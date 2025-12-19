@@ -43,7 +43,8 @@ func RunSourceCode(code string, path string) glob.GlobRet {
 }
 
 func RunSourceCodeInExecutor(curExec *exe.Executor, code string, path string) glob.GlobRet {
-	stmtSlice, err := ast.ParseSourceCode(code)
+	// TODO: 现在问题很大，只能在parse的时候默认现在是""，所以不能parse的时候就让对应的参数变成其他的包名.xxx
+	stmtSlice, err := ast.ParseSourceCode(code, "", curExec.Env.PackageManager.PkgPathNameMgr)
 	if err != nil {
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
@@ -75,7 +76,7 @@ func RunStmtAndImportStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) glob.G
 // import path as name 的执行：1. 如果之前有过当前包或者引用包里(引用的包也是可见的，然后里面可以给一个path赋予了某个名字)，import path2 as name了，那name同时指向两个包了，那就不行 2. 如果之前没有过，那就可以，然后引入path，如果path已经被引用过了，那就给这个path一个新的名字name 3. path之前还没引用过，那这时候就运行path对应的包。运行方式：新开一个executor，然后运行path对应的包，得到env和pkgMgr, 把 env 和 pkgMgr merge到主executor中。
 func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirStmt) glob.GlobRet {
 	// 如果已经存在asPkgName，则直接返回
-	if path, ok := curExec.Env.PackageManager.PkgNamePkgPathPairs[importDirStmt.AsPkgName]; ok {
+	if path, ok := curExec.Env.PackageManager.PkgPathNameMgr.NamePathMap[importDirStmt.AsPkgName]; ok {
 		if path != importDirStmt.Path {
 			return glob.NewGlobErr(fmt.Sprintf("package name %s already exists, and it refers to package %s, not %s", importDirStmt.AsPkgName, path, importDirStmt.Path))
 		}
@@ -84,16 +85,14 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 
 	// 如果已经在curExec.PkgMgr.PkgEnvPairs中，则直接返回
 	if _, ok := curExec.Env.PackageManager.PkgPathEnvPairs[importDirStmt.Path]; ok {
-		curExec.Env.PackageManager.PkgNamePkgPathPairs[importDirStmt.AsPkgName] = importDirStmt.Path
+		if err := curExec.Env.PackageManager.PkgPathNameMgr.AddNamePath(importDirStmt.AsPkgName, importDirStmt.Path); err != nil {
+			return glob.NewGlobErr(err.Error())
+		}
 		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported. Now it has another name: %s", importDirStmt.Path, importDirStmt.AsPkgName))
 	}
 
 	// Resolve package path: if not absolute, resolve from system root directory (~/litexlang)
-	resolvedPath, err := glob.ResolvePackagePath(importDirStmt.Path)
-	if err != nil {
-		return glob.NewGlobErr(err.Error())
-	}
-	mainFileContent, err := os.ReadFile(filepath.Join(resolvedPath, glob.MainDotLit))
+	mainFileContent, err := os.ReadFile(filepath.Join(importDirStmt.Path, glob.MainDotLit))
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
@@ -103,7 +102,7 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 		return glob.NewGlobErr(err.Error())
 	}
 	executorToRunDir := exe.NewExecutor(builtinEnv)
-	ret := RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent), resolvedPath)
+	ret := RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent), importDirStmt.Path)
 	if ret.IsNotTrue() {
 		return ret
 	}

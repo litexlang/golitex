@@ -20,17 +20,17 @@ import (
 
 func (env *Env) MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(defPropStmt *ast.DefPropStmt) *ast.DefPropStmt {
 	newDomFacts := []ast.FactStmt{}
-	for _, domFact := range defPropStmt.DomFacts {
+	for _, domFact := range defPropStmt.DomFactsOrNil {
 		newDomFacts = append(newDomFacts, env.makeUniFactParamsInThisFactDoNotConflictWithEnv(domFact))
 	}
 
 	newIffFacts := []ast.FactStmt{}
-	for _, iffFact := range defPropStmt.IffFacts {
+	for _, iffFact := range defPropStmt.IffFactsOrNil {
 		newIffFacts = append(newIffFacts, env.makeUniFactParamsInThisFactDoNotConflictWithEnv(iffFact))
 	}
 
 	newThenFacts := []ast.FactStmt{}
-	for _, thenFact := range defPropStmt.ThenFacts {
+	for _, thenFact := range defPropStmt.ImplicationFactsOrNil {
 		newThenFacts = append(newThenFacts, env.makeUniFactParamsInThisFactDoNotConflictWithEnv(thenFact))
 	}
 
@@ -51,7 +51,7 @@ func (env *Env) makeUniFactParamsInThisFactDoNotConflictWithEnv(fact ast.FactStm
 func (env *Env) makeUniFactParamsInThisUniFactDoNotConflictWithEnv_getNewParamsAndParamSets(params []string, paramSets []ast.Obj) ([]string, []ast.Obj, map[string]ast.Obj) {
 	conflictingParams := map[string]struct{}{}
 	for _, param := range params {
-		ret := env.IsAtomDeclared(ast.Atom(param), map[string]struct{}{})
+		ret := env.IsNameDefinedOrBuiltin(param, map[string]struct{}{})
 		if ret.IsTrue() {
 			conflictingParams[param] = struct{}{}
 		}

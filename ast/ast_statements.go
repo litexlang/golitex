@@ -32,26 +32,26 @@ type DefLetStmt struct {
 }
 
 type DefHeader struct {
-	Name      Atom
+	Name      string
 	Params    StrSlice
 	ParamSets ObjSlice
 }
 
 type DefPropStmt struct {
-	DefHeader *DefHeader
-	DomFacts  FactStmtSlice
-	IffFacts  FactStmtSlice
-	ThenFacts FactStmtSlice
+	DefHeader             *DefHeader
+	DomFactsOrNil         FactStmtSlice
+	IffFactsOrNil         FactStmtSlice
+	ImplicationFactsOrNil FactStmtSlice
 
 	Line uint
 }
 
 // 虽然它和 defProp 一样，但不排除之后要让iffFacts只能是可逆的事实
 type DefExistPropStmtBody struct {
-	DefHeader *DefHeader
-	DomFacts  FactStmtSlice
-	IffFacts  FactStmtSlice
-	ThenFacts FactStmtSlice
+	DefHeader             *DefHeader
+	DomFactsOrNil         FactStmtSlice
+	IffFactsOrNil         FactStmtSlice
+	ImplicationFactsOrNil FactStmtSlice
 
 	Line uint
 }
@@ -109,10 +109,9 @@ type ClaimProveByContradictionStmt struct {
 	Line uint
 }
 
-type ClaimPropStmt struct {
-	Prop   *DefPropStmt
-	Proofs StmtSlice
-	// IsProve bool
+type ClaimImplicationStmt struct {
+	Implication *ImplicationStmt
+	Proofs      StmtSlice
 
 	Line uint
 }
@@ -167,6 +166,16 @@ type OrStmt struct {
 	Line uint
 }
 
+// """
+// import sys # 相当于 import sys as sys
+
+// import "xxx.lit"
+
+// import sys as s
+
+// import "your_dir" as a
+
+// """
 type ImportDirStmt struct {
 	Path      string
 	AsPkgName string
@@ -229,11 +238,11 @@ type HaveObjInNonEmptySetStmt struct {
 	Line uint
 }
 
-type NamedUniFactStmt struct {
-	DefPropStmt *DefPropStmt
+// type NamedUniFactStmt struct {
+// 	DefPropStmt *DefPropStmt
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type EqualsFactStmt struct {
 	Params ObjSlice
@@ -320,14 +329,6 @@ type HaveFnEqualCaseByCaseStmt struct {
 
 	Line uint
 }
-
-// type HaveFnLiftStmt struct {
-// 	FnName                     string
-// 	Opt                        Obj
-// 	DomainOfEachParamOfGivenFn ObjSlice
-
-// 	Line uint
-// }
 
 /*
 have fn:
@@ -463,23 +464,13 @@ type PrintStmt struct {
 	Line uint
 }
 
-type HelpStmt struct {
-	Keyword string
+// type HelpStmt struct {
+// 	Keyword string
 
-	Line uint
-}
+// 	Line uint
+// }
 
 // 这是必要的，因为要证明从n到m有且只有n, n+1, ..., m-1, m这些数，必须要用特殊的关键词
-type ProveInRangeStmt2 struct {
-	param         string
-	start         Obj
-	end           Obj
-	DomFactsOrNil FactStmtSlice
-	ThenFacts     FactStmtSlice
-	ProofsOrNil   StmtSlice
-
-	Line uint
-}
 
 type HaveCartSetStmt struct {
 	Name    string
@@ -488,6 +479,7 @@ type HaveCartSetStmt struct {
 	Line uint
 }
 
+// TODO 应该没什么用
 type HaveObjFromCartSetStmt struct {
 	ObjName string
 	CartSet *FnObj
@@ -507,13 +499,37 @@ type HaveCartWithDimStmt struct {
 	Line uint
 }
 
-type ProveInRangeStmt struct {
-	Params    string
-	Start     Obj
-	End       Obj
-	DomFacts  FactStmtSlice
-	ThenFacts FactStmtSlice
-	Proofs    StmtSlice
+// prove_for i $in range(1, 10):
+//     =>:
+//         $p(i)
+//     prove:
+//         know $p(i)
+
+type ProveForStmt struct {
+	Param         string
+	Left          Obj
+	Right         Obj
+	IsProveIRange bool
+	DomFacts      FactStmtSlice
+	ThenFacts     FactStmtSlice
+	Proofs        StmtSlice
+
+	Line uint
+}
+
+type ImplicationStmt struct {
+	DefHeader        *DefHeader
+	DomFacts         FactStmtSlice
+	ImplicationFacts FactStmtSlice
+
+	Line uint
+}
+
+type ProveImplicationStmt struct {
+	ImplicationName string
+	Params          StrSlice
+	ImplicationFact FactStmtSlice
+	Proof           StmtSlice
 
 	Line uint
 }

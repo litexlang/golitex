@@ -60,14 +60,14 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 
 	// prop to iff
 	propToIffDomFacts := []FactStmt{propSpecFact}
-	propToIffDomFacts = append(propToIffDomFacts, defStmt.DomFacts...)
+	propToIffDomFacts = append(propToIffDomFacts, defStmt.DomFactsOrNil...)
 
-	propToIff := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, propToIffDomFacts, defStmt.IffFacts, defStmt.Line)
+	propToIff := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, propToIffDomFacts, defStmt.IffFactsOrNil, defStmt.Line)
 
 	// iff to prop
 	IffToPropDomFacts := []FactStmt{}
-	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
-	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFacts...)
+	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFactsOrNil...)
+	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFactsOrNil...)
 
 	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, IffToPropDomFacts, []FactStmt{propSpecFact}, defStmt.Line)
 
@@ -83,8 +83,8 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	propSpecFact := NewSpecFactStmt(TruePure, Atom(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
 
 	IffToPropDomFacts := []FactStmt{}
-	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFacts...)
-	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFacts...)
+	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFactsOrNil...)
+	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFactsOrNil...)
 
 	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, IffToPropDomFacts, []FactStmt{propSpecFact}, defStmt.Line)
 
@@ -139,20 +139,43 @@ func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
 	return glob.IsBuiltinInfixRelaPropSymbol(string(stmt.PropName)) && !stmt.NameIs(glob.KeySymbolEqual)
 }
 
-// func (stmt *SpecFactStmt) IsMathInductionFact() bool {
-// 	return string(stmt.PropName) == glob.KeywordProveByMathInduction
-// }
-
 func NewInFact(param string, paramSet Obj) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{Atom(param), paramSet}, glob.BuiltinLine)
+	switch string(paramSet.String()) {
+	case glob.KeywordSet:
+		return NewIsASetFact(Atom(param), glob.BuiltinLine)
+	case glob.KeywordFiniteSet:
+		return NewIsAFiniteSetFact(Atom(param), glob.BuiltinLine)
+	case glob.KeywordNonEmptySet:
+		return NewIsANonEmptySetFact(Atom(param), glob.BuiltinLine)
+	default:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{Atom(param), paramSet}, glob.BuiltinLine)
+	}
 }
 
-func NewInFactWithParamObj(param Obj, paramSet Obj) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{param, paramSet}, glob.BuiltinLine)
+func NewInFactWithParamObj(param Obj, paramSet Obj, line uint) *SpecFactStmt {
+	switch string(paramSet.String()) {
+	case glob.KeywordSet:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{param}, line)
+	case glob.KeywordFiniteSet:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, line)
+	case glob.KeywordNonEmptySet:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, line)
+	default:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{param, paramSet}, line)
+	}
 }
 
 func NewInFactWithObj(param Obj, paramSet Obj) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{param, paramSet}, glob.BuiltinLine)
+	switch string(paramSet.String()) {
+	case glob.KeywordSet:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{param}, glob.BuiltinLine)
+	case glob.KeywordFiniteSet:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, glob.BuiltinLine)
+	case glob.KeywordNonEmptySet:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, glob.BuiltinLine)
+	default:
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{param, paramSet}, glob.BuiltinLine)
+	}
 }
 
 func IsFnSet(obj Obj) bool {
@@ -226,6 +249,22 @@ func Get_FnTemplate_InObjForm_ParamSetsAndRetSet(obj Obj) ([]Obj, Obj, bool) {
 	paramSets = append(paramSets, objAsFnObjHeadAsFnObj.Params...)
 
 	return paramSets, objAsFnObj.Params[0], true
+}
+
+func GetExistParamsAndFactParamsFromExistFactStmt(stmt *SpecFactStmt) ([]Obj, []Obj) {
+	lengthOfExistParams, _ := strconv.Atoi(string(stmt.Params[0].(Atom)))
+
+	existParams := []Obj{}
+	factParams := []Obj{}
+	for i := 1; i < lengthOfExistParams+1; i++ {
+		existParams = append(existParams, stmt.Params[i])
+	}
+
+	for i := lengthOfExistParams + 1; i < len(stmt.Params); i++ {
+		factParams = append(factParams, stmt.Params[i])
+	}
+
+	return existParams, factParams
 }
 
 func MakeExistFactParamsSlice(existParams []Obj, paramsInFact []Obj) []Obj {
@@ -358,17 +397,23 @@ func TransformEnumToUniFact(setName Obj, enumObjs []Obj) (*UniFactStmt, []*SpecF
 // 	return NewUniFact([]string{stmt.Param}, []Obj{stmt.IntensionalSet}, []FactStmt{}, stmt.ThenFacts, stmt.Line)
 // }
 
-func (stmt *ProveInRangeStmt2) UniFact() *UniFactStmt {
-	params := []string{stmt.param}
+func (stmt *ProveForStmt) UniFact() *UniFactStmt {
+	params := []string{stmt.Param}
 	paramSets := []Obj{Atom(glob.KeywordInteger)}
 
-	// Build dom facts: start <= param < end, plus user-provided dom facts
+	// Build dom facts based on range type
 	domFacts := []FactStmt{
-		NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLessEqual), []Obj{stmt.start, Atom(stmt.param)}, stmt.Line),
-		NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLess), []Obj{Atom(stmt.param), stmt.end}, stmt.Line),
+		NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLessEqual), []Obj{stmt.Left, Atom(stmt.Param)}, stmt.Line),
+	}
+	if stmt.IsProveIRange {
+		// range: left <= param < right
+		domFacts = append(domFacts, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLess), []Obj{Atom(stmt.Param), stmt.Right}, stmt.Line))
+	} else {
+		// closed_range: left <= param <= right
+		domFacts = append(domFacts, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLessEqual), []Obj{Atom(stmt.Param), stmt.Right}, stmt.Line))
 	}
 	// Add user-provided dom facts
-	domFacts = append(domFacts, stmt.DomFactsOrNil...)
+	domFacts = append(domFacts, stmt.DomFacts...)
 
 	thenFacts := stmt.ThenFacts
 	return NewUniFact(params, paramSets, domFacts, thenFacts, stmt.Line)

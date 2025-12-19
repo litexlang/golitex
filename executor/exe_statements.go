@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	"strconv"
 )
 
 func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
@@ -30,21 +29,23 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	case *ast.KnowFactStmt:
 		execRet = exec.knowStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `know` saves the facts you write without verification. Users may inadvertently introduce incorrect facts. Use it with great caution.\n")
+			execRet = execRet.AddMsg("Warning: `know` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
 	case *ast.KnowPropStmt:
 		execRet = exec.knowPropStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `know @` saves the facts you write without verification. Users may inadvertently introduce incorrect facts. Use it with great caution.\n")
+			execRet = execRet.AddMsg("Warning: `know imply ` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
 	case *ast.ClaimProveStmt:
 		execRet = exec.execClaimStmtProve(stmt)
 	case *ast.DefPropStmt:
 		execRet = exec.defPropStmt(stmt, true)
+	case *ast.ImplicationStmt:
+		execRet = exec.implicationStmt(stmt)
 	case *ast.DefLetStmt:
 		execRet = exec.defLetStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `let` may introduce non-existent objects. If you want to ensure the object exists, please use `have` instead.\n")
+			execRet = execRet.AddMsg("Warning: `let` may introduce non-existent objects. If you want to ensure the object exists, please use `have` instead!\n")
 		}
 	case *ast.HaveObjStStmt:
 		execRet = exec.haveObjStStmt(stmt, true)
@@ -53,11 +54,11 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	case *ast.DefFnStmt:
 		execRet = exec.defFnStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `fn` may introduce non-existent functions. If you want to ensure the function exists, please use `have fn` instead.\n")
+			execRet = execRet.AddMsg("Warning: `fn` may introduce non-existent functions. If you want to ensure the function exists, please use `have fn` instead!\n")
 		}
 	case *ast.ProveInEachCaseStmt:
 		execRet = exec.proveInEachCaseStmt(stmt)
-	case *ast.ClaimPropStmt:
+	case *ast.ClaimImplicationStmt:
 		execRet = exec.claimPropStmt(stmt)
 	case *ast.ClaimExistPropStmt:
 		execRet = exec.claimExistPropStmt(stmt)
@@ -71,12 +72,12 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.haveObjInNonEmptySetStmt(stmt)
 	case *ast.HaveCartSetStmt:
 		execRet = exec.haveCartSetStmt(stmt)
-	case *ast.NamedUniFactStmt:
-		execRet = exec.namedUniFactStmt(stmt)
+	// case *ast.NamedUniFactStmt:
+	// 	execRet = exec.namedUniFactStmt(stmt)
 	case *ast.KnowExistPropStmt:
 		execRet = exec.knowExistPropStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddMsg("Warning: `know exist` saves the facts you write without verification. Users may inadvertently introduce incorrect facts. Use it with great caution.\n")
+			execRet = execRet.AddMsg("Warning: `know exist` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
 	case *ast.FnTemplateDefStmt:
 		execRet = exec.DefFnTemplateStmt(stmt)
@@ -116,22 +117,18 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.byStmt(stmt)
 	case *ast.PrintStmt:
 		execRet = exec.printStmt(stmt)
-	case *ast.HelpStmt:
-		execRet = exec.helpStmt(stmt)
 	case *ast.HaveFnEqualCaseByCaseStmt:
 		execRet = exec.haveFnEqualCaseByCaseStmt(stmt)
 	case *ast.ProveCaseByCaseStmt:
 		execRet = exec.proveCaseByCaseStmt(stmt)
-	case *ast.ProveInRangeStmt2:
-		execRet = exec.proveInRangeStmt(stmt)
 	case *ast.ImportDirStmt:
 		execRet = NewExecErr("import statements are not allowed in local scope.")
 	case *ast.ImportFileStmt:
 		execRet = NewExecErr("import statements are not allowed in local scope.")
 	case *ast.HaveObjFromCartSetStmt:
 		execRet = exec.haveObjFromCartSetStmt(stmt)
-	case *ast.HaveCartWithDimStmt:
-		execRet = exec.haveCartWithDimStmt(stmt)
+	case *ast.ProveForStmt:
+		execRet = exec.proveForStmt(stmt)
 	default:
 		execRet = NewExecErr(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -147,13 +144,13 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 
 func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 	curVerifier := NewVerifier(exec.Env)
-	state := Round0Msg
+	state := NewVerState(0, true, false)
 	verRet := curVerifier.VerFactStmt(stmt, state)
 
 	if verRet.IsErr() {
 		return verRet.AddMsg(stmt.String())
 	} else if verRet.IsTrue() {
-		ret := exec.Env.NewFact(stmt)
+		ret := exec.Env.NewFactWithAtomsDefined(stmt)
 		if ret.IsErr() {
 			return NewExecErr(ret.String()).AddMsg(stmt.String())
 		}
@@ -176,12 +173,18 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
 func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
+	allDerivedFacts := []string{}
+
 	for _, fact := range stmt.Facts {
 		switch fact := fact.(type) {
 		case ast.FactStmt:
-			ret := exec.Env.NewFactWithDeclarationCheck(fact)
+			ret := exec.Env.NewFactWithAtomsDefined(fact)
 			if ret.IsErr() {
 				return NewExecErr(ret.String()).AddMsg(stmt.String())
+			}
+			// Collect derived facts from post-processing
+			if ret.IsTrue() && len(ret.GetMsgs()) > 0 {
+				allDerivedFacts = append(allDerivedFacts, ret.GetMsgs()...)
 			}
 
 		case *ast.KnowPropStmt:
@@ -194,7 +197,12 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
 		}
 	}
 
-	return NewExecTrue(stmt.String())
+	// Build the result with all derived facts
+	resultMsgs := []string{stmt.String()}
+	if len(allDerivedFacts) > 0 {
+		resultMsgs = append(resultMsgs, allDerivedFacts...)
+	}
+	return NewExecTrueWithMsgs(resultMsgs)
 }
 
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) ExecRet {
@@ -208,29 +216,29 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 		paramMap[param] = struct{}{}
 	}
 
-	for _, fact := range stmt.DomFacts {
-		for _, param := range ast.ExtractParamsFromFact(fact) {
-			if _, ok := paramMap[param]; ok {
-				return NewExecErr(fmt.Sprintf("param %s in %s\n is already declared in def header %s and should not be redeclared", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
-			}
-		}
-	}
-	for _, fact := range stmt.IffFacts {
-		for _, param := range ast.ExtractParamsFromFact(fact) {
-			if _, ok := paramMap[param]; ok {
-				return NewExecErr(fmt.Sprintf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
-			}
-		}
-	}
-	for _, fact := range stmt.ThenFacts {
-		for _, param := range ast.ExtractParamsFromFact(fact) {
-			if _, ok := paramMap[param]; ok {
-				return NewExecErr(fmt.Sprintf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
-			}
-		}
-	}
+	// for _, fact := range stmt.DomFactsOrNil {
+	// 	for _, param := range ast.ExtractParamsFromFact(fact) {
+	// 		if _, ok := paramMap[param]; ok {
+	// 			return NewExecErr(fmt.Sprintf("param %s in %s\n is already declared in def header %s and should not be redeclared", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
+	// 		}
+	// 	}
+	// }
+	// for _, fact := range stmt.IffFactsOrNil {
+	// 	for _, param := range ast.ExtractParamsFromFact(fact) {
+	// 		if _, ok := paramMap[param]; ok {
+	// 			return NewExecErr(fmt.Sprintf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
+	// 		}
+	// 	}
+	// }
+	// for _, fact := range stmt.ImplicationFactsOrNil {
+	// 	for _, param := range ast.ExtractParamsFromFact(fact) {
+	// 		if _, ok := paramMap[param]; ok {
+	// 			return NewExecErr(fmt.Sprintf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
+	// 		}
+	// 	}
+	// }
 
-	if len(stmt.IffFacts) == 0 {
+	if len(stmt.IffFactsOrNil) == 0 {
 		return NewExecTrue(stmt.String())
 	}
 
@@ -241,12 +249,12 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 			return NewExecErr(err.Error())
 		}
 
-		ret = exec.Env.NewFact(propToIff)
+		ret = exec.Env.NewFactWithAtomsDefined(propToIff)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
 
-		ret = exec.Env.NewFact(iffToProp)
+		ret = exec.Env.NewFactWithAtomsDefined(iffToProp)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -261,7 +269,7 @@ func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) ExecRet {
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
-	return NewExecTrue(stmt.String())
+	return NewExecTrue(stmt.String()).AddMsgs(ret.GetMsgs())
 }
 
 func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) ExecRet {
@@ -328,7 +336,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 
 	caseStmt := stmt.OrFact.Facts[index]
 
-	ret := exec.Env.NewFact(caseStmt)
+	ret := exec.Env.NewFactWithAtomsDefined(caseStmt)
 	if ret.IsErr() {
 		return NewExecErr(ret.String()), fmt.Errorf(ret.String())
 	}
@@ -340,7 +348,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 
 	// verify thenFacts are true
 	// execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(stmt.ThenFacts, exec.env, verifier.Round0NoMsg)
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(stmt.ThenFacts, Round0NoMsg)
+	execState, failedFact, err := exec.verifyFactsAtCurEnv(stmt.ThenFacts, Round0NoMsg())
 	if err != nil {
 		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s\n%s", failedFact, err)
 	} else if execState.IsUnknown() {
@@ -383,7 +391,7 @@ func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCase
 
 	caseStmt := stmt.CaseFacts[index]
 
-	ret := exec.Env.NewFact(caseStmt)
+	ret := exec.Env.NewFactWithAtomsDefined(caseStmt)
 	if ret.IsErr() {
 		return NewExecErr(ret.String()), fmt.Errorf(ret.String())
 	}
@@ -394,7 +402,7 @@ func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCase
 	}
 
 	// verify thenFacts are true
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(stmt.ThenFacts, Round0NoMsg)
+	execState, failedFact, err := exec.verifyFactsAtCurEnv(stmt.ThenFacts, Round0NoMsg())
 	if err != nil {
 		return execState, fmt.Errorf("prove case by case statement error: failed to verify then facts:\n%s\n%s", failedFact, err)
 	} else if execState.IsUnknown() {
@@ -417,12 +425,12 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) ExecRet {
 		return execRet
 	}
 
-	if len(stmt.Prop.IffFacts) == 0 {
+	if len(stmt.Prop.IffFactsOrNil) == 0 {
 		_, iffToProp, err := stmt.Prop.Make_PropToIff_IffToProp()
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
-		ret := exec.Env.NewFact(iffToProp)
+		ret := exec.Env.NewFactWithAtomsDefined(iffToProp)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -433,15 +441,15 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) ExecRet {
 		paramsAsObj = append(paramsAsObj, ast.Atom(stmt.Prop.DefHeader.Params[i]))
 	}
 
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop.DefHeader.Name), paramsAsObj, stmt.Line)}, stmt.Prop.ThenFacts, stmt.Line)
+	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop.DefHeader.Name), paramsAsObj, stmt.Line)}, stmt.Prop.ImplicationFactsOrNil, stmt.Line)
 
-	ret := exec.Env.NewFact(uniFact)
+	ret := exec.Env.NewFactWithAtomsDefined(uniFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
 
-	uniFact2 := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ThenFacts, stmt.Line)
-	ret = exec.Env.NewFact(uniFact2)
+	uniFact2 := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFactsOrNil, stmt.Prop.ImplicationFactsOrNil, stmt.Line)
+	ret = exec.Env.NewFactWithAtomsDefined(uniFact2)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -480,7 +488,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
 		return NewExecErr(err.Error())
 	}
 
-	ret = exec.Env.NewFact(derivedFact)
+	ret = exec.Env.NewFactWithAtomsDefined(derivedFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -498,27 +506,12 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
 	}
 
 	// know uniFact
-	ret := exec.Env.Parent.NewFact(stmt.Fact)
+	ret := exec.Env.Parent.NewFactWithAtomsDefined(stmt.Fact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
 
 	return NewExecTrue(stmt.String())
-}
-
-func (exec *Executor) namedUniFactStmt(stmt *ast.NamedUniFactStmt) ExecRet {
-	uniFact := ast.NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFacts, stmt.DefPropStmt.ThenFacts, stmt.Line)
-	execState := exec.factStmt(uniFact)
-	if execState.IsNotTrue() {
-		return execState
-	}
-
-	execRet := exec.knowPropStmt(ast.NewKnowPropStmt(stmt.DefPropStmt, stmt.Line))
-	if execRet.IsNotTrue() {
-		return execRet
-	}
-
-	return execRet
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
@@ -529,9 +522,9 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) ExecRet {
 	}
 
 	thenFacts := []ast.FactStmt{stmt.ExistProp.ToSpecFact()}
-	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.ParamSets, stmt.ExistProp.DefBody.IffFacts, thenFacts, stmt.Line)
+	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.ParamSets, stmt.ExistProp.DefBody.IffFactsOrNil, thenFacts, stmt.Line)
 
-	ret := exec.Env.NewFact(knownUniFact)
+	ret := exec.Env.NewFactWithAtomsDefined(knownUniFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -544,7 +537,7 @@ func (exec *Executor) DefFnTemplateStmt(stmt *ast.FnTemplateDefStmt) ExecRet {
 	// 	defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	// }
 
-	ret := exec.Env.ExecDefFnTemplate(stmt)
+	ret := exec.Env.NewFnTemplateInEnvMem(stmt)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -578,445 +571,13 @@ func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) ExecRet {
 	return NewExecTrue(stmt.String())
 }
 
-func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
-	ver := NewVerifier(exec.Env)
-
-	for i := range len(stmt.ObjNames) {
-		if ver.objIsDefinedAtomOrIsFnSatisfyItsReq(stmt.ObjEqualTos[i], Round0NoMsg).IsNotTrue() {
-			return NewExecErr(fmt.Sprintf("%s is not defined or does not satisfy function requirement", stmt.ObjEqualTos[i].String()))
-		}
-
-		verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.ObjEqualTos[i], stmt.ObjSets[i]}, stmt.Line), Round0Msg)
-		if verRet.IsErr() {
-			return NewExecErr(verRet.String())
-		}
-		if verRet.IsUnknown() {
-			return NewExecErr(fmt.Sprintf("%s is not in %s", stmt.ObjNames[i], stmt.ObjSets[i]))
-		}
-
-		stmtForDef := ast.NewDefLetStmt([]string{stmt.ObjNames[i]}, []ast.Obj{stmt.ObjSets[i]}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(stmt.ObjNames[i]), stmt.ObjEqualTos[i])}, stmt.Line)
-		ret := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
-		if ret.IsErr() {
-			return NewExecErr(ret.String())
-		}
-		execState := NewExecTrue(stmtForDef.String())
-		if execState.IsNotTrue() {
-			return execState
-		}
-		// 检查 等号右边的东西是否存在
-		ret = exec.Env.AreAtomsInObjDefined(stmt.ObjEqualTos[i], map[string]struct{}{})
-		if ret.IsErr() {
-			ret.AddMsg(fmt.Sprintf("in obj equal to %s", stmt.ObjEqualTos[i]))
-			return NewExecErr(ret.String())
-		}
-	}
-
-	return NewExecTrue(stmt.String())
-}
-
-func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) ExecRet {
-	var err error
-
-	// 返回值要是set
-	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
-	if execState.IsNotTrue() {
-		return NewExecErr(execState.String())
-	}
-	if execState.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("return set %s must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.RetSet.String(), stmt.RetSet.String()))
-	}
-
-	execRet, err := exec.checkFnEqualStmt(stmt)
-	if notOkExec(execRet, err) {
-		return execRet.AddMsg(stmt.String())
-	}
-
-	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(stmt.DefHeader), stmt.EqualTo)}, stmt.Line), stmt.Line)
-	execRet = exec.defFnStmt(newFnDefStmt)
-	if execRet.IsNotTrue() {
-		return execRet.AddMsg(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String())).AddMsg(stmt.String())
-	}
-
-	return execRet.AddMsg(stmt.String())
-}
-
-func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
-	defer func() {
-		exec.deleteEnv()
-	}()
-
-	for i := range len(stmt.DefHeader.Params) {
-		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.DefHeader.Params[i]}, []ast.Obj{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
-		if execState.IsNotTrue() {
-			return execState, fmt.Errorf(execState.String())
-		}
-	}
-
-	ver := NewVerifier(exec.Env)
-
-	verRet := ver.VerFactStmt(ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet), Round0Msg)
-	if verRet.IsErr() {
-		return NewExecErr(verRet.String()), fmt.Errorf(verRet.String())
-	}
-	if verRet.IsUnknown() {
-		return NewExecErr(verRet.String()), fmt.Errorf("according to the definition of %s, the returned value %s must be in %s, but\n%s is unknown", stmt, stmt.EqualTo, stmt.RetSet, ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet))
-	}
-
-	return NewExecTrue(stmt.String()), nil
-}
-
-func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {
-	params := make([]ast.Obj, len(head.Params))
-	for i := range len(head.Params) {
-		params[i] = ast.Atom(head.Params[i])
-	}
-
-	fnName := ast.Atom(head.Name)
-
-	return ast.NewFnObj(fnName, params)
-}
-
-func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ExecRet {
-	// Verify first
-	execRet, err := exec.checkHaveFnStmt(stmt)
-	if notOkExec(execRet, err) {
-		return execRet
-	}
-
-	execRet = exec.defFnStmt(stmt.DefFnStmt)
-
-	if execRet.IsNotTrue() {
-		return execRet.AddMsg(stmt.String())
-	}
-
-	return NewExecTrue(stmt.String())
-}
-
-func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
-	// Create a new environment for verification and proof
-	exec.NewEnv(exec.Env)
-	defer func() {
-		exec.deleteEnv()
-	}()
-
-	// 返回值要是set
-	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.DefFnStmt.FnTemplate.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
-	if execState.IsNotTrue() {
-		return NewExecErr(execState.String()), fmt.Errorf(execState.String())
-	}
-	if execState.IsUnknown() {
-		return NewEmptyExecErr(), fmt.Errorf("return set %s must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String())
-	}
-
-	// 验证 fn template 里面的 paramSet 都是 in set 的
-	// Verify each paramSet is in set type
-	for i, paramSet := range stmt.DefFnStmt.FnTemplate.ParamSets {
-		execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{paramSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
-		if execState.IsErr() {
-			return NewExecErr(execState.String()), fmt.Errorf(execState.String())
-		}
-		if execState.IsUnknown() {
-			return NewEmptyExecErr(), fmt.Errorf("parameter set %d (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", i+1, paramSet.String(), paramSet.String())
-		}
-	}
-
-	// Verify retSet is in set type
-	execState = exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.DefFnStmt.FnTemplate.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
-	if execState.IsErr() {
-		return NewExecErr(execState.String()), fmt.Errorf(execState.String())
-	}
-	if execState.IsUnknown() {
-		return NewEmptyExecErr(), fmt.Errorf("return set (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String())
-	}
-
-	// Define parameters in the new environment
-	defObjStmt := ast.NewDefLetStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts, stmt.Line)
-	execState = exec.defLetStmt(defObjStmt)
-	if execState.IsNotTrue() {
-		return execState, fmt.Errorf(execState.String())
-	}
-
-	// Execute proof statements
-	for _, proof := range stmt.Proofs {
-		execState := exec.Stmt(proof)
-		if execState.IsNotTrue() {
-			return execState, fmt.Errorf(execState.String())
-		}
-	}
-
-	// Verify that HaveObjSatisfyFn is in the return set
-	execState = exec.factStmt(ast.NewInFactWithObj(stmt.HaveObjSatisfyFn, stmt.DefFnStmt.FnTemplate.RetSet))
-	if execState.IsNotTrue() {
-		return execState, fmt.Errorf(execState.String())
-	}
-
-	// 声明一下函数，这样证明then的时候不会因为没声明这个函数而g了
-	localTemplate := ast.NewFnTStruct(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.RetSet, stmt.DefFnStmt.FnTemplate.DomFacts, []ast.FactStmt{}, stmt.Line)
-	fnDefStmt := ast.NewDefFnStmt(stmt.DefFnStmt.Name, localTemplate, stmt.Line)
-	execState = exec.defFnStmt(fnDefStmt)
-	if execState.IsNotTrue() {
-		return execState, fmt.Errorf(execState.String())
-	}
-
-	// know 一下 函数等于 等号右边的东西
-	params := []ast.Obj{}
-	for i := range len(stmt.DefFnStmt.FnTemplate.Params) {
-		params = append(params, ast.Atom(stmt.DefFnStmt.FnTemplate.Params[i]))
-	}
-
-	fnObj := ast.NewFnObj(ast.Atom(stmt.DefFnStmt.Name), params)
-	fnObjIsEqualTo := ast.NewEqualFact(fnObj, stmt.HaveObjSatisfyFn)
-	err := exec.Env.NewFact(fnObjIsEqualTo)
-	if err.IsErr() {
-		return NewExecErr(err.String()), fmt.Errorf(err.String())
-	}
-
-	// 证明 fn then 里全是对的
-	for _, thenFact := range stmt.DefFnStmt.FnTemplate.ThenFacts {
-		execState = exec.factStmt(thenFact)
-		if execState.IsNotTrue() {
-			return execState, fmt.Errorf(execState.String())
-		}
-	}
-
-	return NewExecTrue(stmt.String()), nil
-}
-
-func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) ExecRet {
-	// Verify first and get thenFacts
-	execRet, _, err := exec.checkHaveFnCaseByCaseStmt(stmt)
-	if notOkExec(execRet, err) {
-		return execRet
-	}
-
-	// Only after all verifications pass, declare the function
-	execRet = exec.defFnStmt(stmt.DefFnStmt)
-	if execRet.IsNotTrue() {
-		return execRet.AddMsg(stmt.String())
-	}
-
-	return NewExecTrue(stmt.String())
-}
-
-func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) (ExecRet, []ast.FactStmt, error) {
-	// Create a new environment for verification and proof
-	exec.NewEnv(exec.Env)
-	defer func() {
-		exec.deleteEnv()
-	}()
-
-	// Verify each paramSet is in set type
-	for i, paramSet := range stmt.DefFnStmt.FnTemplate.ParamSets {
-		execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{paramSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
-		if execState.IsErr() {
-			return NewExecErr(execState.String()), nil, fmt.Errorf(execState.String())
-		}
-		if execState.IsUnknown() {
-			return NewEmptyExecErr(), nil, fmt.Errorf("parameter set %d (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", i+1, paramSet.String(), paramSet.String())
-		}
-	}
-
-	// Verify retSet is in set type
-	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.DefFnStmt.FnTemplate.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
-	if execState.IsErr() {
-		return NewExecErr(execState.String()), nil, fmt.Errorf(execState.String())
-	}
-	if execState.IsUnknown() {
-		return NewEmptyExecErr(), nil, fmt.Errorf("return set (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String())
-	}
-
-	// Verify each case: execute proof and verify return value
-	for i := range len(stmt.CaseByCaseFacts) {
-		execState, err := exec.verifyHaveFnCaseByCase_OneCase(stmt, i)
-		if notOkExec(execState, err) {
-			return execState, nil, err
-		}
-	}
-
-	// Verify all cases cover the domain
-	execState, err := exec.checkAtLeastOneCaseHolds_ForHaveFn(stmt)
-	if notOkExec(execState, err) {
-		return execState, nil, err
-	}
-
-	// Verify cases don't overlap
-	execState, err = exec.checkCasesNoOverlap_ForHaveFn(stmt)
-	if notOkExec(execState, err) {
-		return execState, nil, err
-	}
-
-	// Build thenFacts: for each case, if condition holds, function equals corresponding return value
-	thenFacts := []ast.FactStmt{}
-	for i, caseFact := range stmt.CaseByCaseFacts {
-		// Create function call from function name and params
-		params := make([]ast.Obj, len(stmt.DefFnStmt.FnTemplate.Params))
-		for j := range len(stmt.DefFnStmt.FnTemplate.Params) {
-			params[j] = ast.Atom(stmt.DefFnStmt.FnTemplate.Params[j])
-		}
-		fnName := ast.Atom(stmt.DefFnStmt.Name)
-		fnCall := ast.NewFnObj(fnName, params)
-		equalFact := ast.NewEqualFact(fnCall, stmt.EqualToObjs[i])
-
-		uniFact := ast.NewUniFact(
-			stmt.DefFnStmt.FnTemplate.Params,
-			stmt.DefFnStmt.FnTemplate.ParamSets,
-			[]ast.FactStmt{caseFact},
-			[]ast.FactStmt{equalFact},
-			stmt.Line,
-		)
-		thenFacts = append(thenFacts, uniFact)
-	}
-
-	return NewExecTrue(stmt.String()), thenFacts, nil
-}
-
-func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
-	defer func() {
-		exec.deleteEnv()
-	}()
-
-	// Define parameters
-	defObjStmt := ast.NewDefLetStmt(
-		stmt.DefFnStmt.FnTemplate.Params,
-		stmt.DefFnStmt.FnTemplate.ParamSets,
-		stmt.DefFnStmt.FnTemplate.DomFacts,
-		stmt.Line,
-	)
-	execState := exec.defLetStmt(defObjStmt)
-	if execState.IsNotTrue() {
-		return execState, fmt.Errorf(execState.String())
-	}
-
-	// Add case condition as fact
-	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	ret := exec.Env.NewFact(caseFact)
-	if ret.IsErr() {
-		return NewExecErr(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
-	}
-
-	// Execute proof for this case
-	for _, proof := range stmt.Proofs[caseIndex] {
-		execState := exec.Stmt(proof)
-		if execState.IsNotTrue() {
-			return execState, fmt.Errorf("case %d: proof failed", caseIndex)
-		}
-	}
-
-	// Verify return value is in retSet
-	equalTo := stmt.EqualToObjs[caseIndex]
-	ver := NewVerifier(exec.Env)
-	verRet := ver.VerFactStmt(ast.NewInFactWithObj(equalTo, stmt.DefFnStmt.FnTemplate.RetSet), Round0Msg)
-	if verRet.IsErr() {
-		return NewEmptyExecErr(), fmt.Errorf("case %d: %s", caseIndex, verRet.String())
-	}
-	if verRet.IsUnknown() {
-		return NewEmptyExecErr(), fmt.Errorf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.DefFnStmt.FnTemplate.RetSet, ast.NewInFactWithObj(equalTo, stmt.DefFnStmt.FnTemplate.RetSet))
-	}
-
-	// The proof statements should have established the necessary conditions
-	// Note: We don't verify thenFacts here because the function is not yet defined,
-	// and object substitution (ReplaceObj) is not currently available.
-	// The proof statements in each case should prove what's needed.
-
-	return NewExecTrue(stmt.String()), nil
-}
-
-func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
-	defer func() {
-		exec.deleteEnv()
-	}()
-
-	// Define parameters
-	for i := range len(stmt.DefFnStmt.FnTemplate.Params) {
-		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.DefFnStmt.FnTemplate.Params[i]}, []ast.Obj{stmt.DefFnStmt.FnTemplate.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
-		if execState.IsNotTrue() {
-			return execState, fmt.Errorf(execState.String())
-		}
-	}
-
-	// Create or fact: case1 or case2 or ... or caseN
-	orFact := ast.NewOrStmt(stmt.CaseByCaseFacts, stmt.Line)
-
-	// Verify or fact is true (all cases cover the domain)
-	ver := NewVerifier(exec.Env)
-	verRet := ver.VerFactStmt(orFact, Round0Msg)
-	if verRet.IsErr() {
-		return NewEmptyExecErr(), fmt.Errorf("failed to verify that all cases cover the domain: %s", verRet.String())
-	}
-	if verRet.IsUnknown() {
-		return NewEmptyExecErr(), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
-	}
-
-	return NewExecTrue(stmt.String()), nil
-}
-
-func (exec *Executor) checkCasesNoOverlap_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (ExecRet, error) {
-	// For each case i, verify that when case i holds, all other cases don't hold
-	for i := range len(stmt.CaseByCaseFacts) {
-		execState, err := exec.checkCaseNoOverlapWithOthers_ForHaveFn(stmt, i)
-		if notOkExec(execState, err) {
-			return execState, err
-		}
-	}
-
-	return NewExecTrue(stmt.String()), nil
-}
-
-func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
-	defer func() {
-		exec.deleteEnv()
-	}()
-
-	// Define parameters
-	for i := range len(stmt.DefFnStmt.FnTemplate.Params) {
-		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.DefFnStmt.FnTemplate.Params[i]}, []ast.Obj{stmt.DefFnStmt.FnTemplate.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
-		if execState.IsNotTrue() {
-			return execState, fmt.Errorf(execState.String())
-		}
-	}
-
-	// Assume current case condition holds
-	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	ret := exec.Env.NewFact(caseFact)
-	if ret.IsErr() {
-		return NewExecErr(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
-	}
-
-	// Verify all other cases don't hold
-	ver := NewVerifier(exec.Env)
-	for j := range len(stmt.CaseByCaseFacts) {
-		if j == caseIndex {
-			continue
-		}
-
-		// Get not case j
-		otherCaseFact := stmt.CaseByCaseFacts[j]
-		notOtherCaseFact := otherCaseFact.ReverseTrue()
-
-		// Verify not case j is true
-		verRet := ver.VerFactStmt(notOtherCaseFact, Round0Msg)
-		if verRet.IsErr() {
-			return NewEmptyExecErr(), fmt.Errorf("case %d and case %d overlap: failed to verify that not %s: %s", caseIndex, j, otherCaseFact, verRet.String())
-		}
-		if verRet.IsUnknown() {
-			return NewEmptyExecErr(), fmt.Errorf("case %d and case %d may overlap: when %s is true, %s must be false, but it is unknown", caseIndex, j, caseFact, otherCaseFact)
-		}
-	}
-
-	return NewExecTrue(stmt.String()), nil
-}
-
 func (exec *Executor) Verify(fact ast.FactStmt, requireMsg bool) ExecRet {
 	ver := NewVerifier(exec.Env)
 	var state *VerState
 	if requireMsg {
-		state = Round0Msg
+		state = Round0Msg()
 	} else {
-		state = Round0NoMsg
+		state = Round0NoMsg()
 	}
 
 	return ver.VerFactStmt(fact, state)
@@ -1054,7 +615,7 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 
 	def := exec.Env.GetPropDef(stmt.Prop)
 	if def == nil {
-		return fmt.Errorf("prop %s is not defined", stmt.Prop)
+		return fmt.Errorf("undefined prop: %s", stmt.Prop)
 	}
 
 	if len(def.DefHeader.Params) != 2 {
@@ -1071,30 +632,30 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 	}
 
 	// 这里最好检查一下，是不是 Param set 依赖了 Param，如果依赖了，那其实是要报错了，不过暂时不管了
-	execState := exec.defLetStmt(ast.NewDefLetStmt(stmt.Params, []ast.Obj{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0]}, def.DomFacts, stmt.Line))
+	execState := exec.defLetStmt(ast.NewDefLetStmt(stmt.Params, []ast.Obj{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0]}, def.DomFactsOrNil, stmt.Line))
 	if execState.IsNotTrue() {
 		return fmt.Errorf(execState.String())
 	}
 
-	ret := exec.Env.AreAtomsInObjDefined(def.DefHeader.ParamSets[0], map[string]struct{}{})
+	ret := exec.Env.AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(def.DefHeader.ParamSets[0], map[string]struct{}{})
 	if ret.IsErr() {
 		return fmt.Errorf(ret.String())
 	}
-	ret = exec.Env.AreAtomsInObjDefined(def.DefHeader.ParamSets[1], map[string]struct{}{})
+	ret = exec.Env.AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(def.DefHeader.ParamSets[1], map[string]struct{}{})
 	if ret.IsErr() {
 		return fmt.Errorf(ret.String())
 	}
 
-	if len(def.DomFacts) > 0 {
+	if len(def.DomFactsOrNil) > 0 {
 		return fmt.Errorf("dom facts are not allowed in %s", glob.KeywordProveIsTransitiveProp)
 	}
 
-	ret = exec.Env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[0]), ast.Atom(stmt.Params[1])}, stmt.Line))
+	ret = exec.Env.NewFactWithAtomsDefined(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[0]), ast.Atom(stmt.Params[1])}, stmt.Line))
 	if ret.IsErr() {
 		return fmt.Errorf(ret.String())
 	}
 
-	ret = exec.Env.NewFact(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[1]), ast.Atom(stmt.Params[2])}, stmt.Line))
+	ret = exec.Env.NewFactWithAtomsDefined(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[1]), ast.Atom(stmt.Params[2])}, stmt.Line))
 	if ret.IsErr() {
 		return fmt.Errorf(ret.String())
 	}
@@ -1128,13 +689,13 @@ func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
 	if execRet.IsNotTrue() {
 		return execRet
 	}
-	ret := exec.Env.NewFact(ast.NewEqualFact(stmt.ObjToEval, value))
+	ret := exec.Env.NewFactWithAtomsDefined(ast.NewEqualFact(stmt.ObjToEval, value))
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
 	trueEvalRet.Inherit(execRet)
 
-	return trueEvalRet.NewVerMsgAtBegin(Round0Msg, stmt.String())
+	return trueEvalRet.NewVerMsgAtBegin(Round0Msg(), stmt.String())
 }
 
 func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, ExecRet) {
@@ -1163,254 +724,35 @@ func (exec *Executor) printStmt(stmt *ast.PrintStmt) ExecRet {
 	return NewExecTrue(stmt.String())
 }
 
-func (exec *Executor) helpStmt(stmt *ast.HelpStmt) ExecRet {
-	helpMsg, ok := glob.KeywordHelpMap[stmt.Keyword]
-	result := NewEmptyExecTrue()
-	if !ok {
-		return result.AddMsg(fmt.Sprintf("Unknown keyword: %s", stmt.Keyword))
-	}
-	if helpMsg == "" {
-		return result.AddMsg(fmt.Sprintf("Help for '%s': (description not yet available)", stmt.Keyword))
-	} else {
-		return result.AddMsg(fmt.Sprintf("Help for '%s': %s", stmt.Keyword, helpMsg))
-	}
-}
-
-func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) ExecRet {
-
-	// 返回值要是set
-	execState := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.RetSet, ast.Atom(glob.KeywordSet)}, stmt.Line))
-	if execState.IsNotTrue() {
-		return NewExecErr(execState.String())
-	}
-	if execState.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("return set %s must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.RetSet.String(), stmt.RetSet.String()))
-	}
-	// 验证每个case的返回值都符合fn的retSet
-	execState, err := exec.checkHaveFnEqualCaseByCaseStmt(stmt)
-	if notOkExec(execState, err) {
-		return execState.AddMsg(stmt.String())
-	}
-
-	// 构建 thenFacts：对于每个 case，如果条件满足，则函数值等于对应的返回值
-	thenFacts := []ast.FactStmt{}
-	for i, caseFact := range stmt.CaseByCaseFacts {
-		// 在 caseFact 的条件下，函数值等于对应的返回值
-		// 需要将 caseFact 作为条件，然后添加等式
-		fnCall := fnHeaderToReturnValueOfFn(stmt.DefHeader)
-		equalFact := ast.NewEqualFact(fnCall, stmt.CaseByCaseEqualTo[i])
-
-		// 创建一个条件事实：如果 caseFact 为真，则 equalFact 为真
-		// 这里我们需要使用 implication 或者直接在 thenFacts 中添加条件
-		// 由于 caseFact 是 SpecFactStmt，我们需要创建一个 UniFact 来表示这个条件
-		// 但是更简单的方式是：创建一个 UniFact，其中 DomFacts 包含 caseFact，ThenFacts 包含 equalFact
-		uniFact := ast.NewUniFact(
-			stmt.DefHeader.Params,
-			stmt.DefHeader.ParamSets,
-			[]ast.FactStmt{caseFact},
-			[]ast.FactStmt{equalFact},
-			stmt.Line,
-		)
-		thenFacts = append(thenFacts, uniFact)
-	}
-
-	// 定义函数
-	newFnDefStmt := ast.NewDefFnStmt(
-		string(stmt.DefHeader.Name),
-		ast.NewFnTStruct(
-			stmt.DefHeader.Params,
-			stmt.DefHeader.ParamSets,
-			stmt.RetSet,
-			[]ast.FactStmt{},
-			thenFacts,
-			stmt.Line,
-		),
-		stmt.Line,
-	)
-	execState = exec.defFnStmt(newFnDefStmt)
-	if execState.IsNotTrue() {
-		return execState.AddMsg(stmt.String())
-	}
-
-	return NewExecTrue(stmt.String())
-}
-
-func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) (ExecRet, error) {
-	// 验证每个case的返回值都符合fn的retSet（在case成立的条件下）
-	for i := range len(stmt.CaseByCaseFacts) {
-		execState, err := exec.checkCaseReturnValueInRetSet(stmt, i)
-		if notOkExec(execState, err) {
-			return execState, err
-		}
-	}
-
-	// 验证所有的case覆盖了整个domain
-	execState, err := exec.checkAtLeastOneCaseHolds(stmt)
-	if notOkExec(execState, err) {
-		return execState, err
-	}
-
-	// 验证每个case没有overlap
-	execState, err = exec.checkCasesNoOverlap(stmt)
-	if notOkExec(execState, err) {
-		return execState, err
-	}
-
-	return NewExecTrue(stmt.String()), nil
-}
-
-func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
-	defer func() {
-		exec.deleteEnv()
-	}()
-
-	// 为每个参数定义变量
-	for i := range len(stmt.DefHeader.Params) {
-		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.DefHeader.Params[i]}, []ast.Obj{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
-		if execState.IsNotTrue() {
-			return execState, fmt.Errorf(execState.String())
-		}
-	}
-
-	// 假设case的条件成立
-	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	ret := exec.Env.NewFact(caseFact)
-	if ret.IsErr() {
-		return NewExecErr(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
-	}
-
-	// 在case成立的条件下，验证返回值在retSet中
-	equalTo := stmt.CaseByCaseEqualTo[caseIndex]
-	ver := NewVerifier(exec.Env)
-	verRet := ver.VerFactStmt(ast.NewInFactWithObj(equalTo, stmt.RetSet), Round0Msg)
-	if verRet.IsErr() {
-		return NewEmptyExecErr(), fmt.Errorf("case %d: %s", caseIndex, verRet.String())
-	}
-	if verRet.IsUnknown() {
-		return NewEmptyExecErr(), fmt.Errorf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.RetSet, ast.NewInFactWithObj(equalTo, stmt.RetSet))
-	}
-
-	return NewExecTrue(stmt.String()), nil
-}
-
-func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseStmt) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
-	defer func() {
-		exec.deleteEnv()
-	}()
-
-	// 为每个参数定义变量
-	for i := range len(stmt.DefHeader.Params) {
-		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.DefHeader.Params[i]}, []ast.Obj{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
-		if execState.IsNotTrue() {
-			return execState, fmt.Errorf(execState.String())
-		}
-	}
-
-	// 创建 or fact: case1 or case2 or ... or caseN
-	orFact := ast.NewOrStmt(stmt.CaseByCaseFacts, stmt.Line)
-
-	// 验证 or fact 为 true（即所有 case 覆盖了整个 domain）
-	ver := NewVerifier(exec.Env)
-	verRet := ver.VerFactStmt(orFact, Round0Msg)
-	if verRet.IsErr() {
-		return NewEmptyExecErr(), fmt.Errorf("failed to verify that all cases cover the domain: %s", verRet.String())
-	}
-	if verRet.IsUnknown() {
-		return NewEmptyExecErr(), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
-	}
-
-	return NewExecTrue(stmt.String()), nil
-}
-
-func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (ExecRet, error) {
-	// 对于每个 case i，验证在 case i 成立的条件下，其他所有 case 都不成立
-	for i := range len(stmt.CaseByCaseFacts) {
-		execState, err := exec.checkCaseNoOverlapWithOthers(stmt, i)
-		if notOkExec(execState, err) {
-			return execState, err
-		}
-	}
-
-	return NewExecTrue(stmt.String()), nil
-}
-
-func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
-	defer func() {
-		exec.deleteEnv()
-	}()
-
-	// 为每个参数定义变量
-	for i := range len(stmt.DefHeader.Params) {
-		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.DefHeader.Params[i]}, []ast.Obj{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
-		if execState.IsNotTrue() {
-			return execState, fmt.Errorf(execState.String())
-		}
-	}
-
-	// 假设当前 case 的条件成立
-	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	ret := exec.Env.NewFact(caseFact)
-	if ret.IsErr() {
-		return NewExecErr(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
-	}
-
-	// 验证其他所有 case 都不成立
-	ver := NewVerifier(exec.Env)
-	for j := range len(stmt.CaseByCaseFacts) {
-		if j == caseIndex {
-			continue
-		}
-
-		// 获取 not case j
-		otherCaseFact := stmt.CaseByCaseFacts[j]
-		notOtherCaseFact := otherCaseFact.ReverseTrue()
-
-		// 验证 not case j 为 true
-		verRet := ver.VerFactStmt(notOtherCaseFact, Round0Msg)
-		if verRet.IsErr() {
-			return NewEmptyExecErr(), fmt.Errorf("case %d and case %d overlap: failed to verify that not %s: %s", caseIndex, j, otherCaseFact, verRet.String())
-		}
-		if verRet.IsUnknown() {
-			return NewEmptyExecErr(), fmt.Errorf("case %d and case %d may overlap: when %s is true, %s must be false, but it is unknown", caseIndex, j, caseFact, otherCaseFact)
-		}
-	}
-
-	return NewExecTrue(stmt.String()), nil
-}
-
-func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt2) ExecRet {
-	// Evaluate start and end to get integer values
-	startObj, execRet := exec.evalObjThenSimplify(stmt.Start())
+func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) ExecRet {
+	left, execRet := exec.GetSimplifiedValue(stmt.Left)
 	if execRet.IsNotTrue() {
-		return NewExecErr(fmt.Sprintf("start value %s cannot be evaluated: %s", stmt.Start().String(), execRet.String()))
+		return execRet
 	}
 
-	endObj, execRet := exec.evalObjThenSimplify(stmt.End())
+	right, execRet := exec.GetSimplifiedValue(stmt.Right)
 	if execRet.IsNotTrue() {
-		return NewExecErr(fmt.Sprintf("end value %s cannot be evaluated: %s", stmt.End().String(), execRet.String()))
+		return execRet
 	}
 
-	// Convert to integers
-	startInt, ok := ast.ToInt(startObj)
-	if !ok {
-		return NewExecErr(fmt.Sprintf("start value %s is not an integer", startObj.String()))
+	leftAsInt, ok1 := ast.IsObjLiterallyIntNumber(left)
+	rightAsInt, ok2 := ast.IsObjLiterallyIntNumber(right)
+	if !ok1 || !ok2 {
+		return NewExecErr(fmt.Sprintf("left value %s and right value %s must be integers", left.String(), right.String()))
 	}
 
-	endInt, ok := ast.ToInt(endObj)
-	if !ok {
-		return NewExecErr(fmt.Sprintf("end value %s is not an integer", endObj.String()))
+	if leftAsInt > rightAsInt {
+		return NewExecErr(fmt.Sprintf("left value %d must be less than or equal to right value %d", leftAsInt, rightAsInt))
 	}
 
-	if startInt >= endInt {
-		return NewExecErr(fmt.Sprintf("start value %d must be less than end value %d", startInt, endInt))
+	rightMost := rightAsInt
+	if !stmt.IsProveIRange {
+		rightMost = rightAsInt + 1
 	}
 
-	// Iterate through all values in range [start, end)
-	for i := int64(startInt); i < int64(endInt); i++ {
-		execRet := exec.proveInRangeStmtWhenParamIsIndex(stmt, i)
+	// Iterate through all values in range [left, rightMost)
+	for i := leftAsInt; i < rightMost; i++ {
+		execRet := exec.proveForStmtWhenParamIsIndex(stmt, i)
 		if execRet.IsNotTrue() {
 			return execRet
 		}
@@ -1418,7 +760,7 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt2) ExecRet {
 
 	// Create and store the universal fact
 	uniFact := stmt.UniFact()
-	ret := exec.Env.NewFact(uniFact)
+	ret := exec.Env.NewFactWithAtomsDefined(uniFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -1426,269 +768,94 @@ func (exec *Executor) proveInRangeStmt(stmt *ast.ProveInRangeStmt2) ExecRet {
 	return NewExecTrue(stmt.String())
 }
 
-func (exec *Executor) haveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) ExecRet {
-	// Check: verify cart parameters are sets and equalTo elements are in corresponding sets
-	checkRet := exec.checkHaveObjFromCartSetStmt(stmt)
-	if checkRet.IsNotTrue() {
-		return checkRet
+func (exec *Executor) proveForStmtWhenParamIsIndex(stmt *ast.ProveForStmt, i int) ExecRet {
+	indexAsObj := ast.Atom(fmt.Sprintf("%d", i))
+	param := stmt.Param
+	uniMap := map[string]ast.Obj{param: indexAsObj}
+	exec.NewEnv(exec.Env)
+	defer exec.deleteEnv()
+
+	defObjStmt := ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(param), indexAsObj)}, stmt.Line)
+	execState := exec.defLetStmt(defObjStmt)
+	if execState.IsNotTrue() {
+		return execState
 	}
 
-	// Post-process: add obj in cart and obj = equalTo facts
-	postRet := exec.postProcessHaveObjFromCartSetStmt(stmt)
-	if postRet.IsNotTrue() {
-		return postRet
-	}
-
-	return NewEmptyExecTrue().AddMsg(stmt.String())
-}
-
-// checkHaveObjFromCartSetStmt checks that:
-// 1. Each parameter of cart is a set
-// 2. equalTo is a tuple with the same length as cart parameters
-// 3. Each element of equalTo is in the corresponding cart set
-func (exec *Executor) checkHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) ExecRet {
-	// Check that each parameter of cart is a set
-	for i, param := range stmt.CartSet.Params {
-		state := exec.factStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{param, ast.Atom(glob.KeywordSet)}, stmt.Line))
-		if state.IsErr() {
-			return NewExecErr(state.String())
+	// Check dom facts
+	for _, domFact := range stmt.DomFacts {
+		instDomFact, err := domFact.InstantiateFact(uniMap)
+		if err != nil {
+			return NewExecErr(err.Error())
 		}
-		if state.IsUnknown() {
-			return NewExecErr(fmt.Sprintf("cart parameter %d (%s) must be a set, i.e. `%s in %s` must be true, but it is unknown", i+1, param.String(), param.String(), ast.Atom(glob.KeywordSet).String()))
+		execState := exec.factStmt(instDomFact)
+		if execState.IsErr() {
+			return execState
 		}
-	}
 
-	// Check that equalTo is a tuple
-	equalToAsFn, ok := stmt.EqualTo.(*ast.FnObj)
-	if !ok {
-		return NewExecErr(fmt.Sprintf("expected equalTo to be a tuple, but got %T", stmt.EqualTo))
-	}
-	if !ast.IsTupleFnObj(equalToAsFn) {
-		return NewExecErr(fmt.Sprintf("expected equalTo to be a tuple (with head %s), but got %s", glob.KeywordTuple, equalToAsFn.FnHead.String()))
-	}
+		if execState.IsUnknown() {
+			// 如果 不OK，那必须证明是 false，绝对不能是 unknown
+			specFact, ok := domFact.(*ast.SpecFactStmt)
+			if !ok {
+				return NewExecErr(fmt.Sprintf("dom fact in prove_for must be a SpecFactStmt to reverse: %s", domFact.String()))
+			}
+			revInstDomFact := specFact.ReverseIsTrue()
+			for _, fact := range revInstDomFact {
+				instFact, err := fact.InstantiateFact(uniMap)
+				if err != nil {
+					return NewExecErr(err.Error())
+				}
+				execState = exec.factStmt(instFact)
+				if execState.IsErr() {
+					return execState
+				}
+				if execState.IsUnknown() {
+					return NewExecErr(fmt.Sprintf("dom facts in prove_for must be proved to be true or false, can not be unknown: %s", instFact.String()))
+				}
+			}
 
-	// Check that tuple length matches cart parameters length
-	if len(equalToAsFn.Params) != len(stmt.CartSet.Params) {
-		return NewExecErr(fmt.Sprintf("tuple length (%d) does not match cart parameters length (%d)", len(equalToAsFn.Params), len(stmt.CartSet.Params)))
-	}
-
-	// Check that each element of equalTo is in the corresponding cart set
-	for i := range len(equalToAsFn.Params) {
-		inFact := ast.NewInFactWithObj(equalToAsFn.Params[i], stmt.CartSet.Params[i])
-		state := exec.factStmt(inFact)
-		if state.IsErr() {
-			return NewExecErr(state.String())
+			return NewEmptyExecTrue()
 		}
-		if state.IsUnknown() {
-			return NewExecErr(fmt.Sprintf("tuple element %d (%s) must be in cart set %d (%s), but it is unknown", i+1, equalToAsFn.Params[i].String(), i+1, stmt.CartSet.Params[i].String()))
-		}
-	}
 
-	return NewEmptyExecTrue()
-}
-
-// postProcessHaveObjFromCartSetStmt adds:
-// 1. obj in cart(...) fact
-// 2. obj = equalTo fact
-// 3. obj[i] = equalTo[i] for each i
-// 4. dim(obj) = len(cartSet.Params)
-func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) ExecRet {
-	objAtom := ast.Atom(stmt.ObjName)
-
-	// Add obj in cart(...) fact
-	inCartFact := ast.NewInFactWithObj(objAtom, stmt.CartSet)
-	ret := exec.Env.NewFact(inCartFact)
-	if ret.IsErr() {
-		return NewExecErr(ret.String())
-	}
-
-	// Add obj = equalTo fact
-	equalFact := ast.NewEqualFact(objAtom, stmt.EqualTo)
-	ret = exec.Env.NewFact(equalFact)
-	if ret.IsErr() {
-		return NewExecErr(ret.String())
-	}
-
-	// equalTo is already verified to be a tuple in checkHaveObjFromCartSetStmt
-	equalToAsFn, ok := stmt.EqualTo.(*ast.FnObj)
-	if !ok || !ast.IsTupleFnObj(equalToAsFn) {
-		return NewEmptyExecTrue()
-	}
-
-	// Add obj[i] = equalTo[i] for each i (index starts from 1)
-	for i := range len(equalToAsFn.Params) {
-		index := i + 1 // index starts from 1
-		indexObj := ast.Atom(strconv.Itoa(index))
-
-		// Create indexed object: obj[index]
-		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{objAtom, indexObj})
-
-		// Create equal fact: obj[index] = equalTo[i]
-		indexEqualFact := ast.NewEqualFact(indexedObj, equalToAsFn.Params[i])
-		ret = exec.Env.NewFact(indexEqualFact)
+		ret := exec.Env.NewFactWithAtomsDefined(domFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
 	}
 
-	// Add dim(obj) = len(cartSet.Params)
-	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{objAtom})
-	dimValue := ast.Atom(strconv.Itoa(len(stmt.CartSet.Params)))
-	dimEqualFact := ast.NewEqualFact(dimFn, dimValue)
-	ret = exec.Env.NewFact(dimEqualFact)
+	// exec proofs
+	for _, curStmt := range stmt.Proofs {
+		execState := exec.Stmt(curStmt)
+		if execState.IsNotTrue() {
+			return execState
+		}
+	}
+
+	// 满足 then
+	for _, thenFact := range stmt.ThenFacts {
+		instThenFact, err := thenFact.InstantiateFact(uniMap)
+		if err != nil {
+			return NewExecErr(err.Error())
+		}
+
+		execState = exec.factStmt(instThenFact)
+		if execState.IsErr() {
+			return execState
+		}
+		if execState.IsUnknown() {
+			return NewExecErr(fmt.Sprintf("then fact in prove_for must be proved to be true or false, can not be unknown: %s", instThenFact.String()))
+		}
+	}
+
+	return NewEmptyExecTrue()
+}
+
+func (exec *Executor) implicationStmt(stmt *ast.ImplicationStmt) ExecRet {
+	// Convert ImplicationStmt to DefPropStmt (with dom and implication facts, but no iff facts)
+	defPropStmt := ast.NewDefPropStmt(stmt.DefHeader, stmt.DomFacts, nil, stmt.ImplicationFacts, stmt.Line)
+	ret := exec.Env.NewDefProp_InsideAtomsDeclared(defPropStmt)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
 
-	return NewEmptyExecTrue()
-}
-
-func (exec *Executor) haveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) ExecRet {
-	// Check: verify all conditions in local environment
-	checkRet := exec.checkHaveCartWithDimStmt(stmt)
-	if checkRet.IsNotTrue() {
-		return checkRet
-	}
-
-	// Post-process: store facts in main environment
-	postRet := exec.postProcessHaveCartWithDimStmt(stmt)
-	if postRet.IsNotTrue() {
-		return postRet
-	}
-
-	return NewEmptyExecTrue().AddMsg(stmt.String())
-}
-
-// checkHaveCartWithDimStmt checks that:
-// 1. CartDim is in N_pos and > 1 and <= objDim
-// 2. All proofs execute successfully
-// 3. proj(ObjName, Param) = EqualTo
-// 4. All Facts are true
-// All checks are performed in a local environment with is_cart(ObjName) and set_dim(ObjName) = CartDim
-func (exec *Executor) checkHaveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) ExecRet {
-	// 0. 新建一个局部环境，让它is_cart然后dim是 dimObj
-	exec.NewEnv(exec.Env)
-	defer exec.deleteEnv()
-
-	objToDefineAtom := ast.Atom(stmt.ObjName)
-
-	// 局部环境里定义 param 是 N_pos，大于等于1，小于等于n
-	defLetStmt := ast.NewDefLetStmt([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{ast.Atom(stmt.Param), stmt.CartDim}, stmt.Line)}, stmt.Line)
-	execState := exec.defLetStmt(defLetStmt)
-	if execState.IsNotTrue() {
-		return NewExecErr(execState.String())
-	}
-
-	// 1. 证明 dimObj 是 N_pos 且大于1
-	ver := NewVerifier(exec.Env)
-	state := Round0Msg
-
-	// 验证 CartDim 是 N_pos
-	dimInNPosFact := ast.NewInFactWithObj(stmt.CartDim, ast.Atom(glob.KeywordNPos))
-	verRet := ver.VerFactStmt(dimInNPosFact, state)
-	if verRet.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to verify %s is in N_pos: %s", stmt.CartDim.String(), verRet.String()))
-	}
-	if verRet.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("%s must be in N_pos, but it is unknown", stmt.CartDim.String()))
-	}
-
-	// 验证 CartDim > 1
-	dimGreaterThanOneFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{stmt.CartDim, ast.Atom("1")}, stmt.Line)
-	verRet = ver.VerFactStmt(dimGreaterThanOneFact, state)
-	if verRet.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to verify %s > 1: %s", stmt.CartDim.String(), verRet.String()))
-	}
-	if verRet.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("%s must be > 1, but it is unknown", stmt.CartDim.String()))
-	}
-
-	// 执行 proofs
-	for _, proof := range stmt.Proofs {
-		execRet := exec.Stmt(proof)
-		if execRet.IsNotTrue() {
-			return NewExecErr(fmt.Sprintf("proof execution failed: %s", execRet.String()))
-		}
-	}
-
-	// 定义 objToDefine
-	defLetStmt = ast.NewDefLetStmt([]string{stmt.ObjName}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
-	execState = exec.defLetStmt(defLetStmt)
-	if execState.IsNotTrue() {
-		return NewExecErr(execState.String())
-	}
-
-	// 在局部环境中添加 is_cart(ObjName)
-	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{objToDefineAtom}, stmt.Line)
-	ret := exec.Env.NewFact(isCartFact)
-	if ret.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to add is_cart fact: %s", ret.String()))
-	}
-
-	// 在局部环境中添加 set_dim(ObjName) = CartDim
-	setDimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{objToDefineAtom})
-	setDimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{setDimFn, stmt.CartDim}, stmt.Line)
-	ret = exec.Env.NewFact(setDimEqualFact)
-	if ret.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to add set_dim fact: %s", ret.String()))
-	}
-
-	// 让  proj(ObjToDefine, Param) = EqualTo
-	projFn := ast.NewFnObj(ast.Atom(glob.KeywordProj), []ast.Obj{objToDefineAtom, ast.Atom(stmt.Param)})
-	projEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{projFn, stmt.EqualTo}, stmt.Line)
-	ret = exec.Env.NewFact(projEqualFact)
-	if ret.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to add proj fact: %s", ret.String()))
-	}
-
-	// 验证所有 Facts 中的条件（thenFact）
-	for _, fact := range stmt.Facts {
-		verRet = ver.VerFactStmt(fact, state)
-		if verRet.IsErr() {
-			return NewExecErr(fmt.Sprintf("failed to verify fact %s: %s", fact.String(), verRet.String()))
-		}
-		if verRet.IsUnknown() {
-			return NewExecErr(fmt.Sprintf("fact %s must be true, but it is unknown", fact.String()))
-		}
-	}
-
-	return NewEmptyExecTrue()
-}
-
-// postProcessHaveCartWithDimStmt stores:
-// 1. is_cart(ObjName) fact
-// 2. set_dim(ObjName) = CartDim fact
-// 3. All Facts (then properties)
-func (exec *Executor) postProcessHaveCartWithDimStmt(stmt *ast.HaveCartWithDimStmt) ExecRet {
-	defLetStmt := ast.NewDefLetStmt([]string{stmt.ObjName}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
-	execState := exec.defLetStmt(defLetStmt)
-	if execState.IsNotTrue() {
-		return NewExecErr(execState.String())
-	}
-
-	objToDefineAtom := ast.Atom(stmt.ObjName)
-
-	// 在局部环境中添加 is_cart(ObjName)
-	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{objToDefineAtom}, stmt.Line)
-	ret := exec.Env.NewFact(isCartFact)
-	if ret.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to add is_cart fact: %s", ret.String()))
-	}
-
-	// 在局部环境中添加 set_dim(ObjName) = CartDim
-	setDimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{objToDefineAtom})
-	setDimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{setDimFn, stmt.CartDim}, stmt.Line)
-	ret = exec.Env.NewFact(setDimEqualFact)
-	if ret.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to add set_dim fact: %s", ret.String()))
-	}
-
-	// 让then里都对
-	uniFact := ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{ast.Atom(stmt.Param), stmt.CartDim}, stmt.Line)}, stmt.Facts, stmt.Line)
-	ret = exec.Env.NewFact(uniFact)
-	if ret.IsErr() {
-		return NewExecErr(fmt.Sprintf("failed to add uni fact: %s", ret.String()))
-	}
-
-	return NewEmptyExecTrue()
+	return NewExecTrue(stmt.String())
 }

@@ -8,7 +8,7 @@ a = b \union c
 not x $in a
 not x $in b
 
-know @in_union_then_in_some_of_it(x obj, b, c set):
+know imply in_union_then_in_some_of_it(x obj, b, c set):
     x $in b \union c
     =>:
         or:

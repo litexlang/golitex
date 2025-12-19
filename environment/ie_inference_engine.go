@@ -12,23 +12,12 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_executor
+package litex_env
 
-// func (ver *Verifier) verIntensionalSetStmt(stmt *ast.IntensionalSetStmt, state *VerState) ExecRet {
-// 	leftUniFact, rightUniFact, err := stmt.ToEquivalentUniFacts()
-// 	if err != nil {
-// 		return NewExecErr(err.Error())
-// 	}
+type InferenceEngine struct {
+	Env *Env
+}
 
-// 	verRet := ver.verUniFact(leftUniFact, state)
-// 	if verRet.IsErr() || verRet.IsUnknown() {
-// 		return verRet
-// 	}
-
-// 	verRet = ver.verUniFact(rightUniFact, state)
-// 	if verRet.IsErr() || verRet.IsUnknown() {
-// 		return verRet
-// 	}
-
-// 	return verRet
-// }
+func NewInferenceEngine(env *Env) *InferenceEngine {
+	return &InferenceEngine{Env: env}
+}

@@ -34,17 +34,17 @@ func (c *DefPropStmt) InlineString() string {
 	builder.WriteString(glob.KeywordProp)
 	builder.WriteString(" ")
 	builder.WriteString(string(c.DefHeader.Name))
-	if len(c.DomFacts) > 0 {
+	if len(c.DomFactsOrNil) > 0 {
 		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteString(inlineFactsString(c.DomFacts))
+		builder.WriteString(inlineFactsString(c.DomFactsOrNil))
 	}
-	if len(c.IffFacts) > 0 {
+	if len(c.IffFactsOrNil) > 0 {
 		builder.WriteString(glob.KeySymbolEquivalent)
-		builder.WriteString(inlineFactsString(c.IffFacts))
+		builder.WriteString(inlineFactsString(c.IffFactsOrNil))
 	}
-	if len(c.ThenFacts) > 0 {
+	if len(c.ImplicationFactsOrNil) > 0 {
 		builder.WriteString(glob.KeySymbolRightArrow)
-		builder.WriteString(inlineFactsString(c.ThenFacts))
+		builder.WriteString(inlineFactsString(c.ImplicationFactsOrNil))
 	}
 	return builder.String()
 }
@@ -52,7 +52,7 @@ func (l *DefFnStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFn)
 	builder.WriteString(" ")
-	builder.WriteString(NewDefHeader(Atom(l.Name), l.FnTemplate.Params, l.FnTemplate.ParamSets).StringWithoutColonAtEnd())
+	builder.WriteString(NewDefHeader(l.Name, l.FnTemplate.Params, l.FnTemplate.ParamSets).StringWithoutColonAtEnd())
 	builder.WriteString(" ")
 	builder.WriteString(l.FnTemplate.RetSet.String())
 	if len(l.FnTemplate.DomFacts) > 0 {
@@ -107,14 +107,14 @@ func (s *DefExistPropStmt) InlineString() string {
 	builder.WriteString(" ")
 	builder.WriteString(s.DefBody.DefHeader.InlineString())
 
-	if len(s.DefBody.DomFacts) > 0 {
+	if len(s.DefBody.DomFactsOrNil) > 0 {
 		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteString(inlineFactsString(s.DefBody.DomFacts))
+		builder.WriteString(inlineFactsString(s.DefBody.DomFactsOrNil))
 	}
 
-	if len(s.DefBody.IffFacts) > 0 {
+	if len(s.DefBody.IffFactsOrNil) > 0 {
 		builder.WriteString(glob.KeySymbolEquivalent)
-		builder.WriteString(inlineFactsString(s.DefBody.IffFacts))
+		builder.WriteString(inlineFactsString(s.DefBody.IffFactsOrNil))
 	}
 
 	return builder.String()
@@ -134,11 +134,12 @@ func (s *HaveObjStStmt) InlineString() string {
 
 func (s *ProveInEachCaseStmt) InlineString() string { return s.String() }
 func (s *ProveCaseByCaseStmt) InlineString() string { return s.String() }
+
 func (s *KnowPropStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)
 	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolAt)
+	builder.WriteString(glob.KeywordImplication)
 	builder.WriteString(s.Prop.InlineString())
 	return builder.String()
 }
@@ -187,8 +188,8 @@ func (s *UniFactWithIffStmt) InlineString() string {
 }
 func (s *ClaimProveByContradictionStmt) InlineString() string { panic("") }
 
-func (s *ClaimPropStmt) InlineString() string      { panic("") }
-func (s *ClaimExistPropStmt) InlineString() string { panic("") }
+func (s *ClaimImplicationStmt) InlineString() string { panic("") }
+func (s *ClaimExistPropStmt) InlineString() string   { panic("") }
 
 func (s *ProveByEnumStmt) InlineString() string          { panic("") }
 func (s *HaveObjInNonEmptySetStmt) InlineString() string { panic("") }
@@ -196,7 +197,8 @@ func (s *HaveCartSetStmt) InlineString() string          { panic("") }
 func (s *HaveObjFromCartSetStmt) InlineString() string   { panic("") }
 
 func (s *HaveCartWithDimStmt) InlineString() string { panic("") }
-func (s *NamedUniFactStmt) InlineString() string    { panic("") }
+
+// func (s *NamedUniFactStmt) InlineString() string    { panic("") }
 
 func (s *EqualsFactStmt) InlineString() string {
 	var builder strings.Builder
@@ -276,7 +278,7 @@ func inlineCanBeKnownFactsString(facts CanBeKnownStmtSlice) string {
 
 func (header *DefHeader) InlineString() string {
 	var builder strings.Builder
-	builder.WriteString(header.Name.String())
+	builder.WriteString(header.Name)
 	builder.WriteString("(")
 	builder.WriteString(StrObjSetPairs(header.Params, header.ParamSets))
 	builder.WriteString(")")
@@ -333,7 +335,15 @@ func (s *ClaimIffStmt) InlineString() string {
 // 	return "TODO"
 // }
 
-func (s *ProveInRangeStmt2) InlineString() string {
+func (s *ProveForStmt) InlineString() string {
+	return "TODO"
+}
+
+func (s *ProveImplicationStmt) InlineString() string {
+	return "TODO"
+}
+
+func (s *ImplicationStmt) InlineString() string {
 	return "TODO"
 }
 
@@ -378,10 +388,6 @@ func (s *ProveAlgoReturnStmt) InlineString() string {
 }
 
 func (s *PrintStmt) InlineString() string {
-	return s.String()
-}
-
-func (s *HelpStmt) InlineString() string {
 	return s.String()
 }
 

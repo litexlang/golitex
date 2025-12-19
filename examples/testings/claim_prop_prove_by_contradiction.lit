@@ -9,7 +9,7 @@ know:
             $q(x, y)
 
 claim:
-    @t(x, y, z N):
+imply t(x, y, z N):
         not $q(x, y)
         =>:
             not $p(x, y)

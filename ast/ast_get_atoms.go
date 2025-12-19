@@ -19,7 +19,7 @@ import "slices"
 func (stmt *SpecFactStmt) GetAtoms() []Atom {
 	atoms := []Atom{stmt.PropName}
 	for _, param := range stmt.Params {
-		atoms = append(atoms, GetAtomsInObj(param)...)
+		atoms = append(atoms, GetAtomObjsInObj(param)...)
 	}
 	return atoms
 }
@@ -35,10 +35,30 @@ func (stmt *SpecFactStmt) GetAtoms() []Atom {
 // 	return atoms
 // }
 
+func GetAtomObjsInObj(obj Obj) []Atom {
+	ret := []Atom{}
+
+	switch asObj := obj.(type) {
+	case Atom:
+		ret = append(ret, asObj)
+	case *FnObj:
+		if IsSetBuilder(asObj) {
+			atomsFromSetBuilder := GetAtomsInSetBuilder(asObj)
+			ret = append(ret, atomsFromSetBuilder...)
+		} else {
+			for _, param := range asObj.Params {
+				atoms := GetAtomObjsInObj(param)
+				ret = append(ret, atoms...)
+			}
+		}
+	}
+	return ret
+}
+
 func (stmt *UniFactStmt) GetAtoms() []Atom {
 	atoms := []Atom{}
 	for _, param := range stmt.ParamSets {
-		atoms = append(atoms, GetAtomsInObj(param)...)
+		atoms = append(atoms, GetAtomObjsInObj(param)...)
 	}
 	for _, fact := range stmt.DomFacts {
 		atoms = append(atoms, fact.GetAtoms()...)
@@ -89,7 +109,7 @@ func (stmt *OrStmt) GetAtoms() []Atom {
 func (stmt *EqualsFactStmt) GetAtoms() []Atom {
 	atoms := []Atom{}
 	for _, param := range stmt.Params {
-		atoms = append(atoms, GetAtomsInObj(param)...)
+		atoms = append(atoms, GetAtomObjsInObj(param)...)
 	}
 	return atoms
 }

@@ -93,7 +93,7 @@ prove:
     a $subset_of b
 
 claim:
-    @subset_of_is_transitive(a, b, c set):
+imply subset_of_is_transitive(a, b, c set):
         a $subset_of b
         b $subset_of c
         =>:
@@ -121,7 +121,7 @@ prove:
         $P(x)
 
 # Intersection
-know @obj_in_intersection_is_in_both_sets(s1 set, s2 set, x obj):
+know imply obj_in_intersection_is_in_both_sets(s1 set, s2 set, x obj):
     x $in s1
     x $in s2
 
@@ -134,7 +134,7 @@ fn intersection(s1 set, s2 set) set:
         $obj_in_intersection_is_in_both_sets(s1, s2, x)
 
 # The set of all natural numbers is the union of the set of all natural numbers greater than n and the set of all natural numbers less than or equal to n
-know @union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(n N, s1 set, s2 set):
+know imply union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(n N, s1 set, s2 set):
 	s1 := x N:
 		x > n
 	s2 := x N:
@@ -331,3 +331,13 @@ prove:
                     k $in u
 
     difference(s, t) = u
+
+not 1.5 $in Z
+not 3 / 2 $in Z
+(1+2) * 3 $in Z 
+not 1.5 $in N
+not 3 / 2 $in N
+(1+2) * 3 $in N
+not 1.5 $in N_pos
+not 3 / 2 $in N_pos
+(1+2) * 3 $in N_pos 

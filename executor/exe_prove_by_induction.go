@@ -27,7 +27,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 
 	// 输入的 Start 必须是 N_pos
 	startIsNPos := proveByInduction_Fact_Start_is_NPos(stmt)
-	verRet := ver.VerFactStmt(startIsNPos, Round0NoMsg)
+	verRet := ver.VerFactStmt(startIsNPos, Round0NoMsg())
 	if verRet.IsErr() {
 		var result ExecRet = NewExecErr(fmt.Errorf(verRet.String()).Error())
 		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
@@ -52,7 +52,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 		result = result.AddMsg(err.Error())
 		return result
 	}
-	verRet = ver.VerFactStmt(startFact, Round0NoMsg)
+	verRet = ver.VerFactStmt(startFact, Round0NoMsg())
 	if verRet.IsErr() {
 		result := verRet
 		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
@@ -77,7 +77,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 		result = result.AddMsg(err.Error())
 		return result
 	}
-	verRet = ver.VerFactStmt(uniFact_n_true_leads_n_plus_1_true, Round0NoMsg)
+	verRet = ver.VerFactStmt(uniFact_n_true_leads_n_plus_1_true, Round0NoMsg())
 	if verRet.IsErr() {
 		var result ExecRet = NewExecErr(fmt.Errorf(verRet.String()).Error())
 		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
@@ -96,7 +96,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 
 	// 对于任何 param >= start, fact 成立
 	uniFact_forall_param_geq_start_then_fact_is_true := proveByInduction_newUniFact_forall_param_geq_start_then_fact_is_true(stmt)
-	ret := exec.Env.NewFact(uniFact_forall_param_geq_start_then_fact_is_true)
+	ret := exec.Env.NewFactWithAtomsDefined(uniFact_forall_param_geq_start_then_fact_is_true)
 	if ret.IsErr() {
 		var result ExecRet = NewExecErr(ret.String())
 		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))

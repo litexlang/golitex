@@ -52,7 +52,7 @@ func (c *DefPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString("\\begin{definition}[Proposition]\n")
-	builder.WriteString(prop_fn_bodyToLatexString(c.DefHeader, c.DomFacts, c.IffFacts, false))
+	builder.WriteString(prop_fn_bodyToLatexString(c.DefHeader, c.DomFactsOrNil, c.IffFactsOrNil, false))
 	builder.WriteString("\n\\end{definition}")
 	return builder.String()
 }
@@ -362,7 +362,7 @@ func (s *DefExistPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString("\\begin{definition}[Existential Proposition]\n")
-	builder.WriteString(prop_fn_bodyToLatexString(s.DefBody.DefHeader, s.DefBody.DomFacts, s.DefBody.IffFacts, true))
+	builder.WriteString(prop_fn_bodyToLatexString(s.DefBody.DefHeader, s.DefBody.DomFactsOrNil, s.DefBody.IffFactsOrNil, true))
 	builder.WriteString("\n\\end{definition}")
 	return builder.String()
 }
@@ -517,14 +517,14 @@ func (s *ClaimProveByContradictionStmt) ToLatexString() string {
 	return claimProveBodyToLatexString(s.ClaimProveStmt.ToCheckFact, s.ClaimProveStmt.Proofs, false)
 }
 
-func (s *ClaimPropStmt) ToLatexString() string {
+func (s *ClaimImplicationStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString(s.ToProp().ToLatexString())
 
 	builder.WriteString("\n\n")
 
-	builder.WriteString(claimProveBodyToLatexString(s.Prop.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue(), s.Proofs, true))
+	builder.WriteString(claimProveBodyToLatexString(s.Implication.ToProp().ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue(), s.Proofs, true))
 
 	return builder.String()
 }
@@ -645,15 +645,15 @@ func (s *HaveObjFromCartSetStmt) ToLatexString() string {
 // 	return builder.String()
 // }
 
-func (s *NamedUniFactStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString(s.DefPropStmt.ToLatexString())
-	builder.WriteString("\n\n")
+// func (s *NamedUniFactStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(s.DefPropStmt.ToLatexString())
+// 	builder.WriteString("\n\n")
 
-	builder.WriteString(VerifiedFactsSectionToLatexString(s.DefPropStmt.IffFacts))
+// 	builder.WriteString(VerifiedFactsSectionToLatexString(s.DefPropStmt.IffFactsOrNil))
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
 func VerifiedFactsSectionToLatexString(verifiedFacts []FactStmt) string {
 	var builder strings.Builder
@@ -860,7 +860,18 @@ func (s *ClaimIffStmt) ToLatexString() string {
 // 	return s.String()
 // }
 
-func (s *ProveInRangeStmt2) ToLatexString() string {
+func (s *ProveForStmt) ToLatexString() string {
+	// TODO: implement LaTeX conversion for prove_for
+	return "TODO"
+}
+
+func (s *ProveImplicationStmt) ToLatexString() string {
+	// TODO: implement LaTeX conversion for prove_implication
+	return s.String()
+}
+
+func (s *ImplicationStmt) ToLatexString() string {
+	// TODO: implement LaTeX conversion for implication
 	return s.String()
 }
 
@@ -905,10 +916,6 @@ func (s *ProveAlgoReturnStmt) ToLatexString() string {
 }
 
 func (s *PrintStmt) ToLatexString() string {
-	return s.String()
-}
-
-func (s *HelpStmt) ToLatexString() string {
 	return s.String()
 }
 

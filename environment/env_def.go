@@ -27,12 +27,12 @@ func (env *Env) IsValidIdentifierAvailable(name string) glob.GlobRet {
 		return glob.ErrRet(err)
 	}
 
-	ok := env.IsAtomDefinedByUser(ast.Atom(name))
-	if ok {
+	ret := env.IsAtomObjDefinedByUser(ast.Atom(name))
+	if ret.IsTrue() {
 		return glob.ErrRet(duplicateDefError(name))
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) glob.GlobRet {
@@ -41,10 +41,10 @@ func (env *Env) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) glob.GlobRet {
 		return glob.ErrRet(fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name))
 	}
 
-	ret := env.ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, true)
-	if ret.IsErr() {
-		return ret
-	}
+	// ret := env.NoDuplicateParamNamesAndParamSetsDefined(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, true)
+	// if ret.IsErr() {
+	// 	return ret
+	// }
 
 	extraAtomNames := map[string]struct{}{}
 	for _, param := range stmt.DefHeader.Params {
@@ -52,16 +52,16 @@ func (env *Env) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) glob.GlobRet {
 	}
 	extraAtomNames[string(stmt.DefHeader.Name)] = struct{}{}
 
-	for _, fact := range stmt.DomFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+	for _, fact := range stmt.DomFactsOrNil {
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in dom fact of prop %s definition", stmt.DefHeader.Name))
 			return ret
 		}
 	}
 
-	for _, fact := range stmt.IffFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+	for _, fact := range stmt.IffFactsOrNil {
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in iff fact of prop %s definition", stmt.DefHeader.Name))
 			return ret
@@ -70,7 +70,7 @@ func (env *Env) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) glob.GlobRet {
 
 	key := string(stmt.DefHeader.Name)
 	env.PropDefMem[key] = *stmt
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob.GlobRet {
@@ -84,10 +84,10 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob.GlobR
 		return ret
 	}
 
-	ret = env.ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, true)
-	if ret.IsErr() {
-		return ret
-	}
+	// ret = env.NoDuplicateParamNamesAndParamSetsDefined(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, true)
+	// if ret.IsErr() {
+	// 	return ret
+	// }
 
 	extraAtomNames := map[string]struct{}{}
 	for _, param := range stmt.DefHeader.Params {
@@ -95,16 +95,16 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob.GlobR
 	}
 	extraAtomNames[string(stmt.DefHeader.Name)] = struct{}{}
 
-	for _, fact := range stmt.DomFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+	for _, fact := range stmt.DomFactsOrNil {
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in dom fact of prop %s definition", stmt.DefHeader.Name))
 			return ret
 		}
 	}
 
-	for _, fact := range stmt.IffFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+	for _, fact := range stmt.IffFactsOrNil {
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in iff fact of prop %s definition", stmt.DefHeader.Name))
 			return ret
@@ -113,7 +113,7 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob.GlobR
 
 	key := string(stmt.DefHeader.Name)
 	env.PropDefMem[key] = *stmt
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.FnTemplateDefStmt) glob.GlobRet {
@@ -122,17 +122,12 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.FnT
 		return glob.ErrRet(fmt.Errorf("fn name %s cannot be the same as parameter name %s", name, name))
 	}
 
-	ret := env.ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(stmt.TemplateDefHeader.Params, stmt.TemplateDefHeader.ParamSets, false)
-	if ret.IsErr() {
-		return ret
-	}
-
 	extraAtomNames := map[string]struct{}{}
 	for _, param := range stmt.TemplateDefHeader.Params {
 		extraAtomNames[param] = struct{}{}
 	}
 
-	ret = env.AreAtomsInObjDefined(stmt.Fn.RetSet, extraAtomNames)
+	ret := env.AtomsInObjDefinedOrBuiltin(stmt.Fn.RetSet, extraAtomNames)
 	if ret.IsErr() {
 		ret.AddMsg(fmt.Sprintf("in return set of fn template %s", name))
 		return ret
@@ -141,24 +136,24 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.FnT
 	extraAtomNames[string(name)] = struct{}{}
 
 	for _, fact := range stmt.TemplateDomFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in template dom fact of fn %s definition", name))
 			return ret
 		}
 	}
 
-	ret = env.NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(stmt.Fn.Params, stmt.Fn.ParamSets, extraAtomNames, false)
-	if ret.IsErr() {
-		return ret
-	}
+	// ret = env.NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(stmt.Fn.Params, stmt.Fn.ParamSets, extraAtomNames, false)
+	// if ret.IsErr() {
+	// 	return ret
+	// }
 
 	for _, param := range stmt.Fn.Params {
 		extraAtomNames[param] = struct{}{}
 	}
 
 	for _, fact := range stmt.Fn.DomFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in dom fact of fn %s definition", name))
 			return ret
@@ -166,14 +161,14 @@ func (env *Env) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.FnT
 	}
 
 	for _, fact := range stmt.Fn.ThenFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in then fact of fn %s definition", name))
 			return ret
 		}
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) glob.GlobRet {
@@ -182,10 +177,10 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 		return glob.ErrRet(fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefBody.DefHeader.Name, stmt.DefBody.DefHeader.Name))
 	}
 
-	ret := env.ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.ParamSets, stmt.ExistParamSets...), true)
-	if ret.IsErr() {
-		return ret
-	}
+	// ret := env.NoDuplicateParamNamesAndParamSetsDefined(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.ParamSets, stmt.ExistParamSets...), true)
+	// if ret.IsErr() {
+	// 	return ret
+	// }
 
 	extraAtomNames := map[string]struct{}{}
 	for _, param := range stmt.DefBody.DefHeader.Params {
@@ -197,30 +192,30 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 		extraAtomNames[param] = struct{}{}
 	}
 
-	for _, fact := range stmt.DefBody.DomFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+	for _, fact := range stmt.DefBody.DomFactsOrNil {
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in dom fact of exist_prop %s definition", stmt.DefBody.DefHeader.Name))
 			return ret
 		}
 	}
 
-	for _, fact := range stmt.DefBody.IffFacts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+	for _, fact := range stmt.DefBody.IffFactsOrNil {
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in iff fact of exist_prop %s definition", stmt.DefBody.DefHeader.Name))
 			return ret
 		}
 	}
 
-	ret = env.IsValidIdentifierAvailable(string(stmt.DefBody.DefHeader.Name))
+	ret := env.IsValidIdentifierAvailable(string(stmt.DefBody.DefHeader.Name))
 	if ret.IsErr() {
 		return ret
 	}
 
 	key := string(stmt.DefBody.DefHeader.Name)
 	env.ExistPropDefMem[key] = *stmt
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 func (e *Env) NewObj_NoDuplicate(name string, stmt ast.FnTemplate_Or_DefObjStmtInterface) glob.GlobRet {
@@ -231,17 +226,17 @@ func (e *Env) NewObj_NoDuplicate(name string, stmt ast.FnTemplate_Or_DefObjStmtI
 
 	e.ObjDefMem[name] = stmt
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrue("")
 }
 
 // DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined defines new objects in the environment
 // and checks that all atoms inside the facts are declared.
 // If the obj is a function, it will be inserted into the function definition memory.
 func (env *Env) DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt *ast.DefLetStmt) glob.GlobRet {
-	ret := env.ThereIsNoDuplicateObjNamesAndAllAtomsInParamSetsAreDefined(stmt.Objs, stmt.ObjSets, true)
-	if ret.IsErr() {
-		return ret
-	}
+	// ret := env.NoDuplicateParamNamesAndParamSetsDefined(stmt.Objs, stmt.ObjSets, true)
+	// if ret.IsErr() {
+	// 	return ret
+	// }
 
 	extraAtomNames := map[string]struct{}{}
 
@@ -254,35 +249,39 @@ func (env *Env) DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt *ast.De
 
 	// If this obj is a function, it will be inserted into the function definition memory
 	for _, objName := range stmt.Objs {
-		ret = env.NewObj_NoDuplicate(objName, stmt)
+		ret := env.NewObj_NoDuplicate(objName, stmt)
 		if ret.IsErr() {
 			return ret
 		}
 	}
 
 	for _, fact := range stmt.NewInFacts() {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg("in new in fact of def let statement")
 			return ret
 		}
-		ret = env.NewFact(fact)
+		ret = env.NewFactWithAtomsDefined(fact)
 		if ret.IsErr() {
 			return ret
 		}
 	}
 
+	implicationFacts := []string{}
 	for _, fact := range stmt.Facts {
-		ret := env.AreAtomsInFactAreDeclared(fact, extraAtomNames)
+		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddMsg("in fact of def let statement")
 			return ret
 		}
-		ret = env.NewFact(fact)
+		ret = env.NewFactWithAtomsDefined(fact)
 		if ret.IsErr() {
 			return ret
 		}
+		if ret.IsTrue() {
+			implicationFacts = append(implicationFacts, ret.String())
+		}
 	}
 
-	return glob.TrueRet("")
+	return glob.NewGlobTrueWithMsgs(implicationFacts)
 }

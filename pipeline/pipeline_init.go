@@ -20,6 +20,7 @@ import (
 	env "golitex/environment"
 	exe "golitex/executor"
 	kernelLibLitexCode "golitex/kernel_litex_code"
+	pkgMgr "golitex/package_manager"
 )
 
 func GetEnvWithBuiltinParentEnv() (*env.Env, error) {
@@ -34,7 +35,8 @@ func GetEnvWithBuiltinParentEnv() (*env.Env, error) {
 }
 
 func useHardcodedCodeToInit(env *env.Env) error {
-	statements, err := ast.ParseSourceCode(kernelLibLitexCode.PipelineInitCode)
+	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+	statements, err := ast.ParseSourceCode(kernelLibLitexCode.PipelineInitCode, "", pkgPathNameMgr)
 	if err != nil {
 		return err
 	}
