@@ -57,7 +57,7 @@ know forall q Q => $rational_number_representation_in_fraction(q)
 know forall q Q: q > 0 => $rational_positive_number_representation_in_fraction(q)
 know forall q Q: q < 0 => $rational_negative_number_representation_in_fraction(q)
 
-fn sqrt(z R) R:
+let fn sqrt(z R) R:
 	z >= 0
 	=>:
 		sqrt(z) ^ 2 = z
@@ -101,7 +101,7 @@ know forall x, y, z R: x + y = z => y + x = z
 
 know forall x, y, z R: x * y = z => y * x = z
 
-fn abs(x R) R
+let fn abs(x R) R
 know:
 	forall x R:
 		x > 0
@@ -145,7 +145,7 @@ fn_template finite_seq(s set, n N_pos):
     	dom:
         	x <= n
 
-fn finite_seq_sum(n N_pos, a finite_seq(R, n), k N) R:
+let fn finite_seq_sum(n N_pos, a finite_seq(R, n), k N) R:
     dom:
         k <= n
 
@@ -153,7 +153,7 @@ know:
     forall n N_pos, a finite_seq(R, n), k N: k < n => finite_seq_sum(n, a, k+1) = finite_seq_sum(n, a, k) + a(k+1)
     forall n N_pos, a finite_seq(R, n) => finite_seq_sum(n, a, 1) = a(1)
 
-fn finite_seq_product(n N_pos, a finite_seq(R, n), k N) R:
+let fn finite_seq_product(n N_pos, a finite_seq(R, n), k N) R:
     dom:
         k < n
 
@@ -323,7 +323,7 @@ know:
 know:
 	forall x R, y R: x > 0, y > 0 => x^y > 0
 
-fn log(x, y R) R:
+let fn log(x, y R) R:
 	dom:
 		x > 0
 		x != 1
@@ -358,13 +358,13 @@ know forall a, b, c, d R: c != 0, a = (b / c) * d => a * c = b * d
 know forall a, b, c, d R: c != 0, a = d * (b / c) => a * c = d * b
 know forall x, y, z R: z != 0, x = y / z => x * z = y
 
-fn range(x Z, y Z) set:
+let fn range(x Z, y Z) set:
 	dom:
 		x <= y
 	=>:
 		range(x, y) = {self Z: self >= x, self < y}
 
-fn closed_range(x Z, y Z) set:
+let fn closed_range(x Z, y Z) set:
 	dom:
 		x <= y
 	=>:
@@ -560,7 +560,7 @@ know:
 	forall x, y R => x <= y <=> not x > y
 	forall x, y R => x >= y <=> not x < y
 
-fn pow(x R, y R) R:
+let fn pow(x R, y R) R:
 	dom:
 		x >= 0
 		or:
@@ -580,7 +580,7 @@ exist_prop s set st there_exists_infinite_set() :
 
 know $there_exists_infinite_set()
 
-fn negate(x R) R:
+let fn negate(x R) R:
 	negate(x) = -x
 	negate(x) + x = 0
 	x + negate(x) = 0
@@ -595,7 +595,7 @@ prop subset_of(x, y set):
 prop is_superset_of(A, B set):
 	forall x B: x $in A
 
-fn intersect(x, y set) set:
+let fn intersect(x, y set) set:
 	forall z x:
 		z $in y
 		=>:
@@ -611,7 +611,7 @@ know imply item_in_intersect(z set, x, y set):
 		z $in x
 		z $in y
 
-fn union(x, y set) set:
+let fn union(x, y set) set:
 	forall z x:
 		z $in union(x, y)
 	forall z y:
@@ -622,7 +622,7 @@ know imply item_in_union(z set, x, y set):
 	=>:
 		z $in x or z $in y
 
-fn complement(x, y set) set:
+let fn complement(x, y set) set:
 	dom:
 		x $subset_of y
 	=>:
@@ -685,22 +685,22 @@ prop is_cart(x set)
 
 prop is_tuple(x set)
 
-fn proj(x set, i N_pos) set:
+let fn proj(x set, i N_pos) set:
 	dom:
 		$is_cart(x)
 		i <= dim(x)
 
-fn dim(x set) N_pos:
+let fn dim(x set) N_pos:
 	dom:
 		$is_cart(x)
 
 # ∏_{a in I} A_a (Cartesian product)
 prop is_cart_prod(s set)
-fn index_set_of_cart_prod(s set) set:
+let fn index_set_of_cart_prod(s set) set:
 	dom:
 		$is_cart_prod(s)
 		
-fn cart_prod(index_set set, family fn (index_set) set) set
+let fn cart_prod(index_set set, family fn (index_set) set) set
 
 know forall index_set set, family fn (index_set) set: $is_cart_prod(cart_prod(index_set, family))
 
@@ -719,12 +719,12 @@ know:
 
 	forall x N_pos: x >= 0, x > 0, x != 0, x >= 1, not x < 1, not x < 0
 
-fn inverse_image_set(X set, Y set, f fn(X)Y, U set) set:
+let fn inverse_image_set(X set, Y set, f fn(X)Y, U set) set:
     U $subset_of Y
     =>:
         inverse_image_set(X, Y, f, U) = {self X: f(self) $in U}
 
-fn difference(x, y set) set
+let fn difference(x, y set) set
 know:
 	forall x, y set, z x:
 		not z $in y
@@ -736,7 +736,7 @@ know imply item_in_difference(x, y set, z set):
 		not z $in y
 		z $in x
 
-fn power_set(x set) set
+let fn power_set(x set) set
 know:
 	forall x set, y power_set(x):
 		y $subset_of x
@@ -792,7 +792,7 @@ know:
 		=>:
 			x = y
 
-fn subsets(x set) set
+let fn subsets(x set) set
 know forall x set, y subsets(x): y $subset_of x, forall t y => t $in x
 know forall x, y set: x $subset_of y => x $in subsets(y)
 
@@ -836,12 +836,6 @@ know:
 
 prop equal_set(x set, y set)
 
-fn enum(x, y Z) set:
-	dom:
-		x <= y
-	=>:
-		enum(x, y) = {self Z: x <= self, self <= y}
-
 know:
 	forall x R: x > 0 => 1 / x > 0
 	forall x R, y R: x > 0, y > 0 => x > y <=> 1 / x < 1 / y
@@ -867,7 +861,7 @@ exist_prop y x st axiom_of_regularity(x nonempty_set):
 know forall x nonempty_set: $axiom_of_regularity(x)
 
 # TODO: builtin instead of fn
-fn cup(x set) set
+let fn cup(x set) set
 know imply cup_contains_all_items(x set, y x):
 	forall z y:
 		z $in cup(x)
@@ -878,7 +872,7 @@ exist_prop y x st cup_witness_item(x set, z cup(x)):
 exist_prop x s1 st exist_preimage(s1, s2 set, y s2, f fn(s1)s2):
     f(x) = y
 
-fn image_set(s1, s2 set, f fn(s1)s2) set
+let fn image_set(s1, s2 set, f fn(s1)s2) set
 
 know:
     forall s1, s2 set, f fn(s1)s2, y image_set(s1, s2, f):
@@ -893,7 +887,7 @@ know:
 		image_set(s1, s2, f) $subset_of s2
 
 # TODO: builtin instead of fn
-fn choice(x set) fn(x) cup(x)
+let fn choice(x set) fn(x) cup(x)
 know imply axiom_of_choice(x set):
 	forall y x:
 		choice(x)(y) $in y

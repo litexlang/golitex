@@ -183,7 +183,7 @@ prop is_disjoint_from(A set, B set):
 
 
 # Axiom 3.11 (Union axiom) Let X be a set. Then there exists a set denoted by union(X) which contains all elements of the elements of X.
-fn union_of_set_in_sets(X set) set:
+let fn union_of_set_in_sets(X set) set:
     forall x X:
         x $is_a_set
         =>:
