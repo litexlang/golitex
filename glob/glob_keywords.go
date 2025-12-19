@@ -425,6 +425,8 @@ var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 	KeySymbolMinus:    {},
 	KeySymbolStar:     {},
 	KeySymbolPower:    {},
+	KeySymbolSlash:    {},
+	KeySymbolPercent:  {},
 	KeywordFn:         {},
 }
 
