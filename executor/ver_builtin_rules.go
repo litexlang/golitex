@@ -25,6 +25,10 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 		return ver.inFactBuiltinRules(stmt, state)
 	}
 
+	if stmt.NameIs(glob.KeywordIsNonEmptyWithItem) {
+		return ver.verIsNonEmptyWithItemByBuiltinRules(stmt, state)
+	}
+
 	if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
 		return ver.verTrueExistItemExistsInByBuiltinRules(stmt, state)
 	}
@@ -514,4 +518,19 @@ func (ver *Verifier) verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonemp
 	}
 
 	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("fn set %s is a nonempty set because all its param sets and ret set are nonempty sets.", fnSet), NewEmptyExecTrue())
+}
+
+func (ver *Verifier) verIsNonEmptyWithItemByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if len(stmt.Params) != 2 {
+		return NewExecErr(fmt.Sprintf("is_nonempty_with_item expects 1 parameter, got %d", len(stmt.Params)))
+	}
+
+	inFact := ast.NewInFactWithObj(stmt.Params[1], stmt.Params[0])
+	verRet := ver.VerFactStmt(inFact, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), "is_nonempty_with_item is true because the item is in the set.", NewEmptyExecTrue())
+
 }
