@@ -147,7 +147,7 @@ func (ie *InferenceEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.Spe
 		return ret
 	}
 
-	ret = ie.Env.newFactNoPostProcess(uniFact)
+	ret = ie.Env.newFactNoInfer(uniFact)
 
 	if ret.IsErr() {
 		return glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
