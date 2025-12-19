@@ -1,2 +1,1 @@
-have X, Y nonempty_set
-have f fn(X) Y
+$is_nonempty_with_item({x R: x > 0}, 1)
