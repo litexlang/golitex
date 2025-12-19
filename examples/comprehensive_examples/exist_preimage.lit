@@ -1,7 +1,7 @@
 exist_prop x s1 st exist_preimage(s1, s2 set, f fn(s1) s2, y s2):
     f(x) = y
 
-fn range_of_fn(s1 set, s2 set, f fn(s1) s2) set:
+let fn range_of_fn(s1 set, s2 set, f fn(s1) s2) set:
     forall y range_of_fn(s1, s2, f):
         $exist_preimage(s1, s2, f, y)
     forall y s2:
