@@ -1,0 +1,3 @@
+have fn g(x {y R: y > 0}) R = x + 1
+forall x {y R: y > 0}: g(x) = x + 1, x + 1 > 0, g(x) > 0
+g $in fn({y R: y > 0}) {y R: y > 0}

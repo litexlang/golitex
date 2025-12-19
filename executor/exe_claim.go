@@ -60,7 +60,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 	reversedFact := specFactStmt.ReverseIsTrue()
 
 	for _, curFact := range reversedFact {
-		ret := exec.Env.NewFact(curFact)
+		ret := exec.Env.NewFactWithAtomsDefined(curFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -106,7 +106,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
-		ret := exec.Env.NewFact(condFact)
+		ret := exec.Env.NewFactWithAtomsDefined(condFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -123,7 +123,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	}
 	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversibleFacts)
 	for _, reversedThenFact := range reversedThenFacts {
-		ret := exec.Env.NewFact(reversedThenFact.(ast.FactStmt))
+		ret := exec.Env.NewFactWithAtomsDefined(reversedThenFact.(ast.FactStmt))
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -169,7 +169,7 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	ret := exec.Env.NewFact(stmt.ToCheckFact)
+	ret := exec.Env.NewFactWithAtomsDefined(stmt.ToCheckFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -185,7 +185,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	ret := exec.Env.NewFact(stmt.ClaimProveStmt.ToCheckFact)
+	ret := exec.Env.NewFactWithAtomsDefined(stmt.ClaimProveStmt.ToCheckFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -245,7 +245,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ExecRet {
 
 	// know dom facts
 	for _, domFact := range asUnivFact.DomFacts {
-		ret := exec.Env.NewFact(domFact)
+		ret := exec.Env.NewFactWithAtomsDefined(domFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -318,7 +318,7 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) ExecRet {
 
 	// know forall
 	uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFactsOrNil, []ast.FactStmt{stmt.ExistPropWithoutDom.DefBody.DefHeader.ToSpecFact()}, stmt.Line)
-	ret := exec.Env.NewFact(uniFact)
+	ret := exec.Env.NewFactWithAtomsDefined(uniFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -409,11 +409,11 @@ func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) ExecRet {
 		return execState
 	}
 
-	ret := exec.Env.NewFact(thenToIff)
+	ret := exec.Env.NewFactWithAtomsDefined(thenToIff)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
-	ret = exec.Env.NewFact(iffToThen)
+	ret = exec.Env.NewFactWithAtomsDefined(iffToThen)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}

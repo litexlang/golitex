@@ -101,7 +101,7 @@ func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *as
 	exec.NewEnv(exec.Env)
 	defer exec.deleteEnv()
 
-	ret := exec.Env.NewFact(fact)
+	ret := exec.Env.NewFactWithAtomsDefined(fact)
 	if ret.IsErr() {
 		return false, fmt.Errorf(ret.String())
 	}

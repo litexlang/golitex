@@ -66,7 +66,7 @@ func (ie *InferenceEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) glo
 
 	equalFact := ast.NewEqualFact(fact.Params[0], fact.Params[1])
 
-	ret := ie.Env.NewFact(equalFact)
+	ret := ie.Env.NewFactWithAtomsDefined(equalFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -104,7 +104,7 @@ func (ie *InferenceEngine) newTrueExist(fact *ast.SpecFactStmt) glob.GlobRet {
 			return ret
 		}
 		inFact := ast.NewInFactWithObj(existParams[0], factParams[0])
-		ret = ie.Env.NewFact(inFact)
+		ret = ie.Env.NewFactWithAtomsDefined(inFact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -123,14 +123,14 @@ func (ie *InferenceEngine) newTrueExist(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	for _, iffFact := range iffFacts {
-		ret := ie.Env.NewFact(iffFact)
+		ret := ie.Env.NewFactWithAtomsDefined(iffFact)
 		if ret.IsErr() {
 			return ret
 		}
 	}
 
 	for _, thenFact := range thenFacts {
-		ret := ie.Env.NewFact(thenFact)
+		ret := ie.Env.NewFactWithAtomsDefined(thenFact)
 		if ret.IsErr() {
 			return ret
 		}
