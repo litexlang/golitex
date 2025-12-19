@@ -360,6 +360,11 @@ func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt *ast.SpecFactStmt, sta
 		return ret
 	}
 
+	// 如果是形如 fn(X, Y ...) RetSet 这样的函数，那就如果X, Y ... 都是非空集合，RetSet也是非空集合，那就OK了
+	if ret := ver.verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonempty(stmt.Params[0], state); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
 	return NewEmptyExecUnknown()
 }
 
@@ -477,4 +482,36 @@ func (ver *Verifier) verIsTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *Ver
 
 	return NewEmptyExecTrue()
 
+}
+
+func (ver *Verifier) verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonempty(fnSet ast.Obj, state *VerState) ExecRet {
+	fnObj, ok := fnSet.(*ast.FnObj)
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	if !ast.IsFnSet(fnObj) {
+		return NewEmptyExecUnknown()
+	}
+
+	paramSets, retSet, err := ast.GetParamSetsAndRetSetFromFnSet(fnObj)
+	if err != nil {
+		return NewEmptyExecUnknown()
+	}
+
+	for _, paramSet := range paramSets {
+		isNonEmptyFact := ast.NewIsANonEmptySetFact(paramSet, glob.BuiltinLine)
+		verRet := ver.VerFactStmt(isNonEmptyFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return NewEmptyExecUnknown()
+		}
+	}
+
+	isNonEmptyFact := ast.NewIsANonEmptySetFact(retSet, glob.BuiltinLine)
+	verRet := ver.VerFactStmt(isNonEmptyFact, state)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return NewEmptyExecUnknown()
+	}
+
+	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("fn set %s is a nonempty set because all its param sets and ret set are nonempty sets.", fnSet), NewEmptyExecTrue())
 }
