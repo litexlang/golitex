@@ -369,6 +369,10 @@ func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt *ast.SpecFactStmt, sta
 		return ret
 	}
 
+	if ret := ver.verIsANonEmptySetByIsPowerSetAndAllParamSetsAndRetSetAreNonempty(stmt.Params[0], state); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
 	return NewEmptyExecUnknown()
 }
 
@@ -532,5 +536,26 @@ func (ver *Verifier) verIsNonEmptyWithItemByBuiltinRules(stmt *ast.SpecFactStmt,
 	}
 
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), "is_nonempty_with_item is true because the item is in the set.", NewEmptyExecTrue())
+
+}
+
+func (ver *Verifier) verIsANonEmptySetByIsPowerSetAndAllParamSetsAndRetSetAreNonempty(powerSet ast.Obj, state *VerState) ExecRet {
+	powerSetObj, ok := powerSet.(*ast.FnObj)
+	if !ok {
+		return NewEmptyExecUnknown()
+	}
+
+	if !ast.IsFn_WithHeadName(powerSetObj, glob.KeywordPowerSet) {
+		return NewEmptyExecUnknown()
+	}
+
+	paramInPowerSet := powerSetObj.Params[0]
+	isNonEmptyFact := ast.NewIsANonEmptySetFact(paramInPowerSet, glob.BuiltinLine)
+	verRet := ver.VerFactStmt(isNonEmptyFact, state)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return NewEmptyExecUnknown()
+	}
+
+	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("power set %s is a nonempty set because its param is a nonempty set.", powerSet), NewEmptyExecTrue())
 
 }
