@@ -233,47 +233,47 @@ func (env *Env) AtomsInSetBuilderDefined(obj ast.Obj, extraParams map[string]str
 	return glob.NewGlobTrue("")
 }
 
-func (env *Env) AtomsInObjDefinedOrBuiltin(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
-	// Special handling for setBuilder
-	if ast.IsSetBuilder(obj) {
-		return env.AtomsInSetBuilderDefined(obj, extraParams)
-	}
-
-	// Regular object handling
-	atoms := ast.GetAtomObjsInObj(obj)
-	for _, atom := range atoms {
-		if ret := env.IsAtomObjDefinedOrBuiltin(atom, extraParams); ret.IsNotTrue() {
-			return ret
-		}
-	}
-	return glob.NewGlobTrue("")
-}
-
-// func (e *Env) AtomsInObjDefinedOrBuiltin(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
-// 	switch asObj := obj.(type) {
-// 	case ast.Atom:
-// 		return e.IsAtomObjDefinedOrBuiltin(asObj, extraParams)
-// 	case *ast.FnObj:
-// 		return e.AtomsInFnObjDefinedOrBuiltin(asObj, extraParams)
-// 	default:
-// 		return glob.ErrRet(fmt.Errorf("unknown object type: %T", obj))
-// 	}
-// }
-
-// func (e *Env) AtomsInFnObjDefinedOrBuiltin(fnObj *ast.FnObj, extraParams map[string]struct{}) glob.GlobRet {
+// func (env *Env) AtomsInObjDefinedOrBuiltin(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
 // 	// Special handling for setBuilder
-// 	if ast.IsSetBuilder(fnObj) {
-// 		return e.AtomsInSetBuilderDefined(fnObj, extraParams)
+// 	if ast.IsSetBuilder(obj) {
+// 		return env.AtomsInSetBuilderDefined(obj, extraParams)
 // 	}
 
-// 	for _, param := range fnObj.Params {
-// 		if ret := e.AtomsInObjDefinedOrBuiltin(param, extraParams); ret.IsNotTrue() {
+// 	// Regular object handling
+// 	atoms := ast.GetAtomObjsInObj(obj)
+// 	for _, atom := range atoms {
+// 		if ret := env.IsAtomObjDefinedOrBuiltin(atom, extraParams); ret.IsNotTrue() {
 // 			return ret
 // 		}
 // 	}
-
-// 	return e.AtomsInObjDefinedOrBuiltin(fnObj.FnHead, extraParams)
+// 	return glob.NewGlobTrue("")
 // }
+
+func (e *Env) AtomsInObjDefinedOrBuiltin(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
+	switch asObj := obj.(type) {
+	case ast.Atom:
+		return e.IsAtomObjDefinedOrBuiltin(asObj, extraParams)
+	case *ast.FnObj:
+		return e.AtomsInFnObjDefinedOrBuiltin(asObj, extraParams)
+	default:
+		return glob.ErrRet(fmt.Errorf("unknown object type: %T", obj))
+	}
+}
+
+func (e *Env) AtomsInFnObjDefinedOrBuiltin(fnObj *ast.FnObj, extraParams map[string]struct{}) glob.GlobRet {
+	// Special handling for setBuilder
+	if ast.IsSetBuilder(fnObj) {
+		return e.AtomsInSetBuilderDefined(fnObj, extraParams)
+	}
+
+	for _, param := range fnObj.Params {
+		if ret := e.AtomsInObjDefinedOrBuiltin(param, extraParams); ret.IsNotTrue() {
+			return ret
+		}
+	}
+
+	return e.AtomsInObjDefinedOrBuiltin(fnObj.FnHead, extraParams)
+}
 
 func (env *Env) AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
 	if ast.IsSetBuilder(obj) {

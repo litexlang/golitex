@@ -347,29 +347,29 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 		exec.deleteEnv()
 	}()
 
-	// 返回值要是set
-	execState := exec.factStmt(ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
-	if execState.IsNotTrue() {
-		return NewExecErr(execState.String()), fmt.Errorf(execState.String())
-	}
-	if execState.IsUnknown() {
-		return NewEmptyExecErr(), fmt.Errorf("return set %s must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String())
-	}
+	// // 返回值要是set
+	// execState := exec.factStmt(ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
+	// if execState.IsNotTrue() {
+	// 	return NewExecErr(execState.String()), fmt.Errorf(execState.String())
+	// }
+	// if execState.IsUnknown() {
+	// 	return NewEmptyExecErr(), fmt.Errorf("return set %s must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String())
+	// }
 
 	// 验证 fn template 里面的 paramSet 都是 in set 的
 	// Verify each paramSet is in set type
-	for i, paramSet := range stmt.DefFnStmt.FnTemplate.ParamSets {
-		execState := exec.factStmt(ast.NewIsASetFact(paramSet, stmt.Line))
-		if execState.IsErr() {
-			return NewExecErr(execState.String()), fmt.Errorf(execState.String())
-		}
-		if execState.IsUnknown() {
-			return NewEmptyExecErr(), fmt.Errorf("parameter set %d (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", i+1, paramSet.String(), paramSet.String())
-		}
-	}
+	// for i, paramSet := range stmt.DefFnStmt.FnTemplate.ParamSets {
+	// 	execState := exec.factStmt(ast.NewIsASetFact(paramSet, stmt.Line))
+	// 	if execState.IsErr() {
+	// 		return NewExecErr(execState.String()), fmt.Errorf(execState.String())
+	// 	}
+	// 	if execState.IsUnknown() {
+	// 		return NewEmptyExecErr(), fmt.Errorf("parameter set %d (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", i+1, paramSet.String(), paramSet.String())
+	// 	}
+	// }
 
 	// Verify retSet is in set type
-	execState = exec.factStmt(ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
+	execState := exec.factStmt(ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
 	if execState.IsErr() {
 		return NewExecErr(execState.String()), fmt.Errorf(execState.String())
 	}
