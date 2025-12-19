@@ -115,7 +115,7 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 	}
 
 	for i, param := range algoDef.Params {
-		ret := exec.Env.IsAtomDeclared(ast.Atom(param), map[string]struct{}{})
+		ret := exec.Env.IsNameDefinedOrBuiltin(param, map[string]struct{}{})
 		if ret.IsTrue() {
 			continue
 		} else {
@@ -189,7 +189,7 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWit
 
 func (exec *Executor) fnObjParamsInFnDomain(fnObj *ast.FnObj) ExecRet {
 	ver := NewVerifier(exec.Env)
-	return ver.objIsDefinedAtomOrIsFnSatisfyItsReq(fnObj, Round0NoMsg)
+	return ver.objIsDefinedAtomOrIsFnSatisfyItsReq(fnObj, Round0NoMsg())
 }
 
 func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet) {
@@ -241,4 +241,13 @@ func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValuePar
 
 	value, execRet := exec.runAlgoStmtsWhenEval(stmt.ThenStmts, fnObjWithValueParams)
 	return value, execRet
+}
+
+func (exec *Executor) GetSimplifiedValue(obj ast.Obj) (ast.Obj, ExecRet) {
+	_, value := exec.Env.ReplaceSymbolWithValue(obj)
+	simplifiedValue, execRet := exec.simplifyNumExprObj(value)
+	if execRet.IsNotTrue() {
+		return nil, execRet
+	}
+	return simplifiedValue, execRet
 }

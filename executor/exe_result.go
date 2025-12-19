@@ -38,6 +38,7 @@ type ExecRet interface {
 	ToGlobRet() glob.GlobRet
 	AddMsg(msg string) ExecRet
 	AddMsgAtBegin(msg string) ExecRet
+	AddMsgs(msgs []string) ExecRet
 }
 
 type ExecTrue struct {
@@ -251,5 +252,20 @@ func (v *ExecUnknown) AddMsgAtBegin(msg string) ExecRet {
 
 func (v *ExecErr) AddMsgAtBegin(msg string) ExecRet {
 	v.Msg = append([]string{msg}, v.Msg...)
+	return v
+}
+
+func (v *ExecTrue) AddMsgs(msgs []string) ExecRet {
+	v.Msg = append(v.Msg, msgs...)
+	return v
+}
+
+func (v *ExecUnknown) AddMsgs(msgs []string) ExecRet {
+	v.Msg = append(v.Msg, msgs...)
+	return v
+}
+
+func (v *ExecErr) AddMsgs(msgs []string) ExecRet {
+	v.Msg = append(v.Msg, msgs...)
 	return v
 }

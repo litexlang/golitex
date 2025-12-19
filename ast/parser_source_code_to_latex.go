@@ -14,6 +14,8 @@
 
 package litex_ast
 
+import pkgMgr "golitex/package_manager"
+
 func ParseSourceCode_WhenCompileToLatex2(code string) ([]Stmt, error) {
 	preprocessedCodeLines, err := preprocessSourceCode(code)
 	if err != nil {
@@ -26,7 +28,8 @@ func ParseSourceCode_WhenCompileToLatex2(code string) ([]Stmt, error) {
 	}
 
 	ret := []Stmt{}
-	p := NewTbParser()
+	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+	p := NewTbParser("", pkgPathNameMgr)
 	for _, block := range blocks {
 		cur, err := p.Stmt(&block)
 		if err != nil {

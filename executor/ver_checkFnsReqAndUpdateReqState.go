@@ -45,8 +45,8 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 
 func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) ExecRet {
 	if atom, ok := obj.(ast.Atom); ok {
-		if ver.Env.AreAtomsInObjDefined(atom, map[string]struct{}{}).IsNotTrue() {
-			return NewExecErr(fmt.Sprintf("%s is not declared", atom))
+		if ret := ver.Env.AtomsInObjDefinedOrBuiltin(atom, map[string]struct{}{}); ret.IsNotTrue() {
+			return NewExecErr(ret.String())
 		} else {
 			return NewEmptyExecTrue()
 		}
@@ -93,6 +93,15 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 		return NewExecErr(fmt.Sprintf("failed to parse set builder: %s", err))
 	}
 
+	// parent is a set
+	verRet := ver.VerFactStmt(ast.NewIsASetFact(setBuilderStruct.ParentSet, glob.BuiltinLine), state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsUnknown() {
+		return NewExecErr(fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, setBuilderStruct.ParentSet, objAsFnObj))
+	}
+
 	// parent is ok
 	ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(setBuilderStruct.ParentSet, state)
 	if ret.IsErr() {
@@ -103,7 +112,7 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 	}
 
 	// 如果param在母环境里已经声明过了，那就把整个obj里的所有的param全部改成新的
-	globRet := ver.Env.IsAtomDeclared(ast.Atom(setBuilderStruct.Param), map[string]struct{}{})
+	globRet := ver.Env.IsNameDefinedOrBuiltin(string(setBuilderStruct.Param), map[string]struct{}{})
 	if globRet.IsTrue() {
 		// 把这个param替换成从来没见过的东西
 		setBuilderStruct = ver.replaceParamWithUndeclaredRandomName(setBuilderStruct)
@@ -120,12 +129,9 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 	// Check all parameters in facts satisfy fn requirement
 	for _, fact := range setBuilderStruct.Facts {
 		// Check propName
-		verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(fact.PropName, state)
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsUnknown() {
-			return NewExecErr(fmt.Sprintf("prop name %s in set builder must be an atom or function", fact.PropName))
+		verRet := ver.Env.IsPropDefinedOrBuiltinProp(fact)
+		if verRet.IsNotTrue() {
+			return NewExecErr(verRet.String())
 		}
 
 		// Check all params in the fact
@@ -144,16 +150,16 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 }
 
 func (ver *Verifier) listSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
-	// 所有参数都是$in list set
-	for _, param := range objAsFnObj.Params {
-		verRet := ver.VerFactStmt(ast.NewInFactWithObj(param, ast.Atom(glob.KeywordSet)), state)
-		if verRet.IsErr() {
-			return NewExecErr(verRet.String())
-		}
-		if verRet.IsUnknown() {
-			return NewExecErr(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", objAsFnObj.FnHead, param, objAsFnObj))
-		}
-	}
+	// // 所有参数都是$in list set
+	// for _, param := range objAsFnObj.Params {
+	// 	verRet := ver.VerFactStmt(ast.NewIsASetFact(param, glob.BuiltinLine), state)
+	// 	if verRet.IsErr() {
+	// 		return NewExecErr(verRet.String())
+	// 	}
+	// 	if verRet.IsUnknown() {
+	// 		return NewExecErr(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", objAsFnObj.FnHead, param, objAsFnObj))
+	// 	}
+	// }
 
 	// 所有参数互相不相等
 	for i := range len(objAsFnObj.Params) {
@@ -180,10 +186,15 @@ func (ver *Verifier) tupleFnReq(objAsFnObj *ast.FnObj, state *VerState) ExecRet 
 	_ = state
 
 	for _, param := range objAsFnObj.Params {
-		if !ObjIsNotSet(param) {
-			return NewExecErr(fmt.Sprintf("parameters in %s must not be set", objAsFnObj.String()))
+		execRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, state)
+		if execRet.IsErr() {
+			return NewExecErr(execRet.String())
+		}
+		if execRet.IsUnknown() {
+			return NewExecErr(fmt.Sprintf("parameter %s in %s must be an atom or function", param, objAsFnObj.FnHead))
 		}
 	}
+
 	return NewEmptyExecTrue()
 }
 
@@ -275,12 +286,12 @@ func (ver *Verifier) countFnRequirement(fnObj *ast.FnObj, state *VerState) ExecR
 		return NewExecErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 
-	verRet := ver.VerFactStmt(ast.NewInFactWithObj(fnObj.Params[0], ast.Atom(glob.KeywordFiniteSet)), state)
+	verRet := ver.VerFactStmt(ast.NewIsAFiniteSetFact(fnObj.Params[0], glob.BuiltinLine), state)
 	if verRet.IsErr() {
 		return NewExecErr(verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return NewExecErr(fmt.Sprintf("parameters in %s must be in set %s, %s in %s is not valid", fnObj.FnHead, glob.KeywordFiniteSet, fnObj.Params[0], fnObj))
+		return NewExecErr(fmt.Sprintf("parameters in %s must be a finite set, %s in %s is not valid", fnObj.FnHead, fnObj.Params[0], fnObj))
 	}
 	return NewEmptyExecTrue()
 }
@@ -292,12 +303,12 @@ func (ver *Verifier) cartFnRequirement(fnObj *ast.FnObj, state *VerState) ExecRe
 
 	// 验证所有的参数都是集合
 	for _, param := range fnObj.Params {
-		verRet := ver.VerFactStmt(ast.NewInFactWithObj(param, ast.Atom(glob.KeywordSet)), state)
+		verRet := ver.VerFactStmt(ast.NewIsASetFact(param, glob.BuiltinLine), state)
 		if verRet.IsErr() {
 			return NewExecErr(verRet.String())
 		}
 		if verRet.IsUnknown() {
-			return NewExecErr(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", fnObj.FnHead, param, glob.KeywordSet))
+			return NewExecErr(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", fnObj.FnHead, param, fnObj))
 		}
 	}
 	return NewEmptyExecTrue()

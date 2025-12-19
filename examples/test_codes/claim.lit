@@ -1,12 +1,12 @@
 claim:
-    @p(x, y N):
+imply p(x, y N):
         x + y = y + x
     prove:
         x + y = y + x
 
 $p(1,2)
 
-claim @q(x, y N): x + y = y + x:
+claim imply q(x, y N): x + y = y + x:
     prove:
         x + y = y + x
 

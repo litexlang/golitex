@@ -1,30 +1,27 @@
 # claim prop 的意义是，如果prop的参数列表里面的参数数量大于涉及到的specFact的参数数量，那为了让未来能对应上，要给这个forall取个名字，即claim prop
 
 prove:
-    $larger_is_transitive(3, 2, 1)
-    3 > 1
+    prop p(x R)
+    prop q(x R)
+    prop t(x R)
+
+    know forall x R: $p(x) => $q(x)
+    know forall x R: $q(x) => $t(x)
 
     claim:
-        @p(x N):
-            x > 1
+        imply p_to_t(x R):
+            $p(x)
             =>:
-                x > -1
+                $t(x)
         prove:
-            $larger_is_transitive(x, 1, -1)
-            x > -1
-
-    let a N:
-        a > 1
-
-    $p(a)
-
-    a > -1
+            $q(x)
+            $t(x)
 
 prove:
     prop p(x, y N)
     prop p2(x, y, z N)
     claim:
-        @q(x, y, z N):
+        imply q(x, y, z N):
             $p2(x, y, z)
             =>:
                 $p(x, y)

@@ -33,11 +33,11 @@ func GetSystemRootPath() string {
 	return filepath.Join(os.Getenv("HOME"), SystemRootPath)
 }
 
-// ResolvePackagePath resolves a package path. If the path is not an absolute path,
-// it will first search in core_packages, then in user_packages.
+// ResolveSystemPackagePath resolves a package path from the system-wide installed packages.
+// If the path is not an absolute path, it will first search in core_packages, then in user_packages.
 // If the path is already an absolute path, it will be returned as is.
 // Returns an error if the package is not found in either location.
-func ResolvePackagePath(path string) (string, error) {
+func ResolveSystemPackagePath(path string) (string, error) {
 	if filepath.IsAbs(path) {
 		return path, nil
 	}

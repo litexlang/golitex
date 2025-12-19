@@ -40,13 +40,14 @@ Our commit messages follow the [Conventional Commits](https://www.conventionalco
 ```
 
 **Type** (required): One of the following:
-- `feat`: 更新功能（新建，删除，改变）
-- `fix`: 修补bug
-- `docs`: 文档（documentation）
-- `style`: 格式（不影响代码运行的变动）
-- `refactor`: 重构（即不是新增功能，也不是修改bug的代码变动）
-- `test`: 增加测试
-- `chore`: 构建过程或辅助工具的变动
+1) developing new feature     - 正在开发新功能
+2) updating feature     - 强化功能
+3) deleting feature     - 删除功能
+4) fixing bug  - 修补bug
+5) documenting  - 文档（documentation）
+6) refactoring  - 重构（即不是新增功能，也不是修改bug的代码变动）
+7) testing  - 增加测试
+8) chore     - 构建过程或辅助工具的变动
 
 **Subject** (required): A short description of the commit purpose, no more than 80 characters.
 

@@ -60,7 +60,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 	reversedFact := specFactStmt.ReverseIsTrue()
 
 	for _, curFact := range reversedFact {
-		ret := exec.Env.NewFact(curFact)
+		ret := exec.Env.NewFactWithAtomsDefined(curFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -106,7 +106,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
-		ret := exec.Env.NewFact(condFact)
+		ret := exec.Env.NewFactWithAtomsDefined(condFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -123,7 +123,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	}
 	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversibleFacts)
 	for _, reversedThenFact := range reversedThenFacts {
-		ret := exec.Env.NewFact(reversedThenFact.(ast.FactStmt))
+		ret := exec.Env.NewFactWithAtomsDefined(reversedThenFact.(ast.FactStmt))
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -169,7 +169,7 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	ret := exec.Env.NewFact(stmt.ToCheckFact)
+	ret := exec.Env.NewFactWithAtomsDefined(stmt.ToCheckFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -185,12 +185,12 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	execRet := exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ClaimProveStmt.ToCheckFact.(ast.CanBeKnownStmt)}, stmt.ClaimProveStmt.Line))
-	if execRet.IsNotTrue() {
-		return execRet
+	ret := exec.Env.NewFactWithAtomsDefined(stmt.ClaimProveStmt.ToCheckFact)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
 	}
 
-	return execRet
+	return NewExecTrue(fmt.Sprintf("%s\n", stmt.String()))
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
@@ -200,7 +200,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 	}()
 
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
-	ret := exec.Env.AreAtomsInFactAreDeclared(stmt.ToCheckFact, map[string]struct{}{})
+	ret := exec.Env.AtomObjsInFactProperlyDefined(stmt.ToCheckFact, map[string]struct{}{})
 	if ret.IsErr() {
 		ret.AddMsg("in claim statement")
 		return NewExecErr(ret.String())
@@ -245,7 +245,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ExecRet {
 
 	// know dom facts
 	for _, domFact := range asUnivFact.DomFacts {
-		ret := exec.Env.NewFact(domFact)
+		ret := exec.Env.NewFactWithAtomsDefined(domFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -260,7 +260,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ExecRet {
 	// TODO: 让claim能forall if
 	// if asUnivFact.IffFacts == nil || len(asUnivFact.IffFacts) == 0 {
 	// execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(asUnivFact.ThenFacts, exec.env, verifier.Round0NoMsg)
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(asUnivFact.ThenFacts, Round0NoMsg)
+	execState, failedFact, err := exec.verifyFactsAtCurEnv(asUnivFact.ThenFacts, Round0NoMsg())
 	if err != nil {
 		return NewExecErr(fmt.Errorf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err).Error())
 	} else if execState.IsUnknown() {
@@ -272,11 +272,12 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ExecRet {
 }
 
 // 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
-func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) ExecRet {
+func (exec *Executor) claimPropStmt(stmt *ast.ClaimImplicationStmt) ExecRet {
 	// prop all atoms declared
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.DomFacts, stmt.Prop.IffFacts, stmt.Line)
-	ret := exec.Env.AreAtomsInFactAreDeclared(uniFact, map[string]struct{}{})
-	if ret.IsErr() && !exec.Env.IsAtomDefinedByUser(ast.Atom(stmt.Prop.DefHeader.Name)) {
+	prop := stmt.Implication.ToProp()
+	uniFact := ast.NewUniFact(prop.DefHeader.Params, prop.DefHeader.ParamSets, prop.DomFactsOrNil, prop.IffFactsOrNil, stmt.Line)
+	ret := exec.Env.AtomObjsInFactProperlyDefined(uniFact, map[string]struct{}{})
+	if ret.IsErr() && !exec.Env.IsAtomObjDefinedByUser(ast.Atom(prop.DefHeader.Name)).IsTrue() {
 		ret.AddMsg("in claim prop statement")
 		return NewExecErr(ret.String())
 	}
@@ -295,7 +296,7 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimPropStmt) ExecRet {
 	// }
 
 	// know exec
-	execRet := exec.knowPropStmt(ast.NewKnowPropStmt(stmt.Prop, stmt.Line))
+	execRet := exec.knowPropStmt(ast.NewKnowPropStmt(prop, stmt.Line))
 	if execRet.IsNotTrue() {
 		return execRet
 	}
@@ -316,8 +317,8 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) ExecRet {
 	}
 
 	// know forall
-	uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, []ast.FactStmt{stmt.ExistPropWithoutDom.DefBody.DefHeader.ToSpecFact()}, stmt.Line)
-	ret := exec.Env.NewFact(uniFact)
+	uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFactsOrNil, []ast.FactStmt{stmt.ExistPropWithoutDom.DefBody.DefHeader.ToSpecFact()}, stmt.Line)
+	ret := exec.Env.NewFactWithAtomsDefined(uniFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -332,7 +333,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 	}()
 
 	// declare parameters in exist prop
-	defObjStmt := ast.NewDefLetStmt(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFacts, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFactsOrNil, stmt.Line)
 
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
@@ -360,7 +361,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 		uniMap[stmt.ExistPropWithoutDom.ExistParams[i]] = haveObj
 	}
 
-	for _, fact := range stmt.ExistPropWithoutDom.DefBody.ThenFacts {
+	for _, fact := range stmt.ExistPropWithoutDom.DefBody.ImplicationFactsOrNil {
 		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return NewExecErr(err.Error())
@@ -377,8 +378,9 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 	return NewEmptyExecTrue()
 }
 
-func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimPropStmt) ExecRet {
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFacts, stmt.Prop.ThenFacts, stmt.Line)
+func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimImplicationStmt) ExecRet {
+	prop := stmt.Implication.ToProp()
+	uniFact := ast.NewUniFact(prop.DefHeader.Params, prop.DefHeader.ParamSets, prop.DomFactsOrNil, prop.ImplicationFactsOrNil, stmt.Line)
 
 	exec.NewEnv(exec.Env)
 	defer func() {
@@ -407,11 +409,11 @@ func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) ExecRet {
 		return execState
 	}
 
-	ret := exec.Env.NewFact(thenToIff)
+	ret := exec.Env.NewFactWithAtomsDefined(thenToIff)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
-	ret = exec.Env.NewFact(iffToThen)
+	ret = exec.Env.NewFactWithAtomsDefined(iffToThen)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}

@@ -26,7 +26,11 @@ func successVerString(stmt, stmtVerifiedBy ast.Stmt) string {
 		builder.WriteString(stmt.String())
 	}
 	if stmtVerifiedBy != nil {
-		builder.WriteString(fmt.Sprintf("\nis true. proved by fact on line %d:\n%s", stmtVerifiedBy.GetLine(), stmtVerifiedBy.String()))
+		if stmtVerifiedBy.GetLine() == 0 {
+			builder.WriteString(fmt.Sprintf("\nis true. proved by fact:\n%s", stmtVerifiedBy.String()))
+		} else {
+			builder.WriteString(fmt.Sprintf("\nis true. proved by fact on line %d:\n%s", stmtVerifiedBy.GetLine(), stmtVerifiedBy.String()))
+		}
 	} else {
 		builder.WriteString("\nis true.")
 	}

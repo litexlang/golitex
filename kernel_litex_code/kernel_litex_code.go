@@ -23,6 +23,12 @@ exist_prop a in_set st exist_obj_not_in_left_set_but_in_right_set(not_in_set, in
 
 know forall x2, y2 R: x2 != 0, y2 != 0 => x2 * y2 != 0
 
+exist_prop x Z, y N_pos st Q_in_frac(q Q):
+	x / y = q
+	x = y * q
+	x = q * y
+	y > 0
+
 exist_prop x Z, y N_pos st rational_number_representation_in_fraction(q Q):
 	<=>:
 		x / y = q
@@ -51,7 +57,7 @@ know forall q Q => $rational_number_representation_in_fraction(q)
 know forall q Q: q > 0 => $rational_positive_number_representation_in_fraction(q)
 know forall q Q: q < 0 => $rational_negative_number_representation_in_fraction(q)
 
-fn sqrt(z R) R:
+let fn sqrt(z R) R:
 	z >= 0
 	=>:
 		sqrt(z) ^ 2 = z
@@ -95,7 +101,7 @@ know forall x, y, z R: x + y = z => y + x = z
 
 know forall x, y, z R: x * y = z => y * x = z
 
-fn abs(x R) R
+let fn abs(x R) R
 know:
 	forall x R:
 		x > 0
@@ -115,11 +121,11 @@ know:
 know forall x R: x > 0 or x < 0 => x != 0
 
 # 必须要有，否则不能说明有限集合的子集还是有限集合
-know @finite_set_subset_is_finite_set(s1 finite_set, s2 set):
+know imply finite_set_subset_is_finite_set(s1 finite_set, s2 set):
 	forall x s2:
 		x $in s1
 	=>:
-		s2 $in finite_set
+		$is_a_finite_set(s2)
 
 know forall x N: x != 0 => x > 0
 
@@ -139,7 +145,7 @@ fn_template finite_seq(s set, n N_pos):
     	dom:
         	x <= n
 
-fn finite_seq_sum(n N_pos, a finite_seq(R, n), k N) R:
+let fn finite_seq_sum(n N_pos, a finite_seq(R, n), k N) R:
     dom:
         k <= n
 
@@ -147,7 +153,7 @@ know:
     forall n N_pos, a finite_seq(R, n), k N: k < n => finite_seq_sum(n, a, k+1) = finite_seq_sum(n, a, k) + a(k+1)
     forall n N_pos, a finite_seq(R, n) => finite_seq_sum(n, a, 1) = a(1)
 
-fn finite_seq_product(n N_pos, a finite_seq(R, n), k N) R:
+let fn finite_seq_product(n N_pos, a finite_seq(R, n), k N) R:
     dom:
         k < n
 
@@ -155,18 +161,6 @@ know:
     forall n N_pos, a finite_seq(R, n), k N: k < n => finite_seq_product(n, a, k+1) = finite_seq_product(n, a, k) * a(k+1)
     forall n N_pos, a finite_seq(R, n) => finite_seq_product(n, a, 1) = a(1)
 
-exist_prop a set st item_exists_in(y set):
-	a $in y
-	
-know:
-	$item_exists_in(N)
-	$item_exists_in(N_pos)
-	$item_exists_in(Z)
-	$item_exists_in(Q)
-	$item_exists_in(R)
-	forall x N_pos:
-		x > 0
-	forall x set: $item_exists_in(x) => x $in nonempty_set
 
 know forall m N_pos => m - 1 $in N
 
@@ -193,7 +187,7 @@ know forall a R => 1^a = 1
 know forall a, b, c R: a < b - c => a + c < b
 know forall a, b R: b > 0 => a - b < a
 
-know @subtraction_preserves_inequality_with_positive_term(a R, b R, c R):
+know imply subtraction_preserves_inequality_with_positive_term(a R, b R, c R):
     a < b - c
     c > 0
     =>:
@@ -250,7 +244,7 @@ prop div_cancel_cond(a, b, c R):
     a / c = b / c
     c != 0
 
-know @cancel(a, b, c R):
+know imply cancel(a, b, c R):
     or:
         a + c = b + c
         a - c = b - c
@@ -268,7 +262,7 @@ prop div_cancel_general_cond(a, b, c, d R):
     c != 0
 
 
-know @cancel_general(a, b, c, d R):
+know imply cancel_general(a, b, c, d R):
     c = d
     or:
         a + c = b + d
@@ -278,14 +272,7 @@ know @cancel_general(a, b, c, d R):
     =>:
         a = b
 
-# TODO: 之后把这个移除kernel_lib而是做成像set一样内置的东西
-know:
-	$item_exists_in(nonempty_set)
-	forall x nonempty_set:
-		x $in set
-		$item_exists_in(x)
-
-know @product_is_0_then_at_least_one_factor_is_0(a, b R):
+know imply product_is_0_then_at_least_one_factor_is_0(a, b R):
 	a * b = 0
 	=>:
 		or:
@@ -336,7 +323,7 @@ know:
 know:
 	forall x R, y R: x > 0, y > 0 => x^y > 0
 
-fn log(x, y R) R:
+let fn log(x, y R) R:
 	dom:
 		x > 0
 		x != 1
@@ -371,8 +358,17 @@ know forall a, b, c, d R: c != 0, a = (b / c) * d => a * c = b * d
 know forall a, b, c, d R: c != 0, a = d * (b / c) => a * c = d * b
 know forall x, y, z R: z != 0, x = y / z => x * z = y
 
-fn range(x Z, y Z) set:
-	range(x, y) = {self Z: x <= self, self < y}
+let fn range(x Z, y Z) set:
+	dom:
+		x <= y
+	=>:
+		range(x, y) = {self Z: self >= x, self < y}
+
+let fn closed_range(x Z, y Z) set:
+	dom:
+		x <= y
+	=>:
+		closed_range(x, y) = {self Z: self >= x, self <= y}
 
 """
 know:
@@ -396,131 +392,131 @@ know:
 	forall x, y R: x = y => x - y = 0
 	forall x, y R: x != y => x - y != 0
 
-know @larger_is_transitive(x, y, z R):
+know imply larger_is_transitive(x, y, z R):
 	x > y
 	y > z
 	=>:
 		x > z
 
-know @less_equal_add_cancel(x, y, z R):
+know imply less_equal_add_cancel(x, y, z R):
 	x + z <= y + z
 	=>:
 		x <= y
 
-know @less_equal_minus_cancel(x, y, z R):
+know imply less_equal_minus_cancel(x, y, z R):
 	x - z <= y - z
 	=>:
 		x <= y
 
-know @less_add_cancel(x, y, z R):
+know imply less_add_cancel(x, y, z R):
 	x + z < y + z
 	=>:
 		x < y
 
-know @less_minus_cancel(x, y, z R):
+know imply less_minus_cancel(x, y, z R):
 	x - z < y - z
 	=>:
 		x < y
 
-know @greater_add_cancel(x, y, z R):
+know imply greater_add_cancel(x, y, z R):
 	x + z > y + z
 	=>:
 		x > y
 
-know @greater_minus_cancel(x, y, z R):
+know imply greater_minus_cancel(x, y, z R):
 	x - z > y - z
 	=>:
 		x > y
 
-know @greater_equal_add_cancel(x, y, z R):
+know imply greater_equal_add_cancel(x, y, z R):
 	x + z >= y + z
 	=>:
 		x >= y
 
-know @greater_equal_minus_cancel(x, y, z R):
+know imply greater_equal_minus_cancel(x, y, z R):
 	x - z >= y - z
 	=>:
 		x >= y
 
-know @greater_equal_mul_pos_cancel(x, y, z R):
+know imply greater_equal_mul_pos_cancel(x, y, z R):
 	z > 0
 	x * z >= y * z
 	=>:
 		x >= y
 
-know @greater_equal_div_pos_cancel(x, y, z R):
+know imply greater_equal_div_pos_cancel(x, y, z R):
 	z > 0
 	x / z >= y / z
 	=>:
 		x >= y
 
-know @greater_div_pos_cancel(x, y, z R):
+know imply greater_div_pos_cancel(x, y, z R):
 	z > 0
 	x / z > y / z
 	=>:
 		x > y
 
-know @less_div_pos_cancel(x, y, z R):
+know imply less_div_pos_cancel(x, y, z R):
 	z > 0
 	x / z < y / z
 	=>:
 		x < y
 
-know @less_equal_div_pos_cancel(x, y, z R):
+know imply less_equal_div_pos_cancel(x, y, z R):
 	z > 0
 	x / z <= y / z
 	=>:
 		x <= y
 
-know @less_div_neg_cancel(x, y, z R):
+know imply less_div_neg_cancel(x, y, z R):
 	z < 0
 	x / z < y / z
 	=>:
 		x > y
 
-know @less_equal_div_neg_cancel(x, y, z R):
+know imply less_equal_div_neg_cancel(x, y, z R):
 	z < 0
 	x / z <= y / z
 	=>:
 		x >= y
 
-know @greater_equal_mul_neg_cancel(x, y, z R):
+know imply greater_equal_mul_neg_cancel(x, y, z R):
 	z < 0
 	x / z >= y / z
 	=>:
 		x <= y
 
-know @greater_equal_div_neg_cancel(x, y, z R):
+know imply greater_equal_div_neg_cancel(x, y, z R):
 	z < 0
 	x / z > y / z
 	=>:
 		x < y
 
-know @less_equal_mul_neg_cancel(x, y, z R):
+know imply less_equal_mul_neg_cancel(x, y, z R):
 	z < 0
 	x * z <= y * z
 	=>:
 		x >= y
 
-know @larger_equal_mul_neg_cancel(x, y, z R):
+know imply larger_equal_mul_neg_cancel(x, y, z R):
 	z < 0
 	x * z >= y * z
 	=>:
 		x <= y
 
-know @less_mul_neg_cancel(x, y, z R):
+know imply less_mul_neg_cancel(x, y, z R):
 	z < 0
 	x * z < y * z
 	=>:
 		x > y
 
-know @greater_mul_neg_cancel(x, y, z R):
+know imply greater_mul_neg_cancel(x, y, z R):
 	z < 0
 	x * z > y * z
 	=>:
 		x < y
 
-know @greater_than_pow_cancel(x, y, z R):
+know imply greater_than_pow_cancel(x, y, z R):
 	z > 0
 	x > 0
 	y > 0
@@ -528,7 +524,7 @@ know @greater_than_pow_cancel(x, y, z R):
 	=>:
 		x > y
 
-know @greater_equal_pow_cancel(x, y, z R):
+know imply greater_equal_pow_cancel(x, y, z R):
 	z > 0
 	x > 0
 	y > 0
@@ -536,7 +532,7 @@ know @greater_equal_pow_cancel(x, y, z R):
 	=>:
 		x >= y
 
-know @less_pow_cancel(x, y, z R):
+know imply less_pow_cancel(x, y, z R):
 	z > 0
 	x > 0
 	y > 0
@@ -544,7 +540,7 @@ know @less_pow_cancel(x, y, z R):
 	=>:
 		x < y
 
-know @less_equal_pow_cancel(x, y, z R):
+know imply less_equal_pow_cancel(x, y, z R):
 	z > 0
 	x > 0
 	y > 0
@@ -564,9 +560,7 @@ know:
 	forall x, y R => x <= y <=> not x > y
 	forall x, y R => x >= y <=> not x < y
 
-know $item_exists_in(finite_set)
-
-fn pow(x R, y R) R:
+let fn pow(x R, y R) R:
 	dom:
 		x >= 0
 		or:
@@ -582,11 +576,11 @@ know forall x, y, z Z: z != 0 => (x + y) % z = (x % z + y % z) % z, (x * y) % z 
 
 exist_prop s set st there_exists_infinite_set() :
     <=>:
-        not s $in finite_set
+        not $is_a_finite_set(s)
 
 know $there_exists_infinite_set()
 
-fn negate(x R) R:
+let fn negate(x R) R:
 	negate(x) = -x
 	negate(x) + x = 0
 	x + negate(x) = 0
@@ -601,7 +595,7 @@ prop subset_of(x, y set):
 prop is_superset_of(A, B set):
 	forall x B: x $in A
 
-fn intersect(x, y set) set:
+let fn intersect(x, y set) set:
 	forall z x:
 		z $in y
 		=>:
@@ -611,24 +605,24 @@ fn intersect(x, y set) set:
 		=>:
 			z $in intersect(x, y)
 
-know @item_in_intersect(z set, x, y set):
+know imply item_in_intersect(z set, x, y set):
 	z $in intersect(x, y)
 	=>:
 		z $in x
 		z $in y
 
-fn union(x, y set) set:
+let fn union(x, y set) set:
 	forall z x:
 		z $in union(x, y)
 	forall z y:
 		z $in union(x, y)
 
-know @item_in_union(z set, x, y set):
+know imply item_in_union(z set, x, y set):
 	z $in union(x, y)
 	=>:
 		z $in x or z $in y
 
-fn complement(x, y set) set:
+let fn complement(x, y set) set:
 	dom:
 		x $subset_of y
 	=>:
@@ -637,7 +631,7 @@ fn complement(x, y set) set:
 			=>:
 				z $in complement(x, y)
 
-know @item_in_complement(z set, x, y set):
+know imply item_in_complement(z set, x, y set):
 	x $subset_of y
 	z $in complement(x, y)
 	=>:
@@ -681,64 +675,36 @@ know:
 	forall x, y R: x > y => not x <= y, not x = y, not x < y
 	forall x, y R: x < y => not x >= y, not x = y, not x > y
 
-prop is_finite_set(x set)
-know forall x set: $is_finite_set(x) <=> x $in finite_set
-know @subset_of_finite_set_is_finite_set(x set, y finite_set):
+know imply subset_of_finite_set_is_finite_set(x set, y finite_set):
 	x $subset_of y
 	=>:
-		$is_finite_set(x)
+		$is_a_finite_set(x)
 		count(x) <= count(y)
 
 prop is_cart(x set)
 
 prop is_tuple(x set)
 
-fn proj(x set, i N_pos) set:
+let fn proj(x set, i N_pos) set:
 	dom:
 		$is_cart(x)
 		i <= dim(x)
 
-fn dim(x set) N_pos:
+let fn dim(x set) N_pos:
 	dom:
 		$is_cart(x)
-
-know:
-	forall x set:
-		$is_cart(x)
-		forall a N_pos:
-			a <= dim(x)
-			=>:
-				proj(x, a) $in nonempty_set
-		=>:
-			x $in nonempty_set
-			$item_exists_in(x)
 
 # ∏_{a in I} A_a (Cartesian product)
 prop is_cart_prod(s set)
-fn index_set_of_cart_prod(s set) set:
+let fn index_set_of_cart_prod(s set) set:
 	dom:
 		$is_cart_prod(s)
-
-fn family_of_cart_prod(s set) fn(index_set_of_cart_prod(s)) set:
-    dom:
-        $is_cart_prod(s)
-    =>:
-        $is_cart_prod(s)
 		
-fn cart_prod_proj(s set, a index_set_of_cart_prod(s)) set:
-    dom:
-        $is_cart_prod(s)
-    =>:
-        cart_prod_proj(s, a) = family_of_cart_prod(s)(a)
-
-		
-fn cart_prod(index_set set, family fn (index_set) set) set
+let fn cart_prod(index_set set, family fn (index_set) set) set
 
 know forall index_set set, family fn (index_set) set: $is_cart_prod(cart_prod(index_set, family))
 
 know forall index_set set, family fn (index_set) set: index_set_of_cart_prod(cart_prod(index_set, family)) = index_set
-
-know forall index_set set, family fn (index_set) set, a index_set: cart_prod_proj(cart_prod(index_set, family), a) = family(a)
 
 know:
 	forall x, y R:
@@ -751,39 +717,31 @@ know:
 
 	forall x N_pos: x >= 0, x > 0, x != 0, x >= 1, not x < 1, not x < 0
 
-know forall x, y nonempty_set: $item_exists_in(fn(x) y)
-
-fn inverse_image_set(X set, Y set, f fn(X)Y, U set) set:
+let fn inverse_image_set(X set, Y set, f fn(X)Y, U set) set:
     U $subset_of Y
     =>:
         inverse_image_set(X, Y, f, U) = {self X: f(self) $in U}
 
-fn difference(x, y set) set
+let fn difference(x, y set) set
 know:
 	forall x, y set, z x:
 		not z $in y
 		<=>:
 			z $in difference(x, y)
-know @item_in_difference(x, y set, z set):
+know imply item_in_difference(x, y set, z set):
 	z $in difference(x, y)
 	=>:
 		not z $in y
 		z $in x
 
-fn power_set(x set) set
+let fn power_set(x set) set
 know:
 	forall x set, y power_set(x):
-		y $in set
 		y $subset_of x
 	forall x set, y set:
 		y $subset_of x
 		=>:
 			y $in power_set(x)
-	forall x nonempty_set:
-		power_set(x) $in nonempty_set
-		$item_exists_in(power_set(x))
-
-know forall s finite_set: count(s) > 0 => s $in nonempty_set, $item_exists_in(s)
 
 know:
 	forall a, b, c, d R: b > 0, d > 0 => a / b > c / d <=> a * d > b * c
@@ -832,7 +790,7 @@ know:
 		=>:
 			x = y
 
-fn subsets(x set) set
+let fn subsets(x set) set
 know forall x set, y subsets(x): y $subset_of x, forall t y => t $in x
 know forall x, y set: x $subset_of y => x $in subsets(y)
 
@@ -869,15 +827,75 @@ know:
 	forall a, b R: a > 0, b >= 0 => a + b > 0
 
 know:
-	not {} $in nonempty_set
+	not $is_a_nonempty_set({})
 	forall x set: {} $subset_of x
 	forall x set: not x $in {}
+	forall x set: x != {} <=> $is_a_nonempty_set(x)
 
 prop equal_set(x set, y set)
 
-fn enum(x, y Z) set:
-	dom:
-		x <= y
-	=>:
-		enum(x, y) = {self Z: x <= self, self <= y}
+know:
+	forall x R: x > 0 => 1 / x > 0
+	forall x R, y R: x > 0, y > 0 => x > y <=> 1 / x < 1 / y
+	forall x, y, a, b R: x != 0, y != 0 x / y = a / b <=> y / x = b / a
+
+know: 
+	not $is_a_nonempty_set(R)
+	not $is_a_nonempty_set(N)
+	not $is_a_nonempty_set(N_pos)
+	not $is_a_nonempty_set(Z)
+	not $is_a_nonempty_set(Q)
+	not $is_a_finite_set(R)
+	not $is_a_finite_set(N)
+	not $is_a_finite_set(N_pos)
+	not $is_a_finite_set(Z)
+	not $is_a_finite_set(Q)
+
+# TODO: builtin instead of exist_prop
+exist_prop y x st axiom_of_regularity(x nonempty_set):
+    forall z y: not z $in x
+    forall z x: not z $in y
+
+know forall x nonempty_set: $axiom_of_regularity(x)
+
+# TODO: builtin instead of fn
+let fn cup(x set) set
+know imply cup_contains_all_items(x set, y x):
+	forall z y:
+		z $in cup(x)
+exist_prop y x st cup_witness_item(x set, z cup(x)):
+	z $in y
+
+# TODO: builtin instead of exist_prop
+exist_prop x s1 st exist_preimage(s1, s2 set, y s2, f fn(s1)s2):
+    f(x) = y
+
+let fn image_set(s1, s2 set, f fn(s1)s2) set
+
+know:
+    forall s1, s2 set, f fn(s1)s2, y image_set(s1, s2, f):
+        $exist_preimage(s1, s2, y, f)
+
+    forall s1, s2 set, f fn(s1)s2, y s2:
+        $exist_preimage(s1, s2, y, f)
+        =>:
+            y $in image_set(s1, s2, f)
+
+	forall s1, s2 set, f fn(s1)s2:
+		image_set(s1, s2, f) $subset_of s2
+
+# TODO: builtin instead of fn
+let fn choice(x set) fn(x) cup(x)
+know imply axiom_of_choice(x set):
+	forall y x:
+		choice(x)(y) $in y
+
+# Axiom of infinity
+exist_prop x set st axiom_of_infinity():
+	{} $in x
+	forall y x:
+		union(y, {y}) $in x
+
+know:
+	forall x, y R: x < y => $is_a_nonempty_set(range(x, y)), $is_a_nonempty_set(closed_range(x, y))
 `

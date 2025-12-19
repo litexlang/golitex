@@ -1,0 +1,11 @@
+prop p(x, y R)
+
+know imply p_is_transitive(x R, y R, z R):
+    x $p y
+    y $p z
+    =>:
+        x $p z
+
+let x, y, z R: x $p y, y $p z
+$p_is_transitive(x, y, z)
+x $p z
