@@ -261,7 +261,7 @@ func (env *Env) DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt *ast.De
 			ret.AddMsg("in new in fact of def let statement")
 			return ret
 		}
-		ret = env.NewFact(fact)
+		ret = env.NewFactWithAtomsDefined(fact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -274,7 +274,7 @@ func (env *Env) DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt *ast.De
 			ret.AddMsg("in fact of def let statement")
 			return ret
 		}
-		ret = env.NewFact(fact)
+		ret = env.NewFactWithAtomsDefined(fact)
 		if ret.IsErr() {
 			return ret
 		}

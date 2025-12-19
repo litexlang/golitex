@@ -622,7 +622,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
-		ret = ver.Env.NewFact(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i], glob.BuiltinLine))
+		ret = ver.Env.NewFactWithAtomsDefined(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i], glob.BuiltinLine))
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -649,7 +649,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 			return verRet
 		}
 
-		ret := ver.Env.NewFact(fact)
+		ret := ver.Env.NewFactWithAtomsDefined(fact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -662,7 +662,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 			return verRet
 		}
 
-		ret := ver.Env.NewFact(fact)
+		ret := ver.Env.NewFactWithAtomsDefined(fact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}

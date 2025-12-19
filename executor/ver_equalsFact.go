@@ -38,7 +38,7 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 				return verRet.AddMsg(fmt.Sprintf("%s\nis error", newFact.String()))
 			}
 			if verRet.IsTrue() {
-				ret := ver.Env.NewFact(newFact)
+				ret := ver.Env.NewFactWithAtomsDefined(newFact)
 				if ret.IsErr() {
 					return NewExecErr(ret.String())
 				}
