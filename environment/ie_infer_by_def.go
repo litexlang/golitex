@@ -31,7 +31,7 @@ func (ie *InferenceEngine) newUserDefinedTruePureFactByDef(fact *ast.SpecFactStm
 			return glob.ErrRet(err)
 		}
 
-		ret := ie.Env.newFactNoPostProcess(instantiated)
+		ret := ie.Env.newFactNoInfer(instantiated)
 
 		// Note: Messages are now added to ExecRet in the caller, not to env.Msgs
 
@@ -56,7 +56,7 @@ func (ie *InferenceEngine) newUserDefinedTruePureFactByDef(fact *ast.SpecFactStm
 			return glob.ErrRet(err)
 		}
 
-		ret := ie.Env.newFactNoPostProcess(instantiated)
+		ret := ie.Env.newFactNoInfer(instantiated)
 
 		// Note: Messages are now added to ExecRet in the caller, not to env.Msgs
 

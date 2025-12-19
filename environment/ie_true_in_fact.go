@@ -21,7 +21,35 @@ import (
 	"strconv"
 )
 
-// TODO: 好像这里的条件也不一定是互斥的，所以如果ret.IsTrue()了，也不一定要返回 true，而是应该继续尝试其他条件
+// trueInFact handles postprocessing for true $in facts (x $in S).
+// It performs various inferences based on the type of set S:
+//
+// Inference types:
+//  1. FnTemplate inference: If S is a function template, derives a universal fact
+//     and stores the function-template relationship
+//  2. FnTemplateFnObj inference: If S is an object-type function template function,
+//     inserts the function into the function template table
+//  3. Cart inference: If S is a cartesian product cart(S1, S2, ..., Sn), generates:
+//     - a[i] $in Si for each i (indexed membership facts)
+//     - dim(a) = n (dimension fact)
+//     - is_tuple(a) (tuple type fact)
+//  4. ListSet inference: If S is a list set {e1, e2, ..., en}, generates:
+//     - An OR fact: x = e1 or x = e2 or ... or x = en
+//  5. SetBuilder inference: If S is a set builder {x in T: P(x)}, generates:
+//     - x $in T (parent set membership)
+//     - P(x) (all intentional facts from the builder)
+//  6. Range/ClosedRange inference: If S is range(a, b) or closed_range(a, b), generates:
+//     - x $in Z (integer membership)
+//     - x >= a (lower bound)
+//     - x < b (for range) or x <= b (for closed_range)
+//     - Additional derived facts from comparison postprocessing
+//  7. NPos inference: If S is NPos (positive natural numbers), generates:
+//     - x $in N, x $in Q, x $in R (number type memberships)
+//     - x > 0, x >= 1 (positivity facts)
+//     - Additional derived facts from comparison postprocessing
+//
+// TODO: The conditions are not necessarily mutually exclusive, so if ret.IsTrue(),
+// we might want to continue trying other conditions instead of returning immediately.
 func (ie *InferenceEngine) trueInFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	if len(fact.Params) != 2 {
 		return glob.ErrRet(fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
@@ -58,7 +86,9 @@ func (ie *InferenceEngine) trueInFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	return glob.NewGlobTrue("")
 }
 
-// trueInFactByFnTemplate handles a $in fnTemplate(...) case
+// trueInFactByFnTemplate handles inference for x $in fnTemplate(...)
+// Inference: Derives a universal fact from the function template definition
+// and stores the function-template satisfaction relationship
 func (ie *InferenceEngine) trueInFactByFnTemplate(fact *ast.SpecFactStmt) glob.GlobRet {
 	isTemplate, ret := ie.trueInFactInFnTemplate(fact)
 	if ret.IsErr() {
@@ -70,6 +100,8 @@ func (ie *InferenceEngine) trueInFactByFnTemplate(fact *ast.SpecFactStmt) glob.G
 	return glob.NewEmptyGlobUnknown()
 }
 
+// trueInFactByFnTemplateFnObj handles inference for x $in fnTemplateFnObj
+// Inference: Inserts the function x into the function template table
 func (ie *InferenceEngine) trueInFactByFnTemplateFnObj(fact *ast.SpecFactStmt) glob.GlobRet {
 	fnFn, ok := fact.Params[1].(*ast.FnObj)
 	if !ok || !ast.IsFnTemplate_ObjFn(fnFn) {
@@ -89,8 +121,9 @@ func (ie *InferenceEngine) trueInFactByFnTemplateFnObj(fact *ast.SpecFactStmt) g
 	return glob.NewGlobTrue("")
 }
 
-// trueInFactByCart handles a $in cart(...) case
+// trueInFactByCart handles inference for x $in cart(S1, S2, ..., Sn)
 // It tries both direct cart and cart from equal facts
+// Inference: If x is in a cartesian product, then each component of x is in the corresponding set
 func (ie *InferenceEngine) trueInFactByCart(fact *ast.SpecFactStmt) glob.GlobRet {
 	// Try direct cart first
 	if fnObj, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordCart) {
@@ -113,8 +146,11 @@ func (ie *InferenceEngine) trueInFactByCart(fact *ast.SpecFactStmt) glob.GlobRet
 	return glob.NewEmptyGlobUnknown()
 }
 
-// trueInFactInCart handles postprocessing for a $in cart(...)
-// It generates a[i] $in cartSet.Params[i] facts and dim(a) = len(cartSet.Params) fact
+// trueInFactInCart handles inference for obj $in cart(S1, S2, ..., Sn)
+// Inference generates:
+//   - a[i] $in Si for each i (each component is in the corresponding set)
+//   - dim(a) = n (dimension equals the number of sets)
+//   - is_tuple(a) (the object is a tuple)
 func (ie *InferenceEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) glob.GlobRet {
 	// 为每个索引生成 a[i] $in cartSet.Params[i-1] 的事实（索引从1开始）
 	for i := range len(cartSet.Params) {
@@ -192,8 +228,9 @@ func (ie *InferenceEngine) trueInFactInFnTemplate(fact *ast.SpecFactStmt) (bool,
 	return true, glob.NewGlobTrue("")
 }
 
-// trueInFactInListSet handles postprocessing for a $in listSet(...)
-// It generates an or fact indicating that the left param equals one of the listSetFnObj params
+// trueInFactInListSet handles inference for obj $in listSet(e1, e2, ..., en)
+// Inference: Generates an OR fact indicating that obj equals one of the list set elements
+// Result: obj = e1 or obj = e2 or ... or obj = en
 func (ie *InferenceEngine) trueInFactInListSet(obj ast.Obj, listSetFnObj *ast.FnObj) glob.GlobRet {
 	// 用所有的param做一个or出来，说明left等于其中的一个
 	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine)
@@ -208,6 +245,9 @@ func (ie *InferenceEngine) trueInFactInListSet(obj ast.Obj, listSetFnObj *ast.Fn
 	return glob.NewGlobTrue("")
 }
 
+// trueInFactByListSet handles inference for x $in listSet(...)
+// It tries to get the listSet either directly or from equal facts
+// Inference: If x is in a finite list set, then x equals one of the elements
 func (ie *InferenceEngine) trueInFactByListSet(fact *ast.SpecFactStmt) glob.GlobRet {
 	// Try to get listSet, either directly or from equal facts
 	listSetObj := ie.Env.GetListSetEqualToObj(fact.Params[1])
@@ -223,6 +263,8 @@ func (ie *InferenceEngine) trueInFactByListSet(fact *ast.SpecFactStmt) glob.Glob
 	return ie.trueInFactInListSet(fact.Params[0], listSetFnObj)
 }
 
+// trueInFactBySetBuilder handles inference for x $in {y in T: P(y)}
+// Inference: If x is in a set builder, then x is in the parent set T and satisfies all intentional facts P(x)
 func (ie *InferenceEngine) trueInFactBySetBuilder(fact *ast.SpecFactStmt) glob.GlobRet {
 	setBuilderObj := ie.Env.GetSetBuilderEqualToObj(fact.Params[1])
 	if setBuilderObj == nil {
@@ -232,6 +274,10 @@ func (ie *InferenceEngine) trueInFactBySetBuilder(fact *ast.SpecFactStmt) glob.G
 	return ie.trueInFactInSetBuilder(fact.Params[0], setBuilderObj)
 }
 
+// trueInFactInSetBuilder handles inference for obj $in {param in parentSet: facts}
+// Inference generates:
+//   - obj $in parentSet (membership in parent set)
+//   - All instantiated intentional facts from the set builder
 func (ie *InferenceEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.FnObj) glob.GlobRet {
 	setBuilderStruct, err := setBuilderObj.ToSetBuilderStruct()
 	if err != nil {
@@ -268,6 +314,12 @@ func (ie *InferenceEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *as
 	return glob.NewGlobTrue("")
 }
 
+// trueInFactByRangeOrClosedRange handles inference for x $in range(a, b) or x $in closed_range(a, b)
+// Inference generates:
+//   - x $in Z (integer membership)
+//   - x >= a (lower bound)
+//   - x < b (for range) or x <= b (for closed_range)
+//   - Additional derived facts from comparison postprocessing (e.g., x != 0, x^2 > 0, etc.)
 func (ie *InferenceEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt) glob.GlobRet {
 	// Check if the second parameter is a range or closed_range function call
 	if !ast.ObjIsRangeOrClosedRangeWith2Params(fact.Params[1]) {
@@ -343,6 +395,11 @@ func (ie *InferenceEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt
 	return glob.NewGlobTrue("")
 }
 
+// trueInFactByNPos handles inference for x $in NPos (positive natural numbers)
+// Inference generates:
+//   - x $in N, x $in Q, x $in R (number type memberships)
+//   - x > 0, x >= 1 (positivity facts)
+//   - Additional derived facts from comparison postprocessing (e.g., x != 0, x^2 > 0, sqrt(x) > 0, etc.)
 func (ie *InferenceEngine) trueInFactByNPos(fact *ast.SpecFactStmt) glob.GlobRet {
 	derivedFacts := []string{}
 

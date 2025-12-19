@@ -537,7 +537,7 @@ func (exec *Executor) DefFnTemplateStmt(stmt *ast.FnTemplateDefStmt) ExecRet {
 	// 	defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	// }
 
-	ret := exec.Env.ExecDefFnTemplate(stmt)
+	ret := exec.Env.NewFnTemplateInEnvMem(stmt)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}

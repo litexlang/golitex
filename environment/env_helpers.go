@@ -180,3 +180,42 @@ func (env *Env) notExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, glob
 
 	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, []ast.FactStmt{}, []ast.FactStmt{orStmt}, fact.Line), glob.NewGlobTrue("")
 }
+
+func (env *Env) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, []ast.FactStmt, glob.GlobRet) {
+	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
+
+	existPropDef := env.GetExistPropDef(fact.PropName)
+	if existPropDef == nil {
+		return nil, nil, glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
+	}
+
+	uniMap := map[string]ast.Obj{}
+	for i := range existParams {
+		uniMap[existPropDef.ExistParams[i]] = existParams[i]
+	}
+
+	for i := range factParams {
+		uniMap[existPropDef.DefBody.DefHeader.Params[i]] = factParams[i]
+	}
+
+	instantiatedIffFacts := []ast.FactStmt{}
+	// instantiate iff facts
+	for _, iffFact := range existPropDef.DefBody.IffFactsOrNil {
+		instantiated, err := iffFact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, nil, glob.ErrRet(err)
+		}
+		instantiatedIffFacts = append(instantiatedIffFacts, instantiated)
+	}
+
+	instantiatedThenFacts := []ast.FactStmt{}
+	for _, thenFact := range existPropDef.DefBody.ImplicationFactsOrNil {
+		instantiated, err := thenFact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, nil, glob.ErrRet(err)
+		}
+		instantiatedThenFacts = append(instantiatedThenFacts, instantiated)
+	}
+
+	return instantiatedIffFacts, instantiatedThenFacts, glob.NewGlobTrue("")
+}
