@@ -100,9 +100,10 @@ const (
 	KeywordBy        = "by"
 	KeywordEval      = "eval"
 
-	KeywordEqualSet   = "equal_set"
-	KeywordSubsetOf   = "subset_of"
-	KeywordEqualTuple = "equal_tuple"
+	KeywordEqualSet           = "equal_set"
+	KeywordSubsetOf           = "subset_of"
+	KeywordEqualTuple         = "equal_tuple"
+	KeywordIsNonEmptyWithItem = "is_nonempty_with_item"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -195,6 +196,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordRange: {},
 
 	KeywordItemExistsIn: {},
+
+	KeywordIsNonEmptyWithItem: {},
 }
 
 const (
@@ -431,21 +434,22 @@ var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 }
 
 var BuiltinPropNames map[string]struct{} = map[string]struct{}{
-	KeywordIn:             {},
-	KeywordIsASet:         {},
-	KeywordIsAFiniteSet:   {},
-	KeywordIsANonEmptySet: {},
-	KeywordIsCart:         {},
-	KeywordIsTuple:        {},
-	KeywordEqualSet:       {},
-	KeywordSubsetOf:       {},
-	KeySymbolEqual:        {},
-	KeySymbolNotEqual:     {},
-	KeySymbolLargerEqual:  {},
-	KeySymbolLessEqual:    {},
-	KeySymbolGreater:      {},
-	KeySymbolLess:         {},
-	KeywordEqualTuple:     {},
+	KeywordIn:                 {},
+	KeywordIsASet:             {},
+	KeywordIsAFiniteSet:       {},
+	KeywordIsANonEmptySet:     {},
+	KeywordIsCart:             {},
+	KeywordIsTuple:            {},
+	KeywordEqualSet:           {},
+	KeywordSubsetOf:           {},
+	KeySymbolEqual:            {},
+	KeySymbolNotEqual:         {},
+	KeySymbolLargerEqual:      {},
+	KeySymbolLessEqual:        {},
+	KeySymbolGreater:          {},
+	KeySymbolLess:             {},
+	KeywordEqualTuple:         {},
+	KeywordIsNonEmptyWithItem: {},
 }
 
 var BuiltinExistPropNames map[string]struct{} = map[string]struct{}{
