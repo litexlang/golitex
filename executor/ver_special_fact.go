@@ -35,12 +35,12 @@ func (ver *Verifier) verSpecialFactInSpecialWays(stmt *ast.SpecFactStmt, state *
 	//     forall x R: x > 0 => g(x) > 0
 
 	// f(g(1)) = f(g(1))
-	if stmt.NameIs(glob.KeySymbolLargerEqual) && stmt.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolLargerEqual) {
 		return ver.verGreaterEqualBySpecialWays(stmt, state)
 	}
 
 	// 如果是 <= 那可以用 < 和 = 来证明，针对sqrt里不能对负数开方额外做的
-	if stmt.NameIs(glob.KeySymbolLessEqual) && stmt.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolLessEqual) {
 		return ver.verLessEqualBySpecialWays(stmt, state)
 	}
 
@@ -61,7 +61,7 @@ func (ver *Verifier) verSpecialFactInSpecialWays(stmt *ast.SpecFactStmt, state *
 	// f(1) > 0
 
 	// g(2) / g(f(1)) = g(2) / g(f(1))
-	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure && len(stmt.Params) == 2 {
+	if ast.IsFalseSpecFactWithPropName(stmt, glob.KeySymbolEqual) && len(stmt.Params) == 2 {
 		// 检查是否是 != 0 的情况
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], "0") {
 			return ver.verNotEqualZeroBySpecialWays(stmt, state)

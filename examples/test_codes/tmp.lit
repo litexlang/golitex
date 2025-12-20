@@ -1,0 +1,2 @@
+have S set = {x R : not x $in x }
+not S $in S

@@ -22,38 +22,41 @@ import (
 
 func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if stmt.NameIs(glob.KeywordIn) {
-		return ver.inFactBuiltinRules(stmt, state)
+		if stmt.TypeEnum == ast.FalsePure {
+			return ver.falseInFactBuiltinRules(stmt, state)
+		}
+		return ver.trueInFactBuiltinRules(stmt, state)
 	}
 
-	if stmt.NameIs(glob.KeywordIsNonEmptyWithItem) && stmt.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsNonEmptyWithItem) {
 		return ver.verIsNonEmptyWithItemByBuiltinRules(stmt, state)
 	}
 
-	if stmt.NameIs(glob.KeywordIsASet) && stmt.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsASet) {
 		return ver.verIsASetByBuiltinRules(stmt, state)
 	}
 
-	if stmt.NameIs(glob.KeywordIsAFiniteSet) && stmt.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsAFiniteSet) {
 		return ver.verIsAFiniteSetByBuiltinRules(stmt, state)
 	}
 
-	if stmt.NameIs(glob.KeywordIsANonEmptySet) && stmt.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsANonEmptySet) {
 		return ver.verIsANonEmptySetByBuiltinRules(stmt, state)
 	}
 
-	// if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TruePure {
+	// if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordItemExistsIn) {
 	// 	return ver.verItemExistsInByBuiltinRules(stmt, state)
 	// }
 
-	if stmt.NameIs(glob.KeywordEqualSet) && stmt.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordEqualSet) {
 		return ver.verEqualSetByBuiltinRules(stmt, state)
 	}
 
-	if stmt.NameIs(glob.KeywordEqualTuple) && stmt.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordEqualTuple) {
 		return ver.verEqualTupleByBuiltinRules(stmt, state)
 	}
 
-	if stmt.NameIs(glob.KeywordIsTuple) && stmt.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsTuple) {
 		return ver.verIsTupleByBuiltinRules(stmt, state)
 	}
 
@@ -63,11 +66,11 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 		return verRet
 	}
 
-	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure {
+	if ast.IsFalseSpecFactWithPropName(stmt, glob.KeySymbolEqual) {
 		return ver.verNotTrueEqualFact_BuiltinRules_WithState(stmt, state)
 	}
 
-	if stmt.NameIs(glob.KeywordIsCart) && stmt.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsCart) {
 		return ver.verIsCartByBuiltinRules(stmt, state)
 	}
 

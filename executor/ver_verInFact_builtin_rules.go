@@ -22,14 +22,14 @@ import (
 	"strconv"
 )
 
-func (ver *Verifier) inFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) trueInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if len(stmt.Params) != 2 {
 		return NewExecErr(fmt.Sprintf("invalid number of parameters for in fact: %d", len(stmt.Params)))
 	}
 
-	if stmt.TypeEnum == ast.FalsePure {
-		return ver.falseInFactBuiltinRules(stmt, state)
-	}
+	// if stmt.TypeEnum == ast.FalsePure {
+	// 	return ver.falseInFactBuiltinRules(stmt, state)
+	// }
 
 	var verRet ExecRet
 
@@ -954,10 +954,16 @@ func (ver *Verifier) verInFactByLeftIsIndexOfObjInSomeSet(stmt *ast.SpecFactStmt
 }
 
 func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if state.isFinalRound() {
+		return NewEmptyExecUnknown()
+	}
+
 	setBuilder := ver.Env.GetSetBuilderEqualToObj(stmt.Params[1])
 	if setBuilder == nil {
 		return NewEmptyExecUnknown()
 	}
+
+	nextState := state.GetAddRound()
 
 	setBuilderStruct, err := setBuilder.ToSetBuilderStruct()
 	if err != nil {
@@ -978,14 +984,14 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state 
 
 	// First, verify that the element is in the parent set
 	instParentSetFact := ast.NewInFactWithObj(stmt.Params[0], setBuilderStruct.ParentSet)
-	parentSetRet := ver.VerFactStmt(instParentSetFact, state)
+	parentSetRet := ver.VerFactStmt(instParentSetFact, nextState)
 	if parentSetRet.IsNotTrue() {
 		return parentSetRet
 	}
 
 	// Then, verify all facts are true
 	for _, fact := range instFacts {
-		verRet := ver.VerFactStmt(fact, state)
+		verRet := ver.VerFactStmt(fact, nextState)
 		if verRet.IsNotTrue() {
 			return NewEmptyExecUnknown()
 		}
