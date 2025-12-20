@@ -1,3 +1,1 @@
-let s set, a s
-$is_nonempty_with_item(s, a)
-have b s
+forall x set: forall x set: x $in s
