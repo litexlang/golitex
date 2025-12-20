@@ -2759,20 +2759,20 @@ func (p *TbParser) param_paramSet_paramInSetFacts(tb *tokenBlock, endWith string
 	}
 
 	// nth parameter set should not include nth to last parameter inside
-	for i, setParam := range setParams {
-		// 这里需要考虑极端情况： forall a {x R: x > 0}, x R 这样的极端情况，此时自由变量里有x，但是这个x出现在了setParam，而且此setParam出现在了自由变量x的前面，所以没被警告，所以需要特殊处理
-		atomsInSetParam := GetAtomsInObjIncludingParamInSetBuilder(setParam)
-		atomsInSetParamAsStr := make([]string, len(atomsInSetParam))
-		for i, atom := range atomsInSetParam {
-			atomsInSetParamAsStr[i] = string(atom)
-		}
+	// for i, setParam := range setParams {
+	// 	// 这里需要考虑极端情况： forall a {x R: x > 0}, x R 这样的极端情况，此时自由变量里有x，但是这个x出现在了setParam，而且此setParam出现在了自由变量x的前面，所以没被警告，所以需要特殊处理
+	// 	atomsInSetParam := GetAtomsInObjIncludingParamInSetBuilder(setParam)
+	// 	atomsInSetParamAsStr := make([]string, len(atomsInSetParam))
+	// 	for i, atom := range atomsInSetParam {
+	// 		atomsInSetParamAsStr[i] = string(atom)
+	// 	}
 
-		for j := i; j < len(params); j++ {
-			if slices.Contains(atomsInSetParamAsStr, params[j]) {
-				return nil, nil, fmt.Errorf("the set %s of the parameter at index %d cannot include any parameters from index %d to the last one (found parameter %s)", setParam, i, j, params[j])
-			}
-		}
-	}
+	// 	for j := i; j < len(params); j++ {
+	// 		if slices.Contains(atomsInSetParamAsStr, params[j]) {
+	// 			return nil, nil, fmt.Errorf("the set %s of the parameter at index %d cannot include any parameters from index %d to the last one (found parameter %s)", setParam, i, j, params[j])
+	// 		}
+	// 	}
+	// }
 
 	return params, setParams, nil
 }
