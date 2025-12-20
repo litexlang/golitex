@@ -32,11 +32,6 @@ func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob.GlobR
 		return ret
 	}
 
-	// ret = env.NoDuplicateParamNamesAndParamSetsDefined(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, true)
-	// if ret.IsErr() {
-	// 	return ret
-	// }
-
 	extraAtomNames := map[string]struct{}{}
 	for _, param := range stmt.DefHeader.Params {
 		extraAtomNames[param] = struct{}{}
