@@ -25,16 +25,8 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 		return ver.inFactBuiltinRules(stmt, state)
 	}
 
-	if stmt.NameIs(glob.KeywordIsNonEmptyWithItem) {
+	if stmt.NameIs(glob.KeywordIsNonEmptyWithItem) && stmt.TypeEnum == ast.TruePure {
 		return ver.verIsNonEmptyWithItemByBuiltinRules(stmt, state)
-	}
-
-	if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TrueExist_St {
-		return ver.verTrueExistItemExistsInByBuiltinRules(stmt, state)
-	}
-
-	if stmt.NameIs(glob.KeywordItemExistsIn) && stmt.TypeEnum == ast.TruePure {
-		return ver.verTruePurePropItemExistsInByBuiltinRules(stmt, state)
 	}
 
 	if stmt.NameIs(glob.KeywordIsASet) && stmt.TypeEnum == ast.TruePure {
