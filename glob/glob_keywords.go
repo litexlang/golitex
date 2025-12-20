@@ -340,15 +340,15 @@ var AddMinusStarSet map[string]struct{} = map[string]struct{}{
 	KeySymbolStar:  {},
 }
 
-const LeftIsEqual0RightIsPositive = "__leftIsEqual0RightIsPositive__"
-const LeftIsNegativeRightIsInteger = "__leftIsNegativeRightIsInteger__"
-const LastTwoObjectsAreEqual = "__last_two_objects_are_equal__"
+// const LeftIsEqual0RightIsPositive = "__leftIsEqual0RightIsPositive__"
+// const LeftIsNegativeRightIsInteger = "__leftIsNegativeRightIsInteger__"
+// const LastTwoObjectsAreEqual = "__last_two_objects_are_equal__"
 
-var builtinPropObjNames = map[string]struct{}{
-	LeftIsEqual0RightIsPositive:  {},
-	LeftIsNegativeRightIsInteger: {},
-	LastTwoObjectsAreEqual:       {},
-}
+// var builtinPropObjNames = map[string]struct{}{
+// 	LeftIsEqual0RightIsPositive:  {},
+// 	LeftIsNegativeRightIsInteger: {},
+// 	LastTwoObjectsAreEqual:       {},
+// }
 
 // KeywordHelpMap stores help messages for each keyword
 var KeywordHelpMap = map[string]string{

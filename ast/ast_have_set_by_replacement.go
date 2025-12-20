@@ -14,19 +14,15 @@
 
 package litex_ast
 
-import (
-	glob "golitex/glob"
-)
-
-func GetForallXOnlyOneYSatisfyGivenProp(domSet, rangeSet Obj, propName Atom) *UniFactStmt {
-	params := []string{"x", "y1", "y2"}
-	setParams := []Obj{domSet, rangeSet, rangeSet}
-	domFacts := []FactStmt{
-		NewSpecFactStmt(TruePure, propName, []Obj{Atom("x"), Atom("y1")}, glob.BuiltinLine),
-		NewSpecFactStmt(TruePure, propName, []Obj{Atom("x"), Atom("y2")}, glob.BuiltinLine),
-	}
-	thenFacts := []FactStmt{
-		NewSpecFactStmt(TruePure, Atom(glob.LastTwoObjectsAreEqual), []Obj{Atom("x"), Atom("y1"), Atom("y2")}, glob.BuiltinLine),
-	}
-	return NewUniFact(params, setParams, domFacts, thenFacts, glob.BuiltinLine)
-}
+// func GetForallXOnlyOneYSatisfyGivenProp(domSet, rangeSet Obj, propName Atom) *UniFactStmt {
+// 	params := []string{"x", "y1", "y2"}
+// 	setParams := []Obj{domSet, rangeSet, rangeSet}
+// 	domFacts := []FactStmt{
+// 		NewSpecFactStmt(TruePure, propName, []Obj{Atom("x"), Atom("y1")}, glob.BuiltinLine),
+// 		NewSpecFactStmt(TruePure, propName, []Obj{Atom("x"), Atom("y2")}, glob.BuiltinLine),
+// 	}
+// 	thenFacts := []FactStmt{
+// 		NewSpecFactStmt(TruePure, Atom(glob.LastTwoObjectsAreEqual), []Obj{Atom("x"), Atom("y1"), Atom("y2")}, glob.BuiltinLine),
+// 	}
+// 	return NewUniFact(params, setParams, domFacts, thenFacts, glob.BuiltinLine)
+// }
