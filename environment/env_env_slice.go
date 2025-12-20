@@ -31,3 +31,39 @@ type EnvMemory struct {
 	AlgoDefMem      map[string]*ast.DefAlgoStmt
 	DefProveAlgoMem map[string]*ast.DefProveAlgoStmt
 }
+
+func NewEnvMemory() *EnvMemory {
+	return &EnvMemory{
+		EqualMem:                 make(map[string]shared_ptr_to_slice_of_obj),
+		KnownFactsStruct:         makeKnownFactsStruct(),
+		SymbolSimplifiedValueMem: make(map[string]ast.Obj),
+
+		AtomObjDefMem:    make(AtomObjDefMem),
+		PropDefMem:       make(PropDefMem),
+		FnTemplateDefMem: make(FnTemplateDefMem),
+		ExistPropDefMem:  make(ExistPropDefMem),
+
+		TransitivePropMem:  make(map[string]map[string][]ast.Obj),
+		CommutativePropMem: make(map[string]*PropCommutativeCase),
+
+		AlgoDefMem:      make(map[string]*ast.DefAlgoStmt),
+		DefProveAlgoMem: make(map[string]*ast.DefProveAlgoStmt),
+	}
+}
+
+func (envMgr *EnvMgr) NewEnvMgr(pkgMgr *EnvPkgMgr) *EnvMgr {
+	return &EnvMgr{
+		AllDefinedAtomObjNames: make(map[string]EnvDepthWhereNameIsUsed),
+		AllDefinedPropNames:    make(map[string]EnvDepthWhereNameIsUsed),
+		PackageManager:         pkgMgr,
+		EnvSlice:               []EnvMemory{*NewEnvMemory()},
+	}
+}
+
+func (envMgr *EnvMgr) GetUpMostEnv() *EnvMemory {
+	return &envMgr.EnvSlice[0]
+}
+
+func (envMgr *EnvMgr) GetSecondUpMostEnv() *EnvMemory {
+	return &envMgr.EnvSlice[1]
+}
