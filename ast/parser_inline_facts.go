@@ -213,7 +213,7 @@ func (p *TbParser) inlineUniFact_Param_ParamSet_ParamInSetFacts(tb *tokenBlock) 
 	return params, setParams, nil
 }
 
-func (p *TbParser) inlineUniInterfaceSkipTerminator(tb *tokenBlock, ends []string) (UniFactInterface, error) {
+func (p *TbParser) inlineUniInterfaceSkipTerminator(tb *tokenBlock, ends []string) (FactStmt, error) {
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
