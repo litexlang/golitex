@@ -2,34 +2,37 @@ package litex_env
 
 import ast "golitex/ast"
 
-type EnvDepthWhereNameIsUsed uint // where a prop or atom object is defined
-
 type EnvMgr struct {
-	AllDefinedAtomObjNames map[string]EnvDepthWhereNameIsUsed
-	AllDefinedPropNames    map[string]EnvDepthWhereNameIsUsed
-	PackageManager         *EnvPkgMgr
-	EnvSlice               []EnvMemory
+	AllDefinedAtomObjNames    map[string]int
+	AllDefinedPropNames       map[string]int
+	AllDefinedExistPropNames  map[string]int
+	AllDefinedFnTemplateNames map[string]int
+	AllDefinedAlgoNames       map[string]int
+	AllDefinedProveAlgoNames  map[string]int
+
+	PackageManager *EnvPkgMgr
+	EnvSlice       []EnvMemory
 }
 
 type EnvMemory struct {
-	// facts memory
-	EqualMem                 map[string]shared_ptr_to_slice_of_obj
-	KnownFactsStruct         KnownFactsStruct
-	SymbolSimplifiedValueMem map[string]ast.Obj
-
 	// definition memory
 	AtomObjDefMem    AtomObjDefMem
 	PropDefMem       PropDefMem
 	FnTemplateDefMem FnTemplateDefMem
 	ExistPropDefMem  ExistPropDefMem
 
-	// transitive prop
-	TransitivePropMem  map[string]map[string][]ast.Obj
-	CommutativePropMem map[string]*PropCommutativeCase
-
 	// algo
 	AlgoDefMem      map[string]*ast.DefAlgoStmt
 	DefProveAlgoMem map[string]*ast.DefProveAlgoStmt
+
+	// facts memory
+	EqualMem                 map[string]shared_ptr_to_slice_of_obj
+	KnownFactsStruct         KnownFactsStruct
+	SymbolSimplifiedValueMem map[string]ast.Obj
+
+	// transitive prop and commutative prop
+	TransitivePropMem  map[string]map[string][]ast.Obj
+	CommutativePropMem map[string]*PropCommutativeCase
 }
 
 func NewEnvMemory() *EnvMemory {
@@ -51,12 +54,16 @@ func NewEnvMemory() *EnvMemory {
 	}
 }
 
-func (envMgr *EnvMgr) NewEnvMgr(pkgMgr *EnvPkgMgr) *EnvMgr {
+func NewEnvMgr(pkgMgr *EnvPkgMgr) *EnvMgr {
 	return &EnvMgr{
-		AllDefinedAtomObjNames: make(map[string]EnvDepthWhereNameIsUsed),
-		AllDefinedPropNames:    make(map[string]EnvDepthWhereNameIsUsed),
-		PackageManager:         pkgMgr,
-		EnvSlice:               []EnvMemory{*NewEnvMemory()},
+		AllDefinedAtomObjNames:    make(map[string]int),
+		AllDefinedPropNames:       make(map[string]int),
+		AllDefinedExistPropNames:  make(map[string]int),
+		AllDefinedFnTemplateNames: make(map[string]int),
+		AllDefinedAlgoNames:       make(map[string]int),
+		AllDefinedProveAlgoNames:  make(map[string]int),
+		PackageManager:            pkgMgr,
+		EnvSlice:                  []EnvMemory{*NewEnvMemory()},
 	}
 }
 

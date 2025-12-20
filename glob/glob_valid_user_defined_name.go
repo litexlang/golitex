@@ -65,9 +65,9 @@ func IsValidUserDefinedNameWithoutPkgName(name string) error {
 		return fmt.Errorf("identifier name cannot be a builtin keyword or builtin symbol, get: %s", name)
 	}
 
-	if _, ok := builtinPropObjNames[name]; ok {
-		return fmt.Errorf("identifier name cannot be a builtin name, get: %s", name)
-	}
+	// if _, ok := builtinPropObjNames[name]; ok {
+	// 	return fmt.Errorf("identifier name cannot be a builtin name, get: %s", name)
+	// }
 
 	return nil
 }
