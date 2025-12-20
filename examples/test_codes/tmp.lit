@@ -1,1 +1,3 @@
-have set x = {1, 2, 3}
+let s set, a s
+$is_nonempty_with_item(s, a)
+have b s

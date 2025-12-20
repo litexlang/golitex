@@ -17,7 +17,6 @@ package litex_ast
 import (
 	"fmt"
 	glob "golitex/glob"
-	"slices"
 )
 
 func (p *TbParser) IsEnding(tb *tokenBlock, ends []string) bool {
@@ -197,19 +196,19 @@ func (p *TbParser) inlineUniFact_Param_ParamSet_ParamInSetFacts(tb *tokenBlock) 
 	}
 
 	// nth parameter set should not include nth to last parameter inside
-	for i, setParam := range setParams {
-		atomsInSetParam := GetAtomObjsInObj(setParam)
-		atomsInSetParamAsStr := make([]string, len(atomsInSetParam))
-		for i, atom := range atomsInSetParam {
-			atomsInSetParamAsStr[i] = string(atom)
-		}
+	// for i, setParam := range setParams {
+	// 	atomsInSetParam := GetAtomObjsInObj(setParam)
+	// 	atomsInSetParamAsStr := make([]string, len(atomsInSetParam))
+	// 	for i, atom := range atomsInSetParam {
+	// 		atomsInSetParamAsStr[i] = string(atom)
+	// 	}
 
-		for j := i; j < len(params); j++ {
-			if slices.Contains(atomsInSetParamAsStr, params[j]) {
-				return nil, nil, fmt.Errorf("the set %s of the parameter if index %d cannot include any parameters from the index %d to the last one (found parameter %s)", setParam, i, j, params[j])
-			}
-		}
-	}
+	// 	for j := i; j < len(params); j++ {
+	// 		if slices.Contains(atomsInSetParamAsStr, params[j]) {
+	// 			return nil, nil, fmt.Errorf("the set %s of the parameter if index %d cannot include any parameters from the index %d to the last one (found parameter %s)", setParam, i, j, params[j])
+	// 		}
+	// 	}
+	// }
 
 	return params, setParams, nil
 }

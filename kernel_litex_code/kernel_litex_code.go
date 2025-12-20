@@ -700,11 +700,7 @@ let fn index_set_of_cart_prod(s set) set:
 	dom:
 		$is_cart_prod(s)
 		
-let fn cart_prod(index_set set, family fn (index_set) set) set
-
-know forall index_set set, family fn (index_set) set: $is_cart_prod(cart_prod(index_set, family))
-
-know forall index_set set, family fn (index_set) set: index_set_of_cart_prod(cart_prod(index_set, family)) = index_set
+# let fn cart_prod(index_set set, family fn (index_set) set) set
 
 know:
 	forall x, y R:
@@ -898,4 +894,7 @@ exist_prop x set st axiom_of_infinity():
 
 know:
 	forall x, y R: x < y => $is_a_nonempty_set(range(x, y)), $is_a_nonempty_set(closed_range(x, y))
+
+know:
+	forall x finite_set: count(x) > 0 => $is_a_nonempty_set(x)
 `

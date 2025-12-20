@@ -36,21 +36,6 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	// 这个 warning 不合时宜了，因为fn的定义其实和obj一样了，就是额外多个满足特定的template
 
 	if glob.IsBuiltinExistPropName(string(stmt.Fact.PropName)) {
-		if stmt.Fact.PropName == ast.Atom(glob.KeywordItemExistsIn) {
-			inFact := ast.NewInFactWithObj(ast.Atom(stmt.ObjNames[0]), stmt.Fact.Params[0])
-
-			// 把 obj 放入环境
-			stmtForDef := ast.NewDefLetStmt([]string{stmt.ObjNames[0]}, []ast.Obj{stmt.Fact.Params[0]}, []ast.FactStmt{}, stmt.Line)
-			ret := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
-			if ret.IsErr() {
-				return NewExecErr(ret.String())
-			}
-			ret = exec.Env.NewFactWithAtomsDefined(inFact)
-			if ret.IsErr() {
-				return NewExecErr(ret.String())
-			}
-			return NewExecTrue(stmtForDef.String())
-		}
 	}
 
 	// TODO 把 exist prop def 里的东西释放出来

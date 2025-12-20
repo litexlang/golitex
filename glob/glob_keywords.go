@@ -25,7 +25,6 @@ const (
 	KeywordIsASet         = "is_a_set"
 	KeywordIsAFiniteSet   = "is_a_finite_set"
 	KeywordIsANonEmptySet = "is_a_nonempty_set"
-	KeywordItemExistsIn   = "item_exists_in"
 
 	KeywordNot    = "not"
 	KeywordOr     = "or"
@@ -196,8 +195,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordIsANonEmptySet: {},
 
 	KeywordRange: {},
-
-	KeywordItemExistsIn: {},
 
 	KeywordIsNonEmptyWithItem: {},
 }
@@ -454,9 +451,7 @@ var BuiltinPropNames map[string]struct{} = map[string]struct{}{
 	KeywordIsNonEmptyWithItem: {},
 }
 
-var BuiltinExistPropNames map[string]struct{} = map[string]struct{}{
-	KeywordItemExistsIn: {},
-}
+var BuiltinExistPropNames map[string]struct{} = map[string]struct{}{}
 
 func IsBuiltinPropName(name string) bool {
 	_, ok := BuiltinPropNames[name]

@@ -110,8 +110,8 @@ prove:
         count(s) = 1
     1 > 0
     count(s) > 0
-    have a st $item_exists_in(s)
-    a $in s
+    $is_a_nonempty_set(s)
+    have a s
 
 
 # have objectName st item_exists_in(setName)
@@ -119,15 +119,13 @@ prove:
 prove:
     let s set, a set
     know a $in s
-    exist a st $item_exists_in(s)
-    $item_exists_in(s)
-    have b st $item_exists_in(s)
-    b $in s
+    $is_nonempty_with_item(s, a)
+    have b s
 
 prove:
     {x R: x > 0} = {x R: x > 0}
 
-    exist 1 st $item_exists_in({x R: x > 0})
+    $is_nonempty_with_item({x R: x > 0}, 1)
 
     have a set = {x R: x > 0}
 
