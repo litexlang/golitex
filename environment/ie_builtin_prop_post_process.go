@@ -31,7 +31,7 @@ func (ie *InferenceEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, 
 
 // BuiltinPropExceptEqualPostProcess handles postprocessing for builtin properties except equality
 func (ie *InferenceEngine) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
-	if fact.PropName == glob.KeywordIn {
+	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordIn) {
 		return ie.trueInFact(fact)
 	}
 
@@ -39,7 +39,7 @@ func (ie *InferenceEngine) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactS
 		return ie.falseEqualFact(fact)
 	}
 
-	if fact.PropName == glob.KeySymbolGreater && fact.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(fact, glob.KeySymbolGreater) {
 		if fact.Params[1].String() == "0" {
 			return ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact)
 		} else {
@@ -47,7 +47,7 @@ func (ie *InferenceEngine) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactS
 		}
 	}
 
-	if fact.PropName == glob.KeySymbolLargerEqual && fact.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(fact, glob.KeySymbolLargerEqual) {
 		if fact.Params[1].String() == "0" {
 			return ie.builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsZero(fact)
 		} else {
@@ -55,7 +55,7 @@ func (ie *InferenceEngine) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactS
 		}
 	}
 
-	if fact.PropName == glob.KeySymbolLess && fact.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(fact, glob.KeySymbolLess) {
 		if fact.Params[1].String() == "0" {
 			return ie.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(fact)
 		} else {
@@ -63,7 +63,7 @@ func (ie *InferenceEngine) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactS
 		}
 	}
 
-	if fact.PropName == glob.KeySymbolLessEqual {
+	if ast.IsTrueSpecFactWithPropName(fact, glob.KeySymbolLessEqual) {
 		if fact.Params[1].String() == "0" {
 			return ie.builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsZero(fact)
 		} else {
@@ -71,18 +71,18 @@ func (ie *InferenceEngine) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactS
 		}
 	}
 
-	if fact.PropName == glob.KeywordEqualSet && fact.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordEqualSet) {
 		ret := ie.equalSetFactPostProcess(fact)
 		return ret
 	}
 
-	if fact.PropName == glob.KeywordEqualTuple && fact.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordEqualTuple) {
 		ret := ie.equalTupleFactPostProcess(fact)
 		// Inherit derived facts from equal tuple post-processing
 		return ret
 	}
 
-	if fact.PropName == glob.KeywordSubsetOf && fact.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordSubsetOf) {
 		ret := ie.subsetOfFactPostProcess(fact)
 		// Inherit derived facts from subset_of post-processing
 		return ret

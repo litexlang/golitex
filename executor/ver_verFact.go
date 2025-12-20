@@ -24,7 +24,7 @@ import (
 func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) ExecRet {
 	switch asStmt := stmt.(type) {
 	case *ast.SpecFactStmt:
-		if asStmt.NameIs(glob.KeySymbolEqual) && asStmt.TypeEnum == ast.TruePure {
+		if ast.IsTrueSpecFactWithPropName(asStmt, glob.KeySymbolEqual) {
 			return ver.verTrueEqualFact(asStmt, state, true)
 		} else {
 			return ver.verNormalSpecFact(asStmt, state)

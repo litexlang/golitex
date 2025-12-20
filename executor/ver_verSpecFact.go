@@ -36,7 +36,7 @@ func (ver *Verifier) verNormalSpecFact(stmt *ast.SpecFactStmt, state *VerState) 
 }
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.TruePure {
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolEqual) {
 		return ver.verTrueEqualFact(stmt, state, true)
 	}
 

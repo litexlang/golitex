@@ -194,11 +194,9 @@ type FactStmt interface {
 	stmt()
 	String() string
 	InstantiateFact(map[string]Obj) (FactStmt, error)
-	// GetAtoms() []Atom
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
-	// ReplaceObj(oldObj Obj, newObj Obj) FactStmt
 	GetLine() uint
 	algoStmt()
 	Instantiate(map[string]Obj) (Stmt, error)
@@ -218,11 +216,9 @@ type Spec_OrFact interface {
 	String() string
 	InstantiateFact(uniConMap map[string]Obj) (FactStmt, error)
 	ReverseIsTrue() []*SpecFactStmt
-	// GetAtoms() []Atom
 	ToLatexString() string
 	canBeKnown()
 	InlineString() string
-	// ReplaceObj(oldObj Obj, newObj Obj) FactStmt
 	GetLine() uint
 	algoStmt()
 	Instantiate(map[string]Obj) (Stmt, error)
@@ -244,16 +240,6 @@ func (stmt *OrStmt) ReverseIsTrue() []*SpecFactStmt {
 	}
 	return reversedFacts
 }
-
-type FnTemplate_Or_DefObjStmtInterface interface {
-	fnTemplate_Or_DefObjStmt()
-	ToLatexString() string
-	InlineString() string
-	algoStmt()
-	Instantiate(map[string]Obj) (Stmt, error)
-}
-
-func (stmt *DefLetStmt) fnTemplate_Or_DefObjStmt() {}
 
 type CanBeKnownStmt interface {
 	stmt()
