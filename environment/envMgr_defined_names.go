@@ -25,17 +25,17 @@ import (
 
 func (envMgr *EnvMgr) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
 	// depth
-	depthPropDefPair, ok := envMgr.AllDefinedPropNames[string(propName)]
+	propDef, ok := envMgr.AllDefinedPropNames[string(propName)]
 	if ok {
-		return depthPropDefPair.defStmt
+		return propDef
 	}
 	return nil
 }
 
 func (envMgr *EnvMgr) GetExistPropDef(propName ast.Atom) *ast.DefExistPropStmt {
-	depthExistPropDefPair, ok := envMgr.AllDefinedExistPropNames[string(propName)]
+	existPropDef, ok := envMgr.AllDefinedExistPropNames[string(propName)]
 	if ok {
-		return depthExistPropDefPair.defStmt
+		return existPropDef
 	}
 	return nil
 }

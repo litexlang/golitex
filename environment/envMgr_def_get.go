@@ -17,9 +17,9 @@ package litex_env
 import ast "golitex/ast"
 
 func (envMgr *EnvMgr) GetFnTemplateDef(objAtomName ast.Atom) *ast.FnTemplateDefStmt {
-	depthFnTemplateDefPair, ok := envMgr.AllDefinedFnTemplateNames[string(objAtomName)]
+	fnTemplateDef, ok := envMgr.AllDefinedFnTemplateNames[string(objAtomName)]
 	if ok {
-		return depthFnTemplateDefPair.defStmt
+		return fnTemplateDef
 	}
 	return nil
 }
@@ -61,17 +61,17 @@ func (envMgr *EnvMgr) IsCommutativeProp(specFact *ast.SpecFactStmt) bool {
 }
 
 func (envMgr *EnvMgr) GetProveAlgoDef(proveAlgoName string) *ast.DefProveAlgoStmt {
-	depthProveAlgoDefPair, ok := envMgr.AllDefinedProveAlgoNames[proveAlgoName]
+	proveAlgoDef, ok := envMgr.AllDefinedProveAlgoNames[proveAlgoName]
 	if ok {
-		return depthProveAlgoDefPair.defStmt
+		return proveAlgoDef
 	}
 	return nil
 }
 
 func (envMgr *EnvMgr) GetAlgoDef(funcName string) *ast.DefAlgoStmt {
-	depthAlgoDefPair, ok := envMgr.AllDefinedAlgoNames[funcName]
+	algoDef, ok := envMgr.AllDefinedAlgoNames[funcName]
 	if ok {
-		return depthAlgoDefPair.defStmt
+		return algoDef
 	}
 	return nil
 }
