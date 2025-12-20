@@ -140,3 +140,12 @@ func (env *Env) newEqualsFact(stmt *ast.EqualsFactStmt) glob.GlobRet {
 	}
 	return glob.NewGlobTrue("")
 }
+
+func (e *Env) NotEqualIsCommutative() {
+	e.CommutativePropMem[glob.KeySymbolEqual] = NewCommutativePropMemItemStruct()
+	e.CommutativePropMem[glob.KeySymbolEqual].FalsePureIsCommutative = true
+}
+
+func (e *Env) NewTransitiveProp(name string) {
+	e.TransitivePropMem[name] = make(map[string][]ast.Obj)
+}

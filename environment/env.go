@@ -16,7 +16,6 @@ package litex_env
 
 import (
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 type shared_ptr_to_slice_of_obj = *[]ast.Obj
@@ -73,13 +72,6 @@ type PropCommutativeCase struct {
 	FalsePureIsCommutative bool
 }
 
-func NewCommutativePropMemItemStruct() *PropCommutativeCase {
-	return &PropCommutativeCase{
-		TruePureIsCommutative:  false,
-		FalsePureIsCommutative: false,
-	}
-}
-
 func (env *Env) GetUpMostEnv() *Env {
 	if env.Parent == nil {
 		return env
@@ -129,11 +121,9 @@ func makeKnownFactsStruct() KnownFactsStruct {
 	}
 }
 
-func (e *Env) NotEqualIsCommutative() {
-	e.CommutativePropMem[glob.KeySymbolEqual] = NewCommutativePropMemItemStruct()
-	e.CommutativePropMem[glob.KeySymbolEqual].FalsePureIsCommutative = true
-}
-
-func (e *Env) NewTransitiveProp(name string) {
-	e.TransitivePropMem[name] = make(map[string][]ast.Obj)
+func NewCommutativePropMemItemStruct() *PropCommutativeCase {
+	return &PropCommutativeCase{
+		TruePureIsCommutative:  false,
+		FalsePureIsCommutative: false,
+	}
 }
