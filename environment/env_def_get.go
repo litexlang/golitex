@@ -95,3 +95,15 @@ func (e *Env) IsPkgName(pkgName string) bool {
 	_, ok := e.PackageManager.PkgPathNameMgr.NamePathMap[pkgName]
 	return ok
 }
+
+func (env *Env) IsFnWithDefinedAlgo(obj ast.Obj) bool {
+	objAsFnObj, ok := obj.(*ast.FnObj)
+	if !ok {
+		return false
+	}
+	objAsFnObjHeadAsAtom, ok := objAsFnObj.FnHead.(ast.Atom)
+	if !ok {
+		return false
+	}
+	return env.GetAlgoDef(objAsFnObjHeadAsAtom.String()) != nil
+}
