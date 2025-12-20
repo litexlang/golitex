@@ -21,44 +21,6 @@ import (
 	"slices"
 )
 
-// func (env *Env) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) glob.GlobRet {
-// 	// prop名不能和parameter名重叠
-// 	if slices.Contains(stmt.DefHeader.Params, string(stmt.DefHeader.Name)) {
-// 		return glob.ErrRet(fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name))
-// 	}
-
-// 	// ret := env.NoDuplicateParamNamesAndParamSetsDefined(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, true)
-// 	// if ret.IsErr() {
-// 	// 	return ret
-// 	// }
-
-// 	extraAtomNames := map[string]struct{}{}
-// 	for _, param := range stmt.DefHeader.Params {
-// 		extraAtomNames[param] = struct{}{}
-// 	}
-// 	extraAtomNames[string(stmt.DefHeader.Name)] = struct{}{}
-
-// 	for _, fact := range stmt.DomFactsOrNil {
-// 		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
-// 		if ret.IsErr() {
-// 			ret.AddMsg(fmt.Sprintf("in dom fact of prop %s definition", stmt.DefHeader.Name))
-// 			return ret
-// 		}
-// 	}
-
-// 	for _, fact := range stmt.IffFactsOrNil {
-// 		ret := env.AtomObjsInFactProperlyDefined(fact, extraAtomNames)
-// 		if ret.IsErr() {
-// 			ret.AddMsg(fmt.Sprintf("in iff fact of prop %s definition", stmt.DefHeader.Name))
-// 			return ret
-// 		}
-// 	}
-
-// 	key := string(stmt.DefHeader.Name)
-// 	env.PropDefMem[key] = *stmt
-// 	return glob.NewGlobTrue("")
-// }
-
 func (env *Env) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob.GlobRet {
 	// prop名不能和parameter名重叠
 	if slices.Contains(stmt.DefHeader.Params, string(stmt.DefHeader.Name)) {
