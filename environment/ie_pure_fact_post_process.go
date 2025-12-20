@@ -22,7 +22,7 @@ import (
 
 func (ie *InferenceEngine) newPureFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	if glob.IsBuiltinPropName(string(fact.PropName)) || glob.IsBuiltinExistPropName(string(fact.PropName)) {
-		ret := ie.BuiltinPropExceptEqualPostProcess(fact)
+		ret := ie.BuiltinPropExceptTrueEqual(fact)
 		return ret
 	}
 

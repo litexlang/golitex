@@ -29,8 +29,8 @@ func (ie *InferenceEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, 
 	return glob.NewGlobTrue("")
 }
 
-// BuiltinPropExceptEqualPostProcess handles postprocessing for builtin properties except equality
-func (ie *InferenceEngine) BuiltinPropExceptEqualPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+// BuiltinPropExceptTrueEqual handles postprocessing for builtin properties except equality
+func (ie *InferenceEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
 	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordIn) {
 		return ie.trueInFact(fact)
 	}
