@@ -330,3 +330,17 @@ func (e *Env) IsNameDefinedOrBuiltin(name string, extraParams map[string]struct{
 
 	return glob.ErrRet(fmt.Errorf("undefined: %s", name))
 }
+
+func (env *Env) IsValidIdentifierAvailable(name string) glob.GlobRet {
+	err := glob.IsValidUseDefinedAtomObj(name)
+	if err != nil {
+		return glob.ErrRet(err)
+	}
+
+	ret := env.IsAtomObjDefinedByUser(ast.Atom(name))
+	if ret.IsTrue() {
+		return glob.ErrRet(duplicateDefError(name))
+	}
+
+	return glob.NewGlobTrue("")
+}
