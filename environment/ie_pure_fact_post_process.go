@@ -93,23 +93,11 @@ func (ie *InferenceEngine) newFalseExist(fact *ast.SpecFactStmt) glob.GlobRet {
 // newTrueExist handles postprocessing for TrueExist_St facts
 // have(exist ... st ...) => exist
 func (ie *InferenceEngine) newTrueExist(fact *ast.SpecFactStmt) glob.GlobRet {
-	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
+	_, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
 	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, factParams, fact.Line)
 
 	// err := ie.Env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(existFact, ie.Env.CurMatchEnv)
-	if fact.PropName == glob.KeywordItemExistsIn {
-		ret := ie.Env.storeSpecFactInMem(existFact)
-		if ret.IsErr() {
-			return ret
-		}
-		inFact := ast.NewInFactWithObj(existParams[0], factParams[0])
-		ret = ie.Env.NewFactWithAtomsDefined(inFact)
-		if ret.IsErr() {
-			return ret
-		}
-		return glob.NewGlobTrue("")
-	}
 
 	ret := ie.Env.storeSpecFactInMem(existFact)
 	if ret.IsErr() {
