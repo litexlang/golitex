@@ -295,3 +295,38 @@ func (env *Env) AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(obj ast.Obj,
 
 	return env.AtomsInObjDefinedOrBuiltin(obj, extraParams)
 }
+
+func (e *Env) IsNameDefinedOrBuiltin(name string, extraParams map[string]struct{}) glob.GlobRet {
+	if _, ok := extraParams[name]; ok {
+		return glob.NewGlobTrue("")
+	}
+
+	if glob.IsBuiltinAtom(name) {
+		return glob.NewGlobTrue("")
+	}
+
+	if e.IsPkgName(name) {
+		return glob.NewGlobTrue("")
+	}
+
+	if _, ok := ast.IsNumLitAtomObj(ast.Atom(name)); ok {
+		return glob.NewGlobTrue("")
+	}
+
+	ret := e.IsAtomObjDefinedByUser(ast.Atom(name))
+	if ret.IsTrue() {
+		return glob.NewGlobTrue("")
+	}
+
+	existPropDef := e.GetExistPropDef(ast.Atom(name))
+	if existPropDef != nil {
+		return glob.NewGlobTrue("")
+	}
+
+	propDef := e.GetPropDef(ast.Atom(name))
+	if propDef != nil {
+		return glob.NewGlobTrue("")
+	}
+
+	return glob.ErrRet(fmt.Errorf("undefined: %s", name))
+}
