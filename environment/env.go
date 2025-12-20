@@ -27,7 +27,7 @@ type ExistPropDefMem map[string]ast.DefExistPropStmt
 
 type FnTemplateDefMem map[string]ast.FnTemplateDefStmt
 
-type ObjDefMem map[string]*ast.DefLetStmt // 因为很多的obj会共享一个def obj. 可能是 nil
+type AtomObjDefMem map[string]*ast.DefLetStmt // 因为很多的obj会共享一个def obj. 可能是 nil
 
 type FnInFnTMem map[string][]FnInFnTMemItem
 
@@ -46,7 +46,7 @@ type KnownFactsStruct struct {
 type Env struct {
 	Parent *Env
 
-	ObjDefMem        ObjDefMem
+	ObjDefMem        AtomObjDefMem
 	PropDefMem       PropDefMem
 	FnTemplateDefMem FnTemplateDefMem
 	ExistPropDefMem  ExistPropDefMem
@@ -66,11 +66,6 @@ type Env struct {
 	DefProveAlgoMem map[string]*ast.DefProveAlgoStmt
 
 	PackageManager *EnvPkgMgr
-}
-
-type ObjFromCartSetMemItem struct {
-	CartSetOrNil *ast.FnObj
-	EqualToOrNil ast.Obj
 }
 
 type PropCommutativeCase struct {
@@ -108,7 +103,7 @@ func NewEnv(parent *Env) *Env {
 	}
 	env := &Env{
 		Parent:                   parent,
-		ObjDefMem:                make(ObjDefMem),
+		ObjDefMem:                make(AtomObjDefMem),
 		PropDefMem:               make(PropDefMem),
 		FnTemplateDefMem:         make(FnTemplateDefMem),
 		FnInFnTemplateFactsMem:   make(FnInFnTMem),
