@@ -476,7 +476,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
 	}
 
 	// 在 objMem 里记录一下
-	exec.Env.ObjDefMem[stmt.Name] = nil
+	exec.Env.ObjDefMem[stmt.Name] = ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{}, []ast.FactStmt{}, stmt.Line)
 
 	ret = exec.Env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.Atom(stmt.Name), nil, stmt.FnTemplate)
 	if ret.IsErr() {

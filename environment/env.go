@@ -27,7 +27,7 @@ type ExistPropDefMem map[string]ast.DefExistPropStmt
 
 type FnTemplateDefMem map[string]ast.FnTemplateDefStmt
 
-type ObjDefMem map[string]ast.FnTemplate_Or_DefObjStmtInterface // 因为很多的obj会共享一个def obj. 可能是 nil
+type ObjDefMem map[string]*ast.DefLetStmt // 因为很多的obj会共享一个def obj. 可能是 nil
 
 type FnInFnTMem map[string][]FnInFnTMemItem
 

@@ -218,7 +218,7 @@ func (env *Env) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) 
 	return glob.NewGlobTrue("")
 }
 
-func (e *Env) NewObj_NoDuplicate(name string, stmt ast.FnTemplate_Or_DefObjStmtInterface) glob.GlobRet {
+func (e *Env) NewObj_NoDuplicate(name string, stmt *ast.DefLetStmt) glob.GlobRet {
 	ret := e.IsValidIdentifierAvailable(name)
 	if ret.IsErr() {
 		return glob.ErrRet(fmt.Errorf("invalid name: %s", name))

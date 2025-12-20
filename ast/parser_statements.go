@@ -2383,7 +2383,7 @@ func (p *TbParser) specFactWithoutExist_WithoutNot_Or_EqualsFact(tb *tokenBlock)
 	}
 }
 
-func (p *TbParser) uniFactInterface(tb *tokenBlock, uniFactDepth uniFactEnum) (UniFactInterface, error) {
+func (p *TbParser) uniFactInterface(tb *tokenBlock, uniFactDepth uniFactEnum) (FactStmt, error) {
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
