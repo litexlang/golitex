@@ -81,7 +81,7 @@ func (envMgr *EnvMgr) AtomDefinedOrBuiltin(atom ast.Atom, extraParams map[string
 	if glob.IsKeywordSetOrNonEmptySetOrFiniteSet(string(atom)) {
 		return glob.NewGlobErr(fmt.Sprintf("%s keyword is not an object.", string(atom)))
 	} else {
-		return glob.ErrRet(fmt.Errorf("undefined atom: %s", atom))
+		return glob.ErrRet(fmt.Errorf("undefined atom name: %s", atom))
 	}
 }
 
@@ -308,6 +308,12 @@ func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet 
 	if ok {
 		return glob.NewGlobTrue("")
 	}
+
+	// 这里其实有点问题，应该独立出来，因为 fn_template 可能不能算 atom
+	if _, ok := envMgr.AllDefinedFnTemplateNames[string(AtomObjName)]; ok {
+		return glob.NewGlobTrue("")
+	}
+
 	return glob.ErrRet(fmt.Errorf("undefined: %s", AtomObjName))
 }
 

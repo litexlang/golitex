@@ -23,25 +23,55 @@ import (
 	pkgMgr "golitex/package_manager"
 )
 
-func GetEnvWithBuiltinParentEnv() (*env.Env, error) {
-	curEnv := env.NewEnv(nil)
-	curEnv.Init()
-	err := useHardcodedCodeToInit(curEnv)
+// func GetEnvWithBuiltinParentEnv() (*env.Env, error) {
+// 	curEnv := env.NewEnv(nil)
+// 	curEnv.Init()
+// 	err := useHardcodedCodeToInit(curEnv)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	curEnv = env.NewEnv(curEnv)
+// 	return curEnv, nil
+// }
+
+// func useHardcodedCodeToInit(env *env.Env) error {
+// 	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+// 	statements, err := ast.ParseSourceCode(kernelLibLitexCode.PipelineInitCode, "", pkgPathNameMgr)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	executor := exe.NewExecutor(env)
+// 	for _, statement := range statements {
+// 		execState := executor.Stmt(statement)
+// 		if execState.IsUnknown() || execState.IsErr() {
+// 			return fmt.Errorf("failed to init pipeline: %s\n%s", err, execState.String())
+// 		}
+// 	}
+
+// 	return nil
+// }
+
+func GetEnvMgrWithBuiltinParentEnv() (*env.EnvMgr, error) {
+	pkgMgr := env.NewPackageManager()
+	curEnvMgr := env.NewEnvMgr(pkgMgr)
+	curEnvMgr.Init()
+	err := useHardcodedCodeToInitEnvMgr(curEnvMgr)
 	if err != nil {
 		panic(err)
 	}
-	curEnv = env.NewEnv(curEnv)
-	return curEnv, nil
+	curEnvMgr = curEnvMgr.NewEnv()
+	return curEnvMgr, nil
 }
 
-func useHardcodedCodeToInit(env *env.Env) error {
+func useHardcodedCodeToInitEnvMgr(envMgr *env.EnvMgr) error {
 	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
 	statements, err := ast.ParseSourceCode(kernelLibLitexCode.PipelineInitCode, "", pkgPathNameMgr)
 	if err != nil {
 		return err
 	}
 
-	executor := exe.NewExecutor(env)
+	executor := exe.NewExecutor(envMgr)
 	for _, statement := range statements {
 		execState := executor.Stmt(statement)
 		if execState.IsUnknown() || execState.IsErr() {
