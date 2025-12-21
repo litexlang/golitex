@@ -71,8 +71,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.proveByEnumStmt(stmt)
 	case *ast.HaveObjInNonEmptySetStmt:
 		execRet = exec.haveObjInNonEmptySetStmt(stmt)
-	case *ast.HaveCartSetStmt:
-		execRet = exec.haveCartSetStmt(stmt)
 	// case *ast.NamedUniFactStmt:
 	// 	execRet = exec.namedUniFactStmt(stmt)
 	case *ast.KnowExistPropStmt:
