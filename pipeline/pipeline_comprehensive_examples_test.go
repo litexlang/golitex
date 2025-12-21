@@ -55,6 +55,15 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 
 	allFilesStartTime := time.Now()
 
+	// 每次打开文件时重启 executor
+	envMgr, err := GetBuiltinEnvMgr()
+	if err != nil {
+		return fmt.Errorf("failed to init pipeline env: %s", err)
+	}
+
+	envMgr = envMgr.NewEnv()
+	executor := exe.NewExecutor(envMgr)
+
 	for _, file := range files {
 		// file 最后必须以.lit结尾
 
@@ -63,15 +72,6 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		}
 
 		fmt.Printf("%s ", file)
-
-		// 每次打开文件时重启 executor
-		envMgr, err := GetBuiltinEnvMgr()
-		if err != nil {
-			return fmt.Errorf("failed to init pipeline env: %s", err)
-		}
-
-		envMgr = envMgr.NewEnv()
-		executor := exe.NewExecutor(envMgr)
 
 		// 读出file的内容，然后执行
 		path := filepath.Join(repo, file.Name())
@@ -105,6 +105,8 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		elapsed := time.Since(start)
 
 		fmt.Printf("%s\n", elapsed)
+
+		executor.ClearStmt()
 
 	}
 

@@ -79,7 +79,49 @@ func NewEnvMemory() *EnvMemory {
 	}
 }
 
-func NewEnvMgr(pkgMgr *EnvPkgMgr) *EnvMgr {
+func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames map[string]*ast.DefLetStmt, allDefinedPropNames map[string]*ast.DefPropStmt, allDefinedExistPropNames map[string]*ast.DefExistPropStmt, allDefinedFnTemplateNames map[string]*ast.FnTemplateDefStmt, allDefinedAlgoNames map[string]*ast.DefAlgoStmt, allDefinedProveAlgoNames map[string]*ast.DefProveAlgoStmt) *EnvMgr {
+	return &EnvMgr{
+		AllDefinedAtomObjNames:    allDefinedAtomObjNames,
+		AllDefinedPropNames:       allDefinedPropNames,
+		AllDefinedExistPropNames:  allDefinedExistPropNames,
+		AllDefinedFnTemplateNames: allDefinedFnTemplateNames,
+		AllDefinedAlgoNames:       allDefinedAlgoNames,
+		AllDefinedProveAlgoNames:  allDefinedProveAlgoNames,
+		PkgMgr:                    pkgMgr,
+		EnvSlice:                  envMemory,
+	}
+}
+
+func NewBuiltinEnvMgr(envMgr *EnvMgr) *EnvMgr {
+	builtinEnvMemory := envMgr.EnvSlice[0]
+	newAllDefinedAtomObjNames := make(map[string]*ast.DefLetStmt)
+	for k, _ := range builtinEnvMemory.AtomObjDefMem {
+		newAllDefinedAtomObjNames[k] = envMgr.AllDefinedAtomObjNames[k]
+	}
+	newAllDefinedPropNames := make(map[string]*ast.DefPropStmt)
+	for k, _ := range builtinEnvMemory.PropDefMem {
+		newAllDefinedPropNames[k] = envMgr.AllDefinedPropNames[k]
+	}
+	newAllDefinedExistPropNames := make(map[string]*ast.DefExistPropStmt)
+	for k, _ := range builtinEnvMemory.ExistPropDefMem {
+		newAllDefinedExistPropNames[k] = envMgr.AllDefinedExistPropNames[k]
+	}
+	newAllDefinedFnTemplateNames := make(map[string]*ast.FnTemplateDefStmt)
+	for k, _ := range builtinEnvMemory.FnTemplateDefMem {
+		newAllDefinedFnTemplateNames[k] = envMgr.AllDefinedFnTemplateNames[k]
+	}
+	newAllDefinedAlgoNames := make(map[string]*ast.DefAlgoStmt)
+	for k, _ := range builtinEnvMemory.AlgoDefMem {
+		newAllDefinedAlgoNames[k] = envMgr.AllDefinedAlgoNames[k]
+	}
+	newAllDefinedProveAlgoNames := make(map[string]*ast.DefProveAlgoStmt)
+	for k, _ := range builtinEnvMemory.DefProveAlgoMem {
+		newAllDefinedProveAlgoNames[k] = envMgr.AllDefinedProveAlgoNames[k]
+	}
+	return NewEnvMgr(envMgr.PkgMgr, []EnvMemory{builtinEnvMemory}, newAllDefinedAtomObjNames, newAllDefinedPropNames, newAllDefinedExistPropNames, newAllDefinedFnTemplateNames, newAllDefinedAlgoNames, newAllDefinedProveAlgoNames)
+}
+
+func NewEmptyEnvMgr(pkgMgr *EnvPkgMgr) *EnvMgr {
 	return &EnvMgr{
 		AllDefinedAtomObjNames:    make(map[string]*ast.DefLetStmt),
 		AllDefinedPropNames:       make(map[string]*ast.DefPropStmt),

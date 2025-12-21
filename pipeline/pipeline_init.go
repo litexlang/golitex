@@ -54,7 +54,7 @@ import (
 
 func GetBuiltinEnvMgr() (*env.EnvMgr, error) {
 	pkgMgr := env.NewPackageManager()
-	curEnvMgr := env.NewEnvMgr(pkgMgr)
+	curEnvMgr := env.NewEmptyEnvMgr(pkgMgr)
 	curEnvMgr.Init()
 	err := useHardcodedCodeToInitEnvMgr(curEnvMgr)
 	if err != nil {
