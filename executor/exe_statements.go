@@ -115,8 +115,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.defProveAlgoStmt(stmt)
 	case *ast.ByStmt:
 		execRet = exec.byStmt(stmt)
-	case *ast.PrintStmt:
-		execRet = exec.printStmt(stmt)
 	case *ast.HaveFnEqualCaseByCaseStmt:
 		execRet = exec.haveFnEqualCaseByCaseStmt(stmt)
 	case *ast.ProveCaseByCaseStmt:
@@ -331,7 +329,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) ExecRet
 }
 
 func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	caseStmt := stmt.OrFact.Facts[index]
@@ -386,7 +384,7 @@ func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) ExecRet
 }
 
 func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCaseByCaseStmt) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	caseStmt := stmt.CaseFacts[index]
@@ -459,7 +457,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) ExecRet {
 
 func (exec *Executor) proveStmt(stmt *ast.ProveStmt) ExecRet {
 	// new env
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	execState := exec.execStmtsAtCurEnv(stmt.Proof)
@@ -496,8 +494,8 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
 	return NewExecTrue(stmt.String())
 }
 
-func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
-	exec.NewEnv(exec.Env)
+func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) ExecRet {
+	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	execState, err := exec.proveByEnumMainLogic(stmt)
@@ -505,8 +503,17 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
 		return NewExecErr(execState.String())
 	}
 
+	return NewExecTrue(stmt.String())
+}
+
+func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ExecRet {
+	execRet := exec.proveByEnumStmtProve(stmt)
+	if execRet.IsNotTrue() {
+		return execRet
+	}
+
 	// know uniFact
-	ret := exec.Env.Parent.NewFactWithAtomsDefined(stmt.Fact)
+	ret := exec.Env.NewFactWithAtomsDefined(stmt.Fact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -712,15 +719,6 @@ func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, ExecRet) {
 
 func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) ExecRet {
 	exec.Env.DefProveAlgoMem[stmt.ProveAlgoName] = stmt
-	return NewExecTrue(stmt.String())
-}
-
-func (exec *Executor) printStmt(stmt *ast.PrintStmt) ExecRet {
-	if stmt.IsFString {
-		fmt.Println(stmt.Value)
-	} else {
-		fmt.Println(stmt.Value)
-	}
 	return NewExecTrue(stmt.String())
 }
 

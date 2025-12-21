@@ -1326,19 +1326,6 @@ func (stmt *ProveAlgoReturnStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *PrintStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordPrint)
-	builder.WriteString(glob.KeySymbolLeftBrace)
-	if stmt.IsFString {
-		builder.WriteString("f")
-	}
-	builder.WriteString(stmt.Value)
-	builder.WriteString(glob.KeySymbolDoubleQuote)
-	builder.WriteString(glob.KeySymbolRightBrace)
-	return builder.String()
-}
-
 func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)

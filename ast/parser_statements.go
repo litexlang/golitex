@@ -106,8 +106,6 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.byStmt(tb)
 	case glob.KeywordProveByContradiction:
 		ret, err = p.proveByContradictionStmt(tb)
-	case glob.KeywordPrint:
-		ret, err = p.printStmt(tb)
 	case glob.KeywordDoNothing:
 		ret, err = p.doNothingStmt(tb)
 	case glob.KeywordImport:
@@ -1847,36 +1845,6 @@ func (p *TbParser) proveByContradictionStmt(tb *tokenBlock) (Stmt, error) {
 		proofs = append(proofs, curStmt)
 	}
 	return NewClaimProveByContradictionStmt(NewClaimProveStmt(toCheck, proofs, tb.line), tb.line), nil
-}
-
-func (p *TbParser) printStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordPrint)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	isFString := false
-	if tb.header.is("f") {
-		isFString = true
-		tb.header.skip("f")
-	}
-
-	value, err := p.getStringInDoubleQuotes(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	return NewPrintStmt(isFString, value, tb.line), nil
 }
 
 func (p *TbParser) doNothingStmt(tb *tokenBlock) (Stmt, error) {

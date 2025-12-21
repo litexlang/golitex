@@ -31,15 +31,15 @@ func notOkExec(state ExecRet, err error) bool {
 }
 
 func (exec *Executor) NewCommutativeProp(specFact *ast.SpecFactStmt) {
-	if _, ok := exec.Env.CommutativePropMem[string(specFact.PropName)]; !ok {
-		exec.Env.CommutativePropMem[string(specFact.PropName)] = env.NewCommutativePropMemItemStruct()
+	if _, ok := exec.Env.CurEnv().CommutativePropMem[string(specFact.PropName)]; !ok {
+		exec.Env.CurEnv().CommutativePropMem[string(specFact.PropName)] = env.NewCommutativePropMemItemStruct()
 	}
 
 	switch specFact.TypeEnum {
 	case ast.TruePure:
-		exec.Env.CommutativePropMem[string(specFact.PropName)].TruePureIsCommutative = true
+		exec.Env.CurEnv().CommutativePropMem[string(specFact.PropName)].TruePureIsCommutative = true
 	case ast.FalsePure:
-		exec.Env.CommutativePropMem[string(specFact.PropName)].FalsePureIsCommutative = true
+		exec.Env.CurEnv().CommutativePropMem[string(specFact.PropName)].FalsePureIsCommutative = true
 	default:
 		panic("not implemented: not commutative prop")
 	}
@@ -63,10 +63,10 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 	return NewEmptyExecTrue(), nil, nil
 }
 
-func (exec *Executor) GetBuiltinEnv() *env.Env {
+func (exec *Executor) GetBuiltinEnv() *env.EnvMemory {
 	return exec.Env.GetUpMostEnv()
 }
 
-func (exec *Executor) GetSecondUpMostEnv() *env.Env {
+func (exec *Executor) GetSecondUpMostEnv() *env.EnvMemory {
 	return exec.Env.GetSecondUpMostEnv()
 }

@@ -32,7 +32,7 @@ func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePro
 }
 
 func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommutativePropStmt) (bool, error) {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	if exec.Env.IsCommutativeProp(stmt.SpecFact) {
@@ -98,7 +98,7 @@ func (exec *Executor) proveIsCommutativePropStmtMainLogic(stmt *ast.ProveIsCommu
 }
 
 func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *ast.SpecFactStmt, rightToLeft *ast.SpecFactStmt) (bool, error) {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	ret := exec.Env.NewFactWithAtomsDefined(fact)
