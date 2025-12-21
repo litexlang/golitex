@@ -179,7 +179,8 @@ func (ver *Verifier) verEqualByBuiltinEval(left ast.Obj, right ast.Obj, state *V
 
 func (ver *Verifier) verEqualSpecMem(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	// if ver.env.CurMatchProp == nil {
-	for curEnv := ver.Env; curEnv != nil; curEnv = curEnv.Parent {
+	for curEnvIndex := range ver.Env.EnvSlice {
+		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.equalFact_SpecMem_atEnv(curEnv, left, right, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return NewEmptyExecTrue()
@@ -189,7 +190,7 @@ func (ver *Verifier) verEqualSpecMem(left ast.Obj, right ast.Obj, state *VerStat
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.Env, left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.EnvMemory, left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	nextState := state.GetNoMsg()
 
 	verRet := ver.getEqualObjsAndCmpOneByOne(curEnv, left, right, nextState)
@@ -239,7 +240,7 @@ func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.Env, left ast.Obj, right ast.Obj, state *VerState) ExecRet {
+func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.EnvMemory, left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	var equalToLeftObjs, equalToRightObjs *[]ast.Obj
 	var gotLeftEqualObjs, gotRightEqualObjs bool
 

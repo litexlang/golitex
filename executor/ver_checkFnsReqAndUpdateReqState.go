@@ -84,8 +84,8 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 
 // TODO: 非常缺乏检查。因为这里的验证非常麻烦，{}里包括了事实，而事实里有fn，所以需要检查fn行不行
 func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ExecRet {
-	ver.newEnv(ver.Env)
-	defer ver.deleteEnvAndRetainMsg()
+	ver.newEnv()
+	defer ver.deleteEnv()
 
 	// Parse set builder struct to check facts
 	setBuilderStruct, err := objAsFnObj.ToSetBuilderStruct()

@@ -81,7 +81,7 @@ func useRandomParamToReplaceOriginalParamInUniFact(oldStmt *ast.UniFactStmt, par
 	return newStmtPtr, paramMap, nil
 }
 
-func processUniFactParamsDuplicateDeclared(env *env.Env, params []string) (map[string]ast.Obj, map[string]string) {
+func processUniFactParamsDuplicateDeclared(env *env.EnvMgr, params []string) (map[string]ast.Obj, map[string]string) {
 	paramMap := make(map[string]ast.Obj)
 	paramMapStrToStr := make(map[string]string)
 	for _, param := range params {
@@ -104,7 +104,7 @@ func processUniFactParamsDuplicateDeclared(env *env.Env, params []string) (map[s
 	return paramMap, paramMapStrToStr
 }
 
-func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.Env, params []string, notInMap map[string]string) (map[string]ast.Obj, map[string]string) {
+func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.EnvMgr, params []string, notInMap map[string]string) (map[string]ast.Obj, map[string]string) {
 	paramMap := make(map[string]ast.Obj)
 	paramMapStrToStr := make(map[string]string)
 	for _, param := range params {

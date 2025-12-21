@@ -129,7 +129,8 @@ func (ver *Verifier) verTrueEqualFact_ObjFnEqual_NoCheckRequirements(left, right
 }
 
 func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, state *VerState) ExecRet {
-	for curEnv := ver.Env; curEnv != nil; curEnv = curEnv.Parent {
+	for curEnvIndex := range ver.Env.EnvSlice {
+		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		leftEqualObjs, ok := curEnv.EqualMem[left.String()]
 		if ok {
 			rightEqualObjs, ok := curEnv.EqualMem[right.String()]

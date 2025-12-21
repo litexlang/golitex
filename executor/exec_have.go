@@ -273,7 +273,7 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) ExecRet {
 }
 
 func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
@@ -327,7 +327,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ExecRet {
 
 func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (ExecRet, error) {
 	// Create a new environment for verification and proof
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
@@ -433,7 +433,7 @@ func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) ExecR
 
 func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) (ExecRet, []ast.FactStmt, error) {
 	// Create a new environment for verification and proof
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
@@ -504,7 +504,7 @@ func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) 
 }
 
 func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
@@ -556,7 +556,7 @@ func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseS
 }
 
 func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
@@ -598,7 +598,7 @@ func (exec *Executor) checkCasesNoOverlap_ForHaveFn(stmt *ast.HaveFnCaseByCaseSt
 }
 
 func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
@@ -726,7 +726,7 @@ func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseBy
 }
 
 func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
@@ -761,7 +761,7 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 }
 
 func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseStmt) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
@@ -803,7 +803,7 @@ func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (
 }
 
 func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (ExecRet, error) {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
