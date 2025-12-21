@@ -35,7 +35,7 @@ func (ver *Verifier) newEnv() *env.EnvMgr {
 	return ver.Env.NewEnv()
 }
 
-func (ver *Verifier) deleteEnv_DeleteMsg() error {
+func (ver *Verifier) deleteEnv() error {
 	ver.Env.DeleteEnv()
 	return nil
 }

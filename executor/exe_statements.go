@@ -474,7 +474,12 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
 	}
 
 	// 在 objMem 里记录一下
-	exec.Env.ObjDefMem[stmt.Name] = ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{}, []ast.FactStmt{}, stmt.Line)
+	defLetStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
+	ret = exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(defLetStmt)
+	if ret.IsErr() {
+		return NewExecErr(ret.String())
+	}
+	exec.Env.AllDefinedAtomObjNames[stmt.Name] = defLetStmt
 
 	ret = exec.Env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.Atom(stmt.Name), nil, stmt.FnTemplate)
 	if ret.IsErr() {
@@ -553,12 +558,9 @@ func (exec *Executor) DefFnTemplateStmt(stmt *ast.FnTemplateDefStmt) ExecRet {
 }
 
 func (exec *Executor) ClearStmt() ExecRet {
-	curEnv := exec.Env
-	for curEnv.Parent != nil {
-		curEnv = curEnv.Parent
-	} // 最顶层的env不删，因为最顶层的包含了热启动的代码
-	exec.NewEnv(curEnv)
-	// Note: Clear message should be added to ExecRet in the caller if needed
+	for len(exec.Env.EnvSlice) > 1 {
+		exec.deleteEnv()
+	}
 	return NewEmptyExecTrue()
 }
 
@@ -606,14 +608,14 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 		return NewExecErr(err.Error())
 	}
 
-	exec.Env.TransitivePropMem[string(stmt.Prop)] = make(map[string][]ast.Obj)
+	exec.Env.CurEnv().TransitivePropMem[string(stmt.Prop)] = make(map[string][]ast.Obj)
 
 	return NewExecTrue(stmt.String())
 }
 
 // TODO 这里的msg系统太冗杂了，需要优化
 func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitivePropStmt) error {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	if exec.Env.IsTransitiveProp(string(stmt.Prop)) {
@@ -685,7 +687,8 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 }
 
 func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) ExecRet {
-	exec.Env.AlgoDefMem[stmt.FuncName] = stmt
+	exec.Env.CurEnv().AlgoDefMem[stmt.FuncName] = struct{}{}
+	exec.Env.AllDefinedAlgoNames[stmt.FuncName] = stmt
 	return NewExecTrue(stmt.String())
 }
 
@@ -706,7 +709,7 @@ func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ExecRet {
 }
 
 func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, ExecRet) {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	value, execRet := exec.evalObjThenSimplify(objToEval)
@@ -718,7 +721,8 @@ func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, ExecRet) {
 }
 
 func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) ExecRet {
-	exec.Env.DefProveAlgoMem[stmt.ProveAlgoName] = stmt
+	exec.Env.CurEnv().DefProveAlgoMem[stmt.ProveAlgoName] = struct{}{}
+	exec.Env.AllDefinedProveAlgoNames[stmt.ProveAlgoName] = stmt
 	return NewExecTrue(stmt.String())
 }
 
@@ -770,7 +774,7 @@ func (exec *Executor) proveForStmtWhenParamIsIndex(stmt *ast.ProveForStmt, i int
 	indexAsObj := ast.Atom(fmt.Sprintf("%d", i))
 	param := stmt.Param
 	uniMap := map[string]ast.Obj{param: indexAsObj}
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	defObjStmt := ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(param), indexAsObj)}, stmt.Line)

@@ -39,8 +39,8 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) ExecRet {
 }
 
 func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt, i int, state *VerState) ExecRet {
-	ver.newEnv(ver.Env)
-	defer ver.deleteEnvAndRetainMsg()
+	ver.newEnv()
+	defer ver.deleteEnv()
 
 	for j := range facts {
 		if j == i {
