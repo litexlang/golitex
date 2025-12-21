@@ -25,15 +25,15 @@ type KnownFactsStruct struct {
 }
 
 type EnvMgr struct {
+	PkgMgr   *EnvPkgMgr
+	EnvSlice []EnvMemory
+
 	AllDefinedAtomObjNames    map[string]*ast.DefLetStmt
 	AllDefinedPropNames       map[string]*ast.DefPropStmt
 	AllDefinedExistPropNames  map[string]*ast.DefExistPropStmt
 	AllDefinedFnTemplateNames map[string]*ast.FnTemplateDefStmt
 	AllDefinedAlgoNames       map[string]*ast.DefAlgoStmt
 	AllDefinedProveAlgoNames  map[string]*ast.DefProveAlgoStmt
-
-	PkgMgr   *EnvPkgMgr
-	EnvSlice []EnvMemory
 }
 
 type EnvMemory struct {
@@ -95,43 +95,30 @@ func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames 
 func NewBuiltinEnvMgr(envMgr *EnvMgr) *EnvMgr {
 	builtinEnvMemory := envMgr.EnvSlice[0]
 	newAllDefinedAtomObjNames := make(map[string]*ast.DefLetStmt)
-	for k, _ := range builtinEnvMemory.AtomObjDefMem {
+	for k := range builtinEnvMemory.AtomObjDefMem {
 		newAllDefinedAtomObjNames[k] = envMgr.AllDefinedAtomObjNames[k]
 	}
 	newAllDefinedPropNames := make(map[string]*ast.DefPropStmt)
-	for k, _ := range builtinEnvMemory.PropDefMem {
+	for k := range builtinEnvMemory.PropDefMem {
 		newAllDefinedPropNames[k] = envMgr.AllDefinedPropNames[k]
 	}
 	newAllDefinedExistPropNames := make(map[string]*ast.DefExistPropStmt)
-	for k, _ := range builtinEnvMemory.ExistPropDefMem {
+	for k := range builtinEnvMemory.ExistPropDefMem {
 		newAllDefinedExistPropNames[k] = envMgr.AllDefinedExistPropNames[k]
 	}
 	newAllDefinedFnTemplateNames := make(map[string]*ast.FnTemplateDefStmt)
-	for k, _ := range builtinEnvMemory.FnTemplateDefMem {
+	for k := range builtinEnvMemory.FnTemplateDefMem {
 		newAllDefinedFnTemplateNames[k] = envMgr.AllDefinedFnTemplateNames[k]
 	}
 	newAllDefinedAlgoNames := make(map[string]*ast.DefAlgoStmt)
-	for k, _ := range builtinEnvMemory.AlgoDefMem {
+	for k := range builtinEnvMemory.AlgoDefMem {
 		newAllDefinedAlgoNames[k] = envMgr.AllDefinedAlgoNames[k]
 	}
 	newAllDefinedProveAlgoNames := make(map[string]*ast.DefProveAlgoStmt)
-	for k, _ := range builtinEnvMemory.DefProveAlgoMem {
+	for k := range builtinEnvMemory.DefProveAlgoMem {
 		newAllDefinedProveAlgoNames[k] = envMgr.AllDefinedProveAlgoNames[k]
 	}
 	return NewEnvMgr(envMgr.PkgMgr, []EnvMemory{builtinEnvMemory}, newAllDefinedAtomObjNames, newAllDefinedPropNames, newAllDefinedExistPropNames, newAllDefinedFnTemplateNames, newAllDefinedAlgoNames, newAllDefinedProveAlgoNames)
-}
-
-func NewEmptyEnvMgr(pkgMgr *EnvPkgMgr) *EnvMgr {
-	return &EnvMgr{
-		AllDefinedAtomObjNames:    make(map[string]*ast.DefLetStmt),
-		AllDefinedPropNames:       make(map[string]*ast.DefPropStmt),
-		AllDefinedExistPropNames:  make(map[string]*ast.DefExistPropStmt),
-		AllDefinedFnTemplateNames: make(map[string]*ast.FnTemplateDefStmt),
-		AllDefinedAlgoNames:       make(map[string]*ast.DefAlgoStmt),
-		AllDefinedProveAlgoNames:  make(map[string]*ast.DefProveAlgoStmt),
-		PkgMgr:                    pkgMgr,
-		EnvSlice:                  []EnvMemory{*NewEnvMemory()},
-	}
 }
 
 func (envMgr *EnvMgr) GetUpMostEnv() *EnvMemory {
@@ -155,22 +142,22 @@ func (envMgr *EnvMgr) DeleteEnvUntilBuiltin() {
 
 func (envMgr *EnvMgr) DeleteEnv() {
 	// 把 当前的 def 从 all defined 里删了，不删最后一个，因为最后一个是最顶层的
-	for k, _ := range envMgr.CurEnv().AtomObjDefMem {
+	for k := range envMgr.CurEnv().AtomObjDefMem {
 		delete(envMgr.AllDefinedAtomObjNames, k)
 	}
-	for k, _ := range envMgr.CurEnv().PropDefMem {
+	for k := range envMgr.CurEnv().PropDefMem {
 		delete(envMgr.AllDefinedPropNames, k)
 	}
-	for k, _ := range envMgr.CurEnv().ExistPropDefMem {
+	for k := range envMgr.CurEnv().ExistPropDefMem {
 		delete(envMgr.AllDefinedExistPropNames, k)
 	}
-	for k, _ := range envMgr.CurEnv().FnTemplateDefMem {
+	for k := range envMgr.CurEnv().FnTemplateDefMem {
 		delete(envMgr.AllDefinedFnTemplateNames, k)
 	}
-	for k, _ := range envMgr.CurEnv().AlgoDefMem {
+	for k := range envMgr.CurEnv().AlgoDefMem {
 		delete(envMgr.AllDefinedAlgoNames, k)
 	}
-	for k, _ := range envMgr.CurEnv().DefProveAlgoMem {
+	for k := range envMgr.CurEnv().DefProveAlgoMem {
 		delete(envMgr.AllDefinedProveAlgoNames, k)
 	}
 

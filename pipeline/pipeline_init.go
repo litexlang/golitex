@@ -23,38 +23,9 @@ import (
 	pkgMgr "golitex/package_manager"
 )
 
-// func GetEnvWithBuiltinParentEnv() (*env.Env, error) {
-// 	curEnv := env.NewEnv(nil)
-// 	curEnv.Init()
-// 	err := useHardcodedCodeToInit(curEnv)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	curEnv = env.NewEnv(curEnv)
-// 	return curEnv, nil
-// }
-
-// func useHardcodedCodeToInit(env *env.Env) error {
-// 	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
-// 	statements, err := ast.ParseSourceCode(kernelLibLitexCode.PipelineInitCode, "", pkgPathNameMgr)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	executor := exe.NewExecutor(env)
-// 	for _, statement := range statements {
-// 		execState := executor.Stmt(statement)
-// 		if execState.IsUnknown() || execState.IsErr() {
-// 			return fmt.Errorf("failed to init pipeline: %s\n%s", err, execState.String())
-// 		}
-// 	}
-
-// 	return nil
-// }
-
 func GetBuiltinEnvMgr() (*env.EnvMgr, error) {
-	pkgMgr := env.NewPackageManager()
-	curEnvMgr := env.NewEmptyEnvMgr(pkgMgr)
+	pkgMgr := env.NewPkgMgr()
+	curEnvMgr := env.NewEnvMgr(pkgMgr, []env.EnvMemory{*env.NewEnvMemory()}, make(map[string]*ast.DefLetStmt), make(map[string]*ast.DefPropStmt), make(map[string]*ast.DefExistPropStmt), make(map[string]*ast.FnTemplateDefStmt), make(map[string]*ast.DefAlgoStmt), make(map[string]*ast.DefProveAlgoStmt))
 	curEnvMgr.Init()
 	err := useHardcodedCodeToInitEnvMgr(curEnvMgr)
 	if err != nil {

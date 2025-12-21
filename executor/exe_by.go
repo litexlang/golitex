@@ -108,28 +108,28 @@ func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSl
 	return NewEmptyExecTrue(), nil
 }
 
-func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
-	for _, stmt := range algoStmts {
-		switch asStmt := stmt.(type) {
-		case *ast.AlgoIfStmt:
-			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); execRet.IsErr() {
-				return execRet, nil
-			} else if conditionIsTrue {
-				return exec.algoIfStmtWhenBy(asStmt, paramsValues)
-			} else if execRet.IsUnknown() {
-				continue
-			}
-		case *ast.AlgoReturnStmt:
-			return NewExecErr(fmt.Sprintf("There can not be return value statements in algo. Use return eval instead .Get %s", asStmt.String())), nil
-		default:
-			execRet := exec.Stmt(stmt.(ast.Stmt))
-			if execRet.IsNotTrue() {
-				return execRet, nil
-			}
-		}
-	}
-	return NewEmptyExecTrue(), nil
-}
+// func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
+// 	for _, stmt := range algoStmts {
+// 		switch asStmt := stmt.(type) {
+// 		case *ast.AlgoIfStmt:
+// 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); execRet.IsErr() {
+// 				return execRet, nil
+// 			} else if conditionIsTrue {
+// 				return exec.algoIfStmtWhenBy(asStmt, paramsValues)
+// 			} else if execRet.IsUnknown() {
+// 				continue
+// 			}
+// 		case *ast.AlgoReturnStmt:
+// 			return NewExecErr(fmt.Sprintf("There can not be return value statements in algo. Use return eval instead .Get %s", asStmt.String())), nil
+// 		default:
+// 			execRet := exec.Stmt(stmt.(ast.Stmt))
+// 			if execRet.IsNotTrue() {
+// 				return execRet, nil
+// 			}
+// 		}
+// 	}
+// 	return NewEmptyExecTrue(), nil
+// }
 
 func (exec *Executor) proveAlgoIfStmt(stmt *ast.ProveAlgoIfStmt, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
 	exec.NewEnv()
@@ -144,18 +144,18 @@ func (exec *Executor) proveAlgoIfStmt(stmt *ast.ProveAlgoIfStmt, paramsValues []
 	return exec.runProveAlgoStmtsWhenBy(stmt.ThenStmts, paramsValues)
 }
 
-func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
-	exec.NewEnv()
-	defer exec.deleteEnv()
+// func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
+// 	exec.NewEnv()
+// 	defer exec.deleteEnv()
 
-	knowStmt := ast.NewKnowStmt(stmt.Conditions.ToCanBeKnownStmtSlice(), stmt.GetLine())
-	execRet := exec.knowStmt(knowStmt)
-	if execRet.IsNotTrue() {
-		return execRet, nil
-	}
+// 	knowStmt := ast.NewKnowStmt(stmt.Conditions.ToCanBeKnownStmtSlice(), stmt.GetLine())
+// 	execRet := exec.knowStmt(knowStmt)
+// 	if execRet.IsNotTrue() {
+// 		return execRet, nil
+// 	}
 
-	return exec.runAlgoStmtsWhenBy(stmt.ThenStmts, paramsValues)
-}
+// 	return exec.runAlgoStmtsWhenBy(stmt.ThenStmts, paramsValues)
+// }
 
 func (exec *Executor) runProveAlgoReturnStmt(stmt *ast.ProveAlgoReturnStmt) (ExecRet, []ast.FactStmt) {
 	if len(stmt.Facts) == 0 {
