@@ -17,6 +17,7 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -558,10 +559,9 @@ func (exec *Executor) DefFnTemplateStmt(stmt *ast.FnTemplateDefStmt) ExecRet {
 }
 
 func (exec *Executor) ClearStmt() ExecRet {
-	for len(exec.Env.EnvSlice) > 1 {
-		exec.deleteEnv()
-	}
-	return NewEmptyExecTrue()
+	newEnvMgr := env.NewBuiltinEnvMgr(exec.Env)
+	exec.Env = newEnvMgr.NewEnv()
+	return NewExecTrue("clear statement")
 }
 
 func (exec *Executor) DoNothingStmt() ExecRet {
