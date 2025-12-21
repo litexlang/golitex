@@ -50,7 +50,6 @@ func (s *ClaimImplicationStmt) stmt()     {}
 func (s *ClaimExistPropStmt) stmt()       {}
 func (s *ProveByEnumStmt) stmt()          {}
 func (s *HaveObjInNonEmptySetStmt) stmt() {}
-func (s *HaveCartSetStmt) stmt()          {}
 func (s *HaveObjFromCartSetStmt) stmt()   {}
 
 // func (s *NamedUniFactStmt) stmt()  {}
@@ -75,7 +74,6 @@ func (s *DefAlgoStmt) stmt()                       {}
 func (s *EvalStmt) stmt()                          {}
 func (s *DefProveAlgoStmt) stmt()                  {}
 func (s *ByStmt) stmt()                            {}
-func (s *PrintStmt) stmt()                         {}
 func (s *HaveFnEqualCaseByCaseStmt) stmt()         {}
 func (s *HaveFnCaseByCaseStmt) stmt()              {}
 func (s *DefLetStmt) algoStmt()                    {}
@@ -101,7 +99,6 @@ func (s *ClaimImplicationStmt) algoStmt()     {}
 func (s *ClaimExistPropStmt) algoStmt()       {}
 func (s *ProveByEnumStmt) algoStmt()          {}
 func (s *HaveObjInNonEmptySetStmt) algoStmt() {}
-func (s *HaveCartSetStmt) algoStmt()          {}
 func (s *HaveObjFromCartSetStmt) algoStmt()   {}
 
 // func (s *NamedUniFactStmt) algoStmt()  {}
@@ -129,11 +126,8 @@ func (s *ImplicationStmt) algoStmt()                   {}
 func (s *ProveIsTransitivePropStmt) algoStmt()         {}
 func (s *DefAlgoStmt) algoStmt()                       {}
 func (s *EvalStmt) algoStmt()                          {}
-func (s *PrintStmt) algoStmt()                         {}
 func (s *HaveFnEqualCaseByCaseStmt) algoStmt()         {}
 func (s *HaveFnCaseByCaseStmt) algoStmt()              {}
-func (s *HaveCartWithDimStmt) stmt()                   {}
-func (s *HaveCartWithDimStmt) algoStmt()               {}
 func (s *DefLetStmt) GetLine() uint                    { return s.Line }
 func (s *DefPropStmt) GetLine() uint                   { return s.Line }
 func (s *DefFnStmt) GetLine() uint                     { return s.Line }
@@ -157,7 +151,6 @@ func (s *ClaimImplicationStmt) GetLine() uint     { return s.Line }
 func (s *ClaimExistPropStmt) GetLine() uint       { return s.Line }
 func (s *ProveByEnumStmt) GetLine() uint          { return s.Line }
 func (s *HaveObjInNonEmptySetStmt) GetLine() uint { return s.Line }
-func (s *HaveCartSetStmt) GetLine() uint          { return s.Line }
 func (s *HaveObjFromCartSetStmt) GetLine() uint   { return s.Line }
 
 // func (s *NamedUniFactStmt) GetLine() uint  { return s.Line }
@@ -181,13 +174,11 @@ func (s *DefAlgoStmt) GetLine() uint                { return s.Line }
 func (s *EvalStmt) GetLine() uint                   { return s.Line }
 func (s *DefProveAlgoStmt) GetLine() uint           { return s.Line }
 func (s *ByStmt) GetLine() uint                     { return s.Line }
-func (s *PrintStmt) GetLine() uint                  { return s.Line }
 func (s *ProveForStmt) GetLine() uint               { return s.Line }
 func (s *ProveImplicationStmt) GetLine() uint       { return s.Line }
 func (s *ImplicationStmt) GetLine() uint            { return s.Line }
 func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint  { return s.Line }
 func (s *HaveFnCaseByCaseStmt) GetLine() uint       { return s.Line }
-func (s *HaveCartWithDimStmt) GetLine() uint        { return s.Line }
 
 type FactStmt interface {
 	factStmt()

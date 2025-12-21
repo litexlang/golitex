@@ -176,14 +176,14 @@ prove forall a, b, c cart(R, R) => prod(a, add(b, c)) = prod(a, b) + prod(a, c):
     prod(a, add(b, c)) = a[1] * add(b, c)[1] + a[2] * add(b, c)[2] = a[1] * (b[1] + c[1]) + a[2] * (b[2] + c[2]) = a[1] * b[1] + a[1] * c[1] + a[2] * b[2] + a[2] * c[2] = (a[1] * b[1] + a[2] * b[2]) + (a[1] * c[1] + a[2] * c[2]) = prod(a, b) + prod(a, c)
 
 have fn:
-    orth_decomp(a cart(R, R), e1 cart(R, R), e2 cart(R, R)) cart(R, R):
+    orth_decomposition(a cart(R, R), e1 cart(R, R), e2 cart(R, R)) cart(R, R):
         dom:
             mod(e1) != 0
             mod(e2) != 0
             $are_orthogonal_vectors(e1, e2)
         =>:
-            orth_decomp(a, e1, e2)[1] = mod(project(a, e1))
-            orth_decomp(a, e1, e2)[2] = mod(project(a, e2))
+            orth_decomposition(a, e1, e2)[1] = mod(project(a, e1))
+            orth_decomposition(a, e1, e2)[2] = mod(project(a, e2))
     prove:
         have c cart(R, R) = (mod(project(a, e1)), mod(project(a, e2)))
     = c

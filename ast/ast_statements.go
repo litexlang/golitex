@@ -457,13 +457,6 @@ type ProveAlgoReturnStmt struct {
 	Line uint
 }
 
-type PrintStmt struct {
-	IsFString bool
-	Value     string
-
-	Line uint
-}
-
 // type HelpStmt struct {
 // 	Keyword string
 
@@ -472,28 +465,10 @@ type PrintStmt struct {
 
 // 这是必要的，因为要证明从n到m有且只有n, n+1, ..., m-1, m这些数，必须要用特殊的关键词
 
-type HaveCartSetStmt struct {
-	Name    string
-	CartObj *FnObj
-
-	Line uint
-}
-
 // TODO 应该没什么用
 type HaveObjFromCartSetStmt struct {
 	ObjName string
 	CartSet *FnObj
-	EqualTo Obj
-
-	Line uint
-}
-
-type HaveCartWithDimStmt struct {
-	ObjName string
-	CartDim Obj
-	Param   string
-	Facts   FactStmtSlice
-	Proofs  StmtSlice
 	EqualTo Obj
 
 	Line uint

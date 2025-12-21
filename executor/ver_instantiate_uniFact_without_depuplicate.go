@@ -156,8 +156,10 @@ func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.U
 
 			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.Env, asStmt.Params, copiedMapStrToStr)
 
-			copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
-			copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
+			maps.Copy(copiedParamMap, curParamMap)
+			maps.Copy(copiedMapStrToStr, curParamMapStrToStr)
+			// copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
+			// copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
 
 			newDomFact, _, err := useRandomParamToReplaceOriginalParamInUniFact(asStmt, copiedParamMap, copiedMapStrToStr)
 			if err != nil {
@@ -169,8 +171,10 @@ func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.U
 
 			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.Env, asStmt.UniFact.Params, copiedMapStrToStr)
 
-			copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
-			copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
+			maps.Copy(copiedParamMap, curParamMap)
+			maps.Copy(copiedMapStrToStr, curParamMapStrToStr)
+			// copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
+			// copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
 
 			newDomFact, _, err := useRandomParamToReplaceOriginalParamInUniFactWithIff(asStmt, copiedParamMap, copiedMapStrToStr)
 			if err != nil {

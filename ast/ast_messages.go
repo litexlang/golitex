@@ -691,20 +691,6 @@ func (stmt *ProveByEnumStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *HaveCartSetStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordHave)
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeywordSet)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.Name)
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolEqual)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.CartObj.String())
-	return builder.String()
-}
-
 func (stmt *HaveObjFromCartSetStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)

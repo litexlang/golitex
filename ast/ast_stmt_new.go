@@ -288,24 +288,12 @@ func NewProveAlgoReturnStmt(facts FactOrByStmtSlice, line uint) *ProveAlgoReturn
 	return &ProveAlgoReturnStmt{Facts: facts, Line: line}
 }
 
-func NewPrintStmt(isFString bool, value string, line uint) *PrintStmt {
-	return &PrintStmt{isFString, value, line}
-}
-
 func NewHaveFnCaseByCaseStmt(defFnStmt *DefFnStmt, caseByCaseFacts SpecFactPtrSlice, proofs StmtSliceSlice, haveObjSatisfyFn ObjSlice, line uint) *HaveFnCaseByCaseStmt {
 	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, line}
 }
 
-func NewHaveCartSetStmt(name string, cartObj *FnObj, line uint) *HaveCartSetStmt {
-	return &HaveCartSetStmt{name, cartObj, line}
-}
-
 func NewHaveObjFromCartSetStmt(objName string, cartSet *FnObj, equalTo Obj, line uint) *HaveObjFromCartSetStmt {
 	return &HaveObjFromCartSetStmt{objName, cartSet, equalTo, line}
-}
-
-func NewHaveCartWithDimStmt(objName string, cartDim Obj, param string, facts FactStmtSlice, proofs StmtSlice, equalTo Obj, line uint) *HaveCartWithDimStmt {
-	return &HaveCartWithDimStmt{objName, cartDim, param, facts, proofs, equalTo, line}
 }
 
 func NewProveImplicationStmt(implicationName string, params StrSlice, implicationFact FactStmtSlice, proof StmtSlice, line uint) *ProveImplicationStmt {
