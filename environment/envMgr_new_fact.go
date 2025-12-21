@@ -108,16 +108,7 @@ func (envMgr *EnvMgr) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
-	// Create a temporary Env for InferenceEngine
-	// Note: This is a temporary solution until InferenceEngine is refactored to use EnvMgr
-	tempEnv := &Env{
-		KnownFactsStruct:         envMgr.CurEnv().KnownFactsStruct,
-		EqualMem:                 envMgr.CurEnv().EqualMem,
-		SymbolSimplifiedValueMem: envMgr.CurEnv().SymbolSimplifiedValueMem,
-		TransitivePropMem:        envMgr.CurEnv().TransitivePropMem,
-		CommutativePropMem:       envMgr.CurEnv().CommutativePropMem,
-	}
-	ie := NewInferenceEngine(tempEnv)
+	ie := NewInferenceEngine(envMgr)
 	switch fact.TypeEnum {
 	case ast.TrueExist_St:
 		return ie.newTrueExist(fact)
@@ -135,15 +126,7 @@ func (envMgr *EnvMgr) newTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	// postprocess for cart: if x = cart(x1, x2, ..., xn)
-	// Create a temporary Env for InferenceEngine
-	tempEnv := &Env{
-		KnownFactsStruct:         envMgr.CurEnv().KnownFactsStruct,
-		EqualMem:                 envMgr.CurEnv().EqualMem,
-		SymbolSimplifiedValueMem: envMgr.CurEnv().SymbolSimplifiedValueMem,
-		TransitivePropMem:        envMgr.CurEnv().TransitivePropMem,
-		CommutativePropMem:       envMgr.CurEnv().CommutativePropMem,
-	}
-	ie := NewInferenceEngine(tempEnv)
+	ie := NewInferenceEngine(envMgr)
 	ret = ie.newTrueEqual(fact)
 	return ret
 }

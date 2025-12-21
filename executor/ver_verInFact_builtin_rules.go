@@ -592,8 +592,8 @@ func (ver *Verifier) verInFactByRightParamIsCartSet(stmt *ast.SpecFactStmt, stat
 }
 
 func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *VerState) ExecRet {
-	ver.newEnv(ver.Env)
-	defer ver.deleteEnv_DeleteMsg()
+	ver.newEnv()
+	defer ver.deleteEnv()
 
 	// check when parameters satisfy given fnFcFn parameter requirements, then it satisfies the fn template template requirement
 

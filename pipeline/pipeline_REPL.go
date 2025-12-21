@@ -13,12 +13,12 @@ import (
 )
 
 func RunREPL(version string) {
-	env, err := GetEnvWithBuiltinParentEnv()
+	envMgr, err := GetEnvMgrWithBuiltinParentEnv()
 	if err != nil {
 		fmt.Println("Error initializing pipeline env:", err)
 		return
 	}
-	executor := exe.NewExecutor(env)
+	executor := exe.NewExecutor(envMgr)
 
 	reader := bufio.NewReader(os.Stdin)
 	writer := os.Stdout

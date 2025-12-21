@@ -22,10 +22,11 @@ import (
 )
 
 func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+	// upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
-	for curEnv := ver.Env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+	for curEnvIndex := range ver.Env.EnvSlice {
+		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
@@ -38,10 +39,11 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerSta
 func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	nextState := state.GetAddRound()
 
-	upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+	// upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
-	for curEnv := ver.Env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+	for curEnvIndex := range ver.Env.EnvSlice {
+		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_LogicMem(curEnv, stmt, nextState)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
@@ -52,10 +54,11 @@ func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerSt
 }
 
 func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+	// upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
-	for curEnv := ver.Env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+	for curEnvIndex := range ver.Env.EnvSlice {
+		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_UniMem_atCurEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
@@ -65,10 +68,11 @@ func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state
 }
 
 func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
+	// upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
-	for curEnv := ver.Env; curEnv != upMostEnv; curEnv = curEnv.Parent {
+	for curEnvIndex := range ver.Env.EnvSlice {
+		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
@@ -78,7 +82,7 @@ func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	searchedSpecFactsInLogicExpr, got := curEnv.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
@@ -176,7 +180,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if state.Round == 0 && !state.ReqOk {
 		return NewExecErr(fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state))
 	}
@@ -249,7 +253,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	return NewEmptyExecTrue()
 }
 
-func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	knownFacts, got := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
@@ -259,7 +263,7 @@ func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.Env, stmt *ast.SpecFactS
 	return ver.iterateKnownSpecFacts_applyObjEqualSpec(stmt, knownFacts, state)
 }
 
-func (ver *Verifier) specFact_LogicMem(curEnv *env.Env, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) specFact_LogicMem(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	knownFacts, got := curEnv.KnownFactsStruct.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
@@ -332,8 +336,8 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 }
 
 func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	ver.newEnv(ver.Env)
-	defer ver.deleteEnvAndRetainMsg()
+	ver.newEnv()
+	defer ver.deleteEnv()
 
 	verRet := ver.matchTwoSpecFacts(stmt, knownFact.SpecFact, state)
 	if verRet.IsErr() || verRet.IsUnknown() {
@@ -389,8 +393,8 @@ func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerSta
 }
 
 func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFactStmt, orStmt *ast.OrStmt, index int, state *VerState) ExecRet {
-	ver.newEnv(ver.Env)
-	defer ver.deleteEnvAndRetainMsg()
+	ver.newEnv()
+	defer ver.deleteEnv()
 
 	// 其他是否都错
 	for i := range orStmt.Facts {
