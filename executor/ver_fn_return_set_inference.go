@@ -127,8 +127,8 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDef
 }
 
 func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.FnTemplateDefStmt, uniMap map[string]ast.Obj, state *VerState) ExecRet {
-	ver.newEnv(ver.Env)
-	defer ver.deleteEnvAndRetainMsg()
+	ver.newEnv()
+	defer ver.deleteEnv()
 
 	for _, fact := range fnTDef.TemplateDomFacts {
 		newFact, err := fact.InstantiateFact(uniMap)
