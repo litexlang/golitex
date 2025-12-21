@@ -18,13 +18,6 @@ import (
 	"strings"
 )
 
-func MergeMap[T any](from map[string]T, to map[string]T) map[string]T {
-	for k, v := range from {
-		to[k] = v
-	}
-	return to
-}
-
 func numberToLetters(num int) string {
 	result := ""
 	for num > 0 {

@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ie *InferenceEngine) equalSetFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) equalSetFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	if len(fact.Params) != 2 {
 		return glob.ErrRet(fmt.Errorf("equal_set fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}

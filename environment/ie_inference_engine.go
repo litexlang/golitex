@@ -14,10 +14,10 @@
 
 package litex_env
 
-type InferenceEngine struct {
+type InferEngine struct {
 	EnvMgr *EnvMgr
 }
 
-func NewInferenceEngine(envMgr *EnvMgr) *InferenceEngine {
-	return &InferenceEngine{EnvMgr: envMgr}
+func NewInferenceEngine(envMgr *EnvMgr) *InferEngine {
+	return &InferEngine{EnvMgr: envMgr}
 }

@@ -20,7 +20,7 @@ import (
 )
 
 // storeSpecFactInMemAndCollect collects the fact string for derived facts tracking
-func (ie *InferenceEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) glob.GlobRet {
+func (ie *InferEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) glob.GlobRet {
 	ret := ie.EnvMgr.storeSpecFactInMem(fact)
 	if ret.IsErr() {
 		return ret
@@ -30,7 +30,7 @@ func (ie *InferenceEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, 
 }
 
 // BuiltinPropExceptTrueEqual handles postprocessing for builtin properties except equality
-func (ie *InferenceEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
 	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordIn) {
 		return ie.trueInFact(fact)
 	}
@@ -96,7 +96,7 @@ func (ie *InferenceEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) gl
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
 	derivedFacts := []string{}
 
 	// x != 0 store spec Mem
@@ -175,7 +175,7 @@ func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAn
 	return glob.NewEmptyGlobTrue()
 }
 
-func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
 	derivedFacts := []string{}
 
 	// abs(x) = x
@@ -207,7 +207,7 @@ func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqu
 	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
 
-func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
 	derivedFacts := []string{}
 
 	// x != 0 store spec Mem
@@ -267,7 +267,7 @@ func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRi
 	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
 
-func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
 	derivedFacts := []string{}
 
 	// abs(x) = -x
@@ -296,7 +296,7 @@ func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqual
 	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
 
-func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
 	derivedFacts := []string{}
 
 	// x > c (c != 0)
@@ -368,7 +368,7 @@ func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAn
 	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
 
-func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
 	derivedFacts := []string{}
 
 	// x >= c (c != 0)
@@ -412,7 +412,7 @@ func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqu
 	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
 
-func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
 	derivedFacts := []string{}
 
 	// x < c (c != 0)
@@ -484,7 +484,7 @@ func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRi
 	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
 
-func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
 	derivedFacts := []string{}
 
 	// x <= c (c != 0)
@@ -528,7 +528,7 @@ func (ie *InferenceEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqual
 	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
 
-func (ie *InferenceEngine) subsetOfFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) subsetOfFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	derivedFacts := []string{}
 	// 生成出来一个 random variable t
 	obj := ie.EnvMgr.GenerateUndeclaredRandomName()
@@ -546,7 +546,7 @@ func (ie *InferenceEngine) subsetOfFactPostProcess(fact *ast.SpecFactStmt) glob.
 	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
 
-func (ie *InferenceEngine) falseEqualFact(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) falseEqualFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	derivedFacts := []string{}
 
 	// x - y != 0
@@ -559,7 +559,7 @@ func (ie *InferenceEngine) falseEqualFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
 }
 
-func (ie *InferenceEngine) isNonEmptyWithItemFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) isNonEmptyWithItemFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	derivedFacts := []string{}
 
 	// fact.Params[0] 非空

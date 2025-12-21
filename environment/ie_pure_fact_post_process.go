@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ie *InferenceEngine) newPureFact(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	if glob.IsBuiltinPropName(string(fact.PropName)) || glob.IsBuiltinExistPropName(string(fact.PropName)) {
 		ret := ie.BuiltinPropExceptTrueEqual(fact)
 		return ret
@@ -59,7 +59,7 @@ func (ie *InferenceEngine) newPureFact(fact *ast.SpecFactStmt) glob.GlobRet {
 
 // equalTupleFactPostProcess handles postprocessing for equal_tuple(a, b, dim) facts
 // It automatically derives a[i] = b[i] for i from 1 to dim
-func (ie *InferenceEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
 	if len(fact.Params) != 3 {
 		return glob.ErrRet(fmt.Errorf("equal_tuple fact expect 3 parameters, get %d in %s", len(fact.Params), fact))
 	}
@@ -74,14 +74,14 @@ func (ie *InferenceEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) glo
 	return ret
 }
 
-func (ie *InferenceEngine) newFalseExist(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) newFalseExist(fact *ast.SpecFactStmt) glob.GlobRet {
 	_ = fact
 	return glob.NewEmptyGlobTrue()
 }
 
 // newTrueExist handles postprocessing for TrueExist_St facts
 // have(exist ... st ...) => exist
-func (ie *InferenceEngine) newTrueExist(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) newTrueExist(fact *ast.SpecFactStmt) glob.GlobRet {
 	_, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
 	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, factParams, fact.Line)
@@ -118,7 +118,7 @@ func (ie *InferenceEngine) newTrueExist(fact *ast.SpecFactStmt) glob.GlobRet {
 
 // newFalseExistFact_EmitEquivalentUniFact handles postprocessing for FalseExist facts
 // not exist => forall not
-func (ie *InferenceEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	uniFact, ret := ie.EnvMgr.notExistToForall(fact)
 	if ret.IsErr() {
 		return ret

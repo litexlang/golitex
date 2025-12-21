@@ -153,39 +153,39 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 // 	return false, nil
 // }
 
-func (exec *Executor) haveCartSetStmt(stmt *ast.HaveCartSetStmt) ExecRet {
-	// check that the cart has at least 2 parameters
-	if len(stmt.CartObj.Params) < 2 {
-		return NewExecErr(fmt.Sprintf("cart must have at least 2 parameters, %s in %s is not valid", stmt.CartObj.String(), stmt.CartObj.String()))
-	}
+// func (exec *Executor) haveCartSetStmt(stmt *ast.HaveCartSetStmt) ExecRet {
+// 	// check that the cart has at least 2 parameters
+// 	if len(stmt.CartObj.Params) < 2 {
+// 		return NewExecErr(fmt.Sprintf("cart must have at least 2 parameters, %s in %s is not valid", stmt.CartObj.String(), stmt.CartObj.String()))
+// 	}
 
-	// Check that each parameter of cart is a set
-	for i, param := range stmt.CartObj.Params {
-		state := exec.factStmt(ast.NewIsASetFact(param, stmt.Line))
-		if state.IsErr() {
-			return NewExecErr(state.String())
-		}
-		if state.IsUnknown() {
-			return NewExecErr(fmt.Sprintf("cart parameter %d (%s) must be a set, i.e. `%s in %s` must be true, but it is unknown", i+1, param.String(), param.String(), ast.Atom(glob.KeywordSet).String()))
-		}
-	}
+// 	// Check that each parameter of cart is a set
+// 	for i, param := range stmt.CartObj.Params {
+// 		state := exec.factStmt(ast.NewIsASetFact(param, stmt.Line))
+// 		if state.IsErr() {
+// 			return NewExecErr(state.String())
+// 		}
+// 		if state.IsUnknown() {
+// 			return NewExecErr(fmt.Sprintf("cart parameter %d (%s) must be a set, i.e. `%s in %s` must be true, but it is unknown", i+1, param.String(), param.String(), ast.Atom(glob.KeywordSet).String()))
+// 		}
+// 	}
 
-	// Define the new set variable
-	defObjStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
-	execState := exec.defLetStmt(defObjStmt)
-	if execState.IsNotTrue() {
-		return execState
-	}
+// 	// Define the new set variable
+// 	defObjStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
+// 	execState := exec.defLetStmt(defObjStmt)
+// 	if execState.IsNotTrue() {
+// 		return execState
+// 	}
 
-	// Store the equal fact: x = cart(a, b, c, ...)
-	equalFact := ast.NewEqualFact(ast.Atom(stmt.Name), stmt.CartObj)
-	ret := exec.Env.NewFactWithAtomsDefined(equalFact)
-	if ret.IsErr() {
-		return NewExecErr(ret.String())
-	}
+// 	// Store the equal fact: x = cart(a, b, c, ...)
+// 	equalFact := ast.NewEqualFact(ast.Atom(stmt.Name), stmt.CartObj)
+// 	ret := exec.Env.NewFactWithAtomsDefined(equalFact)
+// 	if ret.IsErr() {
+// 		return NewExecErr(ret.String())
+// 	}
 
-	return NewEmptyExecTrue().AddMsg(stmt.String())
-}
+// 	return NewEmptyExecTrue().AddMsg(stmt.String())
+// }
 
 func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 	ver := NewVerifier(exec.Env)
