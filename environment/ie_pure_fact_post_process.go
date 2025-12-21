@@ -34,18 +34,18 @@ func (ie *InferenceEngine) newPureFact(fact *ast.SpecFactStmt) glob.GlobRet {
 			// Inherit derived facts from prop definition
 			return ret
 		}
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	existPropDef := ie.EnvMgr.GetExistPropDef(fact.PropName)
 	if existPropDef != nil {
 		if fact.TypeEnum == ast.TruePure {
-			return glob.NewGlobTrue("")
+			return glob.NewEmptyGlobTrue()
 		} else {
 			for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
 				_, ok := thenFact.(*ast.SpecFactStmt)
 				if !ok {
-					return glob.NewGlobTrue("")
+					return glob.NewEmptyGlobTrue()
 				}
 			}
 			ret := ie.newFalseExistFact_EmitEquivalentUniFact(fact)
@@ -75,20 +75,9 @@ func (ie *InferenceEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) glo
 }
 
 func (ie *InferenceEngine) newFalseExist(fact *ast.SpecFactStmt) glob.GlobRet {
+	_ = fact
 	return glob.NewEmptyGlobTrue()
 }
-
-// newExist_St_FactPostProcess dispatches to the appropriate Exist_St fact postprocess handler
-// func (ie *InferenceEngine) newExist_St_FactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
-// 	switch fact.TypeEnum {
-// 	case ast.TrueExist_St:
-// 		return ie.newTrueExist_St_FactPostProcess(fact)
-// 	case ast.FalseExist_St:
-// 		return ie.newFalseExist_St_FactPostProcess(fact)
-// 	default:
-// 		return glob.NewEmptyGlobErr()
-// 	}
-// }
 
 // newTrueExist handles postprocessing for TrueExist_St facts
 // have(exist ... st ...) => exist
@@ -124,7 +113,7 @@ func (ie *InferenceEngine) newTrueExist(fact *ast.SpecFactStmt) glob.GlobRet {
 		}
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 // newFalseExistFact_EmitEquivalentUniFact handles postprocessing for FalseExist facts
@@ -141,5 +130,5 @@ func (ie *InferenceEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.Spe
 		return glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }

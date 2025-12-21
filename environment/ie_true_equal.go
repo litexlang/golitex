@@ -65,7 +65,7 @@ func (ie *InferenceEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) glob.Glob
 		}
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 // trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex handles postprocessing for obj = tuple
@@ -92,7 +92,7 @@ func (ie *InferenceEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondi
 		}
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 // trueEqualFactByTuple handles postprocessing for tuple equality
@@ -115,7 +115,7 @@ func (ie *InferenceEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) glo
 		return ie.trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(right, left)
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (ie *InferenceEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj, rightTuple *ast.FnObj) glob.GlobRet {
@@ -133,7 +133,7 @@ func (ie *InferenceEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.Fn
 		}
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 // equalFactPostProcess_tupleTuple handles postprocessing for tuple = tuple
@@ -147,7 +147,7 @@ func (ie *InferenceEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) g
 	// 尝试获取 list set（可能是直接的，也可能是通过 equal facts 得到的）
 	listSetObj := ie.EnvMgr.GetListSetEqualToObj(right)
 	if listSetObj == nil {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	listSetFnObj, ok := listSetObj.(*ast.FnObj)

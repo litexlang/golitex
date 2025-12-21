@@ -26,7 +26,7 @@ func (ie *InferenceEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, 
 		return ret
 	}
 	*derivedFacts = append(*derivedFacts, fact.String())
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 // BuiltinPropExceptTrueEqual handles postprocessing for builtin properties except equality

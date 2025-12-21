@@ -83,7 +83,7 @@ func (ie *InferenceEngine) trueInFact(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ie.trueInFactByNPos(fact)
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 // trueInFactByFnTemplate handles inference for x $in fnTemplate(...)
@@ -118,7 +118,7 @@ func (ie *InferenceEngine) trueInFactByFnTemplateFnObj(fact *ast.SpecFactStmt) g
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 // trueInFactByCart handles inference for x $in cart(S1, S2, ..., Sn)
@@ -179,22 +179,22 @@ func (ie *InferenceEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) glo
 	if ret.IsErr() {
 		return ret
 	}
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (ie *InferenceEngine) trueInFactInFnTemplate(fact *ast.SpecFactStmt) (bool, glob.GlobRet) {
 	if _, ok := fact.Params[1].(*ast.FnObj); !ok {
-		return false, glob.NewGlobTrue("")
+		return false, glob.NewEmptyGlobTrue()
 	}
 
 	head, ok := fact.Params[1].(*ast.FnObj).IsObjFn_HasAtomHead_ReturnHead()
 	if !ok {
-		return false, glob.NewGlobTrue("")
+		return false, glob.NewEmptyGlobTrue()
 	}
 
 	def := ie.EnvMgr.GetFnTemplateDef_KeyIsObjHead(fact.Params[1].(*ast.FnObj))
 	if def == nil {
-		return false, glob.NewGlobTrue("")
+		return false, glob.NewEmptyGlobTrue()
 	}
 
 	fnTNoName, ok, ret := ie.EnvMgr.getInstantiatedFnTTOfFnObj(fact.Params[1].(*ast.FnObj))
@@ -202,7 +202,7 @@ func (ie *InferenceEngine) trueInFactInFnTemplate(fact *ast.SpecFactStmt) (bool,
 		return false, ret
 	}
 	if !ok {
-		return false, glob.NewGlobTrue("")
+		return false, glob.NewEmptyGlobTrue()
 	}
 
 	templateParamUniMap := map[string]ast.Obj{}
@@ -225,7 +225,7 @@ func (ie *InferenceEngine) trueInFactInFnTemplate(fact *ast.SpecFactStmt) (bool,
 		return false, ret
 	}
 
-	return true, glob.NewGlobTrue("")
+	return true, glob.NewEmptyGlobTrue()
 }
 
 // trueInFactInListSet handles inference for obj $in listSet(e1, e2, ..., en)
@@ -242,7 +242,7 @@ func (ie *InferenceEngine) trueInFactInListSet(obj ast.Obj, listSetFnObj *ast.Fn
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 // trueInFactByListSet handles inference for x $in listSet(...)
@@ -311,7 +311,7 @@ func (ie *InferenceEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *as
 		}
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 // trueInFactByRangeOrClosedRange handles inference for x $in range(a, b) or x $in closed_range(a, b)
@@ -392,7 +392,7 @@ func (ie *InferenceEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt
 	if len(derivedFacts) > 0 {
 		return glob.NewGlobTrueWithMsgs(derivedFacts)
 	}
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 // trueInFactByNPos handles inference for x $in NPos (positive natural numbers)
@@ -455,5 +455,5 @@ func (ie *InferenceEngine) trueInFactByNPos(fact *ast.SpecFactStmt) glob.GlobRet
 	if len(derivedFacts) > 0 {
 		return glob.NewGlobTrueWithMsgs(derivedFacts)
 	}
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }

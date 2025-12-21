@@ -419,52 +419,9 @@ func (ver *Verifier) verIsANonEmptySetByAllItemsInCartAreNonempty(cart ast.Obj, 
 	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("cart %s is a nonempty set because all its items are nonempty sets.", cart), NewEmptyExecTrue())
 }
 
-func (ver *Verifier) verTrueExistItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if len(stmt.Params) != 3 {
-		return NewExecErr(fmt.Sprintf("item_exists_in expects 2 parameters, got %d", len(stmt.Params)))
-	}
-
-	existParams, factParams := ast.GetExistParamsAndFactParamsFromExistFactStmt(stmt)
-
-	if len(existParams) != 1 {
-		return NewExecErr(fmt.Sprintf("item_exists_in expects 1 exist parameter, got %d", len(existParams)))
-	}
-
-	if len(factParams) != 1 {
-		return NewExecErr(fmt.Sprintf("item_exists_in expects 1 fact parameter, got %d", len(factParams)))
-	}
-
-	inFact := ast.NewInFactWithObj(existParams[0], factParams[0])
-	verRet := ver.VerFactStmt(inFact, state)
-	if verRet.IsNotTrue() {
-		return verRet
-	}
-
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), "item_exists_in is true because the exist parameter is in the fact parameter.", NewEmptyExecTrue())
-}
-
-func (ver *Verifier) verTruePurePropItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	if len(stmt.Params) != 1 {
-		return NewExecErr(fmt.Sprintf("item_exists_in expects 1 parameter, got %d", len(stmt.Params)))
-	}
-
-	// 是 finite set 然后 count > 0
-	isFiniteSet := ast.NewIsAFiniteSetFact(stmt.Params[0], glob.BuiltinLine)
-	verRet := ver.VerFactStmt(isFiniteSet, state)
-	if verRet.IsNotTrue() {
-		return verRet
-	}
-
-	isCountGreaterThanZero := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{stmt.Params[0]}), ast.Atom("0")}, glob.BuiltinLine)
-	verRet = ver.VerFactStmt(isCountGreaterThanZero, state)
-	if verRet.IsNotTrue() {
-		return NewEmptyExecUnknown()
-	}
-
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), "item_exists_in is true because the set is a finite set and the count is greater than 0.", NewEmptyExecTrue())
-}
-
 func (ver *Verifier) verIsTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	_ = state
+
 	if len(stmt.Params) != 1 {
 		return NewExecErr(fmt.Sprintf("is_tuple expects 1 parameter, got %d", len(stmt.Params)))
 	}

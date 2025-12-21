@@ -43,5 +43,5 @@ func (ie *InferenceEngine) equalSetFactPostProcess(fact *ast.SpecFactStmt) glob.
 	if len(derivedFacts) > 0 {
 		return glob.NewGlobTrueWithMsgs(derivedFacts)
 	}
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }

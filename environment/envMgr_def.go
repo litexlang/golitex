@@ -40,7 +40,7 @@ func (envMgr *EnvMgr) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) glob.GlobRet
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob.GlobRet {
@@ -84,7 +84,7 @@ func (envMgr *EnvMgr) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob
 	// Mark in current EnvSlice
 	envMgr.CurEnv().PropDefMem[key] = struct{}{}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.FnTemplateDefStmt) glob.GlobRet {
@@ -139,7 +139,7 @@ func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *a
 		}
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) glob.GlobRet {
@@ -192,7 +192,7 @@ func (envMgr *EnvMgr) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistProp
 	// Mark in current EnvSlice
 	envMgr.CurEnv().ExistPropDefMem[key] = struct{}{}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) NewObj_NoDuplicate(name string, stmt *ast.DefLetStmt) glob.GlobRet {
@@ -207,7 +207,7 @@ func (envMgr *EnvMgr) NewObj_NoDuplicate(name string, stmt *ast.DefLetStmt) glob
 	// Mark in current EnvSlice
 	envMgr.CurEnv().AtomObjDefMem[name] = struct{}{}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 // DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined defines new objects in the environment

@@ -139,25 +139,25 @@ func (ver *Verifier) matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreePara
 	return nil, []fcPair{}, nil
 }
 
-func (ver *Verifier) matchFcsInKnownSpecFactAndGivenFc_ReturnFreeParamFcMapAndUnmatchedFcPairs(knownFcs []ast.Obj, givenFcs []ast.Obj, freeVars map[string]struct{}, specFactName string) (map[string][]ast.Obj, []fcPair, error) {
-	if len(knownFcs) != len(givenFcs) {
-		return nil, []fcPair{}, fmt.Errorf("required parameters number of fact %s is %d, get %d", specFactName, len(knownFcs), len(givenFcs))
-	}
+// func (ver *Verifier) matchFcsInKnownSpecFactAndGivenFc_ReturnFreeParamFcMapAndUnmatchedFcPairs(knownFcs []ast.Obj, givenFcs []ast.Obj, freeVars map[string]struct{}, specFactName string) (map[string][]ast.Obj, []fcPair, error) {
+// 	if len(knownFcs) != len(givenFcs) {
+// 		return nil, []fcPair{}, fmt.Errorf("required parameters number of fact %s is %d, get %d", specFactName, len(knownFcs), len(givenFcs))
+// 	}
 
-	matchedMaps := []map[string][]ast.Obj{}
-	unmatchedFcPairs := [][]fcPair{}
-	for i := range knownFcs {
-		freeParamToConcreteObjMatchedMap, unmatchedFcPair, err := ver.matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreeParamFcMapAndUnmatchedFcPairs(knownFcs[i], givenFcs[i], freeVars, specFactName)
-		if err != nil {
-			return nil, []fcPair{}, err
-		}
-		matchedMaps = append(matchedMaps, freeParamToConcreteObjMatchedMap)
-		unmatchedFcPairs = append(unmatchedFcPairs, unmatchedFcPair)
-	}
+// 	matchedMaps := []map[string][]ast.Obj{}
+// 	unmatchedFcPairs := [][]fcPair{}
+// 	for i := range knownFcs {
+// 		freeParamToConcreteObjMatchedMap, unmatchedFcPair, err := ver.matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreeParamFcMapAndUnmatchedFcPairs(knownFcs[i], givenFcs[i], freeVars, specFactName)
+// 		if err != nil {
+// 			return nil, []fcPair{}, err
+// 		}
+// 		matchedMaps = append(matchedMaps, freeParamToConcreteObjMatchedMap)
+// 		unmatchedFcPairs = append(unmatchedFcPairs, unmatchedFcPair)
+// 	}
 
-	mergedMap, mergedPairs := ver.mergeMultipleMatchedMapAndUnMatchedFcPairs(matchedMaps, unmatchedFcPairs, map[string][]ast.Obj{}, []fcPair{})
-	return mergedMap, mergedPairs, nil
-}
+// 	mergedMap, mergedPairs := ver.mergeMultipleMatchedMapAndUnMatchedFcPairs(matchedMaps, unmatchedFcPairs, map[string][]ast.Obj{}, []fcPair{})
+// 	return mergedMap, mergedPairs, nil
+// }
 
 // 非常重要：返回uniFact下面的某个specFact里的所有的param推出来的 free param 和 给定obj的对应关系，以及所有的没有匹配上的fc的pair们组成的slice
 func (ver *Verifier) matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs []ast.Obj, givenFcs []ast.Obj, freeVars map[string]struct{}, specFactName string) ([]map[string][]ast.Obj, [][]fcPair, error) {

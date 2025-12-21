@@ -59,23 +59,23 @@ func (envMgr *EnvMgr) AtomsInObjDefinedOrBuiltin(obj ast.Obj, extraParams map[st
 // TODO: 目前只是检查了在当前的envMgr中是否定义了，没有检查在parent envMgr中是否定义了
 func (envMgr *EnvMgr) AtomDefinedOrBuiltin(atom ast.Atom, extraParams map[string]struct{}) glob.GlobRet {
 	if _, ok := extraParams[string(atom)]; ok {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	// Check if it's a builtin atom
 	if glob.IsBuiltinAtom(string(atom)) {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	// Check if it's a number literal
 	if _, ok := ast.IsNumLitAtomObj(atom); ok {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	// Check if it's defined by user
 	ret := envMgr.IsAtomObjDefinedByUser(atom)
 	if ret.IsTrue() {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	// Check if it's a keyword that's not an object
@@ -127,7 +127,7 @@ func (envMgr *EnvMgr) AtomsInSetBuilderDefined(obj ast.Obj, extraParams map[stri
 		}
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 // 在def时，检查fact中的所有atom是否都定义了
@@ -159,39 +159,39 @@ func (envMgr *EnvMgr) AtomsInSpecFactDefined(stmt *ast.SpecFactStmt, extraParams
 		}
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.SpecFactStmt) glob.GlobRet {
 	// Check if it's an exist_prop defined by user
 	if stmt.TypeEnum == ast.TrueExist_St || stmt.TypeEnum == ast.FalseExist_St {
 		if glob.IsBuiltinExistPropName(string(stmt.PropName)) {
-			return glob.NewGlobTrue("")
+			return glob.NewEmptyGlobTrue()
 		}
 
 		existPropDef := envMgr.GetExistPropDef(stmt.PropName)
 		if existPropDef != nil {
-			return glob.NewGlobTrue("")
+			return glob.NewEmptyGlobTrue()
 		}
 		return glob.ErrRet(fmt.Errorf("undefined exist_prop: %s", stmt.PropName))
 	} else {
 		if glob.IsBuiltinPropName(string(stmt.PropName)) {
-			return glob.NewGlobTrue("")
+			return glob.NewEmptyGlobTrue()
 		}
 
 		if glob.IsBuiltinExistPropName(string(stmt.PropName)) {
-			return glob.NewGlobTrue("")
+			return glob.NewEmptyGlobTrue()
 		}
 
 		// Check if it's a regular prop defined by user
 		propDef := envMgr.GetPropDef(stmt.PropName)
 		if propDef != nil {
-			return glob.NewGlobTrue("")
+			return glob.NewEmptyGlobTrue()
 		}
 
 		existPropDef := envMgr.GetExistPropDef(stmt.PropName)
 		if existPropDef != nil {
-			return glob.NewGlobTrue("")
+			return glob.NewEmptyGlobTrue()
 		}
 
 		return glob.ErrRet(fmt.Errorf("undefined prop or exist_prop: %s", stmt.PropName))
@@ -200,7 +200,7 @@ func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.SpecFactStmt) glob.Gl
 
 func (envMgr *EnvMgr) IsAtomDefinedByOrBuiltinOrSetNonemptySetFiniteSet(atom ast.Atom, extraParams map[string]struct{}) glob.GlobRet {
 	if glob.IsKeywordSetOrNonEmptySetOrFiniteSet(string(atom)) {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	} else {
 		return envMgr.AtomDefinedOrBuiltin(atom, extraParams)
 	}
@@ -238,7 +238,7 @@ func (envMgr *EnvMgr) AtomObjsInUniFactDefined(stmt *ast.UniFactStmt, extraParam
 		}
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) AtomsInUniFactWithIffDefined(stmt *ast.UniFactWithIffStmt, extraParams map[string]struct{}) glob.GlobRet {
@@ -261,7 +261,7 @@ func (envMgr *EnvMgr) AtomsInUniFactWithIffDefined(stmt *ast.UniFactWithIffStmt,
 		}
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) AtomsInOrDefined(stmt *ast.OrStmt, extraParams map[string]struct{}) glob.GlobRet {
@@ -271,7 +271,7 @@ func (envMgr *EnvMgr) AtomsInOrDefined(stmt *ast.OrStmt, extraParams map[string]
 		}
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) AtomsInEqualsFactDefined(stmt *ast.EqualsFactStmt, extraParams map[string]struct{}) glob.GlobRet {
@@ -281,7 +281,7 @@ func (envMgr *EnvMgr) AtomsInEqualsFactDefined(stmt *ast.EqualsFactStmt, extraPa
 		}
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet {
@@ -299,7 +299,7 @@ func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet 
 		}
 		ret := pkgPathEnv.AtomDefinedOrBuiltin(ast.Atom(AtomName), make(map[string]struct{}))
 		if ret.IsTrue() {
-			return glob.NewGlobTrue("")
+			return glob.NewEmptyGlobTrue()
 		}
 		return ret
 	}
@@ -307,12 +307,12 @@ func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet 
 	// Search from current depth upward to depth 0
 	_, ok := envMgr.AllDefinedAtomObjNames[string(AtomObjName)]
 	if ok {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	// 这里其实有点问题，应该独立出来，因为 fn_template 可能不能算 atom
 	if _, ok := envMgr.AllDefinedFnTemplateNames[string(AtomObjName)]; ok {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	return glob.ErrRet(fmt.Errorf("undefined: %s", AtomObjName))
@@ -320,7 +320,7 @@ func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet 
 
 func (envMgr *EnvMgr) AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
 	if asAtom, ok := obj.(ast.Atom); ok && glob.IsKeywordSetOrNonEmptySetOrFiniteSet(string(asAtom)) {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	return envMgr.AtomsInObjDefinedOrBuiltin(obj, extraParams)
@@ -328,34 +328,34 @@ func (envMgr *EnvMgr) AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(obj as
 
 func (envMgr *EnvMgr) IsNameDefinedOrBuiltin(name string, extraParams map[string]struct{}) glob.GlobRet {
 	if _, ok := extraParams[name]; ok {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	if glob.IsBuiltinAtom(name) {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	if envMgr.IsPkgName(name) {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	if _, ok := ast.IsNumLitAtomObj(ast.Atom(name)); ok {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	ret := envMgr.IsAtomObjDefinedByUser(ast.Atom(name))
 	if ret.IsTrue() {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	existPropDef := envMgr.GetExistPropDef(ast.Atom(name))
 	if existPropDef != nil {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	propDef := envMgr.GetPropDef(ast.Atom(name))
 	if propDef != nil {
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	return glob.ErrRet(fmt.Errorf("undefined: %s", name))
@@ -372,5 +372,5 @@ func (envMgr *EnvMgr) IsValidIdentifierAvailable(name string) glob.GlobRet {
 		return glob.ErrRet(duplicateDefError(name))
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }

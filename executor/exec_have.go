@@ -36,6 +36,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 	// 这个 warning 不合时宜了，因为fn的定义其实和obj一样了，就是额外多个满足特定的template
 
 	if glob.IsBuiltinExistPropName(string(stmt.Fact.PropName)) {
+		return NewEmptyExecUnknown()
 	}
 
 	// TODO 把 exist prop def 里的东西释放出来
