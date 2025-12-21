@@ -54,7 +54,7 @@ func (envMgr *EnvMgr) GenerateUndeclaredRandomName_AndNotInMap(m map[string]stru
 
 func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTStruct, glob.GlobRet) {
 	if objFnTypeToFnTStruct, ok := ast.ObjFnT_To_FnTStruct(fnTName); ok {
-		return objFnTypeToFnTStruct, glob.NewGlobTrue("")
+		return objFnTypeToFnTStruct, glob.NewEmptyGlobTrue()
 	} else {
 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
 		if !ok {
@@ -81,7 +81,7 @@ func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateP
 		return nil, glob.ErrRet(err)
 	}
 
-	return fnTStruct, glob.NewGlobTrue("")
+	return fnTStruct, glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) AutoDerivedFactsMsg(originalFact string, derivedFacts []string) glob.GlobRet {
@@ -100,7 +100,7 @@ func (envMgr *EnvMgr) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, deriv
 		return ret
 	}
 	*derivedFacts = append(*derivedFacts, fact.String())
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -118,37 +118,37 @@ func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.SpecFactStmt) gl
 
 	if leftGot && rightGot {
 		if storedEqualLeftFcs == storedEqualRightFcs {
-			return glob.NewGlobTrue("")
+			return glob.NewEmptyGlobTrue()
 		} else {
 			newEqualFcs := []ast.Obj{}
 			newEqualFcs = append(newEqualFcs, *storedEqualLeftFcs...)
 			newEqualFcs = append(newEqualFcs, *storedEqualRightFcs...)
 			*storedEqualLeftFcs = newEqualFcs
 			*storedEqualRightFcs = newEqualFcs
-			return glob.NewGlobTrue("")
+			return glob.NewEmptyGlobTrue()
 		}
 	}
 
 	if leftGot && !rightGot {
 		*storedEqualLeftFcs = append(*storedEqualLeftFcs, fact.Params[1])
 		mem[rightAsStr] = storedEqualLeftFcs
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	if !leftGot && rightGot {
 		*storedEqualRightFcs = append(*storedEqualRightFcs, fact.Params[0])
 		mem[leftAsStr] = storedEqualRightFcs
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
 	if !leftGot && !rightGot {
 		newEqualFcs := []ast.Obj{fact.Params[0], fact.Params[1]}
 		mem[leftAsStr] = &newEqualFcs
 		mem[rightAsStr] = &newEqualFcs
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) notExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, glob.GlobRet) {
@@ -183,7 +183,7 @@ func (envMgr *EnvMgr) notExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt
 	// 创建 OrStmt 表示 OR 关系，然后整体取反
 	orStmt := ast.NewOrStmt(orFactOrs, existPropDef.Line)
 
-	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, []ast.FactStmt{}, []ast.FactStmt{orStmt}, fact.Line), glob.NewGlobTrue("")
+	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, []ast.FactStmt{}, []ast.FactStmt{orStmt}, fact.Line), glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, []ast.FactStmt, glob.GlobRet) {
@@ -222,7 +222,7 @@ func (envMgr *EnvMgr) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactS
 		instantiatedThenFacts = append(instantiatedThenFacts, instantiated)
 	}
 
-	return instantiatedIffFacts, instantiatedThenFacts, glob.NewGlobTrue("")
+	return instantiatedIffFacts, instantiatedThenFacts, glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) StoreTrueEqualValues(key, value ast.Obj) {
@@ -246,7 +246,7 @@ func (envMgr *EnvMgr) storeSymbolSimplifiedValue(left, right ast.Obj) glob.GlobR
 		envMgr.StoreTrueEqualValues(left, simplifiedNewRight)
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 // func (envMgr *EnvMgr) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {

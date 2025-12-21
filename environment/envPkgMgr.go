@@ -53,7 +53,7 @@ func (mgr *EnvPkgMgr) MergeGivenExecPkgMgr(importDirStmt *ast.ImportDirStmt, cur
 	return nil
 }
 
-func NewPackageManager() *EnvPkgMgr {
+func NewPkgMgr() *EnvPkgMgr {
 	return &EnvPkgMgr{
 		PkgPathEnvPairs: make(map[string]*EnvMgr),
 		PkgPathNameMgr:  pkgMgr.NewPathNameMgr(),

@@ -307,6 +307,8 @@ func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj
 }
 
 func (ver *Verifier) verEqualByLeftAndRightAreSetBuilders(left, right ast.Obj, state *VerState) ExecRet {
+	_ = state
+
 	leftSetBuilder := ver.Env.GetSetBuilderEqualToObj(left)
 	if leftSetBuilder == nil {
 		return NewEmptyExecUnknown()
