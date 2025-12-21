@@ -113,7 +113,7 @@ func (ie *InferenceEngine) trueInFactByFnTemplateFnObj(fact *ast.SpecFactStmt) g
 		return glob.ErrRet(fmt.Errorf("%s is not obj type fn template", fnFn.String()))
 	}
 
-	ret := ie.Env.InsertFnInFnTT(fact.Params[0], fnTStruct)
+	ret := ie.EnvMgr.InsertFnInFnTT(fact.Params[0], fnTStruct)
 	if ret.IsErr() {
 		return ret
 	}
@@ -131,7 +131,7 @@ func (ie *InferenceEngine) trueInFactByCart(fact *ast.SpecFactStmt) glob.GlobRet
 	}
 
 	// Try cart from equal facts
-	equalObjs, ok := ie.Env.GetEqualObjs(fact.Params[1])
+	equalObjs, ok := ie.EnvMgr.GetEqualObjs(fact.Params[1])
 	if !ok || equalObjs == nil {
 		return glob.NewEmptyGlobUnknown()
 	}
@@ -160,7 +160,7 @@ func (ie *InferenceEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) glo
 		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{obj, indexObj})
 		// 创建 a[i] $in cartSet.Params[i] 的事实
 		inFact := ast.NewInFactWithObj(indexedObj, cartSet.Params[i])
-		ret := ie.Env.NewFactWithAtomsDefined(inFact)
+		ret := ie.EnvMgr.NewFactWithAtomsDefined(inFact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -169,13 +169,13 @@ func (ie *InferenceEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) glo
 	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{obj})
 	dimValue := ast.Atom(strconv.Itoa(len(cartSet.Params)))
 	dimEqualFact := ast.NewEqualFact(dimFn, dimValue)
-	ret := ie.Env.NewFactWithAtomsDefined(dimEqualFact)
+	ret := ie.EnvMgr.NewFactWithAtomsDefined(dimEqualFact)
 	if ret.IsErr() {
 		return ret
 	}
 	// 添加 is_tuple(obj) 的事实
 	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{obj}, glob.BuiltinLine)
-	ret = ie.Env.NewFactWithAtomsDefined(isTupleFact)
+	ret = ie.EnvMgr.NewFactWithAtomsDefined(isTupleFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -192,12 +192,12 @@ func (ie *InferenceEngine) trueInFactInFnTemplate(fact *ast.SpecFactStmt) (bool,
 		return false, glob.NewGlobTrue("")
 	}
 
-	def := ie.Env.GetFnTemplateDef_KeyIsObjHead(fact.Params[1].(*ast.FnObj))
+	def := ie.EnvMgr.GetFnTemplateDef_KeyIsObjHead(fact.Params[1].(*ast.FnObj))
 	if def == nil {
 		return false, glob.NewGlobTrue("")
 	}
 
-	fnTNoName, ok, ret := ie.Env.getInstantiatedFnTTOfFnObj(fact.Params[1].(*ast.FnObj))
+	fnTNoName, ok, ret := ie.EnvMgr.getInstantiatedFnTTOfFnObj(fact.Params[1].(*ast.FnObj))
 	if ret.IsErr() {
 		return false, ret
 	}
@@ -215,12 +215,12 @@ func (ie *InferenceEngine) trueInFactInFnTemplate(fact *ast.SpecFactStmt) (bool,
 		return false, glob.ErrRet(err)
 	}
 
-	ret = ie.Env.NewFactWithAtomsDefined(derivedFact)
+	ret = ie.EnvMgr.NewFactWithAtomsDefined(derivedFact)
 	if ret.IsErr() {
 		return false, ret
 	}
 
-	ret = ie.Env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fact.Params[0], fact.Params[1].(*ast.FnObj), fnTNoName)
+	ret = ie.EnvMgr.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fact.Params[0], fact.Params[1].(*ast.FnObj), fnTNoName)
 	if ret.IsErr() {
 		return false, ret
 	}
@@ -237,7 +237,7 @@ func (ie *InferenceEngine) trueInFactInListSet(obj ast.Obj, listSetFnObj *ast.Fn
 	for _, param := range listSetFnObj.Params {
 		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, param}, glob.BuiltinLine))
 	}
-	ret := ie.Env.NewFactWithAtomsDefined(orFact)
+	ret := ie.EnvMgr.NewFactWithAtomsDefined(orFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -250,7 +250,7 @@ func (ie *InferenceEngine) trueInFactInListSet(obj ast.Obj, listSetFnObj *ast.Fn
 // Inference: If x is in a finite list set, then x equals one of the elements
 func (ie *InferenceEngine) trueInFactByListSet(fact *ast.SpecFactStmt) glob.GlobRet {
 	// Try to get listSet, either directly or from equal facts
-	listSetObj := ie.Env.GetListSetEqualToObj(fact.Params[1])
+	listSetObj := ie.EnvMgr.GetListSetEqualToObj(fact.Params[1])
 	if listSetObj == nil {
 		return glob.NewEmptyGlobUnknown()
 	}
@@ -266,7 +266,7 @@ func (ie *InferenceEngine) trueInFactByListSet(fact *ast.SpecFactStmt) glob.Glob
 // trueInFactBySetBuilder handles inference for x $in {y in T: P(y)}
 // Inference: If x is in a set builder, then x is in the parent set T and satisfies all intentional facts P(x)
 func (ie *InferenceEngine) trueInFactBySetBuilder(fact *ast.SpecFactStmt) glob.GlobRet {
-	setBuilderObj := ie.Env.GetSetBuilderEqualToObj(fact.Params[1])
+	setBuilderObj := ie.EnvMgr.GetSetBuilderEqualToObj(fact.Params[1])
 	if setBuilderObj == nil {
 		return glob.NewEmptyGlobUnknown()
 	}
@@ -298,14 +298,14 @@ func (ie *InferenceEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *as
 
 	// in parent set
 	inParentSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{obj, setBuilderStruct.ParentSet}, glob.BuiltinLine)
-	ret := ie.Env.NewFactWithAtomsDefined(inParentSetFact)
+	ret := ie.EnvMgr.NewFactWithAtomsDefined(inParentSetFact)
 	if ret.IsErr() {
 		return glob.ErrRet(err)
 	}
 
 	// intentional facts are true
 	for _, fact := range instFacts {
-		ret := ie.Env.NewFactWithAtomsDefined(fact)
+		ret := ie.EnvMgr.NewFactWithAtomsDefined(fact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -336,7 +336,7 @@ func (ie *InferenceEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt
 
 	// in Z
 	inZFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordInteger))
-	ret := ie.Env.storeSpecFactInMem(inZFact)
+	ret := ie.EnvMgr.storeSpecFactInMem(inZFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -344,7 +344,7 @@ func (ie *InferenceEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt
 
 	// Generate x >= left
 	greaterEqualLeftFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{obj, left}, fact.Line)
-	ret = ie.Env.storeSpecFactInMem(greaterEqualLeftFact)
+	ret = ie.EnvMgr.storeSpecFactInMem(greaterEqualLeftFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -360,7 +360,7 @@ func (ie *InferenceEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt
 	if isRange {
 		// range: generate x < right
 		lessRightFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{obj, right}, fact.Line)
-		ret = ie.Env.storeSpecFactInMem(lessRightFact)
+		ret = ie.EnvMgr.storeSpecFactInMem(lessRightFact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -375,7 +375,7 @@ func (ie *InferenceEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt
 	} else {
 		// closed_range: generate x <= right
 		lessEqualRightFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{obj, right}, fact.Line)
-		ret = ie.Env.storeSpecFactInMem(lessEqualRightFact)
+		ret = ie.EnvMgr.storeSpecFactInMem(lessEqualRightFact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -407,7 +407,7 @@ func (ie *InferenceEngine) trueInFactByNPos(fact *ast.SpecFactStmt) glob.GlobRet
 
 	// x $in N
 	inNFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordNatural))
-	ret := ie.Env.storeSpecFactInMem(inNFact)
+	ret := ie.EnvMgr.storeSpecFactInMem(inNFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -415,7 +415,7 @@ func (ie *InferenceEngine) trueInFactByNPos(fact *ast.SpecFactStmt) glob.GlobRet
 
 	// x $in Q
 	inQFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordRational))
-	ret = ie.Env.storeSpecFactInMem(inQFact)
+	ret = ie.EnvMgr.storeSpecFactInMem(inQFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -423,7 +423,7 @@ func (ie *InferenceEngine) trueInFactByNPos(fact *ast.SpecFactStmt) glob.GlobRet
 
 	// x $in R
 	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
-	ret = ie.Env.storeSpecFactInMem(inRFact)
+	ret = ie.EnvMgr.storeSpecFactInMem(inRFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -431,7 +431,7 @@ func (ie *InferenceEngine) trueInFactByNPos(fact *ast.SpecFactStmt) glob.GlobRet
 
 	// x > 0
 	greaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine)
-	ret = ie.Env.storeSpecFactInMem(greaterThanZeroFact)
+	ret = ie.EnvMgr.storeSpecFactInMem(greaterThanZeroFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -446,7 +446,7 @@ func (ie *InferenceEngine) trueInFactByNPos(fact *ast.SpecFactStmt) glob.GlobRet
 
 	// x >= 1
 	greaterEqualOneFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{obj, ast.Atom("1")}, glob.BuiltinLine)
-	ret = ie.Env.storeSpecFactInMem(greaterEqualOneFact)
+	ret = ie.EnvMgr.storeSpecFactInMem(greaterEqualOneFact)
 	if ret.IsErr() {
 		return ret
 	}

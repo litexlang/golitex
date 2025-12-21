@@ -25,8 +25,8 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) ExecR
 	}
 
 	// 在局部环境声明新变量
-	ver.newEnv(ver.Env)
-	defer ver.deleteEnvAndRetainMsg()
+	ver.newEnv()
+	defer ver.deleteEnv()
 
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(oldStmt)
 	if err != nil {

@@ -53,11 +53,11 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		return err
 	}
 
-	env, err := GetEnvWithBuiltinParentEnv()
+	envMgr, err := GetEnvMgrWithBuiltinParentEnv()
 	if err != nil {
 		return fmt.Errorf("failed to init pipeline env: %s", err)
 	}
-	executor := exe.NewExecutor(env)
+	executor := exe.NewExecutor(envMgr)
 	allFilesStartTime := time.Now()
 
 	for _, file := range files {

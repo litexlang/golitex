@@ -15,9 +15,9 @@
 package litex_env
 
 type InferenceEngine struct {
-	Env *Env
+	EnvMgr *EnvMgr
 }
 
-func NewInferenceEngine(env *Env) *InferenceEngine {
-	return &InferenceEngine{Env: env}
+func NewInferenceEngine(envMgr *EnvMgr) *InferenceEngine {
+	return &InferenceEngine{EnvMgr: envMgr}
 }

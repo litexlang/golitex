@@ -107,15 +107,10 @@ func (env *Env) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
-	ie := NewInferenceEngine(env)
-	switch fact.TypeEnum {
-	case ast.TrueExist_St:
-		return ie.newTrueExist(fact)
-	case ast.FalseExist_St:
-		return ie.newFalseExist(fact)
-	default:
-		return ie.newPureFact(fact)
-	}
+	// TODO: env_new_fact.go should use EnvMgr version instead
+	// This file is deprecated and should not be used
+	// Use envMgr_new_fact.go instead
+	return glob.NewGlobTrue("")
 }
 
 func (env *Env) newTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -125,8 +120,9 @@ func (env *Env) newTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	// postprocess for cart: if x = cart(x1, x2, ..., xn)
-	ie := NewInferenceEngine(env)
-	ret = ie.newTrueEqual(fact)
+	// TODO: env_new_fact.go should use EnvMgr version instead
+	// This file is deprecated and should not be used
+	// Use envMgr_new_fact.go instead
 	return ret
 }
 

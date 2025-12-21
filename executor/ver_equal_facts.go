@@ -51,7 +51,8 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 		return verRet
 	}
 
-	for curEnv := ver.Env; curEnv != nil; curEnv = curEnv.Parent {
+	for curEnvIndex := range ver.Env.EnvSlice {
+		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		var equalToLeftObjs, equalToRightObjs *[]ast.Obj
 		var gotLeftEqualObjs, gotRightEqualObjs bool
 

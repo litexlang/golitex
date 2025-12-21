@@ -26,7 +26,7 @@ func (ie *InferenceEngine) newPureFact(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
-	propDef := ie.Env.GetPropDef(fact.PropName)
+	propDef := ie.EnvMgr.GetPropDef(fact.PropName)
 
 	if propDef != nil {
 		if fact.TypeEnum == ast.TruePure {
@@ -37,7 +37,7 @@ func (ie *InferenceEngine) newPureFact(fact *ast.SpecFactStmt) glob.GlobRet {
 		return glob.NewGlobTrue("")
 	}
 
-	existPropDef := ie.Env.GetExistPropDef(fact.PropName)
+	existPropDef := ie.EnvMgr.GetExistPropDef(fact.PropName)
 	if existPropDef != nil {
 		if fact.TypeEnum == ast.TruePure {
 			return glob.NewGlobTrue("")
@@ -66,7 +66,7 @@ func (ie *InferenceEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) glo
 
 	equalFact := ast.NewEqualFact(fact.Params[0], fact.Params[1])
 
-	ret := ie.Env.NewFactWithAtomsDefined(equalFact)
+	ret := ie.EnvMgr.NewFactWithAtomsDefined(equalFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -99,26 +99,26 @@ func (ie *InferenceEngine) newTrueExist(fact *ast.SpecFactStmt) glob.GlobRet {
 
 	// err := ie.Env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(existFact, ie.Env.CurMatchEnv)
 
-	ret := ie.Env.storeSpecFactInMem(existFact)
+	ret := ie.EnvMgr.storeSpecFactInMem(existFact)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// iff facts
-	iffFacts, thenFacts, ret := ie.Env.iffFactsInExistStFact(fact)
+	iffFacts, thenFacts, ret := ie.EnvMgr.iffFactsInExistStFact(fact)
 	if ret.IsErr() {
 		return ret
 	}
 
 	for _, iffFact := range iffFacts {
-		ret := ie.Env.NewFactWithAtomsDefined(iffFact)
+		ret := ie.EnvMgr.NewFactWithAtomsDefined(iffFact)
 		if ret.IsErr() {
 			return ret
 		}
 	}
 
 	for _, thenFact := range thenFacts {
-		ret := ie.Env.NewFactWithAtomsDefined(thenFact)
+		ret := ie.EnvMgr.NewFactWithAtomsDefined(thenFact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -130,12 +130,12 @@ func (ie *InferenceEngine) newTrueExist(fact *ast.SpecFactStmt) glob.GlobRet {
 // newFalseExistFact_EmitEquivalentUniFact handles postprocessing for FalseExist facts
 // not exist => forall not
 func (ie *InferenceEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) glob.GlobRet {
-	uniFact, ret := ie.Env.notExistToForall(fact)
+	uniFact, ret := ie.EnvMgr.notExistToForall(fact)
 	if ret.IsErr() {
 		return ret
 	}
 
-	ret = ie.Env.newFactNoInfer(uniFact)
+	ret = ie.EnvMgr.newFactNoInfer(uniFact)
 
 	if ret.IsErr() {
 		return glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
