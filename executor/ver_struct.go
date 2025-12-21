@@ -16,43 +16,26 @@
 package litex_executor
 
 import (
-	"fmt"
 	env "golitex/environment"
 )
 
 type Verifier struct {
-	Env *env.Env
+	Env *env.EnvMgr
 }
 
-func NewVerifier(curEnv *env.Env) *Verifier {
-	if curEnv == nil {
-		return &Verifier{Env: env.NewEnv(nil)}
+func NewVerifier(envMgr *env.EnvMgr) *Verifier {
+	if envMgr == nil {
+		return &Verifier{Env: env.NewEnvMgr(nil)}
 	} else {
-		return &Verifier{Env: curEnv}
+		return &Verifier{Env: envMgr}
 	}
 }
 
-func (ver *Verifier) newEnv(parent *env.Env) {
-	newEnv := env.NewEnv(parent)
-	ver.Env = newEnv
-}
-
-func (ver *Verifier) deleteEnvAndRetainMsg() error {
-	// Note: Messages are now stored in ExecRet, not in env.Msgs
-	// This function is kept for compatibility but only deletes the env
-	if ver.Env.Parent != nil {
-		ver.Env = ver.Env.Parent
-		return nil
-	} else {
-		return fmt.Errorf("parent env does not exist")
-	}
+func (ver *Verifier) newEnv() *env.EnvMgr {
+	return ver.Env.NewEnv()
 }
 
 func (ver *Verifier) deleteEnv_DeleteMsg() error {
-	if ver.Env.Parent != nil {
-		ver.Env = ver.Env.Parent
-		return nil
-	} else {
-		return fmt.Errorf("parent env does not exist")
-	}
+	ver.Env.DeleteEnv()
+	return nil
 }

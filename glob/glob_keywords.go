@@ -88,9 +88,7 @@ const (
 
 	KeywordImport = "import"
 	KeywordClear  = "clear"
-	KeywordPrint  = "print"
 	KeywordExit   = "exit"
-	KeywordHelp   = "help"
 
 	KeywordProveAlgo = "prove_algo"
 	KeywordAlgo      = "algo"
@@ -162,13 +160,10 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordProveAlgo: {},
 	KeywordBy:        {},
 
-	KeywordPrint: {},
-
 	KeywordCase: {},
 
 	KeywordProveCaseByCase: {},
 	KeywordExit:            {},
-	KeywordHelp:            {},
 
 	KeywordCart:   {},
 	KeywordIsCart: {},
@@ -340,16 +335,6 @@ var AddMinusStarSet map[string]struct{} = map[string]struct{}{
 	KeySymbolStar:  {},
 }
 
-// const LeftIsEqual0RightIsPositive = "__leftIsEqual0RightIsPositive__"
-// const LeftIsNegativeRightIsInteger = "__leftIsNegativeRightIsInteger__"
-// const LastTwoObjectsAreEqual = "__last_two_objects_are_equal__"
-
-// var builtinPropObjNames = map[string]struct{}{
-// 	LeftIsEqual0RightIsPositive:  {},
-// 	LeftIsNegativeRightIsInteger: {},
-// 	LastTwoObjectsAreEqual:       {},
-// }
-
 // KeywordHelpMap stores help messages for each keyword
 var KeywordHelpMap = map[string]string{
 	KeywordSet:    "",
@@ -395,11 +380,9 @@ var KeywordHelpMap = map[string]string{
 	KeywordEval:                  "",
 	KeywordProveAlgo:             "",
 	KeywordBy:                    "",
-	KeywordPrint:                 "",
 	KeywordCase:                  "",
 	KeywordProveCaseByCase:       "",
 	KeywordExit:                  "exit current REPL session",
-	KeywordHelp:                  "show this help message",
 }
 
 const PkgNameAtomSeparator = KeySymbolDot

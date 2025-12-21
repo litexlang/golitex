@@ -193,7 +193,7 @@ func (exec *Executor) fnObjParamsInFnDomain(fnObj *ast.FnObj) ExecRet {
 }
 
 func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet) {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	for _, fact := range stmt.Conditions {
@@ -229,7 +229,7 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ExecRet
 }
 
 func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValueParams *ast.FnObj) (ast.Obj, ExecRet) {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	// all conditions are true

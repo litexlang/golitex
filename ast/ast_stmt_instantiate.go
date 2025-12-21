@@ -936,11 +936,6 @@ func (specFactPtrSlice SpecFactPtrSlice) InstantiateFact(uniMap map[string]Obj) 
 	return newSpecFactPtrSlice, nil
 }
 
-// TODO: 在eval时，这里的token可能因为没有实例化而有问题
-func (stmt *PrintStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	return stmt, nil
-}
-
 func (stmt *HaveFnEqualCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newDefHeader, err := stmt.DefHeader.Instantiate(uniMap)
 	if err != nil {

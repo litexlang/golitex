@@ -77,3 +77,36 @@ func (envMgr *EnvMgr) GetUpMostEnv() *EnvMemory {
 func (envMgr *EnvMgr) GetSecondUpMostEnv() *EnvMemory {
 	return &envMgr.EnvSlice[1]
 }
+
+func (envMgr *EnvMgr) NewEnv() *EnvMgr {
+	envMgr.EnvSlice = append(envMgr.EnvSlice, *NewEnvMemory())
+	return envMgr
+}
+
+func (envMgr *EnvMgr) DeleteEnv() {
+	// 把 当前的 def 从 all defined 里删了，不删最后一个，因为最后一个是最顶层的
+	for k, _ := range envMgr.CurEnv().AtomObjDefMem {
+		delete(envMgr.AllDefinedAtomObjNames, k)
+	}
+	for k, _ := range envMgr.CurEnv().PropDefMem {
+		delete(envMgr.AllDefinedPropNames, k)
+	}
+	for k, _ := range envMgr.CurEnv().ExistPropDefMem {
+		delete(envMgr.AllDefinedExistPropNames, k)
+	}
+	for k, _ := range envMgr.CurEnv().FnTemplateDefMem {
+		delete(envMgr.AllDefinedFnTemplateNames, k)
+	}
+	for k, _ := range envMgr.CurEnv().AlgoDefMem {
+		delete(envMgr.AllDefinedAlgoNames, k)
+	}
+	for k, _ := range envMgr.CurEnv().DefProveAlgoMem {
+		delete(envMgr.AllDefinedProveAlgoNames, k)
+	}
+
+	envMgr.EnvSlice = envMgr.EnvSlice[:len(envMgr.EnvSlice)-1]
+}
+
+func (envMgr *EnvMgr) ParentEnv() *EnvMemory {
+	return &envMgr.EnvSlice[len(envMgr.EnvSlice)-1]
+}
