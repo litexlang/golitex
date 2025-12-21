@@ -25,10 +25,9 @@ type Verifier struct {
 
 func NewVerifier(envMgr *env.EnvMgr) *Verifier {
 	if envMgr == nil {
-		return &Verifier{Env: env.NewEmptyEnvMgr(nil)}
-	} else {
-		return &Verifier{Env: envMgr}
+		panic("envMgr is nil")
 	}
+	return &Verifier{Env: envMgr}
 }
 
 func (ver *Verifier) newEnv() *env.EnvMgr {
