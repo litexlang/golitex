@@ -19,16 +19,14 @@ import (
 )
 
 type Executor struct {
-	// Env *env.Env
 	Env *env.EnvMgr
 }
 
 func NewExecutor(envMgr *env.EnvMgr) *Executor {
 	if envMgr == nil {
 		panic("envMgr is nil")
-	} else {
-		return &Executor{Env: envMgr}
 	}
+	return &Executor{Env: envMgr}
 }
 
 func (e *Executor) NewEnv() *env.EnvMgr {
