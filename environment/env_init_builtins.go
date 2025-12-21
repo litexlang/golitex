@@ -20,9 +20,6 @@ import (
 
 // template of arithmetic operations。用来证明 + $in fn(R, R)R 这样的事实
 func (e *EnvMgr) InitBuiltins() {
-	// e.NewDefProp_BuiltinProp(kernel_lib.LeftIs0RightIsPositivePropDef)
-	// e.NewDefProp_BuiltinProp(kernel_lib.LeftIsNegativeRightIsIntegerPropDef)
-
 	e.InsertFnInFnTT(kernel_lib.AddAtom, kernel_lib.AddTemplateQ)
 	e.InsertFnInFnTT(kernel_lib.AddAtom, kernel_lib.AddTemplateN)
 	e.InsertFnInFnTT(kernel_lib.AddAtom, kernel_lib.AddTemplateZ)

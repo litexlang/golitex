@@ -561,7 +561,7 @@ func (exec *Executor) DefFnTemplateStmt(stmt *ast.FnTemplateDefStmt) ExecRet {
 func (exec *Executor) ClearStmt() ExecRet {
 	newEnvMgr := env.NewBuiltinEnvMgr(exec.Env)
 	exec.Env = newEnvMgr.NewEnv()
-	return NewExecTrue("clear statement")
+	return NewExecTrue("clear all definitions and facts")
 }
 
 func (exec *Executor) DoNothingStmt() ExecRet {
