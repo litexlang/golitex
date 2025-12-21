@@ -52,7 +52,7 @@ import (
 // 	return nil
 // }
 
-func GetEnvMgrWithBuiltinParentEnv() (*env.EnvMgr, error) {
+func GetBuiltinEnvMgr() (*env.EnvMgr, error) {
 	pkgMgr := env.NewPackageManager()
 	curEnvMgr := env.NewEnvMgr(pkgMgr)
 	curEnvMgr.Init()
@@ -60,7 +60,6 @@ func GetEnvMgrWithBuiltinParentEnv() (*env.EnvMgr, error) {
 	if err != nil {
 		panic(err)
 	}
-	curEnvMgr = curEnvMgr.NewEnv()
 	return curEnvMgr, nil
 }
 

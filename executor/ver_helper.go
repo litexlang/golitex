@@ -17,13 +17,12 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
 )
 
-func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
-	_ = stmt
-	return nil
-}
+// func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
+// 	_ = stmt
+// 	return nil
+// }
 
 // func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) ExecRet {
 // 	// Note: processOkMsg uses string format, keep using string version for backward compatibility

@@ -37,7 +37,7 @@ func (envMgr *EnvMgr) ReplaceSymbolWithValue(obj ast.Obj) (bool, ast.Obj) {
 
 func (envMgr *EnvMgr) IsIndexOfTupleFnObjAndGetValueAtIndex(obj *ast.FnObj) (bool, ast.Obj) {
 	if ast.IsIndexOptFnObj(obj) && ast.IsTupleObj(obj.Params[0]) {
-		value := getTupleValueAtIndex(obj.Params[0].(*ast.FnObj), obj.Params[1])
+		value := ast.GetTupleValueAtIndex(obj.Params[0].(*ast.FnObj), obj.Params[1])
 		if value != nil {
 			_, valueOfValue := envMgr.ReplaceSymbolWithValue(value)
 			return true, valueOfValue
@@ -99,4 +99,3 @@ func (envMgr *EnvMgr) ReplaceObjInSpecFactWithValue(fact *ast.SpecFactStmt) (boo
 	}
 	return replaced, ast.NewSpecFactStmt(fact.TypeEnum, fact.PropName, newParams, fact.Line)
 }
-

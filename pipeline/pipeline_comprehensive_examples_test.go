@@ -53,11 +53,6 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		return err
 	}
 
-	envMgr, err := GetEnvMgrWithBuiltinParentEnv()
-	if err != nil {
-		return fmt.Errorf("failed to init pipeline env: %s", err)
-	}
-	executor := exe.NewExecutor(envMgr)
 	allFilesStartTime := time.Now()
 
 	for _, file := range files {
@@ -68,6 +63,15 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		}
 
 		fmt.Printf("%s ", file)
+
+		// 每次打开文件时重启 executor
+		envMgr, err := GetBuiltinEnvMgr()
+		if err != nil {
+			return fmt.Errorf("failed to init pipeline env: %s", err)
+		}
+
+		envMgr = envMgr.NewEnv()
+		executor := exe.NewExecutor(envMgr)
 
 		// 读出file的内容，然后执行
 		path := filepath.Join(repo, file.Name())
@@ -102,7 +106,6 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 
 		fmt.Printf("%s\n", elapsed)
 
-		executor.ClearStmt()
 	}
 
 	fmt.Printf("All Files Take %s\n", time.Since(allFilesStartTime))

@@ -56,6 +56,7 @@ func (envMgr *EnvMgr) AtomsInObjDefinedOrBuiltin(obj ast.Obj, extraParams map[st
 	}
 }
 
+// TODO: 目前只是检查了在当前的envMgr中是否定义了，没有检查在parent envMgr中是否定义了
 func (envMgr *EnvMgr) AtomDefinedOrBuiltin(atom ast.Atom, extraParams map[string]struct{}) glob.GlobRet {
 	if _, ok := extraParams[string(atom)]; ok {
 		return glob.NewGlobTrue("")
@@ -296,7 +297,7 @@ func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet 
 		if !ok {
 			return glob.ErrRet(fmt.Errorf("package environment for %s is not found", PkgName))
 		}
-		ret := pkgPathEnv.isAtomDefinedAtCurEnv(ast.Atom(AtomName))
+		ret := pkgPathEnv.AtomDefinedOrBuiltin(ast.Atom(AtomName), make(map[string]struct{}))
 		if ret.IsTrue() {
 			return glob.NewGlobTrue("")
 		}

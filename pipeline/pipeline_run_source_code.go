@@ -17,7 +17,6 @@ package litex_pipeline
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
 	exe "golitex/executor"
 	glob "golitex/glob"
 	"os"
@@ -34,11 +33,11 @@ func RunFile(path string) glob.GlobRet {
 }
 
 func RunSourceCode(code string, path string) glob.GlobRet {
-	envMgr, err := GetEnvMgrWithBuiltinParentEnv()
+	envMgr, err := GetBuiltinEnvMgr()
 	if err != nil {
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
-	executor := exe.NewExecutor(envMgr)
+	executor := exe.NewExecutor(envMgr.NewEnv())
 	ret := RunSourceCodeInExecutor(executor, code, path)
 	return ret
 }
@@ -98,11 +97,11 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 		return glob.NewGlobErr(err.Error())
 	}
 
-	builtinEnvMgr, err := GetEnvMgrWithBuiltinParentEnv()
+	builtinEnvMgr, err := GetBuiltinEnvMgr()
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
-	executorToRunDir := exe.NewExecutor(builtinEnvMgr)
+	executorToRunDir := exe.NewExecutor(builtinEnvMgr.NewEnv())
 	ret := RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent), importDirStmt.Path)
 	if ret.IsNotTrue() {
 		return ret
@@ -111,10 +110,7 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 	// TODO: MergeGivenExecPkgMgr still expects *Env, need to create a temporary wrapper or refactor
 	// For now, we'll need to create a temporary Env wrapper from EnvMgr
 	// This is a temporary solution until EnvPkgMgr is fully migrated to EnvMgr
-	tempEnv := &env.Env{
-		PackageManager: executorToRunDir.Env.PkgMgr,
-	}
-	err = curExec.Env.PkgMgr.MergeGivenExecPkgMgr(importDirStmt, tempEnv)
+	err = curExec.Env.PkgMgr.MergeGivenExecPkgMgr(importDirStmt, executorToRunDir.Env)
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
