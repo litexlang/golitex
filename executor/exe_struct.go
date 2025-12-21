@@ -19,22 +19,22 @@ import (
 )
 
 type Executor struct {
-	Env *env.Env
+	// Env *env.Env
+	Env *env.EnvMgr
 }
 
-func NewExecutor(curEnv *env.Env) *Executor {
-	if curEnv == nil {
-		return &Executor{Env: env.NewEnv(nil)}
+func NewExecutor(envMgr *env.EnvMgr) *Executor {
+	if envMgr == nil {
+		panic("envMgr is nil")
 	} else {
-		return &Executor{Env: curEnv}
+		return &Executor{Env: envMgr}
 	}
 }
 
-func (e *Executor) NewEnv(parent *env.Env) *env.Env {
-	e.Env = env.NewEnv(parent)
-	return e.Env
+func (e *Executor) NewEnv() *env.EnvMgr {
+	return e.Env.NewEnv()
 }
 
 func (e *Executor) deleteEnv() {
-	e.Env = e.Env.Parent
+	e.Env.DeleteEnv()
 }

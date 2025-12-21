@@ -915,10 +915,6 @@ func (s *ProveAlgoReturnStmt) ToLatexString() string {
 	return s.String()
 }
 
-func (s *PrintStmt) ToLatexString() string {
-	return s.String()
-}
-
 func (s *HaveFnEqualCaseByCaseStmt) ToLatexString() string {
 	return s.String()
 }

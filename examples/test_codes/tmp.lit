@@ -1,2 +1,1 @@
-have S set = {x R : not x $in x }
-not S $in S
+(4 + 3) / 7 $in N_pos

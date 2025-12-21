@@ -23,7 +23,7 @@ import (
 func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) ExecRet {
 	isSuccess := false
 
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	var result ExecRet
@@ -194,7 +194,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
@@ -327,7 +327,7 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) ExecRet {
 }
 
 func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt) ExecRet {
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
@@ -382,7 +382,7 @@ func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimImplicationStmt) E
 	prop := stmt.Implication.ToProp()
 	uniFact := ast.NewUniFact(prop.DefHeader.Params, prop.DefHeader.ParamSets, prop.DomFactsOrNil, prop.ImplicationFactsOrNil, stmt.Line)
 
-	exec.NewEnv(exec.Env)
+	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
