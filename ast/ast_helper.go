@@ -546,3 +546,21 @@ func GetParamSetsAndRetSetFromFnSet(fnSet *FnObj) ([]Obj, Obj, error) {
 
 	return paramSets, retSet, nil
 }
+
+func GetTupleValueAtIndex(tuple *FnObj, index Obj) Obj {
+	if asAtom, ok := index.(Atom); ok {
+		// string(asAtom) 是整数
+		index, err := strconv.Atoi(string(asAtom))
+		if err != nil {
+			return nil
+		}
+
+		if index >= 1 && index <= len(tuple.Params) {
+			return tuple.Params[index-1]
+		}
+
+		return nil
+	}
+
+	return nil
+}

@@ -242,12 +242,10 @@ func (envMgr *EnvMgr) DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt *
 			ret.AddMsg("in new in fact of def let statement")
 			return ret
 		}
-		// Note: NewFactWithAtomsDefined needs to be implemented for EnvMgr
-		// For now, we'll skip this call or implement a placeholder
-		// ret = envMgr.NewFactWithAtomsDefined(fact)
-		// if ret.IsErr() {
-		// 	return ret
-		// }
+		ret = envMgr.NewFactWithAtomsDefined(fact)
+		if ret.IsErr() {
+			return ret
+		}
 	}
 
 	implicationFacts := []string{}
@@ -257,15 +255,13 @@ func (envMgr *EnvMgr) DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt *
 			ret.AddMsg("in fact of def let statement")
 			return ret
 		}
-		// Note: NewFactWithAtomsDefined needs to be implemented for EnvMgr
-		// For now, we'll skip this call or implement a placeholder
-		// ret = envMgr.NewFactWithAtomsDefined(fact)
-		// if ret.IsErr() {
-		// 	return ret
-		// }
-		// if ret.IsTrue() {
-		// 	implicationFacts = append(implicationFacts, ret.String())
-		// }
+		ret = envMgr.NewFactWithAtomsDefined(fact)
+		if ret.IsErr() {
+			return ret
+		}
+		if ret.IsTrue() {
+			implicationFacts = append(implicationFacts, ret.String())
+		}
 	}
 
 	return glob.NewGlobTrueWithMsgs(implicationFacts)
