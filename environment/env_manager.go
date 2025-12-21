@@ -2,6 +2,28 @@ package litex_env
 
 import ast "golitex/ast"
 
+type shared_ptr_to_slice_of_obj = *[]ast.Obj
+type PropDefMem map[string]ast.DefPropStmt
+type ExistPropDefMem map[string]ast.DefExistPropStmt
+type FnTemplateDefMem map[string]ast.FnTemplateDefStmt
+type AtomObjDefMem map[string]*ast.DefLetStmt // 因为很多的obj会共享一个def obj. 可能是 nil
+type FnInFnTMem map[string][]FnInFnTMemItem
+type PropCommutativeCase struct {
+	TruePureIsCommutative  bool
+	FalsePureIsCommutative bool
+}
+
+type FnInFnTMemItem struct {
+	AsFnTStruct *ast.FnTStruct
+}
+
+type KnownFactsStruct struct {
+	SpecFactMem                       SpecFactMem
+	SpecFactInLogicExprMem            SpecFactInLogicExprMem
+	SpecFactInUniFactMem              SpecFactInUniFactMem
+	SpecFact_InLogicExpr_InUniFactMem SpecFact_InLogicExpr_InUniFactMem
+}
+
 type EnvMgr struct {
 	AllDefinedAtomObjNames    map[string]*ast.DefLetStmt
 	AllDefinedPropNames       map[string]*ast.DefPropStmt
@@ -83,6 +105,12 @@ func (envMgr *EnvMgr) NewEnv() *EnvMgr {
 	return envMgr
 }
 
+func (envMgr *EnvMgr) DeleteEnvUntilBuiltin() {
+	for len(envMgr.EnvSlice) > 1 {
+		envMgr.DeleteEnv()
+	}
+}
+
 func (envMgr *EnvMgr) DeleteEnv() {
 	// 把 当前的 def 从 all defined 里删了，不删最后一个，因为最后一个是最顶层的
 	for k, _ := range envMgr.CurEnv().AtomObjDefMem {
@@ -109,4 +137,29 @@ func (envMgr *EnvMgr) DeleteEnv() {
 
 func (envMgr *EnvMgr) ParentEnv() *EnvMemory {
 	return &envMgr.EnvSlice[len(envMgr.EnvSlice)-1]
+}
+
+func makeKnownFactsStruct() KnownFactsStruct {
+	return KnownFactsStruct{
+		SpecFactMem:                       *newSpecFactMem(),
+		SpecFactInLogicExprMem:            *newSpecFactInLogicExprMem(),
+		SpecFactInUniFactMem:              *newSpecFactInUniFact(),
+		SpecFact_InLogicExpr_InUniFactMem: *newSpecFact_InLogicExpr_InUniFactMem(),
+	}
+}
+
+func newSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
+	return &SpecFact_InLogicExpr_InUniFactMem{
+		PureFacts:         make(map[string][]SpecFact_InLogicExpr_InUniFact),
+		NotPureFacts:      make(map[string][]SpecFact_InLogicExpr_InUniFact),
+		Exist_St_Facts:    make(map[string][]SpecFact_InLogicExpr_InUniFact),
+		NotExist_St_Facts: make(map[string][]SpecFact_InLogicExpr_InUniFact),
+	}
+}
+
+func NewCommutativePropMemItemStruct() *PropCommutativeCase {
+	return &PropCommutativeCase{
+		TruePureIsCommutative:  false,
+		FalsePureIsCommutative: false,
+	}
 }

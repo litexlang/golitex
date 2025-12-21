@@ -33,8 +33,6 @@ func (ie *InferenceEngine) newUserDefinedTruePureFactByDef(fact *ast.SpecFactStm
 
 		ret := ie.EnvMgr.newFactNoInfer(instantiated)
 
-		// Note: Messages are now added to ExecRet in the caller, not to env.Msgs
-
 		if ret.IsErr() {
 			return ret
 		}
