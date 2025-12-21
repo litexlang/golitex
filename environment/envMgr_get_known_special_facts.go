@@ -16,17 +16,6 @@ package litex_env
 
 import ast "golitex/ast"
 
-// func (envMgr *EnvMgr) GetEnumFact(enumName string) ([]ast.Obj, bool) {
-// 	for depth := envMgr.curEnvDepth(); depth >= 0; depth-- {
-// 		enumFacts, ok := envMgr.EnvSlice[depth].EnumFacts[enumName]
-// 		if ok {
-// 			return enumFacts, true
-// 		}
-// 	}
-
-// 	return nil, false
-// }
-
 func (envMgr *EnvMgr) GetLatestFnT_GivenNameIsIn(fnName string) *FnInFnTMemItem {
 	// Search from current depth upward to depth 0
 	for depth := envMgr.curEnvDepth(); depth >= 0; depth-- {
@@ -144,4 +133,3 @@ func (envMgr *EnvMgr) GetEqualObjsAtDepth(depth int, obj ast.Obj) (*[]ast.Obj, b
 	facts, ok := envMgr.EnvSlice[depth].EqualMem[objAsStr]
 	return facts, ok
 }
-
