@@ -177,8 +177,9 @@ type OrStmt struct {
 
 // """
 type ImportDirStmt struct {
-	Path      string
-	AsPkgName string
+	Path        string
+	AsPkgName   string
+	IsGlobalPkg bool
 
 	Line uint
 }
