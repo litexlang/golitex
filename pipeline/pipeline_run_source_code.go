@@ -17,6 +17,7 @@ package litex_pipeline
 import (
 	"fmt"
 	ast "golitex/ast"
+	env "golitex/environment"
 	exe "golitex/executor"
 	glob "golitex/glob"
 	"os"
@@ -38,7 +39,8 @@ func RunSourceCode(code string, path string) glob.GlobRet {
 	if err != nil {
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
-	envMgr, err := GetBuiltinEnvMgr(repoPath)
+	envPkgMgr := env.NewPkgMgr(repoPath)
+	envMgr, err := GetBuiltinEnvMgr(envPkgMgr)
 	if err != nil {
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
@@ -49,7 +51,7 @@ func RunSourceCode(code string, path string) glob.GlobRet {
 
 func RunSourceCodeInExecutor(curExec *exe.Executor, code string, path string) glob.GlobRet {
 	// TODO: 现在问题很大，只能在parse的时候默认现在是""，所以不能parse的时候就让对应的参数变成其他的包名.xxx
-	stmtSlice, err := ast.ParseSourceCode(code, "", curExec.Env.PkgMgr.PkgPathNameMgr)
+	stmtSlice, err := ast.ParseSourceCode(code, "", curExec.Env.PkgMgr.AbsPathNameMgr)
 	if err != nil {
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
@@ -80,51 +82,73 @@ func RunStmtAndImportStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) glob.G
 
 // import path as name 的执行：1. 如果之前有过当前包或者引用包里(引用的包也是可见的，然后里面可以给一个path赋予了某个名字)，import path2 as name了，那name同时指向两个包了，那就不行 2. 如果之前没有过，那就可以，然后引入path，如果path已经被引用过了，那就给这个path一个新的名字name 3. path之前还没引用过，那这时候就运行path对应的包。运行方式：新开一个executor，然后运行path对应的包，得到env和pkgMgr, 把 env 和 pkgMgr merge到主executor中。
 func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirStmt) glob.GlobRet {
-	// 如果已经存在asPkgName，则直接返回
-	if path, ok := curExec.Env.PkgMgr.PkgPathNameMgr.NamePathMap[importDirStmt.AsPkgName]; ok {
-		if path != importDirStmt.Path {
-			return glob.NewGlobErr(fmt.Sprintf("package name %s already exists, and it refers to package %s, not %s", importDirStmt.AsPkgName, path, importDirStmt.Path))
+	var importRelativePath string = ""
+	var err error = nil
+
+	if importDirStmt.IsGlobalPkg {
+		importRelativePath = importDirStmt.RelativePathOrGlobalPkgName
+	} else {
+		importRelativePath, err = GetRelativePathFromGlobalPkgToWorkingRepo(curExec, importDirStmt.RelativePathOrGlobalPkgName)
+		if err != nil {
+			return glob.NewGlobErr(err.Error())
 		}
-		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported as %s", importDirStmt.Path, importDirStmt.AsPkgName))
+	}
+
+	absRepoPath := filepath.Join(curExec.Env.PkgMgr.CurRepoPath, importRelativePath)
+
+	// 如果已经存在asPkgName，则直接返回
+	if path, ok := curExec.Env.PkgMgr.AbsPathNameMgr.NameAbsPathMap[importDirStmt.AsPkgName]; ok {
+		if path != absRepoPath {
+			return glob.NewGlobErr(fmt.Sprintf("package name %s already exists, and it refers to package %s, not %s", importDirStmt.AsPkgName, path, absRepoPath))
+		}
+		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported as %s", absRepoPath, importDirStmt.AsPkgName))
 	}
 
 	// 如果已经在curExec.PkgMgr.PkgEnvPairs中，则直接返回
-	if _, ok := curExec.Env.PkgMgr.PkgPathEnvPairs[importDirStmt.Path]; ok {
-		if err := curExec.Env.PkgMgr.PkgPathNameMgr.AddNamePath(importDirStmt.AsPkgName, importDirStmt.Path); err != nil {
+	if _, ok := curExec.Env.PkgMgr.AbsPkgPathEnvPairs[absRepoPath]; ok {
+		if err := curExec.Env.PkgMgr.AbsPathNameMgr.AddNamePath(importDirStmt.AsPkgName, absRepoPath); err != nil {
 			return glob.NewGlobErr(err.Error())
 		}
-		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported. Now it has another name: %s", importDirStmt.Path, importDirStmt.AsPkgName))
+		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported. Now it has another name: %s", absRepoPath, importDirStmt.AsPkgName))
 	}
 
 	// Resolve package path: if not absolute, resolve from system root directory (~/litexlang)
-	mainFileContent, err := os.ReadFile(filepath.Join(importDirStmt.Path, glob.MainDotLit))
+	absoluteMainFilePath := filepath.Join(absRepoPath, glob.MainDotLit)
+
+	// 把 entrance path 改成 absRepoPath
+	previousEntranceRepoPath := curExec.Env.PkgMgr.CurRepoPath
+	curExec.Env.PkgMgr.CurRepoPath = absRepoPath
+	defer func() {
+		curExec.Env.PkgMgr.CurRepoPath = previousEntranceRepoPath
+	}()
+
+	mainFileContent, err := os.ReadFile(absoluteMainFilePath)
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
 
-	builtinEnvMgr, err := GetBuiltinEnvMgr(importDirStmt.Path)
+	envPkgMgr := env.NewPkgMgr(absRepoPath)
+
+	builtinEnvMgr, err := GetBuiltinEnvMgr(envPkgMgr)
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
 	executorToRunDir := exe.NewExecutor(builtinEnvMgr.NewEnv())
-	ret := RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent), importDirStmt.Path)
+	ret := RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent), importRelativePath)
 	if ret.IsNotTrue() {
 		return ret
 	}
 
-	// TODO: MergeGivenExecPkgMgr still expects *Env, need to create a temporary wrapper or refactor
-	// For now, we'll need to create a temporary Env wrapper from EnvMgr
-	// This is a temporary solution until EnvPkgMgr is fully migrated to EnvMgr
-	err = curExec.Env.PkgMgr.MergeGivenExecPkgMgr(importDirStmt, executorToRunDir.Env)
+	err = curExec.Env.PkgMgr.MergeGivenExecPkgMgr(absRepoPath, importDirStmt.AsPkgName, executorToRunDir.Env)
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
-	return glob.NewGlobTrue(fmt.Sprintf("imported package %s as %s", importDirStmt.Path, importDirStmt.AsPkgName))
+	return glob.NewGlobTrue(fmt.Sprintf("imported package %s as %s", importRelativePath, importDirStmt.AsPkgName))
 }
 
 func RunFileStmtInExec(curExec *exe.Executor, importFileStmt *ast.RunFileStmt) glob.GlobRet {
 	// 把 entrance repo path 和 importFileStmt.Path结合起来
-	path := filepath.Join(curExec.Env.PkgMgr.EntranceRepoPath, importFileStmt.Path)
+	path := filepath.Join(curExec.Env.PkgMgr.CurRepoPath, importFileStmt.Path)
 
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -134,15 +158,15 @@ func RunFileStmtInExec(curExec *exe.Executor, importFileStmt *ast.RunFileStmt) g
 	return RunSourceCodeInExecutor(curExec, string(content), path)
 }
 
-// GetRelativePathFromGlobalPkgToWorkingEnv 获取全局包路径和当前执行器工作环境的相对路径
+// GetRelativePathFromGlobalPkgToWorkingRepo 获取全局包路径和当前执行器工作环境的相对路径
 // 返回从 globalPkg 到 curExec 的 working env 的相对路径
-func GetRelativePathFromGlobalPkgToWorkingEnv(curExec *exe.Executor, globalPkgName string) (string, error) {
+func GetRelativePathFromGlobalPkgToWorkingRepo(curExec *exe.Executor, globalPkgName string) (string, error) {
 	globalPkgPath, err := glob.GetGlobalPkgAbsPath(globalPkgName)
 	if err != nil {
 		return "", err
 	}
 
-	workingEnvPath := curExec.Env.PkgMgr.EntranceRepoPath
+	workingEnvPath := curExec.Env.PkgMgr.CurRepoPath
 
 	relPath, err := filepath.Rel(globalPkgPath, workingEnvPath)
 	if err != nil {
