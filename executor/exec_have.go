@@ -203,7 +203,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 			return NewExecErr(fmt.Sprintf("%s is not in %s", stmt.ObjNames[i], stmt.ObjSets[i]))
 		}
 
-		stmtForDef := ast.NewDefLetStmt([]string{stmt.ObjNames[i]}, []ast.Obj{stmt.ObjSets[i]}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(stmt.ObjNames[i]), stmt.ObjEqualTos[i])}, stmt.Line)
+		stmtForDef := ast.NewDefLetStmt([]string{stmt.ObjNames[i]}, []ast.Obj{stmt.ObjSets[i]}, []ast.FactStmt{ast.NewEqualFact(ast.Atom((stmt.ObjNames[i])), stmt.ObjEqualTos[i])}, stmt.Line)
 		ret := exec.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())

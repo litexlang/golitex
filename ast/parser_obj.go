@@ -193,10 +193,10 @@ func (p *TbParser) notNumberAtom(tb *tokenBlock) (Atom, error) {
 		pkgPath := p.PkgPathNameMgr.NameAbsPathMap[value]
 		pkgName := p.PkgPathNameMgr.AbsPathDefaultNameMap[pkgPath]
 		return Atom(fmt.Sprintf("%s%s%s", pkgName, glob.PkgNameAtomSeparator, rightValue)), nil
-	} else if p.CurPkgPath != glob.DefaultPkgName {
+	} else if p.CurPkgName != glob.DefaultPkgName {
 		// TODO: 这里显然有很多可以提高的地方，比如把当前运行的pkg的名字保存在env里，这样就不要每次查了；又比如当前的pkgName是 "" 时，下面这坨逻辑根本不发生
 		if _, ok := p.FreeParams[value]; !ok && p.IsNameDefinedInCurrentParseEnvExceptPkgNames(value) {
-			pkgName := p.PkgPathNameMgr.AbsPathDefaultNameMap[p.CurPkgPath]
+			pkgName := p.PkgPathNameMgr.AbsPathDefaultNameMap[p.CurPkgName]
 			return Atom(fmt.Sprintf("%s%s%s", pkgName, glob.PkgNameAtomSeparator, value)), nil
 		} else {
 			return Atom(value), nil

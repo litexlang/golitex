@@ -25,41 +25,41 @@ func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
-	// 如果是 a = b / c 的情况，那就 a * c = b, b * c = 0 自动成立
-	ret = ie.trueEqualFactByFraction(fact.Params[0], fact.Params[1])
-	if ret.IsErr() {
-		return ret
-	}
+	// // 如果是 a = b / c 的情况，那就 a * c = b, b * c = 0 自动成立
+	// ret = ie.trueEqualFactByFraction(fact.Params[0], fact.Params[1])
+	// if ret.IsErr() {
+	// 	return ret
+	// }
 
-	// 如果是 b / c = a 的情况，那就 b = a * c, c = b / a 自动成立
-	ret = ie.trueEqualFactByFraction(fact.Params[1], fact.Params[0])
-	if ret.IsErr() {
-		return ret
-	}
+	// // 如果是 b / c = a 的情况，那就 b = a * c, c = b / a 自动成立
+	// ret = ie.trueEqualFactByFraction(fact.Params[1], fact.Params[0])
+	// if ret.IsErr() {
+	// 	return ret
+	// }
 
-	// 如果是 a = b + c 的情况，那就 a - c = b, a - b = c 自动成立
-	ret = ie.trueEqualFactByAddition(fact.Params[0], fact.Params[1])
-	if ret.IsErr() {
-		return ret
-	}
+	// // 如果是 a = b + c 的情况，那就 a - c = b, a - b = c 自动成立
+	// ret = ie.trueEqualFactByAddition(fact.Params[0], fact.Params[1])
+	// if ret.IsErr() {
+	// 	return ret
+	// }
 
-	// 如果是 b + c = a 的情况，那就 a - c = b, a - b = c 自动成立
-	ret = ie.trueEqualFactByAddition(fact.Params[1], fact.Params[0])
-	if ret.IsErr() {
-		return ret
-	}
+	// // 如果是 b + c = a 的情况，那就 a - c = b, a - b = c 自动成立
+	// ret = ie.trueEqualFactByAddition(fact.Params[1], fact.Params[0])
+	// if ret.IsErr() {
+	// 	return ret
+	// }
 
-	// 如果是 a = b - c 的情况，那就 a + c = b, b = a + c 自动成立
-	ret = ie.trueEqualFactBySubtraction(fact.Params[0], fact.Params[1])
-	if ret.IsErr() {
-		return ret
-	}
+	// // 如果是 a = b - c 的情况，那就 a + c = b, b = a + c 自动成立
+	// ret = ie.trueEqualFactBySubtraction(fact.Params[0], fact.Params[1])
+	// if ret.IsErr() {
+	// 	return ret
+	// }
 
-	// 如果是 b - c = a 的情况，那就 a + c = b, b = a + c 自动成立
-	ret = ie.trueEqualFactBySubtraction(fact.Params[1], fact.Params[0])
-	if ret.IsErr() {
-		return ret
-	}
+	// // 如果是 b - c = a 的情况，那就 a + c = b, b = a + c 自动成立
+	// ret = ie.trueEqualFactBySubtraction(fact.Params[1], fact.Params[0])
+	// if ret.IsErr() {
+	// 	return ret
+	// }
 
 	return glob.NewEmptyGlobTrue()
 }
@@ -176,7 +176,7 @@ func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj,
 // It generates equal facts for each corresponding element
 // trueEqualFactByListSet handles postprocessing for x = {1, 2, 3}
 // If the right side is a list set (directly or through equal facts), it creates:
-//   - An or fact indicating that x equals one of the list set elements
+//   - An or fact indicating that forall items in the list set, the equals one of the list set elements
 //   - count(x) = len(listSet) fact
 //   - is_finite_set(x) fact
 func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) glob.GlobRet {
@@ -218,93 +218,93 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) glob.
 	return ie.EnvMgr.NewFactWithAtomsDefined(isFiniteFact)
 }
 
-func (ie *InferEngine) trueEqualFactByFraction(left ast.Obj, right ast.Obj) glob.GlobRet {
-	// 处理 a = b / c 的情况：推导出 a * c = b
-	rightFraction, ok := right.(*ast.FnObj)
-	if ok && rightFraction.HasAtomHeadEqualToStr(glob.KeySymbolSlash) {
-		if len(rightFraction.Params) != 2 {
-			return glob.NewEmptyGlobUnknown()
-		}
-		numerator := rightFraction.Params[0]   // b
-		denominator := rightFraction.Params[1] // c
+// func (ie *InferEngine) trueEqualFactByFraction(left ast.Obj, right ast.Obj) glob.GlobRet {
+// 	// 处理 a = b / c 的情况：推导出 a * c = b
+// 	rightFraction, ok := right.(*ast.FnObj)
+// 	if ok && rightFraction.HasAtomHeadEqualToStr(glob.KeySymbolSlash) {
+// 		if len(rightFraction.Params) != 2 {
+// 			return glob.NewEmptyGlobUnknown()
+// 		}
+// 		numerator := rightFraction.Params[0]   // b
+// 		denominator := rightFraction.Params[1] // c
 
-		// 推导出 left * denominator = numerator (即 a * c = b)
-		multiplyObj := ast.NewFnObj(ast.Atom(glob.KeySymbolStar), []ast.Obj{left, denominator})
-		multiplyEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{multiplyObj, numerator}, glob.BuiltinLine)
-		ret := ie.EnvMgr.newSpecFactNoInfer(multiplyEqualFact)
-		if ret.IsErr() {
-			return ret
-		}
-		return glob.NewEmptyGlobTrue()
-	}
-	return glob.NewEmptyGlobUnknown()
-}
+// 		// 推导出 left * denominator = numerator (即 a * c = b)
+// 		multiplyObj := ast.NewFnObj(ast.Atom(glob.KeySymbolStar), []ast.Obj{left, denominator})
+// 		multiplyEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{multiplyObj, numerator}, glob.BuiltinLine)
+// 		ret := ie.EnvMgr.newSpecFactNoInfer(multiplyEqualFact)
+// 		if ret.IsErr() {
+// 			return ret
+// 		}
+// 		return glob.NewEmptyGlobTrue()
+// 	}
+// 	return glob.NewEmptyGlobUnknown()
+// }
 
-func (ie *InferEngine) trueEqualFactByAddition(left ast.Obj, right ast.Obj) glob.GlobRet {
-	// 处理 a = b + c 的情况：推导出 a - c = b 和 a - b = c
-	rightAddition, ok := right.(*ast.FnObj)
-	if ok && rightAddition.HasAtomHeadEqualToStr(glob.KeySymbolPlus) {
-		if len(rightAddition.Params) != 2 {
-			return glob.NewEmptyGlobUnknown()
-		}
-		leftOperand := rightAddition.Params[0]  // b
-		rightOperand := rightAddition.Params[1] // c
+// func (ie *InferEngine) trueEqualFactByAddition(left ast.Obj, right ast.Obj) glob.GlobRet {
+// 	// 处理 a = b + c 的情况：推导出 a - c = b 和 a - b = c
+// 	rightAddition, ok := right.(*ast.FnObj)
+// 	if ok && rightAddition.HasAtomHeadEqualToStr(glob.KeySymbolPlus) {
+// 		if len(rightAddition.Params) != 2 {
+// 			return glob.NewEmptyGlobUnknown()
+// 		}
+// 		leftOperand := rightAddition.Params[0]  // b
+// 		rightOperand := rightAddition.Params[1] // c
 
-		// 推导出 left - rightOperand = leftOperand (即 a - c = b)
-		subtractObj1 := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{left, rightOperand})
-		subtractEqualFact1 := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{subtractObj1, leftOperand}, glob.BuiltinLine)
-		ret := ie.EnvMgr.newFactNoInfer(subtractEqualFact1)
-		if ret.IsErr() {
-			return ret
-		}
+// 		// 推导出 left - rightOperand = leftOperand (即 a - c = b)
+// 		subtractObj1 := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{left, rightOperand})
+// 		subtractEqualFact1 := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{subtractObj1, leftOperand}, glob.BuiltinLine)
+// 		ret := ie.EnvMgr.newFactNoInfer(subtractEqualFact1)
+// 		if ret.IsErr() {
+// 			return ret
+// 		}
 
-		// 推导出 left - leftOperand = rightOperand (即 a - b = c)
-		subtractObj2 := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{left, leftOperand})
-		subtractEqualFact2 := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{subtractObj2, rightOperand}, glob.BuiltinLine)
-		ret = ie.EnvMgr.newFactNoInfer(subtractEqualFact2)
-		if ret.IsErr() {
-			return ret
-		}
+// 		// 推导出 left - leftOperand = rightOperand (即 a - b = c)
+// 		subtractObj2 := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{left, leftOperand})
+// 		subtractEqualFact2 := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{subtractObj2, rightOperand}, glob.BuiltinLine)
+// 		ret = ie.EnvMgr.newFactNoInfer(subtractEqualFact2)
+// 		if ret.IsErr() {
+// 			return ret
+// 		}
 
-		// 推出 a = c + b
-		addObj3 := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{leftOperand, rightOperand})
-		addEqualFact3 := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{addObj3, left}, glob.BuiltinLine)
-		ret = ie.EnvMgr.newFactNoInfer(addEqualFact3)
-		if ret.IsErr() {
-			return ret
-		}
+// 		// 推出 a = c + b
+// 		addObj3 := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{leftOperand, rightOperand})
+// 		addEqualFact3 := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{addObj3, left}, glob.BuiltinLine)
+// 		ret = ie.EnvMgr.newFactNoInfer(addEqualFact3)
+// 		if ret.IsErr() {
+// 			return ret
+// 		}
 
-		return glob.NewEmptyGlobTrue()
-	}
-	return glob.NewEmptyGlobUnknown()
-}
+// 		return glob.NewEmptyGlobTrue()
+// 	}
+// 	return glob.NewEmptyGlobUnknown()
+// }
 
-func (ie *InferEngine) trueEqualFactBySubtraction(left ast.Obj, right ast.Obj) glob.GlobRet {
-	// 处理 a = b - c 的情况：推导出 a + c = b 和 b = a + c
-	rightSubtraction, ok := right.(*ast.FnObj)
-	if ok && rightSubtraction.HasAtomHeadEqualToStr(glob.KeySymbolMinus) {
-		if len(rightSubtraction.Params) != 2 {
-			return glob.NewEmptyGlobUnknown()
-		}
-		minuend := rightSubtraction.Params[0]    // b (被减数)
-		subtrahend := rightSubtraction.Params[1] // c (减数)
+// func (ie *InferEngine) trueEqualFactBySubtraction(left ast.Obj, right ast.Obj) glob.GlobRet {
+// 	// 处理 a = b - c 的情况：推导出 a + c = b 和 b = a + c
+// 	rightSubtraction, ok := right.(*ast.FnObj)
+// 	if ok && rightSubtraction.HasAtomHeadEqualToStr(glob.KeySymbolMinus) {
+// 		if len(rightSubtraction.Params) != 2 {
+// 			return glob.NewEmptyGlobUnknown()
+// 		}
+// 		minuend := rightSubtraction.Params[0]    // b (被减数)
+// 		subtrahend := rightSubtraction.Params[1] // c (减数)
 
-		// 推导出 left + subtrahend = minuend (即 a + c = b)
-		addObj := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{left, subtrahend})
-		addEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{addObj, minuend}, glob.BuiltinLine)
-		ret := ie.EnvMgr.newFactNoInfer(addEqualFact)
-		if ret.IsErr() {
-			return ret
-		}
+// 		// 推导出 left + subtrahend = minuend (即 a + c = b)
+// 		addObj := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{left, subtrahend})
+// 		addEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{addObj, minuend}, glob.BuiltinLine)
+// 		ret := ie.EnvMgr.newFactNoInfer(addEqualFact)
+// 		if ret.IsErr() {
+// 			return ret
+// 		}
 
-		// c + a = b
-		addObj2 := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{subtrahend, left})
-		addEqualFact2 := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{addObj2, minuend}, glob.BuiltinLine)
-		ret = ie.EnvMgr.newFactNoInfer(addEqualFact2)
-		if ret.IsErr() {
-			return ret
-		}
-		return glob.NewEmptyGlobTrue()
-	}
-	return glob.NewEmptyGlobUnknown()
-}
+// 		// c + a = b
+// 		addObj2 := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{subtrahend, left})
+// 		addEqualFact2 := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{addObj2, minuend}, glob.BuiltinLine)
+// 		ret = ie.EnvMgr.newFactNoInfer(addEqualFact2)
+// 		if ret.IsErr() {
+// 			return ret
+// 		}
+// 		return glob.NewEmptyGlobTrue()
+// 	}
+// 	return glob.NewEmptyGlobUnknown()
+// }
