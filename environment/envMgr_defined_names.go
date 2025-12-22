@@ -48,7 +48,7 @@ func (envMgr *EnvMgr) IsPkgName(pkgName string) bool {
 func (envMgr *EnvMgr) AtomsInObjDefinedOrBuiltin(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
 	switch asObj := obj.(type) {
 	case ast.Atom:
-		return envMgr.AtomDefinedOrBuiltin(asObj, extraParams)
+		return envMgr.AtomObjDefinedOrBuiltin(asObj, extraParams)
 	case *ast.FnObj:
 		return envMgr.AtomsInFnObjDefinedOrBuiltin(asObj, extraParams)
 	default:
@@ -57,7 +57,7 @@ func (envMgr *EnvMgr) AtomsInObjDefinedOrBuiltin(obj ast.Obj, extraParams map[st
 }
 
 // TODO: 目前只是检查了在当前的envMgr中是否定义了，没有检查在parent envMgr中是否定义了
-func (envMgr *EnvMgr) AtomDefinedOrBuiltin(atom ast.Atom, extraParams map[string]struct{}) glob.GlobRet {
+func (envMgr *EnvMgr) AtomObjDefinedOrBuiltin(atom ast.Atom, extraParams map[string]struct{}) glob.GlobRet {
 	if _, ok := extraParams[string(atom)]; ok {
 		return glob.NewEmptyGlobTrue()
 	}
@@ -96,6 +96,16 @@ func (envMgr *EnvMgr) AtomsInFnObjDefinedOrBuiltin(fnObj *ast.FnObj, extraParams
 		if ret := envMgr.AtomsInObjDefinedOrBuiltin(param, extraParams); ret.IsNotTrue() {
 			return ret
 		}
+	}
+
+	// 如果head是fn,那直接成立了
+	if fnObj.HasAtomHeadEqualToStr(glob.KeywordFn) {
+		return glob.NewEmptyGlobTrue()
+	}
+
+	// 如果head 是 fn_template 那也OK了
+	if envMgr.FnObjHeadIsAtomAndIsFnSet(fnObj) {
+		return glob.NewEmptyGlobTrue()
 	}
 
 	return envMgr.AtomsInObjDefinedOrBuiltin(fnObj.FnHead, extraParams)
@@ -202,7 +212,7 @@ func (envMgr *EnvMgr) IsAtomDefinedByOrBuiltinOrSetNonemptySetFiniteSet(atom ast
 	if glob.IsKeywordSetOrNonEmptySetOrFiniteSet(string(atom)) {
 		return glob.NewEmptyGlobTrue()
 	} else {
-		return envMgr.AtomDefinedOrBuiltin(atom, extraParams)
+		return envMgr.AtomObjDefinedOrBuiltin(atom, extraParams)
 	}
 }
 
@@ -297,7 +307,7 @@ func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet 
 		if !ok {
 			return glob.ErrRet(fmt.Errorf("package environment for %s is not found", PkgName))
 		}
-		ret := pkgPathEnv.AtomDefinedOrBuiltin(ast.Atom(AtomName), make(map[string]struct{}))
+		ret := pkgPathEnv.AtomObjDefinedOrBuiltin(ast.Atom(AtomName), make(map[string]struct{}))
 		if ret.IsTrue() {
 			return glob.NewEmptyGlobTrue()
 		}
@@ -310,10 +320,10 @@ func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet 
 		return glob.NewEmptyGlobTrue()
 	}
 
-	// 这里其实有点问题，应该独立出来，因为 fn_template 可能不能算 atom
-	if _, ok := envMgr.AllDefinedFnTemplateNames[string(AtomObjName)]; ok {
-		return glob.NewEmptyGlobTrue()
-	}
+	// // TODO: 这里其实有点问题，应该独立出来，因为 fn_template 可能不能算 atom
+	// if _, ok := envMgr.AllDefinedFnTemplateNames[string(AtomObjName)]; ok {
+	// 	return glob.NewEmptyGlobTrue()
+	// }
 
 	return glob.ErrRet(fmt.Errorf("undefined: %s", AtomObjName))
 }
