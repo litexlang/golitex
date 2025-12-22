@@ -1,0 +1,4 @@
+have A set = {{}}
+
+prove_by_contradiction 1 = 0:
+    not A $in A

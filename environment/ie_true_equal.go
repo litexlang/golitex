@@ -192,11 +192,14 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) glob.
 	}
 
 	// 创建一个 or fact，表示 left 等于 list set 中的某一个元素
+	// forall x left => x = left[1] or x = left[2] or ... or x = left[len(left)]
+	randomName := ie.EnvMgr.GenerateUndeclaredRandomName()
 	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine)
 	for _, param := range listSetFnObj.Params {
-		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, param}, glob.BuiltinLine))
+		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.Atom(randomName), param}, glob.BuiltinLine))
 	}
-	ret := ie.EnvMgr.NewFactWithAtomsDefined(orFact)
+	forallFact := ast.NewUniFact([]string{randomName}, []ast.Obj{left}, []ast.FactStmt{}, []ast.FactStmt{orFact}, glob.BuiltinLine)
+	ret := ie.EnvMgr.NewFactWithAtomsDefined(forallFact)
 	if ret.IsErr() {
 		return ret
 	}
