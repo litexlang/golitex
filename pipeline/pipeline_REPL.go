@@ -3,6 +3,7 @@ package litex_pipeline
 import (
 	"bufio"
 	"fmt"
+	env "golitex/environment"
 	exe "golitex/executor"
 	glob "golitex/glob"
 	"io"
@@ -20,7 +21,8 @@ func RunREPL(version string) {
 		return
 	}
 
-	envMgr, err := GetBuiltinEnvMgr(currDir)
+	envPkgMgr := env.NewPkgMgr(currDir)
+	envMgr, err := GetBuiltinEnvMgr(envPkgMgr)
 	if err != nil {
 		fmt.Println("Error initializing pipeline env:", err)
 		return

@@ -429,7 +429,7 @@ func (s *ImportDirStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{import}\n")
 	builder.WriteString("Import directory ")
-	builder.WriteString(s.Path)
+	builder.WriteString(s.RelativePathOrGlobalPkgName)
 	builder.WriteString(" as ")
 	builder.WriteString(s.AsPkgName)
 	builder.WriteString("\n\\end{import}")
