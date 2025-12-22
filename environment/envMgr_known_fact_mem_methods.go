@@ -54,7 +54,7 @@ func (envMgr *EnvMgr) IsFnDeclared(obj ast.Atom) (*FnInFnTMemItem, bool) {
 	return fnDef, true
 }
 
-func (envMgr *EnvMgr) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, fnTemplateFnObj *ast.FnObj, fnTStruct *ast.FnTStruct) glob.GlobRet {
+func (envMgr *EnvMgr) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, fnTemplateFnObj *ast.FnObj, fnTStruct *ast.FnTemplate) glob.GlobRet {
 	if fnTemplateFnObj != nil {
 		fnTStruct, ret := envMgr.GetFnStructFromFnTName(fnTemplateFnObj)
 		if ret.IsErr() {
@@ -77,7 +77,7 @@ func (envMgr *EnvMgr) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn a
 	}
 }
 
-func (envMgr *EnvMgr) getInstantiatedFnTTOfFnObj(fnObj *ast.FnObj) (*ast.FnTStruct, bool, glob.GlobRet) {
+func (envMgr *EnvMgr) getInstantiatedFnTTOfFnObj(fnObj *ast.FnObj) (*ast.FnTemplate, bool, glob.GlobRet) {
 	if ast.IsFnTemplate_ObjFn(fnObj) {
 		fnTNoName, err := fnObj.FnTObj_ToFnTNoName()
 		if err != nil {
@@ -99,7 +99,7 @@ func (envMgr *EnvMgr) getInstantiatedFnTTOfFnObj(fnObj *ast.FnObj) (*ast.FnTStru
 	return fnTNoName, true, glob.NewGlobTrue("")
 }
 
-func (envMgr *EnvMgr) NewFnTemplateInEnvMem(stmt *ast.FnTemplateDefStmt) glob.GlobRet {
+func (envMgr *EnvMgr) NewFnTemplateInEnvMem(stmt *ast.DefFnSetStmt) glob.GlobRet {
 	// 确保template name 没有被声明过
 	ret := envMgr.IsNameDefinedOrBuiltin(string(stmt.TemplateDefHeader.Name), map[string]struct{}{})
 	if ret.IsTrue() {
@@ -113,10 +113,9 @@ func (envMgr *EnvMgr) NewFnTemplateInEnvMem(stmt *ast.FnTemplateDefStmt) glob.Gl
 
 	// Store in AllDefinedFnTemplateNames
 	envMgr.AllDefinedFnTemplateNames[string(stmt.TemplateDefHeader.Name)] = stmt
-	
+
 	// Mark in current EnvSlice
 	envMgr.CurEnv().FnTemplateDefMem[string(stmt.TemplateDefHeader.Name)] = struct{}{}
-	
+
 	return glob.NewGlobTrue("")
 }
-

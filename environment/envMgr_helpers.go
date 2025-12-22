@@ -52,8 +52,8 @@ func (envMgr *EnvMgr) GenerateUndeclaredRandomName_AndNotInMap(m map[string]stru
 	}
 }
 
-func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTStruct, glob.GlobRet) {
-	if objFnTypeToFnTStruct, ok := ast.ObjFnT_To_FnTStruct(fnTName); ok {
+func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTemplate, glob.GlobRet) {
+	if objFnTypeToFnTStruct, ok := ast.AnonymousFnToInstFnTemplate(fnTName); ok {
 		return objFnTypeToFnTStruct, glob.NewEmptyGlobTrue()
 	} else {
 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
@@ -65,7 +65,7 @@ func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTStruct
 	}
 }
 
-func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.FnTStruct, glob.GlobRet) {
+func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.FnTemplate, glob.GlobRet) {
 	defOfT := envMgr.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
 		return nil, glob.ErrRet(fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName))

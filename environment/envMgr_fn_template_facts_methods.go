@@ -20,7 +20,7 @@ import (
 )
 
 // func (envMgr *EnvMgr) InsertFnInFnTT(fc ast.Fc, asFcFn *ast.FcFn, fnTNoName *ast.FnTStruct) error {
-func (envMgr *EnvMgr) InsertFnInFnTT(fc ast.Obj, fnTNoName *ast.FnTStruct) glob.GlobRet {
+func (envMgr *EnvMgr) InsertFnInFnTT(fc ast.Obj, fnTNoName *ast.FnTemplate) glob.GlobRet {
 	var fnTFcIsIn = fnTNoName
 	var ok bool
 
@@ -73,4 +73,3 @@ func (envMgr *EnvMgr) FindRightMostResolvedFn_Return_ResolvedIndexAndFnTMemItem(
 
 // 	return fnInFnTMemItem.AsFnTStruct
 // }
-

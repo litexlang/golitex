@@ -671,7 +671,7 @@ func (s *KnowExistPropStmt) ToLatexString() string {
 // 	return s.Comment
 // }
 
-func (s *FnTemplateDefStmt) ToLatexString() string {
+func (s *DefFnSetStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Function Template]\n\n")
 

@@ -16,7 +16,7 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (envMgr *EnvMgr) GetFnTemplateDef(objAtomName ast.Atom) *ast.FnTemplateDefStmt {
+func (envMgr *EnvMgr) GetFnTemplateDef(objAtomName ast.Atom) *ast.DefFnSetStmt {
 	fnTemplateDef, ok := envMgr.AllDefinedFnTemplateNames[string(objAtomName)]
 	if ok {
 		return fnTemplateDef
@@ -24,7 +24,7 @@ func (envMgr *EnvMgr) GetFnTemplateDef(objAtomName ast.Atom) *ast.FnTemplateDefS
 	return nil
 }
 
-func (envMgr *EnvMgr) GetFnTemplateDef_KeyIsObjHead(obj *ast.FnObj) *ast.FnTemplateDefStmt {
+func (envMgr *EnvMgr) GetFnTemplateDef_KeyIsObjHead(obj *ast.FnObj) *ast.DefFnSetStmt {
 	fnHeadAsAtom, ok := obj.FnHead.(ast.Atom)
 	if !ok {
 		return nil

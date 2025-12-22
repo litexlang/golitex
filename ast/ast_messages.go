@@ -213,7 +213,7 @@ func (fact *DefPropStmt) String() string {
 
 }
 
-func fnDefStmtStringGivenKw(kw string, f *FnTStruct, name string) string {
+func fnDefStmtStringGivenKw(kw string, f *FnTemplate, name string) string {
 	var builder strings.Builder
 	builder.WriteString(kw)
 	builder.WriteString(" ")
@@ -735,7 +735,7 @@ func (stmt *KnowExistPropStmt) String() string {
 // 	return stmt.Comment
 // }
 
-func (stmt *FnTemplateDefStmt) String() string {
+func (stmt *DefFnSetStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFnSet)
 	builder.WriteString(" ")
@@ -887,7 +887,7 @@ func (params StrSlice) String() string {
 	return strings.Join(output, ", ")
 }
 
-func (fnTStruct *FnTStruct) String() string {
+func (fnTStruct *FnTemplate) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFn)
 	builder.WriteString(" ")

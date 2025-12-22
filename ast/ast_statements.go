@@ -67,7 +67,7 @@ type DefExistPropStmt struct {
 
 type DefFnStmt struct {
 	Name       string
-	FnTemplate *FnTStruct
+	FnTemplate *FnTemplate
 
 	Line uint
 }
@@ -262,15 +262,15 @@ type KnowExistPropStmt struct {
 // 	Line uint
 // }
 
-type FnTemplateDefStmt struct {
+type DefFnSetStmt struct {
 	TemplateDefHeader *DefHeader
 	TemplateDomFacts  FactStmtSlice
-	Fn                *FnTStruct
+	Fn                *FnTemplate
 
 	Line uint
 }
 
-type FnTStruct struct {
+type FnTemplate struct {
 	Params    StrSlice
 	ParamSets ObjSlice
 	RetSet    Obj
