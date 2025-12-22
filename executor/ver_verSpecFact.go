@@ -516,8 +516,8 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 		indexObj := ast.Atom(fmt.Sprintf("%d", i))
 
 		// 创建索引操作: left[i] 和 right[i]
-		leftIndexed := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{left, indexObj})
-		rightIndexed := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{right, indexObj})
+		leftIndexed := ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{left, indexObj})
+		rightIndexed := ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{right, indexObj})
 
 		// 创建相等事实: left[i] = right[i]
 		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftIndexed, rightIndexed}, glob.BuiltinLine)

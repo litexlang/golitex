@@ -943,7 +943,7 @@ func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCar
 		indexObj := ast.Atom(strconv.Itoa(index))
 
 		// Create indexed object: obj[index]
-		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{objAtom, indexObj})
+		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{objAtom, indexObj})
 
 		// Create equal fact: obj[index] = equalTo[i]
 		indexEqualFact := ast.NewEqualFact(indexedObj, equalToAsFn.Params[i])

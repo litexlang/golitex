@@ -450,7 +450,7 @@ func IsTupleFnObj(f *FnObj) bool {
 }
 
 func IsIndexOptFnObj(f *FnObj) bool {
-	return f.FnHead.String() == glob.KeywordIndexOpt
+	return f.FnHead.String() == glob.KeywordObjAtIndexOpt
 }
 
 func IsListSetObj(obj Obj) bool {

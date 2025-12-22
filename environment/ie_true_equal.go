@@ -82,7 +82,7 @@ func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIn
 		indexObj := ast.Atom(strconv.Itoa(index))
 
 		// 创建索引操作: obj[index]
-		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{obj, indexObj})
+		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{obj, indexObj})
 
 		// 创建相等事实: obj[index] = tuple[i]
 		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{indexedObj, tuple.Params[i]}, glob.BuiltinLine)

@@ -157,7 +157,7 @@ func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) glob.Gl
 		index := i + 1 // 索引从1开始
 		indexObj := ast.Atom(fmt.Sprintf("%d", index))
 		// 创建索引操作 a[i]
-		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{obj, indexObj})
+		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{obj, indexObj})
 		// 创建 a[i] $in cartSet.Params[i] 的事实
 		inFact := ast.NewInFactWithObj(indexedObj, cartSet.Params[i])
 		ret := ie.EnvMgr.NewFactWithAtomsDefined(inFact)

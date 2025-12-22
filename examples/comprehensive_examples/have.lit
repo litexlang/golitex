@@ -204,3 +204,14 @@ prove:
 
     exist g st $tmp()
 
+prove:
+    have s set = list_set(1, 2, 3)
+    s = {1, 2, 3}
+
+    have a set = set_builder(x R: x > 0)
+    a = {x R: x > 0}
+
+    tuple(1, 2, 3) $in cart(R, R, N)
+    (1, 2, 3) = tuple(1, 2, 3)
+
+    obj_at_index(tuple(1, 2, 3), 1) = 1

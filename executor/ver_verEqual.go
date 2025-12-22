@@ -151,7 +151,7 @@ func (ver *Verifier) verEqualRightIsTuple(left ast.Obj, right ast.Obj, state *Ve
 
 		// 查 每一位都相等
 		for i := range rightLen {
-			leftAtIndex := ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{left, ast.Atom(fmt.Sprintf("%d", i+1))})
+			leftAtIndex := ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{left, ast.Atom(fmt.Sprintf("%d", i+1))})
 			equalFact := ast.EqualFact(leftAtIndex, rightTuple.Params[i])
 			ret = ver.VerFactStmt(equalFact, state)
 			if ret.IsNotTrue() {

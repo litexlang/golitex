@@ -51,13 +51,13 @@ const (
 	KeywordSetDim = "set_dim"
 	KeywordProj   = "proj"
 
-	KeywordTuple    = "()"
-	KeywordDim      = "dim"
-	KeywordIsTuple  = "is_tuple"
-	KeywordIndexOpt = "[]"
+	KeywordTuple         = "tuple"
+	KeywordDim           = "dim"
+	KeywordIsTuple       = "is_tuple"
+	KeywordObjAtIndexOpt = "obj_at_index"
 
-	KeywordListSet     = "{}"
-	KeywordSetBuilder  = "{:}"
+	KeywordListSet     = "list_set"
+	KeywordSetBuilder  = "set_builder"
 	KeywordCount       = "count"
 	KeywordRange       = "range"
 	KeywordClosedRange = "closed_range"
@@ -137,13 +137,13 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordFiniteSet:   {},
 	KeywordProveByEnum: {},
 	// KeywordItemExistsIn: {},
-	KeywordFnSet:     {},
-	KeywordNPos:      {},
-	KeywordLet:       {},
-	KeywordClear:     {},
-	KeywordTuple:     {},
-	KeywordIndexOpt:  {},
-	KeywordDoNothing: {},
+	KeywordFnSet:         {},
+	KeywordNPos:          {},
+	KeywordLet:           {},
+	KeywordClear:         {},
+	KeywordTuple:         {},
+	KeywordObjAtIndexOpt: {},
+	KeywordDoNothing:     {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
 
 	KeywordProveIsTransitiveProp: {},
@@ -305,7 +305,7 @@ var BuiltinObjOrPropNames map[string]struct{} = map[string]struct{}{
 	// KeywordDim:    {},
 
 	// KeywordProj:     {},
-	KeywordIndexOpt: {},
+	KeywordObjAtIndexOpt: {},
 
 	KeywordIsASet:         {},
 	KeywordIsAFiniteSet:   {},
@@ -392,27 +392,27 @@ func IsNPosOrNOrZOrQOrR(name string) bool {
 }
 
 var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
-	KeywordNatural:    {},
-	KeywordInteger:    {},
-	KeywordRational:   {},
-	KeywordReal:       {},
-	KeywordCount:      {},
-	KeywordNPos:       {},
-	KeywordCart:       {},
-	KeywordTuple:      {},
-	KeywordSetDim:     {},
-	KeywordDim:        {},
-	KeywordProj:       {},
-	KeywordIndexOpt:   {},
-	KeywordListSet:    {},
-	KeywordSetBuilder: {},
-	KeySymbolPlus:     {},
-	KeySymbolMinus:    {},
-	KeySymbolStar:     {},
-	KeySymbolPower:    {},
-	KeySymbolSlash:    {},
-	KeySymbolPercent:  {},
-	KeywordFn:         {},
+	KeywordNatural:       {},
+	KeywordInteger:       {},
+	KeywordRational:      {},
+	KeywordReal:          {},
+	KeywordCount:         {},
+	KeywordNPos:          {},
+	KeywordCart:          {},
+	KeywordTuple:         {},
+	KeywordSetDim:        {},
+	KeywordDim:           {},
+	KeywordProj:          {},
+	KeywordObjAtIndexOpt: {},
+	KeywordListSet:       {},
+	KeywordSetBuilder:    {},
+	KeySymbolPlus:        {},
+	KeySymbolMinus:       {},
+	KeySymbolStar:        {},
+	KeySymbolPower:       {},
+	KeySymbolSlash:       {},
+	KeySymbolPercent:     {},
+	KeywordFn:            {},
 }
 
 var BuiltinPropNames map[string]struct{} = map[string]struct{}{
