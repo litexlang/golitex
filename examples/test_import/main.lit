@@ -1,0 +1,4 @@
+run "test_import_tmp1.lit"
+
+have x R = 1
+x $in a

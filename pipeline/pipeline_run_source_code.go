@@ -33,7 +33,12 @@ func RunFile(path string) glob.GlobRet {
 }
 
 func RunSourceCode(code string, path string) glob.GlobRet {
-	envMgr, err := GetBuiltinEnvMgr()
+	// 获得 path所在的 repo
+	repoPath, err := filepath.Abs(filepath.Dir(path))
+	if err != nil {
+		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
+	}
+	envMgr, err := GetBuiltinEnvMgr(repoPath)
 	if err != nil {
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
@@ -67,7 +72,7 @@ func RunStmtAndImportStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) glob.G
 	case *ast.ImportDirStmt:
 		return RunImportDirStmtInExec(curExec, asStmt)
 	case *ast.RunFileStmt:
-		return RunImportFileStmtInExec(curExec, asStmt)
+		return RunFileStmtInExec(curExec, asStmt)
 	default:
 		return curExec.Stmt(asStmt).ToGlobRet()
 	}
@@ -97,7 +102,7 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 		return glob.NewGlobErr(err.Error())
 	}
 
-	builtinEnvMgr, err := GetBuiltinEnvMgr()
+	builtinEnvMgr, err := GetBuiltinEnvMgr(importDirStmt.Path)
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
@@ -141,16 +146,14 @@ func expandTilde(path string) (string, error) {
 	return path, nil
 }
 
-func RunImportFileStmtInExec(curExec *exe.Executor, importFileStmt *ast.RunFileStmt) glob.GlobRet {
-	// Expand ~ to home directory if present
-	expandedPath, err := expandTilde(importFileStmt.Path)
-	if err != nil {
-		return glob.NewGlobErr(fmt.Sprintf("failed to expand path: %s", err.Error()))
-	}
+func RunFileStmtInExec(curExec *exe.Executor, importFileStmt *ast.RunFileStmt) glob.GlobRet {
+	// 把 entrance repo path 和 importFileStmt.Path结合起来
+	path := filepath.Join(curExec.Env.PkgMgr.EntranceRepoPath, importFileStmt.Path)
 
-	content, err := os.ReadFile(expandedPath)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
-	return RunSourceCodeInExecutor(curExec, string(content), importFileStmt.Path)
+
+	return RunSourceCodeInExecutor(curExec, string(content), path)
 }

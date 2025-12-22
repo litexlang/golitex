@@ -1020,7 +1020,11 @@ func (ver *Verifier) verInFactByRightIsListSet(stmt *ast.SpecFactStmt, state *Ve
 		}
 		if verRet.IsTrue() {
 			// 找到了相等的元素，返回 true
-			return NewExecTrue(fmt.Sprintf("%s is true proved by\n%s = %s and %s $in %s", stmt.String(), stmt.Params[0], item, item, stmt.Params[1]))
+			if stmt.Params[0].String() == item.String() {
+				return NewExecTrue(fmt.Sprintf("%s is true proved by\n%s $in %s, %s = %s", stmt.String(), stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj))
+			}
+
+			return NewExecTrue(fmt.Sprintf("%s is true proved by\n%s $in %s, %s = %s, %s = %s", stmt.String(), stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj, item, stmt.Params[0]))
 		}
 	}
 

@@ -13,7 +13,14 @@ import (
 )
 
 func RunREPL(version string) {
-	envMgr, err := GetBuiltinEnvMgr()
+	// where current dir is
+	currDir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error getting current directory:", err)
+		return
+	}
+
+	envMgr, err := GetBuiltinEnvMgr(currDir)
 	if err != nil {
 		fmt.Println("Error initializing pipeline env:", err)
 		return
