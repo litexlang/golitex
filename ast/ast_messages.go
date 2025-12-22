@@ -737,7 +737,7 @@ func (stmt *KnowExistPropStmt) String() string {
 
 func (stmt *FnTemplateDefStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordFnTemplate)
+	builder.WriteString(glob.KeywordFnSet)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.TemplateDefHeader.String())
 	builder.WriteString("\n")

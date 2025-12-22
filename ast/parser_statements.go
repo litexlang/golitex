@@ -47,13 +47,14 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColon {
 				ret, err = p.haveFnStmt(tb)
-				// } else if tb.header.strAtCurIndexPlus(4) == glob.KeywordLift {
-				// 	ret, err = tb.haveFnLiftStmt()
 			} else {
 				ret, err = p.haveFnEqualStmt(tb)
 			}
 		} else if slices.Contains(tb.header.slice, glob.KeywordSt) {
 			ret, err = p.haveObjStStmt(tb)
+		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFnSet {
+			tb.header.skip(glob.KeywordHave)
+			ret, err = p.fnTemplateStmt(tb)
 		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordCart {
 			// Check for "have objName cart(...) = ..." pattern
 			ret, err = p.haveObjFromCartSetStmt(tb)
@@ -84,8 +85,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.proveCaseByCaseStmt(tb)
 	case glob.KeywordProveByEnum:
 		ret, err = p.proveByEnum(tb)
-	case glob.KeywordFnTemplate:
-		ret, err = p.fnTemplateStmt(tb)
+	// case glob.KeywordFnTemplate:
+	// 	ret, err = p.fnTemplateStmt(tb)
 	case glob.KeywordClear:
 		ret, err = p.clearStmt(tb)
 	case glob.KeywordProveByInduction:

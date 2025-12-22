@@ -1,5 +1,5 @@
 prove:
-    fn_template T(t Z):
+    have fn_set T(t Z):
         fn (z N) fn(R)R
 
     fn a(x R) T(17)
@@ -9,10 +9,10 @@ prove:
     a(1)(2)(3) $in R
 
 prove:
-    fn_template T2(t Z):
+    have fn_set T2(t Z):
         fn (z N) R
 
-    fn_template T(t Z):
+    have fn_set T(t Z):
         fn (z N) T2(t)
 
     fn a(x R) T(17)
@@ -35,7 +35,7 @@ prove:
     a(f,g)(item) = opt(f(item),g(item))
 
 prove:
-	fn_template T(t Z):
+	have fn_set T(t Z):
 		fn (z N) R
 
 	fn a(x R) T(17)
@@ -46,7 +46,7 @@ prove:
     have has_very_special_meanings nonempty_set
     prop very_special(x has_very_special_meanings)
 
-    fn_template T3(n R):
+    have fn_set T3(n R):
         dom:
             n < 10
         fn (x R) has_very_special_meanings:
@@ -55,17 +55,17 @@ prove:
             =>:
                 $very_special(T3(n)(x))
 
-    fn_template T2(n R):
+    have fn_set T2(n R):
         dom:
             n $in N_pos
         fn (x R, y R, z R, m R) T3(n)
 
-    fn_template T1(n R):
+    have fn_set T1(n R):
         dom:
             n $in N
         fn (x R) T2(n)
 
-    fn_template T0(n R):
+    have fn_set T0(n R):
         dom:
             n >= 1
         fn (x R) T1(n)

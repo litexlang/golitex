@@ -15,23 +15,14 @@
 package litex_global
 
 import (
+	"strconv"
 	"strings"
 )
-
-func numberToLetters(num int) string {
-	result := ""
-	for num > 0 {
-		num-- // 调整为 0-based
-		result = string(rune('a'+(num%26))) + result
-		num /= 26
-	}
-	return result
-}
 
 func GenerateNamesLikeExcelColumnNames(n int) []string {
 	names := make([]string, n)
 	for i := 1; i <= n; i++ {
-		names[i-1] = numberToLetters(i)
+		names[i-1] = strconv.Itoa(i)
 	}
 	return names
 }
@@ -44,16 +35,4 @@ func RemoveWindowsCarriage(code string) string {
 
 func IsKeywordSetOrNonEmptySetOrFiniteSet(s string) bool {
 	return s == KeywordSet || s == KeywordNonEmptySet || s == KeywordFiniteSet
-}
-
-func IsKeywordSet(s string) bool {
-	return s == KeywordSet
-}
-
-func IsKeywordNonEmptySet(s string) bool {
-	return s == KeywordNonEmptySet
-}
-
-func IsKeywordFiniteSet(s string) bool {
-	return s == KeywordFiniteSet
 }

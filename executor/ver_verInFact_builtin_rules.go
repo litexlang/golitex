@@ -963,7 +963,7 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state 
 		return NewEmptyExecUnknown()
 	}
 
-	nextState := state.GetAddRound()
+	// nextState := state.GetAddRound()
 
 	setBuilderStruct, err := setBuilder.ToSetBuilderStruct()
 	if err != nil {
@@ -984,14 +984,14 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state 
 
 	// First, verify that the element is in the parent set
 	instParentSetFact := ast.NewInFactWithObj(stmt.Params[0], setBuilderStruct.ParentSet)
-	parentSetRet := ver.VerFactStmt(instParentSetFact, nextState)
+	parentSetRet := ver.VerFactStmt(instParentSetFact, state)
 	if parentSetRet.IsNotTrue() {
 		return parentSetRet
 	}
 
 	// Then, verify all facts are true
 	for _, fact := range instFacts {
-		verRet := ver.VerFactStmt(fact, nextState)
+		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsNotTrue() {
 			return NewEmptyExecUnknown()
 		}
