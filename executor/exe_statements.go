@@ -120,7 +120,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		execRet = exec.proveCaseByCaseStmt(stmt)
 	case *ast.ImportDirStmt:
 		execRet = NewExecErr("import statements are not allowed in local scope.")
-	case *ast.ImportFileStmt:
+	case *ast.RunFileStmt:
 		execRet = NewExecErr("import statements are not allowed in local scope.")
 	case *ast.HaveObjFromCartSetStmt:
 		execRet = exec.haveObjFromCartSetStmt(stmt)

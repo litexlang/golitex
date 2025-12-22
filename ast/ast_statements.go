@@ -198,7 +198,7 @@ type ProveStmt struct {
 // 	Line uint
 // }
 
-type ImportFileStmt struct {
+type RunFileStmt struct {
 	Path string
 
 	Line uint
