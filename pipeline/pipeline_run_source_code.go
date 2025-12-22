@@ -94,40 +94,44 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 		}
 	}
 
-	absRepoPath := filepath.Join(curExec.Env.PkgMgr.CurRepoPath, importRelativePath)
+	importAbsRepoPath := filepath.Join(curExec.Env.PkgMgr.CurRepoPath, importRelativePath)
 
 	// 如果已经存在asPkgName，则直接返回
 	if path, ok := curExec.Env.PkgMgr.AbsPathNameMgr.NameAbsPathMap[importDirStmt.AsPkgName]; ok {
-		if path != absRepoPath {
-			return glob.NewGlobErr(fmt.Sprintf("package name %s already exists, and it refers to package %s, not %s", importDirStmt.AsPkgName, path, absRepoPath))
+		if path != importAbsRepoPath {
+			return glob.NewGlobErr(fmt.Sprintf("package name %s already exists, and it refers to package %s, not %s", importDirStmt.AsPkgName, path, importAbsRepoPath))
 		}
-		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported as %s", absRepoPath, importDirStmt.AsPkgName))
+		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported as %s", importAbsRepoPath, importDirStmt.AsPkgName))
 	}
 
 	// 如果已经在curExec.PkgMgr.PkgEnvPairs中，则直接返回
-	if _, ok := curExec.Env.PkgMgr.AbsPkgPathEnvPairs[absRepoPath]; ok {
-		if err := curExec.Env.PkgMgr.AbsPathNameMgr.AddNamePath(importDirStmt.AsPkgName, absRepoPath); err != nil {
+	if _, ok := curExec.Env.PkgMgr.AbsPkgPathEnvPairs[importAbsRepoPath]; ok {
+		if err := curExec.Env.PkgMgr.AbsPathNameMgr.AddNamePath(importDirStmt.AsPkgName, importAbsRepoPath); err != nil {
 			return glob.NewGlobErr(err.Error())
 		}
-		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported. Now it has another name: %s", absRepoPath, importDirStmt.AsPkgName))
+		return glob.NewGlobTrue(fmt.Sprintf("package %s already imported. Now it has another name: %s", importAbsRepoPath, importDirStmt.AsPkgName))
 	}
 
 	// Resolve package path: if not absolute, resolve from system root directory (~/litexlang)
-	absoluteMainFilePath := filepath.Join(absRepoPath, glob.MainDotLit)
+	absoluteMainFilePath := filepath.Join(importAbsRepoPath, glob.MainDotLit)
 
 	// 把 entrance path 改成 absRepoPath
 	previousEntranceRepoPath := curExec.Env.PkgMgr.CurRepoPath
-	curExec.Env.PkgMgr.CurRepoPath = absRepoPath
+	curExec.Env.PkgMgr.CurRepoPath = importAbsRepoPath
 	defer func() {
 		curExec.Env.PkgMgr.CurRepoPath = previousEntranceRepoPath
 	}()
+
+	if _, ok := curExec.Env.PkgMgr.AbsPathNameMgr.NameAbsPathMap[importDirStmt.AsPkgName]; ok {
+		return glob.NewGlobErr(fmt.Sprintf("package name %s is used as package name for package %s. It cannot be used as package name for another package %s", importDirStmt.AsPkgName, importAbsRepoPath, curExec.Env.PkgMgr.AbsPathNameMgr.NameAbsPathMap[importDirStmt.AsPkgName]))
+	}
 
 	mainFileContent, err := os.ReadFile(absoluteMainFilePath)
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
 
-	envPkgMgr := env.NewPkgMgr(absRepoPath)
+	envPkgMgr := env.NewPkgMgr(importAbsRepoPath)
 
 	builtinEnvMgr, err := GetBuiltinEnvMgr(envPkgMgr)
 	if err != nil {
@@ -139,7 +143,7 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 		return ret
 	}
 
-	err = curExec.Env.PkgMgr.MergeGivenExecPkgMgr(absRepoPath, importDirStmt.AsPkgName, executorToRunDir.Env)
+	err = curExec.Env.PkgMgr.MergeGivenExecPkgMgr(importAbsRepoPath, importDirStmt.AsPkgName, executorToRunDir.Env)
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
