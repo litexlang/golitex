@@ -23,7 +23,7 @@ import (
 type TbParser struct {
 	FreeParams                    map[string]struct{}
 	PkgPathNameMgr                *pkgMgr.AbsPathNameMgr
-	CurPkgPath                    string
+	CurPkgName                    string
 	DefinedNamesAtEachParseEnv    DefinedNameAtEachParseEnv
 	AllDefinedNamesExceptPkgNames map[string]struct{}
 }
@@ -32,7 +32,7 @@ func NewTbParser(curPkgName string, pkgPathNameMgr *pkgMgr.AbsPathNameMgr) *TbPa
 	return &TbParser{
 		FreeParams:                    make(map[string]struct{}),
 		PkgPathNameMgr:                pkgPathNameMgr,
-		CurPkgPath:                    curPkgName,
+		CurPkgName:                    curPkgName,
 		DefinedNamesAtEachParseEnv:    NewDefinedNameAtEachParseEnv(),
 		AllDefinedNamesExceptPkgNames: make(map[string]struct{}),
 	}

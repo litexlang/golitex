@@ -39,7 +39,7 @@ func RunSourceCode(code string, path string) glob.GlobRet {
 	if err != nil {
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
-	envPkgMgr := env.NewPkgMgr(repoPath)
+	envPkgMgr := env.NewPkgMgr(repoPath, "")
 	envMgr, err := GetBuiltinEnvMgr(envPkgMgr)
 	if err != nil {
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
@@ -51,7 +51,7 @@ func RunSourceCode(code string, path string) glob.GlobRet {
 
 func RunSourceCodeInExecutor(curExec *exe.Executor, code string, path string) glob.GlobRet {
 	// TODO: 现在问题很大，只能在parse的时候默认现在是""，所以不能parse的时候就让对应的参数变成其他的包名.xxx
-	stmtSlice, err := ast.ParseSourceCode(code, "", curExec.Env.PkgMgr.AbsPathNameMgr)
+	stmtSlice, err := ast.ParseSourceCode(code, curExec.Env.PkgMgr.AbsPathNameMgr.CurPkgName, curExec.Env.PkgMgr.AbsPathNameMgr)
 	if err != nil {
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
@@ -85,7 +85,7 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 	var importRelativePath string = ""
 	var err error = nil
 
-	if importDirStmt.IsGlobalPkg {
+	if !importDirStmt.IsGlobalPkg {
 		importRelativePath = importDirStmt.RelativePathOrGlobalPkgName
 	} else {
 		importRelativePath, err = GetRelativePathFromGlobalPkgToWorkingRepo(curExec, importDirStmt.RelativePathOrGlobalPkgName)
@@ -117,13 +117,30 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 
 	// 把 entrance path 改成 absRepoPath
 	previousEntranceRepoPath := curExec.Env.PkgMgr.CurAbsRepoPath
+	previousCurPkgName := curExec.Env.PkgMgr.AbsPathNameMgr.CurPkgName
 	curExec.Env.PkgMgr.CurAbsRepoPath = importAbsRepoPath
+	curExec.Env.PkgMgr.AbsPathNameMgr.CurPkgName = importDirStmt.AsPkgName
 	defer func() {
 		curExec.Env.PkgMgr.CurAbsRepoPath = previousEntranceRepoPath
+		curExec.Env.PkgMgr.AbsPathNameMgr.CurPkgName = previousCurPkgName
 	}()
 
-	if _, ok := curExec.Env.PkgMgr.AbsPathNameMgr.NameAbsPathMap[importDirStmt.AsPkgName]; ok {
-		return glob.NewGlobErr(fmt.Sprintf("package name %s is used as package name for package %s. It cannot be used as package name for another package %s", importDirStmt.AsPkgName, importAbsRepoPath, curExec.Env.PkgMgr.AbsPathNameMgr.NameAbsPathMap[importDirStmt.AsPkgName]))
+	// 使用 PathNameMgr 的方法添加包名和路径的映射
+	if err := curExec.Env.PkgMgr.AbsPathNameMgr.AddNamePath(importDirStmt.AsPkgName, importAbsRepoPath); err != nil {
+		return glob.NewGlobErr(err.Error())
+	}
+
+	// 把 curExec 的 pkgMgr 合并到现在的 pkgMgr 中
+	for pkgPath, pkgEnv := range curExec.Env.PkgMgr.AbsPkgPathEnvPairs {
+		if _, ok := curExec.Env.PkgMgr.AbsPkgPathEnvPairs[pkgPath]; ok {
+			continue
+		}
+		curExec.Env.PkgMgr.AbsPkgPathEnvPairs[pkgPath] = pkgEnv
+	}
+
+	// 使用 PathNameMgr 的 Merge 方法合并包名映射
+	if err := curExec.Env.PkgMgr.AbsPathNameMgr.Merge(curExec.Env.PkgMgr.AbsPathNameMgr); err != nil {
+		return glob.NewGlobErr(err.Error())
 	}
 
 	mainFileContent, err := os.ReadFile(absoluteMainFilePath)
