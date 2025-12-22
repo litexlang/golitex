@@ -3556,5 +3556,10 @@ func (p *TbParser) runFileStmt(tb *tokenBlock) (*RunFileStmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	return NewRunFileStmt(path, tb.line), nil
+	// 必须要.lit结尾
+	if strings.HasSuffix(path, glob.LitexFileSuffix) {
+		return NewRunFileStmt(path, tb.line), nil
+	} else {
+		return nil, ErrInLine(fmt.Errorf("run path must end with .lit, got %s", path), tb)
+	}
 }
