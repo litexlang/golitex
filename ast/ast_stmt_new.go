@@ -88,7 +88,7 @@ func NewOrStmt(orFacts []*SpecFactStmt, line uint) *OrStmt {
 	return &OrStmt{orFacts, line}
 }
 
-func NewImportStmt(path string, asPkgName string, line uint) *ImportDirStmt {
+func NewImportDirStmt(path string, asPkgName string, line uint) *ImportDirStmt {
 	return &ImportDirStmt{path, asPkgName, line}
 }
 
@@ -104,8 +104,8 @@ func NewDefFnStmt(name string, fnTemplate *FnTemplate, line uint) *DefFnStmt {
 // 	return &EnumStmt{enumName, enumValues, line}
 // }
 
-func NewImportFileStmt(path string, line uint) *ImportFileStmt {
-	return &ImportFileStmt{path, line}
+func NewRunFileStmt(path string, line uint) *RunFileStmt {
+	return &RunFileStmt{path, line}
 }
 
 func NewClaimPropStmt(implication *ImplicationStmt, proofs []Stmt, line uint) *ClaimImplicationStmt {

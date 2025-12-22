@@ -236,27 +236,6 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 	return NewEmptyExecUnknown()
 }
 
-// func (ver *Verifier) verItemExistsInByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-// 	if len(stmt.Params) != 1 {
-// 		return NewExecErr(fmt.Sprintf("builtin logic opt rule should have 1 param, but got %d", len(stmt.Params)))
-// 	}
-
-// 	if ast.IsListSetObj(stmt.Params[0]) {
-// 		asEnumSet, ok := stmt.Params[0].(*ast.FnObj)
-// 		if !ok {
-// 			return NewEmptyExecUnknown()
-// 		}
-
-// 		if len(asEnumSet.Params) != 0 {
-// 			return NewEmptyExecTrue()
-// 		}
-// 	}
-
-// 	_ = state
-
-// 	return NewEmptyExecUnknown()
-// }
-
 // verEqualSetByBuiltinRules verifies equal_set(a, b) by checking:
 // - forall t a : t $in b
 // - forall t b : t $in a

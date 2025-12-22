@@ -463,7 +463,7 @@ func (stmt *ImportDirStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt, nil
 }
 
-func (stmt *ImportFileStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+func (stmt *RunFileStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt, nil
 }
 
