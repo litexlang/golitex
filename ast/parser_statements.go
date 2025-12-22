@@ -1484,48 +1484,84 @@ func (p *TbParser) proveForStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	// Parse parameter name
-	param, err := tb.header.next()
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+	params := []string{}
+	lefts := []Obj{}
+	rights := []Obj{}
+	isProveIRange := []bool{}
 
-	// Skip $in (FuncFactPrefix + KeywordIn)
-	if tb.header.is(glob.FuncFactPrefix) {
-		err = tb.header.skip(glob.FuncFactPrefix)
+	// Parse multiple param $in range(...) pairs, separated by commas
+	for {
+		// Parse parameter name
+		param, err := tb.header.next()
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
-	}
 
-	if !tb.header.is(glob.KeywordIn) {
-		return nil, ErrInLine(fmt.Errorf("expect 'in' after '$'"), tb)
-	}
-	err = tb.header.skip(glob.KeywordIn)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+		// Skip $in (FuncFactPrefix + KeywordIn)
+		if tb.header.is(glob.FuncFactPrefix) {
+			err = tb.header.skip(glob.FuncFactPrefix)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+		}
 
-	// Parse RangeOrClosedRange object (e.g., range(1, 10) or closed_range(1, 10))
-	rangeOrClosedRange, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+		if !tb.header.is(glob.KeywordIn) {
+			return nil, ErrInLine(fmt.Errorf("expect 'in' after '$'"), tb)
+		}
+		err = tb.header.skip(glob.KeywordIn)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
 
-	if !ObjIsRangeOrClosedRangeWith2Params(rangeOrClosedRange) {
-		return nil, ErrInLine(fmt.Errorf("expect range or closed range, but got %s", rangeOrClosedRange.String()), tb)
-	}
+		// Parse RangeOrClosedRange object (e.g., range(1, 10) or closed_range(1, 10))
+		rangeOrClosedRange, err := p.Obj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
 
-	fnObj := rangeOrClosedRange.(*FnObj)
-	left := fnObj.Params[0]
-	right := fnObj.Params[1]
-	isProveIRange := fnObj.FnHead.String() == glob.KeywordRange
+		if !ObjIsRangeOrClosedRangeWith2Params(rangeOrClosedRange) {
+			return nil, ErrInLine(fmt.Errorf("expect range or closed range, but got %s", rangeOrClosedRange.String()), tb)
+		}
+
+		fnObj := rangeOrClosedRange.(*FnObj)
+		left := fnObj.Params[0]
+		right := fnObj.Params[1]
+		isRange := fnObj.FnHead.String() == glob.KeywordRange
+
+		params = append(params, param)
+		lefts = append(lefts, left)
+		rights = append(rights, right)
+		isProveIRange = append(isProveIRange, isRange)
+
+		// Check if there's a comma (more parameters) or colon (end of parameters)
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			continue
+		} else if tb.header.is(glob.KeySymbolColon) {
+			break
+		} else {
+			return nil, ErrInLine(fmt.Errorf("expect ',' or ':' after range"), tb)
+		}
+	}
 
 	// Skip colon
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
+
+	// Add params to FreeParams
+	for _, param := range params {
+		if _, ok := p.FreeParams[param]; ok {
+			return nil, ErrInLine(fmt.Errorf("parameter %s in prove_for conflicts with a free parameter in the outer scope", param), tb)
+		}
+		p.FreeParams[param] = struct{}{}
+	}
+	defer func() {
+		for _, param := range params {
+			delete(p.FreeParams, param)
+		}
+	}()
 
 	// Use parseDomThenProve to handle all three cases:
 	// 1. dom:, =>:, prove: (all three sections)
@@ -1536,7 +1572,7 @@ func (p *TbParser) proveForStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	return NewProveForStmt(param, left, right, isProveIRange, domFacts, thenFacts, proofs, tb.line), nil
+	return NewProveForStmt(params, lefts, rights, isProveIRange, domFacts, thenFacts, proofs, tb.line), nil
 }
 
 func (p *TbParser) proveIsTransitivePropStmt(tb *tokenBlock) (Stmt, error) {
