@@ -564,3 +564,11 @@ func GetTupleValueAtIndex(tuple *FnObj, index Obj) Obj {
 
 	return nil
 }
+
+func (fnObj *FnObj) HasAtomHeadEqualToStr(s string) bool {
+	if asAtom, ok := fnObj.FnHead.(Atom); ok {
+		return string(asAtom) == s
+	}
+
+	return false
+}

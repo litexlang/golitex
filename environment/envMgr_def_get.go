@@ -17,7 +17,7 @@ package litex_env
 import ast "golitex/ast"
 
 func (envMgr *EnvMgr) GetFnTemplateDef(objAtomName ast.Atom) *ast.DefFnSetStmt {
-	fnTemplateDef, ok := envMgr.AllDefinedFnTemplateNames[string(objAtomName)]
+	fnTemplateDef, ok := envMgr.AllDefinedFnSetNames[string(objAtomName)]
 	if ok {
 		return fnTemplateDef
 	}

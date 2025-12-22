@@ -112,7 +112,7 @@ func (envMgr *EnvMgr) NewFnTemplateInEnvMem(stmt *ast.DefFnSetStmt) glob.GlobRet
 	}
 
 	// Store in AllDefinedFnTemplateNames
-	envMgr.AllDefinedFnTemplateNames[string(stmt.TemplateDefHeader.Name)] = stmt
+	envMgr.AllDefinedFnSetNames[string(stmt.TemplateDefHeader.Name)] = stmt
 
 	// Mark in current EnvSlice
 	envMgr.CurEnv().FnTemplateDefMem[string(stmt.TemplateDefHeader.Name)] = struct{}{}
