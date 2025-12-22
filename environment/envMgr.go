@@ -121,6 +121,36 @@ func NewBuiltinEnvMgr(envMgr *EnvMgr) *EnvMgr {
 	return NewEnvMgr(envMgr.PkgMgr, []EnvMemory{builtinEnvMemory}, newAllDefinedAtomObjNames, newAllDefinedPropNames, newAllDefinedExistPropNames, newAllDefinedFnTemplateNames, newAllDefinedAlgoNames, newAllDefinedProveAlgoNames)
 }
 
+func (envMgr *EnvMgr) RemoveBuiltinEnv() *EnvMgr {
+	builtinEnvMemory := envMgr.EnvSlice[0]
+	// 把 atomObjDefMem 里的 def 删了
+	for k := range builtinEnvMemory.AtomObjDefMem {
+		delete(envMgr.AllDefinedAtomObjNames, k)
+	}
+	// 把 propDefMem 里的 def 删了
+	for k := range builtinEnvMemory.PropDefMem {
+		delete(envMgr.AllDefinedPropNames, k)
+	}
+	// 把 existPropDefMem 里的 def 删了
+	for k := range builtinEnvMemory.ExistPropDefMem {
+		delete(envMgr.AllDefinedExistPropNames, k)
+	}
+	// 把 fnTemplateDefMem 里的 def 删了
+	for k := range builtinEnvMemory.FnTemplateDefMem {
+		delete(envMgr.AllDefinedFnSetNames, k)
+	}
+	// 把 algoDefMem 里的 def 删了
+	for k := range builtinEnvMemory.AlgoDefMem {
+		delete(envMgr.AllDefinedAlgoNames, k)
+	}
+	// 把 defProveAlgoMem 里的 def 删了
+	for k := range builtinEnvMemory.DefProveAlgoMem {
+		delete(envMgr.AllDefinedProveAlgoNames, k)
+	}
+	envMgr.EnvSlice = envMgr.EnvSlice[1:]
+	return envMgr
+}
+
 func (envMgr *EnvMgr) GetUpMostEnv() *EnvMemory {
 	return &envMgr.EnvSlice[0]
 }

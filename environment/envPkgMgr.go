@@ -16,38 +16,39 @@ package litex_env
 
 import (
 	"fmt"
-	ast "golitex/ast"
 	pkgMgr "golitex/package_manager"
 )
 
 type EnvPkgMgr struct {
-	PkgPathEnvPairs  map[string]*EnvMgr
-	PkgPathNameMgr   *pkgMgr.PathNameMgr
-	EntranceRepoPath string
+	AbsPkgPathEnvPairs map[string]*EnvMgr
+	AbsPathNameMgr     *pkgMgr.AbsPathNameMgr
+	CurRepoPath        string
 }
 
 // 为了确保实现上的简单性，不允许用重复的asPkgName
-func (mgr *EnvPkgMgr) MergeGivenExecPkgMgr(importDirStmt *ast.ImportDirStmt, curEnv *EnvMgr) error {
-	if _, ok := mgr.PkgPathEnvPairs[importDirStmt.Path]; ok {
-		return fmt.Errorf("package already exists: %s", importDirStmt.Path)
+func (mgr *EnvPkgMgr) MergeGivenExecPkgMgr(absRepoPath string, asPkgName string, pkgEnv *EnvMgr) error {
+	if _, ok := mgr.AbsPkgPathEnvPairs[absRepoPath]; ok {
+		return fmt.Errorf("package already exists: %s", absRepoPath)
 	}
-	mgr.PkgPathEnvPairs[importDirStmt.Path] = curEnv
+
+	storedPkgEnv := pkgEnv.RemoveBuiltinEnv()
+	mgr.AbsPkgPathEnvPairs[absRepoPath] = storedPkgEnv
 
 	// 使用 PathNameMgr 的方法添加包名和路径的映射
-	if err := mgr.PkgPathNameMgr.AddNamePath(importDirStmt.AsPkgName, importDirStmt.Path); err != nil {
+	if err := mgr.AbsPathNameMgr.AddNamePath(asPkgName, absRepoPath); err != nil {
 		return err
 	}
 
 	// 把 curExec 的 pkgMgr 合并到现在的 pkgMgr 中
-	for pkgPath, pkgEnv := range curEnv.PkgMgr.PkgPathEnvPairs {
-		if _, ok := mgr.PkgPathEnvPairs[pkgPath]; ok {
+	for pkgPath, pkgEnv := range pkgEnv.PkgMgr.AbsPkgPathEnvPairs {
+		if _, ok := mgr.AbsPkgPathEnvPairs[pkgPath]; ok {
 			continue
 		}
-		mgr.PkgPathEnvPairs[pkgPath] = pkgEnv
+		mgr.AbsPkgPathEnvPairs[pkgPath] = pkgEnv
 	}
 
 	// 使用 PathNameMgr 的 Merge 方法合并包名映射
-	if err := mgr.PkgPathNameMgr.Merge(curEnv.PkgMgr.PkgPathNameMgr); err != nil {
+	if err := mgr.AbsPathNameMgr.Merge(pkgEnv.PkgMgr.AbsPathNameMgr); err != nil {
 		return err
 	}
 
@@ -56,8 +57,8 @@ func (mgr *EnvPkgMgr) MergeGivenExecPkgMgr(importDirStmt *ast.ImportDirStmt, cur
 
 func NewPkgMgr(entranceRepoPath string) *EnvPkgMgr {
 	return &EnvPkgMgr{
-		PkgPathEnvPairs:  make(map[string]*EnvMgr),
-		PkgPathNameMgr:   pkgMgr.NewPathNameMgr(),
-		EntranceRepoPath: entranceRepoPath,
+		AbsPkgPathEnvPairs: make(map[string]*EnvMgr),
+		AbsPathNameMgr:     pkgMgr.NewPathNameMgr(),
+		CurRepoPath:        entranceRepoPath,
 	}
 }

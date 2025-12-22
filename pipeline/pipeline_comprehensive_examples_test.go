@@ -17,6 +17,7 @@ package litex_pipeline
 import (
 	"fmt"
 	ast "golitex/ast"
+	env "golitex/environment"
 	exe "golitex/executor"
 	glob "golitex/glob"
 	pkgMgr "golitex/package_manager"
@@ -56,7 +57,9 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 	allFilesStartTime := time.Now()
 
 	// 每次打开文件时重启 executor
-	envMgr, err := GetBuiltinEnvMgr(repo)
+	envPkgMgr := env.NewPkgMgr(repo)
+
+	envMgr, err := GetBuiltinEnvMgr(envPkgMgr)
 	if err != nil {
 		return fmt.Errorf("failed to init pipeline env: %s", err)
 	}

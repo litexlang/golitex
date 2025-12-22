@@ -581,7 +581,7 @@ func (stmt *ImportDirStmt) String() string {
 
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolDoubleQuote)
-	builder.WriteString(stmt.Path)
+	builder.WriteString(stmt.RelativePathOrGlobalPkgName)
 	builder.WriteString(glob.KeySymbolDoubleQuote)
 
 	return builder.String()
