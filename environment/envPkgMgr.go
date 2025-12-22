@@ -22,7 +22,7 @@ import (
 type EnvPkgMgr struct {
 	AbsPkgPathEnvPairs map[string]*EnvMgr
 	AbsPathNameMgr     *pkgMgr.AbsPathNameMgr
-	CurRepoPath        string
+	CurAbsRepoPath     string
 }
 
 // 为了确保实现上的简单性，不允许用重复的asPkgName
@@ -59,6 +59,6 @@ func NewPkgMgr(entranceRepoPath string) *EnvPkgMgr {
 	return &EnvPkgMgr{
 		AbsPkgPathEnvPairs: make(map[string]*EnvMgr),
 		AbsPathNameMgr:     pkgMgr.NewPathNameMgr(),
-		CurRepoPath:        entranceRepoPath,
+		CurAbsRepoPath:     entranceRepoPath,
 	}
 }

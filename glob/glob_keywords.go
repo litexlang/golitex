@@ -230,7 +230,7 @@ const (
 
 	KeySymbolSemiColon  = ";"
 	KeySymbolEquivalent = "<=>"
-	KeySymbolSlah       = "\\"
+	KeySymbolBackSlash  = "\\"
 	// KeySymbolQuestionMark = "?"
 
 )
@@ -265,7 +265,7 @@ var SymbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolRightArrow:   {}, // "=>"
 	KeySymbolSemiColon:    {}, // ";"
 	KeySymbolEquivalent:   {}, // "<=>"
-	KeySymbolSlah:         {},
+	KeySymbolBackSlash:    {},
 	// KeySymbolQuestionMark: {}, // "?"
 }
 
