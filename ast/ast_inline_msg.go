@@ -161,7 +161,7 @@ func (s *ImportDirStmt) InlineString() string {
 	return s.String()
 }
 
-func (s *ImportFileStmt) InlineString() string {
+func (s *RunFileStmt) InlineString() string {
 	return s.String()
 }
 func (s *ProveStmt) InlineString() string {

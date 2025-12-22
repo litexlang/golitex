@@ -66,7 +66,7 @@ func RunStmtAndImportStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) glob.G
 	switch asStmt := stmt.(type) {
 	case *ast.ImportDirStmt:
 		return RunImportDirStmtInExec(curExec, asStmt)
-	case *ast.ImportFileStmt:
+	case *ast.RunFileStmt:
 		return RunImportFileStmtInExec(curExec, asStmt)
 	default:
 		return curExec.Stmt(asStmt).ToGlobRet()
@@ -141,7 +141,7 @@ func expandTilde(path string) (string, error) {
 	return path, nil
 }
 
-func RunImportFileStmtInExec(curExec *exe.Executor, importFileStmt *ast.ImportFileStmt) glob.GlobRet {
+func RunImportFileStmtInExec(curExec *exe.Executor, importFileStmt *ast.RunFileStmt) glob.GlobRet {
 	// Expand ~ to home directory if present
 	expandedPath, err := expandTilde(importFileStmt.Path)
 	if err != nil {

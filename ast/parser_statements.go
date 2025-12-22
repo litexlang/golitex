@@ -110,11 +110,13 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 	case glob.KeywordDoNothing:
 		ret, err = p.doNothingStmt(tb)
 	case glob.KeywordImport:
-		ret, err = p.importStmt(tb)
+		ret, err = p.importDirStmt(tb)
 	case glob.KeywordProveImplication:
 		ret, err = p.proveImplicationStmt(tb)
 	case glob.KeywordImplication:
 		ret, err = p.implicationStmt(tb)
+	case glob.KeywordRun:
+		ret, err = p.runFileStmt(tb)
 	default:
 		ret, err = p.factsStmt(tb)
 	}
@@ -1859,12 +1861,13 @@ func (p *TbParser) doNothingStmt(tb *tokenBlock) (Stmt, error) {
 	return NewDoNothingStmt(tb.line), nil
 }
 
-func (p *TbParser) importStmt(tb *tokenBlock) (Stmt, error) {
+func (p *TbParser) importDirStmt(tb *tokenBlock) (Stmt, error) {
 	err := tb.header.skip(glob.KeywordImport)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
+	// 这是 parse 具体路径，用来处理可能不是标准库里的东西
 	if tb.header.is(glob.KeySymbolDoubleQuote) {
 		// Parse the path in double quotes
 		path, err := p.getStringInDoubleQuotes(tb)
@@ -1872,25 +1875,17 @@ func (p *TbParser) importStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		// Check if path ends with .lit - if so, it's an ImportFileStmt
-		if strings.HasSuffix(path, glob.LitexFileSuffix) {
-			if !tb.header.ExceedEnd() {
-				return nil, fmt.Errorf("expect end of line")
-			}
-			return NewImportFileStmt(path, tb.line), nil
-		} else {
-			err := tb.header.skip(glob.KeywordAs)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-
-			asPkgName, err := tb.header.next()
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-
-			return NewImportStmt(path, asPkgName, tb.line), nil
+		err = tb.header.skip(glob.KeywordAs)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
 		}
+
+		asPkgName, err := tb.header.next()
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		return NewImportDirStmt(path, asPkgName, tb.line), nil
 	}
 
 	pkgName, err := tb.header.next()
@@ -1915,7 +1910,7 @@ func (p *TbParser) importStmt(tb *tokenBlock) (Stmt, error) {
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
-	return NewImportStmt(path, asPkgName, tb.line), nil
+	return NewImportDirStmt(path, asPkgName, tb.line), nil
 }
 
 func (p *TbParser) proveImplicationStmt(tb *tokenBlock) (Stmt, error) {
@@ -3552,4 +3547,14 @@ func (p *TbParser) parseTbBodyAndGetStmts(body []tokenBlock) ([]Stmt, error) {
 	}
 	p.DeleteCurrentParseEnv()
 	return stmts, nil
+}
+
+func (p *TbParser) runFileStmt(tb *tokenBlock) (*RunFileStmt, error) {
+	tb.header.skip(glob.KeywordRun)
+	path, err := p.getStringInDoubleQuotes(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	return NewRunFileStmt(path, tb.line), nil
 }

@@ -604,7 +604,7 @@ func (stmt *DefFnStmt) String() string {
 	return fnDefStmtStringGivenKw(glob.KeywordFn, stmt.FnTemplate, stmt.Name)
 }
 
-func (stmt *ImportFileStmt) String() string {
+func (stmt *RunFileStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordImport)
 	builder.WriteString(" ")

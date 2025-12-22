@@ -89,6 +89,7 @@ const (
 	KeywordImport = "import"
 	KeywordClear  = "clear"
 	KeywordExit   = "exit"
+	KeywordRun    = "run"
 
 	KeywordProveAlgo = "prove_algo"
 	KeywordAlgo      = "algo"
@@ -192,6 +193,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordRange: {},
 
 	KeywordIsNonEmptyWithItem: {},
+
+	KeywordRun: {},
 }
 
 const (

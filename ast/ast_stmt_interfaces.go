@@ -38,7 +38,7 @@ func (s *ProveCaseByCaseStmt) stmt()           {}
 func (s *KnowPropStmt) stmt()                  {}
 func (s *OrStmt) stmt()                        {}
 func (s *ImportDirStmt) stmt()                 {}
-func (s *ImportFileStmt) stmt()                {}
+func (s *RunFileStmt) stmt()                   {}
 func (s *ProveStmt) stmt()                     {}
 func (s *ProveForStmt) stmt()                  {}
 func (s *ProveImplicationStmt) stmt()          {}
@@ -90,7 +90,7 @@ func (s *ProveCaseByCaseStmt) algoStmt()           {}
 func (s *KnowPropStmt) algoStmt()                  {}
 func (s *OrStmt) algoStmt()                        {}
 func (s *ImportDirStmt) algoStmt()                 {}
-func (s *ImportFileStmt) algoStmt()                {}
+func (s *RunFileStmt) algoStmt()                   {}
 func (s *ProveStmt) algoStmt()                     {}
 func (s *UniFactWithIffStmt) algoStmt()            {}
 func (s *ClaimProveByContradictionStmt) algoStmt() {}
@@ -142,7 +142,7 @@ func (s *ProveCaseByCaseStmt) GetLine() uint           { return s.Line }
 func (s *KnowPropStmt) GetLine() uint                  { return s.Line }
 func (s *OrStmt) GetLine() uint                        { return s.Line }
 func (s *ImportDirStmt) GetLine() uint                 { return s.Line }
-func (s *ImportFileStmt) GetLine() uint                { return s.Line }
+func (s *RunFileStmt) GetLine() uint                   { return s.Line }
 func (s *ProveStmt) GetLine() uint                     { return s.Line }
 func (s *UniFactWithIffStmt) GetLine() uint            { return s.Line }
 func (s *ClaimProveByContradictionStmt) GetLine() uint { return s.Line }
