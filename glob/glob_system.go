@@ -23,26 +23,26 @@ import (
 
 const SystemRootPath = "litex"
 
-// GetSystemRootPath returns the system root directory for litexlang packages.
+// getSystemRootPath returns the system root directory for litexlang packages.
 // On Linux/macOS: ~/litexlang/packages
 // On Windows: %USERPROFILE%\litexlang\packages
-func GetSystemRootPath() string {
+func getSystemRootPath() string {
 	if runtime.GOOS == "windows" {
 		return filepath.Join(os.Getenv("USERPROFILE"), SystemRootPath)
 	}
 	return filepath.Join(os.Getenv("HOME"), SystemRootPath)
 }
 
-// ResolveSystemPackagePath resolves a package path from the system-wide installed packages.
+// GetGlobalPkgAbsPath resolves a package path from the system-wide installed packages.
 // If the path is not an absolute path, it will first search in core_packages, then in user_packages.
 // If the path is already an absolute path, it will be returned as is.
 // Returns an error if the package is not found in either location.
-func ResolveSystemPackagePath(path string) (string, error) {
+func GetGlobalPkgAbsPath(path string) (string, error) {
 	if filepath.IsAbs(path) {
 		return path, nil
 	}
 
-	systemRoot := GetSystemRootPath()
+	systemRoot := getSystemRootPath()
 
 	// First, try core_packages
 	corePath := filepath.Join(systemRoot, "core_packages", path)

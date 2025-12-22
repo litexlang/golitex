@@ -122,30 +122,6 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 	return glob.NewGlobTrue(fmt.Sprintf("imported package %s as %s", importDirStmt.Path, importDirStmt.AsPkgName))
 }
 
-// expandTilde expands ~ to the user's home directory.
-// Note: ~ is primarily used on Unix/Linux/macOS. Windows users typically
-// use %USERPROFILE% or full paths like C:\Users\username\...
-func expandTilde(path string) (string, error) {
-	// Handle ~/path format
-	if strings.HasPrefix(path, "~/") {
-		homeDir, err := os.UserHomeDir()
-		if err != nil {
-			return "", fmt.Errorf("failed to get home directory: %w", err)
-		}
-		// Use filepath.Join to handle cross-platform path separators
-		restOfPath := path[2:]
-		return filepath.Join(homeDir, restOfPath), nil
-	}
-
-	// Handle just ~
-	if path == "~" {
-		return os.UserHomeDir()
-	}
-
-	// No expansion needed
-	return path, nil
-}
-
 func RunFileStmtInExec(curExec *exe.Executor, importFileStmt *ast.RunFileStmt) glob.GlobRet {
 	// 把 entrance repo path 和 importFileStmt.Path结合起来
 	path := filepath.Join(curExec.Env.PkgMgr.EntranceRepoPath, importFileStmt.Path)
@@ -156,4 +132,22 @@ func RunFileStmtInExec(curExec *exe.Executor, importFileStmt *ast.RunFileStmt) g
 	}
 
 	return RunSourceCodeInExecutor(curExec, string(content), path)
+}
+
+// GetRelativePathFromGlobalPkgToWorkingEnv 获取全局包路径和当前执行器工作环境的相对路径
+// 返回从 globalPkg 到 curExec 的 working env 的相对路径
+func GetRelativePathFromGlobalPkgToWorkingEnv(curExec *exe.Executor, globalPkgName string) (string, error) {
+	globalPkgPath, err := glob.GetGlobalPkgAbsPath(globalPkgName)
+	if err != nil {
+		return "", err
+	}
+
+	workingEnvPath := curExec.Env.PkgMgr.EntranceRepoPath
+
+	relPath, err := filepath.Rel(globalPkgPath, workingEnvPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to calculate relative path from %s to %s: %w", globalPkgPath, workingEnvPath, err)
+	}
+
+	return relPath, nil
 }
