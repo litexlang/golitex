@@ -25,7 +25,7 @@ import (
 
 func GetBuiltinEnvMgr() (*env.EnvMgr, error) {
 	pkgMgr := env.NewPkgMgr()
-	curEnvMgr := env.NewEnvMgr(pkgMgr, []env.EnvMemory{*env.NewEnvMemory()}, make(map[string]*ast.DefLetStmt), make(map[string]*ast.DefPropStmt), make(map[string]*ast.DefExistPropStmt), make(map[string]*ast.FnTemplateDefStmt), make(map[string]*ast.DefAlgoStmt), make(map[string]*ast.DefProveAlgoStmt))
+	curEnvMgr := env.NewEnvMgr(pkgMgr, []env.EnvMemory{*env.NewEnvMemory()}, make(map[string]*ast.DefLetStmt), make(map[string]*ast.DefPropStmt), make(map[string]*ast.DefExistPropStmt), make(map[string]*ast.DefFnSetStmt), make(map[string]*ast.DefAlgoStmt), make(map[string]*ast.DefProveAlgoStmt))
 	curEnvMgr.Init()
 	err := useHardcodedCodeToInitEnvMgr(curEnvMgr)
 	if err != nil {

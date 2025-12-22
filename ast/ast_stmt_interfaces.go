@@ -56,7 +56,7 @@ func (s *HaveObjFromCartSetStmt) stmt()   {}
 func (s *EqualsFactStmt) stmt()    {}
 func (s *KnowExistPropStmt) stmt() {}
 
-func (s *FnTemplateDefStmt) stmt()    {}
+func (s *DefFnSetStmt) stmt()         {}
 func (s *ClearStmt) stmt()            {}
 func (s *DoNothingStmt) stmt()        {}
 func (s *InlineFactsStmt) stmt()      {}
@@ -105,7 +105,7 @@ func (s *HaveObjFromCartSetStmt) algoStmt()   {}
 func (s *EqualsFactStmt) algoStmt()    {}
 func (s *KnowExistPropStmt) algoStmt() {}
 
-func (s *FnTemplateDefStmt) algoStmt()    {}
+func (s *DefFnSetStmt) algoStmt()         {}
 func (s *ClearStmt) algoStmt()            {}
 func (s *DoNothingStmt) algoStmt()        {}
 func (s *InlineFactsStmt) algoStmt()      {}
@@ -157,7 +157,7 @@ func (s *HaveObjFromCartSetStmt) GetLine() uint   { return s.Line }
 func (s *EqualsFactStmt) GetLine() uint    { return s.Line }
 func (s *KnowExistPropStmt) GetLine() uint { return s.Line }
 
-func (s *FnTemplateDefStmt) GetLine() uint    { return s.Line }
+func (s *DefFnSetStmt) GetLine() uint         { return s.Line }
 func (s *ClearStmt) GetLine() uint            { return s.Line }
 func (s *DoNothingStmt) GetLine() uint        { return s.Line }
 func (s *InlineFactsStmt) GetLine() uint      { return s.Line }

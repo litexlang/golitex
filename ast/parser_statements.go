@@ -54,7 +54,7 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 			ret, err = p.haveObjStStmt(tb)
 		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFnSet {
 			tb.header.skip(glob.KeywordHave)
-			ret, err = p.fnTemplateStmt(tb)
+			ret, err = p.DefFnSetStmt(tb)
 		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordCart {
 			// Check for "have objName cart(...) = ..." pattern
 			ret, err = p.haveObjFromCartSetStmt(tb)
@@ -1318,7 +1318,7 @@ func (p *TbParser) proveByEnum(tb *tokenBlock) (Stmt, error) {
 	return NewProveByEnumStmt(uniFact, proofs, tb.line), nil
 }
 
-func (p *TbParser) fnTemplateStmt(tb *tokenBlock) (Stmt, error) {
+func (p *TbParser) DefFnSetStmt(tb *tokenBlock) (Stmt, error) {
 	tb.header.skipNext()
 
 	defHeader, err := p.defHeaderWithoutParsingColonAtEnd_MustFollowWithFreeParamCheck(tb)
@@ -1358,7 +1358,7 @@ func (p *TbParser) fnTemplateStmt(tb *tokenBlock) (Stmt, error) {
 
 		newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, tb.body[0].line)
 
-		return NewFnTemplateStmt(defHeader, []FactStmt{}, newFnTStruct, tb.line), nil
+		return NewDefFnSetStmt(defHeader, []FactStmt{}, newFnTStruct, tb.line), nil
 	} else if len(tb.body) >= 2 {
 		if tb.body[0].header.is(glob.KeywordDom) {
 			err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeywordDom)
@@ -1378,7 +1378,7 @@ func (p *TbParser) fnTemplateStmt(tb *tokenBlock) (Stmt, error) {
 
 			newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, tb.body[1].line)
 
-			return NewFnTemplateStmt(defHeader, templateDomFacts, newFnTStruct, tb.line), nil
+			return NewDefFnSetStmt(defHeader, templateDomFacts, newFnTStruct, tb.line), nil
 		} else {
 			templateDomFacts := []FactStmt{}
 			for i := range len(tb.body) - 1 {
@@ -1396,7 +1396,7 @@ func (p *TbParser) fnTemplateStmt(tb *tokenBlock) (Stmt, error) {
 
 			newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, tb.body[len(tb.body)-1].line)
 
-			return NewFnTemplateStmt(defHeader, templateDomFacts, newFnTStruct, tb.line), nil
+			return NewDefFnSetStmt(defHeader, templateDomFacts, newFnTStruct, tb.line), nil
 		}
 	} else {
 		return nil, fmt.Errorf("expect one or two body blocks")

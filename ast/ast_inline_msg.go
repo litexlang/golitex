@@ -213,10 +213,10 @@ func (s *EqualsFactStmt) InlineString() string {
 func (s *KnowExistPropStmt) InlineString() string { panic("") }
 
 // func (s *LatexStmt) InlineString() string         { panic("") }
-func (s *FnTemplateDefStmt) InlineString() string { panic("") }
-func (s *ClearStmt) InlineString() string         { return s.String() }
-func (s *DoNothingStmt) InlineString() string     { return s.String() }
-func (s *InlineFactsStmt) InlineString() string   { return inlineFactsString(s.Facts) }
+func (s *DefFnSetStmt) InlineString() string    { panic("") }
+func (s *ClearStmt) InlineString() string       { return s.String() }
+func (s *DoNothingStmt) InlineString() string   { return s.String() }
+func (s *InlineFactsStmt) InlineString() string { return inlineFactsString(s.Facts) }
 func (s *ProveByInductionStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveByInduction)

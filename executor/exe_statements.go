@@ -78,7 +78,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 		if execRet.IsTrue() {
 			execRet = execRet.AddMsg("Warning: `know exist` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
-	case *ast.FnTemplateDefStmt:
+	case *ast.DefFnSetStmt:
 		execRet = exec.DefFnTemplateStmt(stmt)
 	case *ast.ClearStmt:
 		execRet = exec.ClearStmt()
@@ -543,7 +543,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) ExecRet {
 	return NewExecTrue(stmt.String()).AddMsg(fmt.Sprintf("%s\nis true by definition", knownUniFact))
 }
 
-func (exec *Executor) DefFnTemplateStmt(stmt *ast.FnTemplateDefStmt) ExecRet {
+func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) ExecRet {
 	// if glob.RequireMsg() {
 	// 	defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	// }

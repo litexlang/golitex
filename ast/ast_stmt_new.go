@@ -96,7 +96,7 @@ func NewProveStmt(proof []Stmt, line uint) *ProveStmt {
 	return &ProveStmt{proof, line}
 }
 
-func NewDefFnStmt(name string, fnTemplate *FnTStruct, line uint) *DefFnStmt {
+func NewDefFnStmt(name string, fnTemplate *FnTemplate, line uint) *DefFnStmt {
 	return &DefFnStmt{name, fnTemplate, line}
 }
 
@@ -136,12 +136,12 @@ func NewKnowExistPropStmt(existProp *DefExistPropStmt, line uint) *KnowExistProp
 	return &KnowExistPropStmt{existProp, line}
 }
 
-func NewFnTemplateStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnTStruct *FnTStruct, line uint) *FnTemplateDefStmt {
-	return &FnTemplateDefStmt{defHeader, templateDomFacts, fnTStruct, line}
+func NewDefFnSetStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnTStruct *FnTemplate, line uint) *DefFnSetStmt {
+	return &DefFnSetStmt{defHeader, templateDomFacts, fnTStruct, line}
 }
 
-func NewFnTStruct(params []string, paramSets []Obj, retSet Obj, domFacts []FactStmt, thenFacts []FactStmt, line uint) *FnTStruct {
-	return &FnTStruct{params, paramSets, retSet, domFacts, thenFacts, line}
+func NewFnTStruct(params []string, paramSets []Obj, retSet Obj, domFacts []FactStmt, thenFacts []FactStmt, line uint) *FnTemplate {
+	return &FnTemplate{params, paramSets, retSet, domFacts, thenFacts, line}
 }
 
 func NewClearStmt(line uint) *ClearStmt {

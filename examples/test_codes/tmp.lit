@@ -1,1 +1,0 @@
-$is_nonempty_with_item({x R: x > 0}, 1)
