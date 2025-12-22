@@ -485,7 +485,7 @@ func ObjIsKeywordSetOrNonEmptySetOrFiniteSet(obj Obj) bool {
 
 func ObjIsKeywordSet(obj Obj) bool {
 	if asAtom, ok := obj.(Atom); ok {
-		return glob.IsKeywordSet(string(asAtom))
+		return string(asAtom) == glob.KeywordSet
 	}
 	return false
 }

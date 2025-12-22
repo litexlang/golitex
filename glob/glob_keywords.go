@@ -72,8 +72,8 @@ const (
 	KeywordProveCaseByCase      = "prove_case_by_case"
 	KeywordProveFor             = "prove_for"
 
-	KeywordFn         = "fn"
-	KeywordFnTemplate = "fn_template"
+	KeywordFn    = "fn"
+	KeywordFnSet = "fn_set"
 
 	KeywordClaim = "claim"
 	KeywordProve = "prove"
@@ -137,13 +137,13 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordFiniteSet:   {},
 	KeywordProveByEnum: {},
 	// KeywordItemExistsIn: {},
-	KeywordFnTemplate: {},
-	KeywordNPos:       {},
-	KeywordLet:        {},
-	KeywordClear:      {},
-	KeywordTuple:      {},
-	KeywordIndexOpt:   {},
-	KeywordDoNothing:  {},
+	KeywordFnSet:     {},
+	KeywordNPos:      {},
+	KeywordLet:       {},
+	KeywordClear:     {},
+	KeywordTuple:     {},
+	KeywordIndexOpt:  {},
+	KeywordDoNothing: {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
 
 	KeywordProveIsTransitiveProp: {},
@@ -367,7 +367,7 @@ var KeywordHelpMap = map[string]string{
 
 	// KeywordItemExistsIn:           "",
 
-	KeywordFnTemplate:            "",
+	KeywordFnSet:                 "",
 	KeywordNPos:                  "",
 	KeywordLet:                   "",
 	KeywordClear:                 "",

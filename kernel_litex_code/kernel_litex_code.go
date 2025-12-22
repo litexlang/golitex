@@ -137,10 +137,10 @@ know forall x N_pos => x $in N, x >= 1, x > 0, x $in Q, x $in R
 know forall x Z: x > 0 => x $in N_pos
 know forall x Z: x <= 0 => not x $in N_pos
 
-fn_template seq(s set):
+have fn_set seq(s set):
 	fn (n N_pos) s
 
-fn_template finite_seq(s set, n N_pos):
+have fn_set finite_seq(s set, n N_pos):
     fn (x N_pos) s:
     	dom:
         	x <= n
