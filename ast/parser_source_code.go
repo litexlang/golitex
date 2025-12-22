@@ -21,7 +21,7 @@ import (
 )
 
 // * TODO: 在parse时，把pkgName改成当前项目里定义的 pkgName，而不是继续沿用原来的
-func ParseSourceCode(code string, curPkgNameMaybeNotDefault string, pkgPathNameMgr *pkgMgr.AbsPathNameMgr) ([]Stmt, error) {
+func ParseSourceCode(code string, curPkgNameMaybeNotDefault string, pkgPathNameMgr *pkgMgr.AbsPathNameMgr, curParsingDirPath string) ([]Stmt, error) {
 	// code, err := preprocessSourceCode(code)
 	preprocessedCodeLines, err := preprocessSourceCode(code)
 	if err != nil {
@@ -39,7 +39,7 @@ func ParseSourceCode(code string, curPkgNameMaybeNotDefault string, pkgPathNameM
 	}
 
 	ret := []Stmt{}
-	p := NewTbParser(defaultPkgName, pkgPathNameMgr)
+	p := NewTbParser(defaultPkgName, pkgPathNameMgr, curParsingDirPath)
 	for _, block := range blocks {
 		cur, err := p.Stmt(&block)
 		if err != nil {

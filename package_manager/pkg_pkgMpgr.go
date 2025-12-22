@@ -69,9 +69,9 @@ func (mgr *AbsPathNameMgr) Merge(other *AbsPathNameMgr) error {
 			continue
 		}
 		// 包名不存在，直接添加
-		if err := mgr.AddNamePath(name, path); err != nil {
-			return err
-		}
+		// if err := mgr.AddNamePath(name, path); err != nil {
+		// 	return err
+		// }
 	}
 	return nil
 }

@@ -15,7 +15,6 @@
 package litex_env
 
 import (
-	"fmt"
 	pkgMgr "golitex/package_manager"
 )
 
@@ -28,9 +27,9 @@ type EnvPkgMgr struct {
 
 // 为了确保实现上的简单性，不允许用重复的asPkgName
 func (mgr *EnvPkgMgr) MergeGivenExecPkgMgr(absRepoPath string, asPkgName string, pkgEnv *EnvMgr) error {
-	if _, ok := mgr.AbsPkgPathEnvPairs[absRepoPath]; ok {
-		return fmt.Errorf("package already exists: %s", absRepoPath)
-	}
+	// if _, ok := mgr.AbsPkgPathEnvPairs[absRepoPath]; ok {
+	// 	return fmt.Errorf("package already exists: %s", absRepoPath)
+	// }
 
 	storedPkgEnv := pkgEnv.RemoveBuiltinEnv()
 	mgr.AbsPkgPathEnvPairs[absRepoPath] = storedPkgEnv
