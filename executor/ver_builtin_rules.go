@@ -21,15 +21,19 @@ import (
 )
 
 func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsNonEmptyWithItem) {
+		return ver.verIsNonEmptyWithItemByBuiltinRules(stmt, state)
+	}
+
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordEqualSet) {
+		return ver.verEqualSetByBuiltinRules(stmt, state)
+	}
+
 	if stmt.NameIs(glob.KeywordIn) {
 		if stmt.TypeEnum == ast.FalsePure {
 			return ver.falseInFactBuiltinRules(stmt, state)
 		}
 		return ver.trueInFactBuiltinRules(stmt, state)
-	}
-
-	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsNonEmptyWithItem) {
-		return ver.verIsNonEmptyWithItemByBuiltinRules(stmt, state)
 	}
 
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsASet) {
@@ -47,10 +51,6 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 	// if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordItemExistsIn) {
 	// 	return ver.verItemExistsInByBuiltinRules(stmt, state)
 	// }
-
-	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordEqualSet) {
-		return ver.verEqualSetByBuiltinRules(stmt, state)
-	}
 
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordEqualTuple) {
 		return ver.verEqualTupleByBuiltinRules(stmt, state)

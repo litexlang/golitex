@@ -249,17 +249,6 @@ func (envMgr *EnvMgr) storeSymbolSimplifiedValue(left, right ast.Obj) glob.GlobR
 	return glob.NewEmptyGlobTrue()
 }
 
-// func (envMgr *EnvMgr) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
-// 	objAsStr := obj.String()
-// 	for depth := envMgr.curEnvDepth(); depth >= 0; depth-- {
-// 		facts, ok := envMgr.EnvSlice[depth].EqualMem[objAsStr]
-// 		if ok {
-// 			return facts, ok
-// 		}
-// 	}
-// 	return nil, false
-// }
-
 func (envMgr *EnvMgr) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
 	objAsStr := obj.String()
 	facts, ok := envMgr.CurEnv().EqualMem[objAsStr]
