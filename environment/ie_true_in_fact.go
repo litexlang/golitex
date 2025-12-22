@@ -108,7 +108,7 @@ func (ie *InferEngine) trueInFactByFnTemplateFnObj(fact *ast.SpecFactStmt) glob.
 		return glob.NewEmptyGlobUnknown()
 	}
 
-	fnTStruct, ok := ast.ObjFnT_To_FnTStruct(fnFn)
+	fnTStruct, ok := ast.AnonymousFnToInstFnTemplate(fnFn)
 	if !ok {
 		return glob.ErrRet(fmt.Errorf("%s is not obj type fn template", fnFn.String()))
 	}

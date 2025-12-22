@@ -62,7 +62,7 @@ func (ver *Verifier) parasSatisfyFnReq(fnObj *ast.FnObj, state *VerState) ExecRe
 			return NewExecErr("curRetSet is not an FnObj")
 		}
 
-		curFnTStruct, err = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
+		curFnTStruct, err = ver.GetInstFnSet_CheckFnSetParamsReq(curRetSet, state)
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
@@ -91,8 +91,8 @@ func (ver *Verifier) parasSatisfyFnReq(fnObj *ast.FnObj, state *VerState) ExecRe
 	return NewEmptyExecTrue()
 }
 
-func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FnObj, state *VerState) (*ast.FnTStruct, error) {
-	if FnObjTypeToFnTStruct, ok := ast.ObjFnT_To_FnTStruct(fnTName); ok {
+func (ver *Verifier) GetInstFnSet_CheckFnSetParamsReq(fnTName *ast.FnObj, state *VerState) (*ast.FnTemplate, error) {
+	if FnObjTypeToFnTStruct, ok := ast.AnonymousFnToInstFnTemplate(fnTName); ok {
 		return FnObjTypeToFnTStruct, nil
 	} else {
 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
@@ -100,11 +100,11 @@ func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FnObj
 			return nil, fmt.Errorf("fnTNameHead is not an atom")
 		}
 
-		return ver.getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTNameHeadAsAtom, fnTName.Params, state)
+		return ver.getFnSetDef_InstFnInFnSet_CheckParamsSatisfyFnSetReq(fnTNameHeadAsAtom, fnTName.Params, state)
 	}
 }
 
-func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDefName ast.Atom, templateParams []ast.Obj, state *VerState) (*ast.FnTStruct, error) {
+func (ver *Verifier) getFnSetDef_InstFnInFnSet_CheckParamsSatisfyFnSetReq(fnTDefName ast.Atom, templateParams []ast.Obj, state *VerState) (*ast.FnTemplate, error) {
 	defOfT := ver.Env.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
 		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)
@@ -126,7 +126,7 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDef
 	return defOfT.Fn.Instantiate(uniMap)
 }
 
-func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.FnTemplateDefStmt, uniMap map[string]ast.Obj, state *VerState) ExecRet {
+func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.DefFnSetStmt, uniMap map[string]ast.Obj, state *VerState) ExecRet {
 	ver.newEnv()
 	defer ver.deleteEnv()
 
@@ -145,7 +145,7 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 	return NewEmptyExecTrue()
 }
 
-func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParams ast.ObjSlice, fnTStruct *ast.FnTStruct, state *VerState) ExecRet {
+func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParams ast.ObjSlice, fnTStruct *ast.FnTemplate, state *VerState) ExecRet {
 	if len(concreteParams) != len(fnTStruct.ParamSets) {
 		return NewExecErr("params and sets length mismatch")
 	}

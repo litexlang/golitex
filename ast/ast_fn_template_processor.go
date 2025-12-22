@@ -16,7 +16,7 @@ package litex_ast
 
 import "fmt"
 
-func (stmt *FnTStruct) Instantiate(uniMap map[string]Obj) (*FnTStruct, error) {
+func (stmt *FnTemplate) Instantiate(uniMap map[string]Obj) (*FnTemplate, error) {
 	var err error
 
 	newParamSets := make(ObjSlice, len(stmt.ParamSets))
@@ -51,7 +51,7 @@ func (stmt *FnTStruct) Instantiate(uniMap map[string]Obj) (*FnTStruct, error) {
 	return NewFnTStruct(stmt.Params, newParamSets, newRetSet, newDomFacts, newThenFacts, stmt.Line), nil
 }
 
-func (stmt *FnTStruct) Instantiate_FnTDefParams(templateParams []string, params []Obj) (*FnTStruct, error) {
+func (stmt *FnTemplate) Instantiate_FnTDefParams(templateParams []string, params []Obj) (*FnTemplate, error) {
 	if len(params) != len(templateParams) {
 		return nil, fmt.Errorf("params length mismatch")
 	}
@@ -64,7 +64,7 @@ func (stmt *FnTStruct) Instantiate_FnTDefParams(templateParams []string, params 
 	return stmt.Instantiate(uniMap)
 }
 
-func (stmt *FnTStruct) InstantiateFnStruct_FnName(fnTName string, obj Obj) (*FnTStruct, error) {
+func (stmt *FnTemplate) InstantiateFnStruct_FnName(fnTName string, obj Obj) (*FnTemplate, error) {
 	uniMap := map[string]Obj{fnTName: obj}
 	return stmt.Instantiate(uniMap)
 }

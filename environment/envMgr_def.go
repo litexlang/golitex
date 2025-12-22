@@ -87,7 +87,7 @@ func (envMgr *EnvMgr) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob
 	return glob.NewEmptyGlobTrue()
 }
 
-func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.FnTemplateDefStmt) glob.GlobRet {
+func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.DefFnSetStmt) glob.GlobRet {
 	// fn名不能和parameter名重叠
 	if slices.Contains(stmt.TemplateDefHeader.Params, string(name)) {
 		return glob.ErrRet(fmt.Errorf("fn name %s cannot be the same as parameter name %s", name, name))

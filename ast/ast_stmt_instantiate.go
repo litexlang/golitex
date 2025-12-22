@@ -539,7 +539,7 @@ func (stmt *KnowExistPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) 
 // 	return stmt, nil
 // }
 
-func (stmt *FnTemplateDefStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+func (stmt *DefFnSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newTemplateDefHeader, err := stmt.TemplateDefHeader.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
@@ -552,7 +552,7 @@ func (stmt *FnTemplateDefStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) 
 	if err != nil {
 		return nil, err
 	}
-	return NewFnTemplateStmt(newTemplateDefHeader, newTemplateDomFacts, newFn, stmt.Line), nil
+	return NewDefFnSetStmt(newTemplateDefHeader, newTemplateDomFacts, newFn, stmt.Line), nil
 }
 
 func (stmt *ClearStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

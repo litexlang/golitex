@@ -191,7 +191,7 @@ func (objFn *FnObj) IsObjFn_HasAtomHead_ReturnHead() (Atom, bool) {
 	return head, true
 }
 
-func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(fnObj *FnObj) (*FnTStruct, error) {
+func (stmt *DefFnSetStmt) Instantiate_GetFnTemplateNoName(fnObj *FnObj) (*FnTemplate, error) {
 	uniMap := map[string]Obj{}
 	templateParams := stmt.TemplateDefHeader.Params
 	if len(templateParams) != len(fnObj.Params) {
@@ -233,7 +233,7 @@ func (objFn *FnObj) HasHeadInSlice(headNames []string) bool {
 	return slices.Contains(headNames, string(headAtom))
 }
 
-func (objAsFnObj *FnObj) FnTObj_ToFnTNoName() (*FnTStruct, error) {
+func (objAsFnObj *FnObj) FnTObj_ToFnTNoName() (*FnTemplate, error) {
 	objAsFnObjHeadAsFnObj, ok := objAsFnObj.FnHead.(*FnObj)
 	if !ok {
 		return nil, fmt.Errorf("expected ObjFn, but got %T", objAsFnObj.FnHead)
@@ -274,7 +274,7 @@ func GetFnHeadChain_AndItSelf(obj Obj) ([]Obj, [][]Obj) {
 	}
 }
 
-func (objAsFnObj *FnObj) IsFnT_ObjFn_Ret_ParamSets_And_RetSet(fnObj *FnObj) (bool, []Obj, Obj) {
+func (objAsFnObj *FnObj) GetParamSetsAndRetSetOfAnonymousFn(fnObj *FnObj) (bool, []Obj, Obj) {
 	if !IsFnTemplate_ObjFn(objAsFnObj) {
 		return false, nil, nil
 	}
@@ -315,8 +315,8 @@ func InstFacts(facts []FactStmt, uniMap map[string]Obj) ([]FactStmt, error) {
 	return newFacts, nil
 }
 
-func ObjFnT_To_FnTStruct(objFnTypeT *FnObj) (*FnTStruct, bool) {
-	ok, paramSets, retSet := objFnTypeT.IsFnT_ObjFn_Ret_ParamSets_And_RetSet(objFnTypeT)
+func AnonymousFnToInstFnTemplate(objFnTypeT *FnObj) (*FnTemplate, bool) {
+	ok, paramSets, retSet := objFnTypeT.GetParamSetsAndRetSetOfAnonymousFn(objFnTypeT)
 	if !ok {
 		return nil, false
 	}
