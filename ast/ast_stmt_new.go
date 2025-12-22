@@ -88,8 +88,8 @@ func NewOrStmt(orFacts []*SpecFactStmt, line uint) *OrStmt {
 	return &OrStmt{orFacts, line}
 }
 
-func NewImportDirStmt(path string, asPkgName string, line uint) *ImportDirStmt {
-	return &ImportDirStmt{path, asPkgName, line}
+func NewImportDirStmt(path string, asPkgName string, IsGlobalPkg bool, line uint) *ImportDirStmt {
+	return &ImportDirStmt{path, asPkgName, IsGlobalPkg, line}
 }
 
 func NewProveStmt(proof []Stmt, line uint) *ProveStmt {

@@ -1861,7 +1861,7 @@ func (p *TbParser) doNothingStmt(tb *tokenBlock) (Stmt, error) {
 	return NewDoNothingStmt(tb.line), nil
 }
 
-func (p *TbParser) importDirStmt(tb *tokenBlock) (Stmt, error) {
+func (p *TbParser) importDirStmt(tb *tokenBlock) (*ImportDirStmt, error) {
 	err := tb.header.skip(glob.KeywordImport)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -1885,7 +1885,7 @@ func (p *TbParser) importDirStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		return NewImportDirStmt(path, asPkgName, tb.line), nil
+		return NewImportDirStmt(path, asPkgName, false, tb.line), nil
 	}
 
 	pkgName, err := tb.header.next()
@@ -1906,11 +1906,11 @@ func (p *TbParser) importDirStmt(tb *tokenBlock) (Stmt, error) {
 		}
 	}
 
-	path, err := glob.ResolveSystemPackagePath(pkgName)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-	return NewImportDirStmt(path, asPkgName, tb.line), nil
+	// path, err := glob.ResolveSystemPackagePath(pkgName)
+	// if err != nil {
+	// 	return nil, ErrInLine(err, tb)
+	// }
+	return NewImportDirStmt(pkgName, asPkgName, true, tb.line), nil
 }
 
 func (p *TbParser) proveImplicationStmt(tb *tokenBlock) (Stmt, error) {
