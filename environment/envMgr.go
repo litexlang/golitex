@@ -28,12 +28,12 @@ type EnvMgr struct {
 	PkgMgr   *EnvPkgMgr
 	EnvSlice []EnvMemory
 
-	AllDefinedAtomObjNames    map[string]*ast.DefLetStmt
-	AllDefinedPropNames       map[string]*ast.DefPropStmt
-	AllDefinedExistPropNames  map[string]*ast.DefExistPropStmt
-	AllDefinedFnTemplateNames map[string]*ast.DefFnSetStmt
-	AllDefinedAlgoNames       map[string]*ast.DefAlgoStmt
-	AllDefinedProveAlgoNames  map[string]*ast.DefProveAlgoStmt
+	AllDefinedAtomObjNames   map[string]*ast.DefLetStmt
+	AllDefinedPropNames      map[string]*ast.DefPropStmt
+	AllDefinedExistPropNames map[string]*ast.DefExistPropStmt
+	AllDefinedFnSetNames     map[string]*ast.DefFnSetStmt
+	AllDefinedAlgoNames      map[string]*ast.DefAlgoStmt
+	AllDefinedProveAlgoNames map[string]*ast.DefProveAlgoStmt
 }
 
 type EnvMemory struct {
@@ -81,14 +81,14 @@ func NewEnvMemory() *EnvMemory {
 
 func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames map[string]*ast.DefLetStmt, allDefinedPropNames map[string]*ast.DefPropStmt, allDefinedExistPropNames map[string]*ast.DefExistPropStmt, allDefinedFnTemplateNames map[string]*ast.DefFnSetStmt, allDefinedAlgoNames map[string]*ast.DefAlgoStmt, allDefinedProveAlgoNames map[string]*ast.DefProveAlgoStmt) *EnvMgr {
 	return &EnvMgr{
-		AllDefinedAtomObjNames:    allDefinedAtomObjNames,
-		AllDefinedPropNames:       allDefinedPropNames,
-		AllDefinedExistPropNames:  allDefinedExistPropNames,
-		AllDefinedFnTemplateNames: allDefinedFnTemplateNames,
-		AllDefinedAlgoNames:       allDefinedAlgoNames,
-		AllDefinedProveAlgoNames:  allDefinedProveAlgoNames,
-		PkgMgr:                    pkgMgr,
-		EnvSlice:                  envMemory,
+		AllDefinedAtomObjNames:   allDefinedAtomObjNames,
+		AllDefinedPropNames:      allDefinedPropNames,
+		AllDefinedExistPropNames: allDefinedExistPropNames,
+		AllDefinedFnSetNames:     allDefinedFnTemplateNames,
+		AllDefinedAlgoNames:      allDefinedAlgoNames,
+		AllDefinedProveAlgoNames: allDefinedProveAlgoNames,
+		PkgMgr:                   pkgMgr,
+		EnvSlice:                 envMemory,
 	}
 }
 
@@ -108,7 +108,7 @@ func NewBuiltinEnvMgr(envMgr *EnvMgr) *EnvMgr {
 	}
 	newAllDefinedFnTemplateNames := make(map[string]*ast.DefFnSetStmt)
 	for k := range builtinEnvMemory.FnTemplateDefMem {
-		newAllDefinedFnTemplateNames[k] = envMgr.AllDefinedFnTemplateNames[k]
+		newAllDefinedFnTemplateNames[k] = envMgr.AllDefinedFnSetNames[k]
 	}
 	newAllDefinedAlgoNames := make(map[string]*ast.DefAlgoStmt)
 	for k := range builtinEnvMemory.AlgoDefMem {
@@ -152,7 +152,7 @@ func (envMgr *EnvMgr) DeleteEnv() {
 		delete(envMgr.AllDefinedExistPropNames, k)
 	}
 	for k := range envMgr.CurEnv().FnTemplateDefMem {
-		delete(envMgr.AllDefinedFnTemplateNames, k)
+		delete(envMgr.AllDefinedFnSetNames, k)
 	}
 	for k := range envMgr.CurEnv().AlgoDefMem {
 		delete(envMgr.AllDefinedAlgoNames, k)

@@ -254,3 +254,11 @@ func (envMgr *EnvMgr) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
 	facts, ok := envMgr.CurEnv().EqualMem[objAsStr]
 	return facts, ok
 }
+
+func (envMgr *EnvMgr) FnObjHeadIsAtomAndIsFnSet(fnObj *ast.FnObj) bool {
+	if asAtom, ok := fnObj.FnHead.(ast.Atom); ok {
+		return envMgr.AllDefinedFnSetNames[string(asAtom)] != nil
+	}
+
+	return false
+}
