@@ -21,8 +21,9 @@ import (
 )
 
 type EnvPkgMgr struct {
-	PkgPathEnvPairs map[string]*EnvMgr
-	PkgPathNameMgr  *pkgMgr.PathNameMgr
+	PkgPathEnvPairs  map[string]*EnvMgr
+	PkgPathNameMgr   *pkgMgr.PathNameMgr
+	EntranceRepoPath string
 }
 
 // 为了确保实现上的简单性，不允许用重复的asPkgName
@@ -53,9 +54,10 @@ func (mgr *EnvPkgMgr) MergeGivenExecPkgMgr(importDirStmt *ast.ImportDirStmt, cur
 	return nil
 }
 
-func NewPkgMgr() *EnvPkgMgr {
+func NewPkgMgr(entranceRepoPath string) *EnvPkgMgr {
 	return &EnvPkgMgr{
-		PkgPathEnvPairs: make(map[string]*EnvMgr),
-		PkgPathNameMgr:  pkgMgr.NewPathNameMgr(),
+		PkgPathEnvPairs:  make(map[string]*EnvMgr),
+		PkgPathNameMgr:   pkgMgr.NewPathNameMgr(),
+		EntranceRepoPath: entranceRepoPath,
 	}
 }

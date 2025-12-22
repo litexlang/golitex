@@ -31,3 +31,15 @@ func Test_File(t *testing.T) {
 	executionTime := time.Since(start)
 	fmt.Printf("execution time: %s\n", executionTime)
 }
+
+func Test_ImportFile(t *testing.T) {
+	fileName := "../examples/test_import/main.lit"
+	start := time.Now()
+	ret := RunFile(fileName)
+	if ret.IsNotTrue() {
+		t.Errorf("failed to run file %s\n", fileName)
+	}
+	fmt.Println(ret.StringWithOptimizedNewline())
+	executionTime := time.Since(start)
+	fmt.Printf("execution time: %s\n", executionTime)
+}
