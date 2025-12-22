@@ -257,7 +257,8 @@ func (envMgr *EnvMgr) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
 
 func (envMgr *EnvMgr) FnObjHeadIsAtomAndIsFnSet(fnObj *ast.FnObj) bool {
 	if asAtom, ok := fnObj.FnHead.(ast.Atom); ok {
-		return envMgr.AllDefinedFnSetNames[string(asAtom)] != nil
+		_, ok := envMgr.AllDefinedFnSetNames[string(asAtom)]
+		return ok
 	}
 
 	return false

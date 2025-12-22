@@ -67,7 +67,7 @@ func (p *TbParser) objInfixExpr(tb *tokenBlock, currentPrec glob.BuiltinOptPrece
 		}
 
 		// Handle backslash operator (e.g., x \mul y)
-		if curToken == glob.KeySymbolBackSlash {
+		if curToken == glob.KeySymbolSlah {
 			fn, err := p.backSlashExpr(tb)
 			if err != nil {
 				return nil, err
@@ -460,7 +460,7 @@ func (p *TbParser) fnSet(tb *tokenBlock) (Obj, error) {
 }
 
 func (p *TbParser) backSlashExpr(tb *tokenBlock) (Obj, error) {
-	err := tb.header.skip(glob.KeySymbolBackSlash)
+	err := tb.header.skip(glob.KeySymbolSlah)
 	if err != nil {
 		return nil, err
 	}
