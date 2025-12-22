@@ -74,6 +74,9 @@ func (envMgr *EnvMgr) AtomObjDefinedOrBuiltin(atom ast.Atom, extraParams map[str
 
 	// Check if it's defined by user
 	ret := envMgr.IsAtomObjDefinedByUser(atom)
+	if ret.IsErr() {
+		return ret
+	}
 	if ret.IsTrue() {
 		return glob.NewEmptyGlobTrue()
 	}
@@ -299,19 +302,29 @@ func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet 
 		PkgNameAndAtomName := strings.Split(string(AtomObjName), glob.PkgNameAtomSeparator)
 		PkgName := PkgNameAndAtomName[0]
 		AtomName := PkgNameAndAtomName[1]
-		pkgPath, ok := envMgr.PkgMgr.AbsPathNameMgr.NameAbsPathMap[PkgName]
-		if !ok {
-			return glob.ErrRet(fmt.Errorf("package %s is not found", PkgName))
+
+		if envMgr.PkgMgr.CurDefaultPkgName != PkgName {
+			pkgPath, ok := envMgr.PkgMgr.AbsPathNameMgr.NameAbsPathMap[PkgName]
+			if !ok {
+				return glob.ErrRet(fmt.Errorf("package %s is not found", PkgName))
+			}
+			pkgPathEnv, ok := envMgr.PkgMgr.AbsPkgPathEnvPairs[pkgPath]
+			if !ok {
+				return glob.ErrRet(fmt.Errorf("package environment for %s is not found", PkgName))
+			}
+			ret := pkgPathEnv.AtomObjDefinedOrBuiltin(ast.Atom(AtomName), make(map[string]struct{}))
+			if ret.IsTrue() {
+				return glob.NewEmptyGlobTrue()
+			}
+			return ret
+		} else {
+			_, ok := envMgr.AllDefinedAtomObjNames[string(AtomName)]
+			if ok {
+				return glob.NewEmptyGlobTrue()
+			}
+
+			return glob.ErrRet(fmt.Errorf("undefined: %s", AtomObjName))
 		}
-		pkgPathEnv, ok := envMgr.PkgMgr.AbsPkgPathEnvPairs[pkgPath]
-		if !ok {
-			return glob.ErrRet(fmt.Errorf("package environment for %s is not found", PkgName))
-		}
-		ret := pkgPathEnv.AtomObjDefinedOrBuiltin(ast.Atom(AtomName), make(map[string]struct{}))
-		if ret.IsTrue() {
-			return glob.NewEmptyGlobTrue()
-		}
-		return ret
 	}
 
 	// Search from current depth upward to depth 0
@@ -319,11 +332,6 @@ func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet 
 	if ok {
 		return glob.NewEmptyGlobTrue()
 	}
-
-	// // TODO: 这里其实有点问题，应该独立出来，因为 fn_template 可能不能算 atom
-	// if _, ok := envMgr.AllDefinedFnTemplateNames[string(AtomObjName)]; ok {
-	// 	return glob.NewEmptyGlobTrue()
-	// }
 
 	return glob.ErrRet(fmt.Errorf("undefined: %s", AtomObjName))
 }

@@ -16,6 +16,7 @@ package litex_ast
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	glob "golitex/glob"
@@ -1885,6 +1886,16 @@ func (p *TbParser) importDirStmt(tb *tokenBlock) (*ImportDirStmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
+		// get abs path of path
+		// working absolute path is relative to the working directory
+
+		absPath := filepath.Join(p.curParsingDirPath, path)
+
+		err = p.PkgPathNameMgr.AddNamePath(asPkgName, absPath)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
 		return NewImportDirStmt(path, asPkgName, false, tb.line), nil
 	}
 
@@ -1901,6 +1912,16 @@ func (p *TbParser) importDirStmt(tb *tokenBlock) (*ImportDirStmt, error) {
 		}
 
 		asPkgName, err = tb.header.next()
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		path, err := glob.GetGlobalPkgAbsPath(pkgName)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		err = p.PkgPathNameMgr.AddNamePath(asPkgName, path)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}

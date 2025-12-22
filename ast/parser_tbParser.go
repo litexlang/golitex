@@ -26,15 +26,17 @@ type TbParser struct {
 	CurPkgName                    string
 	DefinedNamesAtEachParseEnv    DefinedNameAtEachParseEnv
 	AllDefinedNamesExceptPkgNames map[string]struct{}
+	curParsingDirPath             string
 }
 
-func NewTbParser(curPkgName string, pkgPathNameMgr *pkgMgr.AbsPathNameMgr) *TbParser {
+func NewTbParser(curPkgName string, pkgPathNameMgr *pkgMgr.AbsPathNameMgr, curParsingDirPath string) *TbParser {
 	return &TbParser{
 		FreeParams:                    make(map[string]struct{}),
 		PkgPathNameMgr:                pkgPathNameMgr,
 		CurPkgName:                    curPkgName,
 		DefinedNamesAtEachParseEnv:    NewDefinedNameAtEachParseEnv(),
 		AllDefinedNamesExceptPkgNames: make(map[string]struct{}),
+		curParsingDirPath:             curParsingDirPath,
 	}
 }
 
