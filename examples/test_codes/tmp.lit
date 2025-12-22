@@ -1,23 +1,25 @@
-claim:
-    forall a, b, x R:
-        x^2 + 2 * a * x + b = 0
-        a^2 - b >= 0
-        =>:
-            x = -a + sqrt(a^2 - b) or x = -a - sqrt(a^2 - b)
+# Test prove_for with multiple ranges
+# Example 1: Simple case - prove i + j >= 3 for i in [1, 5) and j in [2, 4] (closed)
+prove_for i $in range(1, 5), j $in closed_range(2, 4):
+    =>:
+        i + j >= 3
     prove:
-        sqrt(a^2 - b) * sqrt(a^2 - b) = sqrt(a^2 - b) ^ 2 = a^2 - b
-        (x + a - sqrt(a^2 - b)) * (x + a + sqrt(a^2 - b)) = x ^ 2 + 2 * a * x + a^2 - sqrt(a^2 - b) ^ 2 = x ^ 2 + 2 * a * x + a^2 - (a^2 - b) = x ^ 2 + 2 * a * x + b = 0
-        $product_is_0_then_at_least_one_factor_is_0(x + a - sqrt(a^2 - b), x + a + sqrt(a^2 - b))
-        
-        prove_in_each_case:
-            x + a + sqrt(a^2 - b) = 0 or x + a - sqrt(a^2 - b) = 0
-            =>:
-                x = -a + sqrt(a^2 - b) or x = -a - sqrt(a^2 - b)
-            prove:
-                x + a + sqrt(a^2 - b) + (-a - sqrt(a^2 - b)) = 0 + (-a - sqrt(a^2 - b))
-                x = 0 + (-a - sqrt(a^2 - b))
-                x = -a - sqrt(a^2 - b) 
-            prove:
-                x + a - sqrt(a^2 - b) + (-a + sqrt(a^2 - b)) = 0 + (-a + sqrt(a^2 - b))
-                x = 0 + (-a + sqrt(a^2 - b))
-                x = -a + sqrt(a^2 - b)
+        do_nothing
+
+# Example 2: With domain condition - prove that for even i and odd j, i + j is odd
+prove_for i $in range(1, 6), j $in closed_range(1, 5):
+    dom:
+        i % 2 = 0
+        j % 2 = 1
+    =>:
+        (i + j) % 2 = 1
+    prove:
+        do_nothing
+
+# Example 3: Three parameters - prove i + j + k >= 4 for i in [1, 3), j in [2, 4), k in [1, 3] (closed)
+# Minimum: i=1, j=2, k=1 => 1+2+1=4 >= 4 ✓
+prove_for i $in range(1, 3), j $in range(2, 4), k $in closed_range(1, 3):
+    =>:
+        i + j + k >= 4
+    prove:
+        do_nothing

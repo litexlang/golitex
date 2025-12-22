@@ -479,10 +479,10 @@ type HaveObjFromCartSetStmt struct {
 //         know $p(i)
 
 type ProveForStmt struct {
-	Param         string
-	Left          Obj
-	Right         Obj
-	IsProveIRange bool
+	Params        StrSlice
+	Lefts         ObjSlice
+	Rights        ObjSlice
+	IsProveIRange []bool // true for range, false for closed_range
 	DomFacts      FactStmtSlice
 	ThenFacts     FactStmtSlice
 	Proofs        StmtSlice
