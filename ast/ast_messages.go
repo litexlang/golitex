@@ -953,21 +953,28 @@ func (stmt *ProveForStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveFor)
 	builder.WriteString(" ")
-	builder.WriteString(stmt.Param)
-	builder.WriteString(" ")
-	builder.WriteString(glob.FuncFactPrefix)
-	builder.WriteString(glob.KeywordIn)
-	builder.WriteString(" ")
-	if stmt.IsProveIRange {
-		builder.WriteString(glob.KeywordRange)
-	} else {
-		builder.WriteString(glob.KeywordClosedRange)
+	
+	// Write all param $in range(...) pairs
+	for i, param := range stmt.Params {
+		if i > 0 {
+			builder.WriteString(", ")
+		}
+		builder.WriteString(param)
+		builder.WriteString(" ")
+		builder.WriteString(glob.FuncFactPrefix)
+		builder.WriteString(glob.KeywordIn)
+		builder.WriteString(" ")
+		if stmt.IsProveIRange[i] {
+			builder.WriteString(glob.KeywordRange)
+		} else {
+			builder.WriteString(glob.KeywordClosedRange)
+		}
+		builder.WriteString("(")
+		builder.WriteString(stmt.Lefts[i].String())
+		builder.WriteString(", ")
+		builder.WriteString(stmt.Rights[i].String())
+		builder.WriteString(")")
 	}
-	builder.WriteString("(")
-	builder.WriteString(stmt.Left.String())
-	builder.WriteString(", ")
-	builder.WriteString(stmt.Right.String())
-	builder.WriteString(")")
 	builder.WriteString(":")
 
 	hasDom := len(stmt.DomFacts) > 0

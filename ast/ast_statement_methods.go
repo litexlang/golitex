@@ -398,19 +398,29 @@ func TransformEnumToUniFact(setName Obj, enumObjs []Obj) (*UniFactStmt, []*SpecF
 // }
 
 func (stmt *ProveForStmt) UniFact() *UniFactStmt {
-	params := []string{stmt.Param}
-	paramSets := []Obj{Atom(glob.KeywordInteger)}
-
-	// Build dom facts based on range type
-	domFacts := []FactStmt{
-		NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLessEqual), []Obj{stmt.Left, Atom(stmt.Param)}, stmt.Line),
+	params := stmt.Params
+	paramSets := make([]Obj, len(params))
+	for i := range params {
+		paramSets[i] = Atom(glob.KeywordInteger)
 	}
-	if stmt.IsProveIRange {
-		// range: left <= param < right
-		domFacts = append(domFacts, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLess), []Obj{Atom(stmt.Param), stmt.Right}, stmt.Line))
-	} else {
-		// closed_range: left <= param <= right
-		domFacts = append(domFacts, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLessEqual), []Obj{Atom(stmt.Param), stmt.Right}, stmt.Line))
+
+	// Build dom facts based on range type for each parameter
+	domFacts := []FactStmt{}
+	for i, param := range params {
+		left := stmt.Lefts[i]
+		right := stmt.Rights[i]
+		isRange := stmt.IsProveIRange[i]
+		
+		// left <= param
+		domFacts = append(domFacts, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLessEqual), []Obj{left, Atom(param)}, stmt.Line))
+		
+		if isRange {
+			// range: left <= param < right
+			domFacts = append(domFacts, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLess), []Obj{Atom(param), right}, stmt.Line))
+		} else {
+			// closed_range: left <= param <= right
+			domFacts = append(domFacts, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLessEqual), []Obj{Atom(param), right}, stmt.Line))
+		}
 	}
 	// Add user-provided dom facts
 	domFacts = append(domFacts, stmt.DomFacts...)

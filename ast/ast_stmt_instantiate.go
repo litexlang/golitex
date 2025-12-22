@@ -668,14 +668,24 @@ func (stmt *HaveFnCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 }
 
 func (stmt *ProveForStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newLeft, err := stmt.Left.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
+	newLefts := make([]Obj, len(stmt.Lefts))
+	for i, left := range stmt.Lefts {
+		newLeft, err := left.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newLefts[i] = newLeft
 	}
-	newRight, err := stmt.Right.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
+	
+	newRights := make([]Obj, len(stmt.Rights))
+	for i, right := range stmt.Rights {
+		newRight, err := right.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newRights[i] = newRight
 	}
+	
 	newDomFacts, err := stmt.DomFacts.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
@@ -688,7 +698,7 @@ func (stmt *ProveForStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewProveForStmt(stmt.Param, newLeft, newRight, stmt.IsProveIRange, newDomFacts, newThenFacts, newProofs, stmt.Line), nil
+	return NewProveForStmt(stmt.Params, newLefts, newRights, stmt.IsProveIRange, newDomFacts, newThenFacts, newProofs, stmt.Line), nil
 }
 
 func (stmt *ProveImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

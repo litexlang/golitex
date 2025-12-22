@@ -725,34 +725,48 @@ func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) ExecRet {
 }
 
 func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) ExecRet {
-	left, execRet := exec.GetSimplifiedValue(stmt.Left)
-	if execRet.IsNotTrue() {
-		return execRet
+	// Generate integer lists for each range
+	ranges := [][]ast.Obj{}
+	for i := range len(stmt.Params) {
+		left, execRet := exec.GetSimplifiedValue(stmt.Lefts[i])
+		if execRet.IsNotTrue() {
+			return execRet
+		}
+
+		right, execRet := exec.GetSimplifiedValue(stmt.Rights[i])
+		if execRet.IsNotTrue() {
+			return execRet
+		}
+
+		leftAsInt, ok1 := ast.IsObjLiterallyIntNumber(left)
+		rightAsInt, ok2 := ast.IsObjLiterallyIntNumber(right)
+		if !ok1 || !ok2 {
+			return NewExecErr(fmt.Sprintf("left value %s and right value %s must be integers", left.String(), right.String()))
+		}
+
+		if leftAsInt > rightAsInt {
+			return NewExecErr(fmt.Sprintf("left value %d must be less than or equal to right value %d", leftAsInt, rightAsInt))
+		}
+
+		rightMost := rightAsInt
+		if !stmt.IsProveIRange[i] {
+			rightMost = rightAsInt + 1
+		}
+
+		// Generate integer list for this range
+		rangeValues := []ast.Obj{}
+		for j := leftAsInt; j < rightMost; j++ {
+			rangeValues = append(rangeValues, ast.Atom(fmt.Sprintf("%d", j)))
+		}
+		ranges = append(ranges, rangeValues)
 	}
 
-	right, execRet := exec.GetSimplifiedValue(stmt.Right)
-	if execRet.IsNotTrue() {
-		return execRet
-	}
+	// Calculate Cartesian product of all ranges
+	cartesianProductOfObjs := glob.CartesianProduct(ranges)
 
-	leftAsInt, ok1 := ast.IsObjLiterallyIntNumber(left)
-	rightAsInt, ok2 := ast.IsObjLiterallyIntNumber(right)
-	if !ok1 || !ok2 {
-		return NewExecErr(fmt.Sprintf("left value %s and right value %s must be integers", left.String(), right.String()))
-	}
-
-	if leftAsInt > rightAsInt {
-		return NewExecErr(fmt.Sprintf("left value %d must be less than or equal to right value %d", leftAsInt, rightAsInt))
-	}
-
-	rightMost := rightAsInt
-	if !stmt.IsProveIRange {
-		rightMost = rightAsInt + 1
-	}
-
-	// Iterate through all values in range [left, rightMost)
-	for i := leftAsInt; i < rightMost; i++ {
-		execRet := exec.proveForStmtWhenParamIsIndex(stmt, i)
+	// Iterate through all combinations
+	for _, combination := range cartesianProductOfObjs {
+		execRet := exec.proveForStmtWhenParamsAreIndices(stmt, combination)
 		if execRet.IsNotTrue() {
 			return execRet
 		}
@@ -768,14 +782,25 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) ExecRet {
 	return NewExecTrue(stmt.String())
 }
 
-func (exec *Executor) proveForStmtWhenParamIsIndex(stmt *ast.ProveForStmt, i int) ExecRet {
-	indexAsObj := ast.Atom(fmt.Sprintf("%d", i))
-	param := stmt.Param
-	uniMap := map[string]ast.Obj{param: indexAsObj}
+func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, indices []ast.Obj) ExecRet {
+	uniMap := map[string]ast.Obj{}
+	for i, param := range stmt.Params {
+		uniMap[param] = indices[i]
+	}
+
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
-	defObjStmt := ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordInteger)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(param), indexAsObj)}, stmt.Line)
+	// Create def let statements for all parameters
+	equalFacts := []ast.FactStmt{}
+	paramSets := make([]ast.Obj, len(stmt.Params))
+	for i, param := range stmt.Params {
+		equalFacts = append(equalFacts, ast.NewEqualFact(ast.Atom(param), indices[i]))
+		paramSets[i] = ast.Atom(glob.KeywordInteger)
+	}
+
+	defObjStmt := ast.NewDefLetStmt(stmt.Params, paramSets, equalFacts, stmt.Line)
+
 	execState := exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return execState
