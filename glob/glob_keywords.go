@@ -230,7 +230,7 @@ const (
 
 	KeySymbolSemiColon  = ";"
 	KeySymbolEquivalent = "<=>"
-	KeySymbolBackSlash  = "\\"
+	KeySymbolSlah       = "\\"
 	// KeySymbolQuestionMark = "?"
 
 )
@@ -265,7 +265,7 @@ var SymbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolRightArrow:   {}, // "=>"
 	KeySymbolSemiColon:    {}, // ";"
 	KeySymbolEquivalent:   {}, // "<=>"
-	KeySymbolBackSlash:    {},
+	KeySymbolSlah:         {},
 	// KeySymbolQuestionMark: {}, // "?"
 }
 
@@ -415,7 +415,6 @@ var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 	KeySymbolPower:       {},
 	KeySymbolSlash:       {},
 	KeySymbolPercent:     {},
-	KeywordFn:            {},
 }
 
 var BuiltinPropNames map[string]struct{} = map[string]struct{}{
