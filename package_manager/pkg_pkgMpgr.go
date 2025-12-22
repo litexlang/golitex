@@ -20,6 +20,7 @@ type AbsPathNameMgr struct {
 	NameAbsPathMap        map[string]string
 	AbsPathNamesSetMap    map[string]map[string]struct{}
 	AbsPathDefaultNameMap map[string]string // 默认第一次看到某个path的时候，我们认为它的名字就是这个名字，后续如果出现其他名字，则认为这个path有多个名字，但是默认名字还是第一次知道它的时候它的名字
+	CurPkgName            string
 }
 
 func NewPathNameMgr() *AbsPathNameMgr {
@@ -27,6 +28,7 @@ func NewPathNameMgr() *AbsPathNameMgr {
 		NameAbsPathMap:        make(map[string]string),
 		AbsPathNamesSetMap:    make(map[string]map[string]struct{}),
 		AbsPathDefaultNameMap: make(map[string]string),
+		CurPkgName:            "",
 	}
 }
 
@@ -72,4 +74,16 @@ func (mgr *AbsPathNameMgr) Merge(other *AbsPathNameMgr) error {
 		}
 	}
 	return nil
+}
+
+func (mgr *AbsPathNameMgr) GetDefaultPkgName(pkgName string) (string, error) {
+	if pkgName == "" {
+		return "", nil
+	}
+
+	path, ok := mgr.NameAbsPathMap[pkgName]
+	if !ok {
+		return pkgName, fmt.Errorf("package name %s not found", pkgName)
+	}
+	return mgr.AbsPathDefaultNameMap[path], nil
 }

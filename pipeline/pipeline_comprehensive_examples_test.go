@@ -57,7 +57,7 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 	allFilesStartTime := time.Now()
 
 	// 每次打开文件时重启 executor
-	envPkgMgr := env.NewPkgMgr(repo)
+	envPkgMgr := env.NewPkgMgr(repo, "")
 
 	envMgr, err := GetBuiltinEnvMgr(envPkgMgr)
 	if err != nil {

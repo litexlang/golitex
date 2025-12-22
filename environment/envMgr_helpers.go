@@ -263,3 +263,11 @@ func (envMgr *EnvMgr) FnObjHeadIsAtomAndIsFnSet(fnObj *ast.FnObj) bool {
 
 	return false
 }
+
+// func (envMgr *EnvMgr) NameWithPkgName(name string) string {
+// 	curPkgName := envMgr.PkgMgr.CurDefaultPkgName
+// 	if curPkgName == "" {
+// 		return name
+// 	}
+// 	return fmt.Sprintf("%s.%s", curPkgName, name)
+// }

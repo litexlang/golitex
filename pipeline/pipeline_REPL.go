@@ -21,7 +21,7 @@ func RunREPL(version string) {
 		return
 	}
 
-	envPkgMgr := env.NewPkgMgr(currDir)
+	envPkgMgr := env.NewPkgMgr(currDir, "")
 	envMgr, err := GetBuiltinEnvMgr(envPkgMgr)
 	if err != nil {
 		fmt.Println("Error initializing pipeline env:", err)

@@ -23,6 +23,7 @@ type EnvPkgMgr struct {
 	AbsPkgPathEnvPairs map[string]*EnvMgr
 	AbsPathNameMgr     *pkgMgr.AbsPathNameMgr
 	CurAbsRepoPath     string
+	CurDefaultPkgName  string
 }
 
 // 为了确保实现上的简单性，不允许用重复的asPkgName
@@ -34,31 +35,32 @@ func (mgr *EnvPkgMgr) MergeGivenExecPkgMgr(absRepoPath string, asPkgName string,
 	storedPkgEnv := pkgEnv.RemoveBuiltinEnv()
 	mgr.AbsPkgPathEnvPairs[absRepoPath] = storedPkgEnv
 
-	// 使用 PathNameMgr 的方法添加包名和路径的映射
-	if err := mgr.AbsPathNameMgr.AddNamePath(asPkgName, absRepoPath); err != nil {
-		return err
-	}
+	// // 使用 PathNameMgr 的方法添加包名和路径的映射
+	// if err := mgr.AbsPathNameMgr.AddNamePath(asPkgName, absRepoPath); err != nil {
+	// 	return err
+	// }
 
-	// 把 curExec 的 pkgMgr 合并到现在的 pkgMgr 中
-	for pkgPath, pkgEnv := range pkgEnv.PkgMgr.AbsPkgPathEnvPairs {
-		if _, ok := mgr.AbsPkgPathEnvPairs[pkgPath]; ok {
-			continue
-		}
-		mgr.AbsPkgPathEnvPairs[pkgPath] = pkgEnv
-	}
+	// // 把 curExec 的 pkgMgr 合并到现在的 pkgMgr 中
+	// for pkgPath, pkgEnv := range pkgEnv.PkgMgr.AbsPkgPathEnvPairs {
+	// 	if _, ok := mgr.AbsPkgPathEnvPairs[pkgPath]; ok {
+	// 		continue
+	// 	}
+	// 	mgr.AbsPkgPathEnvPairs[pkgPath] = pkgEnv
+	// }
 
-	// 使用 PathNameMgr 的 Merge 方法合并包名映射
-	if err := mgr.AbsPathNameMgr.Merge(pkgEnv.PkgMgr.AbsPathNameMgr); err != nil {
-		return err
-	}
+	// // 使用 PathNameMgr 的 Merge 方法合并包名映射
+	// if err := mgr.AbsPathNameMgr.Merge(pkgEnv.PkgMgr.AbsPathNameMgr); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
 
-func NewPkgMgr(entranceRepoPath string) *EnvPkgMgr {
+func NewPkgMgr(entranceRepoPath string, entranceDefaultPkgName string) *EnvPkgMgr {
 	return &EnvPkgMgr{
 		AbsPkgPathEnvPairs: make(map[string]*EnvMgr),
 		AbsPathNameMgr:     pkgMgr.NewPathNameMgr(),
 		CurAbsRepoPath:     entranceRepoPath,
+		CurDefaultPkgName:  entranceDefaultPkgName,
 	}
 }
