@@ -67,7 +67,7 @@ func (p *TbParser) objInfixExpr(tb *tokenBlock, currentPrec glob.BuiltinOptPrece
 		}
 
 		// Handle backslash operator (e.g., x \mul y)
-		if curToken == glob.KeySymbolSlah {
+		if curToken == glob.KeySymbolBackSlash {
 			fn, err := p.backSlashExpr(tb)
 			if err != nil {
 				return nil, err
@@ -194,7 +194,7 @@ func (p *TbParser) notNumberAtom(tb *tokenBlock) (Atom, error) {
 		pkgName := p.PkgPathNameMgr.AbsPathDefaultNameMap[pkgPath]
 		return Atom(fmt.Sprintf("%s%s%s", pkgName, glob.PkgNameAtomSeparator, rightValue)), nil
 	} else if p.CurPkgPath != glob.DefaultPkgName {
-		if p.IsNameDefinedInCurrentParseEnv(value) {
+		if _, ok := p.FreeParams[value]; !ok && p.IsNameDefinedInCurrentParseEnv(value) {
 			pkgName := p.PkgPathNameMgr.AbsPathDefaultNameMap[p.CurPkgPath]
 			return Atom(fmt.Sprintf("%s%s%s", pkgName, glob.PkgNameAtomSeparator, value)), nil
 		} else {
@@ -460,7 +460,7 @@ func (p *TbParser) fnSet(tb *tokenBlock) (Obj, error) {
 }
 
 func (p *TbParser) backSlashExpr(tb *tokenBlock) (Obj, error) {
-	err := tb.header.skip(glob.KeySymbolSlah)
+	err := tb.header.skip(glob.KeySymbolBackSlash)
 	if err != nil {
 		return nil, err
 	}
