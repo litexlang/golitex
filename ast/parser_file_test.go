@@ -44,7 +44,7 @@ func TestParseFile(t *testing.T) {
 			}
 
 			// 解析源代码
-			stmts, err := ParseSourceCode(string(content), "", pkgPathNameMgr)
+			stmts, err := ParseSourceCode(string(content), "", pkgPathNameMgr, "")
 			if err != nil {
 				t.Fatalf("Failed to parse file %s: %v", filePath, err)
 			}
@@ -96,7 +96,7 @@ func TestParseDirectory(t *testing.T) {
 				}
 
 				// 解析源代码
-				_, err = ParseSourceCode(string(content), "", pkgPathNameMgr)
+				_, err = ParseSourceCode(string(content), "", pkgPathNameMgr, "")
 				if err != nil {
 					t.Logf("✗ %s: Parse error: %v", filepath.Base(filePath), err)
 					failCount++
@@ -134,7 +134,7 @@ func TestParseQuickCheck(t *testing.T) {
 	fmt.Printf("==========================================\n\n")
 
 	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
-	stmts, err := ParseSourceCode(string(content), "", pkgPathNameMgr)
+	stmts, err := ParseSourceCode(string(content), "", pkgPathNameMgr, "")
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)
 	}
