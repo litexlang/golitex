@@ -256,12 +256,9 @@ type KnowExistPropStmt struct {
 	Line uint
 }
 
-// type LatexStmt struct {
-// 	Comment string
-
-// 	Line uint
-// }
-
+// have fn_set seq(s set):
+//
+//	fn (n N_pos) s # 这是fn_template了
 type DefFnSetStmt struct {
 	TemplateDefHeader *DefHeader
 	TemplateDomFacts  FactStmtSlice

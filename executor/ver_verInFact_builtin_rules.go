@@ -546,7 +546,7 @@ func (ver *Verifier) verInCartSet_DimAndElements(obj ast.Obj, cartSet *ast.FnObj
 			objElement = objCartSet.Params[i]
 		} else {
 			// Create indexed object: a[i]
-			objElement = ast.NewFnObj(ast.Atom(glob.KeywordIndexOpt), []ast.Obj{obj, indexObj})
+			objElement = ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{obj, indexObj})
 		}
 
 		// Verify a[i] $in cartSet.Params[i]
@@ -917,7 +917,7 @@ func (ver *Verifier) verInFactByLeftIsIndexOfObjInSomeSet(stmt *ast.SpecFactStmt
 		return NewEmptyExecUnknown()
 	}
 
-	if leftAsFn.FnHead.String() != glob.KeywordIndexOpt {
+	if leftAsFn.FnHead.String() != glob.KeywordObjAtIndexOpt {
 		return NewEmptyExecUnknown()
 	}
 
