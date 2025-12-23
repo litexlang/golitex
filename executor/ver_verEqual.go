@@ -187,7 +187,7 @@ func (ver *Verifier) verEqualSpecMem(left ast.Obj, right ast.Obj, state *VerStat
 		}
 	}
 
-	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMap {
+	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
 		curEnv := pkgEnvMgr.EnvSlice[0]
 		verRet := ver.equalFact_SpecMem_atEnv(&curEnv, left, right, state)
 		if verRet.IsErr() || verRet.IsTrue() {

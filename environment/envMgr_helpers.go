@@ -271,3 +271,12 @@ func (envMgr *EnvMgr) NameWithPkgName(name string) string {
 	}
 	return fmt.Sprintf("%s.%s", curPkgName, name)
 }
+
+func (envMgr *EnvMgr) GetEnvMgrOfPkgName(pkgName string) *EnvMgr {
+	path, ok := envMgr.EnvPkgMgr.PkgMgr.NameAbsPathMap[pkgName]
+	if !ok {
+		return nil
+	}
+
+	return envMgr.EnvPkgMgr.AbsPkgPathEnvMgrMap[path]
+}
