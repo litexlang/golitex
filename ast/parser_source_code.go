@@ -34,7 +34,7 @@ func ParseSourceCode(code string, pkgPathNameMgr *pkgMgr.PkgMgr) ([]Stmt, error)
 	}
 
 	ret := []Stmt{}
-	p := NewTbParser(pkgPathNameMgr)
+	p := NewTbParser(pkgPathNameMgr, blocks)
 	for _, block := range blocks {
 		cur, err := p.Stmt(&block)
 		if err != nil {
