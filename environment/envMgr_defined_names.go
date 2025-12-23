@@ -303,7 +303,7 @@ func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet 
 		PkgName := PkgNameAndAtomName[0]
 		AtomName := PkgNameAndAtomName[1]
 
-		if envMgr.EnvPkgMgr.PkgMgr.CurPkgDefaultName_EmptyWhenREPL != PkgName {
+		if envMgr.EnvPkgMgr.PkgMgr.CurPkgDefaultName != PkgName {
 			pkgPath, ok := envMgr.EnvPkgMgr.PkgMgr.NameAbsPathMap[PkgName]
 			if !ok {
 				return glob.ErrRet(fmt.Errorf("package %s is not found", PkgName))
