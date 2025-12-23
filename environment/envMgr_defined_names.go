@@ -299,31 +299,33 @@ func (envMgr *EnvMgr) AtomsInEqualsFactDefined(stmt *ast.EqualsFactStmt, extraPa
 
 func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet {
 	if strings.Contains(string(AtomObjName), glob.PkgNameAtomSeparator) {
-		PkgNameAndAtomName := strings.Split(string(AtomObjName), glob.PkgNameAtomSeparator)
-		PkgName := PkgNameAndAtomName[0]
-		AtomName := PkgNameAndAtomName[1]
+		pkgNameAndAtomName := strings.Split(string(AtomObjName), glob.PkgNameAtomSeparator)
+		pkgName := pkgNameAndAtomName[0]
+		atomName := pkgNameAndAtomName[1]
 
-		if envMgr.EnvPkgMgr.PkgMgr.CurPkgDefaultName != PkgName {
-			pkgPath, ok := envMgr.EnvPkgMgr.PkgMgr.NameAbsPathMap[PkgName]
-			if !ok {
-				return glob.ErrRet(fmt.Errorf("package %s is not found", PkgName))
+		if pkgName != envMgr.EnvPkgMgr.PkgMgr.CurPkgDefaultName {
+			// 这时候我不是在执行 import repo
+
+			pkgEnvMgr := envMgr.GetEnvMgrOfPkgName(pkgName)
+			if pkgEnvMgr == nil {
+				return glob.ErrRet(fmt.Errorf("package %s is not found", pkgName))
 			}
-			pkgPathEnv, ok := envMgr.EnvPkgMgr.AbsPkgPathEnvMap[pkgPath]
-			if !ok {
-				return glob.ErrRet(fmt.Errorf("package environment for %s is not found", PkgName))
-			}
-			ret := pkgPathEnv.AtomObjDefinedOrBuiltin(ast.Atom(AtomName), make(map[string]struct{}))
-			if ret.IsTrue() {
-				return glob.NewEmptyGlobTrue()
-			}
-			return ret
-		} else {
-			_, ok := envMgr.AllDefinedAtomObjNames[string(AtomName)]
+
+			_, ok := pkgEnvMgr.AllDefinedAtomObjNames[string(atomName)]
 			if ok {
 				return glob.NewEmptyGlobTrue()
 			}
 
-			return glob.ErrRet(fmt.Errorf("undefined: %s", AtomObjName))
+			return glob.ErrRet(fmt.Errorf("undefined object: %s", AtomObjName))
+		} else {
+			// 这时候我是在执行 import
+
+			_, ok := envMgr.AllDefinedAtomObjNames[string(atomName)]
+			if ok {
+				return glob.NewEmptyGlobTrue()
+			}
+
+			return glob.ErrRet(fmt.Errorf("undefined object: %s", AtomObjName))
 		}
 	}
 
@@ -333,7 +335,7 @@ func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet 
 		return glob.NewEmptyGlobTrue()
 	}
 
-	return glob.ErrRet(fmt.Errorf("undefined: %s", AtomObjName))
+	return glob.ErrRet(fmt.Errorf("undefined object: %s", AtomObjName))
 }
 
 func (envMgr *EnvMgr) AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {

@@ -28,7 +28,7 @@ import (
 
 func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, glob.GlobRet) {
 	envPkgMgr := env.NewEnvPkgMgr(pkgMgr)
-	envMgr, err := NewBuiltinEnvMgr(envPkgMgr)
+	envMgr, err := NewBuiltinEnvMgrWithNewEmptyEnv(envPkgMgr)
 	if err != nil {
 		return nil, glob.NewGlobErr(err.Error())
 	}

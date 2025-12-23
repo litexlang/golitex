@@ -59,12 +59,11 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 	// 每次打开文件时重启 executor
 	envPkgMgr := env.NewPkgMgr(repo, "")
 
-	envMgr, err := NewBuiltinEnvMgr(envPkgMgr)
+	envMgr, err := NewBuiltinEnvMgrWithNewEmptyEnv(envPkgMgr)
 	if err != nil {
 		return fmt.Errorf("failed to init pipeline env: %s", err)
 	}
 
-	envMgr = envMgr.NewEnv()
 	executor := exe.NewExecutor(envMgr)
 
 	for _, file := range files {
