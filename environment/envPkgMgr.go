@@ -19,8 +19,8 @@ import (
 )
 
 type EnvPkgMgr struct {
-	AbsPkgPathEnvPairs map[string]*EnvMgr
-	AbsPathNameMgr     *pkgMgr.PkgMgr
+	AbsPkgPathEnvMap map[string]*EnvMgr
+	PkgMgr           *pkgMgr.PkgMgr
 	// CurAbsRepoPath     string
 	// CurDefaultPkgName string
 }
@@ -32,7 +32,7 @@ func (mgr *EnvPkgMgr) MergeGivenExecPkgMgr(absRepoPath string, asPkgName string,
 	// }
 
 	storedPkgEnv := pkgEnv.RemoveBuiltinEnv()
-	mgr.AbsPkgPathEnvPairs[absRepoPath] = storedPkgEnv
+	mgr.AbsPkgPathEnvMap[absRepoPath] = storedPkgEnv
 
 	// // 使用 PathNameMgr 的方法添加包名和路径的映射
 	// if err := mgr.AbsPathNameMgr.AddNamePath(asPkgName, absRepoPath); err != nil {
@@ -57,8 +57,8 @@ func (mgr *EnvPkgMgr) MergeGivenExecPkgMgr(absRepoPath string, asPkgName string,
 
 func NewPkgMgr(entranceRepoPath string, entranceDefaultPkgName string) *EnvPkgMgr {
 	return &EnvPkgMgr{
-		AbsPkgPathEnvPairs: make(map[string]*EnvMgr),
-		AbsPathNameMgr:     pkgMgr.NewEmptyPkgMgr(),
+		AbsPkgPathEnvMap: make(map[string]*EnvMgr),
+		PkgMgr:           pkgMgr.NewEmptyPkgMgr(),
 		// CurAbsRepoPath:     entranceRepoPath,
 		// CurDefaultPkgName: entranceDefaultPkgName,
 	}
@@ -66,7 +66,7 @@ func NewPkgMgr(entranceRepoPath string, entranceDefaultPkgName string) *EnvPkgMg
 
 func NewEnvPkgMgr(mgr *pkgMgr.PkgMgr) *EnvPkgMgr {
 	return &EnvPkgMgr{
-		AbsPkgPathEnvPairs: make(map[string]*EnvMgr),
-		AbsPathNameMgr:     mgr,
+		AbsPkgPathEnvMap: make(map[string]*EnvMgr),
+		PkgMgr:           mgr,
 	}
 }
