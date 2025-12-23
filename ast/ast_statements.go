@@ -472,7 +472,7 @@ type HaveObjFromCartSetStmt struct {
 	Line uint
 }
 
-// prove_for i $in range(1, 10):
+// prove_for i range(1, 10):
 //     =>:
 //         $p(i)
 //     prove:
