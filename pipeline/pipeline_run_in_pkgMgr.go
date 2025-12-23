@@ -33,18 +33,26 @@ func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bo
 		return nil, glob.NewGlobErr(err.Error())
 	}
 
-	stmtSlice, err := ast.ParseSourceCode(code, pkgMgr)
+	// stmtSlice, err := ast.ParseSourceCode(code, pkgMgr)
+	// if err != nil {
+	// 	return nil, glob.NewGlobErr(err.Error())
+	// }
+
+	blocks, err := ast.PreprocessAndMakeSourceCodeIntoBlocks(code)
 	if err != nil {
 		return nil, glob.NewGlobErr(err.Error())
 	}
 
+	p := ast.NewTbParser(pkgMgr)
 	curExec := exe.NewExecutor(envMgr)
-
 	msgs := []string{}
-	for _, topStmt := range stmtSlice {
+	for _, block := range blocks {
+		topStmt, err := p.Stmt(&block)
+		if err != nil {
+			return nil, glob.NewGlobErr(err.Error())
+		}
 		ret := RunStmtInExecutor(curExec, topStmt)
 		msgs = append(msgs, ret.String())
-
 		if ret.IsNotTrue() {
 			return nil, glob.NewGlobErr(strings.Join(msgs, "\n"))
 		}

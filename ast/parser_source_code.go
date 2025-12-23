@@ -16,39 +16,43 @@ package litex_ast
 
 import (
 	glob "golitex/glob"
-	pkgMgr "golitex/package_manager"
 	"strings"
 )
 
 // * TODO: 在parse时，把pkgName改成当前项目里定义的 pkgName，而不是继续沿用原来的
-func ParseSourceCode(code string, pkgPathNameMgr *pkgMgr.PkgMgr) ([]Stmt, error) {
-	// code, err := preprocessSourceCode(code)
-	preprocessedCodeLines, err := preprocessSourceCode(code)
-	if err != nil {
-		return []Stmt{}, err
-	}
+// func ParseSourceCode(code string, pkgPathNameMgr *pkgMgr.PkgMgr) ([]Stmt, error) {
+// 	blocks, err := PreprocessAndMakeSourceCodeIntoBlocks(code)
+// 	if err != nil {
+// 		return []Stmt{}, err
+// 	}
+// 	ret := []Stmt{}
+// 	p := NewTbParser(pkgPathNameMgr)
+// 	for _, block := range blocks {
+// 		cur, err := p.Stmt(&block)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		ret = append(ret, cur)
+// 	}
 
-	blocks, err := makeTokenBlocks(preprocessedCodeLines)
-	if err != nil {
-		return nil, err
-	}
+// 	return ret, nil
+// }
 
-	ret := []Stmt{}
-	p := NewTbParser(pkgPathNameMgr, blocks)
-	for _, block := range blocks {
-		cur, err := p.Stmt(&block)
-		if err != nil {
-			return nil, err
-		}
-		ret = append(ret, cur)
-	}
-
-	return ret, nil
-}
-
-func preprocessSourceCode(code string) ([]string, error) {
+func PreprocessSourceCode(code string) ([]string, error) {
 	processedCode := strings.ReplaceAll(code, "\t", glob.Scope4Indents)
 	processedCode = glob.RemoveWindowsCarriage(processedCode)
 	lines := strings.Split(processedCode, "\n")
 	return lines, nil
+}
+
+func PreprocessAndMakeSourceCodeIntoBlocks(code string) ([]tokenBlock, error) {
+	preprocessedCodeLines, err := PreprocessSourceCode(code)
+	if err != nil {
+		return []tokenBlock{}, err
+	}
+	blocks, err := MakeTokenBlocks(preprocessedCodeLines)
+	if err != nil {
+		return []tokenBlock{}, err
+	}
+	return blocks, nil
 }

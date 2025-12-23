@@ -69,14 +69,23 @@ func NewBuiltinEnvMgr(envPkgMgr *env.EnvPkgMgr) (*env.EnvMgr, error) {
 
 func useHardcodedCodeToInitEnvMgr(envMgr *env.EnvMgr) error {
 	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
-	statements, err := ast.ParseSourceCode(kernelLibLitexCode.PipelineInitCode, pkgPathNameMgr)
+
+	// statements, err := ast.ParseSourceCode(kernelLibLitexCode.PipelineInitCode, pkgPathNameMgr)
+
+	blocks, err := ast.PreprocessAndMakeSourceCodeIntoBlocks(kernelLibLitexCode.PipelineInitCode)
 	if err != nil {
 		return err
 	}
 
+	p := ast.NewTbParser(pkgPathNameMgr)
 	executor := exe.NewExecutor(envMgr)
-	for _, statement := range statements {
-		execState := executor.Stmt(statement)
+
+	for _, block := range blocks {
+		topStmt, err := p.Stmt(&block)
+		if err != nil {
+			return err
+		}
+		execState := executor.Stmt(topStmt)
 		if execState.IsUnknown() || execState.IsErr() {
 			return fmt.Errorf("failed to init pipeline: %s\n%s", err, execState.String())
 		}
