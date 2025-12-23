@@ -14,7 +14,9 @@
 
 package litex_package_manager
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type AbsPathNameMgr struct {
 	NameAbsPathMap        map[string]string
