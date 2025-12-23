@@ -3,9 +3,8 @@ package litex_pipeline
 import (
 	"bufio"
 	"fmt"
-	env "golitex/environment"
-	exe "golitex/executor"
 	glob "golitex/glob"
+	package_manager "golitex/package_manager"
 	"io"
 	"os"
 	"strconv"
@@ -14,27 +13,14 @@ import (
 )
 
 func RunREPL(version string) {
-	// where current dir is
-	currDir, err := os.Getwd()
-	if err != nil {
-		fmt.Println("Error getting current directory:", err)
-		return
-	}
-
-	envPkgMgr := env.NewPkgMgr(currDir, "")
-	envMgr, err := NewBuiltinEnvMgr(envPkgMgr)
-	if err != nil {
-		fmt.Println("Error initializing pipeline env:", err)
-		return
-	}
-	executor := exe.NewExecutor(envMgr.NewEnv())
+	pkgMgr := package_manager.NewEmptyPkgMgr()
 
 	reader := bufio.NewReader(os.Stdin)
 	writer := os.Stdout
 
 	year := time.Now().Year()
 
-	fmt.Fprintf(writer, "Litex %s (Beta)\nCopyright (C) 2024-%s\nOfficial Website: litexlang.com\nGithub: https://github.com/litexlang/golitex\nEmail: litexlang@outlook.com\nType 'help' for help\n\nNote: This is a beta version. We welcome your testing and feedback!\nHowever, please note that this version is NOT READY FOR PRODUCTION USE.\n\n", version, strconv.Itoa(year))
+	fmt.Fprintf(writer, "Litex %s\nCopyright (C) 2024-%s\nOfficial Website: litexlang.com\nGithub: https://github.com/litexlang/golitex\nEmail: litexlang@outlook.com\nType 'help' for help\n\nNote: This is a Litex version is not ready for production use. Testing and feedback are welcome!\n\n", version, strconv.Itoa(year))
 
 	for {
 		code, err := listenOneStatementFromREPL(reader, writer)
@@ -50,7 +36,7 @@ func RunREPL(version string) {
 		}
 
 		// ret := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)
-		ret := RunSourceCodeInExecutor(executor, code, "REPL")
+		_, ret := RunCodeWithPkgMgr(code, pkgMgr, false)
 		if ret.IsNotTrue() {
 			msgStr := ret.String()
 			if msgStr != "" {
