@@ -1,3 +1,8 @@
 have c set = {1, 2, 3}
 
 2 $in c
+
+prop dvd(x, y Z):
+    x != 0
+    <=>:
+        y % x = 0
