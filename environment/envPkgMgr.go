@@ -20,7 +20,7 @@ import (
 
 type EnvPkgMgr struct {
 	AbsPkgPathEnvPairs map[string]*EnvMgr
-	AbsPathNameMgr     *pkgMgr.AbsPathNameMgr
+	AbsPathNameMgr     *pkgMgr.PkgMgr
 	// CurAbsRepoPath     string
 	// CurDefaultPkgName string
 }
@@ -58,13 +58,13 @@ func (mgr *EnvPkgMgr) MergeGivenExecPkgMgr(absRepoPath string, asPkgName string,
 func NewPkgMgr(entranceRepoPath string, entranceDefaultPkgName string) *EnvPkgMgr {
 	return &EnvPkgMgr{
 		AbsPkgPathEnvPairs: make(map[string]*EnvMgr),
-		AbsPathNameMgr:     pkgMgr.NewPathNameMgr(),
+		AbsPathNameMgr:     pkgMgr.NewEmptyPkgMgr(),
 		// CurAbsRepoPath:     entranceRepoPath,
 		// CurDefaultPkgName: entranceDefaultPkgName,
 	}
 }
 
-func NewEnvPkgMgrWithPkgMgr(mgr *pkgMgr.AbsPathNameMgr) *EnvPkgMgr {
+func NewEnvPkgMgrWithPkgMgr(mgr *pkgMgr.PkgMgr) *EnvPkgMgr {
 	return &EnvPkgMgr{
 		AbsPkgPathEnvPairs: make(map[string]*EnvMgr),
 		AbsPathNameMgr:     mgr,

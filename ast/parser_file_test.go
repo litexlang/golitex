@@ -33,7 +33,7 @@ func TestParseFile(t *testing.T) {
 		// 添加更多测试文件...
 	}
 
-	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
 
 	for _, filePath := range testFiles {
 		t.Run(filepath.Base(filePath), func(t *testing.T) {
@@ -68,7 +68,7 @@ func TestParseDirectory(t *testing.T) {
 		// 添加更多测试目录...
 	}
 
-	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
 
 	for _, dir := range testDirs {
 		t.Run(filepath.Base(dir), func(t *testing.T) {
@@ -133,7 +133,7 @@ func TestParseQuickCheck(t *testing.T) {
 	fmt.Printf("Content:\n%s\n", string(content))
 	fmt.Printf("==========================================\n\n")
 
-	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
 	stmts, err := ParseSourceCode(string(content), "", pkgPathNameMgr, "")
 	if err != nil {
 		t.Fatalf("Parse error: %v", err)

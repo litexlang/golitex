@@ -18,31 +18,30 @@ import (
 	"fmt"
 )
 
-type AbsPathNameMgr struct {
-	NameAbsPathMap        map[string]string
-	AbsPathNamesSetMap    map[string]map[string]struct{}
-	AbsPathDefaultNameMap map[string]string // 默认第一次看到某个path的时候，我们认为它的名字就是这个名字，后续如果出现其他名字，则认为这个path有多个名字，但是默认名字还是第一次知道它的时候它的名字
-	CurPkgDefaultName     string
-	CurRepoAbsPath        string
+type PkgMgr struct {
+	NameAbsPathMap                  map[string]string
+	AbsPathNamesSetMap              map[string]map[string]struct{}
+	AbsPathDefaultNameMap           map[string]string // 默认第一次看到某个path的时候，我们认为它的名字就是这个名字，后续如果出现其他名字，则认为这个path有多个名字，但是默认名字还是第一次知道它的时候它的名字
+	CurPkgDefaultName_EmptyWhenREPL string            // Empty when REPL
+	CurRepoAbsPath_EmptyWhenREPL    string            // Empty when REPL
 }
 
-func NewPathNameMgr() *AbsPathNameMgr {
-	return &AbsPathNameMgr{
-		NameAbsPathMap:        make(map[string]string),
-		AbsPathNamesSetMap:    make(map[string]map[string]struct{}),
-		AbsPathDefaultNameMap: make(map[string]string),
-		CurPkgDefaultName:     "",
-		CurRepoAbsPath:        "",
+func (mgr *PkgMgr) IsREPL() bool {
+	return mgr.CurPkgDefaultName_EmptyWhenREPL == "" && mgr.CurRepoAbsPath_EmptyWhenREPL == ""
+}
+
+func NewEmptyPkgMgr() *PkgMgr {
+	return &PkgMgr{
+		NameAbsPathMap:                  make(map[string]string),
+		AbsPathNamesSetMap:              make(map[string]map[string]struct{}),
+		AbsPathDefaultNameMap:           make(map[string]string),
+		CurPkgDefaultName_EmptyWhenREPL: "",
+		CurRepoAbsPath_EmptyWhenREPL:    "",
 	}
 }
 
-func (mgr *AbsPathNameMgr) UpdateCurPkgNameAndCurRepo(repoAbsPath string, pkgName string) {
-	mgr.CurRepoAbsPath = repoAbsPath
-	mgr.CurPkgDefaultName = pkgName
-}
-
 // AddNamePath 添加包名到路径的映射，同时更新路径到包名集合的映射
-func (mgr *AbsPathNameMgr) AddNamePath(pkgName, pkgAbsPath string) error {
+func (mgr *PkgMgr) AddNamePath(pkgName, pkgAbsPath string) error {
 	if _, ok := mgr.NameAbsPathMap[pkgName]; ok {
 		return fmt.Errorf("package name already exists: %s, but it is used as package name for package %s", pkgName, mgr.NameAbsPathMap[pkgName])
 	}
@@ -62,7 +61,7 @@ func (mgr *AbsPathNameMgr) AddNamePath(pkgName, pkgAbsPath string) error {
 }
 
 // Merge 合并另一个 PathNameMgr 到当前 PathNameMgr
-func (mgr *AbsPathNameMgr) Merge(other *AbsPathNameMgr) error {
+func (mgr *PkgMgr) Merge(other *PkgMgr) error {
 	for name, path := range other.NameAbsPathMap {
 		if existingPath, ok := mgr.NameAbsPathMap[name]; ok {
 			if existingPath != path {
@@ -77,15 +76,11 @@ func (mgr *AbsPathNameMgr) Merge(other *AbsPathNameMgr) error {
 			}
 			continue
 		}
-		// 包名不存在，直接添加
-		// if err := mgr.AddNamePath(name, path); err != nil {
-		// 	return err
-		// }
 	}
 	return nil
 }
 
-func (mgr *AbsPathNameMgr) GetDefaultPkgName(pkgName string) (string, error) {
+func (mgr *PkgMgr) GetDefaultPkgName(pkgName string) (string, error) {
 	if pkgName == "" {
 		return "", nil
 	}

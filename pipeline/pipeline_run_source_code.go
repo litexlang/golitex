@@ -58,7 +58,7 @@ func RunSourceCodeInExecutor(curExec *exe.Executor, code string, path string) gl
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
 
-	stmtSlice, err := ast.ParseSourceCode(code, curExec.Env.PkgMgr.AbsPathNameMgr.CurPkgDefaultName, curExec.Env.PkgMgr.AbsPathNameMgr, dir)
+	stmtSlice, err := ast.ParseSourceCode(code, curExec.Env.PkgMgr.AbsPathNameMgr.CurPkgDefaultName_EmptyWhenREPL, curExec.Env.PkgMgr.AbsPathNameMgr, dir)
 	if err != nil {
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
@@ -101,7 +101,7 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 		}
 	}
 
-	importAbsRepoPath := filepath.Join(curExec.Env.PkgMgr.AbsPathNameMgr.CurRepoAbsPath, importRelativePath)
+	importAbsRepoPath := filepath.Join(curExec.Env.PkgMgr.AbsPathNameMgr.CurRepoAbsPath_EmptyWhenREPL, importRelativePath)
 
 	// 如果已经存在asPkgName，则直接返回
 	// if path, ok := curExec.Env.PkgMgr.AbsPathNameMgr.NameAbsPathMap[importDirStmt.AsPkgName]; ok {
@@ -123,13 +123,13 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 	absoluteMainFilePath := filepath.Join(importAbsRepoPath, glob.MainDotLit)
 
 	// 把 entrance path 改成 absRepoPath
-	previousEntranceRepoPath := curExec.Env.PkgMgr.AbsPathNameMgr.CurRepoAbsPath
-	previousCurPkgName := curExec.Env.PkgMgr.AbsPathNameMgr.CurPkgDefaultName
-	curExec.Env.PkgMgr.AbsPathNameMgr.CurRepoAbsPath = importAbsRepoPath
-	curExec.Env.PkgMgr.AbsPathNameMgr.CurPkgDefaultName = importDirStmt.AsPkgName
+	previousEntranceRepoPath := curExec.Env.PkgMgr.AbsPathNameMgr.CurRepoAbsPath_EmptyWhenREPL
+	previousCurPkgName := curExec.Env.PkgMgr.AbsPathNameMgr.CurPkgDefaultName_EmptyWhenREPL
+	curExec.Env.PkgMgr.AbsPathNameMgr.CurRepoAbsPath_EmptyWhenREPL = importAbsRepoPath
+	curExec.Env.PkgMgr.AbsPathNameMgr.CurPkgDefaultName_EmptyWhenREPL = importDirStmt.AsPkgName
 	defer func() {
-		curExec.Env.PkgMgr.AbsPathNameMgr.CurRepoAbsPath = previousEntranceRepoPath
-		curExec.Env.PkgMgr.AbsPathNameMgr.CurPkgDefaultName = previousCurPkgName
+		curExec.Env.PkgMgr.AbsPathNameMgr.CurRepoAbsPath_EmptyWhenREPL = previousEntranceRepoPath
+		curExec.Env.PkgMgr.AbsPathNameMgr.CurPkgDefaultName_EmptyWhenREPL = previousCurPkgName
 	}()
 
 	// 使用 PathNameMgr 的方法添加包名和路径的映射
@@ -163,10 +163,10 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 	}
 
 	executorToRunDir := exe.NewExecutor(builtinEnvMgr.NewEnv())
-	previousCurDefaultPkgName := executorToRunDir.Env.PkgMgr.AbsPathNameMgr.CurPkgDefaultName
-	executorToRunDir.Env.PkgMgr.AbsPathNameMgr.CurPkgDefaultName = importDirStmt.AsPkgName
+	previousCurDefaultPkgName := executorToRunDir.Env.PkgMgr.AbsPathNameMgr.CurPkgDefaultName_EmptyWhenREPL
+	executorToRunDir.Env.PkgMgr.AbsPathNameMgr.CurPkgDefaultName_EmptyWhenREPL = importDirStmt.AsPkgName
 	defer func() {
-		executorToRunDir.Env.PkgMgr.AbsPathNameMgr.CurPkgDefaultName = previousCurDefaultPkgName
+		executorToRunDir.Env.PkgMgr.AbsPathNameMgr.CurPkgDefaultName_EmptyWhenREPL = previousCurDefaultPkgName
 	}()
 
 	ret := RunSourceCodeInExecutor(executorToRunDir, string(mainFileContent), importRelativePath)
@@ -183,7 +183,7 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 
 func RunFileStmtInExec(curExec *exe.Executor, importFileStmt *ast.RunFileStmt) glob.GlobRet {
 	// 把 entrance repo path 和 importFileStmt.Path结合起来
-	path := filepath.Join(curExec.Env.PkgMgr.AbsPathNameMgr.CurRepoAbsPath, importFileStmt.Path)
+	path := filepath.Join(curExec.Env.PkgMgr.AbsPathNameMgr.CurRepoAbsPath_EmptyWhenREPL, importFileStmt.Path)
 
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -201,7 +201,7 @@ func GetRelativePathFromGlobalPkgToWorkingRepo(curExec *exe.Executor, globalPkgN
 		return "", err
 	}
 
-	workingEnvPath := curExec.Env.PkgMgr.AbsPathNameMgr.CurRepoAbsPath
+	workingEnvPath := curExec.Env.PkgMgr.AbsPathNameMgr.CurRepoAbsPath_EmptyWhenREPL
 
 	relPath, err := filepath.Rel(globalPkgPath, workingEnvPath)
 	if err != nil {

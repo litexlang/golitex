@@ -30,10 +30,9 @@ func Test_File(t *testing.T) {
 		t.Errorf("failed to get current working directory: %v\n", err)
 	}
 	absOfFile := filepath.Join(workingDir, fileName)
-	absOfRepo := filepath.Dir(absOfFile)
 	start := time.Now()
-	pkgMgr := package_manager.NewPathNameMgr()
-	_, ret := RunFileWithPkgMgr(absOfRepo, absOfFile, "", pkgMgr, false)
+	pkgMgr := package_manager.NewEmptyPkgMgr()
+	_, ret := RunFileWithPkgMgr(absOfFile, "", pkgMgr, false)
 	if ret.IsNotTrue() {
 		t.Errorf("failed to run file %s\n", fileName)
 	}
@@ -49,10 +48,9 @@ func Test_ImportFile(t *testing.T) {
 		t.Errorf("failed to get current working directory: %v\n", err)
 	}
 	absOfFile := filepath.Join(workingDir, fileName)
-	absOfRepo := filepath.Dir(absOfFile)
 	start := time.Now()
-	pkgMgr := package_manager.NewPathNameMgr()
-	_, ret := RunFileWithPkgMgr(absOfRepo, absOfFile, "", pkgMgr, false)
+	pkgMgr := package_manager.NewEmptyPkgMgr()
+	_, ret := RunFileWithPkgMgr(absOfFile, "", pkgMgr, false)
 	if ret.IsNotTrue() {
 		t.Errorf("failed to run file %s\n", fileName)
 	}
