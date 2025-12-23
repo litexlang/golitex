@@ -21,35 +21,6 @@ import (
 	"strconv"
 )
 
-// trueInFact handles postprocessing for true $in facts (x $in S).
-// It performs various inferences based on the type of set S:
-//
-// Inference types:
-//  1. FnTemplate inference: If S is a function template, derives a universal fact
-//     and stores the function-template relationship
-//  2. FnTemplateFnObj inference: If S is an object-type function template function,
-//     inserts the function into the function template table
-//  3. Cart inference: If S is a cartesian product cart(S1, S2, ..., Sn), generates:
-//     - a[i] $in Si for each i (indexed membership facts)
-//     - dim(a) = n (dimension fact)
-//     - is_tuple(a) (tuple type fact)
-//  4. ListSet inference: If S is a list set {e1, e2, ..., en}, generates:
-//     - An OR fact: x = e1 or x = e2 or ... or x = en
-//  5. SetBuilder inference: If S is a set builder {x in T: P(x)}, generates:
-//     - x $in T (parent set membership)
-//     - P(x) (all intentional facts from the builder)
-//  6. Range/ClosedRange inference: If S is range(a, b) or closed_range(a, b), generates:
-//     - x $in Z (integer membership)
-//     - x >= a (lower bound)
-//     - x < b (for range) or x <= b (for closed_range)
-//     - Additional derived facts from comparison postprocessing
-//  7. NPos inference: If S is NPos (positive natural numbers), generates:
-//     - x $in N, x $in Q, x $in R (number type memberships)
-//     - x > 0, x >= 1 (positivity facts)
-//     - Additional derived facts from comparison postprocessing
-//
-// TODO: The conditions are not necessarily mutually exclusive, so if ret.IsTrue(),
-// we might want to continue trying other conditions instead of returning immediately.
 func (ie *InferEngine) trueInFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	if len(fact.Params) != 2 {
 		return glob.ErrRet(fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
@@ -355,6 +326,18 @@ func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt) gl
 	}
 	if ret.IsTrue() && len(ret.GetMsgs()) > 0 {
 		derivedFacts = append(derivedFacts, ret.GetMsgs()...)
+	}
+
+	// Generate left <= x
+	lessEqualLeftFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{left, obj}, fact.Line)
+	ret = ie.EnvMgr.storeSpecFactInMem(lessEqualLeftFact)
+	if ret.IsErr() {
+		return ret
+	}
+	derivedFacts = append(derivedFacts, lessEqualLeftFact.String())
+	ret = ie.builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(lessEqualLeftFact)
+	if ret.IsErr() {
+		return ret
 	}
 
 	if isRange {

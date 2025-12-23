@@ -1497,21 +1497,21 @@ func (p *TbParser) proveForStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		// Skip $in (FuncFactPrefix + KeywordIn)
-		if tb.header.is(glob.FuncFactPrefix) {
-			err = tb.header.skip(glob.FuncFactPrefix)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-		}
+		// // Skip $in (FuncFactPrefix + KeywordIn)
+		// if tb.header.is(glob.FuncFactPrefix) {
+		// 	err = tb.header.skip(glob.FuncFactPrefix)
+		// 	if err != nil {
+		// 		return nil, ErrInLine(err, tb)
+		// 	}
+		// }
 
-		if !tb.header.is(glob.KeywordIn) {
-			return nil, ErrInLine(fmt.Errorf("expect 'in' after '$'"), tb)
-		}
-		err = tb.header.skip(glob.KeywordIn)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
+		// if !tb.header.is(glob.KeywordIn) {
+		// 	return nil, ErrInLine(fmt.Errorf("expect 'in' after '$'"), tb)
+		// }
+		// err = tb.header.skip(glob.KeywordIn)
+		// if err != nil {
+		// 	return nil, ErrInLine(err, tb)
+		// }
 
 		// Parse RangeOrClosedRange object (e.g., range(1, 10) or closed_range(1, 10))
 		rangeOrClosedRange, err := p.Obj(tb)

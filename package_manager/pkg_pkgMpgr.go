@@ -20,7 +20,8 @@ type AbsPathNameMgr struct {
 	NameAbsPathMap        map[string]string
 	AbsPathNamesSetMap    map[string]map[string]struct{}
 	AbsPathDefaultNameMap map[string]string // 默认第一次看到某个path的时候，我们认为它的名字就是这个名字，后续如果出现其他名字，则认为这个path有多个名字，但是默认名字还是第一次知道它的时候它的名字
-	CurPkgName            string
+	CurPkgDefaultName     string
+	CurRepoAbsPath        string
 }
 
 func NewPathNameMgr() *AbsPathNameMgr {
@@ -28,8 +29,14 @@ func NewPathNameMgr() *AbsPathNameMgr {
 		NameAbsPathMap:        make(map[string]string),
 		AbsPathNamesSetMap:    make(map[string]map[string]struct{}),
 		AbsPathDefaultNameMap: make(map[string]string),
-		CurPkgName:            "",
+		CurPkgDefaultName:     "",
+		CurRepoAbsPath:        "",
 	}
+}
+
+func (mgr *AbsPathNameMgr) UpdateCurPkgNameAndCurRepo(repoAbsPath string, pkgName string) {
+	mgr.CurRepoAbsPath = repoAbsPath
+	mgr.CurPkgDefaultName = pkgName
 }
 
 // AddNamePath 添加包名到路径的映射，同时更新路径到包名集合的映射

@@ -102,7 +102,7 @@ func (envMgr *EnvMgr) AtomsInFnObjDefinedOrBuiltin(fnObj *ast.FnObj, extraParams
 	}
 
 	// 如果head是fn,那直接成立了
-	if fnObj.HasAtomHeadEqualToStr(glob.KeywordFn) {
+	if fnObj.IsAtomHeadEqualToStr(glob.KeywordFn) {
 		return glob.NewEmptyGlobTrue()
 	}
 
@@ -303,7 +303,7 @@ func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet 
 		PkgName := PkgNameAndAtomName[0]
 		AtomName := PkgNameAndAtomName[1]
 
-		if envMgr.PkgMgr.CurDefaultPkgName != PkgName {
+		if envMgr.PkgMgr.AbsPathNameMgr.CurPkgDefaultName != PkgName {
 			pkgPath, ok := envMgr.PkgMgr.AbsPathNameMgr.NameAbsPathMap[PkgName]
 			if !ok {
 				return glob.ErrRet(fmt.Errorf("package %s is not found", PkgName))
