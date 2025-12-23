@@ -50,13 +50,13 @@ func MergeOuterInnerUniFacts(outer *UniFactStmt, inner *UniFactStmt) *UniFactStm
 	return newOuter
 }
 
-func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactStmt, error) {
+func (defStmt *DefPropStmt) Make_PropToIff_IffToProp(pkgName string) (*UniFactStmt, *UniFactStmt, error) {
 	propSpecFactParams := []Obj{}
 	for _, param := range defStmt.DefHeader.Params {
 		propSpecFactParams = append(propSpecFactParams, Atom(param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, Atom(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
+	propSpecFact := NewSpecFactStmt(TruePure, Atom(AddPkgNameToName(pkgName, string(defStmt.DefHeader.Name))), propSpecFactParams, defStmt.Line)
 
 	// prop to iff
 	propToIffDomFacts := []FactStmt{propSpecFact}
@@ -74,13 +74,13 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 	return propToIff, IffToProp, nil
 }
 
-func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
+func (defStmt *DefPropStmt) IffToPropUniFact(pkgName string) *UniFactStmt {
 	propSpecFactParams := []Obj{}
 	for _, param := range defStmt.DefHeader.Params {
 		propSpecFactParams = append(propSpecFactParams, Atom(param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, Atom(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
+	propSpecFact := NewSpecFactStmt(TruePure, Atom(AddPkgNameToName(pkgName, string(defStmt.DefHeader.Name))), propSpecFactParams, defStmt.Line)
 
 	IffToPropDomFacts := []FactStmt{}
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFactsOrNil...)
@@ -89,17 +89,6 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, IffToPropDomFacts, []FactStmt{propSpecFact}, defStmt.Line)
 
 	return IffToProp
-}
-
-func (defStmt *DefPropStmt) ToSpecFact() *SpecFactStmt {
-	propSpecFactParams := []Obj{}
-	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, Atom(param))
-	}
-
-	propSpecFact := NewSpecFactStmt(TruePure, Atom(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
-
-	return propSpecFact
 }
 
 func (defStmt *DefExistPropStmt) ToSpecFact() *SpecFactStmt {
@@ -410,10 +399,10 @@ func (stmt *ProveForStmt) UniFact() *UniFactStmt {
 		left := stmt.Lefts[i]
 		right := stmt.Rights[i]
 		isRange := stmt.IsProveIRange[i]
-		
+
 		// left <= param
 		domFacts = append(domFacts, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLessEqual), []Obj{left, Atom(param)}, stmt.Line))
-		
+
 		if isRange {
 			// range: left <= param < right
 			domFacts = append(domFacts, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLess), []Obj{Atom(param), right}, stmt.Line))

@@ -572,3 +572,25 @@ func (fnObj *FnObj) IsAtomHeadEqualToStr(s string) bool {
 
 	return false
 }
+
+var BuiltinAndKernelDefinedNames = map[string]struct{}{}
+
+func IsBuiltinOrKernelDefinedName(name string) bool {
+	if glob.IsKeyword(name) || glob.IsKeySymbol(name) {
+		return true
+	}
+
+	if glob.IsNumLitStr(name) {
+		return true
+	}
+
+	_, ok := BuiltinAndKernelDefinedNames[name]
+	return ok
+}
+
+func AddPkgNameToName(pkgName string, name string) string {
+	if pkgName == "" {
+		return name
+	}
+	return fmt.Sprintf("%s.%s", pkgName, name)
+}

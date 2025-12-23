@@ -44,6 +44,26 @@ func NewBuiltinEnvMgr(envPkgMgr *env.EnvPkgMgr) (*env.EnvMgr, error) {
 	if err != nil {
 		panic(err)
 	}
+
+	for k := range curEnvMgr.AllDefinedAlgoNames {
+		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
+	}
+	for k := range curEnvMgr.AllDefinedPropNames {
+		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
+	}
+	for k := range curEnvMgr.AllDefinedExistPropNames {
+		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
+	}
+	for k := range curEnvMgr.AllDefinedFnSetNames {
+		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
+	}
+	for k := range curEnvMgr.AllDefinedAtomObjNames {
+		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
+	}
+	for k := range curEnvMgr.AllDefinedProveAlgoNames {
+		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
+	}
+
 	return curEnvMgr, nil
 }
 
