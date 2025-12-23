@@ -79,7 +79,7 @@ func RunImportStmtInExecutor(curExec *exe.Executor, importStmt *ast.ImportDirStm
 		if err != nil {
 			return glob.NewGlobErr(err.Error())
 		}
-		curExec.Env.EnvPkgMgr.AbsPkgPathEnvMap[absPath] = newEnvMgr
+		curExec.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap[absPath] = newEnvMgr
 	}
 
 	return glob.NewGlobTrue(fmt.Sprintf("%s\n", importStmt))
