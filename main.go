@@ -202,8 +202,8 @@ func RunTutorial() {
 		input = strings.TrimSpace(input)
 
 		// Check if user wants to quit
-		if input == "q" || input == "Q" || input == "quit" || input == "exit" {
-			fmt.Println("\nGoodbye! :)")
+		if input == "exit" {
+			fmt.Println("\nGoodbye!")
 			return
 		}
 

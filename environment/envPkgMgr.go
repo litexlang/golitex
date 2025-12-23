@@ -64,7 +64,7 @@ func NewPkgMgr(entranceRepoPath string, entranceDefaultPkgName string) *EnvPkgMg
 	}
 }
 
-func NewEnvPkgMgrWithPkgMgr(mgr *pkgMgr.PkgMgr) *EnvPkgMgr {
+func NewEnvPkgMgr(mgr *pkgMgr.PkgMgr) *EnvPkgMgr {
 	return &EnvPkgMgr{
 		AbsPkgPathEnvPairs: make(map[string]*EnvMgr),
 		AbsPathNameMgr:     mgr,

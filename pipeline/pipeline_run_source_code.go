@@ -17,7 +17,6 @@ package litex_pipeline
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
 	exe "golitex/executor"
 	glob "golitex/glob"
 	"os"
@@ -33,21 +32,21 @@ import (
 // 	return RunSourceCode(string(content), path)
 // }
 
-func RunSourceCode(code string, path string) glob.GlobRet {
-	// 获得 path所在的 repo
-	repoPath, err := filepath.Abs(filepath.Dir(path))
-	if err != nil {
-		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
-	}
-	envPkgMgr := env.NewPkgMgr(repoPath, "")
-	envMgr, err := NewBuiltinEnvMgr(envPkgMgr)
-	if err != nil {
-		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
-	}
-	executor := exe.NewExecutor(envMgr.NewEnv())
-	ret := RunSourceCodeInExecutor(executor, code, path)
-	return ret
-}
+// func RunSourceCode(code string, path string) glob.GlobRet {
+// 	// 获得 path所在的 repo
+// 	repoPath, err := filepath.Abs(filepath.Dir(path))
+// 	if err != nil {
+// 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
+// 	}
+// 	envPkgMgr := env.NewPkgMgr(repoPath, "")
+// 	envMgr, err := NewBuiltinEnvMgr(envPkgMgr)
+// 	if err != nil {
+// 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
+// 	}
+// 	executor := exe.NewExecutor(envMgr.NewEnv())
+// 	ret := RunSourceCodeInExecutor(executor, code, path)
+// 	return ret
+// }
 
 func RunSourceCodeInExecutor(curExec *exe.Executor, code string, path string) glob.GlobRet {
 	// TODO: 现在问题很大，只能在parse的时候默认现在是""，所以不能parse的时候就让对应的参数变成其他的包名.xxx
