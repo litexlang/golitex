@@ -19,6 +19,7 @@ import (
 	"flag"
 	"fmt"
 	glob "golitex/glob"
+	package_manager "golitex/package_manager"
 	pipeline "golitex/pipeline"
 	"os"
 	"path/filepath"
@@ -143,7 +144,22 @@ func main() {
 }
 
 func MainFlagFile(fileFlag string) {
-	ret := pipeline.RunFile(glob.RemoveWindowsCarriage(fileFlag))
+	relativeFilePath := glob.RemoveWindowsCarriage(fileFlag)
+
+	// 获取当前工作目录
+	workingDir, err := os.Getwd()
+	if err != nil {
+		fmt.Printf("Error: failed to get current working directory: %v\n", err)
+		return
+	}
+
+	// 获取相对于当前工作目录的相对路径
+	absFilePath := filepath.Join(workingDir, relativeFilePath)
+	absFileRepoPath := filepath.Dir(absFilePath)
+
+	pkgMgr := package_manager.NewPathNameMgr()
+
+	_, ret := pipeline.RunFileWithPkgMgr(absFileRepoPath, absFilePath, "", pkgMgr, false)
 	fmt.Println(ret.StringWithOptimizedNewline())
 }
 

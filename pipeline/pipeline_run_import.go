@@ -50,7 +50,7 @@ func RunImport(pkgMgr *packageMgr.AbsPathNameMgr, importStmt *ast.ImportDirStmt)
 	pkgMgr.AbsPathDefaultNameMap[importRepoAbsPath] = importStmt.AsPkgName
 
 	// 这个repo还没被引用，那么就第一次运行它
-	envMgr, ret := RunFileWithPkgMgr(importRepoAbsPath, filepath.Join(importRepoAbsPath, glob.MainDotLit), importStmt.AsPkgName, pkgMgr)
+	envMgr, ret := RunFileWithPkgMgr(importRepoAbsPath, filepath.Join(importRepoAbsPath, glob.MainDotLit), importStmt.AsPkgName, pkgMgr, true)
 	if ret.IsNotTrue() {
 		return false, nil, ret
 	}
@@ -58,7 +58,7 @@ func RunImport(pkgMgr *packageMgr.AbsPathNameMgr, importStmt *ast.ImportDirStmt)
 	return true, envMgr, glob.NewGlobTrue(fmt.Sprintf("%s\n", importStmt))
 }
 
-func RunFileWithPkgMgr(fileRepoAbsPath string, fileAbsPath string, curPkgName string, pkgMgr *packageMgr.AbsPathNameMgr) (*env.EnvMgr, glob.GlobRet) {
+func RunFileWithPkgMgr(fileRepoAbsPath string, fileAbsPath string, curPkgName string, pkgMgr *packageMgr.AbsPathNameMgr, removeBuiltinEnv bool) (*env.EnvMgr, glob.GlobRet) {
 	// 更新 current working repo
 	previousCurRepoAbsPath := pkgMgr.CurRepoAbsPath
 	previousCurPkgDefaultName := pkgMgr.CurPkgDefaultName
@@ -99,7 +99,10 @@ func RunFileWithPkgMgr(fileRepoAbsPath string, fileAbsPath string, curPkgName st
 		}
 	}
 
-	envMgrWithoutBuiltinLogic := envMgr.RemoveBuiltinEnv()
+	if removeBuiltinEnv {
+		envMgrWithoutBuiltinLogic := envMgr.RemoveBuiltinEnv()
+		return envMgrWithoutBuiltinLogic, glob.NewGlobTrue(strings.Join(msgs, "\n"))
+	}
 
-	return envMgrWithoutBuiltinLogic, glob.NewGlobTrue(strings.Join(msgs, "\n"))
+	return envMgr, glob.NewGlobTrue(strings.Join(msgs, "\n"))
 }

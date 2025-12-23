@@ -16,14 +16,24 @@ package litex_pipeline
 
 import (
 	"fmt"
+	package_manager "golitex/package_manager"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
 
 func Test_File(t *testing.T) {
 	fileName := "../examples/test_codes/tmp.lit"
+	workingDir, err := os.Getwd()
+	if err != nil {
+		t.Errorf("failed to get current working directory: %v\n", err)
+	}
+	absOfFile := filepath.Join(workingDir, fileName)
+	absOfRepo := filepath.Dir(absOfFile)
 	start := time.Now()
-	ret := RunFile(fileName)
+	pkgMgr := package_manager.NewPathNameMgr()
+	_, ret := RunFileWithPkgMgr(absOfRepo, absOfFile, "", pkgMgr, false)
 	if ret.IsNotTrue() {
 		t.Errorf("failed to run file %s\n", fileName)
 	}
@@ -34,8 +44,15 @@ func Test_File(t *testing.T) {
 
 func Test_ImportFile(t *testing.T) {
 	fileName := "../examples/test_import/main.lit"
+	workingDir, err := os.Getwd()
+	if err != nil {
+		t.Errorf("failed to get current working directory: %v\n", err)
+	}
+	absOfFile := filepath.Join(workingDir, fileName)
+	absOfRepo := filepath.Dir(absOfFile)
 	start := time.Now()
-	ret := RunFile(fileName)
+	pkgMgr := package_manager.NewPathNameMgr()
+	_, ret := RunFileWithPkgMgr(absOfRepo, absOfFile, "", pkgMgr, false)
 	if ret.IsNotTrue() {
 		t.Errorf("failed to run file %s\n", fileName)
 	}
