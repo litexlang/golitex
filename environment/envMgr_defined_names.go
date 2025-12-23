@@ -24,6 +24,10 @@ import (
 // Helper methods for EnvMgr to access definitions
 
 func (envMgr *EnvMgr) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
+	if envMgr == nil || envMgr.AllDefinedAlgoNames == nil {
+		panic("")
+	}
+
 	// depth
 	propDef, ok := envMgr.AllDefinedPropNames[string(propName)]
 	if ok {
@@ -176,33 +180,43 @@ func (envMgr *EnvMgr) AtomsInSpecFactDefined(stmt *ast.SpecFactStmt, extraParams
 }
 
 func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.SpecFactStmt) glob.GlobRet {
+	var realName string
+	var curEnvMgr = envMgr
+	if stmt.PropName.IsWithPkgName() {
+		pkgName := strings.Split(string(stmt.PropName), glob.PkgNameAtomSeparator)[0]
+		realName = strings.Split(string(stmt.PropName), glob.PkgNameAtomSeparator)[1]
+		curEnvMgr = envMgr.GetEnvMgrOfName(pkgName)
+	} else {
+		realName = string(stmt.PropName)
+	}
+
 	// Check if it's an exist_prop defined by user
 	if stmt.TypeEnum == ast.TrueExist_St || stmt.TypeEnum == ast.FalseExist_St {
-		if glob.IsBuiltinExistPropName(string(stmt.PropName)) {
+		if glob.IsBuiltinExistPropName(realName) {
 			return glob.NewEmptyGlobTrue()
 		}
 
-		existPropDef := envMgr.GetExistPropDef(stmt.PropName)
+		existPropDef := curEnvMgr.GetExistPropDef(ast.Atom(realName))
 		if existPropDef != nil {
 			return glob.NewEmptyGlobTrue()
 		}
 		return glob.ErrRet(fmt.Errorf("undefined exist_prop: %s", stmt.PropName))
 	} else {
-		if glob.IsBuiltinPropName(string(stmt.PropName)) {
+		if glob.IsBuiltinPropName(realName) {
 			return glob.NewEmptyGlobTrue()
 		}
 
-		if glob.IsBuiltinExistPropName(string(stmt.PropName)) {
+		if glob.IsBuiltinExistPropName(realName) {
 			return glob.NewEmptyGlobTrue()
 		}
 
 		// Check if it's a regular prop defined by user
-		propDef := envMgr.GetPropDef(stmt.PropName)
+		propDef := curEnvMgr.GetPropDef(ast.Atom(realName))
 		if propDef != nil {
 			return glob.NewEmptyGlobTrue()
 		}
 
-		existPropDef := envMgr.GetExistPropDef(stmt.PropName)
+		existPropDef := curEnvMgr.GetExistPropDef(ast.Atom(realName))
 		if existPropDef != nil {
 			return glob.NewEmptyGlobTrue()
 		}

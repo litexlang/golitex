@@ -213,35 +213,13 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 		paramMap[param] = struct{}{}
 	}
 
-	// for _, fact := range stmt.DomFactsOrNil {
-	// 	for _, param := range ast.ExtractParamsFromFact(fact) {
-	// 		if _, ok := paramMap[param]; ok {
-	// 			return NewExecErr(fmt.Sprintf("param %s in %s\n is already declared in def header %s and should not be redeclared", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
-	// 		}
-	// 	}
-	// }
-	// for _, fact := range stmt.IffFactsOrNil {
-	// 	for _, param := range ast.ExtractParamsFromFact(fact) {
-	// 		if _, ok := paramMap[param]; ok {
-	// 			return NewExecErr(fmt.Sprintf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
-	// 		}
-	// 	}
-	// }
-	// for _, fact := range stmt.ImplicationFactsOrNil {
-	// 	for _, param := range ast.ExtractParamsFromFact(fact) {
-	// 		if _, ok := paramMap[param]; ok {
-	// 			return NewExecErr(fmt.Sprintf("param %s in %s\nshould not be redeclared in def header %s", param, fact.String(), ast.HeaderWithParamsAndParamSetsString(stmt.DefHeader)))
-	// 		}
-	// 	}
-	// }
-
 	if len(stmt.IffFactsOrNil) == 0 {
 		return NewExecTrue(stmt.String())
 	}
 
 	if generateIffUniFact {
 		// prop leads to iff
-		propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
+		propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp(exec.Env.EnvPkgMgr.PkgMgr.CurPkgDefaultName)
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
@@ -423,7 +401,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) ExecRet {
 	}
 
 	if len(stmt.Prop.IffFactsOrNil) == 0 {
-		_, iffToProp, err := stmt.Prop.Make_PropToIff_IffToProp()
+		_, iffToProp, err := stmt.Prop.Make_PropToIff_IffToProp(exec.Env.EnvPkgMgr.PkgMgr.CurPkgDefaultName)
 		if err != nil {
 			return NewExecErr(err.Error())
 		}

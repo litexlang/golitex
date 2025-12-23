@@ -518,14 +518,3 @@ func copySpecFact_InLogicExpr_InUniFactMem(src SpecFact_InLogicExpr_InUniFactMem
 	}
 	return dst
 }
-
-func IsKeywordOrKeySymbolOrKernelDefined(name string) bool {
-	if glob.IsKeyword(name) {
-		return true
-	}
-	if glob.IsKeySymbol(name) {
-		return true
-	}
-
-	return BuiltinEnvMgr.IsNamedDefinedInEnvMgr(name)
-}
