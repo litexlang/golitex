@@ -22,22 +22,22 @@ type PkgMgr struct {
 	NameAbsPathMap     map[string]string
 	AbsPathNamesSetMap map[string]map[string]struct{}
 	// 默认第一次看到某个path的时候，我们认为它的名字就是这个名字，后续如果出现其他名字，则认为这个path有多个名字，但是默认名字还是第一次知道它的时候它的名字
-	AbsPathDefaultNameMap           map[string]string
-	CurPkgDefaultName_EmptyWhenREPL string // Empty when REPL
-	CurRepoAbsPath_EmptyWhenREPL    string // Empty when REPL
+	AbsPathDefaultNameMap map[string]string
+	CurPkgDefaultName     string // Empty when REPL
+	CurRepoAbsPath        string // Empty when in main runtime
 }
 
 func (mgr *PkgMgr) IsREPL() bool {
-	return mgr.CurPkgDefaultName_EmptyWhenREPL == "" && mgr.CurRepoAbsPath_EmptyWhenREPL == ""
+	return mgr.CurPkgDefaultName == "" && mgr.CurRepoAbsPath == ""
 }
 
 func NewEmptyPkgMgr() *PkgMgr {
 	return &PkgMgr{
-		NameAbsPathMap:                  make(map[string]string),
-		AbsPathNamesSetMap:              make(map[string]map[string]struct{}),
-		AbsPathDefaultNameMap:           make(map[string]string),
-		CurPkgDefaultName_EmptyWhenREPL: "",
-		CurRepoAbsPath_EmptyWhenREPL:    "",
+		NameAbsPathMap:        make(map[string]string),
+		AbsPathNamesSetMap:    make(map[string]map[string]struct{}),
+		AbsPathDefaultNameMap: make(map[string]string),
+		CurPkgDefaultName:     "",
+		CurRepoAbsPath:        "",
 	}
 }
 

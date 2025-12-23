@@ -22,6 +22,16 @@ func RunREPL(version string) {
 
 	fmt.Fprintf(writer, "Litex %s\nCopyright (C) 2024-%s\nOfficial Website: litexlang.com\nGithub: https://github.com/litexlang/golitex\nEmail: litexlang@outlook.com\nType 'help' for help\n\nNote: This is a Litex version is not ready for production use. Testing and feedback are welcome!\n\n", version, strconv.Itoa(year))
 
+	// current working repo
+	curWorkingRepoAbsPath, err := os.Getwd()
+	if err != nil {
+		fmt.Fprintf(writer, "[Error] %s\n", err)
+		return
+	}
+
+	pkgMgr.CurRepoAbsPath = curWorkingRepoAbsPath
+	pkgMgr.CurPkgDefaultName = ""
+
 	for {
 		code, err := listenOneStatementFromREPL(reader, writer)
 		if err != nil {
@@ -36,7 +46,7 @@ func RunREPL(version string) {
 		}
 
 		// ret := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)
-		_, ret := RunCodeWithPkgMgr(code, pkgMgr, false)
+		_, ret := RunCodeInPkgMgr(code, pkgMgr, false)
 		if ret.IsNotTrue() {
 			msgStr := ret.String()
 			if msgStr != "" {
