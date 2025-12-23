@@ -40,7 +40,7 @@ func RunSourceCode(code string, path string) glob.GlobRet {
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
 	envPkgMgr := env.NewPkgMgr(repoPath, "")
-	envMgr, err := GetBuiltinEnvMgr(envPkgMgr)
+	envMgr, err := NewBuiltinEnvMgr(envPkgMgr)
 	if err != nil {
 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
 	}
@@ -157,7 +157,7 @@ func RunImportDirStmtInExec(curExec *exe.Executor, importDirStmt *ast.ImportDirS
 
 	// envPkgMgr := env.NewPkgMgr(importAbsRepoPath)
 	envPkgMgr := curExec.Env.PkgMgr // REMARK 直接把现在的pkgMgr传进去，因为已经把entrance repo path改成importAbsRepoPath了
-	builtinEnvMgr, err := GetBuiltinEnvMgr(envPkgMgr)
+	builtinEnvMgr, err := NewBuiltinEnvMgr(envPkgMgr)
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
