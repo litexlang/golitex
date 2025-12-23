@@ -146,3 +146,8 @@ func IsAtomObjAndEqualToStr(obj Obj, name string) bool {
 func (a Atom) IsWithPkgName() bool {
 	return strings.Contains(string(a), glob.PkgNameAtomSeparator)
 }
+
+func (a Atom) GetPkgNameAndAtomName() (string, string) {
+	parts := strings.Split(string(a), glob.PkgNameAtomSeparator)
+	return parts[0], parts[1]
+}

@@ -118,6 +118,7 @@ func RunImportStmtToGetEnvMgr(pkgMgr *packageMgr.PkgMgr, importStmt *ast.ImportD
 	}
 
 	// 把这个包存在 pkgMgr 里
+	// 在Run Dir 前存好，因为1. run的时候需要知道现在的 curEnvName 2. 防止循环引用
 	pkgMgr.NameAbsPathMap[importStmt.AsPkgName] = importRepoAbsPath
 	pkgMgr.AbsPathNamesSetMap[importRepoAbsPath][importStmt.AsPkgName] = struct{}{}
 	pkgMgr.AbsPathDefaultNameMap[importRepoAbsPath] = importStmt.AsPkgName

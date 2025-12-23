@@ -1,10 +1,20 @@
 run "test_import_tmp1.lit"
 
 have x R = 1
-# x $in a
+x $in a
 
 import "./pkg1" as pkgName1
 
-# 1 $in pkgName1.c
+1 $in pkgName1.c
 
 $pkgName1.divides(2, 4)
+
+import "./pkg1" as pkg1
+
+pkgName1.c = pkg1.c
+
+import "./pkg2" as pkgName2
+
+4 $in pkgName2.c
+
+7 $in pkg3.c

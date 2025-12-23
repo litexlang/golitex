@@ -25,13 +25,14 @@ import (
 
 func (envMgr *EnvMgr) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
 	var realName string
+	var pkgName string
 	var curEnvMgr = envMgr
 	if propName.IsWithPkgName() {
-		pkgName := strings.Split(string(propName), glob.PkgNameAtomSeparator)[0]
-		realName = strings.Split(string(propName), glob.PkgNameAtomSeparator)[1]
+		pkgName, realName = propName.GetPkgNameAndAtomName()
 		curEnvMgr = envMgr.GetEnvMgrOfName(pkgName)
 	} else {
 		realName = string(propName)
+		curEnvMgr = envMgr
 	}
 
 	// depth
@@ -44,10 +45,10 @@ func (envMgr *EnvMgr) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
 
 func (envMgr *EnvMgr) GetExistPropDef(propName ast.Atom) *ast.DefExistPropStmt {
 	var realName string
+	var pkgName string
 	var curEnvMgr = envMgr
 	if propName.IsWithPkgName() {
-		pkgName := strings.Split(string(propName), glob.PkgNameAtomSeparator)[0]
-		realName = strings.Split(string(propName), glob.PkgNameAtomSeparator)[1]
+		pkgName, realName = propName.GetPkgNameAndAtomName()
 		curEnvMgr = envMgr.GetEnvMgrOfName(pkgName)
 	} else {
 		realName = string(propName)
@@ -319,10 +320,7 @@ func (envMgr *EnvMgr) AtomsInEqualsFactDefined(stmt *ast.EqualsFactStmt, extraPa
 
 func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet {
 	if strings.Contains(string(AtomObjName), glob.PkgNameAtomSeparator) {
-		pkgNameAndAtomName := strings.Split(string(AtomObjName), glob.PkgNameAtomSeparator)
-		pkgName := pkgNameAndAtomName[0]
-		atomName := pkgNameAndAtomName[1]
-
+		pkgName, atomName := AtomObjName.GetPkgNameAndAtomName()
 		if pkgName != envMgr.EnvPkgMgr.PkgMgr.CurPkgDefaultName {
 			// 这时候我不是在执行 import repo
 
