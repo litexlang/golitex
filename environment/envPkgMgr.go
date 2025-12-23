@@ -21,46 +21,12 @@ import (
 type EnvPkgMgr struct {
 	AbsPkgPathEnvMap map[string]*EnvMgr
 	PkgMgr           *pkgMgr.PkgMgr
-	// CurAbsRepoPath     string
-	// CurDefaultPkgName string
-}
-
-// 为了确保实现上的简单性，不允许用重复的asPkgName
-func (mgr *EnvPkgMgr) MergeGivenExecPkgMgr(absRepoPath string, asPkgName string, pkgEnv *EnvMgr) error {
-	// if _, ok := mgr.AbsPkgPathEnvPairs[absRepoPath]; ok {
-	// 	return fmt.Errorf("package already exists: %s", absRepoPath)
-	// }
-
-	storedPkgEnv := pkgEnv.RemoveBuiltinEnv()
-	mgr.AbsPkgPathEnvMap[absRepoPath] = storedPkgEnv
-
-	// // 使用 PathNameMgr 的方法添加包名和路径的映射
-	// if err := mgr.AbsPathNameMgr.AddNamePath(asPkgName, absRepoPath); err != nil {
-	// 	return err
-	// }
-
-	// // 把 curExec 的 pkgMgr 合并到现在的 pkgMgr 中
-	// for pkgPath, pkgEnv := range pkgEnv.PkgMgr.AbsPkgPathEnvPairs {
-	// 	if _, ok := mgr.AbsPkgPathEnvPairs[pkgPath]; ok {
-	// 		continue
-	// 	}
-	// 	mgr.AbsPkgPathEnvPairs[pkgPath] = pkgEnv
-	// }
-
-	// // 使用 PathNameMgr 的 Merge 方法合并包名映射
-	// if err := mgr.AbsPathNameMgr.Merge(pkgEnv.PkgMgr.AbsPathNameMgr); err != nil {
-	// 	return err
-	// }
-
-	return nil
 }
 
 func NewPkgMgr(entranceRepoPath string, entranceDefaultPkgName string) *EnvPkgMgr {
 	return &EnvPkgMgr{
 		AbsPkgPathEnvMap: make(map[string]*EnvMgr),
 		PkgMgr:           pkgMgr.NewEmptyPkgMgr(),
-		// CurAbsRepoPath:     entranceRepoPath,
-		// CurDefaultPkgName: entranceDefaultPkgName,
 	}
 }
 
