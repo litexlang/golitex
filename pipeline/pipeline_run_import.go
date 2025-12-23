@@ -13,7 +13,7 @@ import (
 )
 
 // return: new imported pkg, new envMgr, globRet
-func RunImport(pkgMgr *packageMgr.AbsPathNameMgr, importStmt *ast.ImportDirStmt) (bool, *env.EnvMgr, glob.GlobRet) {
+func RunImport(pkgMgr *packageMgr.PkgMgr, importStmt *ast.ImportDirStmt) (bool, *env.EnvMgr, glob.GlobRet) {
 	var importRepoAbsPath string
 	var err error
 
@@ -24,7 +24,7 @@ func RunImport(pkgMgr *packageMgr.AbsPathNameMgr, importStmt *ast.ImportDirStmt)
 			return false, nil, glob.NewGlobErr(err.Error())
 		}
 	} else {
-		importRepoAbsPath = filepath.Join(pkgMgr.CurRepoAbsPath, importStmt.RelativePathOrGlobalPkgName)
+		importRepoAbsPath = filepath.Join(pkgMgr.CurRepoAbsPath_EmptyWhenREPL, importStmt.RelativePathOrGlobalPkgName)
 	}
 
 	// 这个repo已经被引用过了
@@ -50,7 +50,7 @@ func RunImport(pkgMgr *packageMgr.AbsPathNameMgr, importStmt *ast.ImportDirStmt)
 	pkgMgr.AbsPathDefaultNameMap[importRepoAbsPath] = importStmt.AsPkgName
 
 	// 这个repo还没被引用，那么就第一次运行它
-	envMgr, ret := RunFileWithPkgMgr(importRepoAbsPath, filepath.Join(importRepoAbsPath, glob.MainDotLit), importStmt.AsPkgName, pkgMgr, true)
+	envMgr, ret := RunFileWithPkgMgr(filepath.Join(importRepoAbsPath, glob.MainDotLit), importStmt.AsPkgName, pkgMgr, true)
 	if ret.IsNotTrue() {
 		return false, nil, ret
 	}
@@ -58,31 +58,44 @@ func RunImport(pkgMgr *packageMgr.AbsPathNameMgr, importStmt *ast.ImportDirStmt)
 	return true, envMgr, glob.NewGlobTrue(fmt.Sprintf("%s\n", importStmt))
 }
 
-func RunFileWithPkgMgr(fileRepoAbsPath string, fileAbsPath string, curPkgName string, pkgMgr *packageMgr.AbsPathNameMgr, removeBuiltinEnv bool) (*env.EnvMgr, glob.GlobRet) {
+func RunFileWithPkgMgr(fileAbsPath string, curPkgName string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, glob.GlobRet) {
+	if fileAbsPath == "" {
+		return nil, glob.NewGlobErr("filePath is empty")
+	}
+
+	cleanFileAbsPath := filepath.Clean(fileAbsPath)
+	if cleanFileAbsPath == "" {
+		return nil, glob.NewGlobErr(fmt.Sprintf("file path %s error", fileAbsPath))
+	}
+
 	// 更新 current working repo
-	previousCurRepoAbsPath := pkgMgr.CurRepoAbsPath
-	previousCurPkgDefaultName := pkgMgr.CurPkgDefaultName
-	pkgMgr.CurRepoAbsPath = fileRepoAbsPath
-	pkgMgr.CurPkgDefaultName = curPkgName
+	previousCurRepoAbsPath := pkgMgr.CurRepoAbsPath_EmptyWhenREPL
+	previousCurPkgDefaultName := pkgMgr.CurPkgDefaultName_EmptyWhenREPL
+	pkgMgr.CurRepoAbsPath_EmptyWhenREPL = filepath.Dir(cleanFileAbsPath)
+	pkgMgr.CurPkgDefaultName_EmptyWhenREPL = curPkgName
 
 	defer func() {
-		pkgMgr.CurRepoAbsPath = previousCurRepoAbsPath
-		pkgMgr.CurPkgDefaultName = previousCurPkgDefaultName
+		pkgMgr.CurRepoAbsPath_EmptyWhenREPL = previousCurRepoAbsPath
+		pkgMgr.CurPkgDefaultName_EmptyWhenREPL = previousCurPkgDefaultName
 	}()
 
+	// 获得那个 main.lit
+	code, err := os.ReadFile(cleanFileAbsPath)
+	if err != nil {
+		return nil, glob.NewGlobErr(err.Error())
+	}
+
+	return RunCodeWithPkgMgr(string(code), pkgMgr, removeBuiltinEnv)
+}
+
+func RunCodeWithPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, glob.GlobRet) {
 	envPkgMgr := env.NewEnvPkgMgrWithPkgMgr(pkgMgr)
 	envMgr, err := NewBuiltinEnvMgr(envPkgMgr)
 	if err != nil {
 		return nil, glob.NewGlobErr(err.Error())
 	}
 
-	// 获得那个 main.lit
-	code, err := os.ReadFile(fileAbsPath)
-	if err != nil {
-		return nil, glob.NewGlobErr(err.Error())
-	}
-
-	stmtSlice, err := ast.ParseSourceCode(string(code), pkgMgr.CurPkgDefaultName, pkgMgr, pkgMgr.CurRepoAbsPath)
+	stmtSlice, err := ast.ParseSourceCode(code, pkgMgr.CurPkgDefaultName_EmptyWhenREPL, pkgMgr, pkgMgr.CurRepoAbsPath_EmptyWhenREPL)
 	if err != nil {
 		return nil, glob.NewGlobErr(err.Error())
 	}

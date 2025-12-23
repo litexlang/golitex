@@ -22,14 +22,14 @@ import (
 // TODO: 这里要让 parse obj 的时候，能读入 pkgName 这样parse的时候，自动把这个名字写成 defaultPkgName.name 的形式，就会很好 =，很方便我跨包引用，顺便能检查是否重复定义了
 type TbParser struct {
 	FreeParams                    map[string]struct{}
-	PkgPathNameMgr                *pkgMgr.AbsPathNameMgr
+	PkgPathNameMgr                *pkgMgr.PkgMgr
 	CurPkgName                    string
 	DefinedNamesAtEachParseEnv    DefinedNameAtEachParseEnv
 	AllDefinedNamesExceptPkgNames map[string]struct{}
 	curParsingDirPath             string
 }
 
-func NewTbParser(curPkgName string, pkgPathNameMgr *pkgMgr.AbsPathNameMgr, curParsingDirPath string) *TbParser {
+func NewTbParser(curPkgName string, pkgPathNameMgr *pkgMgr.PkgMgr, curParsingDirPath string) *TbParser {
 	return &TbParser{
 		FreeParams:                    make(map[string]struct{}),
 		PkgPathNameMgr:                pkgPathNameMgr,
