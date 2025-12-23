@@ -104,7 +104,7 @@ func RunCodeWithPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv 
 
 	msgs := []string{}
 	for _, topStmt := range stmtSlice {
-		ret := RunStmtAndImportStmtInExecutor(curExec, topStmt)
+		ret := RunStmtInExecutor(curExec, topStmt)
 		msgs = append(msgs, ret.String())
 
 		if ret.IsNotTrue() {
@@ -118,4 +118,72 @@ func RunCodeWithPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv 
 	}
 
 	return envMgr, glob.NewGlobTrue(strings.Join(msgs, "\n"))
+}
+
+func AbsPathOfImportStmtPath(pkgMgr *packageMgr.PkgMgr, importStmt *ast.ImportDirStmt) (string, error) {
+	var importRepoAbsPath string
+	var err error
+
+	// 分类：如果 importStmt 是import 全局的包，或者是import其他repo
+	if importStmt.IsGlobalPkg {
+		importRepoAbsPath, err = glob.GetGlobalPkgAbsPath(importStmt.AsPkgName)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		importRepoAbsPath = filepath.Join(pkgMgr.CurRepoAbsPath_EmptyWhenREPL, importStmt.RelativePathOrGlobalPkgName)
+	}
+
+	return importRepoAbsPath, nil
+}
+
+func RunFileStmtInExec(curExec *exe.Executor, importFileStmt *ast.RunFileStmt) glob.GlobRet {
+	// 把 entrance repo path 和 importFileStmt.Path结合起来
+	path := filepath.Join(curExec.Env.EnvPkgMgr.PkgMgr.CurRepoAbsPath_EmptyWhenREPL, importFileStmt.Path)
+
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return glob.NewGlobErr(err.Error())
+	}
+	code := string(content)
+
+	stmtSlice, err := ast.ParseSourceCode(code, curExec.Env.EnvPkgMgr.PkgMgr.CurPkgDefaultName_EmptyWhenREPL, curExec.Env.EnvPkgMgr.PkgMgr, curExec.Env.EnvPkgMgr.PkgMgr.CurRepoAbsPath_EmptyWhenREPL)
+	if err != nil {
+		return glob.NewGlobErr(err.Error())
+	}
+
+	msgs := []string{}
+	for _, topStmt := range stmtSlice {
+		ret := RunStmtInExecutor(curExec, topStmt)
+		msgs = append(msgs, ret.String())
+
+		if ret.IsNotTrue() {
+			return glob.NewGlobErr(strings.Join(msgs, "\n"))
+		}
+	}
+
+	return glob.NewGlobTrue(strings.Join(msgs, "\n"))
+}
+
+func RunStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) glob.GlobRet {
+	switch asStmt := stmt.(type) {
+	case *ast.ImportDirStmt:
+		// return RunImportDirStmtInExec(curExec, asStmt)
+		newPkgImported, newEnvMgr, ret := RunImport(curExec.Env.EnvPkgMgr.PkgMgr, asStmt)
+		if ret.IsNotTrue() {
+			return ret
+		}
+		if newPkgImported {
+			absPath, err := AbsPathOfImportStmtPath(curExec.Env.EnvPkgMgr.PkgMgr, asStmt)
+			if err != nil {
+				return glob.NewGlobErr(err.Error())
+			}
+			curExec.Env.EnvPkgMgr.AbsPkgPathEnvMap[absPath] = newEnvMgr
+		}
+		return ret
+	case *ast.RunFileStmt:
+		return RunFileStmtInExec(curExec, asStmt)
+	default:
+		return curExec.Stmt(asStmt).ToGlobRet()
+	}
 }
