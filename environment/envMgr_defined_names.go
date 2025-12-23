@@ -24,12 +24,18 @@ import (
 // Helper methods for EnvMgr to access definitions
 
 func (envMgr *EnvMgr) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
-	if envMgr == nil || envMgr.AllDefinedAlgoNames == nil {
-		panic("")
+	var realName string
+	var curEnvMgr = envMgr
+	if propName.IsWithPkgName() {
+		pkgName := strings.Split(string(propName), glob.PkgNameAtomSeparator)[0]
+		realName = strings.Split(string(propName), glob.PkgNameAtomSeparator)[1]
+		curEnvMgr = envMgr.GetEnvMgrOfName(pkgName)
+	} else {
+		realName = string(propName)
 	}
 
 	// depth
-	propDef, ok := envMgr.AllDefinedPropNames[string(propName)]
+	propDef, ok := curEnvMgr.AllDefinedPropNames[realName]
 	if ok {
 		return propDef
 	}
@@ -37,7 +43,17 @@ func (envMgr *EnvMgr) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
 }
 
 func (envMgr *EnvMgr) GetExistPropDef(propName ast.Atom) *ast.DefExistPropStmt {
-	existPropDef, ok := envMgr.AllDefinedExistPropNames[string(propName)]
+	var realName string
+	var curEnvMgr = envMgr
+	if propName.IsWithPkgName() {
+		pkgName := strings.Split(string(propName), glob.PkgNameAtomSeparator)[0]
+		realName = strings.Split(string(propName), glob.PkgNameAtomSeparator)[1]
+		curEnvMgr = envMgr.GetEnvMgrOfName(pkgName)
+	} else {
+		realName = string(propName)
+	}
+
+	existPropDef, ok := curEnvMgr.AllDefinedExistPropNames[realName]
 	if ok {
 		return existPropDef
 	}
@@ -180,43 +196,33 @@ func (envMgr *EnvMgr) AtomsInSpecFactDefined(stmt *ast.SpecFactStmt, extraParams
 }
 
 func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.SpecFactStmt) glob.GlobRet {
-	var realName string
-	var curEnvMgr = envMgr
-	if stmt.PropName.IsWithPkgName() {
-		pkgName := strings.Split(string(stmt.PropName), glob.PkgNameAtomSeparator)[0]
-		realName = strings.Split(string(stmt.PropName), glob.PkgNameAtomSeparator)[1]
-		curEnvMgr = envMgr.GetEnvMgrOfName(pkgName)
-	} else {
-		realName = string(stmt.PropName)
-	}
-
 	// Check if it's an exist_prop defined by user
 	if stmt.TypeEnum == ast.TrueExist_St || stmt.TypeEnum == ast.FalseExist_St {
-		if glob.IsBuiltinExistPropName(realName) {
+		if glob.IsBuiltinExistPropName(string(stmt.PropName)) {
 			return glob.NewEmptyGlobTrue()
 		}
 
-		existPropDef := curEnvMgr.GetExistPropDef(ast.Atom(realName))
+		existPropDef := envMgr.GetExistPropDef(stmt.PropName)
 		if existPropDef != nil {
 			return glob.NewEmptyGlobTrue()
 		}
 		return glob.ErrRet(fmt.Errorf("undefined exist_prop: %s", stmt.PropName))
 	} else {
-		if glob.IsBuiltinPropName(realName) {
+		if glob.IsBuiltinPropName(string(stmt.PropName)) {
 			return glob.NewEmptyGlobTrue()
 		}
 
-		if glob.IsBuiltinExistPropName(realName) {
+		if glob.IsBuiltinExistPropName(string(stmt.PropName)) {
 			return glob.NewEmptyGlobTrue()
 		}
 
 		// Check if it's a regular prop defined by user
-		propDef := curEnvMgr.GetPropDef(ast.Atom(realName))
+		propDef := envMgr.GetPropDef(stmt.PropName)
 		if propDef != nil {
 			return glob.NewEmptyGlobTrue()
 		}
 
-		existPropDef := curEnvMgr.GetExistPropDef(ast.Atom(realName))
+		existPropDef := envMgr.GetExistPropDef(stmt.PropName)
 		if existPropDef != nil {
 			return glob.NewEmptyGlobTrue()
 		}
