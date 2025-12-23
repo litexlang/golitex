@@ -24,10 +24,15 @@ import (
 )
 
 func NewBuiltinEnvMgrWithNewEmptyEnv(envPkgMgr *env.EnvPkgMgr) (*env.EnvMgr, error) {
-	envMgr, err := NewBuiltinEnvMgr(envPkgMgr)
-	if err != nil {
-		return nil, err
+	var err error
+	if env.BuiltinEnvMgr == nil {
+		env.BuiltinEnvMgr, err = NewBuiltinEnvMgr(envPkgMgr)
+		if err != nil {
+			return nil, err
+		}
 	}
+
+	envMgr := env.CopyEnvMgr_SharePkgMgr(env.BuiltinEnvMgr)
 	envMgr = envMgr.NewEnv()
 	return envMgr, nil
 }
