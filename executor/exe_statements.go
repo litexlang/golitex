@@ -131,11 +131,11 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	}
 
 	if execRet.IsTrue() {
-		return execRet.AddMsg(fmt.Sprintf("\nSuccess! line %d\n", stmt.GetLine()))
+		return execRet.AddMsg(SuccessExecStmtStr(stmt))
 	} else if execRet.IsUnknown() {
-		return execRet.AddMsg(fmt.Sprintf("Unknown: line %d\n", stmt.GetLine()))
+		return execRet.AddMsg(UnknownExecStmtStr(stmt))
 	} else {
-		return execRet.AddMsg(fmt.Sprintf("Execution Error: line %d\n", stmt.GetLine()))
+		return execRet.AddMsg(ErrorExecStmtStr(stmt))
 	}
 }
 

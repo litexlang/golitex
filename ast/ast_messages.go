@@ -606,7 +606,7 @@ func (stmt *DefFnStmt) String() string {
 
 func (stmt *RunFileStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordImport)
+	builder.WriteString(glob.KeywordRun)
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolDoubleQuote)
 	builder.WriteString(stmt.Path)
@@ -953,7 +953,7 @@ func (stmt *ProveForStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveFor)
 	builder.WriteString(" ")
-	
+
 	// Write all param $in range(...) pairs
 	for i, param := range stmt.Params {
 		if i > 0 {
