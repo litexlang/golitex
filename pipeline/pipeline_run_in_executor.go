@@ -47,25 +47,32 @@ func RunFileStmtInExecutor(curExec *exe.Executor, importFileStmt *ast.RunFileStm
 	}
 	code := string(content)
 
-	stmtSlice, err := ast.ParseSourceCode(code, curExec.Env.EnvPkgMgr.PkgMgr)
+	// stmtSlice, err := ast.ParseSourceCode(code, curExec.Env.EnvPkgMgr.PkgMgr)
+	// if err != nil {
+	// 	return glob.NewGlobErr(err.Error())
+	// }
+
+	blocks, err := ast.PreprocessAndMakeSourceCodeIntoBlocks(code)
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
 	}
 
+	p := ast.NewTbParser(curExec.Env.EnvPkgMgr.PkgMgr)
 	msgs := []string{}
-	for _, topStmt := range stmtSlice {
+	for _, block := range blocks {
+		topStmt, err := p.Stmt(&block)
+		if err != nil {
+			return glob.NewGlobErr(err.Error())
+		}
 		ret := RunStmtInExecutor(curExec, topStmt)
 		msgs = append(msgs, ret.String())
-
 		if ret.IsNotTrue() {
 			return glob.NewGlobErr(strings.Join(msgs, "\n"))
 		}
 	}
 
 	msgs = append(msgs, fmt.Sprintf("%s\n", importFileStmt))
-
 	msgs = append(msgs, exe.SuccessExecStmtStr(importFileStmt))
-
 	return glob.NewGlobTrue(strings.Join(msgs, "\n"))
 }
 

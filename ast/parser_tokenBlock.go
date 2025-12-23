@@ -53,8 +53,8 @@ func (b *tokenBlock) stringWithIndent(indentLevel int) string {
 	return result
 }
 
-// makeTokenBlocks 合并 tokenization 和 scope 解析的入口函数
-func makeTokenBlocks(lines []string) ([]tokenBlock, error) {
+// MakeTokenBlocks 合并 tokenization 和 scope 解析的入口函数
+func MakeTokenBlocks(lines []string) ([]tokenBlock, error) {
 	t := newTokenizerWithScope(lines)
 	return t.parseBlocks(0)
 }

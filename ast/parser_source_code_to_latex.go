@@ -17,19 +17,19 @@ package litex_ast
 import pkgMgr "golitex/package_manager"
 
 func ParseSourceCode_WhenCompileToLatex2(code string) ([]Stmt, error) {
-	preprocessedCodeLines, err := preprocessSourceCode(code)
+	preprocessedCodeLines, err := PreprocessSourceCode(code)
 	if err != nil {
 		return []Stmt{}, err
 	}
 
-	blocks, err := makeTokenBlocks(preprocessedCodeLines)
+	blocks, err := MakeTokenBlocks(preprocessedCodeLines)
 	if err != nil {
 		return nil, err
 	}
 
 	ret := []Stmt{}
 	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
-	p := NewTbParser(pkgPathNameMgr, blocks)
+	p := NewTbParser(pkgPathNameMgr)
 	for _, block := range blocks {
 		cur, err := p.Stmt(&block)
 		if err != nil {
