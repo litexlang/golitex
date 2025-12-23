@@ -25,13 +25,13 @@ import (
 	"strings"
 )
 
-func RunFile(path string) glob.GlobRet {
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
-	}
-	return RunSourceCode(string(content), path)
-}
+// func RunFile(path string) glob.GlobRet {
+// 	content, err := os.ReadFile(path)
+// 	if err != nil {
+// 		return glob.NewGlobErr(err.Error()).AddMsg(glob.REPLErrorMessageWithPath(path))
+// 	}
+// 	return RunSourceCode(string(content), path)
+// }
 
 func RunSourceCode(code string, path string) glob.GlobRet {
 	// 获得 path所在的 repo
