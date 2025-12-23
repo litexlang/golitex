@@ -89,7 +89,7 @@ func RunFileWithPkgMgr(fileAbsPath string, curPkgName string, pkgMgr *packageMgr
 }
 
 func RunCodeWithPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, glob.GlobRet) {
-	envPkgMgr := env.NewEnvPkgMgrWithPkgMgr(pkgMgr)
+	envPkgMgr := env.NewEnvPkgMgr(pkgMgr)
 	envMgr, err := NewBuiltinEnvMgr(envPkgMgr)
 	if err != nil {
 		return nil, glob.NewGlobErr(err.Error())
