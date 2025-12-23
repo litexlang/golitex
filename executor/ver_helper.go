@@ -19,22 +19,6 @@ import (
 	ast "golitex/ast"
 )
 
-// func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
-// 	_ = stmt
-// 	return nil
-// }
-
-// func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) ExecRet {
-// 	// Note: processOkMsg uses string format, keep using string version for backward compatibility
-// 	verifiedByStr := fmt.Sprintf(verifiedBy, args...)
-// 	execRet := NewExecTrue(successVerStringString(msg, verifiedByStr))
-// 	if state.WithMsg {
-// 		execRet.AddMsg(successVerStringString(msg, verifiedByStr))
-// 		return execRet
-// 	}
-// 	return execRet
-// }
-
 // maybeAddSuccessMsg adds a success message to execRet if state.WithMsg is true
 func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy ast.Stmt, execRet ExecRet) ExecRet {
 	if state.WithMsg {

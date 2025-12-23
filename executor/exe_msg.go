@@ -12,27 +12,21 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
-package litex_env
+package litex_executor
 
 import (
-	pkgMgr "golitex/package_manager"
+	"fmt"
+	ast "golitex/ast"
 )
 
-type EnvPkgMgr struct {
-	AbsPkgPathEnvMap map[string]*EnvMgr
-	PkgMgr           *pkgMgr.PkgMgr
+func SuccessExecStmtStr(stmt ast.Stmt) string {
+	return fmt.Sprintf("Success! line %d\n", stmt.GetLine())
 }
 
-func NewPkgMgr(entranceRepoPath string, entranceDefaultPkgName string) *EnvPkgMgr {
-	return &EnvPkgMgr{
-		AbsPkgPathEnvMap: make(map[string]*EnvMgr),
-		PkgMgr:           pkgMgr.NewEmptyPkgMgr(),
-	}
+func UnknownExecStmtStr(stmt ast.Stmt) string {
+	return fmt.Sprintf("Unknown: line %d\n", stmt.GetLine())
 }
 
-func NewEnvPkgMgr(mgr *pkgMgr.PkgMgr) *EnvPkgMgr {
-	return &EnvPkgMgr{
-		AbsPkgPathEnvMap: make(map[string]*EnvMgr),
-		PkgMgr:           mgr,
-	}
+func ErrorExecStmtStr(stmt ast.Stmt) string {
+	return fmt.Sprintf("Error: line %d\n", stmt.GetLine())
 }

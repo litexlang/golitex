@@ -41,7 +41,7 @@ func RunREPL(version string) {
 
 		// Have to trim space because there is \n at the end of code
 		if strings.TrimSpace(code) == glob.KeywordExit {
-			fmt.Fprintf(writer, "---\nGoodbye! :)\n")
+			fmt.Fprintf(writer, "---\nGoodbye!\n")
 			return
 		}
 
