@@ -37,25 +37,21 @@ func getSystemRootPath() string {
 // If the path is not an absolute path, it will first search in core_packages, then in user_packages.
 // If the path is already an absolute path, it will be returned as is.
 // Returns an error if the package is not found in either location.
-func GetGlobalPkgAbsPath(path string) (string, error) {
-	if filepath.IsAbs(path) {
-		return path, nil
-	}
-
+func GetGlobalPkgAbsPath(pkgName string) (string, error) {
 	systemRoot := getSystemRootPath()
 
 	// First, try core_packages
-	corePath := filepath.Join(systemRoot, "core_packages", path)
+	corePath := filepath.Join(systemRoot, "core_packages", pkgName)
 	if info, err := os.Stat(corePath); err == nil && info.IsDir() {
 		return corePath, nil
 	}
 
 	// Then, try user_packages
-	userPath := filepath.Join(systemRoot, "user_packages", path)
+	userPath := filepath.Join(systemRoot, "user_packages", pkgName)
 	if info, err := os.Stat(userPath); err == nil && info.IsDir() {
 		return userPath, nil
 	}
 
 	// Package not found in either location
-	return "", fmt.Errorf("package not found: %s (searched in core_packages and user_packages)", path)
+	return "", fmt.Errorf("package not found: %s (searched in core_packages and user_packages)", pkgName)
 }
