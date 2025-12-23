@@ -87,7 +87,7 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 
 		start := time.Now()
 
-		pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+		pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
 
 		// Run the code directly
 		topStmtSlice, err := ast.ParseSourceCode(string(content), "", pkgPathNameMgr, "")

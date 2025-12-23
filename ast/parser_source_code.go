@@ -21,7 +21,7 @@ import (
 )
 
 // * TODO: 在parse时，把pkgName改成当前项目里定义的 pkgName，而不是继续沿用原来的
-func ParseSourceCode(code string, curPkgNameMaybeNotDefault string, pkgPathNameMgr *pkgMgr.AbsPathNameMgr, curParsingDirPath string) ([]Stmt, error) {
+func ParseSourceCode(code string, curPkgNameMaybeNotDefault string, pkgPathNameMgr *pkgMgr.PkgMgr, curParsingDirPath string) ([]Stmt, error) {
 	// code, err := preprocessSourceCode(code)
 	preprocessedCodeLines, err := preprocessSourceCode(code)
 	if err != nil {

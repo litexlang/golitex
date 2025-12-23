@@ -78,7 +78,10 @@ func main() {
 	// Handle execution flags
 	if *executeFlag != "" {
 		// Normal execution
-		ret := pipeline.RunSourceCode(glob.RemoveWindowsCarriage(*executeFlag), "-e")
+		pkgMgr := package_manager.NewEmptyPkgMgr()
+
+		// ret := pipeline.RunSourceCode(glob.RemoveWindowsCarriage(*executeFlag), "-e")
+		_, ret := pipeline.RunCodeWithPkgMgr(glob.RemoveWindowsCarriage(*executeFlag), pkgMgr, false)
 		msg := strings.TrimSpace(ret.String())
 		fmt.Println(msg)
 		return
@@ -155,11 +158,10 @@ func MainFlagFile(fileFlag string) {
 
 	// 获取相对于当前工作目录的相对路径
 	absFilePath := filepath.Join(workingDir, relativeFilePath)
-	absFileRepoPath := filepath.Dir(absFilePath)
 
-	pkgMgr := package_manager.NewPathNameMgr()
+	pkgMgr := package_manager.NewEmptyPkgMgr()
 
-	_, ret := pipeline.RunFileWithPkgMgr(absFileRepoPath, absFilePath, "", pkgMgr, false)
+	_, ret := pipeline.RunFileWithPkgMgr(absFilePath, "", pkgMgr, false)
 	fmt.Println(ret.StringWithOptimizedNewline())
 }
 

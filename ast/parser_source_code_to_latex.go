@@ -28,7 +28,7 @@ func ParseSourceCode_WhenCompileToLatex2(code string) ([]Stmt, error) {
 	}
 
 	ret := []Stmt{}
-	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
 	p := NewTbParser("", pkgPathNameMgr, "")
 	for _, block := range blocks {
 		cur, err := p.Stmt(&block)
