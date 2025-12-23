@@ -30,14 +30,24 @@ func FormatCode(path string) (glob.GlobRet, error) {
 	}
 
 	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
-	topStmtSlice, err := ast.ParseSourceCode(string(content), pkgPathNameMgr)
+	// topStmtSlice, err := ast.ParseSourceCode(string(content), pkgPathNameMgr)
+	// if err != nil {
+	// 	return glob.NewGlobErr(err.Error()), err
+	// }
+
+	blocks, err := ast.PreprocessAndMakeSourceCodeIntoBlocks(string(content))
 	if err != nil {
 		return glob.NewGlobErr(err.Error()), err
 	}
 
+	p := ast.NewTbParser(pkgPathNameMgr)
 	stmtStrSlice := []string{}
-	for _, stmt := range topStmtSlice {
-		stmtStrSlice = append(stmtStrSlice, stmt.String())
+	for _, block := range blocks {
+		topStmt, err := p.Stmt(&block)
+		if err != nil {
+			return glob.NewGlobErr(err.Error()), err
+		}
+		stmtStrSlice = append(stmtStrSlice, topStmt.String())
 	}
 
 	// 把 code 写到 path 里

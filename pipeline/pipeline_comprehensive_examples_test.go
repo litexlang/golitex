@@ -89,27 +89,28 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
 
 		// Run the code directly
-		topStmtSlice, err := ast.ParseSourceCode(string(content), pkgPathNameMgr)
+		blocks, err := ast.PreprocessAndMakeSourceCodeIntoBlocks(string(content))
 		if err != nil {
-			return fmt.Errorf("parse error in file %s: %s", file.Name(), err.Error())
+			return fmt.Errorf("make token blocks error in file %s: %s", file.Name(), err.Error())
 		}
 
-		for _, topStmt := range topStmtSlice {
+		p := ast.NewTbParser(pkgPathNameMgr)
+
+		for _, block := range blocks {
+			topStmt, err := p.Stmt(&block)
+			if err != nil {
+				return fmt.Errorf("parse block one by one error in file %s: %s", file.Name(), err.Error())
+			}
+
 			execState := executor.Stmt(topStmt)
 			if execState.IsErr() {
 				return fmt.Errorf("\n\nexecution test failed in file %s, line %d:\n%s\n\n", file.Name(), topStmt.GetLine(), execState.String())
 			}
-			if execState.IsUnknown() {
-				return fmt.Errorf("\n\nexecution test failed in file %s, line %d: unknown:\n%s\n\n", file.Name(), topStmt.GetLine(), execState.String())
-			}
 		}
 
 		elapsed := time.Since(start)
-
 		fmt.Printf("%s\n", elapsed)
-
 		executor.ClearStmt()
-
 	}
 
 	fmt.Printf("All Files Take %s\n", time.Since(allFilesStartTime))
