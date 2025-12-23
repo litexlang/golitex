@@ -36,3 +36,12 @@ func NewEnvPkgMgr(mgr *pkgMgr.PkgMgr) *EnvPkgMgr {
 		PkgMgr:              mgr,
 	}
 }
+
+func (envMgr *EnvMgr) GetEnvMgrOfName(name string) *EnvMgr {
+	if name == envMgr.EnvPkgMgr.PkgMgr.CurPkgDefaultName {
+		return envMgr
+	}
+
+	path := envMgr.EnvPkgMgr.PkgMgr.NameAbsPathMap[name]
+	return envMgr.EnvPkgMgr.AbsPkgPathEnvMgrMap[path]
+}

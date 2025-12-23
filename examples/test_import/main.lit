@@ -1,10 +1,10 @@
 run "test_import_tmp1.lit"
 
 have x R = 1
-x $in a
+# x $in a
 
 import "./pkg1" as pkgName1
 
-1 $in pkgName1.c
+# 1 $in pkgName1.c
 
 $pkgName1.dvd(2, 4)

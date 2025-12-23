@@ -186,7 +186,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 
 	defStmt := ver.Env.MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(curDefStmt)
 
-	iffToProp := defStmt.IffToPropUniFact()
+	iffToProp := defStmt.IffToPropUniFact(ver.Env.EnvPkgMgr.PkgMgr.CurPkgDefaultName)
 	paramArrMap := map[string]ast.Obj{}
 	for i, param := range stmt.Params {
 		paramArrMap[defStmt.DefHeader.Params[i]] = param
@@ -392,7 +392,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 		return NewEmptyExecUnknown()
 	}
 
-	iffToProp := defStmt.IffToPropUniFact()
+	iffToProp := defStmt.IffToPropUniFact(ver.Env.EnvPkgMgr.PkgMgr.CurPkgDefaultName)
 	paramArrMap := map[string]ast.Obj{}
 	for i, param := range stmt.Params {
 		paramArrMap[defStmt.DefHeader.Params[i]] = param

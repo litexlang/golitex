@@ -69,4 +69,3 @@ func (envMgr *EnvMgr) NotEqualIsCommutative() {
 func (envMgr *EnvMgr) NewTransitiveProp(name string) {
 	envMgr.CurEnv().TransitivePropMem[name] = make(map[string][]ast.Obj)
 }
-

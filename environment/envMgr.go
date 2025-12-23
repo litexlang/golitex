@@ -50,7 +50,7 @@ type EnvMgr struct {
 	AllDefinedProveAlgoNames map[string]*ast.DefProveAlgoStmt
 }
 
-func (mgr *EnvMgr) IsNamedDefinedInEnvMgr(name string) bool {
+func (mgr *EnvMgr) IsNameDefinedInEnvMgr(name string) bool {
 	if mgr.AllDefinedAtomObjNames[name] != nil {
 		return true
 	}
