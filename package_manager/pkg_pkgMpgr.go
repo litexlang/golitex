@@ -60,35 +60,3 @@ func (mgr *PkgMgr) AddNamePath(pkgName, pkgAbsPath string) error {
 
 	return nil
 }
-
-// Merge 合并另一个 PathNameMgr 到当前 PathNameMgr
-func (mgr *PkgMgr) Merge(other *PkgMgr) error {
-	for name, path := range other.NameAbsPathMap {
-		if existingPath, ok := mgr.NameAbsPathMap[name]; ok {
-			if existingPath != path {
-				return fmt.Errorf("package name %s refer to package %s, and package %s", name, path, existingPath)
-			}
-			// 如果包名已存在且路径相同，确保路径到包名集合的映射也更新了
-			if _, ok := mgr.AbsPathNamesSetMap[path]; !ok {
-				mgr.AbsPathNamesSetMap[path] = make(map[string]struct{})
-			}
-			if _, ok := mgr.AbsPathNamesSetMap[path][name]; !ok {
-				mgr.AbsPathNamesSetMap[path][name] = struct{}{}
-			}
-			continue
-		}
-	}
-	return nil
-}
-
-func (mgr *PkgMgr) GetDefaultPkgName(pkgName string) (string, error) {
-	if pkgName == "" {
-		return "", nil
-	}
-
-	path, ok := mgr.NameAbsPathMap[pkgName]
-	if !ok {
-		return pkgName, fmt.Errorf("package name %s not found", pkgName)
-	}
-	return mgr.AbsPathDefaultNameMap[path], nil
-}
