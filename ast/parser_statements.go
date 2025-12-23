@@ -1925,7 +1925,7 @@ func (p *TbParser) importDirStmt(tb *tokenBlock) (*ImportDirStmt, error) {
 		// get abs path of path
 		// working absolute path is relative to the working directory
 
-		absPath := filepath.Join(p.curParsingDirPath, path)
+		absPath := filepath.Join(p.PkgPathNameMgr.CurRepoAbsPath, path)
 
 		err = p.PkgPathNameMgr.AddNamePath(asPkgName, absPath)
 		if err != nil {
