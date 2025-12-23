@@ -33,7 +33,7 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerSta
 		}
 	}
 
-	for _, pkgEnvMgr := range ver.Env.PkgMgr.AbsPkgPathEnvPairs {
+	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMap {
 		curEnv := pkgEnvMgr.EnvSlice[0]
 		verRet := ver.specFact_SpecMem_atEnv(&curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {

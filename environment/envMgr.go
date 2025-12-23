@@ -25,8 +25,8 @@ type KnownFactsStruct struct {
 }
 
 type EnvMgr struct {
-	PkgMgr   *EnvPkgMgr
-	EnvSlice []EnvMemory
+	EnvPkgMgr *EnvPkgMgr
+	EnvSlice  []EnvMemory
 
 	AllDefinedAtomObjNames   map[string]*ast.DefLetStmt
 	AllDefinedPropNames      map[string]*ast.DefPropStmt
@@ -87,7 +87,7 @@ func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames 
 		AllDefinedFnSetNames:     allDefinedFnTemplateNames,
 		AllDefinedAlgoNames:      allDefinedAlgoNames,
 		AllDefinedProveAlgoNames: allDefinedProveAlgoNames,
-		PkgMgr:                   pkgMgr,
+		EnvPkgMgr:                pkgMgr,
 		EnvSlice:                 envMemory,
 	}
 }
@@ -118,7 +118,7 @@ func NewBuiltinEnvMgr(envMgr *EnvMgr) *EnvMgr {
 	for k := range builtinEnvMemory.DefProveAlgoMem {
 		newAllDefinedProveAlgoNames[k] = envMgr.AllDefinedProveAlgoNames[k]
 	}
-	return NewEnvMgr(envMgr.PkgMgr, []EnvMemory{builtinEnvMemory}, newAllDefinedAtomObjNames, newAllDefinedPropNames, newAllDefinedExistPropNames, newAllDefinedFnTemplateNames, newAllDefinedAlgoNames, newAllDefinedProveAlgoNames)
+	return NewEnvMgr(envMgr.EnvPkgMgr, []EnvMemory{builtinEnvMemory}, newAllDefinedAtomObjNames, newAllDefinedPropNames, newAllDefinedExistPropNames, newAllDefinedFnTemplateNames, newAllDefinedAlgoNames, newAllDefinedProveAlgoNames)
 }
 
 func (envMgr *EnvMgr) RemoveBuiltinEnv() *EnvMgr {

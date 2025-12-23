@@ -100,7 +100,7 @@ func (envMgr *EnvMgr) GetListSetEqualToObj(obj ast.Obj) ast.Obj {
 	}
 
 	// search in pkg env mgr
-	for _, pkgEnvMgr := range envMgr.PkgMgr.AbsPkgPathEnvPairs {
+	for _, pkgEnvMgr := range envMgr.EnvPkgMgr.AbsPkgPathEnvMap {
 		equalObjs, ok := pkgEnvMgr.EnvSlice[0].GetEqualObjs(obj)
 		if ok && equalObjs != nil {
 			for _, equalObj := range *equalObjs {

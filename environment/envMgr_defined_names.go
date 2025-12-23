@@ -41,7 +41,7 @@ func (envMgr *EnvMgr) GetExistPropDef(propName ast.Atom) *ast.DefExistPropStmt {
 }
 
 func (envMgr *EnvMgr) IsPkgName(pkgName string) bool {
-	_, ok := envMgr.PkgMgr.AbsPathNameMgr.NameAbsPathMap[pkgName]
+	_, ok := envMgr.EnvPkgMgr.PkgMgr.NameAbsPathMap[pkgName]
 	return ok
 }
 
@@ -303,12 +303,12 @@ func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) glob.GlobRet 
 		PkgName := PkgNameAndAtomName[0]
 		AtomName := PkgNameAndAtomName[1]
 
-		if envMgr.PkgMgr.AbsPathNameMgr.CurPkgDefaultName_EmptyWhenREPL != PkgName {
-			pkgPath, ok := envMgr.PkgMgr.AbsPathNameMgr.NameAbsPathMap[PkgName]
+		if envMgr.EnvPkgMgr.PkgMgr.CurPkgDefaultName_EmptyWhenREPL != PkgName {
+			pkgPath, ok := envMgr.EnvPkgMgr.PkgMgr.NameAbsPathMap[PkgName]
 			if !ok {
 				return glob.ErrRet(fmt.Errorf("package %s is not found", PkgName))
 			}
-			pkgPathEnv, ok := envMgr.PkgMgr.AbsPkgPathEnvPairs[pkgPath]
+			pkgPathEnv, ok := envMgr.EnvPkgMgr.AbsPkgPathEnvMap[pkgPath]
 			if !ok {
 				return glob.ErrRet(fmt.Errorf("package environment for %s is not found", PkgName))
 			}
