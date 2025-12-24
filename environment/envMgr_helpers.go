@@ -277,7 +277,7 @@ var BuiltinEnvMgr *EnvMgr = nil
 
 func CopyEnvMgr_SharePkgMgr(givenEnvMgr *EnvMgr) *EnvMgr {
 	// 复制所有的 map
-	allDefinedAtomObjNames := make(map[string]*ast.DefLetStmt)
+	allDefinedAtomObjNames := make(map[string]struct{})
 	for k, v := range givenEnvMgr.AllDefinedAtomObjNames {
 		allDefinedAtomObjNames[k] = v
 	}

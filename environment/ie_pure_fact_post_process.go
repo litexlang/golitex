@@ -66,7 +66,7 @@ func (ie *InferEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) glob.Gl
 
 	equalFact := ast.NewEqualFact(fact.Params[0], fact.Params[1])
 
-	ret := ie.EnvMgr.NewFactWithAtomsDefined(equalFact)
+	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -100,14 +100,14 @@ func (ie *InferEngine) newTrueExist(fact *ast.SpecFactStmt) glob.GlobRet {
 	}
 
 	for _, iffFact := range iffFacts {
-		ret := ie.EnvMgr.NewFactWithAtomsDefined(iffFact)
+		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(iffFact)
 		if ret.IsErr() {
 			return ret
 		}
 	}
 
 	for _, thenFact := range thenFacts {
-		ret := ie.EnvMgr.NewFactWithAtomsDefined(thenFact)
+		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(thenFact)
 		if ret.IsErr() {
 			return ret
 		}

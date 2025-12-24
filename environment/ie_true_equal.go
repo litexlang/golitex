@@ -91,7 +91,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) glob.GlobRet 
 
 	// 让 $is_cart(x) 成立
 	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fact.Params[0]}, glob.BuiltinLine)
-	ret := ie.EnvMgr.NewFactWithAtomsDefined(isCartFact)
+	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(isCartFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -100,7 +100,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) glob.GlobRet 
 	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fact.Params[0]})
 	dimValue := ast.Atom(strconv.Itoa(len(cart.Params)))
 	dimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimFn, dimValue}, glob.BuiltinLine)
-	ret = ie.EnvMgr.NewFactWithAtomsDefined(dimEqualFact)
+	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(dimEqualFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -109,7 +109,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) glob.GlobRet 
 	for i, cartParam := range cart.Params {
 		projFn := ast.NewFnObj(ast.Atom(glob.KeywordProj), []ast.Obj{fact.Params[0], ast.Atom(strconv.Itoa(i + 1))})
 		projEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{projFn, cartParam}, glob.BuiltinLine)
-		ret = ie.EnvMgr.NewFactWithAtomsDefined(projEqualFact)
+		ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(projEqualFact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -136,7 +136,7 @@ func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIn
 
 		// 创建相等事实: obj[index] = tuple[i]
 		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{indexedObj, tuple.Params[i]}, glob.BuiltinLine)
-		ret := ie.EnvMgr.NewFactWithAtomsDefined(indexEqualFact)
+		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(indexEqualFact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -177,7 +177,7 @@ func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj,
 	// 让每一位相等
 	for i := range len(leftTuple.Params) {
 		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftTuple.Params[i], rightTuple.Params[i]}, glob.BuiltinLine)
-		ret := ie.EnvMgr.NewFactWithAtomsDefined(equalFact)
+		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -213,7 +213,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) glob.
 		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.Atom(randomName), param}, glob.BuiltinLine))
 	}
 	forallFact := ast.NewUniFact([]string{randomName}, []ast.Obj{left}, []ast.FactStmt{}, []ast.FactStmt{orFact}, glob.BuiltinLine)
-	ret := ie.EnvMgr.NewFactWithAtomsDefined(forallFact)
+	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(forallFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -222,14 +222,14 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) glob.
 	countFn := ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{left})
 	countValue := ast.Atom(strconv.Itoa(len(listSetFnObj.Params)))
 	countEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{countFn, countValue}, glob.BuiltinLine)
-	ret = ie.EnvMgr.NewFactWithAtomsDefined(countEqualFact)
+	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(countEqualFact)
 	if ret.IsErr() {
 		return ret
 	}
 
 	// is finite set
 	isFiniteFact := ast.NewIsAFiniteSetFact(left, glob.BuiltinLine)
-	return ie.EnvMgr.NewFactWithAtomsDefined(isFiniteFact)
+	return ie.EnvMgr.NewFactWithoutCheckingNameDefined(isFiniteFact)
 }
 
 // func (ie *InferEngine) trueEqualFactByFraction(left ast.Obj, right ast.Obj) glob.GlobRet {

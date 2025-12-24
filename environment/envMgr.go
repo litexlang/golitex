@@ -42,7 +42,7 @@ type EnvMgr struct {
 	EnvPkgMgr *EnvPkgMgr
 	EnvSlice  []EnvMemory
 
-	AllDefinedAtomObjNames   map[string]*ast.DefLetStmt
+	AllDefinedAtomObjNames   map[string]struct{}
 	AllDefinedPropNames      map[string]*ast.DefPropStmt
 	AllDefinedExistPropNames map[string]*ast.DefExistPropStmt
 	AllDefinedFnSetNames     map[string]*ast.DefFnSetStmt
@@ -51,22 +51,22 @@ type EnvMgr struct {
 }
 
 func (mgr *EnvMgr) IsNameDefinedInEnvMgr(name string) bool {
-	if mgr.AllDefinedAtomObjNames[name] != nil {
+	if _, ok := mgr.AllDefinedAtomObjNames[name]; ok {
 		return true
 	}
-	if mgr.AllDefinedPropNames[name] != nil {
+	if _, ok := mgr.AllDefinedPropNames[name]; ok {
 		return true
 	}
-	if mgr.AllDefinedExistPropNames[name] != nil {
+	if _, ok := mgr.AllDefinedExistPropNames[name]; ok {
 		return true
 	}
-	if mgr.AllDefinedFnSetNames[name] != nil {
+	if _, ok := mgr.AllDefinedFnSetNames[name]; ok {
 		return true
 	}
-	if mgr.AllDefinedAlgoNames[name] != nil {
+	if _, ok := mgr.AllDefinedAlgoNames[name]; ok {
 		return true
 	}
-	if mgr.AllDefinedProveAlgoNames[name] != nil {
+	if _, ok := mgr.AllDefinedProveAlgoNames[name]; ok {
 		return true
 	}
 	return false
@@ -115,7 +115,7 @@ func NewEnvMemory() *EnvMemory {
 	}
 }
 
-func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames map[string]*ast.DefLetStmt, allDefinedPropNames map[string]*ast.DefPropStmt, allDefinedExistPropNames map[string]*ast.DefExistPropStmt, allDefinedFnTemplateNames map[string]*ast.DefFnSetStmt, allDefinedAlgoNames map[string]*ast.DefAlgoStmt, allDefinedProveAlgoNames map[string]*ast.DefProveAlgoStmt) *EnvMgr {
+func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames map[string]struct{}, allDefinedPropNames map[string]*ast.DefPropStmt, allDefinedExistPropNames map[string]*ast.DefExistPropStmt, allDefinedFnTemplateNames map[string]*ast.DefFnSetStmt, allDefinedAlgoNames map[string]*ast.DefAlgoStmt, allDefinedProveAlgoNames map[string]*ast.DefProveAlgoStmt) *EnvMgr {
 	return &EnvMgr{
 		AllDefinedAtomObjNames:   allDefinedAtomObjNames,
 		AllDefinedPropNames:      allDefinedPropNames,
@@ -130,9 +130,9 @@ func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames 
 
 func NewBuiltinEnvMgr(envMgr *EnvMgr) *EnvMgr {
 	builtinEnvMemory := envMgr.EnvSlice[0]
-	newAllDefinedAtomObjNames := make(map[string]*ast.DefLetStmt)
+	newAllDefinedAtomObjNames := make(map[string]struct{})
 	for k := range builtinEnvMemory.AtomObjDefMem {
-		newAllDefinedAtomObjNames[k] = envMgr.AllDefinedAtomObjNames[k]
+		newAllDefinedAtomObjNames[k] = struct{}{}
 	}
 	newAllDefinedPropNames := make(map[string]*ast.DefPropStmt)
 	for k := range builtinEnvMemory.PropDefMem {
@@ -351,4 +351,12 @@ func NewKnownSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFact
 		Exist_St_Facts:    make(map[string][]SpecFact_InLogicExpr_InUniFact),
 		NotExist_St_Facts: make(map[string][]SpecFact_InLogicExpr_InUniFact),
 	}
+}
+
+func (envMgr *EnvMgr) curEnvDepth() int {
+	return len(envMgr.EnvSlice) - 1
+}
+
+func (envMgr *EnvMgr) CurEnv() *EnvMemory {
+	return &envMgr.EnvSlice[len(envMgr.EnvSlice)-1]
 }

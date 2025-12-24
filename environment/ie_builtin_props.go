@@ -29,7 +29,7 @@ func (ie *InferEngine) equalSetFactPostProcess(fact *ast.SpecFactStmt) glob.Glob
 
 	// Create a = b fact
 	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret := ie.EnvMgr.NewFactWithAtomsDefined(equalFact)
+	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
 	if ret.IsErr() {
 		return ret
 	}

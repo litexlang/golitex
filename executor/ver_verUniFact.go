@@ -35,7 +35,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) ExecR
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
-		ret := ver.Env.NewFactWithAtomsDefined(condFact)
+		ret := ver.Env.NewFactWithoutCheckingNameDefined(condFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -60,7 +60,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		}
 
 		// if true, store it
-		ret := ver.Env.NewFactWithAtomsDefined(thenFact)
+		ret := ver.Env.NewFactWithoutCheckingNameDefined(thenFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -81,7 +81,7 @@ func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactS
 
 	// declare
 	stmtForDef := ast.NewDefLetStmt(newStmtPtr.Params, newStmtPtr.ParamSets, []ast.FactStmt{}, oldStmt.Line)
-	ret := ver.Env.DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmtForDef)
+	ret := ver.Env.DefLetStmt(stmtForDef)
 	if ret.IsErr() {
 		return nil, fmt.Errorf(ret.String())
 	}
