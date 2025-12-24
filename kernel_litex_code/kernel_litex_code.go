@@ -836,16 +836,16 @@ know:
 	forall x, y, a, b R: x != 0, y != 0 x / y = a / b <=> y / x = b / a
 
 know: 
-	not $is_a_nonempty_set(R)
-	not $is_a_nonempty_set(N)
-	not $is_a_nonempty_set(N_pos)
-	not $is_a_nonempty_set(Z)
-	not $is_a_nonempty_set(Q)
-	not $is_a_finite_set(R)
-	not $is_a_finite_set(N)
-	not $is_a_finite_set(N_pos)
-	not $is_a_finite_set(Z)
-	not $is_a_finite_set(Q)
+	$is_a_nonempty_set(R)
+	$is_a_nonempty_set(N)
+	$is_a_nonempty_set(N_pos)
+	$is_a_nonempty_set(Z)
+	$is_a_nonempty_set(Q)
+	$is_a_finite_set(R)
+	$is_a_finite_set(N)
+	$is_a_finite_set(N_pos)
+	$is_a_finite_set(Z)
+	$is_a_finite_set(Q)
 
 # TODO: builtin instead of exist_prop
 exist_prop y x st axiom_of_regularity(x nonempty_set):

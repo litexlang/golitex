@@ -190,15 +190,18 @@ func (p *TbParser) notNumberAtom(tb *tokenBlock) (Atom, error) {
 			return "", ErrInLine(err, tb)
 		}
 
-		pkgPath := p.PkgPathNameMgr.NameAbsPathMap[value]
-		pkgName := p.PkgPathNameMgr.AbsPathDefaultNameMap[pkgPath]
+		pkgName, err := p.PkgPathNameMgr.GetDefaultNameOfPkgName(value)
+		if err != nil {
+			return "", err
+		}
+
 		return Atom(fmt.Sprintf("%s%s%s", pkgName, glob.PkgNameAtomSeparator, rightValue)), nil
 	}
 
 	// 如果没有 . 的情况 ： 1. 涉及到的symbol就是单独的builtin 2. 现在在parse pkg1，那么这个在当前repo的pkg1里定义的symbol就要返回 pkg1.symbol
 
 	if p.PkgPathNameMgr.CurPkgDefaultName != "" {
-		if _, ok := p.FreeParams[value]; !ok && !IsBuiltinOrKernelDefinedName(value) {
+		if !IsBuiltinOrKernelDefinedName(value) {
 			return Atom(fmt.Sprintf("%s%s%s", p.PkgPathNameMgr.CurPkgDefaultName, glob.PkgNameAtomSeparator, value)), nil
 		}
 		return Atom(value), nil
