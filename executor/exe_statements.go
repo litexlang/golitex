@@ -439,7 +439,7 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) ExecRet {
 }
 
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) ExecRet {
-	ret := exec.Env.IsValidIdentifierAvailable(stmt.Name)
+	ret := exec.Env.IsNameValidAndUndefined(stmt.Name)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
