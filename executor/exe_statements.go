@@ -616,11 +616,11 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 		return fmt.Errorf(execState.String())
 	}
 
-	ret := exec.Env.AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(def.DefHeader.ParamSets[0], map[string]struct{}{})
+	ret := exec.Env.LookupNamesInObjOrObjStringIsSetNonemptySetFiniteSet(def.DefHeader.ParamSets[0], map[string]struct{}{})
 	if ret.IsErr() {
 		return fmt.Errorf(ret.String())
 	}
-	ret = exec.Env.AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(def.DefHeader.ParamSets[1], map[string]struct{}{})
+	ret = exec.Env.LookupNamesInObjOrObjStringIsSetNonemptySetFiniteSet(def.DefHeader.ParamSets[1], map[string]struct{}{})
 	if ret.IsErr() {
 		return fmt.Errorf(ret.String())
 	}

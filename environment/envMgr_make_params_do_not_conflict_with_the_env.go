@@ -51,7 +51,7 @@ func (envMgr *EnvMgr) makeUniFactParamsInThisFactDoNotConflictWithEnv(fact ast.F
 func (envMgr *EnvMgr) makeUniFactParamsInThisUniFactDoNotConflictWithEnv_getNewParamsAndParamSets(params []string, paramSets []ast.Obj) ([]string, []ast.Obj, map[string]ast.Obj) {
 	conflictingParams := map[string]struct{}{}
 	for _, param := range params {
-		ret := envMgr.IsNameDefinedOrBuiltin(param, map[string]struct{}{})
+		ret := envMgr.IsNameUnavailable(param, map[string]struct{}{})
 		if ret.IsTrue() {
 			conflictingParams[param] = struct{}{}
 		}
@@ -140,4 +140,3 @@ func (envMgr *EnvMgr) makeUniFactWithIffParamsInThisUniFactDoNotConflictWithEnv(
 
 	return ast.NewUniFactWithIff(ast.NewUniFact(newParams, newParamSets, newDomFacts, newThenFacts, uniFact.UniFact.Line), newIffFacts, uniFact.Line)
 }
-
