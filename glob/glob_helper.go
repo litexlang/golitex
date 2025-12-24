@@ -36,3 +36,12 @@ func RemoveWindowsCarriage(code string) string {
 func IsKeywordSetOrNonEmptySetOrFiniteSet(s string) bool {
 	return s == KeywordSet || s == KeywordNonEmptySet || s == KeywordFiniteSet
 }
+
+func GetPkgNameAndAtomName(name string) (bool, string, string) {
+	parts := strings.Split(name, PkgNameAtomSeparator)
+	if len(parts) != 2 {
+		return false, "", ""
+	}
+
+	return true, parts[0], parts[1]
+}

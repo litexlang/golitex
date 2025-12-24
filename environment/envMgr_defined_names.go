@@ -322,28 +322,16 @@ func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) bool {
 			}
 
 			_, ok := pkgEnvMgr.AllDefinedAtomObjNames[string(AtomObjName)]
-			if ok {
-				return true
-			}
-
-			return false
+			return ok
 		} else {
 			_, ok := envMgr.AllDefinedAtomObjNames[string(AtomObjName)]
-			if ok {
-				return true
-			}
-
-			return false
+			return ok
 		}
 	}
 
 	// Search from current depth upward to depth 0
 	_, ok := envMgr.AllDefinedAtomObjNames[string(AtomObjName)]
-	if ok {
-		return true
-	}
-
-	return false
+	return ok
 }
 
 func (envMgr *EnvMgr) AtomsInObjDefinedOrBuiltinOrSetNonemptySetFiniteSet(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
@@ -389,8 +377,8 @@ func (envMgr *EnvMgr) IsNameDefinedOrBuiltin(name string, extraParams map[string
 	return glob.ErrRet(fmt.Errorf("undefined: %s", name))
 }
 
-func (envMgr *EnvMgr) IsValidIdentifierAvailable(name string) glob.GlobRet {
-	err := glob.IsValidUseDefinedAtomObj(name)
+func (envMgr *EnvMgr) IsNameValidAndUndefined(name string) glob.GlobRet {
+	err := glob.IsValidUseDefinedName(name)
 	if err != nil {
 		return glob.ErrRet(err)
 	}

@@ -35,8 +35,8 @@ func (envMgr *EnvMgr) NewDefProp_BuiltinProp(stmt *ast.DefPropStmt) glob.GlobRet
 		return glob.ErrRet(fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name))
 	}
 
-	ret := envMgr.IsValidIdentifierAvailable(string(stmt.DefHeader.Name))
-	if ret.IsErr() {
+	ret := envMgr.IsNameValidAndUndefined(string(stmt.DefHeader.Name))
+	if ret.IsNotTrue() {
 		return ret
 	}
 
@@ -49,7 +49,7 @@ func (envMgr *EnvMgr) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob
 		return glob.ErrRet(fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name))
 	}
 
-	ret := envMgr.IsValidIdentifierAvailable(string(stmt.DefHeader.Name))
+	ret := envMgr.IsNameValidAndUndefined(string(stmt.DefHeader.Name))
 	if ret.IsErr() {
 		return ret
 	}
@@ -179,7 +179,7 @@ func (envMgr *EnvMgr) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistProp
 		}
 	}
 
-	ret := envMgr.IsValidIdentifierAvailable(string(stmt.DefBody.DefHeader.Name))
+	ret := envMgr.IsNameValidAndUndefined(string(stmt.DefBody.DefHeader.Name))
 	if ret.IsErr() {
 		return ret
 	}
@@ -196,7 +196,7 @@ func (envMgr *EnvMgr) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistProp
 }
 
 func (envMgr *EnvMgr) NewObj_NoDuplicate(name string, stmt *ast.DefLetStmt) glob.GlobRet {
-	ret := envMgr.IsValidIdentifierAvailable(name)
+	ret := envMgr.IsNameValidAndUndefined(name)
 	if ret.IsErr() {
 		return glob.ErrRet(fmt.Errorf("invalid name: %s", name))
 	}
@@ -222,7 +222,7 @@ func (envMgr *EnvMgr) DefineNewObjsAndCheckAllAtomsInDefLetStmtAreDefined(stmt *
 	extraAtomNames := map[string]struct{}{}
 
 	for _, objName := range stmt.Objs {
-		ret := envMgr.IsValidIdentifierAvailable(objName)
+		ret := envMgr.IsNameValidAndUndefined(objName)
 		if ret.IsErr() {
 			return ret
 		}
