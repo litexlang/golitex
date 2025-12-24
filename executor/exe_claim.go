@@ -277,7 +277,7 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimImplicationStmt) ExecRet {
 	prop := stmt.Implication.ToProp()
 	uniFact := ast.NewUniFact(prop.DefHeader.Params, prop.DefHeader.ParamSets, prop.DomFactsOrNil, prop.IffFactsOrNil, stmt.Line)
 	ret := exec.Env.AtomObjsInFactProperlyDefined(uniFact, map[string]struct{}{})
-	if ret.IsErr() && !exec.Env.IsAtomObjDefinedByUser(ast.Atom(prop.DefHeader.Name)).IsTrue() {
+	if ret.IsErr() && !exec.Env.IsAtomObjDefinedByUser(ast.Atom(prop.DefHeader.Name)) {
 		ret.AddMsg("in claim prop statement")
 		return NewExecErr(ret.String())
 	}

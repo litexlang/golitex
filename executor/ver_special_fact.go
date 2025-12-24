@@ -21,20 +21,6 @@ import (
 )
 
 func (ver *Verifier) verSpecialFactInSpecialWays(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	// 如果是 >= 那可以用 > 和 = 来证明，针对sqrt里不能对负数开方额外做的
-	// Example: 如果没有这里的特殊证明，下面的f(g(1)) = f(g(1)) 无法证明
-	// 	fn f(x R) R:
-	//     dom:
-	//         x >= 0
-	//     =>:
-	//         f(x) = x + 1
-
-	// fn g(x R) R
-
-	// know:
-	//     forall x R: x > 0 => g(x) > 0
-
-	// f(g(1)) = f(g(1))
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolLargerEqual) {
 		return ver.verGreaterEqualBySpecialWays(stmt, state)
 	}
@@ -74,6 +60,20 @@ func (ver *Verifier) verSpecialFactInSpecialWays(stmt *ast.SpecFactStmt, state *
 	return NewEmptyExecUnknown()
 }
 
+// 如果是 >= 那可以用 > 和 = 来证明，针对sqrt里不能对负数开方额外做的
+// Example: 如果没有这里的特殊证明，下面的f(g(1)) = f(g(1)) 无法证明
+// 	fn f(x R) R:
+//     dom:
+//         x >= 0
+//     =>:
+//         f(x) = x + 1
+
+// fn g(x R) R
+
+// know:
+//     forall x R: x > 0 => g(x) > 0
+
+// f(g(1)) = f(g(1))
 func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if len(stmt.Params) != 2 {
 		return NewEmptyExecUnknown()

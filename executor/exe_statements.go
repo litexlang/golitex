@@ -219,7 +219,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 
 	if generateIffUniFact {
 		// prop leads to iff
-		propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp(exec.Env.EnvPkgMgr.PkgMgr.CurPkgDefaultName)
+		propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
 		if err != nil {
 			return NewExecErr(err.Error())
 		}
@@ -389,19 +389,13 @@ func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCase
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
 func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) ExecRet {
-	// if glob.RequireMsg() {
-	// 	defer func() {
-	// 		exec.newMsg(fmt.Sprintf("%s\n", stmt))
-	// 	}()
-	// }
-
 	execRet := exec.defPropStmt(stmt.Prop, false)
 	if execRet.IsNotTrue() {
 		return execRet
 	}
 
 	if len(stmt.Prop.IffFactsOrNil) == 0 {
-		_, iffToProp, err := stmt.Prop.Make_PropToIff_IffToProp(exec.Env.EnvPkgMgr.PkgMgr.CurPkgDefaultName)
+		_, iffToProp, err := stmt.Prop.Make_PropToIff_IffToProp()
 		if err != nil {
 			return NewExecErr(err.Error())
 		}

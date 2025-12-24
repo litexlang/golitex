@@ -27,8 +27,22 @@ type PkgMgr struct {
 	CurRepoAbsPath        string
 }
 
+func (mgr *PkgMgr) GetDefaultNameOfPkgName(name string) (string, error) {
+	path, ok := mgr.NameAbsPathMap[name]
+	if !ok {
+		return "", fmt.Errorf("%s is not a defined package name", name)
+	}
+
+	pkgName, ok := mgr.AbsPathDefaultNameMap[path]
+	if !ok {
+		return "", fmt.Errorf("%s is not imported", path)
+	}
+
+	return pkgName, nil
+}
+
 func (mgr *PkgMgr) IsREPL() bool {
-	return mgr.CurPkgDefaultName == "" && mgr.CurRepoAbsPath == ""
+	return mgr.CurPkgDefaultName == ""
 }
 
 func NewEmptyPkgMgr() *PkgMgr {

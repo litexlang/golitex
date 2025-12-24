@@ -30,10 +30,6 @@ func FormatCode(path string) (glob.GlobRet, error) {
 	}
 
 	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
-	// topStmtSlice, err := ast.ParseSourceCode(string(content), pkgPathNameMgr)
-	// if err != nil {
-	// 	return glob.NewGlobErr(err.Error()), err
-	// }
 
 	blocks, err := ast.PreprocessAndMakeSourceCodeIntoBlocks(string(content))
 	if err != nil {
