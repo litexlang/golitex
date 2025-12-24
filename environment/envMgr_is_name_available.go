@@ -16,19 +16,10 @@ package litex_env
 
 import (
 	"fmt"
-	ast "golitex/ast"
 	glob "golitex/glob"
 )
 
-// Helper methods for EnvMgr to access definitions
-
-// 在def时，检查fact中的所有atom是否都定义了
-
 func (envMgr *EnvMgr) IsNameUnavailable(name string, extraParams map[string]struct{}) glob.GlobRet {
-	if envMgr.IsAtomNameDefinedByUser(name) || envMgr.IsPropNameDefinedByUser(name) || envMgr.IsExistPropNameDefinedByUser(name) || envMgr.IsFnSetNameDefinedByUser(name) || envMgr.IsAlgoNameDefinedByUser(name) || envMgr.IsProveAlgoNameDefinedByUser(name) || envMgr.IsPkgNameDefinedByUser(name) {
-		return glob.NewEmptyGlobTrue()
-	}
-
 	if _, ok := extraParams[name]; ok {
 		return glob.NewEmptyGlobTrue()
 	}
@@ -37,7 +28,7 @@ func (envMgr *EnvMgr) IsNameUnavailable(name string, extraParams map[string]stru
 		return glob.NewEmptyGlobTrue()
 	}
 
-	if _, ok := ast.IsNumLitAtomObj(ast.Atom(name)); ok {
+	if envMgr.IsAtomNameDefinedByUser(name) || envMgr.IsPropNameDefinedByUser(name) || envMgr.IsExistPropNameDefinedByUser(name) || envMgr.IsFnSetNameDefinedByUser(name) || envMgr.IsAlgoNameDefinedByUser(name) || envMgr.IsProveAlgoNameDefinedByUser(name) || envMgr.IsPkgNameDefinedByUser(name) {
 		return glob.NewEmptyGlobTrue()
 	}
 
@@ -51,7 +42,7 @@ func (envMgr *EnvMgr) IsValidAndAvailableName(name string) glob.GlobRet {
 	}
 
 	defined := envMgr.IsNameUnavailable(name, map[string]struct{}{})
-	if defined.IsNotTrue() {
+	if defined.IsTrue() {
 		return glob.ErrRet(duplicateDefError(name))
 	}
 
