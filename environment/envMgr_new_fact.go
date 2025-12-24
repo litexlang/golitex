@@ -20,9 +20,9 @@ import (
 	glob "golitex/glob"
 )
 
-func (envMgr *EnvMgr) NewFactWithAtomsDefined(stmt ast.FactStmt) glob.GlobRet {
+func (envMgr *EnvMgr) NewFactWithoutCheckingNameDefined(stmt ast.FactStmt) glob.GlobRet {
 	// 检查是否符合要求：比如涉及到的符号是否都定义了
-	if ret := envMgr.AtomObjsInFactProperlyDefined(stmt, map[string]struct{}{}); ret.IsNotTrue() {
+	if ret := envMgr.NamesInFactProperlyDefined(stmt, map[string]struct{}{}); ret.IsNotTrue() {
 		return glob.NewGlobErr(stmt.String()).AddMsg(ret.String())
 	}
 
@@ -134,7 +134,7 @@ func (envMgr *EnvMgr) newTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
 func (envMgr *EnvMgr) newEqualsFact(stmt *ast.EqualsFactStmt) glob.GlobRet {
 	equalFacts := stmt.ToEqualFacts()
 	for _, equalFact := range equalFacts {
-		ret := envMgr.NewFactWithAtomsDefined(equalFact)
+		ret := envMgr.NewFactWithoutCheckingNameDefined(equalFact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -188,4 +188,3 @@ func (envMgr *EnvMgr) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt,
 func (envMgr *EnvMgr) storeUniFactInMem(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) glob.GlobRet {
 	return envMgr.CurEnv().KnownFactsStruct.SpecFactInUniFactMem.newFact(specFact, uniFact)
 }
-

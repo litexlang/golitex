@@ -1,0 +1,101 @@
+package litex_env
+
+import (
+	"fmt"
+	ast "golitex/ast"
+	glob "golitex/glob"
+)
+
+func (envMgr *EnvMgr) AtomObjNamesInObjDefinedOrBuiltin(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
+	switch asObj := obj.(type) {
+	case ast.Atom:
+		return envMgr.IsDefinedOrBuiltinAtomObjName(asObj, extraParams)
+	case *ast.FnObj:
+		return envMgr.NamesInFnObjDefinedOrBuiltin(asObj, extraParams)
+	default:
+		return glob.ErrRet(fmt.Errorf("unknown object type: %T", obj))
+	}
+}
+
+// TODO: 目前只是检查了在当前的envMgr中是否定义了，没有检查在parent envMgr中是否定义了
+func (envMgr *EnvMgr) IsDefinedOrBuiltinAtomObjName(atom ast.Atom, extraParams map[string]struct{}) glob.GlobRet {
+	if _, ok := extraParams[string(atom)]; ok {
+		return glob.NewEmptyGlobTrue()
+	}
+
+	// Check if it's a builtin atom
+	if glob.IsBuiltinAtom(string(atom)) {
+		return glob.NewEmptyGlobTrue()
+	}
+
+	// Check if it's a number literal
+	if _, ok := ast.IsNumLitAtomObj(atom); ok {
+		return glob.NewEmptyGlobTrue()
+	}
+
+	// Check if it's defined by user
+	defined := envMgr.IsAtomObjDefinedByUser(atom)
+	if !defined {
+		if glob.IsKeywordSetOrNonEmptySetOrFiniteSet(string(atom)) {
+			return glob.NewGlobErr(fmt.Sprintf("undefined atom name: %s. Be careful, %s, %s, %s are syntax sugar for %s, %s, %s respectively. They are not objects.", string(atom), glob.KeywordSet, glob.KeywordNonEmptySet, glob.KeywordFiniteSet, glob.KeywordSet, glob.KeywordNonEmptySet, glob.KeywordFiniteSet))
+		} else {
+			return glob.ErrRet(fmt.Errorf("undefined atom name: %s", atom))
+		}
+	} else {
+		return glob.NewEmptyGlobTrue()
+	}
+}
+
+func (envMgr *EnvMgr) NamesInFnObjDefinedOrBuiltin(fnObj *ast.FnObj, extraParams map[string]struct{}) glob.GlobRet {
+	// Special handling for setBuilder
+	if ast.IsSetBuilder(fnObj) {
+		return envMgr.NamesInSetBuilderDefined(fnObj, extraParams)
+	}
+
+	for _, param := range fnObj.Params {
+		if ret := envMgr.AtomObjNamesInObjDefinedOrBuiltin(param, extraParams); ret.IsNotTrue() {
+			return ret
+		}
+	}
+
+	// 如果head是fn,那直接成立了
+	if fnObj.IsAtomHeadEqualToStr(glob.KeywordFn) {
+		return glob.NewEmptyGlobTrue()
+	}
+
+	// 如果head 是 fn_template 那也OK了
+	if envMgr.FnObjHeadIsAtomAndIsFnSet(fnObj) {
+		return glob.NewEmptyGlobTrue()
+	}
+
+	return envMgr.AtomObjNamesInObjDefinedOrBuiltin(fnObj.FnHead, extraParams)
+}
+
+func (envMgr *EnvMgr) NamesInSetBuilderDefined(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
+	setBuilderObj := obj.(*ast.FnObj)
+	setBuilder, err := setBuilderObj.ToSetBuilderStruct()
+	if err != nil {
+		return glob.ErrRet(fmt.Errorf("failed to parse setBuilder: %s", err.Error()))
+	}
+
+	// Check parentSet
+	if ret := envMgr.AtomObjNamesInObjDefinedOrBuiltin(setBuilder.ParentSet, extraParams); ret.IsNotTrue() {
+		return ret
+	}
+
+	// Merge setBuilder param into extraParams (it's a bound variable)
+	combinedParams := make(map[string]struct{})
+	for k, v := range extraParams {
+		combinedParams[k] = v
+	}
+	combinedParams[setBuilder.Param] = struct{}{}
+
+	// Check facts in setBuilder
+	for _, fact := range setBuilder.Facts {
+		if ret := envMgr.AtomsInSpecFactDefined(fact, combinedParams); ret.IsNotTrue() {
+			return ret
+		}
+	}
+
+	return glob.NewEmptyGlobTrue()
+}

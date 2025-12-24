@@ -60,7 +60,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 	reversedFact := specFactStmt.ReverseIsTrue()
 
 	for _, curFact := range reversedFact {
-		ret := exec.Env.NewFactWithAtomsDefined(curFact)
+		ret := exec.Env.NewFactWithoutCheckingNameDefined(curFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -106,7 +106,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
-		ret := exec.Env.NewFactWithAtomsDefined(condFact)
+		ret := exec.Env.NewFactWithoutCheckingNameDefined(condFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -123,7 +123,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	}
 	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversibleFacts)
 	for _, reversedThenFact := range reversedThenFacts {
-		ret := exec.Env.NewFactWithAtomsDefined(reversedThenFact.(ast.FactStmt))
+		ret := exec.Env.NewFactWithoutCheckingNameDefined(reversedThenFact.(ast.FactStmt))
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -169,7 +169,7 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	ret := exec.Env.NewFactWithAtomsDefined(stmt.ToCheckFact)
+	ret := exec.Env.NewFactWithoutCheckingNameDefined(stmt.ToCheckFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -185,7 +185,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	ret := exec.Env.NewFactWithAtomsDefined(stmt.ClaimProveStmt.ToCheckFact)
+	ret := exec.Env.NewFactWithoutCheckingNameDefined(stmt.ClaimProveStmt.ToCheckFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -200,7 +200,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ExecRet {
 	}()
 
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
-	ret := exec.Env.AtomObjsInFactProperlyDefined(stmt.ToCheckFact, map[string]struct{}{})
+	ret := exec.Env.NamesInFactProperlyDefined(stmt.ToCheckFact, map[string]struct{}{})
 	if ret.IsErr() {
 		ret.AddMsg("in claim statement")
 		return NewExecErr(ret.String())
@@ -245,7 +245,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ExecRet {
 
 	// know dom facts
 	for _, domFact := range asUnivFact.DomFacts {
-		ret := exec.Env.NewFactWithAtomsDefined(domFact)
+		ret := exec.Env.NewFactWithoutCheckingNameDefined(domFact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -276,7 +276,7 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimImplicationStmt) ExecRet {
 	// prop all atoms declared
 	prop := stmt.Implication.ToProp()
 	uniFact := ast.NewUniFact(prop.DefHeader.Params, prop.DefHeader.ParamSets, prop.DomFactsOrNil, prop.IffFactsOrNil, stmt.Line)
-	ret := exec.Env.AtomObjsInFactProperlyDefined(uniFact, map[string]struct{}{})
+	ret := exec.Env.NamesInFactProperlyDefined(uniFact, map[string]struct{}{})
 	if ret.IsErr() && !exec.Env.IsAtomObjDefinedByUser(ast.Atom(prop.DefHeader.Name)) {
 		ret.AddMsg("in claim prop statement")
 		return NewExecErr(ret.String())
@@ -318,7 +318,7 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) ExecRet {
 
 	// know forall
 	uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFactsOrNil, []ast.FactStmt{stmt.ExistPropWithoutDom.DefBody.DefHeader.ToSpecFact()}, stmt.Line)
-	ret := exec.Env.NewFactWithAtomsDefined(uniFact)
+	ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
@@ -409,11 +409,11 @@ func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) ExecRet {
 		return execState
 	}
 
-	ret := exec.Env.NewFactWithAtomsDefined(thenToIff)
+	ret := exec.Env.NewFactWithoutCheckingNameDefined(thenToIff)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
-	ret = exec.Env.NewFactWithAtomsDefined(iffToThen)
+	ret = exec.Env.NewFactWithoutCheckingNameDefined(iffToThen)
 	if ret.IsErr() {
 		return NewExecErr(ret.String())
 	}
