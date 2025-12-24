@@ -27,7 +27,7 @@ func (envMgr *EnvMgr) GenerateUndeclaredRandomName() string {
 	for {
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
-		ret := envMgr.IsNameDefinedOrBuiltin((randomStr), map[string]struct{}{})
+		ret := envMgr.IsNameUnavailable((randomStr), map[string]struct{}{})
 		if ret.IsErr() {
 			return randomStr
 		}
@@ -41,7 +41,7 @@ func (envMgr *EnvMgr) GenerateUndeclaredRandomName_AndNotInMap(m map[string]stru
 	for {
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
-		ret := envMgr.IsNameDefinedOrBuiltin(randomStr, map[string]struct{}{})
+		ret := envMgr.IsNameUnavailable(randomStr, map[string]struct{}{})
 		if ret.IsErr() {
 			_, ok := m[randomStr]
 			if !ok {

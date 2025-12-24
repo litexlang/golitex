@@ -22,7 +22,7 @@ import (
 
 func (envMgr *EnvMgr) NewFactWithoutCheckingNameDefined(stmt ast.FactStmt) glob.GlobRet {
 	// 检查是否符合要求：比如涉及到的符号是否都定义了
-	if ret := envMgr.NamesInFactProperlyDefined(stmt, map[string]struct{}{}); ret.IsNotTrue() {
+	if ret := envMgr.LookUpNamesInFact(stmt, map[string]struct{}{}); ret.IsNotTrue() {
 		return glob.NewGlobErr(stmt.String()).AddMsg(ret.String())
 	}
 

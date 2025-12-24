@@ -6,19 +6,19 @@ import (
 	glob "golitex/glob"
 )
 
-func (envMgr *EnvMgr) AtomObjNamesInObjDefinedOrBuiltin(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
+func (envMgr *EnvMgr) LookupNamesInObj(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
 	switch asObj := obj.(type) {
 	case ast.Atom:
-		return envMgr.IsDefinedOrBuiltinAtomObjName(asObj, extraParams)
+		return envMgr.lookupAtomObjName(asObj, extraParams)
 	case *ast.FnObj:
-		return envMgr.NamesInFnObjDefinedOrBuiltin(asObj, extraParams)
+		return envMgr.lookupNamesInFnObj(asObj, extraParams)
 	default:
 		return glob.ErrRet(fmt.Errorf("unknown object type: %T", obj))
 	}
 }
 
 // TODO: 目前只是检查了在当前的envMgr中是否定义了，没有检查在parent envMgr中是否定义了
-func (envMgr *EnvMgr) IsDefinedOrBuiltinAtomObjName(atom ast.Atom, extraParams map[string]struct{}) glob.GlobRet {
+func (envMgr *EnvMgr) lookupAtomObjName(atom ast.Atom, extraParams map[string]struct{}) glob.GlobRet {
 	if _, ok := extraParams[string(atom)]; ok {
 		return glob.NewEmptyGlobTrue()
 	}
@@ -46,14 +46,14 @@ func (envMgr *EnvMgr) IsDefinedOrBuiltinAtomObjName(atom ast.Atom, extraParams m
 	}
 }
 
-func (envMgr *EnvMgr) NamesInFnObjDefinedOrBuiltin(fnObj *ast.FnObj, extraParams map[string]struct{}) glob.GlobRet {
+func (envMgr *EnvMgr) lookupNamesInFnObj(fnObj *ast.FnObj, extraParams map[string]struct{}) glob.GlobRet {
 	// Special handling for setBuilder
 	if ast.IsSetBuilder(fnObj) {
-		return envMgr.NamesInSetBuilderDefined(fnObj, extraParams)
+		return envMgr.lookupNamesInSetBuilder(fnObj, extraParams)
 	}
 
 	for _, param := range fnObj.Params {
-		if ret := envMgr.AtomObjNamesInObjDefinedOrBuiltin(param, extraParams); ret.IsNotTrue() {
+		if ret := envMgr.LookupNamesInObj(param, extraParams); ret.IsNotTrue() {
 			return ret
 		}
 	}
@@ -68,10 +68,10 @@ func (envMgr *EnvMgr) NamesInFnObjDefinedOrBuiltin(fnObj *ast.FnObj, extraParams
 		return glob.NewEmptyGlobTrue()
 	}
 
-	return envMgr.AtomObjNamesInObjDefinedOrBuiltin(fnObj.FnHead, extraParams)
+	return envMgr.LookupNamesInObj(fnObj.FnHead, extraParams)
 }
 
-func (envMgr *EnvMgr) NamesInSetBuilderDefined(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
+func (envMgr *EnvMgr) lookupNamesInSetBuilder(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
 	setBuilderObj := obj.(*ast.FnObj)
 	setBuilder, err := setBuilderObj.ToSetBuilderStruct()
 	if err != nil {
@@ -79,7 +79,7 @@ func (envMgr *EnvMgr) NamesInSetBuilderDefined(obj ast.Obj, extraParams map[stri
 	}
 
 	// Check parentSet
-	if ret := envMgr.AtomObjNamesInObjDefinedOrBuiltin(setBuilder.ParentSet, extraParams); ret.IsNotTrue() {
+	if ret := envMgr.LookupNamesInObj(setBuilder.ParentSet, extraParams); ret.IsNotTrue() {
 		return ret
 	}
 
@@ -92,7 +92,7 @@ func (envMgr *EnvMgr) NamesInSetBuilderDefined(obj ast.Obj, extraParams map[stri
 
 	// Check facts in setBuilder
 	for _, fact := range setBuilder.Facts {
-		if ret := envMgr.AtomsInSpecFactDefined(fact, combinedParams); ret.IsNotTrue() {
+		if ret := envMgr.LookupNamesInSpecFact(fact, combinedParams); ret.IsNotTrue() {
 			return ret
 		}
 	}

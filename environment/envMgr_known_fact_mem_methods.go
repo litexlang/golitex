@@ -101,7 +101,7 @@ func (envMgr *EnvMgr) getInstantiatedFnTTOfFnObj(fnObj *ast.FnObj) (*ast.FnTempl
 
 func (envMgr *EnvMgr) NewFnTemplateInEnvMem(stmt *ast.DefFnSetStmt) glob.GlobRet {
 	// 确保template name 没有被声明过
-	ret := envMgr.IsNameDefinedOrBuiltin(string(stmt.TemplateDefHeader.Name), map[string]struct{}{})
+	ret := envMgr.IsNameUnavailable(string(stmt.TemplateDefHeader.Name), map[string]struct{}{})
 	if ret.IsTrue() {
 		return glob.ErrRet(fmt.Errorf("fn template name %s is already declared", stmt.TemplateDefHeader.Name))
 	}
