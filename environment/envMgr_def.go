@@ -27,7 +27,7 @@ func (envMgr *EnvMgr) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) glob
 		return glob.ErrRet(fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name))
 	}
 
-	ret := envMgr.IsNameValidAndAvailable(string(stmt.DefHeader.Name))
+	ret := envMgr.IsValidAndAvailableName(string(stmt.DefHeader.Name))
 	if ret.IsErr() {
 		return ret
 	}
@@ -157,7 +157,7 @@ func (envMgr *EnvMgr) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistProp
 		}
 	}
 
-	ret := envMgr.IsNameValidAndAvailable(string(stmt.DefBody.DefHeader.Name))
+	ret := envMgr.IsValidAndAvailableName(string(stmt.DefBody.DefHeader.Name))
 	if ret.IsErr() {
 		return ret
 	}
@@ -174,7 +174,7 @@ func (envMgr *EnvMgr) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistProp
 }
 
 func (envMgr *EnvMgr) CheckAtomObjNameIsValidAndAvailableThenDefineIt(name string) glob.GlobRet {
-	ret := envMgr.IsNameValidAndAvailable(name)
+	ret := envMgr.IsValidAndAvailableName(name)
 	if ret.IsErr() {
 		return glob.ErrRet(fmt.Errorf("invalid name: %s", name))
 	}

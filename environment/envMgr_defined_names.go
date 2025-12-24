@@ -25,15 +25,15 @@ import (
 // 在def时，检查fact中的所有atom是否都定义了
 
 func (envMgr *EnvMgr) IsNameUnavailable(name string, extraParams map[string]struct{}) glob.GlobRet {
+	if envMgr.IsAtomNameDefinedByUser(name) || envMgr.IsPropNameDefinedByUser(name) || envMgr.IsExistPropNameDefinedByUser(name) || envMgr.IsFnSetNameDefinedByUser(name) || envMgr.IsAlgoNameDefinedByUser(name) || envMgr.IsProveAlgoNameDefinedByUser(name) || envMgr.IsPkgNameDefinedByUser(name) {
+		return glob.NewEmptyGlobTrue()
+	}
+
 	if _, ok := extraParams[name]; ok {
 		return glob.NewEmptyGlobTrue()
 	}
 
-	if glob.IsBuiltinAtom(name) {
-		return glob.NewEmptyGlobTrue()
-	}
-
-	if envMgr.IsPkgName(name) {
+	if glob.IsBuiltinName(name) {
 		return glob.NewEmptyGlobTrue()
 	}
 
@@ -41,39 +41,19 @@ func (envMgr *EnvMgr) IsNameUnavailable(name string, extraParams map[string]stru
 		return glob.NewEmptyGlobTrue()
 	}
 
-	defined := envMgr.IsAtomObjDefinedByUser(ast.Atom(name))
-	if defined {
-		return glob.NewEmptyGlobTrue()
-	}
-
-	existPropDef := envMgr.GetExistPropDef(ast.Atom(name))
-	if existPropDef != nil {
-		return glob.NewEmptyGlobTrue()
-	}
-
-	propDef := envMgr.GetPropDef(ast.Atom(name))
-	if propDef != nil {
-		return glob.NewEmptyGlobTrue()
-	}
-
 	return glob.ErrRet(fmt.Errorf("undefined: %s", name))
 }
 
-func (envMgr *EnvMgr) IsNameValidAndAvailable(name string) glob.GlobRet {
+func (envMgr *EnvMgr) IsValidAndAvailableName(name string) glob.GlobRet {
 	err := glob.IsValidUseDefinedName(name)
 	if err != nil {
 		return glob.ErrRet(err)
 	}
 
-	defined := envMgr.IsAtomObjDefinedByUser(ast.Atom(name))
-	if defined {
+	defined := envMgr.IsNameUnavailable(name, map[string]struct{}{})
+	if defined.IsNotTrue() {
 		return glob.ErrRet(duplicateDefError(name))
 	}
 
 	return glob.NewEmptyGlobTrue()
-}
-
-func (envMgr *EnvMgr) IsPkgName(pkgName string) bool {
-	_, ok := envMgr.EnvPkgMgr.PkgMgr.NameAbsPathMap[pkgName]
-	return ok
 }

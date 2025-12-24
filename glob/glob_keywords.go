@@ -269,7 +269,7 @@ var SymbolSet map[string]struct{} = map[string]struct{}{
 	// KeySymbolQuestionMark: {}, // "?"
 }
 
-var BuiltinObjOrPropNames map[string]struct{} = map[string]struct{}{
+var BuiltinNames map[string]struct{} = map[string]struct{}{
 	// KeywordObj:           {},
 	// KeywordSet:           {},
 	KeywordNatural:       {},
@@ -315,12 +315,12 @@ var BuiltinObjOrPropNames map[string]struct{} = map[string]struct{}{
 	KeywordIsANonEmptySet: {},
 }
 
-func IsBuiltinObjOrPropName(name string) bool {
-	_, ok := BuiltinObjOrPropNames[name]
+func IsBuiltinName(name string) bool {
+	_, ok := BuiltinNames[name]
 	return ok
 }
 
-func IsBuiltinAtom(name string) bool {
+func IsBuiltinAtomName(name string) bool {
 	_, ok := BuiltinAtomNames[name]
 	return ok
 }
