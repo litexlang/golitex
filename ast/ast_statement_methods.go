@@ -50,13 +50,13 @@ func MergeOuterInnerUniFacts(outer *UniFactStmt, inner *UniFactStmt) *UniFactStm
 	return newOuter
 }
 
-func (defStmt *DefPropStmt) Make_PropToIff_IffToProp(pkgName string) (*UniFactStmt, *UniFactStmt, error) {
+func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactStmt, error) {
 	propSpecFactParams := []Obj{}
 	for _, param := range defStmt.DefHeader.Params {
 		propSpecFactParams = append(propSpecFactParams, Atom(param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, Atom(AddPkgNameToName(pkgName, string(defStmt.DefHeader.Name))), propSpecFactParams, defStmt.Line)
+	propSpecFact := NewSpecFactStmt(TruePure, Atom((defStmt.DefHeader.Name)), propSpecFactParams, defStmt.Line)
 
 	// prop to iff
 	propToIffDomFacts := []FactStmt{propSpecFact}
@@ -74,13 +74,13 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp(pkgName string) (*UniFactSt
 	return propToIff, IffToProp, nil
 }
 
-func (defStmt *DefPropStmt) IffToPropUniFact(pkgName string) *UniFactStmt {
+func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 	propSpecFactParams := []Obj{}
 	for _, param := range defStmt.DefHeader.Params {
 		propSpecFactParams = append(propSpecFactParams, Atom(param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, Atom(AddPkgNameToName(pkgName, string(defStmt.DefHeader.Name))), propSpecFactParams, defStmt.Line)
+	propSpecFact := NewSpecFactStmt(TruePure, Atom(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
 
 	IffToPropDomFacts := []FactStmt{}
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFactsOrNil...)

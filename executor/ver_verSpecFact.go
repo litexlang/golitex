@@ -87,7 +87,8 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 }
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	// replace the params with the values
+	// replace the params with the values 来证明
+	// 比如 $q(x, y) 证明不出来，但可能 $q(1, 2) 证明出来了，如果x=1,y=2的话。这里会用到 1. 如果x和y本来就是数学表达式，那就计算 2. 如果 x和y之前存过数值，那就用之前存过的值。
 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 	if replaced {
 		verRet := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(newStmt, state)
@@ -186,7 +187,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 
 	defStmt := ver.Env.MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(curDefStmt)
 
-	iffToProp := defStmt.IffToPropUniFact(ver.Env.EnvPkgMgr.PkgMgr.CurPkgDefaultName)
+	iffToProp := defStmt.IffToPropUniFact()
 	paramArrMap := map[string]ast.Obj{}
 	for i, param := range stmt.Params {
 		paramArrMap[defStmt.DefHeader.Params[i]] = param
@@ -392,7 +393,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 		return NewEmptyExecUnknown()
 	}
 
-	iffToProp := defStmt.IffToPropUniFact(ver.Env.EnvPkgMgr.PkgMgr.CurPkgDefaultName)
+	iffToProp := defStmt.IffToPropUniFact()
 	paramArrMap := map[string]ast.Obj{}
 	for i, param := range stmt.Params {
 		paramArrMap[defStmt.DefHeader.Params[i]] = param

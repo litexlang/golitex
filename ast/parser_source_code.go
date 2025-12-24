@@ -19,25 +19,6 @@ import (
 	"strings"
 )
 
-// * TODO: 在parse时，把pkgName改成当前项目里定义的 pkgName，而不是继续沿用原来的
-// func ParseSourceCode(code string, pkgPathNameMgr *pkgMgr.PkgMgr) ([]Stmt, error) {
-// 	blocks, err := PreprocessAndMakeSourceCodeIntoBlocks(code)
-// 	if err != nil {
-// 		return []Stmt{}, err
-// 	}
-// 	ret := []Stmt{}
-// 	p := NewTbParser(pkgPathNameMgr)
-// 	for _, block := range blocks {
-// 		cur, err := p.Stmt(&block)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		ret = append(ret, cur)
-// 	}
-
-// 	return ret, nil
-// }
-
 func PreprocessSourceCode(code string) ([]string, error) {
 	processedCode := strings.ReplaceAll(code, "\t", glob.Scope4Indents)
 	processedCode = glob.RemoveWindowsCarriage(processedCode)
