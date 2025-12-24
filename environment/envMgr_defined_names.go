@@ -26,8 +26,9 @@ func (envMgr *EnvMgr) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
 	var pkgName string
 	var curEnvMgr = envMgr
 
-	if propName.IsWithPkgName() {
-		pkgName, _ = propName.GetPkgNameAndAtomName()
+	withPkgName, pkgName, _ := glob.GetPkgNameAndName(string(propName))
+
+	if withPkgName {
 		curEnvMgr = envMgr.GetEnvMgrOfName(pkgName)
 	} else {
 		curEnvMgr = envMgr
@@ -44,8 +45,10 @@ func (envMgr *EnvMgr) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
 func (envMgr *EnvMgr) GetExistPropDef(propName ast.Atom) *ast.DefExistPropStmt {
 	var pkgName string
 	var curEnvMgr = envMgr
-	if propName.IsWithPkgName() {
-		pkgName, _ = propName.GetPkgNameAndAtomName()
+
+	withPkgName, pkgName, _ := glob.GetPkgNameAndName(string(propName))
+
+	if withPkgName {
 		curEnvMgr = envMgr.GetEnvMgrOfName(pkgName)
 	} else {
 		curEnvMgr = envMgr
@@ -313,8 +316,9 @@ func (envMgr *EnvMgr) AtomsInEqualsFactDefined(stmt *ast.EqualsFactStmt, extraPa
 }
 
 func (envMgr *EnvMgr) IsAtomObjDefinedByUser(AtomObjName ast.Atom) bool {
-	if AtomObjName.IsWithPkgName() {
-		pkgName, _ := AtomObjName.GetPkgNameAndAtomName()
+	withPkgName, pkgName, _ := glob.GetPkgNameAndName(string(AtomObjName))
+
+	if withPkgName {
 		if pkgName != envMgr.EnvPkgMgr.PkgMgr.CurPkgDefaultName {
 			pkgEnvMgr := envMgr.GetEnvMgrOfPkgName(pkgName)
 			if pkgEnvMgr == nil {

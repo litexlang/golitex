@@ -37,7 +37,7 @@ func IsKeywordSetOrNonEmptySetOrFiniteSet(s string) bool {
 	return s == KeywordSet || s == KeywordNonEmptySet || s == KeywordFiniteSet
 }
 
-func GetPkgNameAndAtomName(name string) (bool, string, string) {
+func GetPkgNameAndName(name string) (bool, string, string) {
 	parts := strings.Split(name, PkgNameAtomSeparator)
 	if len(parts) != 2 {
 		return false, "", ""
