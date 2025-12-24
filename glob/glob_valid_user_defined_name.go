@@ -60,7 +60,7 @@ func IsValidUserDefinedNameWithoutPkgName(name string) error {
 	}
 
 	// 检查是否与内置关键字或符号冲突（在字符验证之后）
-	if IsBuiltinObjOrPropName(name) {
+	if IsBuiltinName(name) {
 		return fmt.Errorf("identifier name cannot be a builtin keyword or builtin symbol, get: %s", name)
 	}
 
