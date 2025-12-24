@@ -68,7 +68,7 @@ func IsValidUserDefinedNameWithoutPkgName(name string) error {
 }
 
 func IsValidUseDefinedName(name string) error {
-	isWithPkgName, _, atomName := GetPkgNameAndAtomName(name)
+	isWithPkgName, _, atomName := GetPkgNameAndName(name)
 
 	if !isWithPkgName {
 		return IsValidUserDefinedNameWithoutPkgName(name)
