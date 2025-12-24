@@ -1,3 +1,17 @@
+// Copyright 2024 Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Litex email: <litexlang@outlook.com>
+// Litex website: https://litexlang.com
+// Litex github repository: https://github.com/litexlang/golitex
+// Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
+
 package litex_env
 
 import (
@@ -24,7 +38,7 @@ func (envMgr *EnvMgr) lookupAtomObjName(atom ast.Atom, extraParams map[string]st
 	}
 
 	// Check if it's a builtin atom
-	if glob.IsBuiltinAtom(string(atom)) {
+	if glob.IsBuiltinAtomName(string(atom)) {
 		return glob.NewEmptyGlobTrue()
 	}
 
@@ -34,7 +48,7 @@ func (envMgr *EnvMgr) lookupAtomObjName(atom ast.Atom, extraParams map[string]st
 	}
 
 	// Check if it's defined by user
-	defined := envMgr.IsAtomObjDefinedByUser(atom)
+	defined := envMgr.IsAtomNameDefinedByUser(string(atom))
 	if !defined {
 		if glob.IsKeywordSetOrNonEmptySetOrFiniteSet(string(atom)) {
 			return glob.NewGlobErr(fmt.Sprintf("undefined atom name: %s. Be careful, %s, %s, %s are syntax sugar for %s, %s, %s respectively. They are not objects.", string(atom), glob.KeywordSet, glob.KeywordNonEmptySet, glob.KeywordFiniteSet, glob.KeywordSet, glob.KeywordNonEmptySet, glob.KeywordFiniteSet))
