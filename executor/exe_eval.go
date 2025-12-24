@@ -115,7 +115,7 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 	}
 
 	for i, param := range algoDef.Params {
-		ret := exec.Env.IsNameDefinedOrBuiltin(param, map[string]struct{}{})
+		ret := exec.Env.IsNameUnavailable(param, map[string]struct{}{})
 		if ret.IsTrue() {
 			continue
 		} else {

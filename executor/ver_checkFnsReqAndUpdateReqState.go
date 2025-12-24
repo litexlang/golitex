@@ -45,7 +45,7 @@ func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state 
 
 func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) ExecRet {
 	if atom, ok := obj.(ast.Atom); ok {
-		if ret := ver.Env.AtomObjNamesInObjDefinedOrBuiltin(atom, map[string]struct{}{}); ret.IsNotTrue() {
+		if ret := ver.Env.LookupNamesInObj(atom, map[string]struct{}{}); ret.IsNotTrue() {
 			return NewExecErr(ret.String())
 		} else {
 			return NewEmptyExecTrue()
@@ -112,7 +112,7 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 	}
 
 	// 如果param在母环境里已经声明过了，那就把整个obj里的所有的param全部改成新的
-	globRet := ver.Env.IsNameDefinedOrBuiltin(string(setBuilderStruct.Param), map[string]struct{}{})
+	globRet := ver.Env.IsNameUnavailable(string(setBuilderStruct.Param), map[string]struct{}{})
 	if globRet.IsTrue() {
 		// 把这个param替换成从来没见过的东西
 		setBuilderStruct = ver.replaceParamWithUndeclaredRandomName(setBuilderStruct)
