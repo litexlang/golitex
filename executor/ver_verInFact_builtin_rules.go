@@ -618,11 +618,11 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 
 	// check parameters of the left satisfies the fn template template requirement
 	for i, randomName := range randomNames {
-		ret := ver.Env.NewObj_NoDuplicate(randomName, nil)
+		ret := ver.Env.CheckAtomObjNameIsValidAndAvailableThenDefineIt(randomName)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
-		ret = ver.Env.NewFactWithAtomsDefined(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i], glob.BuiltinLine))
+		ret = ver.Env.NewFactWithoutCheckingNameDefined(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i], glob.BuiltinLine))
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -649,7 +649,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 			return verRet
 		}
 
-		ret := ver.Env.NewFactWithAtomsDefined(fact)
+		ret := ver.Env.NewFactWithoutCheckingNameDefined(fact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
@@ -662,7 +662,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 			return verRet
 		}
 
-		ret := ver.Env.NewFactWithAtomsDefined(fact)
+		ret := ver.Env.NewFactWithoutCheckingNameDefined(fact)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}

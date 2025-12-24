@@ -131,7 +131,7 @@ func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) glob.Gl
 		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{obj, indexObj})
 		// 创建 a[i] $in cartSet.Params[i] 的事实
 		inFact := ast.NewInFactWithObj(indexedObj, cartSet.Params[i])
-		ret := ie.EnvMgr.NewFactWithAtomsDefined(inFact)
+		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(inFact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -140,13 +140,13 @@ func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) glob.Gl
 	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{obj})
 	dimValue := ast.Atom(strconv.Itoa(len(cartSet.Params)))
 	dimEqualFact := ast.NewEqualFact(dimFn, dimValue)
-	ret := ie.EnvMgr.NewFactWithAtomsDefined(dimEqualFact)
+	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(dimEqualFact)
 	if ret.IsErr() {
 		return ret
 	}
 	// 添加 is_tuple(obj) 的事实
 	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{obj}, glob.BuiltinLine)
-	ret = ie.EnvMgr.NewFactWithAtomsDefined(isTupleFact)
+	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(isTupleFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -186,7 +186,7 @@ func (ie *InferEngine) trueInFactInFnTemplate(fact *ast.SpecFactStmt) (bool, glo
 		return false, glob.ErrRet(err)
 	}
 
-	ret = ie.EnvMgr.NewFactWithAtomsDefined(derivedFact)
+	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(derivedFact)
 	if ret.IsErr() {
 		return false, ret
 	}
@@ -208,7 +208,7 @@ func (ie *InferEngine) trueInFactInListSet(obj ast.Obj, listSetFnObj *ast.FnObj)
 	for _, param := range listSetFnObj.Params {
 		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, param}, glob.BuiltinLine))
 	}
-	ret := ie.EnvMgr.NewFactWithAtomsDefined(orFact)
+	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(orFact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -269,14 +269,14 @@ func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.Fn
 
 	// in parent set
 	inParentSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{obj, setBuilderStruct.ParentSet}, glob.BuiltinLine)
-	ret := ie.EnvMgr.NewFactWithAtomsDefined(inParentSetFact)
+	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(inParentSetFact)
 	if ret.IsErr() {
 		return glob.ErrRet(err)
 	}
 
 	// intentional facts are true
 	for _, fact := range instFacts {
-		ret := ie.EnvMgr.NewFactWithAtomsDefined(fact)
+		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(fact)
 		if ret.IsErr() {
 			return ret
 		}

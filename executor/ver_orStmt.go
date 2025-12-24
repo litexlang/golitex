@@ -46,7 +46,7 @@ func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt
 		if j == i {
 			continue
 		}
-		ret := ver.Env.NewFactWithAtomsDefined(facts[j].ReverseTrue())
+		ret := ver.Env.NewFactWithoutCheckingNameDefined(facts[j].ReverseTrue())
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
