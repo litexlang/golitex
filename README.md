@@ -34,6 +34,19 @@ How does Litex work? It achieves its simplicity by imitating how people reason a
 
 [Official Documentation](https://litexlang.com) is our website. Read [Tutorial](https://litexlang.com/doc/Tutorial/Introduction), [How Litex Works](https://litexlang.com/doc/How_Litex_Works/Introduction) for more details. [Hugging Face Dataset](https://huggingface.co/litexlang) is on Hugging Face.
 
+<style>
+/* Code block styling - bright pink for visibility */
+table code {
+  color: #ff00ff;
+  padding: 2px 6px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  display: inline-block;
+  line-height: 1.4;
+  font-weight: 500;
+}
+</style>
+
 ## Why Litex?
 
 _Our intent was to create a pleasant computing environment (Unix) for ourselves and our hope was that others liked it._
