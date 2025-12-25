@@ -39,6 +39,7 @@ type GlobRet interface {
 	GetREPLMsg() string
 	AddMsg(msg string) GlobRet
 	AddNewREPLMsg() GlobRet
+	AddMsgs(msgs []string) GlobRet
 }
 
 type GlobTrue struct {
@@ -245,5 +246,20 @@ func (v *GlobUnknown) AddNewREPLMsg() GlobRet {
 
 func (v *GlobErr) AddNewREPLMsg() GlobRet {
 	v.Msg = append(v.Msg, REPLErrorMessage)
+	return v
+}
+
+func (v *GlobTrue) AddMsgs(msgs []string) GlobRet {
+	v.Msg = append(v.Msg, msgs...)
+	return v
+}
+
+func (v *GlobUnknown) AddMsgs(msgs []string) GlobRet {
+	v.Msg = append(v.Msg, msgs...)
+	return v
+}
+
+func (v *GlobErr) AddMsgs(msgs []string) GlobRet {
+	v.Msg = append(v.Msg, msgs...)
 	return v
 }

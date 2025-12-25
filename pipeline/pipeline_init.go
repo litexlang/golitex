@@ -30,6 +30,10 @@ func NewBuiltinEnvMgrWithNewEmptyEnv(envPkgMgr *env.EnvPkgMgr) (*env.EnvMgr, err
 		if err != nil {
 			return nil, err
 		}
+		err = InitAstBuiltinAndKernelDefinedNames(env.BuiltinEnvMgrWithEmptyEnvPkgMgr)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	envMgr := env.CopyEnvMgrAndOwnPkgMgr(env.BuiltinEnvMgrWithEmptyEnvPkgMgr, envPkgMgr)
@@ -41,10 +45,10 @@ func NewBuiltinEnvMgr() (*env.EnvMgr, error) {
 	curEnvMgr := env.NewEnvMgr(env.NewEnvPkgMgr(pkgMgr.NewEmptyPkgMgr()), []env.EnvMemory{*env.NewEnvMemory()}, make(map[string]struct{}), make(map[string]*ast.DefPropStmt), make(map[string]*ast.DefExistPropStmt), make(map[string]*ast.DefFnSetStmt), make(map[string]*ast.DefAlgoStmt), make(map[string]*ast.DefProveAlgoStmt))
 	curEnvMgr.Init()
 	err := useHardcodedCodeToInitEnvMgr(curEnvMgr)
-	if err != nil {
-		panic(err)
-	}
+	return curEnvMgr, err
+}
 
+func InitAstBuiltinAndKernelDefinedNames(curEnvMgr *env.EnvMgr) error {
 	for k := range curEnvMgr.AllDefinedAlgoNames {
 		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
 	}
@@ -64,7 +68,7 @@ func NewBuiltinEnvMgr() (*env.EnvMgr, error) {
 		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
 	}
 
-	return curEnvMgr, nil
+	return nil
 }
 
 func useHardcodedCodeToInitEnvMgr(envMgr *env.EnvMgr) error {
