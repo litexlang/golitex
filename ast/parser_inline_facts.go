@@ -63,7 +63,7 @@ func (p *TbParser) inlineFactThenSkipStmtTerminatorUntilEndSignals(tb *tokenBloc
 		if err != nil {
 			return nil, err
 		}
-		return uniFact.(FactStmt), nil
+		return uniFact, nil
 	default:
 		return p.inline_spec_or_enum_intensional_Equals_fact_skip_terminator(tb)
 	}

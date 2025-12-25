@@ -2267,13 +2267,13 @@ func (p *TbParser) factStmt(tb *tokenBlock, uniFactDepth uniFactEnum) (FactStmt,
 			if err != nil {
 				return nil, err
 			}
-			return uniFact.(FactStmt), nil
+			return uniFact, nil
 		} else {
 			uniFact, err := p.inlineUniInterfaceSkipTerminator(tb, []string{})
 			if err != nil {
 				return nil, err
 			}
-			return uniFact.(FactStmt), nil
+			return uniFact, nil
 		}
 	case glob.KeywordOr:
 		return p.orStmt(tb)

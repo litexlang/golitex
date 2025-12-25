@@ -273,9 +273,9 @@ func (envMgr *EnvMgr) GetEnvMgrOfPkgName(pkgName string) *EnvMgr {
 	return envMgr.EnvPkgMgr.AbsPkgPathEnvMgrMap[path]
 }
 
-var BuiltinEnvMgr *EnvMgr = nil
+var BuiltinEnvMgrWithEmptyEnvPkgMgr *EnvMgr = nil
 
-func CopyEnvMgr_SharePkgMgr(givenEnvMgr *EnvMgr) *EnvMgr {
+func CopyEnvMgrAndOwnPkgMgr(givenEnvMgr *EnvMgr, envPkgMgr *EnvPkgMgr) *EnvMgr {
 	// 复制所有的 map
 	allDefinedAtomObjNames := make(map[string]struct{})
 	for k, v := range givenEnvMgr.AllDefinedAtomObjNames {
@@ -314,7 +314,7 @@ func CopyEnvMgr_SharePkgMgr(givenEnvMgr *EnvMgr) *EnvMgr {
 	}
 
 	return NewEnvMgr(
-		givenEnvMgr.EnvPkgMgr, // 共享 EnvPkgMgr
+		envPkgMgr,
 		envSlice,
 		allDefinedAtomObjNames,
 		allDefinedPropNames,

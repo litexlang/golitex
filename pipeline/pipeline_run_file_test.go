@@ -33,6 +33,7 @@ func Test_File(t *testing.T) {
 	start := time.Now()
 	pkgMgr := package_manager.NewEmptyPkgMgr()
 	_, ret := RunFileInPkgMgr(absOfFile, "", pkgMgr, false)
+	ret.AddNewREPLMsg()
 	if ret.IsNotTrue() {
 		t.Errorf("failed to run file %s\n", fileName)
 	}
@@ -51,6 +52,7 @@ func Test_ImportFile(t *testing.T) {
 	start := time.Now()
 	pkgMgr := package_manager.NewEmptyPkgMgr()
 	_, ret := RunFileInPkgMgr(absOfFile, "", pkgMgr, false)
+	ret.AddNewREPLMsg()
 	if ret.IsNotTrue() {
 		t.Errorf("failed to run file %s\n", fileName)
 	}
