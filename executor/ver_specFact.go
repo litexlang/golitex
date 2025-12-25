@@ -123,7 +123,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFa
 			return verRet
 		}
 
-		state.ReqOk = true
+		state.UpdateReqOkToTrue()
 	}
 	return ver.verSpecFactStepByStep(stmt, state)
 }

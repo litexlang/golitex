@@ -136,7 +136,7 @@ func (exec *Executor) proveAlgoIfStmt(stmt *ast.ProveAlgoIfStmt, paramsValues []
 	defer exec.deleteEnv()
 
 	knowStmt := ast.NewKnowStmt(stmt.Conditions.ToCanBeKnownStmtSlice(), stmt.GetLine())
-	execRet := exec.knowFactStmt(knowStmt)
+	execRet := exec.knowStmt(knowStmt)
 	if execRet.IsNotTrue() {
 		return execRet, nil
 	}
