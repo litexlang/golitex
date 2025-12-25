@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import (
 	glob "golitex/glob"
 )
 
-// 所有verifier的方法里，只有它和switch里的三大函数可能读入anyState
 func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) ExecRet {
 	switch asStmt := stmt.(type) {
 	case *ast.SpecFactStmt:
