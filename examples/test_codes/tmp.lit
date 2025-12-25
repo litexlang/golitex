@@ -1,6 +1,2 @@
-"
-$is_nonempty_with_item({x R: x > 0}, 1)
-have a {1,2,3}, b cart(R, R), c {x R: x > 0}, d range(1, 3)
-"
-
-have a {1,2,3}
+have s set = cart(R, R)
+s = cart(R, R)
