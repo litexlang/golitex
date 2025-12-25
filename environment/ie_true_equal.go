@@ -187,7 +187,7 @@ func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) glob.Gl
 		return glob.NewGlobTrue(glob.InferMsgs(inferMsgs))
 	}
 
-	return glob.NewGlobTrue(glob.InferMsgs(inferMsgs))
+	return glob.NewEmptyGlobUnknown()
 }
 
 func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj, rightTuple *ast.FnObj) glob.GlobRet {
