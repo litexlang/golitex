@@ -244,6 +244,8 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 			return NewExecErr(fmt.Sprintf("%s\n", stmt.String())).AddMsg(execRet.String())
 		}
 
+		inFact := ast.NewInFact(stmt.Objs[i], stmt.ObjSets[i])
+		msgs = append(msgs, glob.ByDefinitionMsg(inFact.String()))
 		msgs = append(msgs, ret.GetMsgs()...)
 	}
 

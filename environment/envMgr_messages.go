@@ -49,11 +49,3 @@ func AtomsInFactNotDeclaredMsg(fact ast.FactStmt) string {
 func AtomsInObjNotDeclaredMsg(obj ast.Obj) string {
 	return fmt.Sprintf("undefined name in obj: %s", obj)
 }
-
-func InferMsgs(msg []string) string {
-	return fmt.Sprintf("infer:\n%s\n", strings.Join(msg, "\n"))
-}
-
-func InferMsg(msg string) string {
-	return fmt.Sprintf("infer:\n%s\n", msg)
-}

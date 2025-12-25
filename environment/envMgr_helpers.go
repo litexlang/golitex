@@ -19,7 +19,6 @@ import (
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 	glob "golitex/glob"
-	"strings"
 )
 
 func (envMgr *EnvMgr) GenerateUndeclaredRandomName() string {
@@ -85,11 +84,11 @@ func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateP
 	return fnTStruct, glob.NewEmptyGlobTrue()
 }
 
-func (envMgr *EnvMgr) InferMsgsWithOriginalFact(originalFact string, derivedFacts []string) glob.GlobRet {
-	msgs := []string{originalFact, "\n"}
-	msgs = append(msgs, InferMsgs(derivedFacts))
-	return glob.NewGlobTrue(strings.Join(msgs, "\n"))
-}
+// func (envMgr *EnvMgr) InferMsgsWithOriginalFact(originalFact string, derivedFacts []string) glob.GlobRet {
+// 	msgs := []string{originalFact, "\n"}
+// 	msgs = append(msgs, InferMsgs(derivedFacts))
+// 	return glob.NewGlobTrue(strings.Join(msgs, "\n"))
+// }
 
 func (envMgr *EnvMgr) storeSpecFactInMem(stmt *ast.SpecFactStmt) glob.GlobRet {
 	return envMgr.CurEnv().KnownFactsStruct.SpecFactMem.newFact(stmt)
