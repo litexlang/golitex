@@ -23,8 +23,8 @@ import (
 )
 
 // how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
-func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) ExecRet {
-	if !state.ReqOk && checkRequirements {
+func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+	if !state.ReqOk {
 		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
 		}
@@ -36,7 +36,7 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 		return verRet
 	}
 
-	if verRet := ver.verTrueEqualFactMainLogic(stmt, state, checkRequirements); verRet.IsTrue() || verRet.IsErr() {
+	if verRet := ver.verTrueEqualFactMainLogic(stmt, state); verRet.IsTrue() || verRet.IsErr() {
 		return verRet
 	}
 
@@ -47,7 +47,7 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 	return NewEmptyExecUnknown()
 }
 
-func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) ExecRet {
+func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// var verRet ExecRet
 
 	// if checkRequirements && !state.ReqOk {
