@@ -170,7 +170,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRig
 	derivedFacts = append(derivedFacts, sqrtXGreaterThanZeroFact.String())
 
 	if len(derivedFacts) > 0 {
-		return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
+		return ie.EnvMgr.InferMsgsWithOriginalFact(fact.String(), derivedFacts)
 	}
 	return glob.NewEmptyGlobTrue()
 }
@@ -204,7 +204,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAn
 		return ret
 	}
 
-	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
+	return ie.EnvMgr.InferMsgsWithOriginalFact(fact.String(), derivedFacts)
 }
 
 func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -264,7 +264,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightP
 		return ret
 	}
 
-	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
+	return ie.EnvMgr.InferMsgsWithOriginalFact(fact.String(), derivedFacts)
 }
 
 func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsZero(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -293,7 +293,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndR
 		return ret
 	}
 
-	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
+	return ie.EnvMgr.InferMsgsWithOriginalFact(fact.String(), derivedFacts)
 }
 
 func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -365,7 +365,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRig
 		return ret
 	}
 
-	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
+	return ie.EnvMgr.InferMsgsWithOriginalFact(fact.String(), derivedFacts)
 }
 
 func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -409,7 +409,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAn
 		return ret
 	}
 
-	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
+	return ie.EnvMgr.InferMsgsWithOriginalFact(fact.String(), derivedFacts)
 }
 
 func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -481,7 +481,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightP
 		return ret
 	}
 
-	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
+	return ie.EnvMgr.InferMsgsWithOriginalFact(fact.String(), derivedFacts)
 }
 
 func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -525,7 +525,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndR
 		return ret
 	}
 
-	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
+	return ie.EnvMgr.InferMsgsWithOriginalFact(fact.String(), derivedFacts)
 }
 
 func (ie *InferEngine) subsetOfFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -543,7 +543,7 @@ func (ie *InferEngine) subsetOfFactPostProcess(fact *ast.SpecFactStmt) glob.Glob
 
 	derivedFacts = append(derivedFacts, forallFact.String())
 
-	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
+	return ie.EnvMgr.InferMsgsWithOriginalFact(fact.String(), derivedFacts)
 }
 
 func (ie *InferEngine) falseEqualFact(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -556,7 +556,7 @@ func (ie *InferEngine) falseEqualFact(fact *ast.SpecFactStmt) glob.GlobRet {
 		return ret
 	}
 
-	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
+	return ie.EnvMgr.InferMsgsWithOriginalFact(fact.String(), derivedFacts)
 }
 
 func (ie *InferEngine) isNonEmptyWithItemFactPostProcess(fact *ast.SpecFactStmt) glob.GlobRet {
@@ -569,5 +569,5 @@ func (ie *InferEngine) isNonEmptyWithItemFactPostProcess(fact *ast.SpecFactStmt)
 		return ret
 	}
 
-	return ie.EnvMgr.AutoDerivedFactsMsg(fact.String(), derivedFacts)
+	return ie.EnvMgr.InferMsgsWithOriginalFact(fact.String(), derivedFacts)
 }

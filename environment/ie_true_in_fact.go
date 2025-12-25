@@ -123,6 +123,8 @@ func (ie *InferEngine) trueInFactByCart(fact *ast.SpecFactStmt) glob.GlobRet {
 //   - dim(a) = n (dimension equals the number of sets)
 //   - is_tuple(a) (the object is a tuple)
 func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) glob.GlobRet {
+	derivedFacts := []string{}
+
 	// 为每个索引生成 a[i] $in cartSet.Params[i-1] 的事实（索引从1开始）
 	for i := range len(cartSet.Params) {
 		index := i + 1 // 索引从1开始
@@ -135,6 +137,7 @@ func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) glob.Gl
 		if ret.IsErr() {
 			return ret
 		}
+		derivedFacts = append(derivedFacts, inFact.String())
 	}
 	// 添加 dim(obj) = len(cartSet.Params) 的事实
 	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{obj})
@@ -144,13 +147,15 @@ func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) glob.Gl
 	if ret.IsErr() {
 		return ret
 	}
+	derivedFacts = append(derivedFacts, dimEqualFact.String())
 	// 添加 is_tuple(obj) 的事实
 	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{obj}, glob.BuiltinLine)
 	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(isTupleFact)
 	if ret.IsErr() {
 		return ret
 	}
-	return glob.NewEmptyGlobTrue()
+	derivedFacts = append(derivedFacts, isTupleFact.String())
+	return glob.NewGlobTrue(InferMsgs(derivedFacts))
 }
 
 func (ie *InferEngine) trueInFactInFnSet(fact *ast.SpecFactStmt) (bool, glob.GlobRet) {
@@ -242,6 +247,7 @@ func (ie *InferEngine) trueInFactBySetBuilder(fact *ast.SpecFactStmt) glob.GlobR
 //   - obj $in parentSet (membership in parent set)
 //   - All instantiated intentional facts from the set builder
 func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.FnObj) glob.GlobRet {
+	derivedFactStrings := []string{}
 	setBuilderStruct, err := setBuilderObj.ToSetBuilderStruct()
 	if err != nil {
 		return glob.ErrRet(err)
@@ -265,6 +271,7 @@ func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.Fn
 	if ret.IsErr() {
 		return glob.ErrRet(err)
 	}
+	derivedFactStrings = append(derivedFactStrings, inParentSetFact.String())
 
 	// intentional facts are true
 	for _, fact := range instFacts {
@@ -272,9 +279,10 @@ func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.Fn
 		if ret.IsErr() {
 			return ret
 		}
+		derivedFactStrings = append(derivedFactStrings, fact.String())
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewGlobTrue(InferMsgs(derivedFactStrings))
 }
 
 // trueInFactByRangeOrClosedRange handles inference for x $in range(a, b) or x $in closed_range(a, b)
@@ -289,7 +297,7 @@ func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt) gl
 		return glob.NewEmptyGlobUnknown()
 	}
 
-	derivedFacts := []string{}
+	derivedFactStrings := []string{}
 
 	obj := fact.Params[0]
 	rangeOrClosedRange := fact.Params[1].(*ast.FnObj)
@@ -303,7 +311,7 @@ func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt) gl
 	if ret.IsErr() {
 		return ret
 	}
-	derivedFacts = append(derivedFacts, inZFact.String())
+	derivedFactStrings = append(derivedFactStrings, inZFact.String())
 
 	// Generate x >= left
 	greaterEqualLeftFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{obj, left}, fact.Line)
@@ -311,13 +319,13 @@ func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt) gl
 	if ret.IsErr() {
 		return ret
 	}
-	derivedFacts = append(derivedFacts, greaterEqualLeftFact.String())
+	derivedFactStrings = append(derivedFactStrings, greaterEqualLeftFact.String())
 	ret = ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterEqualLeftFact)
 	if ret.IsErr() {
 		return ret
 	}
 	if ret.IsTrue() && len(ret.GetMsgs()) > 0 {
-		derivedFacts = append(derivedFacts, ret.GetMsgs()...)
+		derivedFactStrings = append(derivedFactStrings, ret.GetMsgs()...)
 	}
 
 	// Generate left <= x
@@ -326,7 +334,7 @@ func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt) gl
 	if ret.IsErr() {
 		return ret
 	}
-	derivedFacts = append(derivedFacts, lessEqualLeftFact.String())
+	derivedFactStrings = append(derivedFactStrings, lessEqualLeftFact.String())
 	ret = ie.builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(lessEqualLeftFact)
 	if ret.IsErr() {
 		return ret
@@ -339,13 +347,13 @@ func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt) gl
 		if ret.IsErr() {
 			return ret
 		}
-		derivedFacts = append(derivedFacts, lessRightFact.String())
+		derivedFactStrings = append(derivedFactStrings, lessRightFact.String())
 		ret = ie.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(lessRightFact)
 		if ret.IsErr() {
 			return ret
 		}
 		if ret.IsTrue() && len(ret.GetMsgs()) > 0 {
-			derivedFacts = append(derivedFacts, ret.GetMsgs()...)
+			derivedFactStrings = append(derivedFactStrings, ret.GetMsgs()...)
 		}
 	} else {
 		// closed_range: generate x <= right
@@ -354,20 +362,17 @@ func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt) gl
 		if ret.IsErr() {
 			return ret
 		}
-		derivedFacts = append(derivedFacts, lessEqualRightFact.String())
+		derivedFactStrings = append(derivedFactStrings, lessEqualRightFact.String())
 		ret = ie.builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(lessEqualRightFact)
 		if ret.IsErr() {
 			return ret
 		}
 		if ret.IsTrue() && len(ret.GetMsgs()) > 0 {
-			derivedFacts = append(derivedFacts, ret.GetMsgs()...)
+			derivedFactStrings = append(derivedFactStrings, ret.GetMsgs()...)
 		}
 	}
 
-	if len(derivedFacts) > 0 {
-		return glob.NewGlobTrueWithMsgs(derivedFacts)
-	}
-	return glob.NewEmptyGlobTrue()
+	return glob.NewGlobTrue(InferMsgs(derivedFactStrings))
 }
 
 // trueInFactByNPos handles inference for x $in NPos (positive natural numbers)
