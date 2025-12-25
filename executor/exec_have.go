@@ -190,6 +190,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) Ex
 func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 	ver := NewVerifier(exec.Env)
 
+	inferMsgs := []string{}
 	for i := range len(stmt.ObjNames) {
 		if ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(stmt.ObjEqualTos[i], Round0NoMsg()); ret.IsNotTrue() {
 			return ret
@@ -203,7 +204,8 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 			return NewExecErr(fmt.Sprintf("%s is not in %s", stmt.ObjNames[i], stmt.ObjSets[i]))
 		}
 
-		stmtForDef := ast.NewDefLetStmt([]string{(stmt.ObjNames[i])}, []ast.Obj{stmt.ObjSets[i]}, []ast.FactStmt{ast.NewEqualFact(ast.Atom((stmt.ObjNames[i])), stmt.ObjEqualTos[i])}, stmt.Line)
+		equalFact := ast.NewEqualFact(ast.Atom((stmt.ObjNames[i])), stmt.ObjEqualTos[i])
+		stmtForDef := ast.NewDefLetStmt([]string{(stmt.ObjNames[i])}, []ast.Obj{stmt.ObjSets[i]}, []ast.FactStmt{equalFact}, stmt.Line)
 		ret := exec.Env.DefLetStmt(stmtForDef)
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
@@ -212,15 +214,21 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 		if execState.IsNotTrue() {
 			return execState
 		}
+
+		inFact := ast.NewInFactWithObj(stmt.ObjEqualTos[i], stmt.ObjSets[i])
+		inferMsgs = append(inferMsgs, inFact.String())
+
 		// 检查 等号右边的东西是否存在
 		ret = exec.Env.LookupNamesInObj(stmt.ObjEqualTos[i], map[string]struct{}{})
 		if ret.IsErr() {
 			ret.AddMsg(fmt.Sprintf("in obj equal to %s", stmt.ObjEqualTos[i]))
 			return NewExecErr(ret.String())
 		}
+
+		inferMsgs = append(inferMsgs, equalFact.String())
 	}
 
-	return NewExecTrue(stmt.String())
+	return NewExecTrue(stmt.String()).AddNewLineAndMsg(glob.ByDefinitionMsgs(inferMsgs))
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) ExecRet {

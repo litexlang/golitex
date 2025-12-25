@@ -39,6 +39,7 @@ type ExecRet interface {
 	AddMsg(msg string) ExecRet
 	AddMsgAtBegin(msg string) ExecRet
 	AddMsgs(msgs []string) ExecRet
+	AddNewLineAndMsg(msg string) ExecRet
 }
 
 type ExecTrue struct {
@@ -267,5 +268,20 @@ func (v *ExecUnknown) AddMsgs(msgs []string) ExecRet {
 
 func (v *ExecErr) AddMsgs(msgs []string) ExecRet {
 	v.Msg = append(v.Msg, msgs...)
+	return v
+}
+
+func (v *ExecTrue) AddNewLineAndMsg(msg string) ExecRet {
+	v.Msg = append(v.Msg, "\n", msg)
+	return v
+}
+
+func (v *ExecUnknown) AddNewLineAndMsg(msg string) ExecRet {
+	v.Msg = append(v.Msg, "\n", msg)
+	return v
+}
+
+func (v *ExecErr) AddNewLineAndMsg(msg string) ExecRet {
+	v.Msg = append(v.Msg, "\n", msg)
 	return v
 }
