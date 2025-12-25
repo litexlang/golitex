@@ -47,7 +47,8 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 		if verRet = ver.checkFnsReqAndUpdateReqState(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return NewExecErr(verRet.String())
 		}
-		state.ReqOk = true
+
+		state.UpdateReqOkToTrue() // 任何条件下，只要这个fact里面的函数的定义域什么的被检查过了，日后都不再需要检查了
 
 		if !isValidEqualFact(stmt) {
 			return NewExecErr(fmt.Sprintf("invalid equal fact: %s", stmt))

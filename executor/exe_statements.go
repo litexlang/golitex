@@ -28,7 +28,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	case ast.FactStmt:
 		execRet = exec.factStmt(stmt)
 	case *ast.KnowFactStmt:
-		execRet = exec.knowFactStmt(stmt)
+		execRet = exec.knowStmt(stmt)
 		if execRet.IsTrue() {
 			execRet = execRet.AddMsg("Warning: `know` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
@@ -159,7 +159,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 }
 
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
-func (exec *Executor) knowFactStmt(stmt *ast.KnowFactStmt) ExecRet {
+func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
 	allDerivedFacts := []string{}
 
 	for _, fact := range stmt.Facts {
@@ -273,7 +273,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) ExecRet
 	}
 
 	// emit then fact
-	execState = exec.knowFactStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
+	execState = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
 	if execState.IsNotTrue() {
 		return execState
 	}
@@ -337,7 +337,7 @@ func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) ExecRet
 	}
 
 	// emit then fact
-	execState = exec.knowFactStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
+	execState = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
 	if execState.IsNotTrue() {
 		return execState
 	}
