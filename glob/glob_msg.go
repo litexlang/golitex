@@ -75,17 +75,37 @@ func REPLErrorMessageWithPath(path string) string {
 }
 
 func InferMsgs(msg []string) string {
+	if len(msg) == 0 {
+		return ""
+	}
 	return fmt.Sprintf("infer:\n%s\n", strings.Join(msg, "\n"))
 }
 
 func InferMsg(msg string) string {
+	if msg == "" {
+		return ""
+	}
 	return fmt.Sprintf("infer:\n%s\n", msg)
 }
 
 func ByDefinitionMsgs(msg []string) string {
+	if len(msg) == 0 {
+		return ""
+	}
 	return fmt.Sprintf("by definition:\n%s\n", strings.Join(msg, "\n"))
 }
 
 func ByDefinitionMsg(msg string) string {
+	if msg == "" {
+		return ""
+	}
 	return fmt.Sprintf("by definition:\n%s\n", msg)
+}
+
+type StmtExecMsg struct {
+	Define        []string
+	NewFact       []string
+	VerifyProcess []string
+	Infer         []string
+	Error         []string
 }
