@@ -373,7 +373,7 @@ func (ver *Verifier) verIsCartByBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 	// 如果参数数量是1，且参数的函数名是cart，那自动成立
 	if len(stmt.Params) == 1 {
 		if cartObj, ok := stmt.Params[0].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartObj.FnHead, glob.KeywordCart) {
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), "builtin rules: cart(...) is automatically a cart set", NewEmptyExecTrue())
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), "definition", NewEmptyExecTrue())
 		}
 	}
 	return NewEmptyExecUnknown()
