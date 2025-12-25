@@ -73,3 +73,19 @@ func REPLMsgWithPath(ret GlobRet, path string) string {
 func REPLErrorMessageWithPath(path string) string {
 	return REPLMsgWithPath(NewEmptyGlobErr(), path)
 }
+
+func InferMsgs(msg []string) string {
+	return fmt.Sprintf("infer:\n%s\n", strings.Join(msg, "\n"))
+}
+
+func InferMsg(msg string) string {
+	return fmt.Sprintf("infer:\n%s\n", msg)
+}
+
+func ByDefinitionMsgs(msg []string) string {
+	return fmt.Sprintf("by definition:\n%s\n", strings.Join(msg, "\n"))
+}
+
+func ByDefinitionMsg(msg string) string {
+	return fmt.Sprintf("by definition:\n%s\n", msg)
+}
