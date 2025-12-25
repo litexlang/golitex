@@ -157,12 +157,12 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 				exec.Env.StoreTrueEqualValues(stmt.(*ast.SpecFactStmt).Params[0], verRet.(*ExecTrue).TrueEqualValues[1])
 			}
 		}
-		return verRet.AddMsg(stmt.String()).AddMsgs(ret.GetMsgs())
+		return NewExecTrue(fmt.Sprintf("%s\n", stmt.String())).AddMsg(glob.NewFactMsg(stmt.String())).AddMsg(glob.VerifyProcessMsgs(verRet.GetMsgs())).AddMsgs((ret.GetMsgs()))
 	} else if verRet.IsUnknown() {
-		return verRet.AddMsg(stmt.String())
+		return verRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 	} else {
 		execRet := NewExecErr("unknown ver ret")
-		return execRet.AddMsg(stmt.String())
+		return execRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 	}
 }
 
