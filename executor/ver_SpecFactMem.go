@@ -119,7 +119,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 
 		ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(&knownFact_paramProcessed, stmt)
 		if err != nil {
-			return NewExecErr(err.Error())
+			return NewExecUnknown(err.Error())
 		}
 		if !ok {
 			continue
@@ -127,7 +127,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 
 		randomizedUniFactWithoutThen, _, paramMapStrToStr, randomizedOrStmt, err := ver.preprocessUniFactParamsWithoutThenFacts_OrStmt(knownFactUnderLogicExpr.UniFact, knownFactUnderLogicExpr.LogicExpr)
 		if err != nil {
-			return NewExecErr(err.Error())
+			return NewExecUnknown(err.Error())
 		}
 
 		for k, v := range uniConMap {
@@ -139,7 +139,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 
 		instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
 		if err != nil {
-			return NewExecErr(err.Error())
+			return NewExecUnknown(err.Error())
 		}
 
 		// insKnownUniFact, err := ast.InstantiateUniFact(knownFactUnderLogicExpr.UniFact, uniConMap)
@@ -154,7 +154,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 		for _, paramInParamSetFact := range paramInParamSetFacts {
 			verRet := ver.VerFactStmt(paramInParamSetFact, state)
 			if verRet.IsErr() {
-				return NewExecErr(verRet.String())
+				return NewExecUnknown(verRet.String())
 			}
 			if verRet.IsUnknown() {
 				setFactSatisfied = false
@@ -169,7 +169,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 		// ok, err = ver.proveUniFactDomFacts(insKnownUniFact.DomFacts, state)
 		verRet := ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
 		if verRet.IsErr() {
-			return verRet
+			return NewExecUnknown(verRet.String())
 		}
 		if verRet.IsUnknown() {
 			continue
@@ -177,16 +177,16 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 
 		instantiatedLogicExpr, err := randomizedOrStmt.InstantiateFact(uniConMap)
 		if err != nil {
-			return NewExecErr(err.Error())
+			return NewExecUnknown(err.Error())
 		}
 		instantiatedLogicExprAsKnownSpecFact, ok := instantiatedLogicExpr.(*ast.OrStmt)
 		if !ok {
-			return NewExecErr("instantiatedLogicExpr is not a KnownSpecFact_InLogicExpr")
+			return NewExecUnknown("instantiatedLogicExpr is not a KnownSpecFact_InLogicExpr")
 		}
 
 		verRet = ver.verify_specFact_when_given_orStmt_is_true(stmt, instantiatedLogicExprAsKnownSpecFact, knownFactUnderLogicExpr.Index, state)
 		if verRet.IsErr() {
-			return verRet
+			return NewExecUnknown(verRet.String())
 		}
 
 		if verRet.IsTrue() {
@@ -199,7 +199,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 
 func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if state.Round == 0 && !state.ReqOk {
-		return NewExecErr(fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state))
+		return NewExecUnknown(fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state))
 	}
 
 	searchedSpecFacts, got := curEnv.KnownFactsStruct.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
@@ -291,7 +291,7 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.EnvMemory, stmt *ast.SpecFact
 		for _, knownFact := range knownFacts {
 			verRet := ver.useKnownOrFactToProveSpecFact(&knownFact, stmt, state)
 			if verRet.IsErr() {
-				return NewExecErr(verRet.String())
+				return NewExecUnknown(verRet.String())
 			}
 			if verRet.IsTrue() {
 				return ver.maybeAddSuccessMsg(state, stmt, knownFact.LogicExpr, verRet)
@@ -434,7 +434,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 
 		ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(&knownFact_paramProcessed, stmt)
 		if err != nil {
-			return NewExecErr(err.Error())
+			return NewExecUnknown(err.Error())
 		}
 		if !ok {
 			continue
@@ -442,7 +442,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 
 		randomizedUniFactWithoutThen, _, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownFact_paramProcessed.UniFact)
 		if err != nil {
-			return NewExecErr(err.Error())
+			return NewExecUnknown(err.Error())
 		}
 
 		for k, v := range uniConMap {
@@ -454,7 +454,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 
 		instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
 		if err != nil {
-			return NewExecErr(err.Error())
+			return NewExecUnknown(err.Error())
 		}
 
 		var nextState *VerState
