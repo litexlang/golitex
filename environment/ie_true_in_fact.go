@@ -26,11 +26,11 @@ func (ie *InferEngine) trueInFact(fact *ast.SpecFactStmt) glob.GlobRet {
 		return glob.ErrRet(fmt.Errorf("in fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
 
-	if ret := ie.trueInFactByFnTemplate(fact); ret.IsTrue() || ret.IsErr() {
+	if ret := ie.trueInFactByNamedFnSet(fact); ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
 
-	if ret := ie.trueInFactByFnTemplateFnObj(fact); ret.IsTrue() || ret.IsErr() {
+	if ret := ie.trueInFactByAnonymousFnSetObj(fact); ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
 
@@ -57,11 +57,11 @@ func (ie *InferEngine) trueInFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	return glob.NewEmptyGlobTrue()
 }
 
-// trueInFactByFnTemplate handles inference for x $in fnTemplate(...)
+// trueInFactByNamedFnSet handles inference for x $in fnTemplate(...)
 // Inference: Derives a universal fact from the function template definition
 // and stores the function-template satisfaction relationship
-func (ie *InferEngine) trueInFactByFnTemplate(fact *ast.SpecFactStmt) glob.GlobRet {
-	isTemplate, ret := ie.trueInFactInFnTemplate(fact)
+func (ie *InferEngine) trueInFactByNamedFnSet(fact *ast.SpecFactStmt) glob.GlobRet {
+	isTemplate, ret := ie.trueInFactInFnSet(fact)
 	if ret.IsErr() {
 		return ret
 	}
@@ -71,9 +71,9 @@ func (ie *InferEngine) trueInFactByFnTemplate(fact *ast.SpecFactStmt) glob.GlobR
 	return glob.NewEmptyGlobUnknown()
 }
 
-// trueInFactByFnTemplateFnObj handles inference for x $in fnTemplateFnObj
+// trueInFactByAnonymousFnSetObj handles inference for x $in fnTemplateFnObj
 // Inference: Inserts the function x into the function template table
-func (ie *InferEngine) trueInFactByFnTemplateFnObj(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) trueInFactByAnonymousFnSetObj(fact *ast.SpecFactStmt) glob.GlobRet {
 	fnFn, ok := fact.Params[1].(*ast.FnObj)
 	if !ok || !ast.IsFnTemplate_ObjFn(fnFn) {
 		return glob.NewEmptyGlobUnknown()
@@ -153,7 +153,7 @@ func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) glob.Gl
 	return glob.NewEmptyGlobTrue()
 }
 
-func (ie *InferEngine) trueInFactInFnTemplate(fact *ast.SpecFactStmt) (bool, glob.GlobRet) {
+func (ie *InferEngine) trueInFactInFnSet(fact *ast.SpecFactStmt) (bool, glob.GlobRet) {
 	if _, ok := fact.Params[1].(*ast.FnObj); !ok {
 		return false, glob.NewEmptyGlobTrue()
 	}
@@ -199,23 +199,6 @@ func (ie *InferEngine) trueInFactInFnTemplate(fact *ast.SpecFactStmt) (bool, glo
 	return true, glob.NewEmptyGlobTrue()
 }
 
-// trueInFactInListSet handles inference for obj $in listSet(e1, e2, ..., en)
-// Inference: Generates an OR fact indicating that obj equals one of the list set elements
-// Result: obj = e1 or obj = e2 or ... or obj = en
-func (ie *InferEngine) trueInFactInListSet(obj ast.Obj, listSetFnObj *ast.FnObj) glob.GlobRet {
-	// 用所有的param做一个or出来，说明left等于其中的一个
-	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine)
-	for _, param := range listSetFnObj.Params {
-		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, param}, glob.BuiltinLine))
-	}
-	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(orFact)
-	if ret.IsErr() {
-		return ret
-	}
-
-	return glob.NewEmptyGlobTrue()
-}
-
 // trueInFactByListSet handles inference for x $in listSet(...)
 // It tries to get the listSet either directly or from equal facts
 // Inference: If x is in a finite list set, then x equals one of the elements
@@ -231,7 +214,16 @@ func (ie *InferEngine) trueInFactByListSet(fact *ast.SpecFactStmt) glob.GlobRet 
 		return glob.ErrRet(fmt.Errorf("expected list set to be FnObj, got %T", listSetObj))
 	}
 
-	return ie.trueInFactInListSet(fact.Params[0], listSetFnObj)
+	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine)
+	for _, param := range listSetFnObj.Params {
+		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], param}, glob.BuiltinLine))
+	}
+	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(orFact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	return glob.NewGlobTrue(InferMsg(orFact.String()))
 }
 
 // trueInFactBySetBuilder handles inference for x $in {y in T: P(y)}

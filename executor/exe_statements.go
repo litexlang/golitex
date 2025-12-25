@@ -159,7 +159,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 				exec.Env.StoreTrueEqualValues(stmt.(*ast.SpecFactStmt).Params[0], verRet.(*ExecTrue).TrueEqualValues[1])
 			}
 		}
-		return verRet.AddMsg(stmt.String())
+		return verRet.AddMsg(stmt.String()).AddMsgs(ret.GetMsgs())
 	} else if verRet.IsUnknown() {
 		return verRet.AddMsg(stmt.String())
 	} else {

@@ -200,6 +200,7 @@ func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) glob.GlobRet {
 		}
 	}
 
+	inferMsgs := []string{}
 	for _, fact := range stmt.NewInFacts() {
 		ret := envMgr.LookUpNamesInFact(fact, map[string]struct{}{})
 		if ret.IsErr() {
@@ -210,6 +211,7 @@ func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) glob.GlobRet {
 		if ret.IsErr() {
 			return ret
 		}
+		inferMsgs = append(inferMsgs, ret.GetMsgs()...)
 	}
 
 	implicationFacts := []string{}
@@ -228,5 +230,5 @@ func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) glob.GlobRet {
 		}
 	}
 
-	return glob.NewGlobTrueWithMsgs(implicationFacts)
+	return glob.NewGlobTrueWithMsgs(implicationFacts).AddMsgs(inferMsgs)
 }
