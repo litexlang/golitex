@@ -196,6 +196,8 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 			return ret
 		}
 
+		inferMsgs = append(inferMsgs, glob.IsANewObjectMsg(stmt.ObjNames[i]))
+
 		verRet := ver.VerFactStmt(ast.NewInFactWithObj(stmt.ObjEqualTos[i], stmt.ObjSets[i]), Round0Msg())
 		if verRet.IsErr() {
 			return NewExecErr(verRet.String())
@@ -253,7 +255,7 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 		}
 
 		inFact := ast.NewInFact(stmt.Objs[i], stmt.ObjSets[i])
-		msgs = append(msgs, glob.ByDefinitionMsg(inFact.String()))
+		msgs = append(msgs, glob.ByDefinitionMsgs([]string{glob.IsANewObjectMsg(stmt.Objs[i]), inFact.String()}))
 		msgs = append(msgs, ret.GetMsgs()...)
 	}
 

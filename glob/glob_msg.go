@@ -109,3 +109,18 @@ type StmtExecMsg struct {
 	Infer         []string
 	Error         []string
 }
+
+func NewFactMsg(stmt string) string {
+	return fmt.Sprintf("new fact:\n%s\n", stmt)
+}
+
+func IsANewObjectMsg(obj string) string {
+	return fmt.Sprintf("%s is a new object", obj)
+}
+
+func VerifyProcessMsgs(msgs []string) string {
+	if len(msgs) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("verify process:\n%s\n", strings.Join(msgs, "\n"))
+}
