@@ -15,9 +15,6 @@
 package kernel_lib_litex_code
 
 var PipelineInitCode = `
-prop last_two_objects_are_equal(x, y, y2 set):
-	y = y2
-
 exist_prop a in_set st exist_obj_not_in_left_set_but_in_right_set(not_in_set, in_set set):
 	not a $in not_in_set
 
