@@ -224,12 +224,13 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ExecRet {
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) ExecRet {
+	msgs := []string{}
 	for i := range len(stmt.Objs) {
 		if !glob.IsKeywordSetOrNonEmptySetOrFiniteSet(stmt.ObjSets[i].String()) {
 			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsANonEmptySet), []ast.Obj{stmt.ObjSets[i]}, stmt.Line)
-			execState := exec.factStmt(existInFact)
-			if execState.IsNotTrue() {
-				return NewExecErr(fmt.Sprintf("%s\n", stmt.String())).AddMsg(execState.String())
+			execRet := exec.factStmt(existInFact)
+			if execRet.IsNotTrue() {
+				return NewExecErr(fmt.Sprintf("%s\n", stmt.String())).AddMsg(execRet.String())
 			}
 		}
 
@@ -238,13 +239,15 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 		if ret.IsErr() {
 			return NewExecErr(ret.String())
 		}
-		execState := NewExecTrue(stmtForDef.String())
-		if execState.IsNotTrue() {
-			return NewExecErr(fmt.Sprintf("%s\n", stmt.String())).AddMsg(execState.String())
+		execRet := NewExecTrue(stmtForDef.String())
+		if execRet.IsNotTrue() {
+			return NewExecErr(fmt.Sprintf("%s\n", stmt.String())).AddMsg(execRet.String())
 		}
+
+		msgs = append(msgs, ret.GetMsgs()...)
 	}
 
-	return NewEmptyExecTrue().AddMsg(fmt.Sprintf("%s\n", stmt))
+	return NewEmptyExecTrue().AddMsg(fmt.Sprintf("%s\n", stmt)).AddMsgs(msgs)
 }
 
 func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) ExecRet {

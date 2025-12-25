@@ -562,14 +562,11 @@ func fnSetString(f *FnObj) string {
 
 func (stmt *OrStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordOr)
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	orFactStrSlice := make([]string, len(stmt.Facts))
-	for i, orFact := range stmt.Facts {
-		orFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(orFact.String(), 1)
+	factStrSlice := make([]string, len(stmt.Facts))
+	for i, fact := range stmt.Facts {
+		factStrSlice[i] = fact.String()
 	}
-	builder.WriteString(strings.Join(orFactStrSlice, "\n"))
+	builder.WriteString(strings.Join(factStrSlice, " or "))
 	return builder.String()
 }
 

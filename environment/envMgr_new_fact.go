@@ -104,19 +104,27 @@ func (envMgr *EnvMgr) newSpecFact(fact *ast.SpecFactStmt) glob.GlobRet {
 	}()
 
 	ret := envMgr.storeSpecFactInMem(fact)
-	if ret.IsErr() {
+	if ret.IsNotTrue() {
 		return ret
 	}
 
 	ie := NewInferenceEngine(envMgr)
+
+	var ieRet glob.GlobRet
 	switch fact.TypeEnum {
 	case ast.TrueExist_St:
-		return ie.newTrueExist(fact)
+		ieRet = ie.newTrueExist(fact)
 	case ast.FalseExist_St:
-		return ie.newFalseExist(fact)
+		ieRet = ie.newFalseExist(fact)
 	default:
-		return ie.newPureFact(fact)
+		ieRet = ie.newPureFact(fact)
 	}
+
+	if ieRet.IsNotTrue() {
+		return ieRet
+	}
+
+	return ret.AddMsgs(ieRet.GetMsgs())
 }
 
 func (envMgr *EnvMgr) newTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
