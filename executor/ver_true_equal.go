@@ -24,6 +24,14 @@ import (
 
 // how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
 func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) ExecRet {
+	if !state.ReqOk && checkRequirements {
+		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
+			return verRet
+		}
+
+		state.UpdateReqOkToTrue()
+	}
+
 	if verRet := ver.verByReplaceObjInSpecFactWithValue(stmt, state); verRet.IsTrue() || verRet.IsErr() {
 		return verRet
 	}
@@ -40,20 +48,20 @@ func (ver *Verifier) verTrueEqualFact(stmt *ast.SpecFactStmt, state *VerState, c
 }
 
 func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState, checkRequirements bool) ExecRet {
-	var verRet ExecRet
+	// var verRet ExecRet
 
-	if checkRequirements && !state.ReqOk {
-		// REMARK: 这里 state 更新了： ReqOk 更新到了 true
-		if verRet = ver.checkFnsReqAndUpdateReqState(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
-			return NewExecErr(verRet.String())
-		}
+	// if checkRequirements && !state.ReqOk {
+	// 	// REMARK: 这里 state 更新了： ReqOk 更新到了 true
+	// 	if verRet = ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
+	// 		return NewExecErr(verRet.String())
+	// 	}
 
-		state.UpdateReqOkToTrue() // 任何条件下，只要这个fact里面的函数的定义域什么的被检查过了，日后都不再需要检查了
+	// 	state.UpdateReqOkToTrue() // 任何条件下，只要这个fact里面的函数的定义域什么的被检查过了，日后都不再需要检查了
 
-		if !isValidEqualFact(stmt) {
-			return NewExecErr(fmt.Sprintf("invalid equal fact: %s", stmt))
-		}
-	}
+	// 	if !isValidEqualFact(stmt) {
+	// 		return NewExecErr(fmt.Sprintf("invalid equal fact: %s", stmt))
+	// 	}
+	// }
 
 	if verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet

@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) checkFnsReqAndUpdateReqState(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) checkFnsReq(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	// TODO: 这里有点问题。应该做的分类是：builtin的 stmt name，如in；以及非builtin的stmt name
 
 	// 2. Check if the parameters satisfy the requirement of the function requirements

@@ -22,20 +22,13 @@ type VerState struct {
 	ReqOk   bool
 }
 
+// 只要这个fact里面的函数的定义域什么的被检查过了，该函数都日后都不再需要检查这些函数定义域问题了
 func (s *VerState) UpdateReqOkToTrue() {
 	s.ReqOk = true
 }
 
 func (s *VerState) IsWithMsg() bool {
 	return s.WithMsg
-}
-
-func (s *VerState) ToReqOk() *VerState {
-	return &VerState{
-		Round:   s.Round,
-		WithMsg: s.WithMsg,
-		ReqOk:   true,
-	}
 }
 
 func (s *VerState) GetAddRound() *VerState {
