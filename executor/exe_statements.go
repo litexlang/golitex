@@ -28,7 +28,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ExecRet {
 	case ast.FactStmt:
 		execRet = exec.factStmt(stmt)
 	case *ast.KnowFactStmt:
-		execRet = exec.knowStmt(stmt)
+		execRet = exec.knowFactStmt(stmt)
 		if execRet.IsTrue() {
 			execRet = execRet.AddMsg("Warning: `know` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
@@ -149,14 +149,6 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 		if ret.IsErr() {
 			return NewExecErr(ret.String()).AddMsg(stmt.String())
 		}
-		if verRet.(*ExecTrue).TrueEqualValues != nil {
-			if verRet.(*ExecTrue).TrueEqualValues[0] != nil {
-				exec.Env.StoreTrueEqualValues(stmt.(*ast.SpecFactStmt).Params[1], verRet.(*ExecTrue).TrueEqualValues[0])
-			}
-			if verRet.(*ExecTrue).TrueEqualValues[1] != nil {
-				exec.Env.StoreTrueEqualValues(stmt.(*ast.SpecFactStmt).Params[0], verRet.(*ExecTrue).TrueEqualValues[1])
-			}
-		}
 		return NewExecTrue(fmt.Sprintf("%s\n", stmt.String())).AddMsg(glob.NewFactMsg(stmt.String())).AddMsg(glob.VerifyProcessMsgs(verRet.GetMsgs())).AddMsgs((ret.GetMsgs()))
 	} else if verRet.IsUnknown() {
 		return verRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
@@ -167,7 +159,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ExecRet {
 }
 
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
-func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
+func (exec *Executor) knowFactStmt(stmt *ast.KnowFactStmt) ExecRet {
 	allDerivedFacts := []string{}
 
 	for _, fact := range stmt.Facts {
@@ -182,11 +174,6 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ExecRet {
 				allDerivedFacts = append(allDerivedFacts, ret.GetMsgs()...)
 			}
 
-		case *ast.KnowPropStmt:
-			execRet := exec.knowPropStmt(fact)
-			if execRet.IsNotTrue() {
-				return execRet.AddMsg(stmt.String())
-			}
 		default:
 			return NewExecErr(fmt.Sprintf("unknown fact type: %T", fact)).AddMsg(stmt.String())
 		}
@@ -286,7 +273,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) ExecRet
 	}
 
 	// emit then fact
-	execState = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
+	execState = exec.knowFactStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
 	if execState.IsNotTrue() {
 		return execState
 	}
@@ -350,7 +337,7 @@ func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) ExecRet
 	}
 
 	// emit then fact
-	execState = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
+	execState = exec.knowFactStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
 	if execState.IsNotTrue() {
 		return execState
 	}
