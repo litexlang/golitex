@@ -23,7 +23,7 @@ import (
 func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 	if replaced {
-		verRet := ver.verTrueEqualFactMainLogic(newStmt, state, true)
+		verRet := ver.verTrueEqualFactMainLogic(newStmt, state.CopyAndReqOkToFalse())
 		if verRet.IsErr() {
 			return NewExecErr("failed to verify true equal fact: " + verRet.String())
 		}
@@ -60,7 +60,7 @@ func (ver *Verifier) verByReplaceObjInSpecFactWithValueAndCompute(stmt *ast.Spec
 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 
 	if replaced {
-		verRet := ver.verTrueEqualFactMainLogic(newStmt, state, true)
+		verRet := ver.verTrueEqualFactMainLogic(newStmt, state.CopyAndReqOkToFalse())
 		if verRet.IsErr() {
 			return verRet
 		}

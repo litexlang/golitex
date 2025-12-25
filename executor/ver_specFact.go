@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verNormalSpecFact(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if !state.ReqOk {
 		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
@@ -45,7 +45,7 @@ func (ver *Verifier) verNormalSpecFact(stmt *ast.SpecFactStmt, state *VerState) 
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolEqual) {
-		return ver.verTrueEqualFact(stmt, state, true)
+		return ver.verTrueEqualFactAndCheckFnReq(stmt, state.CopyAndReqOkToFalse())
 	}
 
 	if verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt, state); verRet.IsTrue() || verRet.IsErr() {
