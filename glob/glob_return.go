@@ -38,6 +38,7 @@ type GlobRet interface {
 	StringWithOptimizedNewline() string
 	GetREPLMsg() string
 	AddMsg(msg string) GlobRet
+	AddNewREPLMsg() GlobRet
 }
 
 type GlobTrue struct {
@@ -230,4 +231,19 @@ func NewEmptyGlobUnknown() GlobRet {
 
 func NewEmptyGlobErr() GlobRet {
 	return NewGlobErrWithMsgs([]string{})
+}
+
+func (v *GlobTrue) AddNewREPLMsg() GlobRet {
+	v.Msg = append(v.Msg, REPLSuccessMessage)
+	return v
+}
+
+func (v *GlobUnknown) AddNewREPLMsg() GlobRet {
+	v.Msg = append(v.Msg, REPLUnknownMessage)
+	return v
+}
+
+func (v *GlobErr) AddNewREPLMsg() GlobRet {
+	v.Msg = append(v.Msg, REPLErrorMessage)
+	return v
 }

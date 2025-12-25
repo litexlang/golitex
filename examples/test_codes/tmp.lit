@@ -1,1 +1,21 @@
-forall 1x R: 1x > 0
+prop dvd(x, y Z):
+    dom:
+        x != 0
+    <=>:
+        y % x = 0
+
+prop is_prime(x N_pos):
+    dom:
+        x >= 2
+    <=>:
+        forall y N_pos: y >= 2, y < x => not y $dvd x
+
+know imply exp_dvd_imply_dvd(x, y Z, a N_pos):
+    x != 0
+    x $dvd y ^ a
+    $is_prime(a)
+    =>:
+        x $dvd y
+
+prove_for i range():
+	
