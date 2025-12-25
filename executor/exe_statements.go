@@ -529,7 +529,7 @@ func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) ExecRet {
 }
 
 func (exec *Executor) ClearStmt() ExecRet {
-	newEnvMgr := env.NewBuiltinEnvMgr(exec.Env)
+	newEnvMgr := env.CopyEnvMgrAndOwnPkgMgr(env.BuiltinEnvMgrWithEmptyEnvPkgMgr, exec.Env.EnvPkgMgr)
 	exec.Env = newEnvMgr.NewEnv()
 	return NewExecTrue("clear all definitions and facts")
 }

@@ -56,14 +56,6 @@ func (p *TbParser) IsNameDefinedInCurrentParseEnv(name string) bool {
 	return false
 }
 
-func (p *TbParser) IsNameDefinedInCurrentParseEnvExceptPkgNames(name string) bool {
-	_, ok := p.AllDefinedNamesExceptPkgNames[name]
-	if ok {
-		return true
-	}
-	return false
-}
-
 func (p *TbParser) NewParseEnv() {
 	p.DefinedNamesAtEachParseEnv.Names = append(p.DefinedNamesAtEachParseEnv.Names, make(map[string]struct{}))
 }

@@ -174,8 +174,9 @@ func (p *TbParser) fnSetObjAndBracedExprAndAtomObjAndFnObj(tb *tokenBlock) (Obj,
 // Atom parsing
 // ============================================================================
 
-// notNumberAtom parses an atom (identifier). Supports package name notation: pkgName.atomName
-// For example, "a.b" means atom "b" in package "a".
+// parse出来非数字的atom
+// 如果我读到了 a.b 然后a是包c的别名，然后包c的别名的默认名不是a而是d，那么我会parse成d.a
+// 如果现在我是在tbParser的curPkgName是d，d不是空，然后我现在在parse一个没有包名的atom（比如叫x）的时候，我就需要返回 d.x（当然，如果x是内置的prop或者是keyword的时候就还是叫x）
 func (p *TbParser) notNumberAtom(tb *tokenBlock) (Atom, error) {
 	value, err := tb.header.next()
 	if err != nil {

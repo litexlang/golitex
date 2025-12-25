@@ -25,20 +25,20 @@ import (
 
 func NewBuiltinEnvMgrWithNewEmptyEnv(envPkgMgr *env.EnvPkgMgr) (*env.EnvMgr, error) {
 	var err error
-	if env.BuiltinEnvMgr == nil {
-		env.BuiltinEnvMgr, err = NewBuiltinEnvMgr(envPkgMgr)
+	if env.BuiltinEnvMgrWithEmptyEnvPkgMgr == nil {
+		env.BuiltinEnvMgrWithEmptyEnvPkgMgr, err = NewBuiltinEnvMgr()
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	envMgr := env.CopyEnvMgr_SharePkgMgr(env.BuiltinEnvMgr)
+	envMgr := env.CopyEnvMgrAndOwnPkgMgr(env.BuiltinEnvMgrWithEmptyEnvPkgMgr, envPkgMgr)
 	envMgr = envMgr.NewEnv()
 	return envMgr, nil
 }
 
-func NewBuiltinEnvMgr(envPkgMgr *env.EnvPkgMgr) (*env.EnvMgr, error) {
-	curEnvMgr := env.NewEnvMgr(envPkgMgr, []env.EnvMemory{*env.NewEnvMemory()}, make(map[string]struct{}), make(map[string]*ast.DefPropStmt), make(map[string]*ast.DefExistPropStmt), make(map[string]*ast.DefFnSetStmt), make(map[string]*ast.DefAlgoStmt), make(map[string]*ast.DefProveAlgoStmt))
+func NewBuiltinEnvMgr() (*env.EnvMgr, error) {
+	curEnvMgr := env.NewEnvMgr(env.NewEnvPkgMgr(pkgMgr.NewEmptyPkgMgr()), []env.EnvMemory{*env.NewEnvMemory()}, make(map[string]struct{}), make(map[string]*ast.DefPropStmt), make(map[string]*ast.DefExistPropStmt), make(map[string]*ast.DefFnSetStmt), make(map[string]*ast.DefAlgoStmt), make(map[string]*ast.DefProveAlgoStmt))
 	curEnvMgr.Init()
 	err := useHardcodedCodeToInitEnvMgr(curEnvMgr)
 	if err != nil {

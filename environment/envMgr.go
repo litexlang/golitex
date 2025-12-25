@@ -96,20 +96,19 @@ type EnvMemory struct {
 
 func NewEnvMemory() *EnvMemory {
 	return &EnvMemory{
-		EqualMem:                 make(map[string]shared_ptr_to_slice_of_obj),
-		KnownFactsStruct:         makeKnownFactsStruct(),
-		SymbolSimplifiedValueMem: make(map[string]ast.Obj),
-
 		AtomObjDefMem:    make(map[string]struct{}),
 		PropDefMem:       make(map[string]struct{}),
 		FnTemplateDefMem: make(map[string]struct{}),
 		ExistPropDefMem:  make(map[string]struct{}),
+		AlgoDefMem:       make(map[string]struct{}),
+		DefProveAlgoMem:  make(map[string]struct{}),
+
+		EqualMem:                 make(map[string]shared_ptr_to_slice_of_obj),
+		KnownFactsStruct:         makeKnownFactsStruct(),
+		SymbolSimplifiedValueMem: make(map[string]ast.Obj),
 
 		TransitivePropMem:  make(map[string]map[string][]ast.Obj),
 		CommutativePropMem: make(map[string]*PropCommutativeCase),
-
-		AlgoDefMem:      make(map[string]struct{}),
-		DefProveAlgoMem: make(map[string]struct{}),
 
 		FnInFnTemplateFactsMem: make(FnInFnTMem),
 	}
@@ -126,35 +125,6 @@ func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames 
 		EnvPkgMgr:                pkgMgr,
 		EnvSlice:                 envMemory,
 	}
-}
-
-func NewBuiltinEnvMgr(envMgr *EnvMgr) *EnvMgr {
-	builtinEnvMemory := envMgr.EnvSlice[0]
-	newAllDefinedAtomObjNames := make(map[string]struct{})
-	for k := range builtinEnvMemory.AtomObjDefMem {
-		newAllDefinedAtomObjNames[k] = struct{}{}
-	}
-	newAllDefinedPropNames := make(map[string]*ast.DefPropStmt)
-	for k := range builtinEnvMemory.PropDefMem {
-		newAllDefinedPropNames[k] = envMgr.AllDefinedPropNames[k]
-	}
-	newAllDefinedExistPropNames := make(map[string]*ast.DefExistPropStmt)
-	for k := range builtinEnvMemory.ExistPropDefMem {
-		newAllDefinedExistPropNames[k] = envMgr.AllDefinedExistPropNames[k]
-	}
-	newAllDefinedFnTemplateNames := make(map[string]*ast.DefFnSetStmt)
-	for k := range builtinEnvMemory.FnTemplateDefMem {
-		newAllDefinedFnTemplateNames[k] = envMgr.AllDefinedFnSetNames[k]
-	}
-	newAllDefinedAlgoNames := make(map[string]*ast.DefAlgoStmt)
-	for k := range builtinEnvMemory.AlgoDefMem {
-		newAllDefinedAlgoNames[k] = envMgr.AllDefinedAlgoNames[k]
-	}
-	newAllDefinedProveAlgoNames := make(map[string]*ast.DefProveAlgoStmt)
-	for k := range builtinEnvMemory.DefProveAlgoMem {
-		newAllDefinedProveAlgoNames[k] = envMgr.AllDefinedProveAlgoNames[k]
-	}
-	return NewEnvMgr(envMgr.EnvPkgMgr, []EnvMemory{builtinEnvMemory}, newAllDefinedAtomObjNames, newAllDefinedPropNames, newAllDefinedExistPropNames, newAllDefinedFnTemplateNames, newAllDefinedAlgoNames, newAllDefinedProveAlgoNames)
 }
 
 func (envMgr *EnvMgr) RemoveBuiltinEnv() *EnvMgr {
