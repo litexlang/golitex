@@ -897,10 +897,4 @@ know:
 
 know:
 	forall x finite_set: count(x) > 0 => $is_a_nonempty_set(x)
-
-prop dvd(x, y Z):
-    dom:
-        x != 0
-    <=>:
-        y % x = 0
 `

@@ -147,21 +147,29 @@ func main() {
 }
 
 func MainFlagFile(fileFlag string) {
-	relativeFilePath := glob.RemoveWindowsCarriage(fileFlag)
+	path := glob.RemoveWindowsCarriage(fileFlag)
 
-	// 获取当前工作目录
-	workingDir, err := os.Getwd()
-	if err != nil {
-		fmt.Printf("Error: failed to get current working directory: %v\n", err)
-		return
+	// 判断输入路径是否是绝对路径
+	var absFilePath string
+	if filepath.IsAbs(path) {
+		// 如果已经是绝对路径，直接使用
+		absFilePath = path
+	} else {
+		// 如果是相对路径，拼接当前工作目录
+		// 获取当前工作目录
+		workingDir, err := os.Getwd()
+		if err != nil {
+			fmt.Printf("Error: failed to get current working directory: %v\n", err)
+			return
+		}
+		absFilePath = filepath.Join(workingDir, path)
 	}
-
-	// 获取相对于当前工作目录的相对路径
-	absFilePath := filepath.Join(workingDir, relativeFilePath)
 
 	pkgMgr := package_manager.NewEmptyPkgMgr()
 
 	_, ret := pipeline.RunFileInPkgMgr(absFilePath, "", pkgMgr, false)
+
+	ret.AddNewREPLMsg()
 	fmt.Println(ret.StringWithOptimizedNewline())
 }
 
