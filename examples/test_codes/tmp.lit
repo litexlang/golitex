@@ -1,3 +1,13 @@
-let s2 set
-know s2 = {1,2,3,4,5,6}
-count(s2) = 6
+# Examples of not in N (natural numbers)
+not -1 $in N
+not 3.5 $in N
+not (-1 * 1) $in N
+
+# Examples of not in Z (integers)
+not 3.5 $in Z
+not (3 / 2) $in Z
+
+# Examples of not in N_pos (positive integers)
+not -1 $in N_pos
+not 0 $in N_pos
+not 3.5 $in N_pos

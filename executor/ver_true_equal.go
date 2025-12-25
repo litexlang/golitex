@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,21 +48,6 @@ func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt *ast.SpecFactStmt, state
 }
 
 func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	// var verRet ExecRet
-
-	// if checkRequirements && !state.ReqOk {
-	// 	// REMARK: 这里 state 更新了： ReqOk 更新到了 true
-	// 	if verRet = ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
-	// 		return NewExecErr(verRet.String())
-	// 	}
-
-	// 	state.UpdateReqOkToTrue() // 任何条件下，只要这个fact里面的函数的定义域什么的被检查过了，日后都不再需要检查了
-
-	// 	if !isValidEqualFact(stmt) {
-	// 		return NewExecErr(fmt.Sprintf("invalid equal fact: %s", stmt))
-	// 	}
-	// }
-
 	if verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
