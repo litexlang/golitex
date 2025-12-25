@@ -22,6 +22,10 @@ type VerState struct {
 	ReqOk   bool
 }
 
+func (s *VerState) UpdateReqOkToTrue() {
+	s.ReqOk = true
+}
+
 func (s *VerState) IsWithMsg() bool {
 	return s.WithMsg
 }

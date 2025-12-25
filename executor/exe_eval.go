@@ -234,7 +234,7 @@ func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValuePar
 
 	// all conditions are true
 	knowStmt := ast.NewKnowStmt(stmt.Conditions.ToCanBeKnownStmtSlice(), stmt.GetLine())
-	execRet := exec.knowFactStmt(knowStmt)
+	execRet := exec.knowStmt(knowStmt)
 	if execRet.IsNotTrue() {
 		return nil, execRet
 	}
