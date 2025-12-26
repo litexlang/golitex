@@ -126,8 +126,6 @@ func (m *GlobRet) AddStmt(s string) *GlobRet {
 }
 
 func (m *GlobRet) AddUnknown(unknown string) *GlobRet {
-	m.Type = GlobRetTypeUnknown
-
 	if unknown == "" {
 		return m
 	}
@@ -136,8 +134,6 @@ func (m *GlobRet) AddUnknown(unknown string) *GlobRet {
 }
 
 func (m *GlobRet) AddError(error string) *GlobRet {
-	m.Type = GlobRetTypeError
-
 	if error == "" {
 		return m
 	}
@@ -374,7 +370,6 @@ func (m *GlobRet) AddStmts(stmts []string) *GlobRet {
 }
 
 func (m *GlobRet) AddUnknowns(unknowns []string) *GlobRet {
-	m.Type = GlobRetTypeUnknown
 	for _, unknown := range unknowns {
 		m.AddUnknown(unknown)
 	}
@@ -382,7 +377,6 @@ func (m *GlobRet) AddUnknowns(unknowns []string) *GlobRet {
 }
 
 func (m *GlobRet) AddErrors(errors []string) *GlobRet {
-	m.Type = GlobRetTypeError
 	for _, error := range errors {
 		m.AddError(error)
 	}
