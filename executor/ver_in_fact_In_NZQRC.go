@@ -21,7 +21,7 @@ import (
 )
 
 // 这是必要的，因为 2 $in N 是这个检查的
-func (ver *Verifier) verInFactByRightParamIsNOrZOrQOrR(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verInFactByRightParamIsNOrZOrQOrR(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	inSet, ok := stmt.Params[1].(ast.Atom)
 	if !ok {
 		return glob.NewEmptyGlobUnknown()

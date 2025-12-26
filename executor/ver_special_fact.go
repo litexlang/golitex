@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verSpecialFactInSpecialWays(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verSpecialFactInSpecialWays(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolLargerEqual) {
 		return ver.verGreaterEqualBySpecialWays(stmt, state)
 	}
@@ -74,7 +74,7 @@ func (ver *Verifier) verSpecialFactInSpecialWays(stmt *ast.SpecFactStmt, state *
 //     forall x R: x > 0 => g(x) > 0
 
 // f(g(1)) = f(g(1))
-func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 2 {
 		return glob.NewEmptyGlobUnknown()
 	}
@@ -108,7 +108,7 @@ func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state 
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verLessEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verLessEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 2 {
 		return glob.NewEmptyGlobUnknown()
 	}
@@ -142,7 +142,7 @@ func (ver *Verifier) verLessEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ve
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 2 {
 		return glob.NewEmptyGlobUnknown()
 	}
@@ -193,7 +193,7 @@ func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state 
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 2 {
 		return glob.NewEmptyGlobUnknown()
 	}

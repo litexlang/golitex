@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if !state.ReqOk {
 		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
@@ -40,10 +40,10 @@ func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt *ast.Spec
 		return ret
 	}
 
-	return glob.NewGlobUnknown(stmt.String())
+	return glob.UnknownRet(stmt.String())
 }
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolEqual) {
 		return ver.verTrueEqualFactAndCheckFnReq(stmt, state.CopyAndReqOkToFalse())
 	}
@@ -66,7 +66,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *as
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt, state)
 	if verRet.IsTrue() || verRet.IsErr() {
 		return verRet
@@ -94,7 +94,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	// replace the params with the values 来证明
 	// 比如 $q(x, y) 证明不出来，但可能 $q(1, 2) 证明出来了，如果x=1,y=2的话。这里会用到 1. 如果x和y本来就是数学表达式，那就计算 2. 如果 x和y之前存过数值，那就用之前存过的值。
 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
@@ -123,8 +123,8 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 // TODO: 其实 specFact 是等号的时候，还是会访问到这个函数。
 // WARNING: 其实 specFact 是等号的时候，还是会访问到这个函数。所以这个函数的命名是有问题的
 // WARNING: 需要重构整个架构，把验证的逻辑屡屡顺。Litex是ATP的话，那就必须要告诉用户我Auto的过程是什么样的
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
-	// var verRet glob.GlobRet
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+	// var verRet *glob.GlobRet
 
 	// if !state.ReqOk {
 	// 	if verRet = ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
@@ -136,7 +136,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFa
 	return ver.verSpecFactStepByStep(stmt, state)
 }
 
-func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if verRet := ver.verSpecFactByBuiltinRules(stmt, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -162,7 +162,7 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerSta
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if stmt.IsPureFact() {
 		if !stmt.IsTrue() {
 			return ver.verNotPureSpecFact_ByDef(stmt, state)
@@ -178,7 +178,7 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) 
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	// nextState := state.GetAddRound()
 
 	curDefStmt := ver.Env.GetPropDef(stmt.PropName)
@@ -231,7 +231,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), defStmt.String(), glob.NewEmptyGlobTrue())
 }
 
-func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(stmt)
 
 	propDef := ver.Env.GetExistPropDef(stmt.PropName)
@@ -312,7 +312,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 // 	return false, nil
 // }
 
-func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	nextState := state.GetAddRound()
 
 	verRet := ver.verSpecFact_InSpecFact_UniMem(stmt, nextState)
@@ -323,7 +323,7 @@ func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState)
 	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState)
 }
 
-func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if stmt.IsTrue() {
 		return glob.NewEmptyGlobUnknown()
 	}
@@ -377,7 +377,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verIsCartByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verIsCartByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	// 如果参数数量是1，且参数的函数名是cart，那自动成立
 	if len(stmt.Params) == 1 {
 		if cartObj, ok := stmt.Params[0].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartObj.FnHead, glob.KeywordCart) {
@@ -387,7 +387,7 @@ func (ver *Verifier) verIsCartByBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	nextState := state.GetAddRound()
 
 	defStmt := ver.Env.GetPropDef(stmt.PropName)
@@ -447,7 +447,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 }
 
 // $equal_tuple(left, right, dim)
-func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 3 {
 		return glob.NewGlobErr(fmt.Sprintf("equal_tuple should have 3 params, but got %d", len(stmt.Params)))
 	}
@@ -463,7 +463,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewGlobUnknown(fmt.Sprintf("cannot verify that %s is a tuple", left))
+		return glob.UnknownRet(fmt.Sprintf("cannot verify that %s is a tuple", left))
 	}
 
 	// 2. 证明 right 是 is_tuple
@@ -473,7 +473,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewGlobUnknown(fmt.Sprintf("cannot verify that %s is a tuple", right))
+		return glob.UnknownRet(fmt.Sprintf("cannot verify that %s is a tuple", right))
 	}
 
 	// 3. 证明 dim(left) = dim
@@ -484,7 +484,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewGlobUnknown(fmt.Sprintf("cannot verify that dim(%s) = %s", left, dim))
+		return glob.UnknownRet(fmt.Sprintf("cannot verify that dim(%s) = %s", left, dim))
 	}
 
 	// 4. 证明 dim(right) = dim
@@ -495,7 +495,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewGlobUnknown(fmt.Sprintf("cannot verify that dim(%s) = %s", right, dim))
+		return glob.UnknownRet(fmt.Sprintf("cannot verify that dim(%s) = %s", right, dim))
 	}
 
 	// 5. 获取 dim 的数值，用于枚举
@@ -535,7 +535,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 			return verRet
 		}
 		if verRet.IsUnknown() {
-			return glob.NewGlobUnknown(fmt.Sprintf("cannot verify that %s[%d] = %s[%d]", left, i, right, i))
+			return glob.UnknownRet(fmt.Sprintf("cannot verify that %s[%d] = %s[%d]", left, i, right, i))
 		}
 	}
 

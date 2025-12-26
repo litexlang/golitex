@@ -24,7 +24,7 @@ import (
 
 // 反过来，用已知的 a ∨ b ∨ c ∨ ... ∨ n 为真，去验证 a ，需要先验证b, c, ... , n 为假，才能得到 a 为真。
 
-func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.GlobRet {
 	nextState := state.GetAddRound()
 	for i := range stmt.Facts {
 		verRet := ver.verFactAtIndex_WhenOthersAreFalse(stmt.Facts, i, nextState)
@@ -39,7 +39,7 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) glob.GlobRet {
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt, i int, state *VerState) glob.GlobRet {
+func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt, i int, state *VerState) *glob.GlobRet {
 	ver.newEnv()
 	defer ver.deleteEnv()
 

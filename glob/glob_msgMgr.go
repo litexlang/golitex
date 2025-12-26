@@ -16,27 +16,27 @@ package litex_global
 
 import "strings"
 
-type MsgType int8
+type GlobRetType int8
 
 const (
-	MsgTypeTrue MsgType = iota
-	MsgTypeUnknown
-	MsgTypeError
+	GlobRetTypeTrue GlobRetType = iota
+	GlobRetTypeUnknown
+	GlobRetTypeError
 )
 
-type MsgMgr struct {
-	Type             MsgType
-	Define           []string
-	NewFact          []string
-	VerifyProcess    []string
-	Infer            []string
-	System           []string
-	Unknown          []string
-	Error            []string
-	InnerMsgMgrSlice []*MsgMgr
+type GlobRet struct {
+	Type              GlobRetType
+	Define            []string
+	NewFact           []string
+	VerifyProcess     []string
+	Infer             []string
+	System            []string
+	InnerGlobRetSlice []*GlobRet
+	Unknown           []string
+	Error             []string
 }
 
-func (m *MsgMgr) String() string {
+func (m *GlobRet) String() string {
 	var builder strings.Builder
 
 	if len(m.Define) > 0 {
@@ -74,10 +74,10 @@ func (m *MsgMgr) String() string {
 		builder.WriteString(strings.Join(m.Error, "\n"))
 	}
 
-	if len(m.InnerMsgMgrSlice) > 0 {
+	if len(m.InnerGlobRetSlice) > 0 {
 		builder.WriteString("details:\n")
-		for _, innerMsgMgr := range m.InnerMsgMgrSlice {
-			builder.WriteString(innerMsgMgr.String())
+		for _, innerGlobRet := range m.InnerGlobRetSlice {
+			builder.WriteString(innerGlobRet.String())
 			builder.WriteByte('\n')
 		}
 	}
@@ -85,144 +85,233 @@ func (m *MsgMgr) String() string {
 	return builder.String()
 }
 
-func (m *MsgMgr) AddDefine(define string) *MsgMgr {
+func (m *GlobRet) AddDefine(define string) *GlobRet {
 	m.Define = append(m.Define, define)
 	return m
 }
 
-func (m *MsgMgr) AddNewFact(newFact string) *MsgMgr {
+func (m *GlobRet) AddNewFact(newFact string) *GlobRet {
 	m.NewFact = append(m.NewFact, newFact)
 	return m
 }
 
-func (m *MsgMgr) AddVerifyProcess(verifyProcess string) *MsgMgr {
+func (m *GlobRet) AddVerifyProcess(verifyProcess string) *GlobRet {
 	m.VerifyProcess = append(m.VerifyProcess, verifyProcess)
 	return m
 }
 
-func (m *MsgMgr) AddInfer(infer string) *MsgMgr {
+func (m *GlobRet) AddInfer(infer string) *GlobRet {
 	m.Infer = append(m.Infer, infer)
 	return m
 }
 
-func (m *MsgMgr) AddSystem(system string) *MsgMgr {
+func (m *GlobRet) AddSystem(system string) *GlobRet {
 	m.System = append(m.System, system)
 	return m
 }
 
-func (m *MsgMgr) AddUnknown(unknown string) *MsgMgr {
+func (m *GlobRet) AddUnknown(unknown string) *GlobRet {
 	m.Unknown = append(m.Unknown, unknown)
 	return m
 }
 
-func (m *MsgMgr) AddError(error string) *MsgMgr {
+func (m *GlobRet) AddError(error string) *GlobRet {
 	m.Error = append(m.Error, error)
 	return m
 }
 
-func (m *MsgMgr) AddInnerMsgMgr(innerMsgMgr *MsgMgr) *MsgMgr {
-	m.InnerMsgMgrSlice = append(m.InnerMsgMgrSlice, innerMsgMgr)
+func (m *GlobRet) AddInnerGlobRet(innerGlobRet *GlobRet) *GlobRet {
+	m.InnerGlobRetSlice = append(m.InnerGlobRetSlice, innerGlobRet)
 	return m
 }
 
-func NewEmptyMsgMgr() *MsgMgr {
-	return &MsgMgr{
-		Define:           []string{},
-		NewFact:          []string{},
-		VerifyProcess:    []string{},
-		Infer:            []string{},
-		System:           []string{},
-		Unknown:          []string{},
-		Error:            []string{},
-		InnerMsgMgrSlice: []*MsgMgr{},
+func NewEmptyGlobTrue() *GlobRet {
+	return &GlobRet{
+		Type:              GlobRetTypeTrue,
+		Define:            []string{},
+		NewFact:           []string{},
+		VerifyProcess:     []string{},
+		Infer:             []string{},
+		System:            []string{},
+		Unknown:           []string{},
+		Error:             []string{},
+		InnerGlobRetSlice: []*GlobRet{},
 	}
 }
 
-func NewMsgMgrWithDefine(define string) *MsgMgr {
-	ret := NewEmptyMsgMgr()
+func NewEmptyGlobUnknown() *GlobRet {
+	return &GlobRet{
+		Type:              GlobRetTypeUnknown,
+		Define:            []string{},
+		NewFact:           []string{},
+		VerifyProcess:     []string{},
+		Infer:             []string{},
+		System:            []string{},
+		Unknown:           []string{},
+		Error:             []string{},
+		InnerGlobRetSlice: []*GlobRet{},
+	}
+}
+
+func NewEmptyGlobError() *GlobRet {
+	return &GlobRet{
+		Type:              GlobRetTypeError,
+		Define:            []string{},
+		NewFact:           []string{},
+		VerifyProcess:     []string{},
+		Infer:             []string{},
+		System:            []string{},
+		InnerGlobRetSlice: []*GlobRet{},
+		Unknown:           []string{},
+		Error:             []string{},
+	}
+}
+
+func NewGlobTrueWithDefine(define string) *GlobRet {
+	ret := NewEmptyGlobTrue()
 	ret.AddDefine(define)
 	return ret
 }
 
-func NewMsgMgrWithNewFact(newFact string) *MsgMgr {
-	ret := NewEmptyMsgMgr()
+func NewGlobTrueWithNewFact(newFact string) *GlobRet {
+	ret := NewEmptyGlobTrue()
 	ret.AddNewFact(newFact)
 	return ret
 }
 
-func NewMsgMgrWithVerifyProcess(verifyProcess string) *MsgMgr {
-	ret := NewEmptyMsgMgr()
+func NewGlobTrueWithVerifyProcess(verifyProcess string) *GlobRet {
+	ret := NewEmptyGlobTrue()
 	ret.AddVerifyProcess(verifyProcess)
 	return ret
 }
 
-func NewMsgMgrWithInfer(infer string) *MsgMgr {
-	ret := NewEmptyMsgMgr()
+func NewGlobTrueWithInfer(infer string) *GlobRet {
+	ret := NewEmptyGlobTrue()
 	ret.AddInfer(infer)
 	return ret
 }
 
-func NewMsgMgrWithSystem(system string) *MsgMgr {
-	ret := NewEmptyMsgMgr()
+func NewGlobTrueWithSystem(system string) *GlobRet {
+	ret := NewEmptyGlobTrue()
 	ret.AddSystem(system)
 	return ret
 }
 
-func NewMsgMgrWithUnknown(unknown string) *MsgMgr {
-	ret := NewEmptyMsgMgr()
+func NewGlobTrueWithInnerGlobRet(innerGlobRet *GlobRet) *GlobRet {
+	ret := NewEmptyGlobTrue()
+	ret.AddInnerGlobRet(innerGlobRet)
+	return ret
+}
+
+func UnknownRet(unknown string) *GlobRet {
+	ret := NewEmptyGlobUnknown()
 	ret.AddUnknown(unknown)
 	return ret
 }
 
-func NewMsgMgrWithError(error string) *MsgMgr {
-	ret := NewEmptyMsgMgr()
-	ret.AddError(error)
+func ErrRet(err error) *GlobRet {
+	ret := NewEmptyGlobError()
+	ret.AddError(err.Error())
 	return ret
 }
 
-func NewMsgMgrWithInnerMsgMgr(innerMsgMgr *MsgMgr) *MsgMgr {
-	ret := NewEmptyMsgMgr()
-	ret.AddInnerMsgMgr(innerMsgMgr)
-	return ret
-}
-
-func (m *MsgMgr) SetType(msgType MsgType) *MsgMgr {
+func (m *GlobRet) SetType(msgType GlobRetType) *GlobRet {
 	m.Type = msgType
 	return m
 }
 
-func (m *MsgMgr) IsTrue() bool {
-	return m.Type == MsgTypeTrue
+func (m *GlobRet) IsTrue() bool {
+	return m.Type == GlobRetTypeTrue
 }
 
-func (m *MsgMgr) IsUnknown() bool {
-	return m.Type == MsgTypeUnknown
+func (m *GlobRet) IsUnknown() bool {
+	return m.Type == GlobRetTypeUnknown
 }
 
-func (m *MsgMgr) IsError() bool {
-	return m.Type == MsgTypeError
+func (m *GlobRet) IsErr() bool {
+	return m.Type == GlobRetTypeError
 }
 
-func (m *MsgMgr) IsNotTrue() bool {
-	return m.Type != MsgTypeTrue
+func (m *GlobRet) IsNotTrue() bool {
+	return m.Type != GlobRetTypeTrue
 }
 
-func (m *MsgMgr) IsNotUnknown() bool {
-	return m.Type != MsgTypeUnknown
+func (m *GlobRet) IsNotUnknown() bool {
+	return m.Type != GlobRetTypeUnknown
 }
 
-func (m *MsgMgr) IsNotError() bool {
-	return m.Type != MsgTypeError
+func (m *GlobRet) IsNotError() bool {
+	return m.Type != GlobRetTypeError
 }
 
-func (m *MsgMgr) AddREPLMsg() *MsgMgr {
+func (m *GlobRet) AddREPLMsg() *GlobRet {
 	switch m.Type {
-	case MsgTypeTrue:
+	case GlobRetTypeTrue:
 		m.AddSystem(REPLSuccessMessage)
-	case MsgTypeUnknown:
+	case GlobRetTypeUnknown:
 		m.AddSystem(REPLUnknownMessage)
-	case MsgTypeError:
+	case GlobRetTypeError:
 		m.AddSystem(REPLErrorMessage)
 	}
 	return m
+}
+
+func (m *GlobRet) Inherit(other *GlobRet) *GlobRet {
+	m.Define = append(m.Define, other.Define...)
+	m.NewFact = append(m.NewFact, other.NewFact...)
+	m.VerifyProcess = append(m.VerifyProcess, other.VerifyProcess...)
+	m.Infer = append(m.Infer, other.Infer...)
+	m.System = append(m.System, other.System...)
+	m.Unknown = append(m.Unknown, other.Unknown...)
+	m.Error = append(m.Error, other.Error...)
+	m.InnerGlobRetSlice = append(m.InnerGlobRetSlice, other.InnerGlobRetSlice...)
+	return m
+}
+
+func NewGlobTrueWithDefines(defines []string) *GlobRet {
+	ret := NewEmptyGlobTrue()
+	ret.Define = defines
+	return ret
+}
+
+func NewGlobTrueWithNewFacts(newFacts []string) *GlobRet {
+	ret := NewEmptyGlobTrue()
+	ret.NewFact = newFacts
+	return ret
+}
+
+func NewGlobTrueWithVerifyProcesses(verifyProcesses []string) *GlobRet {
+	ret := NewEmptyGlobTrue()
+	ret.VerifyProcess = verifyProcesses
+	return ret
+}
+
+func NewGlobTrueWithInfers(infers []string) *GlobRet {
+	ret := NewEmptyGlobTrue()
+	ret.Infer = infers
+	return ret
+}
+
+func NewGlobTrueWithSystems(systems []string) *GlobRet {
+	ret := NewEmptyGlobTrue()
+	ret.System = systems
+	return ret
+}
+
+func NewGlobUnknownWithInnerGlobRets(innerGlobRets []*GlobRet) *GlobRet {
+	ret := NewEmptyGlobUnknown()
+	ret.InnerGlobRetSlice = innerGlobRets
+	return ret
+}
+
+func NewGlobUnknownWithUnknowns(unknowns []string) *GlobRet {
+	ret := NewEmptyGlobUnknown()
+	ret.Unknown = unknowns
+	return ret
+}
+
+func NewGlobErrorWithErrors(errors []string) *GlobRet {
+	ret := NewEmptyGlobError()
+	ret.Error = errors
+	return ret
 }

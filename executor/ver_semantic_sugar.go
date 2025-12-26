@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 	if replaced {
 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state.CopyAndReqOkToFalse())
@@ -43,7 +43,7 @@ func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, 
 				values = append(values, nil)
 			}
 
-			var execRet glob.GlobRet
+			var execRet *glob.GlobRet
 			if values[0] == nil && values[1] == nil {
 				execRet = glob.NewGlobTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 			} else {
@@ -54,10 +54,10 @@ func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, 
 		}
 	}
 
-	return glob.NewGlobUnknown(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+	return glob.UnknownRet(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 }
 
-func (ver *Verifier) verByReplaceObjInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verByReplaceObjInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 
 	if replaced {

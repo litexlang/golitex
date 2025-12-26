@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (glob.GlobRet, error) {
+func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (*glob.GlobRet, error) {
 	enums := [][]ast.Obj{}
 	for _, paramSet := range stmt.Fact.ParamSets {
 		enumSet := exec.Env.GetListSetEqualToObj(paramSet)
@@ -113,7 +113,7 @@ func getParamEqualObjSlice(params []string, equalTo []ast.Obj) []ast.FactStmt {
 	return result
 }
 
-func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnumStmt, cartesianProductOfObjs [][]ast.Obj) (glob.GlobRet, error) {
+func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnumStmt, cartesianProductOfObjs [][]ast.Obj) (*glob.GlobRet, error) {
 	for _, ObjSlice := range cartesianProductOfObjs {
 		uniMap := map[string]ast.Obj{}
 		for i, param := range stmt.Fact.Params {
