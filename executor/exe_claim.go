@@ -18,10 +18,11 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	"strings"
 )
 
 func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.GlobRet {
+	// isSuccess := false
+
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -39,7 +40,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 			return execState
 		}
 		result = glob.NewEmptyGlobTrue()
-		isSuccess = true
+		// isSuccess = true
 	default:
 		return glob.ErrRet(fmt.Sprintf("prove by contradiction only support reversible fact or uni fact"))
 	}
@@ -51,7 +52,8 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 	// } else {
 	// 	result = result.AddMsgAtBegin("is unknown\n")
 	// }
-	result = result.AddSystem(stmt.ClaimProveStmt.String())
+
+	result = result.AddStmt(stmt.ClaimProveStmt.String())
 	return result
 }
 
@@ -81,7 +83,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 	for _, curFact := range reversedLastFact {
 		reversedLastFactStr = append(reversedLastFactStr, curFact.String())
 	}
-	reversedLastFactStrStr := strings.Join(reversedLastFactStr, "\n\t")
+	// reversedLastFactStrStr := strings.Join(reversedLastFactStr, "\n\t")
 
 	for _, curFact := range reversedLastFact {
 		execState := exec.factStmt(curFact)
@@ -91,8 +93,8 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 	}
 
 	result := glob.NewEmptyGlobTrue()
-	result = result.AddMsg(fmt.Sprintf("the reversed last statement of current claim statement is:\n%s\nwe prove it(them)\n", reversedLastFactStrStr))
-	result = result.AddMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastStmtAsFact))
+	// result = result.AddMsg(fmt.Sprintf("the reversed last statement of current claim statement is:\n%s\nwe prove it(them)\n", reversedLastFactStrStr))
+	// result = result.AddMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastStmtAsFact))
 	return result
 }
 
@@ -117,7 +119,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 		if reversibleThenFact, ok := thenFact.(ast.Spec_OrFact); ok {
 			thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, reversibleThenFact)
 		} else {
-			return glob.ErrRet(fmt.Sprintf("then fact:\n%s\nis not reversible. Then section of universal fact prove by contradiction only support reversible fact", thenFact).Error())
+			return glob.ErrRet(fmt.Sprintf("then fact:\n%s\nis not reversible. Then section of universal fact prove by contradiction only support reversible fact", thenFact))
 		}
 	}
 	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversibleFacts)
@@ -137,7 +139,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	// the reversed last statement of current claim statement is true
 	lastFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.Spec_OrFact)
 	if !ok {
-		return glob.ErrRet(fmt.Sprintf("prove by contradiction only support fact").Error())
+		return glob.ErrRet(fmt.Sprintf("prove by contradiction only support fact"))
 	}
 
 	reversedLastFact := lastFact.ReverseIsTrue()
@@ -146,7 +148,6 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	for _, curFact := range reversedLastFact {
 		reversedLastFactStr = append(reversedLastFactStr, curFact.String())
 	}
-	reversedLastFactStrStr := strings.Join(reversedLastFactStr, "\n\t")
 
 	for _, curFact := range reversedLastFact {
 		execState = exec.factStmt(curFact)
@@ -156,8 +157,10 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	}
 
 	result := glob.NewEmptyGlobTrue()
-	result = result.AddMsg(fmt.Sprintf("the reversed last statement of current claim statement is(are):\n\n%s\n\nwe prove it(them)\n", reversedLastFactStrStr))
-	result = result.AddMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastFact))
+
+	// reversedLastFactStrStr := strings.Join(reversedLastFactStr, "\n\t")
+	// result = result.AddMsg(fmt.Sprintf("the reversed last statement of current claim statement is(are):\n\n%s\n\nwe prove it(them)\n", reversedLastFactStrStr))
+	// result = result.AddMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastFact))
 	return result
 }
 
@@ -174,7 +177,7 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.GlobRet
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
-	return glob.NewGlobTrue(stmt.String())
+	return glob.NewGlobTrueWithStmt(stmt.String())
 }
 
 func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.GlobRet {
@@ -189,7 +192,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 		return glob.ErrRet(ret.String())
 	}
 
-	return glob.NewGlobTrue(fmt.Sprintf("%s\n", stmt.String()))
+	return glob.NewGlobTrueWithStmt(fmt.Sprintf("%s\n", stmt.String()))
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.GlobRet {
@@ -201,7 +204,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.GlobRet {
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
 	ret := exec.Env.LookUpNamesInFact(stmt.ToCheckFact, map[string]struct{}{})
 	if ret.IsErr() {
-		ret.AddMsg("in claim statement")
+		ret.AddError("in claim statement")
 		return glob.ErrRet(ret.String())
 	}
 
@@ -231,7 +234,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.GlobRet {
 func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.GlobRet {
 	asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt)
 	if !ok {
-		return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support uni fact").Error())
+		return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support uni fact"))
 	}
 
 	// declare parameters in asUnivFact in the env
@@ -239,7 +242,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.Glob
 
 	execState := exec.defLetStmt(objDefStmt)
 	if execState.IsNotTrue() {
-		return execState.AddMsg(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt))
+		return execState.AddError(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt))
 	}
 
 	// know dom facts
@@ -261,9 +264,9 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.Glob
 	// execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(asUnivFact.ThenFacts, exec.env, verifier.Round0NoMsg)
 	execState, failedFact, err := exec.verifyFactsAtCurEnv(asUnivFact.ThenFacts, Round0NoMsg())
 	if err != nil {
-		return glob.ErrRet(fmt.Sprintf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err).Error())
+		return glob.ErrRet(fmt.Sprintf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err))
 	} else if execState.IsUnknown() {
-		return glob.ErrRet(fmt.Sprintf("claim statement error: failed to verify fact:\n%s", failedFact).Error())
+		return glob.ErrRet(fmt.Sprintf("claim statement error: failed to verify fact:\n%s", failedFact))
 	}
 
 	return glob.NewEmptyGlobTrue()
@@ -278,7 +281,7 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimImplicationStmt) *glob.GlobRe
 
 	ret := exec.Env.LookUpNamesInFact(uniFact, map[string]struct{}{})
 	if ret.IsErr() {
-		ret.AddMsg("in claim prop statement")
+		ret.AddError("in claim prop statement")
 		return glob.ErrRet(ret.String())
 	}
 
@@ -344,16 +347,16 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 		execState := exec.Stmt(curStmt)
 		if execState.IsNotTrue() {
 			if execState.IsUnknown() {
-				return execState.AddMsg(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
+				return execState.AddUnknown(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
 			} else {
-				return execState.AddMsg(fmt.Sprintf("failed :( line %d:\n", curStmt.GetLine()))
+				return execState.AddError(fmt.Sprintf("failed :( line %d:\n", curStmt.GetLine()))
 			}
 		}
 	}
 
 	// 把haveObj 代入 existParams 看看是否真的符合 then
 	if len(stmt.HaveObj) != len(stmt.ExistPropWithoutDom.ExistParams) {
-		return glob.ErrRet(fmt.Sprintf("claim exist prop statement error: have obj length is not equal to exist params length").Error())
+		return glob.ErrRet(fmt.Sprintf("claim exist prop statement error: have obj length is not equal to exist params length"))
 	}
 
 	uniMap := make(map[string]ast.Obj)

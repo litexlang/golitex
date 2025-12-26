@@ -24,7 +24,7 @@ import (
 func (exec *Executor) simplifyNumExprObj(obj ast.Obj) (ast.Obj, *glob.GlobRet) {
 	simplifiedNumExprObj := cmp.IsNumExprObjThenSimplify(obj)
 	if simplifiedNumExprObj == nil {
-		return nil, glob.NewEmptyGlobErr()
+		return nil, glob.NewEmptyGlobError()
 	}
 
 	return simplifiedNumExprObj, glob.NewEmptyGlobTrue()

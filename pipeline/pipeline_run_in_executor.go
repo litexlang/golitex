@@ -73,7 +73,7 @@ func RunFileStmtInExecutor(curExec *exe.Executor, importFileStmt *ast.RunFileStm
 
 	msgs = append(msgs, fmt.Sprintf("%s\n", importFileStmt))
 	msgs = append(msgs, exe.SuccessExecStmtStr(importFileStmt))
-	return glob.NewGlobTrue(strings.Join(msgs, "\n"))
+	return glob.GlobTrue(strings.Join(msgs, "\n"))
 }
 
 func RunImportStmtInExecutor(curExec *exe.Executor, importStmt *ast.ImportDirStmt) *glob.GlobRet {
@@ -89,7 +89,7 @@ func RunImportStmtInExecutor(curExec *exe.Executor, importStmt *ast.ImportDirStm
 		curExec.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap[absPath] = newEnvMgr
 	}
 
-	return glob.NewGlobTrue(fmt.Sprintf("%s\n", importStmt))
+	return glob.GlobTrue(fmt.Sprintf("%s\n", importStmt))
 }
 
 // return: new imported pkg, new envMgr, globRet
@@ -115,7 +115,7 @@ func RunImportStmtToGetEnvMgr(pkgMgr *packageMgr.PkgMgr, importStmt *ast.ImportD
 			pkgMgr.NameAbsPathMap[importStmt.AsPkgName] = importRepoAbsPath
 			pkgMgr.AbsPathNamesSetMap[importRepoAbsPath][importStmt.AsPkgName] = struct{}{}
 
-			return false, nil, glob.NewGlobTrue(fmt.Sprintf("%s\n", importStmt))
+			return false, nil, glob.GlobTrue(fmt.Sprintf("%s\n", importStmt))
 		} else {
 			// 这个name已经用过了，需要验证一下是不是之前对应的也是目前的abs path
 			if path != importRepoAbsPath {
@@ -136,5 +136,5 @@ func RunImportStmtToGetEnvMgr(pkgMgr *packageMgr.PkgMgr, importStmt *ast.ImportD
 		return false, nil, ret
 	}
 
-	return true, envMgr, glob.NewGlobTrue(fmt.Sprintf("%s\n", importStmt))
+	return true, envMgr, glob.GlobTrue(fmt.Sprintf("%s\n", importStmt))
 }
