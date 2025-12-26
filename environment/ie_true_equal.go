@@ -21,7 +21,7 @@ import (
 	"strconv"
 )
 
-func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) *glob.GlobRet {
 	ret := ie.trueEqualFactByCart(fact)
 	if ret.IsErr() || ret.IsTrue() {
 		return ret
@@ -83,7 +83,7 @@ func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) glob.GlobRet {
 //   - is_cart(x) fact
 //   - dim(x) = len(cart.Params) fact
 //   - proj(x, i+1) = cart.Params[i] facts for each i
-func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.GlobRet {
 	cart, ok := fact.Params[1].(*ast.FnObj)
 	if !ok || !ast.IsAtomObjAndEqualToStr(cart.FnHead, glob.KeywordCart) {
 		return glob.NewEmptyGlobUnknown()
@@ -125,7 +125,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) glob.GlobRet 
 
 // trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex handles postprocessing for obj = tuple
 // It generates obj[index] = tuple[i] facts for each index
-func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(obj ast.Obj, tupleObj ast.Obj) glob.GlobRet {
+func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(obj ast.Obj, tupleObj ast.Obj) *glob.GlobRet {
 	tuple, ok := tupleObj.(*ast.FnObj)
 	if !ok || !ast.IsTupleFnObj(tuple) {
 		return glob.ErrRet(fmt.Errorf("expected tuple to be a tuple object, got %T", tupleObj))
@@ -155,7 +155,7 @@ func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIn
 //   - (.., …) = (.., ..): tuple = tuple
 //   - a = (.., ..): obj = tuple
 //   - (.., ..) = a: tuple = obj
-func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) glob.GlobRet {
+func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) *glob.GlobRet {
 	inferMsgs := []string{}
 
 	leftTuple, leftIsTuple := left.(*ast.FnObj)
@@ -190,7 +190,7 @@ func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) glob.Gl
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj, rightTuple *ast.FnObj) glob.GlobRet {
+func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj, rightTuple *ast.FnObj) *glob.GlobRet {
 	// 如果两个 tuple 的长度不同，返回错误
 	if len(leftTuple.Params) != len(rightTuple.Params) {
 		return glob.ErrRet(fmt.Errorf("tuple length mismatch: left has %d elements, right has %d elements", len(leftTuple.Params), len(rightTuple.Params)))
@@ -215,7 +215,7 @@ func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj,
 //   - An or fact indicating that forall items in the list set, the equals one of the list set elements
 //   - count(x) = len(listSet) fact
 //   - is_finite_set(x) fact
-func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) glob.GlobRet {
+func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob.GlobRet {
 	inferMsgs := []string{}
 
 	// 尝试获取 list set（可能是直接的，也可能是通过 equal facts 得到的）
@@ -263,7 +263,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) glob.
 	return glob.NewGlobTrue(glob.InferMsgs(inferMsgs))
 }
 
-// func (ie *InferEngine) trueEqualFactByFraction(left ast.Obj, right ast.Obj) glob.GlobRet {
+// func (ie *InferEngine) trueEqualFactByFraction(left ast.Obj, right ast.Obj) *glob.GlobRet {
 // 	// 处理 a = b / c 的情况：推导出 a * c = b
 // 	rightFraction, ok := right.(*ast.FnObj)
 // 	if ok && rightFraction.HasAtomHeadEqualToStr(glob.KeySymbolSlash) {
@@ -285,7 +285,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) glob.
 // 	return glob.NewEmptyGlobUnknown()
 // }
 
-// func (ie *InferEngine) trueEqualFactByAddition(left ast.Obj, right ast.Obj) glob.GlobRet {
+// func (ie *InferEngine) trueEqualFactByAddition(left ast.Obj, right ast.Obj) *glob.GlobRet {
 // 	// 处理 a = b + c 的情况：推导出 a - c = b 和 a - b = c
 // 	rightAddition, ok := right.(*ast.FnObj)
 // 	if ok && rightAddition.HasAtomHeadEqualToStr(glob.KeySymbolPlus) {
@@ -324,7 +324,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) glob.
 // 	return glob.NewEmptyGlobUnknown()
 // }
 
-// func (ie *InferEngine) trueEqualFactBySubtraction(left ast.Obj, right ast.Obj) glob.GlobRet {
+// func (ie *InferEngine) trueEqualFactBySubtraction(left ast.Obj, right ast.Obj) *glob.GlobRet {
 // 	// 处理 a = b - c 的情况：推导出 a + c = b 和 b = a + c
 // 	rightSubtraction, ok := right.(*ast.FnObj)
 // 	if ok && rightSubtraction.HasAtomHeadEqualToStr(glob.KeySymbolMinus) {

@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsNonEmptyWithItem) {
 		return ver.verIsNonEmptyWithItemByBuiltinRules(stmt, state)
 	}
@@ -77,7 +77,7 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if !stmt.IsTrue() {
 		return glob.NewEmptyGlobUnknown()
 	}
@@ -90,7 +90,7 @@ func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, 
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if !glob.IsBuiltinNumberInfixRelaProp(string(stmt.PropName)) {
 		return glob.NewEmptyGlobUnknown()
 	}
@@ -127,7 +127,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *Ver
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	_ = state
 
 	if stmt.PropName != glob.KeywordIn {
@@ -239,7 +239,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 // verEqualSetByBuiltinRules verifies equal_set(a, b) by checking:
 // - forall t a : t $in b
 // - forall t b : t $in a
-func (ver *Verifier) verEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 2 {
 		return glob.NewGlobErr(fmt.Sprintf("equal_set expects 2 parameters, got %d", len(stmt.Params)))
 	}
@@ -286,7 +286,7 @@ func (ver *Verifier) verEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 }
 
 // TODO: 理论上任何obj都是set了现在，因为现在set不再是obj了
-func (ver *Verifier) verIsASetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verIsASetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 1 {
 		return glob.NewGlobErr(fmt.Sprintf("is_a_set expects 1 parameter, got %d", len(stmt.Params)))
 	}
@@ -298,7 +298,7 @@ func (ver *Verifier) verIsASetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), "In ZFC set theory, everything except set itself is a set. In Litex, any object except set, nonempty_set, finite_set is a set.", glob.NewEmptyGlobTrue())
 }
 
-func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 1 {
 		return glob.NewGlobErr(fmt.Sprintf("is_a_finite_set expects 1 parameter, got %d", len(stmt.Params)))
 	}
@@ -315,7 +315,7 @@ func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt *ast.SpecFactStmt, state
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 1 {
 		return glob.NewGlobErr(fmt.Sprintf("is_a_nonempty_set expects 1 parameter, got %d", len(stmt.Params)))
 	}
@@ -350,7 +350,7 @@ func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt *ast.SpecFactStmt, sta
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verIsAFiniteSetByAllItemsInCartAreNonempty(cart ast.Obj, state *VerState) glob.GlobRet {
+func (ver *Verifier) verIsAFiniteSetByAllItemsInCartAreNonempty(cart ast.Obj, state *VerState) *glob.GlobRet {
 	// 先判断是不是 cart
 	cartFn, ok := cart.(*ast.FnObj)
 	if !ok {
@@ -374,7 +374,7 @@ func (ver *Verifier) verIsAFiniteSetByAllItemsInCartAreNonempty(cart ast.Obj, st
 	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("cart %s is a finite set because all its items are finite sets.", cart), glob.NewEmptyGlobTrue())
 }
 
-func (ver *Verifier) verIsANonEmptySetByAllItemsInCartAreNonempty(cart ast.Obj, state *VerState) glob.GlobRet {
+func (ver *Verifier) verIsANonEmptySetByAllItemsInCartAreNonempty(cart ast.Obj, state *VerState) *glob.GlobRet {
 	// 先判断是不是 cart
 	cartFn, ok := cart.(*ast.FnObj)
 	if !ok {
@@ -398,7 +398,7 @@ func (ver *Verifier) verIsANonEmptySetByAllItemsInCartAreNonempty(cart ast.Obj, 
 	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("cart %s is a nonempty set because all its items are nonempty sets.", cart), glob.NewEmptyGlobTrue())
 }
 
-func (ver *Verifier) verIsTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verIsTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	_ = state
 
 	if len(stmt.Params) != 1 {
@@ -423,7 +423,7 @@ func (ver *Verifier) verIsTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *Ver
 
 }
 
-func (ver *Verifier) verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonempty(fnSet ast.Obj, state *VerState) glob.GlobRet {
+func (ver *Verifier) verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonempty(fnSet ast.Obj, state *VerState) *glob.GlobRet {
 	fnObj, ok := fnSet.(*ast.FnObj)
 	if !ok {
 		return glob.NewEmptyGlobUnknown()
@@ -455,7 +455,7 @@ func (ver *Verifier) verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonemp
 	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("fn set %s is a nonempty set because all its param sets and ret set are nonempty sets.", fnSet), glob.NewEmptyGlobTrue())
 }
 
-func (ver *Verifier) verIsNonEmptyWithItemByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verIsNonEmptyWithItemByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 2 {
 		return glob.NewGlobErr(fmt.Sprintf("is_nonempty_with_item expects 1 parameter, got %d", len(stmt.Params)))
 	}
@@ -470,7 +470,7 @@ func (ver *Verifier) verIsNonEmptyWithItemByBuiltinRules(stmt *ast.SpecFactStmt,
 
 }
 
-func (ver *Verifier) verIsANonEmptySetByIsPowerSetAndAllParamSetsAndRetSetAreNonempty(powerSet ast.Obj, state *VerState) glob.GlobRet {
+func (ver *Verifier) verIsANonEmptySetByIsPowerSetAndAllParamSetsAndRetSetAreNonempty(powerSet ast.Obj, state *VerState) *glob.GlobRet {
 	powerSetObj, ok := powerSet.(*ast.FnObj)
 	if !ok {
 		return glob.NewEmptyGlobUnknown()

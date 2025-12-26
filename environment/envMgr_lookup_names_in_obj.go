@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (envMgr *EnvMgr) LookupNamesInObj(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
+func (envMgr *EnvMgr) LookupNamesInObj(obj ast.Obj, extraParams map[string]struct{}) *glob.GlobRet {
 	switch asObj := obj.(type) {
 	case ast.Atom:
 		return envMgr.lookupAtomObjName(asObj, extraParams)
@@ -32,7 +32,7 @@ func (envMgr *EnvMgr) LookupNamesInObj(obj ast.Obj, extraParams map[string]struc
 }
 
 // TODO: 目前只是检查了在当前的envMgr中是否定义了，没有检查在parent envMgr中是否定义了
-func (envMgr *EnvMgr) lookupAtomObjName(atom ast.Atom, extraParams map[string]struct{}) glob.GlobRet {
+func (envMgr *EnvMgr) lookupAtomObjName(atom ast.Atom, extraParams map[string]struct{}) *glob.GlobRet {
 	if _, ok := extraParams[string(atom)]; ok {
 		return glob.NewEmptyGlobTrue()
 	}
@@ -60,7 +60,7 @@ func (envMgr *EnvMgr) lookupAtomObjName(atom ast.Atom, extraParams map[string]st
 	}
 }
 
-func (envMgr *EnvMgr) lookupNamesInFnObj(fnObj *ast.FnObj, extraParams map[string]struct{}) glob.GlobRet {
+func (envMgr *EnvMgr) lookupNamesInFnObj(fnObj *ast.FnObj, extraParams map[string]struct{}) *glob.GlobRet {
 	// Special handling for setBuilder
 	if ast.IsSetBuilder(fnObj) {
 		return envMgr.lookupNamesInSetBuilder(fnObj, extraParams)
@@ -85,7 +85,7 @@ func (envMgr *EnvMgr) lookupNamesInFnObj(fnObj *ast.FnObj, extraParams map[strin
 	return envMgr.LookupNamesInObj(fnObj.FnHead, extraParams)
 }
 
-func (envMgr *EnvMgr) lookupNamesInSetBuilder(obj ast.Obj, extraParams map[string]struct{}) glob.GlobRet {
+func (envMgr *EnvMgr) lookupNamesInSetBuilder(obj ast.Obj, extraParams map[string]struct{}) *glob.GlobRet {
 	setBuilderObj := obj.(*ast.FnObj)
 	setBuilder, err := setBuilderObj.ToSetBuilderStruct()
 	if err != nil {

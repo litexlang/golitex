@@ -22,7 +22,7 @@ import (
 	"strconv"
 )
 
-func (ver *Verifier) trueInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) trueInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 2 {
 		return glob.NewGlobErr(fmt.Sprintf("invalid number of parameters for in fact: %d", len(stmt.Params)))
 	}
@@ -31,7 +31,7 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerSt
 	// 	return ver.falseInFactBuiltinRules(stmt, state)
 	// }
 
-	var verRet glob.GlobRet = glob.NewEmptyGlobUnknown()
+	var verRet *glob.GlobRet = glob.NewEmptyGlobUnknown()
 
 	// verRet = ver.verInFactByRightParamIsKeywordSet(stmt, state)
 	// if verRet.IsErr() {
@@ -148,7 +148,7 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerSt
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if !ast.IsFn_WithHeadName(stmt.Params[0], glob.KeywordCart) {
 		return glob.NewEmptyGlobUnknown()
 	}
@@ -164,7 +164,7 @@ func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt *
 	return glob.NewGlobTrue(fmt.Sprintf("all arguments of %s are in nonempty.", stmt.Params[0]))
 }
 
-// func (ver *Verifier) verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+// func (ver *Verifier) verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 // 	if asAtom, ok := stmt.Params[1].(ast.Atom); ok {
 // 		if glob.IsKeywordSet(string(asAtom)) {
 // 			return glob.NewEmptyGlobUnknown()
@@ -195,7 +195,7 @@ func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt *
 // 	return glob.NewEmptyGlobUnknown()
 // }
 
-func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordReal)
 	if ok {
 		ok = ast.IsFn_WithHeadNameInSlice(stmt.Params[0], map[string]struct{}{glob.KeySymbolPlus: {}, glob.KeySymbolMinus: {}, glob.KeySymbolStar: {}, glob.KeySymbolSlash: {}, glob.KeySymbolPower: {}})
@@ -210,7 +210,7 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt *ast.S
 	return glob.NewEmptyGlobUnknown()
 }
 
-// func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+// func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 // 	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordSet)
 // 	if !ok {
 // 		return glob.NewEmptyGlobUnknown()
@@ -233,7 +233,7 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt *ast.S
 // 	return glob.NewEmptyGlobUnknown()
 // }
 
-func (ver *Verifier) verInFactByRightParamIsFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verInFactByRightParamIsFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if asFcFn, ok := stmt.Params[1].(*ast.FnObj); ok {
 		if ast.IsFnTemplate_ObjFn(asFcFn) {
 			verRet := ver.ver_In_FnFcFn_FnTT(stmt.Params[0], asFcFn, state)
@@ -262,8 +262,8 @@ func (ver *Verifier) verInFactByRightParamIsFnTemplateFact(stmt *ast.SpecFactStm
 	return glob.NewEmptyGlobUnknown()
 }
 
-// func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
-// 	var verRet glob.GlobRet
+// func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+// 	var verRet *glob.GlobRet
 // 	ok := ast.IsObjAtomEqualToGivenString(stmt.Params[1], glob.KeywordSet)
 // 	if !ok {
 // 		return NewExecEmptyUnknown()
@@ -314,7 +314,7 @@ func (ver *Verifier) verInFactByRightParamIsFnTemplateFact(stmt *ast.SpecFactStm
 // 	return NewExecEmptyUnknown()
 // }
 
-func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	// 任何东西不在空集里
 	verRet := ver.nothingIsInEmptySet(stmt, state)
 	if verRet.IsErr() {
@@ -382,7 +382,7 @@ func (ver *Verifier) falseInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 }
 
 // TODO 需要先证明一下它是finite set 去开始验证 len(n) = 0
-func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	verRet := ver.VerFactStmt(ast.NewIsAFiniteSetFact(stmt.Params[1], stmt.Line), state)
 	if verRet.IsErr() || verRet.IsUnknown() {
 		return verRet
@@ -394,13 +394,13 @@ func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState
 	return verRet
 }
 
-// func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+// func (ver *Verifier) trueExistInSt(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 // 	pureInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.Params[1], stmt.Params[2]}, stmt.Line)
 // 	verRet := ver.VerFactStmt(pureInFact, state)
 // 	return verRet
 // }
 
-// func (ver *Verifier) fcIsFiniteSet(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+// func (ver *Verifier) fcIsFiniteSet(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 // 	// TODO: not sure whether I should add this nextState
 // 	nextState := state.GetAddRound()
 
@@ -409,7 +409,7 @@ func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState
 // 	return verRet
 // }
 
-func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if stmt.TypeEnum != ast.FalsePure {
 		return glob.NewEmptyGlobUnknown()
 	}
@@ -421,7 +421,7 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.S
 }
 
 // verInCartSet_ByTuple verifies a $in cart(...) by checking if the tuple's elements are in corresponding cart sets
-// func (ver *Verifier) verInCartSet_ByTuple(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+// func (ver *Verifier) verInCartSet_ByTuple(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 // 	// Check if right side is cart(...)
 // 	cartSet, ok := stmt.Params[1].(*ast.FnObj)
 // 	if !ok {
@@ -470,7 +470,7 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.S
 // 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewExecEmptyTrue())
 // }
 
-func (ver *Verifier) verInFactByRightParamIsSetProduct(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verInFactByRightParamIsSetProduct(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	// left must be (x, y, ...) right must be product(xSet, ySet, ...)
 	fcFn, ok := stmt.Params[0].(*ast.FnObj)
 	if !ok {
@@ -521,7 +521,7 @@ func (ver *Verifier) getCartSetFromObj(obj ast.Obj) *ast.FnObj {
 // verInCartSet_DimAndElements verifies a $in cart(...) by checking:
 // 1. dim(a) = dim(cart(...))
 // 2. a[i] $in cart(...).Params[i-1] for each i
-func (ver *Verifier) verInCartSet_DimAndElements(obj ast.Obj, cartSet *ast.FnObj, objCartSet *ast.FnObj, state *VerState) glob.GlobRet {
+func (ver *Verifier) verInCartSet_DimAndElements(obj ast.Obj, cartSet *ast.FnObj, objCartSet *ast.FnObj, state *VerState) *glob.GlobRet {
 	// Step 1: Verify dim(a) = dim(cart(...))
 	// dim(cart(...)) = len(cartSet.Params)
 	cartDimValue := len(cartSet.Params)
@@ -567,7 +567,7 @@ func (ver *Verifier) verInCartSet_DimAndElements(obj ast.Obj, cartSet *ast.FnObj
 // verInFactByRightParamIsCartSet verifies a $in cart(...) by checking:
 // 1. dim(a) = dim(cart(...))
 // 2. a[i] $in cart(...).Params[i-1] for each i
-func (ver *Verifier) verInFactByRightParamIsCartSet(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verInFactByRightParamIsCartSet(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	// Check if right side is cart(...)
 	cartSet, ok := stmt.Params[1].(*ast.FnObj)
 	if !ok {
@@ -591,7 +591,7 @@ func (ver *Verifier) verInFactByRightParamIsCartSet(stmt *ast.SpecFactStmt, stat
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), ret.String(), ret)
 }
 
-func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *VerState) glob.GlobRet {
+func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *VerState) *glob.GlobRet {
 	ver.newEnv()
 	defer ver.deleteEnv()
 
@@ -674,7 +674,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 	return verRet
 }
 
-func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	fcFn, ok := stmt.Params[0].(*ast.FnObj)
 	if !ok {
 		return glob.NewEmptyGlobUnknown()
@@ -736,7 +736,7 @@ func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FnObj) (ast.Obj, err
 			return nil, fmt.Errorf("curRetSet is not an FcFn")
 		}
 
-		var ret glob.GlobRet
+		var ret *glob.GlobRet
 		// curFnTStruct, ret = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
 		curFnTStruct, ret = ver.Env.GetFnStructFromFnTName(curRetSet)
 		if ret.IsErr() {
@@ -759,7 +759,7 @@ func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FnObj) (ast.Obj, err
 	return instRetSet, nil
 }
 
-func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	// 检查是否是 not x $in N 的形式
 	if !ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNatural) {
 		return glob.NewEmptyGlobUnknown()
@@ -818,7 +818,7 @@ func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt *ast.SpecFactStmt, st
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
 }
 
-func (ver *Verifier) litNumNotInIntegerByLiteralShape(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) litNumNotInIntegerByLiteralShape(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	// 检查是否是 not x $in Z 的形式
 	if !ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordInteger) {
 		return glob.NewEmptyGlobUnknown()
@@ -847,7 +847,7 @@ func (ver *Verifier) litNumNotInIntegerByLiteralShape(stmt *ast.SpecFactStmt, st
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	// 检查是否是 not x $in N_pos 的形式
 	if !ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNPos) {
 		return glob.NewEmptyGlobUnknown()
@@ -906,7 +906,7 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt *ast.SpecFactStmt, state
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
 }
 
-func (ver *Verifier) verInFactByLeftIsIndexOfObjInSomeSet(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verInFactByLeftIsIndexOfObjInSomeSet(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	left := stmt.Params[0]
 	someSet := stmt.Params[1]
 
@@ -953,7 +953,7 @@ func (ver *Verifier) verInFactByLeftIsIndexOfObjInSomeSet(stmt *ast.SpecFactStmt
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if state.isFinalRound() {
 		return glob.NewEmptyGlobUnknown()
 	}
@@ -1000,7 +1000,7 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state 
 	return glob.NewGlobTrue(fmt.Sprintf("%s is true proved by definition of set builder", stmt.String()))
 }
 
-func (ver *Verifier) verInFactByRightIsListSet(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verInFactByRightIsListSet(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	listSetObj := ver.Env.GetListSetEqualToObj(stmt.Params[1])
 	if listSetObj == nil {
 		return glob.NewEmptyGlobUnknown()

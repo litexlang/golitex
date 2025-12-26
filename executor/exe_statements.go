@@ -21,8 +21,8 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) Stmt(stmt ast.Stmt) glob.GlobRet {
-	var execRet glob.GlobRet = glob.NewEmptyGlobErr()
+func (exec *Executor) Stmt(stmt ast.Stmt) *glob.GlobRet {
+	var execRet *glob.GlobRet = glob.NewEmptyGlobErr()
 
 	switch stmt := (stmt).(type) {
 	case ast.FactStmt:
@@ -137,7 +137,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) glob.GlobRet {
 	}
 }
 
-func (exec *Executor) factStmt(stmt ast.FactStmt) glob.GlobRet {
+func (exec *Executor) factStmt(stmt ast.FactStmt) *glob.GlobRet {
 	curVerifier := NewVerifier(exec.Env)
 	state := NewVerState(0, true, false)
 	verRet := curVerifier.VerFactStmt(stmt, state)
@@ -159,7 +159,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) glob.GlobRet {
 }
 
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
-func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) glob.GlobRet {
+func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) *glob.GlobRet {
 	allDerivedFacts := []string{}
 
 	for _, fact := range stmt.Facts {
@@ -187,7 +187,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) glob.GlobRet {
 	return glob.NewGlobTrueWithMsgs(resultMsgs)
 }
 
-func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) glob.GlobRet {
+func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) *glob.GlobRet {
 	ret := exec.Env.NewDefProp_InsideAtomsDeclared(stmt)
 	if ret.IsErr() {
 		return glob.NewGlobErr(ret.String())
@@ -224,7 +224,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 	return execRet
 }
 
-func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) glob.GlobRet {
+func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) *glob.GlobRet {
 	ret := exec.Env.DefLetStmt(stmt)
 	if ret.IsErr() {
 		return glob.NewGlobErr(ret.String())
@@ -232,7 +232,7 @@ func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) glob.GlobRet {
 	return glob.NewGlobTrue(stmt.String()).AddMsgs(ret.GetMsgs())
 }
 
-func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) glob.GlobRet {
+func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) *glob.GlobRet {
 	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
 	// if glob.RequireMsg() {
 	// 	defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
@@ -246,7 +246,7 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) glob.GlobRet 
 }
 
 // TODO: 我认为打印一下 claim 里面的各个语句的输出还是有道理的
-func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) glob.GlobRet {
+func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) *glob.GlobRet {
 	for _, curStmt := range proof {
 		execState := exec.Stmt(curStmt)
 		if execState.IsNotTrue() {
@@ -256,7 +256,7 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) glob.GlobRet {
 	return glob.NewEmptyGlobTrue()
 }
 
-func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) glob.GlobRet {
+func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) *glob.GlobRet {
 	isSuccess := false
 
 	// prove orFact is true
@@ -290,7 +290,7 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) glob.Gl
 	return result
 }
 
-func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (glob.GlobRet, error) {
+func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (*glob.GlobRet, error) {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -318,7 +318,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 	return glob.NewGlobTrue(stmt.String()), nil
 }
 
-func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) glob.GlobRet {
+func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) *glob.GlobRet {
 	// Create OrStmt from CaseFacts
 	orFact := ast.NewOrStmt(stmt.CaseFacts, stmt.Line)
 
@@ -345,7 +345,7 @@ func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) glob.Gl
 	return glob.NewGlobTrue(stmt.String())
 }
 
-func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCaseByCaseStmt) (glob.GlobRet, error) {
+func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCaseByCaseStmt) (*glob.GlobRet, error) {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -373,7 +373,7 @@ func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCase
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
-func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) glob.GlobRet {
+func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) *glob.GlobRet {
 	execRet := exec.defPropStmt(stmt.Prop, false)
 	if execRet.IsNotTrue() {
 		return execRet
@@ -411,7 +411,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) glob.GlobRet {
 	return glob.NewGlobTrue(stmt.String())
 }
 
-func (exec *Executor) proveStmt(stmt *ast.ProveStmt) glob.GlobRet {
+func (exec *Executor) proveStmt(stmt *ast.ProveStmt) *glob.GlobRet {
 	// new env
 	exec.NewEnv()
 	defer exec.deleteEnv()
@@ -423,7 +423,7 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) glob.GlobRet {
 	return execState.AddMsg(stmt.String())
 }
 
-func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) glob.GlobRet {
+func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) *glob.GlobRet {
 	ret := exec.Env.IsValidAndAvailableName(stmt.Name)
 	if ret.IsErr() {
 		return glob.NewGlobErr(ret.String())
@@ -455,7 +455,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) glob.GlobRet {
 	return glob.NewGlobTrue(stmt.String())
 }
 
-func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) glob.GlobRet {
+func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) *glob.GlobRet {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -467,7 +467,7 @@ func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) glob.GlobR
 	return glob.NewGlobTrue(stmt.String())
 }
 
-func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) glob.GlobRet {
+func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) *glob.GlobRet {
 	execRet := exec.proveByEnumStmtProve(stmt)
 	if execRet.IsNotTrue() {
 		return execRet
@@ -483,7 +483,7 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) glob.GlobRet {
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
-func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) glob.GlobRet {
+func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) *glob.GlobRet {
 	execState := exec.defExistPropStmt(stmt.ExistProp)
 	if execState.IsNotTrue() {
 		return execState
@@ -500,7 +500,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) glob.GlobRe
 	return glob.NewGlobTrue(stmt.String()).AddMsg(fmt.Sprintf("%s\nis true by definition", knownUniFact))
 }
 
-func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) glob.GlobRet {
+func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) *glob.GlobRet {
 	// if glob.RequireMsg() {
 	// 	defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
 	// }
@@ -513,18 +513,18 @@ func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) glob.GlobRet {
 	return glob.NewGlobTrue(stmt.String())
 }
 
-func (exec *Executor) ClearStmt() glob.GlobRet {
+func (exec *Executor) ClearStmt() *glob.GlobRet {
 	newEnvMgr := env.CopyEnvMgrAndOwnPkgMgr(env.BuiltinEnvMgrWithEmptyEnvPkgMgr, exec.Env.EnvPkgMgr)
 	exec.Env = newEnvMgr.NewEnv()
 	return glob.NewGlobTrue("clear all definitions and facts")
 }
 
-func (exec *Executor) DoNothingStmt() glob.GlobRet {
+func (exec *Executor) DoNothingStmt() *glob.GlobRet {
 	// do_nothing statement does nothing
 	return glob.NewEmptyGlobTrue()
 }
 
-func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) glob.GlobRet {
+func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) *glob.GlobRet {
 	for _, fact := range stmt.Facts {
 		execState := exec.factStmt(fact)
 		if execState.IsNotTrue() {
@@ -535,7 +535,7 @@ func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) glob.GlobRet {
 	return glob.NewGlobTrue(stmt.String())
 }
 
-func (exec *Executor) Verify(fact ast.FactStmt, requireMsg bool) glob.GlobRet {
+func (exec *Executor) Verify(fact ast.FactStmt, requireMsg bool) *glob.GlobRet {
 	ver := NewVerifier(exec.Env)
 	var state *VerState
 	if requireMsg {
@@ -547,17 +547,17 @@ func (exec *Executor) Verify(fact ast.FactStmt, requireMsg bool) glob.GlobRet {
 	return ver.VerFactStmt(fact, state)
 }
 
-// func (exec *Executor) markdownStmt(stmt *ast.MarkdownStmt) glob.GlobRet {
+// func (exec *Executor) markdownStmt(stmt *ast.MarkdownStmt) *glob.GlobRet {
 // 	_ = stmt
 // 	return NewExecEmptyTrue()
 // }
 
-// func (exec *Executor) latexStmt(stmt *ast.LatexStmt) glob.GlobRet {
+// func (exec *Executor) latexStmt(stmt *ast.LatexStmt) *glob.GlobRet {
 // 	_ = stmt
 // 	return NewExecEmptyTrue()
 // }
 
-func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) glob.GlobRet {
+func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) *glob.GlobRet {
 	err := exec.proveIsTransitivePropStmtBody(stmt)
 	if err != nil {
 		return glob.NewGlobErr(err.Error())
@@ -641,13 +641,13 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 	return nil
 }
 
-func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) glob.GlobRet {
+func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) *glob.GlobRet {
 	exec.Env.CurEnv().AlgoDefMem[stmt.FuncName] = struct{}{}
 	exec.Env.AllDefinedAlgoNames[stmt.FuncName] = stmt
 	return glob.NewGlobTrue(stmt.String())
 }
 
-func (exec *Executor) evalStmt(stmt *ast.EvalStmt) glob.GlobRet {
+func (exec *Executor) evalStmt(stmt *ast.EvalStmt) *glob.GlobRet {
 	trueEvalRet := glob.NewEmptyGlobTrue()
 
 	value, execRet := exec.evalObjInLocalEnv(stmt.ObjToEval)
@@ -663,7 +663,7 @@ func (exec *Executor) evalStmt(stmt *ast.EvalStmt) glob.GlobRet {
 	return trueEvalRet.AddMsgAtBegin(stmt.String())
 }
 
-func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, glob.GlobRet) {
+func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, *glob.GlobRet) {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -675,13 +675,13 @@ func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, glob.GlobRe
 	return value, glob.NewGlobTrue(fmt.Sprintf("By evaluation of algo %s\nWe get %s = %s\n", objToEval.(*ast.FnObj).FnHead.String(), objToEval.String(), value.String()))
 }
 
-func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) glob.GlobRet {
+func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) *glob.GlobRet {
 	exec.Env.CurEnv().DefProveAlgoMem[stmt.ProveAlgoName] = struct{}{}
 	exec.Env.AllDefinedProveAlgoNames[stmt.ProveAlgoName] = stmt
 	return glob.NewGlobTrue(stmt.String())
 }
 
-func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) glob.GlobRet {
+func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.GlobRet {
 	// Generate integer lists for each range
 	ranges := [][]ast.Obj{}
 	for i := range len(stmt.Params) {
@@ -739,7 +739,7 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) glob.GlobRet {
 	return glob.NewGlobTrue(stmt.String())
 }
 
-func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, indices []ast.Obj) glob.GlobRet {
+func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, indices []ast.Obj) *glob.GlobRet {
 	uniMap := map[string]ast.Obj{}
 	for i, param := range stmt.Params {
 		uniMap[param] = indices[i]
@@ -831,7 +831,7 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 	return glob.NewEmptyGlobTrue()
 }
 
-func (exec *Executor) implicationStmt(stmt *ast.ImplicationStmt) glob.GlobRet {
+func (exec *Executor) implicationStmt(stmt *ast.ImplicationStmt) *glob.GlobRet {
 	// Convert ImplicationStmt to DefPropStmt (with dom and implication facts, but no iff facts)
 	defPropStmt := ast.NewDefPropStmt(stmt.DefHeader, stmt.DomFacts, nil, stmt.ImplicationFacts, stmt.Line)
 	ret := exec.Env.NewDefProp_InsideAtomsDeclared(defPropStmt)

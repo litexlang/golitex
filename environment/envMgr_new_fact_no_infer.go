@@ -22,7 +22,7 @@ import (
 
 // newFactNoInfer stores facts without performing any inference.
 // This is used to prevent circular definitions (e.g., p => q, q => p).
-func (envMgr *EnvMgr) newFactNoInfer(stmt ast.FactStmt) glob.GlobRet {
+func (envMgr *EnvMgr) newFactNoInfer(stmt ast.FactStmt) *glob.GlobRet {
 	switch f := stmt.(type) {
 	case *ast.SpecFactStmt:
 		return envMgr.newSpecFactNoInfer(f)
@@ -41,7 +41,7 @@ func (envMgr *EnvMgr) newFactNoInfer(stmt ast.FactStmt) glob.GlobRet {
 
 // newSpecFactNoInfer stores a SpecFact without performing any inference.
 // It only stores the fact in memory, without triggering post-processing.
-func (envMgr *EnvMgr) newSpecFactNoInfer(fact *ast.SpecFactStmt) glob.GlobRet {
+func (envMgr *EnvMgr) newSpecFactNoInfer(fact *ast.SpecFactStmt) *glob.GlobRet {
 	if isEqualFact := ast.IsTrueEqualFact(fact); isEqualFact {
 		return envMgr.newTrueEqualNoInfer(fact)
 	}
@@ -57,7 +57,7 @@ func (envMgr *EnvMgr) newSpecFactNoInfer(fact *ast.SpecFactStmt) glob.GlobRet {
 // newTrueEqualNoInfer stores an equality fact without performing any inference.
 // It stores the equality in the equal memory and simplifies symbol values,
 // but does not trigger equality-related inferences (e.g., cart, tuple, listSet).
-func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.SpecFactStmt) glob.GlobRet {
+func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.SpecFactStmt) *glob.GlobRet {
 	if len(fact.Params) != 2 {
 		return glob.ErrRet(fmt.Errorf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
@@ -78,7 +78,7 @@ func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.SpecFactStmt) glob.GlobRet {
 
 // newEqualsFactNoInfer stores an EqualsFact without performing any inference.
 // It converts the EqualsFact to individual equality facts and stores them without inference.
-func (envMgr *EnvMgr) newEqualsFactNoInfer(stmt *ast.EqualsFactStmt) glob.GlobRet {
+func (envMgr *EnvMgr) newEqualsFactNoInfer(stmt *ast.EqualsFactStmt) *glob.GlobRet {
 	equalFacts := stmt.ToEqualFacts()
 	for _, equalFact := range equalFacts {
 		ret := envMgr.newSpecFactNoInfer(equalFact)
@@ -89,14 +89,14 @@ func (envMgr *EnvMgr) newEqualsFactNoInfer(stmt *ast.EqualsFactStmt) glob.GlobRe
 	return glob.NewGlobTrue("")
 }
 
-func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) glob.GlobRet {
+func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) *glob.GlobRet {
 	ret := envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
 	return ret
 }
 
-func (envMgr *EnvMgr) newUniFactNoInfer(stmt *ast.UniFactStmt) glob.GlobRet {
+func (envMgr *EnvMgr) newUniFactNoInfer(stmt *ast.UniFactStmt) *glob.GlobRet {
 	for _, thenStmt := range stmt.ThenFacts {
-		var ret glob.GlobRet
+		var ret *glob.GlobRet
 		switch asFact := thenStmt.(type) {
 		case *ast.SpecFactStmt:
 			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, asFact)
@@ -113,7 +113,7 @@ func (envMgr *EnvMgr) newUniFactNoInfer(stmt *ast.UniFactStmt) glob.GlobRet {
 	return glob.NewGlobTrue("")
 }
 
-func (envMgr *EnvMgr) newUniFactWithIffNoInfer(stmt *ast.UniFactWithIffStmt) glob.GlobRet {
+func (envMgr *EnvMgr) newUniFactWithIffNoInfer(stmt *ast.UniFactWithIffStmt) *glob.GlobRet {
 	thenToIff := stmt.NewUniFactWithThenToIff()
 	ret := envMgr.newUniFactNoInfer(thenToIff)
 	if ret.IsErr() {
