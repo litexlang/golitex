@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
+func (exec *Executor) byStmt(stmt *ast.ByStmt) glob.GlobRet {
 	execState, returnedFacts := exec.callProveAlgo(stmt)
 	if execState.IsNotTrue() {
 		return execState
@@ -30,27 +30,27 @@ func (exec *Executor) byStmt(stmt *ast.ByStmt) ExecRet {
 	for _, fact := range returnedFacts {
 		ret := exec.Env.NewFactWithoutCheckingNameDefined(fact)
 		if ret.IsNotTrue() {
-			return NewExecErr(fmt.Sprintf("by statement failed: returned fact %s store error.", fact.String()))
+			return glob.NewGlobErr(fmt.Sprintf("by statement failed: returned fact %s store error.", fact.String()))
 		}
 	}
 
-	return NewEmptyExecTrue()
+	return glob.NewEmptyGlobTrue()
 }
 
 // 工作原理是吧ProveAlgoDef的params都变成传入的obj，然后instantiate，然后run
-// Returns ExecRet and the FactStmt slice returned by prove_algo
+// Returns glob.GlobRet and the FactStmt slice returned by prove_algo
 // If a ByStmt is encountered, it recursively extracts facts from it
-func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) (ExecRet, []ast.FactStmt) {
+func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) (glob.GlobRet, []ast.FactStmt) {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	proveAlgoDef := exec.Env.GetProveAlgoDef(stmt.ProveAlgoName)
 	if proveAlgoDef == nil {
-		return NewExecErr(fmt.Sprintf("prove algo %s not found", stmt.ProveAlgoName)), nil
+		return glob.NewGlobErr(fmt.Sprintf("prove algo %s not found", stmt.ProveAlgoName)), nil
 	}
 
 	if len(proveAlgoDef.Params) != len(stmt.Params) {
-		return NewExecErr(fmt.Sprintf("prove algo %s requires %d params, get %d instead", stmt.ProveAlgoName, len(proveAlgoDef.Params), len(stmt.Params))), nil
+		return glob.NewGlobErr(fmt.Sprintf("prove algo %s requires %d params, get %d instead", stmt.ProveAlgoName, len(proveAlgoDef.Params), len(stmt.Params))), nil
 	}
 
 	for i, param := range proveAlgoDef.Params {
@@ -72,7 +72,7 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) (ExecRet, []ast.FactStmt) 
 
 	instProveAlgoDef, err := proveAlgoDef.Instantiate(uniMap)
 	if err != nil {
-		return NewExecErrWithErr(err), nil
+		return glob.NewGlobErrWithErr(err), nil
 	}
 
 	execRet, returnedFacts := exec.runProveAlgoStmtsWhenBy(instProveAlgoDef.(*ast.DefProveAlgoStmt).Stmts, stmt.Params)
@@ -80,10 +80,10 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) (ExecRet, []ast.FactStmt) 
 		return execRet, nil
 	}
 
-	return NewEmptyExecTrue(), returnedFacts
+	return glob.NewEmptyGlobTrue(), returnedFacts
 }
 
-func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSlice, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
+func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSlice, paramsValues []ast.Obj) (glob.GlobRet, []ast.FactStmt) {
 	for _, stmt := range proveAlgoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.ProveAlgoReturnStmt:
@@ -92,7 +92,7 @@ func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSl
 				return execRet, nil
 			}
 			// Return the facts from prove_algo
-			return NewEmptyExecTrue(), facts
+			return glob.NewEmptyGlobTrue(), facts
 		case *ast.ProveAlgoIfStmt:
 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(ast.NewAlgoIfStmt(asStmt.Conditions, nil, asStmt.Line)); execRet.IsErr() {
 				return execRet, nil
@@ -102,13 +102,13 @@ func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSl
 				continue
 			}
 		default:
-			return NewExecErr(fmt.Sprintf("unexpected prove_algo statement type: %T", stmt)), nil
+			return glob.NewGlobErr(fmt.Sprintf("unexpected prove_algo statement type: %T", stmt)), nil
 		}
 	}
-	return NewEmptyExecTrue(), nil
+	return glob.NewEmptyGlobTrue(), nil
 }
 
-// func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
+// func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Obj) (glob.GlobRet, []ast.FactStmt) {
 // 	for _, stmt := range algoStmts {
 // 		switch asStmt := stmt.(type) {
 // 		case *ast.AlgoIfStmt:
@@ -120,7 +120,7 @@ func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSl
 // 				continue
 // 			}
 // 		case *ast.AlgoReturnStmt:
-// 			return NewExecErr(fmt.Sprintf("There can not be return value statements in algo. Use return eval instead .Get %s", asStmt.String())), nil
+// 			return glob.NewGlobErr(fmt.Sprintf("There can not be return value statements in algo. Use return eval instead .Get %s", asStmt.String())), nil
 // 		default:
 // 			execRet := exec.Stmt(stmt.(ast.Stmt))
 // 			if execRet.IsNotTrue() {
@@ -128,10 +128,10 @@ func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSl
 // 			}
 // 		}
 // 	}
-// 	return NewEmptyExecTrue(), nil
+// 	return glob.NewEmptyGlobTrue(), nil
 // }
 
-func (exec *Executor) proveAlgoIfStmt(stmt *ast.ProveAlgoIfStmt, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
+func (exec *Executor) proveAlgoIfStmt(stmt *ast.ProveAlgoIfStmt, paramsValues []ast.Obj) (glob.GlobRet, []ast.FactStmt) {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -144,7 +144,7 @@ func (exec *Executor) proveAlgoIfStmt(stmt *ast.ProveAlgoIfStmt, paramsValues []
 	return exec.runProveAlgoStmtsWhenBy(stmt.ThenStmts, paramsValues)
 }
 
-// func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.Obj) (ExecRet, []ast.FactStmt) {
+// func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.Obj) (glob.GlobRet, []ast.FactStmt) {
 // 	exec.NewEnv()
 // 	defer exec.deleteEnv()
 
@@ -157,9 +157,9 @@ func (exec *Executor) proveAlgoIfStmt(stmt *ast.ProveAlgoIfStmt, paramsValues []
 // 	return exec.runAlgoStmtsWhenBy(stmt.ThenStmts, paramsValues)
 // }
 
-func (exec *Executor) runProveAlgoReturnStmt(stmt *ast.ProveAlgoReturnStmt) (ExecRet, []ast.FactStmt) {
+func (exec *Executor) runProveAlgoReturnStmt(stmt *ast.ProveAlgoReturnStmt) (glob.GlobRet, []ast.FactStmt) {
 	if len(stmt.Facts) == 0 {
-		return NewEmptyExecTrue(), nil
+		return glob.NewEmptyGlobTrue(), nil
 	}
 
 	resultFacts := []ast.FactStmt{}
@@ -184,9 +184,9 @@ func (exec *Executor) runProveAlgoReturnStmt(stmt *ast.ProveAlgoReturnStmt) (Exe
 			// 将递归获取的事实加入结果列表
 			resultFacts = append(resultFacts, facts...)
 		default:
-			return NewExecErr(fmt.Sprintf("return unexpected type: %T", factOrBy)), nil
+			return glob.NewGlobErr(fmt.Sprintf("return unexpected type: %T", factOrBy)), nil
 		}
 	}
 
-	return NewEmptyExecTrue(), resultFacts
+	return glob.NewEmptyGlobTrue(), resultFacts
 }

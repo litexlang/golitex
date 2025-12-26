@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) ExecRet {
+func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) glob.GlobRet {
 	switch asStmt := stmt.(type) {
 	case *ast.SpecFactStmt:
 		if ast.IsTrueSpecFactWithPropName(asStmt, glob.KeySymbolEqual) {
@@ -37,6 +37,6 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) ExecRet {
 	case *ast.EqualsFactStmt:
 		return ver.verEqualsFactStmt(asStmt, state)
 	default:
-		return NewExecErr(fmt.Sprintf("unexpected fact statement: %s", asStmt))
+		return glob.NewGlobErr(fmt.Sprintf("unexpected fact statement: %s", asStmt))
 	}
 }

@@ -17,11 +17,12 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
-func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) glob.GlobRet {
 	if state.isFinalRound() {
-		return NewEmptyExecUnknown()
+		return glob.NewEmptyGlobUnknown()
 	}
 
 	// 在局部环境声明新变量
@@ -30,29 +31,29 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) ExecR
 
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(oldStmt)
 	if err != nil {
-		return NewExecErr(err.Error())
+		return glob.NewGlobErr(err.Error())
 	}
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
 		ret := ver.Env.NewFactWithoutCheckingNameDefined(condFact)
 		if ret.IsErr() {
-			return NewExecErr(ret.String())
+			return glob.NewGlobErr(ret.String())
 		}
 	}
 
 	return ver.uniFact_checkThenFacts(newStmtPtr, state)
 }
 
-func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) glob.GlobRet {
 	// check then facts
 	for _, thenFact := range stmt.ThenFacts {
 		verRet := ver.VerFactStmt(thenFact, state) // 这个地方有点tricky，这里是可能读入state是any的，而且我要允许读入any
 		if verRet.IsErr() {
-			return NewExecErr(verRet.String())
+			return glob.NewGlobErr(verRet.String())
 		}
 		if verRet.IsUnknown() {
-			execRet := NewEmptyExecUnknown()
+			execRet := glob.NewEmptyGlobUnknown()
 			if state.WithMsg {
 				execRet.AddMsg(fmt.Sprintf("%s is unknown", thenFact))
 			}
@@ -62,11 +63,11 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		// if true, store it
 		ret := ver.Env.NewFactWithoutCheckingNameDefined(thenFact)
 		if ret.IsErr() {
-			return NewExecErr(ret.String())
+			return glob.NewGlobErr(ret.String())
 		}
 	}
 
-	execRet := NewEmptyExecTrue()
+	execRet := glob.NewEmptyGlobTrue()
 	if state.WithMsg {
 		execRet = execRet.AddMsg(fmt.Sprintf("%s\nis true", stmt))
 	}
@@ -97,7 +98,7 @@ func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactS
 	return newStmtPtr, nil
 }
 
-func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) ExecRet {
+func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) glob.GlobRet {
 	thenToIff := stmt.NewUniFactWithThenToIff()
 	verRet := ver.verUniFact(thenToIff, state)
 	if verRet.IsErr() || verRet.IsUnknown() {

@@ -21,10 +21,10 @@ import (
 )
 
 // 这是必要的，因为 2 $in N 是这个检查的
-func (ver *Verifier) verInFactByRightParamIsNOrZOrQOrR(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verInFactByRightParamIsNOrZOrQOrR(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
 	inSet, ok := stmt.Params[1].(ast.Atom)
 	if !ok {
-		return NewEmptyExecUnknown()
+		return glob.NewEmptyGlobUnknown()
 	}
 
 	nextState := state.GetFinalRound().GetNoMsg()
@@ -49,9 +49,9 @@ func (ver *Verifier) verInFactByRightParamIsNOrZOrQOrR(stmt *ast.SpecFactStmt, s
 		if verifiedBy == "" {
 			verifiedBy = fmt.Sprintf("%s is in %s", stmt.Params[0], inSet)
 		}
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), verifiedBy, NewEmptyExecTrue())
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), verifiedBy, glob.NewEmptyGlobTrue())
 	}
-	return NewEmptyExecUnknown()
+	return glob.NewEmptyGlobUnknown()
 }
 
 func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
