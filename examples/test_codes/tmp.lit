@@ -1,13 +1,17 @@
-# Examples of not in N (natural numbers)
-not -1 $in N
-not 3.5 $in N
-not (-1 * 1) $in N
+prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
+    forall x s, y s, z s:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+    forall x s:
+        mul(x, inv(x)) = e
+        mul(inv(x), x) = e
+    forall x s:
+        mul(x, e) = x
+        mul(e, x) = x
 
-# Examples of not in Z (integers)
-not 3.5 $in Z
-not (3 / 2) $in Z
+# 定义一个群，证明 e * e = e
+claim:
+    forall g set, g_mul fn(g, g)g, g_inv fn(g)g, g_e g:
+        $is_group(g, g_mul, g_inv, g_e)
+    prove:
+        g_e \g_mul g_e = g_e
 
-# Examples of not in N_pos (positive integers)
-not -1 $in N_pos
-not 0 $in N_pos
-not 3.5 $in N_pos
