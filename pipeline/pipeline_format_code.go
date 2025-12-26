@@ -26,14 +26,14 @@ import (
 func FormatCode(path string) (*glob.GlobRet, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return glob.NewGlobErr(fmt.Sprintf("failed to read file %s: %s", path, err.Error())), err
+		return glob.ErrRet(fmt.Sprintf("failed to read file %s: %s", path, err.Error())), err
 	}
 
 	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
 
 	blocks, err := ast.PreprocessAndMakeSourceCodeIntoBlocks(string(content))
 	if err != nil {
-		return glob.NewGlobErr(err.Error()), err
+		return glob.ErrRet(err.Error()), err
 	}
 
 	p := ast.NewTbParser(pkgPathNameMgr)
@@ -41,7 +41,7 @@ func FormatCode(path string) (*glob.GlobRet, error) {
 	for _, block := range blocks {
 		topStmt, err := p.Stmt(&block)
 		if err != nil {
-			return glob.NewGlobErr(err.Error()), err
+			return glob.ErrRet(err.Error()), err
 		}
 		stmtStrSlice = append(stmtStrSlice, topStmt.String())
 	}
@@ -49,7 +49,7 @@ func FormatCode(path string) (*glob.GlobRet, error) {
 	// 把 code 写到 path 里
 	err = os.WriteFile(path, []byte((strings.Join(stmtStrSlice, "\n\n"))), 0644)
 	if err != nil {
-		return glob.NewGlobErr(fmt.Sprintf("failed to write file %s: %s", path, err.Error())), err
+		return glob.ErrRet(fmt.Sprintf("failed to write file %s: %s", path, err.Error())), err
 	}
 	return glob.NewGlobTrue(fmt.Sprintf("formatted code written to %s", path)), nil
 }

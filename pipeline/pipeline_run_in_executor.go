@@ -43,18 +43,18 @@ func RunFileStmtInExecutor(curExec *exe.Executor, importFileStmt *ast.RunFileStm
 
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 	code := string(content)
 
 	// stmtSlice, err := ast.ParseSourceCode(code, curExec.Env.EnvPkgMgr.PkgMgr)
 	// if err != nil {
-	// 	return glob.NewGlobErr(err.Error())
+	// 	return glob.ErrRet(err.Error())
 	// }
 
 	blocks, err := ast.PreprocessAndMakeSourceCodeIntoBlocks(code)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 
 	p := ast.NewTbParser(curExec.Env.EnvPkgMgr.PkgMgr)
@@ -62,12 +62,12 @@ func RunFileStmtInExecutor(curExec *exe.Executor, importFileStmt *ast.RunFileStm
 	for _, block := range blocks {
 		topStmt, err := p.Stmt(&block)
 		if err != nil {
-			return glob.NewGlobErr(err.Error())
+			return glob.ErrRet(err.Error())
 		}
 		ret := RunStmtInExecutor(curExec, topStmt)
 		msgs = append(msgs, ret.String())
 		if ret.IsNotTrue() {
-			return glob.NewGlobErr(strings.Join(msgs, "\n"))
+			return glob.ErrRet(strings.Join(msgs, "\n"))
 		}
 	}
 
@@ -84,7 +84,7 @@ func RunImportStmtInExecutor(curExec *exe.Executor, importStmt *ast.ImportDirStm
 	if newPkgImported {
 		absPath, err := absPathOfImportStmtPath(curExec.Env.EnvPkgMgr.PkgMgr, importStmt)
 		if err != nil {
-			return glob.NewGlobErr(err.Error())
+			return glob.ErrRet(err.Error())
 		}
 		curExec.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap[absPath] = newEnvMgr
 	}
@@ -101,7 +101,7 @@ func RunImportStmtToGetEnvMgr(pkgMgr *packageMgr.PkgMgr, importStmt *ast.ImportD
 	if importStmt.IsGlobalPkg {
 		importRepoAbsPath, err = glob.GetGlobalPkgAbsPath(importStmt.AsPkgName)
 		if err != nil {
-			return false, nil, glob.NewGlobErr(err.Error())
+			return false, nil, glob.ErrRet(err.Error())
 		}
 	} else {
 		importRepoAbsPath = filepath.Join(pkgMgr.CurRepoAbsPath, importStmt.RelativePathOrGlobalPkgName)
@@ -119,7 +119,7 @@ func RunImportStmtToGetEnvMgr(pkgMgr *packageMgr.PkgMgr, importStmt *ast.ImportD
 		} else {
 			// 这个name已经用过了，需要验证一下是不是之前对应的也是目前的abs path
 			if path != importRepoAbsPath {
-				return false, nil, glob.NewGlobErr(fmt.Sprintf("error at %s:\npackage name %s is already used for repository %s, it can not be name for %s", importStmt, importStmt.AsPkgName, path, importRepoAbsPath))
+				return false, nil, glob.ErrRet(fmt.Sprintf("error at %s:\npackage name %s is already used for repository %s, it can not be name for %s", importStmt, importStmt.AsPkgName, path, importRepoAbsPath))
 			}
 		}
 	}

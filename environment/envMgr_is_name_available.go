@@ -32,18 +32,18 @@ func (envMgr *EnvMgr) IsNameUnavailable(name string, extraParams map[string]stru
 		return glob.NewEmptyGlobTrue()
 	}
 
-	return glob.ErrRet(fmt.Errorf("undefined: %s", name))
+	return glob.ErrRet(fmt.Sprintf("undefined: %s", name))
 }
 
 func (envMgr *EnvMgr) IsValidAndAvailableName(name string) *glob.GlobRet {
 	err := glob.IsValidUseDefinedName(name)
 	if err != nil {
-		return glob.ErrRet(err)
+		return glob.ErrRetWithErr(err)
 	}
 
 	defined := envMgr.IsNameUnavailable(name, map[string]struct{}{})
 	if defined.IsTrue() {
-		return glob.ErrRet(duplicateDefError(name))
+		return glob.ErrRetWithErr(duplicateDefError(name))
 	}
 
 	return glob.NewEmptyGlobTrue()

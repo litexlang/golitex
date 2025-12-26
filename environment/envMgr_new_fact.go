@@ -23,7 +23,8 @@ import (
 func (envMgr *EnvMgr) NewFactWithoutCheckingNameDefined(stmt ast.FactStmt) *glob.GlobRet {
 	// 检查是否符合要求：比如涉及到的符号是否都定义了
 	if ret := envMgr.LookUpNamesInFact(stmt, map[string]struct{}{}); ret.IsNotTrue() {
-		return glob.NewGlobErr(stmt.String()).AddMsg(ret.String())
+		// return glob.ErrRet(stmt.String()).AddMsg(ret.String())
+		return glob.ErrRet(fmt.Sprintf(stmt.String())).AddError(ret.String())
 	}
 
 	switch f := stmt.(type) {
@@ -38,7 +39,7 @@ func (envMgr *EnvMgr) NewFactWithoutCheckingNameDefined(stmt ast.FactStmt) *glob
 	case *ast.EqualsFactStmt:
 		return envMgr.newEqualsFact(f)
 	default:
-		return glob.ErrRet(fmt.Errorf("unknown fact type: %T", stmt))
+		return glob.ErrRet(fmt.Sprintf("unknown fact type: %T", stmt))
 	}
 }
 
@@ -57,14 +58,14 @@ func (envMgr *EnvMgr) newUniFact(stmt *ast.UniFactStmt) *glob.GlobRet {
 		case *ast.EqualsFactStmt:
 			ret = envMgr.newUniFact_ThenFactIsEqualsFactStmt(stmt, asFact)
 		default:
-			return glob.ErrRet(fmt.Errorf("invalid then fact type: %s", thenStmt))
+			return glob.ErrRet(fmt.Sprintf("invalid then fact type: %s", thenStmt))
 		}
 
 		if ret.IsErr() {
 			return ret
 		}
 	}
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) *glob.GlobRet {
@@ -80,7 +81,7 @@ func (envMgr *EnvMgr) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) *glob.Glob
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) newOrFact(fact *ast.OrStmt) *glob.GlobRet {
@@ -124,7 +125,7 @@ func (envMgr *EnvMgr) newSpecFact(fact *ast.SpecFactStmt) *glob.GlobRet {
 		return ieRet
 	}
 
-	return ret.AddMsgs(ieRet.GetMsgs())
+	return ret.AddInfers(ieRet.Infer)
 }
 
 func (envMgr *EnvMgr) newTrueEqual(fact *ast.SpecFactStmt) *glob.GlobRet {
@@ -147,7 +148,7 @@ func (envMgr *EnvMgr) newEqualsFact(stmt *ast.EqualsFactStmt) *glob.GlobRet {
 			return ret
 		}
 	}
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFact *ast.SpecFactStmt) *glob.GlobRet {
@@ -174,7 +175,7 @@ func (envMgr *EnvMgr) newUniFact_ThenFactIsIffStmt(stmt *ast.UniFactStmt, thenFa
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) newUniFact_ThenFactIsUniFactStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactStmt) *glob.GlobRet {
@@ -190,7 +191,7 @@ func (envMgr *EnvMgr) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt,
 			return ret
 		}
 	}
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) storeUniFactInMem(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) *glob.GlobRet {

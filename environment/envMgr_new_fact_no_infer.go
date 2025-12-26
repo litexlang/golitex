@@ -35,7 +35,7 @@ func (envMgr *EnvMgr) newFactNoInfer(stmt ast.FactStmt) *glob.GlobRet {
 	case *ast.EqualsFactStmt:
 		return envMgr.newEqualsFactNoInfer(f)
 	default:
-		return glob.ErrRet(fmt.Errorf("unknown fact type: %T", stmt))
+		return glob.ErrRet(fmt.Sprintf("unknown fact type: %T", stmt))
 	}
 }
 
@@ -51,7 +51,7 @@ func (envMgr *EnvMgr) newSpecFactNoInfer(fact *ast.SpecFactStmt) *glob.GlobRet {
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 // newTrueEqualNoInfer stores an equality fact without performing any inference.
@@ -59,7 +59,7 @@ func (envMgr *EnvMgr) newSpecFactNoInfer(fact *ast.SpecFactStmt) *glob.GlobRet {
 // but does not trigger equality-related inferences (e.g., cart, tuple, listSet).
 func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.SpecFactStmt) *glob.GlobRet {
 	if len(fact.Params) != 2 {
-		return glob.ErrRet(fmt.Errorf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
+		return glob.ErrRet(fmt.Sprintf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
 
 	ret := envMgr.storeTrueEqualInEqualMemNoInfer(fact)
@@ -73,7 +73,7 @@ func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.SpecFactStmt) *glob.GlobRet 
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 // newEqualsFactNoInfer stores an EqualsFact without performing any inference.
@@ -86,7 +86,7 @@ func (envMgr *EnvMgr) newEqualsFactNoInfer(stmt *ast.EqualsFactStmt) *glob.GlobR
 			return ret
 		}
 	}
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) *glob.GlobRet {
@@ -103,14 +103,14 @@ func (envMgr *EnvMgr) newUniFactNoInfer(stmt *ast.UniFactStmt) *glob.GlobRet {
 		case *ast.OrStmt:
 			ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
 		default:
-			return glob.ErrRet(fmt.Errorf("invalid then fact type: %s", thenStmt))
+			return glob.ErrRet(fmt.Sprintf("invalid then fact type: %s", thenStmt))
 		}
 
 		if ret.IsErr() {
 			return ret
 		}
 	}
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) newUniFactWithIffNoInfer(stmt *ast.UniFactWithIffStmt) *glob.GlobRet {
@@ -126,7 +126,5 @@ func (envMgr *EnvMgr) newUniFactWithIffNoInfer(stmt *ast.UniFactWithIffStmt) *gl
 		return ret
 	}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }
-
-

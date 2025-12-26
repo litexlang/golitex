@@ -63,12 +63,12 @@ func NotImplementedMsg(s string, args ...any) string {
 	return fmt.Sprintf("Feature Not Implemented (Will be implemented in the future):\n%s\n\n", fmt.Sprintf(s, args...))
 }
 
-func InferMsgs(msg []string) string {
-	if len(msg) == 0 {
-		return ""
-	}
-	return fmt.Sprintf("infer:\n%s\n", strings.Join(msg, "\n"))
-}
+// func InferMsgs(msg []string) string {
+// 	if len(msg) == 0 {
+// 		return ""
+// 	}
+// 	return fmt.Sprintf("infer:\n%s\n", strings.Join(msg, "\n"))
+// }
 
 func InferMsg(msg string) string {
 	if msg == "" {

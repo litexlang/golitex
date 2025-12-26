@@ -26,7 +26,7 @@ func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, 
 	if replaced {
 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state.CopyAndReqOkToFalse())
 		if verRet.IsErr() {
-			return glob.NewGlobErr("failed to verify true equal fact: " + verRet.String())
+			return glob.ErrRet("failed to verify true equal fact: " + verRet.String())
 		}
 
 		if verRet.IsTrue() {

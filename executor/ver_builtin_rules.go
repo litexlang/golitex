@@ -96,12 +96,12 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *Ver
 	}
 
 	if len(stmt.Params) != 2 {
-		return glob.NewGlobErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
+		return glob.ErrRet(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
 	}
 
 	leftNumLitExpr, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[0])
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 	if !ok {
 		return glob.NewEmptyGlobUnknown()
@@ -109,7 +109,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *Ver
 
 	rightNumLitExpr, ok, err := ast.MakeObjIntoNumLitExpr(stmt.Params[1])
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 	if !ok {
 		return glob.NewEmptyGlobUnknown()
@@ -118,7 +118,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt *ast.SpecFactStmt, state *Ver
 	ok, err = glob.NumLitExprCompareOpt(leftNumLitExpr, rightNumLitExpr, string(stmt.PropName))
 
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 	if ok {
 		return ver.maybeAddSuccessMsgString(state, stmt.String(), "builtin rules", glob.NewEmptyGlobTrue())
@@ -141,7 +141,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 	}()
 
 	if len(stmt.Params) != 2 {
-		return glob.NewGlobErr(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
+		return glob.ErrRet(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(stmt.Params)))
 	}
 
 	// 先评估表达式
@@ -184,7 +184,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 
 	leftObj, ok, err := ast.MakeObjIntoNumLitExpr(toEval)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 	if ok {
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordReal) {
@@ -241,7 +241,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 // - forall t b : t $in a
 func (ver *Verifier) verEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 2 {
-		return glob.NewGlobErr(fmt.Sprintf("equal_set expects 2 parameters, got %d", len(stmt.Params)))
+		return glob.ErrRet(fmt.Sprintf("equal_set expects 2 parameters, got %d", len(stmt.Params)))
 	}
 
 	a := stmt.Params[0]
@@ -288,7 +288,7 @@ func (ver *Verifier) verEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 // TODO: 理论上任何obj都是set了现在，因为现在set不再是obj了
 func (ver *Verifier) verIsASetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 1 {
-		return glob.NewGlobErr(fmt.Sprintf("is_a_set expects 1 parameter, got %d", len(stmt.Params)))
+		return glob.ErrRet(fmt.Sprintf("is_a_set expects 1 parameter, got %d", len(stmt.Params)))
 	}
 
 	if glob.IsKeywordSetOrNonEmptySetOrFiniteSet(stmt.Params[0].String()) {
@@ -300,7 +300,7 @@ func (ver *Verifier) verIsASetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 
 func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 1 {
-		return glob.NewGlobErr(fmt.Sprintf("is_a_finite_set expects 1 parameter, got %d", len(stmt.Params)))
+		return glob.ErrRet(fmt.Sprintf("is_a_finite_set expects 1 parameter, got %d", len(stmt.Params)))
 	}
 
 	if ast.IsListSetObj(stmt.Params[0]) {
@@ -317,7 +317,7 @@ func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt *ast.SpecFactStmt, state
 
 func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 1 {
-		return glob.NewGlobErr(fmt.Sprintf("is_a_nonempty_set expects 1 parameter, got %d", len(stmt.Params)))
+		return glob.ErrRet(fmt.Sprintf("is_a_nonempty_set expects 1 parameter, got %d", len(stmt.Params)))
 	}
 
 	if ast.IsListSetObj(stmt.Params[0]) {
@@ -402,7 +402,7 @@ func (ver *Verifier) verIsTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *Ver
 	_ = state
 
 	if len(stmt.Params) != 1 {
-		return glob.NewGlobErr(fmt.Sprintf("is_tuple expects 1 parameter, got %d", len(stmt.Params)))
+		return glob.ErrRet(fmt.Sprintf("is_tuple expects 1 parameter, got %d", len(stmt.Params)))
 	}
 
 	fnObj, ok := stmt.Params[0].(*ast.FnObj)
@@ -457,7 +457,7 @@ func (ver *Verifier) verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonemp
 
 func (ver *Verifier) verIsNonEmptyWithItemByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 2 {
-		return glob.NewGlobErr(fmt.Sprintf("is_nonempty_with_item expects 1 parameter, got %d", len(stmt.Params)))
+		return glob.ErrRet(fmt.Sprintf("is_nonempty_with_item expects 1 parameter, got %d", len(stmt.Params)))
 	}
 
 	inFact := ast.NewInFactWithObj(stmt.Params[1], stmt.Params[0])

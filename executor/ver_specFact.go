@@ -56,7 +56,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *as
 	if ver.Env.IsCommutativeProp(stmt) {
 		reverseParamsOrderStmt, err := stmt.ReverseParameterOrder()
 		if err != nil {
-			return glob.NewGlobErr(err.Error())
+			return glob.ErrRet(err.Error())
 		}
 		if verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(reverseParamsOrderStmt, state); verRet.IsTrue() || verRet.IsErr() {
 			return verRet
@@ -204,7 +204,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	// TODO: ? 这里还需要检查吗？或者说是在这里检查吗？难道prop的关于参数的检查不应该在更顶层的函数里？
 	paramSetFacts, err := defStmt.DefHeader.GetInstantiatedParamInParamSetFact(paramArrMap)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 
 	for _, paramSetFact := range paramSetFacts {
@@ -217,7 +217,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
 	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 	// prove all domFacts are true
 	for _, domFact := range instantiatedIffToProp.DomFacts {
@@ -237,7 +237,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	propDef := ver.Env.GetExistPropDef(stmt.PropName)
 	if propDef == nil {
 		// TODO: 如果没声明，应该报错
-		return glob.NewGlobErr(fmt.Errorf("%s has no definition", stmt.PropName).Error())
+		return glob.ErrRet(fmt.Sprintf("%s has no definition", stmt.PropName).Error())
 	}
 
 	uniConMap := map[string]ast.Obj{}
@@ -252,7 +252,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	// given objects are in their param sets
 	instParamSets, err := propDef.ExistParamSets.Instantiate(uniConMap)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 	for i := range instParamSets {
 		verRet := ver.VerFactStmt(ast.NewInFactWithObj(existParams[i], instParamSets[i]), state)
@@ -271,12 +271,12 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 
 	domFacts, err := propDef.DefBody.DomFactsOrNil.InstantiateFact(uniConMap)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 
 	iffFacts, err := propDef.DefBody.IffFactsOrNil.InstantiateFact(uniConMap)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 
 	for _, domFact := range domFacts {
@@ -353,7 +353,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 
 	_, areEqual, err := cmp.NumLitEqual_ByEval(leftValue, rightValue)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 	if !areEqual {
 		if state != nil {
@@ -365,7 +365,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 	// // 如果左右两边能是能被处理的数字
 	// areBothNumLit, areEqual, err := cmp.NumLitEqual_ByEval(stmt.Params[0], stmt.Params[1])
 	// if err != nil {
-	// 	return glob.NewGlobErr(err.Error())
+	// 	return glob.ErrRet(err.Error())
 	// }
 	// if areBothNumLit {
 	// 	if !areEqual { // 这里是在证明两边不相等
@@ -410,7 +410,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 	// TODO: ? 这里还需要检查吗？或者说是在这里检查吗？难道prop的关于参数的检查不应该在更顶层的函数里？
 	paramSetFacts, err := defStmt.DefHeader.GetInstantiatedParamInParamSetFact(paramArrMap)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 
 	for _, paramSetFact := range paramSetFacts {
@@ -423,7 +423,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
 	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 
 	// 某个fact是false的，那就OK了
@@ -449,7 +449,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 // $equal_tuple(left, right, dim)
 func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 3 {
-		return glob.NewGlobErr(fmt.Sprintf("equal_tuple should have 3 params, but got %d", len(stmt.Params)))
+		return glob.ErrRet(fmt.Sprintf("equal_tuple should have 3 params, but got %d", len(stmt.Params)))
 	}
 
 	left := stmt.Params[0]
@@ -516,7 +516,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 			}
 		}
 		if !ok {
-			return glob.NewGlobErr(fmt.Sprintf("cannot determine integer value of dim %s", dim))
+			return glob.ErrRet(fmt.Sprintf("cannot determine integer value of dim %s", dim))
 		}
 	}
 

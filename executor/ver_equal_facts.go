@@ -28,7 +28,7 @@ import (
 func (ver *Verifier) cmpObj_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.Obj, state *VerState) *glob.GlobRet {
 	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 	if ok {
 		// return ver.equalTrueAddSuccessMsg(left, right, state, msg)

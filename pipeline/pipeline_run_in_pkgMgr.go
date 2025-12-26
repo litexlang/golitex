@@ -30,17 +30,17 @@ func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bo
 	envPkgMgr := env.NewEnvPkgMgr(pkgMgr)
 	envMgr, err := NewBuiltinEnvMgrWithNewEmptyEnv(envPkgMgr)
 	if err != nil {
-		return nil, glob.NewGlobErr(err.Error())
+		return nil, glob.ErrRet(err.Error())
 	}
 
 	// stmtSlice, err := ast.ParseSourceCode(code, pkgMgr)
 	// if err != nil {
-	// 	return nil, glob.NewGlobErr(err.Error())
+	// 	return nil, glob.ErrRet(err.Error())
 	// }
 
 	blocks, err := ast.PreprocessAndMakeSourceCodeIntoBlocks(code)
 	if err != nil {
-		return nil, glob.NewGlobErr(err.Error())
+		return nil, glob.ErrRet(err.Error())
 	}
 
 	p := ast.NewTbParser(pkgMgr)
@@ -49,12 +49,12 @@ func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bo
 	for _, block := range blocks {
 		topStmt, err := p.Stmt(&block)
 		if err != nil {
-			return nil, glob.NewGlobErr(err.Error())
+			return nil, glob.ErrRet(err.Error())
 		}
 		ret := RunStmtInExecutor(curExec, topStmt)
 		msgs = append(msgs, ret.String())
 		if ret.IsNotTrue() {
-			return nil, glob.NewGlobErr(strings.Join(msgs, "\n"))
+			return nil, glob.ErrRet(strings.Join(msgs, "\n"))
 		}
 	}
 
@@ -68,12 +68,12 @@ func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bo
 
 func RunFileInPkgMgr(fileAbsPath string, curPkgName string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, *glob.GlobRet) {
 	if fileAbsPath == "" {
-		return nil, glob.NewGlobErr("filePath is empty")
+		return nil, glob.ErrRet("filePath is empty")
 	}
 
 	cleanFileAbsPath := filepath.Clean(fileAbsPath)
 	if cleanFileAbsPath == "" {
-		return nil, glob.NewGlobErr(fmt.Sprintf("file path %s error", fileAbsPath))
+		return nil, glob.ErrRet(fmt.Sprintf("file path %s error", fileAbsPath))
 	}
 
 	// 更新 current working repo
@@ -90,7 +90,7 @@ func RunFileInPkgMgr(fileAbsPath string, curPkgName string, pkgMgr *packageMgr.P
 	// 获得那个 main.lit
 	code, err := os.ReadFile(cleanFileAbsPath)
 	if err != nil {
-		return nil, glob.NewGlobErr(err.Error())
+		return nil, glob.ErrRet(err.Error())
 	}
 
 	return RunCodeInPkgMgr(string(code), pkgMgr, removeBuiltinEnv)
