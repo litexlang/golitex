@@ -44,5 +44,5 @@ func CompileCodeToLatex(code string) (*glob.GlobRet, error) {
 		return glob.ErrRet(err.Error()), err
 	}
 
-	return glob.NewGlobTrue(latexStr), nil
+	return glob.GlobTrue(latexStr), nil
 }

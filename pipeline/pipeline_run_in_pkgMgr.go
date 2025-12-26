@@ -60,10 +60,10 @@ func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bo
 
 	if removeBuiltinEnv {
 		envMgrWithoutBuiltinLogic := envMgr.RemoveBuiltinEnv()
-		return envMgrWithoutBuiltinLogic, glob.NewGlobTrue(strings.Join(msgs, "\n"))
+		return envMgrWithoutBuiltinLogic, glob.GlobTrue(strings.Join(msgs, "\n"))
 	}
 
-	return envMgr, glob.NewGlobTrue(strings.Join(msgs, "\n"))
+	return envMgr, glob.GlobTrue(strings.Join(msgs, "\n"))
 }
 
 func RunFileInPkgMgr(fileAbsPath string, curPkgName string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, *glob.GlobRet) {

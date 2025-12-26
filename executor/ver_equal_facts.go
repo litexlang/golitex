@@ -32,7 +32,7 @@ func (ver *Verifier) cmpObj_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.
 	}
 	if ok {
 		// return ver.equalTrueAddSuccessMsg(left, right, state, msg)
-		return glob.NewGlobTrue(msg)
+		return glob.GlobTrue(msg)
 	}
 
 	// if ok {

@@ -29,17 +29,17 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) *glob
 	startIsNPos := proveByInduction_Fact_Start_is_NPos(stmt)
 	verRet := ver.VerFactStmt(startIsNPos, Round0NoMsg())
 	if verRet.IsErr() {
-		var result *glob.GlobRet = glob.ErrRet(fmt.Sprintf(verRet.String()).Error())
-		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddMsg(verRet.String())
+		var result *glob.GlobRet = glob.ErrRet(fmt.Sprintf(verRet.String()))
+		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddError(verRet.String())
 		return result
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", startIsNPos.String())
 		var result *glob.GlobRet = glob.NewEmptyGlobUnknown()
-		result = result.AddMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
+		result = result.AddError(fmt.Sprintf("%s\nfailed\n", stmt.String()))
 		if msg != "" {
-			result = result.AddMsg(msg)
+			result = result.AddError(msg)
 		}
 		return result
 	}
@@ -48,23 +48,23 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) *glob
 	startFact, err := proveByInduction_newStartFact(stmt)
 	if err != nil {
 		var result *glob.GlobRet = glob.ErrRet(err.Error())
-		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddMsg(err.Error())
+		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddError(err.Error())
 		return result
 	}
 	verRet = ver.VerFactStmt(startFact, Round0NoMsg())
 	if verRet.IsErr() {
 		result := verRet
-		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddMsg(verRet.String())
+		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddError(verRet.String())
 		return result
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", startFact.String())
 		var result *glob.GlobRet = glob.NewEmptyGlobUnknown()
-		result = result.AddMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
+		result = result.AddUnknown(fmt.Sprintf("%s\nfailed\n", stmt.String()))
 		if msg != "" {
-			result = result.AddMsg(msg)
+			result = result.AddUnknown(msg)
 		}
 		return result
 	}
@@ -73,23 +73,23 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) *glob
 	uniFact_n_true_leads_n_plus_1_true, err := proveByInduction_newUniFact_n_true_leads_n_plus_1_true(stmt)
 	if err != nil {
 		var result *glob.GlobRet = glob.ErrRet(err.Error())
-		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddMsg(err.Error())
+		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddError(err.Error())
 		return result
 	}
 	verRet = ver.VerFactStmt(uniFact_n_true_leads_n_plus_1_true, Round0NoMsg())
 	if verRet.IsErr() {
-		var result *glob.GlobRet = glob.ErrRet(fmt.Sprintf(verRet.String()).Error())
-		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddMsg(verRet.String())
+		var result *glob.GlobRet = glob.ErrRet(fmt.Sprintf(verRet.String()))
+		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddError(verRet.String())
 		return result
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", uniFact_n_true_leads_n_plus_1_true.String())
 		var result *glob.GlobRet = glob.NewEmptyGlobUnknown()
-		result = result.AddMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
+		result = result.AddUnknown(fmt.Sprintf("%s\nfailed\n", stmt.String()))
 		if msg != "" {
-			result = result.AddMsg(msg)
+			result = result.AddUnknown(msg)
 		}
 		return result
 	}
@@ -99,13 +99,12 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) *glob
 	ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact_forall_param_geq_start_then_fact_is_true)
 	if ret.IsErr() {
 		var result *glob.GlobRet = glob.ErrRet(ret.String())
-		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddMsg(ret.String())
+		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddError(ret.String())
 		return result
 	}
 
 	var result *glob.GlobRet = glob.NewEmptyGlobTrue()
-	result = result.AddMsg(fmt.Sprintf("%s\nsuccess\n", stmt.String()))
 	return result
 }
 

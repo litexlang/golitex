@@ -38,7 +38,7 @@ package litex_global
 // 	AddMsgAtBegin(msg string) GlobRet
 // }
 
-// type GlobTrue struct {
+// type GlobTrue( struct {
 // 	Msg []string
 // }
 
@@ -50,14 +50,14 @@ package litex_global
 // 	Msg []string
 // }
 
-// func (v *GlobTrue) globRet()              {}
-// func (v *GlobTrue) IsTrue() bool          { return true }
-// func (v *GlobTrue) IsUnknown() bool       { return false }
-// func (v *GlobTrue) IsErr() bool           { return false }
-// func (v *GlobTrue) String() string        { return strings.Join(v.Msg, "\n") }
-// func (v *GlobTrue) IsNotTrue() bool       { return false }
-// func (v *GlobTrue) IsNotUnknown() bool    { return true }
-// func (v *GlobTrue) IsNotErr() bool        { return true }
+// func (v *GlobTrue() globRet()              {}
+// func (v *GlobTrue() IsTrue() bool          { return true }
+// func (v *GlobTrue() IsUnknown() bool       { return false }
+// func (v *GlobTrue() IsErr() bool           { return false }
+// func (v *GlobTrue() String() string        { return strings.Join(v.Msg, "\n") }
+// func (v *GlobTrue() IsNotTrue() bool       { return false }
+// func (v *GlobTrue() IsNotUnknown() bool    { return true }
+// func (v *GlobTrue() IsNotErr() bool        { return true }
 // func (v *GlobErr) globRet()               {}
 // func (v *GlobErr) IsTrue() bool           { return false }
 // func (v *GlobErr) IsUnknown() bool        { return false }
@@ -96,11 +96,11 @@ package litex_global
 // 	return NewGlobUnknownWithMsgs([]string{})
 // }
 
-// func NewGlobTrue(s string) GlobRet {
+// func GlobTrue(s string) GlobRet {
 // 	if s != "" {
-// 		return &GlobTrue{Msg: []string{s}}
+// 		return &GlobTrue({Msg: []string{s}}
 // 	}
-// 	return &GlobTrue{Msg: []string{}}
+// 	return &GlobTrue({Msg: []string{}}
 // }
 
 // func NewGlobUnknown(s string) GlobRet {
@@ -111,7 +111,7 @@ package litex_global
 // }
 
 // func NewGlobTrueWithMsgs(msgs []string) GlobRet {
-// 	return &GlobTrue{Msg: msgs}
+// 	return &GlobTrue({Msg: msgs}
 // }
 
 // func NewGlobErrWithMsgs(msgs []string) GlobRet {
@@ -127,10 +127,10 @@ package litex_global
 // 	if err != nil {
 // 		return NewGlobErr(err.Error())
 // 	}
-// 	return NewEmptyGlobErr()
+// 	return NewEmptyGlobError()
 // }
 
-// func (v *GlobTrue) GetREPLMsg() string {
+// func (v *GlobTrue() GetREPLMsg() string {
 // 	return REPLSuccessMessage
 // }
 
@@ -142,7 +142,7 @@ package litex_global
 // 	return REPLErrorMessage
 // }
 
-// func (v *GlobTrue) GetMsgs() []string {
+// func (v *GlobTrue() GetMsgs() []string {
 // 	return v.Msg
 // }
 
@@ -154,7 +154,7 @@ package litex_global
 // 	return v.Msg
 // }
 
-// // func (v *GlobTrue) StringWithOptimizedNewline() string {
+// // func (v *GlobTrue() StringWithOptimizedNewline() string {
 // // 	// 把末尾的空
 // // 	s := strings.Trim(v.String(), "\n\t ")
 // // 	// 将3个或更多连续的\n替换成\n\n
@@ -176,7 +176,7 @@ package litex_global
 // // 	return fmt.Sprintf("%s\n", s)
 // // }
 
-// func (v *GlobTrue) AddMsg(msg string) GlobRet {
+// func (v *GlobTrue() AddMsg(msg string) GlobRet {
 // 	v.Msg = append(v.Msg, msg)
 // 	return v
 // }
@@ -199,11 +199,11 @@ package litex_global
 // 	return NewGlobUnknownWithMsgs([]string{})
 // }
 
-// func NewEmptyGlobErr() GlobRet {
+// func NewEmptyGlobError() GlobRet {
 // 	return NewGlobErrWithMsgs([]string{})
 // }
 
-// func (v *GlobTrue) AddNewREPLMsg() GlobRet {
+// func (v *GlobTrue() AddNewREPLMsg() GlobRet {
 // 	v.Msg = append(v.Msg, REPLSuccessMessage)
 // 	return v
 // }
@@ -218,7 +218,7 @@ package litex_global
 // 	return v
 // }
 
-// func (v *GlobTrue) AddMsgs(msgs []string) GlobRet {
+// func (v *GlobTrue() AddMsgs(msgs []string) GlobRet {
 // 	v.Msg = append(v.Msg, msgs...)
 // 	return v
 // }
@@ -233,7 +233,7 @@ package litex_global
 // 	return v
 // }
 
-// func (v *GlobTrue) AddNewLineAndMsg(msg string) GlobRet {
+// func (v *GlobTrue() AddNewLineAndMsg(msg string) GlobRet {
 // 	v.Msg = append(v.Msg, "\n", msg)
 // 	return v
 // }
@@ -248,7 +248,7 @@ package litex_global
 // 	return v
 // }
 
-// func (v *GlobTrue) AddMsgAtBegin(msg string) GlobRet {
+// func (v *GlobTrue() AddMsgAtBegin(msg string) GlobRet {
 // 	v.Msg = append([]string{msg}, v.Msg...)
 // 	return v
 // }

@@ -51,7 +51,7 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 	for _, proof := range proofs {
 		verRet := ver.VerFactStmt(proof, verState)
 		if verRet.IsErr() {
-			return glob.NewEmptyGlobErr(), proof, fmt.Errorf(verRet.String())
+			return glob.NewEmptyGlobError(), proof, fmt.Errorf(verRet.String())
 		} else if verRet.IsUnknown() {
 			return glob.NewEmptyGlobUnknown(), proof, nil
 		}
