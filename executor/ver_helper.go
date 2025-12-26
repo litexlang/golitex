@@ -29,7 +29,7 @@ func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy as
 	return execRet
 }
 
-// maybeAddSuccessMsgString is a backward compatibility function for string-based messagesglob.GlobRet
+// maybeAddSuccessMsgString is a backward compatibility function for string-based
 func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet glob.GlobRet) glob.GlobRet {
 	if state == nil {
 		panic("")
