@@ -53,16 +53,16 @@ func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bo
 		ret := RunStmtInExecutor(curExec, topStmt)
 		innerGlobRets = append(innerGlobRets, ret)
 		if ret.IsNotTrue() {
-			return nil, glob.ErrRet(ret.String())
+			return nil, glob.NewGlobWithInnerGlobRets(innerGlobRets, ret.Type)
 		}
 	}
 
 	if removeBuiltinEnv {
 		envMgrWithoutBuiltinLogic := envMgr.RemoveBuiltinEnv()
-		return envMgrWithoutBuiltinLogic, glob.NewGlobTrueWithInnerGlobRets(innerGlobRets)
+		return envMgrWithoutBuiltinLogic, glob.NewGlobWithInnerGlobRets(innerGlobRets, glob.GlobRetTypeTrue)
 	}
 
-	return envMgr, glob.NewGlobTrueWithInnerGlobRets(innerGlobRets)
+	return envMgr, glob.NewGlobWithInnerGlobRets(innerGlobRets, glob.GlobRetTypeTrue)
 }
 
 func RunFileInPkgMgr(fileAbsPath string, curPkgName string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, *glob.GlobRet) {
