@@ -28,15 +28,11 @@ type GlobRet interface {
 	IsUnknown() bool
 	IsErr() bool
 	String() string
-	ToBoolErr() (bool, error)
 	IsNotTrue() bool
 	IsNotUnknown() bool
 	IsNotErr() bool
-	Inherit(globRet GlobRet)
-	Error() error
 	GetMsgs() []string
 	StringWithOptimizedNewline() string
-	GetREPLMsg() string
 	AddMsg(msg string) GlobRet
 	AddNewREPLMsg() GlobRet
 	AddMsgs(msgs []string) GlobRet
@@ -54,33 +50,30 @@ type GlobErr struct {
 	Msg []string
 }
 
-func (v *GlobTrue) globRet()                    {}
-func (v *GlobTrue) IsTrue() bool                { return true }
-func (v *GlobTrue) IsUnknown() bool             { return false }
-func (v *GlobTrue) IsErr() bool                 { return false }
-func (v *GlobTrue) String() string              { return strings.Join(v.Msg, "\n") }
-func (v *GlobTrue) ToBoolErr() (bool, error)    { return true, nil }
-func (v *GlobTrue) IsNotTrue() bool             { return false }
-func (v *GlobTrue) IsNotUnknown() bool          { return true }
-func (v *GlobTrue) IsNotErr() bool              { return true }
-func (v *GlobErr) globRet()                     {}
-func (v *GlobErr) IsTrue() bool                 { return false }
-func (v *GlobErr) IsUnknown() bool              { return false }
-func (v *GlobErr) IsErr() bool                  { return true }
-func (v *GlobErr) String() string               { return strings.Join(v.Msg, "\n") }
-func (v *GlobErr) ToBoolErr() (bool, error)     { return false, fmt.Errorf(v.String()) }
-func (v *GlobErr) IsNotTrue() bool              { return true }
-func (v *GlobErr) IsNotUnknown() bool           { return true }
-func (v *GlobErr) IsNotErr() bool               { return false }
-func (v *GlobUnknown) globRet()                 {}
-func (v *GlobUnknown) IsTrue() bool             { return false }
-func (v *GlobUnknown) IsUnknown() bool          { return true }
-func (v *GlobUnknown) IsErr() bool              { return false }
-func (v *GlobUnknown) String() string           { return strings.Join(v.Msg, "\n") }
-func (v *GlobUnknown) ToBoolErr() (bool, error) { return false, nil }
-func (v *GlobUnknown) IsNotTrue() bool          { return true }
-func (v *GlobUnknown) IsNotUnknown() bool       { return false }
-func (v *GlobUnknown) IsNotErr() bool           { return true }
+func (v *GlobTrue) globRet()              {}
+func (v *GlobTrue) IsTrue() bool          { return true }
+func (v *GlobTrue) IsUnknown() bool       { return false }
+func (v *GlobTrue) IsErr() bool           { return false }
+func (v *GlobTrue) String() string        { return strings.Join(v.Msg, "\n") }
+func (v *GlobTrue) IsNotTrue() bool       { return false }
+func (v *GlobTrue) IsNotUnknown() bool    { return true }
+func (v *GlobTrue) IsNotErr() bool        { return true }
+func (v *GlobErr) globRet()               {}
+func (v *GlobErr) IsTrue() bool           { return false }
+func (v *GlobErr) IsUnknown() bool        { return false }
+func (v *GlobErr) IsErr() bool            { return true }
+func (v *GlobErr) String() string         { return strings.Join(v.Msg, "\n") }
+func (v *GlobErr) IsNotTrue() bool        { return true }
+func (v *GlobErr) IsNotUnknown() bool     { return true }
+func (v *GlobErr) IsNotErr() bool         { return false }
+func (v *GlobUnknown) globRet()           {}
+func (v *GlobUnknown) IsTrue() bool       { return false }
+func (v *GlobUnknown) IsUnknown() bool    { return true }
+func (v *GlobUnknown) IsErr() bool        { return false }
+func (v *GlobUnknown) String() string     { return strings.Join(v.Msg, "\n") }
+func (v *GlobUnknown) IsNotTrue() bool    { return true }
+func (v *GlobUnknown) IsNotUnknown() bool { return false }
+func (v *GlobUnknown) IsNotErr() bool     { return true }
 
 func NewGlobErr(s string) *GlobErr {
 	if s != "" {
@@ -135,30 +128,6 @@ func ErrRet(err error) GlobRet {
 		return NewGlobErr(err.Error())
 	}
 	return NewEmptyGlobErr()
-}
-
-func (v *GlobTrue) Inherit(globRet GlobRet) {
-	v.Msg = append(v.Msg, globRet.String())
-}
-
-func (v *GlobUnknown) Inherit(globRet GlobRet) {
-	v.Msg = append(v.Msg, globRet.String())
-}
-
-func (v *GlobErr) Inherit(globRet GlobRet) {
-	v.Msg = append(v.Msg, globRet.String())
-}
-
-func (v *GlobTrue) Error() error {
-	return nil
-}
-
-func (v *GlobUnknown) Error() error {
-	return nil
-}
-
-func (v *GlobErr) Error() error {
-	return fmt.Errorf(v.String())
 }
 
 func (v *GlobTrue) GetREPLMsg() string {

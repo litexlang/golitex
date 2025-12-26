@@ -66,9 +66,9 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 	return NewEmptyExecUnknown()
 }
 
-func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
-	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
-}
+// func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
+// 	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
+// }
 
 func (ver *Verifier) verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, right ast.Obj, state *VerState) ExecRet {
 	if verRet := ver.verEqualBuiltin(left, right, state); verRet.IsErr() || verRet.IsTrue() {
