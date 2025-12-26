@@ -42,44 +42,52 @@ func (m *GlobRet) String() string {
 	if len(m.Stmt) > 0 {
 		builder.WriteString("statement:\n")
 		builder.WriteString(strings.Join(m.Stmt, "\n"))
+		builder.WriteString("\n\n")
 	}
 
 	if len(m.Define) > 0 {
 		builder.WriteString("by definition:\n")
 		builder.WriteString(strings.Join(m.Define, "\n"))
+		builder.WriteString("\n\n")
 	}
 
 	if len(m.NewFact) > 0 {
 		builder.WriteString("new fact:\n")
 		builder.WriteString(strings.Join(m.NewFact, "\n"))
+		builder.WriteString("\n\n")
 	}
 
 	if len(m.VerifyProcess) > 0 {
 		builder.WriteString("verify process:\n")
 		builder.WriteString(strings.Join(m.VerifyProcess, "\n"))
+		builder.WriteString("\n\n")
 	}
 
 	if len(m.Infer) > 0 {
 		builder.WriteString("infer:\n")
 		builder.WriteString(strings.Join(m.Infer, "\n"))
+		builder.WriteString("\n\n")
 	}
 
 	if len(m.Unknown) > 0 {
-		builder.WriteString("unknown:\n")
+		builder.WriteString("unable to verify:\n")
 		builder.WriteString(strings.Join(m.Unknown, "\n"))
+		builder.WriteString("\n\n")
 	}
 
 	if len(m.Error) > 0 {
 		builder.WriteString("error:\n")
 		builder.WriteString(strings.Join(m.Error, "\n"))
+		builder.WriteString("\n\n")
 	}
 
 	if len(m.InnerGlobRetSlice) > 0 {
 		builder.WriteString("details:\n")
 		for _, innerGlobRet := range m.InnerGlobRetSlice {
 			builder.WriteString(innerGlobRet.String())
-			builder.WriteByte('\n')
+			builder.WriteString("\n\n")
 		}
+		builder.WriteString("\n\n")
 	}
 
 	return builder.String()
@@ -316,9 +324,10 @@ func NewGlobTrueWithStmts(stmts []string) *GlobRet {
 	return ret
 }
 
-func NewGlobTrueWithInnerGlobRets(innerGlobRets []*GlobRet) *GlobRet {
+func NewGlobWithInnerGlobRets(innerGlobRets []*GlobRet, msgType GlobRetType) *GlobRet {
 	ret := NewEmptyGlobTrue()
 	ret.InnerGlobRetSlice = innerGlobRets
+	ret.Type = msgType
 	return ret
 }
 

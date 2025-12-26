@@ -91,10 +91,6 @@ func ByDefinitionMsg(msg string) string {
 	return fmt.Sprintf("by definition:\n%s\n", msg)
 }
 
-func NewFactMsg(stmt string) string {
-	return fmt.Sprintf("new fact:\n%s\n", stmt)
-}
-
 func IsANewObjectMsg(obj string) string {
 	return fmt.Sprintf("%s is a new object", obj)
 }

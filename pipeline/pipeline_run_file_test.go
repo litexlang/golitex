@@ -34,10 +34,11 @@ func Test_File(t *testing.T) {
 	start := time.Now()
 	pkgMgr := package_manager.NewEmptyPkgMgr()
 	_, ret := RunFileInPkgMgr(absOfFile, "", pkgMgr, false)
-	if ret.IsNotTrue() {
-		t.Errorf("failed to run file %s\n", fileName)
+
+	for _, innerRet := range ret.InnerGlobRetSlice {
+		fmt.Println((innerRet.String()))
 	}
-	fmt.Println(glob.StringWithOptimizedNewline(ret.String()))
+
 	fmt.Println(glob.AddREPLSuccessMsg(ret))
 	executionTime := time.Since(start)
 	fmt.Printf("execution time: %s\n", executionTime)

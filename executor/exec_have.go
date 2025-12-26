@@ -191,20 +191,26 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.GlobRet
 	ver := NewVerifier(exec.Env)
 
 	inferMsgs := []string{}
+	defineMsgs := []string{}
+	verifyProcessMsgs := []string{}
+
 	for i := range len(stmt.ObjNames) {
 		if ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(stmt.ObjEqualTos[i], Round0NoMsg()); ret.IsNotTrue() {
 			return ret
 		}
 
-		inferMsgs = append(inferMsgs, glob.IsANewObjectMsg(stmt.ObjNames[i]))
+		defineMsgs = append(defineMsgs, glob.IsANewObjectMsg(stmt.ObjNames[i]))
 
-		verRet := ver.VerFactStmt(ast.NewInFactWithObj(stmt.ObjEqualTos[i], stmt.ObjSets[i]), Round0Msg())
+		inFact := ast.NewInFactWithObj(stmt.ObjEqualTos[i], stmt.ObjSets[i])
+		verRet := ver.VerFactStmt(inFact, Round0Msg())
 		if verRet.IsErr() {
 			return glob.ErrRet(verRet.String())
 		}
 		if verRet.IsUnknown() {
 			return glob.ErrRet(fmt.Sprintf("%s is not in %s", stmt.ObjNames[i], stmt.ObjSets[i]))
 		}
+
+		verifyProcessMsgs = append(verifyProcessMsgs, verRet.VerifyProcess...)
 
 		equalFact := ast.NewEqualFact(ast.Atom((stmt.ObjNames[i])), stmt.ObjEqualTos[i])
 		stmtForDef := ast.NewDefLetStmt([]string{(stmt.ObjNames[i])}, []ast.Obj{stmt.ObjSets[i]}, []ast.FactStmt{equalFact}, stmt.Line)
@@ -217,9 +223,6 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.GlobRet
 			return execState
 		}
 
-		inFact := ast.NewInFactWithObj(stmt.ObjEqualTos[i], stmt.ObjSets[i])
-		inferMsgs = append(inferMsgs, inFact.String())
-
 		// 检查 等号右边的东西是否存在
 		ret = exec.Env.LookupNamesInObj(stmt.ObjEqualTos[i], map[string]struct{}{})
 		if ret.IsErr() {
@@ -230,7 +233,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.GlobRet
 		inferMsgs = append(inferMsgs, equalFact.String())
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String()).AddNewFacts(inferMsgs)
+	return glob.NewGlobTrueWithStmt(stmt.String()).AddNewFacts(inferMsgs).AddDefines(defineMsgs).AddVerifyProcesses(verifyProcessMsgs)
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) *glob.GlobRet {

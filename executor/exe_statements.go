@@ -145,18 +145,18 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) *glob.GlobRet {
 	verRet := curVerifier.VerFactStmt(stmt, state)
 
 	if verRet.IsErr() {
-		return verRet.AddError(stmt.String())
+		return verRet.AddStmt(stmt.String())
 	} else if verRet.IsTrue() {
 		ret := exec.Env.NewFactWithoutCheckingNameDefined(stmt)
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String()).AddError(stmt.String())
 		}
-		return glob.NewGlobTrueWithStmt(fmt.Sprintf("%s\n", stmt.String())).AddNewFact(glob.NewFactMsg(stmt.String())).AddVerifyProcesses(verRet.VerifyProcess).AddNewFacts(ret.NewFact)
+		return glob.NewGlobTrueWithStmt(fmt.Sprintf("%s\n", stmt.String())).AddNewFact((stmt.String())).AddVerifyProcesses(verRet.VerifyProcess).AddNewFacts(ret.NewFact)
 	} else if verRet.IsUnknown() {
-		return verRet.AddUnknown(fmt.Sprintf("%s\n", stmt.String()))
+		return verRet.AddStmt(fmt.Sprintf("%s\n", stmt.String())).AddUnknown(stmt.String())
 	} else {
 		execRet := glob.ErrRet("unknown ver ret")
-		return execRet.AddError(fmt.Sprintf("%s\n", stmt.String()))
+		return execRet.AddError(fmt.Sprintf("%s\n", stmt.String())).AddError(stmt.String())
 	}
 }
 

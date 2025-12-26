@@ -67,12 +67,12 @@ func RunFileStmtInExecutor(curExec *exe.Executor, importFileStmt *ast.RunFileStm
 		ret := RunStmtInExecutor(curExec, topStmt)
 		msgs = append(msgs, ret)
 		if ret.IsNotTrue() {
-			return glob.ErrRet(ret.String())
+			return glob.NewGlobWithInnerGlobRets(msgs, ret.Type)
 		}
 	}
 	msgs = append(msgs, glob.NewGlobTrueWithStmt(fmt.Sprintf("%s\n", importFileStmt)))
 	msgs = append(msgs, glob.NewGlobTrueWithStmt(exe.SuccessExecStmtStr(importFileStmt)))
-	return glob.NewGlobTrueWithInnerGlobRets(msgs)
+	return glob.NewGlobWithInnerGlobRets(msgs, glob.GlobRetTypeTrue)
 }
 
 func RunImportStmtInExecutor(curExec *exe.Executor, importStmt *ast.ImportDirStmt) *glob.GlobRet {
