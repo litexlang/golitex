@@ -17,24 +17,25 @@ package litex_executor
 import (
 	ast "golitex/ast"
 	env "golitex/environment"
+	glob "golitex/glob"
 )
 
-func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState) ExecRet {
+func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState) glob.GlobRet {
 	leftLatestFnT := ver.Env.GetLatestFnT_GivenNameIsIn(left.String())
 	if leftLatestFnT == nil {
-		return NewEmptyExecUnknown()
+		return glob.NewEmptyGlobUnknown()
 	}
 
 	// right dom <= left dom. on right dom left has all those then facts
 	rightDefT := ver.Env.GetFnTemplateDef_KeyIsObjHead(right)
 	if rightDefT == nil {
-		return NewEmptyExecUnknown()
+		return glob.NewEmptyGlobUnknown()
 	}
 
 	ok := ver.leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftLatestFnT, rightDefT, left, right, state)
 
 	if !ok {
-		return NewEmptyExecUnknown()
+		return glob.NewEmptyGlobUnknown()
 	}
 
 	templateParamUniMap := map[string]ast.Obj{}
@@ -44,10 +45,10 @@ func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState
 
 	ok = ver.f_satisfy_FnT_ThenFacts_On_FnT_Dom(left, string(rightDefT.TemplateDefHeader.Name), templateParamUniMap, rightDefT.Fn, state)
 	if !ok {
-		return NewEmptyExecUnknown()
+		return glob.NewEmptyGlobUnknown()
 	}
 
-	return NewEmptyExecTrue()
+	return glob.NewEmptyGlobTrue()
 }
 
 // right dom is subset of left dom
@@ -84,8 +85,11 @@ func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruc
 	uniFact := ast.NewUniFact(uniParams, uniParamSets, uniDom, uniThen, rightFnTDef.Line)
 
 	verRet := ver.VerFactStmt(uniFact, state)
-	ok, _ := verRet.ToBoolErr()
-	return ok
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return false
+	}
+
+	return true
 }
 
 // all right in left
@@ -96,6 +100,9 @@ func (ver *Verifier) f_satisfy_FnT_ThenFacts_On_FnT_Dom(f ast.Obj, fnTDefName st
 	}
 
 	verRet := ver.VerFactStmt(derivedUniFact, state)
-	ok, _ := verRet.ToBoolErr()
-	return ok
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return false
+	}
+
+	return true
 }

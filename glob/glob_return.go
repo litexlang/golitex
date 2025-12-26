@@ -36,6 +36,8 @@ type GlobRet interface {
 	AddMsg(msg string) GlobRet
 	AddNewREPLMsg() GlobRet
 	AddMsgs(msgs []string) GlobRet
+	AddNewLineAndMsg(msg string) GlobRet
+	AddMsgAtBegin(msg string) GlobRet
 }
 
 type GlobTrue struct {
@@ -230,5 +232,35 @@ func (v *GlobUnknown) AddMsgs(msgs []string) GlobRet {
 
 func (v *GlobErr) AddMsgs(msgs []string) GlobRet {
 	v.Msg = append(v.Msg, msgs...)
+	return v
+}
+
+func (v *GlobTrue) AddNewLineAndMsg(msg string) GlobRet {
+	v.Msg = append(v.Msg, "\n", msg)
+	return v
+}
+
+func (v *GlobUnknown) AddNewLineAndMsg(msg string) GlobRet {
+	v.Msg = append(v.Msg, "\n", msg)
+	return v
+}
+
+func (v *GlobErr) AddNewLineAndMsg(msg string) GlobRet {
+	v.Msg = append(v.Msg, "\n", msg)
+	return v
+}
+
+func (v *GlobTrue) AddMsgAtBegin(msg string) GlobRet {
+	v.Msg = append([]string{msg}, v.Msg...)
+	return v
+}
+
+func (v *GlobUnknown) AddMsgAtBegin(msg string) GlobRet {
+	v.Msg = append([]string{msg}, v.Msg...)
+	return v
+}
+
+func (v *GlobErr) AddMsgAtBegin(msg string) GlobRet {
+	v.Msg = append([]string{msg}, v.Msg...)
 	return v
 }

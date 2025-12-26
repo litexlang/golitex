@@ -17,13 +17,14 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 // 如果我尝试通过逐个子命题 m 的方式，使用“其余为假，m 为真”的方法去验证 a ∨ b ∨ c ∨ ... ∨ n，但全部尝试都失败了，那就可以断言 a ∨ b ∨ c ∨ ... ∨ n 为假。反过来，只要有一次成立了，那就可以断言 a ∨ b ∨ c ∨ ... ∨ n 为真。
 
 // 反过来，用已知的 a ∨ b ∨ c ∨ ... ∨ n 为真，去验证 a ，需要先验证b, c, ... , n 为假，才能得到 a 为真。
 
-func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) ExecRet {
+func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) glob.GlobRet {
 	nextState := state.GetAddRound()
 	for i := range stmt.Facts {
 		verRet := ver.verFactAtIndex_WhenOthersAreFalse(stmt.Facts, i, nextState)
@@ -32,13 +33,13 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) ExecRet {
 		}
 		if verRet.IsTrue() {
 			msg := fmt.Sprintf("%s is true when all others facts in the or statement are false", stmt.Facts[i])
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
 		}
 	}
-	return NewEmptyExecUnknown()
+	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt, i int, state *VerState) ExecRet {
+func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt, i int, state *VerState) glob.GlobRet {
 	ver.newEnv()
 	defer ver.deleteEnv()
 
@@ -48,7 +49,7 @@ func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt
 		}
 		ret := ver.Env.NewFactWithoutCheckingNameDefined(facts[j].ReverseTrue())
 		if ret.IsErr() {
-			return NewExecErr(ret.String())
+			return glob.NewGlobErr(ret.String())
 		}
 	}
 

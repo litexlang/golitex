@@ -17,18 +17,19 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
-func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) glob.GlobRet {
 	if len(stmt.Params) < 2 {
-		return NewExecErr("equals fact must have at least 2 params")
+		return glob.NewGlobErr("equals fact must have at least 2 params")
 	}
 
 	trueMsgs := []string{}
 
 	for i := 1; i < len(stmt.Params); i++ {
 		checked := false
-		unknownRet := NewEmptyExecUnknown()
+		unknownRet := glob.NewEmptyGlobUnknown()
 
 		for j := i - 1; j >= 0; j-- {
 			newFact := ast.NewEqualFact(stmt.Params[j], stmt.Params[i])
@@ -40,7 +41,7 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 			if verRet.IsTrue() {
 				ret := ver.Env.NewFactWithoutCheckingNameDefined(newFact)
 				if ret.IsErr() {
-					return NewExecErr(ret.String())
+					return glob.NewGlobErr(ret.String())
 				}
 				checked = true
 				trueMsgs = append(trueMsgs, verRet.String())
@@ -57,5 +58,5 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 			return unknownRet.AddMsg(fmt.Sprintf("%s\nis unknown", newFact.String()))
 		}
 	}
-	return NewExecTrueWithMsgs(trueMsgs)
+	return glob.NewGlobTrueWithMsgs(trueMsgs)
 }

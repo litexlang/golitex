@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecRet {
+func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) glob.GlobRet {
 	var err error
 	ver := NewVerifier(exec.Env)
 	msg := ""
@@ -29,14 +29,14 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 	startIsNPos := proveByInduction_Fact_Start_is_NPos(stmt)
 	verRet := ver.VerFactStmt(startIsNPos, Round0NoMsg())
 	if verRet.IsErr() {
-		var result ExecRet = NewExecErr(fmt.Errorf(verRet.String()).Error())
+		var result glob.GlobRet = glob.NewGlobErr(fmt.Errorf(verRet.String()).Error())
 		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
 		result = result.AddMsg(verRet.String())
 		return result
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", startIsNPos.String())
-		var result ExecRet = NewEmptyExecUnknown()
+		var result glob.GlobRet = glob.NewEmptyGlobUnknown()
 		result = result.AddMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
 		if msg != "" {
 			result = result.AddMsg(msg)
@@ -47,7 +47,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 	// 把start代入fact，得到的fact是true
 	startFact, err := proveByInduction_newStartFact(stmt)
 	if err != nil {
-		var result ExecRet = NewExecErr(err.Error())
+		var result glob.GlobRet = glob.NewGlobErr(err.Error())
 		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
 		result = result.AddMsg(err.Error())
 		return result
@@ -61,7 +61,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", startFact.String())
-		var result ExecRet = NewEmptyExecUnknown()
+		var result glob.GlobRet = glob.NewEmptyGlobUnknown()
 		result = result.AddMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
 		if msg != "" {
 			result = result.AddMsg(msg)
@@ -72,21 +72,21 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 	// 对于任意n对于fact成立，那么对于n+1也成立
 	uniFact_n_true_leads_n_plus_1_true, err := proveByInduction_newUniFact_n_true_leads_n_plus_1_true(stmt)
 	if err != nil {
-		var result ExecRet = NewExecErr(err.Error())
+		var result glob.GlobRet = glob.NewGlobErr(err.Error())
 		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
 		result = result.AddMsg(err.Error())
 		return result
 	}
 	verRet = ver.VerFactStmt(uniFact_n_true_leads_n_plus_1_true, Round0NoMsg())
 	if verRet.IsErr() {
-		var result ExecRet = NewExecErr(fmt.Errorf(verRet.String()).Error())
+		var result glob.GlobRet = glob.NewGlobErr(fmt.Errorf(verRet.String()).Error())
 		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
 		result = result.AddMsg(verRet.String())
 		return result
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", uniFact_n_true_leads_n_plus_1_true.String())
-		var result ExecRet = NewEmptyExecUnknown()
+		var result glob.GlobRet = glob.NewEmptyGlobUnknown()
 		result = result.AddMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
 		if msg != "" {
 			result = result.AddMsg(msg)
@@ -98,13 +98,13 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 	uniFact_forall_param_geq_start_then_fact_is_true := proveByInduction_newUniFact_forall_param_geq_start_then_fact_is_true(stmt)
 	ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact_forall_param_geq_start_then_fact_is_true)
 	if ret.IsErr() {
-		var result ExecRet = NewExecErr(ret.String())
+		var result glob.GlobRet = glob.NewGlobErr(ret.String())
 		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
 		result = result.AddMsg(ret.String())
 		return result
 	}
 
-	var result ExecRet = NewEmptyExecTrue()
+	var result glob.GlobRet = glob.NewEmptyGlobTrue()
 	result = result.AddMsg(fmt.Sprintf("%s\nsuccess\n", stmt.String()))
 	return result
 }

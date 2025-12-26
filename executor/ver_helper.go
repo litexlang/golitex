@@ -17,10 +17,11 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 // maybeAddSuccessMsg adds a success message to execRet if state.WithMsg is true
-func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy ast.Stmt, execRet ExecRet) ExecRet {
+func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy ast.Stmt, execRet glob.GlobRet) glob.GlobRet {
 	if state.WithMsg {
 		execRet.AddMsg(successVerString(stmt, stmtVerifiedBy))
 		return execRet
@@ -28,8 +29,8 @@ func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy as
 	return execRet
 }
 
-// maybeAddSuccessMsgString is a backward compatibility function for string-based messages
-func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet ExecRet) ExecRet {
+// maybeAddSuccessMsgString is a backward compatibility function for string-based messagesglob.GlobRet
+func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet glob.GlobRet) glob.GlobRet {
 	if state == nil {
 		panic("")
 	}
