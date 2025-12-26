@@ -30,7 +30,7 @@ func (exec *Executor) byStmt(stmt *ast.ByStmt) *glob.GlobRet {
 	for _, fact := range returnedFacts {
 		ret := exec.Env.NewFactWithoutCheckingNameDefined(fact)
 		if ret.IsNotTrue() {
-			return glob.NewGlobErr(fmt.Sprintf("by statement failed: returned fact %s store error.", fact.String()))
+			return glob.ErrRet(fmt.Sprintf("by statement failed: returned fact %s store error.", fact.String()))
 		}
 	}
 
@@ -46,11 +46,11 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) (*glob.GlobRet, []ast.Fact
 
 	proveAlgoDef := exec.Env.GetProveAlgoDef(stmt.ProveAlgoName)
 	if proveAlgoDef == nil {
-		return glob.NewGlobErr(fmt.Sprintf("prove algo %s not found", stmt.ProveAlgoName)), nil
+		return glob.ErrRet(fmt.Sprintf("prove algo %s not found", stmt.ProveAlgoName)), nil
 	}
 
 	if len(proveAlgoDef.Params) != len(stmt.Params) {
-		return glob.NewGlobErr(fmt.Sprintf("prove algo %s requires %d params, get %d instead", stmt.ProveAlgoName, len(proveAlgoDef.Params), len(stmt.Params))), nil
+		return glob.ErrRet(fmt.Sprintf("prove algo %s requires %d params, get %d instead", stmt.ProveAlgoName, len(proveAlgoDef.Params), len(stmt.Params))), nil
 	}
 
 	for i, param := range proveAlgoDef.Params {
@@ -72,7 +72,7 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) (*glob.GlobRet, []ast.Fact
 
 	instProveAlgoDef, err := proveAlgoDef.Instantiate(uniMap)
 	if err != nil {
-		return glob.NewGlobErrWithErr(err), nil
+		return glob.ErrRetWithErr(err), nil
 	}
 
 	execRet, returnedFacts := exec.runProveAlgoStmtsWhenBy(instProveAlgoDef.(*ast.DefProveAlgoStmt).Stmts, stmt.Params)
@@ -102,7 +102,7 @@ func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSl
 				continue
 			}
 		default:
-			return glob.NewGlobErr(fmt.Sprintf("unexpected prove_algo statement type: %T", stmt)), nil
+			return glob.ErrRet(fmt.Sprintf("unexpected prove_algo statement type: %T", stmt)), nil
 		}
 	}
 	return glob.NewEmptyGlobTrue(), nil
@@ -120,7 +120,7 @@ func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSl
 // 				continue
 // 			}
 // 		case *ast.AlgoReturnStmt:
-// 			return glob.NewGlobErr(fmt.Sprintf("There can not be return value statements in algo. Use return eval instead .Get %s", asStmt.String())), nil
+// 			return glob.ErrRet(fmt.Sprintf("There can not be return value statements in algo. Use return eval instead .Get %s", asStmt.String())), nil
 // 		default:
 // 			execRet := exec.Stmt(stmt.(ast.Stmt))
 // 			if execRet.IsNotTrue() {
@@ -171,7 +171,7 @@ func (exec *Executor) runProveAlgoReturnStmt(stmt *ast.ProveAlgoReturnStmt) (*gl
 			// 如果是事实，验证是否为真
 			execState := exec.factStmt(item)
 			if execState.IsNotTrue() {
-				return execState.AddMsg(fmt.Sprintf("return fact failed: %s", item.String())), nil
+				return execState.AddError(fmt.Sprintf("return fact failed: %s", item.String())), nil
 			}
 			// 验证通过后，加入结果列表
 			resultFacts = append(resultFacts, item)
@@ -179,12 +179,12 @@ func (exec *Executor) runProveAlgoReturnStmt(stmt *ast.ProveAlgoReturnStmt) (*gl
 			// 如果是 ByStmt，递归调用 callProveAlgo 来提取事实
 			execState, facts := exec.callProveAlgo(item)
 			if execState.IsNotTrue() {
-				return execState.AddMsg(fmt.Sprintf("return by statement failed: %s", item.String())), nil
+				return execState.AddError(fmt.Sprintf("return by statement failed: %s", item.String())), nil
 			}
 			// 将递归获取的事实加入结果列表
 			resultFacts = append(resultFacts, facts...)
 		default:
-			return glob.NewGlobErr(fmt.Sprintf("return unexpected type: %T", factOrBy)), nil
+			return glob.ErrRet(fmt.Sprintf("return unexpected type: %T", factOrBy)), nil
 		}
 	}
 

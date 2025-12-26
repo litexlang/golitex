@@ -31,7 +31,7 @@ func (ver *Verifier) checkFnsReq(stmt *ast.SpecFactStmt, state *VerState) *glob.
 			return verRet
 		}
 		if verRet.IsUnknown() {
-			return glob.NewGlobErrWithMsgs(verRet.GetMsgs())
+			return glob.ErrRetWithMsgs(verRet.GetMsgs())
 		}
 	}
 
@@ -46,7 +46,7 @@ func (ver *Verifier) checkFnsReq(stmt *ast.SpecFactStmt, state *VerState) *glob.
 func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) *glob.GlobRet {
 	if atom, ok := obj.(ast.Atom); ok {
 		if ret := ver.Env.LookupNamesInObj(atom, map[string]struct{}{}); ret.IsNotTrue() {
-			return glob.NewGlobErr(ret.String())
+			return glob.ErrRet(ret.String())
 		} else {
 			return glob.NewEmptyGlobTrue()
 		}
@@ -54,7 +54,7 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 
 	objAsFnObj, ok := obj.(*ast.FnObj)
 	if !ok {
-		return glob.NewGlobErr(fmt.Sprintf("%s is not a function", obj))
+		return glob.ErrRet(fmt.Sprintf("%s is not a function", obj))
 	}
 
 	if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCount) {
@@ -90,7 +90,7 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 	// Parse set builder struct to check facts
 	setBuilderStruct, err := objAsFnObj.ToSetBuilderStruct()
 	if err != nil {
-		return glob.NewGlobErr(fmt.Sprintf("failed to parse set builder: %s", err))
+		return glob.ErrRet(fmt.Sprintf("failed to parse set builder: %s", err))
 	}
 
 	// parent is a set
@@ -99,7 +99,7 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewGlobErr(fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, setBuilderStruct.ParentSet, objAsFnObj))
+		return glob.ErrRet(fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, setBuilderStruct.ParentSet, objAsFnObj))
 	}
 
 	// parent is ok
@@ -108,7 +108,7 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 		return ret
 	}
 	if ret.IsUnknown() {
-		return glob.NewGlobErr(fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, setBuilderStruct.ParentSet, objAsFnObj))
+		return glob.ErrRet(fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, setBuilderStruct.ParentSet, objAsFnObj))
 	}
 
 	// 如果param在母环境里已经声明过了，那就把整个obj里的所有的param全部改成新的
@@ -131,7 +131,7 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 		// Check propName
 		verRet := ver.Env.IsPropDefinedOrBuiltinProp(fact)
 		if verRet.IsNotTrue() {
-			return glob.NewGlobErr(verRet.String())
+			return glob.ErrRet(verRet.String())
 		}
 
 		// Check all params in the fact
@@ -141,7 +141,7 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 				return verRet
 			}
 			if verRet.IsUnknown() {
-				return glob.NewGlobErr(fmt.Sprintf("parameter %s in set builder fact must be an atom or function", param))
+				return glob.ErrRet(fmt.Sprintf("parameter %s in set builder fact must be an atom or function", param))
 			}
 		}
 	}
@@ -154,10 +154,10 @@ func (ver *Verifier) listSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState
 	// for _, param := range objAsFnObj.Params {
 	// 	verRet := ver.VerFactStmt(ast.NewIsASetFact(param, glob.BuiltinLine), state)
 	// 	if verRet.IsErr() {
-	// 		return glob.NewGlobErr(verRet.String())
+	// 		return glob.ErrRet(verRet.String())
 	// 	}
 	// 	if verRet.IsUnknown() {
-	// 		return glob.NewGlobErr(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", objAsFnObj.FnHead, param, objAsFnObj))
+	// 		return glob.ErrRet(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", objAsFnObj.FnHead, param, objAsFnObj))
 	// 	}
 	// }
 
@@ -167,10 +167,10 @@ func (ver *Verifier) listSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState
 			fact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{objAsFnObj.Params[i], objAsFnObj.Params[j]}, glob.BuiltinLine)
 			verRet := ver.VerFactStmt(fact, state)
 			if verRet.IsErr() {
-				return glob.NewGlobErr(verRet.String())
+				return glob.ErrRet(verRet.String())
 			}
 			if verRet.IsUnknown() {
-				return glob.NewGlobErr(fmt.Sprintf("parameters in set must be different from one another, inequality of %s and %s in %s is unknown", objAsFnObj.Params[i], objAsFnObj.Params[j], objAsFnObj))
+				return glob.ErrRet(fmt.Sprintf("parameters in set must be different from one another, inequality of %s and %s in %s is unknown", objAsFnObj.Params[i], objAsFnObj.Params[j], objAsFnObj))
 			}
 		}
 	}
@@ -180,7 +180,7 @@ func (ver *Verifier) listSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState
 
 func (ver *Verifier) tupleFnReq(objAsFnObj *ast.FnObj, state *VerState) *glob.GlobRet {
 	if len(objAsFnObj.Params) < 2 {
-		return glob.NewGlobErr(fmt.Sprintf("parameters in %s must be at least 2, %s in %s is not valid", objAsFnObj.FnHead, objAsFnObj, objAsFnObj))
+		return glob.ErrRet(fmt.Sprintf("parameters in %s must be at least 2, %s in %s is not valid", objAsFnObj.FnHead, objAsFnObj, objAsFnObj))
 	}
 
 	_ = state
@@ -188,10 +188,10 @@ func (ver *Verifier) tupleFnReq(objAsFnObj *ast.FnObj, state *VerState) *glob.Gl
 	for _, param := range objAsFnObj.Params {
 		execRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, state)
 		if execRet.IsErr() {
-			return glob.NewGlobErr(execRet.String())
+			return glob.ErrRet(execRet.String())
 		}
 		if execRet.IsUnknown() {
-			return glob.NewGlobErr(fmt.Sprintf("parameter %s in %s must be an atom or function", param, objAsFnObj.FnHead))
+			return glob.ErrRet(fmt.Sprintf("parameter %s in %s must be an atom or function", param, objAsFnObj.FnHead))
 		}
 	}
 
@@ -200,65 +200,65 @@ func (ver *Verifier) tupleFnReq(objAsFnObj *ast.FnObj, state *VerState) *glob.Gl
 
 func (ver *Verifier) dimFnRequirement(fnObj *ast.FnObj, state *VerState) *glob.GlobRet {
 	if len(fnObj.Params) != 1 {
-		return glob.NewGlobErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
+		return glob.ErrRet(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 	// 检查是否是 tuple
 	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine)
 	verRet := ver.VerFactStmt(isTupleFact, state)
 	if verRet.IsErr() {
-		return glob.NewGlobErr(verRet.String())
+		return glob.ErrRet(verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return glob.NewGlobErr(fmt.Sprintf("%s is unknown", isTupleFact))
+		return glob.ErrRet(fmt.Sprintf("%s is unknown", isTupleFact))
 	}
 	return glob.NewEmptyGlobTrue()
 }
 
 func (ver *Verifier) setDimFnRequirement(fnObj *ast.FnObj, state *VerState) *glob.GlobRet {
 	if len(fnObj.Params) != 1 {
-		return glob.NewGlobErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
+		return glob.ErrRet(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 
 	verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine), state)
 	if verRet.IsErr() {
-		return glob.NewGlobErr(verRet.String())
+		return glob.ErrRet(verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return glob.NewGlobErr(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", fnObj.FnHead, fnObj.Params[0], fnObj))
+		return glob.ErrRet(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", fnObj.FnHead, fnObj.Params[0], fnObj))
 	}
 	return glob.NewEmptyGlobTrue()
 }
 
 func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) *glob.GlobRet {
 	if len(fnObj.Params) != 2 {
-		return glob.NewGlobErr(fmt.Sprintf("parameters in %s must be 2, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
+		return glob.ErrRet(fmt.Sprintf("parameters in %s must be 2, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 
 	// x is cart
 	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine)
 	verRet := ver.VerFactStmt(isCartFact, state)
 	if verRet.IsErr() {
-		return glob.NewGlobErr(verRet.String())
+		return glob.ErrRet(verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return glob.NewGlobErr(fmt.Sprintf("%s is unknown", isCartFact))
+		return glob.ErrRet(fmt.Sprintf("%s is unknown", isCartFact))
 	}
 
 	// index >= 1
 	verRet = ver.VerFactStmt(ast.NewInFactWithObj(fnObj.Params[1], ast.Atom(glob.KeywordNPos)), state)
 	if verRet.IsErr() {
-		return glob.NewGlobErr(verRet.String())
+		return glob.ErrRet(verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return glob.NewGlobErr(fmt.Sprintf("index in %s must be N_pos, %s in %s is not valid", fnObj, fnObj.Params[1], fnObj))
+		return glob.ErrRet(fmt.Sprintf("index in %s must be N_pos, %s in %s is not valid", fnObj, fnObj.Params[1], fnObj))
 	}
 
 	// index <= set_dim(x)
 	verRet = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fnObj.Params[1], ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fnObj.Params[0]})}, glob.BuiltinLine), state)
 	if verRet.IsErr() {
-		return glob.NewGlobErr(verRet.String())
+		return glob.ErrRet(verRet.String())
 	} else if verRet.IsUnknown() {
-		return glob.NewGlobErr(fmt.Sprintf("index in %s must be <= set_dim(%s), %s in %s is not valid", fnObj, fnObj.Params[0], fnObj.Params[1], fnObj))
+		return glob.ErrRet(fmt.Sprintf("index in %s must be <= set_dim(%s), %s in %s is not valid", fnObj, fnObj.Params[0], fnObj.Params[1], fnObj))
 	}
 
 	return glob.NewEmptyGlobTrue()
@@ -267,12 +267,12 @@ func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) *glo
 // // TODO: 这里需要检查！
 // func (ver *Verifier) setDefinedByReplacementFnRequirement(fnObj *ast.FnObj, state *VerState) *glob.GlobRet {
 // 	if len(fnObj.Params) != 3 {
-// 		return glob.NewGlobErr(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
+// 		return glob.ErrRet(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 // 	}
 
 // 	propName, ok := fnObj.Params[2].(ast.AtomObj)
 // 	if !ok {
-// 		return glob.NewGlobErr(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
+// 		return glob.ErrRet(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 // 	}
 
 // 	forallXOnlyOneYSatisfyGivenProp := ast.GetForallXOnlyOneYSatisfyGivenProp(fnObj.Params[0], fnObj.Params[1], propName)
@@ -283,32 +283,32 @@ func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) *glo
 
 func (ver *Verifier) countFnRequirement(fnObj *ast.FnObj, state *VerState) *glob.GlobRet {
 	if len(fnObj.Params) != 1 {
-		return glob.NewGlobErr(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
+		return glob.ErrRet(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 
 	verRet := ver.VerFactStmt(ast.NewIsAFiniteSetFact(fnObj.Params[0], glob.BuiltinLine), state)
 	if verRet.IsErr() {
-		return glob.NewGlobErr(verRet.String())
+		return glob.ErrRet(verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return glob.NewGlobErr(fmt.Sprintf("parameters in %s must be a finite set, %s in %s is not valid", fnObj.FnHead, fnObj.Params[0], fnObj))
+		return glob.ErrRet(fmt.Sprintf("parameters in %s must be a finite set, %s in %s is not valid", fnObj.FnHead, fnObj.Params[0], fnObj))
 	}
 	return glob.NewEmptyGlobTrue()
 }
 
 func (ver *Verifier) cartFnRequirement(fnObj *ast.FnObj, state *VerState) *glob.GlobRet {
 	if len(fnObj.Params) < 2 {
-		return glob.NewGlobErr(fmt.Sprintf("parameters in %s must be at least 2, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
+		return glob.ErrRet(fmt.Sprintf("parameters in %s must be at least 2, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 
 	// 验证所有的参数都是集合
 	for _, param := range fnObj.Params {
 		verRet := ver.VerFactStmt(ast.NewIsASetFact(param, glob.BuiltinLine), state)
 		if verRet.IsErr() {
-			return glob.NewGlobErr(verRet.String())
+			return glob.ErrRet(verRet.String())
 		}
 		if verRet.IsUnknown() {
-			return glob.NewGlobErr(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", fnObj.FnHead, param, fnObj))
+			return glob.ErrRet(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", fnObj.FnHead, param, fnObj))
 		}
 	}
 	return glob.NewEmptyGlobTrue()
@@ -319,7 +319,7 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) *g
 
 	// [] 操作需要两个参数：obj 和 index
 	if len(fnObj.Params) != 2 {
-		return glob.NewGlobErr(fmt.Sprintf("[] operator requires 2 parameters, got %d in %s", len(fnObj.Params), fnObj))
+		return glob.ErrRet(fmt.Sprintf("[] operator requires 2 parameters, got %d in %s", len(fnObj.Params), fnObj))
 	}
 
 	obj := fnObj.Params[0]
@@ -329,10 +329,10 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) *g
 
 	verRet := ver.VerFactStmt(ast.NewInFactWithObj(indexObj, ast.Atom(glob.KeywordNPos)), state)
 	if verRet.IsErr() {
-		return glob.NewGlobErr(verRet.String())
+		return glob.ErrRet(verRet.String())
 	}
 	if verRet.IsUnknown() {
-		return glob.NewGlobErr(fmt.Sprintf("index in %s must be N_pos, %s in %s is not valid", fnObj, indexObj, fnObj))
+		return glob.ErrRet(fmt.Sprintf("index in %s must be N_pos, %s in %s is not valid", fnObj, indexObj, fnObj))
 	}
 
 	// 如果 index 本来就是数字，那就换成数字；如果不是数字，那换成这个symbol
@@ -359,14 +359,14 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) *g
 		}
 		// 如果仍然无法获取整数值，返回错误
 		if !ok {
-			return glob.NewGlobErr(fmt.Sprintf("cannot determine integer value of index %s in %s", indexObj, fnObj))
+			return glob.ErrRet(fmt.Sprintf("cannot determine integer value of index %s in %s", indexObj, fnObj))
 		}
 	}
 
 	// 情况1: obj 本身就是一个 tuple，比如 (1,2)[1]
 	if objAsTuple, ok := obj.(*ast.FnObj); ok && ast.IsTupleFnObj(objAsTuple) {
 		if index > len(objAsTuple.Params) {
-			return glob.NewGlobErr(fmt.Sprintf("index %d in %s is out of range, tuple has %d elements", index, fnObj, len(objAsTuple.Params)))
+			return glob.ErrRet(fmt.Sprintf("index %d in %s is out of range, tuple has %d elements", index, fnObj, len(objAsTuple.Params)))
 		}
 		return glob.NewEmptyGlobTrue()
 	}
@@ -381,7 +381,7 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) *g
 			if dimValue, ok := ast.ToInt(equalObj); ok {
 				// 检查 index >= 1 且 index <= dim(obj)
 				if index > dimValue {
-					return glob.NewGlobErr(fmt.Sprintf("index %d in %s is out of range, dim(%s) = %d", index, fnObj, obj, dimValue))
+					return glob.ErrRet(fmt.Sprintf("index %d in %s is out of range, dim(%s) = %d", index, fnObj, obj, dimValue))
 				}
 				// 如果找到了 dim 值并且 index 在范围内，返回成功
 				return glob.NewEmptyGlobTrue()

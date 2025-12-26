@@ -24,7 +24,7 @@ import (
 func (envMgr *EnvMgr) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) *glob.GlobRet {
 	// prop名不能和parameter名重叠
 	if slices.Contains(stmt.DefHeader.Params, string(stmt.DefHeader.Name)) {
-		return glob.ErrRet(fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name))
+		return glob.ErrRet(fmt.Sprintf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name))
 	}
 
 	ret := envMgr.IsValidAndAvailableName(string(stmt.DefHeader.Name))
@@ -68,7 +68,7 @@ func (envMgr *EnvMgr) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) *glo
 func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.DefFnSetStmt) *glob.GlobRet {
 	// fn名不能和parameter名重叠
 	if slices.Contains(stmt.TemplateDefHeader.Params, string(name)) {
-		return glob.ErrRet(fmt.Errorf("fn name %s cannot be the same as parameter name %s", name, name))
+		return glob.ErrRet(fmt.Sprintf("fn name %s cannot be the same as parameter name %s", name, name))
 	}
 
 	extraAtomNames := map[string]struct{}{}
@@ -123,7 +123,7 @@ func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *a
 func (envMgr *EnvMgr) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) *glob.GlobRet {
 	// prop名不能和parameter名重叠
 	if slices.Contains(append(stmt.ExistParams, stmt.DefBody.DefHeader.Params...), string(stmt.DefBody.DefHeader.Name)) {
-		return glob.ErrRet(fmt.Errorf("prop name %s cannot be the same as parameter name %s", stmt.DefBody.DefHeader.Name, stmt.DefBody.DefHeader.Name))
+		return glob.ErrRet(fmt.Sprintf("prop name %s cannot be the same as parameter name %s", stmt.DefBody.DefHeader.Name, stmt.DefBody.DefHeader.Name))
 	}
 
 	// ret := envMgr.NoDuplicateParamNamesAndParamSetsDefined(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.ParamSets, stmt.ExistParamSets...), true)
@@ -176,7 +176,7 @@ func (envMgr *EnvMgr) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistProp
 func (envMgr *EnvMgr) CheckAtomObjNameIsValidAndAvailableThenDefineIt(name string) *glob.GlobRet {
 	ret := envMgr.IsValidAndAvailableName(name)
 	if ret.IsErr() {
-		return glob.ErrRet(fmt.Errorf("invalid name: %s", name))
+		return glob.ErrRet(fmt.Sprintf("invalid name: %s", name))
 	}
 
 	// Save to AllDefinedAtomObjNames
@@ -201,6 +201,7 @@ func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) *glob.GlobRet {
 	}
 
 	inferMsgs := []string{}
+	implicationFacts := []string{}
 	for _, fact := range stmt.NewInFacts() {
 		ret := envMgr.LookUpNamesInFact(fact, map[string]struct{}{})
 		if ret.IsErr() {
@@ -211,10 +212,10 @@ func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) *glob.GlobRet {
 		if ret.IsErr() {
 			return ret
 		}
+		implicationFacts = append(implicationFacts, fact.String())
 		inferMsgs = append(inferMsgs, ret.Infer...)
 	}
 
-	implicationFacts := []string{}
 	for _, fact := range stmt.Facts {
 		ret := envMgr.LookUpNamesInFact(fact, map[string]struct{}{})
 		if ret.IsErr() {
@@ -230,5 +231,5 @@ func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) *glob.GlobRet {
 		}
 	}
 
-	return glob.NewGlobTrueWithMsgs(implicationFacts).AddMsgs(inferMsgs)
+	return glob.NewGlobTrueWithDefines(implicationFacts).AddInfers(inferMsgs)
 }

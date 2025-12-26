@@ -22,7 +22,7 @@ import (
 
 func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) < 2 {
-		return glob.NewGlobErr("equals fact must have at least 2 params")
+		return glob.ErrRet("equals fact must have at least 2 params")
 	}
 
 	trueMsgs := []string{}
@@ -41,7 +41,7 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 			if verRet.IsTrue() {
 				ret := ver.Env.NewFactWithoutCheckingNameDefined(newFact)
 				if ret.IsErr() {
-					return glob.NewGlobErr(ret.String())
+					return glob.ErrRet(ret.String())
 				}
 				checked = true
 				trueMsgs = append(trueMsgs, verRet.String())

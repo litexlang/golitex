@@ -31,14 +31,14 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) *glob
 
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(oldStmt)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
 		ret := ver.Env.NewFactWithoutCheckingNameDefined(condFact)
 		if ret.IsErr() {
-			return glob.NewGlobErr(ret.String())
+			return glob.ErrRet(ret.String())
 		}
 	}
 
@@ -50,7 +50,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 	for _, thenFact := range stmt.ThenFacts {
 		verRet := ver.VerFactStmt(thenFact, state) // 这个地方有点tricky，这里是可能读入state是any的，而且我要允许读入any
 		if verRet.IsErr() {
-			return glob.NewGlobErr(verRet.String())
+			return glob.ErrRet(verRet.String())
 		}
 		if verRet.IsUnknown() {
 			execRet := glob.NewEmptyGlobUnknown()
@@ -63,7 +63,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		// if true, store it
 		ret := ver.Env.NewFactWithoutCheckingNameDefined(thenFact)
 		if ret.IsErr() {
-			return glob.NewGlobErr(ret.String())
+			return glob.ErrRet(ret.String())
 		}
 	}
 

@@ -42,13 +42,13 @@ func (exec *Executor) evalObjThenSimplify(obj ast.Obj) (ast.Obj, *glob.GlobRet) 
 	case ast.Atom:
 		symbolValue := exec.Env.GetSymbolSimplifiedValue(obj)
 		if symbolValue == nil {
-			return nil, glob.NewGlobErr(fmt.Sprintf("symbol %s has no value", obj.String()))
+			return nil, glob.ErrRet(fmt.Sprintf("symbol %s has no value", obj.String()))
 		}
 		return symbolValue, glob.NewEmptyGlobTrue()
 	case *ast.FnObj:
 		return exec.evalFnObjThenSimplify(asObj)
 	default:
-		return nil, glob.NewGlobErr(fmt.Sprintf("unexpected type: %T", obj))
+		return nil, glob.ErrRet(fmt.Sprintf("unexpected type: %T", obj))
 	}
 }
 
@@ -80,7 +80,7 @@ func (exec *Executor) evalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, *glob.Gl
 		numExprObj := ast.NewFnObj(fnObj.FnHead, []ast.Obj{left, right})
 		execRet = exec.fnObjParamsInFnDomain(numExprObj)
 		if execRet.IsNotTrue() {
-			return nil, glob.NewGlobErr(fmt.Sprintf("%s = %s is invalid", fnObj, numExprObj))
+			return nil, glob.ErrRet(fmt.Sprintf("%s = %s is invalid", fnObj, numExprObj))
 		}
 
 		return exec.simplifyNumExprObj(numExprObj)
@@ -101,17 +101,17 @@ func (exec *Executor) evalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, *glob.Gl
 func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, *glob.GlobRet) {
 	algoDef := exec.Env.GetAlgoDef(fnObj.FnHead.String())
 	if algoDef == nil {
-		return nil, glob.NewGlobErr(fmt.Sprintf("algo %s is not found", fnObj.FnHead.String()))
+		return nil, glob.ErrRet(fmt.Sprintf("algo %s is not found", fnObj.FnHead.String()))
 	}
 
 	if len(fnObj.Params) != len(algoDef.Params) {
-		return nil, glob.NewGlobErr(fmt.Sprintf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(fnObj.Params)))
+		return nil, glob.ErrRet(fmt.Sprintf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(fnObj.Params)))
 	}
 
 	// 传入的参数真的在fn的domain里
 	execRet := exec.fnObjParamsInFnDomain(fnObj)
 	if execRet.IsNotTrue() {
-		return nil, glob.NewGlobErr(fmt.Sprintf("parameters of %s are not in domain of %s", fnObj, fnObj.FnHead))
+		return nil, glob.ErrRet(fmt.Sprintf("parameters of %s are not in domain of %s", fnObj, fnObj.FnHead))
 	}
 
 	for i, param := range algoDef.Params {
@@ -121,7 +121,7 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 		} else {
 			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(param), fnObj.Params[i])}, glob.BuiltinLine))
 			if execState.IsNotTrue() {
-				return nil, glob.NewGlobErr(execState.String())
+				return nil, glob.ErrRet(execState.String())
 			}
 		}
 	}
@@ -132,7 +132,7 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 		// simplifiedValue := value
 		simplifiedValue, execRet := exec.simplifyNumExprObj(value)
 		if execRet.IsNotTrue() {
-			return nil, glob.NewGlobErr(fmt.Sprintf("value of %s of %s is unknown.", param, fnObj))
+			return nil, glob.ErrRet(fmt.Sprintf("value of %s of %s is unknown.", param, fnObj))
 		}
 		fnObjParamsValues = append(fnObjParamsValues, simplifiedValue)
 	}
@@ -146,7 +146,7 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 
 	instAlgoDef, err := algoDef.Instantiate(uniMap)
 	if err != nil {
-		return nil, glob.NewGlobErrWithErr(err)
+		return nil, glob.ErrRetWithErr(err)
 	}
 
 	value, execRet := exec.runAlgoStmtsWhenEval(instAlgoDef.(*ast.DefAlgoStmt).Stmts, fnObjWithValueParams)
@@ -184,7 +184,7 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWit
 		}
 	}
 
-	return nil, glob.NewGlobErr(fmt.Sprintf("There is no return value of %s", fnObjWithValueParams))
+	return nil, glob.ErrRet(fmt.Sprintf("There is no return value of %s", fnObjWithValueParams))
 }
 
 func (exec *Executor) fnObjParamsInFnDomain(fnObj *ast.FnObj) *glob.GlobRet {
@@ -208,7 +208,7 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, *glob.G
 
 		factAsReversibleFact, reversed := fact.(ast.Spec_OrFact)
 		if !reversed {
-			return false, glob.NewGlobErr(fmt.Sprintf("The condition %s in\n%s\nis unknown, and it can not be negated. Failed", fact, stmt))
+			return false, glob.ErrRet(fmt.Sprintf("The condition %s in\n%s\nis unknown, and it can not be negated. Failed", fact, stmt))
 		}
 
 		for _, reversedFact := range factAsReversibleFact.ReverseIsTrue() {
@@ -218,7 +218,7 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, *glob.G
 			}
 
 			if execRet.IsNotTrue() {
-				return false, glob.NewGlobErr(fmt.Sprintf("%s is unknown. Negation of it is also unknown. Fail to verify condition of if statement:\n%s", fact, stmt))
+				return false, glob.ErrRet(fmt.Sprintf("%s is unknown. Negation of it is also unknown. Fail to verify condition of if statement:\n%s", fact, stmt))
 			}
 		}
 

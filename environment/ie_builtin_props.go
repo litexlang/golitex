@@ -22,7 +22,7 @@ import (
 
 func (ie *InferEngine) equalSetFactPostProcess(fact *ast.SpecFactStmt) *glob.GlobRet {
 	if len(fact.Params) != 2 {
-		return glob.ErrRet(fmt.Errorf("equal_set fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
+		return glob.ErrRet(fmt.Sprintf("equal_set fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
 
 	derivedFacts := []string{}
@@ -36,12 +36,7 @@ func (ie *InferEngine) equalSetFactPostProcess(fact *ast.SpecFactStmt) *glob.Glo
 	derivedFacts = append(derivedFacts, equalFact.String())
 
 	// Collect any derived facts from the equality fact
-	if ret.IsTrue() && len(ret.GetMsgs()) > 0 {
-		derivedFacts = append(derivedFacts, ret.GetMsgs()...)
-	}
+	derivedFacts = append(derivedFacts, ret.Infer...)
 
-	if len(derivedFacts) > 0 {
-		return glob.NewGlobTrueWithMsgs(derivedFacts)
-	}
-	return glob.NewEmptyGlobTrue()
+	return glob.NewGlobTrueWithInfers(derivedFacts)
 }

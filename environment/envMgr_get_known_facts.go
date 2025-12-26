@@ -15,7 +15,6 @@
 package litex_env
 
 import (
-	"errors"
 	ast "golitex/ast"
 	glob "golitex/glob"
 )
@@ -31,7 +30,7 @@ func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]ast.
 	case ast.FalseExist_St:
 		return s.NotExist_St_Facts, glob.NewEmptyGlobTrue()
 	default:
-		return nil, glob.ErrRet(errors.New("invalid spec fact type"))
+		return nil, glob.ErrRet(("invalid spec fact type"))
 	}
 }
 
@@ -74,7 +73,7 @@ func (s SpecFactInLogicExprMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[st
 	case ast.FalseExist_St:
 		return s.NotExist_St_Facts, glob.NewEmptyGlobTrue()
 	default:
-		return nil, glob.ErrRet(errors.New("invalid spec fact type"))
+		return nil, glob.ErrRet(("invalid spec fact type"))
 	}
 }
 
@@ -119,7 +118,7 @@ func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[stri
 	case ast.FalseExist_St:
 		return s.NotExist_St_Facts, glob.NewEmptyGlobTrue()
 	default:
-		return nil, glob.ErrRet(errors.New("invalid spec fact type"))
+		return nil, glob.ErrRet(("invalid spec fact type"))
 	}
 }
 
@@ -162,7 +161,7 @@ func (s SpecFact_InLogicExpr_InUniFactMem) getSameEnumFacts(stmt *ast.SpecFactSt
 	case ast.FalseExist_St:
 		return s.NotExist_St_Facts, glob.NewEmptyGlobTrue()
 	default:
-		return nil, glob.ErrRet(errors.New("invalid spec fact type"))
+		return nil, glob.ErrRet(("invalid spec fact type"))
 	}
 }
 

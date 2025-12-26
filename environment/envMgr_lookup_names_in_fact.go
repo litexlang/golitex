@@ -33,7 +33,7 @@ func (envMgr *EnvMgr) LookUpNamesInFact(stmt ast.FactStmt, extraParams map[strin
 	case *ast.EqualsFactStmt:
 		return envMgr.LookupNamesInEqualsFact(s, extraParams)
 	default:
-		return glob.ErrRet(fmt.Errorf("unknown fact type: %T", stmt))
+		return glob.ErrRet(fmt.Sprintf("unknown fact type: %T", stmt))
 	}
 }
 
@@ -62,7 +62,7 @@ func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.SpecFactStmt) *glob.G
 		if existPropDef != nil {
 			return glob.NewEmptyGlobTrue()
 		}
-		return glob.ErrRet(fmt.Errorf("undefined exist_prop: %s", stmt.PropName))
+		return glob.ErrRet(fmt.Sprintf("undefined exist_prop: %s", stmt.PropName))
 	} else {
 		if glob.IsBuiltinPropName(string(stmt.PropName)) {
 			return glob.NewEmptyGlobTrue()
@@ -83,7 +83,7 @@ func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.SpecFactStmt) *glob.G
 			return glob.NewEmptyGlobTrue()
 		}
 
-		return glob.ErrRet(fmt.Errorf("undefined prop or exist_prop: %s", stmt.PropName))
+		return glob.ErrRet(fmt.Sprintf("undefined prop or exist_prop: %s", stmt.PropName))
 	}
 }
 
@@ -102,7 +102,7 @@ func (envMgr *EnvMgr) LookupNamesInUniFact(stmt *ast.UniFactStmt, extraParams ma
 		}
 
 		if _, ok := combinedParams[stmt.Params[i]]; ok {
-			return glob.NewGlobErr(fmt.Sprintf("duplicate free parameter: %s", stmt.Params[i]))
+			return glob.ErrRet(fmt.Sprintf("duplicate free parameter: %s", stmt.Params[i]))
 		}
 		combinedParams[stmt.Params[i]] = struct{}{}
 	}

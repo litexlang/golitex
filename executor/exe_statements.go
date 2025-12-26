@@ -117,15 +117,15 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.GlobRet {
 	case *ast.ProveCaseByCaseStmt:
 		execRet = exec.proveCaseByCaseStmt(stmt)
 	case *ast.ImportDirStmt:
-		execRet = glob.NewGlobErr("import statements are not allowed in local scope.")
+		execRet = glob.ErrRet("import statements are not allowed in local scope.")
 	case *ast.RunFileStmt:
-		execRet = glob.NewGlobErr("import statements are not allowed in local scope.")
+		execRet = glob.ErrRet("import statements are not allowed in local scope.")
 	case *ast.HaveObjFromCartSetStmt:
 		execRet = exec.haveObjFromCartSetStmt(stmt)
 	case *ast.ProveForStmt:
 		execRet = exec.proveForStmt(stmt)
 	default:
-		execRet = glob.NewGlobErr(fmt.Sprintf("unknown statement type: %T", stmt))
+		execRet = glob.ErrRet(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
 
 	if execRet.IsTrue() {
@@ -147,13 +147,13 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) *glob.GlobRet {
 	} else if verRet.IsTrue() {
 		ret := exec.Env.NewFactWithoutCheckingNameDefined(stmt)
 		if ret.IsErr() {
-			return glob.NewGlobErr(ret.String()).AddMsg(stmt.String())
+			return glob.ErrRet(ret.String()).AddMsg(stmt.String())
 		}
 		return glob.NewGlobTrue(fmt.Sprintf("%s\n", stmt.String())).AddMsg(glob.NewFactMsg(stmt.String())).AddMsg(glob.VerifyProcessMsgs(verRet.GetMsgs())).AddMsgs((ret.GetMsgs()))
 	} else if verRet.IsUnknown() {
 		return verRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 	} else {
-		execRet := glob.NewGlobErr("unknown ver ret")
+		execRet := glob.ErrRet("unknown ver ret")
 		return execRet.AddMsg(fmt.Sprintf("%s\n", stmt.String()))
 	}
 }
@@ -167,7 +167,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) *glob.GlobRet {
 		case ast.FactStmt:
 			ret := exec.Env.NewFactWithoutCheckingNameDefined(fact)
 			if ret.IsErr() {
-				return glob.NewGlobErr(ret.String()).AddMsg(stmt.String())
+				return glob.ErrRet(ret.String()).AddMsg(stmt.String())
 			}
 			// Collect derived facts from post-processing
 			if ret.IsTrue() && len(ret.GetMsgs()) > 0 {
@@ -175,7 +175,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) *glob.GlobRet {
 			}
 
 		default:
-			return glob.NewGlobErr(fmt.Sprintf("unknown fact type: %T", fact)).AddMsg(stmt.String())
+			return glob.ErrRet(fmt.Sprintf("unknown fact type: %T", fact)).AddMsg(stmt.String())
 		}
 	}
 
@@ -190,7 +190,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) *glob.GlobRet {
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) *glob.GlobRet {
 	ret := exec.Env.NewDefProp_InsideAtomsDeclared(stmt)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	paramMap := make(map[string]struct{})
@@ -206,17 +206,17 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 		// prop leads to iff
 		propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
 		if err != nil {
-			return glob.NewGlobErr(err.Error())
+			return glob.ErrRet(err.Error())
 		}
 
 		ret = exec.Env.NewFactWithoutCheckingNameDefined(propToIff)
 		if ret.IsErr() {
-			return glob.NewGlobErr(ret.String())
+			return glob.ErrRet(ret.String())
 		}
 
 		ret = exec.Env.NewFactWithoutCheckingNameDefined(iffToProp)
 		if ret.IsErr() {
-			return glob.NewGlobErr(ret.String())
+			return glob.ErrRet(ret.String())
 		}
 	}
 	execRet := glob.NewGlobTrue(stmt.String())
@@ -227,7 +227,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) *glob.GlobRet {
 	ret := exec.Env.DefLetStmt(stmt)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 	return glob.NewGlobTrue(stmt.String()).AddMsgs(ret.GetMsgs())
 }
@@ -240,7 +240,7 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) *glob.GlobRet
 
 	ret := exec.Env.NewDefExistProp_InsideAtomsDeclared(stmt)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 	return glob.NewGlobTrue(stmt.String())
 }
@@ -298,7 +298,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 
 	ret := exec.Env.NewFactWithoutCheckingNameDefined(caseStmt)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String()), fmt.Errorf(ret.String())
+		return glob.ErrRet(ret.String()), fmt.Errorf(ret.String())
 	}
 
 	execState := exec.execStmtsAtCurEnv(stmt.Proofs[index])
@@ -353,7 +353,7 @@ func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCase
 
 	ret := exec.Env.NewFactWithoutCheckingNameDefined(caseStmt)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String()), fmt.Errorf(ret.String())
+		return glob.ErrRet(ret.String()), fmt.Errorf(ret.String())
 	}
 
 	execState := exec.execStmtsAtCurEnv(stmt.Proofs[index])
@@ -382,11 +382,11 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) *glob.GlobRet {
 	if len(stmt.Prop.IffFactsOrNil) == 0 {
 		_, iffToProp, err := stmt.Prop.Make_PropToIff_IffToProp()
 		if err != nil {
-			return glob.NewGlobErr(err.Error())
+			return glob.ErrRet(err.Error())
 		}
 		ret := exec.Env.NewFactWithoutCheckingNameDefined(iffToProp)
 		if ret.IsErr() {
-			return glob.NewGlobErr(ret.String())
+			return glob.ErrRet(ret.String())
 		}
 	}
 
@@ -399,13 +399,13 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) *glob.GlobRet {
 
 	ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	uniFact2 := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFactsOrNil, stmt.Prop.ImplicationFactsOrNil, stmt.Line)
 	ret = exec.Env.NewFactWithoutCheckingNameDefined(uniFact2)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	return glob.NewGlobTrue(stmt.String())
@@ -426,30 +426,30 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) *glob.GlobRet {
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) *glob.GlobRet {
 	ret := exec.Env.IsValidAndAvailableName(stmt.Name)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	// 在 objMem 里记录一下
 	defLetStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
 	ret = exec.Env.DefLetStmt(defLetStmt)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 	exec.Env.AllDefinedAtomObjNames[stmt.Name] = struct{}{}
 
 	ret = exec.Env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.Atom(stmt.Name), nil, stmt.FnTemplate)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	derivedFact, err := stmt.FnTemplate.DeriveUniFact_WithGivenFn(ast.Atom(stmt.Name))
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 
 	ret = exec.Env.NewFactWithoutCheckingNameDefined(derivedFact)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	return glob.NewGlobTrue(stmt.String())
@@ -461,7 +461,7 @@ func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) *glob.Glob
 
 	execState, err := exec.proveByEnumMainLogic(stmt)
 	if notOkExec(execState, err) {
-		return glob.NewGlobErr(execState.String())
+		return glob.ErrRet(execState.String())
 	}
 
 	return glob.NewGlobTrue(stmt.String())
@@ -476,7 +476,7 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) *glob.GlobRet {
 	// know uniFact
 	ret := exec.Env.NewFactWithoutCheckingNameDefined(stmt.Fact)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	return glob.NewGlobTrue(stmt.String())
@@ -494,7 +494,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) *glob.GlobR
 
 	ret := exec.Env.NewFactWithoutCheckingNameDefined(knownUniFact)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	return glob.NewGlobTrue(stmt.String()).AddMsg(fmt.Sprintf("%s\nis true by definition", knownUniFact))
@@ -507,7 +507,7 @@ func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) *glob.GlobRet {
 
 	ret := exec.Env.NewFnTemplateInEnvMem(stmt)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	return glob.NewGlobTrue(stmt.String())
@@ -560,7 +560,7 @@ func (exec *Executor) Verify(fact ast.FactStmt, requireMsg bool) *glob.GlobRet {
 func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) *glob.GlobRet {
 	err := exec.proveIsTransitivePropStmtBody(stmt)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 
 	exec.Env.CurEnv().TransitivePropMem[string(stmt.Prop)] = make(map[string][]ast.Obj)
@@ -656,7 +656,7 @@ func (exec *Executor) evalStmt(stmt *ast.EvalStmt) *glob.GlobRet {
 	}
 	ret := exec.Env.NewFactWithoutCheckingNameDefined(ast.NewEqualFact(stmt.ObjToEval, value))
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 	trueEvalRet = trueEvalRet.AddMsgs(execRet.GetMsgs())
 
@@ -698,11 +698,11 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.GlobRet {
 		leftAsInt, ok1 := ast.IsObjLiterallyIntNumber(left)
 		rightAsInt, ok2 := ast.IsObjLiterallyIntNumber(right)
 		if !ok1 || !ok2 {
-			return glob.NewGlobErr(fmt.Sprintf("left value %s and right value %s must be integers", left.String(), right.String()))
+			return glob.ErrRet(fmt.Sprintf("left value %s and right value %s must be integers", left.String(), right.String()))
 		}
 
 		if leftAsInt > rightAsInt {
-			return glob.NewGlobErr(fmt.Sprintf("left value %d must be less than or equal to right value %d", leftAsInt, rightAsInt))
+			return glob.ErrRet(fmt.Sprintf("left value %d must be less than or equal to right value %d", leftAsInt, rightAsInt))
 		}
 
 		rightMost := rightAsInt
@@ -733,7 +733,7 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.GlobRet {
 	uniFact := stmt.UniFact()
 	ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	return glob.NewGlobTrue(stmt.String())
@@ -767,7 +767,7 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 	for _, domFact := range stmt.DomFacts {
 		instDomFact, err := domFact.InstantiateFact(uniMap)
 		if err != nil {
-			return glob.NewGlobErr(err.Error())
+			return glob.ErrRet(err.Error())
 		}
 		execState := exec.factStmt(instDomFact)
 		if execState.IsErr() {
@@ -778,20 +778,20 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 			// 如果 不OK，那必须证明是 false，绝对不能是 unknown
 			specFact, ok := domFact.(*ast.SpecFactStmt)
 			if !ok {
-				return glob.NewGlobErr(fmt.Sprintf("dom fact in prove_for must be a SpecFactStmt to reverse: %s", domFact.String()))
+				return glob.ErrRet(fmt.Sprintf("dom fact in prove_for must be a SpecFactStmt to reverse: %s", domFact.String()))
 			}
 			revInstDomFact := specFact.ReverseIsTrue()
 			for _, fact := range revInstDomFact {
 				instFact, err := fact.InstantiateFact(uniMap)
 				if err != nil {
-					return glob.NewGlobErr(err.Error())
+					return glob.ErrRet(err.Error())
 				}
 				execState = exec.factStmt(instFact)
 				if execState.IsErr() {
 					return execState
 				}
 				if execState.IsUnknown() {
-					return glob.NewGlobErr(fmt.Sprintf("dom facts in prove_for must be proved to be true or false, can not be unknown: %s", instFact.String()))
+					return glob.ErrRet(fmt.Sprintf("dom facts in prove_for must be proved to be true or false, can not be unknown: %s", instFact.String()))
 				}
 			}
 
@@ -800,7 +800,7 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 
 		ret := exec.Env.NewFactWithoutCheckingNameDefined(domFact)
 		if ret.IsErr() {
-			return glob.NewGlobErr(ret.String())
+			return glob.ErrRet(ret.String())
 		}
 	}
 
@@ -816,7 +816,7 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 	for _, thenFact := range stmt.ThenFacts {
 		instThenFact, err := thenFact.InstantiateFact(uniMap)
 		if err != nil {
-			return glob.NewGlobErr(err.Error())
+			return glob.ErrRet(err.Error())
 		}
 
 		execState = exec.factStmt(instThenFact)
@@ -824,7 +824,7 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 			return execState
 		}
 		if execState.IsUnknown() {
-			return glob.NewGlobErr(fmt.Sprintf("then fact in prove_for must be proved to be true or false, can not be unknown: %s", instThenFact.String()))
+			return glob.ErrRet(fmt.Sprintf("then fact in prove_for must be proved to be true or false, can not be unknown: %s", instThenFact.String()))
 		}
 	}
 
@@ -836,7 +836,7 @@ func (exec *Executor) implicationStmt(stmt *ast.ImplicationStmt) *glob.GlobRet {
 	defPropStmt := ast.NewDefPropStmt(stmt.DefHeader, stmt.DomFacts, nil, stmt.ImplicationFacts, stmt.Line)
 	ret := exec.Env.NewDefProp_InsideAtomsDeclared(defPropStmt)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	return glob.NewGlobTrue(stmt.String())

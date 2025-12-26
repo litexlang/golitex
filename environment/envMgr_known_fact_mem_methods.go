@@ -66,14 +66,14 @@ func (envMgr *EnvMgr) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn a
 			return ret
 		}
 
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	} else {
 		ret := envMgr.InsertFnInFnTT(fn, fnTStruct)
 		if ret.IsErr() {
 			return ret
 		}
 
-		return glob.NewGlobTrue("")
+		return glob.NewEmptyGlobTrue()
 	}
 }
 
@@ -81,29 +81,29 @@ func (envMgr *EnvMgr) getInstantiatedFnTTOfFnObj(fnObj *ast.FnObj) (*ast.FnTempl
 	if ast.IsFnTemplate_ObjFn(fnObj) {
 		fnTNoName, err := fnObj.FnTObj_ToFnTNoName()
 		if err != nil {
-			return nil, false, glob.ErrRet(err)
+			return nil, false, glob.ErrRetWithErr(err)
 		}
-		return fnTNoName, true, glob.NewGlobTrue("")
+		return fnTNoName, true, glob.NewEmptyGlobTrue()
 	}
 
 	def := envMgr.GetFnTemplateDef(fnObj.FnHead.(ast.Atom))
 	if def == nil {
-		return nil, false, glob.NewGlobTrue("")
+		return nil, false, glob.NewEmptyGlobTrue()
 	}
 
 	fnTNoName, err := def.Instantiate_GetFnTemplateNoName(fnObj)
 	if err != nil {
-		return nil, false, glob.ErrRet(err)
+		return nil, false, glob.ErrRetWithErr(err)
 	}
 
-	return fnTNoName, true, glob.NewGlobTrue("")
+	return fnTNoName, true, glob.NewEmptyGlobTrue()
 }
 
 func (envMgr *EnvMgr) NewFnTemplateInEnvMem(stmt *ast.DefFnSetStmt) *glob.GlobRet {
 	// 确保template name 没有被声明过
 	ret := envMgr.IsValidAndAvailableName(string(stmt.TemplateDefHeader.Name))
 	if ret.IsNotTrue() {
-		return glob.ErrRet(fmt.Errorf("fn template name %s is already declared", stmt.TemplateDefHeader.Name))
+		return glob.ErrRet(fmt.Sprintf("fn template name %s is already declared", stmt.TemplateDefHeader.Name))
 	}
 
 	ret = envMgr.AtomsInFnTemplateFnTemplateDeclared(ast.Atom(stmt.TemplateDefHeader.Name), stmt)
@@ -117,5 +117,5 @@ func (envMgr *EnvMgr) NewFnTemplateInEnvMem(stmt *ast.DefFnSetStmt) *glob.GlobRe
 	// Mark in current EnvSlice
 	envMgr.CurEnv().FnTemplateDefMem[string(stmt.TemplateDefHeader.Name)] = struct{}{}
 
-	return glob.NewGlobTrue("")
+	return glob.NewEmptyGlobTrue()
 }

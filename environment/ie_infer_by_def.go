@@ -42,7 +42,7 @@ func (ie *InferEngine) newUserDefinedTruePureFactByDef(fact *ast.SpecFactStmt) *
 	for _, thenFact := range propDef.IffFactsOrNil {
 		instantiated, err := thenFact.InstantiateFact(uniMap)
 		if err != nil {
-			return glob.ErrRet(err)
+			return glob.ErrRetWithErr(err)
 		}
 
 		ret := ie.EnvMgr.newFactNoInfer(instantiated)
@@ -65,7 +65,7 @@ func (ie *InferEngine) newUserDefinedTruePureFactByDef(fact *ast.SpecFactStmt) *
 	for _, thenFact := range propDef.ImplicationFactsOrNil {
 		instantiated, err := thenFact.InstantiateFact(uniMap)
 		if err != nil {
-			return glob.ErrRet(err)
+			return glob.ErrRetWithErr(err)
 		}
 
 		ret := ie.EnvMgr.newFactNoInfer(instantiated)
@@ -91,5 +91,5 @@ func (ie *InferEngine) newUserDefinedTruePureFactByDef(fact *ast.SpecFactStmt) *
 		derivedFacts = append(derivedFacts, "")
 	}
 
-	return glob.NewGlobTrueWithMsgs(derivedFacts)
+	return glob.NewGlobTrueWithInfers(derivedFacts)
 }

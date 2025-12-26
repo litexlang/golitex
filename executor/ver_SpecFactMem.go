@@ -471,7 +471,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 		for _, paramInParamSetFact := range paramInParamSetFacts {
 			verRet := ver.VerFactStmt(paramInParamSetFact, nextState)
 			if verRet.IsErr() {
-				return glob.NewGlobErr(verRet.String())
+				return glob.ErrRet(verRet.String())
 			}
 			if verRet.IsUnknown() {
 				setFactSatisfied = false
