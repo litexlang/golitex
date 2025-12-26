@@ -16,6 +16,7 @@ package litex_pipeline
 
 import (
 	"fmt"
+	glob "golitex/glob"
 	package_manager "golitex/package_manager"
 	"os"
 	"path/filepath"
@@ -37,7 +38,7 @@ func Test_File(t *testing.T) {
 	if ret.IsNotTrue() {
 		t.Errorf("failed to run file %s\n", fileName)
 	}
-	fmt.Println(ret.StringWithOptimizedNewline())
+	fmt.Println(glob.StringWithOptimizedNewline(ret.String()))
 	executionTime := time.Since(start)
 	fmt.Printf("execution time: %s\n", executionTime)
 }
@@ -56,7 +57,7 @@ func Test_ImportFile(t *testing.T) {
 	if ret.IsNotTrue() {
 		t.Errorf("failed to run file %s\n", fileName)
 	}
-	fmt.Println(ret.StringWithOptimizedNewline())
+	fmt.Println(glob.StringWithOptimizedNewline(ret.String()))
 	executionTime := time.Since(start)
 	fmt.Printf("execution time: %s\n", executionTime)
 }

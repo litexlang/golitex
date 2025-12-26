@@ -16,7 +16,16 @@ package litex_global
 
 import "strings"
 
+type MsgType int8
+
+const (
+	MsgTypeTrue MsgType = iota
+	MsgTypeUnknown
+	MsgTypeError
+)
+
 type MsgMgr struct {
+	Type             MsgType
 	Define           []string
 	NewFact          []string
 	VerifyProcess    []string
@@ -175,4 +184,45 @@ func NewMsgMgrWithInnerMsgMgr(innerMsgMgr *MsgMgr) *MsgMgr {
 	ret := NewEmptyMsgMgr()
 	ret.AddInnerMsgMgr(innerMsgMgr)
 	return ret
+}
+
+func (m *MsgMgr) SetType(msgType MsgType) *MsgMgr {
+	m.Type = msgType
+	return m
+}
+
+func (m *MsgMgr) IsTrue() bool {
+	return m.Type == MsgTypeTrue
+}
+
+func (m *MsgMgr) IsUnknown() bool {
+	return m.Type == MsgTypeUnknown
+}
+
+func (m *MsgMgr) IsError() bool {
+	return m.Type == MsgTypeError
+}
+
+func (m *MsgMgr) IsNotTrue() bool {
+	return m.Type != MsgTypeTrue
+}
+
+func (m *MsgMgr) IsNotUnknown() bool {
+	return m.Type != MsgTypeUnknown
+}
+
+func (m *MsgMgr) IsNotError() bool {
+	return m.Type != MsgTypeError
+}
+
+func (m *MsgMgr) AddREPLMsg() *MsgMgr {
+	switch m.Type {
+	case MsgTypeTrue:
+		m.AddSystem(REPLSuccessMessage)
+	case MsgTypeUnknown:
+		m.AddSystem(REPLUnknownMessage)
+	case MsgTypeError:
+		m.AddSystem(REPLErrorMessage)
+	}
+	return m
 }
