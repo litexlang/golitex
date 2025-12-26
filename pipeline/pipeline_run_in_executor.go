@@ -23,7 +23,6 @@ import (
 	packageMgr "golitex/package_manager"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 func RunStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) *glob.GlobRet {
@@ -33,7 +32,8 @@ func RunStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) *glob.GlobRet {
 	case *ast.ImportDirStmt:
 		return RunImportStmtInExecutor(curExec, asStmt)
 	default:
-		return curExec.Stmt(asStmt).AddMsgAtBegin(fmt.Sprintf("--- line %d ---", stmt.GetLine()))
+		// return curExec.Stmt(asStmt).AddMsgAtBegin(fmt.Sprintf("--- line %d ---", stmt.GetLine()))
+		return curExec.Stmt(asStmt)
 	}
 }
 
@@ -58,22 +58,21 @@ func RunFileStmtInExecutor(curExec *exe.Executor, importFileStmt *ast.RunFileStm
 	}
 
 	p := ast.NewTbParser(curExec.Env.EnvPkgMgr.PkgMgr)
-	msgs := []string{}
+	msgs := []*glob.GlobRet{}
 	for _, block := range blocks {
 		topStmt, err := p.Stmt(&block)
 		if err != nil {
 			return glob.ErrRet(err.Error())
 		}
 		ret := RunStmtInExecutor(curExec, topStmt)
-		msgs = append(msgs, ret.String())
+		msgs = append(msgs, ret)
 		if ret.IsNotTrue() {
-			return glob.ErrRet(strings.Join(msgs, "\n"))
+			return glob.ErrRet(ret.String())
 		}
 	}
-
-	msgs = append(msgs, fmt.Sprintf("%s\n", importFileStmt))
-	msgs = append(msgs, exe.SuccessExecStmtStr(importFileStmt))
-	return glob.GlobTrue(strings.Join(msgs, "\n"))
+	msgs = append(msgs, glob.NewGlobTrueWithStmt(fmt.Sprintf("%s\n", importFileStmt)))
+	msgs = append(msgs, glob.NewGlobTrueWithStmt(exe.SuccessExecStmtStr(importFileStmt)))
+	return glob.NewGlobTrueWithInnerGlobRets(msgs)
 }
 
 func RunImportStmtInExecutor(curExec *exe.Executor, importStmt *ast.ImportDirStmt) *glob.GlobRet {
@@ -89,7 +88,7 @@ func RunImportStmtInExecutor(curExec *exe.Executor, importStmt *ast.ImportDirStm
 		curExec.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap[absPath] = newEnvMgr
 	}
 
-	return glob.GlobTrue(fmt.Sprintf("%s\n", importStmt))
+	return glob.NewGlobTrueWithStmt(fmt.Sprintf("%s\n", importStmt))
 }
 
 // return: new imported pkg, new envMgr, globRet
@@ -115,7 +114,7 @@ func RunImportStmtToGetEnvMgr(pkgMgr *packageMgr.PkgMgr, importStmt *ast.ImportD
 			pkgMgr.NameAbsPathMap[importStmt.AsPkgName] = importRepoAbsPath
 			pkgMgr.AbsPathNamesSetMap[importRepoAbsPath][importStmt.AsPkgName] = struct{}{}
 
-			return false, nil, glob.GlobTrue(fmt.Sprintf("%s\n", importStmt))
+			return false, nil, glob.NewGlobTrueWithStmt(fmt.Sprintf("%s\n", importStmt))
 		} else {
 			// 这个name已经用过了，需要验证一下是不是之前对应的也是目前的abs path
 			if path != importRepoAbsPath {
@@ -136,5 +135,5 @@ func RunImportStmtToGetEnvMgr(pkgMgr *packageMgr.PkgMgr, importStmt *ast.ImportD
 		return false, nil, ret
 	}
 
-	return true, envMgr, glob.GlobTrue(fmt.Sprintf("%s\n", importStmt))
+	return true, envMgr, glob.NewGlobTrueWithStmt(fmt.Sprintf("%s\n", importStmt))
 }

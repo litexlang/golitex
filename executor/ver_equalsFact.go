@@ -36,7 +36,7 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 			verRet := ver.VerFactStmt(newFact, state)
 			if verRet.IsErr() {
 				newFact := ast.NewEqualFact(stmt.Params[i-1], stmt.Params[i])
-				return verRet.AddMsg(fmt.Sprintf("%s\nis error", newFact.String()))
+				return verRet.AddError(fmt.Sprintf("%s\nis error", newFact.String()))
 			}
 			if verRet.IsTrue() {
 				ret := ver.Env.NewFactWithoutCheckingNameDefined(newFact)
@@ -55,8 +55,8 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 
 		if !checked {
 			newFact := ast.NewEqualFact(stmt.Params[i-1], stmt.Params[i])
-			return unknownRet.AddMsg(fmt.Sprintf("%s\nis unknown", newFact.String()))
+			return unknownRet.AddUnknown(fmt.Sprintf("%s\nis unknown", newFact.String()))
 		}
 	}
-	return glob.NewGlobTrueWithMsgs(trueMsgs)
+	return glob.NewGlobTrueWithNewFacts(trueMsgs)
 }

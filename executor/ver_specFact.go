@@ -237,7 +237,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 	propDef := ver.Env.GetExistPropDef(stmt.PropName)
 	if propDef == nil {
 		// TODO: 如果没声明，应该报错
-		return glob.ErrRet(fmt.Sprintf("%s has no definition", stmt.PropName).Error())
+		return glob.ErrRet(fmt.Sprintf("%s has no definition", stmt.PropName))
 	}
 
 	uniConMap := map[string]ast.Obj{}
@@ -263,7 +263,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 			execRet := glob.NewEmptyGlobUnknown()
 			if state.WithMsg {
 				msg := fmt.Sprintf("given object %s is not in its param set %s\n", existParams[i], instParamSets[i])
-				execRet.AddMsg(msg)
+				execRet.AddUnknown(msg)
 			}
 			return execRet
 		}
@@ -288,7 +288,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 			execRet := glob.NewEmptyGlobUnknown()
 			if state.WithMsg {
 				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
-				execRet.AddMsg(msg)
+				execRet.AddUnknown(msg)
 			}
 			return execRet
 		}

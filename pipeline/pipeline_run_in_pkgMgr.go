@@ -23,7 +23,6 @@ import (
 	packageMgr "golitex/package_manager"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, *glob.GlobRet) {
@@ -45,25 +44,25 @@ func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bo
 
 	p := ast.NewTbParser(pkgMgr)
 	curExec := exe.NewExecutor(envMgr)
-	msgs := []string{}
+	innerGlobRets := []*glob.GlobRet{}
 	for _, block := range blocks {
 		topStmt, err := p.Stmt(&block)
 		if err != nil {
 			return nil, glob.ErrRet(err.Error())
 		}
 		ret := RunStmtInExecutor(curExec, topStmt)
-		msgs = append(msgs, ret.String())
+		innerGlobRets = append(innerGlobRets, ret)
 		if ret.IsNotTrue() {
-			return nil, glob.ErrRet(strings.Join(msgs, "\n"))
+			return nil, glob.ErrRet(ret.String())
 		}
 	}
 
 	if removeBuiltinEnv {
 		envMgrWithoutBuiltinLogic := envMgr.RemoveBuiltinEnv()
-		return envMgrWithoutBuiltinLogic, glob.GlobTrue(strings.Join(msgs, "\n"))
+		return envMgrWithoutBuiltinLogic, glob.NewGlobTrueWithInnerGlobRets(innerGlobRets)
 	}
 
-	return envMgr, glob.GlobTrue(strings.Join(msgs, "\n"))
+	return envMgr, glob.NewGlobTrueWithInnerGlobRets(innerGlobRets)
 }
 
 func RunFileInPkgMgr(fileAbsPath string, curPkgName string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, *glob.GlobRet) {
