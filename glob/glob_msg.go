@@ -102,14 +102,6 @@ func ByDefinitionMsg(msg string) string {
 	return fmt.Sprintf("by definition:\n%s\n", msg)
 }
 
-type StmtExecMsg struct {
-	Define        []string
-	NewFact       []string
-	VerifyProcess []string
-	Infer         []string
-	Error         []string
-}
-
 func NewFactMsg(stmt string) string {
 	return fmt.Sprintf("new fact:\n%s\n", stmt)
 }
