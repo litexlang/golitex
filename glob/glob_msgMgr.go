@@ -30,7 +30,7 @@ type GlobRet struct {
 	NewFact           []string
 	VerifyProcess     []string
 	Infer             []string
-	System            []string
+	Stmt              []string
 	InnerGlobRetSlice []*GlobRet
 	Unknown           []string
 	Error             []string
@@ -38,6 +38,11 @@ type GlobRet struct {
 
 func (m *GlobRet) String() string {
 	var builder strings.Builder
+
+	if len(m.Stmt) > 0 {
+		builder.WriteString("statement:\n")
+		builder.WriteString(strings.Join(m.Stmt, "\n"))
+	}
 
 	if len(m.Define) > 0 {
 		builder.WriteString("by definition:\n")
@@ -57,11 +62,6 @@ func (m *GlobRet) String() string {
 	if len(m.Infer) > 0 {
 		builder.WriteString("infer:\n")
 		builder.WriteString(strings.Join(m.Infer, "\n"))
-	}
-
-	if len(m.System) > 0 {
-		builder.WriteString("system:\n")
-		builder.WriteString(strings.Join(m.System, "\n"))
 	}
 
 	if len(m.Unknown) > 0 {
@@ -86,41 +86,69 @@ func (m *GlobRet) String() string {
 }
 
 func (m *GlobRet) AddDefine(define string) *GlobRet {
+	if define == "" {
+		return m
+	}
 	m.Define = append(m.Define, define)
 	return m
 }
 
 func (m *GlobRet) AddNewFact(newFact string) *GlobRet {
+	if newFact == "" {
+		return m
+	}
 	m.NewFact = append(m.NewFact, newFact)
 	return m
 }
 
 func (m *GlobRet) AddVerifyProcess(verifyProcess string) *GlobRet {
+	if verifyProcess == "" {
+		return m
+	}
 	m.VerifyProcess = append(m.VerifyProcess, verifyProcess)
 	return m
 }
 
 func (m *GlobRet) AddInfer(infer string) *GlobRet {
+	if infer == "" {
+		return m
+	}
 	m.Infer = append(m.Infer, infer)
 	return m
 }
 
-func (m *GlobRet) AddSystem(system string) *GlobRet {
-	m.System = append(m.System, system)
+func (m *GlobRet) AddStmt(s string) *GlobRet {
+	if s == "" {
+		return m
+	}
+	m.Stmt = append(m.Stmt, s)
 	return m
 }
 
 func (m *GlobRet) AddUnknown(unknown string) *GlobRet {
+	m.Type = GlobRetTypeUnknown
+
+	if unknown == "" {
+		return m
+	}
 	m.Unknown = append(m.Unknown, unknown)
 	return m
 }
 
 func (m *GlobRet) AddError(error string) *GlobRet {
+	m.Type = GlobRetTypeError
+
+	if error == "" {
+		return m
+	}
 	m.Error = append(m.Error, error)
 	return m
 }
 
 func (m *GlobRet) AddInnerGlobRet(innerGlobRet *GlobRet) *GlobRet {
+	if innerGlobRet == nil {
+		return m
+	}
 	m.InnerGlobRetSlice = append(m.InnerGlobRetSlice, innerGlobRet)
 	return m
 }
@@ -132,7 +160,7 @@ func NewEmptyGlobTrue() *GlobRet {
 		NewFact:           []string{},
 		VerifyProcess:     []string{},
 		Infer:             []string{},
-		System:            []string{},
+		Stmt:              []string{},
 		Unknown:           []string{},
 		Error:             []string{},
 		InnerGlobRetSlice: []*GlobRet{},
@@ -146,7 +174,7 @@ func NewEmptyGlobUnknown() *GlobRet {
 		NewFact:           []string{},
 		VerifyProcess:     []string{},
 		Infer:             []string{},
-		System:            []string{},
+		Stmt:              []string{},
 		Unknown:           []string{},
 		Error:             []string{},
 		InnerGlobRetSlice: []*GlobRet{},
@@ -160,7 +188,7 @@ func NewEmptyGlobError() *GlobRet {
 		NewFact:           []string{},
 		VerifyProcess:     []string{},
 		Infer:             []string{},
-		System:            []string{},
+		Stmt:              []string{},
 		InnerGlobRetSlice: []*GlobRet{},
 		Unknown:           []string{},
 		Error:             []string{},
@@ -191,9 +219,9 @@ func NewGlobTrueWithInfer(infer string) *GlobRet {
 	return ret
 }
 
-func NewGlobTrueWithSystem(system string) *GlobRet {
+func NewGlobTrueWithStmt(s string) *GlobRet {
 	ret := NewEmptyGlobTrue()
-	ret.AddSystem(system)
+	ret.AddStmt(s)
 	return ret
 }
 
@@ -209,7 +237,13 @@ func UnknownRet(unknown string) *GlobRet {
 	return ret
 }
 
-func ErrRet(err error) *GlobRet {
+func ErrRet(s string) *GlobRet {
+	ret := NewEmptyGlobError()
+	ret.AddError(s)
+	return ret
+}
+
+func ErrRetWithErr(err error) *GlobRet {
 	ret := NewEmptyGlobError()
 	ret.AddError(err.Error())
 	return ret
@@ -244,24 +278,12 @@ func (m *GlobRet) IsNotError() bool {
 	return m.Type != GlobRetTypeError
 }
 
-func (m *GlobRet) AddREPLMsg() *GlobRet {
-	switch m.Type {
-	case GlobRetTypeTrue:
-		m.AddSystem(REPLSuccessMessage)
-	case GlobRetTypeUnknown:
-		m.AddSystem(REPLUnknownMessage)
-	case GlobRetTypeError:
-		m.AddSystem(REPLErrorMessage)
-	}
-	return m
-}
-
 func (m *GlobRet) Inherit(other *GlobRet) *GlobRet {
 	m.Define = append(m.Define, other.Define...)
 	m.NewFact = append(m.NewFact, other.NewFact...)
 	m.VerifyProcess = append(m.VerifyProcess, other.VerifyProcess...)
 	m.Infer = append(m.Infer, other.Infer...)
-	m.System = append(m.System, other.System...)
+	m.Stmt = append(m.Stmt, other.Stmt...)
 	m.Unknown = append(m.Unknown, other.Unknown...)
 	m.Error = append(m.Error, other.Error...)
 	m.InnerGlobRetSlice = append(m.InnerGlobRetSlice, other.InnerGlobRetSlice...)
@@ -292,9 +314,9 @@ func NewGlobTrueWithInfers(infers []string) *GlobRet {
 	return ret
 }
 
-func NewGlobTrueWithSystems(systems []string) *GlobRet {
+func NewGlobTrueWithStmts(stmts []string) *GlobRet {
 	ret := NewEmptyGlobTrue()
-	ret.System = systems
+	ret.Stmt = stmts
 	return ret
 }
 
@@ -314,4 +336,62 @@ func NewGlobErrorWithErrors(errors []string) *GlobRet {
 	ret := NewEmptyGlobError()
 	ret.Error = errors
 	return ret
+}
+
+func (m *GlobRet) AddDefines(defines []string) *GlobRet {
+	for _, define := range defines {
+		m.AddDefine(define)
+	}
+	return m
+}
+
+func (m *GlobRet) AddNewFacts(newFacts []string) *GlobRet {
+	for _, newFact := range newFacts {
+		m.AddNewFact(newFact)
+	}
+	return m
+}
+
+func (m *GlobRet) AddVerifyProcesses(verifyProcesses []string) *GlobRet {
+	for _, verifyProcess := range verifyProcesses {
+		m.AddVerifyProcess(verifyProcess)
+	}
+	return m
+}
+
+func (m *GlobRet) AddInfers(infers []string) *GlobRet {
+	for _, infer := range infers {
+		m.AddInfer(infer)
+	}
+	return m
+}
+
+func (m *GlobRet) AddStmts(stmts []string) *GlobRet {
+	for _, stmts := range stmts {
+		m.AddStmt(stmts)
+	}
+	return m
+}
+
+func (m *GlobRet) AddUnknowns(unknowns []string) *GlobRet {
+	m.Type = GlobRetTypeUnknown
+	for _, unknown := range unknowns {
+		m.AddUnknown(unknown)
+	}
+	return m
+}
+
+func (m *GlobRet) AddErrors(errors []string) *GlobRet {
+	m.Type = GlobRetTypeError
+	for _, error := range errors {
+		m.AddError(error)
+	}
+	return m
+}
+
+func (m *GlobRet) AddInnerGlobRets(innerGlobRets []*GlobRet) *GlobRet {
+	for _, innerGlobRet := range innerGlobRets {
+		m.AddInnerGlobRet(innerGlobRet)
+	}
+	return m
 }

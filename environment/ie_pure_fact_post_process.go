@@ -54,14 +54,14 @@ func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.GlobRet {
 		}
 	}
 
-	return glob.ErrRet(fmt.Errorf("undefined prop: %s", fact.PropName))
+	return glob.ErrRet(fmt.Sprintf("undefined prop: %s", fact.PropName))
 }
 
 // equalTupleFactPostProcess handles postprocessing for equal_tuple(a, b, dim) facts
 // It automatically derives a[i] = b[i] for i from 1 to dim
 func (ie *InferEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) *glob.GlobRet {
 	if len(fact.Params) != 3 {
-		return glob.ErrRet(fmt.Errorf("equal_tuple fact expect 3 parameters, get %d in %s", len(fact.Params), fact))
+		return glob.ErrRet(fmt.Sprintf("equal_tuple fact expect 3 parameters, get %d in %s", len(fact.Params), fact))
 	}
 
 	equalFact := ast.NewEqualFact(fact.Params[0], fact.Params[1])
@@ -127,7 +127,7 @@ func (ie *InferEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFac
 	ret = ie.EnvMgr.newFactNoInfer(uniFact)
 
 	if ret.IsErr() {
-		return glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
+		return glob.ErrRet(fmt.Sprintf("exist fact %s has no definition", fact))
 	}
 
 	return glob.NewEmptyGlobTrue()

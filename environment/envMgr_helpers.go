@@ -58,7 +58,7 @@ func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTemplat
 	} else {
 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
 		if !ok {
-			return nil, glob.ErrRet(fmt.Errorf("fnTNameHead is not an atom"))
+			return nil, glob.ErrRet(fmt.Sprintf("fnTNameHead is not an atom"))
 		}
 
 		return envMgr.getFnTDef_InstFnTStructOfIt(fnTNameHeadAsAtom, fnTName.Params)
@@ -68,17 +68,17 @@ func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTemplat
 func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.FnTemplate, *glob.GlobRet) {
 	defOfT := envMgr.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
-		return nil, glob.ErrRet(fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName))
+		return nil, glob.ErrRet(fmt.Sprintf("fnTNameHead %s is not a fn template", fnTDefName))
 	}
 
 	uniMap, err := ast.MakeUniMap(defOfT.TemplateDefHeader.Params, templateParams)
 	if err != nil {
-		return nil, glob.ErrRet(err)
+		return nil, glob.ErrRetWithErr(err)
 	}
 
 	fnTStruct, err := defOfT.Fn.Instantiate(uniMap)
 	if err != nil {
-		return nil, glob.ErrRet(err)
+		return nil, glob.ErrRetWithErr(err)
 	}
 
 	return fnTStruct, glob.NewEmptyGlobTrue()
@@ -107,7 +107,7 @@ func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.SpecFactStmt) *g
 	mem := envMgr.CurEnv().EqualMem
 
 	if len(fact.Params) != 2 {
-		return glob.ErrRet(fmt.Errorf("commutative transitive fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
+		return glob.ErrRet(fmt.Sprintf("commutative transitive fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
 
 	leftAsStr := fact.Params[0].String()
@@ -154,7 +154,7 @@ func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.SpecFactStmt) *g
 func (envMgr *EnvMgr) notExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, *glob.GlobRet) {
 	existPropDef := envMgr.GetExistPropDef(fact.PropName)
 	if existPropDef == nil {
-		return nil, glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
+		return nil, glob.ErrRet(fmt.Sprintf("exist fact %s has no definition", fact))
 	}
 
 	uniMap := map[string]ast.Obj{}
@@ -167,12 +167,12 @@ func (envMgr *EnvMgr) notExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt
 	for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
 		asSpecFactStmt, ok := thenFact.(*ast.SpecFactStmt)
 		if !ok {
-			return nil, glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
+			return nil, glob.ErrRet(fmt.Sprintf("exist fact %s has no definition", fact))
 		}
 
 		instantiated, err := asSpecFactStmt.InstantiateFact(uniMap)
 		if err != nil {
-			return nil, glob.ErrRet(err)
+			return nil, glob.ErrRetWithErr(err)
 		}
 
 		reversedFact := instantiated.(*ast.SpecFactStmt).ReverseIsTrue()
@@ -191,7 +191,7 @@ func (envMgr *EnvMgr) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactS
 
 	existPropDef := envMgr.GetExistPropDef(fact.PropName)
 	if existPropDef == nil {
-		return nil, nil, glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
+		return nil, nil, glob.ErrRet(fmt.Sprintf("exist fact %s has no definition", fact))
 	}
 
 	uniMap := map[string]ast.Obj{}
@@ -208,7 +208,7 @@ func (envMgr *EnvMgr) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactS
 	for _, iffFact := range existPropDef.DefBody.IffFactsOrNil {
 		instantiated, err := iffFact.InstantiateFact(uniMap)
 		if err != nil {
-			return nil, nil, glob.ErrRet(err)
+			return nil, nil, glob.ErrRetWithErr(err)
 		}
 		instantiatedIffFacts = append(instantiatedIffFacts, instantiated)
 	}
@@ -217,7 +217,7 @@ func (envMgr *EnvMgr) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactS
 	for _, thenFact := range existPropDef.DefBody.ImplicationFactsOrNil {
 		instantiated, err := thenFact.InstantiateFact(uniMap)
 		if err != nil {
-			return nil, nil, glob.ErrRet(err)
+			return nil, nil, glob.ErrRetWithErr(err)
 		}
 		instantiatedThenFacts = append(instantiatedThenFacts, instantiated)
 	}

@@ -37,6 +37,6 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) *glob.GlobR
 	case *ast.EqualsFactStmt:
 		return ver.verEqualsFactStmt(asStmt, state)
 	default:
-		return glob.NewGlobErr(fmt.Sprintf("unexpected fact statement: %s", asStmt))
+		return glob.ErrRet(fmt.Sprintf("unexpected fact statement: %s", asStmt))
 	}
 }

@@ -24,7 +24,7 @@ import (
 
 func (ver *Verifier) trueInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) != 2 {
-		return glob.NewGlobErr(fmt.Sprintf("invalid number of parameters for in fact: %d", len(stmt.Params)))
+		return glob.ErrRet(fmt.Sprintf("invalid number of parameters for in fact: %d", len(stmt.Params)))
 	}
 
 	// if stmt.TypeEnum == ast.FalsePure {
@@ -83,7 +83,7 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerSt
 
 	verRet = ver.verInFactByRightParamIsFnTemplateFact(stmt, state)
 	if verRet.IsErr() {
-		return glob.NewGlobErr(verRet.String())
+		return glob.ErrRet(verRet.String())
 	}
 	if verRet.IsTrue() {
 		return verRet
@@ -91,7 +91,7 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerSt
 
 	verRet = ver.verInFactByRightParamIsSetProduct(stmt, state)
 	if verRet.IsErr() {
-		return glob.NewGlobErr(verRet.String())
+		return glob.ErrRet(verRet.String())
 	}
 	if verRet.IsTrue() {
 		return verRet
@@ -99,7 +99,7 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerSt
 
 	verRet = ver.verInFactByRightParamIsCartSet(stmt, state)
 	if verRet.IsErr() {
-		return glob.NewGlobErr(verRet.String())
+		return glob.ErrRet(verRet.String())
 	}
 	if verRet.IsTrue() {
 		return verRet
@@ -451,7 +451,7 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.S
 
 // 	// Check that tuple length matches cart set length
 // 	if len(tupleAsFn.Params) != len(cartSet.Params) {
-// 		return glob.NewGlobErr(fmt.Sprintf("tuple length (%d) does not match cart set length (%d) in %s", len(tupleAsFn.Params), len(cartSet.Params), stmt))
+// 		return glob.ErrRet(fmt.Sprintf("tuple length (%d) does not match cart set length (%d) in %s", len(tupleAsFn.Params), len(cartSet.Params), stmt))
 // 	}
 
 // 	// Check that each element of tuple is in the corresponding cart set
@@ -620,22 +620,22 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 	for i, randomName := range randomNames {
 		ret := ver.Env.CheckAtomObjNameIsValidAndAvailableThenDefineIt(randomName)
 		if ret.IsErr() {
-			return glob.NewGlobErr(ret.String())
+			return glob.ErrRet(ret.String())
 		}
 		ret = ver.Env.NewFactWithoutCheckingNameDefined(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i], glob.BuiltinLine))
 		if ret.IsErr() {
-			return glob.NewGlobErr(ret.String())
+			return glob.ErrRet(ret.String())
 		}
 	}
 
 	leftToUniFact, err := leftIsInWhichFnTT.AsFnTStruct.DeriveUniFact_WithGivenFn(left)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 
 	instantiatedLeftToUniFact, err := leftToUniFact.InstantiateFact(uniMap)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 	instLeftUniFactAsUniFactStmt, ok := instantiatedLeftToUniFact.(*ast.UniFactStmt)
 	if !ok {
@@ -651,7 +651,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 
 		ret := ver.Env.NewFactWithoutCheckingNameDefined(fact)
 		if ret.IsErr() {
-			return glob.NewGlobErr(ret.String())
+			return glob.ErrRet(ret.String())
 		}
 	}
 
@@ -664,7 +664,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 
 		ret := ver.Env.NewFactWithoutCheckingNameDefined(fact)
 		if ret.IsErr() {
-			return glob.NewGlobErr(ret.String())
+			return glob.ErrRet(ret.String())
 		}
 	}
 
@@ -967,7 +967,7 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state 
 
 	setBuilderStruct, err := setBuilder.ToSetBuilderStruct()
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 
 	uniMap := map[string]ast.Obj{setBuilderStruct.Param: stmt.Params[0]}
@@ -977,7 +977,7 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state 
 	for _, fact := range setBuilderStruct.Facts {
 		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
-			return glob.NewGlobErr(err.Error())
+			return glob.ErrRet(err.Error())
 		}
 		instFacts = append(instFacts, instFact)
 	}

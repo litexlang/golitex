@@ -22,8 +22,6 @@ import (
 )
 
 func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.GlobRet {
-	isSuccess := false
-
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -43,17 +41,17 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 		result = glob.NewEmptyGlobTrue()
 		isSuccess = true
 	default:
-		return glob.NewGlobErr(fmt.Errorf("prove by contradiction only support reversible fact or uni fact").Error())
+		return glob.ErrRet(fmt.Sprintf("prove by contradiction only support reversible fact or uni fact"))
 	}
 
 	// Add messages in correct order
-	result = result.AddMsg("\n")
-	if isSuccess {
-		result = result.AddMsgAtBegin("is true\n")
-	} else {
-		result = result.AddMsgAtBegin("is unknown\n")
-	}
-	result = result.AddMsgAtBegin(stmt.ClaimProveStmt.String())
+	// result = result.AddMsg("\n")
+	// if isSuccess {
+	// 	result = result.AddMsgAtBegin("is true\n")
+	// } else {
+	// 	result = result.AddMsgAtBegin("is unknown\n")
+	// }
+	result = result.AddSystem(stmt.ClaimProveStmt.String())
 	return result
 }
 
@@ -63,7 +61,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 	for _, curFact := range reversedFact {
 		ret := exec.Env.NewFactWithoutCheckingNameDefined(curFact)
 		if ret.IsErr() {
-			return glob.NewGlobErr(ret.String())
+			return glob.ErrRet(ret.String())
 		}
 	}
 
@@ -74,7 +72,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 
 	lastStmtAsFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.Spec_OrFact)
 	if !ok {
-		return glob.NewGlobErr("prove by contradiction only support fact as last statement")
+		return glob.ErrRet("prove by contradiction only support fact as last statement")
 	}
 
 	reversedLastFact := lastStmtAsFact.ReverseIsTrue()
@@ -102,14 +100,14 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	ver := NewVerifier(exec.Env)
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(specFactStmt)
 	if err != nil {
-		return glob.NewGlobErr(err.Error())
+		return glob.ErrRet(err.Error())
 	}
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
 		ret := exec.Env.NewFactWithoutCheckingNameDefined(condFact)
 		if ret.IsErr() {
-			return glob.NewGlobErr(ret.String())
+			return glob.ErrRet(ret.String())
 		}
 	}
 
@@ -119,14 +117,14 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 		if reversibleThenFact, ok := thenFact.(ast.Spec_OrFact); ok {
 			thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, reversibleThenFact)
 		} else {
-			return glob.NewGlobErr(fmt.Errorf("then fact:\n%s\nis not reversible. Then section of universal fact prove by contradiction only support reversible fact", thenFact).Error())
+			return glob.ErrRet(fmt.Sprintf("then fact:\n%s\nis not reversible. Then section of universal fact prove by contradiction only support reversible fact", thenFact).Error())
 		}
 	}
 	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversibleFacts)
 	for _, reversedThenFact := range reversedThenFacts {
 		ret := exec.Env.NewFactWithoutCheckingNameDefined(reversedThenFact.(ast.FactStmt))
 		if ret.IsErr() {
-			return glob.NewGlobErr(ret.String())
+			return glob.ErrRet(ret.String())
 		}
 	}
 
@@ -139,7 +137,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	// the reversed last statement of current claim statement is true
 	lastFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.Spec_OrFact)
 	if !ok {
-		return glob.NewGlobErr(fmt.Errorf("prove by contradiction only support fact").Error())
+		return glob.ErrRet(fmt.Sprintf("prove by contradiction only support fact").Error())
 	}
 
 	reversedLastFact := lastFact.ReverseIsTrue()
@@ -172,7 +170,7 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.GlobRet
 	// 检查 stmt fact 中的所有元素已经定义过了
 	ret := exec.Env.NewFactWithoutCheckingNameDefined(stmt.ToCheckFact)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
@@ -188,7 +186,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	// 检查 stmt fact 中的所有元素已经定义过了
 	ret := exec.Env.NewFactWithoutCheckingNameDefined(stmt.ClaimProveStmt.ToCheckFact)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	return glob.NewGlobTrue(fmt.Sprintf("%s\n", stmt.String()))
@@ -204,7 +202,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.GlobRet {
 	ret := exec.Env.LookUpNamesInFact(stmt.ToCheckFact, map[string]struct{}{})
 	if ret.IsErr() {
 		ret.AddMsg("in claim statement")
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	switch stmt.ToCheckFact.(type) {
@@ -233,7 +231,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.GlobRet {
 func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.GlobRet {
 	asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt)
 	if !ok {
-		return glob.NewGlobErr(fmt.Errorf("claim stmt prove uni fact only support uni fact").Error())
+		return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support uni fact").Error())
 	}
 
 	// declare parameters in asUnivFact in the env
@@ -248,7 +246,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.Glob
 	for _, domFact := range asUnivFact.DomFacts {
 		ret := exec.Env.NewFactWithoutCheckingNameDefined(domFact)
 		if ret.IsErr() {
-			return glob.NewGlobErr(ret.String())
+			return glob.ErrRet(ret.String())
 		}
 	}
 
@@ -263,9 +261,9 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.Glob
 	// execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(asUnivFact.ThenFacts, exec.env, verifier.Round0NoMsg)
 	execState, failedFact, err := exec.verifyFactsAtCurEnv(asUnivFact.ThenFacts, Round0NoMsg())
 	if err != nil {
-		return glob.NewGlobErr(fmt.Errorf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err).Error())
+		return glob.ErrRet(fmt.Sprintf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err).Error())
 	} else if execState.IsUnknown() {
-		return glob.NewGlobErr(fmt.Errorf("claim statement error: failed to verify fact:\n%s", failedFact).Error())
+		return glob.ErrRet(fmt.Sprintf("claim statement error: failed to verify fact:\n%s", failedFact).Error())
 	}
 
 	return glob.NewEmptyGlobTrue()
@@ -281,7 +279,7 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimImplicationStmt) *glob.GlobRe
 	ret := exec.Env.LookUpNamesInFact(uniFact, map[string]struct{}{})
 	if ret.IsErr() {
 		ret.AddMsg("in claim prop statement")
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	// check proofs
@@ -322,7 +320,7 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) *glob.Glo
 	uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFactsOrNil, []ast.FactStmt{stmt.ExistPropWithoutDom.DefBody.DefHeader.ToSpecFact()}, stmt.Line)
 	ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	return glob.NewEmptyGlobTrue()
@@ -355,7 +353,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 
 	// 把haveObj 代入 existParams 看看是否真的符合 then
 	if len(stmt.HaveObj) != len(stmt.ExistPropWithoutDom.ExistParams) {
-		return glob.NewGlobErr(fmt.Errorf("claim exist prop statement error: have obj length is not equal to exist params length").Error())
+		return glob.ErrRet(fmt.Sprintf("claim exist prop statement error: have obj length is not equal to exist params length").Error())
 	}
 
 	uniMap := make(map[string]ast.Obj)
@@ -366,7 +364,7 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 	for _, fact := range stmt.ExistPropWithoutDom.DefBody.ImplicationFactsOrNil {
 		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
-			return glob.NewGlobErr(err.Error())
+			return glob.ErrRet(err.Error())
 		}
 		execState := exec.factStmt(instFact)
 		if execState.IsErr() {
@@ -413,11 +411,11 @@ func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) *glob.GlobRet {
 
 	ret := exec.Env.NewFactWithoutCheckingNameDefined(thenToIff)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 	ret = exec.Env.NewFactWithoutCheckingNameDefined(iffToThen)
 	if ret.IsErr() {
-		return glob.NewGlobErr(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	return glob.NewEmptyGlobTrue()

@@ -27,7 +27,7 @@ func (envMgr *EnvMgr) LookupNamesInObj(obj ast.Obj, extraParams map[string]struc
 	case *ast.FnObj:
 		return envMgr.lookupNamesInFnObj(asObj, extraParams)
 	default:
-		return glob.ErrRet(fmt.Errorf("unknown object type: %T", obj))
+		return glob.ErrRet(fmt.Sprintf("unknown object type: %T", obj))
 	}
 }
 
@@ -51,9 +51,9 @@ func (envMgr *EnvMgr) lookupAtomObjName(atom ast.Atom, extraParams map[string]st
 	defined := envMgr.IsAtomNameDefinedByUser(string(atom))
 	if !defined {
 		if glob.IsKeywordSetOrNonEmptySetOrFiniteSet(string(atom)) {
-			return glob.NewGlobErr(fmt.Sprintf("undefined atom name: %s. Be careful, %s, %s, %s are syntax sugar for %s, %s, %s respectively. They are not objects.", string(atom), glob.KeywordSet, glob.KeywordNonEmptySet, glob.KeywordFiniteSet, glob.KeywordSet, glob.KeywordNonEmptySet, glob.KeywordFiniteSet))
+			return glob.ErrRet(fmt.Sprintf("undefined atom name: %s. Be careful, %s, %s, %s are syntax sugar for %s, %s, %s respectively. They are not objects.", string(atom), glob.KeywordSet, glob.KeywordNonEmptySet, glob.KeywordFiniteSet, glob.KeywordSet, glob.KeywordNonEmptySet, glob.KeywordFiniteSet))
 		} else {
-			return glob.ErrRet(fmt.Errorf("undefined atom name: %s", atom))
+			return glob.ErrRet(fmt.Sprintf("undefined atom name: %s", atom))
 		}
 	} else {
 		return glob.NewEmptyGlobTrue()
@@ -89,7 +89,7 @@ func (envMgr *EnvMgr) lookupNamesInSetBuilder(obj ast.Obj, extraParams map[strin
 	setBuilderObj := obj.(*ast.FnObj)
 	setBuilder, err := setBuilderObj.ToSetBuilderStruct()
 	if err != nil {
-		return glob.ErrRet(fmt.Errorf("failed to parse setBuilder: %s", err.Error()))
+		return glob.ErrRet(fmt.Sprintf("failed to parse setBuilder: %s", err.Error()))
 	}
 
 	// Check parentSet
