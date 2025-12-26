@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) byStmt(stmt *ast.ByStmt) glob.GlobRet {
+func (exec *Executor) byStmt(stmt *ast.ByStmt) *glob.GlobRet {
 	execState, returnedFacts := exec.callProveAlgo(stmt)
 	if execState.IsNotTrue() {
 		return execState
@@ -38,9 +38,9 @@ func (exec *Executor) byStmt(stmt *ast.ByStmt) glob.GlobRet {
 }
 
 // 工作原理是吧ProveAlgoDef的params都变成传入的obj，然后instantiate，然后run
-// Returns glob.GlobRet and the FactStmt slice returned by prove_algo
+// Returns *glob.GlobRet and the FactStmt slice returned by prove_algo
 // If a ByStmt is encountered, it recursively extracts facts from it
-func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) (glob.GlobRet, []ast.FactStmt) {
+func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) (*glob.GlobRet, []ast.FactStmt) {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -83,7 +83,7 @@ func (exec *Executor) callProveAlgo(stmt *ast.ByStmt) (glob.GlobRet, []ast.FactS
 	return glob.NewEmptyGlobTrue(), returnedFacts
 }
 
-func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSlice, paramsValues []ast.Obj) (glob.GlobRet, []ast.FactStmt) {
+func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSlice, paramsValues []ast.Obj) (*glob.GlobRet, []ast.FactStmt) {
 	for _, stmt := range proveAlgoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.ProveAlgoReturnStmt:
@@ -108,7 +108,7 @@ func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSl
 	return glob.NewEmptyGlobTrue(), nil
 }
 
-// func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Obj) (glob.GlobRet, []ast.FactStmt) {
+// func (exec *Executor) runAlgoStmtsWhenBy(algoStmts ast.AlgoStmtSlice, paramsValues []ast.Obj) (*glob.GlobRet, []ast.FactStmt) {
 // 	for _, stmt := range algoStmts {
 // 		switch asStmt := stmt.(type) {
 // 		case *ast.AlgoIfStmt:
@@ -131,7 +131,7 @@ func (exec *Executor) runProveAlgoStmtsWhenBy(proveAlgoStmts ast.ProveAlgoStmtSl
 // 	return glob.NewEmptyGlobTrue(), nil
 // }
 
-func (exec *Executor) proveAlgoIfStmt(stmt *ast.ProveAlgoIfStmt, paramsValues []ast.Obj) (glob.GlobRet, []ast.FactStmt) {
+func (exec *Executor) proveAlgoIfStmt(stmt *ast.ProveAlgoIfStmt, paramsValues []ast.Obj) (*glob.GlobRet, []ast.FactStmt) {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -144,7 +144,7 @@ func (exec *Executor) proveAlgoIfStmt(stmt *ast.ProveAlgoIfStmt, paramsValues []
 	return exec.runProveAlgoStmtsWhenBy(stmt.ThenStmts, paramsValues)
 }
 
-// func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.Obj) (glob.GlobRet, []ast.FactStmt) {
+// func (exec *Executor) algoIfStmtWhenBy(stmt *ast.AlgoIfStmt, paramsValues []ast.Obj) (*glob.GlobRet, []ast.FactStmt) {
 // 	exec.NewEnv()
 // 	defer exec.deleteEnv()
 
@@ -157,7 +157,7 @@ func (exec *Executor) proveAlgoIfStmt(stmt *ast.ProveAlgoIfStmt, paramsValues []
 // 	return exec.runAlgoStmtsWhenBy(stmt.ThenStmts, paramsValues)
 // }
 
-func (exec *Executor) runProveAlgoReturnStmt(stmt *ast.ProveAlgoReturnStmt) (glob.GlobRet, []ast.FactStmt) {
+func (exec *Executor) runProveAlgoReturnStmt(stmt *ast.ProveAlgoReturnStmt) (*glob.GlobRet, []ast.FactStmt) {
 	if len(stmt.Facts) == 0 {
 		return glob.NewEmptyGlobTrue(), nil
 	}

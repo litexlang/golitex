@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-func FormatCode(path string) (glob.GlobRet, error) {
+func FormatCode(path string) (*glob.GlobRet, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return glob.NewGlobErr(fmt.Sprintf("failed to read file %s: %s", path, err.Error())), err

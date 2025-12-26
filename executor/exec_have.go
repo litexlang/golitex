@@ -21,7 +21,7 @@ import (
 	"strconv"
 )
 
-func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) glob.GlobRet {
+func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *glob.GlobRet {
 	// 检查 SpecFactStmt 是否满足了
 	execState := exec.Verify(stmt.Fact, false)
 	if execState.IsNotTrue() {
@@ -153,7 +153,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) gl
 // 	return false, nil
 // }
 
-// func (exec *Executor) haveCartSetStmt(stmt *ast.HaveCartSetStmt) glob.GlobRet {
+// func (exec *Executor) haveCartSetStmt(stmt *ast.HaveCartSetStmt) *glob.GlobRet {
 // 	// check that the cart has at least 2 parameters
 // 	if len(stmt.CartObj.Params) < 2 {
 // 		return glob.NewGlobErr(fmt.Sprintf("cart must have at least 2 parameters, %s in %s is not valid", stmt.CartObj.String(), stmt.CartObj.String()))
@@ -187,7 +187,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) gl
 // 	return glob.NewEmptyGlobTrue().AddMsg(stmt.String())
 // }
 
-func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) glob.GlobRet {
+func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.GlobRet {
 	ver := NewVerifier(exec.Env)
 
 	inferMsgs := []string{}
@@ -233,7 +233,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) glob.GlobRet 
 	return glob.NewGlobTrue(stmt.String()).AddNewLineAndMsg(glob.ByDefinitionMsgs(inferMsgs))
 }
 
-func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) glob.GlobRet {
+func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) *glob.GlobRet {
 	msgs := []string{}
 	for i := range len(stmt.Objs) {
 		if !glob.IsKeywordSetOrNonEmptySetOrFiniteSet(stmt.ObjSets[i].String()) {
@@ -262,7 +262,7 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 	return glob.NewEmptyGlobTrue().AddMsg(fmt.Sprintf("%s\n", stmt)).AddMsgs(msgs)
 }
 
-func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) glob.GlobRet {
+func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) *glob.GlobRet {
 	var err error
 
 	// 返回值要是set
@@ -288,7 +288,7 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) glob.GlobRet {
 	return execRet.AddMsg(stmt.String())
 }
 
-func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (glob.GlobRet, error) {
+func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (*glob.GlobRet, error) {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -325,7 +325,7 @@ func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {
 	return ast.NewFnObj(fnName, params)
 }
 
-func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) glob.GlobRet {
+func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) *glob.GlobRet {
 	// Verify first
 	execRet, err := exec.checkHaveFnStmt(stmt)
 	if notOkExec(execRet, err) {
@@ -341,7 +341,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) glob.GlobRet {
 	return glob.NewGlobTrue(stmt.String())
 }
 
-func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (glob.GlobRet, error) {
+func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.GlobRet, error) {
 	// Create a new environment for verification and proof
 	exec.NewEnv()
 	defer func() {
@@ -431,7 +431,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (glob.GlobRet, error
 	return glob.NewGlobTrue(stmt.String()), nil
 }
 
-func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) glob.GlobRet {
+func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob.GlobRet {
 	// Verify first and get thenFacts
 	execRet, _, err := exec.checkHaveFnCaseByCaseStmt(stmt)
 	if notOkExec(execRet, err) {
@@ -447,7 +447,7 @@ func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) glob.
 	return glob.NewGlobTrue(stmt.String())
 }
 
-func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) (glob.GlobRet, []ast.FactStmt, error) {
+func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) (*glob.GlobRet, []ast.FactStmt, error) {
 	// Create a new environment for verification and proof
 	exec.NewEnv()
 	defer func() {
@@ -519,7 +519,7 @@ func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) 
 	return glob.NewGlobTrue(stmt.String()), thenFacts, nil
 }
 
-func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (glob.GlobRet, error) {
+func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (*glob.GlobRet, error) {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -571,7 +571,7 @@ func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseS
 	return glob.NewGlobTrue(stmt.String()), nil
 }
 
-func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (glob.GlobRet, error) {
+func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (*glob.GlobRet, error) {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -601,7 +601,7 @@ func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByC
 	return glob.NewGlobTrue(stmt.String()), nil
 }
 
-func (exec *Executor) checkCasesNoOverlap_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (glob.GlobRet, error) {
+func (exec *Executor) checkCasesNoOverlap_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (*glob.GlobRet, error) {
 	// For each case i, verify that when case i holds, all other cases don't hold
 	for i := range len(stmt.CaseByCaseFacts) {
 		execState, err := exec.checkCaseNoOverlapWithOthers_ForHaveFn(stmt, i)
@@ -613,7 +613,7 @@ func (exec *Executor) checkCasesNoOverlap_ForHaveFn(stmt *ast.HaveFnCaseByCaseSt
 	return glob.NewGlobTrue(stmt.String()), nil
 }
 
-func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (glob.GlobRet, error) {
+func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (*glob.GlobRet, error) {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -658,7 +658,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCas
 	return glob.NewGlobTrue(stmt.String()), nil
 }
 
-func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) glob.GlobRet {
+func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.GlobRet {
 
 	// 返回值要是set
 	execState := exec.factStmt(ast.NewIsASetFact(stmt.RetSet, stmt.Line))
@@ -717,7 +717,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 	return glob.NewGlobTrue(stmt.String())
 }
 
-func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) (glob.GlobRet, error) {
+func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.GlobRet, error) {
 	// 验证每个case的返回值都符合fn的retSet（在case成立的条件下）
 	for i := range len(stmt.CaseByCaseFacts) {
 		execState, err := exec.checkCaseReturnValueInRetSet(stmt, i)
@@ -741,7 +741,7 @@ func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseBy
 	return glob.NewGlobTrue(stmt.String()), nil
 }
 
-func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (glob.GlobRet, error) {
+func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (*glob.GlobRet, error) {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -776,7 +776,7 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 	return glob.NewGlobTrue(stmt.String()), nil
 }
 
-func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseStmt) (glob.GlobRet, error) {
+func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.GlobRet, error) {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -806,7 +806,7 @@ func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseSt
 	return glob.NewGlobTrue(stmt.String()), nil
 }
 
-func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (glob.GlobRet, error) {
+func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.GlobRet, error) {
 	// 对于每个 case i，验证在 case i 成立的条件下，其他所有 case 都不成立
 	for i := range len(stmt.CaseByCaseFacts) {
 		execState, err := exec.checkCaseNoOverlapWithOthers(stmt, i)
@@ -818,7 +818,7 @@ func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (
 	return glob.NewGlobTrue(stmt.String()), nil
 }
 
-func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (glob.GlobRet, error) {
+func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (*glob.GlobRet, error) {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -863,7 +863,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 	return glob.NewGlobTrue(stmt.String()), nil
 }
 
-func (exec *Executor) haveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) glob.GlobRet {
+func (exec *Executor) haveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) *glob.GlobRet {
 	// Check: verify cart parameters are sets and equalTo elements are in corresponding sets
 	checkRet := exec.checkHaveObjFromCartSetStmt(stmt)
 	if checkRet.IsNotTrue() {
@@ -883,7 +883,7 @@ func (exec *Executor) haveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) g
 // 1. Each parameter of cart is a set
 // 2. equalTo is a tuple with the same length as cart parameters
 // 3. Each element of equalTo is in the corresponding cart set
-func (exec *Executor) checkHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) glob.GlobRet {
+func (exec *Executor) checkHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) *glob.GlobRet {
 	// Check that each parameter of cart is a set
 	for i, param := range stmt.CartSet.Params {
 		state := exec.factStmt(ast.NewIsASetFact(param, stmt.Line))
@@ -929,7 +929,7 @@ func (exec *Executor) checkHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetSt
 // 2. obj = equalTo fact
 // 3. obj[i] = equalTo[i] for each i
 // 4. dim(obj) = len(cartSet.Params)
-func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) glob.GlobRet {
+func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) *glob.GlobRet {
 	objAtom := ast.Atom(stmt.ObjName)
 
 	// Add obj in cart(...) fact

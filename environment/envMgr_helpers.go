@@ -52,7 +52,7 @@ func (envMgr *EnvMgr) GenerateUndeclaredRandomName_AndNotInMap(m map[string]stru
 	}
 }
 
-func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTemplate, glob.GlobRet) {
+func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTemplate, *glob.GlobRet) {
 	if objFnTypeToFnTStruct, ok := ast.AnonymousFnToInstFnTemplate(fnTName); ok {
 		return objFnTypeToFnTStruct, glob.NewEmptyGlobTrue()
 	} else {
@@ -65,7 +65,7 @@ func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTemplat
 	}
 }
 
-func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.FnTemplate, glob.GlobRet) {
+func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.FnTemplate, *glob.GlobRet) {
 	defOfT := envMgr.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
 		return nil, glob.ErrRet(fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName))
@@ -84,17 +84,17 @@ func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateP
 	return fnTStruct, glob.NewEmptyGlobTrue()
 }
 
-// func (envMgr *EnvMgr) InferMsgsWithOriginalFact(originalFact string, derivedFacts []string) glob.GlobRet {
+// func (envMgr *EnvMgr) InferMsgsWithOriginalFact(originalFact string, derivedFacts []string) *glob.GlobRet {
 // 	msgs := []string{originalFact, "\n"}
 // 	msgs = append(msgs, InferMsgs(derivedFacts))
 // 	return glob.NewGlobTrue(strings.Join(msgs, "\n"))
 // }
 
-func (envMgr *EnvMgr) storeSpecFactInMem(stmt *ast.SpecFactStmt) glob.GlobRet {
+func (envMgr *EnvMgr) storeSpecFactInMem(stmt *ast.SpecFactStmt) *glob.GlobRet {
 	return envMgr.CurEnv().KnownFactsStruct.SpecFactMem.newFact(stmt)
 }
 
-func (envMgr *EnvMgr) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) glob.GlobRet {
+func (envMgr *EnvMgr) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) *glob.GlobRet {
 	ret := envMgr.storeSpecFactInMem(fact)
 	if ret.IsErr() {
 		return ret
@@ -103,7 +103,7 @@ func (envMgr *EnvMgr) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, deriv
 	return glob.NewEmptyGlobTrue()
 }
 
-func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.SpecFactStmt) glob.GlobRet {
+func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.SpecFactStmt) *glob.GlobRet {
 	mem := envMgr.CurEnv().EqualMem
 
 	if len(fact.Params) != 2 {
@@ -151,7 +151,7 @@ func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.SpecFactStmt) gl
 	return glob.NewEmptyGlobTrue()
 }
 
-func (envMgr *EnvMgr) notExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, glob.GlobRet) {
+func (envMgr *EnvMgr) notExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, *glob.GlobRet) {
 	existPropDef := envMgr.GetExistPropDef(fact.PropName)
 	if existPropDef == nil {
 		return nil, glob.ErrRet(fmt.Errorf("exist fact %s has no definition", fact))
@@ -186,7 +186,7 @@ func (envMgr *EnvMgr) notExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt
 	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, []ast.FactStmt{}, []ast.FactStmt{orStmt}, fact.Line), glob.NewEmptyGlobTrue()
 }
 
-func (envMgr *EnvMgr) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, []ast.FactStmt, glob.GlobRet) {
+func (envMgr *EnvMgr) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, []ast.FactStmt, *glob.GlobRet) {
 	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
 	existPropDef := envMgr.GetExistPropDef(fact.PropName)
@@ -233,7 +233,7 @@ func (envMgr *EnvMgr) StoreTrueEqualValues(key, value ast.Obj) {
 	envMgr.CurEnv().SymbolSimplifiedValueMem[key.String()] = value
 }
 
-func (envMgr *EnvMgr) storeSymbolSimplifiedValue(left, right ast.Obj) glob.GlobRet {
+func (envMgr *EnvMgr) storeSymbolSimplifiedValue(left, right ast.Obj) *glob.GlobRet {
 	_, newLeft := envMgr.ReplaceSymbolWithValue(left)
 	if cmp.IsNumExprLitObj(newLeft) {
 		simplifiedNewLeft := cmp.IsNumExprObjThenSimplify(newLeft)

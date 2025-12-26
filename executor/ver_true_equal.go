@@ -23,7 +23,7 @@ import (
 )
 
 // how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
-func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if !state.ReqOk {
 		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
@@ -47,7 +47,7 @@ func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt *ast.SpecFactStmt, state
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	if verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -70,7 +70,7 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 // 	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
 // }
 
-func (ver *Verifier) verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, right ast.Obj, state *VerState) glob.GlobRet {
+func (ver *Verifier) verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, right ast.Obj, state *VerState) *glob.GlobRet {
 	if verRet := ver.verEqualBuiltin(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -96,7 +96,7 @@ func (ver *Verifier) verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj,
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerState) glob.GlobRet {
+func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerState) *glob.GlobRet {
 	if verRet := ver.verEqualByBuiltinEval(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -112,7 +112,7 @@ func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerStat
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verEqualByEitherLeftOrRightIsTuple(left, right ast.Obj, state *VerState) glob.GlobRet {
+func (ver *Verifier) verEqualByEitherLeftOrRightIsTuple(left, right ast.Obj, state *VerState) *glob.GlobRet {
 	if verRet := ver.verEqualRightIsTuple(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -124,7 +124,7 @@ func (ver *Verifier) verEqualByEitherLeftOrRightIsTuple(left, right ast.Obj, sta
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verEqualRightIsTuple(left ast.Obj, right ast.Obj, state *VerState) glob.GlobRet {
+func (ver *Verifier) verEqualRightIsTuple(left ast.Obj, right ast.Obj, state *VerState) *glob.GlobRet {
 	if ast.IsTupleObj(right) {
 		rightTuple := right.(*ast.FnObj)
 		rightLen := len(rightTuple.Params)
@@ -156,7 +156,7 @@ func (ver *Verifier) verEqualRightIsTuple(left ast.Obj, right ast.Obj, state *Ve
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verEqualByBuiltinEval(left ast.Obj, right ast.Obj, state *VerState) glob.GlobRet {
+func (ver *Verifier) verEqualByBuiltinEval(left ast.Obj, right ast.Obj, state *VerState) *glob.GlobRet {
 	left = ver.evaluateNonNumberLiteralExpr(left)
 	right = ver.evaluateNonNumberLiteralExpr(right)
 
@@ -171,7 +171,7 @@ func (ver *Verifier) verEqualByBuiltinEval(left ast.Obj, right ast.Obj, state *V
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verEqualSpecMem(left ast.Obj, right ast.Obj, state *VerState) glob.GlobRet {
+func (ver *Verifier) verEqualSpecMem(left ast.Obj, right ast.Obj, state *VerState) *glob.GlobRet {
 	// if ver.env.CurMatchProp == nil {
 	for curEnvIndex := range ver.Env.EnvSlice {
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
@@ -192,7 +192,7 @@ func (ver *Verifier) verEqualSpecMem(left ast.Obj, right ast.Obj, state *VerStat
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.EnvMemory, left ast.Obj, right ast.Obj, state *VerState) glob.GlobRet {
+func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.EnvMemory, left ast.Obj, right ast.Obj, state *VerState) *glob.GlobRet {
 	nextState := state.GetNoMsg()
 
 	verRet := ver.getEqualObjsAndCmpOneByOne(curEnv, left, right, nextState)
@@ -206,7 +206,7 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.EnvMemory, left ast.Obj
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Obj, right ast.Obj, state *VerState) glob.GlobRet {
+func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Obj, right ast.Obj, state *VerState) *glob.GlobRet {
 	equalFact := ast.NewEqualFact(left, right)
 	verRet := ver.verSpecFact_ByLogicMem(equalFact, state)
 	if verRet.IsErr() || verRet.IsTrue() {
@@ -224,7 +224,7 @@ func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Obj, right ast
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState) glob.GlobRet {
+func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState) *glob.GlobRet {
 	equalFact := ast.NewEqualFact(left, right)
 	verRet := ver.verSpecFact_UniMem(equalFact, state)
 	if verRet.IsErr() || verRet.IsTrue() {
@@ -242,7 +242,7 @@ func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.EnvMemory, left ast.Obj, right ast.Obj, state *VerState) glob.GlobRet {
+func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.EnvMemory, left ast.Obj, right ast.Obj, state *VerState) *glob.GlobRet {
 	var equalToLeftObjs, equalToRightObjs *[]ast.Obj
 	var gotLeftEqualObjs, gotRightEqualObjs bool
 
@@ -282,7 +282,7 @@ func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.EnvMemory, left ast.
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj, state *VerState, areEqualObjs func(left ast.Obj, right ast.Obj, state *VerState) glob.GlobRet) glob.GlobRet {
+func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj, state *VerState, areEqualObjs func(left ast.Obj, right ast.Obj, state *VerState) *glob.GlobRet) *glob.GlobRet {
 	if leftAsFn, ok := left.(*ast.FnObj); ok {
 		if rightAsFn, ok := right.(*ast.FnObj); ok {
 			if len(leftAsFn.Params) != len(rightAsFn.Params) {
@@ -308,7 +308,7 @@ func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj
 	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verEqualByLeftAndRightAreSetBuilders(left, right ast.Obj, state *VerState) glob.GlobRet {
+func (ver *Verifier) verEqualByLeftAndRightAreSetBuilders(left, right ast.Obj, state *VerState) *glob.GlobRet {
 	_ = state
 
 	leftSetBuilder := ver.Env.GetSetBuilderEqualToObj(left)

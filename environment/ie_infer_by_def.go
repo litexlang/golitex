@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ie *InferEngine) newUserDefinedTruePureFactByDef(fact *ast.SpecFactStmt) glob.GlobRet {
+func (ie *InferEngine) newUserDefinedTruePureFactByDef(fact *ast.SpecFactStmt) *glob.GlobRet {
 	// 通过 prop 定义中的 iff 和 implication 规则，推导出后续结论
 	// 因为 prop 的定义包含了 iff（当且仅当）和 implication（蕴含）关系，
 	// 所以当该 prop 为真时，可以推导出定义中指定的后续事实
@@ -70,7 +70,7 @@ func (ie *InferEngine) newUserDefinedTruePureFactByDef(fact *ast.SpecFactStmt) g
 
 		ret := ie.EnvMgr.newFactNoInfer(instantiated)
 
-		// Note: Messages are now added to glob.GlobRet in the caller, not to env.Msgs
+		// Note: Messages are now added to *glob.GlobRet in the caller, not to env.Msgs
 
 		if ret.IsErr() {
 			return ret

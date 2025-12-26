@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) glob.GlobRet {
+func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) *glob.GlobRet {
 	if len(stmt.Params) < 2 {
 		return glob.NewGlobErr("equals fact must have at least 2 params")
 	}
