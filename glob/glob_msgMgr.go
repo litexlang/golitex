@@ -316,8 +316,8 @@ func NewGlobTrueWithStmts(stmts []string) *GlobRet {
 	return ret
 }
 
-func NewGlobUnknownWithInnerGlobRets(innerGlobRets []*GlobRet) *GlobRet {
-	ret := NewEmptyGlobUnknown()
+func NewGlobTrueWithInnerGlobRets(innerGlobRets []*GlobRet) *GlobRet {
+	ret := NewEmptyGlobTrue()
 	ret.InnerGlobRetSlice = innerGlobRets
 	return ret
 }

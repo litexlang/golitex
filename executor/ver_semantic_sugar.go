@@ -45,9 +45,9 @@ func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, 
 
 			var execRet *glob.GlobRet
 			if values[0] == nil && values[1] == nil {
-				execRet = glob.GlobTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+				execRet = glob.NewGlobTrueWithVerifyProcess(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 			} else {
-				execRet = glob.GlobTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+				execRet = glob.NewGlobTrueWithVerifyProcess(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 			}
 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
 			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, execRet)

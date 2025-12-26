@@ -23,7 +23,7 @@ import (
 // maybeAddSuccessMsg adds a success message to execRet if state.WithMsg is true
 func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy ast.Stmt, execRet *glob.GlobRet) *glob.GlobRet {
 	if state.WithMsg {
-		execRet.AddMsg(successVerString(stmt, stmtVerifiedBy))
+		execRet.AddVerifyProcess(successVerString(stmt, stmtVerifiedBy))
 		return execRet
 	}
 	return execRet
@@ -36,7 +36,7 @@ func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verified
 	}
 
 	if state.WithMsg {
-		execRet.AddMsg(successVerStringString(stmtStr, verifiedByStr))
+		execRet.AddVerifyProcess(successVerStringString(stmtStr, verifiedByStr))
 		return execRet
 	}
 	return execRet

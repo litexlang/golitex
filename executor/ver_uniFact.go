@@ -55,7 +55,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		if verRet.IsUnknown() {
 			execRet := glob.NewEmptyGlobUnknown()
 			if state.WithMsg {
-				execRet.AddMsg(fmt.Sprintf("%s is unknown", thenFact))
+				execRet.AddUnknown(fmt.Sprintf("%s is unknown", thenFact))
 			}
 			return execRet
 		}
@@ -69,7 +69,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 
 	execRet := glob.NewEmptyGlobTrue()
 	if state.WithMsg {
-		execRet = execRet.AddMsg(fmt.Sprintf("%s\nis true", stmt))
+		execRet = execRet.AddVerifyProcess(fmt.Sprintf("%s\nis true", stmt))
 	}
 	return execRet
 }
