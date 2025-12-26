@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verSpecialFactInSpecialWays(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verSpecialFactInSpecialWays(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolLargerEqual) {
 		return ver.verGreaterEqualBySpecialWays(stmt, state)
 	}
@@ -57,7 +57,7 @@ func (ver *Verifier) verSpecialFactInSpecialWays(stmt *ast.SpecFactStmt, state *
 		}
 	}
 
-	return NewEmptyExecUnknown()
+	return glob.NewEmptyGlobUnknown()
 }
 
 // 如果是 >= 那可以用 > 和 = 来证明，针对sqrt里不能对负数开方额外做的
@@ -74,9 +74,9 @@ func (ver *Verifier) verSpecialFactInSpecialWays(stmt *ast.SpecFactStmt, state *
 //     forall x R: x > 0 => g(x) > 0
 
 // f(g(1)) = f(g(1))
-func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
 	if len(stmt.Params) != 2 {
-		return NewEmptyExecUnknown()
+		return glob.NewEmptyGlobUnknown()
 	}
 
 	left := stmt.Params[0]
@@ -91,7 +91,7 @@ func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state 
 	}
 	if verRet.IsTrue() {
 		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), greaterFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
 	}
 
 	// 如果 > 不成立，尝试用 = 证明
@@ -102,15 +102,15 @@ func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state 
 	}
 	if verRet.IsTrue() {
 		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), equalFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
 	}
 
-	return NewEmptyExecUnknown()
+	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verLessEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verLessEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
 	if len(stmt.Params) != 2 {
-		return NewEmptyExecUnknown()
+		return glob.NewEmptyGlobUnknown()
 	}
 
 	left := stmt.Params[0]
@@ -125,7 +125,7 @@ func (ver *Verifier) verLessEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ve
 	}
 	if verRet.IsTrue() {
 		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), lessFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
 	}
 
 	// 如果 < 不成立，尝试用 = 证明
@@ -136,15 +136,15 @@ func (ver *Verifier) verLessEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ve
 	}
 	if verRet.IsTrue() {
 		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), equalFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
 	}
 
-	return NewEmptyExecUnknown()
+	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
 	if len(stmt.Params) != 2 {
-		return NewEmptyExecUnknown()
+		return glob.NewEmptyGlobUnknown()
 	}
 
 	left := stmt.Params[0]
@@ -159,7 +159,7 @@ func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state 
 	}
 	if verRet.IsTrue() {
 		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), greaterFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
 	}
 
 	// 如果 > 0 不成立，尝试用 < 0 证明
@@ -170,7 +170,7 @@ func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state 
 	}
 	if verRet.IsTrue() {
 		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), lessFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
 	}
 
 	// 如果 a != b 那 a - b != 0
@@ -186,16 +186,16 @@ func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state 
 		}
 		if verRet.IsTrue() {
 			msg := fmt.Sprintf("%s is proved by %s", stmt.String(), notEqualFact.String())
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
 		}
 	}
 
-	return NewEmptyExecUnknown()
+	return glob.NewEmptyGlobUnknown()
 }
 
-func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) glob.GlobRet {
 	if len(stmt.Params) != 2 {
-		return NewEmptyExecUnknown()
+		return glob.NewEmptyGlobUnknown()
 	}
 
 	left := stmt.Params[0]
@@ -210,7 +210,7 @@ func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ver
 	}
 	if verRet.IsTrue() {
 		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), greaterFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
 	}
 
 	// 如果 > 不成立，尝试用 < 证明
@@ -221,7 +221,7 @@ func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ver
 	}
 	if verRet.IsTrue() {
 		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), lessFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
 	}
 
 	// 如果 > 和 < 都不成立，尝试用 a - b != 0 证明
@@ -233,10 +233,10 @@ func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ver
 	}
 	if verRet.IsTrue() {
 		msg := fmt.Sprintf("%s is proved by %s (if a - b != 0 then a != b)", stmt.String(), subNotEqualZeroFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, NewEmptyExecTrue())
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
 	}
 
-	return NewEmptyExecUnknown()
+	return glob.NewEmptyGlobUnknown()
 }
 
 func IsObjMinusFnObj(obj ast.Obj) bool {

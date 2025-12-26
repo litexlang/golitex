@@ -33,7 +33,7 @@ func RunStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) glob.GlobRet {
 	case *ast.ImportDirStmt:
 		return RunImportStmtInExecutor(curExec, asStmt)
 	default:
-		return curExec.Stmt(asStmt).AddMsgAtBegin(fmt.Sprintf("--- line %d ---", stmt.GetLine())).ToGlobRet()
+		return curExec.Stmt(asStmt).AddMsgAtBegin(fmt.Sprintf("--- line %d ---", stmt.GetLine()))
 	}
 }
 
