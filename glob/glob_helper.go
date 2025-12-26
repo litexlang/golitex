@@ -15,6 +15,7 @@
 package litex_global
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -44,4 +45,11 @@ func GetPkgNameAndName(name string) (bool, string, string) {
 	}
 
 	return true, parts[0], parts[1]
+}
+
+func StringWithOptimizedNewline(s string) string {
+	s2 := strings.Trim(s, "\n\t ")
+	// 将3个或更多连续的\n替换成\n\n
+	s2 = newlineRegex.ReplaceAllString(s2, "\n\n")
+	return fmt.Sprintf("%s\n", s2)
 }

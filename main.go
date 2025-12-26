@@ -170,7 +170,7 @@ func MainFlagFile(fileFlag string) {
 	_, ret := pipeline.RunFileInPkgMgr(absFilePath, "", pkgMgr, false)
 
 	ret.AddNewREPLMsg()
-	fmt.Println(ret.StringWithOptimizedNewline())
+	fmt.Println(glob.StringWithOptimizedNewline(ret.String()))
 }
 
 func RunTutorial() {
