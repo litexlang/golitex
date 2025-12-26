@@ -31,7 +31,7 @@ func (ver *Verifier) checkFnsReq(stmt *ast.SpecFactStmt, state *VerState) *glob.
 			return verRet
 		}
 		if verRet.IsUnknown() {
-			return glob.ErrRetWithMsgs(verRet.GetMsgs())
+			return verRet
 		}
 	}
 

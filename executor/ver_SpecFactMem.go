@@ -316,7 +316,7 @@ LoopOverFacts:
 
 		if state.WithMsg {
 			execRet := glob.NewEmptyGlobTrue()
-			execRet.AddMsg(successVerString(stmt, &knownFact))
+			execRet.AddVerifyProcess(successVerString(stmt, &knownFact))
 			return execRet
 		}
 		return glob.NewEmptyGlobTrue()

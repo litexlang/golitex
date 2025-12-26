@@ -161,7 +161,7 @@ func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt *
 		}
 	}
 
-	return glob.GlobTrue(fmt.Sprintf("all arguments of %s are in nonempty.", stmt.Params[0]))
+	return glob.NewGlobTrueWithStmt(fmt.Sprintf("all arguments of %s are in nonempty.", stmt.Params[0]))
 }
 
 // func (ver *Verifier) verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
@@ -561,7 +561,7 @@ func (ver *Verifier) verInCartSet_DimAndElements(obj ast.Obj, cartSet *ast.FnObj
 	}
 
 	msg := fmt.Sprintf("dim(%s) = %d and each element %s[i] is in corresponding cart set %s", obj, cartDimValue, obj, cartSet)
-	return glob.GlobTrue(msg)
+	return glob.NewGlobTrueWithVerifyProcess(msg)
 }
 
 // verInFactByRightParamIsCartSet verifies a $in cart(...) by checking:
@@ -997,7 +997,7 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state 
 		}
 	}
 
-	return glob.GlobTrue(fmt.Sprintf("%s is true proved by definition of set builder", stmt.String()))
+	return glob.NewGlobTrueWithVerifyProcess(fmt.Sprintf("%s is true proved by definition of set builder", stmt.String()))
 }
 
 func (ver *Verifier) verInFactByRightIsListSet(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
@@ -1021,10 +1021,10 @@ func (ver *Verifier) verInFactByRightIsListSet(stmt *ast.SpecFactStmt, state *Ve
 		if verRet.IsTrue() {
 			// 找到了相等的元素，返回 true
 			if stmt.Params[0].String() == item.String() {
-				return glob.GlobTrue(fmt.Sprintf("%s is true proved by\n%s $in %s, %s = %s", stmt.String(), stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj))
+				return glob.NewGlobTrueWithVerifyProcess(fmt.Sprintf("%s is true proved by\n%s $in %s, %s = %s", stmt.String(), stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj))
 			}
 
-			return glob.GlobTrue(fmt.Sprintf("%s is true proved by\n%s $in %s, %s = %s, %s = %s", stmt.String(), stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj, item, stmt.Params[0]))
+			return glob.NewGlobTrueWithVerifyProcess(fmt.Sprintf("%s is true proved by\n%s $in %s, %s = %s, %s = %s", stmt.String(), stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj, item, stmt.Params[0]))
 		}
 	}
 

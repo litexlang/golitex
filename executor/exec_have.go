@@ -598,7 +598,7 @@ func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByC
 		return glob.NewEmptyGlobError(), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
 	}
 
-	return glob.GlobTrue(stmt.String()), nil
+	return glob.NewGlobTrueWithStmt(stmt.String()), nil
 }
 
 func (exec *Executor) checkCasesNoOverlap_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (*glob.GlobRet, error) {
@@ -803,7 +803,7 @@ func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseSt
 		return glob.NewEmptyGlobError(), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
 	}
 
-	return glob.GlobTrue(stmt.String()), nil
+	return glob.NewGlobTrueWithStmt(stmt.String()), nil
 }
 
 func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.GlobRet, error) {
