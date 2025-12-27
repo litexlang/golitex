@@ -17,36 +17,37 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	"strings"
+	glob "golitex/glob"
 )
 
-func successVerString(stmt, stmtVerifiedBy ast.Stmt) string {
-	var builder strings.Builder
+func successVerString(stmt, stmtVerifiedBy ast.Stmt) *glob.VerMsg {
+	stmtStr := ""
 	if stmt != nil {
-		builder.WriteString(stmt.String())
+		stmtStr = stmt.String()
 	}
+	
+	verifyMsgs := []string{}
 	if stmtVerifiedBy != nil {
 		if stmtVerifiedBy.GetLine() == 0 {
-			builder.WriteString(fmt.Sprintf("\nis true. proved by fact:\n%s", stmtVerifiedBy.String()))
+			verifyMsgs = append(verifyMsgs, fmt.Sprintf("proved by fact:\n%s", stmtVerifiedBy.String()))
 		} else {
-			builder.WriteString(fmt.Sprintf("\nis true. proved by fact on line %d:\n%s", stmtVerifiedBy.GetLine(), stmtVerifiedBy.String()))
+			verifyMsgs = append(verifyMsgs, fmt.Sprintf("proved by fact on line %d:\n%s", stmtVerifiedBy.GetLine(), stmtVerifiedBy.String()))
 		}
 	} else {
-		builder.WriteString("\nis true.")
+		verifyMsgs = append(verifyMsgs, "is true.")
 	}
-	return builder.String()
+	
+	return glob.NewVerMsg(stmtStr, verifyMsgs)
 }
 
 // successVerStringString is a helper function for backward compatibility with string-based calls
-func successVerStringString(stmtStr, stmtVerifiedByStr string) string {
-	var builder strings.Builder
-	if stmtStr != "" {
-		builder.WriteString(stmtStr)
-	}
+func successVerStringString(stmtStr, stmtVerifiedByStr string) *glob.VerMsg {
+	verifyMsgs := []string{}
 	if stmtVerifiedByStr != "" {
-		builder.WriteString(fmt.Sprintf("\nis true. proved by\n%s", stmtVerifiedByStr))
+		verifyMsgs = append(verifyMsgs, fmt.Sprintf("proved by\n%s", stmtVerifiedByStr))
 	} else {
-		builder.WriteString("\nis true.")
+		verifyMsgs = append(verifyMsgs, "is true.")
 	}
-	return builder.String()
+	
+	return glob.NewVerMsg(stmtStr, verifyMsgs)
 }
