@@ -495,21 +495,21 @@ func (stmt *HaveObjInNonEmptySetStmt) Instantiate(uniMap map[string]Obj) (Stmt, 
 	return NewHaveObjInNonEmptySetStmt(stmt.Objs, newObjSets, stmt.Line), nil
 }
 
-func (stmt *HaveObjFromCartSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newCartSet, err := stmt.CartSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	cartSet, ok := newCartSet.(*FnObj)
-	if !ok {
-		return nil, fmt.Errorf("expected cart set to be FnObj after instantiation")
-	}
-	newEqualTo, err := stmt.EqualTo.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewHaveObjFromCartSetStmt(stmt.ObjName, cartSet, newEqualTo, stmt.Line), nil
-}
+// func (stmt *HaveObjFromCartSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+// 	newCartSet, err := stmt.CartSet.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	cartSet, ok := newCartSet.(*FnObj)
+// 	if !ok {
+// 		return nil, fmt.Errorf("expected cart set to be FnObj after instantiation")
+// 	}
+// 	newEqualTo, err := stmt.EqualTo.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return NewHaveObjFromCartSetStmt(stmt.ObjName, cartSet, newEqualTo, stmt.Line), nil
+// }
 
 // func (stmt *NamedUniFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 // 	newProp, err := stmt.DefPropStmt.Instantiate(uniMap)
@@ -676,7 +676,7 @@ func (stmt *ProveForStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 		}
 		newLefts[i] = newLeft
 	}
-	
+
 	newRights := make([]Obj, len(stmt.Rights))
 	for i, right := range stmt.Rights {
 		newRight, err := right.Instantiate(uniMap)
@@ -685,7 +685,7 @@ func (stmt *ProveForStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 		}
 		newRights[i] = newRight
 	}
-	
+
 	newDomFacts, err := stmt.DomFacts.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err

@@ -56,9 +56,9 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFnSet {
 			tb.header.skip(glob.KeywordHave)
 			ret, err = p.DefFnSetStmt(tb)
-		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordCart {
+			// } else if tb.header.strAtCurIndexPlus(1) == glob.KeywordCart {
 			// Check for "have objName cart(...) = ..." pattern
-			ret, err = p.haveObjFromCartSetStmt(tb)
+			// ret, err = p.haveObjFromCartSetStmt(tb)
 		} else if slices.Contains(tb.header.slice, glob.KeySymbolEqual) {
 			ret, err = p.haveObjEqualStmt(tb)
 		} else {
@@ -781,56 +781,56 @@ func (p *TbParser) defExistPropStmtBody(tb *tokenBlock) (*DefExistPropStmtBody, 
 	}
 }
 
-func (p *TbParser) haveObjFromCartSetStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordHave)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// func (p *TbParser) haveObjFromCartSetStmt(tb *tokenBlock) (Stmt, error) {
+// 	err := tb.header.skip(glob.KeywordHave)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	// Parse object name
-	objName, err := tb.header.next()
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	// Parse object name
+// 	objName, err := tb.header.next()
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	err = p.NewDefinedNameInCurrentParseEnv(string(objName))
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	err = p.NewDefinedNameInCurrentParseEnv(string(objName))
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	// Parse cart(...)
-	cartSetObj, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	// Parse cart(...)
+// 	cartSetObj, err := p.Obj(tb)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	cartSet, ok := cartSetObj.(*FnObj)
-	if !ok {
-		return nil, ErrInLine(fmt.Errorf("expected cart to be FnObj"), tb)
-	}
+// 	cartSet, ok := cartSetObj.(*FnObj)
+// 	if !ok {
+// 		return nil, ErrInLine(fmt.Errorf("expected cart to be FnObj"), tb)
+// 	}
 
-	if !IsFn_WithHeadName(cartSetObj, glob.KeywordCart) {
-		return nil, ErrInLine(fmt.Errorf("expected cart function call"), tb)
-	}
+// 	if !IsFn_WithHeadName(cartSetObj, glob.KeywordCart) {
+// 		return nil, ErrInLine(fmt.Errorf("expected cart function call"), tb)
+// 	}
 
-	// Parse = ...
-	err = tb.header.skip(glob.KeySymbolEqual)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	// Parse = ...
+// 	err = tb.header.skip(glob.KeySymbolEqual)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	equalTo, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	equalTo, err := p.Obj(tb)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	// Check end of line
-	if !tb.header.ExceedEnd() {
-		return nil, ErrInLine(fmt.Errorf("expect end of line"), tb)
-	}
+// 	// Check end of line
+// 	if !tb.header.ExceedEnd() {
+// 		return nil, ErrInLine(fmt.Errorf("expect end of line"), tb)
+// 	}
 
-	return NewHaveObjFromCartSetStmt(objName, cartSet, equalTo, tb.line), nil
-}
+// 	return NewHaveObjFromCartSetStmt(objName, cartSet, equalTo, tb.line), nil
+// }
 
 func (p *TbParser) haveObjEqualStmt(tb *tokenBlock) (Stmt, error) {
 	err := tb.header.skip(glob.KeywordHave)

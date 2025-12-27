@@ -464,13 +464,13 @@ type ProveAlgoReturnStmt struct {
 // 这是必要的，因为要证明从n到m有且只有n, n+1, ..., m-1, m这些数，必须要用特殊的关键词
 
 // TODO 应该没什么用
-type HaveObjFromCartSetStmt struct {
-	ObjName string
-	CartSet *FnObj
-	EqualTo Obj
+// type HaveObjFromCartSetStmt struct {
+// 	ObjName string
+// 	CartSet *FnObj
+// 	EqualTo Obj
 
-	Line uint
-}
+// 	Line uint
+// }
 
 // prove_for i range(1, 10):
 //     =>:

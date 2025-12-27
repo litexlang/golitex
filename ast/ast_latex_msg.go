@@ -582,17 +582,17 @@ func (s *HaveObjInNonEmptySetStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *HaveObjFromCartSetStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordHave)
-	builder.WriteString(" ")
-	builder.WriteString(s.ObjName)
-	builder.WriteString(" ")
-	builder.WriteString(s.CartSet.ToLatexString())
-	builder.WriteString(" = ")
-	builder.WriteString(s.EqualTo.ToLatexString())
-	return builder.String()
-}
+// func (s *HaveObjFromCartSetStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordHave)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(s.ObjName)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(s.CartSet.ToLatexString())
+// 	builder.WriteString(" = ")
+// 	builder.WriteString(s.EqualTo.ToLatexString())
+// 	return builder.String()
+// }
 
 // func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string {
 // 	var builder strings.Builder

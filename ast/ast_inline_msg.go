@@ -193,7 +193,8 @@ func (s *ClaimExistPropStmt) InlineString() string   { panic("") }
 
 func (s *ProveByEnumStmt) InlineString() string          { panic("") }
 func (s *HaveObjInNonEmptySetStmt) InlineString() string { panic("") }
-func (s *HaveObjFromCartSetStmt) InlineString() string   { panic("") }
+
+// func (s *HaveObjFromCartSetStmt) InlineString() string   { panic("") }
 
 // func (s *NamedUniFactStmt) InlineString() string    { panic("") }
 

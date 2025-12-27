@@ -292,9 +292,9 @@ func NewHaveFnCaseByCaseStmt(defFnStmt *DefFnStmt, caseByCaseFacts SpecFactPtrSl
 	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, line}
 }
 
-func NewHaveObjFromCartSetStmt(objName string, cartSet *FnObj, equalTo Obj, line uint) *HaveObjFromCartSetStmt {
-	return &HaveObjFromCartSetStmt{objName, cartSet, equalTo, line}
-}
+// func NewHaveObjFromCartSetStmt(objName string, cartSet *FnObj, equalTo Obj, line uint) *HaveObjFromCartSetStmt {
+// 	return &HaveObjFromCartSetStmt{objName, cartSet, equalTo, line}
+// }
 
 func NewProveImplicationStmt(implicationName string, params StrSlice, implicationFact FactStmtSlice, proof StmtSlice, line uint) *ProveImplicationStmt {
 	return &ProveImplicationStmt{implicationName, params, implicationFact, proof, line}
