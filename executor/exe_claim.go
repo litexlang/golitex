@@ -20,26 +20,26 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.GlobRet {
+func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
 	// isSuccess := false
 
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
-	var result *glob.GlobRet
+	var result *glob.StmtRet
 	switch asStmt := stmt.ClaimProveStmt.ToCheckFact.(type) {
 	case ast.Spec_OrFact:
 		execState := exec.reversibleFactProveByContradiction(asStmt, stmt)
 		if execState.IsNotTrue() {
 			return execState
 		}
-		result = glob.NewEmptyGlobTrue()
+		result = glob.NewEmptyStmtTrue()
 	case *ast.UniFactStmt:
 		execState := exec.uniFactProveByContradiction(asStmt, stmt)
 		if execState.IsNotTrue() {
 			return execState
 		}
-		result = glob.NewEmptyGlobTrue()
+		result = glob.NewEmptyStmtTrue()
 		// isSuccess = true
 	default:
 		return glob.ErrRet(fmt.Sprintf("prove by contradiction only support reversible fact or uni fact"))
@@ -53,10 +53,10 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 	// 	result = result.AddMsgAtBegin("is unknown\n")
 	// }
 
-	return exec.AddStmtToGlobRet(result, stmt.ClaimProveStmt)
+	return exec.AddStmtToStmtRet(result, stmt.ClaimProveStmt)
 }
 
-func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_OrFact, stmt *ast.ClaimProveByContradictionStmt) *glob.GlobRet {
+func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_OrFact, stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
 	reversedFact := specFactStmt.ReverseIsTrue()
 
 	for _, curFact := range reversedFact {
@@ -91,13 +91,13 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 		}
 	}
 
-	result := glob.NewEmptyGlobTrue()
+	result := glob.NewEmptyStmtTrue()
 	// result = result.AddMsg(fmt.Sprintf("the reversed last statement of current claim statement is:\n%s\nwe prove it(them)\n", reversedLastFactStrStr))
 	// result = result.AddMsg(fmt.Sprintf("last statement of current claim statement:\n%s\nis true and false. Prove by contradiction is successful!", lastStmtAsFact))
 	return result
 }
 
-func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt, stmt *ast.ClaimProveByContradictionStmt) *glob.GlobRet {
+func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt, stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
 	ver := NewVerifier(exec.Env)
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(specFactStmt)
 	if err != nil {
@@ -155,7 +155,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 		}
 	}
 
-	result := glob.NewEmptyGlobTrue()
+	result := glob.NewEmptyStmtTrue()
 
 	// reversedLastFactStrStr := strings.Join(reversedLastFactStr, "\n\t")
 	// result = result.AddMsg(fmt.Sprintf("the reversed last statement of current claim statement is(are):\n\n%s\n\nwe prove it(them)\n", reversedLastFactStrStr))
@@ -163,7 +163,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	return result
 }
 
-func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.GlobRet {
+func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet {
 	state := exec.claimStmtProve(stmt)
 	if state.IsNotTrue() {
 		return state
@@ -176,10 +176,10 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.GlobRet
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
-	return exec.NewTrueGlobRetWithStmt(stmt)
+	return exec.NewTrueStmtRetWithStmt(stmt)
 }
 
-func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.GlobRet {
+func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
 	state := exec.claimStmtProveByContradiction(stmt)
 	if state.IsNotTrue() {
 		return state
@@ -191,10 +191,10 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 		return glob.ErrRet(ret.String())
 	}
 
-	return exec.NewTrueGlobRetWithStmt(stmt)
+	return exec.NewTrueStmtRetWithStmt(stmt)
 }
 
-func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.GlobRet {
+func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -213,7 +213,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.GlobRet {
 		if isSuccess.IsNotTrue() {
 			return isSuccess
 		}
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	default:
 		execState := exec.execStmtsAtCurEnv(stmt.Proofs)
 		if execState.IsNotTrue() {
@@ -224,13 +224,13 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.GlobRet {
 		if execState.IsNotTrue() {
 			return execState
 		}
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 
 }
 
 // prove uniFact in claim at current env
-func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.GlobRet {
+func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.StmtRet {
 	asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt)
 	if !ok {
 		return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support uni fact"))
@@ -268,12 +268,12 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.Glob
 		return glob.ErrRet(fmt.Sprintf("claim statement error: failed to verify fact:\n%s", failedFact))
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 
 }
 
 // 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
-func (exec *Executor) claimPropStmt(stmt *ast.ClaimImplicationStmt) *glob.GlobRet {
+func (exec *Executor) claimPropStmt(stmt *ast.ClaimImplicationStmt) *glob.StmtRet {
 	// prop all atoms declared
 	prop := stmt.Implication.ToProp()
 	uniFact := ast.NewUniFact(prop.DefHeader.Params, prop.DefHeader.ParamSets, prop.DomFactsOrNil, prop.IffFactsOrNil, stmt.Line)
@@ -306,7 +306,7 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimImplicationStmt) *glob.GlobRe
 	return execRet
 }
 
-func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) *glob.GlobRet {
+func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) *glob.StmtRet {
 	execState := exec.claimExistPropStmtCheckProofs(stmt)
 	if execState.IsNotTrue() {
 		return execState
@@ -325,10 +325,10 @@ func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) *glob.Glo
 		return glob.ErrRet(ret.String())
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }
 
-func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt) *glob.GlobRet {
+func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt) *glob.StmtRet {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -377,10 +377,10 @@ func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt
 		}
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }
 
-func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimImplicationStmt) *glob.GlobRet {
+func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimImplicationStmt) *glob.StmtRet {
 	prop := stmt.Implication.ToProp()
 	uniFact := ast.NewUniFact(prop.DefHeader.Params, prop.DefHeader.ParamSets, prop.DomFactsOrNil, prop.ImplicationFactsOrNil, stmt.Line)
 
@@ -394,10 +394,10 @@ func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimImplicationStmt) *
 		return execRet
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }
 
-func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) *glob.GlobRet {
+func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) *glob.StmtRet {
 	thenToIff := stmt.UniFactWithIffStmt.NewUniFactWithThenToIff()
 	iffToThen := stmt.UniFactWithIffStmt.NewUniFactWithIffToThen()
 	claimThenToIff := ast.NewClaimProveStmt(thenToIff, stmt.ProofThenToIff, stmt.Line)
@@ -420,5 +420,5 @@ func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) *glob.GlobRet {
 		return glob.ErrRet(ret.String())
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }

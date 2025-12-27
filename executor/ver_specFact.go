@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	if !state.ReqOk {
 		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
@@ -43,7 +43,7 @@ func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt *ast.Spec
 	return glob.UnknownRet(stmt.String())
 }
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolEqual) {
 		return ver.verTrueEqualFactAndCheckFnReq(stmt, state.CopyAndReqOkToFalse())
 	}
@@ -63,10 +63,10 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *as
 		}
 	}
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt, state)
 	if verRet.IsTrue() || verRet.IsErr() {
 		return verRet
@@ -75,7 +75,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 	if stmt.TypeEnum == ast.TruePure && ver.Env.IsTransitiveProp(string(stmt.PropName)) {
 		relatedObjSlice := ver.Env.GetRelatedObjSliceOfTransitiveProp(string(stmt.PropName), stmt.Params[0])
 		if len(relatedObjSlice) == 0 {
-			return glob.NewEmptyGlobUnknown()
+			return glob.NewEmptyStmtUnknown()
 		}
 
 		for _, relatedObj := range relatedObjSlice {
@@ -86,15 +86,15 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 			}
 			if verRet.IsTrue() {
 				msg := fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedObjStmt.String())
-				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyStmtTrue())
 			}
 		}
 	}
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	// replace the params with the values 来证明
 	// 比如 $q(x, y) 证明不出来，但可能 $q(1, 2) 证明出来了，如果x=1,y=2的话。这里会用到 1. 如果x和y本来就是数学表达式，那就计算 2. 如果 x和y之前存过数值，那就用之前存过的值。
 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
@@ -105,7 +105,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 		}
 		if verRet.IsTrue() {
 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyStmtTrue())
 		}
 	}
 
@@ -117,13 +117,13 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 		return verRet
 	}
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
 // TODO: 其实 specFact 是等号的时候，还是会访问到这个函数。
 // WARNING: 其实 specFact 是等号的时候，还是会访问到这个函数。所以这个函数的命名是有问题的
 // WARNING: 需要重构整个架构，把验证的逻辑屡屡顺。Litex是ATP的话，那就必须要告诉用户我Auto的过程是什么样的
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	// var verRet *glob.GlobRet
 
 	// if !state.ReqOk {
@@ -136,7 +136,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFa
 	return ver.verSpecFactStepByStep(stmt, state)
 }
 
-func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	if verRet := ver.verSpecFactByBuiltinRules(stmt, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -159,10 +159,10 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerSta
 		}
 	}
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
-func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	if stmt.IsPureFact() {
 		if !stmt.IsTrue() {
 			return ver.verNotPureSpecFact_ByDef(stmt, state)
@@ -175,22 +175,22 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) 
 		return ver.verExistSpecFact_ByDefinition(stmt, state)
 	}
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
-func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	// nextState := state.GetAddRound()
 
 	curDefStmt := ver.Env.GetPropDef(stmt.PropName)
 	// defStmt := curDefStmt
 	if curDefStmt == nil {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
-		return glob.NewEmptyGlobUnknown()
+		return glob.NewEmptyStmtUnknown()
 	}
 
 	if len(curDefStmt.IffFactsOrNil) == 0 {
 		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
-		return glob.NewEmptyGlobUnknown()
+		return glob.NewEmptyStmtUnknown()
 	}
 
 	defStmt := ver.Env.MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(curDefStmt)
@@ -228,10 +228,10 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 		}
 	}
 
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), defStmt.String(), glob.NewEmptyGlobTrue())
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), defStmt.String(), glob.NewEmptyStmtTrue())
 }
 
-func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(stmt)
 
 	propDef := ver.Env.GetExistPropDef(stmt.PropName)
@@ -260,7 +260,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 			return verRet
 		}
 		if verRet.IsUnknown() {
-			execRet := glob.NewEmptyGlobUnknown()
+			execRet := glob.NewEmptyStmtUnknown()
 			if state.WithMsg {
 				msg := fmt.Sprintf("given object %s is not in its param set %s\n", existParams[i], instParamSets[i])
 				execRet.AddUnknown(msg)
@@ -285,7 +285,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 			return verRet
 		}
 		if verRet.IsUnknown() {
-			execRet := glob.NewEmptyGlobUnknown()
+			execRet := glob.NewEmptyStmtUnknown()
 			if state.WithMsg {
 				msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
 				execRet.AddUnknown(msg)
@@ -301,7 +301,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 		}
 	}
 
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), "by definition", glob.NewEmptyGlobTrue())
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), "by definition", glob.NewEmptyStmtTrue())
 }
 
 // func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
@@ -312,7 +312,7 @@ func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state
 // 	return false, nil
 // }
 
-func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	nextState := state.GetAddRound()
 
 	verRet := ver.verSpecFact_InSpecFact_UniMem(stmt, nextState)
@@ -323,9 +323,9 @@ func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState)
 	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState)
 }
 
-func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	if stmt.IsTrue() {
-		return glob.NewEmptyGlobUnknown()
+		return glob.NewEmptyStmtUnknown()
 	}
 
 	// 如果右侧是0，且左边是减号，那就证明左边这两个东西不等
@@ -339,7 +339,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 	} else {
 		leftValue = ver.Env.GetSymbolSimplifiedValue(stmt.Params[0])
 		if leftValue == nil {
-			return glob.NewEmptyGlobUnknown()
+			return glob.NewEmptyStmtUnknown()
 		}
 	}
 	if cmp.IsNumExprLitObj(stmt.Params[1]) {
@@ -347,7 +347,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 	} else {
 		rightValue = ver.Env.GetSymbolSimplifiedValue(stmt.Params[1])
 		if rightValue == nil {
-			return glob.NewEmptyGlobUnknown()
+			return glob.NewEmptyStmtUnknown()
 		}
 	}
 
@@ -357,9 +357,9 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 	}
 	if !areEqual {
 		if state != nil {
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), "builtin rules", glob.NewEmptyGlobTrue())
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), "builtin rules", glob.NewEmptyStmtTrue())
 		}
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 
 	// // 如果左右两边能是能被处理的数字
@@ -374,31 +374,31 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 	// 	}
 	// }
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
-func (ver *Verifier) verIsCartByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verIsCartByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	// 如果参数数量是1，且参数的函数名是cart，那自动成立
 	if len(stmt.Params) == 1 {
 		if cartObj, ok := stmt.Params[0].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartObj.FnHead, glob.KeywordCart) {
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), "definition", glob.NewEmptyGlobTrue())
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), "definition", glob.NewEmptyStmtTrue())
 		}
 	}
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
-func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	nextState := state.GetAddRound()
 
 	defStmt := ver.Env.GetPropDef(stmt.PropName)
 	if defStmt == nil {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
-		return glob.NewEmptyGlobUnknown()
+		return glob.NewEmptyStmtUnknown()
 	}
 
 	if len(defStmt.IffFactsOrNil) == 0 {
 		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
-		return glob.NewEmptyGlobUnknown()
+		return glob.NewEmptyStmtUnknown()
 	}
 
 	iffToProp := defStmt.IffToPropUniFact()
@@ -439,15 +439,15 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 			return verRet
 		}
 		if verRet.IsTrue() {
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), defStmt.String(), glob.NewEmptyGlobTrue())
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), defStmt.String(), glob.NewEmptyStmtTrue())
 		}
 	}
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
 // $equal_tuple(left, right, dim)
-func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	if len(stmt.Params) != 3 {
 		return glob.ErrRet(fmt.Sprintf("equal_tuple should have 3 params, but got %d", len(stmt.Params)))
 	}
@@ -540,5 +540,5 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 	}
 
 	msg := fmt.Sprintf("verified %s and %s are tuples with dim = %s, and each element %s[i] = %s[i] for i = 1 to %d", left, right, dim, left, right, dimValue)
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyStmtTrue())
 }

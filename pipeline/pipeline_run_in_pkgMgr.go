@@ -25,7 +25,7 @@ import (
 	"path/filepath"
 )
 
-func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, *glob.GlobRet) {
+func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, *glob.StmtRet) {
 	envPkgMgr := env.NewEnvPkgMgr(pkgMgr)
 	envMgr, err := NewBuiltinEnvMgrWithNewEmptyEnv(envPkgMgr)
 	if err != nil {
@@ -44,7 +44,7 @@ func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bo
 
 	p := ast.NewTbParser(pkgMgr)
 	curExec := exe.NewExecutor(envMgr)
-	innerGlobRets := []*glob.GlobRet{}
+	innerGlobRets := []*glob.StmtRet{}
 	for _, block := range blocks {
 		topStmt, err := p.Stmt(&block)
 		if err != nil {
@@ -53,19 +53,19 @@ func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bo
 		ret := RunStmtInExecutor(curExec, topStmt)
 		innerGlobRets = append(innerGlobRets, ret)
 		if ret.IsNotTrue() {
-			return nil, glob.NewGlobWithInnerGlobRets(innerGlobRets, ret.Type)
+			return nil, glob.NewStmtWithInnerStmtsRet(innerGlobRets, ret.Type)
 		}
 	}
 
 	if removeBuiltinEnv {
 		envMgrWithoutBuiltinLogic := envMgr.RemoveBuiltinEnv()
-		return envMgrWithoutBuiltinLogic, glob.NewGlobWithInnerGlobRets(innerGlobRets, glob.GlobRetTypeTrue)
+		return envMgrWithoutBuiltinLogic, glob.NewStmtWithInnerStmtsRet(innerGlobRets, glob.StmtRetTypeTrue)
 	}
 
-	return envMgr, glob.NewGlobWithInnerGlobRets(innerGlobRets, glob.GlobRetTypeTrue)
+	return envMgr, glob.NewStmtWithInnerStmtsRet(innerGlobRets, glob.StmtRetTypeTrue)
 }
 
-func RunFileInPkgMgr(fileAbsPath string, curPkgName string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, *glob.GlobRet) {
+func RunFileInPkgMgr(fileAbsPath string, curPkgName string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, *glob.StmtRet) {
 	if fileAbsPath == "" {
 		return nil, glob.ErrRet("filePath is empty")
 	}

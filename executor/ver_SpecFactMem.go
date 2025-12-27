@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	// upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
@@ -41,10 +41,10 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerSta
 		}
 	}
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
-func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	nextState := state.GetAddRound()
 
 	// upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
@@ -58,10 +58,10 @@ func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerSt
 		}
 	}
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
-func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	// upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
@@ -81,10 +81,10 @@ func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state
 		}
 	}
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
-func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	// upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
@@ -96,14 +96,14 @@ func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt
 		}
 	}
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
-func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	searchedSpecFactsInLogicExpr, got := curEnv.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
-		return glob.NewEmptyGlobUnknown()
+		return glob.NewEmptyStmtUnknown()
 	}
 
 	nextState := state.GetAddRound().GetNoMsg()
@@ -112,7 +112,7 @@ func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.EnvMemo
 	return ver.iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt, searchedSpecFactsInLogicExpr, nextState)
 }
 
-func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.SpecFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state *VerState) *glob.GlobRet {
+func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.SpecFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state *VerState) *glob.StmtRet {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		knownFactUnderLogicExpr := knownFacts[i]
 		knownFact_paramProcessed := env.KnownSpecFact_InUniFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}
@@ -190,14 +190,14 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 		}
 
 		if verRet.IsTrue() {
-			return ver.maybeAddSuccessMsg(state, stmt, knownFactUnderLogicExpr.UniFact, glob.NewEmptyGlobTrue())
+			return ver.maybeAddSuccessMsg(state, stmt, knownFactUnderLogicExpr.UniFact, glob.NewEmptyStmtTrue())
 		}
 	}
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
-func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	if state.Round == 0 && !state.ReqOk {
 		return glob.UnknownRet(fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state))
 	}
@@ -205,14 +205,14 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.S
 	searchedSpecFacts, got := curEnv.KnownFactsStruct.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
-		return glob.NewEmptyGlobUnknown()
+		return glob.NewEmptyStmtUnknown()
 	}
 
 	// return ver.iterate_KnownSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, state)
 	return ver.iterate_KnownSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, state)
 }
 
-func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Obj, state *VerState) (map[string]ast.Obj, *glob.GlobRet) {
+func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Obj, state *VerState) (map[string]ast.Obj, *glob.StmtRet) {
 	newMap := map[string]ast.Obj{}
 	for key, value := range paramArrMap {
 		if len(value) == 1 {
@@ -230,12 +230,12 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 		newMap[key] = value[0]
 	}
 
-	return newMap, glob.NewEmptyGlobTrue()
+	return newMap, glob.NewEmptyStmtTrue()
 }
 
-func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	if len(knownFact.SpecFact.Params) != len(stmt.Params) {
-		return glob.NewEmptyGlobUnknown()
+		return glob.NewEmptyStmtUnknown()
 	}
 
 	for i, knownParam := range knownFact.SpecFact.Params {
@@ -264,27 +264,27 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	}
 
 	if state.WithMsg {
-		return ver.maybeAddSuccessMsg(state, stmt, knownFact.LogicExpr, glob.NewEmptyGlobTrue())
+		return ver.maybeAddSuccessMsg(state, stmt, knownFact.LogicExpr, glob.NewEmptyStmtTrue())
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }
 
-func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	knownFacts, got := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
-		return glob.NewEmptyGlobUnknown()
+		return glob.NewEmptyStmtUnknown()
 	}
 
 	return ver.iterateKnownSpecFacts_applyObjEqualSpec(stmt, knownFacts, state)
 }
 
-func (ver *Verifier) specFact_LogicMem(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) specFact_LogicMem(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	knownFacts, got := curEnv.KnownFactsStruct.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
-		return glob.NewEmptyGlobUnknown()
+		return glob.NewEmptyStmtUnknown()
 	}
 
 	if got {
@@ -300,10 +300,10 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.EnvMemory, stmt *ast.SpecFact
 
 	}
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
-func (ver *Verifier) iterateKnownSpecFacts_applyObjEqualSpec(stmt *ast.SpecFactStmt, knownFacts []ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) iterateKnownSpecFacts_applyObjEqualSpec(stmt *ast.SpecFactStmt, knownFacts []ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 LoopOverFacts:
 	for _, knownFact := range knownFacts {
 		verRet := ver.matchTwoSpecFacts(stmt, &knownFact, state)
@@ -315,19 +315,19 @@ LoopOverFacts:
 		}
 
 		if state.WithMsg {
-			execRet := glob.NewEmptyGlobTrue()
+			execRet := glob.NewEmptyStmtTrue()
 			execRet.AddVerifyProcess(successVerString(stmt, &knownFact))
 			return execRet
 		}
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
-func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	if len(knownFact.Params) != len(stmt.Params) || knownFact.TypeEnum != stmt.TypeEnum {
-		return glob.NewEmptyGlobUnknown()
+		return glob.NewEmptyStmtUnknown()
 	}
 
 	// 如果不区分 equal 和 其他事实的话，可能会出死循环
@@ -349,10 +349,10 @@ func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.Sp
 		}
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }
 
-func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_InLogicExpr, stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	ver.newEnv()
 	defer ver.deleteEnv()
 
@@ -374,10 +374,10 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 		}
 	}
 
-	return ver.maybeAddSuccessMsg(state, stmt, knownFact.LogicExpr, glob.NewEmptyGlobTrue())
+	return ver.maybeAddSuccessMsg(state, stmt, knownFact.LogicExpr, glob.NewEmptyStmtTrue())
 }
 
-func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerState) *glob.StmtRet {
 	if !state.isFinalRound() {
 		for _, fact := range domFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)
@@ -393,23 +393,23 @@ func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerSta
 				}
 			}
 		}
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	} else {
 		for _, fact := range domFacts {
 			asSpecFact, ok := fact.(*ast.SpecFactStmt)
 			if !ok {
-				return glob.NewEmptyGlobUnknown()
+				return glob.NewEmptyStmtUnknown()
 			}
 			verRet := ver.VerFactStmt(asSpecFact, state.GetFinalRound())
 			if verRet.IsErr() || verRet.IsUnknown() {
 				return verRet
 			}
 		}
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 }
 
-func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFactStmt, orStmt *ast.OrStmt, index int, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFactStmt, orStmt *ast.OrStmt, index int, state *VerState) *glob.StmtRet {
 	ver.newEnv()
 	defer ver.deleteEnv()
 
@@ -424,10 +424,10 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 		}
 	}
 
-	return ver.maybeAddSuccessMsg(state, stmt, orStmt, glob.NewEmptyGlobTrue())
+	return ver.maybeAddSuccessMsg(state, stmt, orStmt, glob.NewEmptyStmtTrue())
 }
 
-func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) *glob.GlobRet {
+func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) *glob.StmtRet {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		knownFact_paramProcessed := knownFacts[i]
 		// 这里需要用的是 instantiated 的 knownFact
@@ -489,9 +489,9 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 		}
 
 		if verRet.IsTrue() {
-			return ver.maybeAddSuccessMsg(state, stmt, knownFact_paramProcessed.UniFact, glob.NewEmptyGlobTrue())
+			return ver.maybeAddSuccessMsg(state, stmt, knownFact_paramProcessed.UniFact, glob.NewEmptyStmtTrue())
 		}
 	}
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }

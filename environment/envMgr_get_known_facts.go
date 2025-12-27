@@ -19,16 +19,16 @@ import (
 	glob "golitex/glob"
 )
 
-func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]ast.SpecFactStmt, *glob.GlobRet) {
+func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]ast.SpecFactStmt, *glob.StmtRet) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
-		return s.PureFacts, glob.NewEmptyGlobTrue()
+		return s.PureFacts, glob.NewEmptyStmtTrue()
 	case ast.FalsePure:
-		return s.NotPureFacts, glob.NewEmptyGlobTrue()
+		return s.NotPureFacts, glob.NewEmptyStmtTrue()
 	case ast.TrueExist_St:
-		return s.Exist_St_Facts, glob.NewEmptyGlobTrue()
+		return s.Exist_St_Facts, glob.NewEmptyStmtTrue()
 	case ast.FalseExist_St:
-		return s.NotExist_St_Facts, glob.NewEmptyGlobTrue()
+		return s.NotExist_St_Facts, glob.NewEmptyStmtTrue()
 	default:
 		return nil, glob.ErrRet(("invalid spec fact type"))
 	}
@@ -48,7 +48,7 @@ func (s SpecFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]ast.Spec
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactMem) newFact(stmt *ast.SpecFactStmt) *glob.GlobRet {
+func (s SpecFactMem) newFact(stmt *ast.SpecFactStmt) *glob.StmtRet {
 	// 要考虑pkgName和propName是否存在
 	sameEnumFacts, ret := s.getSameEnumFacts(stmt)
 	if ret.IsErr() {
@@ -59,19 +59,19 @@ func (s SpecFactMem) newFact(stmt *ast.SpecFactStmt) *glob.GlobRet {
 		sameEnumFacts[string(stmt.PropName)] = []ast.SpecFactStmt{}
 	}
 	sameEnumFacts[string(stmt.PropName)] = append(sameEnumFacts[string(stmt.PropName)], *stmt)
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }
 
-func (s SpecFactInLogicExprMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]KnownSpecFact_InLogicExpr, *glob.GlobRet) {
+func (s SpecFactInLogicExprMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]KnownSpecFact_InLogicExpr, *glob.StmtRet) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
-		return s.PureFacts, glob.NewEmptyGlobTrue()
+		return s.PureFacts, glob.NewEmptyStmtTrue()
 	case ast.FalsePure:
-		return s.NotPureFacts, glob.NewEmptyGlobTrue()
+		return s.NotPureFacts, glob.NewEmptyStmtTrue()
 	case ast.TrueExist_St:
-		return s.Exist_St_Facts, glob.NewEmptyGlobTrue()
+		return s.Exist_St_Facts, glob.NewEmptyStmtTrue()
 	case ast.FalseExist_St:
-		return s.NotExist_St_Facts, glob.NewEmptyGlobTrue()
+		return s.NotExist_St_Facts, glob.NewEmptyStmtTrue()
 	default:
 		return nil, glob.ErrRet(("invalid spec fact type"))
 	}
@@ -91,7 +91,7 @@ func (s SpecFactInLogicExprMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) 
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt) *glob.GlobRet {
+func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt) *glob.StmtRet {
 	for i, fact := range logicExpr.Facts {
 		sameEnumFacts, ret := s.getSameEnumFacts(fact)
 		if ret.IsErr() {
@@ -104,19 +104,19 @@ func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt) *glob.GlobRet {
 		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], *NewKnownSpecFact_InLogicExpr(fact, i, logicExpr))
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }
 
-func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]KnownSpecFact_InUniFact, *glob.GlobRet) {
+func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]KnownSpecFact_InUniFact, *glob.StmtRet) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
-		return s.PureFacts, glob.NewEmptyGlobTrue()
+		return s.PureFacts, glob.NewEmptyStmtTrue()
 	case ast.FalsePure:
-		return s.NotPureFacts, glob.NewEmptyGlobTrue()
+		return s.NotPureFacts, glob.NewEmptyStmtTrue()
 	case ast.TrueExist_St:
-		return s.Exist_St_Facts, glob.NewEmptyGlobTrue()
+		return s.Exist_St_Facts, glob.NewEmptyStmtTrue()
 	case ast.FalseExist_St:
-		return s.NotExist_St_Facts, glob.NewEmptyGlobTrue()
+		return s.NotExist_St_Facts, glob.NewEmptyStmtTrue()
 	default:
 		return nil, glob.ErrRet(("invalid spec fact type"))
 	}
@@ -136,7 +136,7 @@ func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) *glob.GlobRet {
+func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) *glob.StmtRet {
 	sameEnumFacts, ret := s.getSameEnumFacts(stmtAsSpecFact)
 	if ret.IsErr() {
 		return ret
@@ -147,19 +147,19 @@ func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact 
 	}
 	sameEnumFacts[string(stmtAsSpecFact.PropName)] = append(sameEnumFacts[string(stmtAsSpecFact.PropName)], KnownSpecFact_InUniFact{stmtAsSpecFact, uniFact})
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }
 
-func (s SpecFact_InLogicExpr_InUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]SpecFact_InLogicExpr_InUniFact, *glob.GlobRet) {
+func (s SpecFact_InLogicExpr_InUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]SpecFact_InLogicExpr_InUniFact, *glob.StmtRet) {
 	switch stmt.TypeEnum {
 	case ast.TruePure:
-		return s.PureFacts, glob.NewEmptyGlobTrue()
+		return s.PureFacts, glob.NewEmptyStmtTrue()
 	case ast.FalsePure:
-		return s.NotPureFacts, glob.NewEmptyGlobTrue()
+		return s.NotPureFacts, glob.NewEmptyStmtTrue()
 	case ast.TrueExist_St:
-		return s.Exist_St_Facts, glob.NewEmptyGlobTrue()
+		return s.Exist_St_Facts, glob.NewEmptyStmtTrue()
 	case ast.FalseExist_St:
-		return s.NotExist_St_Facts, glob.NewEmptyGlobTrue()
+		return s.NotExist_St_Facts, glob.NewEmptyStmtTrue()
 	default:
 		return nil, glob.ErrRet(("invalid spec fact type"))
 	}
@@ -179,7 +179,7 @@ func (s SpecFact_InLogicExpr_InUniFactMem) GetSameEnumPkgPropFacts(stmt *ast.Spe
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, logicExpr *ast.OrStmt) *glob.GlobRet {
+func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, logicExpr *ast.OrStmt) *glob.StmtRet {
 	for i, fact := range logicExpr.Facts {
 		sameEnumFacts, ret := s.getSameEnumFacts(fact)
 		if ret.IsErr() {
@@ -192,7 +192,7 @@ func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, log
 		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], *NewSpecFact_InLogicExpr_InUniFact(fact, uniStmt, i, logicExpr))
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }
 
 func (envMemory *EnvMemory) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {

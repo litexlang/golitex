@@ -21,17 +21,17 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) simplifyNumExprObj(obj ast.Obj) (ast.Obj, *glob.GlobRet) {
+func (exec *Executor) simplifyNumExprObj(obj ast.Obj) (ast.Obj, *glob.StmtRet) {
 	simplifiedNumExprObj := cmp.IsNumExprObjThenSimplify(obj)
 	if simplifiedNumExprObj == nil {
-		return nil, glob.NewEmptyGlobError()
+		return nil, glob.NewEmptyStmtError()
 	}
 
-	return simplifiedNumExprObj, glob.NewEmptyGlobTrue()
+	return simplifiedNumExprObj, glob.NewEmptyStmtTrue()
 }
 
 // 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
-func (exec *Executor) evalObjThenSimplify(obj ast.Obj) (ast.Obj, *glob.GlobRet) {
+func (exec *Executor) evalObjThenSimplify(obj ast.Obj) (ast.Obj, *glob.StmtRet) {
 	// fmt.Println(obj)
 
 	if cmp.IsNumExprLitObj(obj) {
@@ -44,7 +44,7 @@ func (exec *Executor) evalObjThenSimplify(obj ast.Obj) (ast.Obj, *glob.GlobRet) 
 		if symbolValue == nil {
 			return nil, glob.ErrRet(fmt.Sprintf("symbol %s has no value", obj.String()))
 		}
-		return symbolValue, glob.NewEmptyGlobTrue()
+		return symbolValue, glob.NewEmptyStmtTrue()
 	case *ast.FnObj:
 		return exec.evalFnObjThenSimplify(asObj)
 	default:
@@ -62,9 +62,9 @@ var basicArithOptMap = map[string]struct{}{
 }
 
 // 可能返回数值的时候需要检查一下会不会除以0这种情况
-func (exec *Executor) evalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, *glob.GlobRet) {
+func (exec *Executor) evalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, *glob.StmtRet) {
 	if symbolValue := exec.Env.GetSymbolSimplifiedValue(fnObj); symbolValue != nil {
-		return symbolValue, glob.NewEmptyGlobTrue()
+		return symbolValue, glob.NewEmptyStmtTrue()
 	}
 
 	if ast.IsFn_WithHeadNameInSlice(fnObj, basicArithOptMap) {
@@ -92,13 +92,13 @@ func (exec *Executor) evalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, *glob.Gl
 			return nil, execRet
 		}
 
-		return numExprObj, glob.NewEmptyGlobTrue()
+		return numExprObj, glob.NewEmptyStmtTrue()
 	}
 
-	return nil, glob.NewEmptyGlobUnknown()
+	return nil, glob.NewEmptyStmtUnknown()
 }
 
-func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, *glob.GlobRet) {
+func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, *glob.StmtRet) {
 	algoDef := exec.Env.GetAlgoDef(fnObj.FnHead.String())
 	if algoDef == nil {
 		return nil, glob.ErrRet(fmt.Sprintf("algo %s is not found", fnObj.FnHead.String()))
@@ -157,7 +157,7 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 	return exec.simplifyNumExprObj(value)
 }
 
-func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWithValueParams *ast.FnObj) (ast.Obj, *glob.GlobRet) {
+func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWithValueParams *ast.FnObj) (ast.Obj, *glob.StmtRet) {
 	for _, stmt := range algoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.AlgoReturnStmt:
@@ -187,12 +187,12 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWit
 	return nil, glob.ErrRet(fmt.Sprintf("There is no return value of %s", fnObjWithValueParams))
 }
 
-func (exec *Executor) fnObjParamsInFnDomain(fnObj *ast.FnObj) *glob.GlobRet {
+func (exec *Executor) fnObjParamsInFnDomain(fnObj *ast.FnObj) *glob.StmtRet {
 	ver := NewVerifier(exec.Env)
 	return ver.objIsDefinedAtomOrIsFnSatisfyItsReq(fnObj, Round0NoMsg())
 }
 
-func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, *glob.GlobRet) {
+func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, *glob.StmtRet) {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -222,13 +222,13 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, *glob.G
 			}
 		}
 
-		return false, glob.NewEmptyGlobTrue()
+		return false, glob.NewEmptyStmtTrue()
 	}
 
-	return true, glob.NewEmptyGlobTrue()
+	return true, glob.NewEmptyStmtTrue()
 }
 
-func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValueParams *ast.FnObj) (ast.Obj, *glob.GlobRet) {
+func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValueParams *ast.FnObj) (ast.Obj, *glob.StmtRet) {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -243,7 +243,7 @@ func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValuePar
 	return value, execRet
 }
 
-func (exec *Executor) GetSimplifiedValue(obj ast.Obj) (ast.Obj, *glob.GlobRet) {
+func (exec *Executor) GetSimplifiedValue(obj ast.Obj) (ast.Obj, *glob.StmtRet) {
 	_, value := exec.Env.ReplaceSymbolWithValue(obj)
 	simplifiedValue, execRet := exec.simplifyNumExprObj(value)
 	if execRet.IsNotTrue() {

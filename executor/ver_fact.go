@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) *glob.StmtRet {
 	switch asStmt := stmt.(type) {
 	case *ast.SpecFactStmt:
 		if ast.IsTrueSpecFactWithPropName(asStmt, glob.KeySymbolEqual) {

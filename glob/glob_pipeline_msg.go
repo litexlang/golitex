@@ -1,5 +1,5 @@
 package litex_global
 
 type PipelineMsg struct {
-	GlobMsgs []*GlobRet
+	GlobMsgs []*StmtRet
 }

@@ -20,14 +20,14 @@ import (
 	glob "golitex/glob"
 )
 
-func (ie *InferEngine) newUserDefinedTruePureFactByDef(fact *ast.SpecFactStmt) *glob.GlobRet {
+func (ie *InferEngine) newUserDefinedTruePureFactByDef(fact *ast.SpecFactStmt) *glob.StmtRet {
 	// 通过 prop 定义中的 iff 和 implication 规则，推导出后续结论
 	// 因为 prop 的定义包含了 iff（当且仅当）和 implication（蕴含）关系，
 	// 所以当该 prop 为真时，可以推导出定义中指定的后续事实
 	propDef := ie.EnvMgr.GetPropDef(fact.PropName)
 	if propDef == nil {
 		// TODO 这里需要考虑prop的定义是否在当前包中。当然这里有点复杂，因为如果是内置的prop，那么可能需要到builtin包中去找
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 
 	iffFacts := []string{}
@@ -91,5 +91,5 @@ func (ie *InferEngine) newUserDefinedTruePureFactByDef(fact *ast.SpecFactStmt) *
 		derivedFacts = append(derivedFacts, "")
 	}
 
-	return glob.NewGlobTrueWithInfers(derivedFacts)
+	return glob.NewStmtTrueWithInfers(derivedFacts)
 }
