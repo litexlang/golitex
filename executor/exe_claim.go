@@ -176,7 +176,7 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	return exec.NewTrueStmtRet(stmt)
 }
 
 func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
@@ -191,7 +191,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 		return glob.ErrRet(ret.String())
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	return exec.NewTrueStmtRet(stmt)
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet {

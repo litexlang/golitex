@@ -1,15 +1,11 @@
-prop p(a R):
-    dom:
-        a > 0
-    <=>:
-        a > 1
+have fn f(x R) R = x
 
-prop q(a R):
-    dom:
-        a > 0
-    <=>:
-        a > 2
+have x R
 
-prop r(a R):
-    dom:
-        a > 0
+prove_case_by_case:
+    =>:
+        f(x) = x
+    case x > 0:
+        f(x) = x
+    case not x > 0:
+        f(x) = x
