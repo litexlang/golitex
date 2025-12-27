@@ -20,7 +20,7 @@ import (
 )
 
 // func (envMgr *EnvMgr) InsertFnInFnTT(fc ast.Fc, asFcFn *ast.FcFn, fnTNoName *ast.FnTStruct) error {
-func (envMgr *EnvMgr) InsertFnInFnTT(fc ast.Obj, fnTNoName *ast.FnTemplate) *glob.GlobRet {
+func (envMgr *EnvMgr) InsertFnInFnTT(fc ast.Obj, fnTNoName *ast.FnTemplate) *glob.StmtRet {
 	var fnTFcIsIn = fnTNoName
 	var ok bool
 
@@ -33,14 +33,14 @@ func (envMgr *EnvMgr) InsertFnInFnTT(fc ast.Obj, fnTNoName *ast.FnTemplate) *glo
 				AsFnTStruct: fnTFcIsIn,
 			},
 		}
-		return glob.NewGlobTrueWithDefine("")
+		return glob.NewStmtTrueWithDefine("")
 	} else {
 		fnDefs = append(fnDefs, FnInFnTMemItem{
 			// AsFcFn:      asFcFn,
 			AsFnTStruct: fnTFcIsIn,
 		})
 		memory[fc.String()] = fnDefs
-		return glob.NewGlobTrueWithDefine("")
+		return glob.NewStmtTrueWithDefine("")
 	}
 }
 

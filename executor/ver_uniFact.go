@@ -20,9 +20,9 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) *glob.StmtRet {
 	if state.isFinalRound() {
-		return glob.NewEmptyGlobUnknown()
+		return glob.NewEmptyStmtUnknown()
 	}
 
 	// 在局部环境声明新变量
@@ -45,7 +45,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) *glob
 	return ver.uniFact_checkThenFacts(newStmtPtr, state)
 }
 
-func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) *glob.StmtRet {
 	// check then facts
 	for _, thenFact := range stmt.ThenFacts {
 		verRet := ver.VerFactStmt(thenFact, state) // 这个地方有点tricky，这里是可能读入state是any的，而且我要允许读入any
@@ -53,7 +53,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 			return glob.ErrRet(verRet.String())
 		}
 		if verRet.IsUnknown() {
-			execRet := glob.NewEmptyGlobUnknown()
+			execRet := glob.NewEmptyStmtUnknown()
 			if state.WithMsg {
 				execRet.AddUnknown(fmt.Sprintf("%s is unknown", thenFact))
 			}
@@ -67,7 +67,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		}
 	}
 
-	execRet := glob.NewEmptyGlobTrue()
+	execRet := glob.NewEmptyStmtTrue()
 	if state.WithMsg {
 		execRet = execRet.AddVerifyProcess(fmt.Sprintf("%s\nis true", stmt))
 	}
@@ -98,7 +98,7 @@ func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactS
 	return newStmtPtr, nil
 }
 
-func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) *glob.StmtRet {
 	thenToIff := stmt.NewUniFactWithThenToIff()
 	verRet := ver.verUniFact(thenToIff, state)
 	if verRet.IsErr() || verRet.IsUnknown() {

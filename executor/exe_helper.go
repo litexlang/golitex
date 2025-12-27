@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func notOkExec(state *glob.GlobRet, err error) bool {
+func notOkExec(state *glob.StmtRet, err error) bool {
 	if err != nil {
 		return true
 	}
@@ -46,14 +46,14 @@ func (exec *Executor) NewCommutativeProp(specFact *ast.SpecFactStmt) {
 	}
 }
 
-func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerState) (*glob.GlobRet, ast.Stmt, error) {
+func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerState) (*glob.StmtRet, ast.Stmt, error) {
 	ver := NewVerifier(exec.Env)
 	for _, proof := range proofs {
 		verRet := ver.VerFactStmt(proof, verState)
 		if verRet.IsErr() {
-			return glob.NewEmptyGlobError(), proof, fmt.Errorf(verRet.String())
+			return glob.NewEmptyStmtError(), proof, fmt.Errorf(verRet.String())
 		} else if verRet.IsUnknown() {
-			return glob.NewEmptyGlobUnknown(), proof, nil
+			return glob.NewEmptyStmtUnknown(), proof, nil
 		}
 
 		ret := exec.Env.NewFactWithoutCheckingNameDefined(proof)
@@ -61,7 +61,7 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 			return glob.ErrRet(ret.String()), proof, fmt.Errorf(ret.String())
 		}
 	}
-	return glob.NewEmptyGlobTrue(), nil, nil
+	return glob.NewEmptyStmtTrue(), nil, nil
 }
 
 func (exec *Executor) GetBuiltinEnv() *env.EnvMemory {

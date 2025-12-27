@@ -19,23 +19,23 @@ import (
 	glob "golitex/glob"
 )
 
-func (envMgr *EnvMgr) IsNameUnavailable(name string, extraParams map[string]struct{}) *glob.GlobRet {
+func (envMgr *EnvMgr) IsNameUnavailable(name string, extraParams map[string]struct{}) *glob.StmtRet {
 	if _, ok := extraParams[name]; ok {
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 
 	if glob.IsBuiltinName(name) {
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 
 	if envMgr.IsAtomNameDefinedByUser(name) || envMgr.IsPropNameDefinedByUser(name) || envMgr.IsExistPropNameDefinedByUser(name) || envMgr.IsFnSetNameDefinedByUser(name) || envMgr.IsAlgoNameDefinedByUser(name) || envMgr.IsProveAlgoNameDefinedByUser(name) || envMgr.IsPkgNameDefinedByUser(name) {
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 
 	return glob.ErrRet(fmt.Sprintf("undefined: %s", name))
 }
 
-func (envMgr *EnvMgr) IsValidAndAvailableName(name string) *glob.GlobRet {
+func (envMgr *EnvMgr) IsValidAndAvailableName(name string) *glob.StmtRet {
 	err := glob.IsValidUseDefinedName(name)
 	if err != nil {
 		return glob.ErrRetWithErr(err)
@@ -46,5 +46,5 @@ func (envMgr *EnvMgr) IsValidAndAvailableName(name string) *glob.GlobRet {
 		return glob.ErrRetWithErr(duplicateDefError(name))
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }

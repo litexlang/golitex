@@ -21,7 +21,7 @@ import (
 )
 
 // maybeAddSuccessMsg adds a success message to execRet if state.WithMsg is true
-func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy ast.Stmt, execRet *glob.GlobRet) *glob.GlobRet {
+func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy ast.Stmt, execRet *glob.StmtRet) *glob.StmtRet {
 	if state.WithMsg {
 		execRet.AddVerifyProcess(successVerString(stmt, stmtVerifiedBy))
 		return execRet
@@ -30,7 +30,7 @@ func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy as
 }
 
 // maybeAddSuccessMsgString is a backward compatibility function for string-based
-func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet *glob.GlobRet) *glob.GlobRet {
+func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet *glob.StmtRet) *glob.StmtRet {
 	if state == nil {
 		panic("")
 	}

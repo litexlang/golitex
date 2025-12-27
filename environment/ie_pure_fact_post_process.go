@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.GlobRet {
+func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.StmtRet {
 	if glob.IsBuiltinPropName(string(fact.PropName)) || glob.IsBuiltinExistPropName(string(fact.PropName)) {
 		ret := ie.BuiltinPropExceptTrueEqual(fact)
 		return ret
@@ -34,18 +34,18 @@ func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.GlobRet {
 			// Inherit derived facts from prop definition
 			return ret
 		}
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 
 	existPropDef := ie.EnvMgr.GetExistPropDef(fact.PropName)
 	if existPropDef != nil {
 		if fact.TypeEnum == ast.TruePure {
-			return glob.NewEmptyGlobTrue()
+			return glob.NewEmptyStmtTrue()
 		} else {
 			for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
 				_, ok := thenFact.(*ast.SpecFactStmt)
 				if !ok {
-					return glob.NewEmptyGlobTrue()
+					return glob.NewEmptyStmtTrue()
 				}
 			}
 			ret := ie.newFalseExistFact_EmitEquivalentUniFact(fact)
@@ -59,7 +59,7 @@ func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.GlobRet {
 
 // equalTupleFactPostProcess handles postprocessing for equal_tuple(a, b, dim) facts
 // It automatically derives a[i] = b[i] for i from 1 to dim
-func (ie *InferEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) *glob.GlobRet {
+func (ie *InferEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) *glob.StmtRet {
 	if len(fact.Params) != 3 {
 		return glob.ErrRet(fmt.Sprintf("equal_tuple fact expect 3 parameters, get %d in %s", len(fact.Params), fact))
 	}
@@ -74,14 +74,14 @@ func (ie *InferEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) *glob.G
 	return ret
 }
 
-func (ie *InferEngine) newFalseExist(fact *ast.SpecFactStmt) *glob.GlobRet {
+func (ie *InferEngine) newFalseExist(fact *ast.SpecFactStmt) *glob.StmtRet {
 	_ = fact
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }
 
 // newTrueExist handles postprocessing for TrueExist_St facts
 // have(exist ... st ...) => exist
-func (ie *InferEngine) newTrueExist(fact *ast.SpecFactStmt) *glob.GlobRet {
+func (ie *InferEngine) newTrueExist(fact *ast.SpecFactStmt) *glob.StmtRet {
 	_, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
 
 	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, factParams, fact.Line)
@@ -113,12 +113,12 @@ func (ie *InferEngine) newTrueExist(fact *ast.SpecFactStmt) *glob.GlobRet {
 		}
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }
 
 // newFalseExistFact_EmitEquivalentUniFact handles postprocessing for FalseExist facts
 // not exist => forall not
-func (ie *InferEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) *glob.GlobRet {
+func (ie *InferEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) *glob.StmtRet {
 	uniFact, ret := ie.EnvMgr.notExistToForall(fact)
 	if ret.IsErr() {
 		return ret
@@ -130,5 +130,5 @@ func (ie *InferEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFac
 		return glob.ErrRet(fmt.Sprintf("exist fact %s has no definition", fact))
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }

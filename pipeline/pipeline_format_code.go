@@ -23,7 +23,7 @@ import (
 	"strings"
 )
 
-func FormatCode(path string) (*glob.GlobRet, error) {
+func FormatCode(path string) (*glob.StmtRet, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return glob.ErrRet(fmt.Sprintf("failed to read file %s: %s", path, err.Error())), err
@@ -51,5 +51,5 @@ func FormatCode(path string) (*glob.GlobRet, error) {
 	if err != nil {
 		return glob.ErrRet(fmt.Sprintf("failed to write file %s: %s", path, err.Error())), err
 	}
-	return glob.NewGlobTrueWithVerifyProcess(fmt.Sprintf("formatted code written to %s", path)), nil
+	return glob.NewStmtTrueWithVerifyProcess(fmt.Sprintf("formatted code written to %s", path)), nil
 }

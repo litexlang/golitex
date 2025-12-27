@@ -19,22 +19,22 @@ import (
 	"strings"
 )
 
-type GlobRetType int8
+type StmtRetType int8
 
 const (
-	GlobRetTypeTrue GlobRetType = iota
-	GlobRetTypeUnknown
-	GlobRetTypeError
+	StmtRetTypeTrue StmtRetType = iota
+	StmtRetTypeUnknown
+	StmtRetTypeError
 )
 
-type GlobRet struct {
-	Type              GlobRetType
+type StmtRet struct {
+	Type              StmtRetType
 	Define            []string
 	NewFact           []string
 	VerifyProcess     []string
 	Infer             []string
 	Stmt              []string
-	InnerGlobRetSlice []*GlobRet
+	InnerStmtRetSlice []*StmtRet
 	Unknown           []string
 	Error             []string
 	Warnings          []string
@@ -42,7 +42,7 @@ type GlobRet struct {
 	Line uint
 }
 
-func (m *GlobRet) String() string {
+func (m *StmtRet) String() string {
 	var builder strings.Builder
 
 	builder.WriteString(fmt.Sprintf("--- line %d ---\n\n", m.Line))
@@ -89,10 +89,10 @@ func (m *GlobRet) String() string {
 		builder.WriteString("\n\n")
 	}
 
-	if len(m.InnerGlobRetSlice) > 0 {
+	if len(m.InnerStmtRetSlice) > 0 {
 		builder.WriteString("details:\n")
-		for _, innerGlobRet := range m.InnerGlobRetSlice {
-			builder.WriteString(innerGlobRet.String())
+		for _, innerStmtRet := range m.InnerStmtRetSlice {
+			builder.WriteString(innerStmtRet.String())
 			builder.WriteString("\n\n")
 		}
 		builder.WriteString("\n\n")
@@ -107,7 +107,7 @@ func (m *GlobRet) String() string {
 	return builder.String()
 }
 
-func (m *GlobRet) AddDefine(define string) *GlobRet {
+func (m *StmtRet) AddDefine(define string) *StmtRet {
 	if define == "" {
 		return m
 	}
@@ -115,7 +115,7 @@ func (m *GlobRet) AddDefine(define string) *GlobRet {
 	return m
 }
 
-func (m *GlobRet) AddNewFact(newFact string) *GlobRet {
+func (m *StmtRet) AddNewFact(newFact string) *StmtRet {
 	if newFact == "" {
 		return m
 	}
@@ -123,7 +123,7 @@ func (m *GlobRet) AddNewFact(newFact string) *GlobRet {
 	return m
 }
 
-func (m *GlobRet) AddVerifyProcess(verifyProcess string) *GlobRet {
+func (m *StmtRet) AddVerifyProcess(verifyProcess string) *StmtRet {
 	if verifyProcess == "" {
 		return m
 	}
@@ -131,7 +131,7 @@ func (m *GlobRet) AddVerifyProcess(verifyProcess string) *GlobRet {
 	return m
 }
 
-func (m *GlobRet) AddInfer(infer string) *GlobRet {
+func (m *StmtRet) AddInfer(infer string) *StmtRet {
 	if infer == "" {
 		return m
 	}
@@ -139,7 +139,7 @@ func (m *GlobRet) AddInfer(infer string) *GlobRet {
 	return m
 }
 
-func (m *GlobRet) AddStmt(s string) *GlobRet {
+func (m *StmtRet) AddStmt(s string) *StmtRet {
 	if s == "" {
 		return m
 	}
@@ -147,7 +147,7 @@ func (m *GlobRet) AddStmt(s string) *GlobRet {
 	return m
 }
 
-func (m *GlobRet) AddUnknown(unknown string) *GlobRet {
+func (m *StmtRet) AddUnknown(unknown string) *StmtRet {
 	if unknown == "" {
 		return m
 	}
@@ -155,7 +155,7 @@ func (m *GlobRet) AddUnknown(unknown string) *GlobRet {
 	return m
 }
 
-func (m *GlobRet) AddError(error string) *GlobRet {
+func (m *StmtRet) AddError(error string) *StmtRet {
 	if error == "" {
 		return m
 	}
@@ -163,17 +163,17 @@ func (m *GlobRet) AddError(error string) *GlobRet {
 	return m
 }
 
-func (m *GlobRet) AddInnerGlobRet(innerGlobRet *GlobRet) *GlobRet {
-	if innerGlobRet == nil {
+func (m *StmtRet) AddInnerStmtRet(innerStmtRet *StmtRet) *StmtRet {
+	if innerStmtRet == nil {
 		return m
 	}
-	m.InnerGlobRetSlice = append(m.InnerGlobRetSlice, innerGlobRet)
+	m.InnerStmtRetSlice = append(m.InnerStmtRetSlice, innerStmtRet)
 	return m
 }
 
-func NewEmptyGlobTrue() *GlobRet {
-	return &GlobRet{
-		Type:              GlobRetTypeTrue,
+func NewEmptyStmtTrue() *StmtRet {
+	return &StmtRet{
+		Type:              StmtRetTypeTrue,
 		Define:            []string{},
 		NewFact:           []string{},
 		VerifyProcess:     []string{},
@@ -181,15 +181,15 @@ func NewEmptyGlobTrue() *GlobRet {
 		Stmt:              []string{},
 		Unknown:           []string{},
 		Error:             []string{},
-		InnerGlobRetSlice: []*GlobRet{},
+		InnerStmtRetSlice: []*StmtRet{},
 		Warnings:          []string{},
 		Line:              0,
 	}
 }
 
-func NewEmptyGlobUnknown() *GlobRet {
-	return &GlobRet{
-		Type:              GlobRetTypeUnknown,
+func NewEmptyStmtUnknown() *StmtRet {
+	return &StmtRet{
+		Type:              StmtRetTypeUnknown,
 		Define:            []string{},
 		NewFact:           []string{},
 		VerifyProcess:     []string{},
@@ -197,21 +197,21 @@ func NewEmptyGlobUnknown() *GlobRet {
 		Stmt:              []string{},
 		Unknown:           []string{},
 		Error:             []string{},
-		InnerGlobRetSlice: []*GlobRet{},
+		InnerStmtRetSlice: []*StmtRet{},
 		Warnings:          []string{},
 		Line:              0,
 	}
 }
 
-func NewEmptyGlobError() *GlobRet {
-	return &GlobRet{
-		Type:              GlobRetTypeError,
+func NewEmptyStmtError() *StmtRet {
+	return &StmtRet{
+		Type:              StmtRetTypeError,
 		Define:            []string{},
 		NewFact:           []string{},
 		VerifyProcess:     []string{},
 		Infer:             []string{},
 		Stmt:              []string{},
-		InnerGlobRetSlice: []*GlobRet{},
+		InnerStmtRetSlice: []*StmtRet{},
 		Unknown:           []string{},
 		Error:             []string{},
 		Warnings:          []string{},
@@ -219,90 +219,84 @@ func NewEmptyGlobError() *GlobRet {
 	}
 }
 
-func NewGlobTrueWithDefine(define string) *GlobRet {
-	ret := NewEmptyGlobTrue()
+func NewStmtTrueWithDefine(define string) *StmtRet {
+	ret := NewEmptyStmtTrue()
 	ret.AddDefine(define)
 	return ret
 }
 
-func NewGlobTrueWithNewFact(newFact string) *GlobRet {
-	ret := NewEmptyGlobTrue()
+func NewStmtTrueWithNewFact(newFact string) *StmtRet {
+	ret := NewEmptyStmtTrue()
 	ret.AddNewFact(newFact)
 	return ret
 }
 
-func NewGlobTrueWithVerifyProcess(verifyProcess string) *GlobRet {
-	ret := NewEmptyGlobTrue()
+func NewStmtTrueWithVerifyProcess(verifyProcess string) *StmtRet {
+	ret := NewEmptyStmtTrue()
 	ret.AddVerifyProcess(verifyProcess)
 	return ret
 }
 
-func NewGlobTrueWithInfer(infer string) *GlobRet {
-	ret := NewEmptyGlobTrue()
+func NewStmtTrueWithInfer(infer string) *StmtRet {
+	ret := NewEmptyStmtTrue()
 	ret.AddInfer(infer)
 	return ret
 }
 
-func NewGlobTrueWithStmt(s string) *GlobRet {
-	ret := NewEmptyGlobTrue()
+func NewStmtTrueWithStmt(s string) *StmtRet {
+	ret := NewEmptyStmtTrue()
 	ret.AddStmt(s)
 	return ret
 }
 
-func NewGlobTrueWithInnerGlobRet(innerGlobRet *GlobRet) *GlobRet {
-	ret := NewEmptyGlobTrue()
-	ret.AddInnerGlobRet(innerGlobRet)
-	return ret
-}
-
-func UnknownRet(unknown string) *GlobRet {
-	ret := NewEmptyGlobUnknown()
+func UnknownRet(unknown string) *StmtRet {
+	ret := NewEmptyStmtUnknown()
 	ret.AddUnknown(unknown)
 	return ret
 }
 
-func ErrRet(s string) *GlobRet {
-	ret := NewEmptyGlobError()
+func ErrRet(s string) *StmtRet {
+	ret := NewEmptyStmtError()
 	ret.AddError(s)
 	return ret
 }
 
-func ErrRetWithErr(err error) *GlobRet {
-	ret := NewEmptyGlobError()
+func ErrRetWithErr(err error) *StmtRet {
+	ret := NewEmptyStmtError()
 	ret.AddError(err.Error())
 	return ret
 }
 
-func (m *GlobRet) SetType(msgType GlobRetType) *GlobRet {
+func (m *StmtRet) SetType(msgType StmtRetType) *StmtRet {
 	m.Type = msgType
 	return m
 }
 
-func (m *GlobRet) IsTrue() bool {
-	return m.Type == GlobRetTypeTrue
+func (m *StmtRet) IsTrue() bool {
+	return m.Type == StmtRetTypeTrue
 }
 
-func (m *GlobRet) IsUnknown() bool {
-	return m.Type == GlobRetTypeUnknown
+func (m *StmtRet) IsUnknown() bool {
+	return m.Type == StmtRetTypeUnknown
 }
 
-func (m *GlobRet) IsErr() bool {
-	return m.Type == GlobRetTypeError
+func (m *StmtRet) IsErr() bool {
+	return m.Type == StmtRetTypeError
 }
 
-func (m *GlobRet) IsNotTrue() bool {
-	return m.Type != GlobRetTypeTrue
+func (m *StmtRet) IsNotTrue() bool {
+	return m.Type != StmtRetTypeTrue
 }
 
-func (m *GlobRet) IsNotUnknown() bool {
-	return m.Type != GlobRetTypeUnknown
+func (m *StmtRet) IsNotUnknown() bool {
+	return m.Type != StmtRetTypeUnknown
 }
 
-func (m *GlobRet) IsNotError() bool {
-	return m.Type != GlobRetTypeError
+func (m *StmtRet) IsNotError() bool {
+	return m.Type != StmtRetTypeError
 }
 
-func (m *GlobRet) Inherit(other *GlobRet) *GlobRet {
+func (m *StmtRet) Inherit(other *StmtRet) *StmtRet {
 	m.Define = append(m.Define, other.Define...)
 	m.NewFact = append(m.NewFact, other.NewFact...)
 	m.VerifyProcess = append(m.VerifyProcess, other.VerifyProcess...)
@@ -310,128 +304,97 @@ func (m *GlobRet) Inherit(other *GlobRet) *GlobRet {
 	m.Stmt = append(m.Stmt, other.Stmt...)
 	m.Unknown = append(m.Unknown, other.Unknown...)
 	m.Error = append(m.Error, other.Error...)
-	m.InnerGlobRetSlice = append(m.InnerGlobRetSlice, other.InnerGlobRetSlice...)
+	m.InnerStmtRetSlice = append(m.InnerStmtRetSlice, other.InnerStmtRetSlice...)
 	return m
 }
 
-func NewGlobTrueWithDefines(defines []string) *GlobRet {
-	ret := NewEmptyGlobTrue()
+func NewStmtTrueRetWithDefines(defines []string) *StmtRet {
+	ret := NewEmptyStmtTrue()
 	ret.Define = defines
 	return ret
 }
 
-func NewGlobTrueWithNewFacts(newFacts []string) *GlobRet {
-	ret := NewEmptyGlobTrue()
-	ret.NewFact = newFacts
-	return ret
-}
-
-func NewGlobTrueWithVerifyProcesses(verifyProcesses []string) *GlobRet {
-	ret := NewEmptyGlobTrue()
-	ret.VerifyProcess = verifyProcesses
-	return ret
-}
-
-func NewGlobTrueWithInfers(infers []string) *GlobRet {
-	ret := NewEmptyGlobTrue()
+func NewStmtTrueWithInfers(infers []string) *StmtRet {
+	ret := NewEmptyStmtTrue()
 	ret.Infer = infers
 	return ret
 }
 
-func NewGlobTrueWithStmts(stmts []string) *GlobRet {
-	ret := NewEmptyGlobTrue()
+func NewStmtTrueWithStmts(stmts []string) *StmtRet {
+	ret := NewEmptyStmtTrue()
 	ret.Stmt = stmts
 	return ret
 }
 
-func NewGlobWithInnerGlobRets(innerGlobRets []*GlobRet, msgType GlobRetType) *GlobRet {
-	ret := NewEmptyGlobTrue()
-	ret.InnerGlobRetSlice = innerGlobRets
+func NewStmtWithInnerStmtsRet(innerStmtsRet []*StmtRet, msgType StmtRetType) *StmtRet {
+	ret := NewEmptyStmtTrue()
+	ret.InnerStmtRetSlice = innerStmtsRet
 	ret.Type = msgType
 	return ret
 }
 
-func NewGlobUnknownWithUnknowns(unknowns []string) *GlobRet {
-	ret := NewEmptyGlobUnknown()
-	ret.Unknown = unknowns
-	return ret
-}
-
-func NewGlobErrorWithErrors(errors []string) *GlobRet {
-	ret := NewEmptyGlobError()
-	ret.Error = errors
-	return ret
-}
-
-func (m *GlobRet) AddDefines(defines []string) *GlobRet {
+func (m *StmtRet) AddDefines(defines []string) *StmtRet {
 	for _, define := range defines {
 		m.AddDefine(define)
 	}
 	return m
 }
 
-func (m *GlobRet) AddNewFacts(newFacts []string) *GlobRet {
+func (m *StmtRet) AddNewFacts(newFacts []string) *StmtRet {
 	for _, newFact := range newFacts {
 		m.AddNewFact(newFact)
 	}
 	return m
 }
 
-func (m *GlobRet) AddVerifyProcesses(verifyProcesses []string) *GlobRet {
+func (m *StmtRet) AddVerifyProcesses(verifyProcesses []string) *StmtRet {
 	for _, verifyProcess := range verifyProcesses {
 		m.AddVerifyProcess(verifyProcess)
 	}
 	return m
 }
 
-func (m *GlobRet) AddInfers(infers []string) *GlobRet {
+func (m *StmtRet) AddInfers(infers []string) *StmtRet {
 	for _, infer := range infers {
 		m.AddInfer(infer)
 	}
 	return m
 }
 
-func (m *GlobRet) AddStmts(stmts []string) *GlobRet {
+func (m *StmtRet) AddStmts(stmts []string) *StmtRet {
 	for _, stmts := range stmts {
 		m.AddStmt(stmts)
 	}
 	return m
 }
 
-func (m *GlobRet) AddUnknowns(unknowns []string) *GlobRet {
+func (m *StmtRet) AddUnknowns(unknowns []string) *StmtRet {
 	for _, unknown := range unknowns {
 		m.AddUnknown(unknown)
 	}
 	return m
 }
 
-func (m *GlobRet) AddErrors(errors []string) *GlobRet {
+func (m *StmtRet) AddErrors(errors []string) *StmtRet {
 	for _, error := range errors {
 		m.AddError(error)
 	}
 	return m
 }
 
-func (m *GlobRet) AddInnerGlobRets(innerGlobRets []*GlobRet) *GlobRet {
-	for _, innerGlobRet := range innerGlobRets {
-		m.AddInnerGlobRet(innerGlobRet)
-	}
-	return m
-}
-
-func (m *GlobRet) SetLine(line uint) *GlobRet {
+func (m *StmtRet) SetLine(line uint) *StmtRet {
 	m.Line = line
 	return m
 }
 
-func (m *GlobRet) AddWarnings(warnings []string) *GlobRet {
+func (m *StmtRet) AddWarnings(warnings []string) *StmtRet {
 	for _, warning := range warnings {
 		m.AddWarning(warning)
 	}
 	return m
 }
 
-func (m *GlobRet) AddWarning(warning string) *GlobRet {
+func (m *StmtRet) AddWarning(warning string) *StmtRet {
 	if warning == "" {
 		return m
 	}
