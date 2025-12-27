@@ -1,0 +1,10 @@
+have a R = 3
+
+exist_prop x, y R st p(a R):
+    dom:
+        a > 0
+    <=>:
+        x * y > a
+
+exist 2, 10 st $p(10)
+have x, y st $p(10)
