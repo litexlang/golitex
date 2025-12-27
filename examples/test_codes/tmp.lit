@@ -1,18 +1,15 @@
-"""
-have a R = 3
-
-exist_prop x, y R st p(a R):
+prop p(a R):
     dom:
         a > 0
     <=>:
-        x * y > a
+        a > 1
 
-exist 2, 10 st $p(10)
-have x, y st $p(10)
+prop q(a R):
+    dom:
+        a > 0
+    <=>:
+        a > 2
 
-have b R
-
-have fn f(t R) R = t
-"""
-
-have s set = cart(R, R)
+prop r(a R):
+    dom:
+        a > 0
