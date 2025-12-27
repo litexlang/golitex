@@ -335,7 +335,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 
 func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) *glob.StmtRet {
 	innerExecRetMsgs := []*glob.StmtRet{}
-	verifyProcessMsgs := []string{}
+	verifyProcessMsgs := []*glob.VerMsg{}
 	newFactsMsgs := []string{}
 
 	// Create OrStmt from CaseFacts
@@ -400,10 +400,17 @@ func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCase
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
 func (exec *Executor) knowImplicationStmt(stmt *ast.KnowImplicationStmt) *glob.StmtRet {
+	innerStmtRets := []*glob.StmtRet{}
+	defineMsgs := []string{}
+	newFactMsgs := []string{}
+
 	execRet := exec.defPropStmt(stmt.Prop, false)
 	if execRet.IsNotTrue() {
 		return execRet
 	}
+	innerStmtRets = append(innerStmtRets, execRet.InnerStmtRetSlice...)
+	defineMsgs = append(defineMsgs, execRet.Define...)
+	newFactMsgs = append(newFactMsgs, execRet.NewFact...)
 
 	if len(stmt.Prop.IffFactsOrNil) == 0 {
 		_, iffToProp, err := stmt.Prop.Make_PropToIff_IffToProp()
@@ -414,6 +421,7 @@ func (exec *Executor) knowImplicationStmt(stmt *ast.KnowImplicationStmt) *glob.S
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
+		newFactMsgs = append(newFactMsgs, iffToProp.String())
 	}
 
 	paramsAsObj := []ast.Obj{}
@@ -427,14 +435,16 @@ func (exec *Executor) knowImplicationStmt(stmt *ast.KnowImplicationStmt) *glob.S
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
+	newFactMsgs = append(newFactMsgs, uniFact.String())
 
 	uniFact2 := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFactsOrNil, stmt.Prop.ImplicationFactsOrNil, stmt.Line)
 	ret = exec.Env.NewFactWithoutCheckingNameDefined(uniFact2)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
+	newFactMsgs = append(newFactMsgs, uniFact2.String())
 
-	return exec.NewTrueStmtRet(stmt)
+	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddDefineMsgs(defineMsgs).AddNewFacts(newFactMsgs)
 }
 
 func (exec *Executor) proveStmt(stmt *ast.ProveStmt) *glob.StmtRet {
@@ -450,6 +460,9 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) *glob.StmtRet {
 }
 
 func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) *glob.StmtRet {
+	defineMsgs := []string{}
+	newFactMsgs := []string{}
+
 	ret := exec.Env.IsValidAndAvailableName(stmt.Name)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
@@ -462,6 +475,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) *glob.StmtRet {
 		return glob.ErrRet(ret.String())
 	}
 	exec.Env.AllDefinedAtomObjNames[stmt.Name] = struct{}{}
+	defineMsgs = append(defineMsgs, glob.IsANewObjectMsg(stmt.Name))
 
 	ret = exec.Env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.Atom(stmt.Name), nil, stmt.FnTemplate)
 	if ret.IsErr() {
@@ -477,8 +491,9 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) *glob.StmtRet {
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
+	newFactMsgs = append(newFactMsgs, derivedFact.String())
 
-	return exec.NewTrueStmtRet(stmt)
+	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs).AddNewFacts(newFactMsgs)
 }
 
 func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) *glob.StmtRet {
@@ -490,22 +505,29 @@ func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) *glob.Stmt
 		return glob.ErrRet(execState.String())
 	}
 
-	return exec.NewTrueStmtRet(stmt)
+	return execState
 }
 
 func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) *glob.StmtRet {
+	innerStmtRets := []*glob.StmtRet{}
+	verifyProcessMsgs := []*glob.VerMsg{}
+	newFactMsgs := []string{}
+
 	execRet := exec.proveByEnumStmtProve(stmt)
 	if execRet.IsNotTrue() {
 		return execRet
 	}
+	innerStmtRets = append(innerStmtRets, execRet.InnerStmtRetSlice...)
+	verifyProcessMsgs = append(verifyProcessMsgs, execRet.VerifyProcess...)
 
 	// know uniFact
 	ret := exec.Env.NewFactWithoutCheckingNameDefined(stmt.Fact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
+	newFactMsgs = append(newFactMsgs, stmt.Fact.String())
 
-	return exec.NewTrueStmtRet(stmt)
+	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactMsgs)
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
@@ -551,14 +573,19 @@ func (exec *Executor) DoNothingStmt() *glob.StmtRet {
 }
 
 func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) *glob.StmtRet {
+	verifyProcessMsgs := []*glob.VerMsg{}
+	newFactMsgs := []string{}
+
 	for _, fact := range stmt.Facts {
 		execState := exec.factStmt(fact)
 		if execState.IsNotTrue() {
 			return execState
 		}
+		verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
+		newFactMsgs = append(newFactMsgs, fact.String())
 	}
 
-	return exec.NewTrueStmtRet(stmt)
+	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactMsgs)
 }
 
 func (exec *Executor) Verify(fact ast.FactStmt, requireMsg bool) *glob.StmtRet {
@@ -584,87 +611,88 @@ func (exec *Executor) Verify(fact ast.FactStmt, requireMsg bool) *glob.StmtRet {
 // }
 
 func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) *glob.StmtRet {
-	err := exec.proveIsTransitivePropStmtBody(stmt)
-	if err != nil {
-		return glob.ErrRet(err.Error())
-	}
+	innerStmtRets := []*glob.StmtRet{}
+	verifyProcessMsgs := []*glob.VerMsg{}
+	newFactMsgs := []string{}
 
-	exec.Env.CurEnv().TransitivePropMem[string(stmt.Prop)] = make(map[string][]ast.Obj)
-
-	return exec.NewTrueStmtRet(stmt)
-}
-
-// TODO 这里的msg系统太冗杂了，需要优化
-func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitivePropStmt) error {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	if exec.Env.IsTransitiveProp(string(stmt.Prop)) {
-		return nil
+		newFactMsgs = append(newFactMsgs, fmt.Sprintf("%s is transitive prop", stmt.Prop.String()))
+		return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
 	}
 
 	def := exec.Env.GetPropDef(stmt.Prop)
 	if def == nil {
-		return fmt.Errorf("undefined prop: %s", stmt.Prop)
+		return glob.ErrRet(fmt.Sprintf("undefined prop: %s", stmt.Prop))
 	}
 
 	if len(def.DefHeader.Params) != 2 {
-		return fmt.Errorf("prop %s has %d params, but 2 params are expected", stmt.Prop, len(def.DefHeader.Params))
+		return glob.ErrRet(fmt.Sprintf("prop %s has %d params, but 2 params are expected", stmt.Prop, len(def.DefHeader.Params)))
 	}
 
 	// def 的 paramSet 必须相等
 	state := exec.factStmt(ast.NewEqualFact(def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1]))
 	if state.IsErr() {
-		return fmt.Errorf(state.String())
+		return state
 	}
 	if state.IsUnknown() {
-		return fmt.Errorf("prop in %s must have equal parameter sets, but parameter sets %s and %s of %s are not equal", glob.KeywordProveIsTransitiveProp, def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1], def.DefHeader.Name)
+		return glob.ErrRet(fmt.Sprintf("prop in %s must have equal parameter sets, but parameter sets %s and %s of %s are not equal", glob.KeywordProveIsTransitiveProp, def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1], def.DefHeader.Name))
 	}
+	verifyProcessMsgs = append(verifyProcessMsgs, state.VerifyProcess...)
 
 	// 这里最好检查一下，是不是 Param set 依赖了 Param，如果依赖了，那其实是要报错了，不过暂时不管了
 	execState := exec.defLetStmt(ast.NewDefLetStmt(stmt.Params, []ast.Obj{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0]}, def.DomFactsOrNil, stmt.Line))
 	if execState.IsNotTrue() {
-		return fmt.Errorf(execState.String())
+		return execState
 	}
+	innerStmtRets = append(innerStmtRets, execState.InnerStmtRetSlice...)
 
 	ret := exec.Env.LookupNamesInObjOrObjStringIsSetNonemptySetFiniteSet(def.DefHeader.ParamSets[0], map[string]struct{}{})
 	if ret.IsErr() {
-		return fmt.Errorf(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 	ret = exec.Env.LookupNamesInObjOrObjStringIsSetNonemptySetFiniteSet(def.DefHeader.ParamSets[1], map[string]struct{}{})
 	if ret.IsErr() {
-		return fmt.Errorf(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	if len(def.DomFactsOrNil) > 0 {
-		return fmt.Errorf("dom facts are not allowed in %s", glob.KeywordProveIsTransitiveProp)
+		return glob.ErrRet(fmt.Sprintf("dom facts are not allowed in %s", glob.KeywordProveIsTransitiveProp))
 	}
 
 	ret = exec.Env.NewFactWithoutCheckingNameDefined(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[0]), ast.Atom(stmt.Params[1])}, stmt.Line))
 	if ret.IsErr() {
-		return fmt.Errorf(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	ret = exec.Env.NewFactWithoutCheckingNameDefined(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[1]), ast.Atom(stmt.Params[2])}, stmt.Line))
 	if ret.IsErr() {
-		return fmt.Errorf(ret.String())
+		return glob.ErrRet(ret.String())
 	}
 
 	for _, proof := range stmt.Proofs {
 		execState := exec.Stmt(proof)
 		if execState.IsNotTrue() {
-			return fmt.Errorf(execState.String())
+			return execState
 		}
+		innerStmtRets = append(innerStmtRets, execState)
 	}
 
 	// check
 	finalCheckStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[0]), ast.Atom(stmt.Params[2])}, stmt.Line)
 	state = exec.factStmt(finalCheckStmt)
 	if state.IsNotTrue() {
-		return fmt.Errorf("failed to prove %s is transitive: %s failed", stmt.Prop, finalCheckStmt)
+		return glob.ErrRet(fmt.Sprintf("failed to prove %s is transitive: %s failed", stmt.Prop, finalCheckStmt))
 	}
+	verifyProcessMsgs = append(verifyProcessMsgs, state.VerifyProcess...)
 
-	return nil
+	exec.Env.CurEnv().TransitivePropMem[string(stmt.Prop)] = make(map[string][]ast.Obj)
+
+	newFactMsgs = append(newFactMsgs, fmt.Sprintf("%s is transitive prop", stmt.Prop.String()))
+
+	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactMsgs)
 }
 
 func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) *glob.StmtRet {
@@ -747,12 +775,16 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.StmtRet {
 	// Calculate Cartesian product of all ranges
 	cartesianProductOfObjs := glob.CartesianProduct(ranges)
 
+	innerStmtRets := []*glob.StmtRet{}
+	newFactMsgs := []string{}
+
 	// Iterate through all combinations
 	for _, combination := range cartesianProductOfObjs {
 		execRet := exec.proveForStmtWhenParamsAreIndices(stmt, combination)
 		if execRet.IsNotTrue() {
 			return execRet
 		}
+		innerStmtRets = append(innerStmtRets, execRet)
 	}
 
 	// Create and store the universal fact
@@ -761,8 +793,9 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.StmtRet {
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
+	newFactMsgs = append(newFactMsgs, uniFact.String())
 
-	return exec.NewTrueStmtRet(stmt)
+	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddNewFacts(newFactMsgs)
 }
 
 func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, indices []ast.Obj) *glob.StmtRet {

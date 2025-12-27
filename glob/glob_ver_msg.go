@@ -14,7 +14,23 @@
 
 package litex_global
 
+import (
+	"fmt"
+	"strings"
+)
+
 type VerMsg struct {
 	StmtStr    string
 	VerifyMsgs []string
+}
+
+func NewVerMsg(stmtStr string, verifyMsgs []string) *VerMsg {
+	return &VerMsg{
+		StmtStr:    stmtStr,
+		VerifyMsgs: verifyMsgs,
+	}
+}
+
+func (m *VerMsg) String() string {
+	return fmt.Sprintf("%s\nproved by:\n%s", m.StmtStr, strings.Join(m.VerifyMsgs, "\n"))
 }
