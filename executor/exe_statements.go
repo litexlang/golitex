@@ -32,8 +32,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		if execRet.IsTrue() {
 			execRet = execRet.AddWarning("`know` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
-	case *ast.KnowPropStmt:
-		execRet = exec.knowPropStmt(stmt)
+	case *ast.KnowImplicationStmt:
+		execRet = exec.knowImplicationStmt(stmt)
 		if execRet.IsTrue() {
 			execRet = execRet.AddWarning("`know imply ` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
@@ -399,7 +399,7 @@ func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCase
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
-func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) *glob.StmtRet {
+func (exec *Executor) knowImplicationStmt(stmt *ast.KnowImplicationStmt) *glob.StmtRet {
 	execRet := exec.defPropStmt(stmt.Prop, false)
 	if execRet.IsNotTrue() {
 		return execRet

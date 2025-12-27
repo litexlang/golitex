@@ -76,8 +76,8 @@ func NewProveCaseByCaseStmt(caseFacts []*SpecFactStmt, thenFacts []FactStmt, pro
 	return &ProveCaseByCaseStmt{caseFacts, thenFacts, proofs, line}
 }
 
-func NewKnowPropStmt(prop *DefPropStmt, line uint) *KnowPropStmt {
-	return &KnowPropStmt{prop, line}
+func NewKnowPropStmt(prop *DefPropStmt, line uint) *KnowImplicationStmt {
+	return &KnowImplicationStmt{prop, line}
 }
 
 func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {

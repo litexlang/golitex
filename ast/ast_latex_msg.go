@@ -408,7 +408,7 @@ func (s *ProveCaseByCaseStmt) ToLatexString() string {
 	return s.String()
 }
 
-func (s *KnowPropStmt) ToLatexString() string {
+func (s *KnowImplicationStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString(s.Prop.ToLatexString())
 	builder.WriteString("\\begin{assumption}\n")

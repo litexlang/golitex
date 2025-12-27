@@ -373,12 +373,12 @@ func (stmt *KnowFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewKnowStmt(newFacts, stmt.Line), nil
 }
 
-func (stmt *KnowPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+func (stmt *KnowImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newProp, err := stmt.Prop.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
-	return NewKnowPropStmt(newProp.(*DefPropStmt), stmt.Line), nil
+	return NewKnowImplicationStmt(newProp.(*DefPropStmt), stmt.Line), nil
 }
 
 func (stmt *ClaimExistPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
