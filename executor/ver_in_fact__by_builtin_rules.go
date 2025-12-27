@@ -37,14 +37,6 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerSt
 		return verRet
 	}
 
-	// verRet = ver.builtinSetsInSetSet(stmt, state)
-	// if verRet.IsErr() {
-	// 	return verRet
-	// }
-	// if verRet.IsTrue() {
-	// 	return verRet
-	// }
-
 	verRet = ver.verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt, state)
 	if verRet.IsErr() {
 		return verRet
@@ -152,37 +144,6 @@ func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt *
 	return glob.NewStmtTrueWithStmt(fmt.Sprintf("all arguments of %s are in nonempty.", stmt.Params[0]))
 }
 
-// func (ver *Verifier) verInFactByLeftIsFnTemplateAndRightIsKeywordSet(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
-// 	if asAtom, ok := stmt.Params[1].(ast.Atom); ok {
-// 		if glob.IsKeywordSet(string(asAtom)) {
-// 			return glob.NewEmptyGlobUnknown()
-// 		}
-// 	}
-
-// 	if asFcFn, ok := stmt.Params[0].(*ast.FnObj); ok {
-// 		if ast.IsFnTemplate_ObjFn(asFcFn) {
-// 			// 所有参数还都真是集合
-// 			for i := range asFcFn.FnHead.(*ast.FnObj).Params {
-// 				verRet := ver.VerFactStmt(ast.NewIsASetFact(asFcFn.FnHead.(*ast.FnObj).Params[i], stmt.Line), state)
-// 				if verRet.IsErr() || verRet.IsUnknown() {
-// 					return glob.NewEmptyGlobUnknown()
-// 				}
-// 			}
-
-// 			for i := range asFcFn.Params {
-// 				if verRet := ver.VerFactStmt(ast.NewIsASetFact(asFcFn.Params[i], stmt.Line), state); verRet.IsErr() || verRet.IsUnknown() {
-// 					return glob.NewEmptyGlobUnknown()
-// 				}
-// 			}
-// 			return glob.NewEmptyGlobTrue()
-// 		}
-// 	}
-
-// 	// TODO 如果fnTemplate 里面的涉及到的 paramSet 也都是集合，那就返回true
-
-// 	return glob.NewEmptyGlobUnknown()
-// }
-
 func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordReal)
 	if ok {
@@ -197,29 +158,6 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt *ast.S
 
 	return glob.NewEmptyStmtUnknown()
 }
-
-// func (ver *Verifier) builtinSetsInSetSet(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
-// 	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordSet)
-// 	if !ok {
-// 		return glob.NewEmptyGlobUnknown()
-// 	}
-
-// 	asAtom, ok := stmt.Params[0].(ast.Atom)
-// 	if !ok {
-// 		return glob.NewEmptyGlobUnknown()
-// 	}
-
-// 	// if asAtom.PkgName != glob.EmptyPkg {
-// 	// 	return NewExecEmptyUnknown()
-// 	// }
-
-// 	if string(asAtom) == glob.KeywordNatural || string(asAtom) == glob.KeywordInteger || string(asAtom) == glob.KeywordReal || string(asAtom) == glob.KeywordRational || string(asAtom) == glob.KeywordNPos {
-// 		msg := fmt.Sprintf("%s is a builtin set", asAtom)
-// 		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyGlobTrue())
-// 	}
-
-// 	return glob.NewEmptyGlobUnknown()
-// }
 
 func (ver *Verifier) verInFactByRightParamIsFnTemplateFact(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	if asFcFn, ok := stmt.Params[1].(*ast.FnObj); ok {

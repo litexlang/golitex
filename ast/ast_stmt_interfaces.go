@@ -50,7 +50,8 @@ func (s *ClaimImplicationStmt) stmt()     {}
 func (s *ClaimExistPropStmt) stmt()       {}
 func (s *ProveByEnumStmt) stmt()          {}
 func (s *HaveObjInNonEmptySetStmt) stmt() {}
-func (s *HaveObjFromCartSetStmt) stmt()   {}
+
+// func (s *HaveObjFromCartSetStmt) stmt()   {}
 
 // func (s *NamedUniFactStmt) stmt()  {}
 func (s *EqualsFactStmt) stmt()    {}
@@ -99,7 +100,8 @@ func (s *ClaimImplicationStmt) algoStmt()     {}
 func (s *ClaimExistPropStmt) algoStmt()       {}
 func (s *ProveByEnumStmt) algoStmt()          {}
 func (s *HaveObjInNonEmptySetStmt) algoStmt() {}
-func (s *HaveObjFromCartSetStmt) algoStmt()   {}
+
+// func (s *HaveObjFromCartSetStmt) algoStmt()   {}
 
 // func (s *NamedUniFactStmt) algoStmt()  {}
 func (s *EqualsFactStmt) algoStmt()    {}
@@ -151,7 +153,8 @@ func (s *ClaimImplicationStmt) GetLine() uint     { return s.Line }
 func (s *ClaimExistPropStmt) GetLine() uint       { return s.Line }
 func (s *ProveByEnumStmt) GetLine() uint          { return s.Line }
 func (s *HaveObjInNonEmptySetStmt) GetLine() uint { return s.Line }
-func (s *HaveObjFromCartSetStmt) GetLine() uint   { return s.Line }
+
+// func (s *HaveObjFromCartSetStmt) GetLine() uint   { return s.Line }
 
 // func (s *NamedUniFactStmt) GetLine() uint  { return s.Line }
 func (s *EqualsFactStmt) GetLine() uint    { return s.Line }

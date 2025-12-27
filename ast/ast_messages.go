@@ -688,19 +688,19 @@ func (stmt *ProveByEnumStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *HaveObjFromCartSetStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordHave)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.ObjName)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.CartSet.String())
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolEqual)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.EqualTo.String())
-	return builder.String()
-}
+// func (stmt *HaveObjFromCartSetStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordHave)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(stmt.ObjName)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(stmt.CartSet.String())
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeySymbolEqual)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(stmt.EqualTo.String())
+// 	return builder.String()
+// }
 
 // func (stmt *NamedUniFactStmt) String() string {
 // 	var builder strings.Builder

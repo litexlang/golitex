@@ -120,8 +120,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = glob.ErrRet("import statements are not allowed in local scope.")
 	case *ast.RunFileStmt:
 		execRet = glob.ErrRet("import statements are not allowed in local scope.")
-	case *ast.HaveObjFromCartSetStmt:
-		execRet = exec.haveObjFromCartSetStmt(stmt)
+	// case *ast.HaveObjFromCartSetStmt:
+	// 	execRet = exec.haveObjFromCartSetStmt(stmt)
 	case *ast.ProveForStmt:
 		execRet = exec.proveForStmt(stmt)
 	default:
