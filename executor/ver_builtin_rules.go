@@ -190,7 +190,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordReal) {
 			isSuccess = glob.IsRealNumLitExpr(leftObj)
 			if isSuccess {
-				return glob.NewEmptyGlobTrue()
+				return glob.NewGlobTrueWithVerifyProcess(fmt.Sprintf("%s is literally a real number", stmt.Params[0]))
 			} else {
 				return glob.NewEmptyGlobUnknown()
 			}
@@ -199,7 +199,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNatural) {
 			isSuccess = glob.IsNatNumLitExpr(leftObj)
 			if isSuccess {
-				return glob.NewEmptyGlobTrue()
+				return glob.NewGlobTrueWithVerifyProcess(fmt.Sprintf("%s is literally a natural number", stmt.Params[0]))
 			} else {
 				return glob.NewEmptyGlobUnknown()
 			}
@@ -208,7 +208,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordInteger) {
 			isSuccess = glob.IsIntegerNumLitExpr(leftObj)
 			if isSuccess {
-				return glob.NewEmptyGlobTrue()
+				return glob.NewGlobTrueWithVerifyProcess(fmt.Sprintf("%s is literally an integer number", stmt.Params[0]))
 			} else {
 				return glob.NewEmptyGlobUnknown()
 			}
@@ -217,7 +217,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordRational) {
 			isSuccess = glob.IsRationalNumLitExpr(leftObj)
 			if isSuccess {
-				return glob.NewEmptyGlobTrue()
+				return glob.NewGlobTrueWithVerifyProcess(fmt.Sprintf("%s is literally a rational number", stmt.Params[0]))
 			} else {
 				return glob.NewEmptyGlobUnknown()
 			}
@@ -226,7 +226,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNPos) {
 			isSuccess = glob.IsNPosNumLitExpr(leftObj)
 			if isSuccess {
-				return glob.NewEmptyGlobTrue()
+				return glob.NewGlobTrueWithVerifyProcess(fmt.Sprintf("%s is literally a positive natural number", stmt.Params[0]))
 			} else {
 				return glob.NewEmptyGlobUnknown()
 			}
