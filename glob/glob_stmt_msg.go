@@ -77,20 +77,6 @@ func InferMsg(msg string) string {
 	return fmt.Sprintf("infer:\n%s\n", msg)
 }
 
-func ByDefinitionMsgs(msg []string) string {
-	if len(msg) == 0 {
-		return ""
-	}
-	return fmt.Sprintf("by definition:\n%s\n", strings.Join(msg, "\n"))
-}
-
-func ByDefinitionMsg(msg string) string {
-	if msg == "" {
-		return ""
-	}
-	return fmt.Sprintf("by definition:\n%s\n", msg)
-}
-
 func IsANewObjectMsg(obj string) string {
 	return fmt.Sprintf("%s is a new object", obj)
 }

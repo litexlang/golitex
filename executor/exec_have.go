@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	"strconv"
 )
 
 func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *glob.StmtRet {
@@ -31,9 +30,6 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *g
 	if execState.IsNotTrue() {
 		return execState
 	}
-
-	// TODO： have 可能会引入3种不同的东西：set,obj,fn都可能；每种情况，处理起来不一样：比如如果你是fn和set，那可能就要把你放到 setMem 和 fnMem 里了
-	// 这个 warning 不合时宜了，因为fn的定义其实和obj一样了，就是额外多个满足特定的template
 
 	if glob.IsBuiltinExistPropName(string(stmt.Fact.PropName)) {
 		return glob.NewEmptyStmtUnknown()
@@ -191,7 +187,9 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) *glob.StmtRet {
-	msgs := []string{}
+	verifyProcessMsgs := []string{}
+	defineMsgs := []string{}
+
 	for i := range len(stmt.Objs) {
 		if !glob.IsKeywordSetOrNonEmptySetOrFiniteSet(stmt.ObjSets[i].String()) {
 			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsANonEmptySet), []ast.Obj{stmt.ObjSets[i]}, stmt.Line)
@@ -199,6 +197,8 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 			if execRet.IsNotTrue() {
 				return glob.ErrRet(fmt.Sprintf("%s\n", stmt.String())).AddError(execRet.String())
 			}
+
+			verifyProcessMsgs = append(verifyProcessMsgs, execRet.VerifyProcess...)
 		}
 
 		stmtForDef := ast.NewDefLetStmt([]string{stmt.Objs[i]}, []ast.Obj{stmt.ObjSets[i]}, []ast.FactStmt{}, stmt.Line)
@@ -212,15 +212,19 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 		}
 
 		inFact := ast.NewInFact(stmt.Objs[i], stmt.ObjSets[i])
-		msgs = append(msgs, glob.ByDefinitionMsgs([]string{glob.IsANewObjectMsg(stmt.Objs[i]), inFact.String()}))
-		msgs = append(msgs, ret.NewFact...)
+
+		defineMsgs = append(defineMsgs, glob.IsANewObjectMsg(stmt.Objs[i]))
+		defineMsgs = append(defineMsgs, inFact.String())
 	}
 
-	return exec.AddStmtToStmtRet(glob.NewEmptyStmtTrue(), stmt).AddNewFacts(msgs)
+	return exec.AddStmtToStmtRet(glob.NewEmptyStmtTrue(), stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefines(defineMsgs)
 }
 
 func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) *glob.StmtRet {
 	var err error
+
+	verifyProcessMsgs := []string{}
+	defineMsgs := []string{}
 
 	// 返回值要是set
 	execState := exec.factStmt(ast.NewIsASetFact(stmt.RetSet, stmt.Line))
@@ -235,14 +239,16 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) *glob.StmtRet {
 	if notOkExec(execRet, err) {
 		return exec.AddStmtToStmtRet(execRet, stmt)
 	}
+	verifyProcessMsgs = append(verifyProcessMsgs, execRet.VerifyProcess...)
 
 	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(stmt.DefHeader), stmt.EqualTo)}, stmt.Line), stmt.Line)
 	execRet = exec.defFnStmt(newFnDefStmt)
 	if execRet.IsNotTrue() {
 		return exec.AddStmtToStmtRet(execRet.AddError(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String())), stmt)
 	}
+	defineMsgs = append(defineMsgs, newFnDefStmt.String())
 
-	return exec.AddStmtToStmtRet(execRet, stmt)
+	return exec.AddStmtToStmtRet(glob.NewEmptyStmtTrue(), stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefines(defineMsgs)
 }
 
 func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (*glob.StmtRet, error) {
@@ -268,7 +274,7 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (*glob.StmtRet
 		return glob.ErrRet(verRet.String()), fmt.Errorf("according to the definition of %s, the returned value %s must be in %s, but\n%s is unknown", stmt, stmt.EqualTo, stmt.RetSet, ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet))
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt), nil
+	return verRet, nil
 }
 
 func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {
@@ -283,11 +289,15 @@ func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {
 }
 
 func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) *glob.StmtRet {
+	verifyProcessMsgs := []string{}
+	defineMsgs := []string{}
+
 	// Verify first
 	execRet, err := exec.checkHaveFnStmt(stmt)
 	if notOkExec(execRet, err) {
 		return execRet
 	}
+	verifyProcessMsgs = append(verifyProcessMsgs, execRet.VerifyProcess...)
 
 	execRet = exec.defFnStmt(stmt.DefFnStmt)
 
@@ -295,7 +305,9 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) *glob.StmtRet {
 		return exec.AddStmtToStmtRet(execRet, stmt)
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	defineMsgs = append(defineMsgs, stmt.DefFnStmt.String())
+
+	return exec.NewTrueStmtRetWithStmt(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefines(defineMsgs)
 }
 
 func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.StmtRet, error) {
@@ -389,19 +401,22 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.StmtRet, erro
 }
 
 func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob.StmtRet {
+
+	verifyProcessMsgs := []string{}
+	defineMsgs := []string{}
 	// Verify first and get thenFacts
 	execRet, _, err := exec.checkHaveFnCaseByCaseStmt(stmt)
 	if notOkExec(execRet, err) {
 		return execRet
 	}
-
+	verifyProcessMsgs = append(verifyProcessMsgs, execRet.VerifyProcess...)
 	// Only after all verifications pass, declare the function
 	execRet = exec.defFnStmt(stmt.DefFnStmt)
 	if execRet.IsNotTrue() {
 		return exec.AddStmtToStmtRet(execRet, stmt)
 	}
-
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	defineMsgs = append(defineMsgs, stmt.DefFnStmt.String())
+	return exec.NewTrueStmtRetWithStmt(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefines(defineMsgs)
 }
 
 func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, []ast.FactStmt, error) {
@@ -616,7 +631,8 @@ func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCas
 }
 
 func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
-
+	verifyProcessMsgs := []string{}
+	defineMsgs := []string{}
 	// 返回值要是set
 	execState := exec.factStmt(ast.NewIsASetFact(stmt.RetSet, stmt.Line))
 	if execState.IsNotTrue() {
@@ -630,7 +646,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 	if notOkExec(execState, err) {
 		return exec.AddStmtToStmtRet(execState, stmt)
 	}
-
+	verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
 	// 构建 thenFacts：对于每个 case，如果条件满足，则函数值等于对应的返回值
 	thenFacts := []ast.FactStmt{}
 	for i, caseFact := range stmt.CaseByCaseFacts {
@@ -670,17 +686,19 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 	if execState.IsNotTrue() {
 		return exec.AddStmtToStmtRet(execState, stmt)
 	}
-
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	defineMsgs = append(defineMsgs, newFnDefStmt.String())
+	return exec.NewTrueStmtRetWithStmt(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefines(defineMsgs)
 }
 
 func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
+	verifyProcessMsgs := []string{}
 	// 验证每个case的返回值都符合fn的retSet（在case成立的条件下）
 	for i := range len(stmt.CaseByCaseFacts) {
 		execState, err := exec.checkCaseReturnValueInRetSet(stmt, i)
 		if notOkExec(execState, err) {
 			return execState, err
 		}
+		verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
 	}
 
 	// 验证所有的case覆盖了整个domain
@@ -688,14 +706,14 @@ func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseBy
 	if notOkExec(execState, err) {
 		return execState, err
 	}
-
+	verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
 	// 验证每个case没有overlap
 	execState, err = exec.checkCasesNoOverlap(stmt)
 	if notOkExec(execState, err) {
 		return execState, err
 	}
-
-	return exec.NewTrueStmtRetWithStmt(stmt), nil
+	verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
+	return exec.NewTrueStmtRetWithStmt(stmt).AddVerifyProcesses(verifyProcessMsgs), nil
 }
 
 func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (*glob.StmtRet, error) {
@@ -820,119 +838,119 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 	return exec.NewTrueStmtRetWithStmt(stmt), nil
 }
 
-func (exec *Executor) haveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) *glob.StmtRet {
-	// Check: verify cart parameters are sets and equalTo elements are in corresponding sets
-	checkRet := exec.checkHaveObjFromCartSetStmt(stmt)
-	if checkRet.IsNotTrue() {
-		return checkRet
-	}
+// func (exec *Executor) haveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) *glob.StmtRet {
+// 	// Check: verify cart parameters are sets and equalTo elements are in corresponding sets
+// 	checkRet := exec.checkHaveObjFromCartSetStmt(stmt)
+// 	if checkRet.IsNotTrue() {
+// 		return checkRet
+// 	}
 
-	// Post-process: add obj in cart and obj = equalTo facts
-	postRet := exec.postProcessHaveObjFromCartSetStmt(stmt)
-	if postRet.IsNotTrue() {
-		return postRet
-	}
+// 	// Post-process: add obj in cart and obj = equalTo facts
+// 	postRet := exec.postProcessHaveObjFromCartSetStmt(stmt)
+// 	if postRet.IsNotTrue() {
+// 		return postRet
+// 	}
 
-	return exec.AddStmtToStmtRet(glob.NewEmptyStmtTrue(), stmt)
-}
+// 	return exec.AddStmtToStmtRet(glob.NewEmptyStmtTrue(), stmt)
+// }
 
 // checkHaveObjFromCartSetStmt checks that:
 // 1. Each parameter of cart is a set
 // 2. equalTo is a tuple with the same length as cart parameters
 // 3. Each element of equalTo is in the corresponding cart set
-func (exec *Executor) checkHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) *glob.StmtRet {
-	// Check that each parameter of cart is a set
-	for i, param := range stmt.CartSet.Params {
-		state := exec.factStmt(ast.NewIsASetFact(param, stmt.Line))
-		if state.IsErr() {
-			return glob.ErrRet(state.String())
-		}
-		if state.IsUnknown() {
-			return glob.ErrRet(fmt.Sprintf("cart parameter %d (%s) must be a set, i.e. `is_a_set(%s)` must be true, but it is unknown", i+1, param.String(), param.String()))
-		}
-	}
+// func (exec *Executor) checkHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) *glob.StmtRet {
+// 	// Check that each parameter of cart is a set
+// 	for i, param := range stmt.CartSet.Params {
+// 		state := exec.factStmt(ast.NewIsASetFact(param, stmt.Line))
+// 		if state.IsErr() {
+// 			return glob.ErrRet(state.String())
+// 		}
+// 		if state.IsUnknown() {
+// 			return glob.ErrRet(fmt.Sprintf("cart parameter %d (%s) must be a set, i.e. `is_a_set(%s)` must be true, but it is unknown", i+1, param.String(), param.String()))
+// 		}
+// 	}
 
-	// Check that equalTo is a tuple
-	equalToAsFn, ok := stmt.EqualTo.(*ast.FnObj)
-	if !ok {
-		return glob.ErrRet(fmt.Sprintf("expected equalTo to be a tuple, but got %T", stmt.EqualTo))
-	}
-	if !ast.IsTupleFnObj(equalToAsFn) {
-		return glob.ErrRet(fmt.Sprintf("expected equalTo to be a tuple (with head %s), but got %s", glob.KeywordTuple, equalToAsFn.FnHead.String()))
-	}
+// 	// Check that equalTo is a tuple
+// 	equalToAsFn, ok := stmt.EqualTo.(*ast.FnObj)
+// 	if !ok {
+// 		return glob.ErrRet(fmt.Sprintf("expected equalTo to be a tuple, but got %T", stmt.EqualTo))
+// 	}
+// 	if !ast.IsTupleFnObj(equalToAsFn) {
+// 		return glob.ErrRet(fmt.Sprintf("expected equalTo to be a tuple (with head %s), but got %s", glob.KeywordTuple, equalToAsFn.FnHead.String()))
+// 	}
 
-	// Check that tuple length matches cart parameters length
-	if len(equalToAsFn.Params) != len(stmt.CartSet.Params) {
-		return glob.ErrRet(fmt.Sprintf("tuple length (%d) does not match cart parameters length (%d)", len(equalToAsFn.Params), len(stmt.CartSet.Params)))
-	}
+// 	// Check that tuple length matches cart parameters length
+// 	if len(equalToAsFn.Params) != len(stmt.CartSet.Params) {
+// 		return glob.ErrRet(fmt.Sprintf("tuple length (%d) does not match cart parameters length (%d)", len(equalToAsFn.Params), len(stmt.CartSet.Params)))
+// 	}
 
-	// Check that each element of equalTo is in the corresponding cart set
-	for i := range len(equalToAsFn.Params) {
-		inFact := ast.NewInFactWithObj(equalToAsFn.Params[i], stmt.CartSet.Params[i])
-		state := exec.factStmt(inFact)
-		if state.IsErr() {
-			return glob.ErrRet(state.String())
-		}
-		if state.IsUnknown() {
-			return glob.ErrRet(fmt.Sprintf("tuple element %d (%s) must be in cart set %d (%s), but it is unknown", i+1, equalToAsFn.Params[i].String(), i+1, stmt.CartSet.Params[i].String()))
-		}
-	}
+// 	// Check that each element of equalTo is in the corresponding cart set
+// 	for i := range len(equalToAsFn.Params) {
+// 		inFact := ast.NewInFactWithObj(equalToAsFn.Params[i], stmt.CartSet.Params[i])
+// 		state := exec.factStmt(inFact)
+// 		if state.IsErr() {
+// 			return glob.ErrRet(state.String())
+// 		}
+// 		if state.IsUnknown() {
+// 			return glob.ErrRet(fmt.Sprintf("tuple element %d (%s) must be in cart set %d (%s), but it is unknown", i+1, equalToAsFn.Params[i].String(), i+1, stmt.CartSet.Params[i].String()))
+// 		}
+// 	}
 
-	return glob.NewEmptyStmtTrue()
-}
+// 	return glob.NewEmptyStmtTrue()
+// }
 
 // postProcessHaveObjFromCartSetStmt adds:
 // 1. obj in cart(...) fact
 // 2. obj = equalTo fact
 // 3. obj[i] = equalTo[i] for each i
 // 4. dim(obj) = len(cartSet.Params)
-func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) *glob.StmtRet {
-	objAtom := ast.Atom(stmt.ObjName)
+// func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) *glob.StmtRet {
+// 	objAtom := ast.Atom(stmt.ObjName)
 
-	// Add obj in cart(...) fact
-	inCartFact := ast.NewInFactWithObj(objAtom, stmt.CartSet)
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(inCartFact)
-	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
-	}
+// 	// Add obj in cart(...) fact
+// 	inCartFact := ast.NewInFactWithObj(objAtom, stmt.CartSet)
+// 	ret := exec.Env.NewFactWithoutCheckingNameDefined(inCartFact)
+// 	if ret.IsErr() {
+// 		return glob.ErrRet(ret.String())
+// 	}
 
-	// Add obj = equalTo fact
-	equalFact := ast.NewEqualFact(objAtom, stmt.EqualTo)
-	ret = exec.Env.NewFactWithoutCheckingNameDefined(equalFact)
-	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
-	}
+// 	// Add obj = equalTo fact
+// 	equalFact := ast.NewEqualFact(objAtom, stmt.EqualTo)
+// 	ret = exec.Env.NewFactWithoutCheckingNameDefined(equalFact)
+// 	if ret.IsErr() {
+// 		return glob.ErrRet(ret.String())
+// 	}
 
-	// equalTo is already verified to be a tuple in checkHaveObjFromCartSetStmt
-	equalToAsFn, ok := stmt.EqualTo.(*ast.FnObj)
-	if !ok || !ast.IsTupleFnObj(equalToAsFn) {
-		return glob.NewEmptyStmtTrue()
-	}
+// 	// equalTo is already verified to be a tuple in checkHaveObjFromCartSetStmt
+// 	equalToAsFn, ok := stmt.EqualTo.(*ast.FnObj)
+// 	if !ok || !ast.IsTupleFnObj(equalToAsFn) {
+// 		return glob.NewEmptyStmtTrue()
+// 	}
 
-	// Add obj[i] = equalTo[i] for each i (index starts from 1)
-	for i := range len(equalToAsFn.Params) {
-		index := i + 1 // index starts from 1
-		indexObj := ast.Atom(strconv.Itoa(index))
+// 	// Add obj[i] = equalTo[i] for each i (index starts from 1)
+// 	for i := range len(equalToAsFn.Params) {
+// 		index := i + 1 // index starts from 1
+// 		indexObj := ast.Atom(strconv.Itoa(index))
 
-		// Create indexed object: obj[index]
-		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{objAtom, indexObj})
+// 		// Create indexed object: obj[index]
+// 		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{objAtom, indexObj})
 
-		// Create equal fact: obj[index] = equalTo[i]
-		indexEqualFact := ast.NewEqualFact(indexedObj, equalToAsFn.Params[i])
-		ret = exec.Env.NewFactWithoutCheckingNameDefined(indexEqualFact)
-		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
-		}
-	}
+// 		// Create equal fact: obj[index] = equalTo[i]
+// 		indexEqualFact := ast.NewEqualFact(indexedObj, equalToAsFn.Params[i])
+// 		ret = exec.Env.NewFactWithoutCheckingNameDefined(indexEqualFact)
+// 		if ret.IsErr() {
+// 			return glob.ErrRet(ret.String())
+// 		}
+// 	}
 
-	// Add dim(obj) = len(cartSet.Params)
-	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{objAtom})
-	dimValue := ast.Atom(strconv.Itoa(len(stmt.CartSet.Params)))
-	dimEqualFact := ast.NewEqualFact(dimFn, dimValue)
-	ret = exec.Env.NewFactWithoutCheckingNameDefined(dimEqualFact)
-	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
-	}
+// 	// Add dim(obj) = len(cartSet.Params)
+// 	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{objAtom})
+// 	dimValue := ast.Atom(strconv.Itoa(len(stmt.CartSet.Params)))
+// 	dimEqualFact := ast.NewEqualFact(dimFn, dimValue)
+// 	ret = exec.Env.NewFactWithoutCheckingNameDefined(dimEqualFact)
+// 	if ret.IsErr() {
+// 		return glob.ErrRet(ret.String())
+// 	}
 
-	return glob.NewEmptyStmtTrue()
-}
+// 	return glob.NewEmptyStmtTrue()
+// }

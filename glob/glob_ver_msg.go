@@ -14,6 +14,7 @@
 
 package litex_global
 
-type PipelineMsg struct {
-	GlobMsgs []*StmtRet
+type VerMsg struct {
+	StmtStr    string
+	VerifyMsgs []string
 }
