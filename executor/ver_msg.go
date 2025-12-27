@@ -15,7 +15,6 @@
 package litex_executor
 
 import (
-	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 )
@@ -25,18 +24,18 @@ func successVerString(stmt, stmtVerifiedBy ast.Stmt) *glob.VerMsg {
 	if stmt != nil {
 		stmtStr = stmt.String()
 	}
-	
+
 	verifyMsgs := []string{}
 	if stmtVerifiedBy != nil {
 		if stmtVerifiedBy.GetLine() == 0 {
-			verifyMsgs = append(verifyMsgs, fmt.Sprintf("proved by fact:\n%s", stmtVerifiedBy.String()))
+			verifyMsgs = append(verifyMsgs, stmtVerifiedBy.String())
 		} else {
-			verifyMsgs = append(verifyMsgs, fmt.Sprintf("proved by fact on line %d:\n%s", stmtVerifiedBy.GetLine(), stmtVerifiedBy.String()))
+			verifyMsgs = append(verifyMsgs, stmtVerifiedBy.String())
 		}
 	} else {
 		verifyMsgs = append(verifyMsgs, "is true.")
 	}
-	
+
 	return glob.NewVerMsg(stmtStr, verifyMsgs)
 }
 
@@ -44,10 +43,10 @@ func successVerString(stmt, stmtVerifiedBy ast.Stmt) *glob.VerMsg {
 func successVerStringString(stmtStr, stmtVerifiedByStr string) *glob.VerMsg {
 	verifyMsgs := []string{}
 	if stmtVerifiedByStr != "" {
-		verifyMsgs = append(verifyMsgs, fmt.Sprintf("proved by\n%s", stmtVerifiedByStr))
+		verifyMsgs = append(verifyMsgs, stmtVerifiedByStr)
 	} else {
 		verifyMsgs = append(verifyMsgs, "is true.")
 	}
-	
+
 	return glob.NewVerMsg(stmtStr, verifyMsgs)
 }

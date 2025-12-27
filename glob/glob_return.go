@@ -45,28 +45,28 @@ type StmtRet struct {
 func (m *StmtRet) String() string {
 	var builder strings.Builder
 
-	builder.WriteString(fmt.Sprintf("--- line %d ---\n\n", m.Line))
+	builder.WriteString(fmt.Sprintf("*** line %d ***\n\n", m.Line))
 
 	if len(m.Stmt) > 0 {
-		builder.WriteString("statement:\n")
+		builder.WriteString("--- statement ---\n\n")
 		builder.WriteString(strings.Join(m.Stmt, "\n"))
 		builder.WriteString("\n\n")
 	}
 
 	if len(m.Define) > 0 {
-		builder.WriteString("by definition:\n")
+		builder.WriteString("--- by definition ---\n\n")
 		builder.WriteString(strings.Join(m.Define, "\n"))
 		builder.WriteString("\n\n")
 	}
 
 	if len(m.NewFact) > 0 {
-		builder.WriteString("new fact:\n")
+		builder.WriteString("--- new fact ---\n\n")
 		builder.WriteString(strings.Join(m.NewFact, "\n"))
 		builder.WriteString("\n\n")
 	}
 
 	if len(m.VerifyProcess) > 0 {
-		builder.WriteString("verify process:\n\n")
+		builder.WriteString("--- verify process ---\n\n")
 		for _, verifyProcess := range m.VerifyProcess {
 			builder.WriteString(verifyProcess.String())
 			builder.WriteString("\n\n")
@@ -74,25 +74,25 @@ func (m *StmtRet) String() string {
 	}
 
 	if len(m.Infer) > 0 {
-		builder.WriteString("infer:\n")
+		builder.WriteString("--- infer ---\n\n")
 		builder.WriteString(strings.Join(m.Infer, "\n"))
 		builder.WriteString("\n\n")
 	}
 
 	if len(m.Unknown) > 0 {
-		builder.WriteString("unable to verify:\n")
+		builder.WriteString("--- unable to verify ---\n\n")
 		builder.WriteString(strings.Join(m.Unknown, "\n"))
 		builder.WriteString("\n\n")
 	}
 
 	if len(m.Error) > 0 {
-		builder.WriteString("error:\n")
+		builder.WriteString("--- error ---\n\n")
 		builder.WriteString(strings.Join(m.Error, "\n"))
 		builder.WriteString("\n\n")
 	}
 
 	if len(m.InnerStmtRetSlice) > 0 {
-		builder.WriteString("details:\n")
+		builder.WriteString("--- details ---\n\n")
 		for _, innerStmtRet := range m.InnerStmtRetSlice {
 			builder.WriteString(innerStmtRet.String())
 			builder.WriteString("\n\n")
@@ -101,7 +101,7 @@ func (m *StmtRet) String() string {
 	}
 
 	if len(m.Warnings) > 0 {
-		builder.WriteString("warning:\n")
+		builder.WriteString("--- warning ---\n\n")
 		builder.WriteString(strings.Join(m.Warnings, "\n"))
 		builder.WriteString("\n\n")
 	}
