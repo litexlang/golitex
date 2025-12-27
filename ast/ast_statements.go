@@ -122,7 +122,7 @@ type KnowFactStmt struct {
 	Line uint
 }
 
-type KnowPropStmt struct {
+type KnowImplicationStmt struct {
 	Prop *DefPropStmt
 
 	Line uint

@@ -74,7 +74,7 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 				if tb.TokenAtHeaderIndexIs(2, glob.KeywordExist) {
 					ret, err = p.knowExistPropStmt(tb)
 				} else {
-					ret, err = p.knowPropStmt(tb)
+					ret, err = p.knowImplicationStmt(tb)
 				}
 			} else {
 				ret, err = p.knowFactStmt(tb)
@@ -1038,7 +1038,7 @@ func (p *TbParser) knowExistPropStmt(tb *tokenBlock) (Stmt, error) {
 	return NewKnowExistPropStmt(existProp, tb.line), nil
 }
 
-func (p *TbParser) knowPropStmt(tb *tokenBlock) (*KnowPropStmt, error) {
+func (p *TbParser) knowImplicationStmt(tb *tokenBlock) (*KnowImplicationStmt, error) {
 	err := tb.header.skip(glob.KeywordKnow)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -1049,13 +1049,13 @@ func (p *TbParser) knowPropStmt(tb *tokenBlock) (*KnowPropStmt, error) {
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
-		return NewKnowPropStmt(implicationStmt.ToProp(), tb.line), nil
+		return NewKnowImplicationStmt(implicationStmt.ToProp(), tb.line), nil
 	} else {
 		prop, err := p.defPropStmt(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
-		return NewKnowPropStmt(prop, tb.line), nil
+		return NewKnowImplicationStmt(prop, tb.line), nil
 	}
 }
 

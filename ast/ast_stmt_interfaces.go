@@ -35,7 +35,7 @@ func (s *DefExistPropStmt) stmt()              {}
 func (s *HaveObjStStmt) stmt()                 {}
 func (s *ProveInEachCaseStmt) stmt()           {}
 func (s *ProveCaseByCaseStmt) stmt()           {}
-func (s *KnowPropStmt) stmt()                  {}
+func (s *KnowImplicationStmt) stmt()                  {}
 func (s *OrStmt) stmt()                        {}
 func (s *ImportDirStmt) stmt()                 {}
 func (s *RunFileStmt) stmt()                   {}
@@ -88,7 +88,7 @@ func (s *DefExistPropStmt) algoStmt()              {}
 func (s *HaveObjStStmt) algoStmt()                 {}
 func (s *ProveInEachCaseStmt) algoStmt()           {}
 func (s *ProveCaseByCaseStmt) algoStmt()           {}
-func (s *KnowPropStmt) algoStmt()                  {}
+func (s *KnowImplicationStmt) algoStmt()                  {}
 func (s *OrStmt) algoStmt()                        {}
 func (s *ImportDirStmt) algoStmt()                 {}
 func (s *RunFileStmt) algoStmt()                   {}
@@ -141,7 +141,7 @@ func (s *DefExistPropStmt) GetLine() uint              { return s.Line }
 func (s *HaveObjStStmt) GetLine() uint                 { return s.Line }
 func (s *ProveInEachCaseStmt) GetLine() uint           { return s.Line }
 func (s *ProveCaseByCaseStmt) GetLine() uint           { return s.Line }
-func (s *KnowPropStmt) GetLine() uint                  { return s.Line }
+func (s *KnowImplicationStmt) GetLine() uint                  { return s.Line }
 func (s *OrStmt) GetLine() uint                        { return s.Line }
 func (s *ImportDirStmt) GetLine() uint                 { return s.Line }
 func (s *RunFileStmt) GetLine() uint                   { return s.Line }
@@ -251,7 +251,7 @@ func (s *UniFactWithIffStmt) canBeKnown() {}
 func (s *OrStmt) canBeKnown()             {}
 
 func (s *EqualsFactStmt) canBeKnown() {}
-func (s *KnowPropStmt) canBeKnown()   {}
+func (s *KnowImplicationStmt) canBeKnown()   {}
 
 type CanBeKnownStmtSlice []CanBeKnownStmt
 
