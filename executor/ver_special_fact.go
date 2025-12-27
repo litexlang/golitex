@@ -15,7 +15,6 @@
 package litex_executor
 
 import (
-	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 )
@@ -90,8 +89,8 @@ func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state 
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), greaterFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyStmtTrue())
+		msg := glob.NewVerMsg(stmt.String(), []string{greaterFact.String()})
+		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
 	}
 
 	// 如果 > 不成立，尝试用 = 证明
@@ -101,8 +100,8 @@ func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state 
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), equalFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyStmtTrue())
+		msg := glob.NewVerMsg(stmt.String(), []string{equalFact.String()})
+		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
 	}
 
 	return glob.NewEmptyStmtUnknown()
@@ -124,8 +123,8 @@ func (ver *Verifier) verLessEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ve
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), lessFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyStmtTrue())
+		msg := glob.NewVerMsg(stmt.String(), []string{lessFact.String()})
+		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
 	}
 
 	// 如果 < 不成立，尝试用 = 证明
@@ -135,8 +134,8 @@ func (ver *Verifier) verLessEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ve
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), equalFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyStmtTrue())
+		msg := glob.NewVerMsg(stmt.String(), []string{equalFact.String()})
+		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
 	}
 
 	return glob.NewEmptyStmtUnknown()
@@ -158,8 +157,8 @@ func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state 
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), greaterFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyStmtTrue())
+		msg := glob.NewVerMsg(stmt.String(), []string{greaterFact.String()})
+		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
 	}
 
 	// 如果 > 0 不成立，尝试用 < 0 证明
@@ -169,8 +168,8 @@ func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state 
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), lessFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyStmtTrue())
+		msg := glob.NewVerMsg(stmt.String(), []string{lessFact.String()})
+		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
 	}
 
 	// 如果 a != b 那 a - b != 0
@@ -185,8 +184,8 @@ func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state 
 			return verRet
 		}
 		if verRet.IsTrue() {
-			msg := fmt.Sprintf("%s is proved by %s", stmt.String(), notEqualFact.String())
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyStmtTrue())
+			msg := glob.NewVerMsg(stmt.String(), []string{notEqualFact.String()})
+			return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
 		}
 	}
 
@@ -209,8 +208,8 @@ func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ver
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), greaterFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyStmtTrue())
+		msg := glob.NewVerMsg(stmt.String(), []string{greaterFact.String()})
+		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
 	}
 
 	// 如果 > 不成立，尝试用 < 证明
@@ -220,8 +219,8 @@ func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ver
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := fmt.Sprintf("%s is proved by %s", stmt.String(), lessFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyStmtTrue())
+		msg := glob.NewVerMsg(stmt.String(), []string{lessFact.String()})
+		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
 	}
 
 	// 如果 > 和 < 都不成立，尝试用 a - b != 0 证明
@@ -232,8 +231,8 @@ func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ver
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := fmt.Sprintf("%s is proved by %s (if a - b != 0 then a != b)", stmt.String(), subNotEqualZeroFact.String())
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyStmtTrue())
+		msg := glob.NewVerMsg(stmt.String(), []string{subNotEqualZeroFact.String()})
+		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
 	}
 
 	return glob.NewEmptyStmtUnknown()
