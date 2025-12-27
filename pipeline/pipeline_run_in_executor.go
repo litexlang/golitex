@@ -70,7 +70,7 @@ func RunFileStmtInExecutor(curExec *exe.Executor, importFileStmt *ast.RunFileStm
 			return glob.NewGlobWithInnerGlobRets(msgs, ret.Type)
 		}
 	}
-	msgs = append(msgs, glob.NewGlobTrueWithStmt(fmt.Sprintf("%s\n", importFileStmt)))
+	msgs = append(msgs, curExec.NewTrueGlobRetWithStmt(importFileStmt))
 	msgs = append(msgs, glob.NewGlobTrueWithStmt(exe.SuccessExecStmtStr(importFileStmt)))
 	return glob.NewGlobWithInnerGlobRets(msgs, glob.GlobRetTypeTrue)
 }
@@ -88,7 +88,7 @@ func RunImportStmtInExecutor(curExec *exe.Executor, importStmt *ast.ImportDirStm
 		curExec.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap[absPath] = newEnvMgr
 	}
 
-	return glob.NewGlobTrueWithStmt(fmt.Sprintf("%s\n", importStmt))
+	return curExec.NewTrueGlobRetWithStmt(importStmt)
 }
 
 // return: new imported pkg, new envMgr, globRet
