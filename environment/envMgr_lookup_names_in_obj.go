@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (envMgr *EnvMgr) LookupNamesInObj(obj ast.Obj, extraParams map[string]struct{}) *glob.GlobRet {
+func (envMgr *EnvMgr) LookupNamesInObj(obj ast.Obj, extraParams map[string]struct{}) *glob.StmtRet {
 	switch asObj := obj.(type) {
 	case ast.Atom:
 		return envMgr.lookupAtomObjName(asObj, extraParams)
@@ -32,19 +32,19 @@ func (envMgr *EnvMgr) LookupNamesInObj(obj ast.Obj, extraParams map[string]struc
 }
 
 // TODO: 目前只是检查了在当前的envMgr中是否定义了，没有检查在parent envMgr中是否定义了
-func (envMgr *EnvMgr) lookupAtomObjName(atom ast.Atom, extraParams map[string]struct{}) *glob.GlobRet {
+func (envMgr *EnvMgr) lookupAtomObjName(atom ast.Atom, extraParams map[string]struct{}) *glob.StmtRet {
 	if _, ok := extraParams[string(atom)]; ok {
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 
 	// Check if it's a builtin atom
 	if glob.IsBuiltinAtomName(string(atom)) {
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 
 	// Check if it's a number literal
 	if _, ok := ast.IsNumLitAtomObj(atom); ok {
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 
 	// Check if it's defined by user
@@ -56,11 +56,11 @@ func (envMgr *EnvMgr) lookupAtomObjName(atom ast.Atom, extraParams map[string]st
 			return glob.ErrRet(fmt.Sprintf("undefined atom name: %s", atom))
 		}
 	} else {
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 }
 
-func (envMgr *EnvMgr) lookupNamesInFnObj(fnObj *ast.FnObj, extraParams map[string]struct{}) *glob.GlobRet {
+func (envMgr *EnvMgr) lookupNamesInFnObj(fnObj *ast.FnObj, extraParams map[string]struct{}) *glob.StmtRet {
 	// Special handling for setBuilder
 	if ast.IsSetBuilder(fnObj) {
 		return envMgr.lookupNamesInSetBuilder(fnObj, extraParams)
@@ -74,18 +74,18 @@ func (envMgr *EnvMgr) lookupNamesInFnObj(fnObj *ast.FnObj, extraParams map[strin
 
 	// 如果head是fn,那直接成立了
 	if fnObj.IsAtomHeadEqualToStr(glob.KeywordFn) {
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 
 	// 如果head 是 fn_template 那也OK了
 	if envMgr.FnObjHeadIsAtomAndIsFnSet(fnObj) {
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 
 	return envMgr.LookupNamesInObj(fnObj.FnHead, extraParams)
 }
 
-func (envMgr *EnvMgr) lookupNamesInSetBuilder(obj ast.Obj, extraParams map[string]struct{}) *glob.GlobRet {
+func (envMgr *EnvMgr) lookupNamesInSetBuilder(obj ast.Obj, extraParams map[string]struct{}) *glob.StmtRet {
 	setBuilderObj := obj.(*ast.FnObj)
 	setBuilder, err := setBuilderObj.ToSetBuilderStruct()
 	if err != nil {
@@ -111,5 +111,5 @@ func (envMgr *EnvMgr) lookupNamesInSetBuilder(obj ast.Obj, extraParams map[strin
 		}
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }

@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) *glob.StmtRet {
 	if len(stmt.Params) < 2 {
 		return glob.ErrRet("equals fact must have at least 2 params")
 	}
@@ -29,7 +29,7 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 
 	for i := 1; i < len(stmt.Params); i++ {
 		checked := false
-		unknownRet := glob.NewEmptyGlobUnknown()
+		unknownRet := glob.NewEmptyStmtUnknown()
 
 		for j := i - 1; j >= 0; j-- {
 			newFact := ast.NewEqualFact(stmt.Params[j], stmt.Params[i])
@@ -58,5 +58,5 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 			return unknownRet.AddUnknown(fmt.Sprintf("%s\nis unknown", newFact.String()))
 		}
 	}
-	return glob.NewGlobTrueWithNewFacts(trueMsgs)
+	return glob.NewStmtTrueWithStmts(trueMsgs)
 }

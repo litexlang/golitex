@@ -21,7 +21,7 @@ import (
 	"strconv"
 )
 
-func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) *glob.GlobRet {
+func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) *glob.StmtRet {
 	ret := ie.trueEqualFactByCart(fact)
 	if ret.IsErr() || ret.IsTrue() {
 		return ret
@@ -75,7 +75,7 @@ func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) *glob.GlobRet {
 	// 	return ret
 	// }
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }
 
 // trueEqualFactByCart handles postprocessing for x = cart(x1, x2, ..., xn)
@@ -83,10 +83,10 @@ func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) *glob.GlobRet {
 //   - is_cart(x) fact
 //   - dim(x) = len(cart.Params) fact
 //   - proj(x, i+1) = cart.Params[i] facts for each i
-func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.GlobRet {
+func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.StmtRet {
 	cart, ok := fact.Params[1].(*ast.FnObj)
 	if !ok || !ast.IsAtomObjAndEqualToStr(cart.FnHead, glob.KeywordCart) {
-		return glob.NewEmptyGlobUnknown()
+		return glob.NewEmptyStmtUnknown()
 	}
 
 	inferMsgs := []string{}
@@ -120,12 +120,12 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.GlobRet
 		inferMsgs = append(inferMsgs, projEqualFact.String())
 	}
 
-	return glob.NewGlobTrueWithInfers((inferMsgs))
+	return glob.NewStmtTrueWithInfers((inferMsgs))
 }
 
 // trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex handles postprocessing for obj = tuple
 // It generates obj[index] = tuple[i] facts for each index
-func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(obj ast.Obj, tupleObj ast.Obj) *glob.GlobRet {
+func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(obj ast.Obj, tupleObj ast.Obj) *glob.StmtRet {
 	tuple, ok := tupleObj.(*ast.FnObj)
 	if !ok || !ast.IsTupleFnObj(tuple) {
 		return glob.ErrRet(fmt.Sprintf("expected tuple to be a tuple object, got %T", tupleObj))
@@ -147,7 +147,7 @@ func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIn
 		}
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }
 
 // trueEqualFactByTuple handles postprocessing for tuple equality
@@ -155,7 +155,7 @@ func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIn
 //   - (.., …) = (.., ..): tuple = tuple
 //   - a = (.., ..): obj = tuple
 //   - (.., ..) = a: tuple = obj
-func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) *glob.GlobRet {
+func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) *glob.StmtRet {
 	inferMsgs := []string{}
 
 	leftTuple, leftIsTuple := left.(*ast.FnObj)
@@ -168,7 +168,7 @@ func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) *glob.G
 			return ret
 		}
 		inferMsgs = append(inferMsgs, ret.Infer...)
-		return glob.NewGlobTrueWithInfers((inferMsgs))
+		return glob.NewStmtTrueWithInfers((inferMsgs))
 	} else if rightIsTuple && ast.IsTupleFnObj(rightTuple) {
 		// 如果右边是 tuple，左边是对象: a = (1, 2, ..)
 		ret := ie.trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(left, right)
@@ -176,7 +176,7 @@ func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) *glob.G
 			return ret
 		}
 		inferMsgs = append(inferMsgs, ret.Infer...)
-		return glob.NewGlobTrueWithInfers((inferMsgs))
+		return glob.NewStmtTrueWithInfers((inferMsgs))
 	} else if leftIsTuple && ast.IsTupleFnObj(leftTuple) {
 		// 如果左边是 tuple，右边是对象: (1, 2, ..) = a
 		ret := ie.trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(right, left)
@@ -184,13 +184,13 @@ func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) *glob.G
 			return ret
 		}
 		inferMsgs = append(inferMsgs, ret.Infer...)
-		return glob.NewGlobTrueWithInfers((inferMsgs))
+		return glob.NewStmtTrueWithInfers((inferMsgs))
 	}
 
-	return glob.NewEmptyGlobUnknown()
+	return glob.NewEmptyStmtUnknown()
 }
 
-func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj, rightTuple *ast.FnObj) *glob.GlobRet {
+func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj, rightTuple *ast.FnObj) *glob.StmtRet {
 	// 如果两个 tuple 的长度不同，返回错误
 	if len(leftTuple.Params) != len(rightTuple.Params) {
 		return glob.ErrRet(fmt.Sprintf("tuple length mismatch: left has %d elements, right has %d elements", len(leftTuple.Params), len(rightTuple.Params)))
@@ -205,7 +205,7 @@ func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj,
 		}
 	}
 
-	return glob.NewEmptyGlobTrue()
+	return glob.NewEmptyStmtTrue()
 }
 
 // equalFactPostProcess_tupleTuple handles postprocessing for tuple = tuple
@@ -215,13 +215,13 @@ func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj,
 //   - An or fact indicating that forall items in the list set, the equals one of the list set elements
 //   - count(x) = len(listSet) fact
 //   - is_finite_set(x) fact
-func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob.GlobRet {
+func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob.StmtRet {
 	inferMsgs := []string{}
 
 	// 尝试获取 list set（可能是直接的，也可能是通过 equal facts 得到的）
 	listSetObj := ie.EnvMgr.GetListSetEqualToObj(right)
 	if listSetObj == nil {
-		return glob.NewEmptyGlobTrue()
+		return glob.NewEmptyStmtTrue()
 	}
 
 	listSetFnObj, ok := listSetObj.(*ast.FnObj)
@@ -260,7 +260,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 		return ret
 	}
 	inferMsgs = append(inferMsgs, isFiniteFact.String())
-	return glob.NewGlobTrueWithInfers((inferMsgs))
+	return glob.NewStmtTrueWithInfers((inferMsgs))
 }
 
 // func (ie *InferEngine) trueEqualFactByFraction(left ast.Obj, right ast.Obj) *glob.GlobRet {

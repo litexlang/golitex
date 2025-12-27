@@ -35,7 +35,7 @@ func Test_File(t *testing.T) {
 	pkgMgr := package_manager.NewEmptyPkgMgr()
 	_, ret := RunFileInPkgMgr(absOfFile, "", pkgMgr, false)
 
-	for _, innerRet := range ret.InnerGlobRetSlice {
+	for _, innerRet := range ret.InnerStmtRetSlice {
 		fmt.Println((innerRet.String()))
 	}
 
