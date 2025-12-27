@@ -333,7 +333,7 @@ func NewStmtWithInnerStmtsRet(innerStmtsRet []*StmtRet, msgType StmtRetType) *St
 	return ret
 }
 
-func (m *StmtRet) AddDefines(defines []string) *StmtRet {
+func (m *StmtRet) AddDefineMsgs(defines []string) *StmtRet {
 	for _, define := range defines {
 		m.AddDefine(define)
 	}
@@ -399,5 +399,10 @@ func (m *StmtRet) AddWarning(warning string) *StmtRet {
 		return m
 	}
 	m.Warnings = append(m.Warnings, warning)
+	return m
+}
+
+func (m *StmtRet) AddInnerStmtRets(innerStmtRetSlice []*StmtRet) *StmtRet {
+	m.InnerStmtRetSlice = innerStmtRetSlice
 	return m
 }

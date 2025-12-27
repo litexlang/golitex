@@ -69,7 +69,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *g
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
-		execState := exec.NewTrueStmtRetWithStmt(stmtForDef)
+		execState := exec.NewTrueStmtRet(stmtForDef)
 		if execState.IsNotTrue() {
 			return execState
 		}
@@ -128,7 +128,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *g
 	}
 	defineMsgs = append(defineMsgs, newExistStFact.String())
 
-	return result.AddVerifyProcesses(verifyProcessMsgs).AddInfers(inferMsgs).AddDefines(defineMsgs)
+	return result.AddVerifyProcesses(verifyProcessMsgs).AddInfers(inferMsgs).AddDefineMsgs(defineMsgs)
 }
 
 func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet {
@@ -183,7 +183,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet
 
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt).AddNewFacts(newFactMsgs).AddDefines(defineMsgs).AddVerifyProcesses(verifyProcessMsgs)
+	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs).AddDefineMsgs(defineMsgs).AddVerifyProcesses(verifyProcessMsgs)
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) *glob.StmtRet {
@@ -206,7 +206,7 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
-		execRet := exec.NewTrueStmtRetWithStmt(stmtForDef)
+		execRet := exec.NewTrueStmtRet(stmtForDef)
 		if execRet.IsNotTrue() {
 			return glob.ErrRet(fmt.Sprintf("%s\n", stmt.String())).AddError(execRet.String())
 		}
@@ -217,7 +217,7 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 		defineMsgs = append(defineMsgs, inFact.String())
 	}
 
-	return exec.AddStmtToStmtRet(glob.NewEmptyStmtTrue(), stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefines(defineMsgs)
+	return exec.AddStmtToStmtRet(glob.NewEmptyStmtTrue(), stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
 }
 
 func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) *glob.StmtRet {
@@ -248,7 +248,7 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) *glob.StmtRet {
 	}
 	defineMsgs = append(defineMsgs, newFnDefStmt.String())
 
-	return exec.AddStmtToStmtRet(glob.NewEmptyStmtTrue(), stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefines(defineMsgs)
+	return exec.AddStmtToStmtRet(glob.NewEmptyStmtTrue(), stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
 }
 
 func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (*glob.StmtRet, error) {
@@ -307,7 +307,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) *glob.StmtRet {
 
 	defineMsgs = append(defineMsgs, stmt.DefFnStmt.String())
 
-	return exec.NewTrueStmtRetWithStmt(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefines(defineMsgs)
+	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
 }
 
 func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.StmtRet, error) {
@@ -397,7 +397,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.StmtRet, erro
 		}
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt), nil
+	return exec.NewTrueStmtRet(stmt), nil
 }
 
 func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob.StmtRet {
@@ -416,7 +416,7 @@ func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob
 		return exec.AddStmtToStmtRet(execRet, stmt)
 	}
 	defineMsgs = append(defineMsgs, stmt.DefFnStmt.String())
-	return exec.NewTrueStmtRetWithStmt(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefines(defineMsgs)
+	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
 }
 
 func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, []ast.FactStmt, error) {
@@ -488,7 +488,7 @@ func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) 
 		thenFacts = append(thenFacts, uniFact)
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt), thenFacts, nil
+	return exec.NewTrueStmtRet(stmt), thenFacts, nil
 }
 
 func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (*glob.StmtRet, error) {
@@ -540,7 +540,7 @@ func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseS
 	// and object substitution (ReplaceObj) is not currently available.
 	// The proof statements in each case should prove what's needed.
 
-	return exec.NewTrueStmtRetWithStmt(stmt), nil
+	return exec.NewTrueStmtRet(stmt), nil
 }
 
 func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, error) {
@@ -570,7 +570,7 @@ func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByC
 		return glob.NewEmptyStmtError(), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt), nil
+	return exec.NewTrueStmtRet(stmt), nil
 }
 
 func (exec *Executor) checkCasesNoOverlap_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, error) {
@@ -582,7 +582,7 @@ func (exec *Executor) checkCasesNoOverlap_ForHaveFn(stmt *ast.HaveFnCaseByCaseSt
 		}
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt), nil
+	return exec.NewTrueStmtRet(stmt), nil
 }
 
 func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (*glob.StmtRet, error) {
@@ -627,7 +627,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCas
 		}
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt), nil
+	return exec.NewTrueStmtRet(stmt), nil
 }
 
 func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
@@ -687,7 +687,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 		return exec.AddStmtToStmtRet(execState, stmt)
 	}
 	defineMsgs = append(defineMsgs, newFnDefStmt.String())
-	return exec.NewTrueStmtRetWithStmt(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefines(defineMsgs)
+	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
 }
 
 func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
@@ -713,7 +713,7 @@ func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseBy
 		return execState, err
 	}
 	verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
-	return exec.NewTrueStmtRetWithStmt(stmt).AddVerifyProcesses(verifyProcessMsgs), nil
+	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs), nil
 }
 
 func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (*glob.StmtRet, error) {
@@ -748,7 +748,7 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 		return glob.NewEmptyStmtError(), fmt.Errorf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.RetSet, ast.NewInFactWithObj(equalTo, stmt.RetSet))
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt), nil
+	return exec.NewTrueStmtRet(stmt), nil
 }
 
 func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
@@ -778,7 +778,7 @@ func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseSt
 		return glob.NewEmptyStmtError(), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt), nil
+	return exec.NewTrueStmtRet(stmt), nil
 }
 
 func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
@@ -790,7 +790,7 @@ func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (
 		}
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt), nil
+	return exec.NewTrueStmtRet(stmt), nil
 }
 
 func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (*glob.StmtRet, error) {
@@ -835,7 +835,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 		}
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt), nil
+	return exec.NewTrueStmtRet(stmt), nil
 }
 
 // func (exec *Executor) haveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) *glob.StmtRet {

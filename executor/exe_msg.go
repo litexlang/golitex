@@ -38,7 +38,7 @@ func (exec *Executor) AddStmtToStmtRet(ret *glob.StmtRet, stmt ast.Stmt) *glob.S
 	return ret
 }
 
-func (exec *Executor) NewTrueStmtRetWithStmt(stmt ast.Stmt) *glob.StmtRet {
+func (exec *Executor) NewTrueStmtRet(stmt ast.Stmt) *glob.StmtRet {
 	ret := glob.NewEmptyStmtTrue()
 	exec.AddStmtToStmtRet(ret, stmt)
 	return ret

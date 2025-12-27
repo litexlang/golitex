@@ -126,11 +126,6 @@ func (envMgr *EnvMgr) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistProp
 		return glob.ErrRet(fmt.Sprintf("prop name %s cannot be the same as parameter name %s", stmt.DefBody.DefHeader.Name, stmt.DefBody.DefHeader.Name))
 	}
 
-	// ret := envMgr.NoDuplicateParamNamesAndParamSetsDefined(append(stmt.DefBody.DefHeader.Params, stmt.ExistParams...), append(stmt.DefBody.DefHeader.ParamSets, stmt.ExistParamSets...), true)
-	// if ret.IsErr() {
-	// 	return ret
-	// }
-
 	extraAtomNames := map[string]struct{}{}
 	for _, param := range stmt.DefBody.DefHeader.Params {
 		extraAtomNames[param] = struct{}{}
