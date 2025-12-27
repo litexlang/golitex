@@ -30,12 +30,12 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 	case *ast.KnowFactStmt:
 		execRet = exec.knowStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddWarning("Warning: `know` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
+			execRet = execRet.AddWarning("`know` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
 	case *ast.KnowPropStmt:
 		execRet = exec.knowPropStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddWarning("Warning: `know imply ` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
+			execRet = execRet.AddWarning("`know imply ` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
 	case *ast.ClaimProveStmt:
 		execRet = exec.execClaimStmtProve(stmt)
@@ -46,7 +46,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 	case *ast.DefLetStmt:
 		execRet = exec.defLetStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddWarning("Warning: `let` may introduce non-existent objects. If you want to ensure the object exists, please use `have` instead!\n")
+			execRet = execRet.AddWarning("`let` may introduce non-existent objects. If you want to ensure the object exists, please use `have` instead!\n")
 		}
 	case *ast.HaveObjStStmt:
 		execRet = exec.haveObjStStmt(stmt, true)
@@ -55,7 +55,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 	case *ast.DefFnStmt:
 		execRet = exec.defFnStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddWarning("Warning: `fn` may introduce non-existent functions. If you want to ensure the function exists, please use `have fn` instead!\n")
+			execRet = execRet.AddWarning("`let fn` may introduce non-existent functions. If you want to ensure the function exists, please use `have fn` instead!\n")
 		}
 	case *ast.ProveInEachCaseStmt:
 		execRet = exec.proveInEachCaseStmt(stmt)
@@ -74,7 +74,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 	case *ast.KnowExistPropStmt:
 		execRet = exec.knowExistPropStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddWarning("Warning: `know exist` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
+			execRet = execRet.AddWarning("`know exist` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
 	case *ast.DefFnSetStmt:
 		execRet = exec.DefFnTemplateStmt(stmt)
@@ -119,7 +119,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 	case *ast.ImportDirStmt:
 		execRet = glob.ErrRet("import statements are not allowed in local scope.")
 	case *ast.RunFileStmt:
-		execRet = glob.ErrRet("import statements are not allowed in local scope.")
+		execRet = glob.ErrRet("run statements are not allowed in local scope.")
 	// case *ast.HaveObjFromCartSetStmt:
 	// 	execRet = exec.haveObjFromCartSetStmt(stmt)
 	case *ast.ProveForStmt:
@@ -151,7 +151,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) *glob.StmtRet {
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String()).AddError(stmt.String())
 		}
-		return exec.NewTrueStmtRetWithStmt(stmt).AddNewFact((stmt.String())).AddVerifyProcesses(verRet.VerifyProcess).AddNewFacts(ret.NewFact)
+		return exec.NewTrueStmtRet(stmt).AddNewFact((stmt.String())).AddVerifyProcesses(verRet.VerifyProcess).AddNewFacts(ret.NewFact)
 	} else if verRet.IsUnknown() {
 		return exec.AddStmtToStmtRet(verRet, stmt).AddUnknown(stmt.String())
 	} else {
@@ -182,7 +182,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) *glob.StmtRet {
 	}
 
 	// Build the result with all derived facts
-	return exec.NewTrueStmtRetWithStmt(stmt).AddNewFacts(newFactMsgs)
+	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
 }
 
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) *glob.StmtRet {
@@ -193,7 +193,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
-	defineMsgs = append(defineMsgs, ret.Define...)
+	defineMsgs = append(defineMsgs, glob.IsANewPropMsg(stmt.DefHeader.Name))
 
 	paramMap := make(map[string]struct{})
 	for _, param := range stmt.DefHeader.Params {
@@ -201,7 +201,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 	}
 
 	if len(stmt.IffFactsOrNil) == 0 {
-		return exec.NewTrueStmtRetWithStmt(stmt)
+		return exec.NewTrueStmtRet(stmt)
 	}
 
 	if generateIffUniFact {
@@ -224,7 +224,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 		newFactMsgs = append(newFactMsgs, iffToProp.String())
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt).AddDefines(defineMsgs).AddNewFacts(newFactMsgs)
+	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs).AddNewFacts(newFactMsgs)
 }
 
 func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
@@ -232,31 +232,43 @@ func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
-	return exec.NewTrueStmtRetWithStmt(stmt).AddNewFacts(ret.NewFact)
+
+	defineMsgs := []string{}
+	for _, objName := range stmt.Objs {
+		defineMsgs = append(defineMsgs, glob.IsANewObjectMsg(objName))
+	}
+
+	for _, fact := range stmt.Facts {
+		defineMsgs = append(defineMsgs, fact.String())
+	}
+
+	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
 }
 
 func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) *glob.StmtRet {
-	// TODO 像定义这样的经常被调用的 事实，应该和普通的事实分离开来，以便于调用吗?
-	// if glob.RequireMsg() {
-	// 	defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
-	// }
-
 	ret := exec.Env.NewDefExistProp_InsideAtomsDeclared(stmt)
 	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
+		return exec.AddStmtToStmtRet(ret, stmt).AddErrors(ret.Error)
 	}
-	return exec.NewTrueStmtRetWithStmt(stmt)
+
+	defineMsgs := []string{}
+	defineMsgs = append(defineMsgs, glob.IsANewExistPropMsg(stmt.DefBody.DefHeader.Name))
+
+	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
 }
 
 // TODO: 我认为打印一下 claim 里面的各个语句的输出还是有道理的
 func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) *glob.StmtRet {
+	innerExecRets := []*glob.StmtRet{}
+
 	for _, curStmt := range proof {
 		execState := exec.Stmt(curStmt)
 		if execState.IsNotTrue() {
 			return execState.AddError(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
 		}
+		innerExecRets = append(innerExecRets, execState)
 	}
-	return glob.NewEmptyStmtTrue()
+	return glob.NewStmtWithInnerStmtsRet(innerExecRets, glob.StmtRetTypeTrue)
 }
 
 func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) *glob.StmtRet {
@@ -268,11 +280,13 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) *glob.S
 		return execState.AddUnknown(fmt.Sprintf("%s is unknown", stmt.OrFact.String()))
 	}
 
+	innerExecRets := []*glob.StmtRet{}
 	for i := range stmt.OrFact.Facts {
 		execState, err := exec.execProofBlockForEachCase(i, stmt)
 		if notOkExec(execState, err) {
 			return execState
 		}
+		innerExecRets = append(innerExecRets, execState)
 	}
 
 	// emit then fact
@@ -281,14 +295,14 @@ func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) *glob.S
 		return execState
 	}
 
-	// isSuccess = true
+	// newFacts
+	newFacts := []string{}
+	for _, fact := range stmt.ThenFacts {
+		newFacts = append(newFacts, fact.String())
+	}
+
 	result := glob.NewEmptyStmtTrue()
-	// if isSuccess {
-	// 	result = result.AddMsgAtBegin("is true\n")
-	// } else {
-	// 	result = result.AddMsgAtBegin("is unknown\n")
-	// }
-	return exec.AddStmtToStmtRet(result, stmt)
+	return exec.AddStmtToStmtRet(result, stmt).AddInnerStmtRets(innerExecRets).AddNewFacts(newFacts)
 }
 
 func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (*glob.StmtRet, error) {
@@ -316,10 +330,14 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s", failedFact)
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt), nil
+	return exec.NewTrueStmtRet(stmt), nil
 }
 
 func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) *glob.StmtRet {
+	innerExecRetMsgs := []*glob.StmtRet{}
+	verifyProcessMsgs := []string{}
+	newFactsMsgs := []string{}
+
 	// Create OrStmt from CaseFacts
 	orFact := ast.NewOrStmt(stmt.CaseFacts, stmt.Line)
 
@@ -329,12 +347,15 @@ func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) *glob.S
 		return execState.AddUnknown(fmt.Sprintf("%s is unknown\n", orFact.String()))
 	}
 
+	verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
+
 	// Prove each case
 	for i := range stmt.CaseFacts {
 		execState, err := exec.execProofBlockForCaseByCase(i, stmt)
 		if notOkExec(execState, err) {
 			return execState
 		}
+		innerExecRetMsgs = append(innerExecRetMsgs, execState.InnerStmtRetSlice...)
 	}
 
 	// emit then fact
@@ -343,7 +364,11 @@ func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) *glob.S
 		return execState
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	for _, fact := range stmt.ThenFacts {
+		newFactsMsgs = append(newFactsMsgs, fact.String())
+	}
+
+	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerExecRetMsgs).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactsMsgs)
 }
 
 func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCaseByCaseStmt) (*glob.StmtRet, error) {
@@ -370,7 +395,7 @@ func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCase
 		return execState, fmt.Errorf("prove case by case statement error: failed to verify then facts:\n%s", failedFact)
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt), nil
+	return exec.NewTrueStmtRet(stmt), nil
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
@@ -409,7 +434,7 @@ func (exec *Executor) knowPropStmt(stmt *ast.KnowPropStmt) *glob.StmtRet {
 		return glob.ErrRet(ret.String())
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	return exec.NewTrueStmtRet(stmt)
 }
 
 func (exec *Executor) proveStmt(stmt *ast.ProveStmt) *glob.StmtRet {
@@ -453,7 +478,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) *glob.StmtRet {
 		return glob.ErrRet(ret.String())
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	return exec.NewTrueStmtRet(stmt)
 }
 
 func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) *glob.StmtRet {
@@ -465,7 +490,7 @@ func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) *glob.Stmt
 		return glob.ErrRet(execState.String())
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	return exec.NewTrueStmtRet(stmt)
 }
 
 func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) *glob.StmtRet {
@@ -480,7 +505,7 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) *glob.StmtRet {
 		return glob.ErrRet(ret.String())
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	return exec.NewTrueStmtRet(stmt)
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
@@ -498,7 +523,7 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) *glob.StmtR
 		return glob.ErrRet(ret.String())
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt).AddNewFact(fmt.Sprintf("%s\nis true by definition", knownUniFact))
+	return exec.NewTrueStmtRet(stmt).AddNewFact(fmt.Sprintf("%s\nis true by definition", knownUniFact))
 }
 
 func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) *glob.StmtRet {
@@ -511,7 +536,7 @@ func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) *glob.StmtRet {
 		return glob.ErrRet(ret.String())
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	return exec.NewTrueStmtRet(stmt)
 }
 
 func (exec *Executor) ClearStmt() *glob.StmtRet {
@@ -533,7 +558,7 @@ func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) *glob.StmtRet {
 		}
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	return exec.NewTrueStmtRet(stmt)
 }
 
 func (exec *Executor) Verify(fact ast.FactStmt, requireMsg bool) *glob.StmtRet {
@@ -566,7 +591,7 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 
 	exec.Env.CurEnv().TransitivePropMem[string(stmt.Prop)] = make(map[string][]ast.Obj)
 
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	return exec.NewTrueStmtRet(stmt)
 }
 
 // TODO 这里的msg系统太冗杂了，需要优化
@@ -645,7 +670,7 @@ func (exec *Executor) proveIsTransitivePropStmtBody(stmt *ast.ProveIsTransitiveP
 func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) *glob.StmtRet {
 	exec.Env.CurEnv().AlgoDefMem[stmt.FuncName] = struct{}{}
 	exec.Env.AllDefinedAlgoNames[stmt.FuncName] = stmt
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	return exec.NewTrueStmtRet(stmt)
 }
 
 func (exec *Executor) evalStmt(stmt *ast.EvalStmt) *glob.StmtRet {
@@ -679,7 +704,7 @@ func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, *glob.StmtR
 func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) *glob.StmtRet {
 	exec.Env.CurEnv().DefProveAlgoMem[stmt.ProveAlgoName] = struct{}{}
 	exec.Env.AllDefinedProveAlgoNames[stmt.ProveAlgoName] = stmt
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	return exec.NewTrueStmtRet(stmt)
 }
 
 func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.StmtRet {
@@ -737,7 +762,7 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.StmtRet {
 		return glob.ErrRet(ret.String())
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	return exec.NewTrueStmtRet(stmt)
 }
 
 func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, indices []ast.Obj) *glob.StmtRet {
@@ -840,5 +865,5 @@ func (exec *Executor) implicationStmt(stmt *ast.ImplicationStmt) *glob.StmtRet {
 		return glob.ErrRet(ret.String())
 	}
 
-	return exec.NewTrueStmtRetWithStmt(stmt)
+	return exec.NewTrueStmtRet(stmt)
 }
