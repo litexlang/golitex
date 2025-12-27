@@ -135,7 +135,7 @@ func (s *HaveObjStStmt) InlineString() string {
 func (s *ProveInEachCaseStmt) InlineString() string { return s.String() }
 func (s *ProveCaseByCaseStmt) InlineString() string { return s.String() }
 
-func (s *KnowPropStmt) InlineString() string {
+func (s *KnowImplicationStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)
 	builder.WriteString(" ")

@@ -544,7 +544,7 @@ func (stmt *ProveCaseByCaseStmt) String() string {
 	return strings.TrimSuffix(builder.String(), "\n")
 }
 
-func (stmt *KnowPropStmt) String() string {
+func (stmt *KnowImplicationStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)
 	builder.WriteString(" ")
