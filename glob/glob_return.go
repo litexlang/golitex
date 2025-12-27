@@ -31,7 +31,7 @@ type StmtRet struct {
 	Type              StmtRetType
 	Define            []string
 	NewFact           []string
-	VerifyProcess     []string
+	VerifyProcess     []*VerMsg
 	Infer             []string
 	Stmt              []string
 	InnerStmtRetSlice []*StmtRet
@@ -66,9 +66,11 @@ func (m *StmtRet) String() string {
 	}
 
 	if len(m.VerifyProcess) > 0 {
-		builder.WriteString("verify process:\n")
-		builder.WriteString(strings.Join(m.VerifyProcess, "\n"))
-		builder.WriteString("\n\n")
+		builder.WriteString("verify process:\n\n")
+		for _, verifyProcess := range m.VerifyProcess {
+			builder.WriteString(verifyProcess.String())
+			builder.WriteString("\n\n")
+		}
 	}
 
 	if len(m.Infer) > 0 {
@@ -123,11 +125,11 @@ func (m *StmtRet) AddNewFact(newFact string) *StmtRet {
 	return m
 }
 
-func (m *StmtRet) AddVerifyProcess(verifyProcess string) *StmtRet {
-	if verifyProcess == "" {
+func (m *StmtRet) AddVerifyProcess(verMsg *VerMsg) *StmtRet {
+	if verMsg == nil || verMsg.StmtStr == "" || len(verMsg.VerifyMsgs) == 0 {
 		return m
 	}
-	m.VerifyProcess = append(m.VerifyProcess, verifyProcess)
+	m.VerifyProcess = append(m.VerifyProcess, verMsg)
 	return m
 }
 
@@ -176,7 +178,7 @@ func NewEmptyStmtTrue() *StmtRet {
 		Type:              StmtRetTypeTrue,
 		Define:            []string{},
 		NewFact:           []string{},
-		VerifyProcess:     []string{},
+		VerifyProcess:     []*VerMsg{},
 		Infer:             []string{},
 		Stmt:              []string{},
 		Unknown:           []string{},
@@ -192,7 +194,7 @@ func NewEmptyStmtUnknown() *StmtRet {
 		Type:              StmtRetTypeUnknown,
 		Define:            []string{},
 		NewFact:           []string{},
-		VerifyProcess:     []string{},
+		VerifyProcess:     []*VerMsg{},
 		Infer:             []string{},
 		Stmt:              []string{},
 		Unknown:           []string{},
@@ -208,7 +210,7 @@ func NewEmptyStmtError() *StmtRet {
 		Type:              StmtRetTypeError,
 		Define:            []string{},
 		NewFact:           []string{},
-		VerifyProcess:     []string{},
+		VerifyProcess:     []*VerMsg{},
 		Infer:             []string{},
 		Stmt:              []string{},
 		InnerStmtRetSlice: []*StmtRet{},
@@ -231,9 +233,9 @@ func NewStmtTrueWithNewFact(newFact string) *StmtRet {
 	return ret
 }
 
-func NewStmtTrueWithVerifyProcess(verifyProcess string) *StmtRet {
+func NewStmtTrueWithVerifyProcess(verMsg *VerMsg) *StmtRet {
 	ret := NewEmptyStmtTrue()
-	ret.AddVerifyProcess(verifyProcess)
+	ret.AddVerifyProcess(verMsg)
 	return ret
 }
 
@@ -347,7 +349,7 @@ func (m *StmtRet) AddNewFacts(newFacts []string) *StmtRet {
 	return m
 }
 
-func (m *StmtRet) AddVerifyProcesses(verifyProcesses []string) *StmtRet {
+func (m *StmtRet) AddVerifyProcesses(verifyProcesses []*VerMsg) *StmtRet {
 	for _, verifyProcess := range verifyProcesses {
 		m.AddVerifyProcess(verifyProcess)
 	}

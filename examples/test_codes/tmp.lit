@@ -1,11 +1,1 @@
-have fn f(x R) R = x
-
-have x R
-
-prove_case_by_case:
-    =>:
-        f(x) = x
-    case x > 0:
-        f(x) = x
-    case not x > 0:
-        f(x) = x
+have x R = 10
