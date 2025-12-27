@@ -162,7 +162,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) *glob.StmtRet {
 
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
 func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) *glob.StmtRet {
-	allDerivedFacts := []string{}
+	newFactMsgs := []string{}
 
 	for _, fact := range stmt.Facts {
 		switch fact := fact.(type) {
@@ -173,7 +173,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) *glob.StmtRet {
 			}
 			// Collect derived facts from post-processing
 			if ret.IsTrue() && len(ret.NewFact) > 0 {
-				allDerivedFacts = append(allDerivedFacts, ret.NewFact...)
+				newFactMsgs = append(newFactMsgs, ret.NewFact...)
 			}
 
 		default:
@@ -182,18 +182,18 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) *glob.StmtRet {
 	}
 
 	// Build the result with all derived facts
-	resultMsgs := []string{}
-	if len(allDerivedFacts) > 0 {
-		resultMsgs = append(resultMsgs, allDerivedFacts...)
-	}
-	return exec.NewTrueStmtRetWithStmt(stmt).AddNewFacts(resultMsgs)
+	return exec.NewTrueStmtRetWithStmt(stmt).AddNewFacts(newFactMsgs)
 }
 
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) *glob.StmtRet {
+	defineMsgs := []string{}
+	newFactMsgs := []string{}
+
 	ret := exec.Env.NewDefProp_InsideAtomsDeclared(stmt)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
+	defineMsgs = append(defineMsgs, ret.Define...)
 
 	paramMap := make(map[string]struct{})
 	for _, param := range stmt.DefHeader.Params {
@@ -220,10 +220,11 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
+		newFactMsgs = append(newFactMsgs, propToIff.String())
+		newFactMsgs = append(newFactMsgs, iffToProp.String())
 	}
-	execRet := exec.NewTrueStmtRetWithStmt(stmt)
-	// Note: Messages about "is true by definition" are now handled in the verifier
-	return execRet
+
+	return exec.NewTrueStmtRetWithStmt(stmt).AddDefines(defineMsgs).AddNewFacts(newFactMsgs)
 }
 
 func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
