@@ -908,7 +908,7 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state 
 		}
 	}
 
-	return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), []string{"proved by definition of set builder"}))
+	return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), []string{"definition of set builder"}))
 }
 
 func (ver *Verifier) verInFactByRightIsListSet(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
@@ -932,10 +932,10 @@ func (ver *Verifier) verInFactByRightIsListSet(stmt *ast.SpecFactStmt, state *Ve
 		if verRet.IsTrue() {
 			// 找到了相等的元素，返回 true
 			if stmt.Params[0].String() == item.String() {
-				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), []string{fmt.Sprintf("proved by\n%s $in %s, %s = %s", stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj)}))
+				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), []string{fmt.Sprintf("%s $in %s, %s = %s", stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj)}))
 			}
 
-			return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), []string{fmt.Sprintf("proved by\n%s $in %s, %s = %s, %s = %s", stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj, item, stmt.Params[0])}))
+			return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), []string{fmt.Sprintf("%s $in %s, %s = %s, %s = %s", stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj, item, stmt.Params[0])}))
 		}
 	}
 

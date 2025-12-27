@@ -42,6 +42,19 @@ func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verified
 	return execRet
 }
 
+// maybeAddSuccessMsgVerMsg adds a VerMsg to execRet if state.WithMsg is true
+func (ver *Verifier) maybeAddSuccessMsgVerMsg(state *VerState, verMsg *glob.VerMsg, execRet *glob.StmtRet) *glob.StmtRet {
+	if state == nil {
+		panic("")
+	}
+
+	if state.WithMsg {
+		execRet.AddVerifyProcess(verMsg)
+		return execRet
+	}
+	return execRet
+}
+
 func IsTrueOrErr(ok bool, err error) bool {
 	return ok || err != nil
 }
