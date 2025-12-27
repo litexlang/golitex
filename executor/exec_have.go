@@ -73,7 +73,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *g
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
-		execState := glob.NewGlobTrueWithStmt(stmtForDef.String())
+		execState := exec.NewTrueGlobRetWithStmt(stmtForDef)
 		if execState.IsNotTrue() {
 			return execState
 		}
@@ -121,119 +121,73 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *g
 
 	result := glob.NewEmptyGlobTrue()
 	if requireMsg {
-		result = result.AddStmt(fmt.Sprintf("%s\n", stmt))
+		result = exec.AddStmtToGlobRet(result, stmt)
 	}
-	// Note: Messages about "is true by definition" are now handled in the verifier
-	return result
+
+	verifyProcessMsgs := []string{stmt.Fact.String()}
+	inferMsgs := append([]string{}, ret.Infer...)
+	defineMsgs := []string{}
+	for _, fact := range stmt.ObjNames {
+		defineMsgs = append(defineMsgs, glob.IsANewObjectMsg(fact))
+	}
+	defineMsgs = append(defineMsgs, newExistStFact.String())
+
+	return result.AddVerifyProcesses(verifyProcessMsgs).AddInfers(inferMsgs).AddDefines(defineMsgs)
 }
-
-// func (exec *Executor) checkInFactInSet_SetIsNonEmpty(pureInFact *ast.SpecFactStmt) (bool, error) {
-// 	if _, ok := glob.BuiltinObjKeywordSet[pureInFact.Params[0].String()]; ok {
-// 		return true, nil
-// 	}
-
-// 	isFiniteSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{pureInFact.Params[0], ast.Atom(glob.KeywordFiniteSet)}, pureInFact.Line)
-// 	execRet := exec.Verify(isFiniteSetFact, false)
-// 	if execRet.IsNotTrue() {
-// 		return false, fmt.Errorf(execRet.String())
-// 	}
-// 	if execRet.IsTrue() {
-// 		// 如果 len > 0 那就是可以
-// 		lenOverStmtName := ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{pureInFact.Params[0]})
-// 		largerThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{lenOverStmtName, ast.Atom("0")}, pureInFact.Line)
-// 		execRet := exec.Verify(largerThanZeroFact, false)
-// 		if execRet.IsNotTrue() {
-// 			return false, fmt.Errorf(execRet.String())
-// 		}
-// 		if execRet.IsTrue() {
-// 			return true, nil
-// 		}
-// 	}
-
-// 	return false, nil
-// }
-
-// func (exec *Executor) haveCartSetStmt(stmt *ast.HaveCartSetStmt) *glob.GlobRet {
-// 	// check that the cart has at least 2 parameters
-// 	if len(stmt.CartObj.Params) < 2 {
-// 		return glob.ErrRet(fmt.Sprintf("cart must have at least 2 parameters, %s in %s is not valid", stmt.CartObj.String(), stmt.CartObj.String()))
-// 	}
-
-// 	// Check that each parameter of cart is a set
-// 	for i, param := range stmt.CartObj.Params {
-// 		state := exec.factStmt(ast.NewIsASetFact(param, stmt.Line))
-// 		if state.IsErr() {
-// 			return glob.ErrRet(state.String())
-// 		}
-// 		if state.IsUnknown() {
-// 			return glob.ErrRet(fmt.Sprintf("cart parameter %d (%s) must be a set, i.e. `%s in %s` must be true, but it is unknown", i+1, param.String(), param.String(), ast.Atom(glob.KeywordSet).String()))
-// 		}
-// 	}
-
-// 	// Define the new set variable
-// 	defObjStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
-// 	execState := exec.defLetStmt(defObjStmt)
-// 	if execState.IsNotTrue() {
-// 		return execState
-// 	}
-
-// 	// Store the equal fact: x = cart(a, b, c, ...)
-// 	equalFact := ast.NewEqualFact(ast.Atom(stmt.Name), stmt.CartObj)
-// 	ret := exec.Env.NewFactWithAtomsDefined(equalFact)
-// 	if ret.IsErr() {
-// 		return glob.ErrRet(ret.String())
-// 	}
-
-// 	return glob.NewEmptyGlobTrue().AddMsg(stmt.String())
-// }
 
 func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.GlobRet {
 	ver := NewVerifier(exec.Env)
 
-	inferMsgs := []string{}
+	newFactMsgs := []string{}
 	defineMsgs := []string{}
 	verifyProcessMsgs := []string{}
 
 	for i := range len(stmt.ObjNames) {
-		if ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(stmt.ObjEqualTos[i], Round0NoMsg()); ret.IsNotTrue() {
+		objName := stmt.ObjNames[i]
+		objEqualTo := stmt.ObjEqualTos[i]
+		objSet := stmt.ObjSets[i]
+
+		// 验证等号右边的对象是否已定义
+		if ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(objEqualTo, Round0NoMsg()); ret.IsNotTrue() {
 			return ret
 		}
 
-		defineMsgs = append(defineMsgs, glob.IsANewObjectMsg(stmt.ObjNames[i]))
-
-		inFact := ast.NewInFactWithObj(stmt.ObjEqualTos[i], stmt.ObjSets[i])
+		// 验证等号右边的对象是否在指定的集合中
+		inFact := ast.NewInFactWithObj(objEqualTo, objSet)
 		verRet := ver.VerFactStmt(inFact, Round0Msg())
 		if verRet.IsErr() {
 			return glob.ErrRet(verRet.String())
 		}
 		if verRet.IsUnknown() {
-			return glob.ErrRet(fmt.Sprintf("%s is not in %s", stmt.ObjNames[i], stmt.ObjSets[i]))
+			return glob.ErrRet(fmt.Sprintf("%s is not in %s", objName, objSet))
 		}
-
 		verifyProcessMsgs = append(verifyProcessMsgs, verRet.VerifyProcess...)
 
-		equalFact := ast.NewEqualFact(ast.Atom((stmt.ObjNames[i])), stmt.ObjEqualTos[i])
-		stmtForDef := ast.NewDefLetStmt([]string{(stmt.ObjNames[i])}, []ast.Obj{stmt.ObjSets[i]}, []ast.FactStmt{equalFact}, stmt.Line)
-		ret := exec.Env.DefLetStmt(stmtForDef)
+		// 检查等号右边的对象中的名称是否存在
+		ret := exec.Env.LookupNamesInObj(objEqualTo, map[string]struct{}{})
 		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
-		}
-		execState := glob.NewGlobTrueWithStmt(stmtForDef.String())
-		if execState.IsNotTrue() {
-			return execState
-		}
-
-		// 检查 等号右边的东西是否存在
-		ret = exec.Env.LookupNamesInObj(stmt.ObjEqualTos[i], map[string]struct{}{})
-		if ret.IsErr() {
-			ret.AddError(fmt.Sprintf("in obj equal to %s", stmt.ObjEqualTos[i]))
+			ret.AddError(fmt.Sprintf("in obj equal to %s", objEqualTo))
 			return glob.ErrRet(ret.String())
 		}
 
-		inferMsgs = append(inferMsgs, equalFact.String())
+		// 定义新对象及其等式关系
+		equalFact := ast.NewEqualFact(ast.Atom(objName), objEqualTo)
+		objInSetFact := ast.NewInFact(objName, objSet)
+		stmtForDef := ast.NewDefLetStmt([]string{objName}, []ast.Obj{objSet}, []ast.FactStmt{equalFact}, stmt.Line)
+
+		ret = exec.Env.DefLetStmt(stmtForDef)
+		if ret.IsErr() {
+			return glob.ErrRet(ret.String())
+		}
+
+		// 收集定义消息
+		defineMsgs = append(defineMsgs, glob.IsANewObjectMsg(objName))
+		defineMsgs = append(defineMsgs, equalFact.String())
+		defineMsgs = append(defineMsgs, objInSetFact.String())
+
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String()).AddNewFacts(inferMsgs).AddDefines(defineMsgs).AddVerifyProcesses(verifyProcessMsgs)
+	return exec.NewTrueGlobRetWithStmt(stmt).AddNewFacts(newFactMsgs).AddDefines(defineMsgs).AddVerifyProcesses(verifyProcessMsgs)
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) *glob.GlobRet {
@@ -252,7 +206,7 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
-		execRet := glob.NewGlobTrueWithStmt(stmtForDef.String())
+		execRet := exec.NewTrueGlobRetWithStmt(stmtForDef)
 		if execRet.IsNotTrue() {
 			return glob.ErrRet(fmt.Sprintf("%s\n", stmt.String())).AddError(execRet.String())
 		}
@@ -262,7 +216,7 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 		msgs = append(msgs, ret.NewFact...)
 	}
 
-	return glob.NewEmptyGlobTrue().AddStmt(fmt.Sprintf("%s\n", stmt)).AddNewFacts(msgs)
+	return exec.AddStmtToGlobRet(glob.NewEmptyGlobTrue(), stmt).AddNewFacts(msgs)
 }
 
 func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) *glob.GlobRet {
@@ -279,16 +233,16 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) *glob.GlobRet {
 
 	execRet, err := exec.checkFnEqualStmt(stmt)
 	if notOkExec(execRet, err) {
-		return execRet.AddStmt(stmt.String())
+		return exec.AddStmtToGlobRet(execRet, stmt)
 	}
 
 	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(stmt.DefHeader), stmt.EqualTo)}, stmt.Line), stmt.Line)
 	execRet = exec.defFnStmt(newFnDefStmt)
 	if execRet.IsNotTrue() {
-		return execRet.AddError(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String())).AddStmt(stmt.String())
+		return exec.AddStmtToGlobRet(execRet.AddError(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String())), stmt)
 	}
 
-	return execRet.AddStmt(stmt.String())
+	return exec.AddStmtToGlobRet(execRet, stmt)
 }
 
 func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (*glob.GlobRet, error) {
@@ -314,7 +268,7 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (*glob.GlobRet
 		return glob.ErrRet(verRet.String()), fmt.Errorf("according to the definition of %s, the returned value %s must be in %s, but\n%s is unknown", stmt, stmt.EqualTo, stmt.RetSet, ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet))
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String()), nil
+	return exec.NewTrueGlobRetWithStmt(stmt), nil
 }
 
 func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {
@@ -338,10 +292,10 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) *glob.GlobRet {
 	execRet = exec.defFnStmt(stmt.DefFnStmt)
 
 	if execRet.IsNotTrue() {
-		return execRet.AddStmt(stmt.String())
+		return exec.AddStmtToGlobRet(execRet, stmt)
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String())
+	return exec.NewTrueGlobRetWithStmt(stmt)
 }
 
 func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.GlobRet, error) {
@@ -431,7 +385,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.GlobRet, erro
 		}
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String()), nil
+	return exec.NewTrueGlobRetWithStmt(stmt), nil
 }
 
 func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob.GlobRet {
@@ -444,10 +398,10 @@ func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob
 	// Only after all verifications pass, declare the function
 	execRet = exec.defFnStmt(stmt.DefFnStmt)
 	if execRet.IsNotTrue() {
-		return execRet.AddStmt(stmt.String())
+		return exec.AddStmtToGlobRet(execRet, stmt)
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String())
+	return exec.NewTrueGlobRetWithStmt(stmt)
 }
 
 func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) (*glob.GlobRet, []ast.FactStmt, error) {
@@ -519,7 +473,7 @@ func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) 
 		thenFacts = append(thenFacts, uniFact)
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String()), thenFacts, nil
+	return exec.NewTrueGlobRetWithStmt(stmt), thenFacts, nil
 }
 
 func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (*glob.GlobRet, error) {
@@ -571,7 +525,7 @@ func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseS
 	// and object substitution (ReplaceObj) is not currently available.
 	// The proof statements in each case should prove what's needed.
 
-	return glob.NewGlobTrueWithStmt(stmt.String()), nil
+	return exec.NewTrueGlobRetWithStmt(stmt), nil
 }
 
 func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (*glob.GlobRet, error) {
@@ -601,7 +555,7 @@ func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByC
 		return glob.NewEmptyGlobError(), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String()), nil
+	return exec.NewTrueGlobRetWithStmt(stmt), nil
 }
 
 func (exec *Executor) checkCasesNoOverlap_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (*glob.GlobRet, error) {
@@ -613,7 +567,7 @@ func (exec *Executor) checkCasesNoOverlap_ForHaveFn(stmt *ast.HaveFnCaseByCaseSt
 		}
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String()), nil
+	return exec.NewTrueGlobRetWithStmt(stmt), nil
 }
 
 func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (*glob.GlobRet, error) {
@@ -658,7 +612,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCas
 		}
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String()), nil
+	return exec.NewTrueGlobRetWithStmt(stmt), nil
 }
 
 func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.GlobRet {
@@ -674,7 +628,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 	// 验证每个case的返回值都符合fn的retSet
 	execState, err := exec.checkHaveFnEqualCaseByCaseStmt(stmt)
 	if notOkExec(execState, err) {
-		return execState.AddStmt(stmt.String())
+		return exec.AddStmtToGlobRet(execState, stmt)
 	}
 
 	// 构建 thenFacts：对于每个 case，如果条件满足，则函数值等于对应的返回值
@@ -714,10 +668,10 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 	)
 	execState = exec.defFnStmt(newFnDefStmt)
 	if execState.IsNotTrue() {
-		return execState.AddStmt(stmt.String())
+		return exec.AddStmtToGlobRet(execState, stmt)
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String())
+	return exec.NewTrueGlobRetWithStmt(stmt)
 }
 
 func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.GlobRet, error) {
@@ -741,7 +695,7 @@ func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseBy
 		return execState, err
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String()), nil
+	return exec.NewTrueGlobRetWithStmt(stmt), nil
 }
 
 func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (*glob.GlobRet, error) {
@@ -776,7 +730,7 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 		return glob.NewEmptyGlobError(), fmt.Errorf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.RetSet, ast.NewInFactWithObj(equalTo, stmt.RetSet))
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String()), nil
+	return exec.NewTrueGlobRetWithStmt(stmt), nil
 }
 
 func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.GlobRet, error) {
@@ -806,7 +760,7 @@ func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseSt
 		return glob.NewEmptyGlobError(), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String()), nil
+	return exec.NewTrueGlobRetWithStmt(stmt), nil
 }
 
 func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.GlobRet, error) {
@@ -818,7 +772,7 @@ func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (
 		}
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String()), nil
+	return exec.NewTrueGlobRetWithStmt(stmt), nil
 }
 
 func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (*glob.GlobRet, error) {
@@ -863,7 +817,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 		}
 	}
 
-	return glob.NewGlobTrueWithStmt(stmt.String()), nil
+	return exec.NewTrueGlobRetWithStmt(stmt), nil
 }
 
 func (exec *Executor) haveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) *glob.GlobRet {
@@ -879,7 +833,7 @@ func (exec *Executor) haveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) *
 		return postRet
 	}
 
-	return glob.NewEmptyGlobTrue().AddStmt(stmt.String())
+	return exec.AddStmtToGlobRet(glob.NewEmptyGlobTrue(), stmt)
 }
 
 // checkHaveObjFromCartSetStmt checks that:

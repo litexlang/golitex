@@ -53,8 +53,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 	// 	result = result.AddMsgAtBegin("is unknown\n")
 	// }
 
-	result = result.AddStmt(stmt.ClaimProveStmt.String())
-	return result
+	return exec.AddStmtToGlobRet(result, stmt.ClaimProveStmt)
 }
 
 func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_OrFact, stmt *ast.ClaimProveByContradictionStmt) *glob.GlobRet {
@@ -177,7 +176,7 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.GlobRet
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
-	return glob.NewGlobTrueWithStmt(stmt.String())
+	return exec.NewTrueGlobRetWithStmt(stmt)
 }
 
 func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.GlobRet {
@@ -192,7 +191,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 		return glob.ErrRet(ret.String())
 	}
 
-	return glob.NewGlobTrueWithStmt(fmt.Sprintf("%s\n", stmt.String()))
+	return exec.NewTrueGlobRetWithStmt(stmt)
 }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.GlobRet {
