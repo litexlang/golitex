@@ -27,19 +27,7 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerSt
 		return glob.ErrRet(fmt.Sprintf("invalid number of parameters for in fact: %d", len(stmt.Params)))
 	}
 
-	// if stmt.TypeEnum == ast.FalsePure {
-	// 	return ver.falseInFactBuiltinRules(stmt, state)
-	// }
-
 	var verRet *glob.GlobRet = glob.NewEmptyGlobUnknown()
-
-	// verRet = ver.verInFactByRightParamIsKeywordSet(stmt, state)
-	// if verRet.IsErr() {
-	// 	return verRet
-	// }
-	// if verRet.IsTrue() {
-	// 	return verRet
-	// }
 
 	verRet = ver.verInFactByLeftParamIsNumberExpr(stmt, state)
 	if verRet.IsErr() {
@@ -73,7 +61,7 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerSt
 		return verRet
 	}
 
-	verRet = ver.verInFactByRightParamIsNOrZOrQOrR(stmt, state)
+	verRet = ver.verInFactByRightParamIsNOrZOrQOrR_BySpecMem_ReturnValueOfUserDefinedFnInFnReturn(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}

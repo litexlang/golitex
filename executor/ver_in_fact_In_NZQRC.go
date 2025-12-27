@@ -21,7 +21,7 @@ import (
 )
 
 // 这是必要的，因为 2 $in N 是这个检查的
-func (ver *Verifier) verInFactByRightParamIsNOrZOrQOrR(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
+func (ver *Verifier) verInFactByRightParamIsNOrZOrQOrR_BySpecMem_ReturnValueOfUserDefinedFnInFnReturn(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 	inSet, ok := stmt.Params[1].(ast.Atom)
 	if !ok {
 		return glob.NewEmptyGlobUnknown()
@@ -40,7 +40,7 @@ func (ver *Verifier) verInFactByRightParamIsNOrZOrQOrR(stmt *ast.SpecFactStmt, s
 	case glob.KeywordNPos:
 		success, verifiedBy = ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordReal:
-		success, verifiedBy = ver.verInR_BySpecMem(stmt, nextState)
+		success, verifiedBy = ver.verInR_BySpecMem_ReturnValueOfUserDefinedFnInFnReturn(stmt, nextState)
 	default:
 		success = false
 	}
@@ -200,7 +200,7 @@ func (ver *Verifier) verInQ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 	return ver.verInZ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(newStmt, state)
 }
 
-func (ver *Verifier) verInR_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
+func (ver *Verifier) verInR_BySpecMem_ReturnValueOfUserDefinedFnInFnReturn(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {
 	verRet := ver.verSpecFact_BySpecMem(stmt, state)
 	if verRet.IsErr() {
 		return false, ""
@@ -218,9 +218,9 @@ func (ver *Verifier) verInR_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) (
 	if ast.IsFn_WithHeadNameInSlice(stmt.Params[0], glob.AddMinusStarSet) {
 		fnObj, ok := stmt.Params[0].(*ast.FnObj)
 		if ok {
-			ok, _ = ver.verInR_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[0], ast.Atom(glob.KeywordReal)}, stmt.Line), state)
+			ok, _ = ver.verInR_BySpecMem_ReturnValueOfUserDefinedFnInFnReturn(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[0], ast.Atom(glob.KeywordReal)}, stmt.Line), state)
 			if ok {
-				ok, _ = ver.verInR_BySpecMem(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[1], ast.Atom(glob.KeywordReal)}, stmt.Line), state)
+				ok, _ = ver.verInR_BySpecMem_ReturnValueOfUserDefinedFnInFnReturn(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{fnObj.Params[1], ast.Atom(glob.KeywordReal)}, stmt.Line), state)
 				if ok {
 					return true, fmt.Sprintf("%s has function name in *+-, and both params are in R", fnObj)
 				}
