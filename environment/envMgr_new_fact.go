@@ -136,8 +136,12 @@ func (envMgr *EnvMgr) newTrueEqual(fact *ast.SpecFactStmt) *glob.StmtRet {
 
 	// postprocess for cart: if x = cart(x1, x2, ..., xn)
 	ie := NewInferenceEngine(envMgr)
-	ret = ie.newTrueEqual(fact)
-	return ret
+	ieRet := ie.newTrueEqual(fact)
+	if ieRet.IsNotTrue() {
+		return ieRet
+	}
+
+	return ret.AddInfers(ieRet.Infer)
 }
 
 func (envMgr *EnvMgr) newEqualsFact(stmt *ast.EqualsFactStmt) *glob.StmtRet {
