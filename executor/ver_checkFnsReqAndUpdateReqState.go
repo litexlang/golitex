@@ -22,6 +22,9 @@ import (
 
 func (ver *Verifier) checkFnsReq(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	// TODO: 这里有点问题。应该做的分类是：builtin的 stmt name，如in；以及非builtin的stmt name
+	if glob.IsSuperFunction(string(stmt.PropName)) {
+		return ver.verSuperFunctionReq(stmt, state)
+	}
 
 	// 2. Check if the parameters satisfy the requirement of the function requirements
 	stateNoMsg := state.GetNoMsg()

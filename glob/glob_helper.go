@@ -55,3 +55,13 @@ func StringWithOptimizedNewline(s string) string {
 	s2 = newlineRegex.ReplaceAllString(s2, "\n\n")
 	return fmt.Sprintf("%s\n", s2)
 }
+
+func IsNPosOrNOrZOrQOrR(name string) bool {
+	return name == KeywordNPos || name == KeywordNatural || name == KeywordInteger || name == KeywordRational || name == KeywordReal
+}
+
+var AddMinusStarSet map[string]struct{} = map[string]struct{}{
+	KeySymbolPlus:  {},
+	KeySymbolMinus: {},
+	KeySymbolStar:  {},
+}
