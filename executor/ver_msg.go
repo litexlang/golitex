@@ -21,8 +21,10 @@ import (
 
 func successVerString(stmt, stmtVerifiedBy ast.Stmt) *glob.VerMsg {
 	stmtStr := ""
+	line := uint(0)
 	if stmt != nil {
 		stmtStr = stmt.String()
+		line = stmt.GetLine()
 	}
 
 	verifyMsgs := []string{}
@@ -36,7 +38,7 @@ func successVerString(stmt, stmtVerifiedBy ast.Stmt) *glob.VerMsg {
 		verifyMsgs = append(verifyMsgs, "is true.")
 	}
 
-	return glob.NewVerMsg(stmtStr, verifyMsgs)
+	return glob.NewVerMsg(stmtStr, line, verifyMsgs)
 }
 
 // successVerStringString is a helper function for backward compatibility with string-based calls
@@ -48,5 +50,5 @@ func successVerStringString(stmtStr, stmtVerifiedByStr string) *glob.VerMsg {
 		verifyMsgs = append(verifyMsgs, "is true.")
 	}
 
-	return glob.NewVerMsg(stmtStr, verifyMsgs)
+	return glob.NewVerMsg(stmtStr, 0, verifyMsgs)
 }

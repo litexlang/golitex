@@ -251,7 +251,7 @@ func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.EnvMemory, left ast.
 
 	if gotLeftEqualObjs && gotRightEqualObjs {
 		if equalToLeftObjs == equalToRightObjs {
-			return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(fmt.Sprintf("%s = %s", left, right), []string{"by either their equality is known, or it is ensured by transitivity of equality."}))
+			return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(fmt.Sprintf("%s = %s", left, right), 0, []string{"by either their equality is known, or it is ensured by transitivity of equality."}))
 		}
 	}
 
@@ -264,7 +264,7 @@ func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.EnvMemory, left ast.
 			if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToLeftObj, right, state); verRet.IsErr() {
 				return verRet
 			} else if verRet.IsTrue() {
-				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(fmt.Sprintf("%s = %s", equalToLeftObj, right), []string{fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftObj, right, equalToLeftObj, left)}))
+				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(fmt.Sprintf("%s = %s", equalToLeftObj, right), 0, []string{fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftObj, right, equalToLeftObj, left)}))
 			}
 		}
 	}
@@ -274,7 +274,7 @@ func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.EnvMemory, left ast.
 			if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToRightObj, left, state); verRet.IsErr() {
 				return verRet
 			} else if verRet.IsTrue() {
-				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(fmt.Sprintf("%s = %s", left, equalToRightObj), []string{fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightObj, equalToRightObj, right)}))
+				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(fmt.Sprintf("%s = %s", left, equalToRightObj), 0, []string{fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightObj, equalToRightObj, right)}))
 			}
 		}
 	}
@@ -302,7 +302,7 @@ func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj
 				}
 			}
 
-			return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(fmt.Sprintf("%s = %s", left, right), []string{fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right)}))
+			return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(fmt.Sprintf("%s = %s", left, right), 0, []string{fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right)}))
 		}
 	}
 	return glob.NewEmptyStmtUnknown()
@@ -348,7 +348,7 @@ func (ver *Verifier) verEqualByLeftAndRightAreSetBuilders(left, right ast.Obj, s
 	}
 
 	if leftSetBuilderStruct.String() == rightSetBuilderStruct.String() {
-		return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(fmt.Sprintf("%s = %s", left, right), []string{"by definition of set builder"}))
+		return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(fmt.Sprintf("%s = %s", left, right), 0, []string{"by definition of set builder"}))
 	}
 
 	return glob.NewEmptyStmtUnknown()
