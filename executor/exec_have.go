@@ -134,10 +134,6 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *g
 func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet {
 	ver := NewVerifier(exec.Env)
 
-	if err := ast.ParamSetsDoesNotContainFreeParams(stmt.ObjNames, stmt.ObjSets); err != nil {
-		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
-	}
-
 	newFactMsgs := []string{}
 	defineMsgs := []string{}
 	verifyProcessMsgs := []*glob.VerMsg{}
@@ -191,9 +187,6 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) *glob.StmtRet {
-	if err := ast.ParamSetsDoesNotContainFreeParams(stmt.Objs, stmt.ObjSets); err != nil {
-		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
-	}
 
 	verifyProcessMsgs := []*glob.VerMsg{}
 	defineMsgs := []string{}
