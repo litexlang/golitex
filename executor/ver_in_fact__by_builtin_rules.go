@@ -533,7 +533,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
-		ret = ver.Env.NewFactWithoutCheckingNameDefined(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i], glob.BuiltinLine))
+		ret = ver.Env.NewFactWithoutCheckingNameDefined(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i], glob.BuiltinLine0))
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
@@ -554,7 +554,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 	}
 
 	for i := range instLeftUniFactAsUniFactStmt.Params {
-		fact := ast.NewInFactWithParamObj(ast.Atom(randomNames[i]), leftIsInWhichFnTT.AsFnTStruct.ParamSets[i], glob.BuiltinLine)
+		fact := ast.NewInFactWithParamObj(ast.Atom(randomNames[i]), leftIsInWhichFnTT.AsFnTStruct.ParamSets[i], glob.BuiltinLine0)
 		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
@@ -581,7 +581,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 
 	// whether return value is in ret set of fnFcFn
 	fn := ast.NewFnObj(left, randomAtoms)
-	verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(fn, fnFcFn.Params[0], glob.BuiltinLine), state)
+	verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(fn, fnFcFn.Params[0], glob.BuiltinLine0), state)
 	return verRet
 }
 

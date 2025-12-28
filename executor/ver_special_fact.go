@@ -177,7 +177,7 @@ func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state 
 		leftLeft := left.(*ast.FnObj).Params[0]
 		leftRight := left.(*ast.FnObj).Params[1]
 
-		notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftLeft, leftRight}, glob.BuiltinLine)
+		notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftLeft, leftRight}, glob.BuiltinLine0)
 
 		verRet = ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(notEqualFact, state)
 		if verRet.IsErr() {

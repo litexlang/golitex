@@ -92,7 +92,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.StmtRet
 	inferMsgs := []string{}
 
 	// 让 $is_cart(x) 成立
-	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fact.Params[0]}, glob.BuiltinLine)
+	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fact.Params[0]}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(isCartFact)
 	if ret.IsErr() {
 		return ret
@@ -102,7 +102,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.StmtRet
 	// dim(x) = len(cart.Params)
 	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fact.Params[0]})
 	dimValue := ast.Atom(strconv.Itoa(len(cart.Params)))
-	dimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimFn, dimValue}, glob.BuiltinLine)
+	dimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimFn, dimValue}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(dimEqualFact)
 	if ret.IsErr() {
 		return ret
@@ -112,7 +112,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.StmtRet
 	// proj(x, i+1) = cart.Params[i] for each i
 	for i, cartParam := range cart.Params {
 		projFn := ast.NewFnObj(ast.Atom(glob.KeywordProj), []ast.Obj{fact.Params[0], ast.Atom(strconv.Itoa(i + 1))})
-		projEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{projFn, cartParam}, glob.BuiltinLine)
+		projEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{projFn, cartParam}, glob.BuiltinLine0)
 		ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(projEqualFact)
 		if ret.IsErr() {
 			return ret
@@ -140,7 +140,7 @@ func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIn
 		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{obj, indexObj})
 
 		// 创建相等事实: obj[index] = tuple[i]
-		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{indexedObj, tuple.Params[i]}, glob.BuiltinLine)
+		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{indexedObj, tuple.Params[i]}, glob.BuiltinLine0)
 		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(indexEqualFact)
 		if ret.IsErr() {
 			return ret
@@ -198,7 +198,7 @@ func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj,
 
 	// 让每一位相等
 	for i := range len(leftTuple.Params) {
-		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftTuple.Params[i], rightTuple.Params[i]}, glob.BuiltinLine)
+		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftTuple.Params[i], rightTuple.Params[i]}, glob.BuiltinLine0)
 		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
 		if ret.IsErr() {
 			return ret
@@ -232,11 +232,11 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 	// 创建一个 or fact，表示 left 等于 list set 中的某一个元素
 	// forall x left => x = left[1] or x = left[2] or ... or x = left[len(left)]
 	randomName := ie.EnvMgr.GenerateUndeclaredRandomName()
-	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine)
+	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine0)
 	for _, param := range listSetFnObj.Params {
-		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.Atom(randomName), param}, glob.BuiltinLine))
+		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.Atom(randomName), param}, glob.BuiltinLine0))
 	}
-	forallFact := ast.NewUniFact([]string{randomName}, []ast.Obj{left}, []ast.FactStmt{}, []ast.FactStmt{orFact}, glob.BuiltinLine)
+	forallFact := ast.NewUniFact([]string{randomName}, []ast.Obj{left}, []ast.FactStmt{}, []ast.FactStmt{orFact}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(forallFact)
 	if ret.IsErr() {
 		return ret
@@ -246,7 +246,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 	// count(a) = len
 	countFn := ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{left})
 	countValue := ast.Atom(strconv.Itoa(len(listSetFnObj.Params)))
-	countEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{countFn, countValue}, glob.BuiltinLine)
+	countEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{countFn, countValue}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(countEqualFact)
 	if ret.IsErr() {
 		return ret
@@ -254,7 +254,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 	inferMsgs = append(inferMsgs, countEqualFact.String())
 
 	// is finite set
-	isFiniteFact := ast.NewIsAFiniteSetFact(left, glob.BuiltinLine)
+	isFiniteFact := ast.NewIsAFiniteSetFact(left, glob.BuiltinLine0)
 	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(isFiniteFact)
 	if ret.IsErr() {
 		return ret
