@@ -898,4 +898,6 @@ know:
 
 know:
 	forall x finite_set: count(x) > 0 => $is_a_nonempty_set(x)
+
+know forall x set: x \union x = x, x \intersect x = x
 `

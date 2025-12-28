@@ -22,9 +22,6 @@ import (
 
 func (ver *Verifier) checkFnsReq(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	// TODO: 这里有点问题。应该做的分类是：builtin的 stmt name，如in；以及非builtin的stmt name
-	if glob.IsSuperFunction(string(stmt.PropName)) {
-		return ver.verSuperFunctionReq(stmt, state)
-	}
 
 	// 2. Check if the parameters satisfy the requirement of the function requirements
 	stateNoMsg := state.GetNoMsg()
@@ -60,7 +57,9 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 		return glob.ErrRet(fmt.Sprintf("%s is not a function", obj))
 	}
 
-	if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCount) {
+	if headAsAtom, ok := objAsFnObj.FnHead.(ast.Atom); ok && glob.IsSuperFunction(string(headAsAtom)) {
+		return ver.verSuperFunctionReq(objAsFnObj, state)
+	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCount) {
 		return ver.countFnRequirement(objAsFnObj, state)
 	} else if ast.IsFnTemplate_ObjFn(objAsFnObj) {
 		return glob.NewEmptyStmtTrue()
