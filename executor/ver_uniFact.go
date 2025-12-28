@@ -69,7 +69,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 
 	execRet := glob.NewEmptyStmtTrue()
 	if state.WithMsg {
-		execRet = execRet.AddVerifyProcess(glob.NewVerMsg(stmt.String(), []string{"is true"}))
+		execRet = execRet.AddVerifyProcess(glob.NewVerMsg(stmt.String(), stmt.Line, []string{"is true"}))
 	}
 	return execRet
 }

@@ -120,7 +120,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *g
 		result = exec.AddStmtToStmtRet(result, stmt)
 	}
 
-	verifyProcessMsgs := []*glob.VerMsg{glob.NewVerMsg(stmt.Fact.String(), []string{"is true"})}
+	verifyProcessMsgs := []*glob.VerMsg{glob.NewVerMsg(stmt.Fact.String(), stmt.Line, []string{"is true"})}
 	inferMsgs := append([]string{}, ret.Infer...)
 	defineMsgs := []string{}
 	for _, fact := range stmt.ObjNames {

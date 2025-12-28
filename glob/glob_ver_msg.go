@@ -21,16 +21,21 @@ import (
 
 type VerMsg struct {
 	StmtStr    string
+	Line       uint
 	VerifyMsgs []string
 }
 
-func NewVerMsg(stmtStr string, verifyMsgs []string) *VerMsg {
+func NewVerMsg(stmtStr string, line uint, verifyMsgs []string) *VerMsg {
 	return &VerMsg{
 		StmtStr:    stmtStr,
+		Line:       line,
 		VerifyMsgs: verifyMsgs,
 	}
 }
 
 func (m *VerMsg) String() string {
-	return fmt.Sprintf("%s\nproved by:\n%s", m.StmtStr, strings.Join(m.VerifyMsgs, "\n"))
+	if m.Line == 0 {
+		return fmt.Sprintf("%s\nproved by builtin rules:\n%s", m.StmtStr, strings.Join(m.VerifyMsgs, "\n"))
+	}
+	return fmt.Sprintf("%s\nproved by fact on line %d:\n%s", m.StmtStr, m.Line, strings.Join(m.VerifyMsgs, "\n"))
 }
