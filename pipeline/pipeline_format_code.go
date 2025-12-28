@@ -29,7 +29,7 @@ func FormatCode(path string) (*glob.StmtRet, error) {
 		return glob.ErrRet(fmt.Sprintf("failed to read file %s: %s", path, err.Error())), err
 	}
 
-	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
+	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr("")
 
 	blocks, err := ast.PreprocessAndMakeSourceCodeIntoBlocks(string(content))
 	if err != nil {

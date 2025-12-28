@@ -87,7 +87,7 @@ func ParseSourceCodeGetFact(sourceCode string) (FactStmt, error) {
 		return nil, err
 	}
 
-	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
+	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr("")
 	p := NewTbParser(pkgPathNameMgr)
 
 	return p.factStmt(&blocks[0], UniFactDepth0)
@@ -102,7 +102,7 @@ func ParseSingleLineFact(s string) (FactStmt, error) {
 		return nil, err
 	}
 
-	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
+	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr("")
 	p := NewTbParser(pkgPathNameMgr)
 
 	fact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(&blocks[0], []string{})
@@ -119,7 +119,7 @@ func ParseSourceCodeGetObj(s string) (Obj, error) {
 		return nil, err
 	}
 
-	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
+	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr("")
 	p := NewTbParser(pkgPathNameMgr)
 
 	obj, err := p.Obj(&blocks[0])

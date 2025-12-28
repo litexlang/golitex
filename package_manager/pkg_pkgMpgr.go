@@ -25,6 +25,8 @@ type PkgMgr struct {
 	AbsPathDefaultNameMap map[string]string
 	CurPkgDefaultName     string // Empty when REPL or in main runtime
 	CurRepoAbsPath        string
+
+	EntranceAbsPath string
 }
 
 func (mgr *PkgMgr) GetDefaultNameOfPkgName(name string) (string, error) {
@@ -45,13 +47,14 @@ func (mgr *PkgMgr) IsREPL() bool {
 	return mgr.CurPkgDefaultName == ""
 }
 
-func NewEmptyPkgMgr() *PkgMgr {
+func NewEmptyPkgMgr(entranceAbsPath string) *PkgMgr {
 	return &PkgMgr{
 		NameAbsPathMap:        make(map[string]string),
 		AbsPathNamesSetMap:    make(map[string]map[string]struct{}),
 		AbsPathDefaultNameMap: make(map[string]string),
 		CurPkgDefaultName:     "",
 		CurRepoAbsPath:        "",
+		EntranceAbsPath:       entranceAbsPath,
 	}
 }
 

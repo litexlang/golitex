@@ -1,1 +1,2 @@
-intersect(R, R) = R
+#prop p(x set, y x)
+have fn f(x R, y x) R = y
