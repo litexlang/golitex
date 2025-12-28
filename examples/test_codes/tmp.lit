@@ -1,2 +1,8 @@
 let a, b, c R: c + a = c + b
 a = b
+
+let x, y, z R: y + x = z + x
+y = z
+
+let d, e, f R: f != 0, d / f = e / f
+d = e
