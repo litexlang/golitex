@@ -228,7 +228,7 @@ func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
 		defineMsgs = append(defineMsgs, fact.String())
 	}
 
-	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
+	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs).AddInfers(ret.Infer)
 }
 
 func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) *glob.StmtRet {

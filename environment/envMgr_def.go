@@ -224,6 +224,7 @@ func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
 		if ret.IsTrue() {
 			implicationFacts = append(implicationFacts, ret.String())
 		}
+		inferMsgs = append(inferMsgs, ret.Infer...)
 	}
 
 	return glob.NewStmtTrueRetWithDefines(implicationFacts).AddInfers(inferMsgs)

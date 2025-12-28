@@ -45,6 +45,12 @@ func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) *glob.StmtRet {
 		return ret
 	}
 
+	// 处理 a / b = c / b 时，让 a = c 自动成立（注意：不能处理 b / a = b / c，因为 b 可能是 0）
+	ret = ie.trueEqualFactByLeftIsADivBRightIsCDivB(fact.Params[0], fact.Params[1])
+	if ret.IsErr() || ret.IsTrue() {
+		return ret
+	}
+
 	// // 如果是 a = b / c 的情况，那就 a * c = b, b * c = 0 自动成立
 	// ret = ie.trueEqualFactByFraction(fact.Params[0], fact.Params[1])
 	// if ret.IsErr() {
@@ -393,55 +399,151 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 		return glob.NewEmptyStmtUnknown()
 	}
 
-	// 检查第一参数是否相同（都是 x）
+	inferMsgs := []string{}
+
+	// 情况1: 第一参数相同（都是 x）
+	// x + y = x + z => y = z
+	// x - y = x - z => y = z
 	leftX := leftFn.Params[0]
 	rightX := rightFn.Params[0]
-	if leftX.String() != rightX.String() {
+	if leftX.String() == rightX.String() {
+		if leftOp == rightOp {
+			// 操作符相同，直接推导 y = z
+			y := leftFn.Params[1]
+			z := rightFn.Params[1]
+			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, z}, glob.BuiltinLine0)
+			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+			if ret.IsErr() {
+				return glob.NewEmptyStmtUnknown()
+			}
+			inferMsgs = append(inferMsgs, equalFact.String())
+		} else if leftOp == glob.KeySymbolPlus && rightOp == glob.KeySymbolMinus {
+			// x + y = x - z => y + z = 0
+			y := leftFn.Params[1]
+			z := rightFn.Params[1]
+			zero := ast.Atom("0")
+			yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
+			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
+			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+			if ret.IsErr() {
+				return glob.NewEmptyStmtUnknown()
+			}
+			inferMsgs = append(inferMsgs, equalFact.String())
+		} else if leftOp == glob.KeySymbolMinus && rightOp == glob.KeySymbolPlus {
+			// x - y = x + z => y + z = 0
+			y := leftFn.Params[1]
+			z := rightFn.Params[1]
+			zero := ast.Atom("0")
+			yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
+			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
+			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+			if ret.IsErr() {
+				return glob.NewEmptyStmtUnknown()
+			}
+			inferMsgs = append(inferMsgs, equalFact.String())
+		}
+		if len(inferMsgs) > 0 {
+			return glob.NewStmtTrueWithInfers(inferMsgs)
+		}
+	}
+
+	// 情况2: 第二参数相同（都是 x）
+	// y + x = z + x => y = z
+	// y - x = z - x => y = z
+	leftY := leftFn.Params[1]
+	rightZ := rightFn.Params[1]
+	if leftY.String() == rightZ.String() {
+		if leftOp == rightOp {
+			// 操作符相同，直接推导 y = z
+			y := leftFn.Params[0]
+			z := rightFn.Params[0]
+			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, z}, glob.BuiltinLine0)
+			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+			if ret.IsErr() {
+				return glob.NewEmptyStmtUnknown()
+			}
+			inferMsgs = append(inferMsgs, equalFact.String())
+		} else if leftOp == glob.KeySymbolPlus && rightOp == glob.KeySymbolMinus {
+			// y + x = z - x => y + z = 0
+			y := leftFn.Params[0]
+			z := rightFn.Params[0]
+			zero := ast.Atom("0")
+			yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
+			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
+			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+			if ret.IsErr() {
+				return glob.NewEmptyStmtUnknown()
+			}
+			inferMsgs = append(inferMsgs, equalFact.String())
+		} else if leftOp == glob.KeySymbolMinus && rightOp == glob.KeySymbolPlus {
+			// y - x = z + x => y + z = 0
+			y := leftFn.Params[0]
+			z := rightFn.Params[0]
+			zero := ast.Atom("0")
+			yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
+			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
+			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+			if ret.IsErr() {
+				return glob.NewEmptyStmtUnknown()
+			}
+			inferMsgs = append(inferMsgs, equalFact.String())
+		}
+		if len(inferMsgs) > 0 {
+			return glob.NewStmtTrueWithInfers(inferMsgs)
+		}
+	}
+
+	return glob.NewEmptyStmtUnknown()
+}
+
+// trueEqualFactByLeftIsADivBRightIsCDivB handles the case where a / b = c / b => a = c
+// Note: We only handle the case where the second parameter (denominator) is the same,
+// because if the first parameter (numerator) is the same (b / a = b / c), we cannot
+// conclude a = c since b might be 0.
+func (ie *InferEngine) trueEqualFactByLeftIsADivBRightIsCDivB(left ast.Obj, right ast.Obj) *glob.StmtRet {
+	// 检查 left 是否是 a / b 的形式
+	leftFn, leftIsFn := left.(*ast.FnObj)
+	if !leftIsFn || len(leftFn.Params) != 2 {
 		return glob.NewEmptyStmtUnknown()
 	}
 
-	// 如果操作符相同，直接推导 y = z
-	if leftOp == rightOp {
-		// x + y = x + z => y = z
-		// x - y = x - z => y = z
-		y := leftFn.Params[1]
-		z := rightFn.Params[1]
-		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, z}, glob.BuiltinLine0)
-		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
-		if ret.IsErr() {
-			return ret
-		}
-		return glob.NewStmtTrueWithInfers([]string{equalFact.String()})
+	leftHead, leftHeadIsAtom := leftFn.FnHead.(ast.Atom)
+	if !leftHeadIsAtom {
+		return glob.NewEmptyStmtUnknown()
 	}
 
-	// 如果操作符不同，需要特殊处理
-	// x + y = x - z => y = -z 或 y + z = 0
-	// x - y = x + z => -y = z 或 y + z = 0
-	// 我们选择推导 y + z = 0，因为这样更通用
-	if leftOp == glob.KeySymbolPlus && rightOp == glob.KeySymbolMinus {
-		// x + y = x - z => y + z = 0
-		y := leftFn.Params[1]
-		z := rightFn.Params[1]
-		zero := ast.Atom("0")
-		yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
-		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
-		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
-		if ret.IsErr() {
-			return ret
-		}
-		return glob.NewStmtTrueWithInfers([]string{equalFact.String()})
+	leftOp := string(leftHead)
+	if leftOp != glob.KeySymbolSlash {
+		return glob.NewEmptyStmtUnknown()
 	}
 
-	if leftOp == glob.KeySymbolMinus && rightOp == glob.KeySymbolPlus {
-		// x - y = x + z => y + z = 0
-		y := leftFn.Params[1]
-		z := rightFn.Params[1]
-		zero := ast.Atom("0")
-		yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
-		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
+	// 检查 right 是否是 c / b 的形式
+	rightFn, rightIsFn := right.(*ast.FnObj)
+	if !rightIsFn || len(rightFn.Params) != 2 {
+		return glob.NewEmptyStmtUnknown()
+	}
+
+	rightHead, rightHeadIsAtom := rightFn.FnHead.(ast.Atom)
+	if !rightHeadIsAtom {
+		return glob.NewEmptyStmtUnknown()
+	}
+
+	rightOp := string(rightHead)
+	if rightOp != glob.KeySymbolSlash {
+		return glob.NewEmptyStmtUnknown()
+	}
+
+	// 只处理第二参数相同的情况（分母相同）
+	// a / b = c / b => a = c
+	leftB := leftFn.Params[1]
+	rightB := rightFn.Params[1]
+	if leftB.String() == rightB.String() {
+		a := leftFn.Params[0]
+		c := rightFn.Params[0]
+		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{a, c}, glob.BuiltinLine0)
 		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
 		if ret.IsErr() {
-			return ret
+			return glob.NewEmptyStmtUnknown()
 		}
 		return glob.NewStmtTrueWithInfers([]string{equalFact.String()})
 	}
