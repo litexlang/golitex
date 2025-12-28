@@ -356,14 +356,10 @@ know forall a, b, c, d R: c != 0, a = d * (b / c) => a * c = d * b
 know forall x, y, z R: z != 0, x = y / z => x * z = y
 
 let fn range(x Z, y Z) set:
-	dom:
-		x <= y
 	=>:
 		range(x, y) = {self Z: self >= x, self < y}
 
 let fn closed_range(x Z, y Z) set:
-	dom:
-		x <= y
 	=>:
 		closed_range(x, y) = {self Z: self >= x, self <= y}
 
@@ -900,4 +896,5 @@ know:
 	forall x finite_set: count(x) > 0 => $is_a_nonempty_set(x)
 
 know forall x set: x \union x = x, x \intersect x = x
+
 `

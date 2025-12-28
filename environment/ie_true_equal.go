@@ -39,6 +39,12 @@ func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) *glob.StmtRet {
 		return ret
 	}
 
+	// 处理 x + y = x + z 时，让 y = z 自动成立
+	ret = ie.trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(fact.Params[0], fact.Params[1])
+	if ret.IsErr() || ret.IsTrue() {
+		return ret
+	}
+
 	// // 如果是 a = b / c 的情况，那就 a * c = b, b * c = 0 自动成立
 	// ret = ie.trueEqualFactByFraction(fact.Params[0], fact.Params[1])
 	// if ret.IsErr() {
@@ -353,3 +359,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 // 	}
 // 	return glob.NewEmptyGlobUnknown()
 // }
+
+func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(left ast.Obj, right ast.Obj) *glob.StmtRet {
+	return glob.NewEmptyStmtTrue()
+}

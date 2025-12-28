@@ -35,7 +35,14 @@ func NewVerMsg(stmtStr string, line uint, verifyMsgs []string) *VerMsg {
 
 func (m *VerMsg) String() string {
 	if m.Line == 0 {
+		if m.StmtStr == "" {
+			return fmt.Sprintf("proved by builtin rules:\n%s", strings.Join(m.VerifyMsgs, "\n"))
+		}
 		return fmt.Sprintf("%s\nproved by builtin rules:\n%s", m.StmtStr, strings.Join(m.VerifyMsgs, "\n"))
+	}
+
+	if m.StmtStr == "" {
+		return fmt.Sprintf("proved by fact on line %d:\n%s", m.Line, strings.Join(m.VerifyMsgs, "\n"))
 	}
 	return fmt.Sprintf("%s\nproved by fact on line %d:\n%s", m.StmtStr, m.Line, strings.Join(m.VerifyMsgs, "\n"))
 }

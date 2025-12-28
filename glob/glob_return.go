@@ -56,7 +56,7 @@ func (m *StmtRet) String() string {
 	}
 
 	if len(m.Define) > 0 {
-		builder.WriteString("--- by definition ---\n\n")
+		builder.WriteString("--- definition ---\n\n")
 		builder.WriteString(strings.Join(m.Define, "\n"))
 		builder.WriteString("\n\n")
 	}
@@ -81,18 +81,6 @@ func (m *StmtRet) String() string {
 		builder.WriteString("\n\n")
 	}
 
-	if len(m.Unknown) > 0 {
-		builder.WriteString("--- unable to verify ---\n\n")
-		builder.WriteString(strings.Join(m.Unknown, "\n"))
-		builder.WriteString("\n\n")
-	}
-
-	if len(m.Error) > 0 {
-		builder.WriteString("--- error ---\n\n")
-		builder.WriteString(strings.Join(m.Error, "\n"))
-		builder.WriteString("\n\n")
-	}
-
 	if len(m.InnerStmtRetSlice) > 0 {
 		builder.WriteString("--- details ---\n\n")
 		for _, innerStmtRet := range m.InnerStmtRetSlice {
@@ -106,6 +94,18 @@ func (m *StmtRet) String() string {
 		builder.WriteString("--- warning ---\n\n")
 		builder.WriteString(strings.Join(m.Warnings, "\n"))
 		builder.WriteString("\n\n")
+	}
+
+	if len(m.Error) > 0 {
+		builder.WriteString("=== error ===\n\n")
+		builder.WriteString(strings.Join(m.Error, "\n"))
+		builder.WriteString("\n\n")
+	} else if len(m.Unknown) > 0 {
+		builder.WriteString("=== unable to verify ===\n\n")
+		builder.WriteString(strings.Join(m.Unknown, "\n"))
+		builder.WriteString("\n\n")
+	} else {
+		builder.WriteString("=== success! ===\n\n")
 	}
 
 	return builder.String()
@@ -128,9 +128,6 @@ func (m *StmtRet) AddNewFact(newFact string) *StmtRet {
 }
 
 func (m *StmtRet) AddVerifyProcess(verMsg *VerMsg) *StmtRet {
-	if verMsg == nil || verMsg.StmtStr == "" || len(verMsg.VerifyMsgs) == 0 {
-		return m
-	}
 	m.VerifyProcess = append(m.VerifyProcess, verMsg)
 	return m
 }
