@@ -90,16 +90,12 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = exec.haveObjEqualStmt(stmt)
 	case *ast.HaveFnEqualStmt:
 		execRet = exec.haveFnEqualStmt(stmt)
-	// case *ast.HaveFnLiftStmt:
-	// 	execRet = exec.haveFnLiftStmt(stmt)
 	case *ast.HaveFnStmt:
 		execRet = exec.haveFnStmt(stmt)
 	case *ast.HaveFnCaseByCaseStmt:
 		execRet = exec.haveFnCaseByCaseStmt(stmt)
 	case *ast.ClaimIffStmt:
 		execRet = exec.claimIffStmt(stmt)
-	// case *ast.ProveInRangeSetStmt:
-	// 	execRet = exec.proveInRangeSetStmt(stmt)
 	case *ast.ProveIsTransitivePropStmt:
 		execRet = exec.proveIsTransitivePropStmt(stmt)
 	case *ast.ProveIsCommutativePropStmt:
@@ -120,21 +116,11 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = glob.ErrRet("import statements are not allowed in local scope.")
 	case *ast.RunFileStmt:
 		execRet = glob.ErrRet("run statements are not allowed in local scope.")
-	// case *ast.HaveObjFromCartSetStmt:
-	// 	execRet = exec.haveObjFromCartSetStmt(stmt)
 	case *ast.ProveForStmt:
 		execRet = exec.proveForStmt(stmt)
 	default:
 		execRet = glob.ErrRet(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
-
-	// if execRet.IsTrue() {
-	// 	return execRet.AddMsg(SuccessExecStmtStr(stmt))
-	// } else if execRet.IsUnknown() {
-	// 	return execRet.AddMsg(UnknownExecStmtStr(stmt))
-	// } else {
-	// 	return execRet.AddMsg(ErrorExecStmtStr(stmt))
-	// }
 
 	return execRet
 }

@@ -594,3 +594,26 @@ func AddPkgNameToName(pkgName string, name string) string {
 	}
 	return fmt.Sprintf("%s.%s", pkgName, name)
 }
+
+func ObjContainsFreeParams(obj Obj, freeParams []string) bool {
+	switch asObj := obj.(type) {
+	case *FnObj:
+		return fnObjContainsFreeParams(asObj, freeParams)
+	case Atom:
+		return slices.Contains(freeParams, string(asObj))
+	default:
+		return false
+	}
+}
+
+func fnObjContainsFreeParams(fnObj *FnObj, freeParams []string) bool {
+	for _, param := range fnObj.Params {
+		if ObjContainsFreeParams(param, freeParams) {
+			return true
+		}
+	}
+	if ObjContainsFreeParams(fnObj.FnHead, freeParams) {
+		return true
+	}
+	return false
+}
