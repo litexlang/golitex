@@ -130,7 +130,7 @@ func (ver *Verifier) verEqualRightIsTuple(left ast.Obj, right ast.Obj, state *Ve
 		rightLen := len(rightTuple.Params)
 
 		// 查 left 的类型是不是 tuple
-		isTupleFact := ast.NewSpecFactStmt(ast.TruePure, glob.KeywordIsTuple, []ast.Obj{left}, glob.BuiltinLine)
+		isTupleFact := ast.NewSpecFactStmt(ast.TruePure, glob.KeywordIsTuple, []ast.Obj{left}, glob.BuiltinLine0)
 		ret := ver.VerFactStmt(isTupleFact, state)
 		if ret.IsNotTrue() {
 			return glob.NewEmptyStmtUnknown()

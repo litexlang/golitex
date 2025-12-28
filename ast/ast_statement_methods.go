@@ -131,13 +131,13 @@ func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
 func NewInFact(param string, paramSet Obj) *SpecFactStmt {
 	switch string(paramSet.String()) {
 	case glob.KeywordSet:
-		return NewIsASetFact(Atom(param), glob.BuiltinLine)
+		return NewIsASetFact(Atom(param), glob.BuiltinLine0)
 	case glob.KeywordFiniteSet:
-		return NewIsAFiniteSetFact(Atom(param), glob.BuiltinLine)
+		return NewIsAFiniteSetFact(Atom(param), glob.BuiltinLine0)
 	case glob.KeywordNonEmptySet:
-		return NewIsANonEmptySetFact(Atom(param), glob.BuiltinLine)
+		return NewIsANonEmptySetFact(Atom(param), glob.BuiltinLine0)
 	default:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{Atom(param), paramSet}, glob.BuiltinLine)
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{Atom(param), paramSet}, glob.BuiltinLine0)
 	}
 }
 
@@ -157,13 +157,13 @@ func NewInFactWithParamObj(param Obj, paramSet Obj, line uint) *SpecFactStmt {
 func NewInFactWithObj(param Obj, paramSet Obj) *SpecFactStmt {
 	switch string(paramSet.String()) {
 	case glob.KeywordSet:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{param}, glob.BuiltinLine)
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{param}, glob.BuiltinLine0)
 	case glob.KeywordFiniteSet:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, glob.BuiltinLine)
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, glob.BuiltinLine0)
 	case glob.KeywordNonEmptySet:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, glob.BuiltinLine)
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, glob.BuiltinLine0)
 	default:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{param, paramSet}, glob.BuiltinLine)
+		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{param, paramSet}, glob.BuiltinLine0)
 	}
 }
 
@@ -327,8 +327,8 @@ func TransformEnumToUniFact(setName Obj, enumObjs []Obj) (*UniFactStmt, []*SpecF
 	equalFactsInOrFact := []*SpecFactStmt{}
 	itemsInSetFacts := []*SpecFactStmt{}
 	for _, obj := range enumObjs {
-		equalFactsInOrFact = append(equalFactsInOrFact, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{freeObjName, obj}, glob.BuiltinLine))
-		itemsInSetFacts = append(itemsInSetFacts, NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{obj, setName}, glob.BuiltinLine))
+		equalFactsInOrFact = append(equalFactsInOrFact, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{freeObjName, obj}, glob.BuiltinLine0))
+		itemsInSetFacts = append(itemsInSetFacts, NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{obj, setName}, glob.BuiltinLine0))
 	}
 
 	pairwiseNotEqualFacts := []*SpecFactStmt{}
@@ -337,12 +337,12 @@ func TransformEnumToUniFact(setName Obj, enumObjs []Obj) (*UniFactStmt, []*SpecF
 			if i == j {
 				continue
 			}
-			pairwiseNotEqualFacts = append(pairwiseNotEqualFacts, NewSpecFactStmt(FalsePure, Atom(glob.KeySymbolEqual), []Obj{enumObjs[i], enumObjs[j]}, glob.BuiltinLine))
+			pairwiseNotEqualFacts = append(pairwiseNotEqualFacts, NewSpecFactStmt(FalsePure, Atom(glob.KeySymbolEqual), []Obj{enumObjs[i], enumObjs[j]}, glob.BuiltinLine0))
 		}
 	}
 
-	orFact := NewOrStmt(equalFactsInOrFact, glob.BuiltinLine)
-	forallItemInSetEqualToOneOfGivenItems := NewUniFact([]string{string(freeObjName)}, []Obj{setName}, []FactStmt{}, []FactStmt{orFact}, glob.BuiltinLine)
+	orFact := NewOrStmt(equalFactsInOrFact, glob.BuiltinLine0)
+	forallItemInSetEqualToOneOfGivenItems := NewUniFact([]string{string(freeObjName)}, []Obj{setName}, []FactStmt{}, []FactStmt{orFact}, glob.BuiltinLine0)
 
 	return forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts
 }

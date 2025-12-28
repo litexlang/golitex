@@ -94,7 +94,7 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 	}
 
 	// parent is a set
-	verRet := ver.VerFactStmt(ast.NewIsASetFact(setBuilderStruct.ParentSet, glob.BuiltinLine), state)
+	verRet := ver.VerFactStmt(ast.NewIsASetFact(setBuilderStruct.ParentSet, glob.BuiltinLine0), state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -123,7 +123,7 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 		[]string{setBuilderStruct.Param},
 		[]ast.Obj{setBuilderStruct.ParentSet},
 		[]ast.FactStmt{},
-		glob.BuiltinLine,
+		glob.BuiltinLine0,
 	))
 
 	// Check all parameters in facts satisfy fn requirement
@@ -164,7 +164,7 @@ func (ver *Verifier) listSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState
 	// 所有参数互相不相等
 	for i := range len(objAsFnObj.Params) {
 		for j := i + 1; j < len(objAsFnObj.Params); j++ {
-			fact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{objAsFnObj.Params[i], objAsFnObj.Params[j]}, glob.BuiltinLine)
+			fact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{objAsFnObj.Params[i], objAsFnObj.Params[j]}, glob.BuiltinLine0)
 			verRet := ver.VerFactStmt(fact, state)
 			if verRet.IsErr() {
 				return glob.ErrRet(verRet.String())
@@ -203,7 +203,7 @@ func (ver *Verifier) dimFnRequirement(fnObj *ast.FnObj, state *VerState) *glob.S
 		return glob.ErrRet(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 	// 检查是否是 tuple
-	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine)
+	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine0)
 	verRet := ver.VerFactStmt(isTupleFact, state)
 	if verRet.IsErr() {
 		return glob.ErrRet(verRet.String())
@@ -219,7 +219,7 @@ func (ver *Verifier) setDimFnRequirement(fnObj *ast.FnObj, state *VerState) *glo
 		return glob.ErrRet(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 
-	verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine), state)
+	verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine0), state)
 	if verRet.IsErr() {
 		return glob.ErrRet(verRet.String())
 	}
@@ -235,7 +235,7 @@ func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) *glo
 	}
 
 	// x is cart
-	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine)
+	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine0)
 	verRet := ver.VerFactStmt(isCartFact, state)
 	if verRet.IsErr() {
 		return glob.ErrRet(verRet.String())
@@ -254,7 +254,7 @@ func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) *glo
 	}
 
 	// index <= set_dim(x)
-	verRet = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fnObj.Params[1], ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fnObj.Params[0]})}, glob.BuiltinLine), state)
+	verRet = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fnObj.Params[1], ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fnObj.Params[0]})}, glob.BuiltinLine0), state)
 	if verRet.IsErr() {
 		return glob.ErrRet(verRet.String())
 	} else if verRet.IsUnknown() {
@@ -286,7 +286,7 @@ func (ver *Verifier) countFnRequirement(fnObj *ast.FnObj, state *VerState) *glob
 		return glob.ErrRet(fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 	}
 
-	verRet := ver.VerFactStmt(ast.NewIsAFiniteSetFact(fnObj.Params[0], glob.BuiltinLine), state)
+	verRet := ver.VerFactStmt(ast.NewIsAFiniteSetFact(fnObj.Params[0], glob.BuiltinLine0), state)
 	if verRet.IsErr() {
 		return glob.ErrRet(verRet.String())
 	}
@@ -303,7 +303,7 @@ func (ver *Verifier) cartFnRequirement(fnObj *ast.FnObj, state *VerState) *glob.
 
 	// 验证所有的参数都是集合
 	for _, param := range fnObj.Params {
-		verRet := ver.VerFactStmt(ast.NewIsASetFact(param, glob.BuiltinLine), state)
+		verRet := ver.VerFactStmt(ast.NewIsASetFact(param, glob.BuiltinLine0), state)
 		if verRet.IsErr() {
 			return glob.ErrRet(verRet.String())
 		}

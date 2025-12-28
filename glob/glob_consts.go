@@ -20,7 +20,7 @@ const MaxNameLen int = 255
 const FuncFactPrefix string = "$"
 const InlineCommentSig string = "#"
 
-const BuiltinLine uint = 0
+const BuiltinLine0 uint = 0
 
 const LatexSig string = "##"
 

@@ -259,7 +259,7 @@ func instantiateUniFactWithoutThenFacts(u *uniFactWithoutThenFacts, paramMap map
 func (u *uniFactWithoutThenFacts) ParamInParamSetFacts(paramMap map[string]ast.Obj) []*ast.SpecFactStmt {
 	paramSetFacts := make([]*ast.SpecFactStmt, len(u.Params))
 	for i, param := range u.Params {
-		paramSetFacts[i] = ast.NewInFactWithParamObj(paramMap[param], u.ParamSets[i], glob.BuiltinLine)
+		paramSetFacts[i] = ast.NewInFactWithParamObj(paramMap[param], u.ParamSets[i], glob.BuiltinLine0)
 	}
 	return paramSetFacts
 }
