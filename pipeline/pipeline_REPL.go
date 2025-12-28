@@ -13,14 +13,8 @@ import (
 )
 
 func RunREPL(version string) {
-	pkgMgr := package_manager.NewEmptyPkgMgr()
-
 	reader := bufio.NewReader(os.Stdin)
 	writer := os.Stdout
-
-	year := time.Now().Year()
-
-	fmt.Fprintf(writer, "Litex %s\nCopyright (C) 2024-%s\nOfficial Website: litexlang.com\nGithub: https://github.com/litexlang/golitex\nEmail: litexlang@outlook.com\nType 'help' for help\n\nNote: This is a Litex version is not ready for production use. Testing and feedback are welcome!\n\n", version, strconv.Itoa(year))
 
 	// current working repo
 	curWorkingRepoAbsPath, err := os.Getwd()
@@ -28,6 +22,12 @@ func RunREPL(version string) {
 		fmt.Fprintf(writer, "[Error] %s\n", err)
 		return
 	}
+
+	pkgMgr := package_manager.NewEmptyPkgMgr(curWorkingRepoAbsPath)
+
+	year := time.Now().Year()
+
+	fmt.Fprintf(writer, "Litex %s\nCopyright (C) 2024-%s\nOfficial Website: litexlang.com\nGithub: https://github.com/litexlang/golitex\nEmail: litexlang@outlook.com\nType 'help' for help\n\nNote: This is a Litex version is not ready for production use. Testing and feedback are welcome!\n\n", version, strconv.Itoa(year))
 
 	pkgMgr.CurRepoAbsPath = curWorkingRepoAbsPath
 	pkgMgr.CurPkgDefaultName = ""

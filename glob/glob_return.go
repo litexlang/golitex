@@ -45,7 +45,9 @@ type StmtRet struct {
 func (m *StmtRet) String() string {
 	var builder strings.Builder
 
-	builder.WriteString(fmt.Sprintf("*** line %d ***\n\n", m.Line))
+	if m.Line != 0 {
+		builder.WriteString(fmt.Sprintf("*** line %d ***\n\n", m.Line))
+	}
 
 	if len(m.Stmt) > 0 {
 		builder.WriteString("--- statement ---\n\n")

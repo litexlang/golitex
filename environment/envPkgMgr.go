@@ -23,12 +23,12 @@ type EnvPkgMgr struct {
 	PkgMgr              *pkgMgr.PkgMgr
 }
 
-func NewPkgMgr(entranceRepoPath string, entranceDefaultPkgName string) *EnvPkgMgr {
-	return &EnvPkgMgr{
-		AbsPkgPathEnvMgrMap: make(map[string]*EnvMgr),
-		PkgMgr:              pkgMgr.NewEmptyPkgMgr(),
-	}
-}
+// func NewPkgMgr(entranceRepoPath string, entranceDefaultPkgName string) *EnvPkgMgr {
+// 	return &EnvPkgMgr{
+// 		AbsPkgPathEnvMgrMap: make(map[string]*EnvMgr),
+// 		PkgMgr:              pkgMgr.NewEmptyPkgMgr(),
+// 	}
+// }
 
 func NewEnvPkgMgr(mgr *pkgMgr.PkgMgr) *EnvPkgMgr {
 	return &EnvPkgMgr{
