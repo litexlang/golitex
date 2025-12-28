@@ -190,7 +190,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordReal) {
 			isSuccess = glob.IsRealNumLitExpr(leftObj)
 			if isSuccess {
-				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), []string{fmt.Sprintf("%s is literally a real number", stmt.Params[0])}))
+				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), stmt.Line, []string{fmt.Sprintf("%s is literally a real number", stmt.Params[0])}))
 			} else {
 				return glob.NewEmptyStmtUnknown()
 			}
@@ -199,7 +199,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNatural) {
 			isSuccess = glob.IsNatNumLitExpr(leftObj)
 			if isSuccess {
-				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), []string{fmt.Sprintf("%s is literally a natural number", stmt.Params[0])}))
+				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), stmt.Line, []string{fmt.Sprintf("%s is literally a natural number", stmt.Params[0])}))
 			} else {
 				return glob.NewEmptyStmtUnknown()
 			}
@@ -208,7 +208,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordInteger) {
 			isSuccess = glob.IsIntegerNumLitExpr(leftObj)
 			if isSuccess {
-				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), []string{fmt.Sprintf("%s is literally an integer number", stmt.Params[0])}))
+				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), stmt.Line, []string{fmt.Sprintf("%s is literally an integer number", stmt.Params[0])}))
 			} else {
 				return glob.NewEmptyStmtUnknown()
 			}
@@ -217,7 +217,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordRational) {
 			isSuccess = glob.IsRationalNumLitExpr(leftObj)
 			if isSuccess {
-				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), []string{fmt.Sprintf("%s is literally a rational number", stmt.Params[0])}))
+				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), stmt.Line, []string{fmt.Sprintf("%s is literally a rational number", stmt.Params[0])}))
 			} else {
 				return glob.NewEmptyStmtUnknown()
 			}
@@ -226,7 +226,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 		if ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordNPos) {
 			isSuccess = glob.IsNPosNumLitExpr(leftObj)
 			if isSuccess {
-				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), []string{fmt.Sprintf("%s is literally a positive natural number", stmt.Params[0])}))
+				return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(stmt.String(), stmt.Line, []string{fmt.Sprintf("%s is literally a positive natural number", stmt.Params[0])}))
 			} else {
 				return glob.NewEmptyStmtUnknown()
 			}
@@ -329,7 +329,7 @@ func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt *ast.SpecFactStmt, sta
 	if _, ok := stmt.Params[0].(ast.Atom); ok {
 		paramAsStr := stmt.Params[0].String()
 		if glob.IsNPosOrNOrZOrQOrR(paramAsStr) {
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), "A number is a nonempty set.", glob.NewEmptyStmtTrue())
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), fmt.Sprintf("%s & %s & %s & %s & %s are nonempty sets.", glob.KeywordNPos, glob.KeywordNatural, glob.KeywordInteger, glob.KeywordRational, glob.KeywordReal), glob.NewEmptyStmtTrue())
 		}
 	}
 

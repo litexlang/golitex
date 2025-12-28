@@ -66,7 +66,7 @@ func (m *StmtRet) String() string {
 	}
 
 	if len(m.VerifyProcess) > 0 {
-		builder.WriteString("--- verify process ---\n\n")
+		builder.WriteString("--- verification process ---\n\n")
 		for _, verifyProcess := range m.VerifyProcess {
 			builder.WriteString(verifyProcess.String())
 			builder.WriteString("\n\n")
