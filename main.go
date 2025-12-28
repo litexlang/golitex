@@ -15,7 +15,6 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	glob "golitex/glob"
@@ -23,8 +22,6 @@ import (
 	pipeline "golitex/pipeline"
 	"os"
 	"path/filepath"
-	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -174,77 +171,5 @@ func MainFlagFile(fileFlag string) {
 }
 
 func RunTutorial() {
-	reader := bufio.NewReader(os.Stdin)
-
-	// Get all keywords from KeywordHelpMap and sort them
-	keywords := make([]string, 0, len(glob.KeywordHelpMap))
-	for keyword := range glob.KeywordHelpMap {
-		keywords = append(keywords, keyword)
-	}
-	sort.Strings(keywords)
-
-	for {
-		fmt.Println("\n=== Litex Keyword Tutorial ===")
-		fmt.Println("Available keywords:")
-		fmt.Println()
-
-		// Display keywords in a numbered list
-		for i, keyword := range keywords {
-			helpMsg := glob.KeywordHelpMap[keyword]
-			displayMsg := keyword
-			if helpMsg != "" {
-				displayMsg = fmt.Sprintf("%s - %s", keyword, helpMsg)
-			}
-			fmt.Printf("%3d. %s\n", i+1, displayMsg)
-		}
-
-		fmt.Println()
-		fmt.Print("Enter keyword number (or 'q' to quit): ")
-
-		input, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Printf("Error reading input: %s\n", err)
-			return
-		}
-
-		input = strings.TrimSpace(input)
-
-		// Check if user wants to quit
-		if input == "exit" {
-			fmt.Println("\nGoodbye!")
-			return
-		}
-
-		// Parse number
-		num, err := strconv.Atoi(input)
-		if err != nil {
-			fmt.Printf("Invalid input. Please enter a number between 1 and %d, or 'q' to quit.\n", len(keywords))
-			continue
-		}
-
-		if num < 1 || num > len(keywords) {
-			fmt.Printf("Number out of range. Please enter a number between 1 and %d.\n", len(keywords))
-			continue
-		}
-
-		// Display detailed information about the selected keyword
-		selectedKeyword := keywords[num-1]
-		helpMsg := glob.KeywordHelpMap[selectedKeyword]
-
-		fmt.Println()
-		fmt.Println("=" + strings.Repeat("=", 50))
-		fmt.Printf("Keyword: %s\n", selectedKeyword)
-		fmt.Println("=" + strings.Repeat("=", 50))
-
-		if helpMsg == "" {
-			fmt.Println("No detailed explanation available for this keyword yet.")
-			fmt.Println("(Help message is empty in KeywordHelpMap)")
-		} else {
-			fmt.Println(helpMsg)
-		}
-
-		fmt.Println()
-		fmt.Print("Press Enter to continue...")
-		reader.ReadString('\n')
-	}
+	fmt.Println("TODO: Implement tutorial")
 }

@@ -592,6 +592,7 @@ prop subset_of(x, y set):
 prop is_superset_of(A, B set):
 	forall x B: x $in A
 
+"""
 let fn intersect(x, y set) set:
 	forall z x:
 		z $in y
@@ -601,6 +602,7 @@ let fn intersect(x, y set) set:
 		z $in x
 		=>:
 			z $in intersect(x, y)
+"""
 
 know imply item_in_intersect(z set, x, y set):
 	z $in intersect(x, y)
@@ -608,11 +610,13 @@ know imply item_in_intersect(z set, x, y set):
 		z $in x
 		z $in y
 
+"""
 let fn union(x, y set) set:
 	forall z x:
 		z $in union(x, y)
 	forall z y:
 		z $in union(x, y)
+"""
 
 know imply item_in_union(z set, x, y set):
 	z $in union(x, y)
