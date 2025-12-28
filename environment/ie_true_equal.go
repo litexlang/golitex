@@ -227,12 +227,12 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 	// 尝试获取 list set（可能是直接的，也可能是通过 equal facts 得到的）
 	listSetObj := ie.EnvMgr.GetListSetEqualToObj(right)
 	if listSetObj == nil {
-		return glob.NewEmptyStmtTrue()
+		return glob.NewEmptyStmtUnknown()
 	}
 
 	listSetFnObj, ok := listSetObj.(*ast.FnObj)
 	if !ok {
-		return glob.ErrRet(fmt.Sprintf("expected list set to be FnObj, got %T", listSetObj))
+		return glob.UnknownRet(fmt.Sprintf("expected list set to be FnObj, got %T", listSetObj))
 	}
 
 	// 创建一个 or fact，表示 left 等于 list set 中的某一个元素
@@ -245,7 +245,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 	forallFact := ast.NewUniFact([]string{randomName}, []ast.Obj{left}, []ast.FactStmt{}, []ast.FactStmt{orFact}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(forallFact)
 	if ret.IsErr() {
-		return ret
+		return glob.NewEmptyStmtUnknown()
 	}
 	inferMsgs = append(inferMsgs, forallFact.String())
 
@@ -255,7 +255,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 	countEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{countFn, countValue}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(countEqualFact)
 	if ret.IsErr() {
-		return ret
+		return glob.NewEmptyStmtUnknown()
 	}
 	inferMsgs = append(inferMsgs, countEqualFact.String())
 
@@ -263,7 +263,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 	isFiniteFact := ast.NewIsAFiniteSetFact(left, glob.BuiltinLine0)
 	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(isFiniteFact)
 	if ret.IsErr() {
-		return ret
+		return glob.NewEmptyStmtUnknown()
 	}
 	inferMsgs = append(inferMsgs, isFiniteFact.String())
 	return glob.NewStmtTrueWithInfers((inferMsgs))
@@ -361,5 +361,90 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 // }
 
 func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(left ast.Obj, right ast.Obj) *glob.StmtRet {
-	return glob.NewEmptyStmtTrue()
+	// 检查 left 是否是 x + y 或 x - y 的形式
+	leftFn, leftIsFn := left.(*ast.FnObj)
+	if !leftIsFn || len(leftFn.Params) != 2 {
+		return glob.NewEmptyStmtUnknown()
+	}
+
+	leftHead, leftHeadIsAtom := leftFn.FnHead.(ast.Atom)
+	if !leftHeadIsAtom {
+		return glob.NewEmptyStmtUnknown()
+	}
+
+	leftOp := string(leftHead)
+	if leftOp != glob.KeySymbolPlus && leftOp != glob.KeySymbolMinus {
+		return glob.NewEmptyStmtUnknown()
+	}
+
+	// 检查 right 是否是 x + z 或 x - z 的形式
+	rightFn, rightIsFn := right.(*ast.FnObj)
+	if !rightIsFn || len(rightFn.Params) != 2 {
+		return glob.NewEmptyStmtUnknown()
+	}
+
+	rightHead, rightHeadIsAtom := rightFn.FnHead.(ast.Atom)
+	if !rightHeadIsAtom {
+		return glob.NewEmptyStmtUnknown()
+	}
+
+	rightOp := string(rightHead)
+	if rightOp != glob.KeySymbolPlus && rightOp != glob.KeySymbolMinus {
+		return glob.NewEmptyStmtUnknown()
+	}
+
+	// 检查第一参数是否相同（都是 x）
+	leftX := leftFn.Params[0]
+	rightX := rightFn.Params[0]
+	if leftX.String() != rightX.String() {
+		return glob.NewEmptyStmtUnknown()
+	}
+
+	// 如果操作符相同，直接推导 y = z
+	if leftOp == rightOp {
+		// x + y = x + z => y = z
+		// x - y = x - z => y = z
+		y := leftFn.Params[1]
+		z := rightFn.Params[1]
+		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, z}, glob.BuiltinLine0)
+		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+		if ret.IsErr() {
+			return ret
+		}
+		return glob.NewStmtTrueWithInfers([]string{equalFact.String()})
+	}
+
+	// 如果操作符不同，需要特殊处理
+	// x + y = x - z => y = -z 或 y + z = 0
+	// x - y = x + z => -y = z 或 y + z = 0
+	// 我们选择推导 y + z = 0，因为这样更通用
+	if leftOp == glob.KeySymbolPlus && rightOp == glob.KeySymbolMinus {
+		// x + y = x - z => y + z = 0
+		y := leftFn.Params[1]
+		z := rightFn.Params[1]
+		zero := ast.Atom("0")
+		yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
+		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
+		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+		if ret.IsErr() {
+			return ret
+		}
+		return glob.NewStmtTrueWithInfers([]string{equalFact.String()})
+	}
+
+	if leftOp == glob.KeySymbolMinus && rightOp == glob.KeySymbolPlus {
+		// x - y = x + z => y + z = 0
+		y := leftFn.Params[1]
+		z := rightFn.Params[1]
+		zero := ast.Atom("0")
+		yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
+		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
+		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+		if ret.IsErr() {
+			return ret
+		}
+		return glob.NewStmtTrueWithInfers([]string{equalFact.String()})
+	}
+
+	return glob.NewEmptyStmtUnknown()
 }
