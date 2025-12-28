@@ -187,7 +187,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 	}
 
 	if len(stmt.IffFactsOrNil) == 0 {
-		return exec.NewTrueStmtRet(stmt)
+		return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
 	}
 
 	if generateIffUniFact {
@@ -239,6 +239,7 @@ func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) *glob.StmtRet
 
 	defineMsgs := []string{}
 	defineMsgs = append(defineMsgs, glob.IsANewExistPropMsg(stmt.DefBody.DefHeader.Name))
+	defineMsgs = append(defineMsgs, stmt.String())
 
 	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
 }
@@ -742,7 +743,15 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.StmtRet {
 		}
 
 		if leftAsInt > rightAsInt {
-			return glob.ErrRet(fmt.Sprintf("left value %d must be less than or equal to right value %d", leftAsInt, rightAsInt))
+			verMsg := glob.NewVerMsg("", glob.BuiltinLine0, []string{fmt.Sprintf("left value %d is larger than right value %d, so the %s statement is iterating on an empty range, so it is true", leftAsInt, rightAsInt, glob.KeywordProveFor)})
+
+			uniFact := stmt.UniFact()
+			ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact)
+			if ret.IsErr() {
+				return glob.ErrRet(ret.String())
+			}
+
+			return exec.AddStmtToStmtRet(glob.NewStmtTrueWithVerifyProcess(verMsg), stmt).AddNewFact(uniFact.String())
 		}
 
 		rightMost := rightAsInt
