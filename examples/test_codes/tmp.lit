@@ -1,2 +1,2 @@
 #prop p(x set, y x)
-have fn f(x R, y x) R = y
+have fn f(x R, y x) R = x
