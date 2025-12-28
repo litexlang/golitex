@@ -1,1 +1,1 @@
-have x, y, z R
+intersect(R, R) = R
