@@ -86,7 +86,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *g
 	for i, existParamSet := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets {
 		ret := exec.Env.NewFactWithoutCheckingNameDefined(ast.NewInFact(stmt.ObjNames[i], existParamSet))
 		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
+			return exec.AddStmtToStmtRet(ret, stmt)
 		}
 	}
 
@@ -133,6 +133,10 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *g
 
 func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet {
 	ver := NewVerifier(exec.Env)
+
+	if err := ast.ParamSetsDoesNotContainFreeParams(stmt.ObjNames, stmt.ObjSets); err != nil {
+		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
+	}
 
 	newFactMsgs := []string{}
 	defineMsgs := []string{}
@@ -187,6 +191,10 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) *glob.StmtRet {
+	if err := ast.ParamSetsDoesNotContainFreeParams(stmt.Objs, stmt.ObjSets); err != nil {
+		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
+	}
+
 	verifyProcessMsgs := []*glob.VerMsg{}
 	defineMsgs := []string{}
 
@@ -221,7 +229,9 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 }
 
 func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) *glob.StmtRet {
-	var err error
+	if err := ast.ParamSetsDoesNotContainFreeParams(stmt.DefHeader.Params, stmt.DefHeader.ParamSets); err != nil {
+		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
+	}
 
 	verifyProcessMsgs := []*glob.VerMsg{}
 	defineMsgs := []string{}
@@ -289,6 +299,10 @@ func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {
 }
 
 func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) *glob.StmtRet {
+	if err := ast.ParamSetsDoesNotContainFreeParams(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets); err != nil {
+		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
+	}
+
 	verifyProcessMsgs := []*glob.VerMsg{}
 	defineMsgs := []string{}
 
@@ -311,32 +325,16 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) *glob.StmtRet {
 }
 
 func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.StmtRet, error) {
+
+	if err := ast.ParamSetsDoesNotContainFreeParams(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets); err != nil {
+		return glob.ErrRet(err.Error()), fmt.Errorf(err.Error())
+	}
+
 	// Create a new environment for verification and proof
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
-
-	// // 返回值要是set
-	// execState := exec.factStmt(ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
-	// if execState.IsNotTrue() {
-	// 	return glob.ErrRet(execState.String()), fmt.Errorf(execState.String())
-	// }
-	// if execState.IsUnknown() {
-	// 	return glob.NewEmptyGlobError(), fmt.Errorf("return set %s must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String())
-	// }
-
-	// 验证 fn template 里面的 paramSet 都是 in set 的
-	// Verify each paramSet is in set type
-	// for i, paramSet := range stmt.DefFnStmt.FnTemplate.ParamSets {
-	// 	execState := exec.factStmt(ast.NewIsASetFact(paramSet, stmt.Line))
-	// 	if execState.IsErr() {
-	// 		return glob.ErrRet(execState.String()), fmt.Errorf(execState.String())
-	// 	}
-	// 	if execState.IsUnknown() {
-	// 		return glob.NewEmptyGlobError(), fmt.Errorf("parameter set %d (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", i+1, paramSet.String(), paramSet.String())
-	// 	}
-	// }
 
 	// Verify retSet is in set type
 	execState := exec.factStmt(ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
@@ -401,6 +399,9 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.StmtRet, erro
 }
 
 func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob.StmtRet {
+	if err := ast.ParamSetsDoesNotContainFreeParams(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets); err != nil {
+		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
+	}
 
 	verifyProcessMsgs := []*glob.VerMsg{}
 	defineMsgs := []string{}
@@ -631,6 +632,11 @@ func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCas
 }
 
 func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
+
+	if err := ast.ParamSetsDoesNotContainFreeParams(stmt.DefHeader.Params, stmt.DefHeader.ParamSets); err != nil {
+		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
+	}
+
 	verifyProcessMsgs := []*glob.VerMsg{}
 	defineMsgs := []string{}
 	// 返回值要是set
@@ -837,120 +843,3 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 
 	return exec.NewTrueStmtRet(stmt), nil
 }
-
-// func (exec *Executor) haveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) *glob.StmtRet {
-// 	// Check: verify cart parameters are sets and equalTo elements are in corresponding sets
-// 	checkRet := exec.checkHaveObjFromCartSetStmt(stmt)
-// 	if checkRet.IsNotTrue() {
-// 		return checkRet
-// 	}
-
-// 	// Post-process: add obj in cart and obj = equalTo facts
-// 	postRet := exec.postProcessHaveObjFromCartSetStmt(stmt)
-// 	if postRet.IsNotTrue() {
-// 		return postRet
-// 	}
-
-// 	return exec.AddStmtToStmtRet(glob.NewEmptyStmtTrue(), stmt)
-// }
-
-// checkHaveObjFromCartSetStmt checks that:
-// 1. Each parameter of cart is a set
-// 2. equalTo is a tuple with the same length as cart parameters
-// 3. Each element of equalTo is in the corresponding cart set
-// func (exec *Executor) checkHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) *glob.StmtRet {
-// 	// Check that each parameter of cart is a set
-// 	for i, param := range stmt.CartSet.Params {
-// 		state := exec.factStmt(ast.NewIsASetFact(param, stmt.Line))
-// 		if state.IsErr() {
-// 			return glob.ErrRet(state.String())
-// 		}
-// 		if state.IsUnknown() {
-// 			return glob.ErrRet(fmt.Sprintf("cart parameter %d (%s) must be a set, i.e. `is_a_set(%s)` must be true, but it is unknown", i+1, param.String(), param.String()))
-// 		}
-// 	}
-
-// 	// Check that equalTo is a tuple
-// 	equalToAsFn, ok := stmt.EqualTo.(*ast.FnObj)
-// 	if !ok {
-// 		return glob.ErrRet(fmt.Sprintf("expected equalTo to be a tuple, but got %T", stmt.EqualTo))
-// 	}
-// 	if !ast.IsTupleFnObj(equalToAsFn) {
-// 		return glob.ErrRet(fmt.Sprintf("expected equalTo to be a tuple (with head %s), but got %s", glob.KeywordTuple, equalToAsFn.FnHead.String()))
-// 	}
-
-// 	// Check that tuple length matches cart parameters length
-// 	if len(equalToAsFn.Params) != len(stmt.CartSet.Params) {
-// 		return glob.ErrRet(fmt.Sprintf("tuple length (%d) does not match cart parameters length (%d)", len(equalToAsFn.Params), len(stmt.CartSet.Params)))
-// 	}
-
-// 	// Check that each element of equalTo is in the corresponding cart set
-// 	for i := range len(equalToAsFn.Params) {
-// 		inFact := ast.NewInFactWithObj(equalToAsFn.Params[i], stmt.CartSet.Params[i])
-// 		state := exec.factStmt(inFact)
-// 		if state.IsErr() {
-// 			return glob.ErrRet(state.String())
-// 		}
-// 		if state.IsUnknown() {
-// 			return glob.ErrRet(fmt.Sprintf("tuple element %d (%s) must be in cart set %d (%s), but it is unknown", i+1, equalToAsFn.Params[i].String(), i+1, stmt.CartSet.Params[i].String()))
-// 		}
-// 	}
-
-// 	return glob.NewEmptyStmtTrue()
-// }
-
-// postProcessHaveObjFromCartSetStmt adds:
-// 1. obj in cart(...) fact
-// 2. obj = equalTo fact
-// 3. obj[i] = equalTo[i] for each i
-// 4. dim(obj) = len(cartSet.Params)
-// func (exec *Executor) postProcessHaveObjFromCartSetStmt(stmt *ast.HaveObjFromCartSetStmt) *glob.StmtRet {
-// 	objAtom := ast.Atom(stmt.ObjName)
-
-// 	// Add obj in cart(...) fact
-// 	inCartFact := ast.NewInFactWithObj(objAtom, stmt.CartSet)
-// 	ret := exec.Env.NewFactWithoutCheckingNameDefined(inCartFact)
-// 	if ret.IsErr() {
-// 		return glob.ErrRet(ret.String())
-// 	}
-
-// 	// Add obj = equalTo fact
-// 	equalFact := ast.NewEqualFact(objAtom, stmt.EqualTo)
-// 	ret = exec.Env.NewFactWithoutCheckingNameDefined(equalFact)
-// 	if ret.IsErr() {
-// 		return glob.ErrRet(ret.String())
-// 	}
-
-// 	// equalTo is already verified to be a tuple in checkHaveObjFromCartSetStmt
-// 	equalToAsFn, ok := stmt.EqualTo.(*ast.FnObj)
-// 	if !ok || !ast.IsTupleFnObj(equalToAsFn) {
-// 		return glob.NewEmptyStmtTrue()
-// 	}
-
-// 	// Add obj[i] = equalTo[i] for each i (index starts from 1)
-// 	for i := range len(equalToAsFn.Params) {
-// 		index := i + 1 // index starts from 1
-// 		indexObj := ast.Atom(strconv.Itoa(index))
-
-// 		// Create indexed object: obj[index]
-// 		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{objAtom, indexObj})
-
-// 		// Create equal fact: obj[index] = equalTo[i]
-// 		indexEqualFact := ast.NewEqualFact(indexedObj, equalToAsFn.Params[i])
-// 		ret = exec.Env.NewFactWithoutCheckingNameDefined(indexEqualFact)
-// 		if ret.IsErr() {
-// 			return glob.ErrRet(ret.String())
-// 		}
-// 	}
-
-// 	// Add dim(obj) = len(cartSet.Params)
-// 	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{objAtom})
-// 	dimValue := ast.Atom(strconv.Itoa(len(stmt.CartSet.Params)))
-// 	dimEqualFact := ast.NewEqualFact(dimFn, dimValue)
-// 	ret = exec.Env.NewFactWithoutCheckingNameDefined(dimEqualFact)
-// 	if ret.IsErr() {
-// 		return glob.ErrRet(ret.String())
-// 	}
-
-// 	return glob.NewEmptyStmtTrue()
-// }

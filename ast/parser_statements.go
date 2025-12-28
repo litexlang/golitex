@@ -840,7 +840,7 @@ func (p *TbParser) haveObjEqualStmt(tb *tokenBlock) (Stmt, error) {
 
 	objectEqualTos := []Obj{}
 
-	objectNames, setSlice, err := p.param_paramSet_paramInSetFacts_checkParamSetsDoesNotContainFreeParams(tb, glob.KeySymbolEqual, false)
+	objectNames, setSlice, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolEqual, false)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -877,7 +877,7 @@ func (p *TbParser) haveObjInNonEmptySetStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	objNames, objSets, err := p.param_paramSet_paramInSetFacts_checkParamSetsDoesNotContainFreeParams(tb, glob.KeySymbolColon, true)
+	objNames, objSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolColon, true)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1286,7 +1286,7 @@ func (p *TbParser) proveByEnum(tb *tokenBlock) (Stmt, error) {
 	}
 
 	// param paramSet pairs
-	params, paramSets, err := p.param_paramSet_paramInSetFacts_checkParamSetsDoesNotContainFreeParams(tb, glob.KeySymbolRightBrace, false)
+	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolRightBrace, false)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1419,7 +1419,7 @@ func (p *TbParser) fnInFnTemplateStmt(tb *tokenBlock) ([]string, []Obj, Obj, []F
 		return nil, nil, nil, nil, nil, ErrInLine(err, tb)
 	}
 
-	fnParams, fnParamSets, err := p.param_paramSet_paramInSetFacts_checkParamSetsDoesNotContainFreeParams(tb, glob.KeySymbolRightBrace, false)
+	fnParams, fnParamSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolRightBrace, false)
 	if err != nil {
 		return nil, nil, nil, nil, nil, ErrInLine(err, tb)
 	}
@@ -3503,16 +3503,16 @@ func (p *TbParser) runFileStmt(tb *tokenBlock) (*RunFileStmt, error) {
 	}
 }
 
-func (p *TbParser) param_paramSet_paramInSetFacts_checkParamSetsDoesNotContainFreeParams(tb *tokenBlock, endWith string, allowExceedEnd bool) ([]string, []Obj, error) {
-	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, endWith, allowExceedEnd)
-	if err != nil {
-		return nil, nil, err
-	}
+// func (p *TbParser) param_paramSet_paramInSetFacts_checkParamSetsDoesNotContainFreeParams(tb *tokenBlock, endWith string, allowExceedEnd bool) ([]string, []Obj, error) {
+// 	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, endWith, allowExceedEnd)
+// 	if err != nil {
+// 		return nil, nil, err
+// 	}
 
-	for _, paramSet := range paramSets {
-		if ObjContainsFreeParams(paramSet, params) {
-			return nil, nil, fmt.Errorf("object set %s contains free parameters", paramSet)
-		}
-	}
-	return params, paramSets, nil
-}
+// 	for _, paramSet := range paramSets {
+// 		if ObjContainsFreeParams(paramSet, params) {
+// 			return nil, nil, fmt.Errorf("object set %s contains free parameters", paramSet)
+// 		}
+// 	}
+// 	return params, paramSets, nil
+// }
