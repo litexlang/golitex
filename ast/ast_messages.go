@@ -138,7 +138,7 @@ func exist_st_FactString(stmt *SpecFactStmt) string {
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
-	builder.WriteString(NewSpecFactStmt(TruePure, stmt.PropName, factParams, glob.BuiltinLine).String())
+	builder.WriteString(NewSpecFactStmt(TruePure, stmt.PropName, factParams, glob.BuiltinLine0).String())
 
 	return builder.String()
 }

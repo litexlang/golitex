@@ -22,6 +22,7 @@ type Stmt interface {
 	GetLine() uint
 	algoStmt()
 	Instantiate(map[string]Obj) (Stmt, error)
+	SetLine(line uint)
 }
 
 func (s *DefLetStmt) stmt()                    {}
@@ -35,7 +36,7 @@ func (s *DefExistPropStmt) stmt()              {}
 func (s *HaveObjStStmt) stmt()                 {}
 func (s *ProveInEachCaseStmt) stmt()           {}
 func (s *ProveCaseByCaseStmt) stmt()           {}
-func (s *KnowImplicationStmt) stmt()                  {}
+func (s *KnowImplicationStmt) stmt()           {}
 func (s *OrStmt) stmt()                        {}
 func (s *ImportDirStmt) stmt()                 {}
 func (s *RunFileStmt) stmt()                   {}
@@ -88,7 +89,7 @@ func (s *DefExistPropStmt) algoStmt()              {}
 func (s *HaveObjStStmt) algoStmt()                 {}
 func (s *ProveInEachCaseStmt) algoStmt()           {}
 func (s *ProveCaseByCaseStmt) algoStmt()           {}
-func (s *KnowImplicationStmt) algoStmt()                  {}
+func (s *KnowImplicationStmt) algoStmt()           {}
 func (s *OrStmt) algoStmt()                        {}
 func (s *ImportDirStmt) algoStmt()                 {}
 func (s *RunFileStmt) algoStmt()                   {}
@@ -141,7 +142,7 @@ func (s *DefExistPropStmt) GetLine() uint              { return s.Line }
 func (s *HaveObjStStmt) GetLine() uint                 { return s.Line }
 func (s *ProveInEachCaseStmt) GetLine() uint           { return s.Line }
 func (s *ProveCaseByCaseStmt) GetLine() uint           { return s.Line }
-func (s *KnowImplicationStmt) GetLine() uint                  { return s.Line }
+func (s *KnowImplicationStmt) GetLine() uint           { return s.Line }
 func (s *OrStmt) GetLine() uint                        { return s.Line }
 func (s *ImportDirStmt) GetLine() uint                 { return s.Line }
 func (s *RunFileStmt) GetLine() uint                   { return s.Line }
@@ -183,6 +184,59 @@ func (s *ImplicationStmt) GetLine() uint            { return s.Line }
 func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint  { return s.Line }
 func (s *HaveFnCaseByCaseStmt) GetLine() uint       { return s.Line }
 
+func (s *DefLetStmt) SetLine(l uint)                    { s.Line = l }
+func (s *DefPropStmt) SetLine(l uint)                   { s.Line = l }
+func (s *DefFnStmt) SetLine(l uint)                     { s.Line = l }
+func (s *UniFactStmt) SetLine(l uint)                   { s.Line = l }
+func (s *SpecFactStmt) SetLine(l uint)                  { s.Line = l }
+func (s *ClaimProveStmt) SetLine(l uint)                { s.Line = l }
+func (s *KnowFactStmt) SetLine(l uint)                  { s.Line = l }
+func (s *DefExistPropStmt) SetLine(l uint)              { s.Line = l }
+func (s *HaveObjStStmt) SetLine(l uint)                 { s.Line = l }
+func (s *ProveInEachCaseStmt) SetLine(l uint)           { s.Line = l }
+func (s *ProveCaseByCaseStmt) SetLine(l uint)           { s.Line = l }
+func (s *KnowImplicationStmt) SetLine(l uint)           { s.Line = l }
+func (s *OrStmt) SetLine(l uint)                        { s.Line = l }
+func (s *ImportDirStmt) SetLine(l uint)                 { s.Line = l }
+func (s *RunFileStmt) SetLine(l uint)                   { s.Line = l }
+func (s *ProveStmt) SetLine(l uint)                     { s.Line = l }
+func (s *UniFactWithIffStmt) SetLine(l uint)            { s.Line = l }
+func (s *ClaimProveByContradictionStmt) SetLine(l uint) { s.Line = l }
+
+func (s *ClaimImplicationStmt) SetLine(l uint)     { s.Line = l }
+func (s *ClaimExistPropStmt) SetLine(l uint)       { s.Line = l }
+func (s *ProveByEnumStmt) SetLine(l uint)          { s.Line = l }
+func (s *HaveObjInNonEmptySetStmt) SetLine(l uint) { s.Line = l }
+
+// func (s *HaveObjFromCartSetStmt) SetLine(l uint)   { s.Line = l}
+
+// func (s *NamedUniFactStmt) SetLine(l uint)  { s.Line = l}
+func (s *EqualsFactStmt) SetLine(l uint)    { s.Line = l }
+func (s *KnowExistPropStmt) SetLine(l uint) { s.Line = l }
+
+func (s *DefFnSetStmt) SetLine(l uint)         { s.Line = l }
+func (s *ClearStmt) SetLine(l uint)            { s.Line = l }
+func (s *DoNothingStmt) SetLine(l uint)        { s.Line = l }
+func (s *InlineFactsStmt) SetLine(l uint)      { s.Line = l }
+func (s *ProveByInductionStmt) SetLine(l uint) { s.Line = l }
+func (s *HaveObjEqualStmt) SetLine(l uint)     { s.Line = l }
+func (s *HaveFnEqualStmt) SetLine(l uint)      { s.Line = l }
+
+func (s *HaveFnStmt) SetLine(l uint) { s.Line = l }
+
+func (s *ClaimIffStmt) SetLine(l uint)               { s.Line = l }
+func (s *ProveIsTransitivePropStmt) SetLine(l uint)  { s.Line = l }
+func (s *ProveIsCommutativePropStmt) SetLine(l uint) { s.Line = l }
+func (s *DefAlgoStmt) SetLine(l uint)                { s.Line = l }
+func (s *EvalStmt) SetLine(l uint)                   { s.Line = l }
+func (s *DefProveAlgoStmt) SetLine(l uint)           { s.Line = l }
+func (s *ByStmt) SetLine(l uint)                     { s.Line = l }
+func (s *ProveForStmt) SetLine(l uint)               { s.Line = l }
+func (s *ProveImplicationStmt) SetLine(l uint)       { s.Line = l }
+func (s *ImplicationStmt) SetLine(l uint)            { s.Line = l }
+func (s *HaveFnEqualCaseByCaseStmt) SetLine(l uint)  { s.Line = l }
+func (s *HaveFnCaseByCaseStmt) SetLine(l uint)       { s.Line = l }
+
 type FactStmt interface {
 	factStmt()
 	stmt()
@@ -195,6 +249,7 @@ type FactStmt interface {
 	algoStmt()
 	Instantiate(map[string]Obj) (Stmt, error)
 	proveAlgoReturnStmt()
+	SetLine(l uint)
 }
 
 func (p *SpecFactStmt) factStmt()       {}
@@ -216,6 +271,7 @@ type Spec_OrFact interface {
 	GetLine() uint
 	algoStmt()
 	Instantiate(map[string]Obj) (Stmt, error)
+	SetLine(l uint)
 }
 
 func (s *SpecFactStmt) reversibleFact() {}
@@ -243,6 +299,7 @@ type CanBeKnownStmt interface {
 	InlineString() string
 	GetLine() uint
 	Instantiate(map[string]Obj) (Stmt, error)
+	SetLine(l uint)
 }
 
 func (s *SpecFactStmt) canBeKnown()       {}
@@ -250,8 +307,8 @@ func (s *UniFactStmt) canBeKnown()        {}
 func (s *UniFactWithIffStmt) canBeKnown() {}
 func (s *OrStmt) canBeKnown()             {}
 
-func (s *EqualsFactStmt) canBeKnown() {}
-func (s *KnowImplicationStmt) canBeKnown()   {}
+func (s *EqualsFactStmt) canBeKnown()      {}
+func (s *KnowImplicationStmt) canBeKnown() {}
 
 type CanBeKnownStmtSlice []CanBeKnownStmt
 
@@ -270,12 +327,15 @@ type AlgoStmt interface {
 	ToLatexString() string
 	InlineString() string
 	GetLine() uint
+	SetLine(l uint)
 }
 
-func (s *AlgoIfStmt) algoStmt()         {}
-func (s *AlgoReturnStmt) algoStmt()     {}
-func (s *AlgoIfStmt) GetLine() uint     { return s.Line }
-func (s *AlgoReturnStmt) GetLine() uint { return s.Line }
+func (s *AlgoIfStmt) algoStmt()          {}
+func (s *AlgoReturnStmt) algoStmt()      {}
+func (s *AlgoIfStmt) GetLine() uint      { return s.Line }
+func (s *AlgoReturnStmt) GetLine() uint  { return s.Line }
+func (s *AlgoIfStmt) SetLine(l uint)     { s.Line = l }
+func (s *AlgoReturnStmt) SetLine(l uint) { s.Line = l }
 
 type ProveAlgoStmt interface {
 	proveAlgoStmt()
@@ -283,17 +343,21 @@ type ProveAlgoStmt interface {
 	ToLatexString() string
 	InlineString() string
 	GetLine() uint
+	SetLine(l uint)
 }
 
 func (s *ProveAlgoIfStmt) proveAlgoStmt()     {}
 func (s *ProveAlgoReturnStmt) proveAlgoStmt() {}
 func (s *ProveAlgoIfStmt) GetLine() uint      { return s.Line }
 func (s *ProveAlgoReturnStmt) GetLine() uint  { return s.Line }
+func (s *ProveAlgoIfStmt) SetLine(l uint)     { s.Line = l }
+func (s *ProveAlgoReturnStmt) SetLine(l uint) { s.Line = l }
 
 type FactOrByStmt interface {
 	proveAlgoReturnStmt()
 	String() string
 	Instantiate(map[string]Obj) (Stmt, error)
+	SetLine(l uint)
 }
 
 func (p *SpecFactStmt) proveAlgoReturnStmt()       {}

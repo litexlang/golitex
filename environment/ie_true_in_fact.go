@@ -149,7 +149,7 @@ func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) *glob.S
 	}
 	derivedFacts = append(derivedFacts, dimEqualFact.String())
 	// 添加 is_tuple(obj) 的事实
-	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{obj}, glob.BuiltinLine)
+	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{obj}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(isTupleFact)
 	if ret.IsErr() {
 		return ret
@@ -219,9 +219,9 @@ func (ie *InferEngine) trueInFactByListSet(fact *ast.SpecFactStmt) *glob.StmtRet
 		return glob.ErrRet(fmt.Sprintf("expected list set to be FnObj, got %T", listSetObj))
 	}
 
-	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine)
+	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine0)
 	for _, param := range listSetFnObj.Params {
-		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], param}, glob.BuiltinLine))
+		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], param}, glob.BuiltinLine0))
 	}
 	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(orFact)
 	if ret.IsErr() {
@@ -266,7 +266,7 @@ func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.Fn
 	}
 
 	// in parent set
-	inParentSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{obj, setBuilderStruct.ParentSet}, glob.BuiltinLine)
+	inParentSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{obj, setBuilderStruct.ParentSet}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(inParentSetFact)
 	if ret.IsErr() {
 		return glob.ErrRetWithErr(err)
@@ -406,7 +406,7 @@ func (ie *InferEngine) trueInFactByNPos(fact *ast.SpecFactStmt) *glob.StmtRet {
 	derivedFacts = append(derivedFacts, inRFact.String())
 
 	// x > 0
-	greaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine)
+	greaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.storeSpecFactInMem(greaterThanZeroFact)
 	if ret.IsErr() {
 		return ret
@@ -419,7 +419,7 @@ func (ie *InferEngine) trueInFactByNPos(fact *ast.SpecFactStmt) *glob.StmtRet {
 	derivedFacts = append(derivedFacts, ret.Infer...)
 
 	// x >= 1
-	greaterEqualOneFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{obj, ast.Atom("1")}, glob.BuiltinLine)
+	greaterEqualOneFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{obj, ast.Atom("1")}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.storeSpecFactInMem(greaterEqualOneFact)
 	if ret.IsErr() {
 		return ret

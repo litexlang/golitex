@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	exe "golitex/executor"
+	glob "golitex/glob"
 	kernelLibLitexCode "golitex/kernel_litex_code"
 	pkgMgr "golitex/package_manager"
 )
@@ -26,7 +27,7 @@ import (
 func NewBuiltinEnvMgrWithNewEmptyEnv(envPkgMgr *env.EnvPkgMgr) (*env.EnvMgr, error) {
 	var err error
 	if env.BuiltinEnvMgrWithEmptyEnvPkgMgr == nil {
-		env.BuiltinEnvMgrWithEmptyEnvPkgMgr, err = NewBuiltinEnvMgr()
+		_, err = NewBuiltinEnvMgr()
 		if err != nil {
 			return nil, err
 		}
@@ -45,6 +46,7 @@ func NewBuiltinEnvMgr() (*env.EnvMgr, error) {
 	curEnvMgr := env.NewEnvMgr(env.NewEnvPkgMgr(pkgMgr.NewEmptyPkgMgr()), []env.EnvMemory{*env.NewEnvMemory()}, make(map[string]struct{}), make(map[string]*ast.DefPropStmt), make(map[string]*ast.DefExistPropStmt), make(map[string]*ast.DefFnSetStmt), make(map[string]*ast.DefAlgoStmt), make(map[string]*ast.DefProveAlgoStmt))
 	curEnvMgr.Init()
 	err := useHardcodedCodeToInitEnvMgr(curEnvMgr)
+	env.BuiltinEnvMgrWithEmptyEnvPkgMgr = curEnvMgr
 	return curEnvMgr, err
 }
 
@@ -89,6 +91,7 @@ func useHardcodedCodeToInitEnvMgr(envMgr *env.EnvMgr) error {
 		if err != nil {
 			return err
 		}
+		topStmt.SetLine(uint(glob.BuiltinLine0))
 		execState := executor.Stmt(topStmt)
 		if execState.IsUnknown() || execState.IsErr() {
 			return fmt.Errorf("failed to init pipeline: %s\n%s", err, execState.String())

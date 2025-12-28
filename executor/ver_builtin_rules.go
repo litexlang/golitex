@@ -363,7 +363,7 @@ func (ver *Verifier) verIsAFiniteSetByAllItemsInCartAreNonempty(cart ast.Obj, st
 
 	// 然后一位一位地检查每一项是否是有限集
 	for i := range cartFn.Params {
-		isFiniteFact := ast.NewIsAFiniteSetFact(cartFn.Params[i], glob.BuiltinLine)
+		isFiniteFact := ast.NewIsAFiniteSetFact(cartFn.Params[i], glob.BuiltinLine0)
 		verRet := ver.VerFactStmt(isFiniteFact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
 			return glob.NewEmptyStmtUnknown()
@@ -387,7 +387,7 @@ func (ver *Verifier) verIsANonEmptySetByAllItemsInCartAreNonempty(cart ast.Obj, 
 
 	// 然后一位一位地检查每一项是否是非空集合
 	for i := range cartFn.Params {
-		isNonEmptyFact := ast.NewIsANonEmptySetFact(cartFn.Params[i], glob.BuiltinLine)
+		isNonEmptyFact := ast.NewIsANonEmptySetFact(cartFn.Params[i], glob.BuiltinLine0)
 		verRet := ver.VerFactStmt(isNonEmptyFact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
 			return glob.NewEmptyStmtUnknown()
@@ -439,14 +439,14 @@ func (ver *Verifier) verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonemp
 	}
 
 	for _, paramSet := range paramSets {
-		isNonEmptyFact := ast.NewIsANonEmptySetFact(paramSet, glob.BuiltinLine)
+		isNonEmptyFact := ast.NewIsANonEmptySetFact(paramSet, glob.BuiltinLine0)
 		verRet := ver.VerFactStmt(isNonEmptyFact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
 			return glob.NewEmptyStmtUnknown()
 		}
 	}
 
-	isNonEmptyFact := ast.NewIsANonEmptySetFact(retSet, glob.BuiltinLine)
+	isNonEmptyFact := ast.NewIsANonEmptySetFact(retSet, glob.BuiltinLine0)
 	verRet := ver.VerFactStmt(isNonEmptyFact, state)
 	if verRet.IsErr() || verRet.IsUnknown() {
 		return glob.NewEmptyStmtUnknown()
@@ -481,7 +481,7 @@ func (ver *Verifier) verIsANonEmptySetByIsPowerSetAndAllParamSetsAndRetSetAreNon
 	}
 
 	paramInPowerSet := powerSetObj.Params[0]
-	isNonEmptyFact := ast.NewIsANonEmptySetFact(paramInPowerSet, glob.BuiltinLine)
+	isNonEmptyFact := ast.NewIsANonEmptySetFact(paramInPowerSet, glob.BuiltinLine0)
 	verRet := ver.VerFactStmt(isNonEmptyFact, state)
 	if verRet.IsErr() || verRet.IsUnknown() {
 		return glob.NewEmptyStmtUnknown()

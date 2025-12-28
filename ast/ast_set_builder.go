@@ -118,7 +118,7 @@ func (fnObj *FnObj) ToSetBuilderStruct() (*SetBuilderStruct, error) {
 		i += paramCount
 
 		// Create SpecFactStmt
-		specFact := NewSpecFactStmt(typeEnum, propNameAtom, params, glob.BuiltinLine)
+		specFact := NewSpecFactStmt(typeEnum, propNameAtom, params, glob.BuiltinLine0)
 		facts = append(facts, specFact)
 	}
 

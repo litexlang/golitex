@@ -23,7 +23,7 @@ import (
 )
 
 func EqualFact(left, right Obj) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{left, right}, glob.BuiltinLine)
+	return NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{left, right}, glob.BuiltinLine0)
 }
 
 func (stmt *UniFactStmt) ParamInParamSetFacts(uniConMap map[string]Obj) []*SpecFactStmt {
@@ -62,7 +62,7 @@ func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
 		reversedSpecFacts[i] = specFact.ReverseTrue()
 	}
 
-	orFact_GotBYReversedSpecFacts := NewOrStmt(reversedSpecFacts, glob.BuiltinLine)
+	orFact_GotBYReversedSpecFacts := NewOrStmt(reversedSpecFacts, glob.BuiltinLine0)
 	ret = append(ret, orFact_GotBYReversedSpecFacts)
 
 	specFacts_GotByReversedOrFacts := []*SpecFactStmt{}
@@ -79,7 +79,7 @@ func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
 }
 
 func NewEqualFact(left, right Obj) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{left, right}, glob.BuiltinLine)
+	return NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{left, right}, glob.BuiltinLine0)
 }
 
 func IsFn_WithHeadName(obj Obj, headName string) bool {
@@ -118,7 +118,7 @@ func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string
 		if err != nil {
 			return nil, err
 		}
-		paramSetFacts[i] = NewInFactWithParamObj(uniMap[param], instantiatedSet, glob.BuiltinLine)
+		paramSetFacts[i] = NewInFactWithParamObj(uniMap[param], instantiatedSet, glob.BuiltinLine0)
 	}
 	return paramSetFacts, nil
 }
@@ -163,20 +163,20 @@ func (strSlice StrSlice) ToObjSlice() []Obj {
 
 func (head DefHeader) ToSpecFact() *SpecFactStmt {
 	params := head.Params.ToObjSlice()
-	return NewSpecFactStmt(TruePure, Atom(head.Name), params, glob.BuiltinLine)
+	return NewSpecFactStmt(TruePure, Atom(head.Name), params, glob.BuiltinLine0)
 }
 
 func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *UniFactStmt {
-	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ImplicationFactsOrNil, glob.BuiltinLine)
+	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ImplicationFactsOrNil, glob.BuiltinLine0)
 }
 
 func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
 	params := stmt.DefBody.DefHeader.Params.ToObjSlice()
-	return NewSpecFactStmt(TruePure, Atom(stmt.DefBody.DefHeader.Name), params, glob.BuiltinLine)
+	return NewSpecFactStmt(TruePure, Atom(stmt.DefBody.DefHeader.Name), params, glob.BuiltinLine0)
 }
 
 func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue() *UniFactStmt {
-	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFactsOrNil, []FactStmt{stmt.ToProp()}, glob.BuiltinLine)
+	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFactsOrNil, []FactStmt{stmt.ToProp()}, glob.BuiltinLine0)
 }
 
 // func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {
@@ -255,7 +255,7 @@ func (objAsFnObj *FnObj) FnTObj_ToFnTNoName() (*FnTemplate, error) {
 	paramSets := objAsFnObjHeadAsFnObj.Params
 	retSet := objAsFnObj.Params[0]
 
-	fnTNoName := NewFnTStruct(randomParams, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.BuiltinLine)
+	fnTNoName := NewFnTStruct(randomParams, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.BuiltinLine0)
 
 	return fnTNoName, nil
 }
@@ -322,7 +322,7 @@ func AnonymousFnToInstFnTemplate(objFnTypeT *FnObj) (*FnTemplate, bool) {
 	}
 
 	excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
-	return NewFnTStruct(excelNames, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.BuiltinLine), true
+	return NewFnTStruct(excelNames, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.BuiltinLine0), true
 }
 
 func UnknownFactMsg(fact FactStmt) string {
