@@ -75,7 +75,13 @@ func main() {
 	// Handle execution flags
 	if *executeFlag != "" {
 		// Normal execution
-		pkgMgr := package_manager.NewEmptyPkgMgr()
+
+		wd, err := os.Getwd()
+		if err != nil {
+			fmt.Printf("Error: failed to get current working directory: %v\n", err)
+			return
+		}
+		pkgMgr := package_manager.NewEmptyPkgMgr(wd)
 
 		// ret := pipeline.RunSourceCode(glob.RemoveWindowsCarriage(*executeFlag), "-e")
 		_, ret := pipeline.RunCodeInPkgMgr(glob.RemoveWindowsCarriage(*executeFlag), pkgMgr, false)
@@ -162,7 +168,14 @@ func MainFlagFile(fileFlag string) {
 		absFilePath = filepath.Join(workingDir, path)
 	}
 
-	pkgMgr := package_manager.NewEmptyPkgMgr()
+	// get wd of the file
+	wd, err := filepath.Abs(filepath.Dir(absFilePath))
+	if err != nil {
+		fmt.Printf("Error: failed to get working directory of the file: %v\n", err)
+		return
+	}
+
+	pkgMgr := package_manager.NewEmptyPkgMgr(wd)
 
 	_, ret := pipeline.RunFileInPkgMgr(absFilePath, "", pkgMgr, false)
 
