@@ -33,18 +33,18 @@ func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 			ret := ie.newUserDefinedTruePureFactByDef(fact)
 			return ret
 		}
-		return glob.NewShortRet(glob.StmtRetTypeTrue, nil)
+		return glob.NewEmptyShortTrueRet()
 	}
 
 	existPropDef := ie.EnvMgr.GetExistPropDef(fact.PropName)
 	if existPropDef != nil {
 		if fact.FactType == ast.TruePure {
-			return glob.NewShortRet(glob.StmtRetTypeTrue, nil)
+			return glob.NewEmptyShortTrueRet()
 		} else {
 			for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
 				_, ok := thenFact.(*ast.SpecFactStmt)
 				if !ok {
-					return glob.NewShortRet(glob.StmtRetTypeTrue, nil)
+					return glob.NewEmptyShortTrueRet()
 				}
 			}
 			ret := ie.newFalseExistFact_EmitEquivalentUniFact(fact)
@@ -79,7 +79,7 @@ func (ie *InferEngine) newFalseExist(fact *ast.SpecFactStmt) *glob.ShortRet {
 	}
 
 	_ = fact
-	return glob.NewShortRet(glob.StmtRetTypeTrue, nil)
+	return glob.NewEmptyShortTrueRet()
 }
 
 // newTrueExist handles postprocessing for TrueExist_St facts
@@ -120,7 +120,7 @@ func (ie *InferEngine) newTrueExist(fact *ast.SpecFactStmt) *glob.ShortRet {
 		}
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, nil)
+	return glob.NewEmptyShortTrueRet()
 }
 
 // newFalseExistFact_EmitEquivalentUniFact handles postprocessing for FalseExist facts
@@ -137,5 +137,5 @@ func (ie *InferEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFac
 		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("exist fact %s has no definition", fact)})
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, nil)
+	return glob.NewEmptyShortTrueRet()
 }

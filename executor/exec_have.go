@@ -120,7 +120,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *g
 		result = exec.AddStmtToStmtRet(result, stmt)
 	}
 
-	verifyProcessMsgs := []*glob.VerMsg{glob.NewVerMsg(stmt.Fact.String(), stmt.Line, []string{"is true"})}
+	verifyProcessMsgs := []*glob.VerRet{glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.Fact.String(), stmt.Line, []string{})}
 	inferMsgs := append([]string{}, ret.Infer...)
 	defineMsgs := []string{}
 	for _, fact := range stmt.ObjNames {
@@ -136,7 +136,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet
 
 	newFactMsgs := []string{}
 	defineMsgs := []string{}
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 
 	for i := range len(stmt.ObjNames) {
 		objName := stmt.ObjNames[i]
@@ -188,7 +188,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) *glob.StmtRet {
 
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 	defineMsgs := []string{}
 
 	for i := range len(stmt.Objs) {
@@ -226,7 +226,7 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) *glob.StmtRet {
 		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
 	}
 
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 	defineMsgs := []string{}
 
 	// 返回值要是set
@@ -296,7 +296,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) *glob.StmtRet {
 		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
 	}
 
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 	defineMsgs := []string{}
 
 	// Verify first
@@ -396,7 +396,7 @@ func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob
 		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
 	}
 
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 	defineMsgs := []string{}
 	// Verify first and get thenFacts
 	execRet, _, err := exec.checkHaveFnCaseByCaseStmt(stmt)
@@ -630,7 +630,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
 	}
 
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 	defineMsgs := []string{}
 	// 返回值要是set
 	execState := exec.factStmt(ast.NewIsASetFact(stmt.RetSet, stmt.Line))
@@ -690,7 +690,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 }
 
 func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 	// 验证每个case的返回值都符合fn的retSet（在case成立的条件下）
 	for i := range len(stmt.CaseByCaseFacts) {
 		execState, err := exec.checkCaseReturnValueInRetSet(stmt, i)

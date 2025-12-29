@@ -22,7 +22,7 @@ import (
 
 func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePropStmt) *glob.StmtRet {
 	innerStmtRets := []*glob.StmtRet{}
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 	newFactMsgs := []string{}
 
 	exec.NewEnv()
@@ -101,9 +101,9 @@ func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePro
 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactMsgs)
 }
 
-func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *ast.SpecFactStmt, rightToLeft *ast.SpecFactStmt) (*glob.StmtRet, []*glob.VerMsg, []*glob.StmtRet) {
+func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *ast.SpecFactStmt, rightToLeft *ast.SpecFactStmt) (*glob.StmtRet, []*glob.VerRet, []*glob.StmtRet) {
 	innerStmtRets := []*glob.StmtRet{}
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 
 	exec.NewEnv()
 	defer exec.deleteEnv()
