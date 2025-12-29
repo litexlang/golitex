@@ -53,38 +53,38 @@ func (envMgr *EnvMgr) LookupNamesInSpecFact(stmt *ast.SpecFactStmt, extraParams 
 
 func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.SpecFactStmt) *glob.StmtRet {
 	// Check if it's an exist_prop defined by user
-	if stmt.FactType == ast.TrueExist_St || stmt.FactType == ast.FalseExist_St {
-		if glob.IsBuiltinExistPropName(string(stmt.PropName)) {
-			return glob.NewEmptyStmtTrue()
-		}
+	// if stmt.FactType == ast.TrueExist_St || stmt.FactType == ast.FalseExist_St {
+	// 	if glob.IsBuiltinExistPropName(string(stmt.PropName)) {
+	// 		return glob.NewEmptyStmtTrue()
+	// 	}
 
-		existPropDef := envMgr.GetExistPropDef(stmt.PropName)
-		if existPropDef != nil {
-			return glob.NewEmptyStmtTrue()
-		}
-		return glob.ErrRet(fmt.Sprintf("undefined exist_prop: %s", stmt.PropName))
-	} else {
-		if glob.IsBuiltinPropName(string(stmt.PropName)) {
-			return glob.NewEmptyStmtTrue()
-		}
-
-		if glob.IsBuiltinExistPropName(string(stmt.PropName)) {
-			return glob.NewEmptyStmtTrue()
-		}
-
-		// Check if it's a regular prop defined by user
-		propDef := envMgr.GetPropDef(stmt.PropName)
-		if propDef != nil {
-			return glob.NewEmptyStmtTrue()
-		}
-
-		existPropDef := envMgr.GetExistPropDef(stmt.PropName)
-		if existPropDef != nil {
-			return glob.NewEmptyStmtTrue()
-		}
-
-		return glob.ErrRet(fmt.Sprintf("undefined prop or exist_prop: %s", stmt.PropName))
+	// 	existPropDef := envMgr.GetExistPropDef(stmt.PropName)
+	// 	if existPropDef != nil {
+	// 		return glob.NewEmptyStmtTrue()
+	// 	}
+	// 	return glob.ErrRet(fmt.Sprintf("undefined exist_prop: %s", stmt.PropName))
+	// } else {
+	if glob.IsBuiltinPropName(string(stmt.PropName)) {
+		return glob.NewEmptyStmtTrue()
 	}
+
+	if glob.IsBuiltinExistPropName(string(stmt.PropName)) {
+		return glob.NewEmptyStmtTrue()
+	}
+
+	// Check if it's a regular prop defined by user
+	propDef := envMgr.GetPropDef(stmt.PropName)
+	if propDef != nil {
+		return glob.NewEmptyStmtTrue()
+	}
+
+	existPropDef := envMgr.GetExistPropDef(stmt.PropName)
+	if existPropDef != nil {
+		return glob.NewEmptyStmtTrue()
+	}
+
+	return glob.ErrRet(fmt.Sprintf("undefined prop or exist_prop: %s", stmt.PropName))
+	// }
 }
 
 func (envMgr *EnvMgr) LookupNamesInUniFact(stmt *ast.UniFactStmt, extraParams map[string]struct{}) *glob.StmtRet {

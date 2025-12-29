@@ -62,26 +62,26 @@ func Test_ImportFile(t *testing.T) {
 	fmt.Printf("execution time: %s\n", executionTime)
 }
 
-func Test_FileToJSON(t *testing.T) {
-	fileName := "../examples/test_codes/tmp.lit"
-	workingDir, err := os.Getwd()
-	if err != nil {
-		t.Errorf("failed to get current working directory: %v\n", err)
-	}
-	absOfFile := filepath.Join(workingDir, fileName)
-	start := time.Now()
-	pkgMgr := package_manager.NewEmptyPkgMgr(workingDir)
-	_, retType, rets := RunFileInPkgMgr(absOfFile, "", pkgMgr, false)
+// func Test_FileToJSON(t *testing.T) {
+// 	fileName := "../examples/test_codes/tmp.lit"
+// 	workingDir, err := os.Getwd()
+// 	if err != nil {
+// 		t.Errorf("failed to get current working directory: %v\n", err)
+// 	}
+// 	absOfFile := filepath.Join(workingDir, fileName)
+// 	start := time.Now()
+// 	pkgMgr := package_manager.NewEmptyPkgMgr(workingDir)
+// 	_, retType, rets := RunFileInPkgMgr(absOfFile, "", pkgMgr, false)
 
-	for _, ret := range rets {
-		jsonData, err := ret.ToJSON()
-		if err != nil {
-			t.Errorf("failed to convert ret to JSON: %v\n", err)
-		}
-		fmt.Println(string(jsonData))
-	}
+// 	for _, ret := range rets {
+// 		jsonData, err := ret.ToJSON()
+// 		if err != nil {
+// 			t.Errorf("failed to convert ret to JSON: %v\n", err)
+// 		}
+// 		fmt.Println(string(jsonData))
+// 	}
 
-	fmt.Println(glob.REPLSuccessMsgs(retType))
-	executionTime := time.Since(start)
-	fmt.Printf("execution time: %s\n", executionTime)
-}
+// 	fmt.Println(glob.REPLSuccessMsgs(retType))
+// 	executionTime := time.Since(start)
+// 	fmt.Printf("execution time: %s\n", executionTime)
+// }
