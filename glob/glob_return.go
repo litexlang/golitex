@@ -32,13 +32,11 @@ const (
 func (t StmtRetType) MarshalJSON() ([]byte, error) {
 	switch t {
 	case StmtRetTypeTrue:
-		return json.Marshal("True")
+		return json.Marshal("success")
 	case StmtRetTypeUnknown:
-		return json.Marshal("Unknown")
-	case StmtRetTypeError:
-		return json.Marshal("Error")
+		return json.Marshal("unknown")
 	default:
-		return json.Marshal("Unknown")
+		return json.Marshal("error")
 	}
 }
 
@@ -412,13 +410,6 @@ func (m *StmtRet) AddErrors(errors []string) *StmtRet {
 
 func (m *StmtRet) SetLine(line uint) *StmtRet {
 	m.Line = line
-	return m
-}
-
-func (m *StmtRet) AddWarnings(warnings []string) *StmtRet {
-	for _, warning := range warnings {
-		m.AddWarning(warning)
-	}
 	return m
 }
 
