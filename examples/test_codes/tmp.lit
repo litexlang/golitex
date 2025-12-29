@@ -1,4 +1,4 @@
-prop $p(x R)
+prop p(x R)
 
 know exist 1 st $p(1)
 

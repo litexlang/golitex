@@ -21,6 +21,11 @@ import (
 )
 
 func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *glob.StmtRet {
+	purePropDef := exec.Env.GetPropDef(stmt.Fact.PropName)
+	if purePropDef != nil {
+		return exec.haveObjStPurePropStmt(stmt)
+	}
+
 	// 检查 SpecFactStmt 是否满足了
 	execState := exec.Verify(stmt.Fact, false)
 	if execState.IsNotTrue() {
@@ -38,7 +43,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *g
 	// TODO 把 exist prop def 里的东西释放出来
 	existPropDef := exec.Env.GetExistPropDef(stmt.Fact.PropName)
 	if existPropDef == nil {
-		return exec.haveObjStPurePropStmt(stmt)
+		return exec.NewTrueStmtRet(stmt).AddError(fmt.Sprintf("can not find %s", stmt.Fact.PropName))
 	}
 
 	if len(existPropDef.ExistParams) != len(stmt.ObjNames) {
