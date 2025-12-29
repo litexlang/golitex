@@ -28,7 +28,7 @@ const (
 )
 
 type StmtRet struct {
-	Type              StmtRetType
+	RetType           StmtRetType
 	Define            []string
 	NewFact           []string
 	VerifyProcess     []*VerMsg
@@ -186,7 +186,7 @@ func (m *StmtRet) AddInnerStmtRet(innerStmtRet *StmtRet) *StmtRet {
 
 func NewEmptyStmtTrue() *StmtRet {
 	return &StmtRet{
-		Type:              StmtRetTypeTrue,
+		RetType:           StmtRetTypeTrue,
 		Define:            []string{},
 		NewFact:           []string{},
 		VerifyProcess:     []*VerMsg{},
@@ -202,7 +202,7 @@ func NewEmptyStmtTrue() *StmtRet {
 
 func NewEmptyStmtUnknown() *StmtRet {
 	return &StmtRet{
-		Type:              StmtRetTypeUnknown,
+		RetType:           StmtRetTypeUnknown,
 		Define:            []string{},
 		NewFact:           []string{},
 		VerifyProcess:     []*VerMsg{},
@@ -218,7 +218,7 @@ func NewEmptyStmtUnknown() *StmtRet {
 
 func NewEmptyStmtError() *StmtRet {
 	return &StmtRet{
-		Type:              StmtRetTypeError,
+		RetType:           StmtRetTypeError,
 		Define:            []string{},
 		NewFact:           []string{},
 		VerifyProcess:     []*VerMsg{},
@@ -281,32 +281,32 @@ func ErrRetWithErr(err error) *StmtRet {
 }
 
 func (m *StmtRet) SetType(msgType StmtRetType) *StmtRet {
-	m.Type = msgType
+	m.RetType = msgType
 	return m
 }
 
 func (m *StmtRet) IsTrue() bool {
-	return m.Type == StmtRetTypeTrue
+	return m.RetType == StmtRetTypeTrue
 }
 
 func (m *StmtRet) IsUnknown() bool {
-	return m.Type == StmtRetTypeUnknown
+	return m.RetType == StmtRetTypeUnknown
 }
 
 func (m *StmtRet) IsErr() bool {
-	return m.Type == StmtRetTypeError
+	return m.RetType == StmtRetTypeError
 }
 
 func (m *StmtRet) IsNotTrue() bool {
-	return m.Type != StmtRetTypeTrue
+	return m.RetType != StmtRetTypeTrue
 }
 
 func (m *StmtRet) IsNotUnknown() bool {
-	return m.Type != StmtRetTypeUnknown
+	return m.RetType != StmtRetTypeUnknown
 }
 
 func (m *StmtRet) IsNotError() bool {
-	return m.Type != StmtRetTypeError
+	return m.RetType != StmtRetTypeError
 }
 
 func (m *StmtRet) Inherit(other *StmtRet) *StmtRet {
@@ -342,7 +342,7 @@ func NewStmtTrueWithStmts(stmts []string) *StmtRet {
 func NewStmtWithInnerStmtsRet(innerStmtsRet []*StmtRet, msgType StmtRetType) *StmtRet {
 	ret := NewEmptyStmtTrue()
 	ret.InnerStmtRetSlice = innerStmtsRet
-	ret.Type = msgType
+	ret.RetType = msgType
 	return ret
 }
 
@@ -417,5 +417,18 @@ func (m *StmtRet) AddWarning(warning string) *StmtRet {
 
 func (m *StmtRet) AddInnerStmtRets(innerStmtRetSlice []*StmtRet) *StmtRet {
 	m.InnerStmtRetSlice = innerStmtRetSlice
+	return m
+}
+
+func (m *StmtRet) AddShortRetAsInfers(shortRet *ShortRet) *StmtRet {
+	if shortRet.IsTrue() {
+		m.AddInfers(shortRet.Msgs)
+	} else if shortRet.IsUnknown() {
+		m.SetType(StmtRetTypeUnknown)
+		m.AddUnknowns(shortRet.Msgs)
+	} else if shortRet.IsErr() {
+		m.SetType(StmtRetTypeError)
+		m.AddErrors(shortRet.Msgs)
+	}
 	return m
 }
