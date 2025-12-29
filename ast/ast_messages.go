@@ -213,7 +213,7 @@ func (fact *DefPropStmt) String() string {
 
 }
 
-func fnDefStmtStringGivenKw(kw string, f *FnTemplate, name string) string {
+func fnDefStmtStringGivenKw(kw string, f *AnonymousFn, name string) string {
 	var builder strings.Builder
 	builder.WriteString(kw)
 	builder.WriteString(" ")
@@ -751,7 +751,7 @@ func (stmt *DefFnSetStmt) String() string {
 		builder.WriteByte('\n')
 	}
 
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(NewDefFnStmt("", NewFnTStruct(stmt.Fn.Params, stmt.Fn.ParamSets, stmt.Fn.RetSet, stmt.Fn.DomFacts, stmt.Fn.ThenFacts, stmt.Line), stmt.Line).String(), 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(NewDefFnStmt("", NewFnTStruct(stmt.AnonymousFn.Params, stmt.AnonymousFn.ParamSets, stmt.AnonymousFn.RetSet, stmt.AnonymousFn.DomFacts, stmt.AnonymousFn.ThenFacts, stmt.Line), stmt.Line).String(), 1))
 
 	return builder.String()
 }
@@ -884,7 +884,7 @@ func (params StrSlice) String() string {
 	return strings.Join(output, ", ")
 }
 
-func (fnTStruct *FnTemplate) String() string {
+func (fnTStruct *AnonymousFn) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFn)
 	builder.WriteString(" ")

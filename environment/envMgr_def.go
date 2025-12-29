@@ -76,7 +76,7 @@ func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *a
 		extraAtomNames[param] = struct{}{}
 	}
 
-	ret := envMgr.LookupNamesInObj(stmt.Fn.RetSet, extraAtomNames)
+	ret := envMgr.LookupNamesInObj(stmt.AnonymousFn.RetSet, extraAtomNames)
 	if ret.IsErr() {
 		ret.AddError(fmt.Sprintf("in return set of fn template %s", name))
 		return ret
@@ -97,11 +97,11 @@ func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *a
 	// 	return ret
 	// }
 
-	for _, param := range stmt.Fn.Params {
+	for _, param := range stmt.AnonymousFn.Params {
 		extraAtomNames[param] = struct{}{}
 	}
 
-	for _, fact := range stmt.Fn.DomFacts {
+	for _, fact := range stmt.AnonymousFn.DomFacts {
 		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddError(fmt.Sprintf("in dom fact of fn %s definition", name))
@@ -109,7 +109,7 @@ func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *a
 		}
 	}
 
-	for _, fact := range stmt.Fn.ThenFacts {
+	for _, fact := range stmt.AnonymousFn.ThenFacts {
 		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
 		if ret.IsErr() {
 			ret.AddError(fmt.Sprintf("in then fact of fn %s definition", name))

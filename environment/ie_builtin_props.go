@@ -20,9 +20,9 @@ import (
 	glob "golitex/glob"
 )
 
-func (ie *InferEngine) equalSetFactPostProcess(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (ie *InferEngine) equalSetFactPostProcess(fact *ast.SpecFactStmt) *glob.ShortRet {
 	if len(fact.Params) != 2 {
-		return glob.ErrRet(fmt.Sprintf("equal_set fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
+		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("equal_set fact expect 2 parameters, get %d in %s", len(fact.Params), fact)})
 	}
 
 	derivedFacts := []string{}
@@ -31,12 +31,12 @@ func (ie *InferEngine) equalSetFactPostProcess(fact *ast.SpecFactStmt) *glob.Stm
 	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
 	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
 	if ret.IsErr() {
-		return ret
+		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	derivedFacts = append(derivedFacts, equalFact.String())
 
 	// Collect any derived facts from the equality fact
 	derivedFacts = append(derivedFacts, ret.Infer...)
 
-	return glob.NewStmtTrueWithInfers(derivedFacts)
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }

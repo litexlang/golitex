@@ -111,21 +111,17 @@ func (envMgr *EnvMgr) newSpecFact(fact *ast.SpecFactStmt) *glob.StmtRet {
 
 	ie := NewInferenceEngine(envMgr)
 
-	var ieRet *glob.StmtRet
+	var ieShortRet *glob.ShortRet
 	switch fact.FactType {
 	case ast.TrueExist_St:
-		ieRet = ie.newTrueExist(fact)
+		ieShortRet = ie.newTrueExist(fact)
 	case ast.FalseExist_St:
-		ieRet = ie.newFalseExist(fact)
+		ieShortRet = ie.newFalseExist(fact)
 	default:
-		ieRet = ie.newPureFact(fact)
+		ieShortRet = ie.newPureFact(fact)
 	}
 
-	if ieRet.IsNotTrue() {
-		return ieRet
-	}
-
-	return ret.AddInfers(ieRet.Infer)
+	return ret.AddShortRetAsInfers(ieShortRet)
 }
 
 func (envMgr *EnvMgr) newTrueEqual(fact *ast.SpecFactStmt) *glob.StmtRet {
