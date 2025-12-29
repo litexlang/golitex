@@ -97,5 +97,5 @@ func (envMgr *EnvMgr) ReplaceObjInSpecFactWithValue(fact *ast.SpecFactStmt) (boo
 
 		replaced = replaced || newReplaced
 	}
-	return replaced, ast.NewSpecFactStmt(fact.TypeEnum, fact.PropName, newParams, fact.Line)
+	return replaced, ast.NewSpecFactStmt(fact.FactType, fact.PropName, newParams, fact.Line)
 }

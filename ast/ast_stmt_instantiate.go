@@ -66,7 +66,7 @@ func InstantiateSpecFact(stmt *SpecFactStmt, uniMap map[string]Obj) (*SpecFactSt
 		newParams = append(newParams, newParam)
 	}
 
-	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams, stmt.Line), nil
+	return NewSpecFactStmt(stmt.FactType, stmt.PropName, newParams, stmt.Line), nil
 }
 
 func (stmt *SpecFactStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {

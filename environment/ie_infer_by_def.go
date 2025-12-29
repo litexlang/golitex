@@ -70,8 +70,6 @@ func (ie *InferEngine) newUserDefinedTruePureFactByDef(fact *ast.SpecFactStmt) *
 
 		ret := ie.EnvMgr.newFactNoInfer(instantiated)
 
-		// Note: Messages are now added to *glob.GlobRet in the caller, not to env.Msgs
-
 		if ret.IsErr() {
 			return ret
 		}

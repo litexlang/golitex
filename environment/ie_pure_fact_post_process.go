@@ -29,9 +29,8 @@ func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.StmtRet {
 	propDef := ie.EnvMgr.GetPropDef(fact.PropName)
 
 	if propDef != nil {
-		if fact.TypeEnum == ast.TruePure {
+		if fact.FactType == ast.TruePure {
 			ret := ie.newUserDefinedTruePureFactByDef(fact)
-			// Inherit derived facts from prop definition
 			return ret
 		}
 		return glob.NewEmptyStmtTrue()
@@ -39,7 +38,7 @@ func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.StmtRet {
 
 	existPropDef := ie.EnvMgr.GetExistPropDef(fact.PropName)
 	if existPropDef != nil {
-		if fact.TypeEnum == ast.TruePure {
+		if fact.FactType == ast.TruePure {
 			return glob.NewEmptyStmtTrue()
 		} else {
 			for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {

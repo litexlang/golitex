@@ -2703,7 +2703,7 @@ func (p *TbParser) relaFactStmt_orRelaEquals(tb *tokenBlock) (FactStmt, error) {
 
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
 	if ret.NameIs(glob.KeySymbolNotEqual) {
-		ret.TypeEnum = FalsePure
+		ret.FactType = FalsePure
 		ret.PropName = Atom(glob.KeySymbolEqual)
 	}
 
@@ -3229,7 +3229,7 @@ func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, err
 
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
 	if ret.NameIs(glob.KeySymbolNotEqual) {
-		ret.TypeEnum = FalsePure
+		ret.FactType = FalsePure
 		ret.PropName = Atom(glob.KeySymbolEqual)
 	}
 

@@ -89,7 +89,7 @@ type UniFactWithIffStmt struct {
 }
 
 type SpecFactStmt struct {
-	TypeEnum SpecFactEnum
+	FactType SpecFactEnum
 	PropName Atom
 	Params   ObjSlice
 
