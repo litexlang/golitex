@@ -626,3 +626,26 @@ func ParamSetsDoesNotContainFreeParams(freeParams []string, paramSets []Obj) err
 	}
 	return nil
 }
+
+func IsAtomWithoutPkgName(atom Atom) bool {
+	if strings.Contains(string(atom), glob.PkgNameAtomSeparator) {
+		return false
+	}
+	return true
+}
+
+func ParamsInSpecFactAreStrings(specFact *SpecFactStmt) ([]string, error) {
+	ret := []string{}
+	for _, param := range specFact.Params {
+		if atom, ok := param.(Atom); !ok {
+			return nil, fmt.Errorf("expect atom in params: %s", param.String())
+		} else {
+			if !IsAtomWithoutPkgName(atom) {
+				return nil, fmt.Errorf("expect atom without pkg name in params: %s", atom.String())
+			}
+
+			ret = append(ret, string(atom))
+		}
+	}
+	return ret, nil
+}

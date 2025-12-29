@@ -701,16 +701,16 @@ func (stmt *ProveForStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewProveForStmt(stmt.Params, newLefts, newRights, stmt.IsProveIRange, newDomFacts, newThenFacts, newProofs, stmt.Line), nil
 }
 
-func (stmt *ProveImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+func (stmt *ProveImplyStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newImplicationFacts, err := stmt.ImplicationFact.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
 	}
-	newProofs, err := stmt.Proof.Instantiate(uniMap)
+	newProofs, err := stmt.Proofs.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
-	return NewProveImplicationStmt(stmt.ImplicationName, stmt.Params, newImplicationFacts, newProofs, stmt.Line), nil
+	return NewProveImplicationStmt(stmt.SpecFact, newImplicationFacts, newProofs, stmt.Line), nil
 }
 
 func (stmt *ImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

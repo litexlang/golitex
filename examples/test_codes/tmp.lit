@@ -1,7 +1,11 @@
-have fn_set matrix(m N_pos, n N_pos):
-    fn (i N_pos, j N_pos) R:
-        dom:
-            i <= m
-            j <= n
+prop p(x R):
+    x > 2
 
-let x matrix(3, 3)
+prove_imply $p(x):
+    =>:
+        x > -1
+    prove:
+        x > -1
+
+prove_imply $p(x) => 1 / x > 0:
+    x > 0
