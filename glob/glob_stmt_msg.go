@@ -109,5 +109,17 @@ func AddREPLSuccessMsg(ret *StmtRet) string {
 	case StmtRetTypeError:
 		return REPLErrorMessage
 	}
-	return REPLUnknownMessage
+	return REPLErrorMessage
+}
+
+func REPLSuccessMsgs(t StmtRetType) string {
+	switch t {
+	case StmtRetTypeTrue:
+		return REPLSuccessMessage
+	case StmtRetTypeUnknown:
+		return REPLUnknownMessage
+	case StmtRetTypeError:
+		return REPLErrorMessage
+	}
+	return REPLErrorMessage
 }

@@ -46,19 +46,11 @@ func RunREPL(version string) {
 		}
 
 		// ret := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)
-		_, ret := RunCodeInPkgMgr(code, pkgMgr, false)
-		if ret.IsNotTrue() {
-			msgStr := ret.String()
-			if msgStr != "" {
-				fmt.Fprint(writer, msgStr)
-			}
-			continue
+		_, retType, rets := RunCodeInPkgMgr(code, pkgMgr, false)
+		for _, ret := range rets {
+			fmt.Fprint(writer, glob.StringWithOptimizedNewline(ret.String()))
 		}
-
-		msgStr := ret.String()
-		if msgStr != "" {
-			fmt.Fprint(writer, msgStr)
-		}
+		fmt.Fprint(writer, glob.REPLSuccessMsgs(retType))
 	}
 }
 

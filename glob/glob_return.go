@@ -97,15 +97,27 @@ func (m *StmtRet) String() string {
 	}
 
 	if len(m.Error) > 0 {
-		builder.WriteString("=== error ===\n\n")
+		if m.Line != 0 {
+			builder.WriteString(fmt.Sprintf("*** line %d: error ***\n\n", m.Line))
+		} else {
+			builder.WriteString("*** error ***\n\n")
+		}
 		builder.WriteString(strings.Join(m.Error, "\n"))
 		builder.WriteString("\n\n")
 	} else if len(m.Unknown) > 0 {
-		builder.WriteString("=== unable to verify ===\n\n")
+		if m.Line != 0 {
+			builder.WriteString(fmt.Sprintf("*** line %d: unknown ***\n\n", m.Line))
+		} else {
+			builder.WriteString("*** unable to verify ***\n\n")
+		}
 		builder.WriteString(strings.Join(m.Unknown, "\n"))
 		builder.WriteString("\n\n")
 	} else {
-		builder.WriteString("=== success! ===\n\n")
+		if m.Line != 0 {
+			builder.WriteString(fmt.Sprintf("*** line %d: success! ***\n\n", m.Line))
+		} else {
+			builder.WriteString("*** success! ***\n\n")
+		}
 	}
 
 	return builder.String()

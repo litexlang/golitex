@@ -1,8 +1,7 @@
-let a, b, c R: c + a = c + b
-a = b
+have fn_set matrix(m N_pos, n N_pos):
+    fn (i N_pos, j N_pos) R:
+        dom:
+            i <= m
+            j <= n
 
-let x, y, z R: y + x = z + x
-y = z
-
-let d, e, f R: f != 0, d / f = e / f
-d = e
+let x matrix(3, 3)
