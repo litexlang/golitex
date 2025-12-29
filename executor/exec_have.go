@@ -20,13 +20,10 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *glob.StmtRet {
+func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) *glob.StmtRet {
 	// 检查 SpecFactStmt 是否满足了
-	execState := exec.Verify(stmt.Fact, false)
-	if execState.IsNotTrue() {
-		return execState
-	}
-
+	ver := NewVerifier(exec.Env)
+	execState := ver.VerFactStmt(stmt.Fact, Round0NoMsg())
 	if execState.IsNotTrue() {
 		return execState
 	}
@@ -116,9 +113,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *g
 	}
 
 	result := glob.NewEmptyStmtTrue()
-	if requireMsg {
-		result = exec.AddStmtToStmtRet(result, stmt)
-	}
+	result = exec.AddStmtToStmtRet(result, stmt)
 
 	verifyProcessMsgs := []*glob.VerRet{glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.Fact.String(), stmt.Line, []string{})}
 	inferMsgs := append([]string{}, ret.Infer...)
