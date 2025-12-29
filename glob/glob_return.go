@@ -174,6 +174,7 @@ func (m *StmtRet) AddStmt(s string) *StmtRet {
 }
 
 func (m *StmtRet) AddUnknown(unknown string) *StmtRet {
+	m.RetType = StmtRetTypeUnknown
 	if unknown == "" {
 		return m
 	}
@@ -182,6 +183,7 @@ func (m *StmtRet) AddUnknown(unknown string) *StmtRet {
 }
 
 func (m *StmtRet) AddError(error string) *StmtRet {
+	m.RetType = StmtRetTypeError
 	if error == "" {
 		return m
 	}
@@ -395,6 +397,7 @@ func (m *StmtRet) AddStmts(stmts []string) *StmtRet {
 }
 
 func (m *StmtRet) AddUnknowns(unknowns []string) *StmtRet {
+	m.RetType = StmtRetTypeUnknown
 	for _, unknown := range unknowns {
 		m.AddUnknown(unknown)
 	}
@@ -402,6 +405,7 @@ func (m *StmtRet) AddUnknowns(unknowns []string) *StmtRet {
 }
 
 func (m *StmtRet) AddErrors(errors []string) *StmtRet {
+	m.RetType = StmtRetTypeError
 	for _, error := range errors {
 		m.AddError(error)
 	}
