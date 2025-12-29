@@ -18,10 +18,10 @@ import (
 	glob "golitex/glob"
 )
 
-type SpecFactEnum uint8
+type SpecFactType uint8
 
 const (
-	TruePure SpecFactEnum = iota
+	TruePure SpecFactType = iota
 	FalsePure
 	TrueExist_St
 	FalseExist_St
@@ -58,4 +58,20 @@ func (f *SpecFactStmt) IsTrue() bool {
 
 func (f *SpecFactStmt) NameIs(givenName string) bool {
 	return string(f.PropName) == givenName
+}
+
+func (f *SpecFactStmt) IsTruePure() bool {
+	return f.FactType == TruePure
+}
+
+func (f *SpecFactStmt) IsFalsePure() bool {
+	return f.FactType == FalsePure
+}
+
+func (f *SpecFactStmt) IsTrueExist_St() bool {
+	return f.FactType == TrueExist_St
+}
+
+func (f *SpecFactStmt) IsFalseExist_St() bool {
+	return f.FactType == FalseExist_St
 }

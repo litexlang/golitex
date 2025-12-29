@@ -74,7 +74,7 @@ func (fnObj *FnObj) ToSetBuilderStruct() (*SetBuilderStruct, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse type enum at index %d: %s", i, err)
 		}
-		typeEnum := SpecFactEnum(typeEnumInt)
+		typeEnum := SpecFactType(typeEnumInt)
 		if typeEnum > FalseExist_St {
 			return nil, fmt.Errorf("invalid type enum value: %d", typeEnumInt)
 		}
