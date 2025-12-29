@@ -14,12 +14,31 @@
 
 package litex_global
 
-var SuperFunctionsSet map[string]struct{} = map[string]struct{}{
-	KeywordUnion:     {},
-	KeywordIntersect: {},
+type ShortRet struct {
+	RetType StmtRetType
+	Msgs    []string
 }
 
-func IsSuperFunction(name string) bool {
-	_, ok := SuperFunctionsSet[name]
-	return ok
+func NewShortRet(retType StmtRetType, msgs []string) *ShortRet {
+	return &ShortRet{
+		RetType: retType,
+		Msgs:    msgs,
+	}
+}
+
+func (sr *ShortRet) IsTrue() bool {
+	return sr.RetType == StmtRetTypeTrue
+}
+
+func (sr *ShortRet) IsUnknown() bool {
+	return sr.RetType == StmtRetTypeUnknown
+}
+
+func (sr *ShortRet) IsErr() bool {
+	return sr.RetType == StmtRetTypeError
+}
+
+func (sr *ShortRet) SetType(retType StmtRetType) *ShortRet {
+	sr.RetType = retType
+	return sr
 }

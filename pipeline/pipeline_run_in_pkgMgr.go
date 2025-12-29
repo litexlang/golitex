@@ -53,7 +53,7 @@ func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bo
 		ret := RunStmtInExecutor(curExec, topStmt)
 		innerGlobRets = append(innerGlobRets, ret)
 		if ret.IsNotTrue() {
-			return nil, ret.Type, innerGlobRets
+			return nil, ret.RetType, innerGlobRets
 		}
 	}
 
