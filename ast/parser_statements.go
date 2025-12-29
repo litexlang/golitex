@@ -707,7 +707,7 @@ func (p *TbParser) haveObjStStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		return NewHaveStmt(objNames, fact, tb.line), nil
+		return NewHaveObjStStmt(objNames, fact, tb.line), nil
 	}
 }
 

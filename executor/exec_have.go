@@ -838,6 +838,10 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 }
 
 func (exec *Executor) haveObjStWithParamSets(stmt *ast.HaveObjStWithParamSetsStmt) *glob.StmtRet {
+	if exec.Env.GetExistPropDef(stmt.Fact.PropName) != nil {
+		return glob.ErrRet(fmt.Sprintf("%s is %s, please do not pass parameter set of objects", stmt.Fact.PropName, glob.KeywordExistProp))
+	}
+
 	purePropDef := exec.Env.GetPropDef(stmt.Fact.PropName)
 	if purePropDef == nil {
 		return glob.ErrRet("")
