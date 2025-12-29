@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) haveObjStPurePropStmtCheck(stmt *ast.HaveObjStWithParamSetsStmt, existStFact *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
+func (exec *Executor) haveObjWithSetParamsStPurePropStmtCheck(stmt *ast.HaveObjStWithParamSetsStmt, existStFact *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	ver := NewVerifier(exec.Env)
 
 	for curEnvIndex := range exec.Env.EnvSlice {
@@ -28,7 +28,7 @@ func (exec *Executor) haveObjStPurePropStmtCheck(stmt *ast.HaveObjStWithParamSet
 		if !got {
 			continue
 		}
-		ret := ver.ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(existStFact, knownFacts, state)
+		ret := ver.ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt, existStFact, knownFacts, state)
 		if ret != nil {
 			return glob.NewStmtTrueWithStmt(stmt.String()).AddVerifyProcess(ret)
 		}
@@ -40,7 +40,7 @@ func (exec *Executor) haveObjStPurePropStmtCheck(stmt *ast.HaveObjStWithParamSet
 		if !got {
 			continue
 		}
-		ret := ver.ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(existStFact, knownFacts, state)
+		ret := ver.ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt, existStFact, knownFacts, state)
 		if ret != nil {
 			return glob.NewStmtTrueWithStmt(stmt.String()).AddVerifyProcess(ret)
 		}
