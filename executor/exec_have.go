@@ -38,7 +38,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *g
 	// TODO 把 exist prop def 里的东西释放出来
 	existPropDef := exec.Env.GetExistPropDef(stmt.Fact.PropName)
 	if existPropDef == nil {
-		return glob.NewEmptyStmtUnknown()
+		return exec.haveObjStPurePropStmt(stmt, requireMsg)
 	}
 
 	if len(existPropDef.ExistParams) != len(stmt.ObjNames) {
