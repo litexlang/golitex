@@ -132,7 +132,7 @@ func exist_st_FactString(stmt *SpecFactStmt) string {
 	builder.WriteString(glob.KeywordExist)
 	builder.WriteByte(' ')
 
-	existParams, factParams := GetExistFactExistParamsAndFactParams(stmt)
+	existParams, factParams := stmt.ExistStFactToPropNameExistParamsParams()
 
 	builder.WriteString(objSliceString(existParams))
 	builder.WriteString(" ")
