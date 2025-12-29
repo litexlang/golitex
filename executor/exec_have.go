@@ -845,10 +845,10 @@ func (exec *Executor) haveObjStWithParamSets(stmt *ast.HaveObjStWithParamSetsStm
 
 	existStFact := stmt.ToTruePurePropExistStFact()
 	state := Round0Msg()
-	ret := exec.haveObjStPurePropStmtCheck(stmt, existStFact, state)
+	ret := exec.haveObjWithSetParamsStPurePropStmtCheck(stmt, existStFact, state)
 	if ret.IsNotUnknown() {
 		return ret
 	}
 
-	panic(":")
+	panic("")
 }
