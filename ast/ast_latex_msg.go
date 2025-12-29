@@ -711,10 +711,10 @@ func (s *DefFnSetStmt) ToLatexString() string {
 		builder.WriteString(".")
 	}
 
-	if len(s.Fn.ThenFacts) > 0 {
+	if len(s.AnonymousFn.ThenFacts) > 0 {
 		builder.WriteString("\n\n")
 		builder.WriteString("When its parameters satisfies the above condition, it has the following properties:")
-		thenFactStrSlice := s.Fn.ThenFacts.factStmtSliceToLatexStringSlice()
+		thenFactStrSlice := s.AnonymousFn.ThenFacts.factStmtSliceToLatexStringSlice()
 		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
 			builder.WriteString(" ")
 			builder.WriteString(strings.Join(thenFactStrSlice, ", "))
@@ -728,7 +728,7 @@ func (s *DefFnSetStmt) ToLatexString() string {
 	builder.WriteString("\n\n")
 
 	builder.WriteString("The return value is $\\in$ ")
-	builder.WriteString(s.Fn.RetSet.ToLatexString())
+	builder.WriteString(s.AnonymousFn.RetSet.ToLatexString())
 
 	builder.WriteString("\n\\end{definition}")
 

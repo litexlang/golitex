@@ -43,7 +43,7 @@ func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState
 		templateParamUniMap[param] = right.Params[i]
 	}
 
-	ok = ver.f_satisfy_FnT_ThenFacts_On_FnT_Dom(left, string(rightDefT.TemplateDefHeader.Name), templateParamUniMap, rightDefT.Fn, state)
+	ok = ver.f_satisfy_FnT_ThenFacts_On_FnT_Dom(left, string(rightDefT.TemplateDefHeader.Name), templateParamUniMap, rightDefT.AnonymousFn, state)
 	if !ok {
 		return glob.NewEmptyStmtUnknown()
 	}
@@ -57,7 +57,7 @@ func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruc
 		return false
 	}
 
-	instRightFnT, err := rightFnTDef.Fn.InstantiateFnStruct_FnName(string(rightFnTDef.TemplateDefHeader.Name), left)
+	instRightFnT, err := rightFnTDef.AnonymousFn.InstantiateFnStruct_FnName(string(rightFnTDef.TemplateDefHeader.Name), left)
 	if err != nil {
 		return false
 	}
@@ -93,7 +93,7 @@ func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruc
 }
 
 // all right in left
-func (ver *Verifier) f_satisfy_FnT_ThenFacts_On_FnT_Dom(f ast.Obj, fnTDefName string, templateParamUniMap map[string]ast.Obj, fnT *ast.FnTemplate, state *VerState) bool {
+func (ver *Verifier) f_satisfy_FnT_ThenFacts_On_FnT_Dom(f ast.Obj, fnTDefName string, templateParamUniMap map[string]ast.Obj, fnT *ast.AnonymousFn, state *VerState) bool {
 	derivedUniFact, err := fnT.DeriveUniFact(fnTDefName, f, templateParamUniMap)
 	if err != nil {
 		return false

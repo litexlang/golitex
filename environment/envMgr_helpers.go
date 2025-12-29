@@ -52,7 +52,7 @@ func (envMgr *EnvMgr) GenerateUndeclaredRandomName_AndNotInMap(m map[string]stru
 	}
 }
 
-func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTemplate, *glob.StmtRet) {
+func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.AnonymousFn, *glob.StmtRet) {
 	if objFnTypeToFnTStruct, ok := ast.AnonymousFnToInstFnTemplate(fnTName); ok {
 		return objFnTypeToFnTStruct, glob.NewEmptyStmtTrue()
 	} else {
@@ -65,7 +65,7 @@ func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.FnTemplat
 	}
 }
 
-func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.FnTemplate, *glob.StmtRet) {
+func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.AnonymousFn, *glob.StmtRet) {
 	defOfT := envMgr.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
 		return nil, glob.ErrRet(fmt.Sprintf("fnTNameHead %s is not a fn template", fnTDefName))
@@ -76,7 +76,7 @@ func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateP
 		return nil, glob.ErrRetWithErr(err)
 	}
 
-	fnTStruct, err := defOfT.Fn.Instantiate(uniMap)
+	fnTStruct, err := defOfT.AnonymousFn.Instantiate(uniMap)
 	if err != nil {
 		return nil, glob.ErrRetWithErr(err)
 	}

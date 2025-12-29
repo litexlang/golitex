@@ -548,7 +548,7 @@ func (stmt *DefFnSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	newFn, err := stmt.Fn.Instantiate(uniMap)
+	newFn, err := stmt.AnonymousFn.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}

@@ -28,7 +28,7 @@ type PropCommutativeCase struct {
 }
 
 type FnInFnTMemItem struct {
-	AsFnTStruct *ast.FnTemplate
+	AsFnTStruct *ast.AnonymousFn
 }
 
 type KnownFactsStruct struct {

@@ -67,7 +67,7 @@ type DefExistPropStmt struct {
 
 type DefFnStmt struct {
 	Name       string
-	FnTemplate *FnTemplate
+	FnTemplate *AnonymousFn
 
 	Line uint
 }
@@ -263,12 +263,12 @@ type KnowExistPropStmt struct {
 type DefFnSetStmt struct {
 	TemplateDefHeader *DefHeader
 	TemplateDomFacts  FactStmtSlice
-	Fn                *FnTemplate
+	AnonymousFn       *AnonymousFn
 
 	Line uint
 }
 
-type FnTemplate struct {
+type AnonymousFn struct {
 	Params    StrSlice
 	ParamSets ObjSlice
 	RetSet    Obj
@@ -501,7 +501,7 @@ type ImplicationStmt struct {
 type ProveImplyStmt struct {
 	SpecFact        *SpecFactStmt
 	ImplicationFact FactStmtSlice
-	Proofs           StmtSlice
+	Proofs          StmtSlice
 
 	Line uint
 }

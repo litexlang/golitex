@@ -20,17 +20,17 @@ import (
 )
 
 // storeSpecFactInMemAndCollect collects the fact string for derived facts tracking
-func (ie *InferEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) *glob.StmtRet {
+func (ie *InferEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) *glob.ShortRet {
 	ret := ie.EnvMgr.storeSpecFactInMem(fact)
 	if ret.IsErr() {
-		return ret
+		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	*derivedFacts = append(*derivedFacts, fact.String())
-	return glob.NewEmptyStmtTrue()
+	return glob.NewShortRet(glob.StmtRetTypeTrue, nil)
 }
 
 // BuiltinPropExceptTrueEqual handles postprocessing for builtin properties except equality
-func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) *glob.ShortRet {
 	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordIn) {
 		return ie.trueInFact(fact)
 	}
@@ -93,17 +93,17 @@ func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) *glob.
 		return ret
 	}
 
-	return glob.NewEmptyStmtUnknown()
+	return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact *ast.SpecFactStmt) *glob.ShortRet {
 	derivedFacts := []string{}
 
 	// x != 0 store spec Mem
 	notEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolNotEqual), []ast.Obj{fact.Params[0], ast.Atom("0")}, fact.Line)
 	ret := ie.EnvMgr.storeSpecFactInMem(notEqualZeroFact)
 	if ret.IsErr() {
-		return ret
+		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	derivedFacts = append(derivedFacts, notEqualZeroFact.String())
 
@@ -111,7 +111,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRig
 	greaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{fact.Params[0], ast.Atom("0")}, fact.Line)
 	ret = ie.EnvMgr.storeSpecFactInMem(greaterEqualZeroFact)
 	if ret.IsErr() {
-		return ret
+		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	derivedFacts = append(derivedFacts, greaterEqualZeroFact.String())
 
@@ -119,7 +119,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRig
 	lessEqualZeroFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fact.Params[0], ast.Atom("0")}, fact.Line)
 	ret = ie.EnvMgr.storeSpecFactInMem(lessEqualZeroFact)
 	if ret.IsErr() {
-		return ret
+		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	derivedFacts = append(derivedFacts, lessEqualZeroFact.String())
 
@@ -130,7 +130,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRig
 	greaterThanMinusXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{fact.Params[0], minusX}, fact.Line)
 	ret = ie.EnvMgr.storeSpecFactInMem(greaterThanMinusXFact)
 	if ret.IsErr() {
-		return ret
+		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	derivedFacts = append(derivedFacts, greaterThanMinusXFact.String())
 
@@ -138,7 +138,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRig
 	minusXLessThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{minusX, ast.Atom("0")}, fact.Line)
 	ret = ie.EnvMgr.storeSpecFactInMem(minusXLessThanZeroFact)
 	if ret.IsErr() {
-		return ret
+		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	derivedFacts = append(derivedFacts, minusXLessThanZeroFact.String())
 
@@ -147,7 +147,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRig
 	oneDivXGreaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{oneDivX, ast.Atom("0")}, fact.Line)
 	ret = ie.EnvMgr.storeSpecFactInMem(oneDivXGreaterThanZeroFact)
 	if ret.IsErr() {
-		return ret
+		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	derivedFacts = append(derivedFacts, oneDivXGreaterThanZeroFact.String())
 
@@ -156,7 +156,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRig
 	xSquaredGreaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{xSquared, ast.Atom("0")}, fact.Line)
 	ret = ie.EnvMgr.storeSpecFactInMem(xSquaredGreaterThanZeroFact)
 	if ret.IsErr() {
-		return ret
+		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	derivedFacts = append(derivedFacts, xSquaredGreaterThanZeroFact.String())
 
@@ -165,17 +165,17 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRig
 	sqrtXGreaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{sqrtX, ast.Atom("0")}, fact.Line)
 	ret = ie.EnvMgr.storeSpecFactInMem(sqrtXGreaterThanZeroFact)
 	if ret.IsErr() {
-		return ret
+		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	derivedFacts = append(derivedFacts, sqrtXGreaterThanZeroFact.String())
 
 	if len(derivedFacts) > 0 {
-		return glob.NewStmtTrueWithInfers((derivedFacts))
+		return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 	}
-	return glob.NewEmptyStmtTrue()
+	return glob.NewShortRet(glob.StmtRetTypeTrue, nil)
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsZero(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsZero(fact *ast.SpecFactStmt) *glob.ShortRet {
 	derivedFacts := []string{}
 
 	// abs(x) = x
@@ -191,44 +191,44 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAn
 
 	// x >= -x
 	greaterEqualMinusXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{fact.Params[0], minusX}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(greaterEqualMinusXFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort := ie.storeSpecFactInMemAndCollect(greaterEqualMinusXFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// sqrt(x) >= 0
 	sqrtX := ast.NewFnObj(ast.Atom("sqrt"), []ast.Obj{fact.Params[0]})
 	sqrtXGreaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{sqrtX, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(sqrtXGreaterEqualZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(sqrtXGreaterEqualZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
-	return glob.NewStmtTrueWithInfers((derivedFacts))
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(fact *ast.SpecFactStmt) *glob.ShortRet {
 	derivedFacts := []string{}
 
 	// x != 0 store spec Mem
 	notEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolNotEqual), []ast.Obj{fact.Params[0], ast.Atom("0")}, fact.Line)
-	ret := ie.EnvMgr.storeSpecFactInMemAndCollect(notEqualZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort := ie.storeSpecFactInMemAndCollect(notEqualZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// x <= 0
 	lessEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fact.Params[0], ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(lessEqualZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(lessEqualZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// not x >= 0
 	greaterEqualZeroFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{fact.Params[0], ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(greaterEqualZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(greaterEqualZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// -x: -1 * x
@@ -236,299 +236,299 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightP
 
 	// x < -x
 	lessThanMinusXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{fact.Params[0], minusX}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(lessThanMinusXFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(lessThanMinusXFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// -x > 0
 	minusXGreaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{minusX, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(minusXGreaterThanZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(minusXGreaterThanZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// 1/x < 0
 	oneDivX := ast.NewFnObj(ast.Atom(glob.KeySymbolSlash), []ast.Obj{ast.Atom("1"), fact.Params[0]})
 	oneDivXLessThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{oneDivX, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(oneDivXLessThanZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(oneDivXLessThanZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// x^2 > 0
 	xSquared := ast.NewFnObj(ast.Atom(glob.KeySymbolPower), []ast.Obj{fact.Params[0], ast.Atom("2")})
 	xSquaredGreaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{xSquared, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(xSquaredGreaterThanZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(xSquaredGreaterThanZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
-	return glob.NewStmtTrueWithInfers((derivedFacts))
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsZero(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsZero(fact *ast.SpecFactStmt) *glob.ShortRet {
 	derivedFacts := []string{}
 
 	// abs(x) = -x
 	absX := ast.NewFnObj(ast.Atom("abs"), []ast.Obj{fact.Params[0]})
 	minusX := ast.NegateObj(fact.Params[0])
 	absXEqualMinusXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{absX, minusX}, fact.Line)
-	ret := ie.EnvMgr.storeSpecFactInMemAndCollect(absXEqualMinusXFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort := ie.storeSpecFactInMemAndCollect(absXEqualMinusXFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// x <= -x
 	lessEqualMinusXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fact.Params[0], minusX}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(lessEqualMinusXFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(lessEqualMinusXFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// -x >= 0
 	minusXGreaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{minusX, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(minusXGreaterEqualZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(minusXGreaterEqualZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
-	return glob.NewStmtTrueWithInfers((derivedFacts))
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsNotZero(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsNotZero(fact *ast.SpecFactStmt) *glob.ShortRet {
 	derivedFacts := []string{}
 
 	// x > c (c != 0)
 	// x != c
 	notEqualCFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolNotEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret := ie.EnvMgr.storeSpecFactInMemAndCollect(notEqualCFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort := ie.storeSpecFactInMemAndCollect(notEqualCFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// x >= c
 	greaterEqualCFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(greaterEqualCFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(greaterEqualCFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// not x <= c
 	lessEqualCFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(lessEqualCFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(lessEqualCFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// c < x (等价表述)
 	cLessThanXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(cLessThanXFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(cLessThanXFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// not c >= x
 	cGreaterEqualXFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(cGreaterEqualXFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(cGreaterEqualXFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// x - c > 0
 	xMinusC := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[0], fact.Params[1]})
 	xMinusCGreaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{xMinusC, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(xMinusCGreaterThanZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(xMinusCGreaterThanZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// x - c >= 0
 	xMinusCGreaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{xMinusC, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(xMinusCGreaterEqualZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(xMinusCGreaterEqualZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// c - x < 0
 	cMinusX := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[1], fact.Params[0]})
 	cMinusXLessThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{cMinusX, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(cMinusXLessThanZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(cMinusXLessThanZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// c - x <= 0
 	cMinusXLessEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{cMinusX, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(cMinusXLessEqualZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(cMinusXLessEqualZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
-	return glob.NewStmtTrueWithInfers((derivedFacts))
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsNotZero(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsNotZero(fact *ast.SpecFactStmt) *glob.ShortRet {
 	derivedFacts := []string{}
 
 	// x >= c (c != 0)
 	// not x < c
 	lessCFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret := ie.EnvMgr.storeSpecFactInMemAndCollect(lessCFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort := ie.storeSpecFactInMemAndCollect(lessCFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// c <= x (等价表述)
 	cLessEqualXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(cLessEqualXFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(cLessEqualXFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// not c > x
 	cGreaterXFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(cGreaterXFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(cGreaterXFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// x - c >= 0
 	xMinusC := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[0], fact.Params[1]})
 	xMinusCGreaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{xMinusC, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(xMinusCGreaterEqualZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(xMinusCGreaterEqualZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// c - x <= 0
 	cMinusX := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[1], fact.Params[0]})
 	cMinusXLessEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{cMinusX, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(cMinusXLessEqualZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(cMinusXLessEqualZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
-	return glob.NewStmtTrueWithInfers((derivedFacts))
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsNotZero(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsNotZero(fact *ast.SpecFactStmt) *glob.ShortRet {
 	derivedFacts := []string{}
 
 	// x < c (c != 0)
 	// x != c
 	notEqualCFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolNotEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret := ie.EnvMgr.storeSpecFactInMemAndCollect(notEqualCFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort := ie.storeSpecFactInMemAndCollect(notEqualCFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// x <= c
 	lessEqualCFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(lessEqualCFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(lessEqualCFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// not x >= c
 	greaterEqualCFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(greaterEqualCFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(greaterEqualCFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// c > x (等价表述)
 	cGreaterThanXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(cGreaterThanXFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(cGreaterThanXFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// not c <= x
 	cLessEqualXFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(cLessEqualXFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(cLessEqualXFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// x - c < 0
 	xMinusC := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[0], fact.Params[1]})
 	xMinusCLessThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{xMinusC, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(xMinusCLessThanZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(xMinusCLessThanZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// x - c <= 0
 	xMinusCLessEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{xMinusC, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(xMinusCLessEqualZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(xMinusCLessEqualZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// c - x > 0
 	cMinusX := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[1], fact.Params[0]})
 	cMinusXGreaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{cMinusX, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(cMinusXGreaterThanZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(cMinusXGreaterThanZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// c - x >= 0
 	cMinusXGreaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{cMinusX, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(cMinusXGreaterEqualZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(cMinusXGreaterEqualZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
-	return glob.NewStmtTrueWithInfers((derivedFacts))
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(fact *ast.SpecFactStmt) *glob.ShortRet {
 	derivedFacts := []string{}
 
 	// x <= c (c != 0)
 	// not x > c
 	greaterCFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	ret := ie.EnvMgr.storeSpecFactInMemAndCollect(greaterCFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort := ie.storeSpecFactInMemAndCollect(greaterCFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// c >= x (等价表述)
 	cGreaterEqualXFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(cGreaterEqualXFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(cGreaterEqualXFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// not c < x
 	cLessXFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(cLessXFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(cLessXFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// x - c <= 0
 	xMinusC := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[0], fact.Params[1]})
 	xMinusCLessEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{xMinusC, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(xMinusCLessEqualZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(xMinusCLessEqualZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
 	// c - x >= 0
 	cMinusX := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[1], fact.Params[0]})
 	cMinusXGreaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{cMinusX, ast.Atom("0")}, fact.Line)
-	ret = ie.EnvMgr.storeSpecFactInMemAndCollect(cMinusXGreaterEqualZeroFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort = ie.storeSpecFactInMemAndCollect(cMinusXGreaterEqualZeroFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
-	return glob.NewStmtTrueWithInfers((derivedFacts))
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) subsetOfFactPostProcess(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (ie *InferEngine) subsetOfFactPostProcess(fact *ast.SpecFactStmt) *glob.ShortRet {
 	derivedFacts := []string{}
 	// 生成出来一个 random variable t
 	obj := ie.EnvMgr.GenerateUndeclaredRandomName()
@@ -538,36 +538,36 @@ func (ie *InferEngine) subsetOfFactPostProcess(fact *ast.SpecFactStmt) *glob.Stm
 	ret := ie.EnvMgr.newUniFact(forallFact)
 
 	if ret.IsErr() {
-		return ret
+		return glob.ErrStmtMsgToShortRet(ret)
 	}
 
 	derivedFacts = append(derivedFacts, forallFact.String())
 
-	return glob.NewStmtTrueWithInfers((derivedFacts))
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) falseEqualFact(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (ie *InferEngine) falseEqualFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 	derivedFacts := []string{}
 
 	// x - y != 0
 	notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolNotEqual), []ast.Obj{ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{fact.Params[0], fact.Params[1]}), ast.Atom("0")}, fact.Line)
-	ret := ie.EnvMgr.storeSpecFactInMemAndCollect(notEqualFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort := ie.storeSpecFactInMemAndCollect(notEqualFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
-	return glob.NewStmtTrueWithInfers((derivedFacts))
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) isNonEmptyWithItemFactPostProcess(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (ie *InferEngine) isNonEmptyWithItemFactPostProcess(fact *ast.SpecFactStmt) *glob.ShortRet {
 	derivedFacts := []string{}
 
 	// fact.Params[0] 非空
 	isNonEmptyFact := ast.NewIsANonEmptySetFact(fact.Params[0], fact.Line)
-	ret := ie.EnvMgr.storeSpecFactInMemAndCollect(isNonEmptyFact, &derivedFacts)
-	if ret.IsErr() {
-		return ret
+	retShort := ie.storeSpecFactInMemAndCollect(isNonEmptyFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
 	}
 
-	return glob.NewStmtTrueWithInfers((derivedFacts))
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
