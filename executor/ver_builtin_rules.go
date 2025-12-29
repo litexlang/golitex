@@ -295,7 +295,7 @@ func (ver *Verifier) verIsASetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 		return glob.NewEmptyStmtUnknown()
 	}
 
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), "In ZFC set theory, everything except set itself is a set. In Litex, any object except set, nonempty_set, finite_set is a set.", glob.NewEmptyStmtTrue())
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), "In ZFC set theory, everything is a set. Since Litex is based on ZFC set theory, $is_a_set(x) is true for any object x.", glob.NewEmptyStmtTrue())
 }
 
 func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
