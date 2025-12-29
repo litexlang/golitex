@@ -136,12 +136,20 @@ func (envMgr *EnvMgr) newTrueEqual(fact *ast.SpecFactStmt) *glob.StmtRet {
 
 	// postprocess for cart: if x = cart(x1, x2, ..., xn)
 	ie := NewInferenceEngine(envMgr)
-	ieRet := ie.newTrueEqual(fact)
-	if ieRet.IsNotTrue() {
-		return ieRet
-	}
+	shortRet := ie.newTrueEqual(fact)
 
-	return ret.AddInfers(ieRet.Infer)
+	return ret.AddShortRetAsInfers(shortRet)
+
+	// if shortRet.IsErr() {
+	// 	return ret.AddShortRetAsInfers(shortRet)
+	// }
+
+	// // 将 infer 消息添加到结果中
+	// if shortRet.IsTrue() && len(shortRet.Msgs) > 0 {
+	// 	return ret.AddInfers(shortRet.Msgs)
+	// }
+
+	// return ret
 }
 
 func (envMgr *EnvMgr) newEqualsFact(stmt *ast.EqualsFactStmt) *glob.StmtRet {

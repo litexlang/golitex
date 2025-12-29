@@ -101,7 +101,7 @@ func VerifyProcessMsgs(msgs []string) string {
 }
 
 func AddREPLSuccessMsg(ret *StmtRet) string {
-	switch ret.Type {
+	switch ret.RetType {
 	case StmtRetTypeTrue:
 		return REPLSuccessMessage
 	case StmtRetTypeUnknown:
