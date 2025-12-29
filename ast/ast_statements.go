@@ -498,11 +498,10 @@ type ImplicationStmt struct {
 	Line uint
 }
 
-type ProveImplicationStmt struct {
-	ImplicationName string
-	Params          StrSlice
+type ProveImplyStmt struct {
+	SpecFact        *SpecFactStmt
 	ImplicationFact FactStmtSlice
-	Proof           StmtSlice
+	Proofs           StmtSlice
 
 	Line uint
 }

@@ -1032,19 +1032,14 @@ func (stmt *ProveForStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ProveImplicationStmt) String() string {
+func (stmt *ProveImplyStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveImplication)
+	builder.WriteString(glob.KeywordProveImply)
 	builder.WriteString(" ")
-	builder.WriteString(stmt.ImplicationName)
-	if len(stmt.Params) > 0 {
-		builder.WriteString("(")
-		builder.WriteString(strings.Join(stmt.Params, ", "))
-		builder.WriteString(")")
-	}
+	builder.WriteString(stmt.SpecFact.String())
 	builder.WriteString(":")
 
-	hasProve := len(stmt.Proof) > 0
+	hasProve := len(stmt.Proofs) > 0
 
 	if hasProve {
 		// Case 1: =>:, prove: format
@@ -1057,7 +1052,7 @@ func (stmt *ProveImplicationStmt) String() string {
 			}
 		}
 		builder.WriteString("    prove:\n")
-		for _, proof := range stmt.Proof {
+		for _, proof := range stmt.Proofs {
 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 2))
 			builder.WriteString("\n")
 		}

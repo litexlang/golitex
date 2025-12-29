@@ -836,7 +836,7 @@ func (s *ProveForStmt) ToLatexString() string {
 	return "TODO"
 }
 
-func (s *ProveImplicationStmt) ToLatexString() string {
+func (s *ProveImplyStmt) ToLatexString() string {
 	// TODO: implement LaTeX conversion for prove_implication
 	return s.String()
 }

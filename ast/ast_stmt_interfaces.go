@@ -42,7 +42,7 @@ func (s *ImportDirStmt) stmt()                 {}
 func (s *RunFileStmt) stmt()                   {}
 func (s *ProveStmt) stmt()                     {}
 func (s *ProveForStmt) stmt()                  {}
-func (s *ProveImplicationStmt) stmt()          {}
+func (s *ProveImplyStmt) stmt()          {}
 func (s *ImplicationStmt) stmt()               {}
 func (s *UniFactWithIffStmt) stmt()            {}
 func (s *ClaimProveByContradictionStmt) stmt() {}
@@ -124,7 +124,7 @@ func (s *ByStmt) algoStmt()                     {}
 func (s *ClaimIffStmt) algoStmt()               {}
 
 func (s *ProveForStmt) algoStmt()                      {}
-func (s *ProveImplicationStmt) algoStmt()              {}
+func (s *ProveImplyStmt) algoStmt()              {}
 func (s *ImplicationStmt) algoStmt()                   {}
 func (s *ProveIsTransitivePropStmt) algoStmt()         {}
 func (s *DefAlgoStmt) algoStmt()                       {}
@@ -179,7 +179,7 @@ func (s *EvalStmt) GetLine() uint                   { return s.Line }
 func (s *DefProveAlgoStmt) GetLine() uint           { return s.Line }
 func (s *ByStmt) GetLine() uint                     { return s.Line }
 func (s *ProveForStmt) GetLine() uint               { return s.Line }
-func (s *ProveImplicationStmt) GetLine() uint       { return s.Line }
+func (s *ProveImplyStmt) GetLine() uint       { return s.Line }
 func (s *ImplicationStmt) GetLine() uint            { return s.Line }
 func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint  { return s.Line }
 func (s *HaveFnCaseByCaseStmt) GetLine() uint       { return s.Line }
@@ -232,7 +232,7 @@ func (s *EvalStmt) SetLine(l uint)                   { s.Line = l }
 func (s *DefProveAlgoStmt) SetLine(l uint)           { s.Line = l }
 func (s *ByStmt) SetLine(l uint)                     { s.Line = l }
 func (s *ProveForStmt) SetLine(l uint)               { s.Line = l }
-func (s *ProveImplicationStmt) SetLine(l uint)       { s.Line = l }
+func (s *ProveImplyStmt) SetLine(l uint)       { s.Line = l }
 func (s *ImplicationStmt) SetLine(l uint)            { s.Line = l }
 func (s *HaveFnEqualCaseByCaseStmt) SetLine(l uint)  { s.Line = l }
 func (s *HaveFnCaseByCaseStmt) SetLine(l uint)       { s.Line = l }

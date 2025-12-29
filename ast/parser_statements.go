@@ -112,8 +112,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.doNothingStmt(tb)
 	case glob.KeywordImport:
 		ret, err = p.importDirStmt(tb)
-	case glob.KeywordProveImplication:
-		ret, err = p.proveImplicationStmt(tb)
+	case glob.KeywordProveImply:
+		ret, err = p.proveImplyStmt(tb)
 	case glob.KeywordImplication:
 		ret, err = p.DefImplicationStmtI(tb)
 	case glob.KeywordRun:
@@ -1970,46 +1970,43 @@ func (p *TbParser) importDirStmt(tb *tokenBlock) (*ImportDirStmt, error) {
 	return NewImportDirStmt(pkgName, asPkgName, true, tb.line), nil
 }
 
-func (p *TbParser) proveImplicationStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordProveImplication)
+func (p *TbParser) proveImplyStmt(tb *tokenBlock) (*ProveImplyStmt, error) {
+	err := tb.header.skip(glob.KeywordProveImply)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
-	// Parse implication name (e.g., "p")
-	implicationName, err := tb.header.next()
+	specFact, err := p.specFactStmt(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
-	// Parse parameters (e.g., "(x)")
-	var params StrSlice
-	if tb.header.is(glob.KeySymbolLeftBrace) {
-		err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if tb.header.is(glob.KeySymbolRightArrow) {
+		err = tb.header.skip(glob.KeySymbolRightArrow)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
 
-		// Parse parameters without param sets (just parameter names)
-		for !tb.header.is(glob.KeySymbolRightBrace) {
-			param, err := tb.header.next()
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			params = append(params, param)
-
-			if tb.header.is(glob.KeySymbolComma) {
-				err = tb.header.skip(glob.KeySymbolComma)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-			}
-		}
-
-		err = tb.header.skip(glob.KeySymbolRightBrace)
+		implicationFacts, err := p.inlineFacts_checkUniDepth0(tb, []string{glob.KeySymbolColon})
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
+
+		if len(implicationFacts) == 0 {
+			return nil, ErrInLine(fmt.Errorf("expect implication facts after '=>:'"), tb)
+		}
+
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		proofs, err := p.parseTbBodyAndGetStmts(tb.body)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		return NewProveImplicationStmt(specFact, implicationFacts, proofs, tb.line), nil
 	}
 
 	// Skip colon
@@ -2079,7 +2076,7 @@ func (p *TbParser) proveImplicationStmt(tb *tokenBlock) (Stmt, error) {
 		}
 	}
 
-	return NewProveImplicationStmt(implicationName, params, implicationFacts, proofs, tb.line), nil
+	return NewProveImplicationStmt(specFact, implicationFacts, proofs, tb.line), nil
 }
 
 func (p *TbParser) DefImplicationStmtI(tb *tokenBlock) (*ImplicationStmt, error) {

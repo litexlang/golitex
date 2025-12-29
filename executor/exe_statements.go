@@ -118,6 +118,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = glob.ErrRet("run statements are not allowed in local scope.")
 	case *ast.ProveForStmt:
 		execRet = exec.proveForStmt(stmt)
+	case *ast.ProveImplyStmt:
+		execRet = exec.proveImplyStmt(stmt)
 	default:
 		execRet = glob.ErrRet(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -894,4 +896,98 @@ func (exec *Executor) implicationStmt(stmt *ast.ImplicationStmt) *glob.StmtRet {
 	}
 
 	return exec.NewTrueStmtRet(stmt)
+}
+
+func (exec *Executor) proveImplyStmt(stmt *ast.ProveImplyStmt) *glob.StmtRet {
+	ret := exec.proveImplyStmtProveProcess(stmt)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	ret = exec.Env.ProveImplyNewThenFactInPropDef(stmt)
+	if ret.IsErr() {
+		return glob.ErrRet(ret.String())
+	}
+
+	return exec.NewTrueStmtRet(stmt)
+}
+
+func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveImplyStmt) *glob.StmtRet {
+	specFactAsParams, err := ast.ParamsInSpecFactAreStrings(stmt.SpecFact)
+	if err != nil {
+		return glob.ErrRet(err.Error())
+	}
+
+	// prop 的定义
+	def := exec.Env.GetPropDef(stmt.SpecFact.PropName)
+	if def == nil {
+		return glob.ErrRet(fmt.Sprintf("undefined prop: %s", stmt.SpecFact.PropName))
+	}
+	if len(def.DefHeader.Params) != len(specFactAsParams) {
+		return glob.ErrRet(fmt.Sprintf("prop %s has %d params, but %d params are expected", stmt.SpecFact.PropName, len(def.DefHeader.Params), len(specFactAsParams)))
+	}
+
+	if len(def.DefHeader.ParamSets) != len(stmt.SpecFact.Params) {
+		return glob.ErrRet(fmt.Sprintf("prop %s has %d param sets, but %d params are expected", stmt.SpecFact.PropName, len(def.DefHeader.ParamSets), len(stmt.SpecFact.Params)))
+	}
+
+	// define params in env
+	for _, param := range specFactAsParams {
+		ret := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line))
+		if ret.IsErr() {
+			return glob.ErrRet(ret.String())
+		}
+	}
+
+	// 让这些param符合 def domain
+	uniMap := map[string]ast.Obj{}
+
+	// 让 param 都在 set 里
+	for i, param := range def.DefHeader.Params {
+		instParamSet, err := def.DefHeader.ParamSets[i].Instantiate(uniMap)
+		if err != nil {
+			return glob.ErrRet(err.Error())
+		}
+
+		newInFact := ast.NewInFactWithObj(stmt.SpecFact.Params[i], instParamSet)
+		ret := exec.Env.NewFactWithoutCheckingNameDefined(newInFact)
+		if ret.IsErr() {
+			return glob.ErrRet(ret.String())
+		}
+
+		uniMap[param] = stmt.SpecFact.Params[i]
+	}
+
+	for _, domFact := range def.DomFactsOrNil {
+		instDomFact, err := domFact.InstantiateFact(uniMap)
+		if err != nil {
+			return glob.ErrRet(err.Error())
+		}
+		ret := exec.Env.NewFactWithoutCheckingNameDefined(instDomFact)
+		if ret.IsErr() {
+			return glob.ErrRet(ret.String())
+		}
+	}
+
+	// exec proofs
+	for _, curStmt := range stmt.Proofs {
+		execState := exec.Stmt(curStmt)
+		if execState.IsNotTrue() {
+			return execState
+		}
+	}
+
+	// exec then
+	for _, thenFact := range stmt.ImplicationFact {
+		instThenFact, err := thenFact.InstantiateFact(uniMap)
+		if err != nil {
+			return glob.ErrRet(err.Error())
+		}
+		execState := exec.factStmt(instThenFact)
+		if execState.IsNotTrue() {
+			return execState
+		}
+	}
+
+	return glob.NewEmptyStmtTrue()
 }

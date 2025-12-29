@@ -337,7 +337,7 @@ func (s *ProveForStmt) InlineString() string {
 	return "TODO"
 }
 
-func (s *ProveImplicationStmt) InlineString() string {
+func (s *ProveImplyStmt) InlineString() string {
 	return "TODO"
 }
 
