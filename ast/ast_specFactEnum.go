@@ -28,13 +28,13 @@ const (
 )
 
 func (stmt *SpecFactStmt) ReverseTrue() *SpecFactStmt {
-	if stmt.TypeEnum == TruePure {
+	if stmt.FactType == TruePure {
 		return NewSpecFactStmt(FalsePure, stmt.PropName, stmt.Params, stmt.Line)
-	} else if stmt.TypeEnum == FalsePure {
+	} else if stmt.FactType == FalsePure {
 		return NewSpecFactStmt(TruePure, stmt.PropName, stmt.Params, stmt.Line)
-	} else if stmt.TypeEnum == TrueExist_St {
+	} else if stmt.FactType == TrueExist_St {
 		return NewSpecFactStmt(FalseExist_St, stmt.PropName, stmt.Params, stmt.Line)
-	} else if stmt.TypeEnum == FalseExist_St {
+	} else if stmt.FactType == FalseExist_St {
 		return NewSpecFactStmt(TrueExist_St, stmt.PropName, stmt.Params, stmt.Line)
 	}
 	return nil
@@ -45,15 +45,15 @@ func (f *SpecFactStmt) IsPropNameEqual() bool {
 }
 
 func (f *SpecFactStmt) IsPureFact() bool {
-	return f.TypeEnum == TruePure || f.TypeEnum == FalsePure
+	return f.FactType == TruePure || f.FactType == FalsePure
 }
 
 func (f *SpecFactStmt) IsExist_St_Fact() bool {
-	return f.TypeEnum == TrueExist_St || f.TypeEnum == FalseExist_St
+	return f.FactType == TrueExist_St || f.FactType == FalseExist_St
 }
 
 func (f *SpecFactStmt) IsTrue() bool {
-	return f.TypeEnum == TruePure || f.TypeEnum == TrueExist_St
+	return f.FactType == TruePure || f.FactType == TrueExist_St
 }
 
 func (f *SpecFactStmt) NameIs(givenName string) bool {

@@ -36,7 +36,7 @@ func (exec *Executor) NewCommutativeProp(specFact *ast.SpecFactStmt) {
 		exec.Env.CurEnv().CommutativePropMem[string(specFact.PropName)] = env.NewCommutativePropMemItemStruct()
 	}
 
-	switch specFact.TypeEnum {
+	switch specFact.FactType {
 	case ast.TruePure:
 		exec.Env.CurEnv().CommutativePropMem[string(specFact.PropName)].TruePureIsCommutative = true
 	case ast.FalsePure:

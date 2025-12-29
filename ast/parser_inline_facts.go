@@ -523,7 +523,7 @@ func (p *TbParser) parseInfixRelationalFact(tb *tokenBlock, leftObj Obj, operato
 // This allows us to reuse the commutative property of =
 func (p *TbParser) normalizeNotEqualFact(fact *SpecFactStmt) *SpecFactStmt {
 	if fact != nil && fact.NameIs(glob.KeySymbolNotEqual) {
-		fact.TypeEnum = FalsePure
+		fact.FactType = FalsePure
 		fact.PropName = Atom(glob.KeySymbolEqual)
 	}
 	return fact

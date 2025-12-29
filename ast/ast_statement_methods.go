@@ -109,7 +109,7 @@ func (stmt *SpecFactStmt) ReverseParameterOrder() (*SpecFactStmt, error) {
 
 	newParams := []Obj{stmt.Params[1], stmt.Params[0]}
 
-	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams, stmt.Line), nil
+	return NewSpecFactStmt(stmt.FactType, stmt.PropName, newParams, stmt.Line), nil
 }
 
 func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
@@ -187,7 +187,7 @@ func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
 	}
 
 	newParams := []Obj{stmt.Params[1], stmt.Params[0]}
-	return NewSpecFactStmt(stmt.TypeEnum, stmt.PropName, newParams, stmt.Line), nil
+	return NewSpecFactStmt(stmt.FactType, stmt.PropName, newParams, stmt.Line), nil
 }
 
 func (stmt *DefLetStmt) NewInFacts() []*SpecFactStmt {

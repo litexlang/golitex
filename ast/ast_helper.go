@@ -418,7 +418,7 @@ func MakeSetBuilderObj(param string, parentSet Obj, facts SpecFactPtrSlice) (*Fn
 
 func changeSpecFactIntoObjs(fact *SpecFactStmt) ([]Obj, error) {
 	ret := []Obj{}
-	switch fact.TypeEnum {
+	switch fact.FactType {
 	case FalsePure:
 		ret = append(ret, Atom(strconv.Itoa(int(FalsePure))))
 	case FalseExist_St:
@@ -502,7 +502,7 @@ func ObjIsRangeOrClosedRangeWith2Params(obj Obj) bool {
 }
 
 func IsTrueEqualFact(fact *SpecFactStmt) bool {
-	if fact.TypeEnum != TruePure {
+	if fact.FactType != TruePure {
 		return false
 	}
 
@@ -518,7 +518,7 @@ func (stmt *ImplicationStmt) ToProp() *DefPropStmt {
 }
 
 func IsTrueSpecFactWithPropName(specFact *SpecFactStmt, propName string) bool {
-	if specFact.TypeEnum != TruePure {
+	if specFact.FactType != TruePure {
 		return false
 	}
 
@@ -526,7 +526,7 @@ func IsTrueSpecFactWithPropName(specFact *SpecFactStmt, propName string) bool {
 }
 
 func IsFalseSpecFactWithPropName(specFact *SpecFactStmt, propName string) bool {
-	if specFact.TypeEnum != FalsePure {
+	if specFact.FactType != FalsePure {
 		return false
 	}
 

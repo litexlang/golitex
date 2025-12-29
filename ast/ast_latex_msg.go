@@ -158,13 +158,13 @@ func pureSpecFactLatexString(stmt *SpecFactStmt) string {
 
 	if glob.IsKeySymbol(string(stmt.PropName)) {
 		builder.WriteString(keySymbolRelaFactWithoutNotLatexString(stmt))
-		if stmt.TypeEnum == FalsePure {
+		if stmt.FactType == FalsePure {
 			builder.WriteString(" is false")
 		}
 		return builder.String()
 	} else if _, ok := relaPropSet[string(stmt.PropName)]; ok {
 		builder.WriteString(keywordRelaFactWithoutNotLatexString(stmt))
-		if stmt.TypeEnum == FalsePure {
+		if stmt.FactType == FalsePure {
 			builder.WriteString(" is false")
 		}
 		return builder.String()
@@ -174,7 +174,7 @@ func pureSpecFactLatexString(stmt *SpecFactStmt) string {
 		curStr = fmt.Sprintf("$%s$", curStr)
 		builder.WriteString(curStr)
 
-		if stmt.TypeEnum == FalsePure {
+		if stmt.FactType == FalsePure {
 			builder.WriteString(" is false")
 		}
 		return builder.String()

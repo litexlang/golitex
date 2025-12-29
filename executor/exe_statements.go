@@ -151,6 +151,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) *glob.StmtRet {
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
 func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) *glob.StmtRet {
 	newFactMsgs := []string{}
+	implicationMsgs := []string{}
 
 	for _, fact := range stmt.Facts {
 		switch fact := fact.(type) {
@@ -160,17 +161,15 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) *glob.StmtRet {
 				return glob.ErrRet(ret.String()).AddError(stmt.String())
 			}
 			// Collect derived facts from post-processing
-			if ret.IsTrue() && len(ret.NewFact) > 0 {
-				newFactMsgs = append(newFactMsgs, ret.NewFact...)
-			}
-
+			newFactMsgs = append(newFactMsgs, fact.String())
+			implicationMsgs = append(implicationMsgs, ret.Infer...)
 		default:
 			return glob.ErrRet(fmt.Sprintf("unknown fact type: %T", fact)).AddError(stmt.String())
 		}
 	}
 
 	// Build the result with all derived facts
-	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
+	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs).AddInfers(implicationMsgs)
 }
 
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) *glob.StmtRet {
@@ -913,6 +912,14 @@ func (exec *Executor) proveImplyStmt(stmt *ast.ProveImplyStmt) *glob.StmtRet {
 }
 
 func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveImplyStmt) *glob.StmtRet {
+
+	exec.NewEnv()
+	defer exec.deleteEnv()
+
+	if stmt.SpecFact.FactType != ast.TruePure {
+		return glob.ErrRet(fmt.Sprintf("expect true pure fact in prove_imply"))
+	}
+
 	specFactAsParams, err := ast.ParamsInSpecFactAreStrings(stmt.SpecFact)
 	if err != nil {
 		return glob.ErrRet(err.Error())
@@ -967,6 +974,12 @@ func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveImplyStmt) *glob
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
+	}
+
+	// itself is true
+	ret := exec.Env.NewFactWithoutCheckingNameDefined(stmt.SpecFact)
+	if ret.IsErr() {
+		return glob.ErrRet(ret.String())
 	}
 
 	// exec proofs
