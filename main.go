@@ -84,9 +84,14 @@ func main() {
 		pkgMgr := package_manager.NewEmptyPkgMgr(wd)
 
 		// ret := pipeline.RunSourceCode(glob.RemoveWindowsCarriage(*executeFlag), "-e")
-		_, ret := pipeline.RunCodeInPkgMgr(glob.RemoveWindowsCarriage(*executeFlag), pkgMgr, false)
-		msg := strings.TrimSpace(ret.String())
-		fmt.Println(msg)
+		_, retType, rets := pipeline.RunCodeInPkgMgr(glob.RemoveWindowsCarriage(*executeFlag), pkgMgr, false)
+
+		for _, ret := range rets {
+			fmt.Println(strings.TrimSpace(ret.String()))
+		}
+
+		fmt.Println(glob.REPLSuccessMsgs(retType))
+
 		return
 	}
 
@@ -177,10 +182,13 @@ func MainFlagFile(fileFlag string) {
 
 	pkgMgr := package_manager.NewEmptyPkgMgr(wd)
 
-	_, ret := pipeline.RunFileInPkgMgr(absFilePath, "", pkgMgr, false)
+	_, retType, rets := pipeline.RunFileInPkgMgr(absFilePath, "", pkgMgr, false)
 
-	fmt.Println(glob.StringWithOptimizedNewline(ret.String()))
-	fmt.Println(glob.AddREPLSuccessMsg(ret))
+	for _, ret := range rets {
+		fmt.Println(glob.StringWithOptimizedNewline(ret.String()))
+	}
+
+	fmt.Println(glob.REPLSuccessMsgs(retType))
 }
 
 func RunTutorial() {
