@@ -81,7 +81,7 @@ func (ie *InferEngine) newFalseExist(fact *ast.SpecFactStmt) *glob.ShortRet {
 // newTrueExist handles postprocessing for TrueExist_St facts
 // have(exist ... st ...) => exist
 func (ie *InferEngine) newTrueExist(fact *ast.SpecFactStmt) *glob.ShortRet {
-	_, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
+	_, factParams := fact.ExistStFactToPropNameExistParamsParams()
 
 	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, factParams, fact.Line)
 

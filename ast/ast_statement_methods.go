@@ -267,22 +267,6 @@ func MakeExistFactParamsSlice(existParams []Obj, paramsInFact []Obj) []Obj {
 	return factParams
 }
 
-func GetExistFactExistParamsAndFactParams(stmt *SpecFactStmt) ([]Obj, []Obj) {
-	lengthOfExistParams, _ := strconv.Atoi(string(stmt.Params[0].(Atom)))
-
-	existParams := []Obj{}
-	factParams := []Obj{}
-	for i := 1; i < lengthOfExistParams+1; i++ {
-		existParams = append(existParams, stmt.Params[i])
-	}
-
-	for i := lengthOfExistParams + 1; i < len(stmt.Params); i++ {
-		factParams = append(factParams, stmt.Params[i])
-	}
-
-	return existParams, factParams
-}
-
 func (factStmtSlice FactStmtSlice) InstantiateFact(uniMap map[string]Obj) (FactStmtSlice, error) {
 	instantiatedFacts := FactStmtSlice{}
 	for _, fact := range factStmtSlice {
@@ -416,4 +400,20 @@ func (stmt *ProveForStmt) UniFact() *UniFactStmt {
 
 	thenFacts := stmt.ThenFacts
 	return NewUniFact(params, paramSets, domFacts, thenFacts, stmt.Line)
+}
+
+func (stmt *SpecFactStmt) ExistStFactToPropNameExistParamsParams() ([]Obj, []Obj) {
+	lengthOfExistParams, _ := strconv.Atoi(string(stmt.Params[0].(Atom)))
+
+	existParams := []Obj{}
+	factParams := []Obj{}
+	for i := 1; i < lengthOfExistParams+1; i++ {
+		existParams = append(existParams, stmt.Params[i])
+	}
+
+	for i := lengthOfExistParams + 1; i < len(stmt.Params); i++ {
+		factParams = append(factParams, stmt.Params[i])
+	}
+
+	return existParams, factParams
 }
