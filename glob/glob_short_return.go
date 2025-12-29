@@ -46,3 +46,15 @@ func (sr *ShortRet) SetType(retType StmtRetType) *ShortRet {
 func ErrStmtMsgToShortRet(stmtRet *StmtRet) *ShortRet {
 	return NewShortRet(stmtRet.RetType, stmtRet.Error)
 }
+
+func NewShortUnknownRet() *ShortRet {
+	return NewShortRet(StmtRetTypeUnknown, []string{})
+}
+
+func NewShortErrorRet() *ShortRet {
+	return NewShortRet(StmtRetTypeError, []string{})
+}
+
+func NewShortTrueRet() *ShortRet {
+	return NewShortRet(StmtRetTypeTrue, []string{})
+}
