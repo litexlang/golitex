@@ -5,10 +5,12 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) twoExistFactWithTheSamePropNameAndParams(left *ast.SpecFactStmt, right *ast.SpecFactStmt) glob.ShortRet {
-	panic("")
-}
+func (ver *Verifier) GivenExistParamsAndSpecFactMatchRightInstExistStFact(freeExistParams []string, freeSpecFact *ast.SpecFactStmt, right *ast.SpecFactStmt) *glob.ShortRet {
+	rightExistParams, rightParams := right.ExistStFactToPropNameExistParamsParams()
 
-func (ver *Verifier) twoExistFactWithTheSameParams(left *ast.SpecFactStmt, right *ast.SpecFactStmt) glob.ShortRet {
+	if len(freeExistParams) != len(rightExistParams) || len(freeSpecFact.Params) != len(rightParams) {
+		return glob.NewShortUnknownRet()
+	}
+
 	panic("")
 }
