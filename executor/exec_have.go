@@ -850,5 +850,14 @@ func (exec *Executor) haveObjStWithParamSets(stmt *ast.HaveObjStWithParamSetsStm
 		return ret
 	}
 
-	panic("")
+	// define
+	ret = exec.Env.DefLetStmt(ast.NewDefLetStmt(stmt.ObjNames, stmt.ObjSets, []ast.FactStmt{stmt.Fact}, glob.BuiltinLine0))
+	if ret.IsErr() {
+		return exec.NewTrueStmtRet(stmt).AddErrors(ret.Error)
+	}
+	if ret.IsUnknown() {
+		return exec.NewTrueStmtRet(stmt).AddUnknowns(ret.Unknown)
+	}
+
+	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(ret.Define).AddInfers(ret.Infer)
 }
