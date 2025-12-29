@@ -95,7 +95,7 @@ func (envMgr *EnvMgr) newSpecFact(fact *ast.SpecFactStmt) *glob.StmtRet {
 	}
 
 	defer func() {
-		if fact.TypeEnum == ast.TruePure && envMgr.IsTransitiveProp(string(fact.PropName)) {
+		if fact.FactType == ast.TruePure && envMgr.IsTransitiveProp(string(fact.PropName)) {
 			curEnv := envMgr.CurEnv()
 			if curEnv.TransitivePropMem[string(fact.PropName)] == nil {
 				curEnv.TransitivePropMem[string(fact.PropName)] = make(map[string][]ast.Obj)
@@ -112,7 +112,7 @@ func (envMgr *EnvMgr) newSpecFact(fact *ast.SpecFactStmt) *glob.StmtRet {
 	ie := NewInferenceEngine(envMgr)
 
 	var ieRet *glob.StmtRet
-	switch fact.TypeEnum {
+	switch fact.FactType {
 	case ast.TrueExist_St:
 		ieRet = ie.newTrueExist(fact)
 	case ast.FalseExist_St:

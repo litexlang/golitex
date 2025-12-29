@@ -53,7 +53,7 @@ func (envMgr *EnvMgr) LookupNamesInSpecFact(stmt *ast.SpecFactStmt, extraParams 
 
 func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.SpecFactStmt) *glob.StmtRet {
 	// Check if it's an exist_prop defined by user
-	if stmt.TypeEnum == ast.TrueExist_St || stmt.TypeEnum == ast.FalseExist_St {
+	if stmt.FactType == ast.TrueExist_St || stmt.FactType == ast.FalseExist_St {
 		if glob.IsBuiltinExistPropName(string(stmt.PropName)) {
 			return glob.NewEmptyStmtTrue()
 		}

@@ -30,7 +30,7 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 	}
 
 	if stmt.NameIs(glob.KeywordIn) {
-		if stmt.TypeEnum == ast.FalsePure {
+		if stmt.FactType == ast.FalsePure {
 			return ver.falseInFactBuiltinRules(stmt, state)
 		}
 		return ver.trueInFactBuiltinRules(stmt, state)

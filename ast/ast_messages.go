@@ -69,7 +69,7 @@ var relaPropSet map[string]struct{} = map[string]struct{}{
 func pureSpecFactString(stmt *SpecFactStmt) string {
 	var builder strings.Builder
 
-	if stmt.TypeEnum == FalsePure {
+	if stmt.FactType == FalsePure {
 		builder.WriteString(glob.KeywordNot)
 		builder.WriteByte(' ')
 	}
@@ -124,7 +124,7 @@ func StrObjSetPairs(objs []string, objSets []Obj) string {
 
 func exist_st_FactString(stmt *SpecFactStmt) string {
 	var builder strings.Builder
-	if stmt.TypeEnum == FalseExist_St {
+	if stmt.FactType == FalseExist_St {
 		builder.WriteString(glob.KeywordNot)
 		builder.WriteByte(' ')
 	}

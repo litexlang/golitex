@@ -50,9 +50,9 @@ func (envMgr *EnvMgr) IsCommutativeProp(specFact *ast.SpecFactStmt) bool {
 	for depth := envMgr.curEnvDepth(); depth >= 0; depth-- {
 		item, ok := envMgr.EnvSlice[depth].CommutativePropMem[string(specFact.PropName)]
 		if ok {
-			if specFact.TypeEnum == ast.TruePure {
+			if specFact.FactType == ast.TruePure {
 				return item.TruePureIsCommutative
-			} else if specFact.TypeEnum == ast.FalsePure {
+			} else if specFact.FactType == ast.FalsePure {
 				return item.FalsePureIsCommutative
 			}
 		}

@@ -326,7 +326,7 @@ LoopOverFacts:
 }
 
 func (ver *Verifier) matchTwoSpecFacts(stmt *ast.SpecFactStmt, knownFact *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
-	if len(knownFact.Params) != len(stmt.Params) || knownFact.TypeEnum != stmt.TypeEnum {
+	if len(knownFact.Params) != len(stmt.Params) || knownFact.FactType != stmt.FactType {
 		return glob.NewEmptyStmtUnknown()
 	}
 

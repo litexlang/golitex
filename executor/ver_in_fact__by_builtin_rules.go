@@ -321,7 +321,7 @@ func (ver *Verifier) nothingIsInEmptySet(stmt *ast.SpecFactStmt, state *VerState
 }
 
 func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
-	if stmt.TypeEnum != ast.FalsePure {
+	if stmt.FactType != ast.FalsePure {
 		return glob.NewEmptyStmtUnknown()
 	}
 

@@ -414,7 +414,7 @@ func (ver *Verifier) replaceParamWithUndeclaredRandomName(setBuilderStruct *ast.
 		}
 
 		// Create new fact with replaced param
-		newFacts[i] = ast.NewSpecFactStmt(fact.TypeEnum, newPropName, newFactParams, fact.Line)
+		newFacts[i] = ast.NewSpecFactStmt(fact.FactType, newPropName, newFactParams, fact.Line)
 	}
 
 	return &ast.SetBuilderStruct{

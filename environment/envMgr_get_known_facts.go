@@ -20,7 +20,7 @@ import (
 )
 
 func (s SpecFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]ast.SpecFactStmt, *glob.StmtRet) {
-	switch stmt.TypeEnum {
+	switch stmt.FactType {
 	case ast.TruePure:
 		return s.PureFacts, glob.NewEmptyStmtTrue()
 	case ast.FalsePure:
@@ -63,7 +63,7 @@ func (s SpecFactMem) newFact(stmt *ast.SpecFactStmt) *glob.StmtRet {
 }
 
 func (s SpecFactInLogicExprMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]KnownSpecFact_InLogicExpr, *glob.StmtRet) {
-	switch stmt.TypeEnum {
+	switch stmt.FactType {
 	case ast.TruePure:
 		return s.PureFacts, glob.NewEmptyStmtTrue()
 	case ast.FalsePure:
@@ -108,7 +108,7 @@ func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt) *glob.StmtRet {
 }
 
 func (s SpecFactInUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]KnownSpecFact_InUniFact, *glob.StmtRet) {
-	switch stmt.TypeEnum {
+	switch stmt.FactType {
 	case ast.TruePure:
 		return s.PureFacts, glob.NewEmptyStmtTrue()
 	case ast.FalsePure:
@@ -151,7 +151,7 @@ func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, uniFact 
 }
 
 func (s SpecFact_InLogicExpr_InUniFactMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]SpecFact_InLogicExpr_InUniFact, *glob.StmtRet) {
-	switch stmt.TypeEnum {
+	switch stmt.FactType {
 	case ast.TruePure:
 		return s.PureFacts, glob.NewEmptyStmtTrue()
 	case ast.FalsePure:
