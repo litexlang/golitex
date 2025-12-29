@@ -218,7 +218,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 
 func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
 	ret := exec.Env.DefLetStmt(stmt)
-	if ret.IsErr() {
+	if ret.IsNotUnknown() {
 		return glob.ErrRet(ret.String())
 	}
 

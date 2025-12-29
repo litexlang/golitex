@@ -2,4 +2,8 @@ prop p(x R)
 
 know exist 1 st $p(1)
 
-have x st $p(x)
+have x R st $p(x)
+
+x $in R
+
+$p(x)
