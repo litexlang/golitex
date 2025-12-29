@@ -32,7 +32,7 @@ func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existP
 	return &DefExistPropStmt{def, existParams, existParamSets, line}
 }
 
-func NewSpecFactStmt(typeEnum SpecFactEnum, propName Atom, params []Obj, line uint) *SpecFactStmt {
+func NewSpecFactStmt(typeEnum SpecFactType, propName Atom, params []Obj, line uint) *SpecFactStmt {
 	return &SpecFactStmt{typeEnum, propName, params, line}
 }
 

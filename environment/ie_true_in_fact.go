@@ -269,7 +269,7 @@ func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.Fn
 	inParentSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{obj, setBuilderStruct.ParentSet}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(inParentSetFact)
 	if ret.IsErr() {
-		return glob.NewShortRet(glob.StmtRetTypeError, []string{err.Error()})
+		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	derivedFactStrings = append(derivedFactStrings, inParentSetFact.String())
 
