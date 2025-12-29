@@ -19,9 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) haveObjStPurePropStmt(stmt *ast.HaveObjStStmt) *glob.StmtRet {
-	existStFact := stmt.ToTruePurePropExistStFact()
-	state := Round0Msg()
+func (exec *Executor) haveObjStPurePropStmtCheck(stmt *ast.HaveObjStWithParamSetsStmt, existStFact *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	ver := NewVerifier(exec.Env)
 
 	for curEnvIndex := range exec.Env.EnvSlice {
@@ -49,5 +47,4 @@ func (exec *Executor) haveObjStPurePropStmt(stmt *ast.HaveObjStStmt) *glob.StmtR
 	}
 
 	return glob.NewEmptyStmtUnknown()
-
 }

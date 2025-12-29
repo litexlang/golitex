@@ -380,6 +380,19 @@ func (s *HaveObjStStmt) ToLatexString() string {
 	return builder.String()
 }
 
+func (s *HaveObjStWithParamSetsStmt) ToLatexString() string {
+	var builder strings.Builder
+
+	builder.WriteString("\\begin{definition}[Object(s) Exists By Verified Existential Fact]\n")
+
+	builder.WriteString(" we have ")
+	builder.WriteString(objParamsLatexString(s.Fact.Params))
+	builder.WriteString(fmt.Sprintf(" which makes existential fact %s true", propNameParamsLatexString(s.Fact.PropName, s.Fact.Params)))
+
+	builder.WriteString("\n\\end{definition}")
+	return builder.String()
+}
+
 func (s *ProveInEachCaseStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{proveCaseByCase}\n")

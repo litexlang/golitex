@@ -642,34 +642,125 @@ func (p *TbParser) haveObjStStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	objNames := []string{}
+	// Save position to check if we have sets
+	savedIndex := tb.header.index
 
-	// there is at least one object name
+	// Try to parse first object name
+	_, err = tb.header.next()
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Check if next token is a set (Obj) or comma/st
+	hasSets := false
+	if !tb.header.is(glob.KeySymbolComma) && !tb.header.is(glob.KeywordSt) {
+		// Try to parse as Obj (set) - save position before trying
+		peekIndex := tb.header.index
+		_, parseErr := p.Obj(tb)
+		if parseErr == nil {
+			// Successfully parsed as Obj, so we have sets
+			hasSets = true
+			// Restore to parse properly
+			tb.header.index = savedIndex
+		} else {
+			// Not an Obj, restore position
+			tb.header.index = peekIndex
+		}
+	}
+
+	if hasSets {
+		// Parse with sets: have x set1, y set2 st ...
+		return p.haveObjStWithParamSetsStmt(tb)
+	} else {
+		// Parse without sets: have x, y st ...
+		tb.header.index = savedIndex
+		objNames := []string{}
+
+		// there is at least one object name
+		for {
+			objName, err := tb.header.next()
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			objNames = append(objNames, objName)
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+				continue
+			}
+			if tb.header.is(glob.KeywordSt) {
+				break
+			}
+			return nil, fmt.Errorf("expect '%s' or '%s' but got '%s'", glob.KeywordSt, glob.KeySymbolComma, tb.header.strAtCurIndexPlus(0))
+		}
+
+		for _, objName := range objNames {
+			err = p.NewDefinedNameInCurrentParseEnv(string(objName))
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+		}
+
+		err = tb.header.skip(glob.KeywordSt)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		fact, err := p.specFactStmt(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		return NewHaveStmt(objNames, fact, tb.line), nil
+	}
+}
+
+func (p *TbParser) haveObjStWithParamSetsStmt(tb *tokenBlock) (Stmt, error) {
+	// Parse param-set pairs similar to param_paramSet_paramInSetFacts but ending with "st"
+	objNames := []string{}
+	objSets := []Obj{}
+
 	for {
 		objName, err := tb.header.next()
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
-		// objNames = append(objNames, addPkgNameToString(objName))
 		objNames = append(objNames, objName)
+
+		if tb.header.is(glob.KeywordSt) {
+			return nil, fmt.Errorf("expect set after parameter '%s' but got '%s'", objName, glob.KeywordSt)
+		}
+
+		setObj, err := p.Obj(tb)
+		if err != nil {
+			return nil, fmt.Errorf("expect set after parameter '%s' but got error: %v", objName, err)
+		}
+		objSets = append(objSets, setObj)
+
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
 			continue
 		}
+
 		if tb.header.is(glob.KeywordSt) {
 			break
 		}
-		return nil, fmt.Errorf("expect '%s' or '%s' but got '%s'", glob.KeywordSt, glob.KeySymbolComma, tb.header.strAtCurIndexPlus(0))
+
+		return nil, fmt.Errorf("expect ',' or '%s' but got '%s'", glob.KeywordSt, tb.header.strAtCurIndexPlus(0))
+	}
+
+	// Check that we have sets for all params
+	if len(objSets) != len(objNames) {
+		return nil, fmt.Errorf("number of sets (%d) does not match number of parameters (%d)", len(objSets), len(objNames))
 	}
 
 	for _, objName := range objNames {
-		err = p.NewDefinedNameInCurrentParseEnv(string(objName))
+		err := p.NewDefinedNameInCurrentParseEnv(string(objName))
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
 	}
 
-	err = tb.header.skip(glob.KeywordSt)
+	err := tb.header.skip(glob.KeywordSt)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -679,7 +770,7 @@ func (p *TbParser) haveObjStStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	return NewHaveStmt(objNames, fact, tb.line), nil
+	return NewHaveObjStWithParamSetsStmt(objNames, objSets, fact, tb.line), nil
 }
 
 func (p *TbParser) bodyBlockFacts(tb *tokenBlock, uniFactDepth uniFactEnum, parseBodyFactNum int) ([]FactStmt, error) {

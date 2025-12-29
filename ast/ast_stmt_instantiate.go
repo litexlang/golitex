@@ -405,6 +405,18 @@ func (stmt *HaveObjStStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewHaveStmt(stmt.ObjNames, newFact.(*SpecFactStmt), stmt.Line), nil
 }
 
+func (stmt *HaveObjStWithParamSetsStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newFact, err := stmt.Fact.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newObjSets, err := stmt.ObjSets.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveObjStWithParamSetsStmt(stmt.ObjNames, newObjSets, newFact.(*SpecFactStmt), stmt.Line), nil
+}
+
 func (stmt *ProveInEachCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newOrFact, err := stmt.OrFact.InstantiateFact(uniMap)
 	if err != nil {

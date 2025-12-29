@@ -505,3 +505,11 @@ type ProveImplyStmt struct {
 
 	Line uint
 }
+
+type HaveObjStWithParamSetsStmt struct {
+	ObjNames StrSlice
+	ObjSets  ObjSlice
+	Fact     *SpecFactStmt
+
+	Line uint
+}
