@@ -187,16 +187,17 @@ func (envMgr *EnvMgr) CheckAtomObjNameIsValidAndAvailableThenDefineIt(name strin
 // and checks that all atoms inside the facts are declared.
 // If the obj is a function, it will be inserted into the function definition memory.
 func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
+	implyMsgs := []string{}
+	defineFacts := []string{}
 	// If this obj is a function, it will be inserted into the function definition memory
 	for _, objName := range stmt.Objs {
 		ret := envMgr.CheckAtomObjNameIsValidAndAvailableThenDefineIt(objName)
 		if ret.IsErr() {
 			return ret
 		}
+		defineFacts = append(defineFacts, glob.IsANewObjectMsg(objName))
 	}
 
-	inferMsgs := []string{}
-	implicationFacts := []string{}
 	for _, fact := range stmt.NewInFacts() {
 		ret := envMgr.LookUpNamesInFact(fact, map[string]struct{}{})
 		if ret.IsErr() {
@@ -207,8 +208,8 @@ func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
 		if ret.IsErr() {
 			return ret
 		}
-		implicationFacts = append(implicationFacts, fact.String())
-		inferMsgs = append(inferMsgs, ret.Infer...)
+		defineFacts = append(defineFacts, fact.String())
+		implyMsgs = append(implyMsgs, ret.Infer...)
 	}
 
 	for _, fact := range stmt.Facts {
@@ -222,10 +223,10 @@ func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
 			return ret
 		}
 		if ret.IsTrue() {
-			implicationFacts = append(implicationFacts, ret.String())
+			defineFacts = append(defineFacts, fact.String())
 		}
-		inferMsgs = append(inferMsgs, ret.Infer...)
+		implyMsgs = append(implyMsgs, ret.Infer...)
 	}
 
-	return glob.NewStmtTrueRetWithDefines(implicationFacts).AddInfers(inferMsgs)
+	return glob.NewStmtTrueRetWithDefines(defineFacts).AddInfers(implyMsgs)
 }

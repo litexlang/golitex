@@ -56,9 +56,6 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFnSet {
 			tb.header.skip(glob.KeywordHave)
 			ret, err = p.DefFnSetStmt(tb)
-			// } else if tb.header.strAtCurIndexPlus(1) == glob.KeywordCart {
-			// Check for "have objName cart(...) = ..." pattern
-			// ret, err = p.haveObjFromCartSetStmt(tb)
 		} else if slices.Contains(tb.header.slice, glob.KeySymbolEqual) {
 			ret, err = p.haveObjEqualStmt(tb)
 		} else {
