@@ -424,6 +424,19 @@ func (stmt *HaveObjStStmt) String() string {
 	return builder.String()
 }
 
+func (stmt *HaveObjStWithParamSetsStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(StrObjSetPairs(stmt.ObjNames, stmt.ObjSets))
+	builder.WriteByte(' ')
+	builder.WriteString(glob.KeywordSt)
+	builder.WriteString(" ")
+
+	builder.WriteString(stmt.Fact.String())
+	return builder.String()
+}
+
 func (f Atom) String() string {
 	return string(f)
 }

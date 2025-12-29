@@ -34,6 +34,7 @@ func (s *ClaimProveStmt) stmt()                {}
 func (s *KnowFactStmt) stmt()                  {}
 func (s *DefExistPropStmt) stmt()              {}
 func (s *HaveObjStStmt) stmt()                 {}
+func (s *HaveObjStWithParamSetsStmt) stmt()    {}
 func (s *ProveInEachCaseStmt) stmt()           {}
 func (s *ProveCaseByCaseStmt) stmt()           {}
 func (s *KnowImplicationStmt) stmt()           {}
@@ -87,6 +88,7 @@ func (s *ClaimProveStmt) algoStmt()                {}
 func (s *KnowFactStmt) algoStmt()                  {}
 func (s *DefExistPropStmt) algoStmt()              {}
 func (s *HaveObjStStmt) algoStmt()                 {}
+func (s *HaveObjStWithParamSetsStmt) algoStmt()    {}
 func (s *ProveInEachCaseStmt) algoStmt()           {}
 func (s *ProveCaseByCaseStmt) algoStmt()           {}
 func (s *KnowImplicationStmt) algoStmt()           {}
@@ -140,6 +142,7 @@ func (s *ClaimProveStmt) GetLine() uint                { return s.Line }
 func (s *KnowFactStmt) GetLine() uint                  { return s.Line }
 func (s *DefExistPropStmt) GetLine() uint              { return s.Line }
 func (s *HaveObjStStmt) GetLine() uint                 { return s.Line }
+func (s *HaveObjStWithParamSetsStmt) GetLine() uint    { return s.Line }
 func (s *ProveInEachCaseStmt) GetLine() uint           { return s.Line }
 func (s *ProveCaseByCaseStmt) GetLine() uint           { return s.Line }
 func (s *KnowImplicationStmt) GetLine() uint           { return s.Line }
@@ -193,6 +196,7 @@ func (s *ClaimProveStmt) SetLine(l uint)                { s.Line = l }
 func (s *KnowFactStmt) SetLine(l uint)                  { s.Line = l }
 func (s *DefExistPropStmt) SetLine(l uint)              { s.Line = l }
 func (s *HaveObjStStmt) SetLine(l uint)                 { s.Line = l }
+func (s *HaveObjStWithParamSetsStmt) SetLine(l uint)    { s.Line = l }
 func (s *ProveInEachCaseStmt) SetLine(l uint)           { s.Line = l }
 func (s *ProveCaseByCaseStmt) SetLine(l uint)           { s.Line = l }
 func (s *KnowImplicationStmt) SetLine(l uint)           { s.Line = l }
