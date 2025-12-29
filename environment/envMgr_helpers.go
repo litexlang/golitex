@@ -88,14 +88,14 @@ func (envMgr *EnvMgr) storeSpecFactInMem(stmt *ast.SpecFactStmt) *glob.StmtRet {
 	return envMgr.CurEnv().KnownFactsStruct.SpecFactMem.newFact(stmt)
 }
 
-func (envMgr *EnvMgr) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) *glob.StmtRet {
-	ret := envMgr.storeSpecFactInMem(fact)
-	if ret.IsErr() {
-		return ret
-	}
-	*derivedFacts = append(*derivedFacts, fact.String())
-	return glob.NewEmptyStmtTrue()
-}
+// func (envMgr *EnvMgr) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) *glob.StmtRet {
+// 	ret := envMgr.storeSpecFactInMem(fact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
+// 	*derivedFacts = append(*derivedFacts, fact.String())
+// 	return glob.NewEmptyStmtTrue()
+// }
 
 func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.SpecFactStmt) *glob.StmtRet {
 	mem := envMgr.CurEnv().EqualMem
@@ -181,7 +181,7 @@ func (envMgr *EnvMgr) notExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt
 }
 
 func (envMgr *EnvMgr) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, []ast.FactStmt, *glob.StmtRet) {
-	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(fact)
+	existParams, factParams := fact.ExistStFactToPropNameExistParamsParams()
 
 	existPropDef := envMgr.GetExistPropDef(fact.PropName)
 	if existPropDef == nil {

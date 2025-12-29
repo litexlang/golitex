@@ -232,7 +232,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 }
 
 func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
-	existParams, factParams := ast.GetExistFactExistParamsAndFactParams(stmt)
+	existParams, factParams := stmt.ExistStFactToPropNameExistParamsParams()
 
 	propDef := ver.Env.GetExistPropDef(stmt.PropName)
 	if propDef == nil {
