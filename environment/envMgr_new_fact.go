@@ -209,3 +209,37 @@ func (envMgr *EnvMgr) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt,
 func (envMgr *EnvMgr) storeUniFactInMem(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) *glob.StmtRet {
 	return envMgr.CurEnv().KnownFactsStruct.SpecFactInUniFactMem.newFact(specFact, uniFact)
 }
+
+func (envMgr *EnvMgr) ProveImplyNewThenFactInPropDef(stmt *ast.ProveImplyStmt) *glob.StmtRet {
+	specFactAsParams, err := ast.ParamsInSpecFactAreStrings(stmt.SpecFact)
+	if err != nil {
+		return glob.ErrRet(err.Error())
+	}
+
+	def := envMgr.GetPropDef(stmt.SpecFact.PropName)
+	if def == nil {
+		return glob.ErrRet(fmt.Sprintf("undefined prop: %s", stmt.SpecFact.PropName))
+	}
+
+	if len(specFactAsParams) != len(def.DefHeader.Params) {
+		return glob.ErrRet(fmt.Sprintf("prop %s has %d params, but %d params are expected", stmt.SpecFact.PropName, len(def.DefHeader.Params), len(specFactAsParams)))
+	}
+
+	uniMap := map[string]ast.Obj{}
+	for i, param := range specFactAsParams {
+		uniMap[param] = ast.Atom(def.DefHeader.Params[i])
+	}
+
+	for _, stmtFact := range stmt.ImplicationFact {
+		instStmtFact, err := stmtFact.InstantiateFact(uniMap)
+		if err != nil {
+			return glob.ErrRet(err.Error())
+		}
+		if def.ImplicationFactsOrNil == nil {
+			def.ImplicationFactsOrNil = make([]ast.FactStmt, 0)
+		}
+		def.ImplicationFactsOrNil = append(def.ImplicationFactsOrNil, instStmtFact)
+	}
+
+	return glob.NewEmptyStmtTrue()
+}

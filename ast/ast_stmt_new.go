@@ -296,8 +296,8 @@ func NewHaveFnCaseByCaseStmt(defFnStmt *DefFnStmt, caseByCaseFacts SpecFactPtrSl
 // 	return &HaveObjFromCartSetStmt{objName, cartSet, equalTo, line}
 // }
 
-func NewProveImplicationStmt(implicationName string, params StrSlice, implicationFact FactStmtSlice, proof StmtSlice, line uint) *ProveImplicationStmt {
-	return &ProveImplicationStmt{implicationName, params, implicationFact, proof, line}
+func NewProveImplicationStmt(specFact *SpecFactStmt, implicationFact FactStmtSlice, proof StmtSlice, line uint) *ProveImplyStmt {
+	return &ProveImplyStmt{specFact, implicationFact, proof, line}
 }
 
 func NewImplicationStmt(defHeader *DefHeader, domFacts FactStmtSlice, implicationFacts FactStmtSlice, line uint) *ImplicationStmt {
