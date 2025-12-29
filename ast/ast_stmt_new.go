@@ -56,6 +56,10 @@ func NewHaveStmt(objNames []string, fact *SpecFactStmt, line uint) *HaveObjStStm
 	return &HaveObjStStmt{objNames, fact, line}
 }
 
+func NewHaveObjStWithParamSetsStmt(objNames []string, objSets []Obj, fact *SpecFactStmt, line uint) *HaveObjStWithParamSetsStmt {
+	return &HaveObjStWithParamSetsStmt{objNames, objSets, fact, line}
+}
+
 func NewExistPropDef(declHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {
 	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts, thenFacts, line}
 }

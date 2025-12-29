@@ -21,11 +21,6 @@ import (
 )
 
 func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt, requireMsg bool) *glob.StmtRet {
-	purePropDef := exec.Env.GetPropDef(stmt.Fact.PropName)
-	if purePropDef != nil {
-		return exec.haveObjStPurePropStmt(stmt)
-	}
-
 	// 检查 SpecFactStmt 是否满足了
 	execState := exec.Verify(stmt.Fact, false)
 	if execState.IsNotTrue() {
@@ -840,4 +835,20 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 	}
 
 	return exec.NewTrueStmtRet(stmt), nil
+}
+
+func (exec *Executor) haveObjStWithParamSets(stmt *ast.HaveObjStWithParamSetsStmt) *glob.StmtRet {
+	purePropDef := exec.Env.GetPropDef(stmt.Fact.PropName)
+	if purePropDef == nil {
+		return glob.ErrRet("")
+	}
+
+	existStFact := stmt.ToTruePurePropExistStFact()
+	state := Round0Msg()
+	ret := exec.haveObjStPurePropStmtCheck(stmt, existStFact, state)
+	if ret.IsNotUnknown() {
+		return ret
+	}
+
+	panic(":")
 }

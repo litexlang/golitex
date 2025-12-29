@@ -132,6 +132,18 @@ func (s *HaveObjStStmt) InlineString() string {
 	return builder.String()
 }
 
+func (s *HaveObjStWithParamSetsStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(StrObjSetPairs(s.ObjNames, s.ObjSets))
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordSt)
+	builder.WriteString(" ")
+	builder.WriteString(s.Fact.InlineString())
+	return builder.String()
+}
+
 func (s *ProveInEachCaseStmt) InlineString() string { return s.String() }
 func (s *ProveCaseByCaseStmt) InlineString() string { return s.String() }
 
