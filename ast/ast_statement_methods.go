@@ -418,7 +418,7 @@ func (stmt *SpecFactStmt) ExistStFactToPropNameExistParamsParams() ([]Obj, []Obj
 	return existParams, factParams
 }
 
-func (stmt *SpecFactStmt) TrueExistStFactToPropNameExistParamsParamsAndSpecFactAfterSt() ([]Obj, []Obj, *SpecFactStmt) {
+func (stmt *SpecFactStmt) ExistStFactToPropNameExistParamsParamsAndTrueSpecFactAfterSt() ([]Obj, []Obj, *SpecFactStmt) {
 	lengthOfExistParams, _ := strconv.Atoi(string(stmt.Params[0].(Atom)))
 
 	existParams := []Obj{}
