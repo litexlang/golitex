@@ -92,7 +92,7 @@ func (ver *Verifier) parasSatisfyFnReq(fnObj *ast.FnObj, state *VerState) *glob.
 	return glob.NewEmptyStmtTrue()
 }
 
-func (ver *Verifier) GetInstFnSet_CheckFnSetParamsReq(fnTName *ast.FnObj, state *VerState) (*ast.FnTemplate, error) {
+func (ver *Verifier) GetInstFnSet_CheckFnSetParamsReq(fnTName *ast.FnObj, state *VerState) (*ast.AnonymousFn, error) {
 	if FnObjTypeToFnTStruct, ok := ast.AnonymousFnToInstFnTemplate(fnTName); ok {
 		return FnObjTypeToFnTStruct, nil
 	} else {
@@ -105,7 +105,7 @@ func (ver *Verifier) GetInstFnSet_CheckFnSetParamsReq(fnTName *ast.FnObj, state 
 	}
 }
 
-func (ver *Verifier) getFnSetDef_InstFnInFnSet_CheckParamsSatisfyFnSetReq(fnTDefName ast.Atom, templateParams []ast.Obj, state *VerState) (*ast.FnTemplate, error) {
+func (ver *Verifier) getFnSetDef_InstFnInFnSet_CheckParamsSatisfyFnSetReq(fnTDefName ast.Atom, templateParams []ast.Obj, state *VerState) (*ast.AnonymousFn, error) {
 	defOfT := ver.Env.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
 		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)
@@ -124,7 +124,7 @@ func (ver *Verifier) getFnSetDef_InstFnInFnSet_CheckParamsSatisfyFnSetReq(fnTDef
 		return nil, fmt.Errorf("template params dom facts are not true")
 	}
 
-	return defOfT.Fn.Instantiate(uniMap)
+	return defOfT.AnonymousFn.Instantiate(uniMap)
 }
 
 func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.DefFnSetStmt, uniMap map[string]ast.Obj, state *VerState) *glob.StmtRet {
@@ -146,7 +146,7 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 	return glob.NewEmptyStmtTrue()
 }
 
-func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParams ast.ObjSlice, fnTStruct *ast.FnTemplate, state *VerState) *glob.StmtRet {
+func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParams ast.ObjSlice, fnTStruct *ast.AnonymousFn, state *VerState) *glob.StmtRet {
 	if len(concreteParams) != len(fnTStruct.ParamSets) {
 		return glob.ErrRet("params and sets length mismatch")
 	}

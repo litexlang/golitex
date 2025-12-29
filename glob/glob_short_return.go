@@ -42,3 +42,7 @@ func (sr *ShortRet) SetType(retType StmtRetType) *ShortRet {
 	sr.RetType = retType
 	return sr
 }
+
+func ErrStmtMsgToShortRet(stmtRet *StmtRet) *ShortRet {
+	return NewShortRet(stmtRet.RetType, stmtRet.Error)
+}

@@ -191,7 +191,7 @@ func (objFn *FnObj) IsObjFn_HasAtomHead_ReturnHead() (Atom, bool) {
 	return head, true
 }
 
-func (stmt *DefFnSetStmt) Instantiate_GetFnTemplateNoName(fnObj *FnObj) (*FnTemplate, error) {
+func (stmt *DefFnSetStmt) Instantiate_GetFnTemplateNoName(fnObj *FnObj) (*AnonymousFn, error) {
 	uniMap := map[string]Obj{}
 	templateParams := stmt.TemplateDefHeader.Params
 	if len(templateParams) != len(fnObj.Params) {
@@ -202,27 +202,27 @@ func (stmt *DefFnSetStmt) Instantiate_GetFnTemplateNoName(fnObj *FnObj) (*FnTemp
 		uniMap[param] = fnObj.Params[i]
 	}
 
-	instantiatedParamSets, err := stmt.Fn.ParamSets.Instantiate(uniMap)
+	instantiatedParamSets, err := stmt.AnonymousFn.ParamSets.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	instantiatedDomFacts, err := stmt.Fn.DomFacts.InstantiateFact(uniMap)
+	instantiatedDomFacts, err := stmt.AnonymousFn.DomFacts.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	instantiatedThenFacts, err := stmt.Fn.ThenFacts.InstantiateFact(uniMap)
+	instantiatedThenFacts, err := stmt.AnonymousFn.ThenFacts.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	instantiatedRetSet, err := stmt.Fn.RetSet.Instantiate(uniMap)
+	instantiatedRetSet, err := stmt.AnonymousFn.RetSet.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewFnTStruct(stmt.Fn.Params, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts, stmt.Line), nil
+	return NewFnTStruct(stmt.AnonymousFn.Params, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts, stmt.Line), nil
 }
 
 func (objFn *FnObj) HasHeadInSlice(headNames []string) bool {
@@ -233,7 +233,7 @@ func (objFn *FnObj) HasHeadInSlice(headNames []string) bool {
 	return slices.Contains(headNames, string(headAtom))
 }
 
-func (objAsFnObj *FnObj) FnTObj_ToFnTNoName() (*FnTemplate, error) {
+func (objAsFnObj *FnObj) FnTObj_ToFnTNoName() (*AnonymousFn, error) {
 	objAsFnObjHeadAsFnObj, ok := objAsFnObj.FnHead.(*FnObj)
 	if !ok {
 		return nil, fmt.Errorf("expected ObjFn, but got %T", objAsFnObj.FnHead)
@@ -315,7 +315,7 @@ func InstFacts(facts []FactStmt, uniMap map[string]Obj) ([]FactStmt, error) {
 	return newFacts, nil
 }
 
-func AnonymousFnToInstFnTemplate(objFnTypeT *FnObj) (*FnTemplate, bool) {
+func AnonymousFnToInstFnTemplate(objFnTypeT *FnObj) (*AnonymousFn, bool) {
 	ok, paramSets, retSet := objFnTypeT.GetParamSetsAndRetSetOfAnonymousFn(objFnTypeT)
 	if !ok {
 		return nil, false

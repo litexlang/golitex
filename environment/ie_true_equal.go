@@ -137,12 +137,13 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.ShortRe
 
 // trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex handles postprocessing for obj = tuple
 // It generates obj[index] = tuple[i] facts for each index
-func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(obj ast.Obj, tupleObj ast.Obj) *glob.StmtRet {
+func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(obj ast.Obj, tupleObj ast.Obj) *glob.ShortRet {
 	tuple, ok := tupleObj.(*ast.FnObj)
 	if !ok || !ast.IsTupleFnObj(tuple) {
-		return glob.ErrRet(fmt.Sprintf("expected tuple to be a tuple object, got %T", tupleObj))
+		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("expected tuple to be a tuple object, got %T", tupleObj)})
 	}
 
+	inferMsgs := []string{}
 	// 让 obj 的每一位对应等于 tuple 的每一位
 	for i := range len(tuple.Params) {
 		index := i + 1 // 索引从1开始
@@ -155,11 +156,12 @@ func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIn
 		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{indexedObj, tuple.Params[i]}, glob.BuiltinLine0)
 		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(indexEqualFact)
 		if ret.IsErr() {
-			return ret
+			return glob.ErrStmtMsgToShortRet(ret)
 		}
+		inferMsgs = append(inferMsgs, ret.Infer...)
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
 }
 
 // trueEqualFactByTuple handles postprocessing for tuple equality
@@ -179,7 +181,7 @@ func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) *glob.S
 		if ret.IsErr() {
 			return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
 		}
-		inferMsgs = append(inferMsgs, ret.Infer...)
+		inferMsgs = append(inferMsgs, ret.Msgs...)
 		return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
 	} else if rightIsTuple && ast.IsTupleFnObj(rightTuple) {
 		// 如果右边是 tuple，左边是对象: a = (1, 2, ..)
@@ -187,7 +189,7 @@ func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) *glob.S
 		if ret.IsErr() {
 			return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
 		}
-		inferMsgs = append(inferMsgs, ret.Infer...)
+		inferMsgs = append(inferMsgs, ret.Msgs...)
 		return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
 	} else if leftIsTuple && ast.IsTupleFnObj(leftTuple) {
 		// 如果左边是 tuple，右边是对象: (1, 2, ..) = a
@@ -195,29 +197,31 @@ func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) *glob.S
 		if ret.IsErr() {
 			return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
 		}
-		inferMsgs = append(inferMsgs, ret.Infer...)
+		inferMsgs = append(inferMsgs, ret.Msgs...)
 		return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
 	}
 
 	return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
 }
 
-func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj, rightTuple *ast.FnObj) *glob.StmtRet {
+func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj, rightTuple *ast.FnObj) *glob.ShortRet {
 	// 如果两个 tuple 的长度不同，返回错误
 	if len(leftTuple.Params) != len(rightTuple.Params) {
-		return glob.ErrRet(fmt.Sprintf("tuple length mismatch: left has %d elements, right has %d elements", len(leftTuple.Params), len(rightTuple.Params)))
+		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("tuple length mismatch: left has %d elements, right has %d elements", len(leftTuple.Params), len(rightTuple.Params))})
 	}
 
+	inferMsgs := []string{}
 	// 让每一位相等
 	for i := range len(leftTuple.Params) {
 		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftTuple.Params[i], rightTuple.Params[i]}, glob.BuiltinLine0)
 		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
 		if ret.IsErr() {
-			return ret
+			return glob.ErrStmtMsgToShortRet(ret)
 		}
+		inferMsgs = append(inferMsgs, ret.Infer...)
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
 }
 
 // equalFactPostProcess_tupleTuple handles postprocessing for tuple = tuple
