@@ -908,7 +908,7 @@ func (exec *Executor) proveImplyStmt(stmt *ast.ProveImplyStmt) *glob.StmtRet {
 		return glob.ErrRet(ret.String())
 	}
 
-	return exec.NewTrueStmtRet(stmt)
+	return exec.NewTrueStmtRet(stmt).AddWarning(fmt.Sprintf("%s is a powerful feature. The implication section will be automatically generated after every time %s is true later. Don't use it too much, since it is very memory consuming.", glob.KeywordProveImply, stmt.SpecFact.PropName))
 }
 
 func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveImplyStmt) *glob.StmtRet {
