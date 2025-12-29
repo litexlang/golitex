@@ -49,7 +49,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 			execRet = execRet.AddWarning("`let` may introduce non-existent objects. If you want to ensure the object exists, please use `have` instead!\n")
 		}
 	case *ast.HaveObjStStmt:
-		execRet = exec.haveObjStStmt(stmt, true)
+		execRet = exec.haveObjStStmt(stmt)
 	case *ast.DefExistPropStmt:
 		execRet = exec.defExistPropStmt(stmt)
 	case *ast.DefFnStmt:
@@ -530,9 +530,6 @@ func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) *glob.StmtR
 }
 
 func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) *glob.StmtRet {
-	// if glob.RequireMsg() {
-	// 	defer exec.newMsg(fmt.Sprintf("%s\n", stmt))
-	// }
 
 	ret := exec.Env.NewFnTemplateInEnvMem(stmt)
 	if ret.IsErr() {
@@ -569,15 +566,9 @@ func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactMsgs)
 }
 
-func (exec *Executor) Verify(fact ast.FactStmt, requireMsg bool) *glob.StmtRet {
+func (exec *Executor) Verify(fact ast.FactStmt) *glob.StmtRet {
 	ver := NewVerifier(exec.Env)
-	var state *VerState
-	if requireMsg {
-		state = Round0Msg()
-	} else {
-		state = Round0NoMsg()
-	}
-
+	state := Round0Msg()
 	return ver.VerFactStmt(fact, state)
 }
 

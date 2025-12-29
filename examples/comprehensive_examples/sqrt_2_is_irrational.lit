@@ -13,7 +13,7 @@ claim:
     not sqrt(2) $in Q
     prove_by_contradiction:
         sqrt(2) > 0
-        have x, y st $rational_positive_number_representation_in_fraction(sqrt(2))
+        have x, y st $Q_pos_in_frac(sqrt(2))
         
         x = sqrt(2) * y
         x ^ 2 = (sqrt(2) ^ 2) * (y ^ 2)
