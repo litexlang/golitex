@@ -27,7 +27,7 @@ func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFac
 	toBeMatchedExistParams, toBeMatchedParams := instExistStFactToBeMatched.ExistStFactToPropNameExistParamsParams()
 
 	if len(freeExistParams) != len(toBeMatchedExistParams) || len(freeParams) != len(toBeMatchedParams) {
-		return nil
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	uniMap := map[string]ast.Obj{}
@@ -37,14 +37,14 @@ func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFac
 
 	instFreeSpecFact, err := freeSpecFact.Instantiate(uniMap)
 	if err != nil {
-		return nil
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	// 证明 inst Free Spec Fact 的每一个 param 等于 right 的 对应的 param
 	for i, instFreeSpecFactParam := range instFreeSpecFact.(*ast.SpecFactStmt).Params {
 		verRet := ver.VerFactStmt(ast.NewEqualFact(instFreeSpecFactParam, instExistStFactToBeMatched.Params[i]), verState)
 		if verRet.IsNotTrue() {
-			return nil
+			return glob.NewEmptyVerRetUnknown()
 		}
 	}
 
@@ -53,14 +53,14 @@ func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFac
 	for i, paramSet := range stmt.ObjSets {
 		instParamSet, err := paramSet.Instantiate(newUniMap)
 		if err != nil {
-			return nil
+			return glob.NewEmptyVerRetUnknown()
 		}
 
 		inFact := ast.NewInFactWithObj(instExistStFactToBeMatched.Params[i], instParamSet)
 
 		ret := ver.VerFactStmt(inFact, verState)
 		if ret.IsNotTrue() {
-			return nil
+			return glob.NewEmptyVerRetUnknown()
 		}
 
 		newUniMap[stmt.ObjNames[i]] = instExistStFactToBeMatched.Params[i]
@@ -72,10 +72,10 @@ func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFac
 func (ver *Verifier) ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt *ast.HaveObjStWithParamSetsStmt, freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched []ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	for _, curToMatch := range instExistStFactToBeMatched {
 		ret := ver.ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(stmt, freeExistStFact, &curToMatch, state)
-		if ret == nil {
+		if ret.IsTrue() {
 			return ret
 		}
 	}
 
-	return nil
+	return glob.NewEmptyVerRetUnknown()
 }

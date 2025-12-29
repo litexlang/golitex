@@ -29,7 +29,7 @@ func (exec *Executor) haveObjWithSetParamsStPurePropStmtCheck(stmt *ast.HaveObjS
 			continue
 		}
 		ret := ver.ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt, existStFact, knownFacts, state)
-		if ret != nil {
+		if ret.IsTrue() {
 			return glob.NewStmtTrueWithStmt(stmt.String()).AddVerifyProcess(ret)
 		}
 	}
@@ -41,7 +41,7 @@ func (exec *Executor) haveObjWithSetParamsStPurePropStmtCheck(stmt *ast.HaveObjS
 			continue
 		}
 		ret := ver.ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt, existStFact, knownFacts, state)
-		if ret != nil {
+		if ret.IsTrue() {
 			return glob.NewStmtTrueWithStmt(stmt.String()).AddVerifyProcess(ret)
 		}
 	}
