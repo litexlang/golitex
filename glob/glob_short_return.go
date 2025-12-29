@@ -47,14 +47,14 @@ func ErrStmtMsgToShortRet(stmtRet *StmtRet) *ShortRet {
 	return NewShortRet(stmtRet.RetType, stmtRet.Error)
 }
 
-func NewShortUnknownRet() *ShortRet {
+func NewEmptyShortUnknownRet() *ShortRet {
 	return NewShortRet(StmtRetTypeUnknown, []string{})
 }
 
-func NewShortErrorRet() *ShortRet {
+func NewEmptyShortErrorRet() *ShortRet {
 	return NewShortRet(StmtRetTypeError, []string{})
 }
 
-func NewShortTrueRet() *ShortRet {
+func NewEmptyShortTrueRet() *ShortRet {
 	return NewShortRet(StmtRetTypeTrue, []string{})
 }
