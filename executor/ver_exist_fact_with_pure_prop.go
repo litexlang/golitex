@@ -5,17 +5,17 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) ExistStFactMatchRightInstExistStFact(freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched *ast.SpecFactStmt, verState *VerState) *glob.VerMsg {
-	freeExistParams, freeParams, freeSpecFact := freeExistStFact.TrueExistStFactToPropNameExistParamsParamsAndSpecFactAfterSt()
-	rightExistParams, rightParams := instExistStFactToBeMatched.ExistStFactToPropNameExistParamsParams()
+func (ver *Verifier) FreeExistsStFactMatchInstExistStFact(freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched *ast.SpecFactStmt, verState *VerState) *glob.VerMsg {
+	freeExistParams, freeParams, freeSpecFact := freeExistStFact.ExistStFactToPropNameExistParamsParamsAndTrueSpecFactAfterSt()
+	toBeMatchedExistParams, toBeMatchedParams := instExistStFactToBeMatched.ExistStFactToPropNameExistParamsParams()
 
-	if len(freeExistParams) != len(rightExistParams) || len(freeParams) != len(rightParams) {
+	if len(freeExistParams) != len(toBeMatchedExistParams) || len(freeParams) != len(toBeMatchedParams) {
 		return nil
 	}
 
 	uniMap := map[string]ast.Obj{}
 	for i, freeExistParam := range freeExistParams {
-		uniMap[freeExistParam.String()] = rightExistParams[i]
+		uniMap[freeExistParam.String()] = toBeMatchedExistParams[i]
 	}
 
 	instFreeSpecFact, err := freeSpecFact.Instantiate(uniMap)
@@ -32,4 +32,15 @@ func (ver *Verifier) ExistStFactMatchRightInstExistStFact(freeExistStFact *ast.S
 	}
 
 	return glob.NewVerMsg(freeExistStFact.String(), instExistStFactToBeMatched.Line, []string{instExistStFactToBeMatched.String()})
+}
+
+func (ver *Verifier) FreeExistStFactMatchInstExistStFacts(freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched []*ast.SpecFactStmt, state *VerState) *glob.VerMsg {
+	for _, toMatch := range instExistStFactToBeMatched {
+		ret := ver.FreeExistsStFactMatchInstExistStFact(freeExistStFact, toMatch, state)
+		if ret != nil {
+			return ret
+		}
+	}
+
+	return nil
 }

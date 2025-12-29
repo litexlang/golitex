@@ -1,17 +1,5 @@
-prop p(x R):
-    x > 2
+prop $p(x R)
 
-prove_imply $p(x):
-    =>:
-        x > 0
-    prove:
-        x > 2
-        x > 0
+know exist 1 st $p(1)
 
-prove_imply $p(x) => 1 / x > 0:
-    x > 2
-    x > 0
-
-let x R: $p(x)
-
-forall x R: $p(x) => x > 0, 1 / x > 0
+have x st $p(x)
