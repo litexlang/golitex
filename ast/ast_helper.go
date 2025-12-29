@@ -649,3 +649,7 @@ func ParamsInSpecFactAreStrings(specFact *SpecFactStmt) ([]string, error) {
 	}
 	return ret, nil
 }
+
+func (stmt *HaveObjStWithParamSetsStmt) ToHaveObjStStmt() *HaveObjStStmt {
+	return NewHaveObjStStmt(stmt.ObjNames, stmt.Fact, stmt.Line)
+}

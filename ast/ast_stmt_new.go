@@ -52,7 +52,7 @@ func NewDefHeader(name string, params []string, setParams []Obj) *DefHeader {
 	return &DefHeader{name, params, setParams}
 }
 
-func NewHaveStmt(objNames []string, fact *SpecFactStmt, line uint) *HaveObjStStmt {
+func NewHaveObjStStmt(objNames []string, fact *SpecFactStmt, line uint) *HaveObjStStmt {
 	return &HaveObjStStmt{objNames, fact, line}
 }
 
