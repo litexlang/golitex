@@ -43,7 +43,7 @@ func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verified
 }
 
 // maybeAddSuccessMsgVerMsg adds a VerMsg to execRet if state.WithMsg is true
-func (ver *Verifier) maybeAddSuccessMsgVerMsg(state *VerState, verMsg *glob.VerMsg, execRet *glob.StmtRet) *glob.StmtRet {
+func (ver *Verifier) maybeAddSuccessMsgVerMsg(state *VerState, verMsg *glob.VerRet, execRet *glob.StmtRet) *glob.StmtRet {
 	if state == nil {
 		panic("")
 	}

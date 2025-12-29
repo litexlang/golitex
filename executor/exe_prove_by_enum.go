@@ -22,7 +22,7 @@ import (
 
 func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (*glob.StmtRet, error) {
 	innerStmtRets := []*glob.StmtRet{}
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 
 	enums := [][]ast.Obj{}
 	for _, paramSet := range stmt.Fact.ParamSets {
@@ -61,7 +61,7 @@ func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (*glob.Stm
 
 func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveByEnumStmt, cartesianProductAtI []ast.Obj) (*glob.StmtRet, error) {
 	innerStmtRets := []*glob.StmtRet{}
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 
 	exec.NewEnv()
 	defer exec.deleteEnv()
@@ -133,7 +133,7 @@ func getParamEqualObjSlice(params []string, equalTo []ast.Obj) []ast.FactStmt {
 }
 
 func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnumStmt, cartesianProductOfObjs [][]ast.Obj) (*glob.StmtRet, error) {
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 
 	for _, ObjSlice := range cartesianProductOfObjs {
 		uniMap := map[string]ast.Obj{}

@@ -27,7 +27,7 @@ func (ie *InferEngine) newUserDefinedTruePureFactByDef(fact *ast.SpecFactStmt) *
 	propDef := ie.EnvMgr.GetPropDef(fact.PropName)
 	if propDef == nil {
 		// TODO 这里需要考虑prop的定义是否在当前包中。当然这里有点复杂，因为如果是内置的prop，那么可能需要到builtin包中去找
-		return glob.NewShortRet(glob.StmtRetTypeTrue, nil)
+		return glob.NewEmptyShortTrueRet()
 	}
 
 	iffFacts := []string{}

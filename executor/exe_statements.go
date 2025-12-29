@@ -316,7 +316,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 
 func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) *glob.StmtRet {
 	innerExecRetMsgs := []*glob.StmtRet{}
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 	newFactsMsgs := []string{}
 
 	// Create OrStmt from CaseFacts
@@ -491,7 +491,7 @@ func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) *glob.Stmt
 
 func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) *glob.StmtRet {
 	innerStmtRets := []*glob.StmtRet{}
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 	newFactMsgs := []string{}
 
 	execRet := exec.proveByEnumStmtProve(stmt)
@@ -554,7 +554,7 @@ func (exec *Executor) DoNothingStmt() *glob.StmtRet {
 }
 
 func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) *glob.StmtRet {
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 	newFactMsgs := []string{}
 
 	for _, fact := range stmt.Facts {
@@ -593,7 +593,7 @@ func (exec *Executor) Verify(fact ast.FactStmt, requireMsg bool) *glob.StmtRet {
 
 func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) *glob.StmtRet {
 	innerStmtRets := []*glob.StmtRet{}
-	verifyProcessMsgs := []*glob.VerMsg{}
+	verifyProcessMsgs := []*glob.VerRet{}
 	newFactMsgs := []string{}
 
 	exec.NewEnv()
@@ -737,7 +737,7 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.StmtRet {
 		}
 
 		if leftAsInt > rightAsInt {
-			verMsg := glob.NewVerMsg("", glob.BuiltinLine0, []string{fmt.Sprintf("left value %d is larger than right value %d, so the %s statement is iterating on an empty range, so it is true", leftAsInt, rightAsInt, glob.KeywordProveFor)})
+			verMsg := glob.NewVerMsg(glob.StmtRetTypeTrue, "", glob.BuiltinLine0, []string{fmt.Sprintf("left value %d is larger than right value %d, so the %s statement is iterating on an empty range, so it is true", leftAsInt, rightAsInt, glob.KeywordProveFor)})
 
 			uniFact := stmt.UniFact()
 			ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact)

@@ -44,7 +44,7 @@ type StmtRet struct {
 	RetType           StmtRetType
 	Define            []string
 	NewFact           []string
-	VerifyProcess     []*VerMsg
+	VerifyProcess     []*VerRet
 	Infer             []string
 	Stmt              []string
 	InnerStmtRetSlice []*StmtRet
@@ -152,7 +152,7 @@ func (m *StmtRet) AddNewFact(newFact string) *StmtRet {
 	return m
 }
 
-func (m *StmtRet) AddVerifyProcess(verMsg *VerMsg) *StmtRet {
+func (m *StmtRet) AddVerifyProcess(verMsg *VerRet) *StmtRet {
 	m.VerifyProcess = append(m.VerifyProcess, verMsg)
 	return m
 }
@@ -204,7 +204,7 @@ func NewEmptyStmtTrue() *StmtRet {
 		RetType:           StmtRetTypeTrue,
 		Define:            []string{},
 		NewFact:           []string{},
-		VerifyProcess:     []*VerMsg{},
+		VerifyProcess:     []*VerRet{},
 		Infer:             []string{},
 		Stmt:              []string{},
 		Unknown:           []string{},
@@ -220,7 +220,7 @@ func NewEmptyStmtUnknown() *StmtRet {
 		RetType:           StmtRetTypeUnknown,
 		Define:            []string{},
 		NewFact:           []string{},
-		VerifyProcess:     []*VerMsg{},
+		VerifyProcess:     []*VerRet{},
 		Infer:             []string{},
 		Stmt:              []string{},
 		Unknown:           []string{},
@@ -236,7 +236,7 @@ func NewEmptyStmtError() *StmtRet {
 		RetType:           StmtRetTypeError,
 		Define:            []string{},
 		NewFact:           []string{},
-		VerifyProcess:     []*VerMsg{},
+		VerifyProcess:     []*VerRet{},
 		Infer:             []string{},
 		Stmt:              []string{},
 		InnerStmtRetSlice: []*StmtRet{},
@@ -259,7 +259,7 @@ func NewStmtTrueWithNewFact(newFact string) *StmtRet {
 	return ret
 }
 
-func NewStmtTrueWithVerifyProcess(verMsg *VerMsg) *StmtRet {
+func NewStmtTrueWithVerifyProcess(verMsg *VerRet) *StmtRet {
 	ret := NewEmptyStmtTrue()
 	ret.AddVerifyProcess(verMsg)
 	return ret
@@ -375,7 +375,7 @@ func (m *StmtRet) AddNewFacts(newFacts []string) *StmtRet {
 	return m
 }
 
-func (m *StmtRet) AddVerifyProcesses(verifyProcesses []*VerMsg) *StmtRet {
+func (m *StmtRet) AddVerifyProcesses(verifyProcesses []*VerRet) *StmtRet {
 	for _, verifyProcess := range verifyProcesses {
 		m.AddVerifyProcess(verifyProcess)
 	}

@@ -26,7 +26,7 @@ func (ie *InferEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, deri
 		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	*derivedFacts = append(*derivedFacts, fact.String())
-	return glob.NewShortRet(glob.StmtRetTypeTrue, nil)
+	return glob.NewEmptyShortTrueRet()
 }
 
 // BuiltinPropExceptTrueEqual handles postprocessing for builtin properties except equality
@@ -93,7 +93,7 @@ func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) *glob.
 		return ret
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+	return glob.NewEmptyShortUnknownRet()
 }
 
 func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact *ast.SpecFactStmt) *glob.ShortRet {
@@ -172,7 +172,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRig
 	if len(derivedFacts) > 0 {
 		return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 	}
-	return glob.NewShortRet(glob.StmtRetTypeTrue, nil)
+	return glob.NewEmptyShortTrueRet()
 }
 
 func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsZero(fact *ast.SpecFactStmt) *glob.ShortRet {
