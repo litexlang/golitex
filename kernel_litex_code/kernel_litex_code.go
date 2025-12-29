@@ -15,9 +15,6 @@
 package kernel_lib_litex_code
 
 var PipelineInitCode = `
-exist_prop a in_set st exist_obj_not_in_left_set_but_in_right_set(not_in_set, in_set set):
-	not a $in not_in_set
-
 know forall x2, y2 R: x2 != 0, y2 != 0 => x2 * y2 != 0
 
 exist_prop x Z, y N_pos st Q_in_frac(q Q):
@@ -332,7 +329,7 @@ know:
 	forall x, y, z R: x > 0, x != 1, y > 0, z > 0 => log(x, y * z) = log(x, y) + log(x, z)
 	forall x R: x > 0, x != 1 => log(x, x) = 1
 
-#let pi R # pi is the ratio of the circumference of a circle to its diameter
+let pi R # pi is the ratio of the circumference of a circle to its diameter
 
 know:
 	forall x, y, z R: x + y = z => x = z - y, y = z - x

@@ -35,8 +35,17 @@ func NewVerMsg(retType StmtRetType, stmtStr string, line uint, verifyMsgs []stri
 	}
 }
 
+func NewEmptyVerRetUnknown() *VerRet {
+	return &VerRet{
+		RetType:            StmtRetTypeUnknown,
+		StmtStr:            "",
+		ProvedByFactOnLine: 0,
+		VerifyMsgs:         []string{},
+	}
+}
+
 func (m *VerRet) String() string {
-	if m.RetType == StmtRetTypeTrue {
+	if m.IsTrue() {
 		if m.ProvedByFactOnLine == 0 {
 			if m.StmtStr == "" {
 				return fmt.Sprintf("proved by builtin rules:\n%s", strings.Join(m.VerifyMsgs, "\n"))
@@ -54,4 +63,16 @@ func (m *VerRet) String() string {
 		}
 		return fmt.Sprintf("%s\nfailed to verify:\n%s", m.StmtStr, strings.Join(m.VerifyMsgs, "\n"))
 	}
+}
+
+func (m *VerRet) IsUnknown() bool {
+	return m.RetType == StmtRetTypeUnknown
+}
+
+func (m *VerRet) IsTrue() bool {
+	return m.RetType == StmtRetTypeTrue
+}
+
+func (m *VerRet) IsErr() bool {
+	return m.RetType == StmtRetTypeError
 }
