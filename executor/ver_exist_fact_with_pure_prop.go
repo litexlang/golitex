@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched *ast.SpecFactStmt, verState *VerState) *glob.VerMsg {
+func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(stmt *ast.HaveObjStWithParamSetsStmt, freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched *ast.SpecFactStmt, verState *VerState) *glob.VerMsg {
 	ver.newEnv()
 	defer ver.deleteEnv()
 
@@ -48,13 +48,31 @@ func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFac
 		}
 	}
 
+	// 证明 have 对应的 每一个 set ，对应的 exist_param 都在
+	newUniMap := map[string]ast.Obj{}
+	for i, paramSet := range stmt.ObjSets {
+		instParamSet, err := paramSet.Instantiate(newUniMap)
+		if err != nil {
+			return nil
+		}
+
+		inFact := ast.NewInFactWithObj(instExistStFactToBeMatched.Params[i], instParamSet)
+
+		ret := ver.VerFactStmt(inFact, verState)
+		if ret.IsNotTrue() {
+			return nil
+		}
+
+		newUniMap[stmt.ObjNames[i]] = instExistStFactToBeMatched.Params[i]
+	}
+
 	return glob.NewVerMsg(freeExistStFact.String(), instExistStFactToBeMatched.Line, []string{instExistStFactToBeMatched.String()})
 }
 
-func (ver *Verifier) ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched []ast.SpecFactStmt, state *VerState) *glob.VerMsg {
-	for _, toMatch := range instExistStFactToBeMatched {
-		ret := ver.ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(freeExistStFact, &toMatch, state)
-		if ret != nil {
+func (ver *Verifier) ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt *ast.HaveObjStWithParamSetsStmt, freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched []ast.SpecFactStmt, state *VerState) *glob.VerMsg {
+	for _, curToMatch := range instExistStFactToBeMatched {
+		ret := ver.ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(stmt, freeExistStFact, &curToMatch, state)
+		if ret == nil {
 			return ret
 		}
 	}
