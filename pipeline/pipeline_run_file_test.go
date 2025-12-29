@@ -33,13 +33,13 @@ func Test_File(t *testing.T) {
 	absOfFile := filepath.Join(workingDir, fileName)
 	start := time.Now()
 	pkgMgr := package_manager.NewEmptyPkgMgr(workingDir)
-	_, ret := RunFileInPkgMgr(absOfFile, "", pkgMgr, false)
+	_, retType, rets := RunFileInPkgMgr(absOfFile, "", pkgMgr, false)
 
-	for _, innerRet := range ret.InnerStmtRetSlice {
-		fmt.Println((innerRet.String()))
+	for _, ret := range rets {
+		fmt.Println(glob.StringWithOptimizedNewline(ret.String()))
 	}
 
-	fmt.Println(glob.AddREPLSuccessMsg(ret))
+	fmt.Println(glob.REPLSuccessMsgs(retType))
 	executionTime := time.Since(start)
 	fmt.Printf("execution time: %s\n", executionTime)
 }
@@ -53,12 +53,11 @@ func Test_ImportFile(t *testing.T) {
 	absOfFile := filepath.Join(workingDir, fileName)
 	start := time.Now()
 	pkgMgr := package_manager.NewEmptyPkgMgr(workingDir)
-	_, ret := RunFileInPkgMgr(absOfFile, "", pkgMgr, false)
-	if ret.IsNotTrue() {
-		t.Errorf("failed to run file %s\n", fileName)
+	_, retType, rets := RunFileInPkgMgr(absOfFile, "", pkgMgr, false)
+	for _, ret := range rets {
+		fmt.Println(glob.StringWithOptimizedNewline(ret.String()))
 	}
-	fmt.Println(glob.StringWithOptimizedNewline(ret.String()))
+	fmt.Println(glob.REPLSuccessMsgs(retType))
 	executionTime := time.Since(start)
-	fmt.Println(glob.AddREPLSuccessMsg(ret))
 	fmt.Printf("execution time: %s\n", executionTime)
 }

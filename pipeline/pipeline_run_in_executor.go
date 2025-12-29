@@ -129,10 +129,10 @@ func RunImportStmtToGetEnvMgr(pkgMgr *packageMgr.PkgMgr, importStmt *ast.ImportD
 	pkgMgr.AbsPathDefaultNameMap[importRepoAbsPath] = importStmt.AsPkgName
 
 	// 这个repo还没被引用，那么就第一次运行它
-	envMgr, ret := RunFileInPkgMgr(filepath.Join(importRepoAbsPath, glob.MainDotLit), importStmt.AsPkgName, pkgMgr, true)
-	if ret.IsNotTrue() {
-		return false, nil, ret
+	envMgr, retType, rets := RunFileInPkgMgr(filepath.Join(importRepoAbsPath, glob.MainDotLit), importStmt.AsPkgName, pkgMgr, true)
+	if retType != glob.StmtRetTypeTrue {
+		return false, nil, glob.NewStmtWithInnerStmtsRet(rets, retType)
 	}
 
-	return true, envMgr, glob.NewStmtTrueWithStmt(fmt.Sprintf("%s\n", importStmt))
+	return true, envMgr, glob.NewStmtTrueWithStmt(fmt.Sprintf("%s\n", importStmt)).AddInnerStmtRets(rets)
 }
