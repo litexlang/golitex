@@ -218,20 +218,11 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 
 func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
 	ret := exec.Env.DefLetStmt(stmt)
-	if ret.IsNotUnknown() {
+	if ret.IsUnknown() || ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
 
-	defineMsgs := []string{}
-	for _, objName := range stmt.Objs {
-		defineMsgs = append(defineMsgs, glob.IsANewObjectMsg(objName))
-	}
-
-	for _, fact := range stmt.Facts {
-		defineMsgs = append(defineMsgs, fact.String())
-	}
-
-	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs).AddInfers(ret.Infer)
+	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(ret.Define).AddInfers(ret.Infer)
 }
 
 func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) *glob.StmtRet {

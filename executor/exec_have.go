@@ -851,7 +851,7 @@ func (exec *Executor) haveObjStWithParamSets(stmt *ast.HaveObjStWithParamSetsStm
 	}
 
 	// define
-	ret = exec.Env.DefLetStmt(ast.NewDefLetStmt(stmt.ObjNames, stmt.ObjSets, []ast.FactStmt{stmt.Fact}, glob.BuiltinLine0))
+	ret = exec.Env.DefLetStmt(ast.NewDefLetStmt(stmt.ObjNames, stmt.ObjSets, []ast.FactStmt{stmt.Fact}, stmt.Line))
 	if ret.IsErr() {
 		return exec.NewTrueStmtRet(stmt).AddErrors(ret.Error)
 	}

@@ -42,7 +42,7 @@ func (m *VerMsg) String() string {
 	}
 
 	if m.StmtStr == "" {
-		return fmt.Sprintf("proved by fact on line %d:\n%s", m.Line, strings.Join(m.VerifyMsgs, "\n"))
+		return fmt.Sprintf("proved by fact stored on line %d:\n%s", m.Line, strings.Join(m.VerifyMsgs, "\n"))
 	}
-	return fmt.Sprintf("%s\nproved by fact on line %d:\n%s", m.StmtStr, m.Line, strings.Join(m.VerifyMsgs, "\n"))
+	return fmt.Sprintf("%s\nproved by fact stored on line %d:\n%s", m.StmtStr, m.Line, strings.Join(m.VerifyMsgs, "\n"))
 }
