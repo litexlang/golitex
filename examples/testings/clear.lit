@@ -1,6 +1,7 @@
-let a R:
-    a = 1
+have a R = 1
 
 clear
 
-have a, b st $rational_number_representation_in_fraction(1/2)
+have a R = 2
+
+a = 2

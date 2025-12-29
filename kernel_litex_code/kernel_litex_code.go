@@ -23,14 +23,7 @@ exist_prop x Z, y N_pos st Q_in_frac(q Q):
 	x = q * y
 	y > 0
 
-exist_prop x Z, y N_pos st rational_number_representation_in_fraction(q Q):
-	<=>:
-		x / y = q
-		x = y * q
-		x = q * y
-		y > 0
-
-exist_prop x N_pos, y N_pos st rational_positive_number_representation_in_fraction(q Q):
+exist_prop x N_pos, y N_pos st Q_pos_in_frac(q Q):
 	q > 0
 	<=>:
 		x / y = q
@@ -39,7 +32,7 @@ exist_prop x N_pos, y N_pos st rational_positive_number_representation_in_fracti
 		x > 0
 		y > 0
 
-exist_prop x Z, y N_pos st rational_negative_number_representation_in_fraction(q Q):
+exist_prop x Z, y N_pos st Q_neg_in_frac(q Q):
 	q < 0
 	<=>:
 		x / y = q
@@ -47,9 +40,9 @@ exist_prop x Z, y N_pos st rational_negative_number_representation_in_fraction(q
 		x = q * y
 		x < 0
 
-know forall q Q => $rational_number_representation_in_fraction(q)
-know forall q Q: q > 0 => $rational_positive_number_representation_in_fraction(q)
-know forall q Q: q < 0 => $rational_negative_number_representation_in_fraction(q)
+know forall q Q => $Q_in_frac(q)
+know forall q Q: q > 0 => $Q_pos_in_frac(q)
+know forall q Q: q < 0 => $Q_neg_in_frac(q)
 
 let fn sqrt(z R) R:
 	z >= 0
@@ -66,20 +59,16 @@ know forall x, y, z R: z != 0, x / z = y => x = y * z, x = z * y
 
 know forall x, y, z R, n N: x = (y * z) => x^n = y^n * z^n
 
-# TODO: 已经放到 Std/Int/main.lit 中
 know:
 	forall x, y Z, z N:
 		z != 0
 		=>:
 			(x + y) % z = (x % z + y % z) % z
 
-# TODO: 已经放到 Std/Int/main.lit 中
 know forall x, y Z, z N: z !=0, x % z = 0 => (x * y) % z = 0
 
-# TODO: 已经放到 Std/Int/main.lit 中
 know forall x, z N: z != 0, x < z => x % z = x
 
-# TODO: 已经放到 Std/Int/main.lit 中
 know forall x, y N: y != 0, x < y => x % y = x
 
 know forall x, y, z R: z != 0, x * z = y => x = y / z
