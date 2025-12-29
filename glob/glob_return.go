@@ -15,6 +15,8 @@
 package litex_global
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -26,6 +28,19 @@ const (
 	StmtRetTypeUnknown
 	StmtRetTypeError
 )
+
+func (t StmtRetType) MarshalJSON() ([]byte, error) {
+	switch t {
+	case StmtRetTypeTrue:
+		return json.Marshal("True")
+	case StmtRetTypeUnknown:
+		return json.Marshal("Unknown")
+	case StmtRetTypeError:
+		return json.Marshal("Error")
+	default:
+		return json.Marshal("Unknown")
+	}
+}
 
 type StmtRet struct {
 	RetType           StmtRetType
@@ -431,4 +446,20 @@ func (m *StmtRet) AddShortRetAsInfers(shortRet *ShortRet) *StmtRet {
 		m.AddErrors(shortRet.Msgs)
 	}
 	return m
+}
+
+func (m *StmtRet) ToJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	err := encoder.Encode(m)
+	if err != nil {
+		return nil, err
+	}
+	// 移除末尾的换行符（Encode 会自动添加）
+	result := buf.Bytes()
+	if len(result) > 0 && result[len(result)-1] == '\n' {
+		result = result[:len(result)-1]
+	}
+	return result, nil
 }
