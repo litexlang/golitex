@@ -87,7 +87,7 @@ func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) *glob.ShortRet {
 	// 	return ret
 	// }
 
-	return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+	return glob.NewEmptyShortUnknownRet()
 }
 
 // trueEqualFactByCart handles postprocessing for x = cart(x1, x2, ..., xn)
@@ -98,7 +98,7 @@ func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) *glob.ShortRet {
 func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.ShortRet {
 	cart, ok := fact.Params[1].(*ast.FnObj)
 	if !ok || !ast.IsAtomObjAndEqualToStr(cart.FnHead, glob.KeywordCart) {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 
 	inferMsgs := []string{}
@@ -107,7 +107,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.ShortRe
 	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fact.Params[0]}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(isCartFact)
 	if ret.IsErr() {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 	inferMsgs = append(inferMsgs, isCartFact.String())
 
@@ -117,7 +117,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.ShortRe
 	dimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimFn, dimValue}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(dimEqualFact)
 	if ret.IsErr() {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 	inferMsgs = append(inferMsgs, dimEqualFact.String())
 
@@ -127,7 +127,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.ShortRe
 		projEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{projFn, cartParam}, glob.BuiltinLine0)
 		ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(projEqualFact)
 		if ret.IsErr() {
-			return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+			return glob.NewEmptyShortUnknownRet()
 		}
 		inferMsgs = append(inferMsgs, projEqualFact.String())
 	}
@@ -179,7 +179,7 @@ func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) *glob.S
 		// 处理 tuple = tuple 的情况，让每一位相等
 		ret := ie.trueEqualByLeftAndRightAreBothTuple(leftTuple, rightTuple)
 		if ret.IsErr() {
-			return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+			return glob.NewEmptyShortUnknownRet()
 		}
 		inferMsgs = append(inferMsgs, ret.Msgs...)
 		return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
@@ -187,7 +187,7 @@ func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) *glob.S
 		// 如果右边是 tuple，左边是对象: a = (1, 2, ..)
 		ret := ie.trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(left, right)
 		if ret.IsErr() {
-			return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+			return glob.NewEmptyShortUnknownRet()
 		}
 		inferMsgs = append(inferMsgs, ret.Msgs...)
 		return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
@@ -195,13 +195,13 @@ func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) *glob.S
 		// 如果左边是 tuple，右边是对象: (1, 2, ..) = a
 		ret := ie.trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(right, left)
 		if ret.IsErr() {
-			return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+			return glob.NewEmptyShortUnknownRet()
 		}
 		inferMsgs = append(inferMsgs, ret.Msgs...)
 		return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+	return glob.NewEmptyShortUnknownRet()
 }
 
 func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj, rightTuple *ast.FnObj) *glob.ShortRet {
@@ -237,12 +237,12 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 	// 尝试获取 list set（可能是直接的，也可能是通过 equal facts 得到的）
 	listSetObj := ie.EnvMgr.GetListSetEqualToObj(right)
 	if listSetObj == nil {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 
 	listSetFnObj, ok := listSetObj.(*ast.FnObj)
 	if !ok {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 
 	// 创建一个 or fact，表示 left 等于 list set 中的某一个元素
@@ -255,7 +255,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 	forallFact := ast.NewUniFact([]string{randomName}, []ast.Obj{left}, []ast.FactStmt{}, []ast.FactStmt{orFact}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(forallFact)
 	if ret.IsErr() {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 	inferMsgs = append(inferMsgs, forallFact.String())
 
@@ -265,7 +265,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 	countEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{countFn, countValue}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(countEqualFact)
 	if ret.IsErr() {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 	inferMsgs = append(inferMsgs, countEqualFact.String())
 
@@ -273,7 +273,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 	isFiniteFact := ast.NewIsAFiniteSetFact(left, glob.BuiltinLine0)
 	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(isFiniteFact)
 	if ret.IsErr() {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 	inferMsgs = append(inferMsgs, isFiniteFact.String())
 	return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
@@ -374,33 +374,33 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 	// 检查 left 是否是 x + y 或 x - y 的形式
 	leftFn, leftIsFn := left.(*ast.FnObj)
 	if !leftIsFn || len(leftFn.Params) != 2 {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 
 	leftHead, leftHeadIsAtom := leftFn.FnHead.(ast.Atom)
 	if !leftHeadIsAtom {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 
 	leftOp := string(leftHead)
 	if leftOp != glob.KeySymbolPlus && leftOp != glob.KeySymbolMinus {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 
 	// 检查 right 是否是 x + z 或 x - z 的形式
 	rightFn, rightIsFn := right.(*ast.FnObj)
 	if !rightIsFn || len(rightFn.Params) != 2 {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 
 	rightHead, rightHeadIsAtom := rightFn.FnHead.(ast.Atom)
 	if !rightHeadIsAtom {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 
 	rightOp := string(rightHead)
 	if rightOp != glob.KeySymbolPlus && rightOp != glob.KeySymbolMinus {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 
 	inferMsgs := []string{}
@@ -418,7 +418,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, z}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
 			if ret.IsErr() {
-				return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+				return glob.NewEmptyShortUnknownRet()
 			}
 			inferMsgs = append(inferMsgs, equalFact.String())
 		} else if leftOp == glob.KeySymbolPlus && rightOp == glob.KeySymbolMinus {
@@ -430,7 +430,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
 			if ret.IsErr() {
-				return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+				return glob.NewEmptyShortUnknownRet()
 			}
 			inferMsgs = append(inferMsgs, equalFact.String())
 		} else if leftOp == glob.KeySymbolMinus && rightOp == glob.KeySymbolPlus {
@@ -442,7 +442,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
 			if ret.IsErr() {
-				return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+				return glob.NewEmptyShortUnknownRet()
 			}
 			inferMsgs = append(inferMsgs, equalFact.String())
 		}
@@ -464,7 +464,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, z}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
 			if ret.IsErr() {
-				return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+				return glob.NewEmptyShortUnknownRet()
 			}
 			inferMsgs = append(inferMsgs, equalFact.String())
 		} else if leftOp == glob.KeySymbolPlus && rightOp == glob.KeySymbolMinus {
@@ -476,7 +476,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
 			if ret.IsErr() {
-				return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+				return glob.NewEmptyShortUnknownRet()
 			}
 			inferMsgs = append(inferMsgs, equalFact.String())
 		} else if leftOp == glob.KeySymbolMinus && rightOp == glob.KeySymbolPlus {
@@ -488,7 +488,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
 			if ret.IsErr() {
-				return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+				return glob.NewEmptyShortUnknownRet()
 			}
 			inferMsgs = append(inferMsgs, equalFact.String())
 		}
@@ -497,7 +497,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 		}
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+	return glob.NewEmptyShortUnknownRet()
 }
 
 // trueEqualFactByLeftIsADivBRightIsCDivB handles the case where a / b = c / b => a = c
@@ -508,33 +508,33 @@ func (ie *InferEngine) trueEqualFactByLeftIsADivBRightIsCDivB(left ast.Obj, righ
 	// 检查 left 是否是 a / b 的形式
 	leftFn, leftIsFn := left.(*ast.FnObj)
 	if !leftIsFn || len(leftFn.Params) != 2 {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 
 	leftHead, leftHeadIsAtom := leftFn.FnHead.(ast.Atom)
 	if !leftHeadIsAtom {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 
 	leftOp := string(leftHead)
 	if leftOp != glob.KeySymbolSlash {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 
 	// 检查 right 是否是 c / b 的形式
 	rightFn, rightIsFn := right.(*ast.FnObj)
 	if !rightIsFn || len(rightFn.Params) != 2 {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 
 	rightHead, rightHeadIsAtom := rightFn.FnHead.(ast.Atom)
 	if !rightHeadIsAtom {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 
 	rightOp := string(rightHead)
 	if rightOp != glob.KeySymbolSlash {
-		return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+		return glob.NewEmptyShortUnknownRet()
 	}
 
 	// 只处理第二参数相同的情况（分母相同）
@@ -547,10 +547,10 @@ func (ie *InferEngine) trueEqualFactByLeftIsADivBRightIsCDivB(left ast.Obj, righ
 		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{a, c}, glob.BuiltinLine0)
 		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
 		if ret.IsErr() {
-			return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+			return glob.NewEmptyShortUnknownRet()
 		}
 		return glob.NewShortRet(glob.StmtRetTypeTrue, []string{equalFact.String()})
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeUnknown, nil)
+	return glob.NewEmptyShortUnknownRet()
 }

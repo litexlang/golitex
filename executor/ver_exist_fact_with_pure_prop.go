@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(stmt *ast.HaveObjStWithParamSetsStmt, freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched *ast.SpecFactStmt, verState *VerState) *glob.VerMsg {
+func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(stmt *ast.HaveObjStWithParamSetsStmt, freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched *ast.SpecFactStmt, verState *VerState) *glob.VerRet {
 	ver.newEnv()
 	defer ver.deleteEnv()
 
@@ -66,10 +66,10 @@ func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFac
 		newUniMap[stmt.ObjNames[i]] = instExistStFactToBeMatched.Params[i]
 	}
 
-	return glob.NewVerMsg(freeExistStFact.String(), instExistStFactToBeMatched.Line, []string{instExistStFactToBeMatched.String()})
+	return glob.NewVerMsg(glob.StmtRetTypeTrue, freeExistStFact.String(), instExistStFactToBeMatched.Line, []string{instExistStFactToBeMatched.String()})
 }
 
-func (ver *Verifier) ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt *ast.HaveObjStWithParamSetsStmt, freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched []ast.SpecFactStmt, state *VerState) *glob.VerMsg {
+func (ver *Verifier) ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt *ast.HaveObjStWithParamSetsStmt, freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched []ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	for _, curToMatch := range instExistStFactToBeMatched {
 		ret := ver.ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(stmt, freeExistStFact, &curToMatch, state)
 		if ret == nil {
