@@ -1,3 +1,17 @@
+// Copyright Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Litex email: <litexlang@outlook.com>
+// Litex website: https://litexlang.com
+// Litex github repository: https://github.com/litexlang/golitex
+// Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
+
 package litex_executor
 
 import (
@@ -5,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) FreeExistsStFactMatchInstExistStFact(freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched *ast.SpecFactStmt, verState *VerState) *glob.VerMsg {
+func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched *ast.SpecFactStmt, verState *VerState) *glob.VerMsg {
 	freeExistParams, freeParams, freeSpecFact := freeExistStFact.ExistStFactToPropNameExistParamsParamsAndTrueSpecFactAfterSt()
 	toBeMatchedExistParams, toBeMatchedParams := instExistStFactToBeMatched.ExistStFactToPropNameExistParamsParams()
 
@@ -34,9 +48,9 @@ func (ver *Verifier) FreeExistsStFactMatchInstExistStFact(freeExistStFact *ast.S
 	return glob.NewVerMsg(freeExistStFact.String(), instExistStFactToBeMatched.Line, []string{instExistStFactToBeMatched.String()})
 }
 
-func (ver *Verifier) FreeExistStFactMatchInstExistStFacts(freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched []*ast.SpecFactStmt, state *VerState) *glob.VerMsg {
+func (ver *Verifier) ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched []ast.SpecFactStmt, state *VerState) *glob.VerMsg {
 	for _, toMatch := range instExistStFactToBeMatched {
-		ret := ver.FreeExistsStFactMatchInstExistStFact(freeExistStFact, toMatch, state)
+		ret := ver.ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(freeExistStFact, &toMatch, state)
 		if ret != nil {
 			return ret
 		}

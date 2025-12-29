@@ -19,7 +19,7 @@ import (
 )
 
 type EnvPkgMgr struct {
-	AbsPkgPathEnvMgrMap map[string]*EnvMgr
+	AbsPkgPathEnvMgrMap map[string]*EnvMgr // import的包的envMgr永远只有一层 envFact。里面不包含builtin
 	PkgMgr              *pkgMgr.PkgMgr
 }
 
