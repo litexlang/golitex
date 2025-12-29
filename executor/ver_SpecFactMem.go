@@ -96,6 +96,14 @@ func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt
 		}
 	}
 
+	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
+		curEnv := pkgEnvMgr.EnvSlice[0]
+		verRet := ver.specFact_inLogicExpr_inUniFactMem_atEnv(&curEnv, stmt, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
+	}
+
 	return glob.NewEmptyStmtUnknown()
 }
 
