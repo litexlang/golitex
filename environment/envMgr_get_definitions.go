@@ -36,6 +36,13 @@ func (envMgr *EnvMgr) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
 	if ok {
 		return propDef
 	}
+
+	// Search in builtin env
+	propDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedPropNames[string(propName)]
+	if ok {
+		return propDef
+	}
+
 	return nil
 }
 
@@ -55,5 +62,12 @@ func (envMgr *EnvMgr) GetExistPropDef(propName ast.Atom) *ast.DefExistPropStmt {
 	if ok {
 		return existPropDef
 	}
+
+	// Search in builtin env
+	existPropDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedExistPropNames[string(propName)]
+	if ok {
+		return existPropDef
+	}
+
 	return nil
 }
