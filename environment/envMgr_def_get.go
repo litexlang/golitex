@@ -21,6 +21,13 @@ func (envMgr *EnvMgr) GetFnTemplateDef(objAtomName ast.Atom) *ast.DefFnSetStmt {
 	if ok {
 		return fnTemplateDef
 	}
+
+	// Search in builtin env
+	fnTemplateDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedFnSetNames[string(objAtomName)]
+	if ok {
+		return fnTemplateDef
+	}
+
 	return nil
 }
 
@@ -42,6 +49,13 @@ func (envMgr *EnvMgr) GetSymbolSimplifiedValue(obj ast.Obj) ast.Obj {
 			return symbolValue
 		}
 	}
+
+	// Search in builtin env
+	symbolValue, ok := BuiltinEnvMgrWithEmptyEnvPkgMgr.EnvSlice[0].SymbolSimplifiedValueMem[obj.String()]
+	if ok {
+		return symbolValue
+	}
+
 	return nil
 }
 
@@ -57,6 +71,17 @@ func (envMgr *EnvMgr) IsCommutativeProp(specFact *ast.SpecFactStmt) bool {
 			}
 		}
 	}
+
+	// Search in builtin env
+	item, ok := BuiltinEnvMgrWithEmptyEnvPkgMgr.EnvSlice[0].CommutativePropMem[string(specFact.PropName)]
+	if ok {
+		if specFact.FactType == ast.TruePure {
+			return item.TruePureIsCommutative
+		} else if specFact.FactType == ast.FalsePure {
+			return item.FalsePureIsCommutative
+		}
+	}
+
 	return false
 }
 
@@ -65,6 +90,13 @@ func (envMgr *EnvMgr) GetProveAlgoDef(proveAlgoName string) *ast.DefProveAlgoStm
 	if ok {
 		return proveAlgoDef
 	}
+
+	// Search in builtin env
+	proveAlgoDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedProveAlgoNames[proveAlgoName]
+	if ok {
+		return proveAlgoDef
+	}
+
 	return nil
 }
 
@@ -73,6 +105,13 @@ func (envMgr *EnvMgr) GetAlgoDef(funcName string) *ast.DefAlgoStmt {
 	if ok {
 		return algoDef
 	}
+
+	// Search in builtin env
+	algoDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedAlgoNames[funcName]
+	if ok {
+		return algoDef
+	}
+
 	return nil
 }
 
