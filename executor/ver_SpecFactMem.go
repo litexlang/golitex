@@ -26,11 +26,21 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerSta
 
 	// if ver.env.CurMatchProp == nil {
 	for curEnvIndex := range ver.Env.EnvSlice {
+		if curEnvIndex == 0 {
+			continue
+		}
+
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}
+	}
+
+	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
+	verRet := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
 	}
 
 	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
@@ -46,16 +56,24 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerSta
 
 func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	nextState := state.GetAddRound()
-
 	// upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 
 	// if ver.env.CurMatchProp == nil {
 	for curEnvIndex := range ver.Env.EnvSlice {
+		if curEnvIndex == 0 {
+			continue
+		}
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_LogicMem(curEnv, stmt, nextState)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}
+	}
+
+	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
+	verRet := ver.specFact_LogicMem(curEnv, stmt, nextState)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
 	}
 
 	return glob.NewEmptyStmtUnknown()
@@ -66,11 +84,20 @@ func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state
 
 	// if ver.env.CurMatchProp == nil {
 	for curEnvIndex := range ver.Env.EnvSlice {
+		if curEnvIndex == 0 {
+			continue
+		}
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_UniMem_atCurEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}
+	}
+
+	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
+	verRet := ver.specFact_UniMem_atCurEnv(curEnv, stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
 	}
 
 	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
@@ -86,14 +113,22 @@ func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state
 
 func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
 	// upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
-
 	// if ver.env.CurMatchProp == nil {
 	for curEnvIndex := range ver.Env.EnvSlice {
+		if curEnvIndex == 0 {
+			continue
+		}
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}
+	}
+
+	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
+	verRet := ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
 	}
 
 	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
