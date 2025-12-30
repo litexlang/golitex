@@ -58,3 +58,15 @@ func NewEmptyShortErrorRet() *ShortRet {
 func NewEmptyShortTrueRet() *ShortRet {
 	return NewShortRet(StmtRetTypeTrue, []string{})
 }
+
+func NewShortRetTrue(s string) *ShortRet {
+	ret := NewEmptyShortTrueRet()
+	ret.Msgs = append(ret.Msgs, s)
+	return ret
+}
+
+func NewShortRetErr(s string) *ShortRet {
+	ret := NewEmptyShortErrorRet()
+	ret.Msgs = append(ret.Msgs, s)
+	return ret
+}

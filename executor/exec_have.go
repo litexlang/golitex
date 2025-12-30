@@ -25,7 +25,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) *glob.StmtRet {
 	ver := NewVerifier(exec.Env)
 	execState := ver.VerFactStmt(stmt.Fact, Round0NoMsg())
 	if execState.IsNotTrue() {
-		return execState
+		return execState.ToStmtRet()
 	}
 
 	if glob.IsBuiltinExistPropName(string(stmt.Fact.PropName)) {
@@ -140,7 +140,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet
 
 		// 验证等号右边的对象是否已定义
 		if ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(objEqualTo, Round0NoMsg()); ret.IsNotTrue() {
-			return ret
+			return ret.ToStmtRet()
 		}
 
 		// 验证等号右边的对象是否在指定的集合中
@@ -152,7 +152,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet
 		if verRet.IsUnknown() {
 			return glob.ErrRet(fmt.Sprintf("%s is not in %s", objName, objSet))
 		}
-		verifyProcessMsgs = append(verifyProcessMsgs, verRet.VerifyProcess...)
+		verifyProcessMsgs = append(verifyProcessMsgs, verRet)
 
 		// 检查等号右边的对象中的名称是否存在
 		ret := exec.Env.LookupNamesInObj(objEqualTo, map[string]struct{}{})
@@ -272,7 +272,7 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (*glob.StmtRet
 		return glob.ErrRet(verRet.String()), fmt.Errorf("according to the definition of %s, the returned value %s must be in %s, but\n%s is unknown", stmt, stmt.EqualTo, stmt.RetSet, ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet))
 	}
 
-	return verRet, nil
+	return verRet.ToStmtRet(), nil
 }
 
 func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {

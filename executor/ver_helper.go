@@ -30,30 +30,19 @@ func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy as
 }
 
 // maybeAddSuccessMsgString is a backward compatibility function for string-based
-func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet *glob.StmtRet) *glob.StmtRet {
+func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet *glob.VerRet) *glob.VerRet {
 	if state == nil {
 		panic("")
 	}
 
 	if state.WithMsg {
-		execRet.AddVerifyProcess(successVerStringString(stmtStr, verifiedByStr))
+		execRet.VerifyMsgs = append(execRet.VerifyMsgs, successVerStringString(stmtStr, verifiedByStr).VerifyMsgs...)
 		return execRet
 	}
 	return execRet
 }
 
 // maybeAddSuccessMsgVerMsg adds a VerMsg to execRet if state.WithMsg is true
-func (ver *Verifier) maybeAddSuccessMsgVerMsg(state *VerState, verMsg *glob.VerRet, execRet *glob.StmtRet) *glob.StmtRet {
-	if state == nil {
-		panic("")
-	}
-
-	if state.WithMsg {
-		execRet.AddVerifyProcess(verMsg)
-		return execRet
-	}
-	return execRet
-}
 
 func IsTrueOrErr(ok bool, err error) bool {
 	return ok || err != nil

@@ -20,33 +20,33 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verSuperFunctionReq(fnObj *ast.FnObj, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verSuperFunctionReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	switch fnObj.FnHead.String() {
 	case glob.KeywordUnion:
 		return ver.verUnionReq(fnObj, state)
 	case glob.KeywordIntersect:
 		return ver.verIntersectReq(fnObj, state)
 	default:
-		return glob.ErrRet(fmt.Sprintf("unknown super function: %s", fnObj.FnHead))
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("unknown super function: %s", fnObj.FnHead)})
 	}
 }
 
-func (ver *Verifier) verUnionReq(fnObj *ast.FnObj, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verUnionReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 2 {
-		return glob.ErrRet(fmt.Sprintf("union expects 2 parameters, got %d", len(fnObj.Params)))
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("union expects 2 parameters, got %d", len(fnObj.Params))})
 	}
 
 	_ = state
 
-	return glob.NewEmptyStmtTrue()
+	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) verIntersectReq(fnObj *ast.FnObj, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verIntersectReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 2 {
-		return glob.ErrRet(fmt.Sprintf("intersect expects 2 parameters, got %d", len(fnObj.Params)))
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("intersect expects 2 parameters, got %d", len(fnObj.Params))})
 	}
 
 	_ = state
 
-	return glob.NewEmptyStmtTrue()
+	return glob.NewEmptyVerRetTrue()
 }

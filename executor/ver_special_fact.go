@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verSpecialFactInSpecialWays(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verSpecialFactInSpecialWays(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolLargerEqual) {
 		return ver.verGreaterEqualBySpecialWays(stmt, state)
 	}
@@ -56,7 +56,7 @@ func (ver *Verifier) verSpecialFactInSpecialWays(stmt *ast.SpecFactStmt, state *
 		}
 	}
 
-	return glob.NewEmptyStmtUnknown()
+	return glob.NewEmptyVerRetUnknown()
 }
 
 // 如果是 >= 那可以用 > 和 = 来证明，针对sqrt里不能对负数开方额外做的
@@ -73,9 +73,9 @@ func (ver *Verifier) verSpecialFactInSpecialWays(stmt *ast.SpecFactStmt, state *
 //     forall x R: x > 0 => g(x) > 0
 
 // f(g(1)) = f(g(1))
-func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	if len(stmt.Params) != 2 {
-		return glob.NewEmptyStmtUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	left := stmt.Params[0]
@@ -90,7 +90,7 @@ func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state 
 	}
 	if verRet.IsTrue() {
 		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{greaterFact.String()})
-		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
+		return msg
 	}
 
 	// 如果 > 不成立，尝试用 = 证明
@@ -101,15 +101,15 @@ func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state 
 	}
 	if verRet.IsTrue() {
 		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{equalFact.String()})
-		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
+		return msg
 	}
 
-	return glob.NewEmptyStmtUnknown()
+	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verLessEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verLessEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	if len(stmt.Params) != 2 {
-		return glob.NewEmptyStmtUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	left := stmt.Params[0]
@@ -124,7 +124,7 @@ func (ver *Verifier) verLessEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ve
 	}
 	if verRet.IsTrue() {
 		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{lessFact.String()})
-		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
+		return msg
 	}
 
 	// 如果 < 不成立，尝试用 = 证明
@@ -135,15 +135,15 @@ func (ver *Verifier) verLessEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ve
 	}
 	if verRet.IsTrue() {
 		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{equalFact.String()})
-		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
+		return msg
 	}
 
-	return glob.NewEmptyStmtUnknown()
+	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	if len(stmt.Params) != 2 {
-		return glob.NewEmptyStmtUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	left := stmt.Params[0]
@@ -158,7 +158,7 @@ func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state 
 	}
 	if verRet.IsTrue() {
 		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{greaterFact.String()})
-		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
+		return msg
 	}
 
 	// 如果 > 0 不成立，尝试用 < 0 证明
@@ -169,7 +169,7 @@ func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state 
 	}
 	if verRet.IsTrue() {
 		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{lessFact.String()})
-		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
+		return msg
 	}
 
 	// 如果 a != b 那 a - b != 0
@@ -185,16 +185,16 @@ func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state 
 		}
 		if verRet.IsTrue() {
 			msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{notEqualFact.String()})
-			return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
+			return msg
 		}
 	}
 
-	return glob.NewEmptyStmtUnknown()
+	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	if len(stmt.Params) != 2 {
-		return glob.NewEmptyStmtUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	left := stmt.Params[0]
@@ -209,7 +209,7 @@ func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ver
 	}
 	if verRet.IsTrue() {
 		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{greaterFact.String()})
-		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
+		return msg
 	}
 
 	// 如果 > 不成立，尝试用 < 证明
@@ -220,7 +220,7 @@ func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ver
 	}
 	if verRet.IsTrue() {
 		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{lessFact.String()})
-		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
+		return msg
 	}
 
 	// 如果 > 和 < 都不成立，尝试用 a - b != 0 证明
@@ -232,10 +232,10 @@ func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ver
 	}
 	if verRet.IsTrue() {
 		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{subNotEqualZeroFact.String()})
-		return ver.maybeAddSuccessMsgVerMsg(state, msg, glob.NewEmptyStmtTrue())
+		return msg
 	}
 
-	return glob.NewEmptyStmtUnknown()
+	return glob.NewEmptyVerRetUnknown()
 }
 
 func IsObjMinusFnObj(obj ast.Obj) bool {

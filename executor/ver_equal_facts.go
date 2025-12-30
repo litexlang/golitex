@@ -25,14 +25,16 @@ import (
 // WARNING
 // REMARK
 // TODO: cmpFc_Builtin_Then_Decompose_Spec, fcEqualSpec 大循环本质上是有问题的，会有循环论证的风险：know p(p(1,2), 0) = 1, 则现在问 p(1,2) =1 吗？我会比较 p(1,2) = p(p(1,2), 0)，那这时候就出问题了：我因为一位位地比，所以又回到了比较 1 = p(1,2)
-func (ver *Verifier) cmpObj_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.Obj, state *VerState) *glob.StmtRet {
+func (ver *Verifier) cmpObj_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
 	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
-		return glob.ErrRet(err.Error())
+		return glob.NewVerMsg(glob.StmtRetTypeError, fmt.Sprintf("%s = %s", left, right), 0, []string{err.Error()})
 	}
 	if ok {
-		// return ver.equalTrueAddSuccessMsg(left, right, state, msg)
-		return glob.NewStmtTrueWithStmt(msg)
+		if state.WithMsg {
+			return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), 0, []string{msg})
+		}
+		return glob.NewEmptyVerRetTrue()
 	}
 
 	// if ok {
@@ -46,7 +48,7 @@ func (ver *Verifier) cmpObj_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.
 }
 
 // Iterate over all equal facts. On each equal fact, use commutative, associative, cmp rule to compare.
-func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) *glob.StmtRet {
+func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
 	if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -61,7 +63,10 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 
 		if gotLeftEqualObjs && gotRightEqualObjs {
 			if equalToLeftObjs == equalToRightObjs {
-				return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("known %s = %s", left, right), "", glob.NewEmptyStmtTrue())
+				if state.WithMsg {
+					return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("known %s = %s", left, right), 0, []string{})
+				}
+				return glob.NewEmptyVerRetTrue()
 			}
 		}
 
@@ -75,7 +80,10 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 				if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToLeftObj, right, state); verRet.IsErr() {
 					return verRet
 				} else if verRet.IsTrue() {
-					return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftObj, right, equalToLeftObj, left), "", verRet)
+					if state.WithMsg {
+						return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftObj, right, equalToLeftObj, left), 0, verRet.VerifyMsgs)
+					}
+					return verRet
 				}
 			}
 		}
@@ -90,18 +98,21 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 				if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToRightObj, left, state); verRet.IsErr() {
 					return verRet
 				} else if verRet.IsTrue() {
-					return ver.maybeAddSuccessMsgString(state, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightObj, left, equalToRightObj, right), "", verRet)
+					if state.WithMsg {
+						return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightObj, left, equalToRightObj, right), 0, verRet.VerifyMsgs)
+					}
+					return verRet
 				}
 			}
 		}
 	}
 
-	return glob.NewEmptyStmtUnknown()
+	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verTrueEqualFact_ObjFnEqual_NoCheckRequirements(left, right *ast.FnObj, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verTrueEqualFact_ObjFnEqual_NoCheckRequirements(left, right *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(left.Params) != len(right.Params) {
-		return glob.NewEmptyStmtUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
@@ -110,7 +121,7 @@ func (ver *Verifier) verTrueEqualFact_ObjFnEqual_NoCheckRequirements(left, right
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewEmptyStmtUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	for i := range left.Params {
@@ -126,7 +137,7 @@ func (ver *Verifier) verTrueEqualFact_ObjFnEqual_NoCheckRequirements(left, right
 	}
 
 	// return newTrueVerRet("")
-	return glob.NewEmptyStmtTrue()
+	return glob.NewEmptyVerRetTrue()
 }
 
 func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, state *VerState) *glob.StmtRet {
