@@ -20,13 +20,17 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.ProveExistStmt) *glob.StmtR
 	defer exec.deleteEnv()
 
 	// prove proofs
+	bodyRets := []*glob.StmtRet{}
 	for _, proof := range stmt.Proofs {
 		execState := exec.Stmt(proof)
 		if execState.IsNotTrue() {
-			return execState
+			return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(bodyRets)
 		}
+		bodyRets = append(bodyRets, execState)
 	}
 
+	verProcessRets := []*glob.VerRet{}
+	// prove in each param set
 	uniMap := map[string]ast.Obj{}
 	for i, equalTo := range stmt.EqualTos {
 		curParamSet, err := stmt.ParamSets[i].Instantiate(uniMap)
@@ -36,9 +40,12 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.ProveExistStmt) *glob.StmtR
 
 		inFact := ast.NewInFactWithObj(equalTo, curParamSet)
 		execState := exec.factStmt(inFact)
+
 		if execState.IsNotTrue() {
 			return execState
 		}
+
+		verProcessRets = append(verProcessRets, execState.VerifyProcess...)
 
 		uniMap[stmt.Params[i]] = equalTo
 	}
@@ -58,5 +65,7 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.ProveExistStmt) *glob.StmtR
 		return execState
 	}
 
-	return glob.NewEmptyStmtTrue()
+	verProcessRets = append(verProcessRets, execState.VerifyProcess...)
+
+	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verProcessRets)
 }

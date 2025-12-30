@@ -989,5 +989,5 @@ func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveImplyStmt) *glob
 		}
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return exec.NewTrueStmtRet(stmt)
 }
