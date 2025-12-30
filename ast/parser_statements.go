@@ -2659,36 +2659,81 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*SpecFactStmt, er
 		return nil, ErrInLine(err, tb)
 	}
 
-	existParams := []Obj{}
+	params := []string{}
+	paramSets := []Obj{}
 
-	for !tb.header.is(glob.KeywordSt) {
-		param, err := p.Obj(tb)
+	for !tb.header.is(glob.KeywordSt) || tb.header.is(glob.KeySymbolColon) {
+		param, err := tb.header.next()
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
-		existParams = append(existParams, param)
+		params = append(params, param)
+
+		paramSet, err := p.Obj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		paramSets = append(paramSets, paramSet)
 
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
+		} else {
+			break
 		}
 	}
 
-	err = tb.header.skip(glob.KeywordSt)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+	if tb.header.is(glob.KeySymbolColon) {
+		tb.header.skip(glob.KeySymbolColon)
 
-	pureSpecFact, err := p.specFactWithoutExist_WithoutNot(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+		objs := []Obj{}
+		for !tb.header.is(glob.KeywordSt) {
+			curObj, err := p.Obj(tb)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			objs = append(objs, curObj)
 
-	factParams := MakeExistFactParamsSlice(existParams, pureSpecFact.Params)
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+			} else {
+				break
+			}
+		}
 
-	if isTrue {
-		return NewSpecFactStmt(TrueExist_St, pureSpecFact.PropName, factParams, tb.line), nil
+		err = tb.header.skip(glob.KeywordSt)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		pureSpecFact, err := p.specFactWithoutExist_WithoutNot(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		if isTrue {
+			return NewExistStFactWithEquality(TrueExist_St, pureSpecFact.PropName, params, paramSets, objs, pureSpecFact.Params, tb.line), nil
+		} else {
+			return NewExistStFactWithEquality(FalseExist_St, pureSpecFact.PropName, params, paramSets, objs, pureSpecFact.Params, tb.line), nil
+		}
+
+	} else if tb.header.is(glob.KeywordSt) {
+		err = tb.header.skip(glob.KeywordSt)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		pureSpecFact, err := p.specFactWithoutExist_WithoutNot(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		if isTrue {
+			return NewExistStFact(TrueExist_St, pureSpecFact.PropName, params, paramSets, pureSpecFact.Params, tb.line), nil
+		} else {
+			return NewExistStFact(FalseExist_St, pureSpecFact.PropName, params, paramSets, pureSpecFact.Params, tb.line), nil
+		}
 	} else {
-		return NewSpecFactStmt(FalseExist_St, pureSpecFact.PropName, factParams, tb.line), nil
+		return nil, fmt.Errorf("expected ':' or 'st' but got '%s'", tb.header.strAtCurIndexPlus(0))
 	}
 }
 
