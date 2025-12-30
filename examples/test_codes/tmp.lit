@@ -1,9 +1,2 @@
-claim:
-    forall s nonempty_set:
-        exist add fn(s, s)s, neg fn(s)s, e s st $is_group(s, add, neg, e)
-    prove:
-        have e_on_s s // identity element
-        have fn neg_on_s(x s) s = e_on_s
-        have fn add_on_s(x s, y s) s = e_on_s
-        prove_exist add fn(s, s)s, neg fn(s)s, e s st $is_group(s, add, neg, e) = e_on_s, add_on_s, neg_on_s:
-            do_nothing
+prove_exist 1: x R st x > 0:
+    1 > 0
