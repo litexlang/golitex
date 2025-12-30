@@ -3627,7 +3627,8 @@ func (p *TbParser) proveExistStmt(tb *tokenBlock) (*ProveExistStmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeywordSt, false)
+	// params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeywordSt, false)
+	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolColon, false)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}

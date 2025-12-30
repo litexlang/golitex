@@ -1,2 +1,3 @@
-prove_exist 1: x R st x > 0:
+prove_exist 1: x Z : x > 0:
     1 > 0
+
