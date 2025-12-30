@@ -3607,21 +3607,6 @@ func (p *TbParser) proveExistStmt(tb *tokenBlock) (*ProveExistStmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeywordSt, false)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeywordSt)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	fact, err := p.specFactWithoutExist_WithoutNot(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
 	equalTos := []Obj{}
 	for !tb.header.is(glob.KeySymbolColon) {
 		equalTo, err := p.Obj(tb)
@@ -3642,17 +3627,28 @@ func (p *TbParser) proveExistStmt(tb *tokenBlock) (*ProveExistStmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	if len(equalTos) != len(paramSets) {
-		return nil, ErrInLine(fmt.Errorf("number of equal tos must be equal to number of parameters, got %d equal tos and %d param sets", len(equalTos), len(paramSets)), tb)
-	}
-
-	proofs, err := p.parseTbBodyAndGetStmts(tb.body)
+	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeywordSt, false)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
 	if len(equalTos) != len(paramSets) {
 		return nil, ErrInLine(fmt.Errorf("number of equal tos must be equal to number of parameters, got %d equal tos and %d param sets", len(equalTos), len(paramSets)), tb)
+	}
+
+	fact, err := p.specFactWithoutExist_WithoutNot(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	proofs, err := p.parseTbBodyAndGetStmts(tb.body)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
 	}
 
 	return NewProveExistStmt(params, paramSets, equalTos, fact, proofs, tb.line), nil

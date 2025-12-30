@@ -1384,6 +1384,13 @@ func (stmt *ProveExistStmt) String() string {
 	builder.WriteString(glob.KeywordProveExist)
 	builder.WriteString(" ")
 
+	equalToSlice := make([]string, len(stmt.EqualTos))
+	for i, equalTo := range stmt.EqualTos {
+		equalToSlice[i] = equalTo.String()
+	}
+	builder.WriteString(strings.Join(equalToSlice, ", "))
+	builder.WriteString(glob.KeySymbolColon)
+
 	paramAndParamSetSlice := []string{}
 	for i, param := range stmt.Params {
 		paramAndParamSetSlice = append(paramAndParamSetSlice, fmt.Sprintf("%s %s", param, stmt.ParamSets[i].String()))
@@ -1394,14 +1401,6 @@ func (stmt *ProveExistStmt) String() string {
 	builder.WriteString(" st ")
 
 	builder.WriteString(stmt.Fact.String())
-
-	builder.WriteString(" = ")
-
-	equalToSlice := make([]string, len(stmt.EqualTos))
-	for i, equalTo := range stmt.EqualTos {
-		equalToSlice[i] = equalTo.String()
-	}
-	builder.WriteString(strings.Join(equalToSlice, ", "))
 
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
