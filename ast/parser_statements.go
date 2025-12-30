@@ -3651,5 +3651,9 @@ func (p *TbParser) proveExistStmt(tb *tokenBlock) (*ProveExistStmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
+	if len(equalTos) != len(paramSets) {
+		return nil, ErrInLine(fmt.Errorf("number of equal tos must be equal to number of parameters, got %d equal tos and %d param sets", len(equalTos), len(paramSets)), tb)
+	}
+
 	return NewProveExistStmt(params, paramSets, equalTos, fact, proofs, tb.line), nil
 }
