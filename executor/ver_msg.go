@@ -52,3 +52,10 @@ func successVerStringString(stmtStr, stmtVerifiedByStr string) *glob.VerRet {
 
 	return glob.NewVerMsg(glob.StmtRetTypeTrue, stmtStr, 0, verifyMsgs)
 }
+
+func newMaybeSuccessMsgVerRet(state *VerState, stmt ast.Stmt, stmtVerifiedBy string) *glob.VerRet {
+	if state.WithMsg {
+		return successVerStringString(stmt.String(), stmtVerifiedBy)
+	}
+	return glob.NewEmptyVerRetTrue()
+}

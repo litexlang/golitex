@@ -44,6 +44,24 @@ func NewEmptyVerRetUnknown() *VerRet {
 	}
 }
 
+func NewEmptyVerRetTrue() *VerRet {
+	return &VerRet{
+		RetType:            StmtRetTypeTrue,
+		StmtStr:            "",
+		ProvedByFactOnLine: 0,
+		VerifyMsgs:         []string{},
+	}
+}
+
+func NewEmptyVerRetErr() *VerRet {
+	return &VerRet{
+		RetType:            StmtRetTypeError,
+		StmtStr:            "",
+		ProvedByFactOnLine: 0,
+		VerifyMsgs:         []string{},
+	}
+}
+
 func (m *VerRet) String() string {
 	if m.IsTrue() {
 		if m.ProvedByFactOnLine == 0 {
@@ -75,4 +93,71 @@ func (m *VerRet) IsTrue() bool {
 
 func (m *VerRet) IsErr() bool {
 	return m.RetType == StmtRetTypeError
+}
+
+func (m *VerRet) IsNotTrue() bool {
+	return m.RetType != StmtRetTypeTrue
+}
+
+func (m *VerRet) IsNotUnknown() bool {
+	return m.RetType != StmtRetTypeUnknown
+}
+
+func (m *VerRet) IsNotError() bool {
+	return m.RetType != StmtRetTypeError
+}
+
+// ToStmtRet converts VerRet to StmtRet for compatibility
+func (m *VerRet) ToStmtRet() *StmtRet {
+	ret := &StmtRet{
+		RetType:           m.RetType,
+		Define:            []string{},
+		NewFact:           []string{},
+		VerifyProcess:     []*VerRet{m},
+		Infer:             []string{},
+		Stmt:              []string{},
+		InnerStmtRetSlice: []*StmtRet{},
+		Unknown:           []string{},
+		Error:             []string{},
+		Warnings:          []string{},
+		Line:              m.ProvedByFactOnLine,
+	}
+
+	if m.RetType == StmtRetTypeUnknown {
+		ret.Unknown = m.VerifyMsgs
+	} else if m.RetType == StmtRetTypeError {
+		ret.Error = m.VerifyMsgs
+	}
+
+	return ret
+}
+
+func (m *VerRet) AddError(s string) *VerRet {
+	m.RetType = StmtRetTypeError
+	m.VerifyMsgs = append(m.VerifyMsgs, s)
+	return m
+}
+
+func (m *VerRet) AddUnknown(unknown string) *VerRet {
+	m.RetType = StmtRetTypeUnknown
+	m.VerifyMsgs = append(m.VerifyMsgs, unknown)
+	return m
+}
+
+func NewErrVerRet(s string) *VerRet {
+	verRet := NewEmptyVerRetErr()
+	verRet.VerifyMsgs = append(verRet.VerifyMsgs, s)
+	return verRet
+}
+
+func NewUnknownVerRet(s string) *VerRet {
+	verRet := NewEmptyVerRetUnknown()
+	verRet.VerifyMsgs = append(verRet.VerifyMsgs, s)
+	return verRet
+}
+
+func NewTrueVerRetWithMsg(s string) *VerRet {
+	verRet := NewEmptyVerRetTrue()
+	verRet.VerifyMsgs = append(verRet.VerifyMsgs, s)
+	return verRet
 }

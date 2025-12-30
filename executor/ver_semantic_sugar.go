@@ -17,48 +17,30 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	cmp "golitex/cmp"
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 	if replaced {
 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state.CopyAndReqOkToFalse())
 		if verRet.IsErr() {
-			return glob.ErrRet("failed to verify true equal fact: " + verRet.String())
+			return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.Line, []string{"failed to verify true equal fact: " + verRet.String()})
 		}
 
 		if verRet.IsTrue() {
-			values := []ast.Obj{}
-			if cmp.IsNumExprLitObj(newStmt.Params[0]) {
-				values = append(values, newStmt.Params[0])
-			} else {
-				values = append(values, nil)
-			}
-
-			if cmp.IsNumExprLitObj(newStmt.Params[1]) {
-				values = append(values, newStmt.Params[1])
-			} else {
-				values = append(values, nil)
-			}
-
 			msg := fmt.Sprintf("proved by replacing the symbols with their values:\n%s", newStmt.String())
-			var execRet *glob.StmtRet
-			if values[0] == nil && values[1] == nil {
-				execRet = glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{msg}))
-			} else {
-				execRet = glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{msg}))
+			if state.WithMsg {
+				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{msg})
 			}
-			msgStr := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), msgStr, execRet)
+			return glob.NewEmptyVerRetTrue()
 		}
 	}
 
-	return glob.UnknownRet(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+	return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.Line, []string{fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())})
 }
 
-func (ver *Verifier) verByReplaceObjInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verByReplaceObjInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 
 	if replaced {
@@ -68,9 +50,12 @@ func (ver *Verifier) verByReplaceObjInSpecFactWithValueAndCompute(stmt *ast.Spec
 		}
 		if verRet.IsTrue() {
 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String())
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyStmtTrue())
+			if state.WithMsg {
+				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{msg})
+			}
+			return glob.NewEmptyVerRetTrue()
 		}
 	}
 
-	return glob.NewEmptyStmtUnknown()
+	return glob.NewEmptyVerRetUnknown()
 }
