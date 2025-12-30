@@ -52,36 +52,36 @@ func (envMgr *EnvMgr) GenerateUndeclaredRandomName_AndNotInMap(m map[string]stru
 	}
 }
 
-func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.AnonymousFn, *glob.StmtRet) {
+func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.AnonymousFn, *glob.ShortRet) {
 	if objFnTypeToFnTStruct, ok := ast.AnonymousFnToInstFnTemplate(fnTName); ok {
-		return objFnTypeToFnTStruct, glob.NewEmptyStmtTrue()
+		return objFnTypeToFnTStruct, glob.NewEmptyShortTrueRet()
 	} else {
 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
 		if !ok {
-			return nil, glob.ErrRet(fmt.Sprintf("fnTNameHead is not an atom"))
+			return nil, glob.NewShortRetTrue(fmt.Sprintf("fnTNameHead is not an atom"))
 		}
 
 		return envMgr.getFnTDef_InstFnTStructOfIt(fnTNameHeadAsAtom, fnTName.Params)
 	}
 }
 
-func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.AnonymousFn, *glob.StmtRet) {
+func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.AnonymousFn, *glob.ShortRet) {
 	defOfT := envMgr.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
-		return nil, glob.ErrRet(fmt.Sprintf("fnTNameHead %s is not a fn template", fnTDefName))
+		return nil, glob.NewShortRetErr(fmt.Sprintf("fnTNameHead %s is not a fn template", fnTDefName))
 	}
 
 	uniMap, err := ast.MakeUniMap(defOfT.TemplateDefHeader.Params, templateParams)
 	if err != nil {
-		return nil, glob.ErrRetWithErr(err)
+		return nil, glob.NewShortRetErr(err.Error())
 	}
 
 	fnTStruct, err := defOfT.AnonymousFn.Instantiate(uniMap)
 	if err != nil {
-		return nil, glob.ErrRetWithErr(err)
+		return nil, glob.NewShortRetErr(err.Error())
 	}
 
-	return fnTStruct, glob.NewEmptyStmtTrue()
+	return fnTStruct, glob.NewEmptyShortTrueRet()
 }
 
 func (envMgr *EnvMgr) storeSpecFactInMem(stmt *ast.SpecFactStmt) *glob.StmtRet {
@@ -326,187 +326,187 @@ var BuiltinEnvMgrWithEmptyEnvPkgMgr *EnvMgr = nil
 // }
 
 // copyEnvMemory 深拷贝 EnvMemory
-func copyEnvMemory(src EnvMemory) EnvMemory {
-	dst := EnvMemory{
-		AtomObjDefMem:            make(map[string]struct{}),
-		PropDefMem:               make(map[string]struct{}),
-		FnTemplateDefMem:         make(map[string]struct{}),
-		ExistPropDefMem:          make(map[string]struct{}),
-		AlgoDefMem:               make(map[string]struct{}),
-		DefProveAlgoMem:          make(map[string]struct{}),
-		EqualMem:                 make(map[string]shared_ptr_to_slice_of_obj),
-		SymbolSimplifiedValueMem: make(map[string]ast.Obj),
-		TransitivePropMem:        make(map[string]map[string][]ast.Obj),
-		CommutativePropMem:       make(map[string]*PropCommutativeCase),
-		FnInFnTemplateFactsMem:   make(FnInFnTMem),
-	}
+// func copyEnvMemory(src EnvMemory) EnvMemory {
+// 	dst := EnvMemory{
+// 		AtomObjDefMem:            make(map[string]struct{}),
+// 		PropDefMem:               make(map[string]struct{}),
+// 		FnTemplateDefMem:         make(map[string]struct{}),
+// 		ExistPropDefMem:          make(map[string]struct{}),
+// 		AlgoDefMem:               make(map[string]struct{}),
+// 		DefProveAlgoMem:          make(map[string]struct{}),
+// 		EqualMem:                 make(map[string]shared_ptr_to_slice_of_obj),
+// 		SymbolSimplifiedValueMem: make(map[string]ast.Obj),
+// 		TransitivePropMem:        make(map[string]map[string][]ast.Obj),
+// 		CommutativePropMem:       make(map[string]*PropCommutativeCase),
+// 		FnInFnTemplateFactsMem:   make(FnInFnTMem),
+// 	}
 
-	// 复制定义内存
-	for k := range src.AtomObjDefMem {
-		dst.AtomObjDefMem[k] = struct{}{}
-	}
-	for k := range src.PropDefMem {
-		dst.PropDefMem[k] = struct{}{}
-	}
-	for k := range src.FnTemplateDefMem {
-		dst.FnTemplateDefMem[k] = struct{}{}
-	}
-	for k := range src.ExistPropDefMem {
-		dst.ExistPropDefMem[k] = struct{}{}
-	}
-	for k := range src.AlgoDefMem {
-		dst.AlgoDefMem[k] = struct{}{}
-	}
-	for k := range src.DefProveAlgoMem {
-		dst.DefProveAlgoMem[k] = struct{}{}
-	}
+// 	// 复制定义内存
+// 	for k := range src.AtomObjDefMem {
+// 		dst.AtomObjDefMem[k] = struct{}{}
+// 	}
+// 	for k := range src.PropDefMem {
+// 		dst.PropDefMem[k] = struct{}{}
+// 	}
+// 	for k := range src.FnTemplateDefMem {
+// 		dst.FnTemplateDefMem[k] = struct{}{}
+// 	}
+// 	for k := range src.ExistPropDefMem {
+// 		dst.ExistPropDefMem[k] = struct{}{}
+// 	}
+// 	for k := range src.AlgoDefMem {
+// 		dst.AlgoDefMem[k] = struct{}{}
+// 	}
+// 	for k := range src.DefProveAlgoMem {
+// 		dst.DefProveAlgoMem[k] = struct{}{}
+// 	}
 
-	// 复制 EqualMem
-	for k, v := range src.EqualMem {
-		if v != nil {
-			newSlice := make([]ast.Obj, len(*v))
-			copy(newSlice, *v)
-			dst.EqualMem[k] = &newSlice
-		}
-	}
+// 	// 复制 EqualMem
+// 	for k, v := range src.EqualMem {
+// 		if v != nil {
+// 			newSlice := make([]ast.Obj, len(*v))
+// 			copy(newSlice, *v)
+// 			dst.EqualMem[k] = &newSlice
+// 		}
+// 	}
 
-	// 复制 SymbolSimplifiedValueMem
-	for k, v := range src.SymbolSimplifiedValueMem {
-		dst.SymbolSimplifiedValueMem[k] = v
-	}
+// 	// 复制 SymbolSimplifiedValueMem
+// 	for k, v := range src.SymbolSimplifiedValueMem {
+// 		dst.SymbolSimplifiedValueMem[k] = v
+// 	}
 
-	// 复制 TransitivePropMem
-	for k, v := range src.TransitivePropMem {
-		newMap := make(map[string][]ast.Obj)
-		for k2, v2 := range v {
-			newSlice := make([]ast.Obj, len(v2))
-			copy(newSlice, v2)
-			newMap[k2] = newSlice
-		}
-		dst.TransitivePropMem[k] = newMap
-	}
+// 	// 复制 TransitivePropMem
+// 	for k, v := range src.TransitivePropMem {
+// 		newMap := make(map[string][]ast.Obj)
+// 		for k2, v2 := range v {
+// 			newSlice := make([]ast.Obj, len(v2))
+// 			copy(newSlice, v2)
+// 			newMap[k2] = newSlice
+// 		}
+// 		dst.TransitivePropMem[k] = newMap
+// 	}
 
-	// 复制 CommutativePropMem
-	for k, v := range src.CommutativePropMem {
-		if v != nil {
-			dst.CommutativePropMem[k] = &PropCommutativeCase{
-				TruePureIsCommutative:  v.TruePureIsCommutative,
-				FalsePureIsCommutative: v.FalsePureIsCommutative,
-			}
-		}
-	}
+// 	// 复制 CommutativePropMem
+// 	for k, v := range src.CommutativePropMem {
+// 		if v != nil {
+// 			dst.CommutativePropMem[k] = &PropCommutativeCase{
+// 				TruePureIsCommutative:  v.TruePureIsCommutative,
+// 				FalsePureIsCommutative: v.FalsePureIsCommutative,
+// 			}
+// 		}
+// 	}
 
-	// 复制 FnInFnTemplateFactsMem
-	for k, v := range src.FnInFnTemplateFactsMem {
-		newSlice := make([]FnInFnTMemItem, len(v))
-		copy(newSlice, v)
-		dst.FnInFnTemplateFactsMem[k] = newSlice
-	}
+// 	// 复制 FnInFnTemplateFactsMem
+// 	for k, v := range src.FnInFnTemplateFactsMem {
+// 		newSlice := make([]FnInFnTMemItem, len(v))
+// 		copy(newSlice, v)
+// 		dst.FnInFnTemplateFactsMem[k] = newSlice
+// 	}
 
-	// 复制 KnownFactsStruct
-	dst.KnownFactsStruct = copyKnownFactsStruct(src.KnownFactsStruct)
+// 	// 复制 KnownFactsStruct
+// 	dst.KnownFactsStruct = copyKnownFactsStruct(src.KnownFactsStruct)
 
-	return dst
-}
+// 	return dst
+// }
 
 // copyKnownFactsStruct 深拷贝 KnownFactsStruct
-func copyKnownFactsStruct(src KnownFactsStruct) KnownFactsStruct {
-	return KnownFactsStruct{
-		SpecFactMem:                       copySpecFactMem(src.SpecFactMem),
-		SpecFactInLogicExprMem:            copySpecFactInLogicExprMem(src.SpecFactInLogicExprMem),
-		SpecFactInUniFactMem:              copySpecFactInUniFactMem(src.SpecFactInUniFactMem),
-		SpecFact_InLogicExpr_InUniFactMem: copySpecFact_InLogicExpr_InUniFactMem(src.SpecFact_InLogicExpr_InUniFactMem),
-	}
-}
+// func copyKnownFactsStruct(src KnownFactsStruct) KnownFactsStruct {
+// 	return KnownFactsStruct{
+// 		SpecFactMem:                       copySpecFactMem(src.SpecFactMem),
+// 		SpecFactInLogicExprMem:            copySpecFactInLogicExprMem(src.SpecFactInLogicExprMem),
+// 		SpecFactInUniFactMem:              copySpecFactInUniFactMem(src.SpecFactInUniFactMem),
+// 		SpecFact_InLogicExpr_InUniFactMem: copySpecFact_InLogicExpr_InUniFactMem(src.SpecFact_InLogicExpr_InUniFactMem),
+// 	}
+// }
 
 // copySpecFactMem 深拷贝 SpecFactMem
-func copySpecFactMem(src SpecFactMem) SpecFactMem {
-	dst := SpecFactMem{
-		PureFacts:         make(map[string][]ast.SpecFactStmt),
-		NotPureFacts:      make(map[string][]ast.SpecFactStmt),
-		Exist_St_Facts:    make(map[string][]ast.SpecFactStmt),
-		NotExist_St_Facts: make(map[string][]ast.SpecFactStmt),
-	}
-	for k, v := range src.PureFacts {
-		dst.PureFacts[k] = append([]ast.SpecFactStmt{}, v...)
-	}
-	for k, v := range src.NotPureFacts {
-		dst.NotPureFacts[k] = append([]ast.SpecFactStmt{}, v...)
-	}
-	for k, v := range src.Exist_St_Facts {
-		dst.Exist_St_Facts[k] = append([]ast.SpecFactStmt{}, v...)
-	}
-	for k, v := range src.NotExist_St_Facts {
-		dst.NotExist_St_Facts[k] = append([]ast.SpecFactStmt{}, v...)
-	}
-	return dst
-}
+// func copySpecFactMem(src SpecFactMem) SpecFactMem {
+// 	dst := SpecFactMem{
+// 		PureFacts:         make(map[string][]ast.SpecFactStmt),
+// 		NotPureFacts:      make(map[string][]ast.SpecFactStmt),
+// 		Exist_St_Facts:    make(map[string][]ast.SpecFactStmt),
+// 		NotExist_St_Facts: make(map[string][]ast.SpecFactStmt),
+// 	}
+// 	for k, v := range src.PureFacts {
+// 		dst.PureFacts[k] = append([]ast.SpecFactStmt{}, v...)
+// 	}
+// 	for k, v := range src.NotPureFacts {
+// 		dst.NotPureFacts[k] = append([]ast.SpecFactStmt{}, v...)
+// 	}
+// 	for k, v := range src.Exist_St_Facts {
+// 		dst.Exist_St_Facts[k] = append([]ast.SpecFactStmt{}, v...)
+// 	}
+// 	for k, v := range src.NotExist_St_Facts {
+// 		dst.NotExist_St_Facts[k] = append([]ast.SpecFactStmt{}, v...)
+// 	}
+// 	return dst
+// }
 
-// copySpecFactInLogicExprMem 深拷贝 SpecFactInLogicExprMem
-func copySpecFactInLogicExprMem(src SpecFactInLogicExprMem) SpecFactInLogicExprMem {
-	dst := SpecFactInLogicExprMem{
-		PureFacts:         make(map[string][]KnownSpecFact_InLogicExpr),
-		NotPureFacts:      make(map[string][]KnownSpecFact_InLogicExpr),
-		Exist_St_Facts:    make(map[string][]KnownSpecFact_InLogicExpr),
-		NotExist_St_Facts: make(map[string][]KnownSpecFact_InLogicExpr),
-	}
-	for k, v := range src.PureFacts {
-		dst.PureFacts[k] = append([]KnownSpecFact_InLogicExpr{}, v...)
-	}
-	for k, v := range src.NotPureFacts {
-		dst.NotPureFacts[k] = append([]KnownSpecFact_InLogicExpr{}, v...)
-	}
-	for k, v := range src.Exist_St_Facts {
-		dst.Exist_St_Facts[k] = append([]KnownSpecFact_InLogicExpr{}, v...)
-	}
-	for k, v := range src.NotExist_St_Facts {
-		dst.NotExist_St_Facts[k] = append([]KnownSpecFact_InLogicExpr{}, v...)
-	}
-	return dst
-}
+// // copySpecFactInLogicExprMem 深拷贝 SpecFactInLogicExprMem
+// func copySpecFactInLogicExprMem(src SpecFactInLogicExprMem) SpecFactInLogicExprMem {
+// 	dst := SpecFactInLogicExprMem{
+// 		PureFacts:         make(map[string][]KnownSpecFact_InLogicExpr),
+// 		NotPureFacts:      make(map[string][]KnownSpecFact_InLogicExpr),
+// 		Exist_St_Facts:    make(map[string][]KnownSpecFact_InLogicExpr),
+// 		NotExist_St_Facts: make(map[string][]KnownSpecFact_InLogicExpr),
+// 	}
+// 	for k, v := range src.PureFacts {
+// 		dst.PureFacts[k] = append([]KnownSpecFact_InLogicExpr{}, v...)
+// 	}
+// 	for k, v := range src.NotPureFacts {
+// 		dst.NotPureFacts[k] = append([]KnownSpecFact_InLogicExpr{}, v...)
+// 	}
+// 	for k, v := range src.Exist_St_Facts {
+// 		dst.Exist_St_Facts[k] = append([]KnownSpecFact_InLogicExpr{}, v...)
+// 	}
+// 	for k, v := range src.NotExist_St_Facts {
+// 		dst.NotExist_St_Facts[k] = append([]KnownSpecFact_InLogicExpr{}, v...)
+// 	}
+// 	return dst
+// }
 
-// copySpecFactInUniFactMem 深拷贝 SpecFactInUniFactMem
-func copySpecFactInUniFactMem(src SpecFactInUniFactMem) SpecFactInUniFactMem {
-	dst := SpecFactInUniFactMem{
-		PureFacts:         make(map[string][]KnownSpecFact_InUniFact),
-		NotPureFacts:      make(map[string][]KnownSpecFact_InUniFact),
-		Exist_St_Facts:    make(map[string][]KnownSpecFact_InUniFact),
-		NotExist_St_Facts: make(map[string][]KnownSpecFact_InUniFact),
-	}
-	for k, v := range src.PureFacts {
-		dst.PureFacts[k] = append([]KnownSpecFact_InUniFact{}, v...)
-	}
-	for k, v := range src.NotPureFacts {
-		dst.NotPureFacts[k] = append([]KnownSpecFact_InUniFact{}, v...)
-	}
-	for k, v := range src.Exist_St_Facts {
-		dst.Exist_St_Facts[k] = append([]KnownSpecFact_InUniFact{}, v...)
-	}
-	for k, v := range src.NotExist_St_Facts {
-		dst.NotExist_St_Facts[k] = append([]KnownSpecFact_InUniFact{}, v...)
-	}
-	return dst
-}
+// // copySpecFactInUniFactMem 深拷贝 SpecFactInUniFactMem
+// func copySpecFactInUniFactMem(src SpecFactInUniFactMem) SpecFactInUniFactMem {
+// 	dst := SpecFactInUniFactMem{
+// 		PureFacts:         make(map[string][]KnownSpecFact_InUniFact),
+// 		NotPureFacts:      make(map[string][]KnownSpecFact_InUniFact),
+// 		Exist_St_Facts:    make(map[string][]KnownSpecFact_InUniFact),
+// 		NotExist_St_Facts: make(map[string][]KnownSpecFact_InUniFact),
+// 	}
+// 	for k, v := range src.PureFacts {
+// 		dst.PureFacts[k] = append([]KnownSpecFact_InUniFact{}, v...)
+// 	}
+// 	for k, v := range src.NotPureFacts {
+// 		dst.NotPureFacts[k] = append([]KnownSpecFact_InUniFact{}, v...)
+// 	}
+// 	for k, v := range src.Exist_St_Facts {
+// 		dst.Exist_St_Facts[k] = append([]KnownSpecFact_InUniFact{}, v...)
+// 	}
+// 	for k, v := range src.NotExist_St_Facts {
+// 		dst.NotExist_St_Facts[k] = append([]KnownSpecFact_InUniFact{}, v...)
+// 	}
+// 	return dst
+// }
 
-// copySpecFact_InLogicExpr_InUniFactMem 深拷贝 SpecFact_InLogicExpr_InUniFactMem
-func copySpecFact_InLogicExpr_InUniFactMem(src SpecFact_InLogicExpr_InUniFactMem) SpecFact_InLogicExpr_InUniFactMem {
-	dst := SpecFact_InLogicExpr_InUniFactMem{
-		PureFacts:         make(map[string][]SpecFact_InLogicExpr_InUniFact),
-		NotPureFacts:      make(map[string][]SpecFact_InLogicExpr_InUniFact),
-		Exist_St_Facts:    make(map[string][]SpecFact_InLogicExpr_InUniFact),
-		NotExist_St_Facts: make(map[string][]SpecFact_InLogicExpr_InUniFact),
-	}
-	for k, v := range src.PureFacts {
-		dst.PureFacts[k] = append([]SpecFact_InLogicExpr_InUniFact{}, v...)
-	}
-	for k, v := range src.NotPureFacts {
-		dst.NotPureFacts[k] = append([]SpecFact_InLogicExpr_InUniFact{}, v...)
-	}
-	for k, v := range src.Exist_St_Facts {
-		dst.Exist_St_Facts[k] = append([]SpecFact_InLogicExpr_InUniFact{}, v...)
-	}
-	for k, v := range src.NotExist_St_Facts {
-		dst.NotExist_St_Facts[k] = append([]SpecFact_InLogicExpr_InUniFact{}, v...)
-	}
-	return dst
-}
+// // copySpecFact_InLogicExpr_InUniFactMem 深拷贝 SpecFact_InLogicExpr_InUniFactMem
+// func copySpecFact_InLogicExpr_InUniFactMem(src SpecFact_InLogicExpr_InUniFactMem) SpecFact_InLogicExpr_InUniFactMem {
+// 	dst := SpecFact_InLogicExpr_InUniFactMem{
+// 		PureFacts:         make(map[string][]SpecFact_InLogicExpr_InUniFact),
+// 		NotPureFacts:      make(map[string][]SpecFact_InLogicExpr_InUniFact),
+// 		Exist_St_Facts:    make(map[string][]SpecFact_InLogicExpr_InUniFact),
+// 		NotExist_St_Facts: make(map[string][]SpecFact_InLogicExpr_InUniFact),
+// 	}
+// 	for k, v := range src.PureFacts {
+// 		dst.PureFacts[k] = append([]SpecFact_InLogicExpr_InUniFact{}, v...)
+// 	}
+// 	for k, v := range src.NotPureFacts {
+// 		dst.NotPureFacts[k] = append([]SpecFact_InLogicExpr_InUniFact{}, v...)
+// 	}
+// 	for k, v := range src.Exist_St_Facts {
+// 		dst.Exist_St_Facts[k] = append([]SpecFact_InLogicExpr_InUniFact{}, v...)
+// 	}
+// 	for k, v := range src.NotExist_St_Facts {
+// 		dst.NotExist_St_Facts[k] = append([]SpecFact_InLogicExpr_InUniFact{}, v...)
+// 	}
+// 	return dst
+// }

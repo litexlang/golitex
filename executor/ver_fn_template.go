@@ -20,22 +20,22 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState) *glob.StmtRet {
+func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState) *glob.VerRet {
 	leftLatestFnT := ver.Env.GetLatestFnT_GivenNameIsIn(left.String())
 	if leftLatestFnT == nil {
-		return glob.NewEmptyStmtUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	// right dom <= left dom. on right dom left has all those then facts
 	rightDefT := ver.Env.GetFnTemplateDef_KeyIsObjHead(right)
 	if rightDefT == nil {
-		return glob.NewEmptyStmtUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	ok := ver.leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftLatestFnT, rightDefT, left, right, state)
 
 	if !ok {
-		return glob.NewEmptyStmtUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	templateParamUniMap := map[string]ast.Obj{}
@@ -45,10 +45,10 @@ func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState
 
 	ok = ver.f_satisfy_FnT_ThenFacts_On_FnT_Dom(left, string(rightDefT.TemplateDefHeader.Name), templateParamUniMap, rightDefT.AnonymousFn, state)
 	if !ok {
-		return glob.NewEmptyStmtUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return glob.NewEmptyVerRetTrue()
 }
 
 // right dom is subset of left dom

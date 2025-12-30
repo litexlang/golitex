@@ -56,12 +56,12 @@ func (envMgr *EnvMgr) IsFnDeclared(obj ast.Atom) (*FnInFnTMemItem, bool) {
 
 func (envMgr *EnvMgr) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, fnTemplateFnObj *ast.FnObj, fnTStruct *ast.AnonymousFn) *glob.StmtRet {
 	if fnTemplateFnObj != nil {
-		fnTStruct, ret := envMgr.GetFnStructFromFnTName(fnTemplateFnObj)
-		if ret.IsErr() {
-			return ret
+		fnTStruct, shortRet := envMgr.GetFnStructFromFnTName(fnTemplateFnObj)
+		if shortRet.IsErr() {
+			return glob.NewEmptyStmtError().AddErrors(shortRet.Msgs)
 		}
 
-		ret = envMgr.InsertFnInFnTT(fn, fnTStruct)
+		ret := envMgr.InsertFnInFnTT(fn, fnTStruct)
 		if ret.IsErr() {
 			return ret
 		}

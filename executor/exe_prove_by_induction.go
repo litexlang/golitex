@@ -57,7 +57,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) *glob
 		result := verRet
 		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
 		result = result.AddError(verRet.String())
-		return result
+		return result.ToStmtRet()
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", startFact.String())

@@ -20,28 +20,29 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) *glob.VerRet {
 	if len(stmt.Params) < 2 {
-		return glob.ErrRet("equals fact must have at least 2 params")
+		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{"equals fact must have at least 2 params"})
 	}
 
 	trueMsgs := []string{}
 
 	for i := 1; i < len(stmt.Params); i++ {
 		checked := false
-		unknownRet := glob.NewEmptyStmtUnknown()
+		unknownRet := glob.NewEmptyVerRetUnknown()
 
 		for j := i - 1; j >= 0; j-- {
 			newFact := ast.NewEqualFact(stmt.Params[j], stmt.Params[i])
 			verRet := ver.VerFactStmt(newFact, state)
 			if verRet.IsErr() {
 				newFact := ast.NewEqualFact(stmt.Params[i-1], stmt.Params[i])
-				return verRet.AddError(fmt.Sprintf("%s\nis error", newFact.String()))
+				msgs := append(verRet.VerifyMsgs, fmt.Sprintf("%s\nis error", newFact.String()))
+				return glob.NewVerMsg(glob.StmtRetTypeError, newFact.String(), newFact.GetLine(), msgs)
 			}
 			if verRet.IsTrue() {
 				ret := ver.Env.NewFactWithoutCheckingNameDefined(newFact)
 				if ret.IsErr() {
-					return glob.ErrRet(ret.String())
+					return glob.NewVerMsg(glob.StmtRetTypeError, newFact.String(), newFact.GetLine(), []string{ret.String()})
 				}
 				checked = true
 				trueMsgs = append(trueMsgs, verRet.String())
@@ -55,8 +56,13 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 
 		if !checked {
 			newFact := ast.NewEqualFact(stmt.Params[i-1], stmt.Params[i])
-			return unknownRet.AddUnknown(fmt.Sprintf("%s\nis unknown", newFact.String()))
+			msgs := append(unknownRet.VerifyMsgs, fmt.Sprintf("%s\nis unknown", newFact.String()))
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, newFact.String(), newFact.GetLine(), msgs)
 		}
 	}
-	return glob.NewStmtTrueWithStmts(trueMsgs)
+	if state.WithMsg {
+		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), trueMsgs)
+	}
+	return glob.NewEmptyVerRetTrue()
 }
+

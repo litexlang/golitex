@@ -24,7 +24,7 @@ import (
 
 // 反过来，用已知的 a ∨ b ∨ c ∨ ... ∨ n 为真，去验证 a ，需要先验证b, c, ... , n 为假，才能得到 a 为真。
 
-func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
 	nextState := state.GetAddRound()
 	for i := range stmt.Facts {
 		verRet := ver.verFactAtIndex_WhenOthersAreFalse(stmt.Facts, i, nextState)
@@ -33,13 +33,16 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.StmtRet 
 		}
 		if verRet.IsTrue() {
 			msg := fmt.Sprintf("%s is true when all others facts in the or statement are false", stmt.Facts[i])
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyStmtTrue())
+			if state.WithMsg {
+				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), []string{msg})
+			}
+			return glob.NewEmptyVerRetTrue()
 		}
 	}
-	return glob.NewEmptyStmtUnknown()
+	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt, i int, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt, i int, state *VerState) *glob.VerRet {
 	ver.newEnv()
 	defer ver.deleteEnv()
 
@@ -49,7 +52,7 @@ func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt
 		}
 		ret := ver.Env.NewFactWithoutCheckingNameDefined(facts[j].ReverseTrue())
 		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
+			return glob.NewVerMsg(glob.StmtRetTypeError, facts[j].String(), facts[j].GetLine(), []string{ret.String()})
 		}
 	}
 

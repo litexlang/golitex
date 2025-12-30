@@ -20,9 +20,9 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
 	if state.isFinalRound() {
-		return glob.NewEmptyStmtUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	// 在局部环境声明新变量
@@ -31,47 +31,46 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) *glob
 
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(oldStmt)
 	if err != nil {
-		return glob.ErrRet(err.Error())
+		return glob.NewVerMsg(glob.StmtRetTypeError, oldStmt.String(), oldStmt.GetLine(), []string{err.Error()})
 	}
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
 		ret := ver.Env.NewFactWithoutCheckingNameDefined(condFact)
 		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
+			return glob.NewVerMsg(glob.StmtRetTypeError, condFact.String(), condFact.GetLine(), []string{ret.String()})
 		}
 	}
 
 	return ver.uniFact_checkThenFacts(newStmtPtr, state)
 }
 
-func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) *glob.StmtRet {
+func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
 	// check then facts
 	for _, thenFact := range stmt.ThenFacts {
 		verRet := ver.VerFactStmt(thenFact, state) // 这个地方有点tricky，这里是可能读入state是any的，而且我要允许读入any
 		if verRet.IsErr() {
-			return glob.ErrRet(verRet.String())
+			return verRet
 		}
 		if verRet.IsUnknown() {
-			execRet := glob.NewEmptyStmtUnknown()
 			if state.WithMsg {
-				execRet.AddUnknown(fmt.Sprintf("%s is unknown", thenFact))
+				msgs := append(verRet.VerifyMsgs, fmt.Sprintf("%s is unknown", thenFact))
+				return glob.NewVerMsg(glob.StmtRetTypeUnknown, thenFact.String(), thenFact.GetLine(), msgs)
 			}
-			return execRet
+			return glob.NewEmptyVerRetUnknown()
 		}
 
 		// if true, store it
 		ret := ver.Env.NewFactWithoutCheckingNameDefined(thenFact)
 		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
+			return glob.NewVerMsg(glob.StmtRetTypeError, thenFact.String(), thenFact.GetLine(), []string{ret.String()})
 		}
 	}
 
-	execRet := glob.NewEmptyStmtTrue()
 	if state.WithMsg {
-		execRet = execRet.AddVerifyProcess(glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{"is true"}))
+		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{"is true"})
 	}
-	return execRet
+	return glob.NewEmptyVerRetTrue()
 }
 
 func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactStmt) (*ast.UniFactStmt, error) {
@@ -98,7 +97,7 @@ func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactS
 	return newStmtPtr, nil
 }
 
-func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) *glob.VerRet {
 	thenToIff := stmt.NewUniFactWithThenToIff()
 	verRet := ver.verUniFact(thenToIff, state)
 	if verRet.IsErr() || verRet.IsUnknown() {

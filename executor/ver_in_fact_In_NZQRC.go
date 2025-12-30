@@ -21,10 +21,10 @@ import (
 )
 
 // 这是必要的，因为 2 $in N 是这个检查的
-func (ver *Verifier) verInFactByRightParamIsNOrZOrQOrR_BySpecMem_ReturnValueOfUserDefinedFnInFnReturn(stmt *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
+func (ver *Verifier) verInFactByRightParamIsNOrZOrQOrR_BySpecMem_ReturnValueOfUserDefinedFnInFnReturn(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	inSet, ok := stmt.Params[1].(ast.Atom)
 	if !ok {
-		return glob.NewEmptyStmtUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	nextState := state.GetFinalRound().GetNoMsg()
@@ -49,9 +49,9 @@ func (ver *Verifier) verInFactByRightParamIsNOrZOrQOrR_BySpecMem_ReturnValueOfUs
 		if verifiedBy == "" {
 			verifiedBy = fmt.Sprintf("%s is in %s", stmt.Params[0], inSet)
 		}
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), verifiedBy, glob.NewEmptyStmtTrue())
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), verifiedBy, glob.NewEmptyVerRetTrue())
 	}
-	return glob.NewEmptyStmtUnknown()
+	return glob.NewEmptyVerRetUnknown()
 }
 
 func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt *ast.SpecFactStmt, state *VerState) (bool, string) {

@@ -50,28 +50,6 @@ type EnvMgr struct {
 	AllDefinedProveAlgoNames map[string]*ast.DefProveAlgoStmt
 }
 
-func (mgr *EnvMgr) IsNameDefinedInEnvMgr(name string) bool {
-	if _, ok := mgr.AllDefinedAtomObjNames[name]; ok {
-		return true
-	}
-	if _, ok := mgr.AllDefinedPropNames[name]; ok {
-		return true
-	}
-	if _, ok := mgr.AllDefinedExistPropNames[name]; ok {
-		return true
-	}
-	if _, ok := mgr.AllDefinedFnSetNames[name]; ok {
-		return true
-	}
-	if _, ok := mgr.AllDefinedAlgoNames[name]; ok {
-		return true
-	}
-	if _, ok := mgr.AllDefinedProveAlgoNames[name]; ok {
-		return true
-	}
-	return false
-}
-
 type EnvMemory struct {
 	// definition memory
 	AtomObjDefMem    map[string]struct{}
@@ -198,10 +176,6 @@ func (envMgr *EnvMgr) DeleteEnv() {
 	}
 
 	envMgr.EnvSlice = envMgr.EnvSlice[:len(envMgr.EnvSlice)-1]
-}
-
-func (envMgr *EnvMgr) ParentEnv() *EnvMemory {
-	return &envMgr.EnvSlice[len(envMgr.EnvSlice)-1]
 }
 
 func makeKnownFactsStruct() KnownFactsStruct {

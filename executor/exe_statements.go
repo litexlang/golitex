@@ -135,15 +135,15 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) *glob.StmtRet {
 	verRet := curVerifier.VerFactStmt(stmt, state)
 
 	if verRet.IsErr() {
-		return exec.AddStmtToStmtRet(verRet, stmt)
+		return exec.AddStmtToStmtRet(verRet.ToStmtRet(), stmt)
 	} else if verRet.IsTrue() {
 		ret := exec.Env.NewFactWithoutCheckingNameDefined(stmt)
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String()).AddError(stmt.String())
 		}
-		return exec.NewTrueStmtRet(stmt).AddNewFact((stmt.String())).AddVerifyProcesses(verRet.VerifyProcess).AddNewFacts(ret.NewFact)
+		return exec.NewTrueStmtRet(stmt).AddNewFact((stmt.String())).AddVerifyProcess(verRet).AddNewFacts(ret.NewFact)
 	} else if verRet.IsUnknown() {
-		return exec.AddStmtToStmtRet(verRet, stmt).AddUnknown(stmt.String())
+		return exec.AddStmtToStmtRet(verRet.ToStmtRet(), stmt).AddUnknown(stmt.String())
 	} else {
 		execRet := glob.ErrRet("unknown ver ret")
 		return execRet.AddError(fmt.Sprintf("%s\n", stmt.String())).AddError(stmt.String())
@@ -570,7 +570,7 @@ func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) *glob.StmtRet {
 func (exec *Executor) Verify(fact ast.FactStmt) *glob.StmtRet {
 	ver := NewVerifier(exec.Env)
 	state := Round0Msg()
-	return ver.VerFactStmt(fact, state)
+	return ver.VerFactStmt(fact, state).ToStmtRet()
 }
 
 // func (exec *Executor) markdownStmt(stmt *ast.MarkdownStmt) *glob.GlobRet {
