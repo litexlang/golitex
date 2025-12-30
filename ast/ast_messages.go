@@ -1378,3 +1378,37 @@ func SetBuilderObjString(f *FnObj) string {
 	builder.WriteString(glob.KeySymbolRightCurly)
 	return builder.String()
 }
+
+func (stmt *ProveExistStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordProveExist)
+	builder.WriteString(" ")
+
+	paramAndParamSetSlice := []string{}
+	for i, param := range stmt.Params {
+		paramAndParamSetSlice = append(paramAndParamSetSlice, fmt.Sprintf("%s %s", param, stmt.ParamSets[i].String()))
+	}
+
+	builder.WriteString(strings.Join(paramAndParamSetSlice, ", "))
+
+	builder.WriteString(" st ")
+
+	builder.WriteString(stmt.Fact.String())
+
+	builder.WriteString(" = ")
+
+	equalToSlice := make([]string, len(stmt.EqualTos))
+	for i, equalTo := range stmt.EqualTos {
+		equalToSlice[i] = equalTo.String()
+	}
+	builder.WriteString(strings.Join(equalToSlice, ", "))
+
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+		builder.WriteByte('\n')
+	}
+	return builder.String()
+}

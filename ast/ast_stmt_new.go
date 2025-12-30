@@ -307,3 +307,7 @@ func NewProveImplicationStmt(specFact *SpecFactStmt, implicationFact FactStmtSli
 func NewImplicationStmt(defHeader *DefHeader, domFacts FactStmtSlice, implicationFacts FactStmtSlice, line uint) *ImplicationStmt {
 	return &ImplicationStmt{defHeader, domFacts, implicationFacts, line}
 }
+
+func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact *SpecFactStmt, proofs []Stmt, line uint) *ProveExistStmt {
+	return &ProveExistStmt{params, paramSets, equalTos, fact, proofs, line}
+}
