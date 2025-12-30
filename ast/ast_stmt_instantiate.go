@@ -998,3 +998,7 @@ func InstantiateSetBuilderObjWithoutChangingParam(obj *FnObj, uniMap map[string]
 
 	return MakeSetBuilderObj(setBuilderStruct.Param, instParentSet, instFacts)
 }
+
+func (stmt *ProveExistStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	panic("TODO: Implement ProveExistStmt Instantiate")
+}

@@ -81,3 +81,7 @@ func isSpecialLatexSymbol_Process(f *FnObj) (bool, string) {
 
 	return false, ""
 }
+
+func (f *ProveExistStmt) ToLatexString() string {
+	return f.String()
+}

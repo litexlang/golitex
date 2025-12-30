@@ -400,3 +400,7 @@ func (s *ProveAlgoReturnStmt) InlineString() string {
 func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
 	return s.String()
 }
+
+func (s *ProveExistStmt) InlineString() string {
+	return s.String()
+}
