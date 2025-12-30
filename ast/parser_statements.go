@@ -115,6 +115,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.DefImplicationStmtI(tb)
 	case glob.KeywordRun:
 		ret, err = p.runFileStmt(tb)
+	case glob.KeywordProveExist:
+		ret, err = p.proveExistStmt(tb)
 	default:
 		ret, err = p.factsStmt(tb)
 	}
@@ -3599,16 +3601,55 @@ func (p *TbParser) runFileStmt(tb *tokenBlock) (*RunFileStmt, error) {
 	}
 }
 
-// func (p *TbParser) param_paramSet_paramInSetFacts_checkParamSetsDoesNotContainFreeParams(tb *tokenBlock, endWith string, allowExceedEnd bool) ([]string, []Obj, error) {
-// 	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, endWith, allowExceedEnd)
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
+func (p *TbParser) proveExistStmt(tb *tokenBlock) (*ProveExistStmt, error) {
+	err := tb.header.skip(glob.KeywordProveExist)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
 
-// 	for _, paramSet := range paramSets {
-// 		if ObjContainsFreeParams(paramSet, params) {
-// 			return nil, nil, fmt.Errorf("object set %s contains free parameters", paramSet)
-// 		}
-// 	}
-// 	return params, paramSets, nil
-// }
+	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeywordSt, false)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeywordSt)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	fact, err := p.specFactWithoutExist_WithoutNot(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	equalTos := []Obj{}
+	for !tb.header.is(glob.KeySymbolColon) {
+		equalTo, err := p.Obj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		equalTos = append(equalTos, equalTo)
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		} else {
+			break
+		}
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	if len(equalTos) != len(paramSets) {
+		return nil, ErrInLine(fmt.Errorf("number of equal tos must be equal to number of parameters, got %d equal tos and %d param sets", len(equalTos), len(paramSets)), tb)
+	}
+
+	proofs, err := p.parseTbBodyAndGetStmts(tb.body)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	return NewProveExistStmt(params, paramSets, equalTos, fact, proofs, tb.line), nil
+}

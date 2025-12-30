@@ -513,3 +513,13 @@ type HaveObjStWithParamSetsStmt struct {
 
 	Line uint
 }
+
+type ProveExistStmt struct {
+	Params    StrSlice
+	ParamSets ObjSlice
+	EqualTos  ObjSlice
+	Fact      *SpecFactStmt
+	Proofs    StmtSlice
+
+	Line uint
+}
