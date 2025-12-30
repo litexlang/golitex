@@ -1390,6 +1390,7 @@ func (stmt *ProveExistStmt) String() string {
 	}
 	builder.WriteString(strings.Join(equalToSlice, ", "))
 	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteString(" ")
 
 	paramAndParamSetSlice := []string{}
 	for i, param := range stmt.Params {
@@ -1398,7 +1399,7 @@ func (stmt *ProveExistStmt) String() string {
 
 	builder.WriteString(strings.Join(paramAndParamSetSlice, ", "))
 
-	builder.WriteString(" st ")
+	builder.WriteString(" : ")
 
 	builder.WriteString(stmt.Fact.String())
 
