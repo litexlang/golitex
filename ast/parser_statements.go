@@ -261,6 +261,10 @@ func (p *TbParser) defExistPropStmtBodyWithoutSelfReferCheck(tb *tokenBlock, hea
 		return nil, ErrInLine(err, tb)
 	}
 
+	if len(existParams) == 0 {
+		return nil, fmt.Errorf("expect at least one parameter in exist prop definition")
+	}
+
 	// Add exist prop params to FreeParams
 	for _, param := range existParams {
 		if _, exists := p.FreeParams[param]; exists {
