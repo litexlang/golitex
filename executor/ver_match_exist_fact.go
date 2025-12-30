@@ -1,0 +1,61 @@
+// Copyright Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Litex email: <litexlang@outlook.com>
+// Litex website: https://litexlang.com
+// Litex github repository: https://github.com/litexlang/golitex
+// Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
+
+package litex_executor
+
+import (
+	ast "golitex/ast"
+	glob "golitex/glob"
+)
+
+func (ver *Verifier) MatchExistFact(given *ast.SpecFactStmt, stored *ast.SpecFactStmt, verState *VerState) *glob.VerRet {
+	givenExistFactStruct := given.ToExistStFactStruct()
+	storedExistFactStruct := stored.ToExistStFactStruct()
+
+	if len(givenExistFactStruct.ExistFreeParams) != len(storedExistFactStruct.ExistFreeParams) {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	// given: exist x Z : x > 0; stored: exist y N: y > 0
+	uniMap := map[string]ast.Obj{}
+	for i := range storedExistFactStruct.ExistFreeParams {
+		uniMap[storedExistFactStruct.ExistFreeParams[i]] = ast.Atom(givenExistFactStruct.ExistFreeParams[i])
+	}
+
+	propStoredFact := storedExistFactStruct.ToProp()
+	instPropStoredFact, err := propStoredFact.Instantiate(uniMap)
+	if err != nil {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	if instPropStoredFact.String() != givenExistFactStruct.ToProp().String() {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	uniMap2 := map[string]ast.Obj{}
+	for i := range storedExistFactStruct.ExistFreeParamSets {
+		instSet, err := storedExistFactStruct.ExistFreeParamSets[i].Instantiate(uniMap2)
+		if err != nil {
+			return glob.NewEmptyVerRetErr()
+		}
+
+		if instSet.String() != givenExistFactStruct.ExistFreeParamSets[i].String() {
+			return glob.NewEmptyVerRetUnknown()
+		}
+
+		uniMap[storedExistFactStruct.ExistFreeParams[i]] = ast.Atom(givenExistFactStruct.ExistFreeParams[i])
+	}
+
+	return glob.NewEmptyVerRetTrue()
+}

@@ -1,3 +1,9 @@
 prove_exist 1: x Z : x > 0:
     1 > 0
 
+# store
+exist x Z: x > 0
+
+# verify (free params match free params, verb match verb)
+exist y Z: y > 0
+

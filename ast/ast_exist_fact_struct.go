@@ -79,3 +79,7 @@ func (f *SpecFactStmt) ToExistStFactStruct() *ExistStFactStruct {
 
 	return NewExistStFactStruct(ft, propName, existFreeParams, existFreeParamSets, params, f.Line)
 }
+
+func (s *ExistStFactStruct) ToProp() *SpecFactStmt {
+	return NewSpecFactStmt(s.FactType, s.PropName, s.Params, s.Line)
+}
