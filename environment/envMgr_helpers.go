@@ -246,6 +246,12 @@ func (envMgr *EnvMgr) storeSymbolSimplifiedValue(left, right ast.Obj) *glob.Stmt
 func (envMgr *EnvMgr) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
 	objAsStr := obj.String()
 	facts, ok := envMgr.CurEnv().EqualMem[objAsStr]
+	if ok {
+		return facts, ok
+	}
+
+	// Search in builtin env
+	facts, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.EnvSlice[0].EqualMem[objAsStr]
 	return facts, ok
 }
 

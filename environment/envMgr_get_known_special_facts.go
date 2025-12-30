@@ -68,7 +68,6 @@ func (envMgr *EnvMgr) GetRelatedObjSliceOfTransitiveProp(propName string, obj as
 				ret = append(ret, relatedObjSlice...)
 			}
 		}
-		return nil
 	}
 	return ret
 }
@@ -119,6 +118,16 @@ func (envMgr *EnvMgr) GetListSetEqualToObj(obj ast.Obj) ast.Obj {
 				if ast.IsListSetObj(equalObj) {
 					return equalObj
 				}
+			}
+		}
+	}
+
+	// Search in builtin env
+	equalObjs, ok := BuiltinEnvMgrWithEmptyEnvPkgMgr.EnvSlice[0].EqualMem[obj.String()]
+	if ok && equalObjs != nil {
+		for _, equalObj := range *equalObjs {
+			if ast.IsListSetObj(equalObj) {
+				return equalObj
 			}
 		}
 	}
