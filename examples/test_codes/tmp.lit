@@ -1,2 +1,8 @@
-forall x Z:
-    negate(x) = -x = inverse(x)
+claim:
+    forall s nonempty_set:
+        exist add fn(s, s)s, neg fn(s)s, e s: $is_group(s, add, neg, e)
+    prove:
+        have e_on_s s // identity element
+        have fn neg_on_s(x s) s = e_on_s
+        have fn add_on_s(x s, y s) s = e_on_s
+        exist add fn(s, s)s = add_on_s, neg fn(s)s = neg_on_s, e s = e_on_s: $is_group(s, add, neg, e)
