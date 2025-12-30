@@ -64,10 +64,10 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 	return glob.NewEmptyStmtTrue(), nil, nil
 }
 
-func (exec *Executor) GetBuiltinEnv() *env.EnvMemory {
-	return exec.Env.GetUpMostEnv()
-}
+// func (exec *Executor) GetBuiltinEnv() *env.EnvMemory {
+// 	return exec.Env.GetUpMostEnv()
+// }
 
-func (exec *Executor) GetSecondUpMostEnv() *env.EnvMemory {
-	return exec.Env.GetSecondUpMostEnv()
-}
+// func (exec *Executor) GetSecondUpMostEnv() *env.EnvMemory {
+// 	return exec.Env.GetSecondUpMostEnv()
+// }
