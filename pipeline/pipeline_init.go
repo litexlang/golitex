@@ -37,16 +37,17 @@ func NewBuiltinEnvMgrWithNewEmptyEnv(envPkgMgr *env.EnvPkgMgr) (*env.EnvMgr, err
 		}
 	}
 
-	envMgr := env.CopyEnvMgrAndOwnPkgMgr(env.BuiltinEnvMgrWithEmptyEnvPkgMgr, envPkgMgr)
-	envMgr = envMgr.NewEnv()
+	// envMgr := env.CopyEnvMgrAndOwnPkgMgr(env.BuiltinEnvMgrWithEmptyEnvPkgMgr, envPkgMgr)
+	// envMgr = envMgr.NewEnv()
+	envMgr := env.NewEmptyEnvMgr(envPkgMgr)
 	return envMgr, nil
 }
 
 func NewBuiltinEnvMgr() (*env.EnvMgr, error) {
 	curEnvMgr := env.NewEnvMgr(env.NewEnvPkgMgr(pkgMgr.NewEmptyPkgMgr("")), []env.EnvMemory{*env.NewEnvMemory()}, make(map[string]struct{}), make(map[string]*ast.DefPropStmt), make(map[string]*ast.DefExistPropStmt), make(map[string]*ast.DefFnSetStmt), make(map[string]*ast.DefAlgoStmt), make(map[string]*ast.DefProveAlgoStmt))
+	env.BuiltinEnvMgrWithEmptyEnvPkgMgr = curEnvMgr
 	curEnvMgr.Init()
 	err := useHardcodedCodeToInitEnvMgr(curEnvMgr)
-	env.BuiltinEnvMgrWithEmptyEnvPkgMgr = curEnvMgr
 	return curEnvMgr, err
 }
 

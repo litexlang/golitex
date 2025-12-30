@@ -1,1 +1,2 @@
-union(R, Z) $is_a_set
+forall x Z:
+    negate(x) = -x = inverse(x)

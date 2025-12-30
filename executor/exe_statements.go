@@ -17,7 +17,7 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
+	litex_env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -540,8 +540,9 @@ func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) *glob.StmtRet {
 }
 
 func (exec *Executor) ClearStmt() *glob.StmtRet {
-	newEnvMgr := env.CopyEnvMgrAndOwnPkgMgr(env.BuiltinEnvMgrWithEmptyEnvPkgMgr, exec.Env.EnvPkgMgr)
-	exec.Env = newEnvMgr.NewEnv()
+	// newEnvMgr := env.CopyEnvMgrAndOwnPkgMgr(env.BuiltinEnvMgrWithEmptyEnvPkgMgr, exec.Env.EnvPkgMgr)
+	// exec.Env = newEnvMgr.NewEnv()
+	exec.Env = litex_env.NewEmptyEnvMgr(exec.Env.EnvPkgMgr)
 	return glob.NewStmtTrueWithStmt("clear all definitions and facts")
 }
 

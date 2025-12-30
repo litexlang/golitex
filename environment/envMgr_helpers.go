@@ -269,55 +269,55 @@ func (envMgr *EnvMgr) GetEnvMgrOfPkgName(pkgName string) *EnvMgr {
 
 var BuiltinEnvMgrWithEmptyEnvPkgMgr *EnvMgr = nil
 
-func CopyEnvMgrAndOwnPkgMgr(givenEnvMgr *EnvMgr, envPkgMgr *EnvPkgMgr) *EnvMgr {
-	// 复制所有的 map
-	allDefinedAtomObjNames := make(map[string]struct{})
-	for k, v := range givenEnvMgr.AllDefinedAtomObjNames {
-		allDefinedAtomObjNames[k] = v
-	}
+// func CopyEnvMgrAndOwnPkgMgr(givenEnvMgr *EnvMgr, envPkgMgr *EnvPkgMgr) *EnvMgr {
+// 	// 复制所有的 map
+// 	allDefinedAtomObjNames := make(map[string]struct{})
+// 	for k, v := range givenEnvMgr.AllDefinedAtomObjNames {
+// 		allDefinedAtomObjNames[k] = v
+// 	}
 
-	allDefinedPropNames := make(map[string]*ast.DefPropStmt)
-	for k, v := range givenEnvMgr.AllDefinedPropNames {
-		allDefinedPropNames[k] = v
-	}
+// 	allDefinedPropNames := make(map[string]*ast.DefPropStmt)
+// 	for k, v := range givenEnvMgr.AllDefinedPropNames {
+// 		allDefinedPropNames[k] = v
+// 	}
 
-	allDefinedExistPropNames := make(map[string]*ast.DefExistPropStmt)
-	for k, v := range givenEnvMgr.AllDefinedExistPropNames {
-		allDefinedExistPropNames[k] = v
-	}
+// 	allDefinedExistPropNames := make(map[string]*ast.DefExistPropStmt)
+// 	for k, v := range givenEnvMgr.AllDefinedExistPropNames {
+// 		allDefinedExistPropNames[k] = v
+// 	}
 
-	allDefinedFnSetNames := make(map[string]*ast.DefFnSetStmt)
-	for k, v := range givenEnvMgr.AllDefinedFnSetNames {
-		allDefinedFnSetNames[k] = v
-	}
+// 	allDefinedFnSetNames := make(map[string]*ast.DefFnSetStmt)
+// 	for k, v := range givenEnvMgr.AllDefinedFnSetNames {
+// 		allDefinedFnSetNames[k] = v
+// 	}
 
-	allDefinedAlgoNames := make(map[string]*ast.DefAlgoStmt)
-	for k, v := range givenEnvMgr.AllDefinedAlgoNames {
-		allDefinedAlgoNames[k] = v
-	}
+// 	allDefinedAlgoNames := make(map[string]*ast.DefAlgoStmt)
+// 	for k, v := range givenEnvMgr.AllDefinedAlgoNames {
+// 		allDefinedAlgoNames[k] = v
+// 	}
 
-	allDefinedProveAlgoNames := make(map[string]*ast.DefProveAlgoStmt)
-	for k, v := range givenEnvMgr.AllDefinedProveAlgoNames {
-		allDefinedProveAlgoNames[k] = v
-	}
+// 	allDefinedProveAlgoNames := make(map[string]*ast.DefProveAlgoStmt)
+// 	for k, v := range givenEnvMgr.AllDefinedProveAlgoNames {
+// 		allDefinedProveAlgoNames[k] = v
+// 	}
 
-	// 复制 EnvSlice
-	envSlice := make([]EnvMemory, len(givenEnvMgr.EnvSlice))
-	for i, envMem := range givenEnvMgr.EnvSlice {
-		envSlice[i] = copyEnvMemory(envMem)
-	}
+// 	// 复制 EnvSlice
+// 	envSlice := make([]EnvMemory, len(givenEnvMgr.EnvSlice))
+// 	for i, envMem := range givenEnvMgr.EnvSlice {
+// 		envSlice[i] = copyEnvMemory(envMem)
+// 	}
 
-	return NewEnvMgr(
-		envPkgMgr,
-		envSlice,
-		allDefinedAtomObjNames,
-		allDefinedPropNames,
-		allDefinedExistPropNames,
-		allDefinedFnSetNames,
-		allDefinedAlgoNames,
-		allDefinedProveAlgoNames,
-	)
-}
+// 	return NewEnvMgr(
+// 		envPkgMgr,
+// 		envSlice,
+// 		allDefinedAtomObjNames,
+// 		allDefinedPropNames,
+// 		allDefinedExistPropNames,
+// 		allDefinedFnSetNames,
+// 		allDefinedAlgoNames,
+// 		allDefinedProveAlgoNames,
+// 	)
+// }
 
 // copyEnvMemory 深拷贝 EnvMemory
 func copyEnvMemory(src EnvMemory) EnvMemory {

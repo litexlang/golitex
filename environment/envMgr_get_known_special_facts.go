@@ -25,6 +25,11 @@ func (envMgr *EnvMgr) GetLatestFnT_GivenNameIsIn(fnName string) *FnInFnTMemItem 
 		}
 	}
 
+	fnInFnTemplateFacts, ok := BuiltinEnvMgrWithEmptyEnvPkgMgr.EnvSlice[0].FnInFnTemplateFactsMem[fnName]
+	if ok {
+		return &fnInFnTemplateFacts[len(fnInFnTemplateFacts)-1]
+	}
+
 	return nil
 }
 
@@ -36,6 +41,12 @@ func (envMgr *EnvMgr) IsTransitiveProp(propName string) bool {
 			return true
 		}
 	}
+
+	_, ok := BuiltinEnvMgrWithEmptyEnvPkgMgr.EnvSlice[0].TransitivePropMem[propName]
+	if ok {
+		return true
+	}
+
 	return false
 }
 
@@ -51,6 +62,12 @@ func (envMgr *EnvMgr) GetRelatedObjSliceOfTransitiveProp(propName string, obj as
 		}
 	}
 	if len(ret) == 0 {
+		relatedObjSlice, ok := BuiltinEnvMgrWithEmptyEnvPkgMgr.EnvSlice[0].TransitivePropMem[propName]
+		if ok {
+			if relatedObjSlice, ok := relatedObjSlice[obj.String()]; ok {
+				ret = append(ret, relatedObjSlice...)
+			}
+		}
 		return nil
 	}
 	return ret
@@ -70,6 +87,13 @@ func (envMgr *EnvMgr) GetObjTuple(obj ast.Obj) ast.Obj {
 				if fnObj, ok := equalObj.(*ast.FnObj); ok && ast.IsTupleFnObj(fnObj) {
 					return fnObj
 				}
+			}
+		}
+	}
+	if equalObjs, ok := BuiltinEnvMgrWithEmptyEnvPkgMgr.EnvSlice[0].EqualMem[obj.String()]; ok && equalObjs != nil {
+		for _, equalObj := range *equalObjs {
+			if ast.IsListSetObj(equalObj) {
+				return equalObj
 			}
 		}
 	}
@@ -134,6 +158,13 @@ func (envMgr *EnvMgr) GetSetBuilderEqualToObj(obj ast.Obj) *ast.FnObj {
 				if ast.IsSetBuilder(equalObj) {
 					return equalObj.(*ast.FnObj)
 				}
+			}
+		}
+	}
+	if equalObjs, ok := BuiltinEnvMgrWithEmptyEnvPkgMgr.EnvSlice[0].EqualMem[obj.String()]; ok && equalObjs != nil {
+		for _, equalObj := range *equalObjs {
+			if ast.IsSetBuilder(equalObj) {
+				return equalObj.(*ast.FnObj)
 			}
 		}
 	}

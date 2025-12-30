@@ -31,7 +31,17 @@ func (envMgr *EnvMgr) IsAtomNameDefinedByUser(AtomObjName string) bool {
 		return ok
 	} else {
 		_, ok := envMgr.AllDefinedAtomObjNames[AtomObjName]
-		return ok
+		if ok {
+			return true
+		}
+
+		curEnv := BuiltinEnvMgrWithEmptyEnvPkgMgr
+		_, ok = curEnv.AllDefinedAtomObjNames[AtomObjName]
+		if ok {
+			return true
+		}
+
+		return false
 	}
 }
 
@@ -48,7 +58,15 @@ func (envMgr *EnvMgr) IsPropNameDefinedByUser(PropName string) bool {
 		return ok
 	} else {
 		_, ok := envMgr.AllDefinedPropNames[PropName]
-		return ok
+		if ok {
+			return true
+		}
+
+		_, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedPropNames[PropName]
+		if ok {
+			return true
+		}
+		return false
 	}
 }
 
@@ -65,7 +83,15 @@ func (envMgr *EnvMgr) IsExistPropNameDefinedByUser(ExistPropName string) bool {
 		return ok
 	} else {
 		_, ok := envMgr.AllDefinedExistPropNames[ExistPropName]
-		return ok
+		if ok {
+			return true
+		}
+
+		_, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedExistPropNames[ExistPropName]
+		if ok {
+			return true
+		}
+		return false
 	}
 }
 
@@ -82,7 +108,15 @@ func (envMgr *EnvMgr) IsFnSetNameDefinedByUser(FnSetName string) bool {
 		return ok
 	} else {
 		_, ok := envMgr.AllDefinedFnSetNames[FnSetName]
-		return ok
+		if ok {
+			return true
+		}
+
+		_, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedFnSetNames[FnSetName]
+		if ok {
+			return true
+		}
+		return false
 	}
 }
 
@@ -99,7 +133,15 @@ func (envMgr *EnvMgr) IsAlgoNameDefinedByUser(AlgoName string) bool {
 		return ok
 	} else {
 		_, ok := envMgr.AllDefinedAlgoNames[AlgoName]
-		return ok
+		if ok {
+			return true
+		}
+
+		_, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedAlgoNames[AlgoName]
+		if ok {
+			return true
+		}
+		return false
 	}
 }
 
@@ -116,7 +158,15 @@ func (envMgr *EnvMgr) IsProveAlgoNameDefinedByUser(ProveAlgoName string) bool {
 		return ok
 	} else {
 		_, ok := envMgr.AllDefinedProveAlgoNames[ProveAlgoName]
-		return ok
+		if ok {
+			return true
+		}
+
+		_, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedProveAlgoNames[ProveAlgoName]
+		if ok {
+			return true
+		}
+		return false
 	}
 }
 

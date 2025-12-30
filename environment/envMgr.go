@@ -330,3 +330,7 @@ func (envMgr *EnvMgr) curEnvDepth() int {
 func (envMgr *EnvMgr) CurEnv() *EnvMemory {
 	return &envMgr.EnvSlice[len(envMgr.EnvSlice)-1]
 }
+
+func NewEmptyEnvMgr(envPkgMgr *EnvPkgMgr) *EnvMgr {
+	return NewEnvMgr(envPkgMgr, []EnvMemory{*NewEnvMemory()}, make(map[string]struct{}), make(map[string]*ast.DefPropStmt), make(map[string]*ast.DefExistPropStmt), make(map[string]*ast.DefFnSetStmt), make(map[string]*ast.DefAlgoStmt), make(map[string]*ast.DefProveAlgoStmt))
+}
