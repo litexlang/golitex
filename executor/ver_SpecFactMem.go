@@ -26,9 +26,9 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerSta
 
 	// if ver.env.CurMatchProp == nil {
 	for curEnvIndex := range ver.Env.EnvSlice {
-		if curEnvIndex == 0 {
-			continue
-		}
+		// if curEnvIndex == 0 {
+		// 	continue
+		// }
 
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
@@ -60,9 +60,9 @@ func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerSt
 
 	// if ver.env.CurMatchProp == nil {
 	for curEnvIndex := range ver.Env.EnvSlice {
-		if curEnvIndex == 0 {
-			continue
-		}
+		// if curEnvIndex == 0 {
+		// 	continue
+		// }
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_LogicMem(curEnv, stmt, nextState)
 		if verRet.IsErr() || verRet.IsTrue() {
@@ -84,9 +84,9 @@ func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state
 
 	// if ver.env.CurMatchProp == nil {
 	for curEnvIndex := range ver.Env.EnvSlice {
-		if curEnvIndex == 0 {
-			continue
-		}
+		// if curEnvIndex == 0 {
+		// 	continue
+		// }
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_UniMem_atCurEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
@@ -115,9 +115,9 @@ func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt
 	// upMostEnv := ver.todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt)
 	// if ver.env.CurMatchProp == nil {
 	for curEnvIndex := range ver.Env.EnvSlice {
-		if curEnvIndex == 0 {
-			continue
-		}
+		// if curEnvIndex == 0 {
+		// 	continue
+		// }
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
