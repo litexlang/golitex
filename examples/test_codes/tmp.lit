@@ -10,11 +10,11 @@ prop R_seq_converges(a fn(N_pos)R):
     forall epsilon R_pos:
         =>:
             exist M N_pos: $Cauchy_condition(a, M, epsilon)
-"""
 
 prove forall x R: exist y R st y > x:
     prove_exist x + 1 : y R st y > x
 
+"""
 know forall x R: exist y R st y > x
 
-exist z R st z > 10000
+exist x R st x > 10000
