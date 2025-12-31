@@ -14,37 +14,32 @@
 
 package litex_executor
 
-import (
-	ast "golitex/ast"
-	glob "golitex/glob"
-)
+// func (exec *Executor) haveObjWithSetParamsStPurePropStmtCheck(stmt *ast.HaveObjStWithParamSetsStmt, existStFact *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
+// 	ver := NewVerifier(exec.Env)
 
-func (exec *Executor) haveObjWithSetParamsStPurePropStmtCheck(stmt *ast.HaveObjStWithParamSetsStmt, existStFact *ast.SpecFactStmt, state *VerState) *glob.StmtRet {
-	ver := NewVerifier(exec.Env)
+// 	for curEnvIndex := range exec.Env.EnvSlice {
+// 		curEnv := &exec.Env.EnvSlice[curEnvIndex]
+// 		knownFacts, got := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(existStFact)
+// 		if !got {
+// 			continue
+// 		}
+// 		ret := ver.ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt, existStFact, knownFacts, state)
+// 		if ret.IsTrue() {
+// 			return glob.NewStmtTrueWithStmt(stmt.String()).AddVerifyProcess(ret)
+// 		}
+// 	}
 
-	for curEnvIndex := range exec.Env.EnvSlice {
-		curEnv := &exec.Env.EnvSlice[curEnvIndex]
-		knownFacts, got := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(existStFact)
-		if !got {
-			continue
-		}
-		ret := ver.ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt, existStFact, knownFacts, state)
-		if ret.IsTrue() {
-			return glob.NewStmtTrueWithStmt(stmt.String()).AddVerifyProcess(ret)
-		}
-	}
+// 	for _, pkgEnvMgr := range exec.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
+// 		curEnv := pkgEnvMgr.EnvSlice[0]
+// 		knownFacts, got := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(existStFact)
+// 		if !got {
+// 			continue
+// 		}
+// 		ret := ver.ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt, existStFact, knownFacts, state)
+// 		if ret.IsTrue() {
+// 			return glob.NewStmtTrueWithStmt(stmt.String()).AddVerifyProcess(ret)
+// 		}
+// 	}
 
-	for _, pkgEnvMgr := range exec.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
-		curEnv := pkgEnvMgr.EnvSlice[0]
-		knownFacts, got := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(existStFact)
-		if !got {
-			continue
-		}
-		ret := ver.ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt, existStFact, knownFacts, state)
-		if ret.IsTrue() {
-			return glob.NewStmtTrueWithStmt(stmt.String()).AddVerifyProcess(ret)
-		}
-	}
-
-	return glob.NewEmptyStmtUnknown()
-}
+// 	return glob.NewEmptyStmtUnknown()
+// }

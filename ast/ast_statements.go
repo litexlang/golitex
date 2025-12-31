@@ -506,6 +506,7 @@ type ProveImplyStmt struct {
 	Line uint
 }
 
+// have objectName setName, objectName2 setName2 st $propName(...)
 type HaveObjStWithParamSetsStmt struct {
 	ObjNames StrSlice
 	ObjSets  ObjSlice
@@ -517,9 +518,9 @@ type HaveObjStWithParamSetsStmt struct {
 type ProveExistStmt struct {
 	ExistParams    StrSlice
 	ExistParamSets ObjSlice
-	EqualTos  ObjSlice
-	Fact      *SpecFactStmt
-	Proofs    StmtSlice
+	EqualTos       ObjSlice
+	Fact           *SpecFactStmt
+	Proofs         StmtSlice
 
 	Line uint
 }

@@ -444,8 +444,7 @@ func (stmt *HaveObjStStmt) ToTruePurePropExistStFact() *SpecFactStmt {
 }
 
 func (stmt *HaveObjStWithParamSetsStmt) ToTruePurePropExistStFact() *SpecFactStmt {
-	existStParams := MakeExistFactParamsSlice(stmt.ObjNames.ToObjSlice(), stmt.Fact.Params)
-	return NewSpecFactStmt(TrueExist_St, stmt.Fact.PropName, existStParams, stmt.Line)
+	return NewExistStFact(TrueExist_St, stmt.Fact.PropName, stmt.ObjNames, stmt.ObjSets, stmt.Fact.Params, stmt.Line)
 }
 
 func (stmt *ProveExistStmt) ToTrueExistStFact() *SpecFactStmt {
