@@ -163,7 +163,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 
 		ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(&knownFact_paramProcessed, stmt)
 		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{err.Error()})
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
 		}
 		if !ok {
 			continue
@@ -171,7 +171,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 
 		randomizedUniFactWithoutThen, _, paramMapStrToStr, randomizedOrStmt, err := ver.preprocessUniFactParamsWithoutThenFacts_OrStmt(knownFactUnderLogicExpr.UniFact, knownFactUnderLogicExpr.LogicExpr)
 		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{err.Error()})
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
 		}
 
 		for k, v := range uniConMap {
@@ -183,7 +183,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 
 		instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
 		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{err.Error()})
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
 		}
 
 		// insKnownUniFact, err := ast.InstantiateUniFact(knownFactUnderLogicExpr.UniFact, uniConMap)
@@ -213,7 +213,7 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 		// ok, err = ver.proveUniFactDomFacts(insKnownUniFact.DomFacts, state)
 		verRet := ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
 		if verRet.IsErr() {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{verRet.String()})
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{verRet.String()})
 		}
 		if verRet.IsUnknown() {
 			continue
@@ -221,21 +221,21 @@ func (ver *Verifier) iterate_KnownSpecInLogic_InUni_applyMatch_new(stmt *ast.Spe
 
 		instantiatedLogicExpr, err := randomizedOrStmt.InstantiateFact(uniConMap)
 		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{err.Error()})
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
 		}
 		instantiatedLogicExprAsKnownSpecFact, ok := instantiatedLogicExpr.(*ast.OrStmt)
 		if !ok {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{"instantiatedLogicExpr is not a KnownSpecFact_InLogicExpr"})
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{"instantiatedLogicExpr is not a KnownSpecFact_InLogicExpr"})
 		}
 
 		verRet = ver.verify_specFact_when_given_orStmt_is_true(stmt, instantiatedLogicExprAsKnownSpecFact, knownFactUnderLogicExpr.Index, state)
 		if verRet.IsErr() {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{verRet.String()})
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{verRet.String()})
 		}
 
 		if verRet.IsTrue() {
 			if state.WithMsg {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), []string{knownFactUnderLogicExpr.UniFact.String()})
+				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{knownFactUnderLogicExpr.UniFact.String()})
 			}
 			return glob.NewEmptyVerRetTrue()
 		}
@@ -315,7 +315,7 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 	}
 
 	if state.WithMsg {
-		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), []string{knownFact.LogicExpr.String()})
+		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), knownFact.SpecFact.GetLine(), []string{knownFact.LogicExpr.String()})
 	}
 
 	return glob.NewEmptyVerRetTrue()
@@ -350,7 +350,7 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.EnvMemory, stmt *ast.SpecFact
 			}
 			if verRet.IsTrue() {
 				if state.WithMsg {
-					return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), verRet.VerifyMsgs)
+					return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), knownFact.SpecFact.GetLine(), verRet.VerifyMsgs)
 				}
 				return verRet
 			}
@@ -431,7 +431,7 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 	}
 
 	if state.WithMsg {
-		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), []string{knownFact.LogicExpr.String()})
+		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), knownFact.SpecFact.GetLine(), []string{knownFact.LogicExpr.String()})
 	}
 	return glob.NewEmptyVerRetTrue()
 }
@@ -555,7 +555,7 @@ func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch_new(stmtToMatch 
 
 		if verRet.IsTrue() {
 			if state.WithMsg {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmtToMatch.String(), stmtToMatch.GetLine(), []string{knownFact_paramProcessed.UniFact.String()})
+				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmtToMatch.String(), knownFact_paramProcessed.SpecFact.GetLine(), []string{knownFact_paramProcessed.UniFact.String()})
 			}
 			return glob.NewEmptyVerRetTrue()
 		}
@@ -632,7 +632,7 @@ func (ver *Verifier) iterate_KnownExistSpecInUniFacts_applyMatch_new(stmtToMatch
 
 		if verRet.IsTrue() {
 			if state.WithMsg {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmtToMatch.String(), stmtToMatch.GetLine(), []string{knownFact_paramProcessed.UniFact.String()})
+				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmtToMatch.String(), knownFact_paramProcessed.SpecFact.GetLine(), []string{knownFact_paramProcessed.UniFact.String()})
 			}
 			return glob.NewEmptyVerRetTrue()
 		}
