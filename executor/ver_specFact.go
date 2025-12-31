@@ -168,9 +168,9 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) 
 		return ver.verPureSpecFact_ByDefinition(stmt, state)
 	}
 
-	if stmt.IsExist_St_Fact() {
-		return ver.verExistSpecFact_ByDefinition(stmt, state)
-	}
+	// if stmt.IsExist_St_Fact() {
+	// 	return ver.verExistSpecFact_ByDefinition(stmt, state)
+	// }
 
 	return glob.NewEmptyVerRetUnknown()
 }
@@ -231,81 +231,81 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	return glob.NewEmptyVerRetUnknown()
+// func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+// 	return glob.NewEmptyVerRetUnknown()
 
-	// existParams, factParams := stmt.ExistStFactToPropNameExistParamsParams()
+// existParams, factParams := stmt.ExistStFactToPropNameExistParamsParams()
 
-	// propDef := ver.Env.GetExistPropDef(stmt.PropName)
-	// if propDef == nil {
-	// 	// TODO: 如果没声明，应该报错
-	// 	return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{fmt.Sprintf("%s has no definition", stmt.PropName)})
-	// }
+// propDef := ver.Env.GetExistPropDef(stmt.PropName)
+// if propDef == nil {
+// 	// TODO: 如果没声明，应该报错
+// 	return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{fmt.Sprintf("%s has no definition", stmt.PropName)})
+// }
 
-	// uniConMap := map[string]ast.Obj{}
-	// for i := range existParams {
-	// 	uniConMap[propDef.ExistParams[i]] = existParams[i]
-	// }
+// uniConMap := map[string]ast.Obj{}
+// for i := range existParams {
+// 	uniConMap[propDef.ExistParams[i]] = existParams[i]
+// }
 
-	// for i := range factParams {
-	// 	uniConMap[propDef.DefBody.DefHeader.Params[i]] = factParams[i]
-	// }
+// for i := range factParams {
+// 	uniConMap[propDef.DefBody.DefHeader.Params[i]] = factParams[i]
+// }
 
-	// // given objects are in their param sets
-	// instParamSets, err := propDef.ExistParamSets.Instantiate(uniConMap)
-	// if err != nil {
-	// 	return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{err.Error()})
-	// }
-	// for i := range instParamSets {
-	// 	verRet := ver.VerFactStmt(ast.NewInFactWithObj(existParams[i], instParamSets[i]), state)
-	// 	if verRet.IsErr() {
-	// 		return verRet
-	// 	}
-	// 	if verRet.IsUnknown() {
-	// 		if state.WithMsg {
-	// 			msg := fmt.Sprintf("given object %s is not in its param set %s\n", existParams[i], instParamSets[i])
-	// 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{msg})
-	// 		}
-	// 		return glob.NewEmptyVerRetUnknown()
-	// 	}
-	// }
+// // given objects are in their param sets
+// instParamSets, err := propDef.ExistParamSets.Instantiate(uniConMap)
+// if err != nil {
+// 	return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{err.Error()})
+// }
+// for i := range instParamSets {
+// 	verRet := ver.VerFactStmt(ast.NewInFactWithObj(existParams[i], instParamSets[i]), state)
+// 	if verRet.IsErr() {
+// 		return verRet
+// 	}
+// 	if verRet.IsUnknown() {
+// 		if state.WithMsg {
+// 			msg := fmt.Sprintf("given object %s is not in its param set %s\n", existParams[i], instParamSets[i])
+// 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{msg})
+// 		}
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
+// }
 
-	// domFacts, err := propDef.DefBody.DomFactsOrNil.InstantiateFact(uniConMap)
-	// if err != nil {
-	// 	return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{err.Error()})
-	// }
+// domFacts, err := propDef.DefBody.DomFactsOrNil.InstantiateFact(uniConMap)
+// if err != nil {
+// 	return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{err.Error()})
+// }
 
-	// iffFacts, err := propDef.DefBody.IffFactsOrNil.InstantiateFact(uniConMap)
-	// if err != nil {
-	// 	return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{err.Error()})
-	// }
+// iffFacts, err := propDef.DefBody.IffFactsOrNil.InstantiateFact(uniConMap)
+// if err != nil {
+// 	return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{err.Error()})
+// }
 
-	// for _, domFact := range domFacts {
-	// 	verRet := ver.VerFactStmt(domFact, state)
-	// 	if verRet.IsErr() {
-	// 		return verRet
-	// 	}
-	// 	if verRet.IsUnknown() {
-	// 		if state.WithMsg {
-	// 			msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
-	// 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{msg})
-	// 		}
-	// 		return glob.NewEmptyVerRetUnknown()
-	// 	}
-	// }
+// for _, domFact := range domFacts {
+// 	verRet := ver.VerFactStmt(domFact, state)
+// 	if verRet.IsErr() {
+// 		return verRet
+// 	}
+// 	if verRet.IsUnknown() {
+// 		if state.WithMsg {
+// 			msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
+// 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{msg})
+// 		}
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
+// }
 
-	// for _, iffFact := range iffFacts {
-	// 	verRet := ver.VerFactStmt(iffFact, state)
-	// 	if verRet.IsErr() || verRet.IsUnknown() {
-	// 		return verRet
-	// 	}
-	// }
+// for _, iffFact := range iffFacts {
+// 	verRet := ver.VerFactStmt(iffFact, state)
+// 	if verRet.IsErr() || verRet.IsUnknown() {
+// 		return verRet
+// 	}
+// }
 
-	// if state.WithMsg {
-	// 	return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), []string{"by definition"})
-	// }
-	// return glob.NewEmptyVerRetTrue()
-}
+// if state.WithMsg {
+// 	return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), []string{"by definition"})
+// }
+// return glob.NewEmptyVerRetTrue()
+// }
 
 // func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
 // 	verRet := ver.verSpecFact_ByLogicMem(stmt, state)
