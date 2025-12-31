@@ -52,7 +52,7 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.ProveExistStmt) *glob.StmtR
 	// prove in each param set
 	uniMap := map[string]ast.Obj{}
 	for i, equalTo := range stmt.EqualTos {
-		curParamSet, err := stmt.ParamSets[i].Instantiate(uniMap)
+		curParamSet, err := stmt.ExistParamSets[i].Instantiate(uniMap)
 		if err != nil {
 			return glob.ErrRet(err.Error())
 		}
@@ -66,15 +66,10 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.ProveExistStmt) *glob.StmtR
 
 		verProcessRets = append(verProcessRets, execState.VerifyProcess...)
 
-		uniMap[stmt.Params[i]] = equalTo
+		uniMap[stmt.ExistParams[i]] = equalTo
 	}
 
-	uniMap2 := map[string]ast.Obj{}
-	for i, equalTo := range stmt.EqualTos {
-		uniMap2[stmt.Params[i]] = equalTo
-	}
-
-	instFact, err := stmt.Fact.InstantiateFact(uniMap2)
+	instFact, err := stmt.Fact.InstantiateFact(uniMap)
 	if err != nil {
 		return glob.ErrRet(err.Error())
 	}
@@ -90,5 +85,11 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.ProveExistStmt) *glob.StmtR
 }
 
 func (exec *Executor) proveExistStmt_NewFact(stmt *ast.ProveExistStmt) *glob.StmtRet {
-	return exec.NewTrueStmtRet(stmt)
+	newFact := stmt.ToTrueExistStFact()
+	ret := exec.Env.NewFactWithoutCheckingNameDefined(newFact)
+	if ret.IsErr() {
+		return glob.ErrRet(ret.String())
+	}
+
+	return glob.NewStmtTrueWithInfers(ret.Infer).AddNewFact(newFact.String())
 }
