@@ -485,14 +485,7 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(given *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) *glob.VerRet {
-	var stmtToMatch *ast.SpecFactStmt
-	if given.IsPureFact() {
-		stmtToMatch = given
-	} else {
-		stmtToMatch = given.ToExistStFactStruct().ToTruePureFact()
-	}
-
+func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmtToMatch *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) *glob.VerRet {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		knownFact_paramProcessed := knownFacts[i]
 		// 这里需要用的是 instantiated 的 knownFact
@@ -500,7 +493,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(given *ast.SpecF
 		var ok bool
 		var uniConMap map[string]ast.Obj
 		var err error
-		if given.IsPureFact() {
+		if stmtToMatch.IsPureFact() {
 			ok, uniConMap, err = ver.matchUniFactParamsWithSpecFactParams(&knownFact_paramProcessed, stmtToMatch)
 			if err != nil {
 				return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), stmtToMatch.GetLine(), []string{err.Error()})
