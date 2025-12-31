@@ -1,20 +1,4 @@
-"""
-prop Cauchy_condition(a fn(N_pos)R, M N_pos, epsilon R_pos):
-    forall x, y N_pos:
-        x > M
-        y > M
-        =>:
-            abs(a(x) - a(y)) < epsilon
-
-prop R_seq_converges(a fn(N_pos)R):
-    forall epsilon R_pos:
-        =>:
-            exist M N_pos: $Cauchy_condition(a, M, epsilon)
-
 prove forall x R: exist y R st y > x:
     prove_exist x + 1 : y R st y > x
 
-"""
-know forall x R: exist y R st y > x
-
-exist x R st x > 10000
+have a R st a > 0
