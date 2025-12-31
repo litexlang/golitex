@@ -1,3 +1,7 @@
 know exist x Z st x > 0
 
 exist y Z st y > 0
+
+know not exist z N st z < 0
+
+not exist z N st z < 0
