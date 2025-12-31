@@ -109,6 +109,12 @@ const (
 	KeywordIntersect = "intersect"
 
 	KeywordProveExist = "prove_exist"
+
+	KeywordRPos = "R_pos"
+	KeywordRNeg = "R_neg"
+	KeywordZNeg = "Z_neg"
+	KeywordQNeg = "Q_neg"
+	KeywordQPos = "Q_pos"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -205,6 +211,12 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordIntersect: {},
 
 	KeywordProveExist: {},
+
+	KeywordRPos: {},
+	KeywordRNeg: {},
+	KeywordZNeg: {},
+	KeywordQNeg: {},
+	KeywordQPos: {},
 }
 
 const (
@@ -303,6 +315,12 @@ var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 
 	KeywordUnion:     {},
 	KeywordIntersect: {},
+
+	KeywordRPos: {},
+	KeywordRNeg: {},
+	KeywordZNeg: {},
+	KeywordQNeg: {},
+	KeywordQPos: {},
 }
 
 var BuiltinPropNames map[string]struct{} = map[string]struct{}{
@@ -407,4 +425,9 @@ var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struc
 	KeywordRun:                    {},
 	KeywordUnion:                  {},
 	KeywordIntersect:              {},
+	KeywordRPos:                   {},
+	KeywordRNeg:                   {},
+	KeywordZNeg:                   {},
+	KeywordQNeg:                   {},
+	KeywordQPos:                   {},
 }

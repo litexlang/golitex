@@ -883,4 +883,10 @@ know:
 
 know forall x set: x \union x = x, x \intersect x = x
 
+know:
+	forall x R: x > 0 <=> x $in R_pos
+	forall x R: x < 0 <=> x $in R_neg
+	forall x Z: x < 0 <=> x $in Z_neg
+	forall x Q: x < 0 <=> x $in Q_neg
+	forall x Q: x > 0 <=> x $in Q_pos
 `
