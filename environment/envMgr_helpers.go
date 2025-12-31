@@ -510,3 +510,51 @@ var BuiltinEnvMgrWithEmptyEnvPkgMgr *EnvMgr = nil
 // 	}
 // 	return dst
 // }
+
+func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFactStruct *ast.ExistStFactStruct, definedParams []string) (*ast.ExistStFactStruct, error) {
+	uniMap := map[string]struct{}{}
+	for _, param := range definedParams {
+		uniMap[param] = struct{}{}
+	}
+
+	defined := false
+	for _, existParam := range existFactStruct.ExistFreeParams {
+		if envMgr.lookupAtomObjName(ast.Atom(existParam), uniMap).IsTrue() {
+			defined = true
+			break
+		}
+	}
+
+	if !defined {
+		return existFactStruct, nil
+	}
+
+	// 生产一个不冲突的exist fact struct
+	newExistParams := make([]string, len(existFactStruct.ExistFreeParams))
+	for i := range existFactStruct.ExistFreeParams {
+		newExistParams[i] = envMgr.GenerateUndeclaredRandomName_AndNotInMap(uniMap)
+	}
+
+	// 把 set 也换成不冲突的
+	uniMap2 := map[string]ast.Obj{}
+	newExistParamSets := make([]ast.Obj, len(existFactStruct.ExistFreeParamSets))
+	for i, paramSet := range existFactStruct.ExistFreeParamSets {
+		newParamSet, err := paramSet.Instantiate(uniMap2)
+		if err != nil {
+			return nil, err
+		}
+		newExistParamSets[i] = newParamSet
+		uniMap2[existFactStruct.ExistFreeParams[i]] = ast.Atom(newExistParams[i])
+	}
+
+	newParams := make([]ast.Obj, len(existFactStruct.Params))
+	for i, param := range existFactStruct.Params {
+		newParam, err := param.Instantiate(uniMap2)
+		if err != nil {
+			return nil, err
+		}
+		newParams[i] = newParam
+	}
+
+	return ast.NewExistStFactStruct(existFactStruct.FactType, existFactStruct.PropName, newExistParams, newExistParamSets, newParams, existFactStruct.Line), nil
+}
