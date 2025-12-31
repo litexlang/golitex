@@ -38,6 +38,52 @@ func (envMgr *EnvMgr) LookUpNamesInFact(stmt ast.FactStmt, extraParams map[strin
 }
 
 func (envMgr *EnvMgr) LookupNamesInSpecFact(stmt *ast.SpecFactStmt, extraParams map[string]struct{}) *glob.StmtRet {
+	switch stmt.FactType {
+	case ast.TruePure:
+		return envMgr.lookupNamesInPureFact(stmt, extraParams)
+	case ast.FalsePure:
+		return envMgr.lookupNamesInPureFact(stmt, extraParams)
+	case ast.TrueExist_St:
+		return envMgr.lookupNamesInExistFact(stmt, extraParams)
+	case ast.FalseExist_St:
+		return envMgr.lookupNamesInExistFact(stmt, extraParams)
+	default:
+		panic("")
+	}
+}
+
+func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.SpecFactStmt, extraParams map[string]struct{}) *glob.StmtRet {
+	if ret := envMgr.IsPropDefinedOrBuiltinProp(stmt); ret.IsNotTrue() {
+		return ret
+	}
+
+	newExtraParams := map[string]struct{}{}
+	for i := range extraParams {
+		newExtraParams[i] = struct{}{}
+	}
+
+	existFactStruct := stmt.ToExistStFactStruct()
+
+	// check paramSet
+	for i, paramSet := range existFactStruct.ExistFreeParamSets {
+		ret := envMgr.LookupNamesInObj(paramSet, newExtraParams)
+		if ret.IsNotTrue() {
+			return ret
+		}
+
+		newExtraParams[existFactStruct.ExistFreeParams[i]] = struct{}{}
+	}
+
+	for _, param := range stmt.Params {
+		if ret := envMgr.LookupNamesInObj(param, newExtraParams); ret.IsNotTrue() {
+			return ret
+		}
+	}
+
+	return glob.NewEmptyStmtTrue()
+}
+
+func (envMgr *EnvMgr) lookupNamesInPureFact(stmt *ast.SpecFactStmt, extraParams map[string]struct{}) *glob.StmtRet {
 	if ret := envMgr.IsPropDefinedOrBuiltinProp(stmt); ret.IsNotTrue() {
 		return ret
 	}
