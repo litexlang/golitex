@@ -114,7 +114,8 @@ func (envMgr *EnvMgr) newSpecFact(fact *ast.SpecFactStmt) *glob.StmtRet {
 	var ieShortRet *glob.ShortRet
 	switch fact.FactType {
 	case ast.TrueExist_St:
-		ieShortRet = ie.newTrueExist(fact)
+		// ieShortRet = ie.newTrueExist(fact)
+		ieShortRet = glob.NewEmptyShortTrueRet()
 	case ast.FalseExist_St:
 		ieShortRet = ie.newFalseExist(fact)
 	default:
