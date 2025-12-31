@@ -78,6 +78,10 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 }
 
 func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+	if !stmt.IsPureFact() {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
 	if !stmt.IsTrue() {
 		return glob.NewEmptyVerRetUnknown()
 	}

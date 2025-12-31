@@ -37,13 +37,15 @@ func (ver *Verifier) MatchExistFactStruct(given *ast.ExistStFactStruct, stored *
 		uniMap[stored.ExistFreeParams[i]] = ast.Atom(given.ExistFreeParams[i])
 	}
 
-	propStoredFact := stored.ToProp()
+	propStoredFact := stored.ToTruePureFact()
 	instPropStoredFact, err := propStoredFact.Instantiate(uniMap)
 	if err != nil {
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	if instPropStoredFact.String() != given.ToProp().String() {
+	instPropStoredFactStr := instPropStoredFact.String()
+	givenPropStr := given.ToTruePureFact().String()
+	if instPropStoredFactStr != givenPropStr {
 		return glob.NewEmptyVerRetUnknown()
 	}
 
