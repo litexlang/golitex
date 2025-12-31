@@ -3655,6 +3655,10 @@ func (p *TbParser) proveExistStmt(tb *tokenBlock) (*ProveExistStmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
+	if tb.header.ExceedEnd() {
+		return NewProveExistStmt(params, paramSets, equalTos, fact, []Stmt{}, tb.line), nil
+	}
+
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, ErrInLine(err, tb)

@@ -26,6 +26,11 @@ func (exec *Executor) proveExistStmt(stmt *ast.ProveExistStmt) *glob.StmtRet {
 		return execState
 	}
 
+	execState = exec.proveExistStmt_NewFact(stmt)
+	if execState.IsNotTrue() {
+		return execState
+	}
+
 	return execState
 }
 
@@ -82,4 +87,8 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.ProveExistStmt) *glob.StmtR
 	verProcessRets = append(verProcessRets, execState.VerifyProcess...)
 
 	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verProcessRets)
+}
+
+func (exec *Executor) proveExistStmt_NewFact(stmt *ast.ProveExistStmt) *glob.StmtRet {
+	return exec.NewTrueStmtRet(stmt)
 }
