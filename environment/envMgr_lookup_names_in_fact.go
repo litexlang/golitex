@@ -64,6 +64,12 @@ func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.SpecFactStmt, extraParams
 
 	existFactStruct := stmt.ToExistStFactStruct()
 
+	for _, param := range existFactStruct.ExistFreeParams {
+		if envMgr.lookupAtomObjName(ast.Atom(param), extraParams).IsTrue() {
+			return glob.ErrRetWithErr(fmt.Errorf("exist fact exist parameter %s conflicts with defined parameter", param))
+		}
+	}
+
 	// check paramSet
 	for i, paramSet := range existFactStruct.ExistFreeParamSets {
 		ret := envMgr.LookupNamesInObj(paramSet, newExtraParams)

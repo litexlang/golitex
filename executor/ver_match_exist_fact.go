@@ -76,6 +76,12 @@ func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUn
 		return false, nil, fmt.Errorf("length of exist free params is not equal")
 	}
 
+	var err error
+	givenStruct, err = ver.Env.MakeExistFactStructDoesNotConflictWithDefinedNames(givenStruct, knownSpecFactInUniFact.UniFact.Params)
+	if err != nil {
+		return false, nil, err
+	}
+
 	uniMap := map[string]ast.Obj{}
 	for i := range knownStruct.ExistFreeParams {
 		uniMap[knownStruct.ExistFreeParams[i]] = ast.Atom(givenStruct.ExistFreeParams[i])
