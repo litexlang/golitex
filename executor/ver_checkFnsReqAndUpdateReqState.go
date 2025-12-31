@@ -18,29 +18,32 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"strings"
 )
 
 func (ver *Verifier) checkFnsReq(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	// TODO: 这里有点问题。应该做的分类是：builtin的 stmt name，如in；以及非builtin的stmt name
-
-	// 2. Check if the parameters satisfy the requirement of the function requirements
-	stateNoMsg := state.GetNoMsg()
-	for _, param := range stmt.Params {
-		verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, stateNoMsg)
-		if verRet.IsErr() {
-			return verRet
+	if stmt.IsPureFact() {
+		stateNoMsg := state.GetNoMsg()
+		for _, param := range stmt.Params {
+			verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, stateNoMsg)
+			if verRet.IsErr() {
+				return verRet
+			}
+			if verRet.IsUnknown() {
+				return verRet
+			}
 		}
-		if verRet.IsUnknown() {
-			return verRet
+		return glob.NewEmptyVerRetTrue()
+	} else {
+		ret := ver.Env.LookUpNamesInFact(stmt, map[string]struct{}{})
+		if ret.IsErr() {
+			return glob.NewErrVerRet(strings.Join(ret.Error, ", "))
 		}
+		if ret.IsUnknown() {
+			return glob.NewUnknownVerRet(strings.Join(ret.Unknown, ", "))
+		}
+		return glob.NewEmptyVerRetTrue()
 	}
-
-	// 所有的传入的参数符号 prop 的要求 以及 stmt name 确实是个 prop。这貌似不需要检查，因为每次你得到新的事实时候，已经检查过了
-	// 但是最好在这里警告一下用户，如果不满足prop的要求的话，可能出问题
-
-	// state.ReqOk = true
-	// newState := VerState{state.Round, state.WithMsg, true}
-	return glob.NewEmptyVerRetTrue()
 }
 
 func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) *glob.VerRet {
@@ -90,28 +93,28 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 	defer ver.deleteEnv()
 
 	// Parse set builder struct to check facts
-		setBuilderStruct, err := objAsFnObj.ToSetBuilderStruct()
-		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeError, objAsFnObj.String(), 0, []string{fmt.Sprintf("failed to parse set builder: %s", err)})
-		}
+	setBuilderStruct, err := objAsFnObj.ToSetBuilderStruct()
+	if err != nil {
+		return glob.NewVerMsg(glob.StmtRetTypeError, objAsFnObj.String(), 0, []string{fmt.Sprintf("failed to parse set builder: %s", err)})
+	}
 
-		// parent is a set
-		verRet := ver.VerFactStmt(ast.NewIsASetFact(setBuilderStruct.ParentSet, glob.BuiltinLine0), state)
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsUnknown() {
-			return glob.NewVerMsg(glob.StmtRetTypeError, objAsFnObj.String(), 0, []string{fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, setBuilderStruct.ParentSet, objAsFnObj)})
-		}
+	// parent is a set
+	verRet := ver.VerFactStmt(ast.NewIsASetFact(setBuilderStruct.ParentSet, glob.BuiltinLine0), state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsUnknown() {
+		return glob.NewVerMsg(glob.StmtRetTypeError, objAsFnObj.String(), 0, []string{fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, setBuilderStruct.ParentSet, objAsFnObj)})
+	}
 
-		// parent is ok
-		ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(setBuilderStruct.ParentSet, state)
-		if ret.IsErr() {
-			return ret
-		}
-		if ret.IsUnknown() {
-			return glob.NewVerMsg(glob.StmtRetTypeError, objAsFnObj.String(), 0, []string{fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, setBuilderStruct.ParentSet, objAsFnObj)})
-		}
+	// parent is ok
+	ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(setBuilderStruct.ParentSet, state)
+	if ret.IsErr() {
+		return ret
+	}
+	if ret.IsUnknown() {
+		return glob.NewVerMsg(glob.StmtRetTypeError, objAsFnObj.String(), 0, []string{fmt.Sprintf("parent of %s must be a set, %s in %s is not valid", objAsFnObj, setBuilderStruct.ParentSet, objAsFnObj)})
+	}
 
 	// 如果param在母环境里已经声明过了，那就把整个obj里的所有的param全部改成新的
 	globRet := ver.Env.IsNameUnavailable(string(setBuilderStruct.Param), map[string]struct{}{})
