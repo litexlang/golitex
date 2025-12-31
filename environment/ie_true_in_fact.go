@@ -54,6 +54,26 @@ func (ie *InferEngine) trueInFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 		return ie.trueInFactByNPos(fact)
 	}
 
+	if fact.Params[1].String() == glob.KeywordRPos {
+		return ie.trueInFactByRPos(fact)
+	}
+
+	if fact.Params[1].String() == glob.KeywordRNeg {
+		return ie.trueInFactByRNeg(fact)
+	}
+
+	if fact.Params[1].String() == glob.KeywordZNeg {
+		return ie.trueInFactByZNeg(fact)
+	}
+
+	if fact.Params[1].String() == glob.KeywordQNeg {
+		return ie.trueInFactByQNeg(fact)
+	}
+
+	if fact.Params[1].String() == glob.KeywordQPos {
+		return ie.trueInFactByQPos(fact)
+	}
+
 	return glob.NewEmptyShortTrueRet()
 }
 
@@ -432,6 +452,211 @@ func (ie *InferEngine) trueInFactByNPos(fact *ast.SpecFactStmt) *glob.ShortRet {
 		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	derivedFacts = append(derivedFacts, greaterEqualOneFact.String())
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+// trueInFactByRPos handles inference for x $in RPos (positive real numbers)
+// Inference generates:
+//   - x $in R (real number membership)
+//   - x > 0 (positivity fact)
+//   - Additional derived facts from comparison postprocessing (e.g., x != 0, x^2 > 0, sqrt(x) > 0, etc.)
+func (ie *InferEngine) trueInFactByRPos(fact *ast.SpecFactStmt) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	obj := fact.Params[0]
+
+	// x $in R
+	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
+	ret := ie.EnvMgr.storeSpecFactInMem(inRFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inRFact.String())
+
+	// x > 0
+	greaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
+	ret = ie.EnvMgr.storeSpecFactInMem(greaterThanZeroFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, greaterThanZeroFact.String())
+	retShort := ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterThanZeroFact)
+	if retShort.IsErr() {
+		return retShort
+	}
+	derivedFacts = append(derivedFacts, retShort.Msgs...)
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+// trueInFactByRNeg handles inference for x $in RNeg (negative real numbers)
+// Inference generates:
+//   - x $in R (real number membership)
+//   - x < 0 (negativity fact)
+//   - Additional derived facts from comparison postprocessing (e.g., x != 0, -x > 0, etc.)
+func (ie *InferEngine) trueInFactByRNeg(fact *ast.SpecFactStmt) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	obj := fact.Params[0]
+
+	// x $in R
+	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
+	ret := ie.EnvMgr.storeSpecFactInMem(inRFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inRFact.String())
+
+	// x < 0
+	lessThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
+	ret = ie.EnvMgr.storeSpecFactInMem(lessThanZeroFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, lessThanZeroFact.String())
+	retShort := ie.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(lessThanZeroFact)
+	if retShort.IsErr() {
+		return retShort
+	}
+	derivedFacts = append(derivedFacts, retShort.Msgs...)
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+// trueInFactByZNeg handles inference for x $in ZNeg (negative integers)
+// Inference generates:
+//   - x $in Z (integer membership)
+//   - x $in Q, x $in R (number type memberships)
+//   - x < 0 (negativity fact)
+//   - Additional derived facts from comparison postprocessing (e.g., x != 0, -x > 0, etc.)
+func (ie *InferEngine) trueInFactByZNeg(fact *ast.SpecFactStmt) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	obj := fact.Params[0]
+
+	// x $in Z
+	inZFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordInteger))
+	ret := ie.EnvMgr.storeSpecFactInMem(inZFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inZFact.String())
+
+	// x $in Q
+	inQFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordRational))
+	ret = ie.EnvMgr.storeSpecFactInMem(inQFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inQFact.String())
+
+	// x $in R
+	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
+	ret = ie.EnvMgr.storeSpecFactInMem(inRFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inRFact.String())
+
+	// x < 0
+	lessThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
+	ret = ie.EnvMgr.storeSpecFactInMem(lessThanZeroFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, lessThanZeroFact.String())
+	retShort := ie.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(lessThanZeroFact)
+	if retShort.IsErr() {
+		return retShort
+	}
+	derivedFacts = append(derivedFacts, retShort.Msgs...)
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+// trueInFactByQNeg handles inference for x $in QNeg (negative rational numbers)
+// Inference generates:
+//   - x $in Q (rational number membership)
+//   - x $in R (real number membership)
+//   - x < 0 (negativity fact)
+//   - Additional derived facts from comparison postprocessing (e.g., x != 0, -x > 0, etc.)
+func (ie *InferEngine) trueInFactByQNeg(fact *ast.SpecFactStmt) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	obj := fact.Params[0]
+
+	// x $in Q
+	inQFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordRational))
+	ret := ie.EnvMgr.storeSpecFactInMem(inQFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inQFact.String())
+
+	// x $in R
+	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
+	ret = ie.EnvMgr.storeSpecFactInMem(inRFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inRFact.String())
+
+	// x < 0
+	lessThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
+	ret = ie.EnvMgr.storeSpecFactInMem(lessThanZeroFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, lessThanZeroFact.String())
+	retShort := ie.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(lessThanZeroFact)
+	if retShort.IsErr() {
+		return retShort
+	}
+	derivedFacts = append(derivedFacts, retShort.Msgs...)
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+// trueInFactByQPos handles inference for x $in QPos (positive rational numbers)
+// Inference generates:
+//   - x $in Q (rational number membership)
+//   - x $in R (real number membership)
+//   - x > 0 (positivity fact)
+//   - Additional derived facts from comparison postprocessing (e.g., x != 0, x^2 > 0, sqrt(x) > 0, etc.)
+func (ie *InferEngine) trueInFactByQPos(fact *ast.SpecFactStmt) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	obj := fact.Params[0]
+
+	// x $in Q
+	inQFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordRational))
+	ret := ie.EnvMgr.storeSpecFactInMem(inQFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inQFact.String())
+
+	// x $in R
+	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
+	ret = ie.EnvMgr.storeSpecFactInMem(inRFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inRFact.String())
+
+	// x > 0
+	greaterThanZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
+	ret = ie.EnvMgr.storeSpecFactInMem(greaterThanZeroFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, greaterThanZeroFact.String())
+	retShort := ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterThanZeroFact)
+	if retShort.IsErr() {
+		return retShort
+	}
+	derivedFacts = append(derivedFacts, retShort.Msgs...)
 
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
