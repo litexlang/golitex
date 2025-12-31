@@ -16,6 +16,7 @@ package litex_executor
 
 import (
 	ast "golitex/ast"
+	env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -65,3 +66,35 @@ func (ver *Verifier) MatchExistFactStruct(given *ast.ExistStFactStruct, stored *
 
 	return glob.NewEmptyVerRetTrue()
 }
+
+func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, given *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
+	knownStruct := knownSpecFactInUniFact.SpecFact.ToExistStFactStruct()
+	givenStruct := given.ToExistStFactStruct()
+
+	uniMap := map[string]ast.Obj{}
+	for i := range knownStruct.ExistFreeParams {
+		uniMap[knownStruct.ExistFreeParams[i]] = ast.Atom(givenStruct.ExistFreeParams[i])
+	}
+
+	knownPropFact := knownStruct.ToTruePureFact()
+	instKnownPureFact, err := knownPropFact.Instantiate(uniMap)
+	if err != nil {
+		return false, nil, err
+	}
+
+	// matchParamsInGivenExistFactWithKnownExistFactInUniFact
+	tmp := env.MakeKnownSpecFact_InUniFact(instKnownPureFact.(*ast.SpecFactStmt), knownSpecFactInUniFact.UniFact)
+	ok, m, err := ver.matchUniFactParamsWithSpecFactParams(&tmp, givenStruct.ToTruePureFact())
+
+	if err != nil || !ok {
+		return false, nil, nil
+	} else {
+		return ok, m, err
+	}
+}
+
+// func (ver *Verifier) matchParamsInGivenExistFactWithKnownExistFactInUniFact(existParamMap map[string]ast.Obj, givenPureFactOfExistFact *ast.SpecFactStmt, knownInstPureFactOfExistFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
+// 	for i, param := givenPureFactOfExistFact.Params {
+// 		ok, map[string]ast.Obj = ver.matchObjOfParamsInGivenExistFactWithKnownExistFactInUniFact(param, knownInstPureFactOfExistFact.Params[i])
+// 	}
+// }

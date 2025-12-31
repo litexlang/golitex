@@ -130,15 +130,6 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 // WARNING: 其实 specFact 是等号的时候，还是会访问到这个函数。所以这个函数的命名是有问题的
 // WARNING: 需要重构整个架构，把验证的逻辑屡屡顺。Litex是ATP的话，那就必须要告诉用户我Auto的过程是什么样的
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	// var verRet *glob.GlobRet
-
-	// if !state.ReqOk {
-	// 	if verRet = ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
-	// 		return verRet
-	// 	}
-
-	// 	state.UpdateReqOkToTrue()
-	// }
 	return ver.verSpecFactStepByStep(stmt, state)
 }
 
