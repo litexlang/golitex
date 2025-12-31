@@ -58,3 +58,4 @@ know imply exist x N st exist_smallest_element_of(s set):
 know forall x Z, y Z => x * y $in Z, x + y $in Z, x - y $in Z
 
 know forall x N, y N => x + y $in N, x * y $in N
+

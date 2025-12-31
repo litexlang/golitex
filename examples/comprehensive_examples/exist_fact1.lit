@@ -1,0 +1,17 @@
+prove:
+    prop p(x R)
+    prop q(x R)
+
+prove:
+    know exist x Z st $p(x)
+
+    exist y Z st $p(y)
+
+    know not exist z N st $q(z)
+
+    not exist z N st $q(z)
+
+prove:
+    know forall x Q: exist y Q st y > x
+
+    exist z Q st z > 1

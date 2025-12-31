@@ -1,16 +1,12 @@
-"""
-prop p(x R)
-prop q(x R)
+prop Cauchy_condition(a fn(N_pos)R, M N_pos, epsilon R_pos):
+    forall x, y N_pos:
+        x > M
+        y > M
+        =>:
+            abs(a(x) - a(y)) < epsilon
 
-know exist x Z st $p(x)
+prop R_seq_converges(a fn(N_pos)R):
+    forall epsilon R_pos:
+        =>:
+            exist M N_pos: $Cauchy_condition(a, M, epsilon)
 
-exist y Z st $p(y)
-
-know not exist z N st $q(z)
-
-not exist z N st $q(z)
-"""
-
-know forall x Q: exist y Q st y > x
-
-exist z Q st z > 1
