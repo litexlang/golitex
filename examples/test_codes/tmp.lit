@@ -1,13 +1,16 @@
 """
-know exist x Z st x > 0
+prop p(x R)
+prop q(x R)
 
-exist y Z st y > 0
+know exist x Z st $p(x)
 
-know not exist z N st z < 0
+exist y Z st $p(y)
 
-not exist z N st z < 0
+know not exist z N st $q(z)
+
+not exist z N st $q(z)
 """
 
-know forall x Z: exist y Z st y > x + 1
+know forall x Q: exist y Q st y > x
 
-exist z Z st z > 1 + 1
+exist z Q st z > 1

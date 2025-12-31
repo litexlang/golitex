@@ -256,7 +256,11 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.S
 	}
 
 	// return ver.iterate_KnownSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, state)
-	return ver.iterate_KnownSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, state)
+	if stmt.IsPureFact() {
+		return ver.iterate_KnownPureSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, state)
+	} else {
+		return ver.iterate_KnownExistSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, state)
+	}
 }
 
 func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Obj, state *VerState) (map[string]ast.Obj, *glob.VerRet) {
@@ -485,7 +489,7 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmtToMatch *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) *glob.VerRet {
+func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch_new(stmtToMatch *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) *glob.VerRet {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		knownFact_paramProcessed := knownFacts[i]
 		// 这里需要用的是 instantiated 的 knownFact
@@ -493,23 +497,90 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmtToMatch *ast
 		var ok bool
 		var uniConMap map[string]ast.Obj
 		var err error
-		if stmtToMatch.IsPureFact() {
-			ok, uniConMap, err = ver.matchUniFactParamsWithSpecFactParams(&knownFact_paramProcessed, stmtToMatch)
-			if err != nil {
-				return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), stmtToMatch.GetLine(), []string{err.Error()})
-			}
-			if !ok {
-				continue
-			}
-		} else {
-			ok, uniConMap, err = ver.matchExistFactWithExistFactInKnownUniFact(&knownFact_paramProcessed, stmtToMatch)
-			if err != nil {
-				return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), stmtToMatch.GetLine(), []string{err.Error()})
-			}
-			if !ok {
-				continue
+		ok, uniConMap, err = ver.matchUniFactParamsWithSpecFactParams(&knownFact_paramProcessed, stmtToMatch)
+		if err != nil {
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), stmtToMatch.GetLine(), []string{err.Error()})
+		}
+		if !ok {
+			continue
+		}
+
+		randomizedUniFactWithoutThen, _, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownFact_paramProcessed.UniFact)
+		if err != nil {
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), stmtToMatch.GetLine(), []string{err.Error()})
+		}
+
+		for k, v := range uniConMap {
+			if newParam, ok := paramMapStrToStr[k]; ok {
+				uniConMap[newParam] = v
+				delete(uniConMap, k)
 			}
 		}
+
+		instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
+		if err != nil {
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), stmtToMatch.GetLine(), []string{err.Error()})
+		}
+
+		var nextState *VerState
+		if glob.FullMsg {
+			nextState = state.Copy()
+		} else {
+			nextState = state.GetNoMsg()
+			// nextState = state.Copy()
+		}
+
+		// TODO 要证明在paramSet里
+		paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
+		setFactSatisfied := true
+		for _, paramInParamSetFact := range paramInParamSetFacts {
+			verRet := ver.VerFactStmt(paramInParamSetFact, nextState)
+			if verRet.IsErr() {
+				return glob.NewVerMsg(glob.StmtRetTypeError, paramInParamSetFact.String(), paramInParamSetFact.GetLine(), []string{verRet.String()})
+			}
+			if verRet.IsUnknown() {
+				setFactSatisfied = false
+				break
+			}
+		}
+
+		if !setFactSatisfied {
+			continue
+		}
+
+		verRet := ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, nextState)
+		if verRet.IsErr() {
+			return verRet
+		}
+
+		if verRet.IsTrue() {
+			if state.WithMsg {
+				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmtToMatch.String(), stmtToMatch.GetLine(), []string{knownFact_paramProcessed.UniFact.String()})
+			}
+			return glob.NewEmptyVerRetTrue()
+		}
+	}
+
+	return glob.NewEmptyVerRetUnknown()
+}
+
+func (ver *Verifier) iterate_KnownExistSpecInUniFacts_applyMatch_new(stmtToMatch *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) *glob.VerRet {
+	for i := len(knownFacts) - 1; i >= 0; i-- {
+		knownFact_paramProcessed := knownFacts[i]
+		// 这里需要用的是 instantiated 的 knownFact
+
+		var ok bool
+		var uniConMap map[string]ast.Obj
+		var err error
+		ok, uniConMap, err = ver.matchExistFactWithExistFactInKnownUniFact(&knownFact_paramProcessed, stmtToMatch)
+		if err != nil {
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), stmtToMatch.GetLine(), []string{err.Error()})
+		}
+		if !ok {
+			continue
+		}
+
+		// 后面过程和pure fact一样的
 
 		randomizedUniFactWithoutThen, _, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownFact_paramProcessed.UniFact)
 		if err != nil {
