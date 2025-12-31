@@ -324,7 +324,11 @@ func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.EnvMemory, stmt *ast.Spe
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	return ver.iterateKnownSpecFacts_applyObjEqualSpec(stmt, knownFacts, state)
+	if stmt.FactType == ast.TruePure || stmt.FactType == ast.FalsePure {
+		return ver.iterateKnownSpecFacts_applyObjEqualSpec(stmt, knownFacts, state)
+	} else {
+		return ver.iterateKnownExistFactsAndMatchGivenFact(stmt, knownFacts, state)
+	}
 }
 
 func (ver *Verifier) specFact_LogicMem(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
