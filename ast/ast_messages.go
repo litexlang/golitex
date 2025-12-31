@@ -1399,7 +1399,7 @@ func (stmt *ProveExistStmt) String() string {
 
 	builder.WriteString(strings.Join(paramAndParamSetSlice, ", "))
 
-	builder.WriteString(" : ")
+	builder.WriteString(fmt.Sprintf(" %s ", glob.KeywordSt))
 
 	builder.WriteString(stmt.Fact.String())
 

@@ -68,8 +68,7 @@ func (f *SpecFactStmt) ToExistStFactStruct() *ExistStFactStruct {
 	for i := 1; i <= lenOfExistFreeParams*2; i++ {
 		existFreeParams = append(existFreeParams, string(f.Params[i].(Atom)))
 		i++
-		existFreeParamSets = append(existFreeParamSets, f.Params[i+lenOfExistFreeParams])
-		i++
+		existFreeParamSets = append(existFreeParamSets, f.Params[i])
 	}
 
 	params := []Obj{}
