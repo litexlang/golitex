@@ -515,8 +515,8 @@ type HaveObjStWithParamSetsStmt struct {
 }
 
 type ProveExistStmt struct {
-	Params    StrSlice
-	ParamSets ObjSlice
+	ExistParams    StrSlice
+	ExistParamSets ObjSlice
 	EqualTos  ObjSlice
 	Fact      *SpecFactStmt
 	Proofs    StmtSlice

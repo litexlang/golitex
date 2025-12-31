@@ -132,14 +132,12 @@ func exist_st_FactString(stmt *SpecFactStmt) string {
 	builder.WriteString(glob.KeywordExist)
 	builder.WriteByte(' ')
 
-	existParams, factParams := stmt.ExistStFactToPropNameExistParamsParams()
-
-	builder.WriteString(objSliceString(existParams))
+	existStruct := stmt.ToExistStFactStruct()
+	builder.WriteString(StrObjSetPairs(existStruct.ExistFreeParams, existStruct.ExistFreeParamSets))
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
-	builder.WriteString(NewSpecFactStmt(TruePure, stmt.PropName, factParams, glob.BuiltinLine0).String())
-
+	builder.WriteString(NewSpecFactStmt(TruePure, existStruct.PropName, existStruct.Params, glob.BuiltinLine0).String())
 	return builder.String()
 }
 
@@ -1393,8 +1391,8 @@ func (stmt *ProveExistStmt) String() string {
 	builder.WriteString(" ")
 
 	paramAndParamSetSlice := []string{}
-	for i, param := range stmt.Params {
-		paramAndParamSetSlice = append(paramAndParamSetSlice, fmt.Sprintf("%s %s", param, stmt.ParamSets[i].String()))
+	for i, param := range stmt.ExistParams {
+		paramAndParamSetSlice = append(paramAndParamSetSlice, fmt.Sprintf("%s %s", param, stmt.ExistParamSets[i].String()))
 	}
 
 	builder.WriteString(strings.Join(paramAndParamSetSlice, ", "))
