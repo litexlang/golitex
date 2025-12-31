@@ -1,50 +1,46 @@
-# cart_prod 例子
+prop Cauchy_condition(a fn(N_pos)R, M N_pos, epsilon R_pos):
+    forall x, y N_pos:
+        x > M
+        y > M
+        =>:
+            abs(a(x) - a(y)) < epsilon
 
-# 例子1: 使用有限索引集合的笛卡尔积
-fn family1(i range(1, 4)) set:
-    i = 1 => family1(i) = R
-    i = 2 => family1(i) = Q
-    i = 3 => family1(i) = Z
+prop R_seq_converges(a fn(N_pos)R):
+    forall epsilon R_pos:
+        =>:
+            exist M N_pos: $Cauchy_condition(a, M, epsilon)
 
-have y1 set = cart_prod(range(1, 4), family1)
-$is_cart_prod(y1)
-index_set_of_cart_prod(y1) = range(1, 4)
-cart_prod_proj(y1, 1) = R
-cart_prod_proj(y1, 2) = Q
-cart_prod_proj(y1, 3) = Z
+have fn f(x N_pos) R = 1 / x
 
-# 例子2: 使用自然数作为索引集合
-fn family2(i N_pos) set:
-    i = 1 => family2(i) = R
-    i = 2 => family2(i) = Q
-    i >= 3 => family2(i) = Z
+prove forall epsilon R_pos => exist M N_pos: $Cauchy_condition(f, M, epsilon):
+    have a Q st a $in {t Q: 0 < t, t < epsilon}
+    have p Z, q N_pos st a = p / q
 
-have y2 set = cart_prod(N_pos, family2)
-$is_cart_prod(y2)
-index_set_of_cart_prod(y2) = N_pos
-cart_prod_proj(y2, 1) = R
-cart_prod_proj(y2, 2) = Q
-cart_prod_proj(y2, 3) = Z
+    # 需要添加 a < b <= c 则 a < c
+    # 添加： p $in R， p >= 1时， 如果 x >= 0 那么 x <= p * x
+    1 / q <= p / q
+    a < epsilon
+    p / q < epsilon
+    1 / q < epsilon
 
-# 例子3: 所有投影都是同一个集合
-fn family3(i range(1, 5)) set:
-    family3(i) = R
+    have M N_pos = M = 2 * q
+    forall x N_pos:
+        x > M
+        =>:
+            f(x) = 1 / x
+            1 / x < 1 / M
+            1 / M = 1 / (2 * q)
+            1 / x < 1 / (2 * q)
+            f(x) < 1 / (2 * q)
 
-have y3 set = cart_prod(range(1, 5), family3)
-$is_cart_prod(y3)
-cart_prod_proj(y3, 1) = R
-cart_prod_proj(y3, 2) = R
-cart_prod_proj(y3, 3) = R
-cart_prod_proj(y3, 4) = R
-
-# 例子4: 使用函数模板定义更复杂的 family
-fn_template indexed_set(s set, n N_pos):
-    fn (i range(1, n + 1)) set:
-        indexed_set(s, n)(i) = s
-
-have y4 set = cart_prod(range(1, 3), indexed_set(R, 3))
-$is_cart_prod(y4)
-cart_prod_proj(y4, 1) = R
-cart_prod_proj(y4, 2) = R
-cart_prod_proj(y4, 3) = R
-
+    forall x, y N_pos:
+        x > M
+        y > M
+        =>:
+            abs(f(x) - f(y)) < abs(f(x)) + abs(f(y))
+            abs(f(x)) < 1 / (2 * q)
+            abs(f(y)) < 1 / (2 * q)
+            abs(f(x)) + abs(f(y)) < 1 / 2 * q + 1 / 2 * q
+            abs(f(x) - f(y)) < 1 / 2 * q + 1 / 2 * q
+            abs(f(x) - f(y)) < 1 / q
+            abs(f(x) - f(y)) < epsilon

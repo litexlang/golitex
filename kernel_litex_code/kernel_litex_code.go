@@ -889,4 +889,9 @@ know:
 	forall x Z: x < 0 <=> x $in Z_neg
 	forall x Q: x < 0 <=> x $in Q_neg
 	forall x Q: x > 0 <=> x $in Q_pos
+
+# density of Q, R
+know:
+	forall x, y R: x < y => exist z Q: z $in {t R: x < t, t < y}
+	forall x, y R: x < y => exist z R: z $in {t R: x < t, t < y}
 `
