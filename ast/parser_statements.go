@@ -2661,21 +2661,21 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*SpecFactStmt, er
 		return nil, ErrInLine(err, tb)
 	}
 
-	params := []string{}
-	paramSets := []Obj{}
+	existParams := []string{}
+	existParamSets := []Obj{}
 
 	for !tb.header.is(glob.KeywordSt) {
 		param, err := tb.header.next()
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
-		params = append(params, param)
+		existParams = append(existParams, param)
 
 		paramSet, err := p.Obj(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
-		paramSets = append(paramSets, paramSet)
+		existParamSets = append(existParamSets, paramSet)
 
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
@@ -2683,6 +2683,19 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*SpecFactStmt, er
 			break
 		}
 	}
+
+	for _, param := range existParams {
+		if _, exists := p.FreeParams[param]; exists {
+			return nil, ErrInLine(fmt.Errorf("parameter %s in exist fact conflicts with a free parameter in the outer scope", param), tb)
+		}
+		p.FreeParams[param] = struct{}{}
+	}
+
+	defer func() {
+		for _, param := range existParams {
+			delete(p.FreeParams, param)
+		}
+	}()
 
 	err = tb.header.skip(glob.KeywordSt)
 	if err != nil {
@@ -2695,9 +2708,9 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*SpecFactStmt, er
 	}
 
 	if isTrue {
-		return NewExistStFact(TrueExist_St, pureSpecFact.PropName, params, paramSets, pureSpecFact.Params, tb.line), nil
+		return NewExistStFact(TrueExist_St, pureSpecFact.PropName, existParams, existParamSets, pureSpecFact.Params, tb.line), nil
 	} else {
-		return NewExistStFact(FalseExist_St, pureSpecFact.PropName, params, paramSets, pureSpecFact.Params, tb.line), nil
+		return NewExistStFact(FalseExist_St, pureSpecFact.PropName, existParams, existParamSets, pureSpecFact.Params, tb.line), nil
 	}
 }
 

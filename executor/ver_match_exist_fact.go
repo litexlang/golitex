@@ -95,6 +95,26 @@ func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUn
 	if err != nil || !ok {
 		return false, nil, nil
 	} else {
+		// 它的 set 也能对应上
+		newUniMap := map[string]ast.Obj{}
+		for i := range knownStruct.ExistFreeParamSets {
+			instParamSet, err := knownStruct.ExistFreeParamSets[i].Instantiate(m)
+			if err != nil {
+				return false, nil, err
+			}
+
+			instParamSet, err = instParamSet.Instantiate(newUniMap)
+			if err != nil {
+				return false, nil, err
+			}
+
+			if instParamSet.String() != givenStruct.ExistFreeParamSets[i].String() {
+				return false, nil, fmt.Errorf("param set %s in known exist fact is not equal to param set %s in given exist fact", knownStruct.ExistFreeParamSets[i].String(), givenStruct.ExistFreeParamSets[i].String())
+			}
+
+			newUniMap[knownStruct.ExistFreeParams[i]] = ast.Atom(givenStruct.ExistFreeParams[i])
+		}
+
 		return ok, m, err
 	}
 }
