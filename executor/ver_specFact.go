@@ -232,6 +232,8 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 }
 
 func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+	return glob.NewEmptyVerRetUnknown()
+
 	existParams, factParams := stmt.ExistStFactToPropNameExistParamsParams()
 
 	propDef := ver.Env.GetExistPropDef(stmt.PropName)
@@ -321,7 +323,11 @@ func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState)
+	if stmt.IsPureFact() {
+		return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState)
+	} else {
+		return glob.NewEmptyVerRetUnknown()
+	}
 }
 
 func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {

@@ -15,6 +15,7 @@
 package litex_executor
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
@@ -71,6 +72,10 @@ func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUn
 	knownStruct := knownSpecFactInUniFact.SpecFact.ToExistStFactStruct()
 	givenStruct := given.ToExistStFactStruct()
 
+	if len(knownStruct.ExistFreeParams) != len(givenStruct.ExistFreeParams) {
+		return false, nil, fmt.Errorf("length of exist free params is not equal")
+	}
+
 	uniMap := map[string]ast.Obj{}
 	for i := range knownStruct.ExistFreeParams {
 		uniMap[knownStruct.ExistFreeParams[i]] = ast.Atom(givenStruct.ExistFreeParams[i])
@@ -83,6 +88,7 @@ func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUn
 	}
 
 	// matchParamsInGivenExistFactWithKnownExistFactInUniFact
+	// TODO: 这里的match我还是有点慌，因为涉及到的参数其实是不存在的，应该用纯symbol去匹配好像更好一点
 	tmp := env.MakeKnownSpecFact_InUniFact(instKnownPureFact.(*ast.SpecFactStmt), knownSpecFactInUniFact.UniFact)
 	ok, m, err := ver.matchUniFactParamsWithSpecFactParams(&tmp, givenStruct.ToTruePureFact())
 
