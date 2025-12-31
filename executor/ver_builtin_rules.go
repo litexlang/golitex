@@ -60,7 +60,7 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 		return ver.verIsTupleByBuiltinRules(stmt, state)
 	}
 
-	if verRet := ver.verNumberLogicRelaOpt_BuiltinRules(stmt, state); verRet.IsErr() {
+	if verRet := ver.verNumberTrueLogicRelaOpt_BuiltinRules(stmt, state); verRet.IsErr() {
 		return verRet
 	} else if verRet.IsTrue() {
 		return verRet
@@ -77,7 +77,7 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verNumberLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verNumberTrueLogicRelaOpt_BuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	if !stmt.IsPureFact() {
 		return glob.NewEmptyVerRetUnknown()
 	}

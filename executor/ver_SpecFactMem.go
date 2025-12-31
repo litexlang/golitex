@@ -485,22 +485,42 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) *glob.VerRet {
+func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(given *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) *glob.VerRet {
+	var stmtToMatch *ast.SpecFactStmt
+	if given.IsPureFact() {
+		stmtToMatch = given
+	} else {
+		stmtToMatch = given.ToExistStFactStruct().ToTruePureFact()
+	}
+
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		knownFact_paramProcessed := knownFacts[i]
 		// 这里需要用的是 instantiated 的 knownFact
 
-		ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(&knownFact_paramProcessed, stmt)
-		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{err.Error()})
-		}
-		if !ok {
-			continue
+		var ok bool
+		var uniConMap map[string]ast.Obj
+		var err error
+		if given.IsPureFact() {
+			ok, uniConMap, err = ver.matchUniFactParamsWithSpecFactParams(&knownFact_paramProcessed, stmtToMatch)
+			if err != nil {
+				return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), stmtToMatch.GetLine(), []string{err.Error()})
+			}
+			if !ok {
+				continue
+			}
+		} else {
+			ok, uniConMap, err = ver.matchExistFactWithExistFactInKnownUniFact(&knownFact_paramProcessed, stmtToMatch)
+			if err != nil {
+				return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), stmtToMatch.GetLine(), []string{err.Error()})
+			}
+			if !ok {
+				continue
+			}
 		}
 
 		randomizedUniFactWithoutThen, _, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownFact_paramProcessed.UniFact)
 		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{err.Error()})
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), stmtToMatch.GetLine(), []string{err.Error()})
 		}
 
 		for k, v := range uniConMap {
@@ -512,7 +532,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 
 		instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
 		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{err.Error()})
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), stmtToMatch.GetLine(), []string{err.Error()})
 		}
 
 		var nextState *VerState
@@ -548,7 +568,7 @@ func (ver *Verifier) iterate_KnownSpecInUniFacts_applyMatch_new(stmt *ast.SpecFa
 
 		if verRet.IsTrue() {
 			if state.WithMsg {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), []string{knownFact_paramProcessed.UniFact.String()})
+				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmtToMatch.String(), stmtToMatch.GetLine(), []string{knownFact_paramProcessed.UniFact.String()})
 			}
 			return glob.NewEmptyVerRetTrue()
 		}
