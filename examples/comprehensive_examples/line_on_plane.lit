@@ -131,12 +131,14 @@ prop are_inverse_vectors(a cart(R, R), b cart(R, R)):
     a[1] = -b[1]
     a[2] = -b[2]
 
+"""
 exist_prop a, b R st can_be_bases_of_vector(c, d, e cart(R, R)):
     e = sm(a, c) + sm(b, d)
 
 prop are_bases_vectors(a cart(R, R), b cart(R, R)):
     forall c cart(R, R) => $can_be_bases_of_vector(a, b, c)
-    
+"""
+
 # 加法交换律
 prove forall a, b cart(R, R) => add(a, b) = add(b, a):
     add(a, b) = (a[1] + b[1], a[2] + b[2]) = (b[1] + a[1], b[2] + a[2]) = add(b, a)
