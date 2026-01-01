@@ -31,8 +31,9 @@ const (
 	KeywordForall = "forall"
 	KeywordExist  = "exist"
 
-	KeywordProp      = "prop"
-	KeywordExistProp = "exist_prop"
+	KeywordProp = "prop"
+
+	// KeywordExistProp = "exist_prop"
 
 	KeywordImplication = "imply"
 	KeywordProveImply  = "prove_imply"
@@ -118,16 +119,16 @@ const (
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
-	KeywordSet:                  {},
-	KeywordForall:               {},
-	KeywordDom:                  {},
-	KeywordImplication:          {},
-	KeywordProveImply:           {},
-	KeywordHave:                 {},
-	KeywordFn:                   {},
-	KeywordProp:                 {},
-	KeywordKnow:                 {},
-	KeywordExistProp:            {},
+	KeywordSet:         {},
+	KeywordForall:      {},
+	KeywordDom:         {},
+	KeywordImplication: {},
+	KeywordProveImply:  {},
+	KeywordHave:        {},
+	KeywordFn:          {},
+	KeywordProp:        {},
+	KeywordKnow:        {},
+	// KeywordExistProp:            {},
 	KeywordSt:                   {},
 	KeywordClaim:                {},
 	KeywordProve:                {},
@@ -365,16 +366,16 @@ func IsBuiltinAtomName(name string) bool {
 }
 
 var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struct{}{
-	KeywordSet:                    {},
-	KeywordForall:                 {},
-	KeywordDom:                    {},
-	KeywordImplication:            {},
-	KeywordProveImply:             {},
-	KeywordHave:                   {},
-	KeywordFn:                     {},
-	KeywordProp:                   {},
-	KeywordKnow:                   {},
-	KeywordExistProp:              {},
+	KeywordSet:         {},
+	KeywordForall:      {},
+	KeywordDom:         {},
+	KeywordImplication: {},
+	KeywordProveImply:  {},
+	KeywordHave:        {},
+	KeywordFn:          {},
+	KeywordProp:        {},
+	KeywordKnow:        {},
+	// KeywordExistProp:              {},
 	KeywordSt:                     {},
 	KeywordClaim:                  {},
 	KeywordProve:                  {},

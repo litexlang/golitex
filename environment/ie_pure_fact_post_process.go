@@ -36,22 +36,22 @@ func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 		return glob.NewEmptyShortTrueRet()
 	}
 
-	existPropDef := ie.EnvMgr.GetExistPropDef(fact.PropName)
-	if existPropDef != nil {
-		if fact.FactType == ast.TruePure {
-			return glob.NewEmptyShortTrueRet()
-		} else {
-			for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
-				_, ok := thenFact.(*ast.SpecFactStmt)
-				if !ok {
-					return glob.NewEmptyShortTrueRet()
-				}
-			}
-			ret := ie.newFalseExistFact_EmitEquivalentUniFact(fact)
-			// Inherit derived facts from exist prop processing
-			return ret
-		}
-	}
+	// existPropDef := ie.EnvMgr.GetExistPropDef(fact.PropName)
+	// if existPropDef != nil {
+	// 	if fact.FactType == ast.TruePure {
+	// 		return glob.NewEmptyShortTrueRet()
+	// 	} else {
+	// 		for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
+	// 			_, ok := thenFact.(*ast.SpecFactStmt)
+	// 			if !ok {
+	// 				return glob.NewEmptyShortTrueRet()
+	// 			}
+	// 		}
+	// 		ret := ie.newFalseExistFact_EmitEquivalentUniFact(fact)
+	// 		// Inherit derived facts from exist prop processing
+	// 		return ret
+	// 	}
+	// }
 
 	return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("undefined prop: %s", fact.PropName)})
 }
@@ -89,53 +89,55 @@ func (ie *InferEngine) newTrueExist(fact *ast.SpecFactStmt) *glob.ShortRet {
 		return glob.NewEmptyShortTrueRet()
 	}
 
-	_, factParams := fact.ExistStFactToPropNameExistParamsParams()
+	return glob.NewShortRetErr(fmt.Sprintf("undefined prop: %s", fact.PropName))
 
-	existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, factParams, fact.Line)
+	// _, factParams := fact.ExistStFactToPropNameExistParamsParams()
 
-	// err := ie.Env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(existFact, ie.Env.CurMatchEnv)
+	// existFact := ast.NewSpecFactStmt(ast.TruePure, fact.PropName, factParams, fact.Line)
 
-	ret := ie.EnvMgr.storeSpecFactInMem(existFact)
-	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
-	}
+	// // err := ie.Env.KnownFacts.SpecFactMem.NewFactInSpecFactMem(existFact, ie.Env.CurMatchEnv)
 
-	// iff facts
-	iffFacts, thenFacts, ret := ie.EnvMgr.iffFactsInExistStFact(fact)
-	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
-	}
+	// ret := ie.EnvMgr.storeSpecFactInMem(existFact)
+	// if ret.IsErr() {
+	// 	return glob.ErrStmtMsgToShortRet(ret)
+	// }
 
-	for _, iffFact := range iffFacts {
-		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(iffFact)
-		if ret.IsErr() {
-			return glob.ErrStmtMsgToShortRet(ret)
-		}
-	}
+	// // iff facts
+	// iffFacts, thenFacts, ret := ie.EnvMgr.iffFactsInExistStFact(fact)
+	// if ret.IsErr() {
+	// 	return glob.ErrStmtMsgToShortRet(ret)
+	// }
 
-	for _, thenFact := range thenFacts {
-		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(thenFact)
-		if ret.IsErr() {
-			return glob.ErrStmtMsgToShortRet(ret)
-		}
-	}
+	// for _, iffFact := range iffFacts {
+	// 	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(iffFact)
+	// 	if ret.IsErr() {
+	// 		return glob.ErrStmtMsgToShortRet(ret)
+	// 	}
+	// }
 
-	return glob.NewEmptyShortTrueRet()
+	// for _, thenFact := range thenFacts {
+	// 	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(thenFact)
+	// 	if ret.IsErr() {
+	// 		return glob.ErrStmtMsgToShortRet(ret)
+	// 	}
+	// }
+
+	// return glob.NewEmptyShortTrueRet()
 }
 
 // newFalseExistFact_EmitEquivalentUniFact handles postprocessing for FalseExist facts
 // not exist => forall not
-func (ie *InferEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) *glob.ShortRet {
-	uniFact, ret := ie.EnvMgr.notExistToForall(fact)
-	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
-	}
+// func (ie *InferEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) *glob.ShortRet {
+// 	uniFact, ret := ie.EnvMgr.notExistToForall(fact)
+// 	if ret.IsErr() {
+// 		return glob.ErrStmtMsgToShortRet(ret)
+// 	}
 
-	ret = ie.EnvMgr.newFactNoInfer(uniFact)
+// 	ret = ie.EnvMgr.newFactNoInfer(uniFact)
 
-	if ret.IsErr() {
-		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("exist fact %s has no definition", fact)})
-	}
+// 	if ret.IsErr() {
+// 		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("exist fact %s has no definition", fact)})
+// 	}
 
-	return glob.NewEmptyShortTrueRet()
-}
+// 	return glob.NewEmptyShortTrueRet()
+// }

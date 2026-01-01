@@ -28,9 +28,9 @@ func NewDefPropStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactSt
 	return &DefPropStmt{defHeader, domFacts, iffFacts, thenFacts, line}
 }
 
-func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Obj, line uint) *DefExistPropStmt {
-	return &DefExistPropStmt{def, existParams, existParamSets, line}
-}
+// func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Obj, line uint) *DefExistPropStmt {
+// 	return &DefExistPropStmt{def, existParams, existParamSets, line}
+// }
 
 func NewSpecFactStmt(typeEnum SpecFactType, propName Atom, params []Obj, line uint) *SpecFactStmt {
 	return &SpecFactStmt{typeEnum, propName, params, line}
@@ -52,17 +52,17 @@ func NewDefHeader(name string, params []string, setParams []Obj) *DefHeader {
 	return &DefHeader{name, params, setParams}
 }
 
-func NewHaveObjStStmt(objNames []string, fact *SpecFactStmt, line uint) *HaveObjStStmt {
-	return &HaveObjStStmt{objNames, fact, line}
-}
+// func NewHaveObjStStmt(objNames []string, fact *SpecFactStmt, line uint) *HaveObjStStmt {
+// 	return &HaveObjStStmt{objNames, fact, line}
+// }
 
 func NewHaveObjStWithParamSetsStmt(objNames []string, objSets []Obj, fact *SpecFactStmt, line uint) *HaveObjStWithParamSetsStmt {
 	return &HaveObjStWithParamSetsStmt{objNames, objSets, fact, line}
 }
 
-func NewExistPropDef(declHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {
-	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts, thenFacts, line}
-}
+// func NewExistPropDef(declHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {
+// 	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts, thenFacts, line}
+// }
 
 func NewUniFact(params []string, setParams []Obj, domFacts []FactStmt, thenFacts []FactStmt, line uint) *UniFactStmt {
 	return &UniFactStmt{params, setParams, domFacts, thenFacts, line}
@@ -84,9 +84,9 @@ func NewKnowImplicationStmt(prop *DefPropStmt, line uint) *KnowImplicationStmt {
 	return &KnowImplicationStmt{prop, line}
 }
 
-func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {
-	return &DefExistPropStmtBody{defHeader, domFacts, iffFacts, thenFacts, line}
-}
+// func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {
+// 	return &DefExistPropStmtBody{defHeader, domFacts, iffFacts, thenFacts, line}
+// }
 
 func NewOrStmt(orFacts []*SpecFactStmt, line uint) *OrStmt {
 	return &OrStmt{orFacts, line}
@@ -116,9 +116,9 @@ func NewClaimPropStmt(implication *ImplicationStmt, proofs []Stmt, line uint) *C
 	return &ClaimImplicationStmt{implication, proofs, line}
 }
 
-func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt, haveObj []Obj, line uint) *ClaimExistPropStmt {
-	return &ClaimExistPropStmt{existProp, proofs, haveObj, line}
-}
+// func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt, haveObj []Obj, line uint) *ClaimExistPropStmt {
+// 	return &ClaimExistPropStmt{existProp, proofs, haveObj, line}
+// }
 
 func NewProveByEnumStmt(fact *UniFactStmt, proofs []Stmt, line uint) *ProveByEnumStmt {
 	return &ProveByEnumStmt{fact, proofs, line}
@@ -136,9 +136,9 @@ func NewEqualsFactStmt(params ObjSlice, line uint) *EqualsFactStmt {
 	return &EqualsFactStmt{params, line}
 }
 
-func NewKnowExistPropStmt(existProp *DefExistPropStmt, line uint) *KnowExistPropStmt {
-	return &KnowExistPropStmt{existProp, line}
-}
+// func NewKnowExistPropStmt(existProp *DefExistPropStmt, line uint) *KnowExistPropStmt {
+// 	return &KnowExistPropStmt{existProp, line}
+// }
 
 func NewDefFnSetStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnTStruct *AnonymousFn, line uint) *DefFnSetStmt {
 	return &DefFnSetStmt{defHeader, templateDomFacts, fnTStruct, line}

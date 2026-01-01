@@ -358,27 +358,27 @@ func (f *KnowFactStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *DefExistPropStmt) ToLatexString() string {
-	var builder strings.Builder
+// func (s *DefExistPropStmt) ToLatexString() string {
+// 	var builder strings.Builder
 
-	builder.WriteString("\\begin{definition}[Existential Proposition]\n")
-	builder.WriteString(prop_fn_bodyToLatexString(s.DefBody.DefHeader, s.DefBody.DomFactsOrNil, s.DefBody.IffFactsOrNil, true))
-	builder.WriteString("\n\\end{definition}")
-	return builder.String()
-}
+// 	builder.WriteString("\\begin{definition}[Existential Proposition]\n")
+// 	builder.WriteString(prop_fn_bodyToLatexString(s.DefBody.DefHeader, s.DefBody.DomFactsOrNil, s.DefBody.IffFactsOrNil, true))
+// 	builder.WriteString("\n\\end{definition}")
+// 	return builder.String()
+// }
 
-func (s *HaveObjStStmt) ToLatexString() string {
-	var builder strings.Builder
+// func (s *HaveObjStStmt) ToLatexString() string {
+// 	var builder strings.Builder
 
-	builder.WriteString("\\begin{definition}[Object(s) Exists By Verified Existential Fact]\n")
+// 	builder.WriteString("\\begin{definition}[Object(s) Exists By Verified Existential Fact]\n")
 
-	builder.WriteString(" we have ")
-	builder.WriteString(objParamsLatexString(s.Fact.Params))
-	builder.WriteString(fmt.Sprintf(" which makes existential fact %s true", propNameParamsLatexString(s.Fact.PropName, s.Fact.Params)))
+// 	builder.WriteString(" we have ")
+// 	builder.WriteString(objParamsLatexString(s.Fact.Params))
+// 	builder.WriteString(fmt.Sprintf(" which makes existential fact %s true", propNameParamsLatexString(s.Fact.PropName, s.Fact.Params)))
 
-	builder.WriteString("\n\\end{definition}")
-	return builder.String()
-}
+// 	builder.WriteString("\n\\end{definition}")
+// 	return builder.String()
+// }
 
 func (s *HaveObjStWithParamSetsStmt) ToLatexString() string {
 	var builder strings.Builder
@@ -543,17 +543,17 @@ func (s *ClaimImplicationStmt) ToLatexString() string {
 }
 
 // TODO
-func (s *ClaimExistPropStmt) ToLatexString() string {
-	var builder strings.Builder
+// func (s *ClaimExistPropStmt) ToLatexString() string {
+// 	var builder strings.Builder
 
-	builder.WriteString(s.ExistPropWithoutDom.ToLatexString())
+// 	builder.WriteString(s.ExistPropWithoutDom.ToLatexString())
 
-	builder.WriteString("\n\n")
+// 	builder.WriteString("\n\n")
 
-	builder.WriteString(claimProveBodyToLatexString(s.ExistPropWithoutDom.ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue(), s.Proofs, true))
+// 	builder.WriteString(claimProveBodyToLatexString(s.ExistPropWithoutDom.ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue(), s.Proofs, true))
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
 func (s *ProveByEnumStmt) ToLatexString() string {
 	var builder strings.Builder
@@ -669,16 +669,16 @@ func (s *EqualsFactStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *KnowExistPropStmt) ToLatexString() string {
-	var builder strings.Builder
-	defExistProp := NewDefExistPropStmt(s.ExistProp.DefBody, s.ExistProp.ExistParams, s.ExistProp.ExistParamSets, glob.BuiltinLine0)
-	builder.WriteString(defExistProp.ToLatexString())
+// func (s *KnowExistPropStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	defExistProp := NewDefExistPropStmt(s.ExistProp.DefBody, s.ExistProp.ExistParams, s.ExistProp.ExistParamSets, glob.BuiltinLine0)
+// 	builder.WriteString(defExistProp.ToLatexString())
 
-	builder.WriteString("\n\n")
-	builder.WriteString("We assume existential proposition is true for all parameters in the proposition's domain.")
+// 	builder.WriteString("\n\n")
+// 	builder.WriteString("We assume existential proposition is true for all parameters in the proposition's domain.")
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
 // func (s *LatexStmt) ToLatexString() string {
 // 	return s.Comment

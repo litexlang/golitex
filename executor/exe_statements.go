@@ -48,10 +48,10 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		if execRet.IsTrue() {
 			execRet = execRet.AddWarning("`let` may introduce non-existent objects. If you want to ensure the object exists, please use `have` instead!\n")
 		}
-	case *ast.HaveObjStStmt:
-		execRet = exec.haveObjStStmt(stmt)
-	case *ast.DefExistPropStmt:
-		execRet = exec.defExistPropStmt(stmt)
+	// case *ast.HaveObjStStmt:
+	// 	execRet = exec.haveObjStStmt(stmt)
+	// case *ast.DefExistPropStmt:
+	// 	execRet = exec.defExistPropStmt(stmt)
 	case *ast.DefFnStmt:
 		execRet = exec.defFnStmt(stmt)
 		if execRet.IsTrue() {
@@ -61,8 +61,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = exec.proveInEachCaseStmt(stmt)
 	case *ast.ClaimImplicationStmt:
 		execRet = exec.claimPropStmt(stmt)
-	case *ast.ClaimExistPropStmt:
-		execRet = exec.claimExistPropStmt(stmt)
+		// case *ast.ClaimExistPropStmt:
+		// 	execRet = exec.claimExistPropStmt(stmt)
 	case *ast.ProveStmt:
 		execRet = exec.proveStmt(stmt)
 	case *ast.ClaimProveByContradictionStmt:
@@ -71,11 +71,11 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = exec.proveByEnumStmt(stmt)
 	case *ast.HaveObjInNonEmptySetStmt:
 		execRet = exec.haveObjInNonEmptySetStmt(stmt)
-	case *ast.KnowExistPropStmt:
-		execRet = exec.knowExistPropStmt(stmt)
-		if execRet.IsTrue() {
-			execRet = execRet.AddWarning("`know exist` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
-		}
+	// case *ast.KnowExistPropStmt:
+	// 	execRet = exec.knowExistPropStmt(stmt)
+	// 	if execRet.IsTrue() {
+	// 		execRet = execRet.AddWarning("`know exist` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
+	// 	}
 	case *ast.DefFnSetStmt:
 		execRet = exec.DefFnTemplateStmt(stmt)
 	case *ast.ClearStmt:
@@ -227,18 +227,18 @@ func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(ret.Define).AddInfers(ret.Infer)
 }
 
-func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) *glob.StmtRet {
-	ret := exec.Env.NewDefExistProp_InsideAtomsDeclared(stmt)
-	if ret.IsErr() {
-		return exec.AddStmtToStmtRet(ret, stmt).AddErrors(ret.Error)
-	}
+// func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) *glob.StmtRet {
+// 	ret := exec.Env.NewDefExistProp_InsideAtomsDeclared(stmt)
+// 	if ret.IsErr() {
+// 		return exec.AddStmtToStmtRet(ret, stmt).AddErrors(ret.Error)
+// 	}
 
-	defineMsgs := []string{}
-	defineMsgs = append(defineMsgs, glob.IsANewExistPropMsg(stmt.DefBody.DefHeader.Name))
-	defineMsgs = append(defineMsgs, stmt.String())
+// 	defineMsgs := []string{}
+// 	defineMsgs = append(defineMsgs, glob.IsANewExistPropMsg(stmt.DefBody.DefHeader.Name))
+// 	defineMsgs = append(defineMsgs, stmt.String())
 
-	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
-}
+// 	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
+// }
 
 // TODO: 我认为打印一下 claim 里面的各个语句的输出还是有道理的
 func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) *glob.StmtRet {
@@ -514,22 +514,22 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) *glob.StmtRet {
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
-func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) *glob.StmtRet {
-	execState := exec.defExistPropStmt(stmt.ExistProp)
-	if execState.IsNotTrue() {
-		return execState
-	}
+// func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) *glob.StmtRet {
+// 	execState := exec.defExistPropStmt(stmt.ExistProp)
+// 	if execState.IsNotTrue() {
+// 		return execState
+// 	}
 
-	thenFacts := []ast.FactStmt{stmt.ExistProp.ToSpecFact()}
-	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.ParamSets, stmt.ExistProp.DefBody.IffFactsOrNil, thenFacts, stmt.Line)
+// 	thenFacts := []ast.FactStmt{stmt.ExistProp.ToSpecFact()}
+// 	knownUniFact := ast.NewUniFact(stmt.ExistProp.DefBody.DefHeader.Params, stmt.ExistProp.DefBody.DefHeader.ParamSets, stmt.ExistProp.DefBody.IffFactsOrNil, thenFacts, stmt.Line)
 
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(knownUniFact)
-	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
-	}
+// 	ret := exec.Env.NewFactWithoutCheckingNameDefined(knownUniFact)
+// 	if ret.IsErr() {
+// 		return glob.ErrRet(ret.String())
+// 	}
 
-	return exec.NewTrueStmtRet(stmt).AddNewFact(fmt.Sprintf("%s\nis true by definition", knownUniFact))
-}
+// 	return exec.NewTrueStmtRet(stmt).AddNewFact(fmt.Sprintf("%s\nis true by definition", knownUniFact))
+// }
 
 func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) *glob.StmtRet {
 

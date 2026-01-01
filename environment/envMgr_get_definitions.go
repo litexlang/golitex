@@ -46,28 +46,28 @@ func (envMgr *EnvMgr) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
 	return nil
 }
 
-func (envMgr *EnvMgr) GetExistPropDef(propName ast.Atom) *ast.DefExistPropStmt {
-	var pkgName string
-	var envMgrContainsDef = envMgr
+// func (envMgr *EnvMgr) GetExistPropDef(propName ast.Atom) *ast.DefExistPropStmt {
+// 	var pkgName string
+// 	var envMgrContainsDef = envMgr
 
-	withPkgName, pkgName, _ := glob.GetPkgNameAndName(string(propName))
+// 	withPkgName, pkgName, _ := glob.GetPkgNameAndName(string(propName))
 
-	if withPkgName {
-		envMgrContainsDef = envMgr.GetEnvMgrOfName(pkgName)
-	} else {
-		envMgrContainsDef = envMgr
-	}
+// 	if withPkgName {
+// 		envMgrContainsDef = envMgr.GetEnvMgrOfName(pkgName)
+// 	} else {
+// 		envMgrContainsDef = envMgr
+// 	}
 
-	existPropDef, ok := envMgrContainsDef.AllDefinedExistPropNames[string(propName)]
-	if ok {
-		return existPropDef
-	}
+// 	existPropDef, ok := envMgrContainsDef.AllDefinedExistPropNames[string(propName)]
+// 	if ok {
+// 		return existPropDef
+// 	}
 
-	// Search in builtin env
-	existPropDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedExistPropNames[string(propName)]
-	if ok {
-		return existPropDef
-	}
+// 	// Search in builtin env
+// 	existPropDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedExistPropNames[string(propName)]
+// 	if ok {
+// 		return existPropDef
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
