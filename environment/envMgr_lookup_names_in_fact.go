@@ -130,10 +130,10 @@ func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.SpecFactStmt) *glob.S
 		return glob.NewEmptyStmtTrue()
 	}
 
-	existPropDef := envMgr.GetExistPropDef(stmt.PropName)
-	if existPropDef != nil {
-		return glob.NewEmptyStmtTrue()
-	}
+	// existPropDef := envMgr.GetExistPropDef(stmt.PropName)
+	// if existPropDef != nil {
+	// 	return glob.NewEmptyStmtTrue()
+	// }
 
 	return glob.ErrRet(fmt.Sprintf("undefined prop or exist_prop: %s", stmt.PropName))
 	// }

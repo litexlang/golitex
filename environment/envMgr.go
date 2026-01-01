@@ -18,7 +18,8 @@ import ast "golitex/ast"
 
 type shared_ptr_to_slice_of_obj = *[]ast.Obj
 type PropDefMem map[string]ast.DefPropStmt
-type ExistPropDefMem map[string]ast.DefExistPropStmt
+
+// type ExistPropDefMem map[string]ast.DefExistPropStmt
 type FnTemplateDefMem map[string]ast.DefFnSetStmt
 type AtomObjDefMem map[string]*ast.DefLetStmt // 因为很多的obj会共享一个def obj. 可能是 nil
 type FnInFnTMem map[string][]FnInFnTMemItem
@@ -42,9 +43,9 @@ type EnvMgr struct {
 	EnvPkgMgr *EnvPkgMgr
 	EnvSlice  []EnvMemory
 
-	AllDefinedAtomObjNames   map[string]struct{}
-	AllDefinedPropNames      map[string]*ast.DefPropStmt
-	AllDefinedExistPropNames map[string]*ast.DefExistPropStmt
+	AllDefinedAtomObjNames map[string]struct{}
+	AllDefinedPropNames    map[string]*ast.DefPropStmt
+	// AllDefinedExistPropNames map[string]*ast.DefExistPropStmt
 	AllDefinedFnSetNames     map[string]*ast.DefFnSetStmt
 	AllDefinedAlgoNames      map[string]*ast.DefAlgoStmt
 	AllDefinedProveAlgoNames map[string]*ast.DefProveAlgoStmt
@@ -92,11 +93,11 @@ func NewEnvMemory() *EnvMemory {
 	}
 }
 
-func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames map[string]struct{}, allDefinedPropNames map[string]*ast.DefPropStmt, allDefinedExistPropNames map[string]*ast.DefExistPropStmt, allDefinedFnTemplateNames map[string]*ast.DefFnSetStmt, allDefinedAlgoNames map[string]*ast.DefAlgoStmt, allDefinedProveAlgoNames map[string]*ast.DefProveAlgoStmt) *EnvMgr {
+func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames map[string]struct{}, allDefinedPropNames map[string]*ast.DefPropStmt, allDefinedFnTemplateNames map[string]*ast.DefFnSetStmt, allDefinedAlgoNames map[string]*ast.DefAlgoStmt, allDefinedProveAlgoNames map[string]*ast.DefProveAlgoStmt) *EnvMgr {
 	return &EnvMgr{
-		AllDefinedAtomObjNames:   allDefinedAtomObjNames,
-		AllDefinedPropNames:      allDefinedPropNames,
-		AllDefinedExistPropNames: allDefinedExistPropNames,
+		AllDefinedAtomObjNames: allDefinedAtomObjNames,
+		AllDefinedPropNames:    allDefinedPropNames,
+		// AllDefinedExistPropNames: allDefinedExistPropNames,
 		AllDefinedFnSetNames:     allDefinedFnTemplateNames,
 		AllDefinedAlgoNames:      allDefinedAlgoNames,
 		AllDefinedProveAlgoNames: allDefinedProveAlgoNames,
@@ -162,9 +163,9 @@ func (envMgr *EnvMgr) DeleteEnv() {
 	for k := range envMgr.CurEnv().PropDefMem {
 		delete(envMgr.AllDefinedPropNames, k)
 	}
-	for k := range envMgr.CurEnv().ExistPropDefMem {
-		delete(envMgr.AllDefinedExistPropNames, k)
-	}
+	// for k := range envMgr.CurEnv().ExistPropDefMem {
+	// 	delete(envMgr.AllDefinedExistPropNames, k)
+	// }
 	for k := range envMgr.CurEnv().FnTemplateDefMem {
 		delete(envMgr.AllDefinedFnSetNames, k)
 	}
@@ -306,5 +307,5 @@ func (envMgr *EnvMgr) CurEnv() *EnvMemory {
 }
 
 func NewEmptyEnvMgr(envPkgMgr *EnvPkgMgr) *EnvMgr {
-	return NewEnvMgr(envPkgMgr, []EnvMemory{*NewEnvMemory()}, make(map[string]struct{}), make(map[string]*ast.DefPropStmt), make(map[string]*ast.DefExistPropStmt), make(map[string]*ast.DefFnSetStmt), make(map[string]*ast.DefAlgoStmt), make(map[string]*ast.DefProveAlgoStmt))
+	return NewEnvMgr(envPkgMgr, []EnvMemory{*NewEnvMemory()}, make(map[string]struct{}), make(map[string]*ast.DefPropStmt), make(map[string]*ast.DefFnSetStmt), make(map[string]*ast.DefAlgoStmt), make(map[string]*ast.DefProveAlgoStmt))
 }

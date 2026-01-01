@@ -20,111 +20,111 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) *glob.StmtRet {
-	// 检查 SpecFactStmt 是否满足了
-	ver := NewVerifier(exec.Env)
-	execState := ver.VerFactStmt(stmt.Fact, Round0NoMsg())
-	if execState.IsNotTrue() {
-		return execState.ToStmtRet()
-	}
+// func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) *glob.StmtRet {
+// 	// 检查 SpecFactStmt 是否满足了
+// 	ver := NewVerifier(exec.Env)
+// 	execState := ver.VerFactStmt(stmt.Fact, Round0NoMsg())
+// 	if execState.IsNotTrue() {
+// 		return execState.ToStmtRet()
+// 	}
 
-	if glob.IsBuiltinExistPropName(string(stmt.Fact.PropName)) {
-		return glob.NewEmptyStmtUnknown()
-	}
+// 	if glob.IsBuiltinExistPropName(string(stmt.Fact.PropName)) {
+// 		return glob.NewEmptyStmtUnknown()
+// 	}
 
-	// TODO 把 exist prop def 里的东西释放出来
-	existPropDef := exec.Env.GetExistPropDef(stmt.Fact.PropName)
-	if existPropDef == nil {
-		return exec.NewTrueStmtRet(stmt).AddError(fmt.Sprintf("can not find %s", stmt.Fact.PropName))
-	}
+// 	// TODO 把 exist prop def 里的东西释放出来
+// 	existPropDef := exec.Env.GetExistPropDef(stmt.Fact.PropName)
+// 	if existPropDef == nil {
+// 		return exec.NewTrueStmtRet(stmt).AddError(fmt.Sprintf("can not find %s", stmt.Fact.PropName))
+// 	}
 
-	if len(existPropDef.ExistParams) != len(stmt.ObjNames) {
-		return glob.ErrRet(fmt.Sprintf("exist prop def params number not equal to have stmt obj names number. expect %d, but got %d", len(existPropDef.ExistParams), len(stmt.ObjNames)))
-	}
+// 	if len(existPropDef.ExistParams) != len(stmt.ObjNames) {
+// 		return glob.ErrRet(fmt.Sprintf("exist prop def params number not equal to have stmt obj names number. expect %d, but got %d", len(existPropDef.ExistParams), len(stmt.ObjNames)))
+// 	}
 
-	uniMap := map[string]ast.Obj{}
-	ExistParamsAtoms := []ast.Obj{}
-	for i, param := range existPropDef.ExistParams {
-		paramAsAtom := ast.Atom(stmt.ObjNames[i])
-		uniMap[param] = paramAsAtom
-		ExistParamsAtoms = append(ExistParamsAtoms, paramAsAtom)
-	}
+// 	uniMap := map[string]ast.Obj{}
+// 	ExistParamsAtoms := []ast.Obj{}
+// 	for i, param := range existPropDef.ExistParams {
+// 		paramAsAtom := ast.Atom(stmt.ObjNames[i])
+// 		uniMap[param] = paramAsAtom
+// 		ExistParamsAtoms = append(ExistParamsAtoms, paramAsAtom)
+// 	}
 
-	for i, param := range existPropDef.DefBody.DefHeader.Params {
-		uniMap[param] = stmt.Fact.Params[i]
-	}
+// 	for i, param := range existPropDef.DefBody.DefHeader.Params {
+// 		uniMap[param] = stmt.Fact.Params[i]
+// 	}
 
-	instantiatedExistPropDefStmt, err := existPropDef.Instantiate(uniMap)
-	if err != nil {
-		return glob.ErrRet(err.Error())
-	}
+// 	instantiatedExistPropDefStmt, err := existPropDef.Instantiate(uniMap)
+// 	if err != nil {
+// 		return glob.ErrRet(err.Error())
+// 	}
 
-	// 把 obj 放入环境
-	for i, objName := range stmt.ObjNames {
-		stmtForDef := ast.NewDefLetStmt([]string{objName}, []ast.Obj{instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets[i]}, []ast.FactStmt{}, stmt.Line)
-		ret := exec.Env.DefLetStmt(stmtForDef)
-		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
-		}
-		execState := exec.NewTrueStmtRet(stmtForDef)
-		if execState.IsNotTrue() {
-			return execState
-		}
-	}
+// 	// 把 obj 放入环境
+// 	for i, objName := range stmt.ObjNames {
+// 		stmtForDef := ast.NewDefLetStmt([]string{objName}, []ast.Obj{instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets[i]}, []ast.FactStmt{}, stmt.Line)
+// 		ret := exec.Env.DefLetStmt(stmtForDef)
+// 		if ret.IsErr() {
+// 			return glob.ErrRet(ret.String())
+// 		}
+// 		execState := exec.NewTrueStmtRet(stmtForDef)
+// 		if execState.IsNotTrue() {
+// 			return execState
+// 		}
+// 	}
 
-	// param in param sets is true
-	// for _, paramInParamSet := range instantiatedExistPropDefStmt.ExistParamInSetsFacts() {
-	// 	err := exec.env.NewFact(paramInParamSet)
-	// 	if err != nil {
-	// 		return glob.ExecState_Error, err
-	// 	}
-	// }
+// 	// param in param sets is true
+// 	// for _, paramInParamSet := range instantiatedExistPropDefStmt.ExistParamInSetsFacts() {
+// 	// 	err := exec.env.NewFact(paramInParamSet)
+// 	// 	if err != nil {
+// 	// 		return glob.ExecState_Error, err
+// 	// 	}
+// 	// }
 
-	for i, existParamSet := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets {
-		ret := exec.Env.NewFactWithoutCheckingNameDefined(ast.NewInFact(stmt.ObjNames[i], existParamSet))
-		if ret.IsErr() {
-			return exec.AddStmtToStmtRet(ret, stmt)
-		}
-	}
+// 	for i, existParamSet := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets {
+// 		ret := exec.Env.NewFactWithoutCheckingNameDefined(ast.NewInFact(stmt.ObjNames[i], existParamSet))
+// 		if ret.IsErr() {
+// 			return exec.AddStmtToStmtRet(ret, stmt)
+// 		}
+// 	}
 
-	// dom of def exist prop is true
-	for _, domFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.DomFactsOrNil {
-		ret := exec.Env.NewFactWithoutCheckingNameDefined(domFact)
-		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
-		}
-	}
+// 	// dom of def exist prop is true
+// 	for _, domFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.DomFactsOrNil {
+// 		ret := exec.Env.NewFactWithoutCheckingNameDefined(domFact)
+// 		if ret.IsErr() {
+// 			return glob.ErrRet(ret.String())
+// 		}
+// 	}
 
-	// iff of def exist prop is true
-	for _, iffFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.IffFactsOrNil {
-		ret := exec.Env.NewFactWithoutCheckingNameDefined(iffFact)
-		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
-		}
-	}
+// 	// iff of def exist prop is true
+// 	for _, iffFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.IffFactsOrNil {
+// 		ret := exec.Env.NewFactWithoutCheckingNameDefined(iffFact)
+// 		if ret.IsErr() {
+// 			return glob.ErrRet(ret.String())
+// 		}
+// 	}
 
-	// 相关的 exist st 事实也成立
-	existStFactParams := ast.MakeExistFactParamsSlice(ExistParamsAtoms, stmt.Fact.Params)
+// 	// 相关的 exist st 事实也成立
+// 	existStFactParams := ast.MakeExistFactParamsSlice(ExistParamsAtoms, stmt.Fact.Params)
 
-	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.Atom(string(stmt.Fact.PropName)), existStFactParams, stmt.Line)
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(newExistStFact)
-	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
-	}
+// 	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.Atom(string(stmt.Fact.PropName)), existStFactParams, stmt.Line)
+// 	ret := exec.Env.NewFactWithoutCheckingNameDefined(newExistStFact)
+// 	if ret.IsErr() {
+// 		return glob.ErrRet(ret.String())
+// 	}
 
-	result := glob.NewEmptyStmtTrue()
-	result = exec.AddStmtToStmtRet(result, stmt)
+// 	result := glob.NewEmptyStmtTrue()
+// 	result = exec.AddStmtToStmtRet(result, stmt)
 
-	verifyProcessMsgs := []*glob.VerRet{glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.Fact.String(), stmt.Line, []string{})}
-	inferMsgs := append([]string{}, ret.Infer...)
-	defineMsgs := []string{}
-	for _, fact := range stmt.ObjNames {
-		defineMsgs = append(defineMsgs, glob.IsANewObjectMsg(fact))
-	}
-	defineMsgs = append(defineMsgs, newExistStFact.String())
+// 	verifyProcessMsgs := []*glob.VerRet{glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.Fact.String(), stmt.Line, []string{})}
+// 	inferMsgs := append([]string{}, ret.Infer...)
+// 	defineMsgs := []string{}
+// 	for _, fact := range stmt.ObjNames {
+// 		defineMsgs = append(defineMsgs, glob.IsANewObjectMsg(fact))
+// 	}
+// 	defineMsgs = append(defineMsgs, newExistStFact.String())
 
-	return result.AddVerifyProcesses(verifyProcessMsgs).AddInfers(inferMsgs).AddDefineMsgs(defineMsgs)
-}
+// 	return result.AddVerifyProcesses(verifyProcessMsgs).AddInfers(inferMsgs).AddDefineMsgs(defineMsgs)
+// }
 
 func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet {
 	ver := NewVerifier(exec.Env)

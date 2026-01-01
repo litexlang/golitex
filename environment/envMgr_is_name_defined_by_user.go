@@ -70,30 +70,30 @@ func (envMgr *EnvMgr) IsPropNameDefinedByUser(PropName string) bool {
 	}
 }
 
-func (envMgr *EnvMgr) IsExistPropNameDefinedByUser(ExistPropName string) bool {
-	withPkgName, pkgName, _ := glob.GetPkgNameAndName(ExistPropName)
+// func (envMgr *EnvMgr) IsExistPropNameDefinedByUser(ExistPropName string) bool {
+// 	withPkgName, pkgName, _ := glob.GetPkgNameAndName(ExistPropName)
 
-	if withPkgName && pkgName != envMgr.EnvPkgMgr.PkgMgr.CurPkgDefaultName {
-		pkgEnvMgr := envMgr.GetEnvMgrOfPkgName(pkgName)
-		if pkgEnvMgr == nil {
-			return false
-		}
+// 	if withPkgName && pkgName != envMgr.EnvPkgMgr.PkgMgr.CurPkgDefaultName {
+// 		pkgEnvMgr := envMgr.GetEnvMgrOfPkgName(pkgName)
+// 		if pkgEnvMgr == nil {
+// 			return false
+// 		}
 
-		_, ok := pkgEnvMgr.AllDefinedExistPropNames[ExistPropName]
-		return ok
-	} else {
-		_, ok := envMgr.AllDefinedExistPropNames[ExistPropName]
-		if ok {
-			return true
-		}
+// 		_, ok := pkgEnvMgr.AllDefinedExistPropNames[ExistPropName]
+// 		return ok
+// 	} else {
+// 		_, ok := envMgr.AllDefinedExistPropNames[ExistPropName]
+// 		if ok {
+// 			return true
+// 		}
 
-		_, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedExistPropNames[ExistPropName]
-		if ok {
-			return true
-		}
-		return false
-	}
-}
+// 		_, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedExistPropNames[ExistPropName]
+// 		if ok {
+// 			return true
+// 		}
+// 		return false
+// 	}
+// }
 
 func (envMgr *EnvMgr) IsFnSetNameDefinedByUser(FnSetName string) bool {
 	withPkgName, pkgName, _ := glob.GetPkgNameAndName(FnSetName)

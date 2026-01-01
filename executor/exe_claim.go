@@ -313,84 +313,84 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimImplicationStmt) *glob.StmtRe
 	return execRet
 }
 
-func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) *glob.StmtRet {
-	execState := exec.claimExistPropStmtCheckProofs(stmt)
-	if execState.IsNotTrue() {
-		return execState
-	}
+// func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) *glob.StmtRet {
+// 	execState := exec.claimExistPropStmtCheckProofs(stmt)
+// 	if execState.IsNotTrue() {
+// 		return execState
+// 	}
 
-	// declare exist prop
-	execState = exec.defExistPropStmt(stmt.ExistPropWithoutDom)
-	if execState.IsNotTrue() {
-		return execState
-	}
+// 	// declare exist prop
+// 	execState = exec.defExistPropStmt(stmt.ExistPropWithoutDom)
+// 	if execState.IsNotTrue() {
+// 		return execState
+// 	}
 
-	// know forall
-	uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFactsOrNil, []ast.FactStmt{stmt.ExistPropWithoutDom.DefBody.DefHeader.ToSpecFact()}, stmt.Line)
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact)
-	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
-	}
+// 	// know forall
+// 	uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFactsOrNil, []ast.FactStmt{stmt.ExistPropWithoutDom.DefBody.DefHeader.ToSpecFact()}, stmt.Line)
+// 	ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact)
+// 	if ret.IsErr() {
+// 		return glob.ErrRet(ret.String())
+// 	}
 
-	return glob.NewEmptyStmtTrue()
-}
+// 	return glob.NewEmptyStmtTrue()
+// }
 
-func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt) *glob.StmtRet {
-	exec.NewEnv()
-	defer func() {
-		exec.deleteEnv()
-	}()
+// func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt) *glob.StmtRet {
+// 	exec.NewEnv()
+// 	defer func() {
+// 		exec.deleteEnv()
+// 	}()
 
-	innerStmtRets := []*glob.StmtRet{}
+// 	innerStmtRets := []*glob.StmtRet{}
 
-	// declare parameters in exist prop
-	defObjStmt := ast.NewDefLetStmt(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFactsOrNil, stmt.Line)
+// 	// declare parameters in exist prop
+// 	defObjStmt := ast.NewDefLetStmt(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFactsOrNil, stmt.Line)
 
-	execState := exec.defLetStmt(defObjStmt)
-	if execState.IsNotTrue() {
-		return execState
-	}
-	innerStmtRets = append(innerStmtRets, execState)
+// 	execState := exec.defLetStmt(defObjStmt)
+// 	if execState.IsNotTrue() {
+// 		return execState
+// 	}
+// 	innerStmtRets = append(innerStmtRets, execState)
 
-	for _, curStmt := range stmt.Proofs {
-		execState := exec.Stmt(curStmt)
-		if execState.IsNotTrue() {
-			if execState.IsUnknown() {
-				return execState.AddUnknown(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
-			} else {
-				return execState.AddError(fmt.Sprintf("failed :( line %d:\n", curStmt.GetLine()))
-			}
-		}
-		innerStmtRets = append(innerStmtRets, execState)
-	}
+// 	for _, curStmt := range stmt.Proofs {
+// 		execState := exec.Stmt(curStmt)
+// 		if execState.IsNotTrue() {
+// 			if execState.IsUnknown() {
+// 				return execState.AddUnknown(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
+// 			} else {
+// 				return execState.AddError(fmt.Sprintf("failed :( line %d:\n", curStmt.GetLine()))
+// 			}
+// 		}
+// 		innerStmtRets = append(innerStmtRets, execState)
+// 	}
 
-	// 把haveObj 代入 existParams 看看是否真的符合 then
-	if len(stmt.HaveObj) != len(stmt.ExistPropWithoutDom.ExistParams) {
-		return glob.ErrRet(fmt.Sprintf("claim exist prop statement error: have obj length is not equal to exist params length"))
-	}
+// 	// 把haveObj 代入 existParams 看看是否真的符合 then
+// 	if len(stmt.HaveObj) != len(stmt.ExistPropWithoutDom.ExistParams) {
+// 		return glob.ErrRet(fmt.Sprintf("claim exist prop statement error: have obj length is not equal to exist params length"))
+// 	}
 
-	uniMap := make(map[string]ast.Obj)
-	for i, haveObj := range stmt.HaveObj {
-		uniMap[stmt.ExistPropWithoutDom.ExistParams[i]] = haveObj
-	}
+// 	uniMap := make(map[string]ast.Obj)
+// 	for i, haveObj := range stmt.HaveObj {
+// 		uniMap[stmt.ExistPropWithoutDom.ExistParams[i]] = haveObj
+// 	}
 
-	for _, fact := range stmt.ExistPropWithoutDom.DefBody.ImplicationFactsOrNil {
-		instFact, err := fact.InstantiateFact(uniMap)
-		if err != nil {
-			return glob.ErrRet(err.Error())
-		}
-		execState := exec.factStmt(instFact)
-		if execState.IsErr() {
-			return execState
-		}
-		if notOkExec(execState, err) {
-			return execState
-		}
-		innerStmtRets = append(innerStmtRets, execState)
-	}
+// 	for _, fact := range stmt.ExistPropWithoutDom.DefBody.ImplicationFactsOrNil {
+// 		instFact, err := fact.InstantiateFact(uniMap)
+// 		if err != nil {
+// 			return glob.ErrRet(err.Error())
+// 		}
+// 		execState := exec.factStmt(instFact)
+// 		if execState.IsErr() {
+// 			return execState
+// 		}
+// 		if notOkExec(execState, err) {
+// 			return execState
+// 		}
+// 		innerStmtRets = append(innerStmtRets, execState)
+// 	}
 
-	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
-}
+// 	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
+// }
 
 func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimImplicationStmt) *glob.StmtRet {
 	prop := stmt.Implication.ToProp()

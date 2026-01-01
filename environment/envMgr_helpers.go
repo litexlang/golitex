@@ -145,79 +145,79 @@ func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.SpecFactStmt) *g
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) notExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, *glob.StmtRet) {
-	existPropDef := envMgr.GetExistPropDef(fact.PropName)
-	if existPropDef == nil {
-		return nil, glob.ErrRet(fmt.Sprintf("exist fact %s has no definition", fact))
-	}
+// func (envMgr *EnvMgr) notExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, *glob.StmtRet) {
+// 	existPropDef := envMgr.GetExistPropDef(fact.PropName)
+// 	if existPropDef == nil {
+// 		return nil, glob.ErrRet(fmt.Sprintf("exist fact %s has no definition", fact))
+// 	}
 
-	uniMap := map[string]ast.Obj{}
-	for i, propParam := range existPropDef.DefBody.DefHeader.Params {
-		uniMap[propParam] = fact.Params[i]
-	}
+// 	uniMap := map[string]ast.Obj{}
+// 	for i, propParam := range existPropDef.DefBody.DefHeader.Params {
+// 		uniMap[propParam] = fact.Params[i]
+// 	}
 
-	// IffFactsOrNil 中的 facts 是 OR 关系，先实例化它们
-	orFactOrs := []*ast.SpecFactStmt{}
-	for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
-		asSpecFactStmt, ok := thenFact.(*ast.SpecFactStmt)
-		if !ok {
-			return nil, glob.ErrRet(fmt.Sprintf("exist fact %s has no definition", fact))
-		}
+// 	// IffFactsOrNil 中的 facts 是 OR 关系，先实例化它们
+// 	orFactOrs := []*ast.SpecFactStmt{}
+// 	for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
+// 		asSpecFactStmt, ok := thenFact.(*ast.SpecFactStmt)
+// 		if !ok {
+// 			return nil, glob.ErrRet(fmt.Sprintf("exist fact %s has no definition", fact))
+// 		}
 
-		instantiated, err := asSpecFactStmt.InstantiateFact(uniMap)
-		if err != nil {
-			return nil, glob.ErrRetWithErr(err)
-		}
+// 		instantiated, err := asSpecFactStmt.InstantiateFact(uniMap)
+// 		if err != nil {
+// 			return nil, glob.ErrRetWithErr(err)
+// 		}
 
-		reversedFact := instantiated.(*ast.SpecFactStmt).ReverseIsTrue()
+// 		reversedFact := instantiated.(*ast.SpecFactStmt).ReverseIsTrue()
 
-		orFactOrs = append(orFactOrs, reversedFact[0])
-	}
+// 		orFactOrs = append(orFactOrs, reversedFact[0])
+// 	}
 
-	// 创建 OrStmt 表示 OR 关系，然后整体取反
-	orStmt := ast.NewOrStmt(orFactOrs, existPropDef.Line)
+// 	// 创建 OrStmt 表示 OR 关系，然后整体取反
+// 	orStmt := ast.NewOrStmt(orFactOrs, existPropDef.Line)
 
-	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, []ast.FactStmt{}, []ast.FactStmt{orStmt}, fact.Line), glob.NewEmptyStmtTrue()
-}
+// 	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, []ast.FactStmt{}, []ast.FactStmt{orStmt}, fact.Line), glob.NewEmptyStmtTrue()
+// }
 
-func (envMgr *EnvMgr) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, []ast.FactStmt, *glob.StmtRet) {
-	existParams, factParams := fact.ExistStFactToPropNameExistParamsParams()
+// func (envMgr *EnvMgr) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, []ast.FactStmt, *glob.StmtRet) {
+// 	existParams, factParams := fact.ExistStFactToPropNameExistParamsParams()
 
-	existPropDef := envMgr.GetExistPropDef(fact.PropName)
-	if existPropDef == nil {
-		return nil, nil, glob.ErrRet(fmt.Sprintf("exist fact %s has no definition", fact))
-	}
+// 	existPropDef := envMgr.GetExistPropDef(fact.PropName)
+// 	if existPropDef == nil {
+// 		return nil, nil, glob.ErrRet(fmt.Sprintf("exist fact %s has no definition", fact))
+// 	}
 
-	uniMap := map[string]ast.Obj{}
-	for i := range existParams {
-		uniMap[existPropDef.ExistParams[i]] = existParams[i]
-	}
+// 	uniMap := map[string]ast.Obj{}
+// 	for i := range existParams {
+// 		uniMap[existPropDef.ExistParams[i]] = existParams[i]
+// 	}
 
-	for i := range factParams {
-		uniMap[existPropDef.DefBody.DefHeader.Params[i]] = factParams[i]
-	}
+// 	for i := range factParams {
+// 		uniMap[existPropDef.DefBody.DefHeader.Params[i]] = factParams[i]
+// 	}
 
-	instantiatedIffFacts := []ast.FactStmt{}
-	// instantiate iff facts
-	for _, iffFact := range existPropDef.DefBody.IffFactsOrNil {
-		instantiated, err := iffFact.InstantiateFact(uniMap)
-		if err != nil {
-			return nil, nil, glob.ErrRetWithErr(err)
-		}
-		instantiatedIffFacts = append(instantiatedIffFacts, instantiated)
-	}
+// 	instantiatedIffFacts := []ast.FactStmt{}
+// 	// instantiate iff facts
+// 	for _, iffFact := range existPropDef.DefBody.IffFactsOrNil {
+// 		instantiated, err := iffFact.InstantiateFact(uniMap)
+// 		if err != nil {
+// 			return nil, nil, glob.ErrRetWithErr(err)
+// 		}
+// 		instantiatedIffFacts = append(instantiatedIffFacts, instantiated)
+// 	}
 
-	instantiatedThenFacts := []ast.FactStmt{}
-	for _, thenFact := range existPropDef.DefBody.ImplicationFactsOrNil {
-		instantiated, err := thenFact.InstantiateFact(uniMap)
-		if err != nil {
-			return nil, nil, glob.ErrRetWithErr(err)
-		}
-		instantiatedThenFacts = append(instantiatedThenFacts, instantiated)
-	}
+// 	instantiatedThenFacts := []ast.FactStmt{}
+// 	for _, thenFact := range existPropDef.DefBody.ImplicationFactsOrNil {
+// 		instantiated, err := thenFact.InstantiateFact(uniMap)
+// 		if err != nil {
+// 			return nil, nil, glob.ErrRetWithErr(err)
+// 		}
+// 		instantiatedThenFacts = append(instantiatedThenFacts, instantiated)
+// 	}
 
-	return instantiatedIffFacts, instantiatedThenFacts, glob.NewEmptyStmtTrue()
-}
+// 	return instantiatedIffFacts, instantiatedThenFacts, glob.NewEmptyStmtTrue()
+// }
 
 func (envMgr *EnvMgr) StoreTrueEqualValues(key, value ast.Obj) {
 	// 如果已经知道它的值了，那不能存了；否则比如我在外部环境里知道了a = 3，内部环境在反证法证明 a != 1，那我 a = 1就把a = 3覆盖掉了，a = 3这个取值貌似就不work了。某种程度上就是弄了个const

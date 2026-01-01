@@ -97,40 +97,40 @@ func (f *KnowFactStmt) InlineString() string {
 	return builder.String()
 }
 
-func (s *DefExistPropStmt) InlineString() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordExistProp)
-	builder.WriteString(" ")
-	builder.WriteString(StrObjSetPairs(s.ExistParams, s.ExistParamSets))
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeywordSt)
-	builder.WriteString(" ")
-	builder.WriteString(s.DefBody.DefHeader.InlineString())
+// func (s *DefExistPropStmt) InlineString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordExistProp)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(StrObjSetPairs(s.ExistParams, s.ExistParamSets))
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeywordSt)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(s.DefBody.DefHeader.InlineString())
 
-	if len(s.DefBody.DomFactsOrNil) > 0 {
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteString(inlineFactsString(s.DefBody.DomFactsOrNil))
-	}
+// 	if len(s.DefBody.DomFactsOrNil) > 0 {
+// 		builder.WriteString(glob.KeySymbolColon)
+// 		builder.WriteString(inlineFactsString(s.DefBody.DomFactsOrNil))
+// 	}
 
-	if len(s.DefBody.IffFactsOrNil) > 0 {
-		builder.WriteString(glob.KeySymbolEquivalent)
-		builder.WriteString(inlineFactsString(s.DefBody.IffFactsOrNil))
-	}
+// 	if len(s.DefBody.IffFactsOrNil) > 0 {
+// 		builder.WriteString(glob.KeySymbolEquivalent)
+// 		builder.WriteString(inlineFactsString(s.DefBody.IffFactsOrNil))
+// 	}
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
-func (s *HaveObjStStmt) InlineString() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordHave)
-	builder.WriteString(" ")
-	builder.WriteString(strings.Join(s.ObjNames, ", "))
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeywordSt)
-	builder.WriteString(" ")
-	builder.WriteString(s.Fact.InlineString())
-	return builder.String()
-}
+// func (s *HaveObjStStmt) InlineString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordHave)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(strings.Join(s.ObjNames, ", "))
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeywordSt)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(s.Fact.InlineString())
+// 	return builder.String()
+// }
 
 func (s *HaveObjStWithParamSetsStmt) InlineString() string {
 	var builder strings.Builder
@@ -201,7 +201,8 @@ func (s *UniFactWithIffStmt) InlineString() string {
 func (s *ClaimProveByContradictionStmt) InlineString() string { panic("") }
 
 func (s *ClaimImplicationStmt) InlineString() string { panic("") }
-func (s *ClaimExistPropStmt) InlineString() string   { panic("") }
+
+// func (s *ClaimExistPropStmt) InlineString() string   { panic("") }
 
 func (s *ProveByEnumStmt) InlineString() string          { panic("") }
 func (s *HaveObjInNonEmptySetStmt) InlineString() string { panic("") }
@@ -223,7 +224,7 @@ func (s *EqualsFactStmt) InlineString() string {
 	return builder.String()
 }
 
-func (s *KnowExistPropStmt) InlineString() string { panic("") }
+// func (s *KnowExistPropStmt) InlineString() string { panic("") }
 
 // func (s *LatexStmt) InlineString() string         { panic("") }
 func (s *DefFnSetStmt) InlineString() string    { panic("") }

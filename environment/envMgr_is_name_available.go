@@ -28,7 +28,8 @@ func (envMgr *EnvMgr) IsNameUnavailable(name string, extraParams map[string]stru
 		return glob.NewEmptyStmtTrue()
 	}
 
-	if envMgr.IsAtomNameDefinedByUser(name) || envMgr.IsPropNameDefinedByUser(name) || envMgr.IsExistPropNameDefinedByUser(name) || envMgr.IsFnSetNameDefinedByUser(name) || envMgr.IsAlgoNameDefinedByUser(name) || envMgr.IsProveAlgoNameDefinedByUser(name) || envMgr.IsPkgNameDefinedByUser(name) {
+	if envMgr.IsAtomNameDefinedByUser(name) || envMgr.IsPropNameDefinedByUser(name) || envMgr.IsFnSetNameDefinedByUser(name) || envMgr.IsAlgoNameDefinedByUser(name) || envMgr.IsProveAlgoNameDefinedByUser(name) || envMgr.IsPkgNameDefinedByUser(name) {
+		// ||envMgr.IsExistPropNameDefinedByUser(name){
 		return glob.NewEmptyStmtTrue()
 	}
 

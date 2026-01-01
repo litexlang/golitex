@@ -120,53 +120,53 @@ func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *a
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) *glob.StmtRet {
-	// prop名不能和parameter名重叠
-	if slices.Contains(append(stmt.ExistParams, stmt.DefBody.DefHeader.Params...), string(stmt.DefBody.DefHeader.Name)) {
-		return glob.ErrRet(fmt.Sprintf("prop name %s cannot be the same as parameter name %s", stmt.DefBody.DefHeader.Name, stmt.DefBody.DefHeader.Name))
-	}
+// func (envMgr *EnvMgr) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) *glob.StmtRet {
+// 	// prop名不能和parameter名重叠
+// 	if slices.Contains(append(stmt.ExistParams, stmt.DefBody.DefHeader.Params...), string(stmt.DefBody.DefHeader.Name)) {
+// 		return glob.ErrRet(fmt.Sprintf("prop name %s cannot be the same as parameter name %s", stmt.DefBody.DefHeader.Name, stmt.DefBody.DefHeader.Name))
+// 	}
 
-	extraAtomNames := map[string]struct{}{}
-	for _, param := range stmt.DefBody.DefHeader.Params {
-		extraAtomNames[param] = struct{}{}
-	}
-	extraAtomNames[string(stmt.DefBody.DefHeader.Name)] = struct{}{}
+// 	extraAtomNames := map[string]struct{}{}
+// 	for _, param := range stmt.DefBody.DefHeader.Params {
+// 		extraAtomNames[param] = struct{}{}
+// 	}
+// 	extraAtomNames[string(stmt.DefBody.DefHeader.Name)] = struct{}{}
 
-	for _, param := range stmt.ExistParams {
-		extraAtomNames[param] = struct{}{}
-	}
+// 	for _, param := range stmt.ExistParams {
+// 		extraAtomNames[param] = struct{}{}
+// 	}
 
-	for _, fact := range stmt.DefBody.DomFactsOrNil {
-		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
-		if ret.IsErr() {
-			ret.AddError(fmt.Sprintf("in dom fact of exist_prop %s definition", stmt.DefBody.DefHeader.Name))
-			return ret
-		}
-	}
+// 	for _, fact := range stmt.DefBody.DomFactsOrNil {
+// 		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
+// 		if ret.IsErr() {
+// 			ret.AddError(fmt.Sprintf("in dom fact of exist_prop %s definition", stmt.DefBody.DefHeader.Name))
+// 			return ret
+// 		}
+// 	}
 
-	for _, fact := range stmt.DefBody.IffFactsOrNil {
-		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
-		if ret.IsErr() {
-			ret.AddError(fmt.Sprintf("in iff fact of exist_prop %s definition", stmt.DefBody.DefHeader.Name))
-			return ret
-		}
-	}
+// 	for _, fact := range stmt.DefBody.IffFactsOrNil {
+// 		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
+// 		if ret.IsErr() {
+// 			ret.AddError(fmt.Sprintf("in iff fact of exist_prop %s definition", stmt.DefBody.DefHeader.Name))
+// 			return ret
+// 		}
+// 	}
 
-	ret := envMgr.IsValidAndAvailableName(string(stmt.DefBody.DefHeader.Name))
-	if ret.IsErr() {
-		return ret
-	}
+// 	ret := envMgr.IsValidAndAvailableName(string(stmt.DefBody.DefHeader.Name))
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	key := string(stmt.DefBody.DefHeader.Name)
+// 	key := string(stmt.DefBody.DefHeader.Name)
 
-	// Save to AllDefinedExistPropNames
-	envMgr.AllDefinedExistPropNames[key] = stmt
+// 	// Save to AllDefinedExistPropNames
+// 	envMgr.AllDefinedExistPropNames[key] = stmt
 
-	// Mark in current EnvSlice
-	envMgr.CurEnv().ExistPropDefMem[key] = struct{}{}
+// 	// Mark in current EnvSlice
+// 	envMgr.CurEnv().ExistPropDefMem[key] = struct{}{}
 
-	return glob.NewEmptyStmtTrue()
-}
+// 	return glob.NewEmptyStmtTrue()
+// }
 
 func (envMgr *EnvMgr) CheckAtomObjNameIsValidAndAvailableThenDefineIt(name string) *glob.StmtRet {
 	ret := envMgr.IsValidAndAvailableName(name)

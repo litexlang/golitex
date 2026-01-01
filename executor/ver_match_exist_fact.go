@@ -125,9 +125,3 @@ func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUn
 		return ok, m, err
 	}
 }
-
-// func (ver *Verifier) matchParamsInGivenExistFactWithKnownExistFactInUniFact(existParamMap map[string]ast.Obj, givenPureFactOfExistFact *ast.SpecFactStmt, knownInstPureFactOfExistFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
-// 	for i, param := givenPureFactOfExistFact.Params {
-// 		ok, map[string]ast.Obj = ver.matchObjOfParamsInGivenExistFactWithKnownExistFactInUniFact(param, knownInstPureFactOfExistFact.Params[i])
-// 	}
-// }

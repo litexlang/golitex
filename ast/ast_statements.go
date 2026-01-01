@@ -47,23 +47,23 @@ type DefPropStmt struct {
 }
 
 // 虽然它和 defProp 一样，但不排除之后要让iffFacts只能是可逆的事实
-type DefExistPropStmtBody struct {
-	DefHeader             *DefHeader
-	DomFactsOrNil         FactStmtSlice
-	IffFactsOrNil         FactStmtSlice
-	ImplicationFactsOrNil FactStmtSlice
+// type DefExistPropStmtBody struct {
+// 	DefHeader             *DefHeader
+// 	DomFactsOrNil         FactStmtSlice
+// 	IffFactsOrNil         FactStmtSlice
+// 	ImplicationFactsOrNil FactStmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 // how to  use not exist to prove and store not forall in iff section of exist_prop: define a new exist_prop, give a name to that forall, and make this exist_prop equivalent to original exist_prop. Then use prove_by_contradiction to prove the new exist_prop is also false, then the not forall is proved.
-type DefExistPropStmt struct {
-	DefBody        *DefExistPropStmtBody
-	ExistParams    StrSlice
-	ExistParamSets ObjSlice
+// type DefExistPropStmt struct {
+// 	DefBody        *DefExistPropStmtBody
+// 	ExistParams    StrSlice
+// 	ExistParamSets ObjSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type DefFnStmt struct {
 	Name       string
@@ -129,20 +129,20 @@ type KnowImplicationStmt struct {
 }
 
 // TODO: 这个的parser还没有像claim_prop那样改成用@
-type ClaimExistPropStmt struct {
-	ExistPropWithoutDom *DefExistPropStmt
-	Proofs              StmtSlice
-	HaveObj             ObjSlice
+// type ClaimExistPropStmt struct {
+// 	ExistPropWithoutDom *DefExistPropStmt
+// 	Proofs              StmtSlice
+// 	HaveObj             ObjSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
-type HaveObjStStmt struct {
-	ObjNames StrSlice
-	Fact     *SpecFactStmt
+// type HaveObjStStmt struct {
+// 	ObjNames StrSlice
+// 	Fact     *SpecFactStmt
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type ProveInEachCaseStmt struct {
 	OrFact    *OrStmt
@@ -251,11 +251,11 @@ type EqualsFactStmt struct {
 	Line uint
 }
 
-type KnowExistPropStmt struct {
-	ExistProp *DefExistPropStmt
+// type KnowExistPropStmt struct {
+// 	ExistProp *DefExistPropStmt
 
-	Line uint
-}
+// 	Line uint
+// }
 
 // have fn_set seq(s set):
 //
