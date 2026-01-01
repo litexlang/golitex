@@ -1,8 +1,0 @@
-prop p(x R)
-
-know exist 1 st $p(1 + 1)
-
-have x R st $p(x + x)
-
-x $in R
-$p(2 * x)
