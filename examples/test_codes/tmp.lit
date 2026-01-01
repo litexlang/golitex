@@ -1,13 +1,5 @@
-prop Cauchy_condition(a fn(N_pos)R, M N_pos, epsilon R_pos):
-    forall x, y N_pos:
-        x > M
-        y > M
-        =>:
-            abs(a(x) - a(y)) < epsilon
+prop p(x R, y R)
 
-prop R_seq_converges(a fn(N_pos)R):
-    forall epsilon R_pos:
-        =>:
-            exist M N_pos: $Cauchy_condition(a, M, epsilon)
+know forall x R: exist y R st $p(x, y)
 
-have fn f(x N_pos) R = (0.1) ^ x
+exist y R st $p(1, y)

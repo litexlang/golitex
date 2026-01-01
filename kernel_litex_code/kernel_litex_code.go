@@ -17,32 +17,10 @@ package kernel_lib_litex_code
 var PipelineInitCode = `
 know forall x2, y2 R: x2 != 0, y2 != 0 => x2 * y2 != 0
 
-exist_prop x Z, y N_pos st Q_in_frac(q Q):
-	x / y = q
-	x = y * q
-	x = q * y
-	y > 0
-
-exist_prop x N_pos, y N_pos st Q_pos_in_frac(q Q):
-	q > 0
-	<=>:
-		x / y = q
-		x = y * q
-		x = q * y
-		x > 0
-		y > 0
-
-exist_prop x Z, y N_pos st Q_neg_in_frac(q Q):
-	q < 0
-	<=>:
-		x / y = q
-		x = y * q
-		x = q * y
-		x < 0
-
-know forall q Q => $Q_in_frac(q)
-know forall q Q: q > 0 => $Q_pos_in_frac(q)
-know forall q Q: q < 0 => $Q_neg_in_frac(q)
+know:
+	forall q Q: exist x Z, y N_pos st x / y = q
+	forall q Q_pos: exist x N_pos, y N_pos st x / y = q
+	forall q Q_neg: exist x Z_neg, y N_pos st x / y = q
 
 let fn sqrt(z R) R:
 	z >= 0
@@ -553,12 +531,6 @@ know forall a, b R: a ^ 2 = b, a >= 0 => a = sqrt(b), a = pow(b, 1/2)
 
 know forall x, y, z Z: z != 0 => (x + y) % z = (x % z + y % z) % z, (x * y) % z = (x % z * y % z) % z, (x - y) % z = (x % z - y % z) % z
 
-exist_prop s set st there_exists_infinite_set() :
-    <=>:
-        not $is_a_finite_set(s)
-
-know $there_exists_infinite_set()
-
 let fn negate(x R) R:
 	negate(x) = -x
 	negate(x) + x = 0
@@ -777,27 +749,6 @@ know forall x, y set => x = y <=> x $subset_of y, y $subset_of x
 
 know forall x R: abs(x) >= 0
 know forall x R: x >= 0 => sqrt(x) = 0 <=> x = 0
-
-exist_prop x X st has_preimage(X, Y set, f fn(X)Y, y Y):
-	f(x) = y
-
-prop is_injective_fn(X set, Y set, f fn(X)Y):
-	forall x1, x2 X:
-		x1 != x2
-		=>:
-			f(x1) != f(x2)
-
-prop is_surjective_fn(X set, Y set, f fn(X)Y):
-	forall y Y:
-		$has_preimage(X, Y, f, y)
-
-prop is_bijective_fn(X set, Y set, f fn(X)Y):
-	$is_injective_fn(X, Y, f)
-	$is_surjective_fn(X, Y, f)
-
-# 如何证明集合是有限集合
-exist_prop f fn(X)Y st exist_one_to_one_fn_to_finite_set(X finite_set, Y set):
-	$is_bijective_fn(X, Y, f)
 			
 know:
 	forall a, b, c R: a > 0, a * b > c => b > c / a
@@ -824,56 +775,23 @@ know:
 	$is_a_nonempty_set(N_pos)
 	$is_a_nonempty_set(Z)
 	$is_a_nonempty_set(Q)
-	$is_a_finite_set(R)
-	$is_a_finite_set(N)
-	$is_a_finite_set(N_pos)
-	$is_a_finite_set(Z)
-	$is_a_finite_set(Q)
-
-# TODO: builtin instead of exist_prop
-exist_prop y x st axiom_of_regularity(x nonempty_set):
-    forall z y: not z $in x
-    forall z x: not z $in y
-
-know forall x nonempty_set: $axiom_of_regularity(x)
+	$is_a_nonempty_set(Q_pos)
+	$is_a_nonempty_set(Q_neg)
+	$is_a_nonempty_set(Z_neg)
+	$is_a_nonempty_set(R_pos)
+	$is_a_nonempty_set(R_neg)
 
 # TODO: builtin instead of fn
 let fn cup(x set) set
 know imply cup_contains_all_items(x set, y x):
 	forall z y:
 		z $in cup(x)
-exist_prop y x st cup_witness_item(x set, z cup(x)):
-	z $in y
-
-# TODO: builtin instead of exist_prop
-exist_prop x s1 st exist_preimage(s1, s2 set, y s2, f fn(s1)s2):
-    f(x) = y
-
-let fn image_set(s1, s2 set, f fn(s1)s2) set
-
-know:
-    forall s1, s2 set, f fn(s1)s2, y image_set(s1, s2, f):
-        $exist_preimage(s1, s2, y, f)
-
-    forall s1, s2 set, f fn(s1)s2, y s2:
-        $exist_preimage(s1, s2, y, f)
-        =>:
-            y $in image_set(s1, s2, f)
-
-	forall s1, s2 set, f fn(s1)s2:
-		image_set(s1, s2, f) $subset_of s2
 
 # TODO: builtin instead of fn
 let fn choice(x set) fn(x) cup(x)
 know imply axiom_of_choice(x set):
 	forall y x:
 		choice(x)(y) $in y
-
-# Axiom of infinity
-exist_prop x set st axiom_of_infinity():
-	{} $in x
-	forall y x:
-		union(y, {y}) $in x
 
 know:
 	forall x, y R: x < y => $is_a_nonempty_set(range(x, y)), $is_a_nonempty_set(closed_range(x, y))
@@ -892,6 +810,6 @@ know:
 
 # density of Q, R
 know:
-	forall x, y R: x < y => exist z Q: z $in {t R: x < t, t < y}
-	forall x, y R: x < y => exist z R: z $in {t R: x < t, t < y}
+	forall x, y R: x < y => exist z Q st z $in {t R: x < t, t < y}
+	forall x, y R: x < y => exist z R st z $in {t R: x < t, t < y}
 `
