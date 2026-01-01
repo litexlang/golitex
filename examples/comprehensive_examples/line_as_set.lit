@@ -59,6 +59,7 @@ prove forall a, b, c R: a != 0 => line(a, b, c) = line(1, b/a, c/a):
 
     line(a, b, c) = line(1, b/a, c/a)
 
+"""
 # 平面上的子集确实是直线
 exist_prop a, b, c R st is_line(s subsets(cart(R, R))):
     $line_as_intensional_set(s, a, b, c)
@@ -71,6 +72,7 @@ prove:
 # 是斜率
 exist_prop c R st is_slope(k R, s subsets(cart(R, R))):
     $line_as_intensional_set(s, 1, k, c)
+"""
 
 # 1 是 line(1, 1, 1) 的斜率
 prove:

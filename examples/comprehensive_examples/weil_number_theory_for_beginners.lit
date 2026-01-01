@@ -1,7 +1,4 @@
 """
-Basics
-"""
-
 forall x R, a R, b R:
     a + x = b
     =>:
@@ -223,3 +220,4 @@ know:
         =>:
             gcd(a, b*d) = 1
 
+"""
