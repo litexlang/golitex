@@ -170,14 +170,14 @@ func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *
 	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ImplicationFactsOrNil, glob.BuiltinLine0)
 }
 
-func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
-	params := stmt.DefBody.DefHeader.Params.ToObjSlice()
-	return NewSpecFactStmt(TruePure, Atom(stmt.DefBody.DefHeader.Name), params, glob.BuiltinLine0)
-}
+// func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
+// 	params := stmt.DefBody.DefHeader.Params.ToObjSlice()
+// 	return NewSpecFactStmt(TruePure, Atom(stmt.DefBody.DefHeader.Name), params, glob.BuiltinLine0)
+// }
 
-func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue() *UniFactStmt {
-	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFactsOrNil, []FactStmt{stmt.ToProp()}, glob.BuiltinLine0)
-}
+// func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue() *UniFactStmt {
+// 	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFactsOrNil, []FactStmt{stmt.ToProp()}, glob.BuiltinLine0)
+// }
 
 // func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {
 // 	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFactsOrNil, stmt.DefPropStmt.ImplicationFactsOrNil, glob.BuiltinLine)
@@ -650,6 +650,6 @@ func ParamsInSpecFactAreStrings(specFact *SpecFactStmt) ([]string, error) {
 	return ret, nil
 }
 
-func (stmt *HaveObjStWithParamSetsStmt) ToHaveObjStStmt() *HaveObjStStmt {
-	return NewHaveObjStStmt(stmt.ObjNames, stmt.Fact, stmt.Line)
-}
+// func (stmt *HaveObjStWithParamSetsStmt) ToHaveObjStStmt() *HaveObjStStmt {
+// 	return NewHaveObjStStmt(stmt.ObjNames, stmt.Fact, stmt.Line)
+// }
