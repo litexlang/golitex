@@ -1,6 +1,6 @@
 prop p(x R, y R)
 prop q(x R, y R)
 
-know forall x R: exist y R st $p(x, y) or exist y R st $q(x, y)
+know not exist x R st $p(x, 1)
 
-exist y R st $p(1, y) or exist y R st $q(1, y)
+forall x R: not $p(x, 1)
