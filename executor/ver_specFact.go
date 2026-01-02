@@ -323,11 +323,7 @@ func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState)
 		return verRet
 	}
 
-	if stmt.IsPureFact() {
-		return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState)
-	} else {
-		return glob.NewEmptyVerRetUnknown()
-	}
+	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState)
 }
 
 func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {

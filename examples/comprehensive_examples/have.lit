@@ -104,3 +104,19 @@ prove:
     (1, 2, 3) = tuple(1, 2, 3)
 
     obj_at_index(tuple(1, 2, 3), 1) = 1
+
+prove:
+    prop p(x R, y R)
+    prop q(x R, y R)
+
+    know exist x R st $p(x, 1) or exist x R st $q(x, 1)
+
+    exist x R st $p(x, 1) or exist x R st $q(x, 1)
+
+prove:
+    prop p(x R, y R)
+    prop q(x R, y R)
+
+    know forall x R: exist y R st $p(x, y) or exist y R st $q(x, y)
+
+    exist y R st $p(1, y) or exist y R st $q(1, y)
