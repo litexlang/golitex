@@ -57,7 +57,7 @@ func (envMgr *EnvMgr) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) *glo
 	key := string(stmt.DefHeader.Name)
 
 	// Save to AllDefinedPropNames
-	envMgr.AllDefinedPropNames[key] = stmt
+	envMgr.AllDefinedPropNames[key] = NewDefinedStuff(stmt, envMgr.CurEnvDepth())
 
 	// Mark in current EnvSlice
 	envMgr.CurEnv().PropDefMem[key] = struct{}{}
@@ -175,7 +175,7 @@ func (envMgr *EnvMgr) CheckAtomObjNameIsValidAndAvailableThenDefineIt(name strin
 	}
 
 	// Save to AllDefinedAtomObjNames
-	envMgr.AllDefinedAtomObjNames[name] = struct{}{}
+	envMgr.AllDefinedAtomObjNames[name] = NewDefinedStuff(struct{}{}, envMgr.CurEnvDepth())
 
 	// Mark in current EnvSlice
 	envMgr.CurEnv().AtomObjDefMem[name] = struct{}{}

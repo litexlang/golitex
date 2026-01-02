@@ -34,13 +34,13 @@ func (envMgr *EnvMgr) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
 	// depth
 	propDef, ok := envMgrContainsDef.AllDefinedPropNames[string(propName)]
 	if ok {
-		return propDef
+		return propDef.Defined
 	}
 
 	// Search in builtin env
 	propDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedPropNames[string(propName)]
 	if ok {
-		return propDef
+		return propDef.Defined
 	}
 
 	return nil
