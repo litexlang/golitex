@@ -412,10 +412,21 @@ func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_
 	ver.newEnv()
 	defer ver.deleteEnv()
 
-	verRet := ver.matchTwoSpecFacts(stmt, knownFact.SpecFact, state)
-	if verRet.IsErr() || verRet.IsUnknown() {
-		return verRet
+	if stmt.FactType == ast.TruePure || stmt.FactType == ast.FalsePure {
+		verRet := ver.matchTwoSpecFacts(stmt, knownFact.SpecFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet
+		}
+	} else {
+		verRet := ver.MatchExistFact(stmt, knownFact.SpecFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet
+		}
 	}
+	// verRet := ver.matchTwoSpecFacts(stmt, knownFact.SpecFact, state)
+	// if verRet.IsErr() || verRet.IsUnknown() {
+	// 	return verRet
+	// }
 
 	nextState := state.GetAddRound()
 	for i, fact := range knownFact.LogicExpr.Facts {
