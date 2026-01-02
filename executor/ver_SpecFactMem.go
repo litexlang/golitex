@@ -713,7 +713,7 @@ func (ver *Verifier) iterate_KnownExistSpecInLogic_InUni_applyMatch_new(stmt *as
 			if state.WithMsg {
 				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{knownFactUnderLogicExpr.UniFact.String()})
 			}
-			return glob.NewEmptyVerRetTrue()go
+			return glob.NewEmptyVerRetTrue()
 		}
 	}
 

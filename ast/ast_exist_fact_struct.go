@@ -79,6 +79,6 @@ func (f *SpecFactStmt) ToExistStFactStruct() *ExistStFactStruct {
 	return NewExistStFactStruct(ft, propName, existFreeParams, existFreeParamSets, params, f.Line)
 }
 
-func (s *ExistStFactStruct) ToTruePureFact() *SpecFactStmt {
+func (s *ExistStFactStruct) GetTruePureFact() *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, s.PropName, s.Params, s.Line)
 }
