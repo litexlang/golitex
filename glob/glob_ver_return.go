@@ -161,3 +161,8 @@ func NewTrueVerRetWithMsg(s string) *VerRet {
 	verRet.VerifyMsgs = append(verRet.VerifyMsgs, s)
 	return verRet
 }
+
+func (m *VerRet) AddVerifyMsg(s string) *VerRet {
+	m.VerifyMsgs = append(m.VerifyMsgs, s)
+	return m
+}

@@ -127,7 +127,7 @@ func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.EnvMemo
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	nextState := state.GetAddRound().GetNoMsg()
+	nextState := state.GetAddRound()
 
 	if stmt.IsPureFact() {
 		return ver.iterate_KnownPureSpecInLogic_InUni_applyMatch_new(stmt, searchedSpecFactsInLogicExpr, nextState)
@@ -713,7 +713,7 @@ func (ver *Verifier) iterate_KnownExistSpecInLogic_InUni_applyMatch_new(stmt *as
 			if state.WithMsg {
 				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{knownFactUnderLogicExpr.UniFact.String()})
 			}
-			return glob.NewEmptyVerRetTrue()
+			return glob.NewEmptyVerRetTrue()go
 		}
 	}
 

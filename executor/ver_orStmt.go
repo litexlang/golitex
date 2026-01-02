@@ -32,9 +32,9 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
 			return verRet
 		}
 		if verRet.IsTrue() {
-			msg := fmt.Sprintf("%s is true when all others facts in the or statement are false", stmt.Facts[i])
 			if state.WithMsg {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), []string{msg})
+				msg := fmt.Sprintf("%s is true when all others facts in the or statement are false", stmt.Facts[i])
+				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), append([]string{msg}, verRet.VerifyMsgs...))
 			}
 			return glob.NewEmptyVerRetTrue()
 		}
