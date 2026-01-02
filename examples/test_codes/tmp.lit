@@ -1,6 +1,0 @@
-prop p(x R, y R)
-prop q(x R, y R)
-
-know exist x R st $p(x, 1) or exist x R st $q(x, 1)
-
-exist x R st $p(x, 1) or exist x R st $q(x, 1)
