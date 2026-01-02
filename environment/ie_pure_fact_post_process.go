@@ -74,12 +74,14 @@ func (ie *InferEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) *glob.S
 }
 
 func (ie *InferEngine) newFalseExist(fact *ast.SpecFactStmt) *glob.ShortRet {
-	if ie.EnvMgr.GetPropDef(fact.PropName) != nil {
-		return glob.NewEmptyShortTrueRet()
+	existStruct := fact.ToExistStFactStruct()
+	equivalentForall := ast.NewUniFact(existStruct.ExistFreeParams, existStruct.ExistFreeParamSets, []ast.FactStmt{}, []ast.FactStmt{existStruct.GetTruePureFact().ReverseTrue()}, fact.Line)
+	ret := ie.EnvMgr.newUniFact(equivalentForall)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
 	}
 
-	_ = fact
-	return glob.NewEmptyShortTrueRet()
+	return glob.NewShortRet(glob.StmtRetTypeTrue, []string{equivalentForall.String()})
 }
 
 // newTrueExist handles postprocessing for TrueExist_St facts
