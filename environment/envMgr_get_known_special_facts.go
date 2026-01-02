@@ -18,7 +18,7 @@ import ast "golitex/ast"
 
 func (envMgr *EnvMgr) GetLatestFnT_GivenNameIsIn(fnName string) *FnInFnTMemItem {
 	// Search from current depth upward to depth 0
-	for depth := envMgr.curEnvDepth(); depth >= 0; depth-- {
+	for depth := envMgr.CurEnvDepth(); depth >= 0; depth-- {
 		fnInFnTemplateFacts, ok := envMgr.EnvSlice[depth].FnInFnTemplateFactsMem[fnName]
 		if ok {
 			return &fnInFnTemplateFacts[len(fnInFnTemplateFacts)-1]
@@ -35,7 +35,7 @@ func (envMgr *EnvMgr) GetLatestFnT_GivenNameIsIn(fnName string) *FnInFnTMemItem 
 
 func (envMgr *EnvMgr) IsTransitiveProp(propName string) bool {
 	// Search from current depth upward to depth 0
-	for depth := envMgr.curEnvDepth(); depth >= 0; depth-- {
+	for depth := envMgr.CurEnvDepth(); depth >= 0; depth-- {
 		_, ok := envMgr.EnvSlice[depth].TransitivePropMem[propName]
 		if ok {
 			return true
@@ -53,7 +53,7 @@ func (envMgr *EnvMgr) IsTransitiveProp(propName string) bool {
 func (envMgr *EnvMgr) GetRelatedObjSliceOfTransitiveProp(propName string, obj ast.Obj) []ast.Obj {
 	ret := []ast.Obj{}
 	// Search from current depth upward to depth 0
-	for depth := envMgr.curEnvDepth(); depth >= 0; depth-- {
+	for depth := envMgr.CurEnvDepth(); depth >= 0; depth-- {
 		relatedObjSlice, ok := envMgr.EnvSlice[depth].TransitivePropMem[propName]
 		if ok {
 			if relatedObjSlice, ok := relatedObjSlice[obj.String()]; ok {
@@ -77,7 +77,7 @@ func (envMgr *EnvMgr) GetRelatedObjSliceOfTransitiveProp(propName string, obj as
 // 如果找到 tuple，返回该 tuple；否则返回 nil
 func (envMgr *EnvMgr) GetObjTuple(obj ast.Obj) ast.Obj {
 	// 遍历所有环境深度
-	for depth := envMgr.curEnvDepth(); depth >= 0; depth-- {
+	for depth := envMgr.CurEnvDepth(); depth >= 0; depth-- {
 		// 获取当前环境中与 obj 相等的所有对象
 		equalObjs, ok := envMgr.GetEqualObjsAtDepth(depth, obj)
 		if ok && equalObjs != nil {
@@ -109,7 +109,7 @@ func (envMgr *EnvMgr) GetListSetEqualToObj(obj ast.Obj) ast.Obj {
 	}
 
 	// 遍历所有环境深度
-	for depth := envMgr.curEnvDepth(); depth >= 0; depth-- {
+	for depth := envMgr.CurEnvDepth(); depth >= 0; depth-- {
 		// 获取当前环境中与 obj 相等的所有对象
 		equalObjs, ok := envMgr.GetEqualObjsAtDepth(depth, obj)
 		if ok && equalObjs != nil {
@@ -158,7 +158,7 @@ func (envMgr *EnvMgr) GetSetBuilderEqualToObj(obj ast.Obj) *ast.FnObj {
 	}
 
 	// 遍历所有环境深度
-	for depth := envMgr.curEnvDepth(); depth >= 0; depth-- {
+	for depth := envMgr.CurEnvDepth(); depth >= 0; depth-- {
 		// 获取当前环境中与 obj 相等的所有对象
 		equalObjs, ok := envMgr.GetEqualObjsAtDepth(depth, obj)
 		if ok && equalObjs != nil {

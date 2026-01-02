@@ -457,7 +457,7 @@ func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) *glob.StmtRet {
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
-	exec.Env.AllDefinedAtomObjNames[stmt.Name] = struct{}{}
+	exec.Env.AllDefinedAtomObjNames[stmt.Name] = litex_env.NewDefinedStuff(struct{}{}, exec.Env.CurEnvDepth())
 	defineMsgs = append(defineMsgs, glob.IsANewObjectMsg(stmt.Name))
 
 	ret = exec.Env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.Atom(stmt.Name), nil, stmt.FnTemplate)
@@ -672,7 +672,7 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 
 func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) *glob.StmtRet {
 	exec.Env.CurEnv().AlgoDefMem[stmt.FuncName] = struct{}{}
-	exec.Env.AllDefinedAlgoNames[stmt.FuncName] = stmt
+	exec.Env.AllDefinedAlgoNames[stmt.FuncName] = litex_env.NewDefinedStuff(stmt, exec.Env.CurEnvDepth())
 	return exec.NewTrueStmtRet(stmt)
 }
 
@@ -706,7 +706,7 @@ func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, *glob.StmtR
 
 func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) *glob.StmtRet {
 	exec.Env.CurEnv().DefProveAlgoMem[stmt.ProveAlgoName] = struct{}{}
-	exec.Env.AllDefinedProveAlgoNames[stmt.ProveAlgoName] = stmt
+	exec.Env.AllDefinedProveAlgoNames[stmt.ProveAlgoName] = litex_env.NewDefinedStuff(stmt, exec.Env.CurEnvDepth())
 	return exec.NewTrueStmtRet(stmt)
 }
 

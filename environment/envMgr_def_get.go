@@ -19,13 +19,13 @@ import ast "golitex/ast"
 func (envMgr *EnvMgr) GetFnTemplateDef(objAtomName ast.Atom) *ast.DefFnSetStmt {
 	fnTemplateDef, ok := envMgr.AllDefinedFnSetNames[string(objAtomName)]
 	if ok {
-		return fnTemplateDef
+		return fnTemplateDef.Defined
 	}
 
 	// Search in builtin env
 	fnTemplateDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedFnSetNames[string(objAtomName)]
 	if ok {
-		return fnTemplateDef
+		return fnTemplateDef.Defined
 	}
 
 	return nil
@@ -43,7 +43,7 @@ func (envMgr *EnvMgr) GetFnTemplateDef_KeyIsObjHead(obj *ast.FnObj) *ast.DefFnSe
 
 func (envMgr *EnvMgr) GetSymbolSimplifiedValue(obj ast.Obj) ast.Obj {
 	// Search from current depth upward to depth 0
-	for depth := envMgr.curEnvDepth(); depth >= 0; depth-- {
+	for depth := envMgr.CurEnvDepth(); depth >= 0; depth-- {
 		symbolValue, ok := envMgr.EnvSlice[depth].SymbolSimplifiedValueMem[obj.String()]
 		if ok {
 			return symbolValue
@@ -61,7 +61,7 @@ func (envMgr *EnvMgr) GetSymbolSimplifiedValue(obj ast.Obj) ast.Obj {
 
 func (envMgr *EnvMgr) IsCommutativeProp(specFact *ast.SpecFactStmt) bool {
 	// Search from current depth upward to depth 0
-	for depth := envMgr.curEnvDepth(); depth >= 0; depth-- {
+	for depth := envMgr.CurEnvDepth(); depth >= 0; depth-- {
 		item, ok := envMgr.EnvSlice[depth].CommutativePropMem[string(specFact.PropName)]
 		if ok {
 			if specFact.FactType == ast.TruePure {
@@ -88,13 +88,13 @@ func (envMgr *EnvMgr) IsCommutativeProp(specFact *ast.SpecFactStmt) bool {
 func (envMgr *EnvMgr) GetProveAlgoDef(proveAlgoName string) *ast.DefProveAlgoStmt {
 	proveAlgoDef, ok := envMgr.AllDefinedProveAlgoNames[proveAlgoName]
 	if ok {
-		return proveAlgoDef
+		return proveAlgoDef.Defined
 	}
 
 	// Search in builtin env
 	proveAlgoDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedProveAlgoNames[proveAlgoName]
 	if ok {
-		return proveAlgoDef
+		return proveAlgoDef.Defined
 	}
 
 	return nil
@@ -103,13 +103,13 @@ func (envMgr *EnvMgr) GetProveAlgoDef(proveAlgoName string) *ast.DefProveAlgoStm
 func (envMgr *EnvMgr) GetAlgoDef(funcName string) *ast.DefAlgoStmt {
 	algoDef, ok := envMgr.AllDefinedAlgoNames[funcName]
 	if ok {
-		return algoDef
+		return algoDef.Defined
 	}
 
 	// Search in builtin env
 	algoDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedAlgoNames[funcName]
 	if ok {
-		return algoDef
+		return algoDef.Defined
 	}
 
 	return nil
