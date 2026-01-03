@@ -104,10 +104,13 @@ const (
 	KeywordEqualTuple         = "equal_tuple"
 	KeywordIsNonEmptyWithItem = "is_nonempty_with_item"
 
-	KeywordPowerSet = "power_set"
-
-	KeywordUnion     = "union"
-	KeywordIntersect = "intersect"
+	KeywordUnion               = "union"
+	KeywordIntersect           = "intersect"
+	KeywordPowerSet            = "power_set"
+	KeywordCup                 = "cup"
+	KeywordCap                 = "cap"
+	KeywordSetMinus            = "set_minus"
+	KeywordSymmetricDifference = "set_diff"
 
 	KeywordProveExist = "prove_exist"
 
