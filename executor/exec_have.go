@@ -215,8 +215,16 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.StmtRet, erro
 		exec.deleteEnv()
 	}()
 
+	// 声明一下函数，这样证明then的时候不会因为没声明这个函数而g了
+	localTemplate := ast.NewFnTStruct(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.RetSet, stmt.DefFnStmt.FnTemplate.DomFacts, []ast.FactStmt{}, stmt.Line)
+	fnDefStmt := ast.NewLetFnStmt(stmt.DefFnStmt.Name, localTemplate, stmt.Line)
+	execState := exec.lefDefFnStmt(fnDefStmt)
+	if execState.IsNotTrue() {
+		return execState, fmt.Errorf(execState.String())
+	}
+
 	// Verify retSet is in set type
-	execState := exec.factStmt(ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
+	execState = exec.factStmt(ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
 	if execState.IsErr() {
 		return glob.ErrRet(execState.String()), fmt.Errorf(execState.String())
 	}
@@ -245,13 +253,13 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.StmtRet, erro
 		return execState, fmt.Errorf(execState.String())
 	}
 
-	// 声明一下函数，这样证明then的时候不会因为没声明这个函数而g了
-	localTemplate := ast.NewFnTStruct(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.RetSet, stmt.DefFnStmt.FnTemplate.DomFacts, []ast.FactStmt{}, stmt.Line)
-	fnDefStmt := ast.NewLetFnStmt(stmt.DefFnStmt.Name, localTemplate, stmt.Line)
-	execState = exec.lefDefFnStmt(fnDefStmt)
-	if execState.IsNotTrue() {
-		return execState, fmt.Errorf(execState.String())
-	}
+	// // 声明一下函数，这样证明then的时候不会因为没声明这个函数而g了
+	// localTemplate := ast.NewFnTStruct(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.RetSet, stmt.DefFnStmt.FnTemplate.DomFacts, []ast.FactStmt{}, stmt.Line)
+	// fnDefStmt := ast.NewLetFnStmt(stmt.DefFnStmt.Name, localTemplate, stmt.Line)
+	// execState = exec.lefDefFnStmt(fnDefStmt)
+	// if execState.IsNotTrue() {
+	// 	return execState, fmt.Errorf(execState.String())
+	// }
 
 	// know 一下 函数等于 等号右边的东西
 	params := []ast.Obj{}

@@ -1,4 +1,4 @@
-fn f(x, y R) R
+let fn f(x, y R) R
 know forall x,y,z R => f(f(x, y), z) = f(x, f(y, z))
 
 forall x,y,z R:

@@ -35,7 +35,7 @@ func (ver *Verifier) verSuperFunctionReq(fnObj *ast.FnObj, state *VerState) *glo
 	case glob.KeywordSetMinus:
 		return ver.verSetMinusReq(fnObj, state)
 	case glob.KeywordSetDiff:
-		return ver.verSymmetricDifferenceReq(fnObj, state)
+		return ver.verSetDiffReq(fnObj, state)
 	case glob.KeywordProj:
 		return ver.verProjReq(fnObj, state)
 	case glob.KeywordDim:
@@ -106,7 +106,7 @@ func (ver *Verifier) verSetMinusReq(fnObj *ast.FnObj, state *VerState) *glob.Ver
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) verSymmetricDifferenceReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+func (ver *Verifier) verSetDiffReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 2 {
 		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("set_diff expects 2 parameters, got %d", len(fnObj.Params))})
 	}

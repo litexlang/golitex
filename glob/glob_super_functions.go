@@ -17,6 +17,13 @@ package litex_global
 var SuperFunctionsSet map[string]struct{} = map[string]struct{}{
 	KeywordUnion:     {},
 	KeywordIntersect: {},
+	KeywordPowerSet:  {},
+	KeywordCup:       {},
+	KeywordCap:       {},
+	KeywordSetMinus:  {},
+	KeywordSetDiff:   {},
+	KeywordProj:      {},
+	KeywordDim:       {},
 }
 
 func IsSuperFunction(name string) bool {
