@@ -34,7 +34,7 @@ func (ver *Verifier) verSuperFunctionReq(fnObj *ast.FnObj, state *VerState) *glo
 		return ver.verCapReq(fnObj, state)
 	case glob.KeywordSetMinus:
 		return ver.verSetMinusReq(fnObj, state)
-	case glob.KeywordSymmetricDifference:
+	case glob.KeywordSetDiff:
 		return ver.verSymmetricDifferenceReq(fnObj, state)
 	default:
 		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("unknown super function: %s", fnObj.FnHead)})

@@ -101,16 +101,17 @@ const (
 
 	KeywordEqualSet           = "equal_set"
 	KeywordSubsetOf           = "subset_of"
+	KeywordSupersetOf         = "superset_of"
 	KeywordEqualTuple         = "equal_tuple"
 	KeywordIsNonEmptyWithItem = "is_nonempty_with_item"
 
-	KeywordUnion               = "union"
-	KeywordIntersect           = "intersect"
-	KeywordPowerSet            = "power_set"
-	KeywordCup                 = "cup"
-	KeywordCap                 = "cap"
-	KeywordSetMinus            = "set_minus"
-	KeywordSymmetricDifference = "set_diff"
+	KeywordUnion     = "union"
+	KeywordIntersect = "intersect"
+	KeywordPowerSet  = "power_set"
+	KeywordCup       = "cup"
+	KeywordCap       = "cap"
+	KeywordSetMinus  = "set_minus"
+	KeywordSetDiff   = "set_diff"
 
 	KeywordProveExist = "prove_exist"
 
@@ -191,9 +192,9 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordListSet:    {},
 	KeywordSetBuilder: {},
 
-	KeywordSubsetOf: {},
-
-	KeywordProveFor: {},
+	KeywordSubsetOf:   {},
+	KeywordSupersetOf: {},
+	KeywordProveFor:   {},
 
 	KeywordEqualSet: {},
 
@@ -213,6 +214,11 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordUnion:     {},
 	KeywordIntersect: {},
+	KeywordPowerSet:  {},
+	KeywordCup:       {},
+	KeywordCap:       {},
+	KeywordSetMinus:  {},
+	KeywordSetDiff:   {},
 
 	KeywordProveExist: {},
 
@@ -319,6 +325,11 @@ var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 
 	KeywordUnion:     {},
 	KeywordIntersect: {},
+	KeywordPowerSet:  {},
+	KeywordCup:       {},
+	KeywordCap:       {},
+	KeywordSetMinus:  {},
+	KeywordSetDiff:   {},
 
 	KeywordRPos: {},
 	KeywordRNeg: {},
@@ -434,4 +445,9 @@ var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struc
 	KeywordZNeg:                   {},
 	KeywordQNeg:                   {},
 	KeywordQPos:                   {},
+	KeywordPowerSet:               {},
+	KeywordCup:                    {},
+	KeywordCap:                    {},
+	KeywordSetMinus:               {},
+	KeywordSetDiff:                {},
 }
