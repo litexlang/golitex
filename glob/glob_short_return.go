@@ -14,6 +14,8 @@
 
 package litex_global
 
+import "strings"
+
 type ShortRet struct {
 	RetType StmtRetType
 	Msgs    []string
@@ -69,4 +71,12 @@ func NewShortRetErr(s string) *ShortRet {
 	ret := NewEmptyShortErrorRet()
 	ret.Msgs = append(ret.Msgs, s)
 	return ret
+}
+
+func (sr *ShortRet) String() string {
+	return strings.Join(sr.Msgs, "\n")
+}
+
+func (sr *ShortRet) IsNotTrue() bool {
+	return sr.RetType != StmtRetTypeTrue
 }

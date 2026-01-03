@@ -71,3 +71,21 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 // func (exec *Executor) GetSecondUpMostEnv() *env.EnvMemory {
 // 	return exec.Env.GetSecondUpMostEnv()
 // }
+
+func checkParamsInFnDefNotDefinedAndParamSetsDefined(exec *Executor, params []string, paramSets []ast.Obj) *glob.ShortRet {
+	for _, paramSet := range paramSets {
+		ret := exec.Env.LookupNamesInObj(paramSet, map[string]struct{}{})
+		if ret.IsNotTrue() {
+			return glob.NewShortRetErr(ret.String())
+		}
+	}
+
+	for _, param := range params {
+		ret := exec.Env.LookupNamesInObj(ast.Atom(param), map[string]struct{}{})
+		if ret.IsTrue() {
+			return glob.NewShortRetErr(fmt.Sprintf("parameter %s is already defined. To avoid ambiguity, please use a different name for the parameter", param))
+		}
+	}
+
+	return glob.NewEmptyShortTrueRet()
+}
