@@ -41,7 +41,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = exec.execClaimStmtProve(stmt)
 	case *ast.DefPropStmt:
 		execRet = exec.defPropStmt(stmt, true)
-	case *ast.ImplicationStmt:
+	case *ast.DefImplicationStmt:
 		execRet = exec.implicationStmt(stmt)
 	case *ast.DefLetStmt:
 		execRet = exec.defLetStmt(stmt)
@@ -52,7 +52,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 	// 	execRet = exec.haveObjStStmt(stmt)
 	// case *ast.DefExistPropStmt:
 	// 	execRet = exec.defExistPropStmt(stmt)
-	case *ast.DefFnStmt:
+	case *ast.LetFnStmt:
 		execRet = exec.defFnStmt(stmt)
 		if execRet.IsTrue() {
 			execRet = execRet.AddWarning("`let fn` may introduce non-existent functions. If you want to ensure the function exists, please use `have fn` instead!\n")
@@ -387,7 +387,7 @@ func (exec *Executor) knowImplicationStmt(stmt *ast.KnowImplicationStmt) *glob.S
 	defineMsgs := []string{}
 	newFactMsgs := []string{}
 
-	execRet := exec.defPropStmt(stmt.Prop, false)
+	execRet := exec.defPropStmt(stmt.ImplicationProp, false)
 	if execRet.IsNotTrue() {
 		return execRet
 	}
@@ -395,8 +395,8 @@ func (exec *Executor) knowImplicationStmt(stmt *ast.KnowImplicationStmt) *glob.S
 	defineMsgs = append(defineMsgs, execRet.Define...)
 	newFactMsgs = append(newFactMsgs, execRet.NewFact...)
 
-	if len(stmt.Prop.IffFactsOrNil) == 0 {
-		_, iffToProp, err := stmt.Prop.Make_PropToIff_IffToProp()
+	if len(stmt.ImplicationProp.IffFactsOrNil) == 0 {
+		_, iffToProp, err := stmt.ImplicationProp.Make_PropToIff_IffToProp()
 		if err != nil {
 			return glob.ErrRet(err.Error())
 		}
@@ -408,11 +408,11 @@ func (exec *Executor) knowImplicationStmt(stmt *ast.KnowImplicationStmt) *glob.S
 	}
 
 	paramsAsObj := []ast.Obj{}
-	for i := range stmt.Prop.DefHeader.Params {
-		paramsAsObj = append(paramsAsObj, ast.Atom(stmt.Prop.DefHeader.Params[i]))
+	for i := range stmt.ImplicationProp.DefHeader.Params {
+		paramsAsObj = append(paramsAsObj, ast.Atom(stmt.ImplicationProp.DefHeader.Params[i]))
 	}
 
-	uniFact := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop.DefHeader.Name), paramsAsObj, stmt.Line)}, stmt.Prop.ImplicationFactsOrNil, stmt.Line)
+	uniFact := ast.NewUniFact(stmt.ImplicationProp.DefHeader.Params, stmt.ImplicationProp.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.ImplicationProp.DefHeader.Name), paramsAsObj, stmt.Line)}, stmt.ImplicationProp.ImplicationFactsOrNil, stmt.Line)
 
 	ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact)
 	if ret.IsErr() {
@@ -420,7 +420,7 @@ func (exec *Executor) knowImplicationStmt(stmt *ast.KnowImplicationStmt) *glob.S
 	}
 	newFactMsgs = append(newFactMsgs, uniFact.String())
 
-	uniFact2 := ast.NewUniFact(stmt.Prop.DefHeader.Params, stmt.Prop.DefHeader.ParamSets, stmt.Prop.IffFactsOrNil, stmt.Prop.ImplicationFactsOrNil, stmt.Line)
+	uniFact2 := ast.NewUniFact(stmt.ImplicationProp.DefHeader.Params, stmt.ImplicationProp.DefHeader.ParamSets, stmt.ImplicationProp.IffFactsOrNil, stmt.ImplicationProp.ImplicationFactsOrNil, stmt.Line)
 	ret = exec.Env.NewFactWithoutCheckingNameDefined(uniFact2)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
@@ -442,7 +442,7 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) *glob.StmtRet {
 	return exec.AddStmtToStmtRet(execState, stmt)
 }
 
-func (exec *Executor) defFnStmt(stmt *ast.DefFnStmt) *glob.StmtRet {
+func (exec *Executor) defFnStmt(stmt *ast.LetFnStmt) *glob.StmtRet {
 	defineMsgs := []string{}
 	newFactMsgs := []string{}
 
@@ -873,7 +873,7 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 	return glob.NewEmptyStmtTrue()
 }
 
-func (exec *Executor) implicationStmt(stmt *ast.ImplicationStmt) *glob.StmtRet {
+func (exec *Executor) implicationStmt(stmt *ast.DefImplicationStmt) *glob.StmtRet {
 	// Convert ImplicationStmt to DefPropStmt (with dom and implication facts, but no iff facts)
 	defPropStmt := ast.NewDefPropStmt(stmt.DefHeader, stmt.DomFacts, nil, stmt.ImplicationFacts, stmt.Line)
 	ret := exec.Env.NewDefProp_InsideAtomsDeclared(defPropStmt)

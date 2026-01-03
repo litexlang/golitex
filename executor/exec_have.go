@@ -239,7 +239,7 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) *glob.StmtRet {
 	}
 	verifyProcessMsgs = append(verifyProcessMsgs, execRet.VerifyProcess...)
 
-	newFnDefStmt := ast.NewDefFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(stmt.DefHeader), stmt.EqualTo)}, stmt.Line), stmt.Line)
+	newFnDefStmt := ast.NewLetFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(stmt.DefHeader), stmt.EqualTo)}, stmt.Line), stmt.Line)
 	execRet = exec.defFnStmt(newFnDefStmt)
 	if execRet.IsNotTrue() {
 		return exec.AddStmtToStmtRet(execRet.AddError(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String())), stmt)
@@ -356,7 +356,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.StmtRet, erro
 
 	// 声明一下函数，这样证明then的时候不会因为没声明这个函数而g了
 	localTemplate := ast.NewFnTStruct(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.RetSet, stmt.DefFnStmt.FnTemplate.DomFacts, []ast.FactStmt{}, stmt.Line)
-	fnDefStmt := ast.NewDefFnStmt(stmt.DefFnStmt.Name, localTemplate, stmt.Line)
+	fnDefStmt := ast.NewLetFnStmt(stmt.DefFnStmt.Name, localTemplate, stmt.Line)
 	execState = exec.defFnStmt(fnDefStmt)
 	if execState.IsNotTrue() {
 		return execState, fmt.Errorf(execState.String())
@@ -664,7 +664,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 	}
 
 	// 定义函数
-	newFnDefStmt := ast.NewDefFnStmt(
+	newFnDefStmt := ast.NewLetFnStmt(
 		string(stmt.DefHeader.Name),
 		ast.NewFnTStruct(
 			stmt.DefHeader.Params,
