@@ -685,7 +685,6 @@ know imply item_in_difference(x, y set, z set):
 		not z $in y
 		z $in x
 
-let fn power_set(x set) set
 know:
 	forall x set, y power_set(x):
 		y $subset_of x
@@ -782,11 +781,35 @@ know:
 	$is_a_nonempty_set(R_neg)
 
 # TODO: builtin instead of fn
-let fn cup(x set) set
-know imply cup_contains_all_items(x set, y x):
+know imply item_in_cup(x set, y x, z set):
 	forall z y:
 		z $in cup(x)
 
+# cap
+know imply item_in_cap(z set, x set, y cap(x)):
+	forall t x:
+		z $in t
+
+
+prop is_item_in_cap(z set, x set, y set):
+
+
+# set_minus
+know imply item_in_set_minus(x, y set, z set_minus(x, y)):
+	z $in x
+	not z $in y
+
+# set symmetric difference
+know imply item_in_set_diff(x, y set):
+	forall z set_diff(x, y):
+		z $in x
+		=>:
+			not z $in y
+	forall z set_diff(x, y):
+		z $in y
+		=>:
+			not z $in x
+		
 # TODO: builtin instead of fn
 let fn choice(x set) fn(x) cup(x)
 know imply axiom_of_choice(x set):
@@ -812,4 +835,5 @@ know:
 know:
 	forall x, y R: x < y => exist z Q st z $in {t R: x < t, t < y}
 	forall x, y R: x < y => exist z R st z $in {t R: x < t, t < y}
+
 `

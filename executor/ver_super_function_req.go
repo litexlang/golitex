@@ -26,6 +26,16 @@ func (ver *Verifier) verSuperFunctionReq(fnObj *ast.FnObj, state *VerState) *glo
 		return ver.verUnionReq(fnObj, state)
 	case glob.KeywordIntersect:
 		return ver.verIntersectReq(fnObj, state)
+	case glob.KeywordPowerSet:
+		return ver.verPowerSetReq(fnObj, state)
+	case glob.KeywordCup:
+		return ver.verCupReq(fnObj, state)
+	case glob.KeywordCap:
+		return ver.verCapReq(fnObj, state)
+	case glob.KeywordSetMinus:
+		return ver.verSetMinusReq(fnObj, state)
+	case glob.KeywordSymmetricDifference:
+		return ver.verSymmetricDifferenceReq(fnObj, state)
 	default:
 		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("unknown super function: %s", fnObj.FnHead)})
 	}
@@ -44,6 +54,56 @@ func (ver *Verifier) verUnionReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet
 func (ver *Verifier) verIntersectReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 2 {
 		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("intersect expects 2 parameters, got %d", len(fnObj.Params))})
+	}
+
+	_ = state
+
+	return glob.NewEmptyVerRetTrue()
+}
+
+func (ver *Verifier) verPowerSetReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+	if len(fnObj.Params) != 1 {
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("power_set expects 1 parameter, got %d", len(fnObj.Params))})
+	}
+
+	_ = state
+
+	return glob.NewEmptyVerRetTrue()
+}
+
+func (ver *Verifier) verCupReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+	if len(fnObj.Params) != 1 {
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("cup expects 1 parameter, got %d", len(fnObj.Params))})
+	}
+
+	_ = state
+
+	return glob.NewEmptyVerRetTrue()
+}
+
+func (ver *Verifier) verCapReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+	if len(fnObj.Params) != 1 {
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("cap expects 1 parameter, got %d", len(fnObj.Params))})
+	}
+
+	_ = state
+
+	return glob.NewEmptyVerRetTrue()
+}
+
+func (ver *Verifier) verSetMinusReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+	if len(fnObj.Params) != 2 {
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("set_minus expects 2 parameters, got %d", len(fnObj.Params))})
+	}
+
+	_ = state
+
+	return glob.NewEmptyVerRetTrue()
+}
+
+func (ver *Verifier) verSymmetricDifferenceReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+	if len(fnObj.Params) != 2 {
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("set_diff expects 2 parameters, got %d", len(fnObj.Params))})
 	}
 
 	_ = state
