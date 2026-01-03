@@ -618,14 +618,14 @@ func fnObjContainsFreeParams(fnObj *FnObj, freeParams []string) bool {
 	return false
 }
 
-func ParamSetsDoesNotContainFreeParams(freeParams []string, paramSets []Obj) error {
-	for _, paramSet := range paramSets {
-		if ObjContainsFreeParams(paramSet, freeParams) {
-			return fmt.Errorf("object set %s contains free parameters (%s)", paramSet, strings.Join(freeParams, ", "))
-		}
-	}
-	return nil
-}
+// func ParamSetsDoesNotContainFreeParams(freeParams []string, paramSets []Obj) error {
+// 	for _, paramSet := range paramSets {
+// 		if ObjContainsFreeParams(paramSet, freeParams) {
+// 			return fmt.Errorf("object set %s contains free parameters (%s)", paramSet, strings.Join(freeParams, ", "))
+// 		}
+// 	}
+// 	return nil
+// }
 
 func IsAtomWithoutPkgName(atom Atom) bool {
 	if strings.Contains(string(atom), glob.PkgNameAtomSeparator) {
