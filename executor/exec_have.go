@@ -20,112 +20,6 @@ import (
 	glob "golitex/glob"
 )
 
-// func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) *glob.StmtRet {
-// 	// 检查 SpecFactStmt 是否满足了
-// 	ver := NewVerifier(exec.Env)
-// 	execState := ver.VerFactStmt(stmt.Fact, Round0NoMsg())
-// 	if execState.IsNotTrue() {
-// 		return execState.ToStmtRet()
-// 	}
-
-// 	if glob.IsBuiltinExistPropName(string(stmt.Fact.PropName)) {
-// 		return glob.NewEmptyStmtUnknown()
-// 	}
-
-// 	// TODO 把 exist prop def 里的东西释放出来
-// 	existPropDef := exec.Env.GetExistPropDef(stmt.Fact.PropName)
-// 	if existPropDef == nil {
-// 		return exec.NewTrueStmtRet(stmt).AddError(fmt.Sprintf("can not find %s", stmt.Fact.PropName))
-// 	}
-
-// 	if len(existPropDef.ExistParams) != len(stmt.ObjNames) {
-// 		return glob.ErrRet(fmt.Sprintf("exist prop def params number not equal to have stmt obj names number. expect %d, but got %d", len(existPropDef.ExistParams), len(stmt.ObjNames)))
-// 	}
-
-// 	uniMap := map[string]ast.Obj{}
-// 	ExistParamsAtoms := []ast.Obj{}
-// 	for i, param := range existPropDef.ExistParams {
-// 		paramAsAtom := ast.Atom(stmt.ObjNames[i])
-// 		uniMap[param] = paramAsAtom
-// 		ExistParamsAtoms = append(ExistParamsAtoms, paramAsAtom)
-// 	}
-
-// 	for i, param := range existPropDef.DefBody.DefHeader.Params {
-// 		uniMap[param] = stmt.Fact.Params[i]
-// 	}
-
-// 	instantiatedExistPropDefStmt, err := existPropDef.Instantiate(uniMap)
-// 	if err != nil {
-// 		return glob.ErrRet(err.Error())
-// 	}
-
-// 	// 把 obj 放入环境
-// 	for i, objName := range stmt.ObjNames {
-// 		stmtForDef := ast.NewDefLetStmt([]string{objName}, []ast.Obj{instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets[i]}, []ast.FactStmt{}, stmt.Line)
-// 		ret := exec.Env.DefLetStmt(stmtForDef)
-// 		if ret.IsErr() {
-// 			return glob.ErrRet(ret.String())
-// 		}
-// 		execState := exec.NewTrueStmtRet(stmtForDef)
-// 		if execState.IsNotTrue() {
-// 			return execState
-// 		}
-// 	}
-
-// 	// param in param sets is true
-// 	// for _, paramInParamSet := range instantiatedExistPropDefStmt.ExistParamInSetsFacts() {
-// 	// 	err := exec.env.NewFact(paramInParamSet)
-// 	// 	if err != nil {
-// 	// 		return glob.ExecState_Error, err
-// 	// 	}
-// 	// }
-
-// 	for i, existParamSet := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).ExistParamSets {
-// 		ret := exec.Env.NewFactWithoutCheckingNameDefined(ast.NewInFact(stmt.ObjNames[i], existParamSet))
-// 		if ret.IsErr() {
-// 			return exec.AddStmtToStmtRet(ret, stmt)
-// 		}
-// 	}
-
-// 	// dom of def exist prop is true
-// 	for _, domFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.DomFactsOrNil {
-// 		ret := exec.Env.NewFactWithoutCheckingNameDefined(domFact)
-// 		if ret.IsErr() {
-// 			return glob.ErrRet(ret.String())
-// 		}
-// 	}
-
-// 	// iff of def exist prop is true
-// 	for _, iffFact := range instantiatedExistPropDefStmt.(*ast.DefExistPropStmt).DefBody.IffFactsOrNil {
-// 		ret := exec.Env.NewFactWithoutCheckingNameDefined(iffFact)
-// 		if ret.IsErr() {
-// 			return glob.ErrRet(ret.String())
-// 		}
-// 	}
-
-// 	// 相关的 exist st 事实也成立
-// 	existStFactParams := ast.MakeExistFactParamsSlice(ExistParamsAtoms, stmt.Fact.Params)
-
-// 	newExistStFact := ast.NewSpecFactStmt(ast.TrueExist_St, ast.Atom(string(stmt.Fact.PropName)), existStFactParams, stmt.Line)
-// 	ret := exec.Env.NewFactWithoutCheckingNameDefined(newExistStFact)
-// 	if ret.IsErr() {
-// 		return glob.ErrRet(ret.String())
-// 	}
-
-// 	result := glob.NewEmptyStmtTrue()
-// 	result = exec.AddStmtToStmtRet(result, stmt)
-
-// 	verifyProcessMsgs := []*glob.VerRet{glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.Fact.String(), stmt.Line, []string{})}
-// 	inferMsgs := append([]string{}, ret.Infer...)
-// 	defineMsgs := []string{}
-// 	for _, fact := range stmt.ObjNames {
-// 		defineMsgs = append(defineMsgs, glob.IsANewObjectMsg(fact))
-// 	}
-// 	defineMsgs = append(defineMsgs, newExistStFact.String())
-
-// 	return result.AddVerifyProcesses(verifyProcessMsgs).AddInfers(inferMsgs).AddDefineMsgs(defineMsgs)
-// }
-
 func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet {
 	ver := NewVerifier(exec.Env)
 
@@ -217,8 +111,9 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 }
 
 func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) *glob.StmtRet {
-	if err := ast.ParamSetsDoesNotContainFreeParams(stmt.DefHeader.Params, stmt.DefHeader.ParamSets); err != nil {
-		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
+	shortRet := checkParamsInFnDefNotDefinedAndParamSetsDefined(exec, stmt.DefHeader.Params, stmt.DefHeader.ParamSets)
+	if shortRet.IsNotTrue() {
+		return glob.ErrRet(shortRet.String())
 	}
 
 	verifyProcessMsgs := []*glob.VerRet{}
@@ -240,7 +135,7 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) *glob.StmtRet {
 	verifyProcessMsgs = append(verifyProcessMsgs, execRet.VerifyProcess...)
 
 	newFnDefStmt := ast.NewLetFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(stmt.DefHeader), stmt.EqualTo)}, stmt.Line), stmt.Line)
-	execRet = exec.defFnStmt(newFnDefStmt)
+	execRet = exec.lefDefFnStmt(newFnDefStmt)
 	if execRet.IsNotTrue() {
 		return exec.AddStmtToStmtRet(execRet.AddError(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String())), stmt)
 	}
@@ -287,8 +182,9 @@ func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {
 }
 
 func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) *glob.StmtRet {
-	if err := ast.ParamSetsDoesNotContainFreeParams(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets); err != nil {
-		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
+	shortRet := checkParamsInFnDefNotDefinedAndParamSetsDefined(exec, stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets)
+	if shortRet.IsNotTrue() {
+		return glob.ErrRet(shortRet.String())
 	}
 
 	verifyProcessMsgs := []*glob.VerRet{}
@@ -301,7 +197,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) *glob.StmtRet {
 	}
 	verifyProcessMsgs = append(verifyProcessMsgs, execRet.VerifyProcess...)
 
-	execRet = exec.defFnStmt(stmt.DefFnStmt)
+	execRet = exec.lefDefFnStmt(stmt.DefFnStmt)
 
 	if execRet.IsNotTrue() {
 		return exec.AddStmtToStmtRet(execRet, stmt)
@@ -313,11 +209,6 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) *glob.StmtRet {
 }
 
 func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.StmtRet, error) {
-
-	if err := ast.ParamSetsDoesNotContainFreeParams(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets); err != nil {
-		return glob.ErrRet(err.Error()), fmt.Errorf(err.Error())
-	}
-
 	// Create a new environment for verification and proof
 	exec.NewEnv()
 	defer func() {
@@ -357,7 +248,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.StmtRet, erro
 	// 声明一下函数，这样证明then的时候不会因为没声明这个函数而g了
 	localTemplate := ast.NewFnTStruct(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.RetSet, stmt.DefFnStmt.FnTemplate.DomFacts, []ast.FactStmt{}, stmt.Line)
 	fnDefStmt := ast.NewLetFnStmt(stmt.DefFnStmt.Name, localTemplate, stmt.Line)
-	execState = exec.defFnStmt(fnDefStmt)
+	execState = exec.lefDefFnStmt(fnDefStmt)
 	if execState.IsNotTrue() {
 		return execState, fmt.Errorf(execState.String())
 	}
@@ -387,8 +278,10 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.StmtRet, erro
 }
 
 func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob.StmtRet {
-	if err := ast.ParamSetsDoesNotContainFreeParams(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets); err != nil {
-		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
+
+	shortRet := checkParamsInFnDefNotDefinedAndParamSetsDefined(exec, stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets)
+	if shortRet.IsNotTrue() {
+		return glob.ErrRet(shortRet.String())
 	}
 
 	verifyProcessMsgs := []*glob.VerRet{}
@@ -400,7 +293,7 @@ func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob
 	}
 	verifyProcessMsgs = append(verifyProcessMsgs, execRet.VerifyProcess...)
 	// Only after all verifications pass, declare the function
-	execRet = exec.defFnStmt(stmt.DefFnStmt)
+	execRet = exec.lefDefFnStmt(stmt.DefFnStmt)
 	if execRet.IsNotTrue() {
 		return exec.AddStmtToStmtRet(execRet, stmt)
 	}
@@ -621,8 +514,9 @@ func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCas
 
 func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
 
-	if err := ast.ParamSetsDoesNotContainFreeParams(stmt.DefHeader.Params, stmt.DefHeader.ParamSets); err != nil {
-		return exec.AddStmtToStmtRet(glob.ErrRet(err.Error()), stmt)
+	shortRet := checkParamsInFnDefNotDefinedAndParamSetsDefined(exec, stmt.DefHeader.Params, stmt.DefHeader.ParamSets)
+	if shortRet.IsNotTrue() {
+		return glob.ErrRet(shortRet.String())
 	}
 
 	verifyProcessMsgs := []*glob.VerRet{}
@@ -676,7 +570,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 		),
 		stmt.Line,
 	)
-	execState = exec.defFnStmt(newFnDefStmt)
+	execState = exec.lefDefFnStmt(newFnDefStmt)
 	if execState.IsNotTrue() {
 		return exec.AddStmtToStmtRet(execState, stmt)
 	}

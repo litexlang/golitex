@@ -53,7 +53,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 	// case *ast.DefExistPropStmt:
 	// 	execRet = exec.defExistPropStmt(stmt)
 	case *ast.LetFnStmt:
-		execRet = exec.defFnStmt(stmt)
+		execRet = exec.lefDefFnStmt(stmt)
 		if execRet.IsTrue() {
 			execRet = execRet.AddWarning("`let fn` may introduce non-existent functions. If you want to ensure the function exists, please use `have fn` instead!\n")
 		}
@@ -442,13 +442,18 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) *glob.StmtRet {
 	return exec.AddStmtToStmtRet(execState, stmt)
 }
 
-func (exec *Executor) defFnStmt(stmt *ast.LetFnStmt) *glob.StmtRet {
+func (exec *Executor) lefDefFnStmt(stmt *ast.LetFnStmt) *glob.StmtRet {
 	defineMsgs := []string{}
 	newFactMsgs := []string{}
 
 	ret := exec.Env.IsValidAndAvailableName(stmt.Name)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
+	}
+
+	shortRet := checkParamsInFnDefNotDefinedAndParamSetsDefined(exec, stmt.FnTemplate.Params, stmt.FnTemplate.ParamSets)
+	if shortRet.IsNotTrue() {
+		return glob.ErrRet(shortRet.String())
 	}
 
 	// 在 objMem 里记录一下
