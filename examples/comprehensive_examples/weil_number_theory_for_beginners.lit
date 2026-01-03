@@ -29,9 +29,6 @@ know:
         =>:
             a > b
 
-exist_prop x Z st is_divisible_by(b Z, a Z):
-    a * x = b
-
 prop is_smallest_element_of(x N, s set):
     dom:
         forall y s:
@@ -41,8 +38,6 @@ prop is_smallest_element_of(x N, s set):
         forall y s:
             y >= x
 
-exist_prop x set st non_empty(s set):
-    x $in s
 
 know imply exist x N st exist_smallest_element_of(s set):
     $non_empty(s)
@@ -51,6 +46,8 @@ know imply exist x N st exist_smallest_element_of(s set):
     =>:
         x $in s
         $is_smallest_element_of(x, s)
+
+
     
 know forall x Z, y Z => x * y $in Z, x + y $in Z, x - y $in Z
 
@@ -59,9 +56,9 @@ know forall x N, y N => x + y $in N, x * y $in N
 know forall x N, y N => x + y $in N, x * y $in N
 
 
- """
+ 
 Chapter 1
-"""
+
 
 # Handy builtin rules are there for verifying basic properties of real numbers.
 prove:
@@ -90,17 +87,19 @@ know:
         =>:
             b / a $in Q
 
-"""
+
 Chapter 2
-"""
+
 
 # Lemma 2.1
+
 
 # TODO: THIS CLAIM CAN BE PROVED
 know imply exist q Z st exist_largest_multiple_of(d Z, a Z):
     =>:
         a >= d * q
         d*(q+1) > a
+
 
 # Theorem 2.1
 
@@ -113,6 +112,7 @@ know imply exist m N st nonempty_set_of_integers_closed_under_addition_has_eleme
         forall x s:
             x $in Z
             $is_divisible_by(m, x)
+
 
 # Corollary 2.1
 # Specialized case
@@ -128,6 +128,7 @@ fn set_of_integer_linear_combination_of_two_integers(a Z, b Z) set:
     forall x set_of_integer_linear_combination_of_two_integers(a, b):
         x $in Z
         $is_linear_combination_of_two_integers(x, a, b)
+
 
 know:
     forall x Z, a Z, b Z:
@@ -165,9 +166,9 @@ fn gcd(a Z, b Z) N:
 
 know forall a Z, b Z, d Z: d != 0, a $is_divisible_by d, b $is_divisible_by d => gcd(a, b) $is_divisible_by d
 
-"""
+
 Chapter 3
-"""
+
 
 # Definition 3.1
 prop relatively_prime(a Z, b Z):

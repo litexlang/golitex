@@ -72,12 +72,12 @@ prove:
 # 是斜率
 exist_prop c R st is_slope(k R, s subsets(cart(R, R))):
     $line_as_intensional_set(s, 1, k, c)
-"""
 
 # 1 是 line(1, 1, 1) 的斜率
 prove:
     $line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
     exist 1 st $is_slope(1, line(1, 1, 1))
+"""
 
 # 是截距
 prop is_intercept(i R, a, b, c R):
