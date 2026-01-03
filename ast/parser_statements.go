@@ -37,7 +37,6 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 	// 	ret, err = p.defFnStmt(tb, true)
 	case glob.KeywordLet:
 		if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
-			tb.header.skip(glob.KeywordLet)
 			ret, err = p.defFnStmt(tb, true)
 		} else {
 			ret, err = p.letDefObjStmt(tb)

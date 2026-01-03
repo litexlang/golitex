@@ -98,6 +98,7 @@ know forall x N_pos => x $in N, x >= 1, x > 0, x $in Q, x $in R
 know forall x Z: x > 0 => x $in N_pos
 know forall x Z: x <= 0 => not x $in N_pos
 
+"""
 have fn_set seq(s set):
 	fn (n N_pos) s
 
@@ -121,6 +122,7 @@ let fn finite_seq_product(n N_pos, a finite_seq(R, n), k N) R:
 know:
     forall n N_pos, a finite_seq(R, n), k N: k < n => finite_seq_product(n, a, k+1) = finite_seq_product(n, a, k) * a(k+1)
     forall n N_pos, a finite_seq(R, n) => finite_seq_product(n, a, 1) = a(1)
+"""
 
 
 know forall m N_pos => m - 1 $in N
@@ -577,6 +579,7 @@ know imply item_in_union(z set, x, y set):
 	=>:
 		z $in x or z $in y
 
+"""
 let fn complement(x, y set) set:
 	dom:
 		x $subset_of y
@@ -592,6 +595,7 @@ know imply item_in_complement(z set, x, y set):
 	=>:
 		z $in y
 		not z $in x
+"""
 
 prop sets_are_equal(x, y set):
 	forall a x => a $in y
@@ -640,6 +644,7 @@ prop is_cart(x set)
 
 prop is_tuple(x set)
 
+"""
 let fn proj(x set, i N_pos) set:
 	dom:
 		$is_cart(x)
@@ -648,12 +653,15 @@ let fn proj(x set, i N_pos) set:
 let fn dim(x set) N_pos:
 	dom:
 		$is_cart(x)
+"""
 
 # ∏_{a in I} A_a (Cartesian product)
 prop is_cart_prod(s set)
+"""
 let fn index_set_of_cart_prod(s set) set:
 	dom:
 		$is_cart_prod(s)
+"""
 		
 # let fn cart_prod(index_set set, family fn (index_set) set) set
 
@@ -668,6 +676,7 @@ know:
 
 	forall x N_pos: x >= 0, x > 0, x != 0, x >= 1, not x < 1, not x < 0
 
+"""
 let fn inverse_image_set(X set, Y set, f fn(X)Y, U set) set:
     U $subset_of Y
     =>:
@@ -679,11 +688,14 @@ know:
 		not z $in y
 		<=>:
 			z $in difference(x, y)
+
 know imply item_in_difference(x, y set, z set):
 	z $in difference(x, y)
 	=>:
 		not z $in y
 		z $in x
+
+"""
 
 know:
 	forall x set, y power_set(x):
@@ -740,9 +752,11 @@ know:
 		=>:
 			x = y
 
+"""
 let fn subsets(x set) set
 know forall x set, y subsets(x): y $subset_of x, forall t y => t $in x
 know forall x, y set: x $subset_of y => x $in subsets(y)
+"""
 
 know forall x, y set => x = y <=> x $subset_of y, y $subset_of x
 
@@ -810,10 +824,12 @@ know imply item_in_set_diff(x, y set):
 """
 		
 # TODO: builtin instead of fn
+"""
 let fn choice(x set) fn(x) cup(x)
 know imply axiom_of_choice(x set):
 	forall y x:
 		choice(x)(y) $in y
+"""
 
 know:
 	forall x, y R: x < y => $is_a_nonempty_set(range(x, y)), $is_a_nonempty_set(closed_range(x, y))
