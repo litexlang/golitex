@@ -781,10 +781,8 @@ know:
 	$is_a_nonempty_set(R_neg)
 
 # TODO: builtin instead of fn
-know imply item_in_cup(x set, y x, z set):
-	forall z y:
-		z $in cup(x)
-
+# 一个东西在cup，则怎么怎么样；一个东西满足了cup的性质，则怎么怎么样
+"""
 # cap
 know imply item_in_cap(z set, x set, y cap(x)):
 	forall t x:
@@ -809,6 +807,7 @@ know imply item_in_set_diff(x, y set):
 		z $in y
 		=>:
 			not z $in x
+"""
 		
 # TODO: builtin instead of fn
 let fn choice(x set) fn(x) cup(x)
@@ -836,4 +835,7 @@ know:
 	forall x, y R: x < y => exist z Q st z $in {t R: x < t, t < y}
 	forall x, y R: x < y => exist z R st z $in {t R: x < t, t < y}
 
+prop superset_of(x, y set):
+	forall z y:
+		z $in x
 `
