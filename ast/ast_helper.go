@@ -513,7 +513,7 @@ func IsTrueEqualFact(fact *SpecFactStmt) bool {
 	return true
 }
 
-func (stmt *ImplicationStmt) ToProp() *DefPropStmt {
+func (stmt *DefImplicationStmt) ToProp() *DefPropStmt {
 	return NewDefPropStmt(stmt.DefHeader, stmt.DomFacts, nil, stmt.ImplicationFacts, stmt.Line)
 }
 

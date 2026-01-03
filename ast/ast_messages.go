@@ -559,7 +559,7 @@ func (stmt *KnowImplicationStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)
 	builder.WriteString(" ")
-	builder.WriteString(stmt.Prop.String())
+	builder.WriteString(stmt.ImplicationProp.String())
 	return builder.String()
 }
 
@@ -608,7 +608,7 @@ func (stmt *ProveStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *DefFnStmt) String() string {
+func (stmt *LetFnStmt) String() string {
 	return fnDefStmtStringGivenKw(glob.KeywordFn, stmt.FnTemplate, stmt.Name)
 }
 
@@ -762,7 +762,7 @@ func (stmt *DefFnSetStmt) String() string {
 		builder.WriteByte('\n')
 	}
 
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(NewDefFnStmt("", NewFnTStruct(stmt.AnonymousFn.Params, stmt.AnonymousFn.ParamSets, stmt.AnonymousFn.RetSet, stmt.AnonymousFn.DomFacts, stmt.AnonymousFn.ThenFacts, stmt.Line), stmt.Line).String(), 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(NewLetFnStmt("", NewFnTStruct(stmt.AnonymousFn.Params, stmt.AnonymousFn.ParamSets, stmt.AnonymousFn.RetSet, stmt.AnonymousFn.DomFacts, stmt.AnonymousFn.ThenFacts, stmt.Line), stmt.Line).String(), 1))
 
 	return builder.String()
 }
@@ -1081,7 +1081,7 @@ func (stmt *ProveImplyStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ImplicationStmt) String() string {
+func (stmt *DefImplicationStmt) String() string {
 	var builder strings.Builder
 
 	builder.WriteString(glob.KeywordImplication)
