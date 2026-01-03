@@ -113,8 +113,8 @@ prove:
     a * 1 = 1 * 1 # true. 因为等于的判断条件是每一位相等，而a=1，1=1，每一位对应上了
     a * 1 = 1 # true. 因为1*1能匹配1。如果涉及到的元素都是Number literal，则可以自动匹配
 
-fn sin(x R) R
-fn cos(x R) R
+let fn sin(x R) R
+let fn cos(x R) R
 
 prove:
     know forall x R => sin(x)^2 + cos(x)^2 = 1

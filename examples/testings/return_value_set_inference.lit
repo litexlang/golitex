@@ -2,7 +2,7 @@ prove:
     have fn_set T(t Z):
         fn (z N) fn(R)R
 
-    fn a(x R) T(17)
+    let fn a(x R) T(17)
 
 #    know a(1)(2)(3) = 17
 
@@ -15,20 +15,20 @@ prove:
     have fn_set T(t Z):
         fn (z N) T2(t)
 
-    fn a(x R) T(17)
+    let fn a(x R) T(17)
 
     a(1)(2)(3) $in R
 
 prove:
     let DOMAIN set, f_RET set, g_RET set, optRET set
-    fn opt(x f_RET, y g_RET) optRET
+    let fn opt(x f_RET, y g_RET) optRET
 
-    fn a(f fn(DOMAIN)f_RET, g fn(DOMAIN)g_RET) fn(DOMAIN)optRET: # 最右侧的R，因为+的返回值是R所以是R
+    let fn a(f fn(DOMAIN)f_RET, g fn(DOMAIN)g_RET) fn(DOMAIN)optRET: # 最右侧的R，因为+的返回值是R所以是R
         forall x DOMAIN:
             a(f,g)(x) = opt(f(x),g(x))
             
-    fn f(x DOMAIN)f_RET
-    fn g(x DOMAIN)g_RET
+    let fn f(x DOMAIN)f_RET
+    let fn g(x DOMAIN)g_RET
 
     let item DOMAIN
 
@@ -38,7 +38,7 @@ prove:
 	have fn_set T(t Z):
 		fn (z N) R
 
-	fn a(x R) T(17)
+	let fn a(x R) T(17)
 
     a(1)(2) $in R
 
@@ -70,7 +70,7 @@ prove:
             n >= 1
         fn (x R) T1(n)
 
-    fn w(x R) T0(1)
+    let fn w(x R) T0(1)
 
     have b, z, d, g, s, m R
 

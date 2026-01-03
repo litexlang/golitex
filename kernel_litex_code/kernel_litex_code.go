@@ -753,9 +753,9 @@ know:
 			x = y
 
 """
-let fn subsets(x set) set
-know forall x set, y subsets(x): y $subset_of x, forall t y => t $in x
-know forall x, y set: x $subset_of y => x $in subsets(y)
+let fn power_set(x set) set
+know forall x set, y power_set(x): y $subset_of x, forall t y => t $in x
+know forall x, y set: x $subset_of y => x $in power_set(y)
 """
 
 know forall x, y set => x = y <=> x $subset_of y, y $subset_of x

@@ -56,7 +56,7 @@ prove:
     have fn g(x R) R =:
         case x = 2: 3
         case x != 2: 4
-
+        
     have fn:
         h(x R) R:
             x > 0
