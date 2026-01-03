@@ -1,1 +1,8 @@
-have fn f(x R, y x) R = x
+have fn:
+    h(x R) R:
+        x > 0
+        =>:
+            h(x) > 1
+    prove:
+        do_nothing
+    = 100

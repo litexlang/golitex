@@ -1,7 +1,7 @@
 prop p(x R):
     x > 2
 
-fn f(x R) R
+let fn f(x R) R
 know:
     forall x R: $p(x) => f(x) = x - 2
     forall x R: not $p(x) => f(x) = 0
