@@ -95,7 +95,7 @@ func useHardcodedCodeToInitEnvMgr(envMgr *env.EnvMgr) error {
 		topStmt.SetLine(uint(glob.BuiltinLine0))
 		execState := executor.Stmt(topStmt)
 		if execState.IsUnknown() || execState.IsErr() {
-			return fmt.Errorf("failed to init pipeline: %s\n%s", err, execState.String())
+			return fmt.Errorf("failed to init pipeline :\n%s\nerror:\n %s\n%s", block.String(), err, execState.String())
 		}
 	}
 
