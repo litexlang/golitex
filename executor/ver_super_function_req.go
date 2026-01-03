@@ -36,6 +36,11 @@ func (ver *Verifier) verSuperFunctionReq(fnObj *ast.FnObj, state *VerState) *glo
 		return ver.verSetMinusReq(fnObj, state)
 	case glob.KeywordSetDiff:
 		return ver.verSymmetricDifferenceReq(fnObj, state)
+	case glob.KeywordProj:
+		return ver.verProjReq(fnObj, state)
+	case glob.KeywordDim:
+		return ver.verDimReq(fnObj, state)
+
 	default:
 		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("unknown super function: %s", fnObj.FnHead)})
 	}
@@ -104,6 +109,26 @@ func (ver *Verifier) verSetMinusReq(fnObj *ast.FnObj, state *VerState) *glob.Ver
 func (ver *Verifier) verSymmetricDifferenceReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 2 {
 		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("set_diff expects 2 parameters, got %d", len(fnObj.Params))})
+	}
+
+	_ = state
+
+	return glob.NewEmptyVerRetTrue()
+}
+
+func (ver *Verifier) verProjReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+	if len(fnObj.Params) != 2 {
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("proj expects 2 parameters, got %d", len(fnObj.Params))})
+	}
+
+	_ = state
+
+	return glob.NewEmptyVerRetTrue()
+}
+
+func (ver *Verifier) verDimReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+	if len(fnObj.Params) != 1 {
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("dim expects 1 parameter, got %d", len(fnObj.Params))})
 	}
 
 	_ = state
