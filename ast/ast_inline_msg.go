@@ -48,7 +48,7 @@ func (c *DefPropStmt) InlineString() string {
 	}
 	return builder.String()
 }
-func (l *DefFnStmt) InlineString() string {
+func (l *LetFnStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFn)
 	builder.WriteString(" ")
@@ -152,7 +152,7 @@ func (s *KnowImplicationStmt) InlineString() string {
 	builder.WriteString(glob.KeywordKnow)
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordImplication)
-	builder.WriteString(s.Prop.InlineString())
+	builder.WriteString(s.ImplicationProp.InlineString())
 	return builder.String()
 }
 
@@ -354,7 +354,7 @@ func (s *ProveImplyStmt) InlineString() string {
 	return "TODO"
 }
 
-func (s *ImplicationStmt) InlineString() string {
+func (s *DefImplicationStmt) InlineString() string {
 	return "TODO"
 }
 

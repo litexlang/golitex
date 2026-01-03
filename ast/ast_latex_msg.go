@@ -57,7 +57,7 @@ func (c *DefPropStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (l *DefFnStmt) ToLatexString() string {
+func (l *LetFnStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Function]\n")
 	builder.WriteString(l.Name)
@@ -423,9 +423,9 @@ func (s *ProveCaseByCaseStmt) ToLatexString() string {
 
 func (s *KnowImplicationStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString(s.Prop.ToLatexString())
+	builder.WriteString(s.ImplicationProp.ToLatexString())
 	builder.WriteString("\\begin{assumption}\n")
-	builder.WriteString(s.Prop.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue().ToLatexString())
+	builder.WriteString(s.ImplicationProp.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue().ToLatexString())
 	builder.WriteString("\n\\end{assumption}")
 	return builder.String()
 }
@@ -854,7 +854,7 @@ func (s *ProveImplyStmt) ToLatexString() string {
 	return s.String()
 }
 
-func (s *ImplicationStmt) ToLatexString() string {
+func (s *DefImplicationStmt) ToLatexString() string {
 	// TODO: implement LaTeX conversion for implication
 	return s.String()
 }

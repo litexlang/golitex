@@ -100,8 +100,8 @@ func NewProveStmt(proof []Stmt, line uint) *ProveStmt {
 	return &ProveStmt{proof, line}
 }
 
-func NewDefFnStmt(name string, fnTemplate *AnonymousFn, line uint) *DefFnStmt {
-	return &DefFnStmt{name, fnTemplate, line}
+func NewLetFnStmt(name string, fnTemplate *AnonymousFn, line uint) *LetFnStmt {
+	return &LetFnStmt{name, fnTemplate, line}
 }
 
 // func NewEnumStmt(enumName Obj, enumValues []Obj, line uint) *EnumStmt {
@@ -112,7 +112,7 @@ func NewRunFileStmt(path string, line uint) *RunFileStmt {
 	return &RunFileStmt{path, line}
 }
 
-func NewClaimPropStmt(implication *ImplicationStmt, proofs []Stmt, line uint) *ClaimImplicationStmt {
+func NewClaimPropStmt(implication *DefImplicationStmt, proofs []Stmt, line uint) *ClaimImplicationStmt {
 	return &ClaimImplicationStmt{implication, proofs, line}
 }
 
@@ -176,7 +176,7 @@ func NewHaveFnEqualStmt(defHeader *DefHeader, retSet Obj, equalTo Obj, line uint
 // 	return &HaveFnLiftStmt{fnName, opt, domainOfEachParamOfGivenFn, line}
 // }
 
-func NewClaimHaveFnStmt(defFnStmt *DefFnStmt, proof []Stmt, haveObjSatisfyFn Obj, line uint) *HaveFnStmt {
+func NewClaimHaveFnStmt(defFnStmt *LetFnStmt, proof []Stmt, haveObjSatisfyFn Obj, line uint) *HaveFnStmt {
 	return &HaveFnStmt{defFnStmt, proof, haveObjSatisfyFn, line}
 }
 
@@ -292,7 +292,7 @@ func NewProveAlgoReturnStmt(facts FactOrByStmtSlice, line uint) *ProveAlgoReturn
 	return &ProveAlgoReturnStmt{Facts: facts, Line: line}
 }
 
-func NewHaveFnCaseByCaseStmt(defFnStmt *DefFnStmt, caseByCaseFacts SpecFactPtrSlice, proofs StmtSliceSlice, haveObjSatisfyFn ObjSlice, line uint) *HaveFnCaseByCaseStmt {
+func NewHaveFnCaseByCaseStmt(defFnStmt *LetFnStmt, caseByCaseFacts SpecFactPtrSlice, proofs StmtSliceSlice, haveObjSatisfyFn ObjSlice, line uint) *HaveFnCaseByCaseStmt {
 	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, line}
 }
 
@@ -304,8 +304,8 @@ func NewProveImplicationStmt(specFact *SpecFactStmt, implicationFact FactStmtSli
 	return &ProveImplyStmt{specFact, implicationFact, proof, line}
 }
 
-func NewImplicationStmt(defHeader *DefHeader, domFacts FactStmtSlice, implicationFacts FactStmtSlice, line uint) *ImplicationStmt {
-	return &ImplicationStmt{defHeader, domFacts, implicationFacts, line}
+func NewImplicationStmt(defHeader *DefHeader, domFacts FactStmtSlice, implicationFacts FactStmtSlice, line uint) *DefImplicationStmt {
+	return &DefImplicationStmt{defHeader, domFacts, implicationFacts, line}
 }
 
 func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact *SpecFactStmt, proofs []Stmt, line uint) *ProveExistStmt {

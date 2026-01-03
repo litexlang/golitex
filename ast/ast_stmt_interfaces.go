@@ -27,7 +27,7 @@ type Stmt interface {
 
 func (s *DefLetStmt) stmt()     {}
 func (s *DefPropStmt) stmt()    {}
-func (s *DefFnStmt) stmt()      {}
+func (s *LetFnStmt) stmt()      {}
 func (s *UniFactStmt) stmt()    {}
 func (s *SpecFactStmt) stmt()   {}
 func (s *ClaimProveStmt) stmt() {}
@@ -45,7 +45,7 @@ func (s *RunFileStmt) stmt()                   {}
 func (s *ProveStmt) stmt()                     {}
 func (s *ProveForStmt) stmt()                  {}
 func (s *ProveImplyStmt) stmt()                {}
-func (s *ImplicationStmt) stmt()               {}
+func (s *DefImplicationStmt) stmt()               {}
 func (s *UniFactWithIffStmt) stmt()            {}
 func (s *ClaimProveByContradictionStmt) stmt() {}
 func (s *ClaimImplicationStmt) stmt()          {}
@@ -77,7 +77,7 @@ func (s *ProveExistStmt) stmt()             {}
 
 func (s *DefLetStmt) algoStmt()     {}
 func (s *DefPropStmt) algoStmt()    {}
-func (s *DefFnStmt) algoStmt()      {}
+func (s *LetFnStmt) algoStmt()      {}
 func (s *UniFactStmt) algoStmt()    {}
 func (s *SpecFactStmt) algoStmt()   {}
 func (s *ClaimProveStmt) algoStmt() {}
@@ -117,7 +117,7 @@ func (s *ByStmt) algoStmt()                     {}
 func (s *ClaimIffStmt) algoStmt()               {}
 func (s *ProveForStmt) algoStmt()               {}
 func (s *ProveImplyStmt) algoStmt()             {}
-func (s *ImplicationStmt) algoStmt()            {}
+func (s *DefImplicationStmt) algoStmt()            {}
 func (s *ProveIsTransitivePropStmt) algoStmt()  {}
 func (s *DefAlgoStmt) algoStmt()                {}
 func (s *EvalStmt) algoStmt()                   {}
@@ -126,7 +126,7 @@ func (s *HaveFnCaseByCaseStmt) algoStmt()       {}
 func (s *ProveExistStmt) algoStmt()             {}
 func (s *DefLetStmt) GetLine() uint             { return s.Line }
 func (s *DefPropStmt) GetLine() uint            { return s.Line }
-func (s *DefFnStmt) GetLine() uint              { return s.Line }
+func (s *LetFnStmt) GetLine() uint              { return s.Line }
 func (s *UniFactStmt) GetLine() uint            { return s.Line }
 func (s *SpecFactStmt) GetLine() uint           { return s.Line }
 func (s *ClaimProveStmt) GetLine() uint         { return s.Line }
@@ -173,14 +173,14 @@ func (s *DefProveAlgoStmt) GetLine() uint           { return s.Line }
 func (s *ByStmt) GetLine() uint                     { return s.Line }
 func (s *ProveForStmt) GetLine() uint               { return s.Line }
 func (s *ProveImplyStmt) GetLine() uint             { return s.Line }
-func (s *ImplicationStmt) GetLine() uint            { return s.Line }
+func (s *DefImplicationStmt) GetLine() uint            { return s.Line }
 func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint  { return s.Line }
 func (s *HaveFnCaseByCaseStmt) GetLine() uint       { return s.Line }
 func (s *ProveExistStmt) GetLine() uint             { return s.Line }
 
 func (s *DefLetStmt) SetLine(l uint)     { s.Line = l }
 func (s *DefPropStmt) SetLine(l uint)    { s.Line = l }
-func (s *DefFnStmt) SetLine(l uint)      { s.Line = l }
+func (s *LetFnStmt) SetLine(l uint)      { s.Line = l }
 func (s *UniFactStmt) SetLine(l uint)    { s.Line = l }
 func (s *SpecFactStmt) SetLine(l uint)   { s.Line = l }
 func (s *ClaimProveStmt) SetLine(l uint) { s.Line = l }
@@ -231,7 +231,7 @@ func (s *DefProveAlgoStmt) SetLine(l uint)           { s.Line = l }
 func (s *ByStmt) SetLine(l uint)                     { s.Line = l }
 func (s *ProveForStmt) SetLine(l uint)               { s.Line = l }
 func (s *ProveImplyStmt) SetLine(l uint)             { s.Line = l }
-func (s *ImplicationStmt) SetLine(l uint)            { s.Line = l }
+func (s *DefImplicationStmt) SetLine(l uint)            { s.Line = l }
 func (s *HaveFnEqualCaseByCaseStmt) SetLine(l uint)  { s.Line = l }
 func (s *HaveFnCaseByCaseStmt) SetLine(l uint)       { s.Line = l }
 func (s *ProveExistStmt) SetLine(l uint)             { s.Line = l }

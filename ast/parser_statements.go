@@ -33,10 +33,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 	switch cur {
 	case glob.KeywordProp:
 		ret, err = p.defPropStmt(tb)
-	// case glob.KeywordExistProp:
-	// 	ret, err = p.defExistPropStmt(tb, glob.KeywordExistProp)
-	case glob.KeywordFn:
-		ret, err = p.defFnStmt(tb, true)
+	// case glob.KeywordFn:
+	// 	ret, err = p.defFnStmt(tb, true)
 	case glob.KeywordLet:
 		if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
 			tb.header.skip(glob.KeywordLet)
@@ -310,9 +308,14 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 // 	return NewDefExistPropStmt(def, existParams, existParamSets, tb.line), nil
 // }
 
-func (p *TbParser) defFnStmt(tb *tokenBlock, skipFn bool) (Stmt, error) {
-	if skipFn {
-		err := tb.header.skip(glob.KeywordFn)
+func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (Stmt, error) {
+	if skipLetAndFn {
+		err := tb.header.skip(glob.KeywordLet)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		err = tb.header.skip(glob.KeywordFn)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -371,7 +374,7 @@ func (p *TbParser) defFnStmt(tb *tokenBlock, skipFn bool) (Stmt, error) {
 			}
 
 			if !tb.header.is(glob.KeySymbolRightArrow) {
-				return NewDefFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
+				return NewLetFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
 			}
 
 			err = tb.header.skip(glob.KeySymbolRightArrow)
@@ -396,7 +399,7 @@ func (p *TbParser) defFnStmt(tb *tokenBlock, skipFn bool) (Stmt, error) {
 		thenFacts = append(thenFacts, unitFacts...)
 	}
 
-	return NewDefFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
+	return NewLetFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
 }
 
 func (p *TbParser) letDefObjStmt(tb *tokenBlock) (Stmt, error) {
@@ -497,7 +500,7 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		return NewClaimHaveFnStmt(defFnStmt.(*DefFnStmt), proof, haveObjSatisfyFn, tb.line), nil
+		return NewClaimHaveFnStmt(defFnStmt.(*LetFnStmt), proof, haveObjSatisfyFn, tb.line), nil
 	} else if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordCase) {
 		// Case-by-case structure: body[0] is defFnStmt, body[1..n] are case/equal pairs
 		if (len(tb.body)-1)%2 != 0 {
@@ -543,7 +546,7 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 			}
 		}
 
-		return NewHaveFnCaseByCaseStmt(defFnStmt.(*DefFnStmt), cases, proofs, EqualTo, tb.line), nil
+		return NewHaveFnCaseByCaseStmt(defFnStmt.(*LetFnStmt), cases, proofs, EqualTo, tb.line), nil
 	} else {
 		return nil, fmt.Errorf("expect 'prove:' or 'case' after defFnStmt in have fn statement")
 	}
@@ -2177,7 +2180,7 @@ func (p *TbParser) proveImplyStmt(tb *tokenBlock) (*ProveImplyStmt, error) {
 	return NewProveImplicationStmt(specFact, implicationFacts, proofs, tb.line), nil
 }
 
-func (p *TbParser) DefImplicationStmtI(tb *tokenBlock) (*ImplicationStmt, error) {
+func (p *TbParser) DefImplicationStmtI(tb *tokenBlock) (*DefImplicationStmt, error) {
 	body, err := p.implicationStmtWithoutSelfReferCheck(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -2196,7 +2199,7 @@ func (p *TbParser) DefImplicationStmtI(tb *tokenBlock) (*ImplicationStmt, error)
 	return body, nil
 }
 
-func (p *TbParser) implicationStmtWithoutSelfReferCheck(tb *tokenBlock) (*ImplicationStmt, error) {
+func (p *TbParser) implicationStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefImplicationStmt, error) {
 	err := tb.header.skip(glob.KeywordImplication)
 	if err != nil {
 		return nil, ErrInLine(err, tb)

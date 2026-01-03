@@ -301,12 +301,12 @@ func (stmt *DefLetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewDefLetStmt(stmt.Objs, newObjSets, stmt.Facts, stmt.Line), nil
 }
 
-func (stmt *DefFnStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+func (stmt *LetFnStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	fnTemplateInstantiated, err := stmt.FnTemplate.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
-	return NewDefFnStmt(stmt.Name, fnTemplateInstantiated, stmt.Line), nil
+	return NewLetFnStmt(stmt.Name, fnTemplateInstantiated, stmt.Line), nil
 }
 
 func (s StmtSlice) Instantiate(uniMap map[string]Obj) (StmtSlice, error) {
@@ -350,7 +350,7 @@ func (stmt *ClaimImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 	if err != nil {
 		return nil, err
 	}
-	return NewClaimPropStmt(newImplication.(*ImplicationStmt), newProofs, stmt.Line), nil
+	return NewClaimPropStmt(newImplication.(*DefImplicationStmt), newProofs, stmt.Line), nil
 }
 
 func (stmt CanBeKnownStmtSlice) Instantiate(uniMap map[string]Obj) (CanBeKnownStmtSlice, error) {
@@ -374,7 +374,7 @@ func (stmt *KnowFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 }
 
 func (stmt *KnowImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newProp, err := stmt.Prop.Instantiate(uniMap)
+	newProp, err := stmt.ImplicationProp.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
@@ -648,7 +648,7 @@ func (stmt *HaveFnStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewClaimHaveFnStmt(newDefFnStmt.(*DefFnStmt), newProofs, newHaveObjSatisfyFn, stmt.Line), nil
+	return NewClaimHaveFnStmt(newDefFnStmt.(*LetFnStmt), newProofs, newHaveObjSatisfyFn, stmt.Line), nil
 }
 
 func (stmt *HaveFnCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
@@ -676,7 +676,7 @@ func (stmt *HaveFnCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 		}
 		newHaveObjSatisfyFn[i] = newObj
 	}
-	return NewHaveFnCaseByCaseStmt(newDefFnStmt.(*DefFnStmt), newCaseByCaseFacts, newProofs, newHaveObjSatisfyFn, stmt.Line), nil
+	return NewHaveFnCaseByCaseStmt(newDefFnStmt.(*LetFnStmt), newCaseByCaseFacts, newProofs, newHaveObjSatisfyFn, stmt.Line), nil
 }
 
 func (stmt *ProveForStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
@@ -725,7 +725,7 @@ func (stmt *ProveImplyStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewProveImplicationStmt(stmt.SpecFact, newImplicationFacts, newProofs, stmt.Line), nil
 }
 
-func (stmt *ImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+func (stmt *DefImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newDefHeader, err := stmt.DefHeader.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
