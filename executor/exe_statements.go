@@ -603,10 +603,12 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 		return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
 	}
 
-	def := exec.Env.GetPropDef(stmt.Prop)
-	if def == nil {
+	definedStuff, ok := exec.Env.GetPropDef(stmt.Prop)
+	if !ok {
 		return glob.ErrRet(fmt.Sprintf("undefined prop: %s", stmt.Prop))
 	}
+
+	def := definedStuff.Defined
 
 	if len(def.DefHeader.Params) != 2 {
 		return glob.ErrRet(fmt.Sprintf("prop %s has %d params, but 2 params are expected", stmt.Prop, len(def.DefHeader.Params)))
@@ -918,10 +920,11 @@ func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveImplyStmt) *glob
 	}
 
 	// prop 的定义
-	def := exec.Env.GetPropDef(stmt.SpecFact.PropName)
-	if def == nil {
+	definedStuff, ok := exec.Env.GetPropDef(stmt.SpecFact.PropName)
+	if !ok {
 		return glob.ErrRet(fmt.Sprintf("undefined prop: %s", stmt.SpecFact.PropName))
 	}
+	def := definedStuff.Defined
 	if len(def.DefHeader.Params) != len(specFactAsParams) {
 		return glob.ErrRet(fmt.Sprintf("prop %s has %d params, but %d params are expected", stmt.SpecFact.PropName, len(def.DefHeader.Params), len(specFactAsParams)))
 	}

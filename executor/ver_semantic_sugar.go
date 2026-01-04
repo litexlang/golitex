@@ -40,22 +40,22 @@ func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, 
 	return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.Line, []string{fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())})
 }
 
-func (ver *Verifier) verByReplaceObjInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
+// func (ver *Verifier) verByReplaceObjInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+// 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 
-	if replaced {
-		verRet := ver.verTrueEqualFactMainLogic(newStmt, state.CopyAndReqOkToFalse())
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsTrue() {
-			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String())
-			if state.WithMsg {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{msg})
-			}
-			return glob.NewEmptyVerRetTrue()
-		}
-	}
+// 	if replaced {
+// 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state.CopyAndReqOkToFalse())
+// 		if verRet.IsErr() {
+// 			return verRet
+// 		}
+// 		if verRet.IsTrue() {
+// 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String())
+// 			if state.WithMsg {
+// 				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{msg})
+// 			}
+// 			return glob.NewEmptyVerRetTrue()
+// 		}
+// 	}
 
-	return glob.NewEmptyVerRetUnknown()
-}
+// 	return glob.NewEmptyVerRetUnknown()
+// }

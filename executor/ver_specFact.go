@@ -178,12 +178,14 @@ func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) 
 func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	// nextState := state.GetAddRound()
 
-	curDefStmt := ver.Env.GetPropDef(stmt.PropName)
+	curDefinedStuff, ok := ver.Env.GetPropDef(stmt.PropName)
 	// defStmt := curDefStmt
-	if curDefStmt == nil {
+	if !ok {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
 		return glob.NewEmptyVerRetUnknown()
 	}
+
+	curDefStmt := curDefinedStuff.Defined
 
 	if len(curDefStmt.IffFactsOrNil) == 0 {
 		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
@@ -396,11 +398,13 @@ func (ver *Verifier) verIsCartByBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	nextState := state.GetAddRound()
 
-	defStmt := ver.Env.GetPropDef(stmt.PropName)
-	if defStmt == nil {
+	curDefinedStuff, ok := ver.Env.GetPropDef(stmt.PropName)
+	if !ok {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
 		return glob.NewEmptyVerRetUnknown()
 	}
+
+	defStmt := curDefinedStuff.Defined
 
 	if len(defStmt.IffFactsOrNil) == 0 {
 		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立

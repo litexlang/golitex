@@ -213,10 +213,12 @@ func (envMgr *EnvMgr) ProveImplyNewThenFactInPropDef(stmt *ast.ProveImplyStmt) *
 		return glob.ErrRet(err.Error())
 	}
 
-	def := envMgr.GetPropDef(stmt.SpecFact.PropName)
-	if def == nil {
+	definedStuff, ok := envMgr.GetPropDef(stmt.SpecFact.PropName)
+	if !ok {
 		return glob.ErrRet(fmt.Sprintf("undefined prop: %s", stmt.SpecFact.PropName))
 	}
+
+	def := definedStuff.Defined
 
 	if len(specFactAsParams) != len(def.DefHeader.Params) {
 		return glob.ErrRet(fmt.Sprintf("prop %s has %d params, but %d params are expected", stmt.SpecFact.PropName, len(def.DefHeader.Params), len(specFactAsParams)))

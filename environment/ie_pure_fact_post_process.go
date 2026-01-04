@@ -26,9 +26,9 @@ func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 		return ret
 	}
 
-	propDef := ie.EnvMgr.GetPropDef(fact.PropName)
+	_, ok := ie.EnvMgr.GetPropDef(fact.PropName)
 
-	if propDef != nil {
+	if ok {
 		if fact.FactType == ast.TruePure {
 			ret := ie.newUserDefinedTruePureFactByDef(fact)
 			return ret

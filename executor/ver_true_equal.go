@@ -40,9 +40,9 @@ func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt *ast.SpecFactStmt, state
 		return verRet
 	}
 
-	if verRet := ver.verByReplaceObjInSpecFactWithValueAndCompute(stmt, state); verRet.IsTrue() || verRet.IsErr() {
-		return verRet
-	}
+	// if verRet := ver.verByReplaceObjInSpecFactWithValueAndCompute(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+	// 	return verRet
+	// }
 
 	return glob.NewEmptyVerRetUnknown()
 }

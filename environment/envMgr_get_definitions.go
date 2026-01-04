@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (envMgr *EnvMgr) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
+func (envMgr *EnvMgr) GetPropDef(propName ast.Atom) (DefinedStuff[*ast.DefPropStmt], bool) {
 	var pkgName string
 	var envMgrContainsDef = envMgr
 
@@ -34,40 +34,14 @@ func (envMgr *EnvMgr) GetPropDef(propName ast.Atom) *ast.DefPropStmt {
 	// depth
 	propDef, ok := envMgrContainsDef.AllDefinedPropNames[string(propName)]
 	if ok {
-		return propDef.Defined
+		return propDef, true
 	}
 
 	// Search in builtin env
 	propDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedPropNames[string(propName)]
 	if ok {
-		return propDef.Defined
+		return propDef, true
 	}
 
-	return nil
+	return DefinedStuff[*ast.DefPropStmt]{}, false
 }
-
-// func (envMgr *EnvMgr) GetExistPropDef(propName ast.Atom) *ast.DefExistPropStmt {
-// 	var pkgName string
-// 	var envMgrContainsDef = envMgr
-
-// 	withPkgName, pkgName, _ := glob.GetPkgNameAndName(string(propName))
-
-// 	if withPkgName {
-// 		envMgrContainsDef = envMgr.GetEnvMgrOfName(pkgName)
-// 	} else {
-// 		envMgrContainsDef = envMgr
-// 	}
-
-// 	existPropDef, ok := envMgrContainsDef.AllDefinedExistPropNames[string(propName)]
-// 	if ok {
-// 		return existPropDef
-// 	}
-
-// 	// Search in builtin env
-// 	existPropDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedExistPropNames[string(propName)]
-// 	if ok {
-// 		return existPropDef
-// 	}
-
-// 	return nil
-// }

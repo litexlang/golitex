@@ -1,5 +1,1 @@
-prop p(x, y R)
-
-know forall x R: exist z R st $p(x, z)
-
-exist z R st $p(1, z)
+(1, 0) $in {x cart(R, R): x[1] * x[1] + x[2] * x[2] = 1}
