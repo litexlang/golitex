@@ -567,23 +567,6 @@ let fn union(x, y set) set:
 		z $in union(x, y)
 """
 
-"""
-let fn complement(x, y set) set:
-	dom:
-		x $subset_of y
-	=>:
-		forall z y:
-			not z $in x
-			=>:
-				z $in complement(x, y)
-
-know imply item_in_complement(z set, x, y set):
-	x $subset_of y
-	z $in complement(x, y)
-	=>:
-		z $in y
-		not z $in x
-"""
 
 prop sets_are_equal(x, y set):
 	forall a x => a $in y
@@ -685,13 +668,6 @@ know imply item_in_difference(x, y set, z set):
 
 """
 
-know:
-	forall x set, y power_set(x):
-		y $subset_of x
-	forall x set, y set:
-		y $subset_of x
-		=>:
-			y $in power_set(x)
 
 know:
 	forall a, b, c, d R: b > 0, d > 0 => a / b > c / d <=> a * d > b * c
@@ -911,4 +887,38 @@ know imply item_in_intersect(z set, x, y set):
 		z $in x
 		z $in y
 
+### power set
+
+# check item in power_set
+know:
+	forall x set, y set:
+		y $subset_of x
+		=>:
+			y $in power_set(x)
+
+# when item in power set, it has properties
+know:
+	forall x set, y power_set(x):
+		y $subset_of x
+
+### set minus
+
+# check item in set minus
+know:
+	forall item, x, y set:
+		item $in x
+		not item $in y
+		=>:
+			item $in set_minus(x, y)
+
+# when item in set minus, it has properties
+know imply item_in_set_minus(x, y set, item set_minus(x, y)):
+	item $in x
+	not item $in y
+
+### set diff
+
+know:
+	forall x, y set:
+		set_diff(x, y) = set_minus(x, y) \union set_minus(y, x)
 `

@@ -105,11 +105,11 @@ const (
 	KeywordEqualTuple         = "equal_tuple"
 	KeywordIsNonEmptyWithItem = "is_nonempty_with_item"
 
+	KeywordCup       = "cup"
+	KeywordCap       = "cap"
 	KeywordUnion     = "union"
 	KeywordIntersect = "intersect"
 	KeywordPowerSet  = "power_set"
-	KeywordCup       = "cup"
-	KeywordCap       = "cap"
 	KeywordSetMinus  = "set_minus"
 	KeywordSetDiff   = "set_diff"
 
