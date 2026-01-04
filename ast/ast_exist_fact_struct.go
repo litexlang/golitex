@@ -82,3 +82,17 @@ func (f *SpecFactStmt) ToExistStFactStruct() *ExistStFactStruct {
 func (s *ExistStFactStruct) GetTruePureFact() *SpecFactStmt {
 	return NewSpecFactStmt(TruePure, s.PropName, s.Params, s.Line)
 }
+
+// 作用：know forall x set, cup_x_item cup(x) => exist x_item x st cup_x_item $in x_item 能用到 existParamSet 中出现的 x 去匹配 forall cup_c_item cup(c) => exist c_item c st $in(cup_c_item, c_item)
+func (s *ExistStFactStruct) GetTruePureFactWithParamSets() *SpecFactStmt {
+	params := []Obj{}
+	for _, param := range s.Params {
+		params = append(params, param)
+	}
+
+	for _, existParamSet := range s.ExistFreeParamSets {
+		params = append(params, existParamSet)
+	}
+
+	return NewSpecFactStmt(TruePure, s.PropName, params, s.Line)
+}
