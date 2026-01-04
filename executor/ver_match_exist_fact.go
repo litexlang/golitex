@@ -67,6 +67,7 @@ func (ver *Verifier) MatchExistFactStruct(given *ast.ExistStFactStruct, stored *
 	return glob.NewEmptyVerRetTrue()
 }
 
+// match给定的specFact和uniFact下面的specFact的多个行为 1. 如果不涉及到freeParam，那么要确保他们符号相等 2. 获得各个freeParam对应了哪些哪些givenParam 3. 如果某个freeParam对应了多个givenParam，那就要验证他们都相等否则就unknown
 func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, given *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
 	knownStruct := knownSpecFactInUniFact.SpecFact.ToExistStFactStruct()
 	givenStruct := given.ToExistStFactStruct()

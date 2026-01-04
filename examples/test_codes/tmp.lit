@@ -7,3 +7,4 @@ $check_item_in_cup(c, a, a_item)
 a_item $in cup(c)
 
 forall cup_c_item cup(c) => exist c_item c st $in(cup_c_item, c_item)
+
