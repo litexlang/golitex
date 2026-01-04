@@ -858,7 +858,7 @@ know:
 			item $in cap(x)
 
 # when item in cap, it has properties
-know imply item_in_cap(x set, item cap(x)):
+know imply item_in_cap_implies(x set, item cap(x)):
 	forall x_item x:
 		item $in x_item
 
@@ -869,7 +869,7 @@ know:
 	forall item, x, y set: item $in x or item $in y => item $in union(x, y)
 
 # when item in union, it has properties
-know imply item_in_union(z set, x, y set):
+know imply item_in_union_implies(z set, x, y set):
 	z $in union(x, y)
 	=>:
 		z $in x or z $in y
@@ -881,7 +881,7 @@ know:
 	forall item, x, y set: item $in x, item $in y => item $in intersect(x, y)
 
 # when item in intersect, it has properties
-know imply item_in_intersect(z set, x, y set):
+know imply item_in_intersect_implies(z set, x, y set):
 	z $in intersect(x, y)
 	=>:
 		z $in x
@@ -912,7 +912,7 @@ know:
 			item $in set_minus(x, y)
 
 # when item in set minus, it has properties
-know imply item_in_set_minus(x, y set, item set_minus(x, y)):
+know imply item_in_set_minus_implies(x, y set, item set_minus(x, y)):
 	item $in x
 	not item $in y
 

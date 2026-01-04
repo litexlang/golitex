@@ -1,10 +1,92 @@
-have a, b nonempty_set
-know a != b
-have c set = {a, b}
-have a_item a, b_item b
+# cup example
+prove:
+    have a, b nonempty_set
+    know a != b
+    have c set = {a, b}
+    have a_item a, b_item b
 
-$check_item_in_cup(c, a, a_item)
-a_item $in cup(c)
+    $check_item_in_cup(c, a, a_item)
+    a_item $in cup(c)
 
-forall cup_c_item cup(c) => exist c_item c st $in(cup_c_item, c_item)
+    forall cup_c_item cup(c) => exist c_item c st $in(cup_c_item, c_item)
+
+# cap example
+prove:
+    have a, b nonempty_set
+    have item set
+    know:
+        a != b 
+        item $in a
+        item $in b
+
+    have c set = {a, b}
+    
+    prove_by_enum(c_item c):
+        item $in c_item
+
+    item $in cap(c)
+    
+    $item_in_cap_implies(c, item)
+    item $in cap(c)
+
+# union example
+prove:
+    have x, y set
+    have item set
+    know item $in x
+    
+    item $in x or item $in y
+    item $in union(x, y)
+    
+    $item_in_union_implies(item, x, y)
+    item $in union(x, y)
+    item $in x or item $in y
+
+# intersect example
+prove:
+    have x, y set
+    have item set
+    know item $in x
+    know item $in y
+    
+    item $in x, item $in y
+    item $in intersect(x, y)
+    
+    $item_in_intersect_implies(item, x, y)
+    item $in intersect(x, y)
+    item $in x
+    item $in y
+
+# power_set example
+prove:
+    have x set
+    have y set
+    know y $subset_of x
+    
+    y $subset_of x
+    y $in power_set(x)
+    
+    forall x_set set, y_set power_set(x_set):
+        y_set $subset_of x_set
+
+# set_minus example
+prove:
+    have x, y set
+    have item set
+    know item $in x
+    know not item $in y
+    
+    item $in x
+    not item $in y
+    item $in set_minus(x, y)
+    
+    $item_in_set_minus_implies(x, y, item)
+    item $in set_minus(x, y)
+    item $in x
+    not item $in y
+
+# set_diff example
+prove:
+    have x, y set
+    set_diff(x, y) = set_minus(x, y) \union set_minus(y, x)
 
