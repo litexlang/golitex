@@ -1,0 +1,27 @@
+prove:
+    prop p(x R)
+    prop q(x R)
+
+    know exist x Z st $p(x)
+
+    exist y Z st $p(y)
+
+    know not exist z N st $q(z)
+
+    not exist z N st $q(z)
+
+prove:
+    know forall x Q: exist y Q st y > x
+
+    exist z Q st z > 1
+
+prove:
+    know forall x R: exist y R st y > x
+
+    exist x R st x > 10000
+
+prove:
+    prove forall x R: exist y R st y > x:
+        prove_exist x + 1 : y R st y > x
+
+    have a R st a > 0

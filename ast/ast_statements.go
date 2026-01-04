@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,28 +46,9 @@ type DefPropStmt struct {
 	Line uint
 }
 
-// 虽然它和 defProp 一样，但不排除之后要让iffFacts只能是可逆的事实
-type DefExistPropStmtBody struct {
-	DefHeader             *DefHeader
-	DomFactsOrNil         FactStmtSlice
-	IffFactsOrNil         FactStmtSlice
-	ImplicationFactsOrNil FactStmtSlice
-
-	Line uint
-}
-
-// how to  use not exist to prove and store not forall in iff section of exist_prop: define a new exist_prop, give a name to that forall, and make this exist_prop equivalent to original exist_prop. Then use prove_by_contradiction to prove the new exist_prop is also false, then the not forall is proved.
-type DefExistPropStmt struct {
-	DefBody        *DefExistPropStmtBody
-	ExistParams    StrSlice
-	ExistParamSets ObjSlice
-
-	Line uint
-}
-
-type DefFnStmt struct {
+type LetFnStmt struct {
 	Name       string
-	FnTemplate *FnTStruct
+	FnTemplate *AnonymousFn
 
 	Line uint
 }
@@ -89,7 +70,7 @@ type UniFactWithIffStmt struct {
 }
 
 type SpecFactStmt struct {
-	TypeEnum SpecFactEnum
+	FactType SpecFactType
 	PropName Atom
 	Params   ObjSlice
 
@@ -110,7 +91,7 @@ type ClaimProveByContradictionStmt struct {
 }
 
 type ClaimImplicationStmt struct {
-	Implication *ImplicationStmt
+	Implication *DefImplicationStmt
 	Proofs      StmtSlice
 
 	Line uint
@@ -122,24 +103,8 @@ type KnowFactStmt struct {
 	Line uint
 }
 
-type KnowPropStmt struct {
-	Prop *DefPropStmt
-
-	Line uint
-}
-
-// TODO: 这个的parser还没有像claim_prop那样改成用@
-type ClaimExistPropStmt struct {
-	ExistPropWithoutDom *DefExistPropStmt
-	Proofs              StmtSlice
-	HaveObj             ObjSlice
-
-	Line uint
-}
-
-type HaveObjStStmt struct {
-	ObjNames StrSlice
-	Fact     *SpecFactStmt
+type KnowImplicationStmt struct {
+	ImplicationProp *DefPropStmt
 
 	Line uint
 }
@@ -166,19 +131,12 @@ type OrStmt struct {
 	Line uint
 }
 
-// """
-// import sys # 相当于 import sys as sys
-
-// import "xxx.lit"
-
 // import sys as s
-
 // import "your_dir" as a
-
-// """
 type ImportDirStmt struct {
-	Path      string
-	AsPkgName string
+	RelativePathOrGlobalPkgName string
+	AsPkgName                   string
+	IsGlobalPkg                 bool
 
 	Line uint
 }
@@ -189,16 +147,8 @@ type ProveStmt struct {
 	Line uint
 }
 
-// s := {1,2,3} 是枚举语法糖，等价于 forall x s: x = 1 or x = 2 or x = 3; 1 $in s; 2 $in s; 3 $in s;
-// s := {} 表示 这是个空集
-// type EnumStmt struct {
-// 	CurSet Obj
-// 	Items  ObjSlice
-
-// 	Line uint
-// }
-
-type ImportFileStmt struct {
+// run "xxx.lit"
+type RunFileStmt struct {
 	Path string
 
 	Line uint
@@ -238,39 +188,20 @@ type HaveObjInNonEmptySetStmt struct {
 	Line uint
 }
 
-// type NamedUniFactStmt struct {
-// 	DefPropStmt *DefPropStmt
-
-// 	Line uint
-// }
-
 type EqualsFactStmt struct {
 	Params ObjSlice
 
 	Line uint
 }
-
-type KnowExistPropStmt struct {
-	ExistProp *DefExistPropStmt
-
-	Line uint
-}
-
-// type LatexStmt struct {
-// 	Comment string
-
-// 	Line uint
-// }
-
-type FnTemplateDefStmt struct {
+type DefFnSetStmt struct {
 	TemplateDefHeader *DefHeader
 	TemplateDomFacts  FactStmtSlice
-	Fn                *FnTStruct
+	AnonymousFn       *AnonymousFn
 
 	Line uint
 }
 
-type FnTStruct struct {
+type AnonymousFn struct {
 	Params    StrSlice
 	ParamSets ObjSlice
 	RetSet    Obj
@@ -342,7 +273,7 @@ have fn:
 	= ...
 */
 type HaveFnStmt struct {
-	DefFnStmt        *DefFnStmt
+	DefFnStmt        *LetFnStmt
 	Proofs           StmtSlice
 	HaveObjSatisfyFn Obj
 
@@ -364,7 +295,7 @@ have fn:
 	= ...
 */
 type HaveFnCaseByCaseStmt struct {
-	DefFnStmt       *DefFnStmt
+	DefFnStmt       *LetFnStmt
 	CaseByCaseFacts SpecFactPtrSlice
 	Proofs          StmtSliceSlice
 	EqualToObjs     ObjSlice
@@ -457,59 +388,11 @@ type ProveAlgoReturnStmt struct {
 	Line uint
 }
 
-type PrintStmt struct {
-	IsFString bool
-	Value     string
-
-	Line uint
-}
-
-// type HelpStmt struct {
-// 	Keyword string
-
-// 	Line uint
-// }
-
-// 这是必要的，因为要证明从n到m有且只有n, n+1, ..., m-1, m这些数，必须要用特殊的关键词
-
-type HaveCartSetStmt struct {
-	Name    string
-	CartObj *FnObj
-
-	Line uint
-}
-
-// TODO 应该没什么用
-type HaveObjFromCartSetStmt struct {
-	ObjName string
-	CartSet *FnObj
-	EqualTo Obj
-
-	Line uint
-}
-
-type HaveCartWithDimStmt struct {
-	ObjName string
-	CartDim Obj
-	Param   string
-	Facts   FactStmtSlice
-	Proofs  StmtSlice
-	EqualTo Obj
-
-	Line uint
-}
-
-// prove_for i $in range(1, 10):
-//     =>:
-//         $p(i)
-//     prove:
-//         know $p(i)
-
 type ProveForStmt struct {
-	Param         string
-	Left          Obj
-	Right         Obj
-	IsProveIRange bool
+	Params        StrSlice
+	Lefts         ObjSlice
+	Rights        ObjSlice
+	IsProveIRange []bool // true for range, false for closed_range
 	DomFacts      FactStmtSlice
 	ThenFacts     FactStmtSlice
 	Proofs        StmtSlice
@@ -517,7 +400,7 @@ type ProveForStmt struct {
 	Line uint
 }
 
-type ImplicationStmt struct {
+type DefImplicationStmt struct {
 	DefHeader        *DefHeader
 	DomFacts         FactStmtSlice
 	ImplicationFacts FactStmtSlice
@@ -525,11 +408,29 @@ type ImplicationStmt struct {
 	Line uint
 }
 
-type ProveImplicationStmt struct {
-	ImplicationName string
-	Params          StrSlice
+type ProveImplyStmt struct {
+	SpecFact        *SpecFactStmt
 	ImplicationFact FactStmtSlice
-	Proof           StmtSlice
+	Proofs          StmtSlice
+
+	Line uint
+}
+
+// have objectName setName, objectName2 setName2 st $propName(...)
+type HaveObjStWithParamSetsStmt struct {
+	ObjNames StrSlice
+	ObjSets  ObjSlice
+	Fact     *SpecFactStmt
+
+	Line uint
+}
+
+type ProveExistStmt struct {
+	ExistParams    StrSlice
+	ExistParamSets ObjSlice
+	EqualTos       ObjSlice
+	Fact           *SpecFactStmt
+	Proofs         StmtSlice
 
 	Line uint
 }

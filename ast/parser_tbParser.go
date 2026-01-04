@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,20 +19,17 @@ import (
 	pkgMgr "golitex/package_manager"
 )
 
-// TODO: 这里要让 parse obj 的时候，能读入 pkgName 这样parse的时候，自动把这个名字写成 defaultPkgName.name 的形式，就会很好 =，很方便我跨包引用，顺便能检查是否重复定义了
 type TbParser struct {
 	FreeParams                    map[string]struct{}
-	PkgPathNameMgr                *pkgMgr.PathNameMgr
-	CurPkgPath                    string
-	DefinedNamesAtEachParseEnv    DefinedNameAtEachParseEnv
+	PkgPathNameMgr                *pkgMgr.PkgMgr
+	DefinedNamesAtEachParseEnv    DefinedNameAtEachParseEnv // 在parse时就能知道哪些名字被定义了，哪些没有被定义，方便检查是否重复定义
 	AllDefinedNamesExceptPkgNames map[string]struct{}
 }
 
-func NewTbParser(curPkgName string, pkgPathNameMgr *pkgMgr.PathNameMgr) *TbParser {
+func NewTbParser(pkgPathNameMgr *pkgMgr.PkgMgr) *TbParser {
 	return &TbParser{
 		FreeParams:                    make(map[string]struct{}),
 		PkgPathNameMgr:                pkgPathNameMgr,
-		CurPkgPath:                    curPkgName,
 		DefinedNamesAtEachParseEnv:    NewDefinedNameAtEachParseEnv(),
 		AllDefinedNamesExceptPkgNames: make(map[string]struct{}),
 	}
@@ -53,7 +50,7 @@ func (p *TbParser) IsNameDefinedInCurrentParseEnv(name string) bool {
 	if ok {
 		return true
 	}
-	if _, ok := p.PkgPathNameMgr.NamePathMap[name]; ok {
+	if _, ok := p.PkgPathNameMgr.NameAbsPathMap[name]; ok {
 		return true
 	}
 	return false

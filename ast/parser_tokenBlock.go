@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,8 +53,8 @@ func (b *tokenBlock) stringWithIndent(indentLevel int) string {
 	return result
 }
 
-// makeTokenBlocks 合并 tokenization 和 scope 解析的入口函数
-func makeTokenBlocks(lines []string) ([]tokenBlock, error) {
+// MakeTokenBlocks 合并 tokenization 和 scope 解析的入口函数
+func MakeTokenBlocks(lines []string) ([]tokenBlock, error) {
 	t := newTokenizerWithScope(lines)
 	return t.parseBlocks(0)
 }

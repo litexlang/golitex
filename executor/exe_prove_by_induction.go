@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecRet {
+func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) *glob.StmtRet {
 	var err error
 	ver := NewVerifier(exec.Env)
 	msg := ""
@@ -29,17 +29,17 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 	startIsNPos := proveByInduction_Fact_Start_is_NPos(stmt)
 	verRet := ver.VerFactStmt(startIsNPos, Round0NoMsg())
 	if verRet.IsErr() {
-		var result ExecRet = NewExecErr(fmt.Errorf(verRet.String()).Error())
-		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddMsg(verRet.String())
+		var result *glob.StmtRet = glob.ErrRet(fmt.Sprintf(verRet.String()))
+		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddError(verRet.String())
 		return result
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", startIsNPos.String())
-		var result ExecRet = NewEmptyExecUnknown()
-		result = result.AddMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
+		var result *glob.StmtRet = glob.NewEmptyStmtUnknown()
+		result = result.AddError(fmt.Sprintf("%s\nfailed\n", stmt.String()))
 		if msg != "" {
-			result = result.AddMsg(msg)
+			result = result.AddError(msg)
 		}
 		return result
 	}
@@ -47,24 +47,24 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 	// 把start代入fact，得到的fact是true
 	startFact, err := proveByInduction_newStartFact(stmt)
 	if err != nil {
-		var result ExecRet = NewExecErr(err.Error())
-		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddMsg(err.Error())
+		var result *glob.StmtRet = glob.ErrRet(err.Error())
+		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddError(err.Error())
 		return result
 	}
 	verRet = ver.VerFactStmt(startFact, Round0NoMsg())
 	if verRet.IsErr() {
 		result := verRet
-		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddMsg(verRet.String())
-		return result
+		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddError(verRet.String())
+		return result.ToStmtRet()
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", startFact.String())
-		var result ExecRet = NewEmptyExecUnknown()
-		result = result.AddMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
+		var result *glob.StmtRet = glob.NewEmptyStmtUnknown()
+		result = result.AddUnknown(fmt.Sprintf("%s\nfailed\n", stmt.String()))
 		if msg != "" {
-			result = result.AddMsg(msg)
+			result = result.AddUnknown(msg)
 		}
 		return result
 	}
@@ -72,40 +72,39 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ExecR
 	// 对于任意n对于fact成立，那么对于n+1也成立
 	uniFact_n_true_leads_n_plus_1_true, err := proveByInduction_newUniFact_n_true_leads_n_plus_1_true(stmt)
 	if err != nil {
-		var result ExecRet = NewExecErr(err.Error())
-		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddMsg(err.Error())
+		var result *glob.StmtRet = glob.ErrRet(err.Error())
+		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddError(err.Error())
 		return result
 	}
 	verRet = ver.VerFactStmt(uniFact_n_true_leads_n_plus_1_true, Round0NoMsg())
 	if verRet.IsErr() {
-		var result ExecRet = NewExecErr(fmt.Errorf(verRet.String()).Error())
-		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddMsg(verRet.String())
+		var result *glob.StmtRet = glob.ErrRet(fmt.Sprintf(verRet.String()))
+		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddError(verRet.String())
 		return result
 	}
 	if verRet.IsUnknown() {
 		msg = fmt.Sprintf("%s\nis unknown", uniFact_n_true_leads_n_plus_1_true.String())
-		var result ExecRet = NewEmptyExecUnknown()
-		result = result.AddMsg(fmt.Sprintf("%s\nfailed\n", stmt.String()))
+		var result *glob.StmtRet = glob.NewEmptyStmtUnknown()
+		result = result.AddUnknown(fmt.Sprintf("%s\nfailed\n", stmt.String()))
 		if msg != "" {
-			result = result.AddMsg(msg)
+			result = result.AddUnknown(msg)
 		}
 		return result
 	}
 
 	// 对于任何 param >= start, fact 成立
 	uniFact_forall_param_geq_start_then_fact_is_true := proveByInduction_newUniFact_forall_param_geq_start_then_fact_is_true(stmt)
-	ret := exec.Env.NewFactWithAtomsDefined(uniFact_forall_param_geq_start_then_fact_is_true)
+	ret := exec.Env.NewFactWithCheckingNameDefined(uniFact_forall_param_geq_start_then_fact_is_true)
 	if ret.IsErr() {
-		var result ExecRet = NewExecErr(ret.String())
-		result = result.AddMsg(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddMsg(ret.String())
+		var result *glob.StmtRet = glob.ErrRet(ret.String())
+		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
+		result = result.AddError(ret.String())
 		return result
 	}
 
-	var result ExecRet = NewEmptyExecTrue()
-	result = result.AddMsg(fmt.Sprintf("%s\nsuccess\n", stmt.String()))
+	var result *glob.StmtRet = glob.NewEmptyStmtTrue()
 	return result
 }
 

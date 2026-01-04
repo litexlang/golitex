@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package litex_pipeline
 import (
 	"fmt"
 	ast "golitex/ast"
+	env "golitex/environment"
 	exe "golitex/executor"
 	glob "golitex/glob"
 	pkgMgr "golitex/package_manager"
@@ -53,12 +54,17 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 		return err
 	}
 
-	env, err := GetEnvWithBuiltinParentEnv()
+	allFilesStartTime := time.Now()
+
+	// 每次打开文件时重启 executor
+	envPkgMgr := env.NewEnvPkgMgr(pkgMgr.NewEmptyPkgMgr(repo))
+
+	envMgr, err := NewBuiltinEnvMgrWithNewEmptyEnv(envPkgMgr)
 	if err != nil {
 		return fmt.Errorf("failed to init pipeline env: %s", err)
 	}
-	executor := exe.NewExecutor(env)
-	allFilesStartTime := time.Now()
+
+	executor := exe.NewExecutor(envMgr)
 
 	for _, file := range files {
 		// file 最后必须以.lit结尾
@@ -80,28 +86,30 @@ func RunFilesInRepoWithPipelineRunner(repo string) error {
 
 		start := time.Now()
 
-		pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+		pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr(repo)
 
 		// Run the code directly
-		topStmtSlice, err := ast.ParseSourceCode(string(content), "", pkgPathNameMgr)
+		blocks, err := ast.PreprocessAndMakeSourceCodeIntoBlocks(string(content))
 		if err != nil {
-			return fmt.Errorf("parse error in file %s: %s", file.Name(), err.Error())
+			return fmt.Errorf("make token blocks error in file %s: %s", file.Name(), err.Error())
 		}
 
-		for _, topStmt := range topStmtSlice {
+		p := ast.NewTbParser(pkgPathNameMgr)
+
+		for _, block := range blocks {
+			topStmt, err := p.Stmt(&block)
+			if err != nil {
+				return fmt.Errorf("parse block one by one error in file %s: %s", file.Name(), err.Error())
+			}
+
 			execState := executor.Stmt(topStmt)
 			if execState.IsErr() {
 				return fmt.Errorf("\n\nexecution test failed in file %s, line %d:\n%s\n\n", file.Name(), topStmt.GetLine(), execState.String())
 			}
-			if execState.IsUnknown() {
-				return fmt.Errorf("\n\nexecution test failed in file %s, line %d: unknown:\n%s\n\n", file.Name(), topStmt.GetLine(), execState.String())
-			}
 		}
 
 		elapsed := time.Since(start)
-
 		fmt.Printf("%s\n", elapsed)
-
 		executor.ClearStmt()
 	}
 

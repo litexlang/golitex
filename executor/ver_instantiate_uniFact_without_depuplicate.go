@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -81,16 +81,16 @@ func useRandomParamToReplaceOriginalParamInUniFact(oldStmt *ast.UniFactStmt, par
 	return newStmtPtr, paramMap, nil
 }
 
-func processUniFactParamsDuplicateDeclared(env *env.Env, params []string) (map[string]ast.Obj, map[string]string) {
+func processUniFactParamsDuplicateDeclared(env *env.EnvMgr, params []string) (map[string]ast.Obj, map[string]string) {
 	paramMap := make(map[string]ast.Obj)
 	paramMapStrToStr := make(map[string]string)
 	for _, param := range params {
 		for {
 			newParam := param
-			ret := env.IsNameDefinedOrBuiltin(newParam, map[string]struct{}{})
+			ret := env.IsNameUnavailable(newParam, map[string]struct{}{})
 			if ret.IsTrue() {
 				newParam = env.GenerateUndeclaredRandomName()
-				ret = env.IsNameDefinedOrBuiltin(newParam, map[string]struct{}{})
+				ret = env.IsNameUnavailable(newParam, map[string]struct{}{})
 				if ret.IsErr() {
 					paramMap[param] = ast.Atom(newParam)
 					paramMapStrToStr[param] = newParam
@@ -104,19 +104,19 @@ func processUniFactParamsDuplicateDeclared(env *env.Env, params []string) (map[s
 	return paramMap, paramMapStrToStr
 }
 
-func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.Env, params []string, notInMap map[string]string) (map[string]ast.Obj, map[string]string) {
+func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.EnvMgr, params []string, notInMap map[string]string) (map[string]ast.Obj, map[string]string) {
 	paramMap := make(map[string]ast.Obj)
 	paramMapStrToStr := make(map[string]string)
 	for _, param := range params {
 		for {
 			newParam := param
 			_, inNotOnMap := notInMap[newParam]
-			ret := env.IsNameDefinedOrBuiltin(newParam, map[string]struct{}{})
+			ret := env.IsNameUnavailable(newParam, map[string]struct{}{})
 			if ret.IsTrue() || inNotOnMap {
 				newParam = env.GenerateUndeclaredRandomName()
 
 				_, inNotOnMap = notInMap[newParam]
-				ret = env.IsNameDefinedOrBuiltin(newParam, map[string]struct{}{})
+				ret = env.IsNameUnavailable(newParam, map[string]struct{}{})
 				if ret.IsErr() && !inNotOnMap {
 					paramMap[param] = ast.Atom(newParam)
 					paramMapStrToStr[param] = newParam
@@ -156,8 +156,10 @@ func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.U
 
 			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.Env, asStmt.Params, copiedMapStrToStr)
 
-			copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
-			copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
+			maps.Copy(copiedParamMap, curParamMap)
+			maps.Copy(copiedMapStrToStr, curParamMapStrToStr)
+			// copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
+			// copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
 
 			newDomFact, _, err := useRandomParamToReplaceOriginalParamInUniFact(asStmt, copiedParamMap, copiedMapStrToStr)
 			if err != nil {
@@ -169,8 +171,10 @@ func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.U
 
 			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.Env, asStmt.UniFact.Params, copiedMapStrToStr)
 
-			copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
-			copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
+			maps.Copy(copiedParamMap, curParamMap)
+			maps.Copy(copiedMapStrToStr, curParamMapStrToStr)
+			// copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
+			// copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
 
 			newDomFact, _, err := useRandomParamToReplaceOriginalParamInUniFactWithIff(asStmt, copiedParamMap, copiedMapStrToStr)
 			if err != nil {
@@ -255,7 +259,7 @@ func instantiateUniFactWithoutThenFacts(u *uniFactWithoutThenFacts, paramMap map
 func (u *uniFactWithoutThenFacts) ParamInParamSetFacts(paramMap map[string]ast.Obj) []*ast.SpecFactStmt {
 	paramSetFacts := make([]*ast.SpecFactStmt, len(u.Params))
 	for i, param := range u.Params {
-		paramSetFacts[i] = ast.NewInFactWithParamObj(paramMap[param], u.ParamSets[i], glob.BuiltinLine)
+		paramSetFacts[i] = ast.NewInFactWithParamObj(paramMap[param], u.ParamSets[i], glob.BuiltinLine0)
 	}
 	return paramSetFacts
 }

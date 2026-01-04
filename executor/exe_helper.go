@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,9 +18,10 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
+	glob "golitex/glob"
 )
 
-func notOkExec(state ExecRet, err error) bool {
+func notOkExec(state *glob.StmtRet, err error) bool {
 	if err != nil {
 		return true
 	}
@@ -31,42 +32,60 @@ func notOkExec(state ExecRet, err error) bool {
 }
 
 func (exec *Executor) NewCommutativeProp(specFact *ast.SpecFactStmt) {
-	if _, ok := exec.Env.CommutativePropMem[string(specFact.PropName)]; !ok {
-		exec.Env.CommutativePropMem[string(specFact.PropName)] = env.NewCommutativePropMemItemStruct()
+	if _, ok := exec.Env.CurEnv().CommutativePropMem[string(specFact.PropName)]; !ok {
+		exec.Env.CurEnv().CommutativePropMem[string(specFact.PropName)] = env.NewCommutativePropMemItemStruct()
 	}
 
-	switch specFact.TypeEnum {
+	switch specFact.FactType {
 	case ast.TruePure:
-		exec.Env.CommutativePropMem[string(specFact.PropName)].TruePureIsCommutative = true
+		exec.Env.CurEnv().CommutativePropMem[string(specFact.PropName)].TruePureIsCommutative = true
 	case ast.FalsePure:
-		exec.Env.CommutativePropMem[string(specFact.PropName)].FalsePureIsCommutative = true
+		exec.Env.CurEnv().CommutativePropMem[string(specFact.PropName)].FalsePureIsCommutative = true
 	default:
 		panic("not implemented: not commutative prop")
 	}
 }
 
-func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerState) (ExecRet, ast.Stmt, error) {
+func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerState) (*glob.StmtRet, ast.Stmt, error) {
 	ver := NewVerifier(exec.Env)
 	for _, proof := range proofs {
 		verRet := ver.VerFactStmt(proof, verState)
 		if verRet.IsErr() {
-			return NewEmptyExecErr(), proof, fmt.Errorf(verRet.String())
+			return verRet.ToStmtRet(), proof, fmt.Errorf(verRet.String())
 		} else if verRet.IsUnknown() {
-			return NewEmptyExecUnknown(), proof, nil
+			return verRet.ToStmtRet(), proof, nil
 		}
 
-		ret := exec.Env.NewFactWithAtomsDefined(proof)
+		ret := exec.Env.NewFactWithCheckingNameDefined(proof)
 		if ret.IsErr() {
-			return NewExecErr(ret.String()), proof, fmt.Errorf(ret.String())
+			return glob.ErrRet(ret.String()), proof, fmt.Errorf(ret.String())
 		}
 	}
-	return NewEmptyExecTrue(), nil, nil
+	return glob.NewEmptyStmtTrue(), nil, nil
 }
 
-func (exec *Executor) GetBuiltinEnv() *env.Env {
-	return exec.Env.GetUpMostEnv()
-}
+// func (exec *Executor) GetBuiltinEnv() *env.EnvMemory {
+// 	return exec.Env.GetUpMostEnv()
+// }
 
-func (exec *Executor) GetSecondUpMostEnv() *env.Env {
-	return exec.Env.GetSecondUpMostEnv()
+// func (exec *Executor) GetSecondUpMostEnv() *env.EnvMemory {
+// 	return exec.Env.GetSecondUpMostEnv()
+// }
+
+func checkParamsInFnDefNotDefinedAndParamSetsDefined(exec *Executor, params []string, paramSets []ast.Obj) *glob.ShortRet {
+	for _, paramSet := range paramSets {
+		ret := exec.Env.LookupNamesInObj(paramSet, map[string]struct{}{})
+		if ret.IsNotTrue() {
+			return glob.NewShortRetErr(ret.String())
+		}
+	}
+
+	for _, param := range params {
+		ret := exec.Env.LookupNamesInObj(ast.Atom(param), map[string]struct{}{})
+		if ret.IsTrue() {
+			return glob.NewShortRetErr(fmt.Sprintf("parameter %s is already defined. To avoid ambiguity, please use a different name for the parameter", param))
+		}
+	}
+
+	return glob.NewEmptyShortTrueRet()
 }

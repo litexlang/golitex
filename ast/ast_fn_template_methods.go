@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import (
 	"maps"
 )
 
-func (fnTemplate *FnTStruct) DeriveUniFact_WithGivenFn(obj Obj) (*UniFactStmt, error) {
+func (fnTemplate *AnonymousFn) DeriveUniFact_WithGivenFn(obj Obj) (*UniFactStmt, error) {
 	paramAsObj := []Obj{}
 	for _, param := range fnTemplate.Params {
 		paramAsObj = append(paramAsObj, Atom(param))
@@ -32,7 +32,7 @@ func (fnTemplate *FnTStruct) DeriveUniFact_WithGivenFn(obj Obj) (*UniFactStmt, e
 	return notInstantiated, nil
 }
 
-func (fnTemplate *FnTStruct) DeriveUniFact(defFnTemplateName string, fnObj Obj, templateParamUniMap map[string]Obj) (*UniFactStmt, error) {
+func (fnTemplate *AnonymousFn) DeriveUniFact(defFnTemplateName string, fnObj Obj, templateParamUniMap map[string]Obj) (*UniFactStmt, error) {
 	paramAsObj := []Obj{}
 	for _, param := range fnTemplate.Params {
 		paramAsObj = append(paramAsObj, Atom(param))
@@ -54,7 +54,7 @@ func (fnTemplate *FnTStruct) DeriveUniFact(defFnTemplateName string, fnObj Obj, 
 	return instantiated.(*UniFactStmt), nil
 }
 
-func (stmt *FnTStruct) InstantiateFnTWithoutChangingTName(uniMap map[string]Obj) ([]Obj, FactStmtSlice, FactStmtSlice, Obj, error) {
+func (stmt *AnonymousFn) InstantiateFnTWithoutChangingTName(uniMap map[string]Obj) ([]Obj, FactStmtSlice, FactStmtSlice, Obj, error) {
 	// 1. instantiate set params in facts
 	newSetParams := []Obj{}
 	for _, setParam := range stmt.ParamSets {

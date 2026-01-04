@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -143,75 +143,11 @@ func IsAtomObjAndEqualToStr(obj Obj, name string) bool {
 	return string(atomObj) == name
 }
 
-func GetAtomsInObjIncludingParamInSetBuilder(obj Obj) []Atom {
-	ret := []Atom{}
-
-	switch asObj := obj.(type) {
-	case Atom:
-		ret = append(ret, asObj)
-	case *FnObj:
-		if IsSetBuilder(asObj) {
-			atomsFromSetBuilder := GetAtomsInSetBuilderIncludingParamInSetBuilder(asObj)
-			ret = append(ret, atomsFromSetBuilder...)
-		} else {
-			for _, param := range asObj.Params {
-				atoms := GetAtomObjsInObj(param)
-				ret = append(ret, atoms...)
-			}
-		}
-	}
-	return ret
+func (a Atom) IsWithPkgName() bool {
+	return strings.Contains(string(a), glob.PkgNameAtomSeparator)
 }
 
-func GetAtomsInSetBuilder(f *FnObj) []Atom {
-	// Convert FnObj to SetBuilderStruct for easier processing
-	setBuilder, err := f.ToSetBuilderStruct()
-	if err != nil {
-		panic(err)
-	}
-
-	ret := []Atom{}
-
-	// Extract atoms from parentSet (skip the bound parameter)
-	atoms := GetAtomObjsInObj(setBuilder.ParentSet)
-	ret = append(ret, atoms...)
-
-	// Extract atoms from facts
-	for _, fact := range setBuilder.Facts {
-		atoms := fact.GetAtoms()
-		ret = append(ret, atoms...)
-	}
-
-	// remove the bound parameter itself from the collected atoms
-	filtered := make([]Atom, 0, len(ret))
-	for _, param := range ret {
-		if string(param) == setBuilder.Param {
-			continue
-		}
-		filtered = append(filtered, param)
-	}
-
-	return filtered
-}
-
-func GetAtomsInSetBuilderIncludingParamInSetBuilder(f *FnObj) []Atom {
-	// Convert FnObj to SetBuilderStruct for easier processing
-	setBuilder, err := f.ToSetBuilderStruct()
-	if err != nil {
-		panic(err)
-	}
-
-	ret := []Atom{Atom(setBuilder.Param)}
-
-	// Extract atoms from parentSet (skip the bound parameter)
-	atoms := GetAtomObjsInObj(setBuilder.ParentSet)
-	ret = append(ret, atoms...)
-
-	// Extract atoms from facts
-	for _, fact := range setBuilder.Facts {
-		atoms := fact.GetAtoms()
-		ret = append(ret, atoms...)
-	}
-
-	return ret
-}
+// func (a Atom) GetPkgNameAndAtomName_CalledWhenPkgNameExists() (string, string) {
+// 	parts := strings.Split(string(a), glob.PkgNameAtomSeparator)
+// 	return parts[0], parts[1]
+// }

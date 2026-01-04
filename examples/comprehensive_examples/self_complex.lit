@@ -1,12 +1,12 @@
 let self_complex set
-fn sc(x, y R) self_complex # sc means self_complex
-fn sc_add(x, y self_complex) self_complex
-fn sc_mul(x, y self_complex) self_complex
-fn sc_div(x, y self_complex) self_complex
-fn sc_sub(x, y self_complex) self_complex
-fn sc_neg(x self_complex) self_complex
-fn sc_abs(x self_complex) R
-fn sc_conj(x self_complex) self_complex
+let fn sc(x, y R) self_complex # sc means self_complex
+let fn sc_add(x, y self_complex) self_complex
+let fn sc_mul(x, y self_complex) self_complex
+let fn sc_div(x, y self_complex) self_complex
+let fn sc_sub(x, y self_complex) self_complex
+let fn sc_neg(x self_complex) self_complex
+let fn sc_abs(x self_complex) R
+let fn sc_conj(x self_complex) self_complex
 
 know:
     forall x, y, a, b R:

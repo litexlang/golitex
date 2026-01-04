@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package litex_ast
 import (
 	"fmt"
 	glob "golitex/glob"
-	"slices"
 )
 
 func (p *TbParser) IsEnding(tb *tokenBlock, ends []string) bool {
@@ -64,7 +63,7 @@ func (p *TbParser) inlineFactThenSkipStmtTerminatorUntilEndSignals(tb *tokenBloc
 		if err != nil {
 			return nil, err
 		}
-		return uniFact.(FactStmt), nil
+		return uniFact, nil
 	default:
 		return p.inline_spec_or_enum_intensional_Equals_fact_skip_terminator(tb)
 	}
@@ -197,24 +196,24 @@ func (p *TbParser) inlineUniFact_Param_ParamSet_ParamInSetFacts(tb *tokenBlock) 
 	}
 
 	// nth parameter set should not include nth to last parameter inside
-	for i, setParam := range setParams {
-		atomsInSetParam := GetAtomObjsInObj(setParam)
-		atomsInSetParamAsStr := make([]string, len(atomsInSetParam))
-		for i, atom := range atomsInSetParam {
-			atomsInSetParamAsStr[i] = string(atom)
-		}
+	// for i, setParam := range setParams {
+	// 	atomsInSetParam := GetAtomObjsInObj(setParam)
+	// 	atomsInSetParamAsStr := make([]string, len(atomsInSetParam))
+	// 	for i, atom := range atomsInSetParam {
+	// 		atomsInSetParamAsStr[i] = string(atom)
+	// 	}
 
-		for j := i; j < len(params); j++ {
-			if slices.Contains(atomsInSetParamAsStr, params[j]) {
-				return nil, nil, fmt.Errorf("the set %s of the parameter if index %d cannot include any parameters from the index %d to the last one (found parameter %s)", setParam, i, j, params[j])
-			}
-		}
-	}
+	// 	for j := i; j < len(params); j++ {
+	// 		if slices.Contains(atomsInSetParamAsStr, params[j]) {
+	// 			return nil, nil, fmt.Errorf("the set %s of the parameter if index %d cannot include any parameters from the index %d to the last one (found parameter %s)", setParam, i, j, params[j])
+	// 		}
+	// 	}
+	// }
 
 	return params, setParams, nil
 }
 
-func (p *TbParser) inlineUniInterfaceSkipTerminator(tb *tokenBlock, ends []string) (UniFactInterface, error) {
+func (p *TbParser) inlineUniInterfaceSkipTerminator(tb *tokenBlock, ends []string) (FactStmt, error) {
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -524,7 +523,7 @@ func (p *TbParser) parseInfixRelationalFact(tb *tokenBlock, leftObj Obj, operato
 // This allows us to reuse the commutative property of =
 func (p *TbParser) normalizeNotEqualFact(fact *SpecFactStmt) *SpecFactStmt {
 	if fact != nil && fact.NameIs(glob.KeySymbolNotEqual) {
-		fact.TypeEnum = FalsePure
+		fact.FactType = FalsePure
 		fact.PropName = Atom(glob.KeySymbolEqual)
 	}
 	return fact

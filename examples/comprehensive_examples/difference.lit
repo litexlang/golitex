@@ -1,9 +1,0 @@
-have a, b set
-forall x a:
-    not x $in b
-    =>:
-        x $in difference(a, b)
-
-forall x difference(a, b):
-    $item_in_difference(a, b, x)
-    not x $in b

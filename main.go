@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,20 +15,18 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	glob "golitex/glob"
+	package_manager "golitex/package_manager"
 	pipeline "golitex/pipeline"
 	"os"
 	"path/filepath"
-	"sort"
-	"strconv"
 	"strings"
 )
 
 // 可以改变version的value，但是不要该VERSION这个名字，因为其他文件的grep依赖它
-const VERSION = "0.2.01-beta"
+const VERSION = "0.6.01-beta"
 
 func main() {
 	// Define flags
@@ -77,9 +75,23 @@ func main() {
 	// Handle execution flags
 	if *executeFlag != "" {
 		// Normal execution
-		ret := pipeline.RunSourceCode(glob.RemoveWindowsCarriage(*executeFlag), "-e")
-		msg := strings.TrimSpace(ret.String())
-		fmt.Println(msg)
+
+		wd, err := os.Getwd()
+		if err != nil {
+			fmt.Printf("Error: failed to get current working directory: %v\n", err)
+			return
+		}
+		pkgMgr := package_manager.NewEmptyPkgMgr(wd)
+
+		// ret := pipeline.RunSourceCode(glob.RemoveWindowsCarriage(*executeFlag), "-e")
+		_, retType, rets := pipeline.RunCodeInPkgMgr(glob.RemoveWindowsCarriage(*executeFlag), pkgMgr, false)
+
+		for _, ret := range rets {
+			fmt.Println(strings.TrimSpace(ret.String()))
+		}
+
+		fmt.Println(glob.REPLSuccessMsgs(retType))
+
 		return
 	}
 
@@ -143,82 +155,42 @@ func main() {
 }
 
 func MainFlagFile(fileFlag string) {
-	ret := pipeline.RunFile(glob.RemoveWindowsCarriage(fileFlag))
-	fmt.Println(ret.StringWithOptimizedNewline())
+	path := glob.RemoveWindowsCarriage(fileFlag)
+
+	// 判断输入路径是否是绝对路径
+	var absFilePath string
+	if filepath.IsAbs(path) {
+		// 如果已经是绝对路径，直接使用
+		absFilePath = path
+	} else {
+		// 如果是相对路径，拼接当前工作目录
+		// 获取当前工作目录
+		workingDir, err := os.Getwd()
+		if err != nil {
+			fmt.Printf("Error: failed to get current working directory: %v\n", err)
+			return
+		}
+		absFilePath = filepath.Join(workingDir, path)
+	}
+
+	// get wd of the file
+	wd, err := filepath.Abs(filepath.Dir(absFilePath))
+	if err != nil {
+		fmt.Printf("Error: failed to get working directory of the file: %v\n", err)
+		return
+	}
+
+	pkgMgr := package_manager.NewEmptyPkgMgr(wd)
+
+	_, retType, rets := pipeline.RunFileInPkgMgr(absFilePath, "", pkgMgr, false)
+
+	for _, ret := range rets {
+		fmt.Println(glob.StringWithOptimizedNewline(ret.String()))
+	}
+
+	fmt.Println(glob.REPLSuccessMsgs(retType))
 }
 
 func RunTutorial() {
-	reader := bufio.NewReader(os.Stdin)
-
-	// Get all keywords from KeywordHelpMap and sort them
-	keywords := make([]string, 0, len(glob.KeywordHelpMap))
-	for keyword := range glob.KeywordHelpMap {
-		keywords = append(keywords, keyword)
-	}
-	sort.Strings(keywords)
-
-	for {
-		fmt.Println("\n=== Litex Keyword Tutorial ===")
-		fmt.Println("Available keywords:")
-		fmt.Println()
-
-		// Display keywords in a numbered list
-		for i, keyword := range keywords {
-			helpMsg := glob.KeywordHelpMap[keyword]
-			displayMsg := keyword
-			if helpMsg != "" {
-				displayMsg = fmt.Sprintf("%s - %s", keyword, helpMsg)
-			}
-			fmt.Printf("%3d. %s\n", i+1, displayMsg)
-		}
-
-		fmt.Println()
-		fmt.Print("Enter keyword number (or 'q' to quit): ")
-
-		input, err := reader.ReadString('\n')
-		if err != nil {
-			fmt.Printf("Error reading input: %s\n", err)
-			return
-		}
-
-		input = strings.TrimSpace(input)
-
-		// Check if user wants to quit
-		if input == "q" || input == "Q" || input == "quit" || input == "exit" {
-			fmt.Println("\nGoodbye! :)")
-			return
-		}
-
-		// Parse number
-		num, err := strconv.Atoi(input)
-		if err != nil {
-			fmt.Printf("Invalid input. Please enter a number between 1 and %d, or 'q' to quit.\n", len(keywords))
-			continue
-		}
-
-		if num < 1 || num > len(keywords) {
-			fmt.Printf("Number out of range. Please enter a number between 1 and %d.\n", len(keywords))
-			continue
-		}
-
-		// Display detailed information about the selected keyword
-		selectedKeyword := keywords[num-1]
-		helpMsg := glob.KeywordHelpMap[selectedKeyword]
-
-		fmt.Println()
-		fmt.Println("=" + strings.Repeat("=", 50))
-		fmt.Printf("Keyword: %s\n", selectedKeyword)
-		fmt.Println("=" + strings.Repeat("=", 50))
-
-		if helpMsg == "" {
-			fmt.Println("No detailed explanation available for this keyword yet.")
-			fmt.Println("(Help message is empty in KeywordHelpMap)")
-		} else {
-			fmt.Println(helpMsg)
-		}
-
-		fmt.Println()
-		fmt.Print("Press Enter to continue...")
-		reader.ReadString('\n')
-	}
+	fmt.Println("TODO: Implement tutorial")
 }

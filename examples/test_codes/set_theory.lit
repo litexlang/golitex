@@ -19,20 +19,6 @@ prop is_empty_set(x set):
 have builtin_empty_set set := {}
 forall x obj:
     not x $in builtin_empty_set
-
-exist_prop x obj st obj_exist_in_set(s set):
-    x $in s
-
-# There is just one empty set
-claim:
-    forall s set:
-        not $is_empty_set(s)
-        =>:
-           $obj_exist_in_set(s)
-    prove_by_contradiction:
-        forall x obj:
-            not x $in s
-        $is_empty_set(s)
         
 # You can define a finite set of items like this:
 have set_of_one_two_three set := {1, 2, 3}
@@ -332,12 +318,3 @@ prove:
 
     difference(s, t) = u
 
-not 1.5 $in Z
-not 3 / 2 $in Z
-(1+2) * 3 $in Z 
-not 1.5 $in N
-not 3 / 2 $in N
-(1+2) * 3 $in N
-not 1.5 $in N_pos
-not 3 / 2 $in N_pos
-(1+2) * 3 $in N_pos 

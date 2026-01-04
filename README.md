@@ -34,6 +34,19 @@ How does Litex work? It achieves its simplicity by imitating how people reason a
 
 [Official Documentation](https://litexlang.com) is our website. Read [Tutorial](https://litexlang.com/doc/Tutorial/Introduction), [How Litex Works](https://litexlang.com/doc/How_Litex_Works/Introduction) for more details. [Hugging Face Dataset](https://huggingface.co/litexlang) is on Hugging Face.
 
+<style>
+/* Code block styling - bright pink for visibility */
+table code {
+  color: #ff00ff;
+  padding: 2px 6px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  display: inline-block;
+  line-height: 1.4;
+  font-weight: 500;
+}
+</style>
+
 ## Why Litex?
 
 _Our intent was to create a pleasant computing environment (Unix) for ourselves and our hope was that others liked it._
@@ -85,13 +98,13 @@ _- Dennis Ritchie_
   </tr>
 </table>
 
-While Lean 4 is a powerful and rigorous proof assistant ideal, it requires months of training and years of experience to master. Litex takes a different approach: prioritizing accessibility and ease of use, enabling even beginners to formalize naive tasks like multivariate equations in minutes.
+Mathematics has many different axiomatic systems, and choosing different foundational axiom systems as the basis for a formal language results in vastly different user experiences. Lean chooses type theory as its foundation, while Litex chooses set theory.
 
-Making Litex intuitive to both humans and AI is Litex's core mission. We want people feel happy using Litex. Just like how Python lowers the barrier of programming by 10x compared with C/C++, Litex lowers the barrier of formal reasoning by 10x compared with previous formal languages like Lean. 
+This design makes Lean easier to maintain and theoretically more general, which experts prefer. Litex's design, on the other hand, is more intuitive and easier to learn, built on familiar set theory, aims to democratize formal mathematics while maintaining rigor, even for 10-year-olds. Think of Litex as the Python of formal languages.
 
-Since each Litex sentence corresponds directly to an expression in everyday mathematical language, and since it is supported by set theory (ZFC) and basic logic (not, forall, exist, or), Litex does not sacrifice any rigor. So please do not think about Litex using the mindset of traditional formal languages. Instead, imagine yourself as a college student or even a high school student who has a basic understanding of set theory — regardless of whether you like Litex or are skeptical of it.
+Litex can be viewed as a curated subset of Lean, Coq, and Isabelle. Focusing on the parts most relevant to users, it offers robust built-in support for these mathematical domains. Furthermore, the Litex verifier is in many ways more powerful than traditional formal languages. By utilizing universal quantifiers (forall), computation, and evaluation—and by proving directly through definitions and common facts—it aligns perfectly with user intuition. There is no need to memorize or learn a vast library of tactics and specialized keywords.
 
-*In summary, Litex is a piece of software that imitates the way people think when they verify mathematics in everyday reasoning, using a small number of straightforward rules.* 
+*In summary, Litex is a language that imitates the way people think when they verify mathematics in everyday reasoning, using a small number of straightforward rules.* 
 
 ## Litex For AI, For Math, For Everyone
 

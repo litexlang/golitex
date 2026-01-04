@@ -3,8 +3,8 @@ package litex_pipeline
 import (
 	"bufio"
 	"fmt"
-	exe "golitex/executor"
 	glob "golitex/glob"
+	package_manager "golitex/package_manager"
 	"io"
 	"os"
 	"strconv"
@@ -13,19 +13,24 @@ import (
 )
 
 func RunREPL(version string) {
-	env, err := GetEnvWithBuiltinParentEnv()
-	if err != nil {
-		fmt.Println("Error initializing pipeline env:", err)
-		return
-	}
-	executor := exe.NewExecutor(env)
-
 	reader := bufio.NewReader(os.Stdin)
 	writer := os.Stdout
 
+	// current working repo
+	curWorkingRepoAbsPath, err := os.Getwd()
+	if err != nil {
+		fmt.Fprintf(writer, "[Error] %s\n", err)
+		return
+	}
+
+	pkgMgr := package_manager.NewEmptyPkgMgr(curWorkingRepoAbsPath)
+
 	year := time.Now().Year()
 
-	fmt.Fprintf(writer, "Litex %s (Beta)\nCopyright (C) 2024-%s\nOfficial Website: litexlang.com\nGithub: https://github.com/litexlang/golitex\nEmail: litexlang@outlook.com\nType 'help' for help\n\nNote: This is a beta version. We welcome your testing and feedback!\nHowever, please note that this version is NOT READY FOR PRODUCTION USE.\n\n", version, strconv.Itoa(year))
+	fmt.Fprintf(writer, "Litex %s\nCopyright (C) 2024-%s\nOfficial Website: litexlang.com\nGithub: https://github.com/litexlang/golitex\nEmail: litexlang@outlook.com\nType 'help' for help\n\nNote: This is a Litex version is not ready for production use. Testing and feedback are welcome!\n\n", version, strconv.Itoa(year))
+
+	pkgMgr.CurRepoAbsPath = curWorkingRepoAbsPath
+	pkgMgr.CurPkgDefaultName = ""
 
 	for {
 		code, err := listenOneStatementFromREPL(reader, writer)
@@ -36,24 +41,16 @@ func RunREPL(version string) {
 
 		// Have to trim space because there is \n at the end of code
 		if strings.TrimSpace(code) == glob.KeywordExit {
-			fmt.Fprintf(writer, "---\nGoodbye! :)\n")
+			fmt.Fprintf(writer, "---\nGoodbye!\n")
 			return
 		}
 
 		// ret := ExecuteCodeAndReturnMessageSliceGivenSettings(code, executor)
-		ret := RunSourceCodeInExecutor(executor, code, "REPL")
-		if ret.IsNotTrue() {
-			msgStr := ret.String()
-			if msgStr != "" {
-				fmt.Fprint(writer, msgStr)
-			}
-			continue
+		_, retType, rets := RunCodeInPkgMgr(code, pkgMgr, false)
+		for _, ret := range rets {
+			fmt.Fprint(writer, glob.StringWithOptimizedNewline(ret.String()))
 		}
-
-		msgStr := ret.String()
-		if msgStr != "" {
-			fmt.Fprint(writer, msgStr)
-		}
+		fmt.Fprint(writer, glob.REPLSuccessMsgs(retType))
 	}
 }
 

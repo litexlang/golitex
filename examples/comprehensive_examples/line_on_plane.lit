@@ -131,12 +131,14 @@ prop are_inverse_vectors(a cart(R, R), b cart(R, R)):
     a[1] = -b[1]
     a[2] = -b[2]
 
+"""
 exist_prop a, b R st can_be_bases_of_vector(c, d, e cart(R, R)):
     e = sm(a, c) + sm(b, d)
 
 prop are_bases_vectors(a cart(R, R), b cart(R, R)):
     forall c cart(R, R) => $can_be_bases_of_vector(a, b, c)
-    
+"""
+
 # 加法交换律
 prove forall a, b cart(R, R) => add(a, b) = add(b, a):
     add(a, b) = (a[1] + b[1], a[2] + b[2]) = (b[1] + a[1], b[2] + a[2]) = add(b, a)
@@ -176,14 +178,14 @@ prove forall a, b, c cart(R, R) => prod(a, add(b, c)) = prod(a, b) + prod(a, c):
     prod(a, add(b, c)) = a[1] * add(b, c)[1] + a[2] * add(b, c)[2] = a[1] * (b[1] + c[1]) + a[2] * (b[2] + c[2]) = a[1] * b[1] + a[1] * c[1] + a[2] * b[2] + a[2] * c[2] = (a[1] * b[1] + a[2] * b[2]) + (a[1] * c[1] + a[2] * c[2]) = prod(a, b) + prod(a, c)
 
 have fn:
-    orth_decomp(a cart(R, R), e1 cart(R, R), e2 cart(R, R)) cart(R, R):
+    orth_decomposition(a cart(R, R), e1 cart(R, R), e2 cart(R, R)) cart(R, R):
         dom:
             mod(e1) != 0
             mod(e2) != 0
             $are_orthogonal_vectors(e1, e2)
         =>:
-            orth_decomp(a, e1, e2)[1] = mod(project(a, e1))
-            orth_decomp(a, e1, e2)[2] = mod(project(a, e2))
+            orth_decomposition(a, e1, e2)[1] = mod(project(a, e1))
+            orth_decomposition(a, e1, e2)[2] = mod(project(a, e2))
     prove:
         have c cart(R, R) = (mod(project(a, e1)), mod(project(a, e2)))
     = c
@@ -191,6 +193,7 @@ have fn:
 prove forall a, b, c, d R => (a, b) \add (c, d) = (a + c, b + d):
     (a, b) \add (c, d) = ((a, b)[1] + (c, d)[1], (a, b)[2] + (c, d)[2]) = (a + c, b + d)
 
+"""
 # 向量基本定理：如果两个向量不平行，那么它们可以作为某个向量空间的基底
 exist_prop c1, c2 R st write_vec_by_bases(to_write cart(R, R), base1 cart(R, R), base2 cart(R, R)):
     to_write = sm(c1, base1) \add sm(c2, base2)
@@ -221,6 +224,8 @@ prove forall base1, base2 cart(R, R): base1[1] * base2[2] != base1[2] * base2[1]
         $equal_tuple(x, sm(c1, base1) \add sm(c2, base2), 2)
 
         exist c1, c2 st $write_vec_by_bases(x, base1, base2)
+
+"""
 
 # 法向量
 have fn:

@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ const MaxNameLen int = 255
 const FuncFactPrefix string = "$"
 const InlineCommentSig string = "#"
 
-const BuiltinLine uint = 0
+const BuiltinLine0 uint = 0
 
 const LatexSig string = "##"
 
@@ -31,3 +31,5 @@ const LitexFileSuffix string = ".lit"
 const MainDotLit string = "main.lit"
 
 const DefaultPkgName string = ""
+
+const PkgNameAtomSeparator = KeySymbolDot

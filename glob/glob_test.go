@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ func TestIsValidName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := IsValidUseDefinedAtomObj(tt.name); (got == nil) != tt.want {
+			if got := IsValidUseDefinedName(tt.name); (got == nil) != tt.want {
 				panic("test failed")
 			}
 		})

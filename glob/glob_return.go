@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,219 +15,446 @@
 package litex_global
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"regexp"
 	"strings"
 )
 
-var newlineRegex = regexp.MustCompile(`\n{3,}`)
+type StmtRetType int8
 
-type GlobRet interface {
-	globRet()
-	IsTrue() bool
-	IsUnknown() bool
-	IsErr() bool
-	String() string
-	ToBoolErr() (bool, error)
-	IsNotTrue() bool
-	IsNotUnknown() bool
-	IsNotErr() bool
-	Inherit(globRet GlobRet)
-	Error() error
-	GetMsgs() []string
-	StringWithOptimizedNewline() string
-	GetREPLMsg() string
-	AddMsg(msg string) GlobRet
-}
+const (
+	StmtRetTypeTrue StmtRetType = iota
+	StmtRetTypeUnknown
+	StmtRetTypeError
+)
 
-type GlobTrue struct {
-	Msg []string
-}
-
-type GlobUnknown struct {
-	Msg []string
-}
-
-type GlobErr struct {
-	Msg []string
-}
-
-func (v *GlobTrue) globRet()                    {}
-func (v *GlobTrue) IsTrue() bool                { return true }
-func (v *GlobTrue) IsUnknown() bool             { return false }
-func (v *GlobTrue) IsErr() bool                 { return false }
-func (v *GlobTrue) String() string              { return strings.Join(v.Msg, "\n") }
-func (v *GlobTrue) ToBoolErr() (bool, error)    { return true, nil }
-func (v *GlobTrue) IsNotTrue() bool             { return false }
-func (v *GlobTrue) IsNotUnknown() bool          { return true }
-func (v *GlobTrue) IsNotErr() bool              { return true }
-func (v *GlobErr) globRet()                     {}
-func (v *GlobErr) IsTrue() bool                 { return false }
-func (v *GlobErr) IsUnknown() bool              { return false }
-func (v *GlobErr) IsErr() bool                  { return true }
-func (v *GlobErr) String() string               { return strings.Join(v.Msg, "\n") }
-func (v *GlobErr) ToBoolErr() (bool, error)     { return false, fmt.Errorf(v.String()) }
-func (v *GlobErr) IsNotTrue() bool              { return true }
-func (v *GlobErr) IsNotUnknown() bool           { return true }
-func (v *GlobErr) IsNotErr() bool               { return false }
-func (v *GlobUnknown) globRet()                 {}
-func (v *GlobUnknown) IsTrue() bool             { return false }
-func (v *GlobUnknown) IsUnknown() bool          { return true }
-func (v *GlobUnknown) IsErr() bool              { return false }
-func (v *GlobUnknown) String() string           { return strings.Join(v.Msg, "\n") }
-func (v *GlobUnknown) ToBoolErr() (bool, error) { return false, nil }
-func (v *GlobUnknown) IsNotTrue() bool          { return true }
-func (v *GlobUnknown) IsNotUnknown() bool       { return false }
-func (v *GlobUnknown) IsNotErr() bool           { return true }
-
-func NewGlobErr(s string) *GlobErr {
-	if s != "" {
-		return &GlobErr{Msg: []string{s}}
+func (t StmtRetType) MarshalJSON() ([]byte, error) {
+	switch t {
+	case StmtRetTypeTrue:
+		return json.Marshal("success")
+	case StmtRetTypeUnknown:
+		return json.Marshal("unknown")
+	default:
+		return json.Marshal("error")
 	}
-	return &GlobErr{Msg: []string{}}
 }
 
-func NewGlobErrWithErr(err error) *GlobErr {
-	return &GlobErr{Msg: []string{err.Error()}}
+type StmtRet struct {
+	RetType           StmtRetType
+	Define            []string
+	NewFact           []string
+	VerifyProcess     []*VerRet
+	Infer             []string
+	Stmt              []string
+	InnerStmtRetSlice []*StmtRet
+	Unknown           []string
+	Error             []string
+	Warnings          []string
+
+	Line uint
 }
 
-func BoolErrToGlobRet(ok bool, err error) GlobRet {
+func (m *StmtRet) String() string {
+	var builder strings.Builder
+
+	if m.Line != 0 {
+		builder.WriteString(fmt.Sprintf("*** line %d ***\n\n", m.Line))
+	}
+
+	if len(m.Stmt) > 0 {
+		builder.WriteString("--- statement ---\n\n")
+		builder.WriteString(strings.Join(m.Stmt, "\n"))
+		builder.WriteString("\n\n")
+	}
+
+	if len(m.Define) > 0 {
+		builder.WriteString("--- definition ---\n\n")
+		builder.WriteString(strings.Join(m.Define, "\n"))
+		builder.WriteString("\n\n")
+	}
+
+	if len(m.NewFact) > 0 {
+		builder.WriteString("--- new fact ---\n\n")
+		builder.WriteString(strings.Join(m.NewFact, "\n"))
+		builder.WriteString("\n\n")
+	}
+
+	if len(m.VerifyProcess) > 0 {
+		builder.WriteString("--- verification process ---\n\n")
+		for _, verifyProcess := range m.VerifyProcess {
+			builder.WriteString(verifyProcess.String())
+			builder.WriteString("\n\n")
+		}
+	}
+
+	if len(m.Infer) > 0 {
+		builder.WriteString("--- infer ---\n\n")
+		builder.WriteString(strings.Join(m.Infer, "\n"))
+		builder.WriteString("\n\n")
+	}
+
+	if len(m.InnerStmtRetSlice) > 0 {
+		builder.WriteString("--- details ---\n\n")
+		for _, innerStmtRet := range m.InnerStmtRetSlice {
+			builder.WriteString(innerStmtRet.String())
+			builder.WriteString("\n\n")
+		}
+		builder.WriteString("\n\n")
+	}
+
+	if len(m.Warnings) > 0 {
+		builder.WriteString("--- warning ---\n\n")
+		builder.WriteString(strings.Join(m.Warnings, "\n"))
+		builder.WriteString("\n\n")
+	}
+
+	if len(m.Error) > 0 {
+		if m.Line != 0 {
+			builder.WriteString(fmt.Sprintf("*** line %d: error ***\n\n", m.Line))
+		} else {
+			builder.WriteString("*** error ***\n\n")
+		}
+		builder.WriteString(strings.Join(m.Error, "\n"))
+		builder.WriteString("\n\n")
+	} else if len(m.Unknown) > 0 {
+		if m.Line != 0 {
+			builder.WriteString(fmt.Sprintf("*** line %d: unknown ***\n\n", m.Line))
+		} else {
+			builder.WriteString("*** unable to verify ***\n\n")
+		}
+		builder.WriteString(strings.Join(m.Unknown, "\n"))
+		builder.WriteString("\n\n")
+	} else {
+		if m.Line != 0 {
+			builder.WriteString(fmt.Sprintf("*** line %d: success! ***\n\n", m.Line))
+		} else {
+			builder.WriteString("*** success! ***\n\n")
+		}
+	}
+
+	return builder.String()
+}
+
+func (m *StmtRet) AddDefine(define string) *StmtRet {
+	if define == "" {
+		return m
+	}
+	m.Define = append(m.Define, define)
+	return m
+}
+
+func (m *StmtRet) AddNewFact(newFact string) *StmtRet {
+	if newFact == "" {
+		return m
+	}
+	m.NewFact = append(m.NewFact, newFact)
+	return m
+}
+
+func (m *StmtRet) AddVerifyProcess(verMsg *VerRet) *StmtRet {
+	m.VerifyProcess = append(m.VerifyProcess, verMsg)
+	return m
+}
+
+func (m *StmtRet) AddInfer(infer string) *StmtRet {
+	if infer == "" {
+		return m
+	}
+	m.Infer = append(m.Infer, infer)
+	return m
+}
+
+func (m *StmtRet) AddStmt(s string) *StmtRet {
+	if s == "" {
+		return m
+	}
+	m.Stmt = append(m.Stmt, s)
+	return m
+}
+
+func (m *StmtRet) AddUnknown(unknown string) *StmtRet {
+	m.RetType = StmtRetTypeUnknown
+	if unknown == "" {
+		return m
+	}
+	m.Unknown = append(m.Unknown, unknown)
+	return m
+}
+
+func (m *StmtRet) AddError(error string) *StmtRet {
+	m.RetType = StmtRetTypeError
+	if error == "" {
+		return m
+	}
+	m.Error = append(m.Error, error)
+	return m
+}
+
+func (m *StmtRet) AddInnerStmtRet(innerStmtRet *StmtRet) *StmtRet {
+	if innerStmtRet == nil {
+		return m
+	}
+	m.InnerStmtRetSlice = append(m.InnerStmtRetSlice, innerStmtRet)
+	return m
+}
+
+func NewEmptyStmtTrue() *StmtRet {
+	return &StmtRet{
+		RetType:           StmtRetTypeTrue,
+		Define:            []string{},
+		NewFact:           []string{},
+		VerifyProcess:     []*VerRet{},
+		Infer:             []string{},
+		Stmt:              []string{},
+		Unknown:           []string{},
+		Error:             []string{},
+		InnerStmtRetSlice: []*StmtRet{},
+		Warnings:          []string{},
+		Line:              0,
+	}
+}
+
+func NewEmptyStmtUnknown() *StmtRet {
+	return &StmtRet{
+		RetType:           StmtRetTypeUnknown,
+		Define:            []string{},
+		NewFact:           []string{},
+		VerifyProcess:     []*VerRet{},
+		Infer:             []string{},
+		Stmt:              []string{},
+		Unknown:           []string{},
+		Error:             []string{},
+		InnerStmtRetSlice: []*StmtRet{},
+		Warnings:          []string{},
+		Line:              0,
+	}
+}
+
+func NewEmptyStmtError() *StmtRet {
+	return &StmtRet{
+		RetType:           StmtRetTypeError,
+		Define:            []string{},
+		NewFact:           []string{},
+		VerifyProcess:     []*VerRet{},
+		Infer:             []string{},
+		Stmt:              []string{},
+		InnerStmtRetSlice: []*StmtRet{},
+		Unknown:           []string{},
+		Error:             []string{},
+		Warnings:          []string{},
+		Line:              0,
+	}
+}
+
+func NewStmtTrueWithDefine(define string) *StmtRet {
+	ret := NewEmptyStmtTrue()
+	ret.AddDefine(define)
+	return ret
+}
+
+func NewStmtTrueWithNewFact(newFact string) *StmtRet {
+	ret := NewEmptyStmtTrue()
+	ret.AddNewFact(newFact)
+	return ret
+}
+
+func NewStmtTrueWithVerifyProcess(verMsg *VerRet) *StmtRet {
+	ret := NewEmptyStmtTrue()
+	ret.AddVerifyProcess(verMsg)
+	return ret
+}
+
+func NewStmtTrueWithInfer(infer string) *StmtRet {
+	ret := NewEmptyStmtTrue()
+	ret.AddInfer(infer)
+	return ret
+}
+
+func NewStmtTrueWithStmt(s string) *StmtRet {
+	ret := NewEmptyStmtTrue()
+	ret.AddStmt(s)
+	return ret
+}
+
+func UnknownRet(unknown string) *StmtRet {
+	ret := NewEmptyStmtUnknown()
+	ret.AddUnknown(unknown)
+	return ret
+}
+
+func ErrRet(s string) *StmtRet {
+	ret := NewEmptyStmtError()
+	ret.AddError(s)
+	return ret
+}
+
+func ErrRetWithErr(err error) *StmtRet {
+	ret := NewEmptyStmtError()
+	ret.AddError(err.Error())
+	return ret
+}
+
+func (m *StmtRet) SetType(msgType StmtRetType) *StmtRet {
+	m.RetType = msgType
+	return m
+}
+
+func (m *StmtRet) IsTrue() bool {
+	return m.RetType == StmtRetTypeTrue
+}
+
+func (m *StmtRet) IsUnknown() bool {
+	return m.RetType == StmtRetTypeUnknown
+}
+
+func (m *StmtRet) IsErr() bool {
+	return m.RetType == StmtRetTypeError
+}
+
+func (m *StmtRet) IsNotTrue() bool {
+	return m.RetType != StmtRetTypeTrue
+}
+
+func (m *StmtRet) IsNotUnknown() bool {
+	return m.RetType != StmtRetTypeUnknown
+}
+
+func (m *StmtRet) IsNotError() bool {
+	return m.RetType != StmtRetTypeError
+}
+
+func (m *StmtRet) Inherit(other *StmtRet) *StmtRet {
+	m.Define = append(m.Define, other.Define...)
+	m.NewFact = append(m.NewFact, other.NewFact...)
+	m.VerifyProcess = append(m.VerifyProcess, other.VerifyProcess...)
+	m.Infer = append(m.Infer, other.Infer...)
+	m.Stmt = append(m.Stmt, other.Stmt...)
+	m.Unknown = append(m.Unknown, other.Unknown...)
+	m.Error = append(m.Error, other.Error...)
+	m.InnerStmtRetSlice = append(m.InnerStmtRetSlice, other.InnerStmtRetSlice...)
+	return m
+}
+
+func NewStmtTrueRetWithDefines(defines []string) *StmtRet {
+	ret := NewEmptyStmtTrue()
+	ret.Define = defines
+	return ret
+}
+
+func NewStmtTrueWithInfers(infers []string) *StmtRet {
+	ret := NewEmptyStmtTrue()
+	ret.Infer = infers
+	return ret
+}
+
+func NewStmtTrueWithStmts(stmts []string) *StmtRet {
+	ret := NewEmptyStmtTrue()
+	ret.Stmt = stmts
+	return ret
+}
+
+func NewStmtWithInnerStmtsRet(innerStmtsRet []*StmtRet, msgType StmtRetType) *StmtRet {
+	ret := NewEmptyStmtTrue()
+	ret.InnerStmtRetSlice = innerStmtsRet
+	ret.RetType = msgType
+	return ret
+}
+
+func (m *StmtRet) AddDefineMsgs(defines []string) *StmtRet {
+	for _, define := range defines {
+		m.AddDefine(define)
+	}
+	return m
+}
+
+func (m *StmtRet) AddNewFacts(newFacts []string) *StmtRet {
+	for _, newFact := range newFacts {
+		m.AddNewFact(newFact)
+	}
+	return m
+}
+
+func (m *StmtRet) AddVerifyProcesses(verifyProcesses []*VerRet) *StmtRet {
+	for _, verifyProcess := range verifyProcesses {
+		m.AddVerifyProcess(verifyProcess)
+	}
+	return m
+}
+
+func (m *StmtRet) AddInfers(infers []string) *StmtRet {
+	for _, infer := range infers {
+		m.AddInfer(infer)
+	}
+	return m
+}
+
+func (m *StmtRet) AddStmts(stmts []string) *StmtRet {
+	for _, stmts := range stmts {
+		m.AddStmt(stmts)
+	}
+	return m
+}
+
+func (m *StmtRet) AddUnknowns(unknowns []string) *StmtRet {
+	m.RetType = StmtRetTypeUnknown
+	for _, unknown := range unknowns {
+		m.AddUnknown(unknown)
+	}
+	return m
+}
+
+func (m *StmtRet) AddErrors(errors []string) *StmtRet {
+	m.RetType = StmtRetTypeError
+	for _, error := range errors {
+		m.AddError(error)
+	}
+	return m
+}
+
+func (m *StmtRet) SetLine(line uint) *StmtRet {
+	m.Line = line
+	return m
+}
+
+func (m *StmtRet) AddWarning(warning string) *StmtRet {
+	if warning == "" {
+		return m
+	}
+	m.Warnings = append(m.Warnings, warning)
+	return m
+}
+
+func (m *StmtRet) AddInnerStmtRets(innerStmtRetSlice []*StmtRet) *StmtRet {
+	m.InnerStmtRetSlice = innerStmtRetSlice
+	return m
+}
+
+func (m *StmtRet) AddShortRetAsInfers(shortRet *ShortRet) *StmtRet {
+	if shortRet.IsTrue() {
+		m.AddInfers(shortRet.Msgs)
+	} else if shortRet.IsUnknown() {
+		m.SetType(StmtRetTypeUnknown)
+		m.AddUnknowns(shortRet.Msgs)
+	} else if shortRet.IsErr() {
+		m.SetType(StmtRetTypeError)
+		m.AddErrors(shortRet.Msgs)
+	}
+	return m
+}
+
+func (m *StmtRet) ToJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	encoder.SetEscapeHTML(false)
+	err := encoder.Encode(m)
 	if err != nil {
-		return NewGlobErrWithMsgs([]string{err.Error()})
+		return nil, err
 	}
-	if ok {
-		return NewGlobTrueWithMsgs([]string{})
+	// 移除末尾的换行符（Encode 会自动添加）
+	result := buf.Bytes()
+	if len(result) > 0 && result[len(result)-1] == '\n' {
+		result = result[:len(result)-1]
 	}
-	return NewGlobUnknownWithMsgs([]string{})
-}
-
-func NewGlobTrue(s string) GlobRet {
-	if s != "" {
-		return &GlobTrue{Msg: []string{s}}
-	}
-	return &GlobTrue{Msg: []string{}}
-}
-
-func NewGlobUnknown(s string) GlobRet {
-	if s != "" {
-		return &GlobUnknown{Msg: []string{s}}
-	}
-	return &GlobUnknown{Msg: []string{}}
-}
-
-func NewGlobTrueWithMsgs(msgs []string) GlobRet {
-	return &GlobTrue{Msg: msgs}
-}
-
-func NewGlobErrWithMsgs(msgs []string) GlobRet {
-	return &GlobErr{Msg: msgs}
-}
-
-func NewGlobUnknownWithMsgs(msgs []string) GlobRet {
-	return &GlobUnknown{Msg: msgs}
-}
-
-// ErrRet returns a GlobErr with the given error message. If err is nil, returns empty error message.
-func ErrRet(err error) GlobRet {
-	if err != nil {
-		return NewGlobErr(err.Error())
-	}
-	return NewEmptyGlobErr()
-}
-
-func (v *GlobTrue) Inherit(globRet GlobRet) {
-	v.Msg = append(v.Msg, globRet.String())
-}
-
-func (v *GlobUnknown) Inherit(globRet GlobRet) {
-	v.Msg = append(v.Msg, globRet.String())
-}
-
-func (v *GlobErr) Inherit(globRet GlobRet) {
-	v.Msg = append(v.Msg, globRet.String())
-}
-
-func (v *GlobTrue) Error() error {
-	return nil
-}
-
-func (v *GlobUnknown) Error() error {
-	return nil
-}
-
-func (v *GlobErr) Error() error {
-	return fmt.Errorf(v.String())
-}
-
-func (v *GlobTrue) GetREPLMsg() string {
-	return REPLSuccessMessage
-}
-
-func (v *GlobUnknown) GetREPLMsg() string {
-	return REPLUnknownMessage
-}
-
-func (v *GlobErr) GetREPLMsg() string {
-	return REPLErrorMessage
-}
-
-func (v *GlobTrue) GetMsgs() []string {
-	return v.Msg
-}
-
-func (v *GlobUnknown) GetMsgs() []string {
-	return v.Msg
-}
-
-func (v *GlobErr) GetMsgs() []string {
-	return v.Msg
-}
-
-func (v *GlobTrue) StringWithOptimizedNewline() string {
-	// 把末尾的空
-	s := strings.Trim(v.String(), "\n\t ")
-	// 将3个或更多连续的\n替换成\n\n
-	s = newlineRegex.ReplaceAllString(s, "\n\n")
-	return fmt.Sprintf("%s\n", s)
-}
-
-func (v *GlobUnknown) StringWithOptimizedNewline() string {
-	s := strings.Trim(v.String(), "\n\t ")
-	// 将3个或更多连续的\n替换成\n\n
-	s = newlineRegex.ReplaceAllString(s, "\n\n")
-	return fmt.Sprintf("%s\n", s)
-}
-
-func (v *GlobErr) StringWithOptimizedNewline() string {
-	s := strings.Trim(v.String(), "\n\t ")
-	// 将3个或更多连续的\n替换成\n\n
-	s = newlineRegex.ReplaceAllString(s, "\n\n")
-	return fmt.Sprintf("%s\n", s)
-}
-
-func (v *GlobTrue) AddMsg(msg string) GlobRet {
-	v.Msg = append(v.Msg, msg)
-	return v
-}
-
-func (v *GlobUnknown) AddMsg(msg string) GlobRet {
-	v.Msg = append(v.Msg, msg)
-	return v
-}
-
-func (v *GlobErr) AddMsg(msg string) GlobRet {
-	v.Msg = append(v.Msg, msg)
-	return v
-}
-
-func NewEmptyGlobTrue() GlobRet {
-	return NewGlobTrueWithMsgs([]string{})
-}
-
-func NewEmptyGlobUnknown() GlobRet {
-	return NewGlobUnknownWithMsgs([]string{})
-}
-
-func NewEmptyGlobErr() GlobRet {
-	return NewGlobErrWithMsgs([]string{})
+	return result, nil
 }

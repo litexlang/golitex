@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 package litex_executor
 
-// func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (ExecRet, error) {
+// func (exec *Executor) importFileStmt(stmt *ast.ImportFileStmt) (*glob.GlobRet, error) {
 // 	currentTaskDir := glob.CurrentTaskDirName
 // 	codePath := glob.ResolvePath(currentTaskDir, stmt.Path)
 // 	// codePath := filepath.Join(currentTaskDir, stmt.Path)
@@ -66,7 +66,7 @@ package litex_executor
 // 	return NewExecEmptyTrue(), nil
 // }
 
-// func (exec *Executor) importMainFileStmt(stmt *ast.ImportFileStmt) (ExecRet, error) {
+// func (exec *Executor) importMainFileStmt(stmt *ast.ImportFileStmt) (*glob.GlobRet, error) {
 // 	exec.env.Msgs = append(exec.env.Msgs, fmt.Sprintf("start importing file globally \"%s\"\n", stmt.Path))
 
 // 	if !glob.AllowImport {
