@@ -674,7 +674,7 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.StmtRet {
 		}
 
 		if leftAsInt > rightAsInt {
-			verMsg := glob.NewVerMsg(glob.StmtRetTypeTrue, "", glob.BuiltinLine0, []string{fmt.Sprintf("left value %d is larger than right value %d, so the %s statement is iterating on an empty range, so it is true", leftAsInt, rightAsInt, glob.KeywordProveFor)})
+			verMsg := glob.NewVerMsg2(glob.StmtRetTypeTrue, "", glob.BuiltinLine0, []string{fmt.Sprintf("left value %d is larger than right value %d, so the %s statement is iterating on an empty range, so it is true", leftAsInt, rightAsInt, glob.KeywordProveFor)})
 
 			uniFact := stmt.UniFact()
 			ret := exec.Env.NewFactWithCheckingNameDefined(uniFact)
