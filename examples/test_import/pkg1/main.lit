@@ -1,0 +1,9 @@
+have c set = {1, 2, 3}
+
+1 $in c
+
+prop divides(x, y Z):
+    x != 0
+    <=>:
+        y % x = 0
+

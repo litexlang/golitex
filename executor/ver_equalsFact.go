@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,30 +17,32 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
-func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) *glob.VerRet {
 	if len(stmt.Params) < 2 {
-		return NewExecErr("equals fact must have at least 2 params")
+		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{"equals fact must have at least 2 params"})
 	}
 
 	trueMsgs := []string{}
 
 	for i := 1; i < len(stmt.Params); i++ {
 		checked := false
-		unknownRet := NewEmptyExecUnknown()
+		unknownRet := glob.NewEmptyVerRetUnknown()
 
 		for j := i - 1; j >= 0; j-- {
 			newFact := ast.NewEqualFact(stmt.Params[j], stmt.Params[i])
 			verRet := ver.VerFactStmt(newFact, state)
 			if verRet.IsErr() {
 				newFact := ast.NewEqualFact(stmt.Params[i-1], stmt.Params[i])
-				return verRet.AddMsg(fmt.Sprintf("%s\nis error", newFact.String()))
+				msgs := append(verRet.VerifyMsgs, fmt.Sprintf("%s\nis error", newFact.String()))
+				return glob.NewVerMsg(glob.StmtRetTypeError, newFact.String(), newFact.GetLine(), msgs)
 			}
 			if verRet.IsTrue() {
-				ret := ver.Env.NewFactWithAtomsDefined(newFact)
+				ret := ver.Env.NewFactWithCheckingNameDefined(newFact)
 				if ret.IsErr() {
-					return NewExecErr(ret.String())
+					return glob.NewVerMsg(glob.StmtRetTypeError, newFact.String(), newFact.GetLine(), []string{ret.String()})
 				}
 				checked = true
 				trueMsgs = append(trueMsgs, verRet.String())
@@ -54,8 +56,13 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 
 		if !checked {
 			newFact := ast.NewEqualFact(stmt.Params[i-1], stmt.Params[i])
-			return unknownRet.AddMsg(fmt.Sprintf("%s\nis unknown", newFact.String()))
+			msgs := append(unknownRet.VerifyMsgs, fmt.Sprintf("%s\nis unknown", newFact.String()))
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, newFact.String(), newFact.GetLine(), msgs)
 		}
 	}
-	return NewExecTrueWithMsgs(trueMsgs)
+	if state.WithMsg {
+		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), trueMsgs)
+	}
+	return glob.NewEmptyVerRetTrue()
 }
+

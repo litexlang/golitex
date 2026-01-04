@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,18 +25,18 @@ const (
 	KeywordIsASet         = "is_a_set"
 	KeywordIsAFiniteSet   = "is_a_finite_set"
 	KeywordIsANonEmptySet = "is_a_nonempty_set"
-	KeywordItemExistsIn   = "item_exists_in"
 
 	KeywordNot    = "not"
 	KeywordOr     = "or"
 	KeywordForall = "forall"
 	KeywordExist  = "exist"
 
-	KeywordProp      = "prop"
-	KeywordExistProp = "exist_prop"
+	KeywordProp = "prop"
 
-	KeywordImplication      = "imply"
-	KeywordProveImplication = "prove_imply"
+	// KeywordExistProp = "exist_prop"
+
+	KeywordImplication = "imply"
+	KeywordProveImply  = "prove_imply"
 
 	KeywordHave = "have"
 	KeywordLet  = "let"
@@ -52,13 +52,13 @@ const (
 	KeywordSetDim = "set_dim"
 	KeywordProj   = "proj"
 
-	KeywordTuple    = "()"
-	KeywordDim      = "dim"
-	KeywordIsTuple  = "is_tuple"
-	KeywordIndexOpt = "[]"
+	KeywordTuple         = "tuple"
+	KeywordDim           = "dim"
+	KeywordIsTuple       = "is_tuple"
+	KeywordObjAtIndexOpt = "obj_at_index"
 
-	KeywordListSet     = "{}"
-	KeywordSetBuilder  = "{:}"
+	KeywordListSet     = "list_set"
+	KeywordSetBuilder  = "set_builder"
 	KeywordCount       = "count"
 	KeywordRange       = "range"
 	KeywordClosedRange = "closed_range"
@@ -73,8 +73,8 @@ const (
 	KeywordProveCaseByCase      = "prove_case_by_case"
 	KeywordProveFor             = "prove_for"
 
-	KeywordFn         = "fn"
-	KeywordFnTemplate = "fn_template"
+	KeywordFn    = "fn"
+	KeywordFnSet = "fn_set"
 
 	KeywordClaim = "claim"
 	KeywordProve = "prove"
@@ -89,9 +89,8 @@ const (
 
 	KeywordImport = "import"
 	KeywordClear  = "clear"
-	KeywordPrint  = "print"
 	KeywordExit   = "exit"
-	KeywordHelp   = "help"
+	KeywordRun    = "run"
 
 	KeywordProveAlgo = "prove_algo"
 	KeywordAlgo      = "algo"
@@ -102,23 +101,38 @@ const (
 
 	KeywordEqualSet           = "equal_set"
 	KeywordSubsetOf           = "subset_of"
+	KeywordSupersetOf         = "superset_of"
 	KeywordEqualTuple         = "equal_tuple"
 	KeywordIsNonEmptyWithItem = "is_nonempty_with_item"
 
-	KeywordPowerSet = "power_set"
+	KeywordCup       = "cup"
+	KeywordCap       = "cap"
+	KeywordUnion     = "union"
+	KeywordIntersect = "intersect"
+	KeywordPowerSet  = "power_set"
+	KeywordSetMinus  = "set_minus"
+	KeywordSetDiff   = "set_diff"
+
+	KeywordProveExist = "prove_exist"
+
+	KeywordRPos = "R_pos"
+	KeywordRNeg = "R_neg"
+	KeywordZNeg = "Z_neg"
+	KeywordQNeg = "Q_neg"
+	KeywordQPos = "Q_pos"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
-	KeywordSet:                  {},
-	KeywordForall:               {},
-	KeywordDom:                  {},
-	KeywordImplication:          {},
-	KeywordProveImplication:     {},
-	KeywordHave:                 {},
-	KeywordFn:                   {},
-	KeywordProp:                 {},
-	KeywordKnow:                 {},
-	KeywordExistProp:            {},
+	KeywordSet:         {},
+	KeywordForall:      {},
+	KeywordDom:         {},
+	KeywordImplication: {},
+	KeywordProveImply:  {},
+	KeywordHave:        {},
+	KeywordFn:          {},
+	KeywordProp:        {},
+	KeywordKnow:        {},
+	// KeywordExistProp:            {},
 	KeywordSt:                   {},
 	KeywordClaim:                {},
 	KeywordProve:                {},
@@ -140,13 +154,13 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordFiniteSet:   {},
 	KeywordProveByEnum: {},
 	// KeywordItemExistsIn: {},
-	KeywordFnTemplate: {},
-	KeywordNPos:       {},
-	KeywordLet:        {},
-	KeywordClear:      {},
-	KeywordTuple:      {},
-	KeywordIndexOpt:   {},
-	KeywordDoNothing:  {},
+	KeywordFnSet:         {},
+	KeywordNPos:          {},
+	KeywordLet:           {},
+	KeywordClear:         {},
+	KeywordTuple:         {},
+	KeywordObjAtIndexOpt: {},
+	KeywordDoNothing:     {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
 
 	KeywordProveIsTransitiveProp: {},
@@ -163,13 +177,10 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordProveAlgo: {},
 	KeywordBy:        {},
 
-	KeywordPrint: {},
-
 	KeywordCase: {},
 
 	KeywordProveCaseByCase: {},
 	KeywordExit:            {},
-	KeywordHelp:            {},
 
 	KeywordCart:   {},
 	KeywordIsCart: {},
@@ -181,9 +192,9 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordListSet:    {},
 	KeywordSetBuilder: {},
 
-	KeywordSubsetOf: {},
-
-	KeywordProveFor: {},
+	KeywordSubsetOf:   {},
+	KeywordSupersetOf: {},
+	KeywordProveFor:   {},
 
 	KeywordEqualSet: {},
 
@@ -197,9 +208,25 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordRange: {},
 
-	KeywordItemExistsIn: {},
-
 	KeywordIsNonEmptyWithItem: {},
+
+	KeywordRun: {},
+
+	KeywordUnion:     {},
+	KeywordIntersect: {},
+	KeywordPowerSet:  {},
+	KeywordCup:       {},
+	KeywordCap:       {},
+	KeywordSetMinus:  {},
+	KeywordSetDiff:   {},
+
+	KeywordProveExist: {},
+
+	KeywordRPos: {},
+	KeywordRNeg: {},
+	KeywordZNeg: {},
+	KeywordQNeg: {},
+	KeywordQPos: {},
 }
 
 const (
@@ -274,165 +301,41 @@ var SymbolSet map[string]struct{} = map[string]struct{}{
 	// KeySymbolQuestionMark: {}, // "?"
 }
 
-var BuiltinObjOrPropNames map[string]struct{} = map[string]struct{}{
-	// KeywordObj:           {},
-	// KeywordSet:           {},
+var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 	KeywordNatural:       {},
 	KeywordInteger:       {},
 	KeywordRational:      {},
 	KeywordReal:          {},
-	KeywordIn:            {},
-	KeySymbolEqual:       {},
-	KeySymbolSlash:       {},
+	KeywordCount:         {},
+	KeywordNPos:          {},
+	KeywordCart:          {},
+	KeywordTuple:         {},
+	KeywordSetDim:        {},
+	KeywordDim:           {},
+	KeywordProj:          {},
+	KeywordObjAtIndexOpt: {},
+	KeywordListSet:       {},
+	KeywordSetBuilder:    {},
 	KeySymbolPlus:        {},
 	KeySymbolMinus:       {},
 	KeySymbolStar:        {},
 	KeySymbolPower:       {},
-	KeySymbolLess:        {},
-	KeySymbolGreater:     {},
-	KeySymbolLargerEqual: {},
-	KeySymbolLessEqual:   {},
-	KeySymbolNotEqual:    {},
-	// KeySymbolColonEqual:                   {},
-	KeySymbolPercent:      {}, // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
-	KeySymbolLeftBracket:  {},
-	KeySymbolRightBracket: {},
-	// KeywordFiniteSet:      {},
-	// KeywordItemExistsIn:   {},
-	KeywordCount: {},
-	KeywordNPos:  {},
-	KeywordEval:  {},
+	KeySymbolSlash:       {},
+	KeySymbolPercent:     {},
 
-	KeywordCart:  {},
-	KeywordTuple: {},
+	KeywordUnion:     {},
+	KeywordIntersect: {},
+	KeywordPowerSet:  {},
+	KeywordCup:       {},
+	KeywordCap:       {},
+	KeywordSetMinus:  {},
+	KeywordSetDiff:   {},
 
-	// KeywordIsCart:  {},
-	// KeywordIsTuple: {},
-
-	KeywordSetDim: {},
-	// KeywordDim:    {},
-
-	// KeywordProj:     {},
-	KeywordIndexOpt: {},
-
-	KeywordIsASet:         {},
-	KeywordIsAFiniteSet:   {},
-	KeywordIsANonEmptySet: {},
-}
-
-func IsBuiltinObjOrPropName(name string) bool {
-	_, ok := BuiltinObjOrPropNames[name]
-	return ok
-}
-
-func IsBuiltinAtom(name string) bool {
-	_, ok := BuiltinAtomNames[name]
-	return ok
-}
-
-func IsBuiltinKeywordOrBuiltinSymbolOrNumber(name string) bool {
-	if IsKeyword(name) || IsKeySymbol(name) || (name[0] >= '0' && name[0] <= '9') {
-		return true
-	}
-	return false
-}
-
-var AddMinusStarSet map[string]struct{} = map[string]struct{}{
-	KeySymbolPlus:  {},
-	KeySymbolMinus: {},
-	KeySymbolStar:  {},
-}
-
-const LeftIsEqual0RightIsPositive = "__leftIsEqual0RightIsPositive__"
-const LeftIsNegativeRightIsInteger = "__leftIsNegativeRightIsInteger__"
-const LastTwoObjectsAreEqual = "__last_two_objects_are_equal__"
-
-var builtinPropObjNames = map[string]struct{}{
-	LeftIsEqual0RightIsPositive:  {},
-	LeftIsNegativeRightIsInteger: {},
-	LastTwoObjectsAreEqual:       {},
-}
-
-// KeywordHelpMap stores help messages for each keyword
-var KeywordHelpMap = map[string]string{
-	KeywordSet:    "",
-	KeywordForall: "",
-	KeywordDom:    "",
-	// KeywordObj:                    "",
-	KeywordHave:                   "",
-	KeywordFn:                     "",
-	KeywordProp:                   "",
-	KeywordKnow:                   "",
-	KeywordExist:                  "",
-	KeywordSt:                     "",
-	KeywordExistProp:              "",
-	KeywordClaim:                  "",
-	KeywordProve:                  "",
-	KeywordImport:                 "",
-	KeywordNot:                    "",
-	KeywordProveByContradiction:   "",
-	KeywordProveInEachCase:        "",
-	KeywordOr:                     "",
-	KeywordProveIsCommutativeProp: "",
-	KeywordNatural:                "",
-	KeywordInteger:                "",
-	KeywordRational:               "",
-	KeywordReal:                   "",
-	KeywordIn:                     "",
-	KeywordCount:                  "",
-	KeywordFiniteSet:              "",
-	KeywordProveByEnum:            "",
-
-	// KeywordItemExistsIn:           "",
-
-	KeywordFnTemplate:            "",
-	KeywordNPos:                  "",
-	KeywordLet:                   "",
-	KeywordClear:                 "",
-	KeywordProveByInduction:      "",
-	KeywordNonEmptySet:           "",
-	KeywordProveIsTransitiveProp: "",
-	KeywordAlgo:                  "",
-	KeywordReturn:                "",
-	KeywordIf:                    "",
-	KeywordEval:                  "",
-	KeywordProveAlgo:             "",
-	KeywordBy:                    "",
-	KeywordPrint:                 "",
-	KeywordCase:                  "",
-	KeywordProveCaseByCase:       "",
-	KeywordExit:                  "exit current REPL session",
-	KeywordHelp:                  "show this help message",
-}
-
-const PkgNameAtomSeparator = KeySymbolDot
-
-func IsNPosOrNOrZOrQOrR(name string) bool {
-	return name == KeywordNPos || name == KeywordNatural || name == KeywordInteger || name == KeywordRational || name == KeywordReal
-}
-
-var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
-	KeywordNatural:    {},
-	KeywordInteger:    {},
-	KeywordRational:   {},
-	KeywordReal:       {},
-	KeywordCount:      {},
-	KeywordNPos:       {},
-	KeywordCart:       {},
-	KeywordTuple:      {},
-	KeywordSetDim:     {},
-	KeywordDim:        {},
-	KeywordProj:       {},
-	KeywordIndexOpt:   {},
-	KeywordListSet:    {},
-	KeywordSetBuilder: {},
-	KeySymbolPlus:     {},
-	KeySymbolMinus:    {},
-	KeySymbolStar:     {},
-	KeySymbolPower:    {},
-	KeySymbolSlash:    {},
-	KeySymbolPercent:  {},
-	KeywordFn:         {},
+	KeywordRPos: {},
+	KeywordRNeg: {},
+	KeywordZNeg: {},
+	KeywordQNeg: {},
+	KeywordQPos: {},
 }
 
 var BuiltinPropNames map[string]struct{} = map[string]struct{}{
@@ -454,9 +357,7 @@ var BuiltinPropNames map[string]struct{} = map[string]struct{}{
 	KeywordIsNonEmptyWithItem: {},
 }
 
-var BuiltinExistPropNames map[string]struct{} = map[string]struct{}{
-	KeywordItemExistsIn: {},
-}
+var BuiltinExistPropNames map[string]struct{} = map[string]struct{}{}
 
 func IsBuiltinPropName(name string) bool {
 	_, ok := BuiltinPropNames[name]
@@ -466,4 +367,87 @@ func IsBuiltinPropName(name string) bool {
 func IsBuiltinExistPropName(name string) bool {
 	_, ok := BuiltinExistPropNames[name]
 	return ok
+}
+
+func IsBuiltinName(name string) bool {
+	_, ok := BuiltinKeywordsThatCanNotBeUsedAsName[name]
+	return ok
+}
+
+func IsBuiltinAtomName(name string) bool {
+	_, ok := BuiltinAtomNames[name]
+	return ok
+}
+
+var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struct{}{
+	KeywordSet:         {},
+	KeywordForall:      {},
+	KeywordDom:         {},
+	KeywordImplication: {},
+	KeywordProveImply:  {},
+	KeywordHave:        {},
+	KeywordFn:          {},
+	KeywordProp:        {},
+	KeywordKnow:        {},
+	// KeywordExistProp:              {},
+	KeywordSt:                     {},
+	KeywordClaim:                  {},
+	KeywordProve:                  {},
+	KeywordImport:                 {},
+	KeywordNot:                    {},
+	KeywordProveByContradiction:   {},
+	KeywordProveInEachCase:        {},
+	KeywordExist:                  {},
+	KeywordProveIsCommutativeProp: {},
+	KeywordOr:                     {},
+	KeywordNatural:                {},
+	KeywordInteger:                {},
+	KeywordRational:               {},
+	KeywordReal:                   {},
+	KeywordIn:                     {},
+	KeywordCount:                  {},
+	KeywordFiniteSet:              {},
+	KeywordProveByEnum:            {},
+	KeywordFnSet:                  {},
+	KeywordNPos:                   {},
+	KeywordLet:                    {},
+	KeywordClear:                  {},
+	KeywordTuple:                  {},
+	KeywordObjAtIndexOpt:          {},
+	KeywordDoNothing:              {},
+	KeywordProveIsTransitiveProp:  {},
+	KeywordProveByInduction:       {},
+	KeywordNonEmptySet:            {},
+	KeywordAlgo:                   {},
+	KeywordReturn:                 {},
+	KeywordIf:                     {},
+	KeywordEval:                   {},
+	KeywordProveAlgo:              {},
+	KeywordBy:                     {},
+	KeywordCase:                   {},
+	KeywordProveCaseByCase:        {},
+	KeywordExit:                   {},
+	KeywordCart:                   {},
+	KeywordSetDim:                 {},
+	KeywordListSet:                {},
+	KeywordSetBuilder:             {},
+	KeywordProveFor:               {},
+	KeywordAs:                     {},
+	KeywordIsASet:                 {},
+	KeywordIsAFiniteSet:           {},
+	KeywordIsANonEmptySet:         {},
+	KeywordIsNonEmptyWithItem:     {},
+	KeywordRun:                    {},
+	KeywordUnion:                  {},
+	KeywordIntersect:              {},
+	KeywordRPos:                   {},
+	KeywordRNeg:                   {},
+	KeywordZNeg:                   {},
+	KeywordQNeg:                   {},
+	KeywordQPos:                   {},
+	KeywordPowerSet:               {},
+	KeywordCup:                    {},
+	KeywordCap:                    {},
+	KeywordSetMinus:               {},
+	KeywordSetDiff:                {},
 }

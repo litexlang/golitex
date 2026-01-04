@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ func (c *DefPropStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (l *DefFnStmt) ToLatexString() string {
+func (l *LetFnStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Function]\n")
 	builder.WriteString(l.Name)
@@ -158,13 +158,13 @@ func pureSpecFactLatexString(stmt *SpecFactStmt) string {
 
 	if glob.IsKeySymbol(string(stmt.PropName)) {
 		builder.WriteString(keySymbolRelaFactWithoutNotLatexString(stmt))
-		if stmt.TypeEnum == FalsePure {
+		if stmt.FactType == FalsePure {
 			builder.WriteString(" is false")
 		}
 		return builder.String()
 	} else if _, ok := relaPropSet[string(stmt.PropName)]; ok {
 		builder.WriteString(keywordRelaFactWithoutNotLatexString(stmt))
-		if stmt.TypeEnum == FalsePure {
+		if stmt.FactType == FalsePure {
 			builder.WriteString(" is false")
 		}
 		return builder.String()
@@ -174,7 +174,7 @@ func pureSpecFactLatexString(stmt *SpecFactStmt) string {
 		curStr = fmt.Sprintf("$%s$", curStr)
 		builder.WriteString(curStr)
 
-		if stmt.TypeEnum == FalsePure {
+		if stmt.FactType == FalsePure {
 			builder.WriteString(" is false")
 		}
 		return builder.String()
@@ -358,16 +358,29 @@ func (f *KnowFactStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *DefExistPropStmt) ToLatexString() string {
-	var builder strings.Builder
+// func (s *DefExistPropStmt) ToLatexString() string {
+// 	var builder strings.Builder
 
-	builder.WriteString("\\begin{definition}[Existential Proposition]\n")
-	builder.WriteString(prop_fn_bodyToLatexString(s.DefBody.DefHeader, s.DefBody.DomFactsOrNil, s.DefBody.IffFactsOrNil, true))
-	builder.WriteString("\n\\end{definition}")
-	return builder.String()
-}
+// 	builder.WriteString("\\begin{definition}[Existential Proposition]\n")
+// 	builder.WriteString(prop_fn_bodyToLatexString(s.DefBody.DefHeader, s.DefBody.DomFactsOrNil, s.DefBody.IffFactsOrNil, true))
+// 	builder.WriteString("\n\\end{definition}")
+// 	return builder.String()
+// }
 
-func (s *HaveObjStStmt) ToLatexString() string {
+// func (s *HaveObjStStmt) ToLatexString() string {
+// 	var builder strings.Builder
+
+// 	builder.WriteString("\\begin{definition}[Object(s) Exists By Verified Existential Fact]\n")
+
+// 	builder.WriteString(" we have ")
+// 	builder.WriteString(objParamsLatexString(s.Fact.Params))
+// 	builder.WriteString(fmt.Sprintf(" which makes existential fact %s true", propNameParamsLatexString(s.Fact.PropName, s.Fact.Params)))
+
+// 	builder.WriteString("\n\\end{definition}")
+// 	return builder.String()
+// }
+
+func (s *HaveObjStWithParamSetsStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString("\\begin{definition}[Object(s) Exists By Verified Existential Fact]\n")
@@ -408,11 +421,11 @@ func (s *ProveCaseByCaseStmt) ToLatexString() string {
 	return s.String()
 }
 
-func (s *KnowPropStmt) ToLatexString() string {
+func (s *KnowImplicationStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString(s.Prop.ToLatexString())
+	builder.WriteString(s.ImplicationProp.ToLatexString())
 	builder.WriteString("\\begin{assumption}\n")
-	builder.WriteString(s.Prop.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue().ToLatexString())
+	builder.WriteString(s.ImplicationProp.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue().ToLatexString())
 	builder.WriteString("\n\\end{assumption}")
 	return builder.String()
 }
@@ -429,14 +442,14 @@ func (s *ImportDirStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{import}\n")
 	builder.WriteString("Import directory ")
-	builder.WriteString(s.Path)
+	builder.WriteString(s.RelativePathOrGlobalPkgName)
 	builder.WriteString(" as ")
 	builder.WriteString(s.AsPkgName)
 	builder.WriteString("\n\\end{import}")
 	return builder.String()
 }
 
-func (s *ImportFileStmt) ToLatexString() string {
+func (s *RunFileStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{import}\n")
 	builder.WriteString("Import file ")
@@ -530,17 +543,17 @@ func (s *ClaimImplicationStmt) ToLatexString() string {
 }
 
 // TODO
-func (s *ClaimExistPropStmt) ToLatexString() string {
-	var builder strings.Builder
+// func (s *ClaimExistPropStmt) ToLatexString() string {
+// 	var builder strings.Builder
 
-	builder.WriteString(s.ExistPropWithoutDom.ToLatexString())
+// 	builder.WriteString(s.ExistPropWithoutDom.ToLatexString())
 
-	builder.WriteString("\n\n")
+// 	builder.WriteString("\n\n")
 
-	builder.WriteString(claimProveBodyToLatexString(s.ExistPropWithoutDom.ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue(), s.Proofs, true))
+// 	builder.WriteString(claimProveBodyToLatexString(s.ExistPropWithoutDom.ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue(), s.Proofs, true))
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
 func (s *ProveByEnumStmt) ToLatexString() string {
 	var builder strings.Builder
@@ -582,46 +595,17 @@ func (s *HaveObjInNonEmptySetStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *HaveCartSetStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
-	builder.WriteString("We have a set: ")
-	builder.WriteString(s.Name)
-	builder.WriteString(" = ")
-	builder.WriteString(s.CartObj.ToLatexString())
-	builder.WriteString(".\n")
-	builder.WriteString("\\end{definition}")
-	return builder.String()
-}
-
-func (s *HaveCartWithDimStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Set Exist By Axioms of Set Theory]")
-	builder.WriteString("We have a set: ")
-	builder.WriteString(s.ObjName)
-	builder.WriteString(" = cart\\_with\\_dim(")
-	builder.WriteString(s.CartDim.ToLatexString())
-	builder.WriteString(")")
-	if s.Param != "" {
-		builder.WriteString(": ")
-		builder.WriteString(s.Param)
-	}
-	builder.WriteString(".\n")
-	builder.WriteString("\\end{definition}")
-	return builder.String()
-}
-
-func (s *HaveObjFromCartSetStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordHave)
-	builder.WriteString(" ")
-	builder.WriteString(s.ObjName)
-	builder.WriteString(" ")
-	builder.WriteString(s.CartSet.ToLatexString())
-	builder.WriteString(" = ")
-	builder.WriteString(s.EqualTo.ToLatexString())
-	return builder.String()
-}
+// func (s *HaveObjFromCartSetStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordHave)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(s.ObjName)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(s.CartSet.ToLatexString())
+// 	builder.WriteString(" = ")
+// 	builder.WriteString(s.EqualTo.ToLatexString())
+// 	return builder.String()
+// }
 
 // func (s *HaveSetDefinedByReplacementStmt) ToLatexString() string {
 // 	var builder strings.Builder
@@ -685,22 +669,22 @@ func (s *EqualsFactStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *KnowExistPropStmt) ToLatexString() string {
-	var builder strings.Builder
-	defExistProp := NewDefExistPropStmt(s.ExistProp.DefBody, s.ExistProp.ExistParams, s.ExistProp.ExistParamSets, glob.BuiltinLine)
-	builder.WriteString(defExistProp.ToLatexString())
+// func (s *KnowExistPropStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	defExistProp := NewDefExistPropStmt(s.ExistProp.DefBody, s.ExistProp.ExistParams, s.ExistProp.ExistParamSets, glob.BuiltinLine0)
+// 	builder.WriteString(defExistProp.ToLatexString())
 
-	builder.WriteString("\n\n")
-	builder.WriteString("We assume existential proposition is true for all parameters in the proposition's domain.")
+// 	builder.WriteString("\n\n")
+// 	builder.WriteString("We assume existential proposition is true for all parameters in the proposition's domain.")
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
 // func (s *LatexStmt) ToLatexString() string {
 // 	return s.Comment
 // }
 
-func (s *FnTemplateDefStmt) ToLatexString() string {
+func (s *DefFnSetStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{definition}[Function Template]\n\n")
 
@@ -740,10 +724,10 @@ func (s *FnTemplateDefStmt) ToLatexString() string {
 		builder.WriteString(".")
 	}
 
-	if len(s.Fn.ThenFacts) > 0 {
+	if len(s.AnonymousFn.ThenFacts) > 0 {
 		builder.WriteString("\n\n")
 		builder.WriteString("When its parameters satisfies the above condition, it has the following properties:")
-		thenFactStrSlice := s.Fn.ThenFacts.factStmtSliceToLatexStringSlice()
+		thenFactStrSlice := s.AnonymousFn.ThenFacts.factStmtSliceToLatexStringSlice()
 		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
 			builder.WriteString(" ")
 			builder.WriteString(strings.Join(thenFactStrSlice, ", "))
@@ -757,7 +741,7 @@ func (s *FnTemplateDefStmt) ToLatexString() string {
 	builder.WriteString("\n\n")
 
 	builder.WriteString("The return value is $\\in$ ")
-	builder.WriteString(s.Fn.RetSet.ToLatexString())
+	builder.WriteString(s.AnonymousFn.RetSet.ToLatexString())
 
 	builder.WriteString("\n\\end{definition}")
 
@@ -865,12 +849,12 @@ func (s *ProveForStmt) ToLatexString() string {
 	return "TODO"
 }
 
-func (s *ProveImplicationStmt) ToLatexString() string {
+func (s *ProveImplyStmt) ToLatexString() string {
 	// TODO: implement LaTeX conversion for prove_implication
 	return s.String()
 }
 
-func (s *ImplicationStmt) ToLatexString() string {
+func (s *DefImplicationStmt) ToLatexString() string {
 	// TODO: implement LaTeX conversion for implication
 	return s.String()
 }
@@ -912,10 +896,6 @@ func (s *ByStmt) ToLatexString() string {
 }
 
 func (s *ProveAlgoReturnStmt) ToLatexString() string {
-	return s.String()
-}
-
-func (s *PrintStmt) ToLatexString() string {
 	return s.String()
 }
 

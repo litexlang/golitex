@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
 
 package litex_env
 
-type InferenceEngine struct {
-	Env *Env
+type InferEngine struct {
+	EnvMgr *EnvMgr
 }
 
-func NewInferenceEngine(env *Env) *InferenceEngine {
-	return &InferenceEngine{Env: env}
+func NewInferenceEngine(envMgr *EnvMgr) *InferEngine {
+	return &InferEngine{EnvMgr: envMgr}
 }

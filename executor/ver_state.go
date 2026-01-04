@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,16 +22,30 @@ type VerState struct {
 	ReqOk   bool
 }
 
-func (s *VerState) IsWithMsg() bool {
-	return s.WithMsg
+// 只要这个fact里面的函数的定义域什么的被检查过了，该函数都日后都不再需要检查这些函数定义域问题了
+func (s *VerState) UpdateReqOkToTrue() *VerState {
+	s.ReqOk = true
+	return s
 }
 
-func (s *VerState) ToReqOk() *VerState {
+func (s *VerState) CopyAndReqOkToTrue() *VerState {
 	return &VerState{
 		Round:   s.Round,
 		WithMsg: s.WithMsg,
 		ReqOk:   true,
 	}
+}
+
+func (s *VerState) CopyAndReqOkToFalse() *VerState {
+	return &VerState{
+		Round:   s.Round,
+		WithMsg: s.WithMsg,
+		ReqOk:   false,
+	}
+}
+
+func (s *VerState) IsWithMsg() bool {
+	return s.WithMsg
 }
 
 func (s *VerState) GetAddRound() *VerState {

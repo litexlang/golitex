@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,46 +17,32 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
+	glob "golitex/glob"
 )
 
-func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
-	_ = stmt
-	return nil
-}
-
-// func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) ExecRet {
-// 	// Note: processOkMsg uses string format, keep using string version for backward compatibility
-// 	verifiedByStr := fmt.Sprintf(verifiedBy, args...)
-// 	execRet := NewExecTrue(successVerStringString(msg, verifiedByStr))
-// 	if state.WithMsg {
-// 		execRet.AddMsg(successVerStringString(msg, verifiedByStr))
-// 		return execRet
-// 	}
-// 	return execRet
-// }
-
 // maybeAddSuccessMsg adds a success message to execRet if state.WithMsg is true
-func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy ast.Stmt, execRet ExecRet) ExecRet {
+func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy ast.Stmt, execRet *glob.StmtRet) *glob.StmtRet {
 	if state.WithMsg {
-		execRet.AddMsg(successVerString(stmt, stmtVerifiedBy))
+		execRet.AddVerifyProcess(successVerString(stmt, stmtVerifiedBy))
 		return execRet
 	}
 	return execRet
 }
 
-// maybeAddSuccessMsgString is a backward compatibility function for string-based messages
-func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet ExecRet) ExecRet {
+// maybeAddSuccessMsgString is a backward compatibility function for string-based
+func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet *glob.VerRet) *glob.VerRet {
 	if state == nil {
 		panic("")
 	}
 
 	if state.WithMsg {
-		execRet.AddMsg(successVerStringString(stmtStr, verifiedByStr))
+		execRet.VerifyMsgs = append(execRet.VerifyMsgs, successVerStringString(stmtStr, verifiedByStr).VerifyMsgs...)
 		return execRet
 	}
 	return execRet
 }
+
+// maybeAddSuccessMsgVerMsg adds a VerMsg to execRet if state.WithMsg is true
 
 func IsTrueOrErr(ok bool, err error) bool {
 	return ok || err != nil

@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,38 +15,47 @@
 package litex_executor
 
 import (
-	"fmt"
 	ast "golitex/ast"
-	"strings"
+	glob "golitex/glob"
 )
 
-func successVerString(stmt, stmtVerifiedBy ast.Stmt) string {
-	var builder strings.Builder
+func successVerString(stmt, stmtVerifiedBy ast.Stmt) *glob.VerRet {
+	stmtStr := ""
+	line := uint(0)
 	if stmt != nil {
-		builder.WriteString(stmt.String())
+		stmtStr = stmt.String()
+		line = stmt.GetLine()
 	}
+
+	verifyMsgs := []string{}
 	if stmtVerifiedBy != nil {
 		if stmtVerifiedBy.GetLine() == 0 {
-			builder.WriteString(fmt.Sprintf("\nis true. proved by fact:\n%s", stmtVerifiedBy.String()))
+			verifyMsgs = append(verifyMsgs, stmtVerifiedBy.String())
 		} else {
-			builder.WriteString(fmt.Sprintf("\nis true. proved by fact on line %d:\n%s", stmtVerifiedBy.GetLine(), stmtVerifiedBy.String()))
+			verifyMsgs = append(verifyMsgs, stmtVerifiedBy.String())
 		}
 	} else {
-		builder.WriteString("\nis true.")
+		verifyMsgs = append(verifyMsgs, "is true.")
 	}
-	return builder.String()
+
+	return glob.NewVerMsg(glob.StmtRetTypeTrue, stmtStr, line, verifyMsgs)
 }
 
 // successVerStringString is a helper function for backward compatibility with string-based calls
-func successVerStringString(stmtStr, stmtVerifiedByStr string) string {
-	var builder strings.Builder
-	if stmtStr != "" {
-		builder.WriteString(stmtStr)
-	}
+func successVerStringString(stmtStr, stmtVerifiedByStr string) *glob.VerRet {
+	verifyMsgs := []string{}
 	if stmtVerifiedByStr != "" {
-		builder.WriteString(fmt.Sprintf("\nis true. proved by\n%s", stmtVerifiedByStr))
+		verifyMsgs = append(verifyMsgs, stmtVerifiedByStr)
 	} else {
-		builder.WriteString("\nis true.")
+		verifyMsgs = append(verifyMsgs, "is true.")
 	}
-	return builder.String()
+
+	return glob.NewVerMsg(glob.StmtRetTypeTrue, stmtStr, 0, verifyMsgs)
+}
+
+func newMaybeSuccessMsgVerRet(state *VerState, stmt ast.Stmt, stmtVerifiedBy string) *glob.VerRet {
+	if state.WithMsg {
+		return successVerStringString(stmt.String(), stmtVerifiedBy)
+	}
+	return glob.NewEmptyVerRetTrue()
 }

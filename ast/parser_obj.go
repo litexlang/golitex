@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,9 @@ import (
 //		  → bracedExpr_orTuple() [解析括号表达式]
 func (p *TbParser) Obj(tb *tokenBlock) (Obj, error) {
 	if tb.header.is(glob.KeySymbolLeftCurly) {
-		return p.ListSetObjOrSetBuilderObj(tb)
+		return p.ListSetObjOrSetBuilderObjWrittenInCurly(tb)
+	} else if tb.header.is(glob.KeywordSetBuilder) {
+		return p.SetBuilderObjBeginWithKeywordSetBuilder(tb)
 	}
 
 	return p.objInfixExpr(tb, glob.PrecLowest)
@@ -172,8 +174,9 @@ func (p *TbParser) fnSetObjAndBracedExprAndAtomObjAndFnObj(tb *tokenBlock) (Obj,
 // Atom parsing
 // ============================================================================
 
-// notNumberAtom parses an atom (identifier). Supports package name notation: pkgName.atomName
-// For example, "a.b" means atom "b" in package "a".
+// parse出来非数字的atom
+// 如果我读到了 a.b 然后a是包c的别名，然后包c的别名的默认名不是a而是d，那么我会parse成d.a
+// 如果现在我是在tbParser的curPkgName是d，d不是空，然后我现在在parse一个没有包名的atom（比如叫x）的时候，我就需要返回 d.x（当然，如果x是内置的prop或者是keyword的时候就还是叫x）
 func (p *TbParser) notNumberAtom(tb *tokenBlock) (Atom, error) {
 	value, err := tb.header.next()
 	if err != nil {
@@ -188,16 +191,21 @@ func (p *TbParser) notNumberAtom(tb *tokenBlock) (Atom, error) {
 			return "", ErrInLine(err, tb)
 		}
 
-		pkgPath := p.PkgPathNameMgr.NamePathMap[value]
-		pkgName := p.PkgPathNameMgr.PathDefaultNameMap[pkgPath]
-		return Atom(fmt.Sprintf("%s%s%s", pkgName, glob.PkgNameAtomSeparator, rightValue)), nil
-	} else if p.CurPkgPath != glob.DefaultPkgName {
-		if p.IsNameDefinedInCurrentParseEnv(value) {
-			pkgName := p.PkgPathNameMgr.PathDefaultNameMap[p.CurPkgPath]
-			return Atom(fmt.Sprintf("%s%s%s", pkgName, glob.PkgNameAtomSeparator, value)), nil
-		} else {
-			return Atom(value), nil
+		pkgName, err := p.PkgPathNameMgr.GetDefaultNameOfPkgName(value)
+		if err != nil {
+			return "", err
 		}
+
+		return Atom(fmt.Sprintf("%s%s%s", pkgName, glob.PkgNameAtomSeparator, rightValue)), nil
+	}
+
+	// 如果没有 . 的情况 ： 1. 涉及到的symbol就是单独的builtin 2. 现在在parse pkg1，那么这个在当前repo的pkg1里定义的symbol就要返回 pkg1.symbol
+
+	if p.PkgPathNameMgr.CurPkgDefaultName != "" {
+		if !IsBuiltinOrKernelDefinedName(value) {
+			return Atom(fmt.Sprintf("%s%s%s", p.PkgPathNameMgr.CurPkgDefaultName, glob.PkgNameAtomSeparator, value)), nil
+		}
+		return Atom(value), nil
 	} else {
 		return Atom(value), nil
 	}
@@ -410,7 +418,7 @@ func (p *TbParser) fnObjWithRepeatedBraceAndBracket(tb *tokenBlock, head Obj) (O
 				return nil, ErrInLine(err, tb)
 			}
 			// IndexOpt is a prefix operator, so it's applied as IndexOpt(head, ...params)
-			head = NewFnObj(Atom(glob.KeywordIndexOpt), []Obj{head, obj})
+			head = NewFnObj(Atom(glob.KeywordObjAtIndexOpt), []Obj{head, obj})
 		} else {
 			// No more braces or brackets
 			break
@@ -471,7 +479,7 @@ func (p *TbParser) backSlashExpr(tb *tokenBlock) (Obj, error) {
 	return Atom(obj), nil
 }
 
-func (p *TbParser) ListSetObjOrSetBuilderObj(tb *tokenBlock) (Obj, error) {
+func (p *TbParser) ListSetObjOrSetBuilderObjWrittenInCurly(tb *tokenBlock) (Obj, error) {
 	err := tb.header.skip(glob.KeySymbolLeftCurly)
 	if err != nil {
 		return nil, err
@@ -491,13 +499,13 @@ func (p *TbParser) ListSetObjOrSetBuilderObj(tb *tokenBlock) (Obj, error) {
 	}
 
 	if !tb.header.is(glob.KeySymbolComma) && !tb.header.is(glob.KeySymbolRightCurly) {
-		return p.setBuilderObj(tb, obj)
+		return p.setBuilderObjWrittenInCurly(tb, obj)
 	} else {
-		return p.listSetObj(tb, obj)
+		return p.listSetObjWrittenInCurly(tb, obj)
 	}
 }
 
-func (p *TbParser) listSetObj(tb *tokenBlock, firstParam Obj) (Obj, error) {
+func (p *TbParser) listSetObjWrittenInCurly(tb *tokenBlock, firstParam Obj) (Obj, error) {
 	enumItems := []Obj{firstParam}
 
 	// 跳过第一个逗号（如果存在）
@@ -525,7 +533,7 @@ func (p *TbParser) listSetObj(tb *tokenBlock, firstParam Obj) (Obj, error) {
 }
 
 // {x R: specific fact, ..., specific fact}
-func (p *TbParser) setBuilderObj(tb *tokenBlock, paramAsObj Obj) (Obj, error) {
+func (p *TbParser) setBuilderObjWrittenInCurly(tb *tokenBlock, paramAsObj Obj) (Obj, error) {
 	param, ok := paramAsObj.(Atom)
 	if !ok {
 		return nil, fmt.Errorf("expect parameter as self")
@@ -578,6 +586,75 @@ func (p *TbParser) setBuilderObj(tb *tokenBlock, paramAsObj Obj) (Obj, error) {
 	err = tb.header.skip(glob.KeySymbolRightCurly)
 	if err != nil {
 		return nil, err
+	}
+
+	return MakeSetBuilderObj(paramStr, parentSet, facts)
+}
+
+// set_builder(x R: specific fact, ..., specific fact)
+// Parse set builder with keyword and parentheses instead of curly braces
+func (p *TbParser) SetBuilderObjBeginWithKeywordSetBuilder(tb *tokenBlock) (Obj, error) {
+	// Skip "set_builder" keyword
+	err := tb.header.skip(glob.KeywordSetBuilder)
+	if err != nil {
+		return nil, err
+	}
+
+	// Skip left parenthesis "("
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, fmt.Errorf("expected '(' after set_builder keyword")
+	}
+
+	// Parse parameter (atom)
+	paramStr, err := tb.header.next()
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for conflicts with existing FreeParams
+	if _, exists := p.FreeParams[paramStr]; exists {
+		return nil, ErrInLine(fmt.Errorf("parameter %s in set builder conflicts with a free parameter in the outer scope", paramStr), tb)
+	}
+
+	// Add set builder param to FreeParams
+	p.FreeParams[paramStr] = struct{}{}
+
+	// Defer: remove the param we added when leaving this set builder scope
+	defer func() {
+		delete(p.FreeParams, paramStr)
+	}()
+
+	// Parse parent set
+	parentSet, err := p.Obj(tb)
+	if err != nil {
+		return nil, err
+	}
+
+	// Skip colon ":"
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, err
+	}
+
+	// Parse facts (comma-separated)
+	facts := SpecFactPtrSlice{}
+	for !tb.header.is(glob.KeySymbolRightBrace) {
+		specFact, err := p.specFactStmt(tb)
+		if err != nil {
+			return nil, err
+		}
+		facts = append(facts, specFact)
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			continue
+		}
+	}
+
+	// Skip right parenthesis ")"
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return nil, fmt.Errorf("expected ')' to close set_builder")
 	}
 
 	return MakeSetBuilderObj(paramStr, parentSet, facts)
