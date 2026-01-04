@@ -1,2 +1,9 @@
-have x R st x > 0
-have y {t R: 0 < t, t < 1}
+have a, b nonempty_set
+know a != b
+have c set = {a, b}
+have a_item a, b_item b
+
+$check_item_in_cup(c, a, a_item)
+a_item $in cup(c)
+
+forall cup_c_item cup(c) => exist c_item c st $in(cup_c_item, c_item)

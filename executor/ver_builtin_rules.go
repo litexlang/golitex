@@ -32,8 +32,9 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 	if stmt.NameIs(glob.KeywordIn) {
 		if stmt.FactType == ast.FalsePure {
 			return ver.falseInFactBuiltinRules(stmt, state)
+		} else if stmt.FactType == ast.TruePure {
+			return ver.trueInFactBuiltinRules(stmt, state)
 		}
-		return ver.trueInFactBuiltinRules(stmt, state)
 	}
 
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsASet) {
@@ -47,10 +48,6 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsANonEmptySet) {
 		return ver.verIsANonEmptySetByBuiltinRules(stmt, state)
 	}
-
-	// if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordItemExistsIn) {
-	// 	return ver.verItemExistsInByBuiltinRules(stmt, state)
-	// }
 
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordEqualTuple) {
 		return ver.verEqualTupleByBuiltinRules(stmt, state)

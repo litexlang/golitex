@@ -73,8 +73,9 @@ func (m *VerRet) String() string {
 
 		if m.StmtStr == "" {
 			return fmt.Sprintf("proved by fact stored on line %d:\n%s", m.ProvedByFactOnLine, strings.Join(m.VerifyMsgs, "\n"))
+		} else {
+			return fmt.Sprintf("%s\nproved by fact stored on line %d:\n%s", m.StmtStr, m.ProvedByFactOnLine, strings.Join(m.VerifyMsgs, "\n"))
 		}
-		return fmt.Sprintf("%s\nproved by fact stored on line %d:\n%s", m.StmtStr, m.ProvedByFactOnLine, strings.Join(m.VerifyMsgs, "\n"))
 	} else {
 		if m.StmtStr == "" {
 			return fmt.Sprintf("failed to verify:\n%s", strings.Join(m.VerifyMsgs, "\n"))

@@ -86,7 +86,7 @@ func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUn
 		uniMap[knownStruct.ExistFreeParams[i]] = ast.Atom(givenStruct.ExistFreeParams[i])
 	}
 
-	knownPropFact := knownStruct.GetTruePureFact()
+	knownPropFact := knownStruct.GetTruePureFactWithParamSets()
 	instKnownPureFact, err := knownPropFact.Instantiate(uniMap)
 	if err != nil {
 		return false, nil, err
@@ -96,7 +96,7 @@ func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUn
 	// REMARK 应该有问题
 	// TODO: 这里的match我还是有点慌，因为涉及到的参数其实是不存在的，应该用纯symbol去匹配好像更好一点
 	tmp := env.MakeKnownSpecFact_InUniFact(instKnownPureFact.(*ast.SpecFactStmt), knownSpecFactInUniFact.UniFact)
-	ok, m, err := ver.matchUniFactParamsWithSpecFactParams(&tmp, givenStruct.GetTruePureFact())
+	ok, m, err := ver.matchUniFactParamsWithSpecFactParams(&tmp, givenStruct.GetTruePureFactWithParamSets())
 
 	if err != nil || !ok {
 		return false, nil, nil
