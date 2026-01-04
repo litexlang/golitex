@@ -9,13 +9,10 @@ know imply solve_quadratic_equation(a, b, c, x R):
 let x R: x^2 + 2 * x + 1 = 0
 
 $solve_quadratic_equation(1, 2, 1, x)
-prove_in_each_case:
-    or:
-        x = (-2 + sqrt(2 ^ 2 - 4 * 1 * 1)) / (2 * 1)
-        x = (-2 - sqrt(2 ^ 2 - 4 * 1 * 1)) / (2 * 1)
+prove_case_by_case:
     =>:
         x = -1
-    prove:
+    case x + a + sqrt(a^2 - b) = 0:
         x = (-2 + sqrt(0)) / (2 * 1) = -1
-    prove:
+    case x + a - sqrt(a^2 - b) = 0:
         x = (-2 - sqrt(0)) / (2 * 1) = -1
