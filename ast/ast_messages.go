@@ -502,38 +502,6 @@ func (f *FnObj) String() string {
 	return builder.String()
 }
 
-func (stmt *ProveInEachCaseStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveInEachCase)
-	builder.WriteString(":\n")
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.OrFact.String(), 1))
-	builder.WriteByte('\n')
-	// builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordThen, 1))
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolRightArrow, 1))
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.ThenFacts[0].String(), 2))
-	builder.WriteByte('\n')
-	// Handle last proof block
-	if len(stmt.Proofs) > 0 {
-		for i := range len(stmt.Proofs) {
-			builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
-			builder.WriteString(glob.KeySymbolColon)
-			builder.WriteByte('\n')
-
-			if len(stmt.Proofs[i]) > 0 {
-				for j := range len(stmt.Proofs[i]) - 1 {
-					builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Proofs[i][j].String(), 2))
-					builder.WriteByte('\n')
-				}
-				builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Proofs[i][len(stmt.Proofs[i])-1].String(), 2))
-			}
-			builder.WriteByte('\n')
-		}
-	}
-	return strings.TrimSuffix(builder.String(), "\n")
-}
-
 func (stmt *ProveCaseByCaseStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveCaseByCase)

@@ -74,8 +74,6 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 				ret, err = p.knowFactStmt(tb)
 			}
 		}
-	case glob.KeywordProveInEachCase:
-		ret, err = p.proveInEachCaseStmt(tb)
 	case glob.KeywordProveCaseByCase:
 		ret, err = p.proveCaseByCaseStmt(tb)
 	case glob.KeywordProveByEnum:
@@ -1188,108 +1186,6 @@ func (p *TbParser) knowFactStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	return NewKnowStmt(facts.ToCanBeKnownStmtSlice(), tb.line), nil
-}
-
-func (p *TbParser) proveInEachCaseStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordProveInEachCase)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	if tb.header.is(glob.KeySymbolColon) {
-		err := tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		if !tb.header.ExceedEnd() {
-			return nil, fmt.Errorf("expect end of line")
-		}
-
-		orFact, err := p.orStmt(&tb.body[0])
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		thenFacts := []FactStmt{}
-		// err = tb.body[1].header.skipKwAndColon_ExceedEnd(glob.KeywordThen)
-		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		for _, stmt := range tb.body[1].body {
-			curStmt, err := p.factStmt(&stmt, UniFactDepth0)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			thenFacts = append(thenFacts, curStmt)
-		}
-
-		proofs := []StmtSlice{}
-		for i := 2; i < len(tb.body); i++ {
-			err = tb.body[i].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-
-			proof, err := p.parseTbBodyAndGetStmts(tb.body[i].body)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-
-			proofs = append(proofs, proof)
-		}
-
-		if len(proofs) != len(orFact.Facts) {
-			return nil, ErrInLine(fmt.Errorf("prove in each case: expect %d proofs, but got %d. expect the number of proofs to be the same as the number of facts in the or fact", len(orFact.Facts), len(proofs)), tb)
-		}
-
-		return NewProveInEachCaseStmt(orFact, thenFacts, proofs, tb.line), nil
-	} else {
-		orFact, err := p.inlineOrFact(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		err = tb.header.skip(glob.KeySymbolRightArrow)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		thenFacts := []FactStmt{}
-		for !tb.header.is(glob.KeySymbolColon) {
-			fact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{glob.KeySymbolColon})
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			thenFacts = append(thenFacts, fact)
-		}
-
-		err = tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		proofs := []StmtSlice{}
-		for i := range len(tb.body) {
-			err = tb.body[i].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-
-			proof, err := p.parseTbBodyAndGetStmts(tb.body[i].body)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			proofs = append(proofs, proof)
-		}
-
-		if len(proofs) != len(orFact.Facts) {
-			return nil, ErrInLine(fmt.Errorf("prove in each case: expect %d proofs, but got %d. expect the number of proofs to be the same as the number of facts in the or fact", len(orFact.Facts), len(proofs)), tb)
-		}
-
-		return NewProveInEachCaseStmt(orFact, thenFacts, proofs, tb.line), nil
-	}
 }
 
 func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {

@@ -144,7 +144,6 @@ func (s *HaveObjStWithParamSetsStmt) InlineString() string {
 	return builder.String()
 }
 
-func (s *ProveInEachCaseStmt) InlineString() string { return s.String() }
 func (s *ProveCaseByCaseStmt) InlineString() string { return s.String() }
 
 func (s *KnowImplicationStmt) InlineString() string {

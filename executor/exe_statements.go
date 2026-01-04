@@ -57,8 +57,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		if execRet.IsTrue() {
 			execRet = execRet.AddWarning("`let fn` may introduce non-existent functions. If you want to ensure the function exists, please use `have fn` instead!\n")
 		}
-	case *ast.ProveInEachCaseStmt:
-		execRet = exec.proveInEachCaseStmt(stmt)
 	case *ast.ClaimImplicationStmt:
 		execRet = exec.claimPropStmt(stmt)
 		// case *ast.ClaimExistPropStmt:
@@ -252,68 +250,6 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) *glob.StmtRet {
 		innerExecRets = append(innerExecRets, execState)
 	}
 	return glob.NewStmtWithInnerStmtsRet(innerExecRets, glob.StmtRetTypeTrue)
-}
-
-func (exec *Executor) proveInEachCaseStmt(stmt *ast.ProveInEachCaseStmt) *glob.StmtRet {
-	// isSuccess := false
-
-	// prove orFact is true
-	execState := exec.factStmt(stmt.OrFact)
-	if execState.IsNotTrue() {
-		return execState.AddUnknown(fmt.Sprintf("%s is unknown", stmt.OrFact.String()))
-	}
-
-	innerExecRets := []*glob.StmtRet{}
-	for i := range stmt.OrFact.Facts {
-		execState, err := exec.execProofBlockForEachCase(i, stmt)
-		if notOkExec(execState, err) {
-			return execState
-		}
-		innerExecRets = append(innerExecRets, execState)
-	}
-
-	// emit then fact
-	execState = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
-	if execState.IsNotTrue() {
-		return execState
-	}
-
-	// newFacts
-	newFacts := []string{}
-	for _, fact := range stmt.ThenFacts {
-		newFacts = append(newFacts, fact.String())
-	}
-
-	result := glob.NewEmptyStmtTrue()
-	return exec.AddStmtToStmtRet(result, stmt).AddInnerStmtRets(innerExecRets).AddNewFacts(newFacts)
-}
-
-func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEachCaseStmt) (*glob.StmtRet, error) {
-	exec.NewEnv()
-	defer exec.deleteEnv()
-
-	caseStmt := stmt.OrFact.Facts[index]
-
-	ret := exec.Env.NewFactWithCheckingNameDefined(caseStmt)
-	if ret.IsErr() {
-		return glob.ErrRet(ret.String()), fmt.Errorf(ret.String())
-	}
-
-	execState := exec.execStmtsAtCurEnv(stmt.Proofs[index])
-	if execState.IsNotTrue() {
-		return execState, fmt.Errorf(execState.String())
-	}
-
-	// verify thenFacts are true
-	// execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(stmt.ThenFacts, exec.env, verifier.Round0NoMsg)
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(stmt.ThenFacts, Round0NoMsg())
-	if err != nil {
-		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s\n%s", failedFact, err)
-	} else if execState.IsUnknown() {
-		return execState, fmt.Errorf("prove in each case statement error: failed to verify then facts:\n%s", failedFact)
-	}
-
-	return exec.NewTrueStmtRet(stmt), nil
 }
 
 func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) *glob.StmtRet {
