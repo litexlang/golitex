@@ -1,11 +1,10 @@
 claim:
     forall x R: x = 2 or x = -2 => x ^ 2 = 4
     prove:
-        prove_in_each_case:
-            x = 2 or x = -2
+        prove_case_by_case:
             =>:
                 x ^ 2 = 4
-            prove:
+            case x = 2:
                 2 ^ 2 = 4
-            prove:
+            case x = -2:
                 -2 ^ 2 = 4

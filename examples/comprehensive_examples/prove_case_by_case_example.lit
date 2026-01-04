@@ -13,14 +13,13 @@ claim:
                 (x + 3)^2 = 121
                 x + 3 = sqrt(121) or x + 3 = -sqrt(121)
                 11 = sqrt(121)
-                prove_in_each_case:
-                    x + 3 = 11 or x + 3 = -11
+                prove_case_by_case:
                     =>:
                         x = 8 or x = -14
-                    prove:
+                    case x + 3 = 11:
                         x + 3 = 11
                         x = (x + 3) - 3 = 11 - 3 = 8
-                    prove:
+                    case x + 3 = -11:
                         x + 3 = -11
                         x = (x + 3) - 3 = -11 - 3 = -14
 
@@ -30,13 +29,12 @@ claim:
         claim:
             not x2 = 8
             prove_by_contradiction:
-                prove_in_each_case:
-                    x1 = 8 or x1 = -14
+                prove_case_by_case:
                     =>:
                         not x1 > x2
-                    prove:
+                    case x1 = 8:
                         not x1 > x2
-                    prove:
+                    case x1 = -14:
                         not x1 > x2
                 x1 > x2
         x2 = -14
