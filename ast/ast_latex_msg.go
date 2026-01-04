@@ -393,30 +393,6 @@ func (s *HaveObjStWithParamSetsStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *ProveInEachCaseStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{proveCaseByCase}\n")
-	builder.WriteString("Since ")
-	builder.WriteString(s.OrFact.ToLatexString())
-	builder.WriteString(" is true.")
-	builder.WriteString(" we prove ")
-	builder.WriteString(strings.Join(s.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteString("case by case:\n")
-	for i := range s.Proofs {
-		builder.WriteString(fmt.Sprintf("Case %d: %s\n", i+1, s.OrFact.Facts[i]))
-		stmtSlice := make([]string, len(s.Proofs[i]))
-		for j, proof := range s.Proofs[i] {
-			stmtSlice[j] = proof.ToLatexString()
-		}
-		builder.WriteString(strings.Join(stmtSlice, ", "))
-		builder.WriteString("\n")
-	}
-
-	builder.WriteString("\n\\end{proveCaseByCase}")
-	return builder.String()
-}
-
 func (s *ProveCaseByCaseStmt) ToLatexString() string {
 	return s.String()
 }

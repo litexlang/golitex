@@ -16,18 +16,8 @@ package litex_executor
 
 import (
 	"fmt"
-	ast "golitex/ast"
 	glob "golitex/glob"
 )
-
-// maybeAddSuccessMsg adds a success message to execRet if state.WithMsg is true
-func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy ast.Stmt, execRet *glob.StmtRet) *glob.StmtRet {
-	if state.WithMsg {
-		execRet.AddVerifyProcess(successVerString(stmt, stmtVerifiedBy))
-		return execRet
-	}
-	return execRet
-}
 
 // maybeAddSuccessMsgString is a backward compatibility function for string-based
 func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet *glob.VerRet) *glob.VerRet {
