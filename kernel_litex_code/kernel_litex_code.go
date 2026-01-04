@@ -558,11 +558,6 @@ let fn intersect(x, y set) set:
 			z $in intersect(x, y)
 """
 
-know imply item_in_intersect(z set, x, y set):
-	z $in intersect(x, y)
-	=>:
-		z $in x
-		z $in y
 
 """
 let fn union(x, y set) set:
@@ -571,11 +566,6 @@ let fn union(x, y set) set:
 	forall z y:
 		z $in union(x, y)
 """
-
-know imply item_in_union(z set, x, y set):
-	z $in union(x, y)
-	=>:
-		z $in x or z $in y
 
 """
 let fn complement(x, y set) set:
@@ -870,11 +860,55 @@ know:
 	forall x, y R: x < y => {t R: x <= t, t < y} $is_a_nonempty_set
 	forall x, y R: x < y => {t R: x < t, t <= y} $is_a_nonempty_set
 
-### Set theory ###
+## Set theory 
 
+### cup
+
+# check item in cup
 know imply check_item_in_cup(x set, x_item x, cup_x_item x_item):
 	cup_x_item $in cup(x)
 
+# when item in cup, it has properties
 know forall x set, cup_x_item cup(x) => exist x_item x st cup_x_item $in x_item
 	
+### cap
+
+# check item in cap
+know:
+	forall x set, item set:
+		forall x_item x:
+			item $in x_item
+		=>:
+			item $in cap(x)
+
+# when item in cap, it has properties
+know imply item_in_cap(x set, item cap(x)):
+	forall x_item x:
+		item $in x_item
+
+### union
+
+# check item in union
+know:
+	forall item, x, y set: item $in x or item $in y => item $in union(x, y)
+
+# when item in union, it has properties
+know imply item_in_union(z set, x, y set):
+	z $in union(x, y)
+	=>:
+		z $in x or z $in y
+
+### intersect
+
+# check item in intersect
+know:
+	forall item, x, y set: item $in x, item $in y => item $in intersect(x, y)
+
+# when item in intersect, it has properties
+know imply item_in_intersect(z set, x, y set):
+	z $in intersect(x, y)
+	=>:
+		z $in x
+		z $in y
+
 `
