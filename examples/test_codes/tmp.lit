@@ -1,1 +1,2 @@
-(1, 0) $in {x cart(R, R): x[1] * x[1] + x[2] * x[2] = 1}
+have x R st x > 0
+have y {t R: 0 < t, t < 1}
