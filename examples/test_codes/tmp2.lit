@@ -1,52 +1,35 @@
-# 直线的一般式
-have fn:
-    line(a, b, c R) subsets(cart(R, R)):
-        line(a, b, c) = {x cart(R, R): a * x[1] + b * x[2] = c}
+prove_by_contradiction not sqrt(2) $in Q:
+    have m, n st $Q_in_frac(sqrt(2))
+    sqrt(2) = m / n
+    n * sqrt(2) = m # 自动生成
+    (n * sqrt(2)) ^ 2 = m ^ 2 = n ^ 2 * 2
+    m^2 $dvd 2
+    m $dvd 2
+    prove n $dvd 2:
+        m = 2 * k
+        2 * n^2 = 2^2 * k^2
+        2 $div n^2    
+    gcd(m, n) $dvd 2
+    1 $dvd 2
 
-    prove:
-        have s set = {x cart(R, R): a * x[1] + b * x[2] = c}
-        forall x s: x $in cart(R, R)
-        s $subset_of cart(R, R)
-    = s
+prop dvd(x, y Z):
+    dom:
+        x != 0
+    <=>:
+        y % x = 0
 
-# 平面的子集是一个直线
-exist_prop a, b, c R st is_line(l subsets(cart(R, R))):
-    l = line(a, b, c)
+prop is_prime(x N_pos):
+    dom:
+        x >= 2
+    <=>:
+        forall y N_pos: y >= 2, y < x => not y $dvd x
 
-"""
-know:
-    forall a, b, c R:
-        line(a, b, c) $in subsets(cart(R, R))
-        line(a, b, c) $is_a_set
-        forall x line(a, b, c) => x $in cart(R, R)
+know imply exp_dvd_imply_dvd(x, y Z, a N_pos):
+    x != 0
+    x $dvd y ^ a
+    $is_prime(a)
+    =>:
+        x $dvd y
 
-forall x line(1, 1, 1):
-    x $in cart(R, R)
-    1 * x[1] + 1 * x[2] = 1
-
-line(1, 1, 1) = {x cart(R, R): 1 * x[1] + 1 * x[2] = 1}
-
-# 一般式可以化成点斜式
-prove forall a, b, c R: a != 0 => line(a, b, c) = line(1, b/a, c/a):
-    line(a, b, c) $in subsets(cart(R, R))
-    line(a, b, c) $subset_of cart(R, R)
-
-    forall x line(a, b, c):
-        x $in cart(R, R)
-        a * x[1] + b * x[2] = c
-        (a * x[1] + b * x[2]) / a = c / a = x[1] + (b / a) * x[2]
-        line(1, b/a, c/a) = {x cart(R, R): 1 * x[1] + (b / a) * x[2] = c / a}
-        x $in line(1, b/a, c/a)
-
-    forall x line(1, b/a, c/a):
-        x[1] + (b / a) * x[2] = c / a
-        a * (x[1] + (b / a) * x[2]) = a * x[1] + b * x[2] = a * (c / a) = c
-        x $in line(a, b, c)
-"""
-
-prove forall l1, l2 set, a, b, c R: a != 0, l1 = {x cart(R, R): a * x[1] + b * x[2] = c}, l2 = {x cart(R, R): x[1] + (b / a) * x[2] = c / a} => l1 = l2:
-    forall x l1:
-        a * x[1] + b * x[2] = c
-        x $in l2
-    forall x l2:
-        x $in l1
+prove_for i range():
+	

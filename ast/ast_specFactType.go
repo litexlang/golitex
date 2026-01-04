@@ -1,0 +1,77 @@
+// Copyright Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Litex email: <litexlang@outlook.com>
+// Litex website: https://litexlang.com
+// Litex github repository: https://github.com/litexlang/golitex
+// Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
+
+package litex_ast
+
+import (
+	glob "golitex/glob"
+)
+
+type SpecFactType uint8
+
+const (
+	TruePure SpecFactType = iota
+	FalsePure
+	TrueExist_St
+	FalseExist_St
+)
+
+func (stmt *SpecFactStmt) ReverseTrue() *SpecFactStmt {
+	if stmt.FactType == TruePure {
+		return NewSpecFactStmt(FalsePure, stmt.PropName, stmt.Params, stmt.Line)
+	} else if stmt.FactType == FalsePure {
+		return NewSpecFactStmt(TruePure, stmt.PropName, stmt.Params, stmt.Line)
+	} else if stmt.FactType == TrueExist_St {
+		return NewSpecFactStmt(FalseExist_St, stmt.PropName, stmt.Params, stmt.Line)
+	} else if stmt.FactType == FalseExist_St {
+		return NewSpecFactStmt(TrueExist_St, stmt.PropName, stmt.Params, stmt.Line)
+	}
+	return nil
+}
+
+func (f *SpecFactStmt) IsPropNameEqual() bool {
+	return string(f.PropName) == glob.KeySymbolEqual
+}
+
+func (f *SpecFactStmt) IsPureFact() bool {
+	return f.FactType == TruePure || f.FactType == FalsePure
+}
+
+func (f *SpecFactStmt) IsExist_St_Fact() bool {
+	return f.FactType == TrueExist_St || f.FactType == FalseExist_St
+}
+
+func (f *SpecFactStmt) IsTrue() bool {
+	return f.FactType == TruePure || f.FactType == TrueExist_St
+}
+
+func (f *SpecFactStmt) NameIs(givenName string) bool {
+	return string(f.PropName) == givenName
+}
+
+func (f *SpecFactStmt) IsTruePure() bool {
+	return f.FactType == TruePure
+}
+
+func (f *SpecFactStmt) IsFalsePure() bool {
+	return f.FactType == FalsePure
+}
+
+func (f *SpecFactStmt) IsTrueExist_St() bool {
+	return f.FactType == TrueExist_St
+}
+
+func (f *SpecFactStmt) IsFalseExist_St() bool {
+	return f.FactType == FalseExist_St
+}

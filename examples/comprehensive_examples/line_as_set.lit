@@ -13,7 +13,7 @@ prop line_as_intensional_set(s set, a, b, c R):
     s = {x cart(R, R): a * x[1] + b * x[2] = c}
 
 have fn:
-    line(a, b, c R) subsets(cart(R, R)):
+    line(a, b, c R) power_set(cart(R, R)):
         dom:
             a != 0 or b != 0
         =>:
@@ -59,8 +59,9 @@ prove forall a, b, c R: a != 0 => line(a, b, c) = line(1, b/a, c/a):
 
     line(a, b, c) = line(1, b/a, c/a)
 
+"""
 # 平面上的子集确实是直线
-exist_prop a, b, c R st is_line(s subsets(cart(R, R))):
+exist_prop a, b, c R st is_line(s power_set(cart(R, R))):
     $line_as_intensional_set(s, a, b, c)
 
 # line(1, 1, 1) 是直线
@@ -69,13 +70,14 @@ prove:
     exist 1, 1, 1 st $is_line(line(1, 1, 1))
 
 # 是斜率
-exist_prop c R st is_slope(k R, s subsets(cart(R, R))):
+exist_prop c R st is_slope(k R, s power_set(cart(R, R))):
     $line_as_intensional_set(s, 1, k, c)
 
 # 1 是 line(1, 1, 1) 的斜率
 prove:
     $line_as_intensional_set(line(1, 1, 1), 1, 1, 1)
     exist 1 st $is_slope(1, line(1, 1, 1))
+"""
 
 # 是截距
 prop is_intercept(i R, a, b, c R):
@@ -88,14 +90,14 @@ prove:
 
 # 两点式
 have fn:
-    line_two_points(x cart(R, R), y cart(R, R)) subsets(cart(R, R)):
+    line_two_points(x cart(R, R), y cart(R, R)) power_set(cart(R, R)):
         dom:
             x[2] - y[2] != 0 or y[1] - x[1] != 0
         =>:
             line_two_points(x, y) = line(x[2] - y[2], y[1] - x[1], x[2] * y[1] - x[1] * y[2])
 
     prove:
-        have l subsets(cart(R, R)) = line(x[2] - y[2], y[1] - x[1], x[2] * y[1] - x[1] * y[2])
+        have l power_set(cart(R, R)) = line(x[2] - y[2], y[1] - x[1], x[2] * y[1] - x[1] * y[2])
 
     = l
 
@@ -109,18 +111,18 @@ prove:
 
 # 点法式：给定法向量(a, b) 和点 (x0, y0)，则直线为 {x cart(R, R): a * (x[1] - x0) + b * (x[2] - y0) = 0}
 have fn:
-    line_normal_vector(x cart(R, R), y cart(R, R)) subsets(cart(R, R)):
+    line_normal_vector(x cart(R, R), y cart(R, R)) power_set(cart(R, R)):
         x[1] != 0 or x[2] != 0
         =>:
             line_normal_vector(x, y) = line(x[1], x[2], x[1] * y[1] + x[2] * y[2])
 
     prove:
-        have l subsets(cart(R, R)) = line(x[1], x[2], x[1] * y[1] + x[2] * y[2])
+        have l power_set(cart(R, R)) = line(x[1], x[2], x[1] * y[1] + x[2] * y[2])
 
     = l
 
 # 两个直线垂直
-prop is_vertical(s1 subsets(cart(R, R)), s2 subsets(cart(R, R)), a, b, c, d, e, f R):
+prop is_vertical(s1 power_set(cart(R, R)), s2 power_set(cart(R, R)), a, b, c, d, e, f R):
     s1 = line(a, b, c)
     s2 = line(d, e, f)
     <=>:

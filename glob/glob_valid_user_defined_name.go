@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@ package litex_global
 
 import (
 	"fmt"
-	"strings"
 	"unicode"
 )
 
@@ -61,33 +60,19 @@ func IsValidUserDefinedNameWithoutPkgName(name string) error {
 	}
 
 	// 检查是否与内置关键字或符号冲突（在字符验证之后）
-	if IsBuiltinObjOrPropName(name) {
+	if IsBuiltinName(name) {
 		return fmt.Errorf("identifier name cannot be a builtin keyword or builtin symbol, get: %s", name)
-	}
-
-	if _, ok := builtinPropObjNames[name]; ok {
-		return fmt.Errorf("identifier name cannot be a builtin name, get: %s", name)
 	}
 
 	return nil
 }
 
-func IsValidUseDefinedAtomObj(name string) error {
-	// 用：：切割，得到PkgName 和 Name
-	values := strings.Split(name, PkgNameAtomSeparator)
+func IsValidUseDefinedName(name string) error {
+	isWithPkgName, _, atomName := GetPkgNameAndName(name)
 
-	if len(values) == 1 {
+	if !isWithPkgName {
 		return IsValidUserDefinedNameWithoutPkgName(name)
-	} else if len(values) == 2 {
-		// values 必须满足 IsValidUserDefinedName
-		for _, value := range values {
-			if err := IsValidUserDefinedNameWithoutPkgName(value); err != nil {
-				return err
-			}
-		}
-
-		return nil
 	} else {
-		return fmt.Errorf("identifier name cannot have more than one %s", PkgNameAtomSeparator)
+		return IsValidUserDefinedNameWithoutPkgName(atomName)
 	}
 }

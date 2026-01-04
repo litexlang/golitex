@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ func (c *DefPropStmt) InlineString() string {
 	}
 	return builder.String()
 }
-func (l *DefFnStmt) InlineString() string {
+func (l *LetFnStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFn)
 	builder.WriteString(" ")
@@ -97,34 +97,46 @@ func (f *KnowFactStmt) InlineString() string {
 	return builder.String()
 }
 
-func (s *DefExistPropStmt) InlineString() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordExistProp)
-	builder.WriteString(" ")
-	builder.WriteString(StrObjSetPairs(s.ExistParams, s.ExistParamSets))
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeywordSt)
-	builder.WriteString(" ")
-	builder.WriteString(s.DefBody.DefHeader.InlineString())
+// func (s *DefExistPropStmt) InlineString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordExistProp)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(StrObjSetPairs(s.ExistParams, s.ExistParamSets))
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeywordSt)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(s.DefBody.DefHeader.InlineString())
 
-	if len(s.DefBody.DomFactsOrNil) > 0 {
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteString(inlineFactsString(s.DefBody.DomFactsOrNil))
-	}
+// 	if len(s.DefBody.DomFactsOrNil) > 0 {
+// 		builder.WriteString(glob.KeySymbolColon)
+// 		builder.WriteString(inlineFactsString(s.DefBody.DomFactsOrNil))
+// 	}
 
-	if len(s.DefBody.IffFactsOrNil) > 0 {
-		builder.WriteString(glob.KeySymbolEquivalent)
-		builder.WriteString(inlineFactsString(s.DefBody.IffFactsOrNil))
-	}
+// 	if len(s.DefBody.IffFactsOrNil) > 0 {
+// 		builder.WriteString(glob.KeySymbolEquivalent)
+// 		builder.WriteString(inlineFactsString(s.DefBody.IffFactsOrNil))
+// 	}
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
-func (s *HaveObjStStmt) InlineString() string {
+// func (s *HaveObjStStmt) InlineString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordHave)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(strings.Join(s.ObjNames, ", "))
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeywordSt)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(s.Fact.InlineString())
+// 	return builder.String()
+// }
+
+func (s *HaveObjStWithParamSetsStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")
-	builder.WriteString(strings.Join(s.ObjNames, ", "))
+	builder.WriteString(StrObjSetPairs(s.ObjNames, s.ObjSets))
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
@@ -135,12 +147,12 @@ func (s *HaveObjStStmt) InlineString() string {
 func (s *ProveInEachCaseStmt) InlineString() string { return s.String() }
 func (s *ProveCaseByCaseStmt) InlineString() string { return s.String() }
 
-func (s *KnowPropStmt) InlineString() string {
+func (s *KnowImplicationStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordImplication)
-	builder.WriteString(s.Prop.InlineString())
+	builder.WriteString(s.ImplicationProp.InlineString())
 	return builder.String()
 }
 
@@ -161,7 +173,7 @@ func (s *ImportDirStmt) InlineString() string {
 	return s.String()
 }
 
-func (s *ImportFileStmt) InlineString() string {
+func (s *RunFileStmt) InlineString() string {
 	return s.String()
 }
 func (s *ProveStmt) InlineString() string {
@@ -189,14 +201,13 @@ func (s *UniFactWithIffStmt) InlineString() string {
 func (s *ClaimProveByContradictionStmt) InlineString() string { panic("") }
 
 func (s *ClaimImplicationStmt) InlineString() string { panic("") }
-func (s *ClaimExistPropStmt) InlineString() string   { panic("") }
+
+// func (s *ClaimExistPropStmt) InlineString() string   { panic("") }
 
 func (s *ProveByEnumStmt) InlineString() string          { panic("") }
 func (s *HaveObjInNonEmptySetStmt) InlineString() string { panic("") }
-func (s *HaveCartSetStmt) InlineString() string          { panic("") }
-func (s *HaveObjFromCartSetStmt) InlineString() string   { panic("") }
 
-func (s *HaveCartWithDimStmt) InlineString() string { panic("") }
+// func (s *HaveObjFromCartSetStmt) InlineString() string   { panic("") }
 
 // func (s *NamedUniFactStmt) InlineString() string    { panic("") }
 
@@ -213,13 +224,13 @@ func (s *EqualsFactStmt) InlineString() string {
 	return builder.String()
 }
 
-func (s *KnowExistPropStmt) InlineString() string { panic("") }
+// func (s *KnowExistPropStmt) InlineString() string { panic("") }
 
 // func (s *LatexStmt) InlineString() string         { panic("") }
-func (s *FnTemplateDefStmt) InlineString() string { panic("") }
-func (s *ClearStmt) InlineString() string         { return s.String() }
-func (s *DoNothingStmt) InlineString() string     { return s.String() }
-func (s *InlineFactsStmt) InlineString() string   { return inlineFactsString(s.Facts) }
+func (s *DefFnSetStmt) InlineString() string    { panic("") }
+func (s *ClearStmt) InlineString() string       { return s.String() }
+func (s *DoNothingStmt) InlineString() string   { return s.String() }
+func (s *InlineFactsStmt) InlineString() string { return inlineFactsString(s.Facts) }
 func (s *ProveByInductionStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveByInduction)
@@ -339,11 +350,11 @@ func (s *ProveForStmt) InlineString() string {
 	return "TODO"
 }
 
-func (s *ProveImplicationStmt) InlineString() string {
+func (s *ProveImplyStmt) InlineString() string {
 	return "TODO"
 }
 
-func (s *ImplicationStmt) InlineString() string {
+func (s *DefImplicationStmt) InlineString() string {
 	return "TODO"
 }
 
@@ -387,10 +398,10 @@ func (s *ProveAlgoReturnStmt) InlineString() string {
 	return s.String()
 }
 
-func (s *PrintStmt) InlineString() string {
+func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
 	return s.String()
 }
 
-func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
+func (s *ProveExistStmt) InlineString() string {
 	return s.String()
 }

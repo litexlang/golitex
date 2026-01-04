@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import (
 )
 
 func EqualFact(left, right Obj) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{left, right}, glob.BuiltinLine)
+	return NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{left, right}, glob.BuiltinLine0)
 }
 
 func (stmt *UniFactStmt) ParamInParamSetFacts(uniConMap map[string]Obj) []*SpecFactStmt {
@@ -62,7 +62,7 @@ func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
 		reversedSpecFacts[i] = specFact.ReverseTrue()
 	}
 
-	orFact_GotBYReversedSpecFacts := NewOrStmt(reversedSpecFacts, glob.BuiltinLine)
+	orFact_GotBYReversedSpecFacts := NewOrStmt(reversedSpecFacts, glob.BuiltinLine0)
 	ret = append(ret, orFact_GotBYReversedSpecFacts)
 
 	specFacts_GotByReversedOrFacts := []*SpecFactStmt{}
@@ -79,7 +79,7 @@ func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
 }
 
 func NewEqualFact(left, right Obj) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{left, right}, glob.BuiltinLine)
+	return NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{left, right}, glob.BuiltinLine0)
 }
 
 func IsFn_WithHeadName(obj Obj, headName string) bool {
@@ -118,7 +118,7 @@ func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string
 		if err != nil {
 			return nil, err
 		}
-		paramSetFacts[i] = NewInFactWithParamObj(uniMap[param], instantiatedSet, glob.BuiltinLine)
+		paramSetFacts[i] = NewInFactWithParamObj(uniMap[param], instantiatedSet, glob.BuiltinLine0)
 	}
 	return paramSetFacts, nil
 }
@@ -163,21 +163,21 @@ func (strSlice StrSlice) ToObjSlice() []Obj {
 
 func (head DefHeader) ToSpecFact() *SpecFactStmt {
 	params := head.Params.ToObjSlice()
-	return NewSpecFactStmt(TruePure, Atom(head.Name), params, glob.BuiltinLine)
+	return NewSpecFactStmt(TruePure, Atom(head.Name), params, glob.BuiltinLine0)
 }
 
 func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *UniFactStmt {
-	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ImplicationFactsOrNil, glob.BuiltinLine)
+	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ImplicationFactsOrNil, glob.BuiltinLine0)
 }
 
-func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
-	params := stmt.DefBody.DefHeader.Params.ToObjSlice()
-	return NewSpecFactStmt(TruePure, Atom(stmt.DefBody.DefHeader.Name), params, glob.BuiltinLine)
-}
+// func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
+// 	params := stmt.DefBody.DefHeader.Params.ToObjSlice()
+// 	return NewSpecFactStmt(TruePure, Atom(stmt.DefBody.DefHeader.Name), params, glob.BuiltinLine0)
+// }
 
-func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue() *UniFactStmt {
-	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFactsOrNil, []FactStmt{stmt.ToProp()}, glob.BuiltinLine)
-}
+// func (stmt *DefExistPropStmt) ToForallParamsSatisfyDomFacts_Then_ExistFactIsTrue() *UniFactStmt {
+// 	return NewUniFact(stmt.ExistParams, stmt.ExistParamSets, stmt.DefBody.DomFactsOrNil, []FactStmt{stmt.ToProp()}, glob.BuiltinLine0)
+// }
 
 // func (stmt *NamedUniFactStmt) ToUniFact() *UniFactStmt {
 // 	return NewUniFact(stmt.DefPropStmt.DefHeader.Params, stmt.DefPropStmt.DefHeader.ParamSets, stmt.DefPropStmt.IffFactsOrNil, stmt.DefPropStmt.ImplicationFactsOrNil, glob.BuiltinLine)
@@ -191,7 +191,7 @@ func (objFn *FnObj) IsObjFn_HasAtomHead_ReturnHead() (Atom, bool) {
 	return head, true
 }
 
-func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(fnObj *FnObj) (*FnTStruct, error) {
+func (stmt *DefFnSetStmt) Instantiate_GetFnTemplateNoName(fnObj *FnObj) (*AnonymousFn, error) {
 	uniMap := map[string]Obj{}
 	templateParams := stmt.TemplateDefHeader.Params
 	if len(templateParams) != len(fnObj.Params) {
@@ -202,27 +202,27 @@ func (stmt *FnTemplateDefStmt) Instantiate_GetFnTemplateNoName(fnObj *FnObj) (*F
 		uniMap[param] = fnObj.Params[i]
 	}
 
-	instantiatedParamSets, err := stmt.Fn.ParamSets.Instantiate(uniMap)
+	instantiatedParamSets, err := stmt.AnonymousFn.ParamSets.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	instantiatedDomFacts, err := stmt.Fn.DomFacts.InstantiateFact(uniMap)
+	instantiatedDomFacts, err := stmt.AnonymousFn.DomFacts.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	instantiatedThenFacts, err := stmt.Fn.ThenFacts.InstantiateFact(uniMap)
+	instantiatedThenFacts, err := stmt.AnonymousFn.ThenFacts.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	instantiatedRetSet, err := stmt.Fn.RetSet.Instantiate(uniMap)
+	instantiatedRetSet, err := stmt.AnonymousFn.RetSet.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewFnTStruct(stmt.Fn.Params, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts, stmt.Line), nil
+	return NewFnTStruct(stmt.AnonymousFn.Params, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts, stmt.Line), nil
 }
 
 func (objFn *FnObj) HasHeadInSlice(headNames []string) bool {
@@ -233,7 +233,7 @@ func (objFn *FnObj) HasHeadInSlice(headNames []string) bool {
 	return slices.Contains(headNames, string(headAtom))
 }
 
-func (objAsFnObj *FnObj) FnTObj_ToFnTNoName() (*FnTStruct, error) {
+func (objAsFnObj *FnObj) FnTObj_ToFnTNoName() (*AnonymousFn, error) {
 	objAsFnObjHeadAsFnObj, ok := objAsFnObj.FnHead.(*FnObj)
 	if !ok {
 		return nil, fmt.Errorf("expected ObjFn, but got %T", objAsFnObj.FnHead)
@@ -255,7 +255,7 @@ func (objAsFnObj *FnObj) FnTObj_ToFnTNoName() (*FnTStruct, error) {
 	paramSets := objAsFnObjHeadAsFnObj.Params
 	retSet := objAsFnObj.Params[0]
 
-	fnTNoName := NewFnTStruct(randomParams, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.BuiltinLine)
+	fnTNoName := NewFnTStruct(randomParams, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.BuiltinLine0)
 
 	return fnTNoName, nil
 }
@@ -274,7 +274,7 @@ func GetFnHeadChain_AndItSelf(obj Obj) ([]Obj, [][]Obj) {
 	}
 }
 
-func (objAsFnObj *FnObj) IsFnT_ObjFn_Ret_ParamSets_And_RetSet(fnObj *FnObj) (bool, []Obj, Obj) {
+func (objAsFnObj *FnObj) GetParamSetsAndRetSetOfAnonymousFn(fnObj *FnObj) (bool, []Obj, Obj) {
 	if !IsFnTemplate_ObjFn(objAsFnObj) {
 		return false, nil, nil
 	}
@@ -315,14 +315,14 @@ func InstFacts(facts []FactStmt, uniMap map[string]Obj) ([]FactStmt, error) {
 	return newFacts, nil
 }
 
-func ObjFnT_To_FnTStruct(objFnTypeT *FnObj) (*FnTStruct, bool) {
-	ok, paramSets, retSet := objFnTypeT.IsFnT_ObjFn_Ret_ParamSets_And_RetSet(objFnTypeT)
+func AnonymousFnToInstFnTemplate(objFnTypeT *FnObj) (*AnonymousFn, bool) {
+	ok, paramSets, retSet := objFnTypeT.GetParamSetsAndRetSetOfAnonymousFn(objFnTypeT)
 	if !ok {
 		return nil, false
 	}
 
 	excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
-	return NewFnTStruct(excelNames, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.BuiltinLine), true
+	return NewFnTStruct(excelNames, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.BuiltinLine0), true
 }
 
 func UnknownFactMsg(fact FactStmt) string {
@@ -418,7 +418,7 @@ func MakeSetBuilderObj(param string, parentSet Obj, facts SpecFactPtrSlice) (*Fn
 
 func changeSpecFactIntoObjs(fact *SpecFactStmt) ([]Obj, error) {
 	ret := []Obj{}
-	switch fact.TypeEnum {
+	switch fact.FactType {
 	case FalsePure:
 		ret = append(ret, Atom(strconv.Itoa(int(FalsePure))))
 	case FalseExist_St:
@@ -450,7 +450,7 @@ func IsTupleFnObj(f *FnObj) bool {
 }
 
 func IsIndexOptFnObj(f *FnObj) bool {
-	return f.FnHead.String() == glob.KeywordIndexOpt
+	return f.FnHead.String() == glob.KeywordObjAtIndexOpt
 }
 
 func IsListSetObj(obj Obj) bool {
@@ -485,7 +485,7 @@ func ObjIsKeywordSetOrNonEmptySetOrFiniteSet(obj Obj) bool {
 
 func ObjIsKeywordSet(obj Obj) bool {
 	if asAtom, ok := obj.(Atom); ok {
-		return glob.IsKeywordSet(string(asAtom))
+		return string(asAtom) == glob.KeywordSet
 	}
 	return false
 }
@@ -502,7 +502,7 @@ func ObjIsRangeOrClosedRangeWith2Params(obj Obj) bool {
 }
 
 func IsTrueEqualFact(fact *SpecFactStmt) bool {
-	if fact.TypeEnum != TruePure {
+	if fact.FactType != TruePure {
 		return false
 	}
 
@@ -513,20 +513,20 @@ func IsTrueEqualFact(fact *SpecFactStmt) bool {
 	return true
 }
 
-func (stmt *ImplicationStmt) ToProp() *DefPropStmt {
+func (stmt *DefImplicationStmt) ToProp() *DefPropStmt {
 	return NewDefPropStmt(stmt.DefHeader, stmt.DomFacts, nil, stmt.ImplicationFacts, stmt.Line)
 }
 
-func PropNameIsStringAndIsTrue(specFact *SpecFactStmt, propName string) bool {
-	if specFact.TypeEnum != TruePure {
+func IsTrueSpecFactWithPropName(specFact *SpecFactStmt, propName string) bool {
+	if specFact.FactType != TruePure {
 		return false
 	}
 
 	return string(specFact.PropName) == propName
 }
 
-func PropNameIsStringAndIsFalse(specFact *SpecFactStmt, propName string) bool {
-	if specFact.TypeEnum != FalsePure {
+func IsFalseSpecFactWithPropName(specFact *SpecFactStmt, propName string) bool {
+	if specFact.FactType != FalsePure {
 		return false
 	}
 
@@ -546,3 +546,110 @@ func GetParamSetsAndRetSetFromFnSet(fnSet *FnObj) ([]Obj, Obj, error) {
 
 	return paramSets, retSet, nil
 }
+
+func GetTupleValueAtIndex(tuple *FnObj, index Obj) Obj {
+	if asAtom, ok := index.(Atom); ok {
+		// string(asAtom) 是整数
+		index, err := strconv.Atoi(string(asAtom))
+		if err != nil {
+			return nil
+		}
+
+		if index >= 1 && index <= len(tuple.Params) {
+			return tuple.Params[index-1]
+		}
+
+		return nil
+	}
+
+	return nil
+}
+
+func (fnObj *FnObj) IsAtomHeadEqualToStr(s string) bool {
+	if asAtom, ok := fnObj.FnHead.(Atom); ok {
+		return string(asAtom) == s
+	}
+
+	return false
+}
+
+var BuiltinAndKernelDefinedNames = map[string]struct{}{}
+
+func IsBuiltinOrKernelDefinedName(name string) bool {
+	if glob.IsKeyword(name) || glob.IsKeySymbol(name) {
+		return true
+	}
+
+	if glob.IsNumLitStr(name) {
+		return true
+	}
+
+	_, ok := BuiltinAndKernelDefinedNames[name]
+	return ok
+}
+
+func AddPkgNameToName(pkgName string, name string) string {
+	if pkgName == "" {
+		return name
+	}
+	return fmt.Sprintf("%s.%s", pkgName, name)
+}
+
+func ObjContainsFreeParams(obj Obj, freeParams []string) bool {
+	switch asObj := obj.(type) {
+	case *FnObj:
+		return fnObjContainsFreeParams(asObj, freeParams)
+	case Atom:
+		return slices.Contains(freeParams, string(asObj))
+	default:
+		return false
+	}
+}
+
+func fnObjContainsFreeParams(fnObj *FnObj, freeParams []string) bool {
+	for _, param := range fnObj.Params {
+		if ObjContainsFreeParams(param, freeParams) {
+			return true
+		}
+	}
+	if ObjContainsFreeParams(fnObj.FnHead, freeParams) {
+		return true
+	}
+	return false
+}
+
+// func ParamSetsDoesNotContainFreeParams(freeParams []string, paramSets []Obj) error {
+// 	for _, paramSet := range paramSets {
+// 		if ObjContainsFreeParams(paramSet, freeParams) {
+// 			return fmt.Errorf("object set %s contains free parameters (%s)", paramSet, strings.Join(freeParams, ", "))
+// 		}
+// 	}
+// 	return nil
+// }
+
+func IsAtomWithoutPkgName(atom Atom) bool {
+	if strings.Contains(string(atom), glob.PkgNameAtomSeparator) {
+		return false
+	}
+	return true
+}
+
+func ParamsInSpecFactAreStrings(specFact *SpecFactStmt) ([]string, error) {
+	ret := []string{}
+	for _, param := range specFact.Params {
+		if atom, ok := param.(Atom); !ok {
+			return nil, fmt.Errorf("expect atom in params: %s", param.String())
+		} else {
+			if !IsAtomWithoutPkgName(atom) {
+				return nil, fmt.Errorf("expect atom without pkg name in params: %s", atom.String())
+			}
+
+			ret = append(ret, string(atom))
+		}
+	}
+	return ret, nil
+}
+
+// func (stmt *HaveObjStWithParamSetsStmt) ToHaveObjStStmt() *HaveObjStStmt {
+// 	return NewHaveObjStStmt(stmt.ObjNames, stmt.Fact, stmt.Line)
+// }

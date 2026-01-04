@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,30 +15,16 @@
 package litex_global
 
 import (
+	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 )
-
-func MergeMap[T any](from map[string]T, to map[string]T) map[string]T {
-	for k, v := range from {
-		to[k] = v
-	}
-	return to
-}
-
-func numberToLetters(num int) string {
-	result := ""
-	for num > 0 {
-		num-- // 调整为 0-based
-		result = string(rune('a'+(num%26))) + result
-		num /= 26
-	}
-	return result
-}
 
 func GenerateNamesLikeExcelColumnNames(n int) []string {
 	names := make([]string, n)
 	for i := 1; i <= n; i++ {
-		names[i-1] = numberToLetters(i)
+		names[i-1] = strconv.Itoa(i)
 	}
 	return names
 }
@@ -53,14 +39,29 @@ func IsKeywordSetOrNonEmptySetOrFiniteSet(s string) bool {
 	return s == KeywordSet || s == KeywordNonEmptySet || s == KeywordFiniteSet
 }
 
-func IsKeywordSet(s string) bool {
-	return s == KeywordSet
+func GetPkgNameAndName(name string) (bool, string, string) {
+	parts := strings.Split(name, PkgNameAtomSeparator)
+	if len(parts) != 2 {
+		return false, "", ""
+	}
+
+	return true, parts[0], parts[1]
 }
 
-func IsKeywordNonEmptySet(s string) bool {
-	return s == KeywordNonEmptySet
+func StringWithOptimizedNewline(s string) string {
+	s2 := strings.Trim(s, "\n\t ")
+	// 将3个或更多连续的\n替换成\n\n
+	newlineRegex := regexp.MustCompile(`\n{3,}`)
+	s2 = newlineRegex.ReplaceAllString(s2, "\n\n")
+	return fmt.Sprintf("%s\n", s2)
 }
 
-func IsKeywordFiniteSet(s string) bool {
-	return s == KeywordFiniteSet
+func IsNPosOrNOrZOrQOrR(name string) bool {
+	return name == KeywordNPos || name == KeywordNatural || name == KeywordInteger || name == KeywordRational || name == KeywordReal
+}
+
+var AddMinusStarSet map[string]struct{} = map[string]struct{}{
+	KeySymbolPlus:  {},
+	KeySymbolMinus: {},
+	KeySymbolStar:  {},
 }

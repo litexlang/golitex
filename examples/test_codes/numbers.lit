@@ -1,0 +1,15 @@
+not 1.5 $in Z
+not 3 / 2 $in Z
+(1+2) * 3 $in Z 
+not 1.5 $in N
+not 3 / 2 $in N
+(1+2) * 3 $in N
+not 1.5 $in N_pos
+not 3 / 2 $in N_pos
+(1+2) * 3 $in N_pos 
+
+2 $in R_pos
+2.5 $in Q_pos
+-124 $in Z_neg
+-7.9  $in Q_neg
+-17  $in R_neg

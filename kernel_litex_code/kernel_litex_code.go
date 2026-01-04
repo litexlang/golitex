@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,47 +15,12 @@
 package kernel_lib_litex_code
 
 var PipelineInitCode = `
-prop last_two_objects_are_equal(x, y, y2 set):
-	y = y2
-
-exist_prop a in_set st exist_obj_not_in_left_set_but_in_right_set(not_in_set, in_set set):
-	not a $in not_in_set
-
 know forall x2, y2 R: x2 != 0, y2 != 0 => x2 * y2 != 0
 
-exist_prop x Z, y N_pos st Q_in_frac(q Q):
-	x / y = q
-	x = y * q
-	x = q * y
-	y > 0
-
-exist_prop x Z, y N_pos st rational_number_representation_in_fraction(q Q):
-	<=>:
-		x / y = q
-		x = y * q
-		x = q * y
-		y > 0
-
-exist_prop x N_pos, y N_pos st rational_positive_number_representation_in_fraction(q Q):
-	q > 0
-	<=>:
-		x / y = q
-		x = y * q
-		x = q * y
-		x > 0
-		y > 0
-
-exist_prop x Z, y N_pos st rational_negative_number_representation_in_fraction(q Q):
-	q < 0
-	<=>:
-		x / y = q
-		x = y * q
-		x = q * y
-		x < 0
-
-know forall q Q => $rational_number_representation_in_fraction(q)
-know forall q Q: q > 0 => $rational_positive_number_representation_in_fraction(q)
-know forall q Q: q < 0 => $rational_negative_number_representation_in_fraction(q)
+know:
+	forall q Q: exist x Z, y N_pos st x / y = q
+	forall q Q_pos: exist x N_pos, y N_pos st x / y = q
+	forall q Q_neg: exist x Z_neg, y N_pos st x / y = q
 
 let fn sqrt(z R) R:
 	z >= 0
@@ -72,20 +37,16 @@ know forall x, y, z R: z != 0, x / z = y => x = y * z, x = z * y
 
 know forall x, y, z R, n N: x = (y * z) => x^n = y^n * z^n
 
-# TODO: 已经放到 Std/Int/main.lit 中
 know:
 	forall x, y Z, z N:
 		z != 0
 		=>:
 			(x + y) % z = (x % z + y % z) % z
 
-# TODO: 已经放到 Std/Int/main.lit 中
 know forall x, y Z, z N: z !=0, x % z = 0 => (x * y) % z = 0
 
-# TODO: 已经放到 Std/Int/main.lit 中
 know forall x, z N: z != 0, x < z => x % z = x
 
-# TODO: 已经放到 Std/Int/main.lit 中
 know forall x, y N: y != 0, x < y => x % y = x
 
 know forall x, y, z R: z != 0, x * z = y => x = y / z
@@ -137,10 +98,11 @@ know forall x N_pos => x $in N, x >= 1, x > 0, x $in Q, x $in R
 know forall x Z: x > 0 => x $in N_pos
 know forall x Z: x <= 0 => not x $in N_pos
 
-fn_template seq(s set):
+"""
+have fn_set seq(s set):
 	fn (n N_pos) s
 
-fn_template finite_seq(s set, n N_pos):
+have fn_set finite_seq(s set, n N_pos):
     fn (x N_pos) s:
     	dom:
         	x <= n
@@ -160,6 +122,7 @@ let fn finite_seq_product(n N_pos, a finite_seq(R, n), k N) R:
 know:
     forall n N_pos, a finite_seq(R, n), k N: k < n => finite_seq_product(n, a, k+1) = finite_seq_product(n, a, k) * a(k+1)
     forall n N_pos, a finite_seq(R, n) => finite_seq_product(n, a, 1) = a(1)
+"""
 
 
 know forall m N_pos => m - 1 $in N
@@ -359,14 +322,10 @@ know forall a, b, c, d R: c != 0, a = d * (b / c) => a * c = d * b
 know forall x, y, z R: z != 0, x = y / z => x * z = y
 
 let fn range(x Z, y Z) set:
-	dom:
-		x <= y
 	=>:
 		range(x, y) = {self Z: self >= x, self < y}
 
 let fn closed_range(x Z, y Z) set:
-	dom:
-		x <= y
 	=>:
 		closed_range(x, y) = {self Z: self >= x, self <= y}
 
@@ -381,9 +340,7 @@ know:
 			forall t y:
 				t $in x
 """
-` + InequalityFacts
 
-var InequalityFacts = `
 know:
 	forall x, y R: x < y => x - y < 0
 	forall x, y R: x > y => x - y > 0
@@ -574,12 +531,6 @@ know forall a, b R: a ^ 2 = b, a >= 0 => a = sqrt(b), a = pow(b, 1/2)
 
 know forall x, y, z Z: z != 0 => (x + y) % z = (x % z + y % z) % z, (x * y) % z = (x % z * y % z) % z, (x - y) % z = (x % z - y % z) % z
 
-exist_prop s set st there_exists_infinite_set() :
-    <=>:
-        not $is_a_finite_set(s)
-
-know $there_exists_infinite_set()
-
 let fn negate(x R) R:
 	negate(x) = -x
 	negate(x) + x = 0
@@ -595,6 +546,7 @@ prop subset_of(x, y set):
 prop is_superset_of(A, B set):
 	forall x B: x $in A
 
+"""
 let fn intersect(x, y set) set:
 	forall z x:
 		z $in y
@@ -604,39 +556,17 @@ let fn intersect(x, y set) set:
 		z $in x
 		=>:
 			z $in intersect(x, y)
+"""
 
-know imply item_in_intersect(z set, x, y set):
-	z $in intersect(x, y)
-	=>:
-		z $in x
-		z $in y
 
+"""
 let fn union(x, y set) set:
 	forall z x:
 		z $in union(x, y)
 	forall z y:
 		z $in union(x, y)
+"""
 
-know imply item_in_union(z set, x, y set):
-	z $in union(x, y)
-	=>:
-		z $in x or z $in y
-
-let fn complement(x, y set) set:
-	dom:
-		x $subset_of y
-	=>:
-		forall z y:
-			not z $in x
-			=>:
-				z $in complement(x, y)
-
-know imply item_in_complement(z set, x, y set):
-	x $subset_of y
-	z $in complement(x, y)
-	=>:
-		z $in y
-		not z $in x
 
 prop sets_are_equal(x, y set):
 	forall a x => a $in y
@@ -685,6 +615,7 @@ prop is_cart(x set)
 
 prop is_tuple(x set)
 
+"""
 let fn proj(x set, i N_pos) set:
 	dom:
 		$is_cart(x)
@@ -693,18 +624,17 @@ let fn proj(x set, i N_pos) set:
 let fn dim(x set) N_pos:
 	dom:
 		$is_cart(x)
+"""
 
 # ∏_{a in I} A_a (Cartesian product)
 prop is_cart_prod(s set)
+"""
 let fn index_set_of_cart_prod(s set) set:
 	dom:
 		$is_cart_prod(s)
+"""
 		
-let fn cart_prod(index_set set, family fn (index_set) set) set
-
-know forall index_set set, family fn (index_set) set: $is_cart_prod(cart_prod(index_set, family))
-
-know forall index_set set, family fn (index_set) set: index_set_of_cart_prod(cart_prod(index_set, family)) = index_set
+# let fn cart_prod(index_set set, family fn (index_set) set) set
 
 know:
 	forall x, y R:
@@ -717,6 +647,7 @@ know:
 
 	forall x N_pos: x >= 0, x > 0, x != 0, x >= 1, not x < 1, not x < 0
 
+"""
 let fn inverse_image_set(X set, Y set, f fn(X)Y, U set) set:
     U $subset_of Y
     =>:
@@ -728,20 +659,15 @@ know:
 		not z $in y
 		<=>:
 			z $in difference(x, y)
+
 know imply item_in_difference(x, y set, z set):
 	z $in difference(x, y)
 	=>:
 		not z $in y
 		z $in x
 
-let fn power_set(x set) set
-know:
-	forall x set, y power_set(x):
-		y $subset_of x
-	forall x set, y set:
-		y $subset_of x
-		=>:
-			y $in power_set(x)
+"""
+
 
 know:
 	forall a, b, c, d R: b > 0, d > 0 => a / b > c / d <=> a * d > b * c
@@ -790,35 +716,16 @@ know:
 		=>:
 			x = y
 
-let fn subsets(x set) set
-know forall x set, y subsets(x): y $subset_of x, forall t y => t $in x
-know forall x, y set: x $subset_of y => x $in subsets(y)
+"""
+let fn power_set(x set) set
+know forall x set, y power_set(x): y $subset_of x, forall t y => t $in x
+know forall x, y set: x $subset_of y => x $in power_set(y)
+"""
 
 know forall x, y set => x = y <=> x $subset_of y, y $subset_of x
 
 know forall x R: abs(x) >= 0
 know forall x R: x >= 0 => sqrt(x) = 0 <=> x = 0
-
-exist_prop x X st has_preimage(X, Y set, f fn(X)Y, y Y):
-	f(x) = y
-
-prop is_injective_fn(X set, Y set, f fn(X)Y):
-	forall x1, x2 X:
-		x1 != x2
-		=>:
-			f(x1) != f(x2)
-
-prop is_surjective_fn(X set, Y set, f fn(X)Y):
-	forall y Y:
-		$has_preimage(X, Y, f, y)
-
-prop is_bijective_fn(X set, Y set, f fn(X)Y):
-	$is_injective_fn(X, Y, f)
-	$is_surjective_fn(X, Y, f)
-
-# 如何证明集合是有限集合
-exist_prop f fn(X)Y st exist_one_to_one_fn_to_finite_set(X finite_set, Y set):
-	$is_bijective_fn(X, Y, f)
 			
 know:
 	forall a, b, c R: a > 0, a * b > c => b > c / a
@@ -840,62 +747,178 @@ know:
 	forall x, y, a, b R: x != 0, y != 0 x / y = a / b <=> y / x = b / a
 
 know: 
-	not $is_a_nonempty_set(R)
-	not $is_a_nonempty_set(N)
-	not $is_a_nonempty_set(N_pos)
-	not $is_a_nonempty_set(Z)
-	not $is_a_nonempty_set(Q)
-	not $is_a_finite_set(R)
-	not $is_a_finite_set(N)
-	not $is_a_finite_set(N_pos)
-	not $is_a_finite_set(Z)
-	not $is_a_finite_set(Q)
-
-# TODO: builtin instead of exist_prop
-exist_prop y x st axiom_of_regularity(x nonempty_set):
-    forall z y: not z $in x
-    forall z x: not z $in y
-
-know forall x nonempty_set: $axiom_of_regularity(x)
+	$is_a_nonempty_set(R)
+	$is_a_nonempty_set(N)
+	$is_a_nonempty_set(N_pos)
+	$is_a_nonempty_set(Z)
+	$is_a_nonempty_set(Q)
+	$is_a_nonempty_set(Q_pos)
+	$is_a_nonempty_set(Q_neg)
+	$is_a_nonempty_set(Z_neg)
+	$is_a_nonempty_set(R_pos)
+	$is_a_nonempty_set(R_neg)
 
 # TODO: builtin instead of fn
-let fn cup(x set) set
-know imply cup_contains_all_items(x set, y x):
-	forall z y:
-		z $in cup(x)
-exist_prop y x st cup_witness_item(x set, z cup(x)):
-	z $in y
+# 一个东西在cup，则怎么怎么样；一个东西满足了cup的性质，则怎么怎么样
+"""
+# cap
+know imply item_in_cap(z set, x set, y cap(x)):
+	forall t x:
+		z $in t
 
-# TODO: builtin instead of exist_prop
-exist_prop x s1 st exist_preimage(s1, s2 set, y s2, f fn(s1)s2):
-    f(x) = y
 
-let fn image_set(s1, s2 set, f fn(s1)s2) set
+prop is_item_in_cap(z set, x set, y set):
 
-know:
-    forall s1, s2 set, f fn(s1)s2, y image_set(s1, s2, f):
-        $exist_preimage(s1, s2, y, f)
 
-    forall s1, s2 set, f fn(s1)s2, y s2:
-        $exist_preimage(s1, s2, y, f)
-        =>:
-            y $in image_set(s1, s2, f)
+# set_minus
+know imply item_in_set_minus(x, y set, z set_minus(x, y)):
+	z $in x
+	not z $in y
 
-	forall s1, s2 set, f fn(s1)s2:
-		image_set(s1, s2, f) $subset_of s2
-
+# set symmetric difference
+know imply item_in_set_diff(x, y set):
+	forall z set_diff(x, y):
+		z $in x
+		=>:
+			not z $in y
+	forall z set_diff(x, y):
+		z $in y
+		=>:
+			not z $in x
+"""
+		
 # TODO: builtin instead of fn
+"""
 let fn choice(x set) fn(x) cup(x)
 know imply axiom_of_choice(x set):
 	forall y x:
 		choice(x)(y) $in y
-
-# Axiom of infinity
-exist_prop x set st axiom_of_infinity():
-	{} $in x
-	forall y x:
-		union(y, {y}) $in x
+"""
 
 know:
 	forall x, y R: x < y => $is_a_nonempty_set(range(x, y)), $is_a_nonempty_set(closed_range(x, y))
+
+know:
+	forall x finite_set: count(x) > 0 => $is_a_nonempty_set(x)
+
+know forall x set: x \union x = x, x \intersect x = x
+
+know:
+	forall x R: x > 0 <=> x $in R_pos
+	forall x R: x < 0 <=> x $in R_neg
+	forall x Z: x < 0 <=> x $in Z_neg
+	forall x Q: x < 0 <=> x $in Q_neg
+	forall x Q: x > 0 <=> x $in Q_pos
+
+# density of Q, R
+know:
+	forall x, y R: x < y => exist z Q st z $in {t R: x < t, t < y}
+	forall x, y R: x < y => exist z R st z $in {t R: x < t, t < y}
+
+prop superset_of(x, y set):
+	forall z y:
+		z $in x
+
+know:
+	forall x R: exist y R st y > x
+	forall x R: exist y R st y < x
+	forall x R: exist y R st y >= x
+	forall x R: exist y R st y <= x
+
+	forall x R: exist y N_pos st y > x
+	forall x R: exist y Z_neg st y < x
+	forall x R: exist y N_pos st y >= x
+	forall x R: exist y Z_neg st y <= x
+
+know:
+	forall x, y R: x < y => {t R: x < t, t < y} $is_a_nonempty_set
+	forall x, y R: x < y => {t R: x <= t, t <= y} $is_a_nonempty_set
+	forall x, y R: x < y => {t R: x <= t, t < y} $is_a_nonempty_set
+	forall x, y R: x < y => {t R: x < t, t <= y} $is_a_nonempty_set
+
+## Set theory 
+
+### cup
+
+# check item in cup
+know imply check_item_in_cup(x set, x_item x, cup_x_item x_item):
+	cup_x_item $in cup(x)
+
+# when item in cup, it has properties
+know forall x set, cup_x_item cup(x) => exist x_item x st cup_x_item $in x_item
+	
+### cap
+
+# check item in cap
+know:
+	forall x set, item set:
+		forall x_item x:
+			item $in x_item
+		=>:
+			item $in cap(x)
+
+# when item in cap, it has properties
+know imply item_in_cap_implies(x set, item cap(x)):
+	forall x_item x:
+		item $in x_item
+
+### union
+
+# check item in union
+know:
+	forall item, x, y set: item $in x or item $in y => item $in union(x, y)
+
+# when item in union, it has properties
+know imply item_in_union_implies(z set, x, y set):
+	z $in union(x, y)
+	=>:
+		z $in x or z $in y
+
+### intersect
+
+# check item in intersect
+know:
+	forall item, x, y set: item $in x, item $in y => item $in intersect(x, y)
+
+# when item in intersect, it has properties
+know imply item_in_intersect_implies(z set, x, y set):
+	z $in intersect(x, y)
+	=>:
+		z $in x
+		z $in y
+
+### power set
+
+# check item in power_set
+know:
+	forall x set, y set:
+		y $subset_of x
+		=>:
+			y $in power_set(x)
+
+# when item in power set, it has properties
+know:
+	forall x set, y power_set(x):
+		y $subset_of x
+
+### set minus
+
+# check item in set minus
+know:
+	forall item, x, y set:
+		item $in x
+		not item $in y
+		=>:
+			item $in set_minus(x, y)
+
+# when item in set minus, it has properties
+know imply item_in_set_minus_implies(x, y set, item set_minus(x, y)):
+	item $in x
+	not item $in y
+
+### set diff
+
+know:
+	forall x, y set:
+		set_diff(x, y) = set_minus(x, y) \union set_minus(y, x)
 `

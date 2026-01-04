@@ -1,6 +1,6 @@
 # |a| = a if a ≥ 0; |a| = -a if a < 0
 
-fn absolute(x R) R
+let fn absolute(x R) R
 know:
     forall x R: x >= 0 => absolute(x) = x
     forall x R: x < 0 => absolute(x) = -x

@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,33 +19,83 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	exe "golitex/executor"
+	glob "golitex/glob"
 	kernelLibLitexCode "golitex/kernel_litex_code"
 	pkgMgr "golitex/package_manager"
 )
 
-func GetEnvWithBuiltinParentEnv() (*env.Env, error) {
-	curEnv := env.NewEnv(nil)
-	curEnv.Init()
-	err := useHardcodedCodeToInit(curEnv)
-	if err != nil {
-		panic(err)
+func NewBuiltinEnvMgrWithNewEmptyEnv(envPkgMgr *env.EnvPkgMgr) (*env.EnvMgr, error) {
+	var err error
+	if env.BuiltinEnvMgrWithEmptyEnvPkgMgr == nil {
+		_, err = NewBuiltinEnvMgr()
+		if err != nil {
+			return nil, err
+		}
+		err = InitAstBuiltinAndKernelDefinedNames(env.BuiltinEnvMgrWithEmptyEnvPkgMgr)
+		if err != nil {
+			return nil, err
+		}
 	}
-	curEnv = env.NewEnv(curEnv)
-	return curEnv, nil
+
+	// envMgr := env.CopyEnvMgrAndOwnPkgMgr(env.BuiltinEnvMgrWithEmptyEnvPkgMgr, envPkgMgr)
+	// envMgr = envMgr.NewEnv()
+	envMgr := env.NewEmptyEnvMgr(envPkgMgr)
+	return envMgr, nil
 }
 
-func useHardcodedCodeToInit(env *env.Env) error {
-	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
-	statements, err := ast.ParseSourceCode(kernelLibLitexCode.PipelineInitCode, "", pkgPathNameMgr)
+func NewBuiltinEnvMgr() (*env.EnvMgr, error) {
+	curEnvMgr := env.NewEnvMgr(env.NewEnvPkgMgr(pkgMgr.NewEmptyPkgMgr("")), []env.EnvMemory{*env.NewEnvMemory()}, make(map[string]env.DefinedStuff[struct{}]), make(map[string]env.DefinedStuff[*ast.DefPropStmt]), make(map[string]env.DefinedStuff[*ast.DefFnSetStmt]), make(map[string]env.DefinedStuff[*ast.DefAlgoStmt]), make(map[string]env.DefinedStuff[*ast.DefProveAlgoStmt]))
+	env.BuiltinEnvMgrWithEmptyEnvPkgMgr = curEnvMgr
+	curEnvMgr.Init()
+	err := useHardcodedCodeToInitEnvMgr(curEnvMgr)
+	return curEnvMgr, err
+}
+
+func InitAstBuiltinAndKernelDefinedNames(curEnvMgr *env.EnvMgr) error {
+	for k := range curEnvMgr.AllDefinedAlgoNames {
+		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
+	}
+	for k := range curEnvMgr.AllDefinedPropNames {
+		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
+	}
+	// for k := range curEnvMgr.AllDefinedExistPropNames {
+	// 	ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
+	// }
+	for k := range curEnvMgr.AllDefinedFnSetNames {
+		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
+	}
+	for k := range curEnvMgr.AllDefinedAtomObjNames {
+		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
+	}
+	for k := range curEnvMgr.AllDefinedProveAlgoNames {
+		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
+	}
+
+	return nil
+}
+
+func useHardcodedCodeToInitEnvMgr(envMgr *env.EnvMgr) error {
+	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr("")
+
+	// statements, err := ast.ParseSourceCode(kernelLibLitexCode.PipelineInitCode, pkgPathNameMgr)
+
+	blocks, err := ast.PreprocessAndMakeSourceCodeIntoBlocks(kernelLibLitexCode.PipelineInitCode)
 	if err != nil {
 		return err
 	}
 
-	executor := exe.NewExecutor(env)
-	for _, statement := range statements {
-		execState := executor.Stmt(statement)
+	p := ast.NewTbParser(pkgPathNameMgr)
+	executor := exe.NewExecutor(envMgr)
+
+	for _, block := range blocks {
+		topStmt, err := p.Stmt(&block)
+		if err != nil {
+			return err
+		}
+		topStmt.SetLine(uint(glob.BuiltinLine0))
+		execState := executor.Stmt(topStmt)
 		if execState.IsUnknown() || execState.IsErr() {
-			return fmt.Errorf("failed to init pipeline: %s\n%s", err, execState.String())
+			return fmt.Errorf("failed to init pipeline :\n%s\nerror:\n %s\n%s", block.String(), err, execState.String())
 		}
 	}
 

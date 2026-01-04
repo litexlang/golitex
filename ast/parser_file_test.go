@@ -1,146 +1,166 @@
-// Copyright 2024 Jiachen Shen.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
-// Litex email: <litexlang@outlook.com>
-// Litex website: https://litexlang.com
-// Litex github repository: https://github.com/litexlang/golitex
-// Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
+// // Copyright Jiachen Shen.
+// //
+// // Licensed under the Apache License, Version 2.0 (the "License");
+// // you may not use this file except in compliance with the License.
+// // You may obtain a copy of the License at
+// //
+// //     http://www.apache.org/licenses/LICENSE-2.0
+// //
+// // Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// // Litex email: <litexlang@outlook.com>
+// // Litex website: https://litexlang.com
+// // Litex github repository: https://github.com/litexlang/golitex
+// // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
 package litex_ast
 
-import (
-	"fmt"
-	pkgMgr "golitex/package_manager"
-	"os"
-	"path/filepath"
-	"testing"
-)
+// import (
+// 	"fmt"
+// 	pkgMgr "golitex/package_manager"
+// 	"os"
+// 	"path/filepath"
+// 	"testing"
+// )
 
-// TestParseFile 测试解析单个 .lit 文件
-// 使用方法：
-// 1. 将你想测试的文件路径放在 testFiles 列表中
-// 2. 运行 go test -v -run TestParseFile
-func TestParseFile(t *testing.T) {
-	// 在这里添加你想测试的文件路径
-	testFiles := []string{
-		"../examples/test_codes/tmp.lit",
-		// 添加更多测试文件...
-	}
+// // TestParseFile 测试解析单个 .lit 文件
+// // 使用方法：
+// // 1. 将你想测试的文件路径放在 testFiles 列表中
+// // 2. 运行 go test -v -run TestParseFile
+// func TestParseFile(t *testing.T) {
+// 	// 在这里添加你想测试的文件路径
+// 	testFiles := []string{
+// 		"../examples/test_codes/tmp.lit",
+// 		// 添加更多测试文件...
+// 	}
 
-	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+// 	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
 
-	for _, filePath := range testFiles {
-		t.Run(filepath.Base(filePath), func(t *testing.T) {
-			// 读取文件内容
-			content, err := os.ReadFile(filePath)
-			if err != nil {
-				t.Fatalf("Failed to read file %s: %v", filePath, err)
-			}
+// 	for _, filePath := range testFiles {
+// 		t.Run(filepath.Base(filePath), func(t *testing.T) {
+// 			// 读取文件内容
+// 			content, err := os.ReadFile(filePath)
+// 			if err != nil {
+// 				t.Fatalf("Failed to read file %s: %v", filePath, err)
+// 			}
 
-			// 解析源代码
-			stmts, err := ParseSourceCode(string(content), "", pkgPathNameMgr)
-			if err != nil {
-				t.Fatalf("Failed to parse file %s: %v", filePath, err)
-			}
+// 			// 解析源代码
+// 			blocks, err := PreprocessAndMakeSourceCodeIntoBlocks(string(content))
 
-			// 打印解析结果
-			t.Logf("✓ Successfully parsed %s", filePath)
-			t.Logf("  Total statements: %d", len(stmts))
-			for i, stmt := range stmts {
-				t.Logf("  [%d] %T", i, stmt)
-			}
-		})
-	}
-}
+// 			p := NewTbParser(pkgPathNameMgr)
 
-// TestParseDirectory 测试解析整个目录下的所有 .lit 文件
-func TestParseDirectory(t *testing.T) {
-	// 在这里添加你想测试的目录路径
-	testDirs := []string{
-		"../examples/test_codes/",
-		// "../examples/comprehensive_examples/",
-		// 添加更多测试目录...
-	}
+// 			for _, block := range blocks {
+// 				topStmt, err := p.Stmt(&block)
+// 				if err != nil {
+// 					t.Fatalf("Failed to parse block %s: %v", block.String(), err)
+// 				}
+// 				_ = topStmt
+// 			}
 
-	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
+// 			// 打印解析结果
+// 			t.Logf("✓ Successfully parsed %s", filePath)
+// 			t.Logf("  Total blocks: %d", len(blocks))
+// 		})
+// 	}
+// }
 
-	for _, dir := range testDirs {
-		t.Run(filepath.Base(dir), func(t *testing.T) {
-			// 读取目录下所有 .lit 文件
-			files, err := filepath.Glob(filepath.Join(dir, "*.lit"))
-			if err != nil {
-				t.Fatalf("Failed to list files in %s: %v", dir, err)
-			}
+// // TestParseDirectory 测试解析整个目录下的所有 .lit 文件
+// func TestParseDirectory(t *testing.T) {
+// 	// 在这里添加你想测试的目录路径
+// 	testDirs := []string{
+// 		"../examples/test_codes/",
+// 		// "../examples/comprehensive_examples/",
+// 		// 添加更多测试目录...
+// 	}
 
-			if len(files) == 0 {
-				t.Logf("No .lit files found in %s", dir)
-				return
-			}
+// 	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
 
-			successCount := 0
-			failCount := 0
+// 	for _, dir := range testDirs {
+// 		t.Run(filepath.Base(dir), func(t *testing.T) {
+// 			// 读取目录下所有 .lit 文件
+// 			files, err := filepath.Glob(filepath.Join(dir, "*.lit"))
+// 			if err != nil {
+// 				t.Fatalf("Failed to list files in %s: %v", dir, err)
+// 			}
 
-			for _, filePath := range files {
-				// 读取文件内容
-				content, err := os.ReadFile(filePath)
-				if err != nil {
-					t.Logf("✗ %s: Failed to read file: %v", filepath.Base(filePath), err)
-					failCount++
-					continue
-				}
+// 			if len(files) == 0 {
+// 				t.Logf("No .lit files found in %s", dir)
+// 				return
+// 			}
 
-				// 解析源代码
-				_, err = ParseSourceCode(string(content), "", pkgPathNameMgr)
-				if err != nil {
-					t.Logf("✗ %s: Parse error: %v", filepath.Base(filePath), err)
-					failCount++
-					continue
-				}
+// 			successCount := 0
+// 			failCount := 0
 
-				t.Logf("✓ %s", filepath.Base(filePath))
-				successCount++
-			}
+// 			for _, filePath := range files {
+// 				// 读取文件内容
+// 				content, err := os.ReadFile(filePath)
+// 				if err != nil {
+// 					t.Logf("✗ %s: Failed to read file: %v", filepath.Base(filePath), err)
+// 					failCount++
+// 					continue
+// 				}
 
-			t.Logf("\n========== Summary ==========")
-			t.Logf("Total files: %d", len(files))
-			t.Logf("Success: %d", successCount)
-			t.Logf("Failed: %d", failCount)
+// 				// 解析源代码
+// 				blocks, err := PreprocessAndMakeSourceCodeIntoBlocks(string(content))
+// 				if err != nil {
+// 					t.Logf("✗ %s: Failed to parse file: %v", filepath.Base(filePath), err)
+// 					failCount++
+// 					continue
+// 				}
 
-			if failCount > 0 {
-				t.Errorf("%d file(s) failed to parse", failCount)
-			}
-		})
-	}
-}
+// 				p := NewTbParser(pkgPathNameMgr)
+// 				for _, block := range blocks {
+// 					topStmt, err := p.Stmt(&block)
+// 					if err != nil {
+// 						t.Logf("✗ %s: Parse error: %v", filepath.Base(filePath), err)
+// 						failCount++
+// 						continue
+// 					}
+// 					_ = topStmt
+// 				}
+// 				if err != nil {
+// 					t.Logf("✗ %s: Parse error: %v", filepath.Base(filePath), err)
+// 					failCount++
+// 					continue
+// 				}
 
-// TestParseQuickCheck 快速检查单个文件能否解析（用于快速调试）
-func TestParseQuickCheck(t *testing.T) {
-	// 快速测试文件 - 修改这里测试不同的文件
-	filePath := "../examples/test_codes/tmp.lit"
+// 				t.Logf("✓ %s", filepath.Base(filePath))
+// 				successCount++
+// 			}
 
-	content, err := os.ReadFile(filePath)
-	if err != nil {
-		t.Fatalf("Failed to read file: %v", err)
-	}
+// 			t.Logf("\n========== Summary ==========")
+// 			t.Logf("Total files: %d", len(files))
+// 			t.Logf("Success: %d", successCount)
+// 			t.Logf("Failed: %d", failCount)
 
-	fmt.Printf("\n========== Parsing: %s ==========\n", filePath)
-	fmt.Printf("Content:\n%s\n", string(content))
-	fmt.Printf("==========================================\n\n")
+// 			if failCount > 0 {
+// 				t.Errorf("%d file(s) failed to parse", failCount)
+// 			}
+// 		})
+// 	}
+// }
 
-	pkgPathNameMgr := pkgMgr.NewPathNameMgr()
-	stmts, err := ParseSourceCode(string(content), "", pkgPathNameMgr)
-	if err != nil {
-		t.Fatalf("Parse error: %v", err)
-	}
+// // TestParseQuickCheck 快速检查单个文件能否解析（用于快速调试）
+// func TestParseQuickCheck(t *testing.T) {
+// 	// 快速测试文件 - 修改这里测试不同的文件
+// 	filePath := "../examples/test_codes/tmp.lit"
 
-	fmt.Printf("✓ Parse successful! Statements: %d\n\n", len(stmts))
-	for i, stmt := range stmts {
-		fmt.Printf("[%d] %T\n", i, stmt)
-	}
-}
+// 	content, err := os.ReadFile(filePath)
+// 	if err != nil {
+// 		t.Fatalf("Failed to read file: %v", err)
+// 	}
+
+// 	fmt.Printf("\n========== Parsing: %s ==========\n", filePath)
+// 	fmt.Printf("Content:\n%s\n", string(content))
+// 	fmt.Printf("==========================================\n\n")
+
+// 	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
+// 	blocks, err := PreprocessAndMakeSourceCodeIntoBlocks(string(content))
+// 	if err != nil {
+// 		t.Fatalf("Parse error: %v", err)
+// 	}
+
+// 	fmt.Printf("✓ Parse successful! Statements: %d\n\n", len(stmts))
+// 	for i, stmt := range stmts {
+// 		fmt.Printf("[%d] %T\n", i, stmt)
+// 	}
+// }

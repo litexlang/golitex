@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -80,4 +80,8 @@ func isSpecialLatexSymbol_Process(f *FnObj) (bool, string) {
 	}
 
 	return false, ""
+}
+
+func (f *ProveExistStmt) ToLatexString() string {
+	return f.String()
 }

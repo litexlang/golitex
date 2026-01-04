@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,24 +17,25 @@ package litex_executor
 import (
 	ast "golitex/ast"
 	env "golitex/environment"
+	glob "golitex/glob"
 )
 
-func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState) ExecRet {
+func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState) *glob.VerRet {
 	leftLatestFnT := ver.Env.GetLatestFnT_GivenNameIsIn(left.String())
 	if leftLatestFnT == nil {
-		return NewEmptyExecUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	// right dom <= left dom. on right dom left has all those then facts
 	rightDefT := ver.Env.GetFnTemplateDef_KeyIsObjHead(right)
 	if rightDefT == nil {
-		return NewEmptyExecUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	ok := ver.leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftLatestFnT, rightDefT, left, right, state)
 
 	if !ok {
-		return NewEmptyExecUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
 	templateParamUniMap := map[string]ast.Obj{}
@@ -42,21 +43,21 @@ func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState
 		templateParamUniMap[param] = right.Params[i]
 	}
 
-	ok = ver.f_satisfy_FnT_ThenFacts_On_FnT_Dom(left, string(rightDefT.TemplateDefHeader.Name), templateParamUniMap, rightDefT.Fn, state)
+	ok = ver.f_satisfy_FnT_ThenFacts_On_FnT_Dom(left, string(rightDefT.TemplateDefHeader.Name), templateParamUniMap, rightDefT.AnonymousFn, state)
 	if !ok {
-		return NewEmptyExecUnknown()
+		return glob.NewEmptyVerRetUnknown()
 	}
 
-	return NewEmptyExecTrue()
+	return glob.NewEmptyVerRetTrue()
 }
 
 // right dom is subset of left dom
-func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruct *env.FnInFnTMemItem, rightFnTDef *ast.FnTemplateDefStmt, left ast.Obj, rightFn *ast.FnObj, state *VerState) bool {
+func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruct *env.FnInFnTMemItem, rightFnTDef *ast.DefFnSetStmt, left ast.Obj, rightFn *ast.FnObj, state *VerState) bool {
 	if len(rightFnTDef.TemplateDefHeader.Params) != len(rightFn.Params) {
 		return false
 	}
 
-	instRightFnT, err := rightFnTDef.Fn.InstantiateFnStruct_FnName(string(rightFnTDef.TemplateDefHeader.Name), left)
+	instRightFnT, err := rightFnTDef.AnonymousFn.InstantiateFnStruct_FnName(string(rightFnTDef.TemplateDefHeader.Name), left)
 	if err != nil {
 		return false
 	}
@@ -84,18 +85,24 @@ func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruc
 	uniFact := ast.NewUniFact(uniParams, uniParamSets, uniDom, uniThen, rightFnTDef.Line)
 
 	verRet := ver.VerFactStmt(uniFact, state)
-	ok, _ := verRet.ToBoolErr()
-	return ok
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return false
+	}
+
+	return true
 }
 
 // all right in left
-func (ver *Verifier) f_satisfy_FnT_ThenFacts_On_FnT_Dom(f ast.Obj, fnTDefName string, templateParamUniMap map[string]ast.Obj, fnT *ast.FnTStruct, state *VerState) bool {
+func (ver *Verifier) f_satisfy_FnT_ThenFacts_On_FnT_Dom(f ast.Obj, fnTDefName string, templateParamUniMap map[string]ast.Obj, fnT *ast.AnonymousFn, state *VerState) bool {
 	derivedUniFact, err := fnT.DeriveUniFact(fnTDefName, f, templateParamUniMap)
 	if err != nil {
 		return false
 	}
 
 	verRet := ver.VerFactStmt(derivedUniFact, state)
-	ok, _ := verRet.ToBoolErr()
-	return ok
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return false
+	}
+
+	return true
 }
