@@ -96,7 +96,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) *glob
 
 	// 对于任何 param >= start, fact 成立
 	uniFact_forall_param_geq_start_then_fact_is_true := proveByInduction_newUniFact_forall_param_geq_start_then_fact_is_true(stmt)
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact_forall_param_geq_start_then_fact_is_true)
+	ret := exec.Env.NewFactWithCheckingNameDefined(uniFact_forall_param_geq_start_then_fact_is_true)
 	if ret.IsErr() {
 		var result *glob.StmtRet = glob.ErrRet(ret.String())
 		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))

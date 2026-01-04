@@ -50,7 +50,7 @@ func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt
 		if j == i {
 			continue
 		}
-		ret := ver.Env.NewFactWithoutCheckingNameDefined(facts[j].ReverseTrue())
+		ret := ver.Env.NewFactWithCheckingNameDefined(facts[j].ReverseTrue())
 		if ret.IsErr() {
 			return glob.NewVerMsg(glob.StmtRetTypeError, facts[j].String(), facts[j].GetLine(), []string{ret.String()})
 		}

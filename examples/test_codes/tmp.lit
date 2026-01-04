@@ -1,8 +1,5 @@
-have fn:
-    h(x R) R:
-        x > 0
-        =>:
-            h(x) > 1
-    prove:
-        do_nothing
-    = 100
+prop p(x, y R)
+
+know forall x R: exist z R st $p(x, z)
+
+exist z R st $p(1, z)

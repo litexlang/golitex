@@ -204,7 +204,7 @@ func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
 			ret.AddError("in new in fact of def let statement")
 			return ret
 		}
-		ret = envMgr.NewFactWithoutCheckingNameDefined(fact)
+		ret = envMgr.NewFactWithCheckingNameDefined(fact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -218,7 +218,7 @@ func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
 			ret.AddError("in fact of def let statement")
 			return ret
 		}
-		ret = envMgr.NewFactWithoutCheckingNameDefined(fact)
+		ret = envMgr.NewFactWithCheckingNameDefined(fact)
 		if ret.IsErr() {
 			return ret
 		}

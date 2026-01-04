@@ -28,7 +28,7 @@ func (exec *Executor) byStmt(stmt *ast.ByStmt) *glob.StmtRet {
 
 	// 保存返回的事实
 	for _, fact := range returnedFacts {
-		ret := exec.Env.NewFactWithoutCheckingNameDefined(fact)
+		ret := exec.Env.NewFactWithCheckingNameDefined(fact)
 		if ret.IsNotTrue() {
 			return glob.ErrRet(fmt.Sprintf("by statement failed: returned fact %s store error.", fact.String()))
 		}

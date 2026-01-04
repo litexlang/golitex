@@ -36,7 +36,7 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) *glob
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
-		ret := ver.Env.NewFactWithoutCheckingNameDefined(condFact)
+		ret := ver.Env.NewFactWithCheckingNameDefined(condFact)
 		if ret.IsErr() {
 			return glob.NewVerMsg(glob.StmtRetTypeError, condFact.String(), condFact.GetLine(), []string{ret.String()})
 		}
@@ -61,7 +61,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		}
 
 		// if true, store it
-		ret := ver.Env.NewFactWithoutCheckingNameDefined(thenFact)
+		ret := ver.Env.NewFactWithCheckingNameDefined(thenFact)
 		if ret.IsErr() {
 			return glob.NewVerMsg(glob.StmtRetTypeError, thenFact.String(), thenFact.GetLine(), []string{ret.String()})
 		}
