@@ -861,12 +861,10 @@ know:
 	forall x R: exist y R st y >= x
 	forall x R: exist y R st y <= x
 
-	"""
 	forall x R: exist y N_pos st y > x
 	forall x R: exist y Z_neg st y < x
 	forall x R: exist y N_pos st y >= x
 	forall x R: exist y Z_neg st y <= x
-	"""
 
 know:
 	forall x, y R: x < y => {t R: x < t, t < y} $is_a_nonempty_set
