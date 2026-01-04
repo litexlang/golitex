@@ -67,7 +67,6 @@ const (
 	KeywordDoNothing = "do_nothing"
 
 	KeywordProveByContradiction = "prove_by_contradiction"
-	KeywordProveInEachCase      = "prove_in_each_case"
 	KeywordProveByEnum          = "prove_by_enum"
 	KeywordProveByInduction     = "prove_by_induction"
 	KeywordProveCaseByCase      = "prove_case_by_case"
@@ -139,7 +138,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordImport:               {},
 	KeywordNot:                  {},
 	KeywordProveByContradiction: {},
-	KeywordProveInEachCase:      {},
 	// KeywordIff:                  {},
 	KeywordExist:                  {},
 	KeywordProveIsCommutativeProp: {},
@@ -396,7 +394,6 @@ var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struc
 	KeywordImport:                 {},
 	KeywordNot:                    {},
 	KeywordProveByContradiction:   {},
-	KeywordProveInEachCase:        {},
 	KeywordExist:                  {},
 	KeywordProveIsCommutativeProp: {},
 	KeywordOr:                     {},

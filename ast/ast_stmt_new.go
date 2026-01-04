@@ -72,10 +72,6 @@ func NewUniFactWithIff(uniFact *UniFactStmt, iffFacts []FactStmt, line uint) *Un
 	return &UniFactWithIffStmt{uniFact, iffFacts, line}
 }
 
-func NewProveInEachCaseStmt(orFact *OrStmt, thenFacts []FactStmt, proofs StmtSliceSlice, line uint) *ProveInEachCaseStmt {
-	return &ProveInEachCaseStmt{orFact, thenFacts, proofs, line}
-}
-
 func NewProveCaseByCaseStmt(caseFacts []*SpecFactStmt, thenFacts []FactStmt, proofs StmtSliceSlice, line uint) *ProveCaseByCaseStmt {
 	return &ProveCaseByCaseStmt{caseFacts, thenFacts, proofs, line}
 }

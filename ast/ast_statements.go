@@ -109,14 +109,6 @@ type KnowImplicationStmt struct {
 	Line uint
 }
 
-type ProveInEachCaseStmt struct {
-	OrFact    *OrStmt
-	ThenFacts FactStmtSlice
-	Proofs    StmtSliceSlice
-
-	Line uint
-}
-
 type ProveCaseByCaseStmt struct {
 	CaseFacts SpecFactPtrSlice
 	ThenFacts FactStmtSlice

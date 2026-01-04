@@ -417,26 +417,6 @@ func (stmt *HaveObjStWithParamSetsStmt) Instantiate(uniMap map[string]Obj) (Stmt
 	return NewHaveObjStWithParamSetsStmt(stmt.ObjNames, newObjSets, newFact.(*SpecFactStmt), stmt.Line), nil
 }
 
-func (stmt *ProveInEachCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newOrFact, err := stmt.OrFact.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newThenFacts, err := stmt.ThenFacts.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newProofs := StmtSliceSlice{}
-	for _, proof := range stmt.Proofs {
-		newProof, err := proof.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newProofs = append(newProofs, newProof)
-	}
-	return NewProveInEachCaseStmt(newOrFact.(*OrStmt), newThenFacts, newProofs, stmt.Line), nil
-}
-
 func (stmt *ProveCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newCaseFacts := []*SpecFactStmt{}
 	for _, caseFact := range stmt.CaseFacts {

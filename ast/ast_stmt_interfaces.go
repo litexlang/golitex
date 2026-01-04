@@ -36,7 +36,6 @@ func (s *KnowFactStmt) stmt()   {}
 // func (s *DefExistPropStmt) stmt()              {}
 // func (s *HaveObjStStmt) stmt()                 {}
 func (s *HaveObjStWithParamSetsStmt) stmt()    {}
-func (s *ProveInEachCaseStmt) stmt()           {}
 func (s *ProveCaseByCaseStmt) stmt()           {}
 func (s *KnowImplicationStmt) stmt()           {}
 func (s *OrStmt) stmt()                        {}
@@ -45,7 +44,7 @@ func (s *RunFileStmt) stmt()                   {}
 func (s *ProveStmt) stmt()                     {}
 func (s *ProveForStmt) stmt()                  {}
 func (s *ProveImplyStmt) stmt()                {}
-func (s *DefImplicationStmt) stmt()               {}
+func (s *DefImplicationStmt) stmt()            {}
 func (s *UniFactWithIffStmt) stmt()            {}
 func (s *ClaimProveByContradictionStmt) stmt() {}
 func (s *ClaimImplicationStmt) stmt()          {}
@@ -86,7 +85,6 @@ func (s *KnowFactStmt) algoStmt()   {}
 // func (s *DefExistPropStmt) algoStmt()                  {}
 // func (s *HaveObjStStmt) algoStmt()                 {}
 func (s *HaveObjStWithParamSetsStmt) algoStmt()    {}
-func (s *ProveInEachCaseStmt) algoStmt()           {}
 func (s *ProveCaseByCaseStmt) algoStmt()           {}
 func (s *KnowImplicationStmt) algoStmt()           {}
 func (s *OrStmt) algoStmt()                        {}
@@ -117,7 +115,7 @@ func (s *ByStmt) algoStmt()                     {}
 func (s *ClaimIffStmt) algoStmt()               {}
 func (s *ProveForStmt) algoStmt()               {}
 func (s *ProveImplyStmt) algoStmt()             {}
-func (s *DefImplicationStmt) algoStmt()            {}
+func (s *DefImplicationStmt) algoStmt()         {}
 func (s *ProveIsTransitivePropStmt) algoStmt()  {}
 func (s *DefAlgoStmt) algoStmt()                {}
 func (s *EvalStmt) algoStmt()                   {}
@@ -135,7 +133,6 @@ func (s *KnowFactStmt) GetLine() uint           { return s.Line }
 // func (s *DefExistPropStmt) GetLine() uint              { return s.Line }
 // func (s *HaveObjStStmt) GetLine() uint                 { return s.Line }
 func (s *HaveObjStWithParamSetsStmt) GetLine() uint    { return s.Line }
-func (s *ProveInEachCaseStmt) GetLine() uint           { return s.Line }
 func (s *ProveCaseByCaseStmt) GetLine() uint           { return s.Line }
 func (s *KnowImplicationStmt) GetLine() uint           { return s.Line }
 func (s *OrStmt) GetLine() uint                        { return s.Line }
@@ -173,7 +170,7 @@ func (s *DefProveAlgoStmt) GetLine() uint           { return s.Line }
 func (s *ByStmt) GetLine() uint                     { return s.Line }
 func (s *ProveForStmt) GetLine() uint               { return s.Line }
 func (s *ProveImplyStmt) GetLine() uint             { return s.Line }
-func (s *DefImplicationStmt) GetLine() uint            { return s.Line }
+func (s *DefImplicationStmt) GetLine() uint         { return s.Line }
 func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint  { return s.Line }
 func (s *HaveFnCaseByCaseStmt) GetLine() uint       { return s.Line }
 func (s *ProveExistStmt) GetLine() uint             { return s.Line }
@@ -189,7 +186,6 @@ func (s *KnowFactStmt) SetLine(l uint)   { s.Line = l }
 // func (s *DefExistPropStmt) SetLine(l uint)              { s.Line = l }
 // func (s *HaveObjStStmt) SetLine(l uint)                 { s.Line = l }
 func (s *HaveObjStWithParamSetsStmt) SetLine(l uint)    { s.Line = l }
-func (s *ProveInEachCaseStmt) SetLine(l uint)           { s.Line = l }
 func (s *ProveCaseByCaseStmt) SetLine(l uint)           { s.Line = l }
 func (s *KnowImplicationStmt) SetLine(l uint)           { s.Line = l }
 func (s *OrStmt) SetLine(l uint)                        { s.Line = l }
@@ -231,7 +227,7 @@ func (s *DefProveAlgoStmt) SetLine(l uint)           { s.Line = l }
 func (s *ByStmt) SetLine(l uint)                     { s.Line = l }
 func (s *ProveForStmt) SetLine(l uint)               { s.Line = l }
 func (s *ProveImplyStmt) SetLine(l uint)             { s.Line = l }
-func (s *DefImplicationStmt) SetLine(l uint)            { s.Line = l }
+func (s *DefImplicationStmt) SetLine(l uint)         { s.Line = l }
 func (s *HaveFnEqualCaseByCaseStmt) SetLine(l uint)  { s.Line = l }
 func (s *HaveFnCaseByCaseStmt) SetLine(l uint)       { s.Line = l }
 func (s *ProveExistStmt) SetLine(l uint)             { s.Line = l }
