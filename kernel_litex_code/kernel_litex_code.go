@@ -340,9 +340,7 @@ know:
 			forall t y:
 				t $in x
 """
-` + InequalityFacts
 
-var InequalityFacts = `
 know:
 	forall x, y R: x < y => x - y < 0
 	forall x, y R: x > y => x - y > 0
@@ -871,4 +869,12 @@ know:
 	forall x, y R: x < y => {t R: x <= t, t <= y} $is_a_nonempty_set
 	forall x, y R: x < y => {t R: x <= t, t < y} $is_a_nonempty_set
 	forall x, y R: x < y => {t R: x < t, t <= y} $is_a_nonempty_set
+
+### Set theory ###
+
+know imply check_item_in_cup(x set, x_item x, cup_x_item x_item):
+	cup_x_item $in cup(x)
+
+know forall x set, cup_x_item cup(x) => exist x_item x st cup_x_item $in x_item
+	
 `
