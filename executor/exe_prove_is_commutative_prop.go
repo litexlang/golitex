@@ -33,10 +33,12 @@ func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePro
 		return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
 	}
 
-	def := exec.Env.GetPropDef(stmt.SpecFact.PropName)
-	if def == nil {
+	definedStuff, ok := exec.Env.GetPropDef(stmt.SpecFact.PropName)
+	if !ok {
 		return glob.ErrRet(fmt.Sprintf("prop %s is not defined", stmt.SpecFact.PropName))
 	}
+
+	def := definedStuff.Defined
 
 	if len(def.DefHeader.Params) != 2 {
 		return glob.ErrRet(fmt.Sprintf("prop %s has %d params, but 2 params are expected", stmt.SpecFact.PropName, len(def.DefHeader.Params)))

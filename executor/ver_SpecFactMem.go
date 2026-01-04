@@ -22,26 +22,40 @@ import (
 )
 
 func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	for curEnvIndex := range ver.Env.EnvSlice {
-		curEnv := &ver.Env.EnvSlice[curEnvIndex]
+	defInCurEnvPkgMgr, ok := ver.Env.GetPropDef(stmt.PropName)
+	if ok {
+		for i := len(ver.Env.EnvSlice) - 1; i >= defInCurEnvPkgMgr.EnvDepth; i-- {
+			curEnv := &ver.Env.EnvSlice[i]
+			verRet := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
+			if verRet.IsErr() || verRet.IsTrue() {
+				return verRet
+			}
+		}
+
+		return glob.NewEmptyVerRetUnknown()
+	} else {
+		for i := len(ver.Env.EnvSlice) - 1; i >= 0; i-- {
+			curEnv := &ver.Env.EnvSlice[i]
+			verRet := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
+			if verRet.IsErr() || verRet.IsTrue() {
+				return verRet
+			}
+		}
+
+		curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
 		verRet := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}
-	}
 
-	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
-	verRet := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
-	if verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
-
-	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
-		curEnv := pkgEnvMgr.EnvSlice[0]
-		verRet := ver.specFact_SpecMem_atEnv(&curEnv, stmt, state)
-		if verRet.IsErr() || verRet.IsTrue() {
-			return verRet
+		for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
+			curEnv := pkgEnvMgr.EnvSlice[0]
+			verRet := ver.specFact_SpecMem_atEnv(&curEnv, stmt, state)
+			if verRet.IsErr() || verRet.IsTrue() {
+				return verRet
+			}
 		}
+
 	}
 
 	return glob.NewEmptyVerRetUnknown()

@@ -125,8 +125,8 @@ func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.SpecFactStmt) *glob.S
 	}
 
 	// Check if it's a regular prop defined by user
-	propDef := envMgr.GetPropDef(stmt.PropName)
-	if propDef != nil {
+	_, ok := envMgr.GetPropDef(stmt.PropName)
+	if ok {
 		return glob.NewEmptyStmtTrue()
 	}
 
