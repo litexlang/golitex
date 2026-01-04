@@ -15,7 +15,6 @@
 package litex_executor
 
 import (
-	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
@@ -73,7 +72,7 @@ func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUn
 	givenStruct := given.ToExistStFactStruct()
 
 	if len(knownStruct.ExistFreeParams) != len(givenStruct.ExistFreeParams) {
-		return false, nil, fmt.Errorf("length of exist free params is not equal")
+		return false, nil, nil
 	}
 
 	var err error
@@ -116,7 +115,7 @@ func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUn
 			}
 
 			if instParamSet.String() != givenStruct.ExistFreeParamSets[i].String() {
-				return false, nil, fmt.Errorf("param set %s in known exist fact is not equal to param set %s in given exist fact", knownStruct.ExistFreeParamSets[i].String(), givenStruct.ExistFreeParamSets[i].String())
+				return false, nil, nil
 			}
 
 			newUniMap[knownStruct.ExistFreeParams[i]] = ast.Atom(givenStruct.ExistFreeParams[i])
