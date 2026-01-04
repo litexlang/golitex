@@ -56,7 +56,7 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 			return verRet.ToStmtRet(), proof, nil
 		}
 
-		ret := exec.Env.NewFactWithoutCheckingNameDefined(proof)
+		ret := exec.Env.NewFactWithCheckingNameDefined(proof)
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String()), proof, fmt.Errorf(ret.String())
 		}

@@ -105,7 +105,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.ShortRe
 
 	// 让 $is_cart(x) 成立
 	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fact.Params[0]}, glob.BuiltinLine0)
-	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(isCartFact)
+	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(isCartFact)
 	if ret.IsErr() {
 		return glob.NewEmptyShortUnknownRet()
 	}
@@ -115,7 +115,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.ShortRe
 	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fact.Params[0]})
 	dimValue := ast.Atom(strconv.Itoa(len(cart.Params)))
 	dimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimFn, dimValue}, glob.BuiltinLine0)
-	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(dimEqualFact)
+	ret = ie.EnvMgr.NewFactWithCheckingNameDefined(dimEqualFact)
 	if ret.IsErr() {
 		return glob.NewEmptyShortUnknownRet()
 	}
@@ -125,7 +125,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.ShortRe
 	for i, cartParam := range cart.Params {
 		projFn := ast.NewFnObj(ast.Atom(glob.KeywordProj), []ast.Obj{fact.Params[0], ast.Atom(strconv.Itoa(i + 1))})
 		projEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{projFn, cartParam}, glob.BuiltinLine0)
-		ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(projEqualFact)
+		ret = ie.EnvMgr.NewFactWithCheckingNameDefined(projEqualFact)
 		if ret.IsErr() {
 			return glob.NewEmptyShortUnknownRet()
 		}
@@ -154,7 +154,7 @@ func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIn
 
 		// 创建相等事实: obj[index] = tuple[i]
 		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{indexedObj, tuple.Params[i]}, glob.BuiltinLine0)
-		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(indexEqualFact)
+		ret := ie.EnvMgr.NewFactWithCheckingNameDefined(indexEqualFact)
 		if ret.IsErr() {
 			return glob.ErrStmtMsgToShortRet(ret)
 		}
@@ -214,7 +214,7 @@ func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj,
 	// 让每一位相等
 	for i := range len(leftTuple.Params) {
 		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftTuple.Params[i], rightTuple.Params[i]}, glob.BuiltinLine0)
-		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+		ret := ie.EnvMgr.NewFactWithCheckingNameDefined(equalFact)
 		if ret.IsErr() {
 			return glob.ErrStmtMsgToShortRet(ret)
 		}
@@ -253,7 +253,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.Atom(randomName), param}, glob.BuiltinLine0))
 	}
 	forallFact := ast.NewUniFact([]string{randomName}, []ast.Obj{left}, []ast.FactStmt{}, []ast.FactStmt{orFact}, glob.BuiltinLine0)
-	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(forallFact)
+	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(forallFact)
 	if ret.IsErr() {
 		return glob.NewEmptyShortUnknownRet()
 	}
@@ -263,7 +263,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 	countFn := ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{left})
 	countValue := ast.Atom(strconv.Itoa(len(listSetFnObj.Params)))
 	countEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{countFn, countValue}, glob.BuiltinLine0)
-	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(countEqualFact)
+	ret = ie.EnvMgr.NewFactWithCheckingNameDefined(countEqualFact)
 	if ret.IsErr() {
 		return glob.NewEmptyShortUnknownRet()
 	}
@@ -271,7 +271,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 
 	// is finite set
 	isFiniteFact := ast.NewIsAFiniteSetFact(left, glob.BuiltinLine0)
-	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(isFiniteFact)
+	ret = ie.EnvMgr.NewFactWithCheckingNameDefined(isFiniteFact)
 	if ret.IsErr() {
 		return glob.NewEmptyShortUnknownRet()
 	}
@@ -416,7 +416,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			y := leftFn.Params[1]
 			z := rightFn.Params[1]
 			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, z}, glob.BuiltinLine0)
-			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+			ret := ie.EnvMgr.NewFactWithCheckingNameDefined(equalFact)
 			if ret.IsErr() {
 				return glob.NewEmptyShortUnknownRet()
 			}
@@ -428,7 +428,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			zero := ast.Atom("0")
 			yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
 			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
-			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+			ret := ie.EnvMgr.NewFactWithCheckingNameDefined(equalFact)
 			if ret.IsErr() {
 				return glob.NewEmptyShortUnknownRet()
 			}
@@ -440,7 +440,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			zero := ast.Atom("0")
 			yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
 			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
-			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+			ret := ie.EnvMgr.NewFactWithCheckingNameDefined(equalFact)
 			if ret.IsErr() {
 				return glob.NewEmptyShortUnknownRet()
 			}
@@ -462,7 +462,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			y := leftFn.Params[0]
 			z := rightFn.Params[0]
 			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, z}, glob.BuiltinLine0)
-			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+			ret := ie.EnvMgr.NewFactWithCheckingNameDefined(equalFact)
 			if ret.IsErr() {
 				return glob.NewEmptyShortUnknownRet()
 			}
@@ -474,7 +474,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			zero := ast.Atom("0")
 			yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
 			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
-			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+			ret := ie.EnvMgr.NewFactWithCheckingNameDefined(equalFact)
 			if ret.IsErr() {
 				return glob.NewEmptyShortUnknownRet()
 			}
@@ -486,7 +486,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			zero := ast.Atom("0")
 			yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
 			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
-			ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+			ret := ie.EnvMgr.NewFactWithCheckingNameDefined(equalFact)
 			if ret.IsErr() {
 				return glob.NewEmptyShortUnknownRet()
 			}
@@ -545,7 +545,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsADivBRightIsCDivB(left ast.Obj, righ
 		a := leftFn.Params[0]
 		c := rightFn.Params[0]
 		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{a, c}, glob.BuiltinLine0)
-		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+		ret := ie.EnvMgr.NewFactWithCheckingNameDefined(equalFact)
 		if ret.IsErr() {
 			return glob.NewEmptyShortUnknownRet()
 		}

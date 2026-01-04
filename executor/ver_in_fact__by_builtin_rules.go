@@ -531,7 +531,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 		if ret.IsErr() {
 			return glob.NewErrVerRet(ret.String())
 		}
-		ret = ver.Env.NewFactWithoutCheckingNameDefined(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i], glob.BuiltinLine0))
+		ret = ver.Env.NewFactWithCheckingNameDefined(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i], glob.BuiltinLine0))
 		if ret.IsErr() {
 			return glob.NewErrVerRet(ret.String())
 		}
@@ -558,7 +558,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 			return verRet
 		}
 
-		ret := ver.Env.NewFactWithoutCheckingNameDefined(fact)
+		ret := ver.Env.NewFactWithCheckingNameDefined(fact)
 		if ret.IsErr() {
 			return glob.NewErrVerRet(ret.String())
 		}
@@ -571,7 +571,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 			return verRet
 		}
 
-		ret := ver.Env.NewFactWithoutCheckingNameDefined(fact)
+		ret := ver.Env.NewFactWithCheckingNameDefined(fact)
 		if ret.IsErr() {
 			return glob.NewErrVerRet(ret.String())
 		}

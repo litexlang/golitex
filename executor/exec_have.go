@@ -269,7 +269,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) (*glob.StmtRet, erro
 
 	fnObj := ast.NewFnObj(ast.Atom(stmt.DefFnStmt.Name), params)
 	fnObjIsEqualTo := ast.NewEqualFact(fnObj, stmt.HaveObjSatisfyFn)
-	err := exec.Env.NewFactWithoutCheckingNameDefined(fnObjIsEqualTo)
+	err := exec.Env.NewFactWithCheckingNameDefined(fnObjIsEqualTo)
 	if err.IsErr() {
 		return glob.ErrRet(err.String()), fmt.Errorf(err.String())
 	}
@@ -401,7 +401,7 @@ func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseS
 
 	// Add case condition as fact
 	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(caseFact)
+	ret := exec.Env.NewFactWithCheckingNameDefined(caseFact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
 	}
@@ -491,7 +491,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCas
 
 	// Assume current case condition holds
 	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(caseFact)
+	ret := exec.Env.NewFactWithCheckingNameDefined(caseFact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
 	}
@@ -628,7 +628,7 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 
 	// 假设case的条件成立
 	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(caseFact)
+	ret := exec.Env.NewFactWithCheckingNameDefined(caseFact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
 	}
@@ -705,7 +705,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 
 	// 假设当前 case 的条件成立
 	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(caseFact)
+	ret := exec.Env.NewFactWithCheckingNameDefined(caseFact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
 	}

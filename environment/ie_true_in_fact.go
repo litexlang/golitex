@@ -153,7 +153,7 @@ func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) *glob.S
 		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{obj, indexObj})
 		// 创建 a[i] $in cartSet.Params[i] 的事实
 		inFact := ast.NewInFactWithObj(indexedObj, cartSet.Params[i])
-		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(inFact)
+		ret := ie.EnvMgr.NewFactWithCheckingNameDefined(inFact)
 		if ret.IsErr() {
 			return glob.ErrStmtMsgToShortRet(ret)
 		}
@@ -163,14 +163,14 @@ func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) *glob.S
 	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{obj})
 	dimValue := ast.Atom(strconv.Itoa(len(cartSet.Params)))
 	dimEqualFact := ast.NewEqualFact(dimFn, dimValue)
-	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(dimEqualFact)
+	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(dimEqualFact)
 	if ret.IsErr() {
 		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	derivedFacts = append(derivedFacts, dimEqualFact.String())
 	// 添加 is_tuple(obj) 的事实
 	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{obj}, glob.BuiltinLine0)
-	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(isTupleFact)
+	ret = ie.EnvMgr.NewFactWithCheckingNameDefined(isTupleFact)
 	if ret.IsErr() {
 		return glob.ErrStmtMsgToShortRet(ret)
 	}
@@ -211,7 +211,7 @@ func (ie *InferEngine) trueInFactInFnSet(fact *ast.SpecFactStmt) (bool, *glob.Sh
 		return false, glob.NewShortRet(glob.StmtRetTypeError, []string{err.Error()})
 	}
 
-	ret = ie.EnvMgr.NewFactWithoutCheckingNameDefined(derivedFact)
+	ret = ie.EnvMgr.NewFactWithCheckingNameDefined(derivedFact)
 	if ret.IsErr() {
 		return false, glob.NewShortRet(glob.StmtRetTypeError, ret.Error)
 	}
@@ -243,7 +243,7 @@ func (ie *InferEngine) trueInFactByListSet(fact *ast.SpecFactStmt) *glob.ShortRe
 	for _, param := range listSetFnObj.Params {
 		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], param}, glob.BuiltinLine0))
 	}
-	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(orFact)
+	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(orFact)
 	if ret.IsErr() {
 		return glob.ErrStmtMsgToShortRet(ret)
 	}
@@ -287,7 +287,7 @@ func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.Fn
 
 	// in parent set
 	inParentSetFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{obj, setBuilderStruct.ParentSet}, glob.BuiltinLine0)
-	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(inParentSetFact)
+	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(inParentSetFact)
 	if ret.IsErr() {
 		return glob.ErrStmtMsgToShortRet(ret)
 	}
@@ -295,7 +295,7 @@ func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.Fn
 
 	// intentional facts are true
 	for _, fact := range instFacts {
-		ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(fact)
+		ret := ie.EnvMgr.NewFactWithCheckingNameDefined(fact)
 		if ret.IsErr() {
 			return glob.ErrStmtMsgToShortRet(ret)
 		}

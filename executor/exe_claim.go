@@ -62,7 +62,7 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 	reversedFact := specFactStmt.ReverseIsTrue()
 
 	for _, curFact := range reversedFact {
-		ret := exec.Env.NewFactWithoutCheckingNameDefined(curFact)
+		ret := exec.Env.NewFactWithCheckingNameDefined(curFact)
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
@@ -109,7 +109,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
-		ret := exec.Env.NewFactWithoutCheckingNameDefined(condFact)
+		ret := exec.Env.NewFactWithCheckingNameDefined(condFact)
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
@@ -126,7 +126,7 @@ func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt,
 	}
 	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversibleFacts)
 	for _, reversedThenFact := range reversedThenFacts {
-		ret := exec.Env.NewFactWithoutCheckingNameDefined(reversedThenFact.(ast.FactStmt))
+		ret := exec.Env.NewFactWithCheckingNameDefined(reversedThenFact.(ast.FactStmt))
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
@@ -170,7 +170,7 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(stmt.ToCheckFact)
+	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.ToCheckFact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
@@ -186,7 +186,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(stmt.ClaimProveStmt.ToCheckFact)
+	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.ClaimProveStmt.ToCheckFact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
@@ -252,7 +252,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.Stmt
 
 	// know dom facts
 	for _, domFact := range asUnivFact.DomFacts {
-		ret := exec.Env.NewFactWithoutCheckingNameDefined(domFact)
+		ret := exec.Env.NewFactWithCheckingNameDefined(domFact)
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
@@ -427,11 +427,11 @@ func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) *glob.StmtRet {
 	}
 	innerStmtRets = append(innerStmtRets, execState.InnerStmtRetSlice...)
 
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(thenToIff)
+	ret := exec.Env.NewFactWithCheckingNameDefined(thenToIff)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
-	ret = exec.Env.NewFactWithoutCheckingNameDefined(iffToThen)
+	ret = exec.Env.NewFactWithCheckingNameDefined(iffToThen)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}

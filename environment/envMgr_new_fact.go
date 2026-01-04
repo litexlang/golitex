@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (envMgr *EnvMgr) NewFactWithoutCheckingNameDefined(stmt ast.FactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) NewFactWithCheckingNameDefined(stmt ast.FactStmt) *glob.StmtRet {
 	// 检查是否符合要求：比如涉及到的符号是否都定义了
 	if ret := envMgr.LookUpNamesInFact(stmt, map[string]struct{}{}); ret.IsNotTrue() {
 		// return glob.ErrRet(stmt.String()).AddMsg(ret.String())
@@ -152,7 +152,7 @@ func (envMgr *EnvMgr) newTrueEqual(fact *ast.SpecFactStmt) *glob.StmtRet {
 func (envMgr *EnvMgr) newEqualsFact(stmt *ast.EqualsFactStmt) *glob.StmtRet {
 	equalFacts := stmt.ToEqualFacts()
 	for _, equalFact := range equalFacts {
-		ret := envMgr.NewFactWithoutCheckingNameDefined(equalFact)
+		ret := envMgr.NewFactWithCheckingNameDefined(equalFact)
 		if ret.IsErr() {
 			return ret
 		}

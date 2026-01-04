@@ -139,11 +139,11 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) *glob.StmtRet {
 	if verRet.IsErr() {
 		return exec.AddStmtToStmtRet(verRet.ToStmtRet(), stmt)
 	} else if verRet.IsTrue() {
-		ret := exec.Env.NewFactWithoutCheckingNameDefined(stmt)
+		ret := exec.Env.NewFactWithCheckingNameDefined(stmt)
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String()).AddError(stmt.String())
 		}
-		return exec.NewTrueStmtRet(stmt).AddNewFact((stmt.String())).AddVerifyProcess(verRet).AddNewFacts(ret.NewFact)
+		return exec.NewTrueStmtRet(stmt).AddNewFact((stmt.String())).AddVerifyProcess(verRet).AddNewFacts(ret.NewFact).AddInfers(ret.Infer)
 	} else if verRet.IsUnknown() {
 		return exec.AddStmtToStmtRet(verRet.ToStmtRet(), stmt).AddUnknown(stmt.String())
 	} else {
@@ -160,7 +160,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) *glob.StmtRet {
 	for _, fact := range stmt.Facts {
 		switch fact := fact.(type) {
 		case ast.FactStmt:
-			ret := exec.Env.NewFactWithoutCheckingNameDefined(fact)
+			ret := exec.Env.NewFactWithCheckingNameDefined(fact)
 			if ret.IsErr() {
 				return glob.ErrRet(ret.String()).AddError(stmt.String())
 			}
@@ -202,12 +202,12 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 			return glob.ErrRet(err.Error())
 		}
 
-		ret = exec.Env.NewFactWithoutCheckingNameDefined(propToIff)
+		ret = exec.Env.NewFactWithCheckingNameDefined(propToIff)
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
 
-		ret = exec.Env.NewFactWithoutCheckingNameDefined(iffToProp)
+		ret = exec.Env.NewFactWithCheckingNameDefined(iffToProp)
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
@@ -294,7 +294,7 @@ func (exec *Executor) execProofBlockForEachCase(index int, stmt *ast.ProveInEach
 
 	caseStmt := stmt.OrFact.Facts[index]
 
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(caseStmt)
+	ret := exec.Env.NewFactWithCheckingNameDefined(caseStmt)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String()), fmt.Errorf(ret.String())
 	}
@@ -360,7 +360,7 @@ func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCase
 
 	caseStmt := stmt.CaseFacts[index]
 
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(caseStmt)
+	ret := exec.Env.NewFactWithCheckingNameDefined(caseStmt)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String()), fmt.Errorf(ret.String())
 	}
@@ -400,7 +400,7 @@ func (exec *Executor) knowImplicationStmt(stmt *ast.KnowImplicationStmt) *glob.S
 		if err != nil {
 			return glob.ErrRet(err.Error())
 		}
-		ret := exec.Env.NewFactWithoutCheckingNameDefined(iffToProp)
+		ret := exec.Env.NewFactWithCheckingNameDefined(iffToProp)
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
@@ -414,14 +414,14 @@ func (exec *Executor) knowImplicationStmt(stmt *ast.KnowImplicationStmt) *glob.S
 
 	uniFact := ast.NewUniFact(stmt.ImplicationProp.DefHeader.Params, stmt.ImplicationProp.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.ImplicationProp.DefHeader.Name), paramsAsObj, stmt.Line)}, stmt.ImplicationProp.ImplicationFactsOrNil, stmt.Line)
 
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact)
+	ret := exec.Env.NewFactWithCheckingNameDefined(uniFact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
 	newFactMsgs = append(newFactMsgs, uniFact.String())
 
 	uniFact2 := ast.NewUniFact(stmt.ImplicationProp.DefHeader.Params, stmt.ImplicationProp.DefHeader.ParamSets, stmt.ImplicationProp.IffFactsOrNil, stmt.ImplicationProp.ImplicationFactsOrNil, stmt.Line)
-	ret = exec.Env.NewFactWithoutCheckingNameDefined(uniFact2)
+	ret = exec.Env.NewFactWithCheckingNameDefined(uniFact2)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
@@ -475,7 +475,7 @@ func (exec *Executor) lefDefFnStmt(stmt *ast.LetFnStmt) *glob.StmtRet {
 		return glob.ErrRet(err.Error())
 	}
 
-	ret = exec.Env.NewFactWithoutCheckingNameDefined(derivedFact)
+	ret = exec.Env.NewFactWithCheckingNameDefined(derivedFact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
@@ -509,7 +509,7 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) *glob.StmtRet {
 	verifyProcessMsgs = append(verifyProcessMsgs, execRet.VerifyProcess...)
 
 	// know uniFact
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(stmt.Fact)
+	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.Fact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
@@ -642,12 +642,12 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 		return glob.ErrRet(fmt.Sprintf("dom facts are not allowed in %s", glob.KeywordProveIsTransitiveProp))
 	}
 
-	ret = exec.Env.NewFactWithoutCheckingNameDefined(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[0]), ast.Atom(stmt.Params[1])}, stmt.Line))
+	ret = exec.Env.NewFactWithCheckingNameDefined(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[0]), ast.Atom(stmt.Params[1])}, stmt.Line))
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
 
-	ret = exec.Env.NewFactWithoutCheckingNameDefined(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[1]), ast.Atom(stmt.Params[2])}, stmt.Line))
+	ret = exec.Env.NewFactWithCheckingNameDefined(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[1]), ast.Atom(stmt.Params[2])}, stmt.Line))
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
@@ -688,7 +688,7 @@ func (exec *Executor) evalStmt(stmt *ast.EvalStmt) *glob.StmtRet {
 	if execRet.IsNotTrue() {
 		return execRet
 	}
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(ast.NewEqualFact(stmt.ObjToEval, value))
+	ret := exec.Env.NewFactWithCheckingNameDefined(ast.NewEqualFact(stmt.ObjToEval, value))
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
@@ -739,7 +739,7 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.StmtRet {
 			verMsg := glob.NewVerMsg(glob.StmtRetTypeTrue, "", glob.BuiltinLine0, []string{fmt.Sprintf("left value %d is larger than right value %d, so the %s statement is iterating on an empty range, so it is true", leftAsInt, rightAsInt, glob.KeywordProveFor)})
 
 			uniFact := stmt.UniFact()
-			ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact)
+			ret := exec.Env.NewFactWithCheckingNameDefined(uniFact)
 			if ret.IsErr() {
 				return glob.ErrRet(ret.String())
 			}
@@ -777,7 +777,7 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.StmtRet {
 
 	// Create and store the universal fact
 	uniFact := stmt.UniFact()
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact)
+	ret := exec.Env.NewFactWithCheckingNameDefined(uniFact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
@@ -845,7 +845,7 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 			return glob.NewEmptyStmtTrue()
 		}
 
-		ret := exec.Env.NewFactWithoutCheckingNameDefined(domFact)
+		ret := exec.Env.NewFactWithCheckingNameDefined(domFact)
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
@@ -949,7 +949,7 @@ func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveImplyStmt) *glob
 		}
 
 		newInFact := ast.NewInFactWithObj(stmt.SpecFact.Params[i], instParamSet)
-		ret := exec.Env.NewFactWithoutCheckingNameDefined(newInFact)
+		ret := exec.Env.NewFactWithCheckingNameDefined(newInFact)
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
@@ -962,14 +962,14 @@ func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveImplyStmt) *glob
 		if err != nil {
 			return glob.ErrRet(err.Error())
 		}
-		ret := exec.Env.NewFactWithoutCheckingNameDefined(instDomFact)
+		ret := exec.Env.NewFactWithCheckingNameDefined(instDomFact)
 		if ret.IsErr() {
 			return glob.ErrRet(ret.String())
 		}
 	}
 
 	// itself is true
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(stmt.SpecFact)
+	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.SpecFact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
