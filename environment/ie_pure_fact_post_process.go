@@ -36,23 +36,6 @@ func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 		return glob.NewEmptyShortTrueRet()
 	}
 
-	// existPropDef := ie.EnvMgr.GetExistPropDef(fact.PropName)
-	// if existPropDef != nil {
-	// 	if fact.FactType == ast.TruePure {
-	// 		return glob.NewEmptyShortTrueRet()
-	// 	} else {
-	// 		for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
-	// 			_, ok := thenFact.(*ast.SpecFactStmt)
-	// 			if !ok {
-	// 				return glob.NewEmptyShortTrueRet()
-	// 			}
-	// 		}
-	// 		ret := ie.newFalseExistFact_EmitEquivalentUniFact(fact)
-	// 		// Inherit derived facts from exist prop processing
-	// 		return ret
-	// 	}
-	// }
-
 	return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("undefined prop: %s", fact.PropName)})
 }
 
@@ -65,7 +48,7 @@ func (ie *InferEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) *glob.S
 
 	equalFact := ast.NewEqualFact(fact.Params[0], fact.Params[1])
 
-	ret := ie.EnvMgr.NewFactWithoutCheckingNameDefined(equalFact)
+	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(equalFact)
 	if ret.IsErr() {
 		return glob.ErrStmtMsgToShortRet(ret)
 	}

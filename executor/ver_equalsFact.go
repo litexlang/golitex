@@ -40,7 +40,7 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 				return glob.NewVerMsg(glob.StmtRetTypeError, newFact.String(), newFact.GetLine(), msgs)
 			}
 			if verRet.IsTrue() {
-				ret := ver.Env.NewFactWithoutCheckingNameDefined(newFact)
+				ret := ver.Env.NewFactWithCheckingNameDefined(newFact)
 				if ret.IsErr() {
 					return glob.NewVerMsg(glob.StmtRetTypeError, newFact.String(), newFact.GetLine(), []string{ret.String()})
 				}

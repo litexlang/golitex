@@ -86,7 +86,7 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.ProveExistStmt) *glob.StmtR
 
 func (exec *Executor) proveExistStmt_NewFact(stmt *ast.ProveExistStmt) *glob.StmtRet {
 	newFact := stmt.ToTrueExistStFact()
-	ret := exec.Env.NewFactWithoutCheckingNameDefined(newFact)
+	ret := exec.Env.NewFactWithCheckingNameDefined(newFact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
