@@ -28,11 +28,11 @@ import (
 func (ver *Verifier) cmpObj_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
 	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, fmt.Sprintf("%s = %s", left, right), 0, []string{err.Error()})
+		return glob.NewVerMsg2(glob.StmtRetTypeError, fmt.Sprintf("%s = %s", left, right), 0, []string{err.Error()})
 	}
 	if ok {
 		if state.WithMsg {
-			return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), 0, []string{msg})
+			return glob.NewVerMsg2(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), 0, []string{msg})
 		}
 		return glob.NewEmptyVerRetTrue()
 	}
@@ -64,7 +64,7 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 		if gotLeftEqualObjs && gotRightEqualObjs {
 			if equalToLeftObjs == equalToRightObjs {
 				if state.WithMsg {
-					return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("known %s = %s", left, right), 0, []string{})
+					return glob.NewVerMsg2(glob.StmtRetTypeTrue, fmt.Sprintf("known %s = %s", left, right), 0, []string{})
 				}
 				return glob.NewEmptyVerRetTrue()
 			}
@@ -81,7 +81,7 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 					return verRet
 				} else if verRet.IsTrue() {
 					if state.WithMsg {
-						return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftObj, right, equalToLeftObj, left), 0, verRet.VerifyMsgs)
+						return glob.NewVerMsg2(glob.StmtRetTypeTrue, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftObj, right, equalToLeftObj, left), 0, verRet.VerifyMsgs)
 					}
 					return verRet
 				}
@@ -99,7 +99,7 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 					return verRet
 				} else if verRet.IsTrue() {
 					if state.WithMsg {
-						return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightObj, left, equalToRightObj, right), 0, verRet.VerifyMsgs)
+						return glob.NewVerMsg2(glob.StmtRetTypeTrue, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightObj, left, equalToRightObj, right), 0, verRet.VerifyMsgs)
 					}
 					return verRet
 				}

@@ -26,7 +26,7 @@ type VerRet struct {
 	VerifyMsgs         []string
 }
 
-func NewVerMsg(retType StmtRetType, stmtStr string, provedByFactOnLine uint, verifyMsgs []string) *VerRet {
+func NewVerMsg2(retType StmtRetType, stmtStr string, provedByFactOnLine uint, verifyMsgs []string) *VerRet {
 	return &VerRet{
 		RetType:            retType,
 		StmtStr:            stmtStr,
@@ -66,9 +66,9 @@ func (m *VerRet) String() string {
 	if m.IsTrue() {
 		if m.ProvedByFactOnLine == 0 {
 			if m.StmtStr == "" {
-				return fmt.Sprintf("proved by builtin rules:\n%s", strings.Join(m.VerifyMsgs, "\n"))
+				return fmt.Sprintf("proved by:\n%s", strings.Join(m.VerifyMsgs, "\n"))
 			}
-			return fmt.Sprintf("%s\nproved by builtin rules:\n%s", m.StmtStr, strings.Join(m.VerifyMsgs, "\n"))
+			return fmt.Sprintf("%s\nproved by:\n%s", m.StmtStr, strings.Join(m.VerifyMsgs, "\n"))
 		}
 
 		if m.StmtStr == "" {

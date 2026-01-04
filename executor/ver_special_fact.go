@@ -89,7 +89,7 @@ func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state 
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{greaterFact.String()})
+		msg := glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{greaterFact.String()})
 		return msg
 	}
 
@@ -100,7 +100,7 @@ func (ver *Verifier) verGreaterEqualBySpecialWays(stmt *ast.SpecFactStmt, state 
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{equalFact.String()})
+		msg := glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{equalFact.String()})
 		return msg
 	}
 
@@ -123,7 +123,7 @@ func (ver *Verifier) verLessEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ve
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{lessFact.String()})
+		msg := glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{lessFact.String()})
 		return msg
 	}
 
@@ -134,7 +134,7 @@ func (ver *Verifier) verLessEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ve
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{equalFact.String()})
+		msg := glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{equalFact.String()})
 		return msg
 	}
 
@@ -157,7 +157,7 @@ func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state 
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{greaterFact.String()})
+		msg := glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{greaterFact.String()})
 		return msg
 	}
 
@@ -168,7 +168,7 @@ func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state 
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{lessFact.String()})
+		msg := glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{lessFact.String()})
 		return msg
 	}
 
@@ -184,7 +184,7 @@ func (ver *Verifier) verNotEqualZeroBySpecialWays(stmt *ast.SpecFactStmt, state 
 			return verRet
 		}
 		if verRet.IsTrue() {
-			msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{notEqualFact.String()})
+			msg := glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{notEqualFact.String()})
 			return msg
 		}
 	}
@@ -208,7 +208,7 @@ func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ver
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{greaterFact.String()})
+		msg := glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{greaterFact.String()})
 		return msg
 	}
 
@@ -219,7 +219,7 @@ func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ver
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{lessFact.String()})
+		msg := glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{lessFact.String()})
 		return msg
 	}
 
@@ -231,7 +231,7 @@ func (ver *Verifier) verNotEqualBySpecialWays(stmt *ast.SpecFactStmt, state *Ver
 		return verRet
 	}
 	if verRet.IsTrue() {
-		msg := glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{subNotEqualZeroFact.String()})
+		msg := glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{subNotEqualZeroFact.String()})
 		return msg
 	}
 
