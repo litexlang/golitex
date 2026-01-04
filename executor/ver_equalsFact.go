@@ -22,7 +22,7 @@ import (
 
 func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) *glob.VerRet {
 	if len(stmt.Params) < 2 {
-		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{"equals fact must have at least 2 params"})
+		return glob.NewVerMsg2(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{"equals fact must have at least 2 params"})
 	}
 
 	trueMsgs := []string{}
@@ -37,12 +37,12 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 			if verRet.IsErr() {
 				newFact := ast.NewEqualFact(stmt.Params[i-1], stmt.Params[i])
 				msgs := append(verRet.VerifyMsgs, fmt.Sprintf("%s\nis error", newFact.String()))
-				return glob.NewVerMsg(glob.StmtRetTypeError, newFact.String(), newFact.GetLine(), msgs)
+				return glob.NewVerMsg2(glob.StmtRetTypeError, newFact.String(), newFact.GetLine(), msgs)
 			}
 			if verRet.IsTrue() {
 				ret := ver.Env.NewFactWithCheckingNameDefined(newFact)
 				if ret.IsErr() {
-					return glob.NewVerMsg(glob.StmtRetTypeError, newFact.String(), newFact.GetLine(), []string{ret.String()})
+					return glob.NewVerMsg2(glob.StmtRetTypeError, newFact.String(), newFact.GetLine(), []string{ret.String()})
 				}
 				checked = true
 				trueMsgs = append(trueMsgs, verRet.String())
@@ -57,12 +57,11 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 		if !checked {
 			newFact := ast.NewEqualFact(stmt.Params[i-1], stmt.Params[i])
 			msgs := append(unknownRet.VerifyMsgs, fmt.Sprintf("%s\nis unknown", newFact.String()))
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, newFact.String(), newFact.GetLine(), msgs)
+			return glob.NewVerMsg2(glob.StmtRetTypeUnknown, newFact.String(), newFact.GetLine(), msgs)
 		}
 	}
 	if state.WithMsg {
-		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), trueMsgs)
+		return glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, trueMsgs)
 	}
 	return glob.NewEmptyVerRetTrue()
 }
-

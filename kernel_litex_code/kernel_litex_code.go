@@ -16,6 +16,7 @@ package kernel_lib_litex_code
 
 var PipelineInitCode = `
 know forall x2, y2 R: x2 != 0, y2 != 0 => x2 * y2 != 0
+know forall x, y R: x * y = 0 => x = 0 or y = 0
 
 know:
 	forall q Q: exist x Z, y N_pos st x / y = q

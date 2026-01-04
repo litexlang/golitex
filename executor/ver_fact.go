@@ -37,6 +37,6 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) *glob.VerRe
 	case *ast.EqualsFactStmt:
 		return ver.verEqualsFactStmt(asStmt, state)
 	default:
-		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{fmt.Sprintf("unexpected fact statement: %s", asStmt)})
+		return glob.NewVerMsg2(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{fmt.Sprintf("unexpected fact statement: %s", asStmt)})
 	}
 }

@@ -31,14 +31,14 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) *glob
 
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(oldStmt)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, oldStmt.String(), oldStmt.GetLine(), []string{err.Error()})
+		return glob.NewVerMsg2(glob.StmtRetTypeError, oldStmt.String(), oldStmt.GetLine(), []string{err.Error()})
 	}
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
 		ret := ver.Env.NewFactWithCheckingNameDefined(condFact)
 		if ret.IsErr() {
-			return glob.NewVerMsg(glob.StmtRetTypeError, condFact.String(), condFact.GetLine(), []string{ret.String()})
+			return glob.NewVerMsg2(glob.StmtRetTypeError, condFact.String(), condFact.GetLine(), []string{ret.String()})
 		}
 	}
 
@@ -55,7 +55,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		if verRet.IsUnknown() {
 			if state.WithMsg {
 				msgs := append(verRet.VerifyMsgs, fmt.Sprintf("%s is unknown", thenFact))
-				return glob.NewVerMsg(glob.StmtRetTypeUnknown, thenFact.String(), thenFact.GetLine(), msgs)
+				return glob.NewVerMsg2(glob.StmtRetTypeUnknown, thenFact.String(), thenFact.GetLine(), msgs)
 			}
 			return glob.NewEmptyVerRetUnknown()
 		}
@@ -63,12 +63,12 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		// if true, store it
 		ret := ver.Env.NewFactWithCheckingNameDefined(thenFact)
 		if ret.IsErr() {
-			return glob.NewVerMsg(glob.StmtRetTypeError, thenFact.String(), thenFact.GetLine(), []string{ret.String()})
+			return glob.NewVerMsg2(glob.StmtRetTypeError, thenFact.String(), thenFact.GetLine(), []string{ret.String()})
 		}
 	}
 
 	if state.WithMsg {
-		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{"is true"})
+		return glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{})
 	}
 	return glob.NewEmptyVerRetTrue()
 }

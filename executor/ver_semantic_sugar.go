@@ -25,19 +25,19 @@ func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, 
 	if replaced {
 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state.CopyAndReqOkToFalse())
 		if verRet.IsErr() {
-			return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.Line, []string{"failed to verify true equal fact: " + verRet.String()})
+			return glob.NewVerMsg2(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{"failed to verify true equal fact: " + verRet.String()})
 		}
 
 		if verRet.IsTrue() {
 			msg := fmt.Sprintf("proved by replacing the symbols with their values:\n%s", newStmt.String())
 			if state.WithMsg {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{msg})
+				return glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
 			}
 			return glob.NewEmptyVerRetTrue()
 		}
 	}
 
-	return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.Line, []string{fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())})
+	return glob.NewVerMsg2(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())})
 }
 
 // func (ver *Verifier) verByReplaceObjInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
