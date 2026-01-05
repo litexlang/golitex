@@ -353,9 +353,9 @@ func (s *ProveImplyStmt) InlineString() string {
 	return "TODO"
 }
 
-func (s *DefImplicationStmt) InlineString() string {
-	return "TODO"
-}
+// func (s *DefImplicationStmt) InlineString() string {
+// 	return "TODO"
+// }
 
 func (s *ProveIsTransitivePropStmt) InlineString() string {
 	return "TODO"

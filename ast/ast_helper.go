@@ -149,9 +149,9 @@ func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []*SpecFactStmt {
 	return ret
 }
 
-func (stmt *ClaimImplicationStmt) ToProp() *DefPropStmt {
-	return stmt.Implication.ToProp()
-}
+// func (stmt *ClaimImplicationStmt) ToProp() *DefPropStmt {
+// 	return stmt.Implication.ToProp()
+// }
 
 func (strSlice StrSlice) ToObjSlice() []Obj {
 	ret := make([]Obj, len(strSlice))
@@ -513,9 +513,10 @@ func IsTrueEqualFact(fact *SpecFactStmt) bool {
 	return true
 }
 
-func (stmt *DefImplicationStmt) ToProp() *DefPropStmt {
-	return NewDefPropStmt(stmt.DefHeader, stmt.DomFacts, nil, stmt.ImplicationFacts, stmt.Line)
-}
+// func (stmt *DefImplicationStmt) ToProp() *DefPropStmt {
+// 	// return NewDefPropStmt(stmt.DefHeader, stmt.DomFacts, nil, stmt.ImplicationFacts, stmt.Line)
+// 	return NewDefPropStmt(stmt.DefHeader, []FactStmt{}, stmt.DomFacts, stmt.ImplicationFacts, stmt.Line)
+// }
 
 func IsTrueSpecFactWithPropName(specFact *SpecFactStmt, propName string) bool {
 	if specFact.FactType != TruePure {
