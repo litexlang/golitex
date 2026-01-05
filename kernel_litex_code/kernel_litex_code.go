@@ -945,4 +945,15 @@ know:
 				x1 = x2
 		=>:
 			$is_injective_fn(X, Y, f)
+
+prop is_surjective_fn(X set, Y set, f fn(X)Y):
+	forall y Y:
+		exist x X st f(x) = y
+
+prop is_bijective_fn(X set, Y set, f fn(X)Y):
+	$is_injective_fn(X, Y, f)
+	$is_surjective_fn(X, Y, f)
+	
+prop is_injective_fn_to_finite_set(X set, Y finite_set, f fn(X)Y):
+	$is_injective_fn(X, Y, f)
 `
