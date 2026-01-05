@@ -60,31 +60,18 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 		return glob.NewVerMsg2(glob.StmtRetTypeError, obj.String(), 0, []string{fmt.Sprintf("%s is not a function", obj)})
 	}
 
-	if headAsAtom, ok := objAsFnObj.FnHead.(ast.Atom); ok && glob.IsSuperFunction(string(headAsAtom)) {
-		return ver.verSuperFunctionReq(objAsFnObj, state)
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCount) {
-		return ver.countFnRequirement(objAsFnObj, state)
-	} else if ast.IsFnTemplate_ObjFn(objAsFnObj) {
-		return glob.NewEmptyVerRetTrue()
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCart) {
-		return ver.cartFnRequirement(objAsFnObj, state)
-	} else if ast.IsTupleFnObj(objAsFnObj) {
-		return ver.tupleFnReq(objAsFnObj, state)
-	} else if ast.IsIndexOptFnObj(objAsFnObj) {
-		return ver.indexOptFnRequirement(objAsFnObj, state)
-	} else if objAsFnObj.FnHead.String() == glob.KeywordProj {
-		return ver.parasSatisfyProjReq(objAsFnObj, state)
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordSetDim) {
-		return ver.setDimFnRequirement(objAsFnObj, state)
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordDim) {
-		return ver.dimFnRequirement(objAsFnObj, state)
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordListSet) {
-		return ver.listSetFnRequirement(objAsFnObj, state)
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordSetBuilder) {
-		return ver.SetBuilderFnRequirement(objAsFnObj, state)
-	} else {
-		return ver.parasSatisfyFnReq(objAsFnObj, state)
+	// Try super function first (includes all special functions)
+	if ret := ver.isSuperFunction_VerReq(objAsFnObj, state); ret.IsTrue() || ret.IsErr() {
+		return ret
 	}
+
+	// If not a super function, check if it's a function template
+	if ast.IsFnTemplate_ObjFn(objAsFnObj) {
+		return glob.NewEmptyVerRetTrue()
+	}
+
+	// Otherwise, treat it as a regular function
+	return ver.parasSatisfyFnReq(objAsFnObj, state)
 }
 
 // TODO: 非常缺乏检查。因为这里的验证非常麻烦，{}里包括了事实，而事实里有fn，所以需要检查fn行不行
