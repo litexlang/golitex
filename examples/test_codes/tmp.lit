@@ -1,0 +1,2 @@
+have fn f(x R) R = x + 1
+$is_preimage(R, R, f, 1, 2)
