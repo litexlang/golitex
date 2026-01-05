@@ -41,8 +41,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = exec.execClaimStmtProve(stmt)
 	case *ast.DefPropStmt:
 		execRet = exec.defPropStmt(stmt, true)
-	case *ast.DefImplicationStmt:
-		execRet = exec.implicationStmt(stmt)
 	case *ast.DefLetStmt:
 		execRet = exec.defLetStmt(stmt)
 		if execRet.IsTrue() {
@@ -58,7 +56,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 			execRet = execRet.AddWarning("`let fn` may introduce non-existent functions. If you want to ensure the function exists, please use `have fn` instead!\n")
 		}
 	case *ast.ClaimImplicationStmt:
-		execRet = exec.claimPropStmt(stmt)
+		execRet = exec.claimImplyStmt(stmt)
 		// case *ast.ClaimExistPropStmt:
 		// 	execRet = exec.claimExistPropStmt(stmt)
 	case *ast.ProveStmt:
@@ -814,17 +812,6 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 	}
 
 	return glob.NewEmptyStmtTrue()
-}
-
-func (exec *Executor) implicationStmt(stmt *ast.DefImplicationStmt) *glob.StmtRet {
-	// Convert ImplicationStmt to DefPropStmt (with dom and implication facts, but no iff facts)
-	defPropStmt := ast.NewDefPropStmt(stmt.DefHeader, stmt.DomFacts, nil, stmt.ImplicationFacts, stmt.Line)
-	ret := exec.Env.NewDefProp_InsideAtomsDeclared(defPropStmt)
-	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
-	}
-
-	return exec.NewTrueStmtRet(stmt)
 }
 
 func (exec *Executor) proveImplyStmt(stmt *ast.ProveImplyStmt) *glob.StmtRet {

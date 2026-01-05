@@ -1,4 +1,4 @@
-```
+"""
 # Definition of injective function, surjective function, bijective function in Litex kernel
 prop is_injective_fn(X set, Y set, f fn(X)Y):
 
@@ -23,7 +23,7 @@ prop is_surjective_fn(X set, Y set, f fn(X)Y):
 prop is_bijective_fn(X set, Y set, f fn(X)Y):
 	$is_injective_fn(X, Y, f)
 	$is_surjective_fn(X, Y, f)
-```
+"""
 
 have fn f(x R) R = x + 1
 

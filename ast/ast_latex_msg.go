@@ -509,11 +509,11 @@ func (s *ClaimProveByContradictionStmt) ToLatexString() string {
 func (s *ClaimImplicationStmt) ToLatexString() string {
 	var builder strings.Builder
 
-	builder.WriteString(s.ToProp().ToLatexString())
+	builder.WriteString(s.Implication.ToLatexString())
 
 	builder.WriteString("\n\n")
 
-	builder.WriteString(claimProveBodyToLatexString(s.Implication.ToProp().ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue(), s.Proofs, true))
+	builder.WriteString(claimProveBodyToLatexString(s.Implication.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue(), s.Proofs, true))
 
 	return builder.String()
 }
@@ -830,10 +830,10 @@ func (s *ProveImplyStmt) ToLatexString() string {
 	return s.String()
 }
 
-func (s *DefImplicationStmt) ToLatexString() string {
-	// TODO: implement LaTeX conversion for implication
-	return s.String()
-}
+// func (s *DefImplicationStmt) ToLatexString() string {
+// 	// TODO: implement LaTeX conversion for implication
+// 	return s.String()
+// }
 
 func (s *ProveIsTransitivePropStmt) ToLatexString() string {
 	return s.String()

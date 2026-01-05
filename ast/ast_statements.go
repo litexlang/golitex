@@ -91,7 +91,7 @@ type ClaimProveByContradictionStmt struct {
 }
 
 type ClaimImplicationStmt struct {
-	Implication *DefImplicationStmt
+	Implication *DefPropStmt
 	Proofs      StmtSlice
 
 	Line uint
@@ -392,13 +392,13 @@ type ProveForStmt struct {
 	Line uint
 }
 
-type DefImplicationStmt struct {
-	DefHeader        *DefHeader
-	DomFacts         FactStmtSlice
-	ImplicationFacts FactStmtSlice
+// type DefImplicationStmt struct {
+// 	DefHeader        *DefHeader
+// 	DomFacts         FactStmtSlice
+// 	ImplicationFacts FactStmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type ProveImplyStmt struct {
 	SpecFact        *SpecFactStmt
