@@ -32,6 +32,10 @@ func (ver *Verifier) MatchExistFactStruct(given *ast.ExistStFactStruct, stored *
 		return glob.NewEmptyVerRetUnknown()
 	}
 
+	if given.IsPropTrue != given.IsPropTrue {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
 	// given: exist x Z : x > 0; stored: exist y N: y > 0
 	uniMap := map[string]ast.Obj{}
 	for i := range stored.ExistFreeParams {
@@ -73,6 +77,10 @@ func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUn
 	givenStruct := given.ToExistStFactStruct()
 
 	if len(knownStruct.ExistFreeParams) != len(givenStruct.ExistFreeParams) {
+		return false, nil, nil
+	}
+
+	if knownStruct.IsPropTrue != givenStruct.IsPropTrue {
 		return false, nil, nil
 	}
 

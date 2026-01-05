@@ -556,5 +556,15 @@ func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFa
 		newParams[i] = newParam
 	}
 
-	return ast.NewExistStFactStruct(existFactStruct.FactType, existFactStruct.PropName, newExistParams, newExistParamSets, newParams, existFactStruct.Line), nil
+	return ast.NewExistStFactStruct(existFactStruct.FactType, existFactStruct.PropName, existFactStruct.IsPropTrue, newExistParams, newExistParamSets, newParams, existFactStruct.Line), nil
+}
+
+// storeSpecFactInMemAndCollect collects the fact string for derived facts tracking
+func (ie *InferEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) *glob.ShortRet {
+	ret := ie.EnvMgr.storeSpecFactInMem(fact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	*derivedFacts = append(*derivedFacts, fact.String())
+	return glob.NewEmptyShortTrueRet()
 }
