@@ -875,6 +875,10 @@ know imply item_in_union_implies(z set, x, y set):
 	=>:
 		z $in x or z $in y
 
+# Properties of union
+know:
+	forall x, y set: $is_a_nonempty_set(x) or $is_a_nonempty_set(y) => $is_a_nonempty_set(union(x, y))
+
 ### intersect
 
 # check item in intersect
@@ -925,6 +929,20 @@ know:
 
 ## End of set theory
 
+## Function Related
+
+prop is_injective_fn(X set, Y set, f fn(X)Y):
+	forall x1, x2 X:
+		x1 != x2
+		=>:
+			f(x1) != f(x2)
+
 know:
-	forall x, y set: $is_a_nonempty_set(x) or $is_a_nonempty_set(y) => $is_a_nonempty_set(union(x, y))
+	forall X set, Y set, f fn(X)Y:
+		forall x1, x2 X:
+			f(x1) = f(x2)
+			=>:
+				x1 = x2
+		=>:
+			$is_injective_fn(X, Y, f)
 `
