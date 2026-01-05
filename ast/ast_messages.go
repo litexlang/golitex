@@ -422,7 +422,7 @@ func (head DefHeader) String() string {
 // 	return builder.String()
 // }
 
-func (stmt *HaveObjStWithParamSetsStmt) String() string {
+func (stmt *HaveObjStStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")

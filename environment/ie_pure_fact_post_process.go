@@ -58,7 +58,7 @@ func (ie *InferEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) *glob.S
 
 func (ie *InferEngine) newFalseExist(fact *ast.SpecFactStmt) *glob.ShortRet {
 	existStruct := fact.ToExistStFactStruct()
-	equivalentForall := ast.NewUniFact(existStruct.ExistFreeParams, existStruct.ExistFreeParamSets, []ast.FactStmt{}, []ast.FactStmt{existStruct.GetTruePureFact().ReverseTrue()}, fact.Line)
+	equivalentForall := ast.NewUniFact(existStruct.ExistFreeParams, existStruct.ExistFreeParamSets, []ast.FactStmt{}, []ast.FactStmt{existStruct.GetPureFactInside().ReverseTrue()}, fact.Line)
 	ret := ie.EnvMgr.newUniFact(equivalentForall)
 	if ret.IsErr() {
 		return glob.ErrStmtMsgToShortRet(ret)

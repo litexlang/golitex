@@ -33,3 +33,5 @@ const MainDotLit string = "main.lit"
 const DefaultPkgName string = ""
 
 const PkgNameAtomSeparator = KeySymbolDot
+
+const ExistStFactContainsFalsePureSignature = "-1"

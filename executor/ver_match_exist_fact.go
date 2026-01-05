@@ -42,14 +42,14 @@ func (ver *Verifier) MatchExistFactStruct(given *ast.ExistStFactStruct, stored *
 		uniMap[stored.ExistFreeParams[i]] = ast.Atom(given.ExistFreeParams[i])
 	}
 
-	propStoredFact := stored.GetTruePureFact()
+	propStoredFact := stored.GetPureFactInside()
 	instPropStoredFact, err := propStoredFact.Instantiate(uniMap)
 	if err != nil {
 		return glob.NewEmptyVerRetUnknown()
 	}
 
 	instPropStoredFactStr := instPropStoredFact.String()
-	givenPropStr := given.GetTruePureFact().String()
+	givenPropStr := given.GetPureFactInside().String()
 	if instPropStoredFactStr != givenPropStr {
 		return glob.NewEmptyVerRetUnknown()
 	}
@@ -95,7 +95,7 @@ func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUn
 		uniMap[knownStruct.ExistFreeParams[i]] = ast.Atom(givenStruct.ExistFreeParams[i])
 	}
 
-	knownPropFact := knownStruct.GetTruePureFactWithParamSets()
+	knownPropFact := knownStruct.GetPureFactWithParamSets()
 	instKnownPureFact, err := knownPropFact.Instantiate(uniMap)
 	if err != nil {
 		return false, nil, err
@@ -105,7 +105,7 @@ func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUn
 	// REMARK 应该有问题
 	// TODO: 这里的match我还是有点慌，因为涉及到的参数其实是不存在的，应该用纯symbol去匹配好像更好一点
 	tmp := env.MakeKnownSpecFact_InUniFact(instKnownPureFact.(*ast.SpecFactStmt), knownSpecFactInUniFact.UniFact)
-	ok, m, err := ver.matchUniFactParamsWithSpecFactParams(&tmp, givenStruct.GetTruePureFactWithParamSets())
+	ok, m, err := ver.matchUniFactParamsWithSpecFactParams(&tmp, givenStruct.GetPureFactWithParamSets())
 
 	if err != nil || !ok {
 		return false, nil, nil
