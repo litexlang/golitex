@@ -2166,7 +2166,6 @@ func (p *TbParser) implicationStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPro
 				implicationFacts = append(implicationFacts, curStmt)
 			}
 
-			iffFacts = []FactStmt{NewEqualFact(Atom("1"), Atom("1"))}
 		}
 
 		// Check that facts don't reference the same prop name

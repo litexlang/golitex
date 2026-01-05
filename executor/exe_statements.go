@@ -187,7 +187,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 		paramMap[param] = struct{}{}
 	}
 
-	if len(stmt.IffFactsOrNil) == 0 {
+	if (stmt.IffFactsOrNil) == nil {
 		return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
 	}
 

@@ -40,7 +40,7 @@ type DefHeader struct {
 type DefPropStmt struct {
 	DefHeader             *DefHeader
 	DomFactsOrNil         FactStmtSlice
-	IffFactsOrNil         FactStmtSlice
+	IffFactsOrNil         FactStmtSlice // nil 表示没有iff，无法从定义来验证prop正确性；如果是 []FactStmt{}，表示只要dom和def满足了，那就prop成立。1
 	ImplicationFactsOrNil FactStmtSlice
 
 	Line uint
