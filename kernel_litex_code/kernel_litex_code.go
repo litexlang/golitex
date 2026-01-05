@@ -954,6 +954,9 @@ prop is_bijective_fn(X set, Y set, f fn(X)Y):
 	$is_injective_fn(X, Y, f)
 	$is_surjective_fn(X, Y, f)
 	
-prop is_injective_fn_to_finite_set(X set, Y finite_set, f fn(X)Y):
+know imply is_injective_fn_to_finite_set_implies(X set, Y finite_set, f fn(X)Y):
 	$is_injective_fn(X, Y, f)
+	=>:
+		$is_a_finite_set(Y)
+		count(X) <= count(Y)
 `

@@ -1,2 +1,5 @@
-have fn f(x R) R = x + 1
-$is_preimage(R, R, f, 1, 2)
+have X set
+have Y finite_set
+let f fn(X)Y
+know $is_injective_fn(X, Y, f)
+$is_injective_fn_to_finite_set_implies(X, Y, f)

@@ -21,7 +21,7 @@ import (
 )
 
 func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.ShortRet {
-	if glob.IsBuiltinPropName(string(fact.PropName)) || glob.IsBuiltinExistPropName(string(fact.PropName)) {
+	if glob.IsBuiltinPropName(string(fact.PropName)) {
 		ret := ie.BuiltinPropExceptTrueEqual(fact)
 		return ret
 	}
