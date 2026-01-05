@@ -380,7 +380,7 @@ func (f *KnowFactStmt) ToLatexString() string {
 // 	return builder.String()
 // }
 
-func (s *HaveObjStWithParamSetsStmt) ToLatexString() string {
+func (s *HaveObjStStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString("\\begin{definition}[Object(s) Exists By Verified Existential Fact]\n")

@@ -16,6 +16,7 @@ package litex_ast
 
 import (
 	"fmt"
+	glob "golitex/glob"
 	"strconv"
 )
 
@@ -50,7 +51,7 @@ func (s *ExistStFactStruct) ToExistStFact() *SpecFactStmt {
 	params := []Obj{}
 
 	if !s.IsPropTrue {
-		params = append(params, Atom("-1"))
+		params = append(params, Atom(glob.ExistStFactContainsFalsePureSignature))
 	}
 
 	params = append(params, Atom(fmt.Sprintf("%d", len(s.ExistFreeParams))))
@@ -70,7 +71,7 @@ func (f *SpecFactStmt) ToExistStFactStruct() *ExistStFactStruct {
 	ft := f.FactType
 	propName := f.PropName
 
-	if f.Params[0].String() == "-1" {
+	if f.Params[0].String() == glob.ExistStFactContainsFalsePureSignature {
 		lenOfExistFreeParams, _ := strconv.Atoi(string(f.Params[1].(Atom))) // 第一param变成string然后变成int
 		existFreeParams := []string{}
 		existFreeParamSets := []Obj{}
@@ -106,12 +107,16 @@ func (f *SpecFactStmt) ToExistStFactStruct() *ExistStFactStruct {
 	}
 }
 
-func (s *ExistStFactStruct) GetTruePureFact() *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, s.PropName, s.Params, s.Line)
+func (s *ExistStFactStruct) GetPureFactInside() *SpecFactStmt {
+	if s.IsPropTrue {
+		return NewSpecFactStmt(TruePure, s.PropName, s.Params, s.Line)
+	} else {
+		return NewSpecFactStmt(FalsePure, s.PropName, s.Params, s.Line)
+	}
 }
 
 // 作用：know forall x set, cup_x_item cup(x) => exist x_item x st cup_x_item $in x_item 能用到 existParamSet 中出现的 x 去匹配 forall cup_c_item cup(c) => exist c_item c st $in(cup_c_item, c_item)
-func (s *ExistStFactStruct) GetTruePureFactWithParamSets() *SpecFactStmt {
+func (s *ExistStFactStruct) GetPureFactWithParamSets() *SpecFactStmt {
 	params := []Obj{}
 	for _, param := range s.Params {
 		params = append(params, param)
@@ -121,5 +126,9 @@ func (s *ExistStFactStruct) GetTruePureFactWithParamSets() *SpecFactStmt {
 		params = append(params, existParamSet)
 	}
 
-	return NewSpecFactStmt(TruePure, s.PropName, params, s.Line)
+	if s.IsPropTrue {
+		return NewSpecFactStmt(TruePure, s.PropName, params, s.Line)
+	} else {
+		return NewSpecFactStmt(FalsePure, s.PropName, params, s.Line)
+	}
 }

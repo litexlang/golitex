@@ -132,7 +132,7 @@ func (f *KnowFactStmt) InlineString() string {
 // 	return builder.String()
 // }
 
-func (s *HaveObjStWithParamSetsStmt) InlineString() string {
+func (s *HaveObjStStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")

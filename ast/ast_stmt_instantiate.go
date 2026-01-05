@@ -405,7 +405,7 @@ func (stmt *KnowImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error
 // 	return NewHaveObjStStmt(stmt.ObjNames, newFact.(*SpecFactStmt), stmt.Line), nil
 // }
 
-func (stmt *HaveObjStWithParamSetsStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+func (stmt *HaveObjStStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newFact, err := stmt.Fact.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
