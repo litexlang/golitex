@@ -93,6 +93,11 @@ func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) *glob.
 		return ret
 	}
 
+	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordIsInjectiveFnToFiniteSet) {
+		ret := ie.isInjectiveFnToFiniteSetFactPostProcess(fact)
+		return ret
+	}
+
 	return glob.NewEmptyShortUnknownRet()
 }
 
@@ -565,6 +570,19 @@ func (ie *InferEngine) isNonEmptyWithItemFactPostProcess(fact *ast.SpecFactStmt)
 	// fact.Params[0] 非空
 	isNonEmptyFact := ast.NewIsANonEmptySetFact(fact.Params[0], fact.Line)
 	retShort := ie.storeSpecFactInMemAndCollect(isNonEmptyFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
+	}
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+func (ie *InferEngine) isInjectiveFnToFiniteSetFactPostProcess(fact *ast.SpecFactStmt) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	// X is finite set
+	isFiniteSetFact := ast.NewIsAFiniteSetFact(fact.Params[0], fact.Line)
+	retShort := ie.storeSpecFactInMemAndCollect(isFiniteSetFact, &derivedFacts)
 	if retShort.IsErr() {
 		return retShort
 	}
