@@ -35,7 +35,7 @@ const (
 
 	// KeywordExistProp = "exist_prop"
 
-	KeywordImplication = "imply"
+	KeywordImply = "imply"
 	KeywordProveImply  = "prove_imply"
 
 	KeywordHave = "have"
@@ -129,7 +129,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordSet:         {},
 	KeywordForall:      {},
 	KeywordDom:         {},
-	KeywordImplication: {},
+	KeywordImply: {},
 	KeywordProveImply:  {},
 	KeywordHave:        {},
 	KeywordFn:          {},
@@ -378,7 +378,7 @@ var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struc
 	KeywordSet:         {},
 	KeywordForall:      {},
 	KeywordDom:         {},
-	KeywordImplication: {},
+	KeywordImply: {},
 	KeywordProveImply:  {},
 	KeywordHave:        {},
 	KeywordFn:          {},
