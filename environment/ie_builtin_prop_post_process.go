@@ -78,15 +78,15 @@ func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) *glob.
 		return ret
 	}
 
-	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordIsNonEmptyWithItem) {
-		ret := ie.isNonEmptyWithItemFactPostProcess(fact)
-		return ret
-	}
+	// if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordIsNonEmptyWithItem) {
+	// 	ret := ie.isNonEmptyWithItemFactPostProcess(fact)
+	// 	return ret
+	// }
 
-	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordNotEqualSet) {
-		ret := ie.notEqualSetFactPostProcess(fact)
-		return ret
-	}
+	// if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordNotEqualSet) {
+	// 	ret := ie.notEqualSetFactPostProcess(fact)
+	// 	return ret
+	// }
 
 	return glob.NewEmptyShortUnknownRet()
 }
@@ -554,28 +554,39 @@ func (ie *InferEngine) falseEqualFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) isNonEmptyWithItemFactPostProcess(fact *ast.SpecFactStmt) *glob.ShortRet {
-	derivedFacts := []string{}
+// func (ie *InferEngine) isNonEmptyWithItemFactPostProcess(fact *ast.SpecFactStmt) *glob.ShortRet {
+// 	derivedFacts := []string{}
 
-	// fact.Params[0] 非空
-	isNonEmptyFact := ast.NewIsANonEmptySetFact(fact.Params[0], fact.Line)
-	retShort := ie.storeSpecFactInMemAndCollect(isNonEmptyFact, &derivedFacts)
-	if retShort.IsErr() {
-		return retShort
-	}
+// 	// fact.Params[0] 非空
+// 	isNonEmptyFact := ast.NewIsANonEmptySetFact(fact.Params[0], fact.Line)
+// 	retShort := ie.storeSpecFactInMemAndCollect(isNonEmptyFact, &derivedFacts)
+// 	if retShort.IsErr() {
+// 		return retShort
+// 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
-}
+// 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+// }
 
-func (ie *InferEngine) notEqualSetFactPostProcess(fact *ast.SpecFactStmt) *glob.ShortRet {
-	derivedFacts := []string{}
+// func (ie *InferEngine) notEqualSetFactPostProcess(fact *ast.SpecFactStmt) *glob.ShortRet {
+// 	derivedFacts := []string{}
 
-	// x != y
-	notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
-	retShort := ie.storeSpecFactInMemAndCollect(notEqualFact, &derivedFacts)
-	if retShort.IsErr() {
-		return retShort
-	}
+// 	// x != y
+// 	notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
+// 	retShort := ie.storeSpecFactInMemAndCollect(notEqualFact, &derivedFacts)
+// 	if retShort.IsErr() {
+// 		return retShort
+// 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
-}
+// 	// exist z x st not z $in y or exist z y st not z $in x
+// 	randomName := ie.EnvMgr.GenerateUndeclaredRandomName()
+// 	existZInXStNotZInYFact := ast.NewExistStFactStruct(ast.TrueExist_St, ast.Atom(glob.KeywordIn), false, []string{(randomName)}, []ast.Obj{fact.Params[0]}, []ast.Obj{ast.Atom(randomName), fact.Params[1]}, fact.Line)
+// 	existZInYStNotZInXFact := ast.NewExistStFactStruct(ast.TrueExist_St, ast.Atom(glob.KeywordIn), false, []string{(randomName)}, []ast.Obj{fact.Params[1]}, []ast.Obj{ast.Atom(randomName), fact.Params[0]}, fact.Line)
+// 	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{existZInXStNotZInYFact.ToExistStFact(), existZInYStNotZInXFact.ToExistStFact()}, fact.Line)
+
+// 	stmtRet := ie.EnvMgr.newOrFact(orFact)
+// 	if stmtRet.IsNotTrue() {
+// 		return glob.NewShortRet(glob.StmtRetTypeError, []string{})
+// 	}
+
+// 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+// }
