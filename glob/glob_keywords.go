@@ -98,12 +98,10 @@ const (
 	KeywordBy        = "by"
 	KeywordEval      = "eval"
 
-	KeywordEqualSet           = "equal_set"
-	KeywordSubsetOf           = "subset_of"
-	KeywordSupersetOf         = "superset_of"
-	KeywordEqualTuple         = "equal_tuple"
-	KeywordIsNonEmptyWithItem = "is_nonempty_with_item"
-	KeywordNotEqualSet        = "not_equal_set"
+	KeywordEqualSet   = "equal_set"
+	KeywordSubsetOf   = "subset_of"
+	KeywordSupersetOf = "superset_of"
+	KeywordEqualTuple = "equal_tuple"
 
 	KeywordCup       = "cup"
 	KeywordCap       = "cap"
@@ -211,7 +209,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordRange: {},
 
-	KeywordIsNonEmptyWithItem: {},
+	// KeywordIsNonEmptyWithItem: {},
 
 	KeywordRun: {},
 
@@ -230,8 +228,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordZNeg: {},
 	KeywordQNeg: {},
 	KeywordQPos: {},
-
-	KeywordNotEqualSet: {},
 }
 
 const (
@@ -344,23 +340,21 @@ var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 }
 
 var BuiltinPropNames map[string]struct{} = map[string]struct{}{
-	KeywordIn:                 {},
-	KeywordIsASet:             {},
-	KeywordIsAFiniteSet:       {},
-	KeywordIsANonEmptySet:     {},
-	KeywordIsCart:             {},
-	KeywordIsTuple:            {},
-	KeywordEqualSet:           {},
-	KeywordSubsetOf:           {},
-	KeySymbolEqual:            {},
-	KeySymbolNotEqual:         {},
-	KeySymbolLargerEqual:      {},
-	KeySymbolLessEqual:        {},
-	KeySymbolGreater:          {},
-	KeySymbolLess:             {},
-	KeywordNotEqualSet:        {},
-	KeywordEqualTuple:         {},
-	KeywordIsNonEmptyWithItem: {},
+	KeywordIn:             {},
+	KeywordIsASet:         {},
+	KeywordIsAFiniteSet:   {},
+	KeywordIsANonEmptySet: {},
+	KeywordIsCart:         {},
+	KeywordIsTuple:        {},
+	KeywordEqualSet:       {},
+	KeywordSubsetOf:       {},
+	KeySymbolEqual:        {},
+	KeySymbolNotEqual:     {},
+	KeySymbolLargerEqual:  {},
+	KeySymbolLessEqual:    {},
+	KeySymbolGreater:      {},
+	KeySymbolLess:         {},
+	KeywordEqualTuple:     {},
 }
 
 func IsBuiltinPropName(name string) bool {
@@ -434,19 +428,18 @@ var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struc
 	KeywordIsASet:                 {},
 	KeywordIsAFiniteSet:           {},
 	KeywordIsANonEmptySet:         {},
-	KeywordIsNonEmptyWithItem:     {},
-	KeywordRun:                    {},
-	KeywordUnion:                  {},
-	KeywordIntersect:              {},
-	KeywordRPos:                   {},
-	KeywordRNeg:                   {},
-	KeywordZNeg:                   {},
-	KeywordQNeg:                   {},
-	KeywordQPos:                   {},
-	KeywordPowerSet:               {},
-	KeywordCup:                    {},
-	KeywordCap:                    {},
-	KeywordSetMinus:               {},
-	KeywordSetDiff:                {},
-	KeywordNotEqualSet:            {},
+	// KeywordIsNonEmptyWithItem:     {},
+	KeywordRun:       {},
+	KeywordUnion:     {},
+	KeywordIntersect: {},
+	KeywordRPos:      {},
+	KeywordRNeg:      {},
+	KeywordZNeg:      {},
+	KeywordQNeg:      {},
+	KeywordQPos:      {},
+	KeywordPowerSet:  {},
+	KeywordCup:       {},
+	KeywordCap:       {},
+	KeywordSetMinus:  {},
+	KeywordSetDiff:   {},
 }

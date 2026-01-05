@@ -959,4 +959,18 @@ know imply is_injective_fn_to_finite_set_implies(X set, Y finite_set, f fn(X)Y):
 	=>:
 		$is_a_finite_set(Y)
 		count(X) <= count(Y)
+
+know imply not_equal_set(x, y set):
+	x != y
+	=>:
+		exist z x st not z $in y or exist z y st not z $in x
+
+know imply is_nonempty_with_item(z set, x set):
+	z $in x
+	=>:
+		$is_a_nonempty_set(x)
+		
+prop check_is_empty_set(x set):
+	forall y set:
+		not y $in x
 `

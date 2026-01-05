@@ -21,9 +21,9 @@ import (
 )
 
 func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsNonEmptyWithItem) {
-		return ver.verIsNonEmptyWithItemByBuiltinRules(stmt, state)
-	}
+	// if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsNonEmptyWithItem) {
+	// 	return ver.verIsNonEmptyWithItemByBuiltinRules(stmt, state)
+	// }
 
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordEqualSet) {
 		return ver.verEqualSetByBuiltinRules(stmt, state)
