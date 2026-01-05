@@ -721,6 +721,7 @@ func (ie *InferEngine) trueInFactInCup(item ast.Obj, cupSet *ast.FnObj) *glob.Sh
 	existFact := ast.NewExistStFact(
 		ast.TrueExist_St,
 		ast.Atom(glob.KeywordIn),
+		true,
 		[]string{xItemParam},
 		[]ast.Obj{x},
 		[]ast.Obj{item, ast.Atom(xItemParam)},

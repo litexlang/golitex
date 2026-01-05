@@ -27,7 +27,7 @@ import (
 func Test_File(t *testing.T) {
 	fileName := "../examples/test_codes/tmp.lit"
 	workingDir, err := os.Getwd()
-	if err != nil {
+	if err != nil { //
 		t.Errorf("failed to get current working directory: %v\n", err)
 	}
 	absOfFile := filepath.Join(workingDir, fileName)

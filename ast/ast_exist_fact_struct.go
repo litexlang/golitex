@@ -21,6 +21,7 @@ import (
 
 type ExistStFactStruct struct {
 	FactType           SpecFactType
+	IsPropTrue         bool
 	PropName           Atom
 	ExistFreeParams    []string
 	ExistFreeParamSets []Obj
@@ -28,10 +29,11 @@ type ExistStFactStruct struct {
 	Line               uint
 }
 
-func NewExistStFactStruct(factType SpecFactType, propName Atom, existFreeParams []string, existFreeParamSets []Obj, params []Obj, line uint) *ExistStFactStruct {
+func NewExistStFactStruct(factType SpecFactType, propName Atom, isPropTrue bool, existFreeParams []string, existFreeParamSets []Obj, params []Obj, line uint) *ExistStFactStruct {
 	return &ExistStFactStruct{
 		FactType:           factType,
 		PropName:           propName,
+		IsPropTrue:         isPropTrue,
 		ExistFreeParams:    existFreeParams,
 		ExistFreeParamSets: existFreeParamSets,
 		Params:             params,
@@ -39,13 +41,18 @@ func NewExistStFactStruct(factType SpecFactType, propName Atom, existFreeParams 
 	}
 }
 
-func NewExistStFact(factType SpecFactType, propName Atom, existFreeParams []string, existFreeParamSets []Obj, params []Obj, line uint) *SpecFactStmt {
-	s := NewExistStFactStruct(factType, propName, existFreeParams, existFreeParamSets, params, line)
+func NewExistStFact(factType SpecFactType, propName Atom, isPropTrue bool, existFreeParams []string, existFreeParamSets []Obj, params []Obj, line uint) *SpecFactStmt {
+	s := NewExistStFactStruct(factType, propName, isPropTrue, existFreeParams, existFreeParamSets, params, line)
 	return s.ToExistStFact()
 }
 
 func (s *ExistStFactStruct) ToExistStFact() *SpecFactStmt {
 	params := []Obj{}
+
+	if !s.IsPropTrue {
+		params = append(params, Atom("-1"))
+	}
+
 	params = append(params, Atom(fmt.Sprintf("%d", len(s.ExistFreeParams))))
 	for i := range s.ExistFreeParamSets {
 		params = append(params, Atom(s.ExistFreeParams[i]))
@@ -62,21 +69,41 @@ func (s *ExistStFactStruct) ToExistStFact() *SpecFactStmt {
 func (f *SpecFactStmt) ToExistStFactStruct() *ExistStFactStruct {
 	ft := f.FactType
 	propName := f.PropName
-	lenOfExistFreeParams, _ := strconv.Atoi(string(f.Params[0].(Atom))) // 第一param变成string然后变成int
-	existFreeParams := []string{}
-	existFreeParamSets := []Obj{}
-	for i := 1; i <= lenOfExistFreeParams*2; i++ {
-		existFreeParams = append(existFreeParams, string(f.Params[i].(Atom)))
-		i++
-		existFreeParamSets = append(existFreeParamSets, f.Params[i])
-	}
 
-	params := []Obj{}
-	for i := lenOfExistFreeParams*2 + 1; i < len(f.Params); i++ {
-		params = append(params, f.Params[i])
-	}
+	if f.Params[0].String() == "-1" {
+		lenOfExistFreeParams, _ := strconv.Atoi(string(f.Params[1].(Atom))) // 第一param变成string然后变成int
+		existFreeParams := []string{}
+		existFreeParamSets := []Obj{}
+		for i := 2; i <= lenOfExistFreeParams*2+1; i++ {
+			existFreeParams = append(existFreeParams, string(f.Params[i].(Atom)))
+			i++
+			existFreeParamSets = append(existFreeParamSets, f.Params[i])
+		}
 
-	return NewExistStFactStruct(ft, propName, existFreeParams, existFreeParamSets, params, f.Line)
+		params := []Obj{}
+		for i := lenOfExistFreeParams*2 + 2; i < len(f.Params); i++ {
+			params = append(params, f.Params[i])
+		}
+
+		return NewExistStFactStruct(ft, propName, false, existFreeParams, existFreeParamSets, params, f.Line)
+
+	} else {
+		lenOfExistFreeParams, _ := strconv.Atoi(string(f.Params[0].(Atom))) // 第一param变成string然后变成int
+		existFreeParams := []string{}
+		existFreeParamSets := []Obj{}
+		for i := 1; i <= lenOfExistFreeParams*2; i++ {
+			existFreeParams = append(existFreeParams, string(f.Params[i].(Atom)))
+			i++
+			existFreeParamSets = append(existFreeParamSets, f.Params[i])
+		}
+
+		params := []Obj{}
+		for i := lenOfExistFreeParams*2 + 1; i < len(f.Params); i++ {
+			params = append(params, f.Params[i])
+		}
+
+		return NewExistStFactStruct(ft, propName, true, existFreeParams, existFreeParamSets, params, f.Line)
+	}
 }
 
 func (s *ExistStFactStruct) GetTruePureFact() *SpecFactStmt {

@@ -35,8 +35,8 @@ const (
 
 	// KeywordExistProp = "exist_prop"
 
-	KeywordImply = "imply"
-	KeywordProveImply  = "prove_imply"
+	KeywordImply      = "imply"
+	KeywordProveImply = "prove_imply"
 
 	KeywordHave = "have"
 	KeywordLet  = "let"
@@ -103,6 +103,7 @@ const (
 	KeywordSupersetOf         = "superset_of"
 	KeywordEqualTuple         = "equal_tuple"
 	KeywordIsNonEmptyWithItem = "is_nonempty_with_item"
+	KeywordNotEqualSet        = "not_equal_set"
 
 	KeywordCup       = "cup"
 	KeywordCap       = "cap"
@@ -126,15 +127,15 @@ const (
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
-	KeywordSet:         {},
-	KeywordForall:      {},
-	KeywordDom:         {},
-	KeywordImply: {},
-	KeywordProveImply:  {},
-	KeywordHave:        {},
-	KeywordFn:          {},
-	KeywordProp:        {},
-	KeywordKnow:        {},
+	KeywordSet:        {},
+	KeywordForall:     {},
+	KeywordDom:        {},
+	KeywordImply:      {},
+	KeywordProveImply: {},
+	KeywordHave:       {},
+	KeywordFn:         {},
+	KeywordProp:       {},
+	KeywordKnow:       {},
 	// KeywordExistProp:            {},
 	KeywordSt:                   {},
 	KeywordClaim:                {},
@@ -229,6 +230,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordZNeg: {},
 	KeywordQNeg: {},
 	KeywordQPos: {},
+
+	KeywordNotEqualSet: {},
 }
 
 const (
@@ -355,6 +358,7 @@ var BuiltinPropNames map[string]struct{} = map[string]struct{}{
 	KeySymbolLessEqual:        {},
 	KeySymbolGreater:          {},
 	KeySymbolLess:             {},
+	KeywordNotEqualSet:        {},
 	KeywordEqualTuple:         {},
 	KeywordIsNonEmptyWithItem: {},
 }
@@ -375,15 +379,15 @@ func IsBuiltinAtomName(name string) bool {
 }
 
 var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struct{}{
-	KeywordSet:         {},
-	KeywordForall:      {},
-	KeywordDom:         {},
-	KeywordImply: {},
-	KeywordProveImply:  {},
-	KeywordHave:        {},
-	KeywordFn:          {},
-	KeywordProp:        {},
-	KeywordKnow:        {},
+	KeywordSet:        {},
+	KeywordForall:     {},
+	KeywordDom:        {},
+	KeywordImply:      {},
+	KeywordProveImply: {},
+	KeywordHave:       {},
+	KeywordFn:         {},
+	KeywordProp:       {},
+	KeywordKnow:       {},
 	// KeywordExistProp:              {},
 	KeywordSt:                     {},
 	KeywordClaim:                  {},
@@ -444,4 +448,5 @@ var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struc
 	KeywordCap:                    {},
 	KeywordSetMinus:               {},
 	KeywordSetDiff:                {},
+	KeywordNotEqualSet:            {},
 }
