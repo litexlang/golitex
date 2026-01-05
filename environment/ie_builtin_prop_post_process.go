@@ -19,16 +19,6 @@ import (
 	glob "golitex/glob"
 )
 
-// storeSpecFactInMemAndCollect collects the fact string for derived facts tracking
-func (ie *InferEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) *glob.ShortRet {
-	ret := ie.EnvMgr.storeSpecFactInMem(fact)
-	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
-	}
-	*derivedFacts = append(*derivedFacts, fact.String())
-	return glob.NewEmptyShortTrueRet()
-}
-
 // BuiltinPropExceptTrueEqual handles postprocessing for builtin properties except equality
 func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) *glob.ShortRet {
 	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordIn) {
@@ -90,6 +80,11 @@ func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) *glob.
 
 	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordIsNonEmptyWithItem) {
 		ret := ie.isNonEmptyWithItemFactPostProcess(fact)
+		return ret
+	}
+
+	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordNotEqualSet) {
+		ret := ie.notEqualSetFactPostProcess(fact)
 		return ret
 	}
 
@@ -565,6 +560,19 @@ func (ie *InferEngine) isNonEmptyWithItemFactPostProcess(fact *ast.SpecFactStmt)
 	// fact.Params[0] 非空
 	isNonEmptyFact := ast.NewIsANonEmptySetFact(fact.Params[0], fact.Line)
 	retShort := ie.storeSpecFactInMemAndCollect(isNonEmptyFact, &derivedFacts)
+	if retShort.IsErr() {
+		return retShort
+	}
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+func (ie *InferEngine) notEqualSetFactPostProcess(fact *ast.SpecFactStmt) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	// x != y
+	notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
+	retShort := ie.storeSpecFactInMemAndCollect(notEqualFact, &derivedFacts)
 	if retShort.IsErr() {
 		return retShort
 	}

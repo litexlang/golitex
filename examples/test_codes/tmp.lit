@@ -1,9 +1,5 @@
-prop q(x R)
+prop p(x R, y R)
 
-claim:
-    imply p(x R):
-        $q(x)
-    prove:
-        know $q(x)
+know forall y R: exist z R st not $p(z, y)
 
-$p(1)
+exist z R st not $p(z, 1)

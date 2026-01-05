@@ -2640,15 +2640,20 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*SpecFactStmt, er
 		return nil, ErrInLine(err, tb)
 	}
 
-	pureSpecFact, err := p.specFactWithoutExist_WithoutNot(tb)
+	pureSpecFact, err := p.specFactStmt(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
+	// spec fact 必须是 pureFact
+	if !pureSpecFact.IsPureFact() {
+		return nil, fmt.Errorf("exist fact can not take exist fact, get %s", pureSpecFact)
+	}
+
 	if isTrue {
-		return NewExistStFact(TrueExist_St, pureSpecFact.PropName, existParams, existParamSets, pureSpecFact.Params, tb.line), nil
+		return NewExistStFact(TrueExist_St, pureSpecFact.PropName, pureSpecFact.IsTrue(), existParams, existParamSets, pureSpecFact.Params, tb.line), nil
 	} else {
-		return NewExistStFact(FalseExist_St, pureSpecFact.PropName, existParams, existParamSets, pureSpecFact.Params, tb.line), nil
+		return NewExistStFact(FalseExist_St, pureSpecFact.PropName, pureSpecFact.IsTrue(), existParams, existParamSets, pureSpecFact.Params, tb.line), nil
 	}
 }
 
