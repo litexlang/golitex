@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) isSuperFunction_VerReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+func (ver *Verifier) isBuiltinFunction_VerReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	switch fnObj.FnHead.String() {
 	case glob.KeywordUnion:
 		return ver.verUnionReq(fnObj, state)

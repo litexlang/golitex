@@ -61,7 +61,7 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 	}
 
 	// Try super function first (includes all special functions)
-	if ret := ver.isSuperFunction_VerReq(objAsFnObj, state); ret.IsTrue() || ret.IsErr() {
+	if ret := ver.isBuiltinFunction_VerReq(objAsFnObj, state); ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
 
