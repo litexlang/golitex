@@ -76,7 +76,7 @@ func NewProveCaseByCaseStmt(caseFacts []*SpecFactStmt, thenFacts []FactStmt, pro
 	return &ProveCaseByCaseStmt{caseFacts, thenFacts, proofs, line}
 }
 
-func NewKnowImplicationStmt(prop *DefPropStmt, line uint) *KnowImplicationStmt {
+func NewKnowImplyStmt(prop *DefPropStmt, line uint) *KnowImplicationStmt {
 	return &KnowImplicationStmt{prop, line}
 }
 

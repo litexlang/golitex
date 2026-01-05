@@ -378,7 +378,7 @@ func (stmt *KnowImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error
 	if err != nil {
 		return nil, err
 	}
-	return NewKnowImplicationStmt(newProp.(*DefPropStmt), stmt.Line), nil
+	return NewKnowImplyStmt(newProp.(*DefPropStmt), stmt.Line), nil
 }
 
 // func (stmt *ClaimExistPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

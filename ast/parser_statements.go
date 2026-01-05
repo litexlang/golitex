@@ -64,12 +64,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.proveStmt(tb)
 	case glob.KeywordKnow:
 		{
-			if tb.TokenAtHeaderIndexIs(1, glob.KeywordImplication) {
-				// if tb.TokenAtHeaderIndexIs(2, glob.KeywordExist) {
-				// 	ret, err = p.knowExistPropStmt(tb)
-				// } else {
-				ret, err = p.knowImplicationStmt(tb)
-				// }
+			if tb.TokenAtHeaderIndexIs(1, glob.KeywordImply) {
+				ret, err = p.knowImplyStmt(tb)
 			} else {
 				ret, err = p.knowFactStmt(tb)
 			}
@@ -1005,7 +1001,7 @@ func (p *TbParser) claimStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	if tb.body[0].header.is(glob.KeywordImplication) {
+	if tb.body[0].header.is(glob.KeywordImply) {
 		// if tb.body[0].header.strAtCurIndexPlus(1) == glob.KeywordExist {
 		// 	return p.claimExistPropStmt(tb)
 		// } else {
@@ -1136,24 +1132,24 @@ func (p *TbParser) proveStmt(tb *tokenBlock) (Stmt, error) {
 // 	return NewKnowExistPropStmt(existProp, tb.line), nil
 // }
 
-func (p *TbParser) knowImplicationStmt(tb *tokenBlock) (*KnowImplicationStmt, error) {
+func (p *TbParser) knowImplyStmt(tb *tokenBlock) (*KnowImplicationStmt, error) {
 	err := tb.header.skip(glob.KeywordKnow)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
-	if tb.header.is(glob.KeywordImplication) {
-		implicationStmt, err := p.DefImplicationStmtI(tb)
+	if tb.header.is(glob.KeywordImply) {
+		implicationStmt, err := p.DefImplyStmt(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
-		return NewKnowImplicationStmt(implicationStmt, tb.line), nil
+		return NewKnowImplyStmt(implicationStmt, tb.line), nil
 	} else {
 		prop, err := p.defPropStmt(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
-		return NewKnowImplicationStmt(prop, tb.line), nil
+		return NewKnowImplyStmt(prop, tb.line), nil
 	}
 }
 
@@ -2075,8 +2071,8 @@ func (p *TbParser) proveImplyStmt(tb *tokenBlock) (*ProveImplyStmt, error) {
 	return NewProveImplicationStmt(specFact, implicationFacts, proofs, tb.line), nil
 }
 
-func (p *TbParser) DefImplicationStmtI(tb *tokenBlock) (*DefPropStmt, error) {
-	body, err := p.implicationStmtWithoutSelfReferCheck(tb)
+func (p *TbParser) DefImplyStmt(tb *tokenBlock) (*DefPropStmt, error) {
+	body, err := p.implyStmtWithoutSelfReferCheck(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -2094,8 +2090,8 @@ func (p *TbParser) DefImplicationStmtI(tb *tokenBlock) (*DefPropStmt, error) {
 	return body, nil
 }
 
-func (p *TbParser) implicationStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt, error) {
-	err := tb.header.skip(glob.KeywordImplication)
+func (p *TbParser) implyStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt, error) {
+	err := tb.header.skip(glob.KeywordImply)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -3173,7 +3169,7 @@ func (p *TbParser) dom_and_section(tb *tokenBlock, kw string, kw_should_not_exis
 // }
 
 func (p *TbParser) claimImply(tb *tokenBlock) (Stmt, error) {
-	implicationStmt, err := p.DefImplicationStmtI(&tb.body[0])
+	implicationStmt, err := p.DefImplyStmt(&tb.body[0])
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}

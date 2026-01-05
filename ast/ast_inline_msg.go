@@ -150,7 +150,7 @@ func (s *KnowImplicationStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)
 	builder.WriteString(" ")
-	builder.WriteString(glob.KeywordImplication)
+	builder.WriteString(glob.KeywordImply)
 	builder.WriteString(s.ImplicationProp.InlineString())
 	return builder.String()
 }
