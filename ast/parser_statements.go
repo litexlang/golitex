@@ -106,8 +106,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.importDirStmt(tb)
 	case glob.KeywordProveImply:
 		ret, err = p.proveImplyStmt(tb)
-	case glob.KeywordImplication:
-		ret, err = p.DefImplicationStmtI(tb)
+	// case glob.KeywordImplication:
+	// 	ret, err = p.DefImplicationStmtI(tb)
 	case glob.KeywordRun:
 		ret, err = p.runFileStmt(tb)
 	case glob.KeywordProveExist:
@@ -1147,7 +1147,7 @@ func (p *TbParser) knowImplicationStmt(tb *tokenBlock) (*KnowImplicationStmt, er
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
-		return NewKnowImplicationStmt(implicationStmt.ToProp(), tb.line), nil
+		return NewKnowImplicationStmt(implicationStmt, tb.line), nil
 	} else {
 		prop, err := p.defPropStmt(tb)
 		if err != nil {
@@ -2075,13 +2075,13 @@ func (p *TbParser) proveImplyStmt(tb *tokenBlock) (*ProveImplyStmt, error) {
 	return NewProveImplicationStmt(specFact, implicationFacts, proofs, tb.line), nil
 }
 
-func (p *TbParser) DefImplicationStmtI(tb *tokenBlock) (*DefImplicationStmt, error) {
+func (p *TbParser) DefImplicationStmtI(tb *tokenBlock) (*DefPropStmt, error) {
 	body, err := p.implicationStmtWithoutSelfReferCheck(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
-	err = NoSelfReferenceInPropDef(string(body.DefHeader.Name), append(body.DomFacts, body.ImplicationFacts...))
+	err = NoSelfReferenceInPropDef(string(body.DefHeader.Name), append(append(body.DomFactsOrNil, body.IffFactsOrNil...), body.ImplicationFactsOrNil...))
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -2094,7 +2094,7 @@ func (p *TbParser) DefImplicationStmtI(tb *tokenBlock) (*DefImplicationStmt, err
 	return body, nil
 }
 
-func (p *TbParser) implicationStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefImplicationStmt, error) {
+func (p *TbParser) implicationStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt, error) {
 	err := tb.header.skip(glob.KeywordImplication)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -2122,7 +2122,7 @@ func (p *TbParser) implicationStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefImp
 
 	if !tb.header.is(glob.KeySymbolColon) {
 		if tb.header.ExceedEnd() {
-			return NewImplicationStmt(declHeader, nil, nil, tb.line), nil
+			return NewDefPropStmt(declHeader, nil, nil, nil, tb.line), nil
 		} else {
 			return nil, fmt.Errorf("expect ':' or end of block")
 		}
@@ -2134,18 +2134,46 @@ func (p *TbParser) implicationStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefImp
 	}
 
 	if tb.header.ExceedEnd() {
-		// Parse dom and implication sections (no iff)
-		// Third parameter is empty string because => can appear at the end (when there's no dom section)
-		domFacts, implicationFacts, err := p.dom_and_section(tb, glob.KeySymbolRightArrow, "")
-		if err != nil {
-			return nil, ErrInLine(err, tb)
+		// Check if the last body block has =>: separator
+		iffFacts := []FactStmt{}
+		implicationFacts := []FactStmt{}
+
+		if len(tb.body) > 0 && tb.body[len(tb.body)-1].header.is(glob.KeySymbolRightArrow) {
+			// Case 1: body 的最后一位是 =>:，那么前面的每一行是 prop 的 iff，然后 => 后面的是 then
+			// Parse iff facts (all lines before =>:)
+			for i := 0; i < len(tb.body)-1; i++ {
+				curStmt, err := p.factStmt(&tb.body[i], UniFactDepth1)
+				if err != nil {
+					return nil, ErrInLine(err, tb)
+				}
+				iffFacts = append(iffFacts, curStmt)
+			}
+
+			// Parse then facts (after =>:)
+			thenFacts, err := p.parseFactBodyWithHeaderNameAndUniFactDepth(&tb.body[len(tb.body)-1], glob.KeySymbolRightArrow, UniFactDepth1)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			implicationFacts = thenFacts
+		} else {
+			// Case 2: 没有 =>:，那么 iff 是没有，全是 then
+			// All lines are implication facts
+			for _, stmt := range tb.body {
+				curStmt, err := p.factStmt(&stmt, UniFactDepth1)
+				if err != nil {
+					return nil, ErrInLine(err, tb)
+				}
+				implicationFacts = append(implicationFacts, curStmt)
+			}
+
+			iffFacts = []FactStmt{NewEqualFact(Atom("1"), Atom("1"))}
 		}
 
-		// Check that dom and implication facts don't reference the same prop name
-		for _, fact := range domFacts {
+		// Check that facts don't reference the same prop name
+		for _, fact := range iffFacts {
 			if factAsSpecFact, ok := fact.(*SpecFactStmt); ok {
 				if string(factAsSpecFact.PropName) == string(declHeader.Name) {
-					return nil, fmt.Errorf("dom fact cannot be the same as the implication being defined")
+					return nil, fmt.Errorf("iff fact cannot be the same as the implication being defined")
 				}
 			}
 		}
@@ -2158,15 +2186,28 @@ func (p *TbParser) implicationStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefImp
 			}
 		}
 
-		return NewImplicationStmt(declHeader, domFacts, implicationFacts, tb.line), nil
+		return NewDefPropStmt(declHeader, nil, iffFacts, implicationFacts, tb.line), nil
 	} else {
-		// Inline format: parse dom and implication facts
-		domFacts, implicationFacts, err := p.bodyOfInlineDomAndThen(tb, glob.KeySymbolRightArrow, []string{})
+		// Inline format: check if there's => separator
+		// bodyOfInlineDomAndThen returns (facts before =>, facts after =>)
+		// For implication: if => exists, first part is iff, second part is then
+		// If => doesn't exist, all facts are then (iff is empty)
+		iffFacts, implicationFacts, err := p.bodyOfInlineDomAndThen(tb, glob.KeySymbolRightArrow, []string{})
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
 
-		return NewImplicationStmt(declHeader, domFacts, implicationFacts, tb.line), nil
+		// bodyOfInlineDomAndThen behavior:
+		// - If => found: returns (facts before =>, facts after =>)
+		// - If => not found: returns (all facts, empty)
+		// For implication: if => not found, all facts should be implication facts
+		if len(implicationFacts) == 0 && len(iffFacts) > 0 {
+			// => not found, all facts are implication facts
+			implicationFacts = iffFacts
+			iffFacts = nil
+		}
+
+		return NewDefPropStmt(declHeader, nil, iffFacts, implicationFacts, tb.line), nil
 	}
 }
 

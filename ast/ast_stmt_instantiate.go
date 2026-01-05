@@ -350,7 +350,7 @@ func (stmt *ClaimImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 	if err != nil {
 		return nil, err
 	}
-	return NewClaimPropStmt(newImplication.(*DefImplicationStmt), newProofs, stmt.Line), nil
+	return NewClaimPropStmt(newImplication.(*DefPropStmt), newProofs, stmt.Line), nil
 }
 
 func (stmt CanBeKnownStmtSlice) Instantiate(uniMap map[string]Obj) (CanBeKnownStmtSlice, error) {
@@ -705,32 +705,32 @@ func (stmt *ProveImplyStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewProveImplicationStmt(stmt.SpecFact, newImplicationFacts, newProofs, stmt.Line), nil
 }
 
-func (stmt *DefImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newDefHeader, err := stmt.DefHeader.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
+// func (stmt *DefImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+// 	newDefHeader, err := stmt.DefHeader.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	newDomFacts := []FactStmt{}
-	for _, fact := range stmt.DomFacts {
-		newFact, err := fact.InstantiateFact(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newDomFacts = append(newDomFacts, newFact)
-	}
+// 	newDomFacts := []FactStmt{}
+// 	for _, fact := range stmt.DomFacts {
+// 		newFact, err := fact.InstantiateFact(uniMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newDomFacts = append(newDomFacts, newFact)
+// 	}
 
-	newImplicationFacts := []FactStmt{}
-	for _, fact := range stmt.ImplicationFacts {
-		newFact, err := fact.InstantiateFact(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newImplicationFacts = append(newImplicationFacts, newFact)
-	}
+// 	newImplicationFacts := []FactStmt{}
+// 	for _, fact := range stmt.ImplicationFacts {
+// 		newFact, err := fact.InstantiateFact(uniMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newImplicationFacts = append(newImplicationFacts, newFact)
+// 	}
 
-	return NewImplicationStmt(newDefHeader, newDomFacts, newImplicationFacts, stmt.Line), nil
-}
+// 	return NewImplicationStmt(newDefHeader, newDomFacts, newImplicationFacts, stmt.Line), nil
+// }
 
 func (stmt *ClaimIffStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newUniFactWithIffStmt, err := stmt.UniFactWithIffStmt.InstantiateFact(uniMap)
