@@ -120,10 +120,9 @@ const (
 	KeywordQNeg = "Q_neg"
 	KeywordQPos = "Q_pos"
 
-	KeywordIsInjectiveFn            = "is_injective_fn"
-	KeywordIsSurjectiveFn           = "is_surjective_fn"
-	KeywordIsBijectiveFn            = "is_bijective_fn"
-	KeywordIsInjectiveFnToFiniteSet = "is_injective_fn_to_finite_set"
+	KeywordIsInjectiveFn  = "is_injective_fn"
+	KeywordIsSurjectiveFn = "is_surjective_fn"
+	KeywordIsBijectiveFn  = "is_bijective_fn"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -360,15 +359,8 @@ var BuiltinPropNames map[string]struct{} = map[string]struct{}{
 	KeywordIsNonEmptyWithItem: {},
 }
 
-var BuiltinExistPropNames map[string]struct{} = map[string]struct{}{}
-
 func IsBuiltinPropName(name string) bool {
 	_, ok := BuiltinPropNames[name]
-	return ok
-}
-
-func IsBuiltinExistPropName(name string) bool {
-	_, ok := BuiltinExistPropNames[name]
 	return ok
 }
 
