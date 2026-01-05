@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verSuperFunctionReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+func (ver *Verifier) isSuperFunction_VerReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	switch fnObj.FnHead.String() {
 	case glob.KeywordUnion:
 		return ver.verUnionReq(fnObj, state)
@@ -40,9 +40,23 @@ func (ver *Verifier) verSuperFunctionReq(fnObj *ast.FnObj, state *VerState) *glo
 		return ver.verProjReq(fnObj, state)
 	case glob.KeywordDim:
 		return ver.verDimReq(fnObj, state)
+	case glob.KeywordCount:
+		return ver.countFnRequirement(fnObj, state)
+	case glob.KeywordCart:
+		return ver.cartFnRequirement(fnObj, state)
+	case glob.KeywordSetDim:
+		return ver.setDimFnRequirement(fnObj, state)
+	case glob.KeywordListSet:
+		return ver.listSetFnRequirement(fnObj, state)
+	case glob.KeywordSetBuilder:
+		return ver.SetBuilderFnRequirement(fnObj, state)
+	case glob.KeywordTuple:
+		return ver.tupleFnReq(fnObj, state)
+	case glob.KeywordObjAtIndexOpt:
+		return ver.indexOptFnRequirement(fnObj, state)
 
 	default:
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("unknown super function: %s", fnObj.FnHead)})
+		return glob.NewEmptyVerRetUnknown()
 	}
 }
 
@@ -118,20 +132,51 @@ func (ver *Verifier) verSetDiffReq(fnObj *ast.FnObj, state *VerState) *glob.VerR
 
 func (ver *Verifier) verProjReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 2 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("proj expects 2 parameters, got %d", len(fnObj.Params))})
+		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("parameters in %s must be 2, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj)})
 	}
 
-	_ = state
+	// x is cart
+	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine0)
+	verRet := ver.VerFactStmt(isCartFact, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsUnknown() {
+		return glob.NewVerMsg2(glob.StmtRetTypeError, isCartFact.String(), isCartFact.GetLine(), []string{fmt.Sprintf("%s is unknown", isCartFact)})
+	}
+
+	// index >= 1
+	verRet = ver.VerFactStmt(ast.NewInFactWithObj(fnObj.Params[1], ast.Atom(glob.KeywordNPos)), state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsUnknown() {
+		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("index in %s must be N_pos, %s in %s is not valid", fnObj, fnObj.Params[1], fnObj)})
+	}
+
+	// index <= set_dim(x)
+	verRet = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fnObj.Params[1], ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fnObj.Params[0]})}, glob.BuiltinLine0), state)
+	if verRet.IsErr() {
+		return verRet
+	} else if verRet.IsUnknown() {
+		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("index in %s must be <= set_dim(%s), %s in %s is not valid", fnObj, fnObj.Params[0], fnObj.Params[1], fnObj)})
+	}
 
 	return glob.NewEmptyVerRetTrue()
 }
 
 func (ver *Verifier) verDimReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 1 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("dim expects 1 parameter, got %d", len(fnObj.Params))})
+		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj)})
 	}
-
-	_ = state
-
+	// 检查是否是 tuple
+	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine0)
+	verRet := ver.VerFactStmt(isTupleFact, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsUnknown() {
+		return glob.NewVerMsg2(glob.StmtRetTypeError, isTupleFact.String(), isTupleFact.GetLine(), []string{fmt.Sprintf("%s is unknown", isTupleFact)})
+	}
 	return glob.NewEmptyVerRetTrue()
 }

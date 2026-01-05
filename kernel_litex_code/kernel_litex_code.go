@@ -922,4 +922,9 @@ know imply item_in_set_minus_implies(x, y set, item set_minus(x, y)):
 know:
 	forall x, y set:
 		set_diff(x, y) = set_minus(x, y) \union set_minus(y, x)
+
+## End of set theory
+
+know:
+	forall x, y set: $is_a_nonempty_set(x) or $is_a_nonempty_set(y) => $is_a_nonempty_set(union(x, y))
 `
