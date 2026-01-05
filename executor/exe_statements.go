@@ -116,8 +116,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = exec.proveForStmt(stmt)
 	case *ast.ProveImplyStmt:
 		execRet = exec.proveImplyStmt(stmt)
-	case *ast.HaveObjStWithParamSetsStmt:
-		execRet = exec.haveObjStWithParamSets(stmt)
+	case *ast.HaveObjStStmt:
+		execRet = exec.haveObjStStmt(stmt)
 	case *ast.ProveExistStmt:
 		execRet = exec.proveExistStmt(stmt)
 	default:

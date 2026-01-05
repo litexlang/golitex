@@ -409,7 +409,7 @@ type ProveImplyStmt struct {
 }
 
 // have objectName setName, objectName2 setName2 st $propName(...)
-type HaveObjStWithParamSetsStmt struct {
+type HaveObjStStmt struct {
 	ObjNames StrSlice
 	ObjSets  ObjSlice
 	Fact     *SpecFactStmt

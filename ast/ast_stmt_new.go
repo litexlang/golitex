@@ -56,8 +56,8 @@ func NewDefHeader(name string, params []string, setParams []Obj) *DefHeader {
 // 	return &HaveObjStStmt{objNames, fact, line}
 // }
 
-func NewHaveObjStWithParamSetsStmt(objNames []string, objSets []Obj, fact *SpecFactStmt, line uint) *HaveObjStWithParamSetsStmt {
-	return &HaveObjStWithParamSetsStmt{objNames, objSets, fact, line}
+func NewHaveObjStWithParamSetsStmt(objNames []string, objSets []Obj, fact *SpecFactStmt, line uint) *HaveObjStStmt {
+	return &HaveObjStStmt{objNames, objSets, fact, line}
 }
 
 // func NewExistPropDef(declHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {

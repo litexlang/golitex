@@ -734,7 +734,7 @@ func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCa
 	return exec.NewTrueStmtRet(stmt), nil
 }
 
-func (exec *Executor) haveObjStWithParamSets(stmt *ast.HaveObjStWithParamSetsStmt) *glob.StmtRet {
+func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) *glob.StmtRet {
 	existStFact := stmt.ToTruePurePropExistStFact()
 	ret := exec.factStmt(existStFact)
 	if ret.IsUnknown() || ret.IsErr() {
