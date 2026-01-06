@@ -1,13 +1,53 @@
-have fn f(x N_pos) N_pos = x + 1
+forall x Z:
+    (7 * x + 1) % 7 = ((7 * x) % 7 + 1 % 7) % 7 = (0 + 1) % 7 = 1
 
-algo f(x):
-    return x + 1
+forall x Z:
+    (7 * (-x) + 2) % 7 = ((7 * (-x)) % 7 + 2 % 7) % 7 = (0 + 2) % 7 = 2
 
-eval f(1)
-eval f(f(1))
+forall x Z: x < 0 => -x > 0, 7 * (-x) > 0, 7 * (-x) + 2 > 0, 7 * (-x) + 2 $in N
 
-val(f(1)) $in R
+forall x Z: x >= 0 => 7 * x >= 0, 7 * x + 1 >= 0, 7 * x $in N, 7 * x + 1 $in N
 
-val(f(1)) + 100 = 102
+have fn g(x Z) N =:
+    case x < 0: 7 * (-x) + 2
+    case x >= 0: 7 * x + 1
 
-f(1) = val(f(1))
+prove forall x, y Z: x != y => g(x) != g(y):
+    prove_case_by_case:
+        =>:
+            g(x) != g(y)
+        case x < 0:
+            prove_case_by_case:
+                =>:
+                    g(x) != g(y)
+                case y < 0:
+                    prove_by_contradiction g(x) != g(y):
+                        g(x) = g(y) = 7 * (-x) + 2 = 7 * (-y) + 2
+                        x = (7 * (-x) + 2 - 2) / -7  = y = (7 * (-y) + 2 - 2) / -7
+                        x = y
+                case y >= 0:
+                    prove_by_contradiction g(x) != g(y):
+                        g(x) % 7= (7 * (-x) + 2) % 7 = 2
+                        g(y) % 7= (7 * y + 1) % 7 = 1
+                        2 != 1
+                        g(x) % 7 != g(y) % 7
+
+        case x >= 0:
+            prove_case_by_case:
+                =>:
+                    g(x) != g(y)
+                case y >= 0:
+                    g(x) = 7 * x + 1
+                    g(y) = 7 * y + 1
+                    x != y
+                    7 * x != 7 * y
+                    7 * x + 1 != 7 * y + 1
+                    g(x) != g(y)
+                case y < 0:
+                    prove_by_contradiction g(x) != g(y):
+                        g(x) = g(y)
+                        g(x) % 7 = (7 * x + 1) % 7 = 1
+                        g(y) % 7 = (7 * (-y) + 2) % 7 = 2
+                        1 != 2
+                        g(x) % 7 != g(y) % 7
+                        g(x) != g(y)

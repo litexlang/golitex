@@ -1027,4 +1027,6 @@ know:
 		=>:
 			exist i s st $is_max_in(i, s)
 			exist i s st $is_min_in(i, s)
+
+know forall x Z: x >= 0 => x $in N
 `
