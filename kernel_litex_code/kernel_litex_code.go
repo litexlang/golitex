@@ -1006,6 +1006,21 @@ know exist x set st $axiom_of_infinity(x)
 
 # 8. Axiom of power set: for any set, there exists a set of all subsets of the set. We use keyword power_set for this.
 
+# 9. Axiom of choice: for any set of non-empty sets, there exists a choice function that chooses an element from each set. We use keyword choice for this.
+
+### choice
+
+# choice(S) returns a function that chooses an element from each set in S
+# For any set S (which is a set of sets), if each element of S is a non-empty set,
+# then choice(S) is a function such that for any s in S, choice(S)(s) is in s.
+know:
+	forall S set, s S:
+		$is_nonempty_set(s)
+		=>:
+			choice(S)(s) $in s
+
+# End of ZFC
+
 # 常见的和自然数相关的结论
 prop is_max_in(i set, s set):
 	s $subset_of R
