@@ -965,12 +965,17 @@ know imply not_equal_set(x, y set):
 	=>:
 		exist z x st not z $in y or exist z y st not z $in x
 
-know imply is_nonempty_with_item(z set, x set):
+know imply is_nonempty_with_item(x, z set):
 	z $in x
 	=>:
 		$is_a_nonempty_set(x)
 		
-prop check_is_empty_set(x set):
-	forall y set:
-		not y $in x
+# 和序数，有限有关的事实
+know:
+	forall x finite_set: count(x) > 0 <=> not $is_a_nonempty_set(x)
+	forall left, right Z, x set: left <= right, x = range(left, right) => count(x) = right - left
+	forall left, right Z, x set: left <= right, x = closed_range(left, right) => count(x) = right - left + 1
+	forall left, right Z => $is_a_finite_set(range(left, right)), $is_a_finite_set(closed_range(left, right))
+	forall x finite_set: count(x) $in N,  0 <= count(x)
+	forall x, y finite_set: count(x) <= count(y) <=> x $subset_of y
 `

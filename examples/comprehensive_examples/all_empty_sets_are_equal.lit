@@ -12,10 +12,10 @@ claim:
                     $is_a_nonempty_set(x) or $is_a_nonempty_set(y)
                 case exist z x st not z $in y:
                     have z x st not z $in y
-                    z $is_nonempty_with_item x
+                    x $is_nonempty_with_item z
                 case exist z y st not z $in x:
                     have z y st not z $in x
-                    z $is_nonempty_with_item y
+                    y $is_nonempty_with_item z
                     
             $is_a_nonempty_set(x) or $is_a_nonempty_set(y)
 
