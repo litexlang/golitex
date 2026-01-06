@@ -86,6 +86,17 @@ func (envMgr *EnvMgr) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) *glob.Stmt
 
 func (envMgr *EnvMgr) newOrFact(fact *ast.OrStmt) *glob.StmtRet {
 	ret := envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	// Post-processing: a != 0 or b != 0 => a^2 + b^2 > 0
+	ie := NewInferenceEngine(envMgr)
+	orPostProcessRet := ie.orFactPostProcess(fact)
+	if orPostProcessRet.IsTrue() {
+		return ret.AddShortRetAsInfers(orPostProcessRet)
+	}
+
 	return ret
 }
 
