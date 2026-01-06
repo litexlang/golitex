@@ -43,6 +43,14 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerSt
 		return verRet
 	}
 
+	verRet = ver.verInFactByLeftParamIsReturnValueOfSuperFn(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
 	verRet = ver.verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt, state)
 	if verRet.IsErr() {
 		return verRet
@@ -940,4 +948,20 @@ func (ver *Verifier) verInFactByRightIsListSet(stmt *ast.SpecFactStmt, state *Ve
 
 	// 没有找到相等的元素，返回 unknown
 	return glob.NewEmptyVerRetUnknown()
+}
+
+func (ver *Verifier) verInFactByLeftParamIsReturnValueOfSuperFn(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+	setWhereObjIsIn, ok := stmt.Params[0].(*ast.FnObj)
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	switch setWhereObjIsIn.FnHead.String() {
+	case glob.KeywordDim:
+		return ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordSubsetOf), []ast.Obj{ast.Atom(glob.KeywordNPos), stmt.Params[1]}, glob.BuiltinLine0), state)
+	case glob.KeywordCount:
+		return ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordSubsetOf), []ast.Obj{ast.Atom(glob.KeywordNatural), stmt.Params[1]}, glob.BuiltinLine0), state)
+	default:
+		return glob.NewEmptyVerRetUnknown()
+	}
 }
