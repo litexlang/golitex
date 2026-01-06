@@ -120,7 +120,7 @@ func (ie *InferEngine) orFactPostProcess(orFact *ast.OrStmt) *glob.ShortRet {
 				sumGreaterThanZero := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{sumOfSquares, ast.Atom("0")}, orFact.Line)
 
 				// Store the fact
-				ret := ie.EnvMgr.NewFactWithCheckingNameDefined(sumGreaterThanZero)
+				ret := ie.EnvMgr.newSpecFactNoInfer(sumGreaterThanZero)
 				if ret.IsErr() {
 					return glob.ErrStmtMsgToShortRet(ret)
 				}
@@ -196,7 +196,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRig
 
 		// Create or fact: a != 0 or b != 0
 		orFact := ast.NewOrStmt([]*ast.SpecFactStmt{aNotEqualZero, bNotEqualZero}, fact.Line)
-		ret := ie.EnvMgr.NewFactWithCheckingNameDefined(orFact)
+		ret := ie.EnvMgr.newFactNoInfer(orFact)
 		if ret.IsErr() {
 			return glob.ErrStmtMsgToShortRet(ret)
 		}
