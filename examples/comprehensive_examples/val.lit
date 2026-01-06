@@ -1,0 +1,13 @@
+have fn f(x N_pos) N_pos = x + 1
+
+algo f(x):
+    return x + 1
+
+eval f(1)
+eval f(f(1))
+
+val(f(1)) $in R
+
+val(f(1)) + 100 = 102
+
+f(1) = val(f(1))
