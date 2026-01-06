@@ -91,8 +91,118 @@ func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) *glob.
 	return glob.NewEmptyShortUnknownRet()
 }
 
+// orFactPostProcess handles post-processing for OrStmt facts
+func (ie *InferEngine) orFactPostProcess(orFact *ast.OrStmt) *glob.ShortRet {
+	// Special case: a != 0 or b != 0 => a^2 + b^2 > 0
+	if len(orFact.Facts) == 2 {
+		// Check if both facts are "not equal to 0" facts
+		fact1 := orFact.Facts[0]
+		fact2 := orFact.Facts[1]
+
+		// Check if fact1 is "a != 0" (FalsePure with Equal prop)
+		if fact1.FactType == ast.FalsePure && ast.IsAtomObjAndEqualToStr(fact1.PropName, glob.KeySymbolEqual) &&
+			len(fact1.Params) == 2 && fact1.Params[1].String() == "0" {
+			// Check if fact2 is "b != 0"
+			if fact2.FactType == ast.FalsePure && ast.IsAtomObjAndEqualToStr(fact2.PropName, glob.KeySymbolEqual) &&
+				len(fact2.Params) == 2 && fact2.Params[1].String() == "0" {
+				// Extract a and b
+				a := fact1.Params[0]
+				b := fact2.Params[0]
+
+				// Create a^2 and b^2
+				aSquared := ast.NewFnObj(ast.Atom(glob.KeySymbolPower), []ast.Obj{a, ast.Atom("2")})
+				bSquared := ast.NewFnObj(ast.Atom(glob.KeySymbolPower), []ast.Obj{b, ast.Atom("2")})
+
+				// Create a^2 + b^2
+				sumOfSquares := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{aSquared, bSquared})
+
+				// Create a^2 + b^2 > 0
+				sumGreaterThanZero := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{sumOfSquares, ast.Atom("0")}, orFact.Line)
+
+				// Store the fact
+				ret := ie.EnvMgr.NewFactWithCheckingNameDefined(sumGreaterThanZero)
+				if ret.IsErr() {
+					return glob.ErrStmtMsgToShortRet(ret)
+				}
+
+				derivedFacts := []string{sumGreaterThanZero.String()}
+				derivedFacts = append(derivedFacts, ret.Infer...)
+				return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+			}
+		}
+	}
+
+	return glob.NewEmptyShortUnknownRet()
+}
+
+// isSumOfTwoSquares checks if expr is of the form a^2 + b^2 and returns a, b if so
+func isSumOfTwoSquares(expr ast.Obj) (ast.Obj, ast.Obj, bool) {
+	fnObj, ok := expr.(*ast.FnObj)
+	if !ok {
+		return nil, nil, false
+	}
+
+	// Check if it's an addition
+	if !ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeySymbolPlus) {
+		return nil, nil, false
+	}
+
+	if len(fnObj.Params) != 2 {
+		return nil, nil, false
+	}
+
+	// Check if both params are power operations with exponent 2
+	leftPower, ok1 := fnObj.Params[0].(*ast.FnObj)
+	rightPower, ok2 := fnObj.Params[1].(*ast.FnObj)
+
+	if !ok1 || !ok2 {
+		return nil, nil, false
+	}
+
+	// Check if both are power operations
+	if !ast.IsAtomObjAndEqualToStr(leftPower.FnHead, glob.KeySymbolPower) ||
+		!ast.IsAtomObjAndEqualToStr(rightPower.FnHead, glob.KeySymbolPower) {
+		return nil, nil, false
+	}
+
+	// Check if both exponents are 2
+	if len(leftPower.Params) != 2 || len(rightPower.Params) != 2 {
+		return nil, nil, false
+	}
+
+	leftExp, ok1 := leftPower.Params[1].(ast.Atom)
+	rightExp, ok2 := rightPower.Params[1].(ast.Atom)
+
+	if !ok1 || !ok2 {
+		return nil, nil, false
+	}
+
+	if string(leftExp) != "2" || string(rightExp) != "2" {
+		return nil, nil, false
+	}
+
+	// Return the bases
+	return leftPower.Params[0], rightPower.Params[0], true
+}
+
 func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact *ast.SpecFactStmt) *glob.ShortRet {
 	derivedFacts := []string{}
+
+	// Special case: a^2 + b^2 > 0 => a != 0 or b != 0
+	if a, b, ok := isSumOfTwoSquares(fact.Params[0]); ok {
+		// Create a != 0 and b != 0 facts
+		aNotEqualZero := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{a, ast.Atom("0")}, fact.Line)
+		bNotEqualZero := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{b, ast.Atom("0")}, fact.Line)
+
+		// Create or fact: a != 0 or b != 0
+		orFact := ast.NewOrStmt([]*ast.SpecFactStmt{aNotEqualZero, bNotEqualZero}, fact.Line)
+		ret := ie.EnvMgr.NewFactWithCheckingNameDefined(orFact)
+		if ret.IsErr() {
+			return glob.ErrStmtMsgToShortRet(ret)
+		}
+		derivedFacts = append(derivedFacts, orFact.String())
+		derivedFacts = append(derivedFacts, ret.Infer...)
+	}
 
 	// x != 0 store spec Mem
 	notEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolNotEqual), []ast.Obj{fact.Params[0], ast.Atom("0")}, fact.Line)
