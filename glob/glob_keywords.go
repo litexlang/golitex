@@ -112,6 +112,7 @@ const (
 	KeywordPowerSet  = "power_set"
 	KeywordSetMinus  = "set_minus"
 	KeywordSetDiff   = "set_diff"
+	KeywordChoice    = "choice"
 
 	KeywordProveExist = "prove_exist"
 
