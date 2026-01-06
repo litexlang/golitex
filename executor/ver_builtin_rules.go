@@ -29,6 +29,10 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 		return ver.verEqualSetByBuiltinRules(stmt, state)
 	}
 
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordNotEqualSet) {
+		return ver.verNotEqualSetByBuiltinRules(stmt, state)
+	}
+
 	if stmt.NameIs(glob.KeywordIn) {
 		if stmt.FactType == ast.FalsePure {
 			return ver.falseInFactBuiltinRules(stmt, state)
@@ -283,6 +287,28 @@ func (ver *Verifier) verEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 
 	// Both forall statements are true, so equal_set(a, b) is true
 	msg := fmt.Sprintf("equal_set(%s, %s) is true because forall t %s : t $in %s and forall t %s : t $in %s", a, b, a, b, b, a)
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyVerRetTrue())
+}
+
+// verNotEqualSetByBuiltinRules verifies not_equal_set(a, b) by checking:
+// - a != b
+func (ver *Verifier) verNotEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+	if len(stmt.Params) != 2 {
+		return glob.NewVerMsg2(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{fmt.Sprintf("not_equal_set expects 2 parameters, got %d", len(stmt.Params))})
+	}
+
+	a := stmt.Params[0]
+	b := stmt.Params[1]
+
+	// Create a != b fact
+	notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{a, b}, stmt.Line)
+	verRet := ver.VerFactStmt(notEqualFact, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	// a != b is true, so not_equal_set(a, b) is true
+	msg := fmt.Sprintf("not_equal_set(%s, %s) is true because %s != %s", a, b, a, b)
 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyVerRetTrue())
 }
 

@@ -98,10 +98,11 @@ const (
 	KeywordBy        = "by"
 	KeywordEval      = "eval"
 
-	KeywordEqualSet   = "equal_set"
-	KeywordSubsetOf   = "subset_of"
-	KeywordSupersetOf = "superset_of"
-	KeywordEqualTuple = "equal_tuple"
+	KeywordEqualSet    = "equal_set"
+	KeywordNotEqualSet = "not_equal_set"
+	KeywordSubsetOf    = "subset_of"
+	KeywordSupersetOf  = "superset_of"
+	KeywordEqualTuple  = "equal_tuple"
 
 	KeywordCup       = "cup"
 	KeywordCap       = "cap"
@@ -343,6 +344,7 @@ var BuiltinPropNames map[string]struct{} = map[string]struct{}{
 	KeywordIsCart:         {},
 	KeywordIsTuple:        {},
 	KeywordEqualSet:       {},
+	KeywordNotEqualSet:    {},
 	KeywordSubsetOf:       {},
 	KeySymbolEqual:        {},
 	KeySymbolNotEqual:     {},
