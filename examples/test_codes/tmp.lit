@@ -5,3 +5,9 @@ algo f(x):
 
 eval f(1)
 eval f(f(1))
+
+val(f(1)) $in R
+
+val(f(1)) + 100 = 102
+
+f(1) = val(f(1))

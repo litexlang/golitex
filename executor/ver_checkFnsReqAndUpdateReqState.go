@@ -60,6 +60,12 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 		return glob.NewVerMsg2(glob.StmtRetTypeError, obj.String(), 0, []string{fmt.Sprintf("%s is not a function", obj)})
 	}
 
+	// If it's val(...), check the requirement of the inner function
+	if ast.IsAtomObjAndEqualToStr(objAsFnObj.FnHead, glob.KeywordVal) && len(objAsFnObj.Params) == 1 {
+		// Check the requirement of the inner function/object
+		return ver.objIsDefinedAtomOrIsFnSatisfyItsReq(objAsFnObj.Params[0], state)
+	}
+
 	// Try super function first (includes all special functions)
 	if ret := ver.isBuiltinFunction_VerReq(objAsFnObj, state); ret.IsTrue() || ret.IsErr() {
 		return ret

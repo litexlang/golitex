@@ -66,11 +66,35 @@ func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *Ve
 	return glob.NewEmptyVerRetUnknown()
 }
 
+// extractValParam extracts the parameter from val(x), returns x and true if it's a val call
+func (ver *Verifier) extractValParam(obj ast.Obj) (ast.Obj, bool) {
+	if fnObj, ok := obj.(*ast.FnObj); ok {
+		if ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordVal) && len(fnObj.Params) == 1 {
+			return fnObj.Params[0], true
+		}
+	}
+	return nil, false
+}
+
 // func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
 // 	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
 // }
 
 func (ver *Verifier) verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
+	// val(x) = y is equivalent to x = y (val is handled in ReplaceObjInSpecFactWithValue)
+	if leftVal, ok := ver.extractValParam(left); ok {
+		verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(leftVal, right, state)
+		if verRet.IsTrue() || verRet.IsErr() {
+			return verRet
+		}
+	}
+	if rightVal, ok := ver.extractValParam(right); ok {
+		verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(left, rightVal, state)
+		if verRet.IsTrue() || verRet.IsErr() {
+			return verRet
+		}
+	}
+
 	if verRet := ver.verEqualBuiltin(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}

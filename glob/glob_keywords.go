@@ -97,6 +97,7 @@ const (
 	KeywordIf        = "if"
 	KeywordBy        = "by"
 	KeywordEval      = "eval"
+	KeywordVal       = "val"
 
 	KeywordEqualSet    = "equal_set"
 	KeywordNotEqualSet = "not_equal_set"
@@ -334,6 +335,8 @@ var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 	KeywordZNeg: {},
 	KeywordQNeg: {},
 	KeywordQPos: {},
+
+	KeywordVal: {},
 }
 
 var BuiltinPropNames map[string]struct{} = map[string]struct{}{
@@ -440,4 +443,5 @@ var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struc
 	KeywordCap:       {},
 	KeywordSetMinus:  {},
 	KeywordSetDiff:   {},
+	KeywordVal:       {},
 }
