@@ -1005,4 +1005,26 @@ prop axiom_of_infinity(x set):
 know exist x set st $axiom_of_infinity(x)
 
 # 8. Axiom of power set: for any set, there exists a set of all subsets of the set. We use keyword power_set for this.
+
+# 常见的和自然数相关的结论
+prop is_max_in(i set, s set):
+	s $subset_of R
+	i $in s
+	<=>:
+		forall j s:
+			j <= i
+
+prop is_min_in(i set, s set):
+	s $subset_of R
+	i $in s
+	<=>:
+		forall j s:
+			i <= j
+
+know:
+	forall s power_set(R):
+		$is_finite_set(s)
+		=>:
+			exist i s st $is_max_in(i, s)
+			exist i s st $is_min_in(i, s)
 `
