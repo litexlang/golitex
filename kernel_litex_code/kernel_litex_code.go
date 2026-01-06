@@ -87,7 +87,7 @@ know imply finite_set_subset_is_finite_set(s1 finite_set, s2 set):
 	forall x s2:
 		x $in s1
 	=>:
-		$is_a_finite_set(s2)
+		$is_finite_set(s2)
 
 know forall x N: x != 0 => x > 0
 
@@ -609,7 +609,7 @@ know:
 know imply subset_of_finite_set_is_finite_set(x set, y finite_set):
 	x $subset_of y
 	=>:
-		$is_a_finite_set(x)
+		$is_finite_set(x)
 		count(x) <= count(y)
 
 prop is_cart(x set)
@@ -735,10 +735,10 @@ know:
 	forall a, b R: a > 0, b >= 0 => a + b > 0
 
 know:
-	not $is_a_nonempty_set({})
+	not $is_nonempty_set({})
 	forall x set: {} $subset_of x
 	forall x set: not x $in {}
-	forall x set: x != {} <=> $is_a_nonempty_set(x)
+	forall x set: x != {} <=> $is_nonempty_set(x)
 
 prop equal_set(x set, y set)
 
@@ -748,16 +748,16 @@ know:
 	forall x, y, a, b R: x != 0, y != 0 x / y = a / b <=> y / x = b / a
 
 know: 
-	$is_a_nonempty_set(R)
-	$is_a_nonempty_set(N)
-	$is_a_nonempty_set(N_pos)
-	$is_a_nonempty_set(Z)
-	$is_a_nonempty_set(Q)
-	$is_a_nonempty_set(Q_pos)
-	$is_a_nonempty_set(Q_neg)
-	$is_a_nonempty_set(Z_neg)
-	$is_a_nonempty_set(R_pos)
-	$is_a_nonempty_set(R_neg)
+	$is_nonempty_set(R)
+	$is_nonempty_set(N)
+	$is_nonempty_set(N_pos)
+	$is_nonempty_set(Z)
+	$is_nonempty_set(Q)
+	$is_nonempty_set(Q_pos)
+	$is_nonempty_set(Q_neg)
+	$is_nonempty_set(Z_neg)
+	$is_nonempty_set(R_pos)
+	$is_nonempty_set(R_neg)
 
 # TODO: builtin instead of fn
 # 一个东西在cup，则怎么怎么样；一个东西满足了cup的性质，则怎么怎么样
@@ -797,10 +797,10 @@ know imply axiom_of_choice(x set):
 """
 
 know:
-	forall x, y R: x < y => $is_a_nonempty_set(range(x, y)), $is_a_nonempty_set(closed_range(x, y))
+	forall x, y R: x < y => $is_nonempty_set(range(x, y)), $is_nonempty_set(closed_range(x, y))
 
 know:
-	forall x finite_set: count(x) > 0 => $is_a_nonempty_set(x)
+	forall x finite_set: count(x) > 0 => $is_nonempty_set(x)
 
 know forall x set: x \union x = x, x \intersect x = x
 
@@ -832,10 +832,10 @@ know:
 	forall x R: exist y Z_neg st y <= x
 
 know:
-	forall x, y R: x < y => {t R: x < t, t < y} $is_a_nonempty_set
-	forall x, y R: x < y => {t R: x <= t, t <= y} $is_a_nonempty_set
-	forall x, y R: x < y => {t R: x <= t, t < y} $is_a_nonempty_set
-	forall x, y R: x < y => {t R: x < t, t <= y} $is_a_nonempty_set
+	forall x, y R: x < y => {t R: x < t, t < y} $is_nonempty_set
+	forall x, y R: x < y => {t R: x <= t, t <= y} $is_nonempty_set
+	forall x, y R: x < y => {t R: x <= t, t < y} $is_nonempty_set
+	forall x, y R: x < y => {t R: x < t, t <= y} $is_nonempty_set
 
 ## Set theory 
 
@@ -877,7 +877,7 @@ know imply item_in_union_implies(z set, x, y set):
 
 # Properties of union
 know:
-	forall x, y set: $is_a_nonempty_set(x) or $is_a_nonempty_set(y) => $is_a_nonempty_set(union(x, y))
+	forall x, y set: $is_nonempty_set(x) or $is_nonempty_set(y) => $is_nonempty_set(union(x, y))
 
 ### intersect
 
@@ -957,7 +957,7 @@ prop is_bijective_fn(X set, Y set, f fn(X)Y):
 know imply is_injective_fn_to_finite_set_implies(X set, Y finite_set, f fn(X)Y):
 	$is_injective_fn(X, Y, f)
 	=>:
-		$is_a_finite_set(Y)
+		$is_finite_set(Y)
 		count(X) <= count(Y)
 
 know imply not_equal_set(x, y set):
@@ -968,14 +968,14 @@ know imply not_equal_set(x, y set):
 know imply is_nonempty_with_item(x, z set):
 	z $in x
 	=>:
-		$is_a_nonempty_set(x)
+		$is_nonempty_set(x)
 		
 # 和序数，有限有关的事实
 know:
-	forall x finite_set: count(x) > 0 <=> not $is_a_nonempty_set(x)
+	forall x finite_set: count(x) > 0 <=> not $is_nonempty_set(x)
 	forall left, right Z, x set: left <= right, x = range(left, right) => count(x) = right - left
 	forall left, right Z, x set: left <= right, x = closed_range(left, right) => count(x) = right - left + 1
-	forall left, right Z => $is_a_finite_set(range(left, right)), $is_a_finite_set(closed_range(left, right))
+	forall left, right Z => $is_finite_set(range(left, right)), $is_finite_set(closed_range(left, right))
 	forall x finite_set: count(x) $in N,  0 <= count(x)
 	forall x, y finite_set: count(x) <= count(y) <=> x $subset_of y
 `

@@ -289,19 +289,19 @@ func (ver *Verifier) verEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 // TODO: 理论上任何obj都是set了现在，因为现在set不再是obj了
 func (ver *Verifier) verIsASetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	if len(stmt.Params) != 1 {
-		return glob.NewErrVerRet(fmt.Sprintf("is_a_set expects 1 parameter, got %d", len(stmt.Params)))
+		return glob.NewErrVerRet(fmt.Sprintf("%s expects 1 parameter, got %d", glob.KeywordIsASet, len(stmt.Params)))
 	}
 
 	if glob.IsKeywordSetOrNonEmptySetOrFiniteSet(stmt.Params[0].String()) {
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), "In ZFC set theory, everything is a set. Since Litex is based on ZFC set theory, $is_a_set(x) is true for any object x.", glob.NewEmptyVerRetTrue())
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), fmt.Sprintf("In ZFC set theory, everything is a set. Since Litex is based on ZFC set theory, $%s(x) is true for any object x.", glob.KeywordIsASet), glob.NewEmptyVerRetTrue())
 }
 
 func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	if len(stmt.Params) != 1 {
-		return glob.NewErrVerRet(fmt.Sprintf("is_a_finite_set expects 1 parameter, got %d", len(stmt.Params)))
+		return glob.NewErrVerRet(fmt.Sprintf("%s expects 1 parameter, got %d", glob.KeywordIsAFiniteSet, len(stmt.Params)))
 	}
 
 	if ast.IsListSetObj(stmt.Params[0]) {
@@ -318,7 +318,7 @@ func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt *ast.SpecFactStmt, state
 
 func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	if len(stmt.Params) != 1 {
-		return glob.NewErrVerRet(fmt.Sprintf("is_a_nonempty_set expects 1 parameter, got %d", len(stmt.Params)))
+		return glob.NewErrVerRet(fmt.Sprintf("%s expects 1 parameter, got %d", glob.KeywordIsANonEmptySet, len(stmt.Params)))
 	}
 
 	if ast.IsListSetObj(stmt.Params[0]) {
