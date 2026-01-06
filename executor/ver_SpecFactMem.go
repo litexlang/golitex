@@ -22,7 +22,7 @@ import (
 )
 
 func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	defInCurEnvPkgMgr, ok := ver.Env.GetPropDef(stmt.PropName)
+	defInCurEnvPkgMgr, ok := ver.Env.GetPropDefWithoutSearchingInBuiltinEnv(stmt.PropName)
 	if ok {
 		for i := len(ver.Env.EnvSlice) - 1; i >= defInCurEnvPkgMgr.EnvDepth; i-- {
 			curEnv := &ver.Env.EnvSlice[i]
