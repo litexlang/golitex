@@ -74,14 +74,13 @@ prove union({1, 2}, {3, 4}) = {1, 2, 3, 4}:
         
 # 6. Axiom schema of replacement: the image of a set under any definable function will also fall inside a set
 
-forall X, Y set, f fn(X) Y, A X:
-    A $subset_of X
-    =>:
-        {y Y: exist x A: f(x) = y} $subset_of Y
+# If A $subset_of X, then if f $in fn(X)Y, f $in fn(A)Y is true by definition.
+forall X, Y set, f fn(X) Y:
+    {y Y: exist x X st f(x) = y} $subset_of Y
 
 # 7. Axiom of infinity: there exists an infinite set
 
-exist infinity_set set st $axiom_of_infinity(infinity_set)
+exist x set st $axiom_of_infinity(x)
 
 # 8. Axiom of power set: for any set, there exists a set of all subsets of the set. We use keyword power_set for this.
 

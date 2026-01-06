@@ -45,3 +45,24 @@ func (envMgr *EnvMgr) GetPropDef(propName ast.Atom) (DefinedStuff[*ast.DefPropSt
 
 	return DefinedStuff[*ast.DefPropStmt]{}, false
 }
+
+func (envMgr *EnvMgr) GetPropDefWithoutSearchingInBuiltinEnv(propName ast.Atom) (DefinedStuff[*ast.DefPropStmt], bool) {
+	var pkgName string
+	var envMgrContainsDef = envMgr
+
+	withPkgName, pkgName, _ := glob.GetPkgNameAndName(string(propName))
+
+	if withPkgName {
+		envMgrContainsDef = envMgr.GetEnvMgrOfName(pkgName)
+	} else {
+		envMgrContainsDef = envMgr
+	}
+
+	// depth
+	propDef, ok := envMgrContainsDef.AllDefinedPropNames[string(propName)]
+	if ok {
+		return propDef, true
+	}
+
+	return DefinedStuff[*ast.DefPropStmt]{}, false
+}
