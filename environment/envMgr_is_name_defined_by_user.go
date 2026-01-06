@@ -154,18 +154,19 @@ func (envMgr *EnvMgr) IsProveAlgoNameDefinedByUser(ProveAlgoName string) bool {
 			return false
 		}
 
-		_, ok := pkgEnvMgr.AllDefinedProveAlgoNames[ProveAlgoName]
-		return ok
+		// _, ok := pkgEnvMgr.AllDefinedProveAlgoNames[ProveAlgoName]
+		// return ok
+		return false
 	} else {
-		_, ok := envMgr.AllDefinedProveAlgoNames[ProveAlgoName]
-		if ok {
-			return true
-		}
-
-		_, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedProveAlgoNames[ProveAlgoName]
-		if ok {
-			return true
-		}
+		// _, ok := envMgr.AllDefinedProveAlgoNames[ProveAlgoName]
+		// if ok {
+		// 	return true
+		// }
+		//
+		// _, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedProveAlgoNames[ProveAlgoName]
+		// if ok {
+		// 	return true
+		// }
 		return false
 	}
 }

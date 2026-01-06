@@ -69,8 +69,8 @@ func (s *ClaimIffStmt) stmt()               {}
 func (s *ProveIsTransitivePropStmt) stmt()  {}
 func (s *DefAlgoStmt) stmt()                {}
 func (s *EvalStmt) stmt()                   {}
-func (s *DefProveAlgoStmt) stmt()           {}
-func (s *ByStmt) stmt()                     {}
+// func (s *DefProveAlgoStmt) stmt()           {}
+// func (s *ByStmt) stmt()                     {}
 func (s *HaveFnEqualCaseByCaseStmt) stmt()  {}
 func (s *HaveFnCaseByCaseStmt) stmt()       {}
 func (s *ProveExistStmt) stmt()             {}
@@ -111,8 +111,8 @@ func (s *HaveObjEqualStmt) algoStmt()           {}
 func (s *HaveFnEqualStmt) algoStmt()            {}
 func (s *HaveFnStmt) algoStmt()                 {}
 func (s *ProveIsCommutativePropStmt) algoStmt() {}
-func (s *DefProveAlgoStmt) algoStmt()           {}
-func (s *ByStmt) algoStmt()                     {}
+// func (s *DefProveAlgoStmt) algoStmt()           {}
+// func (s *ByStmt) algoStmt()                     {}
 func (s *ClaimIffStmt) algoStmt()               {}
 func (s *ProveForStmt) algoStmt()               {}
 func (s *ProveImplyStmt) algoStmt()             {}
@@ -168,8 +168,8 @@ func (s *ProveIsTransitivePropStmt) GetLine() uint  { return s.Line }
 func (s *ProveIsCommutativePropStmt) GetLine() uint { return s.Line }
 func (s *DefAlgoStmt) GetLine() uint                { return s.Line }
 func (s *EvalStmt) GetLine() uint                   { return s.Line }
-func (s *DefProveAlgoStmt) GetLine() uint           { return s.Line }
-func (s *ByStmt) GetLine() uint                     { return s.Line }
+// func (s *DefProveAlgoStmt) GetLine() uint           { return s.Line }
+// func (s *ByStmt) GetLine() uint                     { return s.Line }
 func (s *ProveForStmt) GetLine() uint               { return s.Line }
 func (s *ProveImplyStmt) GetLine() uint             { return s.Line }
 
@@ -226,8 +226,8 @@ func (s *ProveIsTransitivePropStmt) SetLine(l uint)  { s.Line = l }
 func (s *ProveIsCommutativePropStmt) SetLine(l uint) { s.Line = l }
 func (s *DefAlgoStmt) SetLine(l uint)                { s.Line = l }
 func (s *EvalStmt) SetLine(l uint)                   { s.Line = l }
-func (s *DefProveAlgoStmt) SetLine(l uint)           { s.Line = l }
-func (s *ByStmt) SetLine(l uint)                     { s.Line = l }
+// func (s *DefProveAlgoStmt) SetLine(l uint)           { s.Line = l }
+// func (s *ByStmt) SetLine(l uint)                     { s.Line = l }
 func (s *ProveForStmt) SetLine(l uint)               { s.Line = l }
 func (s *ProveImplyStmt) SetLine(l uint)             { s.Line = l }
 
@@ -336,21 +336,21 @@ func (s *AlgoReturnStmt) GetLine() uint  { return s.Line }
 func (s *AlgoIfStmt) SetLine(l uint)     { s.Line = l }
 func (s *AlgoReturnStmt) SetLine(l uint) { s.Line = l }
 
-type ProveAlgoStmt interface {
-	proveAlgoStmt()
-	String() string
-	ToLatexString() string
-	InlineString() string
-	GetLine() uint
-	SetLine(l uint)
-}
+// type ProveAlgoStmt interface {
+// 	proveAlgoStmt()
+// 	String() string
+// 	ToLatexString() string
+// 	InlineString() string
+// 	GetLine() uint
+// 	SetLine(l uint)
+// }
 
-func (s *ProveAlgoIfStmt) proveAlgoStmt()     {}
-func (s *ProveAlgoReturnStmt) proveAlgoStmt() {}
-func (s *ProveAlgoIfStmt) GetLine() uint      { return s.Line }
-func (s *ProveAlgoReturnStmt) GetLine() uint  { return s.Line }
-func (s *ProveAlgoIfStmt) SetLine(l uint)     { s.Line = l }
-func (s *ProveAlgoReturnStmt) SetLine(l uint) { s.Line = l }
+// func (s *ProveAlgoIfStmt) proveAlgoStmt()     {}
+// func (s *ProveAlgoReturnStmt) proveAlgoStmt() {}
+// func (s *ProveAlgoIfStmt) GetLine() uint      { return s.Line }
+// func (s *ProveAlgoReturnStmt) GetLine() uint  { return s.Line }
+// func (s *ProveAlgoIfStmt) SetLine(l uint)     { s.Line = l }
+// func (s *ProveAlgoReturnStmt) SetLine(l uint) { s.Line = l }
 
 type FactOrByStmt interface {
 	proveAlgoReturnStmt()
@@ -364,4 +364,4 @@ func (l *UniFactStmt) proveAlgoReturnStmt()        {}
 func (l *UniFactWithIffStmt) proveAlgoReturnStmt() {}
 func (s *OrStmt) proveAlgoReturnStmt()             {}
 func (s *EqualsFactStmt) proveAlgoReturnStmt()     {}
-func (s *ByStmt) proveAlgoReturnStmt()             {}
+// func (s *ByStmt) proveAlgoReturnStmt()             {}

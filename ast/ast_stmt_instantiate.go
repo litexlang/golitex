@@ -780,15 +780,15 @@ func InstantiateAlgoStmt(stmt AlgoStmt, uniMap map[string]Obj) (AlgoStmt, error)
 	return nil, fmt.Errorf("unknown algo statement type: %T", stmt)
 }
 
-func InstantiateProveAlgoStmt(stmt ProveAlgoStmt, uniMap map[string]Obj) (ProveAlgoStmt, error) {
-	switch stmt := stmt.(type) {
-	case *ProveAlgoIfStmt:
-		return stmt.InstantiateProveAlgo(uniMap)
-	case *ProveAlgoReturnStmt:
-		return stmt.InstantiateProveAlgo(uniMap)
-	}
-	return nil, fmt.Errorf("unknown prove algo statement type: %T", stmt)
-}
+// func InstantiateProveAlgoStmt(stmt ProveAlgoStmt, uniMap map[string]Obj) (ProveAlgoStmt, error) {
+// 	switch stmt := stmt.(type) {
+// 	case *ProveAlgoIfStmt:
+// 		return stmt.InstantiateProveAlgo(uniMap)
+// 	case *ProveAlgoReturnStmt:
+// 		return stmt.InstantiateProveAlgo(uniMap)
+// 	}
+// 	return nil, fmt.Errorf("unknown prove algo statement type: %T", stmt)
+// }
 
 func (s AlgoStmtSlice) Instantiate(uniMap map[string]Obj) (AlgoStmtSlice, error) {
 	newStmts := make([]AlgoStmt, len(s))
@@ -854,65 +854,65 @@ func (stmt *OrStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt.InstantiateFact(uniMap)
 }
 
-func (stmt *DefProveAlgoStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newStmts, err := stmt.Stmts.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewDefProveAlgoStmt(stmt.ProveAlgoName, stmt.Params, newStmts, stmt.Line), nil
-}
+// func (stmt *DefProveAlgoStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+// 	newStmts, err := stmt.Stmts.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return NewDefProveAlgoStmt(stmt.ProveAlgoName, stmt.Params, newStmts, stmt.Line), nil
+// }
 
-func (s ProveAlgoStmtSlice) Instantiate(uniMap map[string]Obj) (ProveAlgoStmtSlice, error) {
-	newStmts := make([]ProveAlgoStmt, len(s))
-	for i, stmt := range s {
-		newStmt, err := InstantiateProveAlgoStmt(stmt, uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newStmts[i] = newStmt
-	}
-	return newStmts, nil
-}
+// func (s ProveAlgoStmtSlice) Instantiate(uniMap map[string]Obj) (ProveAlgoStmtSlice, error) {
+// 	newStmts := make([]ProveAlgoStmt, len(s))
+// 	for i, stmt := range s {
+// 		newStmt, err := InstantiateProveAlgoStmt(stmt, uniMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newStmts[i] = newStmt
+// 	}
+// 	return newStmts, nil
+// }
 
-func (stmt *ProveAlgoIfStmt) InstantiateProveAlgo(uniMap map[string]Obj) (ProveAlgoStmt, error) {
-	newConditions, err := stmt.Conditions.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newThenStmts, err := stmt.ThenStmts.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewProveAlgoIfStmt(newConditions, newThenStmts, stmt.Line), nil
-}
+// func (stmt *ProveAlgoIfStmt) InstantiateProveAlgo(uniMap map[string]Obj) (ProveAlgoStmt, error) {
+// 	newConditions, err := stmt.Conditions.InstantiateFact(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	newThenStmts, err := stmt.ThenStmts.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return NewProveAlgoIfStmt(newConditions, newThenStmts, stmt.Line), nil
+// }
 
-func (stmt *ByStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newProveAlgoParams, err := stmt.Params.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewByStmt(stmt.ProveAlgoName, newProveAlgoParams, stmt.Line), nil
-}
+// func (stmt *ByStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+// 	newProveAlgoParams, err := stmt.Params.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return NewByStmt(stmt.ProveAlgoName, newProveAlgoParams, stmt.Line), nil
+// }
 
-func (stmt *ProveAlgoReturnStmt) InstantiateProveAlgo(uniMap map[string]Obj) (ProveAlgoStmt, error) {
-	instFacts := FactOrByStmtSlice{}
-	for _, factOrBy := range stmt.Facts {
-		instFactOrBy, err := factOrBy.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		// instFactOrBy is a Stmt, need to convert to FactOrByStmt
-		switch item := instFactOrBy.(type) {
-		case FactStmt:
-			instFacts = append(instFacts, item)
-		case *ByStmt:
-			instFacts = append(instFacts, item)
-		default:
-			return nil, fmt.Errorf("unexpected type after instantiate: %T", instFactOrBy)
-		}
-	}
-	return NewProveAlgoReturnStmt(instFacts, stmt.GetLine()), nil
-}
+// func (stmt *ProveAlgoReturnStmt) InstantiateProveAlgo(uniMap map[string]Obj) (ProveAlgoStmt, error) {
+// 	instFacts := FactOrByStmtSlice{}
+// 	for _, factOrBy := range stmt.Facts {
+// 		instFactOrBy, err := factOrBy.Instantiate(uniMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		// instFactOrBy is a Stmt, need to convert to FactOrByStmt
+// 		switch item := instFactOrBy.(type) {
+// 		case FactStmt:
+// 			instFacts = append(instFacts, item)
+// 		case *ByStmt:
+// 			instFacts = append(instFacts, item)
+// 		default:
+// 			return nil, fmt.Errorf("unexpected type after instantiate: %T", instFactOrBy)
+// 		}
+// 	}
+// 	return NewProveAlgoReturnStmt(instFacts, stmt.GetLine()), nil
+// }
 
 func (specFactPtrSlice SpecFactPtrSlice) InstantiateFact(uniMap map[string]Obj) (SpecFactPtrSlice, error) {
 	newSpecFactPtrSlice := make([]*SpecFactStmt, len(specFactPtrSlice))
