@@ -55,9 +55,9 @@ type EnvMgr struct {
 	AllDefinedAtomObjNames map[string]DefinedStuff[struct{}]
 	AllDefinedPropNames    map[string]DefinedStuff[*ast.DefPropStmt]
 	// AllDefinedExistPropNames map[string]*ast.DefExistPropStmt
-	AllDefinedFnSetNames     map[string]DefinedStuff[*ast.DefFnSetStmt]
-	AllDefinedAlgoNames      map[string]DefinedStuff[*ast.DefAlgoStmt]
-	AllDefinedProveAlgoNames map[string]DefinedStuff[*ast.DefProveAlgoStmt]
+	AllDefinedFnSetNames map[string]DefinedStuff[*ast.DefFnSetStmt]
+	AllDefinedAlgoNames  map[string]DefinedStuff[*ast.DefAlgoStmt]
+	// AllDefinedProveAlgoNames map[string]DefinedStuff[*ast.DefProveAlgoStmt]
 }
 
 type EnvMemory struct {
@@ -67,7 +67,7 @@ type EnvMemory struct {
 	FnTemplateDefMem map[string]struct{}
 	ExistPropDefMem  map[string]struct{}
 	AlgoDefMem       map[string]struct{}
-	DefProveAlgoMem  map[string]struct{}
+	// DefProveAlgoMem  map[string]struct{}
 
 	// facts memory
 	EqualMem                 map[string]shared_ptr_to_slice_of_obj
@@ -89,7 +89,7 @@ func NewEnvMemory() *EnvMemory {
 		FnTemplateDefMem: make(map[string]struct{}),
 		ExistPropDefMem:  make(map[string]struct{}),
 		AlgoDefMem:       make(map[string]struct{}),
-		DefProveAlgoMem:  make(map[string]struct{}),
+		// DefProveAlgoMem:  make(map[string]struct{}),
 
 		EqualMem:                 make(map[string]shared_ptr_to_slice_of_obj),
 		KnownFactsStruct:         makeKnownFactsStruct(),
@@ -102,16 +102,16 @@ func NewEnvMemory() *EnvMemory {
 	}
 }
 
-func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames map[string]DefinedStuff[struct{}], allDefinedPropNames map[string]DefinedStuff[*ast.DefPropStmt], allDefinedFnTemplateNames map[string]DefinedStuff[*ast.DefFnSetStmt], allDefinedAlgoNames map[string]DefinedStuff[*ast.DefAlgoStmt], allDefinedProveAlgoNames map[string]DefinedStuff[*ast.DefProveAlgoStmt]) *EnvMgr {
+func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames map[string]DefinedStuff[struct{}], allDefinedPropNames map[string]DefinedStuff[*ast.DefPropStmt], allDefinedFnTemplateNames map[string]DefinedStuff[*ast.DefFnSetStmt], allDefinedAlgoNames map[string]DefinedStuff[*ast.DefAlgoStmt]) *EnvMgr {
 	return &EnvMgr{
 		AllDefinedAtomObjNames: allDefinedAtomObjNames,
 		AllDefinedPropNames:    allDefinedPropNames,
 		// AllDefinedExistPropNames: allDefinedExistPropNames,
-		AllDefinedFnSetNames:     allDefinedFnTemplateNames,
-		AllDefinedAlgoNames:      allDefinedAlgoNames,
-		AllDefinedProveAlgoNames: allDefinedProveAlgoNames,
-		EnvPkgMgr:                pkgMgr,
-		EnvSlice:                 envMemory,
+		AllDefinedFnSetNames: allDefinedFnTemplateNames,
+		AllDefinedAlgoNames:  allDefinedAlgoNames,
+		// AllDefinedProveAlgoNames: allDefinedProveAlgoNames,
+		EnvPkgMgr: pkgMgr,
+		EnvSlice:  envMemory,
 	}
 }
 
@@ -181,9 +181,9 @@ func (envMgr *EnvMgr) DeleteEnv() {
 	for k := range envMgr.CurEnv().AlgoDefMem {
 		delete(envMgr.AllDefinedAlgoNames, k)
 	}
-	for k := range envMgr.CurEnv().DefProveAlgoMem {
-		delete(envMgr.AllDefinedProveAlgoNames, k)
-	}
+	// for k := range envMgr.CurEnv().DefProveAlgoMem {
+	// 	delete(envMgr.AllDefinedProveAlgoNames, k)
+	// }
 
 	envMgr.EnvSlice = envMgr.EnvSlice[:len(envMgr.EnvSlice)-1]
 }
@@ -316,5 +316,5 @@ func (envMgr *EnvMgr) CurEnv() *EnvMemory {
 }
 
 func NewEmptyEnvMgr(envPkgMgr *EnvPkgMgr) *EnvMgr {
-	return NewEnvMgr(envPkgMgr, []EnvMemory{*NewEnvMemory()}, make(map[string]DefinedStuff[struct{}]), make(map[string]DefinedStuff[*ast.DefPropStmt]), make(map[string]DefinedStuff[*ast.DefFnSetStmt]), make(map[string]DefinedStuff[*ast.DefAlgoStmt]), make(map[string]DefinedStuff[*ast.DefProveAlgoStmt]))
+	return NewEnvMgr(envPkgMgr, []EnvMemory{*NewEnvMemory()}, make(map[string]DefinedStuff[struct{}]), make(map[string]DefinedStuff[*ast.DefPropStmt]), make(map[string]DefinedStuff[*ast.DefFnSetStmt]), make(map[string]DefinedStuff[*ast.DefAlgoStmt]))
 }

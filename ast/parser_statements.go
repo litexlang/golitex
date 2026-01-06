@@ -90,10 +90,10 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.algoDefStmt(tb)
 	case glob.KeywordEval:
 		ret, err = p.evalStmt(tb)
-	case glob.KeywordProveAlgo:
-		ret, err = p.defProveAlgoStmt(tb)
-	case glob.KeywordBy:
-		ret, err = p.byStmt(tb)
+	// case glob.KeywordProveAlgo:
+	// 	ret, err = p.defProveAlgoStmt(tb)
+	// case glob.KeywordBy:
+	// 	ret, err = p.byStmt(tb)
 	case glob.KeywordProveByContradiction:
 		ret, err = p.proveByContradictionStmt(tb)
 	case glob.KeywordDoNothing:
@@ -1746,17 +1746,7 @@ func (p *TbParser) evalStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
 	objsToEval, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolRightBrace)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1764,91 +1754,91 @@ func (p *TbParser) evalStmt(tb *tokenBlock) (Stmt, error) {
 	return NewEvalStmt(objsToEval, tb.line), nil
 }
 
-func (p *TbParser) defProveAlgoStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordProveAlgo)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// func (p *TbParser) defProveAlgoStmt(tb *tokenBlock) (Stmt, error) {
+// 	err := tb.header.skip(glob.KeywordProveAlgo)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	funcName, err := tb.header.next()
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	funcName, err := tb.header.next()
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolLeftBrace)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	params := []string{}
-	for !tb.header.is(glob.KeySymbolRightBrace) {
-		param, err := tb.header.next()
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		params = append(params, param)
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		}
-	}
+// 	params := []string{}
+// 	for !tb.header.is(glob.KeySymbolRightBrace) {
+// 		param, err := tb.header.next()
+// 		if err != nil {
+// 			return nil, ErrInLine(err, tb)
+// 		}
+// 		params = append(params, param)
+// 		if tb.header.is(glob.KeySymbolComma) {
+// 			tb.header.skip(glob.KeySymbolComma)
+// 		}
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolRightBrace)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	stmts := []ProveAlgoStmt{}
-	for _, block := range tb.body {
-		curStmt, err := p.proveAlgoStmt(&block)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		stmts = append(stmts, curStmt)
-	}
-	return NewDefProveAlgoStmt(funcName, params, stmts, tb.line), nil
-}
+// 	stmts := []ProveAlgoStmt{}
+// 	for _, block := range tb.body {
+// 		curStmt, err := p.proveAlgoStmt(&block)
+// 		if err != nil {
+// 			return nil, ErrInLine(err, tb)
+// 		}
+// 		stmts = append(stmts, curStmt)
+// 	}
+// 	return NewDefProveAlgoStmt(funcName, params, stmts, tb.line), nil
+// }
 
-func (p *TbParser) byStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordBy)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// func (p *TbParser) byStmt(tb *tokenBlock) (Stmt, error) {
+// 	err := tb.header.skip(glob.KeywordBy)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	proveAlgoName, err := tb.header.next()
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	proveAlgoName, err := tb.header.next()
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolLeftBrace)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	proveAlgoParams := []Obj{}
-	for !tb.header.is(glob.KeySymbolRightBrace) {
-		param, err := p.Obj(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		proveAlgoParams = append(proveAlgoParams, param)
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		}
-	}
+// 	proveAlgoParams := []Obj{}
+// 	for !tb.header.is(glob.KeySymbolRightBrace) {
+// 		param, err := p.Obj(tb)
+// 		if err != nil {
+// 			return nil, ErrInLine(err, tb)
+// 		}
+// 		proveAlgoParams = append(proveAlgoParams, param)
+// 		if tb.header.is(glob.KeySymbolComma) {
+// 			tb.header.skip(glob.KeySymbolComma)
+// 		}
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolRightBrace)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	// by statement no longer has then facts - facts are returned from prove_algo
-	return NewByStmt(proveAlgoName, proveAlgoParams, tb.line), nil
-}
+// 	// by statement no longer has then facts - facts are returned from prove_algo
+// 	return NewByStmt(proveAlgoName, proveAlgoParams, tb.line), nil
+// }
 
 func (p *TbParser) proveByContradictionStmt(tb *tokenBlock) (Stmt, error) {
 	err := tb.header.skip(glob.KeywordProveByContradiction)
