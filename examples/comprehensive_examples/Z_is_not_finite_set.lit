@@ -1,0 +1,8 @@
+prove_by_contradiction not $is_a_finite_set(Z):
+    have x finite_set = closed_range(0, count(Z))
+    0 <= count(Z)
+    count(x) = count(Z) - 0 + 1
+    closed_range(0, count(Z)) $subset_of Z
+    count(x) <= count(Z)
+    count(Z) + 1 > count(Z)
+    count(Z) + 1 <= count(Z)
