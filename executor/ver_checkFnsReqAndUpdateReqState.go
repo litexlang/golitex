@@ -127,15 +127,19 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 		}
 
 		// Check all params in the fact
-		for _, param := range fact.Params {
-			verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, state)
-			if verRet.IsErr() {
-				return verRet
-			}
-			if verRet.IsUnknown() {
-				return glob.NewVerMsg2(glob.StmtRetTypeError, param.String(), 0, []string{fmt.Sprintf("parameter %s in set builder fact must be an atom or function", param)})
-			}
+		if ver.checkFnsReq(fact, state).IsNotTrue() {
+			return ver.checkFnsReq(fact, state)
 		}
+
+		// for _, param := range fact.Params {
+		// 	verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, state)
+		// 	if verRet.IsErr() {
+		// 		return verRet
+		// 	}
+		// 	if verRet.IsUnknown() {
+		// 		return glob.NewVerMsg2(glob.StmtRetTypeError, param.String(), 0, []string{fmt.Sprintf("parameter %s in set builder fact must be an atom or function", param)})
+		// 	}
+		// }
 	}
 
 	return glob.NewEmptyVerRetTrue()
