@@ -24,6 +24,7 @@ var SuperFunctionsSet map[string]struct{} = map[string]struct{}{
 	KeywordSetDiff:   {},
 	KeywordProj:      {},
 	KeywordDim:       {},
+	KeywordCount:     {},
 }
 
 func IsSuperFunction(name string) bool {
