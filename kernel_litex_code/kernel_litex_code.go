@@ -977,6 +977,32 @@ know:
 	forall x, y finite_set: count(x) <= count(y) <=> x $subset_of y
 
 # ZFC
+# 1. Axiom of extensionality: two sets are equal if and only if they have the same elements. We use keyword equal_set for this. Equivalently, we can use = for this because there is no difference between them in Litex (any object in Litex is a set). But it's better to use equal_set for this to emphasize we are using the definition of equality of sets.
 
+# 2. Axiom of regularity: every non-empty set has an element that is disjoint from the set
+prop disjoint_from(x set, y set):
+	forall z x:
+		not z $in y
+	forall z y:
+		not z $in x
 
+know forall x nonempty_set: exist y x st y $disjoint_from x
+
+# 3. Axiom schema of specification: we can construct a set from a given set and a property. We use keyword {x parent_set: $p1(..), $p2(..), ...} for this.
+
+# 4. Axiom of pairing: we can construct a set from two given sets. We use {x, y} for this.
+
+# 5. Axiom of union: we can construct a set from a given set of sets. We use keyword union(x) and cup(x) for this.
+
+# 6. Axiom schema of replacement: the image of a set under any definable function will also fall inside a set
+
+# 7. Axiom of infinity: there exists an infinite set
+prop axiom_of_infinity(x set):
+	{} $in x
+	forall y x:
+		union(y, {y}) $in x
+
+know exist x set st $axiom_of_infinity(x)
+
+# 8. Axiom of power set: for any set, there exists a set of all subsets of the set. We use keyword power_set for this.
 `
