@@ -41,7 +41,7 @@ func (ver *Verifier) isBuiltinFunction_VerReq(fnObj *ast.FnObj, state *VerState)
 	case glob.KeywordDim:
 		return ver.verDimReq(fnObj, state)
 	case glob.KeywordCount:
-		return ver.countFnRequirement(fnObj, state)
+		return ver.verCountReq(fnObj, state)
 	case glob.KeywordCart:
 		return ver.cartFnRequirement(fnObj, state)
 	case glob.KeywordSetDim:
@@ -117,6 +117,21 @@ func (ver *Verifier) verSetMinusReq(fnObj *ast.FnObj, state *VerState) *glob.Ver
 
 	_ = state
 
+	return glob.NewEmptyVerRetTrue()
+}
+
+func (ver *Verifier) verCountReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+	if len(fnObj.Params) != 1 {
+		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("count expects 1 parameter, got %d", len(fnObj.Params))})
+	}
+
+	verRet := ver.VerFactStmt(ast.NewIsAFiniteSetFact(fnObj.Params[0], glob.BuiltinLine0), state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsUnknown() {
+		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("count parameter must be a finite set, %s in %s is not valid", fnObj.Params[0], fnObj)})
+	}
 	return glob.NewEmptyVerRetTrue()
 }
 

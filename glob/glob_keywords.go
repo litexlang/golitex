@@ -118,10 +118,6 @@ const (
 	KeywordZNeg = "Z_neg"
 	KeywordQNeg = "Q_neg"
 	KeywordQPos = "Q_pos"
-
-	KeywordIsInjectiveFn  = "is_injective_fn"
-	KeywordIsSurjectiveFn = "is_surjective_fn"
-	KeywordIsBijectiveFn  = "is_bijective_fn"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
