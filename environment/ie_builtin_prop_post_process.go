@@ -83,10 +83,10 @@ func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) *glob.
 	// 	return ret
 	// }
 
-	// if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordNotEqualSet) {
-	// 	ret := ie.notEqualSetFactPostProcess(fact)
-	// 	return ret
-	// }
+	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordNotEqualSet) {
+		ret := ie.notEqualSetFactPostProcess(fact)
+		return ret
+	}
 
 	return glob.NewEmptyShortUnknownRet()
 }

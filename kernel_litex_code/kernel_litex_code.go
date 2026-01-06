@@ -837,7 +837,7 @@ know:
 	forall x, y R: x < y => {t R: x <= t, t < y} $is_nonempty_set
 	forall x, y R: x < y => {t R: x < t, t <= y} $is_nonempty_set
 
-## Set theory 
+## Set theory super functions: cup, cap, union, intersect, power set, set minus, set diff
 
 ### cup
 
@@ -960,10 +960,7 @@ know imply is_injective_fn_to_finite_set_implies(X set, Y finite_set, f fn(X)Y):
 		$is_finite_set(Y)
 		count(X) <= count(Y)
 
-know imply not_equal_set(x, y set):
-	x != y
-	=>:
-		exist z x st not z $in y or exist z y st not z $in x
+prop not_equal_set(x set, y set)
 
 know imply is_nonempty_with_item(x, z set):
 	z $in x
@@ -978,4 +975,8 @@ know:
 	forall left, right Z => $is_finite_set(range(left, right)), $is_finite_set(closed_range(left, right))
 	forall x finite_set: count(x) $in N,  0 <= count(x)
 	forall x, y finite_set: count(x) <= count(y) <=> x $subset_of y
+
+# ZFC
+
+
 `
