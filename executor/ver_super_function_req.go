@@ -54,6 +54,8 @@ func (ver *Verifier) isBuiltinFunction_VerReq(fnObj *ast.FnObj, state *VerState)
 		return ver.tupleFnReq(fnObj, state)
 	case glob.KeywordObjAtIndexOpt:
 		return ver.indexOptFnRequirement(fnObj, state)
+	case glob.KeywordChoice:
+		return ver.verChoiceReq(fnObj, state)
 
 	default:
 		return glob.NewEmptyVerRetUnknown()
@@ -193,5 +195,36 @@ func (ver *Verifier) verDimReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if verRet.IsUnknown() {
 		return glob.NewVerMsg2(glob.StmtRetTypeError, isTupleFact.String(), isTupleFact.GetLine(), []string{fmt.Sprintf("%s is unknown", isTupleFact)})
 	}
+	return glob.NewEmptyVerRetTrue()
+}
+
+func (ver *Verifier) verChoiceReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+	if len(fnObj.Params) != 1 {
+		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("choice expects 1 parameter, got %d", len(fnObj.Params))})
+	}
+
+	// choice(S) requires that S is a set of non-empty sets
+	// Verify: forall x S: $is_nonempty_set(x)
+	S := fnObj.Params[0]
+	x := "x"
+
+	// Create a UniFactStmt: forall x S: $is_nonempty_set(x)
+	uniFact := ast.NewUniFact(
+		[]string{x},
+		[]ast.Obj{S},
+		[]ast.FactStmt{}, // no domain facts
+		[]ast.FactStmt{ast.NewIsANonEmptySetFact(ast.Atom(x), glob.BuiltinLine0)},
+		glob.BuiltinLine0,
+	)
+
+	// Verify the forall statement
+	verRet := ver.verUniFact(uniFact, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsUnknown() {
+		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("choice requires that all elements of %s are non-empty sets, but this cannot be verified", S)})
+	}
+
 	return glob.NewEmptyVerRetTrue()
 }
