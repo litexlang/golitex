@@ -22,6 +22,33 @@ import (
 
 func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
+
+	// After replacing symbols with values, evaluate any val(...) expressions
+	newParams := make([]ast.Obj, len(newStmt.Params))
+	valReplaced := false
+	for i, param := range newStmt.Params {
+		if fnObj, ok := param.(*ast.FnObj); ok {
+			if ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordVal) && len(fnObj.Params) == 1 {
+				// val(...) should be evaluated (like eval)
+				exec := NewExecutor(ver.Env)
+				exec.NewEnv()
+				defer exec.deleteEnv()
+				value, execRet := exec.evalObjThenSimplify(fnObj.Params[0])
+				if execRet.IsTrue() {
+					newParams[i] = value
+					valReplaced = true
+					continue
+				}
+			}
+		}
+		newParams[i] = param
+	}
+
+	if valReplaced {
+		newStmt = ast.NewSpecFactStmt(newStmt.FactType, newStmt.PropName, newParams, newStmt.Line)
+		replaced = true
+	}
+
 	if replaced {
 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state.CopyAndReqOkToFalse())
 		if verRet.IsErr() {
