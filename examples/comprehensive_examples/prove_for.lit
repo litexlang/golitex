@@ -1,5 +1,5 @@
 claim:
-    not $is_a_nonempty_set(range(1, 0))
+    not $is_nonempty_set(range(1, 0))
     prove_by_contradiction:
         have x range(1, 0)
         prove_for i range(1, 0):

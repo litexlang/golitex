@@ -20,13 +20,13 @@ prove_forall_on_indexable_set 用遍历的方式去证明forall。这种方式�
 let congruence_class indexable_set
 know:
     forall x N:
-        congruence_class[x] $is_a_finite_set
+        congruence_class[x] $is_finite_set
         len(congruence_class[x]) = x
 
     forall y N, x N:
         y < x
         =>:
-            cc[x][y] $is_a_set
+            cc[x][y] $is_set
     
     forall e cc[x][y]:
         e $in Z

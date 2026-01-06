@@ -25,7 +25,7 @@ prove:
         count(s) = 1
     1 > 0
     count(s) > 0
-    $is_a_nonempty_set(s)
+    $is_nonempty_set(s)
     have a s
 
 

@@ -175,7 +175,7 @@ prove:
 
 # Axiom 3.9 (Regularity) If A is a non-empty set, then there is at least one element of A that is either not a set, or is disjoint from A
 prop is_disjoint_from(A set, B set):
-    $is_a_set(A)
+    $is_set(A)
     forall x A:
         not $in(x, B)
 
@@ -186,7 +186,7 @@ prop is_disjoint_from(A set, B set):
 # Axiom 3.11 (Union axiom) Let X be a set. Then there exists a set denoted by union(X) which contains all elements of the elements of X.
 let fn union_of_set_in_sets(X set) set:
     forall x X:
-        x $is_a_set
+        x $is_set
         =>:
             x $in union_of_set_in_sets(X)
 
@@ -196,7 +196,7 @@ let fn union_of_set_in_sets(X set) set:
 
 # Keyword Z is a built-in set in Litex. Here are some basic built-in properties of Z.
 
-Z $is_a_set # Z is a set
+Z $is_set # Z is a set
 1 $in Z
 -1 $in Z
 forall x N:

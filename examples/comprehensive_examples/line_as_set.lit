@@ -19,7 +19,7 @@ have fn:
         =>:
             line(a, b, c) = {x cart(R, R): a * x[1] + b * x[2] = c}
             $line_as_intensional_set(line(a, b, c), a, b, c)
-            $is_a_set(line(a, b, c))
+            $is_set(line(a, b, c))
 
     prove:
         have l set = {x cart(R, R): a * x[1] + b * x[2] = c}
@@ -51,8 +51,8 @@ prove forall a, b, c R: a != 0 => line(a, b, c) = line(1, b/a, c/a):
         a * (1 * x[1] + (b / a) * x[2]) = a * x[1] + b * x[2] = a * (c / a) = c
         x $in line(a, b, c)
 
-    $is_a_set(line(a, b, c))
-    $is_a_set(line(1, b/a, c/a))
+    $is_set(line(a, b, c))
+    $is_set(line(1, b/a, c/a))
 
     line(a, b, c) $subset_of line(1, b/a, c/a)
     line(1, b/a, c/a) $subset_of line(a, b, c)

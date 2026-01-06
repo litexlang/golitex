@@ -22,9 +22,9 @@ const (
 	KeywordNonEmptySet = "nonempty_set"
 	KeywordFiniteSet   = "finite_set"
 
-	KeywordIsASet         = "is_a_set"
-	KeywordIsAFiniteSet   = "is_a_finite_set"
-	KeywordIsANonEmptySet = "is_a_nonempty_set"
+	KeywordIsASet         = "is_set"
+	KeywordIsAFiniteSet   = "is_finite_set"
+	KeywordIsANonEmptySet = "is_nonempty_set"
 
 	KeywordNot    = "not"
 	KeywordOr     = "or"
