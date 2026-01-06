@@ -843,9 +843,9 @@ func (s *ProveIsCommutativePropStmt) ToLatexString() string {
 	return s.String()
 }
 
-func (s *ProveAlgoIfStmt) ToLatexString() string {
-	return s.String()
-}
+// func (s *ProveAlgoIfStmt) ToLatexString() string {
+// 	return s.String()
+// }
 
 func (s *AlgoIfStmt) ToLatexString() string {
 	return s.String()
@@ -863,17 +863,17 @@ func (s *EvalStmt) ToLatexString() string {
 	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.ObjToEval.ToLatexString())
 }
 
-func (s *DefProveAlgoStmt) ToLatexString() string {
-	return s.String()
-}
+// func (s *DefProveAlgoStmt) ToLatexString() string {
+// 	return s.String()
+// }
 
-func (s *ByStmt) ToLatexString() string {
-	return s.String()
-}
+// func (s *ByStmt) ToLatexString() string {
+// 	return s.String()
+// }
 
-func (s *ProveAlgoReturnStmt) ToLatexString() string {
-	return s.String()
-}
+// func (s *ProveAlgoReturnStmt) ToLatexString() string {
+// 	return s.String()
+// }
 
 func (s *HaveFnEqualCaseByCaseStmt) ToLatexString() string {
 	return s.String()

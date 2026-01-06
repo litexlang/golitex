@@ -1132,24 +1132,24 @@ func (stmt *ProveIsCommutativePropStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ProveAlgoIfStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordIf)
-	builder.WriteString(" ")
-	conditionStrSlice := make([]string, len(stmt.Conditions))
-	for i, fact := range stmt.Conditions {
-		conditionStrSlice[i] = fact.String()
-	}
-	builder.WriteString(strings.Join(conditionStrSlice, ", "))
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	for _, fact := range stmt.ThenStmts {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
-		builder.WriteByte('\n')
-	}
-	return builder.String()
-}
+// func (stmt *ProveAlgoIfStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordIf)
+// 	builder.WriteString(" ")
+// 	conditionStrSlice := make([]string, len(stmt.Conditions))
+// 	for i, fact := range stmt.Conditions {
+// 		conditionStrSlice[i] = fact.String()
+// 	}
+// 	builder.WriteString(strings.Join(conditionStrSlice, ", "))
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeySymbolColon)
+// 	builder.WriteByte('\n')
+// 	for _, fact := range stmt.ThenStmts {
+// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
+// 		builder.WriteByte('\n')
+// 	}
+// 	return builder.String()
+// }
 
 func (stmt *AlgoIfStmt) String() string {
 	var builder strings.Builder
@@ -1236,59 +1236,59 @@ func (stmt *EvalStmt) String() string {
 	return fmt.Sprintf("%s(%s)", glob.KeywordEval, stmt.ObjToEval.String())
 }
 
-func (stmt *DefProveAlgoStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveAlgo)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.ProveAlgoName)
-	builder.WriteString("(")
-	builder.WriteString(stmt.Params.String())
-	builder.WriteString(")")
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	strSlice := make([]string, len(stmt.Stmts))
-	for i, stmt := range stmt.Stmts {
-		strSlice[i] = stmt.String()
-	}
-	builder.WriteString(strings.Join(strSlice, "\n"))
-	return builder.String()
-}
+// func (stmt *DefProveAlgoStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordProveAlgo)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(stmt.ProveAlgoName)
+// 	builder.WriteString("(")
+// 	builder.WriteString(stmt.Params.String())
+// 	builder.WriteString(")")
+// 	builder.WriteString(glob.KeySymbolColon)
+// 	builder.WriteByte('\n')
+// 	strSlice := make([]string, len(stmt.Stmts))
+// 	for i, stmt := range stmt.Stmts {
+// 		strSlice[i] = stmt.String()
+// 	}
+// 	builder.WriteString(strings.Join(strSlice, "\n"))
+// 	return builder.String()
+// }
 
-func (stmt *ByStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordBy)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.ProveAlgoName)
-	builder.WriteString("(")
-	builder.WriteString(stmt.Params.String())
-	builder.WriteString(")")
-	return builder.String()
-}
+// func (stmt *ByStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordBy)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(stmt.ProveAlgoName)
+// 	builder.WriteString("(")
+// 	builder.WriteString(stmt.Params.String())
+// 	builder.WriteString(")")
+// 	return builder.String()
+// }
 
-func (stmt *ProveAlgoReturnStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordReturn)
-	if len(stmt.Facts) == 0 {
-		return builder.String()
-	}
+// func (stmt *ProveAlgoReturnStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordReturn)
+// 	if len(stmt.Facts) == 0 {
+// 		return builder.String()
+// 	}
 
-	// Check if it's a single inline fact (no colon case) or multiple facts (colon case)
-	if len(stmt.Facts) == 1 {
-		// Single inline fact
-		builder.WriteString(" ")
-		builder.WriteString(stmt.Facts[0].String())
-	} else {
-		// Multiple facts from body
-		builder.WriteString(glob.KeySymbolColon)
-		for i, fact := range stmt.Facts {
-			if i > 0 {
-				builder.WriteString("\n")
-			}
-			builder.WriteString(fact.String())
-		}
-	}
-	return builder.String()
-}
+// 	// Check if it's a single inline fact (no colon case) or multiple facts (colon case)
+// 	if len(stmt.Facts) == 1 {
+// 		// Single inline fact
+// 		builder.WriteString(" ")
+// 		builder.WriteString(stmt.Facts[0].String())
+// 	} else {
+// 		// Multiple facts from body
+// 		builder.WriteString(glob.KeySymbolColon)
+// 		for i, fact := range stmt.Facts {
+// 			if i > 0 {
+// 				builder.WriteString("\n")
+// 			}
+// 			builder.WriteString(fact.String())
+// 		}
+// 	}
+// 	return builder.String()
+// }
 
 func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 	var builder strings.Builder

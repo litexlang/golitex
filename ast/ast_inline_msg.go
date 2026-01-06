@@ -365,9 +365,9 @@ func (s *ProveIsCommutativePropStmt) InlineString() string {
 	return "TODO"
 }
 
-func (s *ProveAlgoIfStmt) InlineString() string {
-	return "TODO"
-}
+// func (s *ProveAlgoIfStmt) InlineString() string {
+// 	return "TODO"
+// }
 
 func (s *AlgoIfStmt) InlineString() string {
 	return "TODO"
@@ -385,17 +385,17 @@ func (s *EvalStmt) InlineString() string {
 	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.ObjToEval.String())
 }
 
-func (s *DefProveAlgoStmt) InlineString() string {
-	return "TODO"
-}
+// func (s *DefProveAlgoStmt) InlineString() string {
+// 	return "TODO"
+// }
 
-func (s *ByStmt) InlineString() string {
-	return "TODO"
-}
+// func (s *ByStmt) InlineString() string {
+// 	return "TODO"
+// }
 
-func (s *ProveAlgoReturnStmt) InlineString() string {
-	return s.String()
-}
+// func (s *ProveAlgoReturnStmt) InlineString() string {
+// 	return s.String()
+// }
 
 func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
 	return s.String()

@@ -100,10 +100,10 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = exec.defAlgoStmt(stmt)
 	case *ast.EvalStmt:
 		execRet = exec.evalStmt(stmt)
-	case *ast.DefProveAlgoStmt:
-		execRet = exec.defProveAlgoStmt(stmt)
-	case *ast.ByStmt:
-		execRet = exec.byStmt(stmt)
+	// case *ast.DefProveAlgoStmt:
+	// 	execRet = exec.defProveAlgoStmt(stmt)
+	// case *ast.ByStmt:
+	// 	execRet = exec.byStmt(stmt)
 	case *ast.HaveFnEqualCaseByCaseStmt:
 		execRet = exec.haveFnEqualCaseByCaseStmt(stmt)
 	case *ast.ProveCaseByCaseStmt:
@@ -645,11 +645,11 @@ func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, *glob.StmtR
 	return value, glob.NewStmtTrueWithStmt(fmt.Sprintf("By evaluation of algo %s\nWe get %s = %s\n", objToEval.(*ast.FnObj).FnHead.String(), objToEval.String(), value.String()))
 }
 
-func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) *glob.StmtRet {
-	exec.Env.CurEnv().DefProveAlgoMem[stmt.ProveAlgoName] = struct{}{}
-	exec.Env.AllDefinedProveAlgoNames[stmt.ProveAlgoName] = litex_env.NewDefinedStuff(stmt, exec.Env.CurEnvDepth())
-	return exec.NewTrueStmtRet(stmt)
-}
+// func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) *glob.StmtRet {
+// 	exec.Env.CurEnv().DefProveAlgoMem[stmt.ProveAlgoName] = struct{}{}
+// 	exec.Env.AllDefinedProveAlgoNames[stmt.ProveAlgoName] = litex_env.NewDefinedStuff(stmt, exec.Env.CurEnvDepth())
+// 	return exec.NewTrueStmtRet(stmt)
+// }
 
 func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.StmtRet {
 	// Generate integer lists for each range
