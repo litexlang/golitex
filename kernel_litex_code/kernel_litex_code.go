@@ -209,11 +209,7 @@ prop div_cancel_cond(a, b, c R):
     c != 0
 
 know imply cancel(a, b, c R):
-    or:
-        a + c = b + c
-        a - c = b - c
-        $mul_cancel_cond(a, b, c)
-        $div_cancel_cond(a, b, c)
+	a + c = b + c or a - c = b - c or $mul_cancel_cond(a, b, c)or $div_cancel_cond(a, b, c)
     =>:
         a = b
 
@@ -228,20 +224,14 @@ prop div_cancel_general_cond(a, b, c, d R):
 
 know imply cancel_general(a, b, c, d R):
     c = d
-    or:
-        a + c = b + d
-        a - c = b - d
-        $mul_cancel_general_cond(a, b, c, d)
-        $div_cancel_general_cond(a, b, c, d)
+    a + c = b + d or a - c = b - d or $mul_cancel_general_cond(a, b, c, d) or $div_cancel_general_cond(a, b, c, d)
     =>:
         a = b
 
 know imply product_is_0_then_at_least_one_factor_is_0(a, b R):
 	a * b = 0
 	=>:
-		or:
-			a = 0
-			b = 0
+		a = 0 or	b = 0
 
 know:
 	forall a, b, c, e, f, g R:
@@ -521,9 +511,7 @@ know:
 let fn pow(x R, y R) R:
 	dom:
 		x >= 0
-		or:
-			x != 0
-			y != 0
+		x != 0 or y != 0
 
 know forall b N: b >= 0
 
@@ -640,9 +628,7 @@ let fn index_set_of_cart_prod(s set) set:
 know:
 	forall x, y R:
 		x >= 0
-		or:
-			x != 0
-			y != 0
+		x != 0 or y != 0
 		=>:
 			x ^ (y + 1) = (x ^ y) * x
 
