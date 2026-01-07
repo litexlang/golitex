@@ -110,7 +110,7 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.proveExistStmt(tb)
 	default:
 		// ret, err = p.factsStmt(tb)
-		ret, err = p.factStmt(tb, UniFactDepth0)
+		ret, err = p.factOrFactImplyStmt(tb)
 	}
 
 	if err != nil {
@@ -2353,12 +2353,96 @@ func (p *TbParser) factOrFactImplyStmt(tb *tokenBlock) (Stmt, error) {
 			}
 			return uniFact, nil
 		}
-	case glob.KeywordOr:
-		return p.inlineOrFact(tb)
-	// case glob.KeySymbolEqual:
-	// 	return p.equalsFactStmt(tb)
 	default:
-		return p.fact(tb)
+		var specFactOrOrFact Spec_OrFact
+		if cur == glob.KeywordOr {
+			specFactOrOrFact, err = p.inlineOrFact(tb)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			specFactOrOrFact, err = p.specFactStmt(tb)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		if tb.header.is(glob.KeySymbolRightArrow) {
+			// This is an ImplyStmt: parse multiple single-line facts as domFacts until =>, then parse thenFacts
+			domFacts := []Spec_OrFact{}
+
+			// Add the first fact we already parsed (can be SpecFactStmt or OrStmt)
+			if specOrFact, ok := specFactOrOrFact.(Spec_OrFact); ok {
+				domFacts = append(domFacts, specOrFact)
+			} else {
+				return nil, ErrInLine(fmt.Errorf("expect spec fact or or fact in imply statement"), tb)
+			}
+
+			// Parse more domFacts until we hit =>
+			for {
+				if tb.header.is(glob.KeySymbolRightArrow) {
+					break
+				}
+				if tb.header.is(glob.KeySymbolComma) {
+					tb.header.skip(glob.KeySymbolComma)
+				}
+
+				// Check if we've reached the end
+				if tb.header.ExceedEnd() {
+					return nil, ErrInLine(fmt.Errorf("expect '=>' in imply statement"), tb)
+				}
+
+				// Parse next fact (can be SpecFactStmt or OrStmt)
+				nextFact, err := p.SpecFactOrOrStmt(tb)
+				if err != nil {
+					return nil, ErrInLine(err, tb)
+				}
+				if specOrFact, ok := nextFact.(Spec_OrFact); ok {
+					domFacts = append(domFacts, specOrFact)
+				} else {
+					return nil, ErrInLine(fmt.Errorf("expect spec fact or or fact in imply statement"), tb)
+				}
+			}
+
+			// Skip =>
+			err = tb.header.skip(glob.KeySymbolRightArrow)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+
+			// Parse thenFacts (all remaining single-line facts, can be SpecFactStmt or OrStmt)
+			thenFacts := []Spec_OrFact{}
+			for !tb.header.ExceedEnd() {
+				if tb.header.is(glob.KeySymbolComma) {
+					tb.header.skip(glob.KeySymbolComma)
+				}
+
+				if tb.header.ExceedEnd() {
+					break
+				}
+
+				thenFact, err := p.SpecFactOrOrStmt(tb)
+				if err != nil {
+					return nil, ErrInLine(err, tb)
+				}
+				if specOrFact, ok := thenFact.(Spec_OrFact); ok {
+					thenFacts = append(thenFacts, specOrFact)
+				} else {
+					return nil, ErrInLine(fmt.Errorf("expect spec fact or or fact in imply statement"), tb)
+				}
+			}
+
+			if len(thenFacts) == 0 {
+				return nil, ErrInLine(fmt.Errorf("expect at least one fact after '=>' in imply statement"), tb)
+			}
+
+			return NewImplyStmt(domFacts, thenFacts, tb.line), nil
+		} else if tb.header.is(glob.KeySymbolComma) {
+			// Continue parsing more facts (this might be part of a list, not an imply statement)
+			return specFactOrOrFact, nil
+		} else {
+			return specFactOrOrFact, nil
+		}
 	}
 }
 
