@@ -195,6 +195,94 @@ func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, log
 	return glob.NewEmptyStmtTrue()
 }
 
+func (s SpecFactInImplyTemplateMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]KnownSpecFact_InImplyTemplate, *glob.StmtRet) {
+	switch stmt.FactType {
+	case ast.TruePure:
+		return s.PureFacts, glob.NewEmptyStmtTrue()
+	case ast.FalsePure:
+		return s.NotPureFacts, glob.NewEmptyStmtTrue()
+	case ast.TrueExist_St:
+		return s.Exist_St_Facts, glob.NewEmptyStmtTrue()
+	case ast.FalseExist_St:
+		return s.NotExist_St_Facts, glob.NewEmptyStmtTrue()
+	default:
+		return nil, glob.ErrRet(("invalid spec fact type"))
+	}
+}
+
+func (s SpecFactInImplyTemplateMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]KnownSpecFact_InImplyTemplate, bool) {
+	sameEnumFacts, ret := s.getSameEnumFacts(stmt)
+	if ret.IsErr() {
+		return nil, false
+	}
+
+	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.PropName)]
+	if !memExist {
+		return nil, false
+	}
+
+	return sameEnumPkgPropFacts, true
+}
+
+func (s SpecFactInImplyTemplateMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, implyTemplate *ast.ImplyTemplateStmt) *glob.StmtRet {
+	sameEnumFacts, ret := s.getSameEnumFacts(stmtAsSpecFact)
+	if ret.IsErr() {
+		return ret
+	}
+
+	if _, ok := sameEnumFacts[string(stmtAsSpecFact.PropName)]; !ok {
+		sameEnumFacts[string(stmtAsSpecFact.PropName)] = []KnownSpecFact_InImplyTemplate{}
+	}
+	sameEnumFacts[string(stmtAsSpecFact.PropName)] = append(sameEnumFacts[string(stmtAsSpecFact.PropName)], NewKnownSpecFact_InImplyTemplate(stmtAsSpecFact, implyTemplate))
+
+	return glob.NewEmptyStmtTrue()
+}
+
+func (s SpecFact_InLogicExpr_InImplyTemplateMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]SpecFact_InLogicExpr_InImplyTemplate, *glob.StmtRet) {
+	switch stmt.FactType {
+	case ast.TruePure:
+		return s.PureFacts, glob.NewEmptyStmtTrue()
+	case ast.FalsePure:
+		return s.NotPureFacts, glob.NewEmptyStmtTrue()
+	case ast.TrueExist_St:
+		return s.Exist_St_Facts, glob.NewEmptyStmtTrue()
+	case ast.FalseExist_St:
+		return s.NotExist_St_Facts, glob.NewEmptyStmtTrue()
+	default:
+		return nil, glob.ErrRet(("invalid spec fact type"))
+	}
+}
+
+func (s SpecFact_InLogicExpr_InImplyTemplateMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]SpecFact_InLogicExpr_InImplyTemplate, bool) {
+	sameEnumFacts, ret := s.getSameEnumFacts(stmt)
+	if ret.IsErr() {
+		return nil, false
+	}
+
+	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.PropName)]
+	if !memExist {
+		return nil, false
+	}
+
+	return sameEnumPkgPropFacts, true
+}
+
+func (s SpecFact_InLogicExpr_InImplyTemplateMem) NewFact(implyTemplate *ast.ImplyTemplateStmt, logicExpr *ast.OrStmt) *glob.StmtRet {
+	for i, fact := range logicExpr.Facts {
+		sameEnumFacts, ret := s.getSameEnumFacts(fact)
+		if ret.IsErr() {
+			return ret
+		}
+
+		if _, ok := sameEnumFacts[string(fact.PropName)]; !ok {
+			sameEnumFacts[string(fact.PropName)] = []SpecFact_InLogicExpr_InImplyTemplate{}
+		}
+		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], NewSpecFact_InLogicExpr_InImplyTemplate(fact, implyTemplate, i, logicExpr))
+	}
+
+	return glob.NewEmptyStmtTrue()
+}
+
 func (envMemory *EnvMemory) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
 	objAsStr := obj.String()
 	facts, ok := envMemory.EqualMem[objAsStr]
