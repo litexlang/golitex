@@ -2,9 +2,7 @@ know imply solve_quadratic_equation(a, b, c, x R):
     b ^ 2 - 4 * a * c >= 0
     x ^ 2 + b * x + c = 0
     =>:
-        or:
-            x = (-b + sqrt(b ^ 2 - 4 * a * c)) / (2 * a)
-            x = (-b - sqrt(b ^ 2 - 4 * a * c)) / (2 * a)
+        x = (-b + sqrt(b ^ 2 - 4 * a * c)) / (2 * a) or x = (-b - sqrt(b ^ 2 - 4 * a * c)) / (2 * a)
 
 let x R: x^2 + 2 * x + 1 = 0
 
