@@ -1185,7 +1185,7 @@ func (p *TbParser) knowFactStmt(tb *tokenBlock) (Stmt, error) {
 }
 
 func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skipKwAndColonCheckEOL(glob.KeywordProveCaseByCase)
+	err := tb.header.skip(glob.KeywordProveCaseByCase)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1193,11 +1193,37 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 	caseFacts := []*SpecFactStmt{}
 	thenFacts := FactStmtSlice{}
 	proofs := []StmtSlice{}
-	hasEncounteredCase := false
 
-	for _, block := range tb.body {
-		if block.header.is(glob.KeywordCase) {
-			hasEncounteredCase = true
+	// If prove_case_by_case is not followed by colon, the conclusion is written directly after it
+	if !tb.header.is(glob.KeySymbolColon) {
+		// Parse the conclusion fact directly from the header
+		conclusionFact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{glob.KeySymbolColon})
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		thenFacts = append(thenFacts, conclusionFact)
+
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+	} else {
+		// If there's a colon, skip it
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+	}
+
+	// If thenFacts is already populated, it means the conclusion was written after prove_case_by_case
+	// In this case, all body blocks should be case blocks
+	// Otherwise, body[0] must be =>:, and the rest are case blocks
+	if len(thenFacts) > 0 {
+		// Conclusion already parsed, all body blocks are case blocks
+		for _, block := range tb.body {
+			if !block.header.is(glob.KeywordCase) {
+				return nil, ErrInLine(fmt.Errorf("prove_case_by_case: when conclusion is written after prove_case_by_case, all body blocks must be case blocks"), tb)
+			}
 
 			// Skip "case" keyword
 			err := block.header.skip(glob.KeywordCase)
@@ -1225,32 +1251,63 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 				return nil, ErrInLine(err, tb)
 			}
 			proofs = append(proofs, proof)
-		} else {
-			// This is a thenFacts block
-			if hasEncounteredCase {
-				return nil, ErrInLine(fmt.Errorf("prove_case_by_case: thenFacts can only appear before case blocks"), tb)
+		}
+	} else {
+		// Conclusion is in body, body[0] must be =>:, rest are case blocks
+		if len(tb.body) == 0 {
+			return nil, ErrInLine(fmt.Errorf("prove_case_by_case: when using colon syntax, body must contain at least =>: section"), tb)
+		}
+
+		// Parse body[0] as =>: section
+		firstBlock := tb.body[0]
+		if !firstBlock.header.is(glob.KeySymbolRightArrow) {
+			return nil, ErrInLine(fmt.Errorf("prove_case_by_case: when using colon syntax, first body block must be =>:"), tb)
+		}
+
+		err = firstBlock.header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		curThenFacts, err := p.bodyBlockFacts(&firstBlock, UniFactDepth0, len(firstBlock.body))
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		thenFacts = append(thenFacts, curThenFacts...)
+
+		// Parse remaining body blocks as case blocks
+		for i := 1; i < len(tb.body); i++ {
+			block := tb.body[i]
+			if !block.header.is(glob.KeywordCase) {
+				return nil, ErrInLine(fmt.Errorf("prove_case_by_case: after =>: section, all body blocks must be case blocks"), tb)
 			}
 
-			// Parse thenFacts (could be =>: section or inline facts)
-			if block.header.is(glob.KeySymbolRightArrow) {
-				err = block.header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-
-				curThenFacts, err := p.bodyBlockFacts(&block, UniFactDepth0, len(block.body))
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				thenFacts = append(thenFacts, curThenFacts...)
-			} else {
-				// Parse inline fact
-				curStmt, err := p.factStmt(&block, UniFactDepth0)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				thenFacts = append(thenFacts, curStmt)
+			// Skip "case" keyword
+			err := block.header.skip(glob.KeywordCase)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
 			}
+
+			// Parse the specFact (condition)
+			curStmt, err := p.specFactStmt(&block)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+
+			// Skip the colon after specFact
+			err = block.header.skip(glob.KeySymbolColon)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+
+			caseFacts = append(caseFacts, curStmt)
+
+			// Parse proof statements in the case block body
+			proof, err := p.parseTbBodyAndGetStmts(block.body)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			proofs = append(proofs, proof)
 		}
 	}
 

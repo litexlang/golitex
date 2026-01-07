@@ -1,5 +1,3 @@
-forall S set, s S:
-    forall x S:
-        $is_nonempty_set(x)
-    =>:
-        choice(S, s) $in s
+prove_imply x, y, z R: x + z = y + z => x = y:
+
+prove forall x + z = y + z => x = y:
