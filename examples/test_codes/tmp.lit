@@ -1,0 +1,5 @@
+forall S set, s S:
+    forall x S:
+        $is_nonempty_set(x)
+    =>:
+        choice(S, s) $in s
