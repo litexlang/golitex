@@ -1,3 +1,10 @@
 prove_imply x, y, z R: x + z = y + z => x = y:
 
-prove forall x + z = y + z => x = y:
+prove_imply x, y, z R:
+    ...
+    =>:
+        ...
+    prove:
+        ...
+
+x + z = y + z => x = y
