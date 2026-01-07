@@ -1,0 +1,4 @@
+imply x, y, z R: x + z = y + z => x = y:
+    ...
+
+x + z = y + z => x = y

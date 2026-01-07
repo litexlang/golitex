@@ -854,6 +854,36 @@ func (stmt *OrStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt.InstantiateFact(uniMap)
 }
 
+func (stmt *ImplyStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newDomFacts := make([]Spec_OrFact, len(stmt.DomFacts))
+	for i, fact := range stmt.DomFacts {
+		newFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		if specOrFact, ok := newFact.(Spec_OrFact); ok {
+			newDomFacts[i] = specOrFact
+		} else {
+			return nil, fmt.Errorf("instantiated fact is not Spec_OrFact")
+		}
+	}
+
+	newThenFacts := make([]Spec_OrFact, len(stmt.ThenFacts))
+	for i, fact := range stmt.ThenFacts {
+		newFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		if specOrFact, ok := newFact.(Spec_OrFact); ok {
+			newThenFacts[i] = specOrFact
+		} else {
+			return nil, fmt.Errorf("instantiated fact is not Spec_OrFact")
+		}
+	}
+
+	return NewImplyStmt(newDomFacts, newThenFacts, stmt.Line), nil
+}
+
 // func (stmt *DefProveAlgoStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 // 	newStmts, err := stmt.Stmts.Instantiate(uniMap)
 // 	if err != nil {
