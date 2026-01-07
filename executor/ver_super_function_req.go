@@ -199,16 +199,28 @@ func (ver *Verifier) verDimReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 }
 
 func (ver *Verifier) verChoiceReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
-	if len(fnObj.Params) != 1 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("choice expects 1 parameter, got %d", len(fnObj.Params))})
+	if len(fnObj.Params) != 2 {
+		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("choice expects 2 parameters, got %d", len(fnObj.Params))})
 	}
 
-	// choice(S) requires that S is a set of non-empty sets
-	// Verify: forall x S: $is_nonempty_set(x)
+	// choice(S, s) requires:
+	// 1. s $in S (second parameter is in the first parameter)
+	// 2. S is a set of non-empty sets: forall x S: $is_nonempty_set(x)
 	S := fnObj.Params[0]
-	x := "x"
+	s := fnObj.Params[1]
 
-	// Create a UniFactStmt: forall x S: $is_nonempty_set(x)
+	// Verify: s $in S
+	inFact := ast.NewInFactWithObj(s, S)
+	verRet := ver.VerFactStmt(inFact, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsUnknown() {
+		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("choice requires that %s is in %s, but this cannot be verified", s, S)})
+	}
+
+	// Verify: forall x S: $is_nonempty_set(x)
+	x := "x"
 	uniFact := ast.NewUniFact(
 		[]string{x},
 		[]ast.Obj{S},
@@ -218,7 +230,7 @@ func (ver *Verifier) verChoiceReq(fnObj *ast.FnObj, state *VerState) *glob.VerRe
 	)
 
 	// Verify the forall statement
-	verRet := ver.verUniFact(uniFact, state)
+	verRet = ver.verUniFact(uniFact, state)
 	if verRet.IsErr() {
 		return verRet
 	}

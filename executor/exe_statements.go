@@ -834,7 +834,7 @@ func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveImplyStmt) *glob
 	defer exec.deleteEnv()
 
 	if stmt.SpecFact.FactType != ast.TruePure {
-		return glob.ErrRet(fmt.Sprintf("expect true pure fact in prove_imply"))
+		return glob.ErrRet(fmt.Sprintf("expect true pure fact in prove_infer"))
 	}
 
 	specFactAsParams, err := ast.ParamsInSpecFactAreStrings(stmt.SpecFact)
