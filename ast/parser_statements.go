@@ -109,7 +109,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 	case glob.KeywordProveExist:
 		ret, err = p.proveExistStmt(tb)
 	default:
-		ret, err = p.factsStmt(tb)
+		// ret, err = p.factsStmt(tb)
+		ret, err = p.factStmt(tb, UniFactDepth0)
 	}
 
 	if err != nil {
@@ -2253,22 +2254,23 @@ func (p *TbParser) implyStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt,
 	}
 }
 
-func (p *TbParser) factsStmt(tb *tokenBlock) (Stmt, error) {
-	if tb.GetEnd() != glob.KeySymbolColon { // 因为可能是 forall : 这样的
-		facts, err := p.inlineFacts_checkUniDepth0(tb, []string{})
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
+// func (p *TbParser) factsStmt(tb *tokenBlock) (Stmt, error) {
+// 	return p.factStmt(tb, UniFactDepth0)
+// if tb.GetEnd() != glob.KeySymbolColon { // 因为可能是 forall : 这样的
+// 	facts, err := p.inlineFacts_checkUniDepth0(tb, []string{})
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-		if len(facts) == 1 {
-			return facts[0], nil
-		}
+// 	if len(facts) == 1 {
+// 		return facts[0], nil
+// 	}
 
-		return NewInlineFactsStmt(facts, tb.line), nil
-	} else {
-		return p.factStmt(tb, UniFactDepth0)
-	}
-}
+// 	return NewInlineFactsStmt(facts, tb.line), nil
+// } else {
+// 	return p.factStmt(tb, UniFactDepth0)
+// }
+// }
 
 func (p *TbParser) proveByInductionStmt(tb *tokenBlock) (Stmt, error) {
 	err := tb.header.skip(glob.KeywordProveByInduction)
