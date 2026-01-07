@@ -1010,14 +1010,15 @@ know exist x set st $axiom_of_infinity(x)
 
 ### choice
 
-# choice(S) returns a function that chooses an element from each set in S
+# choice(S, s) chooses an element from s, where s is an element of S
 # For any set S (which is a set of sets), if each element of S is a non-empty set,
-# then choice(S) is a function such that for any s in S, choice(S)(s) is in s.
+# then for any s in S, choice(S, s) is in s.
 know:
 	forall S set, s S:
-		$is_nonempty_set(s)
+		forall x S:
+			$is_nonempty_set(x)
 		=>:
-			choice(S)(s) $in s
+			choice(S, s) $in s
 
 # End of ZFC
 

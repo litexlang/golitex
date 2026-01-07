@@ -36,7 +36,7 @@ const (
 	// KeywordExistProp = "exist_prop"
 
 	KeywordImply      = "imply"
-	KeywordProveImply = "prove_imply"
+	KeywordProveImply = "prove_infer"
 
 	KeywordHave = "have"
 	KeywordLet  = "let"
@@ -337,7 +337,8 @@ var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 	KeywordQNeg: {},
 	KeywordQPos: {},
 
-	KeywordVal: {},
+	KeywordVal:    {},
+	KeywordChoice: {},
 }
 
 var BuiltinPropNames map[string]struct{} = map[string]struct{}{
