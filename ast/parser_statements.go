@@ -33,8 +33,6 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 	switch cur {
 	case glob.KeywordProp:
 		ret, err = p.defPropStmt(tb)
-	// case glob.KeywordFn:
-	// 	ret, err = p.defFnStmt(tb, true)
 	case glob.KeywordLet:
 		if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
 			ret, err = p.defFnStmt(tb, true)
@@ -90,26 +88,21 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.algoDefStmt(tb)
 	case glob.KeywordEval:
 		ret, err = p.evalStmt(tb)
-	// case glob.KeywordProveAlgo:
-	// 	ret, err = p.defProveAlgoStmt(tb)
-	// case glob.KeywordBy:
-	// 	ret, err = p.byStmt(tb)
 	case glob.KeywordProveByContradiction:
 		ret, err = p.proveByContradictionStmt(tb)
 	case glob.KeywordDoNothing:
 		ret, err = p.doNothingStmt(tb)
 	case glob.KeywordImport:
 		ret, err = p.importDirStmt(tb)
-	case glob.KeywordProveImply:
-		ret, err = p.proveImplyStmt(tb)
-	// case glob.KeywordImplication:
-	// 	ret, err = p.DefImplicationStmtI(tb)
+	case glob.KeywordProveInfer:
+		ret, err = p.proveInferStmt(tb)
 	case glob.KeywordRun:
 		ret, err = p.runFileStmt(tb)
 	case glob.KeywordProveExist:
 		ret, err = p.proveExistStmt(tb)
+	case glob.KeywordImply:
+		ret, err = p.implyTemplateStmt(tb)
 	default:
-		// ret, err = p.factsStmt(tb)
 		ret, err = p.factOrFactImplyStmt(tb)
 	}
 
@@ -2010,8 +2003,8 @@ func (p *TbParser) importDirStmt(tb *tokenBlock) (*ImportDirStmt, error) {
 	return NewImportDirStmt(pkgName, asPkgName, true, tb.line), nil
 }
 
-func (p *TbParser) proveImplyStmt(tb *tokenBlock) (*ProveImplyStmt, error) {
-	err := tb.header.skip(glob.KeywordProveImply)
+func (p *TbParser) proveInferStmt(tb *tokenBlock) (*ProveInferStmt, error) {
+	err := tb.header.skip(glob.KeywordProveInfer)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -3792,4 +3785,87 @@ func (p *TbParser) proveExistStmt(tb *tokenBlock) (*ProveExistStmt, error) {
 	}
 
 	return NewProveExistStmt(params, paramSets, equalTos, fact, proofs, tb.line), nil
+}
+
+func (p *TbParser) implyTemplateStmt(tb *tokenBlock) (*ImplyTemplateStmt, error) {
+	err := tb.header.skip(glob.KeywordImply)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// parameters paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeywordSt, false)
+	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolColon, false)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// skip :
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// inline SpecFacts
+	domFacts := []Spec_OrFact{}
+	for {
+		curStmt, err := p.SpecFactOrOrStmt(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		domFacts = append(domFacts, curStmt.(Spec_OrFact))
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		} else {
+			break
+		}
+	}
+
+	thenFacts := []Spec_OrFact{}
+
+	// skip =>
+
+	err = tb.header.skip(glob.KeySymbolRightArrow)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	for {
+		curStmt, err := p.SpecFactOrOrStmt(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		thenFacts = append(thenFacts, curStmt.(Spec_OrFact))
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		} else {
+			break
+		}
+	}
+
+	ifFacts := []FactStmt{}
+
+	// 如果是 if 那跳过
+	if tb.header.is(glob.KeywordIf) {
+		err = tb.header.skip(glob.KeywordIf)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		for {
+			curStmt, err := p.factStmt(tb, UniFactDepth1)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			ifFacts = append(ifFacts, curStmt)
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+			} else {
+				break
+			}
+		}
+	}
+
+	return NewImplyTemplateStmt(params, paramSets, domFacts, thenFacts, ifFacts, tb.line), nil
 }

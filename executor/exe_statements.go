@@ -99,7 +99,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = glob.ErrRet("run statements are not allowed in local scope.")
 	case *ast.ProveForStmt:
 		execRet = exec.proveForStmt(stmt)
-	case *ast.ProveImplyStmt:
+	case *ast.ProveInferStmt:
 		execRet = exec.proveImplyStmt(stmt)
 	case *ast.HaveObjStStmt:
 		execRet = exec.haveObjStStmt(stmt)
@@ -801,7 +801,7 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 	return glob.NewEmptyStmtTrue()
 }
 
-func (exec *Executor) proveImplyStmt(stmt *ast.ProveImplyStmt) *glob.StmtRet {
+func (exec *Executor) proveImplyStmt(stmt *ast.ProveInferStmt) *glob.StmtRet {
 	ret := exec.proveImplyStmtProveProcess(stmt)
 	if ret.IsNotTrue() {
 		return ret
@@ -812,10 +812,10 @@ func (exec *Executor) proveImplyStmt(stmt *ast.ProveImplyStmt) *glob.StmtRet {
 		return glob.ErrRet(ret.String())
 	}
 
-	return exec.NewTrueStmtRet(stmt).AddWarning(fmt.Sprintf("%s is a powerful feature. The implication section will be automatically generated after every time %s is true later. Don't use it too much, since it is very memory consuming.", glob.KeywordProveImply, stmt.SpecFact.PropName))
+	return exec.NewTrueStmtRet(stmt).AddWarning(fmt.Sprintf("%s is a powerful feature. The implication section will be automatically generated after every time %s is true later. Don't use it too much, since it is very memory consuming.", glob.KeywordProveInfer, stmt.SpecFact.PropName))
 }
 
-func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveImplyStmt) *glob.StmtRet {
+func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveInferStmt) *glob.StmtRet {
 
 	exec.NewEnv()
 	defer exec.deleteEnv()

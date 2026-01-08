@@ -400,7 +400,7 @@ type ProveForStmt struct {
 // 	Line uint
 // }
 
-type ProveImplyStmt struct {
+type ProveInferStmt struct {
 	SpecFact        *SpecFactStmt
 	ImplicationFact FactStmtSlice
 	Proofs          StmtSlice

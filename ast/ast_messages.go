@@ -565,6 +565,42 @@ func (stmt *ImplyStmt) String() string {
 	return builder.String()
 }
 
+func (stmt *ImplyTemplateStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordImply)
+	builder.WriteString(" ")
+	
+	// Params
+	if len(stmt.Params) > 0 {
+		paramStrs := make([]string, len(stmt.Params))
+		for i, param := range stmt.Params {
+			paramStrs[i] = param
+			if i < len(stmt.ParamSets) {
+				paramStrs[i] += " " + stmt.ParamSets[i].String()
+			}
+		}
+		builder.WriteString(strings.Join(paramStrs, ", "))
+		builder.WriteString(": ")
+	}
+	
+	// DomFacts
+	domFactStrSlice := make([]string, len(stmt.DomFacts))
+	for i, fact := range stmt.DomFacts {
+		domFactStrSlice[i] = fact.String()
+	}
+	builder.WriteString(strings.Join(domFactStrSlice, ", "))
+	builder.WriteString(" => ")
+	
+	// ThenFacts
+	thenFactStrSlice := make([]string, len(stmt.ThenFacts))
+	for i, fact := range stmt.ThenFacts {
+		thenFactStrSlice[i] = fact.String()
+	}
+	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+	
+	return builder.String()
+}
+
 func (stmt *ImportDirStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordImport)
@@ -1027,9 +1063,9 @@ func (stmt *ProveForStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ProveImplyStmt) String() string {
+func (stmt *ProveInferStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveImply)
+	builder.WriteString(glob.KeywordProveInfer)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.SpecFact.String())
 	builder.WriteString(":")
