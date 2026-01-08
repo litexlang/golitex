@@ -36,12 +36,31 @@ func (exec *Executor) implyStmt(stmt *ast.ImplyStmt) *glob.StmtRet {
 	}
 
 	for _, thenFact := range stmt.ThenFacts {
-		ret := ver.proveOneThenFactInImplyStmt(stmt, thenFact, Round0Msg().UpdateReqOkToTrue())
+		ret := ver.proveOneThenFactInImplyStmt(stmt, thenFact, NewVerState(0, true, true))
 		if ret.IsNotTrue() {
 			return ret
 		}
 	}
-	return exec.NewTrueStmtRet(stmt)
+
+	// emit then
+	newFactMsgs := []string{}
+	for _, thenFact := range stmt.ThenFacts {
+		var factStmt ast.FactStmt
+		if specFact, ok := thenFact.(*ast.SpecFactStmt); ok {
+			factStmt = specFact
+		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
+			factStmt = orStmt
+		} else {
+			return glob.ErrRet(fmt.Sprintf("imply statement error: unsupported fact type in thenFacts: %T", thenFact))
+		}
+		ret := ver.Env.NewFactWithCheckingNameDefined(factStmt)
+		if ret.IsNotTrue() {
+			return ret
+		}
+		newFactMsgs = append(newFactMsgs, factStmt.String())
+	}
+
+	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
 }
 
 func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.ImplyStmt, thenFact ast.Spec_OrFact, state *VerState) *glob.StmtRet {
@@ -94,7 +113,8 @@ func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast
 
 func (ver *Verifier) iterate_KnownPureSpecInImplyStmt_applyMatch_InstObjInParamSetAndSatisfyIfFacts(stmt *ast.ImplyStmt, knownFacts []env.KnownSpecFact_InImplyTemplate, toCheck ast.Spec_OrFact, state *VerState) *glob.VerRet {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
-		ok, uniMap, err := ver.matchImplyTemplateParamsWithAllParamsInImplyStmt(&knownFacts[i], stmt, toCheck)
+		ok, uniMap, err := ver.
+			matchImplyTemplateParamsWithAllParamsInImplyStmt(&knownFacts[i], stmt, toCheck)
 		if !ok || err != nil {
 			return glob.NewEmptyVerRetUnknown()
 		}
@@ -142,6 +162,16 @@ func (ver *Verifier) checkFactTypeAndPropNamesMatch(knownFact ast.Spec_OrFact, i
 			if knownAs.PropName != implyAs.PropName {
 				return false
 			}
+
+			if knownAs.FactType != implyAs.FactType {
+				return false
+			}
+
+			// TODO: exist 的match暂时还不行
+			if !knownAs.IsPureFact() || !implyAs.IsPureFact() {
+				return false
+			}
+
 		} else {
 			return false
 		}
@@ -265,11 +295,8 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.
 		firstVar := instVars[0]
 		for j := 1; j < len(instVars); j++ {
 			verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewEqualFact(firstVar, instVars[j]), FinalRoundNoMsg().CopyAndReqOkToTrue())
-			if verRet.IsErr() {
+			if verRet.IsNotTrue() {
 				return false, nil, err
-			}
-			if verRet.IsUnknown() {
-				return false, nil, nil
 			}
 		}
 	}
@@ -289,7 +316,7 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.
 
 		// REMARK
 		// 注：这里err != nil 也是返回 false, 因为有可能会把 sqrt(x) ^ 2 = x 拿来证明 y = z，但是 匹配的时候，可能会导致 x 是 -1 之类的。如果error了，其实就是说明没证明通过
-		if verRet.IsErr() || verRet.IsUnknown() {
+		if verRet.IsNotTrue() {
 			return false, nil, nil
 		}
 	}

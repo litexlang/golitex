@@ -1,8 +1,17 @@
-imply a, b R: a != b => 2 * a != 2 * b:
-    prove_by_contradiction 2 * a != 2 * b:
-        2 * a = 2 * b
-        a = (2 * a) / 2 = (2 * b) / 2 = b
+"""
+imply a, b, c R: c + a != c + b => a != b:
+    prove_by_contradiction a != b:
         a = b
+        c + a = c + b
 
-let a ,b R : a != b
-a != b => 2 * a != 2 * b
+let x, y, z R: x + y != x + z
+x + y != x + z => y != z
+"""
+
+imply a, b, c R: a * b = a * c => b = c if a != 0:
+    prove_by_contradiction b = c:
+        b = a * b / a = a * c / a = c
+        b = c
+
+let x2, y2, z2 R: x2 * y2 = x2 * z2, x2 != 0
+x2 * y2 = x2 * z2 => y2 = z2

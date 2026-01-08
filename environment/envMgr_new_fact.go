@@ -133,7 +133,7 @@ func (envMgr *EnvMgr) newSpecFact(fact *ast.SpecFactStmt) *glob.StmtRet {
 		ieShortRet = ie.newPureFact(fact)
 	}
 
-	return ret.AddShortRetAsInfers(ieShortRet)
+	return ret.AddInfers(ieShortRet.Msgs)
 }
 
 func (envMgr *EnvMgr) newTrueEqual(fact *ast.SpecFactStmt) *glob.StmtRet {
@@ -146,7 +146,7 @@ func (envMgr *EnvMgr) newTrueEqual(fact *ast.SpecFactStmt) *glob.StmtRet {
 	ie := NewInferenceEngine(envMgr)
 	shortRet := ie.newTrueEqual(fact)
 
-	return ret.AddShortRetAsInfers(shortRet)
+	return ret.AddInfers(shortRet.Msgs)
 
 	// if shortRet.IsErr() {
 	// 	return ret.AddShortRetAsInfers(shortRet)
