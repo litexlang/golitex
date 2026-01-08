@@ -33,12 +33,11 @@ type FnInFnTMemItem struct {
 }
 
 type KnownFactsStruct struct {
-	SpecFactMem                             SpecFactMem
-	SpecFactInLogicExprMem                  SpecFactInLogicExprMem
-	SpecFactInUniFactMem                    SpecFactInUniFactMem
-	SpecFact_InLogicExpr_InUniFactMem       SpecFact_InLogicExpr_InUniFactMem
-	SpecFactInImplyTemplateMem              SpecFactInImplyTemplateMem
-	SpecFact_InImplyTemplate_InLogicExprMem SpecFact_InLogicExpr_InImplyTemplateMem
+	SpecFactMem                       SpecFactMem
+	SpecFactInLogicExprMem            SpecFactInLogicExprMem
+	SpecFactInUniFactMem              SpecFactInUniFactMem
+	SpecFact_InLogicExpr_InUniFactMem SpecFact_InLogicExpr_InUniFactMem
+	SpecFactInImplyTemplateMem        SpecFactInImplyTemplateMem
 }
 
 type DefinedStuff[T any] struct {
@@ -154,12 +153,11 @@ func (envMgr *EnvMgr) DeleteEnv() {
 
 func makeKnownFactsStruct() KnownFactsStruct {
 	return KnownFactsStruct{
-		SpecFactMem:                             *newSpecFactMem(),
-		SpecFactInLogicExprMem:                  *newSpecFactInLogicExprMem(),
-		SpecFactInUniFactMem:                    *newSpecFactInUniFact(),
-		SpecFact_InLogicExpr_InUniFactMem:       *newSpecFact_InLogicExpr_InUniFactMem(),
-		SpecFactInImplyTemplateMem:              *newSpecFactInImplyTemplateMem(),
-		SpecFact_InImplyTemplate_InLogicExprMem: *newSpecFact_InLogicExpr_InImplyTemplateMem(),
+		SpecFactMem:                       *newSpecFactMem(),
+		SpecFactInLogicExprMem:            *newSpecFactInLogicExprMem(),
+		SpecFactInUniFactMem:              *newSpecFactInUniFact(),
+		SpecFact_InLogicExpr_InUniFactMem: *newSpecFact_InLogicExpr_InUniFactMem(),
+		SpecFactInImplyTemplateMem:        *newSpecFactInImplyTemplateMem(),
 	}
 }
 
@@ -236,40 +234,12 @@ func newSpecFactInImplyTemplateMem() *SpecFactInImplyTemplateMem {
 }
 
 type KnownSpecFact_InImplyTemplate struct {
-	SpecFact      *ast.SpecFactStmt
+	SpecFact      ast.Spec_OrFact
 	ImplyTemplate *ast.ImplyTemplateStmt
 }
 
 func NewKnownSpecFact_InImplyTemplate(specFact *ast.SpecFactStmt, implyTemplate *ast.ImplyTemplateStmt) KnownSpecFact_InImplyTemplate {
 	return KnownSpecFact_InImplyTemplate{specFact, implyTemplate}
-}
-
-type SpecFact_InLogicExpr_InImplyTemplate struct {
-	SpecFact      *ast.SpecFactStmt
-	ImplyTemplate *ast.ImplyTemplateStmt
-	Index         int
-	LogicExpr     *ast.OrStmt
-}
-
-func NewSpecFact_InLogicExpr_InImplyTemplate(specFact *ast.SpecFactStmt, implyTemplate *ast.ImplyTemplateStmt, index int, logicExpr *ast.OrStmt) SpecFact_InLogicExpr_InImplyTemplate {
-	return SpecFact_InLogicExpr_InImplyTemplate{specFact, implyTemplate, index, logicExpr}
-}
-
-type SpecFact_InLogicExpr_InImplyTemplateMem struct {
-	PureFacts         map[string][]SpecFact_InLogicExpr_InImplyTemplate
-	NotPureFacts      map[string][]SpecFact_InLogicExpr_InImplyTemplate
-	Exist_St_Facts    map[string][]SpecFact_InLogicExpr_InImplyTemplate
-	NotExist_St_Facts map[string][]SpecFact_InLogicExpr_InImplyTemplate
-}
-
-func newSpecFact_InLogicExpr_InImplyTemplateMem() *SpecFact_InLogicExpr_InImplyTemplateMem {
-
-	return &SpecFact_InLogicExpr_InImplyTemplateMem{
-		PureFacts:         make(map[string][]SpecFact_InLogicExpr_InImplyTemplate),
-		NotPureFacts:      make(map[string][]SpecFact_InLogicExpr_InImplyTemplate),
-		Exist_St_Facts:    make(map[string][]SpecFact_InLogicExpr_InImplyTemplate),
-		NotExist_St_Facts: make(map[string][]SpecFact_InLogicExpr_InImplyTemplate),
-	}
 }
 
 type SpecFact_InLogicExpr_InUniFact struct {
