@@ -113,7 +113,7 @@ func (exec *Executor) implyTemplateStmtStore(stmt *ast.ImplyTemplateStmt) *glob.
 			}
 		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
 			// Store OrStmt in SpecFact_InLogicExpr_InImplyTemplateMem
-			ret := exec.Env.CurEnv().KnownFactsStruct.SpecFact_InImplyTemplate_InLogicExprMem.NewFact(stmt, orStmt)
+			ret := exec.Env.StoreSpecFactInImplyTemplateMem(orStmt.Facts[0], stmt)
 			if ret.IsErr() {
 				return ret
 			}
