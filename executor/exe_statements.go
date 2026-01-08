@@ -46,10 +46,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		if execRet.IsTrue() {
 			execRet = execRet.AddWarning("`let` may introduce non-existent objects. If you want to ensure the object exists, please use `have` instead!\n")
 		}
-	// case *ast.HaveObjStStmt:
-	// 	execRet = exec.haveObjStStmt(stmt)
-	// case *ast.DefExistPropStmt:
-	// 	execRet = exec.defExistPropStmt(stmt)
 	case *ast.LetFnStmt:
 		execRet = exec.lefDefFnStmt(stmt)
 		if execRet.IsTrue() {
@@ -57,8 +53,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		}
 	case *ast.ClaimImplicationStmt:
 		execRet = exec.claimImplyStmt(stmt)
-		// case *ast.ClaimExistPropStmt:
-		// 	execRet = exec.claimExistPropStmt(stmt)
 	case *ast.ProveStmt:
 		execRet = exec.proveStmt(stmt)
 	case *ast.ClaimProveByContradictionStmt:
@@ -67,11 +61,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = exec.proveByEnumStmt(stmt)
 	case *ast.HaveObjInNonEmptySetStmt:
 		execRet = exec.haveObjInNonEmptySetStmt(stmt)
-	// case *ast.KnowExistPropStmt:
-	// 	execRet = exec.knowExistPropStmt(stmt)
-	// 	if execRet.IsTrue() {
-	// 		execRet = execRet.AddWarning("`know exist` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
-	// 	}
 	case *ast.DefFnSetStmt:
 		execRet = exec.DefFnTemplateStmt(stmt)
 	case *ast.ClearStmt:
@@ -100,10 +89,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = exec.defAlgoStmt(stmt)
 	case *ast.EvalStmt:
 		execRet = exec.evalStmt(stmt)
-	// case *ast.DefProveAlgoStmt:
-	// 	execRet = exec.defProveAlgoStmt(stmt)
-	// case *ast.ByStmt:
-	// 	execRet = exec.byStmt(stmt)
 	case *ast.HaveFnEqualCaseByCaseStmt:
 		execRet = exec.haveFnEqualCaseByCaseStmt(stmt)
 	case *ast.ProveCaseByCaseStmt:
@@ -120,6 +105,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = exec.haveObjStStmt(stmt)
 	case *ast.ProveExistStmt:
 		execRet = exec.proveExistStmt(stmt)
+	case *ast.ImplyStmt:
+		execRet = exec.implyStmt(stmt)
 	default:
 		execRet = glob.ErrRet(fmt.Sprintf("unknown statement type: %T", stmt))
 	}

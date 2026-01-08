@@ -2436,7 +2436,18 @@ func (p *TbParser) factOrFactImplyStmt(tb *tokenBlock) (Stmt, error) {
 				return nil, ErrInLine(fmt.Errorf("expect at least one fact after '=>' in imply statement"), tb)
 			}
 
-			return NewImplyStmt(domFacts, thenFacts, tb.line), nil
+			var ifFacts FactStmtSlice
+			if tb.header.is(glob.KeywordIf) {
+				ifFacts, err = p.inlineFacts_checkUniDepth0(tb, []string{glob.KeySymbolColon})
+				if err != nil {
+					return nil, ErrInLine(err, tb)
+				}
+				if len(ifFacts) == 0 {
+					return nil, ErrInLine(fmt.Errorf("expect at least one fact after 'if' in imply statement"), tb)
+				}
+			}
+
+			return NewImplyStmt(domFacts, thenFacts, ifFacts, tb.line), nil
 		} else if tb.header.is(glob.KeySymbolComma) {
 			// Continue parsing more facts (this might be part of a list, not an imply statement)
 			return specFactOrOrFact, nil
