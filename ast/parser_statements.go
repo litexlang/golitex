@@ -2322,8 +2322,11 @@ func (p *TbParser) proveByInductionStmt(tb *tokenBlock) (Stmt, error) {
 // ============================================================================
 
 func (p *TbParser) factOrFactImplyStmt(tb *tokenBlock) (Stmt, error) {
-	if !tb.EndWith(glob.KeySymbolColon) {
-		return p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{})
+	// if !tb.EndWith(glob.KeySymbolColon) {
+	// 	return p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{})
+	// }
+	if tb.EndWith(glob.KeySymbolColon) {
+		return p.uniFactInterface(tb, UniFactDepth0)
 	}
 
 	cur, err := tb.header.currentToken()
@@ -2333,52 +2336,41 @@ func (p *TbParser) factOrFactImplyStmt(tb *tokenBlock) (Stmt, error) {
 
 	switch cur {
 	case glob.KeywordForall:
-		if tb.GetEnd() == glob.KeySymbolColon {
-			uniFact, err := p.uniFactInterface(tb, UniFactDepth0)
-			if err != nil {
-				return nil, err
-			}
-			return uniFact, nil
-		} else {
-			uniFact, err := p.inlineUniInterfaceSkipTerminator(tb, []string{})
-			if err != nil {
-				return nil, err
-			}
-			return uniFact, nil
+		// if tb.GetEnd() == glob.KeySymbolColon {
+		// 	uniFact, err := p.uniFactInterface(tb, UniFactDepth0)
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// 	return uniFact, nil
+		// } else {
+		uniFact, err := p.inlineUniInterfaceSkipTerminator(tb, []string{})
+		if err != nil {
+			return nil, err
 		}
+		return uniFact, nil
+		// }
 	default:
-		var specFactOrOrFact Spec_OrFact
-		if cur == glob.KeywordOr {
-			specFactOrOrFact, err = p.inlineOrFact(tb)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			specFactOrOrFact, err = p.specFactStmt(tb)
-			if err != nil {
-				return nil, err
-			}
+		fact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{glob.KeySymbolRightArrow})
+		if err != nil {
+			return nil, ErrInLine(err, tb)
 		}
 
-		if tb.header.is(glob.KeySymbolRightArrow) {
+		if equalsFact, ok := fact.(*EqualsFactStmt); ok {
+			return equalsFact, nil
+		}
+
+		var specFactOrOrFact Spec_OrFact = fact.(Spec_OrFact)
+
+		if tb.header.is(glob.KeySymbolRightArrow) || tb.header.is(glob.KeySymbolComma) {
 			// This is an ImplyStmt: parse multiple single-line facts as domFacts until =>, then parse thenFacts
 			domFacts := []Spec_OrFact{}
 
 			// Add the first fact we already parsed (can be SpecFactStmt or OrStmt)
-			if specOrFact, ok := specFactOrOrFact.(Spec_OrFact); ok {
-				domFacts = append(domFacts, specOrFact)
-			} else {
-				return nil, ErrInLine(fmt.Errorf("expect spec fact or or fact in imply statement"), tb)
-			}
+			domFacts = append(domFacts, specFactOrOrFact.(Spec_OrFact))
 
 			// Parse more domFacts until we hit =>
-			for {
-				if tb.header.is(glob.KeySymbolRightArrow) {
-					break
-				}
-				if tb.header.is(glob.KeySymbolComma) {
-					tb.header.skip(glob.KeySymbolComma)
-				}
+			for tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
 
 				// Check if we've reached the end
 				if tb.header.ExceedEnd() {
@@ -2394,6 +2386,10 @@ func (p *TbParser) factOrFactImplyStmt(tb *tokenBlock) (Stmt, error) {
 					domFacts = append(domFacts, specOrFact)
 				} else {
 					return nil, ErrInLine(fmt.Errorf("expect spec fact or or fact in imply statement"), tb)
+				}
+
+				if tb.header.is(glob.KeySymbolRightArrow) {
+					break
 				}
 			}
 
@@ -2441,9 +2437,6 @@ func (p *TbParser) factOrFactImplyStmt(tb *tokenBlock) (Stmt, error) {
 			}
 
 			return NewImplyStmt(domFacts, thenFacts, tb.line), nil
-		} else if tb.header.is(glob.KeySymbolComma) {
-			// Continue parsing more facts (this might be part of a list, not an imply statement)
-			return specFactOrOrFact, nil
 		} else {
 			return specFactOrOrFact, nil
 		}
@@ -3799,12 +3792,6 @@ func (p *TbParser) implyTemplateStmt(tb *tokenBlock) (*ImplyTemplateStmt, error)
 		return nil, ErrInLine(err, tb)
 	}
 
-	// skip :
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
 	// inline SpecFacts
 	domFacts := []Spec_OrFact{}
 	for {
@@ -3867,5 +3854,15 @@ func (p *TbParser) implyTemplateStmt(tb *tokenBlock) (*ImplyTemplateStmt, error)
 		}
 	}
 
-	return NewImplyTemplateStmt(params, paramSets, domFacts, thenFacts, ifFacts, tb.line), nil
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	proofs, err := p.parseTbBodyAndGetStmts(tb.body)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	return NewImplyTemplateStmt(params, paramSets, domFacts, thenFacts, ifFacts, proofs, tb.line), nil
 }
