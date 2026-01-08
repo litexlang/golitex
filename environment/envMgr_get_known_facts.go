@@ -238,51 +238,6 @@ func (s SpecFactInImplyTemplateMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, im
 	return glob.NewEmptyStmtTrue()
 }
 
-func (s SpecFact_InLogicExpr_InImplyTemplateMem) getSameEnumFacts(stmt *ast.SpecFactStmt) (map[string][]SpecFact_InLogicExpr_InImplyTemplate, *glob.StmtRet) {
-	switch stmt.FactType {
-	case ast.TruePure:
-		return s.PureFacts, glob.NewEmptyStmtTrue()
-	case ast.FalsePure:
-		return s.NotPureFacts, glob.NewEmptyStmtTrue()
-	case ast.TrueExist_St:
-		return s.Exist_St_Facts, glob.NewEmptyStmtTrue()
-	case ast.FalseExist_St:
-		return s.NotExist_St_Facts, glob.NewEmptyStmtTrue()
-	default:
-		return nil, glob.ErrRet(("invalid spec fact type"))
-	}
-}
-
-func (s SpecFact_InLogicExpr_InImplyTemplateMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactStmt) ([]SpecFact_InLogicExpr_InImplyTemplate, bool) {
-	sameEnumFacts, ret := s.getSameEnumFacts(stmt)
-	if ret.IsErr() {
-		return nil, false
-	}
-
-	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.PropName)]
-	if !memExist {
-		return nil, false
-	}
-
-	return sameEnumPkgPropFacts, true
-}
-
-func (s SpecFact_InLogicExpr_InImplyTemplateMem) NewFact(implyTemplate *ast.ImplyTemplateStmt, logicExpr *ast.OrStmt) *glob.StmtRet {
-	for i, fact := range logicExpr.Facts {
-		sameEnumFacts, ret := s.getSameEnumFacts(fact)
-		if ret.IsErr() {
-			return ret
-		}
-
-		if _, ok := sameEnumFacts[string(fact.PropName)]; !ok {
-			sameEnumFacts[string(fact.PropName)] = []SpecFact_InLogicExpr_InImplyTemplate{}
-		}
-		sameEnumFacts[string(fact.PropName)] = append(sameEnumFacts[string(fact.PropName)], NewSpecFact_InLogicExpr_InImplyTemplate(fact, implyTemplate, i, logicExpr))
-	}
-
-	return glob.NewEmptyStmtTrue()
-}
-
 func (envMemory *EnvMemory) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
 	objAsStr := obj.String()
 	facts, ok := envMemory.EqualMem[objAsStr]

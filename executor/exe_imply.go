@@ -94,24 +94,27 @@ func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	return ver.iterate_KnownPureSpecInImplyStmt_applyMatch(stmt, searchedKnownFacts, state)
+	return ver.iterate_KnownPureSpecInImplyStmt_applyMatch(stmt, searchedKnownFacts, fact, state)
 }
 
-func (ver *Verifier) iterate_KnownPureSpecInImplyStmt_applyMatch(stmt *ast.ImplyStmt, knownFacts []env.KnownSpecFact_InImplyTemplate, state *VerState) *glob.VerRet {
+func (ver *Verifier) iterate_KnownPureSpecInImplyStmt_applyMatch(stmt *ast.ImplyStmt, knownFacts []env.KnownSpecFact_InImplyTemplate, toCheck ast.Spec_OrFact, state *VerState) *glob.VerRet {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
-		knownFact_paramProcessed := knownFacts[i]
-		_ = knownFact_paramProcessed
-		panic("")
+		ok, uniMap, err := ver.matchImplyTemplateParamsWithImplyStmtParams(&knownFacts[i], stmt, toCheck)
+		if !ok || err != nil {
+			return glob.NewEmptyVerRetUnknown()
+		}
+
+		_ = uniMap
 	}
 	panic("")
 }
 
-func (ver *Verifier) matchImplyTemplateParamsWithImplyStmtParams(knownImplyTemplate *env.KnownSpecFact_InImplyTemplate, implyStmt *ast.ImplyStmt, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
+func (ver *Verifier) matchImplyTemplateParamsWithImplyStmtParams(knownImplyTemplate *env.KnownSpecFact_InImplyTemplate, implyStmt *ast.ImplyStmt, toCheck ast.Spec_OrFact) (bool, map[string]ast.Obj, error) {
 	if len(knownImplyTemplate.ImplyTemplate.DomFacts) != len(implyStmt.DomFacts) {
 		return false, nil, nil
 	}
 
-	matched, uniMap, err := ver.matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImplyTemplate, implyStmt, specFact)
+	matched, uniMap, err := ver.matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImplyTemplate, implyStmt, toCheck)
 
 	if err != nil || matched {
 		return matched, uniMap, err
@@ -192,7 +195,7 @@ func (ver *Verifier) matchDomFactAndMergeToUniMap(knownDomFact ast.Spec_OrFact, 
 	return true, nil
 }
 
-func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImplyTemplate *env.KnownSpecFact_InImplyTemplate, implyStmt *ast.ImplyStmt, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
+func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImplyTemplate *env.KnownSpecFact_InImplyTemplate, implyStmt *ast.ImplyStmt, toCheck ast.Spec_OrFact) (bool, map[string]ast.Obj, error) {
 	// 检查所有的prop名对上了
 	if len(knownImplyTemplate.ImplyTemplate.DomFacts) != len(implyStmt.DomFacts) {
 		return false, nil, nil
@@ -204,7 +207,7 @@ func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImply
 		}
 	}
 
-	if !ver.checkFactTypeAndPropNamesMatch(knownImplyTemplate.SpecFact, specFact) {
+	if !ver.checkFactTypeAndPropNamesMatch(knownImplyTemplate.SpecFact, toCheck) {
 		return false, nil, nil
 	}
 
@@ -216,7 +219,7 @@ func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImply
 		}
 	}
 
-	ok, err := ver.matchDomFactAndMergeToUniMap(knownImplyTemplate.SpecFact, specFact, knownImplyTemplate.ImplyTemplate.Params, uniMap)
+	ok, err := ver.matchDomFactAndMergeToUniMap(knownImplyTemplate.SpecFact, toCheck, knownImplyTemplate.ImplyTemplate.Params, uniMap)
 	if !ok || err != nil {
 		return false, nil, err
 	}
