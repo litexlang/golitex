@@ -119,93 +119,114 @@ func (ver *Verifier) matchImplyTemplateParamsWithImplyStmtParams(knownImplyTempl
 		return false, nil, nil
 	}
 
-	freeParamInstParamMap := map[string]ast.Obj{}
+	matched, uniMap, err := ver.matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImplyTemplate, implyStmt, specFact)
 
-	_ = freeParamInstParamMap
+	if err != nil || matched {
+		return matched, uniMap, err
+	}
 
-	panic("")
+	return false, nil, nil
 }
 
-func (ver *Verifier) matchImplyTemplateParamsWithImplyStmtParams_MatchOneSpecWithOneSpec(knownImplyTemplate *env.KnownSpecFact_InImplyTemplate, implyStmt *ast.ImplyStmt, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
-	knownFcs := []string{}
-	_ = knownFcs
-	panic("")
+func (ver *Verifier) checkFactTypeAndPropNamesMatch(knownFact ast.Spec_OrFact, implyFact ast.Spec_OrFact) bool {
+	switch knownAs := knownFact.(type) {
+	case *ast.SpecFactStmt:
+		if implyAs, ok := implyFact.(*ast.SpecFactStmt); ok {
+			if knownAs.PropName != implyAs.PropName {
+				return false
+			}
+		} else {
+			return false
+		}
+	case *ast.OrStmt:
+		if implyAs, ok := implyFact.(*ast.OrStmt); ok {
+			if len(implyAs.Facts) != len(knownAs.Facts) {
+				return false
+			}
+
+			for j := range implyAs.Facts {
+				if knownAs.Facts[j].PropName != implyAs.Facts[j].PropName {
+					return false
+				}
+			}
+
+		} else {
+			return false
+		}
+	}
+	return true
 }
 
-func (ver *Verifier) matchUniFactParamsWithAllSpecFactParamsInImply(knownImplyTemplate *env.KnownSpecFact_InImplyTemplate, implyStmt *ast.ImplyStmt) (bool, map[string]ast.Obj, error) {
+func (ver *Verifier) mergeCurMapToUniMap(curMap map[string]ast.Obj, uniMap map[string]ast.Obj) bool {
+	for key, value := range curMap {
+		if previousValue, ok := uniMap[key]; ok {
+			if ret := ver.VerFactStmt(ast.NewEqualFact(value, previousValue), FinalRoundNoMsg()); ret.IsNotTrue() {
+				return false
+			}
+		} else {
+			uniMap[key] = value
+		}
+	}
+	return true
+}
+
+func (ver *Verifier) matchDomFactAndMergeToUniMap(knownDomFact ast.Spec_OrFact, implyDomFact ast.Spec_OrFact, knownParams []string, uniMap map[string]ast.Obj) (bool, error) {
+	switch implyDomFactAs := implyDomFact.(type) {
+	case *ast.SpecFactStmt:
+		knownSpecFactAs := knownDomFact.(*ast.SpecFactStmt)
+		ok, curMap, err := ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFactAs.Params, knownParams, implyDomFactAs)
+		if !ok || err != nil {
+			return false, err
+		}
+
+		if !ver.mergeCurMapToUniMap(curMap, uniMap) {
+			return false, nil
+		}
+
+	case *ast.OrStmt:
+		knownOrFactAs := knownDomFact.(*ast.OrStmt)
+
+		for j := range implyDomFactAs.Facts {
+			ok, curMap, err := ver.matchUniFactParamsWithSpecFactParamsInImply(knownOrFactAs.Facts[j].Params, knownParams, implyDomFactAs.Facts[j])
+			if !ok || err != nil {
+				return false, err
+			}
+
+			if !ver.mergeCurMapToUniMap(curMap, uniMap) {
+				return false, nil
+			}
+		}
+	}
+	return true, nil
+}
+
+func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImplyTemplate *env.KnownSpecFact_InImplyTemplate, implyStmt *ast.ImplyStmt, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
 	// 检查所有的prop名对上了
 	if len(knownImplyTemplate.ImplyTemplate.DomFacts) != len(implyStmt.DomFacts) {
 		return false, nil, nil
 	}
 
 	for i, domFact := range knownImplyTemplate.ImplyTemplate.DomFacts {
-		switch knownAs := domFact.(type) {
-		case *ast.SpecFactStmt:
-			if implyAs, ok := implyStmt.DomFacts[i].(*ast.SpecFactStmt); ok {
-				if knownAs.PropName != implyAs.PropName {
-					return false, nil, nil
-				}
-			} else {
-				return false, nil, nil
-			}
-		case *ast.OrStmt:
-			if implyAs, ok := implyStmt.DomFacts[i].(*ast.OrStmt); ok {
-				if len(implyAs.Facts) != len(knownAs.Facts) {
-					return false, nil, nil
-				}
-
-				for j := range implyAs.Facts {
-					if knownAs.Facts[j].PropName != implyAs.Facts[j].PropName {
-						return false, nil, nil
-					}
-				}
-
-			} else {
-				return false, nil, nil
-			}
+		if !ver.checkFactTypeAndPropNamesMatch(domFact, implyStmt.DomFacts[i]) {
+			return false, nil, nil
 		}
+	}
+
+	if !ver.checkFactTypeAndPropNamesMatch(knownImplyTemplate.SpecFact, specFact) {
+		return false, nil, nil
 	}
 
 	uniMap := map[string]ast.Obj{}
 	for i, domFact := range implyStmt.DomFacts {
-		switch implyDomFactAs := domFact.(type) {
-		case *ast.SpecFactStmt:
-			ok, curMap, err := ver.matchUniFactParamsWithSpecFactParamsInImply(knownImplyTemplate.ImplyTemplate.DomFacts[i].(*ast.SpecFactStmt).Params, knownImplyTemplate.ImplyTemplate.Params, implyDomFactAs)
-			if !ok || err != nil {
-				return false, nil, err
-			}
-
-			for key, value := range curMap {
-				if previousValue, ok := uniMap[key]; ok {
-					if ret := ver.VerFactStmt(ast.NewEqualFact(value, previousValue), FinalRoundNoMsg()); ret.IsNotTrue() {
-						return false, nil, nil
-					}
-				} else {
-					uniMap[key] = value
-				}
-			}
-
-		case *ast.OrStmt:
-			knownDomFactAs := knownImplyTemplate.ImplyTemplate.DomFacts[i].(*ast.OrStmt)
-
-			for j := range implyDomFactAs.Facts {
-				ok, curMap, err := ver.matchUniFactParamsWithSpecFactParamsInImply(knownDomFactAs.Facts[j].Params, knownImplyTemplate.ImplyTemplate.Params, implyDomFactAs.Facts[j])
-				if !ok || err != nil {
-					return false, nil, err
-				}
-
-				for key, value := range curMap {
-					if previousValue, ok := uniMap[key]; ok {
-						if ret := ver.VerFactStmt(ast.NewEqualFact(value, previousValue), FinalRoundNoMsg()); ret.IsNotTrue() {
-							return false, nil, nil
-						}
-					} else {
-						uniMap[key] = value
-					}
-				}
-
-			}
+		ok, err := ver.matchDomFactAndMergeToUniMap(knownImplyTemplate.ImplyTemplate.DomFacts[i], domFact, knownImplyTemplate.ImplyTemplate.Params, uniMap)
+		if !ok || err != nil {
+			return false, nil, err
 		}
+	}
+
+	ok, err := ver.matchDomFactAndMergeToUniMap(knownImplyTemplate.SpecFact, specFact, knownImplyTemplate.ImplyTemplate.Params, uniMap)
+	if !ok || err != nil {
+		return false, nil, err
 	}
 
 	for _, param := range knownImplyTemplate.ImplyTemplate.Params {
