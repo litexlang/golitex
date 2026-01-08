@@ -113,3 +113,15 @@ func (ver *Verifier) iterate_KnownPureSpecInImplyStmt_applyMatch(stmt *ast.Imply
 	}
 	panic("")
 }
+
+func (ver *Verifier) matchImplyTemplateParamsWithImplyStmtParams(knownImplyTemplate *env.KnownSpecFact_InImplyTemplate, implyStmt *ast.ImplyStmt, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
+	if len(knownImplyTemplate.ImplyTemplate.DomFacts) != len(implyStmt.DomFacts) {
+		return false, nil, nil
+	}
+}
+
+func (ver *Verifier) matchImplyTemplateParamsWithImplyStmtParams_MatchOneSpecWithOneSpec(knownImplyTemplate *env.KnownSpecFact_InImplyTemplate, implyStmt *ast.ImplyStmt, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
+	knownFcs := []string{}
+	_ = knownFcs
+	panic("")
+}
