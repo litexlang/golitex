@@ -482,20 +482,20 @@ func (ver *Verifier) verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonemp
 	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("fn set %s is a nonempty set because all its param sets and ret set are nonempty sets.", fnSet), glob.NewEmptyVerRetTrue())
 }
 
-func (ver *Verifier) verIsNonEmptyWithItemByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	if len(stmt.Params) != 2 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{fmt.Sprintf("is_nonempty_with_item expects 1 parameter, got %d", len(stmt.Params))})
-	}
+// func (ver *Verifier) verIsNonEmptyWithItemByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+// 	if len(stmt.Params) != 2 {
+// 		return glob.NewVerMsg2(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{fmt.Sprintf("is_nonempty_with_item expects 1 parameter, got %d", len(stmt.Params))})
+// 	}
 
-	inFact := ast.NewInFactWithObj(stmt.Params[1], stmt.Params[0])
-	verRet := ver.VerFactStmt(inFact, state)
-	if verRet.IsNotTrue() {
-		return verRet
-	}
+// 	inFact := ast.NewInFactWithObj(stmt.Params[1], stmt.Params[0])
+// 	verRet := ver.VerFactStmt(inFact, state)
+// 	if verRet.IsNotTrue() {
+// 		return verRet
+// 	}
 
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), "is_nonempty_with_item is true because the item is in the set.", glob.NewEmptyVerRetTrue())
+// 	return ver.maybeAddSuccessMsgString(state, stmt.String(), "is_nonempty_with_item is true because the item is in the set.", glob.NewEmptyVerRetTrue())
 
-}
+// }
 
 func (ver *Verifier) verIsANonEmptySetByIsPowerSetAndAllParamSetsAndRetSetAreNonempty(powerSet ast.Obj, state *VerState) *glob.VerRet {
 	powerSetObj, ok := powerSet.(*ast.FnObj)
