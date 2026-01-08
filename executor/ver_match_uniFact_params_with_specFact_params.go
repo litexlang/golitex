@@ -17,13 +17,13 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
 )
 
-func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
-	knownFcs := knownSpecFactInUniFact.SpecFact.Params
+// func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
+func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownFcs []ast.Obj, freeVars []string, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
+	// knownFcs := knownSpecFactInUniFact.SpecFact.Params
 	givenFcs := specFact.Params
-	freeVars := knownSpecFactInUniFact.UniFact.Params
+	// freeVars := knownSpecFactInUniFact.UniFact.Params
 	freeVarsMap := map[string]struct{}{}
 	for _, freeVar := range freeVars {
 		freeVarsMap[freeVar] = struct{}{}
