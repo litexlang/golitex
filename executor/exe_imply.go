@@ -50,7 +50,7 @@ func (exec *Executor) implyStmt(stmt *ast.ImplyStmt) *glob.StmtRet {
 	for _, thenFact := range stmt.ThenFacts {
 		switch thenFact.(type) {
 		case *ast.SpecFactStmt:
-			ret := ver.proveOneThenFactInImplyStmt(stmt, thenFact.(*ast.SpecFactStmt), Round0Msg())
+			ret := ver.proveOneThenFactInImplyStmt(stmt, thenFact.(*ast.SpecFactStmt), Round0Msg().UpdateReqOkToTrue())
 			if ret.IsNotTrue() {
 				return ret
 			}
@@ -98,6 +98,18 @@ func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	_ = searchedSpecFacts
+	if fact.IsPureFact() {
+		return ver.iterate_KnownPureSpecInImplyStmt_applyMatch(stmt, searchedSpecFacts, state)
+	}
+
+	panic("")
+}
+
+func (ver *Verifier) iterate_KnownPureSpecInImplyStmt_applyMatch(stmt *ast.ImplyStmt, knownFacts []env.KnownSpecFact_InImplyTemplate, state *VerState) *glob.VerRet {
+	for i := len(knownFacts) - 1; i >= 0; i-- {
+		knownFact_paramProcessed := knownFacts[i]
+		_ = knownFact_paramProcessed
+		panic("")
+	}
 	panic("")
 }
