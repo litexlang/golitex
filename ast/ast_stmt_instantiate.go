@@ -881,11 +881,7 @@ func (stmt *ImplyStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 		}
 	}
 
-	newIfFacts, err := stmt.IfFacts.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewImplyStmt(newDomFacts, newThenFacts, newIfFacts, stmt.Line), nil
+	return NewImplyStmt(newDomFacts, newThenFacts, stmt.Line), nil
 }
 
 // func (stmt *DefProveAlgoStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

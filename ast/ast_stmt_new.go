@@ -36,8 +36,8 @@ func NewSpecFactStmt(typeEnum SpecFactType, propName Atom, params []Obj, line ui
 	return &SpecFactStmt{typeEnum, propName, params, line}
 }
 
-func NewImplyStmt(domFacts []Spec_OrFact, thenFacts []Spec_OrFact, ifFacts FactStmtSlice, line uint) *ImplyStmt {
-	return &ImplyStmt{domFacts, thenFacts, ifFacts, line}
+func NewImplyStmt(domFacts []Spec_OrFact, thenFacts []Spec_OrFact, line uint) *ImplyStmt {
+	return &ImplyStmt{domFacts, thenFacts, line}
 }
 
 func NewClaimProveByContradictionStmt(claim *ClaimProveStmt, line uint) *ClaimProveByContradictionStmt {

@@ -23,18 +23,6 @@ func (exec *Executor) implyStmt(stmt *ast.ImplyStmt) *glob.StmtRet {
 		}
 	}
 
-	for _, ifFact := range stmt.IfFacts {
-		switch ifFact.(type) {
-		case *ast.SpecFactStmt:
-			ret := ver.checkFnsReq(ifFact.(*ast.SpecFactStmt), Round0Msg())
-			if ret.IsNotTrue() {
-				return ret.ToStmtRet()
-			}
-		case *ast.OrStmt:
-			panic("")
-		}
-	}
-
 	for _, thenFact := range stmt.ThenFacts {
 		switch thenFact.(type) {
 		case *ast.SpecFactStmt:
@@ -87,22 +75,26 @@ func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.ImplyStmt, thenFact *
 	return glob.NewEmptyVerRetUnknown().ToStmtRet()
 }
 
-func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.ImplyStmt, fact *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.ImplyStmt, fact ast.Spec_OrFact, state *VerState) *glob.VerRet {
 	if !state.ReqOk {
 		return glob.NewVerMsg2(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state)})
 	}
 
-	searchedSpecFacts, got := curEnv.KnownFactsStruct.SpecFactInImplyTemplateMem.GetSameEnumPkgPropFacts(fact)
+	searchedKnownFacts := []env.KnownSpecFact_InImplyTemplate{}
+	var got bool
+	if asSpec, ok := fact.(*ast.SpecFactStmt); ok {
+		searchedKnownFacts, got = curEnv.KnownFactsStruct.SpecFactInImplyTemplateMem.GetSameEnumPkgPropFacts(asSpec)
+	} else if asOr, ok := fact.(*ast.OrStmt); ok {
+		searchedKnownFacts, got = curEnv.KnownFactsStruct.SpecFactInImplyTemplateMem.GetSameEnumPkgPropFacts(asOr.Facts[0])
+	} else {
+		return glob.NewEmptyVerRetErr()
+	}
 
 	if !got {
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	if fact.IsPureFact() {
-		return ver.iterate_KnownPureSpecInImplyStmt_applyMatch(stmt, searchedSpecFacts, state)
-	}
-
-	panic("")
+	return ver.iterate_KnownPureSpecInImplyStmt_applyMatch(stmt, searchedKnownFacts, state)
 }
 
 func (ver *Verifier) iterate_KnownPureSpecInImplyStmt_applyMatch(stmt *ast.ImplyStmt, knownFacts []env.KnownSpecFact_InImplyTemplate, state *VerState) *glob.VerRet {
