@@ -2447,7 +2447,7 @@ func (p *TbParser) factOrFactImplyStmt(tb *tokenBlock) (Stmt, error) {
 				}
 			}
 
-			return NewImplyStmt(domFacts, thenFacts, ifFacts, tb.line), nil
+			return NewImplyStmt(domFacts, thenFacts, tb.line), nil
 		} else if tb.header.is(glob.KeySymbolComma) {
 			// Continue parsing more facts (this might be part of a list, not an imply statement)
 			return specFactOrOrFact, nil
