@@ -2425,17 +2425,6 @@ func (p *TbParser) factOrFactImplyStmt(tb *tokenBlock) (Stmt, error) {
 				return nil, ErrInLine(fmt.Errorf("expect at least one fact after '=>' in imply statement"), tb)
 			}
 
-			var ifFacts FactStmtSlice
-			if tb.header.is(glob.KeywordIf) {
-				ifFacts, err = p.inlineFacts_checkUniDepth0(tb, []string{glob.KeySymbolColon})
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				if len(ifFacts) == 0 {
-					return nil, ErrInLine(fmt.Errorf("expect at least one fact after 'if' in imply statement"), tb)
-				}
-			}
-
 			return NewImplyStmt(domFacts, thenFacts, tb.line), nil
 		} else {
 			return specFactOrOrFact, nil
@@ -3840,10 +3829,11 @@ func (p *TbParser) implyTemplateStmt(tb *tokenBlock) (*ImplyTemplateStmt, error)
 			return nil, ErrInLine(err, tb)
 		}
 		for {
-			curStmt, err := p.factStmt(tb, UniFactDepth1)
+			curStmt, err := p.SpecFactOrOrStmt(tb)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
+
 			ifFacts = append(ifFacts, curStmt)
 
 			if tb.header.is(glob.KeySymbolComma) {
@@ -3852,6 +3842,7 @@ func (p *TbParser) implyTemplateStmt(tb *tokenBlock) (*ImplyTemplateStmt, error)
 				break
 			}
 		}
+
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
