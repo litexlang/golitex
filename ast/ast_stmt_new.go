@@ -300,8 +300,8 @@ func NewHaveFnCaseByCaseStmt(defFnStmt *LetFnStmt, caseByCaseFacts SpecFactPtrSl
 // 	return &HaveObjFromCartSetStmt{objName, cartSet, equalTo, line}
 // }
 
-func NewProveImplicationStmt(specFact *SpecFactStmt, implicationFact FactStmtSlice, proof StmtSlice, line uint) *ProveImplyStmt {
-	return &ProveImplyStmt{specFact, implicationFact, proof, line}
+func NewProveImplicationStmt(specFact *SpecFactStmt, implicationFact FactStmtSlice, proof StmtSlice, line uint) *ProveInferStmt {
+	return &ProveInferStmt{specFact, implicationFact, proof, line}
 }
 
 // func NewImplicationStmt(defHeader *DefHeader, domFacts FactStmtSlice, implicationFacts FactStmtSlice, line uint) *DefImplicationStmt {
@@ -310,4 +310,8 @@ func NewProveImplicationStmt(specFact *SpecFactStmt, implicationFact FactStmtSli
 
 func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact *SpecFactStmt, proofs []Stmt, line uint) *ProveExistStmt {
 	return &ProveExistStmt{params, paramSets, equalTos, fact, proofs, line}
+}
+
+func NewImplyTemplateStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts []FactStmt, line uint) *ImplyTemplateStmt {
+	return &ImplyTemplateStmt{Params: params, ParamSets: paramSets, DomFacts: domFacts, ThenFacts: thenFacts, IfFacts: ifFacts, Line: line}
 }

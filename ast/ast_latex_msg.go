@@ -426,6 +426,41 @@ func (s *ImplyStmt) ToLatexString() string {
 	return strings.Join(domFactStrSlice, ", ") + " \\Rightarrow " + strings.Join(thenFactStrSlice, ", ")
 }
 
+func (s *ImplyTemplateStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\text{imply} ")
+	
+	// Params
+	if len(s.Params) > 0 {
+		paramStrs := make([]string, len(s.Params))
+		for i, param := range s.Params {
+			paramStrs[i] = param
+			if i < len(s.ParamSets) {
+				paramStrs[i] += " " + s.ParamSets[i].ToLatexString()
+			}
+		}
+		builder.WriteString(strings.Join(paramStrs, ", "))
+		builder.WriteString(": ")
+	}
+	
+	// DomFacts
+	domFactStrSlice := make([]string, len(s.DomFacts))
+	for i, fact := range s.DomFacts {
+		domFactStrSlice[i] = fact.ToLatexString()
+	}
+	builder.WriteString(strings.Join(domFactStrSlice, ", "))
+	builder.WriteString(" \\Rightarrow ")
+	
+	// ThenFacts
+	thenFactStrSlice := make([]string, len(s.ThenFacts))
+	for i, fact := range s.ThenFacts {
+		thenFactStrSlice[i] = fact.ToLatexString()
+	}
+	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+	
+	return builder.String()
+}
+
 func (s *ImportDirStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\begin{import}\n")
@@ -837,7 +872,7 @@ func (s *ProveForStmt) ToLatexString() string {
 	return "TODO"
 }
 
-func (s *ProveImplyStmt) ToLatexString() string {
+func (s *ProveInferStmt) ToLatexString() string {
 	// TODO: implement LaTeX conversion for prove_implication
 	return s.String()
 }

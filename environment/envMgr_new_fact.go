@@ -218,7 +218,7 @@ func (envMgr *EnvMgr) storeUniFactInMem(specFact *ast.SpecFactStmt, uniFact *ast
 	return envMgr.CurEnv().KnownFactsStruct.SpecFactInUniFactMem.newFact(specFact, uniFact)
 }
 
-func (envMgr *EnvMgr) ProveImplyNewThenFactInPropDef(stmt *ast.ProveImplyStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) ProveImplyNewThenFactInPropDef(stmt *ast.ProveInferStmt) *glob.StmtRet {
 	specFactAsParams, err := ast.ParamsInSpecFactAreStrings(stmt.SpecFact)
 	if err != nil {
 		return glob.ErrRet(err.Error())
