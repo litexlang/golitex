@@ -2529,18 +2529,18 @@ func (p *TbParser) SpecFactOrOrStmt(tb *tokenBlock) (FactStmt, error) {
 	}
 }
 
-func (p *TbParser) specFactStmt_ExceedEnd(tb *tokenBlock) (*SpecFactStmt, error) {
-	ret, err := p.specFactStmt(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// func (p *TbParser) specFactStmt_ExceedEnd(tb *tokenBlock) (*SpecFactStmt, error) {
+// 	ret, err := p.specFactStmt(tb)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	if !tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("expect end of line")
-	}
+// 	if !tb.header.ExceedEnd() {
+// 		return nil, fmt.Errorf("expect end of line")
+// 	}
 
-	return ret, nil
-}
+// 	return ret, nil
+// }
 
 func (p *TbParser) specFactStmt(tb *tokenBlock) (*SpecFactStmt, error) {
 	stmt, err := p.specFactStmt_OrOneLineEqualsFact(tb)
