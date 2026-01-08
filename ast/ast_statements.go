@@ -441,5 +441,7 @@ type ImplyTemplateStmt struct {
 	ThenFacts ReversibleFacts
 	Proof     StmtSlice
 
+	IfFacts FactStmtSlice
+
 	Line uint
 }
