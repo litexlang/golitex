@@ -119,11 +119,10 @@ func (ver *Verifier) matchImplyTemplateParamsWithImplyStmtParams(knownImplyTempl
 		return false, nil, nil
 	}
 
-	// freeParamInstParamMap := map[string]ast.Obj{}
+	freeParamInstParamMap := map[string]ast.Obj{}
 
-	// for domFact := range knownImplyTemplate.ImplyTemplate.DomFacts {
+	_ = freeParamInstParamMap
 
-	// }
 	panic("")
 }
 
@@ -131,4 +130,92 @@ func (ver *Verifier) matchImplyTemplateParamsWithImplyStmtParams_MatchOneSpecWit
 	knownFcs := []string{}
 	_ = knownFcs
 	panic("")
+}
+
+func (ver *Verifier) matchUniFactParamsWithAllSpecFactParamsInImply(knownImplyTemplate *env.KnownSpecFact_InImplyTemplate, implyStmt *ast.ImplyStmt, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
+	// 检查所有的prop名对上了
+
+	uniMap := map[string]ast.Obj{}
+	for i, domFact := range implyStmt.DomFacts {
+		switch domFact.(type) {
+		case *ast.SpecFactStmt:
+			ok, curMap, err := ver.matchUniFactParamsWithSpecFactParamsInImply(knownImplyTemplate.ImplyTemplate.DomFacts[i].(*ast.SpecFactStmt).Params, knownImplyTemplate.ImplyTemplate.Params, specFact)
+			if !ok || err != nil {
+				return false, nil, err
+			}
+
+			for key, value := range curMap {
+				if previousValue, ok := uniMap[key]; ok {
+					if previousValue.String() != value.String() {
+						return false, nil, nil
+					}
+				} else {
+					uniMap[key] = value
+				}
+			}
+
+		case *ast.OrStmt:
+			panic("")
+		}
+	}
+
+	for _, param := range knownImplyTemplate.ImplyTemplate.Params {
+		if _, ok := uniMap[param]; !ok {
+			return false, nil, nil
+		}
+	}
+
+	return true, uniMap, nil
+}
+
+func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.Obj, freeVars []string, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
+	// knownFcs := knownSpecFactInUniFact.SpecFact.Params
+	givenFcs := specFact.Params
+	// freeVars := knownSpecFactInUniFact.UniFact.Params
+	freeVarsMap := map[string]struct{}{}
+	for _, freeVar := range freeVars {
+		freeVarsMap[freeVar] = struct{}{}
+	}
+
+	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs, givenFcs, freeVarsMap, string(specFact.PropName))
+	if err != nil {
+		return false, nil, err
+	}
+	matchedMap, unMatchedFcPairs := ver.mergeMultipleMatchedMapAndUnMatchedFcPairs(matchedMaps, unmatchedFcPairs, map[string][]ast.Obj{}, []fcPair{})
+
+	// 所有自由变量对应的instVar必须相等
+	for _, instVars := range matchedMap {
+		firstVar := instVars[0]
+		for j := 1; j < len(instVars); j++ {
+			verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewEqualFact(firstVar, instVars[j]), FinalRoundNoMsg().CopyAndReqOkToTrue())
+			if verRet.IsErr() {
+				return false, nil, err
+			}
+			if verRet.IsUnknown() {
+				return false, nil, nil
+			}
+		}
+	}
+
+	freeVarToInstVar := map[string]ast.Obj{}
+	for freeVar, instVars := range matchedMap {
+		freeVarToInstVar[freeVar] = instVars[0]
+	}
+
+	// 把实例化了的没被匹配的fcPair拿出来，检查是否是equal
+	for _, fcPair := range unMatchedFcPairs {
+		instKnownFreeVar, err := fcPair.knownFc.Instantiate(freeVarToInstVar)
+		if err != nil {
+			return false, nil, err
+		}
+		verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewEqualFact(instKnownFreeVar, fcPair.givenFc), FinalRoundNoMsg().CopyAndReqOkToTrue())
+
+		// REMARK
+		// 注：这里err != nil 也是返回 false, 因为有可能会把 sqrt(x) ^ 2 = x 拿来证明 y = z，但是 匹配的时候，可能会导致 x 是 -1 之类的。如果error了，其实就是说明没证明通过
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return false, nil, nil
+		}
+	}
+
+	return true, freeVarToInstVar, nil
 }
