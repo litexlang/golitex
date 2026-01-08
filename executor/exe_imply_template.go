@@ -45,7 +45,7 @@ func (exec *Executor) implyTemplateStmtVerify(stmt *ast.ImplyTemplateStmt) *glob
 	innerStmtRets := []*glob.StmtRet{}
 
 	// Declare parameters in the env
-	objDefStmt := ast.NewDefLetStmt(stmt.Params, stmt.ParamSets, []ast.FactStmt{}, stmt.Line)
+	objDefStmt := ast.NewDefLetStmt(stmt.Params, stmt.ParamSets, stmt.IfFacts, stmt.Line)
 
 	execState := exec.defLetStmt(objDefStmt)
 	if execState.IsNotTrue() {
