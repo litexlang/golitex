@@ -430,7 +430,6 @@ type ProveExistStmt struct {
 type ImplyStmt struct {
 	DomFacts  ReversibleFacts
 	ThenFacts ReversibleFacts
-	IfFacts   FactStmtSlice
 
 	Line uint
 }
