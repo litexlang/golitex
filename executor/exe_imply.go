@@ -118,6 +118,13 @@ func (ver *Verifier) matchImplyTemplateParamsWithImplyStmtParams(knownImplyTempl
 	if len(knownImplyTemplate.ImplyTemplate.DomFacts) != len(implyStmt.DomFacts) {
 		return false, nil, nil
 	}
+
+	// freeParamInstParamMap := map[string]ast.Obj{}
+
+	// for domFact := range knownImplyTemplate.ImplyTemplate.DomFacts {
+
+	// }
+	panic("")
 }
 
 func (ver *Verifier) matchImplyTemplateParamsWithImplyStmtParams_MatchOneSpecWithOneSpec(knownImplyTemplate *env.KnownSpecFact_InImplyTemplate, implyStmt *ast.ImplyStmt, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
