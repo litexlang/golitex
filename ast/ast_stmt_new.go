@@ -304,6 +304,6 @@ func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact *S
 	return &ProveExistStmt{params, paramSets, equalTos, fact, proofs, line}
 }
 
-func NewImplyTemplateStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts []FactStmt, line uint) *ImplyTemplateStmt {
-	return &ImplyTemplateStmt{Params: params, ParamSets: paramSets, DomFacts: domFacts, ThenFacts: thenFacts, IfFacts: ifFacts, Line: line}
+func NewImplyTemplateStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts []FactStmt, proof StmtSlice, line uint) *ImplyTemplateStmt {
+	return &ImplyTemplateStmt{Params: params, ParamSets: paramSets, DomFacts: domFacts, ThenFacts: thenFacts, IfFacts: ifFacts, Proof: proof, Line: line}
 }
