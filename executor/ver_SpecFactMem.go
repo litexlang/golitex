@@ -251,9 +251,9 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.S
 
 	// return ver.iterate_KnownSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, state)
 	if stmt.IsPureFact() {
-		return ver.iterate_KnownPureSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, ver.matchUniFactParamsWithSpecFactParams, state)
+		return ver.iterate_KnownPureSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, ver.matchUniFactParamsWithSpecFactParams, state)
 	} else {
-		return ver.iterate_KnownPureSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, ver.matchExistFactWithExistFactInKnownUniFact, state)
+		return ver.iterate_KnownPureSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, ver.matchExistFactWithExistFactInKnownUniFact, state)
 	}
 }
 
@@ -494,7 +494,7 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt *ast.SpecFac
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch_new(stmtToMatch *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, getOkUniConMapErr func(*env.KnownSpecFact_InUniFact, *ast.SpecFactStmt) (bool, map[string]ast.Obj, error), state *VerState) *glob.VerRet {
+func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch(stmtToMatch *ast.SpecFactStmt, knownFacts []env.KnownSpecFact_InUniFact, getOkUniConMapErr func(*env.KnownSpecFact_InUniFact, *ast.SpecFactStmt) (bool, map[string]ast.Obj, error), state *VerState) *glob.VerRet {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		knownFact_paramProcessed := knownFacts[i]
 		// 这里需要用的是 instantiated 的 knownFact
