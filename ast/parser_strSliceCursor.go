@@ -84,14 +84,14 @@ func (cursor *strSliceCursor) is(s string) bool {
 	return cursor.index < len(cursor.slice) && cursor.slice[cursor.index] == s
 }
 
-func (cursor *strSliceCursor) isAndSkip(expected string) bool {
-	if cursor.index < len(cursor.slice) && cursor.slice[cursor.index] == expected {
-		cursor.index++
-		return true
-	} else {
-		return false
-	}
-}
+// func (cursor *strSliceCursor) isAndSkip(expected string) bool {
+// 	if cursor.index < len(cursor.slice) && cursor.slice[cursor.index] == expected {
+// 		cursor.index++
+// 		return true
+// 	} else {
+// 		return false
+// 	}
+// }
 
 func (cursor *strSliceCursor) skipIfIs(s string) {
 	if cursor.index < len(cursor.slice) && cursor.slice[cursor.index] == s {
