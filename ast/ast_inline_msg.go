@@ -184,6 +184,42 @@ func (s *ImplyStmt) InlineString() string {
 	return builder.String()
 }
 
+func (s *ImplyTemplateStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordImply)
+	builder.WriteString(" ")
+	
+	// Params
+	if len(s.Params) > 0 {
+		paramStrs := make([]string, len(s.Params))
+		for i, param := range s.Params {
+			paramStrs[i] = param
+			if i < len(s.ParamSets) {
+				paramStrs[i] += " " + s.ParamSets[i].String()
+			}
+		}
+		builder.WriteString(strings.Join(paramStrs, ", "))
+		builder.WriteString(": ")
+	}
+	
+	// DomFacts
+	domFactStrSlice := make([]string, len(s.DomFacts))
+	for i, fact := range s.DomFacts {
+		domFactStrSlice[i] = fact.InlineString()
+	}
+	builder.WriteString(strings.Join(domFactStrSlice, ", "))
+	builder.WriteString(" => ")
+	
+	// ThenFacts
+	thenFactStrSlice := make([]string, len(s.ThenFacts))
+	for i, fact := range s.ThenFacts {
+		thenFactStrSlice[i] = fact.InlineString()
+	}
+	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+	
+	return builder.String()
+}
+
 func (s *ImportDirStmt) InlineString() string {
 	return s.String()
 }
@@ -365,7 +401,7 @@ func (s *ProveForStmt) InlineString() string {
 	return "TODO"
 }
 
-func (s *ProveImplyStmt) InlineString() string {
+func (s *ProveInferStmt) InlineString() string {
 	return "TODO"
 }
 

@@ -693,7 +693,7 @@ func (stmt *ProveForStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewProveForStmt(stmt.Params, newLefts, newRights, stmt.IsProveIRange, newDomFacts, newThenFacts, newProofs, stmt.Line), nil
 }
 
-func (stmt *ProveImplyStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+func (stmt *ProveInferStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newImplicationFacts, err := stmt.ImplicationFact.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
@@ -882,6 +882,64 @@ func (stmt *ImplyStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	}
 
 	return NewImplyStmt(newDomFacts, newThenFacts, stmt.Line), nil
+}
+
+func (stmt *ImplyTemplateStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	// Instantiate ParamSets
+	newParamSets, err := stmt.ParamSets.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// Instantiate DomFacts
+	newDomFacts := make([]Spec_OrFact, len(stmt.DomFacts))
+	for i, fact := range stmt.DomFacts {
+		newFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		if specOrFact, ok := newFact.(Spec_OrFact); ok {
+			newDomFacts[i] = specOrFact
+		} else {
+			return nil, fmt.Errorf("instantiated fact is not Spec_OrFact")
+		}
+	}
+
+	// Instantiate ThenFacts
+	newThenFacts := make([]Spec_OrFact, len(stmt.ThenFacts))
+	for i, fact := range stmt.ThenFacts {
+		newFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		if specOrFact, ok := newFact.(Spec_OrFact); ok {
+			newThenFacts[i] = specOrFact
+		} else {
+			return nil, fmt.Errorf("instantiated fact is not Spec_OrFact")
+		}
+	}
+
+	// Instantiate Proof
+	newProof, err := stmt.Proof.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// Instantiate IfFacts
+	newIfFacts, err := stmt.IfFacts.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ImplyTemplateStmt{
+		Params:    stmt.Params, // Params are strings, no need to instantiate
+		ParamSets: newParamSets,
+		DomFacts:  newDomFacts,
+		ThenFacts: newThenFacts,
+		Proof:     newProof,
+		IfFacts:   newIfFacts,
+		Line:      stmt.Line,
+	}, nil
 }
 
 // func (stmt *DefProveAlgoStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
