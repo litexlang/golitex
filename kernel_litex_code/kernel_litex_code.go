@@ -866,6 +866,15 @@ know:
 		=>:
 			item $in set_minus(x, y)
 
+	forall s set, s2 set:
+		union(s2, set_minus(s, s2)) = s
+		forall x s2:
+			not x $in set_minus(s, s2)
+		forall x s2:
+			not x $in s
+			=>:
+				x $in set_minus(s, s2)
+
 # when item in set minus, it has properties
 know prop_infer item_in_set_minus_implies(x, y set, item set_minus(x, y)):
 	item $in x
@@ -978,9 +987,25 @@ prop is_max(r R, s set):
         r $in s
         forall x s: x <= r
 
+know:
+    forall s finite_set:
+        forall x s:
+            x $in R
+        =>:
+            exist z R st $is_max(z, s)
+
 prop is_min(r R, s set):
 	forall x s: x $in R
 	<=>:
 		r $in s
 		forall x s: r <= x
+
+know:
+    forall s finite_set:
+        forall x s:
+            x $in R
+        =>:
+            exist z R st $is_min(z, s)
+
+
 `
