@@ -79,7 +79,7 @@ prove:
     a $subset_of b
 
 claim:
-imply subset_of_is_transitive(a, b, c set):
+infer subset_of_is_transitive(a, b, c set):
         a $subset_of b
         b $subset_of c
         =>:
@@ -107,7 +107,7 @@ prove:
         $P(x)
 
 # Intersection
-know imply obj_in_intersection_is_in_both_sets(s1 set, s2 set, x obj):
+know infer obj_in_intersection_is_in_both_sets(s1 set, s2 set, x obj):
     x $in s1
     x $in s2
 
@@ -120,7 +120,7 @@ fn intersection(s1 set, s2 set) set:
         $obj_in_intersection_is_in_both_sets(s1, s2, x)
 
 # The set of all natural numbers is the union of the set of all natural numbers greater than n and the set of all natural numbers less than or equal to n
-know imply union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(n N, s1 set, s2 set):
+know infer union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(n N, s1 set, s2 set):
 	s1 := x N:
 		x > n
 	s2 := x N:

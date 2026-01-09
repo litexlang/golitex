@@ -39,8 +39,8 @@ func (s *HaveObjStStmt) stmt() {}
 func (s *ProveCaseByCaseStmt) stmt()        {}
 func (s *KnowImplicationStmt) stmt()        {}
 func (s *OrStmt) stmt()                     {}
-func (s *ImplyStmt) stmt()                  {}
-func (s *ImplyTemplateStmt) stmt()          {}
+func (s *InferStmt) stmt()                  {}
+func (s *InferTemplateStmt) stmt()          {}
 func (s *ImportDirStmt) stmt()              {}
 func (s *RunFileStmt) stmt()                {}
 func (s *ProveStmt) stmt()                  {}
@@ -91,8 +91,8 @@ func (s *HaveObjStStmt) algoStmt()    {}
 func (s *ProveCaseByCaseStmt) algoStmt()           {}
 func (s *KnowImplicationStmt) algoStmt()           {}
 func (s *OrStmt) algoStmt()                        {}
-func (s *ImplyStmt) algoStmt()                      {}
-func (s *ImplyTemplateStmt) algoStmt()              {}
+func (s *InferStmt) algoStmt()                      {}
+func (s *InferTemplateStmt) algoStmt()              {}
 func (s *ImportDirStmt) algoStmt()                 {}
 func (s *RunFileStmt) algoStmt()                   {}
 func (s *ProveStmt) algoStmt()                     {}
@@ -142,8 +142,8 @@ func (s *HaveObjStStmt) GetLine() uint    { return s.Line }
 func (s *ProveCaseByCaseStmt) GetLine() uint           { return s.Line }
 func (s *KnowImplicationStmt) GetLine() uint           { return s.Line }
 func (s *OrStmt) GetLine() uint                        { return s.Line }
-func (s *ImplyStmt) GetLine() uint                     { return s.Line }
-func (s *ImplyTemplateStmt) GetLine() uint             { return s.Line }
+func (s *InferStmt) GetLine() uint                     { return s.Line }
+func (s *InferTemplateStmt) GetLine() uint             { return s.Line }
 func (s *ImportDirStmt) GetLine() uint                 { return s.Line }
 func (s *RunFileStmt) GetLine() uint                   { return s.Line }
 func (s *ProveStmt) GetLine() uint                     { return s.Line }
@@ -198,8 +198,8 @@ func (s *HaveObjStStmt) SetLine(l uint)    { s.Line = l }
 func (s *ProveCaseByCaseStmt) SetLine(l uint)           { s.Line = l }
 func (s *KnowImplicationStmt) SetLine(l uint)           { s.Line = l }
 func (s *OrStmt) SetLine(l uint)                        { s.Line = l }
-func (s *ImplyStmt) SetLine(l uint)                     { s.Line = l }
-func (s *ImplyTemplateStmt) SetLine(l uint)             { s.Line = l }
+func (s *InferStmt) SetLine(l uint)                     { s.Line = l }
+func (s *InferTemplateStmt) SetLine(l uint)             { s.Line = l }
 func (s *ImportDirStmt) SetLine(l uint)                 { s.Line = l }
 func (s *RunFileStmt) SetLine(l uint)                   { s.Line = l }
 func (s *ProveStmt) SetLine(l uint)                     { s.Line = l }

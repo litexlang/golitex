@@ -225,7 +225,7 @@ func (s SpecFactInImplyTemplateMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactSt
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInImplyTemplateMem) newFact(known ast.Spec_OrFact, implyTemplate *ast.ImplyTemplateStmt) *glob.StmtRet {
+func (s SpecFactInImplyTemplateMem) newFact(known ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) *glob.StmtRet {
 	stmtAsSpecFact, ok := known.(*ast.SpecFactStmt)
 	if !ok {
 		knownAsOr, ok := known.(*ast.OrStmt)

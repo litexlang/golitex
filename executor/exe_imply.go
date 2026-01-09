@@ -7,7 +7,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) implyStmt(stmt *ast.ImplyStmt) *glob.StmtRet {
+func (exec *Executor) implyStmt(stmt *ast.InferStmt) *glob.StmtRet {
 	ver := NewVerifier(exec.Env)
 
 	// 检查涉及到的函数都OK了
@@ -82,7 +82,7 @@ func (exec *Executor) implyStmt(stmt *ast.ImplyStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
 }
 
-func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.ImplyStmt, thenFact ast.Spec_OrFact, state *VerState) *glob.StmtRet {
+func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.InferStmt, thenFact ast.Spec_OrFact, state *VerState) *glob.StmtRet {
 	for curEnvIndex := range ver.Env.EnvSlice {
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_ImplyMem_atCurEnv(curEnv, stmt, thenFact, state)
@@ -108,7 +108,7 @@ func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.ImplyStmt, thenFact a
 	return glob.NewEmptyVerRetUnknown().ToStmtRet()
 }
 
-func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.ImplyStmt, fact ast.Spec_OrFact, state *VerState) *glob.VerRet {
+func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.InferStmt, fact ast.Spec_OrFact, state *VerState) *glob.VerRet {
 	if !state.ReqOk {
 		return glob.NewVerMsg2(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state)})
 	}
@@ -130,7 +130,7 @@ func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast
 	return ver.iterate_KnownPureSpecInImplyStmt_applyMatch_InstObjInParamSetAndSatisfyIfFacts(stmt, searchedKnownFacts, fact, state)
 }
 
-func (ver *Verifier) iterate_KnownPureSpecInImplyStmt_applyMatch_InstObjInParamSetAndSatisfyIfFacts(stmt *ast.ImplyStmt, knownFacts []env.KnownSpecFact_InImplyTemplate, toCheck ast.Spec_OrFact, state *VerState) *glob.VerRet {
+func (ver *Verifier) iterate_KnownPureSpecInImplyStmt_applyMatch_InstObjInParamSetAndSatisfyIfFacts(stmt *ast.InferStmt, knownFacts []env.KnownSpecFact_InImplyTemplate, toCheck ast.Spec_OrFact, state *VerState) *glob.VerRet {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		ok, uniMap, err := ver.
 			matchImplyTemplateParamsWithAllParamsInImplyStmt(&knownFacts[i], stmt, toCheck)
@@ -251,7 +251,7 @@ func (ver *Verifier) matchDomFactAndMergeToUniMap(knownDomFact ast.Spec_OrFact, 
 	return true, nil
 }
 
-func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImplyTemplate *env.KnownSpecFact_InImplyTemplate, implyStmt *ast.ImplyStmt, toCheck ast.Spec_OrFact) (bool, map[string]ast.Obj, error) {
+func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImplyTemplate *env.KnownSpecFact_InImplyTemplate, implyStmt *ast.InferStmt, toCheck ast.Spec_OrFact) (bool, map[string]ast.Obj, error) {
 	// 检查所有的prop名对上了
 	if len(knownImplyTemplate.ImplyTemplate.DomFacts) != len(implyStmt.DomFacts) {
 		return false, nil, nil

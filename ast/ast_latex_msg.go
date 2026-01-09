@@ -414,7 +414,7 @@ func (s *OrStmt) ToLatexString() string {
 	return strings.Join(factStrSlice, " or ")
 }
 
-func (s *ImplyStmt) ToLatexString() string {
+func (s *InferStmt) ToLatexString() string {
 	domFactStrSlice := make([]string, len(s.DomFacts))
 	for i, fact := range s.DomFacts {
 		domFactStrSlice[i] = fact.ToLatexString()
@@ -426,7 +426,7 @@ func (s *ImplyStmt) ToLatexString() string {
 	return strings.Join(domFactStrSlice, ", ") + " \\Rightarrow " + strings.Join(thenFactStrSlice, ", ")
 }
 
-func (s *ImplyTemplateStmt) ToLatexString() string {
+func (s *InferTemplateStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\text{imply} ")
 	

@@ -136,13 +136,13 @@ know:
                 x $in A
 
 # Axiom 3.2: There exists a set which contains no elements
-know imply exist empty_set set st exist_empty_set():
+know infer exist empty_set set st exist_empty_set():
     =>:
         forall x set:
             not $in(x, empty_set)
 
 # Axiom 3.3: a is an object, then there exists a set A such that A contains and only contains a. If a and b are objects, then there exists a set A such that A contains and only contains a and b.
-know imply exist s set st exist_set_contains_and_only_contains_obj(a set):
+know infer exist s set st exist_set_contains_and_only_contains_obj(a set):
     =>:
         forall x s:
             x = a

@@ -105,9 +105,9 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = exec.haveObjStStmt(stmt)
 	case *ast.ProveExistStmt:
 		execRet = exec.proveExistStmt(stmt)
-	case *ast.ImplyStmt:
+	case *ast.InferStmt:
 		execRet = exec.implyStmt(stmt)
-	case *ast.ImplyTemplateStmt:
+	case *ast.InferTemplateStmt:
 		execRet = exec.implyTemplateStmt(stmt)
 	default:
 		execRet = glob.ErrRet(fmt.Sprintf("unknown statement type: %T", stmt))

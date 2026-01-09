@@ -90,7 +90,7 @@ func main() {
 			fmt.Println(strings.TrimSpace(ret.String()))
 		}
 
-		fmt.Println(glob.REPLSuccessMsgs(retType))
+		fmt.Println(glob.REPLMsg(retType))
 
 		return
 	}
@@ -188,7 +188,7 @@ func MainFlagFile(fileFlag string) {
 		fmt.Println(glob.StringWithOptimizedNewline(ret.String()))
 	}
 
-	fmt.Println(glob.REPLSuccessMsgs(retType))
+	fmt.Println(glob.REPLMsg(retType))
 }
 
 func RunTutorial() {

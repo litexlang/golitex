@@ -3790,7 +3790,7 @@ func (p *TbParser) proveExistStmt(tb *tokenBlock) (*ProveExistStmt, error) {
 	return NewProveExistStmt(params, paramSets, equalTos, fact, proofs, tb.line), nil
 }
 
-func (p *TbParser) inferTemplateStmt(tb *tokenBlock) (*ImplyTemplateStmt, error) {
+func (p *TbParser) inferTemplateStmt(tb *tokenBlock) (*InferTemplateStmt, error) {
 	err := tb.header.skip(glob.KeywordInfer)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
