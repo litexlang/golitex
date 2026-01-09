@@ -146,12 +146,12 @@ func (s *HaveObjStStmt) InlineString() string {
 
 func (s *ProveCaseByCaseStmt) InlineString() string { return s.String() }
 
-func (s *KnowImplicationStmt) InlineString() string {
+func (s *KnowPropInferStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordInfer)
-	builder.WriteString(s.ImplicationProp.InlineString())
+	builder.WriteString(s.DefProp.InlineString())
 	return builder.String()
 }
 

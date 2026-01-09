@@ -523,11 +523,11 @@ func (stmt *ProveCaseByCaseStmt) String() string {
 	return strings.TrimSuffix(builder.String(), "\n")
 }
 
-func (stmt *KnowImplicationStmt) String() string {
+func (stmt *KnowPropInferStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)
 	builder.WriteString(" ")
-	builder.WriteString(stmt.ImplicationProp.String())
+	builder.WriteString(stmt.DefProp.String())
 	return builder.String()
 }
 
