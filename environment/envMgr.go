@@ -234,12 +234,12 @@ func newSpecFactInImplyTemplateMem() *SpecFactInImplyTemplateMem {
 }
 
 type KnownSpecFact_InImplyTemplate struct {
-	SpecFact      ast.Spec_OrFact
+	Spec_orFact   ast.Spec_OrFact
 	ImplyTemplate *ast.ImplyTemplateStmt
 }
 
-func NewKnownSpecFact_InImplyTemplate(specFact *ast.SpecFactStmt, implyTemplate *ast.ImplyTemplateStmt) KnownSpecFact_InImplyTemplate {
-	return KnownSpecFact_InImplyTemplate{specFact, implyTemplate}
+func NewKnownSpecFact_InImplyTemplate(known ast.Spec_OrFact, implyTemplate *ast.ImplyTemplateStmt) KnownSpecFact_InImplyTemplate {
+	return KnownSpecFact_InImplyTemplate{known, implyTemplate}
 }
 
 type SpecFact_InLogicExpr_InUniFact struct {

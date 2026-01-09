@@ -88,7 +88,7 @@ func (envMgr *EnvMgr) storeSpecFactInMem(stmt *ast.SpecFactStmt) *glob.StmtRet {
 	return envMgr.CurEnv().KnownFactsStruct.SpecFactMem.newFact(stmt)
 }
 
-func (envMgr *EnvMgr) StoreSpecFactInImplyTemplateMem(specFact *ast.SpecFactStmt, implyTemplate *ast.ImplyTemplateStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) StoreSpecFactInImplyTemplateMem(specFact ast.Spec_OrFact, implyTemplate *ast.ImplyTemplateStmt) *glob.StmtRet {
 	return envMgr.CurEnv().KnownFactsStruct.SpecFactInImplyTemplateMem.newFact(specFact, implyTemplate)
 }
 
