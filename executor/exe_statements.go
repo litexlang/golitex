@@ -37,6 +37,11 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		if execRet.IsTrue() {
 			execRet = execRet.AddWarning("`know imply ` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
+	case *ast.KnowInferStmt:
+		execRet = exec.knowInferStmt(stmt)
+		if execRet.IsTrue() {
+			execRet = execRet.AddWarning("`know infer` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
+		}
 	case *ast.ClaimProveStmt:
 		execRet = exec.execClaimStmtProve(stmt)
 	case *ast.DefPropStmt:
@@ -351,6 +356,12 @@ func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) *glob.StmtR
 	newFactMsgs = append(newFactMsgs, uniFact2.String())
 
 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddDefineMsgs(defineMsgs).AddNewFacts(newFactMsgs)
+}
+
+func (exec *Executor) knowInferStmt(stmt *ast.KnowInferStmt) *glob.StmtRet {
+	newInferTemplate := ast.NewInferTemplateStmt(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.ThenFacts, stmt.IfFacts, []ast.Stmt{}, stmt.Line)
+
+	return exec.inferTemplateStmt(newInferTemplate)
 }
 
 func (exec *Executor) proveStmt(stmt *ast.ProveStmt) *glob.StmtRet {

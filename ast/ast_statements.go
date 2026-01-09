@@ -445,3 +445,13 @@ type InferTemplateStmt struct {
 
 	Line uint
 }
+
+type KnowInferStmt struct {
+	Params    StrSlice
+	ParamSets ObjSlice
+	DomFacts  ReversibleFacts
+	ThenFacts ReversibleFacts
+	IfFacts   FactStmtSlice
+
+	Line uint
+}

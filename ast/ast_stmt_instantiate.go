@@ -381,6 +381,42 @@ func (stmt *KnowPropInferStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) 
 	return NewKnowPropInferStmt(newProp.(*DefPropStmt), stmt.Line), nil
 }
 
+func (stmt *KnowInferStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	// Instantiate ParamSets
+	newParamSets, err := stmt.ParamSets.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	domFacts := ReversibleFacts{}
+	for _, fact := range stmt.DomFacts {
+		newFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		domFacts = append(domFacts, newFact.(Spec_OrFact))
+	}
+
+	// Instantiate DomFacts
+	// Instantiate ThenFacts
+	thenFacts := ReversibleFacts{}
+	for _, fact := range stmt.ThenFacts {
+		newFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		thenFacts = append(thenFacts, newFact.(Spec_OrFact))
+	}
+
+	// Instantiate IfFacts
+	newIfFacts, err := stmt.IfFacts.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewKnowInferStmt(stmt.Params, newParamSets, domFacts, thenFacts, newIfFacts, stmt.Line), nil
+}
+
 // func (stmt *ClaimExistPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 // 	newExistProp, err := stmt.ExistPropWithoutDom.Instantiate(uniMap)
 // 	if err != nil {
