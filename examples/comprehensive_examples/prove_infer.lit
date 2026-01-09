@@ -1,14 +1,14 @@
 prop p(x R):
     x > 2
 
-prove_infer $p(x):
+prove_prop_infer $p(x):
     =>:
         x > 0
     prove:
         x > 2
         x > 0
 
-prove_infer $p(x) => 1 / x > 0:
+prove_prop_infer $p(x) => 1 / x > 0:
     x > 2
     x > 0
 

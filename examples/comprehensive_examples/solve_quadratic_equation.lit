@@ -1,4 +1,4 @@
-know imply solve_quadratic_equation(a, b, c, x R):
+know prop_infer solve_quadratic_equation(a, b, c, x R):
     b ^ 2 - 4 * a * c >= 0
     x ^ 2 + b * x + c = 0
     =>:

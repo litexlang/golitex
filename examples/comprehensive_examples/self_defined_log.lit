@@ -9,7 +9,7 @@ prove:
 
     know forall a, b, c R: a > 0 => (a \pow b) * (a \pow c) = a  \pow  (b+c)
 
-    know imply p(a, b, c R): a > 0, a != 1, a  \pow  b = a  \pow  c => b = c
+    know prop_infer p(a, b, c R): a > 0, a != 1, a  \pow  b = a  \pow  c => b = c
 
     claim:
         forall b, x, y R:

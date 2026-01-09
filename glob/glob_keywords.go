@@ -35,8 +35,10 @@ const (
 
 	// KeywordExistProp = "exist_prop"
 
-	KeywordImply      = "imply"
-	KeywordProveInfer = "prove_infer"
+	// KeywordImply      = "imply"
+	KeywordProvePropInfer = "prove_prop_infer"
+	KeywordPropInfer      = "prop_infer"
+	KeywordInfer          = "infer"
 
 	KeywordHave = "have"
 	KeywordLet  = "let"
@@ -124,15 +126,14 @@ const (
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
-	KeywordSet:        {},
-	KeywordForall:     {},
-	KeywordDom:        {},
-	KeywordImply:      {},
-	KeywordProveInfer: {},
-	KeywordHave:       {},
-	KeywordFn:         {},
-	KeywordProp:       {},
-	KeywordKnow:       {},
+	KeywordSet:            {},
+	KeywordForall:         {},
+	KeywordDom:            {},
+	KeywordProvePropInfer: {},
+	KeywordHave:           {},
+	KeywordFn:             {},
+	KeywordProp:           {},
+	KeywordKnow:           {},
 	// KeywordExistProp:            {},
 	KeywordSt:                   {},
 	KeywordClaim:                {},
@@ -227,6 +228,9 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordZNeg: {},
 	KeywordQNeg: {},
 	KeywordQPos: {},
+
+	KeywordPropInfer: {},
+	KeywordInfer:     {},
 }
 
 const (
@@ -376,15 +380,14 @@ func IsBuiltinAtomName(name string) bool {
 }
 
 var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struct{}{
-	KeywordSet:        {},
-	KeywordForall:     {},
-	KeywordDom:        {},
-	KeywordImply:      {},
-	KeywordProveInfer: {},
-	KeywordHave:       {},
-	KeywordFn:         {},
-	KeywordProp:       {},
-	KeywordKnow:       {},
+	KeywordSet:            {},
+	KeywordForall:         {},
+	KeywordDom:            {},
+	KeywordProvePropInfer: {},
+	KeywordHave:           {},
+	KeywordFn:             {},
+	KeywordProp:           {},
+	KeywordKnow:           {},
 	// KeywordExistProp:              {},
 	KeywordSt:                     {},
 	KeywordClaim:                  {},
@@ -446,4 +449,6 @@ var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struc
 	KeywordSetMinus:  {},
 	KeywordSetDiff:   {},
 	KeywordVal:       {},
+	KeywordPropInfer: {},
+	KeywordInfer:     {},
 }

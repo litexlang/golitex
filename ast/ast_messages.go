@@ -567,9 +567,9 @@ func (stmt *ImplyStmt) String() string {
 
 func (stmt *ImplyTemplateStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordImply)
+	builder.WriteString(glob.KeywordInfer)
 	builder.WriteString(" ")
-	
+
 	// Params
 	if len(stmt.Params) > 0 {
 		paramStrs := make([]string, len(stmt.Params))
@@ -582,7 +582,7 @@ func (stmt *ImplyTemplateStmt) String() string {
 		builder.WriteString(strings.Join(paramStrs, ", "))
 		builder.WriteString(": ")
 	}
-	
+
 	// DomFacts
 	domFactStrSlice := make([]string, len(stmt.DomFacts))
 	for i, fact := range stmt.DomFacts {
@@ -590,14 +590,14 @@ func (stmt *ImplyTemplateStmt) String() string {
 	}
 	builder.WriteString(strings.Join(domFactStrSlice, ", "))
 	builder.WriteString(" => ")
-	
+
 	// ThenFacts
 	thenFactStrSlice := make([]string, len(stmt.ThenFacts))
 	for i, fact := range stmt.ThenFacts {
 		thenFactStrSlice[i] = fact.String()
 	}
 	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
-	
+
 	return builder.String()
 }
 
@@ -644,7 +644,7 @@ func (stmt *RunFileStmt) String() string {
 
 func (stmt *DefPropStmt) ToNamedUniFactString() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordImply)
+	builder.WriteString(glob.KeywordPropInfer)
 	builder.WriteString(stmt.DefHeader.String())
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
@@ -1065,7 +1065,7 @@ func (stmt *ProveForStmt) String() string {
 
 func (stmt *ProveInferStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveInfer)
+	builder.WriteString(glob.KeywordProvePropInfer)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.SpecFact.String())
 	builder.WriteString(":")
