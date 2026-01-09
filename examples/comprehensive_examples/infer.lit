@@ -39,3 +39,14 @@ prove:
         $q(1, 2)
 
     $p(1, 2) or $q(1, 2) => $t(1, 2) or $r(1, 2)
+
+prove:
+    prop p(x, y R)
+    prop q(x, y R)
+    prop t(x, y R)
+
+    know infer x, y R: $p(x, y) or $q(x, y) => $t(x, y)
+
+    know $p(1, 2) or $q(1, 2)
+
+    $p(1, 2) or $q(1, 2) => $t(1, 2)
