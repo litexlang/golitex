@@ -84,6 +84,17 @@ func NewKnowPropInferStmt(prop *DefPropStmt, line uint) *KnowPropInferStmt {
 	return &KnowPropInferStmt{prop, line}
 }
 
+func NewKnowInferStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts FactStmtSlice, line uint) *KnowInferStmt {
+	return &KnowInferStmt{
+		Params:    params,
+		ParamSets: paramSets,
+		DomFacts:  domFacts,
+		ThenFacts: thenFacts,
+		IfFacts:   ifFacts,
+		Line:      line,
+	}
+}
+
 // func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {
 // 	return &DefExistPropStmtBody{defHeader, domFacts, iffFacts, thenFacts, line}
 // }

@@ -64,6 +64,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		{
 			if tb.TokenAtHeaderIndexIs(1, glob.KeywordPropInfer) {
 				ret, err = p.knowPropInferStmt(tb)
+			} else if tb.TokenAtHeaderIndexIs(1, glob.KeywordInfer) {
+				ret, err = p.knowInferStmt(tb)
 			} else {
 				ret, err = p.knowFactStmt(tb)
 			}
@@ -1143,6 +1145,90 @@ func (p *TbParser) knowPropInferStmt(tb *tokenBlock) (*KnowPropInferStmt, error)
 		}
 		return NewKnowPropInferStmt(prop, tb.line), nil
 	}
+}
+
+func (p *TbParser) knowInferStmt(tb *tokenBlock) (*KnowInferStmt, error) {
+	err := tb.header.skip(glob.KeywordKnow)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeywordInfer)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse parameters and parameter sets
+	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolColon, false)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse domain facts (before =>)
+	domFacts := ReversibleFacts{}
+	if !tb.header.is(glob.KeySymbolRightArrow) {
+		for {
+			fact, err := p.SpecFactOrOrStmt(tb)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			domFacts = append(domFacts, fact.(Spec_OrFact))
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+			} else {
+				break
+			}
+		}
+	}
+
+	// Skip =>
+	err = tb.header.skip(glob.KeySymbolRightArrow)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse then facts (after =>)
+	thenFacts := ReversibleFacts{}
+	for {
+		fact, err := p.factStmt(tb, UniFactDepth0)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		thenFacts = append(thenFacts, fact.(Spec_OrFact))
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		} else if tb.header.is(glob.KeywordIf) {
+			break
+		} else {
+			break
+		}
+	}
+
+	// Parse if facts (optional)
+	ifFacts := []FactStmt{}
+	if tb.header.is(glob.KeywordIf) {
+		err = tb.header.skip(glob.KeywordIf)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		for {
+			fact, err := p.factStmt(tb, UniFactDepth0)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			ifFacts = append(ifFacts, fact.(FactStmt))
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+			} else {
+				break
+			}
+		}
+	}
+
+	return NewKnowInferStmt(params, paramSets, domFacts, thenFacts, ifFacts, tb.line), nil
 }
 
 func (p *TbParser) knowFactStmt(tb *tokenBlock) (Stmt, error) {

@@ -155,6 +155,34 @@ func (s *KnowPropInferStmt) InlineString() string {
 	return builder.String()
 }
 
+func (s *KnowInferStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordKnow)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordInfer)
+	builder.WriteString(" ")
+	builder.WriteString(StrObjSetPairs(s.Params, s.ParamSets))
+	if len(s.DomFacts) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		for _, fact := range s.DomFacts {
+			builder.WriteString(fact.InlineString())
+			builder.WriteString(", ")
+		}
+	}
+	if len(s.ThenFacts) > 0 {
+		builder.WriteString(glob.KeySymbolRightArrow)
+		for _, fact := range s.ThenFacts {
+			builder.WriteString(fact.InlineString())
+			builder.WriteString(", ")
+		}
+	}
+	if len(s.IfFacts) > 0 {
+		builder.WriteString(" if ")
+		builder.WriteString(inlineFactsString(s.IfFacts))
+	}
+	return builder.String()
+}
+
 func (s *OrStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordOr)
