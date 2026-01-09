@@ -80,8 +80,8 @@ func NewProveCaseByCaseStmt(caseFacts []*SpecFactStmt, thenFacts []FactStmt, pro
 	return &ProveCaseByCaseStmt{caseFacts, thenFacts, proofs, line}
 }
 
-func NewKnowImplyStmt(prop *DefPropStmt, line uint) *KnowImplicationStmt {
-	return &KnowImplicationStmt{prop, line}
+func NewKnowPropInferStmt(prop *DefPropStmt, line uint) *KnowPropInferStmt {
+	return &KnowPropInferStmt{prop, line}
 }
 
 // func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {
@@ -304,6 +304,6 @@ func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact *S
 	return &ProveExistStmt{params, paramSets, equalTos, fact, proofs, line}
 }
 
-func NewImplyTemplateStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts []FactStmt, proof StmtSlice, line uint) *InferTemplateStmt {
+func NewInferTemplateStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts []FactStmt, proof StmtSlice, line uint) *InferTemplateStmt {
 	return &InferTemplateStmt{Params: params, ParamSets: paramSets, DomFacts: domFacts, ThenFacts: thenFacts, IfFacts: ifFacts, Proof: proof, Line: line}
 }

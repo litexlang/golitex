@@ -63,7 +63,7 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 	case glob.KeywordKnow:
 		{
 			if tb.TokenAtHeaderIndexIs(1, glob.KeywordPropInfer) {
-				ret, err = p.knowImplyStmt(tb)
+				ret, err = p.knowPropInferStmt(tb)
 			} else {
 				ret, err = p.knowFactStmt(tb)
 			}
@@ -1124,24 +1124,24 @@ func (p *TbParser) proveStmt(tb *tokenBlock) (Stmt, error) {
 // 	return NewKnowExistPropStmt(existProp, tb.line), nil
 // }
 
-func (p *TbParser) knowImplyStmt(tb *tokenBlock) (*KnowImplicationStmt, error) {
+func (p *TbParser) knowPropInferStmt(tb *tokenBlock) (*KnowPropInferStmt, error) {
 	err := tb.header.skip(glob.KeywordKnow)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
 	if tb.header.is(glob.KeywordPropInfer) {
-		implicationStmt, err := p.DefImplyStmt(tb)
+		implicationStmt, err := p.DefPropInferStmt(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
-		return NewKnowImplyStmt(implicationStmt, tb.line), nil
+		return NewKnowPropInferStmt(implicationStmt, tb.line), nil
 	} else {
 		prop, err := p.defPropStmt(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
-		return NewKnowImplyStmt(prop, tb.line), nil
+		return NewKnowPropInferStmt(prop, tb.line), nil
 	}
 }
 
@@ -2110,7 +2110,7 @@ func (p *TbParser) provePropInferStmt(tb *tokenBlock) (*ProveInferStmt, error) {
 	return NewProveImplicationStmt(specFact, implicationFacts, proofs, tb.line), nil
 }
 
-func (p *TbParser) DefImplyStmt(tb *tokenBlock) (*DefPropStmt, error) {
+func (p *TbParser) DefPropInferStmt(tb *tokenBlock) (*DefPropStmt, error) {
 	body, err := p.implyStmtWithoutSelfReferCheck(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -3349,7 +3349,7 @@ func (p *TbParser) dom_and_section(tb *tokenBlock, kw string, kw_should_not_exis
 // }
 
 func (p *TbParser) claimImply(tb *tokenBlock) (Stmt, error) {
-	implicationStmt, err := p.DefImplyStmt(&tb.body[0])
+	implicationStmt, err := p.DefPropInferStmt(&tb.body[0])
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -3876,5 +3876,5 @@ func (p *TbParser) inferTemplateStmt(tb *tokenBlock) (*InferTemplateStmt, error)
 		return nil, ErrInLine(err, tb)
 	}
 
-	return NewImplyTemplateStmt(params, paramSets, domFacts, thenFacts, ifFacts, proofs, tb.line), nil
+	return NewInferTemplateStmt(params, paramSets, domFacts, thenFacts, ifFacts, proofs, tb.line), nil
 }

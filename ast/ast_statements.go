@@ -103,8 +103,8 @@ type KnowFactStmt struct {
 	Line uint
 }
 
-type KnowImplicationStmt struct {
-	ImplicationProp *DefPropStmt
+type KnowPropInferStmt struct {
+	DefProp *DefPropStmt
 
 	Line uint
 }

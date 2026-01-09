@@ -7,7 +7,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) implyStmt(stmt *ast.InferStmt) *glob.StmtRet {
+func (exec *Executor) inferStmt(stmt *ast.InferStmt) *glob.StmtRet {
 	ver := NewVerifier(exec.Env)
 
 	// 检查涉及到的函数都OK了
