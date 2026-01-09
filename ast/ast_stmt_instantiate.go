@@ -854,7 +854,7 @@ func (stmt *OrStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt.InstantiateFact(uniMap)
 }
 
-func (stmt *ImplyStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+func (stmt *InferStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newDomFacts := make([]Spec_OrFact, len(stmt.DomFacts))
 	for i, fact := range stmt.DomFacts {
 		newFact, err := fact.InstantiateFact(uniMap)
@@ -884,7 +884,7 @@ func (stmt *ImplyStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewImplyStmt(newDomFacts, newThenFacts, stmt.Line), nil
 }
 
-func (stmt *ImplyTemplateStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+func (stmt *InferTemplateStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	// Instantiate ParamSets
 	newParamSets, err := stmt.ParamSets.Instantiate(uniMap)
 	if err != nil {
@@ -931,7 +931,7 @@ func (stmt *ImplyTemplateStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) 
 		return nil, err
 	}
 
-	return &ImplyTemplateStmt{
+	return &InferTemplateStmt{
 		Params:    stmt.Params, // Params are strings, no need to instantiate
 		ParamSets: newParamSets,
 		DomFacts:  newDomFacts,

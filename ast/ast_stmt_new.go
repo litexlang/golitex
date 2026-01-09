@@ -36,8 +36,8 @@ func NewSpecFactStmt(typeEnum SpecFactType, propName Atom, params []Obj, line ui
 	return &SpecFactStmt{typeEnum, propName, params, line}
 }
 
-func NewImplyStmt(domFacts []Spec_OrFact, thenFacts []Spec_OrFact, line uint) *ImplyStmt {
-	return &ImplyStmt{domFacts, thenFacts, line}
+func NewImplyStmt(domFacts []Spec_OrFact, thenFacts []Spec_OrFact, line uint) *InferStmt {
+	return &InferStmt{domFacts, thenFacts, line}
 }
 
 func NewClaimProveByContradictionStmt(claim *ClaimProveStmt, line uint) *ClaimProveByContradictionStmt {
@@ -304,6 +304,6 @@ func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact *S
 	return &ProveExistStmt{params, paramSets, equalTos, fact, proofs, line}
 }
 
-func NewImplyTemplateStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts []FactStmt, proof StmtSlice, line uint) *ImplyTemplateStmt {
-	return &ImplyTemplateStmt{Params: params, ParamSets: paramSets, DomFacts: domFacts, ThenFacts: thenFacts, IfFacts: ifFacts, Proof: proof, Line: line}
+func NewImplyTemplateStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts []FactStmt, proof StmtSlice, line uint) *InferTemplateStmt {
+	return &InferTemplateStmt{Params: params, ParamSets: paramSets, DomFacts: domFacts, ThenFacts: thenFacts, IfFacts: ifFacts, Proof: proof, Line: line}
 }

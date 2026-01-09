@@ -427,14 +427,14 @@ type ProveExistStmt struct {
 	Line uint
 }
 
-type ImplyStmt struct {
+type InferStmt struct {
 	DomFacts  ReversibleFacts
 	ThenFacts ReversibleFacts
 
 	Line uint
 }
 
-type ImplyTemplateStmt struct {
+type InferTemplateStmt struct {
 	Params    StrSlice
 	ParamSets ObjSlice
 	DomFacts  ReversibleFacts

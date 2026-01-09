@@ -168,7 +168,7 @@ func (s *OrStmt) InlineString() string {
 	return builder.String()
 }
 
-func (s *ImplyStmt) InlineString() string {
+func (s *InferStmt) InlineString() string {
 	var builder strings.Builder
 	domFactStrSlice := make([]string, len(s.DomFacts))
 	for i, fact := range s.DomFacts {
@@ -184,7 +184,7 @@ func (s *ImplyStmt) InlineString() string {
 	return builder.String()
 }
 
-func (s *ImplyTemplateStmt) InlineString() string {
+func (s *InferTemplateStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordInfer)
 	builder.WriteString(" ")

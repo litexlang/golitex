@@ -549,7 +549,7 @@ func (stmt *OrStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ImplyStmt) String() string {
+func (stmt *InferStmt) String() string {
 	var builder strings.Builder
 	domFactStrSlice := make([]string, len(stmt.DomFacts))
 	for i, fact := range stmt.DomFacts {
@@ -565,7 +565,7 @@ func (stmt *ImplyStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ImplyTemplateStmt) String() string {
+func (stmt *InferTemplateStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordInfer)
 	builder.WriteString(" ")

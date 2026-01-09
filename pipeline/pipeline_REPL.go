@@ -50,7 +50,7 @@ func RunREPL(version string) {
 		for _, ret := range rets {
 			fmt.Fprint(writer, glob.StringWithOptimizedNewline(ret.String()))
 		}
-		fmt.Fprint(writer, glob.REPLSuccessMsgs(retType))
+		fmt.Fprint(writer, glob.REPLMsg(retType))
 	}
 }
 
