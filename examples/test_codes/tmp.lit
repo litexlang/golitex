@@ -1,26 +1,5 @@
-know:
-    forall s finite_set:
-        forall x s:
-            x $in R
-        =>:
-            exist z R st $is_max(z, s)
+have s nonempty_set, x s
 
-forall x {1, 2, 3}:
-    x <= 3
+{x} $subset_of s
 
-$is_max(3, {1,2,3})
-
-prop is_prime(x N_pos):
-    x != 1
-    forall y N_pos:
-        2 <= y
-        y < x
-        =>:
-            x % y != 0
-
-prove_for i range(2, 17):
-    17 % i != 0
-
-$is_prime(17)
-
-
+union({x}, set_minus(s, {x})) = s
