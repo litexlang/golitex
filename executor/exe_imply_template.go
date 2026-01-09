@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) implyTemplateStmt(stmt *ast.InferTemplateStmt) *glob.StmtRet {
+func (exec *Executor) inferTemplateStmt(stmt *ast.InferTemplateStmt) *glob.StmtRet {
 	// Step 1: Verify like claim forall
 	execRet := exec.implyTemplateStmtVerify(stmt)
 	if execRet.IsNotTrue() {

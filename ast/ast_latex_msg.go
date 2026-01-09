@@ -397,11 +397,11 @@ func (s *ProveCaseByCaseStmt) ToLatexString() string {
 	return s.String()
 }
 
-func (s *KnowImplicationStmt) ToLatexString() string {
+func (s *KnowPropInferStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString(s.ImplicationProp.ToLatexString())
+	builder.WriteString(s.DefProp.ToLatexString())
 	builder.WriteString("\\begin{assumption}\n")
-	builder.WriteString(s.ImplicationProp.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue().ToLatexString())
+	builder.WriteString(s.DefProp.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue().ToLatexString())
 	builder.WriteString("\n\\end{assumption}")
 	return builder.String()
 }

@@ -32,8 +32,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		if execRet.IsTrue() {
 			execRet = execRet.AddWarning("`know` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
-	case *ast.KnowImplicationStmt:
-		execRet = exec.knowImplicationStmt(stmt)
+	case *ast.KnowPropInferStmt:
+		execRet = exec.knowPropInferStmt(stmt)
 		if execRet.IsTrue() {
 			execRet = execRet.AddWarning("`know imply ` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
 		}
@@ -106,9 +106,9 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 	case *ast.ProveExistStmt:
 		execRet = exec.proveExistStmt(stmt)
 	case *ast.InferStmt:
-		execRet = exec.implyStmt(stmt)
+		execRet = exec.inferStmt(stmt)
 	case *ast.InferTemplateStmt:
-		execRet = exec.implyTemplateStmt(stmt)
+		execRet = exec.inferTemplateStmt(stmt)
 	default:
 		execRet = glob.ErrRet(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -305,12 +305,12 @@ func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCase
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
-func (exec *Executor) knowImplicationStmt(stmt *ast.KnowImplicationStmt) *glob.StmtRet {
+func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) *glob.StmtRet {
 	innerStmtRets := []*glob.StmtRet{}
 	defineMsgs := []string{}
 	newFactMsgs := []string{}
 
-	execRet := exec.defPropStmt(stmt.ImplicationProp, false)
+	execRet := exec.defPropStmt(stmt.DefProp, false)
 	if execRet.IsNotTrue() {
 		return execRet
 	}
@@ -318,8 +318,8 @@ func (exec *Executor) knowImplicationStmt(stmt *ast.KnowImplicationStmt) *glob.S
 	defineMsgs = append(defineMsgs, execRet.Define...)
 	newFactMsgs = append(newFactMsgs, execRet.NewFact...)
 
-	if len(stmt.ImplicationProp.IffFactsOrNil) == 0 {
-		_, iffToProp, err := stmt.ImplicationProp.Make_PropToIff_IffToProp()
+	if len(stmt.DefProp.IffFactsOrNil) == 0 {
+		_, iffToProp, err := stmt.DefProp.Make_PropToIff_IffToProp()
 		if err != nil {
 			return glob.ErrRet(err.Error())
 		}
@@ -331,11 +331,11 @@ func (exec *Executor) knowImplicationStmt(stmt *ast.KnowImplicationStmt) *glob.S
 	}
 
 	paramsAsObj := []ast.Obj{}
-	for i := range stmt.ImplicationProp.DefHeader.Params {
-		paramsAsObj = append(paramsAsObj, ast.Atom(stmt.ImplicationProp.DefHeader.Params[i]))
+	for i := range stmt.DefProp.DefHeader.Params {
+		paramsAsObj = append(paramsAsObj, ast.Atom(stmt.DefProp.DefHeader.Params[i]))
 	}
 
-	uniFact := ast.NewUniFact(stmt.ImplicationProp.DefHeader.Params, stmt.ImplicationProp.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.ImplicationProp.DefHeader.Name), paramsAsObj, stmt.Line)}, stmt.ImplicationProp.ImplicationFactsOrNil, stmt.Line)
+	uniFact := ast.NewUniFact(stmt.DefProp.DefHeader.Params, stmt.DefProp.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.DefProp.DefHeader.Name), paramsAsObj, stmt.Line)}, stmt.DefProp.ImplicationFactsOrNil, stmt.Line)
 
 	ret := exec.Env.NewFactWithCheckingNameDefined(uniFact)
 	if ret.IsErr() {
@@ -343,7 +343,7 @@ func (exec *Executor) knowImplicationStmt(stmt *ast.KnowImplicationStmt) *glob.S
 	}
 	newFactMsgs = append(newFactMsgs, uniFact.String())
 
-	uniFact2 := ast.NewUniFact(stmt.ImplicationProp.DefHeader.Params, stmt.ImplicationProp.DefHeader.ParamSets, stmt.ImplicationProp.IffFactsOrNil, stmt.ImplicationProp.ImplicationFactsOrNil, stmt.Line)
+	uniFact2 := ast.NewUniFact(stmt.DefProp.DefHeader.Params, stmt.DefProp.DefHeader.ParamSets, stmt.DefProp.IffFactsOrNil, stmt.DefProp.ImplicationFactsOrNil, stmt.Line)
 	ret = exec.Env.NewFactWithCheckingNameDefined(uniFact2)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())

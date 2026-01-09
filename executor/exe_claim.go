@@ -305,7 +305,7 @@ func (exec *Executor) claimImplyStmt(stmt *ast.ClaimImplicationStmt) *glob.StmtR
 
 	// know exec
 	prop := stmt.Implication
-	execRet := exec.knowImplicationStmt(ast.NewKnowImplyStmt(prop, stmt.Line))
+	execRet := exec.knowPropInferStmt(ast.NewKnowPropInferStmt(prop, stmt.Line))
 	if execRet.IsNotTrue() {
 		return execRet
 	}
