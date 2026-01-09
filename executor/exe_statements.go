@@ -361,7 +361,7 @@ func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) *glob.StmtR
 func (exec *Executor) knowInferStmt(stmt *ast.KnowInferStmt) *glob.StmtRet {
 	newInferTemplate := ast.NewInferTemplateStmt(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.ThenFacts, stmt.IfFacts, []ast.Stmt{}, stmt.Line)
 
-	return exec.inferTemplateStmt(newInferTemplate)
+	return exec.implyTemplateStmtStore(newInferTemplate)
 }
 
 func (exec *Executor) proveStmt(stmt *ast.ProveStmt) *glob.StmtRet {
