@@ -176,11 +176,6 @@ func (ver *Verifier) checkFactTypeAndPropNamesMatch(knownFact ast.Spec_OrFact, i
 				return false
 			}
 
-			// TODO: exist 的match暂时还不行
-			if !knownAs.IsPureFact() || !implyAs.IsPureFact() {
-				return false
-			}
-
 		} else {
 			return false
 		}
@@ -220,7 +215,7 @@ func (ver *Verifier) matchDomFactAndMergeToUniMap(knownDomFact ast.Spec_OrFact, 
 	switch implyDomFactAs := implyDomFact.(type) {
 	case *ast.SpecFactStmt:
 		knownSpecFactAs := knownDomFact.(*ast.SpecFactStmt)
-		ok, curMap, err := ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFactAs.Params, knownParams, implyDomFactAs)
+		ok, curMap, err := ver.matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFactAs, knownParams, implyDomFactAs)
 		if !ok || err != nil {
 			return false, err
 		}
@@ -233,7 +228,7 @@ func (ver *Verifier) matchDomFactAndMergeToUniMap(knownDomFact ast.Spec_OrFact, 
 		knownOrFactAs := knownDomFact.(*ast.OrStmt)
 
 		for j := range implyDomFactAs.Facts {
-			ok, curMap, err := ver.matchUniFactParamsWithSpecFactParamsInImply(knownOrFactAs.Facts[j].Params, knownParams, implyDomFactAs.Facts[j])
+			ok, curMap, err := ver.matchInstSpecFactWithKnownFreeParamsInImply(knownOrFactAs.Facts[j], knownParams, implyDomFactAs.Facts[j])
 			if !ok || err != nil {
 				return false, err
 			}
@@ -284,16 +279,36 @@ func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImply
 	return true, uniMap, nil
 }
 
-func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.Obj, freeVars []string, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
+func (ver *Verifier) matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFact *ast.SpecFactStmt, freeVars []string, instFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
+	if instFact.IsPureFact() {
+		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.Params, freeVars, instFact.Params, string(instFact.PropName))
+	} else {
+		knownExistStruct := knownSpecFact.ToExistStFactStruct()
+		instExistStruct := instFact.ToExistStFactStruct()
+
+		// 将 exist 参数全部替换成随机名称，确保不会出问题
+		knownExistStruct = ver.replaceExistParamsWithRandomNames(knownExistStruct)
+		instExistStruct = ver.replaceExistParamsWithRandomNames(instExistStruct)
+
+		knownFcs := append([]ast.Obj{}, knownExistStruct.ExistFreeParamSets...)
+		knownFcs = append(knownFcs, knownExistStruct.Params...)
+
+		instFcs := append([]ast.Obj{}, instExistStruct.ExistFreeParamSets...)
+		instFcs = append(instFcs, instExistStruct.Params...)
+
+		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownFcs, freeVars, instFcs, string(knownSpecFact.PropName))
+	}
+}
+
+func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.Obj, freeVars []string, givenFcs []ast.Obj, propNameForMsg string) (bool, map[string]ast.Obj, error) {
 	// knownFcs := knownSpecFactInUniFact.SpecFact.Params
-	givenFcs := specFact.Params
 	// freeVars := knownSpecFactInUniFact.UniFact.Params
 	freeVarsMap := map[string]struct{}{}
 	for _, freeVar := range freeVars {
 		freeVarsMap[freeVar] = struct{}{}
 	}
 
-	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs, givenFcs, freeVarsMap, string(specFact.PropName))
+	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs, givenFcs, freeVarsMap, string(propNameForMsg))
 	if err != nil {
 		return false, nil, err
 	}
