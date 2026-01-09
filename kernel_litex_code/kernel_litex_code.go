@@ -972,27 +972,15 @@ know:
 
 # End of ZFC
 
-# 常见的和自然数相关的结论
-prop is_max_in(i set, s set):
-	s $subset_of R
-	i $in s
+prop is_max(r R, s set):
+    forall x s: x $in R
+    <=>:
+        r $in s
+        forall x s: x <= r
+
+prop is_min(r R, s set):
+	forall x s: x $in R
 	<=>:
-		forall j s:
-			j <= i
-
-prop is_min_in(i set, s set):
-	s $subset_of R
-	i $in s
-	<=>:
-		forall j s:
-			i <= j
-
-know:
-	forall s power_set(R):
-		$is_finite_set(s)
-		=>:
-			exist i s st $is_max_in(i, s)
-			exist i s st $is_min_in(i, s)
-
-know forall x Z: x >= 0 => x $in N
+		r $in s
+		forall x s: r <= x
 `

@@ -1,9 +1,26 @@
-prop p(x, y R)
-prop q(x, y R)
-prop t(x, y R)
+know:
+    forall s finite_set:
+        forall x s:
+            x $in R
+        =>:
+            exist z R st $is_max(z, s)
 
-know infer x, y R: $p(x, y) or $q(x, y) => $t(x, y)
+forall x {1, 2, 3}:
+    x <= 3
 
-know $p(1, 2) or $q(1, 2)
+$is_max(3, {1,2,3})
 
-$p(1, 2) or $q(1, 2) => $t(1, 2)
+prop is_prime(x N_pos):
+    x != 1
+    forall y N_pos:
+        2 <= y
+        y < x
+        =>:
+            x % y != 0
+
+prove_for i range(2, 17):
+    17 % i != 0
+
+$is_prime(17)
+
+

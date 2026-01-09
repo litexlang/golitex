@@ -719,7 +719,7 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.StmtRet {
 	}
 	newFactMsgs = append(newFactMsgs, uniFact.String())
 
-	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddNewFacts(newFactMsgs)
+	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
 }
 
 func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, indices []ast.Obj) *glob.StmtRet {
