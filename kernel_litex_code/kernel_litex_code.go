@@ -83,7 +83,7 @@ know:
 know forall x R: x > 0 or x < 0 => x != 0
 
 # 必须要有，否则不能说明有限集合的子集还是有限集合
-know imply finite_set_subset_is_finite_set(s1 finite_set, s2 set):
+know prop_infer finite_set_subset_is_finite_set(s1 finite_set, s2 set):
 	forall x s2:
 		x $in s1
 	=>:
@@ -151,7 +151,7 @@ know forall a R => 1^a = 1
 know forall a, b, c R: a < b - c => a + c < b
 know forall a, b R: b > 0 => a - b < a
 
-know imply subtraction_preserves_inequality_with_positive_term(a R, b R, c R):
+know prop_infer subtraction_preserves_inequality_with_positive_term(a R, b R, c R):
     a < b - c
     c > 0
     =>:
@@ -208,7 +208,7 @@ prop div_cancel_cond(a, b, c R):
     a / c = b / c
     c != 0
 
-know imply cancel(a, b, c R):
+know prop_infer cancel(a, b, c R):
 	a + c = b + c or a - c = b - c or $mul_cancel_cond(a, b, c)or $div_cancel_cond(a, b, c)
     =>:
         a = b
@@ -222,13 +222,13 @@ prop div_cancel_general_cond(a, b, c, d R):
     c != 0
 
 
-know imply cancel_general(a, b, c, d R):
+know prop_infer cancel_general(a, b, c, d R):
     c = d
     a + c = b + d or a - c = b - d or $mul_cancel_general_cond(a, b, c, d) or $div_cancel_general_cond(a, b, c, d)
     =>:
         a = b
 
-know imply product_is_0_then_at_least_one_factor_is_0(a, b R):
+know prop_infer product_is_0_then_at_least_one_factor_is_0(a, b R):
 	a * b = 0
 	=>:
 		a = 0 or	b = 0
@@ -340,131 +340,131 @@ know:
 	forall x, y R: x = y => x - y = 0
 	forall x, y R: x != y => x - y != 0
 
-know imply larger_is_transitive(x, y, z R):
+know prop_infer larger_is_transitive(x, y, z R):
 	x > y
 	y > z
 	=>:
 		x > z
 
-know imply less_equal_add_cancel(x, y, z R):
+know prop_infer less_equal_add_cancel(x, y, z R):
 	x + z <= y + z
 	=>:
 		x <= y
 
-know imply less_equal_minus_cancel(x, y, z R):
+know prop_infer less_equal_minus_cancel(x, y, z R):
 	x - z <= y - z
 	=>:
 		x <= y
 
-know imply less_add_cancel(x, y, z R):
+know prop_infer less_add_cancel(x, y, z R):
 	x + z < y + z
 	=>:
 		x < y
 
-know imply less_minus_cancel(x, y, z R):
+know prop_infer less_minus_cancel(x, y, z R):
 	x - z < y - z
 	=>:
 		x < y
 
-know imply greater_add_cancel(x, y, z R):
+know prop_infer greater_add_cancel(x, y, z R):
 	x + z > y + z
 	=>:
 		x > y
 
-know imply greater_minus_cancel(x, y, z R):
+know prop_infer greater_minus_cancel(x, y, z R):
 	x - z > y - z
 	=>:
 		x > y
 
-know imply greater_equal_add_cancel(x, y, z R):
+know prop_infer greater_equal_add_cancel(x, y, z R):
 	x + z >= y + z
 	=>:
 		x >= y
 
-know imply greater_equal_minus_cancel(x, y, z R):
+know prop_infer greater_equal_minus_cancel(x, y, z R):
 	x - z >= y - z
 	=>:
 		x >= y
 
-know imply greater_equal_mul_pos_cancel(x, y, z R):
+know prop_infer greater_equal_mul_pos_cancel(x, y, z R):
 	z > 0
 	x * z >= y * z
 	=>:
 		x >= y
 
-know imply greater_equal_div_pos_cancel(x, y, z R):
+know prop_infer greater_equal_div_pos_cancel(x, y, z R):
 	z > 0
 	x / z >= y / z
 	=>:
 		x >= y
 
-know imply greater_div_pos_cancel(x, y, z R):
+know prop_infer greater_div_pos_cancel(x, y, z R):
 	z > 0
 	x / z > y / z
 	=>:
 		x > y
 
-know imply less_div_pos_cancel(x, y, z R):
+know prop_infer less_div_pos_cancel(x, y, z R):
 	z > 0
 	x / z < y / z
 	=>:
 		x < y
 
-know imply less_equal_div_pos_cancel(x, y, z R):
+know prop_infer less_equal_div_pos_cancel(x, y, z R):
 	z > 0
 	x / z <= y / z
 	=>:
 		x <= y
 
-know imply less_div_neg_cancel(x, y, z R):
+know prop_infer less_div_neg_cancel(x, y, z R):
 	z < 0
 	x / z < y / z
 	=>:
 		x > y
 
-know imply less_equal_div_neg_cancel(x, y, z R):
+know prop_infer less_equal_div_neg_cancel(x, y, z R):
 	z < 0
 	x / z <= y / z
 	=>:
 		x >= y
 
-know imply greater_equal_mul_neg_cancel(x, y, z R):
+know prop_infer greater_equal_mul_neg_cancel(x, y, z R):
 	z < 0
 	x / z >= y / z
 	=>:
 		x <= y
 
-know imply greater_equal_div_neg_cancel(x, y, z R):
+know prop_infer greater_equal_div_neg_cancel(x, y, z R):
 	z < 0
 	x / z > y / z
 	=>:
 		x < y
 
-know imply less_equal_mul_neg_cancel(x, y, z R):
+know prop_infer less_equal_mul_neg_cancel(x, y, z R):
 	z < 0
 	x * z <= y * z
 	=>:
 		x >= y
 
-know imply larger_equal_mul_neg_cancel(x, y, z R):
+know prop_infer larger_equal_mul_neg_cancel(x, y, z R):
 	z < 0
 	x * z >= y * z
 	=>:
 		x <= y
 
-know imply less_mul_neg_cancel(x, y, z R):
+know prop_infer less_mul_neg_cancel(x, y, z R):
 	z < 0
 	x * z < y * z
 	=>:
 		x > y
 
-know imply greater_mul_neg_cancel(x, y, z R):
+know prop_infer greater_mul_neg_cancel(x, y, z R):
 	z < 0
 	x * z > y * z
 	=>:
 		x < y
 
-know imply greater_than_pow_cancel(x, y, z R):
+know prop_infer greater_than_pow_cancel(x, y, z R):
 	z > 0
 	x > 0
 	y > 0
@@ -472,7 +472,7 @@ know imply greater_than_pow_cancel(x, y, z R):
 	=>:
 		x > y
 
-know imply greater_equal_pow_cancel(x, y, z R):
+know prop_infer greater_equal_pow_cancel(x, y, z R):
 	z > 0
 	x > 0
 	y > 0
@@ -480,7 +480,7 @@ know imply greater_equal_pow_cancel(x, y, z R):
 	=>:
 		x >= y
 
-know imply less_pow_cancel(x, y, z R):
+know prop_infer less_pow_cancel(x, y, z R):
 	z > 0
 	x > 0
 	y > 0
@@ -488,7 +488,7 @@ know imply less_pow_cancel(x, y, z R):
 	=>:
 		x < y
 
-know imply less_equal_pow_cancel(x, y, z R):
+know prop_infer less_equal_pow_cancel(x, y, z R):
 	z > 0
 	x > 0
 	y > 0
@@ -594,7 +594,7 @@ know:
 	forall x, y R: x > y => not x <= y, not x = y, not x < y
 	forall x, y R: x < y => not x >= y, not x = y, not x > y
 
-know imply subset_of_finite_set_is_finite_set(x set, y finite_set):
+know prop_infer subset_of_finite_set_is_finite_set(x set, y finite_set):
 	x $subset_of y
 	=>:
 		$is_finite_set(x)
@@ -647,7 +647,7 @@ know:
 		<=>:
 			z $in difference(x, y)
 
-know imply item_in_difference(x, y set, z set):
+know prop_infer item_in_difference(x, y set, z set):
 	z $in difference(x, y)
 	=>:
 		not z $in y
@@ -745,42 +745,6 @@ know:
 	$is_nonempty_set(R_pos)
 	$is_nonempty_set(R_neg)
 
-# TODO: builtin instead of fn
-# 一个东西在cup，则怎么怎么样；一个东西满足了cup的性质，则怎么怎么样
-"""
-# cap
-know imply item_in_cap(z set, x set, y cap(x)):
-	forall t x:
-		z $in t
-
-
-prop is_item_in_cap(z set, x set, y set):
-
-
-# set_minus
-know imply item_in_set_minus(x, y set, z set_minus(x, y)):
-	z $in x
-	not z $in y
-
-# set symmetric difference
-know imply item_in_set_diff(x, y set):
-	forall z set_diff(x, y):
-		z $in x
-		=>:
-			not z $in y
-	forall z set_diff(x, y):
-		z $in y
-		=>:
-			not z $in x
-"""
-		
-# TODO: builtin instead of fn
-"""
-let fn choice(x set) fn(x) cup(x)
-know imply axiom_of_choice(x set):
-	forall y x:
-		choice(x)(y) $in y
-"""
 
 know:
 	forall x, y R: x < y => $is_nonempty_set(range(x, y)), $is_nonempty_set(closed_range(x, y))
@@ -828,7 +792,7 @@ know:
 ### cup
 
 # check item in cup
-know imply check_item_in_cup(x set, x_item x, cup_x_item x_item):
+know prop_infer check_item_in_cup(x set, x_item x, cup_x_item x_item):
 	cup_x_item $in cup(x)
 
 # when item in cup, it has properties
@@ -845,7 +809,7 @@ know:
 			item $in cap(x)
 
 # when item in cap, it has properties
-know imply item_in_cap_implies(x set, item cap(x)):
+know prop_infer item_in_cap_implies(x set, item cap(x)):
 	forall x_item x:
 		item $in x_item
 
@@ -856,7 +820,7 @@ know:
 	forall item, x, y set: item $in x or item $in y => item $in union(x, y)
 
 # when item in union, it has properties
-know imply item_in_union_implies(z set, x, y set):
+know prop_infer item_in_union_implies(z set, x, y set):
 	z $in union(x, y)
 	=>:
 		z $in x or z $in y
@@ -872,7 +836,7 @@ know:
 	forall item, x, y set: item $in x, item $in y => item $in intersect(x, y)
 
 # when item in intersect, it has properties
-know imply item_in_intersect_implies(z set, x, y set):
+know prop_infer item_in_intersect_implies(z set, x, y set):
 	z $in intersect(x, y)
 	=>:
 		z $in x
@@ -903,7 +867,7 @@ know:
 			item $in set_minus(x, y)
 
 # when item in set minus, it has properties
-know imply item_in_set_minus_implies(x, y set, item set_minus(x, y)):
+know prop_infer item_in_set_minus_implies(x, y set, item set_minus(x, y)):
 	item $in x
 	not item $in y
 
@@ -940,7 +904,7 @@ prop is_bijective_fn(X set, Y set, f fn(X)Y):
 	$is_injective_fn(X, Y, f)
 	$is_surjective_fn(X, Y, f)
 	
-know imply is_injective_fn_to_finite_set_implies(X set, Y finite_set, f fn(X)Y):
+know prop_infer is_injective_fn_to_finite_set_implies(X set, Y finite_set, f fn(X)Y):
 	$is_injective_fn(X, Y, f)
 	=>:
 		$is_finite_set(Y)
@@ -948,7 +912,7 @@ know imply is_injective_fn_to_finite_set_implies(X set, Y finite_set, f fn(X)Y):
 
 prop not_equal_set(x set, y set)
 
-know imply is_nonempty_with_item(x, z set):
+know prop_infer is_nonempty_with_item(x, z set):
 	z $in x
 	=>:
 		$is_nonempty_set(x)

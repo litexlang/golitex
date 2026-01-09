@@ -814,7 +814,7 @@ func (exec *Executor) proveImplyStmt(stmt *ast.ProveInferStmt) *glob.StmtRet {
 		return glob.ErrRet(ret.String())
 	}
 
-	return exec.NewTrueStmtRet(stmt).AddWarning(fmt.Sprintf("%s is a powerful feature. The implication section will be automatically generated after every time %s is true later. Don't use it too much, since it is very memory consuming.", glob.KeywordProveInfer, stmt.SpecFact.PropName))
+	return exec.NewTrueStmtRet(stmt).AddWarning(fmt.Sprintf("%s is a powerful feature. The implication section will be automatically generated after every time %s is true later. Don't use it too much, since it is very memory consuming.", glob.KeywordProvePropInfer, stmt.SpecFact.PropName))
 }
 
 func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveInferStmt) *glob.StmtRet {
