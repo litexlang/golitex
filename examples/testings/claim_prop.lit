@@ -9,7 +9,7 @@ prove:
     know forall x R: $q(x) => $t(x)
 
     claim:
-        imply p_to_t(x R):
+        prop_infer p_to_t(x R):
             $p(x)
             =>:
                 $t(x)
@@ -21,7 +21,7 @@ prove:
     prop p(x, y N)
     prop p2(x, y, z N)
     claim:
-        imply q(x, y, z N):
+        prop_infer q(x, y, z N):
             $p2(x, y, z)
             =>:
                 $p(x, y)

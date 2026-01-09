@@ -150,7 +150,7 @@ func (s *KnowImplicationStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)
 	builder.WriteString(" ")
-	builder.WriteString(glob.KeywordImply)
+	builder.WriteString(glob.KeywordInfer)
 	builder.WriteString(s.ImplicationProp.InlineString())
 	return builder.String()
 }
@@ -186,9 +186,9 @@ func (s *ImplyStmt) InlineString() string {
 
 func (s *ImplyTemplateStmt) InlineString() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordImply)
+	builder.WriteString(glob.KeywordInfer)
 	builder.WriteString(" ")
-	
+
 	// Params
 	if len(s.Params) > 0 {
 		paramStrs := make([]string, len(s.Params))
@@ -201,7 +201,7 @@ func (s *ImplyTemplateStmt) InlineString() string {
 		builder.WriteString(strings.Join(paramStrs, ", "))
 		builder.WriteString(": ")
 	}
-	
+
 	// DomFacts
 	domFactStrSlice := make([]string, len(s.DomFacts))
 	for i, fact := range s.DomFacts {
@@ -209,14 +209,14 @@ func (s *ImplyTemplateStmt) InlineString() string {
 	}
 	builder.WriteString(strings.Join(domFactStrSlice, ", "))
 	builder.WriteString(" => ")
-	
+
 	// ThenFacts
 	thenFactStrSlice := make([]string, len(s.ThenFacts))
 	for i, fact := range s.ThenFacts {
 		thenFactStrSlice[i] = fact.InlineString()
 	}
 	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
-	
+
 	return builder.String()
 }
 

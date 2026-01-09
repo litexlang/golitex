@@ -1,4 +1,4 @@
-imply a, b, c R: a * b = a * c => b = c if a != 0:
+infer a, b, c R: a * b = a * c => b = c if a != 0:
     prove_by_contradiction b = c:
         b = a * b / a = a * c / a = c
         b = c
