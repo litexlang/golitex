@@ -93,15 +93,15 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 	case glob.KeywordImport:
 		ret, err = p.importDirStmt(tb)
 	case glob.KeywordProvePropInfer:
-		ret, err = p.proveInferStmt(tb)
+		ret, err = p.provePropInferStmt(tb)
 	case glob.KeywordRun:
 		ret, err = p.runFileStmt(tb)
 	case glob.KeywordProveExist:
 		ret, err = p.proveExistStmt(tb)
 	case glob.KeywordInfer:
-		ret, err = p.implyTemplateStmt(tb)
+		ret, err = p.inferTemplateStmt(tb)
 	default:
-		ret, err = p.factOrFactImplyStmt(tb)
+		ret, err = p.factOrFactInferStmt(tb)
 	}
 
 	if err != nil {
@@ -2001,7 +2001,7 @@ func (p *TbParser) importDirStmt(tb *tokenBlock) (*ImportDirStmt, error) {
 	return NewImportDirStmt(pkgName, asPkgName, true, tb.line), nil
 }
 
-func (p *TbParser) proveInferStmt(tb *tokenBlock) (*ProveInferStmt, error) {
+func (p *TbParser) provePropInferStmt(tb *tokenBlock) (*ProveInferStmt, error) {
 	err := tb.header.skip(glob.KeywordProvePropInfer)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -2319,7 +2319,7 @@ func (p *TbParser) proveByInductionStmt(tb *tokenBlock) (Stmt, error) {
 // Fact statement parsing methods (first 10 methods from parser_statements.go)
 // ============================================================================
 
-func (p *TbParser) factOrFactImplyStmt(tb *tokenBlock) (Stmt, error) {
+func (p *TbParser) factOrFactInferStmt(tb *tokenBlock) (Stmt, error) {
 	// if !tb.EndWith(glob.KeySymbolColon) {
 	// 	return p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{})
 	// }
@@ -2492,14 +2492,37 @@ func (p *TbParser) factStmt(tb *tokenBlock, uniFactDepth uniFactEnum) (FactStmt,
 // }
 
 func (p *TbParser) SpecFactOrOrStmt(tb *tokenBlock) (FactStmt, error) {
-	if tb.header.is(glob.KeywordOr) {
-		// return p.orStmt(tb)
-		return p.inlineOrFact(tb)
-		// } else if tb.header.is(glob.KeySymbolEqual) {
-		// 	return p.equalsFactStmt(tb)
-	} else {
-		return p.specFactStmt(tb)
+	// if tb.header.is(glob.KeywordOr) {
+	// return p.orStmt(tb)
+	// return p.inlineOrFact(tb)
+	// } else if tb.header.is(glob.KeySymbolEqual) {
+	// 	return p.equalsFactStmt(tb)
+	// } else {
+	// 	return p.specFactStmt(tb)
+	// }
+
+	start, err := p.specFactStmt(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
 	}
+
+	// 如果有 or，那就直到 后面没有or了
+	if !tb.header.is(glob.KeywordOr) {
+		return start, nil
+	}
+
+	orFacts := []*SpecFactStmt{start}
+	for tb.header.is(glob.KeywordOr) {
+		tb.header.skip(glob.KeywordOr)
+
+		next, err := p.specFactStmt(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		orFacts = append(orFacts, next)
+	}
+
+	return NewOrStmt(orFacts, tb.line), nil
 }
 
 // func (p *TbParser) specFactStmt_ExceedEnd(tb *tokenBlock) (*SpecFactStmt, error) {
@@ -3767,7 +3790,7 @@ func (p *TbParser) proveExistStmt(tb *tokenBlock) (*ProveExistStmt, error) {
 	return NewProveExistStmt(params, paramSets, equalTos, fact, proofs, tb.line), nil
 }
 
-func (p *TbParser) implyTemplateStmt(tb *tokenBlock) (*ImplyTemplateStmt, error) {
+func (p *TbParser) inferTemplateStmt(tb *tokenBlock) (*ImplyTemplateStmt, error) {
 	err := tb.header.skip(glob.KeywordInfer)
 	if err != nil {
 		return nil, ErrInLine(err, tb)

@@ -19,7 +19,12 @@ func (exec *Executor) implyStmt(stmt *ast.ImplyStmt) *glob.StmtRet {
 				return ret.ToStmtRet()
 			}
 		case *ast.OrStmt:
-			panic("")
+			for _, fact := range domFact.(*ast.OrStmt).Facts {
+				ret := ver.checkFnsReq(fact, Round0Msg())
+				if ret.IsNotTrue() {
+					return ret.ToStmtRet()
+				}
+			}
 		}
 	}
 
@@ -31,7 +36,12 @@ func (exec *Executor) implyStmt(stmt *ast.ImplyStmt) *glob.StmtRet {
 				return ret.ToStmtRet()
 			}
 		case *ast.OrStmt:
-			panic("")
+			for _, fact := range thenFact.(*ast.OrStmt).Facts {
+				ret := ver.checkFnsReq(fact, Round0Msg())
+				if ret.IsNotTrue() {
+					return ret.ToStmtRet()
+				}
+			}
 		}
 	}
 
@@ -40,7 +50,7 @@ func (exec *Executor) implyStmt(stmt *ast.ImplyStmt) *glob.StmtRet {
 	for _, domFact := range stmt.DomFacts {
 		ret := exec.factStmt(domFact.(ast.FactStmt))
 		if ret.IsNotTrue() {
-			return ret
+			return exec.AddStmtToStmtRet(glob.ErrRet(fmt.Sprintf("failed to verify fact: %s", domFact.String())), stmt)
 		}
 	}
 
@@ -253,7 +263,7 @@ func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImply
 		}
 	}
 
-	if !ver.checkFactTypeAndPropNamesMatch(knownImplyTemplate.SpecFact, toCheck) {
+	if !ver.checkFactTypeAndPropNamesMatch(knownImplyTemplate.Spec_orFact, toCheck) {
 		return false, nil, nil
 	}
 
@@ -265,7 +275,7 @@ func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImply
 		}
 	}
 
-	ok, err := ver.matchDomFactAndMergeToUniMap(knownImplyTemplate.SpecFact, toCheck, knownImplyTemplate.ImplyTemplate.Params, uniMap)
+	ok, err := ver.matchDomFactAndMergeToUniMap(knownImplyTemplate.Spec_orFact, toCheck, knownImplyTemplate.ImplyTemplate.Params, uniMap)
 	if !ok || err != nil {
 		return false, nil, err
 	}

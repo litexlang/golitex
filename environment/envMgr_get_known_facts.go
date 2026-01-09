@@ -15,6 +15,7 @@
 package litex_env
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 )
@@ -224,7 +225,16 @@ func (s SpecFactInImplyTemplateMem) GetSameEnumPkgPropFacts(stmt *ast.SpecFactSt
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInImplyTemplateMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, implyTemplate *ast.ImplyTemplateStmt) *glob.StmtRet {
+func (s SpecFactInImplyTemplateMem) newFact(known ast.Spec_OrFact, implyTemplate *ast.ImplyTemplateStmt) *glob.StmtRet {
+	stmtAsSpecFact, ok := known.(*ast.SpecFactStmt)
+	if !ok {
+		knownAsOr, ok := known.(*ast.OrStmt)
+		if !ok {
+			return glob.ErrRet(fmt.Sprintf("invalid known fact type: %T", known))
+		}
+		stmtAsSpecFact = knownAsOr.Facts[0]
+	}
+
 	sameEnumFacts, ret := s.getSameEnumFacts(stmtAsSpecFact)
 	if ret.IsErr() {
 		return ret
@@ -233,7 +243,7 @@ func (s SpecFactInImplyTemplateMem) newFact(stmtAsSpecFact *ast.SpecFactStmt, im
 	if _, ok := sameEnumFacts[string(stmtAsSpecFact.PropName)]; !ok {
 		sameEnumFacts[string(stmtAsSpecFact.PropName)] = []KnownSpecFact_InImplyTemplate{}
 	}
-	sameEnumFacts[string(stmtAsSpecFact.PropName)] = append(sameEnumFacts[string(stmtAsSpecFact.PropName)], NewKnownSpecFact_InImplyTemplate(stmtAsSpecFact, implyTemplate))
+	sameEnumFacts[string(stmtAsSpecFact.PropName)] = append(sameEnumFacts[string(stmtAsSpecFact.PropName)], NewKnownSpecFact_InImplyTemplate(known, implyTemplate))
 
 	return glob.NewEmptyStmtTrue()
 }
