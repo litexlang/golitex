@@ -210,9 +210,9 @@ AI references:
 
 ## Special Thanks
 
-_Sometimes it is the very people who no one imagines anything of who do the things that no one can imagine._
+_巴黎挺好，未来一定更好。没有计划，但一定更好。_
 
-_– Alan Turing_
+_- 樊振东在巴黎奥运会后接受采访时说_
 
 <div align="center">
   <img src="https://publisher.litexlang.org/Little_Little_O.PNG" alt="The Litex Logo" width="200">

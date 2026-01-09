@@ -35,6 +35,15 @@ func (exec *Executor) implyStmt(stmt *ast.ImplyStmt) *glob.StmtRet {
 		}
 	}
 
+	// check domFacts
+
+	for _, domFact := range stmt.DomFacts {
+		ret := exec.factStmt(domFact.(ast.FactStmt))
+		if ret.IsNotTrue() {
+			return ret
+		}
+	}
+
 	for _, thenFact := range stmt.ThenFacts {
 		ret := ver.proveOneThenFactInImplyStmt(stmt, thenFact, NewVerState(0, true, true))
 		if ret.IsNotTrue() {
