@@ -8,7 +8,7 @@ fn union(s, s2 set) set:
             x $in union(s, s2)
 
 # Property of union: if an item is in the union of 2 sets, then it is in at least one of the sets
-know imply union_items_in_at_least_one_of_child_set(x obj, s, s2 set):
+know infer union_items_in_at_least_one_of_child_set(x obj, s, s2 set):
     x $in union(s, s2)    
     =>:
         or:
@@ -26,7 +26,7 @@ prove:
 
 # Example: union(s, {}) is itself
 claim:
-imply union_with_empty_set_is_itself(x obj, s, s2 set):
+infer union_with_empty_set_is_itself(x obj, s, s2 set):
         s2 := {}
         x $in union(s, s2)
         =>:

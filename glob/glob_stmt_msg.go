@@ -100,7 +100,7 @@ func VerifyProcessMsgs(msgs []string) string {
 	return fmt.Sprintf("verify process:\n%s\n", strings.Join(msgs, "\n"))
 }
 
-func AddREPLSuccessMsg(ret *StmtRet) string {
+func AddREPLMsg(ret *StmtRet) string {
 	switch ret.RetType {
 	case StmtRetTypeTrue:
 		return REPLSuccessMessage
@@ -112,7 +112,7 @@ func AddREPLSuccessMsg(ret *StmtRet) string {
 	return REPLErrorMessage
 }
 
-func REPLSuccessMsgs(t StmtRetType) string {
+func REPLMsg(t StmtRetType) string {
 	switch t {
 	case StmtRetTypeTrue:
 		return REPLSuccessMessage

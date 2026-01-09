@@ -32,11 +32,6 @@ func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bo
 		return nil, glob.StmtRetTypeError, []*glob.StmtRet{glob.ErrRet(err.Error())}
 	}
 
-	// stmtSlice, err := ast.ParseSourceCode(code, pkgMgr)
-	// if err != nil {
-	// 	return nil, glob.ErrRet(err.Error())
-	// }
-
 	blocks, err := ast.PreprocessAndMakeSourceCodeIntoBlocks(code)
 	if err != nil {
 		return nil, glob.StmtRetTypeError, []*glob.StmtRet{glob.ErrRet(err.Error())}
