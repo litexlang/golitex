@@ -3,3 +3,16 @@ have s nonempty_set, x s
 {x} $subset_of s
 
 union({x}, set_minus(s, {x})) = s
+
+let fn product_of(s finite_set) R:
+    dom:
+        forall x s:
+            x $in R
+
+know:
+    forall x R:
+        product_of({x}) = x
+
+    forall s finite_set, x s:
+        product_of(s) = product_of(s \set_minus {x}) * product_of({x})
+
