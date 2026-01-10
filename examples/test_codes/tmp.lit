@@ -1,18 +1,26 @@
-have s nonempty_set, x s
-
-{x} $subset_of s
-
-union({x}, set_minus(s, {x})) = s
-
-let fn product_of(s finite_set) R:
-    dom:
-        forall x s:
-            x $in R
+have fn product_of(s power_set(R)) R:
+        dom:
+            $is_finite_set(s)
+    prove:
+        do_nothing
+    = 1
 
 know:
     forall x R:
         product_of({x}) = x
 
     forall s finite_set, x s:
-        product_of(s) = product_of(s \set_minus {x}) * product_of({x})
+        product_of(s) = product_of(set_minus(s, {x})) * product_of({x})
+
+prove product_of({1,2}) = 2:
+    know set_minus({1,2}, {1}) = {2}
+    {1, 2} $subset_of R
+    product_of({1, 2}) = product_of({2}) * product_of({1}) = 2 * 1 = 2
+
+# 证明素数有无限个
+
+prove_by_contradiction not $is_finite_set({x N_pos: $is_prime(x)}):
+    # prove product_of({x N_pos: $is_prime(x)}) + 1 is not divisible by any prime number
+
+    
 
