@@ -1,26 +1,12 @@
-have fn product_of(s power_set(R)) R:
-        dom:
-            $is_finite_set(s)
-    prove:
-        do_nothing
-    = 1
+
+prop p(x, y R)
+prop q(x, y R)
+prop t(x, y R)
+
+know forall x, y R: $p(x, y) or $q(x, y) => $t(x, y)
 
 know:
-    forall x R:
-        product_of({x}) = x
+    $p(1, 2)
+    $q(1, 2)
 
-    forall s finite_set, x s:
-        product_of(s) = product_of(set_minus(s, {x})) * product_of({x})
-
-prove product_of({1,2}) = 2:
-    know set_minus({1,2}, {1}) = {2}
-    {1, 2} $subset_of R
-    product_of({1, 2}) = product_of({2}) * product_of({1}) = 2 * 1 = 2
-
-# 证明素数有无限个
-# 需要先内置好，要么一个数自己是prime，要么就是存在一个prime使得它能被prime整除
-prove_by_contradiction not $is_finite_set({x N_pos: $is_prime(x)}):
-    # prove product_of({x N_pos: $is_prime(x)}) + 1 is not divisible by any prime number
-
-
-
+$p(1, 2) or $q(1, 2) => $t(1, 2)

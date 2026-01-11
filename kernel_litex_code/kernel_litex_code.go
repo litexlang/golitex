@@ -1014,4 +1014,6 @@ prop is_prime(x N_pos):
         y < x
         =>:
             x % y != 0
+
+know forall x Z: x >= 0 => x $in N
 `
