@@ -1013,5 +1013,5 @@ prop is_prime(x N_pos):
         2 <= y
         y < x
         =>:
-            x % y != 0	
+            x % y != 0
 `

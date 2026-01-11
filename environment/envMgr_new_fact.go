@@ -33,7 +33,7 @@ func (envMgr *EnvMgr) NewFactWithCheckingNameDefined(stmt ast.FactStmt) *glob.St
 	case *ast.OrStmt:
 		return envMgr.newOrFact(f)
 	case *ast.UniFactStmt:
-		return envMgr.newUniFact(f)
+		return envMgr.NewFactWithCheckingNameDefined_UniFact(f)
 	case *ast.UniFactWithIffStmt:
 		return envMgr.newUniFactWithIff(f)
 	case *ast.EqualsFactStmt:
@@ -41,6 +41,10 @@ func (envMgr *EnvMgr) NewFactWithCheckingNameDefined(stmt ast.FactStmt) *glob.St
 	default:
 		return glob.ErrRet(fmt.Sprintf("unknown fact type: %T", stmt))
 	}
+}
+
+func (envMgr *EnvMgr) NewFactWithCheckingNameDefined_UniFact(stmt *ast.UniFactStmt) *glob.StmtRet {
+	return envMgr.newUniFact(stmt)
 }
 
 func (envMgr *EnvMgr) newUniFact(stmt *ast.UniFactStmt) *glob.StmtRet {

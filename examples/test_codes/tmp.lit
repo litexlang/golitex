@@ -18,9 +18,9 @@ prove product_of({1,2}) = 2:
     product_of({1, 2}) = product_of({2}) * product_of({1}) = 2 * 1 = 2
 
 # 证明素数有无限个
-
+# 需要先内置好，要么一个数自己是prime，要么就是存在一个prime使得它能被prime整除
 prove_by_contradiction not $is_finite_set({x N_pos: $is_prime(x)}):
     # prove product_of({x N_pos: $is_prime(x)}) + 1 is not divisible by any prime number
 
-    
+
 
