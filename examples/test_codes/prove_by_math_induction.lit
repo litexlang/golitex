@@ -1,14 +1,22 @@
-prop p(x R, n N_pos)
-
-let x R
+prop p(n N_pos)
 
 know:
-    forall n N_pos: n >= 2, $p(x, n) => $p(x, n+1)
-    $p(x, 2)
+    $p(1)
+    forall n N_pos: $p(n) => $p(n+1)
 
-prove_by_induction($p(x, n), n, 2)
+prove_by_induction n N_pos: $p(n):
+    do_nothing
+
+prop q(x N_pos)
 
 know:
-    forall n N_pos: n >= 2 => $p(x,n)
+    forall x N_pos: $q(x, 1)
+    forall EUAK N_pos:
+        forall x N_pos:
+            $q(x, EUAK)
+        =>:
+            forall x N_pos:
+                $q(x, (EUAK + 1))
 
-forall n N_pos: n >= 2 => $p(x,n)
+prove_by_induction y N_pos: forall x N_pos: $q(x, y):
+    do_nothing
