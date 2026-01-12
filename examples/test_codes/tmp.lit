@@ -2,4 +2,6 @@ let x, y, z R:
     x > y
     y > z
 
+know forall x, y, z R: x > y, y > z => x > z
+
 x > y, y > z => x > z
