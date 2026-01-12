@@ -1015,4 +1015,5 @@ know:
             exist z R st $is_min(z, s)
 
 know forall x Z: x >= 0 => x $in N
+
 `
