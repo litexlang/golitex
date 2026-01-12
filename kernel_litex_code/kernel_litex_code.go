@@ -1008,13 +1008,5 @@ know:
         =>:
             exist z R st $is_min(z, s)
 
-prop is_prime(x N_pos):
-	x != 1
-    forall y N_pos:
-        2 <= y
-        y < x
-        =>:
-            x % y != 0
-
 know forall x Z: x >= 0 => x $in N
 `

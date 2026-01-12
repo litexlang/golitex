@@ -1,7 +1,26 @@
-prove forall a, b, c R: a * b = a * c, a != 0 => b = c:
-        prove_by_contradiction b = c:
-            b = a * b / a = a * c / a = c
-            b = c
+prop is_prime(x N_pos):
+	2 <= x
+    forall y N_pos:
+        2 <= y
+        y < x
+        =>:
+            x % y != 0
 
-let x2, y2, z2 R: x2 * y2 = x2 * z2, x2 != 0
-x2 * y2 = x2 * z2, x2 != 0 => y2 = z2
+prop is_prime_divisor(x N_pos, y N_pos):
+    2 <= y
+    2 <= x
+    y % x = 0
+    $is_prime(x)
+
+know forall y N_pos: 2 <= y => exist x N_pos st $is_prime_divisor(x, y)
+
+prove_by_contradiction not $is_finite_set({y N_pos: $is_prime(y)}):
+    have x R st $is_max(x, {y N_pos: $is_prime(y)})
+    let a N_pos:
+        forall t {y N_pos: $is_prime(y)}:
+            a % t = 1
+        2 <= a
+    have b N_pos st $is_prime_divisor(b, a)
+    a % b = 1
+    1 != 0
+    a % b != 0
