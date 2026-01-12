@@ -347,63 +347,81 @@ know:
 		=>:
 			x > z
 
-    forall x, y, z R:
+	forall x, y, z R:
+		x >= y
+		y >= z
+		=>:
+			x >= z
+
+	forall x, y, z R:
+		x <= y
+		y <= z
+		=>:
+			x <= z
+
+	forall x, y, z R:
+		x < y
+		y < z
+		=>:
+			x < z
+
+	forall x, y, z R:
 		x + z <= y + z
 		=>:
 			x <= y
 
 	forall x, y, z R:
-			x - z <= y - z
-			=>:
-				x <= y
+		x - z <= y - z
+		=>:
+			x <= y
 
 	forall x, y, z R:
-			x + z < y + z
-			=>:
-				x < y
+		x + z < y + z
+		=>:
+			x < y
 
 	forall x, y, z R:
-			x - z < y - z
-			=>:
-				x < y
+		x - z < y - z
+		=>:
+			x < y
 
 	forall x, y, z R:
-			x + z > y + z
-			=>:
-				x > y
+		x + z > y + z
+		=>:
+			x > y
 
 	forall x, y, z R:
-			x - z > y - z
-			=>:
-				x > y
+		x - z > y - z
+		=>:
+			x > y
 
 	forall x, y, z R:
-			x + z >= y + z
-			=>:
-				x >= y
+		x + z >= y + z
+		=>:
+			x >= y
 
 	forall x, y, z R:
-			x - z >= y - z
-			=>:
-				x >= y
+		x - z >= y - z
+		=>:
+			x >= y
 
 	forall x, y, z R:
-			z > 0
-			x * z >= y * z
-			=>:
-				x >= y
+		z > 0
+		x * z >= y * z
+		=>:
+			x >= y
 
 	forall x, y, z R:
-			z > 0
-			x / z >= y / z
-			=>:
-				x >= y
+		z > 0
+		x / z >= y / z
+		=>:
+			x >= y
 
 	forall x, y, z R:
-			z > 0
-			x / z > y / z
-			=>:
-				x > y
+		z > 0
+		x / z > y / z
+		=>:
+			x > y
 
 	forall x, y, z R:
 		z > 0
@@ -412,88 +430,88 @@ know:
 			x < y
 
 	forall x, y, z R:
-			z > 0
-			x / z <= y / z
-			=>:
-				x <= y
+		z > 0
+		x / z <= y / z
+		=>:
+			x <= y
 
 	forall x, y, z R:
-			z < 0
-			x / z < y / z
-			=>:
-				x > y
+		z < 0
+		x / z < y / z
+		=>:
+			x > y
 
 	forall x, y, z R:
-			z < 0
-			x / z <= y / z
-			=>:
-				x >= y
+		z < 0
+		x / z <= y / z
+		=>:
+			x >= y
 
 	forall x, y, z R:
-			z < 0
-			x / z >= y / z
-			=>:
-				x <= y
+		z < 0
+		x / z >= y / z
+		=>:
+			x <= y
 
 	forall x, y, z R:
-			z < 0
-			x / z > y / z
-			=>:
-				x < y
+		z < 0
+		x / z > y / z
+		=>:
+			x < y
 
 	forall x, y, z R:
-			z < 0
-			x * z <= y * z
-			=>:
-				x >= y
+		z < 0
+		x * z <= y * z
+		=>:
+			x >= y
 
 	forall x, y, z R:
-			z < 0
-			x * z >= y * z
-			=>:
-				x <= y
+		z < 0
+		x * z >= y * z
+		=>:
+			x <= y
 
 	forall x, y, z R:
-			z < 0
-			x * z < y * z
-			=>:
-				x > y
+		z < 0
+		x * z < y * z
+		=>:
+			x > y
 
 	forall x, y, z R:
-			z < 0
-			x * z > y * z
-			=>:
-				x < y
+		z < 0
+		x * z > y * z
+		=>:
+			x < y
 
 	forall x, y, z R:
-			z > 0
-			x > 0
-			y > 0
-			x ^ z > y ^ z
-			=>:
-				x > y
+		z > 0
+		x > 0
+		y > 0
+		x ^ z > y ^ z
+		=>:
+			x > y
 
 	forall x, y, z R:
-			z > 0
-			x > 0
-			y > 0
-			x ^ z >= y ^ z
-			=>:
-				x >= y
+		z > 0
+		x > 0
+		y > 0
+		x ^ z >= y ^ z
+		=>:
+			x >= y
 
 	forall x, y, z R:
-			z > 0
-			x > 0
-			y > 0
-			x ^ z < y ^ z
-			=>:
-				x < y
+		z > 0
+		x > 0
+		y > 0
+		x ^ z < y ^ z
+		=>:
+			x < y
 
 	forall x, y, z R:
-			z > 0
-			x > 0
-			y > 0
-			x ^ z <= y ^ z
+		z > 0
+		x > 0
+		y > 0
+		x ^ z <= y ^ z
 
 know:
 	forall x, y R: x > 0, y > 0 => x * y > 0
