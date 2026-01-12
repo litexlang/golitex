@@ -73,3 +73,7 @@ func (tb *tokenBlock) GetEnd() string {
 func (tb *tokenBlock) EndWith(s string) bool {
 	return tb.GetEnd() == s
 }
+
+func (tb *tokenBlock) AddIndex(i int) {
+	tb.header.index = tb.header.index + i
+}

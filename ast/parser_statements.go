@@ -2445,12 +2445,14 @@ func (p *TbParser) factOrFactInferStmt(tb *tokenBlock) (Stmt, error) {
 
 		var specFactOrOrFact Spec_OrFact = fact.(Spec_OrFact)
 
-		if tb.header.is(glob.KeySymbolRightArrow) || tb.header.is(glob.KeySymbolComma) {
+		if !tb.header.ExceedEnd() {
 			// This is an ImplyStmt: parse multiple single-line facts as domFacts until =>, then parse thenFacts
 			domFacts := []Spec_OrFact{}
 
 			// Add the first fact we already parsed (can be SpecFactStmt or OrStmt)
 			domFacts = append(domFacts, specFactOrOrFact.(Spec_OrFact))
+
+			tb.AddIndex(-1)
 
 			// Parse more domFacts until we hit =>
 			for tb.header.is(glob.KeySymbolComma) {
