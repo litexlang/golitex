@@ -24,3 +24,30 @@ prove_by_contradiction not $is_finite_set({x N_pos: $is_prime(x)}):
 
 
 
+"""
+let fn product_of(s set) R:
+    dom:
+        $is_finite_set(s)
+        forall x s: x $in R
+
+know:
+    product_of({}) = 1
+
+    forall x R:
+        product_of({x}) = x
+
+    forall s finite_set, x s:
+        forall t s: t $in R
+        =>:
+            product_of(s) = product_of(set_minus(s, {x})) * product_of({x})
+
+    forall s finite_set, x s: forall t s: t $in Z; => product_of(s) $in Z
+
+prove forall s finite_set, x s: forall t s: t $in Z; => product_of(s) % x = 0:
+    forall t s: t $in R
+    s $in power_set(R)
+    product_of(s) = product_of(set_minus(s, {x})) * product_of({x}) = product_of(set_minus(s, {x})) * x
+
+    product_of(s) % x = 0
+
+"""
