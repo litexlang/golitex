@@ -1,7 +1,3 @@
-let x, y, z R:
-    x > y
-    y > z
-
-know forall x, y, z R: x > y, y > z => x > z
-
-x > y, y > z => x > z
+prop p(x R, y R)
+know forall x, y, z R: $p(x, y), $p(y, z) => $p(x, z)
+forall x, y, z R: $p(x, y), $p(y, z) => $p(x, z)

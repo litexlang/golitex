@@ -21,6 +21,16 @@ import (
 )
 
 func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
+	ret := ver.verUniFact_checkFactOneByOne(oldStmt, state)
+	if ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
+	// Try using infer if applicable
+	return ver.verUniFact_useInfer(oldStmt, state)
+}
+
+func (ver *Verifier) verUniFact_checkFactOneByOne(oldStmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
 	if state.isFinalRound() {
 		return glob.NewEmptyVerRetUnknown()
 	}
@@ -52,6 +62,88 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) *glob
 	}
 
 	return ver.uniFact_checkThenFacts(newStmtPtr, state)
+}
+
+func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
+	if state.isFinalRound() {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	// 0. 如果dom和then里全是or_spec 那可以继续，否则就不行
+	domFactsReversible := []ast.Spec_OrFact{}
+	for _, domFact := range oldStmt.DomFacts {
+		if specFact, ok := domFact.(*ast.SpecFactStmt); ok {
+			domFactsReversible = append(domFactsReversible, specFact)
+		} else if orStmt, ok := domFact.(*ast.OrStmt); ok {
+			domFactsReversible = append(domFactsReversible, orStmt)
+		} else {
+			// Not all facts are Spec_OrFact, cannot use infer
+			return glob.NewEmptyVerRetUnknown()
+		}
+	}
+
+	thenFactsReversible := []ast.Spec_OrFact{}
+	for _, thenFact := range oldStmt.ThenFacts {
+		if specFact, ok := thenFact.(*ast.SpecFactStmt); ok {
+			thenFactsReversible = append(thenFactsReversible, specFact)
+		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
+			thenFactsReversible = append(thenFactsReversible, orStmt)
+		} else {
+			// Not all facts are Spec_OrFact, cannot use infer
+			return glob.NewEmptyVerRetUnknown()
+		}
+	}
+
+	ver.newEnv()
+	defer ver.deleteEnv()
+
+	// 1. 如果param和当前的环境里冲突了，那就替换成 random
+	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.Env, oldStmt.Params)
+	if len(paramMap) > 0 {
+		// Replace parameters in UniFactStmt
+		newStmtPtr, _, err := useRandomParamToReplaceOriginalParamInUniFact(oldStmt, paramMap, paramMapStrToStr)
+		if err != nil {
+			return glob.NewVerMsg2(glob.StmtRetTypeError, oldStmt.String(), oldStmt.GetLine(), []string{err.Error()})
+		}
+		oldStmt = newStmtPtr
+		// Rebuild reversible facts with replaced parameters
+		domFactsReversible = []ast.Spec_OrFact{}
+		for _, domFact := range oldStmt.DomFacts {
+			if specFact, ok := domFact.(*ast.SpecFactStmt); ok {
+				domFactsReversible = append(domFactsReversible, specFact)
+			} else if orStmt, ok := domFact.(*ast.OrStmt); ok {
+				domFactsReversible = append(domFactsReversible, orStmt)
+			}
+		}
+		thenFactsReversible = []ast.Spec_OrFact{}
+		for _, thenFact := range oldStmt.ThenFacts {
+			if specFact, ok := thenFact.(*ast.SpecFactStmt); ok {
+				thenFactsReversible = append(thenFactsReversible, specFact)
+			} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
+				thenFactsReversible = append(thenFactsReversible, orStmt)
+			}
+		}
+	}
+
+	// 声明param
+	defLeftStmt := ast.NewDefLetStmt(oldStmt.Params, oldStmt.ParamSets, oldStmt.DomFacts, oldStmt.Line)
+	ret := ver.Env.DefLetStmt(defLeftStmt)
+	if ret.IsErr() {
+		return glob.NewVerMsg2(glob.StmtRetTypeError, oldStmt.String(), oldStmt.GetLine(), []string{ret.String()})
+	}
+
+	// 2. 把uni变成 inferStmt，然后执行inferStmt
+	inferStmt := ast.NewImplyStmt(domFactsReversible, thenFactsReversible, oldStmt.Line)
+	exec := NewExecutor(ver.Env)
+	execRet := exec.inferStmt(inferStmt)
+
+	if execRet.IsErr() {
+		return glob.NewVerMsg2(glob.StmtRetTypeError, oldStmt.String(), oldStmt.GetLine(), []string{execRet.String()})
+	} else if execRet.IsTrue() {
+		return glob.NewVerMsg2(glob.StmtRetTypeTrue, oldStmt.String(), oldStmt.GetLine(), []string{})
+	} else {
+		return glob.NewEmptyVerRetUnknown()
+	}
 }
 
 func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
