@@ -462,11 +462,11 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	// Check if it's prove or case-by-case
-	if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordProve) {
+	if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordProveExist) {
 		if len(tb.body) != 3 {
-			return nil, fmt.Errorf("expect 3 body blocks for have fn with prove")
+			return nil, fmt.Errorf("expect 3 body blocks for have fn with prove_exist")
 		}
-		err = tb.body[1].header.skip(glob.KeywordProve)
+		err = tb.body[1].header.skip(glob.KeywordProveExist)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -2405,6 +2405,7 @@ func (p *TbParser) proveByInductionStmt(tb *tokenBlock) (Stmt, error) {
 // Fact statement parsing methods (first 10 methods from parser_statements.go)
 // ============================================================================
 
+// TODO: 这个parser能工作，但工作方式非常乱七八糟，需要重新写一下各种fact的parse方式
 func (p *TbParser) factOrFactInferStmt(tb *tokenBlock) (Stmt, error) {
 	// if !tb.EndWith(glob.KeySymbolColon) {
 	// 	return p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{})
@@ -2420,13 +2421,6 @@ func (p *TbParser) factOrFactInferStmt(tb *tokenBlock) (Stmt, error) {
 
 	switch cur {
 	case glob.KeywordForall:
-		// if tb.GetEnd() == glob.KeySymbolColon {
-		// 	uniFact, err := p.uniFactInterface(tb, UniFactDepth0)
-		// 	if err != nil {
-		// 		return nil, err
-		// 	}
-		// 	return uniFact, nil
-		// } else {
 		uniFact, err := p.inlineUniInterfaceSkipTerminator(tb, []string{})
 		if err != nil {
 			return nil, err
@@ -2452,7 +2446,9 @@ func (p *TbParser) factOrFactInferStmt(tb *tokenBlock) (Stmt, error) {
 			// Add the first fact we already parsed (can be SpecFactStmt or OrStmt)
 			domFacts = append(domFacts, specFactOrOrFact.(Spec_OrFact))
 
-			tb.AddIndex(-1)
+			if !tb.header.is(glob.KeySymbolRightArrow) {
+				tb.AddIndex(-1)
+			}
 
 			// Parse more domFacts until we hit =>
 			for tb.header.is(glob.KeySymbolComma) {
