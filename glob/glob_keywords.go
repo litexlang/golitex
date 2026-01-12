@@ -123,6 +123,9 @@ const (
 	KeywordZNeg = "Z_neg"
 	KeywordQNeg = "Q_neg"
 	KeywordQPos = "Q_pos"
+	KeywordRNot0 = "R_not0"
+	KeywordZNot0 = "Z_not0"
+	KeywordQNot0 = "Q_not0"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -228,6 +231,9 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordZNeg: {},
 	KeywordQNeg: {},
 	KeywordQPos: {},
+	KeywordRNot0: {},
+	KeywordZNot0: {},
+	KeywordQNot0: {},
 
 	KeywordPropInfer: {},
 	KeywordInfer:     {},
@@ -340,6 +346,9 @@ var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 	KeywordZNeg: {},
 	KeywordQNeg: {},
 	KeywordQPos: {},
+	KeywordRNot0: {},
+	KeywordZNot0: {},
+	KeywordQNot0: {},
 
 	KeywordVal:    {},
 	KeywordChoice: {},
@@ -443,6 +452,9 @@ var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struc
 	KeywordZNeg:      {},
 	KeywordQNeg:      {},
 	KeywordQPos:      {},
+	KeywordRNot0:     {},
+	KeywordZNot0:     {},
+	KeywordQNot0:     {},
 	KeywordPowerSet:  {},
 	KeywordCup:       {},
 	KeywordCap:       {},
