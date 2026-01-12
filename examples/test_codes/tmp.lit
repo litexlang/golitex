@@ -1,13 +1,3 @@
-prove_by_contradiction not sqrt(2) $in Q:
-    have m, n st $Q_in_frac(sqrt(2))
-    sqrt(2) = m / n
-    n * sqrt(2) = m # 自动生成
-    (n * sqrt(2)) ^ 2 = m ^ 2 = n ^ 2 * 2
-    m^2 $dvd 2
-    m $dvd 2
-    prove n $dvd 2:
-        m = 2 * k
-        2 * n^2 = 2^2 * k^2
-        2 $div n^2    
-    gcd(m, n) $dvd 2
-    1 $dvd 2
+have x Z_not0
+x $in Z
+x != 0

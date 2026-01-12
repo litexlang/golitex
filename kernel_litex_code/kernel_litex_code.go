@@ -745,6 +745,9 @@ know:
 	$is_nonempty_set(Z_neg)
 	$is_nonempty_set(R_pos)
 	$is_nonempty_set(R_neg)
+	$is_nonempty_set(R_not0)
+	$is_nonempty_set(Z_not0)
+	$is_nonempty_set(Q_not0)
 
 
 know:
@@ -761,6 +764,9 @@ know:
 	forall x Z: x < 0 <=> x $in Z_neg
 	forall x Q: x < 0 <=> x $in Q_neg
 	forall x Q: x > 0 <=> x $in Q_pos
+	forall x Z: x != 0 => x $in Z_not0
+	forall x Q: x != 0 => x $in Q_not0
+	forall x R: x != 0 => x $in R_not0
 
 # density of Q, R
 know:
