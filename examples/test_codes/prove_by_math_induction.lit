@@ -11,12 +11,12 @@ prop q(x N_pos)
 
 know:
     forall x N_pos: $q(x, 1)
-    forall EUAK N_pos:
+    forall d N_pos:
         forall x N_pos:
-            $q(x, EUAK)
+            $q(x, d)
         =>:
             forall x N_pos:
-                $q(x, (EUAK + 1))
+                $q(x, (d + 1))
 
 prove_by_induction y N_pos: forall x N_pos: $q(x, y):
     do_nothing
