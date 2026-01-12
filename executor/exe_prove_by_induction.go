@@ -21,8 +21,14 @@ import (
 )
 
 func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) *glob.StmtRet {
+	// 如果结论是uniFact，那么dom和then全部不能是uniFact；然后不允许是uniFactIff
+	execRet := exec.checkProveByInductionStmtFact(stmt.Fact)
+	if execRet.IsNotTrue() {
+		return execRet
+	}
+
 	// 验证步骤（在局部环境中）
-	execRet := exec.proveByInductionStmtProveProcess(stmt)
+	execRet = exec.proveByInductionStmtProveProcess(stmt)
 	if execRet.IsNotTrue() {
 		return execRet
 	}
@@ -102,6 +108,43 @@ func (exec *Executor) proveByInductionStmtProveProcess(stmt *ast.ProveByInductio
 	}
 	if verRet.IsUnknown() {
 		return glob.NewEmptyStmtUnknown().AddUnknown(fmt.Sprintf("induction step is unknown: %s", inductionStep.String()))
+	}
+
+	return glob.NewEmptyStmtTrue()
+}
+
+func (exec *Executor) checkProveByInductionStmtFact(fact ast.FactStmt) *glob.StmtRet {
+	// 如果结论是uniFact，那么dom和then全部不能是uniFact；然后不允许是uniFactIff
+	if uniFact, ok := fact.(*ast.UniFactStmt); ok {
+		for _, domFact := range uniFact.DomFacts {
+			if _, ok := domFact.(*ast.UniFactStmt); ok {
+				return glob.ErrRet(fmt.Sprintf("dom is uniFact: %s", domFact.String()))
+			}
+		}
+		for _, thenFact := range uniFact.ThenFacts {
+			if _, ok := thenFact.(*ast.UniFactStmt); ok {
+				return glob.ErrRet(fmt.Sprintf("then is uniFact: %s", thenFact.String()))
+			}
+		}
+	}
+
+	if uniFactIff, ok := fact.(*ast.UniFactWithIffStmt); ok {
+		for _, iffFact := range uniFactIff.IffFacts {
+			if _, ok := iffFact.(*ast.UniFactStmt); ok {
+				return glob.ErrRet(fmt.Sprintf("iff is uniFact: %s", iffFact.String()))
+			}
+		}
+		for _, thenFact := range uniFactIff.UniFact.DomFacts {
+			if _, ok := thenFact.(*ast.UniFactStmt); ok {
+				return glob.ErrRet(fmt.Sprintf("then is uniFact: %s", thenFact.String()))
+			}
+		}
+
+		for _, thenFact := range uniFactIff.UniFact.ThenFacts {
+			if _, ok := thenFact.(*ast.UniFactStmt); ok {
+				return glob.ErrRet(fmt.Sprintf("then is uniFact: %s", thenFact.String()))
+			}
+		}
 	}
 
 	return glob.NewEmptyStmtTrue()
