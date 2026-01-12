@@ -113,6 +113,7 @@ func (exec *Executor) proveByInductionStmtProveProcess(stmt *ast.ProveByInductio
 	return glob.NewEmptyStmtTrue()
 }
 
+// 等 inline Parser 能 parse depth的时候删了这个hjuu
 func (exec *Executor) checkProveByInductionStmtFact(fact ast.FactStmt) *glob.StmtRet {
 	// 如果结论是uniFact，那么dom和then全部不能是uniFact；然后不允许是uniFactIff
 	if uniFact, ok := fact.(*ast.UniFactStmt); ok {
