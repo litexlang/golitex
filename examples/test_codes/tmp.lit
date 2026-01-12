@@ -1,26 +1,13 @@
-prop is_prime(x N_pos):
-	2 <= x
-    forall y N_pos:
-        2 <= y
-        y < x
-        =>:
-            x % y != 0
-
-prop is_prime_divisor(x N_pos, y N_pos):
-    2 <= y
-    2 <= x
-    y % x = 0
-    $is_prime(x)
-
-know forall y N_pos: 2 <= y => exist x N_pos st $is_prime_divisor(x, y)
-
-prove_by_contradiction not $is_finite_set({y N_pos: $is_prime(y)}):
-    have x R st $is_max(x, {y N_pos: $is_prime(y)})
-    let a N_pos:
-        forall t {y N_pos: $is_prime(y)}:
-            a % t = 1
-        2 <= a
-    have b N_pos st $is_prime_divisor(b, a)
-    a % b = 1
-    1 != 0
-    a % b != 0
+prove_by_contradiction not sqrt(2) $in Q:
+    have m, n st $Q_in_frac(sqrt(2))
+    sqrt(2) = m / n
+    n * sqrt(2) = m # 自动生成
+    (n * sqrt(2)) ^ 2 = m ^ 2 = n ^ 2 * 2
+    m^2 $dvd 2
+    m $dvd 2
+    prove n $dvd 2:
+        m = 2 * k
+        2 * n^2 = 2^2 * k^2
+        2 $div n^2    
+    gcd(m, n) $dvd 2
+    1 $dvd 2

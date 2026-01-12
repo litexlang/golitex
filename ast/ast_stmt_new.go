@@ -171,8 +171,8 @@ func NewInlineFactsStmt(facts []FactStmt, line uint) *InlineFactsStmt {
 	return &InlineFactsStmt{facts, line}
 }
 
-func NewProveByInductionStmt(fact *SpecFactStmt, param string, start Obj, line uint) *ProveByInductionStmt {
-	return &ProveByInductionStmt{fact, param, start, line}
+func NewProveByInductionStmt(fact FactStmt, param string, proof StmtSlice, line uint) *ProveByInductionStmt {
+	return &ProveByInductionStmt{fact, param, proof, line}
 }
 
 func NewHaveObjEqualStmt(objNames []string, objEqualTos []Obj, objSets []Obj, line uint) *HaveObjEqualStmt {
