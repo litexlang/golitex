@@ -340,159 +340,160 @@ know:
 	forall x, y R: x = y => x - y = 0
 	forall x, y R: x != y => x - y != 0
 
-know prop_infer larger_is_transitive(x, y, z R):
-	x > y
-	y > z
-	=>:
-		x > z
-
-know prop_infer less_equal_add_cancel(x, y, z R):
-	x + z <= y + z
-	=>:
-		x <= y
-
-know prop_infer less_equal_minus_cancel(x, y, z R):
-	x - z <= y - z
-	=>:
-		x <= y
-
-know prop_infer less_add_cancel(x, y, z R):
-	x + z < y + z
-	=>:
-		x < y
-
-know prop_infer less_minus_cancel(x, y, z R):
-	x - z < y - z
-	=>:
-		x < y
-
-know prop_infer greater_add_cancel(x, y, z R):
-	x + z > y + z
-	=>:
+know:
+	forall x, y, z R:
 		x > y
+		y > z
+		=>:
+			x > z
 
-know prop_infer greater_minus_cancel(x, y, z R):
-	x - z > y - z
-	=>:
-		x > y
+    forall x, y, z R:
+		x + z <= y + z
+		=>:
+			x <= y
 
-know prop_infer greater_equal_add_cancel(x, y, z R):
-	x + z >= y + z
-	=>:
-		x >= y
+	forall x, y, z R:
+			x - z <= y - z
+			=>:
+				x <= y
 
-know prop_infer greater_equal_minus_cancel(x, y, z R):
-	x - z >= y - z
-	=>:
-		x >= y
+	forall x, y, z R:
+			x + z < y + z
+			=>:
+				x < y
 
-know prop_infer greater_equal_mul_pos_cancel(x, y, z R):
-	z > 0
-	x * z >= y * z
-	=>:
-		x >= y
+	forall x, y, z R:
+			x - z < y - z
+			=>:
+				x < y
 
-know prop_infer greater_equal_div_pos_cancel(x, y, z R):
-	z > 0
-	x / z >= y / z
-	=>:
-		x >= y
+	forall x, y, z R:
+			x + z > y + z
+			=>:
+				x > y
 
-know prop_infer greater_div_pos_cancel(x, y, z R):
-	z > 0
-	x / z > y / z
-	=>:
-		x > y
+	forall x, y, z R:
+			x - z > y - z
+			=>:
+				x > y
 
-know prop_infer less_div_pos_cancel(x, y, z R):
-	z > 0
-	x / z < y / z
-	=>:
-		x < y
+	forall x, y, z R:
+			x + z >= y + z
+			=>:
+				x >= y
 
-know prop_infer less_equal_div_pos_cancel(x, y, z R):
-	z > 0
-	x / z <= y / z
-	=>:
-		x <= y
+	forall x, y, z R:
+			x - z >= y - z
+			=>:
+				x >= y
 
-know prop_infer less_div_neg_cancel(x, y, z R):
-	z < 0
-	x / z < y / z
-	=>:
-		x > y
+	forall x, y, z R:
+			z > 0
+			x * z >= y * z
+			=>:
+				x >= y
 
-know prop_infer less_equal_div_neg_cancel(x, y, z R):
-	z < 0
-	x / z <= y / z
-	=>:
-		x >= y
+	forall x, y, z R:
+			z > 0
+			x / z >= y / z
+			=>:
+				x >= y
 
-know prop_infer greater_equal_mul_neg_cancel(x, y, z R):
-	z < 0
-	x / z >= y / z
-	=>:
-		x <= y
+	forall x, y, z R:
+			z > 0
+			x / z > y / z
+			=>:
+				x > y
 
-know prop_infer greater_equal_div_neg_cancel(x, y, z R):
-	z < 0
-	x / z > y / z
-	=>:
-		x < y
+	forall x, y, z R:
+		z > 0
+		x / z < y / z
+		=>:
+			x < y
 
-know prop_infer less_equal_mul_neg_cancel(x, y, z R):
-	z < 0
-	x * z <= y * z
-	=>:
-		x >= y
+	forall x, y, z R:
+			z > 0
+			x / z <= y / z
+			=>:
+				x <= y
 
-know prop_infer larger_equal_mul_neg_cancel(x, y, z R):
-	z < 0
-	x * z >= y * z
-	=>:
-		x <= y
+	forall x, y, z R:
+			z < 0
+			x / z < y / z
+			=>:
+				x > y
 
-know prop_infer less_mul_neg_cancel(x, y, z R):
-	z < 0
-	x * z < y * z
-	=>:
-		x > y
+	forall x, y, z R:
+			z < 0
+			x / z <= y / z
+			=>:
+				x >= y
 
-know prop_infer greater_mul_neg_cancel(x, y, z R):
-	z < 0
-	x * z > y * z
-	=>:
-		x < y
+	forall x, y, z R:
+			z < 0
+			x / z >= y / z
+			=>:
+				x <= y
 
-know prop_infer greater_than_pow_cancel(x, y, z R):
-	z > 0
-	x > 0
-	y > 0
-	x ^ z > y ^ z
-	=>:
-		x > y
+	forall x, y, z R:
+			z < 0
+			x / z > y / z
+			=>:
+				x < y
 
-know prop_infer greater_equal_pow_cancel(x, y, z R):
-	z > 0
-	x > 0
-	y > 0
-	x ^ z >= y ^ z
-	=>:
-		x >= y
+	forall x, y, z R:
+			z < 0
+			x * z <= y * z
+			=>:
+				x >= y
 
-know prop_infer less_pow_cancel(x, y, z R):
-	z > 0
-	x > 0
-	y > 0
-	x ^ z < y ^ z
-	=>:
-		x < y
+	forall x, y, z R:
+			z < 0
+			x * z >= y * z
+			=>:
+				x <= y
 
-know prop_infer less_equal_pow_cancel(x, y, z R):
-	z > 0
-	x > 0
-	y > 0
-	x ^ z <= y ^ z
+	forall x, y, z R:
+			z < 0
+			x * z < y * z
+			=>:
+				x > y
+
+	forall x, y, z R:
+			z < 0
+			x * z > y * z
+			=>:
+				x < y
+
+	forall x, y, z R:
+			z > 0
+			x > 0
+			y > 0
+			x ^ z > y ^ z
+			=>:
+				x > y
+
+	forall x, y, z R:
+			z > 0
+			x > 0
+			y > 0
+			x ^ z >= y ^ z
+			=>:
+				x >= y
+
+	forall x, y, z R:
+			z > 0
+			x > 0
+			y > 0
+			x ^ z < y ^ z
+			=>:
+				x < y
+
+	forall x, y, z R:
+			z > 0
+			x > 0
+			y > 0
+			x ^ z <= y ^ z
 
 know:
 	forall x, y R: x > 0, y > 0 => x * y > 0

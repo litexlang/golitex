@@ -1,12 +1,5 @@
+let x, y, z R:
+    x > y
+    y > z
 
-prop p(x, y R)
-prop q(x, y R)
-prop t(x, y R)
-
-know forall x, y R: $p(x, y) or $q(x, y) => $t(x, y)
-
-know:
-    $p(1, 2)
-    $q(1, 2)
-
-$p(1, 2) or $q(1, 2) => $t(1, 2)
+x > y, y > z => x > z
