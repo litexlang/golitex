@@ -604,11 +604,15 @@ func (stmt *ProveByInductionStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 	if err != nil {
 		return nil, err
 	}
-	newStart, err := stmt.Start.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
+	newProof := make(StmtSlice, len(stmt.Proof))
+	for i, proofStmt := range stmt.Proof {
+		newProofStmt, err := proofStmt.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newProof[i] = newProofStmt
 	}
-	return NewProveByInductionStmt(newFact.(*SpecFactStmt), stmt.Param, newStart, stmt.Line), nil
+	return NewProveByInductionStmt(newFact, stmt.Param, newProof, stmt.Line), nil
 }
 
 func (stmt *HaveObjEqualStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

@@ -850,13 +850,13 @@ func (stmt *InlineFactsStmt) String() string {
 func (stmt *ProveByInductionStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveByInduction)
-	builder.WriteString("(")
-	builder.WriteString(stmt.Fact.String())
-	builder.WriteString(", ")
+	builder.WriteString(" ")
 	builder.WriteString(stmt.Param)
-	builder.WriteString(", ")
-	builder.WriteString(stmt.Start.String())
-	builder.WriteString(")")
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordNPos)
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Fact.String())
 	return builder.String()
 }
 

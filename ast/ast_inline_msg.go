@@ -313,12 +313,12 @@ func (s *InlineFactsStmt) InlineString() string { return inlineFactsString(s.Fac
 func (s *ProveByInductionStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordProveByInduction)
+	builder.WriteString(" ")
+	builder.WriteString(s.Param)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordNPos)
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteString(s.Fact.InlineString())
-	builder.WriteString(", ")
-	builder.WriteString(s.Param)
-	builder.WriteString(", ")
-	builder.WriteString(s.Start.String())
 	return builder.String()
 }
 
