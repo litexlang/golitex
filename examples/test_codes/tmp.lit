@@ -1,3 +1,7 @@
-have x Z_not0
-x $in Z
-x != 0
+prop p(n N_pos)
+
+know:
+    $p(1)
+    forall n N_pos: $p(n) => $p(n+1)
+
+prove_by_induction: n N_pos forall
