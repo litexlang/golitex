@@ -78,6 +78,18 @@ func (ie *InferEngine) trueInFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 		return ie.trueInFactByQPos(fact)
 	}
 
+	if fact.Params[1].String() == glob.KeywordRNot0 {
+		return ie.trueInFactByRNot0(fact)
+	}
+
+	if fact.Params[1].String() == glob.KeywordZNot0 {
+		return ie.trueInFactByZNot0(fact)
+	}
+
+	if fact.Params[1].String() == glob.KeywordQNot0 {
+		return ie.trueInFactByQNot0(fact)
+	}
+
 	return glob.NewEmptyShortTrueRet()
 }
 
@@ -661,6 +673,99 @@ func (ie *InferEngine) trueInFactByQPos(fact *ast.SpecFactStmt) *glob.ShortRet {
 		return retShort
 	}
 	derivedFacts = append(derivedFacts, retShort.Msgs...)
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+// trueInFactByRNot0 handles inference for x $in R_not0 (non-zero real numbers)
+// Inference generates:
+//   - x != 0 (non-zero fact)
+//   - x $in R (real number membership)
+func (ie *InferEngine) trueInFactByRNot0(fact *ast.SpecFactStmt) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	obj := fact.Params[0]
+
+	// x != 0
+	notEqualZeroFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
+	ret := ie.EnvMgr.storeSpecFactInMem(notEqualZeroFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, notEqualZeroFact.String())
+
+	// x $in R
+	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
+	ret = ie.EnvMgr.storeSpecFactInMem(inRFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inRFact.String())
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+// trueInFactByZNot0 handles inference for x $in Z_not0 (non-zero integers)
+// Inference generates:
+//   - x != 0 (non-zero fact)
+//   - x $in Z (integer membership)
+func (ie *InferEngine) trueInFactByZNot0(fact *ast.SpecFactStmt) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	obj := fact.Params[0]
+
+	// x != 0
+	notEqualZeroFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
+	ret := ie.EnvMgr.storeSpecFactInMem(notEqualZeroFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, notEqualZeroFact.String())
+
+	// x $in Z
+	inZFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordInteger))
+	ret = ie.EnvMgr.storeSpecFactInMem(inZFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inZFact.String())
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+// trueInFactByQNot0 handles inference for x $in Q_not0 (non-zero rational numbers)
+// Inference generates:
+//   - x != 0 (non-zero fact)
+//   - x $in Q (rational number membership)
+//   - x $in R (real number membership)
+func (ie *InferEngine) trueInFactByQNot0(fact *ast.SpecFactStmt) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	obj := fact.Params[0]
+
+	// x != 0
+	notEqualZeroFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
+	ret := ie.EnvMgr.storeSpecFactInMem(notEqualZeroFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, notEqualZeroFact.String())
+
+	// x $in Q
+	inQFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordRational))
+	ret = ie.EnvMgr.storeSpecFactInMem(inQFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inQFact.String())
+
+	// x $in R
+	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
+	ret = ie.EnvMgr.storeSpecFactInMem(inRFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inRFact.String())
 
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
