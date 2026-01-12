@@ -218,9 +218,9 @@ type InlineFactsStmt struct {
 }
 
 type ProveByInductionStmt struct {
-	Fact  *SpecFactStmt
+	Fact  FactStmt
 	Param string
-	Start Obj
+	Proof StmtSlice
 
 	Line uint
 }

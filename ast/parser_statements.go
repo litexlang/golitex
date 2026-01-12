@@ -2355,50 +2355,50 @@ func (p *TbParser) proveByInductionStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	fact, err := p.specFactStmt(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolComma)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
+	// Parse parameter name
 	param, err := tb.header.next()
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
-	if !tb.header.is(glob.KeySymbolComma) {
-		err = tb.header.skip(glob.KeySymbolRightBrace)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		return NewProveByInductionStmt(fact, param, Atom("1"), tb.line), nil
-	} else {
-		err = tb.header.skip(glob.KeySymbolComma)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
+	p.FreeParams[param] = struct{}{}
+	defer func() {
+		delete(p.FreeParams, param)
+	}()
 
-		start, err := p.Obj(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		err = tb.header.skip(glob.KeySymbolRightBrace)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		return NewProveByInductionStmt(fact, param, start, tb.line), nil
+	// Parse N_pos (or other paramSet type) as Obj, but we don't store it in the struct
+	err = tb.header.skip(glob.KeywordNPos)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
 	}
+
+	// Skip colon
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse inlineFact
+	fact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{glob.KeySymbolColon})
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Skip colon after inlineFact
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse proof body
+	proof, err := p.parseTbBodyAndGetStmts(tb.body)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Create ProveByInductionStmt with proof
+	result := NewProveByInductionStmt(fact, param, proof, tb.line)
+	return result, nil
 }
 
 // ============================================================================
