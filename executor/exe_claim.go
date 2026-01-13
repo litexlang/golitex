@@ -176,7 +176,12 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
-	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(state.InnerStmtRetSlice)
+	if ret.IsNotTrue() {
+		return glob.NewStmtWithInnerStmtsRet(state.InnerStmtRetSlice, ret.RetType)
+	} else {
+		return glob.NewStmtWithInnerStmtsRet(state.InnerStmtRetSlice, ret.RetType)
+	}
+
 }
 
 func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
