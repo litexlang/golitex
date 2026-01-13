@@ -1,6 +1,13 @@
 prop different_item_has_the_same_image(s1, s2 set, f fn(s1)s2, z1, z2 s1):
     z1 != z2
     f(z1) = f(z2)
+
+prop pigeon_hole_is_true_for_all_count(n N_pos):
+    forall s1, s2 finite_set, f fn(s1)s2:
+        count(s2) = n
+        count(s1) = count(s2) + 1
+        =>:
+            exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
     
 # count(s2) = 1 时
 claim:
@@ -22,20 +29,14 @@ claim:
             count(s2) = 1
             2 <= 1
         prove_exist z1, z2: a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
-"""
+
+$pigeon_hole_is_true_for_all_count(1)
+
 claim:
     forall n N_pos:
-        forall s1, s2 finite_set, f fn(s1)s2:
-            count(s2) = n
-            count(s1) = count(s2) + 1
-            =>:
-                exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+        $pigeon_hole_is_true_for_all_count(n)
         =>:
-            forall s1, s2 finite_set, f fn(s1)s2:
-                count(s1) = n + 1
-                count(s1) = count(s2) + 1
-                =>:
-                    exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+            $pigeon_hole_is_true_for_all_count(n + 1)
     prove:
         claim:
             forall s1, s2 finite_set, f fn(s1)s2:
@@ -64,9 +65,9 @@ claim:
                     $different_item_has_the_same_image(s3, s4, f, a, b)
                     
 
-prove_by_induction n N_pos: forall s1, s2 finite_set, f fn(s1)s2: count(s2) = n, count(s1) = count(s2) + 1 => exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b):
+prove_by_induction n N_pos: $pigeon_hole_is_true_for_all_count(n):
     do_nothing
-"""
+
 """
 # 要证明
 forall n N_pos:
