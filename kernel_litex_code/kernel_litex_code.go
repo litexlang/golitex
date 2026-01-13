@@ -1010,5 +1010,7 @@ know:
 
 know forall x Z: x >= 0 => x $in N
 
-
+know:
+	forall x Z, y N_pos: x^y $in Z
+	forall x Q, y N_pos: x^y $in Q
 `

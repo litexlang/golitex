@@ -71,14 +71,18 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 			}
 		}
 	case glob.KeywordProveCaseByCase:
+	case glob.KeywordCases:
 		ret, err = p.proveCaseByCaseStmt(tb)
 	case glob.KeywordProveByEnum:
+	case glob.KeywordEnum:
 		ret, err = p.proveByEnum(tb)
 	case glob.KeywordClear:
 		ret, err = p.clearStmt(tb)
 	case glob.KeywordProveByInduction:
+	case glob.KeywordInduc:
 		ret, err = p.proveByInductionStmt(tb)
 	case glob.KeywordProveFor:
+	case glob.KeywordFor:
 		ret, err = p.proveForStmt(tb)
 	case glob.KeywordProveIsTransitiveProp:
 		ret, err = p.proveIsTransitivePropStmt(tb)
@@ -89,6 +93,7 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 	case glob.KeywordEval:
 		ret, err = p.evalStmt(tb)
 	case glob.KeywordProveByContradiction:
+	case glob.KeywordContra:
 		ret, err = p.proveByContradictionStmt(tb)
 	case glob.KeywordDoNothing:
 		ret, err = p.doNothingStmt(tb)
@@ -2858,27 +2863,10 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*SpecFactStmt, er
 		return nil, ErrInLine(err, tb)
 	}
 
-	existParams := []string{}
-	existParamSets := []Obj{}
-
-	for !tb.header.is(glob.KeywordSt) {
-		param, err := tb.header.next()
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		existParams = append(existParams, param)
-
-		paramSet, err := p.Obj(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		existParamSets = append(existParamSets, paramSet)
-
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		} else {
-			break
-		}
+	// Parse parameters and parameter sets using param_paramSet_paramInSetFacts
+	existParams, existParamSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeywordSt, false)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
 	}
 
 	for _, param := range existParams {
@@ -2893,8 +2881,6 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*SpecFactStmt, er
 			delete(p.FreeParams, param)
 		}
 	}()
-
-	err = tb.header.skip(glob.KeywordSt)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}

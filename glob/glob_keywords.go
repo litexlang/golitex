@@ -69,10 +69,15 @@ const (
 	KeywordDoNothing = "do_nothing"
 
 	KeywordProveByContradiction = "prove_by_contradiction"
+	KeywordContra               = "contra"
 	KeywordProveByEnum          = "prove_by_enum"
+	KeywordEnum                 = "enum"
 	KeywordProveByInduction     = "prove_by_induction"
+	KeywordInduc                = "induc"
 	KeywordProveCaseByCase      = "prove_case_by_case"
+	KeywordCases                = "cases"
 	KeywordProveFor             = "prove_for"
+	KeywordFor                  = "for"
 
 	KeywordFn    = "fn"
 	KeywordFnSet = "fn_set"
@@ -86,6 +91,8 @@ const (
 	KeywordAs   = "as"
 
 	KeywordProveIsCommutativeProp = "prove_is_commutative_prop"
+	KeywordComProp                = "com_prop"
+	KeywordTransProp              = "trans_prop"
 	KeywordProveIsTransitiveProp  = "prove_is_transitive_prop"
 
 	KeywordImport = "import"
@@ -118,11 +125,11 @@ const (
 
 	KeywordProveExist = "prove_exist"
 
-	KeywordRPos = "R_pos"
-	KeywordRNeg = "R_neg"
-	KeywordZNeg = "Z_neg"
-	KeywordQNeg = "Q_neg"
-	KeywordQPos = "Q_pos"
+	KeywordRPos  = "R_pos"
+	KeywordRNeg  = "R_neg"
+	KeywordZNeg  = "Z_neg"
+	KeywordQNeg  = "Q_neg"
+	KeywordQPos  = "Q_pos"
 	KeywordRNot0 = "R_not0"
 	KeywordZNot0 = "Z_not0"
 	KeywordQNot0 = "Q_not0"
@@ -226,17 +233,26 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordProveExist: {},
 
-	KeywordRPos: {},
-	KeywordRNeg: {},
-	KeywordZNeg: {},
-	KeywordQNeg: {},
-	KeywordQPos: {},
+	KeywordRPos:  {},
+	KeywordRNeg:  {},
+	KeywordZNeg:  {},
+	KeywordQNeg:  {},
+	KeywordQPos:  {},
 	KeywordRNot0: {},
 	KeywordZNot0: {},
 	KeywordQNot0: {},
 
 	KeywordPropInfer: {},
 	KeywordInfer:     {},
+
+	KeywordComProp:   {},
+	KeywordTransProp: {},
+
+	KeywordCases:  {},
+	KeywordEnum:   {},
+	KeywordInduc:  {},
+	KeywordFor:    {},
+	KeywordContra: {},
 }
 
 const (
@@ -341,11 +357,11 @@ var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 	KeywordSetMinus:  {},
 	KeywordSetDiff:   {},
 
-	KeywordRPos: {},
-	KeywordRNeg: {},
-	KeywordZNeg: {},
-	KeywordQNeg: {},
-	KeywordQPos: {},
+	KeywordRPos:  {},
+	KeywordRNeg:  {},
+	KeywordZNeg:  {},
+	KeywordQNeg:  {},
+	KeywordQPos:  {},
 	KeywordRNot0: {},
 	KeywordZNot0: {},
 	KeywordQNot0: {},
