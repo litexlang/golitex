@@ -1,15 +1,15 @@
+"""
 prop different_item_has_the_same_image(s1, s2 set, f fn(s1)s2, z1, z2 s1):
     z1 != z2
     f(z1) = f(z2)
-    
-"""
-forall s1, s2 finite_set, f fn(s1)s2:
-    0 < count(s2)
-    count(s1) = count(s2) + 1
-    =>:
-        exist z1 s1, z2 s1 st $different_item_has_the_same_image(s1, s2, f, z1, z2)
-"""
 
+prop pigeon_hole_is_true_for_all_count(n N_pos):
+    forall s1, s2 finite_set, f fn(s1)s2:
+        count(s2) = n
+        count(s1) = count(s2) + 1
+        =>:
+            exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+    
 # count(s2) = 1 时
 claim:
     forall s1, s2 finite_set, f fn(s1)s2:
@@ -30,3 +30,325 @@ claim:
             count(s2) = 1
             2 <= 1
         prove_exist z1, z2: a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+
+$pigeon_hole_is_true_for_all_count(1)
+
+claim:
+    forall n N_pos:
+        $pigeon_hole_is_true_for_all_count(n)
+        =>:
+            $pigeon_hole_is_true_for_all_count(n + 1)
+    prove:
+        claim:
+            forall s1, s2 finite_set, f fn(s1)s2:
+                count(s2) = n + 1
+                count(s1) = count(s2) + 1
+                =>:
+                    exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+            prove:
+                prove_by_contradiction exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b):
+                    forall a s1, b s1:
+                        not $different_item_has_the_same_image(s1, s2, f, a, b)
+
+                    n + 1 + 1> 0
+                    count(s1) > 0
+                    have t s1
+                    have s3 finite_set = set_minus(s1, {t})
+                    have s4 finite_set = set_minus(s2, {f(t)})
+                    count(s4) = count(s2) - count({f(t)}) = n + 1 - 1 = n
+                    count(s3) = count(s1) - count({t}) = count(s2) + 1 - 1 = count(s2) = n + 1 = count(s4) + 1
+
+                    forall x s1 => f(x) $in s2
+
+                    claim:
+                        forall x s3:
+                            f(x) $in s4
+                        prove:
+                            x $in set_minus(s1, {t}) => x $in s1, not x $in {t}
+                            x $in s1
+                            f(x) $in s2
+                            x != t
+                            f(t) != f(x)
+                            prove_by_contradiction not f(x) $in {f(t)}:
+                                f(x) $in {f(t)}
+                                f(x) = f(t)
+                            f(x) $in set_minus(s2, {f(t)})
+
+                    
+                    have a s3, b s3 st $different_item_has_the_same_image(s3, s4, f, a, b)
+                    
+                    know not $different_item_has_the_same_image(s3,s4,f,a,b)
+
+                    $different_item_has_the_same_image(s3, s4, f, a, b)
+                    
+
+prove_by_induction n N_pos: $pigeon_hole_is_true_for_all_count(n):
+    do_nothing
+
+
+know:
+	forall s1, s2 finite_set:
+		forall x s2:
+			x $in s1
+		=>:
+			count(set_minus(s1, s2)) = count(s1) - count(s2)
+	
+	forall x finite_set:
+		count(x) > 0
+		=>:
+			$is_nonempty_set(x)
+
+	forall x set, y finite_set:
+		x $subset_of y
+		=>:
+			$is_finite_set(x)
+
+	forall x finite_set, y set:
+		$is_finite_set(set_minus(x, y))
+	
+	forall x finite_set, y finite_set:
+		$is_finite_set(union(x, y))
+		$is_finite_set(intersect(x, y))
+
+know forall x set, y set, t1 set, t2 set: t1 $in x, t2 $in set_minus(x, y) => t1 != t2
+		
+know infer x, y, z R: x >= y => x > z if y > z
+know forall x, y, z set: z $in set_minus(x, y) => z $in x, not z $in y
+know forall x, y set: x != y <=> not x $in {y}
+
+prop different_item_has_the_same_image(s1, s2 set, f fn(s1)s2, z1, z2 s1):
+    z1 != z2
+    f(z1) = f(z2)
+
+prop pigeon_hole_is_true_for_all_count(n N_pos):
+    forall s1, s2 finite_set, f fn(s1)s2:
+        count(s2) = n
+        count(s1) = count(s2) + 1
+        =>:
+            exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+    
+# count(s2) = 1 时
+claim:
+    forall s1, s2 finite_set, f fn(s1)s2:
+        count(s2) = 1
+        count(s1) = count(s2) + 1
+        =>:
+            exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+    prove:
+        count(s1) = 1 + 1 = 2
+        have z1 s1
+        count(set_minus(s1, {z1})) = 1
+        have z2 set_minus(s1, {z1})
+        know forall x set, y set, t1 set, t2 set: t1 $in x, t2 $in set_minus(x, y) => t1 != t2
+
+        z1 $in s1, z2 $in set_minus(s1, {z1}) => z1 != z2
+        prove_by_contradiction f(z1) = f(z2):
+            {f(z1), f(z2)} $subset_of s2
+            count({f(z1), f(z2)}) <= count(s2)
+            count({f(z1), f(z2)}) = 2
+            count(s2) = 1
+            2 <= 1
+        prove_exist z1, z2: a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+
+$pigeon_hole_is_true_for_all_count(1)
+
+claim:
+    forall n N_pos:
+        $pigeon_hole_is_true_for_all_count(n)
+        =>:
+            $pigeon_hole_is_true_for_all_count(n + 1)
+    prove:
+        claim:
+            forall s1, s2 finite_set, f fn(s1)s2:
+                count(s2) = n + 1
+                count(s1) = count(s2) + 1
+                =>:
+                    exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+            prove:
+                prove_by_contradiction exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b):
+                    forall a s1, b s1:
+                        not $different_item_has_the_same_image(s1, s2, f, a, b)
+
+                    n + 1 + 1> 0
+                    count(s1) > 0
+                    have t s1
+                    have s3 finite_set = set_minus(s1, {t})
+                    have s4 finite_set = set_minus(s2, {f(t)})
+                    count(s4) = count(s2) - count({f(t)}) = n + 1 - 1 = n
+                    count(s3) = count(s1) - count({t}) = count(s2) + 1 - 1 = count(s2) = n + 1 = count(s4) + 1
+
+                    forall x s1 => f(x) $in s2
+
+                    claim:
+                        forall x s3:
+                            f(x) $in s4
+                        prove:
+                            know forall x, y, z set: z $in set_minus(x, y) => z $in x, not z $in y
+                            x $in set_minus(s1, {t}) => x $in s1, not x $in {t}
+                            x $in s1
+                            f(x) $in s2
+                            x != t
+                            not $different_item_has_the_same_image(s3, s4, f, x, t)
+                            f(t) != f(x)
+                            prove_by_contradiction not f(x) $in {f(t)}:
+                                f(x) $in {f(t)}
+                                f(x) = f(t)
+                            f(x) $in set_minus(s2, {f(t)})
+
+                    
+                    have a s3, b s3 st $different_item_has_the_same_image(s3, s4, f, a, b)
+                    
+                    know not $different_item_has_the_same_image(s3,s4,f,a,b)
+
+                    $different_item_has_the_same_image(s3, s4, f, a, b)
+                    
+
+prove_by_induction n N_pos: $pigeon_hole_is_true_for_all_count(n):
+    do_nothing
+
+
+# 要证明
+forall n N_pos:
+    forall s1, s2 finite_set, f fn(s1)s2:
+        count(s1) = n
+        count(s2) = count(s1) + 1
+        =>:
+            exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+
+
+
+
+
+know:
+	forall s1, s2 finite_set:
+		forall x s2:
+			x $in s1
+		=>:
+			count(set_minus(s1, s2)) = count(s1) - count(s2)
+	
+	forall x finite_set:
+		count(x) > 0
+		=>:
+			$is_nonempty_set(x)
+
+	forall x set, y finite_set:
+		x $subset_of y
+		=>:
+			$is_finite_set(x)
+
+	forall x finite_set, y set:
+		$is_finite_set(set_minus(x, y))
+	
+	forall x finite_set, y finite_set:
+		$is_finite_set(union(x, y))
+		$is_finite_set(intersect(x, y))
+
+know forall x set, y set, t1 set, t2 set: t1 $in x, t2 $in set_minus(x, y) => t1 != t2
+		
+know infer x, y, z R: x >= y => x > z if y > z
+know forall x, y, z set: z $in set_minus(x, y) => z $in x, not z $in y
+know forall x, y set: x != y <=> not x $in {y}
+
+prop different_item_has_the_same_image(s1, s2 set, f fn(s1)s2, z1, z2 s1):
+    z1 != z2
+    f(z1) = f(z2)
+
+prop pigeon_hole_is_true_for_all_count(n N_pos):
+    forall s1, s2 finite_set, f fn(s1)s2:
+        count(s2) = n
+        count(s1) = count(s2) + 1
+        =>:
+            exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+    
+# count(s2) = 1 时
+claim:
+    forall s1, s2 finite_set, f fn(s1)s2:
+        count(s2) = 1
+        count(s1) = count(s2) + 1
+        =>:
+            exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+    prove:
+        count(s1) = 1 + 1 = 2
+        have z1 s1
+        count(set_minus(s1, {z1})) = 1
+        have z2 set_minus(s1, {z1})
+        know forall x set, y set, t1 set, t2 set: t1 $in x, t2 $in set_minus(x, y) => t1 != t2
+
+        z1 $in s1, z2 $in set_minus(s1, {z1}) => z1 != z2
+        prove_by_contradiction f(z1) = f(z2):
+            {f(z1), f(z2)} $subset_of s2
+            count({f(z1), f(z2)}) <= count(s2)
+            count({f(z1), f(z2)}) = 2
+            count(s2) = 1
+            2 <= 1
+        prove_exist z1, z2: a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+
+$pigeon_hole_is_true_for_all_count(1)
+
+claim:
+    forall n N_pos:
+        $pigeon_hole_is_true_for_all_count(n)
+        =>:
+            $pigeon_hole_is_true_for_all_count(n + 1)
+    prove:
+        claim:
+            forall s1, s2 finite_set, f fn(s1)s2:
+                count(s2) = n + 1
+                count(s1) = count(s2) + 1
+                =>:
+                    exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+            prove:
+                prove_by_contradiction exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b):
+                    forall a s1, b s1:
+                        not $different_item_has_the_same_image(s1, s2, f, a, b)
+
+                    n + 1 + 1> 0
+                    count(s1) > 0
+                    have t s1
+                    have s3 finite_set = set_minus(s1, {t})
+                    have s4 finite_set = set_minus(s2, {f(t)})
+                    count(s4) = count(s2) - count({f(t)}) = n + 1 - 1 = n
+                    count(s3) = count(s1) - count({t}) = count(s2) + 1 - 1 = count(s2) = n + 1 = count(s4) + 1
+
+                    forall x s1 => f(x) $in s2
+
+                    claim:
+                        forall x s3:
+                            f(x) $in s4
+                        prove:
+                            know forall x, y, z set: z $in set_minus(x, y) => z $in x, not z $in y
+                            x $in set_minus(s1, {t}) => x $in s1, not x $in {t}
+                            x $in s1
+                            f(x) $in s2
+                            x != t
+                            not $different_item_has_the_same_image(s3, s4, f, x, t)
+                            f(t) != f(x)
+                            prove_by_contradiction not f(x) $in {f(t)}:
+                                f(x) $in {f(t)}
+                                f(x) = f(t)
+                            f(x) $in set_minus(s2, {f(t)})
+
+                    
+                    have a s3, b s3 st $different_item_has_the_same_image(s3, s4, f, a, b)
+                    
+                    know not $different_item_has_the_same_image(s3,s4,f,a,b)
+
+                    $different_item_has_the_same_image(s3, s4, f, a, b)
+                    
+
+prove_by_induction n N_pos: $pigeon_hole_is_true_for_all_count(n):
+    do_nothing
+
+
+# 要证明
+forall n N_pos:
+    forall s1, s2 finite_set, f fn(s1)s2:
+        count(s1) = n
+        count(s2) = count(s1) + 1
+        =>:
+            exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+
+"""
+
+
+
