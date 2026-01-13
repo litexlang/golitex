@@ -24,7 +24,9 @@ func successVerString(stmt, stmtVerifiedBy ast.Stmt) *glob.VerRet {
 	line := uint(0)
 	if stmt != nil {
 		stmtStr = stmt.String()
-		line = stmt.GetLine()
+		if stmtVerifiedBy != nil {
+			line = stmtVerifiedBy.GetLine()
+		}
 	}
 
 	verifyMsgs := []string{}
@@ -38,7 +40,7 @@ func successVerString(stmt, stmtVerifiedBy ast.Stmt) *glob.VerRet {
 		verifyMsgs = append(verifyMsgs, "is true.")
 	}
 
-	return glob.NewVerMsg2(glob.StmtRetTypeTrue, stmtStr, line, verifyMsgs)
+	return glob.NewVerMsg(glob.StmtRetTypeTrue, stmtStr, line, verifyMsgs)
 }
 
 // successVerStringString is a helper function for backward compatibility with string-based calls
@@ -50,7 +52,7 @@ func successVerStringString(stmtStr, stmtVerifiedByStr string) *glob.VerRet {
 		verifyMsgs = append(verifyMsgs, "is true.")
 	}
 
-	return glob.NewVerMsg2(glob.StmtRetTypeTrue, stmtStr, glob.BuiltinLine0, verifyMsgs)
+	return glob.NewVerMsg(glob.StmtRetTypeTrue, stmtStr, glob.BuiltinLine0, verifyMsgs)
 }
 
 func newMaybeSuccessMsgVerRet(state *VerState, stmt ast.Stmt, stmtVerifiedBy string) *glob.VerRet {

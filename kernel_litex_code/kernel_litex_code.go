@@ -342,30 +342,6 @@ know:
 
 know:
 	forall x, y, z R:
-		x > y
-		y > z
-		=>:
-			x > z
-
-	forall x, y, z R:
-		x >= y
-		y >= z
-		=>:
-			x >= z
-
-	forall x, y, z R:
-		x <= y
-		y <= z
-		=>:
-			x <= z
-
-	forall x, y, z R:
-		x < y
-		y < z
-		=>:
-			x < z
-
-	forall x, y, z R:
 		x + z <= y + z
 		=>:
 			x <= y
