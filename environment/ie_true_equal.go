@@ -57,6 +57,12 @@ func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) *glob.ShortRet {
 		return shortRet
 	}
 
+	// 处理 z = x / y 时，让 x = y * z 自动成立
+	shortRet = ie.trueEqualFactByLeftIsXDivYRightIsZ(fact.Params[1], fact.Params[0])
+	if shortRet.IsTrue() || shortRet.IsErr() {
+		return shortRet
+	}
+
 	// // 如果是 a = b / c 的情况，那就 a * c = b, b * c = 0 自动成立
 	// ret = ie.trueEqualFactByFraction(fact.Params[0], fact.Params[1])
 	// if ret.IsErr() {
@@ -600,9 +606,18 @@ func (ie *InferEngine) trueEqualFactByLeftIsXDivYRightIsZ(left ast.Obj, right as
 
 	// 创建 x = y * z 的事实
 	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{x, multiplyObj}, glob.BuiltinLine0)
-	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(equalFact)
+	ret := ie.EnvMgr.storeSpecFactInMem(equalFact)
 	if ret.IsErr() {
 		return glob.NewEmptyShortUnknownRet()
 	}
-	return glob.NewShortRet(glob.StmtRetTypeTrue, []string{equalFact.String()})
+
+	// 创建 x = z * y
+	multiplyObj2 := ast.NewFnObj(ast.Atom(glob.KeySymbolStar), []ast.Obj{z, y})
+
+	equalFact2 := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{x, multiplyObj2}, glob.BuiltinLine0)
+	ret2 := ie.EnvMgr.storeSpecFactInMem(equalFact2)
+	if ret2.IsErr() {
+		return glob.NewEmptyShortUnknownRet()
+	}
+	return glob.NewShortRet(glob.StmtRetTypeTrue, []string{equalFact.String(), equalFact2.String()})
 }
