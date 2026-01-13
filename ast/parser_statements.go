@@ -70,30 +70,25 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 				ret, err = p.knowFactStmt(tb)
 			}
 		}
-	case glob.KeywordProveCaseByCase:
-	case glob.KeywordCases:
+	case glob.KeywordProveCaseByCase, glob.KeywordCases:
 		ret, err = p.proveCaseByCaseStmt(tb)
-	case glob.KeywordProveByEnum:
-	case glob.KeywordEnum:
+	case glob.KeywordProveByEnum, glob.KeywordEnum:
 		ret, err = p.proveByEnum(tb)
 	case glob.KeywordClear:
 		ret, err = p.clearStmt(tb)
-	case glob.KeywordProveByInduction:
-	case glob.KeywordInduc:
+	case glob.KeywordProveByInduction, glob.KeywordInduc:
 		ret, err = p.proveByInductionStmt(tb)
-	case glob.KeywordProveFor:
-	case glob.KeywordFor:
+	case glob.KeywordProveFor, glob.KeywordFor:
 		ret, err = p.proveForStmt(tb)
-	case glob.KeywordProveIsTransitiveProp:
+	case glob.KeywordProveIsTransitiveProp, glob.KeywordTransProp:
 		ret, err = p.proveIsTransitivePropStmt(tb)
-	case glob.KeywordProveIsCommutativeProp:
+	case glob.KeywordProveIsCommutativeProp, glob.KeywordComProp:
 		ret, err = p.proveCommutativePropStmt(tb)
 	case glob.KeywordAlgo:
 		ret, err = p.algoDefStmt(tb)
 	case glob.KeywordEval:
 		ret, err = p.evalStmt(tb)
-	case glob.KeywordProveByContradiction:
-	case glob.KeywordContra:
+	case glob.KeywordProveByContradiction, glob.KeywordContra:
 		ret, err = p.proveByContradictionStmt(tb)
 	case glob.KeywordDoNothing:
 		ret, err = p.doNothingStmt(tb)

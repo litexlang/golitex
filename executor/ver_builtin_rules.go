@@ -460,17 +460,9 @@ func (ver *Verifier) verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonemp
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	paramSets, retSet, err := ast.GetParamSetsAndRetSetFromFnSet(fnObj)
+	_, retSet, err := ast.GetParamSetsAndRetSetFromFnSet(fnObj)
 	if err != nil {
 		return glob.NewEmptyVerRetUnknown()
-	}
-
-	for _, paramSet := range paramSets {
-		isNonEmptyFact := ast.NewIsANonEmptySetFact(paramSet, glob.BuiltinLine0)
-		verRet := ver.VerFactStmt(isNonEmptyFact, state)
-		if verRet.IsErr() || verRet.IsUnknown() {
-			return glob.NewEmptyVerRetUnknown()
-		}
 	}
 
 	isNonEmptyFact := ast.NewIsANonEmptySetFact(retSet, glob.BuiltinLine0)
@@ -479,7 +471,7 @@ func (ver *Verifier) verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonemp
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("fn set %s is a nonempty set because all its param sets and ret set are nonempty sets.", fnSet), glob.NewEmptyVerRetTrue())
+	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("fn set %s is a nonempty set because its return set is a nonempty set.", fnSet), glob.NewEmptyVerRetTrue())
 }
 
 // func (ver *Verifier) verIsNonEmptyWithItemByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
