@@ -26,7 +26,7 @@ type VerRet struct {
 	VerifyMsgs         []string
 }
 
-func NewVerMsg2(retType StmtRetType, stmtStr string, provedByFactOnLine uint, verifyMsgs []string) *VerRet {
+func NewVerMsg(retType StmtRetType, stmtStr string, provedByFactOnLine uint, verifyMsgs []string) *VerRet {
 	return &VerRet{
 		RetType:            retType,
 		StmtStr:            stmtStr,
@@ -63,24 +63,44 @@ func NewEmptyVerRetErr() *VerRet {
 }
 
 func (m *VerRet) String() string {
+	verifyMsgsStr := strings.Join(m.VerifyMsgs, "\n")
+	noVerifyMsgHint := "(The kernel has not yet implemented verification messages for this case. This will be implemented in the future.)"
+
 	if m.IsTrue() {
 		if m.ProvedByFactOnLine == 0 {
 			if m.StmtStr == "" {
-				return fmt.Sprintf("proved by:\n%s", strings.Join(m.VerifyMsgs, "\n"))
+				if verifyMsgsStr == "" {
+					return fmt.Sprintf("proved by:\n%s", noVerifyMsgHint)
+				}
+				return fmt.Sprintf("proved by:\n%s", verifyMsgsStr)
 			}
-			return fmt.Sprintf("%s\nproved by:\n%s", m.StmtStr, strings.Join(m.VerifyMsgs, "\n"))
+			if verifyMsgsStr == "" {
+				return fmt.Sprintf("%s\nproved by:\n%s", m.StmtStr, noVerifyMsgHint)
+			}
+			return fmt.Sprintf("%s\nproved by:\n%s", m.StmtStr, verifyMsgsStr)
 		}
 
 		if m.StmtStr == "" {
-			return fmt.Sprintf("proved by fact stored on line %d:\n%s", m.ProvedByFactOnLine, strings.Join(m.VerifyMsgs, "\n"))
-		} else {
-			return fmt.Sprintf("%s\nproved by fact stored on line %d:\n%s", m.StmtStr, m.ProvedByFactOnLine, strings.Join(m.VerifyMsgs, "\n"))
+			if verifyMsgsStr == "" {
+				return fmt.Sprintf("proved by fact stored on line %d", m.ProvedByFactOnLine)
+			}
+			return fmt.Sprintf("proved by fact stored on line %d:\n%s", m.ProvedByFactOnLine, verifyMsgsStr)
 		}
+		if verifyMsgsStr == "" {
+			return fmt.Sprintf("%s\nproved by fact stored on line %d:\n%s", m.StmtStr, m.ProvedByFactOnLine, noVerifyMsgHint)
+		}
+		return fmt.Sprintf("%s\nproved by fact stored on line %d:\n%s", m.StmtStr, m.ProvedByFactOnLine, verifyMsgsStr)
 	} else {
 		if m.StmtStr == "" {
-			return fmt.Sprintf("failed to verify:\n%s", strings.Join(m.VerifyMsgs, "\n"))
+			if verifyMsgsStr == "" {
+				return fmt.Sprintf("failed to verify:\n%s", noVerifyMsgHint)
+			}
+			return fmt.Sprintf("failed to verify:\n%s", verifyMsgsStr)
 		}
-		return fmt.Sprintf("%s\nfailed to verify:\n%s", m.StmtStr, strings.Join(m.VerifyMsgs, "\n"))
+		if verifyMsgsStr == "" {
+			return fmt.Sprintf("%s\nfailed to verify:\n%s", m.StmtStr, noVerifyMsgHint)
+		}
+		return fmt.Sprintf("%s\nfailed to verify:\n%s", m.StmtStr, verifyMsgsStr)
 	}
 }
 

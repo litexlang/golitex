@@ -66,7 +66,7 @@ func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFac
 		newUniMap[stmt.ObjNames[i]] = instExistStFactToBeMatched.Params[i]
 	}
 
-	return glob.NewVerMsg2(glob.StmtRetTypeTrue, freeExistStFact.String(), instExistStFactToBeMatched.Line, []string{instExistStFactToBeMatched.String()})
+	return glob.NewVerMsg(glob.StmtRetTypeTrue, freeExistStFact.String(), instExistStFactToBeMatched.Line, []string{instExistStFactToBeMatched.String()})
 }
 
 func (ver *Verifier) ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt *ast.HaveObjStStmt, freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched []ast.SpecFactStmt, state *VerState) *glob.VerRet {

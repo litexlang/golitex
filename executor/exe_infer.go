@@ -110,7 +110,7 @@ func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.InferStmt, thenFact a
 
 func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.InferStmt, fact ast.Spec_OrFact, state *VerState) *glob.VerRet {
 	if !state.ReqOk {
-		return glob.NewVerMsg2(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state)})
+		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state)})
 	}
 
 	searchedKnownFacts := []env.KnownSpecFact_InImplyTemplate{}
@@ -168,7 +168,7 @@ func (ver *Verifier) iterate_KnownPureSpecInImplyStmt_applyMatch_InstObjInParamS
 			}
 		}
 
-		return glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), []string{})
+		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{})
 	}
 
 	return glob.NewEmptyVerRetUnknown()

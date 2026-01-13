@@ -64,7 +64,7 @@ func (ver *Verifier) isBuiltinFunction_VerReq(fnObj *ast.FnObj, state *VerState)
 
 func (ver *Verifier) verUnionReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 2 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("union expects 2 parameters, got %d", len(fnObj.Params))})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("union expects 2 parameters, got %d", len(fnObj.Params))})
 	}
 
 	_ = state
@@ -74,7 +74,7 @@ func (ver *Verifier) verUnionReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet
 
 func (ver *Verifier) verIntersectReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 2 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("intersect expects 2 parameters, got %d", len(fnObj.Params))})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("intersect expects 2 parameters, got %d", len(fnObj.Params))})
 	}
 
 	_ = state
@@ -84,7 +84,7 @@ func (ver *Verifier) verIntersectReq(fnObj *ast.FnObj, state *VerState) *glob.Ve
 
 func (ver *Verifier) verPowerSetReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 1 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("power_set expects 1 parameter, got %d", len(fnObj.Params))})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("power_set expects 1 parameter, got %d", len(fnObj.Params))})
 	}
 
 	_ = state
@@ -94,7 +94,7 @@ func (ver *Verifier) verPowerSetReq(fnObj *ast.FnObj, state *VerState) *glob.Ver
 
 func (ver *Verifier) verCupReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 1 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cup expects 1 parameter, got %d", len(fnObj.Params))})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cup expects 1 parameter, got %d", len(fnObj.Params))})
 	}
 
 	_ = state
@@ -104,7 +104,7 @@ func (ver *Verifier) verCupReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 
 func (ver *Verifier) verCapReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 1 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cap expects 1 parameter, got %d", len(fnObj.Params))})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cap expects 1 parameter, got %d", len(fnObj.Params))})
 	}
 
 	_ = state
@@ -114,7 +114,7 @@ func (ver *Verifier) verCapReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 
 func (ver *Verifier) verSetMinusReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 2 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("set_minus expects 2 parameters, got %d", len(fnObj.Params))})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("set_minus expects 2 parameters, got %d", len(fnObj.Params))})
 	}
 
 	_ = state
@@ -124,7 +124,7 @@ func (ver *Verifier) verSetMinusReq(fnObj *ast.FnObj, state *VerState) *glob.Ver
 
 func (ver *Verifier) verCountReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 1 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("count expects 1 parameter, got %d", len(fnObj.Params))})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("count expects 1 parameter, got %d", len(fnObj.Params))})
 	}
 
 	verRet := ver.VerFactStmt(ast.NewIsAFiniteSetFact(fnObj.Params[0], glob.BuiltinLine0), state)
@@ -132,14 +132,14 @@ func (ver *Verifier) verCountReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("count parameter must be a finite set, %s in %s is not valid", fnObj.Params[0], fnObj)})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("count parameter must be a finite set, %s in %s is not valid", fnObj.Params[0], fnObj)})
 	}
 	return glob.NewEmptyVerRetTrue()
 }
 
 func (ver *Verifier) verSetDiffReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 2 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("set_diff expects 2 parameters, got %d", len(fnObj.Params))})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("set_diff expects 2 parameters, got %d", len(fnObj.Params))})
 	}
 
 	_ = state
@@ -149,7 +149,7 @@ func (ver *Verifier) verSetDiffReq(fnObj *ast.FnObj, state *VerState) *glob.VerR
 
 func (ver *Verifier) verProjReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 2 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("parameters in %s must be 2, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj)})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("parameters in %s must be 2, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj)})
 	}
 
 	// x is cart
@@ -159,7 +159,7 @@ func (ver *Verifier) verProjReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet 
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, isCartFact.String(), isCartFact.GetLine(), []string{fmt.Sprintf("%s is unknown", isCartFact)})
+		return glob.NewVerMsg(glob.StmtRetTypeError, isCartFact.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s is unknown", isCartFact)})
 	}
 
 	// index >= 1
@@ -168,7 +168,7 @@ func (ver *Verifier) verProjReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet 
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("index in %s must be N_pos, %s in %s is not valid", fnObj, fnObj.Params[1], fnObj)})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("index in %s must be N_pos, %s in %s is not valid", fnObj, fnObj.Params[1], fnObj)})
 	}
 
 	// index <= set_dim(x)
@@ -176,7 +176,7 @@ func (ver *Verifier) verProjReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet 
 	if verRet.IsErr() {
 		return verRet
 	} else if verRet.IsUnknown() {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("index in %s must be <= set_dim(%s), %s in %s is not valid", fnObj, fnObj.Params[0], fnObj.Params[1], fnObj)})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("index in %s must be <= set_dim(%s), %s in %s is not valid", fnObj, fnObj.Params[0], fnObj.Params[1], fnObj)})
 	}
 
 	return glob.NewEmptyVerRetTrue()
@@ -184,7 +184,7 @@ func (ver *Verifier) verProjReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet 
 
 func (ver *Verifier) verDimReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 1 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj)})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj)})
 	}
 	// 检查是否是 tuple
 	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine0)
@@ -193,14 +193,14 @@ func (ver *Verifier) verDimReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, isTupleFact.String(), isTupleFact.GetLine(), []string{fmt.Sprintf("%s is unknown", isTupleFact)})
+		return glob.NewVerMsg(glob.StmtRetTypeError, isTupleFact.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s is unknown", isTupleFact)})
 	}
 	return glob.NewEmptyVerRetTrue()
 }
 
 func (ver *Verifier) verChoiceReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	if len(fnObj.Params) != 2 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("choice expects 2 parameters, got %d", len(fnObj.Params))})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("choice expects 2 parameters, got %d", len(fnObj.Params))})
 	}
 
 	// choice(S, s) requires:
@@ -216,7 +216,7 @@ func (ver *Verifier) verChoiceReq(fnObj *ast.FnObj, state *VerState) *glob.VerRe
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("choice requires that %s is in %s, but this cannot be verified", s, S)})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("choice requires that %s is in %s, but this cannot be verified", s, S)})
 	}
 
 	// Verify: forall x S: $is_nonempty_set(x)
@@ -235,7 +235,7 @@ func (ver *Verifier) verChoiceReq(fnObj *ast.FnObj, state *VerState) *glob.VerRe
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("choice requires that all elements of %s are non-empty sets, but this cannot be verified", S)})
+		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("choice requires that all elements of %s are non-empty sets, but this cannot be verified", S)})
 	}
 
 	return glob.NewEmptyVerRetTrue()

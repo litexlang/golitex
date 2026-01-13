@@ -478,7 +478,7 @@ func (ver *Verifier) verInCartSet_DimAndElements(obj ast.Obj, cartSet *ast.FnObj
 	}
 
 	msg := fmt.Sprintf("dim(%s) = %d and each element %s[i] is in corresponding cart set %s", obj, cartDimValue, obj, cartSet)
-	return (glob.NewVerMsg2(glob.StmtRetTypeTrue, "", glob.BuiltinLine0, []string{msg}))
+	return (glob.NewVerMsg(glob.StmtRetTypeTrue, "", glob.BuiltinLine0, []string{msg}))
 }
 
 // verInFactByRightParamIsCartSet verifies a $in cart(...) by checking:
@@ -915,7 +915,7 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state 
 		}
 	}
 
-	return (glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{"definition of set builder"}))
+	return (glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{"definition of set builder"}))
 }
 
 func (ver *Verifier) verInFactByRightIsListSet(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
@@ -939,10 +939,10 @@ func (ver *Verifier) verInFactByRightIsListSet(stmt *ast.SpecFactStmt, state *Ve
 		if verRet.IsTrue() {
 			// 找到了相等的元素，返回 true
 			if stmt.Params[0].String() == item.String() {
-				return (glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s $in %s, %s = %s", stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj)}))
+				return (glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s $in %s, %s = %s", stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj)}))
 			}
 
-			return (glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s $in %s, %s = %s, %s = %s", stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj, item, stmt.Params[0])}))
+			return (glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s $in %s, %s = %s, %s = %s", stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj, item, stmt.Params[0])}))
 		}
 	}
 

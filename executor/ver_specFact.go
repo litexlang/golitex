@@ -40,7 +40,7 @@ func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt *ast.Spec
 		return ret
 	}
 
-	return glob.NewVerMsg2(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{})
+	return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{})
 }
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
@@ -56,7 +56,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *as
 	if ver.Env.IsCommutativeProp(stmt) {
 		reverseParamsOrderStmt, err := stmt.ReverseParameterOrder()
 		if err != nil {
-			return glob.NewVerMsg2(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+			return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 		}
 		if verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(reverseParamsOrderStmt, state); verRet.IsTrue() || verRet.IsErr() {
 			return verRet
@@ -87,7 +87,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast
 			if verRet.IsTrue() {
 				msg := fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedObjStmt.String())
 				if state.WithMsg {
-					return glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
+					return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
 				}
 				return glob.NewEmptyVerRetTrue()
 			}
@@ -109,7 +109,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 		if verRet.IsTrue() {
 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
 			if state.WithMsg {
-				return glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
+				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
 			}
 			return glob.NewEmptyVerRetTrue()
 		}
@@ -203,7 +203,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	// TODO: ? 这里还需要检查吗？或者说是在这里检查吗？难道prop的关于参数的检查不应该在更顶层的函数里？
 	paramSetFacts, err := defStmt.DefHeader.GetInstantiatedParamInParamSetFact(paramArrMap)
 	if err != nil {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	for _, paramSetFact := range paramSetFacts {
@@ -216,7 +216,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
 	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
 	if err != nil {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 	// prove all domFacts are true
 	for _, domFact := range instantiatedIffToProp.DomFacts {
@@ -228,7 +228,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state 
 	}
 
 	if state.WithMsg {
-		return glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{defStmt.String()})
+		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{defStmt.String()})
 	}
 	return glob.NewEmptyVerRetTrue()
 }
@@ -358,11 +358,11 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 
 	_, areEqual, err := cmp.NumLitEqual_ByEval(leftValue, rightValue)
 	if err != nil {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 	if !areEqual {
 		if state != nil && state.WithMsg {
-			return glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{"builtin rules"})
+			return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{"builtin rules"})
 		}
 		return glob.NewEmptyVerRetTrue()
 	}
@@ -387,7 +387,7 @@ func (ver *Verifier) verIsCartByBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 	if len(stmt.Params) == 1 {
 		if cartObj, ok := stmt.Params[0].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartObj.FnHead, glob.KeywordCart) {
 			if state.WithMsg {
-				return glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{"definition"})
+				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{"definition"})
 			}
 			return glob.NewEmptyVerRetTrue()
 		}
@@ -420,7 +420,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 	// TODO: ? 这里还需要检查吗？或者说是在这里检查吗？难道prop的关于参数的检查不应该在更顶层的函数里？
 	paramSetFacts, err := defStmt.DefHeader.GetInstantiatedParamInParamSetFact(paramArrMap)
 	if err != nil {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	for _, paramSetFact := range paramSetFacts {
@@ -433,7 +433,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
 	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
 	if err != nil {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	// 某个fact是false的，那就OK了
@@ -450,7 +450,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 		}
 		if verRet.IsTrue() {
 			if state.WithMsg {
-				return glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{defStmt.String()})
+				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{defStmt.String()})
 			}
 			return glob.NewEmptyVerRetTrue()
 		}
@@ -462,7 +462,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 // $equal_tuple(left, right, dim)
 func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	if len(stmt.Params) != 3 {
-		return glob.NewVerMsg2(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("equal_tuple should have 3 params, but got %d", len(stmt.Params))})
+		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("equal_tuple should have 3 params, but got %d", len(stmt.Params))})
 	}
 
 	left := stmt.Params[0]
@@ -476,7 +476,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewVerMsg2(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cannot verify that %s is a tuple", left)})
+		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cannot verify that %s is a tuple", left)})
 	}
 
 	// 2. 证明 right 是 is_tuple
@@ -486,7 +486,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewVerMsg2(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cannot verify that %s is a tuple", right)})
+		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cannot verify that %s is a tuple", right)})
 	}
 
 	// 3. 证明 dim(left) = dim
@@ -497,7 +497,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewVerMsg2(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cannot verify that dim(%s) = %s", left, dim)})
+		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cannot verify that dim(%s) = %s", left, dim)})
 	}
 
 	// 4. 证明 dim(right) = dim
@@ -508,7 +508,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewVerMsg2(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cannot verify that dim(%s) = %s", right, dim)})
+		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cannot verify that dim(%s) = %s", right, dim)})
 	}
 
 	// 5. 获取 dim 的数值，用于枚举
@@ -529,7 +529,7 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 			}
 		}
 		if !ok {
-			return glob.NewVerMsg2(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cannot determine integer value of dim %s", dim)})
+			return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cannot determine integer value of dim %s", dim)})
 		}
 	}
 
@@ -548,13 +548,13 @@ func (ver *Verifier) verEqualTupleByBuiltinRules(stmt *ast.SpecFactStmt, state *
 			return verRet
 		}
 		if verRet.IsUnknown() {
-			return glob.NewVerMsg2(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cannot verify that %s[%d] = %s[%d]", left, i, right, i)})
+			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("cannot verify that %s[%d] = %s[%d]", left, i, right, i)})
 		}
 	}
 
 	msg := fmt.Sprintf("verified %s and %s are tuples with dim = %s, and each element %s[i] = %s[i] for i = 1 to %d", left, right, dim, left, right, dimValue)
 	if state.WithMsg {
-		return glob.NewVerMsg2(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
+		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
 	}
 	return glob.NewEmptyVerRetTrue()
 }
