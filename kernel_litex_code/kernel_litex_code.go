@@ -1010,4 +1010,31 @@ know:
 
 know forall x Z: x >= 0 => x $in N
 
+know:
+	forall s1, s2 finite_set:
+		forall x s2:
+			x $in s1
+		=>:
+			count(set_minus(s1, s2)) = count(s1) - count(s2)
+	
+	forall x finite_set:
+		count(x) > 0
+		=>:
+			$is_nonempty_set(x)
+
+	forall x set, y finite_set:
+		x $subset_of y
+		=>:
+			$is_finite_set(x)
+
+	forall x finite_set, y set:
+		$is_finite_set(set_minus(x, y))
+	
+	forall x finite_set, y finite_set:
+		$is_finite_set(union(x, y))
+		$is_finite_set(intersect(x, y))
+
+know infer x set, y set, t1 set, t2 set: t1 $in x, t2 $in set_minus(x, y) => t1 != t2
+		
+know infer x, y, z R: x >= y => x > z if y > z
 `

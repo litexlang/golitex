@@ -93,14 +93,14 @@ func (m *VerRet) String() string {
 	} else {
 		if m.StmtStr == "" {
 			if verifyMsgsStr == "" {
-				return fmt.Sprintf("failed to verify:\n%s", noVerifyMsgHint)
+				return fmt.Sprintf("failed to be verified:\n%s", noVerifyMsgHint)
 			}
-			return fmt.Sprintf("failed to verify:\n%s", verifyMsgsStr)
+			return fmt.Sprintf("failed to be verified:\n%s", verifyMsgsStr)
 		}
 		if verifyMsgsStr == "" {
-			return fmt.Sprintf("%s\nfailed to verify:\n%s", m.StmtStr, noVerifyMsgHint)
+			return fmt.Sprintf("%s\nfailed to be verified", m.StmtStr)
 		}
-		return fmt.Sprintf("%s\nfailed to verify:\n%s", m.StmtStr, verifyMsgsStr)
+		return fmt.Sprintf("%s\nfailed to be verified:\n%s", m.StmtStr, verifyMsgsStr)
 	}
 }
 

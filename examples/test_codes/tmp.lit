@@ -1,16 +1,8 @@
-"""
 prop different_item_has_the_same_image(s1, s2 set, f fn(s1)s2, z1, z2 s1):
     z1 != z2
     f(z1) = f(z2)
-
-forall s1, s2 finite_set, f fn(s1)s2:
-    0 < count(s2)
-    count(s1) = count(s2) + 1
-    =>:
-        exist z1, z2 s1 st $different_item_has_the_same_image(s1, s2, f, z1, z2)
-"""
-
-# count(s1) = 0 时
+    
+# count(s2) = 1 时
 claim:
     forall s1, s2 finite_set, f fn(s1)s2:
         count(s2) = 1
@@ -19,9 +11,69 @@ claim:
             exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
     prove:
         count(s1) = 1 + 1 = 2
-        let z1, z2 s1: z1 != z2
+        have z1 s1
+        count(set_minus(s1, {z1})) = 1
+        have z2 set_minus(s1, {z1})
+        z1 $in s1, z2 $in set_minus(s1, {z1}) => z1 != z2
         prove_by_contradiction f(z1) = f(z2):
             {f(z1), f(z2)} $subset_of s2
             count({f(z1), f(z2)}) <= count(s2)
+            count({f(z1), f(z2)}) = 2
+            count(s2) = 1
             2 <= 1
-        prove_exist z1, z2: exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+        prove_exist z1, z2: a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+"""
+claim:
+    forall n N_pos:
+        forall s1, s2 finite_set, f fn(s1)s2:
+            count(s2) = n
+            count(s1) = count(s2) + 1
+            =>:
+                exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+        =>:
+            forall s1, s2 finite_set, f fn(s1)s2:
+                count(s1) = n + 1
+                count(s1) = count(s2) + 1
+                =>:
+                    exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+    prove:
+        claim:
+            forall s1, s2 finite_set, f fn(s1)s2:
+                count(s2) = n + 1
+                count(s1) = count(s2) + 1
+                =>:
+                    exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+            prove:
+                prove_by_contradiction exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b):
+                    forall a s1, b s1:
+                        not $different_item_has_the_same_image(s1, s2, f, a, b)
+
+                    n + 1 + 1> 0
+                    count(s1) > 0
+                    have t s1
+                    have s3 finite_set = set_minus(s1, {t})
+                    have s4 finite_set = set_minus(s2, {f(t)})
+                    count(s4) = count(s2) - count({f(t)}) = n + 1 - 1 = n
+                    count(s3) = count(s1) - count({t}) = count(s2) + 1 - 1 = count(s2) = n + 1 = count(s4) + 1
+
+                    know f $in fn(s3)s4
+                    have a s3, b s3 st $different_item_has_the_same_image(s3, s4, f, a, b)
+                    
+                    know not $different_item_has_the_same_image(s3,s4,f,a,b)
+
+                    $different_item_has_the_same_image(s3, s4, f, a, b)
+                    
+
+prove_by_induction n N_pos: forall s1, s2 finite_set, f fn(s1)s2: count(s2) = n, count(s1) = count(s2) + 1 => exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b):
+    do_nothing
+"""
+"""
+# 要证明
+forall n N_pos:
+    forall s1, s2 finite_set, f fn(s1)s2:
+        count(s1) = n
+        count(s2) = count(s1) + 1
+        =>:
+            exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+
+"""
