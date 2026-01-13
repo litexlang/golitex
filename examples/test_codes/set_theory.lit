@@ -318,3 +318,6 @@ prove:
 
     difference(s, t) = u
 
+prove:
+    have fn f(x {}) {} = x
+    have fn g(x {}) R = 1
