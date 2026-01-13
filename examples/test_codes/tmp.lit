@@ -1,4 +1,0 @@
-prop p(x R, y R)
-
-know exist x, y Z st $p(x, y)
-
