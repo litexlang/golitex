@@ -1,0 +1,32 @@
+prop different_item_has_the_same_image(s1, s2 set, f fn(s1)s2, z1, z2 s1):
+    z1 != z2
+    f(z1) = f(z2)
+    
+"""
+forall s1, s2 finite_set, f fn(s1)s2:
+    0 < count(s2)
+    count(s1) = count(s2) + 1
+    =>:
+        exist z1 s1, z2 s1 st $different_item_has_the_same_image(s1, s2, f, z1, z2)
+"""
+
+# count(s2) = 1 时
+claim:
+    forall s1, s2 finite_set, f fn(s1)s2:
+        count(s2) = 1
+        count(s1) = count(s2) + 1
+        =>:
+            exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+    prove:
+        count(s1) = 1 + 1 = 2
+        have z1 s1
+        count(set_minus(s1, {z1})) = 1
+        have z2 set_minus(s1, {z1})
+        z1 $in s1, z2 $in set_minus(s1, {z1}) => z1 != z2
+        prove_by_contradiction f(z1) = f(z2):
+            {f(z1), f(z2)} $subset_of s2
+            count({f(z1), f(z2)}) <= count(s2)
+            count({f(z1), f(z2)}) = 2
+            count(s2) = 1
+            2 <= 1
+        prove_exist z1, z2: a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
