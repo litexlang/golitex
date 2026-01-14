@@ -322,3 +322,7 @@ func NewInferTemplateStmt(params []string, paramSets []Obj, domFacts ReversibleF
 func NewEqualSetStmt(left Obj, right Obj, proofs StmtSlice, line uint) *EqualSetStmt {
 	return &EqualSetStmt{Left: left, Right: right, Proofs: proofs, Line: line}
 }
+
+func NewWitnessNonemptyStmt(obj Obj, objSet Obj, proofs StmtSlice, line uint) *WitnessNonemptyStmt {
+	return &WitnessNonemptyStmt{Obj: obj, ObjSet: objSet, Proofs: proofs, Line: line}
+}

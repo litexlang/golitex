@@ -464,9 +464,9 @@ type EqualSetStmt struct {
 	Line uint
 }
 
-type NotEqualSetStmt struct {
-	Left   Obj
-	Right  Obj
+type WitnessNonemptyStmt struct {
+	Obj    Obj
+	ObjSet Obj
 	Proofs StmtSlice
 
 	Line uint
