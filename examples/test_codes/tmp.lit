@@ -1,8 +1,18 @@
-forall x Z, y Z: x > 0, y > 0 => x * y > 0
+have fn g(x Z) N =:
+    case x < 0: 7 * (-x) + 2:
+        forall x Z: (7 * x + 1) % 7 = ((7 * x) % 7 + 1 % 7) % 7 = (0 + 1) % 7 = 1
+    case x >= 0: 7 * x + 1:
+        forall x Z: (7 * (-x) + 2) % 7 = ((7 * (-x)) % 7 + 2 % 7) % 7 = (0 + 2) % 7 = 2
 
-have fn f(x Z) Z = x
+have fn h(x Z) N = x:
+    ....
 
-claim:
-    forall x Z, y Z: x > 0, y > 0 => x * y > 0
-    prove:
-        f(1.5) > 0
+have fn:
+    t(x Z) N:
+        dom:
+            ...
+        =>:
+            ...
+    prove_exist:
+        ...
+    = ...
