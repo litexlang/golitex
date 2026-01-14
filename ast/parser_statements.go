@@ -98,7 +98,7 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.provePropInferStmt(tb)
 	case glob.KeywordRunFile:
 		ret, err = p.runFileStmt(tb)
-	case glob.KeywordProveExist:
+	case glob.KeywordWitness:
 		ret, err = p.proveExistStmt(tb)
 	case glob.KeywordInfer:
 		ret, err = p.inferTemplateStmt(tb)
@@ -462,11 +462,11 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	// Check if it's prove or case-by-case
-	if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordProveExist) {
+	if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordWitness) {
 		if len(tb.body) != 3 {
-			return nil, fmt.Errorf("expect 3 body blocks for have fn with prove_exist")
+			return nil, fmt.Errorf("expect 3 body blocks for have fn with witness")
 		}
-		err = tb.body[1].header.skip(glob.KeywordProveExist)
+		err = tb.body[1].header.skip(glob.KeywordWitness)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -1405,13 +1405,8 @@ func (p *TbParser) proveByEnum(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
 	// param paramSet pairs
-	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolRightBrace, false)
+	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolColon, false)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1427,11 +1422,6 @@ func (p *TbParser) proveByEnum(tb *tokenBlock) (Stmt, error) {
 			delete(p.FreeParams, param)
 		}
 	}()
-
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
 
 	// Use the new parseDomThenProve function to handle all three cases:
 	// 1. dom:, =>:, prove: (all three sections)
@@ -3796,7 +3786,7 @@ func (p *TbParser) runFileStmt(tb *tokenBlock) (*RunFileStmt, error) {
 }
 
 func (p *TbParser) proveExistStmt(tb *tokenBlock) (*ProveExistStmt, error) {
-	err := tb.header.skip(glob.KeywordProveExist)
+	err := tb.header.skip(glob.KeywordWitness)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}

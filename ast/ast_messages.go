@@ -1443,7 +1443,7 @@ func SetBuilderObjString(f *FnObj) string {
 
 func (stmt *ProveExistStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveExist)
+	builder.WriteString(glob.KeywordWitness)
 	builder.WriteString(" ")
 
 	equalToSlice := make([]string, len(stmt.EqualTos))
