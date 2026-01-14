@@ -455,3 +455,29 @@ type KnowInferStmt struct {
 
 	Line uint
 }
+
+// equal_tuple x, y:
+// ...
+type EqualTupleStmt struct {
+	Left   Obj
+	Right  Obj
+	Proofs StmtSlice
+
+	Line uint
+}
+
+type EqualSetStmt struct {
+	Left   Obj
+	Right  Obj
+	Proofs StmtSlice
+
+	Line uint
+}
+
+type NotEqualSetStmt struct {
+	Left   Obj
+	Right  Obj
+	Proofs StmtSlice
+
+	Line uint
+}
