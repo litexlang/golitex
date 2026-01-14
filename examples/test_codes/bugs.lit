@@ -1,0 +1,83 @@
+
+forall i Z:
+    2 <= i
+    i < 17
+    =>:
+        i $in N_pos
+
+for i range(2, 17):
+    17 % i != 0
+
+forall y N_pos:
+    2 <= y
+    y < 17
+    =>:
+        17 % y != 0
+
+# https://github.com/litexlang/golitex/blob/main/examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lit
+
+# 这里其实我可以内置一些信息，让这些处理不至于这么繁琐
+"""
+forall x Z:
+    (7 * x + 1) % 7 = ((7 * x) % 7 + 1 % 7) % 7 = (0 + 1) % 7 = 1
+
+forall x Z:
+    (7 * (-x) + 2) % 7 = ((7 * (-x)) % 7 + 2 % 7) % 7 = (0 + 2) % 7 = 2
+
+forall x Z: x < 0 => -x > 0, 7 * (-x) > 0, 7 * (-x) + 2 > 0, 7 * (-x) + 2 $in N
+
+forall x Z: x >= 0 => 7 * x >= 0, 7 * x + 1 >= 0, x $in N, 7 * x $in N, 7 * x + 1 $in N
+"""
+
+# 忘记写了什么：有什么东西没证明出来，导致了整个系统在某个地方卡了
+# forall x Z: x < 0 => -x > 0, 7 * (-x) > 0, 7 * (-x) + 2 > 0, 7 * (-x) + 2 $in N
+
+# forall x Z: x >= 0 => 7 * x >= 0, 7 * x + 1 >= 0, x $in N, 7 * x $in N, 7 * x + 1 $in N
+
+# 在vslean里加上 Z和N势能相等的例子
+
+# 解释为什么要有 set_equal 而不是在kernel里直接写
+# 让 set_equal变成keyword而不是fact
+
+# 内核里证明 prove forall x union({1, 2}, {2, 3}): x $in {1, 2, 3}:
+
+#   enum(a {1, 2, 3}):
+        a $in {3, 2, 1} 把圆括号删了
+
+#     1 $in {1, 2, 3}
+ subset_of 也能枚举
+
+# floor, ceil round 是内置的，不是被证明的
+
+# 说明 infer 和forall还是有点区别的
+
+# 这是我还没有 infer 的时候必须要有 item_in_intersect 的原因，就是匹配上
+
+# item_in_intersect 和 item_in_union 需要被删了
+
+# https://github.com/litexlang/golitex/blob/main/examples/comprehensive_examples/product_of_items_in_finite_set.lit
+#   know set_minus({1,2}, {1}) = {2}
+
+用函数（序列）来表示 连乘
+
+
+# enum(x {1, 2, 3, 4, 17}): 后面不要有 ()
+
+#    用infer
+ $product_is_0_then_at_least_one_factor_is_0(x + a - sqrt(a^2 - b), x + a + sqrt(a^2 - b))
+ # https://github.com/litexlang/golitex/blob/main/examples/comprehensive_examples/quadratic_equation.lit
+
+
+# https://github.com/litexlang/golitex/blob/main/examples/testings/fn_template.lit
+
+教大家写 fn_template
+
+# 对比 prop 和 fn 的参数列表
+fn 不能读入 set
+fn 还不能 前面一个参数是后面一个参数的集合的参数
+
+prop s set, f fn(s)s
+
+fn f(s R, a s)
+
+# http://github.com/litexlang/golitex/blob/main/examples/testings/seq.lit
