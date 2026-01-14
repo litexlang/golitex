@@ -157,17 +157,31 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (*glob.StmtRet
 		}
 	}
 
+	// Check if equalTo is defined
 	ver := NewVerifier(exec.Env)
-
-	verRet := ver.VerFactStmt(ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet), Round0Msg())
-	if verRet.IsErr() {
-		return glob.ErrRet(verRet.String()), fmt.Errorf(verRet.String())
-	}
-	if verRet.IsUnknown() {
-		return glob.ErrRet(verRet.String()), fmt.Errorf("according to the definition of %s, the returned value %s must be in %s, but\n%s is unknown", stmt, stmt.EqualTo, stmt.RetSet, ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet))
+	verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(stmt.EqualTo, Round0NoMsg())
+	if verRet.IsNotTrue() {
+		return verRet.ToStmtRet(), fmt.Errorf("%s", verRet.String())
 	}
 
-	return verRet.ToStmtRet(), nil
+	// Execute proof
+	for _, proofStmt := range stmt.Proofs {
+		execState := exec.Stmt(proofStmt)
+		if execState.IsNotTrue() {
+			return execState, fmt.Errorf("proof failed: %s", execState.String())
+		}
+	}
+
+	// Verify return value is in retSet
+	execState := exec.factStmt(ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet))
+	if execState.IsErr() {
+		return glob.NewEmptyStmtError(), fmt.Errorf("%s", execState.String())
+	}
+	if execState.IsUnknown() {
+		return glob.NewEmptyStmtError(), fmt.Errorf("according to the definition of %s, the returned value %s must be in %s, but\n%s is unknown", stmt, stmt.EqualTo, stmt.RetSet, ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet))
+	}
+
+	return exec.NewTrueStmtRet(stmt), nil
 }
 
 func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {

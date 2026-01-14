@@ -640,7 +640,11 @@ func (stmt *HaveFnEqualStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewHaveFnEqualStmt(newDefHeader, newRetSet, newEqualTo, stmt.Line), nil
+	newProofs, err := stmt.Proofs.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveFnEqualStmt(newDefHeader, newRetSet, newEqualTo, newProofs, stmt.Line), nil
 }
 
 // func (stmt *HaveFnLiftStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

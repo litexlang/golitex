@@ -893,7 +893,15 @@ func (stmt *HaveFnEqualStmt) String() string {
 	builder.WriteString(glob.KeySymbolEqual)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.EqualTo.String())
-
+	if len(stmt.Proofs) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+		for _, proof := range stmt.Proofs {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+			builder.WriteByte('\n')
+		}
+		return strings.TrimSuffix(builder.String(), "\n")
+	}
 	return builder.String()
 }
 

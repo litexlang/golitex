@@ -179,8 +179,8 @@ func NewHaveObjEqualStmt(objNames []string, objEqualTos []Obj, objSets []Obj, li
 	return &HaveObjEqualStmt{objNames, objEqualTos, objSets, line}
 }
 
-func NewHaveFnEqualStmt(defHeader *DefHeader, retSet Obj, equalTo Obj, line uint) *HaveFnEqualStmt {
-	return &HaveFnEqualStmt{defHeader, retSet, equalTo, line}
+func NewHaveFnEqualStmt(defHeader *DefHeader, retSet Obj, equalTo Obj, proofs StmtSlice, line uint) *HaveFnEqualStmt {
+	return &HaveFnEqualStmt{defHeader, retSet, equalTo, proofs, line}
 }
 
 // func NewHaveFnLiftStmt(fnName string, opt Obj, domainOfEachParamOfGivenFn []Obj, line uint) *HaveFnLiftStmt {
