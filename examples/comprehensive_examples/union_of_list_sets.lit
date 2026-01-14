@@ -33,29 +33,6 @@ prove forall x union({1, 2}, {2, 3}): x $in {1, 2, 3}:
 $equal_set({1, 2, 3}, union({1, 2}, {2, 3}))
 
 
-# 这里有很多的应该做成 keyword的东西被我写成 fact了，比如 not equal set, 比如 is_nonempty_with_item，以及 not_equal_set 自动推出 exist z x st not z $in y这种
-# 能看懂这在做什么，但不知道为毛这么写
-claim:
-    forall x, y set:
-        not $is_nonempty_set(x)
-        not $is_nonempty_set(y)
-        =>:
-            x = y
-    prove:
-        contra x = y:
-            $not_equal_set(x, y)
-            cases:
-                =>:
-                    $is_nonempty_set(x) or $is_nonempty_set(y)
-                case exist z x st not z $in y:
-                    have z x st not z $in y
-                    x $is_nonempty_with_item z
-                case exist z y st not z $in x:
-                    have z y st not z $in x
-                    y $is_nonempty_with_item z
-                    
-            $is_nonempty_set(x) or $is_nonempty_set(y)
-
 not $is_nonempty_set({})
 
 # 要让每个statement为什么不正确工作的原因打印出来，这样定位问题更容易
