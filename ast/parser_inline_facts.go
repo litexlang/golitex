@@ -364,6 +364,7 @@ func (p *TbParser) inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb *tokenB
 
 // inline_spec_or_fact_skip_terminator parses spec fact or or-fact and skips statement terminator
 func (p *TbParser) inline_spec_or_fact_skip_terminator(tb *tokenBlock) (FactStmt, error) {
+
 	specFact, err := p.inlineSpecFactStmt_skip_terminator(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
