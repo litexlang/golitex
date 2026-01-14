@@ -1,46 +1,53 @@
-prop Cauchy_condition(a fn(N_pos)R, M N_pos, epsilon R_pos):
-    forall x, y N_pos:
-        x > M
-        y > M
+have fn product_of(s power_set(R)) R:
+        dom:
+            $is_finite_set(s)
+    prove:
+        do_nothing
+    = 1
+
+know:
+    forall x R:
+        product_of({x}) = x
+
+    forall s finite_set, x s:
+        product_of(s) = product_of(set_minus(s, {x})) * product_of({x})
+
+prove product_of({1,2}) = 2:
+    know set_minus({1,2}, {1}) = {2}
+    {1, 2} $subset_of R
+    product_of({1, 2}) = product_of({2}) * product_of({1}) = 2 * 1 = 2
+
+# 证明素数有无限个
+# 需要先内置好，要么一个数自己是prime，要么就是存在一个prime使得它能被prime整除
+contra not $is_finite_set({x N_pos: $is_prime(x)}):
+    # prove product_of({x N_pos: $is_prime(x)}) + 1 is not divisible by any prime number
+
+
+
+"""
+let fn product_of(s set) R:
+    dom:
+        $is_finite_set(s)
+        forall x s: x $in R
+
+know:
+    product_of({}) = 1
+
+    forall x R:
+        product_of({x}) = x
+
+    forall s finite_set, x s:
+        forall t s: t $in R
         =>:
-            abs(a(x) - a(y)) < epsilon
+            product_of(s) = product_of(set_minus(s, {x})) * product_of({x})
 
-prop R_seq_converges(a fn(N_pos)R):
-    forall epsilon R_pos:
-        =>:
-            exist M N_pos: $Cauchy_condition(a, M, epsilon)
+    forall s finite_set, x s: forall t s: t $in Z; => product_of(s) $in Z
 
-have fn f(x N_pos) R = 1 / x
+prove forall s finite_set, x s: forall t s: t $in Z; => product_of(s) % x = 0:
+    forall t s: t $in R
+    s $in power_set(R)
+    product_of(s) = product_of(set_minus(s, {x})) * product_of({x}) = product_of(set_minus(s, {x})) * x
 
-prove forall epsilon R_pos => exist M N_pos: $Cauchy_condition(f, M, epsilon):
-    have a Q st a $in {t Q: 0 < t, t < epsilon}
-    have p Z, q N_pos st a = p / q
+    product_of(s) % x = 0
 
-    # 需要添加 a < b <= c 则 a < c
-    # 添加： p $in R， p >= 1时， 如果 x >= 0 那么 x <= p * x
-    1 / q <= p / q
-    a < epsilon
-    p / q < epsilon
-    1 / q < epsilon
-
-    have M N_pos = M = 2 * q
-    forall x N_pos:
-        x > M
-        =>:
-            f(x) = 1 / x
-            1 / x < 1 / M
-            1 / M = 1 / (2 * q)
-            1 / x < 1 / (2 * q)
-            f(x) < 1 / (2 * q)
-
-    forall x, y N_pos:
-        x > M
-        y > M
-        =>:
-            abs(f(x) - f(y)) < abs(f(x)) + abs(f(y))
-            abs(f(x)) < 1 / (2 * q)
-            abs(f(y)) < 1 / (2 * q)
-            abs(f(x)) + abs(f(y)) < 1 / 2 * q + 1 / 2 * q
-            abs(f(x) - f(y)) < 1 / 2 * q + 1 / 2 * q
-            abs(f(x) - f(y)) < 1 / q
-            abs(f(x) - f(y)) < epsilon
+"""

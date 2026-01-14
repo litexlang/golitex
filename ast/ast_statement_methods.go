@@ -404,10 +404,10 @@ func (stmt *SpecFactStmt) ExistStFactToPropNameExistParamsParamsAndTrueSpecFactA
 // 	return NewSpecFactStmt(TrueExist_St, stmt.Fact.PropName, existStParams, stmt.Line)
 // }
 
-func (stmt *HaveObjStWithParamSetsStmt) ToTruePurePropExistStFact() *SpecFactStmt {
-	return NewExistStFact(TrueExist_St, stmt.Fact.PropName, stmt.ObjNames, stmt.ObjSets, stmt.Fact.Params, stmt.Line)
+func (stmt *HaveObjStStmt) ToTruePurePropExistStFact() *SpecFactStmt {
+	return NewExistStFact(TrueExist_St, stmt.Fact.PropName, stmt.Fact.IsTrue(), stmt.ObjNames, stmt.ObjSets, stmt.Fact.Params, stmt.Line)
 }
 
 func (stmt *ProveExistStmt) ToTrueExistStFact() *SpecFactStmt {
-	return NewExistStFact(TrueExist_St, stmt.Fact.PropName, stmt.ExistParams, stmt.ExistParamSets, stmt.Fact.Params, stmt.Line)
+	return NewExistStFact(TrueExist_St, stmt.Fact.PropName, stmt.Fact.IsTrue(), stmt.ExistParams, stmt.ExistParamSets, stmt.Fact.Params, stmt.Line)
 }

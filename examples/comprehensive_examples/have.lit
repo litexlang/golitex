@@ -4,7 +4,7 @@
 prove:
     have s set = {1, 2, 3}
 
-    prove_by_enum(x {1, 2, 3}):
+    enum(x {1, 2, 3}):
         x $in {3, 2, 1}
 
 prove:
@@ -25,7 +25,7 @@ prove:
         count(s) = 1
     1 > 0
     count(s) > 0
-    $is_a_nonempty_set(s)
+    $is_nonempty_set(s)
     have a s
 
 
@@ -62,7 +62,7 @@ prove:
             x > 0
             =>:
                 h(x) > 1
-        prove:
+        prove_exist:
             do_nothing
         = 100
 

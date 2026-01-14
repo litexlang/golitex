@@ -16,6 +16,7 @@ package kernel_lib_litex_code
 
 var PipelineInitCode = `
 know forall x2, y2 R: x2 != 0, y2 != 0 => x2 * y2 != 0
+know forall x, y R: x * y = 0 => x = 0 or y = 0
 
 know:
 	forall q Q: exist x Z, y N_pos st x / y = q
@@ -82,11 +83,11 @@ know:
 know forall x R: x > 0 or x < 0 => x != 0
 
 # 必须要有，否则不能说明有限集合的子集还是有限集合
-know imply finite_set_subset_is_finite_set(s1 finite_set, s2 set):
+know prop_infer finite_set_subset_is_finite_set(s1 finite_set, s2 set):
 	forall x s2:
 		x $in s1
 	=>:
-		$is_a_finite_set(s2)
+		$is_finite_set(s2)
 
 know forall x N: x != 0 => x > 0
 
@@ -150,7 +151,7 @@ know forall a R => 1^a = 1
 know forall a, b, c R: a < b - c => a + c < b
 know forall a, b R: b > 0 => a - b < a
 
-know imply subtraction_preserves_inequality_with_positive_term(a R, b R, c R):
+know prop_infer subtraction_preserves_inequality_with_positive_term(a R, b R, c R):
     a < b - c
     c > 0
     =>:
@@ -207,12 +208,8 @@ prop div_cancel_cond(a, b, c R):
     a / c = b / c
     c != 0
 
-know imply cancel(a, b, c R):
-    or:
-        a + c = b + c
-        a - c = b - c
-        $mul_cancel_cond(a, b, c)
-        $div_cancel_cond(a, b, c)
+know prop_infer cancel(a, b, c R):
+	a + c = b + c or a - c = b - c or $mul_cancel_cond(a, b, c)or $div_cancel_cond(a, b, c)
     =>:
         a = b
 
@@ -225,22 +222,16 @@ prop div_cancel_general_cond(a, b, c, d R):
     c != 0
 
 
-know imply cancel_general(a, b, c, d R):
+know prop_infer cancel_general(a, b, c, d R):
     c = d
-    or:
-        a + c = b + d
-        a - c = b - d
-        $mul_cancel_general_cond(a, b, c, d)
-        $div_cancel_general_cond(a, b, c, d)
+    a + c = b + d or a - c = b - d or $mul_cancel_general_cond(a, b, c, d) or $div_cancel_general_cond(a, b, c, d)
     =>:
         a = b
 
-know imply product_is_0_then_at_least_one_factor_is_0(a, b R):
+know prop_infer product_is_0_then_at_least_one_factor_is_0(a, b R):
 	a * b = 0
 	=>:
-		or:
-			a = 0
-			b = 0
+		a = 0 or	b = 0
 
 know:
 	forall a, b, c, e, f, g R:
@@ -349,159 +340,154 @@ know:
 	forall x, y R: x = y => x - y = 0
 	forall x, y R: x != y => x - y != 0
 
-know imply larger_is_transitive(x, y, z R):
-	x > y
-	y > z
-	=>:
-		x > z
+know:
+	forall x, y, z R:
+		x + z <= y + z
+		=>:
+			x <= y
 
-know imply less_equal_add_cancel(x, y, z R):
-	x + z <= y + z
-	=>:
-		x <= y
+	forall x, y, z R:
+		x - z <= y - z
+		=>:
+			x <= y
 
-know imply less_equal_minus_cancel(x, y, z R):
-	x - z <= y - z
-	=>:
-		x <= y
+	forall x, y, z R:
+		x + z < y + z
+		=>:
+			x < y
 
-know imply less_add_cancel(x, y, z R):
-	x + z < y + z
-	=>:
-		x < y
+	forall x, y, z R:
+		x - z < y - z
+		=>:
+			x < y
 
-know imply less_minus_cancel(x, y, z R):
-	x - z < y - z
-	=>:
-		x < y
+	forall x, y, z R:
+		x + z > y + z
+		=>:
+			x > y
 
-know imply greater_add_cancel(x, y, z R):
-	x + z > y + z
-	=>:
-		x > y
+	forall x, y, z R:
+		x - z > y - z
+		=>:
+			x > y
 
-know imply greater_minus_cancel(x, y, z R):
-	x - z > y - z
-	=>:
-		x > y
+	forall x, y, z R:
+		x + z >= y + z
+		=>:
+			x >= y
 
-know imply greater_equal_add_cancel(x, y, z R):
-	x + z >= y + z
-	=>:
-		x >= y
+	forall x, y, z R:
+		x - z >= y - z
+		=>:
+			x >= y
 
-know imply greater_equal_minus_cancel(x, y, z R):
-	x - z >= y - z
-	=>:
-		x >= y
+	forall x, y, z R:
+		z > 0
+		x * z >= y * z
+		=>:
+			x >= y
 
-know imply greater_equal_mul_pos_cancel(x, y, z R):
-	z > 0
-	x * z >= y * z
-	=>:
-		x >= y
+	forall x, y, z R:
+		z > 0
+		x / z >= y / z
+		=>:
+			x >= y
 
-know imply greater_equal_div_pos_cancel(x, y, z R):
-	z > 0
-	x / z >= y / z
-	=>:
-		x >= y
+	forall x, y, z R:
+		z > 0
+		x / z > y / z
+		=>:
+			x > y
 
-know imply greater_div_pos_cancel(x, y, z R):
-	z > 0
-	x / z > y / z
-	=>:
-		x > y
+	forall x, y, z R:
+		z > 0
+		x / z < y / z
+		=>:
+			x < y
 
-know imply less_div_pos_cancel(x, y, z R):
-	z > 0
-	x / z < y / z
-	=>:
-		x < y
+	forall x, y, z R:
+		z > 0
+		x / z <= y / z
+		=>:
+			x <= y
 
-know imply less_equal_div_pos_cancel(x, y, z R):
-	z > 0
-	x / z <= y / z
-	=>:
-		x <= y
+	forall x, y, z R:
+		z < 0
+		x / z < y / z
+		=>:
+			x > y
 
-know imply less_div_neg_cancel(x, y, z R):
-	z < 0
-	x / z < y / z
-	=>:
-		x > y
+	forall x, y, z R:
+		z < 0
+		x / z <= y / z
+		=>:
+			x >= y
 
-know imply less_equal_div_neg_cancel(x, y, z R):
-	z < 0
-	x / z <= y / z
-	=>:
-		x >= y
+	forall x, y, z R:
+		z < 0
+		x / z >= y / z
+		=>:
+			x <= y
 
-know imply greater_equal_mul_neg_cancel(x, y, z R):
-	z < 0
-	x / z >= y / z
-	=>:
-		x <= y
+	forall x, y, z R:
+		z < 0
+		x / z > y / z
+		=>:
+			x < y
 
-know imply greater_equal_div_neg_cancel(x, y, z R):
-	z < 0
-	x / z > y / z
-	=>:
-		x < y
+	forall x, y, z R:
+		z < 0
+		x * z <= y * z
+		=>:
+			x >= y
 
-know imply less_equal_mul_neg_cancel(x, y, z R):
-	z < 0
-	x * z <= y * z
-	=>:
-		x >= y
+	forall x, y, z R:
+		z < 0
+		x * z >= y * z
+		=>:
+			x <= y
 
-know imply larger_equal_mul_neg_cancel(x, y, z R):
-	z < 0
-	x * z >= y * z
-	=>:
-		x <= y
+	forall x, y, z R:
+		z < 0
+		x * z < y * z
+		=>:
+			x > y
 
-know imply less_mul_neg_cancel(x, y, z R):
-	z < 0
-	x * z < y * z
-	=>:
-		x > y
+	forall x, y, z R:
+		z < 0
+		x * z > y * z
+		=>:
+			x < y
 
-know imply greater_mul_neg_cancel(x, y, z R):
-	z < 0
-	x * z > y * z
-	=>:
-		x < y
+	forall x, y, z R:
+		z > 0
+		x > 0
+		y > 0
+		x ^ z > y ^ z
+		=>:
+			x > y
 
-know imply greater_than_pow_cancel(x, y, z R):
-	z > 0
-	x > 0
-	y > 0
-	x ^ z > y ^ z
-	=>:
-		x > y
+	forall x, y, z R:
+		z > 0
+		x > 0
+		y > 0
+		x ^ z >= y ^ z
+		=>:
+			x >= y
 
-know imply greater_equal_pow_cancel(x, y, z R):
-	z > 0
-	x > 0
-	y > 0
-	x ^ z >= y ^ z
-	=>:
-		x >= y
+	forall x, y, z R:
+		z > 0
+		x > 0
+		y > 0
+		x ^ z < y ^ z
+		=>:
+			x < y
 
-know imply less_pow_cancel(x, y, z R):
-	z > 0
-	x > 0
-	y > 0
-	x ^ z < y ^ z
-	=>:
-		x < y
-
-know imply less_equal_pow_cancel(x, y, z R):
-	z > 0
-	x > 0
-	y > 0
-	x ^ z <= y ^ z
+	forall x, y, z R:
+		z > 0
+		x > 0
+		y > 0
+		x ^ z <= y ^ z
 
 know:
 	forall x, y R: x > 0, y > 0 => x * y > 0
@@ -520,9 +506,7 @@ know:
 let fn pow(x R, y R) R:
 	dom:
 		x >= 0
-		or:
-			x != 0
-			y != 0
+		x != 0 or y != 0
 
 know forall b N: b >= 0
 
@@ -605,10 +589,10 @@ know:
 	forall x, y R: x > y => not x <= y, not x = y, not x < y
 	forall x, y R: x < y => not x >= y, not x = y, not x > y
 
-know imply subset_of_finite_set_is_finite_set(x set, y finite_set):
+know prop_infer subset_of_finite_set_is_finite_set(x set, y finite_set):
 	x $subset_of y
 	=>:
-		$is_a_finite_set(x)
+		$is_finite_set(x)
 		count(x) <= count(y)
 
 prop is_cart(x set)
@@ -639,9 +623,7 @@ let fn index_set_of_cart_prod(s set) set:
 know:
 	forall x, y R:
 		x >= 0
-		or:
-			x != 0
-			y != 0
+		x != 0 or y != 0
 		=>:
 			x ^ (y + 1) = (x ^ y) * x
 
@@ -660,7 +642,7 @@ know:
 		<=>:
 			z $in difference(x, y)
 
-know imply item_in_difference(x, y set, z set):
+know prop_infer item_in_difference(x, y set, z set):
 	z $in difference(x, y)
 	=>:
 		not z $in y
@@ -734,10 +716,10 @@ know:
 	forall a, b R: a > 0, b >= 0 => a + b > 0
 
 know:
-	not $is_a_nonempty_set({})
+	not $is_nonempty_set({})
 	forall x set: {} $subset_of x
 	forall x set: not x $in {}
-	forall x set: x != {} <=> $is_a_nonempty_set(x)
+	forall x set: x != {} <=> $is_nonempty_set(x)
 
 prop equal_set(x set, y set)
 
@@ -747,59 +729,26 @@ know:
 	forall x, y, a, b R: x != 0, y != 0 x / y = a / b <=> y / x = b / a
 
 know: 
-	$is_a_nonempty_set(R)
-	$is_a_nonempty_set(N)
-	$is_a_nonempty_set(N_pos)
-	$is_a_nonempty_set(Z)
-	$is_a_nonempty_set(Q)
-	$is_a_nonempty_set(Q_pos)
-	$is_a_nonempty_set(Q_neg)
-	$is_a_nonempty_set(Z_neg)
-	$is_a_nonempty_set(R_pos)
-	$is_a_nonempty_set(R_neg)
+	$is_nonempty_set(R)
+	$is_nonempty_set(N)
+	$is_nonempty_set(N_pos)
+	$is_nonempty_set(Z)
+	$is_nonempty_set(Q)
+	$is_nonempty_set(Q_pos)
+	$is_nonempty_set(Q_neg)
+	$is_nonempty_set(Z_neg)
+	$is_nonempty_set(R_pos)
+	$is_nonempty_set(R_neg)
+	$is_nonempty_set(R_not0)
+	$is_nonempty_set(Z_not0)
+	$is_nonempty_set(Q_not0)
 
-# TODO: builtin instead of fn
-# 一个东西在cup，则怎么怎么样；一个东西满足了cup的性质，则怎么怎么样
-"""
-# cap
-know imply item_in_cap(z set, x set, y cap(x)):
-	forall t x:
-		z $in t
-
-
-prop is_item_in_cap(z set, x set, y set):
-
-
-# set_minus
-know imply item_in_set_minus(x, y set, z set_minus(x, y)):
-	z $in x
-	not z $in y
-
-# set symmetric difference
-know imply item_in_set_diff(x, y set):
-	forall z set_diff(x, y):
-		z $in x
-		=>:
-			not z $in y
-	forall z set_diff(x, y):
-		z $in y
-		=>:
-			not z $in x
-"""
-		
-# TODO: builtin instead of fn
-"""
-let fn choice(x set) fn(x) cup(x)
-know imply axiom_of_choice(x set):
-	forall y x:
-		choice(x)(y) $in y
-"""
 
 know:
-	forall x, y R: x < y => $is_a_nonempty_set(range(x, y)), $is_a_nonempty_set(closed_range(x, y))
+	forall x, y R: x < y => $is_nonempty_set(range(x, y)), $is_nonempty_set(closed_range(x, y))
 
 know:
-	forall x finite_set: count(x) > 0 => $is_a_nonempty_set(x)
+	forall x finite_set: count(x) > 0 => $is_nonempty_set(x)
 
 know forall x set: x \union x = x, x \intersect x = x
 
@@ -809,6 +758,9 @@ know:
 	forall x Z: x < 0 <=> x $in Z_neg
 	forall x Q: x < 0 <=> x $in Q_neg
 	forall x Q: x > 0 <=> x $in Q_pos
+	forall x Z: x != 0 => x $in Z_not0
+	forall x Q: x != 0 => x $in Q_not0
+	forall x R: x != 0 => x $in R_not0
 
 # density of Q, R
 know:
@@ -831,17 +783,17 @@ know:
 	forall x R: exist y Z_neg st y <= x
 
 know:
-	forall x, y R: x < y => {t R: x < t, t < y} $is_a_nonempty_set
-	forall x, y R: x < y => {t R: x <= t, t <= y} $is_a_nonempty_set
-	forall x, y R: x < y => {t R: x <= t, t < y} $is_a_nonempty_set
-	forall x, y R: x < y => {t R: x < t, t <= y} $is_a_nonempty_set
+	forall x, y R: x < y => {t R: x < t, t < y} $is_nonempty_set
+	forall x, y R: x < y => {t R: x <= t, t <= y} $is_nonempty_set
+	forall x, y R: x < y => {t R: x <= t, t < y} $is_nonempty_set
+	forall x, y R: x < y => {t R: x < t, t <= y} $is_nonempty_set
 
-## Set theory 
+## Set theory super functions: cup, cap, union, intersect, power set, set minus, set diff
 
 ### cup
 
 # check item in cup
-know imply check_item_in_cup(x set, x_item x, cup_x_item x_item):
+know prop_infer check_item_in_cup(x set, x_item x, cup_x_item x_item):
 	cup_x_item $in cup(x)
 
 # when item in cup, it has properties
@@ -858,7 +810,7 @@ know:
 			item $in cap(x)
 
 # when item in cap, it has properties
-know imply item_in_cap_implies(x set, item cap(x)):
+know prop_infer item_in_cap_implies(x set, item cap(x)):
 	forall x_item x:
 		item $in x_item
 
@@ -869,10 +821,14 @@ know:
 	forall item, x, y set: item $in x or item $in y => item $in union(x, y)
 
 # when item in union, it has properties
-know imply item_in_union_implies(z set, x, y set):
+know prop_infer item_in_union_implies(z set, x, y set):
 	z $in union(x, y)
 	=>:
 		z $in x or z $in y
+
+# Properties of union
+know:
+	forall x, y set: $is_nonempty_set(x) or $is_nonempty_set(y) => $is_nonempty_set(union(x, y))
 
 ### intersect
 
@@ -881,7 +837,7 @@ know:
 	forall item, x, y set: item $in x, item $in y => item $in intersect(x, y)
 
 # when item in intersect, it has properties
-know imply item_in_intersect_implies(z set, x, y set):
+know prop_infer item_in_intersect_implies(z set, x, y set):
 	z $in intersect(x, y)
 	=>:
 		z $in x
@@ -911,8 +867,17 @@ know:
 		=>:
 			item $in set_minus(x, y)
 
+	forall s set, s2 set:
+		union(s2, set_minus(s, s2)) = s
+		forall x s2:
+			not x $in set_minus(s, s2)
+		forall x s2:
+			not x $in s
+			=>:
+				x $in set_minus(s, s2)
+
 # when item in set minus, it has properties
-know imply item_in_set_minus_implies(x, y set, item set_minus(x, y)):
+know prop_infer item_in_set_minus_implies(x, y set, item set_minus(x, y)):
 	item $in x
 	not item $in y
 
@@ -921,4 +886,131 @@ know imply item_in_set_minus_implies(x, y set, item set_minus(x, y)):
 know:
 	forall x, y set:
 		set_diff(x, y) = set_minus(x, y) \union set_minus(y, x)
+
+## End of set theory
+
+## Function Related
+
+prop is_injective_fn(X set, Y set, f fn(X)Y):
+	forall x1, x2 X:
+		x1 != x2
+		=>:
+			f(x1) != f(x2)
+
+know:
+	forall X set, Y set, f fn(X)Y:
+		forall x1, x2 X:
+			f(x1) = f(x2)
+			=>:
+				x1 = x2
+		=>:
+			$is_injective_fn(X, Y, f)
+
+prop is_surjective_fn(X set, Y set, f fn(X)Y):
+	forall y Y:
+		exist x X st f(x) = y
+
+prop is_bijective_fn(X set, Y set, f fn(X)Y):
+	$is_injective_fn(X, Y, f)
+	$is_surjective_fn(X, Y, f)
+	
+know prop_infer is_injective_fn_to_finite_set_implies(X set, Y finite_set, f fn(X)Y):
+	$is_injective_fn(X, Y, f)
+	=>:
+		$is_finite_set(Y)
+		count(X) <= count(Y)
+
+prop not_equal_set(x set, y set)
+
+know prop_infer is_nonempty_with_item(x, z set):
+	z $in x
+	=>:
+		$is_nonempty_set(x)
+		
+# 和序数，有限有关的事实
+know:
+	forall x finite_set: count(x) > 0 <=> not $is_nonempty_set(x)
+	forall left, right Z, x set: left <= right, x = range(left, right) => count(x) = right - left
+	forall left, right Z, x set: left <= right, x = closed_range(left, right) => count(x) = right - left + 1
+	forall left, right Z => $is_finite_set(range(left, right)), $is_finite_set(closed_range(left, right))
+	forall x finite_set: count(x) $in N,  0 <= count(x)
+	forall x, y finite_set: count(x) <= count(y) <=> x $subset_of y
+
+# ZFC
+# 1. Axiom of extensionality: two sets are equal if and only if they have the same elements. We use keyword equal_set for this. Equivalently, we can use = for this because there is no difference between them in Litex (any object in Litex is a set). But it's better to use equal_set for this to emphasize we are using the definition of equality of sets.
+
+# 2. Axiom of regularity: every non-empty set has an element that is disjoint from the set
+prop disjoint_from(x set, y set):
+	forall z x:
+		not z $in y
+	forall z y:
+		not z $in x
+
+know forall x nonempty_set: exist y x st y $disjoint_from x
+
+# 3. Axiom schema of specification: we can construct a set from a given set and a property. We use keyword {x parent_set: $p1(..), $p2(..), ...} for this.
+
+# 4. Axiom of pairing: we can construct a set from two given sets. We use {x, y} for this.
+
+# 5. Axiom of union: we can construct a set from a given set of sets. We use keyword union(x) and cup(x) for this.
+
+# 6. Axiom schema of replacement: the image of a set under any definable function will also fall inside a set
+
+# 7. Axiom of infinity: there exists an infinite set
+prop axiom_of_infinity(x set):
+	{} $in x
+	forall y x:
+		union(y, {y}) $in x
+
+know exist x set st $axiom_of_infinity(x)
+
+# 8. Axiom of power set: for any set, there exists a set of all subsets of the set. We use keyword power_set for this.
+
+# 9. Axiom of choice: for any set of non-empty sets, there exists a choice function that chooses an element from each set. We use keyword choice for this.
+
+### choice
+
+# choice(S, s) chooses an element from s, where s is an element of S
+# For any set S (which is a set of sets), if each element of S is a non-empty set,
+# then for any s in S, choice(S, s) is in s.
+know:
+	forall S set, s S:
+		forall x S:
+			$is_nonempty_set(x)
+		=>:
+			choice(S, s) $in s
+
+# End of ZFC
+
+prop is_max(r R, s set):
+    forall x s: x $in R
+    <=>:
+        r $in s
+        forall x s: x <= r
+
+know:
+    forall s finite_set:
+        forall x s:
+            x $in R
+        =>:
+            exist z R st $is_max(z, s)
+
+prop is_min(r R, s set):
+	forall x s: x $in R
+	<=>:
+		r $in s
+		forall x s: r <= x
+
+know:
+    forall s finite_set:
+        forall x s:
+            x $in R
+        =>:
+            exist z R st $is_min(z, s)
+
+know forall x Z: x >= 0 => x $in N
+
+know:
+	forall x Z, y N_pos: x^y $in Z
+	forall x Q, y N_pos: x^y $in Q
 `

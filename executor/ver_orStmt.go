@@ -34,7 +34,7 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
 		if verRet.IsTrue() {
 			if state.WithMsg {
 				msg := fmt.Sprintf("%s is true when all others facts in the or statement are false", stmt.Facts[i])
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), append([]string{msg}, verRet.VerifyMsgs...))
+				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, append([]string{msg}, verRet.VerifyMsgs...))
 			}
 			return glob.NewEmptyVerRetTrue()
 		}
@@ -52,7 +52,7 @@ func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt
 		}
 		ret := ver.Env.NewFactWithCheckingNameDefined(facts[j].ReverseTrue())
 		if ret.IsErr() {
-			return glob.NewVerMsg(glob.StmtRetTypeError, facts[j].String(), facts[j].GetLine(), []string{ret.String()})
+			return glob.NewVerMsg(glob.StmtRetTypeError, facts[j].String(), glob.BuiltinLine0, []string{ret.String()})
 		}
 	}
 

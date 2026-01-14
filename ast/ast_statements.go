@@ -40,7 +40,7 @@ type DefHeader struct {
 type DefPropStmt struct {
 	DefHeader             *DefHeader
 	DomFactsOrNil         FactStmtSlice
-	IffFactsOrNil         FactStmtSlice
+	IffFactsOrNil         FactStmtSlice // nil 表示没有iff，无法从定义来验证prop正确性；如果是 []FactStmt{}，表示只要dom和def满足了，那就prop成立。1
 	ImplicationFactsOrNil FactStmtSlice
 
 	Line uint
@@ -91,7 +91,7 @@ type ClaimProveByContradictionStmt struct {
 }
 
 type ClaimImplicationStmt struct {
-	Implication *DefImplicationStmt
+	Implication *DefPropStmt
 	Proofs      StmtSlice
 
 	Line uint
@@ -103,16 +103,8 @@ type KnowFactStmt struct {
 	Line uint
 }
 
-type KnowImplicationStmt struct {
-	ImplicationProp *DefPropStmt
-
-	Line uint
-}
-
-type ProveInEachCaseStmt struct {
-	OrFact    *OrStmt
-	ThenFacts FactStmtSlice
-	Proofs    StmtSliceSlice
+type KnowPropInferStmt struct {
+	DefProp *DefPropStmt
 
 	Line uint
 }
@@ -226,9 +218,9 @@ type InlineFactsStmt struct {
 }
 
 type ProveByInductionStmt struct {
-	Fact  *SpecFactStmt
+	Fact  FactStmt
 	Param string
-	Start Obj
+	Proof StmtSlice
 
 	Line uint
 }
@@ -331,7 +323,7 @@ type ProveIsCommutativePropStmt struct {
 
 type AlgoStmtSlice []AlgoStmt
 
-type ProveAlgoStmtSlice []ProveAlgoStmt
+// type ProveAlgoStmtSlice []ProveAlgoStmt
 
 type AlgoIfStmt struct {
 	Conditions FactStmtSlice
@@ -360,33 +352,33 @@ type EvalStmt struct {
 	Line uint
 }
 
-type DefProveAlgoStmt struct {
-	ProveAlgoName string
-	Params        StrSlice
-	Stmts         ProveAlgoStmtSlice
+// type DefProveAlgoStmt struct {
+// 	ProveAlgoName string
+// 	Params        StrSlice
+// 	Stmts         ProveAlgoStmtSlice
+//
+// 	Line uint
+// }
 
-	Line uint
-}
+// type ByStmt struct {
+// 	ProveAlgoName string
+// 	Params        ObjSlice
+//
+// 	Line uint
+// }
 
-type ByStmt struct {
-	ProveAlgoName string
-	Params        ObjSlice
+// type ProveAlgoIfStmt struct {
+// 	Conditions FactStmtSlice
+// 	ThenStmts  ProveAlgoStmtSlice
+//
+// 	Line uint
+// }
 
-	Line uint
-}
-
-type ProveAlgoIfStmt struct {
-	Conditions FactStmtSlice
-	ThenStmts  ProveAlgoStmtSlice
-
-	Line uint
-}
-
-type ProveAlgoReturnStmt struct {
-	Facts FactOrByStmtSlice
-
-	Line uint
-}
+// type ProveAlgoReturnStmt struct {
+// 	Facts FactOrByStmtSlice
+//
+// 	Line uint
+// }
 
 type ProveForStmt struct {
 	Params        StrSlice
@@ -400,15 +392,15 @@ type ProveForStmt struct {
 	Line uint
 }
 
-type DefImplicationStmt struct {
-	DefHeader        *DefHeader
-	DomFacts         FactStmtSlice
-	ImplicationFacts FactStmtSlice
+// type DefImplicationStmt struct {
+// 	DefHeader        *DefHeader
+// 	DomFacts         FactStmtSlice
+// 	ImplicationFacts FactStmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
-type ProveImplyStmt struct {
+type ProveInferStmt struct {
 	SpecFact        *SpecFactStmt
 	ImplicationFact FactStmtSlice
 	Proofs          StmtSlice
@@ -417,7 +409,7 @@ type ProveImplyStmt struct {
 }
 
 // have objectName setName, objectName2 setName2 st $propName(...)
-type HaveObjStWithParamSetsStmt struct {
+type HaveObjStStmt struct {
 	ObjNames StrSlice
 	ObjSets  ObjSlice
 	Fact     *SpecFactStmt
@@ -431,6 +423,35 @@ type ProveExistStmt struct {
 	EqualTos       ObjSlice
 	Fact           *SpecFactStmt
 	Proofs         StmtSlice
+
+	Line uint
+}
+
+type InferStmt struct {
+	DomFacts  ReversibleFacts
+	ThenFacts ReversibleFacts
+
+	Line uint
+}
+
+type InferTemplateStmt struct {
+	Params    StrSlice
+	ParamSets ObjSlice
+	DomFacts  ReversibleFacts
+	ThenFacts ReversibleFacts
+	Proof     StmtSlice
+
+	IfFacts FactStmtSlice
+
+	Line uint
+}
+
+type KnowInferStmt struct {
+	Params    StrSlice
+	ParamSets ObjSlice
+	DomFacts  ReversibleFacts
+	ThenFacts ReversibleFacts
+	IfFacts   FactStmtSlice
 
 	Line uint
 }

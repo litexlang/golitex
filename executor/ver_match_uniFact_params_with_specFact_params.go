@@ -17,13 +17,13 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
 )
 
-func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
-	knownFcs := knownSpecFactInUniFact.SpecFact.Params
+// func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
+func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownFcs []ast.Obj, freeVars []string, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
+	// knownFcs := knownSpecFactInUniFact.SpecFact.Params
 	givenFcs := specFact.Params
-	freeVars := knownSpecFactInUniFact.UniFact.Params
+	// freeVars := knownSpecFactInUniFact.UniFact.Params
 	freeVarsMap := map[string]struct{}{}
 	for _, freeVar := range freeVars {
 		freeVarsMap[freeVar] = struct{}{}
@@ -140,6 +140,7 @@ func (ver *Verifier) matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreePara
 }
 
 // 非常重要：返回uniFact下面的某个specFact里的所有的param推出来的 free param 和 给定obj的对应关系，以及所有的没有匹配上的fc的pair们组成的slice
+// TODO: 如果能把 exist 里的 exist Param 独立出来匹配，而不是按string去匹配，会更好
 func (ver *Verifier) matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs []ast.Obj, givenFcs []ast.Obj, freeVars map[string]struct{}, specFactName string) ([]map[string][]ast.Obj, [][]fcPair, error) {
 	if len(knownFcs) != len(givenFcs) {
 		return nil, [][]fcPair{}, fmt.Errorf("required parameters number of fact %s is %d, get %d", specFactName, len(knownFcs), len(givenFcs))

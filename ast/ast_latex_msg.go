@@ -380,7 +380,7 @@ func (f *KnowFactStmt) ToLatexString() string {
 // 	return builder.String()
 // }
 
-func (s *HaveObjStWithParamSetsStmt) ToLatexString() string {
+func (s *HaveObjStStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString("\\begin{definition}[Object(s) Exists By Verified Existential Fact]\n")
@@ -393,40 +393,73 @@ func (s *HaveObjStWithParamSetsStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *ProveInEachCaseStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{proveCaseByCase}\n")
-	builder.WriteString("Since ")
-	builder.WriteString(s.OrFact.ToLatexString())
-	builder.WriteString(" is true.")
-	builder.WriteString(" we prove ")
-	builder.WriteString(strings.Join(s.ThenFacts.factStmtSliceToLatexStringSlice(), ", "))
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteString("case by case:\n")
-	for i := range s.Proofs {
-		builder.WriteString(fmt.Sprintf("Case %d: %s\n", i+1, s.OrFact.Facts[i]))
-		stmtSlice := make([]string, len(s.Proofs[i]))
-		for j, proof := range s.Proofs[i] {
-			stmtSlice[j] = proof.ToLatexString()
-		}
-		builder.WriteString(strings.Join(stmtSlice, ", "))
-		builder.WriteString("\n")
-	}
-
-	builder.WriteString("\n\\end{proveCaseByCase}")
-	return builder.String()
-}
-
 func (s *ProveCaseByCaseStmt) ToLatexString() string {
 	return s.String()
 }
 
-func (s *KnowImplicationStmt) ToLatexString() string {
+func (s *KnowPropInferStmt) ToLatexString() string {
 	var builder strings.Builder
-	builder.WriteString(s.ImplicationProp.ToLatexString())
+	builder.WriteString(s.DefProp.ToLatexString())
 	builder.WriteString("\\begin{assumption}\n")
-	builder.WriteString(s.ImplicationProp.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue().ToLatexString())
+	builder.WriteString(s.DefProp.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue().ToLatexString())
 	builder.WriteString("\n\\end{assumption}")
+	return builder.String()
+}
+
+func (s *KnowInferStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\text{know } \\text{infer } ")
+	builder.WriteString(strObjSetPairsLatexString(s.Params, s.ParamSets))
+
+	if len(s.DomFacts) > 0 {
+		builder.WriteString(", ")
+		domFactStrSlice := make([]string, len(s.DomFacts))
+		for i := range len(s.DomFacts) {
+			domFactStrSlice[i] = s.DomFacts[i].ToLatexString()
+		}
+
+		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
+			builder.WriteString(" ")
+			builder.WriteString(strings.Join(domFactStrSlice, ", "))
+			builder.WriteString(" ")
+		} else {
+			builder.WriteString("\n\n")
+			builder.WriteString(strings.Join(domFactStrSlice, "\n\n"))
+			builder.WriteString("\n\n")
+		}
+	} else {
+		builder.WriteString(" ")
+	}
+
+	builder.WriteString("$\\Rightarrow$")
+	thenFactStrSlice := make([]string, len(s.ThenFacts))
+	for i := range len(s.ThenFacts) {
+		thenFactStrSlice[i] = s.ThenFacts[i].ToLatexString()
+	}
+
+	if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
+		builder.WriteString(" ")
+		builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+	} else {
+		builder.WriteString("\n\n")
+		builder.WriteString(strings.Join(thenFactStrSlice, "\n\n"))
+	}
+
+	if len(s.IfFacts) > 0 {
+		builder.WriteString(" \\text{ if } ")
+		ifFactStrSlice := make([]string, len(s.IfFacts))
+		for i := range len(s.IfFacts) {
+			ifFactStrSlice[i] = s.IfFacts[i].ToLatexString()
+		}
+
+		if ShouldInSingleLineAsLatexString(ifFactStrSlice) {
+			builder.WriteString(strings.Join(ifFactStrSlice, ", "))
+		} else {
+			builder.WriteString("\n\n")
+			builder.WriteString(strings.Join(ifFactStrSlice, "\n\n"))
+		}
+	}
+
 	return builder.String()
 }
 
@@ -436,6 +469,53 @@ func (s *OrStmt) ToLatexString() string {
 		factStrSlice[i] = s.Facts[i].ToLatexString()
 	}
 	return strings.Join(factStrSlice, " or ")
+}
+
+func (s *InferStmt) ToLatexString() string {
+	domFactStrSlice := make([]string, len(s.DomFacts))
+	for i, fact := range s.DomFacts {
+		domFactStrSlice[i] = fact.ToLatexString()
+	}
+	thenFactStrSlice := make([]string, len(s.ThenFacts))
+	for i, fact := range s.ThenFacts {
+		thenFactStrSlice[i] = fact.ToLatexString()
+	}
+	return strings.Join(domFactStrSlice, ", ") + " \\Rightarrow " + strings.Join(thenFactStrSlice, ", ")
+}
+
+func (s *InferTemplateStmt) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\text{imply} ")
+	
+	// Params
+	if len(s.Params) > 0 {
+		paramStrs := make([]string, len(s.Params))
+		for i, param := range s.Params {
+			paramStrs[i] = param
+			if i < len(s.ParamSets) {
+				paramStrs[i] += " " + s.ParamSets[i].ToLatexString()
+			}
+		}
+		builder.WriteString(strings.Join(paramStrs, ", "))
+		builder.WriteString(": ")
+	}
+	
+	// DomFacts
+	domFactStrSlice := make([]string, len(s.DomFacts))
+	for i, fact := range s.DomFacts {
+		domFactStrSlice[i] = fact.ToLatexString()
+	}
+	builder.WriteString(strings.Join(domFactStrSlice, ", "))
+	builder.WriteString(" \\Rightarrow ")
+	
+	// ThenFacts
+	thenFactStrSlice := make([]string, len(s.ThenFacts))
+	for i, fact := range s.ThenFacts {
+		thenFactStrSlice[i] = fact.ToLatexString()
+	}
+	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+	
+	return builder.String()
 }
 
 func (s *ImportDirStmt) ToLatexString() string {
@@ -533,11 +613,11 @@ func (s *ClaimProveByContradictionStmt) ToLatexString() string {
 func (s *ClaimImplicationStmt) ToLatexString() string {
 	var builder strings.Builder
 
-	builder.WriteString(s.ToProp().ToLatexString())
+	builder.WriteString(s.Implication.ToLatexString())
 
 	builder.WriteString("\n\n")
 
-	builder.WriteString(claimProveBodyToLatexString(s.Implication.ToProp().ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue(), s.Proofs, true))
+	builder.WriteString(claimProveBodyToLatexString(s.Implication.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue(), s.Proofs, true))
 
 	return builder.String()
 }
@@ -769,8 +849,8 @@ func (s *ProveByInductionStmt) ToLatexString() string {
 	builder.WriteString(s.Fact.ToLatexString())
 	builder.WriteString(" is true $\\forall$ ")
 	builder.WriteString(s.Param)
-	builder.WriteString(" $\\geq$ ")
-	builder.WriteString(s.Start.ToLatexString())
+	builder.WriteString(" $\\in$ ")
+	builder.WriteString("$\\mathbb{N}_{>0}$")
 	builder.WriteString(".")
 	builder.WriteString("\n\\end{proveByMathInduction}")
 	return builder.String()
@@ -849,15 +929,15 @@ func (s *ProveForStmt) ToLatexString() string {
 	return "TODO"
 }
 
-func (s *ProveImplyStmt) ToLatexString() string {
+func (s *ProveInferStmt) ToLatexString() string {
 	// TODO: implement LaTeX conversion for prove_implication
 	return s.String()
 }
 
-func (s *DefImplicationStmt) ToLatexString() string {
-	// TODO: implement LaTeX conversion for implication
-	return s.String()
-}
+// func (s *DefImplicationStmt) ToLatexString() string {
+// 	// TODO: implement LaTeX conversion for implication
+// 	return s.String()
+// }
 
 func (s *ProveIsTransitivePropStmt) ToLatexString() string {
 	return s.String()
@@ -867,9 +947,9 @@ func (s *ProveIsCommutativePropStmt) ToLatexString() string {
 	return s.String()
 }
 
-func (s *ProveAlgoIfStmt) ToLatexString() string {
-	return s.String()
-}
+// func (s *ProveAlgoIfStmt) ToLatexString() string {
+// 	return s.String()
+// }
 
 func (s *AlgoIfStmt) ToLatexString() string {
 	return s.String()
@@ -887,17 +967,17 @@ func (s *EvalStmt) ToLatexString() string {
 	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.ObjToEval.ToLatexString())
 }
 
-func (s *DefProveAlgoStmt) ToLatexString() string {
-	return s.String()
-}
+// func (s *DefProveAlgoStmt) ToLatexString() string {
+// 	return s.String()
+// }
 
-func (s *ByStmt) ToLatexString() string {
-	return s.String()
-}
+// func (s *ByStmt) ToLatexString() string {
+// 	return s.String()
+// }
 
-func (s *ProveAlgoReturnStmt) ToLatexString() string {
-	return s.String()
-}
+// func (s *ProveAlgoReturnStmt) ToLatexString() string {
+// 	return s.String()
+// }
 
 func (s *HaveFnEqualCaseByCaseStmt) ToLatexString() string {
 	return s.String()

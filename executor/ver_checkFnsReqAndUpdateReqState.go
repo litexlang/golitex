@@ -60,31 +60,24 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 		return glob.NewVerMsg(glob.StmtRetTypeError, obj.String(), 0, []string{fmt.Sprintf("%s is not a function", obj)})
 	}
 
-	if headAsAtom, ok := objAsFnObj.FnHead.(ast.Atom); ok && glob.IsSuperFunction(string(headAsAtom)) {
-		return ver.verSuperFunctionReq(objAsFnObj, state)
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCount) {
-		return ver.countFnRequirement(objAsFnObj, state)
-	} else if ast.IsFnTemplate_ObjFn(objAsFnObj) {
-		return glob.NewEmptyVerRetTrue()
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordCart) {
-		return ver.cartFnRequirement(objAsFnObj, state)
-	} else if ast.IsTupleFnObj(objAsFnObj) {
-		return ver.tupleFnReq(objAsFnObj, state)
-	} else if ast.IsIndexOptFnObj(objAsFnObj) {
-		return ver.indexOptFnRequirement(objAsFnObj, state)
-	} else if objAsFnObj.FnHead.String() == glob.KeywordProj {
-		return ver.parasSatisfyProjReq(objAsFnObj, state)
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordSetDim) {
-		return ver.setDimFnRequirement(objAsFnObj, state)
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordDim) {
-		return ver.dimFnRequirement(objAsFnObj, state)
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordListSet) {
-		return ver.listSetFnRequirement(objAsFnObj, state)
-	} else if ast.IsFn_WithHeadName(objAsFnObj, glob.KeywordSetBuilder) {
-		return ver.SetBuilderFnRequirement(objAsFnObj, state)
-	} else {
-		return ver.parasSatisfyFnReq(objAsFnObj, state)
+	// If it's val(...), check the requirement of the inner function
+	if ast.IsAtomObjAndEqualToStr(objAsFnObj.FnHead, glob.KeywordVal) && len(objAsFnObj.Params) == 1 {
+		// Check the requirement of the inner function/object
+		return ver.objIsDefinedAtomOrIsFnSatisfyItsReq(objAsFnObj.Params[0], state)
 	}
+
+	// Try super function first (includes all special functions)
+	if ret := ver.isBuiltinFunction_VerReq(objAsFnObj, state); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
+	// If not a super function, check if it's a function template
+	if ast.IsFnTemplate_ObjFn(objAsFnObj) {
+		return glob.NewEmptyVerRetTrue()
+	}
+
+	// Otherwise, treat it as a regular function
+	return ver.parasSatisfyFnReq(objAsFnObj, state)
 }
 
 // TODO: 非常缺乏检查。因为这里的验证非常麻烦，{}里包括了事实，而事实里有fn，所以需要检查fn行不行
@@ -136,19 +129,23 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 		// Check propName
 		verRet := ver.Env.IsPropDefinedOrBuiltinProp(fact)
 		if verRet.IsNotTrue() {
-			return glob.NewVerMsg(glob.StmtRetTypeError, fact.String(), fact.GetLine(), []string{verRet.String()})
+			return glob.NewVerMsg(glob.StmtRetTypeError, fact.String(), glob.BuiltinLine0, []string{verRet.String()})
 		}
 
 		// Check all params in the fact
-		for _, param := range fact.Params {
-			verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, state)
-			if verRet.IsErr() {
-				return verRet
-			}
-			if verRet.IsUnknown() {
-				return glob.NewVerMsg(glob.StmtRetTypeError, param.String(), 0, []string{fmt.Sprintf("parameter %s in set builder fact must be an atom or function", param)})
-			}
+		if ver.checkFnsReq(fact, state).IsNotTrue() {
+			return ver.checkFnsReq(fact, state)
 		}
+
+		// for _, param := range fact.Params {
+		// 	verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, state)
+		// 	if verRet.IsErr() {
+		// 		return verRet
+		// 	}
+		// 	if verRet.IsUnknown() {
+		// 		return glob.NewVerMsg2(glob.StmtRetTypeError, param.String(), 0, []string{fmt.Sprintf("parameter %s in set builder fact must be an atom or function", param)})
+		// 	}
+		// }
 	}
 
 	return glob.NewEmptyVerRetTrue()
@@ -214,7 +211,7 @@ func (ver *Verifier) dimFnRequirement(fnObj *ast.FnObj, state *VerState) *glob.V
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewVerMsg(glob.StmtRetTypeError, isTupleFact.String(), isTupleFact.GetLine(), []string{fmt.Sprintf("%s is unknown", isTupleFact)})
+		return glob.NewVerMsg(glob.StmtRetTypeError, isTupleFact.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s is unknown", isTupleFact)})
 	}
 	return glob.NewEmptyVerRetTrue()
 }
@@ -246,7 +243,7 @@ func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) *glo
 		return verRet
 	}
 	if verRet.IsUnknown() {
-		return glob.NewVerMsg(glob.StmtRetTypeError, isCartFact.String(), isCartFact.GetLine(), []string{fmt.Sprintf("%s is unknown", isCartFact)})
+		return glob.NewVerMsg(glob.StmtRetTypeError, isCartFact.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s is unknown", isCartFact)})
 	}
 
 	// index >= 1

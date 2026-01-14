@@ -256,7 +256,7 @@ func fnDefStmtStringGivenKw(kw string, f *AnonymousFn, name string) string {
 }
 
 func (f *ClaimProveByContradictionStmt) String() string {
-	return ClaimProve_ClaimProveByContradiction(glob.KeywordProveByContradiction, f.ClaimProveStmt.ToCheckFact, f.ClaimProveStmt.Proofs)
+	return ClaimProve_ClaimProveByContradiction(glob.KeywordContra, f.ClaimProveStmt.ToCheckFact, f.ClaimProveStmt.Proofs)
 }
 
 func (f *ClaimProveStmt) String() string {
@@ -422,7 +422,7 @@ func (head DefHeader) String() string {
 // 	return builder.String()
 // }
 
-func (stmt *HaveObjStWithParamSetsStmt) String() string {
+func (stmt *HaveObjStStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")
@@ -502,41 +502,9 @@ func (f *FnObj) String() string {
 	return builder.String()
 }
 
-func (stmt *ProveInEachCaseStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveInEachCase)
-	builder.WriteString(":\n")
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.OrFact.String(), 1))
-	builder.WriteByte('\n')
-	// builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordThen, 1))
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolRightArrow, 1))
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.ThenFacts[0].String(), 2))
-	builder.WriteByte('\n')
-	// Handle last proof block
-	if len(stmt.Proofs) > 0 {
-		for i := range len(stmt.Proofs) {
-			builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
-			builder.WriteString(glob.KeySymbolColon)
-			builder.WriteByte('\n')
-
-			if len(stmt.Proofs[i]) > 0 {
-				for j := range len(stmt.Proofs[i]) - 1 {
-					builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Proofs[i][j].String(), 2))
-					builder.WriteByte('\n')
-				}
-				builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Proofs[i][len(stmt.Proofs[i])-1].String(), 2))
-			}
-			builder.WriteByte('\n')
-		}
-	}
-	return strings.TrimSuffix(builder.String(), "\n")
-}
-
 func (stmt *ProveCaseByCaseStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveCaseByCase)
+	builder.WriteString(glob.KeywordCases)
 	builder.WriteString(":\n")
 	for _, thenFact := range stmt.ThenFacts {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(thenFact.String(), 1))
@@ -555,11 +523,55 @@ func (stmt *ProveCaseByCaseStmt) String() string {
 	return strings.TrimSuffix(builder.String(), "\n")
 }
 
-func (stmt *KnowImplicationStmt) String() string {
+func (stmt *KnowPropInferStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)
 	builder.WriteString(" ")
-	builder.WriteString(stmt.ImplicationProp.String())
+	builder.WriteString(stmt.DefProp.String())
+	return builder.String()
+}
+
+func (stmt *KnowInferStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordKnow)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordInfer)
+	builder.WriteString(" ")
+	builder.WriteString(StrObjSetPairs(stmt.Params, stmt.ParamSets))
+	builder.WriteString(":\n")
+	
+	if len(stmt.DomFacts) > 0 {
+		domFactStrSlice := make([]string, len(stmt.DomFacts))
+		for i := range len(stmt.DomFacts) {
+			domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.DomFacts[i].String(), 1)
+		}
+		builder.WriteString(strings.Join(domFactStrSlice, "\n"))
+		builder.WriteByte('\n')
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents("=>:", 1))
+		builder.WriteByte('\n')
+	}
+	
+	thenFactStrSlice := make([]string, len(stmt.ThenFacts))
+	for i := range len(stmt.ThenFacts) {
+		if len(stmt.DomFacts) > 0 {
+			thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.ThenFacts[i].String(), 2)
+		} else {
+			thenFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.ThenFacts[i].String(), 1)
+		}
+	}
+	builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
+	
+	if len(stmt.IfFacts) > 0 {
+		builder.WriteByte('\n')
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents("if:", 1))
+		builder.WriteByte('\n')
+		ifFactStrSlice := make([]string, len(stmt.IfFacts))
+		for i := range len(stmt.IfFacts) {
+			ifFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.IfFacts[i].String(), 2)
+		}
+		builder.WriteString(strings.Join(ifFactStrSlice, "\n"))
+	}
+	
 	return builder.String()
 }
 
@@ -578,6 +590,58 @@ func (stmt *OrStmt) String() string {
 		factStrSlice[i] = fact.String()
 	}
 	builder.WriteString(strings.Join(factStrSlice, " or "))
+	return builder.String()
+}
+
+func (stmt *InferStmt) String() string {
+	var builder strings.Builder
+	domFactStrSlice := make([]string, len(stmt.DomFacts))
+	for i, fact := range stmt.DomFacts {
+		domFactStrSlice[i] = fact.String()
+	}
+	builder.WriteString(strings.Join(domFactStrSlice, ", "))
+	builder.WriteString(" => ")
+	thenFactStrSlice := make([]string, len(stmt.ThenFacts))
+	for i, fact := range stmt.ThenFacts {
+		thenFactStrSlice[i] = fact.String()
+	}
+	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+	return builder.String()
+}
+
+func (stmt *InferTemplateStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordInfer)
+	builder.WriteString(" ")
+
+	// Params
+	if len(stmt.Params) > 0 {
+		paramStrs := make([]string, len(stmt.Params))
+		for i, param := range stmt.Params {
+			paramStrs[i] = param
+			if i < len(stmt.ParamSets) {
+				paramStrs[i] += " " + stmt.ParamSets[i].String()
+			}
+		}
+		builder.WriteString(strings.Join(paramStrs, ", "))
+		builder.WriteString(": ")
+	}
+
+	// DomFacts
+	domFactStrSlice := make([]string, len(stmt.DomFacts))
+	for i, fact := range stmt.DomFacts {
+		domFactStrSlice[i] = fact.String()
+	}
+	builder.WriteString(strings.Join(domFactStrSlice, ", "))
+	builder.WriteString(" => ")
+
+	// ThenFacts
+	thenFactStrSlice := make([]string, len(stmt.ThenFacts))
+	for i, fact := range stmt.ThenFacts {
+		thenFactStrSlice[i] = fact.String()
+	}
+	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+
 	return builder.String()
 }
 
@@ -614,7 +678,7 @@ func (stmt *LetFnStmt) String() string {
 
 func (stmt *RunFileStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordRun)
+	builder.WriteString(glob.KeywordRunFile)
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolDoubleQuote)
 	builder.WriteString(stmt.Path)
@@ -624,7 +688,7 @@ func (stmt *RunFileStmt) String() string {
 
 func (stmt *DefPropStmt) ToNamedUniFactString() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordImplication)
+	builder.WriteString(glob.KeywordPropInfer)
 	builder.WriteString(stmt.DefHeader.String())
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
@@ -652,7 +716,7 @@ func (stmt *ClaimImplicationStmt) String() string {
 	builder.WriteString(glob.KeywordClaim)
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteString("\n")
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Implication.ToProp().ToNamedUniFactString(), 1))
+	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Implication.ToNamedUniFactString(), 1))
 	builder.WriteByte('\n')
 	proofStrSlice := make([]string, len(stmt.Proofs))
 	for i, proof := range stmt.Proofs {
@@ -679,7 +743,7 @@ func (stmt *ClaimImplicationStmt) String() string {
 
 func (stmt *ProveByEnumStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveByEnum)
+	builder.WriteString(glob.KeywordEnum)
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Fact.String(), 1))
@@ -785,14 +849,14 @@ func (stmt *InlineFactsStmt) String() string {
 
 func (stmt *ProveByInductionStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveByInduction)
-	builder.WriteString("(")
-	builder.WriteString(stmt.Fact.String())
-	builder.WriteString(", ")
+	builder.WriteString(glob.KeywordInduc)
+	builder.WriteString(" ")
 	builder.WriteString(stmt.Param)
-	builder.WriteString(", ")
-	builder.WriteString(stmt.Start.String())
-	builder.WriteString(")")
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordNPos)
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Fact.String())
 	return builder.String()
 }
 
@@ -959,7 +1023,7 @@ func (stmt *ClaimIffStmt) String() string {
 
 func (stmt *ProveForStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveFor)
+	builder.WriteString(glob.KeywordFor)
 	builder.WriteString(" ")
 
 	// Write all param $in range(...) pairs
@@ -1043,9 +1107,9 @@ func (stmt *ProveForStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ProveImplyStmt) String() string {
+func (stmt *ProveInferStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveImply)
+	builder.WriteString(glob.KeywordProvePropInfer)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.SpecFact.String())
 	builder.WriteString(":")
@@ -1081,44 +1145,44 @@ func (stmt *ProveImplyStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *DefImplicationStmt) String() string {
-	var builder strings.Builder
+// func (stmt *DefImplicationStmt) String() string {
+// 	var builder strings.Builder
 
-	builder.WriteString(glob.KeywordImplication)
-	builder.WriteByte(' ')
-	builder.WriteString(stmt.DefHeader.String())
+// 	builder.WriteString(glob.KeywordImplication)
+// 	builder.WriteByte(' ')
+// 	builder.WriteString(stmt.DefHeader.String())
 
-	if len(stmt.DomFacts) == 0 && len(stmt.ImplicationFacts) == 0 {
-		return strings.TrimSuffix(builder.String(), glob.KeySymbolColon)
-	}
+// 	if len(stmt.DomFacts) == 0 && len(stmt.ImplicationFacts) == 0 {
+// 		return strings.TrimSuffix(builder.String(), glob.KeySymbolColon)
+// 	}
 
-	builder.WriteByte('\n')
-	if len(stmt.DomFacts) > 0 {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordDom, 1))
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteByte('\n')
-		domFactStrSlice := make([]string, len(stmt.DomFacts))
-		for i := range len(stmt.DomFacts) {
-			domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.DomFacts[i].String(), 2)
-		}
-		builder.WriteString(strings.Join(domFactStrSlice, "\n"))
-		builder.WriteByte('\n')
-	}
+// 	builder.WriteByte('\n')
+// 	if len(stmt.DomFacts) > 0 {
+// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordDom, 1))
+// 		builder.WriteString(glob.KeySymbolColon)
+// 		builder.WriteByte('\n')
+// 		domFactStrSlice := make([]string, len(stmt.DomFacts))
+// 		for i := range len(stmt.DomFacts) {
+// 			domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.DomFacts[i].String(), 2)
+// 		}
+// 		builder.WriteString(strings.Join(domFactStrSlice, "\n"))
+// 		builder.WriteByte('\n')
+// 	}
 
-	if len(stmt.ImplicationFacts) > 0 {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolRightArrow, 1))
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteByte('\n')
-		implicationFactStrSlice := make([]string, len(stmt.ImplicationFacts))
-		for i := range len(stmt.ImplicationFacts) {
-			implicationFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.ImplicationFacts[i].String(), 2)
-		}
-		builder.WriteString(strings.Join(implicationFactStrSlice, "\n"))
-		builder.WriteByte('\n')
-	}
+// 	if len(stmt.ImplicationFacts) > 0 {
+// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeySymbolRightArrow, 1))
+// 		builder.WriteString(glob.KeySymbolColon)
+// 		builder.WriteByte('\n')
+// 		implicationFactStrSlice := make([]string, len(stmt.ImplicationFacts))
+// 		for i := range len(stmt.ImplicationFacts) {
+// 			implicationFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.ImplicationFacts[i].String(), 2)
+// 		}
+// 		builder.WriteString(strings.Join(implicationFactStrSlice, "\n"))
+// 		builder.WriteByte('\n')
+// 	}
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
 func ProveIsCertainPropStmtString(kw string, prop Atom, params []string, proofs []Stmt) string {
 	var builder strings.Builder
@@ -1136,7 +1200,7 @@ func ProveIsCertainPropStmtString(kw string, prop Atom, params []string, proofs 
 }
 
 func (stmt *ProveIsTransitivePropStmt) String() string {
-	return ProveIsCertainPropStmtString(glob.KeywordProveIsTransitiveProp, stmt.Prop, stmt.Params, stmt.Proofs)
+	return ProveIsCertainPropStmtString(glob.KeywordTransProp, stmt.Prop, stmt.Params, stmt.Proofs)
 }
 
 func (stmt *ProveIsCommutativePropStmt) String() string {
@@ -1164,24 +1228,24 @@ func (stmt *ProveIsCommutativePropStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *ProveAlgoIfStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordIf)
-	builder.WriteString(" ")
-	conditionStrSlice := make([]string, len(stmt.Conditions))
-	for i, fact := range stmt.Conditions {
-		conditionStrSlice[i] = fact.String()
-	}
-	builder.WriteString(strings.Join(conditionStrSlice, ", "))
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	for _, fact := range stmt.ThenStmts {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
-		builder.WriteByte('\n')
-	}
-	return builder.String()
-}
+// func (stmt *ProveAlgoIfStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordIf)
+// 	builder.WriteString(" ")
+// 	conditionStrSlice := make([]string, len(stmt.Conditions))
+// 	for i, fact := range stmt.Conditions {
+// 		conditionStrSlice[i] = fact.String()
+// 	}
+// 	builder.WriteString(strings.Join(conditionStrSlice, ", "))
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeySymbolColon)
+// 	builder.WriteByte('\n')
+// 	for _, fact := range stmt.ThenStmts {
+// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
+// 		builder.WriteByte('\n')
+// 	}
+// 	return builder.String()
+// }
 
 func (stmt *AlgoIfStmt) String() string {
 	var builder strings.Builder
@@ -1268,59 +1332,59 @@ func (stmt *EvalStmt) String() string {
 	return fmt.Sprintf("%s(%s)", glob.KeywordEval, stmt.ObjToEval.String())
 }
 
-func (stmt *DefProveAlgoStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveAlgo)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.ProveAlgoName)
-	builder.WriteString("(")
-	builder.WriteString(stmt.Params.String())
-	builder.WriteString(")")
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	strSlice := make([]string, len(stmt.Stmts))
-	for i, stmt := range stmt.Stmts {
-		strSlice[i] = stmt.String()
-	}
-	builder.WriteString(strings.Join(strSlice, "\n"))
-	return builder.String()
-}
+// func (stmt *DefProveAlgoStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordProveAlgo)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(stmt.ProveAlgoName)
+// 	builder.WriteString("(")
+// 	builder.WriteString(stmt.Params.String())
+// 	builder.WriteString(")")
+// 	builder.WriteString(glob.KeySymbolColon)
+// 	builder.WriteByte('\n')
+// 	strSlice := make([]string, len(stmt.Stmts))
+// 	for i, stmt := range stmt.Stmts {
+// 		strSlice[i] = stmt.String()
+// 	}
+// 	builder.WriteString(strings.Join(strSlice, "\n"))
+// 	return builder.String()
+// }
 
-func (stmt *ByStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordBy)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.ProveAlgoName)
-	builder.WriteString("(")
-	builder.WriteString(stmt.Params.String())
-	builder.WriteString(")")
-	return builder.String()
-}
+// func (stmt *ByStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordBy)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(stmt.ProveAlgoName)
+// 	builder.WriteString("(")
+// 	builder.WriteString(stmt.Params.String())
+// 	builder.WriteString(")")
+// 	return builder.String()
+// }
 
-func (stmt *ProveAlgoReturnStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordReturn)
-	if len(stmt.Facts) == 0 {
-		return builder.String()
-	}
+// func (stmt *ProveAlgoReturnStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordReturn)
+// 	if len(stmt.Facts) == 0 {
+// 		return builder.String()
+// 	}
 
-	// Check if it's a single inline fact (no colon case) or multiple facts (colon case)
-	if len(stmt.Facts) == 1 {
-		// Single inline fact
-		builder.WriteString(" ")
-		builder.WriteString(stmt.Facts[0].String())
-	} else {
-		// Multiple facts from body
-		builder.WriteString(glob.KeySymbolColon)
-		for i, fact := range stmt.Facts {
-			if i > 0 {
-				builder.WriteString("\n")
-			}
-			builder.WriteString(fact.String())
-		}
-	}
-	return builder.String()
-}
+// 	// Check if it's a single inline fact (no colon case) or multiple facts (colon case)
+// 	if len(stmt.Facts) == 1 {
+// 		// Single inline fact
+// 		builder.WriteString(" ")
+// 		builder.WriteString(stmt.Facts[0].String())
+// 	} else {
+// 		// Multiple facts from body
+// 		builder.WriteString(glob.KeySymbolColon)
+// 		for i, fact := range stmt.Facts {
+// 			if i > 0 {
+// 				builder.WriteString("\n")
+// 			}
+// 			builder.WriteString(fact.String())
+// 		}
+// 	}
+// 	return builder.String()
+// }
 
 func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 	var builder strings.Builder

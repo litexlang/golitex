@@ -5,7 +5,7 @@ prove:
     proj(x, 1) = R
     proj(x, 2) = Q
     proj(x, 3) = Z
-    $is_a_set(x)
+    $is_set(x)
 
     let a x
 
@@ -56,7 +56,7 @@ prove:
     $is_tuple(e[2])
 
 prove:
-    $is_a_nonempty_set(cart(R, R))
+    $is_nonempty_set(cart(R, R))
     have x cart(R, R)
     x[1] $in R
 

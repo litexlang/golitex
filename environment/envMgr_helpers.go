@@ -88,14 +88,9 @@ func (envMgr *EnvMgr) storeSpecFactInMem(stmt *ast.SpecFactStmt) *glob.StmtRet {
 	return envMgr.CurEnv().KnownFactsStruct.SpecFactMem.newFact(stmt)
 }
 
-// func (envMgr *EnvMgr) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) *glob.StmtRet {
-// 	ret := envMgr.storeSpecFactInMem(fact)
-// 	if ret.IsErr() {
-// 		return ret
-// 	}
-// 	*derivedFacts = append(*derivedFacts, fact.String())
-// 	return glob.NewEmptyStmtTrue()
-// }
+func (envMgr *EnvMgr) StoreSpecFactInImplyTemplateMem(specFact ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) *glob.StmtRet {
+	return envMgr.CurEnv().KnownFactsStruct.SpecFactInImplyTemplateMem.newFact(specFact, implyTemplate)
+}
 
 func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.SpecFactStmt) *glob.StmtRet {
 	mem := envMgr.CurEnv().EqualMem
@@ -556,5 +551,15 @@ func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFa
 		newParams[i] = newParam
 	}
 
-	return ast.NewExistStFactStruct(existFactStruct.FactType, existFactStruct.PropName, newExistParams, newExistParamSets, newParams, existFactStruct.Line), nil
+	return ast.NewExistStFactStruct(existFactStruct.FactType, existFactStruct.PropName, existFactStruct.IsPropTrue, newExistParams, newExistParamSets, newParams, existFactStruct.Line), nil
+}
+
+// storeSpecFactInMemAndCollect collects the fact string for derived facts tracking
+func (ie *InferEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) *glob.ShortRet {
+	ret := ie.EnvMgr.storeSpecFactInMem(fact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	*derivedFacts = append(*derivedFacts, fact.String())
+	return glob.NewEmptyShortTrueRet()
 }

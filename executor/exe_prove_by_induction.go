@@ -21,123 +21,132 @@ import (
 )
 
 func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) *glob.StmtRet {
-	var err error
+	// 如果结论是uniFact，那么dom和then全部不能是uniFact；然后不允许是uniFactIff
+	execRet := exec.checkProveByInductionStmtFact(stmt.Fact)
+	if execRet.IsNotTrue() {
+		return execRet
+	}
+
+	// 验证步骤（在局部环境中）
+	execRet = exec.proveByInductionStmtProveProcess(stmt)
+	if execRet.IsNotTrue() {
+		return execRet
+	}
+
+	// 存储步骤（在主环境中）
+	finalUniFact := ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{}, []ast.FactStmt{stmt.Fact}, stmt.Line)
+	factRet := exec.Env.NewFactWithCheckingNameDefined(finalUniFact)
+	if factRet.IsErr() {
+		return glob.ErrRet(fmt.Sprintf("failed to store final universal fact: %s", factRet.String()))
+	}
+
+	return exec.NewTrueStmtRet(stmt).AddNewFact(finalUniFact.String())
+}
+
+func (exec *Executor) proveByInductionStmtProveProcess(stmt *ast.ProveByInductionStmt) *glob.StmtRet {
+	// 步骤1：开一个局部环境
+	exec.NewEnv()
+	defer exec.deleteEnv()
+
+	// 检查 param 是否已经声明过
+	ret := exec.Env.LookupNamesInObj(ast.Atom(stmt.Param), map[string]struct{}{})
+	if ret.IsTrue() {
+		return glob.ErrRet(fmt.Sprintf("parameter %s is already defined. To avoid ambiguity, please use a different name for the parameter", stmt.Param))
+	}
+
+	// 定义 param 在 N_pos 里
+	defLetStmt := ast.NewDefLetStmt([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{}, stmt.Line)
+	execRet := exec.defLetStmt(defLetStmt)
+	if execRet.IsNotTrue() {
+		return execRet.AddError(fmt.Sprintf("failed to define parameter %s in N_pos", stmt.Param))
+	}
+
+	// 运行整个 Proof
+	execRet = exec.execStmtsAtCurEnv(stmt.Proof)
+	if execRet.IsNotTrue() {
+		return execRet.AddError(fmt.Sprintf("proof in induc failed"))
+	}
+
 	ver := NewVerifier(exec.Env)
-	msg := ""
 
-	// 输入的 Start 必须是 N_pos
-	startIsNPos := proveByInduction_Fact_Start_is_NPos(stmt)
-	verRet := ver.VerFactStmt(startIsNPos, Round0NoMsg())
+	// 证明 1：如果把 stmt.Fact 的 param 改成 1，是否成立
+	startFact, err := stmt.Fact.InstantiateFact(map[string]ast.Obj{stmt.Param: ast.Atom("1")})
+	if err != nil {
+		return glob.ErrRet(fmt.Sprintf("failed to instantiate fact with param=1: %s", err.Error()))
+	}
+	verRet := ver.VerFactStmt(startFact, Round0NoMsg())
 	if verRet.IsErr() {
-		var result *glob.StmtRet = glob.ErrRet(fmt.Sprintf(verRet.String()))
-		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddError(verRet.String())
-		return result
+		return glob.ErrRet(fmt.Sprintf("base case failed: %s", verRet.String()))
 	}
 	if verRet.IsUnknown() {
-		msg = fmt.Sprintf("%s\nis unknown", startIsNPos.String())
-		var result *glob.StmtRet = glob.NewEmptyStmtUnknown()
-		result = result.AddError(fmt.Sprintf("%s\nfailed\n", stmt.String()))
-		if msg != "" {
-			result = result.AddError(msg)
-		}
-		return result
+		return glob.NewEmptyStmtUnknown().AddUnknown(fmt.Sprintf("base case is unknown: %s", startFact.String()))
 	}
 
-	// 把start代入fact，得到的fact是true
-	startFact, err := proveByInduction_newStartFact(stmt)
+	// 证明 2：生成 uniFact: forall randomParam N_pos: stmt.Fact 的 param 替换成 randomParam => stmt.Fact 的 param 替换成 randomParam + 1
+	randomParam := exec.Env.GenerateUndeclaredRandomName()
+
+	// domFacts: stmt.Fact 的 param 替换成 randomParam
+	domFact, err := stmt.Fact.InstantiateFact(map[string]ast.Obj{stmt.Param: ast.Atom(randomParam)})
 	if err != nil {
-		var result *glob.StmtRet = glob.ErrRet(err.Error())
-		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddError(err.Error())
-		return result
+		return glob.ErrRet(fmt.Sprintf("failed to instantiate fact with randomParam: %s", err.Error()))
 	}
-	verRet = ver.VerFactStmt(startFact, Round0NoMsg())
+
+	// thenFacts: stmt.Fact 的 param 替换成 randomParam + 1
+	randomParamPlus1 := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{ast.Atom(randomParam), ast.Atom("1")})
+	thenFact, err := stmt.Fact.InstantiateFact(map[string]ast.Obj{stmt.Param: randomParamPlus1})
+	if err != nil {
+		return glob.ErrRet(fmt.Sprintf("failed to instantiate fact with randomParam+1: %s", err.Error()))
+	}
+
+	// 创建 uniFact
+	inductionStep := ast.NewUniFact([]string{randomParam}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{domFact}, []ast.FactStmt{thenFact}, stmt.Line)
+
+	// 验证 induction step
+	verRet = ver.VerFactStmt(inductionStep, Round0NoMsg())
 	if verRet.IsErr() {
-		result := verRet
-		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddError(verRet.String())
-		return result.ToStmtRet()
+		return glob.ErrRet(fmt.Sprintf("induction step failed: %s", verRet.String()))
 	}
 	if verRet.IsUnknown() {
-		msg = fmt.Sprintf("%s\nis unknown", startFact.String())
-		var result *glob.StmtRet = glob.NewEmptyStmtUnknown()
-		result = result.AddUnknown(fmt.Sprintf("%s\nfailed\n", stmt.String()))
-		if msg != "" {
-			result = result.AddUnknown(msg)
+		return glob.NewEmptyStmtUnknown().AddUnknown(fmt.Sprintf("induction step is unknown: %s", inductionStep.String()))
+	}
+
+	return glob.NewEmptyStmtTrue()
+}
+
+// 等 inline Parser 能 parse depth的时候删了这个hjuu
+func (exec *Executor) checkProveByInductionStmtFact(fact ast.FactStmt) *glob.StmtRet {
+	// 如果结论是uniFact，那么dom和then全部不能是uniFact；然后不允许是uniFactIff
+	if uniFact, ok := fact.(*ast.UniFactStmt); ok {
+		for _, domFact := range uniFact.DomFacts {
+			if _, ok := domFact.(*ast.UniFactStmt); ok {
+				return glob.ErrRet(fmt.Sprintf("dom is uniFact: %s", domFact.String()))
+			}
 		}
-		return result
-	}
-
-	// 对于任意n对于fact成立，那么对于n+1也成立
-	uniFact_n_true_leads_n_plus_1_true, err := proveByInduction_newUniFact_n_true_leads_n_plus_1_true(stmt)
-	if err != nil {
-		var result *glob.StmtRet = glob.ErrRet(err.Error())
-		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddError(err.Error())
-		return result
-	}
-	verRet = ver.VerFactStmt(uniFact_n_true_leads_n_plus_1_true, Round0NoMsg())
-	if verRet.IsErr() {
-		var result *glob.StmtRet = glob.ErrRet(fmt.Sprintf(verRet.String()))
-		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddError(verRet.String())
-		return result
-	}
-	if verRet.IsUnknown() {
-		msg = fmt.Sprintf("%s\nis unknown", uniFact_n_true_leads_n_plus_1_true.String())
-		var result *glob.StmtRet = glob.NewEmptyStmtUnknown()
-		result = result.AddUnknown(fmt.Sprintf("%s\nfailed\n", stmt.String()))
-		if msg != "" {
-			result = result.AddUnknown(msg)
+		for _, thenFact := range uniFact.ThenFacts {
+			if _, ok := thenFact.(*ast.UniFactStmt); ok {
+				return glob.ErrRet(fmt.Sprintf("then is uniFact: %s", thenFact.String()))
+			}
 		}
-		return result
 	}
 
-	// 对于任何 param >= start, fact 成立
-	uniFact_forall_param_geq_start_then_fact_is_true := proveByInduction_newUniFact_forall_param_geq_start_then_fact_is_true(stmt)
-	ret := exec.Env.NewFactWithCheckingNameDefined(uniFact_forall_param_geq_start_then_fact_is_true)
-	if ret.IsErr() {
-		var result *glob.StmtRet = glob.ErrRet(ret.String())
-		result = result.AddError(fmt.Sprintf("%s\nerror\n", stmt.String()))
-		result = result.AddError(ret.String())
-		return result
+	if uniFactIff, ok := fact.(*ast.UniFactWithIffStmt); ok {
+		for _, iffFact := range uniFactIff.IffFacts {
+			if _, ok := iffFact.(*ast.UniFactStmt); ok {
+				return glob.ErrRet(fmt.Sprintf("iff is uniFact: %s", iffFact.String()))
+			}
+		}
+		for _, thenFact := range uniFactIff.UniFact.DomFacts {
+			if _, ok := thenFact.(*ast.UniFactStmt); ok {
+				return glob.ErrRet(fmt.Sprintf("then is uniFact: %s", thenFact.String()))
+			}
+		}
+
+		for _, thenFact := range uniFactIff.UniFact.ThenFacts {
+			if _, ok := thenFact.(*ast.UniFactStmt); ok {
+				return glob.ErrRet(fmt.Sprintf("then is uniFact: %s", thenFact.String()))
+			}
+		}
 	}
 
-	var result *glob.StmtRet = glob.NewEmptyStmtTrue()
-	return result
-}
-
-func proveByInduction_Fact_Start_is_NPos(stmt *ast.ProveByInductionStmt) *ast.SpecFactStmt {
-	startIsNPos := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{stmt.Start, ast.Atom(glob.KeywordNPos)}, stmt.Line)
-	return startIsNPos
-}
-
-func proveByInduction_newStartFact(stmt *ast.ProveByInductionStmt) (ast.FactStmt, error) {
-	startFact, err := stmt.Fact.InstantiateFact(map[string]ast.Obj{stmt.Param: stmt.Start})
-	return startFact, err
-}
-
-func proveByInduction_newUniFact_n_true_leads_n_plus_1_true(stmt *ast.ProveByInductionStmt) (ast.FactStmt, error) {
-	uniMap := map[string]ast.Obj{stmt.Param: ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{ast.Atom(stmt.Param), ast.Atom("1")})}
-
-	retUniFactDom := []ast.FactStmt{
-		ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{ast.Atom(stmt.Param), stmt.Start}, stmt.Line),
-		stmt.Fact,
-	}
-
-	retUniFactThen, err := stmt.Fact.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, retUniFactDom, []ast.FactStmt{retUniFactThen}, stmt.Line), nil
-}
-
-func proveByInduction_newUniFact_forall_param_geq_start_then_fact_is_true(stmt *ast.ProveByInductionStmt) ast.FactStmt {
-	if asAtom, ok := stmt.Start.(ast.Atom); ok && string(asAtom) == "1" {
-		return ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{}, []ast.FactStmt{stmt.Fact}, stmt.Line)
-	}
-
-	return ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{ast.Atom(stmt.Param), stmt.Start}, stmt.Line)}, []ast.FactStmt{stmt.Fact}, stmt.Line)
+	return glob.NewEmptyStmtTrue()
 }

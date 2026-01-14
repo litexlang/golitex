@@ -176,7 +176,12 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
-	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(state.InnerStmtRetSlice)
+	if ret.IsNotTrue() {
+		return glob.NewStmtWithInnerStmtsRet(state.InnerStmtRetSlice, ret.RetType)
+	} else {
+		return glob.NewStmtWithInnerStmtsRet(state.InnerStmtRetSlice, ret.RetType)
+	}
+
 }
 
 func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
@@ -280,10 +285,9 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.Stmt
 }
 
 // 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
-func (exec *Executor) claimPropStmt(stmt *ast.ClaimImplicationStmt) *glob.StmtRet {
+func (exec *Executor) claimImplyStmt(stmt *ast.ClaimImplicationStmt) *glob.StmtRet {
 	// prop all atoms declared
-	prop := stmt.Implication.ToProp()
-	uniFact := ast.NewUniFact(prop.DefHeader.Params, prop.DefHeader.ParamSets, prop.DomFactsOrNil, prop.IffFactsOrNil, stmt.Line)
+	uniFact := ast.NewUniFact(stmt.Implication.DefHeader.Params, stmt.Implication.DefHeader.ParamSets, stmt.Implication.IffFactsOrNil, stmt.Implication.ImplicationFactsOrNil, stmt.Line)
 
 	ret := exec.Env.LookUpNamesInFact(uniFact, map[string]struct{}{})
 	if ret.IsErr() {
@@ -305,7 +309,8 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimImplicationStmt) *glob.StmtRe
 	// }
 
 	// know exec
-	execRet := exec.knowImplicationStmt(ast.NewKnowImplicationStmt(prop, stmt.Line))
+	prop := stmt.Implication
+	execRet := exec.knowPropInferStmt(ast.NewKnowPropInferStmt(prop, stmt.Line))
 	if execRet.IsNotTrue() {
 		return execRet
 	}
@@ -393,8 +398,7 @@ func (exec *Executor) claimPropStmt(stmt *ast.ClaimImplicationStmt) *glob.StmtRe
 // }
 
 func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimImplicationStmt) *glob.StmtRet {
-	prop := stmt.Implication.ToProp()
-	uniFact := ast.NewUniFact(prop.DefHeader.Params, prop.DefHeader.ParamSets, prop.DomFactsOrNil, prop.ImplicationFactsOrNil, stmt.Line)
+	uniFact := ast.NewUniFact(stmt.Implication.DefHeader.Params, stmt.Implication.DefHeader.ParamSets, stmt.Implication.IffFactsOrNil, stmt.Implication.ImplicationFactsOrNil, stmt.Line)
 
 	exec.NewEnv()
 	defer func() {

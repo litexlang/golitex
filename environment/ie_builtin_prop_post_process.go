@@ -19,16 +19,6 @@ import (
 	glob "golitex/glob"
 )
 
-// storeSpecFactInMemAndCollect collects the fact string for derived facts tracking
-func (ie *InferEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) *glob.ShortRet {
-	ret := ie.EnvMgr.storeSpecFactInMem(fact)
-	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
-	}
-	*derivedFacts = append(*derivedFacts, fact.String())
-	return glob.NewEmptyShortTrueRet()
-}
-
 // BuiltinPropExceptTrueEqual handles postprocessing for builtin properties except equality
 func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) *glob.ShortRet {
 	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordIn) {
@@ -88,16 +78,131 @@ func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) *glob.
 		return ret
 	}
 
-	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordIsNonEmptyWithItem) {
-		ret := ie.isNonEmptyWithItemFactPostProcess(fact)
+	// if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordIsNonEmptyWithItem) {
+	// 	ret := ie.isNonEmptyWithItemFactPostProcess(fact)
+	// 	return ret
+	// }
+
+	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordNotEqualSet) {
+		ret := ie.notEqualSetFactPostProcess(fact)
 		return ret
 	}
 
 	return glob.NewEmptyShortUnknownRet()
 }
 
+// orFactPostProcess handles post-processing for OrStmt facts
+func (ie *InferEngine) orFactPostProcess(orFact *ast.OrStmt) *glob.ShortRet {
+	// Special case: a != 0 or b != 0 => a^2 + b^2 > 0
+	if len(orFact.Facts) == 2 {
+		// Check if both facts are "not equal to 0" facts
+		fact1 := orFact.Facts[0]
+		fact2 := orFact.Facts[1]
+
+		// Check if fact1 is "a != 0" (FalsePure with Equal prop)
+		if fact1.FactType == ast.FalsePure && ast.IsAtomObjAndEqualToStr(fact1.PropName, glob.KeySymbolEqual) &&
+			len(fact1.Params) == 2 && fact1.Params[1].String() == "0" {
+			// Check if fact2 is "b != 0"
+			if fact2.FactType == ast.FalsePure && ast.IsAtomObjAndEqualToStr(fact2.PropName, glob.KeySymbolEqual) &&
+				len(fact2.Params) == 2 && fact2.Params[1].String() == "0" {
+				// Extract a and b
+				a := fact1.Params[0]
+				b := fact2.Params[0]
+
+				// Create a^2 and b^2
+				aSquared := ast.NewFnObj(ast.Atom(glob.KeySymbolPower), []ast.Obj{a, ast.Atom("2")})
+				bSquared := ast.NewFnObj(ast.Atom(glob.KeySymbolPower), []ast.Obj{b, ast.Atom("2")})
+
+				// Create a^2 + b^2
+				sumOfSquares := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{aSquared, bSquared})
+
+				// Create a^2 + b^2 > 0
+				sumGreaterThanZero := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{sumOfSquares, ast.Atom("0")}, orFact.Line)
+
+				// Store the fact
+				ret := ie.EnvMgr.newSpecFactNoInfer(sumGreaterThanZero)
+				if ret.IsErr() {
+					return glob.ErrStmtMsgToShortRet(ret)
+				}
+
+				derivedFacts := []string{sumGreaterThanZero.String()}
+				derivedFacts = append(derivedFacts, ret.Infer...)
+				return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+			}
+		}
+	}
+
+	return glob.NewEmptyShortUnknownRet()
+}
+
+// isSumOfTwoSquares checks if expr is of the form a^2 + b^2 and returns a, b if so
+func isSumOfTwoSquares(expr ast.Obj) (ast.Obj, ast.Obj, bool) {
+	fnObj, ok := expr.(*ast.FnObj)
+	if !ok {
+		return nil, nil, false
+	}
+
+	// Check if it's an addition
+	if !ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeySymbolPlus) {
+		return nil, nil, false
+	}
+
+	if len(fnObj.Params) != 2 {
+		return nil, nil, false
+	}
+
+	// Check if both params are power operations with exponent 2
+	leftPower, ok1 := fnObj.Params[0].(*ast.FnObj)
+	rightPower, ok2 := fnObj.Params[1].(*ast.FnObj)
+
+	if !ok1 || !ok2 {
+		return nil, nil, false
+	}
+
+	// Check if both are power operations
+	if !ast.IsAtomObjAndEqualToStr(leftPower.FnHead, glob.KeySymbolPower) ||
+		!ast.IsAtomObjAndEqualToStr(rightPower.FnHead, glob.KeySymbolPower) {
+		return nil, nil, false
+	}
+
+	// Check if both exponents are 2
+	if len(leftPower.Params) != 2 || len(rightPower.Params) != 2 {
+		return nil, nil, false
+	}
+
+	leftExp, ok1 := leftPower.Params[1].(ast.Atom)
+	rightExp, ok2 := rightPower.Params[1].(ast.Atom)
+
+	if !ok1 || !ok2 {
+		return nil, nil, false
+	}
+
+	if string(leftExp) != "2" || string(rightExp) != "2" {
+		return nil, nil, false
+	}
+
+	// Return the bases
+	return leftPower.Params[0], rightPower.Params[0], true
+}
+
 func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact *ast.SpecFactStmt) *glob.ShortRet {
 	derivedFacts := []string{}
+
+	// Special case: a^2 + b^2 > 0 => a != 0 or b != 0
+	if a, b, ok := isSumOfTwoSquares(fact.Params[0]); ok {
+		// Create a != 0 and b != 0 facts
+		aNotEqualZero := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{a, ast.Atom("0")}, fact.Line)
+		bNotEqualZero := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{b, ast.Atom("0")}, fact.Line)
+
+		// Create or fact: a != 0 or b != 0
+		orFact := ast.NewOrStmt([]*ast.SpecFactStmt{aNotEqualZero, bNotEqualZero}, fact.Line)
+		ret := ie.EnvMgr.newFactNoInfer(orFact)
+		if ret.IsErr() {
+			return glob.ErrStmtMsgToShortRet(ret)
+		}
+		derivedFacts = append(derivedFacts, orFact.String())
+		derivedFacts = append(derivedFacts, ret.Infer...)
+	}
 
 	// x != 0 store spec Mem
 	notEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolNotEqual), []ast.Obj{fact.Params[0], ast.Atom("0")}, fact.Line)
@@ -559,15 +664,39 @@ func (ie *InferEngine) falseEqualFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) isNonEmptyWithItemFactPostProcess(fact *ast.SpecFactStmt) *glob.ShortRet {
-	derivedFacts := []string{}
+// func (ie *InferEngine) isNonEmptyWithItemFactPostProcess(fact *ast.SpecFactStmt) *glob.ShortRet {
+// 	derivedFacts := []string{}
 
-	// fact.Params[0] 非空
-	isNonEmptyFact := ast.NewIsANonEmptySetFact(fact.Params[0], fact.Line)
-	retShort := ie.storeSpecFactInMemAndCollect(isNonEmptyFact, &derivedFacts)
-	if retShort.IsErr() {
-		return retShort
-	}
+// 	// fact.Params[0] 非空
+// 	isNonEmptyFact := ast.NewIsANonEmptySetFact(fact.Params[0], fact.Line)
+// 	retShort := ie.storeSpecFactInMemAndCollect(isNonEmptyFact, &derivedFacts)
+// 	if retShort.IsErr() {
+// 		return retShort
+// 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
-}
+// 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+// }
+
+// func (ie *InferEngine) notEqualSetFactPostProcess(fact *ast.SpecFactStmt) *glob.ShortRet {
+// 	derivedFacts := []string{}
+
+// 	// x != y
+// 	notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fact.Params[0], fact.Params[1]}, fact.Line)
+// 	retShort := ie.storeSpecFactInMemAndCollect(notEqualFact, &derivedFacts)
+// 	if retShort.IsErr() {
+// 		return retShort
+// 	}
+
+// 	// exist z x st not z $in y or exist z y st not z $in x
+// 	randomName := ie.EnvMgr.GenerateUndeclaredRandomName()
+// 	existZInXStNotZInYFact := ast.NewExistStFactStruct(ast.TrueExist_St, ast.Atom(glob.KeywordIn), false, []string{(randomName)}, []ast.Obj{fact.Params[0]}, []ast.Obj{ast.Atom(randomName), fact.Params[1]}, fact.Line)
+// 	existZInYStNotZInXFact := ast.NewExistStFactStruct(ast.TrueExist_St, ast.Atom(glob.KeywordIn), false, []string{(randomName)}, []ast.Obj{fact.Params[1]}, []ast.Obj{ast.Atom(randomName), fact.Params[0]}, fact.Line)
+// 	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{existZInXStNotZInYFact.ToExistStFact(), existZInYStNotZInXFact.ToExistStFact()}, fact.Line)
+
+// 	stmtRet := ie.EnvMgr.newOrFact(orFact)
+// 	if stmtRet.IsNotTrue() {
+// 		return glob.NewShortRet(glob.StmtRetTypeError, []string{})
+// 	}
+
+// 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+// }

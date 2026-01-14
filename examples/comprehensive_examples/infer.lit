@@ -1,0 +1,80 @@
+prove:
+    prop p(x, y R)
+    prop q(x, y R)
+    prop t(x, y R)
+
+    infer x, y R: $p(x, y) or $q(x, y) => $t(x, y):
+        know $t(x, y)
+
+    know:
+        $p(1, 2)
+        $q(1, 2)
+
+    $p(1, 2) or $q(1, 2) => $t(1, 2)
+
+prove:
+    prop p(x, y R)
+    prop q(x, y R)
+    prop t(x, y R)
+
+    infer x, y R: $p(x, y) => $q(x, y) or $t(x, y):
+        know $q(x, y)
+
+    know:
+        $p(1, 2)
+
+    $p(1, 2) => $q(1, 2) or $t(1, 2)
+
+prove:
+    prop p(x, y R)
+    prop q(x, y R)
+    prop t(x, y R)
+    prop r(x, y R)
+
+    infer x, y R: $p(x, y) or $q(x, y) => $t(x, y) or $r(x, y):
+        know $t(x, y)
+
+    know:
+        $p(1, 2)
+        $q(1, 2)
+
+    $p(1, 2) or $q(1, 2) => $t(1, 2) or $r(1, 2)
+
+prove:
+    prop p(x, y R)
+    prop q(x, y R)
+    prop t(x, y R)
+
+    know infer x, y R: $p(x, y) or $q(x, y) => $t(x, y)
+
+    know $p(1, 2) or $q(1, 2)
+
+    $p(1, 2) or $q(1, 2) => $t(1, 2)
+
+prove:
+    prop p(x, y R)
+    prop q(x, y R)
+    prop t(x, y R)
+
+    know forall x, y R: $p(x, y) or $q(x, y) => $t(x, y)
+
+    know:
+        $p(1, 2)
+        $q(1, 2)
+
+    $p(1, 2) or $q(1, 2) => $t(1, 2)
+
+# use forall to prove forall
+prove:
+    prop p(x R, y R)
+    know forall x, y, z R: $p(x, y), $p(y, z) => $p(x, z)
+    forall x, y, z R: $p(x, y), $p(y, z) => $p(x, z)
+
+prove:
+    infer a, b, c R: a * b = a * c => b = c if a != 0:
+        contra b = c:
+            b = a * b / a = a * c / a = c
+            b = c
+
+    let x2, y2, z2 R: x2 * y2 = x2 * z2, x2 != 0
+    x2 * y2 = x2 * z2 => y2 = z2
