@@ -928,19 +928,20 @@ func (stmt *HaveFnCaseByCaseStmt) String() string {
 		builder.WriteString(" ")
 		builder.WriteString(stmt.CaseByCaseFacts[i].String())
 		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteByte('\n')
-		if i < len(stmt.Proofs) {
-			for _, proofStmt := range stmt.Proofs[i] {
-				builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 2))
-				builder.WriteByte('\n')
-			}
-		}
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordHave, 1))
 		builder.WriteString(" ")
 		if i < len(stmt.EqualToObjs) {
 			builder.WriteString(stmt.EqualToObjs[i].String())
 		}
-		builder.WriteByte('\n')
+		if i < len(stmt.Proofs) && len(stmt.Proofs[i]) > 0 {
+			builder.WriteString(glob.KeySymbolColon)
+			builder.WriteByte('\n')
+			for _, proofStmt := range stmt.Proofs[i] {
+				builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 2))
+				builder.WriteByte('\n')
+			}
+		} else {
+			builder.WriteByte('\n')
+		}
 	}
 	return strings.TrimSuffix(builder.String(), "\n")
 }
@@ -1407,7 +1408,16 @@ func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteString(" ")
 		builder.WriteString(stmt.CaseByCaseEqualTo[i].String())
-		builder.WriteByte('\n')
+		if i < len(stmt.Proofs) && len(stmt.Proofs[i]) > 0 {
+			builder.WriteString(glob.KeySymbolColon)
+			builder.WriteByte('\n')
+			for _, proof := range stmt.Proofs[i] {
+				builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+				builder.WriteByte('\n')
+			}
+		} else {
+			builder.WriteByte('\n')
+		}
 	}
 	return strings.TrimSpace(builder.String())
 }

@@ -626,17 +626,33 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 		}
 	}
 
-	// 假设case的条件成立
+	// caseIndex 处的 obj 确实已经都存在了
+	ver := NewVerifier(exec.Env)
+	verRet := ver.Env.LookupNamesInObj(stmt.CaseByCaseEqualTo[caseIndex], map[string]struct{}{})
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return glob.ErrRet(verRet.String()), fmt.Errorf("case %d: failed to lookup names in obj: %s", caseIndex, verRet.String())
+	}
+
+	// 默认 caseIndex 时 case fact 成立
 	caseFact := stmt.CaseByCaseFacts[caseIndex]
 	ret := exec.Env.NewFactWithCheckingNameDefined(caseFact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
 	}
 
+	// 执行 proof
+	if caseIndex < len(stmt.Proofs) {
+		for _, proofStmt := range stmt.Proofs[caseIndex] {
+			execState := exec.Stmt(proofStmt)
+			if execState.IsNotTrue() {
+				return execState, fmt.Errorf("case %d: proof failed: %s", caseIndex, execState.String())
+			}
+		}
+	}
+
 	// 在case成立的条件下，验证返回值在retSet中
 	equalTo := stmt.CaseByCaseEqualTo[caseIndex]
-	ver := NewVerifier(exec.Env)
-	verRet := ver.VerFactStmt(ast.NewInFactWithObj(equalTo, stmt.RetSet), Round0Msg())
+	verRet = exec.factStmt(ast.NewInFactWithObj(equalTo, stmt.RetSet))
 	if verRet.IsErr() {
 		return glob.NewEmptyStmtError(), fmt.Errorf("case %d: %s", caseIndex, verRet.String())
 	}
