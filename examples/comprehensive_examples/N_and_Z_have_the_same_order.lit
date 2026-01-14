@@ -1,13 +1,15 @@
-forall x Z: (7 * x + 1) % 7 = ((7 * x) % 7 + 1 % 7) % 7 = (0 + 1) % 7 = 1
-forall x Z: (7 * (-x) + 2) % 7 = ((7 * (-x)) % 7 + 2 % 7) % 7 = (0 + 2) % 7 = 2
-forall x Z: x < 0 => -x $in N, 7 * (-x) + 2 $in N
-forall x Z: x >= 0 => x $in N, 7 * x + 1 $in N
-
 have fn g(x Z) N =:
-    case x < 0: 7 * (-x) + 2
-    case x >= 0: 7 * x + 1
+    case x < 0: 7 * (-x) + 2:
+        -x $in N
+        7 * (-x) + 2 $in N
+    case x >= 0: 7 * x + 1:
+        x $in N
+        7 * x + 1 $in N
 
 prove forall x, y Z: x != y => g(x) != g(y):
+    forall x Z: (7 * x + 1) % 7 = ((7 * x) % 7 + 1 % 7) % 7 = (0 + 1) % 7 = 1
+    forall x Z: (7 * (-x) + 2) % 7 = ((7 * (-x)) % 7 + 2 % 7) % 7 = (0 + 2) % 7 = 2
+
     cases g(x) != g(y):
         case x < 0:
             cases g(x) != g(y):

@@ -577,19 +577,14 @@ func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	if !tb.header.is(glob.KeySymbolColon) {
-		equalTo, err := p.Obj(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
+	equalTo, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
 
-		return NewHaveFnEqualStmt(defHeader, retSet, equalTo, tb.line), nil
-	} else {
-		err = tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
+	// Check if it's case-by-case or simple equal
+	if len(tb.body) > 0 && tb.body[0].header.is(glob.KeywordCase) {
+		// Case-by-case structure
 		caseByCaseFacts := []*SpecFactStmt{}
 		caseByCaseEqualTo := []Obj{}
 		caseByCaseProofs := []StmtSlice{}
@@ -628,6 +623,15 @@ func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
 			Proofs:            caseByCaseProofs,
 			Line:              tb.line,
 		}, nil
+	} else {
+		// Simple equal with optional proof
+		// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
+		proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		return NewHaveFnEqualStmt(defHeader, retSet, equalTo, proof, tb.line), nil
 	}
 }
 
