@@ -1,10 +1,5 @@
 # https://github.com/litexlang/golitex/blob/main/examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lit
 
-# 忘记写了什么：有什么东西没证明出来，导致了整个系统在某个地方卡了
-# forall x Z: x < 0 => -x > 0, 7 * (-x) > 0, 7 * (-x) + 2 > 0, 7 * (-x) + 2 $in N
-
-# forall x Z: x >= 0 => 7 * x >= 0, 7 * x + 1 >= 0, x $in N, 7 * x $in N, 7 * x + 1 $in N
-
 # 在vslean里加上 Z和N势能相等的例子
 
 # 解释为什么要有 set_equal 而不是在kernel里直接写
