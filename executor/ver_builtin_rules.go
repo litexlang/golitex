@@ -25,9 +25,6 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 	// 	return ver.verIsNonEmptyWithItemByBuiltinRules(stmt, state)
 	// }
 
-	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordEqualSet) {
-		return ver.verEqualSetByBuiltinRules(stmt, state)
-	}
 
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordNotEqualSet) {
 		return ver.verNotEqualSetByBuiltinRules(stmt, state)
@@ -53,9 +50,6 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 		return ver.verIsANonEmptySetByBuiltinRules(stmt, state)
 	}
 
-	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordEqualTuple) {
-		return ver.verEqualTupleByBuiltinRules(stmt, state)
-	}
 
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsTuple) {
 		return ver.verIsTupleByBuiltinRules(stmt, state)
@@ -239,55 +233,6 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 	}
 
 	return glob.NewEmptyVerRetUnknown()
-}
-
-// verEqualSetByBuiltinRules verifies equal_set(a, b) by checking:
-// - forall t a : t $in b
-// - forall t b : t $in a
-func (ver *Verifier) verEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	if len(stmt.Params) != 2 {
-		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("equal_set expects 2 parameters, got %d", len(stmt.Params))})
-	}
-
-	a := stmt.Params[0]
-	b := stmt.Params[1]
-
-	// Create forall t1 a : t1 $in b
-	forall1 := ast.NewUniFact(
-		[]string{"t"},
-		[]ast.Obj{a},
-		[]ast.FactStmt{},
-		[]ast.FactStmt{
-			ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("t"), b}, stmt.Line),
-		},
-		stmt.Line,
-	)
-
-	// Create forall t2 b : t2 $in a
-	forall2 := ast.NewUniFact(
-		[]string{"t"},
-		[]ast.Obj{b},
-		[]ast.FactStmt{},
-		[]ast.FactStmt{
-			ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("t"), a}, stmt.Line),
-		},
-		stmt.Line,
-	)
-
-	// Verify both forall statements
-	verRet1 := ver.VerFactStmt(forall1, state)
-	if verRet1.IsNotTrue() {
-		return verRet1
-	}
-
-	verRet2 := ver.VerFactStmt(forall2, state)
-	if verRet2.IsNotTrue() {
-		return verRet2
-	}
-
-	// Both forall statements are true, so equal_set(a, b) is true
-	msg := fmt.Sprintf("equal_set(%s, %s) is true because forall t %s : t $in %s and forall t %s : t $in %s", a, b, a, b, b, a)
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyVerRetTrue())
 }
 
 // verNotEqualSetByBuiltinRules verifies not_equal_set(a, b) by checking:

@@ -1474,3 +1474,35 @@ func (stmt *ProveExistStmt) String() string {
 	}
 	return builder.String()
 }
+
+func (stmt *EqualTupleStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordEqualTuple)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Left.String())
+	builder.WriteString(", ")
+	builder.WriteString(stmt.Right.String())
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+		builder.WriteByte('\n')
+	}
+	return builder.String()
+}
+
+func (stmt *EqualSetStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordEqualSet)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Left.String())
+	builder.WriteString(", ")
+	builder.WriteString(stmt.Right.String())
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+		builder.WriteByte('\n')
+	}
+	return builder.String()
+}

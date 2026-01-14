@@ -1110,3 +1110,43 @@ func InstantiateSetBuilderObjWithoutChangingParam(obj *FnObj, uniMap map[string]
 func (stmt *ProveExistStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	panic("TODO: Implement ProveExistStmt Instantiate")
 }
+
+func (stmt *EqualTupleStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	left, err := stmt.Left.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	right, err := stmt.Right.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	proofs := make(StmtSlice, len(stmt.Proofs))
+	for i, proof := range stmt.Proofs {
+		instProof, err := proof.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		proofs[i] = instProof
+	}
+	return NewEqualTupleStmt(left, right, proofs, stmt.Line), nil
+}
+
+func (stmt *EqualSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	left, err := stmt.Left.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	right, err := stmt.Right.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	proofs := make(StmtSlice, len(stmt.Proofs))
+	for i, proof := range stmt.Proofs {
+		instProof, err := proof.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		proofs[i] = instProof
+	}
+	return NewEqualSetStmt(left, right, proofs, stmt.Line), nil
+}

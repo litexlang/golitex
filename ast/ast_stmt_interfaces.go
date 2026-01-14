@@ -130,6 +130,10 @@ func (s *EvalStmt) algoStmt()                  {}
 func (s *HaveFnEqualCaseByCaseStmt) algoStmt() {}
 func (s *HaveFnCaseByCaseStmt) algoStmt()      {}
 func (s *ProveExistStmt) algoStmt()            {}
+func (s *EqualTupleStmt) stmt()                {}
+func (s *EqualTupleStmt) algoStmt()            {}
+func (s *EqualSetStmt) stmt()                  {}
+func (s *EqualSetStmt) algoStmt()              {}
 func (s *DefLetStmt) GetLine() uint            { return s.Line }
 func (s *DefPropStmt) GetLine() uint           { return s.Line }
 func (s *LetFnStmt) GetLine() uint             { return s.Line }
@@ -186,6 +190,8 @@ func (s *ProveInferStmt) GetLine() uint             { return s.Line }
 func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint { return s.Line }
 func (s *HaveFnCaseByCaseStmt) GetLine() uint      { return s.Line }
 func (s *ProveExistStmt) GetLine() uint            { return s.Line }
+func (s *EqualTupleStmt) GetLine() uint            { return s.Line }
+func (s *EqualSetStmt) GetLine() uint               { return s.Line }
 
 func (s *DefLetStmt) SetLine(l uint)     { s.Line = l }
 func (s *DefPropStmt) SetLine(l uint)    { s.Line = l }
@@ -247,6 +253,8 @@ func (s *ProveInferStmt) SetLine(l uint)             { s.Line = l }
 func (s *HaveFnEqualCaseByCaseStmt) SetLine(l uint) { s.Line = l }
 func (s *HaveFnCaseByCaseStmt) SetLine(l uint)      { s.Line = l }
 func (s *ProveExistStmt) SetLine(l uint)            { s.Line = l }
+func (s *EqualTupleStmt) SetLine(l uint)            { s.Line = l }
+func (s *EqualSetStmt) SetLine(l uint)               { s.Line = l }
 
 type FactStmt interface {
 	factStmt()

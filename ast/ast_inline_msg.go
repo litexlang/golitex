@@ -484,3 +484,11 @@ func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
 func (s *ProveExistStmt) InlineString() string {
 	return s.String()
 }
+
+func (s *EqualTupleStmt) InlineString() string {
+	return s.String()
+}
+
+func (s *EqualSetStmt) InlineString() string {
+	return s.String()
+}
