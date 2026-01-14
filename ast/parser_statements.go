@@ -2531,8 +2531,6 @@ func (p *TbParser) factStmt(tb *tokenBlock, uniFactDepth uniFactEnum) (FactStmt,
 			}
 			return uniFact, nil
 		}
-	case glob.KeywordOr:
-		return p.inlineOrFact(tb)
 	// case glob.KeySymbolEqual:
 	// 	return p.equalsFactStmt(tb)
 	default:
