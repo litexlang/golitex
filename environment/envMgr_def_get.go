@@ -85,20 +85,20 @@ func (envMgr *EnvMgr) IsCommutativeProp(specFact *ast.SpecFactStmt) bool {
 	return false
 }
 
-func (envMgr *EnvMgr) GetProveAlgoDef(proveAlgoName string) *ast.DefProveAlgoStmt {
-	proveAlgoDef, ok := envMgr.AllDefinedProveAlgoNames[proveAlgoName]
-	if ok {
-		return proveAlgoDef.Defined
-	}
-
-	// Search in builtin env
-	proveAlgoDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedProveAlgoNames[proveAlgoName]
-	if ok {
-		return proveAlgoDef.Defined
-	}
-
-	return nil
-}
+// func (envMgr *EnvMgr) GetProveAlgoDef(proveAlgoName string) *ast.DefProveAlgoStmt {
+// 	proveAlgoDef, ok := envMgr.AllDefinedProveAlgoNames[proveAlgoName]
+// 	if ok {
+// 		return proveAlgoDef.Defined
+// 	}
+//
+// 	// Search in builtin env
+// 	proveAlgoDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedProveAlgoNames[proveAlgoName]
+// 	if ok {
+// 		return proveAlgoDef.Defined
+// 	}
+//
+// 	return nil
+// }
 
 func (envMgr *EnvMgr) GetAlgoDef(funcName string) *ast.DefAlgoStmt {
 	algoDef, ok := envMgr.AllDefinedAlgoNames[funcName]

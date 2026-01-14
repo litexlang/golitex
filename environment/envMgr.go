@@ -37,6 +37,7 @@ type KnownFactsStruct struct {
 	SpecFactInLogicExprMem            SpecFactInLogicExprMem
 	SpecFactInUniFactMem              SpecFactInUniFactMem
 	SpecFact_InLogicExpr_InUniFactMem SpecFact_InLogicExpr_InUniFactMem
+	SpecFactInImplyTemplateMem        SpecFactInImplyTemplateMem
 }
 
 type DefinedStuff[T any] struct {
@@ -55,9 +56,9 @@ type EnvMgr struct {
 	AllDefinedAtomObjNames map[string]DefinedStuff[struct{}]
 	AllDefinedPropNames    map[string]DefinedStuff[*ast.DefPropStmt]
 	// AllDefinedExistPropNames map[string]*ast.DefExistPropStmt
-	AllDefinedFnSetNames     map[string]DefinedStuff[*ast.DefFnSetStmt]
-	AllDefinedAlgoNames      map[string]DefinedStuff[*ast.DefAlgoStmt]
-	AllDefinedProveAlgoNames map[string]DefinedStuff[*ast.DefProveAlgoStmt]
+	AllDefinedFnSetNames map[string]DefinedStuff[*ast.DefFnSetStmt]
+	AllDefinedAlgoNames  map[string]DefinedStuff[*ast.DefAlgoStmt]
+	// AllDefinedProveAlgoNames map[string]DefinedStuff[*ast.DefProveAlgoStmt]
 }
 
 type EnvMemory struct {
@@ -67,7 +68,7 @@ type EnvMemory struct {
 	FnTemplateDefMem map[string]struct{}
 	ExistPropDefMem  map[string]struct{}
 	AlgoDefMem       map[string]struct{}
-	DefProveAlgoMem  map[string]struct{}
+	// DefProveAlgoMem  map[string]struct{}
 
 	// facts memory
 	EqualMem                 map[string]shared_ptr_to_slice_of_obj
@@ -89,7 +90,7 @@ func NewEnvMemory() *EnvMemory {
 		FnTemplateDefMem: make(map[string]struct{}),
 		ExistPropDefMem:  make(map[string]struct{}),
 		AlgoDefMem:       make(map[string]struct{}),
-		DefProveAlgoMem:  make(map[string]struct{}),
+		// DefProveAlgoMem:  make(map[string]struct{}),
 
 		EqualMem:                 make(map[string]shared_ptr_to_slice_of_obj),
 		KnownFactsStruct:         makeKnownFactsStruct(),
@@ -102,56 +103,18 @@ func NewEnvMemory() *EnvMemory {
 	}
 }
 
-func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames map[string]DefinedStuff[struct{}], allDefinedPropNames map[string]DefinedStuff[*ast.DefPropStmt], allDefinedFnTemplateNames map[string]DefinedStuff[*ast.DefFnSetStmt], allDefinedAlgoNames map[string]DefinedStuff[*ast.DefAlgoStmt], allDefinedProveAlgoNames map[string]DefinedStuff[*ast.DefProveAlgoStmt]) *EnvMgr {
+func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames map[string]DefinedStuff[struct{}], allDefinedPropNames map[string]DefinedStuff[*ast.DefPropStmt], allDefinedFnTemplateNames map[string]DefinedStuff[*ast.DefFnSetStmt], allDefinedAlgoNames map[string]DefinedStuff[*ast.DefAlgoStmt]) *EnvMgr {
 	return &EnvMgr{
 		AllDefinedAtomObjNames: allDefinedAtomObjNames,
 		AllDefinedPropNames:    allDefinedPropNames,
 		// AllDefinedExistPropNames: allDefinedExistPropNames,
-		AllDefinedFnSetNames:     allDefinedFnTemplateNames,
-		AllDefinedAlgoNames:      allDefinedAlgoNames,
-		AllDefinedProveAlgoNames: allDefinedProveAlgoNames,
-		EnvPkgMgr:                pkgMgr,
-		EnvSlice:                 envMemory,
+		AllDefinedFnSetNames: allDefinedFnTemplateNames,
+		AllDefinedAlgoNames:  allDefinedAlgoNames,
+		// AllDefinedProveAlgoNames: allDefinedProveAlgoNames,
+		EnvPkgMgr: pkgMgr,
+		EnvSlice:  envMemory,
 	}
 }
-
-// func (envMgr *EnvMgr) RemoveBuiltinEnv() *EnvMgr {
-// 	builtinEnvMemory := envMgr.EnvSlice[0]
-// 	// 把 atomObjDefMem 里的 def 删了
-// 	for k := range builtinEnvMemory.AtomObjDefMem {
-// 		delete(envMgr.AllDefinedAtomObjNames, k)
-// 	}
-// 	// 把 propDefMem 里的 def 删了
-// 	for k := range builtinEnvMemory.PropDefMem {
-// 		delete(envMgr.AllDefinedPropNames, k)
-// 	}
-// 	// 把 existPropDefMem 里的 def 删了
-// 	for k := range builtinEnvMemory.ExistPropDefMem {
-// 		delete(envMgr.AllDefinedExistPropNames, k)
-// 	}
-// 	// 把 fnTemplateDefMem 里的 def 删了
-// 	for k := range builtinEnvMemory.FnTemplateDefMem {
-// 		delete(envMgr.AllDefinedFnSetNames, k)
-// 	}
-// 	// 把 algoDefMem 里的 def 删了
-// 	for k := range builtinEnvMemory.AlgoDefMem {
-// 		delete(envMgr.AllDefinedAlgoNames, k)
-// 	}
-// 	// 把 defProveAlgoMem 里的 def 删了
-// 	for k := range builtinEnvMemory.DefProveAlgoMem {
-// 		delete(envMgr.AllDefinedProveAlgoNames, k)
-// 	}
-// 	envMgr.EnvSlice = envMgr.EnvSlice[1:]
-// 	return envMgr
-// }
-
-// func (envMgr *EnvMgr) GetUpMostEnv() *EnvMemory {
-// 	return &envMgr.EnvSlice[0]
-// }
-
-// func (envMgr *EnvMgr) GetSecondUpMostEnv() *EnvMemory {
-// 	return &envMgr.EnvSlice[1]
-// }
 
 func (envMgr *EnvMgr) NewEnv() *EnvMgr {
 	envMgr.EnvSlice = append(envMgr.EnvSlice, *NewEnvMemory())
@@ -181,9 +144,9 @@ func (envMgr *EnvMgr) DeleteEnv() {
 	for k := range envMgr.CurEnv().AlgoDefMem {
 		delete(envMgr.AllDefinedAlgoNames, k)
 	}
-	for k := range envMgr.CurEnv().DefProveAlgoMem {
-		delete(envMgr.AllDefinedProveAlgoNames, k)
-	}
+	// for k := range envMgr.CurEnv().DefProveAlgoMem {
+	// 	delete(envMgr.AllDefinedProveAlgoNames, k)
+	// }
 
 	envMgr.EnvSlice = envMgr.EnvSlice[:len(envMgr.EnvSlice)-1]
 }
@@ -194,6 +157,7 @@ func makeKnownFactsStruct() KnownFactsStruct {
 		SpecFactInLogicExprMem:            *newSpecFactInLogicExprMem(),
 		SpecFactInUniFactMem:              *newSpecFactInUniFact(),
 		SpecFact_InLogicExpr_InUniFactMem: *newSpecFact_InLogicExpr_InUniFactMem(),
+		SpecFactInImplyTemplateMem:        *newSpecFactInImplyTemplateMem(),
 	}
 }
 
@@ -251,6 +215,31 @@ type SpecFactInUniFactMem struct {
 	NotPureFacts      map[string][]KnownSpecFact_InUniFact
 	Exist_St_Facts    map[string][]KnownSpecFact_InUniFact
 	NotExist_St_Facts map[string][]KnownSpecFact_InUniFact
+}
+
+type SpecFactInImplyTemplateMem struct {
+	PureFacts         map[string][]KnownSpecFact_InImplyTemplate
+	NotPureFacts      map[string][]KnownSpecFact_InImplyTemplate
+	Exist_St_Facts    map[string][]KnownSpecFact_InImplyTemplate
+	NotExist_St_Facts map[string][]KnownSpecFact_InImplyTemplate
+}
+
+func newSpecFactInImplyTemplateMem() *SpecFactInImplyTemplateMem {
+	return &SpecFactInImplyTemplateMem{
+		PureFacts:         make(map[string][]KnownSpecFact_InImplyTemplate),
+		NotPureFacts:      make(map[string][]KnownSpecFact_InImplyTemplate),
+		Exist_St_Facts:    make(map[string][]KnownSpecFact_InImplyTemplate),
+		NotExist_St_Facts: make(map[string][]KnownSpecFact_InImplyTemplate),
+	}
+}
+
+type KnownSpecFact_InImplyTemplate struct {
+	Spec_orFact   ast.Spec_OrFact
+	ImplyTemplate *ast.InferTemplateStmt
+}
+
+func NewKnownSpecFact_InImplyTemplate(known ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) KnownSpecFact_InImplyTemplate {
+	return KnownSpecFact_InImplyTemplate{known, implyTemplate}
 }
 
 type SpecFact_InLogicExpr_InUniFact struct {
@@ -316,5 +305,5 @@ func (envMgr *EnvMgr) CurEnv() *EnvMemory {
 }
 
 func NewEmptyEnvMgr(envPkgMgr *EnvPkgMgr) *EnvMgr {
-	return NewEnvMgr(envPkgMgr, []EnvMemory{*NewEnvMemory()}, make(map[string]DefinedStuff[struct{}]), make(map[string]DefinedStuff[*ast.DefPropStmt]), make(map[string]DefinedStuff[*ast.DefFnSetStmt]), make(map[string]DefinedStuff[*ast.DefAlgoStmt]), make(map[string]DefinedStuff[*ast.DefProveAlgoStmt]))
+	return NewEnvMgr(envPkgMgr, []EnvMemory{*NewEnvMemory()}, make(map[string]DefinedStuff[struct{}]), make(map[string]DefinedStuff[*ast.DefPropStmt]), make(map[string]DefinedStuff[*ast.DefFnSetStmt]), make(map[string]DefinedStuff[*ast.DefAlgoStmt]))
 }

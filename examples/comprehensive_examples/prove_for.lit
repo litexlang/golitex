@@ -1,18 +1,18 @@
 claim:
-    not $is_a_nonempty_set(range(1, 0))
-    prove_by_contradiction:
+    not $is_nonempty_set(range(1, 0))
+    contra:
         have x range(1, 0)
-        prove_for i range(1, 0):
+        for i range(1, 0):
             i = i + 1
         x = x + 1
         x - x = x + 1 - x = 0 = 1
         0 = 1
 
-prove_for i range(1, 10):
+for i range(1, 10):
     i > 0
 
-prove_for i range(1, 10), j range(1, 10):
+for i range(1, 10), j range(1, 10):
     i + j > 0
 
-prove_for i range(1, 10), j closed_range(1, 10):
+for i range(1, 10), j closed_range(1, 10):
     i + j > 0

@@ -20,15 +20,6 @@ import (
 	glob "golitex/glob"
 )
 
-// maybeAddSuccessMsg adds a success message to execRet if state.WithMsg is true
-func (ver *Verifier) maybeAddSuccessMsg(state *VerState, stmt, stmtVerifiedBy ast.Stmt, execRet *glob.StmtRet) *glob.StmtRet {
-	if state.WithMsg {
-		execRet.AddVerifyProcess(successVerString(stmt, stmtVerifiedBy))
-		return execRet
-	}
-	return execRet
-}
-
 // maybeAddSuccessMsgString is a backward compatibility function for string-based
 func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet *glob.VerRet) *glob.VerRet {
 	if state == nil {
@@ -78,4 +69,45 @@ func ordinalSuffix(n int) string {
 	default:
 		return fmt.Sprintf("%dth", n)
 	}
+}
+
+func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistStFactStruct) *ast.ExistStFactStruct {
+	if len(existStruct.ExistFreeParams) == 0 {
+		return existStruct
+	}
+
+	// 生成随机名称替换映射
+	paramReplaceMap := map[string]ast.Obj{}
+	newExistParams := make([]string, len(existStruct.ExistFreeParams))
+	usedNames := map[string]struct{}{}
+
+	for i, oldParam := range existStruct.ExistFreeParams {
+		// 生成一个不冲突的随机名称
+		newParamName := ver.Env.GenerateUndeclaredRandomName_AndNotInMap(usedNames)
+		newExistParams[i] = newParamName
+		usedNames[newParamName] = struct{}{}
+		paramReplaceMap[oldParam] = ast.Atom(newParamName)
+	}
+
+	// 替换 ExistFreeParamSets 中的参数引用
+	newExistParamSets := make([]ast.Obj, len(existStruct.ExistFreeParamSets))
+	for i, paramSet := range existStruct.ExistFreeParamSets {
+		newParamSet := paramSet
+		for oldParam, newParam := range paramReplaceMap {
+			newParamSet = newParamSet.ReplaceObj(ast.Atom(oldParam), newParam)
+		}
+		newExistParamSets[i] = newParamSet
+	}
+
+	// 替换 Params 中的参数引用
+	newParams := make([]ast.Obj, len(existStruct.Params))
+	for i, param := range existStruct.Params {
+		newParam := param
+		for oldParam, newParamObj := range paramReplaceMap {
+			newParam = newParam.ReplaceObj(ast.Atom(oldParam), newParamObj)
+		}
+		newParams[i] = newParam
+	}
+
+	return ast.NewExistStFactStruct(existStruct.FactType, existStruct.PropName, existStruct.IsPropTrue, newExistParams, newExistParamSets, newParams, existStruct.Line)
 }

@@ -79,7 +79,7 @@ prove:
     a $subset_of b
 
 claim:
-imply subset_of_is_transitive(a, b, c set):
+infer subset_of_is_transitive(a, b, c set):
         a $subset_of b
         b $subset_of c
         =>:
@@ -107,7 +107,7 @@ prove:
         $P(x)
 
 # Intersection
-know imply obj_in_intersection_is_in_both_sets(s1 set, s2 set, x obj):
+know infer obj_in_intersection_is_in_both_sets(s1 set, s2 set, x obj):
     x $in s1
     x $in s2
 
@@ -120,7 +120,7 @@ fn intersection(s1 set, s2 set) set:
         $obj_in_intersection_is_in_both_sets(s1, s2, x)
 
 # The set of all natural numbers is the union of the set of all natural numbers greater than n and the set of all natural numbers less than or equal to n
-know imply union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(n N, s1 set, s2 set):
+know infer union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(n N, s1 set, s2 set):
 	s1 := x N:
 		x > n
 	s2 := x N:
@@ -149,7 +149,7 @@ claim:
         claim:
         	forall x union(a, s):
                 x $in a
-            prove_by_contradiction:
+            contra:
             	not x $in a
                 $obj_in_union_is_in_one_of_the_sets(a, s, x)
                 x $in s
@@ -166,7 +166,7 @@ claim:
         claim:
             forall x obj:
                 not x $in intersection(a, s)
-            prove_by_contradiction:
+            contra:
                 x $in intersection(a, s)
                 $obj_in_intersection_is_in_both_sets(a, s, x)
                 x $in s
@@ -249,13 +249,13 @@ prove:
     3 $in difference(s, t)
     claim:
         not 2 $in difference(s, t)
-        prove_by_contradiction:
+        contra:
         	2 $in difference(s, t)
             2 $in s
             not 2 $in t
     claim:
     	not 4 $in difference(s, t)
-        prove_by_contradiction:
+        contra:
         	4 $in difference(s, t)
             4 $in s
             not 4 $in t
@@ -265,14 +265,14 @@ prove:
     claim:
         forall x difference(s, t):
             x != 2
-        prove_by_contradiction:
+        contra:
             2 $in difference(s, t)
             2 $in s
             not 2 $in t
     claim:
         forall x difference(s, t):
             x != 4
-        prove_by_contradiction:
+        contra:
             4 $in difference(s, t)
             4 $in s
             not 4 $in t
@@ -290,7 +290,7 @@ prove:
             or:
                 k = 1
                 k = 3
-        prove_by_contradiction:
+        contra:
             not k = 1
             not k = 3
             not k = 2
@@ -318,3 +318,6 @@ prove:
 
     difference(s, t) = u
 
+prove:
+    have fn f(x {}) {} = x
+    have fn g(x {}) R = 1

@@ -1,0 +1,32 @@
+prop dvd(x, y Z):
+    dom:
+        x != 0
+    <=>:
+        y % x = 0
+
+have gcd fn(Z, Z) N_pos
+
+know forall x, y, z Z: z $dvd x, z $dvd y => z $dvd gcd(x, y)
+
+prop Q_in_frac(q Q, x Z, y N_pos):
+    q = x / y
+    gcd(x, y) = 1
+
+know forall q Q: exist x Z, y N_pos st $Q_in_frac(q, x, y)
+
+know forall x Z: 2 $dvd x^2 => 2 $dvd x
+know infer x, y, z Z: x = z * y => z $dvd x if z != 0
+know forall x, y Z: x $dvd y => exist z Z st y = x * z
+
+contra not sqrt(2) $in Q:
+    have x Z, y N_pos st $Q_in_frac(sqrt(2), x, y)
+    x^2 = (sqrt(2)* y)^2 = sqrt(2)^2 * y^2 = 2 * y^2
+    x ^ 2 = 2 * y^2 => 2 $dvd x^2
+    2 $dvd x
+    have z Z st x = 2 * z
+    x^2 = (2 * z)^2 = 2 * y^2 = (2) ^ 2 * z^2 = 4 * z^2
+    y ^ 2 = 4 * z^2 / 2 = 2 * z ^ 2
+    y ^ 2 = 2 * z ^ 2 => 2 $dvd y ^ 2
+    2 $dvd y
+    2 $dvd gcd(x, y)
+    2 $dvd 1

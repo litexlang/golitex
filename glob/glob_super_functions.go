@@ -24,6 +24,10 @@ var SuperFunctionsSet map[string]struct{} = map[string]struct{}{
 	KeywordSetDiff:   {},
 	KeywordProj:      {},
 	KeywordDim:       {},
+	KeywordCount:     {},
+	KeywordVal:       {},
+	KeywordChoice:    {},
+	// 为啥 set_list 不用写在这儿嘞？？
 }
 
 func IsSuperFunction(name string) bool {

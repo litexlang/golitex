@@ -132,7 +132,7 @@ func (f *KnowFactStmt) InlineString() string {
 // 	return builder.String()
 // }
 
-func (s *HaveObjStWithParamSetsStmt) InlineString() string {
+func (s *HaveObjStStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordHave)
 	builder.WriteString(" ")
@@ -144,15 +144,42 @@ func (s *HaveObjStWithParamSetsStmt) InlineString() string {
 	return builder.String()
 }
 
-func (s *ProveInEachCaseStmt) InlineString() string { return s.String() }
 func (s *ProveCaseByCaseStmt) InlineString() string { return s.String() }
 
-func (s *KnowImplicationStmt) InlineString() string {
+func (s *KnowPropInferStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)
 	builder.WriteString(" ")
-	builder.WriteString(glob.KeywordImplication)
-	builder.WriteString(s.ImplicationProp.InlineString())
+	builder.WriteString(glob.KeywordInfer)
+	builder.WriteString(s.DefProp.InlineString())
+	return builder.String()
+}
+
+func (s *KnowInferStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordKnow)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordInfer)
+	builder.WriteString(" ")
+	builder.WriteString(StrObjSetPairs(s.Params, s.ParamSets))
+	if len(s.DomFacts) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		for _, fact := range s.DomFacts {
+			builder.WriteString(fact.InlineString())
+			builder.WriteString(", ")
+		}
+	}
+	if len(s.ThenFacts) > 0 {
+		builder.WriteString(glob.KeySymbolRightArrow)
+		for _, fact := range s.ThenFacts {
+			builder.WriteString(fact.InlineString())
+			builder.WriteString(", ")
+		}
+	}
+	if len(s.IfFacts) > 0 {
+		builder.WriteString(" if ")
+		builder.WriteString(inlineFactsString(s.IfFacts))
+	}
 	return builder.String()
 }
 
@@ -166,6 +193,58 @@ func (s *OrStmt) InlineString() string {
 	}
 	builder.WriteString(strings.Join(orFactStrSlice, ", "))
 	builder.WriteString(glob.KeySymbolRightBrace)
+	return builder.String()
+}
+
+func (s *InferStmt) InlineString() string {
+	var builder strings.Builder
+	domFactStrSlice := make([]string, len(s.DomFacts))
+	for i, fact := range s.DomFacts {
+		domFactStrSlice[i] = fact.InlineString()
+	}
+	builder.WriteString(strings.Join(domFactStrSlice, ", "))
+	builder.WriteString(" => ")
+	thenFactStrSlice := make([]string, len(s.ThenFacts))
+	for i, fact := range s.ThenFacts {
+		thenFactStrSlice[i] = fact.InlineString()
+	}
+	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+	return builder.String()
+}
+
+func (s *InferTemplateStmt) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordInfer)
+	builder.WriteString(" ")
+
+	// Params
+	if len(s.Params) > 0 {
+		paramStrs := make([]string, len(s.Params))
+		for i, param := range s.Params {
+			paramStrs[i] = param
+			if i < len(s.ParamSets) {
+				paramStrs[i] += " " + s.ParamSets[i].String()
+			}
+		}
+		builder.WriteString(strings.Join(paramStrs, ", "))
+		builder.WriteString(": ")
+	}
+
+	// DomFacts
+	domFactStrSlice := make([]string, len(s.DomFacts))
+	for i, fact := range s.DomFacts {
+		domFactStrSlice[i] = fact.InlineString()
+	}
+	builder.WriteString(strings.Join(domFactStrSlice, ", "))
+	builder.WriteString(" => ")
+
+	// ThenFacts
+	thenFactStrSlice := make([]string, len(s.ThenFacts))
+	for i, fact := range s.ThenFacts {
+		thenFactStrSlice[i] = fact.InlineString()
+	}
+	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+
 	return builder.String()
 }
 
@@ -233,13 +312,13 @@ func (s *DoNothingStmt) InlineString() string   { return s.String() }
 func (s *InlineFactsStmt) InlineString() string { return inlineFactsString(s.Facts) }
 func (s *ProveByInductionStmt) InlineString() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveByInduction)
+	builder.WriteString(glob.KeywordInduc)
+	builder.WriteString(" ")
+	builder.WriteString(s.Param)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordNPos)
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteString(s.Fact.InlineString())
-	builder.WriteString(", ")
-	builder.WriteString(s.Param)
-	builder.WriteString(", ")
-	builder.WriteString(s.Start.String())
 	return builder.String()
 }
 
@@ -350,13 +429,13 @@ func (s *ProveForStmt) InlineString() string {
 	return "TODO"
 }
 
-func (s *ProveImplyStmt) InlineString() string {
+func (s *ProveInferStmt) InlineString() string {
 	return "TODO"
 }
 
-func (s *DefImplicationStmt) InlineString() string {
-	return "TODO"
-}
+// func (s *DefImplicationStmt) InlineString() string {
+// 	return "TODO"
+// }
 
 func (s *ProveIsTransitivePropStmt) InlineString() string {
 	return "TODO"
@@ -366,9 +445,9 @@ func (s *ProveIsCommutativePropStmt) InlineString() string {
 	return "TODO"
 }
 
-func (s *ProveAlgoIfStmt) InlineString() string {
-	return "TODO"
-}
+// func (s *ProveAlgoIfStmt) InlineString() string {
+// 	return "TODO"
+// }
 
 func (s *AlgoIfStmt) InlineString() string {
 	return "TODO"
@@ -386,17 +465,17 @@ func (s *EvalStmt) InlineString() string {
 	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.ObjToEval.String())
 }
 
-func (s *DefProveAlgoStmt) InlineString() string {
-	return "TODO"
-}
+// func (s *DefProveAlgoStmt) InlineString() string {
+// 	return "TODO"
+// }
 
-func (s *ByStmt) InlineString() string {
-	return "TODO"
-}
+// func (s *ByStmt) InlineString() string {
+// 	return "TODO"
+// }
 
-func (s *ProveAlgoReturnStmt) InlineString() string {
-	return s.String()
-}
+// func (s *ProveAlgoReturnStmt) InlineString() string {
+// 	return s.String()
+// }
 
 func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
 	return s.String()

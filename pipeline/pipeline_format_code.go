@@ -51,5 +51,5 @@ func FormatCode(path string) (*glob.StmtRet, error) {
 	if err != nil {
 		return glob.ErrRet(fmt.Sprintf("failed to write file %s: %s", path, err.Error())), err
 	}
-	return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("formatted code written to %s", path), 0, []string{})), nil
+	return glob.NewStmtTrueWithVerifyProcess(glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("formatted code written to %s", path), glob.BuiltinLine0, []string{})), nil
 }

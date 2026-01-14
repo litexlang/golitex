@@ -1,0 +1,44 @@
+"""
+# Definition of injective function, surjective function, bijective function in Litex kernel
+prop is_injective_fn(X set, Y set, f fn(X)Y):
+
+	forall x1, x2 X:
+		x1 != x2
+		=>:
+			f(x1) != f(x2)
+
+know:
+	forall X set, Y set, f fn(X)Y:
+		forall x1, x2 X:
+			f(x1) = f(x2)
+			=>:
+				x1 = x2
+		=>:
+			$is_injective_fn(X, Y, f)
+
+prop is_surjective_fn(X set, Y set, f fn(X)Y):
+	forall y Y:
+		exist x X st f(x) = y
+
+prop is_bijective_fn(X set, Y set, f fn(X)Y):
+	$is_injective_fn(X, Y, f)
+	$is_surjective_fn(X, Y, f)
+"""
+
+have fn f(x R) R = x + 1
+
+forall x1, x2 R:
+    f(x1) = f(x2)
+    =>:
+        f(x2) = f(x1) = x1 + 1 = x2 + 1
+        x1 = x1 + 1 - 1 = x2 + 1 - 1 = x2
+        x1 = x2
+
+$is_injective_fn(R, R, f)
+
+prove forall y R: exist x R st f(x) = y:
+    prove_exist y - 1: x R st f(x) = y:
+        f(y - 1) = (y - 1) + 1 = y
+$is_surjective_fn(R, R, f)
+
+$is_bijective_fn(R, R, f)

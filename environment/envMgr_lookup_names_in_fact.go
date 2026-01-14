@@ -72,7 +72,7 @@ func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.SpecFactStmt, extraParams
 
 	// check paramSet
 	for i, paramSet := range existFactStruct.ExistFreeParamSets {
-		ret := envMgr.LookupNamesInObj(paramSet, newExtraParams)
+		ret := envMgr.LookupNamesInObjOrObjStringIsSetNonemptySetFiniteSet(paramSet, newExtraParams)
 		if ret.IsNotTrue() {
 			return ret
 		}
@@ -80,7 +80,7 @@ func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.SpecFactStmt, extraParams
 		newExtraParams[existFactStruct.ExistFreeParams[i]] = struct{}{}
 	}
 
-	for _, param := range stmt.Params {
+	for _, param := range existFactStruct.Params {
 		if ret := envMgr.LookupNamesInObj(param, newExtraParams); ret.IsNotTrue() {
 			return ret
 		}
@@ -117,10 +117,6 @@ func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.SpecFactStmt) *glob.S
 	// 	return glob.ErrRet(fmt.Sprintf("undefined exist_prop: %s", stmt.PropName))
 	// } else {
 	if glob.IsBuiltinPropName(string(stmt.PropName)) {
-		return glob.NewEmptyStmtTrue()
-	}
-
-	if glob.IsBuiltinExistPropName(string(stmt.PropName)) {
 		return glob.NewEmptyStmtTrue()
 	}
 

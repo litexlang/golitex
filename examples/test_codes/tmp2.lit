@@ -1,4 +1,4 @@
-prove_by_contradiction not sqrt(2) $in Q:
+contra not sqrt(2) $in Q:
     have m, n st $Q_in_frac(sqrt(2))
     sqrt(2) = m / n
     n * sqrt(2) = m # 自动生成
@@ -24,12 +24,12 @@ prop is_prime(x N_pos):
     <=>:
         forall y N_pos: y >= 2, y < x => not y $dvd x
 
-know imply exp_dvd_imply_dvd(x, y Z, a N_pos):
+know infer exp_dvd_imply_dvd(x, y Z, a N_pos):
     x != 0
     x $dvd y ^ a
     $is_prime(a)
     =>:
         x $dvd y
 
-prove_for i range():
+for i range():
 	

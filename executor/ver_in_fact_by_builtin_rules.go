@@ -43,6 +43,14 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerSt
 		return verRet
 	}
 
+	verRet = ver.verInFactByLeftParamIsReturnValueOfSuperFn(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
 	verRet = ver.verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt, state)
 	if verRet.IsErr() {
 		return verRet
@@ -145,7 +153,7 @@ func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt *
 func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	ok := ast.IsAtomObjAndEqualToStr(stmt.Params[1], glob.KeywordReal)
 	if ok {
-		ok = ast.IsFn_WithHeadNameInSlice(stmt.Params[0], map[string]struct{}{glob.KeySymbolPlus: {}, glob.KeySymbolMinus: {}, glob.KeySymbolStar: {}, glob.KeySymbolSlash: {}, glob.KeySymbolPower: {}})
+		ok = ast.IsFn_WithHeadNameInSlice(stmt.Params[0], map[string]struct{}{glob.KeySymbolPlus: {}, glob.KeySymbolMinus: {}, glob.KeySymbolStar: {}, glob.KeySymbolSlash: {}, glob.KeySymbolPower: {}, glob.KeywordVal: {}})
 
 		if ok {
 			msg := fmt.Sprintf("return value of builtin arithmetic function %s is in Real", stmt.Params[0])
@@ -470,7 +478,7 @@ func (ver *Verifier) verInCartSet_DimAndElements(obj ast.Obj, cartSet *ast.FnObj
 	}
 
 	msg := fmt.Sprintf("dim(%s) = %d and each element %s[i] is in corresponding cart set %s", obj, cartDimValue, obj, cartSet)
-	return (glob.NewVerMsg(glob.StmtRetTypeTrue, "", 0, []string{msg}))
+	return (glob.NewVerMsg(glob.StmtRetTypeTrue, "", glob.BuiltinLine0, []string{msg}))
 }
 
 // verInFactByRightParamIsCartSet verifies a $in cart(...) by checking:
@@ -907,7 +915,7 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt *ast.SpecFactStmt, state 
 		}
 	}
 
-	return (glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{"definition of set builder"}))
+	return (glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{"definition of set builder"}))
 }
 
 func (ver *Verifier) verInFactByRightIsListSet(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
@@ -931,13 +939,29 @@ func (ver *Verifier) verInFactByRightIsListSet(stmt *ast.SpecFactStmt, state *Ve
 		if verRet.IsTrue() {
 			// 找到了相等的元素，返回 true
 			if stmt.Params[0].String() == item.String() {
-				return (glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{fmt.Sprintf("%s $in %s, %s = %s", stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj)}))
+				return (glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s $in %s, %s = %s", stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj)}))
 			}
 
-			return (glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{fmt.Sprintf("%s $in %s, %s = %s, %s = %s", stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj, item, stmt.Params[0])}))
+			return (glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s $in %s, %s = %s, %s = %s", stmt.Params[0], listSetFnObj.String(), stmt.Params[1], listSetFnObj, item, stmt.Params[0])}))
 		}
 	}
 
 	// 没有找到相等的元素，返回 unknown
 	return glob.NewEmptyVerRetUnknown()
+}
+
+func (ver *Verifier) verInFactByLeftParamIsReturnValueOfSuperFn(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+	setWhereObjIsIn, ok := stmt.Params[0].(*ast.FnObj)
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	switch setWhereObjIsIn.FnHead.String() {
+	case glob.KeywordDim:
+		return ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordSubsetOf), []ast.Obj{ast.Atom(glob.KeywordNPos), stmt.Params[1]}, glob.BuiltinLine0), state)
+	case glob.KeywordCount:
+		return ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordSubsetOf), []ast.Obj{ast.Atom(glob.KeywordNatural), stmt.Params[1]}, glob.BuiltinLine0), state)
+	default:
+		return glob.NewEmptyVerRetUnknown()
+	}
 }

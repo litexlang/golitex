@@ -128,7 +128,7 @@ func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *as
 		return state, nil, nil
 	}
 	if state.IsUnknown() {
-		return glob.ErrRet(fmt.Sprintf("proof in %s must be proved to be true, but %s is not true", glob.KeywordProveIsCommutativeProp, rightToLeft)), nil, nil
+		return glob.ErrRet(fmt.Sprintf("proof in %s must be proved to be true, but %s is not true", glob.KeywordComProp, rightToLeft)), nil, nil
 	}
 	verifyProcessMsgs = append(verifyProcessMsgs, state.VerifyProcess...)
 
