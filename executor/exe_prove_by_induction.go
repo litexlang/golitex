@@ -64,7 +64,7 @@ func (exec *Executor) proveByInductionStmtProveProcess(stmt *ast.ProveByInductio
 	// 运行整个 Proof
 	execRet = exec.execStmtsAtCurEnv(stmt.Proof)
 	if execRet.IsNotTrue() {
-		return execRet.AddError(fmt.Sprintf("proof in prove_by_induction failed"))
+		return execRet.AddError(fmt.Sprintf("proof in induc failed"))
 	}
 
 	ver := NewVerifier(exec.Env)

@@ -9,7 +9,7 @@ claim:
         (x + a - sqrt(a^2 - b)) * (x + a + sqrt(a^2 - b)) = x ^ 2 + 2 * a * x + a^2 - sqrt(a^2 - b) ^ 2 = x ^ 2 + 2 * a * x + a^2 - (a^2 - b) = x ^ 2 + 2 * a * x + b = 0
         $product_is_0_then_at_least_one_factor_is_0(x + a - sqrt(a^2 - b), x + a + sqrt(a^2 - b))
         
-        prove_case_by_case:
+        cases:
             =>:
                 x = -a + sqrt(a^2 - b) or x = -a - sqrt(a^2 - b)
             case x + a + sqrt(a^2 - b) = 0:

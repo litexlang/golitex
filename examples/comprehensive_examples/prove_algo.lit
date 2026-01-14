@@ -9,7 +9,7 @@ prove:
         if x != 1:
             claim:
                 not $p(x)
-                prove_by_contradiction:
+                contra:
                     $p(x)
                     x = 1
             return not $p(x)

@@ -7,7 +7,7 @@ know prop_infer solve_quadratic_equation(a, b, c, x R):
 let x R: x^2 + 2 * x + 1 = 0
 
 $solve_quadratic_equation(1, 2, 1, x)
-prove_case_by_case:
+cases:
     =>:
         x = -1
     case x + a + sqrt(a^2 - b) = 0:

@@ -6,7 +6,7 @@ prop is_prime_number(x N_pos):
         =>:
             x % y != 0
 
-prove_for i range(2, 17):
+for i range(2, 17):
     17 % i != 0
 
 $is_prime_number(17)

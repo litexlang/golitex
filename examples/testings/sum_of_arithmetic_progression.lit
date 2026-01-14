@@ -34,7 +34,7 @@ claim:
                     k * (2 * a(1) + (k-1) * d) / 2 + (a(1) + k * d)
                     (k+1) * (2 * a(1) + (k+1 - 1) * d) / 2
 
-        prove_by_induction(sum_of_first_n_numbers(a, k) = k * (2 * a(1) + (k-1) * d) / 2, k, 1)
+        induc(sum_of_first_n_numbers(a, k) = k * (2 * a(1) + (k-1) * d) / 2, k, 1)
         n >= 1
         sum_of_first_n_numbers(a, n) = n * (2 * a(1) + (n-1) * d) / 2
 
