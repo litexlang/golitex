@@ -1,14 +1,7 @@
 # https://github.com/litexlang/golitex/blob/main/examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lit
 
-# 在vslean里加上 Z和N势能相等的例子
-
-# 解释为什么要有 set_equal 而不是在kernel里直接写
-# 让 set_equal变成keyword而不是fact
-
 # 内核里证明 prove forall x union({1, 2}, {2, 3}): x $in {1, 2, 3}:
 
-#   enum a {1, 2, 3}:
-        a $in {3, 2, 1} 把圆括号删了
 
 #     1 $in {1, 2, 3}
  subset_of 也能枚举

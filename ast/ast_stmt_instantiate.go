@@ -1071,7 +1071,15 @@ func (stmt *HaveFnEqualCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt,
 	if err != nil {
 		return nil, err
 	}
-	return &HaveFnEqualCaseByCaseStmt{newDefHeader, newRetSet, newCaseByCaseFacts, newCaseByCaseEqualTo, stmt.Line}, nil
+	newProofs := StmtSliceSlice{}
+	for _, proof := range stmt.Proofs {
+		newProof, err := proof.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newProofs = append(newProofs, newProof)
+	}
+	return &HaveFnEqualCaseByCaseStmt{newDefHeader, newRetSet, newCaseByCaseFacts, newCaseByCaseEqualTo, newProofs, stmt.Line}, nil
 }
 
 func InstantiateSetBuilderObjWithoutChangingParam(obj *FnObj, uniMap map[string]Obj) (Obj, error) {
