@@ -4,7 +4,7 @@
 prove:
     have s set = {1, 2, 3}
 
-    enum(x {1, 2, 3}):
+    enum x {1, 2, 3}:
         x $in {3, 2, 1}
 
 prove:
@@ -62,7 +62,7 @@ prove:
             x > 0
             =>:
                 h(x) > 1
-        prove_exist:
+        witness:
             do_nothing
         = 100
 

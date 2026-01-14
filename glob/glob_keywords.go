@@ -75,7 +75,7 @@ const (
 	KeywordFor         = "for"
 	KeywordComProp     = "com_prop"
 	KeywordTransProp   = "trans_prop"
-	KeywordProveExist  = "prove_exist"
+	KeywordWitness     = "witness"
 	KeywordEqualTuple  = "equal_tuple"
 	KeywordEqualSet    = "equal_set"
 	KeywordNotEqualSet = "not_equal_set"
@@ -217,7 +217,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordSetMinus:  {},
 	KeywordSetDiff:   {},
 
-	KeywordProveExist: {},
+	KeywordWitness: {},
 
 	KeywordRPos:  {},
 	KeywordRNeg:  {},

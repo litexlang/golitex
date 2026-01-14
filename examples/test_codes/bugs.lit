@@ -41,7 +41,7 @@ forall x Z: x >= 0 => 7 * x >= 0, 7 * x + 1 >= 0, x $in N, 7 * x $in N, 7 * x + 
 
 # 内核里证明 prove forall x union({1, 2}, {2, 3}): x $in {1, 2, 3}:
 
-#   enum(a {1, 2, 3}):
+#   enum a {1, 2, 3}:
         a $in {3, 2, 1} 把圆括号删了
 
 #     1 $in {1, 2, 3}
@@ -61,7 +61,7 @@ forall x Z: x >= 0 => 7 * x >= 0, 7 * x + 1 >= 0, x $in N, 7 * x $in N, 7 * x + 
 用函数（序列）来表示 连乘
 
 
-# enum(x {1, 2, 3, 4, 17}): 后面不要有 ()
+# enum x {1, 2, 3, 4, 17}: 后面不要有 ()
 
 #    用infer
  $product_is_0_then_at_least_one_factor_is_0(x + a - sqrt(a^2 - b), x + a + sqrt(a^2 - b))
