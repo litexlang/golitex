@@ -37,7 +37,7 @@ forall x1, x2 R:
 $is_injective_fn(R, R, f)
 
 prove forall y R: exist x R st f(x) = y:
-    prove_exist y - 1: x R st f(x) = y:
+    witness y - 1: x R st f(x) = y:
         f(y - 1) = (y - 1) + 1 = y
 $is_surjective_fn(R, R, f)
 
