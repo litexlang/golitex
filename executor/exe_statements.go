@@ -102,8 +102,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = glob.ErrRet("import statements are not allowed in local scope.")
 	case *ast.RunFileStmt:
 		execRet = glob.ErrRet("run statements are not allowed in local scope.")
-	case *ast.EqualTupleStmt:
-		execRet = exec.equalTupleStmt(stmt)
 	case *ast.EqualSetStmt:
 		execRet = exec.equalSetStmt(stmt)
 	case *ast.ProveForStmt:
@@ -921,116 +919,6 @@ func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveInferStmt) *glob
 		execState := exec.factStmt(instThenFact)
 		if execState.IsNotTrue() {
 			return execState
-		}
-	}
-
-	return exec.NewTrueStmtRet(stmt)
-}
-
-func (exec *Executor) equalTupleStmt(stmt *ast.EqualTupleStmt) *glob.StmtRet {
-	// 1. prove 过程（在局部环境中）
-	ret := exec.equalTupleStmtProveProcess(stmt)
-	if ret.IsNotTrue() {
-		return ret
-	}
-
-	// 2. 存储过程（在原地存储）
-	equalFact := ast.NewEqualFact(stmt.Left, stmt.Right)
-	ret2 := exec.Env.NewFactWithCheckingNameDefined(equalFact)
-	if ret2.IsErr() {
-		return glob.ErrRet(ret2.String())
-	}
-
-	return exec.NewTrueStmtRet(stmt).AddNewFacts(ret2.Infer)
-}
-
-func (exec *Executor) equalTupleStmtProveProcess(stmt *ast.EqualTupleStmt) *glob.StmtRet {
-	// 开局部环境
-	exec.NewEnv()
-	defer exec.deleteEnv()
-
-	// 1. 先执行 proofs
-	for _, proofStmt := range stmt.Proofs {
-		execRet := exec.Stmt(proofStmt)
-		if execRet.IsNotTrue() {
-			return execRet
-		}
-	}
-
-	// 2. 验证：先验证 left 和 right 是 tuple
-	left := stmt.Left
-	right := stmt.Right
-
-	ver := NewVerifier(exec.Env)
-	state := Round0Msg()
-
-	// 验证 left 是 tuple
-	isTupleLeftFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{left}, stmt.Line)
-	verRet := ver.VerFactStmt(isTupleLeftFact, state)
-	if verRet.IsErr() {
-		return glob.ErrRet(verRet.String())
-	}
-	if verRet.IsUnknown() {
-		return glob.ErrRet(fmt.Sprintf("cannot verify that %s is a tuple", left))
-	}
-
-	// 验证 right 是 tuple
-	isTupleRightFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{right}, stmt.Line)
-	verRet = ver.VerFactStmt(isTupleRightFact, state)
-	if verRet.IsErr() {
-		return glob.ErrRet(verRet.String())
-	}
-	if verRet.IsUnknown() {
-		return glob.ErrRet(fmt.Sprintf("cannot verify that %s is a tuple", right))
-	}
-
-	// 3. 获取 dim(left) 的值
-	dimLeftFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{left})
-	dimValue := exec.Env.GetSymbolSimplifiedValue(dimLeftFn)
-	if dimValue == nil {
-		// 尝试从相等事实中获取
-		if equalObjs, gotEqualObjs := exec.Env.GetEqualObjs(dimLeftFn); gotEqualObjs && equalObjs != nil {
-			for _, equalObj := range *equalObjs {
-				if _, ok2 := ast.ToInt(equalObj); ok2 {
-					dimValue = equalObj
-					break
-				}
-			}
-		}
-		if dimValue == nil {
-			return glob.ErrRet(fmt.Sprintf("cannot determine dim(%s)", left))
-		}
-	}
-
-	// 4. 验证 dim(left) = dim(right)
-	dimRightFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{right})
-	dimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimLeftFn, dimRightFn}, stmt.Line)
-	verRet = ver.VerFactStmt(dimEqualFact, state)
-	if verRet.IsErr() {
-		return glob.ErrRet(verRet.String())
-	}
-	if verRet.IsUnknown() {
-		return glob.ErrRet(fmt.Sprintf("cannot verify that dim(%s) = dim(%s)", left, right))
-	}
-
-	// 5. 获取 dim 的整数值
-	dimInt, ok := ast.ToInt(dimValue)
-	if !ok {
-		return glob.ErrRet(fmt.Sprintf("cannot determine integer value of dim %s", dimValue))
-	}
-
-	// 6. 验证每个元素相等：left[i] = right[i] for i = 1 to dim
-	for i := 1; i <= dimInt; i++ {
-		indexObj := ast.Atom(fmt.Sprintf("%d", i))
-		leftIndexed := ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{left, indexObj})
-		rightIndexed := ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{right, indexObj})
-		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftIndexed, rightIndexed}, stmt.Line)
-		verRet := ver.VerFactStmt(indexEqualFact, state)
-		if verRet.IsErr() {
-			return glob.ErrRet(verRet.String())
-		}
-		if verRet.IsUnknown() {
-			return glob.ErrRet(fmt.Sprintf("cannot verify that %s[%d] = %s[%d]", left, i, right, i))
 		}
 	}
 
