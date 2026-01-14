@@ -1,6 +1,8 @@
-1 + 3 = 4
+forall x Z, y Z: x > 0, y > 0 => x * y > 0
+
+have fn f(x Z) Z = x
 
 claim:
-    1 + 1 =3
+    forall x Z, y Z: x > 0, y > 0 => x * y > 0
     prove:
-        1 + 1 = 3
+        f(1.5) > 0
