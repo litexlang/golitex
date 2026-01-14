@@ -509,7 +509,7 @@ func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch(stmtToMatch *ast
 			continue
 		}
 
-		randomizedUniFactWithoutThen, _, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownFact_paramProcessed.UniFact)
+		randomizedKnownUniFactWithoutThen, _, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownFact_paramProcessed.UniFact)
 		if err != nil {
 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
 		}
@@ -521,7 +521,7 @@ func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch(stmtToMatch *ast
 			}
 		}
 
-		instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
+		instantiatedKnownUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedKnownUniFactWithoutThen, uniConMap)
 		if err != nil {
 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
 		}
@@ -535,7 +535,7 @@ func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch(stmtToMatch *ast
 		}
 
 		// TODO 要证明在paramSet里
-		paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
+		paramInParamSetFacts := instantiatedKnownUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
 		setFactSatisfied := true
 		for _, paramInParamSetFact := range paramInParamSetFacts {
 			verRet := ver.VerFactStmt(paramInParamSetFact, nextState)
@@ -552,7 +552,7 @@ func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch(stmtToMatch *ast
 			continue
 		}
 
-		verRet := ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, nextState)
+		verRet := ver.proveUniFactDomFacts(instantiatedKnownUniFactWithoutThen.DomFacts, nextState)
 		if verRet.IsErr() {
 			return verRet
 		}
