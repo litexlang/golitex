@@ -20,7 +20,7 @@ prove:
         forall x Z: x > 1 , x < 3 => $p(x)
         forall x R: x > 2 => $p(x)
 
-    prove_case_by_case:
+    cases:
         =>:
             $p(x)
         prove x = 1:

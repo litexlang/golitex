@@ -149,7 +149,7 @@ claim:
         claim:
         	forall x union(a, s):
                 x $in a
-            prove_by_contradiction:
+            contra:
             	not x $in a
                 $obj_in_union_is_in_one_of_the_sets(a, s, x)
                 x $in s
@@ -166,7 +166,7 @@ claim:
         claim:
             forall x obj:
                 not x $in intersection(a, s)
-            prove_by_contradiction:
+            contra:
                 x $in intersection(a, s)
                 $obj_in_intersection_is_in_both_sets(a, s, x)
                 x $in s
@@ -249,13 +249,13 @@ prove:
     3 $in difference(s, t)
     claim:
         not 2 $in difference(s, t)
-        prove_by_contradiction:
+        contra:
         	2 $in difference(s, t)
             2 $in s
             not 2 $in t
     claim:
     	not 4 $in difference(s, t)
-        prove_by_contradiction:
+        contra:
         	4 $in difference(s, t)
             4 $in s
             not 4 $in t
@@ -265,14 +265,14 @@ prove:
     claim:
         forall x difference(s, t):
             x != 2
-        prove_by_contradiction:
+        contra:
             2 $in difference(s, t)
             2 $in s
             not 2 $in t
     claim:
         forall x difference(s, t):
             x != 4
-        prove_by_contradiction:
+        contra:
             4 $in difference(s, t)
             4 $in s
             not 4 $in t
@@ -290,7 +290,7 @@ prove:
             or:
                 k = 1
                 k = 3
-        prove_by_contradiction:
+        contra:
             not k = 1
             not k = 3
             not k = 2

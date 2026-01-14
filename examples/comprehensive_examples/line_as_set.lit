@@ -146,7 +146,7 @@ have fn:
 
 # 示例：点 (0, 0) 到直线 line(1, 1, 1) 的距离
 prove:
-    prove_by_contradiction sqrt(2) != 0:
+    contra sqrt(2) != 0:
         sqrt(2) = 0
         2 = 0
     distance_point_to_line((0, 0), 1, 1, 1) = abs(1 * 0 + 1 * 0 - 1) / sqrt(1^2 + 1^2)

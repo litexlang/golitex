@@ -312,7 +312,7 @@ func (s *DoNothingStmt) InlineString() string   { return s.String() }
 func (s *InlineFactsStmt) InlineString() string { return inlineFactsString(s.Facts) }
 func (s *ProveByInductionStmt) InlineString() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveByInduction)
+	builder.WriteString(glob.KeywordInduc)
 	builder.WriteString(" ")
 	builder.WriteString(s.Param)
 	builder.WriteString(" ")

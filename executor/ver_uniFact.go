@@ -44,13 +44,13 @@ func (ver *Verifier) verUniFact_checkFactOneByOne(oldStmt *ast.UniFactStmt, stat
 		return glob.NewVerMsg(glob.StmtRetTypeError, oldStmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
-	// 检查所有 paramSet 是否都是 list_set，如果是，自动使用 prove_by_enum 的逻辑
+	// 检查所有 paramSet 是否都是 list_set，如果是，自动使用 enum 的逻辑
 	if ver.allParamSetsAreListSet(newStmtPtr.ParamSets) {
 		verRet := ver.verUniFactByProveByEnum(newStmtPtr, state)
 		if verRet.IsTrue() || verRet.IsErr() {
 			return verRet
 		}
-		// 如果 prove_by_enum 失败，继续使用常规验证方法
+		// 如果 enum 失败，继续使用常规验证方法
 	}
 
 	// know cond facts
@@ -220,7 +220,7 @@ func (ver *Verifier) allParamSetsAreListSet(paramSets []ast.Obj) bool {
 	return true
 }
 
-// verUniFactByProveByEnum 使用 prove_by_enum 的逻辑来验证 forall 语句
+// verUniFactByProveByEnum 使用 enum 的逻辑来验证 forall 语句
 func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
 	// 获取所有 paramSet 对应的 list_set
 	enums := [][]ast.Obj{}
