@@ -23,7 +23,7 @@ claim:
         count(set_minus(s1, {z1})) = 1
         have z2 set_minus(s1, {z1})
         z1 $in s1, z2 $in set_minus(s1, {z1}) => z1 != z2
-        prove_by_contradiction f(z1) = f(z2):
+        contra f(z1) = f(z2):
             {f(z1), f(z2)} $subset_of s2
             count({f(z1), f(z2)}) <= count(s2)
             count({f(z1), f(z2)}) = 2
@@ -46,7 +46,7 @@ claim:
                 =>:
                     exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
             prove:
-                prove_by_contradiction exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b):
+                contra exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b):
                     forall a s1, b s1:
                         not $different_item_has_the_same_image(s1, s2, f, a, b)
 
@@ -69,7 +69,7 @@ claim:
                             f(x) $in s2
                             x != t
                             f(t) != f(x)
-                            prove_by_contradiction not f(x) $in {f(t)}:
+                            contra not f(x) $in {f(t)}:
                                 f(x) $in {f(t)}
                                 f(x) = f(t)
                             f(x) $in set_minus(s2, {f(t)})
@@ -82,7 +82,7 @@ claim:
                     $different_item_has_the_same_image(s3, s4, f, a, b)
                     
 
-prove_by_induction n N_pos: $pigeon_hole_is_true_for_all_count(n):
+induc n N_pos: $pigeon_hole_is_true_for_all_count(n):
     do_nothing
 
 
@@ -142,7 +142,7 @@ claim:
         know forall x set, y set, t1 set, t2 set: t1 $in x, t2 $in set_minus(x, y) => t1 != t2
 
         z1 $in s1, z2 $in set_minus(s1, {z1}) => z1 != z2
-        prove_by_contradiction f(z1) = f(z2):
+        contra f(z1) = f(z2):
             {f(z1), f(z2)} $subset_of s2
             count({f(z1), f(z2)}) <= count(s2)
             count({f(z1), f(z2)}) = 2
@@ -165,7 +165,7 @@ claim:
                 =>:
                     exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
             prove:
-                prove_by_contradiction exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b):
+                contra exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b):
                     forall a s1, b s1:
                         not $different_item_has_the_same_image(s1, s2, f, a, b)
 
@@ -190,7 +190,7 @@ claim:
                             x != t
                             not $different_item_has_the_same_image(s3, s4, f, x, t)
                             f(t) != f(x)
-                            prove_by_contradiction not f(x) $in {f(t)}:
+                            contra not f(x) $in {f(t)}:
                                 f(x) $in {f(t)}
                                 f(x) = f(t)
                             f(x) $in set_minus(s2, {f(t)})
@@ -203,7 +203,7 @@ claim:
                     $different_item_has_the_same_image(s3, s4, f, a, b)
                     
 
-prove_by_induction n N_pos: $pigeon_hole_is_true_for_all_count(n):
+induc n N_pos: $pigeon_hole_is_true_for_all_count(n):
     do_nothing
 
 
@@ -275,7 +275,7 @@ claim:
         know forall x set, y set, t1 set, t2 set: t1 $in x, t2 $in set_minus(x, y) => t1 != t2
 
         z1 $in s1, z2 $in set_minus(s1, {z1}) => z1 != z2
-        prove_by_contradiction f(z1) = f(z2):
+        contra f(z1) = f(z2):
             {f(z1), f(z2)} $subset_of s2
             count({f(z1), f(z2)}) <= count(s2)
             count({f(z1), f(z2)}) = 2
@@ -298,7 +298,7 @@ claim:
                 =>:
                     exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
             prove:
-                prove_by_contradiction exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b):
+                contra exist a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b):
                     forall a s1, b s1:
                         not $different_item_has_the_same_image(s1, s2, f, a, b)
 
@@ -323,7 +323,7 @@ claim:
                             x != t
                             not $different_item_has_the_same_image(s3, s4, f, x, t)
                             f(t) != f(x)
-                            prove_by_contradiction not f(x) $in {f(t)}:
+                            contra not f(x) $in {f(t)}:
                                 f(x) $in {f(t)}
                                 f(x) = f(t)
                             f(x) $in set_minus(s2, {f(t)})
@@ -336,7 +336,7 @@ claim:
                     $different_item_has_the_same_image(s3, s4, f, a, b)
                     
 
-prove_by_induction n N_pos: $pigeon_hole_is_true_for_all_count(n):
+induc n N_pos: $pigeon_hole_is_true_for_all_count(n):
     do_nothing
 
 

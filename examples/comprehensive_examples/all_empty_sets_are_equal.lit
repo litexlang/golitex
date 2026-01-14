@@ -5,9 +5,9 @@ claim:
         =>:
             x = y
     prove:
-        prove_by_contradiction x = y:
+        contra x = y:
             $not_equal_set(x, y)
-            prove_case_by_case:
+            cases:
                 =>:
                     $is_nonempty_set(x) or $is_nonempty_set(y)
                 case exist z x st not z $in y:

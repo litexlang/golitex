@@ -4,7 +4,7 @@ know:
     $p(1)
     forall n N_pos: $p(n) => $p(n+1)
 
-prove_by_induction n N_pos: $p(n):
+induc n N_pos: $p(n):
     do_nothing
 
 prop q(x N_pos)
@@ -18,5 +18,5 @@ know:
             forall x N_pos:
                 $q(x, (d + 1))
 
-prove_by_induction y N_pos: forall x N_pos: $q(x, y):
+induc y N_pos: forall x N_pos: $q(x, y):
     do_nothing

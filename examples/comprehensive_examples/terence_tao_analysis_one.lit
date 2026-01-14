@@ -32,8 +32,8 @@ know:
             x + 1 != y + 1
 
 # Axiom 2.5 Principle of mathematical induction.
-# prove_by_induction is a built-in function that takes a predicate and a natural number and returns true if the predicate is true for all natural numbers up to and including the natural number.
-# The user actually can use "prove_by_induction" + "there exists the smallest natural number" to prove the principle of mathematical induction. In this case, he does not need to use the builtin keyword "prove_by_induction" to use "prove_by_induction" to prove correctness of a statement.
+# induc is a built-in function that takes a predicate and a natural number and returns true if the predicate is true for all natural numbers up to and including the natural number.
+# The user actually can use "induc" + "there exists the smallest natural number" to prove the principle of mathematical induction. In this case, he does not need to use the builtin keyword "induc" to use "induc" to prove correctness of a statement.
 
 # define a random proposition
 prop random_proposition(n N)
@@ -48,7 +48,7 @@ know:
             $random_proposition(n + 1)
 
 # use "prove_by_math_induction" to prove random_proposition is true for all natural numbers larger than 0
-prove_by_induction($random_proposition(n), n, 1)
+induc($random_proposition(n), n, 1)
 
 # verify: $random_proposition(n) is true for all n N
 forall n N_pos:

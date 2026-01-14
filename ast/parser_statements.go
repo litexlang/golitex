@@ -70,25 +70,25 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 				ret, err = p.knowFactStmt(tb)
 			}
 		}
-	case glob.KeywordProveCaseByCase, glob.KeywordCases:
+	case glob.KeywordCases:
 		ret, err = p.proveCaseByCaseStmt(tb)
-	case glob.KeywordProveByEnum, glob.KeywordEnum:
+	case glob.KeywordEnum:
 		ret, err = p.proveByEnum(tb)
 	case glob.KeywordClear:
 		ret, err = p.clearStmt(tb)
-	case glob.KeywordProveByInduction, glob.KeywordInduc:
+	case glob.KeywordInduc:
 		ret, err = p.proveByInductionStmt(tb)
-	case glob.KeywordProveFor, glob.KeywordFor:
+	case glob.KeywordFor:
 		ret, err = p.proveForStmt(tb)
-	case glob.KeywordProveIsTransitiveProp, glob.KeywordTransProp:
+	case glob.KeywordTransProp:
 		ret, err = p.proveIsTransitivePropStmt(tb)
-	case glob.KeywordProveIsCommutativeProp, glob.KeywordComProp:
+	case glob.KeywordComProp:
 		ret, err = p.proveCommutativePropStmt(tb)
 	case glob.KeywordAlgo:
 		ret, err = p.algoDefStmt(tb)
 	case glob.KeywordEval:
 		ret, err = p.evalStmt(tb)
-	case glob.KeywordProveByContradiction, glob.KeywordContra:
+	case glob.KeywordContra:
 		ret, err = p.proveByContradictionStmt(tb)
 	case glob.KeywordDoNothing:
 		ret, err = p.doNothingStmt(tb)
@@ -96,7 +96,7 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.importDirStmt(tb)
 	case glob.KeywordProvePropInfer:
 		ret, err = p.provePropInferStmt(tb)
-	case glob.KeywordRun:
+	case glob.KeywordRunFile:
 		ret, err = p.runFileStmt(tb)
 	case glob.KeywordProveExist:
 		ret, err = p.proveExistStmt(tb)
@@ -1014,9 +1014,9 @@ func (p *TbParser) claimStmt(tb *tokenBlock) (Stmt, error) {
 
 	isProve := true
 
-	if tb.body[1].header.is(glob.KeywordProveByContradiction) {
+	if tb.body[1].header.is(glob.KeywordContra) {
 		isProve = false
-		err := tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProveByContradiction)
+		err := tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordContra)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -1026,7 +1026,7 @@ func (p *TbParser) claimStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 	} else {
-		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction' after claim")
+		return nil, fmt.Errorf("expect 'prove' or 'contra' after claim")
 	}
 
 	proof, err := p.parseTbBodyAndGetStmts(tb.body[1].body)
@@ -1036,7 +1036,7 @@ func (p *TbParser) claimStmt(tb *tokenBlock) (Stmt, error) {
 
 	if asUniFactWithIffStmt, ok := toCheck.(*UniFactWithIffStmt); ok {
 		if !isProve {
-			return nil, fmt.Errorf("prove_by_contradiction is not supported for iff statement")
+			return nil, fmt.Errorf("contra is not supported for iff statement")
 		} else {
 			err := tb.body[2].header.skipKwAndColonCheckEOL(glob.KeywordProve)
 			if err != nil {
@@ -1263,7 +1263,7 @@ func (p *TbParser) knowFactStmt(tb *tokenBlock) (Stmt, error) {
 }
 
 func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordProveCaseByCase)
+	err := tb.header.skip(glob.KeywordCases)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1272,7 +1272,7 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 	thenFacts := FactStmtSlice{}
 	proofs := []StmtSlice{}
 
-	// If prove_case_by_case is not followed by colon, the conclusion is written directly after it
+	// If cases is not followed by colon, the conclusion is written directly after it
 	if !tb.header.is(glob.KeySymbolColon) {
 		// Parse the conclusion fact directly from the header
 		conclusionFact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{glob.KeySymbolColon})
@@ -1293,14 +1293,14 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 		}
 	}
 
-	// If thenFacts is already populated, it means the conclusion was written after prove_case_by_case
+	// If thenFacts is already populated, it means the conclusion was written after cases
 	// In this case, all body blocks should be case blocks
 	// Otherwise, body[0] must be =>:, and the rest are case blocks
 	if len(thenFacts) > 0 {
 		// Conclusion already parsed, all body blocks are case blocks
 		for _, block := range tb.body {
 			if !block.header.is(glob.KeywordCase) {
-				return nil, ErrInLine(fmt.Errorf("prove_case_by_case: when conclusion is written after prove_case_by_case, all body blocks must be case blocks"), tb)
+				return nil, ErrInLine(fmt.Errorf("cases: when conclusion is written after cases, all body blocks must be case blocks"), tb)
 			}
 
 			// Skip "case" keyword
@@ -1333,13 +1333,13 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 	} else {
 		// Conclusion is in body, body[0] must be =>:, rest are case blocks
 		if len(tb.body) == 0 {
-			return nil, ErrInLine(fmt.Errorf("prove_case_by_case: when using colon syntax, body must contain at least =>: section"), tb)
+			return nil, ErrInLine(fmt.Errorf("cases: when using colon syntax, body must contain at least =>: section"), tb)
 		}
 
 		// Parse body[0] as =>: section
 		firstBlock := tb.body[0]
 		if !firstBlock.header.is(glob.KeySymbolRightArrow) {
-			return nil, ErrInLine(fmt.Errorf("prove_case_by_case: when using colon syntax, first body block must be =>:"), tb)
+			return nil, ErrInLine(fmt.Errorf("cases: when using colon syntax, first body block must be =>:"), tb)
 		}
 
 		err = firstBlock.header.skipKwAndColonCheckEOL(glob.KeySymbolRightArrow)
@@ -1357,7 +1357,7 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 		for i := 1; i < len(tb.body); i++ {
 			block := tb.body[i]
 			if !block.header.is(glob.KeywordCase) {
-				return nil, ErrInLine(fmt.Errorf("prove_case_by_case: after =>: section, all body blocks must be case blocks"), tb)
+				return nil, ErrInLine(fmt.Errorf("cases: after =>: section, all body blocks must be case blocks"), tb)
 			}
 
 			// Skip "case" keyword
@@ -1390,19 +1390,19 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	if len(caseFacts) == 0 {
-		return nil, ErrInLine(fmt.Errorf("prove_case_by_case: at least one case block is required"), tb)
+		return nil, ErrInLine(fmt.Errorf("cases: at least one case block is required"), tb)
 	}
 
 	// Verify that the number of proofs matches the number of cases
 	if len(proofs) != len(caseFacts) {
-		return nil, ErrInLine(fmt.Errorf("prove_case_by_case: expect %d proofs, but got %d. expect the number of proofs to be the same as the number of case facts", len(caseFacts), len(proofs)), tb)
+		return nil, ErrInLine(fmt.Errorf("cases: expect %d proofs, but got %d. expect the number of proofs to be the same as the number of case facts", len(caseFacts), len(proofs)), tb)
 	}
 
 	return NewProveCaseByCaseStmt(caseFacts, thenFacts, proofs, tb.line), nil
 }
 
 func (p *TbParser) proveByEnum(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordProveByEnum)
+	err := tb.header.skip(glob.KeywordEnum)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1606,7 +1606,7 @@ func (p *TbParser) clearStmt(tb *tokenBlock) (Stmt, error) {
 }
 
 func (p *TbParser) proveForStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordProveFor)
+	err := tb.header.skip(glob.KeywordFor)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1680,7 +1680,7 @@ func (p *TbParser) proveForStmt(tb *tokenBlock) (Stmt, error) {
 	// Add params to FreeParams
 	for _, param := range params {
 		if _, ok := p.FreeParams[param]; ok {
-			return nil, ErrInLine(fmt.Errorf("parameter %s in prove_for conflicts with a free parameter in the outer scope", param), tb)
+			return nil, ErrInLine(fmt.Errorf("parameter %s in for conflicts with a free parameter in the outer scope", param), tb)
 		}
 		p.FreeParams[param] = struct{}{}
 	}
@@ -1703,7 +1703,7 @@ func (p *TbParser) proveForStmt(tb *tokenBlock) (Stmt, error) {
 }
 
 func (p *TbParser) proveIsTransitivePropStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordProveIsTransitiveProp)
+	err := tb.header.skip(glob.KeywordTransProp)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1764,7 +1764,7 @@ func (p *TbParser) proveIsTransitivePropStmt(tb *tokenBlock) (Stmt, error) {
 }
 
 func (p *TbParser) proveCommutativePropStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordProveIsCommutativeProp)
+	err := tb.header.skip(glob.KeywordComProp)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1976,7 +1976,7 @@ func (p *TbParser) evalStmt(tb *tokenBlock) (Stmt, error) {
 // }
 
 func (p *TbParser) proveByContradictionStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordProveByContradiction)
+	err := tb.header.skip(glob.KeywordContra)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -2350,7 +2350,7 @@ func (p *TbParser) implyStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt,
 // }
 
 func (p *TbParser) proveByInductionStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordProveByInduction)
+	err := tb.header.skip(glob.KeywordInduc)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -3421,10 +3421,10 @@ func (p *TbParser) claimImply(tb *tokenBlock) (Stmt, error) {
 
 	if tb.body[1].header.is(glob.KeywordProve) {
 		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-	} else if tb.body[1].header.is(glob.KeywordProveByContradiction) {
-		panic("prove_by_contradiction is not supported for prop statement")
+	} else if tb.body[1].header.is(glob.KeywordContra) {
+		panic("contra is not supported for prop statement")
 	} else {
-		return nil, fmt.Errorf("expect 'prove' or 'prove_by_contradiction'")
+		return nil, fmt.Errorf("expect 'prove' or 'contra'")
 	}
 
 	if err != nil {
@@ -3783,7 +3783,7 @@ func (p *TbParser) parseTbBodyAndGetStmts(body []tokenBlock) ([]Stmt, error) {
 }
 
 func (p *TbParser) runFileStmt(tb *tokenBlock) (*RunFileStmt, error) {
-	tb.header.skip(glob.KeywordRun)
+	tb.header.skip(glob.KeywordRunFile)
 	path, err := p.getStringInDoubleQuotes(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)

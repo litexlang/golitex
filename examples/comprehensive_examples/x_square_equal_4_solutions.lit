@@ -1,7 +1,7 @@
 claim:
     forall x R: x = 2 or x = -2 => x ^ 2 = 4
     prove:
-        prove_case_by_case:
+        cases:
             =>:
                 x ^ 2 = 4
             case x = 2:

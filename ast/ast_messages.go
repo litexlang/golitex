@@ -256,7 +256,7 @@ func fnDefStmtStringGivenKw(kw string, f *AnonymousFn, name string) string {
 }
 
 func (f *ClaimProveByContradictionStmt) String() string {
-	return ClaimProve_ClaimProveByContradiction(glob.KeywordProveByContradiction, f.ClaimProveStmt.ToCheckFact, f.ClaimProveStmt.Proofs)
+	return ClaimProve_ClaimProveByContradiction(glob.KeywordContra, f.ClaimProveStmt.ToCheckFact, f.ClaimProveStmt.Proofs)
 }
 
 func (f *ClaimProveStmt) String() string {
@@ -504,7 +504,7 @@ func (f *FnObj) String() string {
 
 func (stmt *ProveCaseByCaseStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveCaseByCase)
+	builder.WriteString(glob.KeywordCases)
 	builder.WriteString(":\n")
 	for _, thenFact := range stmt.ThenFacts {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(thenFact.String(), 1))
@@ -678,7 +678,7 @@ func (stmt *LetFnStmt) String() string {
 
 func (stmt *RunFileStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordRun)
+	builder.WriteString(glob.KeywordRunFile)
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolDoubleQuote)
 	builder.WriteString(stmt.Path)
@@ -743,7 +743,7 @@ func (stmt *ClaimImplicationStmt) String() string {
 
 func (stmt *ProveByEnumStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveByEnum)
+	builder.WriteString(glob.KeywordEnum)
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Fact.String(), 1))
@@ -849,7 +849,7 @@ func (stmt *InlineFactsStmt) String() string {
 
 func (stmt *ProveByInductionStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveByInduction)
+	builder.WriteString(glob.KeywordInduc)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.Param)
 	builder.WriteString(" ")
@@ -1023,7 +1023,7 @@ func (stmt *ClaimIffStmt) String() string {
 
 func (stmt *ProveForStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveFor)
+	builder.WriteString(glob.KeywordFor)
 	builder.WriteString(" ")
 
 	// Write all param $in range(...) pairs
@@ -1200,7 +1200,7 @@ func ProveIsCertainPropStmtString(kw string, prop Atom, params []string, proofs 
 }
 
 func (stmt *ProveIsTransitivePropStmt) String() string {
-	return ProveIsCertainPropStmtString(glob.KeywordProveIsTransitiveProp, stmt.Prop, stmt.Params, stmt.Proofs)
+	return ProveIsCertainPropStmtString(glob.KeywordTransProp, stmt.Prop, stmt.Params, stmt.Proofs)
 }
 
 func (stmt *ProveIsCommutativePropStmt) String() string {

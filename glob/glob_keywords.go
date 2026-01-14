@@ -68,16 +68,13 @@ const (
 	KeywordKnow      = "know"
 	KeywordDoNothing = "do_nothing"
 
-	KeywordProveByContradiction = "prove_by_contradiction"
-	KeywordContra               = "contra"
-	KeywordProveByEnum          = "prove_by_enum"
-	KeywordEnum                 = "enum"
-	KeywordProveByInduction     = "prove_by_induction"
-	KeywordInduc                = "induc"
-	KeywordProveCaseByCase      = "prove_case_by_case"
-	KeywordCases                = "cases"
-	KeywordProveFor             = "prove_for"
-	KeywordFor                  = "for"
+	KeywordContra    = "contra"
+	KeywordEnum      = "enum"
+	KeywordInduc     = "induc"
+	KeywordCases     = "cases"
+	KeywordFor       = "for"
+	KeywordComProp   = "com_prop"
+	KeywordTransProp = "trans_prop"
 
 	KeywordFn    = "fn"
 	KeywordFnSet = "fn_set"
@@ -90,15 +87,10 @@ const (
 	KeywordSt   = "st"
 	KeywordAs   = "as"
 
-	KeywordProveIsCommutativeProp = "prove_is_commutative_prop"
-	KeywordComProp                = "com_prop"
-	KeywordTransProp              = "trans_prop"
-	KeywordProveIsTransitiveProp  = "prove_is_transitive_prop"
-
-	KeywordImport = "import"
-	KeywordClear  = "clear"
-	KeywordExit   = "exit"
-	KeywordRun    = "run"
+	KeywordImport  = "import"
+	KeywordClear   = "clear"
+	KeywordExit    = "exit"
+	KeywordRunFile = "run_file"
 
 	KeywordProveAlgo = "prove_algo"
 	KeywordAlgo      = "algo"
@@ -145,25 +137,25 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordProp:           {},
 	KeywordKnow:           {},
 	// KeywordExistProp:            {},
-	KeywordSt:                   {},
-	KeywordClaim:                {},
-	KeywordProve:                {},
-	KeywordImport:               {},
-	KeywordNot:                  {},
-	KeywordProveByContradiction: {},
+	KeywordSt:     {},
+	KeywordClaim:  {},
+	KeywordProve:  {},
+	KeywordImport: {},
+	KeywordNot:    {},
+	KeywordContra: {},
 	// KeywordIff:                  {},
-	KeywordExist:                  {},
-	KeywordProveIsCommutativeProp: {},
-	KeywordOr:                     {},
-	KeywordNatural:                {},
-	KeywordInteger:                {},
-	KeywordRational:               {},
-	KeywordReal:                   {},
-	KeywordIn:                     {},
+	KeywordExist:    {},
+	KeywordComProp:  {},
+	KeywordOr:       {},
+	KeywordNatural:  {},
+	KeywordInteger:  {},
+	KeywordRational: {},
+	KeywordReal:     {},
+	KeywordIn:       {},
 	// KeywordProveByMathInduction:           {},
-	KeywordCount:       {},
-	KeywordFiniteSet:   {},
-	KeywordProveByEnum: {},
+	KeywordCount:     {},
+	KeywordFiniteSet: {},
+	KeywordEnum:      {},
 	// KeywordItemExistsIn: {},
 	KeywordFnSet:         {},
 	KeywordNPos:          {},
@@ -174,9 +166,9 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordDoNothing:     {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
 
-	KeywordProveIsTransitiveProp: {},
+	KeywordTransProp: {},
 
-	KeywordProveByInduction: {},
+	KeywordInduc: {},
 
 	KeywordNonEmptySet: {},
 
@@ -190,8 +182,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordCase: {},
 
-	KeywordProveCaseByCase: {},
-	KeywordExit:            {},
+	KeywordCases: {},
+	KeywordExit:  {},
 
 	KeywordCart:   {},
 	KeywordIsCart: {},
@@ -205,7 +197,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordSubsetOf:   {},
 	KeywordSupersetOf: {},
-	KeywordProveFor:   {},
+	KeywordFor:        {},
 
 	KeywordEqualSet: {},
 
@@ -221,7 +213,7 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	// KeywordIsNonEmptyWithItem: {},
 
-	KeywordRun: {},
+	KeywordRunFile: {},
 
 	KeywordUnion:     {},
 	KeywordIntersect: {},
@@ -244,15 +236,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordPropInfer: {},
 	KeywordInfer:     {},
-
-	KeywordComProp:   {},
-	KeywordTransProp: {},
-
-	KeywordCases:  {},
-	KeywordEnum:   {},
-	KeywordInduc:  {},
-	KeywordFor:    {},
-	KeywordContra: {},
 }
 
 const (
@@ -414,53 +397,53 @@ var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struc
 	KeywordProp:           {},
 	KeywordKnow:           {},
 	// KeywordExistProp:              {},
-	KeywordSt:                     {},
-	KeywordClaim:                  {},
-	KeywordProve:                  {},
-	KeywordImport:                 {},
-	KeywordNot:                    {},
-	KeywordProveByContradiction:   {},
-	KeywordExist:                  {},
-	KeywordProveIsCommutativeProp: {},
-	KeywordOr:                     {},
-	KeywordNatural:                {},
-	KeywordInteger:                {},
-	KeywordRational:               {},
-	KeywordReal:                   {},
-	KeywordIn:                     {},
-	KeywordCount:                  {},
-	KeywordFiniteSet:              {},
-	KeywordProveByEnum:            {},
-	KeywordFnSet:                  {},
-	KeywordNPos:                   {},
-	KeywordLet:                    {},
-	KeywordClear:                  {},
-	KeywordTuple:                  {},
-	KeywordObjAtIndexOpt:          {},
-	KeywordDoNothing:              {},
-	KeywordProveIsTransitiveProp:  {},
-	KeywordProveByInduction:       {},
-	KeywordNonEmptySet:            {},
-	KeywordAlgo:                   {},
-	KeywordReturn:                 {},
-	KeywordIf:                     {},
-	KeywordEval:                   {},
-	KeywordProveAlgo:              {},
-	KeywordBy:                     {},
-	KeywordCase:                   {},
-	KeywordProveCaseByCase:        {},
-	KeywordExit:                   {},
-	KeywordCart:                   {},
-	KeywordSetDim:                 {},
-	KeywordListSet:                {},
-	KeywordSetBuilder:             {},
-	KeywordProveFor:               {},
-	KeywordAs:                     {},
-	KeywordIsASet:                 {},
-	KeywordIsAFiniteSet:           {},
-	KeywordIsANonEmptySet:         {},
+	KeywordSt:             {},
+	KeywordClaim:          {},
+	KeywordProve:          {},
+	KeywordImport:         {},
+	KeywordNot:            {},
+	KeywordContra:         {},
+	KeywordExist:          {},
+	KeywordComProp:        {},
+	KeywordOr:             {},
+	KeywordNatural:        {},
+	KeywordInteger:        {},
+	KeywordRational:       {},
+	KeywordReal:           {},
+	KeywordIn:             {},
+	KeywordCount:          {},
+	KeywordFiniteSet:      {},
+	KeywordEnum:           {},
+	KeywordFnSet:          {},
+	KeywordNPos:           {},
+	KeywordLet:            {},
+	KeywordClear:          {},
+	KeywordTuple:          {},
+	KeywordObjAtIndexOpt:  {},
+	KeywordDoNothing:      {},
+	KeywordTransProp:      {},
+	KeywordInduc:          {},
+	KeywordNonEmptySet:    {},
+	KeywordAlgo:           {},
+	KeywordReturn:         {},
+	KeywordIf:             {},
+	KeywordEval:           {},
+	KeywordProveAlgo:      {},
+	KeywordBy:             {},
+	KeywordCase:           {},
+	KeywordCases:          {},
+	KeywordExit:           {},
+	KeywordCart:           {},
+	KeywordSetDim:         {},
+	KeywordListSet:        {},
+	KeywordSetBuilder:     {},
+	KeywordFor:            {},
+	KeywordAs:             {},
+	KeywordIsASet:         {},
+	KeywordIsAFiniteSet:   {},
+	KeywordIsANonEmptySet: {},
 	// KeywordIsNonEmptyWithItem:     {},
-	KeywordRun:       {},
+	KeywordRunFile:   {},
 	KeywordUnion:     {},
 	KeywordIntersect: {},
 	KeywordRPos:      {},

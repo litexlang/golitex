@@ -554,7 +554,7 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 		return state
 	}
 	if state.IsUnknown() {
-		return glob.ErrRet(fmt.Sprintf("prop in %s must have equal parameter sets, but parameter sets %s and %s of %s are not equal", glob.KeywordProveIsTransitiveProp, def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1], def.DefHeader.Name))
+		return glob.ErrRet(fmt.Sprintf("prop in %s must have equal parameter sets, but parameter sets %s and %s of %s are not equal", glob.KeywordTransProp, def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[1], def.DefHeader.Name))
 	}
 	verifyProcessMsgs = append(verifyProcessMsgs, state.VerifyProcess...)
 
@@ -575,7 +575,7 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 	}
 
 	if len(def.DomFactsOrNil) > 0 {
-		return glob.ErrRet(fmt.Sprintf("dom facts are not allowed in %s", glob.KeywordProveIsTransitiveProp))
+		return glob.ErrRet(fmt.Sprintf("dom facts are not allowed in %s", glob.KeywordTransProp))
 	}
 
 	ret = exec.Env.NewFactWithCheckingNameDefined(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[0]), ast.Atom(stmt.Params[1])}, stmt.Line))
@@ -672,7 +672,7 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.StmtRet {
 		}
 
 		if leftAsInt > rightAsInt {
-			verMsg := glob.NewVerMsg(glob.StmtRetTypeTrue, "", glob.BuiltinLine0, []string{fmt.Sprintf("left value %d is larger than right value %d, so the %s statement is iterating on an empty range, so it is true", leftAsInt, rightAsInt, glob.KeywordProveFor)})
+			verMsg := glob.NewVerMsg(glob.StmtRetTypeTrue, "", glob.BuiltinLine0, []string{fmt.Sprintf("left value %d is larger than right value %d, so the %s statement is iterating on an empty range, so it is true", leftAsInt, rightAsInt, glob.KeywordFor)})
 
 			uniFact := stmt.UniFact()
 			ret := exec.Env.NewFactWithCheckingNameDefined(uniFact)
@@ -761,7 +761,7 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 			// 如果 不OK，那必须证明是 false，绝对不能是 unknown
 			specFact, ok := domFact.(*ast.SpecFactStmt)
 			if !ok {
-				return glob.ErrRet(fmt.Sprintf("dom fact in prove_for must be a SpecFactStmt to reverse: %s", domFact.String()))
+				return glob.ErrRet(fmt.Sprintf("dom fact in for must be a SpecFactStmt to reverse: %s", domFact.String()))
 			}
 			revInstDomFact := specFact.ReverseIsTrue()
 			for _, fact := range revInstDomFact {
@@ -774,7 +774,7 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 					return execState
 				}
 				if execState.IsUnknown() {
-					return glob.ErrRet(fmt.Sprintf("dom facts in prove_for must be proved to be true or false, can not be unknown: %s", instFact.String()))
+					return glob.ErrRet(fmt.Sprintf("dom facts in for must be proved to be true or false, can not be unknown: %s", instFact.String()))
 				}
 			}
 
@@ -807,7 +807,7 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 			return execState
 		}
 		if execState.IsUnknown() {
-			return glob.ErrRet(fmt.Sprintf("then fact in prove_for must be proved to be true or false, can not be unknown: %s", instThenFact.String()))
+			return glob.ErrRet(fmt.Sprintf("then fact in for must be proved to be true or false, can not be unknown: %s", instThenFact.String()))
 		}
 	}
 

@@ -12,7 +12,7 @@ know forall x N: x != 0 => logBase(x, x) = 1
 
 claim:
     not sqrt(2) $in Q
-    prove_by_contradiction:
+    contra:
         sqrt(2) > 0
         have x, y st $Q_pos_in_frac(sqrt(2))
         
