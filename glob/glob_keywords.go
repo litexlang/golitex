@@ -68,17 +68,16 @@ const (
 	KeywordKnow      = "know"
 	KeywordDoNothing = "do_nothing"
 
-	KeywordContra      = "contra"
-	KeywordEnum        = "enum"
-	KeywordInduc       = "induc"
-	KeywordCases       = "cases"
-	KeywordFor         = "for"
-	KeywordComProp     = "com_prop"
-	KeywordTransProp   = "trans_prop"
+	KeywordContra          = "contra"
+	KeywordEnum            = "enum"
+	KeywordInduc           = "induc"
+	KeywordCases           = "cases"
+	KeywordFor             = "for"
+	KeywordComProp         = "com_prop"
+	KeywordTransProp       = "trans_prop"
 	KeywordWitness         = "witness"
 	KeywordWitnessNonempty = "witness_nonempty"
 	KeywordEqualSet        = "equal_set"
-	KeywordNotEqualSet     = "not_equal_set"
 
 	KeywordFn    = "fn"
 	KeywordFnSet = "fn_set"
@@ -354,14 +353,14 @@ var BuiltinPropNames map[string]struct{} = map[string]struct{}{
 	KeywordIsCart:         {},
 	KeywordIsTuple:        {},
 	KeywordEqualSet:       {},
-	KeywordNotEqualSet:    {},
-	KeywordSubsetOf:       {},
-	KeySymbolEqual:        {},
-	KeySymbolNotEqual:     {},
-	KeySymbolLargerEqual:  {},
-	KeySymbolLessEqual:    {},
-	KeySymbolGreater:      {},
-	KeySymbolLess:         {},
+	// KeywordNotEqualSet:    {},
+	KeywordSubsetOf:      {},
+	KeySymbolEqual:       {},
+	KeySymbolNotEqual:    {},
+	KeySymbolLargerEqual: {},
+	KeySymbolLessEqual:   {},
+	KeySymbolGreater:     {},
+	KeySymbolLess:        {},
 	// KeywordEqualTuple:     {},
 }
 

@@ -61,8 +61,6 @@ func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) *glob.
 		}
 	}
 
-
-
 	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordSubsetOf) {
 		ret := ie.subsetOfFactPostProcess(fact)
 		// Inherit derived facts from subset_of post-processing
@@ -73,11 +71,6 @@ func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact *ast.SpecFactStmt) *glob.
 	// 	ret := ie.isNonEmptyWithItemFactPostProcess(fact)
 	// 	return ret
 	// }
-
-	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordNotEqualSet) {
-		ret := ie.notEqualSetFactPostProcess(fact)
-		return ret
-	}
 
 	return glob.NewEmptyShortUnknownRet()
 }
