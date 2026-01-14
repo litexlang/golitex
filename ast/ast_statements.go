@@ -471,3 +471,11 @@ type WitnessNonemptyStmt struct {
 
 	Line uint
 }
+
+type NotEqualSetStmt struct {
+	Left   Obj
+	Right  Obj
+	Proofs StmtSlice
+
+	Line uint
+}

@@ -1022,4 +1022,7 @@ know:
 
 know:
 	forall x, y Z: x > y <=> x >= y + 1
+
+know:
+	forall x, y set: not $is_nonempty_set(x) => not y $in x
 `
