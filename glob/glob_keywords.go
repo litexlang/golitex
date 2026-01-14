@@ -363,7 +363,7 @@ var BuiltinPropNames map[string]struct{} = map[string]struct{}{
 	KeySymbolLessEqual:    {},
 	KeySymbolGreater:      {},
 	KeySymbolLess:         {},
-	KeywordEqualTuple:     {},
+	// KeywordEqualTuple:     {},
 }
 
 func IsBuiltinPropName(name string) bool {

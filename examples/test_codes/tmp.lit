@@ -1,11 +1,9 @@
-prove forall x union({1, 2}, {2, 3}): x $in {1, 2, 3}:
-    x $in {1, 2} or x $in {2, 3}
-    cases x $in {1, 2, 3}:
-        case x $in {1, 2}:
-            cases x $in {1, 2, 3}:
-                case x = 1
-                case x = 2
-        case x $in {2, 3}:
-            cases x $in {1, 2, 3}:
-                case x = 2
-                case x = 3
+witness 1: x R st x > 0:
+    ...
+    ...
+    ...
+
+witness_nonempty 1 {1, 2, 3}:
+    ...
+    ...
+    ...
