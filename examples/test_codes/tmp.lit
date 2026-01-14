@@ -1,18 +1,8 @@
 have fn g(x Z) N =:
     case x < 0: 7 * (-x) + 2:
-        forall x Z: (7 * x + 1) % 7 = ((7 * x) % 7 + 1 % 7) % 7 = (0 + 1) % 7 = 1
+        -x $in N
+        7 * (-x) + 2 $in N
     case x >= 0: 7 * x + 1:
-        forall x Z: (7 * (-x) + 2) % 7 = ((7 * (-x)) % 7 + 2 % 7) % 7 = (0 + 2) % 7 = 2
+        x $in N
+        7 * x + 1 $in N
 
-have fn h(x Z) N = x:
-    ....
-
-have fn:
-    t(x Z) N:
-        dom:
-            ...
-        =>:
-            ...
-    prove_exist:
-        ...
-    = ...

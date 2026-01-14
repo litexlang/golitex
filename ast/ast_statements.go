@@ -249,6 +249,7 @@ type HaveFnEqualCaseByCaseStmt struct {
 	RetSet            Obj
 	CaseByCaseFacts   SpecFactPtrSlice
 	CaseByCaseEqualTo ObjSlice
+	Proofs            StmtSliceSlice
 
 	Line uint
 }

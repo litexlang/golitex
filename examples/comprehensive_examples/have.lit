@@ -75,12 +75,10 @@ prove:
             x > 0
             =>:
                 p(x) > x
-        case 100 > x:
+        case 100 > x: 100:
             do_nothing
-        = 100
-        case not 100 > x:
+        case not 100 > x: x + 1:
             x + 1 > x
-        = x + 1
 
     forall x R: x > 0 => p(x) > x
 

@@ -493,48 +493,38 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 
 		return NewClaimHaveFnStmt(defFnStmt.(*LetFnStmt), proof, haveObjSatisfyFn, tb.line), nil
 	} else if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordCase) {
-		// Case-by-case structure: body[0] is defFnStmt, body[1..n] are case/equal pairs
-		if (len(tb.body)-1)%2 != 0 {
-			return nil, fmt.Errorf("expect even number of body blocks after defFnStmt for case-by-case (got %d)", len(tb.body)-1)
-		}
-
+		// Case-by-case structure: body[0] is defFnStmt, body[1..n] are case blocks
+		// Each case block has format: case <condition>: <equalTo>:
 		cases := []*SpecFactStmt{}
 		proofs := []StmtSlice{}
 		EqualTo := []Obj{}
 		for i := 1; i < len(tb.body); i++ {
-			if (i-1)%2 == 0 {
-				// Case block
-				err := tb.body[i].header.skip(glob.KeywordCase)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				curStmt, err := p.specFactStmt(&tb.body[i])
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				cases = append(cases, curStmt)
-				err = tb.body[i].header.skip(glob.KeySymbolColon)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				// Use parseTbBodyAndGetStmts to create a new parse env for proof, so have statements in proof don't leak to outer scope
-				curProof, err := p.parseTbBodyAndGetStmts(tb.body[i].body)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				proofs = append(proofs, curProof)
-			} else {
-				// Equal block
-				err := tb.body[i].header.skip(glob.KeySymbolEqual)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				curHaveObj, err := p.Obj(&tb.body[i])
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				EqualTo = append(EqualTo, curHaveObj)
+			// Case block: case <condition>: <equalTo>:
+			err := tb.body[i].header.skip(glob.KeywordCase)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
 			}
+			curStmt, err := p.specFactStmt(&tb.body[i])
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			cases = append(cases, curStmt)
+			err = tb.body[i].header.skip(glob.KeySymbolColon)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			// Parse equalTo object
+			curHaveObj, err := p.Obj(&tb.body[i])
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			EqualTo = append(EqualTo, curHaveObj)
+			// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
+			curProof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&tb.body[i])
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			proofs = append(proofs, curProof)
 		}
 
 		return NewHaveFnCaseByCaseStmt(defFnStmt.(*LetFnStmt), cases, proofs, EqualTo, tb.line), nil
@@ -602,6 +592,7 @@ func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
 
 		caseByCaseFacts := []*SpecFactStmt{}
 		caseByCaseEqualTo := []Obj{}
+		caseByCaseProofs := []StmtSlice{}
 		for _, block := range tb.body {
 			err := block.header.skip(glob.KeywordCase)
 			if err != nil {
@@ -619,8 +610,14 @@ func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
+			// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
+			proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&block)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
 			caseByCaseEqualTo = append(caseByCaseEqualTo, obj)
 			caseByCaseFacts = append(caseByCaseFacts, curStmt)
+			caseByCaseProofs = append(caseByCaseProofs, proof)
 		}
 
 		return &HaveFnEqualCaseByCaseStmt{
@@ -628,6 +625,7 @@ func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
 			RetSet:            retSet,
 			CaseByCaseFacts:   caseByCaseFacts,
 			CaseByCaseEqualTo: caseByCaseEqualTo,
+			Proofs:            caseByCaseProofs,
 			Line:              tb.line,
 		}, nil
 	}
