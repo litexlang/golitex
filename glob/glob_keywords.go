@@ -68,13 +68,17 @@ const (
 	KeywordKnow      = "know"
 	KeywordDoNothing = "do_nothing"
 
-	KeywordContra    = "contra"
-	KeywordEnum      = "enum"
-	KeywordInduc     = "induc"
-	KeywordCases     = "cases"
-	KeywordFor       = "for"
-	KeywordComProp   = "com_prop"
-	KeywordTransProp = "trans_prop"
+	KeywordContra      = "contra"
+	KeywordEnum        = "enum"
+	KeywordInduc       = "induc"
+	KeywordCases       = "cases"
+	KeywordFor         = "for"
+	KeywordComProp     = "com_prop"
+	KeywordTransProp   = "trans_prop"
+	KeywordProveExist  = "prove_exist"
+	KeywordEqualTuple  = "equal_tuple"
+	KeywordEqualSet    = "equal_set"
+	KeywordNotEqualSet = "not_equal_set"
 
 	KeywordFn    = "fn"
 	KeywordFnSet = "fn_set"
@@ -92,19 +96,14 @@ const (
 	KeywordExit    = "exit"
 	KeywordRunFile = "run_file"
 
-	KeywordProveAlgo = "prove_algo"
-	KeywordAlgo      = "algo"
-	KeywordReturn    = "return"
-	KeywordIf        = "if"
-	KeywordBy        = "by"
-	KeywordEval      = "eval"
-	KeywordVal       = "val"
+	KeywordAlgo   = "algo"
+	KeywordReturn = "return"
+	KeywordIf     = "if"
+	KeywordEval   = "eval"
+	KeywordVal    = "val"
 
-	KeywordEqualSet    = "equal_set"
-	KeywordNotEqualSet = "not_equal_set"
-	KeywordSubsetOf    = "subset_of"
-	KeywordSupersetOf  = "superset_of"
-	KeywordEqualTuple  = "equal_tuple"
+	KeywordSubsetOf   = "subset_of"
+	KeywordSupersetOf = "superset_of"
 
 	KeywordCup       = "cup"
 	KeywordCap       = "cap"
@@ -114,8 +113,6 @@ const (
 	KeywordSetMinus  = "set_minus"
 	KeywordSetDiff   = "set_diff"
 	KeywordChoice    = "choice"
-
-	KeywordProveExist = "prove_exist"
 
 	KeywordRPos  = "R_pos"
 	KeywordRNeg  = "R_neg"
@@ -176,9 +173,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordReturn: {},
 	KeywordIf:     {},
 	KeywordEval:   {},
-
-	KeywordProveAlgo: {},
-	KeywordBy:        {},
 
 	KeywordCase: {},
 
@@ -428,8 +422,6 @@ var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struc
 	KeywordReturn:         {},
 	KeywordIf:             {},
 	KeywordEval:           {},
-	KeywordProveAlgo:      {},
-	KeywordBy:             {},
 	KeywordCase:           {},
 	KeywordCases:          {},
 	KeywordExit:           {},

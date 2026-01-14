@@ -1,4 +1,0 @@
-have a, b set
-forall x a => x $in union(a, b)
-forall x b => x $in union(a, b)
-forall x union(a, b) => $item_in_union(x, a, b), x $in a or x $in b

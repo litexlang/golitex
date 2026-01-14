@@ -1,7 +1,0 @@
-have a, b set
-forall x a:
-    x $in b
-    =>:
-        x $in intersect(a, b)
-forall x intersect(a, b) => $item_in_intersect(x, a, b), x $in a, x $in b
-
