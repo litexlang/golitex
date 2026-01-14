@@ -238,6 +238,7 @@ type HaveFnEqualStmt struct {
 	DefHeader *DefHeader
 	RetSet    Obj
 	EqualTo   Obj
+	Proofs    StmtSlice
 
 	Line uint
 }
