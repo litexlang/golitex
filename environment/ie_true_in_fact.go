@@ -50,6 +50,10 @@ func (ie *InferEngine) trueInFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 		return ret
 	}
 
+	if ret := ie.trueInFactBySetOperations(fact); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
 	if fact.Params[1].String() == glob.KeywordNPos {
 		return ie.trueInFactByNPos(fact)
 	}
@@ -72,6 +76,18 @@ func (ie *InferEngine) trueInFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 
 	if fact.Params[1].String() == glob.KeywordQPos {
 		return ie.trueInFactByQPos(fact)
+	}
+
+	if fact.Params[1].String() == glob.KeywordRNot0 {
+		return ie.trueInFactByRNot0(fact)
+	}
+
+	if fact.Params[1].String() == glob.KeywordZNot0 {
+		return ie.trueInFactByZNot0(fact)
+	}
+
+	if fact.Params[1].String() == glob.KeywordQNot0 {
+		return ie.trueInFactByQNot0(fact)
 	}
 
 	return glob.NewEmptyShortTrueRet()
@@ -657,6 +673,289 @@ func (ie *InferEngine) trueInFactByQPos(fact *ast.SpecFactStmt) *glob.ShortRet {
 		return retShort
 	}
 	derivedFacts = append(derivedFacts, retShort.Msgs...)
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+// trueInFactByRNot0 handles inference for x $in R_not0 (non-zero real numbers)
+// Inference generates:
+//   - x != 0 (non-zero fact)
+//   - x $in R (real number membership)
+func (ie *InferEngine) trueInFactByRNot0(fact *ast.SpecFactStmt) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	obj := fact.Params[0]
+
+	// x != 0
+	notEqualZeroFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
+	ret := ie.EnvMgr.storeSpecFactInMem(notEqualZeroFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, notEqualZeroFact.String())
+
+	// x $in R
+	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
+	ret = ie.EnvMgr.storeSpecFactInMem(inRFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inRFact.String())
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+// trueInFactByZNot0 handles inference for x $in Z_not0 (non-zero integers)
+// Inference generates:
+//   - x != 0 (non-zero fact)
+//   - x $in Z (integer membership)
+func (ie *InferEngine) trueInFactByZNot0(fact *ast.SpecFactStmt) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	obj := fact.Params[0]
+
+	// x != 0
+	notEqualZeroFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
+	ret := ie.EnvMgr.storeSpecFactInMem(notEqualZeroFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, notEqualZeroFact.String())
+
+	// x $in Z
+	inZFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordInteger))
+	ret = ie.EnvMgr.storeSpecFactInMem(inZFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inZFact.String())
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+// trueInFactByQNot0 handles inference for x $in Q_not0 (non-zero rational numbers)
+// Inference generates:
+//   - x != 0 (non-zero fact)
+//   - x $in Q (rational number membership)
+//   - x $in R (real number membership)
+func (ie *InferEngine) trueInFactByQNot0(fact *ast.SpecFactStmt) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	obj := fact.Params[0]
+
+	// x != 0
+	notEqualZeroFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
+	ret := ie.EnvMgr.storeSpecFactInMem(notEqualZeroFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, notEqualZeroFact.String())
+
+	// x $in Q
+	inQFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordRational))
+	ret = ie.EnvMgr.storeSpecFactInMem(inQFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inQFact.String())
+
+	// x $in R
+	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
+	ret = ie.EnvMgr.storeSpecFactInMem(inRFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inRFact.String())
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+// trueInFactBySetOperations handles inference for set operations (cup, cap, union, intersect, power_set, set_minus)
+// It checks if the second parameter is a set operation function call
+func (ie *InferEngine) trueInFactBySetOperations(fact *ast.SpecFactStmt) *glob.ShortRet {
+	fnObj, ok := fact.Params[1].(*ast.FnObj)
+	if !ok {
+		return glob.NewEmptyShortUnknownRet()
+	}
+
+	head, ok := fnObj.IsObjFn_HasAtomHead_ReturnHead()
+	if !ok {
+		return glob.NewEmptyShortUnknownRet()
+	}
+
+	headStr := string(head)
+
+	// Try direct set operation first
+	switch headStr {
+	case glob.KeywordCup:
+		return ie.trueInFactInCup(fact.Params[0], fnObj)
+	case glob.KeywordCap:
+		return ie.trueInFactInCap(fact.Params[0], fnObj)
+	case glob.KeywordUnion:
+		if len(fnObj.Params) == 2 {
+			return ie.trueInFactInUnion(fact.Params[0], fnObj.Params[0], fnObj.Params[1])
+		}
+	case glob.KeywordIntersect:
+		if len(fnObj.Params) == 2 {
+			return ie.trueInFactInIntersect(fact.Params[0], fnObj.Params[0], fnObj.Params[1])
+		}
+	case glob.KeywordPowerSet:
+		if len(fnObj.Params) == 1 {
+			return ie.trueInFactInPowerSet(fact.Params[0], fnObj.Params[0])
+		}
+	case glob.KeywordSetMinus:
+		if len(fnObj.Params) == 2 {
+			return ie.trueInFactInSetMinus(fact.Params[0], fnObj.Params[0], fnObj.Params[1])
+		}
+	}
+
+	return glob.NewEmptyShortUnknownRet()
+}
+
+// trueInFactInCup handles inference for item $in cup(x)
+// Inference: exist x_item x st item $in x_item
+func (ie *InferEngine) trueInFactInCup(item ast.Obj, cupSet *ast.FnObj) *glob.ShortRet {
+	if len(cupSet.Params) != 1 {
+		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("cup expects 1 parameter, got %d", len(cupSet.Params))})
+	}
+
+	x := cupSet.Params[0]
+	xItemParam := ie.EnvMgr.GenerateUndeclaredRandomName()
+
+	// Create exist fact: exist x_item x st item $in x_item
+	existFact := ast.NewExistStFact(
+		ast.TrueExist_St,
+		ast.Atom(glob.KeywordIn),
+		true,
+		[]string{xItemParam},
+		[]ast.Obj{x},
+		[]ast.Obj{item, ast.Atom(xItemParam)},
+		glob.BuiltinLine0,
+	)
+
+	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(existFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, []string{existFact.String()})
+}
+
+// trueInFactInCap handles inference for item $in cap(x)
+// Inference: forall x_item x: item $in x_item
+func (ie *InferEngine) trueInFactInCap(item ast.Obj, capSet *ast.FnObj) *glob.ShortRet {
+	if len(capSet.Params) != 1 {
+		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("cap expects 1 parameter, got %d", len(capSet.Params))})
+	}
+
+	x := capSet.Params[0]
+	xItemParam := ie.EnvMgr.GenerateUndeclaredRandomName()
+
+	// Create forall fact: forall x_item x: item $in x_item
+	inFact := ast.NewInFactWithParamObj(ast.Atom(xItemParam), x, glob.BuiltinLine0)
+	thenFact := ast.NewInFactWithObj(item, ast.Atom(xItemParam))
+
+	uniFact := ast.NewUniFact(
+		[]string{xItemParam},
+		[]ast.Obj{x},
+		[]ast.FactStmt{inFact},
+		[]ast.FactStmt{thenFact},
+		glob.BuiltinLine0,
+	)
+
+	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(uniFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, []string{uniFact.String()})
+}
+
+// trueInFactInUnion handles inference for item $in union(x, y)
+// Inference: item $in x or item $in y
+func (ie *InferEngine) trueInFactInUnion(item ast.Obj, x ast.Obj, y ast.Obj) *glob.ShortRet {
+	// Create or fact: item $in x or item $in y
+	inXFact := ast.NewInFactWithObj(item, x)
+	inYFact := ast.NewInFactWithObj(item, y)
+
+	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{inXFact, inYFact}, glob.BuiltinLine0)
+
+	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(orFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, []string{orFact.String()})
+}
+
+// trueInFactInIntersect handles inference for item $in intersect(x, y)
+// Inference: item $in x and item $in y
+func (ie *InferEngine) trueInFactInIntersect(item ast.Obj, x ast.Obj, y ast.Obj) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	// Create fact: item $in x
+	inXFact := ast.NewInFactWithObj(item, x)
+	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(inXFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inXFact.String())
+
+	// Create fact: item $in y
+	inYFact := ast.NewInFactWithObj(item, y)
+	ret = ie.EnvMgr.NewFactWithCheckingNameDefined(inYFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inYFact.String())
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+// trueInFactInPowerSet handles inference for y $in power_set(x)
+// Inference: y $subset_of x
+func (ie *InferEngine) trueInFactInPowerSet(y ast.Obj, x ast.Obj) *glob.ShortRet {
+	// Create fact: y $subset_of x
+	subsetFact := ast.NewSpecFactStmt(
+		ast.TruePure,
+		ast.Atom(glob.KeywordSubsetOf),
+		[]ast.Obj{y, x},
+		glob.BuiltinLine0,
+	)
+
+	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(subsetFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, []string{subsetFact.String()})
+}
+
+// trueInFactInSetMinus handles inference for item $in set_minus(x, y)
+// Inference: item $in x and not item $in y
+func (ie *InferEngine) trueInFactInSetMinus(item ast.Obj, x ast.Obj, y ast.Obj) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	// Create fact: item $in x
+	inXFact := ast.NewInFactWithObj(item, x)
+	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(inXFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, inXFact.String())
+
+	// Create fact: not item $in y
+	notInYFact := ast.NewSpecFactStmt(
+		ast.FalsePure,
+		ast.Atom(glob.KeywordIn),
+		[]ast.Obj{item, y},
+		glob.BuiltinLine0,
+	)
+	ret = ie.EnvMgr.NewFactWithCheckingNameDefined(notInYFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, notInYFact.String())
 
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }

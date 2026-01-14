@@ -1,12 +1,12 @@
 claim:
-imply p(x, y N):
+infer p(x, y N):
         x + y = y + x
     prove:
         x + y = y + x
 
 $p(1,2)
 
-claim imply q(x, y N): x + y = y + x:
+claim infer q(x, y N): x + y = y + x:
     prove:
         x + y = y + x
 
@@ -14,10 +14,10 @@ $q(1,2)
 
 claim:
     1 != 0
-    prove_by_contradiction:
+    contra:
         1 = 0
 
-prove_by_contradiction 1 != 0:
+contra 1 != 0:
     1 = 0
 
 prove 1 + 1 = 2:

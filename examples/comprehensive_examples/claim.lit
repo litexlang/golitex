@@ -22,10 +22,10 @@ algo f(x):
 
 claim:
     1 != 0
-    prove_by_contradiction:
+    contra:
         1 = 0
 
-prove_by_contradiction 1 != 0:
+contra 1 != 0:
     1 = 0
 
 prove 1 + 1 = 2:

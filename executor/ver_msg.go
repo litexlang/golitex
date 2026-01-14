@@ -24,7 +24,9 @@ func successVerString(stmt, stmtVerifiedBy ast.Stmt) *glob.VerRet {
 	line := uint(0)
 	if stmt != nil {
 		stmtStr = stmt.String()
-		line = stmt.GetLine()
+		if stmtVerifiedBy != nil {
+			line = stmtVerifiedBy.GetLine()
+		}
 	}
 
 	verifyMsgs := []string{}
@@ -50,7 +52,7 @@ func successVerStringString(stmtStr, stmtVerifiedByStr string) *glob.VerRet {
 		verifyMsgs = append(verifyMsgs, "is true.")
 	}
 
-	return glob.NewVerMsg(glob.StmtRetTypeTrue, stmtStr, 0, verifyMsgs)
+	return glob.NewVerMsg(glob.StmtRetTypeTrue, stmtStr, glob.BuiltinLine0, verifyMsgs)
 }
 
 func newMaybeSuccessMsgVerRet(state *VerState, stmt ast.Stmt, stmtVerifiedBy string) *glob.VerRet {

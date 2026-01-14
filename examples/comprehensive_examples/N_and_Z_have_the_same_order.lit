@@ -1,0 +1,72 @@
+forall x Z:
+    (7 * x + 1) % 7 = ((7 * x) % 7 + 1 % 7) % 7 = (0 + 1) % 7 = 1
+
+forall x Z:
+    (7 * (-x) + 2) % 7 = ((7 * (-x)) % 7 + 2 % 7) % 7 = (0 + 2) % 7 = 2
+
+forall x Z: x < 0 => -x > 0, 7 * (-x) > 0, 7 * (-x) + 2 > 0, 7 * (-x) + 2 $in N
+
+forall x Z: x >= 0 => 7 * x >= 0, 7 * x + 1 >= 0, x $in N, 7 * x $in N, 7 * x + 1 $in N
+
+have fn g(x Z) N =:
+    case x < 0: 7 * (-x) + 2
+    case x >= 0: 7 * x + 1
+
+prove forall x, y Z: x != y => g(x) != g(y):
+    cases:
+        =>:
+            g(x) != g(y)
+        case x < 0:
+            cases:
+                =>:
+                    g(x) != g(y)
+                case y < 0:
+                    contra g(x) != g(y):
+                        g(x) = g(y) = 7 * (-x) + 2 = 7 * (-y) + 2
+                        x = (7 * (-x) + 2 - 2) / -7  = y = (7 * (-y) + 2 - 2) / -7
+                        x = y
+                case y >= 0:
+                    contra g(x) != g(y):
+                        g(x) % 7= (7 * (-x) + 2) % 7 = 2
+                        g(y) % 7= (7 * y + 1) % 7 = 1
+                        2 != 1
+                        g(x) % 7 != g(y) % 7
+
+        case x >= 0:
+            cases:
+                =>:
+                    g(x) != g(y)
+                case y >= 0:
+                    contra g(x) != g(y):
+                        g(x) = g(y) = 7 * x + 1 = 7 * y + 1
+                        x = (7 * x + 1 - 1) / 7 = y = (7 * y + 1 - 1) / 7
+                        x = y
+                case y < 0:
+                    contra g(x) != g(y):
+                        g(x) % 7= (7 * x + 1) % 7 = 1
+                        g(y) % 7= (7 * (-y) + 2) % 7 = 2
+                        1 != 2
+                        g(x) % 7 != g(y) % 7
+
+$is_injective_fn(Z, N, g)
+
+# prove Z and N have the same order
+have fn f(x N) Z = x
+
+forall x, y N:
+    x != y
+    =>:
+        f(x) = x
+        f(y) = y
+        f(x) != f(y)
+
+$is_injective_fn(N, Z, f)
+
+prop order_is_the_same(a, b set):
+    exist f2 fn(a)b st $is_injective_fn(a, b, f2)
+    exist g2 fn(b)a st $is_injective_fn(b, a, g2)
+
+prove_exist f: f2 fn(N)Z st $is_injective_fn(N, Z, f2)
+prove_exist g: g2 fn(Z)N st $is_injective_fn(Z, N, g2)
+
+$order_is_the_same(N, Z)

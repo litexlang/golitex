@@ -65,7 +65,7 @@ func (p *TbParser) inlineFactThenSkipStmtTerminatorUntilEndSignals(tb *tokenBloc
 		}
 		return uniFact, nil
 	default:
-		return p.inline_spec_or_enum_intensional_Equals_fact_skip_terminator(tb)
+		return p.inline_spec_or_Equals_fact_skip_terminator(tb)
 	}
 }
 
@@ -406,14 +406,14 @@ func (p *TbParser) inlineOrFactWithFirstFact(tb *tokenBlock, firstFact *SpecFact
 	return NewOrStmt(orFacts, tb.line), nil
 }
 
-// inline_spec_or_enum_intensional_Equals_fact_skip_terminator is the main entry point for parsing inline facts.
+// inline_spec_or_Equals_fact_skip_terminator is the main entry point for parsing inline facts.
 // It handles four main cases:
 // 1. Facts starting with special prefixes ($, not, exist)
 // 2. Facts with function-like properties (x $prop y)
 // 3. Facts with infix relational operators (x = y, x > y, etc.)
 // 4. Enum intensional facts (x := {y | ...})
 // After parsing, it skips the statement terminator (comma) if present.
-func (p *TbParser) inline_spec_or_enum_intensional_Equals_fact_skip_terminator(tb *tokenBlock) (FactStmt, error) {
+func (p *TbParser) inline_spec_or_Equals_fact_skip_terminator(tb *tokenBlock) (FactStmt, error) {
 	// Case 1: Handle facts starting with special prefixes
 	if p.isCurTokenSpecFactPrefix(tb) {
 		return p.parseSpecialPrefixFact(tb)

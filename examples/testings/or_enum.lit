@@ -1,13 +1,7 @@
 let s set
 know:
     forall x s:
-        or:
-            x = 1
-            x = 2
-            x = 3
-            x = 4
-            x = 5
-            x = 6
+            x = 1 or x = 2 or x = 3 or x = 4 or x = 5 or x = 6
 
 know:
     1 $in s
@@ -21,7 +15,7 @@ claim:
     forall x s:
         x $in {1,2,3,4,5,6}
     prove:
-        prove_case_by_case:
+        cases:
             =>:
                 x $in {1,2,3,4,5,6}
             case x = 1:
@@ -37,24 +31,18 @@ claim:
             case x = 6:
                 do_nothing
 
-prove_by_enum(x {1,2,3,4,5,6}):
+enum(x {1,2,3,4,5,6}):
     x $in s
 
 $equal_set(s, {1,2,3,4,5,6})
 
 let s2 set
 know s2 = {1,2,3,4,5,6}
-s2 $is_a_finite_set
+s2 $is_finite_set
 count(s2) = 6
 
-prove_by_enum(x s2):
-    or:
-        x = 1
-        x = 2
-        x = 3
-        x = 4
-        x = 5
-        x = 6
+enum(x s2):
+    x = 1 or x = 2 or x = 3 or x = 4 or x = 5 or x = 6
     
 1 $in s2
 2 $in s2
@@ -62,3 +50,8 @@ prove_by_enum(x s2):
 4 $in s2
 5 $in s2
 6 $in s2
+
+# use forall directly
+
+forall x s2:
+    x = 1 or x = 2 or x = 3 or x = 4 or x = 5 or x = 6

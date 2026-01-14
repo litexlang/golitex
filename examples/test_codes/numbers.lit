@@ -13,3 +13,11 @@ not 3 / 2 $in N_pos
 -124 $in Z_neg
 -7.9  $in Q_neg
 -17  $in R_neg
+
+prove:
+    have x Z_not0
+    x $in Z
+    x != 0
+
+    let y Z: y != 0
+    y $in Z_not0

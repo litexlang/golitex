@@ -53,6 +53,17 @@ func (envMgr *EnvMgr) GetValueOfFnObj(obj *ast.FnObj) (bool, ast.Obj) {
 		return true, value
 	}
 
+	// 如果是 val(...)，计算它的值（相当于调用 eval）
+	if ast.IsAtomObjAndEqualToStr(obj.FnHead, glob.KeywordVal) && len(obj.Params) == 1 {
+		// val(x) 应该被计算为 x 的值
+		// 先替换参数中的符号为值
+		_, replacedParam := envMgr.ReplaceSymbolWithValue(obj.Params[0])
+		// 然后尝试计算这个值（使用 eval 逻辑）
+		// 由于 environment 包不应该依赖 executor 包，我们在这里只做值替换
+		// 实际的 eval 计算会在 ReplaceObjInSpecFactWithValue 中通过 Executor 完成
+		return true, replacedParam
+	}
+
 	// 如果是 count(listSet)，计算 list set 的元素个数
 	if ast.IsAtomObjAndEqualToStr(obj.FnHead, glob.KeywordCount) && len(obj.Params) == 1 {
 		// 先对参数进行值替换

@@ -32,8 +32,8 @@ know:
             x + 1 != y + 1
 
 # Axiom 2.5 Principle of mathematical induction.
-# prove_by_induction is a built-in function that takes a predicate and a natural number and returns true if the predicate is true for all natural numbers up to and including the natural number.
-# The user actually can use "prove_by_induction" + "there exists the smallest natural number" to prove the principle of mathematical induction. In this case, he does not need to use the builtin keyword "prove_by_induction" to use "prove_by_induction" to prove correctness of a statement.
+# induc is a built-in function that takes a predicate and a natural number and returns true if the predicate is true for all natural numbers up to and including the natural number.
+# The user actually can use "induc" + "there exists the smallest natural number" to prove the principle of mathematical induction. In this case, he does not need to use the builtin keyword "induc" to use "induc" to prove correctness of a statement.
 
 # define a random proposition
 prop random_proposition(n N)
@@ -48,7 +48,7 @@ know:
             $random_proposition(n + 1)
 
 # use "prove_by_math_induction" to prove random_proposition is true for all natural numbers larger than 0
-prove_by_induction($random_proposition(n), n, 1)
+induc($random_proposition(n), n, 1)
 
 # verify: $random_proposition(n) is true for all n N
 forall n N_pos:
@@ -136,13 +136,13 @@ know:
                 x $in A
 
 # Axiom 3.2: There exists a set which contains no elements
-know imply exist empty_set set st exist_empty_set():
+know infer exist empty_set set st exist_empty_set():
     =>:
         forall x set:
             not $in(x, empty_set)
 
 # Axiom 3.3: a is an object, then there exists a set A such that A contains and only contains a. If a and b are objects, then there exists a set A such that A contains and only contains a and b.
-know imply exist s set st exist_set_contains_and_only_contains_obj(a set):
+know infer exist s set st exist_set_contains_and_only_contains_obj(a set):
     =>:
         forall x s:
             x = a
@@ -175,7 +175,7 @@ prove:
 
 # Axiom 3.9 (Regularity) If A is a non-empty set, then there is at least one element of A that is either not a set, or is disjoint from A
 prop is_disjoint_from(A set, B set):
-    $is_a_set(A)
+    $is_set(A)
     forall x A:
         not $in(x, B)
 
@@ -186,7 +186,7 @@ prop is_disjoint_from(A set, B set):
 # Axiom 3.11 (Union axiom) Let X be a set. Then there exists a set denoted by union(X) which contains all elements of the elements of X.
 let fn union_of_set_in_sets(X set) set:
     forall x X:
-        x $is_a_set
+        x $is_set
         =>:
             x $in union_of_set_in_sets(X)
 
@@ -196,7 +196,7 @@ let fn union_of_set_in_sets(X set) set:
 
 # Keyword Z is a built-in set in Litex. Here are some basic built-in properties of Z.
 
-Z $is_a_set # Z is a set
+Z $is_set # Z is a set
 1 $in Z
 -1 $in Z
 forall x N:

@@ -6,10 +6,10 @@
 3. len只能作用在 finite_set 上 （为遍历提供上界）
 4. [], [[]] 能作用在 indexable_set 上，但不能作用在 set 上 （指标唯一性）
 
-本质上set 上 index的意义是：存在函数fn index(N)setName，且know imply exist m N st forall x setName x = index(m) (存在指标) 且 如果 x = index(m), x = index(n) 则 m = n (指标唯一性)
+本质上set 上 index的意义是：存在函数fn index(N)setName，且know infer exist m N st forall x setName x = index(m) (存在指标) 且 如果 x = index(m), x = index(n) 则 m = n (指标唯一性)
 
 5. prove_is_indexable_set 证明，或者构造indexable_set
-prove_forall_on_indexable_set 用遍历的方式去证明forall。这种方式和描述性地证明forall是不同的
+forall_on_indexable_set 用遍历的方式去证明forall。这种方式和描述性地证明forall是不同的
 
 如果单纯是实现1-4，那不需要把1-4作为内置的，因为我在litex也能定义出来。真正重要的是第5条。没有第5条，就没有遍历的功能；而遍历地去验证是独立于现有的所有的逻辑的。正是因为需要引入遍历地验证，我需要引入1-5来提供统一的语法让用户去定义indexable_set。(只是用or来一个个地验证，是不足够的，因为or不能和len配合，其实本质上就是数数这个行为是从字面量来获取信息，而litex的主要功能是没有读取字面量信息的能力的)。
 
@@ -20,13 +20,13 @@ prove_forall_on_indexable_set 用遍历的方式去证明forall。这种方式�
 let congruence_class indexable_set
 know:
     forall x N:
-        congruence_class[x] $is_a_finite_set
+        congruence_class[x] $is_finite_set
         len(congruence_class[x]) = x
 
     forall y N, x N:
         y < x
         =>:
-            cc[x][y] $is_a_set
+            cc[x][y] $is_set
     
     forall e cc[x][y]:
         e $in Z

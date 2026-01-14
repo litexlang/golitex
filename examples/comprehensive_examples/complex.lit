@@ -1,0 +1,16 @@
+have fn c_add(x, y cart(R, R)) cart(R, R) = (x[1] + y[1], x[2] + y[2])
+have fn c_mul(x, y cart(R, R)) cart(R, R) = (x[1] * y[1] - x[2] * y[2], x[1] * y[2] + x[2] * y[1])
+have fn c_sub(x, y cart(R, R)) cart(R, R) = (x[1] - y[1], x[2] - y[2])
+have fn c_neg(x cart(R, R)) cart(R, R) = (-x[1], -x[2])
+have fn c_conj(x cart(R, R)) cart(R, R) = (x[1], -x[2])
+have fn:
+    c_div(x, y cart(R, R)) cart(R, R):
+        dom:
+            y[1] ^2 + y[2]^2 > 0
+        =>:
+            c_div(x, y) = ((x[1] * y[1] + x[2] * y[2]) / (y[1]^2 + y[2]^2), (x[2] * y[1] - x[1] * y[2]) / (y[1]^2 + y[2]^2))
+    prove_exist:
+        do_nothing
+    = ((x[1] * y[1] + x[2] * y[2]) / (y[1]^2 + y[2]^2), (x[2] * y[1] - x[1] * y[2]) / (y[1]^2 + y[2]^2))
+
+have fn c_abs(x cart(R, R)) R = sqrt(x[1]^2 + x[2]^2)
