@@ -25,10 +25,9 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 	// 	return ver.verIsNonEmptyWithItemByBuiltinRules(stmt, state)
 	// }
 
-
-	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordNotEqualSet) {
-		return ver.verNotEqualSetByBuiltinRules(stmt, state)
-	}
+	// if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordNotEqualSet) {
+	// 	return ver.verNotEqualSetByBuiltinRules(stmt, state)
+	// }
 
 	if stmt.NameIs(glob.KeywordIn) {
 		if stmt.FactType == ast.FalsePure {
@@ -49,7 +48,6 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt *ast.SpecFactStmt, state *Ve
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsANonEmptySet) {
 		return ver.verIsANonEmptySetByBuiltinRules(stmt, state)
 	}
-
 
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsTuple) {
 		return ver.verIsTupleByBuiltinRules(stmt, state)
@@ -237,25 +235,25 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt *ast.SpecFactStmt, st
 
 // verNotEqualSetByBuiltinRules verifies not_equal_set(a, b) by checking:
 // - a != b
-func (ver *Verifier) verNotEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	if len(stmt.Params) != 2 {
-		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("not_equal_set expects 2 parameters, got %d", len(stmt.Params))})
-	}
+// func (ver *Verifier) verNotEqualSetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+// 	if len(stmt.Params) != 2 {
+// 		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("not_equal_set expects 2 parameters, got %d", len(stmt.Params))})
+// 	}
 
-	a := stmt.Params[0]
-	b := stmt.Params[1]
+// 	a := stmt.Params[0]
+// 	b := stmt.Params[1]
 
-	// Create a != b fact
-	notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{a, b}, stmt.Line)
-	verRet := ver.VerFactStmt(notEqualFact, state)
-	if verRet.IsNotTrue() {
-		return verRet
-	}
+// 	// Create a != b fact
+// 	notEqualFact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{a, b}, stmt.Line)
+// 	verRet := ver.VerFactStmt(notEqualFact, state)
+// 	if verRet.IsNotTrue() {
+// 		return verRet
+// 	}
 
-	// a != b is true, so not_equal_set(a, b) is true
-	msg := fmt.Sprintf("not_equal_set(%s, %s) is true because %s != %s", a, b, a, b)
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyVerRetTrue())
-}
+// 	// a != b is true, so not_equal_set(a, b) is true
+// 	msg := fmt.Sprintf("not_equal_set(%s, %s) is true because %s != %s", a, b, a, b)
+// 	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyVerRetTrue())
+// }
 
 // TODO: 理论上任何obj都是set了现在，因为现在set不再是obj了
 func (ver *Verifier) verIsASetByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
