@@ -102,8 +102,6 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.proveExistStmt(tb)
 	case glob.KeywordInfer:
 		ret, err = p.inferTemplateStmt(tb)
-	case glob.KeywordEqualTuple:
-		ret, err = p.equalTupleStmt(tb)
 	case glob.KeywordEqualSet:
 		ret, err = p.equalSetStmt(tb)
 	default:
@@ -3936,45 +3934,6 @@ func (p *TbParser) inferTemplateStmt(tb *tokenBlock) (*InferTemplateStmt, error)
 	return NewInferTemplateStmt(params, paramSets, domFacts, thenFacts, ifFacts, proofs, tb.line), nil
 }
 
-func (p *TbParser) equalTupleStmt(tb *tokenBlock) (*EqualTupleStmt, error) {
-	err := tb.header.skip(glob.KeywordEqualTuple)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	// Parse left object
-	left, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	// Check for comma
-	if !tb.header.is(glob.KeySymbolComma) {
-		return nil, ErrInLine(fmt.Errorf("expect ',' after first object in equal_tuple"), tb)
-	}
-	tb.header.skip(glob.KeySymbolComma)
-
-	// Parse right object
-	right, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	// Skip colon
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	// Parse proofs
-	proofs, err := p.parseTbBodyAndGetStmts(tb.body)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	return NewEqualTupleStmt(left, right, proofs, tb.line), nil
-}
-
 func (p *TbParser) equalSetStmt(tb *tokenBlock) (*EqualSetStmt, error) {
 	err := tb.header.skip(glob.KeywordEqualSet)
 	if err != nil {
@@ -3999,14 +3958,7 @@ func (p *TbParser) equalSetStmt(tb *tokenBlock) (*EqualSetStmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	// Skip colon
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	// Parse proofs
-	proofs, err := p.parseTbBodyAndGetStmts(tb.body)
+	proofs, err := p.skipColonAndParseBody(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}

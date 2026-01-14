@@ -86,10 +86,6 @@ func (f *ProveExistStmt) ToLatexString() string {
 	return f.String()
 }
 
-func (f *EqualTupleStmt) ToLatexString() string {
-	return f.String()
-}
-
 func (f *EqualSetStmt) ToLatexString() string {
 	return f.String()
 }
