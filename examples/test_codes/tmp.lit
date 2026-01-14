@@ -1,7 +1,11 @@
-have a, b set
-know  forall x a:
-forall x a:
-    x $in b
-    =>:
-        x $in intersect(a, b)
-forall x intersect(a, b) => $item_in_intersect(x, a, b), x $in a, x $in b
+prove forall x union({1, 2}, {2, 3}): x $in {1, 2, 3}:
+    x $in {1, 2} or x $in {2, 3}
+    cases x $in {1, 2, 3}:
+        case x $in {1, 2}:
+            cases x $in {1, 2, 3}:
+                case x = 1
+                case x = 2
+        case x $in {2, 3}:
+            cases x $in {1, 2, 3}:
+                case x = 2
+                case x = 3
