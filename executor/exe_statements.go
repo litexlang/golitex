@@ -104,6 +104,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = glob.ErrRet("run statements are not allowed in local scope.")
 	case *ast.EqualSetStmt:
 		execRet = exec.equalSetStmt(stmt)
+	case *ast.WitnessNonemptyStmt:
+		execRet = exec.witnessNonemptyStmt(stmt)
 	case *ast.ProveForStmt:
 		execRet = exec.proveForStmt(stmt)
 	case *ast.ProveInferStmt:
@@ -993,6 +995,52 @@ func (exec *Executor) equalSetStmtProveProcess(stmt *ast.EqualSetStmt) *glob.Stm
 	verRet2 := ver.VerFactStmt(forall2, state)
 	if verRet2.IsNotTrue() {
 		return glob.ErrRet(verRet2.String())
+	}
+
+	return exec.NewTrueStmtRet(stmt)
+}
+
+func (exec *Executor) witnessNonemptyStmt(stmt *ast.WitnessNonemptyStmt) *glob.StmtRet {
+	// 1. prove 过程（在局部环境中）
+	ret := exec.witnessNonemptyStmtProveProcess(stmt)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	// 2. 存储过程（在原地存储）
+	isNonEmptyFact := ast.NewIsANonEmptySetFact(stmt.ObjSet, stmt.Line)
+	ret2 := exec.Env.NewFactWithCheckingNameDefined(isNonEmptyFact)
+	if ret2.IsErr() {
+		return glob.ErrRet(ret2.String())
+	}
+
+	return exec.NewTrueStmtRet(stmt).AddNewFacts(ret2.Infer)
+}
+
+func (exec *Executor) witnessNonemptyStmtProveProcess(stmt *ast.WitnessNonemptyStmt) *glob.StmtRet {
+	// 开局部环境
+	exec.NewEnv()
+	defer exec.deleteEnv()
+
+	// 1. 先执行 proofs
+	for _, proofStmt := range stmt.Proofs {
+		execRet := exec.Stmt(proofStmt)
+		if execRet.IsNotTrue() {
+			return execRet
+		}
+	}
+
+	// 2. 验证：验证 obj $in objSet
+	ver := NewVerifier(exec.Env)
+	state := Round0Msg()
+
+	inFact := ast.NewInFactWithObj(stmt.Obj, stmt.ObjSet)
+	verRet := ver.VerFactStmt(inFact, state)
+	if verRet.IsErr() {
+		return glob.ErrRet(verRet.String())
+	}
+	if verRet.IsUnknown() {
+		return glob.ErrRet(fmt.Sprintf("cannot verify that %s $in %s", stmt.Obj, stmt.ObjSet))
 	}
 
 	return exec.NewTrueStmtRet(stmt)

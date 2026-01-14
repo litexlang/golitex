@@ -488,3 +488,7 @@ func (s *ProveExistStmt) InlineString() string {
 func (s *EqualSetStmt) InlineString() string {
 	return s.String()
 }
+
+func (s *WitnessNonemptyStmt) InlineString() string {
+	return s.String()
+}

@@ -1490,3 +1490,19 @@ func (stmt *EqualSetStmt) String() string {
 	}
 	return builder.String()
 }
+
+func (stmt *WitnessNonemptyStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordWitnessNonempty)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Obj.String())
+	builder.WriteString(" ")
+	builder.WriteString(stmt.ObjSet.String())
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+		builder.WriteByte('\n')
+	}
+	return builder.String()
+}
