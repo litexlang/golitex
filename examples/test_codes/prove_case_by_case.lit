@@ -1,13 +1,4 @@
 prove:
-    know:
-        or:
-            x = 1
-            x = 2
-        not x = 1 
-
-    x = 2
-
-prove:
     prop p(x R)
 
     know:

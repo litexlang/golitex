@@ -1315,20 +1315,13 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 				return nil, ErrInLine(err, tb)
 			}
 
-			// Skip the colon after specFact
-			err = block.header.skip(glob.KeySymbolColon)
+			proof, err := p.skipColonAndParseBody(&block)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
-
 			caseFacts = append(caseFacts, curStmt)
-
-			// Parse proof statements in the case block body
-			proof, err := p.parseTbBodyAndGetStmts(block.body)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
 			proofs = append(proofs, proof)
+
 		}
 	} else {
 		// Conclusion is in body, body[0] must be =>:, rest are case blocks
@@ -1372,16 +1365,9 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 				return nil, ErrInLine(err, tb)
 			}
 
-			// Skip the colon after specFact
-			err = block.header.skip(glob.KeySymbolColon)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-
 			caseFacts = append(caseFacts, curStmt)
 
-			// Parse proof statements in the case block body
-			proof, err := p.parseTbBodyAndGetStmts(block.body)
+			proof, err := p.skipColonAndParseBody(&block)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
@@ -1399,6 +1385,18 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	return NewProveCaseByCaseStmt(caseFacts, thenFacts, proofs, tb.line), nil
+}
+
+func (p *TbParser) skipColonAndParseBody(tb *tokenBlock) ([]Stmt, error) {
+	if tb.header.is(glob.KeySymbolColon) {
+		err := tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		return p.parseTbBodyAndGetStmts(tb.body)
+	} else {
+		return StmtSlice{}, nil
+	}
 }
 
 func (p *TbParser) proveByEnum(tb *tokenBlock) (Stmt, error) {
