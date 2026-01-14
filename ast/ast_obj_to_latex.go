@@ -89,3 +89,7 @@ func (f *ProveExistStmt) ToLatexString() string {
 func (f *EqualSetStmt) ToLatexString() string {
 	return f.String()
 }
+
+func (f *WitnessNonemptyStmt) ToLatexString() string {
+	return f.String()
+}

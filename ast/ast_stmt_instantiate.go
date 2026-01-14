@@ -1130,3 +1130,23 @@ func (stmt *EqualSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	}
 	return NewEqualSetStmt(left, right, proofs, stmt.Line), nil
 }
+
+func (stmt *WitnessNonemptyStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	obj, err := stmt.Obj.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	objSet, err := stmt.ObjSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	proofs := make(StmtSlice, len(stmt.Proofs))
+	for i, proof := range stmt.Proofs {
+		instProof, err := proof.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		proofs[i] = instProof
+	}
+	return NewWitnessNonemptyStmt(obj, objSet, proofs, stmt.Line), nil
+}

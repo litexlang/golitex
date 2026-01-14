@@ -104,6 +104,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.inferTemplateStmt(tb)
 	case glob.KeywordEqualSet:
 		ret, err = p.equalSetStmt(tb)
+	case glob.KeywordWitnessNonempty:
+		ret, err = p.witnessNonemptyStmt(tb)
 	default:
 		ret, err = p.factOrFactInferStmt(tb)
 	}
@@ -1317,7 +1319,7 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 				return nil, ErrInLine(err, tb)
 			}
 
-			proof, err := p.skipColonAndParseBody(&block)
+			proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&block)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
@@ -1369,7 +1371,7 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 
 			caseFacts = append(caseFacts, curStmt)
 
-			proof, err := p.skipColonAndParseBody(&block)
+			proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&block)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
@@ -1389,7 +1391,7 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 	return NewProveCaseByCaseStmt(caseFacts, thenFacts, proofs, tb.line), nil
 }
 
-func (p *TbParser) skipColonAndParseBody(tb *tokenBlock) ([]Stmt, error) {
+func (p *TbParser) skipColonAndParseBodyOrReturnEmptyStmtSlice(tb *tokenBlock) ([]Stmt, error) {
 	if tb.header.is(glob.KeySymbolColon) {
 		err := tb.header.skip(glob.KeySymbolColon)
 		if err != nil {
@@ -3958,10 +3960,36 @@ func (p *TbParser) equalSetStmt(tb *tokenBlock) (*EqualSetStmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	proofs, err := p.skipColonAndParseBody(tb)
+	proofs, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
 	return NewEqualSetStmt(left, right, proofs, tb.line), nil
+}
+
+func (p *TbParser) witnessNonemptyStmt(tb *tokenBlock) (*WitnessNonemptyStmt, error) {
+	err := tb.header.skip(glob.KeywordWitnessNonempty)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse obj
+	obj, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse objSet
+	objSet, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	proofs, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	return NewWitnessNonemptyStmt(obj, objSet, proofs, tb.line), nil
 }
