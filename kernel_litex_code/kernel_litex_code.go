@@ -1013,4 +1013,13 @@ know forall x Z: x >= 0 => x $in N
 know:
 	forall x Z, y N_pos: x^y $in Z
 	forall x Q, y N_pos: x^y $in Q
+
+	forall x N_pos:
+		=>:
+			x != 1
+		<=>:
+			x >= 2
+
+know:
+	forall x, y Z: x > y <=> x >= y + 1
 `
