@@ -26,4 +26,5 @@ prove:
     enum a {3, 2, 1}:
         a $in {1, 2, 3}
 
-    $equal_set({1, 2, 3}, {3, 2, 1})
+    equal_set {1, 2, 3}, {3, 2, 1}:
+        do_nothing

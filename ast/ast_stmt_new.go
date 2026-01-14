@@ -319,10 +319,6 @@ func NewInferTemplateStmt(params []string, paramSets []Obj, domFacts ReversibleF
 	return &InferTemplateStmt{Params: params, ParamSets: paramSets, DomFacts: domFacts, ThenFacts: thenFacts, IfFacts: ifFacts, Proof: proof, Line: line}
 }
 
-func NewEqualTupleStmt(left Obj, right Obj, proofs StmtSlice, line uint) *EqualTupleStmt {
-	return &EqualTupleStmt{Left: left, Right: right, Proofs: proofs, Line: line}
-}
-
 func NewEqualSetStmt(left Obj, right Obj, proofs StmtSlice, line uint) *EqualSetStmt {
 	return &EqualSetStmt{Left: left, Right: right, Proofs: proofs, Line: line}
 }

@@ -539,7 +539,7 @@ func (stmt *KnowInferStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(StrObjSetPairs(stmt.Params, stmt.ParamSets))
 	builder.WriteString(":\n")
-	
+
 	if len(stmt.DomFacts) > 0 {
 		domFactStrSlice := make([]string, len(stmt.DomFacts))
 		for i := range len(stmt.DomFacts) {
@@ -550,7 +550,7 @@ func (stmt *KnowInferStmt) String() string {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents("=>:", 1))
 		builder.WriteByte('\n')
 	}
-	
+
 	thenFactStrSlice := make([]string, len(stmt.ThenFacts))
 	for i := range len(stmt.ThenFacts) {
 		if len(stmt.DomFacts) > 0 {
@@ -560,7 +560,7 @@ func (stmt *KnowInferStmt) String() string {
 		}
 	}
 	builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
-	
+
 	if len(stmt.IfFacts) > 0 {
 		builder.WriteByte('\n')
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents("if:", 1))
@@ -571,7 +571,7 @@ func (stmt *KnowInferStmt) String() string {
 		}
 		builder.WriteString(strings.Join(ifFactStrSlice, "\n"))
 	}
-	
+
 	return builder.String()
 }
 
@@ -1468,22 +1468,6 @@ func (stmt *ProveExistStmt) String() string {
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
 
-	for _, proof := range stmt.Proofs {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
-		builder.WriteByte('\n')
-	}
-	return builder.String()
-}
-
-func (stmt *EqualTupleStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordEqualTuple)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.Left.String())
-	builder.WriteString(", ")
-	builder.WriteString(stmt.Right.String())
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
 	for _, proof := range stmt.Proofs {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
 		builder.WriteByte('\n')
