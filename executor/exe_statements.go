@@ -255,7 +255,7 @@ func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) *glob.S
 
 	// Verify that cases cover all possibilities and don't overlap
 	// For ProveCaseByCaseStmt, we don't have params/paramSets, so we use empty slices
-	execState, err := exec.verifyCasesOrAndNoOverlap(stmt.CaseFacts, ast.StrSlice{}, ast.ObjSlice{}, stmt.ProveOr, stmt.Line)
+	execState, err := exec.verifyCasesOrAndNoOverlap(stmt.CaseFacts, ast.StrSlice{}, ast.ObjSlice{}, stmt.ProveCases, stmt.Line)
 	if notOkExec(execState, err) {
 		return execState
 	}
