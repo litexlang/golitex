@@ -326,3 +326,15 @@ func NewEqualSetStmt(left Obj, right Obj, proofs StmtSlice, line uint) *EqualSet
 func NewWitnessNonemptyStmt(obj Obj, objSet Obj, proofs StmtSlice, line uint) *WitnessNonemptyStmt {
 	return &WitnessNonemptyStmt{Obj: obj, ObjSet: objSet, Proofs: proofs, Line: line}
 }
+
+func NewHaveFnEqualCaseByCaseStmt(defHeader *DefHeader, retSet Obj, caseByCaseFacts SpecFactPtrSlice, caseByCaseEqualTo ObjSlice, proofs StmtSliceSlice, proveCases StmtSlice, line uint) *HaveFnEqualCaseByCaseStmt {
+	return &HaveFnEqualCaseByCaseStmt{
+		DefHeader:         defHeader,
+		RetSet:            retSet,
+		CaseByCaseFacts:   caseByCaseFacts,
+		CaseByCaseEqualTo: caseByCaseEqualTo,
+		Proofs:            proofs,
+		ProveCases:        proveCases,
+		Line:              line,
+	}
+}

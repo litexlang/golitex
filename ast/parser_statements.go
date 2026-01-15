@@ -498,7 +498,7 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 		cases := []*SpecFactStmt{}
 		proofs := []StmtSlice{}
 		EqualTo := []Obj{}
-		
+
 		// Check if the last body block is "prove or:"
 		proveOr := StmtSlice{}
 		lastBlockIndex := -1
@@ -561,7 +561,7 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 		if lastBlockIndex >= 0 {
 			lastBlock := tb.body[lastBlockIndex]
 			lastBlock.header.skip(glob.KeywordProve)
-			lastBlock.header.skip(glob.KeywordOr)
+			lastBlock.header.skip(glob.KeywordCases)
 			proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
@@ -629,7 +629,7 @@ func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
 		caseByCaseFacts := []*SpecFactStmt{}
 		caseByCaseEqualTo := []Obj{}
 		caseByCaseProofs := []StmtSlice{}
-		
+
 		// Check if the last body block is "prove or:"
 		proveOr := StmtSlice{}
 		lastBlockIndex := -1
@@ -691,22 +691,24 @@ func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
 		if lastBlockIndex >= 0 {
 			lastBlock := tb.body[lastBlockIndex]
 			lastBlock.header.skip(glob.KeywordProve)
-			lastBlock.header.skip(glob.KeywordOr)
+			lastBlock.header.skip(glob.KeywordCases)
 			proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
 		}
 
-		return &HaveFnEqualCaseByCaseStmt{
-			DefHeader:         defHeader,
-			RetSet:            retSet,
-			CaseByCaseFacts:   caseByCaseFacts,
-			CaseByCaseEqualTo: caseByCaseEqualTo,
-			Proofs:            caseByCaseProofs,
-			ProveOr:           proveOr,
-			Line:              tb.line,
-		}, nil
+		// return &HaveFnEqualCaseByCaseStmt{
+		// 	DefHeader:         defHeader,
+		// 	RetSet:            retSet,
+		// 	CaseByCaseFacts:   caseByCaseFacts,
+		// 	CaseByCaseEqualTo: caseByCaseEqualTo,
+		// 	Proofs:            caseByCaseProofs,
+		// 	ProveCases:        proveOr,
+		// 	Line:              tb.line,
+		// }, nil
+
+		return NewHaveFnEqualCaseByCaseStmt(defHeader, retSet, caseByCaseFacts, caseByCaseEqualTo, caseByCaseProofs, proveOr, tb.line), nil
 	} else {
 		// Simple equal with optional proof
 		// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
@@ -1506,7 +1508,7 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 		lastBlock := tb.body[lastBlockIndex]
 		// Skip "prove" and "or" (we already verified they exist)
 		lastBlock.header.skip(glob.KeywordProve)
-		lastBlock.header.skip(glob.KeywordOr)
+		lastBlock.header.skip(glob.KeywordCases)
 		proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
