@@ -330,6 +330,10 @@ func (f *ClaimProveStmt) ToLatexString() string {
 	return claimProveBodyToLatexString(f.ToCheckFact, f.Proofs, true)
 }
 
+func (f *ImpossibleStmt) ToLatexString() string {
+	return claimProveBodyToLatexString(f.Fact, f.Proofs, true)
+}
+
 func (f *KnowFactStmt) ToLatexString() string {
 	var builder strings.Builder
 

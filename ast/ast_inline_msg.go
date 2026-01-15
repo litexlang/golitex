@@ -89,6 +89,10 @@ func (p *SpecFactStmt) InlineString() string {
 func (f *ClaimProveStmt) InlineString() string {
 	return f.String()
 }
+
+func (f *ImpossibleStmt) InlineString() string {
+	return f.String()
+}
 func (f *KnowFactStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordKnow)

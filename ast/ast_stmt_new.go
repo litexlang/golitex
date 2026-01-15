@@ -48,6 +48,10 @@ func NewClaimProveStmt(toCheckFact FactStmt, proofs []Stmt, line uint) *ClaimPro
 	return &ClaimProveStmt{toCheckFact, proofs, line}
 }
 
+func NewImpossibleStmt(fact FactStmt, proofs []Stmt, line uint) *ImpossibleStmt {
+	return &ImpossibleStmt{fact, proofs, line}
+}
+
 func NewKnowStmt(facts CanBeKnownStmtSlice, line uint) *KnowFactStmt {
 	return &KnowFactStmt{facts, line}
 }
