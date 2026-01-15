@@ -476,3 +476,10 @@ type WitnessNonemptyStmt struct {
 
 	Line uint
 }
+
+type ImpossibleStmt struct {
+	Fact   FactStmt
+	Proofs StmtSlice
+
+	Line uint
+}

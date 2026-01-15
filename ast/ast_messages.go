@@ -263,6 +263,10 @@ func (f *ClaimProveStmt) String() string {
 	return ClaimProve_ClaimProveByContradiction(glob.KeywordProve, f.ToCheckFact, f.Proofs)
 }
 
+func (f *ImpossibleStmt) String() string {
+	return ClaimProve_ClaimProveByContradiction(glob.KeywordImpossible, f.Fact, f.Proofs)
+}
+
 func ClaimProve_ClaimProveByContradiction(kw string, toCheckFact FactStmt, proofs []Stmt) string {
 	var builder strings.Builder
 
