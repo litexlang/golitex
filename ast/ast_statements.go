@@ -110,9 +110,10 @@ type KnowPropInferStmt struct {
 }
 
 type ProveCaseByCaseStmt struct {
-	CaseFacts SpecFactPtrSlice
-	ThenFacts FactStmtSlice
-	Proofs    StmtSliceSlice
+	CaseFacts  SpecFactPtrSlice
+	ThenFacts  FactStmtSlice
+	Proofs     StmtSliceSlice
+	ProveCases StmtSlice
 
 	Line uint
 }
@@ -238,6 +239,7 @@ type HaveFnEqualStmt struct {
 	DefHeader *DefHeader
 	RetSet    Obj
 	EqualTo   Obj
+	Proofs    StmtSlice
 
 	Line uint
 }
@@ -249,6 +251,8 @@ type HaveFnEqualCaseByCaseStmt struct {
 	RetSet            Obj
 	CaseByCaseFacts   SpecFactPtrSlice
 	CaseByCaseEqualTo ObjSlice
+	Proofs            StmtSliceSlice
+	ProveCases        StmtSlice
 
 	Line uint
 }
@@ -291,6 +295,7 @@ type HaveFnCaseByCaseStmt struct {
 	CaseByCaseFacts SpecFactPtrSlice
 	Proofs          StmtSliceSlice
 	EqualToObjs     ObjSlice
+	ProveCases      StmtSlice
 
 	Line uint
 }
@@ -452,6 +457,22 @@ type KnowInferStmt struct {
 	DomFacts  ReversibleFacts
 	ThenFacts ReversibleFacts
 	IfFacts   FactStmtSlice
+
+	Line uint
+}
+
+type EqualSetStmt struct {
+	Left   Obj
+	Right  Obj
+	Proofs StmtSlice
+
+	Line uint
+}
+
+type WitnessNonemptyStmt struct {
+	Obj    Obj
+	ObjSet Obj
+	Proofs StmtSlice
 
 	Line uint
 }

@@ -12,7 +12,7 @@
 #    the corresponding forall fact: forall x in S, if dom(x) then conclusion(x)
 #
 # General form:
-#   enum(x S):
+#   enum x S:
 #       dom:
 #           <domain condition on x>
 #       =>:
@@ -24,7 +24,7 @@
 #
 # Example: This proves that for all even numbers in {1, 2, 3, 4, 17},
 #          they must be either 2 or 4.
-enum(x {1, 2, 3, 4, 17}):
+enum x {1, 2, 3, 4, 17}:
     dom:
         x % 2 = 0
     =>:
@@ -34,7 +34,7 @@ enum(x {1, 2, 3, 4, 17}):
 
 
 have s finite_set = {1, 2, 3, 4, 17}
-enum(x s):
+enum x s:
     dom:
         x % 2 = 0
     =>:

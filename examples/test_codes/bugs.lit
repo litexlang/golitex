@@ -1,0 +1,39 @@
+# https://github.com/litexlang/golitex/blob/main/examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lit
+
+
+# floor, ceil round 是内置的，不是被证明的
+
+# 说明 infer 和forall还是有点区别的
+
+# 这是我还没有 infer 的时候必须要有 item_in_intersect 的原因，就是匹配上
+
+# item_in_intersect 和 item_in_union 需要被删了
+
+# https://github.com/litexlang/golitex/blob/main/examples/comprehensive_examples/product_of_items_in_finite_set.lit
+#   know set_minus({1,2}, {1}) = {2}
+
+用函数（序列）来表示 连乘
+
+
+# enum x {1, 2, 3, 4, 17}: 后面不要有 ()
+
+#    用infer
+ $product_is_0_then_at_least_one_factor_is_0(x + a - sqrt(a^2 - b), x + a + sqrt(a^2 - b))
+ # https://github.com/litexlang/golitex/blob/main/examples/comprehensive_examples/quadratic_equation.lit
+
+
+# https://github.com/litexlang/golitex/blob/main/examples/testings/fn_template.lit
+
+教大家写 fn_template
+
+# 对比 prop 和 fn 的参数列表
+fn 不能读入 set
+fn 还不能 前面一个参数是后面一个参数的集合的参数
+
+prop s set, f fn(s)s
+
+fn f(s R, a s)
+
+# http://github.com/litexlang/golitex/blob/main/examples/testings/seq.lit
+
+prove cases 放在 各种出现case的地方，说明确实是or成立的

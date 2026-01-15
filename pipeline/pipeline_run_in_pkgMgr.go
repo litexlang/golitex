@@ -46,9 +46,11 @@ func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bo
 			return nil, glob.StmtRetTypeError, []*glob.StmtRet{glob.ErrRet(err.Error())}
 		}
 		ret := RunStmtInExecutor(curExec, topStmt)
-		innerGlobRets = append(innerGlobRets, ret)
+
 		if ret.IsNotTrue() {
-			return nil, ret.RetType, innerGlobRets
+			return nil, ret.RetType, []*glob.StmtRet{ret}
+		} else {
+			innerGlobRets = append(innerGlobRets, ret)
 		}
 	}
 

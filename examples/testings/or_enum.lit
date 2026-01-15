@@ -31,7 +31,7 @@ claim:
             case x = 6:
                 do_nothing
 
-enum(x {1,2,3,4,5,6}):
+enum x {1,2,3,4,5,6}:
     x $in s
 
 $equal_set(s, {1,2,3,4,5,6})
@@ -41,7 +41,7 @@ know s2 = {1,2,3,4,5,6}
 s2 $is_finite_set
 count(s2) = 6
 
-enum(x s2):
+enum x s2:
     x = 1 or x = 2 or x = 3 or x = 4 or x = 5 or x = 6
     
 1 $in s2

@@ -484,7 +484,11 @@ func (stmt *ProveCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error
 		}
 		newProofs = append(newProofs, newProof)
 	}
-	return NewProveCaseByCaseStmt(newCaseFacts, newThenFacts, newProofs, stmt.Line), nil
+	newProveOr, err := stmt.ProveCases.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewProveCaseByCaseStmt(newCaseFacts, newThenFacts, newProofs, newProveOr, stmt.Line), nil
 }
 
 func (stmt *ImportDirStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
@@ -640,7 +644,11 @@ func (stmt *HaveFnEqualStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewHaveFnEqualStmt(newDefHeader, newRetSet, newEqualTo, stmt.Line), nil
+	newProofs, err := stmt.Proofs.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveFnEqualStmt(newDefHeader, newRetSet, newEqualTo, newProofs, stmt.Line), nil
 }
 
 // func (stmt *HaveFnLiftStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
@@ -696,7 +704,11 @@ func (stmt *HaveFnCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 		}
 		newHaveObjSatisfyFn[i] = newObj
 	}
-	return NewHaveFnCaseByCaseStmt(newDefFnStmt.(*LetFnStmt), newCaseByCaseFacts, newProofs, newHaveObjSatisfyFn, stmt.Line), nil
+	newProveOr, err := stmt.ProveCases.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveFnCaseByCaseStmt(newDefFnStmt.(*LetFnStmt), newCaseByCaseFacts, newProofs, newHaveObjSatisfyFn, newProveOr, stmt.Line), nil
 }
 
 func (stmt *ProveForStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
@@ -1071,7 +1083,19 @@ func (stmt *HaveFnEqualCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt,
 	if err != nil {
 		return nil, err
 	}
-	return &HaveFnEqualCaseByCaseStmt{newDefHeader, newRetSet, newCaseByCaseFacts, newCaseByCaseEqualTo, stmt.Line}, nil
+	newProofs := StmtSliceSlice{}
+	for _, proof := range stmt.Proofs {
+		newProof, err := proof.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newProofs = append(newProofs, newProof)
+	}
+	newProveOr, err := stmt.ProveCases.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return &HaveFnEqualCaseByCaseStmt{newDefHeader, newRetSet, newCaseByCaseFacts, newCaseByCaseEqualTo, newProofs, newProveOr, stmt.Line}, nil
 }
 
 func InstantiateSetBuilderObjWithoutChangingParam(obj *FnObj, uniMap map[string]Obj) (Obj, error) {
@@ -1109,4 +1133,44 @@ func InstantiateSetBuilderObjWithoutChangingParam(obj *FnObj, uniMap map[string]
 
 func (stmt *ProveExistStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	panic("TODO: Implement ProveExistStmt Instantiate")
+}
+
+func (stmt *EqualSetStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	left, err := stmt.Left.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	right, err := stmt.Right.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	proofs := make(StmtSlice, len(stmt.Proofs))
+	for i, proof := range stmt.Proofs {
+		instProof, err := proof.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		proofs[i] = instProof
+	}
+	return NewEqualSetStmt(left, right, proofs, stmt.Line), nil
+}
+
+func (stmt *WitnessNonemptyStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	obj, err := stmt.Obj.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	objSet, err := stmt.ObjSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	proofs := make(StmtSlice, len(stmt.Proofs))
+	for i, proof := range stmt.Proofs {
+		instProof, err := proof.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		proofs[i] = instProof
+	}
+	return NewWitnessNonemptyStmt(obj, objSet, proofs, stmt.Line), nil
 }

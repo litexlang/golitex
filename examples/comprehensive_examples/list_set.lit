@@ -20,10 +20,11 @@ prove:
 prove:
     1 $in {1, 2, 3}
 
-    enum(a {1, 2, 3}):
+    enum a {1, 2, 3}:
         a $in {3, 2, 1}
 
-    enum(a {3, 2, 1}):
+    enum a {3, 2, 1}:
         a $in {1, 2, 3}
 
-    $equal_set({1, 2, 3}, {3, 2, 1})
+    equal_set {1, 2, 3}, {3, 2, 1}:
+        do_nothing

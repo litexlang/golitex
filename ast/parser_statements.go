@@ -98,10 +98,14 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.provePropInferStmt(tb)
 	case glob.KeywordRunFile:
 		ret, err = p.runFileStmt(tb)
-	case glob.KeywordProveExist:
+	case glob.KeywordWitness:
 		ret, err = p.proveExistStmt(tb)
 	case glob.KeywordInfer:
 		ret, err = p.inferTemplateStmt(tb)
+	case glob.KeywordEqualSet:
+		ret, err = p.equalSetStmt(tb)
+	case glob.KeywordWitnessNonempty:
+		ret, err = p.witnessNonemptyStmt(tb)
 	default:
 		ret, err = p.factOrFactInferStmt(tb)
 	}
@@ -220,80 +224,6 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 		return NewDefPropStmt(declHeader, domFacts, iffFacts, nil, tb.line), nil
 	}
 }
-
-// func (p *TbParser) defExistPropStmt(tb *tokenBlock, keyword string) (Stmt, error) {
-// 	body, err := p.defExistPropStmtBodyWithoutSelfReferCheck(tb, keyword)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	err = NoSelfReferenceInPropDef(string(body.DefBody.DefHeader.Name), append(append(body.DefBody.DomFactsOrNil, body.DefBody.IffFactsOrNil...), body.DefBody.ImplicationFactsOrNil...))
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	return body, nil
-// }
-
-// func (p *TbParser) defExistPropStmtBodyWithoutSelfReferCheck(tb *tokenBlock, head string) (*DefExistPropStmt, error) {
-// 	var err error
-
-// 	err = tb.header.skip(head)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	existParams, existParamSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeywordSt, false)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	if len(existParams) == 0 {
-// 		return nil, fmt.Errorf("expect at least one parameter in exist prop definition")
-// 	}
-
-// 	// Add exist prop params to FreeParams
-// 	for _, param := range existParams {
-// 		if _, exists := p.FreeParams[param]; exists {
-// 			return nil, ErrInLine(fmt.Errorf("parameter %s in exist prop definition conflicts with a free parameter in the outer scope", param), tb)
-// 		}
-// 		p.FreeParams[param] = struct{}{}
-// 	}
-
-// 	defer func() {
-// 		for _, param := range existParams {
-// 			delete(p.FreeParams, param)
-// 		}
-// 	}()
-
-// 	if len(existParams) == 0 {
-// 		return nil, fmt.Errorf("expect at least one parameter in exist prop definition")
-// 	}
-
-// 	def, err := p.defExistPropStmtBody(tb)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	// Also add params from defHeader (the main prop definition)
-// 	for _, param := range def.DefHeader.Params {
-// 		p.FreeParams[param] = struct{}{}
-// 	}
-
-// 	// Defer: remove the params we added when leaving this exist prop scope
-// 	defer func() {
-// 		// Remove existParams
-// 		for _, param := range existParams {
-// 			delete(p.FreeParams, param)
-// 		}
-// 		// Remove defHeader params
-// 		for _, param := range def.DefHeader.Params {
-// 			delete(p.FreeParams, param)
-// 		}
-// 	}()
-
-// 	return NewDefExistPropStmt(def, existParams, existParamSets, tb.line), nil
-// }
 
 func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (Stmt, error) {
 	if skipLetAndFn {
@@ -462,11 +392,11 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	// Check if it's prove or case-by-case
-	if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordProveExist) {
+	if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordWitness) {
 		if len(tb.body) != 3 {
-			return nil, fmt.Errorf("expect 3 body blocks for have fn with prove_exist")
+			return nil, fmt.Errorf("expect 3 body blocks for have fn with witness")
 		}
-		err = tb.body[1].header.skip(glob.KeywordProveExist)
+		err = tb.body[1].header.skip(glob.KeywordWitness)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -489,51 +419,82 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 
 		return NewClaimHaveFnStmt(defFnStmt.(*LetFnStmt), proof, haveObjSatisfyFn, tb.line), nil
 	} else if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordCase) {
-		// Case-by-case structure: body[0] is defFnStmt, body[1..n] are case/equal pairs
-		if (len(tb.body)-1)%2 != 0 {
-			return nil, fmt.Errorf("expect even number of body blocks after defFnStmt for case-by-case (got %d)", len(tb.body)-1)
-		}
-
+		// Case-by-case structure: body[0] is defFnStmt, body[1..n] are case blocks (possibly with prove or: at the end)
+		// Each case block has format: case <condition>: <equalTo>:
 		cases := []*SpecFactStmt{}
 		proofs := []StmtSlice{}
 		EqualTo := []Obj{}
-		for i := 1; i < len(tb.body); i++ {
-			if (i-1)%2 == 0 {
-				// Case block
-				err := tb.body[i].header.skip(glob.KeywordCase)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
+
+		// Check if the last body block is "prove or:"
+		proveOr := StmtSlice{}
+		lastBlockIndex := -1
+		if len(tb.body) > 1 {
+			lastIdx := len(tb.body) - 1
+			lastBlock := tb.body[lastIdx]
+			if lastBlock.header.is(glob.KeywordProve) {
+				savedIndex := lastBlock.header.index
+				err := lastBlock.header.skip(glob.KeywordProve)
+				if err == nil && lastBlock.header.is(glob.KeywordOr) {
+					err := lastBlock.header.skip(glob.KeywordOr)
+					if err == nil {
+						lastBlockIndex = lastIdx
+					} else {
+						lastBlock.header.index = savedIndex
+					}
+				} else {
+					if err == nil {
+						lastBlock.header.index = savedIndex
+					}
 				}
-				curStmt, err := p.specFactStmt(&tb.body[i])
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				cases = append(cases, curStmt)
-				err = tb.body[i].header.skip(glob.KeySymbolColon)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				// Use parseTbBodyAndGetStmts to create a new parse env for proof, so have statements in proof don't leak to outer scope
-				curProof, err := p.parseTbBodyAndGetStmts(tb.body[i].body)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				proofs = append(proofs, curProof)
-			} else {
-				// Equal block
-				err := tb.body[i].header.skip(glob.KeySymbolEqual)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				curHaveObj, err := p.Obj(&tb.body[i])
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				EqualTo = append(EqualTo, curHaveObj)
 			}
 		}
 
-		return NewHaveFnCaseByCaseStmt(defFnStmt.(*LetFnStmt), cases, proofs, EqualTo, tb.line), nil
+		// Process case blocks (skip the last one if it's "prove or:")
+		endIdx := len(tb.body)
+		if lastBlockIndex >= 0 {
+			endIdx = lastBlockIndex
+		}
+		for i := 1; i < endIdx; i++ {
+			// Case block: case <condition>: <equalTo>:
+			err := tb.body[i].header.skip(glob.KeywordCase)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			curStmt, err := p.specFactStmt(&tb.body[i])
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			cases = append(cases, curStmt)
+			err = tb.body[i].header.skip(glob.KeySymbolColon)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			// Parse equalTo object
+			curHaveObj, err := p.Obj(&tb.body[i])
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			EqualTo = append(EqualTo, curHaveObj)
+			// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
+			curProof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&tb.body[i])
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			proofs = append(proofs, curProof)
+		}
+
+		// Parse "prove or:" block if it exists
+		if lastBlockIndex >= 0 {
+			lastBlock := tb.body[lastBlockIndex]
+			lastBlock.header.skip(glob.KeywordProve)
+			lastBlock.header.skip(glob.KeywordCases)
+			proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+		}
+
+		return NewHaveFnCaseByCaseStmt(defFnStmt.(*LetFnStmt), cases, proofs, EqualTo, proveOr, tb.line), nil
 	} else {
 		return nil, fmt.Errorf("expect 'prove:' or 'case' after defFnStmt in have fn statement")
 	}
@@ -583,22 +544,49 @@ func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	if !tb.header.is(glob.KeySymbolColon) {
-		equalTo, err := p.Obj(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
+	equalTo, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
 
-		return NewHaveFnEqualStmt(defHeader, retSet, equalTo, tb.line), nil
-	} else {
-		err = tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
+	// Check if it's case-by-case or simple equal
+	if len(tb.body) > 0 && tb.body[0].header.is(glob.KeywordCase) {
+		// Case-by-case structure (possibly with prove or: at the end)
 		caseByCaseFacts := []*SpecFactStmt{}
 		caseByCaseEqualTo := []Obj{}
-		for _, block := range tb.body {
+		caseByCaseProofs := []StmtSlice{}
+
+		// Check if the last body block is "prove or:"
+		proveOr := StmtSlice{}
+		lastBlockIndex := -1
+		if len(tb.body) > 0 {
+			lastIdx := len(tb.body) - 1
+			lastBlock := tb.body[lastIdx]
+			if lastBlock.header.is(glob.KeywordProve) {
+				savedIndex := lastBlock.header.index
+				err := lastBlock.header.skip(glob.KeywordProve)
+				if err == nil && lastBlock.header.is(glob.KeywordOr) {
+					err := lastBlock.header.skip(glob.KeywordOr)
+					if err == nil {
+						lastBlockIndex = lastIdx
+					} else {
+						lastBlock.header.index = savedIndex
+					}
+				} else {
+					if err == nil {
+						lastBlock.header.index = savedIndex
+					}
+				}
+			}
+		}
+
+		// Process case blocks (skip the last one if it's "prove or:")
+		endIdx := len(tb.body)
+		if lastBlockIndex >= 0 {
+			endIdx = lastBlockIndex
+		}
+		for i := 0; i < endIdx; i++ {
+			block := tb.body[i]
 			err := block.header.skip(glob.KeywordCase)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
@@ -615,17 +603,47 @@ func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
+			// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
+			proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&block)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
 			caseByCaseEqualTo = append(caseByCaseEqualTo, obj)
 			caseByCaseFacts = append(caseByCaseFacts, curStmt)
+			caseByCaseProofs = append(caseByCaseProofs, proof)
 		}
 
-		return &HaveFnEqualCaseByCaseStmt{
-			DefHeader:         defHeader,
-			RetSet:            retSet,
-			CaseByCaseFacts:   caseByCaseFacts,
-			CaseByCaseEqualTo: caseByCaseEqualTo,
-			Line:              tb.line,
-		}, nil
+		// Parse "prove or:" block if it exists
+		if lastBlockIndex >= 0 {
+			lastBlock := tb.body[lastBlockIndex]
+			lastBlock.header.skip(glob.KeywordProve)
+			lastBlock.header.skip(glob.KeywordCases)
+			proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+		}
+
+		// return &HaveFnEqualCaseByCaseStmt{
+		// 	DefHeader:         defHeader,
+		// 	RetSet:            retSet,
+		// 	CaseByCaseFacts:   caseByCaseFacts,
+		// 	CaseByCaseEqualTo: caseByCaseEqualTo,
+		// 	Proofs:            caseByCaseProofs,
+		// 	ProveCases:        proveOr,
+		// 	Line:              tb.line,
+		// }, nil
+
+		return NewHaveFnEqualCaseByCaseStmt(defHeader, retSet, caseByCaseFacts, caseByCaseEqualTo, caseByCaseProofs, proveOr, tb.line), nil
+	} else {
+		// Simple equal with optional proof
+		// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
+		proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		return NewHaveFnEqualStmt(defHeader, retSet, equalTo, proof, tb.line), nil
 	}
 }
 
@@ -1293,14 +1311,45 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 		}
 	}
 
+	// Check if the last body block is "prove or:" before processing cases
+	proveOr := StmtSlice{}
+	lastBlockIndex := -1
+	if len(tb.body) > 0 {
+		lastIdx := len(tb.body) - 1
+		lastBlock := tb.body[lastIdx]
+		// Check if this block starts with "prove" and "or"
+		if lastBlock.header.is(glob.KeywordProve) {
+			savedIndex := lastBlock.header.index
+			err := lastBlock.header.skip(glob.KeywordProve)
+			if err == nil && lastBlock.header.is(glob.KeywordOr) {
+				err := lastBlock.header.skip(glob.KeywordOr)
+				if err == nil {
+					// This is a "prove or:" block
+					lastBlockIndex = lastIdx
+				} else {
+					lastBlock.header.index = savedIndex
+				}
+			} else {
+				if err == nil {
+					lastBlock.header.index = savedIndex
+				}
+			}
+		}
+	}
+
 	// If thenFacts is already populated, it means the conclusion was written after cases
-	// In this case, all body blocks should be case blocks
-	// Otherwise, body[0] must be =>:, and the rest are case blocks
+	// In this case, all body blocks (except possibly the last "prove or:" block) should be case blocks
+	// Otherwise, body[0] must be =>:, and the rest (except possibly the last "prove or:" block) are case blocks
 	if len(thenFacts) > 0 {
-		// Conclusion already parsed, all body blocks are case blocks
-		for _, block := range tb.body {
+		// Conclusion already parsed, all body blocks (except possibly the last "prove or:" block) are case blocks
+		endIdx := len(tb.body)
+		if lastBlockIndex >= 0 {
+			endIdx = lastBlockIndex
+		}
+		for i := 0; i < endIdx; i++ {
+			block := tb.body[i]
 			if !block.header.is(glob.KeywordCase) {
-				return nil, ErrInLine(fmt.Errorf("cases: when conclusion is written after cases, all body blocks must be case blocks"), tb)
+				return nil, ErrInLine(fmt.Errorf("cases: when conclusion is written after cases, all body blocks must be case blocks (except prove or:)"), tb)
 			}
 
 			// Skip "case" keyword
@@ -1315,25 +1364,23 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 				return nil, ErrInLine(err, tb)
 			}
 
-			// Skip the colon after specFact
-			err = block.header.skip(glob.KeySymbolColon)
+			proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&block)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
-
 			caseFacts = append(caseFacts, curStmt)
-
-			// Parse proof statements in the case block body
-			proof, err := p.parseTbBodyAndGetStmts(block.body)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
 			proofs = append(proofs, proof)
 		}
 	} else {
-		// Conclusion is in body, body[0] must be =>:, rest are case blocks
+		// Conclusion is in body, body[0] must be =>:, rest (except possibly the last "prove or:" block) are case blocks
 		if len(tb.body) == 0 {
 			return nil, ErrInLine(fmt.Errorf("cases: when using colon syntax, body must contain at least =>: section"), tb)
+		}
+
+		// Determine the end index for case blocks
+		endIdx := len(tb.body)
+		if lastBlockIndex >= 0 {
+			endIdx = lastBlockIndex
 		}
 
 		// Parse body[0] as =>: section
@@ -1353,11 +1400,11 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 		}
 		thenFacts = append(thenFacts, curThenFacts...)
 
-		// Parse remaining body blocks as case blocks
-		for i := 1; i < len(tb.body); i++ {
+		// Parse remaining body blocks as case blocks (up to endIdx)
+		for i := 1; i < endIdx; i++ {
 			block := tb.body[i]
 			if !block.header.is(glob.KeywordCase) {
-				return nil, ErrInLine(fmt.Errorf("cases: after =>: section, all body blocks must be case blocks"), tb)
+				return nil, ErrInLine(fmt.Errorf("cases: after =>: section, all body blocks must be case blocks (except prove or:)"), tb)
 			}
 
 			// Skip "case" keyword
@@ -1372,20 +1419,25 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 				return nil, ErrInLine(err, tb)
 			}
 
-			// Skip the colon after specFact
-			err = block.header.skip(glob.KeySymbolColon)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-
 			caseFacts = append(caseFacts, curStmt)
 
-			// Parse proof statements in the case block body
-			proof, err := p.parseTbBodyAndGetStmts(block.body)
+			proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&block)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
 			proofs = append(proofs, proof)
+		}
+	}
+
+	// Parse "prove or:" block if it exists
+	if lastBlockIndex >= 0 {
+		lastBlock := tb.body[lastBlockIndex]
+		// Skip "prove" and "or" (we already verified they exist)
+		lastBlock.header.skip(glob.KeywordProve)
+		lastBlock.header.skip(glob.KeywordCases)
+		proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
 		}
 	}
 
@@ -1398,7 +1450,19 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(fmt.Errorf("cases: expect %d proofs, but got %d. expect the number of proofs to be the same as the number of case facts", len(caseFacts), len(proofs)), tb)
 	}
 
-	return NewProveCaseByCaseStmt(caseFacts, thenFacts, proofs, tb.line), nil
+	return NewProveCaseByCaseStmt(caseFacts, thenFacts, proofs, proveOr, tb.line), nil
+}
+
+func (p *TbParser) skipColonAndParseBodyOrReturnEmptyStmtSlice(tb *tokenBlock) ([]Stmt, error) {
+	if tb.header.is(glob.KeySymbolColon) {
+		err := tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		return p.parseTbBodyAndGetStmts(tb.body)
+	} else {
+		return StmtSlice{}, nil
+	}
 }
 
 func (p *TbParser) proveByEnum(tb *tokenBlock) (Stmt, error) {
@@ -1407,13 +1471,8 @@ func (p *TbParser) proveByEnum(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
 	// param paramSet pairs
-	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolRightBrace, false)
+	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolColon, false)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1429,11 +1488,6 @@ func (p *TbParser) proveByEnum(tb *tokenBlock) (Stmt, error) {
 			delete(p.FreeParams, param)
 		}
 	}()
-
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
 
 	// Use the new parseDomThenProve function to handle all three cases:
 	// 1. dom:, =>:, prove: (all three sections)
@@ -2539,8 +2593,6 @@ func (p *TbParser) factStmt(tb *tokenBlock, uniFactDepth uniFactEnum) (FactStmt,
 			}
 			return uniFact, nil
 		}
-	case glob.KeywordOr:
-		return p.inlineOrFact(tb)
 	// case glob.KeySymbolEqual:
 	// 	return p.equalsFactStmt(tb)
 	default:
@@ -3798,7 +3850,7 @@ func (p *TbParser) runFileStmt(tb *tokenBlock) (*RunFileStmt, error) {
 }
 
 func (p *TbParser) proveExistStmt(tb *tokenBlock) (*ProveExistStmt, error) {
-	err := tb.header.skip(glob.KeywordProveExist)
+	err := tb.header.skip(glob.KeywordWitness)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -3942,4 +3994,62 @@ func (p *TbParser) inferTemplateStmt(tb *tokenBlock) (*InferTemplateStmt, error)
 	}
 
 	return NewInferTemplateStmt(params, paramSets, domFacts, thenFacts, ifFacts, proofs, tb.line), nil
+}
+
+func (p *TbParser) equalSetStmt(tb *tokenBlock) (*EqualSetStmt, error) {
+	err := tb.header.skip(glob.KeywordEqualSet)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse left object
+	left, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Check for comma
+	if !tb.header.is(glob.KeySymbolComma) {
+		return nil, ErrInLine(fmt.Errorf("expect ',' after first object in equal_set"), tb)
+	}
+	tb.header.skip(glob.KeySymbolComma)
+
+	// Parse right object
+	right, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	proofs, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	return NewEqualSetStmt(left, right, proofs, tb.line), nil
+}
+
+func (p *TbParser) witnessNonemptyStmt(tb *tokenBlock) (*WitnessNonemptyStmt, error) {
+	err := tb.header.skip(glob.KeywordWitnessNonempty)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse obj
+	obj, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse objSet
+	objSet, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	proofs, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	return NewWitnessNonemptyStmt(obj, objSet, proofs, tb.line), nil
 }

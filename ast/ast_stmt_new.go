@@ -76,8 +76,8 @@ func NewUniFactWithIff(uniFact *UniFactStmt, iffFacts []FactStmt, line uint) *Un
 	return &UniFactWithIffStmt{uniFact, iffFacts, line}
 }
 
-func NewProveCaseByCaseStmt(caseFacts []*SpecFactStmt, thenFacts []FactStmt, proofs StmtSliceSlice, line uint) *ProveCaseByCaseStmt {
-	return &ProveCaseByCaseStmt{caseFacts, thenFacts, proofs, line}
+func NewProveCaseByCaseStmt(caseFacts []*SpecFactStmt, thenFacts []FactStmt, proofs StmtSliceSlice, proveOr StmtSlice, line uint) *ProveCaseByCaseStmt {
+	return &ProveCaseByCaseStmt{caseFacts, thenFacts, proofs, proveOr, line}
 }
 
 func NewKnowPropInferStmt(prop *DefPropStmt, line uint) *KnowPropInferStmt {
@@ -179,8 +179,8 @@ func NewHaveObjEqualStmt(objNames []string, objEqualTos []Obj, objSets []Obj, li
 	return &HaveObjEqualStmt{objNames, objEqualTos, objSets, line}
 }
 
-func NewHaveFnEqualStmt(defHeader *DefHeader, retSet Obj, equalTo Obj, line uint) *HaveFnEqualStmt {
-	return &HaveFnEqualStmt{defHeader, retSet, equalTo, line}
+func NewHaveFnEqualStmt(defHeader *DefHeader, retSet Obj, equalTo Obj, proofs StmtSlice, line uint) *HaveFnEqualStmt {
+	return &HaveFnEqualStmt{defHeader, retSet, equalTo, proofs, line}
 }
 
 // func NewHaveFnLiftStmt(fnName string, opt Obj, domainOfEachParamOfGivenFn []Obj, line uint) *HaveFnLiftStmt {
@@ -303,8 +303,8 @@ func NewEvalStmt(value Obj, line uint) *EvalStmt {
 // 	return &ProveAlgoReturnStmt{Facts: facts, Line: line}
 // }
 
-func NewHaveFnCaseByCaseStmt(defFnStmt *LetFnStmt, caseByCaseFacts SpecFactPtrSlice, proofs StmtSliceSlice, haveObjSatisfyFn ObjSlice, line uint) *HaveFnCaseByCaseStmt {
-	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, line}
+func NewHaveFnCaseByCaseStmt(defFnStmt *LetFnStmt, caseByCaseFacts SpecFactPtrSlice, proofs StmtSliceSlice, haveObjSatisfyFn ObjSlice, proveOr StmtSlice, line uint) *HaveFnCaseByCaseStmt {
+	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, proveOr, line}
 }
 
 func NewProveImplicationStmt(specFact *SpecFactStmt, implicationFact FactStmtSlice, proof StmtSlice, line uint) *ProveInferStmt {
@@ -317,4 +317,24 @@ func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact *S
 
 func NewInferTemplateStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts []FactStmt, proof StmtSlice, line uint) *InferTemplateStmt {
 	return &InferTemplateStmt{Params: params, ParamSets: paramSets, DomFacts: domFacts, ThenFacts: thenFacts, IfFacts: ifFacts, Proof: proof, Line: line}
+}
+
+func NewEqualSetStmt(left Obj, right Obj, proofs StmtSlice, line uint) *EqualSetStmt {
+	return &EqualSetStmt{Left: left, Right: right, Proofs: proofs, Line: line}
+}
+
+func NewWitnessNonemptyStmt(obj Obj, objSet Obj, proofs StmtSlice, line uint) *WitnessNonemptyStmt {
+	return &WitnessNonemptyStmt{Obj: obj, ObjSet: objSet, Proofs: proofs, Line: line}
+}
+
+func NewHaveFnEqualCaseByCaseStmt(defHeader *DefHeader, retSet Obj, caseByCaseFacts SpecFactPtrSlice, caseByCaseEqualTo ObjSlice, proofs StmtSliceSlice, proveCases StmtSlice, line uint) *HaveFnEqualCaseByCaseStmt {
+	return &HaveFnEqualCaseByCaseStmt{
+		DefHeader:         defHeader,
+		RetSet:            retSet,
+		CaseByCaseFacts:   caseByCaseFacts,
+		CaseByCaseEqualTo: caseByCaseEqualTo,
+		Proofs:            proofs,
+		ProveCases:        proveCases,
+		Line:              line,
+	}
 }
