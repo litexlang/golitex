@@ -333,6 +333,18 @@ func (stmt *ClaimProveStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewClaimProveStmt(newToCheckFact, newProofs, stmt.Line), nil
 }
 
+func (stmt *ImpossibleStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newFact, err := stmt.Fact.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofs, err := stmt.Proofs.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewImpossibleStmt(newFact, newProofs, stmt.Line), nil
+}
+
 func (stmt *ClaimProveByContradictionStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newClaimProveStmt, err := stmt.ClaimProveStmt.Instantiate(uniMap)
 	if err != nil {

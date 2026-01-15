@@ -82,8 +82,9 @@ const (
 	KeywordFn    = "fn"
 	KeywordFnSet = "fn_set"
 
-	KeywordClaim = "claim"
-	KeywordProve = "prove"
+	KeywordClaim     = "claim"
+	KeywordProve     = "prove"
+	KeywordImpossible = "impossible"
 
 	KeywordDom  = "dom"
 	KeywordCase = "case"

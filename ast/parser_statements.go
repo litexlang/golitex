@@ -60,6 +60,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.claimStmt(tb)
 	case glob.KeywordProve:
 		ret, err = p.proveStmt(tb)
+	case glob.KeywordImpossible:
+		ret, err = p.impossibleStmt(tb)
 	case glob.KeywordKnow:
 		{
 			if tb.TokenAtHeaderIndexIs(1, glob.KeywordPropInfer) {
@@ -1121,6 +1123,43 @@ func (p *TbParser) proveStmt(tb *tokenBlock) (Stmt, error) {
 
 		return NewClaimProveStmt(factToCheck, proofs, tb.line), nil
 	}
+}
+
+func (p *TbParser) impossibleStmt(tb *tokenBlock) (Stmt, error) {
+	err := tb.header.skip(glob.KeywordImpossible)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolColon)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	if len(tb.body) != 2 {
+		return nil, fmt.Errorf("expect 2 body blocks after impossible")
+	}
+
+	fact, err := p.factStmt(&tb.body[0], UniFactDepth0)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	proofs, err := p.parseTbBodyAndGetStmts(tb.body[1].body)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	if len(proofs) == 0 {
+		return nil, fmt.Errorf("expect proof after impossible")
+	}
+
+	return NewImpossibleStmt(fact, proofs, tb.line), nil
 }
 
 // ###############################################################
