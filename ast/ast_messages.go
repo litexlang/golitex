@@ -521,13 +521,13 @@ func (stmt *ProveCaseByCaseStmt) String() string {
 			builder.WriteByte('\n')
 		}
 	}
-	if len(stmt.ProveOr) > 0 {
+	if len(stmt.ProveCases) > 0 {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
 		builder.WriteString(" ")
 		builder.WriteString(glob.KeywordOr)
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
-		for _, proofStmt := range stmt.ProveOr {
+		for _, proofStmt := range stmt.ProveCases {
 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 2))
 			builder.WriteByte('\n')
 		}
@@ -963,13 +963,13 @@ func (stmt *HaveFnCaseByCaseStmt) String() string {
 			builder.WriteByte('\n')
 		}
 	}
-	if len(stmt.ProveOr) > 0 {
+	if len(stmt.ProveCases) > 0 {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
 		builder.WriteString(" ")
 		builder.WriteString(glob.KeywordOr)
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
-		for _, proofStmt := range stmt.ProveOr {
+		for _, proofStmt := range stmt.ProveCases {
 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 2))
 			builder.WriteByte('\n')
 		}
@@ -1450,14 +1450,14 @@ func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 			builder.WriteByte('\n')
 		}
 	}
-	if len(stmt.ProveOr) > 0 {
+	if len(stmt.ProveCases) > 0 {
 		builder.WriteString("    ")
 		builder.WriteString(glob.KeywordProve)
 		builder.WriteString(" ")
 		builder.WriteString(glob.KeywordOr)
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
-		for _, proofStmt := range stmt.ProveOr {
+		for _, proofStmt := range stmt.ProveCases {
 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 1))
 			builder.WriteByte('\n')
 		}

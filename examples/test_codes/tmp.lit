@@ -13,7 +13,7 @@ prove:
             x = 2
         case x = 3:
             x = 3
-        prove or:
+        prove cases:
             x $in {1, 2, 3}
             x = 1 or x = 2 or x = 3
 
@@ -26,7 +26,7 @@ prove:
         case x >= 0: x:
             x >= 0
             x $in N
-        prove or:
+        prove cases:
             x >= 0 or x < 0
 
 # Example 3: HaveFnCaseByCaseStmt with prove or:
@@ -44,3 +44,5 @@ prove:
         case x = 0: 0:
             x = 0
             0 = 0
+        prove cases:
+            x = 0 or x >0 or x < 0

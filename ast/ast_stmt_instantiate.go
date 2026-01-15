@@ -484,7 +484,7 @@ func (stmt *ProveCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error
 		}
 		newProofs = append(newProofs, newProof)
 	}
-	newProveOr, err := stmt.ProveOr.Instantiate(uniMap)
+	newProveOr, err := stmt.ProveCases.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
@@ -704,7 +704,7 @@ func (stmt *HaveFnCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 		}
 		newHaveObjSatisfyFn[i] = newObj
 	}
-	newProveOr, err := stmt.ProveOr.Instantiate(uniMap)
+	newProveOr, err := stmt.ProveCases.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
@@ -1091,7 +1091,7 @@ func (stmt *HaveFnEqualCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt,
 		}
 		newProofs = append(newProofs, newProof)
 	}
-	newProveOr, err := stmt.ProveOr.Instantiate(uniMap)
+	newProveOr, err := stmt.ProveCases.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}

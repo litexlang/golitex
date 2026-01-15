@@ -309,7 +309,7 @@ func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob
 	verifyProcessMsgs := []*glob.VerRet{}
 	defineMsgs := []string{}
 	// Verify first and get thenFacts
-	execRet, _, err := exec.checkHaveFnCaseByCaseStmt(stmt)
+	execRet, err := exec.checkHaveFnCaseByCaseStmt(stmt)
 	if notOkExec(execRet, err) {
 		return execRet
 	}
@@ -323,76 +323,42 @@ func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob
 	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
 }
 
-func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, []ast.FactStmt, error) {
-	// Create a new environment for verification and proof
-	exec.NewEnv()
-	defer func() {
-		exec.deleteEnv()
-	}()
+func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, error) {
+	verifyProcessMsgs := []*glob.VerRet{}
 
-	// Verify each paramSet is in set type
-	// for i, paramSet := range stmt.DefFnStmt.FnTemplate.ParamSets {
-	// 	execState := exec.factStmt(ast.NewIsASetFact(paramSet, stmt.Line))
-	// 	if execState.IsErr() {
-	// 		return glob.ErrRet(execState.String()), nil, fmt.Errorf(execState.String())
-	// 	}
-	// 	if execState.IsUnknown() {
-	// 		return glob.NewEmptyStmtError(), nil, fmt.Errorf("parameter set %d (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", i+1, paramSet.String(), paramSet.String())
-	// 	}
-	// }
+	// Verify all cases cover domain and don't overlap
+	execState, err := exec.haveFnCaseByCase_AllCasesCoverDomainAndNotOverlap(stmt)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+	verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
 
-	// Verify retSet is in set type
-	// execState := exec.factStmt(ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
-	// if execState.IsErr() {
-	// 	return glob.ErrRet(execState.String()), nil, fmt.Errorf(execState.String())
-	// }
-	// if execState.IsUnknown() {
-	// 	return glob.NewEmptyStmtError(), nil, fmt.Errorf("return set (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
-	// }
+	// Verify each case: execute proof and verify return value
+	execState, err = exec.checkHaveFnCaseByCaseStmt_Cases(stmt)
+	if notOkExec(execState, err) {
+		return execState, err
+	}
+	verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
 
+	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs), nil
+}
+
+func (exec *Executor) haveFnCaseByCase_AllCasesCoverDomainAndNotOverlap(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, error) {
+	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.ProveCases, stmt.Line)
+}
+
+func (exec *Executor) checkHaveFnCaseByCaseStmt_Cases(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, error) {
+	verifyProcessMsgs := []*glob.VerRet{}
 	// Verify each case: execute proof and verify return value
 	for i := range len(stmt.CaseByCaseFacts) {
 		execState, err := exec.verifyHaveFnCaseByCase_OneCase(stmt, i)
 		if notOkExec(execState, err) {
-			return execState, nil, err
+			return execState, err
 		}
+		verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
 	}
 
-	// Verify all cases cover the domain
-	execState, err := exec.checkAtLeastOneCaseHolds_ForHaveFn(stmt)
-	if notOkExec(execState, err) {
-		return execState, nil, err
-	}
-
-	// Verify cases don't overlap
-	execState, err = exec.checkCasesNoOverlap_ForHaveFn(stmt)
-	if notOkExec(execState, err) {
-		return execState, nil, err
-	}
-
-	// Build thenFacts: for each case, if condition holds, function equals corresponding return value
-	thenFacts := []ast.FactStmt{}
-	for i, caseFact := range stmt.CaseByCaseFacts {
-		// Create function call from function name and params
-		params := make([]ast.Obj, len(stmt.DefFnStmt.FnTemplate.Params))
-		for j := range len(stmt.DefFnStmt.FnTemplate.Params) {
-			params[j] = ast.Atom(stmt.DefFnStmt.FnTemplate.Params[j])
-		}
-		fnName := ast.Atom(stmt.DefFnStmt.Name)
-		fnCall := ast.NewFnObj(fnName, params)
-		equalFact := ast.NewEqualFact(fnCall, stmt.EqualToObjs[i])
-
-		uniFact := ast.NewUniFact(
-			stmt.DefFnStmt.FnTemplate.Params,
-			stmt.DefFnStmt.FnTemplate.ParamSets,
-			[]ast.FactStmt{caseFact},
-			[]ast.FactStmt{equalFact},
-			stmt.Line,
-		)
-		thenFacts = append(thenFacts, uniFact)
-	}
-
-	return exec.NewTrueStmtRet(stmt), thenFacts, nil
+	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs), nil
 }
 
 func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (*glob.StmtRet, error) {
@@ -549,10 +515,6 @@ func (exec *Executor) verifyCasesOr(caseFacts ast.SpecFactPtrSlice, params ast.S
 	return exec.NewTrueStmtRet(orFact), nil
 }
 
-func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, error) {
-	return exec.verifyCasesOr(stmt.CaseByCaseFacts, stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.ProveOr, stmt.Line)
-}
-
 // verifyCasesNoOverlap is a helper function to verify that cases don't overlap
 // Deprecated: Use verifyCasesOrAndNoOverlap instead
 func (exec *Executor) verifyCasesNoOverlap(caseFacts ast.SpecFactPtrSlice, params ast.StrSlice, paramSets ast.ObjSlice, proveOr ast.StmtSlice, line uint) (*glob.StmtRet, error) {
@@ -652,10 +614,6 @@ func (exec *Executor) verifyCaseNoOverlapWithOthers(caseFacts ast.SpecFactPtrSli
 	return exec.NewTrueStmtRet(caseFact), nil
 }
 
-func (exec *Executor) checkCasesNoOverlap_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, error) {
-	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.ProveOr, stmt.Line)
-}
-
 func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
 	verifyProcessMsgs := []*glob.VerRet{}
 	defineMsgs := []string{}
@@ -735,7 +693,7 @@ func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseBy
 }
 
 func (exec *Executor) haveFnEqualCaseByCase_AllCasesCoverDomainAndNotOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
-	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.ProveOr, stmt.Line)
+	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.ProveCases, stmt.Line)
 }
 
 func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (*glob.StmtRet, error) {
@@ -790,11 +748,11 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 }
 
 func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
-	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.ProveOr, stmt.Line)
+	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.ProveCases, stmt.Line)
 }
 
 func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
-	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.ProveOr, stmt.Line)
+	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.ProveCases, stmt.Line)
 }
 
 func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) *glob.StmtRet {
