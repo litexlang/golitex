@@ -478,7 +478,7 @@ type WitnessNonemptyStmt struct {
 }
 
 type ImpossibleStmt struct {
-	Fact   FactStmt
+	Fact   *SpecFactStmt
 	Proofs StmtSlice
 
 	Line uint
