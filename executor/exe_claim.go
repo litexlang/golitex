@@ -21,65 +21,32 @@ import (
 )
 
 func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
-	// isSuccess := false
-
-	exec.NewEnv()
-	defer exec.deleteEnv()
-
-	var result *glob.StmtRet
-	switch asStmt := stmt.ClaimProveStmt.ToCheckFact.(type) {
-	case ast.Spec_OrFact:
-		execState := exec.reversibleFactProveByContradiction(asStmt, stmt)
-		if execState.IsNotTrue() {
-			return execState
-		}
-		result = execState
-	case *ast.UniFactStmt:
-		execState := exec.uniFactProveByContradiction(asStmt, stmt)
-		if execState.IsNotTrue() {
-			return execState
-		}
-		result = execState
-		// isSuccess = true
-	default:
-		return glob.ErrRet(fmt.Sprintf("prove by contradiction only support reversible fact or uni fact"))
-	}
-
-	// Add messages in correct order
-	// result = result.AddMsg("\n")
-	// if isSuccess {
-	// 	result = result.AddMsgAtBegin("is true\n")
-	// } else {
-	// 	result = result.AddMsgAtBegin("is unknown\n")
-	// }
-
-	return exec.AddStmtToStmtRet(result, stmt.ClaimProveStmt)
-}
-
-func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_OrFact, stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
 	innerStmtRets := []*glob.StmtRet{}
 
-	reversedFact := specFactStmt.ReverseIsTrue()
-
-	for _, curFact := range reversedFact {
-		ret := exec.Env.NewFactWithCheckingNameDefined(curFact)
-		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
+	// know reverse of
+	facts := stmt.ClaimProveStmt.ToCheckFact.(ast.Spec_OrFact).ReverseIsTrue()
+	for _, curFact := range facts {
+		execState := exec.Env.NewFactWithCheckingNameDefined(curFact)
+		if execState.IsErr() {
+			return glob.ErrRet(execState.String())
 		}
 	}
 
-	execState := exec.execStmtsAtCurEnv(stmt.ClaimProveStmt.Proofs)
-	if execState.IsNotTrue() {
-		return execState
+	for i := 0; i < len(stmt.ClaimProveStmt.Proofs)-1; i++ {
+		curStmt := stmt.ClaimProveStmt.Proofs[i]
+		execState := exec.Stmt(curStmt)
+		if execState.IsNotTrue() {
+			return execState.AddError(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
+		}
+		innerStmtRets = append(innerStmtRets, execState)
 	}
-	innerStmtRets = append(innerStmtRets, execState.InnerStmtRetSlice...)
 
-	lastStmtAsFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.Spec_OrFact)
+	lastStmtAsFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(*ast.ImpossibleStmt)
 	if !ok {
 		return glob.ErrRet("prove by contradiction only support fact as last statement")
 	}
 
-	reversedLastFact := lastStmtAsFact.ReverseIsTrue()
+	reversedLastFact := lastStmtAsFact.Fact.ReverseIsTrue()
 
 	reversedLastFactStr := []string{}
 	for _, curFact := range reversedLastFact {
@@ -98,70 +65,70 @@ func (exec *Executor) reversibleFactProveByContradiction(specFactStmt ast.Spec_O
 	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
 }
 
-func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt, stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
-	innerStmtRets := []*glob.StmtRet{}
+// func (exec *Executor) uniFactProveByContradiction(specFactStmt *ast.UniFactStmt, stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
+// 	innerStmtRets := []*glob.StmtRet{}
 
-	ver := NewVerifier(exec.Env)
-	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(specFactStmt)
-	if err != nil {
-		return glob.ErrRet(err.Error())
-	}
+// 	ver := NewVerifier(exec.Env)
+// 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(specFactStmt)
+// 	if err != nil {
+// 		return glob.ErrRet(err.Error())
+// 	}
 
-	// know cond facts
-	for _, condFact := range newStmtPtr.DomFacts {
-		ret := exec.Env.NewFactWithCheckingNameDefined(condFact)
-		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
-		}
-	}
+// 	// know cond facts
+// 	for _, condFact := range newStmtPtr.DomFacts {
+// 		ret := exec.Env.NewFactWithCheckingNameDefined(condFact)
+// 		if ret.IsErr() {
+// 			return glob.ErrRet(ret.String())
+// 		}
+// 	}
 
-	// know reversed then facts
-	thenFactsAsReversibleFacts := []ast.Spec_OrFact{}
-	for _, thenFact := range newStmtPtr.ThenFacts {
-		if reversibleThenFact, ok := thenFact.(ast.Spec_OrFact); ok {
-			thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, reversibleThenFact)
-		} else {
-			return glob.ErrRet(fmt.Sprintf("then fact:\n%s\nis not reversible. Then section of universal fact prove by contradiction only support reversible fact", thenFact))
-		}
-	}
-	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversibleFacts)
-	for _, reversedThenFact := range reversedThenFacts {
-		ret := exec.Env.NewFactWithCheckingNameDefined(reversedThenFact.(ast.FactStmt))
-		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
-		}
-	}
+// 	// know reversed then facts
+// 	thenFactsAsReversibleFacts := []ast.Spec_OrFact{}
+// 	for _, thenFact := range newStmtPtr.ThenFacts {
+// 		if reversibleThenFact, ok := thenFact.(ast.Spec_OrFact); ok {
+// 			thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, reversibleThenFact)
+// 		} else {
+// 			return glob.ErrRet(fmt.Sprintf("then fact:\n%s\nis not reversible. Then section of universal fact prove by contradiction only support reversible fact", thenFact))
+// 		}
+// 	}
+// 	reversedThenFacts := ast.ReverseSliceOfReversibleFacts(thenFactsAsReversibleFacts)
+// 	for _, reversedThenFact := range reversedThenFacts {
+// 		ret := exec.Env.NewFactWithCheckingNameDefined(reversedThenFact.(ast.FactStmt))
+// 		if ret.IsErr() {
+// 			return glob.ErrRet(ret.String())
+// 		}
+// 	}
 
-	// run proof block
-	execState := exec.execStmtsAtCurEnv(stmt.ClaimProveStmt.Proofs)
-	if execState.IsNotTrue() {
-		return execState
-	}
-	innerStmtRets = append(innerStmtRets, execState.InnerStmtRetSlice...)
+// 	// run proof block
+// 	execState := exec.execStmtsAtCurEnv(stmt.ClaimProveStmt.Proofs)
+// 	if execState.IsNotTrue() {
+// 		return execState
+// 	}
+// 	innerStmtRets = append(innerStmtRets, execState.InnerStmtRetSlice...)
 
-	// the reversed last statement of current claim statement is true
-	lastFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.Spec_OrFact)
-	if !ok {
-		return glob.ErrRet(fmt.Sprintf("prove by contradiction only support fact"))
-	}
+// 	// the reversed last statement of current claim statement is true
+// 	lastFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(ast.Spec_OrFact)
+// 	if !ok {
+// 		return glob.ErrRet(fmt.Sprintf("prove by contradiction only support fact"))
+// 	}
 
-	reversedLastFact := lastFact.ReverseIsTrue()
+// 	reversedLastFact := lastFact.ReverseIsTrue()
 
-	reversedLastFactStr := []string{}
-	for _, curFact := range reversedLastFact {
-		reversedLastFactStr = append(reversedLastFactStr, curFact.String())
-	}
+// 	reversedLastFactStr := []string{}
+// 	for _, curFact := range reversedLastFact {
+// 		reversedLastFactStr = append(reversedLastFactStr, curFact.String())
+// 	}
 
-	for _, curFact := range reversedLastFact {
-		execState = exec.factStmt(curFact)
-		if execState.IsNotTrue() {
-			return execState
-		}
-		innerStmtRets = append(innerStmtRets, execState)
-	}
+// 	for _, curFact := range reversedLastFact {
+// 		execState = exec.factStmt(curFact)
+// 		if execState.IsNotTrue() {
+// 			return execState
+// 		}
+// 		innerStmtRets = append(innerStmtRets, execState)
+// 	}
 
-	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
-}
+// 	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
+// }
 
 func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet {
 	state := exec.claimStmtProve(stmt)
@@ -198,6 +165,48 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 
 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(state.InnerStmtRetSlice)
 }
+
+// func (exec *Executor) execImpossibleStmt(stmt *ast.ImpossibleStmt) *glob.StmtRet {
+// 	state := exec.impossibleStmt(stmt)
+// 	if state.IsNotTrue() {
+// 		return state
+// 	}
+
+// 	// 检查 stmt fact 中的所有元素已经定义过了
+// 	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.Fact)
+// 	if ret.IsErr() {
+// 		return glob.ErrRet(ret.String())
+// 	}
+
+// 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(state.InnerStmtRetSlice)
+// }
+
+// func (exec *Executor) impossibleStmt(stmt *ast.ImpossibleStmt) *glob.StmtRet {
+// 	exec.NewEnv()
+// 	defer func() {
+// 		exec.deleteEnv()
+// 	}()
+
+// 	// 需要检查 stmt.Fact 里的东西都是在外部声明好了的
+// 	ret := exec.Env.LookUpNamesInFact(stmt.Fact, map[string]struct{}{})
+// 	if ret.IsErr() {
+// 		ret.AddError("in impossible statement")
+// 		return glob.ErrRet(ret.String())
+// 	}
+
+// 	// check that the fact is impossible (i.e., its negation is true)
+// 	execState = exec.factStmt(stmt.Fact)
+// 	if execState.IsTrue() {
+// 		// If the fact is true, then it's not impossible - this is an error
+// 		return glob.ErrRet(fmt.Sprintf("impossible statement error: the fact is actually true, not impossible:\n%s", stmt.Fact))
+// 	}
+// 	if execState.IsUnknown() {
+// 		return glob.ErrRet(fmt.Sprintf("impossible statement error: cannot determine if the fact is impossible:\n%s", stmt.Fact))
+// 	}
+// 	// If execState.IsNotTrue(), then the fact is indeed impossible, which is what we want
+// 	innerStmtRets = append(innerStmtRets, execState)
+// 	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
+// }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet {
 	exec.NewEnv()

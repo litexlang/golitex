@@ -467,103 +467,103 @@ func (exec *Executor) verifyCasesOrAndNoOverlap(caseFacts ast.SpecFactPtrSlice, 
 
 // verifyCasesOr is a helper function to verify that cases cover all possibilities
 // Deprecated: Use verifyCasesOrAndNoOverlap instead
-func (exec *Executor) verifyCasesOr(caseFacts ast.SpecFactPtrSlice, params ast.StrSlice, paramSets ast.ObjSlice, proveOr ast.StmtSlice, line uint) (*glob.StmtRet, error) {
-	exec.NewEnv()
-	defer func() {
-		exec.deleteEnv()
-	}()
+// func (exec *Executor) verifyCasesOr(caseFacts ast.SpecFactPtrSlice, params ast.StrSlice, paramSets ast.ObjSlice, proveOr ast.StmtSlice, line uint) (*glob.StmtRet, error) {
+// 	exec.NewEnv()
+// 	defer func() {
+// 		exec.deleteEnv()
+// 	}()
 
-	// Define parameters
-	for i := range len(params) {
-		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{params[i]}, []ast.Obj{paramSets[i]}, []ast.FactStmt{}, line))
-		if execState.IsNotTrue() {
-			return execState, fmt.Errorf(execState.String())
-		}
-	}
+// 	// Define parameters
+// 	for i := range len(params) {
+// 		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{params[i]}, []ast.Obj{paramSets[i]}, []ast.FactStmt{}, line))
+// 		if execState.IsNotTrue() {
+// 			return execState, fmt.Errorf(execState.String())
+// 		}
+// 	}
 
-	// If proveOr is provided, execute it
-	if len(proveOr) > 0 {
-		for _, proofStmt := range proveOr {
-			execState := exec.Stmt(proofStmt)
-			if execState.IsNotTrue() {
-				return execState, fmt.Errorf("prove or: proof failed: %s", execState.String())
-			}
-		}
-		// After executing proof, verify the or fact is true
-		orFact := ast.NewOrStmt(caseFacts, line)
-		execState := exec.factStmt(orFact)
-		if execState.IsErr() {
-			return glob.NewEmptyStmtError(), fmt.Errorf("prove or: failed to verify that all cases cover the domain: %s", execState.String())
-		}
-		if execState.IsUnknown() {
-			return glob.NewEmptyStmtError(), fmt.Errorf("prove or: all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
-		}
-		return exec.NewTrueStmtRet(orFact), nil
-	}
+// 	// If proveOr is provided, execute it
+// 	if len(proveOr) > 0 {
+// 		for _, proofStmt := range proveOr {
+// 			execState := exec.Stmt(proofStmt)
+// 			if execState.IsNotTrue() {
+// 				return execState, fmt.Errorf("prove or: proof failed: %s", execState.String())
+// 			}
+// 		}
+// 		// After executing proof, verify the or fact is true
+// 		orFact := ast.NewOrStmt(caseFacts, line)
+// 		execState := exec.factStmt(orFact)
+// 		if execState.IsErr() {
+// 			return glob.NewEmptyStmtError(), fmt.Errorf("prove or: failed to verify that all cases cover the domain: %s", execState.String())
+// 		}
+// 		if execState.IsUnknown() {
+// 			return glob.NewEmptyStmtError(), fmt.Errorf("prove or: all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
+// 		}
+// 		return exec.NewTrueStmtRet(orFact), nil
+// 	}
 
-	// Otherwise, verify the or fact directly
-	orFact := ast.NewOrStmt(caseFacts, line)
-	ver := NewVerifier(exec.Env)
-	verRet := ver.VerFactStmt(orFact, Round0Msg())
-	if verRet.IsErr() {
-		return glob.NewEmptyStmtError(), fmt.Errorf("failed to verify that all cases cover the domain: %s", verRet.String())
-	}
-	if verRet.IsUnknown() {
-		return glob.NewEmptyStmtError(), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
-	}
+// 	// Otherwise, verify the or fact directly
+// 	orFact := ast.NewOrStmt(caseFacts, line)
+// 	ver := NewVerifier(exec.Env)
+// 	verRet := ver.VerFactStmt(orFact, Round0Msg())
+// 	if verRet.IsErr() {
+// 		return glob.NewEmptyStmtError(), fmt.Errorf("failed to verify that all cases cover the domain: %s", verRet.String())
+// 	}
+// 	if verRet.IsUnknown() {
+// 		return glob.NewEmptyStmtError(), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
+// 	}
 
-	return exec.NewTrueStmtRet(orFact), nil
-}
+// 	return exec.NewTrueStmtRet(orFact), nil
+// }
 
 // verifyCasesNoOverlap is a helper function to verify that cases don't overlap
 // Deprecated: Use verifyCasesOrAndNoOverlap instead
-func (exec *Executor) verifyCasesNoOverlap(caseFacts ast.SpecFactPtrSlice, params ast.StrSlice, paramSets ast.ObjSlice, proveOr ast.StmtSlice, line uint) (*glob.StmtRet, error) {
-	exec.NewEnv()
-	defer func() {
-		exec.deleteEnv()
-	}()
+// func (exec *Executor) verifyCasesNoOverlap(caseFacts ast.SpecFactPtrSlice, params ast.StrSlice, paramSets ast.ObjSlice, proveOr ast.StmtSlice, line uint) (*glob.StmtRet, error) {
+// 	exec.NewEnv()
+// 	defer func() {
+// 		exec.deleteEnv()
+// 	}()
 
-	// Define parameters
-	for i := range len(params) {
-		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{params[i]}, []ast.Obj{paramSets[i]}, []ast.FactStmt{}, line))
-		if execState.IsNotTrue() {
-			return execState, fmt.Errorf(execState.String())
-		}
-	}
+// 	// Define parameters
+// 	for i := range len(params) {
+// 		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{params[i]}, []ast.Obj{paramSets[i]}, []ast.FactStmt{}, line))
+// 		if execState.IsNotTrue() {
+// 			return execState, fmt.Errorf(execState.String())
+// 		}
+// 	}
 
-	// If proveOr is provided, execute it
-	if len(proveOr) > 0 {
-		for _, proofStmt := range proveOr {
-			execState := exec.Stmt(proofStmt)
-			if execState.IsNotTrue() {
-				return execState, fmt.Errorf("prove or: proof failed: %s", execState.String())
-			}
-		}
+// 	// If proveOr is provided, execute it
+// 	if len(proveOr) > 0 {
+// 		for _, proofStmt := range proveOr {
+// 			execState := exec.Stmt(proofStmt)
+// 			if execState.IsNotTrue() {
+// 				return execState, fmt.Errorf("prove or: proof failed: %s", execState.String())
+// 			}
+// 		}
 
-		// After executing proof, verify 1. or cases holds
-		orFact := ast.NewOrStmt(caseFacts, line)
-		execState := exec.factStmt(orFact)
-		if execState.IsErr() {
-			return glob.NewEmptyStmtError(), fmt.Errorf("prove or: failed to verify that all cases cover the domain: %s", execState.String())
-		}
-		if execState.IsUnknown() {
-			return glob.NewEmptyStmtError(), fmt.Errorf("prove or: all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
-		}
-	}
+// 		// After executing proof, verify 1. or cases holds
+// 		orFact := ast.NewOrStmt(caseFacts, line)
+// 		execState := exec.factStmt(orFact)
+// 		if execState.IsErr() {
+// 			return glob.NewEmptyStmtError(), fmt.Errorf("prove or: failed to verify that all cases cover the domain: %s", execState.String())
+// 		}
+// 		if execState.IsUnknown() {
+// 			return glob.NewEmptyStmtError(), fmt.Errorf("prove or: all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
+// 		}
+// 	}
 
-	// Verify 2. all cases don't overlap
-	// For each case i, verify that when case i holds, all other cases don't hold
-	// If proveOr was provided, we need to run it again in each case's environment
-	for i := range len(caseFacts) {
-		execState, err := exec.verifyCaseNoOverlapWithOthers(caseFacts, proveOr, i)
-		if notOkExec(execState, err) {
-			return execState, err
-		}
-	}
+// 	// Verify 2. all cases don't overlap
+// 	// For each case i, verify that when case i holds, all other cases don't hold
+// 	// If proveOr was provided, we need to run it again in each case's environment
+// 	for i := range len(caseFacts) {
+// 		execState, err := exec.verifyCaseNoOverlapWithOthers(caseFacts, proveOr, i)
+// 		if notOkExec(execState, err) {
+// 			return execState, err
+// 		}
+// 	}
 
-	orFact := ast.NewOrStmt(caseFacts, line)
-	return exec.NewTrueStmtRet(orFact), nil
-}
+// 	orFact := ast.NewOrStmt(caseFacts, line)
+// 	return exec.NewTrueStmtRet(orFact), nil
+// }
 
 // verifyCaseNoOverlapWithOthers verifies that when case i holds, all other cases don't hold
 // If proveOr is provided, it runs proveOr in the new environment before verifying
@@ -747,13 +747,13 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 	return exec.NewTrueStmtRet(stmt), nil
 }
 
-func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
-	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.ProveCases, stmt.Line)
-}
+// func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
+// 	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.ProveCases, stmt.Line)
+// }
 
-func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
-	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.ProveCases, stmt.Line)
-}
+// func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
+// 	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.ProveCases, stmt.Line)
+// }
 
 func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) *glob.StmtRet {
 	existStFact := stmt.ToTruePurePropExistStFact()

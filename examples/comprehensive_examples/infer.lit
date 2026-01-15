@@ -74,7 +74,7 @@ prove:
     infer a, b, c R: a * b = a * c => b = c if a != 0:
         contra b = c:
             b = a * b / a = a * c / a = c
-            b = c
+            impossible b = c
 
     let x2, y2, z2 R: x2 * y2 = x2 * z2, x2 != 0
     x2 * y2 = x2 * z2 => y2 = z2
