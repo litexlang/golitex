@@ -484,7 +484,11 @@ func (stmt *ProveCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error
 		}
 		newProofs = append(newProofs, newProof)
 	}
-	return NewProveCaseByCaseStmt(newCaseFacts, newThenFacts, newProofs, stmt.Line), nil
+	newProveOr, err := stmt.ProveOr.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewProveCaseByCaseStmt(newCaseFacts, newThenFacts, newProofs, newProveOr, stmt.Line), nil
 }
 
 func (stmt *ImportDirStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
@@ -700,7 +704,11 @@ func (stmt *HaveFnCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 		}
 		newHaveObjSatisfyFn[i] = newObj
 	}
-	return NewHaveFnCaseByCaseStmt(newDefFnStmt.(*LetFnStmt), newCaseByCaseFacts, newProofs, newHaveObjSatisfyFn, stmt.Line), nil
+	newProveOr, err := stmt.ProveOr.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewHaveFnCaseByCaseStmt(newDefFnStmt.(*LetFnStmt), newCaseByCaseFacts, newProofs, newHaveObjSatisfyFn, newProveOr, stmt.Line), nil
 }
 
 func (stmt *ProveForStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
@@ -1083,7 +1091,11 @@ func (stmt *HaveFnEqualCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt,
 		}
 		newProofs = append(newProofs, newProof)
 	}
-	return &HaveFnEqualCaseByCaseStmt{newDefHeader, newRetSet, newCaseByCaseFacts, newCaseByCaseEqualTo, newProofs, stmt.Line}, nil
+	newProveOr, err := stmt.ProveOr.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return &HaveFnEqualCaseByCaseStmt{newDefHeader, newRetSet, newCaseByCaseFacts, newCaseByCaseEqualTo, newProofs, newProveOr, stmt.Line}, nil
 }
 
 func InstantiateSetBuilderObjWithoutChangingParam(obj *FnObj, uniMap map[string]Obj) (Obj, error) {

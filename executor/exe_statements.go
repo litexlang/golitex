@@ -253,15 +253,12 @@ func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) *glob.S
 	verifyProcessMsgs := []*glob.VerRet{}
 	newFactsMsgs := []string{}
 
-	// Create OrStmt from CaseFacts
-	orFact := ast.NewOrStmt(stmt.CaseFacts, stmt.Line)
-
-	// Verify that the OR fact is true (fact1 or fact2 ... is true)
-	execState := exec.factStmt(orFact)
-	if execState.IsNotTrue() {
-		return execState.AddUnknown(fmt.Sprintf("%s is unknown\n", orFact.String()))
+	// Verify that cases cover all possibilities and don't overlap
+	// For ProveCaseByCaseStmt, we don't have params/paramSets, so we use empty slices
+	execState, err := exec.verifyCasesOrAndNoOverlap(stmt.CaseFacts, ast.StrSlice{}, ast.ObjSlice{}, stmt.ProveOr, stmt.Line)
+	if notOkExec(execState, err) {
+		return execState
 	}
-
 	verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
 
 	// Prove each case

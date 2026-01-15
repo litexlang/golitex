@@ -113,6 +113,7 @@ type ProveCaseByCaseStmt struct {
 	CaseFacts SpecFactPtrSlice
 	ThenFacts FactStmtSlice
 	Proofs    StmtSliceSlice
+	ProveOr   StmtSlice
 
 	Line uint
 }
@@ -251,6 +252,7 @@ type HaveFnEqualCaseByCaseStmt struct {
 	CaseByCaseFacts   SpecFactPtrSlice
 	CaseByCaseEqualTo ObjSlice
 	Proofs            StmtSliceSlice
+	ProveOr           StmtSlice
 
 	Line uint
 }
@@ -293,6 +295,7 @@ type HaveFnCaseByCaseStmt struct {
 	CaseByCaseFacts SpecFactPtrSlice
 	Proofs          StmtSliceSlice
 	EqualToObjs     ObjSlice
+	ProveOr         StmtSlice
 
 	Line uint
 }
