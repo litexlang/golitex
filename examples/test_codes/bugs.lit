@@ -1,8 +1,5 @@
 # https://github.com/litexlang/golitex/blob/main/examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lit
 
-
-# floor, ceil round 是内置的，不是被证明的
-
 # 说明 infer 和forall还是有点区别的
 
 # 这是我还没有 infer 的时候必须要有 item_in_intersect 的原因，就是匹配上
@@ -37,3 +34,15 @@ fn f(s R, a s)
 # http://github.com/litexlang/golitex/blob/main/examples/testings/seq.lit
 
 prove cases 放在 各种出现case的地方，说明确实是or成立的
+
+have f fn(N_pos) N
+
+know p or q or t 
+p or q or t 
+or 的specFactMem的证明用匹配替换，而不是现在的默认后面都是错的这样弄
+
+contra:
+    ,..
+    impossible 1 + 9 = 10
+impossible
+

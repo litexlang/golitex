@@ -17,13 +17,13 @@ prove forall x, y Z: x != y => g(x) != g(y):
                     contra g(x) != g(y):
                         g(x) = g(y) = 7 * (-x) + 2 = 7 * (-y) + 2
                         x = (7 * (-x) + 2 - 2) / -7  = y = (7 * (-y) + 2 - 2) / -7
-                        x = y
+                        impossible x = y
                 case y >= 0:
                     contra g(x) != g(y):
                         g(x) % 7= (7 * (-x) + 2) % 7 = 2
                         g(y) % 7= (7 * y + 1) % 7 = 1
                         2 != 1
-                        g(x) % 7 != g(y) % 7
+                        impossible g(x) % 7 != g(y) % 7
 
         case x >= 0:
             cases g(x) != g(y):
@@ -31,13 +31,13 @@ prove forall x, y Z: x != y => g(x) != g(y):
                     contra g(x) != g(y):
                         g(x) = g(y) = 7 * x + 1 = 7 * y + 1
                         x = (7 * x + 1 - 1) / 7 = y = (7 * y + 1 - 1) / 7
-                        x = y
+                        impossible x = y
                 case y < 0:
                     contra g(x) != g(y):
                         g(x) % 7= (7 * x + 1) % 7 = 1
                         g(y) % 7= (7 * (-y) + 2) % 7 = 2
                         1 != 2
-                        g(x) % 7 != g(y) % 7
+                        impossible g(x) % 7 != g(y) % 7
 
 $is_injective_fn(Z, N, g)
 

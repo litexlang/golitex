@@ -5,7 +5,7 @@ prove forall x, y set: x != y => exist a x st not a $in y or exist a y st not a 
         not exist a y st not a $in x
         forall a y: a $in x
         equal_set x, y
-        x = y
+        impossible x = y
 
 prove forall x, y set: not $is_nonempty_set(x), not $is_nonempty_set(y) => x = y:
     contra x = y:
@@ -17,5 +17,5 @@ prove forall x, y set: not $is_nonempty_set(x), not $is_nonempty_set(y) => x = y
             case exist a y st not a $in x:
                 have a y st not a $in x
                 witness_nonempty a y
-        $is_nonempty_set(x) or $is_nonempty_set(y)
+        impossible $is_nonempty_set(x) or $is_nonempty_set(y)
 

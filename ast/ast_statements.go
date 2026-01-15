@@ -476,3 +476,9 @@ type WitnessNonemptyStmt struct {
 
 	Line uint
 }
+
+type ImpossibleStmt struct {
+	Fact Spec_OrFact
+
+	Line uint
+}

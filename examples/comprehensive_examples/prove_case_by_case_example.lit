@@ -36,13 +36,13 @@ claim:
                         not x1 > x2
                     case x1 = -14:
                         not x1 > x2
-                x1 > x2
+                impossible x1 > x2
         x2 = -14
         
         claim:
             not x1 = -14
             contra:
-                not x1 > x2
+                impossible not x1 > x2
         x1 = 8
 
 
