@@ -250,6 +250,23 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) *glob.StmtRet {
 	return glob.NewStmtWithInnerStmtsRet(innerExecRets, glob.StmtRetTypeTrue)
 }
 
+func (exec *Executor) proveCaseByCaseStmt_checkOr(stmt *ast.ProveCaseByCaseStmt) *glob.StmtRet {
+	exec.NewEnv()
+	defer exec.deleteEnv()
+
+	for _, stmt := range stmt.ProveCases {
+		ret := exec.Stmt(stmt)
+		if ret.IsNotTrue() {
+			return ret
+		}
+	}
+
+	orFact := ast.NewOrStmt(stmt.CaseFacts, glob.BuiltinLine0)
+
+	ret := exec.factStmt(orFact)
+	return ret
+}
+
 func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) *glob.StmtRet {
 	innerExecRetMsgs := []*glob.StmtRet{}
 	verifyProcessMsgs := []*glob.VerRet{}
@@ -257,16 +274,16 @@ func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) *glob.S
 
 	// Verify that cases cover all possibilities and don't overlap
 	// For ProveCaseByCaseStmt, we don't have params/paramSets, so we use empty slices
-	execState, err := exec.verifyCasesOrAndNoOverlap(stmt.CaseFacts, ast.StrSlice{}, ast.ObjSlice{}, stmt.ProveCases, stmt.Line)
-	if notOkExec(execState, err) {
+	execState := exec.proveCaseByCaseStmt_checkOr(stmt)
+	if execState.IsNotTrue() {
 		return execState
 	}
 	verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
 
 	// Prove each case
 	for i := range stmt.CaseFacts {
-		execState, err := exec.execProofBlockForCaseByCase(i, stmt)
-		if notOkExec(execState, err) {
+		execState := exec.checkCaseInProveCaseByCase(stmt, i)
+		if execState.IsNotTrue() {
 			return execState
 		}
 		innerExecRetMsgs = append(innerExecRetMsgs, execState.InnerStmtRetSlice...)
@@ -283,33 +300,6 @@ func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) *glob.S
 	}
 
 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerExecRetMsgs).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactsMsgs)
-}
-
-func (exec *Executor) execProofBlockForCaseByCase(index int, stmt *ast.ProveCaseByCaseStmt) (*glob.StmtRet, error) {
-	exec.NewEnv()
-	defer exec.deleteEnv()
-
-	caseStmt := stmt.CaseFacts[index]
-
-	ret := exec.Env.NewFactWithCheckingNameDefined(caseStmt)
-	if ret.IsErr() {
-		return glob.ErrRet(ret.String()), fmt.Errorf(ret.String())
-	}
-
-	execState := exec.execStmtsAtCurEnv(stmt.Proofs[index])
-	if execState.IsNotTrue() {
-		return execState, fmt.Errorf(execState.String())
-	}
-
-	// verify thenFacts are true
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(stmt.ThenFacts, Round0NoMsg())
-	if err != nil {
-		return execState, fmt.Errorf("prove case by case statement error: failed to verify then facts:\n%s\n%s", failedFact, err)
-	} else if execState.IsUnknown() {
-		return execState, fmt.Errorf("prove case by case statement error: failed to verify then facts:\n%s", failedFact)
-	}
-
-	return exec.NewTrueStmtRet(stmt), nil
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
@@ -1043,4 +1033,68 @@ func (exec *Executor) witnessNonemptyStmtProveProcess(stmt *ast.WitnessNonemptyS
 	}
 
 	return exec.NewTrueStmtRet(stmt)
+}
+
+func (exec *Executor) checkCaseInProveCaseByCase(stmt *ast.ProveCaseByCaseStmt, caseI int) *glob.StmtRet {
+	exec.NewEnv()
+	defer exec.deleteEnv()
+
+	// 默认 stmt at caseI is true
+	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.CaseFacts[caseI])
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	proof := stmt.Proofs[caseI]
+
+	if len(proof) == 0 {
+		// check thens
+		for _, thenFact := range stmt.ThenFacts {
+			ret := exec.factStmt(thenFact)
+			if ret.IsNotTrue() {
+				return ret
+			}
+		}
+
+		return glob.NewEmptyStmtTrue()
+	}
+
+	for i := 0; i < len(proof)-1; i++ {
+		ret := exec.Stmt(proof[i])
+		if ret.IsNotTrue() {
+			return ret
+		}
+	}
+
+	if asStmt, ok := proof[len(proof)-1].(*ast.ImpossibleStmt); ok {
+		ret := exec.factStmt(asStmt.Fact)
+		if ret.IsNotTrue() {
+			return ret
+		}
+
+		for _, fact := range asStmt.Fact.ReverseIsTrue() {
+			ret := exec.factStmt(fact)
+			if ret.IsNotTrue() {
+				return ret
+			}
+		}
+
+		return glob.NewEmptyStmtTrue()
+
+	} else {
+		ret := exec.Stmt(proof[len(proof)-1])
+		if ret.IsNotTrue() {
+			return ret
+		}
+
+		// check thens
+		for _, thenFact := range stmt.ThenFacts {
+			ret := exec.factStmt(thenFact)
+			if ret.IsNotTrue() {
+				return ret
+			}
+		}
+
+		return glob.NewEmptyStmtTrue()
+	}
 }
