@@ -524,7 +524,7 @@ func (stmt *ProveCaseByCaseStmt) String() string {
 	if len(stmt.ProveCases) > 0 {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
 		builder.WriteString(" ")
-		builder.WriteString(glob.KeywordOr)
+		builder.WriteString(glob.KeywordCases)
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
 		for _, proofStmt := range stmt.ProveCases {
@@ -966,7 +966,7 @@ func (stmt *HaveFnCaseByCaseStmt) String() string {
 	if len(stmt.ProveCases) > 0 {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
 		builder.WriteString(" ")
-		builder.WriteString(glob.KeywordOr)
+		builder.WriteString(glob.KeywordCases)
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
 		for _, proofStmt := range stmt.ProveCases {
@@ -1454,7 +1454,7 @@ func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 		builder.WriteString("    ")
 		builder.WriteString(glob.KeywordProve)
 		builder.WriteString(" ")
-		builder.WriteString(glob.KeywordOr)
+		builder.WriteString(glob.KeywordCases)
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
 		for _, proofStmt := range stmt.ProveCases {
