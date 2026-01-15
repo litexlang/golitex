@@ -1,10 +1,5 @@
 # https://github.com/litexlang/golitex/blob/main/examples/comprehensive_examples/Hilbert_geometry_axioms_formalization.lit
 
-# 内核里证明 prove forall x union({1, 2}, {2, 3}): x $in {1, 2, 3}:
-
-
-#     1 $in {1, 2, 3}
- subset_of 也能枚举
 
 # floor, ceil round 是内置的，不是被证明的
 
