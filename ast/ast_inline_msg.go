@@ -223,14 +223,14 @@ func (s *InferTemplateStmt) InlineString() string {
 
 	// Params
 	if len(s.Params) > 0 {
-		paramStrs := make([]string, len(s.Params))
+		paramStrings := make([]string, len(s.Params))
 		for i, param := range s.Params {
-			paramStrs[i] = param
+			paramStrings[i] = param
 			if i < len(s.ParamSets) {
-				paramStrs[i] += " " + s.ParamSets[i].String()
+				paramStrings[i] += " " + s.ParamSets[i].String()
 			}
 		}
-		builder.WriteString(strings.Join(paramStrs, ", "))
+		builder.WriteString(strings.Join(paramStrings, ", "))
 		builder.WriteString(": ")
 	}
 
