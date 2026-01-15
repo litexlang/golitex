@@ -1131,12 +1131,12 @@ func (p *TbParser) impossibleStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	fact, err := p.specFactStmt(tb)
+	fact, err := p.SpecFactOrOrStmt(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
-	return NewImpossibleStmt(fact, tb.line), nil
+	return NewImpossibleStmt(fact.(Spec_OrFact), tb.line), nil
 }
 
 // ###############################################################

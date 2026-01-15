@@ -23,10 +23,10 @@ algo f(x):
 claim:
     1 != 0
     contra:
-        1 = 0
+        impossible 1 = 0
 
 contra 1 != 0:
-    1 = 0
+    impossible 1 = 0
 
 prove 1 + 1 = 2:
     1 + 1 = 2

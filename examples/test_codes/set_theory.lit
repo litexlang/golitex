@@ -153,7 +153,7 @@ claim:
             	not x $in a
                 $obj_in_union_is_in_one_of_the_sets(a, s, x)
                 x $in s
-                not x $in s
+                impossible not x $in s
 
 # Intersection of a set and the empty set is the empty set
 claim:
@@ -169,7 +169,7 @@ claim:
             contra:
                 x $in intersection(a, s)
                 $obj_in_intersection_is_in_both_sets(a, s, x)
-                x $in s
+                impossible x $in s
         
 
 # Union of a set and itself is the set itself
@@ -252,13 +252,13 @@ prove:
         contra:
         	2 $in difference(s, t)
             2 $in s
-            not 2 $in t
+            impossible not 2 $in t
     claim:
     	not 4 $in difference(s, t)
         contra:
         	4 $in difference(s, t)
             4 $in s
-            not 4 $in t
+            impossible not 4 $in t
     prove_over_finite_set:
         forall x u:
             x $in difference(s, t)
@@ -268,14 +268,14 @@ prove:
         contra:
             2 $in difference(s, t)
             2 $in s
-            not 2 $in t
+            impossible not 2 $in t
     claim:
         forall x difference(s, t):
             x != 4
         contra:
             4 $in difference(s, t)
             4 $in s
-            not 4 $in t
+            impossible not 4 $in t
 
     forall x difference(s, t):
         x $in s
@@ -299,7 +299,7 @@ prove:
                 k = 1
                 k  = 2
                 k = 3
-                k = 4
+                impossible k = 4
 
     claim:
         forall k difference(s, t):

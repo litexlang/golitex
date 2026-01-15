@@ -48,7 +48,7 @@ func NewClaimProveStmt(toCheckFact FactStmt, proofs []Stmt, line uint) *ClaimPro
 	return &ClaimProveStmt{toCheckFact, proofs, line}
 }
 
-func NewImpossibleStmt(fact *SpecFactStmt, line uint) *ImpossibleStmt {
+func NewImpossibleStmt(fact Spec_OrFact, line uint) *ImpossibleStmt {
 	return &ImpossibleStmt{fact, line}
 }
 

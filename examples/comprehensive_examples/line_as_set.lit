@@ -148,7 +148,7 @@ have fn:
 prove:
     contra sqrt(2) != 0:
         sqrt(2) = 0
-        2 = 0
+        impossible 2 = 0
     distance_point_to_line((0, 0), 1, 1, 1) = abs(1 * 0 + 1 * 0 - 1) / sqrt(1^2 + 1^2)
     distance_point_to_line((0, 0), 1, 1, 1) = abs(-1) / sqrt(2)
     abs(-1) = 1
