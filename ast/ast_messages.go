@@ -632,14 +632,14 @@ func (stmt *InferTemplateStmt) String() string {
 
 	// Params
 	if len(stmt.Params) > 0 {
-		paramStrs := make([]string, len(stmt.Params))
+		paramStrings := make([]string, len(stmt.Params))
 		for i, param := range stmt.Params {
-			paramStrs[i] = param
+			paramStrings[i] = param
 			if i < len(stmt.ParamSets) {
-				paramStrs[i] += " " + stmt.ParamSets[i].String()
+				paramStrings[i] += " " + stmt.ParamSets[i].String()
 			}
 		}
-		builder.WriteString(strings.Join(paramStrs, ", "))
+		builder.WriteString(strings.Join(paramStrings, ", "))
 		builder.WriteString(": ")
 	}
 
