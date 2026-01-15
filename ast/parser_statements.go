@@ -493,12 +493,42 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 
 		return NewClaimHaveFnStmt(defFnStmt.(*LetFnStmt), proof, haveObjSatisfyFn, tb.line), nil
 	} else if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordCase) {
-		// Case-by-case structure: body[0] is defFnStmt, body[1..n] are case blocks
+		// Case-by-case structure: body[0] is defFnStmt, body[1..n] are case blocks (possibly with prove or: at the end)
 		// Each case block has format: case <condition>: <equalTo>:
 		cases := []*SpecFactStmt{}
 		proofs := []StmtSlice{}
 		EqualTo := []Obj{}
-		for i := 1; i < len(tb.body); i++ {
+		
+		// Check if the last body block is "prove or:"
+		proveOr := StmtSlice{}
+		lastBlockIndex := -1
+		if len(tb.body) > 1 {
+			lastIdx := len(tb.body) - 1
+			lastBlock := tb.body[lastIdx]
+			if lastBlock.header.is(glob.KeywordProve) {
+				savedIndex := lastBlock.header.index
+				err := lastBlock.header.skip(glob.KeywordProve)
+				if err == nil && lastBlock.header.is(glob.KeywordOr) {
+					err := lastBlock.header.skip(glob.KeywordOr)
+					if err == nil {
+						lastBlockIndex = lastIdx
+					} else {
+						lastBlock.header.index = savedIndex
+					}
+				} else {
+					if err == nil {
+						lastBlock.header.index = savedIndex
+					}
+				}
+			}
+		}
+
+		// Process case blocks (skip the last one if it's "prove or:")
+		endIdx := len(tb.body)
+		if lastBlockIndex >= 0 {
+			endIdx = lastBlockIndex
+		}
+		for i := 1; i < endIdx; i++ {
 			// Case block: case <condition>: <equalTo>:
 			err := tb.body[i].header.skip(glob.KeywordCase)
 			if err != nil {
@@ -527,7 +557,18 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 			proofs = append(proofs, curProof)
 		}
 
-		return NewHaveFnCaseByCaseStmt(defFnStmt.(*LetFnStmt), cases, proofs, EqualTo, tb.line), nil
+		// Parse "prove or:" block if it exists
+		if lastBlockIndex >= 0 {
+			lastBlock := tb.body[lastBlockIndex]
+			lastBlock.header.skip(glob.KeywordProve)
+			lastBlock.header.skip(glob.KeywordOr)
+			proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+		}
+
+		return NewHaveFnCaseByCaseStmt(defFnStmt.(*LetFnStmt), cases, proofs, EqualTo, proveOr, tb.line), nil
 	} else {
 		return nil, fmt.Errorf("expect 'prove:' or 'case' after defFnStmt in have fn statement")
 	}
@@ -584,11 +625,42 @@ func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
 
 	// Check if it's case-by-case or simple equal
 	if len(tb.body) > 0 && tb.body[0].header.is(glob.KeywordCase) {
-		// Case-by-case structure
+		// Case-by-case structure (possibly with prove or: at the end)
 		caseByCaseFacts := []*SpecFactStmt{}
 		caseByCaseEqualTo := []Obj{}
 		caseByCaseProofs := []StmtSlice{}
-		for _, block := range tb.body {
+		
+		// Check if the last body block is "prove or:"
+		proveOr := StmtSlice{}
+		lastBlockIndex := -1
+		if len(tb.body) > 0 {
+			lastIdx := len(tb.body) - 1
+			lastBlock := tb.body[lastIdx]
+			if lastBlock.header.is(glob.KeywordProve) {
+				savedIndex := lastBlock.header.index
+				err := lastBlock.header.skip(glob.KeywordProve)
+				if err == nil && lastBlock.header.is(glob.KeywordOr) {
+					err := lastBlock.header.skip(glob.KeywordOr)
+					if err == nil {
+						lastBlockIndex = lastIdx
+					} else {
+						lastBlock.header.index = savedIndex
+					}
+				} else {
+					if err == nil {
+						lastBlock.header.index = savedIndex
+					}
+				}
+			}
+		}
+
+		// Process case blocks (skip the last one if it's "prove or:")
+		endIdx := len(tb.body)
+		if lastBlockIndex >= 0 {
+			endIdx = lastBlockIndex
+		}
+		for i := 0; i < endIdx; i++ {
+			block := tb.body[i]
 			err := block.header.skip(glob.KeywordCase)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
@@ -615,12 +687,24 @@ func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
 			caseByCaseProofs = append(caseByCaseProofs, proof)
 		}
 
+		// Parse "prove or:" block if it exists
+		if lastBlockIndex >= 0 {
+			lastBlock := tb.body[lastBlockIndex]
+			lastBlock.header.skip(glob.KeywordProve)
+			lastBlock.header.skip(glob.KeywordOr)
+			proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+		}
+
 		return &HaveFnEqualCaseByCaseStmt{
 			DefHeader:         defHeader,
 			RetSet:            retSet,
 			CaseByCaseFacts:   caseByCaseFacts,
 			CaseByCaseEqualTo: caseByCaseEqualTo,
 			Proofs:            caseByCaseProofs,
+			ProveOr:           proveOr,
 			Line:              tb.line,
 		}, nil
 	} else {
@@ -1299,14 +1383,45 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 		}
 	}
 
+	// Check if the last body block is "prove or:" before processing cases
+	proveOr := StmtSlice{}
+	lastBlockIndex := -1
+	if len(tb.body) > 0 {
+		lastIdx := len(tb.body) - 1
+		lastBlock := tb.body[lastIdx]
+		// Check if this block starts with "prove" and "or"
+		if lastBlock.header.is(glob.KeywordProve) {
+			savedIndex := lastBlock.header.index
+			err := lastBlock.header.skip(glob.KeywordProve)
+			if err == nil && lastBlock.header.is(glob.KeywordOr) {
+				err := lastBlock.header.skip(glob.KeywordOr)
+				if err == nil {
+					// This is a "prove or:" block
+					lastBlockIndex = lastIdx
+				} else {
+					lastBlock.header.index = savedIndex
+				}
+			} else {
+				if err == nil {
+					lastBlock.header.index = savedIndex
+				}
+			}
+		}
+	}
+
 	// If thenFacts is already populated, it means the conclusion was written after cases
-	// In this case, all body blocks should be case blocks
-	// Otherwise, body[0] must be =>:, and the rest are case blocks
+	// In this case, all body blocks (except possibly the last "prove or:" block) should be case blocks
+	// Otherwise, body[0] must be =>:, and the rest (except possibly the last "prove or:" block) are case blocks
 	if len(thenFacts) > 0 {
-		// Conclusion already parsed, all body blocks are case blocks
-		for _, block := range tb.body {
+		// Conclusion already parsed, all body blocks (except possibly the last "prove or:" block) are case blocks
+		endIdx := len(tb.body)
+		if lastBlockIndex >= 0 {
+			endIdx = lastBlockIndex
+		}
+		for i := 0; i < endIdx; i++ {
+			block := tb.body[i]
 			if !block.header.is(glob.KeywordCase) {
-				return nil, ErrInLine(fmt.Errorf("cases: when conclusion is written after cases, all body blocks must be case blocks"), tb)
+				return nil, ErrInLine(fmt.Errorf("cases: when conclusion is written after cases, all body blocks must be case blocks (except prove or:)"), tb)
 			}
 
 			// Skip "case" keyword
@@ -1327,12 +1442,17 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 			}
 			caseFacts = append(caseFacts, curStmt)
 			proofs = append(proofs, proof)
-
 		}
 	} else {
-		// Conclusion is in body, body[0] must be =>:, rest are case blocks
+		// Conclusion is in body, body[0] must be =>:, rest (except possibly the last "prove or:" block) are case blocks
 		if len(tb.body) == 0 {
 			return nil, ErrInLine(fmt.Errorf("cases: when using colon syntax, body must contain at least =>: section"), tb)
+		}
+
+		// Determine the end index for case blocks
+		endIdx := len(tb.body)
+		if lastBlockIndex >= 0 {
+			endIdx = lastBlockIndex
 		}
 
 		// Parse body[0] as =>: section
@@ -1352,11 +1472,11 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 		}
 		thenFacts = append(thenFacts, curThenFacts...)
 
-		// Parse remaining body blocks as case blocks
-		for i := 1; i < len(tb.body); i++ {
+		// Parse remaining body blocks as case blocks (up to endIdx)
+		for i := 1; i < endIdx; i++ {
 			block := tb.body[i]
 			if !block.header.is(glob.KeywordCase) {
-				return nil, ErrInLine(fmt.Errorf("cases: after =>: section, all body blocks must be case blocks"), tb)
+				return nil, ErrInLine(fmt.Errorf("cases: after =>: section, all body blocks must be case blocks (except prove or:)"), tb)
 			}
 
 			// Skip "case" keyword
@@ -1381,6 +1501,18 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 		}
 	}
 
+	// Parse "prove or:" block if it exists
+	if lastBlockIndex >= 0 {
+		lastBlock := tb.body[lastBlockIndex]
+		// Skip "prove" and "or" (we already verified they exist)
+		lastBlock.header.skip(glob.KeywordProve)
+		lastBlock.header.skip(glob.KeywordOr)
+		proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+	}
+
 	if len(caseFacts) == 0 {
 		return nil, ErrInLine(fmt.Errorf("cases: at least one case block is required"), tb)
 	}
@@ -1390,7 +1522,7 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(fmt.Errorf("cases: expect %d proofs, but got %d. expect the number of proofs to be the same as the number of case facts", len(caseFacts), len(proofs)), tb)
 	}
 
-	return NewProveCaseByCaseStmt(caseFacts, thenFacts, proofs, tb.line), nil
+	return NewProveCaseByCaseStmt(caseFacts, thenFacts, proofs, proveOr, tb.line), nil
 }
 
 func (p *TbParser) skipColonAndParseBodyOrReturnEmptyStmtSlice(tb *tokenBlock) ([]Stmt, error) {
