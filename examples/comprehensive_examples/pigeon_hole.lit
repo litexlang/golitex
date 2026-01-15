@@ -29,7 +29,7 @@ claim:
             count({f(z1), f(z2)}) = 2
             count(s2) = 1
             2 <= 1
-        prove_exist z1, z2: a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+        witness z1, z2: a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
 
 $pigeon_hole_is_true_for_all_count(1)
 
@@ -148,7 +148,7 @@ claim:
             count({f(z1), f(z2)}) = 2
             count(s2) = 1
             2 <= 1
-        prove_exist z1, z2: a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+        witness z1, z2: a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
 
 $pigeon_hole_is_true_for_all_count(1)
 
@@ -281,7 +281,7 @@ claim:
             count({f(z1), f(z2)}) = 2
             count(s2) = 1
             2 <= 1
-        prove_exist z1, z2: a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
+        witness z1, z2: a s1, b s1 st $different_item_has_the_same_image(s1, s2, f, a, b)
 
 $pigeon_hole_is_true_for_all_count(1)
 

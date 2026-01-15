@@ -39,22 +39,6 @@ func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 	return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("undefined prop: %s", fact.PropName)})
 }
 
-// equalTupleFactPostProcess handles postprocessing for equal_tuple(a, b, dim) facts
-// It automatically derives a[i] = b[i] for i from 1 to dim
-func (ie *InferEngine) equalTupleFactPostProcess(fact *ast.SpecFactStmt) *glob.ShortRet {
-	if len(fact.Params) != 3 {
-		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("equal_tuple fact expect 3 parameters, get %d in %s", len(fact.Params), fact)})
-	}
-
-	equalFact := ast.NewEqualFact(fact.Params[0], fact.Params[1])
-
-	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(equalFact)
-	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
-	}
-
-	return glob.NewShortRet(glob.StmtRetTypeTrue, ret.Infer)
-}
 
 func (ie *InferEngine) newFalseExist(fact *ast.SpecFactStmt) *glob.ShortRet {
 	existStruct := fact.ToExistStFactStruct()

@@ -102,6 +102,10 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = glob.ErrRet("import statements are not allowed in local scope.")
 	case *ast.RunFileStmt:
 		execRet = glob.ErrRet("run statements are not allowed in local scope.")
+	case *ast.EqualSetStmt:
+		execRet = exec.equalSetStmt(stmt)
+	case *ast.WitnessNonemptyStmt:
+		execRet = exec.witnessNonemptyStmt(stmt)
 	case *ast.ProveForStmt:
 		execRet = exec.proveForStmt(stmt)
 	case *ast.ProveInferStmt:
@@ -249,15 +253,12 @@ func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) *glob.S
 	verifyProcessMsgs := []*glob.VerRet{}
 	newFactsMsgs := []string{}
 
-	// Create OrStmt from CaseFacts
-	orFact := ast.NewOrStmt(stmt.CaseFacts, stmt.Line)
-
-	// Verify that the OR fact is true (fact1 or fact2 ... is true)
-	execState := exec.factStmt(orFact)
-	if execState.IsNotTrue() {
-		return execState.AddUnknown(fmt.Sprintf("%s is unknown\n", orFact.String()))
+	// Verify that cases cover all possibilities and don't overlap
+	// For ProveCaseByCaseStmt, we don't have params/paramSets, so we use empty slices
+	execState, err := exec.verifyCasesOrAndNoOverlap(stmt.CaseFacts, ast.StrSlice{}, ast.ObjSlice{}, stmt.ProveCases, stmt.Line)
+	if notOkExec(execState, err) {
+		return execState
 	}
-
 	verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
 
 	// Prove each case
@@ -918,6 +919,125 @@ func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveInferStmt) *glob
 		if execState.IsNotTrue() {
 			return execState
 		}
+	}
+
+	return exec.NewTrueStmtRet(stmt)
+}
+
+func (exec *Executor) equalSetStmt(stmt *ast.EqualSetStmt) *glob.StmtRet {
+	// 1. prove 过程（在局部环境中）
+	ret := exec.equalSetStmtProveProcess(stmt)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	// 2. 存储过程（在原地存储）
+	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{stmt.Left, stmt.Right}, stmt.Line)
+	ret2 := exec.Env.NewFactWithCheckingNameDefined(equalFact)
+	if ret2.IsErr() {
+		return glob.ErrRet(ret2.String())
+	}
+
+	return exec.NewTrueStmtRet(stmt).AddNewFacts(ret2.Infer)
+}
+
+func (exec *Executor) equalSetStmtProveProcess(stmt *ast.EqualSetStmt) *glob.StmtRet {
+	// 开局部环境
+	exec.NewEnv()
+	defer exec.deleteEnv()
+
+	// 1. 先执行 proofs
+	for _, proofStmt := range stmt.Proofs {
+		execRet := exec.Stmt(proofStmt)
+		if execRet.IsNotTrue() {
+			return execRet
+		}
+	}
+
+	// 2. 验证：验证 forall t a : t $in b 和 forall t b : t $in a
+	a := stmt.Left
+	b := stmt.Right
+
+	ver := NewVerifier(exec.Env)
+	state := Round0Msg()
+
+	// Create forall t a : t $in b
+	forall1 := ast.NewUniFact(
+		[]string{"t"},
+		[]ast.Obj{a},
+		[]ast.FactStmt{},
+		[]ast.FactStmt{
+			ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("t"), b}, stmt.Line),
+		},
+		stmt.Line,
+	)
+
+	// Create forall t b : t $in a
+	forall2 := ast.NewUniFact(
+		[]string{"t"},
+		[]ast.Obj{b},
+		[]ast.FactStmt{},
+		[]ast.FactStmt{
+			ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("t"), a}, stmt.Line),
+		},
+		stmt.Line,
+	)
+
+	// Verify both forall statements
+	verRet1 := ver.VerFactStmt(forall1, state)
+	if verRet1.IsNotTrue() {
+		return glob.ErrRet(verRet1.String())
+	}
+
+	verRet2 := ver.VerFactStmt(forall2, state)
+	if verRet2.IsNotTrue() {
+		return glob.ErrRet(verRet2.String())
+	}
+
+	return exec.NewTrueStmtRet(stmt)
+}
+
+func (exec *Executor) witnessNonemptyStmt(stmt *ast.WitnessNonemptyStmt) *glob.StmtRet {
+	// 1. prove 过程（在局部环境中）
+	ret := exec.witnessNonemptyStmtProveProcess(stmt)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	// 2. 存储过程（在原地存储）
+	isNonEmptyFact := ast.NewIsANonEmptySetFact(stmt.ObjSet, stmt.Line)
+	ret2 := exec.Env.NewFactWithCheckingNameDefined(isNonEmptyFact)
+	if ret2.IsErr() {
+		return glob.ErrRet(ret2.String())
+	}
+
+	return exec.NewTrueStmtRet(stmt).AddNewFacts(ret2.Infer)
+}
+
+func (exec *Executor) witnessNonemptyStmtProveProcess(stmt *ast.WitnessNonemptyStmt) *glob.StmtRet {
+	// 开局部环境
+	exec.NewEnv()
+	defer exec.deleteEnv()
+
+	// 1. 先执行 proofs
+	for _, proofStmt := range stmt.Proofs {
+		execRet := exec.Stmt(proofStmt)
+		if execRet.IsNotTrue() {
+			return execRet
+		}
+	}
+
+	// 2. 验证：验证 obj $in objSet
+	ver := NewVerifier(exec.Env)
+	state := Round0Msg()
+
+	inFact := ast.NewInFactWithObj(stmt.Obj, stmt.ObjSet)
+	verRet := ver.VerFactStmt(inFact, state)
+	if verRet.IsErr() {
+		return glob.ErrRet(verRet.String())
+	}
+	if verRet.IsUnknown() {
+		return glob.ErrRet(fmt.Sprintf("cannot verify that %s $in %s", stmt.Obj, stmt.ObjSet))
 	}
 
 	return exec.NewTrueStmtRet(stmt)

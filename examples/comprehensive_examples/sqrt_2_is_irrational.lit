@@ -1,48 +1,34 @@
-"""
-# prove sqrt(2) is irrational
-# 证明 sqrt(2) 是无理数
-
-fn logBase(x, y N) N:
+prop dvd(x, y Z):
     dom:
         x != 0
+    <=>:
+        y % x = 0
 
-know forall x, y, z N => logBase(z, x^y) = y * logBase(z, x), logBase(z, x*y) = logBase(z, x) + logBase(z, y)
+have gcd fn(Z, Z) N_pos
 
-know forall x N: x != 0 => logBase(x, x) = 1
+know forall x, y, z Z: z $dvd x, z $dvd y => z $dvd gcd(x, y)
 
-claim:
-    not sqrt(2) $in Q
-    contra:
-        sqrt(2) > 0
-        have x, y st $Q_pos_in_frac(sqrt(2))
-        
-        x = sqrt(2) * y
-        x ^ 2 = (sqrt(2) ^ 2) * (y ^ 2)
-        sqrt(2) ^ 2 = 2
-        x ^ 2 = 2 * (y ^ 2)
+prop Q_in_frac(q Q, x Z, y N_pos):
+    q = x / y
+    gcd(x, y) = 1
 
-        logBase(2, x ^ 2) = logBase(2, 2 * (y ^ 2))     
-        logBase(2, x ^ 2) = 2 * logBase(2, x)
-        logBase(2, y ^ 2) = 2 * logBase(2, y)
+know forall q Q: exist x Z, y N_pos st $Q_in_frac(q, x, y)
 
-        logBase(2, 2 * (y ^ 2)) = logBase(2, 2) + logBase(2, y ^ 2)
-        logBase(2, 2) = 1
-        logBase(2, 2 * (y ^ 2)) = 1 + logBase(2, y ^ 2)
+know forall x Z: 2 $dvd x^2 => 2 $dvd x
+know infer x, y, z Z: x = z * y => z $dvd x if z != 0
+know forall x, y Z: x $dvd y => exist z Z st y = x * z
 
-        logBase(2, x ^ 2) = 1 + 2 * logBase(2, y)
-        2 * logBase(2, x) = 1 + 2 * logBase(2, y)
+contra not sqrt(2) $in Q:
+    have x Z, y N_pos st $Q_in_frac(sqrt(2), x, y)
+    x^2 = (sqrt(2)* y)^2 = sqrt(2)^2 * y^2 = 2 * y^2
+    x ^ 2 = 2 * y^2 => 2 $dvd x^2
+    2 $dvd x
+    have z Z st x = 2 * z
+    x^2 = (2 * z)^2 = 2 * y^2 = (2) ^ 2 * z^2 = 4 * z^2
+    y ^ 2 = 4 * z^2 / 2 = 2 * z ^ 2
+    y ^ 2 = 2 * z ^ 2 => 2 $dvd y ^ 2
+    2 $dvd y
+    2 $dvd gcd(x, y)
+    2 $dvd 1
 
-        =:
-            0
-            (2 * logBase(2, x)) % 2            
-            (1 + 2 * logBase(2, y)) % 2
-            
-        =:
-            (1 % 2 + (2 * logBase(2, y)) % 2) % 2
-            (1 + 2 * logBase(2, y)) % 2
-            (1 % 2 + (2 * logBase(2, y)) % 2) % 2
-            (1 + 0) % 2
-            1
-        0 = 1
 
-"""
