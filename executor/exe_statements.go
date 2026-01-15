@@ -44,8 +44,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		}
 	case *ast.ClaimProveStmt:
 		execRet = exec.execClaimStmtProve(stmt)
-	case *ast.ImpossibleStmt:
-		execRet = exec.execImpossibleStmt(stmt)
+	// case *ast.ImpossibleStmt:
+	// 	execRet = exec.execImpossibleStmt(stmt)
 	case *ast.DefPropStmt:
 		execRet = exec.defPropStmt(stmt, true)
 	case *ast.DefLetStmt:
