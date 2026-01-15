@@ -196,8 +196,8 @@ func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint { return s.Line }
 func (s *HaveFnCaseByCaseStmt) GetLine() uint      { return s.Line }
 func (s *ProveExistStmt) GetLine() uint            { return s.Line }
 func (s *EqualSetStmt) GetLine() uint              { return s.Line }
-func (s *WitnessNonemptyStmt) GetLine() uint        { return s.Line }
-func (s *ImpossibleStmt) GetLine() uint             { return s.Line }
+func (s *WitnessNonemptyStmt) GetLine() uint       { return s.Line }
+func (s *ImpossibleStmt) GetLine() uint            { return s.Line }
 
 func (s *DefLetStmt) SetLine(l uint)     { s.Line = l }
 func (s *DefPropStmt) SetLine(l uint)    { s.Line = l }
@@ -275,7 +275,6 @@ type FactStmt interface {
 	GetLine() uint
 	algoStmt()
 	Instantiate(map[string]Obj) (Stmt, error)
-	proveAlgoReturnStmt()
 	SetLine(l uint)
 }
 

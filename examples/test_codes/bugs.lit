@@ -36,3 +36,13 @@ fn f(s R, a s)
 prove cases 放在 各种出现case的地方，说明确实是or成立的
 
 have f fn(N_pos) N
+
+know p or q or t 
+p or q or t 
+or 的specFactMem的证明用匹配替换，而不是现在的默认后面都是错的这样弄
+
+contra:
+    ,..
+    impossible 1 + 9 = 10
+impossible
+
