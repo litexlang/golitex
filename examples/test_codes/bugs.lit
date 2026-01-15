@@ -40,3 +40,5 @@ prop s set, f fn(s)s
 fn f(s R, a s)
 
 # http://github.com/litexlang/golitex/blob/main/examples/testings/seq.lit
+
+prove cases 放在 各种出现case的地方，说明确实是or成立的

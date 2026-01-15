@@ -510,15 +510,27 @@ func (stmt *ProveCaseByCaseStmt) String() string {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(thenFact.String(), 1))
 		builder.WriteByte('\n')
 	}
-	for _, proof := range stmt.Proofs {
+	for i, proof := range stmt.Proofs {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordCase, 1))
+		builder.WriteString(" ")
+		builder.WriteString(stmt.CaseFacts[i].String())
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
 		for _, fact := range proof {
 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 2))
 			builder.WriteByte('\n')
 		}
+	}
+	if len(stmt.ProveOr) > 0 {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+		builder.WriteString(" ")
+		builder.WriteString(glob.KeywordOr)
+		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
+		for _, proofStmt := range stmt.ProveOr {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 2))
+			builder.WriteByte('\n')
+		}
 	}
 	return strings.TrimSuffix(builder.String(), "\n")
 }
@@ -948,6 +960,17 @@ func (stmt *HaveFnCaseByCaseStmt) String() string {
 				builder.WriteByte('\n')
 			}
 		} else {
+			builder.WriteByte('\n')
+		}
+	}
+	if len(stmt.ProveOr) > 0 {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+		builder.WriteString(" ")
+		builder.WriteString(glob.KeywordOr)
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+		for _, proofStmt := range stmt.ProveOr {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 2))
 			builder.WriteByte('\n')
 		}
 	}
@@ -1424,6 +1447,18 @@ func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 				builder.WriteByte('\n')
 			}
 		} else {
+			builder.WriteByte('\n')
+		}
+	}
+	if len(stmt.ProveOr) > 0 {
+		builder.WriteString("    ")
+		builder.WriteString(glob.KeywordProve)
+		builder.WriteString(" ")
+		builder.WriteString(glob.KeywordOr)
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+		for _, proofStmt := range stmt.ProveOr {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 1))
 			builder.WriteByte('\n')
 		}
 	}

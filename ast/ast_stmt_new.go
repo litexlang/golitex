@@ -76,8 +76,8 @@ func NewUniFactWithIff(uniFact *UniFactStmt, iffFacts []FactStmt, line uint) *Un
 	return &UniFactWithIffStmt{uniFact, iffFacts, line}
 }
 
-func NewProveCaseByCaseStmt(caseFacts []*SpecFactStmt, thenFacts []FactStmt, proofs StmtSliceSlice, line uint) *ProveCaseByCaseStmt {
-	return &ProveCaseByCaseStmt{caseFacts, thenFacts, proofs, line}
+func NewProveCaseByCaseStmt(caseFacts []*SpecFactStmt, thenFacts []FactStmt, proofs StmtSliceSlice, proveOr StmtSlice, line uint) *ProveCaseByCaseStmt {
+	return &ProveCaseByCaseStmt{caseFacts, thenFacts, proofs, proveOr, line}
 }
 
 func NewKnowPropInferStmt(prop *DefPropStmt, line uint) *KnowPropInferStmt {
@@ -303,8 +303,8 @@ func NewEvalStmt(value Obj, line uint) *EvalStmt {
 // 	return &ProveAlgoReturnStmt{Facts: facts, Line: line}
 // }
 
-func NewHaveFnCaseByCaseStmt(defFnStmt *LetFnStmt, caseByCaseFacts SpecFactPtrSlice, proofs StmtSliceSlice, haveObjSatisfyFn ObjSlice, line uint) *HaveFnCaseByCaseStmt {
-	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, line}
+func NewHaveFnCaseByCaseStmt(defFnStmt *LetFnStmt, caseByCaseFacts SpecFactPtrSlice, proofs StmtSliceSlice, haveObjSatisfyFn ObjSlice, proveOr StmtSlice, line uint) *HaveFnCaseByCaseStmt {
+	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, proveOr, line}
 }
 
 func NewProveImplicationStmt(specFact *SpecFactStmt, implicationFact FactStmtSlice, proof StmtSlice, line uint) *ProveInferStmt {
