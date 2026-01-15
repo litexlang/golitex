@@ -199,54 +199,47 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(state.InnerStmtRetSlice)
 }
 
-func (exec *Executor) execImpossibleStmt(stmt *ast.ImpossibleStmt) *glob.StmtRet {
-	state := exec.impossibleStmt(stmt)
-	if state.IsNotTrue() {
-		return state
-	}
+// func (exec *Executor) execImpossibleStmt(stmt *ast.ImpossibleStmt) *glob.StmtRet {
+// 	state := exec.impossibleStmt(stmt)
+// 	if state.IsNotTrue() {
+// 		return state
+// 	}
 
-	// 检查 stmt fact 中的所有元素已经定义过了
-	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.Fact)
-	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
-	}
+// 	// 检查 stmt fact 中的所有元素已经定义过了
+// 	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.Fact)
+// 	if ret.IsErr() {
+// 		return glob.ErrRet(ret.String())
+// 	}
 
-	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(state.InnerStmtRetSlice)
-}
+// 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(state.InnerStmtRetSlice)
+// }
 
-func (exec *Executor) impossibleStmt(stmt *ast.ImpossibleStmt) *glob.StmtRet {
-	exec.NewEnv()
-	defer func() {
-		exec.deleteEnv()
-	}()
+// func (exec *Executor) impossibleStmt(stmt *ast.ImpossibleStmt) *glob.StmtRet {
+// 	exec.NewEnv()
+// 	defer func() {
+// 		exec.deleteEnv()
+// 	}()
 
-	// 需要检查 stmt.Fact 里的东西都是在外部声明好了的
-	ret := exec.Env.LookUpNamesInFact(stmt.Fact, map[string]struct{}{})
-	if ret.IsErr() {
-		ret.AddError("in impossible statement")
-		return glob.ErrRet(ret.String())
-	}
+// 	// 需要检查 stmt.Fact 里的东西都是在外部声明好了的
+// 	ret := exec.Env.LookUpNamesInFact(stmt.Fact, map[string]struct{}{})
+// 	if ret.IsErr() {
+// 		ret.AddError("in impossible statement")
+// 		return glob.ErrRet(ret.String())
+// 	}
 
-	innerStmtRets := []*glob.StmtRet{}
-	execState := exec.execStmtsAtCurEnv(stmt.Proofs)
-	if execState.IsNotTrue() {
-		return execState
-	}
-	innerStmtRets = append(innerStmtRets, execState.InnerStmtRetSlice...)
-
-	// check that the fact is impossible (i.e., its negation is true)
-	execState = exec.factStmt(stmt.Fact)
-	if execState.IsTrue() {
-		// If the fact is true, then it's not impossible - this is an error
-		return glob.ErrRet(fmt.Sprintf("impossible statement error: the fact is actually true, not impossible:\n%s", stmt.Fact))
-	}
-	if execState.IsUnknown() {
-		return glob.ErrRet(fmt.Sprintf("impossible statement error: cannot determine if the fact is impossible:\n%s", stmt.Fact))
-	}
-	// If execState.IsNotTrue(), then the fact is indeed impossible, which is what we want
-	innerStmtRets = append(innerStmtRets, execState)
-	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
-}
+// 	// check that the fact is impossible (i.e., its negation is true)
+// 	execState = exec.factStmt(stmt.Fact)
+// 	if execState.IsTrue() {
+// 		// If the fact is true, then it's not impossible - this is an error
+// 		return glob.ErrRet(fmt.Sprintf("impossible statement error: the fact is actually true, not impossible:\n%s", stmt.Fact))
+// 	}
+// 	if execState.IsUnknown() {
+// 		return glob.ErrRet(fmt.Sprintf("impossible statement error: cannot determine if the fact is impossible:\n%s", stmt.Fact))
+// 	}
+// 	// If execState.IsNotTrue(), then the fact is indeed impossible, which is what we want
+// 	innerStmtRets = append(innerStmtRets, execState)
+// 	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
+// }
 
 func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet {
 	exec.NewEnv()

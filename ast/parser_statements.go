@@ -1131,35 +1131,12 @@ func (p *TbParser) impossibleStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	err = tb.header.skip(glob.KeySymbolColon)
+	fact, err := p.specFactStmt(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
-	if len(tb.body) != 2 {
-		return nil, fmt.Errorf("expect 2 body blocks after impossible")
-	}
-
-	fact, err := p.specFactStmt(&tb.body[0])
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	proofs, err := p.parseTbBodyAndGetStmts(tb.body[1].body)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	if len(proofs) == 0 {
-		return nil, fmt.Errorf("expect proof after impossible")
-	}
-
-	return NewImpossibleStmt(fact, proofs, tb.line), nil
+	return NewImpossibleStmt(fact, tb.line), nil
 }
 
 // ###############################################################
