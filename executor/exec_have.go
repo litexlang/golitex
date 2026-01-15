@@ -157,17 +157,31 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) (*glob.StmtRet
 		}
 	}
 
+	// Check if equalTo is defined
 	ver := NewVerifier(exec.Env)
-
-	verRet := ver.VerFactStmt(ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet), Round0Msg())
-	if verRet.IsErr() {
-		return glob.ErrRet(verRet.String()), fmt.Errorf(verRet.String())
-	}
-	if verRet.IsUnknown() {
-		return glob.ErrRet(verRet.String()), fmt.Errorf("according to the definition of %s, the returned value %s must be in %s, but\n%s is unknown", stmt, stmt.EqualTo, stmt.RetSet, ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet))
+	verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(stmt.EqualTo, Round0NoMsg())
+	if verRet.IsNotTrue() {
+		return verRet.ToStmtRet(), fmt.Errorf("%s", verRet.String())
 	}
 
-	return verRet.ToStmtRet(), nil
+	// Execute proof
+	for _, proofStmt := range stmt.Proofs {
+		execState := exec.Stmt(proofStmt)
+		if execState.IsNotTrue() {
+			return execState, fmt.Errorf("proof failed: %s", execState.String())
+		}
+	}
+
+	// Verify return value is in retSet
+	execState := exec.factStmt(ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet))
+	if execState.IsErr() {
+		return glob.NewEmptyStmtError(), fmt.Errorf("%s", execState.String())
+	}
+	if execState.IsUnknown() {
+		return glob.NewEmptyStmtError(), fmt.Errorf("according to the definition of %s, the returned value %s must be in %s, but\n%s is unknown", stmt, stmt.EqualTo, stmt.RetSet, ast.NewInFactWithObj(stmt.EqualTo, stmt.RetSet))
+	}
+
+	return exec.NewTrueStmtRet(stmt), nil
 }
 
 func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {
@@ -295,7 +309,7 @@ func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob
 	verifyProcessMsgs := []*glob.VerRet{}
 	defineMsgs := []string{}
 	// Verify first and get thenFacts
-	execRet, _, err := exec.checkHaveFnCaseByCaseStmt(stmt)
+	execRet, err := exec.checkHaveFnCaseByCaseStmt(stmt)
 	if notOkExec(execRet, err) {
 		return execRet
 	}
@@ -309,76 +323,42 @@ func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob
 	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
 }
 
-func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, []ast.FactStmt, error) {
-	// Create a new environment for verification and proof
-	exec.NewEnv()
-	defer func() {
-		exec.deleteEnv()
-	}()
+func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, error) {
+	verifyProcessMsgs := []*glob.VerRet{}
 
-	// Verify each paramSet is in set type
-	for i, paramSet := range stmt.DefFnStmt.FnTemplate.ParamSets {
-		execState := exec.factStmt(ast.NewIsASetFact(paramSet, stmt.Line))
-		if execState.IsErr() {
-			return glob.ErrRet(execState.String()), nil, fmt.Errorf(execState.String())
-		}
-		if execState.IsUnknown() {
-			return glob.NewEmptyStmtError(), nil, fmt.Errorf("parameter set %d (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", i+1, paramSet.String(), paramSet.String())
-		}
+	// Verify all cases cover domain and don't overlap
+	execState, err := exec.haveFnCaseByCase_AllCasesCoverDomainAndNotOverlap(stmt)
+	if notOkExec(execState, err) {
+		return execState, err
 	}
+	verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
 
-	// Verify retSet is in set type
-	execState := exec.factStmt(ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
-	if execState.IsErr() {
-		return glob.ErrRet(execState.String()), nil, fmt.Errorf(execState.String())
+	// Verify each case: execute proof and verify return value
+	execState, err = exec.checkHaveFnCaseByCaseStmt_Cases(stmt)
+	if notOkExec(execState, err) {
+		return execState, err
 	}
-	if execState.IsUnknown() {
-		return glob.NewEmptyStmtError(), nil, fmt.Errorf("return set (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
-	}
+	verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
 
+	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs), nil
+}
+
+func (exec *Executor) haveFnCaseByCase_AllCasesCoverDomainAndNotOverlap(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, error) {
+	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.ProveCases, stmt.Line)
+}
+
+func (exec *Executor) checkHaveFnCaseByCaseStmt_Cases(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, error) {
+	verifyProcessMsgs := []*glob.VerRet{}
 	// Verify each case: execute proof and verify return value
 	for i := range len(stmt.CaseByCaseFacts) {
 		execState, err := exec.verifyHaveFnCaseByCase_OneCase(stmt, i)
 		if notOkExec(execState, err) {
-			return execState, nil, err
+			return execState, err
 		}
+		verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
 	}
 
-	// Verify all cases cover the domain
-	execState, err := exec.checkAtLeastOneCaseHolds_ForHaveFn(stmt)
-	if notOkExec(execState, err) {
-		return execState, nil, err
-	}
-
-	// Verify cases don't overlap
-	execState, err = exec.checkCasesNoOverlap_ForHaveFn(stmt)
-	if notOkExec(execState, err) {
-		return execState, nil, err
-	}
-
-	// Build thenFacts: for each case, if condition holds, function equals corresponding return value
-	thenFacts := []ast.FactStmt{}
-	for i, caseFact := range stmt.CaseByCaseFacts {
-		// Create function call from function name and params
-		params := make([]ast.Obj, len(stmt.DefFnStmt.FnTemplate.Params))
-		for j := range len(stmt.DefFnStmt.FnTemplate.Params) {
-			params[j] = ast.Atom(stmt.DefFnStmt.FnTemplate.Params[j])
-		}
-		fnName := ast.Atom(stmt.DefFnStmt.Name)
-		fnCall := ast.NewFnObj(fnName, params)
-		equalFact := ast.NewEqualFact(fnCall, stmt.EqualToObjs[i])
-
-		uniFact := ast.NewUniFact(
-			stmt.DefFnStmt.FnTemplate.Params,
-			stmt.DefFnStmt.FnTemplate.ParamSets,
-			[]ast.FactStmt{caseFact},
-			[]ast.FactStmt{equalFact},
-			stmt.Line,
-		)
-		thenFacts = append(thenFacts, uniFact)
-	}
-
-	return exec.NewTrueStmtRet(stmt), thenFacts, nil
+	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs), nil
 }
 
 func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (*glob.StmtRet, error) {
@@ -433,24 +413,38 @@ func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseS
 	return exec.NewTrueStmtRet(stmt), nil
 }
 
-func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, error) {
+// verifyCasesOrAndNoOverlap is a helper function to verify both:
+// 1. cases cover all possibilities (or cases holds)
+// 2. cases don't overlap
+// If proveOr is provided and non-empty, it executes the proof in a local environment, then verifies both conditions.
+// Otherwise, it verifies both conditions directly.
+func (exec *Executor) verifyCasesOrAndNoOverlap(caseFacts ast.SpecFactPtrSlice, params ast.StrSlice, paramSets ast.ObjSlice, proveOr ast.StmtSlice, line uint) (*glob.StmtRet, error) {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
 
 	// Define parameters
-	for i := range len(stmt.DefFnStmt.FnTemplate.Params) {
-		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.DefFnStmt.FnTemplate.Params[i]}, []ast.Obj{stmt.DefFnStmt.FnTemplate.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
+	for i := range len(params) {
+		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{params[i]}, []ast.Obj{paramSets[i]}, []ast.FactStmt{}, line))
 		if execState.IsNotTrue() {
 			return execState, fmt.Errorf(execState.String())
 		}
 	}
 
-	// Create or fact: case1 or case2 or ... or caseN
-	orFact := ast.NewOrStmt(stmt.CaseByCaseFacts, stmt.Line)
+	// If proveOr is provided, execute it
+	if len(proveOr) > 0 {
+		for _, proofStmt := range proveOr {
+			execState := exec.Stmt(proofStmt)
+			if execState.IsNotTrue() {
+				return execState, fmt.Errorf("prove or: proof failed: %s", execState.String())
+			}
+		}
+	}
 
-	// Verify or fact is true (all cases cover the domain)
+	// Otherwise, verify both conditions directly
+	// 1. Verify or cases holds
+	orFact := ast.NewOrStmt(caseFacts, line)
 	ver := NewVerifier(exec.Env)
 	verRet := ver.VerFactStmt(orFact, Round0Msg())
 	if verRet.IsErr() {
@@ -460,37 +454,137 @@ func (exec *Executor) checkAtLeastOneCaseHolds_ForHaveFn(stmt *ast.HaveFnCaseByC
 		return glob.NewEmptyStmtError(), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
 	}
 
-	return exec.NewTrueStmtRet(stmt), nil
-}
-
-func (exec *Executor) checkCasesNoOverlap_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt) (*glob.StmtRet, error) {
-	// For each case i, verify that when case i holds, all other cases don't hold
-	for i := range len(stmt.CaseByCaseFacts) {
-		execState, err := exec.checkCaseNoOverlapWithOthers_ForHaveFn(stmt, i)
+	// 2. Verify all cases don't overlap
+	for i := range len(caseFacts) {
+		execState, err := exec.verifyCaseNoOverlapWithOthers(caseFacts, proveOr, i)
 		if notOkExec(execState, err) {
 			return execState, err
 		}
 	}
 
-	return exec.NewTrueStmtRet(stmt), nil
+	return exec.NewTrueStmtRet(orFact), nil
 }
 
-func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) (*glob.StmtRet, error) {
+// verifyCasesOr is a helper function to verify that cases cover all possibilities
+// Deprecated: Use verifyCasesOrAndNoOverlap instead
+func (exec *Executor) verifyCasesOr(caseFacts ast.SpecFactPtrSlice, params ast.StrSlice, paramSets ast.ObjSlice, proveOr ast.StmtSlice, line uint) (*glob.StmtRet, error) {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
 
 	// Define parameters
-	for i := range len(stmt.DefFnStmt.FnTemplate.Params) {
-		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.DefFnStmt.FnTemplate.Params[i]}, []ast.Obj{stmt.DefFnStmt.FnTemplate.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
+	for i := range len(params) {
+		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{params[i]}, []ast.Obj{paramSets[i]}, []ast.FactStmt{}, line))
 		if execState.IsNotTrue() {
 			return execState, fmt.Errorf(execState.String())
 		}
 	}
 
+	// If proveOr is provided, execute it
+	if len(proveOr) > 0 {
+		for _, proofStmt := range proveOr {
+			execState := exec.Stmt(proofStmt)
+			if execState.IsNotTrue() {
+				return execState, fmt.Errorf("prove or: proof failed: %s", execState.String())
+			}
+		}
+		// After executing proof, verify the or fact is true
+		orFact := ast.NewOrStmt(caseFacts, line)
+		execState := exec.factStmt(orFact)
+		if execState.IsErr() {
+			return glob.NewEmptyStmtError(), fmt.Errorf("prove or: failed to verify that all cases cover the domain: %s", execState.String())
+		}
+		if execState.IsUnknown() {
+			return glob.NewEmptyStmtError(), fmt.Errorf("prove or: all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
+		}
+		return exec.NewTrueStmtRet(orFact), nil
+	}
+
+	// Otherwise, verify the or fact directly
+	orFact := ast.NewOrStmt(caseFacts, line)
+	ver := NewVerifier(exec.Env)
+	verRet := ver.VerFactStmt(orFact, Round0Msg())
+	if verRet.IsErr() {
+		return glob.NewEmptyStmtError(), fmt.Errorf("failed to verify that all cases cover the domain: %s", verRet.String())
+	}
+	if verRet.IsUnknown() {
+		return glob.NewEmptyStmtError(), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
+	}
+
+	return exec.NewTrueStmtRet(orFact), nil
+}
+
+// verifyCasesNoOverlap is a helper function to verify that cases don't overlap
+// Deprecated: Use verifyCasesOrAndNoOverlap instead
+func (exec *Executor) verifyCasesNoOverlap(caseFacts ast.SpecFactPtrSlice, params ast.StrSlice, paramSets ast.ObjSlice, proveOr ast.StmtSlice, line uint) (*glob.StmtRet, error) {
+	exec.NewEnv()
+	defer func() {
+		exec.deleteEnv()
+	}()
+
+	// Define parameters
+	for i := range len(params) {
+		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{params[i]}, []ast.Obj{paramSets[i]}, []ast.FactStmt{}, line))
+		if execState.IsNotTrue() {
+			return execState, fmt.Errorf(execState.String())
+		}
+	}
+
+	// If proveOr is provided, execute it
+	if len(proveOr) > 0 {
+		for _, proofStmt := range proveOr {
+			execState := exec.Stmt(proofStmt)
+			if execState.IsNotTrue() {
+				return execState, fmt.Errorf("prove or: proof failed: %s", execState.String())
+			}
+		}
+
+		// After executing proof, verify 1. or cases holds
+		orFact := ast.NewOrStmt(caseFacts, line)
+		execState := exec.factStmt(orFact)
+		if execState.IsErr() {
+			return glob.NewEmptyStmtError(), fmt.Errorf("prove or: failed to verify that all cases cover the domain: %s", execState.String())
+		}
+		if execState.IsUnknown() {
+			return glob.NewEmptyStmtError(), fmt.Errorf("prove or: all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
+		}
+	}
+
+	// Verify 2. all cases don't overlap
+	// For each case i, verify that when case i holds, all other cases don't hold
+	// If proveOr was provided, we need to run it again in each case's environment
+	for i := range len(caseFacts) {
+		execState, err := exec.verifyCaseNoOverlapWithOthers(caseFacts, proveOr, i)
+		if notOkExec(execState, err) {
+			return execState, err
+		}
+	}
+
+	orFact := ast.NewOrStmt(caseFacts, line)
+	return exec.NewTrueStmtRet(orFact), nil
+}
+
+// verifyCaseNoOverlapWithOthers verifies that when case i holds, all other cases don't hold
+// If proveOr is provided, it runs proveOr in the new environment before verifying
+func (exec *Executor) verifyCaseNoOverlapWithOthers(caseFacts ast.SpecFactPtrSlice, proveOr ast.StmtSlice, caseIndex int) (*glob.StmtRet, error) {
+	exec.NewEnv()
+	defer func() {
+		exec.deleteEnv()
+	}()
+
+	// If proveOr is provided, run it in this environment
+	if len(proveOr) > 0 {
+		for _, proofStmt := range proveOr {
+			execState := exec.Stmt(proofStmt)
+			if execState.IsNotTrue() {
+				return execState, fmt.Errorf("prove or: proof failed for case %d: %s", caseIndex, execState.String())
+			}
+		}
+	}
+
 	// Assume current case condition holds
-	caseFact := stmt.CaseByCaseFacts[caseIndex]
+	caseFact := caseFacts[caseIndex]
 	ret := exec.Env.NewFactWithCheckingNameDefined(caseFact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
@@ -498,13 +592,13 @@ func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCas
 
 	// Verify all other cases don't hold
 	ver := NewVerifier(exec.Env)
-	for j := range len(stmt.CaseByCaseFacts) {
+	for j := range len(caseFacts) {
 		if j == caseIndex {
 			continue
 		}
 
 		// Get not case j
-		otherCaseFact := stmt.CaseByCaseFacts[j]
+		otherCaseFact := caseFacts[j]
 		notOtherCaseFact := otherCaseFact.ReverseTrue()
 
 		// Verify not case j is true
@@ -517,28 +611,26 @@ func (exec *Executor) checkCaseNoOverlapWithOthers_ForHaveFn(stmt *ast.HaveFnCas
 		}
 	}
 
-	return exec.NewTrueStmtRet(stmt), nil
+	return exec.NewTrueStmtRet(caseFact), nil
 }
 
 func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
+	verifyProcessMsgs := []*glob.VerRet{}
+	defineMsgs := []string{}
 
 	shortRet := checkParamsInFnDefNotDefinedAndParamSetsDefined(exec, stmt.DefHeader.Params, stmt.DefHeader.ParamSets)
 	if shortRet.IsNotTrue() {
 		return glob.ErrRet(shortRet.String())
 	}
 
-	verifyProcessMsgs := []*glob.VerRet{}
-	defineMsgs := []string{}
-	// 返回值要是set
-	execState := exec.factStmt(ast.NewIsASetFact(stmt.RetSet, stmt.Line))
-	if execState.IsNotTrue() {
-		return glob.ErrRet(execState.String())
-	}
-	if execState.IsUnknown() {
-		return glob.ErrRet(fmt.Sprintf("return set %s must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.RetSet.String(), stmt.RetSet.String()))
-	}
 	// 验证每个case的返回值都符合fn的retSet
-	execState, err := exec.checkHaveFnEqualCaseByCaseStmt(stmt)
+	execState, err := exec.haveFnEqualCaseByCase_AllCasesCoverDomainAndNotOverlap(stmt)
+	if notOkExec(execState, err) {
+		return exec.AddStmtToStmtRet(execState, stmt)
+	}
+	verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
+
+	execState, err = exec.checkHaveFnEqualCaseByCaseStmt(stmt)
 	if notOkExec(execState, err) {
 		return exec.AddStmtToStmtRet(execState, stmt)
 	}
@@ -597,19 +689,11 @@ func (exec *Executor) checkHaveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseBy
 		verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
 	}
 
-	// 验证所有的case覆盖了整个domain
-	execState, err := exec.checkAtLeastOneCaseHolds(stmt)
-	if notOkExec(execState, err) {
-		return execState, err
-	}
-	verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
-	// 验证每个case没有overlap
-	execState, err = exec.checkCasesNoOverlap(stmt)
-	if notOkExec(execState, err) {
-		return execState, err
-	}
-	verifyProcessMsgs = append(verifyProcessMsgs, execState.VerifyProcess...)
 	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs), nil
+}
+
+func (exec *Executor) haveFnEqualCaseByCase_AllCasesCoverDomainAndNotOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
+	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.ProveCases, stmt.Line)
 }
 
 func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (*glob.StmtRet, error) {
@@ -626,17 +710,33 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 		}
 	}
 
-	// 假设case的条件成立
+	// caseIndex 处的 obj 确实已经都存在了
+	ver := NewVerifier(exec.Env)
+	verRet := ver.Env.LookupNamesInObj(stmt.CaseByCaseEqualTo[caseIndex], map[string]struct{}{})
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return glob.ErrRet(verRet.String()), fmt.Errorf("case %d: failed to lookup names in obj: %s", caseIndex, verRet.String())
+	}
+
+	// 默认 caseIndex 时 case fact 成立
 	caseFact := stmt.CaseByCaseFacts[caseIndex]
 	ret := exec.Env.NewFactWithCheckingNameDefined(caseFact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
 	}
 
+	// 执行 proof
+	if caseIndex < len(stmt.Proofs) {
+		for _, proofStmt := range stmt.Proofs[caseIndex] {
+			execState := exec.Stmt(proofStmt)
+			if execState.IsNotTrue() {
+				return execState, fmt.Errorf("case %d: proof failed: %s", caseIndex, execState.String())
+			}
+		}
+	}
+
 	// 在case成立的条件下，验证返回值在retSet中
 	equalTo := stmt.CaseByCaseEqualTo[caseIndex]
-	ver := NewVerifier(exec.Env)
-	verRet := ver.VerFactStmt(ast.NewInFactWithObj(equalTo, stmt.RetSet), Round0Msg())
+	verRet = exec.factStmt(ast.NewInFactWithObj(equalTo, stmt.RetSet))
 	if verRet.IsErr() {
 		return glob.NewEmptyStmtError(), fmt.Errorf("case %d: %s", caseIndex, verRet.String())
 	}
@@ -648,90 +748,11 @@ func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCa
 }
 
 func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
-	exec.NewEnv()
-	defer func() {
-		exec.deleteEnv()
-	}()
-
-	// 为每个参数定义变量
-	for i := range len(stmt.DefHeader.Params) {
-		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.DefHeader.Params[i]}, []ast.Obj{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
-		if execState.IsNotTrue() {
-			return execState, fmt.Errorf(execState.String())
-		}
-	}
-
-	// 创建 or fact: case1 or case2 or ... or caseN
-	orFact := ast.NewOrStmt(stmt.CaseByCaseFacts, stmt.Line)
-
-	// 验证 or fact 为 true（即所有 case 覆盖了整个 domain）
-	ver := NewVerifier(exec.Env)
-	verRet := ver.VerFactStmt(orFact, Round0Msg())
-	if verRet.IsErr() {
-		return glob.NewEmptyStmtError(), fmt.Errorf("failed to verify that all cases cover the domain: %s", verRet.String())
-	}
-	if verRet.IsUnknown() {
-		return glob.NewEmptyStmtError(), fmt.Errorf("all cases must cover the entire domain, i.e., %s must be true, but it is unknown", orFact)
-	}
-
-	return exec.NewTrueStmtRet(stmt), nil
+	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.ProveCases, stmt.Line)
 }
 
 func (exec *Executor) checkCasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
-	// 对于每个 case i，验证在 case i 成立的条件下，其他所有 case 都不成立
-	for i := range len(stmt.CaseByCaseFacts) {
-		execState, err := exec.checkCaseNoOverlapWithOthers(stmt, i)
-		if notOkExec(execState, err) {
-			return execState, err
-		}
-	}
-
-	return exec.NewTrueStmtRet(stmt), nil
-}
-
-func (exec *Executor) checkCaseNoOverlapWithOthers(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) (*glob.StmtRet, error) {
-	exec.NewEnv()
-	defer func() {
-		exec.deleteEnv()
-	}()
-
-	// 为每个参数定义变量
-	for i := range len(stmt.DefHeader.Params) {
-		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.DefHeader.Params[i]}, []ast.Obj{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
-		if execState.IsNotTrue() {
-			return execState, fmt.Errorf(execState.String())
-		}
-	}
-
-	// 假设当前 case 的条件成立
-	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	ret := exec.Env.NewFactWithCheckingNameDefined(caseFact)
-	if ret.IsErr() {
-		return glob.ErrRet(ret.String()), fmt.Errorf("case %d: failed to add case fact: %s", caseIndex, ret.String())
-	}
-
-	// 验证其他所有 case 都不成立
-	ver := NewVerifier(exec.Env)
-	for j := range len(stmt.CaseByCaseFacts) {
-		if j == caseIndex {
-			continue
-		}
-
-		// 获取 not case j
-		otherCaseFact := stmt.CaseByCaseFacts[j]
-		notOtherCaseFact := otherCaseFact.ReverseTrue()
-
-		// 验证 not case j 为 true
-		verRet := ver.VerFactStmt(notOtherCaseFact, Round0Msg())
-		if verRet.IsErr() {
-			return glob.NewEmptyStmtError(), fmt.Errorf("case %d and case %d overlap: failed to verify that not %s: %s", caseIndex, j, otherCaseFact, verRet.String())
-		}
-		if verRet.IsUnknown() {
-			return glob.NewEmptyStmtError(), fmt.Errorf("case %d and case %d may overlap: when %s is true, %s must be false, but it is unknown", caseIndex, j, caseFact, otherCaseFact)
-		}
-	}
-
-	return exec.NewTrueStmtRet(stmt), nil
+	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.ProveCases, stmt.Line)
 }
 
 func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) *glob.StmtRet {

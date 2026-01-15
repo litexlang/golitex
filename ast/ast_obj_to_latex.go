@@ -85,3 +85,11 @@ func isSpecialLatexSymbol_Process(f *FnObj) (bool, string) {
 func (f *ProveExistStmt) ToLatexString() string {
 	return f.String()
 }
+
+func (f *EqualSetStmt) ToLatexString() string {
+	return f.String()
+}
+
+func (f *WitnessNonemptyStmt) ToLatexString() string {
+	return f.String()
+}

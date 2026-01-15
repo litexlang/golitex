@@ -510,15 +510,27 @@ func (stmt *ProveCaseByCaseStmt) String() string {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(thenFact.String(), 1))
 		builder.WriteByte('\n')
 	}
-	for _, proof := range stmt.Proofs {
+	for i, proof := range stmt.Proofs {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordCase, 1))
+		builder.WriteString(" ")
+		builder.WriteString(stmt.CaseFacts[i].String())
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
 		for _, fact := range proof {
 			builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 2))
 			builder.WriteByte('\n')
 		}
+	}
+	if len(stmt.ProveCases) > 0 {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+		builder.WriteString(" ")
+		builder.WriteString(glob.KeywordCases)
+		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
+		for _, proofStmt := range stmt.ProveCases {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 2))
+			builder.WriteByte('\n')
+		}
 	}
 	return strings.TrimSuffix(builder.String(), "\n")
 }
@@ -539,7 +551,7 @@ func (stmt *KnowInferStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(StrObjSetPairs(stmt.Params, stmt.ParamSets))
 	builder.WriteString(":\n")
-	
+
 	if len(stmt.DomFacts) > 0 {
 		domFactStrSlice := make([]string, len(stmt.DomFacts))
 		for i := range len(stmt.DomFacts) {
@@ -550,7 +562,7 @@ func (stmt *KnowInferStmt) String() string {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents("=>:", 1))
 		builder.WriteByte('\n')
 	}
-	
+
 	thenFactStrSlice := make([]string, len(stmt.ThenFacts))
 	for i := range len(stmt.ThenFacts) {
 		if len(stmt.DomFacts) > 0 {
@@ -560,7 +572,7 @@ func (stmt *KnowInferStmt) String() string {
 		}
 	}
 	builder.WriteString(strings.Join(thenFactStrSlice, "\n"))
-	
+
 	if len(stmt.IfFacts) > 0 {
 		builder.WriteByte('\n')
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents("if:", 1))
@@ -571,7 +583,7 @@ func (stmt *KnowInferStmt) String() string {
 		}
 		builder.WriteString(strings.Join(ifFactStrSlice, "\n"))
 	}
-	
+
 	return builder.String()
 }
 
@@ -893,7 +905,15 @@ func (stmt *HaveFnEqualStmt) String() string {
 	builder.WriteString(glob.KeySymbolEqual)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.EqualTo.String())
-
+	if len(stmt.Proofs) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+		for _, proof := range stmt.Proofs {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+			builder.WriteByte('\n')
+		}
+		return strings.TrimSuffix(builder.String(), "\n")
+	}
 	return builder.String()
 }
 
@@ -928,19 +948,31 @@ func (stmt *HaveFnCaseByCaseStmt) String() string {
 		builder.WriteString(" ")
 		builder.WriteString(stmt.CaseByCaseFacts[i].String())
 		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteByte('\n')
-		if i < len(stmt.Proofs) {
-			for _, proofStmt := range stmt.Proofs[i] {
-				builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 2))
-				builder.WriteByte('\n')
-			}
-		}
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordHave, 1))
 		builder.WriteString(" ")
 		if i < len(stmt.EqualToObjs) {
 			builder.WriteString(stmt.EqualToObjs[i].String())
 		}
+		if i < len(stmt.Proofs) && len(stmt.Proofs[i]) > 0 {
+			builder.WriteString(glob.KeySymbolColon)
+			builder.WriteByte('\n')
+			for _, proofStmt := range stmt.Proofs[i] {
+				builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 2))
+				builder.WriteByte('\n')
+			}
+		} else {
+			builder.WriteByte('\n')
+		}
+	}
+	if len(stmt.ProveCases) > 0 {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
+		builder.WriteString(" ")
+		builder.WriteString(glob.KeywordCases)
+		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
+		for _, proofStmt := range stmt.ProveCases {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 2))
+			builder.WriteByte('\n')
+		}
 	}
 	return strings.TrimSuffix(builder.String(), "\n")
 }
@@ -1407,7 +1439,28 @@ func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteString(" ")
 		builder.WriteString(stmt.CaseByCaseEqualTo[i].String())
+		if i < len(stmt.Proofs) && len(stmt.Proofs[i]) > 0 {
+			builder.WriteString(glob.KeySymbolColon)
+			builder.WriteByte('\n')
+			for _, proof := range stmt.Proofs[i] {
+				builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+				builder.WriteByte('\n')
+			}
+		} else {
+			builder.WriteByte('\n')
+		}
+	}
+	if len(stmt.ProveCases) > 0 {
+		builder.WriteString("    ")
+		builder.WriteString(glob.KeywordProve)
+		builder.WriteString(" ")
+		builder.WriteString(glob.KeywordCases)
+		builder.WriteString(glob.KeySymbolColon)
 		builder.WriteByte('\n')
+		for _, proofStmt := range stmt.ProveCases {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 1))
+			builder.WriteByte('\n')
+		}
 	}
 	return strings.TrimSpace(builder.String())
 }
@@ -1443,7 +1496,7 @@ func SetBuilderObjString(f *FnObj) string {
 
 func (stmt *ProveExistStmt) String() string {
 	var builder strings.Builder
-	builder.WriteString(glob.KeywordProveExist)
+	builder.WriteString(glob.KeywordWitness)
 	builder.WriteString(" ")
 
 	equalToSlice := make([]string, len(stmt.EqualTos))
@@ -1468,6 +1521,38 @@ func (stmt *ProveExistStmt) String() string {
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')
 
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+		builder.WriteByte('\n')
+	}
+	return builder.String()
+}
+
+func (stmt *EqualSetStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordEqualSet)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Left.String())
+	builder.WriteString(", ")
+	builder.WriteString(stmt.Right.String())
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for _, proof := range stmt.Proofs {
+		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+		builder.WriteByte('\n')
+	}
+	return builder.String()
+}
+
+func (stmt *WitnessNonemptyStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordWitnessNonempty)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.Obj.String())
+	builder.WriteString(" ")
+	builder.WriteString(stmt.ObjSet.String())
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
 	for _, proof := range stmt.Proofs {
 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
 		builder.WriteByte('\n')
