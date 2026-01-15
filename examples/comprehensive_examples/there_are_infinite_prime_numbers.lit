@@ -23,4 +23,4 @@ contra not $is_finite_set({y N_pos: $is_prime(y)}):
     have b N_pos st $is_prime_divisor(b, a)
     a % b = 1
     1 != 0
-    a % b != 0
+    impossible a % b != 0

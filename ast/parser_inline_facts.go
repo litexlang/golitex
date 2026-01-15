@@ -385,13 +385,13 @@ func (p *TbParser) inline_spec_or_fact_skip_terminator(tb *tokenBlock) (FactStmt
 	}
 }
 
-func (p *TbParser) inlineOrFact(tb *tokenBlock) (*OrStmt, error) {
-	firstFact, err := p.specFactStmt(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-	return p.inlineOrFactWithFirstFact(tb, firstFact)
-}
+// func (p *TbParser) inlineOrFact(tb *tokenBlock) (*OrStmt, error) {
+// 	firstFact, err := p.specFactStmt(tb)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
+// 	return p.inlineOrFactWithFirstFact(tb, firstFact)
+// }
 
 func (p *TbParser) inlineOrFactWithFirstFact(tb *tokenBlock, firstFact *SpecFactStmt) (*OrStmt, error) {
 	orFacts := []*SpecFactStmt{firstFact}

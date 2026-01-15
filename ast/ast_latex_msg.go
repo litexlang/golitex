@@ -330,6 +330,10 @@ func (f *ClaimProveStmt) ToLatexString() string {
 	return claimProveBodyToLatexString(f.ToCheckFact, f.Proofs, true)
 }
 
+func (f *ImpossibleStmt) ToLatexString() string {
+	panic("")
+}
+
 func (f *KnowFactStmt) ToLatexString() string {
 	var builder strings.Builder
 
@@ -486,20 +490,20 @@ func (s *InferStmt) ToLatexString() string {
 func (s *InferTemplateStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("\\text{imply} ")
-	
+
 	// Params
 	if len(s.Params) > 0 {
-		paramStrs := make([]string, len(s.Params))
+		paramStrings := make([]string, len(s.Params))
 		for i, param := range s.Params {
-			paramStrs[i] = param
+			paramStrings[i] = param
 			if i < len(s.ParamSets) {
-				paramStrs[i] += " " + s.ParamSets[i].ToLatexString()
+				paramStrings[i] += " " + s.ParamSets[i].ToLatexString()
 			}
 		}
-		builder.WriteString(strings.Join(paramStrs, ", "))
+		builder.WriteString(strings.Join(paramStrings, ", "))
 		builder.WriteString(": ")
 	}
-	
+
 	// DomFacts
 	domFactStrSlice := make([]string, len(s.DomFacts))
 	for i, fact := range s.DomFacts {
@@ -507,14 +511,14 @@ func (s *InferTemplateStmt) ToLatexString() string {
 	}
 	builder.WriteString(strings.Join(domFactStrSlice, ", "))
 	builder.WriteString(" \\Rightarrow ")
-	
+
 	// ThenFacts
 	thenFactStrSlice := make([]string, len(s.ThenFacts))
 	for i, fact := range s.ThenFacts {
 		thenFactStrSlice[i] = fact.ToLatexString()
 	}
 	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
-	
+
 	return builder.String()
 }
 

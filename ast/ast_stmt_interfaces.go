@@ -136,6 +136,8 @@ func (s *EqualSetStmt) stmt()                  {}
 func (s *EqualSetStmt) algoStmt()              {}
 func (s *WitnessNonemptyStmt) stmt()           {}
 func (s *WitnessNonemptyStmt) algoStmt()       {}
+func (s *ImpossibleStmt) stmt()                {}
+func (s *ImpossibleStmt) algoStmt()            {}
 func (s *DefLetStmt) GetLine() uint            { return s.Line }
 func (s *DefPropStmt) GetLine() uint           { return s.Line }
 func (s *LetFnStmt) GetLine() uint             { return s.Line }
@@ -194,7 +196,8 @@ func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint { return s.Line }
 func (s *HaveFnCaseByCaseStmt) GetLine() uint      { return s.Line }
 func (s *ProveExistStmt) GetLine() uint            { return s.Line }
 func (s *EqualSetStmt) GetLine() uint              { return s.Line }
-func (s *WitnessNonemptyStmt) GetLine() uint        { return s.Line }
+func (s *WitnessNonemptyStmt) GetLine() uint       { return s.Line }
+func (s *ImpossibleStmt) GetLine() uint            { return s.Line }
 
 func (s *DefLetStmt) SetLine(l uint)     { s.Line = l }
 func (s *DefPropStmt) SetLine(l uint)    { s.Line = l }
@@ -259,6 +262,7 @@ func (s *HaveFnCaseByCaseStmt) SetLine(l uint)      { s.Line = l }
 func (s *ProveExistStmt) SetLine(l uint)            { s.Line = l }
 func (s *EqualSetStmt) SetLine(l uint)              { s.Line = l }
 func (s *WitnessNonemptyStmt) SetLine(l uint)       { s.Line = l }
+func (s *ImpossibleStmt) SetLine(l uint)            { s.Line = l }
 
 type FactStmt interface {
 	factStmt()
@@ -271,7 +275,6 @@ type FactStmt interface {
 	GetLine() uint
 	algoStmt()
 	Instantiate(map[string]Obj) (Stmt, error)
-	proveAlgoReturnStmt()
 	SetLine(l uint)
 }
 

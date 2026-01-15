@@ -6,7 +6,7 @@ claim:
             i = i + 1
         x = x + 1
         x - x = x + 1 - x = 0 = 1
-        0 = 1
+        impossible 0 = 1
 
 for i range(1, 10):
     i > 0
