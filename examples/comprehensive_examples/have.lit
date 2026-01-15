@@ -109,3 +109,51 @@ prove:
     know forall x R: exist y R st $p(x, y) or exist y R st $q(x, y)
 
     exist y R st $p(1, y) or exist y R st $q(1, y)
+
+
+# Example 1: ProveCaseByCaseStmt with prove or:
+prove:
+    have x {1, 2, 3}
+
+    cases:
+        =>:
+            x = 1 or x = 2 or x = 3
+        case x = 1:
+            x = 1
+        case x = 2:
+            x = 2
+        case x = 3:
+            x = 3
+        prove cases:
+            x $in {1, 2, 3}
+            x = 1 or x = 2 or x = 3
+
+# Example 2: HaveFnEqualCaseByCaseStmt with prove or:
+prove:
+    have fn abs2(x Z) N =:
+        case x < 0: -x:
+            -x > 0
+            -x $in N
+        case x >= 0: x:
+            x >= 0
+            x $in N
+        prove cases:
+            x >= 0 or x < 0
+
+# Example 3: HaveFnCaseByCaseStmt with prove or:
+prove:
+    have fn:
+        sign(x Z) Z:
+            =>:
+                sign(x) = 1 or sign(x) = -1 or sign(x) = 0
+        case x > 0: 1:
+            x > 0
+            1 = 1
+        case x < 0: -1:
+            x < 0
+            -1 = -1
+        case x = 0: 0:
+            x = 0
+            0 = 0
+        prove cases:
+            x = 0 or x >0 or x < 0

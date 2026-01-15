@@ -1025,4 +1025,27 @@ know:
 
 know:
 	forall x set: not $is_nonempty_set(x) => x = {}
+
+know:
+	forall x, y Z: x < y => x + 1 <= y
+	forall x, y Z: x > y => x >= y + 1
+
+let fn floor(x R) Z
+let fn ceil(x R) Z
+let fn round(x R) Z
+
+know:
+	forall x R => x <= ceil(x)
+	forall x R, y Z: x <= y => ceil(x) <= y
+	forall x R => floor(x) <= x
+	forall x R, y Z: y <= x => y <= floor(x)
+	forall x R => ceil(x) - floor(x) = 1
+	forall x R:
+		x - floor(x) < 0.5
+		=>:
+			round(x) = x
+	forall x R:
+		x - floor(x) >= 0.5
+		=>:
+			round(x) = ceil(x)
 `
