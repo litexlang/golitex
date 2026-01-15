@@ -63,6 +63,18 @@ func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) *glob.ShortRet {
 		return shortRet
 	}
 
+	// 处理 x + y = z 时，让 x = z - y 和 y = z - x 自动成立
+	shortRet = ie.trueEqualFactByLeftIsXAddYRightIsZ(fact.Params[0], fact.Params[1])
+	if shortRet.IsTrue() || shortRet.IsErr() {
+		return shortRet
+	}
+
+	// 处理 z = x + y 时，让 x = z - y 和 y = z - x 自动成立
+	shortRet = ie.trueEqualFactByLeftIsXAddYRightIsZ(fact.Params[1], fact.Params[0])
+	if shortRet.IsTrue() || shortRet.IsErr() {
+		return shortRet
+	}
+
 	// // 如果是 a = b / c 的情况，那就 a * c = b, b * c = 0 自动成立
 	// ret = ie.trueEqualFactByFraction(fact.Params[0], fact.Params[1])
 	// if ret.IsErr() {
@@ -620,4 +632,65 @@ func (ie *InferEngine) trueEqualFactByLeftIsXDivYRightIsZ(left ast.Obj, right as
 		return glob.NewEmptyShortUnknownRet()
 	}
 	return glob.NewShortRet(glob.StmtRetTypeTrue, []string{equalFact.String(), equalFact2.String()})
+}
+
+// trueEqualFactByLeftIsXAddYRightIsZ handles the case where x + y = z => x = z - y and y = z - x
+func (ie *InferEngine) trueEqualFactByLeftIsXAddYRightIsZ(left ast.Obj, right ast.Obj) *glob.ShortRet {
+	// 检查 left 是否是 x + y 的形式
+	leftFn, leftIsFn := left.(*ast.FnObj)
+	if !leftIsFn || len(leftFn.Params) != 2 {
+		return glob.NewEmptyShortUnknownRet()
+	}
+
+	leftHead, leftHeadIsAtom := leftFn.FnHead.(ast.Atom)
+	if !leftHeadIsAtom {
+		return glob.NewEmptyShortUnknownRet()
+	}
+
+	leftOp := string(leftHead)
+	if leftOp != glob.KeySymbolPlus {
+		return glob.NewEmptyShortUnknownRet()
+	}
+
+	// 检查 right 是否是单个对象（不是加法表达式）
+	// 如果 right 也是加法，则不应该处理（避免与 trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ 冲突）
+	rightFn, rightIsFn := right.(*ast.FnObj)
+	if rightIsFn {
+		rightHead, rightHeadIsAtom := rightFn.FnHead.(ast.Atom)
+		if rightHeadIsAtom && string(rightHead) == glob.KeySymbolPlus {
+			// right 也是加法，不处理
+			return glob.NewEmptyShortUnknownRet()
+		}
+	}
+
+	// x + y = z => x = z - y and y = z - x
+	x := leftFn.Params[0]
+	y := leftFn.Params[1]
+	z := right
+
+	inferMsgs := []string{}
+
+	// 创建 z - y
+	subtractObj1 := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{z, y})
+
+	// 创建 x = z - y 的事实
+	equalFact1 := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{x, subtractObj1}, glob.BuiltinLine0)
+	ret := ie.EnvMgr.storeTrueEqualInEqualMemNoInfer(equalFact1)
+	if ret.IsErr() {
+		return glob.NewEmptyShortUnknownRet()
+	}
+	inferMsgs = append(inferMsgs, equalFact1.String())
+
+	// 创建 z - x
+	subtractObj2 := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{z, x})
+
+	// 创建 y = z - x 的事实
+	equalFact2 := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, subtractObj2}, glob.BuiltinLine0)
+	ret2 := ie.EnvMgr.storeTrueEqualInEqualMemNoInfer(equalFact2)
+	if ret2.IsErr() {
+		return glob.NewEmptyShortUnknownRet()
+	}
+	inferMsgs = append(inferMsgs, equalFact2.String())
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
 }
