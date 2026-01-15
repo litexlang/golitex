@@ -10,7 +10,7 @@ contra not sqrt(2) $in Q:
         2 * n^2 = 2^2 * k^2
         2 $div n^2    
     gcd(m, n) $dvd 2
-    1 $dvd 2
+    impossible 1 $dvd 2
 
 prop dvd(x, y Z):
     dom:

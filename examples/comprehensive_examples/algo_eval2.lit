@@ -16,7 +16,7 @@ algo f(x):
             contra:
                 $p(x)
                 x > 2
-                not x <= 2
+                impossible not x <= 2
         return 0
 
 have a, b R = 3, -1

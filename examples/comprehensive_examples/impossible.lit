@@ -7,3 +7,4 @@ cases x = 2:
         x < 0
         impossible x > 0
     case x = 2
+

@@ -29,6 +29,6 @@ contra not sqrt(2) $in Q:
     y ^ 2 = 2 * z ^ 2 => 2 $dvd y ^ 2
     2 $dvd y
     2 $dvd gcd(x, y)
-    2 $dvd 1
+    impossible 2 $dvd 1
 
 

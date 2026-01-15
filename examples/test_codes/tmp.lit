@@ -1,2 +1,21 @@
-let x R: x + 1 = 81
-x = 80
+prove forall x, y set: x != y => exist a x st not a $in y or exist a y st not a $in x:
+    contra exist a x st not a $in y or exist a y st not a $in x:
+        not exist a x st not a $in y
+        forall a x: a $in y
+        not exist a y st not a $in x
+        forall a y: a $in x
+        equal_set x, y
+        impossible x = y
+
+prove forall x, y set: not $is_nonempty_set(x), not $is_nonempty_set(y) => x = y:
+    contra x = y:
+        exist a x st not a $in y or exist a y st not a $in x
+        cases $is_nonempty_set(x) or $is_nonempty_set(y):
+            case exist a x st not a $in y:
+                have a x st not a $in y
+                witness_nonempty a x
+            case exist a y st not a $in x:
+                have a y st not a $in x
+                witness_nonempty a y
+        impossible $is_nonempty_set(x) or $is_nonempty_set(y)
+
