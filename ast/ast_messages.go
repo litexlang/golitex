@@ -264,7 +264,7 @@ func (f *ClaimProveStmt) String() string {
 }
 
 func (f *ImpossibleStmt) String() string {
-	return ClaimProve_ClaimProveByContradiction(glob.KeywordImpossible, f.Fact, f.Proofs)
+	return fmt.Sprintf("%s %s", glob.KeywordImpossible, f.Fact.String())
 }
 
 func ClaimProve_ClaimProveByContradiction(kw string, toCheckFact FactStmt, proofs []Stmt) string {

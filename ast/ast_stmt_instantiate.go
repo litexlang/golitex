@@ -338,11 +338,7 @@ func (stmt *ImpossibleStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	newProofs, err := stmt.Proofs.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewImpossibleStmt(newFact.(*SpecFactStmt), newProofs, stmt.Line), nil
+	return NewImpossibleStmt(newFact.(*SpecFactStmt), stmt.Line), nil
 }
 
 func (stmt *ClaimProveByContradictionStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
