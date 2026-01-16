@@ -1062,4 +1062,18 @@ know:
 
 	forall x, y R: 0 < y => x < x + y, x <= x + y
 	forall x, y R: 0 <= y => x <= x + y
+
+know forall a, b, c R: b > c, a >= 0 => a + b > c
+know forall a, b, c R: b >= c, a >= 0 => a + b >= c
+know forall a, b, c R: b > c, a > 0 => a + b > c
+know forall a, b, c R: b < c, a <= 0 => a + b < c
+know forall a, b, c R: b <= c, a <= 0 => a + b <= c
+know forall a, b, c R: b < c, a < 0 => a + b < c
+know forall a, b, c R: b > c, a >= 0 => b + a > c
+know forall a, b, c R: b > c, a >= 0 => a + b >= c
+know forall a, b, c R: b > c, a >= 0 => b - a > c - a or a = 0
+know forall a, b, c R: b > c, a > 0 => a * b > a * c
+know forall a, b, c R: b >= c, a > 0 => a * b >= a * c
+know forall a, b, c R: b > c, a < 0 => a * b < a * c
+know forall a, b, c R: b >= c, a < 0 => a * b <= a * c
 `
