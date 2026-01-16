@@ -53,7 +53,7 @@ func (envMgr *EnvMgr) GenerateUndeclaredRandomName_AndNotInMap(m map[string]stru
 }
 
 func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.AnonymousFn, *glob.ShortRet) {
-	if objFnTypeToFnTStruct, ok := ast.AnonymousFnToInstFnTemplate(fnTName); ok {
+	if objFnTypeToFnTStruct, ok := envMgr.AnonymousFnToInstFnTemplate(fnTName); ok {
 		return objFnTypeToFnTStruct, glob.NewEmptyShortTrueRet()
 	} else {
 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
@@ -562,4 +562,18 @@ func (ie *InferEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, deri
 	}
 	*derivedFacts = append(*derivedFacts, fact.String())
 	return glob.NewEmptyShortTrueRet()
+}
+
+func (envMgr *EnvMgr) AnonymousFnToInstFnTemplate(objFnTypeT *ast.FnObj) (*ast.AnonymousFn, bool) {
+	ok, paramSets, retSet := objFnTypeT.GetParamSetsAndRetSetOfAnonymousFn(objFnTypeT)
+	if !ok {
+		return nil, false
+	}
+
+	randomParams := []string{}
+	for range len(paramSets) {
+		randomParams = append(randomParams, envMgr.GenerateUndeclaredRandomName())
+	}
+
+	return ast.NewFnTStruct(randomParams, paramSets, retSet, []ast.FactStmt{}, []ast.FactStmt{}, glob.BuiltinLine0), true
 }
