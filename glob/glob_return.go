@@ -109,7 +109,7 @@ func (m *StmtRet) String() string {
 		builder.WriteString("\n\n")
 	}
 
-	if len(m.Error) > 0 {
+	if m.IsErr() {
 		if m.Line != 0 {
 			builder.WriteString(fmt.Sprintf("*** line %d: error ***\n\n", m.Line))
 		} else {
@@ -117,7 +117,7 @@ func (m *StmtRet) String() string {
 		}
 		builder.WriteString(strings.Join(m.Error, "\n"))
 		builder.WriteString("\n\n")
-	} else if len(m.Unknown) > 0 {
+	} else if m.IsUnknown() {
 		if m.Line != 0 {
 			builder.WriteString(fmt.Sprintf("*** line %d: unknown ***\n\n", m.Line))
 		} else {

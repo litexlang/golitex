@@ -1069,4 +1069,19 @@ know forall a, b, c R: b > c, a > 0 => a + b > c
 know forall a, b, c R: b < c, a <= 0 => a + b < c
 know forall a, b, c R: b <= c, a <= 0 => a + b <= c
 know forall a, b, c R: b < c, a < 0 => a + b < c
+
+know:
+	forall s1, s2 finite_set:
+		forall x s2:
+			x $in s1
+		<=>:
+			count(set_minus(s1, s2)) = count(s1) - count(s2)
+
+# the followings can be proved by induction, but I put them here for convenience
+know forall x, y Z: x <= y => count(range(x, y)) = y - x
+know forall x, y Z: x <= y => count(closed_range(x, y)) = y - x + 1
+know forall s1, s2 finite_set: count(s1) = count(s2) <=> exist z fn(s1)s2 st $is_bijective_fn(s1, s2, z)
+know forall s1, s2 finite_set, f fn(s1)s2: count(s1) = count(s2) => $is_injective_fn(s1, s2, f) <=> $is_bijective_fn(s1, s2, f)
+
+know forall x finite_set, y set: set_minus(x, y) $is_finite_set
 `
