@@ -243,7 +243,7 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) *glob.StmtRet {
 	for _, curStmt := range proof {
 		execState := exec.Stmt(curStmt)
 		if execState.IsNotTrue() {
-			return execState.AddError(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
+			return execState.AddError(fmt.Sprintf("failed :( line %d\n", curStmt.GetLine()))
 		}
 		innerExecRets = append(innerExecRets, execState)
 	}
@@ -290,13 +290,12 @@ func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) *glob.S
 	}
 
 	// emit then fact
-	execState = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
-	if execState.IsNotTrue() {
-		return execState
-	}
-
-	for _, fact := range stmt.ThenFacts {
-		newFactsMsgs = append(newFactsMsgs, fact.String())
+	for _, thenFact := range stmt.ThenFacts {
+		ret := exec.Env.NewFactWithCheckingNameDefined(thenFact)
+		if ret.IsErr() {
+			return glob.ErrRet(ret.String())
+		}
+		newFactsMsgs = append(newFactsMsgs, thenFact.String())
 	}
 
 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerExecRetMsgs).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactsMsgs)
