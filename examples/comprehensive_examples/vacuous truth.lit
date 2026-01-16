@@ -1,0 +1,6 @@
+prop p(x N)
+
+# by contra, we can prove anything here when the condition of the forall fact is impossible: $p(i) and not $p(i) can never be true at the same time.
+prove forall i N: $p(i), not $p(i) => 1 = 0:
+    contra 1 = 0:
+        impossible $p(i)
