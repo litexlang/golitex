@@ -112,3 +112,4 @@ have fn:
         f(n+1) = f(n) * (n+1)
         forall: n = 0 => f(n) = 1
     = f(n)
+
