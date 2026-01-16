@@ -1008,7 +1008,9 @@ know:
         =>:
             exist z R st $is_min(z, s)
 
-know forall x Z: x >= 0 => x $in N
+know:
+	forall x Z: x >= 0 => x $in N
+	forall i N: 0 <= i, i >= 0
 
 know:
 	forall x Z, y N_pos: x^y $in Z
@@ -1048,4 +1050,16 @@ know:
 		x - floor(x) >= 0.5
 		=>:
 			round(x) = ceil(x)
+
+know:
+	forall x, y Z: closed_range(x, y) = {t Z: x <= t, t <= y}
+	forall x, y Z: range(x, y) = {t Z: x <= t, t < y}
+
+	forall x, y Z: x < y + 1 => x <= y
+	forall x, y Z: x > y - 1 => x >= y
+	forall x, y Z: x <= y - 1 => x < y
+	forall x, y Z: x >= y + 1 => x > y
+
+	forall x, y R: 0 < y => x < x + y, x <= x + y
+	forall x, y R: 0 <= y => x <= x + y
 `

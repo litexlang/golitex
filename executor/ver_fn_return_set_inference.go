@@ -93,7 +93,7 @@ func (ver *Verifier) parasSatisfyFnReq(fnObj *ast.FnObj, state *VerState) *glob.
 }
 
 func (ver *Verifier) GetInstFnSet_CheckFnSetParamsReq(fnTName *ast.FnObj, state *VerState) (*ast.AnonymousFn, error) {
-	if FnObjTypeToFnTStruct, ok := ast.AnonymousFnToInstFnTemplate(fnTName); ok {
+	if FnObjTypeToFnTStruct, ok := ver.Env.AnonymousFnToInstFnTemplate(fnTName); ok {
 		return FnObjTypeToFnTStruct, nil
 	} else {
 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)

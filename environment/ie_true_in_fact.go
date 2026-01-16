@@ -54,6 +54,10 @@ func (ie *InferEngine) trueInFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 		return ret
 	}
 
+	// if fact.Params[1].String() == glob.KeywordNatural {
+	// 	return ie.trueInFactByN(fact)
+	// }
+
 	if fact.Params[1].String() == glob.KeywordNPos {
 		return ie.trueInFactByNPos(fact)
 	}
@@ -115,7 +119,7 @@ func (ie *InferEngine) trueInFactByAnonymousFnSetObj(fact *ast.SpecFactStmt) *gl
 		return glob.NewEmptyShortUnknownRet()
 	}
 
-	fnTStruct, ok := ast.AnonymousFnToInstFnTemplate(fnFn)
+	fnTStruct, ok := ie.EnvMgr.AnonymousFnToInstFnTemplate(fnFn)
 	if !ok {
 		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("%s is not obj type fn template", fnFn.String())})
 	}
@@ -413,6 +417,25 @@ func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.SpecFactStmt) *g
 
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFactStrings)
 }
+
+// trueInFactByN handles inference for x $in N (natural numbers including 0)
+// Inference generates:
+//   - 0 <= x (non-negativity fact)
+// func (ie *InferEngine) trueInFactByN(fact *ast.SpecFactStmt) *glob.ShortRet {
+// 	derivedFacts := []string{}
+
+// 	obj := fact.Params[0]
+
+// 	// 0 <= x
+// 	greaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{ast.Atom("0"), obj}, glob.BuiltinLine0)
+// 	ret := ie.EnvMgr.storeSpecFactInMem(greaterEqualZeroFact)
+// 	if ret.IsErr() {
+// 		return glob.ErrStmtMsgToShortRet(ret)
+// 	}
+// 	derivedFacts = append(derivedFacts, greaterEqualZeroFact.String())
+
+// 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+// }
 
 // trueInFactByNPos handles inference for x $in NPos (positive natural numbers)
 // Inference generates:
