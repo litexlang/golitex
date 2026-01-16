@@ -29,26 +29,37 @@ prove $pigeon_hole_n(1):
 
 prove forall n N_pos: $pigeon_hole_n(n) => $pigeon_hole_n(n+1):
     prove forall s1, s2 finite_set, f fn(s1)s2: count(s2) = n+1, count(s1) = count(s2) + 1 => exist a s1, b s1 st $collide(s1, s2, f, a, b):
+        count(s1) = (n+1)+1
+        (n+1) + 1 > 0
         count(s1) > 0
+        n + 1 > 0
+        count(s2) > 0
+        $is_nonempty_set(s2)
         have t s1
         have s3 finite_set = set_minus(s1, {t})
         have s4 finite_set = set_minus(s2, {f(t)})
         count(s4) = count(s2) - count({f(t)}) = n + 1 - 1 = n
         count(s3) = count(s1) - count({t}) = count(s2) + 1 - 1 = count(s2) = n + 1 = count(s4) + 1
-        
-        prove forall x s3: f(x) $in s4:
-            x $in set_minus(s1, {t})
-            x $in s1
-            f(x) $in s2
-            x != t
-            contra f(x) = f(t):
+
+        cases exist a s1, b s1 st $collide(s1, s2, f, a, b):
+            case exist x s3 st $collide(s3, s4, f, x, t):
+                have x s3 st $collide(s3, s4, f, x, t)
+                x $in set_minus(s1, {t})
+                x $in s1
+                x != t
+                f(x) = f(t)
                 $collide(s1, s2, f, x, t)
-                impossible x = t
-            f(x) != f(t)
-            f(x) $in set_minus(s2, {f(t)})
+                witness x, t: a s1, b s1 st $collide(s1, s2, f, a, b)
+            case not exist x s3 st $collide(s3, s4, f, x, t):
+                know forall x s3: f(x) $in s4
+                f $in fn(s3)s4
+                have a s3, b s3 st $collide(s3, s4, f, a, b)
+                a $in s1
+                b $in s1
+                a != b
+                f(a) = f(b)
+                witness a, b: a s1, b s1 st $collide(s1, s2, f, a, b)
+
+            
         
-        have a s3, b s3 st $collide(s3, s4, f, a, b)
-        a $in s1, b $in s1
-        a != b
-        f(a) = f(b)
-        witness a, b: a s1, b s1 st $collide(s1, s2, f, a, b)
+        

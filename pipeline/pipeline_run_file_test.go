@@ -36,7 +36,6 @@ func Test_File(t *testing.T) {
 	_, retType, rets := RunFileInPkgMgr(absOfFile, "", pkgMgr, false)
 
 	for _, ret := range rets {
-
 		fmt.Println(glob.StringWithOptimizedNewline(ret.String()))
 	}
 
