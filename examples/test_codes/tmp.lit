@@ -1,2 +1,7 @@
-claim:
-    
+prove forall x N: x + 1 > 0:
+    cases x + 1 > 0:
+        case x + 1 > 0:
+            do_nothing
+        case x + 1 <= 0:
+            0 =1
+            impossible x + 1 > 0
