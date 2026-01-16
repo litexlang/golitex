@@ -54,15 +54,15 @@ func (exec *Executor) proveByInductionStmtProveProcess(stmt *ast.ProveByInductio
 		return glob.ErrRet(fmt.Sprintf("parameter %s is already defined. To avoid ambiguity, please use a different name for the parameter", stmt.Param))
 	}
 
-	// 定义 param 在 N_pos 里
-	defLetStmt := ast.NewDefLetStmt([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{}, stmt.Line)
-	execRet := exec.defLetStmt(defLetStmt)
-	if execRet.IsNotTrue() {
-		return execRet.AddError(fmt.Sprintf("failed to define parameter %s in N_pos", stmt.Param))
-	}
+	// // 定义 param 在 N_pos 里
+	// defLetStmt := ast.NewDefLetStmt([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{}, stmt.Line)
+	// execRet := exec.defLetStmt(defLetStmt)
+	// if execRet.IsNotTrue() {
+	// 	return execRet.AddError(fmt.Sprintf("failed to define parameter %s in N_pos", stmt.Param))
+	// }
 
 	// 运行整个 Proof
-	execRet = exec.execStmtsAtCurEnv(stmt.Proof)
+	execRet := exec.execStmtsAtCurEnv(stmt.Proof)
 	if execRet.IsNotTrue() {
 		return execRet.AddError(fmt.Sprintf("proof in induc failed"))
 	}
@@ -83,23 +83,24 @@ func (exec *Executor) proveByInductionStmtProveProcess(stmt *ast.ProveByInductio
 	}
 
 	// 证明 2：生成 uniFact: forall randomParam N_pos: stmt.Fact 的 param 替换成 randomParam => stmt.Fact 的 param 替换成 randomParam + 1
-	randomParam := exec.Env.GenerateUndeclaredRandomName()
+	// randomParam := exec.Env.GenerateUndeclaredRandomName()
 
 	// domFacts: stmt.Fact 的 param 替换成 randomParam
-	domFact, err := stmt.Fact.InstantiateFact(map[string]ast.Obj{stmt.Param: ast.Atom(randomParam)})
-	if err != nil {
-		return glob.ErrRet(fmt.Sprintf("failed to instantiate fact with randomParam: %s", err.Error()))
-	}
+	// domFact, err := stmt.Fact.InstantiateFact(map[string]ast.Obj{stmt.Param: ast.Atom(randomParam)})
+	// if err != nil {
+	// 	return glob.ErrRet(fmt.Sprintf("failed to instantiate fact with randomParam: %s", err.Error()))
+	// }
+	domFact := stmt.Fact
 
 	// thenFacts: stmt.Fact 的 param 替换成 randomParam + 1
-	randomParamPlus1 := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{ast.Atom(randomParam), ast.Atom("1")})
-	thenFact, err := stmt.Fact.InstantiateFact(map[string]ast.Obj{stmt.Param: randomParamPlus1})
+	paramPlus1 := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{ast.Atom(stmt.Param), ast.Atom("1")})
+	thenFact, err := stmt.Fact.InstantiateFact(map[string]ast.Obj{stmt.Param: paramPlus1})
 	if err != nil {
 		return glob.ErrRet(fmt.Sprintf("failed to instantiate fact with randomParam+1: %s", err.Error()))
 	}
 
 	// 创建 uniFact
-	inductionStep := ast.NewUniFact([]string{randomParam}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{domFact}, []ast.FactStmt{thenFact}, stmt.Line)
+	inductionStep := ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{domFact}, []ast.FactStmt{thenFact}, stmt.Line)
 
 	// 验证 induction step
 	verRet = ver.VerFactStmt(inductionStep, Round0NoMsg())
