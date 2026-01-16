@@ -56,7 +56,7 @@ func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, 
 		}
 
 		if verRet.IsTrue() {
-			msg := fmt.Sprintf("proved by replacing the symbols with their values:\n%s", newStmt.String())
+			msg := fmt.Sprintf("replacing the symbols with their values:\n%s", newStmt.String())
 			if state.WithMsg {
 				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
 			}

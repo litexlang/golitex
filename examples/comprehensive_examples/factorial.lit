@@ -113,3 +113,6 @@ have fn:
         forall: n = 0 => f(n) = 1
     = f(n)
 
+prove:
+    factorial(0) = 1
+    forall n N: n > 0 => factorial(n+1) = factorial(n) * (n+1)
