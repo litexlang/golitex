@@ -7,11 +7,11 @@ prop exist_truncated_factorial(n N):
 
 induc para N_pos: $exist_truncated_factorial(para):
     have fn fac1(z {x N: x <= 1}) N_pos =:
-            case z = 0: 1
-            case z = 1: 1
-            prove cases:
-                for i closed_range(0, 1):
-                    i = 0 or i = 1
+        case z = 0: 1
+        case z = 1: 1
+        prove cases:
+            for i closed_range(0, 1):
+                i = 0 or i = 1
 
     fac1(0) = 1
     prove forall i N: i < 1 => fac1(i+1) = fac1(i) * (i+1):
@@ -68,26 +68,13 @@ induc para N_pos: $exist_truncated_factorial(para):
 
         witness fac_next : f fn({x N: x <= n + 1}) N_pos st $is_factorial_fn(n+1, f)
 
-    
-prove forall n N: $exist_truncated_factorial(n):
-    cases $exist_truncated_factorial(n):
-        case n = 0:
-            have fn fac0(z {x N: x <= 0}) N_pos = 1
-            fac0(0) = 1
-            prove forall i N: i < 0 => fac0(i+1) = fac0(i) * (i+1):
-                contra fac0(i+1) = fac0(i) * (i+1):
-                    0 <= i
-                    impossible i < 0
-
-            witness fac0 : f fn({x N: x <= 0}) N_pos st $is_factorial_fn(0, f)
-        case n > 0:
-            n $in N_pos
-
 have fn:
     factorial(n N) N_pos:
         forall: n = 0 => factorial(n) = 1
         forall: factorial(n+1) = factorial(n) * (n+1)
     witness:
+        n + 1 > 0
+        n + 1 $in N_pos
         $exist_truncated_factorial(n+1)
         have f fn({x N: x <= n+1}) N_pos st $is_factorial_fn(n+1, f)
         n < n + 1
