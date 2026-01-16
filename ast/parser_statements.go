@@ -2944,9 +2944,6 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*SpecFactStmt, er
 			delete(p.FreeParams, param)
 		}
 	}()
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
 
 	pureSpecFact, err := p.specFactStmt(tb)
 	if err != nil {

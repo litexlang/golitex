@@ -17,17 +17,8 @@ package litex_global
 import (
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 )
-
-func GenerateNamesLikeExcelColumnNames(n int) []string {
-	names := make([]string, n)
-	for i := 1; i <= n; i++ {
-		names[i-1] = strconv.Itoa(i)
-	}
-	return names
-}
 
 // RemoveWindowsCarriage 移除 Windows 换行符中的回车符(\r)，将 CRLF 转换为 LF
 // 这样可以让 Windows 格式的代码在 Unix/Linux 系统上也能正常处理
