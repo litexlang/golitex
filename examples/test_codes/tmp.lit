@@ -1,21 +1,60 @@
-prove forall x, y set: x != y => exist a x st not a $in y or exist a y st not a $in x:
-    contra exist a x st not a $in y or exist a y st not a $in x:
-        not exist a x st not a $in y
-        forall a x: a $in y
-        not exist a y st not a $in x
-        forall a y: a $in x
-        equal_set x, y
-        impossible x = y
+prop is_factorial_fn(n N,f fn({x N: x <= n}) N_pos):
+    f(0) = 1
+    forall i N: i < n => f(i) = f(i - 1) * i
 
-prove forall x, y set: not $is_nonempty_set(x), not $is_nonempty_set(y) => x = y:
-    contra x = y:
-        exist a x st not a $in y or exist a y st not a $in x
-        cases $is_nonempty_set(x) or $is_nonempty_set(y):
-            case exist a x st not a $in y:
-                have a x st not a $in y
-                witness_nonempty a x
-            case exist a y st not a $in x:
-                have a y st not a $in x
-                witness_nonempty a y
-        impossible $is_nonempty_set(x) or $is_nonempty_set(y)
+prop exist_truncated_factorial(n N):
+    exist f fn({x N: x <= n}) N_pos st $is_factorial_fn(n, f)
 
+"""
+have fn fac0(z {x N: x <= 0}) N_pos = 1
+fac0(0) = 1
+for i range(0, 0):
+    fac0(i) = fac0(i - 1) * i
+prove forall i N: i < 0 => fac0(i) = fac0(i - 1) * i:
+    i >= 0
+    0 <= i, i < 0 => fac0(i) = fac0(i - 1) * i
+
+witness fac0 : f fn({x N: x <= 0}) N_pos st $is_factorial_fn(0, f)
+"""
+
+"""
+have fn fac1(z {x N: x <= 1}) N_pos =:
+    case z = 0: 1
+    case z = 1: 1
+    prove cases:
+        for i range(0, 1):
+            i = 0 or i = 1
+"""
+
+know $exist_truncated_factorial(1)
+
+prove forall n N_pos: $exist_truncated_factorial(n) => $exist_truncated_factorial(n+1):
+    have fac_n fn({x N: x <= n}) N_pos st $is_factorial_fn(n, fac_n)
+
+    know forall z {x N: x <= n + 1}: z <= n or z = n+ 1
+
+    prove forall z Z: z <= n => not z = n+1:
+        contra z = n + 1:
+            n <= n+1
+            impossible n < z
+
+"""
+    prove forall z Z: z = n + 1 => not z <= n:
+        cases not z <= n:
+            case not z <= n:
+                not z <= n
+            case z <= n:
+                n < n + 1
+                know z < n
+                impossible z <= n
+                """
+    
+    know forall z Z: z = n + 1 => not z <= n
+            
+    have fn fac_next(z {x N: x <= n + 1}) N_pos =:
+        case z <= n: fac_n(z)
+        case z = n+1: fac_n(n) * (n+1)
+
+    know $is_factorial_fn(n+1, fac_next)
+
+    witness fac_next : f fn({x N: x <= n + 1}) N_pos st $is_factorial_fn(n+1, f)

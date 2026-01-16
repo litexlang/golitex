@@ -1008,7 +1008,9 @@ know:
         =>:
             exist z R st $is_min(z, s)
 
-know forall x Z: x >= 0 => x $in N
+know:
+	forall x Z: x >= 0 => x $in N
+	forall i N: 0 <= i, i >= 0
 
 know:
 	forall x Z, y N_pos: x^y $in Z
