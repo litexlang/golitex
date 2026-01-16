@@ -1,15 +1,118 @@
-have factorial fn(N) N_pos
-know:
+prop is_factorial_fn(n N,f fn({x N: x <= n}) N_pos):
+    f(0) = 1
+    forall i N: i < n => f(i+1) = f(i) * (i+1)
+
+prop exist_truncated_factorial(n N):
+    exist f fn({x N: x <= n}) N_pos st $is_factorial_fn(n, f)
+
+have fn fac0(z {x N: x <= 0}) N_pos = 1
+fac0(0) = 1
+for i range(0, 0):
+    fac0(i+1) = fac0(i) * (i+1)
+prove forall i N: i < 0 => fac0(i+1) = fac0(i) * (i+1):
+    i >= 0
+    0 <= i, i < 0 => fac0(i+1) = fac0(i) * (i+1)
+
+witness fac0 : f fn({x N: x <= 0}) N_pos st $is_factorial_fn(0, f)
+
+prove forall z {x N: x <= 1}: z = 0 or z = 1:
+    0 <= z
+    z <= 1
+    z $in {x Z: 0 <= x, x <= 1}
+    closed_range(0, 1) = {x Z: 0 <= x, x <= 1}
+    for i closed_range(0, 1):
+        i = 0 or i = 1
+
+have fn fac1(z {x N: x <= 1}) N_pos =:
+    case z = 0: 1
+    case z = 1: 1
+    prove cases:
+        0 <= z
+        z <= 1
+        z $in {x Z: 0 <= x, x <= 1}
+        closed_range(0, 1) = {x Z: 0 <= x, x <= 1}
+        for i closed_range(0, 1):
+            i = 0 or i = 1
+
+fac1(0) = 1
+prove forall i N: i < 1 => fac1(i+1) = fac1(i) * (i+1):
+    0 <= i
+    i < 1
+    for j range(0,1):
+        j = 0
+    i = 0
+    fac1(i+1) = fac1(i) * (i+1)
+            
+witness fac1 : f fn({x N: x <= 1}) N_pos st $is_factorial_fn(1, f)
+$exist_truncated_factorial(1)
+
+prove forall n N_pos: $exist_truncated_factorial(n) => $exist_truncated_factorial(n+1):
+    have fac_n fn({x N: x <= n}) N_pos st $is_factorial_fn(n, fac_n)
+
+    prove forall z {x N: x <= n + 1}: z <= n or z = n+ 1:
+        cases z <= n or z = n+ 1:
+            case z < n + 1:
+                z <= n
+                do_nothing
+            case z = n+ 1:
+                do_nothing
+            case z > n + 1:
+                impossible z > n + 1
+
+    prove forall z Z: z <= n => not z = n+1:
+        contra z = n + 1:
+            n <= n+1
+            impossible n < z
+
+    prove forall z Z, m Z: z = m + 1 => not z <= m:
+        cases not z <= m:
+            case not z <= m:
+                do_nothing
+            case z <= m:
+                m < m + 1
+                impossible z <= m
+    
+    forall z Z: z = n + 1 => not z <= n
+            
+    have fn fac_next(z {x N: x <= n + 1}) N_pos =:
+        case z <= n: fac_n(z)
+        case z = n+1: fac_n(n) * (n+1)
+
+    0 <= n
+    fac_next(0) = fac_n(0) = 1
+    prove forall i N: i < n + 1=> fac_next(i+1) = fac_next(i) * (i+1):
+        i <= n
+        cases fac_next(i + 1) =fac_next(i) * (i+1):
+            case i < n:
+                i + 1 <= n
+                fac_next(i+1) = fac_n(i+1) = fac_n(i) * (i+1) = fac_next(i) * (i+1)
+            case i = n:
+                fac_next(i+1) = fac_next(n+1) = fac_n(n) * (n+1) = fac_next(i) * (i+1)
+
+
+    witness fac_next : f fn({x N: x <= n + 1}) N_pos st $is_factorial_fn(n+1, f)
+
+induc n N_pos: $exist_truncated_factorial(n):
+    do_nothing
+    
+prove forall n N: $exist_truncated_factorial(n):
+    cases $exist_truncated_factorial(n):
+        case n = 0
+        case n > 0:
+            n $in N_pos
+
+have fn:
+    factorial(n N) N_pos:
+        forall: n = 0 => factorial(n) = 1
+        forall: factorial(n+1) = factorial(n) * (n+1)
+    witness:
+        $exist_truncated_factorial(n+1)
+        have f fn({x N: x <= n+1}) N_pos st $is_factorial_fn(n+1, f)
+        n < n + 1
+        f(n+1) = f(n) * (n+1)
+        forall: n = 0 => f(n) = 1
+    = f(n)
+
+prove:
     factorial(0) = 1
-    factorial(1) = 1
-    forall n N: factorial(n) = factorial(n - 1) * n
-
-algo factorial(n):
-    if n = 0:
-        return 1
-    if n = 1:
-        return 1
-    return factorial(n - 1) * n
-
-eval factorial(10)
-factorial(10) = 3628800
+    forall n N: n > 0 => factorial(n+1) = factorial(n) * (n+1)
