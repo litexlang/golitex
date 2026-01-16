@@ -1069,11 +1069,4 @@ know forall a, b, c R: b > c, a > 0 => a + b > c
 know forall a, b, c R: b < c, a <= 0 => a + b < c
 know forall a, b, c R: b <= c, a <= 0 => a + b <= c
 know forall a, b, c R: b < c, a < 0 => a + b < c
-know forall a, b, c R: b > c, a >= 0 => b + a > c
-know forall a, b, c R: b > c, a >= 0 => a + b >= c
-know forall a, b, c R: b > c, a >= 0 => b - a > c - a or a = 0
-know forall a, b, c R: b > c, a > 0 => a * b > a * c
-know forall a, b, c R: b >= c, a > 0 => a * b >= a * c
-know forall a, b, c R: b > c, a < 0 => a * b < a * c
-know forall a, b, c R: b >= c, a < 0 => a * b <= a * c
 `
