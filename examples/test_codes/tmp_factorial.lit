@@ -103,12 +103,10 @@ prove forall n N: $exist_truncated_factorial(n):
 
 have fn:
     factorial(n N) N_pos:
-        forall: n = 0 => factorial(n) = 1
-        forall: factorial(n+1) = factorial(n) * (n+1)
+        factorial(0) = 1
+        factorial(n+1) = factorial(n) * (n+1)
     witness:
         $exist_truncated_factorial(n+1)
         have f fn({x N: x <= n+1}) N_pos st $is_factorial_fn(n+1, f)
-        n < n + 1
         f(n+1) = f(n) * (n+1)
-        forall: n = 0 => f(n) = 1
     = f(n)

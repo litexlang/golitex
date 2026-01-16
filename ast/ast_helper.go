@@ -315,15 +315,19 @@ func InstFacts(facts []FactStmt, uniMap map[string]Obj) ([]FactStmt, error) {
 	return newFacts, nil
 }
 
-func AnonymousFnToInstFnTemplate(objFnTypeT *FnObj) (*AnonymousFn, bool) {
-	ok, paramSets, retSet := objFnTypeT.GetParamSetsAndRetSetOfAnonymousFn(objFnTypeT)
-	if !ok {
-		return nil, false
-	}
+// func AnonymousFnToInstFnTemplate(objFnTypeT *FnObj) (*AnonymousFn, bool) {
+// 	ok, paramSets, retSet := objFnTypeT.GetParamSetsAndRetSetOfAnonymousFn(objFnTypeT)
+// 	if !ok {
+// 		return nil, false
+// 	}
 
-	excelNames := glob.GenerateNamesLikeExcelColumnNames(len(paramSets))
-	return NewFnTStruct(excelNames, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.BuiltinLine0), true
-}
+// 	randomParams := []string{}
+// 	for range len(paramSets) {
+// 		randomParams = append(randomParams, glob.RandomString(4))
+// 	}
+
+// 	return NewFnTStruct(randomParams, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.BuiltinLine0), true
+// }
 
 func UnknownFactMsg(fact FactStmt) string {
 	return fmt.Sprintf("%s\nis unknown\n", fact)

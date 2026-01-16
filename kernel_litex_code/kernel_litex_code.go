@@ -1050,4 +1050,16 @@ know:
 		x - floor(x) >= 0.5
 		=>:
 			round(x) = ceil(x)
+
+know:
+	forall x, y Z: closed_range(x, y) = {t Z: x <= t, t <= y}
+	forall x, y Z: range(x, y) = {t Z: x <= t, t < y}
+
+	forall x, y Z: x < y + 1 => x <= y
+	forall x, y Z: x > y - 1 => x >= y
+	forall x, y Z: x <= y - 1 => x < y
+	forall x, y Z: x >= y + 1 => x > y
+
+	forall x, y R: 0 < y => x < x + y, x <= x + y
+	forall x, y R: 0 <= y => x <= x + y
 `

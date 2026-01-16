@@ -119,7 +119,7 @@ func (ie *InferEngine) trueInFactByAnonymousFnSetObj(fact *ast.SpecFactStmt) *gl
 		return glob.NewEmptyShortUnknownRet()
 	}
 
-	fnTStruct, ok := ast.AnonymousFnToInstFnTemplate(fnFn)
+	fnTStruct, ok := ie.EnvMgr.AnonymousFnToInstFnTemplate(fnFn)
 	if !ok {
 		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("%s is not obj type fn template", fnFn.String())})
 	}
