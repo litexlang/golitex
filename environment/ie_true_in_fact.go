@@ -54,9 +54,9 @@ func (ie *InferEngine) trueInFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 		return ret
 	}
 
-	// if fact.Params[1].String() == glob.KeywordNatural {
-	// 	return ie.trueInFactByN(fact)
-	// }
+	if fact.Params[1].String() == glob.KeywordNatural {
+		return ie.trueInFactByN(fact)
+	}
 
 	if fact.Params[1].String() == glob.KeywordNPos {
 		return ie.trueInFactByNPos(fact)
@@ -979,6 +979,29 @@ func (ie *InferEngine) trueInFactInSetMinus(item ast.Obj, x ast.Obj, y ast.Obj) 
 		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	derivedFacts = append(derivedFacts, notInYFact.String())
+
+	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+}
+
+func (ie *InferEngine) trueInFactByN(fact *ast.SpecFactStmt) *glob.ShortRet {
+	derivedFacts := []string{}
+
+	obj := fact.Params[0]
+
+	// 0 <= x
+	lessEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{ast.Atom("0"), obj}, glob.BuiltinLine0)
+	ret := ie.EnvMgr.storeSpecFactInMem(lessEqualZeroFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+
+	// x >= 0
+	greaterEqualZeroFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
+	ret = ie.EnvMgr.storeSpecFactInMem(greaterEqualZeroFact)
+	if ret.IsErr() {
+		return glob.ErrStmtMsgToShortRet(ret)
+	}
+	derivedFacts = append(derivedFacts, greaterEqualZeroFact.String())
 
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
