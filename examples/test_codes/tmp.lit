@@ -1,7 +1,6 @@
-prove forall x N: x + 1 > 0:
-    cases x + 1 > 0:
-        case x + 1 > 0:
-            do_nothing
-        case x + 1 <= 0:
-            0 =1
-            impossible x + 1 > 0
+prove forall s1, s2 finite_set, f fn(s1)s2: count(s1) > count(s2) => not $is_injective_fn(s1, s2, f):
+    contra not $is_injective_fn(s1, s2, f):
+        witness f: f2 fn(s1)s2 st $is_injective_fn(s1, s2, f2)
+        impossible count(s1) = count(s2)
+
+
