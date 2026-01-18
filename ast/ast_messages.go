@@ -1498,7 +1498,26 @@ func SetBuilderObjString(f *FnObj) string {
 	return builder.String()
 }
 
-func (stmt *ProveExistStmt) String() string {
+func (stmt *WitnessShortStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordWitness)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.SpecFact.String())
+	
+	if len(stmt.Proofs) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+		
+		for _, proof := range stmt.Proofs {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+			builder.WriteByte('\n')
+		}
+	}
+	
+	return builder.String()
+}
+
+func (stmt *WitnessStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordWitness)
 	builder.WriteString(" ")

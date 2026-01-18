@@ -315,8 +315,12 @@ func NewProveImplicationStmt(specFact *SpecFactStmt, implicationFact FactStmtSli
 	return &ProveInferStmt{specFact, implicationFact, proof, line}
 }
 
-func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact *SpecFactStmt, proofs []Stmt, line uint) *ProveExistStmt {
-	return &ProveExistStmt{params, paramSets, equalTos, fact, proofs, line}
+func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact *SpecFactStmt, proofs []Stmt, line uint) *WitnessStmt {
+	return &WitnessStmt{params, paramSets, equalTos, fact, proofs, line}
+}
+
+func NewWitnessShortStmt(specFact *SpecFactStmt, proofs []Stmt, line uint) *WitnessShortStmt {
+	return &WitnessShortStmt{specFact, proofs, line}
 }
 
 func NewInferTemplateStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts []FactStmt, proof StmtSlice, line uint) *InferTemplateStmt {

@@ -1,6 +1,6 @@
 prop p(a N, b R):
     a > b
 
-know exist $p(a, b)
+witness $p(1, 0)
 
 exist $p(a, b)

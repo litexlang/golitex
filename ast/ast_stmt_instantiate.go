@@ -1139,7 +1139,25 @@ func InstantiateSetBuilderObjWithoutChangingParam(obj *FnObj, uniMap map[string]
 	return MakeSetBuilderObj(setBuilderStruct.Param, instParentSet, instFacts)
 }
 
-func (stmt *ProveExistStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+func (stmt *WitnessShortStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newSpecFact, err := stmt.SpecFact.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	newProofs := make(StmtSlice, len(stmt.Proofs))
+	for i, proof := range stmt.Proofs {
+		instProof, err := proof.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newProofs[i] = instProof
+	}
+
+	return NewWitnessShortStmt(newSpecFact.(*SpecFactStmt), newProofs, stmt.Line), nil
+}
+
+func (stmt *WitnessStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	panic("TODO: Implement ProveExistStmt Instantiate")
 }
 
