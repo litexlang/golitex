@@ -3,4 +3,14 @@ prove forall s1, s2 finite_set, f fn(s1)s2: count(s1) > count(s2) => not $is_inj
         witness f: f2 fn(s1)s2 st $is_injective_fn(s1, s2, f2)
         impossible count(s1) = count(s2)
 
+prop collide(s1 set, s2 nonempty_set, f fn(s1)s2, z1 s1, z2 s1):
+    z1 != z2
+    f(z1) = f(z2)
 
+prove forall s1, s2 finite_set, f fn(s1)s2: count(s1) > count(s2) => exist a s1, b s1 st $collide(s1, s2, f, a, b):
+    contra exist a s1, b s1 st $collide(s1, s2, f, a, b):
+        forall a s1, b s1: not $collide(s1, s2, f, a, b)
+        prove forall a s1, b s1: a != b => f(a) != f(b):
+            contra f(a) != f(b):
+                impossible $collide(s1, s2, f, a, b)
+        impossible $is_injective_fn(s1, s2, f)
