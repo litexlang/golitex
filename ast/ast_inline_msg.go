@@ -485,7 +485,11 @@ func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
 	return s.String()
 }
 
-func (s *ProveExistStmt) InlineString() string {
+func (s *WitnessShortStmt) InlineString() string {
+	return s.String()
+}
+
+func (s *WitnessStmt) InlineString() string {
 	return s.String()
 }
 
