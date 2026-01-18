@@ -10,43 +10,6 @@ import (
 func (exec *Executor) inferStmt(stmt *ast.InferStmt) *glob.StmtRet {
 	ver := NewVerifier(exec.Env)
 
-	// 检查涉及到的函数都OK了
-	for _, domFact := range stmt.DomFacts {
-		switch domFact.(type) {
-		case *ast.SpecFactStmt:
-			ret := ver.checkFnsReq(domFact.(*ast.SpecFactStmt), Round0Msg())
-			if ret.IsNotTrue() {
-				return ret.ToStmtRet()
-			}
-		case *ast.OrStmt:
-			for _, fact := range domFact.(*ast.OrStmt).Facts {
-				ret := ver.checkFnsReq(fact, Round0Msg())
-				if ret.IsNotTrue() {
-					return ret.ToStmtRet()
-				}
-			}
-		}
-	}
-
-	for _, thenFact := range stmt.ThenFacts {
-		switch thenFact.(type) {
-		case *ast.SpecFactStmt:
-			ret := ver.checkFnsReq(thenFact.(*ast.SpecFactStmt), Round0Msg())
-			if ret.IsNotTrue() {
-				return ret.ToStmtRet()
-			}
-		case *ast.OrStmt:
-			for _, fact := range thenFact.(*ast.OrStmt).Facts {
-				ret := ver.checkFnsReq(fact, Round0Msg())
-				if ret.IsNotTrue() {
-					return ret.ToStmtRet()
-				}
-			}
-		}
-	}
-
-	// check domFacts
-
 	for _, domFact := range stmt.DomFacts {
 		ret := exec.factStmt(domFact.(ast.FactStmt))
 		if ret.IsNotTrue() {
