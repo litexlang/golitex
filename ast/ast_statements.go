@@ -422,12 +422,19 @@ type HaveObjStStmt struct {
 	Line uint
 }
 
-type ProveExistStmt struct {
+type WitnessStmt struct {
 	ExistParams    StrSlice
 	ExistParamSets ObjSlice
 	EqualTos       ObjSlice
 	Fact           *SpecFactStmt
 	Proofs         StmtSlice
+
+	Line uint
+}
+
+type WitnessShortStmt struct {
+	SpecFact *SpecFactStmt
+	Proofs   StmtSlice
 
 	Line uint
 }
