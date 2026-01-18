@@ -2920,10 +2920,75 @@ func (p *TbParser) fact(tb *tokenBlock) (FactStmt, error) {
 	}
 }
 
+func (p *TbParser) skipDollarAtomParamsAsString(tb *tokenBlock) (Atom, []string, error) {
+	err := tb.header.skip(glob.KeySymbolDollar)
+	if err != nil {
+		return "", nil, err
+	}
+
+	propName, err := p.notNumberAtom(tb)
+	if err != nil {
+		return "", nil, err
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return "", nil, err
+	}
+
+	params := []string{}
+	for !tb.header.is(glob.KeySymbolRightBrace) {
+		param, err := tb.header.next()
+		if err != nil {
+			return "", nil, err
+		}
+		params = append(params, param)
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
+	}
+
+	err = tb.header.skip(glob.KeySymbolRightBrace)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return propName, params, nil
+}
+
 func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*SpecFactStmt, error) {
 	err := tb.header.skip(glob.KeywordExist)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
+	}
+
+	if tb.header.is(glob.KeySymbolDollar) {
+		propName, params, err := p.skipDollarAtomParamsAsString(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		paramSet := []Obj{}
+		for i := 0; i < len(params); i++ {
+			paramSet = append(paramSet, Atom(glob.KeywordSet))
+		}
+
+		paramAsObj := []Obj{}
+		for i := 0; i < len(params); i++ {
+			paramAsObj = append(paramAsObj, Atom(params[i]))
+		}
+
+		// params 互相不能相同
+		for i := 0; i < len(params); i++ {
+			for j := i + 1; j < len(params); j++ {
+				if params[i] == params[j] {
+					return nil, fmt.Errorf("params %s and %s are the same", params[i], params[j])
+				}
+			}
+		}
+
+		return NewExistStFact(TrueExist_St, propName, isTrue, params, paramSet, paramAsObj, tb.line), nil
 	}
 
 	// Parse parameters and parameter sets using param_paramSet_paramInSetFacts
@@ -2953,6 +3018,15 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*SpecFactStmt, er
 	// spec fact 必须是 pureFact
 	if !pureSpecFact.IsPureFact() {
 		return nil, fmt.Errorf("exist fact can not take exist fact, get %s", pureSpecFact)
+	}
+
+	// params 互相不能相同
+	for i := 0; i < len(existParams); i++ {
+		for j := i + 1; j < len(existParams); j++ {
+			if existParams[i] == existParams[j] {
+				return nil, fmt.Errorf("existParams %s and %s are the same", existParams[i], existParams[j])
+			}
+		}
 	}
 
 	if isTrue {
