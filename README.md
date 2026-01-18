@@ -26,8 +26,6 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
----
-
 [Litex](https://litexlang.com) is a simple open-source computer language for mathematical proofs. It aims to express mathematics as code with verified correctness while staying as close to natural language as possible, making it both rigorous and accessible. ([Star the repo!](https://github.com/litexlang/golitex))
 
 Formal code written in Litex is typically 2-10x simpler than traditional formal languages, and looks almost the same as how math is written in natural language, meaning Litex could be a game changer for both traditional math and frontier AI research.
@@ -81,21 +79,21 @@ Here is a thorough collection of comparison between Litex and Lean: [Litex vs Le
 
 ## How Litex Works
 
-_It’s best to do one thing really, really well._
+_Mathematics is nothing more than a game played according to certain simple rules with meaningless marks on a paper._
 
-_- Google, ten things we know to be true_
+_— David Hilbert_
 
----
+Litex achieves its simplicity by imitating how people reason and how mathematics works. Litex is based on set theory. It searches for known facts mechanically and effectively to prove new facts for you. The user no longer has to memorize and recall known facts and inference rules by hand. Each Litex statement has and only has some of the following 4 effects: define, verify, memorize and infer, which is printed out in the output, making the user easy to know how the proof process works.
 
-Litex achieves its simplicity by imitating how people reason and how mathematics works. *Litex is based on set theory. It searches for known facts mechanically and effectively to prove new facts for you. The user no longer has to memorize and recall known facts and inference rules by hand. Each Litex statement has and only has some of the following 4 effects: define, verify, memorize and infer, which is printed out in the output, making the user easy to know how the proof process works.* Even for 10-year-old beginners, Litex is straightforward to learn and use. Visit our [website](https://litexlang.com) for more details.
+Among the 4 effects, verification is the most important one. It is the core of Litex, or any other formal language. Litex uses `match and substitution` to verify the correctness of the statements. For example, when `forall x human => $intelligent(x)` is already stored in memory and `Jordan $in human` is also stored in memory, when the users type `$intelligent(Jordan)`, Litex will substitute `Jordan` with `x` in the statement `forall x human => $intelligent(x)` and check if the statement is true. If it is, the statement is verified.
+
+Even for 10-year-old beginners, Litex is straightforward to learn and use. Visit our [How Litex Works](https://litexlang.com/doc/How_Litex_Works/Introduction) for more details.
 
 ## Resources And Community
 
 _The best way to predict future is to create it._
 
 _-- Alan Kay_
-
----
 
 Litex is nothing without its community and technical ecosystem.
 
@@ -114,8 +112,6 @@ Resources for Litex users:
 _If I have seen further [than others], it is by standing on the shoulders of giants._
 
 _- Isaac Newton_
-
----
 
 Although Litex is a very pragmatic language which contains and only contains the proof methods, axioms, keywords, etc. that people need in their daily mathematical work—things that are often so taken for granted that people usually don't even notice them —- it is equally important to note that Litex indeed has gained great conceptual inspiration from the masters.
 
@@ -146,4 +142,4 @@ _- 樊振东在巴黎奥运会后接受采访时说_
 
 Hi, I’m Jiachen Shen, creator of Litex. It is so fortunate to receive tremendous help from friends and colleagues throughout this journey of designing, implementing, and growing Litex into a community. Without their support, Litex would not have had the chance to succeed.
 
-I am deeply grateful to Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Siqi Guo, Haoyang Shi, Chengyang Zhu, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong for their invaluable contributions. I am certain this list of special thanks will only grow longer in the future.
+I am deeply grateful to Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Siqi Guo, Haoyang Shi, Chengyang Zhu, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong, Lei Bai for their emotional support and insightful advice. I am certain this list of special thanks will only grow longer in the future.
