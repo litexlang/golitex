@@ -3944,13 +3944,23 @@ func (p *TbParser) witnessStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	equalTos := []Obj{}
-	var expectedPropName Atom = ""
-
-	// If witness starts with $, parse specFact and extract parameters
 	if tb.header.is(glob.KeySymbolDollar) {
 		return p.witnessShortStmt(tb)
+	}
 
+	equalTos := []Obj{}
+	for !tb.header.is(glob.KeySymbolColon) {
+		equalTo, err := p.Obj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		equalTos = append(equalTos, equalTo)
+
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		} else {
+			break
+		}
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -3971,13 +3981,6 @@ func (p *TbParser) witnessStmt(tb *tokenBlock) (Stmt, error) {
 	fact, err := p.specFactWithoutExist_WithoutNot(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
-	}
-
-	// If we parsed a specFact at the beginning, verify the final fact's propName matches
-	if expectedPropName != "" {
-		if fact.PropName != expectedPropName {
-			return nil, ErrInLine(fmt.Errorf("witness fact propName %s does not match initial specFact propName %s", fact.PropName, expectedPropName), tb)
-		}
 	}
 
 	if tb.header.ExceedEnd() {
