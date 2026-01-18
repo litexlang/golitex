@@ -40,7 +40,9 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 			ret, err = p.letDefObjStmt(tb)
 		}
 	case glob.KeywordHave:
-		if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
+		if tb.header.strAtCurIndexPlus(1) == glob.KeySymbolDollar {
+			ret, err = p.haveShortStmt(tb)
+		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColon {
 				ret, err = p.haveFnStmt(tb)
 			} else {
@@ -3993,6 +3995,25 @@ func (p *TbParser) witnessStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	return NewProveExistStmt(params, paramSets, equalTos, fact, proofs, tb.line), nil
+}
+
+func (p *TbParser) haveShortStmt(tb *tokenBlock) (*HaveShortStmt, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Parse specFact like $p(a, b)
+	specFact, err := p.pureFuncSpecFact(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	if !tb.header.ExceedEnd() {
+		return nil, ErrInLine(fmt.Errorf("unexpected token after have $p(...), expected end of statement"), tb)
+	}
+
+	return NewHaveShortStmt(specFact, tb.line), nil
 }
 
 func (p *TbParser) witnessShortStmt(tb *tokenBlock) (*WitnessShortStmt, error) {

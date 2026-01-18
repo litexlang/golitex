@@ -4,3 +4,7 @@ prop p(a N, b R):
 witness $p(1, 0)
 
 exist $p(a, b)
+
+have $p(a, b)
+
+$p(a, b)
