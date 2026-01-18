@@ -20,23 +20,6 @@
 
 </div>
 
-## What is Litex?
-
-_Simplicity is the ultimate sophistication._
-
-_– Leonardo da Vinci_
-
----
-
-[Litex](https://litexlang.com) is a simple open-source computer language for mathematical proofs. It aims to express mathematics as code while staying as close to natural language as possible, making it both rigorous and accessible. ([Star the repo!](https://github.com/litexlang/golitex))
-
-With just one to two hours of learning the fundamentals, you can write code that solves interesting mathematical problems with verified correctness! Formal code written in Litex is typically 2-10x simpler than traditional formal languages, and looks almost the same as how math is written in natural language.
-
-Litex achieves its simplicity by imitating how people reason and how mathematics works. *Litex is based on set theory. It searches for known facts mechanically and effectively to prove new facts for you. The user no longer has to memorize and recall known facts and inference rules by hand. Each Litex statement has and only has some of the following 4 effects: define, verify, memorize and infer, which is printed out in the output, making the user easy to know how the proof process works.* Even for 10-year-old beginners, Litex is straightforward to learn and use. 
-
-In an era where AI For math will surely reshape everything in math, Litex offers a different way: instead of just focusing on the model performance, Litex promotes AI for math from a more fundamental perspective by addressing the core question of "what is mathematics" at its essence. By establishing a natural and rigorous representation of mathematical concepts, Litex provides a solid foundation for AI systems to understand and reason about mathematics, enabling them to work with mathematical knowledge in a way that aligns with how humans naturally think about math. 
-
-[Official Documentation](https://litexlang.com) is our website. Read [Tutorial](https://litexlang.com/doc/Tutorial/Introduction), [How Litex Works](https://litexlang.com/doc/How_Litex_Works/Introduction) for more details. [Hugging Face Dataset](https://huggingface.co/litexlang) is on Hugging Face.
 
 <style>
 /* Code block styling - bright pink for visibility */
@@ -51,13 +34,23 @@ table code {
 }
 </style>
 
-## Why Litex?
+## What is Litex?
 
-_Our intent was to create a pleasant computing environment (Unix) for ourselves and our hope was that others liked it._
+_Simplicity is the ultimate sophistication._
 
-_- Dennis Ritchie_
+_– Leonardo da Vinci_
 
 ---
+
+[Litex](https://litexlang.com) is a simple open-source computer language for mathematical proofs. It aims to express mathematics as code while staying as close to natural language as possible, making it both rigorous and accessible. ([Star the repo!](https://github.com/litexlang/golitex))
+
+With just one to two hours of learning the fundamentals, you can write code that solves interesting mathematical problems with verified correctness! Formal code written in Litex is typically 2-10x simpler than traditional formal languages, and looks almost the same as how math is written in natural language. 
+
+With 10x lower entrance barrier for formal mathematics, and 10x higher computational efficiency for AI for formal mathematics, Litex is might be a game changer for both math and AI in general.
+
+Visit our [website](https://litexlang.com) for more details. Dataset on [Hugging Face](https://huggingface.co/litexlang) is also available.
+
+Here is an example of how Litex code looks like:
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -102,15 +95,11 @@ _- Dennis Ritchie_
   </tr>
 </table>
 
-Mathematics has many different axiomatic systems, and choosing different foundational axiom systems as the basis for a formal language results in vastly different user experiences. Lean chooses type theory as its foundation, while Litex chooses set theory.
+Here is a thorough collection of comparison between Litex and Lean: [Litex vs Lean Set Theory Examples](https://litexlang.com/doc/Litex_vs_Lean/Set_Theory)
 
-This design makes Lean easier to maintain and theoretically more general, which experts prefer. Litex's design, on the other hand, is more intuitive and easier to learn, built on familiar set theory, aims to democratize formal mathematics while maintaining rigor, even for 10-year-olds. Think of Litex as the Python of formal languages.
+*In summary, Litex is a language that imitates the way people think when they verify mathematics in everyday reasoning, using carefully crafted and straightforward rules.* 
 
-Litex can be viewed as a curated subset of Lean, Coq, and Isabelle. Focusing on the parts most relevant to users, it offers robust built-in support for these mathematical domains. Furthermore, the Litex verifier is in many ways more powerful than traditional formal languages. By utilizing universal quantifiers (forall), computation, and evaluation—and by proving directly through definitions and common facts—it aligns perfectly with user intuition. There is no need to memorize or learn a vast library of tactics and specialized keywords.
-
-*In summary, Litex is a language that imitates the way people think when they verify mathematics in everyday reasoning, using a small number of straightforward rules.* 
-
-## Litex For AI, For Math, For Everyone
+## How Litex Works
 
 _It’s best to do one thing really, really well._
 
@@ -118,44 +107,7 @@ _- Google, ten things we know to be true_
 
 ---
 
-Litex is a focused and deeply crafted language. We have invested significant effort in refining and enhancing it. Like other focused and profound products, users naturally find ways to integrate Litex into their own work—this is both inspiring and exciting. Here are some examples of how Litex is used:
-
-Litex For AI
-
-AI pioneer Geoffrey Hinton notes that in mathematics, models operate like in Go or chess—within closed systems with fixed rules, where they can generate their own training data. Formal languages (e.g., Litex) are key to self-improvement because computers can automatically and reliably verify whether mathematical reasoning is correct, enabling effective self-supervised learning. 
-
-This is crucial for the following areas:
-
-<table style="border-collapse: collapse; width: 100%; font-size: 12px">
-  <tr>
-    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Application Area</th>
-    <th style="border: 2px solid black; padding: 4px; text-align: left; width: 50%;">Examples</th>
-  </tr>
-  <tr>
-    <td style="border: 2px solid black; padding: 4px;">Model Reasoning</td>
-    <td style="border: 2px solid black; padding: 4px;">DeepSeek-R1</td>
-  </tr>
-  <tr>
-    <td style="border: 2px solid black; padding: 4px;">AI For Math</td>
-    <td style="border: 2px solid black; padding: 4px;">AlphaProof</td>
-  </tr>
-  <tr>
-    <td style="border: 2px solid black; padding: 4px;">Safe and Trustful AI</td>
-    <td style="border: 2px solid black; padding: 4px;">Formal verification of AI systems</td>
-  </tr>
-  <tr>
-    <td style="border: 2px solid black; padding: 4px;">AI Scientific Exploration</td>
-    <td style="border: 2px solid black; padding: 4px;">Automated theorem discovery</td>
-  </tr>
-</table>
-
-Litex For Math
-
-Litex enables automatic verification and large-scale mathematical collaboration. It clarifies dependency structures among complex theorems and transforms mathematical work into **mathematical engineering**—as intuitive as writing Python code, while maintaining full rigor through ZFC axioms.
-
-Litex For Everyone
-
-Litex is accessible to everyone—from children to experts. With just 1-2 hours of learning, anyone with basic set theory knowledge can write verified proofs. Litex's natural-language-like syntax makes it 10x easier to learn than traditional formal languages, democratizing rigorous mathematical thinking.
+Litex achieves its simplicity by imitating how people reason and how mathematics works. *Litex is based on set theory. It searches for known facts mechanically and effectively to prove new facts for you. The user no longer has to memorize and recall known facts and inference rules by hand. Each Litex statement has and only has some of the following 4 effects: define, verify, memorize and infer, which is printed out in the output, making the user easy to know how the proof process works.* Even for 10-year-old beginners, Litex is straightforward to learn and use. Visit our [website](https://litexlang.com) for more details.
 
 ## Resources And Community
 
@@ -170,23 +122,12 @@ Litex is nothing without its community and technical ecosystem.
 Resources for Litex users:
 
 1. Our official [website](https://litexlang.com) contains tutorials, cheat sheets, examples, documentation, collaboration opportunities, and more for Litex. All documents on our [website](https://litexlang.com) are open-sourced [here](https://github.com/litexlang/litex-official-documents)
-2. Learn Litex [online](https://litexlang.com/doc/Tutorial/Introduction). A short list of major Litex statements and their usage are shown in the [cheat sheet](https://litexlang.com/doc/Litex_Cheatsheet).
-3. Theory Behind Litex: [From a Mathematical Perspective](https://litexlang.com/doc/Tutorial/Litex_From_A_Mathematical_Perspective), [From a Programming Perspective](https://litexlang.com/doc/Tutorial/Litex_From_A_Programmer_Perspective)
-4. You can run litex on your own computer,start from [here](https://litexlang.com/doc/Quick_Start)
-5. [Litex standard library](https://github.com/litexlang/litex-stdlib) is under active development. **Contribute to it and earn impact rewards!**
-6. Use [pylitex](https://github.com/litexlang/pylitex) to call Litex in Python
-7. Our Community is on [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)!
-8. Email us [here](mailto:litexlang@outlook.com).
-9. [Congratulations! Litex achieves top 10 on Hacker News on 2025-09-27!!](https://news.ycombinator.com/item?id=45369629)
-
-Resources for AI researchers who want to develop Litex-based AI systems, mostly developed by the Litex open-source community:
-
-1. Litex achieves 100% accuracy on gsm8k dataset without any training [Github](https://github.com/litexlang/litex-gsm8k-killer)
-2. [Litex Dataset](https://huggingface.co/litexlang) is on Hugging Face. **Contribute to it and earn impact rewards!**
-3. Here is a really powerful Litex Agent [Github](https://github.com/litexlang/litex-agent). It is so powerful that much code in our standard library is generated by it!
-4. AI researchers interested in Litex might find [Litex LLM Dev](https://github.com/litexlang/litex-llm-dev) useful. Contact us if you are interested in collaborating on this project!
-
-All of our [repositories](https://github.com/orgs/litexlang/repositories) are open-sourced. Just issue PRs and tell us any ideas about Litex! Maybe we can build the future together!
+2. Use [pylitex](https://github.com/litexlang/pylitex) to call Litex in Python
+3. Our Community is on [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)!
+4. Email us [here](mailto:litexlang@outlook.com).
+5. [Congratulations! Litex achieves top 10 on Hacker News on 2025-09-27!!](https://news.ycombinator.com/item?id=45369629)
+6. Our organization's Github is [here](https://github.com/litexlang/). The kernel is [here](https://github.com/litexlang/golitex).
+7. Our dataset on Hugging Face is [here](https://huggingface.co/litexlang).
 
 ## References
 
