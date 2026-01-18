@@ -20,20 +20,6 @@
 
 </div>
 
-
-<style>
-/* Code block styling - bright pink for visibility */
-table code {
-  color: #ff00ff;
-  padding: 2px 6px;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 0.9em;
-  display: inline-block;
-  line-height: 1.4;
-  font-weight: 500;
-}
-</style>
-
 ## What is Litex?
 
 _Simplicity is the ultimate sophistication._
@@ -42,13 +28,9 @@ _– Leonardo da Vinci_
 
 ---
 
-[Litex](https://litexlang.com) is a simple open-source computer language for mathematical proofs. It aims to express mathematics as code while staying as close to natural language as possible, making it both rigorous and accessible. ([Star the repo!](https://github.com/litexlang/golitex))
+[Litex](https://litexlang.com) is a simple open-source computer language for mathematical proofs. It aims to express mathematics as code with verified correctness while staying as close to natural language as possible, making it both rigorous and accessible. ([Star the repo!](https://github.com/litexlang/golitex))
 
-With just one to two hours of learning the fundamentals, you can write code that solves interesting mathematical problems with verified correctness! Formal code written in Litex is typically 2-10x simpler than traditional formal languages, and looks almost the same as how math is written in natural language. 
-
-With 10x lower entrance barrier for formal mathematics, and 10x higher computational efficiency for AI for formal mathematics, Litex is might be a game changer for both math and AI in general.
-
-Visit our [website](https://litexlang.com) for more details. Dataset on [Hugging Face](https://huggingface.co/litexlang) is also available.
+Formal code written in Litex is typically 2-10x simpler than traditional formal languages, and looks almost the same as how math is written in natural language, meaning Litex could be a game changer for both traditional math and frontier AI research.
 
 Here is an example of how Litex code looks like:
 
@@ -95,9 +77,7 @@ Here is an example of how Litex code looks like:
   </tr>
 </table>
 
-Here is a thorough collection of comparison between Litex and Lean: [Litex vs Lean Set Theory Examples](https://litexlang.com/doc/Litex_vs_Lean/Set_Theory)
-
-*In summary, Litex is a language that imitates the way people think when they verify mathematics in everyday reasoning, using carefully crafted and straightforward rules.* 
+Here is a thorough collection of comparison between Litex and Lean: [Litex vs Lean Set Theory Examples](https://litexlang.com/doc/Litex_vs_Lean/Set_Theory). Visit our [website](https://litexlang.com) for more details. Dataset on [Hugging Face](https://huggingface.co/litexlang) is also available.
 
 ## How Litex Works
 
