@@ -1,11 +1,5 @@
-prop exist_inject_fn(s1 set, s2 set):
-    exist f fn(s1)s2 st $is_injective_fn(s1, s2, f)
-
-know forall s1, s2 finite_set: $exist_inject_fn(s1, s2) => count(s1) <= count(s2)
-
 contra forall s1, s2 finite_set, f fn(s1)s2: count(s1) > count(s2) => not $is_injective_fn(s1, s2, f):
     witness f: f2 fn(s1)s2 st $is_injective_fn(s1, s2, f2)
-    $exist_inject_fn(s1, s2)
     impossible count(s1) <= count(s2)
 
 prop collide(s1 set, s2 nonempty_set, f fn(s1)s2, z1 s1, z2 s1):
