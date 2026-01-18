@@ -113,6 +113,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = exec.proveForStmt(stmt)
 	case *ast.ProveInferStmt:
 		execRet = exec.proveImplyStmt(stmt)
+	case *ast.HaveShortStmt:
+		execRet = exec.haveShortStmt(stmt)
 	case *ast.HaveObjStStmt:
 		execRet = exec.haveObjStStmt(stmt)
 	case *ast.WitnessStmt:
@@ -1172,4 +1174,78 @@ func (exec *Executor) witnessShortStmt_NewFact(witnessShortStmt *ast.WitnessShor
 	}
 
 	return exec.NewTrueStmtRet(witnessShortStmt).AddNewFacts(ret.Infer)
+}
+
+func (exec *Executor) haveShortStmt(stmt *ast.HaveShortStmt) *glob.StmtRet {
+	ret := exec.haveShortStmt_Verify(stmt)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	ret = exec.haveShortStmt_Define(stmt)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	return exec.NewTrueStmtRet(stmt)
+}
+
+func (exec *Executor) haveShortStmt_Verify(haveShortStmt *ast.HaveShortStmt) *glob.StmtRet {
+	exec.NewEnv()
+	defer exec.deleteEnv()
+
+	params := []string{}
+	for _, param := range haveShortStmt.SpecFact.Params {
+		if _, ok := param.(ast.Atom); !ok {
+			return glob.ErrRet(fmt.Sprintf("param %s must be a string", param))
+		}
+		params = append(params, string(param.(ast.Atom)))
+	}
+
+	paramSets := []ast.Obj{}
+	for i := 0; i < len(haveShortStmt.SpecFact.Params); i++ {
+		paramSets = append(paramSets, ast.Atom(glob.KeywordSet))
+	}
+
+	paramAsObj := []ast.Obj{}
+	for _, param := range haveShortStmt.SpecFact.Params {
+		paramAsObj = append(paramAsObj, param)
+	}
+
+	ret := exec.factStmt(ast.NewExistStFactStruct(ast.TrueExist_St, haveShortStmt.SpecFact.PropName, haveShortStmt.SpecFact.IsTrue(), params, paramSets, paramAsObj, haveShortStmt.Line).ToExistStFact())
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	return exec.NewTrueStmtRet(haveShortStmt)
+}
+
+func (exec *Executor) haveShortStmt_Define(haveShortStmt *ast.HaveShortStmt) *glob.StmtRet {
+	// spec fact 里的 params 必须都是 string
+	params := []string{}
+	for _, param := range haveShortStmt.SpecFact.Params {
+		if _, ok := param.(ast.Atom); !ok {
+			return glob.ErrRet(fmt.Sprintf("param %s must be a string", param))
+		}
+		params = append(params, string(param.(ast.Atom)))
+	}
+
+	// 获得 prop 的定义
+	propDef, ok := exec.Env.GetPropDef(haveShortStmt.SpecFact.PropName)
+	if !ok {
+		return glob.ErrRet(fmt.Sprintf("prop %s not found", haveShortStmt.SpecFact.PropName))
+	}
+
+	uniMap := map[string]ast.Obj{}
+	paramSets := []ast.Obj{}
+	for i, param := range propDef.Defined.DefHeader.Params {
+		curSet, err := propDef.Defined.DefHeader.ParamSets[i].Instantiate(uniMap)
+		if err != nil {
+			return glob.ErrRet(err.Error())
+		}
+		paramSets = append(paramSets, curSet)
+		uniMap[string(param)] = haveShortStmt.SpecFact.Params[i]
+	}
+
+	return exec.Env.DefLetStmt(ast.NewDefLetStmt(params, paramSets, []ast.FactStmt{haveShortStmt.SpecFact}, haveShortStmt.Line))
 }

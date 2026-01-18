@@ -489,3 +489,9 @@ type ImpossibleStmt struct {
 
 	Line uint
 }
+
+type HaveShortStmt struct {
+	SpecFact *SpecFactStmt
+
+	Line uint
+}
