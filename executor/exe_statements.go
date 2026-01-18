@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	litex_env "golitex/environment"
 	glob "golitex/glob"
+	"slices"
 )
 
 func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
@@ -112,14 +113,18 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = exec.proveForStmt(stmt)
 	case *ast.ProveInferStmt:
 		execRet = exec.proveImplyStmt(stmt)
+	case *ast.HaveShortStmt:
+		execRet = exec.haveShortStmt(stmt)
 	case *ast.HaveObjStStmt:
 		execRet = exec.haveObjStStmt(stmt)
-	case *ast.ProveExistStmt:
+	case *ast.WitnessStmt:
 		execRet = exec.proveExistStmt(stmt)
 	case *ast.InferStmt:
 		execRet = exec.inferStmt(stmt)
 	case *ast.InferTemplateStmt:
 		execRet = exec.inferTemplateStmt(stmt)
+	case *ast.WitnessShortStmt:
+		execRet = exec.witnessShortStmt(stmt)
 	default:
 		execRet = glob.ErrRet(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -243,7 +248,7 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) *glob.StmtRet {
 	for _, curStmt := range proof {
 		execState := exec.Stmt(curStmt)
 		if execState.IsNotTrue() {
-			return execState.AddError(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
+			return execState.AddError(fmt.Sprintf("failed :( line %d\n", curStmt.GetLine()))
 		}
 		innerExecRets = append(innerExecRets, execState)
 	}
@@ -290,13 +295,12 @@ func (exec *Executor) proveCaseByCaseStmt(stmt *ast.ProveCaseByCaseStmt) *glob.S
 	}
 
 	// emit then fact
-	execState = exec.knowStmt(ast.NewKnowStmt(stmt.ThenFacts.ToCanBeKnownStmtSlice(), stmt.Line))
-	if execState.IsNotTrue() {
-		return execState
-	}
-
-	for _, fact := range stmt.ThenFacts {
-		newFactsMsgs = append(newFactsMsgs, fact.String())
+	for _, thenFact := range stmt.ThenFacts {
+		ret := exec.Env.NewFactWithCheckingNameDefined(thenFact)
+		if ret.IsErr() {
+			return glob.ErrRet(ret.String())
+		}
+		newFactsMsgs = append(newFactsMsgs, thenFact.String())
 	}
 
 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerExecRetMsgs).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactsMsgs)
@@ -1097,4 +1101,151 @@ func (exec *Executor) checkCaseInProveCaseByCase(stmt *ast.ProveCaseByCaseStmt, 
 
 		return glob.NewEmptyStmtTrue()
 	}
+}
+
+func (exec *Executor) witnessShortStmt(stmt *ast.WitnessShortStmt) *glob.StmtRet {
+	ret := exec.witnessShortStmt_Verify(stmt)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	ret = exec.witnessShortStmt_NewFact(stmt)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	return exec.NewTrueStmtRet(stmt)
+}
+
+func (exec *Executor) witnessShortStmt_Verify(witnessShortStmt *ast.WitnessShortStmt) *glob.StmtRet {
+	exec.NewEnv()
+	defer exec.deleteEnv()
+
+	for _, proof := range witnessShortStmt.Proofs {
+		ret := exec.Stmt(proof)
+		if ret.IsNotTrue() {
+			return ret
+		}
+	}
+
+	ret := exec.factStmt(witnessShortStmt.SpecFact)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	return exec.NewTrueStmtRet(witnessShortStmt)
+}
+
+func (exec *Executor) witnessShortStmt_NewFact(witnessShortStmt *ast.WitnessShortStmt) *glob.StmtRet {
+	lenOfParams := len(witnessShortStmt.SpecFact.Params)
+	// 生成 lenOfParams 个 random obj
+
+	randomParams := []string{}
+	for i := 0; i < lenOfParams; i++ {
+		for {
+			randomObj := ast.Atom(exec.Env.GenerateUndeclaredRandomName())
+			if !slices.Contains(randomParams, string(randomObj)) {
+				randomParams = append(randomParams, string(randomObj))
+				break
+			}
+		}
+	}
+
+	// 生成 exist a set, b set, c set ... st $p(a, b, c, ...)
+
+	// 生成 randomParams 个 set
+	randomParamSets := []ast.Obj{}
+	for i := 0; i < len(randomParams); i++ {
+		randomParamSets = append(randomParamSets, ast.Atom(glob.KeywordSet))
+	}
+
+	// 生成 randomParams 个 paramAsObj
+	randomParamAsObj := []ast.Obj{}
+	for i := 0; i < len(randomParams); i++ {
+		randomParamAsObj = append(randomParamAsObj, ast.Atom(randomParams[i]))
+	}
+
+	existStruct := ast.NewExistStFactStruct(ast.TrueExist_St, witnessShortStmt.SpecFact.PropName, witnessShortStmt.SpecFact.IsTrue(), randomParams, randomParamSets, randomParamAsObj, witnessShortStmt.Line)
+	existFact := existStruct.ToExistStFact()
+
+	ret := exec.Env.NewFactWithCheckingNameDefined(existFact)
+	if ret.IsNotTrue() {
+		return glob.ErrRet(ret.String())
+	}
+
+	return exec.NewTrueStmtRet(witnessShortStmt).AddNewFacts(ret.Infer)
+}
+
+func (exec *Executor) haveShortStmt(stmt *ast.HaveShortStmt) *glob.StmtRet {
+	ret := exec.haveShortStmt_Verify(stmt)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	ret = exec.haveShortStmt_Define(stmt)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	return exec.NewTrueStmtRet(stmt)
+}
+
+func (exec *Executor) haveShortStmt_Verify(haveShortStmt *ast.HaveShortStmt) *glob.StmtRet {
+	exec.NewEnv()
+	defer exec.deleteEnv()
+
+	params := []string{}
+	for _, param := range haveShortStmt.SpecFact.Params {
+		if _, ok := param.(ast.Atom); !ok {
+			return glob.ErrRet(fmt.Sprintf("param %s must be a string", param))
+		}
+		params = append(params, string(param.(ast.Atom)))
+	}
+
+	paramSets := []ast.Obj{}
+	for i := 0; i < len(haveShortStmt.SpecFact.Params); i++ {
+		paramSets = append(paramSets, ast.Atom(glob.KeywordSet))
+	}
+
+	paramAsObj := []ast.Obj{}
+	for _, param := range haveShortStmt.SpecFact.Params {
+		paramAsObj = append(paramAsObj, param)
+	}
+
+	ret := exec.factStmt(ast.NewExistStFactStruct(ast.TrueExist_St, haveShortStmt.SpecFact.PropName, haveShortStmt.SpecFact.IsTrue(), params, paramSets, paramAsObj, haveShortStmt.Line).ToExistStFact())
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	return exec.NewTrueStmtRet(haveShortStmt)
+}
+
+func (exec *Executor) haveShortStmt_Define(haveShortStmt *ast.HaveShortStmt) *glob.StmtRet {
+	// spec fact 里的 params 必须都是 string
+	params := []string{}
+	for _, param := range haveShortStmt.SpecFact.Params {
+		if _, ok := param.(ast.Atom); !ok {
+			return glob.ErrRet(fmt.Sprintf("param %s must be a string", param))
+		}
+		params = append(params, string(param.(ast.Atom)))
+	}
+
+	// 获得 prop 的定义
+	propDef, ok := exec.Env.GetPropDef(haveShortStmt.SpecFact.PropName)
+	if !ok {
+		return glob.ErrRet(fmt.Sprintf("prop %s not found", haveShortStmt.SpecFact.PropName))
+	}
+
+	uniMap := map[string]ast.Obj{}
+	paramSets := []ast.Obj{}
+	for i, param := range propDef.Defined.DefHeader.Params {
+		curSet, err := propDef.Defined.DefHeader.ParamSets[i].Instantiate(uniMap)
+		if err != nil {
+			return glob.ErrRet(err.Error())
+		}
+		paramSets = append(paramSets, curSet)
+		uniMap[string(param)] = haveShortStmt.SpecFact.Params[i]
+	}
+
+	return exec.Env.DefLetStmt(ast.NewDefLetStmt(params, paramSets, []ast.FactStmt{haveShortStmt.SpecFact}, haveShortStmt.Line))
 }

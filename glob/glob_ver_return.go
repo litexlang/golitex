@@ -75,7 +75,7 @@ func (m *VerRet) String() string {
 				return fmt.Sprintf("proved by:\n%s", verifyMsgsStr)
 			}
 			if verifyMsgsStr == "" {
-				return fmt.Sprintf("%s\nproved by:\n%s", m.StmtStr, noVerifyMsgHint)
+				return fmt.Sprintf("%s\nproved\n", m.StmtStr)
 			}
 			return fmt.Sprintf("%s\nproved by:\n%s", m.StmtStr, verifyMsgsStr)
 		}
@@ -93,7 +93,7 @@ func (m *VerRet) String() string {
 	} else {
 		if m.StmtStr == "" {
 			if verifyMsgsStr == "" {
-				return fmt.Sprintf("failed to be verified:\n%s", noVerifyMsgHint)
+				return fmt.Sprintf("failed to be verified\n")
 			}
 			return fmt.Sprintf("failed to be verified:\n%s", verifyMsgsStr)
 		}

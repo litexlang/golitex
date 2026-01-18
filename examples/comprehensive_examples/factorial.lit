@@ -6,6 +6,7 @@ prop exist_truncated_factorial(n N):
     exist f fn({x N: x <= n}) N_pos st $is_factorial_fn(n, f)
 
 induc para N_pos: $exist_truncated_factorial(para):
+    # base case
     have fn fac1(z {x N: x <= 1}) N_pos =:
         case z = 0: 1
         case z = 1: 1
@@ -22,6 +23,7 @@ induc para N_pos: $exist_truncated_factorial(para):
     witness fac1 : f fn({x N: x <= 1}) N_pos st $is_factorial_fn(1, f)
     $exist_truncated_factorial(1)
 
+    # induction step
     prove forall n N_pos: $exist_truncated_factorial(n) => $exist_truncated_factorial(n+1):
         have fac_n fn({x N: x <= n}) N_pos st $is_factorial_fn(n, fac_n)
 
