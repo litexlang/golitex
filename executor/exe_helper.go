@@ -89,3 +89,15 @@ func checkParamsInFnDefNotDefinedAndParamSetsDefined(exec *Executor, params []st
 
 	return glob.NewEmptyShortTrueRet()
 }
+
+func (exec *Executor) declareParamsAndDomFactsInUniFact(stmt *ast.UniFactStmt) *glob.StmtRet {
+	// declare parameters in asUnivFact in the env
+	objDefStmt := ast.NewDefLetStmt(stmt.Params, stmt.ParamSets, stmt.DomFacts.Copy(), stmt.Line)
+
+	execState := exec.defLetStmt(objDefStmt)
+	if execState.IsNotTrue() {
+		return execState.AddError(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt))
+	}
+
+	return glob.NewEmptyStmtTrue()
+}
