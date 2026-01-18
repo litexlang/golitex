@@ -1498,6 +1498,14 @@ func SetBuilderObjString(f *FnObj) string {
 	return builder.String()
 }
 
+func (stmt *HaveShortStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.SpecFact.String())
+	return builder.String()
+}
+
 func (stmt *WitnessShortStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordWitness)

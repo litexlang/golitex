@@ -319,6 +319,10 @@ func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact *S
 	return &WitnessStmt{params, paramSets, equalTos, fact, proofs, line}
 }
 
+func NewHaveShortStmt(specFact *SpecFactStmt, line uint) *HaveShortStmt {
+	return &HaveShortStmt{specFact, line}
+}
+
 func NewWitnessShortStmt(specFact *SpecFactStmt, proofs []Stmt, line uint) *WitnessShortStmt {
 	return &WitnessShortStmt{specFact, proofs, line}
 }
