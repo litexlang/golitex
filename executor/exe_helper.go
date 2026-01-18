@@ -19,6 +19,7 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
+	"slices"
 )
 
 func notOkExec(state *glob.StmtRet, err error) bool {
@@ -88,4 +89,42 @@ func checkParamsInFnDefNotDefinedAndParamSetsDefined(exec *Executor, params []st
 	}
 
 	return glob.NewEmptyShortTrueRet()
+}
+
+func (exec *Executor) declareParamsAndDomFactsInUniFact(stmt *ast.UniFactStmt) *glob.StmtRet {
+	// declare parameters in asUnivFact in the env
+	objDefStmt := ast.NewDefLetStmt(stmt.Params, stmt.ParamSets, stmt.DomFacts.Copy(), stmt.Line)
+
+	execState := exec.defLetStmt(objDefStmt)
+	if execState.IsNotTrue() {
+		return execState.AddError(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt))
+	}
+
+	return glob.NewEmptyStmtTrue()
+}
+
+func (exec *Executor) GenerateShortExistFact(specFact *ast.SpecFactStmt) *ast.ExistStFactStruct {
+	lenOfParams := len(specFact.Params)
+	randomParams := []string{}
+	for i := 0; i < lenOfParams; i++ {
+		for {
+			randomObj := ast.Atom(exec.Env.GenerateUndeclaredRandomName())
+			if !slices.Contains(randomParams, string(randomObj)) {
+				randomParams = append(randomParams, string(randomObj))
+				break
+			}
+		}
+	}
+
+	randomParamSets := []ast.Obj{}
+	for i := 0; i < len(randomParams); i++ {
+		randomParamSets = append(randomParamSets, ast.Atom(glob.KeywordSet))
+	}
+
+	randomParamAsObj := []ast.Obj{}
+	for i := 0; i < len(randomParams); i++ {
+		randomParamAsObj = append(randomParamAsObj, ast.Atom(randomParams[i]))
+	}
+
+	return ast.NewExistStFactStruct(ast.TrueExist_St, specFact.PropName, specFact.IsTrue(), randomParams, randomParamSets, randomParamAsObj, specFact.Line)
 }
