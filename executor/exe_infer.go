@@ -330,6 +330,7 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.
 	// 把实例化了的没被匹配的fcPair拿出来，检查是否是equal
 	for _, fcPair := range unMatchedFcPairs {
 		// 用来匹配 exist 的free param的
+		// TODO: 更好的解决办法是，在传入exist的时候，就已经把known的exist free param替换成given exist free param 了
 		if str, ok := knownToInstEqualMap_usedToMatchFreeParamsOfExistFacts[fcPair.knownFc.String()]; ok {
 			if str.String() == fcPair.givenFc.String() {
 				continue

@@ -761,7 +761,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) *glob.StmtRet {
 	existStFact := stmt.ToTruePurePropExistStFact()
 	ret := exec.factStmt(existStFact)
 	if ret.IsUnknown() || ret.IsErr() {
-		return ret
+		return exec.NewErrStmtRet(stmt).AddVerifyProcesses(ret.VerifyProcess)
 	}
 
 	// define
