@@ -44,6 +44,11 @@ func (ver *Verifier) verSpecFactPostProcess(stmt *ast.SpecFactStmt, state *VerSt
 		return verRet
 	}
 
+	verRet = ver.verSpecFactPostProcess_WhenPropIsComparison(stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
 	return glob.NewEmptyVerRetUnknown()
 }
 
@@ -184,6 +189,44 @@ func (ver *Verifier) verSpecFactPostProcess_UseTransitivity(stmt *ast.SpecFactSt
 }
 
 func (ver *Verifier) verSpecFactPostProcess_WhenPropIsComparison(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolGreater) {
+		// a > b <=> b < a
+		lessThanStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLess), []ast.Obj{stmt.Params[1], stmt.Params[0]}, stmt.Line)
+		verRet := ver.verSpecFactPreProcessAndMainProcess(lessThanStmt, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
+
+		return glob.NewEmptyVerRetUnknown()
+	} else if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolLess) {
+		// a < b <=> b > a
+		greaterThanStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolGreater), []ast.Obj{stmt.Params[1], stmt.Params[0]}, stmt.Line)
+		verRet := ver.verSpecFactPreProcessAndMainProcess(greaterThanStmt, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
+
+		return glob.NewEmptyVerRetUnknown()
+	} else if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolLargerEqual) {
+		// a >= b <=> b <= a
+		lessEqualThanStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{stmt.Params[1], stmt.Params[0]}, stmt.Line)
+		verRet := ver.verSpecFactPreProcessAndMainProcess(lessEqualThanStmt, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
+
+		return glob.NewEmptyVerRetUnknown()
+	} else if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolLessEqual) {
+		// a <= b <=> b >= a
+		greaterEqualThanStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{stmt.Params[1], stmt.Params[0]}, stmt.Line)
+		verRet := ver.verSpecFactPreProcessAndMainProcess(greaterEqualThanStmt, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
+
+		return glob.NewEmptyVerRetUnknown()
+	}
+
 	return glob.NewEmptyVerRetUnknown()
 }
 
