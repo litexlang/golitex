@@ -94,11 +94,15 @@ func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast
 }
 
 func (ver *Verifier) iterate_KnownPureSpecInImplyStmt_applyMatch_InstObjInParamSetAndSatisfyIfFacts(stmt *ast.InferStmt, knownFacts []env.KnownSpecFact_InImplyTemplate, toCheck ast.Spec_OrFact, state *VerState) *glob.VerRet {
+outerLoop:
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		ok, uniMap, err := ver.
 			matchImplyTemplateParamsWithAllParamsInImplyStmt(&knownFacts[i], stmt, toCheck)
-		if !ok || err != nil {
+		if err != nil {
 			return glob.NewEmptyVerRetUnknown()
+		}
+		if !ok {
+			continue outerLoop
 		}
 
 		localUniMap := map[string]ast.Obj{}
@@ -113,7 +117,7 @@ func (ver *Verifier) iterate_KnownPureSpecInImplyStmt_applyMatch_InstObjInParamS
 
 			ret := ver.VerFactStmt(inFact, state)
 			if ret.IsNotTrue() {
-				return glob.NewEmptyVerRetUnknown()
+				continue outerLoop
 			}
 
 			localUniMap[knownFacts[i].ImplyTemplate.Params[j]] = uniMap[knownFacts[i].ImplyTemplate.Params[j]]
@@ -127,7 +131,7 @@ func (ver *Verifier) iterate_KnownPureSpecInImplyStmt_applyMatch_InstObjInParamS
 
 			ret := ver.VerFactStmt(instIfFact.(ast.FactStmt), state)
 			if ret.IsNotTrue() {
-				return glob.NewEmptyVerRetUnknown()
+				continue outerLoop
 			}
 		}
 
@@ -254,7 +258,7 @@ func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImply
 
 func (ver *Verifier) matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFact *ast.SpecFactStmt, freeVars []string, instFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
 	if instFact.IsPureFact() {
-		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.Params, freeVars, instFact.Params, string(instFact.PropName))
+		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.Params, freeVars, instFact.Params, string(instFact.PropName), map[string]ast.Obj{})
 	} else {
 		knownExistStruct := knownSpecFact.ToExistStFactStruct()
 		instExistStruct := instFact.ToExistStFactStruct()
@@ -263,17 +267,37 @@ func (ver *Verifier) matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFact *
 		knownExistStruct = ver.replaceExistParamsWithRandomNames(knownExistStruct)
 		instExistStruct = ver.replaceExistParamsWithRandomNames(instExistStruct)
 
-		knownFcs := append([]ast.Obj{}, knownExistStruct.ExistFreeParamSets...)
+		ver.newEnv()
+		defer ver.deleteEnv()
+
+		knownExistFreeParams := []ast.Obj{}
+		for _, param := range knownExistStruct.ExistFreeParams {
+			knownExistFreeParams = append(knownExistFreeParams, ast.Atom(param))
+		}
+
+		knownFcs := []ast.Obj{}
+		knownFcs = append(knownFcs, knownExistStruct.ExistFreeParamSets...)
 		knownFcs = append(knownFcs, knownExistStruct.Params...)
 
-		instFcs := append([]ast.Obj{}, instExistStruct.ExistFreeParamSets...)
+		instExistFreeParams := []ast.Obj{}
+		for _, param := range instExistStruct.ExistFreeParams {
+			instExistFreeParams = append(instExistFreeParams, ast.Atom(param))
+		}
+
+		instFcs := []ast.Obj{}
+		instFcs = append(instFcs, instExistStruct.ExistFreeParamSets...)
 		instFcs = append(instFcs, instExistStruct.Params...)
 
-		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownFcs, freeVars, instFcs, string(knownSpecFact.PropName))
+		knownEqualMap := map[string]ast.Obj{}
+		for i, param := range instExistFreeParams {
+			knownEqualMap[knownExistFreeParams[i].String()] = param
+		}
+
+		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownFcs, freeVars, instFcs, string(knownSpecFact.PropName), knownEqualMap)
 	}
 }
 
-func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.Obj, freeVars []string, givenFcs []ast.Obj, propNameForMsg string) (bool, map[string]ast.Obj, error) {
+func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.Obj, freeVars []string, givenFcs []ast.Obj, propNameForMsg string, knownToInstEqualMap_usedToMatchFreeParamsOfExistFacts map[string]ast.Obj) (bool, map[string]ast.Obj, error) {
 	// knownFcs := knownSpecFactInUniFact.SpecFact.Params
 	// freeVars := knownSpecFactInUniFact.UniFact.Params
 	freeVarsMap := map[string]struct{}{}
@@ -305,10 +329,18 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.
 
 	// 把实例化了的没被匹配的fcPair拿出来，检查是否是equal
 	for _, fcPair := range unMatchedFcPairs {
+		// 用来匹配 exist 的free param的
+		if str, ok := knownToInstEqualMap_usedToMatchFreeParamsOfExistFacts[fcPair.knownFc.String()]; ok {
+			if str.String() == fcPair.givenFc.String() {
+				continue
+			}
+		}
+
 		instKnownFreeVar, err := fcPair.knownFc.Instantiate(freeVarToInstVar)
 		if err != nil {
 			return false, nil, err
 		}
+
 		verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewEqualFact(instKnownFreeVar, fcPair.givenFc), FinalRoundNoMsg().CopyAndReqOkToTrue())
 
 		// REMARK
