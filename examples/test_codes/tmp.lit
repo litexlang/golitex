@@ -1,10 +1,5 @@
-prop p(a N, b R):
-    a > b
 
-witness $p(1, 0)
 
-exist $p(a, b)
+let s1, s2 finite_set: exist f fn(s1)s2 st $is_injective_fn(s1, s2, f)
 
-have $p(a, b)
-
-$p(a, b)
+exist f fn(s1)s2 st $is_injective_fn(s1, s2, f) => count(s1) <= count(s2)

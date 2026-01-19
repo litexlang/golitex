@@ -1086,4 +1086,8 @@ know forall s1, s2 finite_set: count(s1) <= count(s2) => exist f fn(s1)s2 st $is
 know forall a, b finite_set: exist t fn(a)b st $is_injective_fn(a, b, t) => count(a) <= count(b)
 
 know forall x finite_set, y set: set_minus(x, y) $is_finite_set
+
+know:
+	forall x, y R: x * y = 0 => x = 0 or y = 0
+	forall x, y R: x = 0 or y = 0 => x * y = 0
 `
