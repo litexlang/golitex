@@ -15,7 +15,6 @@
 package litex_executor
 
 import (
-	"fmt"
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 	glob "golitex/glob"
@@ -30,96 +29,101 @@ func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt *ast.Spec
 		state.UpdateReqOkToTrue()
 	}
 
-	ret := ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt, state)
+	ret := ver.verSpecFact2(stmt, state)
 	if ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
 
+	// ret := ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt, state)
+	// if ret.IsTrue() || ret.IsErr() {
+	// 	return ret
+	// }
+
 	return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{})
 }
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	// if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolEqual) {
-	// 	return ver.verTrueEqualFactAndCheckFnReq(stmt, state.CopyAndReqOkToFalse())
-	// }
+// func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+// 	// if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolEqual) {
+// 	// 	return ver.verTrueEqualFactAndCheckFnReq(stmt, state.CopyAndReqOkToFalse())
+// 	// }
 
-	if verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt, state); verRet.IsTrue() || verRet.IsErr() {
-		return verRet
-	}
+// 	if verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+// 		return verRet
+// 	}
 
-	// if ver.env.IsCommutativeProp(stmt) || (stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure) {
-	if ver.Env.IsCommutativeProp(stmt) {
-		reverseParamsOrderStmt, err := stmt.ReverseParameterOrder()
-		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
-		}
-		if verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(reverseParamsOrderStmt, state); verRet.IsTrue() || verRet.IsErr() {
-			return verRet
-		}
-	}
+// 	// if ver.env.IsCommutativeProp(stmt) || (stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure) {
+// 	if ver.Env.IsCommutativeProp(stmt) {
+// 		reverseParamsOrderStmt, err := stmt.ReverseParameterOrder()
+// 		if err != nil {
+// 			return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+// 		}
+// 		if verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(reverseParamsOrderStmt, state); verRet.IsTrue() || verRet.IsErr() {
+// 			return verRet
+// 		}
+// 	}
 
-	return glob.NewEmptyVerRetUnknown()
-}
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt, state)
-	if verRet.IsTrue() || verRet.IsErr() {
-		return verRet
-	}
+// func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+// 	verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt, state)
+// 	if verRet.IsTrue() || verRet.IsErr() {
+// 		return verRet
+// 	}
 
-	if stmt.FactType == ast.TruePure && ver.Env.IsTransitiveProp(string(stmt.PropName)) {
-		relatedObjSlice := ver.Env.GetRelatedObjSliceOfTransitiveProp(string(stmt.PropName), stmt.Params[0])
-		if len(relatedObjSlice) == 0 {
-			return glob.NewEmptyVerRetUnknown()
-		}
+// 	if stmt.FactType == ast.TruePure && ver.Env.IsTransitiveProp(string(stmt.PropName)) {
+// 		relatedObjSlice := ver.Env.GetRelatedObjSliceOfTransitiveProp(string(stmt.PropName), stmt.Params[0])
+// 		if len(relatedObjSlice) == 0 {
+// 			return glob.NewEmptyVerRetUnknown()
+// 		}
 
-		for _, relatedObj := range relatedObjSlice {
-			relatedObjStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.PropName), []ast.Obj{relatedObj, stmt.Params[1]}, stmt.Line)
-			verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(relatedObjStmt, state)
-			if verRet.IsErr() {
-				return verRet
-			}
-			if verRet.IsTrue() {
-				msg := fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedObjStmt.String())
-				if state.WithMsg {
-					return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
-				}
-				return glob.NewEmptyVerRetTrue()
-			}
-		}
-	}
+// 		for _, relatedObj := range relatedObjSlice {
+// 			relatedObjStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.PropName), []ast.Obj{relatedObj, stmt.Params[1]}, stmt.Line)
+// 			verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(relatedObjStmt, state)
+// 			if verRet.IsErr() {
+// 				return verRet
+// 			}
+// 			if verRet.IsTrue() {
+// 				msg := fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedObjStmt.String())
+// 				if state.WithMsg {
+// 					return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
+// 				}
+// 				return glob.NewEmptyVerRetTrue()
+// 			}
+// 		}
+// 	}
 
-	return glob.NewEmptyVerRetUnknown()
-}
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	// replace the params with the values 来证明
-	// 比如 $q(x, y) 证明不出来，但可能 $q(1, 2) 证明出来了，如果x=1,y=2的话。这里会用到 1. 如果x和y本来就是数学表达式，那就计算 2. 如果 x和y之前存过数值，那就用之前存过的值。
-	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
-	if replaced {
-		verRet := ver.verSpecFactUsingMemAndBuiltinRules(newStmt, state)
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsTrue() {
-			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
-			if state.WithMsg {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
-			}
-			return glob.NewEmptyVerRetTrue()
-		}
-	}
+// func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+// 	// replace the params with the values 来证明
+// 	// 比如 $q(x, y) 证明不出来，但可能 $q(1, 2) 证明出来了，如果x=1,y=2的话。这里会用到 1. 如果x和y本来就是数学表达式，那就计算 2. 如果 x和y之前存过数值，那就用之前存过的值。
+// 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
+// 	if replaced {
+// 		verRet := ver.verSpecFactUsingMemAndBuiltinRules(newStmt, state)
+// 		if verRet.IsErr() {
+// 			return verRet
+// 		}
+// 		if verRet.IsTrue() {
+// 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
+// 			if state.WithMsg {
+// 				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
+// 			}
+// 			return glob.NewEmptyVerRetTrue()
+// 		}
+// 	}
 
-	verRet := ver.verSpecFactUsingMemAndBuiltinRules(stmt, state)
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsTrue() {
-		return verRet
-	}
+// 	verRet := ver.verSpecFactUsingMemAndBuiltinRules(stmt, state)
+// 	if verRet.IsErr() {
+// 		return verRet
+// 	}
+// 	if verRet.IsTrue() {
+// 		return verRet
+// 	}
 
-	return glob.NewEmptyVerRetUnknown()
-}
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
 // TODO: 其实 specFact 是等号的时候，还是会访问到这个函数。
 // WARNING: 其实 specFact 是等号的时候，还是会访问到这个函数。所以这个函数的命名是有问题的
@@ -128,31 +132,31 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 // 	return ver.verSpecFactStepByStep(stmt, state)
 // }
 
-func (ver *Verifier) verSpecFactUsingMemAndBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	if verRet := ver.verSpecFactByBuiltinRules(stmt, state); verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
+// func (ver *Verifier) verSpecFactUsingMemAndBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+// 	if verRet := ver.verSpecFactByBuiltinRules(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+// 		return verRet
+// 	}
 
-	if verRet := ver.verSpecFact_BySpecMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
+// 	if verRet := ver.verSpecFact_BySpecMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+// 		return verRet
+// 	}
 
-	if verRet := ver.verSpecFact_ByDEF(stmt, state); verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
+// 	if verRet := ver.verSpecFact_ByDEF(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+// 		return verRet
+// 	}
 
-	if !state.isFinalRound() {
-		if verRet := ver.verSpecFact_ByLogicMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
-			return verRet
-		}
+// 	if !state.isFinalRound() {
+// 		if verRet := ver.verSpecFact_ByLogicMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+// 			return verRet
+// 		}
 
-		if verRet := ver.verSpecFact_UniMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
-			return verRet
-		}
-	}
+// 		if verRet := ver.verSpecFact_UniMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+// 			return verRet
+// 		}
+// 	}
 
-	return glob.NewEmptyVerRetUnknown()
-}
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
 func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	if stmt.IsPureFact() {
