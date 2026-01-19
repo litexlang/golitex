@@ -1,5 +1,5 @@
-# know forall x, y R: x * y = 0 => x = 0 or y = 0
+know forall s1, s2 finite_set: exist f fn(s1)s2 st $is_injective_fn(s1, s2, f) => count(s1) < count(s2)
 
-let a, b R: a * b = 0
+let s1, s2 finite_set: exist f fn(s1)s2 st $is_injective_fn(s1, s2, f)
 
-a * b = 0 => a = 0 or b = 0
+exist f fn(s1)s2 st $is_injective_fn(s1, s2, f) => count(s1) < count(s2)
