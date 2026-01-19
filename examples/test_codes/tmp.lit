@@ -1,10 +1,5 @@
-prop p(a N, b R):
-    a > b
+# know forall x, y R: x * y = 0 => x = 0 or y = 0
 
-witness $p(1, 0)
+let a, b R: a * b = 0
 
-exist $p(a, b)
-
-have $p(a, b)
-
-$p(a, b)
+a * b = 0 => a = 0 or b = 0
