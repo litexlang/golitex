@@ -1,7 +1,1 @@
-let n N_pos
-let s2 finite_set :count(s2) = n + 1
-
-know forall a, b R: a > 0, b >= 0 => a + b > 0
-know forall a, b R: a >= 0, b > 0 => a + b > 0
-
-count(s2) > 0
+forall x R: x ^ 2 >= 0
