@@ -1096,4 +1096,6 @@ know forall a N: exist s finite_set st count(s) = a
 know forall x R, y N_pos: y % 2 = 0=> x ^ y >= 0, 0 <= x ^ y
 
 know forall x R: x * x >=0, 0 <= x * x
+
+know forall x, y, z Z, d R: y != 0, (x/y)^z = d => x^z = d * y^z
 `

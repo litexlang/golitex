@@ -1,0 +1,22 @@
+"""
+Axiom	Statement
+Associativity of vector addition	u + (v + w) = (u + v) + w
+Commutativity of vector addition	u + v = v + u
+Identity element of vector addition	There exists an element 0 ∈ V, called the zero vector, such that v + 0 = v for all v ∈ V.
+Inverse elements of vector addition	For every v ∈ V, there exists an element −v ∈ V, called the additive inverse of v, such that v + (−v) = 0.
+Compatibility of scalar multiplication with field multiplication	a(bv) = (ab)v [nb 3]
+Identity element of scalar multiplication	1v = v, where 1 denotes the multiplicative identity in F.
+Distributivity of scalar multiplication with respect to vector addition  	a(u + v) = au + av
+Distributivity of scalar multiplication with respect to field addition	(a + b)v = av + bv
+"""
+
+prop vector_space(F set, Fa fn(F, F)F, Fneg fn(F)F, Fm(F, F)F, F0 F, F1 F, V set, Va fn(V, V)V, Vs fn(F, V)V, v0 V):
+    $field(F, Fa, Fneg, Fm, F0, F1)
+    forall v1, v2, v3 V: Va(v1, Va(v2, v3)) = Va(Va(v1, v2), v3)
+    forall v1, v2 V: Va(v1, v2) = Va(v2, v1)
+    forall v1 V: v0 \Va v1 = v1
+    forall v1 V: exist v1neg V st v1 + v1neg = v0
+    forall a, b F, v V: Vs(Fm(a, b), v) = Vs(a, Vs(b, v))
+    forall v V: F1 \Vs v = v
+    forall a F, v1, v2 V: Vs(a, Va(v1, v2)) = Va(Vs(a, v1), Vs(a, v2))
+    forall a, b F, v V: Vs(Fa(a, b), v) = Va(Vs(a, v), Vs(b, v))
