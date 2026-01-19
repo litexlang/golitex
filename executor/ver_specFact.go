@@ -35,18 +35,13 @@ func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt *ast.Spec
 		return ret
 	}
 
-	ret = ver.verSpecialFactInSpecialWays(stmt, state)
-	if ret.IsTrue() || ret.IsErr() {
-		return ret
-	}
-
 	return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{})
 }
 
 func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolEqual) {
-		return ver.verTrueEqualFactAndCheckFnReq(stmt, state.CopyAndReqOkToFalse())
-	}
+	// if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolEqual) {
+	// 	return ver.verTrueEqualFactAndCheckFnReq(stmt, state.CopyAndReqOkToFalse())
+	// }
 
 	if verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt, state); verRet.IsTrue() || verRet.IsErr() {
 		return verRet
@@ -102,7 +97,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 	// 比如 $q(x, y) 证明不出来，但可能 $q(1, 2) 证明出来了，如果x=1,y=2的话。这里会用到 1. 如果x和y本来就是数学表达式，那就计算 2. 如果 x和y之前存过数值，那就用之前存过的值。
 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 	if replaced {
-		verRet := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(newStmt, state)
+		verRet := ver.verSpecFactUsingMemAndBuiltinRules(newStmt, state)
 		if verRet.IsErr() {
 			return verRet
 		}
@@ -115,7 +110,7 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 		}
 	}
 
-	verRet := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(stmt, state)
+	verRet := ver.verSpecFactUsingMemAndBuiltinRules(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -129,11 +124,11 @@ func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *a
 // TODO: 其实 specFact 是等号的时候，还是会访问到这个函数。
 // WARNING: 其实 specFact 是等号的时候，还是会访问到这个函数。所以这个函数的命名是有问题的
 // WARNING: 需要重构整个架构，把验证的逻辑屡屡顺。Litex是ATP的话，那就必须要告诉用户我Auto的过程是什么样的
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	return ver.verSpecFactStepByStep(stmt, state)
-}
+// func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+// 	return ver.verSpecFactStepByStep(stmt, state)
+// }
 
-func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verSpecFactUsingMemAndBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
 	if verRet := ver.verSpecFactByBuiltinRules(stmt, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -458,4 +453,3 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 
 	return glob.NewEmptyVerRetUnknown()
 }
-
