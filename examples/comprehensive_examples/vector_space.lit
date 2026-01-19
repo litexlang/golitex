@@ -10,7 +10,16 @@ Distributivity of scalar multiplication with respect to vector addition  	a(
 Distributivity of scalar multiplication with respect to field addition	(a + b)v = av + bv
 """
 
-prop vector_space(F set, Fa fn(F, F)F, Fneg fn(F)F, Fm(F, F)F, F0 F, F1 F, V set, Va fn(V, V)V, Vs fn(F, V)V, v0 V):
+prop field(F set, Fa fn(F, F)F, Fneg fn(F)F, Fm fn(F, F)F, F0 F, F1 F):
+    forall a, b, c F: Fa(a, Fa(b, c)) = Fa(Fa(a, b), c)
+    forall a F: Fa(a, F0) = a, a = Fa(F0, a)
+    forall a F: Fa(a, Fneg(a)) = F0, a = Fa(Fneg(a), a)
+    forall a, b F: Fa(a, b) = Fa(b, a)
+    forall a F: Fa(a, F1) = a, a = Fa(F1, a)
+    forall a, b F: Fa(a, b) = Fa(b, a)
+    forall a, b F: Fa(a, b) = Fa(b, a)
+
+prop vector_space(F set, Fa fn(F, F)F, Fneg fn(F)F, Fm fn(F, F)F, F0 F, F1 F, V set, Va fn(V, V)V, Vs fn(F, V)V, v0 V):
     $field(F, Fa, Fneg, Fm, F0, F1)
     forall v1, v2, v3 V: Va(v1, Va(v2, v3)) = Va(Va(v1, v2), v3)
     forall v1, v2 V: Va(v1, v2) = Va(v2, v1)
