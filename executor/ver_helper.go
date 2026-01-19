@@ -89,25 +89,45 @@ func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistStF
 		paramReplaceMap[oldParam] = ast.Atom(newParamName)
 	}
 
-	// 替换 ExistFreeParamSets 中的参数引用
-	newExistParamSets := make([]ast.Obj, len(existStruct.ExistFreeParamSets))
+	newSets := []ast.Obj{}
+	newUniMap := map[string]ast.Obj{}
 	for i, paramSet := range existStruct.ExistFreeParamSets {
-		newParamSet := paramSet
-		for oldParam, newParam := range paramReplaceMap {
-			newParamSet = newParamSet.ReplaceObj(ast.Atom(oldParam), newParam)
+		newSet, err := paramSet.Instantiate(newUniMap)
+		if err != nil {
+			panic("failed to instantiate exist free param set")
 		}
-		newExistParamSets[i] = newParamSet
+		newSets = append(newSets, newSet)
+		newUniMap[existStruct.ExistFreeParams[i]] = paramReplaceMap[existStruct.ExistFreeParams[i]]
 	}
 
-	// 替换 Params 中的参数引用
-	newParams := make([]ast.Obj, len(existStruct.Params))
-	for i, param := range existStruct.Params {
-		newParam := param
-		for oldParam, newParamObj := range paramReplaceMap {
-			newParam = newParam.ReplaceObj(ast.Atom(oldParam), newParamObj)
+	newParams := []ast.Obj{}
+	for _, param := range existStruct.Params {
+		newParam, err := param.Instantiate(paramReplaceMap)
+		if err != nil {
+			panic("failed to instantiate exist free param set")
 		}
-		newParams[i] = newParam
+		newParams = append(newParams, newParam)
 	}
 
-	return ast.NewExistStFactStruct(existStruct.FactType, existStruct.PropName, existStruct.IsPropTrue, newExistParams, newExistParamSets, newParams, existStruct.Line)
+	// 替换 ExistFreeParamSets 中的参数引用
+	// newExistParamSets := make([]ast.Obj, len(existStruct.ExistFreeParamSets))
+	// for i, paramSet := range existStruct.ExistFreeParamSets {
+	// 	newParamSet := paramSet
+	// 	for oldParam, newParam := range paramReplaceMap {
+	// 		newParamSet = newParamSet.ReplaceObj(ast.Atom(oldParam), newParam)
+	// 	}
+	// 	newExistParamSets[i] = newParamSet
+	// }
+
+	// // 替换 Params 中的参数引用
+	// newParams := make([]ast.Obj, len(existStruct.Params))
+	// for i, param := range existStruct.Params {
+	// 	newParam := param
+	// 	for oldParam, newParamObj := range paramReplaceMap {
+	// 		newParam = newParam.ReplaceObj(ast.Atom(oldParam), newParamObj)
+	// 	}
+	// 	newParams[i] = newParam
+	// }
+
+	return ast.NewExistStFactStruct(existStruct.FactType, existStruct.PropName, existStruct.IsPropTrue, newExistParams, newSets, newParams, existStruct.Line)
 }
