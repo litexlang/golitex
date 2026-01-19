@@ -26,7 +26,7 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
-[Litex](https://litexlang.com) is a simple open-source computer language for mathematical proofs. It aims to express mathematics as code with verified correctness while staying as close to natural language as possible, making it both rigorous and accessible. ([Star the repo!](https://github.com/litexlang/golitex))
+[Litex](https://litexlang.com) is a simple open-source computer language for mathematical proofs. It aims to express mathematics as code with verified correctness while staying as close to natural language as possible. I hope after learning Litex, you can have a new understanding of `what mathematics is`! ([Star the repo!](https://github.com/litexlang/golitex)) 
 
 Formal code written in Litex is typically 2-10x simpler than traditional formal languages, and looks almost the same as how math is written in natural language, meaning Litex could be a game changer for both traditional math and frontier AI research.
 
