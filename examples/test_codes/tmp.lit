@@ -1,7 +1,2 @@
-have fn f(x R, t R) R = x + t
-have fn g(x R, t R) R = x + t
-
-forall x, y R: f(x \g y, x \g y) = f(x + y, x + y) = x + y + (x + y)
-
-forall x, y R: (x \g y) \f (x \g y) = (x + y) \f (x + y) 
-
+let a, b R: a < b
+b > a
