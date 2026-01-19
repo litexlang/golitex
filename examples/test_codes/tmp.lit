@@ -1,2 +1,2 @@
-let a, b R: a < b
-b > a
+have a R st a > 0
+0 < a^2
