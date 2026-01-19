@@ -1092,4 +1092,8 @@ know:
 	forall x, y R: x = 0 or y = 0 => x * y = 0
 
 know forall a N: exist s finite_set st count(s) = a
+
+know forall x R, y N_pos: y % 2 = 0=> x ^ y >= 0, 0 <= x ^ y
+
+know forall x R: x * x >=0, 0 <= x * x
 `
