@@ -297,7 +297,7 @@ func (ver *Verifier) matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFact *
 	}
 }
 
-func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.Obj, freeVars []string, givenFcs []ast.Obj, propNameForMsg string, knownToInstEqualMap map[string]ast.Obj) (bool, map[string]ast.Obj, error) {
+func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.Obj, freeVars []string, givenFcs []ast.Obj, propNameForMsg string, knownToInstEqualMap_usedToMatchFreeParamsOfExistFacts map[string]ast.Obj) (bool, map[string]ast.Obj, error) {
 	// knownFcs := knownSpecFactInUniFact.SpecFact.Params
 	// freeVars := knownSpecFactInUniFact.UniFact.Params
 	freeVarsMap := map[string]struct{}{}
@@ -330,7 +330,7 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.
 	// 把实例化了的没被匹配的fcPair拿出来，检查是否是equal
 	for _, fcPair := range unMatchedFcPairs {
 		// 用来匹配 exist 的free param的
-		if str, ok := knownToInstEqualMap[fcPair.knownFc.String()]; ok {
+		if str, ok := knownToInstEqualMap_usedToMatchFreeParamsOfExistFacts[fcPair.knownFc.String()]; ok {
 			if str.String() == fcPair.givenFc.String() {
 				continue
 			}
