@@ -1,2 +1,18 @@
-have a R st a > 0
-0 < a^2
+set_minus({1,2}, {1}) = {2}
+
+"""
+let fn product(s power_set(R)) R
+
+know:
+    product({}) = 1
+
+    forall x R:
+        product({x}) = x
+
+    forall s finite_set, x s:
+        product(s) = product(set_minus(s, {x})) * x
+
+prove product({1,2}) = 2:
+    set_minus({1,2}, {1}) = {2}
+    product({1,2}) = product(set_minus({1,2}, {1})) * 1 = product({2}) * 1 = 2 * 1 = 2
+"""

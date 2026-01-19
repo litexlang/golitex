@@ -131,6 +131,15 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt *ast.SpecFactStmt, state *VerSt
 		return verRet
 	}
 
+	// x $in power_set(X)
+	verRet = ver.verInFactByRightIsPowerSet(stmt, state)
+	if verRet.IsErr() {
+		return verRet
+	}
+	if verRet.IsTrue() {
+		return verRet
+	}
+
 	return glob.NewEmptyVerRetUnknown()
 }
 
@@ -964,4 +973,32 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfSuperFn(stmt *ast.SpecFa
 	default:
 		return glob.NewEmptyVerRetUnknown()
 	}
+}
+
+func (ver *Verifier) verInFactByRightIsPowerSet(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+	if len(stmt.Params) != 2 {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	if asFnObj, ok := stmt.Params[1].(*ast.FnObj); ok {
+		if asFnObj.FnHead.String() != glob.KeywordPowerSet || len(asFnObj.Params) != 1 {
+			return glob.NewEmptyVerRetUnknown()
+		}
+	} else {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	randomAtom := ver.Env.GenerateUndeclaredRandomName()
+
+	// 证明 forall x X: x $in X
+	forallFact := ast.NewUniFact(
+		[]string{randomAtom},
+		[]ast.Obj{stmt.Params[0]},
+		[]ast.FactStmt{},
+		[]ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom(randomAtom), stmt.Params[1].(*ast.FnObj).Params[0]}, glob.BuiltinLine0)},
+		glob.BuiltinLine0,
+	)
+	verRet := ver.VerFactStmt(forallFact, state)
+
+	return verRet
 }
