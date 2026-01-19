@@ -1,2 +1,2 @@
-let x R: x - 1 = 27
-x = 28
+let a, b, c R: b != 0, a / b = c
+a = b * c
