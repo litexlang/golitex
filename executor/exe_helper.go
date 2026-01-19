@@ -128,3 +128,9 @@ func (exec *Executor) GenerateShortExistFact(specFact *ast.SpecFactStmt) *ast.Ex
 
 	return ast.NewExistStFactStruct(ast.TrueExist_St, specFact.PropName, specFact.IsTrue(), randomParams, randomParamSets, randomParamAsObj, specFact.Line)
 }
+
+func (exec *Executor) NewErrStmtRet(stmt ast.Stmt) *glob.StmtRet {
+	ret := glob.NewEmptyStmtError()
+	exec.AddStmtToStmtRet(ret, stmt)
+	return ret
+}

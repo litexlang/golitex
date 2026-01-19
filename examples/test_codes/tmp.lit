@@ -1,5 +1,1 @@
-
-
-let s1, s2 finite_set: exist f fn(s1)s2 st $is_injective_fn(s1, s2, f)
-
-exist f fn(s1)s2 st $is_injective_fn(s1, s2, f) => count(s1) <= count(s2)
+have s2 finite_set st count(s2) = 100

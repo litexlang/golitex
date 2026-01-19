@@ -1090,4 +1090,6 @@ know forall x finite_set, y set: set_minus(x, y) $is_finite_set
 know:
 	forall x, y R: x * y = 0 => x = 0 or y = 0
 	forall x, y R: x = 0 or y = 0 => x * y = 0
+
+know forall a N: exist s finite_set st count(s) = a
 `
