@@ -35,9 +35,26 @@ func (ver *Verifier) verSpecFactPostProcess(stmt *ast.SpecFactStmt, state *VerSt
 }
 
 func (ver *Verifier) verSpecFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	verRet := ver.verSpecFactUsingMemAndBuiltinRules(stmt, state)
-	if verRet.IsErr() || verRet.IsTrue() {
+	if verRet := ver.verSpecFactByBuiltinRules(stmt, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
+	}
+
+	if verRet := ver.verSpecFact_BySpecMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	if verRet := ver.verSpecFact_ByDEF(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	if !state.isFinalRound() {
+		if verRet := ver.verSpecFact_ByLogicMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
+
+		if verRet := ver.verSpecFact_UniMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
 	}
 
 	return glob.NewEmptyVerRetUnknown()
@@ -62,8 +79,37 @@ func (ver *Verifier) verSpecFact2(stmt *ast.SpecFactStmt, state *VerState) *glob
 	return glob.NewEmptyVerRetUnknown()
 }
 
+func (ver *Verifier) verSpecFactByMainLogicAndPostProcess(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+	verRet := ver.verSpecFactMainLogic(stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	verRet = ver.verSpecFactPostProcess(stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	return glob.NewEmptyVerRetUnknown()
+}
+
 func (ver *Verifier) verSpecFactPreProcess_ReplaceSymbolsWithValues(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	panic("not implemented")
+	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
+	if replaced {
+		verRet := ver.verSpecFactByMainLogicAndPostProcess(newStmt, state)
+		if verRet.IsErr() {
+			return verRet
+		}
+		if verRet.IsTrue() {
+			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
+			if state.WithMsg {
+				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
+			}
+			return glob.NewEmptyVerRetTrue()
+		}
+	}
+
+	return glob.NewEmptyVerRetUnknown()
 }
 
 func (ver *Verifier) verSpecFactPreProcessAndMainLogic(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
@@ -107,7 +153,7 @@ func (ver *Verifier) verSpecFactPostProcess_UseTransitivity(stmt *ast.SpecFactSt
 
 		for _, relatedObj := range relatedObjSlice {
 			relatedObjStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.PropName), []ast.Obj{relatedObj, stmt.Params[1]}, stmt.Line)
-			verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(relatedObjStmt, state)
+			verRet := ver.verSpecFactPreProcessAndMainLogic(relatedObjStmt, state)
 			if verRet.IsErr() {
 				return verRet
 			}
