@@ -24,7 +24,7 @@ prop vector_space(F set, Fa fn(F, F)F, Fneg fn(F)F, Fm fn(F, F)F, F0 F, F1 F, V 
     forall v1, v2, v3 V: Va(v1, Va(v2, v3)) = Va(Va(v1, v2), v3)
     forall v1, v2 V: Va(v1, v2) = Va(v2, v1)
     forall v1 V: v0 \Va v1 = v1
-    forall v1 V: exist v1neg V st v1 + v1neg = v0
+    forall v1 V: exist v1neg V st v1 \Va v1neg = v0
     forall a, b F, v V: Vs(Fm(a, b), v) = Vs(a, Vs(b, v))
     forall v V: F1 \Vs v = v
     forall a F, v1, v2 V: Vs(a, Va(v1, v2)) = Va(Vs(a, v1), Vs(a, v2))

@@ -1,7 +1,10 @@
 have fn f(x R, t R) R = x + t
 have fn g(x R, t R) R = x + t
 
+# The followings are equivalent
+
 forall x, y R: f(x \g y, x \g y) = f(x + y, x + y) = x + y + (x + y)
 
 forall x, y R: (x \g y) \f (x \g y) = (x + y) \f (x + y) 
 
+forall x, y R: f(g(x, y), g(x, y)) = f(x + y, x + y) = x + y + (x + y)
