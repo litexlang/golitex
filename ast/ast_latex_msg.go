@@ -153,6 +153,39 @@ func (p *SpecFactStmt) ToLatexString() string {
 	}
 }
 
+func (p *PureSpecificFactStmt) ToLatexString() string {
+	var builder strings.Builder
+
+	if glob.IsKeySymbol(string(p.PropName)) {
+		builder.WriteString(pureSpecificFactKeySymbolRelaFactString(p))
+		if !p.IsTrue {
+			builder.WriteString(" is false")
+		}
+		return builder.String()
+	} else if _, ok := relaPropSet[string(p.PropName)]; ok {
+		builder.WriteString(pureSpecificFactKeywordRelaFactString(p))
+		if !p.IsTrue {
+			builder.WriteString(" is false")
+		}
+		return builder.String()
+	} else {
+		curStr := strings.TrimPrefix(p.String(), "not ")
+		curStr = strings.TrimPrefix(curStr, "$")
+		curStr = fmt.Sprintf("$%s$", curStr)
+		builder.WriteString(curStr)
+
+		if !p.IsTrue {
+			builder.WriteString(" is false")
+		}
+		return builder.String()
+	}
+}
+
+func (e *ExistSpecificFactStmt) ToLatexString() string {
+	// For exist facts, use the same string representation
+	return e.String()
+}
+
 func pureSpecFactLatexString(stmt *SpecFactStmt) string {
 	var builder strings.Builder
 

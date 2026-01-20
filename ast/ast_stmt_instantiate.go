@@ -73,6 +73,54 @@ func (stmt *SpecFactStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, erro
 	return InstantiateSpecFact(stmt, uniMap)
 }
 
+func (p *PureSpecificFactStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {
+	newParams := []Obj{}
+	for _, param := range p.Params {
+		newParam, err := param.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newParams = append(newParams, newParam)
+	}
+
+	return &PureSpecificFactStmt{
+		IsTrue:   p.IsTrue,
+		PropName: p.PropName,
+		Params:   newParams,
+		Line:     p.Line,
+	}, nil
+}
+
+func (e *ExistSpecificFactStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {
+	newExistFreeParamSets := []Obj{}
+	for _, paramSet := range e.ExistFreeParamSets {
+		newParamSet, err := paramSet.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newExistFreeParamSets = append(newExistFreeParamSets, newParamSet)
+	}
+
+	newParams := []Obj{}
+	for _, param := range e.Params {
+		newParam, err := param.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newParams = append(newParams, newParam)
+	}
+
+	return &ExistSpecificFactStmt{
+		IsTrue:             e.IsTrue,
+		IsPropTrue:         e.IsPropTrue,
+		PropName:           e.PropName,
+		ExistFreeParams:    e.ExistFreeParams, // strings don't need instantiation
+		ExistFreeParamSets: newExistFreeParamSets,
+		Params:             newParams,
+		Line:               e.Line,
+	}, nil
+}
+
 func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Obj) (*UniFactStmt, error) {
 	newParams := []string{}
 	newParams = append(newParams, stmt.Params...)
@@ -900,6 +948,14 @@ func (stmt *EvalStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 
 func (stmt *SpecFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt.InstantiateFact(uniMap)
+}
+
+func (p *PureSpecificFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	return p.InstantiateFact(uniMap)
+}
+
+func (e *ExistSpecificFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	return e.InstantiateFact(uniMap)
 }
 
 func (stmt *UniFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
