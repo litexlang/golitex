@@ -429,20 +429,17 @@ func changeSpecFactIntoObjs(fact SpecificFactStmt) ([]Obj, error) {
 		} else {
 			ret = append(ret, Atom(strconv.Itoa(int(FalsePure))))
 		}
-	case *ExistSpecificFactStmt:
-		if asFact.IsTrue {
-			ret = append(ret, Atom(strconv.Itoa(int(TrueExist_St))))
-		} else {
-			ret = append(ret, Atom(strconv.Itoa(int(FalseExist_St))))
+		ret = append(ret, Atom(strconv.Itoa(len(asFact.Params))))
+		ret = append(ret, asFact.PropName)
+
+		for _, param := range asFact.Params {
+			ret = append(ret, param)
 		}
-	}
-	ret = append(ret, Atom(strconv.Itoa(len(fact.Params))))
-	ret = append(ret, fact.PropName)
 
-	for _, param := range fact.Params {
-		ret = append(ret, param)
+		return ret, nil
+	case *ExistSpecificFactStmt:
+		return nil, fmt.Errorf("changeSpecFactIntoObjs: exist specific fact is not supported")
 	}
-
 	return ret, nil
 }
 
@@ -472,16 +469,16 @@ func NegateObj(right Obj) Obj {
 	return NewFnObj(Atom(glob.KeySymbolStar), []Obj{Atom("-1"), right})
 }
 
-func NewIsANonEmptySetFact(param Obj, line uint) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, line)
+func NewIsANonEmptySetFact(param Obj, line uint) *PureSpecificFactStmt {
+	return NewPureSpecificFactStmt(true, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, line)
 }
 
-func NewIsAFiniteSetFact(param Obj, line uint) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, line)
+func NewIsAFiniteSetFact(param Obj, line uint) *PureSpecificFactStmt {
+	return NewPureSpecificFactStmt(true, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, line)
 }
 
-func NewIsASetFact(param Obj, line uint) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{param}, line)
+func NewIsASetFact(param Obj, line uint) *PureSpecificFactStmt {
+	return NewPureSpecificFactStmt(true, Atom(glob.KeywordIsASet), []Obj{param}, line)
 }
 
 func ObjIsKeywordSetOrNonEmptySetOrFiniteSet(obj Obj) bool {
@@ -509,16 +506,13 @@ func ObjIsRangeOrClosedRangeWith2Params(obj Obj) bool {
 	return false
 }
 
-func IsTrueEqualFact(fact *SpecFactStmt) bool {
-	if fact.FactType != TruePure {
+func IsTrueEqualFact(fact SpecificFactStmt) bool {
+	switch asFact := fact.(type) {
+	case *PureSpecificFactStmt:
+		return asFact.IsTrue && asFact.PropName == glob.KeySymbolEqual
+	default:
 		return false
 	}
-
-	if fact.PropName != glob.KeySymbolEqual {
-		return false
-	}
-
-	return true
 }
 
 // func (stmt *DefImplicationStmt) ToProp() *DefPropStmt {
@@ -526,20 +520,22 @@ func IsTrueEqualFact(fact *SpecFactStmt) bool {
 // 	return NewDefPropStmt(stmt.DefHeader, []FactStmt{}, stmt.DomFacts, stmt.ImplicationFacts, stmt.Line)
 // }
 
-func IsTrueSpecFactWithPropName(specFact *SpecFactStmt, propName string) bool {
-	if specFact.FactType != TruePure {
+func IsTrueSpecFactWithPropName(specFact SpecificFactStmt, propName string) bool {
+	switch asFact := specFact.(type) {
+	case *PureSpecificFactStmt:
+		return asFact.IsTrue && string(asFact.PropName) == propName
+	default:
 		return false
 	}
-
-	return string(specFact.PropName) == propName
 }
 
-func IsFalseSpecFactWithPropName(specFact *SpecFactStmt, propName string) bool {
-	if specFact.FactType != FalsePure {
+func IsFalseSpecFactWithPropName(specFact SpecificFactStmt, propName string) bool {
+	switch asFact := specFact.(type) {
+	case *PureSpecificFactStmt:
+		return !asFact.IsTrue && string(asFact.PropName) == propName
+	default:
 		return false
 	}
-
-	return string(specFact.PropName) == propName
 }
 
 func GetParamSetsAndRetSetFromFnSet(fnSet *FnObj) ([]Obj, Obj, error) {
@@ -643,7 +639,7 @@ func IsAtomWithoutPkgName(atom Atom) bool {
 	return true
 }
 
-func ParamsInSpecFactAreStrings(specFact *SpecFactStmt) ([]string, error) {
+func ParamsInSpecFactAreStrings(specFact *PureSpecificFactStmt) ([]string, error) {
 	ret := []string{}
 	for _, param := range specFact.Params {
 		if atom, ok := param.(Atom); !ok {
