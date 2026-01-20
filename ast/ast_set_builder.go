@@ -33,7 +33,7 @@ import (
 type SetBuilderStruct struct {
 	Param     string
 	ParentSet Obj
-	Facts     SpecFactPtrSlice
+	Facts     []*PureSpecificFactStmt
 }
 
 func IsSetBuilder(obj Obj) bool {
@@ -61,7 +61,7 @@ func (fnObj *FnObj) ToSetBuilderStruct() (*SetBuilderStruct, error) {
 
 	// Parse facts from Params[2:]
 	// Format: [typeEnumInt] [paramCountInt] [propName] [params...] [next fact typeEnumInt] ...
-	facts := SpecFactPtrSlice{}
+	facts := []*PureSpecificFactStmt{}
 	i := 2
 	for i < len(fnObj.Params) {
 		// Read type enum (as integer string)
@@ -118,11 +118,17 @@ func (fnObj *FnObj) ToSetBuilderStruct() (*SetBuilderStruct, error) {
 		i += paramCount
 
 		// Create SpecFactStmt
-		specFact := NewSpecFactStmt(typeEnum, propNameAtom, params, glob.BuiltinLine0)
-		facts = append(facts, specFact)
+		switch typeEnum {
+		case TruePure:
+			facts = append(facts, NewPureSpecificFactStmt(true, propNameAtom, params, glob.BuiltinLine0))
+		case FalsePure:
+			facts = append(facts, NewPureSpecificFactStmt(false, propNameAtom, params, glob.BuiltinLine0))
+		default:
+			return nil, fmt.Errorf("invalid type enum value: %d", typeEnumInt)
+		}
 	}
 
-	return NewSetBuilderStruct(param, parentSet, facts), nil
+	return NewSetBuilderStruct(param, parentSet, (facts)), nil
 }
 
 func (setBuilderStruct *SetBuilderStruct) ReplaceParamWithNewParam(newParam string) (*SetBuilderStruct, error) {
@@ -133,19 +139,22 @@ func (setBuilderStruct *SetBuilderStruct) ReplaceParamWithNewParam(newParam stri
 		return nil, err
 	}
 
-	newFacts := make(SpecFactPtrSlice, len(setBuilderStruct.Facts))
+	newFacts := make([]*PureSpecificFactStmt, len(setBuilderStruct.Facts))
 	for i, fact := range setBuilderStruct.Facts {
 		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
-		newFacts[i] = newFact.(*SpecFactStmt)
+		newFacts[i] = newFact.(*PureSpecificFactStmt)
+		if _, ok := newFact.(*PureSpecificFactStmt); !ok {
+			return nil, fmt.Errorf("for the time being, only pure specific facts are supported in set builder")
+		}
 	}
 
 	return NewSetBuilderStruct(newParam, newParentSet, newFacts), nil
 }
 
-func NewSetBuilderStruct(param string, parentSet Obj, facts SpecFactPtrSlice) *SetBuilderStruct {
+func NewSetBuilderStruct(param string, parentSet Obj, facts []*PureSpecificFactStmt) *SetBuilderStruct {
 	return &SetBuilderStruct{
 		Param:     param,
 		ParentSet: parentSet,

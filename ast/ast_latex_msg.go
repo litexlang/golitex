@@ -145,13 +145,13 @@ func (l *UniFactStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (p *SpecFactStmt) ToLatexString() string {
-	if p.IsExist_St_Fact() {
-		return exist_st_FactString(p)
-	} else {
-		return pureSpecFactLatexString(p)
-	}
-}
+// func (p *SpecFactStmt) ToLatexString() string {
+// 	if p.IsExist_St_Fact() {
+// 		return exist_st_FactString(p)
+// 	} else {
+// 		return pureSpecFactLatexString(p)
+// 	}
+// }
 
 func (p *PureSpecificFactStmt) ToLatexString() string {
 	var builder strings.Builder
@@ -186,84 +186,84 @@ func (e *ExistSpecificFactStmt) ToLatexString() string {
 	return e.String()
 }
 
-func pureSpecFactLatexString(stmt *SpecFactStmt) string {
-	var builder strings.Builder
+// 	func pureSpecFactLatexString(stmt *SpecFactStmt) string {
+// 		var builder strings.Builder
 
-	if glob.IsKeySymbol(string(stmt.PropName)) {
-		builder.WriteString(keySymbolRelaFactWithoutNotLatexString(stmt))
-		if stmt.FactType == FalsePure {
-			builder.WriteString(" is false")
-		}
-		return builder.String()
-	} else if _, ok := relaPropSet[string(stmt.PropName)]; ok {
-		builder.WriteString(keywordRelaFactWithoutNotLatexString(stmt))
-		if stmt.FactType == FalsePure {
-			builder.WriteString(" is false")
-		}
-		return builder.String()
-	} else {
-		curStr := strings.TrimPrefix(stmt.String(), "not ")
-		curStr = strings.TrimPrefix(curStr, "$")
-		curStr = fmt.Sprintf("$%s$", curStr)
-		builder.WriteString(curStr)
+// 		if glob.IsKeySymbol(string(stmt.PropName)) {
+// 			builder.WriteString(keySymbolRelaFactWithoutNotLatexString(stmt))
+// 			if stmt.FactType == FalsePure {
+// 				builder.WriteString(" is false")
+// 			}
+// 			return builder.String()
+// 		} else if _, ok := relaPropSet[string(stmt.PropName)]; ok {
+// 			builder.WriteString(keywordRelaFactWithoutNotLatexString(stmt))
+// 			if stmt.FactType == FalsePure {
+// 				builder.WriteString(" is false")
+// 			}
+// 			return builder.String()
+// 		} else {
+// 			curStr := strings.TrimPrefix(stmt.String(), "not ")
+// 			curStr = strings.TrimPrefix(curStr, "$")
+// 			curStr = fmt.Sprintf("$%s$", curStr)
+// 			builder.WriteString(curStr)
 
-		if stmt.FactType == FalsePure {
-			builder.WriteString(" is false")
-		}
-		return builder.String()
-	}
-}
+// 			if stmt.FactType == FalsePure {
+// 			builder.WriteString(" is false")
+// 		}
+// 		return builder.String()
+// 	}
+// }
 
-func keySymbolRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
-	var builder strings.Builder
+// func keySymbolRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
+// 	var builder strings.Builder
 
-	builder.WriteString(stmt.Params[0].ToLatexString())
-	builder.WriteString(" ")
+// 	builder.WriteString(stmt.Params[0].ToLatexString())
+// 	builder.WriteString(" ")
 
-	// 这里根据不同的我str的写法输出不同的latex的写法
-	switch stmt.PropName {
-	case glob.KeySymbolEqual:
-		builder.WriteString("=")
-	case glob.KeySymbolLess:
-		builder.WriteString("$\\leq$")
-	case glob.KeySymbolGreater:
-		builder.WriteString("$\\geq$")
-	case glob.KeySymbolNotEqual:
-		builder.WriteString("\\neq")
-	case glob.KeywordIn:
-		builder.WriteString("$\\in$")
-	case glob.KeySymbolLargerEqual:
-		builder.WriteString("$\\geq$")
-	case glob.KeySymbolLessEqual:
-		builder.WriteString("$\\leq$")
-	default:
-		builder.WriteString(stmt.PropName.String())
-	}
+// 	// 这里根据不同的我str的写法输出不同的latex的写法
+// 	switch stmt.PropName {
+// 	case glob.KeySymbolEqual:
+// 		builder.WriteString("=")
+// 	case glob.KeySymbolLess:
+// 		builder.WriteString("$\\leq$")
+// 	case glob.KeySymbolGreater:
+// 		builder.WriteString("$\\geq$")
+// 	case glob.KeySymbolNotEqual:
+// 		builder.WriteString("\\neq")
+// 	case glob.KeywordIn:
+// 		builder.WriteString("$\\in$")
+// 	case glob.KeySymbolLargerEqual:
+// 		builder.WriteString("$\\geq$")
+// 	case glob.KeySymbolLessEqual:
+// 		builder.WriteString("$\\leq$")
+// 	default:
+// 		builder.WriteString(stmt.PropName.String())
+// 	}
 
-	builder.WriteString(" ")
-	builder.WriteString(stmt.Params[1].ToLatexString())
+// 	builder.WriteString(" ")
+// 	builder.WriteString(stmt.Params[1].ToLatexString())
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
-func keywordRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
-	var builder strings.Builder
+// func keywordRelaFactWithoutNotLatexString(stmt *SpecFactStmt) string {
+// 	var builder strings.Builder
 
-	builder.WriteString(stmt.Params[0].ToLatexString())
-	builder.WriteString(" ")
+// 	builder.WriteString(stmt.Params[0].ToLatexString())
+// 	builder.WriteString(" ")
 
-	switch stmt.PropName {
-	case glob.KeywordIn:
-		builder.WriteString("$\\in$")
-	default:
-		builder.WriteString(stmt.PropName.String())
-	}
+// 	switch stmt.PropName {
+// 	case glob.KeywordIn:
+// 		builder.WriteString("$\\in$")
+// 	default:
+// 		builder.WriteString(stmt.PropName.String())
+// 	}
 
-	builder.WriteString(" ")
-	builder.WriteString(stmt.Params[1].ToLatexString())
+// 	builder.WriteString(" ")
+// 	builder.WriteString(stmt.Params[1].ToLatexString())
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
 func prop_fn_bodyToLatexString(defHeader *DefHeader, domFacts FactStmtSlice, iffFacts FactStmtSlice, isExistProp bool) string {
 	var builder strings.Builder

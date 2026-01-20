@@ -124,13 +124,7 @@ func (e *ExistSpecificFactStmt) String() string {
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
 
-	// Create a pure fact for the inner fact
-	var innerFact PureSpecificFactStmt
-	innerFact.IsTrue = e.IsPropTrue
-	innerFact.PropName = e.PropName
-	innerFact.Params = e.Params
-	innerFact.Line = glob.BuiltinLine0
-	builder.WriteString(innerFact.String())
+	builder.WriteString(e.PureFact.String())
 
 	return builder.String()
 }
