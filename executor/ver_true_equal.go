@@ -23,7 +23,7 @@ import (
 )
 
 // how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
-func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 	if !state.ReqOk {
 		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
@@ -47,13 +47,19 @@ func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt *ast.SpecFactStmt, state
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	if verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(stmt.Params[0], stmt.Params[1], state); verRet.IsErr() || verRet.IsTrue() {
+func (ver *Verifier) verTrueEqualFactMainLogic(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+
+	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	if verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(asStmt.Params[0], asStmt.Params[1], state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
-	if leftAsFn, ok := stmt.Params[0].(*ast.FnObj); ok {
-		if rightAsFn, ok := stmt.Params[1].(*ast.FnObj); ok {
+	if leftAsFn, ok := asStmt.Params[0].(*ast.FnObj); ok {
+		if rightAsFn, ok := asStmt.Params[1].(*ast.FnObj); ok {
 			verRet := ver.verTrueEqualFact_ObjFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
 			if verRet.IsErr() || verRet.IsTrue() {
 				return verRet
@@ -158,7 +164,7 @@ func (ver *Verifier) verEqualRightIsTuple(left ast.Obj, right ast.Obj, state *Ve
 		rightLen := len(rightTuple.Params)
 
 		// 查 left 的类型是不是 tuple
-		isTupleFact := ast.NewSpecFactStmt(ast.TruePure, glob.KeywordIsTuple, []ast.Obj{left}, glob.BuiltinLine0)
+		isTupleFact := ast.NewPureSpecificFactStmt(true, glob.KeywordIsTuple, []ast.Obj{left}, glob.BuiltinLine0)
 		ret := ver.VerFactStmt(isTupleFact, state)
 		if ret.IsNotTrue() {
 			return glob.NewEmptyVerRetUnknown()
@@ -441,12 +447,12 @@ func (ver *Verifier) verEqualBySetMinusOfListSets(left ast.Obj, right ast.Obj, s
 
 	// right 里的东西都在 listSet1 里，但不在 listSet2 里
 	for _, elem := range rightListSetFnObj.Params {
-		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{elem, listSet1FnObj}, glob.BuiltinLine0)
+		equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{elem, listSet1FnObj}, glob.BuiltinLine0)
 		verRet := ver.VerFactStmt(equalFact, state)
 		if verRet.IsTrue() {
 			// 要能证明 forall item in right => not item $in listSet2
 			for _, itemInListSet2 := range listSet2FnObj.Params {
-				notEqual := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{itemInListSet2, elem}, glob.BuiltinLine0)
+				notEqual := ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{itemInListSet2, elem}, glob.BuiltinLine0)
 				verRet := ver.VerFactStmt(notEqual, state)
 				if verRet.IsNotTrue() {
 					return glob.NewEmptyVerRetUnknown()
@@ -459,13 +465,13 @@ func (ver *Verifier) verEqualBySetMinusOfListSets(left ast.Obj, right ast.Obj, s
 
 	// listSet1 里的东西都在 right 里，不在right里就在 listSet2 里
 	for _, elem := range listSet1FnObj.Params {
-		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{elem, rightListSetFnObj}, glob.BuiltinLine0)
+		equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{elem, rightListSetFnObj}, glob.BuiltinLine0)
 		verRet := ver.VerFactStmt(equalFact, state)
 		if verRet.IsTrue() {
 			continue
 		}
 
-		equalFact = ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{elem, listSet2FnObj}, glob.BuiltinLine0)
+		equalFact = ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{elem, listSet2FnObj}, glob.BuiltinLine0)
 		verRet = ver.VerFactStmt(equalFact, state)
 		if verRet.IsNotTrue() {
 			return glob.NewEmptyVerRetUnknown()
