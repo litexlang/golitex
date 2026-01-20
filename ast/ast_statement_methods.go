@@ -56,7 +56,7 @@ func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactSt
 		propSpecFactParams = append(propSpecFactParams, Atom(param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, Atom((defStmt.DefHeader.Name)), propSpecFactParams, defStmt.Line)
+	propSpecFact := NewPureSpecificFactStmt(true, Atom((defStmt.DefHeader.Name)), propSpecFactParams, defStmt.Line)
 
 	// prop to iff
 	propToIffDomFacts := []FactStmt{propSpecFact}
@@ -80,7 +80,7 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 		propSpecFactParams = append(propSpecFactParams, Atom(param))
 	}
 
-	propSpecFact := NewSpecFactStmt(TruePure, Atom(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
+	propSpecFact := NewPureSpecificFactStmt(true, Atom(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
 
 	IffToPropDomFacts := []FactStmt{}
 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.DomFactsOrNil...)
@@ -102,33 +102,33 @@ func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
 // 	return propSpecFact
 // }
 
-func (stmt *SpecFactStmt) ReverseParameterOrder() (*SpecFactStmt, error) {
+func (stmt *PureSpecificFactStmt) ReverseParameterOrder() (*PureSpecificFactStmt, error) {
 	if len(stmt.Params) != 2 {
 		return nil, fmt.Errorf("reverseParameterOrder: expected 2 params, but got %d", len(stmt.Params))
 	}
 
 	newParams := []Obj{stmt.Params[1], stmt.Params[0]}
 
-	return NewSpecFactStmt(stmt.FactType, stmt.PropName, newParams, stmt.Line), nil
+	return NewPureSpecificFactStmt(stmt.IsTrue, stmt.PropName, newParams, stmt.Line), nil
 }
 
-func (stmt *SpecFactStmt) IsValidEqualFact() (bool, error) {
-	if stmt.NameIs(glob.KeySymbolEqual) {
+func (stmt *PureSpecificFactStmt) IsValidEqualFact() (bool, error) {
+	if string(stmt.PropName) == glob.KeySymbolEqual {
 		if len(stmt.Params) == 2 {
 			return true, nil
 		} else {
-			return false, fmt.Errorf("equal fact %s should have 2 params, but got %d", stmt, len(stmt.Params))
+			return false, fmt.Errorf("equal fact %s should have 2 params, but got %d", stmt.String(), len(stmt.Params))
 		}
 	} else {
 		return false, nil
 	}
 }
 
-func (stmt *SpecFactStmt) IsBuiltinProp_ExceptEqual() bool {
-	return glob.IsBuiltinInfixRelaPropSymbol(string(stmt.PropName)) && !stmt.NameIs(glob.KeySymbolEqual)
+func (stmt *PureSpecificFactStmt) IsBuiltinProp_ExceptEqual() bool {
+	return glob.IsBuiltinInfixRelaPropSymbol(string(stmt.PropName)) && string(stmt.PropName) != glob.KeySymbolEqual
 }
 
-func NewInFact(param string, paramSet Obj) *SpecFactStmt {
+func NewInFact(param string, paramSet Obj) *PureSpecificFactStmt {
 	switch string(paramSet.String()) {
 	case glob.KeywordSet:
 		return NewIsASetFact(Atom(param), glob.BuiltinLine0)
@@ -137,33 +137,33 @@ func NewInFact(param string, paramSet Obj) *SpecFactStmt {
 	case glob.KeywordNonEmptySet:
 		return NewIsANonEmptySetFact(Atom(param), glob.BuiltinLine0)
 	default:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{Atom(param), paramSet}, glob.BuiltinLine0)
+		return NewPureSpecificFactStmt(true, Atom(glob.KeywordIn), []Obj{Atom(param), paramSet}, glob.BuiltinLine0)
 	}
 }
 
-func NewInFactWithParamObj(param Obj, paramSet Obj, line uint) *SpecFactStmt {
+func NewInFactWithParamObj(param Obj, paramSet Obj, line uint) *PureSpecificFactStmt {
 	switch string(paramSet.String()) {
 	case glob.KeywordSet:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{param}, line)
+		return NewPureSpecificFactStmt(true, Atom(glob.KeywordIsASet), []Obj{param}, line)
 	case glob.KeywordFiniteSet:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, line)
+		return NewPureSpecificFactStmt(true, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, line)
 	case glob.KeywordNonEmptySet:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, line)
+		return NewPureSpecificFactStmt(true, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, line)
 	default:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{param, paramSet}, line)
+		return NewPureSpecificFactStmt(true, Atom(glob.KeywordIn), []Obj{param, paramSet}, line)
 	}
 }
 
-func NewInFactWithObj(param Obj, paramSet Obj) *SpecFactStmt {
+func NewInFactWithObj(param Obj, paramSet Obj) *PureSpecificFactStmt {
 	switch string(paramSet.String()) {
 	case glob.KeywordSet:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{param}, glob.BuiltinLine0)
+		return NewPureSpecificFactStmt(true, Atom(glob.KeywordIsASet), []Obj{param}, glob.BuiltinLine0)
 	case glob.KeywordFiniteSet:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, glob.BuiltinLine0)
+		return NewPureSpecificFactStmt(true, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, glob.BuiltinLine0)
 	case glob.KeywordNonEmptySet:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, glob.BuiltinLine0)
+		return NewPureSpecificFactStmt(true, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, glob.BuiltinLine0)
 	default:
-		return NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{param, paramSet}, glob.BuiltinLine0)
+		return NewPureSpecificFactStmt(true, Atom(glob.KeywordIn), []Obj{param, paramSet}, glob.BuiltinLine0)
 	}
 }
 
@@ -181,17 +181,17 @@ func IsFnSet(obj Obj) bool {
 	return IsAtomObjAndEqualToStr(objHeadAsFnObj.FnHead, glob.KeywordFn)
 }
 
-func (stmt *SpecFactStmt) ReverseSpecFactParamsOrder() (*SpecFactStmt, error) {
+func (stmt *PureSpecificFactStmt) ReverseSpecFactParamsOrder() (*PureSpecificFactStmt, error) {
 	if len(stmt.Params) != 2 {
 		return nil, fmt.Errorf("ReverseSpecFactParamsOrder: expected 2 params, but got %d", len(stmt.Params))
 	}
 
 	newParams := []Obj{stmt.Params[1], stmt.Params[0]}
-	return NewSpecFactStmt(stmt.FactType, stmt.PropName, newParams, stmt.Line), nil
+	return NewPureSpecificFactStmt(stmt.IsTrue, stmt.PropName, newParams, stmt.Line), nil
 }
 
-func (stmt *DefLetStmt) NewInFacts() []*SpecFactStmt {
-	facts := []*SpecFactStmt{}
+func (stmt *DefLetStmt) NewInFacts() []*PureSpecificFactStmt {
+	facts := []*PureSpecificFactStmt{}
 
 	if len(stmt.Objs) != len(stmt.ObjSets) {
 		panic("NewInFacts: len(stmt.Objs) != len(stmt.ObjSets)")
@@ -205,8 +205,8 @@ func (stmt *DefLetStmt) NewInFacts() []*SpecFactStmt {
 	return facts
 }
 
-func (defHeader *DefHeader) NewInFacts() []*SpecFactStmt {
-	facts := []*SpecFactStmt{}
+func (defHeader *DefHeader) NewInFacts() []*PureSpecificFactStmt {
+	facts := []*PureSpecificFactStmt{}
 	for i, param := range defHeader.Params {
 		facts = append(facts, NewInFact(param, defHeader.ParamSets[i]))
 	}
@@ -240,7 +240,7 @@ func Get_FnTemplate_InObjForm_ParamSetsAndRetSet(obj Obj) ([]Obj, Obj, bool) {
 	return paramSets, objAsFnObj.Params[0], true
 }
 
-func GetExistParamsAndFactParamsFromExistFactStmt(stmt *SpecFactStmt) ([]Obj, []Obj) {
+func GetExistParamsAndFactParamsFromExistFactStmt(stmt *PureSpecificFactStmt) ([]Obj, []Obj) {
 	lengthOfExistParams, _ := strconv.Atoi(string(stmt.Params[0].(Atom)))
 
 	existParams := []Obj{}
@@ -306,22 +306,22 @@ func IsObjAtomEqualToGivenString(obj Obj, name string) bool {
 	return string(objAtom) == name
 }
 
-func TransformEnumToUniFact(setName Obj, enumObjs []Obj) (*UniFactStmt, []*SpecFactStmt, []*SpecFactStmt) {
+func TransformEnumToUniFact(setName Obj, enumObjs []Obj) (*UniFactStmt, []*PureSpecificFactStmt, []*PureSpecificFactStmt) {
 	freeObjName := Atom(glob.RandomString(4))
-	equalFactsInOrFact := []*SpecFactStmt{}
-	itemsInSetFacts := []*SpecFactStmt{}
+	equalFactsInOrFact := []*PureSpecificFactStmt{}
+	itemsInSetFacts := []*PureSpecificFactStmt{}
 	for _, obj := range enumObjs {
-		equalFactsInOrFact = append(equalFactsInOrFact, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{freeObjName, obj}, glob.BuiltinLine0))
-		itemsInSetFacts = append(itemsInSetFacts, NewSpecFactStmt(TruePure, Atom(glob.KeywordIn), []Obj{obj, setName}, glob.BuiltinLine0))
+		equalFactsInOrFact = append(equalFactsInOrFact, NewPureSpecificFactStmt(true, Atom(glob.KeySymbolEqual), []Obj{freeObjName, obj}, glob.BuiltinLine0))
+		itemsInSetFacts = append(itemsInSetFacts, NewPureSpecificFactStmt(true, Atom(glob.KeywordIn), []Obj{obj, setName}, glob.BuiltinLine0))
 	}
 
-	pairwiseNotEqualFacts := []*SpecFactStmt{}
+	pairwiseNotEqualFacts := []*PureSpecificFactStmt{}
 	for i := range len(enumObjs) {
 		for j := range len(enumObjs) {
 			if i == j {
 				continue
 			}
-			pairwiseNotEqualFacts = append(pairwiseNotEqualFacts, NewSpecFactStmt(FalsePure, Atom(glob.KeySymbolEqual), []Obj{enumObjs[i], enumObjs[j]}, glob.BuiltinLine0))
+			pairwiseNotEqualFacts = append(pairwiseNotEqualFacts, NewPureSpecificFactStmt(false, Atom(glob.KeySymbolEqual), []Obj{enumObjs[i], enumObjs[j]}, glob.BuiltinLine0))
 		}
 	}
 
@@ -346,14 +346,14 @@ func (stmt *ProveForStmt) UniFact() *UniFactStmt {
 		isRange := stmt.IsProveIRange[i]
 
 		// left <= param
-		domFacts = append(domFacts, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLessEqual), []Obj{left, Atom(param)}, stmt.Line))
+		domFacts = append(domFacts, NewPureSpecificFactStmt(true, Atom(glob.KeySymbolLessEqual), []Obj{left, Atom(param)}, stmt.Line))
 
 		if isRange {
 			// range: left <= param < right
-			domFacts = append(domFacts, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLess), []Obj{Atom(param), right}, stmt.Line))
+			domFacts = append(domFacts, NewPureSpecificFactStmt(true, Atom(glob.KeySymbolLess), []Obj{Atom(param), right}, stmt.Line))
 		} else {
 			// closed_range: left <= param <= right
-			domFacts = append(domFacts, NewSpecFactStmt(TruePure, Atom(glob.KeySymbolLessEqual), []Obj{Atom(param), right}, stmt.Line))
+			domFacts = append(domFacts, NewPureSpecificFactStmt(true, Atom(glob.KeySymbolLessEqual), []Obj{Atom(param), right}, stmt.Line))
 		}
 	}
 	// Add user-provided dom facts
@@ -363,7 +363,7 @@ func (stmt *ProveForStmt) UniFact() *UniFactStmt {
 	return NewUniFact(params, paramSets, domFacts, thenFacts, stmt.Line)
 }
 
-func (stmt *SpecFactStmt) ExistStFactToPropNameExistParamsParams() ([]Obj, []Obj) {
+func (stmt *PureSpecificFactStmt) ExistStFactToPropNameExistParamsParams() ([]Obj, []Obj) {
 	lengthOfExistParams, _ := strconv.Atoi(string(stmt.Params[0].(Atom)))
 
 	existParams := []Obj{}
@@ -379,7 +379,7 @@ func (stmt *SpecFactStmt) ExistStFactToPropNameExistParamsParams() ([]Obj, []Obj
 	return existParams, factParams
 }
 
-func (stmt *SpecFactStmt) ExistStFactToPropNameExistParamsParamsAndTrueSpecFactAfterSt() ([]Obj, []Obj, *SpecFactStmt) {
+func (stmt *PureSpecificFactStmt) ExistStFactToPropNameExistParamsParamsAndTrueSpecFactAfterSt() ([]Obj, []Obj, *PureSpecificFactStmt) {
 	lengthOfExistParams, _ := strconv.Atoi(string(stmt.Params[0].(Atom)))
 
 	existParams := []Obj{}
@@ -394,7 +394,7 @@ func (stmt *SpecFactStmt) ExistStFactToPropNameExistParamsParamsAndTrueSpecFactA
 		newSpecFactParams = append(newSpecFactParams, stmt.Params[i])
 	}
 
-	newSpecFact := NewSpecFactStmt(TruePure, stmt.PropName, newSpecFactParams, glob.BuiltinLine0)
+	newSpecFact := NewPureSpecificFactStmt(true, stmt.PropName, newSpecFactParams, glob.BuiltinLine0)
 
 	return existParams, factParams, newSpecFact
 }
@@ -404,10 +404,10 @@ func (stmt *SpecFactStmt) ExistStFactToPropNameExistParamsParamsAndTrueSpecFactA
 // 	return NewSpecFactStmt(TrueExist_St, stmt.Fact.PropName, existStParams, stmt.Line)
 // }
 
-func (stmt *HaveObjStStmt) ToTruePurePropExistStFact() *SpecFactStmt {
+func (stmt *HaveObjStStmt) ToTruePurePropExistStFact() *PureSpecificFactStmt {
 	return NewExistStFact(TrueExist_St, stmt.Fact.PropName, stmt.Fact.IsTrue(), stmt.ObjNames, stmt.ObjSets, stmt.Fact.Params, stmt.Line)
 }
 
-func (stmt *WitnessStmt) ToTrueExistStFact() *SpecFactStmt {
+func (stmt *WitnessStmt) ToTrueExistStFact() *PureSpecificFactStmt {
 	return NewExistStFact(TrueExist_St, stmt.Fact.PropName, stmt.Fact.IsTrue(), stmt.ExistParams, stmt.ExistParamSets, stmt.Fact.Params, stmt.Line)
 }

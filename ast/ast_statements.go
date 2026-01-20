@@ -69,13 +69,13 @@ type UniFactWithIffStmt struct {
 	Line uint
 }
 
-type SpecFactStmt struct {
-	FactType SpecFactType
-	PropName Atom
-	Params   ObjSlice
+// type SpecFactStmt struct {
+// 	FactType SpecFactType
+// 	PropName Atom
+// 	Params   ObjSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type ClaimProveStmt struct {
 	ToCheckFact FactStmt
