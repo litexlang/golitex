@@ -64,7 +64,7 @@ func NewDefHeader(name string, params []string, setParams []Obj) *DefHeader {
 // 	return &HaveObjStStmt{objNames, fact, line}
 // }
 
-func NewHaveObjStWithParamSetsStmt(objNames []string, objSets []Obj, fact *SpecFactStmt, line uint) *HaveObjStStmt {
+func NewHaveObjStWithParamSetsStmt(objNames []string, objSets []Obj, fact *PureSpecificFactStmt, line uint) *HaveObjStStmt {
 	return &HaveObjStStmt{objNames, objSets, fact, line}
 }
 
@@ -80,7 +80,7 @@ func NewUniFactWithIff(uniFact *UniFactStmt, iffFacts []FactStmt, line uint) *Un
 	return &UniFactWithIffStmt{uniFact, iffFacts, line}
 }
 
-func NewProveCaseByCaseStmt(caseFacts []*SpecFactStmt, thenFacts []FactStmt, proofs StmtSliceSlice, proveOr StmtSlice, line uint) *ProveCaseByCaseStmt {
+func NewProveCaseByCaseStmt(caseFacts []SpecificFactStmt, thenFacts []FactStmt, proofs StmtSliceSlice, proveOr StmtSlice, line uint) *ProveCaseByCaseStmt {
 	return &ProveCaseByCaseStmt{caseFacts, thenFacts, proofs, proveOr, line}
 }
 
@@ -103,7 +103,7 @@ func NewKnowInferStmt(params []string, paramSets []Obj, domFacts ReversibleFacts
 // 	return &DefExistPropStmtBody{defHeader, domFacts, iffFacts, thenFacts, line}
 // }
 
-func NewOrStmt(orFacts []*SpecFactStmt, line uint) *OrStmt {
+func NewOrStmt(orFacts []SpecificFactStmt, line uint) *OrStmt {
 	return &OrStmt{orFacts, line}
 }
 
@@ -211,7 +211,7 @@ func NewProveIsTransitivePropStmt(prop Atom, params []string, proofs []Stmt, lin
 	return &ProveIsTransitivePropStmt{prop, params, proofs, line}
 }
 
-func NewProveIsCommutativePropStmt(specFact *SpecFactStmt, proofs []Stmt, proofsRightToLeft []Stmt, line uint) *ProveIsCommutativePropStmt {
+func NewProveIsCommutativePropStmt(specFact *PureSpecificFactStmt, proofs []Stmt, proofsRightToLeft []Stmt, line uint) *ProveIsCommutativePropStmt {
 	return &ProveIsCommutativePropStmt{specFact, proofs, proofsRightToLeft, line}
 }
 
@@ -311,19 +311,19 @@ func NewHaveFnCaseByCaseStmt(defFnStmt *LetFnStmt, caseByCaseFacts SpecFactPtrSl
 	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, proveOr, line}
 }
 
-func NewProveImplicationStmt(specFact *SpecFactStmt, implicationFact FactStmtSlice, proof StmtSlice, line uint) *ProveInferStmt {
+func NewProveImplicationStmt(specFact *PureSpecificFactStmt, implicationFact FactStmtSlice, proof StmtSlice, line uint) *ProveInferStmt {
 	return &ProveInferStmt{specFact, implicationFact, proof, line}
 }
 
-func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact *SpecFactStmt, proofs []Stmt, line uint) *WitnessStmt {
+func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact *PureSpecificFactStmt, proofs []Stmt, line uint) *WitnessStmt {
 	return &WitnessStmt{params, paramSets, equalTos, fact, proofs, line}
 }
 
-func NewHaveShortStmt(specFact *SpecFactStmt, line uint) *HaveShortStmt {
+func NewHaveShortStmt(specFact *PureSpecificFactStmt, line uint) *HaveShortStmt {
 	return &HaveShortStmt{specFact, line}
 }
 
-func NewWitnessShortStmt(specFact *SpecFactStmt, proofs []Stmt, line uint) *WitnessShortStmt {
+func NewWitnessShortStmt(specFact *PureSpecificFactStmt, proofs []Stmt, line uint) *WitnessShortStmt {
 	return &WitnessShortStmt{specFact, proofs, line}
 }
 

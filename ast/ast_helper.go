@@ -406,7 +406,7 @@ func MakeListSetObj(params []Obj) Obj {
 	return NewFnObj(Atom(glob.KeywordListSet), params)
 }
 
-func MakeSetBuilderObj(param string, parentSet Obj, facts SpecFactPtrSlice) (*FnObj, error) {
+func MakeSetBuilderObj(param string, parentSet Obj, facts []*PureSpecificFactStmt) (*FnObj, error) {
 	params := []Obj{Atom(param), parentSet}
 
 	for _, fact := range facts {
