@@ -71,7 +71,7 @@ func ordinalSuffix(n int) string {
 	}
 }
 
-func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistStFactStruct) *ast.ExistStFactStruct {
+func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistSpecificFactStmt) *ast.ExistSpecificFactStmt {
 	if len(existStruct.ExistFreeParams) == 0 {
 		return existStruct
 	}
@@ -101,7 +101,7 @@ func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistStF
 	}
 
 	newParams := []ast.Obj{}
-	for _, param := range existStruct.Params {
+	for _, param := range existStruct.PureFact.Params {
 		newParam, err := param.Instantiate(paramReplaceMap)
 		if err != nil {
 			panic("failed to instantiate exist free param set")
@@ -129,5 +129,5 @@ func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistStF
 	// 	newParams[i] = newParam
 	// }
 
-	return ast.NewExistStFactStruct(existStruct.FactType, existStruct.PropName, existStruct.IsPropTrue, newExistParams, newSets, newParams, existStruct.Line)
+	return ast.NewExistSpecificFactStmt(existStruct.IsTrue, newExistParams, newSets, ast.NewPureSpecificFactStmt(existStruct.PureFact.IsTrue, existStruct.PureFact.PropName, newParams, existStruct.Line), existStruct.Line)
 }

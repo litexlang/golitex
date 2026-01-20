@@ -19,7 +19,6 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
-	"slices"
 )
 
 func notOkExec(state *glob.StmtRet, err error) bool {
@@ -32,15 +31,15 @@ func notOkExec(state *glob.StmtRet, err error) bool {
 	return false
 }
 
-func (exec *Executor) NewCommutativeProp(specFact *ast.SpecFactStmt) {
+func (exec *Executor) NewCommutativeProp(specFact *ast.PureSpecificFactStmt) {
 	if _, ok := exec.Env.CurEnv().CommutativePropMem[string(specFact.PropName)]; !ok {
 		exec.Env.CurEnv().CommutativePropMem[string(specFact.PropName)] = env.NewCommutativePropMemItemStruct()
 	}
 
-	switch specFact.FactType {
-	case ast.TruePure:
+	switch specFact.IsTrue {
+	case true:
 		exec.Env.CurEnv().CommutativePropMem[string(specFact.PropName)].TruePureIsCommutative = true
-	case ast.FalsePure:
+	case false:
 		exec.Env.CurEnv().CommutativePropMem[string(specFact.PropName)].FalsePureIsCommutative = true
 	default:
 		panic("not implemented: not commutative prop")
@@ -103,31 +102,31 @@ func (exec *Executor) declareParamsAndDomFactsInUniFact(stmt *ast.UniFactStmt) *
 	return glob.NewEmptyStmtTrue()
 }
 
-func (exec *Executor) GenerateShortExistFact(specFact *ast.SpecFactStmt) *ast.ExistStFactStruct {
-	lenOfParams := len(specFact.Params)
-	randomParams := []string{}
-	for i := 0; i < lenOfParams; i++ {
-		for {
-			randomObj := ast.Atom(exec.Env.GenerateUndeclaredRandomName())
-			if !slices.Contains(randomParams, string(randomObj)) {
-				randomParams = append(randomParams, string(randomObj))
-				break
-			}
-		}
-	}
+// func (exec *Executor) GenerateShortExistFact(specFact *ast.ExistSpecificFactStmt) *ast.ExistSpecificFactStmt {
+// 	lenOfParams := len(specFact.Params)
+// 	randomParams := []string{}
+// 	for i := 0; i < lenOfParams; i++ {
+// 		for {
+// 			randomObj := ast.Atom(exec.Env.GenerateUndeclaredRandomName())
+// 			if !slices.Contains(randomParams, string(randomObj)) {
+// 				randomParams = append(randomParams, string(randomObj))
+// 				break
+// 			}
+// 		}
+// 	}
 
-	randomParamSets := []ast.Obj{}
-	for i := 0; i < len(randomParams); i++ {
-		randomParamSets = append(randomParamSets, ast.Atom(glob.KeywordSet))
-	}
+// 	randomParamSets := []ast.Obj{}
+// 	for i := 0; i < len(randomParams); i++ {
+// 		randomParamSets = append(randomParamSets, ast.Atom(glob.KeywordSet))
+// 	}
 
-	randomParamAsObj := []ast.Obj{}
-	for i := 0; i < len(randomParams); i++ {
-		randomParamAsObj = append(randomParamAsObj, ast.Atom(randomParams[i]))
-	}
+// 	randomParamAsObj := []ast.Obj{}
+// 	for i := 0; i < len(randomParams); i++ {
+// 		randomParamAsObj = append(randomParamAsObj, ast.Atom(randomParams[i]))
+// 	}
 
-	return ast.NewExistStFactStruct(ast.TrueExist_St, specFact.PropName, specFact.IsTrue(), randomParams, randomParamSets, randomParamAsObj, specFact.Line)
-}
+// 	return ast.NewExistSpecificFactStmt(true, randomParams, randomParamSets, ast.NewPureSpecificFactStmt(specFact.IsTrue, specFact.PropName, specFact, specFact.Line), specFact.Line)
+// }
 
 func (exec *Executor) NewErrStmtRet(stmt ast.Stmt) *glob.StmtRet {
 	ret := glob.NewEmptyStmtError()

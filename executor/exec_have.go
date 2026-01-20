@@ -82,7 +82,7 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 
 	for i := range len(stmt.Objs) {
 		if !glob.IsKeywordSetOrNonEmptySetOrFiniteSet(stmt.ObjSets[i].String()) {
-			existInFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsANonEmptySet), []ast.Obj{stmt.ObjSets[i]}, stmt.Line)
+			existInFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIsANonEmptySet), []ast.Obj{stmt.ObjSets[i]}, stmt.Line)
 			execRet := exec.factStmt(existInFact)
 			if execRet.IsNotTrue() {
 				return glob.ErrRet(fmt.Sprintf("%s\n", stmt.String())).AddError(execRet.String())
@@ -599,7 +599,7 @@ func (exec *Executor) verifyCaseNoOverlapWithOthers(caseFacts ast.SpecFactPtrSli
 
 		// Get not case j
 		otherCaseFact := caseFacts[j]
-		notOtherCaseFact := otherCaseFact.ReverseTrue()
+		notOtherCaseFact := otherCaseFact.ReverseIsTrue()[0]
 
 		// Verify not case j is true
 		verRet := ver.VerFactStmt(notOtherCaseFact, Round0Msg())

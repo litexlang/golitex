@@ -22,7 +22,7 @@ import (
 
 func (envMgr *EnvMgr) LookUpNamesInFact(stmt ast.FactStmt, extraParams map[string]struct{}) *glob.StmtRet {
 	switch s := stmt.(type) {
-	case *ast.SpecFactStmt:
+	case ast.SpecificFactStmt:
 		return envMgr.LookupNamesInSpecFact(s, extraParams)
 	case *ast.UniFactStmt:
 		return envMgr.LookupNamesInUniFact(s, extraParams)
@@ -37,23 +37,19 @@ func (envMgr *EnvMgr) LookUpNamesInFact(stmt ast.FactStmt, extraParams map[strin
 	}
 }
 
-func (envMgr *EnvMgr) LookupNamesInSpecFact(stmt *ast.SpecFactStmt, extraParams map[string]struct{}) *glob.StmtRet {
-	switch stmt.FactType {
-	case ast.TruePure:
-		return envMgr.lookupNamesInPureFact(stmt, extraParams)
-	case ast.FalsePure:
-		return envMgr.lookupNamesInPureFact(stmt, extraParams)
-	case ast.TrueExist_St:
-		return envMgr.lookupNamesInExistFact(stmt, extraParams)
-	case ast.FalseExist_St:
-		return envMgr.lookupNamesInExistFact(stmt, extraParams)
+func (envMgr *EnvMgr) LookupNamesInSpecFact(stmt ast.SpecificFactStmt, extraParams map[string]struct{}) *glob.StmtRet {
+	switch asFact := stmt.(type) {
+	case *ast.PureSpecificFactStmt:
+		return envMgr.lookupNamesInPureFact(asFact, extraParams)
+	case *ast.ExistSpecificFactStmt:
+		return envMgr.lookupNamesInExistFact(asFact, extraParams)
 	default:
-		panic("")
+		return glob.ErrRet(fmt.Sprintf("unknown specific fact type: %T", stmt))
 	}
 }
 
-func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.SpecFactStmt, extraParams map[string]struct{}) *glob.StmtRet {
-	if ret := envMgr.IsPropDefinedOrBuiltinProp(stmt); ret.IsNotTrue() {
+func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.ExistSpecificFactStmt, extraParams map[string]struct{}) *glob.StmtRet {
+	if ret := envMgr.IsPropDefinedOrBuiltinProp(stmt.PureFact); ret.IsNotTrue() {
 		return ret
 	}
 
@@ -62,25 +58,23 @@ func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.SpecFactStmt, extraParams
 		newExtraParams[i] = struct{}{}
 	}
 
-	existFactStruct := stmt.ToExistStFactStruct()
-
-	for _, param := range existFactStruct.ExistFreeParams {
+	for _, param := range stmt.ExistFreeParams {
 		if envMgr.lookupAtomObjName(ast.Atom(param), extraParams).IsTrue() {
 			return glob.ErrRetWithErr(fmt.Errorf("exist fact exist parameter %s conflicts with defined parameter", param))
 		}
 	}
 
 	// check paramSet
-	for i, paramSet := range existFactStruct.ExistFreeParamSets {
+	for i, paramSet := range stmt.ExistFreeParamSets {
 		ret := envMgr.LookupNamesInObjOrObjStringIsSetNonemptySetFiniteSet(paramSet, newExtraParams)
 		if ret.IsNotTrue() {
 			return ret
 		}
 
-		newExtraParams[existFactStruct.ExistFreeParams[i]] = struct{}{}
+		newExtraParams[stmt.ExistFreeParams[i]] = struct{}{}
 	}
 
-	for _, param := range existFactStruct.Params {
+	for _, param := range stmt.PureFact.Params {
 		if ret := envMgr.LookupNamesInObj(param, newExtraParams); ret.IsNotTrue() {
 			return ret
 		}
@@ -89,7 +83,7 @@ func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.SpecFactStmt, extraParams
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) lookupNamesInPureFact(stmt *ast.SpecFactStmt, extraParams map[string]struct{}) *glob.StmtRet {
+func (envMgr *EnvMgr) lookupNamesInPureFact(stmt *ast.PureSpecificFactStmt, extraParams map[string]struct{}) *glob.StmtRet {
 	if ret := envMgr.IsPropDefinedOrBuiltinProp(stmt); ret.IsNotTrue() {
 		return ret
 	}
@@ -103,25 +97,13 @@ func (envMgr *EnvMgr) lookupNamesInPureFact(stmt *ast.SpecFactStmt, extraParams 
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.SpecFactStmt) *glob.StmtRet {
-	// Check if it's an exist_prop defined by user
-	// if stmt.FactType == ast.TrueExist_St || stmt.FactType == ast.FalseExist_St {
-	// 	if glob.IsBuiltinExistPropName(string(stmt.PropName)) {
-	// 		return glob.NewEmptyStmtTrue()
-	// 	}
-
-	// 	existPropDef := envMgr.GetExistPropDef(stmt.PropName)
-	// 	if existPropDef != nil {
-	// 		return glob.NewEmptyStmtTrue()
-	// 	}
-	// 	return glob.ErrRet(fmt.Sprintf("undefined exist_prop: %s", stmt.PropName))
-	// } else {
+func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.PureSpecificFactStmt) *glob.StmtRet {
 	if glob.IsBuiltinPropName(string(stmt.PropName)) {
 		return glob.NewEmptyStmtTrue()
 	}
 
 	// Check if it's a regular prop defined by user
-	_, ok := envMgr.GetPropDef(stmt.PropName)
+	_, ok := envMgr.GetPropDef(stmt.GetPropName())
 	if ok {
 		return glob.NewEmptyStmtTrue()
 	}

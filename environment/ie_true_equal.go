@@ -21,7 +21,7 @@ import (
 	"strconv"
 )
 
-func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) *glob.ShortRet {
+func (ie *InferEngine) newTrueEqual(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
 	msgs := []string{}
 
 	shortRet := ie.trueEqualFactByCart(fact)
@@ -101,7 +101,7 @@ func (ie *InferEngine) newTrueEqual(fact *ast.SpecFactStmt) *glob.ShortRet {
 //   - is_cart(x) fact
 //   - dim(x) = len(cart.Params) fact
 //   - proj(x, i+1) = cart.Params[i] facts for each i
-func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueEqualFactByCart(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
 	cart, ok := fact.Params[1].(*ast.FnObj)
 	if !ok || !ast.IsAtomObjAndEqualToStr(cart.FnHead, glob.KeywordCart) {
 		return glob.NewEmptyShortUnknownRet()
@@ -110,7 +110,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.ShortRe
 	inferMsgs := []string{}
 
 	// 让 $is_cart(x) 成立
-	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fact.Params[0]}, glob.BuiltinLine0)
+	isCartFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIsCart), []ast.Obj{fact.Params[0]}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.newSpecFactNoInfer(isCartFact)
 	if ret.IsErr() {
 		return glob.NewEmptyShortUnknownRet()
@@ -120,7 +120,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.ShortRe
 	// dim(x) = len(cart.Params)
 	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fact.Params[0]})
 	dimValue := ast.Atom(strconv.Itoa(len(cart.Params)))
-	dimEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimFn, dimValue}, glob.BuiltinLine0)
+	dimEqualFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{dimFn, dimValue}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.newSpecFactNoInfer(dimEqualFact)
 	if ret.IsErr() {
 		return glob.NewEmptyShortUnknownRet()
@@ -130,7 +130,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.SpecFactStmt) *glob.ShortRe
 	// proj(x, i+1) = cart.Params[i] for each i
 	for i, cartParam := range cart.Params {
 		projFn := ast.NewFnObj(ast.Atom(glob.KeywordProj), []ast.Obj{fact.Params[0], ast.Atom(strconv.Itoa(i + 1))})
-		projEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{projFn, cartParam}, glob.BuiltinLine0)
+		projEqualFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{projFn, cartParam}, glob.BuiltinLine0)
 		ret = ie.EnvMgr.newSpecFactNoInfer(projEqualFact)
 		if ret.IsErr() {
 			return glob.NewEmptyShortUnknownRet()
@@ -159,7 +159,7 @@ func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIn
 		indexedObj := ast.NewFnObj(ast.Atom(glob.KeywordObjAtIndexOpt), []ast.Obj{obj, indexObj})
 
 		// 创建相等事实: obj[index] = tuple[i]
-		indexEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{indexedObj, tuple.Params[i]}, glob.BuiltinLine0)
+		indexEqualFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{indexedObj, tuple.Params[i]}, glob.BuiltinLine0)
 		ret := ie.EnvMgr.newSpecFactNoInfer(indexEqualFact)
 		if ret.IsErr() {
 			return glob.ErrStmtMsgToShortRet(ret)
@@ -219,7 +219,7 @@ func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj,
 	inferMsgs := []string{}
 	// 让每一位相等
 	for i := range len(leftTuple.Params) {
-		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftTuple.Params[i], rightTuple.Params[i]}, glob.BuiltinLine0)
+		equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftTuple.Params[i], rightTuple.Params[i]}, glob.BuiltinLine0)
 		ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 		if ret.IsErr() {
 			return glob.ErrStmtMsgToShortRet(ret)
@@ -254,9 +254,9 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 	// 创建一个 or fact，表示 left 等于 list set 中的某一个元素
 	// forall x left => x = left[1] or x = left[2] or ... or x = left[len(left)]
 	randomName := ie.EnvMgr.GenerateUndeclaredRandomName()
-	orFact := ast.NewOrStmt([]*ast.SpecFactStmt{}, glob.BuiltinLine0)
+	orFact := ast.NewOrStmt([]ast.SpecificFactStmt{}, glob.BuiltinLine0)
 	for _, param := range listSetFnObj.Params {
-		orFact.Facts = append(orFact.Facts, ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.Atom(randomName), param}, glob.BuiltinLine0))
+		orFact.Facts = append(orFact.Facts, ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.Atom(randomName), param}, glob.BuiltinLine0))
 	}
 	forallFact := ast.NewUniFact([]string{randomName}, []ast.Obj{left}, []ast.FactStmt{}, []ast.FactStmt{orFact}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.newUniFactNoInfer(forallFact)
@@ -268,7 +268,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 	// count(a) = len
 	countFn := ast.NewFnObj(ast.Atom(glob.KeywordCount), []ast.Obj{left})
 	countValue := ast.Atom(strconv.Itoa(len(listSetFnObj.Params)))
-	countEqualFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{countFn, countValue}, glob.BuiltinLine0)
+	countEqualFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{countFn, countValue}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.newSpecFactNoInfer(countEqualFact)
 	if ret.IsErr() {
 		return glob.NewEmptyShortUnknownRet()
@@ -421,7 +421,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			// 操作符相同，直接推导 y = z
 			y := leftFn.Params[1]
 			z := rightFn.Params[1]
-			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, z}, glob.BuiltinLine0)
+			equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, z}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 			if ret.IsErr() {
 				return glob.NewEmptyShortUnknownRet()
@@ -433,7 +433,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			z := rightFn.Params[1]
 			zero := ast.Atom("0")
 			yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
-			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
+			equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 			if ret.IsErr() {
 				return glob.NewEmptyShortUnknownRet()
@@ -445,7 +445,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			z := rightFn.Params[1]
 			zero := ast.Atom("0")
 			yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
-			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
+			equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 			if ret.IsErr() {
 				return glob.NewEmptyShortUnknownRet()
@@ -467,7 +467,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			// 操作符相同，直接推导 y = z
 			y := leftFn.Params[0]
 			z := rightFn.Params[0]
-			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, z}, glob.BuiltinLine0)
+			equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, z}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 			if ret.IsErr() {
 				return glob.NewEmptyShortUnknownRet()
@@ -479,7 +479,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			z := rightFn.Params[0]
 			zero := ast.Atom("0")
 			yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
-			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
+			equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 			if ret.IsErr() {
 				return glob.NewEmptyShortUnknownRet()
@@ -491,7 +491,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 			z := rightFn.Params[0]
 			zero := ast.Atom("0")
 			yPlusZ := ast.NewFnObj(ast.Atom(glob.KeySymbolPlus), []ast.Obj{y, z})
-			equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
+			equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 			if ret.IsErr() {
 				return glob.NewEmptyShortUnknownRet()
@@ -550,7 +550,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsADivBRightIsCDivB(left ast.Obj, righ
 	if leftB.String() == rightB.String() {
 		a := leftFn.Params[0]
 		c := rightFn.Params[0]
-		equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{a, c}, glob.BuiltinLine0)
+		equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{a, c}, glob.BuiltinLine0)
 		ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 		if ret.IsErr() {
 			return glob.NewEmptyShortUnknownRet()
@@ -599,7 +599,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXDivYRightIsZ(left ast.Obj, right as
 	multiplyObj := ast.NewFnObj(ast.Atom(glob.KeySymbolStar), []ast.Obj{y, z})
 
 	// 创建 x = y * z 的事实
-	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{x, multiplyObj}, glob.BuiltinLine0)
+	equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{x, multiplyObj}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.storeTrueEqualInEqualMemNoInfer(equalFact)
 	if ret.IsErr() {
 		return glob.NewEmptyShortUnknownRet()
@@ -608,7 +608,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXDivYRightIsZ(left ast.Obj, right as
 	// 创建 x = z * y
 	multiplyObj2 := ast.NewFnObj(ast.Atom(glob.KeySymbolStar), []ast.Obj{z, y})
 
-	equalFact2 := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{x, multiplyObj2}, glob.BuiltinLine0)
+	equalFact2 := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{x, multiplyObj2}, glob.BuiltinLine0)
 	ret2 := ie.EnvMgr.storeTrueEqualInEqualMemNoInfer(equalFact2)
 	if ret2.IsErr() {
 		return glob.NewEmptyShortUnknownRet()
@@ -656,7 +656,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddYRightIsZ(left ast.Obj, right as
 	subtractObj1 := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{z, y})
 
 	// 创建 x = z - y 的事实
-	equalFact1 := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{x, subtractObj1}, glob.BuiltinLine0)
+	equalFact1 := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{x, subtractObj1}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.storeTrueEqualInEqualMemNoInfer(equalFact1)
 	if ret.IsErr() {
 		return glob.NewEmptyShortUnknownRet()
@@ -667,7 +667,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddYRightIsZ(left ast.Obj, right as
 	subtractObj2 := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{z, x})
 
 	// 创建 y = z - x 的事实
-	equalFact2 := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, subtractObj2}, glob.BuiltinLine0)
+	equalFact2 := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, subtractObj2}, glob.BuiltinLine0)
 	ret2 := ie.EnvMgr.storeTrueEqualInEqualMemNoInfer(equalFact2)
 	if ret2.IsErr() {
 		return glob.NewEmptyShortUnknownRet()

@@ -22,7 +22,7 @@ import (
 
 func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) *glob.VerRet {
 	switch asStmt := stmt.(type) {
-	case *ast.SpecFactStmt:
+	case ast.SpecificFactStmt:
 		if ast.IsTrueSpecFactWithPropName(asStmt, glob.KeySymbolEqual) {
 			return ver.verTrueEqualFactAndCheckFnReq(asStmt, state)
 		} else {
