@@ -32,9 +32,9 @@ func NewDefPropStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactSt
 // 	return &DefExistPropStmt{def, existParams, existParamSets, line}
 // }
 
-func NewSpecFactStmt(typeEnum SpecFactType, propName Atom, params []Obj, line uint) *SpecFactStmt {
-	return &SpecFactStmt{typeEnum, propName, params, line}
-}
+// func NewSpecFactStmt(typeEnum SpecFactType, propName Atom, params []Obj, line uint) *SpecFactStmt {
+// 	return &SpecFactStmt{typeEnum, propName, params, line}
+// }
 
 func NewImplyStmt(domFacts []Spec_OrFact, thenFacts []Spec_OrFact, line uint) *InferStmt {
 	return &InferStmt{domFacts, thenFacts, line}
@@ -349,4 +349,12 @@ func NewHaveFnEqualCaseByCaseStmt(defHeader *DefHeader, retSet Obj, caseByCaseFa
 		ProveCases:        proveCases,
 		Line:              line,
 	}
+}
+
+func NewPureSpecificFactStmt(isTrue bool, propName Atom, params ObjSlice, line uint) *PureSpecificFactStmt {
+	return &PureSpecificFactStmt{isTrue, propName, params, line}
+}
+
+func NewExistSpecificFactStmt(isTrue bool, existFreeParams []string, existFreeParamSets []Obj, pureFact *PureSpecificFactStmt, line uint) *ExistSpecificFactStmt {
+	return &ExistSpecificFactStmt{isTrue, existFreeParams, existFreeParamSets, pureFact, line}
 }

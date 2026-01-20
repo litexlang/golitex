@@ -82,9 +82,9 @@ func (l *UniFactStmt) InlineString() string {
 	return builder.String()
 }
 
-func (p *SpecFactStmt) InlineString() string {
-	return p.String()
-}
+// func (p *SpecFactStmt) InlineString() string {
+// 	return p.String()
+// }
 
 func (p *PureSpecificFactStmt) InlineString() string {
 	return p.String()
