@@ -197,7 +197,7 @@ func (envMgr *EnvMgr) newSpecFact(fact *ast.SpecFactStmt) *glob.StmtRet {
 	return ret.AddInfers(ieShortRet.Msgs)
 }
 
-func (envMgr *EnvMgr) newTrueEqual(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newTrueEqual(fact *ast.PureSpecificFactStmt) *glob.StmtRet {
 	ret := envMgr.newTrueEqualNoInfer(fact)
 	if ret.IsNotTrue() {
 		return ret

@@ -178,19 +178,19 @@ func NewCommutativePropMemItemStruct() *PropCommutativeCase {
 }
 
 type SpecFactMem struct {
-	PureFacts         map[string][]ast.SpecFactStmt
-	NotPureFacts      map[string][]ast.SpecFactStmt
-	Exist_St_Facts    map[string][]ast.SpecFactStmt
-	NotExist_St_Facts map[string][]ast.SpecFactStmt
+	PureFacts         map[string][]*ast.PureSpecificFactStmt
+	NotPureFacts      map[string][]*ast.PureSpecificFactStmt
+	Exist_St_Facts    map[string][]*ast.ExistSpecificFactStmt
+	NotExist_St_Facts map[string][]*ast.ExistSpecificFactStmt
 }
 
 type KnownSpecFact_InLogicExpr struct {
-	SpecFact  *ast.SpecFactStmt
+	SpecFact  *ast.SpecificFactStmt
 	Index     int
 	LogicExpr *ast.OrStmt
 }
 
-func NewKnownSpecFact_InLogicExpr(specFact *ast.SpecFactStmt, index int, logicExpr *ast.OrStmt) *KnownSpecFact_InLogicExpr {
+func NewKnownSpecFact_InLogicExpr(specFact *ast.SpecificFactStmt, index int, logicExpr *ast.OrStmt) *KnownSpecFact_InLogicExpr {
 	return &KnownSpecFact_InLogicExpr{specFact, index, logicExpr}
 }
 
@@ -202,11 +202,11 @@ type SpecFactInLogicExprMem struct {
 }
 
 type KnownSpecFact_InUniFact struct {
-	SpecFact *ast.SpecFactStmt
+	SpecFact *ast.SpecificFactStmt
 	UniFact  *ast.UniFactStmt
 }
 
-func MakeKnownSpecFact_InUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) KnownSpecFact_InUniFact {
+func MakeKnownSpecFact_InUniFact(specFact *ast.SpecificFactStmt, uniFact *ast.UniFactStmt) KnownSpecFact_InUniFact {
 	return KnownSpecFact_InUniFact{specFact, uniFact}
 }
 
@@ -243,13 +243,13 @@ func NewKnownSpecFact_InImplyTemplate(known ast.Spec_OrFact, implyTemplate *ast.
 }
 
 type SpecFact_InLogicExpr_InUniFact struct {
-	SpecFact  *ast.SpecFactStmt
+	SpecFact  ast.SpecificFactStmt
 	UniFact   *ast.UniFactStmt
 	Index     int
 	LogicExpr *ast.OrStmt
 }
 
-func NewSpecFact_InLogicExpr_InUniFact(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt, index int, logicExpr *ast.OrStmt) *SpecFact_InLogicExpr_InUniFact {
+func NewSpecFact_InLogicExpr_InUniFact(specFact ast.SpecificFactStmt, uniFact *ast.UniFactStmt, index int, logicExpr *ast.OrStmt) *SpecFact_InLogicExpr_InUniFact {
 	return &SpecFact_InLogicExpr_InUniFact{specFact, uniFact, index, logicExpr}
 }
 
@@ -262,10 +262,10 @@ type SpecFact_InLogicExpr_InUniFactMem struct {
 
 func newSpecFactMem() *SpecFactMem {
 	return &SpecFactMem{
-		PureFacts:         make(map[string][]ast.SpecFactStmt),
-		NotPureFacts:      make(map[string][]ast.SpecFactStmt),
-		Exist_St_Facts:    make(map[string][]ast.SpecFactStmt),
-		NotExist_St_Facts: make(map[string][]ast.SpecFactStmt),
+		PureFacts:         make(map[string][]*ast.PureSpecificFactStmt),
+		NotPureFacts:      make(map[string][]*ast.PureSpecificFactStmt),
+		Exist_St_Facts:    make(map[string][]*ast.ExistSpecificFactStmt),
+		NotExist_St_Facts: make(map[string][]*ast.ExistSpecificFactStmt),
 	}
 }
 
