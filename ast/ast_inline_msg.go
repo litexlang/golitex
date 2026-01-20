@@ -86,6 +86,14 @@ func (p *SpecFactStmt) InlineString() string {
 	return p.String()
 }
 
+func (p *PureSpecificFactStmt) InlineString() string {
+	return p.String()
+}
+
+func (e *ExistSpecificFactStmt) InlineString() string {
+	return e.String()
+}
+
 func (f *ClaimProveStmt) InlineString() string {
 	return f.String()
 }
