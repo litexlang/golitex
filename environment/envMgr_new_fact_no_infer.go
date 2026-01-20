@@ -24,7 +24,7 @@ import (
 // This is used to prevent circular definitions (e.g., p => q, q => p).
 func (envMgr *EnvMgr) newFactNoInfer(stmt ast.FactStmt) *glob.StmtRet {
 	switch f := stmt.(type) {
-	case *ast.SpecFactStmt:
+	case ast.SpecificFactStmt:
 		return envMgr.newSpecFactNoInfer(f)
 	case *ast.OrStmt:
 		return envMgr.newOrFactNoInfer(f)
@@ -41,9 +41,9 @@ func (envMgr *EnvMgr) newFactNoInfer(stmt ast.FactStmt) *glob.StmtRet {
 
 // newSpecFactNoInfer stores a SpecFact without performing any inference.
 // It only stores the fact in memory, without triggering post-processing.
-func (envMgr *EnvMgr) newSpecFactNoInfer(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newSpecFactNoInfer(fact ast.SpecificFactStmt) *glob.StmtRet {
 	if isEqualFact := ast.IsTrueEqualFact(fact); isEqualFact {
-		return envMgr.newTrueEqualNoInfer(fact)
+		return envMgr.newTrueEqualNoInfer(fact.(*ast.PureSpecificFactStmt))
 	}
 
 	ret := envMgr.storeSpecFactInMem(fact)
@@ -57,7 +57,7 @@ func (envMgr *EnvMgr) newSpecFactNoInfer(fact *ast.SpecFactStmt) *glob.StmtRet {
 // newTrueEqualNoInfer stores an equality fact without performing any inference.
 // It stores the equality in the equal memory and simplifies symbol values,
 // but does not trigger equality-related inferences (e.g., cart, tuple, listSet).
-func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.PureSpecificFactStmt) *glob.StmtRet {
 	if len(fact.Params) != 2 {
 		return glob.ErrRet(fmt.Sprintf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
@@ -98,7 +98,7 @@ func (envMgr *EnvMgr) newUniFactNoInfer(stmt *ast.UniFactStmt) *glob.StmtRet {
 	for _, thenStmt := range stmt.ThenFacts {
 		var ret *glob.StmtRet
 		switch asFact := thenStmt.(type) {
-		case *ast.SpecFactStmt:
+		case ast.SpecificFactStmt:
 			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, asFact)
 		case *ast.OrStmt:
 			ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)

@@ -42,7 +42,7 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt, i int, state *VerState) *glob.VerRet {
+func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []ast.SpecificFactStmt, i int, state *VerState) *glob.VerRet {
 	ver.newEnv()
 	defer ver.deleteEnv()
 
@@ -50,7 +50,7 @@ func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []*ast.SpecFactStmt
 		if j == i {
 			continue
 		}
-		ret := ver.Env.NewFactWithCheckingNameDefined(facts[j].ReverseTrue())
+		ret := ver.Env.NewFactWithCheckingNameDefined(facts[j].ReverseIsTrue()[0])
 		if ret.IsErr() {
 			return glob.NewVerMsg(glob.StmtRetTypeError, facts[j].String(), glob.BuiltinLine0, []string{ret.String()})
 		}

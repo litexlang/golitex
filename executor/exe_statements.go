@@ -335,7 +335,7 @@ func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) *glob.StmtR
 		paramsAsObj = append(paramsAsObj, ast.Atom(stmt.DefProp.DefHeader.Params[i]))
 	}
 
-	uniFact := ast.NewUniFact(stmt.DefProp.DefHeader.Params, stmt.DefProp.DefHeader.ParamSets, []ast.FactStmt{ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.DefProp.DefHeader.Name), paramsAsObj, stmt.Line)}, stmt.DefProp.ImplicationFactsOrNil, stmt.Line)
+	uniFact := ast.NewUniFact(stmt.DefProp.DefHeader.Params, stmt.DefProp.DefHeader.ParamSets, []ast.FactStmt{ast.NewPureSpecificFactStmt(true, ast.Atom(stmt.DefProp.DefHeader.Name), paramsAsObj, stmt.Line)}, stmt.DefProp.ImplicationFactsOrNil, stmt.Line)
 
 	ret := exec.Env.NewFactWithCheckingNameDefined(uniFact)
 	if ret.IsErr() {
@@ -573,12 +573,12 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 		return glob.ErrRet(fmt.Sprintf("dom facts are not allowed in %s", glob.KeywordTransProp))
 	}
 
-	ret = exec.Env.NewFactWithCheckingNameDefined(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[0]), ast.Atom(stmt.Params[1])}, stmt.Line))
+	ret = exec.Env.NewFactWithCheckingNameDefined(ast.NewPureSpecificFactStmt(true, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[0]), ast.Atom(stmt.Params[1])}, stmt.Line))
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
 
-	ret = exec.Env.NewFactWithCheckingNameDefined(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[1]), ast.Atom(stmt.Params[2])}, stmt.Line))
+	ret = exec.Env.NewFactWithCheckingNameDefined(ast.NewPureSpecificFactStmt(true, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[1]), ast.Atom(stmt.Params[2])}, stmt.Line))
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
@@ -592,7 +592,7 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 	}
 
 	// check
-	finalCheckStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[0]), ast.Atom(stmt.Params[2])}, stmt.Line)
+	finalCheckStmt := ast.NewPureSpecificFactStmt(true, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[0]), ast.Atom(stmt.Params[2])}, stmt.Line)
 	state = exec.factStmt(finalCheckStmt)
 	if state.IsNotTrue() {
 		return glob.ErrRet(fmt.Sprintf("failed to prove %s is transitive: %s failed", stmt.Prop, finalCheckStmt))
@@ -754,7 +754,7 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 
 		if execState.IsUnknown() {
 			// 如果 不OK，那必须证明是 false，绝对不能是 unknown
-			specFact, ok := domFact.(*ast.SpecFactStmt)
+			specFact, ok := domFact.(ast.SpecificFactStmt)
 			if !ok {
 				return glob.ErrRet(fmt.Sprintf("dom fact in for must be a SpecFactStmt to reverse: %s", domFact.String()))
 			}
@@ -828,7 +828,7 @@ func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveInferStmt) *glob
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
-	if stmt.SpecFact.FactType != ast.TruePure {
+	if stmt.SpecFact.GetFactType() != ast.TruePure {
 		return glob.ErrRet(fmt.Sprintf("expect true pure fact in prove_infer"))
 	}
 
@@ -926,7 +926,7 @@ func (exec *Executor) equalSetStmt(stmt *ast.EqualSetStmt) *glob.StmtRet {
 	}
 
 	// 2. 存储过程（在原地存储）
-	equalFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{stmt.Left, stmt.Right}, stmt.Line)
+	equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{stmt.Left, stmt.Right}, stmt.Line)
 	ret2 := exec.Env.NewFactWithCheckingNameDefined(equalFact)
 	if ret2.IsErr() {
 		return glob.ErrRet(ret2.String())
@@ -961,7 +961,7 @@ func (exec *Executor) equalSetStmtProveProcess(stmt *ast.EqualSetStmt) *glob.Stm
 		[]ast.Obj{a},
 		[]ast.FactStmt{},
 		[]ast.FactStmt{
-			ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("t"), b}, stmt.Line),
+			ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("t"), b}, stmt.Line),
 		},
 		stmt.Line,
 	)
@@ -972,7 +972,7 @@ func (exec *Executor) equalSetStmtProveProcess(stmt *ast.EqualSetStmt) *glob.Stm
 		[]ast.Obj{b},
 		[]ast.FactStmt{},
 		[]ast.FactStmt{
-			ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("t"), a}, stmt.Line),
+			ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("t"), a}, stmt.Line),
 		},
 		stmt.Line,
 	)
@@ -1163,10 +1163,9 @@ func (exec *Executor) witnessShortStmt_NewFact(witnessShortStmt *ast.WitnessShor
 		randomParamAsObj = append(randomParamAsObj, ast.Atom(randomParams[i]))
 	}
 
-	existStruct := ast.NewExistStFactStruct(ast.TrueExist_St, witnessShortStmt.SpecFact.PropName, witnessShortStmt.SpecFact.IsTrue(), randomParams, randomParamSets, randomParamAsObj, witnessShortStmt.Line)
-	existFact := existStruct.ToExistStFact()
+	existStruct := ast.NewExistSpecificFactStmt(true, randomParams, randomParamSets, ast.NewPureSpecificFactStmt(true, witnessShortStmt.SpecFact.PropName, randomParamAsObj, witnessShortStmt.Line), witnessShortStmt.Line)
 
-	ret := exec.Env.NewFactWithCheckingNameDefined(existFact)
+	ret := exec.Env.NewFactWithCheckingNameDefined(existStruct)
 	if ret.IsNotTrue() {
 		return glob.ErrRet(ret.String())
 	}
@@ -1210,7 +1209,7 @@ func (exec *Executor) haveShortStmt_Verify(haveShortStmt *ast.HaveShortStmt) *gl
 		paramAsObj = append(paramAsObj, param)
 	}
 
-	ret := exec.factStmt(ast.NewExistStFactStruct(ast.TrueExist_St, haveShortStmt.SpecFact.PropName, haveShortStmt.SpecFact.IsTrue(), params, paramSets, paramAsObj, haveShortStmt.Line).ToExistStFact())
+	ret := exec.factStmt(ast.NewExistSpecificFactStmt(true, params, paramSets, ast.NewPureSpecificFactStmt(true, haveShortStmt.SpecFact.PropName, paramAsObj, haveShortStmt.Line), haveShortStmt.Line))
 	if ret.IsNotTrue() {
 		return ret
 	}

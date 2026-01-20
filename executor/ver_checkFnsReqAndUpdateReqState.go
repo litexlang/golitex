@@ -21,10 +21,10 @@ import (
 	"strings"
 )
 
-func (ver *Verifier) checkFnsReq(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	if stmt.IsPureFact() {
+func (ver *Verifier) checkFnsReq(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	if _, ok := stmt.(*ast.PureSpecificFactStmt); ok {
 		stateNoMsg := state.GetNoMsg()
-		for _, param := range stmt.Params {
+		for _, param := range stmt.(*ast.PureSpecificFactStmt).Params {
 			verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, stateNoMsg)
 			if verRet.IsErr() {
 				return verRet
@@ -166,7 +166,7 @@ func (ver *Verifier) listSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState
 	// 所有参数互相不相等
 	for i := range len(objAsFnObj.Params) {
 		for j := i + 1; j < len(objAsFnObj.Params); j++ {
-			fact := ast.NewSpecFactStmt(ast.FalsePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{objAsFnObj.Params[i], objAsFnObj.Params[j]}, glob.BuiltinLine0)
+			fact := ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{objAsFnObj.Params[i], objAsFnObj.Params[j]}, glob.BuiltinLine0)
 			verRet := ver.VerFactStmt(fact, state)
 			if verRet.IsErr() {
 				return verRet
@@ -221,7 +221,7 @@ func (ver *Verifier) setDimFnRequirement(fnObj *ast.FnObj, state *VerState) *glo
 		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj)})
 	}
 
-	verRet := ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine0), state)
+	verRet := ver.VerFactStmt(ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine0), state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -402,7 +402,7 @@ func (ver *Verifier) replaceParamWithUndeclaredRandomName(setBuilderStruct *ast.
 	newParam := ast.Atom(newParamName)
 
 	// Replace param in all facts
-	newFacts := make(ast.SpecFactPtrSlice, len(setBuilderStruct.Facts))
+	newFacts := make([]*ast.PureSpecificFactStmt, len(setBuilderStruct.Facts))
 	for i, fact := range setBuilderStruct.Facts {
 		// Replace param in propName
 		newPropName := fact.PropName.ReplaceObj(oldParam, newParam).(ast.Atom)
@@ -414,7 +414,7 @@ func (ver *Verifier) replaceParamWithUndeclaredRandomName(setBuilderStruct *ast.
 		}
 
 		// Create new fact with replaced param
-		newFacts[i] = ast.NewSpecFactStmt(fact.FactType, newPropName, newFactParams, fact.Line)
+		newFacts[i] = ast.NewPureSpecificFactStmt(fact.IsTrue, newPropName, newFactParams, fact.Line)
 	}
 
 	return &ast.SetBuilderStruct{

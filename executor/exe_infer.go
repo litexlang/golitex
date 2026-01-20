@@ -28,7 +28,7 @@ func (exec *Executor) inferStmt(stmt *ast.InferStmt) *glob.StmtRet {
 	newFactMsgs := []string{}
 	for _, thenFact := range stmt.ThenFacts {
 		var factStmt ast.FactStmt
-		if specFact, ok := thenFact.(*ast.SpecFactStmt); ok {
+		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
 			factStmt = specFact
 		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
 			factStmt = orStmt
@@ -78,7 +78,7 @@ func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast
 
 	searchedKnownFacts := []env.KnownSpecFact_InImplyTemplate{}
 	var got bool
-	if asSpec, ok := fact.(*ast.SpecFactStmt); ok {
+	if asSpec, ok := fact.(ast.SpecificFactStmt); ok {
 		searchedKnownFacts, got = curEnv.KnownFactsStruct.SpecFactInImplyTemplateMem.GetSameEnumPkgPropFacts(asSpec)
 	} else if asOr, ok := fact.(*ast.OrStmt); ok {
 		searchedKnownFacts, got = curEnv.KnownFactsStruct.SpecFactInImplyTemplateMem.GetSameEnumPkgPropFacts(asOr.Facts[0])
@@ -143,13 +143,13 @@ outerLoop:
 
 func (ver *Verifier) checkFactTypeAndPropNamesMatch(knownFact ast.Spec_OrFact, implyFact ast.Spec_OrFact) bool {
 	switch knownAs := knownFact.(type) {
-	case *ast.SpecFactStmt:
-		if implyAs, ok := implyFact.(*ast.SpecFactStmt); ok {
-			if knownAs.PropName != implyAs.PropName {
+	case ast.SpecificFactStmt:
+		if implyAs, ok := implyFact.(ast.SpecificFactStmt); ok {
+			if knownAs.GetPropName() != implyAs.GetPropName() {
 				return false
 			}
 
-			if knownAs.FactType != implyAs.FactType {
+			if knownAs.GetFactType() != implyAs.GetFactType() {
 				return false
 			}
 
@@ -163,7 +163,7 @@ func (ver *Verifier) checkFactTypeAndPropNamesMatch(knownFact ast.Spec_OrFact, i
 			}
 
 			for j := range implyAs.Facts {
-				if knownAs.Facts[j].PropName != implyAs.Facts[j].PropName {
+				if knownAs.Facts[j].GetPropName() != implyAs.Facts[j].GetPropName() {
 					return false
 				}
 			}
@@ -190,8 +190,8 @@ func (ver *Verifier) mergeCurMapToUniMap(curMap map[string]ast.Obj, uniMap map[s
 
 func (ver *Verifier) matchDomFactAndMergeToUniMap(knownDomFact ast.Spec_OrFact, implyDomFact ast.Spec_OrFact, knownParams []string, uniMap map[string]ast.Obj) (bool, error) {
 	switch implyDomFactAs := implyDomFact.(type) {
-	case *ast.SpecFactStmt:
-		knownSpecFactAs := knownDomFact.(*ast.SpecFactStmt)
+	case ast.SpecificFactStmt:
+		knownSpecFactAs := knownDomFact.(ast.SpecificFactStmt)
 		ok, curMap, err := ver.matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFactAs, knownParams, implyDomFactAs)
 		if !ok || err != nil {
 			return false, err
@@ -256,12 +256,14 @@ func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImply
 	return true, uniMap, nil
 }
 
-func (ver *Verifier) matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFact *ast.SpecFactStmt, freeVars []string, instFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
-	if instFact.IsPureFact() {
-		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.Params, freeVars, instFact.Params, string(instFact.PropName), map[string]ast.Obj{})
+func (ver *Verifier) matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFact ast.SpecificFactStmt, freeVars []string, instFact ast.SpecificFactStmt) (bool, map[string]ast.Obj, error) {
+	if instFact.GetFactType() == ast.TruePure {
+		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.(*ast.PureSpecificFactStmt).Params, freeVars, instFact.(*ast.PureSpecificFactStmt).Params, string(instFact.GetPropName()), map[string]ast.Obj{})
 	} else {
-		knownExistStruct := knownSpecFact.ToExistStFactStruct()
-		instExistStruct := instFact.ToExistStFactStruct()
+		// knownExistStruct := knownSpecFact.ToExistStFactStruct()
+		// instExistStruct := instFact.ToExistStFactStruct()
+		knownExistStruct := knownSpecFact.(*ast.ExistSpecificFactStmt)
+		instExistStruct := instFact.(*ast.ExistSpecificFactStmt)
 
 		// 将 exist 参数全部替换成随机名称，确保不会出问题
 		knownExistStruct = ver.replaceExistParamsWithRandomNames(knownExistStruct)
@@ -277,7 +279,7 @@ func (ver *Verifier) matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFact *
 
 		knownFcs := []ast.Obj{}
 		knownFcs = append(knownFcs, knownExistStruct.ExistFreeParamSets...)
-		knownFcs = append(knownFcs, knownExistStruct.Params...)
+		knownFcs = append(knownFcs, knownExistStruct.PureFact.Params...)
 
 		instExistFreeParams := []ast.Obj{}
 		for _, param := range instExistStruct.ExistFreeParams {
@@ -286,14 +288,14 @@ func (ver *Verifier) matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFact *
 
 		instFcs := []ast.Obj{}
 		instFcs = append(instFcs, instExistStruct.ExistFreeParamSets...)
-		instFcs = append(instFcs, instExistStruct.Params...)
+		instFcs = append(instFcs, instExistStruct.PureFact.Params...)
 
 		knownEqualMap := map[string]ast.Obj{}
 		for i, param := range instExistFreeParams {
 			knownEqualMap[knownExistFreeParams[i].String()] = param
 		}
 
-		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownFcs, freeVars, instFcs, string(knownSpecFact.PropName), knownEqualMap)
+		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownFcs, freeVars, instFcs, string(knownSpecFact.GetPropName()), knownEqualMap)
 	}
 }
 

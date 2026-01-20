@@ -128,7 +128,7 @@ func (envMgr *EnvMgr) StoreSpecFactInImplyTemplateMem(specFact ast.Spec_OrFact, 
 	return envMgr.CurEnv().KnownFactsStruct.SpecFactInImplyTemplateMem.newFact(specFact, implyTemplate)
 }
 
-func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.PureSpecificFactStmt) *glob.StmtRet {
 	mem := envMgr.CurEnv().EqualMem
 
 	if len(fact.Params) != 2 {
@@ -542,7 +542,7 @@ var BuiltinEnvMgrWithEmptyEnvPkgMgr *EnvMgr = nil
 // 	return dst
 // }
 
-func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFactStruct *ast.ExistStFactStruct, definedParams []string) (*ast.ExistStFactStruct, error) {
+func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFactStruct *ast.ExistSpecificFactStmt, definedParams []string) (*ast.ExistSpecificFactStmt, error) {
 	uniMap := map[string]struct{}{}
 	for _, param := range definedParams {
 		uniMap[param] = struct{}{}
@@ -578,8 +578,8 @@ func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFa
 		uniMap2[existFactStruct.ExistFreeParams[i]] = ast.Atom(newExistParams[i])
 	}
 
-	newParams := make([]ast.Obj, len(existFactStruct.Params))
-	for i, param := range existFactStruct.Params {
+	newParams := make([]ast.Obj, len(existFactStruct.PureFact.Params))
+	for i, param := range existFactStruct.PureFact.Params {
 		newParam, err := param.Instantiate(uniMap2)
 		if err != nil {
 			return nil, err
@@ -587,11 +587,11 @@ func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFa
 		newParams[i] = newParam
 	}
 
-	return ast.NewExistStFactStruct(existFactStruct.FactType, existFactStruct.PropName, existFactStruct.IsPropTrue, newExistParams, newExistParamSets, newParams, existFactStruct.Line), nil
+	return ast.NewExistSpecificFactStmt(existFactStruct.IsTrue, newExistParams, newExistParamSets, ast.NewPureSpecificFactStmt(existFactStruct.PureFact.IsTrue, existFactStruct.PureFact.PropName, newParams, existFactStruct.Line), existFactStruct.Line), nil
 }
 
 // storeSpecFactInMemAndCollect collects the fact string for derived facts tracking
-func (ie *InferEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) *glob.ShortRet {
+func (ie *InferEngine) storeSpecFactInMemAndCollect(fact ast.SpecificFactStmt, derivedFacts *[]string) *glob.ShortRet {
 	ret := ie.EnvMgr.storeSpecFactInMem(fact)
 	if ret.IsErr() {
 		return glob.ErrStmtMsgToShortRet(ret)
