@@ -84,10 +84,10 @@ func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateP
 	return fnTStruct, glob.NewEmptyShortTrueRet()
 }
 
-func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecifcFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecificFactStmt) *glob.StmtRet {
 	switch asFact := stmt.(type) {
 	case *ast.PureSpecificFactStmt:
-		if stmt.IsTrue {
+		if asFact.IsTrue {
 			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())]
 			if !ok {
 				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())] = []*ast.PureSpecificFactStmt{}
@@ -104,7 +104,7 @@ func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecifcFactStmt) *glob.StmtRet
 			return glob.NewEmptyStmtTrue()
 		}
 	case *ast.ExistSpecificFactStmt:
-		if stmt.IsTrue {
+		if asFact.IsTrue {
 			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())]
 			if !ok {
 				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())] = []*ast.ExistSpecificFactStmt{}
