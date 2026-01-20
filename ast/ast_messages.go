@@ -62,6 +62,79 @@ func (stmt *SpecFactStmt) String() string {
 	}
 }
 
+func (p *PureSpecificFactStmt) String() string {
+	var builder strings.Builder
+
+	if !p.IsTrue {
+		builder.WriteString(glob.KeywordNot)
+		builder.WriteByte(' ')
+	}
+
+	if glob.IsKeySymbol(string(p.PropName)) {
+		builder.WriteString(pureSpecificFactKeySymbolRelaFactString(p))
+	} else if _, ok := relaPropSet[string(p.PropName)]; ok {
+		builder.WriteString(pureSpecificFactKeywordRelaFactString(p))
+	} else {
+		builder.WriteString(glob.FuncFactPrefix)
+		builder.WriteString(p.PropName.String())
+		builder.WriteByte('(')
+		builder.WriteString(objSliceString(p.Params))
+		builder.WriteByte(')')
+	}
+	return builder.String()
+}
+
+func pureSpecificFactKeySymbolRelaFactString(p *PureSpecificFactStmt) string {
+	var builder strings.Builder
+	if len(p.Params) >= 2 {
+		builder.WriteString(p.Params[0].String())
+		builder.WriteByte(' ')
+		builder.WriteString(p.PropName.String())
+		builder.WriteByte(' ')
+		builder.WriteString(p.Params[1].String())
+	}
+	return builder.String()
+}
+
+func pureSpecificFactKeywordRelaFactString(p *PureSpecificFactStmt) string {
+	var builder strings.Builder
+	if len(p.Params) >= 2 {
+		builder.WriteString(p.Params[0].String())
+		builder.WriteByte(' ')
+		builder.WriteString(glob.KeySymbolDollar)
+		builder.WriteString(p.PropName.String())
+		builder.WriteByte(' ')
+		builder.WriteString(p.Params[1].String())
+	}
+	return builder.String()
+}
+
+func (e *ExistSpecificFactStmt) String() string {
+	var builder strings.Builder
+	if !e.IsTrue {
+		builder.WriteString(glob.KeywordNot)
+		builder.WriteByte(' ')
+	}
+
+	builder.WriteString(glob.KeywordExist)
+	builder.WriteByte(' ')
+
+	builder.WriteString(StrObjSetPairs(e.ExistFreeParams, e.ExistFreeParamSets))
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordSt)
+	builder.WriteString(" ")
+
+	// Create a pure fact for the inner fact
+	var innerFact PureSpecificFactStmt
+	innerFact.IsTrue = e.IsPropTrue
+	innerFact.PropName = e.PropName
+	innerFact.Params = e.Params
+	innerFact.Line = glob.BuiltinLine0
+	builder.WriteString(innerFact.String())
+
+	return builder.String()
+}
+
 var relaPropSet map[string]struct{} = map[string]struct{}{
 	glob.KeywordIn: {},
 }

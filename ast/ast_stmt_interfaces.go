@@ -31,6 +31,8 @@ func (s *LetFnStmt) stmt()      {}
 func (s *UniFactStmt) stmt()    {}
 func (s *SpecFactStmt) stmt()   {}
 func (s *ClaimProveStmt) stmt() {}
+func (p *PureSpecificFactStmt) stmt() {}
+func (e *ExistSpecificFactStmt) stmt() {}
 func (s *KnowFactStmt) stmt()   {}
 
 // func (s *DefExistPropStmt) stmt()              {}
@@ -87,6 +89,8 @@ func (s *LetFnStmt) algoStmt()      {}
 func (s *UniFactStmt) algoStmt()    {}
 func (s *SpecFactStmt) algoStmt()   {}
 func (s *ClaimProveStmt) algoStmt() {}
+func (p *PureSpecificFactStmt) algoStmt() {}
+func (e *ExistSpecificFactStmt) algoStmt() {}
 func (s *KnowFactStmt) algoStmt()   {}
 
 // func (s *DefExistPropStmt) algoStmt()                  {}
@@ -204,6 +208,8 @@ func (s *WitnessShortStmt) GetLine() uint      { return s.Line }
 func (s *EqualSetStmt) GetLine() uint              { return s.Line }
 func (s *WitnessNonemptyStmt) GetLine() uint       { return s.Line }
 func (s *ImpossibleStmt) GetLine() uint            { return s.Line }
+func (p *PureSpecificFactStmt) GetLine() uint      { return p.Line }
+func (e *ExistSpecificFactStmt) GetLine() uint     { return e.Line }
 
 func (s *DefLetStmt) SetLine(l uint)     { s.Line = l }
 func (s *DefPropStmt) SetLine(l uint)    { s.Line = l }
@@ -271,6 +277,8 @@ func (s *WitnessShortStmt) SetLine(l uint)      { s.Line = l }
 func (s *EqualSetStmt) SetLine(l uint)              { s.Line = l }
 func (s *WitnessNonemptyStmt) SetLine(l uint)       { s.Line = l }
 func (s *ImpossibleStmt) SetLine(l uint)            { s.Line = l }
+func (p *PureSpecificFactStmt) SetLine(l uint)      { p.Line = l }
+func (e *ExistSpecificFactStmt) SetLine(l uint)     { e.Line = l }
 
 type FactStmt interface {
 	factStmt()
@@ -291,6 +299,8 @@ func (l *UniFactStmt) factStmt()        {}
 func (l *UniFactWithIffStmt) factStmt() {}
 func (s *OrStmt) factStmt()             {}
 func (s *EqualsFactStmt) factStmt()     {}
+func (p *PureSpecificFactStmt) factStmt() {}
+func (e *ExistSpecificFactStmt) factStmt() {}
 
 type Spec_OrFact interface {
 	reversibleFact()
@@ -344,6 +354,8 @@ func (s *OrStmt) canBeKnown()             {}
 func (s *EqualsFactStmt) canBeKnown()    {}
 func (s *KnowPropInferStmt) canBeKnown() {}
 func (s *KnowInferStmt) canBeKnown()     {}
+func (p *PureSpecificFactStmt) canBeKnown() {}
+func (e *ExistSpecificFactStmt) canBeKnown() {}
 
 type CanBeKnownStmtSlice []CanBeKnownStmt
 
@@ -400,5 +412,7 @@ func (l *UniFactStmt) proveAlgoReturnStmt()        {}
 func (l *UniFactWithIffStmt) proveAlgoReturnStmt() {}
 func (s *OrStmt) proveAlgoReturnStmt()             {}
 func (s *EqualsFactStmt) proveAlgoReturnStmt()     {}
+func (p *PureSpecificFactStmt) specificFactStmt() {}
+func (e *ExistSpecificFactStmt) specificFactStmt() {}
 
 // func (s *ByStmt) proveAlgoReturnStmt()             {}
