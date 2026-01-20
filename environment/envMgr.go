@@ -185,12 +185,12 @@ type SpecFactMem struct {
 }
 
 type KnownSpecFact_InLogicExpr struct {
-	SpecFact  *ast.SpecificFactStmt
+	SpecFact  ast.SpecificFactStmt
 	Index     int
 	LogicExpr *ast.OrStmt
 }
 
-func NewKnownSpecFact_InLogicExpr(specFact *ast.SpecificFactStmt, index int, logicExpr *ast.OrStmt) *KnownSpecFact_InLogicExpr {
+func NewKnownSpecFact_InLogicExpr(specFact ast.SpecificFactStmt, index int, logicExpr *ast.OrStmt) *KnownSpecFact_InLogicExpr {
 	return &KnownSpecFact_InLogicExpr{specFact, index, logicExpr}
 }
 
@@ -202,11 +202,11 @@ type SpecFactInLogicExprMem struct {
 }
 
 type KnownSpecFact_InUniFact struct {
-	SpecFact *ast.SpecificFactStmt
+	SpecFact ast.SpecificFactStmt
 	UniFact  *ast.UniFactStmt
 }
 
-func MakeKnownSpecFact_InUniFact(specFact *ast.SpecificFactStmt, uniFact *ast.UniFactStmt) KnownSpecFact_InUniFact {
+func MakeKnownSpecFact_InUniFact(specFact ast.SpecificFactStmt, uniFact *ast.UniFactStmt) KnownSpecFact_InUniFact {
 	return KnownSpecFact_InUniFact{specFact, uniFact}
 }
 
