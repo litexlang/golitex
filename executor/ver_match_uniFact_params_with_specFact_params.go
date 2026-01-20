@@ -20,16 +20,16 @@ import (
 )
 
 // func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
-func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownFcs []ast.Obj, freeVars []string, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
+func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownFcs []ast.Obj, freeVars []string, specFact ast.SpecificFactStmt) (bool, map[string]ast.Obj, error) {
 	// knownFcs := knownSpecFactInUniFact.SpecFact.Params
-	givenFcs := specFact.Params
+	givenFcs := specFact.(*ast.PureSpecificFactStmt).Params
 	// freeVars := knownSpecFactInUniFact.UniFact.Params
 	freeVarsMap := map[string]struct{}{}
 	for _, freeVar := range freeVars {
 		freeVarsMap[freeVar] = struct{}{}
 	}
 
-	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs, givenFcs, freeVarsMap, string(specFact.PropName))
+	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs, givenFcs, freeVarsMap, string(specFact.(*ast.PureSpecificFactStmt).PropName))
 	if err != nil {
 		return false, nil, err
 	}

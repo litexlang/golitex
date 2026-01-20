@@ -57,7 +57,7 @@ func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) *glob
 	for _, domFact := range stmt.DomFacts {
 		// Convert Spec_OrFact to FactStmt
 		var factStmt ast.FactStmt
-		if specFact, ok := domFact.(*ast.SpecFactStmt); ok {
+		if specFact, ok := domFact.(ast.SpecificFactStmt); ok {
 			factStmt = specFact
 		} else if orStmt, ok := domFact.(*ast.OrStmt); ok {
 			factStmt = orStmt
@@ -83,7 +83,7 @@ func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) *glob
 	thenFactsAsFactStmt := make([]ast.FactStmt, len(stmt.ThenFacts))
 	for i, fact := range stmt.ThenFacts {
 		// Convert Spec_OrFact to FactStmt
-		if specFact, ok := fact.(*ast.SpecFactStmt); ok {
+		if specFact, ok := fact.(ast.SpecificFactStmt); ok {
 			thenFactsAsFactStmt[i] = specFact
 		} else if orStmt, ok := fact.(*ast.OrStmt); ok {
 			thenFactsAsFactStmt[i] = orStmt
@@ -105,7 +105,7 @@ func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) *glob
 func (exec *Executor) implyTemplateStmtStore(stmt *ast.InferTemplateStmt) *glob.StmtRet {
 	// Store each thenFact in appropriate memory
 	for _, thenFact := range stmt.ThenFacts {
-		if specFact, ok := thenFact.(*ast.SpecFactStmt); ok {
+		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
 			// Store SpecFactStmt in SpecFactInImplyTemplateMem
 			ret := exec.Env.StoreSpecFactInImplyTemplateMem(specFact, stmt)
 			if ret.IsErr() {

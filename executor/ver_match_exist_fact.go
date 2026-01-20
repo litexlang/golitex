@@ -20,19 +20,20 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) MatchExistFact(given *ast.SpecFactStmt, stored *ast.SpecFactStmt, verState *VerState) *glob.VerRet {
-	givenExistFactStruct := given.ToExistStFactStruct()
-	storedExistFactStruct := stored.ToExistStFactStruct()
-
-	return ver.MatchExistFactStruct(givenExistFactStruct, storedExistFactStruct)
+func (ver *Verifier) MatchExistFact(given *ast.ExistSpecificFactStmt, stored *ast.ExistSpecificFactStmt, verState *VerState) *glob.VerRet {
+	return ver.MatchExistFactStruct(given, stored)
 }
 
-func (ver *Verifier) MatchExistFactStruct(given *ast.ExistStFactStruct, stored *ast.ExistStFactStruct) *glob.VerRet {
+func (ver *Verifier) MatchExistFactStruct(given *ast.ExistSpecificFactStmt, stored *ast.ExistSpecificFactStmt) *glob.VerRet {
 	if len(given.ExistFreeParams) != len(stored.ExistFreeParams) {
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	if given.IsPropTrue != given.IsPropTrue {
+	if given.IsTrue != stored.IsTrue {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	if given.PureFact.IsTrue != given.PureFact.IsTrue {
 		return glob.NewEmptyVerRetUnknown()
 	}
 
@@ -42,14 +43,14 @@ func (ver *Verifier) MatchExistFactStruct(given *ast.ExistStFactStruct, stored *
 		uniMap[stored.ExistFreeParams[i]] = ast.Atom(given.ExistFreeParams[i])
 	}
 
-	propStoredFact := stored.GetPureFactInside()
+	propStoredFact := stored.PureFact
 	instPropStoredFact, err := propStoredFact.Instantiate(uniMap)
 	if err != nil {
 		return glob.NewEmptyVerRetUnknown()
 	}
 
 	instPropStoredFactStr := instPropStoredFact.String()
-	givenPropStr := given.GetPureFactInside().String()
+	givenPropStr := given.PureFact.String()
 	if instPropStoredFactStr != givenPropStr {
 		return glob.NewEmptyVerRetUnknown()
 	}
@@ -72,17 +73,9 @@ func (ver *Verifier) MatchExistFactStruct(given *ast.ExistStFactStruct, stored *
 }
 
 // match给定的specFact和uniFact下面的specFact的多个行为 1. 如果不涉及到freeParam，那么要确保他们符号相等 2. 获得各个freeParam对应了哪些哪些givenParam 3. 如果某个freeParam对应了多个givenParam，那就要验证他们都相等否则就unknown
-func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, given *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
-	knownStruct := knownSpecFactInUniFact.SpecFact.ToExistStFactStruct()
-	givenStruct := given.ToExistStFactStruct()
-
-	if len(knownStruct.ExistFreeParams) != len(givenStruct.ExistFreeParams) {
-		return false, nil, nil
-	}
-
-	if knownStruct.IsPropTrue != givenStruct.IsPropTrue {
-		return false, nil, nil
-	}
+func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, given *ast.ExistSpecificFactStmt) (bool, map[string]ast.Obj, error) {
+	knownStruct := knownSpecFactInUniFact.SpecFact.(*ast.ExistSpecificFactStmt)
+	givenStruct := given
 
 	var err error
 	givenStruct, err = ver.Env.MakeExistFactStructDoesNotConflictWithDefinedNames(givenStruct, knownSpecFactInUniFact.UniFact.Params)
@@ -95,7 +88,7 @@ func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUn
 		uniMap[knownStruct.ExistFreeParams[i]] = ast.Atom(givenStruct.ExistFreeParams[i])
 	}
 
-	knownPropFact := knownStruct.GetPureFactWithParamSets()
+	knownPropFact := knownStruct.PureFact
 	instKnownPureFact, err := knownPropFact.Instantiate(uniMap)
 	if err != nil {
 		return false, nil, err
@@ -104,21 +97,22 @@ func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUn
 	// matchParamsInGivenExistFactWithKnownExistFactInUniFact
 	// REMARK 应该有问题
 	// TODO: 这里的match我还是有点慌，因为涉及到的参数其实是不存在的，应该用纯symbol去匹配好像更好一点
-	tmp := env.MakeKnownSpecFact_InUniFact(instKnownPureFact.(*ast.SpecFactStmt), knownSpecFactInUniFact.UniFact)
+	tmp := env.MakeKnownSpecFact_InUniFact(instKnownPureFact.(*ast.PureSpecificFactStmt), knownSpecFactInUniFact.UniFact)
 	// ok, m, err := ver.matchUniFactParamsWithSpecFactParams(&tmp, givenStruct.GetPureFactWithParamSets())
-	ok, m, err := ver.matchUniFactParamsWithSpecFactParams(tmp.SpecFact.Params, tmp.UniFact.Params, givenStruct.GetPureFactWithParamSets())
 
+	var ok bool
+	var m map[string]ast.Obj
+
+	ok, m, err = ver.matchUniFactParamsWithSpecFactParams(tmp.SpecFact.(*ast.ExistSpecificFactStmt).PureFact.Params, tmp.UniFact.Params, givenStruct.PureFact)
 	if err != nil || !ok {
-		return false, nil, nil
-	} else {
-		// 它的 set 也能对应上
-		newUniMap := map[string]ast.Obj{}
-		for i := range knownStruct.ExistFreeParamSets {
-			instParamSet, err := knownStruct.ExistFreeParamSets[i].Instantiate(m)
-			if err != nil {
-				return false, nil, err
-			}
+		return false, nil, err
+	}
 
+	// 它的 set 也能对应上
+	newUniMap := map[string]ast.Obj{}
+	for i := range knownStruct.ExistFreeParamSets {
+		instParamSet, err := knownStruct.ExistFreeParamSets[i].Instantiate(m)
+		if err != nil {
 			instParamSet, err = instParamSet.Instantiate(newUniMap)
 			if err != nil {
 				return false, nil, err
@@ -133,4 +127,6 @@ func (ver *Verifier) matchExistFactWithExistFactInKnownUniFact(knownSpecFactInUn
 
 		return ok, m, err
 	}
+
+	return ok, m, nil
 }

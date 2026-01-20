@@ -20,13 +20,18 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 
 	// After replacing symbols with values, evaluate any val(...) expressions
-	newParams := make([]ast.Obj, len(newStmt.Params))
+	newParams := make([]ast.Obj, len(asStmt.Params))
 	valReplaced := false
-	for i, param := range newStmt.Params {
+	for i, param := range asStmt.Params {
 		if fnObj, ok := param.(*ast.FnObj); ok {
 			if ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordVal) && len(fnObj.Params) == 1 {
 				// val(...) should be evaluated (like eval)
@@ -45,7 +50,7 @@ func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt *ast.SpecFactStmt, 
 	}
 
 	if valReplaced {
-		newStmt = ast.NewSpecFactStmt(newStmt.FactType, newStmt.PropName, newParams, newStmt.Line)
+		newStmt = ast.NewPureSpecificFactStmt(asStmt.IsTrue, asStmt.PropName, newParams, asStmt.Line)
 		replaced = true
 	}
 

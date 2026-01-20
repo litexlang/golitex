@@ -21,8 +21,8 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	defInCurEnvPkgMgr, ok := ver.Env.GetPropDefWithoutSearchingInBuiltinEnv(stmt.PropName)
+func (ver *Verifier) verSpecFact_BySpecMem(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	defInCurEnvPkgMgr, ok := ver.Env.GetPropDefWithoutSearchingInBuiltinEnv(stmt.GetPropName())
 	if ok {
 		for i := len(ver.Env.EnvSlice) - 1; i >= defInCurEnvPkgMgr.EnvDepth; i-- {
 			curEnv := &ver.Env.EnvSlice[i]
@@ -61,7 +61,7 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt *ast.SpecFactStmt, state *VerSta
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verSpecFact_ByLogicMem(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 	nextState := state.GetAddRound()
 	// Add builtin env check
 	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
@@ -82,7 +82,7 @@ func (ver *Verifier) verSpecFact_ByLogicMem(stmt *ast.SpecFactStmt, state *VerSt
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 	for curEnvIndex := range ver.Env.EnvSlice {
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_UniMem_atCurEnv(curEnv, stmt, state)
@@ -108,7 +108,7 @@ func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt *ast.SpecFactStmt, state
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 	for curEnvIndex := range ver.Env.EnvSlice {
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_inLogicExpr_inUniFactMem_atEnv(curEnv, stmt, state)
@@ -134,7 +134,7 @@ func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt *ast.SpecFactStmt
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.EnvMemory, stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 	searchedSpecFactsInLogicExpr, got := curEnv.KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
@@ -143,20 +143,25 @@ func (ver *Verifier) specFact_inLogicExpr_inUniFactMem_atEnv(curEnv *env.EnvMemo
 
 	nextState := state.GetAddRound()
 
-	if stmt.IsPureFact() {
+	if asStmt.IsTrue {
 		return ver.iterate_KnownPureSpecInLogic_InUni_applyMatch_new(stmt, searchedSpecFactsInLogicExpr, nextState)
 	} else {
 		return ver.iterate_KnownExistSpecInLogic_InUni_applyMatch_new(stmt, searchedSpecFactsInLogicExpr, nextState)
 	}
 }
 
-func (ver *Verifier) iterate_KnownPureSpecInLogic_InUni_applyMatch_new(stmt *ast.SpecFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state *VerState) *glob.VerRet {
+func (ver *Verifier) iterate_KnownPureSpecInLogic_InUni_applyMatch_new(stmt ast.SpecificFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state *VerState) *glob.VerRet {
+	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		knownFactUnderLogicExpr := knownFacts[i]
 		knownFact_paramProcessed := env.KnownSpecFact_InUniFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}
 
 		// ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(&knownFact_paramProcessed, stmt)
-		ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(knownFact_paramProcessed.SpecFact.Params, knownFact_paramProcessed.UniFact.Params, stmt)
+		ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(knownFact_paramProcessed.SpecFact.(*ast.PureSpecificFactStmt).Params, knownFact_paramProcessed.UniFact.Params, stmt)
 		if err != nil {
 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
 		}
