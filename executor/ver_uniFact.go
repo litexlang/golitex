@@ -72,7 +72,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 	// 0. 如果dom和then里全是or_spec 那可以继续，否则就不行
 	domFactsReversible := []ast.Spec_OrFact{}
 	for _, domFact := range oldStmt.DomFacts {
-		if specFact, ok := domFact.(*ast.SpecFactStmt); ok {
+		if specFact, ok := domFact.(ast.SpecificFactStmt); ok {
 			domFactsReversible = append(domFactsReversible, specFact)
 		} else if orStmt, ok := domFact.(*ast.OrStmt); ok {
 			domFactsReversible = append(domFactsReversible, orStmt)
@@ -84,7 +84,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 
 	thenFactsReversible := []ast.Spec_OrFact{}
 	for _, thenFact := range oldStmt.ThenFacts {
-		if specFact, ok := thenFact.(*ast.SpecFactStmt); ok {
+		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
 			thenFactsReversible = append(thenFactsReversible, specFact)
 		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
 			thenFactsReversible = append(thenFactsReversible, orStmt)
@@ -109,7 +109,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 		// Rebuild reversible facts with replaced parameters
 		domFactsReversible = []ast.Spec_OrFact{}
 		for _, domFact := range oldStmt.DomFacts {
-			if specFact, ok := domFact.(*ast.SpecFactStmt); ok {
+			if specFact, ok := domFact.(ast.SpecificFactStmt); ok {
 				domFactsReversible = append(domFactsReversible, specFact)
 			} else if orStmt, ok := domFact.(*ast.OrStmt); ok {
 				domFactsReversible = append(domFactsReversible, orStmt)
@@ -117,7 +117,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 		}
 		thenFactsReversible = []ast.Spec_OrFact{}
 		for _, thenFact := range oldStmt.ThenFacts {
-			if specFact, ok := thenFact.(*ast.SpecFactStmt); ok {
+			if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
 				thenFactsReversible = append(thenFactsReversible, specFact)
 			} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
 				thenFactsReversible = append(thenFactsReversible, orStmt)
