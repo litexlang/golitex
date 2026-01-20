@@ -20,7 +20,7 @@ import (
 	"strconv"
 )
 
-func (stmt *SpecFactStmt) IsBuiltinInfixRelaProp() bool {
+func (stmt *PureSpecificFactStmt) IsBuiltinInfixRelaProp() bool {
 	return glob.IsBuiltinInfixRelaPropSymbol(string(stmt.PropName))
 }
 
@@ -308,7 +308,7 @@ func IsObjAtomEqualToGivenString(obj Obj, name string) bool {
 
 func TransformEnumToUniFact(setName Obj, enumObjs []Obj) (*UniFactStmt, []*PureSpecificFactStmt, []*PureSpecificFactStmt) {
 	freeObjName := Atom(glob.RandomString(4))
-	equalFactsInOrFact := []*PureSpecificFactStmt{}
+	equalFactsInOrFact := SpecFactPtrSlice{}
 	itemsInSetFacts := []*PureSpecificFactStmt{}
 	for _, obj := range enumObjs {
 		equalFactsInOrFact = append(equalFactsInOrFact, NewPureSpecificFactStmt(true, Atom(glob.KeySymbolEqual), []Obj{freeObjName, obj}, glob.BuiltinLine0))
@@ -404,10 +404,10 @@ func (stmt *PureSpecificFactStmt) ExistStFactToPropNameExistParamsParamsAndTrueS
 // 	return NewSpecFactStmt(TrueExist_St, stmt.Fact.PropName, existStParams, stmt.Line)
 // }
 
-func (stmt *HaveObjStStmt) ToTruePurePropExistStFact() *PureSpecificFactStmt {
-	return NewExistStFact(TrueExist_St, stmt.Fact.PropName, stmt.Fact.IsTrue(), stmt.ObjNames, stmt.ObjSets, stmt.Fact.Params, stmt.Line)
+func (stmt *HaveObjStStmt) ToTruePurePropExistStFact() *ExistSpecificFactStmt {
+	return NewExistSpecificFactStmt(true, stmt.ObjNames, stmt.ObjSets, NewPureSpecificFactStmt(true, stmt.Fact.PropName, stmt.Fact.Params, stmt.Line), stmt.Line)
 }
 
-func (stmt *WitnessStmt) ToTrueExistStFact() *PureSpecificFactStmt {
-	return NewExistStFact(TrueExist_St, stmt.Fact.PropName, stmt.Fact.IsTrue(), stmt.ExistParams, stmt.ExistParamSets, stmt.Fact.Params, stmt.Line)
+func (stmt *WitnessStmt) ToTrueExistStFact() *ExistSpecificFactStmt {
+	return NewExistSpecificFactStmt(true, stmt.ExistParams, stmt.ExistParamSets, NewPureSpecificFactStmt(true, stmt.Fact.PropName, stmt.Fact.Params, stmt.Line), stmt.Line)
 }

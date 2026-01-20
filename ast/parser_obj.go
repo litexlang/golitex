@@ -569,13 +569,19 @@ func (p *TbParser) setBuilderObjWrittenInCurly(tb *tokenBlock, paramAsObj Obj) (
 		return nil, err
 	}
 
-	facts := SpecFactPtrSlice{}
+	facts := []*PureSpecificFactStmt{}
 	for !tb.header.is(glob.KeySymbolRightCurly) {
 		specFact, err := p.specFactStmt(tb)
 		if err != nil {
 			return nil, err
 		}
-		facts = append(facts, specFact)
+
+		specFactAsPureSpecificFactStmt, ok := specFact.(*PureSpecificFactStmt)
+		if !ok {
+			return nil, fmt.Errorf("expect pure specific fact, got %T", specFact)
+		}
+
+		facts = append(facts, specFactAsPureSpecificFactStmt)
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
 			continue
@@ -638,13 +644,19 @@ func (p *TbParser) SetBuilderObjBeginWithKeywordSetBuilder(tb *tokenBlock) (Obj,
 	}
 
 	// Parse facts (comma-separated)
-	facts := SpecFactPtrSlice{}
+	facts := []*PureSpecificFactStmt{}
 	for !tb.header.is(glob.KeySymbolRightBrace) {
 		specFact, err := p.specFactStmt(tb)
 		if err != nil {
 			return nil, err
 		}
-		facts = append(facts, specFact)
+
+		specFactAsPureSpecificFactStmt, ok := specFact.(*PureSpecificFactStmt)
+		if !ok {
+			return nil, fmt.Errorf("expect pure specific fact, got %T", specFact)
+		}
+
+		facts = append(facts, specFactAsPureSpecificFactStmt)
 		if tb.header.is(glob.KeySymbolComma) {
 			tb.header.skip(glob.KeySymbolComma)
 			continue

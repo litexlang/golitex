@@ -14,10 +14,19 @@ type SpecificFactStmt interface {
 	Instantiate(map[string]Obj) (Stmt, error)
 	SetLine(l uint)
 	ReverseIsTrue() []SpecificFactStmt
+	GetPropName() Atom
 }
 
 func (s *PureSpecificFactStmt) specificFactStmt()  {}
 func (s *ExistSpecificFactStmt) specificFactStmt() {}
+
+func (s *PureSpecificFactStmt) GetPropName() Atom {
+	return s.PropName
+}
+
+func (s *ExistSpecificFactStmt) GetPropName() Atom {
+	return s.PureFact.PropName
+}
 
 type PureSpecificFactStmt struct {
 	IsTrue   bool

@@ -17,7 +17,7 @@ package litex_ast
 type FactStmtSlice []FactStmt
 type StmtSlice []Stmt
 type StmtSliceSlice []StmtSlice
-type SpecFactPtrSlice []*SpecFactStmt
+type SpecFactPtrSlice []SpecificFactStmt
 type StrSlice []string // 在定义的时候，用string而不是 atom 是有道理的，因为atom可能引入::，而string不会
 type ObjSlice []Obj
 type ReversibleFacts []Spec_OrFact
@@ -109,6 +109,7 @@ type KnowPropInferStmt struct {
 	Line uint
 }
 
+// TODO: 可以把caseFacts换成[]Spec_orFact，这样更合理
 type ProveCaseByCaseStmt struct {
 	CaseFacts  SpecFactPtrSlice
 	ThenFacts  FactStmtSlice
@@ -319,7 +320,7 @@ type ProveIsTransitivePropStmt struct {
 type ProveIsCommutativePropStmt struct {
 	// Prop              FcAtom
 	// Params            StrSlice
-	SpecFact          *SpecFactStmt
+	SpecFact          *PureSpecificFactStmt
 	Proofs            StmtSlice
 	ProofsRightToLeft StmtSlice
 
@@ -406,7 +407,7 @@ type ProveForStmt struct {
 // }
 
 type ProveInferStmt struct {
-	SpecFact        *SpecFactStmt
+	SpecFact        *PureSpecificFactStmt
 	ImplicationFact FactStmtSlice
 	Proofs          StmtSlice
 
@@ -417,7 +418,7 @@ type ProveInferStmt struct {
 type HaveObjStStmt struct {
 	ObjNames StrSlice
 	ObjSets  ObjSlice
-	Fact     *SpecFactStmt
+	Fact     *PureSpecificFactStmt
 
 	Line uint
 }
@@ -426,14 +427,14 @@ type WitnessStmt struct {
 	ExistParams    StrSlice
 	ExistParamSets ObjSlice
 	EqualTos       ObjSlice
-	Fact           *SpecFactStmt
+	Fact           *PureSpecificFactStmt
 	Proofs         StmtSlice
 
 	Line uint
 }
 
 type WitnessShortStmt struct {
-	SpecFact *SpecFactStmt
+	SpecFact *PureSpecificFactStmt
 	Proofs   StmtSlice
 
 	Line uint
@@ -491,7 +492,7 @@ type ImpossibleStmt struct {
 }
 
 type HaveShortStmt struct {
-	SpecFact *SpecFactStmt
+	SpecFact *PureSpecificFactStmt
 
 	Line uint
 }
