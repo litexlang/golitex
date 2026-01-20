@@ -153,7 +153,7 @@ func (ver *Verifier) verProjReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet 
 	}
 
 	// x is cart
-	isCartFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine0)
+	isCartFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIsCart), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine0)
 	verRet := ver.VerFactStmt(isCartFact, state)
 	if verRet.IsErr() {
 		return verRet
@@ -172,7 +172,7 @@ func (ver *Verifier) verProjReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet 
 	}
 
 	// index <= set_dim(x)
-	verRet = ver.VerFactStmt(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fnObj.Params[1], ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fnObj.Params[0]})}, glob.BuiltinLine0), state)
+	verRet = ver.VerFactStmt(ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{fnObj.Params[1], ast.NewFnObj(ast.Atom(glob.KeywordSetDim), []ast.Obj{fnObj.Params[0]})}, glob.BuiltinLine0), state)
 	if verRet.IsErr() {
 		return verRet
 	} else if verRet.IsUnknown() {
@@ -187,7 +187,7 @@ func (ver *Verifier) verDimReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj)})
 	}
 	// 检查是否是 tuple
-	isTupleFact := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeywordIsTuple), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine0)
+	isTupleFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIsTuple), []ast.Obj{fnObj.Params[0]}, glob.BuiltinLine0)
 	verRet := ver.VerFactStmt(isTupleFact, state)
 	if verRet.IsErr() {
 		return verRet
