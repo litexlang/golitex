@@ -318,17 +318,60 @@ func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_I
 }
 
 func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	knownFacts, got := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
-
-	if !got {
-		return glob.NewEmptyVerRetUnknown()
+	switch asFact := stmt.(type) {
+	case *ast.PureSpecificFactStmt:
+		if asFact.IsTrue {
+			sameEnumPkgPropFacts, memExist := ver.Env.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.PropName)]
+			if !memExist {
+				return glob.NewEmptyVerRetUnknown()
+			}
+			return ver.iterateKnownSpecFacts_applyObjEqualSpec(asFact, sameEnumPkgPropFacts, state)
+		} else {
+			sameEnumPkgPropFacts, memExist := ver.Env.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.PropName)]
+			if !memExist {
+				return glob.NewEmptyVerRetUnknown()
+			}
+			return ver.iterateKnownSpecFacts_applyObjEqualSpec(asFact, sameEnumPkgPropFacts, state)
+		}
+	case *ast.ExistSpecificFactStmt:
+		if asFact.IsTrue {
+			sameEnumPkgPropFacts, memExist := ver.Env.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())]
+			if !memExist {
+				return glob.NewEmptyVerRetUnknown()
+			}
+			return ver.iterateKnownSpecFacts_applyObjEqualSpec(asFact, sameEnumPkgPropFacts, state)
+		} else {
+			sameEnumPkgPropFacts, memExist := ver.Env.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())]
+			if !memExist {
+				return glob.NewEmptyVerRetUnknown()
+			}
+			return ver.iterateKnownSpecFacts_applyObjEqualSpec(asFact, sameEnumPkgPropFacts, state)
+		}
 	}
 
-	if stmt.FactType == ast.TruePure || stmt.FactType == ast.FalsePure {
-		return ver.iterateKnownSpecFacts_applyObjEqualSpec(stmt, knownFacts, state)
-	} else {
-		return ver.iterateKnownExistFactsAndMatchGivenFact(stmt, knownFacts, state)
-	}
+	// sameEnumFacts, ret := s.getSameEnumFacts(stmt)
+	// if ret.IsErr() {
+	// 	return nil, false
+	// }
+
+	// sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.GetPropName())]
+	// if !memExist {
+	// 	return nil, false
+	// }
+
+	// return sameEnumPkgPropFacts, true
+
+	// knownFacts, got := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
+
+	// if !got {
+	// 	return glob.NewEmptyVerRetUnknown()
+	// }
+
+	// if stmt.FactType == ast.TruePure || stmt.FactType == ast.FalsePure {
+	// 	return ver.iterateKnownSpecFacts_applyObjEqualSpec(stmt, knownFacts, state)
+	// } else {
+	// 	return ver.iterateKnownExistFactsAndMatchGivenFact(stmt, knownFacts, state)
+	// }
 }
 
 func (ver *Verifier) specFact_LogicMem(curEnv *env.EnvMemory, stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
