@@ -13,7 +13,11 @@ type SpecificFactStmt interface {
 	algoStmt()
 	Instantiate(map[string]Obj) (Stmt, error)
 	SetLine(l uint)
+	ReverseIsTrue() []SpecificFactStmt
 }
+
+func (s *PureSpecificFactStmt) specificFactStmt()  {}
+func (s *ExistSpecificFactStmt) specificFactStmt() {}
 
 type PureSpecificFactStmt struct {
 	IsTrue   bool
@@ -24,10 +28,16 @@ type PureSpecificFactStmt struct {
 
 type ExistSpecificFactStmt struct {
 	IsTrue             bool
-	IsPropTrue         bool
-	PropName           Atom
 	ExistFreeParams    []string
 	ExistFreeParamSets []Obj
-	Params             []Obj
+	PureFact           *PureSpecificFactStmt
 	Line               uint
+}
+
+func (s *PureSpecificFactStmt) ReverseIsTrue() []SpecificFactStmt {
+	return []SpecificFactStmt{NewPureSpecificFactStmt(!s.IsTrue, s.PropName, s.Params, s.Line)}
+}
+
+func (s *ExistSpecificFactStmt) ReverseIsTrue() []SpecificFactStmt {
+	return []SpecificFactStmt{NewExistSpecificFactStmt(!s.IsTrue, s.ExistFreeParams, s.ExistFreeParamSets, s.PureFact, s.Line)}
 }
