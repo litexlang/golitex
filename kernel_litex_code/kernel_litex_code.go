@@ -57,7 +57,7 @@ know forall x, y, z R: x + y = z => x = z - y
 know forall x,y R: x + y = 0 => x = -y
 
 # TODO: 已经放到 Std/Int/main.lit 中
-know forall x,y Z => $in(x+y, Z), $in(x-y, Z), $in(x*y, Z)
+# know forall x,y Z => $in(x+y, Z), $in(x-y, Z), $in(x*y, Z)
 	
 know forall x, y, z R: x + y = z => y + x = z
 

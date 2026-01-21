@@ -3008,8 +3008,8 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (SpecificFactStmt,
 		// return NewExistSpecificFactStmt(true, params, NewPureSpecificFactStmt(isTrue, propName, paramAsObj, tb.line), tb.line), nil
 	}
 
-	// Parse parameters and parameter sets using param_paramSet_paramInSetFacts
-	existParams, existParamSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeywordSt, false)
+	// Parse parameters and parameter sets for exist statement
+	existParams, existParamSets, err := p.parseExistParamsAndSets(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -3056,6 +3056,102 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (SpecificFactStmt,
 	} else {
 		return NewExistSpecificFactStmt(false, existParams, existParamSets, specFactAsPureSpecificFactStmt, tb.line), nil
 	}
+}
+
+// parseExistParamsAndSets parses parameters and parameter sets for exist statements.
+// It handles two cases:
+// 1. exist a, b, c st - no sets specified, default all to "set"
+// 2. exist a, b Z st or exist a Z, b N st - sets specified, use specified sets
+func (p *TbParser) parseExistParamsAndSets(tb *tokenBlock) ([]string, []Obj, error) {
+	params := []string{}
+	setParams := []Obj{}
+	hasSetSpecified := false
+
+	if tb.header.is(glob.KeywordSt) {
+		return params, setParams, nil
+	}
+
+	for {
+		// Read parameter name
+		param, err := tb.header.next()
+		if err != nil {
+			return nil, nil, err
+		}
+		param = AddPkgNameToName(p.PkgPathNameMgr.CurPkgDefaultName, param)
+		params = append(params, param)
+
+		// Check if next token is a comma or "st"
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			// Continue to next parameter
+			continue
+		}
+
+		if tb.header.is(glob.KeywordSt) {
+			// End of parameters, no set specified for this parameter
+			break
+		}
+
+		// Try to parse as set (Obj)
+		// Save position to check if parsing succeeds
+		savedIndex := tb.header.index
+		setParam, err := p.Obj(tb)
+		if err != nil {
+			// Not a set, restore position and error
+			tb.header.index = savedIndex
+			return nil, nil, fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeywordSt, tb.header.strAtCurIndexPlus(0))
+		}
+
+		// Successfully parsed a set
+		hasSetSpecified = true
+		setParams = append(setParams, setParam)
+
+		// Check if next token is comma or "st"
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			continue
+		}
+
+		if tb.header.is(glob.KeywordSt) {
+			break
+		}
+
+		return nil, nil, fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeywordSt, tb.header.strAtCurIndexPlus(0))
+	}
+
+	// Skip "st"
+	err := tb.header.skip(glob.KeywordSt)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Check for duplicate parameters
+	for i := range params {
+		for j := i + 1; j < len(params); j++ {
+			if params[i] == params[j] {
+				return nil, nil, fmt.Errorf("parameters cannot be repeated, get duplicate parameter: %s", params[i])
+			}
+		}
+	}
+
+	// If no sets were specified, default all to "set"
+	if !hasSetSpecified {
+		for range params {
+			setParams = append(setParams, Atom(glob.KeywordSet))
+		}
+	} else {
+		// If sets were specified, check if we need to fill missing ones
+		// This handles cases like "exist a, b Z st" where Z applies to both a and b
+		if len(setParams) < len(params) {
+			// Fill missing sets with the last specified set
+			lastSet := setParams[len(setParams)-1]
+			for len(setParams) < len(params) {
+				setParams = append(setParams, lastSet)
+			}
+		}
+	}
+
+	return params, setParams, nil
 }
 
 func (p *TbParser) pureFuncSpecFact(tb *tokenBlock) (*PureSpecificFactStmt, error) {

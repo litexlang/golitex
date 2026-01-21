@@ -85,3 +85,38 @@ func (s *ExistSpecificFactStmt) GetFactType() SpecFactType {
 		return FalseExist_St
 	}
 }
+
+func NewParamSetsWhenParamIsChanged(originalParam []string, paramSet []Obj, newParam []string) ([]Obj, error) {
+	uniMap := map[string]Obj{}
+	newParamSets := make([]Obj, len(paramSet))
+
+	for i := range originalParam {
+		cur, err := paramSet[i].Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newParamSets[i] = cur
+		uniMap[originalParam[i]] = Atom(newParam[i])
+	}
+
+	return newParamSets, nil
+}
+
+func (e *ExistSpecificFactStmt) ReplaceFreeParamsWithNewParams(newExistFreeParams []string) (*ExistSpecificFactStmt, error) {
+	newParamSets, err := NewParamSetsWhenParamIsChanged(e.ExistFreeParams, e.ExistFreeParamSets, newExistFreeParams)
+	if err != nil {
+		return nil, err
+	}
+
+	uniMap := map[string]Obj{}
+	for i := range newExistFreeParams {
+		uniMap[e.ExistFreeParams[i]] = Atom(newExistFreeParams[i])
+	}
+
+	newPureFact, err := e.PureFact.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewExistSpecificFactStmt(e.IsTrue, newExistFreeParams, newParamSets, newPureFact.(*PureSpecificFactStmt), e.Line), nil
+}

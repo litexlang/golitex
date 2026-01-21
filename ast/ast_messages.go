@@ -119,10 +119,7 @@ func (e *ExistSpecificFactStmt) String() string {
 	builder.WriteString(glob.KeywordExist)
 	builder.WriteByte(' ')
 
-	for _, param := range e.ExistFreeParams {
-		builder.WriteString(param)
-		builder.WriteByte(' ')
-	}
+	builder.WriteString(StrObjSetPairs(e.ExistFreeParams, e.ExistFreeParamSets))
 
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
