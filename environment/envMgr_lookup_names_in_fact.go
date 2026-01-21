@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"maps"
 )
 
 func (envMgr *EnvMgr) LookUpNamesInFact(stmt ast.FactStmt, extraParams map[string]struct{}) *glob.StmtRet {
@@ -53,15 +54,12 @@ func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.ExistSpecificFactStmt, ex
 		return ret
 	}
 
-	newExtraParams := map[string]struct{}{}
-	for i := range extraParams {
-		newExtraParams[i] = struct{}{}
-	}
-
-	for _, param := range stmt.ExistFreeParams {
-		if envMgr.lookupAtomObjName(ast.Atom(param), extraParams).IsTrue() {
-			return glob.ErrRetWithErr(fmt.Errorf("exist fact exist parameter %s conflicts with defined parameter", param))
+	newExtraParams := maps.Clone(extraParams)
+	for i, paramSet := range stmt.ExistFreeParams {
+		if envMgr.lookupAtomObjName(ast.Atom(stmt.ExistFreeParams[i]), extraParams).IsTrue() {
+			return glob.ErrRetWithErr(fmt.Errorf("exist fact exist parameter %s conflicts with defined parameter", paramSet))
 		}
+		newExtraParams[stmt.ExistFreeParams[i]] = struct{}{}
 	}
 
 	// // check paramSet
