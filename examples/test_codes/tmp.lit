@@ -1,5 +1,6 @@
-prop p(x R)
+have fn Ca(x, y cart(R, R)) cart(R, R) = (x[1] + y[1], x[2] + y[2])
 
-know not $p(1)
+prove forall a, b, c, d, e, f R: (a, b) \Ca (c, d) \Ca (e, f) = (a + c + e, b + d + f):
+    (a, b) \Ca (c, d) \Ca (e, f) = (a, b) \Ca (c + e, d + f) = ((a, b)[1]+(c+e,d+f)[1], (a, b)[2]+(c+e,d+f)[2]) = (a + c + e, b + d + f)
 
-$p(1)
+(1, 2) \Ca (3, 4) \Ca (5, 6) = (9, 12)
