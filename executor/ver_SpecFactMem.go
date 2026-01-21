@@ -152,7 +152,7 @@ func (ver *Verifier) iterate_KnownPureSpecInLogic_InUni_applyMatch_new(stmt ast.
 		knownFact_paramProcessed := env.KnownSpecFact_InUniFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}
 
 		// ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(&knownFact_paramProcessed, stmt)
-		ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(knownFact_paramProcessed.SpecFact.(*ast.PureSpecificFactStmt).Params, knownFact_paramProcessed.UniFact.Params, stmt)
+		ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(knownFact_paramProcessed.SpecFact.(*ast.PureSpecificFactStmt).Params, knownFact_paramProcessed.UniFact.Params, stmt.(*ast.PureSpecificFactStmt).Params)
 		if err != nil {
 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
 		}
@@ -404,7 +404,7 @@ func (ver *Verifier) specFact_LogicMem(curEnv *env.EnvMemory, stmt ast.SpecificF
 }
 
 func (ver *Verifier) iterateKnownExistSpecFacts_applyObjEqualSpec(stmt ast.SpecificFactStmt, knownFacts []*ast.ExistSpecificFactStmt, state *VerState) *glob.VerRet {
-	newParams := ver.Env.GenerateNoDuplicateNames(len(stmt.(*ast.ExistSpecificFactStmt).ExistFreeParams))
+	newParams := ver.Env.GenerateNoDuplicateNames(len(stmt.(*ast.ExistSpecificFactStmt).ExistFreeParams), map[string]struct{}{})
 
 LoopOverFacts:
 	for _, knownFact := range knownFacts {
@@ -570,12 +570,12 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt ast.Specific
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch(stmtToMatch ast.SpecificFactStmt, knownFacts []env.KnownSpecFact_InUniFact, getOkUniConMapErr func([]ast.Obj, []string, ast.SpecificFactStmt) (bool, map[string]ast.Obj, error), state *VerState) *glob.VerRet {
+func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch(stmtToMatch ast.SpecificFactStmt, knownFacts []env.KnownSpecFact_InUniFact, getOkUniConMapErr func([]ast.Obj, []string, []ast.Obj) (bool, map[string]ast.Obj, error), state *VerState) *glob.VerRet {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		knownFact_paramProcessed := knownFacts[i]
 		// 这里需要用的是 instantiated 的 knownFact
 
-		ok, uniConMap, err := getOkUniConMapErr(knownFact_paramProcessed.SpecFact.(*ast.PureSpecificFactStmt).Params, knownFact_paramProcessed.UniFact.Params, stmtToMatch)
+		ok, uniConMap, err := getOkUniConMapErr(knownFact_paramProcessed.SpecFact.(*ast.PureSpecificFactStmt).Params, knownFact_paramProcessed.UniFact.Params, stmtToMatch.(*ast.PureSpecificFactStmt).Params)
 		if err != nil {
 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
 		}

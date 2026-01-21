@@ -3,13 +3,16 @@ package litex_env
 import (
 	ast "golitex/ast"
 	glob "golitex/glob"
+	"maps"
 )
 
-func (envMgr *EnvMgr) GenerateNoDuplicateNames(length int) []string {
-	usedNames := map[string]struct{}{}
+// usedNames 一般用来传递forall里的自由变量
+func (envMgr *EnvMgr) GenerateNoDuplicateNames(length int, usedNames map[string]struct{}) []string {
+	copiedUsedNames := maps.Clone(usedNames)
 	names := make([]string, length)
 	for i := 0; i < length; i++ {
-		names[i] = envMgr.GenerateUndeclaredRandomName_AndNotInMap(usedNames)
+		names[i] = envMgr.GenerateUndeclaredRandomName_AndNotInMap(copiedUsedNames)
+		copiedUsedNames[names[i]] = struct{}{}
 	}
 	return names
 }
