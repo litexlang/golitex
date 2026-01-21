@@ -99,14 +99,14 @@ func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistSpe
 	}
 
 	// 替换 ExistFreeParamSets 中的参数引用
-	// newExistParamSets := make([]ast.Obj, len(existStruct.ExistFreeParamSets))
-	// for i, paramSet := range existStruct.ExistFreeParamSets {
-	// 	newParamSet := paramSet
-	// 	for oldParam, newParam := range paramReplaceMap {
-	// 		newParamSet = newParamSet.ReplaceObj(ast.Atom(oldParam), newParam)
-	// 	}
-	// 	newExistParamSets[i] = newParamSet
-	// }
+	newExistParamSets := make([]ast.Obj, len(existStruct.ExistFreeParamSets))
+	for i, paramSet := range existStruct.ExistFreeParamSets {
+		newParamSet := paramSet
+		for oldParam, newParam := range paramReplaceMap {
+			newParamSet = newParamSet.ReplaceObj(ast.Atom(oldParam), newParam)
+		}
+		newExistParamSets[i] = newParamSet
+	}
 
 	// // 替换 Params 中的参数引用
 	// newParams := make([]ast.Obj, len(existStruct.Params))
@@ -118,5 +118,5 @@ func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistSpe
 	// 	newParams[i] = newParam
 	// }
 
-	return ast.NewExistSpecificFactStmt(existStruct.IsTrue, newExistParams, ast.NewPureSpecificFactStmt(existStruct.PureFact.IsTrue, existStruct.PureFact.PropName, newParams, existStruct.Line), existStruct.Line)
+	return ast.NewExistSpecificFactStmt(existStruct.IsTrue, newExistParams, newExistParamSets, ast.NewPureSpecificFactStmt(existStruct.PureFact.IsTrue, existStruct.PureFact.PropName, newParams, existStruct.Line), existStruct.Line)
 }
