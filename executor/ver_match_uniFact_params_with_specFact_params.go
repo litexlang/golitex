@@ -20,16 +20,15 @@ import (
 )
 
 // func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownSpecFactInUniFact *env.KnownSpecFact_InUniFact, specFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
-func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownFcs []ast.Obj, freeVars []string, specFact ast.SpecificFactStmt) (bool, map[string]ast.Obj, error) {
+func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownFcs []ast.Obj, freeVars []string, givenFcs []ast.Obj) (bool, map[string]ast.Obj, error) {
 	// knownFcs := knownSpecFactInUniFact.SpecFact.Params
-	givenFcs := specFact.(*ast.PureSpecificFactStmt).Params
 	// freeVars := knownSpecFactInUniFact.UniFact.Params
 	freeVarsMap := map[string]struct{}{}
 	for _, freeVar := range freeVars {
 		freeVarsMap[freeVar] = struct{}{}
 	}
 
-	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs, givenFcs, freeVarsMap, string(specFact.(*ast.PureSpecificFactStmt).PropName))
+	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs, givenFcs, freeVarsMap)
 	if err != nil {
 		return false, nil, err
 	}
@@ -86,7 +85,7 @@ type fcPair struct {
 
 // 非常重要的函数
 // 返回：freeParam和给定obj的map，没有对应上的所有fc对构成的列表
-func (ver *Verifier) matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreeParamFcMapAndUnmatchedFcPairs(knownFc ast.Obj, givenFc ast.Obj, freeVars map[string]struct{}, specFactName string) (map[string][]ast.Obj, []fcPair, error) {
+func (ver *Verifier) matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreeParamFcMapAndUnmatchedFcPairs(knownFc ast.Obj, givenFc ast.Obj, freeVars map[string]struct{}) (map[string][]ast.Obj, []fcPair, error) {
 	switch asKnownFc := knownFc.(type) {
 	case ast.Atom:
 		if _, ok := freeVars[string(asKnownFc)]; ok {
@@ -110,7 +109,7 @@ func (ver *Verifier) matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreePara
 			return nil, []fcPair{{knownFc: knownFc, givenFc: givenFc}}, nil
 		case *ast.FnObj:
 			if ast.IsSetBuilder(asKnownFc) && ast.IsSetBuilder(asGivenFc) {
-				return ver.matchFcsByTheyAreAllSetBuilders(asKnownFc, asGivenFc, freeVars, specFactName)
+				return ver.matchFcsByTheyAreAllSetBuilders(asKnownFc, asGivenFc, freeVars)
 			}
 
 			retMap := map[string][]ast.Obj{}
@@ -120,13 +119,13 @@ func (ver *Verifier) matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreePara
 				return nil, []fcPair{{knownFc: knownFc, givenFc: givenFc}}, nil
 			}
 
-			headMatchedMap, headMatchedFcPairs, err := ver.matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreeParamFcMapAndUnmatchedFcPairs(asKnownFc.FnHead, asGivenFc.FnHead, freeVars, specFactName)
+			headMatchedMap, headMatchedFcPairs, err := ver.matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreeParamFcMapAndUnmatchedFcPairs(asKnownFc.FnHead, asGivenFc.FnHead, freeVars)
 			if err != nil {
 				return nil, []fcPair{}, err
 			}
 			retMap, retFcPairs = ver.mergeSingleMatchedMapAndUnMatchedFcPairs(headMatchedMap, headMatchedFcPairs, retMap, retFcPairs)
 
-			paramsMatchedMap, paramsMatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(asKnownFc.Params, asGivenFc.Params, freeVars, specFactName)
+			paramsMatchedMap, paramsMatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(asKnownFc.Params, asGivenFc.Params, freeVars)
 			if err != nil {
 				return nil, []fcPair{}, err
 			}
@@ -141,15 +140,15 @@ func (ver *Verifier) matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreePara
 
 // 非常重要：返回uniFact下面的某个specFact里的所有的param推出来的 free param 和 给定obj的对应关系，以及所有的没有匹配上的fc的pair们组成的slice
 // TODO: 如果能把 exist 里的 exist Param 独立出来匹配，而不是按string去匹配，会更好
-func (ver *Verifier) matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs []ast.Obj, givenFcs []ast.Obj, freeVars map[string]struct{}, specFactName string) ([]map[string][]ast.Obj, [][]fcPair, error) {
+func (ver *Verifier) matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs []ast.Obj, givenFcs []ast.Obj, freeVars map[string]struct{}) ([]map[string][]ast.Obj, [][]fcPair, error) {
 	if len(knownFcs) != len(givenFcs) {
-		return nil, [][]fcPair{}, fmt.Errorf("required parameters number of fact %s is %d, get %d", specFactName, len(knownFcs), len(givenFcs))
+		return nil, [][]fcPair{}, fmt.Errorf("required parameters number of fact is %d, get %d", len(knownFcs), len(givenFcs))
 	}
 
 	matchedMaps := []map[string][]ast.Obj{}
 	unmatchedFcPairs := [][]fcPair{}
 	for i := range knownFcs {
-		freeParamToConcreteObjMatchedMap, unmatchedFcPair, err := ver.matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreeParamFcMapAndUnmatchedFcPairs(knownFcs[i], givenFcs[i], freeVars, specFactName)
+		freeParamToConcreteObjMatchedMap, unmatchedFcPair, err := ver.matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreeParamFcMapAndUnmatchedFcPairs(knownFcs[i], givenFcs[i], freeVars)
 		if err != nil {
 			return nil, [][]fcPair{}, err
 		}
@@ -187,7 +186,7 @@ func (ver *Verifier) mergeSingleMatchedMapAndUnMatchedFcPairs(matchedMap map[str
 	return putTo, putToFcPairs
 }
 
-func (ver *Verifier) matchFcsByTheyAreAllSetBuilders(knownFc *ast.FnObj, givenFc *ast.FnObj, freeVars map[string]struct{}, specFactName string) (map[string][]ast.Obj, []fcPair, error) {
+func (ver *Verifier) matchFcsByTheyAreAllSetBuilders(knownFc *ast.FnObj, givenFc *ast.FnObj, freeVars map[string]struct{}) (map[string][]ast.Obj, []fcPair, error) {
 	// Normalize both set builders by instantiating their bound param with the same fresh atom,
 	// then verify their definitions align (same parent set and facts). All involved facts must be the same.
 	var instKnownStruct, instGivenStruct *ast.SetBuilderStruct
@@ -237,7 +236,7 @@ func (ver *Verifier) matchFcsByTheyAreAllSetBuilders(knownFc *ast.FnObj, givenFc
 		instGivenStruct = givenStruct
 	}
 
-	parentSetMatchedMap, parentSetMatchedFcPairs, err := ver.matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreeParamFcMapAndUnmatchedFcPairs(instKnownStruct.ParentSet, instGivenStruct.ParentSet, freeVars, specFactName)
+	parentSetMatchedMap, parentSetMatchedFcPairs, err := ver.matchFcInSpecFactInKnownForallFactAndGivenFc_ReturnFreeParamFcMapAndUnmatchedFcPairs(instKnownStruct.ParentSet, instGivenStruct.ParentSet, freeVars)
 	if err != nil {
 		return nil, []fcPair{}, err
 	}
@@ -258,7 +257,7 @@ func (ver *Verifier) matchFcsByTheyAreAllSetBuilders(knownFc *ast.FnObj, givenFc
 	}
 
 	for i := range instKnownStruct.Facts {
-		freeParamObjMatchMap, unMatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(instKnownStruct.Facts[i].Params, instGivenStruct.Facts[i].Params, freeVars, specFactName)
+		freeParamObjMatchMap, unMatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(instKnownStruct.Facts[i].Params, instGivenStruct.Facts[i].Params, freeVars)
 		if err != nil {
 			return nil, []fcPair{}, err
 		}

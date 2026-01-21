@@ -315,7 +315,7 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.
 		freeVarsMap[freeVar] = struct{}{}
 	}
 
-	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs, givenFcs, freeVarsMap, string(propNameForMsg))
+	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs, givenFcs, freeVarsMap)
 	if err != nil {
 		return false, nil, err
 	}
