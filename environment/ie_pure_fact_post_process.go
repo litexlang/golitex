@@ -40,7 +40,12 @@ func (ie *InferEngine) newPureFact(fact *ast.PureSpecificFactStmt) *glob.ShortRe
 }
 
 func (ie *InferEngine) newFalseExist(fact *ast.ExistSpecificFactStmt) *glob.ShortRet {
-	equivalentForall := ast.NewUniFact(fact.ExistFreeParams, fact.ExistFreeParamSets, []ast.FactStmt{}, []ast.FactStmt{fact.PureFact.ReverseIsTrue()[0]}, fact.Line)
+	paramSets := []ast.Obj{}
+	for i := 0; i < len(fact.ExistFreeParams); i++ {
+		paramSets = append(paramSets, ast.Atom(glob.KeywordSet))
+	}
+
+	equivalentForall := ast.NewUniFact(fact.ExistFreeParams, paramSets, []ast.FactStmt{}, []ast.FactStmt{fact.PureFact.ReverseIsTrue()[0]}, fact.Line)
 	ret := ie.EnvMgr.newUniFact(equivalentForall)
 	if ret.IsErr() {
 		return glob.ErrStmtMsgToShortRet(ret)

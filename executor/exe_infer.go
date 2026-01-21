@@ -257,46 +257,54 @@ func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImply
 }
 
 func (ver *Verifier) matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFact ast.SpecificFactStmt, freeVars []string, instFact ast.SpecificFactStmt) (bool, map[string]ast.Obj, error) {
-	if instFact.GetFactType() == ast.TruePure {
-		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.(*ast.PureSpecificFactStmt).Params, freeVars, instFact.(*ast.PureSpecificFactStmt).Params, string(instFact.GetPropName()), map[string]ast.Obj{})
-	} else {
-		// knownExistStruct := knownSpecFact.ToExistStFactStruct()
-		// instExistStruct := instFact.ToExistStFactStruct()
-		knownExistStruct := knownSpecFact.(*ast.ExistSpecificFactStmt)
-		instExistStruct := instFact.(*ast.ExistSpecificFactStmt)
-
-		// 将 exist 参数全部替换成随机名称，确保不会出问题
-		knownExistStruct = ver.replaceExistParamsWithRandomNames(knownExistStruct)
-		instExistStruct = ver.replaceExistParamsWithRandomNames(instExistStruct)
-
-		ver.newEnv()
-		defer ver.deleteEnv()
-
-		knownExistFreeParams := []ast.Obj{}
-		for _, param := range knownExistStruct.ExistFreeParams {
-			knownExistFreeParams = append(knownExistFreeParams, ast.Atom(param))
-		}
-
-		knownFcs := []ast.Obj{}
-		knownFcs = append(knownFcs, knownExistStruct.ExistFreeParamSets...)
-		knownFcs = append(knownFcs, knownExistStruct.PureFact.Params...)
-
-		instExistFreeParams := []ast.Obj{}
-		for _, param := range instExistStruct.ExistFreeParams {
-			instExistFreeParams = append(instExistFreeParams, ast.Atom(param))
-		}
-
-		instFcs := []ast.Obj{}
-		instFcs = append(instFcs, instExistStruct.ExistFreeParamSets...)
-		instFcs = append(instFcs, instExistStruct.PureFact.Params...)
-
-		knownEqualMap := map[string]ast.Obj{}
-		for i, param := range instExistFreeParams {
-			knownEqualMap[knownExistFreeParams[i].String()] = param
-		}
-
-		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownFcs, freeVars, instFcs, string(knownSpecFact.GetPropName()), knownEqualMap)
+	switch instFactAs := instFact.(type) {
+	case *ast.PureSpecificFactStmt:
+		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.(*ast.PureSpecificFactStmt).Params, freeVars, instFactAs.Params, string(instFactAs.GetPropName()), map[string]ast.Obj{})
+	default:
+		return false, nil, nil
 	}
+
+	// if instFact.GetFactType() == ast.TruePure {
+	// 	return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.(*ast.PureSpecificFactStmt).Params, freeVars, instFact.(*ast.PureSpecificFactStmt).Params, string(instFact.GetPropName()), map[string]ast.Obj{})
+	// } else {
+	// 	return false, nil, nil
+	// knownExistStruct := knownSpecFact.ToExistStFactStruct()
+	// instExistStruct := instFact.ToExistStFactStruct()
+	// knownExistStruct := knownSpecFact.(*ast.ExistSpecificFactStmt)
+	// instExistStruct := instFact.(*ast.ExistSpecificFactStmt)
+
+	// // 将 exist 参数全部替换成随机名称，确保不会出问题
+	// knownExistStruct = ver.replaceExistParamsWithRandomNames(knownExistStruct)
+	// instExistStruct = ver.replaceExistParamsWithRandomNames(instExistStruct)
+
+	// ver.newEnv()
+	// defer ver.deleteEnv()
+
+	// knownExistFreeParams := []ast.Obj{}
+	// for _, param := range knownExistStruct.ExistFreeParams {
+	// 	knownExistFreeParams = append(knownExistFreeParams, ast.Atom(param))
+	// }
+
+	// knownFcs := []ast.Obj{}
+	// knownFcs = append(knownFcs, knownExistStruct.ExistFreeParamSets...)
+	// knownFcs = append(knownFcs, knownExistStruct.PureFact.Params...)
+
+	// instExistFreeParams := []ast.Obj{}
+	// for _, param := range instExistStruct.ExistFreeParams {
+	// 	instExistFreeParams = append(instExistFreeParams, ast.Atom(param))
+	// }
+
+	// instFcs := []ast.Obj{}
+	// instFcs = append(instFcs, instExistStruct.ExistFreeParamSets...)
+	// instFcs = append(instFcs, instExistStruct.PureFact.Params...)
+
+	// knownEqualMap := map[string]ast.Obj{}
+	// for i, param := range instExistFreeParams {
+	// 	knownEqualMap[knownExistFreeParams[i].String()] = param
+	// }
+
+	// return ver.matchUniFactParamsWithSpecFactParamsInImply(knownFcs, freeVars, instFcs, string(knownSpecFact.GetPropName()), knownEqualMap)
+	// }
 }
 
 func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.Obj, freeVars []string, givenFcs []ast.Obj, propNameForMsg string, knownToInstEqualMap_usedToMatchFreeParamsOfExistFacts map[string]ast.Obj) (bool, map[string]ast.Obj, error) {

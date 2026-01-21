@@ -566,17 +566,17 @@ func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFa
 		newExistParams[i] = envMgr.GenerateUndeclaredRandomName_AndNotInMap(uniMap)
 	}
 
-	// 把 set 也换成不冲突的
+	// // 把 set 也换成不冲突的
 	uniMap2 := map[string]ast.Obj{}
-	newExistParamSets := make([]ast.Obj, len(existFactStruct.ExistFreeParamSets))
-	for i, paramSet := range existFactStruct.ExistFreeParamSets {
-		newParamSet, err := paramSet.Instantiate(uniMap2)
-		if err != nil {
-			return nil, err
-		}
-		newExistParamSets[i] = newParamSet
-		uniMap2[existFactStruct.ExistFreeParams[i]] = ast.Atom(newExistParams[i])
-	}
+	// newExistParamSets := make([]ast.Obj, len(existFactStruct.ExistFreeParamSets))
+	// for i, paramSet := range existFactStruct.ExistFreeParamSets {
+	// 	newParamSet, err := paramSet.Instantiate(uniMap2)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	newExistParamSets[i] = newParamSet
+	// 	uniMap2[existFactStruct.ExistFreeParams[i]] = ast.Atom(newExistParams[i])
+	// }
 
 	newParams := make([]ast.Obj, len(existFactStruct.PureFact.Params))
 	for i, param := range existFactStruct.PureFact.Params {
@@ -587,7 +587,7 @@ func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFa
 		newParams[i] = newParam
 	}
 
-	return ast.NewExistSpecificFactStmt(existFactStruct.IsTrue, newExistParams, newExistParamSets, ast.NewPureSpecificFactStmt(existFactStruct.PureFact.IsTrue, existFactStruct.PureFact.PropName, newParams, existFactStruct.Line), existFactStruct.Line), nil
+	return ast.NewExistSpecificFactStmt(existFactStruct.IsTrue, newExistParams, ast.NewPureSpecificFactStmt(existFactStruct.PureFact.IsTrue, existFactStruct.PureFact.PropName, newParams, existFactStruct.Line), existFactStruct.Line), nil
 }
 
 // storeSpecFactInMemAndCollect collects the fact string for derived facts tracking
