@@ -64,15 +64,15 @@ func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.ExistSpecificFactStmt, ex
 		}
 	}
 
-	// check paramSet
-	for i, paramSet := range stmt.ExistFreeParamSets {
-		ret := envMgr.LookupNamesInObjOrObjStringIsSetNonemptySetFiniteSet(paramSet, newExtraParams)
-		if ret.IsNotTrue() {
-			return ret
-		}
+	// // check paramSet
+	// for i, paramSet := range stmt.ExistFreeParamSets {
+	// 	ret := envMgr.LookupNamesInObjOrObjStringIsSetNonemptySetFiniteSet(paramSet, newExtraParams)
+	// 	if ret.IsNotTrue() {
+	// 		return ret
+	// 	}
 
-		newExtraParams[stmt.ExistFreeParams[i]] = struct{}{}
-	}
+	// 	newExtraParams[stmt.ExistFreeParams[i]] = struct{}{}
+	// }
 
 	for _, param := range stmt.PureFact.Params {
 		if ret := envMgr.LookupNamesInObj(param, newExtraParams); ret.IsNotTrue() {

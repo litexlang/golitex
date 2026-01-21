@@ -89,17 +89,6 @@ func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistSpe
 		paramReplaceMap[oldParam] = ast.Atom(newParamName)
 	}
 
-	newSets := []ast.Obj{}
-	newUniMap := map[string]ast.Obj{}
-	for i, paramSet := range existStruct.ExistFreeParamSets {
-		newSet, err := paramSet.Instantiate(newUniMap)
-		if err != nil {
-			panic("failed to instantiate exist free param set")
-		}
-		newSets = append(newSets, newSet)
-		newUniMap[existStruct.ExistFreeParams[i]] = paramReplaceMap[existStruct.ExistFreeParams[i]]
-	}
-
 	newParams := []ast.Obj{}
 	for _, param := range existStruct.PureFact.Params {
 		newParam, err := param.Instantiate(paramReplaceMap)
@@ -129,5 +118,5 @@ func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistSpe
 	// 	newParams[i] = newParam
 	// }
 
-	return ast.NewExistSpecificFactStmt(existStruct.IsTrue, newExistParams, newSets, ast.NewPureSpecificFactStmt(existStruct.PureFact.IsTrue, existStruct.PureFact.PropName, newParams, existStruct.Line), existStruct.Line)
+	return ast.NewExistSpecificFactStmt(existStruct.IsTrue, newExistParams, ast.NewPureSpecificFactStmt(existStruct.PureFact.IsTrue, existStruct.PureFact.PropName, newParams, existStruct.Line), existStruct.Line)
 }
