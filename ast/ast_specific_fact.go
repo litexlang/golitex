@@ -55,10 +55,11 @@ type PureSpecificFactStmt struct {
 }
 
 type ExistSpecificFactStmt struct {
-	IsTrue          bool
-	ExistFreeParams []string
-	PureFact        *PureSpecificFactStmt
-	Line            uint
+	IsTrue             bool
+	ExistFreeParams    []string
+	ExistFreeParamSets ObjSlice
+	PureFact           *PureSpecificFactStmt
+	Line               uint
 }
 
 func (s *PureSpecificFactStmt) ReverseIsTrue() []SpecificFactStmt {
@@ -66,7 +67,7 @@ func (s *PureSpecificFactStmt) ReverseIsTrue() []SpecificFactStmt {
 }
 
 func (s *ExistSpecificFactStmt) ReverseIsTrue() []SpecificFactStmt {
-	return []SpecificFactStmt{NewExistSpecificFactStmt(!s.IsTrue, s.ExistFreeParams, s.PureFact, s.GetLine())}
+	return []SpecificFactStmt{NewExistSpecificFactStmt(!s.IsTrue, s.ExistFreeParams, s.ExistFreeParamSets, s.PureFact, s.GetLine())}
 }
 
 func (s *PureSpecificFactStmt) GetFactType() SpecFactType {
