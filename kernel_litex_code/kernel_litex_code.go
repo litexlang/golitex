@@ -508,6 +508,41 @@ let fn pow(x R, y R) R:
 		x >= 0
 		x != 0 or y != 0
 
+know:
+	# Basic properties
+	forall x R: x > 0 => pow(x, 0) = 1
+	forall x R: x >= 0 => pow(x, 1) = x
+	forall y R: pow(1, y) = 1
+	forall x R: x > 0 => pow(x, -1) = 1 / x
+	
+	# Product properties
+	forall x, y, z R: x > 0, y != 0 or z != 0 => pow(x, y + z) = pow(x, y) * pow(x, z)
+	forall x, y, z R: x > 0, pow(x, y) >= 0 => pow(x, y * z) = pow(pow(x, y), z)
+	forall x, y, z R: x >= 0, y >= 0, x != 0 or y != 0 or z != 0 => pow(x * y, z) = pow(x, z) * pow(y, z)
+	forall x, y, z R: x > 0, y != 0, z != 0 => pow(x, y / z) = pow(pow(x, y), 1 / z)
+	
+	# Quotient properties
+	forall x, y, z R: x > 0, y > 0, x != 0 or y != 0 or z != 0 => pow(x / y, z) = pow(x, z) / pow(y, z)
+	
+	# Negative exponent
+	forall x, y R: x > 0, y != 0 => pow(x, -y) = 1 / pow(x, y)
+	
+	# Positivity
+	forall x, y R: x > 0 => pow(x, y) > 0
+	forall x, y R: x = 0, y > 0 => pow(x, y) = 0
+	
+	# Monotonicity
+	forall x, y, z R: x > 1, y > z => pow(x, y) > pow(x, z)
+	forall x, y, z R: 0 < x, x < 1, y > z => pow(x, y) < pow(x, z)
+	forall x, y, z R: x > 0, y > z, y > 0, z > 0 => pow(x, y) > pow(x, z)
+	
+	# Relationship with sqrt
+	forall x R: x >= 0 => pow(x, 1/2) = sqrt(x)
+	forall x R: x >= 0 => pow(x, 2) = x * x
+	
+	# Relationship with ^ operator
+	forall x, y R: x >= 0, x != 0 or y != 0 => pow(x, y) = x ^ y
+
 know forall b N: b >= 0
 
 know forall a, b R: a ^ 2 = b => a = sqrt(b) or a = -sqrt(b), a = pow(b, 1/2) or a = -pow(b, 1/2)
