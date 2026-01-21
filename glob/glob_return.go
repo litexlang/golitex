@@ -458,3 +458,9 @@ func (m *StmtRet) ToJSON() ([]byte, error) {
 	}
 	return result, nil
 }
+
+func StmtRetFromErr(err error) *StmtRet {
+	ret := NewEmptyStmtError()
+	ret.AddError(err.Error())
+	return ret
+}

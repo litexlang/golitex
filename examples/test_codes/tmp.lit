@@ -1,0 +1,5 @@
+prop p(x, y R)
+
+know exist a, b st $p(a, b)
+
+exist a, b st $p(a, b)
