@@ -850,6 +850,7 @@ func (ie *InferEngine) trueInFactInCup(item ast.Obj, cupSet *ast.FnObj) *glob.Sh
 	existFact := ast.NewExistSpecificFactStmt(
 		true,
 		[]string{xItemParam},
+		[]ast.Obj{cupSet.Params[0]},
 		pureFact,
 		glob.BuiltinLine0,
 	)

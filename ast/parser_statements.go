@@ -3009,22 +3009,9 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (SpecificFactStmt,
 	}
 
 	// Parse parameters and parameter sets using param_paramSet_paramInSetFacts
-	// existParams, _, err := p.param_paramSet_paramInSetFacts(tb, glob.KeywordSt, false)
-	// if err != nil {
-	// 	return nil, ErrInLine(err, tb)
-	// }
-
-	existParams := []string{}
-	for !tb.header.is(glob.KeywordSt) {
-		param, err := tb.header.next()
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		existParams = append(existParams, param)
-
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		}
+	existParams, existParamSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeywordSt, false)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
 	}
 
 	for _, param := range existParams {
@@ -3065,9 +3052,9 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (SpecificFactStmt,
 	}
 
 	if isTrue {
-		return NewExistSpecificFactStmt(true, existParams, specFactAsPureSpecificFactStmt, tb.line), nil
+		return NewExistSpecificFactStmt(true, existParams, existParamSets, specFactAsPureSpecificFactStmt, tb.line), nil
 	} else {
-		return NewExistSpecificFactStmt(false, existParams, specFactAsPureSpecificFactStmt, tb.line), nil
+		return NewExistSpecificFactStmt(false, existParams, existParamSets, specFactAsPureSpecificFactStmt, tb.line), nil
 	}
 }
 
