@@ -251,7 +251,8 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.EnvMemory, stmt ast.Sp
 		// return ver.iterate_KnownPureSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, ver.matchUniFactParamsWithSpecFactParams, state)
 		return ver.iterate_KnownPureSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, ver.matchUniFactParamsWithSpecFactParams, state)
 	} else {
-		return ver.iterate_KnownExistSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, state)
+		// return ver.iterate_KnownExistSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, state)
+		return ver.MatchExistFactUseForallMemory(stmt.(*ast.ExistSpecificFactStmt), searchedSpecFacts, state)
 	}
 }
 

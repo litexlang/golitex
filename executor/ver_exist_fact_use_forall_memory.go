@@ -16,6 +16,9 @@ LoopOverFacts:
 		if verRet.IsUnknown() {
 			continue LoopOverFacts
 		}
+		if verRet.IsTrue() {
+			return verRet
+		}
 	}
 
 	return glob.NewEmptyVerRetUnknown()
@@ -36,10 +39,42 @@ func (ver *Verifier) MatchExistSpecificFactWithExistSpecFactInUniFact(given *ast
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	return ver.matchFcInExistFactWithFreeParamsInForallFact(given, knownFact, verState)
+	uniMap, verRet := ver.matchFcInExistFactWithFreeParamsInForallFact(given, knownFact, verState)
+	if verRet.IsErr() || verRet.IsUnknown() {
+		return verRet
+	}
+
+	ver.newEnv()
+	defer ver.deleteEnv()
+
+	for i, paramSet := range knownFact.UniFact.ParamSets {
+		instParamSet, err := paramSet.Instantiate(uniMap)
+		if err != nil {
+			return glob.NewVerMsg(glob.StmtRetTypeError, knownFact.String(), glob.BuiltinLine0, []string{err.Error()})
+		}
+		verRet := ver.VerFactStmt(ast.NewInFactWithObj(uniMap[string(knownFact.UniFact.Params[i])], instParamSet), verState)
+		if verRet.IsErr() {
+			return verRet
+		}
+		if verRet.IsUnknown() {
+		}
+	}
+
+	// 证明所有的dom和dom都成立
+	for _, domFact := range knownFact.UniFact.DomFacts {
+		verRet := ver.VerFactStmt(domFact, verState)
+		if verRet.IsErr() {
+			return verRet
+		}
+		if verRet.IsUnknown() {
+			return glob.NewEmptyVerRetUnknown()
+		}
+	}
+
+	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) matchFcInExistFactWithFreeParamsInForallFact(given *ast.ExistSpecificFactStmt, knownFact env.KnownSpecFact_InUniFact, verState *VerState) *glob.VerRet {
+func (ver *Verifier) matchFcInExistFactWithFreeParamsInForallFact(given *ast.ExistSpecificFactStmt, knownFact env.KnownSpecFact_InUniFact, verState *VerState) (map[string]ast.Obj, *glob.VerRet) {
 	usedNames := map[string]struct{}{}
 	for _, param := range knownFact.UniFact.Params {
 		usedNames[string(param)] = struct{}{}
@@ -49,12 +84,12 @@ func (ver *Verifier) matchFcInExistFactWithFreeParamsInForallFact(given *ast.Exi
 
 	newGiven, err := given.ReplaceFreeParamsWithNewParams(newExistFreeParams)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, given.String(), glob.BuiltinLine0, []string{err.Error()})
+		return nil, glob.NewVerMsg(glob.StmtRetTypeError, given.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	newKnown, err := knownFact.SpecFact.(*ast.ExistSpecificFactStmt).ReplaceFreeParamsWithNewParams(newExistFreeParams)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, knownFact.String(), glob.BuiltinLine0, []string{err.Error()})
+		return nil, glob.NewVerMsg(glob.StmtRetTypeError, knownFact.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	givenFcs := []ast.Obj{}
@@ -75,34 +110,24 @@ func (ver *Verifier) matchFcInExistFactWithFreeParamsInForallFact(given *ast.Exi
 
 	ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(knownFcs, knownFact.UniFact.Params, givenFcs)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, knownFact.String(), glob.BuiltinLine0, []string{err.Error()})
+		return nil, glob.NewVerMsg(glob.StmtRetTypeError, knownFact.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	if !ok {
-		return glob.NewEmptyVerRetUnknown()
+		return nil, glob.NewEmptyVerRetUnknown()
 	}
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, knownFact.String(), glob.BuiltinLine0, []string{err.Error()})
+		return nil, glob.NewVerMsg(glob.StmtRetTypeError, knownFact.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	instKnownFact, err := newKnown.Instantiate(uniConMap)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, knownFact.String(), glob.BuiltinLine0, []string{err.Error()})
+		return nil, glob.NewVerMsg(glob.StmtRetTypeError, knownFact.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
-	// 每一位都一样
-	for i := range instKnownFact.(*ast.ExistSpecificFactStmt).ExistFreeParamSets {
-		verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewEqualFact(instKnownFact.(*ast.ExistSpecificFactStmt).ExistFreeParamSets[i], given.ExistFreeParamSets[i]), FinalRoundNoMsg().CopyAndReqOkToTrue())
-		if verRet.IsNotTrue() {
-			return glob.NewEmptyVerRetUnknown()
-		}
-	}
-	for i := range instKnownFact.(*ast.ExistSpecificFactStmt).PureFact.Params {
-		verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewEqualFact(instKnownFact.(*ast.ExistSpecificFactStmt).PureFact.Params[i], given.PureFact.Params[i]), FinalRoundNoMsg().CopyAndReqOkToTrue())
-		if verRet.IsNotTrue() {
-			return glob.NewEmptyVerRetUnknown()
-		}
+	if instKnownFact.String() == given.String() {
+		return nil, glob.NewEmptyVerRetTrue()
 	}
 
-	return glob.NewEmptyVerRetTrue()
+	return uniConMap, glob.NewEmptyVerRetTrue()
 }
