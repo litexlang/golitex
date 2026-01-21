@@ -843,7 +843,6 @@ func (ie *InferEngine) trueInFactInCup(item ast.Obj, cupSet *ast.FnObj) *glob.Sh
 		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("cup expects 1 parameter, got %d", len(cupSet.Params))})
 	}
 
-	x := cupSet.Params[0]
 	xItemParam := ie.EnvMgr.GenerateUndeclaredRandomName()
 
 	// Create exist fact: exist x_item x st item $in x_item
@@ -851,7 +850,6 @@ func (ie *InferEngine) trueInFactInCup(item ast.Obj, cupSet *ast.FnObj) *glob.Sh
 	existFact := ast.NewExistSpecificFactStmt(
 		true,
 		[]string{xItemParam},
-		[]ast.Obj{x},
 		pureFact,
 		glob.BuiltinLine0,
 	)

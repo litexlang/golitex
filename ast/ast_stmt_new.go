@@ -355,6 +355,6 @@ func NewPureSpecificFactStmt(isTrue bool, propName Atom, params ObjSlice, line u
 	return &PureSpecificFactStmt{isTrue, propName, params, line}
 }
 
-func NewExistSpecificFactStmt(isTrue bool, existFreeParams []string, existFreeParamSets []Obj, pureFact *PureSpecificFactStmt, line uint) *ExistSpecificFactStmt {
-	return &ExistSpecificFactStmt{isTrue, existFreeParams, existFreeParamSets, pureFact, line}
+func NewExistSpecificFactStmt(isTrue bool, existFreeParams []string, pureFact *PureSpecificFactStmt, line uint) *ExistSpecificFactStmt {
+	return &ExistSpecificFactStmt{isTrue, existFreeParams, pureFact, line}
 }

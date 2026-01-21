@@ -73,21 +73,22 @@ func (stmt *PureSpecificFactStmt) InstantiateFact(uniMap map[string]Obj) (FactSt
 	return InstantiateSpecFact(stmt, uniMap)
 }
 
+// TODO: 其实是有问题的，因为 uniMap 里可能有existFreeParams的参数
 func (e *ExistSpecificFactStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {
-	newExistFreeParamSets := []Obj{}
-	for _, paramSet := range e.ExistFreeParamSets {
-		newParamSet, err := paramSet.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newExistFreeParamSets = append(newExistFreeParamSets, newParamSet)
-	}
+	// newExistFreeParamSets := []Obj{}
+	// for _, paramSet := range e.ExistFreeParamSets {
+	// 	newParamSet, err := paramSet.Instantiate(uniMap)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	newExistFreeParamSets = append(newExistFreeParamSets, newParamSet)
+	// }
 
 	newPureFact, err := e.PureFact.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
 	}
-	return NewExistSpecificFactStmt(e.IsTrue, e.ExistFreeParams, newExistFreeParamSets, newPureFact.(*PureSpecificFactStmt), e.Line), nil
+	return NewExistSpecificFactStmt(e.IsTrue, e.ExistFreeParams, newPureFact.(*PureSpecificFactStmt), e.Line), nil
 }
 
 func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Obj) (*UniFactStmt, error) {
