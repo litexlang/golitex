@@ -3,4 +3,4 @@ prop q(x R)
 prop r(x R)
 know forall x R: $p(x) or $q(x) or $r(x)
 
-# $p(1) or $q(1) or $r(1)
+$p(1) or $q(1) or $r(1)

@@ -119,42 +119,9 @@ func (ver *Verifier) orFact_UseOrMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.O
 }
 
 func (ver *Verifier) useKnownOrFactToCheckGivenOrFact(given *ast.OrStmt, known *ast.OrStmt, state *VerState) *glob.VerRet {
-	givenSpecFactWithTheSameNameMap := map[string][]ast.SpecificFactStmt{}
-
-	knownSpecFactWithTheSameNameMap := map[string][]ast.SpecificFactStmt{}
-
-	for _, fact := range given.Facts {
-		propName := string(fact.GetPropName())
-		if _, got := givenSpecFactWithTheSameNameMap[propName]; got {
-			givenSpecFactWithTheSameNameMap[propName] = append(givenSpecFactWithTheSameNameMap[propName], fact)
-		} else {
-			givenSpecFactWithTheSameNameMap[propName] = []ast.SpecificFactStmt{fact}
-		}
-	}
-
-	for _, fact := range known.Facts {
-		propName := string(fact.GetPropName())
-		if _, got := knownSpecFactWithTheSameNameMap[propName]; got {
-			knownSpecFactWithTheSameNameMap[propName] = append(knownSpecFactWithTheSameNameMap[propName], fact)
-		} else {
-			knownSpecFactWithTheSameNameMap[propName] = []ast.SpecificFactStmt{fact}
-		}
-	}
-
-	// 检查两个 map 的 key 数量是否相同
-	if len(givenSpecFactWithTheSameNameMap) != len(knownSpecFactWithTheSameNameMap) {
+	givenSpecFactWithTheSameNameMap, knownSpecFactWithTheSameNameMap, isValid := ver.groupFactsByPropNameAndValidate(given, known)
+	if !isValid {
 		return glob.NewEmptyVerRetUnknown()
-	}
-
-	// 检查每个 key 对应的 value 长度是否相同
-	for key, givenValues := range givenSpecFactWithTheSameNameMap {
-		knownValues, exists := knownSpecFactWithTheSameNameMap[key]
-		if !exists {
-			return glob.NewEmptyVerRetUnknown()
-		}
-		if len(givenValues) != len(knownValues) {
-			return glob.NewEmptyVerRetUnknown()
-		}
 	}
 
 	for key := range givenSpecFactWithTheSameNameMap {
@@ -180,6 +147,49 @@ func (ver *Verifier) useKnownOrFactToCheckGivenOrFact(given *ast.OrStmt, known *
 	}
 
 	return glob.NewEmptyVerRetTrue()
+}
+
+// groupFactsByPropNameAndValidate 将 given 和 known 的 facts 按 propName 分组，并验证两个 map 的结构是否匹配
+// 返回 given 的 map、known 的 map 和是否有效的标志
+func (ver *Verifier) groupFactsByPropNameAndValidate(given *ast.OrStmt, known *ast.OrStmt) (map[string][]ast.SpecificFactStmt, map[string][]ast.SpecificFactStmt, bool) {
+	givenSpecFactWithTheSameNameMap := map[string][]ast.SpecificFactStmt{}
+	knownSpecFactWithTheSameNameMap := map[string][]ast.SpecificFactStmt{}
+
+	for _, fact := range given.Facts {
+		propName := string(fact.GetPropName())
+		if _, got := givenSpecFactWithTheSameNameMap[propName]; got {
+			givenSpecFactWithTheSameNameMap[propName] = append(givenSpecFactWithTheSameNameMap[propName], fact)
+		} else {
+			givenSpecFactWithTheSameNameMap[propName] = []ast.SpecificFactStmt{fact}
+		}
+	}
+
+	for _, fact := range known.Facts {
+		propName := string(fact.GetPropName())
+		if _, got := knownSpecFactWithTheSameNameMap[propName]; got {
+			knownSpecFactWithTheSameNameMap[propName] = append(knownSpecFactWithTheSameNameMap[propName], fact)
+		} else {
+			knownSpecFactWithTheSameNameMap[propName] = []ast.SpecificFactStmt{fact}
+		}
+	}
+
+	// 检查两个 map 的 key 数量是否相同
+	if len(givenSpecFactWithTheSameNameMap) != len(knownSpecFactWithTheSameNameMap) {
+		return givenSpecFactWithTheSameNameMap, knownSpecFactWithTheSameNameMap, false
+	}
+
+	// 检查每个 key 对应的 value 长度是否相同
+	for key, givenValues := range givenSpecFactWithTheSameNameMap {
+		knownValues, exists := knownSpecFactWithTheSameNameMap[key]
+		if !exists {
+			return givenSpecFactWithTheSameNameMap, knownSpecFactWithTheSameNameMap, false
+		}
+		if len(givenValues) != len(knownValues) {
+			return givenSpecFactWithTheSameNameMap, knownSpecFactWithTheSameNameMap, false
+		}
+	}
+
+	return givenSpecFactWithTheSameNameMap, knownSpecFactWithTheSameNameMap, true
 }
 
 func (ver *Verifier) matchSpecFactWhenCheckOr(knowns []ast.SpecificFactStmt, givens []ast.SpecificFactStmt, state *VerState) *glob.VerRet {
