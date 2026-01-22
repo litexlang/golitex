@@ -49,5 +49,15 @@ func (ver *Verifier) orFact_UseOrInUniFactMem_atCurEnv(curEnv *env.EnvMemory, st
 }
 
 func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt, knownOrFactInUni *env.OrFactInUniFact, state *VerState) *glob.VerRet {
+	if len(given.Facts) != len(knownOrFactInUni.OrFact.Facts) {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	for i := range given.Facts {
+		if given.Facts[i].String() != knownOrFactInUni.OrFact.Facts[i].String() || given.Facts[i].GetFactType() != knownOrFactInUni.OrFact.Facts[i].GetFactType() {
+			return glob.NewEmptyVerRetUnknown()
+		}
+	}
+
 	return glob.NewEmptyVerRetTrue()
 }

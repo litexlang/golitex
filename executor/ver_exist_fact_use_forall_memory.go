@@ -39,7 +39,7 @@ func (ver *Verifier) MatchExistSpecificFactWithExistSpecFactInUniFact(given *ast
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	uniMap, verRet := ver.matchFcInExistFactWithFreeParamsInForallFact(given, knownFact, verState)
+	uniMap, verRet := ver.matchFcInExistFactWithFreeParamsInForallFact(given, knownFact.UniFact.Params, knownFact.SpecFact.(*ast.ExistSpecificFactStmt), verState)
 	if verRet.IsErr() || verRet.IsUnknown() {
 		return verRet
 	}
@@ -74,9 +74,9 @@ func (ver *Verifier) MatchExistSpecificFactWithExistSpecFactInUniFact(given *ast
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) matchFcInExistFactWithFreeParamsInForallFact(given *ast.ExistSpecificFactStmt, knownFact env.KnownSpecFact_InUniFact, verState *VerState) (map[string]ast.Obj, *glob.VerRet) {
+func (ver *Verifier) matchFcInExistFactWithFreeParamsInForallFact(given *ast.ExistSpecificFactStmt, freeParams []string, knownExistFactInUniFact *ast.ExistSpecificFactStmt, verState *VerState) (map[string]ast.Obj, *glob.VerRet) {
 	usedNames := map[string]struct{}{}
-	for _, param := range knownFact.UniFact.Params {
+	for _, param := range freeParams {
 		usedNames[string(param)] = struct{}{}
 	}
 
@@ -87,9 +87,9 @@ func (ver *Verifier) matchFcInExistFactWithFreeParamsInForallFact(given *ast.Exi
 		return nil, glob.NewVerMsg(glob.StmtRetTypeError, given.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
-	newKnown, err := knownFact.SpecFact.(*ast.ExistSpecificFactStmt).ReplaceFreeParamsWithNewParams(newExistFreeParams)
+	newKnown, err := knownExistFactInUniFact.ReplaceFreeParamsWithNewParams(newExistFreeParams)
 	if err != nil {
-		return nil, glob.NewVerMsg(glob.StmtRetTypeError, knownFact.String(), glob.BuiltinLine0, []string{err.Error()})
+		return nil, glob.NewVerMsg(glob.StmtRetTypeError, knownExistFactInUniFact.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	givenFcs := []ast.Obj{}
@@ -108,21 +108,21 @@ func (ver *Verifier) matchFcInExistFactWithFreeParamsInForallFact(given *ast.Exi
 		knownFcs = append(knownFcs, param)
 	}
 
-	ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(knownFcs, knownFact.UniFact.Params, givenFcs)
+	ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(knownFcs, freeParams, givenFcs)
 	if err != nil {
-		return nil, glob.NewVerMsg(glob.StmtRetTypeError, knownFact.String(), glob.BuiltinLine0, []string{err.Error()})
+		return nil, glob.NewVerMsg(glob.StmtRetTypeError, knownExistFactInUniFact.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	if !ok {
 		return nil, glob.NewEmptyVerRetUnknown()
 	}
 	if err != nil {
-		return nil, glob.NewVerMsg(glob.StmtRetTypeError, knownFact.String(), glob.BuiltinLine0, []string{err.Error()})
+		return nil, glob.NewVerMsg(glob.StmtRetTypeError, knownExistFactInUniFact.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	instKnownFact, err := newKnown.Instantiate(uniConMap)
 	if err != nil {
-		return nil, glob.NewVerMsg(glob.StmtRetTypeError, knownFact.String(), glob.BuiltinLine0, []string{err.Error()})
+		return nil, glob.NewVerMsg(glob.StmtRetTypeError, knownExistFactInUniFact.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	if instKnownFact.String() == given.String() {
@@ -130,4 +130,8 @@ func (ver *Verifier) matchFcInExistFactWithFreeParamsInForallFact(given *ast.Exi
 	}
 
 	return uniConMap, glob.NewEmptyVerRetTrue()
+}
+
+func GetParamsFromExistFactForMatchUniFactParams(given *ast.ExistSpecificFactStmt, knownExistFactInUniFact *ast.ExistSpecificFactStmt) {
+
 }
