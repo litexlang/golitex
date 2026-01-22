@@ -105,7 +105,8 @@ func (envMgr *EnvMgr) newUniFact(stmt *ast.UniFactStmt) *glob.StmtRet {
 		case ast.SpecificFactStmt:
 			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, asFact)
 		case *ast.OrStmt:
-			ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
+			// ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
+			ret = glob.NewEmptyStmtTrue()
 		case *ast.UniFactWithIffStmt:
 			ret = envMgr.newUniFact_ThenFactIsIffStmt(stmt, asFact)
 		case *ast.UniFactStmt:
@@ -146,19 +147,20 @@ func (envMgr *EnvMgr) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) *glob.Stmt
 }
 
 func (envMgr *EnvMgr) newOrFact(fact *ast.OrStmt) *glob.StmtRet {
-	ret := envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
-	if ret.IsErr() {
-		return ret
-	}
+	// ret := envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
+	// if ret.IsErr() {
+	// 	return ret
+	// }
 
-	// Post-processing: a != 0 or b != 0 => a^2 + b^2 > 0
-	ie := NewInferenceEngine(envMgr)
-	orPostProcessRet := ie.orFactPostProcess(fact)
-	if orPostProcessRet.IsTrue() {
-		return ret.AddShortRetAsInfers(orPostProcessRet)
-	}
+	// // Post-processing: a != 0 or b != 0 => a^2 + b^2 > 0
+	// ie := NewInferenceEngine(envMgr)
+	// orPostProcessRet := ie.orFactPostProcess(fact)
+	// if orPostProcessRet.IsTrue() {
+	// 	return ret.AddShortRetAsInfers(orPostProcessRet)
+	// }
 
-	return ret
+	// return ret
+	return glob.NewEmptyStmtTrue()
 }
 
 func (envMgr *EnvMgr) newSpecFact(fact ast.SpecificFactStmt) *glob.StmtRet {
@@ -237,9 +239,9 @@ func (envMgr *EnvMgr) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenF
 	return envMgr.storeUniFactInMem(thenFact, stmt)
 }
 
-func (envMgr *EnvMgr) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) *glob.StmtRet {
-	return envMgr.CurEnv().KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenFact)
-}
+// func (envMgr *EnvMgr) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) *glob.StmtRet {
+// 	return envMgr.CurEnv().KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenFact)
+// }
 
 func (envMgr *EnvMgr) newUniFact_ThenFactIsIffStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactWithIffStmt) *glob.StmtRet {
 	thenToIff := thenFact.NewUniFactWithThenToIff()

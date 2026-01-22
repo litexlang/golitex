@@ -119,12 +119,6 @@ type ProveCaseByCaseStmt struct {
 	Line uint
 }
 
-type OrStmt struct {
-	Facts SpecFactPtrSlice
-
-	Line uint
-}
-
 // import sys as s
 // import "your_dir" as a
 type ImportDirStmt struct {
@@ -493,6 +487,12 @@ type ImpossibleStmt struct {
 
 type HaveShortStmt struct {
 	SpecFact *PureSpecificFactStmt
+
+	Line uint
+}
+
+type OrStmt struct {
+	Facts SpecFactPtrSlice
 
 	Line uint
 }

@@ -91,54 +91,54 @@ import (
 // 	return glob.NewEmptyStmtTrue()
 // }
 
-func (s SpecFactInLogicExprMem) getSameEnumFacts(stmt ast.SpecificFactStmt) (map[string][]KnownSpecFact_InLogicExpr, *glob.StmtRet) {
-	switch asFact := stmt.(type) {
-	case *ast.PureSpecificFactStmt:
-		if asFact.IsTrue {
-			return s.PureFacts, glob.NewEmptyStmtTrue()
-		} else {
-			return s.NotPureFacts, glob.NewEmptyStmtTrue()
-		}
-	case *ast.ExistSpecificFactStmt:
-		if asFact.IsTrue {
-			return s.Exist_St_Facts, glob.NewEmptyStmtTrue()
-		} else {
-			return s.NotExist_St_Facts, glob.NewEmptyStmtTrue()
-		}
-	default:
-		return nil, glob.ErrRet(("invalid spec fact type"))
-	}
-}
+// func (s SpecFactInLogicExprMem) getSameEnumFacts(stmt ast.SpecificFactStmt) (map[string][]KnownSpecFact_InLogicExpr, *glob.StmtRet) {
+// 	switch asFact := stmt.(type) {
+// 	case *ast.PureSpecificFactStmt:
+// 		if asFact.IsTrue {
+// 			return s.PureFacts, glob.NewEmptyStmtTrue()
+// 		} else {
+// 			return s.NotPureFacts, glob.NewEmptyStmtTrue()
+// 		}
+// 	case *ast.ExistSpecificFactStmt:
+// 		if asFact.IsTrue {
+// 			return s.Exist_St_Facts, glob.NewEmptyStmtTrue()
+// 		} else {
+// 			return s.NotExist_St_Facts, glob.NewEmptyStmtTrue()
+// 		}
+// 	default:
+// 		return nil, glob.ErrRet(("invalid spec fact type"))
+// 	}
+// }
 
-func (s SpecFactInLogicExprMem) GetSameEnumPkgPropFacts(stmt ast.SpecificFactStmt) ([]KnownSpecFact_InLogicExpr, bool) {
-	sameEnumFacts, ret := s.getSameEnumFacts(stmt)
-	if ret.IsErr() {
-		return nil, false
-	}
+// func (s SpecFactInLogicExprMem) GetSameEnumPkgPropFacts(stmt ast.SpecificFactStmt) ([]KnownSpecFact_InLogicExpr, bool) {
+// 	sameEnumFacts, ret := s.getSameEnumFacts(stmt)
+// 	if ret.IsErr() {
+// 		return nil, false
+// 	}
 
-	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.GetPropName())]
-	if !memExist {
-		return nil, false
-	}
+// 	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.GetPropName())]
+// 	if !memExist {
+// 		return nil, false
+// 	}
 
-	return sameEnumPkgPropFacts, true
-}
+// 	return sameEnumPkgPropFacts, true
+// }
 
-func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt) *glob.StmtRet {
-	for i, fact := range logicExpr.Facts {
-		sameEnumFacts, ret := s.getSameEnumFacts(fact)
-		if ret.IsErr() {
-			return ret
-		}
+// func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt) *glob.StmtRet {
+// 	for i, fact := range logicExpr.Facts {
+// 		sameEnumFacts, ret := s.getSameEnumFacts(fact)
+// 		if ret.IsErr() {
+// 			return ret
+// 		}
 
-		if _, ok := sameEnumFacts[string(fact.GetPropName())]; !ok {
-			sameEnumFacts[string(fact.GetPropName())] = []KnownSpecFact_InLogicExpr{}
-		}
-		sameEnumFacts[string(fact.GetPropName())] = append(sameEnumFacts[string(fact.GetPropName())], *NewKnownSpecFact_InLogicExpr(fact, i, logicExpr))
-	}
+// 		if _, ok := sameEnumFacts[string(fact.GetPropName())]; !ok {
+// 			sameEnumFacts[string(fact.GetPropName())] = []KnownSpecFact_InLogicExpr{}
+// 		}
+// 		sameEnumFacts[string(fact.GetPropName())] = append(sameEnumFacts[string(fact.GetPropName())], *NewKnownSpecFact_InLogicExpr(fact, i, logicExpr))
+// 	}
 
-	return glob.NewEmptyStmtTrue()
-}
+// 	return glob.NewEmptyStmtTrue()
+// }
 
 func (s SpecFactInUniFactMem) getSameEnumFacts(stmt ast.SpecificFactStmt) (map[string][]KnownSpecFact_InUniFact, *glob.StmtRet) {
 	switch asFact := stmt.(type) {
@@ -187,54 +187,54 @@ func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact ast.SpecificFactStmt, uniFa
 	return glob.NewEmptyStmtTrue()
 }
 
-func (s SpecFact_InLogicExpr_InUniFactMem) getSameEnumFacts(stmt ast.SpecificFactStmt) (map[string][]SpecFact_InLogicExpr_InUniFact, *glob.StmtRet) {
-	switch asFact := stmt.(type) {
-	case *ast.PureSpecificFactStmt:
-		if asFact.IsTrue {
-			return s.PureFacts, glob.NewEmptyStmtTrue()
-		} else {
-			return s.NotPureFacts, glob.NewEmptyStmtTrue()
-		}
-	case *ast.ExistSpecificFactStmt:
-		if asFact.IsTrue {
-			return s.Exist_St_Facts, glob.NewEmptyStmtTrue()
-		} else {
-			return s.NotExist_St_Facts, glob.NewEmptyStmtTrue()
-		}
-	default:
-		return nil, glob.ErrRet(("invalid spec fact type"))
-	}
-}
+// func (s SpecFact_InLogicExpr_InUniFactMem) getSameEnumFacts(stmt ast.SpecificFactStmt) (map[string][]SpecFact_InLogicExpr_InUniFact, *glob.StmtRet) {
+// 	switch asFact := stmt.(type) {
+// 	case *ast.PureSpecificFactStmt:
+// 		if asFact.IsTrue {
+// 			return s.PureFacts, glob.NewEmptyStmtTrue()
+// 		} else {
+// 			return s.NotPureFacts, glob.NewEmptyStmtTrue()
+// 		}
+// 	case *ast.ExistSpecificFactStmt:
+// 		if asFact.IsTrue {
+// 			return s.Exist_St_Facts, glob.NewEmptyStmtTrue()
+// 		} else {
+// 			return s.NotExist_St_Facts, glob.NewEmptyStmtTrue()
+// 		}
+// 	default:
+// 		return nil, glob.ErrRet(("invalid spec fact type"))
+// 	}
+// }
 
-func (s SpecFact_InLogicExpr_InUniFactMem) GetSameEnumPkgPropFacts(stmt ast.SpecificFactStmt) ([]SpecFact_InLogicExpr_InUniFact, bool) {
-	sameEnumFacts, ret := s.getSameEnumFacts(stmt)
-	if ret.IsErr() {
-		return nil, false
-	}
+// func (s SpecFact_InLogicExpr_InUniFactMem) GetSameEnumPkgPropFacts(stmt ast.SpecificFactStmt) ([]SpecFact_InLogicExpr_InUniFact, bool) {
+// 	sameEnumFacts, ret := s.getSameEnumFacts(stmt)
+// 	if ret.IsErr() {
+// 		return nil, false
+// 	}
 
-	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.GetPropName())]
-	if !memExist {
-		return nil, false
-	}
+// 	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.GetPropName())]
+// 	if !memExist {
+// 		return nil, false
+// 	}
 
-	return sameEnumPkgPropFacts, true
-}
+// 	return sameEnumPkgPropFacts, true
+// }
 
-func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, logicExpr *ast.OrStmt) *glob.StmtRet {
-	for i, fact := range logicExpr.Facts {
-		sameEnumFacts, ret := s.getSameEnumFacts(fact)
-		if ret.IsErr() {
-			return ret
-		}
+// func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, logicExpr *ast.OrStmt) *glob.StmtRet {
+// 	for i, fact := range logicExpr.Facts {
+// 		sameEnumFacts, ret := s.getSameEnumFacts(fact)
+// 		if ret.IsErr() {
+// 			return ret
+// 		}
 
-		if _, ok := sameEnumFacts[string(fact.GetPropName())]; !ok {
-			sameEnumFacts[string(fact.GetPropName())] = []SpecFact_InLogicExpr_InUniFact{}
-		}
-		sameEnumFacts[string(fact.GetPropName())] = append(sameEnumFacts[string(fact.GetPropName())], *NewSpecFact_InLogicExpr_InUniFact(fact, uniStmt, i, logicExpr))
-	}
+// 		if _, ok := sameEnumFacts[string(fact.GetPropName())]; !ok {
+// 			sameEnumFacts[string(fact.GetPropName())] = []SpecFact_InLogicExpr_InUniFact{}
+// 		}
+// 		sameEnumFacts[string(fact.GetPropName())] = append(sameEnumFacts[string(fact.GetPropName())], *NewSpecFact_InLogicExpr_InUniFact(fact, uniStmt, i, logicExpr))
+// 	}
 
-	return glob.NewEmptyStmtTrue()
-}
+// 	return glob.NewEmptyStmtTrue()
+// }
 
 func (s SpecFactInImplyTemplateMem) getSameEnumFacts(stmt ast.SpecificFactStmt) (map[string][]KnownSpecFact_InImplyTemplate, *glob.StmtRet) {
 	switch asFact := stmt.(type) {
