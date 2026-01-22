@@ -1133,4 +1133,14 @@ know forall x R, y N_pos: y % 2 = 0=> x ^ y >= 0, 0 <= x ^ y
 know forall x R: x * x >=0, 0 <= x * x
 
 know forall x, y, z Z, d R: y != 0, (x/y)^z = d => x^z = d * y^z
+
+know:
+	forall x R_pos: x $in R, x > 0
+	forall x R_neg: x $in R, x < 0
+	forall x R_not0: x $in R, x != 0
+	forall x Z_neg: x $in Z, x < 0, x $in Q, x $in R
+	forall x Z_not0: x $in Z, x != 0, x $in Q, x $in R
+	forall x Q_pos: x $in Q, x > 0, x $in R
+	forall x Q_neg: x $in Q, x < 0, x $in R
+	forall x Q_not0: x $in Q, x != 0, x $in R
 `

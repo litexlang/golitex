@@ -16,7 +16,7 @@ prove forall x, y Z: x != y => g(x) != g(y):
                 case y < 0:
                     contra g(x) != g(y):
                         g(x) = g(y) = 7 * (-x) + 2 = 7 * (-y) + 2
-                        x = (7 * (-x) + 2 - 2) / -7  = y = (7 * (-y) + 2 - 2) / -7
+                        x = (7 * (-x) + 2 - 2) / -7  = (7 * (-y) + 2 - 2) / -7 = y
                         impossible x = y
                 case y >= 0:
                     contra g(x) != g(y):
