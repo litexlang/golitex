@@ -27,7 +27,8 @@ func (envMgr *EnvMgr) newFactNoInfer(stmt ast.FactStmt) *glob.StmtRet {
 	case ast.SpecificFactStmt:
 		return envMgr.newSpecFactNoInfer(f)
 	case *ast.OrStmt:
-		return envMgr.newOrFactNoInfer(f)
+		return glob.NewEmptyStmtTrue()
+		// return envMgr.newOrFactNoInfer(f)
 	case *ast.UniFactStmt:
 		return envMgr.newUniFactNoInfer(f)
 	case *ast.UniFactWithIffStmt:
@@ -89,10 +90,10 @@ func (envMgr *EnvMgr) newEqualsFactNoInfer(stmt *ast.EqualsFactStmt) *glob.StmtR
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) *glob.StmtRet {
-	ret := envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
-	return ret
-}
+// func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) *glob.StmtRet {
+// 	ret := envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
+// 	return ret
+// }
 
 func (envMgr *EnvMgr) newUniFactNoInfer(stmt *ast.UniFactStmt) *glob.StmtRet {
 	for _, thenStmt := range stmt.ThenFacts {
@@ -101,7 +102,8 @@ func (envMgr *EnvMgr) newUniFactNoInfer(stmt *ast.UniFactStmt) *glob.StmtRet {
 		case ast.SpecificFactStmt:
 			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, asFact)
 		case *ast.OrStmt:
-			ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
+			// ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
+			ret = glob.NewEmptyStmtTrue()
 		default:
 			return glob.ErrRet(fmt.Sprintf("invalid then fact type: %s", thenStmt))
 		}

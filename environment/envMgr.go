@@ -33,11 +33,11 @@ type FnInFnTMemItem struct {
 }
 
 type KnownFactsStruct struct {
-	SpecFactMem                       SpecFactMem
-	SpecFactInLogicExprMem            SpecFactInLogicExprMem
-	SpecFactInUniFactMem              SpecFactInUniFactMem
-	SpecFact_InLogicExpr_InUniFactMem SpecFact_InLogicExpr_InUniFactMem
-	SpecFactInImplyTemplateMem        SpecFactInImplyTemplateMem
+	SpecFactMem SpecFactMem
+	// SpecFactInLogicExprMem            SpecFactInLogicExprMem
+	SpecFactInUniFactMem SpecFactInUniFactMem
+	// SpecFact_InLogicExpr_InUniFactMem SpecFact_InLogicExpr_InUniFactMem
+	SpecFactInImplyTemplateMem SpecFactInImplyTemplateMem
 }
 
 type DefinedStuff[T any] struct {
@@ -153,22 +153,22 @@ func (envMgr *EnvMgr) DeleteEnv() {
 
 func makeKnownFactsStruct() KnownFactsStruct {
 	return KnownFactsStruct{
-		SpecFactMem:                       *newSpecFactMem(),
-		SpecFactInLogicExprMem:            *newSpecFactInLogicExprMem(),
-		SpecFactInUniFactMem:              *newSpecFactInUniFact(),
-		SpecFact_InLogicExpr_InUniFactMem: *newSpecFact_InLogicExpr_InUniFactMem(),
-		SpecFactInImplyTemplateMem:        *newSpecFactInImplyTemplateMem(),
+		SpecFactMem: *newSpecFactMem(),
+		// SpecFactInLogicExprMem:            *newSpecFactInLogicExprMem(),
+		SpecFactInUniFactMem: *newSpecFactInUniFact(),
+		// SpecFact_InLogicExpr_InUniFactMem: *newSpecFact_InLogicExpr_InUniFactMem(),
+		SpecFactInImplyTemplateMem: *newSpecFactInImplyTemplateMem(),
 	}
 }
 
-func newSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
-	return &SpecFact_InLogicExpr_InUniFactMem{
-		PureFacts:         make(map[string][]SpecFact_InLogicExpr_InUniFact),
-		NotPureFacts:      make(map[string][]SpecFact_InLogicExpr_InUniFact),
-		Exist_St_Facts:    make(map[string][]SpecFact_InLogicExpr_InUniFact),
-		NotExist_St_Facts: make(map[string][]SpecFact_InLogicExpr_InUniFact),
-	}
-}
+// func newSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
+// 	return &SpecFact_InLogicExpr_InUniFactMem{
+// 		PureFacts:         make(map[string][]SpecFact_InLogicExpr_InUniFact),
+// 		NotPureFacts:      make(map[string][]SpecFact_InLogicExpr_InUniFact),
+// 		Exist_St_Facts:    make(map[string][]SpecFact_InLogicExpr_InUniFact),
+// 		NotExist_St_Facts: make(map[string][]SpecFact_InLogicExpr_InUniFact),
+// 	}
+// }
 
 func NewCommutativePropMemItemStruct() *PropCommutativeCase {
 	return &PropCommutativeCase{
@@ -184,22 +184,22 @@ type SpecFactMem struct {
 	NotExist_St_Facts map[string][]*ast.ExistSpecificFactStmt
 }
 
-type KnownSpecFact_InLogicExpr struct {
-	SpecFact  ast.SpecificFactStmt
-	Index     int
-	LogicExpr *ast.OrStmt
-}
+// type KnownSpecFact_InLogicExpr struct {
+// 	SpecFact  ast.SpecificFactStmt
+// 	Index     int
+// 	LogicExpr *ast.OrStmt
+// }
 
-func NewKnownSpecFact_InLogicExpr(specFact ast.SpecificFactStmt, index int, logicExpr *ast.OrStmt) *KnownSpecFact_InLogicExpr {
-	return &KnownSpecFact_InLogicExpr{specFact, index, logicExpr}
-}
+// func NewKnownSpecFact_InLogicExpr(specFact ast.SpecificFactStmt, index int, logicExpr *ast.OrStmt) *KnownSpecFact_InLogicExpr {
+// 	return &KnownSpecFact_InLogicExpr{specFact, index, logicExpr}
+// }
 
-type SpecFactInLogicExprMem struct {
-	PureFacts         map[string][]KnownSpecFact_InLogicExpr
-	NotPureFacts      map[string][]KnownSpecFact_InLogicExpr
-	Exist_St_Facts    map[string][]KnownSpecFact_InLogicExpr
-	NotExist_St_Facts map[string][]KnownSpecFact_InLogicExpr
-}
+// type SpecFactInLogicExprMem struct {
+// 	PureFacts         map[string][]KnownSpecFact_InLogicExpr
+// 	NotPureFacts      map[string][]KnownSpecFact_InLogicExpr
+// 	Exist_St_Facts    map[string][]KnownSpecFact_InLogicExpr
+// 	NotExist_St_Facts map[string][]KnownSpecFact_InLogicExpr
+// }
 
 type KnownSpecFact_InUniFact struct {
 	SpecFact ast.SpecificFactStmt
@@ -253,12 +253,12 @@ func NewSpecFact_InLogicExpr_InUniFact(specFact ast.SpecificFactStmt, uniFact *a
 	return &SpecFact_InLogicExpr_InUniFact{specFact, uniFact, index, logicExpr}
 }
 
-type SpecFact_InLogicExpr_InUniFactMem struct {
-	PureFacts         map[string][]SpecFact_InLogicExpr_InUniFact
-	NotPureFacts      map[string][]SpecFact_InLogicExpr_InUniFact
-	Exist_St_Facts    map[string][]SpecFact_InLogicExpr_InUniFact
-	NotExist_St_Facts map[string][]SpecFact_InLogicExpr_InUniFact
-}
+// type SpecFact_InLogicExpr_InUniFactMem struct {
+// 	PureFacts         map[string][]SpecFact_InLogicExpr_InUniFact
+// 	NotPureFacts      map[string][]SpecFact_InLogicExpr_InUniFact
+// 	Exist_St_Facts    map[string][]SpecFact_InLogicExpr_InUniFact
+// 	NotExist_St_Facts map[string][]SpecFact_InLogicExpr_InUniFact
+// }
 
 func newSpecFactMem() *SpecFactMem {
 	return &SpecFactMem{
@@ -269,14 +269,14 @@ func newSpecFactMem() *SpecFactMem {
 	}
 }
 
-func newSpecFactInLogicExprMem() *SpecFactInLogicExprMem {
-	return &SpecFactInLogicExprMem{
-		PureFacts:         make(map[string][]KnownSpecFact_InLogicExpr),
-		NotPureFacts:      make(map[string][]KnownSpecFact_InLogicExpr),
-		Exist_St_Facts:    make(map[string][]KnownSpecFact_InLogicExpr),
-		NotExist_St_Facts: make(map[string][]KnownSpecFact_InLogicExpr),
-	}
-}
+// func newSpecFactInLogicExprMem() *SpecFactInLogicExprMem {
+// 	return &SpecFactInLogicExprMem{
+// 		PureFacts:         make(map[string][]KnownSpecFact_InLogicExpr),
+// 		NotPureFacts:      make(map[string][]KnownSpecFact_InLogicExpr),
+// 		Exist_St_Facts:    make(map[string][]KnownSpecFact_InLogicExpr),
+// 		NotExist_St_Facts: make(map[string][]KnownSpecFact_InLogicExpr),
+// 	}
+// }
 
 func newSpecFactInUniFact() *SpecFactInUniFactMem {
 	return &SpecFactInUniFactMem{
@@ -287,14 +287,14 @@ func newSpecFactInUniFact() *SpecFactInUniFactMem {
 	}
 }
 
-func NewKnownSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
-	return &SpecFact_InLogicExpr_InUniFactMem{
-		PureFacts:         make(map[string][]SpecFact_InLogicExpr_InUniFact),
-		NotPureFacts:      make(map[string][]SpecFact_InLogicExpr_InUniFact),
-		Exist_St_Facts:    make(map[string][]SpecFact_InLogicExpr_InUniFact),
-		NotExist_St_Facts: make(map[string][]SpecFact_InLogicExpr_InUniFact),
-	}
-}
+// func NewKnownSpecFact_InLogicExpr_InUniFactMem() *SpecFact_InLogicExpr_InUniFactMem {
+// 	return &SpecFact_InLogicExpr_InUniFactMem{
+// 		PureFacts:         make(map[string][]SpecFact_InLogicExpr_InUniFact),
+// 		NotPureFacts:      make(map[string][]SpecFact_InLogicExpr_InUniFact),
+// 		Exist_St_Facts:    make(map[string][]SpecFact_InLogicExpr_InUniFact),
+// 		NotExist_St_Facts: make(map[string][]SpecFact_InLogicExpr_InUniFact),
+// 	}
+// }
 
 func (envMgr *EnvMgr) CurEnvDepth() int {
 	return len(envMgr.EnvSlice) - 1
