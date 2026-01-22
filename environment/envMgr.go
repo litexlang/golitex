@@ -79,6 +79,8 @@ type EnvMemory struct {
 	TransitivePropMem  map[string]map[string][]ast.Obj
 	CommutativePropMem map[string]*PropCommutativeCase
 
+	OrFactsMem map[string][]*ast.OrStmt
+
 	// function template facts
 	FnInFnTemplateFactsMem FnInFnTMem
 }
