@@ -68,6 +68,11 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
 		return ret
 	}
 
+	ret = ver.verOrStmt_UseOrInUniFactMem(stmt, state)
+	if ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
 	return glob.NewEmptyVerRetUnknown()
 }
 
