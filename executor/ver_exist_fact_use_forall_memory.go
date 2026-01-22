@@ -75,37 +75,9 @@ func (ver *Verifier) MatchExistSpecificFactWithExistSpecFactInUniFact(given *ast
 }
 
 func (ver *Verifier) matchFcInExistFactWithFreeParamsInForallFact(given *ast.ExistSpecificFactStmt, freeParams []string, knownExistFactInUniFact *ast.ExistSpecificFactStmt, verState *VerState) (map[string]ast.Obj, *glob.VerRet) {
-	usedNames := map[string]struct{}{}
-	for _, param := range freeParams {
-		usedNames[string(param)] = struct{}{}
-	}
-
-	newExistFreeParams := ver.Env.GenerateNoDuplicateNames(len(given.ExistFreeParams), usedNames)
-
-	newGiven, err := given.ReplaceFreeParamsWithNewParams(newExistFreeParams)
-	if err != nil {
-		return nil, glob.NewVerMsg(glob.StmtRetTypeError, given.String(), glob.BuiltinLine0, []string{err.Error()})
-	}
-
-	newKnown, err := knownExistFactInUniFact.ReplaceFreeParamsWithNewParams(newExistFreeParams)
-	if err != nil {
-		return nil, glob.NewVerMsg(glob.StmtRetTypeError, knownExistFactInUniFact.String(), glob.BuiltinLine0, []string{err.Error()})
-	}
-
-	givenFcs := []ast.Obj{}
-	for _, paramSet := range newGiven.ExistFreeParamSets {
-		givenFcs = append(givenFcs, paramSet)
-	}
-	for _, param := range newGiven.PureFact.Params {
-		givenFcs = append(givenFcs, param)
-	}
-
-	knownFcs := []ast.Obj{}
-	for _, paramSet := range newKnown.ExistFreeParamSets {
-		knownFcs = append(knownFcs, paramSet)
-	}
-	for _, param := range newKnown.PureFact.Params {
-		knownFcs = append(knownFcs, param)
+	givenFcs, knownFcs, _, newKnown, ret := ver.GetParamsFromExistFactForMatchUniFactParams(given, knownExistFactInUniFact, freeParams)
+	if ret.IsNotTrue() {
+		return nil, ret
 	}
 
 	ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(knownFcs, freeParams, givenFcs)
@@ -132,6 +104,39 @@ func (ver *Verifier) matchFcInExistFactWithFreeParamsInForallFact(given *ast.Exi
 	return uniConMap, glob.NewEmptyVerRetTrue()
 }
 
-func GetParamsFromExistFactForMatchUniFactParams(given *ast.ExistSpecificFactStmt, knownExistFactInUniFact *ast.ExistSpecificFactStmt) {
+func (ver *Verifier) GetParamsFromExistFactForMatchUniFactParams(given *ast.ExistSpecificFactStmt, knownExistFactInUniFact *ast.ExistSpecificFactStmt, freeParams []string) ([]ast.Obj, []ast.Obj, *ast.ExistSpecificFactStmt, *ast.ExistSpecificFactStmt, *glob.VerRet) {
+	usedNames := map[string]struct{}{}
+	for _, param := range freeParams {
+		usedNames[string(param)] = struct{}{}
+	}
 
+	newExistFreeParams := ver.Env.GenerateNoDuplicateNames(len(given.ExistFreeParams), usedNames)
+
+	newGiven, err := given.ReplaceFreeParamsWithNewParams(newExistFreeParams)
+	if err != nil {
+		return nil, nil, nil, nil, glob.NewErrVerRet(err.Error())
+	}
+
+	newKnown, err := knownExistFactInUniFact.ReplaceFreeParamsWithNewParams(newExistFreeParams)
+	if err != nil {
+		return nil, nil, nil, nil, glob.NewErrVerRet(err.Error())
+	}
+
+	givenFcs := []ast.Obj{}
+	for _, paramSet := range newGiven.ExistFreeParamSets {
+		givenFcs = append(givenFcs, paramSet)
+	}
+	for _, param := range newGiven.PureFact.Params {
+		givenFcs = append(givenFcs, param)
+	}
+
+	knownFcs := []ast.Obj{}
+	for _, paramSet := range newKnown.ExistFreeParamSets {
+		knownFcs = append(knownFcs, paramSet)
+	}
+	for _, param := range newKnown.PureFact.Params {
+		knownFcs = append(knownFcs, param)
+	}
+
+	return givenFcs, knownFcs, newGiven, newKnown, glob.NewEmptyVerRetTrue()
 }
