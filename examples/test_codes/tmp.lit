@@ -1,7 +1,3 @@
-prop p(x, y R)
-
-know exist a, b st $p(a, b)
-
-know forall x R => exist a st $p(a, x)
-
-exist a st $p(a, 2)
+$is_nonempty_set(fn(R)R)
+have f fn(R) R_pos
+f(1) $in R

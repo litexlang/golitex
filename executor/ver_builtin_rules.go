@@ -323,7 +323,7 @@ func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt ast.SpecificFactStmt, 
 
 	if _, ok := asPureStmt.Params[0].(ast.Atom); ok {
 		paramAsStr := asPureStmt.Params[0].String()
-		if glob.IsNPosOrNOrZOrQOrR(paramAsStr) {
+		if glob.IsNPosOrNOrZOrQOrROrRPosOrRNegOrZNegOrQNegOrQPosOrZNot0OrQNot0OrRNot0(paramAsStr) {
 			return ver.maybeAddSuccessMsgString(state, stmt.String(), fmt.Sprintf("%s & %s & %s & %s & %s are nonempty sets.", glob.KeywordNPos, glob.KeywordNatural, glob.KeywordInteger, glob.KeywordRational, glob.KeywordReal), glob.NewEmptyVerRetTrue())
 		}
 	}
