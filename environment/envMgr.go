@@ -80,19 +80,19 @@ type EnvMemory struct {
 	CommutativePropMem map[string]*PropCommutativeCase
 
 	OrFactsMem         map[string][]*ast.OrStmt
-	OrFactInUniFactMem map[string][]*OrFactInUniFactMem
+	OrFactInUniFactMem map[string][]*OrFactInUniFact
 
 	// function template facts
 	FnInFnTemplateFactsMem FnInFnTMem
 }
 
-type OrFactInUniFactMem struct {
+type OrFactInUniFact struct {
 	OrFact  *ast.OrStmt
 	UniFact *ast.UniFactStmt
 }
 
-func NewOrFactInUniFactMem(orFact *ast.OrStmt, uniFact *ast.UniFactStmt) *OrFactInUniFactMem {
-	return &OrFactInUniFactMem{orFact, uniFact}
+func NewOrFactInUniFactMem(orFact *ast.OrStmt, uniFact *ast.UniFactStmt) *OrFactInUniFact {
+	return &OrFactInUniFact{orFact, uniFact}
 }
 
 func NewEnvMemory() *EnvMemory {
@@ -111,7 +111,8 @@ func NewEnvMemory() *EnvMemory {
 		TransitivePropMem:  make(map[string]map[string][]ast.Obj),
 		CommutativePropMem: make(map[string]*PropCommutativeCase),
 
-		OrFactsMem: make(map[string][]*ast.OrStmt),
+		OrFactsMem:         make(map[string][]*ast.OrStmt),
+		OrFactInUniFactMem: make(map[string][]*OrFactInUniFact),
 
 		FnInFnTemplateFactsMem: make(FnInFnTMem),
 	}
