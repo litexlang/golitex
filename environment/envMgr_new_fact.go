@@ -160,6 +160,12 @@ func (envMgr *EnvMgr) newOrFact(fact *ast.OrStmt) *glob.StmtRet {
 	// }
 
 	// return ret
+
+	ret := envMgr.newOrFactNoInfer(fact)
+	if ret.IsNotTrue() {
+		return glob.ErrRet(ret.String())
+	}
+
 	return glob.NewEmptyStmtTrue()
 }
 
