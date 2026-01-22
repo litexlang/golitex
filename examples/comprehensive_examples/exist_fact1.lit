@@ -37,3 +37,12 @@ prove:
     have $p(a, b)
 
     $p(a, b)
+
+prove:
+    prop p(x, y R)
+
+    know exist a, b st $p(a, b)
+
+    know forall x R => exist a st $p(a, x)
+
+    exist a st $p(a, 2)
