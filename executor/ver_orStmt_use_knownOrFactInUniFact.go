@@ -54,7 +54,7 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 	}
 
 	for i := range given.Facts {
-		if given.Facts[i].String() != knownOrFactInUni.OrFact.Facts[i].String() || given.Facts[i].GetFactType() != knownOrFactInUni.OrFact.Facts[i].GetFactType() {
+		if given.Facts[i].GetPropName().String() != knownOrFactInUni.OrFact.Facts[i].GetPropName().String() || given.Facts[i].GetFactType() != knownOrFactInUni.OrFact.Facts[i].GetFactType() {
 			return glob.NewEmptyVerRetUnknown()
 		}
 	}
@@ -82,12 +82,17 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 		return glob.NewVerMsg(glob.StmtRetTypeError, knownOrFactInUni.OrFact.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
 	for _, param := range knownOrFactInUni.UniFact.Params {
 		if _, ok := uniConMap[param]; !ok {
 			return glob.NewEmptyVerRetUnknown()
 		}
 	}
 
+	// 真的对应上了
 	for i := range given.Facts {
 		switch asStmt := given.Facts[i].(type) {
 		case *ast.PureSpecificFactStmt:
@@ -106,7 +111,7 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 					return glob.NewEmptyVerRetUnknown()
 				}
 
-				ret := ver.VerFactStmt(ast.NewEqualFact(givenParam, knownParam), state.GetAddRound())
+				ret := ver.VerFactStmt(ast.NewEqualFact(givenParam, knownParam), state)
 				if ret.IsNotTrue() {
 					return glob.NewEmptyVerRetUnknown()
 				}
@@ -128,8 +133,29 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 		}
 	}
 
-	if !ok {
-		return glob.NewEmptyVerRetUnknown()
+	// 让dom和paramSet都成立
+	for _, domFact := range knownOrFactInUni.UniFact.DomFacts {
+		instDomFact, err := domFact.Instantiate(uniConMap)
+		if err != nil {
+			return glob.NewVerMsg(glob.StmtRetTypeError, domFact.String(), glob.BuiltinLine0, []string{err.Error()})
+		}
+		verRet := ver.VerFactStmt(instDomFact.(ast.FactStmt), state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	}
+
+	newUniMap := map[string]ast.Obj{}
+	for i, paramSet := range knownOrFactInUni.UniFact.ParamSets {
+		instParamSet, err := paramSet.Instantiate(newUniMap)
+		if err != nil {
+			return glob.NewVerMsg(glob.StmtRetTypeError, paramSet.String(), glob.BuiltinLine0, []string{err.Error()})
+		}
+		verRet := ver.VerFactStmt(ast.NewInFactWithObj(uniConMap[knownOrFactInUni.UniFact.Params[i]], instParamSet.(ast.Obj)), state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+		newUniMap[knownOrFactInUni.UniFact.Params[i]] = uniConMap[knownOrFactInUni.UniFact.Params[i]]
 	}
 
 	return glob.NewEmptyVerRetTrue()
