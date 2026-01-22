@@ -105,8 +105,8 @@ func (envMgr *EnvMgr) newUniFact(stmt *ast.UniFactStmt) *glob.StmtRet {
 		case ast.SpecificFactStmt:
 			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, asFact)
 		case *ast.OrStmt:
-			// ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
-			ret = glob.NewEmptyStmtTrue()
+			ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
+			// ret = glob.NewEmptyStmtTrue()
 		case *ast.UniFactWithIffStmt:
 			ret = envMgr.newUniFact_ThenFactIsIffStmt(stmt, asFact)
 		case *ast.UniFactStmt:
@@ -322,4 +322,8 @@ func (envMgr *EnvMgr) ProveImplyNewThenFactInPropDef(stmt *ast.ProveInferStmt) *
 	}
 
 	return glob.NewEmptyStmtTrue()
+}
+
+func (envMgr *EnvMgr) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) *glob.StmtRet {
+	return envMgr.storeOrFactInUniFactMem(thenFact, stmt)
 }
