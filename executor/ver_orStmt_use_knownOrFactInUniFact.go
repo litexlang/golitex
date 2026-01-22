@@ -28,4 +28,26 @@ func (ver *Verifier) verOrStmt_UseOrInUniFactMem(stmt *ast.OrStmt, state *VerSta
 			return verRet
 		}
 	}
+
+	return glob.NewEmptyVerRetUnknown()
+}
+
+func (ver *Verifier) orFact_UseOrInUniFactMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.OrStmt, state *VerState) *glob.VerRet {
+	knownOrFacts, got := curEnv.OrFactInUniFactMem[string(stmt.Facts[0].GetPropName())]
+	if !got {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	for _, knownOrFactInUniFact := range knownOrFacts {
+		ret := ver.useKnownOrFactInUniFactToCheckGivenOrFact(stmt, knownOrFactInUniFact, state)
+		if ret.IsTrue() || ret.IsErr() {
+			return ret
+		}
+	}
+
+	return glob.NewEmptyVerRetUnknown()
+}
+
+func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt, knownOrFactInUni *env.OrFactInUniFact, state *VerState) *glob.VerRet {
+	return glob.NewEmptyVerRetTrue()
 }
