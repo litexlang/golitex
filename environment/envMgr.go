@@ -101,6 +101,8 @@ func NewEnvMemory() *EnvMemory {
 		TransitivePropMem:  make(map[string]map[string][]ast.Obj),
 		CommutativePropMem: make(map[string]*PropCommutativeCase),
 
+		OrFactsMem: make(map[string][]*ast.OrStmt),
+
 		FnInFnTemplateFactsMem: make(FnInFnTMem),
 	}
 }

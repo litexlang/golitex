@@ -98,7 +98,7 @@ func (ver *Verifier) verOrStmt_UseOrMem(stmt *ast.OrStmt, state *VerState) *glob
 }
 
 func (ver *Verifier) orFact_UseOrMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.OrStmt, state *VerState) *glob.VerRet {
-	knownOrFacts, got := curEnv.OrFactsMem[stmt.String()]
+	knownOrFacts, got := curEnv.OrFactsMem[string(stmt.Facts[0].GetPropName())]
 	if !got {
 		return glob.NewEmptyVerRetUnknown()
 	}
@@ -174,7 +174,7 @@ func (ver *Verifier) useKnownOrFactToCheckGivenOrFact(given *ast.OrStmt, known *
 		}
 	}
 
-	return glob.NewEmptyVerRetUnknown()
+	return glob.NewEmptyVerRetTrue()
 }
 
 func (ver *Verifier) matchSpecFactWhenCheckOr(knowns []ast.SpecificFactStmt, givens []ast.SpecificFactStmt, state *VerState) *glob.VerRet {
