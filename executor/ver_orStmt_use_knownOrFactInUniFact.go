@@ -59,5 +59,78 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 		}
 	}
 
+	givenParams := []ast.Obj{}
+	knownParams := []ast.Obj{}
+	for i := range given.Facts {
+		switch asStmt := given.Facts[i].(type) {
+		case *ast.PureSpecificFactStmt:
+			givenParams = append(givenParams, asStmt.Params...)
+			knownParams = append(knownParams, knownOrFactInUni.OrFact.Facts[i].(*ast.PureSpecificFactStmt).Params...)
+		case *ast.ExistSpecificFactStmt:
+			givenParams, knownParams, _, _, ret := ver.GetParamsFromExistFactForMatchUniFactParams(asStmt, knownOrFactInUni.OrFact.Facts[i].(*ast.ExistSpecificFactStmt), []string{})
+			if ret.IsNotTrue() {
+				return ret
+			}
+
+			givenParams = append(givenParams, givenParams...)
+			knownParams = append(knownParams, knownParams...)
+		}
+	}
+
+	ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(knownParams, knownOrFactInUni.UniFact.Params, givenParams)
+	if err != nil {
+		return glob.NewVerMsg(glob.StmtRetTypeError, knownOrFactInUni.OrFact.String(), glob.BuiltinLine0, []string{err.Error()})
+	}
+
+	for _, param := range knownOrFactInUni.UniFact.Params {
+		if _, ok := uniConMap[param]; !ok {
+			return glob.NewEmptyVerRetUnknown()
+		}
+	}
+
+	for i := range given.Facts {
+		switch asStmt := given.Facts[i].(type) {
+		case *ast.PureSpecificFactStmt:
+			if len(asStmt.Params) != len(knownOrFactInUni.OrFact.Facts[i].(*ast.PureSpecificFactStmt).Params) {
+				return glob.NewEmptyVerRetUnknown()
+			}
+
+			for j := range asStmt.Params {
+				givenParam, err := asStmt.Params[j].Instantiate(uniConMap)
+				if err != nil {
+					return glob.NewEmptyVerRetUnknown()
+				}
+
+				knownParam, err := knownOrFactInUni.OrFact.Facts[i].(*ast.PureSpecificFactStmt).Params[j].Instantiate(uniConMap)
+				if err != nil {
+					return glob.NewEmptyVerRetUnknown()
+				}
+
+				ret := ver.VerFactStmt(ast.NewEqualFact(givenParam, knownParam), state.GetAddRound())
+				if ret.IsNotTrue() {
+					return glob.NewEmptyVerRetUnknown()
+				}
+			}
+
+		case *ast.ExistSpecificFactStmt:
+			instGiven, err := asStmt.Instantiate(uniConMap)
+			if err != nil {
+				return glob.NewEmptyVerRetUnknown()
+			}
+			instKnown, err := knownOrFactInUni.OrFact.Facts[i].Instantiate(uniConMap)
+			if err != nil {
+				return glob.NewEmptyVerRetUnknown()
+			}
+
+			if instGiven.String() != instKnown.String() {
+				return glob.NewEmptyVerRetUnknown()
+			}
+		}
+	}
+
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
 	return glob.NewEmptyVerRetTrue()
 }
