@@ -165,9 +165,25 @@ func (ver *Verifier) matchSpecFactWhenCheckOr(knowns []ast.SpecificFactStmt, giv
 			return glob.NewEmptyVerRetUnknown()
 		}
 
-		if known.String() != given.String() {
-			return glob.NewEmptyVerRetUnknown()
+		switch knownAs := known.(type) {
+		case *ast.PureSpecificFactStmt:
+			if len(knownAs.Params) != len(given.(*ast.PureSpecificFactStmt).Params) {
+				return glob.NewEmptyVerRetUnknown()
+			}
+
+			for param := range knownAs.Params {
+				ret := ver.VerFactStmt(ast.NewEqualFact(knownAs.Params[param], given.(*ast.PureSpecificFactStmt).Params[param]), state)
+				if ret.IsNotTrue() {
+					return glob.NewEmptyVerRetUnknown()
+				}
+			}
+
+		case *ast.ExistSpecificFactStmt:
+			if knownAs.String() != given.String() {
+				return glob.NewEmptyVerRetUnknown()
+			}
 		}
+
 	}
 
 	return glob.NewEmptyVerRetTrue()

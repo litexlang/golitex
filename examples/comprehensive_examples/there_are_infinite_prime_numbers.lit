@@ -1,3 +1,4 @@
+"""
 prop is_prime(x N_pos):
 	2 <= x
     forall y N_pos:
@@ -24,3 +25,4 @@ contra not $is_finite_set({y N_pos: $is_prime(y)}):
     a % b = 1
     1 != 0
     impossible a % b != 0
+    """

@@ -300,7 +300,6 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) *glob.StmtRet {
 }
 
 func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob.StmtRet {
-
 	shortRet := checkParamsInFnDefNotDefinedAndParamSetsDefined(exec, stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets)
 	if shortRet.IsNotTrue() {
 		return glob.ErrRet(shortRet.String())
