@@ -80,9 +80,9 @@ func (ver *Verifier) verSpecFactMainProcess(stmt ast.SpecificFactStmt, state *Ve
 	}
 
 	if !state.isFinalRound() {
-		if verRet := ver.verSpecFact_ByLogicMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
-			return verRet
-		}
+		// if verRet := ver.verSpecFact_ByLogicMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+		// 	return verRet
+		// }
 
 		if verRet := ver.verSpecFact_UniMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
 			return verRet
