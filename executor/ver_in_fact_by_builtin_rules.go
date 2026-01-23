@@ -59,7 +59,7 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt ast.SpecificFactStmt, state *Ve
 		return verRet
 	}
 
-	verRet = ver.verInFactByRightParamIsNOrZOrQOrR_BySpecMem_ReturnValueOfUserDefinedFnInFnReturn(stmt, state)
+	verRet = ver.verInFactByRightParamIsN_Z_Q_R_N_pos_Z_pos_R_pos_etc_BySpecMem_ReturnValueOfUserDefinedFnInFnReturn(stmt, state)
 	if verRet.IsErr() {
 		return verRet
 	}

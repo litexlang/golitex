@@ -1149,4 +1149,8 @@ know:
 	forall x, y R: x > y or x <= y
 	forall x, y R: x <= y or x > y
 	forall x, y R: x >= y or x < y
+
+know:
+	forall a, b, c set: a $in b => a $in union(b, c)
+	forall a, b, c set: a $in c => a $in union(b, c)
 `
