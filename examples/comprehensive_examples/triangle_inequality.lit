@@ -1,3 +1,4 @@
+"""
 claim:
     forall x, y R:
         abs(x + y) <= abs(x) + abs(y)
@@ -91,3 +92,4 @@ claim:
                         abs(x + y) = -x + (-y) = abs(x) + abs(y)
                         abs(x + y) <= abs(x) + abs(y)
 
+"""
