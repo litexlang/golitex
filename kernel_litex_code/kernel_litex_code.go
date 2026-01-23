@@ -1146,4 +1146,7 @@ know:
 
 know:
 	forall x, y R: x < y or x >= y
+	forall x, y R: x > y or x <= y
+	forall x, y R: x <= y or x > y
+	forall x, y R: x >= y or x < y
 `
