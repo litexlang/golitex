@@ -22,46 +22,6 @@ import (
 	glob "golitex/glob"
 )
 
-// 如果我尝试通过逐个子命题 m 的方式，使用“其余为假，m 为真”的方法去验证 a ∨ b ∨ c ∨ ... ∨ n，但全部尝试都失败了，那就可以断言 a ∨ b ∨ c ∨ ... ∨ n 为假。反过来，只要有一次成立了，那就可以断言 a ∨ b ∨ c ∨ ... ∨ n 为真。
-
-// 反过来，用已知的 a ∨ b ∨ c ∨ ... ∨ n 为真，去验证 a ，需要先验证b, c, ... , n 为假，才能得到 a 为真。
-
-// func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
-// nextState := state.GetAddRound()
-// for i := range stmt.Facts {
-// 	verRet := ver.verFactAtIndex_WhenOthersAreFalse(stmt.Facts, i, nextState)
-// 	if verRet.IsErr() {
-// 		return verRet
-// 	}
-// 	if verRet.IsTrue() {
-// 		if state.WithMsg {
-// 			msg := fmt.Sprintf("%s is true when all others facts in the or statement are false", stmt.Facts[i])
-// 			return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, append([]string{msg}, verRet.VerifyMsgs...))
-// 		}
-// 		return glob.NewEmptyVerRetTrue()
-// 	}
-// }
-// return glob.NewEmptyVerRetUnknown()
-// }
-
-// func (ver *Verifier) verFactAtIndex_WhenOthersAreFalse(facts []ast.SpecificFactStmt, i int, state *VerState) *glob.VerRet {
-// 	ver.newEnv()
-// 	defer ver.deleteEnv()
-
-// 	for j := range facts {
-// 		if j == i {
-// 			continue
-// 		}
-// 		ret := ver.Env.NewFactWithCheckingNameDefined(facts[j].ReverseIsTrue()[0])
-// 		if ret.IsErr() {
-// 			return glob.NewVerMsg(glob.StmtRetTypeError, facts[j].String(), glob.BuiltinLine0, []string{ret.String()})
-// 		}
-// 	}
-
-// 	verRet := ver.VerFactStmt(facts[i], state)
-// 	return verRet
-// }
-
 func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
 	ret := ver.verOrStmt_UseOrMem(stmt, state)
 	if ret.IsTrue() || ret.IsErr() {

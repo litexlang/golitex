@@ -22,40 +22,26 @@ import (
 )
 
 func (ver *Verifier) verSpecFact_BySpecMem(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
-	defInCurEnvPkgMgr, ok := ver.Env.GetPropDefWithoutSearchingInBuiltinEnv(stmt.GetPropName())
-	if ok {
-		for i := len(ver.Env.EnvSlice) - 1; i >= defInCurEnvPkgMgr.EnvDepth; i-- {
-			curEnv := &ver.Env.EnvSlice[i]
-			verRet := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
-			if verRet.IsErr() || verRet.IsTrue() {
-				return verRet
-			}
-		}
-
-		return glob.NewEmptyVerRetUnknown()
-	} else {
-		for i := len(ver.Env.EnvSlice) - 1; i >= 0; i-- {
-			curEnv := &ver.Env.EnvSlice[i]
-			verRet := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
-			if verRet.IsErr() || verRet.IsTrue() {
-				return verRet
-			}
-		}
-
-		curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
+	for i := len(ver.Env.EnvSlice) - 1; i >= 0; i-- {
+		curEnv := &ver.Env.EnvSlice[i]
 		verRet := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}
+	}
 
-		for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
-			curEnv := pkgEnvMgr.EnvSlice[0]
-			verRet := ver.specFact_SpecMem_atEnv(&curEnv, stmt, state)
-			if verRet.IsErr() || verRet.IsTrue() {
-				return verRet
-			}
+	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
+	verRet := ver.specFact_SpecMem_atEnv(curEnv, stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
+		curEnv := pkgEnvMgr.EnvSlice[0]
+		verRet := ver.specFact_SpecMem_atEnv(&curEnv, stmt, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
 		}
-
 	}
 
 	return glob.NewEmptyVerRetUnknown()
@@ -324,13 +310,13 @@ func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.EnvMemory, stmt ast.Spec
 	switch asFact := stmt.(type) {
 	case *ast.PureSpecificFactStmt:
 		if asFact.IsTrue {
-			sameEnumPkgPropFacts, memExist := ver.Env.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.PropName)]
+			sameEnumPkgPropFacts, memExist := curEnv.KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.PropName)]
 			if !memExist {
 				return glob.NewEmptyVerRetUnknown()
 			}
 			return ver.iterateKnownPureSpecFacts_applyObjEqualSpec(asFact, sameEnumPkgPropFacts, state)
 		} else {
-			sameEnumPkgPropFacts, memExist := ver.Env.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.PropName)]
+			sameEnumPkgPropFacts, memExist := curEnv.KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.PropName)]
 			if !memExist {
 				return glob.NewEmptyVerRetUnknown()
 			}
@@ -338,13 +324,13 @@ func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.EnvMemory, stmt ast.Spec
 		}
 	case *ast.ExistSpecificFactStmt:
 		if asFact.IsTrue {
-			sameEnumPkgPropFacts, memExist := ver.Env.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())]
+			sameEnumPkgPropFacts, memExist := curEnv.KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())]
 			if !memExist {
 				return glob.NewEmptyVerRetUnknown()
 			}
 			return ver.iterateKnownExistSpecFacts_applyObjEqualSpec(asFact, sameEnumPkgPropFacts, state)
 		} else {
-			sameEnumPkgPropFacts, memExist := ver.Env.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())]
+			sameEnumPkgPropFacts, memExist := curEnv.KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())]
 			if !memExist {
 				return glob.NewEmptyVerRetUnknown()
 			}

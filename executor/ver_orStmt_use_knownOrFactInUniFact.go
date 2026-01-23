@@ -49,7 +49,8 @@ func (ver *Verifier) verOrStmt_UseOrInUniFactMem(stmt *ast.OrStmt, state *VerSta
 }
 
 func (ver *Verifier) orFact_UseOrInUniFactMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.OrStmt, state *VerState) *glob.VerRet {
-	knownOrFacts, got := curEnv.OrFactInUniFactMem[string(stmt.Facts[0].GetPropName())]
+	key := string(stmt.Facts[0].GetPropName())
+	knownOrFacts, got := curEnv.OrFactInUniFactMem[key]
 	if !got {
 		return glob.NewEmptyVerRetUnknown()
 	}
