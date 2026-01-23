@@ -103,7 +103,7 @@ func NewKnowInferStmt(params []string, paramSets []Obj, domFacts ReversibleFacts
 // 	return &DefExistPropStmtBody{defHeader, domFacts, iffFacts, thenFacts, line}
 // }
 
-func NewOrStmt(orFacts []SpecificFactStmt, line uint) *OrStmt {
+func NewOrStmt(orFacts SpecFactPtrSlice, line uint) *OrStmt {
 	return &OrStmt{orFacts, line}
 }
 
