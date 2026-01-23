@@ -1,3 +1,4 @@
+"""
 prop dvd(x, y Z):
     dom:
         x != 0
@@ -33,3 +34,4 @@ contra not sqrt(2) $in Q:
     impossible 2 $dvd 1
 
 
+"""
