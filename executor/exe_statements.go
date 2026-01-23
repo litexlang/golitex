@@ -97,7 +97,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 	case *ast.HaveFnEqualCaseByCaseStmt:
 		execRet = exec.haveFnEqualCaseByCaseStmt2(stmt)
 	case *ast.ProveCaseByCaseStmt:
-		execRet = exec.proveCaseByCaseStmt(stmt)
+		// execRet = exec.proveCaseByCaseStmt(stmt)
+		execRet = exec.execCases(stmt)
 	case *ast.ImportDirStmt:
 		execRet = glob.ErrRet("import statements are not allowed in local scope.")
 	case *ast.RunFileStmt:

@@ -27,18 +27,6 @@ prove:
     have a R st a > 0
 
 prove:
-    prop p(a N, b R):
-        a > b
-
-    witness $p(1, 0)
-
-    exist $p(a, b)
-
-    have $p(a, b)
-
-    $p(a, b)
-
-prove:
     prop p(x, y R)
 
     know exist a, b st $p(a, b)

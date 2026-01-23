@@ -1153,4 +1153,8 @@ know:
 know:
 	forall a, b, c set: a $in b => a $in union(b, c)
 	forall a, b, c set: a $in c => a $in union(b, c)
+
+know:
+	forall a Z, b Z: a < b + 1 => a < b or a = b
+	forall a, b R: a <= b => a < b or a = b
 `

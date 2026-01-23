@@ -136,12 +136,11 @@ func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) *glob.ShortRet {
 		propName := specFact.GetPropName()
 		knowns, ok := envMgr.CurEnv().OrFactsMem[propName.String()]
 		if ok {
-			knowns = append(knowns, fact)
+			envMgr.CurEnv().OrFactsMem[propName.String()] = append(knowns, fact)
 		} else {
 			envMgr.CurEnv().OrFactsMem[propName.String()] = []*ast.OrStmt{fact}
 		}
 	}
-
 	return glob.NewEmptyShortTrueRet()
 }
 
@@ -149,7 +148,7 @@ func (envMgr *EnvMgr) storeOrFactInUniFactMem(orFact *ast.OrStmt, uniFact *ast.U
 	propName := orFact.Facts[0].GetPropName()
 	knowns, ok := envMgr.CurEnv().OrFactInUniFactMem[propName.String()]
 	if ok {
-		knowns = append(knowns, NewOrFactInUniFactMem(orFact, uniFact))
+		envMgr.CurEnv().OrFactInUniFactMem[propName.String()] = append(knowns, NewOrFactInUniFactMem(orFact, uniFact))
 	} else {
 		envMgr.CurEnv().OrFactInUniFactMem[propName.String()] = []*OrFactInUniFact{NewOrFactInUniFactMem(orFact, uniFact)}
 	}
