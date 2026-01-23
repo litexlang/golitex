@@ -1,6 +1,7 @@
-prop p(x R)
-prop q(x R)
-prop r(x R)
-know forall x R: $p(x) or $q(x) or $r(x)
-
-$p(1) or $q(1) or $r(1)
+have fn g(x Z) N =:
+    case x < 0: 7 * (-x) + 2:
+        -x $in N
+        7 * (-x) + 2 $in N
+    case x >= 0: 7 * x + 1:
+        x $in N
+        7 * x + 1 $in N

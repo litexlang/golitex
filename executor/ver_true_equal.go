@@ -110,11 +110,11 @@ func (ver *Verifier) verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj,
 	}
 
 	if !state.isFinalRound() {
-		if verRet := ver.verLogicMem_leftToRight_RightToLeft(left, right, state); verRet.IsErr() {
-			return verRet
-		} else if verRet.IsTrue() {
-			return verRet
-		}
+		// if verRet := ver.verLogicMem_leftToRight_RightToLeft(left, right, state); verRet.IsErr() {
+		// 	return verRet
+		// } else if verRet.IsTrue() {
+		// 	return verRet
+		// }
 
 		if verRet := ver.verEqualUniMem(left, right, state); verRet.IsErr() {
 			return verRet
@@ -246,23 +246,23 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.EnvMemory, left ast.Obj
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-	equalFact := ast.NewEqualFact(left, right)
-	verRet := ver.verSpecFact_ByLogicMem(equalFact, state)
-	if verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
+// func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
+// 	equalFact := ast.NewEqualFact(left, right)
+// 	verRet := ver.verSpecFact_ByLogicMem(equalFact, state)
+// 	if verRet.IsErr() || verRet.IsTrue() {
+// 		return verRet
+// 	}
 
-	equalFactParamReversed, err := equalFact.ReverseSpecFactParamsOrder()
-	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, equalFact.String(), glob.BuiltinLine0, []string{err.Error()})
-	}
-	verRet = ver.verSpecFact_ByLogicMem(equalFactParamReversed, state)
-	if verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
-	return glob.NewEmptyVerRetUnknown()
-}
+// 	equalFactParamReversed, err := equalFact.ReverseSpecFactParamsOrder()
+// 	if err != nil {
+// 		return glob.NewVerMsg(glob.StmtRetTypeError, equalFact.String(), glob.BuiltinLine0, []string{err.Error()})
+// 	}
+// 	verRet = ver.verSpecFact_ByLogicMem(equalFactParamReversed, state)
+// 	if verRet.IsErr() || verRet.IsTrue() {
+// 		return verRet
+// 	}
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
 func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
 	equalFact := ast.NewEqualFact(left, right)

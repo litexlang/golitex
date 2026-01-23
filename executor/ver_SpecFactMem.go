@@ -61,30 +61,30 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt ast.SpecificFactStmt, state *Ver
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verSpecFact_ByLogicMem(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
-	// nextState := state.GetAddRound()
-	// // Add builtin env check
-	// curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
-	// verRet := ver.specFact_LogicMem(curEnv, stmt, nextState)
-	// if verRet.IsErr() || verRet.IsTrue() {
-	// 	return verRet
-	// }
+// func (ver *Verifier) verSpecFact_ByLogicMem(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+// 	// nextState := state.GetAddRound()
+// 	// // Add builtin env check
+// 	// curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
+// 	// verRet := ver.specFact_LogicMem(curEnv, stmt, nextState)
+// 	// if verRet.IsErr() || verRet.IsTrue() {
+// 	// 	return verRet
+// 	// }
 
-	// // if ver.env.CurMatchProp == nil {
-	// for curEnvIndex := range ver.Env.EnvSlice {
-	// 	curEnv := &ver.Env.EnvSlice[curEnvIndex]
-	// 	verRet := ver.specFact_LogicMem(curEnv, stmt, nextState)
-	// 	if verRet.IsErr() || verRet.IsTrue() {
-	// 		return verRet
-	// 	}
-	// }
+// 	// // if ver.env.CurMatchProp == nil {
+// 	// for curEnvIndex := range ver.Env.EnvSlice {
+// 	// 	curEnv := &ver.Env.EnvSlice[curEnvIndex]
+// 	// 	verRet := ver.specFact_LogicMem(curEnv, stmt, nextState)
+// 	// 	if verRet.IsErr() || verRet.IsTrue() {
+// 	// 		return verRet
+// 	// 	}
+// 	// }
 
-	return glob.NewEmptyVerRetUnknown()
-}
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
 func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
-	for curEnvIndex := range ver.Env.EnvSlice {
-		curEnv := &ver.Env.EnvSlice[curEnvIndex]
+	for i := len(ver.Env.EnvSlice) - 1; i >= 0; i-- {
+		curEnv := &ver.Env.EnvSlice[i]
 		verRet := ver.specFact_UniMem_atCurEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
@@ -146,94 +146,94 @@ func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt ast.SpecificFactStmt, st
 // 	return ver.iterate_KnownPureSpecInLogic_InUni_applyMatch_new(stmt, searchedSpecFactsInLogicExpr, nextState)
 // }
 
-func (ver *Verifier) iterate_KnownPureSpecInLogic_InUni_applyMatch_new(stmt ast.SpecificFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state *VerState) *glob.VerRet {
-	for i := len(knownFacts) - 1; i >= 0; i-- {
-		knownFactUnderLogicExpr := knownFacts[i]
-		knownFact_paramProcessed := env.KnownSpecFact_InUniFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}
+// func (ver *Verifier) iterate_KnownPureSpecInLogic_InUni_applyMatch_new(stmt ast.SpecificFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state *VerState) *glob.VerRet {
+// 	for i := len(knownFacts) - 1; i >= 0; i-- {
+// 		knownFactUnderLogicExpr := knownFacts[i]
+// 		knownFact_paramProcessed := env.KnownSpecFact_InUniFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}
 
-		// ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(&knownFact_paramProcessed, stmt)
-		ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(knownFact_paramProcessed.SpecFact.(*ast.PureSpecificFactStmt).Params, knownFact_paramProcessed.UniFact.Params, stmt.(*ast.PureSpecificFactStmt).Params)
-		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
-		}
-		if !ok {
-			continue
-		}
+// 		// ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(&knownFact_paramProcessed, stmt)
+// 		ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(knownFact_paramProcessed.SpecFact.(*ast.PureSpecificFactStmt).Params, knownFact_paramProcessed.UniFact.Params, stmt.(*ast.PureSpecificFactStmt).Params)
+// 		if err != nil {
+// 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
+// 		}
+// 		if !ok {
+// 			continue
+// 		}
 
-		randomizedUniFactWithoutThen, _, paramMapStrToStr, randomizedOrStmt, err := ver.preprocessUniFactParamsWithoutThenFacts_OrStmt(knownFactUnderLogicExpr.UniFact, knownFactUnderLogicExpr.LogicExpr)
-		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
-		}
+// 		randomizedUniFactWithoutThen, _, paramMapStrToStr, randomizedOrStmt, err := ver.preprocessUniFactParamsWithoutThenFacts_OrStmt(knownFactUnderLogicExpr.UniFact, knownFactUnderLogicExpr.LogicExpr)
+// 		if err != nil {
+// 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
+// 		}
 
-		for k, v := range uniConMap {
-			if newParam, ok := paramMapStrToStr[k]; ok {
-				uniConMap[newParam] = v
-				delete(uniConMap, k)
-			}
-		}
+// 		for k, v := range uniConMap {
+// 			if newParam, ok := paramMapStrToStr[k]; ok {
+// 				uniConMap[newParam] = v
+// 				delete(uniConMap, k)
+// 			}
+// 		}
 
-		instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
-		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
-		}
+// 		instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
+// 		if err != nil {
+// 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
+// 		}
 
-		// insKnownUniFact, err := ast.InstantiateUniFact(knownFactUnderLogicExpr.UniFact, uniConMap)
-		// if err != nil {
-		// 	return false, err
-		// }
+// 		// insKnownUniFact, err := ast.InstantiateUniFact(knownFactUnderLogicExpr.UniFact, uniConMap)
+// 		// if err != nil {
+// 		// 	return false, err
+// 		// }
 
-		// TODO 要证明在paramSet里
-		// paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts(uniConMap)
-		paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
-		setFactSatisfied := true
-		for _, paramInParamSetFact := range paramInParamSetFacts {
-			verRet := ver.VerFactStmt(paramInParamSetFact, state)
-			if verRet.IsErr() {
-				return glob.NewVerMsg(glob.StmtRetTypeUnknown, paramInParamSetFact.String(), glob.BuiltinLine0, []string{verRet.String()})
-			}
-			if verRet.IsUnknown() {
-				setFactSatisfied = false
-				break
-			}
-		}
+// 		// TODO 要证明在paramSet里
+// 		// paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts(uniConMap)
+// 		paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
+// 		setFactSatisfied := true
+// 		for _, paramInParamSetFact := range paramInParamSetFacts {
+// 			verRet := ver.VerFactStmt(paramInParamSetFact, state)
+// 			if verRet.IsErr() {
+// 				return glob.NewVerMsg(glob.StmtRetTypeUnknown, paramInParamSetFact.String(), glob.BuiltinLine0, []string{verRet.String()})
+// 			}
+// 			if verRet.IsUnknown() {
+// 				setFactSatisfied = false
+// 				break
+// 			}
+// 		}
 
-		if !setFactSatisfied {
-			continue
-		}
+// 		if !setFactSatisfied {
+// 			continue
+// 		}
 
-		// ok, err = ver.proveUniFactDomFacts(insKnownUniFact.DomFacts, state)
-		verRet := ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
-		if verRet.IsErr() {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{verRet.String()})
-		}
-		if verRet.IsUnknown() {
-			continue
-		}
+// 		// ok, err = ver.proveUniFactDomFacts(insKnownUniFact.DomFacts, state)
+// 		verRet := ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
+// 		if verRet.IsErr() {
+// 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{verRet.String()})
+// 		}
+// 		if verRet.IsUnknown() {
+// 			continue
+// 		}
 
-		instantiatedLogicExpr, err := randomizedOrStmt.InstantiateFact(uniConMap)
-		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
-		}
-		instantiatedLogicExprAsKnownSpecFact, ok := instantiatedLogicExpr.(*ast.OrStmt)
-		if !ok {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{"instantiatedLogicExpr is not a KnownSpecFact_InLogicExpr"})
-		}
+// 		instantiatedLogicExpr, err := randomizedOrStmt.InstantiateFact(uniConMap)
+// 		if err != nil {
+// 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
+// 		}
+// 		instantiatedLogicExprAsKnownSpecFact, ok := instantiatedLogicExpr.(*ast.OrStmt)
+// 		if !ok {
+// 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{"instantiatedLogicExpr is not a KnownSpecFact_InLogicExpr"})
+// 		}
 
-		verRet = ver.verify_specFact_when_given_orStmt_is_true(stmt, instantiatedLogicExprAsKnownSpecFact, knownFactUnderLogicExpr.Index, state)
-		if verRet.IsErr() {
-			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{verRet.String()})
-		}
+// 		verRet = ver.verify_specFact_when_given_orStmt_is_true(stmt, instantiatedLogicExprAsKnownSpecFact, knownFactUnderLogicExpr.Index, state)
+// 		if verRet.IsErr() {
+// 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{verRet.String()})
+// 		}
 
-		if verRet.IsTrue() {
-			if state.WithMsg {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{knownFactUnderLogicExpr.UniFact.String()})
-			}
-			return glob.NewEmptyVerRetTrue()
-		}
-	}
+// 		if verRet.IsTrue() {
+// 			if state.WithMsg {
+// 				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{knownFactUnderLogicExpr.UniFact.String()})
+// 			}
+// 			return glob.NewEmptyVerRetTrue()
+// 		}
+// 	}
 
-	return glob.NewEmptyVerRetUnknown()
-}
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
 func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.EnvMemory, stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 	if state.Round == 0 && !state.ReqOk {
@@ -721,92 +721,92 @@ func (ver *Verifier) iterate_KnownExistSpecInUniFacts_applyMatch_new(stmtToMatch
 	// return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) iterate_KnownExistSpecInLogic_InUni_applyMatch_new(stmt ast.SpecificFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state *VerState) *glob.VerRet {
-	return glob.NewEmptyVerRetUnknown()
+// func (ver *Verifier) iterate_KnownExistSpecInLogic_InUni_applyMatch_new(stmt ast.SpecificFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state *VerState) *glob.VerRet {
+// 	return glob.NewEmptyVerRetUnknown()
 
-	// for i := len(knownFacts) - 1; i >= 0; i-- {
-	// 	knownFactUnderLogicExpr := knownFacts[i]
-	// 	knownFact_paramProcessed := env.KnownSpecFact_InUniFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}
+// for i := len(knownFacts) - 1; i >= 0; i-- {
+// 	knownFactUnderLogicExpr := knownFacts[i]
+// 	knownFact_paramProcessed := env.KnownSpecFact_InUniFact{SpecFact: knownFactUnderLogicExpr.SpecFact, UniFact: knownFactUnderLogicExpr.UniFact}
 
-	// 	ok, uniConMap, err := ver.matchExistFactWithExistFactInKnownUniFact(&knownFact_paramProcessed, stmt)
-	// 	if err != nil {
-	// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
-	// 	}
-	// 	if !ok {
-	// 		continue
-	// 	}
+// 	ok, uniConMap, err := ver.matchExistFactWithExistFactInKnownUniFact(&knownFact_paramProcessed, stmt)
+// 	if err != nil {
+// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
+// 	}
+// 	if !ok {
+// 		continue
+// 	}
 
-	// 	randomizedUniFactWithoutThen, _, paramMapStrToStr, randomizedOrStmt, err := ver.preprocessUniFactParamsWithoutThenFacts_OrStmt(knownFactUnderLogicExpr.UniFact, knownFactUnderLogicExpr.LogicExpr)
-	// 	if err != nil {
-	// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
-	// 	}
+// 	randomizedUniFactWithoutThen, _, paramMapStrToStr, randomizedOrStmt, err := ver.preprocessUniFactParamsWithoutThenFacts_OrStmt(knownFactUnderLogicExpr.UniFact, knownFactUnderLogicExpr.LogicExpr)
+// 	if err != nil {
+// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
+// 	}
 
-	// 	for k, v := range uniConMap {
-	// 		if newParam, ok := paramMapStrToStr[k]; ok {
-	// 			uniConMap[newParam] = v
-	// 			delete(uniConMap, k)
-	// 		}
-	// 	}
+// 	for k, v := range uniConMap {
+// 		if newParam, ok := paramMapStrToStr[k]; ok {
+// 			uniConMap[newParam] = v
+// 			delete(uniConMap, k)
+// 		}
+// 	}
 
-	// 	instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
-	// 	if err != nil {
-	// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
-	// 	}
+// 	instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
+// 	if err != nil {
+// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
+// 	}
 
-	// 	// insKnownUniFact, err := ast.InstantiateUniFact(knownFactUnderLogicExpr.UniFact, uniConMap)
-	// 	// if err != nil {
-	// 	// 	return false, err
-	// 	// }
+// 	// insKnownUniFact, err := ast.InstantiateUniFact(knownFactUnderLogicExpr.UniFact, uniConMap)
+// 	// if err != nil {
+// 	// 	return false, err
+// 	// }
 
-	// 	// TODO 要证明在paramSet里
-	// 	// paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts(uniConMap)
-	// 	paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
-	// 	setFactSatisfied := true
-	// 	for _, paramInParamSetFact := range paramInParamSetFacts {
-	// 		verRet := ver.VerFactStmt(paramInParamSetFact, state)
-	// 		if verRet.IsErr() {
-	// 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, paramInParamSetFact.String(), glob.BuiltinLine0, []string{verRet.String()})
-	// 		}
-	// 		if verRet.IsUnknown() {
-	// 			setFactSatisfied = false
-	// 			break
-	// 		}
-	// 	}
+// 	// TODO 要证明在paramSet里
+// 	// paramInParamSetFacts := insKnownUniFact.ParamInParamSetFacts(uniConMap)
+// 	paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
+// 	setFactSatisfied := true
+// 	for _, paramInParamSetFact := range paramInParamSetFacts {
+// 		verRet := ver.VerFactStmt(paramInParamSetFact, state)
+// 		if verRet.IsErr() {
+// 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, paramInParamSetFact.String(), glob.BuiltinLine0, []string{verRet.String()})
+// 		}
+// 		if verRet.IsUnknown() {
+// 			setFactSatisfied = false
+// 			break
+// 		}
+// 	}
 
-	// 	if !setFactSatisfied {
-	// 		continue
-	// 	}
+// 	if !setFactSatisfied {
+// 		continue
+// 	}
 
-	// 	// ok, err = ver.proveUniFactDomFacts(insKnownUniFact.DomFacts, state)
-	// 	verRet := ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
-	// 	if verRet.IsErr() {
-	// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{verRet.String()})
-	// 	}
-	// 	if verRet.IsUnknown() {
-	// 		continue
-	// 	}
+// 	// ok, err = ver.proveUniFactDomFacts(insKnownUniFact.DomFacts, state)
+// 	verRet := ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, state)
+// 	if verRet.IsErr() {
+// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{verRet.String()})
+// 	}
+// 	if verRet.IsUnknown() {
+// 		continue
+// 	}
 
-	// 	instantiatedLogicExpr, err := randomizedOrStmt.InstantiateFact(uniConMap)
-	// 	if err != nil {
-	// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
-	// 	}
-	// 	instantiatedLogicExprAsKnownSpecFact, ok := instantiatedLogicExpr.(*ast.OrStmt)
-	// 	if !ok {
-	// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{"instantiatedLogicExpr is not a KnownSpecFact_InLogicExpr"})
-	// 	}
+// 	instantiatedLogicExpr, err := randomizedOrStmt.InstantiateFact(uniConMap)
+// 	if err != nil {
+// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{err.Error()})
+// 	}
+// 	instantiatedLogicExprAsKnownSpecFact, ok := instantiatedLogicExpr.(*ast.OrStmt)
+// 	if !ok {
+// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{"instantiatedLogicExpr is not a KnownSpecFact_InLogicExpr"})
+// 	}
 
-	// 	verRet = ver.verify_specFact_when_given_orStmt_is_true(stmt, instantiatedLogicExprAsKnownSpecFact, knownFactUnderLogicExpr.Index, state)
-	// 	if verRet.IsErr() {
-	// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{verRet.String()})
-	// 	}
+// 	verRet = ver.verify_specFact_when_given_orStmt_is_true(stmt, instantiatedLogicExprAsKnownSpecFact, knownFactUnderLogicExpr.Index, state)
+// 	if verRet.IsErr() {
+// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{verRet.String()})
+// 	}
 
-	// 	if verRet.IsTrue() {
-	// 		if state.WithMsg {
-	// 			return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{knownFactUnderLogicExpr.UniFact.String()})
-	// 		}
-	// 		return glob.NewEmptyVerRetTrue()
-	// 	}
-	// }
+// 	if verRet.IsTrue() {
+// 		if state.WithMsg {
+// 			return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), knownFactUnderLogicExpr.SpecFact.GetLine(), []string{knownFactUnderLogicExpr.UniFact.String()})
+// 		}
+// 		return glob.NewEmptyVerRetTrue()
+// 	}
+// }
 
-	// return glob.NewEmptyVerRetUnknown()
-}
+// return glob.NewEmptyVerRetUnknown()
+// }

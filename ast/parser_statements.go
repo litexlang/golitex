@@ -2941,42 +2941,42 @@ func (p *TbParser) fact(tb *tokenBlock) (FactStmt, error) {
 	}
 }
 
-func (p *TbParser) skipDollarAtomParamsAsString(tb *tokenBlock) (Atom, []string, error) {
-	err := tb.header.skip(glob.KeySymbolDollar)
-	if err != nil {
-		return "", nil, err
-	}
+// func (p *TbParser) skipDollarAtomParamsAsString(tb *tokenBlock) (Atom, []string, error) {
+// 	err := tb.header.skip(glob.KeySymbolDollar)
+// 	if err != nil {
+// 		return "", nil, err
+// 	}
 
-	propName, err := p.notNumberAtom(tb)
-	if err != nil {
-		return "", nil, err
-	}
+// 	propName, err := p.notNumberAtom(tb)
+// 	if err != nil {
+// 		return "", nil, err
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return "", nil, err
-	}
+// 	err = tb.header.skip(glob.KeySymbolLeftBrace)
+// 	if err != nil {
+// 		return "", nil, err
+// 	}
 
-	params := []string{}
-	for !tb.header.is(glob.KeySymbolRightBrace) {
-		param, err := tb.header.next()
-		if err != nil {
-			return "", nil, err
-		}
-		params = append(params, param)
+// 	params := []string{}
+// 	for !tb.header.is(glob.KeySymbolRightBrace) {
+// 		param, err := tb.header.next()
+// 		if err != nil {
+// 			return "", nil, err
+// 		}
+// 		params = append(params, param)
 
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		}
-	}
+// 		if tb.header.is(glob.KeySymbolComma) {
+// 			tb.header.skip(glob.KeySymbolComma)
+// 		}
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return "", nil, err
-	}
+// 	err = tb.header.skip(glob.KeySymbolRightBrace)
+// 	if err != nil {
+// 		return "", nil, err
+// 	}
 
-	return propName, params, nil
-}
+// 	return propName, params, nil
+// }
 
 func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (SpecificFactStmt, error) {
 	err := tb.header.skip(glob.KeywordExist)
