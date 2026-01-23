@@ -95,7 +95,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 	case *ast.EvalStmt:
 		execRet = exec.evalStmt(stmt)
 	case *ast.HaveFnEqualCaseByCaseStmt:
-		execRet = exec.haveFnEqualCaseByCaseStmt(stmt)
+		execRet = exec.haveFnEqualCaseByCaseStmt2(stmt)
 	case *ast.ProveCaseByCaseStmt:
 		execRet = exec.proveCaseByCaseStmt(stmt)
 	case *ast.ImportDirStmt:
