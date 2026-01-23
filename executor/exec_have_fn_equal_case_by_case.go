@@ -32,7 +32,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_Verify(stmt *ast.HaveFnEqualCase
 		return glob.ErrRet(execState.String())
 	}
 
-	verRet := exec.haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNoOverlap(stmt)
+	verRet := exec.haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNoOverlap_ReturnValueInRetSet(stmt)
 	if verRet.IsNotTrue() {
 		return verRet
 	}
@@ -40,7 +40,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_Verify(stmt *ast.HaveFnEqualCase
 	return glob.NewEmptyStmtTrue().AddVerifyProcesses(verifyProcessMsgs)
 }
 
-func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNoOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
+func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNoOverlap_ReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -61,7 +61,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNo
 
 	// 证明 cases 互相不冲突
 	for i := range len(stmt.CaseByCaseFacts) {
-		execState = exec.haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap(stmt, i)
+		execState = exec.haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap_ReturnValueInRetSet(stmt, i)
 		if execState.IsNotTrue() {
 			return glob.ErrRet(execState.String())
 		}
@@ -70,7 +70,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNo
 	return exec.NewTrueStmtRet(orFact)
 }
 
-func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap(stmt *ast.HaveFnEqualCaseByCaseStmt, index int) *glob.StmtRet {
+func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap_ReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, index int) *glob.StmtRet {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -92,6 +92,21 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap(stmt *ast.H
 				return glob.ErrRet(execState.String())
 			}
 		}
+	}
+
+	// 跑case proof
+	for _, curStmt := range stmt.Proofs[index] {
+		ret := exec.Stmt(curStmt)
+		if ret.IsNotTrue() {
+			return ret
+		}
+	}
+
+	// 返回值在 retSet里
+	inFact := ast.NewInFactWithObj(stmt.CaseByCaseEqualTo[index], stmt.RetSet)
+	ret = exec.factStmt(inFact)
+	if ret.IsNotTrue() {
+		return ret
 	}
 
 	return exec.NewTrueStmtRet(stmt)

@@ -1143,4 +1143,7 @@ know:
 	forall x Q_pos: x $in Q, x > 0, x $in R
 	forall x Q_neg: x $in Q, x < 0, x $in R
 	forall x Q_not0: x $in Q, x != 0, x $in R
+
+know:
+	forall x, y R: x < y or x >= y
 `
