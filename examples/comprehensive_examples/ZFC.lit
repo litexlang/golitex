@@ -75,8 +75,11 @@ prove union({1, 2}, {3, 4}) = {1, 2, 3, 4}:
 # 6. Axiom schema of replacement: the image of a set under any definable function will also fall inside a set
 
 # If A $subset_of X, then if f $in fn(X)Y, f $in fn(A)Y is true by definition.
+prop has_preimage(X set, Y set, f fn(X) Y, y Y):
+    exist x X st f(x) = y
+
 forall X, Y set, f fn(X) Y:
-    {y Y: exist x X st f(x) = y} $subset_of Y
+    {y Y: $has_preimage(X, Y, f, y)} $subset_of Y
 
 # 7. Axiom of infinity: there exists an infinite set
 

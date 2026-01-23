@@ -15,14 +15,19 @@
 package litex_executor
 
 import (
-	"fmt"
-
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
 )
 
 func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
+	for i := range len(stmt.Facts) {
+		ret := ver.verOrStmtByAssumeAllFactsAreFalseToProveTheRemainingOneIsTrue(stmt, i, state)
+		if ret.IsTrue() || ret.IsErr() {
+			return ret
+		}
+	}
+
 	ret := ver.verOrStmt_UseOrMem(stmt, state)
 	if ret.IsTrue() || ret.IsErr() {
 		return ret
@@ -92,7 +97,6 @@ func (ver *Verifier) useKnownOrFactToCheckGivenOrFact(given *ast.OrStmt, known *
 
 		// 生成 givenFacts 的所有排列
 		permutations := generatePermutations(givenFacts)
-		fmt.Printf("Key '%s': Generated %d permutations for %d facts\n", key, len(permutations), len(givenFacts))
 		for _, perm := range permutations {
 			ret := ver.matchSpecFactWhenCheckOr(knownFacts, perm, state)
 			if ret.IsTrue() {
@@ -198,4 +202,26 @@ func generatePermutations(facts []ast.SpecificFactStmt) [][]ast.SpecificFactStmt
 	}
 
 	return result
+}
+
+func (ver *Verifier) verOrStmtByAssumeAllFactsAreFalseToProveTheRemainingOneIsTrue(stmt *ast.OrStmt, index int, state *VerState) *glob.VerRet {
+	ver.newEnv()
+	defer ver.deleteEnv()
+
+	for i := range len(stmt.Facts) {
+		if i == index {
+			continue
+		}
+		ret := ver.Env.NewFactWithCheckingNameDefined(stmt.Facts[i])
+		if ret.IsNotTrue() {
+			return glob.NewEmptyVerRetUnknown().AddUnknown(ret.String())
+		}
+	}
+
+	ret := ver.VerFactStmt(stmt.Facts[index], state)
+	if ret.IsNotTrue() {
+		return glob.NewEmptyVerRetUnknown().AddUnknown(ret.String())
+	}
+
+	return glob.NewEmptyVerRetTrue()
 }
