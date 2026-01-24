@@ -644,7 +644,7 @@ func (s *UniFactWithIffStmt) ToLatexString() string {
 }
 
 func (s *ClaimProveByContradictionStmt) ToLatexString() string {
-	return claimProveBodyToLatexString(s.ClaimProveStmt.ToCheckFact, s.ClaimProveStmt.Proofs, false)
+	return claimProveBodyToLatexString(s.ToCheckFact, s.Proofs, false)
 }
 
 func (s *ClaimImplicationStmt) ToLatexString() string {

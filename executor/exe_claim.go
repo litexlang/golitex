@@ -24,7 +24,7 @@ func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByC
 	innerStmtRets := []*glob.StmtRet{}
 
 	// know reverse of
-	facts := stmt.ClaimProveStmt.ToCheckFact.(ast.Spec_OrFact).ReverseIsTrue()
+	facts := stmt.ToCheckFact.(ast.Spec_OrFact).ReverseIsTrue()
 	for _, curFact := range facts {
 		execState := exec.Env.NewFactWithCheckingNameDefined(curFact)
 		if execState.IsErr() {
@@ -32,8 +32,8 @@ func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByC
 		}
 	}
 
-	for i := 0; i < len(stmt.ClaimProveStmt.Proofs)-1; i++ {
-		curStmt := stmt.ClaimProveStmt.Proofs[i]
+	for i := 0; i < len(stmt.Proofs)-1; i++ {
+		curStmt := stmt.Proofs[i]
 		execState := exec.Stmt(curStmt)
 		if execState.IsNotTrue() {
 			return execState.AddError(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
@@ -41,7 +41,7 @@ func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByC
 		innerStmtRets = append(innerStmtRets, execState)
 	}
 
-	lastStmtAsFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(*ast.ImpossibleStmt)
+	lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(*ast.ImpossibleStmt)
 	if !ok {
 		return glob.ErrRet("prove by contradiction only support impossible reversible fact as last statement")
 	}
@@ -67,13 +67,13 @@ func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByC
 
 func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
-	ret := exec.Env.LookUpNamesInFact(stmt.ClaimProveStmt.ToCheckFact, map[string]struct{}{})
+	ret := exec.Env.LookUpNamesInFact(stmt.ToCheckFact, map[string]struct{}{})
 	if ret.IsErr() {
 		ret.AddError("in claim statement")
 		return glob.ErrRet(ret.String())
 	}
 
-	switch stmt.ClaimProveStmt.ToCheckFact.(type) {
+	switch stmt.ToCheckFact.(type) {
 	case ast.Spec_OrFact:
 		return exec.claimReversibleFactByContradiction(stmt)
 	case *ast.UniFactStmt:
@@ -84,7 +84,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 }
 
 func (exec *Executor) claimUniFactByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
-	asUnivFact, ok := stmt.ClaimProveStmt.ToCheckFact.(*ast.UniFactStmt)
+	asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt)
 	if !ok {
 		return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support uni fact"))
 	}
@@ -118,8 +118,8 @@ func (exec *Executor) claimUniFactByContradiction(stmt *ast.ClaimProveByContradi
 	}
 
 	innerStmtRets := []*glob.StmtRet{}
-	for i := 0; i < len(stmt.ClaimProveStmt.Proofs)-1; i++ {
-		curStmt := stmt.ClaimProveStmt.Proofs[i]
+	for i := 0; i < len(stmt.Proofs)-1; i++ {
+		curStmt := stmt.Proofs[i]
 		execState := exec.Stmt(curStmt)
 		if execState.IsNotTrue() {
 			return execState.AddError(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
@@ -128,7 +128,7 @@ func (exec *Executor) claimUniFactByContradiction(stmt *ast.ClaimProveByContradi
 	}
 
 	// 最后一位是impossible stmt
-	lastStmtAsFact, ok := stmt.ClaimProveStmt.Proofs[len(stmt.ClaimProveStmt.Proofs)-1].(*ast.ImpossibleStmt)
+	lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(*ast.ImpossibleStmt)
 	if !ok {
 		return glob.ErrRet("prove by contradiction only support impossible reversible fact as last statement")
 	}
@@ -180,7 +180,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	}
 
 	// 检查 stmt fact 中的所有元素已经定义过了
-	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.ClaimProveStmt.ToCheckFact)
+	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.ToCheckFact)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
 	}
