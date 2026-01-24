@@ -1089,7 +1089,7 @@ func (p *TbParser) claimStmt(tb *tokenBlock) (Stmt, error) {
 	if isProve {
 		return NewClaimProveStmt(toCheck, proof, tb.line), nil
 	} else {
-		return NewClaimProveByContradictionStmt(NewClaimProveStmt(toCheck, proof, tb.line), tb.line), nil
+		return NewClaimProveByContradictionStmt(toCheck, proof, tb.line), nil
 	}
 }
 
@@ -2080,7 +2080,7 @@ func (p *TbParser) proveByContradictionStmt(tb *tokenBlock) (Stmt, error) {
 		}
 		proofs = append(proofs, curStmt)
 	}
-	return NewClaimProveByContradictionStmt(NewClaimProveStmt(toCheck, proofs, tb.line), tb.line), nil
+	return NewClaimProveByContradictionStmt(toCheck, proofs, tb.line), nil
 }
 
 func (p *TbParser) doNothingStmt(tb *tokenBlock) (Stmt, error) {

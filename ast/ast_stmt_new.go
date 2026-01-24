@@ -40,8 +40,8 @@ func NewImplyStmt(domFacts []Spec_OrFact, thenFacts []Spec_OrFact, line uint) *I
 	return &InferStmt{domFacts, thenFacts, line}
 }
 
-func NewClaimProveByContradictionStmt(claim *ClaimProveStmt, line uint) *ClaimProveByContradictionStmt {
-	return &ClaimProveByContradictionStmt{claim, line}
+func NewClaimProveByContradictionStmt(toCheckFact FactStmt, proofs []Stmt, line uint) *ClaimProveByContradictionStmt {
+	return &ClaimProveByContradictionStmt{toCheckFact, proofs, line}
 }
 
 func NewClaimProveStmt(toCheckFact FactStmt, proofs []Stmt, line uint) *ClaimProveStmt {
