@@ -405,7 +405,7 @@ func (stmt *PureSpecificFactStmt) ExistStFactToPropNameExistParamsParamsAndTrueS
 // }
 
 func (stmt *HaveObjStStmt) ToTruePurePropExistStFact() *ExistSpecificFactStmt {
-	return NewExistSpecificFactStmt(true, stmt.ObjNames, stmt.ObjSets, NewPureSpecificFactStmt(true, stmt.Fact.PropName, stmt.Fact.Params, stmt.Line), stmt.Line)
+	return NewExistSpecificFactStmt(true, stmt.ObjNames, stmt.ObjSets, NewPureSpecificFactStmt(stmt.Fact.IsTrue, stmt.Fact.PropName, stmt.Fact.Params, stmt.Line), stmt.Line)
 }
 
 func (stmt *WitnessStmt) ToTrueExistStFact() *ExistSpecificFactStmt {
