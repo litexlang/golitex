@@ -360,11 +360,15 @@ func (stmt *ImpossibleStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 }
 
 func (stmt *ClaimProveByContradictionStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newClaimProveStmt, err := stmt.ClaimProveStmt.Instantiate(uniMap)
+	newToCheckFact, err := stmt.ToCheckFact.InstantiateFact(uniMap)
 	if err != nil {
 		return nil, err
 	}
-	return NewClaimProveByContradictionStmt(newClaimProveStmt.(*ClaimProveStmt), stmt.Line), nil
+	newProofs, err := stmt.Proofs.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewClaimProveByContradictionStmt(newToCheckFact, newProofs, stmt.Line), nil
 }
 
 func (stmt *ClaimImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

@@ -324,7 +324,7 @@ func fnDefStmtStringGivenKw(kw string, f *AnonymousFn, name string) string {
 }
 
 func (f *ClaimProveByContradictionStmt) String() string {
-	return ClaimProve_ClaimProveByContradiction(glob.KeywordContra, f.ClaimProveStmt.ToCheckFact, f.ClaimProveStmt.Proofs)
+	return ClaimProve_ClaimProveByContradiction(glob.KeywordContra, f.ToCheckFact, f.Proofs)
 }
 
 func (f *ClaimProveStmt) String() string {
