@@ -85,7 +85,7 @@ type ClaimProveStmt struct {
 }
 
 type ClaimProveByContradictionStmt struct {
-	ToCheckFact FactStmt
+	ToCheckFact Spec_OrFact
 	Proofs      StmtSlice
 
 	Line uint

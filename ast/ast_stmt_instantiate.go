@@ -368,7 +368,7 @@ func (stmt *ClaimProveByContradictionStmt) Instantiate(uniMap map[string]Obj) (S
 	if err != nil {
 		return nil, err
 	}
-	return NewClaimProveByContradictionStmt(newToCheckFact, newProofs, stmt.Line), nil
+	return NewClaimProveByContradictionStmt(newToCheckFact.(Spec_OrFact), newProofs, stmt.Line), nil
 }
 
 func (stmt *ClaimImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
