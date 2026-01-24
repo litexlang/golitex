@@ -76,81 +76,79 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 	switch stmt.ToCheckFact.(type) {
 	case ast.Spec_OrFact:
 		return exec.claimReversibleFactByContradiction(stmt)
-	case *ast.UniFactStmt:
-		return exec.claimUniFactByContradiction(stmt)
 	default:
 		return glob.ErrRet(fmt.Sprintf("claim prove by contradiction only support reversible fact or forall fact"))
 	}
 }
 
-func (exec *Executor) claimUniFactByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
-	asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt)
-	if !ok {
-		return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support uni fact"))
-	}
+// func (exec *Executor) claimUniFactByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
+// 	asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt)
+// 	if !ok {
+// 		return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support uni fact"))
+// 	}
 
-	var thenFact ast.Spec_OrFact
-	if len(asUnivFact.ThenFacts) == 1 {
-		thenFact, ok = asUnivFact.ThenFacts[0].(ast.Spec_OrFact)
-		if !ok {
-			return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support forall fact with one then fact"))
-		}
-	} else {
-		return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support forall fact with one then fact"))
-	}
+// 	var thenFact ast.Spec_OrFact
+// 	if len(asUnivFact.ThenFacts) == 1 {
+// 		thenFact, ok = asUnivFact.ThenFacts[0].(ast.Spec_OrFact)
+// 		if !ok {
+// 			return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support forall fact with one then fact"))
+// 		}
+// 	} else {
+// 		return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support forall fact with one then fact"))
+// 	}
 
-	exec.NewEnv()
-	defer func() {
-		exec.deleteEnv()
-	}()
+// 	exec.NewEnv()
+// 	defer func() {
+// 		exec.deleteEnv()
+// 	}()
 
-	execState := exec.declareParamsAndDomFactsInUniFact(asUnivFact)
-	if execState.IsNotTrue() {
-		return execState
-	}
+// 	execState := exec.declareParamsAndDomFactsInUniFact(asUnivFact)
+// 	if execState.IsNotTrue() {
+// 		return execState
+// 	}
 
-	reversedThenFact := thenFact.ReverseIsTrue()
-	for _, curFact := range reversedThenFact {
-		execState := exec.Env.NewFactWithCheckingNameDefined(curFact)
-		if execState.IsNotTrue() {
-			return execState
-		}
-	}
+// 	reversedThenFact := thenFact.ReverseIsTrue()
+// 	for _, curFact := range reversedThenFact {
+// 		execState := exec.Env.NewFactWithCheckingNameDefined(curFact)
+// 		if execState.IsNotTrue() {
+// 			return execState
+// 		}
+// 	}
 
-	innerStmtRets := []*glob.StmtRet{}
-	for i := 0; i < len(stmt.Proofs)-1; i++ {
-		curStmt := stmt.Proofs[i]
-		execState := exec.Stmt(curStmt)
-		if execState.IsNotTrue() {
-			return execState.AddError(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
-		}
-		innerStmtRets = append(innerStmtRets, execState)
-	}
+// 	innerStmtRets := []*glob.StmtRet{}
+// 	for i := 0; i < len(stmt.Proofs)-1; i++ {
+// 		curStmt := stmt.Proofs[i]
+// 		execState := exec.Stmt(curStmt)
+// 		if execState.IsNotTrue() {
+// 			return execState.AddError(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
+// 		}
+// 		innerStmtRets = append(innerStmtRets, execState)
+// 	}
 
-	// 最后一位是impossible stmt
-	lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(*ast.ImpossibleStmt)
-	if !ok {
-		return glob.ErrRet("prove by contradiction only support impossible reversible fact as last statement")
-	}
+// 	// 最后一位是impossible stmt
+// 	lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(*ast.ImpossibleStmt)
+// 	if !ok {
+// 		return glob.ErrRet("prove by contradiction only support impossible reversible fact as last statement")
+// 	}
 
-	// 最后一位既对又错
-	execState = exec.factStmt(lastStmtAsFact.Fact)
-	if execState.IsNotTrue() {
-		return execState
-	}
-	innerStmtRets = append(innerStmtRets, execState)
+// 	// 最后一位既对又错
+// 	execState = exec.factStmt(lastStmtAsFact.Fact)
+// 	if execState.IsNotTrue() {
+// 		return execState
+// 	}
+// 	innerStmtRets = append(innerStmtRets, execState)
 
-	// last fact is reversible
-	reversedLastFact := lastStmtAsFact.Fact.ReverseIsTrue()
-	for _, curFact := range reversedLastFact {
-		execState := exec.factStmt(curFact)
-		if execState.IsNotTrue() {
-			return execState
-		}
-	}
+// 	// last fact is reversible
+// 	reversedLastFact := lastStmtAsFact.Fact.ReverseIsTrue()
+// 	for _, curFact := range reversedLastFact {
+// 		execState := exec.factStmt(curFact)
+// 		if execState.IsNotTrue() {
+// 			return execState
+// 		}
+// 	}
 
-	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
-}
+// 	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
+// }
 
 func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet {
 	state := exec.claimStmtProve(stmt)
