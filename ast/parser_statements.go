@@ -1089,7 +1089,11 @@ func (p *TbParser) claimStmt(tb *tokenBlock) (Stmt, error) {
 	if isProve {
 		return NewClaimProveStmt(toCheck, proof, tb.line), nil
 	} else {
-		return NewClaimProveByContradictionStmt(toCheck, proof, tb.line), nil
+		if asOrFact, ok := toCheck.(Spec_OrFact); ok {
+			return NewClaimProveByContradictionStmt(asOrFact, proof, tb.line), nil
+		} else {
+			return nil, fmt.Errorf("expect reversible fact in claim contra")
+		}
 	}
 }
 
@@ -2080,7 +2084,11 @@ func (p *TbParser) proveByContradictionStmt(tb *tokenBlock) (Stmt, error) {
 		}
 		proofs = append(proofs, curStmt)
 	}
-	return NewClaimProveByContradictionStmt(toCheck, proofs, tb.line), nil
+	if asOrFact, ok := toCheck.(Spec_OrFact); ok {
+		return NewClaimProveByContradictionStmt(asOrFact, proofs, tb.line), nil
+	} else {
+		return nil, fmt.Errorf("expect reversible fact in claim contra")
+	}
 }
 
 func (p *TbParser) doNothingStmt(tb *tokenBlock) (Stmt, error) {
