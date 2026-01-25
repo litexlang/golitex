@@ -235,7 +235,7 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.EnvMemory, stmt ast.Sp
 	// return ver.iterate_KnownSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, state)
 	if _, ok := stmt.(*ast.PureSpecificFactStmt); ok {
 		// return ver.iterate_KnownPureSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, ver.matchUniFactParamsWithSpecFactParams, state)
-		return ver.iterate_KnownPureSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, ver.matchUniFactParamsWithSpecFactParams, state)
+		return ver.iterate_KnownPureSpecInUniFacts_applyMatch(stmt.(*ast.PureSpecificFactStmt), searchedSpecFacts, ver.matchUniFactParamsWithSpecFactParams, state)
 	} else {
 		// return ver.iterate_KnownExistSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, state)
 		return ver.MatchExistFactUseForallMemory(stmt.(*ast.ExistSpecificFactStmt), searchedSpecFacts, state)
@@ -557,12 +557,12 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt ast.Specific
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch(stmtToMatch ast.SpecificFactStmt, knownFacts []env.KnownSpecFact_InUniFact, getOkUniConMapErr func([]ast.Obj, []string, []ast.Obj) (bool, map[string]ast.Obj, error), state *VerState) *glob.VerRet {
+func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch(stmtToMatch *ast.PureSpecificFactStmt, knownFacts []env.KnownSpecFact_InUniFact, getOkUniConMapErr func([]ast.Obj, []string, []ast.Obj) (bool, map[string]ast.Obj, error), state *VerState) *glob.VerRet {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		knownFact_paramProcessed := knownFacts[i]
 		// 这里需要用的是 instantiated 的 knownFact
 
-		ok, uniConMap, err := getOkUniConMapErr(knownFact_paramProcessed.SpecFact.(*ast.PureSpecificFactStmt).Params, knownFact_paramProcessed.UniFact.Params, stmtToMatch.(*ast.PureSpecificFactStmt).Params)
+		ok, uniConMap, err := getOkUniConMapErr(knownFact_paramProcessed.SpecFact.(*ast.PureSpecificFactStmt).Params, knownFact_paramProcessed.UniFact.Params, stmtToMatch.Params)
 		if err != nil {
 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
 		}
