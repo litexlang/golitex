@@ -1157,4 +1157,11 @@ know:
 know:
 	forall a Z, b Z: a < b + 1 => a < b or a = b
 	forall a, b R: a <= b => a < b or a = b
+
+know:
+	# 把这个删了，就会有证明三角不等式的bug。打断点在ver_SpecMem的 ok, uniConMap, err := getOkUniConMapErr(knownFact_paramProcessed.SpecFact.(*ast.PureSpecificFactStmt).Params, knownFact_paramProcessed.UniFact.Params, stmtToMatch.Params) 上面，让它在565行的 i == 50 && string(stmtToMatch.PropName) == "<" 触发。然后在562行的knownFact_paramProcessed := knownFacts[i]上面 i == 5 && string(stmtToMatch.PropName) == "<="
+	# 是 用 forall a, b R: a <= b <=> a < b or a = b证明的时候有问题
+	# 在证明的时候用 a < b 默认是错的，然后要证明 a= b 的时候出问题
+	# 然后在 verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem 里面ver.verEqualSpecMem(left, right, state) 出问题。
+	forall a, b R, c R_pos: a <= b => a <= b + c
 `
