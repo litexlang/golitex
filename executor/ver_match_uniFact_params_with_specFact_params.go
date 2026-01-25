@@ -41,11 +41,14 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParams(knownFcs []ast.Obj, fr
 		}
 	}
 
+	finalRoundNoMsgReqOk := FinalRoundNoMsg_ReqOk()
+
 	// 所有自由变量对应的instVar必须相等
 	for _, instVars := range matchedMap {
 		firstVar := instVars[0]
 		for j := 1; j < len(instVars); j++ {
-			verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewEqualFact(firstVar, instVars[j]), FinalRoundNoMsg().CopyAndReqOkToTrue())
+			equalFact := ast.NewEqualFact(firstVar, instVars[j])
+			verRet := ver.verTrueEqualFactAndCheckFnReq(equalFact, finalRoundNoMsgReqOk)
 			if verRet.IsErr() {
 				return false, nil, err
 			}
