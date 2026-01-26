@@ -339,7 +339,7 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.
 	for _, instVars := range matchedMap {
 		firstVar := instVars[0]
 		for j := 1; j < len(instVars); j++ {
-			verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewEqualFact(firstVar, instVars[j]), FinalRoundNoMsg().CopyAndReqOkToTrue())
+			verRet := ver.VerFactStmt(ast.NewEqualFact(firstVar, instVars[j]), FinalRoundNoMsg().CopyAndReqOkToTrue())
 			if verRet.IsNotTrue() {
 				return false, nil, err
 			}
@@ -366,7 +366,7 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.
 			return false, nil, err
 		}
 
-		verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewEqualFact(instKnownFreeVar, fcPair.givenFc), FinalRoundNoMsg().CopyAndReqOkToTrue())
+		verRet := ver.VerFactStmt(ast.NewEqualFact(instKnownFreeVar, fcPair.givenFc), FinalRoundNoMsg().CopyAndReqOkToTrue())
 
 		// REMARK
 		// 注：这里err != nil 也是返回 false, 因为有可能会把 sqrt(x) ^ 2 = x 拿来证明 y = z，但是 匹配的时候，可能会导致 x 是 -1 之类的。如果error了，其实就是说明没证明通过
