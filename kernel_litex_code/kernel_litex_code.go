@@ -1134,6 +1134,7 @@ know forall x R: x * x >=0, 0 <= x * x
 
 know forall x, y, z Z, d R: y != 0, (x/y)^z = d => x^z = d * y^z
 
+# 貌似把下面这know注释掉可以让整个系统快20%？？
 know:
 	forall x R_pos: x $in R, x > 0
 	forall x R_neg: x $in R, x < 0
