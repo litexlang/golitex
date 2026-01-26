@@ -1064,6 +1064,10 @@ func (p *TbParser) claimStmt(tb *tokenBlock) (Stmt, error) {
 		if !isProve {
 			return nil, fmt.Errorf("contra is not supported for iff statement")
 		} else {
+			if len(tb.body) < 3 {
+				return nil, fmt.Errorf("expect two proofs after claim forall <=> type statement")
+			}
+
 			err := tb.body[2].header.skipKwAndColonCheckEOL(glob.KeywordProve)
 			if err != nil {
 				return nil, ErrInLine(err, tb)

@@ -1,1 +1,27 @@
-forall x Z: (7 * x + 1) % 7 = ((7 * x) % 7 + 1 % 7) % 7 = (0 + 1) % 7 = 1
+#forall x Z: (7 * x + 1) % 7 = ((7 * x) % 7 + 1 % 7) % 7 = (0 + 1) % 7 = 1
+
+prop dvd(x, y Z):
+    dom:
+        x != 0
+    <=>:
+        y % x = 0
+
+prop is_prime(p N_pos):
+    forall n N_pos:
+        n >= 2
+        =>:
+            p % n != 0
+
+claim:
+    forall p, n N_pos:
+        $is_prime(p)
+        n % p = 0
+        <=>: # panic: runtime error: index out of range [2] with length 2
+            n^2 % p = 0
+    prove:
+        know:
+            forall p, n N_pos:
+                $is_prime(p)
+                n % p = 0
+                <=>:
+                    n^2 % p = 0

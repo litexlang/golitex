@@ -26,9 +26,35 @@ func (ver *Verifier) matchPureFactInKnownUniFactWithGiven(knownUniFact *ast.UniF
 			if err != nil {
 				return glob.NewEmptyVerRetUnknown()
 			}
-			ret := ver.VerFactStmt(instDomFact, state)
-			if ret.IsNotTrue() {
-				return glob.NewEmptyVerRetUnknown()
+
+			// switch asFact := instDomFact.(type) {
+			// case ast.SpecificFactStmt:
+			// 	nextState := NewVerState(2, false, true)
+			// 	ret := ver.VerFactStmt(asFact, nextState)
+			// 	if ret.IsNotTrue() {
+			// 		return glob.NewEmptyVerRetUnknown()
+			// 	}
+			// default:
+			// 	ret := ver.VerFactStmt(asFact, state)
+			// 	if ret.IsNotTrue() {
+			// 		return glob.NewEmptyVerRetUnknown()
+			// 	}
+			// }
+
+			if asPureFact, ok := instDomFact.(*ast.PureSpecificFactStmt); ok {
+				if asPureFact.PropName == glob.KeySymbolEqual {
+					// nextState := state.GetFinalRound()
+					nextState := NewVerState(2, false, true)
+					ret := ver.VerFactStmt(instDomFact, nextState)
+					if ret.IsNotTrue() {
+						return glob.NewEmptyVerRetUnknown()
+					}
+				}
+			} else {
+				ret := ver.VerFactStmt(instDomFact, state)
+				if ret.IsNotTrue() {
+					return glob.NewEmptyVerRetUnknown()
+				}
 			}
 		}
 
