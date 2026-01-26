@@ -4066,10 +4066,6 @@ func (p *TbParser) witnessStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	if tb.header.is(glob.KeySymbolDollar) {
-		return p.witnessShortStmt(tb)
-	}
-
 	equalTos := []Obj{}
 	for !tb.header.is(glob.KeySymbolColon) {
 		equalTo, err := p.Obj(tb)
@@ -4144,34 +4140,6 @@ func (p *TbParser) haveShortStmt(tb *tokenBlock) (*HaveShortStmt, error) {
 	}
 
 	return NewHaveShortStmt(specFact, tb.line), nil
-}
-
-func (p *TbParser) witnessShortStmt(tb *tokenBlock) (*WitnessShortStmt, error) {
-	// Parse specFact like $p(1, 2)
-	specFact, err := p.pureFuncSpecFact(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	var proofs []Stmt
-
-	// Check for optional proofs
-	if tb.header.is(glob.KeySymbolColon) {
-		err = tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		proofs, err = p.parseTbBodyAndGetStmts(tb.body)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-	} else if !tb.header.ExceedEnd() {
-		// Unexpected token
-		return nil, ErrInLine(fmt.Errorf("unexpected token after witness $p(...), expected ':' or end of statement"), tb)
-	}
-
-	return NewWitnessShortStmt(specFact, proofs, tb.line), nil
 }
 
 func (p *TbParser) inferTemplateStmt(tb *tokenBlock) (*InferTemplateStmt, error) {

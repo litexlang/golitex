@@ -428,12 +428,12 @@ type WitnessStmt struct {
 	Line uint
 }
 
-type WitnessShortStmt struct {
-	SpecFact *PureSpecificFactStmt
-	Proofs   StmtSlice
+// type WitnessShortStmt struct {
+// 	SpecFact *PureSpecificFactStmt
+// 	Proofs   StmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type InferStmt struct {
 	DomFacts  ReversibleFacts

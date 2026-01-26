@@ -1174,24 +1174,6 @@ func (stmt *HaveShortStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewHaveShortStmt(newSpecFact.(*PureSpecificFactStmt), stmt.Line), nil
 }
 
-func (stmt *WitnessShortStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newSpecFact, err := stmt.SpecFact.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-
-	newProofs := make(StmtSlice, len(stmt.Proofs))
-	for i, proof := range stmt.Proofs {
-		instProof, err := proof.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newProofs[i] = instProof
-	}
-
-	return NewWitnessShortStmt(newSpecFact.(*PureSpecificFactStmt), newProofs, stmt.Line), nil
-}
-
 func (stmt *WitnessStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	panic("TODO: Implement ProveExistStmt Instantiate")
 }
