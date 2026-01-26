@@ -613,3 +613,41 @@ func (envMgr *EnvMgr) AnonymousFnToInstFnTemplate(objFnTypeT *ast.FnObj) (*ast.A
 
 	return ast.NewFnTStruct(randomParams, paramSets, retSet, []ast.FactStmt{}, []ast.FactStmt{}, glob.BuiltinLine0), true
 }
+
+func (envMgr *EnvMgr) GetUniFactFactFreeParamsNotConflictWithDefinedParams(fact *ast.UniFactStmt) *ast.UniFactStmt {
+	uniMap := map[string]ast.Obj{}
+	newFreeParams := []string{}
+	moreUnAvailableParams := map[string]struct{}{}
+
+	updated := false
+
+	for _, freeParam := range fact.Params {
+		if envMgr.IsNameUnavailable(freeParam, moreUnAvailableParams).IsNotTrue() {
+			noConflictedParam := envMgr.GenerateUndeclaredRandomName()
+			newFreeParams = append(newFreeParams, noConflictedParam)
+			moreUnAvailableParams[noConflictedParam] = struct{}{}
+			uniMap[freeParam] = ast.Atom(noConflictedParam)
+		} else {
+			newFreeParams = append(newFreeParams, freeParam)
+			moreUnAvailableParams[freeParam] = struct{}{}
+		}
+	}
+
+	if !updated {
+		return fact
+	} else {
+		curUniMap := map[string]ast.Obj{}
+		newParamSets := []ast.Obj{}
+		for i, freeParam := range fact.Params {
+			paramSet, _ := fact.ParamSets[i].Instantiate(curUniMap)
+			newParamSets = append(newParamSets, paramSet)
+			if freeParamNewParam, ok := uniMap[freeParam]; ok {
+				curUniMap[freeParam] = freeParamNewParam
+			}
+		}
+		newDomFacts, _ := fact.DomFacts.InstantiateFact(uniMap)
+		newThenFacts, _ := fact.ThenFacts.InstantiateFact(uniMap)
+
+		return ast.NewUniFact(newFreeParams, newParamSets, newDomFacts, newThenFacts, glob.BuiltinLine0)
+	}
+}

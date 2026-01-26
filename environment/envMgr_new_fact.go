@@ -99,11 +99,11 @@ func (envMgr *EnvMgr) NewFactWithCheckingNameDefined_UniFact(stmt *ast.UniFactSt
 }
 
 func (envMgr *EnvMgr) newUniFact(stmt *ast.UniFactStmt) *glob.StmtRet {
-	for _, thenStmt := range stmt.ThenFacts {
+	for i, thenStmt := range stmt.ThenFacts {
 		var ret *glob.StmtRet
 		switch asFact := thenStmt.(type) {
 		case ast.SpecificFactStmt:
-			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, asFact)
+			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, i)
 		case *ast.OrStmt:
 			ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
 			// ret = glob.NewEmptyStmtTrue()
@@ -241,8 +241,9 @@ func (envMgr *EnvMgr) newEqualsFact(stmt *ast.EqualsFactStmt) *glob.StmtRet {
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFact ast.SpecificFactStmt) *glob.StmtRet {
-	return envMgr.storeUniFactInMem(thenFact, stmt)
+func (envMgr *EnvMgr) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFactIndex int) *glob.StmtRet {
+	// return envMgr.storeUniFactInMem(thenFact, stmt)
+	return envMgr.CurEnv().KnownFactsStruct.SpecFactInUniFactMem.newFact(thenFactIndex, stmt)
 }
 
 // func (envMgr *EnvMgr) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) *glob.StmtRet {
@@ -275,8 +276,11 @@ func (envMgr *EnvMgr) newUniFact_ThenFactIsUniFactStmt(stmt *ast.UniFactStmt, th
 
 func (envMgr *EnvMgr) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt, thenFact *ast.EqualsFactStmt) *glob.StmtRet {
 	equalFacts := thenFact.ToEqualFacts_PairwiseCombination()
-	for _, equalFact := range equalFacts {
-		ret := envMgr.newUniFact_ThenFactIsSpecFact(stmt, equalFact)
+
+	newUniFact := ast.NewUniFact(stmt.Params, stmt.ParamSets, stmt.DomFacts, equalFacts, stmt.Line)
+
+	for i, _ := range equalFacts {
+		ret := envMgr.newUniFact_ThenFactIsSpecFact(newUniFact, i)
 		if ret.IsErr() {
 			return ret
 		}
@@ -284,9 +288,9 @@ func (envMgr *EnvMgr) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt,
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) storeUniFactInMem(specFact ast.SpecificFactStmt, uniFact *ast.UniFactStmt) *glob.StmtRet {
-	return envMgr.CurEnv().KnownFactsStruct.SpecFactInUniFactMem.newFact(specFact, uniFact)
-}
+// func (envMgr *EnvMgr) storeUniFactInMem(specFact ast.SpecificFactStmt, uniFact *ast.UniFactStmt) *glob.StmtRet {
+// 	return envMgr.CurEnv().KnownFactsStruct.SpecFactInUniFactMem.newFact(specFact, uniFact)
+// }
 
 func (envMgr *EnvMgr) ProveImplyNewThenFactInPropDef(stmt *ast.ProveInferStmt) *glob.StmtRet {
 	specFactAsParams, err := ast.ParamsInSpecFactAreStrings(stmt.SpecFact)

@@ -39,7 +39,7 @@ LoopOverFacts:
 }
 
 func (ver *Verifier) MatchExistSpecificFactWithExistSpecFactInUniFact(given *ast.ExistSpecificFactStmt, knownFact env.KnownSpecFact_InUniFact, verState *VerState) *glob.VerRet {
-	stored := knownFact.SpecFact.(*ast.ExistSpecificFactStmt)
+	stored := knownFact.UniFact.ThenFacts[knownFact.SpecFactIndex].(*ast.ExistSpecificFactStmt)
 
 	if len(stored.ExistFreeParams) != len(given.ExistFreeParams) {
 		return glob.NewEmptyVerRetUnknown()
@@ -53,7 +53,7 @@ func (ver *Verifier) MatchExistSpecificFactWithExistSpecFactInUniFact(given *ast
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	uniMap, _, _, verRet := ver.matchFcInExistFactWithFreeParamsInForallFact(given, knownFact.UniFact.Params, knownFact.SpecFact.(*ast.ExistSpecificFactStmt), verState)
+	uniMap, _, _, verRet := ver.matchFcInExistFactWithFreeParamsInForallFact(given, knownFact.UniFact.Params, knownFact.UniFact.ThenFacts[knownFact.SpecFactIndex].(*ast.ExistSpecificFactStmt), verState)
 	if verRet.IsErr() || verRet.IsUnknown() {
 		return verRet
 	}
