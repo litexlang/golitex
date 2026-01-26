@@ -1,10 +1,5 @@
-prop p(x R)
-prop q(x R)
-prop r(x R)
+prop p(a,b R)
 
-know:
-    $p(1) or $q(1) or $r(2)
-    not $p(1)
-    not $q(1)
+know forall a R: $p(a, a+1)
 
-$q(1) or $r(2) or $p(1)
+$p(1,1+1)

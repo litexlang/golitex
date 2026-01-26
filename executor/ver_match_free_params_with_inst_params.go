@@ -44,6 +44,8 @@ func (ver *Verifier) matchParamsWithFreeParamsWithInstParam(freeParams []string,
 
 func (ver *Verifier) checkEachFreeParamMatchesEqualInstParams(allInstParamsThatAFreeParamMatchMap map[string][]ast.Obj) (bool, map[string]ast.Obj) {
 	retMatchMap := map[string]ast.Obj{}
+	nextState := NewVerState(2, false, false)
+
 	for freeParamName, instParamsMatchFreeParam := range allInstParamsThatAFreeParamMatchMap {
 		if len(instParamsMatchFreeParam) == 0 {
 			continue
@@ -53,7 +55,6 @@ func (ver *Verifier) checkEachFreeParamMatchesEqualInstParams(allInstParamsThatA
 			retMatchMap[freeParamName] = instParamsMatchFreeParam[0]
 		}
 
-		nextState := NewVerState(2, false, false)
 		for i := 1; i < len(instParamsMatchFreeParam); i++ {
 			equalFact := ast.NewEqualFact(instParamsMatchFreeParam[0], instParamsMatchFreeParam[i])
 			ret := ver.VerFactStmt(equalFact, nextState)
@@ -61,6 +62,8 @@ func (ver *Verifier) checkEachFreeParamMatchesEqualInstParams(allInstParamsThatA
 				return false, nil
 			}
 		}
+
+		retMatchMap[freeParamName] = instParamsMatchFreeParam[0]
 	}
 
 	return true, retMatchMap
