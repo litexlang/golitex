@@ -20,6 +20,70 @@ import (
 	"slices"
 )
 
+func (ver *Verifier) matchParamsWithFreeParamsWithInstParam(freeParams []string, knownParams []ast.Obj, givenParams []ast.Obj) (bool, map[string]ast.Obj) {
+	if len(knownParams) != len(givenParams) {
+		return false, nil
+	}
+
+	allInstParamsThatAFreeParamMatchMap := ver.GetAllInstParamsThatFreeParamsMatch(freeParams, knownParams, givenParams)
+
+	ok, freeParamMatchInstParamMap := ver.MakeSureAllInstParamsThatMatchesTheSameFreeParamAreEqual(allInstParamsThatAFreeParamMatchMap)
+	if !ok {
+		return false, nil
+	}
+
+	for i := range len(freeParams) {
+		_, ok := freeParamMatchInstParamMap[freeParams[i]]
+		if !ok {
+			return false, nil
+		}
+	}
+
+	return true, freeParamMatchInstParamMap
+}
+
+func (ver *Verifier) MakeSureAllInstParamsThatMatchesTheSameFreeParamAreEqual(allInstParamsThatAFreeParamMatchMap map[string][]ast.Obj) (bool, map[string]ast.Obj) {
+	retMatchMap := map[string]ast.Obj{}
+	for freeParamName, instParamsMatchFreeParam := range allInstParamsThatAFreeParamMatchMap {
+		if len(instParamsMatchFreeParam) == 0 {
+			continue
+		}
+
+		if len(instParamsMatchFreeParam) == 1 {
+			retMatchMap[freeParamName] = instParamsMatchFreeParam[0]
+		}
+
+		nextState := NewVerState(2, false, false)
+		for i := 1; i < len(instParamsMatchFreeParam); i++ {
+			equalFact := ast.NewEqualFact(instParamsMatchFreeParam[0], instParamsMatchFreeParam[i])
+			ret := ver.VerFactStmt(equalFact, nextState)
+			if ret.IsNotTrue() {
+				return false, nil
+			}
+		}
+	}
+
+	return true, retMatchMap
+}
+
+func (ver *Verifier) GetAllInstParamsThatFreeParamsMatch(freeParams []string, knownParams []ast.Obj, givenParams []ast.Obj) map[string][]ast.Obj {
+	matchMaps := map[string][]ast.Obj{}
+	for _, freeParam := range freeParams {
+		matchMaps[freeParam] = []ast.Obj{}
+	}
+
+	for i := range len(knownParams) {
+		ok, curMatchMap := ver.matchParamWithFreeParamsWithInstParam(freeParams, knownParams[i], givenParams[i])
+		if ok && curMatchMap != nil {
+			for key, value := range curMatchMap {
+				matchMaps[key] = append(matchMaps[key], value)
+			}
+		}
+	}
+
+	return matchMaps
+}
+
 func (ver *Verifier) matchParamWithFreeParamsWithInstParam(freeParams []string, knownParam ast.Obj, givenParam ast.Obj) (bool, map[string]ast.Obj) {
 	switch asKnownParam := knownParam.(type) {
 	case ast.Atom:
@@ -100,43 +164,16 @@ func (ver *Verifier) matchParamWithFreeParamsAsFnObjWithInstParamAsFnObj(freePar
 		return false, nil
 	}
 
-	matchMaps := map[string][]ast.Obj{}
-	for _, freeParam := range freeParams {
-		matchMaps[freeParam] = []ast.Obj{}
-	}
+	allInstParamsThatAFreeParamMatchMap := ver.GetAllInstParamsThatFreeParamsMatch(freeParams, knownParam.Params, givenParam.Params)
 
 	for key, value := range matchMapOfHeads {
-		matchMaps[key] = append(matchMaps[key], value)
+		allInstParamsThatAFreeParamMatchMap[key] = append(allInstParamsThatAFreeParamMatchMap[key], value)
 	}
 
-	for i := range len(knownParam.Params) {
-		ok, curMatchMap := ver.matchParamWithFreeParamsWithInstParam(freeParams, knownParam.Params[i], givenParam.Params[i])
-		if ok && curMatchMap != nil {
-			for key, value := range curMatchMap {
-				matchMaps[key] = append(matchMaps[key], value)
-			}
-		}
+	ok, freeParamMatchInstParamMap := ver.MakeSureAllInstParamsThatMatchesTheSameFreeParamAreEqual(allInstParamsThatAFreeParamMatchMap)
+	if !ok {
+		return false, nil
 	}
 
-	retMatchMap := map[string]ast.Obj{}
-	for freeParamName, instParamsMatchFreeParam := range matchMaps {
-		if len(instParamsMatchFreeParam) == 0 {
-			continue
-		}
-
-		if len(instParamsMatchFreeParam) == 1 {
-			retMatchMap[freeParamName] = instParamsMatchFreeParam[0]
-		}
-
-		nextState := NewVerState(2, false, false)
-		for i := 1; i < len(instParamsMatchFreeParam); i++ {
-			equalFact := ast.NewEqualFact(instParamsMatchFreeParam[0], instParamsMatchFreeParam[i])
-			ret := ver.VerFactStmt(equalFact, nextState)
-			if ret.IsNotTrue() {
-				return false, nil
-			}
-		}
-	}
-
-	return true, retMatchMap
+	return true, freeParamMatchInstParamMap
 }
