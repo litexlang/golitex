@@ -1134,6 +1134,7 @@ know forall x R: x * x >=0, 0 <= x * x
 
 know forall x, y, z Z, d R: y != 0, (x/y)^z = d => x^z = d * y^z
 
+"""
 know:
 	forall x R_pos: x $in R, x > 0
 	forall x R_neg: x $in R, x < 0
@@ -1143,6 +1144,7 @@ know:
 	forall x Q_pos: x $in Q, x > 0, x $in R
 	forall x Q_neg: x $in Q, x < 0, x $in R
 	forall x Q_not0: x $in Q, x != 0, x $in R
+"""
 
 know:
 	forall x, y R: x < y or x >= y
