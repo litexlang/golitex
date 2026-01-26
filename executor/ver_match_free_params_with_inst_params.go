@@ -39,6 +39,21 @@ func (ver *Verifier) matchParamsWithFreeParamsWithInstParam(freeParams []string,
 		}
 	}
 
+	// known parameters must equal to given parameters
+	// nextState := NewVerState(2, false, false)
+	nextState := NewVerState(2, false, true)
+	for i, knownParam := range knownParams {
+		instKnownParam, err := knownParam.Instantiate(freeParamMatchInstParamMap)
+		if err != nil {
+			return false, nil
+		}
+		equalFact := ast.NewEqualFact(instKnownParam, givenParams[i])
+		ret := ver.VerFactStmt(equalFact, nextState)
+		if ret.IsNotTrue() {
+			return false, nil
+		}
+	}
+
 	return true, freeParamMatchInstParamMap
 }
 

@@ -1,5 +1,1 @@
-prop p(a,b R)
-
-know forall a R: $p(a, a+1)
-
-$p(1,1+1)
+forall x Z: (7 * x + 1) % 7 = ((7 * x) % 7 + 1 % 7) % 7 = (0 + 1) % 7 = 1
