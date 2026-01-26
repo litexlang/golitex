@@ -242,9 +242,9 @@ func (ver *Verifier) checkSpecFactUseUniMemAtCurEnv(curEnv *env.EnvMemory, stmt 
 
 func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch2(knownFacts []env.KnownSpecFact_InUniFact, given *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
-		// fmt.Println("i\n", state.Round, i, given.String(), "\n", knownFacts[i].String())
 		ret := ver.matchPureFactInKnownUniFactWithGiven(knownFacts[i].UniFact, knownFacts[i].SpecFact.(*ast.PureSpecificFactStmt), given, state)
 		if ret.IsTrue() {
+			fmt.Println("i\n", i)
 			return ret
 		}
 	}
