@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	cmp "golitex/cmp"
+	env "golitex/environment"
 	glob "golitex/glob"
 )
 
@@ -258,9 +259,26 @@ func (ver *Verifier) verSpecFactPostProcess_WhenPropIsComparison(stmt ast.Specif
 func (ver *Verifier) verSpecFact_UniMem(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 	nextState := state.GetAddRound()
 
-	verRet := ver.verSpecFact_InSpecFact_UniMem(stmt, nextState)
+	for i := len(ver.Env.EnvSlice) - 1; i >= 0; i-- {
+		curEnv := &ver.Env.EnvSlice[i]
+		verRet := ver.checkSpecFactUseUniMemAtCurEnv(curEnv, stmt, nextState)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
+	}
+
+	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
+	verRet := ver.checkSpecFactUseUniMemAtCurEnv(curEnv, stmt, nextState)
 	if verRet.IsErr() || verRet.IsTrue() {
 		return verRet
+	}
+
+	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
+		curEnv := pkgEnvMgr.EnvSlice[0]
+		verRet := ver.checkSpecFactUseUniMemAtCurEnv(&curEnv, stmt, nextState)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
 	}
 
 	return glob.NewEmptyVerRetUnknown()

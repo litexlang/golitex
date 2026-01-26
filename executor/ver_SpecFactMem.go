@@ -68,31 +68,31 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt ast.SpecificFactStmt, state *Ver
 // 	return glob.NewEmptyVerRetUnknown()
 // }
 
-func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
-	for i := len(ver.Env.EnvSlice) - 1; i >= 0; i-- {
-		curEnv := &ver.Env.EnvSlice[i]
-		verRet := ver.checkSpecFactUseUniMemAtCurEnv(curEnv, stmt, state)
-		if verRet.IsErr() || verRet.IsTrue() {
-			return verRet
-		}
-	}
+// func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+// 	for i := len(ver.Env.EnvSlice) - 1; i >= 0; i-- {
+// 		curEnv := &ver.Env.EnvSlice[i]
+// 		verRet := ver.checkSpecFactUseUniMemAtCurEnv(curEnv, stmt, state)
+// 		if verRet.IsErr() || verRet.IsTrue() {
+// 			return verRet
+// 		}
+// 	}
 
-	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
-	verRet := ver.checkSpecFactUseUniMemAtCurEnv(curEnv, stmt, state)
-	if verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
+// 	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
+// 	verRet := ver.checkSpecFactUseUniMemAtCurEnv(curEnv, stmt, state)
+// 	if verRet.IsErr() || verRet.IsTrue() {
+// 		return verRet
+// 	}
 
-	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
-		curEnv := pkgEnvMgr.EnvSlice[0]
-		verRet := ver.checkSpecFactUseUniMemAtCurEnv(&curEnv, stmt, state)
-		if verRet.IsErr() || verRet.IsTrue() {
-			return verRet
-		}
-	}
+// 	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
+// 		curEnv := pkgEnvMgr.EnvSlice[0]
+// 		verRet := ver.checkSpecFactUseUniMemAtCurEnv(&curEnv, stmt, state)
+// 		if verRet.IsErr() || verRet.IsTrue() {
+// 			return verRet
+// 		}
+// 	}
 
-	return glob.NewEmptyVerRetUnknown()
-}
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
 // func (ver *Verifier) verSpecFact_InLogicExpr_InUniFactMem(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 // 	for curEnvIndex := range ver.Env.EnvSlice {
@@ -233,16 +233,15 @@ func (ver *Verifier) checkSpecFactUseUniMemAtCurEnv(curEnv *env.EnvMemory, stmt 
 	}
 
 	if _, ok := stmt.(*ast.PureSpecificFactStmt); ok {
-		// return ver.iterate_KnownPureSpecInUniFacts_applyMatch(stmt.(*ast.PureSpecificFactStmt), searchedSpecFacts, ver.matchUniFactParamsWithSpecFactParams, state)
-		return ver.iterate_KnownPureSpecInUniFacts_applyMatch2(searchedSpecFacts, stmt.(*ast.PureSpecificFactStmt), state)
+		return ver.matchGivenPureFactWithOnesInKnownUniFacts(searchedSpecFacts, stmt.(*ast.PureSpecificFactStmt), state)
 	} else {
 		return ver.MatchExistFactUseForallMemory(stmt.(*ast.ExistSpecificFactStmt), searchedSpecFacts, state)
 	}
 }
 
-func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch2(knownFacts []env.KnownSpecFact_InUniFact, given *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) matchGivenPureFactWithOnesInKnownUniFacts(knownFacts []env.KnownSpecFact_InUniFact, given *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
-		ret := ver.matchPureFactInKnownUniFactWithGiven(knownFacts[i].UniFact, knownFacts[i].SpecFact.(*ast.PureSpecificFactStmt), given, state)
+		ret := ver.matchPureFactWithOneInKnownUniFact(knownFacts[i].UniFact, knownFacts[i].SpecFact.(*ast.PureSpecificFactStmt), given, state)
 		if ret.IsTrue() {
 			return ret
 		}
