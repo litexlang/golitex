@@ -14,8 +14,43 @@
 
 package litex_executor
 
-import ast "golitex/ast"
+import (
+	ast "golitex/ast"
+)
 
-func (ver *Verifier) verMatchFreeParamsWithInstParams(freeParams []string, instParams []ast.Obj) (bool, map[string]ast.Obj, error) {
-	panic("not implemented")
+func (ver *Verifier) matchParamWithFreeParamsWithInstParam(freeParams []string, knownParam ast.Obj, givenParam ast.Obj) (bool, map[string]ast.Obj) {
+	switch asKnownParam := knownParam.(type) {
+	case ast.Atom:
+		switch asGivenParam := givenParam.(type) {
+		case ast.Atom:
+			return ver.matchParamWithFreeParamsAsAtomWithInstParamAsAtom(freeParams, asKnownParam, asGivenParam)
+		case *ast.FnObj:
+			return ver.matchParamWithFreeParamsAsAtomWithInstParamAsFnObj(freeParams, asKnownParam, asGivenParam)
+		}
+	case *ast.FnObj:
+		switch asGivenParam := givenParam.(type) {
+		case ast.Atom:
+			return ver.matchParamWithFreeParamsAsFnObjWithInstParamAsAtom(freeParams, asKnownParam, asGivenParam)
+		case *ast.FnObj:
+			return ver.matchParamWithFreeParamsAsFnObjWithInstParamAsFnObj(freeParams, asKnownParam, asGivenParam)
+		}
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) matchParamWithFreeParamsAsAtomWithInstParamAsAtom(freeParams []string, knownParam ast.Atom, givenParam ast.Atom) (bool, map[string]ast.Obj) {
+	return false, nil
+}
+
+func (ver *Verifier) matchParamWithFreeParamsAsAtomWithInstParamAsFnObj(freeParams []string, knownParam ast.Atom, givenParam *ast.FnObj) (bool, map[string]ast.Obj) {
+	return false, nil
+}
+
+func (ver *Verifier) matchParamWithFreeParamsAsFnObjWithInstParamAsAtom(freeParams []string, knownParam *ast.FnObj, givenParam ast.Atom) (bool, map[string]ast.Obj) {
+	return false, nil
+}
+
+func (ver *Verifier) matchParamWithFreeParamsAsFnObjWithInstParamAsFnObj(freeParams []string, knownParam *ast.FnObj, givenParam *ast.FnObj) (bool, map[string]ast.Obj) {
+	return false, nil
 }
