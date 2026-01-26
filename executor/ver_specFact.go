@@ -58,10 +58,10 @@ func (ver *Verifier) verSpecFactPostProcess(stmt ast.SpecificFactStmt, state *Ve
 		return verRet
 	}
 
-	verRet = ver.verSpecFactPostProcess_WhenPropIsComparison(stmt, state)
-	if verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
+	// verRet = ver.verSpecFactPostProcess_WhenPropIsComparison(stmt, state)
+	// if verRet.IsErr() || verRet.IsTrue() {
+	// 	return verRet
+	// }
 
 	return glob.NewEmptyVerRetUnknown()
 }
