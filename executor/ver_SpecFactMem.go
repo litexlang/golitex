@@ -241,7 +241,9 @@ func (ver *Verifier) checkSpecFactUseUniMemAtCurEnv(curEnv *env.EnvMemory, stmt 
 
 func (ver *Verifier) matchGivenPureFactWithOnesInKnownUniFacts(knownFacts []env.KnownSpecFact_InUniFact, given *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
 	for i := len(knownFacts) - 1; i >= 0; i-- {
-		ret := ver.matchPureFactWithOneInKnownUniFact(knownFacts[i].UniFact, knownFacts[i].SpecFact.(*ast.PureSpecificFactStmt), given, state)
+		newKnownUniFact := ver.Env.GetUniFactFactFreeParamsNotConflictWithDefinedParams(knownFacts[i].UniFact)
+
+		ret := ver.matchPureFactWithOneInKnownUniFact(newKnownUniFact, newKnownUniFact.ThenFacts[knownFacts[i].SpecFactIndex].(*ast.PureSpecificFactStmt), given, state)
 		if ret.IsTrue() {
 			return ret
 		}

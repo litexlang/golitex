@@ -139,8 +139,8 @@ func (stmt *EqualsFactStmt) ToEqualFacts() []*PureSpecificFactStmt {
 	return ret
 }
 
-func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []*PureSpecificFactStmt {
-	ret := []*PureSpecificFactStmt{}
+func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []FactStmt {
+	ret := []FactStmt{}
 	for i := range len(stmt.Params) - 1 {
 		for j := i + 1; j < len(stmt.Params); j++ {
 			ret = append(ret, NewEqualFact(stmt.Params[i], stmt.Params[j]))
