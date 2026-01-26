@@ -27,7 +27,7 @@ func (ver *Verifier) matchParamsWithFreeParamsWithInstParamInPureFact(freeParams
 
 	allInstParamsThatEachFreeParamMatchesMap := ver.getAllInstParamsThatEachFreeParamMatchesInPureFact(freeParams, knownParams, givenParams)
 
-	ok, freeParamMatchInstParamMap := ver.checkEachFreeParamMatchesEqualInstParamsInPureFact(allInstParamsThatEachFreeParamMatchesMap)
+	ok, freeParamMatchInstParamMap := ver.checkEachFreeParamMatchesEqualInstParams(allInstParamsThatEachFreeParamMatchesMap)
 	if !ok {
 		return false, nil
 	}
@@ -57,7 +57,7 @@ func (ver *Verifier) matchParamsWithFreeParamsWithInstParamInPureFact(freeParams
 	return true, freeParamMatchInstParamMap
 }
 
-func (ver *Verifier) checkEachFreeParamMatchesEqualInstParamsInPureFact(allInstParamsThatAFreeParamMatchMap map[string][]ast.Obj) (bool, map[string]ast.Obj) {
+func (ver *Verifier) checkEachFreeParamMatchesEqualInstParams(allInstParamsThatAFreeParamMatchMap map[string][]ast.Obj) (bool, map[string]ast.Obj) {
 	retMatchMap := map[string]ast.Obj{}
 	nextState := NewVerState(2, false, false)
 
@@ -189,7 +189,7 @@ func (ver *Verifier) matchParamWithFreeParamsAsFnObjWithInstParamAsFnObjInPureFa
 		allInstParamsThatAFreeParamMatchMap[key] = append(allInstParamsThatAFreeParamMatchMap[key], value)
 	}
 
-	ok, freeParamMatchInstParamMap := ver.checkEachFreeParamMatchesEqualInstParamsInPureFact(allInstParamsThatAFreeParamMatchMap)
+	ok, freeParamMatchInstParamMap := ver.checkEachFreeParamMatchesEqualInstParams(allInstParamsThatAFreeParamMatchMap)
 	if !ok {
 		return false, nil
 	}
