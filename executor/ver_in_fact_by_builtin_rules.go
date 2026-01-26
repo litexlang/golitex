@@ -523,7 +523,7 @@ func (ver *Verifier) verInCartSet_DimAndElements(obj ast.Obj, cartSet *ast.FnObj
 	}
 
 	msg := fmt.Sprintf("dim(%s) = %d and each element %s[i] is in corresponding cart set %s", obj, cartDimValue, obj, cartSet)
-	return (glob.NewVerMsg(glob.StmtRetTypeTrue, "", glob.BuiltinLine0, []string{msg}))
+	return (glob.NewVerRet(glob.StmtRetTypeTrue, "", glob.BuiltinLine0, []string{msg}))
 }
 
 // verInFactByRightParamIsCartSet verifies a $in cart(...) by checking:
@@ -994,7 +994,7 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt ast.SpecificFactStmt, sta
 		}
 	}
 
-	return (glob.NewVerMsg(glob.StmtRetTypeTrue, asPureStmt.String(), glob.BuiltinLine0, []string{"definition of set builder"}))
+	return (glob.NewVerRet(glob.StmtRetTypeTrue, asPureStmt.String(), glob.BuiltinLine0, []string{"definition of set builder"}))
 }
 
 func (ver *Verifier) verInFactByRightIsListSet(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
@@ -1023,10 +1023,10 @@ func (ver *Verifier) verInFactByRightIsListSet(stmt ast.SpecificFactStmt, state 
 		if verRet.IsTrue() {
 			// 找到了相等的元素，返回 true
 			if asPureStmt.Params[0].String() == item.String() {
-				return (glob.NewVerMsg(glob.StmtRetTypeTrue, asPureStmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s $in %s, %s = %s", asPureStmt.Params[0], listSetFnObj.String(), asPureStmt.Params[1], listSetFnObj)}))
+				return (glob.NewVerRet(glob.StmtRetTypeTrue, asPureStmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s $in %s, %s = %s", asPureStmt.Params[0], listSetFnObj.String(), asPureStmt.Params[1], listSetFnObj)}))
 			}
 
-			return (glob.NewVerMsg(glob.StmtRetTypeTrue, asPureStmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s $in %s, %s = %s, %s = %s", asPureStmt.Params[0], listSetFnObj.String(), asPureStmt.Params[1], listSetFnObj, item, asPureStmt.Params[0])}))
+			return (glob.NewVerRet(glob.StmtRetTypeTrue, asPureStmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s $in %s, %s = %s, %s = %s", asPureStmt.Params[0], listSetFnObj.String(), asPureStmt.Params[1], listSetFnObj, item, asPureStmt.Params[0])}))
 		}
 	}
 
