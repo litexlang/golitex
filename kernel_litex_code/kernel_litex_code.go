@@ -1166,4 +1166,6 @@ know:
 	# 在证明的时候用 a < b 默认是错的，然后要证明 a= b 的时候出问题
 	# 然后在 verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem 里面ver.verEqualSpecMem(left, right, state) 出问题。
 	forall a, b R, c R_pos: a <= b => a <= b + c
+
+know forall x Z, n Z: x <= n + 1 => x <= n or x = n+ 1
 `

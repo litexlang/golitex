@@ -230,9 +230,12 @@ func (ver *Verifier) verOrStmtByAssumeAllFactsAreFalseToProveTheRemainingOneIsTr
 		if i == index {
 			continue
 		}
-		ret := ver.Env.NewFactWithCheckingNameDefined(stmt.Facts[i])
-		if ret.IsNotTrue() {
-			return glob.NewEmptyVerRetUnknown().AddUnknown(ret.String())
+		reversedFact := stmt.Facts[i].ReverseIsTrue()
+		for _, fact := range reversedFact {
+			ret := ver.Env.NewFactWithCheckingNameDefined(fact)
+			if ret.IsNotTrue() {
+				return glob.NewEmptyVerRetUnknown().AddUnknown(ret.String())
+			}
 		}
 	}
 
