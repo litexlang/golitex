@@ -2,8 +2,27 @@ package litex_executor
 
 import (
 	ast "golitex/ast"
+	glob "golitex/glob"
 	"slices"
 )
+
+func (ver *Verifier) getAllInstParamsThatEachFreeParamMatchesInExistFact(freeParams []string, existFreeParams []string, knownParams []ast.Obj, givenParams []ast.Obj) map[string][]ast.Obj {
+	matchMaps := map[string][]ast.Obj{}
+	for _, freeParam := range freeParams {
+		matchMaps[freeParam] = []ast.Obj{}
+	}
+
+	for i := range len(knownParams) {
+		ok, curMatchMap := ver.matchParamWithFreeParamsWithInstParamInExistFact(freeParams, existFreeParams, knownParams[i], givenParams[i])
+		if ok && curMatchMap != nil {
+			for key, value := range curMatchMap {
+				matchMaps[key] = append(matchMaps[key], value)
+			}
+		}
+	}
+
+	return matchMaps
+}
 
 func (ver *Verifier) matchParamWithFreeParamsWithInstParamInExistFact(freeParams []string, existFreeParams []string, knownParam ast.Obj, givenParam ast.Obj) (bool, map[string]ast.Obj) {
 	switch asKnownParam := knownParam.(type) {
@@ -32,20 +51,71 @@ func (ver *Verifier) matchParamWithFreeParamsAsAtomWithInstParamAsAtomInExistFac
 	}
 
 	if slices.Contains(existFreeParams, string(knownParam)) {
-		panic("")
+		if string(givenParam) == string(knownParam) {
+			return true, nil
+		}
 	}
 
-	panic("")
+	equalFact := ast.NewEqualFact(knownParam, givenParam)
+	nextState := NewVerState(2, false, false)
+	ret := ver.VerFactStmt(equalFact, nextState)
+	if ret.IsNotTrue() {
+		return false, nil
+	} else {
+		return true, nil
+	}
 }
 
 func (ver *Verifier) matchParamWithFreeParamsAsAtomWithInstParamAsFnObjInExistFact(freeParams []string, existFreeParams []string, knownParam ast.Atom, givenParam *ast.FnObj) (bool, map[string]ast.Obj) {
-	panic("")
+	if slices.Contains(freeParams, string(knownParam)) {
+		return true, map[string]ast.Obj{string(knownParam): givenParam}
+	}
+
+	if slices.Contains(existFreeParams, string(knownParam)) {
+		return false, nil
+	}
+
+	equalFact := ast.NewEqualFact(knownParam, givenParam)
+	nextState := NewVerState(2, false, false)
+	ret := ver.VerFactStmt(equalFact, nextState)
+	if ret.IsNotTrue() {
+		return false, nil
+	} else {
+		return true, nil
+	}
 }
 
 func (ver *Verifier) matchParamWithFreeParamsAsFnObjWithInstParamAsAtomInExistFact(freeParams []string, existFreeParams []string, knownParam *ast.FnObj, givenParam ast.Atom) (bool, map[string]ast.Obj) {
-	panic("")
+	return false, nil
 }
 
 func (ver *Verifier) matchParamWithFreeParamsAsFnObjWithInstParamAsFnObjInExistFact(freeParams []string, existFreeParams []string, knownParam *ast.FnObj, givenParam *ast.FnObj) (bool, map[string]ast.Obj) {
-	panic("")
+	if len(knownParam.Params) != len(givenParam.Params) {
+		return false, nil
+	}
+
+	if knownParam.FnHead.String() == glob.KeywordSetBuilder || givenParam.FnHead.String() == glob.KeywordSetBuilder {
+		return false, nil
+	}
+
+	knownParamHead := knownParam.FnHead
+	givenParamHead := givenParam.FnHead
+
+	ok, matchMapOfHeads := ver.matchParamWithFreeParamsWithInstParamInExistFact(freeParams, existFreeParams, knownParamHead, givenParamHead)
+	if !ok {
+		return false, nil
+	}
+
+	allInstParamsThatAFreeParamMatchMap := ver.getAllInstParamsThatEachFreeParamMatchesInExistFact(freeParams, existFreeParams, knownParam.Params, givenParam.Params)
+
+	for key, value := range matchMapOfHeads {
+		allInstParamsThatAFreeParamMatchMap[key] = append(allInstParamsThatAFreeParamMatchMap[key], value)
+	}
+
+	ok, freeParamMatchInstParamMap := ver.checkEachFreeParamMatchesEqualInstParams(allInstParamsThatAFreeParamMatchMap)
+	if !ok {
+		return false, nil
+	}
+
+	return true, freeParamMatchInstParamMap
 }
