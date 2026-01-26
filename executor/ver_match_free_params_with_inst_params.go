@@ -16,6 +16,8 @@ package litex_executor
 
 import (
 	ast "golitex/ast"
+	glob "golitex/glob"
+	"slices"
 )
 
 func (ver *Verifier) matchParamWithFreeParamsWithInstParam(freeParams []string, knownParam ast.Obj, givenParam ast.Obj) (bool, map[string]ast.Obj) {
@@ -40,17 +42,101 @@ func (ver *Verifier) matchParamWithFreeParamsWithInstParam(freeParams []string, 
 }
 
 func (ver *Verifier) matchParamWithFreeParamsAsAtomWithInstParamAsAtom(freeParams []string, knownParam ast.Atom, givenParam ast.Atom) (bool, map[string]ast.Obj) {
-	return false, nil
+	if slices.Contains(freeParams, string(knownParam)) {
+		return true, map[string]ast.Obj{string(knownParam): givenParam}
+	}
+
+	equalFact := ast.NewEqualFact(knownParam, givenParam)
+	nextState := NewVerState(2, false, false)
+	ret := ver.VerFactStmt(equalFact, nextState)
+	if ret.IsNotTrue() {
+		return false, nil
+	} else {
+		return true, nil
+	}
 }
 
 func (ver *Verifier) matchParamWithFreeParamsAsAtomWithInstParamAsFnObj(freeParams []string, knownParam ast.Atom, givenParam *ast.FnObj) (bool, map[string]ast.Obj) {
-	return false, nil
+	if slices.Contains(freeParams, string(knownParam)) {
+		return true, map[string]ast.Obj{string(knownParam): givenParam}
+	}
+
+	equalFact := ast.NewEqualFact(knownParam, givenParam)
+	nextState := NewVerState(2, false, false)
+	ret := ver.VerFactStmt(equalFact, nextState)
+	if ret.IsNotTrue() {
+		return false, nil
+	} else {
+		return true, nil
+	}
 }
 
+// 如果 knownParam 里含有 未申明的freeParams 那返回值一定是 false,因为没申明的东西会在check fn req 的时候出错
 func (ver *Verifier) matchParamWithFreeParamsAsFnObjWithInstParamAsAtom(freeParams []string, knownParam *ast.FnObj, givenParam ast.Atom) (bool, map[string]ast.Obj) {
-	return false, nil
+	equalFact := ast.NewEqualFact(knownParam, givenParam)
+	nextState := NewVerState(2, false, false)
+	ret := ver.VerFactStmt(equalFact, nextState)
+	if ret.IsNotTrue() {
+		return false, nil
+	} else {
+		return true, nil
+	}
 }
 
 func (ver *Verifier) matchParamWithFreeParamsAsFnObjWithInstParamAsFnObj(freeParams []string, knownParam *ast.FnObj, givenParam *ast.FnObj) (bool, map[string]ast.Obj) {
-	return false, nil
+	if len(knownParam.Params) != len(givenParam.Params) {
+		return false, nil
+	}
+
+	if knownParam.FnHead.String() == glob.KeywordSetBuilder || givenParam.FnHead.String() == glob.KeywordSetBuilder {
+		return false, nil
+	}
+
+	knownParamHead := knownParam.FnHead
+	givenParamHead := givenParam.FnHead
+
+	ok, matchMapOfHeads := ver.matchParamWithFreeParamsWithInstParam(freeParams, knownParamHead, givenParamHead)
+	if !ok {
+		return false, nil
+	}
+
+	matchMaps := map[string][]ast.Obj{}
+	for _, freeParam := range freeParams {
+		matchMaps[freeParam] = []ast.Obj{}
+	}
+
+	for key, value := range matchMapOfHeads {
+		matchMaps[key] = append(matchMaps[key], value)
+	}
+
+	for i := range len(knownParam.Params) {
+		ok, curMatchMap := ver.matchParamWithFreeParamsWithInstParam(freeParams, knownParam.Params[i], givenParam.Params[i])
+		if ok && curMatchMap != nil {
+			for key, value := range curMatchMap {
+				matchMaps[key] = append(matchMaps[key], value)
+			}
+		}
+	}
+
+	retMatchMap := map[string]ast.Obj{}
+	for freeParamName, instParamsMatchFreeParam := range matchMaps {
+		if len(instParamsMatchFreeParam) == 0 {
+			continue
+		}
+
+		if len(instParamsMatchFreeParam) == 1 {
+			retMatchMap[freeParamName] = instParamsMatchFreeParam[0]
+		}
+
+		nextState := NewVerState(2, false, false)
+		for i := 1; i < len(instParamsMatchFreeParam); i++ {
+			equalFact := ast.NewEqualFact(instParamsMatchFreeParam[0], instParamsMatchFreeParam[i])
+			ret := ver.VerFactStmt(equalFact, nextState)
+			if ret.IsNotTrue() {
+				return false, nil
+			}
+		}
+	}
+
+	return true, retMatchMap
 }
