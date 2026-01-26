@@ -25,9 +25,9 @@ func (ver *Verifier) matchParamsWithFreeParamsWithInstParam(freeParams []string,
 		return false, nil
 	}
 
-	allInstParamsThatAFreeParamMatchMap := ver.GetAllInstParamsThatFreeParamsMatch(freeParams, knownParams, givenParams)
+	allInstParamsThatEachFreeParamMatchesMap := ver.getAllInstParamsThatEachFreeParamMatches(freeParams, knownParams, givenParams)
 
-	ok, freeParamMatchInstParamMap := ver.MakeSureAllInstParamsThatMatchesTheSameFreeParamAreEqual(allInstParamsThatAFreeParamMatchMap)
+	ok, freeParamMatchInstParamMap := ver.checkEachFreeParamMatchesEqualInstParams(allInstParamsThatEachFreeParamMatchesMap)
 	if !ok {
 		return false, nil
 	}
@@ -42,7 +42,7 @@ func (ver *Verifier) matchParamsWithFreeParamsWithInstParam(freeParams []string,
 	return true, freeParamMatchInstParamMap
 }
 
-func (ver *Verifier) MakeSureAllInstParamsThatMatchesTheSameFreeParamAreEqual(allInstParamsThatAFreeParamMatchMap map[string][]ast.Obj) (bool, map[string]ast.Obj) {
+func (ver *Verifier) checkEachFreeParamMatchesEqualInstParams(allInstParamsThatAFreeParamMatchMap map[string][]ast.Obj) (bool, map[string]ast.Obj) {
 	retMatchMap := map[string]ast.Obj{}
 	for freeParamName, instParamsMatchFreeParam := range allInstParamsThatAFreeParamMatchMap {
 		if len(instParamsMatchFreeParam) == 0 {
@@ -66,7 +66,7 @@ func (ver *Verifier) MakeSureAllInstParamsThatMatchesTheSameFreeParamAreEqual(al
 	return true, retMatchMap
 }
 
-func (ver *Verifier) GetAllInstParamsThatFreeParamsMatch(freeParams []string, knownParams []ast.Obj, givenParams []ast.Obj) map[string][]ast.Obj {
+func (ver *Verifier) getAllInstParamsThatEachFreeParamMatches(freeParams []string, knownParams []ast.Obj, givenParams []ast.Obj) map[string][]ast.Obj {
 	matchMaps := map[string][]ast.Obj{}
 	for _, freeParam := range freeParams {
 		matchMaps[freeParam] = []ast.Obj{}
@@ -164,13 +164,13 @@ func (ver *Verifier) matchParamWithFreeParamsAsFnObjWithInstParamAsFnObj(freePar
 		return false, nil
 	}
 
-	allInstParamsThatAFreeParamMatchMap := ver.GetAllInstParamsThatFreeParamsMatch(freeParams, knownParam.Params, givenParam.Params)
+	allInstParamsThatAFreeParamMatchMap := ver.getAllInstParamsThatEachFreeParamMatches(freeParams, knownParam.Params, givenParam.Params)
 
 	for key, value := range matchMapOfHeads {
 		allInstParamsThatAFreeParamMatchMap[key] = append(allInstParamsThatAFreeParamMatchMap[key], value)
 	}
 
-	ok, freeParamMatchInstParamMap := ver.MakeSureAllInstParamsThatMatchesTheSameFreeParamAreEqual(allInstParamsThatAFreeParamMatchMap)
+	ok, freeParamMatchInstParamMap := ver.checkEachFreeParamMatchesEqualInstParams(allInstParamsThatAFreeParamMatchMap)
 	if !ok {
 		return false, nil
 	}

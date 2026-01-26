@@ -71,21 +71,21 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt ast.SpecificFactStmt, state *Ver
 func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 	for i := len(ver.Env.EnvSlice) - 1; i >= 0; i-- {
 		curEnv := &ver.Env.EnvSlice[i]
-		verRet := ver.specFact_UniMem_atCurEnv(curEnv, stmt, state)
+		verRet := ver.checkSpecFactUseUniMemAtCurEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}
 	}
 
 	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
-	verRet := ver.specFact_UniMem_atCurEnv(curEnv, stmt, state)
+	verRet := ver.checkSpecFactUseUniMemAtCurEnv(curEnv, stmt, state)
 	if verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
 	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
 		curEnv := pkgEnvMgr.EnvSlice[0]
-		verRet := ver.specFact_UniMem_atCurEnv(&curEnv, stmt, state)
+		verRet := ver.checkSpecFactUseUniMemAtCurEnv(&curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}
@@ -221,7 +221,7 @@ func (ver *Verifier) verSpecFact_InSpecFact_UniMem(stmt ast.SpecificFactStmt, st
 // 	return glob.NewEmptyVerRetUnknown()
 // }
 
-func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.EnvMemory, stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) checkSpecFactUseUniMemAtCurEnv(curEnv *env.EnvMemory, stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 	if state.Round == 0 && !state.ReqOk {
 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state)})
 	}
@@ -232,12 +232,9 @@ func (ver *Verifier) specFact_UniMem_atCurEnv(curEnv *env.EnvMemory, stmt ast.Sp
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	// return ver.iterate_KnownSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, state)
 	if _, ok := stmt.(*ast.PureSpecificFactStmt); ok {
-		// return ver.iterate_KnownPureSpecInUniFacts_applyMatch(stmt, searchedSpecFacts, ver.matchUniFactParamsWithSpecFactParams, state)
 		return ver.iterate_KnownPureSpecInUniFacts_applyMatch(stmt.(*ast.PureSpecificFactStmt), searchedSpecFacts, ver.matchUniFactParamsWithSpecFactParams, state)
 	} else {
-		// return ver.iterate_KnownExistSpecInUniFacts_applyMatch_new(stmt, searchedSpecFacts, state)
 		return ver.MatchExistFactUseForallMemory(stmt.(*ast.ExistSpecificFactStmt), searchedSpecFacts, state)
 	}
 }
