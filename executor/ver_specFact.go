@@ -80,10 +80,6 @@ func (ver *Verifier) verSpecFactMainProcess(stmt ast.SpecificFactStmt, state *Ve
 	}
 
 	if !state.isFinalRound() {
-		// if verRet := ver.verSpecFact_ByLogicMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
-		// 	return verRet
-		// }
-
 		if verRet := ver.verSpecFact_UniMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}
@@ -267,7 +263,6 @@ func (ver *Verifier) verSpecFact_UniMem(stmt ast.SpecificFactStmt, state *VerSta
 		return verRet
 	}
 
-	// return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState)
 	return glob.NewEmptyVerRetUnknown()
 }
 
