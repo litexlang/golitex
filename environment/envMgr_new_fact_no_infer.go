@@ -96,11 +96,11 @@ func (envMgr *EnvMgr) newEqualsFactNoInfer(stmt *ast.EqualsFactStmt) *glob.StmtR
 // }
 
 func (envMgr *EnvMgr) newUniFactNoInfer(stmt *ast.UniFactStmt) *glob.StmtRet {
-	for _, thenStmt := range stmt.ThenFacts {
+	for index, thenStmt := range stmt.ThenFacts {
 		var ret *glob.StmtRet
-		switch asFact := thenStmt.(type) {
+		switch thenStmt.(type) {
 		case ast.SpecificFactStmt:
-			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, asFact)
+			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, index)
 		case *ast.OrStmt:
 			// ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
 			ret = glob.NewEmptyStmtTrue()

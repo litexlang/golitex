@@ -217,13 +217,13 @@ type SpecFactMem struct {
 // }
 
 type KnownSpecFact_InUniFact struct {
-	SpecFact ast.SpecificFactStmt
-	UniFact  *ast.UniFactStmt
+	SpecFactIndex int
+	UniFact       *ast.UniFactStmt
 }
 
-func MakeKnownSpecFact_InUniFact(specFact ast.SpecificFactStmt, uniFact *ast.UniFactStmt) KnownSpecFact_InUniFact {
-	return KnownSpecFact_InUniFact{specFact, uniFact}
-}
+// func MakeKnownSpecFact_InUniFact(specFact ast.SpecificFactStmt, uniFact *ast.UniFactStmt) KnownSpecFact_InUniFact {
+// 	return KnownSpecFact_InUniFact{specFact, uniFact}
+// }
 
 type SpecFactInUniFactMem struct {
 	PureFacts         map[string][]KnownSpecFact_InUniFact

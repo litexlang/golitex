@@ -173,7 +173,9 @@ func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt ast.SpecificFactStmt)
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact ast.SpecificFactStmt, uniFact *ast.UniFactStmt) *glob.StmtRet {
+func (s SpecFactInUniFactMem) newFact(stmtAsSpecFactIndex int, uniFact *ast.UniFactStmt) *glob.StmtRet {
+	stmtAsSpecFact := uniFact.ThenFacts[stmtAsSpecFactIndex].(ast.SpecificFactStmt)
+
 	sameEnumFacts, ret := s.getSameEnumFacts(stmtAsSpecFact)
 	if ret.IsErr() {
 		return ret
@@ -182,7 +184,7 @@ func (s SpecFactInUniFactMem) newFact(stmtAsSpecFact ast.SpecificFactStmt, uniFa
 	if _, ok := sameEnumFacts[string(stmtAsSpecFact.GetPropName())]; !ok {
 		sameEnumFacts[string(stmtAsSpecFact.GetPropName())] = []KnownSpecFact_InUniFact{}
 	}
-	sameEnumFacts[string(stmtAsSpecFact.GetPropName())] = append(sameEnumFacts[string(stmtAsSpecFact.GetPropName())], KnownSpecFact_InUniFact{stmtAsSpecFact, uniFact})
+	sameEnumFacts[string(stmtAsSpecFact.GetPropName())] = append(sameEnumFacts[string(stmtAsSpecFact.GetPropName())], KnownSpecFact_InUniFact{stmtAsSpecFactIndex, uniFact})
 
 	return glob.NewEmptyStmtTrue()
 }
