@@ -233,10 +233,22 @@ func (ver *Verifier) checkSpecFactUseUniMemAtCurEnv(curEnv *env.EnvMemory, stmt 
 	}
 
 	if _, ok := stmt.(*ast.PureSpecificFactStmt); ok {
-		return ver.iterate_KnownPureSpecInUniFacts_applyMatch(stmt.(*ast.PureSpecificFactStmt), searchedSpecFacts, ver.matchUniFactParamsWithSpecFactParams, state)
+		// return ver.iterate_KnownPureSpecInUniFacts_applyMatch(stmt.(*ast.PureSpecificFactStmt), searchedSpecFacts, ver.matchUniFactParamsWithSpecFactParams, state)
+		return ver.iterate_KnownPureSpecInUniFacts_applyMatch2(searchedSpecFacts, stmt.(*ast.PureSpecificFactStmt))
 	} else {
 		return ver.MatchExistFactUseForallMemory(stmt.(*ast.ExistSpecificFactStmt), searchedSpecFacts, state)
 	}
+}
+
+func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch2(knownFacts []env.KnownSpecFact_InUniFact, given *ast.PureSpecificFactStmt) *glob.VerRet {
+	for _, knownFact := range knownFacts {
+		ret := ver.matchPureFactInKnownUniFactWithGiven(knownFact.UniFact, knownFact.SpecFact.(*ast.PureSpecificFactStmt), given)
+		if ret.IsTrue() {
+			return ret
+		}
+	}
+
+	return glob.NewEmptyVerRetUnknown()
 }
 
 func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Obj, state *VerState) (map[string]ast.Obj, *glob.VerRet) {
