@@ -244,7 +244,6 @@ func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch2(knownFacts []en
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		ret := ver.matchPureFactInKnownUniFactWithGiven(knownFacts[i].UniFact, knownFacts[i].SpecFact.(*ast.PureSpecificFactStmt), given, state)
 		if ret.IsTrue() {
-			fmt.Println("i\n", i)
 			return ret
 		}
 	}

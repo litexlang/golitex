@@ -1,6 +1,1 @@
-let a R: a != 1
-R $in power_set(1)
-$subset_of(1, R)
-1 $in power_set(R)
-$subset_of(a, 1)
-a = 1
+forall z, m R: not z <= m or m <= z

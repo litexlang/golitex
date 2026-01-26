@@ -23,7 +23,7 @@ import (
 )
 
 // how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
-func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) VerTrueEqualFactAndCheckFnReq(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 	if !state.ReqOk {
 		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
@@ -261,7 +261,7 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.EnvMemory, left ast.Obj
 
 // 	equalFactParamReversed, err := equalFact.ReverseSpecFactParamsOrder()
 // 	if err != nil {
-// 		return glob.NewVerMsg(glob.StmtRetTypeError, equalFact.String(), glob.BuiltinLine0, []string{err.Error()})
+// 		return glob.NewVerRet(glob.StmtRetTypeError, equalFact.String(), glob.BuiltinLine0, []string{err.Error()})
 // 	}
 // 	verRet = ver.verSpecFact_ByLogicMem(equalFactParamReversed, state)
 // 	if verRet.IsErr() || verRet.IsTrue() {

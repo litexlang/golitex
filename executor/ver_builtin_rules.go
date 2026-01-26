@@ -79,7 +79,7 @@ func (ver *Verifier) verNumberTrueLogicRelaOpt_BuiltinRules(stmt ast.SpecificFac
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	verRet := ver.btNumberInfixCompareProp(stmt, state)
+	verRet := ver.btNumberInfixCompareProp(stmt)
 	if verRet.IsTrue() || verRet.IsErr() {
 		return verRet
 	}
@@ -87,7 +87,7 @@ func (ver *Verifier) verNumberTrueLogicRelaOpt_BuiltinRules(stmt ast.SpecificFac
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) btNumberInfixCompareProp(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) btNumberInfixCompareProp(stmt ast.SpecificFactStmt) *glob.VerRet {
 	if !glob.IsBuiltinNumberInfixRelaProp(string(stmt.GetPropName())) {
 		return glob.NewEmptyVerRetUnknown()
 	}
@@ -123,7 +123,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt ast.SpecificFactStmt, state *
 		return glob.NewErrVerRet(err.Error())
 	}
 	if ok {
-		return newMaybeSuccessMsgVerRet(state, stmt, "builtin rules")
+		return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{"builtin rules"})
 	}
 
 	return glob.NewEmptyVerRetUnknown()
