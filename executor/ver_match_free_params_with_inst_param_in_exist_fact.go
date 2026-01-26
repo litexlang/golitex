@@ -6,6 +6,41 @@ import (
 	"slices"
 )
 
+func (ver *Verifier) matchParamsWithFreeParamsWithInstParamInExistFact(freeParams []string, existFreeParams []string, knownExistParamSetsAndParamsInPureFact []ast.Obj, givenExistParamSetsAndParamsInPureFact []ast.Obj) (bool, map[string]ast.Obj) {
+	if len(knownExistParamSetsAndParamsInPureFact) != len(givenExistParamSetsAndParamsInPureFact) {
+		return false, nil
+	}
+
+	allInstParamsThatEachFreeParamMatchesMap := ver.getAllInstParamsThatEachFreeParamMatchesInExistFact(freeParams, existFreeParams, knownExistParamSetsAndParamsInPureFact, givenExistParamSetsAndParamsInPureFact)
+
+	ok, freeParamMatchInstParamMap := ver.checkEachFreeParamMatchesEqualInstParams(allInstParamsThatEachFreeParamMatchesMap)
+	if !ok {
+		return false, nil
+	}
+
+	for i := range len(freeParams) {
+		_, ok := freeParamMatchInstParamMap[freeParams[i]]
+		if !ok {
+			return false, nil
+		}
+	}
+
+	nextState := NewVerState(2, false, true)
+	for i, knownParam := range knownExistParamSetsAndParamsInPureFact {
+		instKnownParam, err := knownParam.Instantiate(freeParamMatchInstParamMap)
+		if err != nil {
+			return false, nil
+		}
+		equalFact := ast.NewEqualFact(instKnownParam, givenExistParamSetsAndParamsInPureFact[i])
+		ret := ver.VerFactStmt(equalFact, nextState)
+		if ret.IsNotTrue() {
+			return false, nil
+		}
+	}
+
+	return true, freeParamMatchInstParamMap
+}
+
 func (ver *Verifier) getAllInstParamsThatEachFreeParamMatchesInExistFact(freeParams []string, existFreeParams []string, knownParams []ast.Obj, givenParams []ast.Obj) map[string][]ast.Obj {
 	matchMaps := map[string][]ast.Obj{}
 	for _, freeParam := range freeParams {
