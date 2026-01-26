@@ -26,7 +26,7 @@ type VerRet struct {
 	VerifyMsgs         []string
 }
 
-func NewVerMsg(retType StmtRetType, stmtStr string, provedByFactOnLine uint, verifyMsgs []string) *VerRet {
+func NewVerRet(retType StmtRetType, stmtStr string, provedByFactOnLine uint, verifyMsgs []string) *VerRet {
 	return &VerRet{
 		RetType:            retType,
 		StmtStr:            stmtStr,

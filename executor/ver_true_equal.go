@@ -196,11 +196,11 @@ func (ver *Verifier) verEqualByBuiltinEval(left ast.Obj, right ast.Obj, state *V
 
 	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{err.Error()})
 	}
 	if ok {
 		if state.WithMsg {
-			return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s by evaluation", left, right), glob.BuiltinLine0, []string{msg})
+			return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s by evaluation", left, right), glob.BuiltinLine0, []string{msg})
 		}
 		return glob.NewEmptyVerRetTrue()
 	}
@@ -244,7 +244,7 @@ func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.EnvMemory, left ast.Obj
 	}
 	if verRet.IsTrue() {
 		if state.WithMsg {
-			return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, verRet.VerifyMsgs)
+			return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, verRet.VerifyMsgs)
 		}
 		return verRet
 	}
@@ -279,7 +279,7 @@ func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState
 
 	equalFactParamReversed, err := equalFact.ReverseSpecFactParamsOrder()
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, equalFact.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, equalFact.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 	verRet = ver.verSpecFact_UniMem(equalFactParamReversed, state)
 	if verRet.IsErr() || verRet.IsTrue() {
@@ -297,7 +297,7 @@ func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.EnvMemory, left ast.
 
 	if gotLeftEqualObjs && gotRightEqualObjs {
 		if equalToLeftObjs == equalToRightObjs {
-			return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{"by either their equality is known, or it is ensured by transitivity of equality."})
+			return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{"by either their equality is known, or it is ensured by transitivity of equality."})
 		}
 	}
 
@@ -310,7 +310,7 @@ func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.EnvMemory, left ast.
 			if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToLeftObj, right, state); verRet.IsErr() {
 				return verRet
 			} else if verRet.IsTrue() {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", equalToLeftObj, right), glob.BuiltinLine0, []string{fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftObj, right, equalToLeftObj, left)})
+				return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", equalToLeftObj, right), glob.BuiltinLine0, []string{fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftObj, right, equalToLeftObj, left)})
 			}
 		}
 	}
@@ -320,7 +320,7 @@ func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.EnvMemory, left ast.
 			if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToRightObj, left, state); verRet.IsErr() {
 				return verRet
 			} else if verRet.IsTrue() {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, equalToRightObj), glob.BuiltinLine0, []string{fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightObj, equalToRightObj, right)})
+				return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, equalToRightObj), glob.BuiltinLine0, []string{fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightObj, equalToRightObj, right)})
 			}
 		}
 	}
@@ -348,7 +348,7 @@ func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj
 				}
 			}
 
-			return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right)})
+			return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right)})
 		}
 	}
 	return glob.NewEmptyVerRetUnknown()
@@ -371,12 +371,12 @@ func (ver *Verifier) verEqualByLeftAndRightAreSetBuilders(left, right ast.Obj, s
 
 	leftSetBuilderStruct, err := leftSetBuilder.ToSetBuilderStruct()
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, left.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, left.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	rightSetBuilderStruct, err := rightSetBuilder.ToSetBuilderStruct()
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, right.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, right.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	if !leftSetBuilderStruct.HasTheSameParentSetAndSpecFactNameAs(rightSetBuilderStruct) {
@@ -385,16 +385,16 @@ func (ver *Verifier) verEqualByLeftAndRightAreSetBuilders(left, right ast.Obj, s
 
 	leftSetBuilderStruct, err = leftSetBuilderStruct.ReplaceParamWithNewParam(randomParam)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, left.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, left.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	rightSetBuilderStruct, err = rightSetBuilderStruct.ReplaceParamWithNewParam(randomParam)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, right.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, right.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	if leftSetBuilderStruct.String() == rightSetBuilderStruct.String() {
-		return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{"by definition of set builder"})
+		return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{"by definition of set builder"})
 	}
 
 	return glob.NewEmptyVerRetUnknown()

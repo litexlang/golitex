@@ -96,7 +96,7 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 
 	ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(knownParams, knownOrFactInUni.UniFact.Params, givenParams)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, knownOrFactInUni.OrFact.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, knownOrFactInUni.OrFact.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	if !ok {
@@ -149,7 +149,7 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 	for _, domFact := range knownOrFactInUni.UniFact.DomFacts {
 		instDomFact, err := domFact.Instantiate(uniConMap)
 		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeError, domFact.String(), glob.BuiltinLine0, []string{err.Error()})
+			return glob.NewVerRet(glob.StmtRetTypeError, domFact.String(), glob.BuiltinLine0, []string{err.Error()})
 		}
 		verRet := ver.VerFactStmt(instDomFact.(ast.FactStmt), state)
 		if verRet.IsNotTrue() {
@@ -161,7 +161,7 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 	for i, paramSet := range knownOrFactInUni.UniFact.ParamSets {
 		instParamSet, err := paramSet.Instantiate(newUniMap)
 		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeError, paramSet.String(), glob.BuiltinLine0, []string{err.Error()})
+			return glob.NewVerRet(glob.StmtRetTypeError, paramSet.String(), glob.BuiltinLine0, []string{err.Error()})
 		}
 		verRet := ver.VerFactStmt(ast.NewInFactWithObj(uniConMap[knownOrFactInUni.UniFact.Params[i]], instParamSet.(ast.Obj)), state)
 		if verRet.IsNotTrue() {
