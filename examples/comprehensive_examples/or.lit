@@ -7,4 +7,7 @@ know:
     not $p(1)
     not $q(1)
 
+contra $r(2):
+    impossible $p(1) or $q(1) or $r(2)
+
 $q(1) or $r(2) or $p(1)

@@ -497,10 +497,6 @@ func (s *HaveShortStmt) InlineString() string {
 	return s.String()
 }
 
-func (s *WitnessShortStmt) InlineString() string {
-	return s.String()
-}
-
 func (s *WitnessStmt) InlineString() string {
 	return s.String()
 }
