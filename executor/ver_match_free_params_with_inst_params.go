@@ -155,14 +155,15 @@ func (ver *Verifier) matchParamWithFreeParamsAsAtomWithInstParamAsFnObj(freePara
 
 // 如果 knownParam 里含有 未申明的freeParams 那返回值一定是 false,因为没申明的东西会在check fn req 的时候出错
 func (ver *Verifier) matchParamWithFreeParamsAsFnObjWithInstParamAsAtom(freeParams []string, knownParam *ast.FnObj, givenParam ast.Atom) (bool, map[string]ast.Obj) {
-	equalFact := ast.NewEqualFact(knownParam, givenParam)
-	nextState := NewVerState(2, false, false)
-	ret := ver.VerFactStmt(equalFact, nextState)
-	if ret.IsNotTrue() {
-		return false, nil
-	} else {
-		return true, nil
-	}
+	return false, nil
+	// equalFact := ast.NewEqualFact(knownParam, givenParam)
+	// nextState := NewVerState(2, false, false)
+	// ret := ver.VerFactStmt(equalFact, nextState)
+	// if ret.IsNotTrue() {
+	// 	return false, nil
+	// } else {
+	// 	return true, nil
+	// }
 }
 
 func (ver *Verifier) matchParamWithFreeParamsAsFnObjWithInstParamAsFnObj(freeParams []string, knownParam *ast.FnObj, givenParam *ast.FnObj) (bool, map[string]ast.Obj) {
