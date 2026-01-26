@@ -35,7 +35,7 @@ func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt ast.Speci
 		return ret
 	}
 
-	return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{})
+	return glob.NewVerRet(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{})
 }
 
 func (ver *Verifier) verSpecFactPreProcess(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
@@ -131,7 +131,7 @@ func (ver *Verifier) verSpecFactPreProcess_ReplaceSymbolsWithValues(stmt ast.Spe
 		if verRet.IsTrue() {
 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
 			if state.WithMsg {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
+				return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
 			}
 			return glob.NewEmptyVerRetTrue()
 		}
@@ -163,7 +163,7 @@ func (ver *Verifier) verSpecFactPostProcess_UseCommutativity(stmt ast.SpecificFa
 	if ver.Env.IsCommutativeProp(asStmt) {
 		reverseParamsOrderStmt, err := asStmt.ReverseParameterOrder()
 		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+			return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 		}
 
 		verRet := ver.verSpecFactPreProcessAndMainProcess(reverseParamsOrderStmt, state)
@@ -198,7 +198,7 @@ func (ver *Verifier) verSpecFactPostProcess_UseTransitivity(stmt ast.SpecificFac
 			if verRet.IsTrue() {
 				msg := fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(asStmt.PropName), relatedObjStmt.String())
 				if state.WithMsg {
-					return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
+					return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
 				}
 				return glob.NewEmptyVerRetTrue()
 			}
@@ -301,11 +301,11 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt ast.Specifi
 
 	_, areEqual, err := cmp.NumLitEqual_ByEval(leftValue, rightValue)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, asStmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, asStmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 	if !areEqual {
 		if state != nil && state.WithMsg {
-			return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{"builtin rules"})
+			return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{"builtin rules"})
 		}
 		return glob.NewEmptyVerRetTrue()
 	}
@@ -335,7 +335,7 @@ func (ver *Verifier) verIsCartByBuiltinRules(stmt ast.SpecificFactStmt, state *V
 	if len(asStmt.Params) == 1 {
 		if cartObj, ok := asStmt.Params[0].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartObj.FnHead, glob.KeywordCart) {
 			if state.WithMsg {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, asStmt.String(), glob.BuiltinLine0, []string{"definition"})
+				return glob.NewVerRet(glob.StmtRetTypeTrue, asStmt.String(), glob.BuiltinLine0, []string{"definition"})
 			}
 			return glob.NewEmptyVerRetTrue()
 		}
@@ -373,7 +373,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt ast.SpecificFactStmt, state *
 	// TODO: ? 这里还需要检查吗？或者说是在这里检查吗？难道prop的关于参数的检查不应该在更顶层的函数里？
 	paramSetFacts, err := defStmt.DefHeader.GetInstantiatedParamInParamSetFact(paramArrMap)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	for _, paramSetFact := range paramSetFacts {
@@ -386,7 +386,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt ast.SpecificFactStmt, state *
 	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
 	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	// 某个fact是false的，那就OK了
@@ -403,7 +403,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt ast.SpecificFactStmt, state *
 		}
 		if verRet.IsTrue() {
 			if state.WithMsg {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{defStmt.String()})
+				return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{defStmt.String()})
 			}
 			return glob.NewEmptyVerRetTrue()
 		}
@@ -466,7 +466,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt ast.SpecificFactStmt, sta
 	// TODO: ? 这里还需要检查吗？或者说是在这里检查吗？难道prop的关于参数的检查不应该在更顶层的函数里？
 	paramSetFacts, err := defStmt.DefHeader.GetInstantiatedParamInParamSetFact(paramArrMap)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	for _, paramSetFact := range paramSetFacts {
@@ -479,7 +479,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt ast.SpecificFactStmt, sta
 	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
 	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 	// prove all domFacts are true
 	for _, domFact := range instantiatedIffToProp.DomFacts {
@@ -491,7 +491,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt ast.SpecificFactStmt, sta
 	}
 
 	if state.WithMsg {
-		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{defStmt.String()})
+		return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{defStmt.String()})
 	}
 	return glob.NewEmptyVerRetTrue()
 }

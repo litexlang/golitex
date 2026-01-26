@@ -25,7 +25,7 @@ LoopOverFacts:
 	for _, knownFact := range knownFacts {
 		verRet := ver.MatchExistSpecificFactWithExistSpecFactInUniFact(given, knownFact, verState)
 		if verRet.IsErr() {
-			return glob.NewVerMsg(glob.StmtRetTypeError, given.String(), glob.BuiltinLine0, []string{verRet.String()})
+			return glob.NewVerRet(glob.StmtRetTypeError, given.String(), glob.BuiltinLine0, []string{verRet.String()})
 		}
 		if verRet.IsUnknown() {
 			continue LoopOverFacts
@@ -64,7 +64,7 @@ func (ver *Verifier) MatchExistSpecificFactWithExistSpecFactInUniFact(given *ast
 	for i, paramSet := range knownFact.UniFact.ParamSets {
 		instParamSet, err := paramSet.Instantiate(uniMap)
 		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeError, knownFact.String(), glob.BuiltinLine0, []string{err.Error()})
+			return glob.NewVerRet(glob.StmtRetTypeError, knownFact.String(), glob.BuiltinLine0, []string{err.Error()})
 		}
 
 		instParam, ok := uniMap[string(knownFact.UniFact.Params[i])]
@@ -85,7 +85,7 @@ func (ver *Verifier) MatchExistSpecificFactWithExistSpecFactInUniFact(given *ast
 	for _, domFact := range knownFact.UniFact.DomFacts {
 		instDomFact, err := domFact.Instantiate(uniMap)
 		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeError, domFact.String(), glob.BuiltinLine0, []string{err.Error()})
+			return glob.NewVerRet(glob.StmtRetTypeError, domFact.String(), glob.BuiltinLine0, []string{err.Error()})
 		}
 		verRet := ver.VerFactStmt(instDomFact.(ast.FactStmt), verState)
 		if verRet.IsErr() {
@@ -107,19 +107,19 @@ func (ver *Verifier) matchFcInExistFactWithFreeParamsInForallFact(given *ast.Exi
 
 	ok, uniConMap, err := ver.matchUniFactParamsWithSpecFactParams(knownFcs, freeParams, givenFcs)
 	if err != nil {
-		return nil, nil, nil, glob.NewVerMsg(glob.StmtRetTypeError, knownExistFactInUniFact.String(), glob.BuiltinLine0, []string{err.Error()})
+		return nil, nil, nil, glob.NewVerRet(glob.StmtRetTypeError, knownExistFactInUniFact.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	if !ok {
 		return nil, nil, nil, glob.NewEmptyVerRetUnknown()
 	}
 	if err != nil {
-		return nil, nil, nil, glob.NewVerMsg(glob.StmtRetTypeError, knownExistFactInUniFact.String(), glob.BuiltinLine0, []string{err.Error()})
+		return nil, nil, nil, glob.NewVerRet(glob.StmtRetTypeError, knownExistFactInUniFact.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	instKnownFact, err := newKnown.Instantiate(uniConMap)
 	if err != nil {
-		return nil, nil, nil, glob.NewVerMsg(glob.StmtRetTypeError, knownExistFactInUniFact.String(), glob.BuiltinLine0, []string{err.Error()})
+		return nil, nil, nil, glob.NewVerRet(glob.StmtRetTypeError, knownExistFactInUniFact.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	if instKnownFact.String() == newGiven.String() {
