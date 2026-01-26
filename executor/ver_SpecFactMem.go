@@ -566,155 +566,155 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt ast.Specific
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch(stmtToMatch *ast.PureSpecificFactStmt, knownFacts []env.KnownSpecFact_InUniFact, getOkUniConMapErr func([]ast.Obj, []string, []ast.Obj) (bool, map[string]ast.Obj, error), state *VerState) *glob.VerRet {
-	for i := len(knownFacts) - 1; i >= 0; i-- {
-		knownFact_paramProcessed := knownFacts[i]
-		// 这里需要用的是 instantiated 的 knownFact
+// func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch(stmtToMatch *ast.PureSpecificFactStmt, knownFacts []env.KnownSpecFact_InUniFact, getOkUniConMapErr func([]ast.Obj, []string, []ast.Obj) (bool, map[string]ast.Obj, error), state *VerState) *glob.VerRet {
+// 	for i := len(knownFacts) - 1; i >= 0; i-- {
+// 		knownFact_paramProcessed := knownFacts[i]
+// 		// 这里需要用的是 instantiated 的 knownFact
 
-		ok, uniConMap, err := getOkUniConMapErr(knownFact_paramProcessed.SpecFact.(*ast.PureSpecificFactStmt).Params, knownFact_paramProcessed.UniFact.Params, stmtToMatch.Params)
-		if err != nil {
-			return glob.NewVerRet(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
-		}
-		if !ok {
-			continue
-		}
+// 		ok, uniConMap, err := getOkUniConMapErr(knownFact_paramProcessed.SpecFact.(*ast.PureSpecificFactStmt).Params, knownFact_paramProcessed.UniFact.Params, stmtToMatch.Params)
+// 		if err != nil {
+// 			return glob.NewVerRet(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
+// 		}
+// 		if !ok {
+// 			continue
+// 		}
 
-		randomizedKnownUniFactWithoutThen, _, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownFact_paramProcessed.UniFact)
-		if err != nil {
-			return glob.NewVerRet(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
-		}
+// 		randomizedKnownUniFactWithoutThen, _, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownFact_paramProcessed.UniFact)
+// 		if err != nil {
+// 			return glob.NewVerRet(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
+// 		}
 
-		for k, v := range uniConMap {
-			if newParam, ok := paramMapStrToStr[k]; ok {
-				uniConMap[newParam] = v
-				delete(uniConMap, k)
-			}
-		}
+// 		for k, v := range uniConMap {
+// 			if newParam, ok := paramMapStrToStr[k]; ok {
+// 				uniConMap[newParam] = v
+// 				delete(uniConMap, k)
+// 			}
+// 		}
 
-		instantiatedKnownUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedKnownUniFactWithoutThen, uniConMap)
-		if err != nil {
-			return glob.NewVerRet(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
-		}
+// 		instantiatedKnownUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedKnownUniFactWithoutThen, uniConMap)
+// 		if err != nil {
+// 			return glob.NewVerRet(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
+// 		}
 
-		var nextState *VerState
-		if glob.FullMsg {
-			nextState = state.Copy()
-		} else {
-			nextState = state.GetNoMsg()
-			// nextState = state.Copy()
-		}
+// 		var nextState *VerState
+// 		if glob.FullMsg {
+// 			nextState = state.Copy()
+// 		} else {
+// 			nextState = state.GetNoMsg()
+// 			// nextState = state.Copy()
+// 		}
 
-		// TODO 要证明在paramSet里
-		paramInParamSetFacts := instantiatedKnownUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
-		setFactSatisfied := true
-		for _, paramInParamSetFact := range paramInParamSetFacts {
-			verRet := ver.VerFactStmt(paramInParamSetFact, nextState)
-			if verRet.IsErr() {
-				return glob.NewVerRet(glob.StmtRetTypeError, paramInParamSetFact.String(), glob.BuiltinLine0, []string{verRet.String()})
-			}
-			if verRet.IsUnknown() {
-				setFactSatisfied = false
-				break
-			}
-		}
+// 		// TODO 要证明在paramSet里
+// 		paramInParamSetFacts := instantiatedKnownUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
+// 		setFactSatisfied := true
+// 		for _, paramInParamSetFact := range paramInParamSetFacts {
+// 			verRet := ver.VerFactStmt(paramInParamSetFact, nextState)
+// 			if verRet.IsErr() {
+// 				return glob.NewVerRet(glob.StmtRetTypeError, paramInParamSetFact.String(), glob.BuiltinLine0, []string{verRet.String()})
+// 			}
+// 			if verRet.IsUnknown() {
+// 				setFactSatisfied = false
+// 				break
+// 			}
+// 		}
 
-		if !setFactSatisfied {
-			continue
-		}
+// 		if !setFactSatisfied {
+// 			continue
+// 		}
 
-		verRet := ver.proveUniFactDomFacts(instantiatedKnownUniFactWithoutThen.DomFacts, nextState)
-		if verRet.IsErr() {
-			return verRet
-		}
+// 		verRet := ver.proveUniFactDomFacts(instantiatedKnownUniFactWithoutThen.DomFacts, nextState)
+// 		if verRet.IsErr() {
+// 			return verRet
+// 		}
 
-		if verRet.IsTrue() {
-			if state.WithMsg {
-				return glob.NewVerRet(glob.StmtRetTypeTrue, stmtToMatch.String(), knownFact_paramProcessed.SpecFact.GetLine(), []string{knownFact_paramProcessed.UniFact.String()})
-			}
-			return glob.NewEmptyVerRetTrue()
-		}
-	}
+// 		if verRet.IsTrue() {
+// 			if state.WithMsg {
+// 				return glob.NewVerRet(glob.StmtRetTypeTrue, stmtToMatch.String(), knownFact_paramProcessed.SpecFact.GetLine(), []string{knownFact_paramProcessed.UniFact.String()})
+// 			}
+// 			return glob.NewEmptyVerRetTrue()
+// 		}
+// 	}
 
-	return glob.NewEmptyVerRetUnknown()
-}
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
-func (ver *Verifier) iterate_KnownExistSpecInUniFacts_applyMatch_new(stmtToMatch ast.SpecificFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) *glob.VerRet {
-	return glob.NewEmptyVerRetUnknown()
-	// for i := len(knownFacts) - 1; i >= 0; i-- {
-	// 	knownFact_paramProcessed := knownFacts[i]
-	// 	// 这里需要用的是 instantiated 的 knownFact
+// func (ver *Verifier) iterate_KnownExistSpecInUniFacts_applyMatch_new(stmtToMatch ast.SpecificFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) *glob.VerRet {
+// 	return glob.NewEmptyVerRetUnknown()
+// for i := len(knownFacts) - 1; i >= 0; i-- {
+// 	knownFact_paramProcessed := knownFacts[i]
+// 	// 这里需要用的是 instantiated 的 knownFact
 
-	// 	var ok bool
-	// 	var uniConMap map[string]ast.Obj
-	// 	var err error
-	// 	ok, uniConMap, err = ver.matchExistFactWithExistFactInKnownUniFact(&knownFact_paramProcessed, stmtToMatch)
-	// 	if err != nil {
-	// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
-	// 	}
-	// 	if !ok {
-	// 		continue
-	// 	}
+// 	var ok bool
+// 	var uniConMap map[string]ast.Obj
+// 	var err error
+// 	ok, uniConMap, err = ver.matchExistFactWithExistFactInKnownUniFact(&knownFact_paramProcessed, stmtToMatch)
+// 	if err != nil {
+// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
+// 	}
+// 	if !ok {
+// 		continue
+// 	}
 
-	// 	// 后面过程和pure fact一样的
+// 	// 后面过程和pure fact一样的
 
-	// 	randomizedUniFactWithoutThen, _, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownFact_paramProcessed.UniFact)
-	// 	if err != nil {
-	// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
-	// 	}
+// 	randomizedUniFactWithoutThen, _, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownFact_paramProcessed.UniFact)
+// 	if err != nil {
+// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
+// 	}
 
-	// 	for k, v := range uniConMap {
-	// 		if newParam, ok := paramMapStrToStr[k]; ok {
-	// 			uniConMap[newParam] = v
-	// 			delete(uniConMap, k)
-	// 		}
-	// 	}
+// 	for k, v := range uniConMap {
+// 		if newParam, ok := paramMapStrToStr[k]; ok {
+// 			uniConMap[newParam] = v
+// 			delete(uniConMap, k)
+// 		}
+// 	}
 
-	// 	instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
-	// 	if err != nil {
-	// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
-	// 	}
+// 	instantiatedUniFactWithoutThen, err := instantiateUniFactWithoutThenFacts(randomizedUniFactWithoutThen, uniConMap)
+// 	if err != nil {
+// 		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmtToMatch.String(), glob.BuiltinLine0, []string{err.Error()})
+// 	}
 
-	// 	var nextState *VerState
-	// 	if glob.FullMsg {
-	// 		nextState = state.Copy()
-	// 	} else {
-	// 		nextState = state.GetNoMsg()
-	// 		// nextState = state.Copy()
-	// 	}
+// 	var nextState *VerState
+// 	if glob.FullMsg {
+// 		nextState = state.Copy()
+// 	} else {
+// 		nextState = state.GetNoMsg()
+// 		// nextState = state.Copy()
+// 	}
 
-	// 	// TODO 要证明在paramSet里
-	// 	paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
-	// 	setFactSatisfied := true
-	// 	for _, paramInParamSetFact := range paramInParamSetFacts {
-	// 		verRet := ver.VerFactStmt(paramInParamSetFact, nextState)
-	// 		if verRet.IsErr() {
-	// 			return glob.NewVerMsg(glob.StmtRetTypeError, paramInParamSetFact.String(), glob.BuiltinLine0, []string{verRet.String()})
-	// 		}
-	// 		if verRet.IsUnknown() {
-	// 			setFactSatisfied = false
-	// 			break
-	// 		}
-	// 	}
+// 	// TODO 要证明在paramSet里
+// 	paramInParamSetFacts := instantiatedUniFactWithoutThen.ParamInParamSetFacts(uniConMap)
+// 	setFactSatisfied := true
+// 	for _, paramInParamSetFact := range paramInParamSetFacts {
+// 		verRet := ver.VerFactStmt(paramInParamSetFact, nextState)
+// 		if verRet.IsErr() {
+// 			return glob.NewVerMsg(glob.StmtRetTypeError, paramInParamSetFact.String(), glob.BuiltinLine0, []string{verRet.String()})
+// 		}
+// 		if verRet.IsUnknown() {
+// 			setFactSatisfied = false
+// 			break
+// 		}
+// 	}
 
-	// 	if !setFactSatisfied {
-	// 		continue
-	// 	}
+// 	if !setFactSatisfied {
+// 		continue
+// 	}
 
-	// 	verRet := ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, nextState)
-	// 	if verRet.IsErr() {
-	// 		return verRet
-	// 	}
+// 	verRet := ver.proveUniFactDomFacts(instantiatedUniFactWithoutThen.DomFacts, nextState)
+// 	if verRet.IsErr() {
+// 		return verRet
+// 	}
 
-	// 	if verRet.IsTrue() {
-	// 		if state.WithMsg {
-	// 			return glob.NewVerMsg(glob.StmtRetTypeTrue, stmtToMatch.String(), knownFact_paramProcessed.SpecFact.GetLine(), []string{knownFact_paramProcessed.UniFact.String()})
-	// 		}
-	// 		return glob.NewEmptyVerRetTrue()
-	// 	}
-	// }
+// 	if verRet.IsTrue() {
+// 		if state.WithMsg {
+// 			return glob.NewVerMsg(glob.StmtRetTypeTrue, stmtToMatch.String(), knownFact_paramProcessed.SpecFact.GetLine(), []string{knownFact_paramProcessed.UniFact.String()})
+// 		}
+// 		return glob.NewEmptyVerRetTrue()
+// 	}
+// }
 
-	// return glob.NewEmptyVerRetUnknown()
-}
+// return glob.NewEmptyVerRetUnknown()
+// }
 
 // func (ver *Verifier) iterate_KnownExistSpecInLogic_InUni_applyMatch_new(stmt ast.SpecificFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state *VerState) *glob.VerRet {
 // 	return glob.NewEmptyVerRetUnknown()
