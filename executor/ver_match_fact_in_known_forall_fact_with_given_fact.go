@@ -27,28 +27,14 @@ func (ver *Verifier) matchPureFactInKnownUniFactWithGiven(knownUniFact *ast.UniF
 				return glob.NewEmptyVerRetUnknown()
 			}
 
-			// switch asFact := instDomFact.(type) {
-			// case ast.SpecificFactStmt:
-			// 	nextState := NewVerState(2, false, true)
-			// 	ret := ver.VerFactStmt(asFact, nextState)
-			// 	if ret.IsNotTrue() {
-			// 		return glob.NewEmptyVerRetUnknown()
-			// 	}
-			// default:
-			// 	ret := ver.VerFactStmt(asFact, state)
-			// 	if ret.IsNotTrue() {
-			// 		return glob.NewEmptyVerRetUnknown()
-			// 	}
-			// }
-
-			if asPureFact, ok := instDomFact.(*ast.PureSpecificFactStmt); ok {
-				if asPureFact.PropName == glob.KeySymbolEqual {
-					// nextState := state.GetFinalRound()
-					nextState := NewVerState(2, false, true)
-					ret := ver.VerFactStmt(instDomFact, nextState)
-					if ret.IsNotTrue() {
-						return glob.NewEmptyVerRetUnknown()
-					}
+			// warning : 这里不应该需要分类处理。因为我的equal在什么地方有bug，所以要有额外的对equal的不同的处理。不分类会让 forall x Z: (7 * x + 1) % 7 = ((7 * x) % 7 + 1 % 7) % 7 = (0 + 1) % 7 = 1 不能通过
+			// TODO
+			if asPureFact, ok := instDomFact.(*ast.PureSpecificFactStmt); ok && asPureFact.PropName == glob.KeySymbolEqual {
+				// nextState := state.GetFinalRound()
+				nextState := NewVerState(2, false, true)
+				ret := ver.VerFactStmt(instDomFact, nextState)
+				if ret.IsNotTrue() {
+					return glob.NewEmptyVerRetUnknown()
 				}
 			} else {
 				ret := ver.VerFactStmt(instDomFact, state)
@@ -56,6 +42,7 @@ func (ver *Verifier) matchPureFactInKnownUniFactWithGiven(knownUniFact *ast.UniF
 					return glob.NewEmptyVerRetUnknown()
 				}
 			}
+
 		}
 
 		return glob.NewVerRet(glob.StmtRetTypeTrue, given.String(), knownUniFact.Line, []string{knownUniFact.String()})

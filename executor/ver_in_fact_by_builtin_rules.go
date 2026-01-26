@@ -132,13 +132,13 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt ast.SpecificFactStmt, state *Ve
 	}
 
 	// x $in power_set(X)
-	verRet = ver.verInFactByRightIsPowerSet(stmt, state)
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsTrue() {
-		return verRet
-	}
+	// verRet = ver.verInFactByRightIsPowerSet(stmt, state)
+	// if verRet.IsErr() {
+	// 	return verRet
+	// }
+	// if verRet.IsTrue() {
+	// 	return verRet
+	// }
 
 	return glob.NewEmptyVerRetUnknown()
 }
@@ -1055,35 +1055,35 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfSuperFn(stmt ast.Specifi
 	}
 }
 
-func (ver *Verifier) verInFactByRightIsPowerSet(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
-	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
-	if !ok {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// func (ver *Verifier) verInFactByRightIsPowerSet(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+// 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+// 	if !ok {
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
 
-	if len(asPureStmt.Params) != 2 {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// 	if len(asPureStmt.Params) != 2 {
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
 
-	if asFnObj, ok := asPureStmt.Params[1].(*ast.FnObj); ok {
-		if asFnObj.FnHead.String() != glob.KeywordPowerSet || len(asFnObj.Params) != 1 {
-			return glob.NewEmptyVerRetUnknown()
-		}
-	} else {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// 	if asFnObj, ok := asPureStmt.Params[1].(*ast.FnObj); ok {
+// 		if asFnObj.FnHead.String() != glob.KeywordPowerSet || len(asFnObj.Params) != 1 {
+// 			return glob.NewEmptyVerRetUnknown()
+// 		}
+// 	} else {
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
 
-	randomAtom := ver.Env.GenerateUndeclaredRandomName()
+// 	randomAtom := ver.Env.GenerateUndeclaredRandomName()
 
-	// 证明 forall x X: x $in X
-	forallFact := ast.NewUniFact(
-		[]string{randomAtom},
-		[]ast.Obj{asPureStmt.Params[0]},
-		[]ast.FactStmt{},
-		[]ast.FactStmt{ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom(randomAtom), asPureStmt.Params[1].(*ast.FnObj).Params[0]}, glob.BuiltinLine0)},
-		glob.BuiltinLine0,
-	)
-	verRet := ver.VerFactStmt(forallFact, state)
+// 	// 证明 forall x X: x $in X
+// 	forallFact := ast.NewUniFact(
+// 		[]string{randomAtom},
+// 		[]ast.Obj{asPureStmt.Params[0]},
+// 		[]ast.FactStmt{},
+// 		[]ast.FactStmt{ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom(randomAtom), asPureStmt.Params[1].(*ast.FnObj).Params[0]}, glob.BuiltinLine0)},
+// 		glob.BuiltinLine0,
+// 	)
+// 	verRet := ver.VerFactStmt(forallFact, state)
 
-	return verRet
-}
+// 	return verRet
+// }
