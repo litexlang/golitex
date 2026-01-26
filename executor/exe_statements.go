@@ -121,8 +121,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = exec.inferStmt(stmt)
 	case *ast.InferTemplateStmt:
 		execRet = exec.inferTemplateStmt(stmt)
-	case *ast.WitnessShortStmt:
-		execRet = exec.witnessShortStmt(stmt)
 	default:
 		execRet = glob.ErrRet(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -1099,80 +1097,6 @@ func (exec *Executor) checkCaseInProveCaseByCase(stmt *ast.ProveCaseByCaseStmt, 
 
 		return glob.NewEmptyStmtTrue()
 	}
-}
-
-func (exec *Executor) witnessShortStmt(stmt *ast.WitnessShortStmt) *glob.StmtRet {
-	ret := exec.witnessShortStmt_Verify(stmt)
-	if ret.IsNotTrue() {
-		return ret
-	}
-
-	ret = exec.witnessShortStmt_NewFact(stmt)
-	if ret.IsNotTrue() {
-		return ret
-	}
-
-	return exec.NewTrueStmtRet(stmt)
-}
-
-func (exec *Executor) witnessShortStmt_Verify(witnessShortStmt *ast.WitnessShortStmt) *glob.StmtRet {
-	exec.NewEnv()
-	defer exec.deleteEnv()
-
-	for _, proof := range witnessShortStmt.Proofs {
-		ret := exec.Stmt(proof)
-		if ret.IsNotTrue() {
-			return ret
-		}
-	}
-
-	ret := exec.factStmt(witnessShortStmt.SpecFact)
-	if ret.IsNotTrue() {
-		return ret
-	}
-
-	return exec.NewTrueStmtRet(witnessShortStmt)
-}
-
-func (exec *Executor) witnessShortStmt_NewFact(witnessShortStmt *ast.WitnessShortStmt) *glob.StmtRet {
-	return glob.NewEmptyStmtUnknown()
-
-	// lenOfParams := len(witnessShortStmt.SpecFact.Params)
-	// // 生成 lenOfParams 个 random obj
-
-	// randomParams := []string{}
-	// for i := 0; i < lenOfParams; i++ {
-	// 	for {
-	// 		randomObj := ast.Atom(exec.Env.GenerateUndeclaredRandomName())
-	// 		if !slices.Contains(randomParams, string(randomObj)) {
-	// 			randomParams = append(randomParams, string(randomObj))
-	// 			break
-	// 		}
-	// 	}
-	// }
-
-	// 生成 exist a set, b set, c set ... st $p(a, b, c, ...)
-
-	// 生成 randomParams 个 set
-	// randomParamSets := []ast.Obj{}
-	// for i := 0; i < len(randomParams); i++ {
-	// 	randomParamSets = append(randomParamSets, ast.Atom(glob.KeywordSet))
-	// }
-
-	// // 生成 randomParams 个 paramAsObj
-	// randomParamAsObj := []ast.Obj{}
-	// for i := 0; i < len(randomParams); i++ {
-	// 	randomParamAsObj = append(randomParamAsObj, ast.Atom(randomParams[i]))
-	// }
-
-	// existStruct := ast.NewExistSpecificFactStmt(true, randomParams, randomParamSets, ast.NewPureSpecificFactStmt(true, witnessShortStmt.SpecFact.PropName, randomParamAsObj, witnessShortStmt.Line), witnessShortStmt.Line)
-
-	// ret := exec.Env.NewFactWithCheckingNameDefined(existStruct)
-	// if ret.IsNotTrue() {
-	// 	return glob.ErrRet(ret.String())
-	// }
-
-	// return exec.NewTrueStmtRet(witnessShortStmt).AddNewFacts(ret.Infer)
 }
 
 func (exec *Executor) haveShortStmt(stmt *ast.HaveShortStmt) *glob.StmtRet {

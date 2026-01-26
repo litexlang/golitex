@@ -86,10 +86,6 @@ func (f *HaveShortStmt) ToLatexString() string {
 	return f.String()
 }
 
-func (f *WitnessShortStmt) ToLatexString() string {
-	return f.String()
-}
-
 func (f *WitnessStmt) ToLatexString() string {
 	return f.String()
 }
