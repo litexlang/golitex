@@ -113,9 +113,6 @@ func (ver *Verifier) matchFcInExistFactWithFreeParamsInForallFact(given *ast.Exi
 	if !ok {
 		return nil, nil, nil, glob.NewEmptyVerRetUnknown()
 	}
-	if err != nil {
-		return nil, nil, nil, glob.NewVerRet(glob.StmtRetTypeError, knownExistFactInUniFact.String(), glob.BuiltinLine0, []string{err.Error()})
-	}
 
 	instKnownFact, err := newKnown.Instantiate(uniConMap)
 	if err != nil {

@@ -322,6 +322,7 @@ func (ver *Verifier) matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFact a
 }
 
 func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.Obj, freeVars []string, givenFcs []ast.Obj, propNameForMsg string, knownToInstEqualMap_usedToMatchFreeParamsOfExistFacts map[string]ast.Obj) (bool, map[string]ast.Obj, error) {
+	_ = propNameForMsg
 	// knownFcs := knownSpecFactInUniFact.SpecFact.Params
 	// freeVars := knownSpecFactInUniFact.UniFact.Params
 	freeVarsMap := map[string]struct{}{}
