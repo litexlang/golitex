@@ -120,6 +120,10 @@ func (ver *Verifier) matchParamWithFreeParamsAsAtomWithInstParamAsAtomInExistFac
 }
 
 func (ver *Verifier) matchParamWithFreeParamsAsAtomWithInstParamAsFnObjInExistFact(freeParams []string, existFreeParams []string, knownParam ast.Atom, givenParam *ast.FnObj) (bool, map[string]ast.Obj) {
+	if ast.ObjIsKeywordSetOrNonEmptySetOrFiniteSet(knownParam) {
+		return false, nil
+	}
+
 	if slices.Contains(freeParams, string(knownParam)) {
 		return true, map[string]ast.Obj{string(knownParam): givenParam}
 	}

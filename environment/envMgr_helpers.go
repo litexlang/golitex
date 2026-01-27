@@ -28,7 +28,7 @@ func (envMgr *EnvMgr) GenerateUnusedRandomName() string {
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
 		ret := envMgr.IsNameUnavailable((randomStr), map[string]struct{}{})
-		if ret.IsErr() {
+		if ret.IsNotTrue() {
 			return randomStr
 		}
 		i++
@@ -42,7 +42,7 @@ func (envMgr *EnvMgr) GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(m map[str
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
 		ret := envMgr.IsNameUnavailable(randomStr, map[string]struct{}{})
-		if ret.IsErr() {
+		if ret.IsNotTrue() {
 			_, ok := m[randomStr]
 			if !ok {
 				return randomStr
