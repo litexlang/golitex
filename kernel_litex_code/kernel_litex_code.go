@@ -1167,4 +1167,6 @@ know:
 	forall a, b R, c R_pos: a <= b => a <= b + c
 
 know forall x Z, n Z: x <= n + 1 => x <= n or x = n+ 1
+
+know forall s power_set(R): $is_finite_set(s) => exist a s st $is_max(a, s)
 `
