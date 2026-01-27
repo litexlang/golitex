@@ -1,8 +1,11 @@
-prop q(x,y,z R)
+prop p(x, a R)
 
-prop p(x R, y R):
-    forall z R: $q(z, x, y)
+know forall x R: exist a R st $p(x, a)
 
-know forall z R: $q(z, 1, 2)
+exist a R st $p(1, a)
 
-$p(1,2)
+prop q(x R, a set)
+
+know forall x R: exist a set st $q(x, a)
+
+exist a set st $q(1, a)

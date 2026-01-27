@@ -235,7 +235,8 @@ func (ver *Verifier) checkSpecFactUseUniMemAtCurEnv(curEnv *env.EnvMemory, stmt 
 	if _, ok := stmt.(*ast.PureSpecificFactStmt); ok {
 		return ver.matchGivenPureFactWithOnesInKnownUniFacts(searchedSpecFacts, stmt.(*ast.PureSpecificFactStmt), state)
 	} else {
-		return ver.MatchExistFactUseForallMemory(stmt.(*ast.ExistSpecificFactStmt), searchedSpecFacts, state)
+		// return ver.MatchExistFactUseForallMemory(stmt.(*ast.ExistSpecificFactStmt), searchedSpecFacts, state)
+		return ver.matchGivenExistFactWithOnesInKnownUniFacts(searchedSpecFacts, stmt.(*ast.ExistSpecificFactStmt), state)
 	}
 }
 
@@ -260,24 +261,22 @@ func (ver *Verifier) matchGivenExistFactWithOnesInKnownUniFacts(knownFacts []env
 		uniMap[givenFreeParam] = ast.Atom(newFreeExistParamsUnused[i])
 	}
 
-	newGiven, err := given.Instantiate(uniMap)
+	newGiven, err := given.ReplaceFreeParamsWithNewParams(newFreeExistParamsUnused)
 	if err != nil {
 		return glob.NewEmptyVerRetErr()
 	}
 
-	newGivenAsExist := newGiven.(*ast.ExistSpecificFactStmt)
-
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		newKnownUniFact := ver.Env.GetUniFactFactFreeParamsNotConflictWithDefinedParams(knownFacts[i].UniFact, usedNamesAsExistFreeParams)
 
-		knownExistFactInUni := newKnownUniFact.ThenFacts[knownFacts[i].SpecFactIndex]
+		knownExistFactInUni := newKnownUniFact.ThenFacts[knownFacts[i].SpecFactIndex].(*ast.ExistSpecificFactStmt)
 
-		newKnownExistInUni, err := knownExistFactInUni.Instantiate(uniMap)
+		newKnownExistInUni, err := knownExistFactInUni.ReplaceFreeParamsWithNewParams(newFreeExistParamsUnused)
 		if err != nil {
 			return glob.NewEmptyVerRetErr()
 		}
 
-		ret := ver.matchExistFactWithOneInKnownUniFact(newKnownUniFact, newKnownExistInUni.(*ast.ExistSpecificFactStmt), newGivenAsExist, state)
+		ret := ver.matchExistFactWithOneInKnownUniFact(newKnownUniFact, newKnownExistInUni, newGiven, state)
 		if ret.IsTrue() {
 			return ret
 		}
