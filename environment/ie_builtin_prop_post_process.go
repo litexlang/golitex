@@ -644,7 +644,7 @@ func (ie *InferEngine) subsetOfFactPostProcess(fact ast.SpecificFactStmt) *glob.
 	}
 
 	// 生成出来一个 random variable t
-	obj := ie.EnvMgr.GenerateUndeclaredRandomName()
+	obj := ie.EnvMgr.GenerateUnusedRandomName()
 
 	forallFact := ast.NewUniFact([]string{obj}, []ast.Obj{asFact.Params[0]}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFact(obj, asFact.Params[1])}, fact.GetLine())
 

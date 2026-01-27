@@ -25,7 +25,7 @@ func (envMgr *EnvMgr) GenerateNoDuplicateNames(length int, usedNames map[string]
 	copiedUsedNames := maps.Clone(usedNames)
 	names := make([]string, length)
 	for i := 0; i < length; i++ {
-		names[i] = envMgr.GenerateUndeclaredRandomName_AndNotInMap(copiedUsedNames)
+		names[i] = envMgr.GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(copiedUsedNames)
 		copiedUsedNames[names[i]] = struct{}{}
 	}
 	return names

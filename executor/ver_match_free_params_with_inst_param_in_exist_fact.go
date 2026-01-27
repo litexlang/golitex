@@ -95,6 +95,10 @@ func (ver *Verifier) matchParamWithFreeParamsWithInstParamInExistFact(freeParams
 }
 
 func (ver *Verifier) matchParamWithFreeParamsAsAtomWithInstParamAsAtomInExistFact(freeParams []string, existFreeParams []string, knownParam ast.Atom, givenParam ast.Atom) (bool, map[string]ast.Obj) {
+	if (string(knownParam) == glob.KeywordSet && string(givenParam) == glob.KeywordSet) || (string(knownParam) == glob.KeywordFiniteSet && string(givenParam) == glob.KeywordFiniteSet) || (string(knownParam) == glob.KeywordNonEmptySet && string(givenParam) == glob.KeywordNonEmptySet) {
+		return true, nil
+	}
+
 	if slices.Contains(freeParams, string(knownParam)) {
 		return true, map[string]ast.Obj{string(knownParam): givenParam}
 	}

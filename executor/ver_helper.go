@@ -83,7 +83,7 @@ func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistSpe
 
 	for i, oldParam := range existStruct.ExistFreeParams {
 		// 生成一个不冲突的随机名称
-		newParamName := ver.Env.GenerateUndeclaredRandomName_AndNotInMap(usedNames)
+		newParamName := ver.Env.GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(usedNames)
 		newExistParams[i] = newParamName
 		usedNames[newParamName] = struct{}{}
 		paramReplaceMap[oldParam] = ast.Atom(newParamName)

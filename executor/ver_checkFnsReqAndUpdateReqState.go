@@ -398,7 +398,7 @@ func (ver *Verifier) replaceParamWithUndeclaredRandomName(setBuilderStruct *ast.
 	oldParam := ast.Atom(setBuilderStruct.Param)
 
 	// Generate a new random undeclared name
-	newParamName := ver.Env.GenerateUndeclaredRandomName()
+	newParamName := ver.Env.GenerateUnusedRandomName()
 	newParam := ast.Atom(newParamName)
 
 	// Replace param in all facts
