@@ -253,7 +253,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 
 	// 创建一个 or fact，表示 left 等于 list set 中的某一个元素
 	// forall x left => x = left[1] or x = left[2] or ... or x = left[len(left)]
-	randomName := ie.EnvMgr.GenerateUndeclaredRandomName()
+	randomName := ie.EnvMgr.GenerateUnusedRandomName()
 	orFact := ast.NewOrStmt([]ast.SpecificFactStmt{}, glob.BuiltinLine0)
 	for _, param := range listSetFnObj.Params {
 		orFact.Facts = append(orFact.Facts, ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.Atom(randomName), param}, glob.BuiltinLine0))

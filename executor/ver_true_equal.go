@@ -367,7 +367,7 @@ func (ver *Verifier) verEqualByLeftAndRightAreSetBuilders(left, right ast.Obj, s
 		return glob.NewEmptyVerRetUnknown()
 	}
 	// 生成一个随机的param，把两个set builder的param都替换成这个随机param
-	randomParam := ver.Env.GenerateUndeclaredRandomName()
+	randomParam := ver.Env.GenerateUnusedRandomName()
 
 	leftSetBuilderStruct, err := leftSetBuilder.ToSetBuilderStruct()
 	if err != nil {

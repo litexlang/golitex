@@ -843,7 +843,7 @@ func (ie *InferEngine) trueInFactInCup(item ast.Obj, cupSet *ast.FnObj) *glob.Sh
 		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("cup expects 1 parameter, got %d", len(cupSet.Params))})
 	}
 
-	xItemParam := ie.EnvMgr.GenerateUndeclaredRandomName()
+	xItemParam := ie.EnvMgr.GenerateUnusedRandomName()
 
 	// Create exist fact: exist x_item x st item $in x_item
 	pureFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{item, ast.Atom(xItemParam)}, glob.BuiltinLine0)
@@ -871,7 +871,7 @@ func (ie *InferEngine) trueInFactInCap(item ast.Obj, capSet *ast.FnObj) *glob.Sh
 	}
 
 	x := capSet.Params[0]
-	xItemParam := ie.EnvMgr.GenerateUndeclaredRandomName()
+	xItemParam := ie.EnvMgr.GenerateUnusedRandomName()
 
 	// Create forall fact: forall x_item x: item $in x_item
 	inFact := ast.NewInFactWithParamObj(ast.Atom(xItemParam), x, glob.BuiltinLine0)

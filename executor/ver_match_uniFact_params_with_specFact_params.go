@@ -223,7 +223,7 @@ func (ver *Verifier) matchFcsByTheyAreAllSetBuilders(knownFc *ast.FnObj, givenFc
 
 	// set builder 里的参数不一样，不一定代表不同的set builder
 	if knownFc.Params[0].String() != givenFc.Params[1].String() {
-		randomParam := ver.Env.GenerateUndeclaredRandomName()
+		randomParam := ver.Env.GenerateUnusedRandomName()
 
 		instKnownStruct, err = knownStruct.ReplaceParamWithNewParam(randomParam)
 		if err != nil {
