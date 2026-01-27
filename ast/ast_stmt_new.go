@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import (
 	"slices"
 )
 
-func NewDefObjStmt(objs []string, objSets []Fc, facts []FactStmt, line uint) *DefLetStmt {
+func NewDefLetStmt(objs []string, objSets []Obj, facts []FactStmt, line uint) *DefLetStmt {
 	return &DefLetStmt{objs, objSets, facts, line}
 }
 
@@ -28,39 +28,51 @@ func NewDefPropStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactSt
 	return &DefPropStmt{defHeader, domFacts, iffFacts, thenFacts, line}
 }
 
-func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Fc, line uint) *DefExistPropStmt {
-	return &DefExistPropStmt{def, existParams, existParamSets, line}
+// func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Obj, line uint) *DefExistPropStmt {
+// 	return &DefExistPropStmt{def, existParams, existParamSets, line}
+// }
+
+// func NewSpecFactStmt(typeEnum SpecFactType, propName Atom, params []Obj, line uint) *SpecFactStmt {
+// 	return &SpecFactStmt{typeEnum, propName, params, line}
+// }
+
+func NewImplyStmt(domFacts []Spec_OrFact, thenFacts []Spec_OrFact, line uint) *InferStmt {
+	return &InferStmt{domFacts, thenFacts, line}
 }
 
-func NewSpecFactStmt(typeEnum SpecFactEnum, propName FcAtom, params []Fc, line uint) *SpecFactStmt {
-	return &SpecFactStmt{typeEnum, propName, params, line}
-}
-
-func NewClaimProveByContradictionStmt(claim *ClaimProveStmt, line uint) *ClaimProveByContradictionStmt {
-	return &ClaimProveByContradictionStmt{claim, line}
+func NewClaimProveByContradictionStmt(toCheckFact Spec_OrFact, proofs []Stmt, line uint) *ClaimProveByContradictionStmt {
+	return &ClaimProveByContradictionStmt{toCheckFact, proofs, line}
 }
 
 func NewClaimProveStmt(toCheckFact FactStmt, proofs []Stmt, line uint) *ClaimProveStmt {
 	return &ClaimProveStmt{toCheckFact, proofs, line}
 }
 
+func NewImpossibleStmt(fact Spec_OrFact, line uint) *ImpossibleStmt {
+	return &ImpossibleStmt{fact, line}
+}
+
 func NewKnowStmt(facts CanBeKnownStmtSlice, line uint) *KnowFactStmt {
 	return &KnowFactStmt{facts, line}
 }
 
-func NewDefHeader(name FcAtom, params []string, setParams []Fc) *DefHeader {
+func NewDefHeader(name string, params []string, setParams []Obj) *DefHeader {
 	return &DefHeader{name, params, setParams}
 }
 
-func NewHaveStmt(objNames []string, fact *SpecFactStmt, line uint) *HaveObjStStmt {
-	return &HaveObjStStmt{objNames, fact, line}
+// func NewHaveObjStStmt(objNames []string, fact *SpecFactStmt, line uint) *HaveObjStStmt {
+// 	return &HaveObjStStmt{objNames, fact, line}
+// }
+
+func NewHaveObjStWithParamSetsStmt(objNames []string, objSets []Obj, fact *PureSpecificFactStmt, line uint) *HaveObjStStmt {
+	return &HaveObjStStmt{objNames, objSets, fact, line}
 }
 
-func NewExistPropDef(declHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {
-	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts, thenFacts, line}
-}
+// func NewExistPropDef(declHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {
+// 	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts, thenFacts, line}
+// }
 
-func NewUniFact(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, line uint) *UniFactStmt {
+func NewUniFact(params []string, setParams []Obj, domFacts []FactStmt, thenFacts []FactStmt, line uint) *UniFactStmt {
 	return &UniFactStmt{params, setParams, domFacts, thenFacts, line}
 }
 
@@ -68,167 +80,158 @@ func NewUniFactWithIff(uniFact *UniFactStmt, iffFacts []FactStmt, line uint) *Un
 	return &UniFactWithIffStmt{uniFact, iffFacts, line}
 }
 
-func NewProveInEachCaseStmt(orFact *OrStmt, thenFacts []FactStmt, proofs []StmtSlice, line uint) *ProveInEachCaseStmt {
-	return &ProveInEachCaseStmt{orFact, thenFacts, proofs, line}
+func NewProveCaseByCaseStmt(caseFacts []SpecificFactStmt, thenFacts []FactStmt, proofs StmtSliceSlice, proveOr StmtSlice, line uint) *ProveCaseByCaseStmt {
+	return &ProveCaseByCaseStmt{caseFacts, thenFacts, proofs, proveOr, line}
 }
 
-func NewKnowPropStmt(prop *DefPropStmt, line uint) *KnowPropStmt {
-	return &KnowPropStmt{prop, line}
+func NewKnowPropInferStmt(prop *DefPropStmt, line uint) *KnowPropInferStmt {
+	return &KnowPropInferStmt{prop, line}
 }
 
-func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {
-	return &DefExistPropStmtBody{defHeader, domFacts, iffFacts, thenFacts, line}
+func NewKnowInferStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts FactStmtSlice, line uint) *KnowInferStmt {
+	return &KnowInferStmt{
+		Params:    params,
+		ParamSets: paramSets,
+		DomFacts:  domFacts,
+		ThenFacts: thenFacts,
+		IfFacts:   ifFacts,
+		Line:      line,
+	}
 }
 
-func NewOrStmt(orFacts []*SpecFactStmt, line uint) *OrStmt {
+// func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {
+// 	return &DefExistPropStmtBody{defHeader, domFacts, iffFacts, thenFacts, line}
+// }
+
+func NewOrStmt(orFacts SpecFactPtrSlice, line uint) *OrStmt {
 	return &OrStmt{orFacts, line}
 }
 
-func NewImportStmt(path string, asPkgName string, line uint) *ImportDirStmt {
-	return &ImportDirStmt{path, asPkgName, line}
+func NewImportDirStmt(path string, asPkgName string, IsGlobalPkg bool, line uint) *ImportDirStmt {
+	return &ImportDirStmt{path, asPkgName, IsGlobalPkg, line}
 }
 
 func NewProveStmt(proof []Stmt, line uint) *ProveStmt {
 	return &ProveStmt{proof, line}
 }
 
-func NewDefFnStmt(name string, fnTemplate *FnTStruct, line uint) *DefFnStmt {
-	return &DefFnStmt{name, fnTemplate, line}
+func NewLetFnStmt(name string, fnTemplate *AnonymousFn, line uint) *LetFnStmt {
+	return &LetFnStmt{name, fnTemplate, line}
 }
 
-func NewEnumStmt(enumName Fc, enumValues []Fc, line uint) *EnumStmt {
-	return &EnumStmt{enumName, enumValues, line}
+// func NewEnumStmt(enumName Obj, enumValues []Obj, line uint) *EnumStmt {
+// 	return &EnumStmt{enumName, enumValues, line}
+// }
+
+func NewRunFileStmt(path string, line uint) *RunFileStmt {
+	return &RunFileStmt{path, line}
 }
 
-func NewImportFileStmt(path string, line uint) *ImportFileStmt {
-	return &ImportFileStmt{path, line}
+func NewClaimPropStmt(implication *DefPropStmt, proofs []Stmt, line uint) *ClaimImplicationStmt {
+	return &ClaimImplicationStmt{implication, proofs, line}
 }
 
-func NewClaimPropStmt(prop *DefPropStmt, proofs []Stmt, isProve bool, line uint) *ClaimPropStmt {
-	return &ClaimPropStmt{prop, proofs, isProve, line}
-}
-
-func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt, haveObj []Fc, line uint) *ClaimExistPropStmt {
-	return &ClaimExistPropStmt{existProp, proofs, haveObj, line}
-}
-
-func NewIntensionalSetStmt(curSet Fc, param string, parentSet Fc, proofs []*SpecFactStmt, line uint) *IntensionalSetStmt {
-	return &IntensionalSetStmt{curSet, param, parentSet, proofs, line}
-}
+// func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt, haveObj []Obj, line uint) *ClaimExistPropStmt {
+// 	return &ClaimExistPropStmt{existProp, proofs, haveObj, line}
+// }
 
 func NewProveByEnumStmt(fact *UniFactStmt, proofs []Stmt, line uint) *ProveByEnumStmt {
 	return &ProveByEnumStmt{fact, proofs, line}
 }
 
-func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Fc, line uint) *HaveObjInNonEmptySetStmt {
+func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Obj, line uint) *HaveObjInNonEmptySetStmt {
 	return &HaveObjInNonEmptySetStmt{objNames, objSets, line}
 }
 
-func NewHaveEnumSetStmt(fact *EnumStmt, line uint) *HaveEnumSetStmt {
-	return &HaveEnumSetStmt{fact, line}
-}
+// func NewNamedUniFactStmt(defPropStmt *DefPropStmt, line uint) *NamedUniFactStmt {
+// 	return &NamedUniFactStmt{defPropStmt, line}
+// }
 
-func NewHaveIntensionalSetStmt(fact *IntensionalSetStmt, line uint) *HaveIntensionalSetStmt {
-	return &HaveIntensionalSetStmt{fact, line}
-}
-
-func NewHaveSetFnStmt(declHeader *DefHeader, param string, parentSet Fc, proofs []*SpecFactStmt, line uint) *HaveSetFnStmt {
-	return &HaveSetFnStmt{declHeader, param, parentSet, proofs, line}
-}
-
-func NewHaveSetDefinedByReplacementStmt(name string, domSet Fc, rangeSet Fc, propName FcAtom, line uint) *HaveSetDefinedByReplacementStmt {
-	return &HaveSetDefinedByReplacementStmt{name, domSet, rangeSet, propName, line}
-}
-
-func NewNamedUniFactStmt(defPropStmt *DefPropStmt, line uint) *NamedUniFactStmt {
-	return &NamedUniFactStmt{defPropStmt, line}
-}
-
-func NewEqualsFactStmt(params FcSlice, line uint) *EqualsFactStmt {
+func NewEqualsFactStmt(params ObjSlice, line uint) *EqualsFactStmt {
 	return &EqualsFactStmt{params, line}
 }
 
-func NewKnowExistPropStmt(existProp *DefExistPropStmt, line uint) *KnowExistPropStmt {
-	return &KnowExistPropStmt{existProp, line}
+// func NewKnowExistPropStmt(existProp *DefExistPropStmt, line uint) *KnowExistPropStmt {
+// 	return &KnowExistPropStmt{existProp, line}
+// }
+
+func NewDefFnSetStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnTStruct *AnonymousFn, line uint) *DefFnSetStmt {
+	return &DefFnSetStmt{defHeader, templateDomFacts, fnTStruct, line}
 }
 
-func NewLatexStmt(comment string, line uint) *LatexStmt {
-	return &LatexStmt{comment, line}
-}
-
-func NewFnTemplateStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnTStruct *FnTStruct, line uint) *FnTemplateDefStmt {
-	return &FnTemplateDefStmt{defHeader, templateDomFacts, fnTStruct, line}
-}
-
-func NewFnTStruct(params []string, paramSets []Fc, retSet Fc, domFacts []FactStmt, thenFacts []FactStmt, line uint) *FnTStruct {
-	return &FnTStruct{params, paramSets, retSet, domFacts, thenFacts, line}
+func NewFnTStruct(params []string, paramSets []Obj, retSet Obj, domFacts []FactStmt, thenFacts []FactStmt, line uint) *AnonymousFn {
+	return &AnonymousFn{params, paramSets, retSet, domFacts, thenFacts, line}
 }
 
 func NewClearStmt(line uint) *ClearStmt {
 	return &ClearStmt{line}
 }
 
+func NewDoNothingStmt(line uint) *DoNothingStmt {
+	return &DoNothingStmt{line}
+}
+
 func NewInlineFactsStmt(facts []FactStmt, line uint) *InlineFactsStmt {
 	return &InlineFactsStmt{facts, line}
 }
 
-func NewProveByInductionStmt(fact *SpecFactStmt, param string, start Fc, line uint) *ProveByInductionStmt {
-	return &ProveByInductionStmt{fact, param, start, line}
+func NewProveByInductionStmt(fact FactStmt, param string, proof StmtSlice, line uint) *ProveByInductionStmt {
+	return &ProveByInductionStmt{fact, param, proof, line}
 }
 
-func NewHaveObjEqualStmt(objNames []string, objEqualTos []Fc, objSets []Fc, line uint) *HaveObjEqualStmt {
+func NewHaveObjEqualStmt(objNames []string, objEqualTos []Obj, objSets []Obj, line uint) *HaveObjEqualStmt {
 	return &HaveObjEqualStmt{objNames, objEqualTos, objSets, line}
 }
 
-func NewHaveFnEqualStmt(defHeader *DefHeader, retSet Fc, equalTo Fc, line uint) *HaveFnEqualStmt {
-	return &HaveFnEqualStmt{defHeader, retSet, equalTo, line}
+func NewHaveFnEqualStmt(defHeader *DefHeader, retSet Obj, equalTo Obj, proofs StmtSlice, line uint) *HaveFnEqualStmt {
+	return &HaveFnEqualStmt{defHeader, retSet, equalTo, proofs, line}
 }
 
-func NewHaveFnLiftStmt(fnName string, opt Fc, domainOfEachParamOfGivenFn []Fc, line uint) *HaveFnLiftStmt {
-	return &HaveFnLiftStmt{fnName, opt, domainOfEachParamOfGivenFn, line}
-}
+// func NewHaveFnLiftStmt(fnName string, opt Obj, domainOfEachParamOfGivenFn []Obj, line uint) *HaveFnLiftStmt {
+// 	return &HaveFnLiftStmt{fnName, opt, domainOfEachParamOfGivenFn, line}
+// }
 
-func NewClaimHaveFnStmt(defFnStmt *DefFnStmt, proof []Stmt, haveObjSatisfyFn Fc, line uint) *HaveFnStmt {
+func NewClaimHaveFnStmt(defFnStmt *LetFnStmt, proof []Stmt, haveObjSatisfyFn Obj, line uint) *HaveFnStmt {
 	return &HaveFnStmt{defFnStmt, proof, haveObjSatisfyFn, line}
 }
 
-func NewMarkdownStmt(comment string, line uint) *MarkdownStmt {
-	return &MarkdownStmt{comment, line}
-}
-
-// func NewProveInRange2Stmt(start int64, end int64, param string, domFacts ReversibleFacts, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRange2tmt {
-// 	return &ProveInRange2tmt{start, end, param, domFacts, thenFacts, proofs, line}
+// func NewMarkdownStmt(comment string, line uint) *MarkdownStmt {
+// 	return &MarkdownStmt{comment, line}
 // }
 
 func NewClaimIffStmt(uniFactWithIffStmt *UniFactWithIffStmt, proofs []Stmt, proofs2 []Stmt, line uint) *ClaimIffStmt {
 	return &ClaimIffStmt{uniFactWithIffStmt, proofs, proofs2, line}
 }
 
-func NewProveInRangeStmt(start int64, end int64, param string, intensionalSet Fc, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveInRangeStmt {
-	return &ProveInRangeStmt{start, end, param, intensionalSet, thenFacts, proofs, line}
+func NewProveForStmt(params []string, lefts []Obj, rights []Obj, isProveIRange []bool, domFacts []FactStmt, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveForStmt {
+	return &ProveForStmt{Params: params, Lefts: lefts, Rights: rights, IsProveIRange: isProveIRange, DomFacts: domFacts, ThenFacts: thenFacts, Proofs: proofs, Line: line}
 }
 
-func NewProveIsTransitivePropStmt(prop FcAtom, params []string, proofs []Stmt, line uint) *ProveIsTransitivePropStmt {
+func NewProveIsTransitivePropStmt(prop Atom, params []string, proofs []Stmt, line uint) *ProveIsTransitivePropStmt {
 	return &ProveIsTransitivePropStmt{prop, params, proofs, line}
 }
 
-func NewProveIsCommutativePropStmt(specFact *SpecFactStmt, proofs []Stmt, proofsRightToLeft []Stmt, line uint) *ProveIsCommutativePropStmt {
+func NewProveIsCommutativePropStmt(specFact *PureSpecificFactStmt, proofs []Stmt, proofsRightToLeft []Stmt, line uint) *ProveIsCommutativePropStmt {
 	return &ProveIsCommutativePropStmt{specFact, proofs, proofsRightToLeft, line}
 }
 
-func NewAlgoDefStmt(funcName string, params []string, stmts AlgoSlice, line uint) *AlgoDefStmt {
-	return &AlgoDefStmt{funcName, params, stmts, line}
+func NewAlgoDefStmt(funcName string, params StrSlice, stmts AlgoStmtSlice, line uint) *DefAlgoStmt {
+	return &DefAlgoStmt{funcName, params, stmts, line}
 }
 
-func NewAlgoIfStmt(condition []FactStmt, thenFacts AlgoSlice, line uint) *AlgoIfStmt {
+func NewAlgoIfStmt(condition []FactStmt, thenFacts AlgoStmtSlice, line uint) *AlgoIfStmt {
 	return &AlgoIfStmt{condition, thenFacts, line}
 }
 
-func NewAlgoReturnStmt(value Fc, line uint) *AlgoReturnStmt {
+// func NewProveAlgoIfStmt(condition []FactStmt, thenFacts ProveAlgoStmtSlice, line uint) *ProveAlgoIfStmt {
+// 	return &ProveAlgoIfStmt{condition, thenFacts, line}
+// }
+
+func NewAlgoReturnStmt(value Obj, line uint) *AlgoReturnStmt {
 	return &AlgoReturnStmt{value, line}
 }
 
-func NewUniFactWithSafeGuard(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, line uint) (*UniFactStmt, error) {
+func NewUniFactWithSafeGuard(params []string, setParams []Obj, domFacts []FactStmt, thenFacts []FactStmt, line uint) (*UniFactStmt, error) {
 	if len(thenFacts) == 0 {
 		return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeySymbolRightArrow, NewUniFact(params, setParams, domFacts, thenFacts, line))
 	}
@@ -262,7 +265,7 @@ func NewUniFactWithSafeGuard(params []string, setParams []Fc, domFacts []FactStm
 	return NewUniFact(params, setParams, domFacts, thenFacts, line), nil
 }
 
-func NewUniFactWithIffWithSafeGuard(params []string, setParams []Fc, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, line uint) (*UniFactWithIffStmt, error) {
+func NewUniFactWithIffWithSafeGuard(params []string, setParams []Obj, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, line uint) (*UniFactWithIffStmt, error) {
 	uniFact, err := NewUniFactWithSafeGuard(params, setParams, domFacts, thenFacts, line)
 	if err != nil {
 		return nil, err
@@ -288,6 +291,62 @@ func NewUniFactWithIffWithSafeGuard(params []string, setParams []Fc, domFacts []
 	return NewUniFactWithIff(uniFact, iffFacts, line), nil
 }
 
-func NewEvalStmt(value Fc, line uint) *EvalStmt {
+func NewEvalStmt(value Obj, line uint) *EvalStmt {
 	return &EvalStmt{value, line}
+}
+
+// func NewDefProveAlgoStmt(algoName string, params []string, thenFacts ProveAlgoStmtSlice, line uint) *DefProveAlgoStmt {
+// 	return &DefProveAlgoStmt{algoName, params, thenFacts, line}
+// }
+
+// func NewByStmt(proveAlgoName string, proveAlgoParams ObjSlice, line uint) *ByStmt {
+// 	return &ByStmt{ProveAlgoName: proveAlgoName, Params: proveAlgoParams, Line: line}
+// }
+
+// func NewProveAlgoReturnStmt(facts FactOrByStmtSlice, line uint) *ProveAlgoReturnStmt {
+// 	return &ProveAlgoReturnStmt{Facts: facts, Line: line}
+// }
+
+func NewHaveFnCaseByCaseStmt(defFnStmt *LetFnStmt, caseByCaseFacts SpecFactPtrSlice, proofs StmtSliceSlice, haveObjSatisfyFn ObjSlice, proveOr StmtSlice, line uint) *HaveFnCaseByCaseStmt {
+	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, proveOr, line}
+}
+
+func NewProveImplicationStmt(specFact *PureSpecificFactStmt, implicationFact FactStmtSlice, proof StmtSlice, line uint) *ProveInferStmt {
+	return &ProveInferStmt{specFact, implicationFact, proof, line}
+}
+
+func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact *PureSpecificFactStmt, proofs []Stmt, line uint) *WitnessStmt {
+	return &WitnessStmt{params, paramSets, equalTos, fact, proofs, line}
+}
+
+func NewInferTemplateStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts []FactStmt, proof StmtSlice, line uint) *InferTemplateStmt {
+	return &InferTemplateStmt{Params: params, ParamSets: paramSets, DomFacts: domFacts, ThenFacts: thenFacts, IfFacts: ifFacts, Proof: proof, Line: line}
+}
+
+func NewEqualSetStmt(left Obj, right Obj, proofs StmtSlice, line uint) *EqualSetStmt {
+	return &EqualSetStmt{Left: left, Right: right, Proofs: proofs, Line: line}
+}
+
+func NewWitnessNonemptyStmt(obj Obj, objSet Obj, proofs StmtSlice, line uint) *WitnessNonemptyStmt {
+	return &WitnessNonemptyStmt{Obj: obj, ObjSet: objSet, Proofs: proofs, Line: line}
+}
+
+func NewHaveFnEqualCaseByCaseStmt(defHeader *DefHeader, retSet Obj, caseByCaseFacts SpecFactPtrSlice, caseByCaseEqualTo ObjSlice, proofs StmtSliceSlice, proveCases StmtSlice, line uint) *HaveFnEqualCaseByCaseStmt {
+	return &HaveFnEqualCaseByCaseStmt{
+		DefHeader:         defHeader,
+		RetSet:            retSet,
+		CaseByCaseFacts:   caseByCaseFacts,
+		CaseByCaseEqualTo: caseByCaseEqualTo,
+		Proofs:            proofs,
+		ProveCases:        proveCases,
+		Line:              line,
+	}
+}
+
+func NewPureSpecificFactStmt(isTrue bool, propName Atom, params ObjSlice, line uint) *PureSpecificFactStmt {
+	return &PureSpecificFactStmt{isTrue, propName, params, line}
+}
+
+func NewExistSpecificFactStmt(isTrue bool, existFreeParams []string, existFreeParamSets ObjSlice, pureFact *PureSpecificFactStmt, line uint) *ExistSpecificFactStmt {
+	return &ExistSpecificFactStmt{isTrue, existFreeParams, existFreeParamSets, pureFact, line}
 }

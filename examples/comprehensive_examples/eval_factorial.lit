@@ -1,0 +1,15 @@
+have factorial fn(N) N_pos
+know:
+    factorial(0) = 1
+    factorial(1) = 1
+    forall n N: factorial(n) = factorial(n - 1) * n
+
+algo factorial(n):
+    if n = 0:
+        return 1
+    if n = 1:
+        return 1
+    return factorial(n - 1) * n
+
+eval factorial(10)
+factorial(10) = 3628800

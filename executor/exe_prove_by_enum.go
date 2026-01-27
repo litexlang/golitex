@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,45 +20,60 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ExecRet, error) {
-	enums := [][]ast.Fc{}
+func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (*glob.StmtRet, error) {
+	innerStmtRets := []*glob.StmtRet{}
+	verifyProcessMsgs := []*glob.VerRet{}
+
+	enums := [][]ast.Obj{}
 	for _, paramSet := range stmt.Fact.ParamSets {
-		enumFacts, ok := exec.Env.GetEnumFact(paramSet.String())
-		if !ok {
-			return NewExecErr(""), fmt.Errorf("prove over finite set statement error: enum not found")
+		enumSet := exec.Env.GetListSetEqualToObj(paramSet)
+		if enumSet == nil {
+			return glob.NewEmptyStmtError(), fmt.Errorf("prove over finite set statement error: enum set not found")
 		}
-		enums = append(enums, enumFacts)
+		enums = append(enums, enumSet.(*ast.FnObj).Params)
 	}
 
-	cartesianProductOfFcs := glob.CartesianProduct(enums)
+	cartesianProductOfObjs := glob.CartesianProduct(enums)
 
 	if len(stmt.Proof) == 0 {
-		return exec.verProveOverFiniteSet_NoProveSection(stmt, cartesianProductOfFcs)
-	} else {
-		for i := range len(cartesianProductOfFcs) {
-			ok, err := exec.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductOfFcs[i])
-			if err != nil {
-				return NewExecErr(""), err
-			}
-			if !ok {
-				return NewExecErr(""), fmt.Errorf("failed to prove at prove section %d", i)
-			}
+		execRet, err := exec.verProveOverFiniteSet_NoProveSection(stmt, cartesianProductOfObjs)
+		if err != nil {
+			return execRet, err
 		}
-		return NewExecTrue(""), nil
+		innerStmtRets = append(innerStmtRets, execRet.InnerStmtRetSlice...)
+		verifyProcessMsgs = append(verifyProcessMsgs, execRet.VerifyProcess...)
+		return execRet.AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs), nil
+	} else {
+		for i := range len(cartesianProductOfObjs) {
+			execRet, err := exec.verProveOverFiniteSet_ProveAtProveSectionI(stmt, cartesianProductOfObjs[i])
+			if err != nil {
+				return execRet, err
+			}
+			if execRet.IsNotTrue() {
+				return execRet, fmt.Errorf("failed to prove at prove section %d", i)
+			}
+			innerStmtRets = append(innerStmtRets, execRet.InnerStmtRetSlice...)
+			verifyProcessMsgs = append(verifyProcessMsgs, execRet.VerifyProcess...)
+		}
+		return glob.NewEmptyStmtTrue().AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs), nil
 	}
 }
 
-func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveByEnumStmt, cartesianProductAtI []ast.Fc) (bool, error) {
-	exec.NewEnv(exec.Env)
-	defer exec.deleteEnvAndRetainMsg()
+func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveByEnumStmt, cartesianProductAtI []ast.Obj) (*glob.StmtRet, error) {
+	innerStmtRets := []*glob.StmtRet{}
+	verifyProcessMsgs := []*glob.VerRet{}
 
-	defObjStmt := ast.NewDefObjStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualFcSlice(stmt.Fact.Params, cartesianProductAtI), stmt.Line)
-	err := exec.defLetStmt(defObjStmt)
-	if err != nil {
-		return false, err
+	exec.NewEnv()
+	defer exec.deleteEnv()
+
+	defObjStmt := ast.NewDefLetStmt(stmt.Fact.Params, stmt.Fact.ParamSets, getParamEqualObjSlice(stmt.Fact.Params, cartesianProductAtI), stmt.Line)
+	execState := exec.defLetStmt(defObjStmt)
+	if execState.IsNotTrue() {
+		return execState, fmt.Errorf(execState.String())
 	}
+	innerStmtRets = append(innerStmtRets, execState.InnerStmtRetSlice...)
 
-	uniMap := map[string]ast.Fc{}
+	uniMap := map[string]ast.Obj{}
 	for i, param := range stmt.Fact.Params {
 		uniMap[param] = cartesianProductAtI[i]
 	}
@@ -66,78 +81,89 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	for _, fact := range stmt.Fact.DomFacts {
 		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
-			return false, err
+			return glob.ErrRet(err.Error()), err
 		}
-		state, err := exec.factStmt(instFact)
-		if notOkExec(state, err) {
+		state := exec.factStmt(instFact)
+		if state.IsErr() {
+			return state, fmt.Errorf(state.String())
+		}
+		verifyProcessMsgs = append(verifyProcessMsgs, state.VerifyProcess...)
+		if state.IsNotTrue() {
 			revFacts := instFact.(ast.Spec_OrFact).ReverseIsTrue()
 			for _, revFact := range revFacts {
-				state, err := exec.factStmt(revFact)
-				if notOkExec(state, err) {
-					return false, fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instFact)
+				state := exec.factStmt(revFact)
+				if state.IsNotTrue() {
+					return glob.ErrRet(fmt.Sprintf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instFact)), fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instFact)
 				}
+				verifyProcessMsgs = append(verifyProcessMsgs, state.VerifyProcess...)
 			}
-			return true, nil
+			return glob.NewEmptyStmtTrue().AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs), nil
 		}
 	}
 
-	for _, stmt := range stmt.Proof {
-		state, _, err := exec.Stmt(stmt)
-		if notOkExec(state, err) {
-			return false, err
+	for _, proofStmt := range stmt.Proof {
+		state := exec.Stmt(proofStmt)
+		if state.IsNotTrue() {
+			return state, fmt.Errorf(state.String())
 		}
+		innerStmtRets = append(innerStmtRets, state)
 	}
 
 	for _, fact := range stmt.Fact.ThenFacts {
 		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
-			return false, err
+			return glob.ErrRet(err.Error()), err
 		}
-		state, err := exec.factStmt(instFact)
-		if notOkExec(state, err) {
-			return false, fmt.Errorf("failed to prove instantiated then facts: %s", instFact)
+		state := exec.factStmt(instFact)
+		if state.IsNotTrue() {
+			return glob.ErrRet(fmt.Sprintf("failed to prove instantiated then facts: %s", instFact)), fmt.Errorf("failed to prove instantiated then facts: %s", instFact)
 		}
+		verifyProcessMsgs = append(verifyProcessMsgs, state.VerifyProcess...)
 	}
 
-	return true, nil
+	return glob.NewEmptyStmtTrue().AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs), nil
 }
 
-func getParamEqualFcSlice(params []string, equalTo []ast.Fc) []ast.FactStmt {
+func getParamEqualObjSlice(params []string, equalTo []ast.Obj) []ast.FactStmt {
 	result := []ast.FactStmt{}
 	for i, param := range params {
-		result = append(result, ast.NewSpecFactStmt(ast.TruePure, ast.FcAtom(glob.KeySymbolEqual), []ast.Fc{ast.FcAtom(param), equalTo[i]}, glob.InnerGenLine))
+		result = append(result, ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.Atom(param), equalTo[i]}, glob.BuiltinLine0))
 	}
 	return result
 }
 
-func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnumStmt, cartesianProductOfFcs [][]ast.Fc) (ExecRet, error) {
-	for _, fcSlice := range cartesianProductOfFcs {
-		uniMap := map[string]ast.Fc{}
+func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnumStmt, cartesianProductOfObjs [][]ast.Obj) (*glob.StmtRet, error) {
+	verifyProcessMsgs := []*glob.VerRet{}
+
+	for _, ObjSlice := range cartesianProductOfObjs {
+		uniMap := map[string]ast.Obj{}
 		for i, param := range stmt.Fact.Params {
-			uniMap[param] = fcSlice[i]
+			uniMap[param] = ObjSlice[i]
 		}
 
 		hasFalseDomFact := false
 		for _, domFact := range stmt.Fact.DomFacts {
 			instantiatedDomFact, err := domFact.InstantiateFact(uniMap)
 			if err != nil {
-				return NewExecErr(""), err
+				return glob.NewEmptyStmtError(), err
 			}
 
-			state, err := exec.factStmt(instantiatedDomFact)
-			if err != nil {
-				return NewExecErr(""), err
+			state := exec.factStmt(instantiatedDomFact)
+			if state.IsErr() {
+				return glob.NewEmptyStmtError(), fmt.Errorf(state.String())
 			}
+			verifyProcessMsgs = append(verifyProcessMsgs, state.VerifyProcess...)
 			if state.IsUnknown() {
 				domFactAs := instantiatedDomFact.(ast.Spec_OrFact)
 				for _, fact := range domFactAs.ReverseIsTrue() {
-					state, err := exec.factStmt(fact)
-					if err != nil {
-						return NewExecErr(""), err
+					state := exec.factStmt(fact)
+					if state.IsErr() {
+						return glob.NewEmptyStmtError(), fmt.Errorf(state.String())
 					}
 					if state.IsUnknown() {
-						return NewExecErr(""), fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instantiatedDomFact)
+						return glob.NewEmptyStmtError(), fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instantiatedDomFact)
 					}
+					verifyProcessMsgs = append(verifyProcessMsgs, state.VerifyProcess...)
 				}
 
 				hasFalseDomFact = true
@@ -153,22 +179,23 @@ func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnum
 		for _, thenFact := range stmt.Fact.ThenFacts {
 			instantiatedThenFact, err := thenFact.InstantiateFact(uniMap)
 			if err != nil {
-				return NewExecErr(""), err
+				return glob.NewEmptyStmtError(), err
 			}
 			instantiatedThenFacts = append(instantiatedThenFacts, instantiatedThenFact)
 		}
 
 		// ver facts
 		for _, fact := range instantiatedThenFacts {
-			state, err := exec.factStmt(fact)
-			if err != nil {
-				return NewExecErr(""), err
+			state := exec.factStmt(fact)
+			if state.IsErr() {
+				return glob.NewEmptyStmtError(), fmt.Errorf(state.String())
 			}
 			if state.IsUnknown() {
-				return NewExecErr(""), fmt.Errorf("failed to prove instantiated then facts: %s", fact)
+				return glob.NewEmptyStmtError(), fmt.Errorf("failed to prove instantiated then facts: %s", fact)
 			}
+			verifyProcessMsgs = append(verifyProcessMsgs, state.VerifyProcess...)
 		}
 	}
 
-	return NewExecTrue(""), nil
+	return glob.NewEmptyStmtTrue().AddVerifyProcesses(verifyProcessMsgs), nil
 }

@@ -1,0 +1,43 @@
+# union({1,2},{2,3}) = {1,2,3}
+
+# a = b 
+
+enum x {1, 2, 3}:
+    =>:
+        x $in union({1, 2}, {2, 3})
+    prove:
+        x $in {1, 2} or x $in {2, 3}
+
+prove forall x union({1, 2}, {2, 3}): x $in {1, 2, 3}:
+    x $in {1, 2} or x $in {2, 3}
+    cases:
+        =>:
+            x $in {1, 2, 3}
+        case x $in {1, 2}:
+            cases:
+                =>:
+                    x $in {1, 2, 3}
+                case x = 1:
+                    x $in {1, 2, 3}
+                case x = 2:
+                    x $in {1, 2, 3}
+        case x $in {2, 3}:
+            cases:
+                =>:
+                    x $in {1, 2, 3}
+                case x = 2:
+                    x $in {1, 2, 3}
+                case x = 3:
+                    x $in {1, 2, 3}
+
+$equal_set({1, 2, 3}, union({1, 2}, {2, 3}))
+
+
+not $is_nonempty_set({})
+
+# 要让每个statement为什么不正确工作的原因打印出来，这样定位问题更容易
+
+# 为什么要有is_cart
+have x set = cart(R, Q, Z)
+$is_cart(x)
+set_dim(x) = 3

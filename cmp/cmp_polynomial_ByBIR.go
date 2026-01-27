@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@ package litex_comparator
 
 import (
 	"fmt"
+	ast "golitex/ast"
 	num "golitex/number"
-	parser "golitex/parser"
 )
 
 // REMARK REMARK
 // TODO
-// 超级超级低效的比较方法。无数次的变成string，变回fc，变成string，变回fc
+// 超级超级低效的比较方法。无数次的变成string，变回obj，变成string，变回obj
 // 大部分的时间都被浪费在这里了
 // 应该直接把 left, right 读入，当做普通的按字典序排列的题目，然后运算 +-*/^ 等，然后比较结果。这里的parser不应依赖 litex parser 而是应该直接是 正常四则运算的parser
 func cmpArith_ByBIR(left string, right string) bool {
@@ -38,17 +38,17 @@ func cmpArith_ByBIR(left string, right string) bool {
 	newLeftStr := fmt.Sprintf("(%s)*(%s)", leftNumerator, rightDenominator)
 	newRightStr := fmt.Sprintf("(%s)*(%s)", rightNumerator, leftDenominator)
 
-	leftFc, err := parser.ParseSourceCodeGetFc(newLeftStr)
+	leftObj, err := ast.ParseSourceCodeGetObj(newLeftStr)
 	if err != nil {
 		return false
 	}
-	rightFc, err := parser.ParseSourceCodeGetFc(newRightStr)
+	rightObj, err := ast.ParseSourceCodeGetObj(newRightStr)
 	if err != nil {
 		return false
 	}
 
-	leftStr := num.FcStringForParseAndExpandPolynomial(leftFc)
-	rightStr := num.FcStringForParseAndExpandPolynomial(rightFc)
+	leftStr := num.ObjStringForParseAndExpandPolynomial(leftObj)
+	rightStr := num.ObjStringForParseAndExpandPolynomial(rightObj)
 
 	leftPolyAsStr := num.ExpandPolynomial_ReturnStr(leftStr)
 	rightPolyAsStr := num.ExpandPolynomial_ReturnStr(rightStr)

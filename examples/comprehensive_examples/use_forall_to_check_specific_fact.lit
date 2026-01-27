@@ -1,0 +1,16 @@
+prove:
+    prop p(x, y R)
+    know forall x R: $p(x, x + 1 + 1)
+
+    $p(1, 3)
+
+prove:
+    have f fn(R) R
+    have t fn(R) R
+    prop p(x, y R)
+
+    know forall x R: $p(x, t(x+1))
+
+    know t(2) = f(1)
+
+    $p(1, f(1))

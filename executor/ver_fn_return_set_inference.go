@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,11 +17,12 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
-func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) ExecRet {
+func (ver *Verifier) parasSatisfyFnReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
 	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
-	fnHeadChain_AndItSelf, paramsChain := ast.GetFnHeadChain_AndItSelf(fcFn)
+	fnHeadChain_AndItSelf, paramsChain := ast.GetFnHeadChain_AndItSelf(fnObj)
 
 	// 从后往前找，直到找到有个 fnHead 被已知在一个 fnInFnTInterface 中
 	// 比如 f(a)(b,c)(e,d,f) 我不知道 f(a)(b,c) 是哪个 fn_template 里的，但我发现 f(a) $in T 是知道的。那之后就是按T的返回值去套入b,c，然后再把e,d,f套入T的返回值的返回值
@@ -31,7 +32,7 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) ExecRet 
 	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
 	// curFnTStruct := ver.env.GetFnTStructOfFnInFnTMemItem(FnToFnItemWhereLatestFnTIsGot)
 	if FnToFnItemWhereLatestFnTIsGot == nil {
-		return NewExecErr(fmt.Sprintf("%s is not defined", fnHeadChain_AndItSelf[len(fnHeadChain_AndItSelf)-1]))
+		return glob.NewVerRet(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("%s is not defined", fnHeadChain_AndItSelf[len(fnHeadChain_AndItSelf)-1])})
 	}
 
 	curFnTStruct := FnToFnItemWhereLatestFnTIsGot.AsFnTStruct
@@ -41,15 +42,15 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) ExecRet 
 	for curParamsChainIndex < len(fnHeadChain_AndItSelf)-1 {
 		uniMap, err := ast.MakeUniMap(curFnTStruct.Params, paramsChain[curParamsChainIndex])
 		if err != nil {
-			return NewExecErr(err.Error())
+			return glob.NewVerRet(glob.StmtRetTypeError, fnObj.String(), 0, []string{err.Error()})
 		}
 
 		instCurFnTStruct, err := curFnTStruct.Instantiate(uniMap)
 		if err != nil {
-			return NewExecErr(err.Error())
+			return glob.NewVerRet(glob.StmtRetTypeError, fnObj.String(), 0, []string{err.Error()})
 		}
 
-		verRet := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
+		verRet := ver.checkParamsSatisfyFnTStruct(fnObj, paramsChain[curParamsChainIndex], instCurFnTStruct, state)
 		if verRet.IsErr() {
 			return verRet
 		}
@@ -57,14 +58,14 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) ExecRet 
 			return verRet
 		}
 
-		curRetSet, ok := instCurFnTStruct.RetSet.(*ast.FcFn)
+		curRetSet, ok := instCurFnTStruct.RetSet.(*ast.FnObj)
 		if !ok {
-			return NewExecErr("curRetSet is not an FcFn")
+			return glob.NewVerRet(glob.StmtRetTypeError, fnObj.String(), 0, []string{"curRetSet is not an FnObj"})
 		}
 
-		curFnTStruct, err = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
+		curFnTStruct, err = ver.GetInstFnSet_CheckFnSetParamsReq(curRetSet, state)
 		if err != nil {
-			return NewExecErr(err.Error())
+			return glob.NewVerRet(glob.StmtRetTypeError, fnObj.String(), 0, []string{err.Error()})
 		}
 
 		curParamsChainIndex++
@@ -72,15 +73,15 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) ExecRet 
 
 	uniMap, err := ast.MakeUniMap(curFnTStruct.Params, paramsChain[curParamsChainIndex])
 	if err != nil {
-		return NewExecErr(err.Error())
+		return glob.NewVerRet(glob.StmtRetTypeError, fnObj.String(), 0, []string{err.Error()})
 	}
 
 	instCurFnTStruct, err := curFnTStruct.Instantiate(uniMap)
 	if err != nil {
-		return NewExecErr(err.Error())
+		return glob.NewVerRet(glob.StmtRetTypeError, fnObj.String(), 0, []string{err.Error()})
 	}
 
-	verRet := ver.checkParamsSatisfyFnTStruct(paramsChain[curParamsChainIndex], instCurFnTStruct, state)
+	verRet := ver.checkParamsSatisfyFnTStruct(fnObj, paramsChain[curParamsChainIndex], instCurFnTStruct, state)
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -88,23 +89,23 @@ func (ver *Verifier) parasSatisfyFnReq(fcFn *ast.FcFn, state *VerState) ExecRet 
 		return verRet
 	}
 
-	return NewExecTrue("")
+	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) GetFnStructFromFnTName_CheckFnTParamsReq(fnTName *ast.FcFn, state *VerState) (*ast.FnTStruct, error) {
-	if fcFnTypeToFnTStruct, ok := ast.FcFnT_To_FnTStruct(fnTName); ok {
-		return fcFnTypeToFnTStruct, nil
+func (ver *Verifier) GetInstFnSet_CheckFnSetParamsReq(fnTName *ast.FnObj, state *VerState) (*ast.AnonymousFn, error) {
+	if FnObjTypeToFnTStruct, ok := ver.Env.AnonymousFnToInstFnTemplate(fnTName); ok {
+		return FnObjTypeToFnTStruct, nil
 	} else {
-		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.FcAtom)
+		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
 		if !ok {
 			return nil, fmt.Errorf("fnTNameHead is not an atom")
 		}
 
-		return ver.getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTNameHeadAsAtom, fnTName.Params, state)
+		return ver.getFnSetDef_InstFnInFnSet_CheckParamsSatisfyFnSetReq(fnTNameHeadAsAtom, fnTName.Params, state)
 	}
 }
 
-func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDefName ast.FcAtom, templateParams []ast.Fc, state *VerState) (*ast.FnTStruct, error) {
+func (ver *Verifier) getFnSetDef_InstFnInFnSet_CheckParamsSatisfyFnSetReq(fnTDefName ast.Atom, templateParams []ast.Obj, state *VerState) (*ast.AnonymousFn, error) {
 	defOfT := ver.Env.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
 		return nil, fmt.Errorf("fnTNameHead %s is not a fn template", fnTDefName)
@@ -123,17 +124,17 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckParamsSatisfyFnTReq(fnTDef
 		return nil, fmt.Errorf("template params dom facts are not true")
 	}
 
-	return defOfT.Fn.Instantiate(uniMap)
+	return defOfT.AnonymousFn.Instantiate(uniMap)
 }
 
-func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.FnTemplateDefStmt, uniMap map[string]ast.Fc, state *VerState) ExecRet {
-	ver.newEnv(ver.Env)
-	defer ver.deleteEnvAndRetainMsg()
+func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.DefFnSetStmt, uniMap map[string]ast.Obj, state *VerState) *glob.VerRet {
+	ver.newEnv()
+	defer ver.deleteEnv()
 
 	for _, fact := range fnTDef.TemplateDomFacts {
 		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
-			return NewExecErr(err.Error())
+			return glob.NewVerRet(glob.StmtRetTypeError, fact.String(), glob.BuiltinLine0, []string{err.Error()})
 		}
 
 		verRet := ver.VerFactStmt(newFact, state)
@@ -142,40 +143,58 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 		}
 	}
 
-	return NewExecTrue("")
+	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) checkParamsSatisfyFnTStruct(concreteParams ast.FcSlice, fnTStruct *ast.FnTStruct, state *VerState) ExecRet {
-	failed := false
+func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParams ast.ObjSlice, fnTStruct *ast.AnonymousFn, state *VerState) *glob.VerRet {
+	if len(concreteParams) != len(fnTStruct.ParamSets) {
+		return glob.NewVerRet(glob.StmtRetTypeError, fnObj.String(), 0, []string{"params and sets length mismatch"})
+	}
 
-	curState := state.GetNoMsg()
-	defer func() {
-		if failed {
-			ver.Env.Msgs = append(ver.Env.Msgs, fmt.Sprintf("failed to check param(s) %s satisfy domain of\n%s", concreteParams, fnTStruct))
+	for i := range concreteParams {
+		fact := ast.NewInFactWithObj(concreteParams[i], fnTStruct.ParamSets[i])
+		verRet := ver.VerFactStmt(fact, state)
+		if verRet.IsErr() {
+			return paramsOfFnObjMustInDomainSetErrMsg(fnObj, i, fact)
 		}
-	}()
-
-	verRet := ver.paramsInSets(concreteParams, fnTStruct.ParamSets, curState)
-	if verRet.IsErr() {
-		failed = true
-		return verRet
-	}
-	if verRet.IsUnknown() {
-		failed = true
-		ver.Env.Msgs = append(ver.Env.Msgs, verRet.String())
-		return verRet
+		if verRet.IsUnknown() {
+			return paramsOfFnObjMustInDomainSetErrMsg(fnObj, i, fact)
+		}
 	}
 
-	verRet = ver.factsAreTrue(fnTStruct.DomFacts, curState)
-	if verRet.IsErr() {
-		failed = true
-		return verRet
-	}
-	if verRet.IsUnknown() {
-		failed = true
-		ver.Env.Msgs = append(ver.Env.Msgs, verRet.String())
-		return NewExecUnknown("")
+	// // verRet := ver.paramsInSets(concreteParams, fnTStruct.ParamSets, state.GetNoMsg())
+	// if verRet.IsErr() {
+	// 	return verRet
+	// }
+	// if verRet.IsUnknown() {
+	// 	return verRet
+	// }
+
+	for i, fact := range fnTStruct.DomFacts {
+		verRet := ver.VerFactStmt(fact, state)
+		if verRet.IsErr() {
+			return domainFactOfFnObjMustBeTrueErrMsg(fnObj, i, fact)
+		}
+		if verRet.IsUnknown() {
+			return domainFactOfFnObjMustBeTrueErrMsg(fnObj, i, fact)
+		}
 	}
 
-	return NewExecTrue("")
+	// verRet = ver.factsAreTrue(fnTStruct.DomFacts, state.GetNoMsg())
+	// if verRet.IsErr() {
+	// 	return verRet
+	// }
+	// if verRet.IsUnknown() {
+	// 	return verRet
+	// }
+
+	return glob.NewEmptyVerRetTrue()
+}
+
+func paramsOfFnObjMustInDomainSetErrMsg(fnObj *ast.FnObj, i int, fact ast.FactStmt) *glob.VerRet {
+	return glob.NewVerRet(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("Function %s requires its %s argument to satisfy the domain constraint:\n%s\nbut verification failed\n", fnObj.FnHead, ordinalSuffix(i+1), fact.String())})
+}
+
+func domainFactOfFnObjMustBeTrueErrMsg(fnObj *ast.FnObj, i int, fact ast.FactStmt) *glob.VerRet {
+	return glob.NewVerRet(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("Function %s requires its %s domain constraint to hold:\n%s\nbut verification failed\n", fnObj.FnHead, ordinalSuffix(i+1), fact.String())})
 }

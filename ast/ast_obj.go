@@ -1,0 +1,153 @@
+// Copyright Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Litex email: <litexlang@outlook.com>
+// Litex website: https://litexlang.com
+// Litex github repository: https://github.com/litexlang/golitex
+// Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
+
+package litex_ast
+
+import (
+	"fmt"
+	glob "golitex/glob"
+	"strings"
+)
+
+type Obj interface {
+	obj()
+	String() string
+	Instantiate(map[string]Obj) (Obj, error)
+	ToLatexString() string
+	ReplaceObj(oldObj Obj, newObj Obj) Obj // 这是必要的，因为 have fn 的 proof 里可能出现 replace obj 的情况
+}
+
+func (f Atom) obj()   {}
+func (f *FnObj) obj() {}
+
+func (f Atom) ReplaceObj(oldObj Obj, newObj Obj) Obj {
+	if f.String() == oldObj.String() {
+		return newObj
+	}
+	return f
+}
+
+func (f *FnObj) ReplaceObj(oldObj Obj, newObj Obj) Obj {
+	if f.String() == oldObj.String() {
+		return newObj
+	}
+
+	var newFnObjHead = f.FnHead.ReplaceObj(oldObj, newObj)
+
+	newObjParams := make([]Obj, len(f.Params))
+	for i, param := range f.Params {
+		newObjParams[i] = param.ReplaceObj(oldObj, newObj)
+	}
+
+	newFnObj := NewFnObj(newFnObjHead, newObjParams)
+	return newFnObj
+}
+
+type Atom string
+
+type FnObj struct {
+	FnHead Obj
+	Params []Obj
+}
+
+func NewFnObj(fnHead Obj, callPipe []Obj) *FnObj {
+	return &FnObj{fnHead, callPipe}
+}
+
+func objSliceString(params []Obj) string {
+	output := make([]string, len(params))
+	for i, param := range params {
+		output[i] = param.String()
+	}
+	return strings.Join(output, ", ")
+}
+
+func hasBuiltinOptAndToString(f *FnObj) (bool, string) {
+	ptr, ok := f.FnHead.(Atom)
+	if !ok {
+		return false, ""
+	}
+
+	if string(ptr) == glob.KeySymbolMinus {
+		return true, fmt.Sprintf("(%s %s %s)", f.Params[0], string(ptr), f.Params[1])
+	}
+
+	outPut := string(ptr)
+	if glob.IsKeySymbolRelaFn(outPut) {
+		return true, fmt.Sprintf("(%s %s %s)", f.Params[0], outPut, f.Params[1])
+	}
+
+	return false, ""
+}
+
+func IsNumLitAtomObj(f Obj) (string, bool) {
+	ptr, ok := f.(Atom)
+	if !ok || string(ptr) == "" {
+		return "", false
+	}
+
+	if glob.IsNumLitStr(string(ptr)) {
+		return string(ptr), true
+	}
+	return "", false
+}
+
+func IsObjBuiltinInfixOpt(f FnObj) bool {
+	ptrHeadAsAtom, ok := f.FnHead.(Atom)
+	if !ok {
+		return false
+	}
+
+	return glob.IsKeySymbolRelaFn(string(ptrHeadAsAtom)) && len(f.Params) == 2
+}
+
+func IsObjBuiltinUnaryFn(obj FnObj) bool {
+	objAsFnHead, ok := obj.FnHead.(Atom)
+	if !ok {
+		return false
+	}
+
+	return objAsFnHead.IsBuiltinUnaryOpt() && len(obj.Params) == 1
+}
+
+func (f Atom) IsBuiltinUnaryOpt() bool {
+	return (string(f)) == glob.KeySymbolMinus
+}
+
+func IsAtomObjAndHasBuiltinPropName(obj Obj) bool {
+	atomObj, ok := obj.(Atom)
+	if !ok {
+		return false
+	}
+
+	return glob.IsBuiltinInfixRelaPropSymbol(string(atomObj))
+}
+
+func IsAtomObjAndEqualToStr(obj Obj, name string) bool {
+	atomObj, ok := obj.(Atom)
+	if !ok {
+		return false
+	}
+
+	return string(atomObj) == name
+}
+
+func (a Atom) IsWithPkgName() bool {
+	return strings.Contains(string(a), glob.PkgNameAtomSeparator)
+}
+
+// func (a Atom) GetPkgNameAndAtomName_CalledWhenPkgNameExists() (string, string) {
+// 	parts := strings.Split(string(a), glob.PkgNameAtomSeparator)
+// 	return parts[0], parts[1]
+// }
