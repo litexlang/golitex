@@ -10,6 +10,53 @@ The Litex [kernel](https://github.com/litexlang/golitex) is for the time being d
 
 Currently, Litex is not fully open-sourced. If you want to contribute to the Litex kernel, please contact us through email: litexlang@outlook.com.
 
+### Code Submission Guidelines
+
+When contributing code to the Litex kernel, please follow our commit message conventions to maintain a clean and consistent git history.
+
+#### Using the Commit Helper Script
+
+**All contributors must use the `git_commit.sh` script when making commits.** This ensures consistent commit message formatting across the project.
+
+To use the script:
+
+```bash
+./git_commit.sh
+```
+
+The script will guide you through:
+1. Selecting a commit type
+2. Writing a commit subject (max 80 characters)
+3. Optionally adding a detailed body description
+
+#### Commit Message Format
+
+Our commit messages follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+```
+<type>: <subject>
+
+<body>
+```
+
+**Type** (required): One of the following:
+1) developing new feature     - 正在开发新功能
+2) updating feature     - 强化功能
+3) deleting feature     - 删除功能
+4) fixing bug  - 修补bug
+5) documenting  - 文档（documentation）
+6) refactoring  - 重构（即不是新增功能，也不是修改bug的代码变动）
+7) testing  - 增加测试
+8) chore     - 构建过程或辅助工具的变动
+
+**Subject** (required): A short description of the commit purpose, no more than 80 characters.
+
+**Body** (optional): A detailed description of the commit, which can span multiple lines. Use this to explain:
+- What changed and why
+- Any breaking changes
+- Related issues or pull requests
+
+
 ## 2. Litex standard library (std)
 
 A standard library is a collection of reusable code that provides a common set of functionality for a computer language. It is a crucial component of any programming language because it allows developers to reuse code, which can save time and effort. Since Litex is a new programming language, we need to develop a standard library for it, covering everything from basic math operations to advanced college math knowledge. Visit [std](https://github.com/litexlang/std) for more details.

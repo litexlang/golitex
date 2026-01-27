@@ -1,4 +1,4 @@
-# Copyright 2024 Jiachen Shen.
+# Copyright Jiachen Shen.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -123,7 +123,7 @@ t.hideturtle()
 screen.update()
 
 
-def save_image(filename="LiTeXNewLogo.png"):
+def save_image(filename="LiTeXNewLogo.PNG"):
     canvas = screen.getcanvas()
     x = canvas.winfo_rootx()
     y = canvas.winfo_rooty()

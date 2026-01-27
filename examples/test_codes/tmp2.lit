@@ -1,25 +1,62 @@
-# definition of a group, and prove R and Z are groups
-# 定义一个群，并证明 R 和 Z 是群
+know forall x, y R: x * y = 0 => x = 0 or y = 0
 
-prop is_group(s set, mul fn(s, s)s, inv fn(s)s, e s):
-    forall x s, y s, z s:
-        mul(mul(x, y), z) = mul(x, mul(y, z))
-    forall x s:
-        mul(x, inv(x)) = e
-        mul(inv(x), x) = e
-    forall x s:
-        mul(x, e) = x
-        mul(e, x) = x
+claim:
+    forall a, b, x R:
+        x^2 + 2 * a * x + b = 0
+        a^2 - b >= 0
+        =>:
+            x = -a + sqrt(a^2 - b) or x = -a - sqrt(a^2 - b)
+    prove:
+        sqrt(a^2 - b) * sqrt(a^2 - b) = sqrt(a^2 - b) ^ 2 = a^2 - b
+        (x + a - sqrt(a^2 - b)) * (x + a + sqrt(a^2 - b)) = x ^ 2 + 2 * a * x + a^2 - sqrt(a^2 - b) ^ 2 = x ^ 2 + 2 * a * x + a^2 - (a^2 - b) = x ^ 2 + 2 * a * x + b = 0
+        $product_is_0_then_at_least_one_factor_is_0(x + a - sqrt(a^2 - b), x + a + sqrt(a^2 - b))
+        
+        cases:
+            =>:
+                x = -a + sqrt(a^2 - b) or x = -a - sqrt(a^2 - b)
+            case x + a + sqrt(a^2 - b) = 0:
+                x + a + sqrt(a^2 - b) + (-a - sqrt(a^2 - b)) = 0 + (-a - sqrt(a^2 - b))
+                x = 0 + (-a - sqrt(a^2 - b))
+                x = -a - sqrt(a^2 - b) 
+            case x + a - sqrt(a^2 - b) = 0:
+                x + a - sqrt(a^2 - b) + (-a + sqrt(a^2 - b)) = 0 + (-a + sqrt(a^2 - b))
+                x = 0 + (-a + sqrt(a^2 - b))
+                x = -a + sqrt(a^2 - b)
 
-forall x R:
-    inverse(x) + x = 0
-    x + inverse(x) = 0
 
-forall x Z:
-    x + inverse(x) = 0
-    inverse(x) = -x
-    -x $in Z
-    inverse(x) $in Z
+"""
+contra not sqrt(2) $in Q:
+    have m, n st $Q_in_frac(sqrt(2))
+    sqrt(2) = m / n
+    n * sqrt(2) = m # 自动生成
+    (n * sqrt(2)) ^ 2 = m ^ 2 = n ^ 2 * 2
+    m^2 $dvd 2
+    m $dvd 2
+    prove n $dvd 2:
+        m = 2 * k
+        2 * n^2 = 2^2 * k^2
+        2 $div n^2    
+    gcd(m, n) $dvd 2
+    impossible 1 $dvd 2
 
-$is_group(R, +, inverse, 0)
-$is_group(Z, +, inverse, 0)
+prop dvd(x, y Z):
+    dom:
+        x != 0
+    <=>:
+        y % x = 0
+
+prop is_prime(x N_pos):
+    dom:
+        x >= 2
+    <=>:
+        forall y N_pos: y >= 2, y < x => not y $dvd x
+
+know infer exp_dvd_imply_dvd(x, y Z, a N_pos):
+    x != 0
+    x $dvd y ^ a
+    $is_prime(a)
+    =>:
+        x $dvd y
+
+for i range():
+"""

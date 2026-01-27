@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -241,32 +241,6 @@ func eval(ast *arithAST) polynomial {
 		panic("invalid AST node")
 	}
 }
-
-// --- Combine like terms ---
-
-// // This version of simplify does not make x * x into x^2
-// func simplify(poly polynomial) polynomial {
-// 	group := map[string]float64{}
-// 	for _, term := range poly {
-// 		key := term.Key()
-// 		group[key] += term.CoEff
-// 	}
-// 	var result polynomial
-// 	for key, coEff := range group {
-// 		if coEff == 0 {
-// 			continue
-// 		}
-// 		vars := []string{}
-// 		if key != "" {
-// 			vars = strings.Split(key, "*")
-// 		}
-// 		result = append(result, arithmeticTerm{CoEff: coEff, Vars: vars})
-// 	}
-// 	sort.Slice(result, func(i, j int) bool {
-// 		return result[i].Key() < result[j].Key()
-// 	})
-// 	return result
-// }
 
 // This version of simplify makes x * x into x^2
 func simplify(poly polynomial) polynomial {

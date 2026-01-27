@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,47 +16,25 @@
 package litex_executor
 
 import (
-	"fmt"
 	env "golitex/environment"
-	glob "golitex/glob"
 )
 
 type Verifier struct {
-	Env *env.Env
+	Env *env.EnvMgr
 }
 
-func NewVerifier(curEnv *env.Env) *Verifier {
-	if curEnv == nil {
-		return &Verifier{Env: env.NewEnv(nil)}
-	} else {
-		return &Verifier{Env: curEnv}
+func NewVerifier(envMgr *env.EnvMgr) *Verifier {
+	if envMgr == nil {
+		panic("envMgr is nil")
 	}
+	return &Verifier{Env: envMgr}
 }
 
-func (ver *Verifier) newEnv(parent *env.Env) {
-	newEnv := env.NewEnv(parent)
-	ver.Env = newEnv
+func (ver *Verifier) newEnv() *env.EnvMgr {
+	return ver.Env.NewEnv()
 }
 
-func (ver *Verifier) deleteEnvAndRetainMsg() error {
-	if ver.Env.Parent != nil {
-		for _, msg := range ver.Env.Msgs {
-			if glob.RequireMsg() {
-				ver.Env.Parent.Msgs = append(ver.Env.Parent.Msgs, msg)
-			}
-		}
-		ver.Env = ver.Env.Parent
-		return nil
-	} else {
-		return fmt.Errorf("parent env does not exist")
-	}
-}
-
-func (ver *Verifier) deleteEnv_DeleteMsg() error {
-	if ver.Env.Parent != nil {
-		ver.Env = ver.Env.Parent
-		return nil
-	} else {
-		return fmt.Errorf("parent env does not exist")
-	}
+func (ver *Verifier) deleteEnv() error {
+	ver.Env.DeleteEnv()
+	return nil
 }

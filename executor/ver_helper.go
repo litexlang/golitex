@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,52 +17,23 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	env "golitex/environment"
+	glob "golitex/glob"
 )
 
-func (ver *Verifier) todo_theUpMostEnvWhereRelatedThingsAreDeclared(stmt *ast.SpecFactStmt) *env.Env {
-	_ = stmt
-	return nil
-}
+// maybeAddSuccessMsgString is a backward compatibility function for string-based
+func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet *glob.VerRet) *glob.VerRet {
+	if state == nil {
+		panic("")
+	}
 
-func (ver *Verifier) processOkMsg(state *VerState, msg string, verifiedBy string, args ...any) ExecRet {
 	if state.WithMsg {
-		ver.successWithMsg(msg, fmt.Sprintf(verifiedBy, args...))
+		execRet.VerifyMsgs = append(execRet.VerifyMsgs, successVerStringString(stmtStr, verifiedByStr).VerifyMsgs...)
+		return execRet
 	}
-	return NewExecTrue(successVerString(msg, fmt.Sprintf(verifiedBy, args...)))
+	return execRet
 }
 
-func (ver *Verifier) paramsInSets(params []ast.Fc, sets []ast.Fc, state *VerState) ExecRet {
-	if len(params) != len(sets) {
-		return NewExecErr("params and sets length mismatch")
-	}
-
-	for i := range params {
-		fact := ast.NewInFactWithFc(params[i], sets[i])
-		verRet := ver.VerFactStmt(fact, state)
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsUnknown() {
-			return NewExecUnknown(ast.UnknownFactMsg(fact))
-		}
-	}
-	return NewExecTrue("")
-}
-
-func (ver *Verifier) factsAreTrue(facts []ast.FactStmt, state *VerState) ExecRet {
-	for _, fact := range facts {
-		verRet := ver.VerFactStmt(fact, state)
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsUnknown() {
-			return NewExecUnknown(ast.UnknownFactMsg(fact))
-		}
-	}
-
-	return NewExecTrue("")
-}
+// maybeAddSuccessMsgVerMsg adds a VerMsg to execRet if state.WithMsg is true
 
 func IsTrueOrErr(ok bool, err error) bool {
 	return ok || err != nil
@@ -70,4 +41,82 @@ func IsTrueOrErr(ok bool, err error) bool {
 
 func IsFalseOrErr(ok bool, err error) bool {
 	return !ok || err != nil
+}
+
+// func ObjIsNotSet(obj ast.Obj) bool {
+// 	return !ast.ObjIsKeywordSet(obj)
+// }
+
+// ordinalSuffix converts a number to its ordinal form (1st, 2nd, 3rd, 4th, etc.)
+func ordinalSuffix(n int) string {
+	if n < 0 {
+		return fmt.Sprintf("%dth", n)
+	}
+
+	// Special cases for 11, 12, 13 which all use "th"
+	if n%100 >= 11 && n%100 <= 13 {
+		return fmt.Sprintf("%dth", n)
+	}
+
+	// Regular cases based on last digit
+	switch n % 10 {
+	case 1:
+		return fmt.Sprintf("%dst", n)
+	case 2:
+		return fmt.Sprintf("%dnd", n)
+	case 3:
+		return fmt.Sprintf("%drd", n)
+	default:
+		return fmt.Sprintf("%dth", n)
+	}
+}
+
+func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistSpecificFactStmt) *ast.ExistSpecificFactStmt {
+	if len(existStruct.ExistFreeParams) == 0 {
+		return existStruct
+	}
+
+	// 生成随机名称替换映射
+	paramReplaceMap := map[string]ast.Obj{}
+	newExistParams := make([]string, len(existStruct.ExistFreeParams))
+	usedNames := map[string]struct{}{}
+
+	for i, oldParam := range existStruct.ExistFreeParams {
+		// 生成一个不冲突的随机名称
+		newParamName := ver.Env.GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(usedNames)
+		newExistParams[i] = newParamName
+		usedNames[newParamName] = struct{}{}
+		paramReplaceMap[oldParam] = ast.Atom(newParamName)
+	}
+
+	newParams := []ast.Obj{}
+	for _, param := range existStruct.PureFact.Params {
+		newParam, err := param.Instantiate(paramReplaceMap)
+		if err != nil {
+			panic("failed to instantiate exist free param set")
+		}
+		newParams = append(newParams, newParam)
+	}
+
+	// 替换 ExistFreeParamSets 中的参数引用
+	newExistParamSets := make([]ast.Obj, len(existStruct.ExistFreeParamSets))
+	for i, paramSet := range existStruct.ExistFreeParamSets {
+		newParamSet := paramSet
+		for oldParam, newParam := range paramReplaceMap {
+			newParamSet = newParamSet.ReplaceObj(ast.Atom(oldParam), newParam)
+		}
+		newExistParamSets[i] = newParamSet
+	}
+
+	// // 替换 Params 中的参数引用
+	// newParams := make([]ast.Obj, len(existStruct.Params))
+	// for i, param := range existStruct.Params {
+	// 	newParam := param
+	// 	for oldParam, newParamObj := range paramReplaceMap {
+	// 		newParam = newParam.ReplaceObj(ast.Atom(oldParam), newParamObj)
+	// 	}
+	// 	newParams[i] = newParam
+	// }
+
+	return ast.NewExistSpecificFactStmt(existStruct.IsTrue, newExistParams, newExistParamSets, ast.NewPureSpecificFactStmt(existStruct.PureFact.IsTrue, existStruct.PureFact.PropName, newParams, existStruct.Line), existStruct.Line)
 }

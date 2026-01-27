@@ -4,7 +4,7 @@ prove:
 
     know forall x A, y1, y2 B: $P(x, y1), $P(x, y2) => $last_two_objects_are_equal(x, y1, y2)
 
-    have set s = set_defined_by_replacement(A, B, P)
+    have s set = set_defined_by_replacement(A, B, P)
     forall x set_defined_by_replacement(A, B, P):
         $obj_exist_as_preimage_of_prop(A, B, P, x)
 
@@ -25,7 +25,7 @@ prove:
 
     know forall x A, y1, y2 B: $P(x, y1), $P(x, y2) => $last_two_objects_are_equal(x, y1, y2)
 
-    have set y = set_defined_by_replacement(A, B, P)
+    have y set = set_defined_by_replacement(A, B, P)
 
     forall x y:
         x $in B

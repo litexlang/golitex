@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,63 +16,46 @@ package litex_ast
 
 type FactStmtSlice []FactStmt
 type StmtSlice []Stmt
-type SpecFactPtrSlice []*SpecFactStmt
-type StrSlice []string
-type FcSlice []Fc
+type StmtSliceSlice []StmtSlice
+type SpecFactPtrSlice []SpecificFactStmt
+type StrSlice []string // 在定义的时候，用string而不是 atom 是有道理的，因为atom可能引入::，而string不会
+type ObjSlice []Obj
 type ReversibleFacts []Spec_OrFact
+type FactOrByStmtSlice []FactOrByStmt
 
 type DefLetStmt struct {
 	Objs    StrSlice
-	ObjSets FcSlice
+	ObjSets ObjSlice
 	Facts   FactStmtSlice
 
 	Line uint
 }
 
 type DefHeader struct {
-	Name      FcAtom
+	Name      string
 	Params    StrSlice
-	ParamSets FcSlice
+	ParamSets ObjSlice
 }
 
 type DefPropStmt struct {
-	DefHeader *DefHeader
-	DomFacts  FactStmtSlice
-	IffFacts  FactStmtSlice
-	ThenFacts FactStmtSlice
+	DefHeader             *DefHeader
+	DomFactsOrNil         FactStmtSlice
+	IffFactsOrNil         FactStmtSlice // nil 表示没有iff，无法从定义来验证prop正确性；如果是 []FactStmt{}，表示只要dom和def满足了，那就prop成立。1
+	ImplicationFactsOrNil FactStmtSlice
 
 	Line uint
 }
 
-// 虽然它和 defProp 一样，但不排除之后要让iffFacts只能是可逆的事实
-type DefExistPropStmtBody struct {
-	DefHeader *DefHeader
-	DomFacts  FactStmtSlice
-	IffFacts  FactStmtSlice
-	ThenFacts FactStmtSlice
-
-	Line uint
-}
-
-// how to  use not exist to prove and store not forall in iff section of exist_prop: define a new exist_prop, give a name to that forall, and make this exist_prop equivalent to original exist_prop. Then use prove_by_contradiction to prove the new exist_prop is also false, then the not forall is proved.
-type DefExistPropStmt struct {
-	DefBody        *DefExistPropStmtBody
-	ExistParams    StrSlice
-	ExistParamSets FcSlice
-
-	Line uint
-}
-
-type DefFnStmt struct {
+type LetFnStmt struct {
 	Name       string
-	FnTemplate *FnTStruct
+	FnTemplate *AnonymousFn
 
 	Line uint
 }
 
 type UniFactStmt struct {
 	Params    StrSlice
-	ParamSets FcSlice
+	ParamSets ObjSlice
 	DomFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
 
@@ -86,13 +69,13 @@ type UniFactWithIffStmt struct {
 	Line uint
 }
 
-type SpecFactStmt struct {
-	TypeEnum SpecFactEnum
-	PropName FcAtom
-	Params   FcSlice
+// type SpecFactStmt struct {
+// 	FactType SpecFactType
+// 	PropName Atom
+// 	Params   ObjSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type ClaimProveStmt struct {
 	ToCheckFact FactStmt
@@ -102,15 +85,15 @@ type ClaimProveStmt struct {
 }
 
 type ClaimProveByContradictionStmt struct {
-	ClaimProveStmt *ClaimProveStmt
+	ToCheckFact Spec_OrFact
+	Proofs      StmtSlice
 
 	Line uint
 }
 
-type ClaimPropStmt struct {
-	Prop    *DefPropStmt
-	Proofs  StmtSlice
-	IsProve bool
+type ClaimImplicationStmt struct {
+	Implication *DefPropStmt
+	Proofs      StmtSlice
 
 	Line uint
 }
@@ -121,45 +104,28 @@ type KnowFactStmt struct {
 	Line uint
 }
 
-type KnowPropStmt struct {
-	Prop *DefPropStmt
+type KnowPropInferStmt struct {
+	DefProp *DefPropStmt
 
 	Line uint
 }
 
-// TODO: 这个的parser还没有像claim_prop那样改成用@
-type ClaimExistPropStmt struct {
-	ExistPropWithoutDom *DefExistPropStmt
-	Proofs              StmtSlice
-	HaveObj             FcSlice
+// TODO: 可以把caseFacts换成[]Spec_orFact，这样更合理
+type ProveCaseByCaseStmt struct {
+	CaseFacts  SpecFactPtrSlice
+	ThenFacts  FactStmtSlice
+	Proofs     StmtSliceSlice
+	ProveCases StmtSlice
 
 	Line uint
 }
 
-type HaveObjStStmt struct {
-	ObjNames StrSlice
-	Fact     *SpecFactStmt
-
-	Line uint
-}
-
-type ProveInEachCaseStmt struct {
-	OrFact    *OrStmt
-	ThenFacts FactStmtSlice
-	Proofs    []StmtSlice
-
-	Line uint
-}
-
-type OrStmt struct {
-	Facts SpecFactPtrSlice
-
-	Line uint
-}
-
+// import sys as s
+// import "your_dir" as a
 type ImportDirStmt struct {
-	Path      string
-	AsPkgName string
+	RelativePathOrGlobalPkgName string
+	AsPkgName                   string
+	IsGlobalPkg                 bool
 
 	Line uint
 }
@@ -170,31 +136,33 @@ type ProveStmt struct {
 	Line uint
 }
 
-// s := {1,2,3} 是枚举语法糖，等价于 forall x s: x = 1 or x = 2 or x = 3; 1 $in s; 2 $in s; 3 $in s;
-// s := {} 表示 这是个空集
-type EnumStmt struct {
-	CurSet Fc
-	Items  FcSlice
-
-	Line uint
-}
-
-type ImportFileStmt struct {
+// run "xxx.lit"
+type RunFileStmt struct {
 	Path string
 
 	Line uint
 }
 
-type IntensionalSetStmt struct {
-	CurSet    Fc
-	Param     string
-	ParentSet Fc
-	Facts     SpecFactPtrSlice
-
-	Line uint
-}
-
 // 某种程度上这个关键词是不必要的，因为如果我发现涉及到的uniFact里面的所有的 paramSet 都是有 enum 的，那我就默认迭代去证明这个forall。但是我还是引入这个关键词以突出我现在用的是iterative的情况
+// prove_by_enum(x s, y s2, z s3...):
+//
+//		dom:
+//			...
+//		=>:
+//			...
+//	    prove:
+//		    ...
+
+// prove_by_enum(x s, y s2, z s3...):
+//
+//	=>:
+//		...
+//	prove:
+//		...
+
+// prove_by_enum(x s, y s2, z s3...):
+//
+//	....
 type ProveByEnumStmt struct {
 	Fact  *UniFactStmt
 	Proof StmtSlice
@@ -204,81 +172,28 @@ type ProveByEnumStmt struct {
 
 type HaveObjInNonEmptySetStmt struct {
 	Objs    StrSlice
-	ObjSets FcSlice
-
-	Line uint
-}
-
-type HaveEnumSetStmt struct {
-	Fact *EnumStmt
-
-	Line uint
-}
-
-type HaveIntensionalSetStmt struct {
-	Fact *IntensionalSetStmt
-
-	Line uint
-}
-
-// TODO: 我不知道这是做什么的
-// 定义返回值是集合的函数；这个的好处是，fn的定义不能保证函数的存在性；而have可以保证函数的存在性
-type HaveSetFnStmt struct {
-	DefHeader *DefHeader
-	Param     string
-	ParentSet Fc
-	Proofs    SpecFactPtrSlice
-
-	Line uint
-}
-
-// TODO: 这里需要变成factStmt, haveSetInterface，而不是只被用在声明的时候
-// 还需要对 enum 也有这样的 fn
-type HaveSetDefinedByReplacementStmt struct {
-	Name     string
-	DomSet   Fc
-	RangeSet Fc
-	PropName FcAtom
-
-	Line uint
-}
-
-type NamedUniFactStmt struct {
-	DefPropStmt *DefPropStmt
+	ObjSets ObjSlice
 
 	Line uint
 }
 
 type EqualsFactStmt struct {
-	Params FcSlice
+	Params ObjSlice
 
 	Line uint
 }
-
-type KnowExistPropStmt struct {
-	ExistProp *DefExistPropStmt
-
-	Line uint
-}
-
-type LatexStmt struct {
-	Comment string
-
-	Line uint
-}
-
-type FnTemplateDefStmt struct {
+type DefFnSetStmt struct {
 	TemplateDefHeader *DefHeader
 	TemplateDomFacts  FactStmtSlice
-	Fn                *FnTStruct
+	AnonymousFn       *AnonymousFn
 
 	Line uint
 }
 
-type FnTStruct struct {
+type AnonymousFn struct {
 	Params    StrSlice
-	ParamSets FcSlice
-	RetSet    Fc
+	ParamSets ObjSlice
+	RetSet    Obj
 	DomFacts  FactStmtSlice
 	ThenFacts FactStmtSlice
 
@@ -289,6 +204,10 @@ type ClearStmt struct {
 	Line uint
 }
 
+type DoNothingStmt struct {
+	Line uint
+}
+
 type InlineFactsStmt struct {
 	Facts FactStmtSlice
 
@@ -296,60 +215,83 @@ type InlineFactsStmt struct {
 }
 
 type ProveByInductionStmt struct {
-	Fact  *SpecFactStmt
+	Fact  FactStmt
 	Param string
-	Start Fc
+	Proof StmtSlice
 
 	Line uint
 }
 
 type HaveObjEqualStmt struct {
 	ObjNames    StrSlice
-	ObjEqualTos FcSlice
-	ObjSets     FcSlice
+	ObjEqualTos ObjSlice
+	ObjSets     ObjSlice
 
 	Line uint
 }
 
-// 不知道这个有什么用
-// TODO 删去
+// 这是have fn 语法糖。理论上可以用 exist_prop + have fn equal case by case + 给定义的函数定义它的函数集合，来彻底实现
 type HaveFnEqualStmt struct {
 	DefHeader *DefHeader
-	RetSet    Fc
-	EqualTo   Fc
+	RetSet    Obj
+	EqualTo   Obj
+	Proofs    StmtSlice
 
 	Line uint
 }
 
-type HaveFnLiftStmt struct {
-	FnName                     string
-	Opt                        Fc
-	DomainOfEachParamOfGivenFn FcSlice
+// 这是have fn case by case，然后case by case下fn的then都满足的语法糖。理论上可以用 exist_prop + have fn equal case by case + fn_template (可以写复杂的dom, then) + 在定义的外部写如果参数符合dom，那对应的equalTo符合fn_template的then，来彻底实现have fn case by case 的功能。
+// Have fn case by case 和 have fn equal 就是单纯的语法糖，不要想有什么额外的功能。不要想着怎么让 HaveFn, HaveFnCaseByCase 用HaveEqual 来替代。
+type HaveFnEqualCaseByCaseStmt struct {
+	DefHeader         *DefHeader
+	RetSet            Obj
+	CaseByCaseFacts   SpecFactPtrSlice
+	CaseByCaseEqualTo ObjSlice
+	Proofs            StmtSliceSlice
+	ProveCases        StmtSlice
 
 	Line uint
 }
 
+/*
+have fn:
+
+	f(x R) R:
+	    ...
+	    =>:
+	        ...
+	prove:
+	    ...
+	= ...
+*/
 type HaveFnStmt struct {
-	DefFnStmt        *DefFnStmt
+	DefFnStmt        *LetFnStmt
 	Proofs           StmtSlice
-	HaveObjSatisfyFn Fc
+	HaveObjSatisfyFn Obj
 
 	Line uint
 }
 
-type MarkdownStmt struct {
-	Markdown string
+/*
+have fn:
 
-	Line uint
-}
-
-type ProveInRangeStmt struct {
-	Start          int64
-	End            int64
-	Param          string
-	IntensionalSet Fc
-	ThenFacts      FactStmtSlice
-	Proofs         StmtSlice
+	g(x R) R:
+	    ...
+	    =>:
+	        ...
+	case ...:
+	    ...
+	= ...
+	case ...:
+	    ...
+	= ...
+*/
+type HaveFnCaseByCaseStmt struct {
+	DefFnStmt       *LetFnStmt
+	CaseByCaseFacts SpecFactPtrSlice
+	Proofs          StmtSliceSlice
+	EqualToObjs     ObjSlice
+	ProveCases      StmtSlice
 
 	Line uint
 }
@@ -363,7 +305,7 @@ type ClaimIffStmt struct {
 }
 
 type ProveIsTransitivePropStmt struct {
-	Prop   FcAtom
+	Prop   Atom
 	Params StrSlice
 	Proofs StmtSlice
 
@@ -373,38 +315,179 @@ type ProveIsTransitivePropStmt struct {
 type ProveIsCommutativePropStmt struct {
 	// Prop              FcAtom
 	// Params            StrSlice
-	SpecFact          *SpecFactStmt
+	SpecFact          *PureSpecificFactStmt
 	Proofs            StmtSlice
 	ProofsRightToLeft StmtSlice
 
 	Line uint
 }
 
-type AlgoSlice []AlgoStmt
+type AlgoStmtSlice []AlgoStmt
+
+// type ProveAlgoStmtSlice []ProveAlgoStmt
 
 type AlgoIfStmt struct {
 	Conditions FactStmtSlice
-	ThenStmts  AlgoSlice
+	ThenStmts  AlgoStmtSlice
 
 	Line uint
 }
 
 type AlgoReturnStmt struct {
-	Value Fc
+	Value Obj
 
 	Line uint
 }
 
-type AlgoDefStmt struct {
+type DefAlgoStmt struct {
 	FuncName string
-	Params   []string
-	Stmts    AlgoSlice
+	Params   StrSlice
+	Stmts    AlgoStmtSlice
 
 	Line uint
 }
 
 type EvalStmt struct {
-	Value Fc
+	ObjToEval Obj
+
+	Line uint
+}
+
+// type DefProveAlgoStmt struct {
+// 	ProveAlgoName string
+// 	Params        StrSlice
+// 	Stmts         ProveAlgoStmtSlice
+//
+// 	Line uint
+// }
+
+// type ByStmt struct {
+// 	ProveAlgoName string
+// 	Params        ObjSlice
+//
+// 	Line uint
+// }
+
+// type ProveAlgoIfStmt struct {
+// 	Conditions FactStmtSlice
+// 	ThenStmts  ProveAlgoStmtSlice
+//
+// 	Line uint
+// }
+
+// type ProveAlgoReturnStmt struct {
+// 	Facts FactOrByStmtSlice
+//
+// 	Line uint
+// }
+
+type ProveForStmt struct {
+	Params        StrSlice
+	Lefts         ObjSlice
+	Rights        ObjSlice
+	IsProveIRange []bool // true for range, false for closed_range
+	DomFacts      FactStmtSlice
+	ThenFacts     FactStmtSlice
+	Proofs        StmtSlice
+
+	Line uint
+}
+
+// type DefImplicationStmt struct {
+// 	DefHeader        *DefHeader
+// 	DomFacts         FactStmtSlice
+// 	ImplicationFacts FactStmtSlice
+
+// 	Line uint
+// }
+
+type ProveInferStmt struct {
+	SpecFact        *PureSpecificFactStmt
+	ImplicationFact FactStmtSlice
+	Proofs          StmtSlice
+
+	Line uint
+}
+
+// have objectName setName, objectName2 setName2 st $propName(...)
+type HaveObjStStmt struct {
+	ObjNames StrSlice
+	ObjSets  ObjSlice
+	Fact     *PureSpecificFactStmt
+
+	Line uint
+}
+
+type WitnessStmt struct {
+	ExistParams    StrSlice
+	ExistParamSets ObjSlice
+	EqualTos       ObjSlice
+	Fact           *PureSpecificFactStmt
+	Proofs         StmtSlice
+
+	Line uint
+}
+
+// type WitnessShortStmt struct {
+// 	SpecFact *PureSpecificFactStmt
+// 	Proofs   StmtSlice
+
+// 	Line uint
+// }
+
+type InferStmt struct {
+	DomFacts  ReversibleFacts
+	ThenFacts ReversibleFacts
+
+	Line uint
+}
+
+type InferTemplateStmt struct {
+	Params    StrSlice
+	ParamSets ObjSlice
+	DomFacts  ReversibleFacts
+	ThenFacts ReversibleFacts
+	Proof     StmtSlice
+
+	IfFacts FactStmtSlice
+
+	Line uint
+}
+
+type KnowInferStmt struct {
+	Params    StrSlice
+	ParamSets ObjSlice
+	DomFacts  ReversibleFacts
+	ThenFacts ReversibleFacts
+	IfFacts   FactStmtSlice
+
+	Line uint
+}
+
+type EqualSetStmt struct {
+	Left   Obj
+	Right  Obj
+	Proofs StmtSlice
+
+	Line uint
+}
+
+type WitnessNonemptyStmt struct {
+	Obj    Obj
+	ObjSet Obj
+	Proofs StmtSlice
+
+	Line uint
+}
+
+type ImpossibleStmt struct {
+	Fact Spec_OrFact
+
+	Line uint
+}
+
+type OrStmt struct {
+	Facts SpecFactPtrSlice
 
 	Line uint
 }

@@ -1,0 +1,83 @@
+# have statements
+
+# have sets by naive set theory
+prove:
+    have s set = {1, 2, 3}
+
+    enum x {1, 2, 3}:
+        x $in {3, 2, 1}
+
+prove:
+    have s2 set = {x N : x > 5}
+    forall x s2:
+        x > 5
+
+# have objects from builtin sets
+prove:
+    have a N, b Z, c Q, d R
+    have s set
+    have s2 finite_set
+
+
+# have objects from finite sets size > 0
+prove:
+    let s finite_set:
+        count(s) = 1
+    1 > 0
+    count(s) > 0
+    $is_nonempty_set(s)
+    have a s
+
+
+# have objectName st item_exists_in(setName)
+# it has syntax sugar: have objectName setName
+prove:
+    let s set, a set
+    know a $in s
+    $is_nonempty_with_item(s, a)
+    have b s
+
+prove:
+    {x R: x > 0} = {x R: x > 0}
+
+    $is_nonempty_with_item({x R: x > 0}, 1)
+
+    have a set = {x R: x > 0}
+
+    forall x a:
+        x > 0
+
+    equal_set {y R: y > 0}, {x R: x > 0}:
+        do_nothing
+
+prove:
+    have fn f(x R) R = x + 1
+    f(2) = 3
+
+    have fn g(x R) R =:
+        case x = 2: 3
+        case x != 2: 4
+
+    g(2) = 3
+        
+prove:
+    have s set = list_set(1, 2, 3)
+    s = {1, 2, 3}
+
+    have a set = set_builder(x R: x > 0)
+    a = {x R: x > 0}
+
+    tuple(1, 2, 3) $in cart(R, R, N)
+    (1, 2, 3) = tuple(1, 2, 3)
+
+    obj_at_index(tuple(1, 2, 3), 1) = 1
+
+prove:
+    prop p(x R, y R)
+    prop q(x R, y R)
+
+    know exist x R st $p(x, 1) or exist x R st $q(x, 1)
+
+    exist x R st $p(x, 1) or exist x R st $q(x, 1)
+
+

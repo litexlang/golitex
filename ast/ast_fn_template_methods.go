@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,15 +14,17 @@
 
 package litex_ast
 
-import glob "golitex/glob"
+import (
+	"maps"
+)
 
-func (fnTemplate *FnTStruct) DeriveUniFact_WithGivenFn(fc Fc) (*UniFactStmt, error) {
-	paramAsFc := []Fc{}
+func (fnTemplate *AnonymousFn) DeriveUniFact_WithGivenFn(obj Obj) (*UniFactStmt, error) {
+	paramAsObj := []Obj{}
 	for _, param := range fnTemplate.Params {
-		paramAsFc = append(paramAsFc, FcAtom(param))
+		paramAsObj = append(paramAsObj, Atom(param))
 	}
 
-	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(fc, paramAsFc), fnTemplate.RetSet)}
+	thenFacts := []FactStmt{NewInFactWithParamObj(NewFnObj(obj, paramAsObj), fnTemplate.RetSet, fnTemplate.Line)}
 	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
 
 	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts, fnTemplate.Line)
@@ -30,19 +32,19 @@ func (fnTemplate *FnTStruct) DeriveUniFact_WithGivenFn(fc Fc) (*UniFactStmt, err
 	return notInstantiated, nil
 }
 
-func (fnTemplate *FnTStruct) DeriveUniFact(defFnTemplateName string, fnFc Fc, templateParamUniMap map[string]Fc) (*UniFactStmt, error) {
-	paramAsFc := []Fc{}
+func (fnTemplate *AnonymousFn) DeriveUniFact(defFnTemplateName string, fnObj Obj, templateParamUniMap map[string]Obj) (*UniFactStmt, error) {
+	paramAsObj := []Obj{}
 	for _, param := range fnTemplate.Params {
-		paramAsFc = append(paramAsFc, FcAtom(param))
+		paramAsObj = append(paramAsObj, Atom(param))
 	}
 
-	thenFacts := []FactStmt{NewInFactWithParamFc(NewFcFn(fnFc, paramAsFc), fnTemplate.RetSet)}
+	thenFacts := []FactStmt{NewInFactWithParamObj(NewFnObj(fnObj, paramAsObj), fnTemplate.RetSet, fnTemplate.Line)}
 	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
 
 	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts, fnTemplate.Line)
 
-	uniMap := glob.CopyMap(templateParamUniMap)
-	uniMap[defFnTemplateName] = fnFc
+	uniMap := maps.Clone(templateParamUniMap)
+	uniMap[defFnTemplateName] = fnObj
 
 	instantiated, err := notInstantiated.InstantiateFact(uniMap)
 	if err != nil {
@@ -52,9 +54,9 @@ func (fnTemplate *FnTStruct) DeriveUniFact(defFnTemplateName string, fnFc Fc, te
 	return instantiated.(*UniFactStmt), nil
 }
 
-func (stmt *FnTStruct) InstantiateFnTWithoutChangingTName(uniMap map[string]Fc) ([]Fc, FactStmtSlice, FactStmtSlice, Fc, error) {
+func (stmt *AnonymousFn) InstantiateFnTWithoutChangingTName(uniMap map[string]Obj) ([]Obj, FactStmtSlice, FactStmtSlice, Obj, error) {
 	// 1. instantiate set params in facts
-	newSetParams := []Fc{}
+	newSetParams := []Obj{}
 	for _, setParam := range stmt.ParamSets {
 		instantiatedParam, err := setParam.Instantiate(uniMap)
 		if err != nil {

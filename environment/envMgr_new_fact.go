@@ -1,0 +1,333 @@
+// Copyright Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Litex email: <litexlang@outlook.com>
+// Litex website: https://litexlang.com
+// Litex github repository: https://github.com/litexlang/golitex
+// Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
+
+package litex_env
+
+import (
+	"fmt"
+	ast "golitex/ast"
+	glob "golitex/glob"
+)
+
+func (envMgr *EnvMgr) NewFactWithCheckingNameDefined(stmt ast.FactStmt) *glob.StmtRet {
+	// 检查是否符合要求：比如涉及到的符号是否都定义了
+	if ret := envMgr.LookUpNamesInFact(stmt, map[string]struct{}{}); ret.IsNotTrue() {
+		// return glob.ErrRet(stmt.String()).AddMsg(ret.String())
+		return glob.ErrRet(fmt.Sprintf(stmt.String())).AddError(ret.String())
+	}
+
+	switch f := stmt.(type) {
+	case ast.SpecificFactStmt:
+		return envMgr.newSpecFact(f)
+	case *ast.OrStmt:
+		return envMgr.newOrFact(f)
+	case *ast.UniFactStmt:
+		return envMgr.NewFactWithCheckingNameDefined_UniFact(f)
+	case *ast.UniFactWithIffStmt:
+		return envMgr.newUniFactWithIff(f)
+	case *ast.EqualsFactStmt:
+		return envMgr.newEqualsFact(f)
+	default:
+		return glob.ErrRet(fmt.Sprintf("unknown fact type: %T", stmt))
+	}
+}
+
+// storeUniFactAsInferTemplateIfApplicable checks if all DomFacts and ThenFacts are SpecFactStmt or OrStmt,
+// and if so, stores them as InferTemplateStmt in SpecFactInImplyTemplateMem.
+// This function does not return errors - it silently skips storage if conditions are not met.
+func (envMgr *EnvMgr) storeUniFactAsInferTemplateIfApplicable(stmt *ast.UniFactStmt, ifFacts []ast.FactStmt) {
+	// 如果dom和then全是spec 或者 or，那做成 imply存起来
+	// Check if all DomFacts and ThenFacts are SpecFactStmt or OrStmt
+	domFactsReversible := []ast.Spec_OrFact{}
+	for _, domFact := range stmt.DomFacts {
+		if specFact, ok := domFact.(ast.SpecificFactStmt); ok {
+			domFactsReversible = append(domFactsReversible, specFact)
+		} else if orStmt, ok := domFact.(*ast.OrStmt); ok {
+			domFactsReversible = append(domFactsReversible, orStmt)
+		} else {
+			// Not all facts are Spec_OrFact, skip storing as InferTemplate
+			return
+		}
+	}
+
+	thenFactsReversible := []ast.Spec_OrFact{}
+	for _, thenFact := range stmt.ThenFacts {
+		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
+			thenFactsReversible = append(thenFactsReversible, specFact)
+		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
+			thenFactsReversible = append(thenFactsReversible, orStmt)
+		} else {
+			// Not all facts are Spec_OrFact, skip storing as InferTemplate
+			return
+		}
+	}
+
+	// All facts are Spec_OrFact, create InferTemplateStmt and store
+	inferTemplate := ast.NewInferTemplateStmt(stmt.Params, stmt.ParamSets, domFactsReversible, thenFactsReversible, ifFacts, []ast.Stmt{}, stmt.Line)
+
+	// Store each thenFact in SpecFactInImplyTemplateMem
+	for _, thenFact := range inferTemplate.ThenFacts {
+		storeRet := envMgr.StoreSpecFactInImplyTemplateMem(thenFact, inferTemplate)
+		if storeRet.IsErr() {
+			// If storage fails, silently skip (don't fail the whole operation)
+			return
+		}
+	}
+}
+
+func (envMgr *EnvMgr) NewFactWithCheckingNameDefined_UniFact(stmt *ast.UniFactStmt) *glob.StmtRet {
+	ret := envMgr.newUniFact(stmt)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	// Try to store as InferTemplate if applicable
+	envMgr.storeUniFactAsInferTemplateIfApplicable(stmt, []ast.FactStmt{})
+
+	return ret
+}
+
+func (envMgr *EnvMgr) newUniFact(stmt *ast.UniFactStmt) *glob.StmtRet {
+	for i, thenStmt := range stmt.ThenFacts {
+		var ret *glob.StmtRet
+		switch asFact := thenStmt.(type) {
+		case ast.SpecificFactStmt:
+			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, i)
+		case *ast.OrStmt:
+			ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
+			// ret = glob.NewEmptyStmtTrue()
+		case *ast.UniFactWithIffStmt:
+			ret = envMgr.newUniFact_ThenFactIsIffStmt(stmt, asFact)
+		case *ast.UniFactStmt:
+			ret = envMgr.newUniFact_ThenFactIsUniFactStmt(stmt, asFact)
+		case *ast.EqualsFactStmt:
+			ret = envMgr.newUniFact_ThenFactIsEqualsFactStmt(stmt, asFact)
+		default:
+			return glob.ErrRet(fmt.Sprintf("invalid then fact type: %s", thenStmt))
+		}
+
+		if ret.IsErr() {
+			return ret
+		}
+	}
+	return glob.NewEmptyStmtTrue()
+}
+
+func (envMgr *EnvMgr) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) *glob.StmtRet {
+	thenToIff := stmt.NewUniFactWithThenToIff()
+	ret := envMgr.newUniFact(thenToIff)
+	if ret.IsErr() {
+		return ret
+	}
+
+	// Try to store as InferTemplate if applicable (with IffFacts as ifFacts)
+	envMgr.storeUniFactAsInferTemplateIfApplicable(thenToIff, []ast.FactStmt{})
+
+	iffToThen := stmt.NewUniFactWithIffToThen()
+	ret = envMgr.newUniFact(iffToThen)
+	if ret.IsErr() {
+		return ret
+	}
+
+	// Try to store as InferTemplate if applicable (with IffFacts as ifFacts)
+	envMgr.storeUniFactAsInferTemplateIfApplicable(iffToThen, []ast.FactStmt{})
+
+	return glob.NewEmptyStmtTrue()
+}
+
+func (envMgr *EnvMgr) newOrFact(fact *ast.OrStmt) *glob.StmtRet {
+	// ret := envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
+	// if ret.IsErr() {
+	// 	return ret
+	// }
+
+	// // Post-processing: a != 0 or b != 0 => a^2 + b^2 > 0
+	// ie := NewInferenceEngine(envMgr)
+	// orPostProcessRet := ie.orFactPostProcess(fact)
+	// if orPostProcessRet.IsTrue() {
+	// 	return ret.AddShortRetAsInfers(orPostProcessRet)
+	// }
+
+	// return ret
+
+	ret := envMgr.newOrFactNoInfer(fact)
+	if ret.IsNotTrue() {
+		return glob.ErrRet(ret.String())
+	}
+
+	return glob.NewEmptyStmtTrue()
+}
+
+func (envMgr *EnvMgr) newSpecFact(fact ast.SpecificFactStmt) *glob.StmtRet {
+	if isEqualFact := ast.IsTrueEqualFact(fact); isEqualFact {
+		return envMgr.newTrueEqual(fact.(*ast.PureSpecificFactStmt))
+	}
+
+	defer func() {
+		if asFact, ok := fact.(*ast.PureSpecificFactStmt); ok && asFact.IsTrue && envMgr.IsTransitiveProp(string(asFact.PropName)) {
+			curEnv := envMgr.CurEnv()
+			if curEnv.TransitivePropMem[string(asFact.PropName)] == nil {
+				curEnv.TransitivePropMem[string(asFact.PropName)] = make(map[string][]ast.Obj)
+			}
+			curEnv.TransitivePropMem[string(asFact.PropName)][asFact.Params[0].String()] = append(curEnv.TransitivePropMem[string(asFact.PropName)][asFact.Params[0].String()], asFact.Params[1])
+		}
+	}()
+
+	ret := envMgr.storeSpecFactInMem(fact)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	ie := NewInferenceEngine(envMgr)
+
+	var ieShortRet *glob.ShortRet
+	switch asFact := fact.(type) {
+	case *ast.ExistSpecificFactStmt:
+		if asFact.IsTrue {
+			ieShortRet = glob.NewEmptyShortTrueRet()
+		} else {
+			ieShortRet = ie.newFalseExist(asFact)
+		}
+	case *ast.PureSpecificFactStmt:
+		ieShortRet = ie.newPureFact(asFact)
+	}
+
+	return ret.AddInfers(ieShortRet.Msgs)
+}
+
+func (envMgr *EnvMgr) newTrueEqual(fact *ast.PureSpecificFactStmt) *glob.StmtRet {
+	ret := envMgr.newTrueEqualNoInfer(fact)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	// postprocess for cart: if x = cart(x1, x2, ..., xn)
+	ie := NewInferenceEngine(envMgr)
+	shortRet := ie.newTrueEqual(fact)
+
+	return ret.AddInfers(shortRet.Msgs)
+
+	// if shortRet.IsErr() {
+	// 	return ret.AddShortRetAsInfers(shortRet)
+	// }
+
+	// // 将 infer 消息添加到结果中
+	// if shortRet.IsTrue() && len(shortRet.Msgs) > 0 {
+	// 	return ret.AddInfers(shortRet.Msgs)
+	// }
+
+	// return ret
+}
+
+func (envMgr *EnvMgr) newEqualsFact(stmt *ast.EqualsFactStmt) *glob.StmtRet {
+	equalFacts := stmt.ToEqualFacts()
+	for _, equalFact := range equalFacts {
+		ret := envMgr.NewFactWithCheckingNameDefined(equalFact)
+		if ret.IsErr() {
+			return ret
+		}
+	}
+	return glob.NewEmptyStmtTrue()
+}
+
+func (envMgr *EnvMgr) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFactIndex int) *glob.StmtRet {
+	// return envMgr.storeUniFactInMem(thenFact, stmt)
+	return envMgr.CurEnv().KnownFactsStruct.SpecFactInUniFactMem.newFact(thenFactIndex, stmt)
+}
+
+// func (envMgr *EnvMgr) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) *glob.StmtRet {
+// 	return envMgr.CurEnv().KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenFact)
+// }
+
+func (envMgr *EnvMgr) newUniFact_ThenFactIsIffStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactWithIffStmt) *glob.StmtRet {
+	thenToIff := thenFact.NewUniFactWithThenToIff()
+	iffToThen := thenFact.NewUniFactWithIffToThen()
+
+	mergedThenToIff := ast.MergeOuterInnerUniFacts(stmt, thenToIff)
+	ret := envMgr.newUniFact(mergedThenToIff)
+	if ret.IsErr() {
+		return ret
+	}
+
+	mergedIffToThen := ast.MergeOuterInnerUniFacts(stmt, iffToThen)
+	ret = envMgr.newUniFact(mergedIffToThen)
+	if ret.IsErr() {
+		return ret
+	}
+
+	return glob.NewEmptyStmtTrue()
+}
+
+func (envMgr *EnvMgr) newUniFact_ThenFactIsUniFactStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactStmt) *glob.StmtRet {
+	mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, thenFact)
+	return envMgr.newUniFact(mergedUniFact)
+}
+
+func (envMgr *EnvMgr) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt, thenFact *ast.EqualsFactStmt) *glob.StmtRet {
+	equalFacts := thenFact.ToEqualFacts_PairwiseCombination()
+
+	newUniFact := ast.NewUniFact(stmt.Params, stmt.ParamSets, stmt.DomFacts, equalFacts, stmt.Line)
+
+	for i, _ := range equalFacts {
+		ret := envMgr.newUniFact_ThenFactIsSpecFact(newUniFact, i)
+		if ret.IsErr() {
+			return ret
+		}
+	}
+	return glob.NewEmptyStmtTrue()
+}
+
+// func (envMgr *EnvMgr) storeUniFactInMem(specFact ast.SpecificFactStmt, uniFact *ast.UniFactStmt) *glob.StmtRet {
+// 	return envMgr.CurEnv().KnownFactsStruct.SpecFactInUniFactMem.newFact(specFact, uniFact)
+// }
+
+func (envMgr *EnvMgr) ProveImplyNewThenFactInPropDef(stmt *ast.ProveInferStmt) *glob.StmtRet {
+	specFactAsParams, err := ast.ParamsInSpecFactAreStrings(stmt.SpecFact)
+	if err != nil {
+		return glob.ErrRet(err.Error())
+	}
+
+	definedStuff, ok := envMgr.GetPropDef(stmt.SpecFact.PropName)
+	if !ok {
+		return glob.ErrRet(fmt.Sprintf("undefined prop: %s", stmt.SpecFact.PropName))
+	}
+
+	def := definedStuff.Defined
+
+	if len(specFactAsParams) != len(def.DefHeader.Params) {
+		return glob.ErrRet(fmt.Sprintf("prop %s has %d params, but %d params are expected", stmt.SpecFact.PropName, len(def.DefHeader.Params), len(specFactAsParams)))
+	}
+
+	uniMap := map[string]ast.Obj{}
+	for i, param := range specFactAsParams {
+		uniMap[param] = ast.Atom(def.DefHeader.Params[i])
+	}
+
+	for _, stmtFact := range stmt.ImplicationFact {
+		instStmtFact, err := stmtFact.InstantiateFact(uniMap)
+		if err != nil {
+			return glob.ErrRet(err.Error())
+		}
+		if def.ImplicationFactsOrNil == nil {
+			def.ImplicationFactsOrNil = make([]ast.FactStmt, 0)
+		}
+		def.ImplicationFactsOrNil = append(def.ImplicationFactsOrNil, instStmtFact)
+	}
+
+	return glob.NewEmptyStmtTrue()
+}
+
+func (envMgr *EnvMgr) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) *glob.StmtRet {
+	return envMgr.storeOrFactInUniFactMem(thenFact, stmt)
+}

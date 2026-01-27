@@ -1,3 +1,0 @@
-import "Seq"
-
-let a R: a = Seq::Seq2::a

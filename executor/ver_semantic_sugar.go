@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,61 +17,77 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	cmp "golitex/cmp"
+	glob "golitex/glob"
 )
 
-func (ver *Verifier) verByReplaceFcInSpecFactWithValue(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	replaced, newStmt := ver.Env.ReplaceFcInSpecFactWithValue(stmt)
+func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
+
+	// After replacing symbols with values, evaluate any val(...) expressions
+	newParams := make([]ast.Obj, len(asStmt.Params))
+	valReplaced := false
+	for i, param := range asStmt.Params {
+		if fnObj, ok := param.(*ast.FnObj); ok {
+			if ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordVal) && len(fnObj.Params) == 1 {
+				// val(...) should be evaluated (like eval)
+				exec := NewExecutor(ver.Env)
+				exec.NewEnv()
+				defer exec.deleteEnv()
+				value, execRet := exec.evalObjThenSimplify(fnObj.Params[0])
+				if execRet.IsTrue() {
+					newParams[i] = value
+					valReplaced = true
+					continue
+				}
+			}
+		}
+		newParams[i] = param
+	}
+
+	if valReplaced {
+		newStmt = ast.NewPureSpecificFactStmt(asStmt.IsTrue, asStmt.PropName, newParams, asStmt.Line)
+		replaced = true
+	}
+
 	if replaced {
-		verRet := ver.verTrueEqualFactMainLogic(newStmt, state, true)
+		verRet := ver.verTrueEqualFactOldMainLogic(newStmt, state.CopyAndReqOkToFalse())
 		if verRet.IsErr() {
-			return NewExecErr("failed to verify true equal fact: " + verRet.String())
+			return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{"failed to verify true equal fact: " + verRet.String()})
 		}
 
 		if verRet.IsTrue() {
+			msg := fmt.Sprintf("replacing the symbols with their values:\n%s", newStmt.String())
 			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+				return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
 			}
-
-			values := []ast.Fc{}
-			if cmp.IsNumLitFc(newStmt.Params[0]) {
-				values = append(values, newStmt.Params[0])
-			} else {
-				values = append(values, nil)
-			}
-
-			if cmp.IsNumLitFc(newStmt.Params[1]) {
-				values = append(values, newStmt.Params[1])
-			} else {
-				values = append(values, nil)
-			}
-
-			if values[0] == nil && values[1] == nil {
-				return NewExecTrue(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
-			} else {
-				return NewExecTrueWithValues(fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()), values)
-			}
+			return glob.NewEmptyVerRetTrue()
 		}
 	}
 
-	return NewExecUnknown(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+	return glob.NewVerRet(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())})
 }
 
-func (ver *Verifier) verByReplaceFcInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) ExecRet {
-	replaced, newStmt := ver.Env.ReplaceFcInSpecFactWithValue(stmt)
+// func (ver *Verifier) verByReplaceObjInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+// 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
 
-	if replaced {
-		verRet := ver.verTrueEqualFactMainLogic(newStmt, state, true)
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsTrue() {
-			if state.WithMsg {
-				ver.successWithMsg(stmt.String(), fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String()))
-			}
-			return NewExecTrue("")
-		}
-	}
+// 	if replaced {
+// 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state.CopyAndReqOkToFalse())
+// 		if verRet.IsErr() {
+// 			return verRet
+// 		}
+// 		if verRet.IsTrue() {
+// 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String())
+// 			if state.WithMsg {
+// 				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{msg})
+// 			}
+// 			return glob.NewEmptyVerRetTrue()
+// 		}
+// 	}
 
-	return NewExecUnknown("")
-}
+// 	return glob.NewEmptyVerRetUnknown()
+// }
