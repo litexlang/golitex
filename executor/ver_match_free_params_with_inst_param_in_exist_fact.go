@@ -20,7 +20,7 @@ import (
 	"slices"
 )
 
-func (ver *Verifier) matchParamsWithFreeParamsWithInstParamInExistFact(freeParams []string, existFreeParams []string, knownExistParamSets []ast.Obj, givenExistParamSets []ast.Obj, knownExistParamSetsAndParamsInPureFact []ast.Obj, givenExistParamSetsAndParamsInPureFact []ast.Obj) (bool, map[string]ast.Obj) {
+func (ver *Verifier) matchObjectsWithFreeParamsWithInstObjectsInExistFact(freeParams []string, existFreeParams []string, knownExistParamSets []ast.Obj, givenExistParamSets []ast.Obj, knownExistParamSetsAndParamsInPureFact []ast.Obj, givenExistParamSetsAndParamsInPureFact []ast.Obj) (bool, map[string]ast.Obj) {
 	if len(knownExistParamSetsAndParamsInPureFact) != len(givenExistParamSetsAndParamsInPureFact) {
 		return false, nil
 	}
@@ -29,12 +29,12 @@ func (ver *Verifier) matchParamsWithFreeParamsWithInstParamInExistFact(freeParam
 		return false, nil
 	}
 
-	allInstParamsThatEachFreeParamMatchesMap := ver.getAllInstParamsThatEachFreeParamMatchesInExistFact(freeParams, existFreeParams, knownExistParamSetsAndParamsInPureFact, givenExistParamSetsAndParamsInPureFact)
+	allInstParamsThatEachFreeParamMatchesMap := ver.getAllObjectsThatEachFreeParamMatchesInExistFactByItsPureFact(freeParams, existFreeParams, knownExistParamSetsAndParamsInPureFact, givenExistParamSetsAndParamsInPureFact)
 
-	allInstParamsThatEachFreeParamMatchesMap2 := ver.getAllParamSetInstParamsThatEachFreeParamMatchesInExistFact(freeParams, existFreeParams, knownExistParamSets, givenExistParamSets)
+	allInstParamsThatEachFreeParamMatchesMap2 := ver.getAllObjectsThatEachFreeParamMatchesInExistFactByItsExistFreeParamSets(freeParams, existFreeParams, knownExistParamSets, givenExistParamSets)
 
 	// merge
-	mergedInstParamsThatEachFreeParamMatches := map[string][]ast.Obj{}
+	objectsThatEachFreeParamMatches := map[string][]ast.Obj{}
 	for _, key := range freeParams {
 		curFreeParamMatches := []ast.Obj{}
 		if items, ok := allInstParamsThatEachFreeParamMatchesMap[key]; ok {
@@ -46,12 +46,12 @@ func (ver *Verifier) matchParamsWithFreeParamsWithInstParamInExistFact(freeParam
 		if len(curFreeParamMatches) == 0 {
 			return false, nil
 		} else {
-			mergedInstParamsThatEachFreeParamMatches[key] = curFreeParamMatches
+			objectsThatEachFreeParamMatches[key] = curFreeParamMatches
 		}
 	}
 
 	// ok, freeParamMatchInstParamMap := ver.checkEachFreeParamMatchesEqualInstParams(mergedInstParamsThatEachFreeParamMatches)
-	ok, freeParamMatchInstParamMap := ver.checkEachFreeParamMatchesEqualInstParams(allInstParamsThatEachFreeParamMatchesMap)
+	ok, freeParamMatchInstParamMap := ver.checkEachFreeParamMatchesEqualObjects(allInstParamsThatEachFreeParamMatchesMap)
 	if !ok {
 		return false, nil
 	}
@@ -72,14 +72,14 @@ func (ver *Verifier) matchParamsWithFreeParamsWithInstParamInExistFact(freeParam
 	return true, freeParamMatchInstParamMap
 }
 
-func (ver *Verifier) getAllInstParamsThatEachFreeParamMatchesInExistFact(freeParams []string, existFreeParams []string, knownParams []ast.Obj, givenParams []ast.Obj) map[string][]ast.Obj {
+func (ver *Verifier) getAllObjectsThatEachFreeParamMatchesInExistFactByItsPureFact(freeParams []string, existFreeParams []string, knownParams []ast.Obj, givenParams []ast.Obj) map[string][]ast.Obj {
 	matchMaps := map[string][]ast.Obj{}
 	for _, freeParam := range freeParams {
 		matchMaps[freeParam] = []ast.Obj{}
 	}
 
 	for i := range len(knownParams) {
-		ok, curMatchMap := ver.matchParamWithFreeParamsWithInstParamInExistFact(freeParams, existFreeParams, knownParams[i], givenParams[i])
+		ok, curMatchMap := ver.matchParamWithFreeParamsWithInstParamInExistFactByItsPureFact(freeParams, existFreeParams, knownParams[i], givenParams[i])
 		if ok && curMatchMap != nil {
 			for key, value := range curMatchMap {
 				matchMaps[key] = append(matchMaps[key], value)
@@ -90,14 +90,14 @@ func (ver *Verifier) getAllInstParamsThatEachFreeParamMatchesInExistFact(freePar
 	return matchMaps
 }
 
-func (ver *Verifier) getAllParamSetInstParamsThatEachFreeParamMatchesInExistFact(freeParams []string, existFreeParams []string, knownParams []ast.Obj, givenParams []ast.Obj) map[string][]ast.Obj {
+func (ver *Verifier) getAllObjectsThatEachFreeParamMatchesInExistFactByItsExistFreeParamSets(freeParams []string, existFreeParams []string, knownParams []ast.Obj, givenParams []ast.Obj) map[string][]ast.Obj {
 	matchMaps := map[string][]ast.Obj{}
 	for _, freeParam := range freeParams {
 		matchMaps[freeParam] = []ast.Obj{}
 	}
 
 	for i := range len(knownParams) {
-		ok, curMatchMap := ver.matchParamSetWithFreeParamsWithInstParamInExistFact(freeParams, existFreeParams, knownParams[i], givenParams[i])
+		ok, curMatchMap := ver.matchObjectWithFreeParamsWithInstObjectInExistFactByItsExistFreeParamSet(freeParams, existFreeParams, knownParams[i], givenParams[i])
 		if ok && curMatchMap != nil {
 			for key, value := range curMatchMap {
 				matchMaps[key] = append(matchMaps[key], value)
@@ -108,49 +108,49 @@ func (ver *Verifier) getAllParamSetInstParamsThatEachFreeParamMatchesInExistFact
 	return matchMaps
 }
 
-func (ver *Verifier) matchParamSetWithFreeParamsWithInstParamInExistFact(freeParams []string, existFreeParams []string, knownParam ast.Obj, givenParam ast.Obj) (bool, map[string]ast.Obj) {
+func (ver *Verifier) matchObjectWithFreeParamsWithInstObjectInExistFactByItsExistFreeParamSet(freeParams []string, existFreeParams []string, knownParam ast.Obj, givenParam ast.Obj) (bool, map[string]ast.Obj) {
 	switch asKnownParam := knownParam.(type) {
 	case ast.Atom:
 		switch asGivenParam := givenParam.(type) {
 		case ast.Atom:
-			return ver.matchParamSetWithFreeParamsAsAtomWithInstParamAsAtomInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
+			return ver.matchObjWithFreeParamSetAsAtomWithInstObjSetAsAtomInExistFactByItsExistFreeParamSet(freeParams, existFreeParams, asKnownParam, asGivenParam)
 		case *ast.FnObj:
-			return ver.matchParamWithFreeParamsAsAtomWithInstParamAsFnObjInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
+			return ver.matchObjWithFreeParamsAsAtomWithInstObjAsFnObjInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
 		}
 	case *ast.FnObj:
 		switch asGivenParam := givenParam.(type) {
 		case ast.Atom:
-			return ver.matchParamWithFreeParamsAsFnObjWithInstParamAsAtomInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
+			return ver.matchObjWithFreeParamsAsFnObjWithInstObjAsAtomInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
 		case *ast.FnObj:
-			return ver.matchParamWithFreeParamsAsFnObjWithInstParamAsFnObjInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
+			return ver.matchObjWithFreeParamsAsFnObjWithInstObjAsFnObjInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
 		}
 	}
 
 	return false, nil
 }
 
-func (ver *Verifier) matchParamWithFreeParamsWithInstParamInExistFact(freeParams []string, existFreeParams []string, knownParam ast.Obj, givenParam ast.Obj) (bool, map[string]ast.Obj) {
+func (ver *Verifier) matchParamWithFreeParamsWithInstParamInExistFactByItsPureFact(freeParams []string, existFreeParams []string, knownParam ast.Obj, givenParam ast.Obj) (bool, map[string]ast.Obj) {
 	switch asKnownParam := knownParam.(type) {
 	case ast.Atom:
 		switch asGivenParam := givenParam.(type) {
 		case ast.Atom:
-			return ver.matchParamWithFreeParamsAsAtomWithInstParamAsAtomInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
+			return ver.matchObjWithFreeParamAsAtomWithInstObjAsAtomInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
 		case *ast.FnObj:
-			return ver.matchParamWithFreeParamsAsAtomWithInstParamAsFnObjInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
+			return ver.matchObjWithFreeParamsAsAtomWithInstObjAsFnObjInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
 		}
 	case *ast.FnObj:
 		switch asGivenParam := givenParam.(type) {
 		case ast.Atom:
-			return ver.matchParamWithFreeParamsAsFnObjWithInstParamAsAtomInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
+			return ver.matchObjWithFreeParamsAsFnObjWithInstObjAsAtomInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
 		case *ast.FnObj:
-			return ver.matchParamWithFreeParamsAsFnObjWithInstParamAsFnObjInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
+			return ver.matchObjWithFreeParamsAsFnObjWithInstObjAsFnObjInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
 		}
 	}
 
 	return false, nil
 }
 
-func (ver *Verifier) matchParamWithFreeParamsAsAtomWithInstParamAsAtomInExistFact(freeParams []string, existFreeParams []string, knownParam ast.Atom, givenParam ast.Atom) (bool, map[string]ast.Obj) {
+func (ver *Verifier) matchObjWithFreeParamAsAtomWithInstObjAsAtomInExistFact(freeParams []string, existFreeParams []string, knownParam ast.Atom, givenParam ast.Atom) (bool, map[string]ast.Obj) {
 	if (string(knownParam) == glob.KeywordSet && string(givenParam) == glob.KeywordSet) || (string(knownParam) == glob.KeywordFiniteSet && string(givenParam) == glob.KeywordFiniteSet) || (string(knownParam) == glob.KeywordNonEmptySet && string(givenParam) == glob.KeywordNonEmptySet) {
 		return true, nil
 	}
@@ -175,7 +175,7 @@ func (ver *Verifier) matchParamWithFreeParamsAsAtomWithInstParamAsAtomInExistFac
 	}
 }
 
-func (ver *Verifier) matchParamSetWithFreeParamsAsAtomWithInstParamAsAtomInExistFact(freeParams []string, existFreeParams []string, knownParam ast.Atom, givenParam ast.Atom) (bool, map[string]ast.Obj) {
+func (ver *Verifier) matchObjWithFreeParamSetAsAtomWithInstObjSetAsAtomInExistFactByItsExistFreeParamSet(freeParams []string, existFreeParams []string, knownParam ast.Atom, givenParam ast.Atom) (bool, map[string]ast.Obj) {
 	if (string(knownParam) == glob.KeywordSet && string(givenParam) == glob.KeywordSet) || (string(knownParam) == glob.KeywordFiniteSet && string(givenParam) == glob.KeywordFiniteSet) || (string(knownParam) == glob.KeywordNonEmptySet && string(givenParam) == glob.KeywordNonEmptySet) {
 		return true, nil
 	}
@@ -200,7 +200,7 @@ func (ver *Verifier) matchParamSetWithFreeParamsAsAtomWithInstParamAsAtomInExist
 	}
 }
 
-func (ver *Verifier) matchParamWithFreeParamsAsAtomWithInstParamAsFnObjInExistFact(freeParams []string, existFreeParams []string, knownParam ast.Atom, givenParam *ast.FnObj) (bool, map[string]ast.Obj) {
+func (ver *Verifier) matchObjWithFreeParamsAsAtomWithInstObjAsFnObjInExistFact(freeParams []string, existFreeParams []string, knownParam ast.Atom, givenParam *ast.FnObj) (bool, map[string]ast.Obj) {
 	if slices.Contains(freeParams, string(knownParam)) {
 		return true, map[string]ast.Obj{string(knownParam): givenParam}
 	}
@@ -219,11 +219,11 @@ func (ver *Verifier) matchParamWithFreeParamsAsAtomWithInstParamAsFnObjInExistFa
 	}
 }
 
-func (ver *Verifier) matchParamWithFreeParamsAsFnObjWithInstParamAsAtomInExistFact(freeParams []string, existFreeParams []string, knownParam *ast.FnObj, givenParam ast.Atom) (bool, map[string]ast.Obj) {
+func (ver *Verifier) matchObjWithFreeParamsAsFnObjWithInstObjAsAtomInExistFact(freeParams []string, existFreeParams []string, knownParam *ast.FnObj, givenParam ast.Atom) (bool, map[string]ast.Obj) {
 	return false, nil
 }
 
-func (ver *Verifier) matchParamWithFreeParamsAsFnObjWithInstParamAsFnObjInExistFact(freeParams []string, existFreeParams []string, knownParam *ast.FnObj, givenParam *ast.FnObj) (bool, map[string]ast.Obj) {
+func (ver *Verifier) matchObjWithFreeParamsAsFnObjWithInstObjAsFnObjInExistFact(freeParams []string, existFreeParams []string, knownParam *ast.FnObj, givenParam *ast.FnObj) (bool, map[string]ast.Obj) {
 	if len(knownParam.Params) != len(givenParam.Params) {
 		return false, nil
 	}
@@ -235,18 +235,18 @@ func (ver *Verifier) matchParamWithFreeParamsAsFnObjWithInstParamAsFnObjInExistF
 	knownParamHead := knownParam.FnHead
 	givenParamHead := givenParam.FnHead
 
-	ok, matchMapOfHeads := ver.matchParamWithFreeParamsWithInstParamInExistFact(freeParams, existFreeParams, knownParamHead, givenParamHead)
+	ok, matchMapOfHeads := ver.matchParamWithFreeParamsWithInstParamInExistFactByItsPureFact(freeParams, existFreeParams, knownParamHead, givenParamHead)
 	if !ok {
 		return false, nil
 	}
 
-	allInstParamsThatAFreeParamMatchMap := ver.getAllInstParamsThatEachFreeParamMatchesInExistFact(freeParams, existFreeParams, knownParam.Params, givenParam.Params)
+	allInstParamsThatAFreeParamMatchMap := ver.getAllObjectsThatEachFreeParamMatchesInExistFactByItsPureFact(freeParams, existFreeParams, knownParam.Params, givenParam.Params)
 
 	for key, value := range matchMapOfHeads {
 		allInstParamsThatAFreeParamMatchMap[key] = append(allInstParamsThatAFreeParamMatchMap[key], value)
 	}
 
-	ok, freeParamMatchInstParamMap := ver.checkEachFreeParamMatchesEqualInstParams(allInstParamsThatAFreeParamMatchMap)
+	ok, freeParamMatchInstParamMap := ver.checkEachFreeParamMatchesEqualObjects(allInstParamsThatAFreeParamMatchMap)
 	if !ok {
 		return false, nil
 	}
