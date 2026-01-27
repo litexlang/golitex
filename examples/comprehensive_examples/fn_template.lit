@@ -1,0 +1,110 @@
+"""
+prove:
+    fn_template f(x, y R):
+        dom:
+            x > 1
+        fn (a, b R) R:
+            dom:
+                a = x
+            =>:
+                f(a, b) = y
+
+    fn_template g(x, y R):
+        fn (a, b R) R:
+            dom:
+                a = x
+            =>:
+                g(a, b) = y
+
+    let f2 g(1,2)
+
+    f2 $in g(1,2)
+
+    forall a,b R:
+        a = 1
+        =>:
+            f2(a, b) = 2
+
+prove:
+    fn_template seq3(s set):
+        fn (n N) s
+
+    fn g(x N) R
+
+    let t seq3(R)
+
+    t $in seq3(R)
+
+    g $in fn(N)R
+
+    g $in seq3(R)
+
+    fn_template seq2(s set):
+        fn (n N) s:
+            dom:
+                n > 3
+
+    fn g2(n N) R:
+        dom:
+            n > 1
+
+    know forall n N: n > 3 => n > 1
+
+    g2 $in seq2(R)
+
+prove:
+    fn_template dom_R_R_ret_R():
+        fn (x, y R) R
+
+    $in(+, dom_R_R_ret_R())
+    $in(-, dom_R_R_ret_R())
+
+    fn_template dom_R_ret_R():
+        fn (x R) R:
+            dom_R_ret_R(x) = -1 * x
+
+    fn reverse(x R) R:
+        reverse(x) = - x
+
+    forall x R:
+        reverse(x) = - x
+        reverse(x) = -1 * x
+
+    $in(reverse, dom_R_ret_R())
+
+prove:
+    fn_template f_template():
+        fn (x Z) Z:
+            dom:
+                x >= -1
+            =>:
+                f_template(x) = x + 1  
+
+    let m f_template()
+    m(0) = 0 + 1
+
+    # prove xxx $in fn_template
+    fn f2(x Z) Z:
+        dom:
+            x >= -1
+        =>:
+            f2(x) = x + 1
+
+    f2 $in f_template()
+
+    # fn name as fn name
+    fn f3(x Z) f_template:
+        dom:
+            x > 0 
+    know f3(1) $in f_template() # true, because return value of f3 is $in f_template。这是要写的，否则找不到f3(1) 的性质
+    f3(1)(2) = 2 + 1
+
+prove:
+    fn fn_add(f fn(R)R, g fn(R)R) fn(R,R)R => forall x R, y R => fn_add(f, g)(x, y) = f(x) + g(y)
+
+    fn f(x R) R => f(x) = x
+    fn_add(f, f) $in fn(R,R)R
+
+    fn_add(f, f)(1, 2) = f(1) + f(2)
+
+    """

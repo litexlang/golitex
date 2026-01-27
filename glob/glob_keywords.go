@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,143 +16,238 @@ package litex_global
 
 // ! 每次新增keyword的时候，要记住把它往isKeyword里加
 const (
-	KeywordSet    = "set"
-	KeywordForall = "forall"
-	KeywordDom    = "dom" // 这是一种语法糖。本质上只要在定义集合的时候写了对集合的要求，那dom就不必要的，因为dom本质上是 ”临时添加新的要求"
-	// KeywordThen                 = "then"
-	KeywordObj       = "obj"
-	KeywordHave      = "have"
-	KeywordFn        = "fn"
-	KeywordProp      = "prop"
-	KeywordKnow      = "know"
-	KeywordExist     = "exist"
-	KeywordSt        = "st"
-	KeywordExistProp = "exist_prop"
-	KeywordClaim     = "claim"
-	KeywordProve     = "prove"
-	KeywordImport    = "import"
-	KeywordNot       = "not"
-	// KeywordIff                  = "iff"
-	KeywordProveByContradiction   = "prove_by_contradiction"
-	KeywordProveInEachCase        = "prove_in_each_case" // 必要：和or一起使用
-	KeywordOr                     = "or"
-	KeywordProveIsCommutativeProp = "prove_is_commutative_prop" // 这个 keyword是真的在工作的
-	KeywordNatural                = "N"                         // e.g. 0
-	KeywordInteger                = "Z"                         // e.g. -1
-	KeywordRational               = "Q"                         // e.g. -1.1
-	KeywordReal                   = "R"                         // e.g. pi
-	KeywordComplex                = "C"                         // e.g. 1+i
-	KeywordIn                     = "in"
-	// KeywordProveByMathInduction           = "prove_by_math_induction"
-	KeywordAs           = "as" // 用在 import xxx as ??? 了
-	KeywordLen          = "len"
-	KeywordFiniteSet    = "finite_set"
-	KeywordProveByEnum  = "prove_by_enum" // syntax connecting forall and finite_set
-	KeywordItemExistsIn = "item_exists_in"
+	KeywordIn = "in"
 
-	// WARNING: TODO 我不知道这三个集合是什么用途
-	// TODO: 需要有他们的对应关系
-	KeywordSetDefinedByReplacement        = "set_defined_by_replacement"    // 这是一个函数，返回一个集合，而不是一个prop
-	KeywordExistPropPreImageByReplacement = "obj_exist_as_preimage_of_prop" //"exist_prop_preimage_by_replacement"
-	KeywordExistFnPreImageByReplacement   = "obj_exist_as_preimage_of_fn"   // "exist_fn_preimage_by_replacement"
-
-	KeywordFnTemplate = "fn_template"
-
-	KeywordNPos  = "N_pos"
-	KeywordLet   = "let"
-	KeywordClear = "clear"
-
-	KeywordProveByInduction = "prove_by_induction"
-
-	KeywordLift        = "lift"
+	KeywordSet         = "set"
 	KeywordNonEmptySet = "nonempty_set"
+	KeywordFiniteSet   = "finite_set"
 
-	KeywordWhen = "when"
+	KeywordIsASet         = "is_set"
+	KeywordIsAFiniteSet   = "is_finite_set"
+	KeywordIsANonEmptySet = "is_nonempty_set"
 
-	KeywordProveIsTransitiveProp = "prove_is_transitive_prop"
+	KeywordNot    = "not"
+	KeywordOr     = "or"
+	KeywordForall = "forall"
+	KeywordExist  = "exist"
 
-	KeywordProveInRange = "prove_in_range"
+	KeywordProp = "prop"
+
+	// KeywordExistProp = "exist_prop"
+
+	// KeywordImply      = "imply"
+	KeywordProvePropInfer = "prove_prop_infer"
+	KeywordPropInfer      = "prop_infer"
+	KeywordInfer          = "infer"
+
+	KeywordHave = "have"
+	KeywordLet  = "let"
+
+	KeywordNPos     = "N_pos"
+	KeywordNatural  = "N"
+	KeywordInteger  = "Z"
+	KeywordRational = "Q"
+	KeywordReal     = "R"
+
+	KeywordCart   = "cart"
+	KeywordIsCart = "is_cart"
+	KeywordSetDim = "set_dim"
+	KeywordProj   = "proj"
+
+	KeywordTuple         = "tuple"
+	KeywordDim           = "dim"
+	KeywordIsTuple       = "is_tuple"
+	KeywordObjAtIndexOpt = "obj_at_index"
+
+	KeywordListSet     = "list_set"
+	KeywordSetBuilder  = "set_builder"
+	KeywordCount       = "count"
+	KeywordRange       = "range"
+	KeywordClosedRange = "closed_range"
+
+	KeywordKnow      = "know"
+	KeywordDoNothing = "do_nothing"
+
+	KeywordContra          = "contra"
+	KeywordEnum            = "enum"
+	KeywordInduc           = "induc"
+	KeywordCases           = "cases"
+	KeywordFor             = "for"
+	KeywordComProp         = "com_prop"
+	KeywordTransProp       = "trans_prop"
+	KeywordWitness         = "witness"
+	KeywordWitnessNonempty = "witness_nonempty"
+	KeywordEqualSet        = "equal_set"
+
+	KeywordFn    = "fn"
+	KeywordFnSet = "fn_set"
+
+	KeywordClaim      = "claim"
+	KeywordProve      = "prove"
+	KeywordImpossible = "impossible"
+
+	KeywordDom  = "dom"
+	KeywordCase = "case"
+	KeywordSt   = "st"
+	KeywordAs   = "as"
+
+	KeywordImport  = "import"
+	KeywordClear   = "clear"
+	KeywordExit    = "exit"
+	KeywordRunFile = "run_file"
 
 	KeywordAlgo   = "algo"
 	KeywordReturn = "return"
 	KeywordIf     = "if"
 	KeywordEval   = "eval"
+	KeywordVal    = "val"
+
+	KeywordSubsetOf   = "subset_of"
+	KeywordSupersetOf = "superset_of"
+
+	KeywordCup       = "cup"
+	KeywordCap       = "cap"
+	KeywordUnion     = "union"
+	KeywordIntersect = "intersect"
+	KeywordPowerSet  = "power_set"
+	KeywordSetMinus  = "set_minus"
+	KeywordSetDiff   = "set_diff"
+	KeywordChoice    = "choice"
+
+	KeywordRPos  = "R_pos"
+	KeywordRNeg  = "R_neg"
+	KeywordZNeg  = "Z_neg"
+	KeywordQNeg  = "Q_neg"
+	KeywordQPos  = "Q_pos"
+	KeywordRNot0 = "R_not0"
+	KeywordZNot0 = "Z_not0"
+	KeywordQNot0 = "Q_not0"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
-	KeywordSet:    {},
-	KeywordForall: {},
-	KeywordDom:    {},
-	// KeywordThen:                 {},
-	KeywordObj:                  {},
-	KeywordHave:                 {},
-	KeywordFn:                   {},
-	KeywordProp:                 {},
-	KeywordKnow:                 {},
-	KeywordExistProp:            {},
-	KeywordSt:                   {},
-	KeywordClaim:                {},
-	KeywordProve:                {},
-	KeywordImport:               {},
-	KeywordNot:                  {},
-	KeywordProveByContradiction: {},
-	KeywordProveInEachCase:      {},
+	KeywordSet:            {},
+	KeywordForall:         {},
+	KeywordDom:            {},
+	KeywordProvePropInfer: {},
+	KeywordHave:           {},
+	KeywordFn:             {},
+	KeywordProp:           {},
+	KeywordKnow:           {},
+	// KeywordExistProp:            {},
+	KeywordSt:     {},
+	KeywordClaim:  {},
+	KeywordProve:  {},
+	KeywordImport: {},
+	KeywordNot:    {},
+	KeywordContra: {},
 	// KeywordIff:                  {},
-	KeywordExist:                  {},
-	KeywordProveIsCommutativeProp: {},
-	KeywordOr:                     {},
-	KeywordNatural:                {},
-	KeywordInteger:                {},
-	KeywordRational:               {},
-	KeywordReal:                   {},
-	KeywordIn:                     {},
+	KeywordExist:    {},
+	KeywordComProp:  {},
+	KeywordOr:       {},
+	KeywordNatural:  {},
+	KeywordInteger:  {},
+	KeywordRational: {},
+	KeywordReal:     {},
+	KeywordIn:       {},
 	// KeywordProveByMathInduction:           {},
-	KeywordComplex:                        {},
-	KeywordAs:                             {},
-	KeywordLen:                            {},
-	KeywordFiniteSet:                      {},
-	KeywordProveByEnum:                    {},
-	KeywordItemExistsIn:                   {},
-	KeywordSetDefinedByReplacement:        {},
-	KeywordExistPropPreImageByReplacement: {},
-	KeywordExistFnPreImageByReplacement:   {},
-	KeywordFnTemplate:                     {},
-	KeywordNPos:                           {},
-	KeywordLet:                            {},
-	KeywordClear:                          {},
+	KeywordCount:     {},
+	KeywordFiniteSet: {},
+	KeywordEnum:      {},
+	// KeywordItemExistsIn: {},
+	KeywordFnSet:         {},
+	KeywordNPos:          {},
+	KeywordLet:           {},
+	KeywordClear:         {},
+	KeywordTuple:         {},
+	KeywordObjAtIndexOpt: {},
+	KeywordDoNothing:     {},
 	// KeywordExistSetByAxiomOfReplacement:   {},
 
-	KeywordProveIsTransitiveProp: {},
+	KeywordTransProp: {},
 
-	KeywordProveByInduction: {},
+	KeywordInduc: {},
 
-	KeywordLift:        {},
 	KeywordNonEmptySet: {},
-
-	KeywordWhen: {},
 
 	KeywordAlgo:   {},
 	KeywordReturn: {},
 	KeywordIf:     {},
 	KeywordEval:   {},
+
+	KeywordCase: {},
+
+	KeywordCases: {},
+	KeywordExit:  {},
+
+	KeywordCart:   {},
+	KeywordIsCart: {},
+	KeywordSetDim: {},
+	KeywordProj:   {},
+
+	KeywordDim: {},
+
+	KeywordListSet:    {},
+	KeywordSetBuilder: {},
+
+	KeywordSubsetOf:   {},
+	KeywordSupersetOf: {},
+	KeywordFor:        {},
+
+	KeywordEqualSet: {},
+
+	KeywordAs: {},
+
+	KeywordIsASet:         {},
+	KeywordIsAFiniteSet:   {},
+	KeywordIsANonEmptySet: {},
+
+	KeywordRange: {},
+
+	// KeywordIsNonEmptyWithItem: {},
+
+	KeywordRunFile: {},
+
+	KeywordUnion:     {},
+	KeywordIntersect: {},
+	KeywordPowerSet:  {},
+	KeywordCup:       {},
+	KeywordCap:       {},
+	KeywordSetMinus:  {},
+	KeywordSetDiff:   {},
+
+	KeywordWitness:         {},
+	KeywordWitnessNonempty: {},
+
+	KeywordRPos:  {},
+	KeywordRNeg:  {},
+	KeywordZNeg:  {},
+	KeywordQNeg:  {},
+	KeywordQPos:  {},
+	KeywordRNot0: {},
+	KeywordZNot0: {},
+	KeywordQNot0: {},
+
+	KeywordPropInfer: {},
+	KeywordInfer:     {},
 }
 
 const (
-	KeySymbolColon        = ":"
-	KeySymbolLeftBrace    = "("
-	KeySymbolRightBrace   = ")"
-	KeySymbolComma        = ","
-	KeySymbolDollar       = "$"
-	KeySymbolEqual        = "="
-	KeySymbolSlash        = "/"
-	KeySymbolPlus         = "+"
-	KeySymbolMinus        = "-"
-	KeySymbolStar         = "*"
-	KeySymbolPower        = "^"
-	KeySymbolLess         = "<"
-	KeySymbolGreater      = ">"
-	KeySymbolDot          = "."
-	KeySymbolColonColon   = "::"
+	KeySymbolColon      = ":"
+	KeySymbolLeftBrace  = "("
+	KeySymbolRightBrace = ")"
+	KeySymbolComma      = ","
+	KeySymbolDollar     = "$"
+	KeySymbolEqual      = "="
+	KeySymbolSlash      = "/"
+	KeySymbolPlus       = "+"
+	KeySymbolMinus      = "-"
+	KeySymbolStar       = "*"
+	KeySymbolPower      = "^"
+	KeySymbolLess       = "<"
+	KeySymbolGreater    = ">"
+	KeySymbolDot        = "."
+	// PkgNameAtomSeparator is the separator between package name and atom name.
+	// For example, in "a.b", "a" is the package name and "b" is the atom name.
 	KeySymbolNotEqual     = "!=" // 在parse就立刻变成 not =，exec里没有对它的处理
 	KeySymbolDoubleQuote  = "\""
 	KeySymbolHash         = "#"
@@ -164,13 +259,14 @@ const (
 	// KeySymbolColonEqual   = ":="
 	KeySymbolLeftCurly  = "{"
 	KeySymbolRightCurly = "}"
-	KeySymbolAt         = "@"
+	// KeySymbolAt         = "@"
 	KeySymbolRightArrow = "=>"
 
 	KeySymbolSemiColon  = ";"
 	KeySymbolEquivalent = "<=>"
 	KeySymbolBackSlash  = "\\"
 	// KeySymbolQuestionMark = "?"
+
 )
 
 // 最多双字符，或者单字符，否则parser的逻辑 GetKeySymbol 有问题
@@ -178,7 +274,6 @@ var SymbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolLargerEqual: {}, // ">="
 	KeySymbolLessEqual:   {}, // "<="
 	KeySymbolNotEqual:    {}, // "!="
-	KeySymbolColonColon:  {}, // "::"
 	// KeySymbolColonEqual:   {}, // ":="
 	KeySymbolPower:        {}, // "^"
 	KeySymbolColon:        {}, // ":"
@@ -201,7 +296,6 @@ var SymbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolRightBracket: {}, // "]"
 	KeySymbolLeftCurly:    {}, // "{"
 	KeySymbolRightCurly:   {}, // "}"
-	KeySymbolAt:           {}, // "@"
 	KeySymbolRightArrow:   {}, // "=>"
 	KeySymbolSemiColon:    {}, // ";"
 	KeySymbolEquivalent:   {}, // "<=>"
@@ -209,78 +303,154 @@ var SymbolSet map[string]struct{} = map[string]struct{}{
 	// KeySymbolQuestionMark: {}, // "?"
 }
 
-var BuiltinKeywordKeySymbolCanBeFcAtomNameSet map[string]struct{} = map[string]struct{}{
-	KeywordObj:           {},
-	KeywordSet:           {},
+var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 	KeywordNatural:       {},
 	KeywordInteger:       {},
 	KeywordRational:      {},
 	KeywordReal:          {},
-	KeywordComplex:       {},
-	KeywordAs:            {},
-	KeywordIn:            {},
-	KeySymbolEqual:       {},
-	KeySymbolSlash:       {},
+	KeywordCount:         {},
+	KeywordNPos:          {},
+	KeywordCart:          {},
+	KeywordTuple:         {},
+	KeywordSetDim:        {},
+	KeywordDim:           {},
+	KeywordProj:          {},
+	KeywordObjAtIndexOpt: {},
+	KeywordListSet:       {},
+	KeywordSetBuilder:    {},
 	KeySymbolPlus:        {},
 	KeySymbolMinus:       {},
 	KeySymbolStar:        {},
 	KeySymbolPower:       {},
-	KeySymbolLess:        {},
-	KeySymbolGreater:     {},
-	KeySymbolLargerEqual: {},
-	KeySymbolLessEqual:   {},
-	KeySymbolNotEqual:    {},
-	// KeySymbolColonEqual:                   {},
-	KeySymbolPercent:                      {}, // prove: 2 % 2 = 0 的时候打印有问题，不知道为什么
-	KeySymbolLeftBracket:                  {},
-	KeySymbolRightBracket:                 {},
-	KeywordFiniteSet:                      {},
-	KeywordItemExistsIn:                   {},
-	KeywordSetDefinedByReplacement:        {},
-	KeywordExistPropPreImageByReplacement: {},
-	KeywordExistFnPreImageByReplacement:   {},
-	// TupleFcFnHead:                         {},
-	KeywordLen:         {},
-	KeywordNPos:        {},
-	KeywordNonEmptySet: {},
-	KeywordEval:        {},
+	KeySymbolSlash:       {},
+	KeySymbolPercent:     {},
+
+	KeywordUnion:     {},
+	KeywordIntersect: {},
+	KeywordPowerSet:  {},
+	KeywordCup:       {},
+	KeywordCap:       {},
+	KeywordSetMinus:  {},
+	KeywordSetDiff:   {},
+
+	KeywordRPos:  {},
+	KeywordRNeg:  {},
+	KeywordZNeg:  {},
+	KeywordQNeg:  {},
+	KeywordQPos:  {},
+	KeywordRNot0: {},
+	KeywordZNot0: {},
+	KeywordQNot0: {},
+
+	KeywordVal:    {},
+	KeywordChoice: {},
 }
 
-func IsBuiltinKeywordKeySymbolCanBeFcAtomName(name string) bool {
-	_, ok := BuiltinKeywordKeySymbolCanBeFcAtomNameSet[name]
+var BuiltinPropNames map[string]struct{} = map[string]struct{}{
+	KeywordIn:             {},
+	KeywordIsASet:         {},
+	KeywordIsAFiniteSet:   {},
+	KeywordIsANonEmptySet: {},
+	KeywordIsCart:         {},
+	KeywordIsTuple:        {},
+	KeywordEqualSet:       {},
+	// KeywordNotEqualSet:    {},
+	KeywordSubsetOf:      {},
+	KeySymbolEqual:       {},
+	KeySymbolNotEqual:    {},
+	KeySymbolLargerEqual: {},
+	KeySymbolLessEqual:   {},
+	KeySymbolGreater:     {},
+	KeySymbolLess:        {},
+	// KeywordEqualTuple:     {},
+}
+
+func IsBuiltinPropName(name string) bool {
+	_, ok := BuiltinPropNames[name]
 	return ok
 }
 
-func IsBuiltinKeywordOrBuiltinSymbolOrNumber(name string) bool {
-	if IsKeyword(name) || IsKeySymbol(name) || (name[0] >= '0' && name[0] <= '9') {
-		return true
-	}
-	return false
+func IsBuiltinName(name string) bool {
+	_, ok := BuiltinKeywordsThatCanNotBeUsedAsName[name]
+	return ok
 }
 
-var BuiltinObjKeywordSet map[string]struct{} = map[string]struct{}{
-	KeywordNatural:   {},
-	KeywordInteger:   {},
-	KeywordRational:  {},
-	KeywordReal:      {},
-	KeywordComplex:   {},
-	KeywordFiniteSet: {},
-	KeywordSet:       {},
-	KeywordNPos:      {},
+func IsBuiltinAtomName(name string) bool {
+	_, ok := BuiltinAtomNames[name]
+	return ok
 }
 
-var AddMinusStarSet map[string]struct{} = map[string]struct{}{
-	KeySymbolPlus:  {},
-	KeySymbolMinus: {},
-	KeySymbolStar:  {},
-}
-
-const LeftIsEqual0RightIsPositive = "__leftIsEqual0RightIsPositive__"
-const LeftIsNegativeRightIsInteger = "__leftIsNegativeRightIsInteger__"
-const LastTwoObjectsAreEqual = "__last_two_objects_are_equal__"
-
-var builtinPropObjNames = map[string]struct{}{
-	LeftIsEqual0RightIsPositive:  {},
-	LeftIsNegativeRightIsInteger: {},
-	LastTwoObjectsAreEqual:       {},
+var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struct{}{
+	KeywordSet:            {},
+	KeywordForall:         {},
+	KeywordDom:            {},
+	KeywordProvePropInfer: {},
+	KeywordHave:           {},
+	KeywordFn:             {},
+	KeywordProp:           {},
+	KeywordKnow:           {},
+	// KeywordExistProp:              {},
+	KeywordSt:             {},
+	KeywordClaim:          {},
+	KeywordProve:          {},
+	KeywordImport:         {},
+	KeywordNot:            {},
+	KeywordContra:         {},
+	KeywordExist:          {},
+	KeywordComProp:        {},
+	KeywordOr:             {},
+	KeywordNatural:        {},
+	KeywordInteger:        {},
+	KeywordRational:       {},
+	KeywordReal:           {},
+	KeywordIn:             {},
+	KeywordCount:          {},
+	KeywordFiniteSet:      {},
+	KeywordEnum:           {},
+	KeywordFnSet:          {},
+	KeywordNPos:           {},
+	KeywordLet:            {},
+	KeywordClear:          {},
+	KeywordTuple:          {},
+	KeywordObjAtIndexOpt:  {},
+	KeywordDoNothing:      {},
+	KeywordTransProp:      {},
+	KeywordInduc:          {},
+	KeywordNonEmptySet:    {},
+	KeywordAlgo:           {},
+	KeywordReturn:         {},
+	KeywordIf:             {},
+	KeywordEval:           {},
+	KeywordCase:           {},
+	KeywordCases:          {},
+	KeywordExit:           {},
+	KeywordCart:           {},
+	KeywordSetDim:         {},
+	KeywordListSet:        {},
+	KeywordSetBuilder:     {},
+	KeywordFor:            {},
+	KeywordAs:             {},
+	KeywordIsASet:         {},
+	KeywordIsAFiniteSet:   {},
+	KeywordIsANonEmptySet: {},
+	// KeywordIsNonEmptyWithItem:     {},
+	KeywordRunFile:   {},
+	KeywordUnion:     {},
+	KeywordIntersect: {},
+	KeywordRPos:      {},
+	KeywordRNeg:      {},
+	KeywordZNeg:      {},
+	KeywordQNeg:      {},
+	KeywordQPos:      {},
+	KeywordRNot0:     {},
+	KeywordZNot0:     {},
+	KeywordQNot0:     {},
+	KeywordPowerSet:  {},
+	KeywordCup:       {},
+	KeywordCap:       {},
+	KeywordSetMinus:  {},
+	KeywordSetDiff:   {},
+	KeywordVal:       {},
+	KeywordPropInfer: {},
+	KeywordInfer:     {},
 }

@@ -1,0 +1,35 @@
+# claim prop 的意义是，如果prop的参数列表里面的参数数量大于涉及到的specFact的参数数量，那为了让未来能对应上，要给这个forall取个名字，即claim prop
+
+prove:
+    prop p(x R)
+    prop q(x R)
+    prop t(x R)
+
+    know forall x R: $p(x) => $q(x)
+    know forall x R: $q(x) => $t(x)
+
+    claim:
+        prop_infer p_to_t(x R):
+            $p(x)
+            =>:
+                $t(x)
+        prove:
+            $q(x)
+            $t(x)
+
+prove:
+    prop p(x, y N)
+    prop p2(x, y, z N)
+    claim:
+        prop_infer q(x, y, z N):
+            $p2(x, y, z)
+            =>:
+                $p(x, y)
+        prove:
+            know $p(x, y)
+
+    let a, b, c N:
+        $p2(a, b, c)
+
+    $q(a, b, c)
+    $p(a, b)

@@ -4,11 +4,11 @@
 
 <div align="center">
 
-# Litex: Scale Formal Reasoning in AI Era
+# Litex: A Simple Formal Language Learnable in 2 Hours
 
-## A Simple Formal Language Learnable in 2 Hours, Not 1 Year.
+## For Verifiable Intellectual Discovery in AI Age
 
-**version v0.1.10-beta (not yet ready for production use)**  
+**version v0.2-beta (not yet ready for production use)**  
 *Jiachen Shen and The Litex Team*
 
 [![Official Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.com)
@@ -26,23 +26,11 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
-[Congratulations! Litex achieves top 10 on Hacker News on 2025-09-27!!](https://news.ycombinator.com/item?id=45369629)
+Litex is a simple and intuitive open-source computer language for mathematical proofs. It aims to express mathematics as code with verified correctness while staying as close to natural language as possible. Think of it as an eye-opening exploration of finding `what mathematics is`! ([Github](https://github.com/litexlang/golitex), [Official Site](https://litexlang.com))
 
-**Warning: Litex is still in beta. The syntax and semantics are subject to change. There might be some bugs and inconsistencies. You should not use Litex in any production environments yet.**
+Formal code written in Litex is typically 2-10x simpler than traditional formal languages, and even high-school students (instead of just math PhDs) can understand it. Much lower barrier to entry means Litex could be a game changer for people without PhD-level math background, ranging from AI researchers and scientists to engineers and math-lovers.
 
-Litex([website](https://litexlang.com)) is a simple open-source formal language, learnable in 2 hours by anyone. It expresses mathematics in the form of code, ensuring that every step of the reasoning process is rigorously correct. The closeness of Litex to natural language can be really helpful for AI and human alike in mathematical exploration and problem-solving. I hope you will forget that you are using a formal language to write mathematics using Litex!([Star the repo!](https://github.com/litexlang/golitex)). 
-
-Euclid showed us over 2000 years ago how 5 axioms could derive such a wonderful geometric world. Simple starting points often lead us into infinitely complex worlds. The same is true for mathematics. The foundation of modern mathematics is naive set theory, which doesn't have many axioms, and we even encountered the concept of sets in middle school. But it is precisely these simple and understandable rules that form the foundation of all mathematics. Before we move on, think about how powerful the idea is: with just very few absolutely accurate inference rules, plus a few axioms, we can derive a rich and diverse mathematical world! That is what math is all about.
-
-By implementing those simple axioms and deduction rules in a software like Litex, we can write math in the form of code. The learning curve of Litex will not be higher than learning LaTeX. Let's explore the fascinating math world with Litex!
-
-## Why Litex?
-
-_Our intent was to create a pleasant computing environment (Unix) for ourselves and our hope was that others liked it._
-
-_- Dennis Ritchie_
-
-Making Litex intuitive to both humans and AI is Litex's core mission. We want people feel happy using Litex. Just like how Python lowers the barrier of programming by 10x compared with C/C++, Litex lowers the barrier of formal reasoning by 10x compared with previous formal languages like Lean. This is how Litex scales formal reasoning: by making it accessible to more people, and usable by large-scale AI systems. Here is an example:
+Here is an example of how Litex code looks like:
 
 <table style="border-collapse: collapse; width: 100%; font-size: 12px">
   <tr>
@@ -51,14 +39,15 @@ Making Litex intuitive to both humans and AI is Litex's core mission. We want pe
   </tr>
   <tr>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
-      <code>let x R, y R:</code><br>
-      <code>&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
-      <code>&nbsp;&nbsp;4 * x + 5 * y = 14</code><br><br>
-      <code>2 * (2 * x + 3 * y) = 2 * 10 = 4 * x + 6 * y</code><br>
-      <code>y = (4 * x + 6 * y) - (4 * x + 5 * y) = 2 * 10 - 14 = 6</code><br>
-      <code>2 * x + 3 * 6 = 10</code><br>
-      <code>2 * x + 18 - 18 = 10 - 18 = -8</code><br>
-      <code>x = (2 * x) / 2 = -8 / 2 = -4</code><br>
+    <code>forall x R, y R:</code><br>
+    <code>&nbsp;&nbsp;2 * x + 3 * y = 10</code><br>
+    <code>&nbsp;&nbsp;4 * x + 5 * y = 14</code><br>
+    <code>&nbsp;&nbsp;=>:</code><br>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * (2 * x + 3 * y) = 2 * 10 = 4 * x + 6 * y</code><br>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;y = (4 * x + 6 * y) - (4 * x + 5 * y) = 20 - 14 = 6</code><br>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * x + 3 * 6 = 10</code><br>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;2 * x + 18 - 18 = 10 - 18 = -8</code><br>
+    <code>&nbsp;&nbsp;&nbsp;&nbsp;x = (2 * x) / 2 = -8 / 2 = -4</code><br>
     </td>
     <td style="border: 2px solid black; padding: 2px; line-height: 1.5">
       <code>import Mathlib.Tactic</code><br><br>
@@ -86,19 +75,21 @@ Making Litex intuitive to both humans and AI is Litex's core mission. We want pe
   </tr>
 </table>
 
-While Lean 4 is a powerful and rigorous proof assistant ideal, it requires months of training and years of experience to master. Litex takes a different approach: prioritizing accessibility and ease of use, enabling even beginners to formalize naive tasks like multivariate equations in minutes.
+Here is a thorough collection of comparison between Litex and Lean: [Litex vs Lean Set Theory Examples](https://litexlang.com/doc/Litex_vs_Lean/Set_Theory). Visit our [website](https://litexlang.com) for more details. Dataset on [Hugging Face](https://huggingface.co/litexlang) is also available.
 
-Since each Litex sentence corresponds directly to an expression in everyday mathematical language, and since it is supported by set theory (ZFC) and basic logic (not, forall, exist, or), Litex does not sacrifice any rigor. So please do not think about Litex using the mindset of traditional formal languages. Instead, imagine yourself as a college student or even a high school student who has a basic understanding of set theory — regardless of whether you like Litex or are skeptical of it.
+## How Litex Works
 
-## Our Mission
+_Mathematics is nothing more than a game played according to certain simple rules with meaningless marks on a paper._
 
-_The value of an idea lies in the using of it._
+_— David Hilbert_
 
-_- Thomas Edison_
+Litex achieves its simplicity by imitating how people reason and how mathematics works. Litex is based on set theory. It searches for known facts mechanically and effectively to prove new facts for you. The user no longer has to memorize and recall known facts and inference rules by hand. Each Litex statement has and only has some of the following 4 effects: define, verify, memorize and infer, which is printed out in the output, making the user easy to know how the proof process works.
 
-Our mission is to make Litex the most intuitive and simple formal language for coding reasoning. We aim to solve the most challenging problems faced by the AI community, i.e. the challenge of efficient, scalable, and reliable coding reasoning. Let's build the future together!
+Among the 4 effects, verification is the most important one. Litex uses `match and substitution` to use `forall` facts to verify the correctness of the statements. It's impossible to explain how it works in a few words. So we put an example here. When `forall x human => $intelligent(x)` is already stored in memory and `Jordan $in human` is also stored in memory, when the users type `$intelligent(Jordan)`, Litex will substitute `Jordan` with `x` in the statement `forall x human => $intelligent(x)` and check if the statement is true. If it is, the statement is verified.
 
-For mathematical research, a well-designed formal language can clarify the dependency structure among complex theorems and lay the foundation for large-scale collaborative “Big Mathematics.” For AI, such a formal language enables reasoning models to form a self-reinforcing cycle of automatic problem generation → automatic solving → automatic verification. Combined with the reinforcement-learning-based post-training approach demonstrated by DeepSeek-R1, this may lead to a breakthrough moment comparable to AlphaGo.
+Think of this: when the user inputs a fact with proposition name `intelligent`, Litex will search all known facts with proposition name `intelligent` (including `forall` facts like `forall x human => $intelligent(x)` and specific facts like `$intelligent(Jordan)`) and check if the given fact matches the known fact. If matched, then it is correct. It works like `ctrl+f` in your browser. The reason why Lean cannot do this is that Lean can pass prop as forall parameter, so its search space is the whole memory, instead of the memory of the current proposition.
+
+Even for 10-year-old beginners, Litex is straightforward to learn and use. Visit our [How Litex Works](https://litexlang.com/doc/How_Litex_Works/Introduction) for more details.
 
 ## Resources And Community
 
@@ -111,21 +102,12 @@ Litex is nothing without its community and technical ecosystem.
 Resources for Litex users:
 
 1. Our official [website](https://litexlang.com) contains tutorials, cheat sheets, examples, documentation, collaboration opportunities, and more for Litex. All documents on our [website](https://litexlang.com) are open-sourced [here](https://github.com/litexlang/litex-official-documents)
-2. Learn Litex [online](https://litexlang.com/doc/Tutorial/Introduction). A short list of major Litex statements and their usage are shown in the [cheat sheet](https://litexlang.com/doc/Litex_Cheatsheet).
-3. You can run litex on your own computer， start from [here](https://litexlang.com/doc/Quick_Start)
-4. [Litex standard library](https://github.com/litexlang/litex-stdlib) is under active development. **Contribute to it and earn impact rewards!**
-5. Use [pylitex](https://github.com/litexlang/pylitex) to call Litex in Python
-6. Our Community is on [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)!
-7. Email us [here](mailto:litexlang@outlook.com).
-
-Resources for AI researchers who want to develop Litex-based AI systems, mostly developed by the Litex open-source community:
-
-1. Litex achieves 100% accuracy on gsm8k dataset without any training [Github](https://github.com/litexlang/litex-gsm8k-killer)
-2. [Litex Dataset](https://huggingface.co/litexlang) is on Hugging Face. **Contribute to it and earn impact rewards!**
-3. Here is a really powerful Litex Agent [Github](https://github.com/litexlang/litex-agent). It is so powerful that much code in our standard library is generated by it!
-4. AI researchers interested in Litex might find [Litex LLM Dev](https://github.com/litexlang/litex-llm-dev) useful. Contact us if you are interested in collaborating on this project!
-
-All of our [repositories](https://github.com/orgs/litexlang/repositories) are open-sourced. Just issue PRs and tell us any ideas about Litex! Maybe we can build the future together!
+2. Use [pylitex](https://github.com/litexlang/pylitex) to call Litex in Python
+3. Our Community is on [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)!
+4. Email us [here](mailto:litexlang@outlook.com).
+5. [Congratulations! Litex achieves top 10 on Hacker News on 2025-09-27!!](https://news.ycombinator.com/item?id=45369629)
+6. Our organization's Github is [here](https://github.com/litexlang/). The kernel is [here](https://github.com/litexlang/golitex).
+7. Our dataset on Hugging Face is [here](https://huggingface.co/litexlang).
 
 ## References
 
@@ -151,9 +133,9 @@ AI references:
 
 ## Special Thanks
 
-_Sometimes it is the very people who no one imagines anything of who do the things that no one can imagine._
+_巴黎挺好，未来一定更好。未来没有计划，但一定更好。_
 
-_– Alan Turing_
+_- 樊振东在巴黎奥运会后接受采访时说_
 
 <div align="center">
   <img src="https://publisher.litexlang.org/Little_Little_O.PNG" alt="The Litex Logo" width="200">
@@ -162,4 +144,4 @@ _– Alan Turing_
 
 Hi, I’m Jiachen Shen, creator of Litex. It is so fortunate to receive tremendous help from friends and colleagues throughout this journey of designing, implementing, and growing Litex into a community. Without their support, Litex would not have had the chance to succeed.
 
-I am deeply grateful to Zhaoxuan Hong, Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Siqi Guo, Haoyang Shi, Chengyang Zhu, Chenxuan Huang, Yan Lu, Sheng Xu for their invaluable contributions. I am certain this list of special thanks will only grow longer in the future.
+I am deeply grateful to Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Siqi Guo, Haoyang Shi, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong, Lei Bai, Xiuyuan Lu, Yunwen Guo for their emotional support and insightful advice. I am certain this list of special thanks will only grow longer in the future.

@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@ package litex_global
 
 import (
 	"fmt"
-	"strings"
+	"unicode"
 )
 
 func IsValidUserDefinedNameWithoutPkgName(name string) error {
@@ -24,51 +24,55 @@ func IsValidUserDefinedNameWithoutPkgName(name string) error {
 		return fmt.Errorf("identifier name cannot be empty")
 	}
 
-	// Check for leading symbols
-	if IsBuiltinKeywordKeySymbolCanBeFcAtomName(name) {
-		return fmt.Errorf("identifier name cannot begin with number, or be a builtin keyword or builtin symbol, get: %s", name)
-	}
-
-	if _, ok := builtinPropObjNames[name]; ok {
-		return fmt.Errorf("identifier name cannot be a builtin name, get: %s", name)
-	}
-
 	// Check maximum length constraint
 	if len(name) > MaxNameLen {
 		return fmt.Errorf("identifier name exceeds maximum length of %d characters", MaxNameLen)
 	}
 
-	// todo: For the time being, I assume all names must start with _ or english letter, and later words can only be number, _ or english letter
-	if first := name[0]; first == '_' || first >= 'a' && first <= 'z' || first >= 'A' && first <= 'Z' {
-		for _, char := range name[1:] {
-			if char >= '0' && char <= '9' || char == '_' || char >= 'a' && char <= 'z' || char >= 'A' && char <= 'Z' {
-				continue
-			}
-			return fmt.Errorf("identifier name can only contain numbers, _, or english letters")
+	// C语言风格的标识符规则：首字符必须是字母或下划线，不能是数字
+	// 后续字符可以是字母、数字、下划线或大部分Unicode字符
+	runes := []rune(name)
+	if len(runes) == 0 {
+		return fmt.Errorf("identifier name cannot be empty")
+	}
+
+	// 检查首字符：必须是字母或下划线
+	first := runes[0]
+	if !(unicode.IsLetter(first) || first == '_') {
+		// 如果是数字开头，给出更明确的错误信息
+		if unicode.IsDigit(first) {
+			return fmt.Errorf("identifier name cannot start with a digit")
 		}
-	} else {
-		return fmt.Errorf("identifier name must start with _ or english letter")
+		return fmt.Errorf("identifier name must start with a letter or underscore")
+	}
+
+	// 检查后续字符：允许字母、数字、下划线以及大部分Unicode字符
+	// 排除一些不适合做标识符的字符，如空格、控制字符等
+	for i, char := range runes[1:] {
+		if unicode.IsLetter(char) || unicode.IsDigit(char) || char == '_' {
+			continue
+		}
+		// 允许其他Unicode字符，但排除控制字符和空白字符
+		if unicode.IsControl(char) || unicode.IsSpace(char) {
+			return fmt.Errorf("identifier name cannot contain control characters or spaces at position %d", i+1)
+		}
+		// 允许大部分其他Unicode字符（如中文、日文、emoji等）
+	}
+
+	// 检查是否与内置关键字或符号冲突（在字符验证之后）
+	if IsBuiltinName(name) {
+		return fmt.Errorf("identifier name cannot be a builtin keyword or builtin symbol, get: %s", name)
 	}
 
 	return nil
 }
 
-func IsValidUseDefinedFcAtom(name string) error {
-	// 用：：切割，得到PkgName 和 Name
-	values := strings.Split(name, KeySymbolColonColon)
+func IsValidUseDefinedName(name string) error {
+	isWithPkgName, _, atomName := GetPkgNameAndName(name)
 
-	// values 必须满足 IsValidUserDefinedName
-	for _, value := range values {
-		if err := IsValidUserDefinedNameWithoutPkgName(value); err != nil {
-			return err
-		}
+	if !isWithPkgName {
+		return IsValidUserDefinedNameWithoutPkgName(name)
+	} else {
+		return IsValidUserDefinedNameWithoutPkgName(atomName)
 	}
-
-	// pkgName 必须声明过啦, 前n-1位join起来
-	pkgName := strings.Join(values[:len(values)-1], KeySymbolColonColon)
-	if _, ok := DeclaredPkgNames[pkgName]; !ok {
-		return fmt.Errorf("package %s is not declared", pkgName)
-	}
-
-	return nil
 }

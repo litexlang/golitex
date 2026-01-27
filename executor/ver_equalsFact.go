@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,35 +15,53 @@
 package litex_executor
 
 import (
+	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
-func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) ExecRet {
+func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) *glob.VerRet {
 	if len(stmt.Params) < 2 {
-		return NewExecErr("equals fact must have at least 2 params")
+		return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{"equals fact must have at least 2 params"})
 	}
+
+	trueMsgs := []string{}
 
 	for i := 1; i < len(stmt.Params); i++ {
 		checked := false
+		unknownRet := glob.NewEmptyVerRetUnknown()
+
 		for j := i - 1; j >= 0; j-- {
 			newFact := ast.NewEqualFact(stmt.Params[j], stmt.Params[i])
 			verRet := ver.VerFactStmt(newFact, state)
 			if verRet.IsErr() {
-				return verRet
+				newFact := ast.NewEqualFact(stmt.Params[i-1], stmt.Params[i])
+				msgs := append(verRet.VerifyMsgs, fmt.Sprintf("%s\nis error", newFact.String()))
+				return glob.NewVerRet(glob.StmtRetTypeError, newFact.String(), glob.BuiltinLine0, msgs)
 			}
 			if verRet.IsTrue() {
-				err := ver.Env.NewFact(newFact)
-				if err != nil {
-					return NewExecErr(err.Error())
+				ret := ver.Env.NewFactWithCheckingNameDefined(newFact)
+				if ret.IsErr() {
+					return glob.NewVerRet(glob.StmtRetTypeError, newFact.String(), glob.BuiltinLine0, []string{ret.String()})
 				}
 				checked = true
+				trueMsgs = append(trueMsgs, verRet.String())
 				break
+			}
+
+			if j == i-1 {
+				unknownRet = verRet
 			}
 		}
 
 		if !checked {
-			return NewExecUnknown("")
+			newFact := ast.NewEqualFact(stmt.Params[i-1], stmt.Params[i])
+			msgs := append(unknownRet.VerifyMsgs, fmt.Sprintf("%s\nis unknown", newFact.String()))
+			return glob.NewVerRet(glob.StmtRetTypeUnknown, newFact.String(), glob.BuiltinLine0, msgs)
 		}
 	}
-	return NewExecTrue("")
+	if state.WithMsg {
+		return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, trueMsgs)
+	}
+	return glob.NewEmptyVerRetTrue()
 }

@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,10 +14,13 @@
 
 package litex_ast
 
-import "unicode"
+import (
+	"strconv"
+	"unicode"
+)
 
-func IsFcLiterallyNPosNumber(fc Fc) bool {
-	atom, ok := fc.(FcAtom)
+func IsObjLiterallyNPosNumber(obj Obj) bool {
+	atom, ok := obj.(Atom)
 	if !ok {
 		return false
 	}
@@ -35,8 +38,8 @@ func IsFcLiterallyNPosNumber(fc Fc) bool {
 	return s[0] != '0'
 }
 
-func IsFcLiterallyNatNumber(fc Fc) bool {
-	atom, ok := fc.(FcAtom)
+func IsObjLiterallyNatNumber(obj Obj) bool {
+	atom, ok := obj.(Atom)
 	if !ok {
 		return false
 	}
@@ -54,35 +57,41 @@ func IsFcLiterallyNatNumber(fc Fc) bool {
 	return true
 }
 
-func IsFcLiterallyIntNumber(fc Fc) bool {
-	atom, ok := fc.(FcAtom)
+func IsObjLiterallyIntNumber(obj Obj) (int, bool) {
+	atom, ok := obj.(Atom)
 	if !ok {
-		return false
+		return 0, false
 	}
 
 	s := string(atom)
 	if len(s) == 0 {
-		return false
+		return 0, false
 	}
 
 	if s[0] == '-' {
 		s = s[1:]
 		if len(s) == 0 {
-			return false
+			return 0, false
 		}
 	}
 
 	for _, c := range s {
 		if !(c >= '0' && c <= '9') {
-			return false
+			return 0, false
 		}
 	}
 
-	return true
+	// Parse the string to int
+	val, err := strconv.Atoi(string(atom))
+	if err != nil {
+		return 0, false
+	}
+
+	return val, true
 }
 
-func IsFcLiterallyRationalNumber(fc Fc) bool {
-	atom, ok := fc.(FcAtom)
+func IsObjLiterallyRationalNumber(obj Obj) bool {
+	atom, ok := obj.(Atom)
 	if !ok {
 		return false
 	}

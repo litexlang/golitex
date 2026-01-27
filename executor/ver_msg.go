@@ -1,4 +1,4 @@
-// Copyright 2024 Jiachen Shen.
+// Copyright Jiachen Shen.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,48 +15,49 @@
 package litex_executor
 
 import (
-	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
-	"strings"
 )
 
-func (ver *Verifier) specFactSpecMemTrueMsg(stmt *ast.SpecFactStmt, knownFact ast.SpecFactStmt) {
-	var verifiedBy strings.Builder
-
-	verifiedBy.WriteString(knownFact.StringWithLine())
-	verifiedBy.WriteString("\n")
-	ver.successWithMsg(stmt.String(), verifiedBy.String())
-}
-
-func (ver *Verifier) successWithMsg(stmtStr, stmtVerifiedBy string) {
-	ver.Env.Msgs = append(ver.Env.Msgs, successVerString(stmtStr, stmtVerifiedBy))
-}
-
-func successVerString(stmtStr, stmtVerifiedBy string) string {
-	var successVerString strings.Builder
-	if stmtStr != "" {
-		successVerString.WriteString(stmtStr)
-	}
-	if stmtVerifiedBy != "" {
-		successVerString.WriteString(fmt.Sprintf("\nis true. proved by\n%s", stmtVerifiedBy))
-	} else {
-		successVerString.WriteString("\nis true.")
-	}
-	return successVerString.String()
-}
-
-func (ver *Verifier) newMsgAtParent(s string) error {
-	if ver.Env.Parent == nil {
-		return fmt.Errorf("no parent env")
-	} else {
-		if glob.RequireMsg() {
-			ver.Env.Parent.Msgs = append(ver.Env.Parent.Msgs, s)
+func successVerString(stmt, stmtVerifiedBy ast.Stmt) *glob.VerRet {
+	stmtStr := ""
+	line := uint(0)
+	if stmt != nil {
+		stmtStr = stmt.String()
+		if stmtVerifiedBy != nil {
+			line = stmtVerifiedBy.GetLine()
 		}
-		return nil
 	}
+
+	verifyMsgs := []string{}
+	if stmtVerifiedBy != nil {
+		if stmtVerifiedBy.GetLine() == 0 {
+			verifyMsgs = append(verifyMsgs, stmtVerifiedBy.String())
+		} else {
+			verifyMsgs = append(verifyMsgs, stmtVerifiedBy.String())
+		}
+	} else {
+		verifyMsgs = append(verifyMsgs, "is true.")
+	}
+
+	return glob.NewVerRet(glob.StmtRetTypeTrue, stmtStr, line, verifyMsgs)
 }
 
-func parametersDoNotSatisfyFnReq(param ast.Fc, fnName ast.Fc) error {
-	return fmt.Errorf("the arguments passed to the %s do not satisfy the domain of %s", param, fnName)
+// successVerStringString is a helper function for backward compatibility with string-based calls
+func successVerStringString(stmtStr, stmtVerifiedByStr string) *glob.VerRet {
+	verifyMsgs := []string{}
+	if stmtVerifiedByStr != "" {
+		verifyMsgs = append(verifyMsgs, stmtVerifiedByStr)
+	} else {
+		verifyMsgs = append(verifyMsgs, "is true.")
+	}
+
+	return glob.NewVerRet(glob.StmtRetTypeTrue, stmtStr, glob.BuiltinLine0, verifyMsgs)
+}
+
+func newMaybeSuccessMsgVerRet(state *VerState, stmt ast.Stmt, stmtVerifiedBy string) *glob.VerRet {
+	if state.WithMsg {
+		return successVerStringString(stmt.String(), stmtVerifiedBy)
+	}
+	return glob.NewEmptyVerRetTrue()
 }

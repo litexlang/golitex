@@ -1,0 +1,380 @@
+// Copyright Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Litex email: <litexlang@outlook.com>
+// Litex website: https://litexlang.com
+// Litex github repository: https://github.com/litexlang/golitex
+// Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
+
+package litex_executor
+
+import (
+	"fmt"
+	ast "golitex/ast"
+	env "golitex/environment"
+	glob "golitex/glob"
+)
+
+func (exec *Executor) inferStmt(stmt *ast.InferStmt) *glob.StmtRet {
+	ver := NewVerifier(exec.Env)
+
+	for _, domFact := range stmt.DomFacts {
+		ret := exec.factStmt(domFact.(ast.FactStmt))
+		if ret.IsNotTrue() {
+			return exec.AddStmtToStmtRet(glob.ErrRet(fmt.Sprintf("failed to verify fact: %s", domFact.String())), stmt)
+		}
+	}
+
+	for _, thenFact := range stmt.ThenFacts {
+		ret := ver.proveOneThenFactInImplyStmt(stmt, thenFact, NewVerState(0, true, true))
+		if ret.IsNotTrue() {
+			return ret
+		}
+	}
+
+	// emit then
+	newFactMsgs := []string{}
+	for _, thenFact := range stmt.ThenFacts {
+		var factStmt ast.FactStmt
+		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
+			factStmt = specFact
+		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
+			factStmt = orStmt
+		} else {
+			return glob.ErrRet(fmt.Sprintf("imply statement error: unsupported fact type in thenFacts: %T", thenFact))
+		}
+		ret := ver.Env.NewFactWithCheckingNameDefined(factStmt)
+		if ret.IsNotTrue() {
+			return ret
+		}
+		newFactMsgs = append(newFactMsgs, factStmt.String())
+	}
+
+	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
+}
+
+func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.InferStmt, thenFact ast.Spec_OrFact, state *VerState) *glob.StmtRet {
+	for curEnvIndex := range ver.Env.EnvSlice {
+		curEnv := &ver.Env.EnvSlice[curEnvIndex]
+		verRet := ver.specFact_ImplyMem_atCurEnv(curEnv, stmt, thenFact, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet.ToStmtRet()
+		}
+	}
+
+	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
+	verRet := ver.specFact_ImplyMem_atCurEnv(curEnv, stmt, thenFact, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet.ToStmtRet()
+	}
+
+	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
+		curEnv := pkgEnvMgr.EnvSlice[0]
+		verRet := ver.specFact_ImplyMem_atCurEnv(&curEnv, stmt, thenFact, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet.ToStmtRet()
+		}
+	}
+
+	return glob.NewEmptyVerRetUnknown().ToStmtRet()
+}
+
+func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.InferStmt, fact ast.Spec_OrFact, state *VerState) *glob.VerRet {
+	if !state.ReqOk {
+		return glob.NewVerRet(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state)})
+	}
+
+	searchedKnownFacts := []env.KnownSpecFact_InImplyTemplate{}
+	var got bool
+	if asSpec, ok := fact.(ast.SpecificFactStmt); ok {
+		searchedKnownFacts, got = curEnv.KnownFactsStruct.SpecFactInImplyTemplateMem.GetSameEnumPkgPropFacts(asSpec)
+	} else if asOr, ok := fact.(*ast.OrStmt); ok {
+		searchedKnownFacts, got = curEnv.KnownFactsStruct.SpecFactInImplyTemplateMem.GetSameEnumPkgPropFacts(asOr.Facts[0])
+	} else {
+		return glob.NewEmptyVerRetErr()
+	}
+
+	if !got {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	return ver.iterate_KnownPureSpecInImplyStmt_applyMatch_InstObjInParamSetAndSatisfyIfFacts(stmt, searchedKnownFacts, fact, state)
+}
+
+func (ver *Verifier) iterate_KnownPureSpecInImplyStmt_applyMatch_InstObjInParamSetAndSatisfyIfFacts(stmt *ast.InferStmt, knownFacts []env.KnownSpecFact_InImplyTemplate, toCheck ast.Spec_OrFact, state *VerState) *glob.VerRet {
+outerLoop:
+	for i := len(knownFacts) - 1; i >= 0; i-- {
+		ok, uniMap, err := ver.
+			matchImplyTemplateParamsWithAllParamsInImplyStmt(&knownFacts[i], stmt, toCheck)
+		if err != nil {
+			return glob.NewEmptyVerRetUnknown()
+		}
+		if !ok {
+			continue outerLoop
+		}
+
+		localUniMap := map[string]ast.Obj{}
+
+		for j, knownParamSet := range knownFacts[i].ImplyTemplate.ParamSets {
+			instKnownParamSet, err := knownParamSet.Instantiate(localUniMap)
+			if err != nil {
+				return glob.NewEmptyVerRetUnknown()
+			}
+
+			inFact := ast.NewInFactWithObj(uniMap[knownFacts[i].ImplyTemplate.Params[j]], instKnownParamSet)
+
+			ret := ver.VerFactStmt(inFact, state)
+			if ret.IsNotTrue() {
+				continue outerLoop
+			}
+
+			localUniMap[knownFacts[i].ImplyTemplate.Params[j]] = uniMap[knownFacts[i].ImplyTemplate.Params[j]]
+		}
+
+		for _, ifFact := range knownFacts[i].ImplyTemplate.IfFacts {
+			instIfFact, err := ifFact.Instantiate(localUniMap)
+			if err != nil {
+				return glob.NewEmptyVerRetUnknown()
+			}
+
+			ret := ver.VerFactStmt(instIfFact.(ast.FactStmt), state)
+			if ret.IsNotTrue() {
+				continue outerLoop
+			}
+		}
+
+		return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{})
+	}
+
+	return glob.NewEmptyVerRetUnknown()
+}
+
+func (ver *Verifier) checkFactTypeAndPropNamesMatch(knownFact ast.Spec_OrFact, implyFact ast.Spec_OrFact) bool {
+	switch knownAs := knownFact.(type) {
+	case ast.SpecificFactStmt:
+		if implyAs, ok := implyFact.(ast.SpecificFactStmt); ok {
+			if knownAs.GetPropName() != implyAs.GetPropName() {
+				return false
+			}
+
+			if knownAs.GetFactType() != implyAs.GetFactType() {
+				return false
+			}
+
+		} else {
+			return false
+		}
+	case *ast.OrStmt:
+		if implyAs, ok := implyFact.(*ast.OrStmt); ok {
+			if len(implyAs.Facts) != len(knownAs.Facts) {
+				return false
+			}
+
+			for j := range implyAs.Facts {
+				if knownAs.Facts[j].GetPropName() != implyAs.Facts[j].GetPropName() {
+					return false
+				}
+			}
+
+		} else {
+			return false
+		}
+	}
+	return true
+}
+
+func (ver *Verifier) mergeCurMapToUniMap(curMap map[string]ast.Obj, uniMap map[string]ast.Obj) bool {
+	for key, value := range curMap {
+		if previousValue, ok := uniMap[key]; ok {
+			if ret := ver.VerFactStmt(ast.NewEqualFact(value, previousValue), FinalRoundNoMsg()); ret.IsNotTrue() {
+				return false
+			}
+		} else {
+			uniMap[key] = value
+		}
+	}
+	return true
+}
+
+func (ver *Verifier) matchDomFactAndMergeToUniMap(knownDomFact ast.Spec_OrFact, implyDomFact ast.Spec_OrFact, knownParams []string, uniMap map[string]ast.Obj) (bool, error) {
+	switch implyDomFactAs := implyDomFact.(type) {
+	case ast.SpecificFactStmt:
+		knownSpecFactAs := knownDomFact.(ast.SpecificFactStmt)
+		ok, curMap, err := ver.matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFactAs, knownParams, implyDomFactAs)
+		if !ok || err != nil {
+			return false, err
+		}
+
+		if !ver.mergeCurMapToUniMap(curMap, uniMap) {
+			return false, nil
+		}
+
+	case *ast.OrStmt:
+		knownOrFactAs := knownDomFact.(*ast.OrStmt)
+
+		for j := range implyDomFactAs.Facts {
+			ok, curMap, err := ver.matchInstSpecFactWithKnownFreeParamsInImply(knownOrFactAs.Facts[j], knownParams, implyDomFactAs.Facts[j])
+			if !ok || err != nil {
+				return false, err
+			}
+
+			if !ver.mergeCurMapToUniMap(curMap, uniMap) {
+				return false, nil
+			}
+		}
+	}
+	return true, nil
+}
+
+func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImplyTemplate *env.KnownSpecFact_InImplyTemplate, implyStmt *ast.InferStmt, toCheck ast.Spec_OrFact) (bool, map[string]ast.Obj, error) {
+	// 检查所有的prop名对上了
+	if len(knownImplyTemplate.ImplyTemplate.DomFacts) != len(implyStmt.DomFacts) {
+		return false, nil, nil
+	}
+
+	for i, domFact := range knownImplyTemplate.ImplyTemplate.DomFacts {
+		if !ver.checkFactTypeAndPropNamesMatch(domFact, implyStmt.DomFacts[i]) {
+			return false, nil, nil
+		}
+	}
+
+	if !ver.checkFactTypeAndPropNamesMatch(knownImplyTemplate.Spec_orFact, toCheck) {
+		return false, nil, nil
+	}
+
+	uniMap := map[string]ast.Obj{}
+	for i, domFact := range implyStmt.DomFacts {
+		ok, err := ver.matchDomFactAndMergeToUniMap(knownImplyTemplate.ImplyTemplate.DomFacts[i], domFact, knownImplyTemplate.ImplyTemplate.Params, uniMap)
+		if !ok || err != nil {
+			return false, nil, err
+		}
+	}
+
+	ok, err := ver.matchDomFactAndMergeToUniMap(knownImplyTemplate.Spec_orFact, toCheck, knownImplyTemplate.ImplyTemplate.Params, uniMap)
+	if !ok || err != nil {
+		return false, nil, err
+	}
+
+	for _, param := range knownImplyTemplate.ImplyTemplate.Params {
+		if _, ok := uniMap[param]; !ok {
+			return false, nil, nil
+		}
+	}
+
+	return true, uniMap, nil
+}
+
+func (ver *Verifier) matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFact ast.SpecificFactStmt, freeVars []string, instFact ast.SpecificFactStmt) (bool, map[string]ast.Obj, error) {
+	switch instFactAs := instFact.(type) {
+	case *ast.PureSpecificFactStmt:
+		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.(*ast.PureSpecificFactStmt).Params, freeVars, instFactAs.Params, string(instFactAs.GetPropName()), map[string]ast.Obj{})
+	default:
+		return false, nil, nil
+	}
+
+	// if instFact.GetFactType() == ast.TruePure {
+	// 	return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.(*ast.PureSpecificFactStmt).Params, freeVars, instFact.(*ast.PureSpecificFactStmt).Params, string(instFact.GetPropName()), map[string]ast.Obj{})
+	// } else {
+	// 	return false, nil, nil
+	// knownExistStruct := knownSpecFact.ToExistStFactStruct()
+	// instExistStruct := instFact.ToExistStFactStruct()
+	// knownExistStruct := knownSpecFact.(*ast.ExistSpecificFactStmt)
+	// instExistStruct := instFact.(*ast.ExistSpecificFactStmt)
+
+	// // 将 exist 参数全部替换成随机名称，确保不会出问题
+	// knownExistStruct = ver.replaceExistParamsWithRandomNames(knownExistStruct)
+	// instExistStruct = ver.replaceExistParamsWithRandomNames(instExistStruct)
+
+	// ver.newEnv()
+	// defer ver.deleteEnv()
+
+	// knownExistFreeParams := []ast.Obj{}
+	// for _, param := range knownExistStruct.ExistFreeParams {
+	// 	knownExistFreeParams = append(knownExistFreeParams, ast.Atom(param))
+	// }
+
+	// knownFcs := []ast.Obj{}
+	// knownFcs = append(knownFcs, knownExistStruct.ExistFreeParamSets...)
+	// knownFcs = append(knownFcs, knownExistStruct.PureFact.Params...)
+
+	// instExistFreeParams := []ast.Obj{}
+	// for _, param := range instExistStruct.ExistFreeParams {
+	// 	instExistFreeParams = append(instExistFreeParams, ast.Atom(param))
+	// }
+
+	// instFcs := []ast.Obj{}
+	// instFcs = append(instFcs, instExistStruct.ExistFreeParamSets...)
+	// instFcs = append(instFcs, instExistStruct.PureFact.Params...)
+
+	// knownEqualMap := map[string]ast.Obj{}
+	// for i, param := range instExistFreeParams {
+	// 	knownEqualMap[knownExistFreeParams[i].String()] = param
+	// }
+
+	// return ver.matchUniFactParamsWithSpecFactParamsInImply(knownFcs, freeVars, instFcs, string(knownSpecFact.GetPropName()), knownEqualMap)
+	// }
+}
+
+func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.Obj, freeVars []string, givenFcs []ast.Obj, propNameForMsg string, knownToInstEqualMap_usedToMatchFreeParamsOfExistFacts map[string]ast.Obj) (bool, map[string]ast.Obj, error) {
+	_ = propNameForMsg
+	// knownFcs := knownSpecFactInUniFact.SpecFact.Params
+	// freeVars := knownSpecFactInUniFact.UniFact.Params
+	freeVarsMap := map[string]struct{}{}
+	for _, freeVar := range freeVars {
+		freeVarsMap[freeVar] = struct{}{}
+	}
+
+	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs, givenFcs, freeVarsMap)
+	if err != nil {
+		return false, nil, err
+	}
+	matchedMap, unMatchedFcPairs := ver.mergeMultipleMatchedMapAndUnMatchedFcPairs(matchedMaps, unmatchedFcPairs, map[string][]ast.Obj{}, []fcPair{})
+
+	// 所有自由变量对应的instVar必须相等
+	for _, instVars := range matchedMap {
+		firstVar := instVars[0]
+		for j := 1; j < len(instVars); j++ {
+			verRet := ver.VerFactStmt(ast.NewEqualFact(firstVar, instVars[j]), FinalRoundNoMsg().CopyAndReqOkToTrue())
+			if verRet.IsNotTrue() {
+				return false, nil, err
+			}
+		}
+	}
+
+	freeVarToInstVar := map[string]ast.Obj{}
+	for freeVar, instVars := range matchedMap {
+		freeVarToInstVar[freeVar] = instVars[0]
+	}
+
+	// 把实例化了的没被匹配的fcPair拿出来，检查是否是equal
+	for _, fcPair := range unMatchedFcPairs {
+		// 用来匹配 exist 的free param的
+		// TODO: 更好的解决办法是，在传入exist的时候，就已经把known的exist free param替换成given exist free param 了
+		if str, ok := knownToInstEqualMap_usedToMatchFreeParamsOfExistFacts[fcPair.knownFc.String()]; ok {
+			if str.String() == fcPair.givenFc.String() {
+				continue
+			}
+		}
+
+		instKnownFreeVar, err := fcPair.knownFc.Instantiate(freeVarToInstVar)
+		if err != nil {
+			return false, nil, err
+		}
+
+		verRet := ver.VerFactStmt(ast.NewEqualFact(instKnownFreeVar, fcPair.givenFc), FinalRoundNoMsg().CopyAndReqOkToTrue())
+
+		// REMARK
+		// 注：这里err != nil 也是返回 false, 因为有可能会把 sqrt(x) ^ 2 = x 拿来证明 y = z，但是 匹配的时候，可能会导致 x 是 -1 之类的。如果error了，其实就是说明没证明通过
+		if verRet.IsNotTrue() {
+			return false, nil, nil
+		}
+	}
+
+	return true, freeVarToInstVar, nil
+}

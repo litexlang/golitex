@@ -16,26 +16,12 @@ prop is_empty_set(x set):
         not a $in x
 
 # There is a builtin-in empty set in Litex
-have set builtin_empty_set := {}
+have builtin_empty_set set := {}
 forall x obj:
     not x $in builtin_empty_set
-
-exist_prop x obj st obj_exist_in_set(s set):
-    x $in s
-
-# There is just one empty set
-claim:
-    forall s set:
-        not $is_empty_set(s)
-        =>:
-           $obj_exist_in_set(s)
-    prove_by_contradiction:
-        forall x obj:
-            not x $in s
-        $is_empty_set(s)
         
 # You can define a finite set of items like this:
-have set set_of_one_two_three := {1, 2, 3}
+have set_of_one_two_three set := {1, 2, 3}
 
 # Pairwise Union
 fn union(s1 set, s2 set) set
@@ -80,37 +66,37 @@ claim:
                 x $in s2
                 x = b
 
-prop is_subset_of(s1 set, s2 set):
+prop subset_of(s1 set, s2 set):
     forall x s1:
         x $in s2
 
 prove:
-    have set a := {1, 2, 4}
-    have set b := {1, 2, 3, 4, 5}
+    have a set := {1, 2, 4}
+    have b set := {1, 2, 3, 4, 5}
     prove_over_finite_set:
         forall x a:
             x $in b
-    a $is_subset_of b
+    a $subset_of b
 
 claim:
-    @subset_of_is_transitive(a, b, c set):
-        a $is_subset_of b
-        b $is_subset_of c
+infer subset_of_is_transitive(a, b, c set):
+        a $subset_of b
+        b $subset_of c
         =>:
-            a $is_subset_of c
+            a $subset_of c
     prove:
         forall x a:
             x $in b
             x $in c
         forall x a:
             x $in c
-        a $is_subset_of c
+        a $subset_of c
 
 # Axiom of Specification
 prove:
     let A set
     prop P(x A)
-	have set a := x A:
+	have a set := x A:
         $P(x)
     forall x A:
         $P(x)
@@ -121,7 +107,7 @@ prove:
         $P(x)
 
 # Intersection
-know @obj_in_intersection_is_in_both_sets(s1 set, s2 set, x obj):
+know infer obj_in_intersection_is_in_both_sets(s1 set, s2 set, x obj):
     x $in s1
     x $in s2
 
@@ -134,7 +120,7 @@ fn intersection(s1 set, s2 set) set:
         $obj_in_intersection_is_in_both_sets(s1, s2, x)
 
 # The set of all natural numbers is the union of the set of all natural numbers greater than n and the set of all natural numbers less than or equal to n
-know @union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(n N, s1 set, s2 set):
+know infer union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(n N, s1 set, s2 set):
 	s1 := x N:
 		x > n
 	s2 := x N:
@@ -143,14 +129,14 @@ know @union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(n N, s1 set, s2
 		union(s1, s2) = N
 
 prove:
-    have set a := x N:
+    have a set := x N:
         x > 0
-    have set b := x N:
+    have b set := x N:
         x <= 0
     $union_of_N_greater_than_n_and_less_than_or_equal_to_n_is_N(0, a, b)
     union(a, b) = N
 
-have set fn difference(s1 set, s2 set) := x s1:
+have fn difference(s1 set, s2 set) set := x s1:
     not x $in s2
 
 # Union of a set and the empty set is the set itself
@@ -163,11 +149,11 @@ claim:
         claim:
         	forall x union(a, s):
                 x $in a
-            prove_by_contradiction:
+            contra:
             	not x $in a
                 $obj_in_union_is_in_one_of_the_sets(a, s, x)
                 x $in s
-                not x $in s
+                impossible not x $in s
 
 # Intersection of a set and the empty set is the empty set
 claim:
@@ -180,10 +166,10 @@ claim:
         claim:
             forall x obj:
                 not x $in intersection(a, s)
-            prove_by_contradiction:
+            contra:
                 x $in intersection(a, s)
                 $obj_in_intersection_is_in_both_sets(a, s, x)
-                x $in s
+                impossible x $in s
         
 
 # Union of a set and itself is the set itself
@@ -228,7 +214,7 @@ prove:
             =>:
                 $last_two_objects_are_equal(x, y1, y2)
 
-    have set s = set_defined_by_replacement(A, B, P)
+    have s set = set_defined_by_replacement(A, B, P)
     forall x set_defined_by_replacement(A, B, P):
         $obj_exist_as_preimage_of_prop(A, B, P, x)
 
@@ -245,9 +231,9 @@ prove:
 
 # {1,2,3,4} \ {2,4,6} = {1,3}
 prove:
-	have set s := {1,2,3,4}
-    have set t := {2,4,6}
-    have set u := {1,3}
+	have s set := {1,2,3,4}
+    have t set := {2,4,6}
+    have u set := {1,3}
     prove_over_finite_set:
         forall x t:
         	x != 1
@@ -263,33 +249,33 @@ prove:
     3 $in difference(s, t)
     claim:
         not 2 $in difference(s, t)
-        prove_by_contradiction:
+        contra:
         	2 $in difference(s, t)
             2 $in s
-            not 2 $in t
+            impossible not 2 $in t
     claim:
     	not 4 $in difference(s, t)
-        prove_by_contradiction:
+        contra:
         	4 $in difference(s, t)
             4 $in s
-            not 4 $in t
+            impossible not 4 $in t
     prove_over_finite_set:
         forall x u:
             x $in difference(s, t)
     claim:
         forall x difference(s, t):
             x != 2
-        prove_by_contradiction:
+        contra:
             2 $in difference(s, t)
             2 $in s
-            not 2 $in t
+            impossible not 2 $in t
     claim:
         forall x difference(s, t):
             x != 4
-        prove_by_contradiction:
+        contra:
             4 $in difference(s, t)
             4 $in s
-            not 4 $in t
+            impossible not 4 $in t
 
     forall x difference(s, t):
         x $in s
@@ -304,7 +290,7 @@ prove:
             or:
                 k = 1
                 k = 3
-        prove_by_contradiction:
+        contra:
             not k = 1
             not k = 3
             not k = 2
@@ -313,7 +299,7 @@ prove:
                 k = 1
                 k  = 2
                 k = 3
-                k = 4
+                impossible k = 4
 
     claim:
         forall k difference(s, t):
@@ -331,3 +317,7 @@ prove:
                     k $in u
 
     difference(s, t) = u
+
+prove:
+    have fn f(x {}) {} = x
+    have fn g(x {}) R = 1
