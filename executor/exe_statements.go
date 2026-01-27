@@ -186,9 +186,9 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) *glob.StmtRet {
 		paramMap[param] = struct{}{}
 	}
 
-	if (stmt.IffFactsOrNil) == nil {
-		return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
-	}
+	// if (stmt.IffFactsOrNil) == nil {
+	// 	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
+	// }
 
 	// if generateIffUniFact {
 	// 	// prop leads to iff
