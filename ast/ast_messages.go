@@ -46,73 +46,141 @@ func (stmt *KnowFactStmt) String() string {
 	}
 }
 
-func (stmt *SpecFactStmt) StringWithLine() string {
-	if stmt.GetLine() == 0 {
-		return fmt.Sprintf("%s\na builtin fact", stmt.String())
-	} else {
-		return fmt.Sprintf("%s on line %d", stmt.String(), stmt.GetLine())
+// func (stmt *SpecFactStmt) StringWithLine() string {
+// 	if stmt.GetLine() == 0 {
+// 		return fmt.Sprintf("%s\na builtin fact", stmt.String())
+// 	} else {
+// 		return fmt.Sprintf("%s on line %d", stmt.String(), stmt.GetLine())
+// 	}
+// }
+
+// func (stmt *SpecFactStmt) String() string {
+// 	if stmt.IsExist_St_Fact() {
+// 		return exist_st_FactString(stmt)
+// 	} else {
+// 		return pureSpecFactString(stmt)
+// 	}
+// }
+
+func (p *PureSpecificFactStmt) String() string {
+	var builder strings.Builder
+
+	if !p.IsTrue {
+		builder.WriteString(glob.KeywordNot)
+		builder.WriteByte(' ')
 	}
+
+	if glob.IsKeySymbol(string(p.PropName)) {
+		builder.WriteString(pureSpecificFactKeySymbolRelaFactString(p))
+	} else if _, ok := relaPropSet[string(p.PropName)]; ok {
+		builder.WriteString(pureSpecificFactKeywordRelaFactString(p))
+	} else {
+		builder.WriteString(glob.FuncFactPrefix)
+		builder.WriteString(p.PropName.String())
+		builder.WriteByte('(')
+		builder.WriteString(objSliceString(p.Params))
+		builder.WriteByte(')')
+	}
+	return builder.String()
 }
 
-func (stmt *SpecFactStmt) String() string {
-	if stmt.IsExist_St_Fact() {
-		return exist_st_FactString(stmt)
-	} else {
-		return pureSpecFactString(stmt)
+func pureSpecificFactKeySymbolRelaFactString(p *PureSpecificFactStmt) string {
+	var builder strings.Builder
+	if len(p.Params) >= 2 {
+		builder.WriteString(p.Params[0].String())
+		builder.WriteByte(' ')
+		builder.WriteString(p.PropName.String())
+		builder.WriteByte(' ')
+		builder.WriteString(p.Params[1].String())
 	}
+	return builder.String()
+}
+
+func pureSpecificFactKeywordRelaFactString(p *PureSpecificFactStmt) string {
+	var builder strings.Builder
+	if len(p.Params) >= 2 {
+		builder.WriteString(p.Params[0].String())
+		builder.WriteByte(' ')
+		builder.WriteString(glob.KeySymbolDollar)
+		builder.WriteString(p.PropName.String())
+		builder.WriteByte(' ')
+		builder.WriteString(p.Params[1].String())
+	}
+	return builder.String()
+}
+
+func (e *ExistSpecificFactStmt) String() string {
+	var builder strings.Builder
+	if !e.IsTrue {
+		builder.WriteString(glob.KeywordNot)
+		builder.WriteByte(' ')
+	}
+
+	builder.WriteString(glob.KeywordExist)
+	builder.WriteByte(' ')
+
+	builder.WriteString(StrObjSetPairs(e.ExistFreeParams, e.ExistFreeParamSets))
+
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordSt)
+	builder.WriteString(" ")
+
+	builder.WriteString(e.PureFact.String())
+
+	return builder.String()
 }
 
 var relaPropSet map[string]struct{} = map[string]struct{}{
 	glob.KeywordIn: {},
 }
 
-func pureSpecFactString(stmt *SpecFactStmt) string {
-	var builder strings.Builder
+// func pureSpecFactString(stmt *SpecFactStmt) string {
+// 	var builder strings.Builder
 
-	if stmt.FactType == FalsePure {
-		builder.WriteString(glob.KeywordNot)
-		builder.WriteByte(' ')
-	}
+// 	if stmt.FactType == FalsePure {
+// 		builder.WriteString(glob.KeywordNot)
+// 		builder.WriteByte(' ')
+// 	}
 
-	if glob.IsKeySymbol(string(stmt.PropName)) {
-		builder.WriteString(keySymbolRelaFactWithoutNotString(stmt))
-	} else if _, ok := relaPropSet[string(stmt.PropName)]; ok {
-		builder.WriteString(keywordRelaFactWithoutNotString(stmt))
-	} else {
-		builder.WriteString(glob.FuncFactPrefix)
-		builder.WriteString(stmt.PropName.String())
-		builder.WriteByte('(')
+// 	if glob.IsKeySymbol(string(stmt.PropName)) {
+// 		builder.WriteString(keySymbolRelaFactWithoutNotString(stmt))
+// 	} else if _, ok := relaPropSet[string(stmt.PropName)]; ok {
+// 		builder.WriteString(keywordRelaFactWithoutNotString(stmt))
+// 	} else {
+// 		builder.WriteString(glob.FuncFactPrefix)
+// 		builder.WriteString(stmt.PropName.String())
+// 		builder.WriteByte('(')
 
-		builder.WriteString(objSliceString(stmt.Params))
-		builder.WriteByte(')')
-	}
-	return builder.String()
-}
+// 		builder.WriteString(objSliceString(stmt.Params))
+// 		builder.WriteByte(')')
+// 	}
+// 	return builder.String()
+// }
 
-func keywordRelaFactWithoutNotString(stmt *SpecFactStmt) string {
-	var builder strings.Builder
+// func keywordRelaFactWithoutNotString(stmt *SpecFactStmt) string {
+// 	var builder strings.Builder
 
-	builder.WriteString(stmt.Params[0].String())
-	builder.WriteByte(' ')
-	builder.WriteString(glob.KeySymbolDollar)
-	builder.WriteString(stmt.PropName.String())
-	builder.WriteByte(' ')
-	builder.WriteString(stmt.Params[1].String())
+// 	builder.WriteString(stmt.Params[0].String())
+// 	builder.WriteByte(' ')
+// 	builder.WriteString(glob.KeySymbolDollar)
+// 	builder.WriteString(stmt.PropName.String())
+// 	builder.WriteByte(' ')
+// 	builder.WriteString(stmt.Params[1].String())
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
-func keySymbolRelaFactWithoutNotString(stmt *SpecFactStmt) string {
-	var builder strings.Builder
+// func keySymbolRelaFactWithoutNotString(stmt *SpecFactStmt) string {
+// 	var builder strings.Builder
 
-	builder.WriteString(stmt.Params[0].String())
-	builder.WriteByte(' ')
-	builder.WriteString(stmt.PropName.String())
-	builder.WriteByte(' ')
-	builder.WriteString(stmt.Params[1].String())
+// 	builder.WriteString(stmt.Params[0].String())
+// 	builder.WriteByte(' ')
+// 	builder.WriteString(stmt.PropName.String())
+// 	builder.WriteByte(' ')
+// 	builder.WriteString(stmt.Params[1].String())
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
 func StrObjSetPairs(objs []string, objSets []Obj) string {
 	pairStrSlice := make([]string, len(objs))
@@ -122,24 +190,24 @@ func StrObjSetPairs(objs []string, objSets []Obj) string {
 	return strings.Join(pairStrSlice, ", ")
 }
 
-func exist_st_FactString(stmt *SpecFactStmt) string {
-	var builder strings.Builder
-	if stmt.FactType == FalseExist_St {
-		builder.WriteString(glob.KeywordNot)
-		builder.WriteByte(' ')
-	}
+// func exist_st_FactString(stmt *SpecFactStmt) string {
+// 	var builder strings.Builder
+// 	if stmt.FactType == FalseExist_St {
+// 		builder.WriteString(glob.KeywordNot)
+// 		builder.WriteByte(' ')
+// 	}
 
-	builder.WriteString(glob.KeywordExist)
-	builder.WriteByte(' ')
+// 	builder.WriteString(glob.KeywordExist)
+// 	builder.WriteByte(' ')
 
-	existStruct := stmt.ToExistStFactStruct()
-	builder.WriteString(StrObjSetPairs(existStruct.ExistFreeParams, existStruct.ExistFreeParamSets))
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeywordSt)
-	builder.WriteString(" ")
-	builder.WriteString(NewSpecFactStmt(TruePure, existStruct.PropName, existStruct.Params, glob.BuiltinLine0).String())
-	return builder.String()
-}
+// 	existStruct := stmt.ToExistStFactStruct()
+// 	builder.WriteString(StrObjSetPairs(existStruct.ExistFreeParams, existStruct.ExistFreeParamSets))
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeywordSt)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(NewSpecFactStmt(TruePure, existStruct.PropName, existStruct.Params, glob.BuiltinLine0).String())
+// 	return builder.String()
+// }
 
 func (stmt *DefLetStmt) String() string {
 	var builder strings.Builder
@@ -256,7 +324,7 @@ func fnDefStmtStringGivenKw(kw string, f *AnonymousFn, name string) string {
 }
 
 func (f *ClaimProveByContradictionStmt) String() string {
-	return ClaimProve_ClaimProveByContradiction(glob.KeywordContra, f.ClaimProveStmt.ToCheckFact, f.ClaimProveStmt.Proofs)
+	return ClaimProve_ClaimProveByContradiction(glob.KeywordContra, f.ToCheckFact, f.Proofs)
 }
 
 func (f *ClaimProveStmt) String() string {
@@ -1495,33 +1563,6 @@ func SetBuilderObjString(f *FnObj) string {
 	}
 
 	builder.WriteString(glob.KeySymbolRightCurly)
-	return builder.String()
-}
-
-func (stmt *HaveShortStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordHave)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.SpecFact.String())
-	return builder.String()
-}
-
-func (stmt *WitnessShortStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordWitness)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.SpecFact.String())
-	
-	if len(stmt.Proofs) > 0 {
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteByte('\n')
-		
-		for _, proof := range stmt.Proofs {
-			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
-			builder.WriteByte('\n')
-		}
-	}
-	
 	return builder.String()
 }
 

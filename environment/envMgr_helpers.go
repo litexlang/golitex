@@ -21,28 +21,28 @@ import (
 	glob "golitex/glob"
 )
 
-func (envMgr *EnvMgr) GenerateUndeclaredRandomName() string {
+func (envMgr *EnvMgr) GenerateUnusedRandomName() string {
 	i := 4
 	var randomStr string
 	for {
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
 		ret := envMgr.IsNameUnavailable((randomStr), map[string]struct{}{})
-		if ret.IsErr() {
+		if ret.IsNotTrue() {
 			return randomStr
 		}
 		i++
 	}
 }
 
-func (envMgr *EnvMgr) GenerateUndeclaredRandomName_AndNotInMap(m map[string]struct{}) string {
+func (envMgr *EnvMgr) GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(m map[string]struct{}) string {
 	i := 4
 	var randomStr string
 	for {
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
 		ret := envMgr.IsNameUnavailable(randomStr, map[string]struct{}{})
-		if ret.IsErr() {
+		if ret.IsNotTrue() {
 			_, ok := m[randomStr]
 			if !ok {
 				return randomStr
@@ -84,15 +84,51 @@ func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateP
 	return fnTStruct, glob.NewEmptyShortTrueRet()
 }
 
-func (envMgr *EnvMgr) storeSpecFactInMem(stmt *ast.SpecFactStmt) *glob.StmtRet {
-	return envMgr.CurEnv().KnownFactsStruct.SpecFactMem.newFact(stmt)
+func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecificFactStmt) *glob.StmtRet {
+	switch asFact := stmt.(type) {
+	case *ast.PureSpecificFactStmt:
+		if asFact.IsTrue {
+			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())]
+			if !ok {
+				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())] = []*ast.PureSpecificFactStmt{}
+			}
+
+			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())], asFact)
+			return glob.NewEmptyStmtTrue()
+		} else {
+			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())]
+			if !ok {
+				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())] = []*ast.PureSpecificFactStmt{}
+			}
+			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())], asFact)
+			return glob.NewEmptyStmtTrue()
+		}
+	case *ast.ExistSpecificFactStmt:
+		if asFact.IsTrue {
+			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())]
+			if !ok {
+				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())] = []*ast.ExistSpecificFactStmt{}
+			}
+			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())], asFact)
+			return glob.NewEmptyStmtTrue()
+		} else {
+			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())]
+			if !ok {
+				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())] = []*ast.ExistSpecificFactStmt{}
+			}
+			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())], asFact)
+			return glob.NewEmptyStmtTrue()
+		}
+	}
+
+	return glob.ErrRet(fmt.Sprintf("invalid spec fact type: %T", stmt))
 }
 
 func (envMgr *EnvMgr) StoreSpecFactInImplyTemplateMem(specFact ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) *glob.StmtRet {
 	return envMgr.CurEnv().KnownFactsStruct.SpecFactInImplyTemplateMem.newFact(specFact, implyTemplate)
 }
 
-func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.PureSpecificFactStmt) *glob.StmtRet {
 	mem := envMgr.CurEnv().EqualMem
 
 	if len(fact.Params) != 2 {
@@ -506,7 +542,7 @@ var BuiltinEnvMgrWithEmptyEnvPkgMgr *EnvMgr = nil
 // 	return dst
 // }
 
-func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFactStruct *ast.ExistStFactStruct, definedParams []string) (*ast.ExistStFactStruct, error) {
+func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFactStruct *ast.ExistSpecificFactStmt, definedParams []string) (*ast.ExistSpecificFactStmt, error) {
 	uniMap := map[string]struct{}{}
 	for _, param := range definedParams {
 		uniMap[param] = struct{}{}
@@ -527,10 +563,10 @@ func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFa
 	// 生产一个不冲突的exist fact struct
 	newExistParams := make([]string, len(existFactStruct.ExistFreeParams))
 	for i := range existFactStruct.ExistFreeParams {
-		newExistParams[i] = envMgr.GenerateUndeclaredRandomName_AndNotInMap(uniMap)
+		newExistParams[i] = envMgr.GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(uniMap)
 	}
 
-	// 把 set 也换成不冲突的
+	// // 把 set 也换成不冲突的
 	uniMap2 := map[string]ast.Obj{}
 	newExistParamSets := make([]ast.Obj, len(existFactStruct.ExistFreeParamSets))
 	for i, paramSet := range existFactStruct.ExistFreeParamSets {
@@ -542,8 +578,8 @@ func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFa
 		uniMap2[existFactStruct.ExistFreeParams[i]] = ast.Atom(newExistParams[i])
 	}
 
-	newParams := make([]ast.Obj, len(existFactStruct.Params))
-	for i, param := range existFactStruct.Params {
+	newParams := make([]ast.Obj, len(existFactStruct.PureFact.Params))
+	for i, param := range existFactStruct.PureFact.Params {
 		newParam, err := param.Instantiate(uniMap2)
 		if err != nil {
 			return nil, err
@@ -551,11 +587,11 @@ func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFa
 		newParams[i] = newParam
 	}
 
-	return ast.NewExistStFactStruct(existFactStruct.FactType, existFactStruct.PropName, existFactStruct.IsPropTrue, newExistParams, newExistParamSets, newParams, existFactStruct.Line), nil
+	return ast.NewExistSpecificFactStmt(existFactStruct.IsTrue, newExistParams, newExistParamSets, ast.NewPureSpecificFactStmt(existFactStruct.PureFact.IsTrue, existFactStruct.PureFact.PropName, newParams, existFactStruct.Line), existFactStruct.Line), nil
 }
 
 // storeSpecFactInMemAndCollect collects the fact string for derived facts tracking
-func (ie *InferEngine) storeSpecFactInMemAndCollect(fact *ast.SpecFactStmt, derivedFacts *[]string) *glob.ShortRet {
+func (ie *InferEngine) storeSpecFactInMemAndCollect(fact ast.SpecificFactStmt, derivedFacts *[]string) *glob.ShortRet {
 	ret := ie.EnvMgr.storeSpecFactInMem(fact)
 	if ret.IsErr() {
 		return glob.ErrStmtMsgToShortRet(ret)
@@ -572,8 +608,46 @@ func (envMgr *EnvMgr) AnonymousFnToInstFnTemplate(objFnTypeT *ast.FnObj) (*ast.A
 
 	randomParams := []string{}
 	for range len(paramSets) {
-		randomParams = append(randomParams, envMgr.GenerateUndeclaredRandomName())
+		randomParams = append(randomParams, envMgr.GenerateUnusedRandomName())
 	}
 
 	return ast.NewFnTStruct(randomParams, paramSets, retSet, []ast.FactStmt{}, []ast.FactStmt{}, glob.BuiltinLine0), true
+}
+
+func (envMgr *EnvMgr) GetUniFactFactFreeParamsNotConflictWithDefinedParams(fact *ast.UniFactStmt, extraNamesThatCanNotBeUsed map[string]struct{}) *ast.UniFactStmt {
+	uniMap := map[string]ast.Obj{}
+	newFreeParams := []string{}
+	moreUnAvailableParams := map[string]struct{}{}
+
+	updated := false
+
+	for _, freeParam := range fact.Params {
+		if envMgr.IsNameUnavailable(freeParam, moreUnAvailableParams).IsNotTrue() {
+			noConflictedParam := envMgr.GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(extraNamesThatCanNotBeUsed)
+			newFreeParams = append(newFreeParams, noConflictedParam)
+			moreUnAvailableParams[noConflictedParam] = struct{}{}
+			uniMap[freeParam] = ast.Atom(noConflictedParam)
+		} else {
+			newFreeParams = append(newFreeParams, freeParam)
+			moreUnAvailableParams[freeParam] = struct{}{}
+		}
+	}
+
+	if !updated {
+		return fact
+	} else {
+		curUniMap := map[string]ast.Obj{}
+		newParamSets := []ast.Obj{}
+		for i, freeParam := range fact.Params {
+			paramSet, _ := fact.ParamSets[i].Instantiate(curUniMap)
+			newParamSets = append(newParamSets, paramSet)
+			if freeParamNewParam, ok := uniMap[freeParam]; ok {
+				curUniMap[freeParam] = freeParamNewParam
+			}
+		}
+		newDomFacts, _ := fact.DomFacts.InstantiateFact(uniMap)
+		newThenFacts, _ := fact.ThenFacts.InstantiateFact(uniMap)
+
+		return ast.NewUniFact(newFreeParams, newParamSets, newDomFacts, newThenFacts, glob.BuiltinLine0)
+	}
 }

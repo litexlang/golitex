@@ -82,14 +82,6 @@ func isSpecialLatexSymbol_Process(f *FnObj) (bool, string) {
 	return false, ""
 }
 
-func (f *HaveShortStmt) ToLatexString() string {
-	return f.String()
-}
-
-func (f *WitnessShortStmt) ToLatexString() string {
-	return f.String()
-}
-
 func (f *WitnessStmt) ToLatexString() string {
 	return f.String()
 }

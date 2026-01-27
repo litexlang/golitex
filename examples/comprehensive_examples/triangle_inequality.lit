@@ -90,4 +90,3 @@ claim:
                         abs(x + y) = -(x + y) = -x - y
                         abs(x + y) = -x + (-y) = abs(x) + abs(y)
                         abs(x + y) <= abs(x) + abs(y)
-

@@ -47,8 +47,8 @@ func StringWithOptimizedNewline(s string) string {
 	return fmt.Sprintf("%s\n", s2)
 }
 
-func IsNPosOrNOrZOrQOrR(name string) bool {
-	return name == KeywordNPos || name == KeywordNatural || name == KeywordInteger || name == KeywordRational || name == KeywordReal
+func IsNPosOrNOrZOrQOrROrRPosOrRNegOrZNegOrQNegOrQPosOrZNot0OrQNot0OrRNot0(name string) bool {
+	return name == KeywordNPos || name == KeywordNatural || name == KeywordInteger || name == KeywordRational || name == KeywordReal || name == KeywordRPos || name == KeywordRNeg || name == KeywordZNeg || name == KeywordQNeg || name == KeywordQPos || name == KeywordZNot0 || name == KeywordQNot0 || name == KeywordRNot0
 }
 
 var AddMinusStarSet map[string]struct{} = map[string]struct{}{

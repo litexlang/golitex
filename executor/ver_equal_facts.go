@@ -28,11 +28,11 @@ import (
 func (ver *Verifier) cmpObj_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
 	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, fmt.Sprintf("%s = %s", left, right), 0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, fmt.Sprintf("%s = %s", left, right), 0, []string{err.Error()})
 	}
 	if ok {
 		if state.WithMsg {
-			return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), 0, []string{msg})
+			return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), 0, []string{msg})
 		}
 		return glob.NewEmptyVerRetTrue()
 	}
@@ -64,7 +64,7 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 		if gotLeftEqualObjs && gotRightEqualObjs {
 			if equalToLeftObjs == equalToRightObjs {
 				if state.WithMsg {
-					return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("known %s = %s", left, right), 0, []string{})
+					return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("known %s = %s", left, right), 0, []string{})
 				}
 				return glob.NewEmptyVerRetTrue()
 			}
@@ -81,7 +81,7 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 					return verRet
 				} else if verRet.IsTrue() {
 					if state.WithMsg {
-						return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftObj, right, equalToLeftObj, left), 0, verRet.VerifyMsgs)
+						return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftObj, right, equalToLeftObj, left), 0, verRet.VerifyMsgs)
 					}
 					return verRet
 				}
@@ -99,7 +99,7 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 					return verRet
 				} else if verRet.IsTrue() {
 					if state.WithMsg {
-						return glob.NewVerMsg(glob.StmtRetTypeTrue, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightObj, left, equalToRightObj, right), 0, verRet.VerifyMsgs)
+						return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightObj, left, equalToRightObj, right), 0, verRet.VerifyMsgs)
 					}
 					return verRet
 				}
@@ -116,7 +116,7 @@ func (ver *Verifier) verTrueEqualFact_ObjFnEqual_NoCheckRequirements(left, right
 	}
 
 	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
-	verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left.FnHead, right.FnHead}, glob.BuiltinLine0), state.CopyAndReqOkToTrue())
+	verRet := ver.VerTrueEqualFactAndCheckFnReq(ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left.FnHead, right.FnHead}, glob.BuiltinLine0), state.CopyAndReqOkToTrue())
 	if verRet.IsErr() {
 		return verRet
 	}
@@ -127,7 +127,7 @@ func (ver *Verifier) verTrueEqualFact_ObjFnEqual_NoCheckRequirements(left, right
 	for i := range left.Params {
 		// ok, err := ver.fcEqualSpec(left.Params[i], right.Params[i], state)
 
-		verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewSpecFactStmt(ast.TruePure, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left.Params[i], right.Params[i]}, glob.BuiltinLine0), state.CopyAndReqOkToTrue())
+		verRet := ver.VerTrueEqualFactAndCheckFnReq(ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left.Params[i], right.Params[i]}, glob.BuiltinLine0), state.CopyAndReqOkToTrue())
 		if verRet.IsErr() {
 			return verRet
 		}

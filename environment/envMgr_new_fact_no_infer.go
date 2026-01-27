@@ -24,10 +24,11 @@ import (
 // This is used to prevent circular definitions (e.g., p => q, q => p).
 func (envMgr *EnvMgr) newFactNoInfer(stmt ast.FactStmt) *glob.StmtRet {
 	switch f := stmt.(type) {
-	case *ast.SpecFactStmt:
+	case ast.SpecificFactStmt:
 		return envMgr.newSpecFactNoInfer(f)
 	case *ast.OrStmt:
-		return envMgr.newOrFactNoInfer(f)
+		return glob.NewEmptyStmtTrue()
+		// return envMgr.newOrFactNoInfer(f)
 	case *ast.UniFactStmt:
 		return envMgr.newUniFactNoInfer(f)
 	case *ast.UniFactWithIffStmt:
@@ -41,9 +42,9 @@ func (envMgr *EnvMgr) newFactNoInfer(stmt ast.FactStmt) *glob.StmtRet {
 
 // newSpecFactNoInfer stores a SpecFact without performing any inference.
 // It only stores the fact in memory, without triggering post-processing.
-func (envMgr *EnvMgr) newSpecFactNoInfer(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newSpecFactNoInfer(fact ast.SpecificFactStmt) *glob.StmtRet {
 	if isEqualFact := ast.IsTrueEqualFact(fact); isEqualFact {
-		return envMgr.newTrueEqualNoInfer(fact)
+		return envMgr.newTrueEqualNoInfer(fact.(*ast.PureSpecificFactStmt))
 	}
 
 	ret := envMgr.storeSpecFactInMem(fact)
@@ -57,7 +58,7 @@ func (envMgr *EnvMgr) newSpecFactNoInfer(fact *ast.SpecFactStmt) *glob.StmtRet {
 // newTrueEqualNoInfer stores an equality fact without performing any inference.
 // It stores the equality in the equal memory and simplifies symbol values,
 // but does not trigger equality-related inferences (e.g., cart, tuple, listSet).
-func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.PureSpecificFactStmt) *glob.StmtRet {
 	if len(fact.Params) != 2 {
 		return glob.ErrRet(fmt.Sprintf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
@@ -89,19 +90,20 @@ func (envMgr *EnvMgr) newEqualsFactNoInfer(stmt *ast.EqualsFactStmt) *glob.StmtR
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) *glob.StmtRet {
-	ret := envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
-	return ret
-}
+// func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) *glob.StmtRet {
+// 	ret := envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
+// 	return ret
+// }
 
 func (envMgr *EnvMgr) newUniFactNoInfer(stmt *ast.UniFactStmt) *glob.StmtRet {
-	for _, thenStmt := range stmt.ThenFacts {
+	for index, thenStmt := range stmt.ThenFacts {
 		var ret *glob.StmtRet
-		switch asFact := thenStmt.(type) {
-		case *ast.SpecFactStmt:
-			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, asFact)
+		switch thenStmt.(type) {
+		case ast.SpecificFactStmt:
+			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, index)
 		case *ast.OrStmt:
-			ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
+			// ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
+			ret = glob.NewEmptyStmtTrue()
 		default:
 			return glob.ErrRet(fmt.Sprintf("invalid then fact type: %s", thenStmt))
 		}
@@ -126,5 +128,29 @@ func (envMgr *EnvMgr) newUniFactWithIffNoInfer(stmt *ast.UniFactWithIffStmt) *gl
 		return ret
 	}
 
+	return glob.NewEmptyStmtTrue()
+}
+
+func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) *glob.ShortRet {
+	for _, specFact := range fact.Facts {
+		propName := specFact.GetPropName()
+		knowns, ok := envMgr.CurEnv().OrFactsMem[propName.String()]
+		if ok {
+			envMgr.CurEnv().OrFactsMem[propName.String()] = append(knowns, fact)
+		} else {
+			envMgr.CurEnv().OrFactsMem[propName.String()] = []*ast.OrStmt{fact}
+		}
+	}
+	return glob.NewEmptyShortTrueRet()
+}
+
+func (envMgr *EnvMgr) storeOrFactInUniFactMem(orFact *ast.OrStmt, uniFact *ast.UniFactStmt) *glob.StmtRet {
+	propName := orFact.Facts[0].GetPropName()
+	knowns, ok := envMgr.CurEnv().OrFactInUniFactMem[propName.String()]
+	if ok {
+		envMgr.CurEnv().OrFactInUniFactMem[propName.String()] = append(knowns, NewOrFactInUniFactMem(orFact, uniFact))
+	} else {
+		envMgr.CurEnv().OrFactInUniFactMem[propName.String()] = []*OrFactInUniFact{NewOrFactInUniFactMem(orFact, uniFact)}
+	}
 	return glob.NewEmptyStmtTrue()
 }

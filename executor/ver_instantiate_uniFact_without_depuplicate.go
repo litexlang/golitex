@@ -89,7 +89,7 @@ func processUniFactParamsDuplicateDeclared(env *env.EnvMgr, params []string) (ma
 			newParam := param
 			ret := env.IsNameUnavailable(newParam, map[string]struct{}{})
 			if ret.IsTrue() {
-				newParam = env.GenerateUndeclaredRandomName()
+				newParam = env.GenerateUnusedRandomName()
 				ret = env.IsNameUnavailable(newParam, map[string]struct{}{})
 				if ret.IsErr() {
 					paramMap[param] = ast.Atom(newParam)
@@ -113,7 +113,7 @@ func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.EnvMgr, params
 			_, inNotOnMap := notInMap[newParam]
 			ret := env.IsNameUnavailable(newParam, map[string]struct{}{})
 			if ret.IsTrue() || inNotOnMap {
-				newParam = env.GenerateUndeclaredRandomName()
+				newParam = env.GenerateUnusedRandomName()
 
 				_, inNotOnMap = notInMap[newParam]
 				ret = env.IsNameUnavailable(newParam, map[string]struct{}{})
@@ -256,8 +256,8 @@ func instantiateUniFactWithoutThenFacts(u *uniFactWithoutThenFacts, paramMap map
 	return newUniFactWithoutThenFacts(u.Params, instantiatedParamSets, instantiatedDomFacts), nil
 }
 
-func (u *uniFactWithoutThenFacts) ParamInParamSetFacts(paramMap map[string]ast.Obj) []*ast.SpecFactStmt {
-	paramSetFacts := make([]*ast.SpecFactStmt, len(u.Params))
+func (u *uniFactWithoutThenFacts) ParamInParamSetFacts(paramMap map[string]ast.Obj) []*ast.PureSpecificFactStmt {
+	paramSetFacts := make([]*ast.PureSpecificFactStmt, len(u.Params))
 	for i, param := range u.Params {
 		paramSetFacts[i] = ast.NewInFactWithParamObj(paramMap[param], u.ParamSets[i], glob.BuiltinLine0)
 	}

@@ -99,14 +99,17 @@ func (envMgr *EnvMgr) GetValueOfAtomObj(obj ast.Atom) (bool, ast.Obj) {
 	return true, symbolValue
 }
 
-func (envMgr *EnvMgr) ReplaceObjInSpecFactWithValue(fact *ast.SpecFactStmt) (bool, *ast.SpecFactStmt) {
-	newParams := make([]ast.Obj, len(fact.Params))
-	replaced := false
-	for i, param := range fact.Params {
-		var newReplaced bool
-		newReplaced, newParams[i] = envMgr.ReplaceSymbolWithValue(param)
-
-		replaced = replaced || newReplaced
+func (envMgr *EnvMgr) ReplaceObjInSpecFactWithValue(fact ast.SpecificFactStmt) (bool, ast.SpecificFactStmt) {
+	if asFact, ok := fact.(*ast.PureSpecificFactStmt); ok {
+		newParams := make([]ast.Obj, len(asFact.Params))
+		replaced := false
+		for i, param := range asFact.Params {
+			var newReplaced bool
+			newReplaced, newParams[i] = envMgr.ReplaceSymbolWithValue(param)
+			replaced = replaced || newReplaced
+		}
+		return replaced, ast.NewPureSpecificFactStmt(asFact.IsTrue, asFact.PropName, newParams, asFact.Line)
+	} else {
+		return false, fact
 	}
-	return replaced, ast.NewSpecFactStmt(fact.FactType, fact.PropName, newParams, fact.Line)
 }

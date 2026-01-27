@@ -24,17 +24,17 @@ func (envMgr *EnvMgr) GetSpecFactMem() (*SpecFactMem, bool) {
 	return &envMgr.CurEnv().KnownFactsStruct.SpecFactMem, true
 }
 
-func (envMgr *EnvMgr) GetSpecFactInLogicExprMem() (*SpecFactInLogicExprMem, bool) {
-	return &envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem, true
-}
+// func (envMgr *EnvMgr) GetSpecFactInLogicExprMem() (*SpecFactInLogicExprMem, bool) {
+// 	return &envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem, true
+// }
 
 func (envMgr *EnvMgr) GetSpecFactInUniFactMem() (*SpecFactInUniFactMem, bool) {
 	return &envMgr.CurEnv().KnownFactsStruct.SpecFactInUniFactMem, true
 }
 
-func (envMgr *EnvMgr) GetSpecFact_InLogicExpr_InUniFactMem() (*SpecFact_InLogicExpr_InUniFactMem, bool) {
-	return &envMgr.CurEnv().KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem, true
-}
+// func (envMgr *EnvMgr) GetSpecFact_InLogicExpr_InUniFactMem() (*SpecFact_InLogicExpr_InUniFactMem, bool) {
+// 	return &envMgr.CurEnv().KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem, true
+// }
 
 func (envMgr *EnvMgr) IsFnDeclared(obj ast.Atom) (*FnInFnTMemItem, bool) {
 	// TODO 这里需要更严格检查一下是否是正常的函数名，但是目前没有

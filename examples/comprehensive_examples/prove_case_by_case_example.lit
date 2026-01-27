@@ -13,6 +13,7 @@ claim:
                 (x + 3)^2 = 121
                 x + 3 = sqrt(121) or x + 3 = -sqrt(121)
                 11 = sqrt(121)
+                x + 3 = 11 or x + 3 = -11
                 cases:
                     =>:
                         x = 8 or x = -14
@@ -37,12 +38,19 @@ claim:
                     case x1 = -14:
                         not x1 > x2
                 impossible x1 > x2
+
+        contra x2 = -14:
+            impossible x1 = 8 or x2 = -14
         x2 = -14
         
         claim:
             not x1 = -14
             contra:
                 impossible not x1 > x2
+
+        contra x1 = -14:
+            impossible x1 = 8 or x1 = -14
+                
         x1 = 8
 
 

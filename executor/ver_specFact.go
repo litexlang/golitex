@@ -18,10 +18,11 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	cmp "golitex/cmp"
+	env "golitex/environment"
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 	if !state.ReqOk {
 		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
@@ -30,110 +31,44 @@ func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt *ast.Spec
 		state.UpdateReqOkToTrue()
 	}
 
-	ret := ver.verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt, state)
+	ret := ver.verSpecFactWholeProcess(stmt, state)
 	if ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
 
-	ret = ver.verSpecialFactInSpecialWays(stmt, state)
-	if ret.IsTrue() || ret.IsErr() {
-		return ret
-	}
-
-	return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{})
+	return glob.NewVerRet(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{})
 }
 
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseCommutativity(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolEqual) {
-		return ver.verTrueEqualFactAndCheckFnReq(stmt, state.CopyAndReqOkToFalse())
-	}
-
-	if verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt, state); verRet.IsTrue() || verRet.IsErr() {
-		return verRet
-	}
-
-	// if ver.env.IsCommutativeProp(stmt) || (stmt.NameIs(glob.KeySymbolEqual) && stmt.TypeEnum == ast.FalsePure) {
-	if ver.Env.IsCommutativeProp(stmt) {
-		reverseParamsOrderStmt, err := stmt.ReverseParameterOrder()
-		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
-		}
-		if verRet := ver.verSpecFactThatIsNotTrueEqualFact_UseTransitivity(reverseParamsOrderStmt, state); verRet.IsTrue() || verRet.IsErr() {
-			return verRet
-		}
-	}
-
-	return glob.NewEmptyVerRetUnknown()
-}
-
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_UseTransitivity(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt, state)
-	if verRet.IsTrue() || verRet.IsErr() {
-		return verRet
-	}
-
-	if stmt.FactType == ast.TruePure && ver.Env.IsTransitiveProp(string(stmt.PropName)) {
-		relatedObjSlice := ver.Env.GetRelatedObjSliceOfTransitiveProp(string(stmt.PropName), stmt.Params[0])
-		if len(relatedObjSlice) == 0 {
-			return glob.NewEmptyVerRetUnknown()
-		}
-
-		for _, relatedObj := range relatedObjSlice {
-			relatedObjStmt := ast.NewSpecFactStmt(ast.TruePure, ast.Atom(stmt.PropName), []ast.Obj{relatedObj, stmt.Params[1]}, stmt.Line)
-			verRet := ver.verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(relatedObjStmt, state)
-			if verRet.IsErr() {
-				return verRet
-			}
-			if verRet.IsTrue() {
-				msg := fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(stmt.PropName), relatedObjStmt.String())
-				if state.WithMsg {
-					return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
-				}
-				return glob.NewEmptyVerRetTrue()
-			}
-		}
-	}
-
-	return glob.NewEmptyVerRetUnknown()
-}
-
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFact_WithoutTransitive(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	// replace the params with the values 来证明
-	// 比如 $q(x, y) 证明不出来，但可能 $q(1, 2) 证明出来了，如果x=1,y=2的话。这里会用到 1. 如果x和y本来就是数学表达式，那就计算 2. 如果 x和y之前存过数值，那就用之前存过的值。
-	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
-	if replaced {
-		verRet := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(newStmt, state)
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsTrue() {
-			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
-			if state.WithMsg {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
-			}
-			return glob.NewEmptyVerRetTrue()
-		}
-	}
-
-	verRet := ver.verSpecFactThatIsNotTrueEqualFactMainLogic(stmt, state)
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsTrue() {
+func (ver *Verifier) verSpecFactPreProcess(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	verRet := ver.verSpecFactPreProcess_ReplaceSymbolsWithValues(stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
 	return glob.NewEmptyVerRetUnknown()
 }
 
-// TODO: 其实 specFact 是等号的时候，还是会访问到这个函数。
-// WARNING: 其实 specFact 是等号的时候，还是会访问到这个函数。所以这个函数的命名是有问题的
-// WARNING: 需要重构整个架构，把验证的逻辑屡屡顺。Litex是ATP的话，那就必须要告诉用户我Auto的过程是什么样的
-func (ver *Verifier) verSpecFactThatIsNotTrueEqualFactMainLogic(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	return ver.verSpecFactStepByStep(stmt, state)
+func (ver *Verifier) verSpecFactPostProcess(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	verRet := ver.verSpecFactPostProcess_UseCommutativity(stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	verRet = ver.verSpecFactPostProcess_UseTransitivity(stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	verRet = ver.verSpecFactPostProcess_WhenPropIsComparison(stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verSpecFactMainProcess(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	// TODO: 需要吧如果builtin rule是在利用定义在证明的话，应该把这些逻辑放到下面的verSpecFact_ByDef里
 	if verRet := ver.verSpecFactByBuiltinRules(stmt, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
@@ -147,10 +82,6 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerSta
 	}
 
 	if !state.isFinalRound() {
-		if verRet := ver.verSpecFact_ByLogicMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
-			return verRet
-		}
-
 		if verRet := ver.verSpecFact_UniMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}
@@ -159,177 +90,208 @@ func (ver *Verifier) verSpecFactStepByStep(stmt *ast.SpecFactStmt, state *VerSta
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verSpecFact_ByDEF(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	if stmt.IsPureFact() {
-		if !stmt.IsTrue() {
-			return ver.verNotPureSpecFact_ByDef(stmt, state)
-		}
-
-		return ver.verPureSpecFact_ByDefinition(stmt, state)
-	}
-
-	// if stmt.IsExist_St_Fact() {
-	// 	return ver.verExistSpecFact_ByDefinition(stmt, state)
-	// }
-
-	return glob.NewEmptyVerRetUnknown()
-}
-
-func (ver *Verifier) verPureSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	// nextState := state.GetAddRound()
-
-	curDefinedStuff, ok := ver.Env.GetPropDef(stmt.PropName)
-	// defStmt := curDefStmt
-	if !ok {
-		// 这里可能是因为这个propName是exist prop，所以没有定义
-		return glob.NewEmptyVerRetUnknown()
-	}
-
-	curDefStmt := curDefinedStuff.Defined
-
-	if len(curDefStmt.IffFactsOrNil) == 0 {
-		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
-		return glob.NewEmptyVerRetUnknown()
-	}
-
-	defStmt := ver.Env.MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(curDefStmt)
-
-	iffToProp := defStmt.IffToPropUniFact()
-	paramArrMap := map[string]ast.Obj{}
-	for i, param := range stmt.Params {
-		paramArrMap[defStmt.DefHeader.Params[i]] = param
-	}
-
-	// TODO: ? 这里还需要检查吗？或者说是在这里检查吗？难道prop的关于参数的检查不应该在更顶层的函数里？
-	paramSetFacts, err := defStmt.DefHeader.GetInstantiatedParamInParamSetFact(paramArrMap)
-	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
-	}
-
-	for _, paramSetFact := range paramSetFacts {
-		verRet := ver.VerFactStmt(paramSetFact, state)
-		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet
-		}
-	}
-
-	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
-	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
-	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
-	}
-	// prove all domFacts are true
-	for _, domFact := range instantiatedIffToProp.DomFacts {
-		// verRet := ver.VerFactStmt(domFact, nextState)
-		verRet := ver.VerFactStmt(domFact, state)
-		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet
-		}
-	}
-
-	if state.WithMsg {
-		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{defStmt.String()})
-	}
-	return glob.NewEmptyVerRetTrue()
-}
-
-// func (ver *Verifier) verExistSpecFact_ByDefinition(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-// 	return glob.NewEmptyVerRetUnknown()
-
-// existParams, factParams := stmt.ExistStFactToPropNameExistParamsParams()
-
-// propDef := ver.Env.GetExistPropDef(stmt.PropName)
-// if propDef == nil {
-// 	// TODO: 如果没声明，应该报错
-// 	return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{fmt.Sprintf("%s has no definition", stmt.PropName)})
-// }
-
-// uniConMap := map[string]ast.Obj{}
-// for i := range existParams {
-// 	uniConMap[propDef.ExistParams[i]] = existParams[i]
-// }
-
-// for i := range factParams {
-// 	uniConMap[propDef.DefBody.DefHeader.Params[i]] = factParams[i]
-// }
-
-// // given objects are in their param sets
-// instParamSets, err := propDef.ExistParamSets.Instantiate(uniConMap)
-// if err != nil {
-// 	return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{err.Error()})
-// }
-// for i := range instParamSets {
-// 	verRet := ver.VerFactStmt(ast.NewInFactWithObj(existParams[i], instParamSets[i]), state)
-// 	if verRet.IsErr() {
-// 		return verRet
-// 	}
-// 	if verRet.IsUnknown() {
-// 		if state.WithMsg {
-// 			msg := fmt.Sprintf("given object %s is not in its param set %s\n", existParams[i], instParamSets[i])
-// 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{msg})
-// 		}
-// 		return glob.NewEmptyVerRetUnknown()
-// 	}
-// }
-
-// domFacts, err := propDef.DefBody.DomFactsOrNil.InstantiateFact(uniConMap)
-// if err != nil {
-// 	return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{err.Error()})
-// }
-
-// iffFacts, err := propDef.DefBody.IffFactsOrNil.InstantiateFact(uniConMap)
-// if err != nil {
-// 	return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), stmt.GetLine(), []string{err.Error()})
-// }
-
-// for _, domFact := range domFacts {
-// 	verRet := ver.VerFactStmt(domFact, state)
-// 	if verRet.IsErr() {
-// 		return verRet
-// 	}
-// 	if verRet.IsUnknown() {
-// 		if state.WithMsg {
-// 			msg := fmt.Sprintf("dom fact %s is unknown\n", domFact)
-// 			return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), stmt.GetLine(), []string{msg})
-// 		}
-// 		return glob.NewEmptyVerRetUnknown()
-// 	}
-// }
-
-// for _, iffFact := range iffFacts {
-// 	verRet := ver.VerFactStmt(iffFact, state)
-// 	if verRet.IsErr() || verRet.IsUnknown() {
-// 		return verRet
-// 	}
-// }
-
-// if state.WithMsg {
-// 	return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.GetLine(), []string{"by definition"})
-// }
-// return glob.NewEmptyVerRetTrue()
-// }
-
-// func (ver *Verifier) verSpecFactLogicMem(stmt *ast.SpecFactStmt, state *VerState) VerRet {
-// 	verRet := ver.verSpecFact_ByLogicMem(stmt, state)
-// 	if verRet.IsErr() || verRet.IsTrue() {
-// 		return verRet.ToBoolErr()
-// 	}
-// 	return false, nil
-// }
-
-func (ver *Verifier) verSpecFact_UniMem(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	nextState := state.GetAddRound()
-
-	verRet := ver.verSpecFact_InSpecFact_UniMem(stmt, nextState)
+func (ver *Verifier) verSpecFactWholeProcess(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	verRet := ver.verSpecFactPreProcess(stmt, state)
 	if verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
-	return ver.verSpecFact_InLogicExpr_InUniFactMem(stmt, nextState)
+	verRet = ver.verSpecFactMainProcess(stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	verRet = ver.verSpecFactPostProcess(stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-	if stmt.IsTrue() {
+func (ver *Verifier) verSpecFactByMainProcessAndPostProcess(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	verRet := ver.verSpecFactMainProcess(stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	verRet = ver.verSpecFactPostProcess(stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	return glob.NewEmptyVerRetUnknown()
+}
+
+func (ver *Verifier) verSpecFactPreProcess_ReplaceSymbolsWithValues(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
+	if replaced {
+		verRet := ver.verSpecFactByMainProcessAndPostProcess(newStmt, state)
+		if verRet.IsErr() {
+			return verRet
+		}
+		if verRet.IsTrue() {
+			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())
+			if state.WithMsg {
+				return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
+			}
+			return glob.NewEmptyVerRetTrue()
+		}
+	}
+
+	return glob.NewEmptyVerRetUnknown()
+}
+
+func (ver *Verifier) verSpecFactPreProcessAndMainProcess(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	verRet := ver.verSpecFactPreProcess(stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	verRet = ver.verSpecFactMainProcess(stmt, state)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	return glob.NewEmptyVerRetUnknown()
+}
+
+func (ver *Verifier) verSpecFactPostProcess_UseCommutativity(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	if ver.Env.IsCommutativeProp(asStmt) {
+		reverseParamsOrderStmt, err := asStmt.ReverseParameterOrder()
+		if err != nil {
+			return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		}
+
+		verRet := ver.verSpecFactPreProcessAndMainProcess(reverseParamsOrderStmt, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
+
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	return glob.NewEmptyVerRetUnknown()
+}
+
+func (ver *Verifier) verSpecFactPostProcess_UseTransitivity(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	if asStmt.IsTrue && ver.Env.IsTransitiveProp(string(asStmt.PropName)) {
+		relatedObjSlice := ver.Env.GetRelatedObjSliceOfTransitiveProp(string(asStmt.PropName), asStmt.Params[0])
+		if len(relatedObjSlice) == 0 {
+			return glob.NewEmptyVerRetUnknown()
+		}
+
+		for _, relatedObj := range relatedObjSlice {
+			relatedObjStmt := ast.NewPureSpecificFactStmt(asStmt.IsTrue, asStmt.PropName, []ast.Obj{relatedObj, asStmt.Params[1]}, asStmt.Line)
+			verRet := ver.verSpecFactPreProcessAndMainProcess(relatedObjStmt, state)
+			if verRet.IsErr() {
+				return verRet
+			}
+			if verRet.IsTrue() {
+				msg := fmt.Sprintf("%s is true by %s is a transitive prop and %s is true", stmt.String(), string(asStmt.PropName), relatedObjStmt.String())
+				if state.WithMsg {
+					return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
+				}
+				return glob.NewEmptyVerRetTrue()
+			}
+		}
+	}
+
+	return glob.NewEmptyVerRetUnknown()
+}
+
+func (ver *Verifier) verSpecFactPostProcess_WhenPropIsComparison(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolGreater) {
+		// a > b <=> b < a
+		lessThanStmt := ast.NewPureSpecificFactStmt(asStmt.IsTrue, ast.Atom(glob.KeySymbolLess), []ast.Obj{asStmt.Params[1], asStmt.Params[0]}, asStmt.Line)
+		verRet := ver.verSpecFactPreProcessAndMainProcess(lessThanStmt, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
+
+		return glob.NewEmptyVerRetUnknown()
+	} else if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolLess) {
+		// a < b <=> b > a
+		greaterThanStmt := ast.NewPureSpecificFactStmt(asStmt.IsTrue, ast.Atom(glob.KeySymbolGreater), []ast.Obj{asStmt.Params[1], asStmt.Params[0]}, asStmt.Line)
+		verRet := ver.verSpecFactPreProcessAndMainProcess(greaterThanStmt, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
+
+		return glob.NewEmptyVerRetUnknown()
+	} else if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolLargerEqual) {
+		// a >= b <=> b <= a
+		lessEqualThanStmt := ast.NewPureSpecificFactStmt(asStmt.IsTrue, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{asStmt.Params[1], asStmt.Params[0]}, asStmt.Line)
+		verRet := ver.verSpecFactPreProcessAndMainProcess(lessEqualThanStmt, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
+
+		return glob.NewEmptyVerRetUnknown()
+	} else if ast.IsTrueSpecFactWithPropName(stmt, glob.KeySymbolLessEqual) {
+		// a <= b <=> b >= a
+		greaterEqualThanStmt := ast.NewPureSpecificFactStmt(asStmt.IsTrue, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{asStmt.Params[1], asStmt.Params[0]}, asStmt.Line)
+		verRet := ver.verSpecFactPreProcessAndMainProcess(greaterEqualThanStmt, state)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
+
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	return glob.NewEmptyVerRetUnknown()
+}
+
+func (ver *Verifier) verSpecFact_UniMem(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	nextState := state.GetAddRound()
+
+	for i := len(ver.Env.EnvSlice) - 1; i >= 0; i-- {
+		curEnv := &ver.Env.EnvSlice[i]
+		verRet := ver.checkSpecFactUseUniMemAtCurEnv(curEnv, stmt, nextState)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
+	}
+
+	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
+	verRet := ver.checkSpecFactUseUniMemAtCurEnv(curEnv, stmt, nextState)
+	if verRet.IsErr() || verRet.IsTrue() {
+		return verRet
+	}
+
+	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
+		curEnv := pkgEnvMgr.EnvSlice[0]
+		verRet := ver.checkSpecFactUseUniMemAtCurEnv(&curEnv, stmt, nextState)
+		if verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
+	}
+
+	return glob.NewEmptyVerRetUnknown()
+}
+
+func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	if asStmt.IsTrue {
 		return glob.NewEmptyVerRetUnknown()
 	}
 
@@ -339,18 +301,18 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 	// }
 
 	var leftValue, rightValue ast.Obj
-	if cmp.IsNumExprLitObj(stmt.Params[0]) {
-		leftValue = stmt.Params[0]
+	if cmp.IsNumExprLitObj(asStmt.Params[0]) {
+		leftValue = asStmt.Params[0]
 	} else {
-		leftValue = ver.Env.GetSymbolSimplifiedValue(stmt.Params[0])
+		leftValue = ver.Env.GetSymbolSimplifiedValue(asStmt.Params[0])
 		if leftValue == nil {
 			return glob.NewEmptyVerRetUnknown()
 		}
 	}
-	if cmp.IsNumExprLitObj(stmt.Params[1]) {
-		rightValue = stmt.Params[1]
+	if cmp.IsNumExprLitObj(asStmt.Params[1]) {
+		rightValue = asStmt.Params[1]
 	} else {
-		rightValue = ver.Env.GetSymbolSimplifiedValue(stmt.Params[1])
+		rightValue = ver.Env.GetSymbolSimplifiedValue(asStmt.Params[1])
 		if rightValue == nil {
 			return glob.NewEmptyVerRetUnknown()
 		}
@@ -358,11 +320,11 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 
 	_, areEqual, err := cmp.NumLitEqual_ByEval(leftValue, rightValue)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, asStmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 	if !areEqual {
 		if state != nil && state.WithMsg {
-			return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{"builtin rules"})
+			return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{"builtin rules"})
 		}
 		return glob.NewEmptyVerRetTrue()
 	}
@@ -382,12 +344,17 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt *ast.SpecFa
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verIsCartByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verIsCartByBuiltinRules(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
 	// 如果参数数量是1，且参数的函数名是cart，那自动成立
-	if len(stmt.Params) == 1 {
-		if cartObj, ok := stmt.Params[0].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartObj.FnHead, glob.KeywordCart) {
+	if len(asStmt.Params) == 1 {
+		if cartObj, ok := asStmt.Params[0].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartObj.FnHead, glob.KeywordCart) {
 			if state.WithMsg {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{"definition"})
+				return glob.NewVerRet(glob.StmtRetTypeTrue, asStmt.String(), glob.BuiltinLine0, []string{"definition"})
 			}
 			return glob.NewEmptyVerRetTrue()
 		}
@@ -395,10 +362,15 @@ func (ver *Verifier) verIsCartByBuiltinRules(stmt *ast.SpecFactStmt, state *VerS
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verNotPureSpecFact_ByDef(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
 	nextState := state.GetAddRound()
 
-	curDefinedStuff, ok := ver.Env.GetPropDef(stmt.PropName)
+	curDefinedStuff, ok := ver.Env.GetPropDef(asStmt.PropName)
 	if !ok {
 		// 这里可能是因为这个propName是exist prop，所以没有定义
 		return glob.NewEmptyVerRetUnknown()
@@ -413,14 +385,14 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 
 	iffToProp := defStmt.IffToPropUniFact()
 	paramArrMap := map[string]ast.Obj{}
-	for i, param := range stmt.Params {
+	for i, param := range asStmt.Params {
 		paramArrMap[defStmt.DefHeader.Params[i]] = param
 	}
 
 	// TODO: ? 这里还需要检查吗？或者说是在这里检查吗？难道prop的关于参数的检查不应该在更顶层的函数里？
 	paramSetFacts, err := defStmt.DefHeader.GetInstantiatedParamInParamSetFact(paramArrMap)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	for _, paramSetFact := range paramSetFacts {
@@ -433,16 +405,16 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
 	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	// 某个fact是false的，那就OK了
 	for _, domFact := range instantiatedIffToProp.DomFacts {
-		domFactAsSpecFact, ok := domFact.(*ast.SpecFactStmt)
+		domFactAsSpecFact, ok := domFact.(*ast.PureSpecificFactStmt)
 		if !ok {
 			continue
 		}
-		reversedDomFact := domFactAsSpecFact.ReverseTrue()
+		reversedDomFact := domFactAsSpecFact.ReverseIsTrue()[0]
 
 		verRet := ver.VerFactStmt(reversedDomFact, nextState)
 		if verRet.IsErr() {
@@ -450,7 +422,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 		}
 		if verRet.IsTrue() {
 			if state.WithMsg {
-				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{defStmt.String()})
+				return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{defStmt.String()})
 			}
 			return glob.NewEmptyVerRetTrue()
 		}
@@ -459,3 +431,86 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt *ast.SpecFactStmt, state *Ver
 	return glob.NewEmptyVerRetUnknown()
 }
 
+func (ver *Verifier) verSpecFact_ByDEF(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	if asStmt.IsTrue {
+		if !asStmt.IsTrue {
+			return ver.verNotPureSpecFact_ByDef(stmt, state)
+		}
+
+		return ver.verPureSpecFact_ByDefinition(stmt, state)
+	}
+
+	// if stmt.IsExist_St_Fact() {
+	// 	return ver.verExistSpecFact_ByDefinition(stmt, state)
+	// }
+
+	return glob.NewEmptyVerRetUnknown()
+}
+
+func (ver *Verifier) verPureSpecFact_ByDefinition(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	// nextState := state.GetAddRound()
+
+	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	curDefinedStuff, ok := ver.Env.GetPropDef(asStmt.PropName)
+	// defStmt := curDefStmt
+	if !ok {
+		// 这里可能是因为这个propName是exist prop，所以没有定义
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	curDefStmt := curDefinedStuff.Defined
+
+	if len(curDefStmt.IffFactsOrNil) == 0 {
+		// REMARK: 如果IFFFacts不存在，那我们认为是 没有iff能验证prop，而不是prop自动成立
+		return glob.NewEmptyVerRetUnknown()
+	}
+
+	defStmt := ver.Env.MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(curDefStmt)
+
+	iffToProp := defStmt.IffToPropUniFact()
+	paramArrMap := map[string]ast.Obj{}
+	for i, param := range asStmt.Params {
+		paramArrMap[defStmt.DefHeader.Params[i]] = param
+	}
+
+	// TODO: ? 这里还需要检查吗？或者说是在这里检查吗？难道prop的关于参数的检查不应该在更顶层的函数里？
+	paramSetFacts, err := defStmt.DefHeader.GetInstantiatedParamInParamSetFact(paramArrMap)
+	if err != nil {
+		return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+	}
+
+	for _, paramSetFact := range paramSetFacts {
+		verRet := ver.VerFactStmt(paramSetFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet
+		}
+	}
+
+	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
+	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
+	if err != nil {
+		return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+	}
+	// prove all domFacts are true
+	for _, domFact := range instantiatedIffToProp.DomFacts {
+		// verRet := ver.VerFactStmt(domFact, nextState)
+		verRet := ver.VerFactStmt(domFact, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			return verRet
+		}
+	}
+
+	if state.WithMsg {
+		return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{defStmt.String()})
+	}
+	return glob.NewEmptyVerRetTrue()
+}

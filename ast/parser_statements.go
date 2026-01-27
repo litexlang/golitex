@@ -40,9 +40,7 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 			ret, err = p.letDefObjStmt(tb)
 		}
 	case glob.KeywordHave:
-		if tb.header.strAtCurIndexPlus(1) == glob.KeySymbolDollar {
-			ret, err = p.haveShortStmt(tb)
-		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
+		if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColon {
 				ret, err = p.haveFnStmt(tb)
 			} else {
@@ -203,16 +201,16 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 
 		// iff, dom 里不能出现和被定义的prop同名的prop，否则用def做验证的时候会出问题
 		for _, fact := range iffFacts {
-			if factAsSpecFact, ok := fact.(*SpecFactStmt); ok {
-				if string(factAsSpecFact.PropName) == string(declHeader.Name) {
+			if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
+				if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
 					return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
 				}
 			}
 		}
 
 		for _, fact := range domFacts {
-			if factAsSpecFact, ok := fact.(*SpecFactStmt); ok {
-				if string(factAsSpecFact.PropName) == string(declHeader.Name) {
+			if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
+				if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
 					return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
 				}
 			}
@@ -425,7 +423,7 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 	} else if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordCase) {
 		// Case-by-case structure: body[0] is defFnStmt, body[1..n] are case blocks (possibly with prove cases: at the end)
 		// Each case block has format: case <condition>: <equalTo>:
-		cases := []*SpecFactStmt{}
+		cases := []SpecificFactStmt{}
 		proofs := []StmtSlice{}
 		EqualTo := []Obj{}
 
@@ -556,7 +554,7 @@ func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
 	// Check if it's case-by-case or simple equal
 	if len(tb.body) > 0 && tb.body[0].header.is(glob.KeywordCase) {
 		// Case-by-case structure (possibly with prove cases: at the end)
-		caseByCaseFacts := []*SpecFactStmt{}
+		caseByCaseFacts := []SpecificFactStmt{}
 		caseByCaseEqualTo := []Obj{}
 		caseByCaseProofs := []StmtSlice{}
 
@@ -789,7 +787,11 @@ func (p *TbParser) haveObjStWithParamSetsStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	return NewHaveObjStWithParamSetsStmt(objNames, objSets, fact, tb.line), nil
+	if factAsPureSpecificFactStmt, ok := fact.(*PureSpecificFactStmt); ok {
+		return NewHaveObjStWithParamSetsStmt(objNames, objSets, factAsPureSpecificFactStmt, tb.line), nil
+	} else {
+		return nil, fmt.Errorf("expect pure specific fact, got %T", fact)
+	}
 }
 
 func (p *TbParser) bodyBlockFacts(tb *tokenBlock, uniFactDepth uniFactEnum, parseBodyFactNum int) ([]FactStmt, error) {
@@ -1060,6 +1062,10 @@ func (p *TbParser) claimStmt(tb *tokenBlock) (Stmt, error) {
 		if !isProve {
 			return nil, fmt.Errorf("contra is not supported for iff statement")
 		} else {
+			if len(tb.body) < 3 {
+				return nil, fmt.Errorf("expect two proofs after claim forall <=> type statement")
+			}
+
 			err := tb.body[2].header.skipKwAndColonCheckEOL(glob.KeywordProve)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
@@ -1085,7 +1091,11 @@ func (p *TbParser) claimStmt(tb *tokenBlock) (Stmt, error) {
 	if isProve {
 		return NewClaimProveStmt(toCheck, proof, tb.line), nil
 	} else {
-		return NewClaimProveByContradictionStmt(NewClaimProveStmt(toCheck, proof, tb.line), tb.line), nil
+		if asOrFact, ok := toCheck.(Spec_OrFact); ok {
+			return NewClaimProveByContradictionStmt(asOrFact, proof, tb.line), nil
+		} else {
+			return nil, fmt.Errorf("expect reversible fact in claim contra")
+		}
 	}
 }
 
@@ -1304,7 +1314,7 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	caseFacts := []*SpecFactStmt{}
+	caseFacts := []SpecificFactStmt{}
 	thenFacts := FactStmtSlice{}
 	proofs := []StmtSlice{}
 
@@ -1851,8 +1861,13 @@ func (p *TbParser) proveCommutativePropStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	if len(specFact.Params) != 2 {
-		return nil, ErrInLine(fmt.Errorf("expect 2 params, but got %d", len(specFact.Params)), tb)
+	specFactAsPureSpecificFactStmt, ok := specFact.(*PureSpecificFactStmt)
+	if !ok {
+		return nil, fmt.Errorf("expect pure specific fact, got %T", specFact)
+	}
+
+	if len(specFactAsPureSpecificFactStmt.Params) != 2 {
+		return nil, ErrInLine(fmt.Errorf("expect 2 params, but got %d", len(specFactAsPureSpecificFactStmt.Params)), tb)
 	}
 
 	err = tb.header.skip(glob.KeySymbolRightBrace)
@@ -1897,7 +1912,7 @@ func (p *TbParser) proveCommutativePropStmt(tb *tokenBlock) (Stmt, error) {
 		proofsRightToLeft = append(proofsRightToLeft, curStmt)
 	}
 
-	return NewProveIsCommutativePropStmt(specFact, proofs, proofsRightToLeft, tb.line), nil
+	return NewProveIsCommutativePropStmt(specFactAsPureSpecificFactStmt, proofs, proofsRightToLeft, tb.line), nil
 }
 
 func (p *TbParser) algoDefStmt(tb *tokenBlock) (Stmt, error) {
@@ -2071,7 +2086,11 @@ func (p *TbParser) proveByContradictionStmt(tb *tokenBlock) (Stmt, error) {
 		}
 		proofs = append(proofs, curStmt)
 	}
-	return NewClaimProveByContradictionStmt(NewClaimProveStmt(toCheck, proofs, tb.line), tb.line), nil
+	if asOrFact, ok := toCheck.(Spec_OrFact); ok {
+		return NewClaimProveByContradictionStmt(asOrFact, proofs, tb.line), nil
+	} else {
+		return nil, fmt.Errorf("expect reversible fact in claim contra")
+	}
 }
 
 func (p *TbParser) doNothingStmt(tb *tokenBlock) (Stmt, error) {
@@ -2195,7 +2214,12 @@ func (p *TbParser) provePropInferStmt(tb *tokenBlock) (*ProveInferStmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		return NewProveImplicationStmt(specFact, implicationFacts, proofs, tb.line), nil
+		specFactAsPureSpecificFactStmt, ok := specFact.(*PureSpecificFactStmt)
+		if !ok {
+			return nil, fmt.Errorf("expect pure specific fact, got %T", specFact)
+		}
+
+		return NewProveImplicationStmt(specFactAsPureSpecificFactStmt, implicationFacts, proofs, tb.line), nil
 	}
 
 	// Skip colon
@@ -2265,7 +2289,12 @@ func (p *TbParser) provePropInferStmt(tb *tokenBlock) (*ProveInferStmt, error) {
 		}
 	}
 
-	return NewProveImplicationStmt(specFact, implicationFacts, proofs, tb.line), nil
+	specFactAsPureSpecificFactStmt, ok := specFact.(*PureSpecificFactStmt)
+	if !ok {
+		return nil, fmt.Errorf("expect pure specific fact, got %T", specFact)
+	}
+
+	return NewProveImplicationStmt(specFactAsPureSpecificFactStmt, implicationFacts, proofs, tb.line), nil
 }
 
 func (p *TbParser) DefPropInferStmt(tb *tokenBlock) (*DefPropStmt, error) {
@@ -2363,16 +2392,16 @@ func (p *TbParser) implyStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt,
 
 		// Check that facts don't reference the same prop name
 		for _, fact := range iffFacts {
-			if factAsSpecFact, ok := fact.(*SpecFactStmt); ok {
-				if string(factAsSpecFact.PropName) == string(declHeader.Name) {
+			if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
+				if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
 					return nil, fmt.Errorf("iff fact cannot be the same as the implication being defined")
 				}
 			}
 		}
 
 		for _, fact := range implicationFacts {
-			if factAsSpecFact, ok := fact.(*SpecFactStmt); ok {
-				if string(factAsSpecFact.PropName) == string(declHeader.Name) {
+			if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
+				if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
 					return nil, fmt.Errorf("implication fact cannot be the same as the implication being defined")
 				}
 			}
@@ -2665,7 +2694,7 @@ func (p *TbParser) SpecFactOrOrStmt(tb *tokenBlock) (FactStmt, error) {
 		return start, nil
 	}
 
-	orFacts := []*SpecFactStmt{start}
+	orFacts := []SpecificFactStmt{start}
 	for tb.header.is(glob.KeywordOr) {
 		tb.header.skip(glob.KeywordOr)
 
@@ -2692,14 +2721,14 @@ func (p *TbParser) SpecFactOrOrStmt(tb *tokenBlock) (FactStmt, error) {
 // 	return ret, nil
 // }
 
-func (p *TbParser) specFactStmt(tb *tokenBlock) (*SpecFactStmt, error) {
+func (p *TbParser) specFactStmt(tb *tokenBlock) (SpecificFactStmt, error) {
 	stmt, err := p.specFactStmt_OrOneLineEqualsFact(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
 	switch astStmt := stmt.(type) {
-	case *SpecFactStmt:
+	case SpecificFactStmt:
 		return astStmt, nil
 	default:
 		return nil, fmt.Errorf("expect specific fact, get %s", astStmt.String())
@@ -2726,18 +2755,18 @@ func (p *TbParser) specFactStmt_OrOneLineEqualsFact(tb *tokenBlock) (FactStmt, e
 	if isTrue {
 		return ret, nil
 	} else {
-		return ret.ReverseTrue(), nil
+		return ret.ReverseIsTrue()[0], nil
 	}
 }
 
-func (p *TbParser) specFactWithoutExist_WithoutNot(tb *tokenBlock) (*SpecFactStmt, error) {
+func (p *TbParser) specFactWithoutExist_WithoutNot(tb *tokenBlock) (SpecificFactStmt, error) {
 	stmt, err := p.specFactWithoutExist_WithoutNot_Or_EqualsFact(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
 	switch astStmt := stmt.(type) {
-	case *SpecFactStmt:
+	case SpecificFactStmt:
 		return astStmt, nil
 	default:
 		return nil, fmt.Errorf("expect specific fact, get %s", astStmt.String())
@@ -2922,79 +2951,75 @@ func (p *TbParser) fact(tb *tokenBlock) (FactStmt, error) {
 	}
 }
 
-func (p *TbParser) skipDollarAtomParamsAsString(tb *tokenBlock) (Atom, []string, error) {
-	err := tb.header.skip(glob.KeySymbolDollar)
-	if err != nil {
-		return "", nil, err
-	}
+// func (p *TbParser) skipDollarAtomParamsAsString(tb *tokenBlock) (Atom, []string, error) {
+// 	err := tb.header.skip(glob.KeySymbolDollar)
+// 	if err != nil {
+// 		return "", nil, err
+// 	}
 
-	propName, err := p.notNumberAtom(tb)
-	if err != nil {
-		return "", nil, err
-	}
+// 	propName, err := p.notNumberAtom(tb)
+// 	if err != nil {
+// 		return "", nil, err
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return "", nil, err
-	}
+// 	err = tb.header.skip(glob.KeySymbolLeftBrace)
+// 	if err != nil {
+// 		return "", nil, err
+// 	}
 
-	params := []string{}
-	for !tb.header.is(glob.KeySymbolRightBrace) {
-		param, err := tb.header.next()
-		if err != nil {
-			return "", nil, err
-		}
-		params = append(params, param)
+// 	params := []string{}
+// 	for !tb.header.is(glob.KeySymbolRightBrace) {
+// 		param, err := tb.header.next()
+// 		if err != nil {
+// 			return "", nil, err
+// 		}
+// 		params = append(params, param)
 
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-		}
-	}
+// 		if tb.header.is(glob.KeySymbolComma) {
+// 			tb.header.skip(glob.KeySymbolComma)
+// 		}
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return "", nil, err
-	}
+// 	err = tb.header.skip(glob.KeySymbolRightBrace)
+// 	if err != nil {
+// 		return "", nil, err
+// 	}
 
-	return propName, params, nil
-}
+// 	return propName, params, nil
+// }
 
-func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*SpecFactStmt, error) {
+func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (SpecificFactStmt, error) {
 	err := tb.header.skip(glob.KeywordExist)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
 	if tb.header.is(glob.KeySymbolDollar) {
-		propName, params, err := p.skipDollarAtomParamsAsString(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
+		return nil, fmt.Errorf("for the time being exist $p(...) does not support")
+		// propName, params, err := p.skipDollarAtomParamsAsString(tb)
+		// if err != nil {
+		// 	return nil, ErrInLine(err, tb)
+		// }
 
-		paramSet := []Obj{}
-		for i := 0; i < len(params); i++ {
-			paramSet = append(paramSet, Atom(glob.KeywordSet))
-		}
+		// paramSet := []Obj{}
+		// for i := 0; i < len(params); i++ {
+		// 	paramSet = append(paramSet, Atom(glob.KeywordSet))
+		// }
 
-		paramAsObj := []Obj{}
-		for i := 0; i < len(params); i++ {
-			paramAsObj = append(paramAsObj, Atom(params[i]))
-		}
+		// // params 互相不能相同
+		// for i := 0; i < len(params); i++ {
+		// 	for j := i + 1; j < len(params); j++ {
+		// 		if params[i] == params[j] {
+		// 			return nil, fmt.Errorf("params %s and %s are the same", params[i], params[j])
+		// 		}
+		// 	}
+		// }
 
-		// params 互相不能相同
-		for i := 0; i < len(params); i++ {
-			for j := i + 1; j < len(params); j++ {
-				if params[i] == params[j] {
-					return nil, fmt.Errorf("params %s and %s are the same", params[i], params[j])
-				}
-			}
-		}
-
-		return NewExistStFact(TrueExist_St, propName, isTrue, params, paramSet, paramAsObj, tb.line), nil
+		// return NewExistSpecificFactStmt(true, params, NewPureSpecificFactStmt(isTrue, propName, paramAsObj, tb.line), tb.line), nil
 	}
 
-	// Parse parameters and parameter sets using param_paramSet_paramInSetFacts
-	existParams, existParamSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeywordSt, false)
+	// Parse parameters and parameter sets for exist statement
+	existParams, existParamSets, err := p.parseExistParamsAndSets(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -3018,7 +3043,7 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*SpecFactStmt, er
 	}
 
 	// spec fact 必须是 pureFact
-	if !pureSpecFact.IsPureFact() {
+	if _, ok := pureSpecFact.(*PureSpecificFactStmt); !ok {
 		return nil, fmt.Errorf("exist fact can not take exist fact, get %s", pureSpecFact)
 	}
 
@@ -3031,14 +3056,115 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (*SpecFactStmt, er
 		}
 	}
 
+	specFactAsPureSpecificFactStmt, ok := pureSpecFact.(*PureSpecificFactStmt)
+	if !ok {
+		return nil, fmt.Errorf("expect pure specific fact, got %T", pureSpecFact)
+	}
+
 	if isTrue {
-		return NewExistStFact(TrueExist_St, pureSpecFact.PropName, pureSpecFact.IsTrue(), existParams, existParamSets, pureSpecFact.Params, tb.line), nil
+		return NewExistSpecificFactStmt(true, existParams, existParamSets, specFactAsPureSpecificFactStmt, tb.line), nil
 	} else {
-		return NewExistStFact(FalseExist_St, pureSpecFact.PropName, pureSpecFact.IsTrue(), existParams, existParamSets, pureSpecFact.Params, tb.line), nil
+		return NewExistSpecificFactStmt(false, existParams, existParamSets, specFactAsPureSpecificFactStmt, tb.line), nil
 	}
 }
 
-func (p *TbParser) pureFuncSpecFact(tb *tokenBlock) (*SpecFactStmt, error) {
+// parseExistParamsAndSets parses parameters and parameter sets for exist statements.
+// It handles two cases:
+// 1. exist a, b, c st - no sets specified, default all to "set"
+// 2. exist a, b Z st or exist a Z, b N st - sets specified, use specified sets
+func (p *TbParser) parseExistParamsAndSets(tb *tokenBlock) ([]string, []Obj, error) {
+	params := []string{}
+	setParams := []Obj{}
+	hasSetSpecified := false
+
+	if tb.header.is(glob.KeywordSt) {
+		return params, setParams, nil
+	}
+
+	for {
+		// Read parameter name
+		param, err := tb.header.next()
+		if err != nil {
+			return nil, nil, err
+		}
+		param = AddPkgNameToName(p.PkgPathNameMgr.CurPkgDefaultName, param)
+		params = append(params, param)
+
+		// Check if next token is a comma or "st"
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			// Continue to next parameter
+			continue
+		}
+
+		if tb.header.is(glob.KeywordSt) {
+			// End of parameters, no set specified for this parameter
+			break
+		}
+
+		// Try to parse as set (Obj)
+		// Save position to check if parsing succeeds
+		savedIndex := tb.header.index
+		setParam, err := p.Obj(tb)
+		if err != nil {
+			// Not a set, restore position and error
+			tb.header.index = savedIndex
+			return nil, nil, fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeywordSt, tb.header.strAtCurIndexPlus(0))
+		}
+
+		// Successfully parsed a set
+		hasSetSpecified = true
+		setParams = append(setParams, setParam)
+
+		// Check if next token is comma or "st"
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			continue
+		}
+
+		if tb.header.is(glob.KeywordSt) {
+			break
+		}
+
+		return nil, nil, fmt.Errorf("expected ',' or '%s' but got '%s'", glob.KeywordSt, tb.header.strAtCurIndexPlus(0))
+	}
+
+	// Skip "st"
+	err := tb.header.skip(glob.KeywordSt)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Check for duplicate parameters
+	for i := range params {
+		for j := i + 1; j < len(params); j++ {
+			if params[i] == params[j] {
+				return nil, nil, fmt.Errorf("parameters cannot be repeated, get duplicate parameter: %s", params[i])
+			}
+		}
+	}
+
+	// If no sets were specified, default all to "set"
+	if !hasSetSpecified {
+		for range params {
+			setParams = append(setParams, Atom(glob.KeywordSet))
+		}
+	} else {
+		// If sets were specified, check if we need to fill missing ones
+		// This handles cases like "exist a, b Z st" where Z applies to both a and b
+		if len(setParams) < len(params) {
+			// Fill missing sets with the last specified set
+			lastSet := setParams[len(setParams)-1]
+			for len(setParams) < len(params) {
+				setParams = append(setParams, lastSet)
+			}
+		}
+	}
+
+	return params, setParams, nil
+}
+
+func (p *TbParser) pureFuncSpecFact(tb *tokenBlock) (*PureSpecificFactStmt, error) {
 	if tb.header.is(glob.FuncFactPrefix) {
 		tb.header.skip(glob.FuncFactPrefix)
 	}
@@ -3081,13 +3207,13 @@ func (p *TbParser) pureFuncSpecFact(tb *tokenBlock) (*SpecFactStmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	ret := NewSpecFactStmt(TruePure, propName, params, tb.line)
+	ret := NewPureSpecificFactStmt(true, propName, params, tb.line)
 
 	return ret, nil
 }
 
 func (p *TbParser) relaFactStmt_orRelaEquals(tb *tokenBlock) (FactStmt, error) {
-	var ret *SpecFactStmt
+	var ret *PureSpecificFactStmt
 
 	obj, err := p.Obj(tb)
 	if err != nil {
@@ -3106,7 +3232,7 @@ func (p *TbParser) relaFactStmt_orRelaEquals(tb *tokenBlock) (FactStmt, error) {
 		}
 
 		if tb.header.ExceedEnd() {
-			ret = NewSpecFactStmt(TruePure, propName, []Obj{obj}, tb.line)
+			ret = NewPureSpecificFactStmt(true, propName, []Obj{obj}, tb.line)
 		} else {
 			obj2, err := p.Obj(tb)
 			if err != nil {
@@ -3115,7 +3241,7 @@ func (p *TbParser) relaFactStmt_orRelaEquals(tb *tokenBlock) (FactStmt, error) {
 
 			params := []Obj{obj, obj2}
 
-			ret = NewSpecFactStmt(TruePure, propName, params, tb.line)
+			ret = NewPureSpecificFactStmt(true, propName, params, tb.line)
 		}
 	} else if !glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		return nil, fmt.Errorf("expect relation prop")
@@ -3128,21 +3254,20 @@ func (p *TbParser) relaFactStmt_orRelaEquals(tb *tokenBlock) (FactStmt, error) {
 		params := []Obj{obj, obj2}
 
 		if opt != glob.KeySymbolEqual {
-			ret = NewSpecFactStmt(TruePure, Atom(opt), params, tb.line)
+			ret = NewPureSpecificFactStmt(true, Atom(opt), params, tb.line)
 		} else {
 			// 循环地看下面一位是不是 = ，直到不是
 			if tb.header.is(glob.KeySymbolEqual) {
 				return p.relaEqualsFactStmt(tb, obj, obj2)
 			} else {
-				ret = NewSpecFactStmt(TruePure, Atom(opt), params, tb.line)
+				ret = NewPureSpecificFactStmt(true, Atom(opt), params, tb.line)
 			}
 		}
 	}
 
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
-	if ret.NameIs(glob.KeySymbolNotEqual) {
-		ret.FactType = FalsePure
-		ret.PropName = Atom(glob.KeySymbolEqual)
+	if ret.GetPropName() == glob.KeySymbolNotEqual {
+		return NewPureSpecificFactStmt(false, Atom(glob.KeySymbolEqual), ret.Params, tb.line), nil
 	}
 
 	return ret, nil
@@ -3604,7 +3729,7 @@ func (p *TbParser) relaEqualsFactStmt(tb *tokenBlock, obj, obj2 Obj) (*EqualsFac
 }
 
 func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, error) {
-	var ret *SpecFactStmt
+	var ret *PureSpecificFactStmt
 
 	obj, err := p.Obj(tb)
 	if err != nil {
@@ -3623,7 +3748,7 @@ func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, err
 		}
 
 		if tb.header.ExceedEnd() {
-			ret = NewSpecFactStmt(TruePure, propName, []Obj{obj}, tb.line)
+			ret = NewPureSpecificFactStmt(true, propName, []Obj{obj}, tb.line)
 		} else {
 			obj2, err := p.Obj(tb)
 			if err != nil {
@@ -3632,7 +3757,7 @@ func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, err
 
 			params := []Obj{obj, obj2}
 
-			ret = NewSpecFactStmt(TruePure, propName, params, tb.line)
+			ret = NewPureSpecificFactStmt(true, propName, params, tb.line)
 		}
 	} else if glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		obj2, err := p.Obj(tb)
@@ -3651,7 +3776,7 @@ func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, err
 		if !tb.header.ExceedEnd() {
 			// or 的情况
 			if tb.header.is(glob.KeywordOr) {
-				ret = NewSpecFactStmt(TruePure, Atom(opt), []Obj{obj, obj2}, tb.line)
+				ret = NewPureSpecificFactStmt(true, Atom(opt), []Obj{obj, obj2}, tb.line)
 				return p.inlineOrFactWithFirstFact(tb, ret)
 			}
 
@@ -3660,15 +3785,14 @@ func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, err
 
 		params := []Obj{obj, obj2}
 
-		ret = NewSpecFactStmt(TruePure, Atom(opt), params, tb.line)
+		ret = NewPureSpecificFactStmt(true, Atom(opt), params, tb.line)
 	} else {
 		return nil, fmt.Errorf("expect relation prop")
 	}
 
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
-	if ret.NameIs(glob.KeySymbolNotEqual) {
-		ret.FactType = FalsePure
-		ret.PropName = Atom(glob.KeySymbolEqual)
+	if ret.GetPropName() == glob.KeySymbolNotEqual {
+		return NewPureSpecificFactStmt(false, Atom(glob.KeySymbolEqual), ret.Params, tb.line), nil
 	}
 
 	return ret, nil
@@ -3944,10 +4068,6 @@ func (p *TbParser) witnessStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	if tb.header.is(glob.KeySymbolDollar) {
-		return p.witnessShortStmt(tb)
-	}
-
 	equalTos := []Obj{}
 	for !tb.header.is(glob.KeySymbolColon) {
 		equalTo, err := p.Obj(tb)
@@ -3983,8 +4103,13 @@ func (p *TbParser) witnessStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
+	specFactAsPureSpecificFactStmt, ok := fact.(*PureSpecificFactStmt)
+	if !ok {
+		return nil, fmt.Errorf("expect pure specific fact, got %T", fact)
+	}
+
 	if tb.header.ExceedEnd() {
-		return NewProveExistStmt(params, paramSets, equalTos, fact, []Stmt{}, tb.line), nil
+		return NewProveExistStmt(params, paramSets, equalTos, specFactAsPureSpecificFactStmt, []Stmt{}, tb.line), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -3997,54 +4122,7 @@ func (p *TbParser) witnessStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	return NewProveExistStmt(params, paramSets, equalTos, fact, proofs, tb.line), nil
-}
-
-func (p *TbParser) haveShortStmt(tb *tokenBlock) (*HaveShortStmt, error) {
-	err := tb.header.skip(glob.KeywordHave)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	// Parse specFact like $p(a, b)
-	specFact, err := p.pureFuncSpecFact(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	if !tb.header.ExceedEnd() {
-		return nil, ErrInLine(fmt.Errorf("unexpected token after have $p(...), expected end of statement"), tb)
-	}
-
-	return NewHaveShortStmt(specFact, tb.line), nil
-}
-
-func (p *TbParser) witnessShortStmt(tb *tokenBlock) (*WitnessShortStmt, error) {
-	// Parse specFact like $p(1, 2)
-	specFact, err := p.pureFuncSpecFact(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	var proofs []Stmt
-
-	// Check for optional proofs
-	if tb.header.is(glob.KeySymbolColon) {
-		err = tb.header.skip(glob.KeySymbolColon)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		proofs, err = p.parseTbBodyAndGetStmts(tb.body)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-	} else if !tb.header.ExceedEnd() {
-		// Unexpected token
-		return nil, ErrInLine(fmt.Errorf("unexpected token after witness $p(...), expected ':' or end of statement"), tb)
-	}
-
-	return NewWitnessShortStmt(specFact, proofs, tb.line), nil
+	return NewProveExistStmt(params, paramSets, equalTos, specFactAsPureSpecificFactStmt, proofs, tb.line), nil
 }
 
 func (p *TbParser) inferTemplateStmt(tb *tokenBlock) (*InferTemplateStmt, error) {

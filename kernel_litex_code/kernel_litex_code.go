@@ -57,7 +57,7 @@ know forall x, y, z R: x + y = z => x = z - y
 know forall x,y R: x + y = 0 => x = -y
 
 # TODO: 已经放到 Std/Int/main.lit 中
-know forall x,y Z => $in(x+y, Z), $in(x-y, Z), $in(x*y, Z)
+# know forall x,y Z => $in(x+y, Z), $in(x-y, Z), $in(x*y, Z)
 	
 know forall x, y, z R: x + y = z => y + x = z
 
@@ -507,6 +507,41 @@ let fn pow(x R, y R) R:
 	dom:
 		x >= 0
 		x != 0 or y != 0
+
+know:
+	# Basic properties
+	forall x R: x > 0 => pow(x, 0) = 1
+	forall x R: x >= 0 => pow(x, 1) = x
+	forall y R: pow(1, y) = 1
+	forall x R: x > 0 => pow(x, -1) = 1 / x
+	
+	# Product properties
+	forall x, y, z R: x > 0, y != 0 or z != 0 => pow(x, y + z) = pow(x, y) * pow(x, z)
+	forall x, y, z R: x > 0, pow(x, y) >= 0 => pow(x, y * z) = pow(pow(x, y), z)
+	forall x, y, z R: x >= 0, y >= 0, x != 0 or y != 0 or z != 0 => pow(x * y, z) = pow(x, z) * pow(y, z)
+	forall x, y, z R: x > 0, y != 0, z != 0 => pow(x, y / z) = pow(pow(x, y), 1 / z)
+	
+	# Quotient properties
+	forall x, y, z R: x > 0, y > 0, x != 0 or y != 0 or z != 0 => pow(x / y, z) = pow(x, z) / pow(y, z)
+	
+	# Negative exponent
+	forall x, y R: x > 0, y != 0 => pow(x, -y) = 1 / pow(x, y)
+	
+	# Positivity
+	forall x, y R: x > 0 => pow(x, y) > 0
+	forall x, y R: x = 0, y > 0 => pow(x, y) = 0
+	
+	# Monotonicity
+	forall x, y, z R: x > 1, y > z => pow(x, y) > pow(x, z)
+	forall x, y, z R: 0 < x, x < 1, y > z => pow(x, y) < pow(x, z)
+	forall x, y, z R: x > 0, y > z, y > 0, z > 0 => pow(x, y) > pow(x, z)
+	
+	# Relationship with sqrt
+	forall x R: x >= 0 => pow(x, 1/2) = sqrt(x)
+	forall x R: x >= 0 => pow(x, 2) = x * x
+	
+	# Relationship with ^ operator
+	forall x, y R: x >= 0, x != 0 or y != 0 => pow(x, y) = x ^ y
 
 know forall b N: b >= 0
 
@@ -1090,4 +1125,50 @@ know forall x finite_set, y set: set_minus(x, y) $is_finite_set
 know:
 	forall x, y R: x * y = 0 => x = 0 or y = 0
 	forall x, y R: x = 0 or y = 0 => x * y = 0
+
+know forall a N: exist s finite_set st count(s) = a
+
+know forall x R, y N_pos: y % 2 = 0=> x ^ y >= 0, 0 <= x ^ y
+
+know forall x R: x * x >=0, 0 <= x * x
+
+know forall x, y, z Z, d R: y != 0, (x/y)^z = d => x^z = d * y^z
+
+# 貌似把下面这know注释掉可以让整个系统快20%？？
+know:
+	forall x R_pos: x $in R, x > 0
+	forall x R_neg: x $in R, x < 0
+	forall x R_not0: x $in R, x != 0
+	forall x Z_neg: x $in Z, x < 0, x $in Q, x $in R
+	forall x Z_not0: x $in Z, x != 0, x $in Q, x $in R
+	forall x Q_pos: x $in Q, x > 0, x $in R
+	forall x Q_neg: x $in Q, x < 0, x $in R
+	forall x Q_not0: x $in Q, x != 0, x $in R
+
+know:
+	forall x, y R: x < y or x >= y
+	forall x, y R: x > y or x <= y
+	forall x, y R: x <= y or x > y
+	forall x, y R: x >= y or x < y
+
+know:
+	forall a, b, c set: a $in b => a $in union(b, c)
+	forall a, b, c set: a $in c => a $in union(b, c)
+
+know:
+	forall a Z, b Z: a < b + 1 => a < b or a = b
+	forall a, b R: a <= b => a < b or a = b
+
+know:
+	# 把这个删了，就会有证明三角不等式的bug。打断点在ver_SpecMem的 ok, uniConMap, err := getOkUniConMapErr(knownFact_paramProcessed.SpecFact.(*ast.PureSpecificFactStmt).Params, knownFact_paramProcessed.UniFact.Params, stmtToMatch.Params) 上面，让它在565行的 i == 50 && string(stmtToMatch.PropName) == "<" 触发。然后在562行的knownFact_paramProcessed := knownFacts[i]上面 i == 5 && string(stmtToMatch.PropName) == "<="
+	# 是 用 forall a, b R: a <= b <=> a < b or a = b证明的时候有问题
+	# 在证明的时候用 a < b 默认是错的，然后要证明 a= b 的时候出问题
+	# 然后在 verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem 里面ver.verEqualSpecMem(left, right, state) 出问题。
+	forall a, b R, c R_pos: a <= b => a <= b + c
+
+know forall x Z, n Z: x <= n + 1 => x <= n or x = n+ 1
+
+know forall s power_set(R): $is_finite_set(s) => exist a s st $is_max(a, s)
+
+know forall q Q: exist x Z, y N_pos st q = x / y
 `

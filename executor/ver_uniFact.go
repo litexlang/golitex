@@ -41,7 +41,7 @@ func (ver *Verifier) verUniFact_checkFactOneByOne(oldStmt *ast.UniFactStmt, stat
 
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(oldStmt)
 	if err != nil {
-		return glob.NewVerMsg(glob.StmtRetTypeError, oldStmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		return glob.NewVerRet(glob.StmtRetTypeError, oldStmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 
 	// 检查所有 paramSet 是否都是 list_set，如果是，自动使用 enum 的逻辑
@@ -57,7 +57,7 @@ func (ver *Verifier) verUniFact_checkFactOneByOne(oldStmt *ast.UniFactStmt, stat
 	for _, condFact := range newStmtPtr.DomFacts {
 		ret := ver.Env.NewFactWithCheckingNameDefined(condFact)
 		if ret.IsErr() {
-			return glob.NewVerMsg(glob.StmtRetTypeError, condFact.String(), glob.BuiltinLine0, []string{ret.String()})
+			return glob.NewVerRet(glob.StmtRetTypeError, condFact.String(), glob.BuiltinLine0, []string{ret.String()})
 		}
 	}
 
@@ -72,7 +72,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 	// 0. 如果dom和then里全是or_spec 那可以继续，否则就不行
 	domFactsReversible := []ast.Spec_OrFact{}
 	for _, domFact := range oldStmt.DomFacts {
-		if specFact, ok := domFact.(*ast.SpecFactStmt); ok {
+		if specFact, ok := domFact.(ast.SpecificFactStmt); ok {
 			domFactsReversible = append(domFactsReversible, specFact)
 		} else if orStmt, ok := domFact.(*ast.OrStmt); ok {
 			domFactsReversible = append(domFactsReversible, orStmt)
@@ -84,7 +84,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 
 	thenFactsReversible := []ast.Spec_OrFact{}
 	for _, thenFact := range oldStmt.ThenFacts {
-		if specFact, ok := thenFact.(*ast.SpecFactStmt); ok {
+		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
 			thenFactsReversible = append(thenFactsReversible, specFact)
 		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
 			thenFactsReversible = append(thenFactsReversible, orStmt)
@@ -103,13 +103,13 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 		// Replace parameters in UniFactStmt
 		newStmtPtr, _, err := useRandomParamToReplaceOriginalParamInUniFact(oldStmt, paramMap, paramMapStrToStr)
 		if err != nil {
-			return glob.NewVerMsg(glob.StmtRetTypeError, oldStmt.String(), glob.BuiltinLine0, []string{err.Error()})
+			return glob.NewVerRet(glob.StmtRetTypeError, oldStmt.String(), glob.BuiltinLine0, []string{err.Error()})
 		}
 		oldStmt = newStmtPtr
 		// Rebuild reversible facts with replaced parameters
 		domFactsReversible = []ast.Spec_OrFact{}
 		for _, domFact := range oldStmt.DomFacts {
-			if specFact, ok := domFact.(*ast.SpecFactStmt); ok {
+			if specFact, ok := domFact.(ast.SpecificFactStmt); ok {
 				domFactsReversible = append(domFactsReversible, specFact)
 			} else if orStmt, ok := domFact.(*ast.OrStmt); ok {
 				domFactsReversible = append(domFactsReversible, orStmt)
@@ -117,7 +117,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 		}
 		thenFactsReversible = []ast.Spec_OrFact{}
 		for _, thenFact := range oldStmt.ThenFacts {
-			if specFact, ok := thenFact.(*ast.SpecFactStmt); ok {
+			if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
 				thenFactsReversible = append(thenFactsReversible, specFact)
 			} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
 				thenFactsReversible = append(thenFactsReversible, orStmt)
@@ -129,7 +129,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 	defLeftStmt := ast.NewDefLetStmt(oldStmt.Params, oldStmt.ParamSets, oldStmt.DomFacts, oldStmt.Line)
 	ret := ver.Env.DefLetStmt(defLeftStmt)
 	if ret.IsErr() {
-		return glob.NewVerMsg(glob.StmtRetTypeError, oldStmt.String(), glob.BuiltinLine0, []string{ret.String()})
+		return glob.NewVerRet(glob.StmtRetTypeError, oldStmt.String(), glob.BuiltinLine0, []string{ret.String()})
 	}
 
 	// 2. 把uni变成 inferStmt，然后执行inferStmt
@@ -138,9 +138,9 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 	execRet := exec.inferStmt(inferStmt)
 
 	if execRet.IsErr() {
-		return glob.NewVerMsg(glob.StmtRetTypeError, oldStmt.String(), glob.BuiltinLine0, []string{execRet.String()})
+		return glob.NewVerRet(glob.StmtRetTypeError, oldStmt.String(), glob.BuiltinLine0, []string{execRet.String()})
 	} else if execRet.IsTrue() {
-		return glob.NewVerMsg(glob.StmtRetTypeTrue, oldStmt.String(), glob.BuiltinLine0, []string{})
+		return glob.NewVerRet(glob.StmtRetTypeTrue, oldStmt.String(), glob.BuiltinLine0, []string{})
 	} else {
 		return glob.NewEmptyVerRetUnknown()
 	}
@@ -158,7 +158,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		if verRet.IsUnknown() {
 			if state.WithMsg {
 				msgs := append(verRet.VerifyMsgs, fmt.Sprintf("%s is unknown", thenFact))
-				return glob.NewVerMsg(glob.StmtRetTypeUnknown, thenFact.String(), glob.BuiltinLine0, msgs)
+				return glob.NewVerRet(glob.StmtRetTypeUnknown, thenFact.String(), glob.BuiltinLine0, msgs)
 			}
 			return glob.NewEmptyVerRetUnknown()
 		}
@@ -166,16 +166,16 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		// if true, store it
 		ret := ver.Env.NewFactWithCheckingNameDefined(thenFact)
 		if ret.IsErr() {
-			return glob.NewVerMsg(glob.StmtRetTypeError, thenFact.String(), glob.BuiltinLine0, []string{ret.String()})
+			return glob.NewVerRet(glob.StmtRetTypeError, thenFact.String(), glob.BuiltinLine0, []string{ret.String()})
 		}
 
 		msgs = append(msgs, verRet.String())
 	}
 
 	if state.WithMsg {
-		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, msgs)
+		return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, msgs)
 	}
-	return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, msgs)
+	return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, msgs)
 }
 
 func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactStmt) (*ast.UniFactStmt, error) {
@@ -257,7 +257,7 @@ func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerSt
 		for _, domFact := range stmt.DomFacts {
 			instantiatedDomFact, err := domFact.InstantiateFact(uniMap)
 			if err != nil {
-				return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+				return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 			}
 
 			verRet := ver.VerFactStmt(instantiatedDomFact, state)
@@ -274,7 +274,7 @@ func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerSt
 						return verRet
 					}
 					if verRet.IsUnknown() {
-						return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("domain fact in universal fact must be true or false, cannot be unknown: %s", instantiatedDomFact)})
+						return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("domain fact in universal fact must be true or false, cannot be unknown: %s", instantiatedDomFact)})
 					}
 					verifyProcessMsgs = append(verifyProcessMsgs, verRet)
 				}
@@ -292,7 +292,7 @@ func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerSt
 		for _, thenFact := range stmt.ThenFacts {
 			instantiatedThenFact, err := thenFact.InstantiateFact(uniMap)
 			if err != nil {
-				return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+				return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 			}
 
 			verRet := ver.VerFactStmt(instantiatedThenFact, state)
@@ -300,7 +300,7 @@ func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerSt
 				return verRet
 			}
 			if verRet.IsUnknown() {
-				return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("failed to prove instantiated then fact: %s", instantiatedThenFact)})
+				return glob.NewVerRet(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("failed to prove instantiated then fact: %s", instantiatedThenFact)})
 			}
 			verifyProcessMsgs = append(verifyProcessMsgs, verRet)
 		}
@@ -309,7 +309,7 @@ func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerSt
 	// 所有组合都验证通过
 	if state.WithMsg {
 		msgs := []string{"proved by enumeration (all paramSets are list_set)"}
-		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, msgs)
+		return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, msgs)
 	}
 	return glob.NewEmptyVerRetTrue()
 }

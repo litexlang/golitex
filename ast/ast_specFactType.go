@@ -14,10 +14,6 @@
 
 package litex_ast
 
-import (
-	glob "golitex/glob"
-)
-
 type SpecFactType uint8
 
 const (
@@ -27,51 +23,51 @@ const (
 	FalseExist_St
 )
 
-func (stmt *SpecFactStmt) ReverseTrue() *SpecFactStmt {
-	if stmt.FactType == TruePure {
-		return NewSpecFactStmt(FalsePure, stmt.PropName, stmt.Params, stmt.Line)
-	} else if stmt.FactType == FalsePure {
-		return NewSpecFactStmt(TruePure, stmt.PropName, stmt.Params, stmt.Line)
-	} else if stmt.FactType == TrueExist_St {
-		return NewSpecFactStmt(FalseExist_St, stmt.PropName, stmt.Params, stmt.Line)
-	} else if stmt.FactType == FalseExist_St {
-		return NewSpecFactStmt(TrueExist_St, stmt.PropName, stmt.Params, stmt.Line)
-	}
-	return nil
-}
+// func (stmt *SpecFactStmt) ReverseTrue() *SpecFactStmt {
+// 	if stmt.FactType == TruePure {
+// 		return NewSpecFactStmt(FalsePure, stmt.PropName, stmt.Params, stmt.Line)
+// 	} else if stmt.FactType == FalsePure {
+// 		return NewSpecFactStmt(TruePure, stmt.PropName, stmt.Params, stmt.Line)
+// 	} else if stmt.FactType == TrueExist_St {
+// 		return NewSpecFactStmt(FalseExist_St, stmt.PropName, stmt.Params, stmt.Line)
+// 	} else if stmt.FactType == FalseExist_St {
+// 		return NewSpecFactStmt(TrueExist_St, stmt.PropName, stmt.Params, stmt.Line)
+// 	}
+// 	return nil
+// }
 
-func (f *SpecFactStmt) IsPropNameEqual() bool {
-	return string(f.PropName) == glob.KeySymbolEqual
-}
+// func (f *PureSpecificFactStmt) IsPropNameEqual() bool {
+// 	return string(f.PropName) == glob.KeySymbolEqual
+// }
 
-func (f *SpecFactStmt) IsPureFact() bool {
-	return f.FactType == TruePure || f.FactType == FalsePure
-}
+// func (f *SpecFactStmt) IsPureFact() bool {
+// 	return f.FactType == TruePure || f.FactType == FalsePure
+// }
 
-func (f *SpecFactStmt) IsExist_St_Fact() bool {
-	return f.FactType == TrueExist_St || f.FactType == FalseExist_St
-}
+// func (f *SpecFactStmt) IsExist_St_Fact() bool {
+// 	return f.FactType == TrueExist_St || f.FactType == FalseExist_St
+// }
 
-func (f *SpecFactStmt) IsTrue() bool {
-	return f.FactType == TruePure || f.FactType == TrueExist_St
-}
+// func (f *SpecFactStmt) IsTrue() bool {
+// 	return f.FactType == TruePure || f.FactType == TrueExist_St
+// }
 
-func (f *SpecFactStmt) NameIs(givenName string) bool {
-	return string(f.PropName) == givenName
-}
+// func (f *SpecFactStmt) NameIs(givenName string) bool {
+// 	return string(f.PropName) == givenName
+// }
 
-func (f *SpecFactStmt) IsTruePure() bool {
-	return f.FactType == TruePure
-}
+// func (f *SpecFactStmt) IsTruePure() bool {
+// 	return f.FactType == TruePure
+// }
 
-func (f *SpecFactStmt) IsFalsePure() bool {
-	return f.FactType == FalsePure
-}
+// func (f *SpecFactStmt) IsFalsePure() bool {
+// 	return f.FactType == FalsePure
+// }
 
-func (f *SpecFactStmt) IsTrueExist_St() bool {
-	return f.FactType == TrueExist_St
-}
+// func (f *SpecFactStmt) IsTrueExist_St() bool {
+// 	return f.FactType == TrueExist_St
+// }
 
-func (f *SpecFactStmt) IsFalseExist_St() bool {
-	return f.FactType == FalseExist_St
-}
+// func (f *SpecFactStmt) IsFalseExist_St() bool {
+// 	return f.FactType == FalseExist_St
+// }
