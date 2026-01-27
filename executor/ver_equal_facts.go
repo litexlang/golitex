@@ -37,13 +37,8 @@ func (ver *Verifier) cmpObj_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.
 		return glob.NewEmptyVerRetTrue()
 	}
 
-	// if ok {
-	// 	return true, nil
-	// }
-
-	// if ok, err := ver.decomposeFcFnsAndCheckEquality_WithoutState(left, right, cmp.Cmp_ByBIR); err != nil {
-	// if ok, msg, err := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.FcsEqualBy_Eval_ShareKnownEqualMem); err != nil {
-	return ver.decomposeObjFnsAndCheckEquality(left, right, state, ver.objEqualSpec)
+	// return ver.decomposeObjFnsAndCheckEquality(left, right, state, ver.objEqualSpec)
+	return glob.NewEmptyVerRetUnknown()
 }
 
 func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj, state *VerState, areEqualObjs func(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet) *glob.VerRet {

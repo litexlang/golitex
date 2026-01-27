@@ -20,15 +20,14 @@ import (
 )
 
 func (ver *Verifier) verTrueEqualFactAndCheckFnReq2(stmt *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
+	nextState := state.CopyAndReqOkToTrue()
 	if !state.ReqOk {
 		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
 		}
-
-		state.UpdateReqOkToTrue()
 	}
 
-	if verRet := ver.verTrueEqualWholeProcess(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+	if verRet := ver.verTrueEqualWholeProcess(stmt, nextState); verRet.IsTrue() || verRet.IsErr() {
 		return verRet
 	}
 

@@ -128,6 +128,7 @@ prop is_vertical(s1 power_set(cart(R, R)), s2 power_set(cart(R, R)), a, b, c, d,
     <=>:
         a * d + b * e = 0
 
+"""
 # 点到直线的距离公式：点 pt 到直线 a * x + b * y = c 的距离
 have fn:
     distance_point_to_line(pt cart(R, R), a, b, c R) R:
@@ -154,5 +155,4 @@ prove:
     abs(-1) = 1
     distance_point_to_line((0, 0), 1, 1, 1) = 1 / sqrt(2)
 
-
-    
+"""
