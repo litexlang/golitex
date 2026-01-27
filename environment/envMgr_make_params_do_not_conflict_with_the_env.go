@@ -85,7 +85,7 @@ func (envMgr *EnvMgr) makeUniFactParamsInThisUniFactDoNotConflictWithEnv_getNewP
 			newParamsSet[param] = struct{}{}
 			formerParamToNewParamMap[param] = ast.Atom(param)
 		} else {
-			newParam := envMgr.GenerateUndeclaredRandomName_AndNotInMap(newParamsSet)
+			newParam := envMgr.GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(newParamsSet)
 			newParams = append(newParams, newParam)
 			newParamsSet[newParam] = struct{}{}
 			formerParamToNewParamMap[param] = ast.Atom(newParam)

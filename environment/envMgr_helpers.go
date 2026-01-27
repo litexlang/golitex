@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (envMgr *EnvMgr) GenerateUndeclaredRandomName() string {
+func (envMgr *EnvMgr) GenerateUnusedRandomName() string {
 	i := 4
 	var randomStr string
 	for {
@@ -35,7 +35,7 @@ func (envMgr *EnvMgr) GenerateUndeclaredRandomName() string {
 	}
 }
 
-func (envMgr *EnvMgr) GenerateUndeclaredRandomName_AndNotInMap(m map[string]struct{}) string {
+func (envMgr *EnvMgr) GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(m map[string]struct{}) string {
 	i := 4
 	var randomStr string
 	for {
@@ -563,7 +563,7 @@ func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFa
 	// 生产一个不冲突的exist fact struct
 	newExistParams := make([]string, len(existFactStruct.ExistFreeParams))
 	for i := range existFactStruct.ExistFreeParams {
-		newExistParams[i] = envMgr.GenerateUndeclaredRandomName_AndNotInMap(uniMap)
+		newExistParams[i] = envMgr.GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(uniMap)
 	}
 
 	// // 把 set 也换成不冲突的
@@ -608,13 +608,13 @@ func (envMgr *EnvMgr) AnonymousFnToInstFnTemplate(objFnTypeT *ast.FnObj) (*ast.A
 
 	randomParams := []string{}
 	for range len(paramSets) {
-		randomParams = append(randomParams, envMgr.GenerateUndeclaredRandomName())
+		randomParams = append(randomParams, envMgr.GenerateUnusedRandomName())
 	}
 
 	return ast.NewFnTStruct(randomParams, paramSets, retSet, []ast.FactStmt{}, []ast.FactStmt{}, glob.BuiltinLine0), true
 }
 
-func (envMgr *EnvMgr) GetUniFactFactFreeParamsNotConflictWithDefinedParams(fact *ast.UniFactStmt) *ast.UniFactStmt {
+func (envMgr *EnvMgr) GetUniFactFactFreeParamsNotConflictWithDefinedParams(fact *ast.UniFactStmt, extraNamesThatCanNotBeUsed map[string]struct{}) *ast.UniFactStmt {
 	uniMap := map[string]ast.Obj{}
 	newFreeParams := []string{}
 	moreUnAvailableParams := map[string]struct{}{}
@@ -623,7 +623,7 @@ func (envMgr *EnvMgr) GetUniFactFactFreeParamsNotConflictWithDefinedParams(fact 
 
 	for _, freeParam := range fact.Params {
 		if envMgr.IsNameUnavailable(freeParam, moreUnAvailableParams).IsNotTrue() {
-			noConflictedParam := envMgr.GenerateUndeclaredRandomName()
+			noConflictedParam := envMgr.GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(extraNamesThatCanNotBeUsed)
 			newFreeParams = append(newFreeParams, noConflictedParam)
 			moreUnAvailableParams[noConflictedParam] = struct{}{}
 			uniMap[freeParam] = ast.Atom(noConflictedParam)

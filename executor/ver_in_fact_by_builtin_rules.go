@@ -571,7 +571,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 
 	randomNames := []string{}
 	for i := 0; i < len(leftIsInWhichFnTT.AsFnTStruct.Params); i++ {
-		randomNames = append(randomNames, ver.Env.GenerateUndeclaredRandomName())
+		randomNames = append(randomNames, ver.Env.GenerateUnusedRandomName())
 	}
 	randomAtoms := []ast.Obj{}
 	for i := 0; i < len(leftIsInWhichFnTT.AsFnTStruct.Params); i++ {
