@@ -56,13 +56,6 @@ func (ver *Verifier) matchParamsWithFreeParamsWithInstParamInExistFact(freeParam
 		return false, nil
 	}
 
-	for i := range len(freeParams) {
-		_, ok := freeParamMatchInstParamMap[freeParams[i]]
-		if !ok {
-			return false, nil
-		}
-	}
-
 	nextState := NewVerState(2, false, true)
 	for i, knownParam := range knownExistParamSetsAndParamsInPureFact {
 		instKnownParam, err := knownParam.Instantiate(freeParamMatchInstParamMap)

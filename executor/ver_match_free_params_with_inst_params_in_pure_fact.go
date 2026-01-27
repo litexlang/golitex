@@ -27,16 +27,16 @@ func (ver *Verifier) matchParamsWithFreeParamsWithInstParamInPureFact(freeParams
 
 	allInstParamsThatEachFreeParamMatchesMap := ver.getAllInstParamsThatEachFreeParamMatchesInPureFact(freeParams, knownParams, givenParams)
 
+	for i := range len(freeParams) {
+		items, ok := allInstParamsThatEachFreeParamMatchesMap[freeParams[i]]
+		if !ok || len(items) == 0 {
+			return false, nil
+		}
+	}
+
 	ok, freeParamMatchInstParamMap := ver.checkEachFreeParamMatchesEqualInstParams(allInstParamsThatEachFreeParamMatchesMap)
 	if !ok {
 		return false, nil
-	}
-
-	for i := range len(freeParams) {
-		_, ok := freeParamMatchInstParamMap[freeParams[i]]
-		if !ok {
-			return false, nil
-		}
 	}
 
 	// known parameters must equal to given parameters
