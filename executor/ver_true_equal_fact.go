@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verTrueEqualFactAndCheckFnReq2(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) VerTrueEqualFactAndCheckFnReq2(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 	if !state.ReqOk {
 		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
@@ -36,9 +36,17 @@ func (ver *Verifier) verTrueEqualFactAndCheckFnReq2(stmt ast.SpecificFactStmt, s
 		return verRet
 	}
 
-	// if verRet := ver.verByReplaceObjInSpecFactWithValueAndCompute(stmt, state); verRet.IsTrue() || verRet.IsErr() {
-	// 	return verRet
-	// }
-
 	return glob.NewEmptyVerRetUnknown()
+}
+
+func (ver *Verifier) verTrueEqualFactPreProcess(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	panic("not implemented")
+}
+
+func (ver *Verifier) verTrueEqualFactMainLogic(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	panic("not implemented")
+}
+
+func (ver *Verifier) verTrueEqualFactPostProcess(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	panic("not implemented")
 }

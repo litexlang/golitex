@@ -36,7 +36,7 @@ func (ver *Verifier) VerTrueEqualFactAndCheckFnReq(stmt ast.SpecificFactStmt, st
 		return verRet
 	}
 
-	if verRet := ver.verTrueEqualFactMainLogic(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+	if verRet := ver.verTrueEqualFactOldMainLogic(stmt, state); verRet.IsTrue() || verRet.IsErr() {
 		return verRet
 	}
 
@@ -47,7 +47,7 @@ func (ver *Verifier) VerTrueEqualFactAndCheckFnReq(stmt ast.SpecificFactStmt, st
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verTrueEqualFactMainLogic(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verTrueEqualFactOldMainLogic(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 
 	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
