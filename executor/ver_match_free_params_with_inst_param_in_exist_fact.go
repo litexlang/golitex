@@ -120,7 +120,7 @@ func (ver *Verifier) matchObjectWithFreeParamsWithInstObjectInExistFactByItsExis
 	case *ast.FnObj:
 		switch asGivenParam := givenParam.(type) {
 		case ast.Atom:
-			return ver.matchObjWithFreeParamsAsFnObjWithInstObjAsAtomInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
+			return false, nil
 		case *ast.FnObj:
 			return ver.matchObjWithFreeParamsAsFnObjWithInstObjAsFnObjInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
 		}
@@ -141,7 +141,7 @@ func (ver *Verifier) matchParamWithFreeParamsWithInstParamInExistFactByItsPureFa
 	case *ast.FnObj:
 		switch asGivenParam := givenParam.(type) {
 		case ast.Atom:
-			return ver.matchObjWithFreeParamsAsFnObjWithInstObjAsAtomInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
+			return false, nil
 		case *ast.FnObj:
 			return ver.matchObjWithFreeParamsAsFnObjWithInstObjAsFnObjInExistFact(freeParams, existFreeParams, asKnownParam, asGivenParam)
 		}
@@ -219,9 +219,9 @@ func (ver *Verifier) matchObjWithFreeParamsAsAtomWithInstObjAsFnObjInExistFact(f
 	}
 }
 
-func (ver *Verifier) matchObjWithFreeParamsAsFnObjWithInstObjAsAtomInExistFact(freeParams []string, existFreeParams []string, knownParam *ast.FnObj, givenParam ast.Atom) (bool, map[string]ast.Obj) {
-	return false, nil
-}
+// func (ver *Verifier) matchObjWithFreeParamsAsFnObjWithInstObjAsAtomInExistFact(freeParams []string, existFreeParams []string, knownParam *ast.FnObj, givenParam ast.Atom) (bool, map[string]ast.Obj) {
+// 	return false, nil
+// }
 
 func (ver *Verifier) matchObjWithFreeParamsAsFnObjWithInstObjAsFnObjInExistFact(freeParams []string, existFreeParams []string, knownParam *ast.FnObj, givenParam *ast.FnObj) (bool, map[string]ast.Obj) {
 	if len(knownParam.Params) != len(givenParam.Params) {

@@ -125,7 +125,6 @@ func (exec *Executor) haveFnCaseByCaseStmt_CheckCasesNotOverlap_ReturnValueInRet
 
 	panic("not implemented: 验证 then fact成立。这里可能要得在这里把函数先声明了，约束x在这个case上，然后验证里面的forall")
 
-	return exec.NewTrueStmtRet(stmt)
 }
 
 func (exec *Executor) haveFnCaseByCase_Define(stmt *ast.HaveFnCaseByCaseStmt) *glob.StmtRet {
