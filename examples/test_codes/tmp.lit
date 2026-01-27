@@ -1,3 +1,9 @@
-know forall t Q: exist x Z, y N_pos st t = x / y
+have f fn(R) R
+have t fn(R) R
+prop p(x, y R)
 
-exist x Z, y N_pos st 2.5 = x / y
+know forall x R: $p(x, t(x+1))
+
+know t(2) = f(1)
+
+$p(1, f(1))
