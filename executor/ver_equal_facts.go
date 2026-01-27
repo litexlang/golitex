@@ -37,14 +37,34 @@ func (ver *Verifier) cmpObj_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.
 		return glob.NewEmptyVerRetTrue()
 	}
 
-	// if ok {
-	// 	return true, nil
-	// }
+	// return ver.decomposeObjFnsAndCheckEquality(left, right, state, ver.objEqualSpec)
+	return glob.NewEmptyVerRetUnknown()
+}
 
-	// if ok, err := ver.decomposeFcFnsAndCheckEquality_WithoutState(left, right, cmp.Cmp_ByBIR); err != nil {
-	// if ok, msg, err := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.FcsEqualBy_Eval_ShareKnownEqualMem); err != nil {
-	return ver.decomposeObjFnsAndCheckEquality(left, right, state, ver.objEqualSpec)
+func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj, state *VerState, areEqualObjs func(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet) *glob.VerRet {
+	if leftAsFn, ok := left.(*ast.FnObj); ok {
+		if rightAsFn, ok := right.(*ast.FnObj); ok {
+			if len(leftAsFn.Params) != len(rightAsFn.Params) {
+				return glob.NewEmptyVerRetUnknown()
+			}
 
+			// compare head
+			verRet := areEqualObjs(leftAsFn.FnHead, rightAsFn.FnHead, state)
+			if verRet.IsErr() || verRet.IsUnknown() {
+				return verRet
+			}
+			// compare params
+			for i := range leftAsFn.Params {
+				verRet := areEqualObjs(leftAsFn.Params[i], rightAsFn.Params[i], state)
+				if verRet.IsErr() || verRet.IsUnknown() {
+					return verRet
+				}
+			}
+
+			return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right)})
+		}
+	}
+	return glob.NewEmptyVerRetUnknown()
 }
 
 // Iterate over all equal facts. On each equal fact, use commutative, associative, cmp rule to compare.
@@ -108,36 +128,6 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 	}
 
 	return glob.NewEmptyVerRetUnknown()
-}
-
-func (ver *Verifier) verTrueEqualFact_ObjFnEqual_NoCheckRequirements(left, right *ast.FnObj, state *VerState) *glob.VerRet {
-	if len(left.Params) != len(right.Params) {
-		return glob.NewEmptyVerRetUnknown()
-	}
-
-	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
-	verRet := ver.VerTrueEqualFactAndCheckFnReq(ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left.FnHead, right.FnHead}, glob.BuiltinLine0), state.CopyAndReqOkToTrue())
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsUnknown() {
-		return glob.NewEmptyVerRetUnknown()
-	}
-
-	for i := range left.Params {
-		// ok, err := ver.fcEqualSpec(left.Params[i], right.Params[i], state)
-
-		verRet := ver.VerTrueEqualFactAndCheckFnReq(ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left.Params[i], right.Params[i]}, glob.BuiltinLine0), state.CopyAndReqOkToTrue())
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsUnknown() {
-			return verRet
-		}
-	}
-
-	// return newTrueVerRet("")
-	return glob.NewEmptyVerRetTrue()
 }
 
 func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, state *VerState) *glob.StmtRet {

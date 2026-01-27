@@ -24,7 +24,8 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) *glob.VerRe
 	switch asStmt := stmt.(type) {
 	case ast.SpecificFactStmt:
 		if ast.IsTrueSpecFactWithPropName(asStmt, glob.KeySymbolEqual) {
-			return ver.VerTrueEqualFactAndCheckFnReq(asStmt, state)
+			// return ver.VerTrueEqualFactAndCheckFnReq(asStmt, state)
+			return ver.verTrueEqualFactAndCheckFnReq2(asStmt.(*ast.PureSpecificFactStmt), state)
 		} else {
 			return ver.verSpecFactNotInFormOfTrueEqualAndCheckFnReq(asStmt, state)
 		}

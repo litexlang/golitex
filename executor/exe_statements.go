@@ -45,7 +45,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 	case *ast.ClaimProveStmt:
 		execRet = exec.execClaimStmtProve(stmt)
 	case *ast.DefPropStmt:
-		execRet = exec.defPropStmt(stmt, true)
+		execRet = exec.defPropStmt(stmt)
 	case *ast.DefLetStmt:
 		execRet = exec.defLetStmt(stmt)
 		if execRet.IsTrue() {
@@ -171,7 +171,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs).AddInfers(implicationMsgs)
 }
 
-func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool) *glob.StmtRet {
+func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) *glob.StmtRet {
 	defineMsgs := []string{}
 	newFactMsgs := []string{}
 
@@ -186,29 +186,29 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt, generateIffUniFact bool
 		paramMap[param] = struct{}{}
 	}
 
-	if (stmt.IffFactsOrNil) == nil {
-		return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
-	}
+	// if (stmt.IffFactsOrNil) == nil {
+	// 	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
+	// }
 
-	if generateIffUniFact {
-		// prop leads to iff
-		propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
-		if err != nil {
-			return glob.ErrRet(err.Error())
-		}
+	// if generateIffUniFact {
+	// 	// prop leads to iff
+	// 	propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
+	// 	if err != nil {
+	// 		return glob.ErrRet(err.Error())
+	// 	}
 
-		ret = exec.Env.NewFactWithCheckingNameDefined(propToIff)
-		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
-		}
+	// 	ret = exec.Env.NewFactWithCheckingNameDefined(propToIff)
+	// 	if ret.IsErr() {
+	// 		return glob.ErrRet(ret.String())
+	// 	}
 
-		ret = exec.Env.NewFactWithCheckingNameDefined(iffToProp)
-		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
-		}
-		newFactMsgs = append(newFactMsgs, propToIff.String())
-		newFactMsgs = append(newFactMsgs, iffToProp.String())
-	}
+	// 	ret = exec.Env.NewFactWithCheckingNameDefined(iffToProp)
+	// 	if ret.IsErr() {
+	// 		return glob.ErrRet(ret.String())
+	// 	}
+	// 	newFactMsgs = append(newFactMsgs, propToIff.String())
+	// 	newFactMsgs = append(newFactMsgs, iffToProp.String())
+	// }
 
 	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs).AddNewFacts(newFactMsgs)
 }
@@ -255,7 +255,7 @@ func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) *glob.StmtR
 	defineMsgs := []string{}
 	newFactMsgs := []string{}
 
-	execRet := exec.defPropStmt(stmt.DefProp, false)
+	execRet := exec.defPropStmt(stmt.DefProp)
 	if execRet.IsNotTrue() {
 		return execRet
 	}
