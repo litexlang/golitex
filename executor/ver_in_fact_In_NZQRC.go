@@ -46,22 +46,22 @@ func (ver *Verifier) verInFactByRightParamIsN_Z_Q_R_N_pos_Z_pos_R_pos_etc_BySpec
 		success, verifiedBy = ver.verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	case glob.KeywordReal:
 		success, verifiedBy = ver.verInR_BySpecMem_ReturnValueOfUserDefinedFnInFnReturn(stmt, nextState)
-	case glob.KeywordRPos:
-		success, verifiedBy = ver.verInRPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
-	case glob.KeywordRNeg:
-		success, verifiedBy = ver.verInRNeg_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
-	case glob.KeywordRNot0:
-		success, verifiedBy = ver.verInRNot0_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
-	case glob.KeywordZNeg:
-		success, verifiedBy = ver.verInZNeg_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
-	case glob.KeywordZNot0:
-		success, verifiedBy = ver.verInZNot0_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
-	case glob.KeywordQPos:
-		success, verifiedBy = ver.verInQPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
-	case glob.KeywordQNeg:
-		success, verifiedBy = ver.verInQNeg_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
-	case glob.KeywordQNot0:
-		success, verifiedBy = ver.verInQNot0_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+	// case glob.KeywordRPos:
+	// 	success, verifiedBy = ver.verInRPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+	// case glob.KeywordRNeg:
+	// 	success, verifiedBy = ver.verInRNeg_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+	// case glob.KeywordRNot0:
+	// 	success, verifiedBy = ver.verInRNot0_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+	// case glob.KeywordZNeg:
+	// 	success, verifiedBy = ver.verInZNeg_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+	// case glob.KeywordZNot0:
+	// 	success, verifiedBy = ver.verInZNot0_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+	// case glob.KeywordQPos:
+	// 	success, verifiedBy = ver.verInQPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+	// case glob.KeywordQNeg:
+	// 	success, verifiedBy = ver.verInQNeg_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
+	// case glob.KeywordQNot0:
+	// 	success, verifiedBy = ver.verInQNot0_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt, nextState)
 	default:
 		success = false
 	}
@@ -538,6 +538,8 @@ func (ver *Verifier) verInQPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet
 		atom, ok := asPureStmt.Params[0].(ast.Atom)
 		if ok && len(string(atom)) > 0 && string(atom)[0] != '-' {
 			return true, stmt.String()
+		} else {
+			return false, ""
 		}
 	}
 

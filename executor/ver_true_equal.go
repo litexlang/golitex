@@ -23,108 +23,108 @@ import (
 )
 
 // how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
-func (ver *Verifier) VerTrueEqualFactAndCheckFnReq(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
-	if !state.ReqOk {
-		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
-			return verRet
-		}
+// func (ver *Verifier) VerTrueEqualFactAndCheckFnReq(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+// 	if !state.ReqOk {
+// 		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
+// 			return verRet
+// 		}
 
-		state.UpdateReqOkToTrue()
-	}
+// 		state.UpdateReqOkToTrue()
+// 	}
 
-	if verRet := ver.verByReplaceObjInSpecFactWithValue(stmt, state); verRet.IsTrue() || verRet.IsErr() {
-		return verRet
-	}
+// 	if verRet := ver.verByReplaceObjInSpecFactWithValue(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+// 		return verRet
+// 	}
 
-	if verRet := ver.verTrueEqualFactOldMainLogic(stmt, state); verRet.IsTrue() || verRet.IsErr() {
-		return verRet
-	}
+// 	if verRet := ver.verTrueEqualFactOldMainLogic(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+// 		return verRet
+// 	}
 
-	// if verRet := ver.verByReplaceObjInSpecFactWithValueAndCompute(stmt, state); verRet.IsTrue() || verRet.IsErr() {
-	// 	return verRet
-	// }
+// 	// if verRet := ver.verByReplaceObjInSpecFactWithValueAndCompute(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+// 	// 	return verRet
+// 	// }
 
-	return glob.NewEmptyVerRetUnknown()
-}
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
-func (ver *Verifier) verTrueEqualFactOldMainLogic(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+// func (ver *Verifier) verTrueEqualFactOldMainLogic(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 
-	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
-	if !ok {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// 	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+// 	if !ok {
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
 
-	if verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(asStmt.Params[0], asStmt.Params[1], state); verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
+// 	if verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(asStmt.Params[0], asStmt.Params[1], state); verRet.IsErr() || verRet.IsTrue() {
+// 		return verRet
+// 	}
 
-	if leftAsFn, ok := asStmt.Params[0].(*ast.FnObj); ok {
-		if rightAsFn, ok := asStmt.Params[1].(*ast.FnObj); ok {
-			verRet := ver.verTrueEqualFact_ObjFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
-			if verRet.IsErr() || verRet.IsTrue() {
-				return verRet
-			}
-		}
-	} else {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// 	if leftAsFn, ok := asStmt.Params[0].(*ast.FnObj); ok {
+// 		if rightAsFn, ok := asStmt.Params[1].(*ast.FnObj); ok {
+// 			verRet := ver.verTrueEqualFact_ObjFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
+// 			if verRet.IsErr() || verRet.IsTrue() {
+// 				return verRet
+// 			}
+// 		}
+// 	} else {
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
 
-	return glob.NewEmptyVerRetUnknown()
-}
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
 // extractValParam extracts the parameter from val(x), returns x and true if it's a val call
-func (ver *Verifier) extractValParam(obj ast.Obj) (ast.Obj, bool) {
-	if fnObj, ok := obj.(*ast.FnObj); ok {
-		if ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordVal) && len(fnObj.Params) == 1 {
-			return fnObj.Params[0], true
-		}
-	}
-	return nil, false
-}
+// func (ver *Verifier) extractValParam(obj ast.Obj) (ast.Obj, bool) {
+// 	if fnObj, ok := obj.(*ast.FnObj); ok {
+// 		if ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordVal) && len(fnObj.Params) == 1 {
+// 			return fnObj.Params[0], true
+// 		}
+// 	}
+// 	return nil, false
+// }
 
 // func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
 // 	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
 // }
 
-func (ver *Verifier) verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-	// val(x) = y is equivalent to x = y (val is handled in ReplaceObjInSpecFactWithValue)
-	if leftVal, ok := ver.extractValParam(left); ok {
-		verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(leftVal, right, state)
-		if verRet.IsTrue() || verRet.IsErr() {
-			return verRet
-		}
-	}
-	if rightVal, ok := ver.extractValParam(right); ok {
-		verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(left, rightVal, state)
-		if verRet.IsTrue() || verRet.IsErr() {
-			return verRet
-		}
-	}
+// func (ver *Verifier) verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
+// 	// val(x) = y is equivalent to x = y (val is handled in ReplaceObjInSpecFactWithValue)
+// 	if leftVal, ok := ver.extractValParam(left); ok {
+// 		verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(leftVal, right, state)
+// 		if verRet.IsTrue() || verRet.IsErr() {
+// 			return verRet
+// 		}
+// 	}
+// 	if rightVal, ok := ver.extractValParam(right); ok {
+// 		verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(left, rightVal, state)
+// 		if verRet.IsTrue() || verRet.IsErr() {
+// 			return verRet
+// 		}
+// 	}
 
-	if verRet := ver.verEqualBuiltin(left, right, state); verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
+// 	if verRet := ver.verEqualBuiltin(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+// 		return verRet
+// 	}
 
-	if verRet := ver.verEqualSpecMem(left, right, state); verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
+// 	if verRet := ver.verEqualSpecMem(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+// 		return verRet
+// 	}
 
-	if !state.isFinalRound() {
-		// if verRet := ver.verLogicMem_leftToRight_RightToLeft(left, right, state); verRet.IsErr() {
-		// 	return verRet
-		// } else if verRet.IsTrue() {
-		// 	return verRet
-		// }
+// 	if !state.isFinalRound() {
+// 		// if verRet := ver.verLogicMem_leftToRight_RightToLeft(left, right, state); verRet.IsErr() {
+// 		// 	return verRet
+// 		// } else if verRet.IsTrue() {
+// 		// 	return verRet
+// 		// }
 
-		if verRet := ver.verEqualUniMem(left, right, state); verRet.IsErr() {
-			return verRet
-		} else if verRet.IsTrue() {
-			return verRet
-		}
-	}
+// 		if verRet := ver.verEqualUniMem(left, right, state); verRet.IsErr() {
+// 			return verRet
+// 		} else if verRet.IsTrue() {
+// 			return verRet
+// 		}
+// 	}
 
-	return glob.NewEmptyVerRetUnknown()
-}
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
 func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
 	if verRet := ver.verEqualByBuiltinEval(left, right, state); verRet.IsErr() || verRet.IsTrue() {
@@ -325,32 +325,6 @@ func (ver *Verifier) getEqualObjsAndCmpOneByOne(curEnv *env.EnvMemory, left ast.
 		}
 	}
 
-	return glob.NewEmptyVerRetUnknown()
-}
-
-func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj, state *VerState, areEqualObjs func(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet) *glob.VerRet {
-	if leftAsFn, ok := left.(*ast.FnObj); ok {
-		if rightAsFn, ok := right.(*ast.FnObj); ok {
-			if len(leftAsFn.Params) != len(rightAsFn.Params) {
-				return glob.NewEmptyVerRetUnknown()
-			}
-
-			// compare head
-			verRet := areEqualObjs(leftAsFn.FnHead, rightAsFn.FnHead, state)
-			if verRet.IsErr() || verRet.IsUnknown() {
-				return verRet
-			}
-			// compare params
-			for i := range leftAsFn.Params {
-				verRet := areEqualObjs(leftAsFn.Params[i], rightAsFn.Params[i], state)
-				if verRet.IsErr() || verRet.IsUnknown() {
-					return verRet
-				}
-			}
-
-			return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right)})
-		}
-	}
 	return glob.NewEmptyVerRetUnknown()
 }
 

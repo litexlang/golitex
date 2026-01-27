@@ -23,15 +23,15 @@ import (
 )
 
 func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	nextState := state.CopyAndReqOkToTrue()
 	if !state.ReqOk {
 		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
 		}
 
-		state.UpdateReqOkToTrue()
 	}
 
-	ret := ver.verSpecFactWholeProcess(stmt, state)
+	ret := ver.verSpecFactWholeProcess(stmt, nextState)
 	if ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
@@ -77,11 +77,11 @@ func (ver *Verifier) verSpecFactMainProcess(stmt ast.SpecificFactStmt, state *Ve
 		return verRet
 	}
 
-	if verRet := ver.verSpecFact_ByDEF(stmt, state); verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
-
 	if !state.isFinalRound() {
+		if verRet := ver.verSpecFact_ByDEF(stmt, state); verRet.IsErr() || verRet.IsTrue() {
+			return verRet
+		}
+
 		if verRet := ver.verSpecFact_UniMem(stmt, state); verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}

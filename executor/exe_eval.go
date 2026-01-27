@@ -168,11 +168,16 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWit
 			if execRet.IsNotTrue() {
 				return nil, execRet
 			}
+
+			if cmp.IsNumExprLitObj(asStmt.Value) {
+				return asStmt.Value, glob.NewEmptyStmtTrue()
+			}
+
 			numExprObj, execRet := exec.evalObjThenSimplify(asStmt.Value)
 			return numExprObj, execRet
 		case *ast.AlgoIfStmt:
 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); execRet.IsNotTrue() {
-				return nil, execRet
+				continue
 			} else if conditionIsTrue {
 				return exec.algoIfStmtWhenEval(asStmt, fnObjWithValueParams)
 			}
@@ -198,31 +203,29 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, *glob.S
 
 	for _, fact := range stmt.Conditions {
 		execRet := exec.factStmt(fact)
-		if execRet.IsErr() {
+		if execRet.IsErr() || execRet.IsUnknown() {
 			return false, execRet
 		}
 
-		if execRet.IsTrue() {
-			continue
-		}
+		continue
 
-		factAsReversibleFact, reversed := fact.(ast.Spec_OrFact)
-		if !reversed {
-			return false, glob.ErrRet(fmt.Sprintf("The condition %s in\n%s\nis unknown, and it can not be negated. Failed", fact, stmt))
-		}
+		// factAsReversibleFact, reversed := fact.(ast.Spec_OrFact)
+		// if !reversed {
+		// 	return false, glob.ErrRet(fmt.Sprintf("The condition %s in\n%s\nis unknown, and it can not be negated. Failed", fact, stmt))
+		// }
 
-		for _, reversedFact := range factAsReversibleFact.ReverseIsTrue() {
-			execRet := exec.factStmt(reversedFact)
-			if execRet.IsErr() {
-				return false, execRet
-			}
+		// for _, reversedFact := range factAsReversibleFact.ReverseIsTrue() {
+		// 	execRet := exec.factStmt(reversedFact)
+		// 	if execRet.IsErr() {
+		// 		return false, execRet
+		// 	}
 
-			if execRet.IsNotTrue() {
-				return false, glob.ErrRet(fmt.Sprintf("%s is unknown. Negation of it is also unknown. Fail to verify condition of if statement:\n%s", fact, stmt))
-			}
-		}
+		// 	if execRet.IsNotTrue() {
+		// 		return false, glob.ErrRet(fmt.Sprintf("%s is unknown. Negation of it is also unknown. Fail to verify condition of if statement:\n%s", fact, stmt))
+		// 	}
+		// }
 
-		return false, glob.NewEmptyStmtTrue()
+		// return false, glob.NewEmptyStmtTrue()
 	}
 
 	return true, glob.NewEmptyStmtTrue()
