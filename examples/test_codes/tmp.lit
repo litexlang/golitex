@@ -1,3 +1,4 @@
+"""
 prop p(x, a R)
 
 know forall x R: exist a R st $p(x, a)
@@ -9,3 +10,20 @@ prop q(x R, a set)
 know forall x R: exist a set st $q(x, a)
 
 exist a set st $q(1, a)
+"""
+
+"""
+prop is_prime(x N_pos)
+
+know forall s power_set(R): $is_finite_set(s) => exist a s st $is_max(a, s)
+
+have all_primes set = {y N_pos: $is_prime(y)}
+
+forall x all_primes: x $in R
+all_primes $in power_set(R)
+
+know $is_finite_set(all_primes)
+
+have x all_primes st $is_max(x, all_primes)
+"""
+
