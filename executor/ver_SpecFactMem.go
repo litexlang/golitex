@@ -252,6 +252,40 @@ func (ver *Verifier) matchGivenPureFactWithOnesInKnownUniFacts(knownFacts []env.
 	return glob.NewEmptyVerRetUnknown()
 }
 
+func (ver *Verifier) matchGivenExistFactWithOnesInKnownUniFacts(knownFacts []env.KnownSpecFact_InUniFact, given *ast.ExistSpecificFactStmt, state *VerState) *glob.VerRet {
+	newFreeExistParamsUnused := ver.Env.GenerateNoDuplicateNames(len(given.ExistFreeParams), map[string]struct{}{})
+	uniMap := map[string]ast.Obj{}
+	usedNamesAsExistFreeParams := map[string]struct{}{}
+	for i, givenFreeParam := range given.ExistFreeParams {
+		uniMap[givenFreeParam] = ast.Atom(newFreeExistParamsUnused[i])
+	}
+
+	newGiven, err := given.Instantiate(uniMap)
+	if err != nil {
+		return glob.NewEmptyVerRetErr()
+	}
+
+	newGivenAsExist := newGiven.(*ast.ExistSpecificFactStmt)
+
+	for i := len(knownFacts) - 1; i >= 0; i-- {
+		newKnownUniFact := ver.Env.GetUniFactFactFreeParamsNotConflictWithDefinedParams(knownFacts[i].UniFact, usedNamesAsExistFreeParams)
+
+		knownExistFactInUni := newKnownUniFact.ThenFacts[knownFacts[i].SpecFactIndex]
+
+		newKnownExistInUni, err := knownExistFactInUni.Instantiate(uniMap)
+		if err != nil {
+			return glob.NewEmptyVerRetErr()
+		}
+
+		ret := ver.matchExistFactWithOneInKnownUniFact(newKnownUniFact, newKnownExistInUni.(*ast.ExistSpecificFactStmt), newGivenAsExist, state)
+		if ret.IsTrue() {
+			return ret
+		}
+	}
+
+	return glob.NewEmptyVerRetUnknown()
+}
+
 func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Obj, state *VerState) (map[string]ast.Obj, *glob.VerRet) {
 	newMap := map[string]ast.Obj{}
 	for key, value := range paramArrMap {
