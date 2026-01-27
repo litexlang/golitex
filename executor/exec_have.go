@@ -689,56 +689,56 @@ func (exec *Executor) verifyCaseNoOverlapWithOthers(caseFacts ast.SpecFactPtrSli
 // 	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.ProveCases, stmt.Line)
 // }
 
-func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) *glob.StmtRet {
-	exec.NewEnv()
-	defer func() {
-		exec.deleteEnv()
-	}()
+// func (exec *Executor) checkCaseReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, caseIndex int) *glob.StmtRet {
+// 	exec.NewEnv()
+// 	defer func() {
+// 		exec.deleteEnv()
+// 	}()
 
-	// 为每个参数定义变量
-	for i := range len(stmt.DefHeader.Params) {
-		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.DefHeader.Params[i]}, []ast.Obj{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
-		if execState.IsNotTrue() {
-			return execState
-		}
-	}
+// 	// 为每个参数定义变量
+// 	for i := range len(stmt.DefHeader.Params) {
+// 		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{stmt.DefHeader.Params[i]}, []ast.Obj{stmt.DefHeader.ParamSets[i]}, []ast.FactStmt{}, stmt.Line))
+// 		if execState.IsNotTrue() {
+// 			return execState
+// 		}
+// 	}
 
-	// caseIndex 处的 obj 确实已经都存在了
-	ver := NewVerifier(exec.Env)
-	verRet := ver.Env.LookupNamesInObj(stmt.CaseByCaseEqualTo[caseIndex], map[string]struct{}{})
-	if verRet.IsErr() || verRet.IsUnknown() {
-		return glob.ErrRet(fmt.Sprintf("case %d: failed to lookup names in obj: %s", caseIndex, verRet.String()))
-	}
+// 	// caseIndex 处的 obj 确实已经都存在了
+// 	ver := NewVerifier(exec.Env)
+// 	verRet := ver.Env.LookupNamesInObj(stmt.CaseByCaseEqualTo[caseIndex], map[string]struct{}{})
+// 	if verRet.IsErr() || verRet.IsUnknown() {
+// 		return glob.ErrRet(fmt.Sprintf("case %d: failed to lookup names in obj: %s", caseIndex, verRet.String()))
+// 	}
 
-	// 默认 caseIndex 时 case fact 成立
-	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	ret := exec.Env.NewFactWithCheckingNameDefined(caseFact)
-	if ret.IsErr() {
-		return glob.ErrRet(fmt.Sprintf("case %d: failed to add case fact: %s", caseIndex, ret.String()))
-	}
+// 	// 默认 caseIndex 时 case fact 成立
+// 	caseFact := stmt.CaseByCaseFacts[caseIndex]
+// 	ret := exec.Env.NewFactWithCheckingNameDefined(caseFact)
+// 	if ret.IsErr() {
+// 		return glob.ErrRet(fmt.Sprintf("case %d: failed to add case fact: %s", caseIndex, ret.String()))
+// 	}
 
-	// 执行 proof
-	if caseIndex < len(stmt.Proofs) {
-		for _, proofStmt := range stmt.Proofs[caseIndex] {
-			execState := exec.Stmt(proofStmt)
-			if execState.IsNotTrue() {
-				return execState
-			}
-		}
-	}
+// 	// 执行 proof
+// 	if caseIndex < len(stmt.Proofs) {
+// 		for _, proofStmt := range stmt.Proofs[caseIndex] {
+// 			execState := exec.Stmt(proofStmt)
+// 			if execState.IsNotTrue() {
+// 				return execState
+// 			}
+// 		}
+// 	}
 
-	// 在case成立的条件下，验证返回值在retSet中
-	equalTo := stmt.CaseByCaseEqualTo[caseIndex]
-	verRet = exec.factStmt(ast.NewInFactWithObj(equalTo, stmt.RetSet))
-	if verRet.IsErr() {
-		return glob.ErrRet(fmt.Sprintf("case %d: %s", caseIndex, verRet.String()))
-	}
-	if verRet.IsUnknown() {
-		return glob.ErrRet(fmt.Sprintf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.RetSet, ast.NewInFactWithObj(equalTo, stmt.RetSet)))
-	}
+// 	// 在case成立的条件下，验证返回值在retSet中
+// 	equalTo := stmt.CaseByCaseEqualTo[caseIndex]
+// 	verRet = exec.factStmt(ast.NewInFactWithObj(equalTo, stmt.RetSet))
+// 	if verRet.IsErr() {
+// 		return glob.ErrRet(fmt.Sprintf("case %d: %s", caseIndex, verRet.String()))
+// 	}
+// 	if verRet.IsUnknown() {
+// 		return glob.ErrRet(fmt.Sprintf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.RetSet, ast.NewInFactWithObj(equalTo, stmt.RetSet)))
+// 	}
 
-	return exec.NewTrueStmtRet(stmt)
-}
+// 	return exec.NewTrueStmtRet(stmt)
+// }
 
 // func (exec *Executor) checkAtLeastOneCaseHolds(stmt *ast.HaveFnEqualCaseByCaseStmt) (*glob.StmtRet, error) {
 // 	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.ProveCases, stmt.Line)

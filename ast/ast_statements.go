@@ -486,12 +486,6 @@ type ImpossibleStmt struct {
 	Line uint
 }
 
-type HaveShortStmt struct {
-	SpecFact *PureSpecificFactStmt
-
-	Line uint
-}
-
 type OrStmt struct {
 	Facts SpecFactPtrSlice
 

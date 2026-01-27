@@ -71,6 +71,8 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt ast.SpecificFactStmt, state 
 }
 
 func (ver *Verifier) verNumberTrueLogicRelaOpt_BuiltinRules(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	_ = state
+
 	if _, ok := stmt.(*ast.PureSpecificFactStmt); !ok {
 		return glob.NewEmptyVerRetUnknown()
 	}

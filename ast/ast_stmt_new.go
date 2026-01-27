@@ -319,10 +319,6 @@ func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact *P
 	return &WitnessStmt{params, paramSets, equalTos, fact, proofs, line}
 }
 
-func NewHaveShortStmt(specFact *PureSpecificFactStmt, line uint) *HaveShortStmt {
-	return &HaveShortStmt{specFact, line}
-}
-
 func NewInferTemplateStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts []FactStmt, proof StmtSlice, line uint) *InferTemplateStmt {
 	return &InferTemplateStmt{Params: params, ParamSets: paramSets, DomFacts: domFacts, ThenFacts: thenFacts, IfFacts: ifFacts, Proof: proof, Line: line}
 }
