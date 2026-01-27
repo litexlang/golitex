@@ -1,29 +1,3 @@
-"""
-prop p(x, a R)
+know forall t Q: exist x Z, y N_pos st t = x / y
 
-know forall x R: exist a R st $p(x, a)
-
-exist a R st $p(1, a)
-
-prop q(x R, a set)
-
-know forall x R: exist a set st $q(x, a)
-
-exist a set st $q(1, a)
-"""
-
-"""
-prop is_prime(x N_pos)
-
-know forall s power_set(R): $is_finite_set(s) => exist a s st $is_max(a, s)
-
-have all_primes set = {y N_pos: $is_prime(y)}
-
-forall x all_primes: x $in R
-all_primes $in power_set(R)
-
-know $is_finite_set(all_primes)
-
-have x all_primes st $is_max(x, all_primes)
-"""
-
+exist x Z, y N_pos st 2.5 = x / y

@@ -1,0 +1,4 @@
+prop p(x, y R)
+know forall x R: $p(x, x + 1 + 1)
+
+$p(1, 3)

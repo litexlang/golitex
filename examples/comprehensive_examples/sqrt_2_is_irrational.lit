@@ -19,7 +19,7 @@ know infer x, y, z Z: x = z * y => z $dvd x if z != 0
 know forall y, x Z: y $dvd x => exist z Z st x = y * z
 
 contra not sqrt(2) $in Q:
-    have x Z, y N_pos st $Q_in_frac(sqrt(2), x, y)
+    have x Z, y N_pos st sqrt(2) = x / y
     x / y = sqrt(2)
     x^2 = (sqrt(2)* y)^2 = sqrt(2)^2 * y^2 = 2 * y^2
     x ^ 2 = 2 * y^2 => 2 $dvd x^2

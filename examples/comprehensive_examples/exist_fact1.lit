@@ -34,3 +34,16 @@ prove:
     know forall x R => exist a st $p(a, x)
 
     exist a st $p(a, 2)
+
+prove:
+    prop p(x, a R)
+
+    know forall x R: exist a R st $p(x, a)
+
+    exist a R st $p(1, a)
+
+    prop q(x R, a set)
+
+    know forall x R: exist a set st $q(x, a)
+
+    exist a set st $q(1, a)
