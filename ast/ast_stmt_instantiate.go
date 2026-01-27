@@ -1165,15 +1165,6 @@ func InstantiateSetBuilderObjWithoutChangingParam(obj *FnObj, uniMap map[string]
 	return MakeSetBuilderObj(setBuilderStruct.Param, instParentSet, instFacts)
 }
 
-func (stmt *HaveShortStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newSpecFact, err := stmt.SpecFact.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-
-	return NewHaveShortStmt(newSpecFact.(*PureSpecificFactStmt), stmt.Line), nil
-}
-
 func (stmt *WitnessStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	panic("TODO: Implement ProveExistStmt Instantiate")
 }
