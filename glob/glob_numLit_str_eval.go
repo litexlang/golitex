@@ -479,7 +479,7 @@ func powBigFloat(a, b string) (string, bool, error) {
 			return "", false, nil
 		}
 		if len(result) > 200 {
-			return "", false, errors.New("result exceeds 200 digits")
+			return "", false, nil
 		}
 	}
 
