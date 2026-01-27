@@ -103,7 +103,7 @@ func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePro
 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactMsgs)
 }
 
-func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact *ast.SpecFactStmt, rightToLeft *ast.SpecFactStmt) (*glob.StmtRet, []*glob.VerRet, []*glob.StmtRet) {
+func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact ast.SpecificFactStmt, rightToLeft ast.SpecificFactStmt) (*glob.StmtRet, []*glob.VerRet, []*glob.StmtRet) {
 	innerStmtRets := []*glob.StmtRet{}
 	verifyProcessMsgs := []*glob.VerRet{}
 

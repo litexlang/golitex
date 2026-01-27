@@ -71,7 +71,7 @@ func ordinalSuffix(n int) string {
 	}
 }
 
-func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistStFactStruct) *ast.ExistStFactStruct {
+func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistSpecificFactStmt) *ast.ExistSpecificFactStmt {
 	if len(existStruct.ExistFreeParams) == 0 {
 		return existStruct
 	}
@@ -83,25 +83,14 @@ func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistStF
 
 	for i, oldParam := range existStruct.ExistFreeParams {
 		// 生成一个不冲突的随机名称
-		newParamName := ver.Env.GenerateUndeclaredRandomName_AndNotInMap(usedNames)
+		newParamName := ver.Env.GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(usedNames)
 		newExistParams[i] = newParamName
 		usedNames[newParamName] = struct{}{}
 		paramReplaceMap[oldParam] = ast.Atom(newParamName)
 	}
 
-	newSets := []ast.Obj{}
-	newUniMap := map[string]ast.Obj{}
-	for i, paramSet := range existStruct.ExistFreeParamSets {
-		newSet, err := paramSet.Instantiate(newUniMap)
-		if err != nil {
-			panic("failed to instantiate exist free param set")
-		}
-		newSets = append(newSets, newSet)
-		newUniMap[existStruct.ExistFreeParams[i]] = paramReplaceMap[existStruct.ExistFreeParams[i]]
-	}
-
 	newParams := []ast.Obj{}
-	for _, param := range existStruct.Params {
+	for _, param := range existStruct.PureFact.Params {
 		newParam, err := param.Instantiate(paramReplaceMap)
 		if err != nil {
 			panic("failed to instantiate exist free param set")
@@ -110,14 +99,14 @@ func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistStF
 	}
 
 	// 替换 ExistFreeParamSets 中的参数引用
-	// newExistParamSets := make([]ast.Obj, len(existStruct.ExistFreeParamSets))
-	// for i, paramSet := range existStruct.ExistFreeParamSets {
-	// 	newParamSet := paramSet
-	// 	for oldParam, newParam := range paramReplaceMap {
-	// 		newParamSet = newParamSet.ReplaceObj(ast.Atom(oldParam), newParam)
-	// 	}
-	// 	newExistParamSets[i] = newParamSet
-	// }
+	newExistParamSets := make([]ast.Obj, len(existStruct.ExistFreeParamSets))
+	for i, paramSet := range existStruct.ExistFreeParamSets {
+		newParamSet := paramSet
+		for oldParam, newParam := range paramReplaceMap {
+			newParamSet = newParamSet.ReplaceObj(ast.Atom(oldParam), newParam)
+		}
+		newExistParamSets[i] = newParamSet
+	}
 
 	// // 替换 Params 中的参数引用
 	// newParams := make([]ast.Obj, len(existStruct.Params))
@@ -129,5 +118,5 @@ func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistStF
 	// 	newParams[i] = newParam
 	// }
 
-	return ast.NewExistStFactStruct(existStruct.FactType, existStruct.PropName, existStruct.IsPropTrue, newExistParams, newSets, newParams, existStruct.Line)
+	return ast.NewExistSpecificFactStmt(existStruct.IsTrue, newExistParams, newExistParamSets, ast.NewPureSpecificFactStmt(existStruct.PureFact.IsTrue, existStruct.PureFact.PropName, newParams, existStruct.Line), existStruct.Line)
 }

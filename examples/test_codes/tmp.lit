@@ -1,5 +1,9 @@
+have f fn(R) R
+have t fn(R) R
+prop p(x, y R)
 
+know forall x R: $p(x, t(x+1))
 
-let s1, s2 finite_set: exist f fn(s1)s2 st $is_injective_fn(s1, s2, f)
+know t(2) = f(1)
 
-exist f fn(s1)s2 st $is_injective_fn(s1, s2, f) => count(s1) <= count(s2)
+$p(1, f(1))

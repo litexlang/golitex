@@ -26,9 +26,9 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
-[Litex](https://litexlang.com) is a simple open-source computer language for mathematical proofs. It aims to express mathematics as code with verified correctness while staying as close to natural language as possible, making it both rigorous and accessible. ([Star the repo!](https://github.com/litexlang/golitex))
+Litex is a simple and intuitive open-source computer language for mathematical proofs. It aims to express mathematics as code with verified correctness while staying as close to natural language as possible. Think of it as an eye-opening exploration of finding `what mathematics is`! ([Github](https://github.com/litexlang/golitex), [Official Site](https://litexlang.com))
 
-Formal code written in Litex is typically 2-10x simpler than traditional formal languages, and looks almost the same as how math is written in natural language, meaning Litex could be a game changer for both traditional math and frontier AI research.
+Formal code written in Litex is typically 2-10x simpler than traditional formal languages, and even high-school students (instead of just math PhDs) can understand it. Much lower barrier to entry means Litex could be a game changer for people without PhD-level math background, ranging from AI researchers and scientists to engineers and math-lovers.
 
 Here is an example of how Litex code looks like:
 
@@ -85,9 +85,9 @@ _— David Hilbert_
 
 Litex achieves its simplicity by imitating how people reason and how mathematics works. Litex is based on set theory. It searches for known facts mechanically and effectively to prove new facts for you. The user no longer has to memorize and recall known facts and inference rules by hand. Each Litex statement has and only has some of the following 4 effects: define, verify, memorize and infer, which is printed out in the output, making the user easy to know how the proof process works.
 
-Among the 4 effects, verification is the most important one. Think of this: when the user inputs a fact with proposition name `intelligent`, Litex will search all known facts with proposition name `intelligent` (including `forall` facts like `forall x human => $intelligent(x)` and specific facts like `$intelligent(Jordan)`) and check if the given fact matches the known fact. If matched, then it is correct.
+Among the 4 effects, verification is the most important one. Litex uses `match and substitution` to use `forall` facts to verify the correctness of the statements. It's impossible to explain how it works in a few words. So we put an example here. When `forall x human => $intelligent(x)` is already stored in memory and `Jordan $in human` is also stored in memory, when the users type `$intelligent(Jordan)`, Litex will substitute `Jordan` with `x` in the statement `forall x human => $intelligent(x)` and check if the statement is true. If it is, the statement is verified.
 
-So Litex uses `match and substitution` to use `forall` facts to verify the correctness of the statements. It's impossible to explain how it works in a few words. So we put an example here. When `forall x human => $intelligent(x)` is already stored in memory and `Jordan $in human` is also stored in memory, when the users type `$intelligent(Jordan)`, Litex will substitute `Jordan` with `x` in the statement `forall x human => $intelligent(x)` and check if the statement is true. If it is, the statement is verified.
+Think of this: when the user inputs a fact with proposition name `intelligent`, Litex will search all known facts with proposition name `intelligent` (including `forall` facts like `forall x human => $intelligent(x)` and specific facts like `$intelligent(Jordan)`) and check if the given fact matches the known fact. If matched, then it is correct. It works like `ctrl+f` in your browser. The reason why Lean cannot do this is that Lean can pass prop as forall parameter, so its search space is the whole memory, instead of the memory of the current proposition.
 
 Even for 10-year-old beginners, Litex is straightforward to learn and use. Visit our [How Litex Works](https://litexlang.com/doc/How_Litex_Works/Introduction) for more details.
 
@@ -144,4 +144,4 @@ _- 樊振东在巴黎奥运会后接受采访时说_
 
 Hi, I’m Jiachen Shen, creator of Litex. It is so fortunate to receive tremendous help from friends and colleagues throughout this journey of designing, implementing, and growing Litex into a community. Without their support, Litex would not have had the chance to succeed.
 
-I am deeply grateful to Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Siqi Guo, Haoyang Shi, Chengyang Zhu, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong, Lei Bai for their emotional support and insightful advice. I am certain this list of special thanks will only grow longer in the future.
+I am deeply grateful to Siqi Sun, Wei Lin, Peng Sun, Jie Fu, Zeyu Zheng, Huajian Xin, Zijie Qiu, Siqi Guo, Haoyang Shi, Chenxuan Huang, Yan Lu, Sheng Xu, Zhaoxuan Hong, Lei Bai, Xiuyuan Lu, Yunwen Guo for their emotional support and insightful advice. I am certain this list of special thanks will only grow longer in the future.

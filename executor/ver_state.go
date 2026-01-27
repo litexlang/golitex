@@ -147,3 +147,11 @@ func NewVerState(round uint8, withMsg bool, reqOk bool) *VerState {
 		ReqOk:   reqOk,
 	}
 }
+
+func (s *VerState) GetCopyOfReqNotOk() *VerState {
+	return &VerState{
+		Round:   s.Round,
+		WithMsg: s.WithMsg,
+		ReqOk:   false,
+	}
+}

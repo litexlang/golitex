@@ -1,3 +1,17 @@
+// Copyright Jiachen Shen.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Original Author: Jiachen Shen <malloc_realloc_free@outlook.com>
+// Litex email: <litexlang@outlook.com>
+// Litex website: https://litexlang.com
+// Litex github repository: https://github.com/litexlang/golitex
+// Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
+
 package litex_executor
 
 import (
@@ -28,7 +42,7 @@ func (exec *Executor) inferStmt(stmt *ast.InferStmt) *glob.StmtRet {
 	newFactMsgs := []string{}
 	for _, thenFact := range stmt.ThenFacts {
 		var factStmt ast.FactStmt
-		if specFact, ok := thenFact.(*ast.SpecFactStmt); ok {
+		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
 			factStmt = specFact
 		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
 			factStmt = orStmt
@@ -73,12 +87,12 @@ func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.InferStmt, thenFact a
 
 func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.InferStmt, fact ast.Spec_OrFact, state *VerState) *glob.VerRet {
 	if !state.ReqOk {
-		return glob.NewVerMsg(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state)})
+		return glob.NewVerRet(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state)})
 	}
 
 	searchedKnownFacts := []env.KnownSpecFact_InImplyTemplate{}
 	var got bool
-	if asSpec, ok := fact.(*ast.SpecFactStmt); ok {
+	if asSpec, ok := fact.(ast.SpecificFactStmt); ok {
 		searchedKnownFacts, got = curEnv.KnownFactsStruct.SpecFactInImplyTemplateMem.GetSameEnumPkgPropFacts(asSpec)
 	} else if asOr, ok := fact.(*ast.OrStmt); ok {
 		searchedKnownFacts, got = curEnv.KnownFactsStruct.SpecFactInImplyTemplateMem.GetSameEnumPkgPropFacts(asOr.Facts[0])
@@ -135,7 +149,7 @@ outerLoop:
 			}
 		}
 
-		return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{})
+		return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{})
 	}
 
 	return glob.NewEmptyVerRetUnknown()
@@ -143,13 +157,13 @@ outerLoop:
 
 func (ver *Verifier) checkFactTypeAndPropNamesMatch(knownFact ast.Spec_OrFact, implyFact ast.Spec_OrFact) bool {
 	switch knownAs := knownFact.(type) {
-	case *ast.SpecFactStmt:
-		if implyAs, ok := implyFact.(*ast.SpecFactStmt); ok {
-			if knownAs.PropName != implyAs.PropName {
+	case ast.SpecificFactStmt:
+		if implyAs, ok := implyFact.(ast.SpecificFactStmt); ok {
+			if knownAs.GetPropName() != implyAs.GetPropName() {
 				return false
 			}
 
-			if knownAs.FactType != implyAs.FactType {
+			if knownAs.GetFactType() != implyAs.GetFactType() {
 				return false
 			}
 
@@ -163,7 +177,7 @@ func (ver *Verifier) checkFactTypeAndPropNamesMatch(knownFact ast.Spec_OrFact, i
 			}
 
 			for j := range implyAs.Facts {
-				if knownAs.Facts[j].PropName != implyAs.Facts[j].PropName {
+				if knownAs.Facts[j].GetPropName() != implyAs.Facts[j].GetPropName() {
 					return false
 				}
 			}
@@ -190,8 +204,8 @@ func (ver *Verifier) mergeCurMapToUniMap(curMap map[string]ast.Obj, uniMap map[s
 
 func (ver *Verifier) matchDomFactAndMergeToUniMap(knownDomFact ast.Spec_OrFact, implyDomFact ast.Spec_OrFact, knownParams []string, uniMap map[string]ast.Obj) (bool, error) {
 	switch implyDomFactAs := implyDomFact.(type) {
-	case *ast.SpecFactStmt:
-		knownSpecFactAs := knownDomFact.(*ast.SpecFactStmt)
+	case ast.SpecificFactStmt:
+		knownSpecFactAs := knownDomFact.(ast.SpecificFactStmt)
 		ok, curMap, err := ver.matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFactAs, knownParams, implyDomFactAs)
 		if !ok || err != nil {
 			return false, err
@@ -256,48 +270,59 @@ func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImply
 	return true, uniMap, nil
 }
 
-func (ver *Verifier) matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFact *ast.SpecFactStmt, freeVars []string, instFact *ast.SpecFactStmt) (bool, map[string]ast.Obj, error) {
-	if instFact.IsPureFact() {
-		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.Params, freeVars, instFact.Params, string(instFact.PropName), map[string]ast.Obj{})
-	} else {
-		knownExistStruct := knownSpecFact.ToExistStFactStruct()
-		instExistStruct := instFact.ToExistStFactStruct()
-
-		// 将 exist 参数全部替换成随机名称，确保不会出问题
-		knownExistStruct = ver.replaceExistParamsWithRandomNames(knownExistStruct)
-		instExistStruct = ver.replaceExistParamsWithRandomNames(instExistStruct)
-
-		ver.newEnv()
-		defer ver.deleteEnv()
-
-		knownExistFreeParams := []ast.Obj{}
-		for _, param := range knownExistStruct.ExistFreeParams {
-			knownExistFreeParams = append(knownExistFreeParams, ast.Atom(param))
-		}
-
-		knownFcs := []ast.Obj{}
-		knownFcs = append(knownFcs, knownExistStruct.ExistFreeParamSets...)
-		knownFcs = append(knownFcs, knownExistStruct.Params...)
-
-		instExistFreeParams := []ast.Obj{}
-		for _, param := range instExistStruct.ExistFreeParams {
-			instExistFreeParams = append(instExistFreeParams, ast.Atom(param))
-		}
-
-		instFcs := []ast.Obj{}
-		instFcs = append(instFcs, instExistStruct.ExistFreeParamSets...)
-		instFcs = append(instFcs, instExistStruct.Params...)
-
-		knownEqualMap := map[string]ast.Obj{}
-		for i, param := range instExistFreeParams {
-			knownEqualMap[knownExistFreeParams[i].String()] = param
-		}
-
-		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownFcs, freeVars, instFcs, string(knownSpecFact.PropName), knownEqualMap)
+func (ver *Verifier) matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFact ast.SpecificFactStmt, freeVars []string, instFact ast.SpecificFactStmt) (bool, map[string]ast.Obj, error) {
+	switch instFactAs := instFact.(type) {
+	case *ast.PureSpecificFactStmt:
+		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.(*ast.PureSpecificFactStmt).Params, freeVars, instFactAs.Params, string(instFactAs.GetPropName()), map[string]ast.Obj{})
+	default:
+		return false, nil, nil
 	}
+
+	// if instFact.GetFactType() == ast.TruePure {
+	// 	return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.(*ast.PureSpecificFactStmt).Params, freeVars, instFact.(*ast.PureSpecificFactStmt).Params, string(instFact.GetPropName()), map[string]ast.Obj{})
+	// } else {
+	// 	return false, nil, nil
+	// knownExistStruct := knownSpecFact.ToExistStFactStruct()
+	// instExistStruct := instFact.ToExistStFactStruct()
+	// knownExistStruct := knownSpecFact.(*ast.ExistSpecificFactStmt)
+	// instExistStruct := instFact.(*ast.ExistSpecificFactStmt)
+
+	// // 将 exist 参数全部替换成随机名称，确保不会出问题
+	// knownExistStruct = ver.replaceExistParamsWithRandomNames(knownExistStruct)
+	// instExistStruct = ver.replaceExistParamsWithRandomNames(instExistStruct)
+
+	// ver.newEnv()
+	// defer ver.deleteEnv()
+
+	// knownExistFreeParams := []ast.Obj{}
+	// for _, param := range knownExistStruct.ExistFreeParams {
+	// 	knownExistFreeParams = append(knownExistFreeParams, ast.Atom(param))
+	// }
+
+	// knownFcs := []ast.Obj{}
+	// knownFcs = append(knownFcs, knownExistStruct.ExistFreeParamSets...)
+	// knownFcs = append(knownFcs, knownExistStruct.PureFact.Params...)
+
+	// instExistFreeParams := []ast.Obj{}
+	// for _, param := range instExistStruct.ExistFreeParams {
+	// 	instExistFreeParams = append(instExistFreeParams, ast.Atom(param))
+	// }
+
+	// instFcs := []ast.Obj{}
+	// instFcs = append(instFcs, instExistStruct.ExistFreeParamSets...)
+	// instFcs = append(instFcs, instExistStruct.PureFact.Params...)
+
+	// knownEqualMap := map[string]ast.Obj{}
+	// for i, param := range instExistFreeParams {
+	// 	knownEqualMap[knownExistFreeParams[i].String()] = param
+	// }
+
+	// return ver.matchUniFactParamsWithSpecFactParamsInImply(knownFcs, freeVars, instFcs, string(knownSpecFact.GetPropName()), knownEqualMap)
+	// }
 }
 
 func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.Obj, freeVars []string, givenFcs []ast.Obj, propNameForMsg string, knownToInstEqualMap_usedToMatchFreeParamsOfExistFacts map[string]ast.Obj) (bool, map[string]ast.Obj, error) {
+	_ = propNameForMsg
 	// knownFcs := knownSpecFactInUniFact.SpecFact.Params
 	// freeVars := knownSpecFactInUniFact.UniFact.Params
 	freeVarsMap := map[string]struct{}{}
@@ -305,7 +330,7 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.
 		freeVarsMap[freeVar] = struct{}{}
 	}
 
-	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs, givenFcs, freeVarsMap, string(propNameForMsg))
+	matchedMaps, unmatchedFcPairs, err := ver.matchFcsInKnownSpecFactAndGivenFc_ReturnSliceOfFreeParamFcMapAndSliceOfUnmatchedFcPairs(knownFcs, givenFcs, freeVarsMap)
 	if err != nil {
 		return false, nil, err
 	}
@@ -315,7 +340,7 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.
 	for _, instVars := range matchedMap {
 		firstVar := instVars[0]
 		for j := 1; j < len(instVars); j++ {
-			verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewEqualFact(firstVar, instVars[j]), FinalRoundNoMsg().CopyAndReqOkToTrue())
+			verRet := ver.VerFactStmt(ast.NewEqualFact(firstVar, instVars[j]), FinalRoundNoMsg().CopyAndReqOkToTrue())
 			if verRet.IsNotTrue() {
 				return false, nil, err
 			}
@@ -330,6 +355,7 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.
 	// 把实例化了的没被匹配的fcPair拿出来，检查是否是equal
 	for _, fcPair := range unMatchedFcPairs {
 		// 用来匹配 exist 的free param的
+		// TODO: 更好的解决办法是，在传入exist的时候，就已经把known的exist free param替换成given exist free param 了
 		if str, ok := knownToInstEqualMap_usedToMatchFreeParamsOfExistFacts[fcPair.knownFc.String()]; ok {
 			if str.String() == fcPair.givenFc.String() {
 				continue
@@ -341,7 +367,7 @@ func (ver *Verifier) matchUniFactParamsWithSpecFactParamsInImply(knownFcs []ast.
 			return false, nil, err
 		}
 
-		verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewEqualFact(instKnownFreeVar, fcPair.givenFc), FinalRoundNoMsg().CopyAndReqOkToTrue())
+		verRet := ver.VerFactStmt(ast.NewEqualFact(instKnownFreeVar, fcPair.givenFc), FinalRoundNoMsg().CopyAndReqOkToTrue())
 
 		// REMARK
 		// 注：这里err != nil 也是返回 false, 因为有可能会把 sqrt(x) ^ 2 = x 拿来证明 y = z，但是 匹配的时候，可能会导致 x 是 -1 之类的。如果error了，其实就是说明没证明通过
