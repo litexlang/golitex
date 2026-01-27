@@ -28,7 +28,7 @@ func (envMgr *EnvMgr) NewFactWithCheckingNameDefined(stmt ast.FactStmt) *glob.St
 	}
 
 	switch f := stmt.(type) {
-	case *ast.SpecFactStmt:
+	case ast.SpecificFactStmt:
 		return envMgr.newSpecFact(f)
 	case *ast.OrStmt:
 		return envMgr.newOrFact(f)
@@ -51,7 +51,7 @@ func (envMgr *EnvMgr) storeUniFactAsInferTemplateIfApplicable(stmt *ast.UniFactS
 	// Check if all DomFacts and ThenFacts are SpecFactStmt or OrStmt
 	domFactsReversible := []ast.Spec_OrFact{}
 	for _, domFact := range stmt.DomFacts {
-		if specFact, ok := domFact.(*ast.SpecFactStmt); ok {
+		if specFact, ok := domFact.(ast.SpecificFactStmt); ok {
 			domFactsReversible = append(domFactsReversible, specFact)
 		} else if orStmt, ok := domFact.(*ast.OrStmt); ok {
 			domFactsReversible = append(domFactsReversible, orStmt)
@@ -63,7 +63,7 @@ func (envMgr *EnvMgr) storeUniFactAsInferTemplateIfApplicable(stmt *ast.UniFactS
 
 	thenFactsReversible := []ast.Spec_OrFact{}
 	for _, thenFact := range stmt.ThenFacts {
-		if specFact, ok := thenFact.(*ast.SpecFactStmt); ok {
+		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
 			thenFactsReversible = append(thenFactsReversible, specFact)
 		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
 			thenFactsReversible = append(thenFactsReversible, orStmt)
@@ -99,13 +99,14 @@ func (envMgr *EnvMgr) NewFactWithCheckingNameDefined_UniFact(stmt *ast.UniFactSt
 }
 
 func (envMgr *EnvMgr) newUniFact(stmt *ast.UniFactStmt) *glob.StmtRet {
-	for _, thenStmt := range stmt.ThenFacts {
+	for i, thenStmt := range stmt.ThenFacts {
 		var ret *glob.StmtRet
 		switch asFact := thenStmt.(type) {
-		case *ast.SpecFactStmt:
-			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, asFact)
+		case ast.SpecificFactStmt:
+			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, i)
 		case *ast.OrStmt:
 			ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
+			// ret = glob.NewEmptyStmtTrue()
 		case *ast.UniFactWithIffStmt:
 			ret = envMgr.newUniFact_ThenFactIsIffStmt(stmt, asFact)
 		case *ast.UniFactStmt:
@@ -146,33 +147,40 @@ func (envMgr *EnvMgr) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) *glob.Stmt
 }
 
 func (envMgr *EnvMgr) newOrFact(fact *ast.OrStmt) *glob.StmtRet {
-	ret := envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
-	if ret.IsErr() {
-		return ret
+	// ret := envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
+	// if ret.IsErr() {
+	// 	return ret
+	// }
+
+	// // Post-processing: a != 0 or b != 0 => a^2 + b^2 > 0
+	// ie := NewInferenceEngine(envMgr)
+	// orPostProcessRet := ie.orFactPostProcess(fact)
+	// if orPostProcessRet.IsTrue() {
+	// 	return ret.AddShortRetAsInfers(orPostProcessRet)
+	// }
+
+	// return ret
+
+	ret := envMgr.newOrFactNoInfer(fact)
+	if ret.IsNotTrue() {
+		return glob.ErrRet(ret.String())
 	}
 
-	// Post-processing: a != 0 or b != 0 => a^2 + b^2 > 0
-	ie := NewInferenceEngine(envMgr)
-	orPostProcessRet := ie.orFactPostProcess(fact)
-	if orPostProcessRet.IsTrue() {
-		return ret.AddShortRetAsInfers(orPostProcessRet)
-	}
-
-	return ret
+	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) newSpecFact(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newSpecFact(fact ast.SpecificFactStmt) *glob.StmtRet {
 	if isEqualFact := ast.IsTrueEqualFact(fact); isEqualFact {
-		return envMgr.newTrueEqual(fact)
+		return envMgr.newTrueEqual(fact.(*ast.PureSpecificFactStmt))
 	}
 
 	defer func() {
-		if fact.FactType == ast.TruePure && envMgr.IsTransitiveProp(string(fact.PropName)) {
+		if asFact, ok := fact.(*ast.PureSpecificFactStmt); ok && asFact.IsTrue && envMgr.IsTransitiveProp(string(asFact.PropName)) {
 			curEnv := envMgr.CurEnv()
-			if curEnv.TransitivePropMem[string(fact.PropName)] == nil {
-				curEnv.TransitivePropMem[string(fact.PropName)] = make(map[string][]ast.Obj)
+			if curEnv.TransitivePropMem[string(asFact.PropName)] == nil {
+				curEnv.TransitivePropMem[string(asFact.PropName)] = make(map[string][]ast.Obj)
 			}
-			curEnv.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()] = append(curEnv.TransitivePropMem[string(fact.PropName)][fact.Params[0].String()], fact.Params[1])
+			curEnv.TransitivePropMem[string(asFact.PropName)][asFact.Params[0].String()] = append(curEnv.TransitivePropMem[string(asFact.PropName)][asFact.Params[0].String()], asFact.Params[1])
 		}
 	}()
 
@@ -184,20 +192,21 @@ func (envMgr *EnvMgr) newSpecFact(fact *ast.SpecFactStmt) *glob.StmtRet {
 	ie := NewInferenceEngine(envMgr)
 
 	var ieShortRet *glob.ShortRet
-	switch fact.FactType {
-	case ast.TrueExist_St:
-		// ieShortRet = ie.newTrueExist(fact)
-		ieShortRet = glob.NewEmptyShortTrueRet()
-	case ast.FalseExist_St:
-		ieShortRet = ie.newFalseExist(fact)
-	default:
-		ieShortRet = ie.newPureFact(fact)
+	switch asFact := fact.(type) {
+	case *ast.ExistSpecificFactStmt:
+		if asFact.IsTrue {
+			ieShortRet = glob.NewEmptyShortTrueRet()
+		} else {
+			ieShortRet = ie.newFalseExist(asFact)
+		}
+	case *ast.PureSpecificFactStmt:
+		ieShortRet = ie.newPureFact(asFact)
 	}
 
 	return ret.AddInfers(ieShortRet.Msgs)
 }
 
-func (envMgr *EnvMgr) newTrueEqual(fact *ast.SpecFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newTrueEqual(fact *ast.PureSpecificFactStmt) *glob.StmtRet {
 	ret := envMgr.newTrueEqualNoInfer(fact)
 	if ret.IsNotTrue() {
 		return ret
@@ -232,13 +241,14 @@ func (envMgr *EnvMgr) newEqualsFact(stmt *ast.EqualsFactStmt) *glob.StmtRet {
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFact *ast.SpecFactStmt) *glob.StmtRet {
-	return envMgr.storeUniFactInMem(thenFact, stmt)
+func (envMgr *EnvMgr) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFactIndex int) *glob.StmtRet {
+	// return envMgr.storeUniFactInMem(thenFact, stmt)
+	return envMgr.CurEnv().KnownFactsStruct.SpecFactInUniFactMem.newFact(thenFactIndex, stmt)
 }
 
-func (envMgr *EnvMgr) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) *glob.StmtRet {
-	return envMgr.CurEnv().KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenFact)
-}
+// func (envMgr *EnvMgr) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) *glob.StmtRet {
+// 	return envMgr.CurEnv().KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenFact)
+// }
 
 func (envMgr *EnvMgr) newUniFact_ThenFactIsIffStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactWithIffStmt) *glob.StmtRet {
 	thenToIff := thenFact.NewUniFactWithThenToIff()
@@ -266,8 +276,11 @@ func (envMgr *EnvMgr) newUniFact_ThenFactIsUniFactStmt(stmt *ast.UniFactStmt, th
 
 func (envMgr *EnvMgr) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt, thenFact *ast.EqualsFactStmt) *glob.StmtRet {
 	equalFacts := thenFact.ToEqualFacts_PairwiseCombination()
-	for _, equalFact := range equalFacts {
-		ret := envMgr.newUniFact_ThenFactIsSpecFact(stmt, equalFact)
+
+	newUniFact := ast.NewUniFact(stmt.Params, stmt.ParamSets, stmt.DomFacts, equalFacts, stmt.Line)
+
+	for i, _ := range equalFacts {
+		ret := envMgr.newUniFact_ThenFactIsSpecFact(newUniFact, i)
 		if ret.IsErr() {
 			return ret
 		}
@@ -275,9 +288,9 @@ func (envMgr *EnvMgr) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt,
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) storeUniFactInMem(specFact *ast.SpecFactStmt, uniFact *ast.UniFactStmt) *glob.StmtRet {
-	return envMgr.CurEnv().KnownFactsStruct.SpecFactInUniFactMem.newFact(specFact, uniFact)
-}
+// func (envMgr *EnvMgr) storeUniFactInMem(specFact ast.SpecificFactStmt, uniFact *ast.UniFactStmt) *glob.StmtRet {
+// 	return envMgr.CurEnv().KnownFactsStruct.SpecFactInUniFactMem.newFact(specFact, uniFact)
+// }
 
 func (envMgr *EnvMgr) ProveImplyNewThenFactInPropDef(stmt *ast.ProveInferStmt) *glob.StmtRet {
 	specFactAsParams, err := ast.ParamsInSpecFactAreStrings(stmt.SpecFact)
@@ -313,4 +326,8 @@ func (envMgr *EnvMgr) ProveImplyNewThenFactInPropDef(stmt *ast.ProveInferStmt) *
 	}
 
 	return glob.NewEmptyStmtTrue()
+}
+
+func (envMgr *EnvMgr) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) *glob.StmtRet {
+	return envMgr.storeOrFactInUniFactMem(thenFact, stmt)
 }

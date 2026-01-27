@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.ShortRet {
+func (ie *InferEngine) newPureFact(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
 	if glob.IsBuiltinPropName(string(fact.PropName)) {
 		ret := ie.BuiltinPropExceptTrueEqual(fact)
 		return ret
@@ -29,7 +29,7 @@ func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 	_, ok := ie.EnvMgr.GetPropDef(fact.PropName)
 
 	if ok {
-		if fact.FactType == ast.TruePure {
+		if fact.IsTrue {
 			ret := ie.newUserDefinedTruePureFactByDef(fact)
 			return ret
 		}
@@ -39,10 +39,13 @@ func (ie *InferEngine) newPureFact(fact *ast.SpecFactStmt) *glob.ShortRet {
 	return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("undefined prop: %s", fact.PropName)})
 }
 
+func (ie *InferEngine) newFalseExist(fact *ast.ExistSpecificFactStmt) *glob.ShortRet {
+	paramSets := []ast.Obj{}
+	for i := 0; i < len(fact.ExistFreeParams); i++ {
+		paramSets = append(paramSets, ast.Atom(glob.KeywordSet))
+	}
 
-func (ie *InferEngine) newFalseExist(fact *ast.SpecFactStmt) *glob.ShortRet {
-	existStruct := fact.ToExistStFactStruct()
-	equivalentForall := ast.NewUniFact(existStruct.ExistFreeParams, existStruct.ExistFreeParamSets, []ast.FactStmt{}, []ast.FactStmt{existStruct.GetPureFactInside().ReverseTrue()}, fact.Line)
+	equivalentForall := ast.NewUniFact(fact.ExistFreeParams, paramSets, []ast.FactStmt{}, []ast.FactStmt{fact.PureFact.ReverseIsTrue()[0]}, fact.Line)
 	ret := ie.EnvMgr.newUniFact(equivalentForall)
 	if ret.IsErr() {
 		return glob.ErrStmtMsgToShortRet(ret)

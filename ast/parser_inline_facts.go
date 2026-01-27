@@ -70,7 +70,7 @@ func (p *TbParser) inlineFactThenSkipStmtTerminatorUntilEndSignals(tb *tokenBloc
 }
 
 // inlineSpecFactStmt_skip_terminator parses a spec fact and skips statement terminator (comma) if present
-func (p *TbParser) inlineSpecFactStmt_skip_terminator(tb *tokenBlock) (*SpecFactStmt, error) {
+func (p *TbParser) inlineSpecFactStmt_skip_terminator(tb *tokenBlock) (SpecificFactStmt, error) {
 	stmt, err := p.specFactStmt(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -370,7 +370,7 @@ func (p *TbParser) inline_spec_or_fact_skip_terminator(tb *tokenBlock) (FactStmt
 	}
 
 	if tb.header.is(glob.KeywordOr) {
-		orFacts := []*SpecFactStmt{specFact}
+		orFacts := []SpecificFactStmt{specFact}
 		for tb.header.is(glob.KeywordOr) {
 			tb.header.skip(glob.KeywordOr)
 			specFact, err := p.inlineSpecFactStmt_skip_terminator(tb)
@@ -393,8 +393,8 @@ func (p *TbParser) inline_spec_or_fact_skip_terminator(tb *tokenBlock) (FactStmt
 // 	return p.inlineOrFactWithFirstFact(tb, firstFact)
 // }
 
-func (p *TbParser) inlineOrFactWithFirstFact(tb *tokenBlock, firstFact *SpecFactStmt) (*OrStmt, error) {
-	orFacts := []*SpecFactStmt{firstFact}
+func (p *TbParser) inlineOrFactWithFirstFact(tb *tokenBlock, firstFact SpecificFactStmt) (*OrStmt, error) {
+	orFacts := []SpecificFactStmt{firstFact}
 	for tb.header.is(glob.KeywordOr) {
 		tb.header.skip(glob.KeywordOr)
 		specFact, err := p.inlineSpecFactStmt_skip_terminator(tb)
@@ -489,7 +489,7 @@ func (p *TbParser) parseFunctionPropertyFact(tb *tokenBlock, leftObj Obj) (FactS
 		params = append(params, rightObj)
 	}
 
-	curFact := NewSpecFactStmt(TruePure, propName, params, tb.line)
+	curFact := NewPureSpecificFactStmt(true, propName, params, tb.line)
 	return p.handleOrFactIfPresent(tb, curFact)
 }
 
@@ -511,7 +511,7 @@ func (p *TbParser) parseInfixRelationalFact(tb *tokenBlock, leftObj Obj, operato
 
 	// Create the fact
 	params := []Obj{leftObj, rightObj}
-	curFact := NewSpecFactStmt(TruePure, Atom(operator), params, tb.line)
+	curFact := NewPureSpecificFactStmt(true, Atom(operator), params, tb.line)
 
 	// Handle syntactic sugar: != is equivalent to "not ="
 	curFact = p.normalizeNotEqualFact(curFact)
@@ -521,16 +521,15 @@ func (p *TbParser) parseInfixRelationalFact(tb *tokenBlock, leftObj Obj, operato
 
 // normalizeNotEqualFact converts != to "not =" for easier processing
 // This allows us to reuse the commutative property of =
-func (p *TbParser) normalizeNotEqualFact(fact *SpecFactStmt) *SpecFactStmt {
-	if fact != nil && fact.NameIs(glob.KeySymbolNotEqual) {
-		fact.FactType = FalsePure
-		fact.PropName = Atom(glob.KeySymbolEqual)
+func (p *TbParser) normalizeNotEqualFact(fact *PureSpecificFactStmt) *PureSpecificFactStmt {
+	if fact != nil && fact.GetPropName() == glob.KeySymbolNotEqual {
+		return NewPureSpecificFactStmt(false, glob.KeySymbolEqual, fact.Params, fact.Line)
 	}
 	return fact
 }
 
 // handleOrFactIfPresent checks if there's an "or" keyword and handles it
-func (p *TbParser) handleOrFactIfPresent(tb *tokenBlock, curFact *SpecFactStmt) (FactStmt, error) {
+func (p *TbParser) handleOrFactIfPresent(tb *tokenBlock, curFact SpecificFactStmt) (FactStmt, error) {
 	if tb.header.is(glob.KeywordOr) {
 		return p.inlineOrFactWithFirstFact(tb, curFact)
 	}

@@ -59,14 +59,14 @@ func (envMgr *EnvMgr) GetSymbolSimplifiedValue(obj ast.Obj) ast.Obj {
 	return nil
 }
 
-func (envMgr *EnvMgr) IsCommutativeProp(specFact *ast.SpecFactStmt) bool {
+func (envMgr *EnvMgr) IsCommutativeProp(specFact *ast.PureSpecificFactStmt) bool {
 	// Search from current depth upward to depth 0
 	for depth := envMgr.CurEnvDepth(); depth >= 0; depth-- {
 		item, ok := envMgr.EnvSlice[depth].CommutativePropMem[string(specFact.PropName)]
 		if ok {
-			if specFact.FactType == ast.TruePure {
+			if specFact.IsTrue {
 				return item.TruePureIsCommutative
-			} else if specFact.FactType == ast.FalsePure {
+			} else {
 				return item.FalsePureIsCommutative
 			}
 		}
@@ -75,9 +75,9 @@ func (envMgr *EnvMgr) IsCommutativeProp(specFact *ast.SpecFactStmt) bool {
 	// Search in builtin env
 	item, ok := BuiltinEnvMgrWithEmptyEnvPkgMgr.EnvSlice[0].CommutativePropMem[string(specFact.PropName)]
 	if ok {
-		if specFact.FactType == ast.TruePure {
+		if specFact.IsTrue {
 			return item.TruePureIsCommutative
-		} else if specFact.FactType == ast.FalsePure {
+		} else {
 			return item.FalsePureIsCommutative
 		}
 	}

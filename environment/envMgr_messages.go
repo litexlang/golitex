@@ -24,11 +24,11 @@ func duplicateDefError(name string) error {
 	return fmt.Errorf("duplicate definition of %s", name)
 }
 
-func (knownSpecFact *KnownSpecFact_InLogicExpr) String() string {
-	var builder strings.Builder
-	builder.WriteString(knownSpecFact.LogicExpr.String())
-	return builder.String()
-}
+// func (knownSpecFact *KnownSpecFact_InLogicExpr) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(knownSpecFact.LogicExpr.String())
+// 	return builder.String()
+// }
 
 func (knownSpecFact *KnownSpecFact_InUniFact) String() string {
 	var builder strings.Builder

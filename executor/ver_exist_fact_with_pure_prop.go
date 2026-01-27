@@ -19,57 +19,59 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(stmt *ast.HaveObjStStmt, freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched *ast.SpecFactStmt, verState *VerState) *glob.VerRet {
-	ver.newEnv()
-	defer ver.deleteEnv()
+func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(stmt *ast.HaveObjStStmt, freeExistStFact *ast.ExistSpecificFactStmt, instExistStFactToBeMatched *ast.ExistSpecificFactStmt, verState *VerState) *glob.VerRet {
+	return glob.NewEmptyVerRetUnknown()
 
-	freeExistParams, freeParams, freeSpecFact := freeExistStFact.ExistStFactToPropNameExistParamsParamsAndTrueSpecFactAfterSt()
-	toBeMatchedExistParams, toBeMatchedParams := instExistStFactToBeMatched.ExistStFactToPropNameExistParamsParams()
+	// ver.newEnv()
+	// defer ver.deleteEnv()
 
-	if len(freeExistParams) != len(toBeMatchedExistParams) || len(freeParams) != len(toBeMatchedParams) {
-		return glob.NewEmptyVerRetUnknown()
-	}
+	// freeExistParams, freeParams, freeSpecFact := freeExistStFact.PureFact.Params, freeExistStFact.ExistFreeParamSets, freeExistStFact.PureFact
+	// toBeMatchedExistParams, toBeMatchedParams := instExistStFactToBeMatched.PureFact.Params, instExistStFactToBeMatched.ExistFreeParamSets
 
-	uniMap := map[string]ast.Obj{}
-	for i, freeExistParam := range freeExistParams {
-		uniMap[freeExistParam.String()] = toBeMatchedExistParams[i]
-	}
+	// if len(freeExistParams) != len(toBeMatchedExistParams) || len(freeParams) != len(toBeMatchedParams) {
+	// 	return glob.NewEmptyVerRetUnknown()
+	// }
 
-	instFreeSpecFact, err := freeSpecFact.Instantiate(uniMap)
-	if err != nil {
-		return glob.NewEmptyVerRetUnknown()
-	}
+	// uniMap := map[string]ast.Obj{}
+	// for i, freeExistParam := range freeExistParams {
+	// 	uniMap[freeExistParam.String()] = toBeMatchedExistParams[i]
+	// }
 
-	// 证明 inst Free Spec Fact 的每一个 param 等于 right 的 对应的 param
-	for i, instFreeSpecFactParam := range instFreeSpecFact.(*ast.SpecFactStmt).Params {
-		verRet := ver.VerFactStmt(ast.NewEqualFact(instFreeSpecFactParam, instExistStFactToBeMatched.Params[i]), verState)
-		if verRet.IsNotTrue() {
-			return glob.NewEmptyVerRetUnknown()
-		}
-	}
+	// instFreeSpecFact, err := freeSpecFact.Instantiate(uniMap)
+	// if err != nil {
+	// 	return glob.NewEmptyVerRetUnknown()
+	// }
 
-	// 证明 have 对应的 每一个 set ，对应的 exist_param 都在
-	newUniMap := map[string]ast.Obj{}
-	for i, paramSet := range stmt.ObjSets {
-		instParamSet, err := paramSet.Instantiate(newUniMap)
-		if err != nil {
-			return glob.NewEmptyVerRetUnknown()
-		}
+	// // 证明 inst Free Spec Fact 的每一个 param 等于 right 的 对应的 param
+	// for i, instFreeSpecFactParam := range instFreeSpecFact.(*ast.PureSpecificFactStmt).Params {
+	// 	verRet := ver.VerFactStmt(ast.NewEqualFact(instFreeSpecFactParam, instExistStFactToBeMatched.PureFact.Params[i]), verState)
+	// 	if verRet.IsNotTrue() {
+	// 		return glob.NewEmptyVerRetUnknown()
+	// 	}
+	// }
 
-		inFact := ast.NewInFactWithObj(instExistStFactToBeMatched.Params[i], instParamSet)
+	// // 证明 have 对应的 每一个 set ，对应的 exist_param 都在
+	// newUniMap := map[string]ast.Obj{}
+	// for i, paramSet := range stmt.ObjSets {
+	// 	instParamSet, err := paramSet.Instantiate(newUniMap)
+	// 	if err != nil {
+	// 		return glob.NewEmptyVerRetUnknown()
+	// 	}
 
-		ret := ver.VerFactStmt(inFact, verState)
-		if ret.IsNotTrue() {
-			return glob.NewEmptyVerRetUnknown()
-		}
+	// 	inFact := ast.NewInFactWithObj(instExistStFactToBeMatched.PureFact.Params[i], instParamSet)
 
-		newUniMap[stmt.ObjNames[i]] = instExistStFactToBeMatched.Params[i]
-	}
+	// 	ret := ver.VerFactStmt(inFact, verState)
+	// 	if ret.IsNotTrue() {
+	// 		return glob.NewEmptyVerRetUnknown()
+	// 	}
 
-	return glob.NewVerMsg(glob.StmtRetTypeTrue, freeExistStFact.String(), instExistStFactToBeMatched.Line, []string{instExistStFactToBeMatched.String()})
+	// 	newUniMap[stmt.ObjNames[i]] = instExistStFactToBeMatched.PureFact.Params[i]
+	// }
+
+	// return glob.NewVerMsg(glob.StmtRetTypeTrue, freeExistStFact.String(), instExistStFactToBeMatched.Line, []string{instExistStFactToBeMatched.String()})
 }
 
-func (ver *Verifier) ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt *ast.HaveObjStStmt, freeExistStFact *ast.SpecFactStmt, instExistStFactToBeMatched []ast.SpecFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt *ast.HaveObjStStmt, freeExistStFact *ast.ExistSpecificFactStmt, instExistStFactToBeMatched []ast.ExistSpecificFactStmt, state *VerState) *glob.VerRet {
 	for _, curToMatch := range instExistStFactToBeMatched {
 		ret := ver.ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(stmt, freeExistStFact, &curToMatch, state)
 		if ret.IsTrue() {

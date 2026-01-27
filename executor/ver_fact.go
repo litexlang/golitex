@@ -22,9 +22,9 @@ import (
 
 func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) *glob.VerRet {
 	switch asStmt := stmt.(type) {
-	case *ast.SpecFactStmt:
+	case ast.SpecificFactStmt:
 		if ast.IsTrueSpecFactWithPropName(asStmt, glob.KeySymbolEqual) {
-			return ver.verTrueEqualFactAndCheckFnReq(asStmt, state)
+			return ver.VerTrueEqualFactAndCheckFnReq(asStmt, state)
 		} else {
 			return ver.verSpecFactNotInFormOfTrueEqualAndCheckFnReq(asStmt, state)
 		}
@@ -37,6 +37,6 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) *glob.VerRe
 	case *ast.EqualsFactStmt:
 		return ver.verEqualsFactStmt(asStmt, state)
 	default:
-		return glob.NewVerMsg(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("unexpected fact statement: %s", asStmt)})
+		return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("unexpected fact statement: %s", asStmt)})
 	}
 }

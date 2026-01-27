@@ -22,64 +22,64 @@ import (
 	"strings"
 )
 
-func EqualFact(left, right Obj) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{left, right}, glob.BuiltinLine0)
+func EqualFact(left, right Obj) *PureSpecificFactStmt {
+	return NewPureSpecificFactStmt(true, Atom(glob.KeySymbolEqual), []Obj{left, right}, glob.BuiltinLine0)
 }
 
-func (stmt *UniFactStmt) ParamInParamSetFacts(uniConMap map[string]Obj) []*SpecFactStmt {
-	paramSetFacts := make([]*SpecFactStmt, len(stmt.Params))
+func (stmt *UniFactStmt) ParamInParamSetFacts(uniConMap map[string]Obj) []*PureSpecificFactStmt {
+	paramSetFacts := make([]*PureSpecificFactStmt, len(stmt.Params))
 	for i, param := range stmt.Params {
 		paramSetFacts[i] = NewInFactWithParamObj(uniConMap[param], stmt.ParamSets[i], stmt.Line)
 	}
 	return paramSetFacts
 }
 
-func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
-	ret := []Spec_OrFact{}
-	if len(facts) == 1 {
-		reversed := facts[0].ReverseIsTrue()
-		for _, fact := range reversed {
-			ret = append(ret, fact)
-		}
-		return ret
-	}
+// func ReverseSliceOfReversibleFacts(facts []Spec_OrFact) []Spec_OrFact {
+// 	ret := []Spec_OrFact{}
+// 	if len(facts) == 1 {
+// 		reversed := facts[0].ReverseIsTrue()
+// 		for _, fact := range reversed {
+// 			ret = append(ret, fact)
+// 		}
+// 		return ret
+// 	}
 
-	specFactsInFacts := []*SpecFactStmt{}
-	orFactsInFacts := []*OrStmt{}
-	for _, fact := range facts {
-		switch asFact := fact.(type) {
-		case *SpecFactStmt:
-			specFactsInFacts = append(specFactsInFacts, asFact)
-		case *OrStmt:
-			orFactsInFacts = append(orFactsInFacts, asFact)
-		default:
-			panic("ReverseSliceOfReversibleFacts: fact is not a spec fact or an or fact")
-		}
-	}
+// 	specFactsInFacts := []*SpecFactStmt{}
+// 	orFactsInFacts := []*OrStmt{}
+// 	for _, fact := range facts {
+// 		switch asFact := fact.(type) {
+// 		case *SpecFactStmt:
+// 			specFactsInFacts = append(specFactsInFacts, asFact)
+// 		case *OrStmt:
+// 			orFactsInFacts = append(orFactsInFacts, asFact)
+// 		default:
+// 			panic("ReverseSliceOfReversibleFacts: fact is not a spec fact or an or fact")
+// 		}
+// 	}
 
-	reversedSpecFacts := make([]*SpecFactStmt, len(specFactsInFacts))
-	for i, specFact := range specFactsInFacts {
-		reversedSpecFacts[i] = specFact.ReverseTrue()
-	}
+// 	reversedSpecFacts := make([]*SpecFactStmt, len(specFactsInFacts))
+// 	for i, specFact := range specFactsInFacts {
+// 		reversedSpecFacts[i] = specFact.ReverseTrue()
+// 	}
 
-	orFact_GotBYReversedSpecFacts := NewOrStmt(reversedSpecFacts, glob.BuiltinLine0)
-	ret = append(ret, orFact_GotBYReversedSpecFacts)
+// 	orFact_GotBYReversedSpecFacts := NewOrStmt(reversedSpecFacts, glob.BuiltinLine0)
+// 	ret = append(ret, orFact_GotBYReversedSpecFacts)
 
-	specFacts_GotByReversedOrFacts := []*SpecFactStmt{}
-	for _, orFact := range orFactsInFacts {
-		reversedOrFact := orFact.ReverseIsTrue()
-		specFacts_GotByReversedOrFacts = append(specFacts_GotByReversedOrFacts, reversedOrFact...)
-	}
+// 	specFacts_GotByReversedOrFacts := []*SpecFactStmt{}
+// 	for _, orFact := range orFactsInFacts {
+// 		reversedOrFact := orFact.ReverseIsTrue()
+// 		specFacts_GotByReversedOrFacts = append(specFacts_GotByReversedOrFacts, reversedOrFact...)
+// 	}
 
-	for _, specFact := range specFacts_GotByReversedOrFacts {
-		ret = append(ret, specFact)
-	}
+// 	for _, specFact := range specFacts_GotByReversedOrFacts {
+// 		ret = append(ret, specFact)
+// 	}
 
-	return ret
-}
+// 	return ret
+// }
 
-func NewEqualFact(left, right Obj) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeySymbolEqual), []Obj{left, right}, glob.BuiltinLine0)
+func NewEqualFact(left, right Obj) *PureSpecificFactStmt {
+	return NewPureSpecificFactStmt(true, Atom(glob.KeySymbolEqual), []Obj{left, right}, glob.BuiltinLine0)
 }
 
 func IsFn_WithHeadName(obj Obj, headName string) bool {
@@ -111,8 +111,8 @@ func IsFn_WithHeadNameInSlice(obj Obj, headNames map[string]struct{}) bool {
 	return ok
 }
 
-func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string]Obj) ([]*SpecFactStmt, error) {
-	paramSetFacts := make([]*SpecFactStmt, len(defHeader.Params))
+func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string]Obj) ([]*PureSpecificFactStmt, error) {
+	paramSetFacts := make([]*PureSpecificFactStmt, len(defHeader.Params))
 	for i, param := range defHeader.Params {
 		instantiatedSet, err := defHeader.ParamSets[i].Instantiate(uniMap)
 		if err != nil {
@@ -123,24 +123,24 @@ func (defHeader *DefHeader) GetInstantiatedParamInParamSetFact(uniMap map[string
 	return paramSetFacts, nil
 }
 
-func (stmt *UniFactStmt) ParamInParamSet() []*SpecFactStmt {
-	paramSetFacts := make([]*SpecFactStmt, len(stmt.Params))
+func (stmt *UniFactStmt) ParamInParamSet() []*PureSpecificFactStmt {
+	paramSetFacts := make([]*PureSpecificFactStmt, len(stmt.Params))
 	for i, param := range stmt.Params {
 		paramSetFacts[i] = NewInFactWithParamObj(Atom(param), stmt.ParamSets[i], stmt.Line)
 	}
 	return paramSetFacts
 }
 
-func (stmt *EqualsFactStmt) ToEqualFacts() []*SpecFactStmt {
-	ret := make([]*SpecFactStmt, len(stmt.Params)-1)
+func (stmt *EqualsFactStmt) ToEqualFacts() []*PureSpecificFactStmt {
+	ret := make([]*PureSpecificFactStmt, len(stmt.Params)-1)
 	for i := range len(stmt.Params) - 1 {
 		ret[i] = NewEqualFact(stmt.Params[i], stmt.Params[i+1])
 	}
 	return ret
 }
 
-func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []*SpecFactStmt {
-	ret := []*SpecFactStmt{}
+func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []FactStmt {
+	ret := []FactStmt{}
 	for i := range len(stmt.Params) - 1 {
 		for j := i + 1; j < len(stmt.Params); j++ {
 			ret = append(ret, NewEqualFact(stmt.Params[i], stmt.Params[j]))
@@ -161,9 +161,9 @@ func (strSlice StrSlice) ToObjSlice() []Obj {
 	return ret
 }
 
-func (head DefHeader) ToSpecFact() *SpecFactStmt {
+func (head DefHeader) ToSpecFact() *PureSpecificFactStmt {
 	params := head.Params.ToObjSlice()
-	return NewSpecFactStmt(TruePure, Atom(head.Name), params, glob.BuiltinLine0)
+	return NewPureSpecificFactStmt(true, Atom(head.Name), params, glob.BuiltinLine0)
 }
 
 func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *UniFactStmt {
@@ -406,7 +406,7 @@ func MakeListSetObj(params []Obj) Obj {
 	return NewFnObj(Atom(glob.KeywordListSet), params)
 }
 
-func MakeSetBuilderObj(param string, parentSet Obj, facts SpecFactPtrSlice) (*FnObj, error) {
+func MakeSetBuilderObj(param string, parentSet Obj, facts []*PureSpecificFactStmt) (*FnObj, error) {
 	params := []Obj{Atom(param), parentSet}
 
 	for _, fact := range facts {
@@ -420,25 +420,26 @@ func MakeSetBuilderObj(param string, parentSet Obj, facts SpecFactPtrSlice) (*Fn
 	return NewFnObj(Atom(glob.KeywordSetBuilder), params), nil
 }
 
-func changeSpecFactIntoObjs(fact *SpecFactStmt) ([]Obj, error) {
+func changeSpecFactIntoObjs(fact SpecificFactStmt) ([]Obj, error) {
 	ret := []Obj{}
-	switch fact.FactType {
-	case FalsePure:
-		ret = append(ret, Atom(strconv.Itoa(int(FalsePure))))
-	case FalseExist_St:
-		ret = append(ret, Atom(strconv.Itoa(int(FalseExist_St))))
-	case TrueExist_St:
-		ret = append(ret, Atom(strconv.Itoa(int(TrueExist_St))))
-	case TruePure:
-		ret = append(ret, Atom(strconv.Itoa(int(TruePure))))
-	}
-	ret = append(ret, Atom(strconv.Itoa(len(fact.Params))))
-	ret = append(ret, fact.PropName)
+	switch asFact := fact.(type) {
+	case *PureSpecificFactStmt:
+		if asFact.IsTrue {
+			ret = append(ret, Atom(strconv.Itoa(int(TruePure))))
+		} else {
+			ret = append(ret, Atom(strconv.Itoa(int(FalsePure))))
+		}
+		ret = append(ret, Atom(strconv.Itoa(len(asFact.Params))))
+		ret = append(ret, asFact.PropName)
 
-	for _, param := range fact.Params {
-		ret = append(ret, param)
-	}
+		for _, param := range asFact.Params {
+			ret = append(ret, param)
+		}
 
+		return ret, nil
+	case *ExistSpecificFactStmt:
+		return nil, fmt.Errorf("changeSpecFactIntoObjs: exist specific fact is not supported")
+	}
 	return ret, nil
 }
 
@@ -468,16 +469,16 @@ func NegateObj(right Obj) Obj {
 	return NewFnObj(Atom(glob.KeySymbolStar), []Obj{Atom("-1"), right})
 }
 
-func NewIsANonEmptySetFact(param Obj, line uint) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, line)
+func NewIsANonEmptySetFact(param Obj, line uint) *PureSpecificFactStmt {
+	return NewPureSpecificFactStmt(true, Atom(glob.KeywordIsANonEmptySet), []Obj{param}, line)
 }
 
-func NewIsAFiniteSetFact(param Obj, line uint) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, line)
+func NewIsAFiniteSetFact(param Obj, line uint) *PureSpecificFactStmt {
+	return NewPureSpecificFactStmt(true, Atom(glob.KeywordIsAFiniteSet), []Obj{param}, line)
 }
 
-func NewIsASetFact(param Obj, line uint) *SpecFactStmt {
-	return NewSpecFactStmt(TruePure, Atom(glob.KeywordIsASet), []Obj{param}, line)
+func NewIsASetFact(param Obj, line uint) *PureSpecificFactStmt {
+	return NewPureSpecificFactStmt(true, Atom(glob.KeywordIsASet), []Obj{param}, line)
 }
 
 func ObjIsKeywordSetOrNonEmptySetOrFiniteSet(obj Obj) bool {
@@ -505,16 +506,13 @@ func ObjIsRangeOrClosedRangeWith2Params(obj Obj) bool {
 	return false
 }
 
-func IsTrueEqualFact(fact *SpecFactStmt) bool {
-	if fact.FactType != TruePure {
+func IsTrueEqualFact(fact SpecificFactStmt) bool {
+	switch asFact := fact.(type) {
+	case *PureSpecificFactStmt:
+		return asFact.IsTrue && asFact.PropName == glob.KeySymbolEqual
+	default:
 		return false
 	}
-
-	if fact.PropName != glob.KeySymbolEqual {
-		return false
-	}
-
-	return true
 }
 
 // func (stmt *DefImplicationStmt) ToProp() *DefPropStmt {
@@ -522,20 +520,22 @@ func IsTrueEqualFact(fact *SpecFactStmt) bool {
 // 	return NewDefPropStmt(stmt.DefHeader, []FactStmt{}, stmt.DomFacts, stmt.ImplicationFacts, stmt.Line)
 // }
 
-func IsTrueSpecFactWithPropName(specFact *SpecFactStmt, propName string) bool {
-	if specFact.FactType != TruePure {
+func IsTrueSpecFactWithPropName(specFact SpecificFactStmt, propName string) bool {
+	switch asFact := specFact.(type) {
+	case *PureSpecificFactStmt:
+		return asFact.IsTrue && string(asFact.PropName) == propName
+	default:
 		return false
 	}
-
-	return string(specFact.PropName) == propName
 }
 
-func IsFalseSpecFactWithPropName(specFact *SpecFactStmt, propName string) bool {
-	if specFact.FactType != FalsePure {
+func IsFalseSpecFactWithPropName(specFact SpecificFactStmt, propName string) bool {
+	switch asFact := specFact.(type) {
+	case *PureSpecificFactStmt:
+		return !asFact.IsTrue && string(asFact.PropName) == propName
+	default:
 		return false
 	}
-
-	return string(specFact.PropName) == propName
 }
 
 func GetParamSetsAndRetSetFromFnSet(fnSet *FnObj) ([]Obj, Obj, error) {
@@ -639,7 +639,7 @@ func IsAtomWithoutPkgName(atom Atom) bool {
 	return true
 }
 
-func ParamsInSpecFactAreStrings(specFact *SpecFactStmt) ([]string, error) {
+func ParamsInSpecFactAreStrings(specFact *PureSpecificFactStmt) ([]string, error) {
 	ret := []string{}
 	for _, param := range specFact.Params {
 		if atom, ok := param.(Atom); !ok {

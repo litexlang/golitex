@@ -82,8 +82,16 @@ func (l *UniFactStmt) InlineString() string {
 	return builder.String()
 }
 
-func (p *SpecFactStmt) InlineString() string {
+// func (p *SpecFactStmt) InlineString() string {
+// 	return p.String()
+// }
+
+func (p *PureSpecificFactStmt) InlineString() string {
 	return p.String()
+}
+
+func (e *ExistSpecificFactStmt) InlineString() string {
+	return e.String()
 }
 
 func (f *ClaimProveStmt) InlineString() string {
@@ -482,14 +490,6 @@ func (s *EvalStmt) InlineString() string {
 // }
 
 func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
-	return s.String()
-}
-
-func (s *HaveShortStmt) InlineString() string {
-	return s.String()
-}
-
-func (s *WitnessShortStmt) InlineString() string {
 	return s.String()
 }
 
