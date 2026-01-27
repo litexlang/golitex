@@ -20,23 +20,7 @@ import (
 )
 
 func (ver *Verifier) matchExistFactWithOneInKnownUniFact(knownUniFact *ast.UniFactStmt, existFactInKnownUniFact *ast.ExistSpecificFactStmt, given *ast.ExistSpecificFactStmt, state *VerState) *glob.VerRet {
-	existFactInKnownUniFactParams := []ast.Obj{}
-	for _, existParamSet := range existFactInKnownUniFact.ExistFreeParamSets {
-		existFactInKnownUniFactParams = append(existFactInKnownUniFactParams, existParamSet)
-	}
-	for _, param := range existFactInKnownUniFact.PureFact.Params {
-		existFactInKnownUniFactParams = append(existFactInKnownUniFactParams, param)
-	}
-
-	givenParams := []ast.Obj{}
-	for _, existParamSet := range given.ExistFreeParamSets {
-		givenParams = append(givenParams, existParamSet)
-	}
-	for _, param := range given.PureFact.Params {
-		givenParams = append(givenParams, param)
-	}
-
-	ok, uniMap := ver.matchParamsWithFreeParamsWithInstParamInExistFact(knownUniFact.Params, existFactInKnownUniFact.ExistFreeParams, existFactInKnownUniFactParams, givenParams)
+	ok, uniMap := ver.matchParamsWithFreeParamsWithInstParamInExistFact(knownUniFact.Params, existFactInKnownUniFact.ExistFreeParams, existFactInKnownUniFact.ExistFreeParamSets, existFactInKnownUniFact.ExistFreeParamSets, existFactInKnownUniFact.PureFact.Params, given.PureFact.Params)
 
 	if !ok {
 		return glob.NewEmptyVerRetUnknown()

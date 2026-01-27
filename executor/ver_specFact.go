@@ -68,6 +68,7 @@ func (ver *Verifier) verSpecFactPostProcess(stmt ast.SpecificFactStmt, state *Ve
 }
 
 func (ver *Verifier) verSpecFactMainProcess(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+	// TODO: 需要吧如果builtin rule是在利用定义在证明的话，应该把这些逻辑放到下面的verSpecFact_ByDef里
 	if verRet := ver.verSpecFactByBuiltinRules(stmt, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}

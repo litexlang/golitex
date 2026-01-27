@@ -32,7 +32,7 @@ func (ver *Verifier) verTrueEqualFactAndCheckFnReq2(stmt ast.SpecificFactStmt, s
 		return verRet
 	}
 
-	if verRet := ver.verTrueEqualFactMainLogic(stmt, state); verRet.IsTrue() || verRet.IsErr() {
+	if verRet := ver.verTrueEqualFactOldMainLogic(stmt, state); verRet.IsTrue() || verRet.IsErr() {
 		return verRet
 	}
 

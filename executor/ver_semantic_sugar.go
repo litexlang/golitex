@@ -55,7 +55,7 @@ func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt ast.SpecificFactStm
 	}
 
 	if replaced {
-		verRet := ver.verTrueEqualFactMainLogic(newStmt, state.CopyAndReqOkToFalse())
+		verRet := ver.verTrueEqualFactOldMainLogic(newStmt, state.CopyAndReqOkToFalse())
 		if verRet.IsErr() {
 			return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{"failed to verify true equal fact: " + verRet.String()})
 		}
