@@ -87,8 +87,11 @@ func (ver *Verifier) verEqualRightIsTuple(left ast.Obj, right ast.Obj, state *Ve
 }
 
 func (ver *Verifier) verEqualByBuiltinEval(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-	left = ver.evaluateNonNumberLiteralExpr(left)
-	right = ver.evaluateNonNumberLiteralExpr(right)
+	replaced1, left := ver.evaluateNonNumberLiteralExpr(left)
+	replaced2, right := ver.evaluateNonNumberLiteralExpr(right)
+	if !replaced1 && !replaced2 {
+		return glob.NewEmptyVerRetUnknown()
+	}
 
 	ret := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right) // 完全一样
 	if ret.IsErr() {
@@ -104,25 +107,25 @@ func (ver *Verifier) verEqualByBuiltinEval(left ast.Obj, right ast.Obj, state *V
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verEqualBySpecMem(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
+func (ver *Verifier) verEqualBySpecMem(left ast.Obj, right ast.Obj) *glob.VerRet {
 	// if ver.env.CurMatchProp == nil {
 	for curEnvIndex := range ver.Env.EnvSlice {
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
-		verRet := ver.verEqualByEqualSpecMemAtEnv(curEnv, left, right, state)
+		verRet := ver.verEqualByEqualSpecMemAtEnv(curEnv, left, right)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}
 	}
 
 	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
-	verRet := ver.verEqualByEqualSpecMemAtEnv(curEnv, left, right, state)
+	verRet := ver.verEqualByEqualSpecMemAtEnv(curEnv, left, right)
 	if verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
 	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
 		curEnv := pkgEnvMgr.EnvSlice[0]
-		verRet := ver.verEqualByEqualSpecMemAtEnv(&curEnv, left, right, state)
+		verRet := ver.verEqualByEqualSpecMemAtEnv(&curEnv, left, right)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}
@@ -130,41 +133,6 @@ func (ver *Verifier) verEqualBySpecMem(left ast.Obj, right ast.Obj, state *VerSt
 
 	return glob.NewEmptyVerRetUnknown()
 }
-
-// func (ver *Verifier) equalFact_SpecMem_atEnv(curEnv *env.EnvMemory, left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-// 	nextState := state.GetNoMsg()
-
-// 	verRet := ver.verEqualByEqualSpecMemAtEnv(curEnv, left, right, nextState)
-// 	if verRet.IsErr() {
-// 		return verRet
-// 	}
-// 	if verRet.IsTrue() {
-// 		if state.WithMsg {
-// 			return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, verRet.VerifyMsgs)
-// 		}
-// 		return verRet
-// 	}
-
-// 	return glob.NewEmptyVerRetUnknown()
-// }
-
-// func (ver *Verifier) verLogicMem_leftToRight_RightToLeft(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-// 	equalFact := ast.NewEqualFact(left, right)
-// 	verRet := ver.verSpecFact_ByLogicMem(equalFact, state)
-// 	if verRet.IsErr() || verRet.IsTrue() {
-// 		return verRet
-// 	}
-
-// 	equalFactParamReversed, err := equalFact.ReverseSpecFactParamsOrder()
-// 	if err != nil {
-// 		return glob.NewVerRet(glob.StmtRetTypeError, equalFact.String(), glob.BuiltinLine0, []string{err.Error()})
-// 	}
-// 	verRet = ver.verSpecFact_ByLogicMem(equalFactParamReversed, state)
-// 	if verRet.IsErr() || verRet.IsTrue() {
-// 		return verRet
-// 	}
-// 	return glob.NewEmptyVerRetUnknown()
-// }
 
 func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
 	equalFact := ast.NewEqualFact(left, right)
@@ -184,8 +152,7 @@ func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verEqualByEqualSpecMemAtEnv(curEnv *env.EnvMemory, left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-	_ = state
+func (ver *Verifier) verEqualByEqualSpecMemAtEnv(curEnv *env.EnvMemory, left ast.Obj, right ast.Obj) *glob.VerRet {
 
 	equalToLeftObjs, gotLeftEqualObjs := curEnv.GetEqualObjs(left)
 	equalToRightObjs, gotRightEqualObjs := curEnv.GetEqualObjs(right)
