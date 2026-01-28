@@ -16,10 +16,27 @@ package litex_executor
 
 import (
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 func (ver *Verifier) evaluateNonNumberLiteralExpr(obj ast.Obj) (bool, ast.Obj) {
+	newReplaced, newObj := ver.Env.GetSymbolValue(obj)
+
+	if newReplaced {
+		return true, newObj
+	}
+
 	if objAsFn, ok := obj.(*ast.FnObj); ok {
+		// val(...) should be evaluated (like eval)
+		if ast.IsAtomObjAndEqualToStr(objAsFn.FnHead, glob.KeywordVal) && len(objAsFn.Params) == 1 {
+			exec := NewExecutor(ver.Env)
+			exec.NewEnv()
+			defer exec.deleteEnv()
+			value, execRet := exec.evalObjThenSimplify(objAsFn.Params[0])
+			if execRet.IsTrue() {
+				return true, value
+			}
+		}
 		// 尝试简化 set_dim(cart(...))
 		if simplified, replaced := ast.SimplifyDimCart(objAsFn); replaced {
 			return true, simplified
