@@ -2468,9 +2468,29 @@ func (p *TbParser) proveByInductionStmt(tb *tokenBlock) (Stmt, error) {
 	}()
 
 	// Parse N_pos (or other paramSet type) as Obj, but we don't store it in the struct
-	err = tb.header.skip(glob.KeywordNPos)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
+	var inducFrom Obj
+	if tb.header.is(glob.KeywordNPos) {
+		err = tb.header.skip(glob.KeywordNPos)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		inducFrom = Atom("1")
+	} else if tb.header.is(glob.KeywordNatural) {
+		err = tb.header.skip(glob.KeywordNatural)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		inducFrom = Atom("0")
+	} else if tb.header.is(glob.KeySymbolLargerEqual) {
+		err = tb.header.skip(glob.KeySymbolLargerEqual)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		inducFrom, err = p.Obj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
 	}
 
 	// Skip colon
@@ -2498,7 +2518,7 @@ func (p *TbParser) proveByInductionStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	// Create ProveByInductionStmt with proof
-	result := NewProveByInductionStmt(fact, param, proof, tb.line)
+	result := NewProveByInductionStmt(fact, param, proof, inducFrom, tb.line)
 	return result, nil
 }
 
