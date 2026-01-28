@@ -219,6 +219,8 @@ type ProveByInductionStmt struct {
 	Param string
 	Proof StmtSlice
 
+	InducFrom Obj
+
 	Line uint
 }
 
