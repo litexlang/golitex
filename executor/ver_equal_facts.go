@@ -25,21 +25,21 @@ import (
 // WARNING
 // REMARK
 // TODO: cmpFc_Builtin_Then_Decompose_Spec, fcEqualSpec 大循环本质上是有问题的，会有循环论证的风险：know p(p(1,2), 0) = 1, 则现在问 p(1,2) =1 吗？我会比较 p(1,2) = p(p(1,2), 0)，那这时候就出问题了：我因为一位位地比，所以又回到了比较 1 = p(1,2)
-func (ver *Verifier) cmpObj_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-	ret := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right) // 完全一样
-	if ret.IsErr() {
-		return ret
-	}
-	if ret.IsTrue() {
-		if state.WithMsg {
-			return ret
-		}
-		return glob.NewEmptyVerRetTrue()
-	}
+// func (ver *Verifier) cmpObj_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
+// 	ret := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right) // 完全一样
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
+// 	if ret.IsTrue() {
+// 		if state.WithMsg {
+// 			return ret
+// 		}
+// 		return glob.NewEmptyVerRetTrue()
+// 	}
 
-	// return ver.decomposeObjFnsAndCheckEquality(left, right, state, ver.objEqualSpec)
-	return glob.NewEmptyVerRetUnknown()
-}
+// 	// return ver.decomposeObjFnsAndCheckEquality(left, right, state, ver.objEqualSpec)
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
 func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj, state *VerState, areEqualObjs func(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet) *glob.VerRet {
 	if leftAsFn, ok := left.(*ast.FnObj); ok {
@@ -69,7 +69,7 @@ func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj
 
 // Iterate over all equal facts. On each equal fact, use commutative, associative, cmp rule to compare.
 func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-	if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+	if verRet := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
@@ -97,7 +97,7 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 					continue
 				}
 
-				if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToLeftObj, right, state); verRet.IsErr() {
+				if verRet := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(equalToLeftObj, right); verRet.IsErr() {
 					return verRet
 				} else if verRet.IsTrue() {
 					if state.WithMsg {
@@ -115,7 +115,7 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 					continue
 				}
 
-				if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToRightObj, left, state); verRet.IsErr() {
+				if verRet := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(equalToRightObj, left); verRet.IsErr() {
 					return verRet
 				} else if verRet.IsTrue() {
 					if state.WithMsg {
