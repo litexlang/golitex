@@ -22,22 +22,22 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-	if verRet := ver.verEqualByUseValuesOfSymbols(left, right, state); verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
+func (ver *Verifier) verEqualMainProcessByBuiltinRules(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
+	// if verRet := ver.verEqualByUseValuesOfSymbols(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+	// 	return verRet
+	// }
 
-	if verRet := ver.verEqualBySetMinusOfListSets(left, right, state); verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
+	// if verRet := ver.verEqualBySetMinusOfListSets(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+	// 	return verRet
+	// }
 
 	if verRet := ver.verEqualByEitherLeftOrRightIsTuple(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
-	if verRet := ver.verEqualByLeftAndRightAreSetBuilders(left, right, state); verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
+	// if verRet := ver.verEqualByLeftAndRightAreSetBuilders(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+	// 	return verRet
+	// }
 
 	return glob.NewEmptyVerRetUnknown()
 }
@@ -86,26 +86,26 @@ func (ver *Verifier) verEqualRightIsTuple(left ast.Obj, right ast.Obj, state *Ve
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verEqualByUseValuesOfSymbols(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-	replaced1, left := ver.GetValueOfSymbol(left)
-	replaced2, right := ver.GetValueOfSymbol(right)
-	if !replaced1 && !replaced2 {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// func (ver *Verifier) verEqualByUseValuesOfSymbols(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
+// replaced1, left := ver.GetValueOfSymbol(left)
+// replaced2, right := ver.GetValueOfSymbol(right)
+// if !replaced1 && !replaced2 {
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
-	ret := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right) // 完全一样
-	if ret.IsErr() {
-		return ret
-	}
-	if ret.IsTrue() {
-		if state.WithMsg {
-			return ret
-		}
-		return glob.NewEmptyVerRetTrue()
-	}
+// ret := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right) // 完全一样
+// if ret.IsErr() {
+// 	return ret
+// }
+// if ret.IsTrue() {
+// 	if state.WithMsg {
+// 		return ret
+// 	}
+// 	return glob.NewEmptyVerRetTrue()
+// }
 
-	return glob.NewEmptyVerRetUnknown()
-}
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
 func (ver *Verifier) verEqualBySpecMem(left ast.Obj, right ast.Obj) *glob.VerRet {
 	// if ver.env.CurMatchProp == nil {
@@ -189,135 +189,135 @@ func (ver *Verifier) verEqualByEqualSpecMemAtEnv(curEnv *env.EnvMemory, left ast
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verEqualByLeftAndRightAreSetBuilders(left, right ast.Obj, state *VerState) *glob.VerRet {
-	_ = state
+// func (ver *Verifier) verEqualByLeftAndRightAreSetBuilders(left, right ast.Obj, state *VerState) *glob.VerRet {
+// _ = state
 
-	leftSetBuilder := ver.Env.GetSetBuilderEqualToObj(left)
-	if leftSetBuilder == nil {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// leftSetBuilder := ver.Env.GetSetBuilderEqualToObj(left)
+// if leftSetBuilder == nil {
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
-	rightSetBuilder := ver.Env.GetSetBuilderEqualToObj(right)
-	if rightSetBuilder == nil {
-		return glob.NewEmptyVerRetUnknown()
-	}
-	// 生成一个随机的param，把两个set builder的param都替换成这个随机param
-	randomParam := ver.Env.GenerateUnusedRandomName()
+// rightSetBuilder := ver.Env.GetSetBuilderEqualToObj(right)
+// if rightSetBuilder == nil {
+// 	return glob.NewEmptyVerRetUnknown()
+// }
+// // 生成一个随机的param，把两个set builder的param都替换成这个随机param
+// randomParam := ver.Env.GenerateUnusedRandomName()
 
-	leftSetBuilderStruct, err := leftSetBuilder.ToSetBuilderStruct()
-	if err != nil {
-		return glob.NewVerRet(glob.StmtRetTypeError, left.String(), glob.BuiltinLine0, []string{err.Error()})
-	}
+// leftSetBuilderStruct, err := leftSetBuilder.ToSetBuilderStruct()
+// if err != nil {
+// 	return glob.NewVerRet(glob.StmtRetTypeError, left.String(), glob.BuiltinLine0, []string{err.Error()})
+// }
 
-	rightSetBuilderStruct, err := rightSetBuilder.ToSetBuilderStruct()
-	if err != nil {
-		return glob.NewVerRet(glob.StmtRetTypeError, right.String(), glob.BuiltinLine0, []string{err.Error()})
-	}
+// rightSetBuilderStruct, err := rightSetBuilder.ToSetBuilderStruct()
+// if err != nil {
+// 	return glob.NewVerRet(glob.StmtRetTypeError, right.String(), glob.BuiltinLine0, []string{err.Error()})
+// }
 
-	if !leftSetBuilderStruct.HasTheSameParentSetAndSpecFactNameAs(rightSetBuilderStruct) {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// if !leftSetBuilderStruct.HasTheSameParentSetAndSpecFactNameAs(rightSetBuilderStruct) {
+// 	return glob.NewEmptyVerRetUnknown()
+// }
 
-	leftSetBuilderStruct, err = leftSetBuilderStruct.ReplaceParamWithNewParam(randomParam)
-	if err != nil {
-		return glob.NewVerRet(glob.StmtRetTypeError, left.String(), glob.BuiltinLine0, []string{err.Error()})
-	}
+// leftSetBuilderStruct, err = leftSetBuilderStruct.ReplaceParamWithNewParam(randomParam)
+// if err != nil {
+// 	return glob.NewVerRet(glob.StmtRetTypeError, left.String(), glob.BuiltinLine0, []string{err.Error()})
+// }
 
-	rightSetBuilderStruct, err = rightSetBuilderStruct.ReplaceParamWithNewParam(randomParam)
-	if err != nil {
-		return glob.NewVerRet(glob.StmtRetTypeError, right.String(), glob.BuiltinLine0, []string{err.Error()})
-	}
+// rightSetBuilderStruct, err = rightSetBuilderStruct.ReplaceParamWithNewParam(randomParam)
+// if err != nil {
+// 	return glob.NewVerRet(glob.StmtRetTypeError, right.String(), glob.BuiltinLine0, []string{err.Error()})
+// }
 
-	if leftSetBuilderStruct.String() == rightSetBuilderStruct.String() {
-		return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{"by definition of set builder"})
-	}
+// if leftSetBuilderStruct.String() == rightSetBuilderStruct.String() {
+// 	return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{"by definition of set builder"})
+// }
 
-	return glob.NewEmptyVerRetUnknown()
-}
+// return glob.NewEmptyVerRetUnknown()
+// }
 
 // verEqualBySetMinusOfListSets verifies equality when left is set_minus(list_set1, list_set2) and right is a list_set
 // It computes set_minus by removing elements from list_set1 that are in list_set2
-func (ver *Verifier) verEqualBySetMinusOfListSets(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-	// Check if left is a set_minus function call
-	leftFnObj, ok := left.(*ast.FnObj)
-	if !ok {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// func (ver *Verifier) verEqualBySetMinusOfListSets(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
+// 	// Check if left is a set_minus function call
+// 	leftFnObj, ok := left.(*ast.FnObj)
+// 	if !ok {
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
 
-	if !ast.IsFn_WithHeadName(leftFnObj, glob.KeywordSetMinus) {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// 	if !ast.IsFn_WithHeadName(leftFnObj, glob.KeywordSetMinus) {
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
 
-	// Check that set_minus has 2 parameters
-	if len(leftFnObj.Params) != 2 {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// 	// Check that set_minus has 2 parameters
+// 	if len(leftFnObj.Params) != 2 {
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
 
-	// Get the actual list_set objects (they might be equal to list_sets rather than being list_sets directly)
-	leftListSet1 := ver.Env.GetListSetEqualToObj(leftFnObj.Params[0])
-	if leftListSet1 == nil {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// 	// Get the actual list_set objects (they might be equal to list_sets rather than being list_sets directly)
+// 	leftListSet1 := ver.Env.GetListSetEqualToObj(leftFnObj.Params[0])
+// 	if leftListSet1 == nil {
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
 
-	leftListSet2 := ver.Env.GetListSetEqualToObj(leftFnObj.Params[1])
-	if leftListSet2 == nil {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// 	leftListSet2 := ver.Env.GetListSetEqualToObj(leftFnObj.Params[1])
+// 	if leftListSet2 == nil {
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
 
-	// Check if right is a list_set
-	rightListSet := ver.Env.GetListSetEqualToObj(right)
-	if rightListSet == nil {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// 	// Check if right is a list_set
+// 	rightListSet := ver.Env.GetListSetEqualToObj(right)
+// 	if rightListSet == nil {
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
 
-	// Convert to FnObj to access parameters
-	listSet1FnObj, ok := leftListSet1.(*ast.FnObj)
-	if !ok {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// 	// Convert to FnObj to access parameters
+// 	listSet1FnObj, ok := leftListSet1.(*ast.FnObj)
+// 	if !ok {
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
 
-	listSet2FnObj, ok := leftListSet2.(*ast.FnObj)
-	if !ok {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// 	listSet2FnObj, ok := leftListSet2.(*ast.FnObj)
+// 	if !ok {
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
 
-	rightListSetFnObj, ok := rightListSet.(*ast.FnObj)
-	if !ok {
-		return glob.NewEmptyVerRetUnknown()
-	}
+// 	rightListSetFnObj, ok := rightListSet.(*ast.FnObj)
+// 	if !ok {
+// 		return glob.NewEmptyVerRetUnknown()
+// 	}
 
-	// right 里的东西都在 listSet1 里，但不在 listSet2 里
-	for _, elem := range rightListSetFnObj.Params {
-		equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{elem, listSet1FnObj}, glob.BuiltinLine0)
-		verRet := ver.VerFactStmt(equalFact, state)
-		if verRet.IsTrue() {
-			// 要能证明 forall item in right => not item $in listSet2
-			for _, itemInListSet2 := range listSet2FnObj.Params {
-				notEqual := ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{itemInListSet2, elem}, glob.BuiltinLine0)
-				verRet := ver.VerFactStmt(notEqual, state)
-				if verRet.IsNotTrue() {
-					return glob.NewEmptyVerRetUnknown()
-				}
-			}
-		} else {
-			return glob.NewEmptyVerRetUnknown()
-		}
-	}
+// 	// right 里的东西都在 listSet1 里，但不在 listSet2 里
+// 	for _, elem := range rightListSetFnObj.Params {
+// 		equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{elem, listSet1FnObj}, glob.BuiltinLine0)
+// 		verRet := ver.VerFactStmt(equalFact, state)
+// 		if verRet.IsTrue() {
+// 			// 要能证明 forall item in right => not item $in listSet2
+// 			for _, itemInListSet2 := range listSet2FnObj.Params {
+// 				notEqual := ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{itemInListSet2, elem}, glob.BuiltinLine0)
+// 				verRet := ver.VerFactStmt(notEqual, state)
+// 				if verRet.IsNotTrue() {
+// 					return glob.NewEmptyVerRetUnknown()
+// 				}
+// 			}
+// 		} else {
+// 			return glob.NewEmptyVerRetUnknown()
+// 		}
+// 	}
 
-	// listSet1 里的东西都在 right 里，不在right里就在 listSet2 里
-	for _, elem := range listSet1FnObj.Params {
-		equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{elem, rightListSetFnObj}, glob.BuiltinLine0)
-		verRet := ver.VerFactStmt(equalFact, state)
-		if verRet.IsTrue() {
-			continue
-		}
+// 	// listSet1 里的东西都在 right 里，不在right里就在 listSet2 里
+// 	for _, elem := range listSet1FnObj.Params {
+// 		equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{elem, rightListSetFnObj}, glob.BuiltinLine0)
+// 		verRet := ver.VerFactStmt(equalFact, state)
+// 		if verRet.IsTrue() {
+// 			continue
+// 		}
 
-		equalFact = ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{elem, listSet2FnObj}, glob.BuiltinLine0)
-		verRet = ver.VerFactStmt(equalFact, state)
-		if verRet.IsNotTrue() {
-			return glob.NewEmptyVerRetUnknown()
-		}
-	}
+// 		equalFact = ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{elem, listSet2FnObj}, glob.BuiltinLine0)
+// 		verRet = ver.VerFactStmt(equalFact, state)
+// 		if verRet.IsNotTrue() {
+// 			return glob.NewEmptyVerRetUnknown()
+// 		}
+// 	}
 
-	return glob.NewEmptyVerRetTrue()
-}
+// 	return glob.NewEmptyVerRetTrue()
+// }
