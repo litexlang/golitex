@@ -20,40 +20,18 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) evalVal(param ast.Obj) (bool, ast.Obj) {
-	if fnObj, ok := param.(*ast.FnObj); ok {
-		if ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordVal) && len(fnObj.Params) == 1 {
-			// val(...) should be evaluated (like eval)
-			exec := NewExecutor(ver.Env)
-			exec.NewEnv()
-			defer exec.deleteEnv()
-			value, execRet := exec.evalObjThenSimplify(fnObj.Params[0])
-			if execRet.IsTrue() {
-				return true, value
-			}
-		}
-
-		return false, nil
-	}
-
-	return false, nil
-}
-
 func (ver *Verifier) ReplaceObjInSpecFactWithValue(fact ast.SpecificFactStmt) (bool, ast.SpecificFactStmt) {
-	envMgr := ver.Env
-
 	switch fact := fact.(type) {
 	case *ast.PureSpecificFactStmt:
 		newParams := make([]ast.Obj, len(fact.Params))
 		replaced := false
 		for i, param := range fact.Params {
-			var newReplaced bool
-			newReplaced, newParams[i] = envMgr.ReplaceSymbolWithValue(param)
-			replaced = replaced || newReplaced
-			replacedByEval, newObj := ver.evalVal(param)
+			replacedByEval, newObj := ver.evaluateNonNumberLiteralExpr(param)
 			if replacedByEval {
 				replaced = true
 				newParams[i] = newObj
+			} else {
+				newParams[i] = param
 			}
 		}
 		return replaced, ast.NewPureSpecificFactStmt(fact.IsTrue, fact.PropName, newParams, fact.Line)
@@ -62,25 +40,23 @@ func (ver *Verifier) ReplaceObjInSpecFactWithValue(fact ast.SpecificFactStmt) (b
 
 		newParamSets := make([]ast.Obj, len(fact.ExistFreeParamSets))
 		for i, param := range fact.ExistFreeParamSets {
-			var newReplaced bool
-			newReplaced, newParamSets[i] = envMgr.ReplaceSymbolWithValue(param)
-			replaced = replaced || newReplaced
-			replacedByEval, newObj := ver.evalVal(param)
+			replacedByEval, newObj := ver.evaluateNonNumberLiteralExpr(param)
 			if replacedByEval {
 				replaced = true
 				newParamSets[i] = newObj
+			} else {
+				newParamSets[i] = param
 			}
 		}
 
 		newParams := make([]ast.Obj, len(fact.PureFact.Params))
 		for i, param := range fact.PureFact.Params {
-			var newReplaced bool
-			newReplaced, newParams[i] = envMgr.ReplaceSymbolWithValue(param)
-			replaced = replaced || newReplaced
-			replacedByEval, newObj := ver.evalVal(param)
+			replacedByEval, newObj := ver.evaluateNonNumberLiteralExpr(param)
 			if replacedByEval {
 				replaced = true
 				newParams[i] = newObj
+			} else {
+				newParams[i] = param
 			}
 		}
 
