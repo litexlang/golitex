@@ -70,7 +70,7 @@ func (ver *Verifier) verTrueEqualMainProcess(stmt *ast.PureSpecificFactStmt, sta
 		return verRet
 	}
 
-	if verRet := ver.verEqualSpecMem(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+	if verRet := ver.verEqualBySpecMem(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
