@@ -128,7 +128,7 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 
 	fnObjParamsValues := []ast.Obj{}
 	for _, param := range fnObj.Params {
-		_, value := exec.Env.GetSymbolValue(param)
+		_, value := exec.Env.GetStoredSymbolValue(param)
 		// simplifiedValue := value
 		simplifiedValue, execRet := exec.simplifyNumExprObj(value)
 		if execRet.IsNotTrue() {
@@ -247,7 +247,7 @@ func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValuePar
 }
 
 func (exec *Executor) GetSimplifiedValue(obj ast.Obj) (ast.Obj, *glob.StmtRet) {
-	_, value := exec.Env.GetSymbolValue(obj)
+	_, value := exec.Env.GetStoredSymbolValue(obj)
 	simplifiedValue, execRet := exec.simplifyNumExprObj(value)
 	if execRet.IsNotTrue() {
 		return nil, execRet

@@ -124,7 +124,7 @@ func (ver *Verifier) verSpecFactByMainProcessAndPostProcess(stmt ast.SpecificFac
 }
 
 func (ver *Verifier) verSpecFactPreProcess_ReplaceSymbolsWithValues(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
-	replaced, newStmt := ver.ReplaceObjInSpecFactWithValue(stmt)
+	replaced, newStmt := ver.ReplaceObjsInSpecFactWithValue(stmt)
 	if replaced {
 		verRet := ver.verSpecFactByMainProcessAndPostProcess(newStmt, state)
 		if verRet.IsErr() {
