@@ -60,7 +60,6 @@ func (ver *Verifier) verTrueEqualWholeProcess(stmt *ast.PureSpecificFactStmt, st
 
 func (ver *Verifier) verTrueEqualPreProcess(stmt *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
 	return ver.verByReplaceObjInSpecFactWithValue(stmt, state)
-	// return glob.NewEmptyVerRetUnknown()
 }
 
 func (ver *Verifier) verTrueEqualMainProcess(stmt *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {

@@ -84,13 +84,14 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 			givenParams = append(givenParams, asStmt.Params...)
 			knownParams = append(knownParams, knownOrFactInUni.OrFact.Facts[i].(*ast.PureSpecificFactStmt).Params...)
 		case *ast.ExistSpecificFactStmt:
-			curGivenParams, curKnownParams, _, _, ret := ver.GetParamsFromExistFactForMatchUniFactParams(asStmt, knownOrFactInUni.OrFact.Facts[i].(*ast.ExistSpecificFactStmt), []string{})
-			if ret.IsNotTrue() {
-				return ret
-			}
+			// curGivenParams, curKnownParams, _, _, ret := ver.GetParamsFromExistFactForMatchUniFactParams(asStmt, knownOrFactInUni.OrFact.Facts[i].(*ast.ExistSpecificFactStmt), []string{})
+			// if ret.IsNotTrue() {
+			// 	return ret
+			// }
 
-			givenParams = append(givenParams, curGivenParams...)
-			knownParams = append(knownParams, curKnownParams...)
+			// givenParams = append(givenParams, curGivenParams...)
+			// knownParams = append(knownParams, curKnownParams...)
+			return glob.NewEmptyVerRetUnknown()
 		}
 	}
 
