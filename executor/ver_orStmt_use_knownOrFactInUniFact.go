@@ -70,17 +70,36 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	for i := range given.Facts {
-		if given.Facts[i].GetPropName().String() != knownOrFactInUni.OrFact.Facts[i].GetPropName().String() || given.Facts[i].GetFactType() != knownOrFactInUni.OrFact.Facts[i].GetFactType() {
-			return glob.NewEmptyVerRetUnknown()
-		}
-	}
-
-	ok, freeParamObjMap := ver.matchOrFactWithOneInKnownUniFact(knownOrFactInUni.UniFact, knownOrFactInUni.OrFact, given)
-	if !ok {
+	// 复用 spec mem 的分组验证函数
+	_, _, isValid := ver.groupFactsByPropNameAndValidate(given, knownOrFactInUni.OrFact)
+	if !isValid {
 		return glob.NewEmptyVerRetUnknown()
 	}
 
+	// 生成 given facts 的所有排列，尝试与 known facts 匹配
+	permutations := generatePermutations(given.Facts)
+	for _, perm := range permutations {
+		// 创建重新排序后的 given OrStmt
+		reorderedGiven := ast.NewOrStmt(perm, given.Line)
+
+		ok, freeParamObjMap := ver.matchOrFactWithOneInKnownUniFact(knownOrFactInUni.UniFact, knownOrFactInUni.OrFact, reorderedGiven)
+		if ok {
+			// 验证 dom 和 paramSet
+			verRet := ver.verifyDomAndParamSets(knownOrFactInUni, freeParamObjMap, state)
+			if verRet.IsTrue() {
+				return glob.NewVerRet(glob.StmtRetTypeTrue, given.String(), knownOrFactInUni.OrFact.Line, []string{knownOrFactInUni.UniFact.String()})
+			}
+			if verRet.IsErr() {
+				return verRet
+			}
+		}
+	}
+
+	return glob.NewEmptyVerRetUnknown()
+}
+
+// verifyDomAndParamSets 验证 dom 和 paramSet 是否成立
+func (ver *Verifier) verifyDomAndParamSets(knownOrFactInUni *env.OrFactInUniFact, freeParamObjMap map[string]ast.Obj, state *VerState) *glob.VerRet {
 	// 让dom和paramSet都成立
 	for _, domFact := range knownOrFactInUni.UniFact.DomFacts {
 		instDomFact, err := domFact.Instantiate(freeParamObjMap)
@@ -106,7 +125,7 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 		newUniMap[knownOrFactInUni.UniFact.Params[i]] = freeParamObjMap[knownOrFactInUni.UniFact.Params[i]]
 	}
 
-	return glob.NewVerRet(glob.StmtRetTypeTrue, given.String(), knownOrFactInUni.OrFact.Line, []string{knownOrFactInUni.UniFact.String()})
+	return glob.NewEmptyVerRetTrue()
 }
 
 func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactStmt, orFactInKnownUniFact *ast.OrStmt, given *ast.OrStmt) (bool, map[string]ast.Obj) {
@@ -120,13 +139,23 @@ func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactS
 
 		switch curKnownAs := curKnown.(type) {
 		case *ast.PureSpecificFactStmt:
-			curGivenAs := curGiven.(*ast.PureSpecificFactStmt)
+			curGivenAs, ok := curGiven.(*ast.PureSpecificFactStmt)
+			if !ok {
+				return false, nil
+			}
 			allInstParamsThatEachFreeParamMatchesMap := ver.getAllObjectsThatEachFreeParamMatchesInPureFact(knownUniFact.Params, curKnownAs.Params, curGivenAs.Params)
 			for key, value := range allInstParamsThatEachFreeParamMatchesMap {
 				freeParamObjMaps[key] = append(freeParamObjMaps[key], value...)
 			}
 		case *ast.ExistSpecificFactStmt:
-			curGivenAs := curGiven.(*ast.ExistSpecificFactStmt)
+			curGivenAs, ok := curGiven.(*ast.ExistSpecificFactStmt)
+			if !ok {
+				return false, nil
+			}
+
+			if curGivenAs.PureFact.IsTrue != curGivenAs.PureFact.IsTrue {
+				return false, nil
+			}
 
 			newFreeExistParamsUnused := ver.Env.GenerateNoDuplicateNames(len(curGivenAs.ExistFreeParams), map[string]struct{}{})
 
