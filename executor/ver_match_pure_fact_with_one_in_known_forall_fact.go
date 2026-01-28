@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) matchPureFactWithOneInKnownUniFact(knownUniFact *ast.UniFactStmt, pureFactInKnownUniFact *ast.PureSpecificFactStmt, given *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) matchPureFactWithOneInKnownUniFactAndCheckMatchedObjectsSatisfyUniFactConditions(knownUniFact *ast.UniFactStmt, pureFactInKnownUniFact *ast.PureSpecificFactStmt, given *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
 	ok, uniMap := ver.matchObjectsWithFreeParamsWithInstObjectsInPureFact(knownUniFact.Params, pureFactInKnownUniFact.Params, given.Params)
 
 	if !ok {

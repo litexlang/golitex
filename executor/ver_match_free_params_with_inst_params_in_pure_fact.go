@@ -27,6 +27,7 @@ func (ver *Verifier) matchObjectsWithFreeParamsWithInstObjectsInPureFact(freePar
 
 	allInstParamsThatEachFreeParamMatchesMap := ver.getAllObjectsThatEachFreeParamMatchesInPureFact(freeParams, knownParams, givenParams)
 
+	// All free params must match some inst params
 	for i := range len(freeParams) {
 		items, ok := allInstParamsThatEachFreeParamMatchesMap[freeParams[i]]
 		if !ok || len(items) == 0 {

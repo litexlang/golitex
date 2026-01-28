@@ -34,7 +34,7 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
 	}
 
 	if !state.isFinalRound() {
-		ret = ver.verOrStmt_UseOrInUniFactMem(stmt, state)
+		ret = ver.verOrStmtByUniFactMem(stmt, state)
 		if ret.IsTrue() || ret.IsErr() {
 			return ret
 		}
