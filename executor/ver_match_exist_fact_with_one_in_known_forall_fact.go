@@ -19,8 +19,8 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) matchExistFactWithOneInKnownUniFact(knownUniFact *ast.UniFactStmt, existFactInKnownUniFact *ast.ExistSpecificFactStmt, given *ast.ExistSpecificFactStmt, state *VerState) *glob.VerRet {
-	ok, uniMap := ver.matchObjectsWithFreeParamsWithInstObjectsInExistFact(knownUniFact.Params, existFactInKnownUniFact.ExistFreeParams, existFactInKnownUniFact.ExistFreeParamSets, existFactInKnownUniFact.ExistFreeParamSets, existFactInKnownUniFact.PureFact.Params, given.PureFact.Params)
+func (ver *Verifier) matchExistFactWithOneInKnownUniFactAndCheckMatchedObjsSatisfyUniFactConditions(knownUniFact *ast.UniFactStmt, existFactInKnownUniFact *ast.ExistSpecificFactStmt, given *ast.ExistSpecificFactStmt, state *VerState) *glob.VerRet {
+	ok, uniMap := ver.matchObjectsWithFreeParamsWithInstObjectsInExistFact(knownUniFact.Params, existFactInKnownUniFact.ExistFreeParams, existFactInKnownUniFact.ExistFreeParamSets, given.ExistFreeParamSets, existFactInKnownUniFact.PureFact.Params, given.PureFact.Params)
 
 	if !ok {
 		return glob.NewEmptyVerRetUnknown()
