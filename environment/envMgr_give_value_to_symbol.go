@@ -21,16 +21,16 @@ import (
 	glob "golitex/glob"
 )
 
-func (envMgr *EnvMgr) GetSymbolValue(obj ast.Obj) (bool, ast.Obj) {
+func (envMgr *EnvMgr) GetStoredSymbolValue(obj ast.Obj) (bool, ast.Obj) {
 	if cmp.IsNumExprLitObj(obj) {
 		return false, obj
 	}
 
 	switch asObj := obj.(type) {
 	case ast.Atom:
-		return envMgr.GetValueOfAtomObj(asObj)
+		return envMgr.GetStoredValueOfAtomObj(asObj)
 	case *ast.FnObj:
-		return envMgr.GetValueOfFnObj(asObj)
+		return envMgr.GetStoredValueOfFnObj(asObj)
 	}
 	panic("")
 }
@@ -39,7 +39,7 @@ func (envMgr *EnvMgr) IsIndexOfTupleFnObjAndGetValueAtIndex(obj *ast.FnObj) (boo
 	if ast.IsIndexOptFnObj(obj) && ast.IsTupleObj(obj.Params[0]) {
 		value := ast.GetTupleValueAtIndex(obj.Params[0].(*ast.FnObj), obj.Params[1])
 		if value != nil {
-			_, valueOfValue := envMgr.GetSymbolValue(value)
+			_, valueOfValue := envMgr.GetStoredSymbolValue(value)
 			return true, valueOfValue
 		}
 		return false, nil
@@ -48,7 +48,7 @@ func (envMgr *EnvMgr) IsIndexOfTupleFnObjAndGetValueAtIndex(obj *ast.FnObj) (boo
 	return false, nil
 }
 
-func (envMgr *EnvMgr) GetValueOfFnObj(obj *ast.FnObj) (bool, ast.Obj) {
+func (envMgr *EnvMgr) GetStoredValueOfFnObj(obj *ast.FnObj) (bool, ast.Obj) {
 	if ok, value := envMgr.IsIndexOfTupleFnObjAndGetValueAtIndex(obj); ok {
 		return true, value
 	}
@@ -57,7 +57,7 @@ func (envMgr *EnvMgr) GetValueOfFnObj(obj *ast.FnObj) (bool, ast.Obj) {
 	if ast.IsAtomObjAndEqualToStr(obj.FnHead, glob.KeywordVal) && len(obj.Params) == 1 {
 		// val(x) 应该被计算为 x 的值
 		// 先替换参数中的符号为值
-		_, replacedParam := envMgr.GetSymbolValue(obj.Params[0])
+		_, replacedParam := envMgr.GetStoredSymbolValue(obj.Params[0])
 		// 然后尝试计算这个值（使用 eval 逻辑）
 		// 由于 environment 包不应该依赖 executor 包，我们在这里只做值替换
 		// 实际的 eval 计算会在 ReplaceObjInSpecFactWithValue 中通过 Executor 完成
@@ -67,7 +67,7 @@ func (envMgr *EnvMgr) GetValueOfFnObj(obj *ast.FnObj) (bool, ast.Obj) {
 	// 如果是 count(listSet)，计算 list set 的元素个数
 	if ast.IsAtomObjAndEqualToStr(obj.FnHead, glob.KeywordCount) && len(obj.Params) == 1 {
 		// 先对参数进行值替换
-		_, replacedParam := envMgr.GetSymbolValue(obj.Params[0])
+		_, replacedParam := envMgr.GetStoredSymbolValue(obj.Params[0])
 		if ast.IsListSetObj(replacedParam) {
 			listSet := replacedParam.(*ast.FnObj)
 			count := len(listSet.Params)
@@ -83,14 +83,14 @@ func (envMgr *EnvMgr) GetValueOfFnObj(obj *ast.FnObj) (bool, ast.Obj) {
 	newParams := make([]ast.Obj, len(obj.Params))
 	for i, param := range obj.Params {
 		var newReplaced bool
-		newReplaced, newParams[i] = envMgr.GetSymbolValue(param)
+		newReplaced, newParams[i] = envMgr.GetStoredSymbolValue(param)
 
 		replaced = replaced || newReplaced
 	}
 	return replaced, ast.NewFnObj(obj.FnHead, newParams)
 }
 
-func (envMgr *EnvMgr) GetValueOfAtomObj(obj ast.Atom) (bool, ast.Obj) {
+func (envMgr *EnvMgr) GetStoredValueOfAtomObj(obj ast.Atom) (bool, ast.Obj) {
 	symbolValue := envMgr.GetSymbolSimplifiedValue(obj)
 	if symbolValue == nil {
 		return false, obj

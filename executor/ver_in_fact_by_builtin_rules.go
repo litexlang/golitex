@@ -751,7 +751,7 @@ func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt ast.SpecificFactStmt,
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	_, toEval := ver.evaluateNonNumberLiteralExpr(asPureStmt.Params[0])
+	_, toEval := ver.GetValueOfSymbol(asPureStmt.Params[0])
 
 	if !cmp.IsNumExprLitObj(toEval) {
 		return glob.NewEmptyVerRetUnknown()
@@ -815,7 +815,7 @@ func (ver *Verifier) litNumNotInIntegerByLiteralShape(stmt ast.SpecificFactStmt,
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	_, toEval := ver.evaluateNonNumberLiteralExpr(asPureStmt.Params[0])
+	_, toEval := ver.GetValueOfSymbol(asPureStmt.Params[0])
 
 	if !cmp.IsNumExprLitObj(toEval) {
 		return glob.NewEmptyVerRetUnknown()
@@ -849,7 +849,7 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt ast.SpecificFactStmt, st
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	_, toEval := ver.evaluateNonNumberLiteralExpr(asPureStmt.Params[0])
+	_, toEval := ver.GetValueOfSymbol(asPureStmt.Params[0])
 
 	if !cmp.IsNumExprLitObj(toEval) {
 		return glob.NewEmptyVerRetUnknown()

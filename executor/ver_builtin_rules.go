@@ -154,7 +154,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt ast.SpecificFactStmt,
 	}
 
 	// 先评估表达式
-	_, toEval := ver.evaluateNonNumberLiteralExpr(asPureStmt.Params[0])
+	_, toEval := ver.GetValueOfSymbol(asPureStmt.Params[0])
 
 	// 对于 N 和 N_pos，检查是否有运算符、小数点或负号
 	if ast.IsAtomObjAndEqualToStr(asPureStmt.Params[1], glob.KeywordNatural) || ast.IsAtomObjAndEqualToStr(asPureStmt.Params[1], glob.KeywordNPos) {

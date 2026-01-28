@@ -20,13 +20,13 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) ReplaceObjInSpecFactWithValue(fact ast.SpecificFactStmt) (bool, ast.SpecificFactStmt) {
+func (ver *Verifier) ReplaceObjsInSpecFactWithValue(fact ast.SpecificFactStmt) (bool, ast.SpecificFactStmt) {
 	switch fact := fact.(type) {
 	case *ast.PureSpecificFactStmt:
 		newParams := make([]ast.Obj, len(fact.Params))
 		replaced := false
 		for i, param := range fact.Params {
-			replacedByEval, newObj := ver.evaluateNonNumberLiteralExpr(param)
+			replacedByEval, newObj := ver.GetValueOfSymbol(param)
 			if replacedByEval {
 				replaced = true
 				newParams[i] = newObj
@@ -40,7 +40,7 @@ func (ver *Verifier) ReplaceObjInSpecFactWithValue(fact ast.SpecificFactStmt) (b
 
 		newParamSets := make([]ast.Obj, len(fact.ExistFreeParamSets))
 		for i, param := range fact.ExistFreeParamSets {
-			replacedByEval, newObj := ver.evaluateNonNumberLiteralExpr(param)
+			replacedByEval, newObj := ver.GetValueOfSymbol(param)
 			if replacedByEval {
 				replaced = true
 				newParamSets[i] = newObj
@@ -51,7 +51,7 @@ func (ver *Verifier) ReplaceObjInSpecFactWithValue(fact ast.SpecificFactStmt) (b
 
 		newParams := make([]ast.Obj, len(fact.PureFact.Params))
 		for i, param := range fact.PureFact.Params {
-			replacedByEval, newObj := ver.evaluateNonNumberLiteralExpr(param)
+			replacedByEval, newObj := ver.GetValueOfSymbol(param)
 			if replacedByEval {
 				replaced = true
 				newParams[i] = newObj
@@ -72,7 +72,7 @@ func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt ast.SpecificFactStm
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	replaced, newStmt := ver.ReplaceObjInSpecFactWithValue(asStmt)
+	replaced, newStmt := ver.ReplaceObjsInSpecFactWithValue(asStmt)
 
 	if replaced {
 		verRet := ver.verTrueEqualWholeProcess(newStmt.(*ast.PureSpecificFactStmt), state.CopyAndReqOkToFalse())
