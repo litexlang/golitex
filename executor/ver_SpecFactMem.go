@@ -70,7 +70,7 @@ func (ver *Verifier) matchGivenPureFactWithOnesInKnownUniFacts(knownFacts []env.
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		newKnownUniFact := ver.Env.GetUniFactFactFreeParamsNotConflictWithDefinedParams(knownFacts[i].UniFact, map[string]struct{}{})
 
-		ret := ver.matchPureFactWithOneInKnownUniFact(newKnownUniFact, newKnownUniFact.ThenFacts[knownFacts[i].SpecFactIndex].(*ast.PureSpecificFactStmt), given, state)
+		ret := ver.matchPureFactWithOneInKnownUniFactAndCheckMatchedObjectsSatisfyUniFactConditions(newKnownUniFact, newKnownUniFact.ThenFacts[knownFacts[i].SpecFactIndex].(*ast.PureSpecificFactStmt), given, state)
 		if ret.IsTrue() {
 			return ret
 		}
@@ -106,7 +106,7 @@ func (ver *Verifier) matchGivenExistFactWithOnesInKnownUniFacts(knownFacts []env
 			return glob.NewEmptyVerRetErr()
 		}
 
-		ret := ver.matchExistFactWithOneInKnownUniFact(newKnownUniFact, newKnownExistInUni, newGiven, state)
+		ret := ver.matchExistFactWithOneInKnownUniFactAndCheckMatchedObjsSatisfyUniFactConditions(newKnownUniFact, newKnownExistInUni, newGiven, state)
 		if ret.IsTrue() {
 			return ret
 		}
