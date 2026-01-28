@@ -15,11 +15,12 @@
 package litex_executor
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verTrueEqualFactAndCheckFnReq2(stmt *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
 	nextState := state.CopyAndReqOkToTrue()
 	if !state.ReqOk {
 		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
@@ -66,7 +67,7 @@ func (ver *Verifier) verTrueEqualMainProcess(stmt *ast.PureSpecificFactStmt, sta
 	left := stmt.Params[0]
 	right := stmt.Params[1]
 
-	if verRet := ver.verEqualBuiltin(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+	if verRet := ver.verEqualMainProcessByBuiltinRules(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
@@ -107,26 +108,17 @@ func (ver *Verifier) verTrueEqualFact_ObjFnEqual_NoCheckRequirements(left, right
 	}
 
 	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
-	verRet := ver.verTrueEqualFactAndCheckFnReq2(ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left.FnHead, right.FnHead}, glob.BuiltinLine0), state.CopyAndReqOkToTrue())
-	if verRet.IsErr() {
+	verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left.FnHead, right.FnHead}, glob.BuiltinLine0), state.CopyAndReqOkToTrue())
+	if verRet.IsErr() || verRet.IsUnknown() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return glob.NewEmptyVerRetUnknown()
 	}
 
 	for i := range left.Params {
-		// ok, err := ver.fcEqualSpec(left.Params[i], right.Params[i], state)
-
-		verRet := ver.verTrueEqualFactAndCheckFnReq2(ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left.Params[i], right.Params[i]}, glob.BuiltinLine0), state.CopyAndReqOkToTrue())
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsUnknown() {
+		verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left.Params[i], right.Params[i]}, glob.BuiltinLine0), state.CopyAndReqOkToTrue())
+		if verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
 		}
 	}
 
-	// return newTrueVerRet("")
-	return glob.NewEmptyVerRetTrue()
+	return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left.String(), right.String()), glob.BuiltinLine0, []string{fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right)})
 }
