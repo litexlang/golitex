@@ -24,7 +24,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) *glob
 	// 如果结论是uniFact，那么dom和then全部不能是uniFact；然后不允许是uniFactIff
 	_, ok := stmt.Fact.(ast.SpecificFactStmt)
 	if !ok {
-		return glob.ErrRet(fmt.Sprintf("fact is not a specific fact: %s", stmt.Fact.String()))
+		return exec.AddStmtToStmtRet(glob.ErrRet(fmt.Sprintf("expect specific fact for induction, get:\n%s", stmt.Fact.String())), stmt)
 	}
 
 	// 验证步骤（在局部环境中）

@@ -1,6 +1,13 @@
-prop p(x R)
-prop q(x R)
+prop q(x N_pos)
 
-know forall x R: $p(x) or $q(x)
+know:
+    forall x N_pos: $q(x, 1)
+    forall d N_pos:
+        forall x N_pos:
+            $q(x, d)
+        =>:
+            forall x N_pos:
+                $q(x, (d + 1))
 
-$q(1) or $p(1)
+induc y N_pos: forall x N_pos: $q(x, y):
+    do_nothing
