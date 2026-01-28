@@ -106,7 +106,7 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 		newUniMap[knownOrFactInUni.UniFact.Params[i]] = freeParamObjMap[knownOrFactInUni.UniFact.Params[i]]
 	}
 
-	return glob.NewEmptyVerRetTrue()
+	return glob.NewVerRet(glob.StmtRetTypeTrue, given.String(), knownOrFactInUni.OrFact.Line, []string{knownOrFactInUni.UniFact.String()})
 }
 
 func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactStmt, orFactInKnownUniFact *ast.OrStmt, given *ast.OrStmt) (bool, map[string]ast.Obj) {
