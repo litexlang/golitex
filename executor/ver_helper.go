@@ -120,3 +120,7 @@ func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistSpe
 
 	return ast.NewExistSpecificFactStmt(existStruct.IsTrue, newExistParams, newExistParamSets, ast.NewPureSpecificFactStmt(existStruct.PureFact.IsTrue, existStruct.PureFact.PropName, newParams, existStruct.Line), existStruct.Line)
 }
+
+func NewVerTrueByBuiltinRule(stmt ast.Stmt, verifyMsgs []string) *glob.VerRet {
+	return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, verifyMsgs)
+}
