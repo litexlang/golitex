@@ -27,6 +27,13 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) *glob
 		return exec.AddStmtToStmtRet(glob.ErrRet(fmt.Sprintf("expect specific fact for induction, get:\n%s", stmt.Fact.String())), stmt)
 	}
 
+	// 证明 start 是 整数
+	startIsInt := ast.NewInFactWithObj(stmt.InducFrom, ast.Atom(glob.KeywordInteger))
+	startIsIntRet := exec.factStmt(startIsInt)
+	if startIsIntRet.IsNotTrue() {
+		return startIsIntRet.AddError(fmt.Sprintf("start is not an integer: %s", stmt.InducFrom.String()))
+	}
+
 	// 验证步骤（在局部环境中）
 	execRet := exec.proveByInductionStmtProveProcess(stmt)
 	if execRet.IsNotTrue() {
