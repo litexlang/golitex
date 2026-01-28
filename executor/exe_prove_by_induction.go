@@ -22,13 +22,13 @@ import (
 
 func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) *glob.StmtRet {
 	// 如果结论是uniFact，那么dom和then全部不能是uniFact；然后不允许是uniFactIff
-	execRet := exec.checkProveByInductionStmtFact(stmt.Fact)
-	if execRet.IsNotTrue() {
-		return execRet
+	_, ok := stmt.Fact.(ast.SpecificFactStmt)
+	if !ok {
+		return glob.ErrRet(fmt.Sprintf("fact is not a specific fact: %s", stmt.Fact.String()))
 	}
 
 	// 验证步骤（在局部环境中）
-	execRet = exec.proveByInductionStmtProveProcess(stmt)
+	execRet := exec.proveByInductionStmtProveProcess(stmt)
 	if execRet.IsNotTrue() {
 		return execRet
 	}
@@ -70,7 +70,7 @@ func (exec *Executor) proveByInductionStmtProveProcess(stmt *ast.ProveByInductio
 	ver := NewVerifier(exec.Env)
 
 	// 证明 1：如果把 stmt.Fact 的 param 改成 1，是否成立
-	startFact, err := stmt.Fact.InstantiateFact(map[string]ast.Obj{stmt.Param: ast.Atom("1")})
+	startFact, err := stmt.Fact.InstantiateFact(map[string]ast.Obj{stmt.Param: stmt.InducFrom})
 	if err != nil {
 		return glob.ErrRet(fmt.Sprintf("failed to instantiate fact with param=1: %s", err.Error()))
 	}
@@ -114,40 +114,40 @@ func (exec *Executor) proveByInductionStmtProveProcess(stmt *ast.ProveByInductio
 	return glob.NewEmptyStmtTrue()
 }
 
-// 等 inline Parser 能 parse depth的时候删了这个hjuu
-func (exec *Executor) checkProveByInductionStmtFact(fact ast.FactStmt) *glob.StmtRet {
-	// 如果结论是uniFact，那么dom和then全部不能是uniFact；然后不允许是uniFactIff
-	if uniFact, ok := fact.(*ast.UniFactStmt); ok {
-		for _, domFact := range uniFact.DomFacts {
-			if _, ok := domFact.(*ast.UniFactStmt); ok {
-				return glob.ErrRet(fmt.Sprintf("dom is uniFact: %s", domFact.String()))
-			}
-		}
-		for _, thenFact := range uniFact.ThenFacts {
-			if _, ok := thenFact.(*ast.UniFactStmt); ok {
-				return glob.ErrRet(fmt.Sprintf("then is uniFact: %s", thenFact.String()))
-			}
-		}
-	}
+// 等 inline Parser 能 parse depth的时候删了这个
+// func (exec *Executor) checkProveByInductionStmtFact(fact ast.FactStmt) *glob.StmtRet {
+// 	// 如果结论是uniFact，那么dom和then全部不能是uniFact；然后不允许是uniFactIff
+// 	if uniFact, ok := fact.(*ast.UniFactStmt); ok {
+// 		for _, domFact := range uniFact.DomFacts {
+// 			if _, ok := domFact.(*ast.UniFactStmt); ok {
+// 				return glob.ErrRet(fmt.Sprintf("dom is uniFact: %s", domFact.String()))
+// 			}
+// 		}
+// 		for _, thenFact := range uniFact.ThenFacts {
+// 			if _, ok := thenFact.(*ast.UniFactStmt); ok {
+// 				return glob.ErrRet(fmt.Sprintf("then is uniFact: %s", thenFact.String()))
+// 			}
+// 		}
+// 	}
 
-	if uniFactIff, ok := fact.(*ast.UniFactWithIffStmt); ok {
-		for _, iffFact := range uniFactIff.IffFacts {
-			if _, ok := iffFact.(*ast.UniFactStmt); ok {
-				return glob.ErrRet(fmt.Sprintf("iff is uniFact: %s", iffFact.String()))
-			}
-		}
-		for _, thenFact := range uniFactIff.UniFact.DomFacts {
-			if _, ok := thenFact.(*ast.UniFactStmt); ok {
-				return glob.ErrRet(fmt.Sprintf("then is uniFact: %s", thenFact.String()))
-			}
-		}
+// 	if uniFactIff, ok := fact.(*ast.UniFactWithIffStmt); ok {
+// 		for _, iffFact := range uniFactIff.IffFacts {
+// 			if _, ok := iffFact.(*ast.UniFactStmt); ok {
+// 				return glob.ErrRet(fmt.Sprintf("iff is uniFact: %s", iffFact.String()))
+// 			}
+// 		}
+// 		for _, thenFact := range uniFactIff.UniFact.DomFacts {
+// 			if _, ok := thenFact.(*ast.UniFactStmt); ok {
+// 				return glob.ErrRet(fmt.Sprintf("then is uniFact: %s", thenFact.String()))
+// 			}
+// 		}
 
-		for _, thenFact := range uniFactIff.UniFact.ThenFacts {
-			if _, ok := thenFact.(*ast.UniFactStmt); ok {
-				return glob.ErrRet(fmt.Sprintf("then is uniFact: %s", thenFact.String()))
-			}
-		}
-	}
+// 		for _, thenFact := range uniFactIff.UniFact.ThenFacts {
+// 			if _, ok := thenFact.(*ast.UniFactStmt); ok {
+// 				return glob.ErrRet(fmt.Sprintf("then is uniFact: %s", thenFact.String()))
+// 			}
+// 		}
+// 	}
 
-	return glob.NewEmptyStmtTrue()
-}
+// 	return glob.NewEmptyStmtTrue()
+// }
