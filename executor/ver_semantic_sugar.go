@@ -20,39 +20,83 @@ import (
 	glob "golitex/glob"
 )
 
+func (ver *Verifier) evalVal(param ast.Obj) (bool, ast.Obj) {
+	if fnObj, ok := param.(*ast.FnObj); ok {
+		if ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordVal) && len(fnObj.Params) == 1 {
+			// val(...) should be evaluated (like eval)
+			exec := NewExecutor(ver.Env)
+			exec.NewEnv()
+			defer exec.deleteEnv()
+			value, execRet := exec.evalObjThenSimplify(fnObj.Params[0])
+			if execRet.IsTrue() {
+				return true, value
+			}
+		}
+
+		return false, nil
+	}
+
+	return false, nil
+}
+
+func (ver *Verifier) ReplaceObjInSpecFactWithValue(fact ast.SpecificFactStmt) (bool, ast.SpecificFactStmt) {
+	envMgr := ver.Env
+
+	switch fact := fact.(type) {
+	case *ast.PureSpecificFactStmt:
+		newParams := make([]ast.Obj, len(fact.Params))
+		replaced := false
+		for i, param := range fact.Params {
+			var newReplaced bool
+			newReplaced, newParams[i] = envMgr.ReplaceSymbolWithValue(param)
+			replaced = replaced || newReplaced
+			replacedByEval, newObj := ver.evalVal(param)
+			if replacedByEval {
+				replaced = true
+				newParams[i] = newObj
+			}
+		}
+		return replaced, ast.NewPureSpecificFactStmt(fact.IsTrue, fact.PropName, newParams, fact.Line)
+	case *ast.ExistSpecificFactStmt:
+		replaced := false
+
+		newParamSets := make([]ast.Obj, len(fact.ExistFreeParamSets))
+		for i, param := range fact.ExistFreeParamSets {
+			var newReplaced bool
+			newReplaced, newParamSets[i] = envMgr.ReplaceSymbolWithValue(param)
+			replaced = replaced || newReplaced
+			replacedByEval, newObj := ver.evalVal(param)
+			if replacedByEval {
+				replaced = true
+				newParamSets[i] = newObj
+			}
+		}
+
+		newParams := make([]ast.Obj, len(fact.PureFact.Params))
+		for i, param := range fact.PureFact.Params {
+			var newReplaced bool
+			newReplaced, newParams[i] = envMgr.ReplaceSymbolWithValue(param)
+			replaced = replaced || newReplaced
+			replacedByEval, newObj := ver.evalVal(param)
+			if replacedByEval {
+				replaced = true
+				newParams[i] = newObj
+			}
+		}
+
+		return replaced, ast.NewExistSpecificFactStmt(fact.IsTrue, fact.ExistFreeParams, newParamSets, ast.NewPureSpecificFactStmt(fact.PureFact.IsTrue, fact.PureFact.PropName, fact.PureFact.Params, fact.PureFact.Line), fact.Line)
+	}
+
+	return false, nil
+}
+
 func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
-
-	// After replacing symbols with values, evaluate any val(...) expressions
-	newParams := make([]ast.Obj, len(asStmt.Params))
-	valReplaced := false
-	for i, param := range asStmt.Params {
-		if fnObj, ok := param.(*ast.FnObj); ok {
-			if ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordVal) && len(fnObj.Params) == 1 {
-				// val(...) should be evaluated (like eval)
-				exec := NewExecutor(ver.Env)
-				exec.NewEnv()
-				defer exec.deleteEnv()
-				value, execRet := exec.evalObjThenSimplify(fnObj.Params[0])
-				if execRet.IsTrue() {
-					newParams[i] = value
-					valReplaced = true
-					continue
-				}
-			}
-		}
-		newParams[i] = param
-	}
-
-	if valReplaced {
-		newStmt = ast.NewPureSpecificFactStmt(asStmt.IsTrue, asStmt.PropName, newParams, asStmt.Line)
-		replaced = true
-	}
+	replaced, newStmt := ver.ReplaceObjInSpecFactWithValue(asStmt)
 
 	if replaced {
 		verRet := ver.verTrueEqualWholeProcess(newStmt.(*ast.PureSpecificFactStmt), state.CopyAndReqOkToFalse())
@@ -71,23 +115,3 @@ func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt ast.SpecificFactStm
 
 	return glob.NewVerRet(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())})
 }
-
-// func (ver *Verifier) verByReplaceObjInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-// 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
-
-// 	if replaced {
-// 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state.CopyAndReqOkToFalse())
-// 		if verRet.IsErr() {
-// 			return verRet
-// 		}
-// 		if verRet.IsTrue() {
-// 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String())
-// 			if state.WithMsg {
-// 				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{msg})
-// 			}
-// 			return glob.NewEmptyVerRetTrue()
-// 		}
-// 	}
-
-// 	return glob.NewEmptyVerRetUnknown()
-// }
