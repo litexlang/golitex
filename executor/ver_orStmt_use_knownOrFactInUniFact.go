@@ -76,9 +76,10 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 		}
 	}
 
-	return glob.NewUnknownVerRet("")
-
-	freeParamObjMap := map[string]ast.Obj{}
+	ok, freeParamObjMap := ver.matchOrFactWithOneInKnownUniFact(knownOrFactInUni.UniFact, knownOrFactInUni.OrFact, given)
+	if !ok {
+		return glob.NewEmptyVerRetUnknown()
+	}
 
 	// 让dom和paramSet都成立
 	for _, domFact := range knownOrFactInUni.UniFact.DomFacts {
@@ -108,7 +109,7 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactStmt, orFactInKnownUniFact *ast.OrStmt, given *ast.OrStmt) *glob.VerRet {
+func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactStmt, orFactInKnownUniFact *ast.OrStmt, given *ast.OrStmt) (bool, map[string]ast.Obj) {
 	freeParamObjMaps := map[string][]ast.Obj{}
 	for _, key := range knownUniFact.Params {
 		freeParamObjMaps[key] = []ast.Obj{}
@@ -131,12 +132,12 @@ func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactS
 
 			newCurGiven, err := curGivenAs.ReplaceFreeParamsWithNewParams(newFreeExistParamsUnused)
 			if err != nil {
-				return glob.NewEmptyVerRetErr()
+				return false, nil
 			}
 
 			newCurKnown, err := curKnownAs.ReplaceFreeParamsWithNewParams(newFreeExistParamsUnused)
 			if err != nil {
-				return glob.NewEmptyVerRetErr()
+				return false, nil
 			}
 
 			allInstParamsThatEachFreeParamMatchesMap := ver.getAllObjectsThatEachFreeParamMatchesInExistFactByItsPureFact(knownUniFact.Params, newCurGiven.ExistFreeParams, newCurKnown.PureFact.Params, newCurGiven.PureFact.Params)
@@ -151,5 +152,16 @@ func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactS
 		}
 	}
 
-	return glob.NewEmptyVerRetUnknown()
+	// All free params must match some inst params
+	for _, key := range knownUniFact.Params {
+		if _, ok := freeParamObjMaps[key]; !ok {
+			return false, nil
+		}
+	}
+
+	freeParamObjMap := map[string]ast.Obj{}
+	for key, value := range freeParamObjMaps {
+		freeParamObjMap[key] = value[0]
+	}
+	return true, freeParamObjMap
 }
