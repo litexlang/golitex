@@ -76,19 +76,19 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) *glob.StmtRet {
-
-	verifyProcessMsgs := []*glob.VerRet{}
 	defineMsgs := []string{}
+	verifyProcessMsgs := []*glob.VerRet{}
 
 	for i := range len(stmt.Objs) {
 		if !glob.IsKeywordSetOrNonEmptySetOrFiniteSet(stmt.ObjSets[i].String()) {
 			existInFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIsANonEmptySet), []ast.Obj{stmt.ObjSets[i]}, stmt.Line)
-			execRet := exec.factStmt(existInFact)
-			if execRet.IsNotTrue() {
-				return glob.ErrRet(fmt.Sprintf("%s\n", stmt.String())).AddError(execRet.String())
+			verifier := NewVerifier(exec.Env)
+			verRet := verifier.VerFactStmt(existInFact, Round0Msg())
+			if verRet.IsNotTrue() {
+				return glob.ErrRet(verRet.String())
 			}
 
-			verifyProcessMsgs = append(verifyProcessMsgs, execRet.VerifyProcess...)
+			verifyProcessMsgs = append(verifyProcessMsgs, glob.NewVerRet(glob.StmtRetTypeTrue, existInFact.String(), stmt.Line, []string{verRet.VerifyMsgs[0]}))
 		}
 
 		stmtForDef := ast.NewDefLetStmt([]string{stmt.Objs[i]}, []ast.Obj{stmt.ObjSets[i]}, []ast.FactStmt{}, stmt.Line)

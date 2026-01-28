@@ -28,7 +28,7 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
 		}
 	}
 
-	ret := ver.verOrStmt_UseOrMem(stmt, state)
+	ret := ver.verOrStmtUseSpecMem(stmt, state)
 	if ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
@@ -43,24 +43,24 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verOrStmt_UseOrMem(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verOrStmtUseSpecMem(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
 	for curEnvIndex := range ver.Env.EnvSlice {
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
-		verRet := ver.orFact_UseOrMem_atCurEnv(curEnv, stmt, state)
+		verRet := ver.verOrStmtUseSpecMemAtEnv(curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}
 	}
 
 	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
-	verRet := ver.orFact_UseOrMem_atCurEnv(curEnv, stmt, state)
+	verRet := ver.verOrStmtUseSpecMemAtEnv(curEnv, stmt, state)
 	if verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
 	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
 		curEnv := pkgEnvMgr.EnvSlice[0]
-		verRet := ver.orFact_UseOrMem_atCurEnv(&curEnv, stmt, state)
+		verRet := ver.verOrStmtUseSpecMemAtEnv(&curEnv, stmt, state)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}
@@ -69,7 +69,7 @@ func (ver *Verifier) verOrStmt_UseOrMem(stmt *ast.OrStmt, state *VerState) *glob
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) orFact_UseOrMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.OrStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verOrStmtUseSpecMemAtEnv(curEnv *env.EnvMemory, stmt *ast.OrStmt, state *VerState) *glob.VerRet {
 	knownOrFacts, got := curEnv.OrFactsMem[string(stmt.Facts[0].GetPropName())]
 	if !got {
 		return glob.NewEmptyVerRetUnknown()
@@ -100,7 +100,7 @@ func (ver *Verifier) useKnownOrFactToCheckGivenOrFact(given *ast.OrStmt, known *
 		// 生成 givenFacts 的所有排列
 		permutations := generatePermutations(givenFacts)
 		for _, perm := range permutations {
-			ret := ver.matchSpecFactWhenCheckOr(knownFacts, perm, state)
+			ret := ver.matchEachSpecFactInGivenOrFactAndKnownOrFact(knownFacts, perm, state)
 			if ret.IsTrue() {
 				verified = true
 				break
@@ -158,7 +158,7 @@ func (ver *Verifier) groupFactsByPropNameAndValidate(given *ast.OrStmt, known *a
 	return givenSpecFactWithTheSameNameMap, knownSpecFactWithTheSameNameMap, true
 }
 
-func (ver *Verifier) matchSpecFactWhenCheckOr(knowns []ast.SpecificFactStmt, givens []ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) matchEachSpecFactInGivenOrFactAndKnownOrFact(knowns []ast.SpecificFactStmt, givens []ast.SpecificFactStmt, state *VerState) *glob.VerRet {
 	for i := range knowns {
 		known := knowns[i]
 		given := givens[i]
@@ -181,11 +181,21 @@ func (ver *Verifier) matchSpecFactWhenCheckOr(knowns []ast.SpecificFactStmt, giv
 			}
 
 		case *ast.ExistSpecificFactStmt:
-			if knownAs.String() != given.String() {
+			given := given.(*ast.ExistSpecificFactStmt)
+			newFreeExistParamsUnused := ver.Env.GenerateNoDuplicateNames(len(given.ExistFreeParams), map[string]struct{}{})
+			newGiven, err := given.ReplaceFreeParamsWithNewParams(newFreeExistParamsUnused)
+			if err != nil {
 				return glob.NewEmptyVerRetUnknown()
 			}
-		}
+			newKnown, err := knownAs.ReplaceFreeParamsWithNewParams(newFreeExistParamsUnused)
+			if err != nil {
+				return glob.NewEmptyVerRetUnknown()
+			}
 
+			if newGiven.String() == newKnown.String() {
+				return glob.NewEmptyVerRetTrue()
+			}
+		}
 	}
 
 	return glob.NewEmptyVerRetTrue()

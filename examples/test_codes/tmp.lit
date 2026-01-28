@@ -1,23 +1,2 @@
-have point nonempty_set
-have line nonempty_set
-have plane nonempty_set
-
-prop point_on_line(p point, l line)
-prop point_on_plane(p point, pl plane)
-prop line_on_plane(l line, pl plane)
-
-have line_of fn(point, point) line
-know:
-    forall a, b, c point, l line:
-        $point_on_line(a, l)
-        $point_on_line(b, l)
-        $point_on_line(c, l)
-        =>:
-            l = line_of(a, b)
-            l = line_of(a, c)
-            l = line_of(b, c)
-
-forall q Q: exist x Z, y N_pos st q = x / y, $co_prime(x, y)
-
-
-
+have z Q_pos
+z $in R
