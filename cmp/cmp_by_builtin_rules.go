@@ -15,6 +15,7 @@
 package litex_comparator
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 )
@@ -91,22 +92,22 @@ func IsNumExprObjThenSimplify(obj ast.Obj) ast.Obj {
 	return nil
 }
 
-func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Obj) (bool, string, error) {
+func CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right ast.Obj) *glob.VerRet {
 	// case 0: 按字面量来比较。这必须在比较div和比较polynomial之前，因为可能比较的是 * 和 *，即比较两个函数是不是一样。这种函数的比较，跑到div和polynomial就会出问题，因为在那些地方*都会被当成有参数的东西
 	ok, err := cmpObjLiterally(left, right)
 	if err != nil {
-		return false, "", err
+		return glob.NewEmptyVerRetErr()
 	}
 	if ok {
-		return true, "they are literally the same", nil
+		return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{"they are literally the same"})
 	}
 
 	areNumLit, areEqual, err := NumLitEqual_ByEval(left, right)
 	if err != nil {
-		return false, "", err
+		return glob.NewEmptyVerRetErr()
 	}
 	if areNumLit && areEqual {
-		return true, "calculation", nil
+		return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{"calculation"})
 	}
 
 	leftStr := left.String()
@@ -114,10 +115,10 @@ func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Obj) (bool, string, 
 
 	cmp := cmpArith_ByBIR(leftStr, rightStr)
 	if cmp {
-		return true, "The two polynomials become the same after simplification.", nil
+		return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{"polynomial simplification"})
 	}
 
-	return false, "", nil
+	return glob.NewEmptyVerRetUnknown()
 }
 
 func IsNumExprLitObj(obj ast.Obj) bool {
@@ -151,11 +152,11 @@ func NumLitEqual_ByEval(left, right ast.Obj) (bool, bool, error) {
 
 func SliceObjAllEqualToGivenObjBuiltinRule(valuesToBeComped *[]ast.Obj, objToComp ast.Obj) (bool, error) {
 	for _, equalObj := range *valuesToBeComped {
-		ok, _, err := CmpBy_Literally_NumLit_PolynomialArith(equalObj, objToComp)
-		if err != nil {
-			return false, err
+		ret := CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(equalObj, objToComp)
+		if ret.IsErr() {
+			return false, fmt.Errorf(ret.String())
 		}
-		if ok {
+		if ret.IsTrue() {
 			return true, nil
 		}
 	}

@@ -52,11 +52,8 @@ func cmpFnObjRule(left, right *ast.FnObj) (bool, error) {
 	}
 
 	for i := range len(left.Params) {
-		ok, _, err := CmpBy_Literally_NumLit_PolynomialArith(left.Params[i], right.Params[i])
-		if err != nil {
-			return false, err
-		}
-		if !ok {
+		ret := CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left.Params[i], right.Params[i])
+		if ret.IsNotTrue() {
 			return false, nil
 		}
 	}
