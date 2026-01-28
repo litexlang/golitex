@@ -22,110 +22,6 @@ import (
 	glob "golitex/glob"
 )
 
-// how equality is verified is different from other facts because 1. it is stored differently 2. its transitive and commutative property is automatically used by the verifier
-// func (ver *Verifier) VerTrueEqualFactAndCheckFnReq(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
-// 	if !state.ReqOk {
-// 		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
-// 			return verRet
-// 		}
-
-// 		state.UpdateReqOkToTrue()
-// 	}
-
-// 	if verRet := ver.verByReplaceObjInSpecFactWithValue(stmt, state); verRet.IsTrue() || verRet.IsErr() {
-// 		return verRet
-// 	}
-
-// 	if verRet := ver.verTrueEqualFactOldMainLogic(stmt, state); verRet.IsTrue() || verRet.IsErr() {
-// 		return verRet
-// 	}
-
-// 	// if verRet := ver.verByReplaceObjInSpecFactWithValueAndCompute(stmt, state); verRet.IsTrue() || verRet.IsErr() {
-// 	// 	return verRet
-// 	// }
-
-// 	return glob.NewEmptyVerRetUnknown()
-// }
-
-// func (ver *Verifier) verTrueEqualFactOldMainLogic(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
-
-// 	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
-// 	if !ok {
-// 		return glob.NewEmptyVerRetUnknown()
-// 	}
-
-// 	if verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(asStmt.Params[0], asStmt.Params[1], state); verRet.IsErr() || verRet.IsTrue() {
-// 		return verRet
-// 	}
-
-// 	if leftAsFn, ok := asStmt.Params[0].(*ast.FnObj); ok {
-// 		if rightAsFn, ok := asStmt.Params[1].(*ast.FnObj); ok {
-// 			verRet := ver.verTrueEqualFact_ObjFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
-// 			if verRet.IsErr() || verRet.IsTrue() {
-// 				return verRet
-// 			}
-// 		}
-// 	} else {
-// 		return glob.NewEmptyVerRetUnknown()
-// 	}
-
-// 	return glob.NewEmptyVerRetUnknown()
-// }
-
-// extractValParam extracts the parameter from val(x), returns x and true if it's a val call
-// func (ver *Verifier) extractValParam(obj ast.Obj) (ast.Obj, bool) {
-// 	if fnObj, ok := obj.(*ast.FnObj); ok {
-// 		if ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordVal) && len(fnObj.Params) == 1 {
-// 			return fnObj.Params[0], true
-// 		}
-// 	}
-// 	return nil, false
-// }
-
-// func isValidEqualFact(stmt *ast.SpecFactStmt) bool {
-// 	return len(stmt.Params) == 2 && string(stmt.PropName) == glob.KeySymbolEqual
-// }
-
-// func (ver *Verifier) verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-// 	// val(x) = y is equivalent to x = y (val is handled in ReplaceObjInSpecFactWithValue)
-// 	if leftVal, ok := ver.extractValParam(left); ok {
-// 		verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(leftVal, right, state)
-// 		if verRet.IsTrue() || verRet.IsErr() {
-// 			return verRet
-// 		}
-// 	}
-// 	if rightVal, ok := ver.extractValParam(right); ok {
-// 		verRet := ver.verObjEqual_ByBtRules_SpecMem_LogicMem_UniMem(left, rightVal, state)
-// 		if verRet.IsTrue() || verRet.IsErr() {
-// 			return verRet
-// 		}
-// 	}
-
-// 	if verRet := ver.verEqualBuiltin(left, right, state); verRet.IsErr() || verRet.IsTrue() {
-// 		return verRet
-// 	}
-
-// 	if verRet := ver.verEqualSpecMem(left, right, state); verRet.IsErr() || verRet.IsTrue() {
-// 		return verRet
-// 	}
-
-// 	if !state.isFinalRound() {
-// 		// if verRet := ver.verLogicMem_leftToRight_RightToLeft(left, right, state); verRet.IsErr() {
-// 		// 	return verRet
-// 		// } else if verRet.IsTrue() {
-// 		// 	return verRet
-// 		// }
-
-// 		if verRet := ver.verEqualUniMem(left, right, state); verRet.IsErr() {
-// 			return verRet
-// 		} else if verRet.IsTrue() {
-// 			return verRet
-// 		}
-// 	}
-
-// 	return glob.NewEmptyVerRetUnknown()
-// }
-
 func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
 	if verRet := ver.verEqualByBuiltinEval(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
@@ -194,13 +90,13 @@ func (ver *Verifier) verEqualByBuiltinEval(left ast.Obj, right ast.Obj, state *V
 	left = ver.evaluateNonNumberLiteralExpr(left)
 	right = ver.evaluateNonNumberLiteralExpr(right)
 
-	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
-	if err != nil {
-		return glob.NewVerRet(glob.StmtRetTypeError, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{err.Error()})
+	ret := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right) // 完全一样
+	if ret.IsErr() {
+		return ret
 	}
-	if ok {
+	if ret.IsTrue() {
 		if state.WithMsg {
-			return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s by evaluation", left, right), glob.BuiltinLine0, []string{msg})
+			return ret
 		}
 		return glob.NewEmptyVerRetTrue()
 	}
