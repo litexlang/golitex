@@ -23,25 +23,33 @@ import (
 func (ver *Verifier) verOrStmtByUniFactMem(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
 	nextState := state.GetAddRound()
 
-	for curEnvIndex := range ver.Env.EnvSlice {
-		curEnv := &ver.Env.EnvSlice[curEnvIndex]
-		verRet := ver.verOrFactByUniFactMemAtEnv(curEnv, stmt, nextState)
+	// 生成 given facts 的所有排列
+	permutations := generatePermutations(stmt.Facts)
+
+	// 对每个排列尝试匹配
+	for _, perm := range permutations {
+		reorderedStmt := ast.NewOrStmt(perm, stmt.Line)
+
+		for curEnvIndex := range ver.Env.EnvSlice {
+			curEnv := &ver.Env.EnvSlice[curEnvIndex]
+			verRet := ver.verOrFactByUniFactMemAtEnv(curEnv, reorderedStmt, nextState)
+			if verRet.IsErr() || verRet.IsTrue() {
+				return verRet
+			}
+		}
+
+		curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
+		verRet := ver.verOrFactByUniFactMemAtEnv(curEnv, reorderedStmt, nextState)
 		if verRet.IsErr() || verRet.IsTrue() {
 			return verRet
 		}
-	}
 
-	curEnv := env.BuiltinEnvMgrWithEmptyEnvPkgMgr.CurEnv()
-	verRet := ver.verOrFactByUniFactMemAtEnv(curEnv, stmt, nextState)
-	if verRet.IsErr() || verRet.IsTrue() {
-		return verRet
-	}
-
-	for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
-		curEnv := pkgEnvMgr.EnvSlice[0]
-		verRet := ver.verOrFactByUniFactMemAtEnv(&curEnv, stmt, nextState)
-		if verRet.IsErr() || verRet.IsTrue() {
-			return verRet
+		for _, pkgEnvMgr := range ver.Env.EnvPkgMgr.AbsPkgPathEnvMgrMap {
+			curEnv := pkgEnvMgr.EnvSlice[0]
+			verRet := ver.verOrFactByUniFactMemAtEnv(&curEnv, reorderedStmt, nextState)
+			if verRet.IsErr() || verRet.IsTrue() {
+				return verRet
+			}
 		}
 	}
 
@@ -76,22 +84,16 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	// 生成 given facts 的所有排列，尝试与 known facts 匹配
-	permutations := generatePermutations(given.Facts)
-	for _, perm := range permutations {
-		// 创建重新排序后的 given OrStmt
-		reorderedGiven := ast.NewOrStmt(perm, given.Line)
-
-		ok, freeParamObjMap := ver.matchOrFactWithOneInKnownUniFact(knownOrFactInUni.UniFact, knownOrFactInUni.OrFact, reorderedGiven)
-		if ok {
-			// 验证 dom 和 paramSet
-			verRet := ver.verifyDomAndParamSets(knownOrFactInUni, freeParamObjMap, state)
-			if verRet.IsTrue() {
-				return glob.NewVerRet(glob.StmtRetTypeTrue, given.String(), knownOrFactInUni.OrFact.Line, []string{knownOrFactInUni.UniFact.String()})
-			}
-			if verRet.IsErr() {
-				return verRet
-			}
+	// 直接尝试匹配（排列已经在 verOrStmtByUniFactMem 中处理）
+	ok, freeParamObjMap := ver.matchOrFactWithOneInKnownUniFact(knownOrFactInUni.UniFact, knownOrFactInUni.OrFact, given)
+	if ok {
+		// 验证 dom 和 paramSet
+		verRet := ver.verifyDomAndParamSets(knownOrFactInUni, freeParamObjMap, state)
+		if verRet.IsTrue() {
+			return glob.NewVerRet(glob.StmtRetTypeTrue, given.String(), knownOrFactInUni.OrFact.Line, []string{knownOrFactInUni.UniFact.String()})
+		}
+		if verRet.IsErr() {
+			return verRet
 		}
 	}
 
