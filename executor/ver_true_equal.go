@@ -23,7 +23,7 @@ import (
 )
 
 func (ver *Verifier) verEqualBuiltin(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-	if verRet := ver.verEqualByBuiltinEval(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+	if verRet := ver.verEqualByUseValuesOfSymbols(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
@@ -86,9 +86,9 @@ func (ver *Verifier) verEqualRightIsTuple(left ast.Obj, right ast.Obj, state *Ve
 	return glob.NewEmptyVerRetUnknown()
 }
 
-func (ver *Verifier) verEqualByBuiltinEval(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-	replaced1, left := ver.evaluateNonNumberLiteralExpr(left)
-	replaced2, right := ver.evaluateNonNumberLiteralExpr(right)
+func (ver *Verifier) verEqualByUseValuesOfSymbols(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
+	replaced1, left := ver.GetValueOfSymbol(left)
+	replaced2, right := ver.GetValueOfSymbol(right)
 	if !replaced1 && !replaced2 {
 		return glob.NewEmptyVerRetUnknown()
 	}
@@ -153,7 +153,6 @@ func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState
 }
 
 func (ver *Verifier) verEqualByEqualSpecMemAtEnv(curEnv *env.EnvMemory, left ast.Obj, right ast.Obj) *glob.VerRet {
-
 	equalToLeftObjs, gotLeftEqualObjs := curEnv.GetEqualObjs(left)
 	equalToRightObjs, gotRightEqualObjs := curEnv.GetEqualObjs(right)
 
@@ -172,7 +171,7 @@ func (ver *Verifier) verEqualByEqualSpecMemAtEnv(curEnv *env.EnvMemory, left ast
 			if verRet := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(equalToLeftObj, right); verRet.IsErr() {
 				return verRet
 			} else if verRet.IsTrue() {
-				return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", equalToLeftObj, right), glob.BuiltinLine0, []string{fmt.Sprintf("It is true that:\n%s = %s and %s = %s", equalToLeftObj, right, equalToLeftObj, left)})
+				return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", equalToLeftObj, right), glob.BuiltinLine0, []string{fmt.Sprintf("It is known that:\n%s = %s and %s = %s", equalToLeftObj, right, equalToLeftObj, left)})
 			}
 		}
 	}
@@ -182,7 +181,7 @@ func (ver *Verifier) verEqualByEqualSpecMemAtEnv(curEnv *env.EnvMemory, left ast
 			if verRet := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(equalToRightObj, left); verRet.IsErr() {
 				return verRet
 			} else if verRet.IsTrue() {
-				return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, equalToRightObj), glob.BuiltinLine0, []string{fmt.Sprintf("It is true that\n%s = %s and %s = %s", left, equalToRightObj, equalToRightObj, right)})
+				return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, equalToRightObj), glob.BuiltinLine0, []string{fmt.Sprintf("It is known that\n%s = %s and %s = %s", left, equalToRightObj, equalToRightObj, right)})
 			}
 		}
 	}

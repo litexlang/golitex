@@ -259,13 +259,13 @@ func (envMgr *EnvMgr) StoreTrueEqualValues(key, value ast.Obj) {
 }
 
 func (envMgr *EnvMgr) storeSymbolSimplifiedValue(left, right ast.Obj) *glob.StmtRet {
-	_, newLeft := envMgr.GetSymbolValue(left)
+	_, newLeft := envMgr.GetStoredSymbolValue(left)
 	if cmp.IsNumExprLitObj(newLeft) {
 		simplifiedNewLeft := cmp.IsNumExprObjThenSimplify(newLeft)
 		envMgr.StoreTrueEqualValues(right, simplifiedNewLeft)
 	}
 
-	_, newRight := envMgr.GetSymbolValue(right)
+	_, newRight := envMgr.GetStoredSymbolValue(right)
 	if cmp.IsNumExprLitObj(newRight) {
 		simplifiedNewRight := cmp.IsNumExprObjThenSimplify(newRight)
 		envMgr.StoreTrueEqualValues(left, simplifiedNewRight)

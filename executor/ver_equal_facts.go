@@ -159,9 +159,9 @@ func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, sta
 			if leftEqualObj.String() == rightEqualObj.String() {
 				return glob.NewEmptyStmtTrue()
 			} else {
-				_, newLeft := ver.Env.GetSymbolValue(leftEqualObj)
+				_, newLeft := ver.Env.GetStoredSymbolValue(leftEqualObj)
 				if cmp.IsNumExprLitObj(newLeft) {
-					_, newRight := ver.Env.GetSymbolValue(rightEqualObj)
+					_, newRight := ver.Env.GetStoredSymbolValue(rightEqualObj)
 					if ret := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(newLeft, newRight); ret.IsTrue() {
 						return glob.NewEmptyStmtTrue()
 					}
