@@ -17,6 +17,7 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	cmp "golitex/cmp"
 	env "golitex/environment"
 	glob "golitex/glob"
 )
@@ -312,7 +313,7 @@ func (ver *Verifier) matchTwoPureSpecFacts(stmt *ast.PureSpecificFactStmt, known
 	// 如果不区分 equal 和 其他事实的话，可能会出死循环
 	if stmt.PropName == glob.KeySymbolEqual && stmt.IsTrue {
 		for i, knownParam := range knownFact.Params {
-			verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(knownParam, stmt.Params[i], state)
+			verRet := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(knownParam, stmt.Params[i])
 			if verRet.IsErr() || verRet.IsUnknown() {
 				return verRet
 			}
