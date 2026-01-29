@@ -78,14 +78,7 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	// 复用 spec mem 的分组验证函数
-	_, _, isValid := ver.groupFactsByPropNameAndValidate(given, knownOrFactInUni.OrFact)
-	if !isValid {
-		return glob.NewEmptyVerRetUnknown()
-	}
-
-	// 直接尝试匹配（排列已经在 verOrStmtByUniFactMem 中处理）
-	ok, freeParamObjMap := ver.matchOrFactWithOneInKnownUniFact(knownOrFactInUni.UniFact, knownOrFactInUni.OrFact, given)
+	ok, freeParamObjMap := ver.matchOrFactWithOneInKnownUniFact(knownOrFactInUni.UniFact, knownOrFactInUni.OrFact, given, state)
 	if ok {
 		// 验证 dom 和 paramSet
 		verRet := ver.verifyDomAndParamSets(knownOrFactInUni, freeParamObjMap, state)
@@ -130,7 +123,7 @@ func (ver *Verifier) verifyDomAndParamSets(knownOrFactInUni *env.OrFactInUniFact
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactStmt, orFactInKnownUniFact *ast.OrStmt, given *ast.OrStmt) (bool, map[string]ast.Obj) {
+func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactStmt, orFactInKnownUniFact *ast.OrStmt, given *ast.OrStmt, state *VerState) (bool, map[string]ast.Obj) {
 	freeParamObjMaps := map[string][]ast.Obj{}
 	for _, key := range knownUniFact.Params {
 		freeParamObjMaps[key] = []ast.Obj{}
@@ -185,8 +178,16 @@ func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactS
 
 	// All free params must match some inst params
 	for _, key := range knownUniFact.Params {
-		if _, ok := freeParamObjMaps[key]; !ok {
+		if _, ok := freeParamObjMaps[key]; !ok || len(freeParamObjMaps[key]) == 0 {
 			return false, nil
+		}
+
+		for j := 1; j < len(freeParamObjMaps[key]); j++ {
+			equalFact := ast.NewEqualFact(freeParamObjMaps[key][0], freeParamObjMaps[key][j])
+			ret := ver.VerFactStmt(equalFact, state)
+			if ret.IsNotTrue() {
+				return false, nil
+			}
 		}
 	}
 
