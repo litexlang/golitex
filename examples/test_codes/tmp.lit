@@ -1,30 +1,7 @@
-have f fn(N_pos) N_pos
-know:
-    f(1) = 2
-    forall n N_pos:
-        n > 1
-        n % 2 = 0
-        =>:
-            f(n) = f(n - 1) + 1
-    forall n N_pos:
-        n > 1
-        n % 2 = 1
-        =>:
-            f(n) = f(n - 2) + 2
-  
-algo f(n):
-    if n = 1:
-        return 2
-    if n % 2 = 0:
-        return f(n - 1) + 1
-    if n % 2 = 1:
-        return f(n - 2) + 2
-
-claim:
-    f(2000) = 2001
-    prove:
-        eval f(2000)
-        f(2000) = 2001
-
-# it got stuck, so I had to terminate the verificaiton process. potential fall back: large number
-# f(10) = 11 works instantly, but f(2017) = 2018 got stuck for over 2 mins and didn't return anything
+have fn g(x Z) N =:
+    case x < 0: 7 * (-x) + 2:
+        -x $in N
+        7 * (-x) + 2 $in N
+    case x >= 0: 7 * x + 1:
+        x $in N
+        7 * x + 1 $in N

@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) haveFnEqualCaseByCaseStmt2(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
+func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
 	ret := exec.haveFnEqualCaseByCaseStmt_Verify(stmt)
 	if ret.IsNotTrue() {
 		return ret
@@ -127,45 +127,28 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap_ReturnValue
 }
 
 func (exec *Executor) haveFnEqualCaseByCaseStmt_Define(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
-	defineMsgs := []string{}
-	thenFacts := []ast.FactStmt{}
-	for i, caseFact := range stmt.CaseByCaseFacts {
-		// 在 caseFact 的条件下，函数值等于对应的返回值
-		// 需要将 caseFact 作为条件，然后添加等式
-		fnCall := fnHeaderToReturnValueOfFn(stmt.DefHeader)
-		equalFact := ast.NewEqualFact(fnCall, stmt.CaseByCaseEqualTo[i])
-
-		// 创建一个条件事实：如果 caseFact 为真，则 equalFact 为真
-		// 这里我们需要使用 implication 或者直接在 thenFacts 中添加条件
-		// 由于 caseFact 是 SpecFactStmt，我们需要创建一个 UniFact 来表示这个条件
-		// 但是更简单的方式是：创建一个 UniFact，其中 DomFacts 包含 caseFact，ThenFacts 包含 equalFact
-		uniFact := ast.NewUniFact(
-			[]string{},
-			[]ast.Obj{},
-			[]ast.Spec_OrFact{caseFact},
-			[]ast.Spec_OrFact{equalFact},
-			stmt.Line,
-		)
-		thenFacts = append(thenFacts, uniFact)
+	fnObj := ast.NewAnonymousFnSetObj(stmt.DefHeader.ParamSets, stmt.RetSet)
+	defFn := ast.NewDefLetStmt([]string{stmt.DefHeader.Name}, []ast.Obj{fnObj}, []ast.FactStmt{}, stmt.Line)
+	defRet := exec.defLetStmt(defFn)
+	if defRet.IsNotTrue() {
+		return exec.AddStmtToStmtRet(defRet, stmt)
 	}
 
-	// 定义函数
-	newFnDefStmt := ast.NewLetFnStmt(
-		string(stmt.DefHeader.Name),
-		ast.NewFnTStruct(
-			stmt.DefHeader.Params,
-			stmt.DefHeader.ParamSets,
-			stmt.RetSet,
-			[]ast.FactStmt{},
-			thenFacts,
-			stmt.Line,
-		),
-		stmt.Line,
-	)
-	execState := exec.lefDefFnStmt(newFnDefStmt)
-	if execState.IsNotTrue() {
-		return exec.AddStmtToStmtRet(execState, stmt)
+	curFnObjParams := []ast.Obj{}
+	for _, paramSet := range stmt.DefHeader.Params {
+		curFnObjParams = append(curFnObjParams, ast.Atom(paramSet))
 	}
-	defineMsgs = append(defineMsgs, newFnDefStmt.String())
-	return glob.NewEmptyStmtTrue().AddDefineMsgs(defineMsgs)
+	curFnObj := ast.NewFnObj(ast.Atom(stmt.DefHeader.Name), curFnObjParams)
+
+	infers := []string{}
+	for i, curCase := range stmt.CaseByCaseFacts {
+		uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []ast.Spec_OrFact{curCase}, []ast.Spec_OrFact{ast.NewEqualFact(curFnObj, stmt.CaseByCaseEqualTo[i])}, curCase.GetLine())
+		ret := exec.Env.NewFactWithCheckingNameDefined(uniFact)
+		if ret.IsNotTrue() {
+			return ret
+		}
+		infers = append(infers, uniFact.String())
+	}
+
+	return exec.AddStmtToStmtRet(defRet.AddInfers(infers), stmt)
 }
