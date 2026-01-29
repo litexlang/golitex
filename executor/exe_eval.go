@@ -40,11 +40,12 @@ func (exec *Executor) evalObjThenSimplify(obj ast.Obj) (ast.Obj, *glob.StmtRet) 
 
 	switch asObj := obj.(type) {
 	case ast.Atom:
-		symbolValue := exec.Env.GetSymbolSimplifiedValue(obj)
-		if symbolValue == nil {
-			return nil, glob.ErrRet(fmt.Sprintf("symbol %s has no value", obj.String()))
-		}
-		return symbolValue, glob.NewEmptyStmtTrue()
+		// symbolValue := exec.Env.GetSymbolSimplifiedValue(obj)
+		// if symbolValue == nil {
+		// 	return nil, glob.ErrRet(fmt.Sprintf("symbol %s has no value", obj.String()))
+		// }
+		// return symbolValue, glob.NewEmptyStmtTrue()
+		return nil, glob.ErrRet(fmt.Sprintf("symbol %s has no value", obj.String()))
 	case *ast.FnObj:
 		return exec.evalFnObjThenSimplify(asObj)
 	default:
@@ -63,9 +64,9 @@ var basicArithOptMap = map[string]struct{}{
 
 // 可能返回数值的时候需要检查一下会不会除以0这种情况
 func (exec *Executor) evalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, *glob.StmtRet) {
-	if symbolValue := exec.Env.GetSymbolSimplifiedValue(fnObj); symbolValue != nil {
-		return symbolValue, glob.NewEmptyStmtTrue()
-	}
+	// if symbolValue := exec.Env.GetSymbolSimplifiedValue(fnObj); symbolValue != nil {
+	// 	return symbolValue, glob.NewEmptyStmtTrue()
+	// }
 
 	if ast.IsFn_WithHeadNameInSlice(fnObj, basicArithOptMap) {
 		left, execRet := exec.evalObjThenSimplify(fnObj.Params[0])
@@ -114,17 +115,17 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 		return nil, glob.ErrRet(fmt.Sprintf("parameters of %s are not in domain of %s", fnObj, fnObj.FnHead))
 	}
 
-	for i, param := range algoDef.Params {
-		ret := exec.Env.IsNameUnavailable(param, map[string]struct{}{})
-		if ret.IsTrue() {
-			continue
-		} else {
-			execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(param), fnObj.Params[i])}, glob.BuiltinLine0))
-			if execState.IsNotTrue() {
-				return nil, glob.ErrRet(execState.String())
-			}
-		}
-	}
+	// for i, param := range algoDef.Params {
+	// 	ret := exec.Env.IsNameUnavailable(param, map[string]struct{}{})
+	// 	if ret.IsTrue() {
+	// 		continue
+	// 	} else {
+	// 		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(param), fnObj.Params[i])}, glob.BuiltinLine0))
+	// 		if execState.IsNotTrue() {
+	// 			return nil, glob.ErrRet(execState.String())
+	// 		}
+	// 	}
+	// }
 
 	fnObjParamsValues := []ast.Obj{}
 	for _, param := range fnObj.Params {
@@ -157,24 +158,26 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 	return exec.simplifyNumExprObj(value)
 }
 
+// 要做到这样的效果：每一步只是做验证，所以不应该有中间过程被know下来
 func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWithValueParams *ast.FnObj) (ast.Obj, *glob.StmtRet) {
 	for _, stmt := range algoStmts {
 		switch asStmt := stmt.(type) {
 		case *ast.AlgoReturnStmt:
-			execRet := exec.factStmt(ast.EqualFact(fnObjWithValueParams, asStmt.Value))
+			ver := NewVerifier(exec.Env)
+			execRet := ver.VerFactStmt(ast.EqualFact(fnObjWithValueParams, asStmt.Value), Round0NoMsg())
 			if execRet.IsErr() {
-				return nil, execRet
+				return nil, execRet.ToStmtRet()
 			}
 			if execRet.IsNotTrue() {
-				return nil, execRet
+				return nil, execRet.ToStmtRet()
 			}
 
 			if cmp.IsNumExprLitObj(asStmt.Value) {
 				return asStmt.Value, glob.NewEmptyStmtTrue()
 			}
 
-			numExprObj, execRet := exec.evalObjThenSimplify(asStmt.Value)
-			return numExprObj, execRet
+			numExprObj, ret := exec.evalObjThenSimplify(asStmt.Value)
+			return numExprObj, ret
 		case *ast.AlgoIfStmt:
 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); execRet.IsNotTrue() {
 				continue
@@ -198,49 +201,26 @@ func (exec *Executor) fnObjParamsInFnDomain(fnObj *ast.FnObj) *glob.StmtRet {
 }
 
 func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, *glob.StmtRet) {
-	exec.NewEnv()
-	defer exec.deleteEnv()
-
+	ver := NewVerifier(exec.Env)
 	for _, fact := range stmt.Conditions {
-		execRet := exec.factStmt(fact)
+		execRet := ver.VerFactStmt(fact, Round0NoMsg()).ToStmtRet()
 		if execRet.IsErr() || execRet.IsUnknown() {
 			return false, execRet
 		}
 
 		continue
-
-		// factAsReversibleFact, reversed := fact.(ast.Spec_OrFact)
-		// if !reversed {
-		// 	return false, glob.ErrRet(fmt.Sprintf("The condition %s in\n%s\nis unknown, and it can not be negated. Failed", fact, stmt))
-		// }
-
-		// for _, reversedFact := range factAsReversibleFact.ReverseIsTrue() {
-		// 	execRet := exec.factStmt(reversedFact)
-		// 	if execRet.IsErr() {
-		// 		return false, execRet
-		// 	}
-
-		// 	if execRet.IsNotTrue() {
-		// 		return false, glob.ErrRet(fmt.Sprintf("%s is unknown. Negation of it is also unknown. Fail to verify condition of if statement:\n%s", fact, stmt))
-		// 	}
-		// }
-
-		// return false, glob.NewEmptyStmtTrue()
 	}
 
 	return true, glob.NewEmptyStmtTrue()
 }
 
 func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValueParams *ast.FnObj) (ast.Obj, *glob.StmtRet) {
-	exec.NewEnv()
-	defer exec.deleteEnv()
-
 	// all conditions are true
-	knowStmt := ast.NewKnowStmt(stmt.Conditions.ToCanBeKnownStmtSlice(), stmt.GetLine())
-	execRet := exec.knowStmt(knowStmt)
-	if execRet.IsNotTrue() {
-		return nil, execRet
-	}
+	// knowStmt := ast.NewKnowStmt(stmt.Conditions.ToCanBeKnownStmtSlice(), stmt.GetLine())
+	// execRet := exec.knowStmt(knowStmt)
+	// if execRet.IsNotTrue() {
+	// 	return nil, execRet
+	// }
 
 	value, execRet := exec.runAlgoStmtsWhenEval(stmt.ThenStmts, fnObjWithValueParams)
 	return value, execRet
