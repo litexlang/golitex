@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ie *InferEngine) newUserDefinedTruePureFactByDef(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) inferByUserDefinedProp(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
 	// 通过 prop 定义中的 iff 和 implication 规则，推导出后续结论
 	// 因为 prop 的定义包含了 iff（当且仅当）和 implication（蕴含）关系，
 	// 所以当该 prop 为真时，可以推导出定义中指定的后续事实
@@ -38,6 +38,30 @@ func (ie *InferEngine) newUserDefinedTruePureFactByDef(fact *ast.PureSpecificFac
 	uniMap := map[string]ast.Obj{}
 	for i, propParam := range propDef.DefHeader.Params {
 		uniMap[propParam] = fact.Params[i]
+	}
+
+	instParamSets := []ast.Obj{}
+	for i := range propDef.DefHeader.ParamSets {
+		paramSet, err := propDef.DefHeader.ParamSets[i].Instantiate(uniMap)
+		if err != nil {
+			return glob.NewShortRet(glob.StmtRetTypeError, []string{err.Error()})
+		}
+		instParamSets = append(instParamSets, paramSet)
+	}
+
+	if len(instParamSets) != len(fact.Params) {
+		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("param sets length %d does not match fact params length %d", len(instParamSets), len(fact.Params))})
+	}
+
+	for i, paramSet := range instParamSets {
+		inFact := ast.NewInFactWithObj(fact.Params[i], paramSet)
+		ret := ie.EnvMgr.newFactNoInfer(inFact)
+		if ret.IsNotTrue() {
+			return glob.ErrStmtMsgToShortRet(ret)
+		}
+		if ret.IsTrue() {
+			iffFacts = append(iffFacts, inFact.String())
+		}
 	}
 
 	// 通过 iff（当且仅当）规则推导出的事实

@@ -24,8 +24,8 @@ func NewDefLetStmt(objs []string, objSets []Obj, facts []FactStmt, line uint) *D
 	return &DefLetStmt{objs, objSets, facts, line}
 }
 
-func NewDefPropStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefPropStmt {
-	return &DefPropStmt{defHeader, domFacts, iffFacts, thenFacts, line}
+func NewDefPropStmt(defHeader *DefHeader, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefPropStmt {
+	return &DefPropStmt{defHeader, iffFacts, thenFacts, line}
 }
 
 // func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Obj, line uint) *DefExistPropStmt {

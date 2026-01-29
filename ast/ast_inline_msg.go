@@ -34,10 +34,6 @@ func (c *DefPropStmt) InlineString() string {
 	builder.WriteString(glob.KeywordProp)
 	builder.WriteString(" ")
 	builder.WriteString(string(c.DefHeader.Name))
-	if len(c.DomFactsOrNil) > 0 {
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteString(inlineFactsString(c.DomFactsOrNil))
-	}
 	if len(c.IffFactsOrNil) > 0 {
 		builder.WriteString(glob.KeySymbolEquivalent)
 		builder.WriteString(inlineFactsString(c.IffFactsOrNil))

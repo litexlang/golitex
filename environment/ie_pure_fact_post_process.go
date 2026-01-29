@@ -30,7 +30,7 @@ func (ie *InferEngine) newPureFact(fact *ast.PureSpecificFactStmt) *glob.ShortRe
 
 	if ok {
 		if fact.IsTrue {
-			ret := ie.newUserDefinedTruePureFactByDef(fact)
+			ret := ie.inferByUserDefinedProp(fact)
 			return ret
 		}
 		return glob.NewEmptyShortTrueRet()
