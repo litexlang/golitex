@@ -80,4 +80,14 @@ prove:
 
     exist x R st $p(x, 1) or exist x R st $q(x, 1)
 
+prove:
+    prop p(x, y R):
+        x > 0
+        y > 0
 
+    know exist x, y st $p(x, y)
+
+    have x, y st $p(x, y)
+
+    x > 0
+    y > 0
