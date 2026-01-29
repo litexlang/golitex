@@ -82,12 +82,15 @@ know:
 
 know forall x R: x > 0 or x < 0 => x != 0
 
+"""
 # 必须要有，否则不能说明有限集合的子集还是有限集合
 know prop_infer finite_set_subset_is_finite_set(s1 finite_set, s2 set):
 	forall x s2:
 		x $in s1
 	=>:
 		$is_finite_set(s2)
+
+"""
 
 know forall x N: x != 0 => x > 0
 
@@ -723,6 +726,7 @@ prop equal_tuple(x, y set, dim N_pos):
 	dim(y) = dim
 	x = y
 
+"""
 know:
 	forall x, y set:
 		$is_tuple(x)
@@ -731,6 +735,7 @@ know:
 		forall i N_pos: i <= dim(x) => x[i] = y[i]
 		=>:
 			x = y
+"""
 
 """
 let fn power_set(x set) set
@@ -835,6 +840,7 @@ know forall x set, cup_x_item cup(x) => exist x_item x st cup_x_item $in x_item
 	
 ### cap
 
+"""
 # check item in cap
 know:
 	forall x set, item set:
@@ -842,11 +848,14 @@ know:
 			item $in x_item
 		=>:
 			item $in cap(x)
+"""
 
+"""
 # when item in cap, it has properties
 know prop_infer item_in_cap_implies(x set, item cap(x)):
 	forall x_item x:
 		item $in x_item
+"""
 
 ### union
 
@@ -903,12 +912,14 @@ know:
 
 	forall s set, s2 set:
 		union(s2, set_minus(s, s2)) = s
-		forall x s2:
-			not x $in set_minus(s, s2)
-		forall x s2:
-			not x $in s
-			=>:
-				x $in set_minus(s, s2)
+
+	forall s set, s2 set, x s2:
+		not x $in set_minus(s, s2)
+	
+	forall s set, s2 set, x s2:
+		not x $in s
+		=>:
+			x $in set_minus(s, s2)
 
 # when item in set minus, it has properties
 know prop_infer item_in_set_minus_implies(x, y set, item set_minus(x, y)):
@@ -931,6 +942,7 @@ prop is_injective_fn(X set, Y set, f fn(X)Y):
 		=>:
 			f(x1) != f(x2)
 
+"""
 know:
 	forall X set, Y set, f fn(X)Y:
 		forall x1, x2 X:
@@ -939,6 +951,7 @@ know:
 				x1 = x2
 		=>:
 			$is_injective_fn(X, Y, f)
+"""
 
 prop is_surjective_fn(X set, Y set, f fn(X)Y):
 	forall y Y:
@@ -1007,10 +1020,13 @@ know exist x set st $axiom_of_infinity(x)
 # choice(S, s) chooses an element from s, where s is an element of S
 # For any set S (which is a set of sets), if each element of S is a non-empty set,
 # then for any s in S, choice(S, s) is in s.
+prop all_items_in_set_are_nonempty(S set):
+	forall x S:
+		$is_nonempty_set(x)
+
 know:
 	forall S set, s S:
-		forall x S:
-			$is_nonempty_set(x)
+		$all_items_in_set_are_nonempty(S)
 		=>:
 			choice(S, s) $in s
 
@@ -1022,11 +1038,10 @@ prop is_max(r R, s set):
 	forall x s: x <= r
 
 know:
-    forall s finite_set:
-        forall x s:
-            x $in R
-        =>:
-            exist z R st $is_max(z, s)
+    forall s power_set(R):
+		$is_finite_set(s)
+		=>:
+			exist z s st $is_max(z, s)
 
 prop is_min(r R, s set):
 	forall x s: x $in R
@@ -1034,11 +1049,10 @@ prop is_min(r R, s set):
 	forall x s: r <= x
 
 know:
-    forall s finite_set:
-        forall x s:
-            x $in R
-        =>:
-            exist z R st $is_min(z, s)
+    forall s power_set(R):
+		$is_finite_set(s)
+		=>:
+			exist z s st $is_min(z, s)
 
 know:
 	forall x Z: x >= 0 => x $in N
@@ -1104,8 +1118,7 @@ know forall a, b, c R: b < c, a < 0 => a + b < c
 
 know:
 	forall s1, s2 finite_set:
-		forall x s2:
-			x $in s1
+		s2 $subset_of s1
 		<=>:
 			count(set_minus(s1, s2)) = count(s1) - count(s2)
 

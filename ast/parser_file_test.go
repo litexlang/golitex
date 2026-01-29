@@ -14,54 +14,53 @@
 
 package litex_ast
 
-// import (
-// 	"fmt"
-// 	pkgMgr "golitex/package_manager"
-// 	"os"
-// 	"path/filepath"
-// 	"testing"
-// )
+import (
+	pkgMgr "golitex/package_manager"
+	"os"
+	"path/filepath"
+	"testing"
+)
 
-// // TestParseFile 测试解析单个 .lit 文件
-// // 使用方法：
-// // 1. 将你想测试的文件路径放在 testFiles 列表中
-// // 2. 运行 go test -v -run TestParseFile
-// func TestParseFile(t *testing.T) {
-// 	// 在这里添加你想测试的文件路径
-// 	testFiles := []string{
-// 		"../examples/test_codes/tmp.lit",
-// 		// 添加更多测试文件...
-// 	}
+// TestParseFile 测试解析单个 .lit 文件
+// 使用方法：
+// 1. 将你想测试的文件路径放在 testFiles 列表中
+// 2. 运行 go test -v -run TestParseFile
+func TestParseFile(t *testing.T) {
+	// 在这里添加你想测试的文件路径
+	testFiles := []string{
+		"../examples/test_codes/tmp.lit",
+		// 添加更多测试文件...
+	}
 
-// 	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr()
+	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr("")
 
-// 	for _, filePath := range testFiles {
-// 		t.Run(filepath.Base(filePath), func(t *testing.T) {
-// 			// 读取文件内容
-// 			content, err := os.ReadFile(filePath)
-// 			if err != nil {
-// 				t.Fatalf("Failed to read file %s: %v", filePath, err)
-// 			}
+	for _, filePath := range testFiles {
+		t.Run(filepath.Base(filePath), func(t *testing.T) {
+			// 读取文件内容
+			content, err := os.ReadFile(filePath)
+			if err != nil {
+				t.Fatalf("Failed to read file %s: %v", filePath, err)
+			}
 
-// 			// 解析源代码
-// 			blocks, err := PreprocessAndMakeSourceCodeIntoBlocks(string(content))
+			// 解析源代码
+			blocks, err := PreprocessAndMakeSourceCodeIntoBlocks(string(content))
 
-// 			p := NewTbParser(pkgPathNameMgr)
+			p := NewTbParser(pkgPathNameMgr)
 
-// 			for _, block := range blocks {
-// 				topStmt, err := p.Stmt(&block)
-// 				if err != nil {
-// 					t.Fatalf("Failed to parse block %s: %v", block.String(), err)
-// 				}
-// 				_ = topStmt
-// 			}
+			for _, block := range blocks {
+				topStmt, err := p.Stmt(&block)
+				if err != nil {
+					t.Fatalf("Failed to parse block %s: %v", block.String(), err)
+				}
+				_ = topStmt
+			}
 
-// 			// 打印解析结果
-// 			t.Logf("✓ Successfully parsed %s", filePath)
-// 			t.Logf("  Total blocks: %d", len(blocks))
-// 		})
-// 	}
-// }
+			// 打印解析结果
+			t.Logf("✓ Successfully parsed %s", filePath)
+			t.Logf("  Total blocks: %d", len(blocks))
+		})
+	}
+}
 
 // // TestParseDirectory 测试解析整个目录下的所有 .lit 文件
 // func TestParseDirectory(t *testing.T) {
