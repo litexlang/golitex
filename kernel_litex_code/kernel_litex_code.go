@@ -1168,4 +1168,7 @@ know forall x Z, n Z: x <= n + 1 => x <= n or x = n+ 1
 know forall s power_set(R): $is_finite_set(s) => exist a s st $is_max(a, s)
 
 know forall q Q: exist x Z, y N_pos st q = x / y
+
+know forall x, y R: x != 0 or y != 0 <=> x^2 + y^2 != 0
+know forall x, y R: x^2 + y^2 != 0 => not x = 0 or not y = 0
 `
