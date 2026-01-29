@@ -221,7 +221,7 @@ func (p *TbParser) inlineUniInterfaceSkipTerminator(tb *tokenBlock, ends []strin
 
 	params := []string{}
 	setParams := []Obj{}
-	domFact := []FactStmt{}
+	domFact := []Spec_OrFact{}
 
 	if !tb.header.is(glob.KeySymbolRightArrow) { // 没有 参数
 		params, setParams, err = p.inlineUniFact_Param_ParamSet_ParamInSetFacts(tb)
@@ -259,9 +259,9 @@ func (p *TbParser) inlineUniInterfaceSkipTerminator(tb *tokenBlock, ends []strin
 
 			if tb.header.is(glob.KeySymbolSemiColon) {
 				tb.header.skip(glob.KeySymbolSemiColon)
-				return NewUniFact(params, setParams, []FactStmt{}, domFact, tb.line), nil
+				return NewUniFact(params, setParams, []Spec_OrFact{}, domFact, tb.line), nil
 			} else if p.IsEnding(tb, ends) {
-				return NewUniFact(params, setParams, []FactStmt{}, domFact, tb.line), nil
+				return NewUniFact(params, setParams, []Spec_OrFact{}, domFact, tb.line), nil
 			} else if tb.header.is(glob.KeySymbolEquivalent) {
 				err = tb.header.skip(glob.KeySymbolEquivalent)
 				if err != nil {
@@ -273,7 +273,7 @@ func (p *TbParser) inlineUniInterfaceSkipTerminator(tb *tokenBlock, ends []strin
 					return nil, err
 				}
 
-				return NewUniFactWithIff(NewUniFact(params, setParams, []FactStmt{}, domFact, tb.line), iffFacts, tb.line), nil
+				return NewUniFactWithIff(NewUniFact(params, setParams, []Spec_OrFact{}, domFact, tb.line), iffFacts, tb.line), nil
 			}
 		}
 	}
@@ -300,10 +300,10 @@ func (p *TbParser) inlineUniInterfaceSkipTerminator(tb *tokenBlock, ends []strin
 	return NewUniFactWithIff(NewUniFact(params, setParams, domFact, thenFact, tb.line), iffFacts, tb.line), nil
 }
 
-func (p *TbParser) thenFactsInUniFactInterface(tb *tokenBlock, ends []string) ([]FactStmt, bool, error) {
-	facts := []FactStmt{}
+func (p *TbParser) thenFactsInUniFactInterface(tb *tokenBlock, ends []string) ([]Spec_OrFact, bool, error) {
+	facts := []Spec_OrFact{}
 	for {
-		specFact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, ends)
+		specFact, err := p.inlineSpecFactStmt_skip_terminator(tb)
 		if err != nil {
 			return nil, false, ErrInLine(err, tb)
 		}
@@ -324,10 +324,10 @@ func (p *TbParser) thenFactsInUniFactInterface(tb *tokenBlock, ends []string) ([
 	}
 }
 
-func (p *TbParser) thenFacts_SkipEnd_Semicolon_or_EOL(tb *tokenBlock, ends []string) ([]FactStmt, error) {
-	facts := []FactStmt{}
+func (p *TbParser) thenFacts_SkipEnd_Semicolon_or_EOL(tb *tokenBlock, ends []string) ([]Spec_OrFact, error) {
+	facts := []Spec_OrFact{}
 	for {
-		specFact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, ends)
+		specFact, err := p.inlineSpecFactStmt_skip_terminator(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -345,10 +345,10 @@ func (p *TbParser) thenFacts_SkipEnd_Semicolon_or_EOL(tb *tokenBlock, ends []str
 	}
 }
 
-func (p *TbParser) inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb *tokenBlock, ends []string) ([]FactStmt, error) {
-	facts := []FactStmt{}
+func (p *TbParser) inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb *tokenBlock, ends []string) ([]Spec_OrFact, error) {
+	facts := []Spec_OrFact{}
 	for {
-		specFact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, ends)
+		specFact, err := p.inlineSpecFactStmt_skip_terminator(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}

@@ -880,8 +880,8 @@ func (ie *InferEngine) trueInFactInCap(item ast.Obj, capSet *ast.FnObj) *glob.Sh
 	uniFact := ast.NewUniFact(
 		[]string{xItemParam},
 		[]ast.Obj{x},
-		[]ast.FactStmt{inFact},
-		[]ast.FactStmt{thenFact},
+		[]ast.Spec_OrFact{inFact},
+		[]ast.Spec_OrFact{thenFact},
 		glob.BuiltinLine0,
 	)
 

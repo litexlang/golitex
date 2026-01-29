@@ -33,24 +33,24 @@ func NoSelfReferenceInPropDef(propName string, facts []FactStmt) error {
 				}
 			}
 		case *UniFactStmt:
-			err := NoSelfReferenceInPropDef(propName, asFactStmt.DomFacts)
+			err := NoSelfReferenceInPropDef(propName, asFactStmt.DomFacts.ToFactStmtSlice())
 			if err != nil {
 				return err
 			}
-			err = NoSelfReferenceInPropDef(propName, asFactStmt.ThenFacts)
+			err = NoSelfReferenceInPropDef(propName, asFactStmt.ThenFacts.ToFactStmtSlice())
 			if err != nil {
 				return err
 			}
 		case *UniFactWithIffStmt:
-			err := NoSelfReferenceInPropDef(propName, asFactStmt.UniFact.DomFacts)
+			err := NoSelfReferenceInPropDef(propName, asFactStmt.UniFact.DomFacts.ToFactStmtSlice())
 			if err != nil {
 				return err
 			}
-			err = NoSelfReferenceInPropDef(propName, asFactStmt.UniFact.ThenFacts)
+			err = NoSelfReferenceInPropDef(propName, asFactStmt.UniFact.ThenFacts.ToFactStmtSlice())
 			if err != nil {
 				return err
 			}
-			err = NoSelfReferenceInPropDef(propName, asFactStmt.IffFacts)
+			err = NoSelfReferenceInPropDef(propName, asFactStmt.IffFacts.ToFactStmtSlice())
 			if err != nil {
 				return err
 			}

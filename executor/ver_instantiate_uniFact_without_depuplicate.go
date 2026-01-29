@@ -19,7 +19,6 @@ import (
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
-	"maps"
 )
 
 // 在用uniFact来验证specFact时，这个已知的uniFact 可能形如 forall a x: $p(a,x)。然后我代入的x刚好是a。于是整个forall被instantiate成 forall a a: $p(a,a)。然后我要验证这个 forall a a: $p(a,a) 我发现a已经在外面定义go了，于是把它替换成了乱码ABCD, 然后变成验证 forall ABCD ABCD: $p(ABCD,ABCD)。总之就错了。避免这个的办法是，让knownUniFact先把param先随机化啦，然后再代入
@@ -130,95 +129,96 @@ func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.EnvMgr, params
 	return paramMap, paramMapStrToStr
 }
 
-func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts_OrStmt(knownUniFact *ast.UniFactStmt, orStmt *ast.OrStmt) (*uniFactWithoutThenFacts, map[string]ast.Obj, map[string]string, *ast.OrStmt, error) {
-	uniFactWithoutThen, paramMap, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownUniFact)
-	if err != nil {
-		return nil, nil, nil, nil, err
-	}
+// func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts_OrStmt(knownUniFact *ast.UniFactStmt, orStmt *ast.OrStmt) (*uniFactWithoutThenFacts, map[string]ast.Obj, map[string]string, *ast.OrStmt, error) {
+// 	uniFactWithoutThen, paramMap, paramMapStrToStr, err := ver.preprocessUniFactParamsWithoutThenFacts(knownUniFact)
+// 	if err != nil {
+// 		return nil, nil, nil, nil, err
+// 	}
 
-	instantiatedOrStmt, err := orStmt.InstantiateFact(paramMap)
-	if err != nil {
-		return nil, nil, nil, nil, err
-	}
+// 	instantiatedOrStmt, err := orStmt.InstantiateFact(paramMap)
+// 	if err != nil {
+// 		return nil, nil, nil, nil, err
+// 	}
 
-	return uniFactWithoutThen, paramMap, paramMapStrToStr, instantiatedOrStmt.(*ast.OrStmt), nil
-}
+// 	return uniFactWithoutThen, paramMap, paramMapStrToStr, instantiatedOrStmt.(*ast.OrStmt), nil
+// }
 
-func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.UniFactStmt) (*uniFactWithoutThenFacts, map[string]ast.Obj, map[string]string, error) {
-	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.Env, knownUniFact.Params)
+// func (ver *Verifier) preprocessUniFactParamsWithoutThenFacts(knownUniFact *ast.UniFactStmt) (*uniFactWithoutThenFacts, map[string]ast.Obj, map[string]string, error) {
+// 	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.Env, knownUniFact.Params)
 
-	domFacts_paramRandomized := []ast.FactStmt{}
+// 	domFacts_paramRandomized := []ast.FactStmt{}
 
-	for _, domFact := range knownUniFact.DomFacts {
-		switch asStmt := domFact.(type) {
-		case *ast.UniFactStmt:
-			copiedParamMap, copiedMapStrToStr := maps.Clone(paramMap), maps.Clone(paramMapStrToStr)
+// 	for _, domFact := range knownUniFact.DomFacts {
+// 		domFacts_paramRandomized = append(domFacts_paramRandomized, domFact.(ast.Spec_OrFact))
+// 		// switch asStmt := domFact.(type) {
+// 		// case *ast.UniFactStmt:
+// 		// 	copiedParamMap, copiedMapStrToStr := maps.Clone(paramMap), maps.Clone(paramMapStrToStr)
 
-			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.Env, asStmt.Params, copiedMapStrToStr)
+// 		// 	curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.Env, asStmt.Params, copiedMapStrToStr)
 
-			maps.Copy(copiedParamMap, curParamMap)
-			maps.Copy(copiedMapStrToStr, curParamMapStrToStr)
-			// copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
-			// copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
+// 		// 	maps.Copy(copiedParamMap, curParamMap)
+// 		// 	maps.Copy(copiedMapStrToStr, curParamMapStrToStr)
+// 		// 	// copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
+// 		// 	// copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
 
-			newDomFact, _, err := useRandomParamToReplaceOriginalParamInUniFact(asStmt, copiedParamMap, copiedMapStrToStr)
-			if err != nil {
-				return nil, nil, nil, err
-			}
-			domFacts_paramRandomized = append(domFacts_paramRandomized, newDomFact)
-		case *ast.UniFactWithIffStmt:
-			copiedParamMap, copiedMapStrToStr := maps.Clone(paramMap), maps.Clone(paramMapStrToStr)
+// 		// 	newDomFact, _, err := useRandomParamToReplaceOriginalParamInUniFact(asStmt, copiedParamMap, copiedMapStrToStr)
+// 		// 	if err != nil {
+// 		// 		return nil, nil, nil, err
+// 		// 	}
+// 		// 	domFacts_paramRandomized = append(domFacts_paramRandomized, newDomFact)
+// 		// case *ast.UniFactWithIffStmt:
+// 		// 	copiedParamMap, copiedMapStrToStr := maps.Clone(paramMap), maps.Clone(paramMapStrToStr)
 
-			curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.Env, asStmt.UniFact.Params, copiedMapStrToStr)
+// 		// 	curParamMap, curParamMapStrToStr := processUniFactParamsDuplicateDeclared_notInGivenMap(ver.Env, asStmt.UniFact.Params, copiedMapStrToStr)
 
-			maps.Copy(copiedParamMap, curParamMap)
-			maps.Copy(copiedMapStrToStr, curParamMapStrToStr)
-			// copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
-			// copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
+// 		// 	maps.Copy(copiedParamMap, curParamMap)
+// 		// 	maps.Copy(copiedMapStrToStr, curParamMapStrToStr)
+// 		// 	// copiedParamMap = glob.MergeMap(curParamMap, copiedParamMap)
+// 		// 	// copiedMapStrToStr = glob.MergeMap(curParamMapStrToStr, copiedMapStrToStr)
 
-			newDomFact, _, err := useRandomParamToReplaceOriginalParamInUniFactWithIff(asStmt, copiedParamMap, copiedMapStrToStr)
-			if err != nil {
-				return nil, nil, nil, err
-			}
-			domFacts_paramRandomized = append(domFacts_paramRandomized, newDomFact)
-		default:
-			domFacts_paramRandomized = append(domFacts_paramRandomized, domFact)
-			continue
-		}
+// 		// 	newDomFact, _, err := useRandomParamToReplaceOriginalParamInUniFactWithIff(asStmt, copiedParamMap, copiedMapStrToStr)
+// 		// 	if err != nil {
+// 		// 		return nil, nil, nil, err
+// 		// 	}
+// 		// 	domFacts_paramRandomized = append(domFacts_paramRandomized, newDomFact)
+// 		// default:
+// 		// 	domFacts_paramRandomized = append(domFacts_paramRandomized, domFact)
+// 		// 	continue
+// 		// }
 
-	}
+// 	}
 
-	newParams := []string{}
-	for _, param := range knownUniFact.Params {
-		if newParam, ok := paramMapStrToStr[param]; ok {
-			newParams = append(newParams, newParam)
-		} else {
-			newParams = append(newParams, param)
-		}
-	}
+// 	newParams := []string{}
+// 	for _, param := range knownUniFact.Params {
+// 		if newParam, ok := paramMapStrToStr[param]; ok {
+// 			newParams = append(newParams, newParam)
+// 		} else {
+// 			newParams = append(newParams, param)
+// 		}
+// 	}
 
-	newParamSets := []ast.Obj{}
-	for _, paramSet := range knownUniFact.ParamSets {
-		inst, err := paramSet.Instantiate(paramMap)
-		if err != nil {
-			return nil, nil, nil, err
-		}
-		newParamSets = append(newParamSets, inst)
-	}
+// 	newParamSets := []ast.Obj{}
+// 	for _, paramSet := range knownUniFact.ParamSets {
+// 		inst, err := paramSet.Instantiate(paramMap)
+// 		if err != nil {
+// 			return nil, nil, nil, err
+// 		}
+// 		newParamSets = append(newParamSets, inst)
+// 	}
 
-	newDomFacts := []ast.FactStmt{}
-	for _, domFact := range domFacts_paramRandomized {
-		inst, err := domFact.InstantiateFact(paramMap)
-		if err != nil {
-			return nil, nil, nil, err
-		}
-		newDomFacts = append(newDomFacts, inst)
-	}
+// 	newDomFacts := []ast.FactStmt{}
+// 	for _, domFact := range domFacts_paramRandomized {
+// 		inst, err := domFact.InstantiateFact(paramMap)
+// 		if err != nil {
+// 			return nil, nil, nil, err
+// 		}
+// 		newDomFacts = append(newDomFacts, inst)
+// 	}
 
-	newUniFactWithoutThen := newUniFactWithoutThenFacts(newParams, newParamSets, newDomFacts)
+// 	newUniFactWithoutThen := newUniFactWithoutThenFacts(newParams, newParamSets, newDomFacts)
 
-	return newUniFactWithoutThen, paramMap, paramMapStrToStr, nil
-}
+// 	return newUniFactWithoutThen, paramMap, paramMapStrToStr, nil
+// }
 
 type uniFactWithoutThenFacts struct {
 	Params    []string
