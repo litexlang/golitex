@@ -1,23 +1,29 @@
-let fn self_floor(x R) Z:
-    forall y Z:
+let fn self_floor(x R) Z
+
+know:
+    forall y Z, x R:
         y <= x
         =>:
             y <= self_floor(x)
 know forall x R, y Z: x - y < 1 => self_floor(x) = y
 
-let fn self_ceil(x R) Z:
-    forall y Z:
+let fn self_ceil(x R) Z
+
+know:
+    forall y Z, x R:
         y >= x
         =>:
             y >= self_ceil(x)
 know forall x R, y Z: y - x < 1 => self_ceil(x) = y
 
-let fn self_round(x R) Z:
-    forall:
+let fn self_round(x R) Z
+
+know:
+    forall x R:
         x - self_floor(x) < 0.5
         =>:
             self_round(x) = self_floor(x)
-    forall:
+    forall x R:
         x - self_floor(x) >= 0.5
         =>:
             self_round(x) = self_ceil(x)

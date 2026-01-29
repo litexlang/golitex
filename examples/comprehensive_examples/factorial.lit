@@ -1,3 +1,5 @@
+# TODO: 改了语法之后貌似不能证明factorial的存在性了，用现在的case的话
+
 prop is_factorial_fn(n N,f fn({x N: x <= n}) N_pos):
     f(0) = 1
     forall i N: i < n => f(i+1) = f(i) * (i+1)
@@ -85,10 +87,14 @@ prove forall n N: $exist_truncated_factorial(n):
         case n > 0:
             n $in N_pos
 
+"""
+prop factorial_cond(f fn(N)N_pos, n N):
+    forall: n = 0 => f(n) = 1 
+    forall: f(n+1) = f(n) * (n+1)
+
 have fn:
     factorial(n N) N_pos:
-        forall: n = 0 => factorial(n) = 1
-        forall: factorial(n+1) = factorial(n) * (n+1)
+        $factorial_cond(f, n)
     witness:
         $exist_truncated_factorial(n+1)
         have f fn({x N: x <= n+1}) N_pos st $is_factorial_fn(n+1, f)
@@ -98,5 +104,7 @@ have fn:
     = f(n)
 
 prove:
+    $factorial_cond(factorial, 0)
     factorial(0) = 1
     forall n N: n > 0 => factorial(n+1) = factorial(n) * (n+1)
+"""
