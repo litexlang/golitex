@@ -1,4 +1,2 @@
-prop p(x R):
-    x > 0
-
-know $p(1)
+let a, b R: a^2 + b^2 != 0
+a != 0 or b != 0
