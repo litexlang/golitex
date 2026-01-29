@@ -721,8 +721,7 @@ prop equal_tuple(x, y set, dim N_pos):
 	$is_tuple(y)
 	dim(x) = dim
 	dim(y) = dim
-	<=>:
-		x = y
+	x = y
 
 know:
 	forall x, y set:
@@ -1019,9 +1018,8 @@ know:
 
 prop is_max(r R, s set):
     forall x s: x $in R
-    <=>:
-        r $in s
-        forall x s: x <= r
+	r $in s
+	forall x s: x <= r
 
 know:
     forall s finite_set:
@@ -1032,9 +1030,8 @@ know:
 
 prop is_min(r R, s set):
 	forall x s: x $in R
-	<=>:
-		r $in s
-		forall x s: r <= x
+	r $in s
+	forall x s: r <= x
 
 know:
     forall s finite_set:

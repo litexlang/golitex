@@ -38,14 +38,6 @@ func (envMgr *EnvMgr) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) *glo
 	}
 	extraAtomNames[string(stmt.DefHeader.Name)] = struct{}{}
 
-	for _, fact := range stmt.DomFactsOrNil {
-		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
-		if ret.IsErr() {
-			ret.AddError(fmt.Sprintf("in dom fact of prop %s definition", stmt.DefHeader.Name))
-			return ret
-		}
-	}
-
 	for _, fact := range stmt.IffFactsOrNil {
 		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
 		if ret.IsErr() {

@@ -19,11 +19,6 @@ import (
 )
 
 func (envMgr *EnvMgr) MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(defPropStmt *ast.DefPropStmt) *ast.DefPropStmt {
-	newDomFacts := []ast.FactStmt{}
-	for _, domFact := range defPropStmt.DomFactsOrNil {
-		newDomFacts = append(newDomFacts, envMgr.makeUniFactParamsInThisFactDoNotConflictWithEnv(domFact))
-	}
-
 	newIffFacts := []ast.FactStmt{}
 	for _, iffFact := range defPropStmt.IffFactsOrNil {
 		newIffFacts = append(newIffFacts, envMgr.makeUniFactParamsInThisFactDoNotConflictWithEnv(iffFact))
@@ -34,7 +29,7 @@ func (envMgr *EnvMgr) MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(defProp
 		newThenFacts = append(newThenFacts, envMgr.makeUniFactParamsInThisFactDoNotConflictWithEnv(thenFact))
 	}
 
-	return ast.NewDefPropStmt(defPropStmt.DefHeader, newDomFacts, newIffFacts, newThenFacts, defPropStmt.Line)
+	return ast.NewDefPropStmt(defPropStmt.DefHeader, newIffFacts, newThenFacts, defPropStmt.Line)
 }
 
 func (envMgr *EnvMgr) makeUniFactParamsInThisFactDoNotConflictWithEnv(fact ast.FactStmt) ast.FactStmt {

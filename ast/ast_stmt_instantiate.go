@@ -149,15 +149,6 @@ func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error)
 		return nil, err
 	}
 
-	newDomFacts := []FactStmt{}
-	for _, fact := range defPropStmt.DomFactsOrNil {
-		newFact, err := fact.InstantiateFact(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newDomFacts = append(newDomFacts, newFact)
-	}
-
 	newIffFacts := []FactStmt{}
 	for _, fact := range defPropStmt.IffFactsOrNil {
 		newFact, err := fact.InstantiateFact(uniMap)
@@ -175,7 +166,7 @@ func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error)
 		}
 		newThenFacts = append(newThenFacts, newFact)
 	}
-	return NewDefPropStmt(newDefHeader, newDomFacts, newIffFacts, newThenFacts, defPropStmt.Line), nil
+	return NewDefPropStmt(newDefHeader, newIffFacts, newThenFacts, defPropStmt.Line), nil
 }
 
 // func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Obj) (*DefExistPropStmtBody, error) {

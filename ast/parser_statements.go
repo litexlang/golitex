@@ -129,7 +129,7 @@ func (p *TbParser) defPropStmt(tb *tokenBlock) (*DefPropStmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	err = NoSelfReferenceInPropDef(string(body.DefHeader.Name), append(append(body.DomFactsOrNil, body.IffFactsOrNil...), body.ImplicationFactsOrNil...))
+	err = NoSelfReferenceInPropDef(string(body.DefHeader.Name), body.IffFactsOrNil)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -170,17 +170,7 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 
 	if !tb.header.is(glob.KeySymbolColon) {
 		if tb.header.ExceedEnd() {
-			return NewDefPropStmt(declHeader, nil, nil, nil, tb.line), nil
-		} else if tb.header.is(glob.KeySymbolEquivalent) {
-			err = tb.header.skip(glob.KeySymbolEquivalent)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			iffFacts, err := p.inlineFacts_checkUniDepth1(tb, []string{})
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			return NewDefPropStmt(declHeader, nil, iffFacts, nil, tb.line), nil
+			return NewDefPropStmt(declHeader, nil, nil, tb.line), nil
 		} else {
 			return nil, fmt.Errorf("expect ':' or end of block")
 		}
@@ -191,40 +181,56 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 		return nil, ErrInLine(err, tb)
 	}
 
-	if tb.header.ExceedEnd() {
-		// domFacts, iffFacts, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
-		// domFacts, iffFacts, err := tb.dom_and_section(glob.KeywordIff, glob.KeySymbolEqualLarger)
-		domFacts, iffFacts, err := p.dom_and_section(tb, glob.KeySymbolEquivalent, glob.KeySymbolRightArrow)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		// iff, dom 里不能出现和被定义的prop同名的prop，否则用def做验证的时候会出问题
-		for _, fact := range iffFacts {
-			if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
-				if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
-					return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
-				}
-			}
-		}
-
-		for _, fact := range domFacts {
-			if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
-				if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
-					return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
-				}
-			}
-		}
-
-		return NewDefPropStmt(declHeader, domFacts, iffFacts, nil, tb.line), nil
-	} else {
-		domFacts, iffFacts, err := p.bodyOfInlineDomAndThen(tb, glob.KeySymbolEquivalent, []string{})
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		return NewDefPropStmt(declHeader, domFacts, iffFacts, nil, tb.line), nil
+	if !tb.header.ExceedEnd() {
+		return nil, fmt.Errorf("expect end of block")
 	}
+
+	iffFacts := []FactStmt{}
+
+	for _, fact := range tb.body {
+		iffFact, err := p.factStmt(&fact, UniFactDepth1)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		iffFacts = append(iffFacts, iffFact)
+	}
+
+	return NewDefPropStmt(declHeader, iffFacts, nil, tb.line), nil
+
+	// if tb.header.ExceedEnd() {
+	// 	// domFacts, iffFacts, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
+	// 	// domFacts, iffFacts, err := tb.dom_and_section(glob.KeywordIff, glob.KeySymbolEqualLarger)
+	// 	domFacts, iffFacts, err := p.dom_and_section(tb, glob.KeySymbolEquivalent, glob.KeySymbolRightArrow)
+	// 	if err != nil {
+	// 		return nil, ErrInLine(err, tb)
+	// 	}
+
+	// 	// iff, dom 里不能出现和被定义的prop同名的prop，否则用def做验证的时候会出问题
+	// 	for _, fact := range iffFacts {
+	// 		if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
+	// 			if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
+	// 				return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
+	// 			}
+	// 		}
+	// 	}
+
+	// 	for _, fact := range domFacts {
+	// 		if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
+	// 			if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
+	// 				return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
+	// 			}
+	// 		}
+	// 	}
+
+	// 	return NewDefPropStmt(declHeader, domFacts, iffFacts, nil, tb.line), nil
+	// } else {
+	// 	domFacts, iffFacts, err := p.bodyOfInlineDomAndThen(tb, glob.KeySymbolEquivalent, []string{})
+	// 	if err != nil {
+	// 		return nil, ErrInLine(err, tb)
+	// 	}
+
+	// 	return NewDefPropStmt(declHeader, domFacts, iffFacts, nil, tb.line), nil
+	// }
 }
 
 func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (Stmt, error) {
@@ -2244,7 +2250,7 @@ func (p *TbParser) DefPropInferStmt(tb *tokenBlock) (*DefPropStmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	err = NoSelfReferenceInPropDef(string(body.DefHeader.Name), append(append(body.DomFactsOrNil, body.IffFactsOrNil...), body.ImplicationFactsOrNil...))
+	err = NoSelfReferenceInPropDef(string(body.DefHeader.Name), body.IffFactsOrNil)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -2285,7 +2291,7 @@ func (p *TbParser) implyStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt,
 
 	if !tb.header.is(glob.KeySymbolColon) {
 		if tb.header.ExceedEnd() {
-			return NewDefPropStmt(declHeader, nil, nil, nil, tb.line), nil
+			return NewDefPropStmt(declHeader, nil, nil, tb.line), nil
 		} else {
 			return nil, fmt.Errorf("expect ':' or end of block")
 		}
@@ -2348,7 +2354,7 @@ func (p *TbParser) implyStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt,
 			}
 		}
 
-		return NewDefPropStmt(declHeader, nil, iffFacts, implicationFacts, tb.line), nil
+		return NewDefPropStmt(declHeader, iffFacts, implicationFacts, tb.line), nil
 	} else {
 		// Inline format: check if there's => separator
 		// bodyOfInlineDomAndThen returns (facts before =>, facts after =>)
@@ -2369,7 +2375,7 @@ func (p *TbParser) implyStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt,
 			iffFacts = nil
 		}
 
-		return NewDefPropStmt(declHeader, nil, iffFacts, implicationFacts, tb.line), nil
+		return NewDefPropStmt(declHeader, iffFacts, implicationFacts, tb.line), nil
 	}
 }
 
