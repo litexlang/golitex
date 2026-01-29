@@ -47,41 +47,23 @@ func checkFactsUniDepth1(facts []FactStmt) error {
 }
 
 func checkUniFactDepth0(uniFact *UniFactStmt) error {
-	for _, fact := range uniFact.DomFacts {
-		switch asFact := fact.(type) {
-		case *UniFactStmt:
-			if !checkUniFactDepth1(asFact) {
-				return fmt.Errorf("too many levels of universal fact in universal fact:\n%s\nthere must be at most two levels of universal fact", uniFact.String())
-			}
-		}
-	}
-
-	for _, fact := range uniFact.ThenFacts {
-		switch asFact := fact.(type) {
-		case *UniFactStmt:
-			if !checkUniFactDepth1(asFact) {
-				return fmt.Errorf("too many levels of universal fact in universal fact:\n%s\nthere must be at most two levels of universal fact", uniFact.String())
-			}
-		}
-	}
-
 	return nil
 }
 
 func checkUniFactDepth1(uniFact *UniFactStmt) bool {
-	for _, fact := range uniFact.DomFacts {
-		switch fact.(type) {
-		case *UniFactStmt:
-			return false
-		}
-	}
+	// for _, fact := range uniFact.DomFacts {
+	// 	switch fact.(type) {
+	// 	case *UniFactStmt:
+	// 		return false
+	// 	}
+	// }
 
-	for _, fact := range uniFact.ThenFacts {
-		switch fact.(type) {
-		case *UniFactStmt:
-			return false
-		}
-	}
+	// for _, fact := range uniFact.ThenFacts {
+	// 	switch fact.(type) {
+	// 	case *UniFactStmt:
+	// 		return false
+	// 	}
+	// }
 
 	return true
 }

@@ -475,7 +475,8 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt ast.SpecificFactStmt, sta
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	defStmt := ver.Env.MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(curDefStmt)
+	// defStmt := ver.Env.MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(curDefStmt)
+	defStmt := curDefStmt
 
 	// iffToProp := defStmt.IffToPropUniFact()
 	paramArrMap := map[string]ast.Obj{}

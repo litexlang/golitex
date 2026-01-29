@@ -41,7 +41,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) *glob
 	}
 
 	// 存储步骤（在主环境中）
-	finalUniFact := ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{}, []ast.FactStmt{stmt.Fact}, stmt.Line)
+	finalUniFact := ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.Spec_OrFact{}, []ast.Spec_OrFact{stmt.Fact}, stmt.Line)
 	factRet := exec.Env.NewFactWithCheckingNameDefined(finalUniFact)
 	if factRet.IsErr() {
 		return glob.ErrRet(fmt.Sprintf("failed to store final universal fact: %s", factRet.String()))
@@ -60,13 +60,6 @@ func (exec *Executor) proveByInductionStmtProveProcess(stmt *ast.ProveByInductio
 	if ret.IsTrue() {
 		return glob.ErrRet(fmt.Sprintf("parameter %s is already defined. To avoid ambiguity, please use a different name for the parameter", stmt.Param))
 	}
-
-	// // 定义 param 在 N_pos 里
-	// defLetStmt := ast.NewDefLetStmt([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{}, stmt.Line)
-	// execRet := exec.defLetStmt(defLetStmt)
-	// if execRet.IsNotTrue() {
-	// 	return execRet.AddError(fmt.Sprintf("failed to define parameter %s in N_pos", stmt.Param))
-	// }
 
 	// 运行整个 Proof
 	execRet := exec.execStmtsAtCurEnv(stmt.Proof)
@@ -89,14 +82,6 @@ func (exec *Executor) proveByInductionStmtProveProcess(stmt *ast.ProveByInductio
 		return glob.NewEmptyStmtUnknown().AddUnknown(fmt.Sprintf("base case is unknown: %s", startFact.String()))
 	}
 
-	// 证明 2：生成 uniFact: forall randomParam N_pos: stmt.Fact 的 param 替换成 randomParam => stmt.Fact 的 param 替换成 randomParam + 1
-	// randomParam := exec.Env.GenerateUndeclaredRandomName()
-
-	// domFacts: stmt.Fact 的 param 替换成 randomParam
-	// domFact, err := stmt.Fact.InstantiateFact(map[string]ast.Obj{stmt.Param: ast.Atom(randomParam)})
-	// if err != nil {
-	// 	return glob.ErrRet(fmt.Sprintf("failed to instantiate fact with randomParam: %s", err.Error()))
-	// }
 	domFact := stmt.Fact
 
 	// thenFacts: stmt.Fact 的 param 替换成 randomParam + 1
@@ -107,7 +92,7 @@ func (exec *Executor) proveByInductionStmtProveProcess(stmt *ast.ProveByInductio
 	}
 
 	// 创建 uniFact
-	inductionStep := ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.FactStmt{domFact}, []ast.FactStmt{thenFact}, stmt.Line)
+	inductionStep := ast.NewUniFact([]string{stmt.Param}, []ast.Obj{ast.Atom(glob.KeywordNPos)}, []ast.Spec_OrFact{domFact}, []ast.Spec_OrFact{thenFact.(ast.Spec_OrFact)}, stmt.Line)
 
 	// 验证 induction step
 	verRet = ver.VerFactStmt(inductionStep, Round0NoMsg())

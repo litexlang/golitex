@@ -258,7 +258,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 	for _, param := range listSetFnObj.Params {
 		orFact.Facts = append(orFact.Facts, ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.Atom(randomName), param}, glob.BuiltinLine0))
 	}
-	forallFact := ast.NewUniFact([]string{randomName}, []ast.Obj{left}, []ast.FactStmt{}, []ast.FactStmt{orFact}, glob.BuiltinLine0)
+	forallFact := ast.NewUniFact([]string{randomName}, []ast.Obj{left}, []ast.Spec_OrFact{}, []ast.Spec_OrFact{orFact}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.newUniFactNoInfer(forallFact)
 	if ret.IsErr() {
 		return glob.NewEmptyShortUnknownRet()

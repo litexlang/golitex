@@ -214,7 +214,7 @@ type InlineFactsStmt struct {
 }
 
 type ProveByInductionStmt struct {
-	Fact  FactStmt
+	Fact  Spec_OrFact
 	Param string
 	Proof StmtSlice
 

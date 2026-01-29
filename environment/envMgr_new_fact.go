@@ -107,12 +107,12 @@ func (envMgr *EnvMgr) newUniFact(stmt *ast.UniFactStmt) *glob.StmtRet {
 		case *ast.OrStmt:
 			ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
 			// ret = glob.NewEmptyStmtTrue()
-		case *ast.UniFactWithIffStmt:
-			ret = envMgr.newUniFact_ThenFactIsIffStmt(stmt, asFact)
-		case *ast.UniFactStmt:
-			ret = envMgr.newUniFact_ThenFactIsUniFactStmt(stmt, asFact)
-		case *ast.EqualsFactStmt:
-			ret = envMgr.newUniFact_ThenFactIsEqualsFactStmt(stmt, asFact)
+		// case *ast.UniFactWithIffStmt:
+		// 	ret = envMgr.newUniFact_ThenFactIsIffStmt(stmt, asFact)
+		// case *ast.UniFactStmt:
+		// 	ret = envMgr.newUniFact_ThenFactIsUniFactStmt(stmt, asFact)
+		// case *ast.EqualsFactStmt:
+		// 	ret = envMgr.newUniFact_ThenFactIsEqualsFactStmt(stmt, asFact)
 		default:
 			return glob.ErrRet(fmt.Sprintf("invalid then fact type: %s", thenStmt))
 		}
@@ -320,9 +320,9 @@ func (envMgr *EnvMgr) ProveImplyNewThenFactInPropDef(stmt *ast.ProveInferStmt) *
 			return glob.ErrRet(err.Error())
 		}
 		if def.ImplicationFactsOrNil == nil {
-			def.ImplicationFactsOrNil = make([]ast.FactStmt, 0)
+			def.ImplicationFactsOrNil = make([]ast.Spec_OrFact, 0)
 		}
-		def.ImplicationFactsOrNil = append(def.ImplicationFactsOrNil, instStmtFact)
+		def.ImplicationFactsOrNil = append(def.ImplicationFactsOrNil, instStmtFact.(ast.Spec_OrFact))
 	}
 
 	return glob.NewEmptyStmtTrue()

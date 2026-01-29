@@ -158,15 +158,11 @@ func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error)
 		newIffFacts = append(newIffFacts, newFact)
 	}
 
-	newThenFacts := []FactStmt{}
-	for _, fact := range defPropStmt.ImplicationFactsOrNil {
-		newFact, err := fact.InstantiateFact(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newThenFacts = append(newThenFacts, newFact)
+	instantiatedThenFacts, err := defPropStmt.ImplicationFactsOrNil.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
 	}
-	return NewDefPropStmt(newDefHeader, newIffFacts, newThenFacts, defPropStmt.Line), nil
+	return NewDefPropStmt(newDefHeader, newIffFacts, instantiatedThenFacts, defPropStmt.Line), nil
 }
 
 // func (stmt *DefExistPropStmtBody) Instantiate(uniMap map[string]Obj) (*DefExistPropStmtBody, error) {
@@ -643,7 +639,7 @@ func (stmt *ProveByInductionStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 		return nil, err
 	}
 
-	return NewProveByInductionStmt(newFact, stmt.Param, newProof, newInducFrom, stmt.Line), nil
+	return NewProveByInductionStmt(newFact.(Spec_OrFact), stmt.Param, newProof, newInducFrom, stmt.Line), nil
 }
 
 func (stmt *HaveObjEqualStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
