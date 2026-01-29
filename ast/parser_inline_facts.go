@@ -303,7 +303,7 @@ func (p *TbParser) inlineUniInterfaceSkipTerminator(tb *tokenBlock, ends []strin
 func (p *TbParser) thenFactsInUniFactInterface(tb *tokenBlock, ends []string) ([]Spec_OrFact, bool, error) {
 	facts := []Spec_OrFact{}
 	for {
-		specFact, err := p.inlineSpecFactStmt_skip_terminator(tb)
+		specFact, err := p.SpecFactOrOrStmt(tb)
 		if err != nil {
 			return nil, false, ErrInLine(err, tb)
 		}
@@ -321,13 +321,17 @@ func (p *TbParser) thenFactsInUniFactInterface(tb *tokenBlock, ends []string) ([
 			return facts, true, nil
 		}
 
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			continue
+		}
 	}
 }
 
 func (p *TbParser) thenFacts_SkipEnd_Semicolon_or_EOL(tb *tokenBlock, ends []string) ([]Spec_OrFact, error) {
 	facts := []Spec_OrFact{}
 	for {
-		specFact, err := p.inlineSpecFactStmt_skip_terminator(tb)
+		specFact, err := p.SpecFactOrOrStmt(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -342,13 +346,18 @@ func (p *TbParser) thenFacts_SkipEnd_Semicolon_or_EOL(tb *tokenBlock, ends []str
 			return facts, nil
 		}
 
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			continue
+		}
+
 	}
 }
 
 func (p *TbParser) inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb *tokenBlock, ends []string) ([]Spec_OrFact, error) {
 	facts := []Spec_OrFact{}
 	for {
-		specFact, err := p.inlineSpecFactStmt_skip_terminator(tb)
+		specFact, err := p.SpecFactOrOrStmt(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -359,12 +368,16 @@ func (p *TbParser) inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb *tokenB
 		if p.IsEnding(tb, ends) {
 			return facts, nil
 		}
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+			continue
+		}
 	}
 }
 
 // inline_spec_or_fact_skip_terminator parses spec fact or or-fact and skips statement terminator
 func (p *TbParser) inline_spec_or_fact_skip_terminator(tb *tokenBlock) (FactStmt, error) {
-	specFact, err := p.inlineSpecFactStmt_skip_terminator(tb)
+	specFact, err := p.specFactStmt(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}

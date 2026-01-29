@@ -745,7 +745,7 @@ func (p *TbParser) bodyBlockSpecOrFacts(tb *tokenBlock, parseBodyFactNum int) ([
 	facts := []Spec_OrFact{}
 	for i := range parseBodyFactNum {
 		stmt := tb.body[i]
-		fact, err := p.inlineSpecFactStmt_skip_terminator(&stmt)
+		fact, err := p.SpecFactOrOrStmt(&stmt)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -2337,7 +2337,7 @@ func (p *TbParser) implyStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt,
 		// Parse then facts (after =>:)
 		thenFact := []Spec_OrFact{}
 		for _, stmt := range tb.body[len(tb.body)-1].body {
-			curStmt, err := p.inlineSpecFactStmt_skip_terminator(&stmt)
+			curStmt, err := p.SpecFactOrOrStmt(&stmt)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
@@ -2348,7 +2348,7 @@ func (p *TbParser) implyStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt,
 		// Case 2: 没有 =>:，那么 iff 是没有，全是 then
 		// All lines are implication facts
 		for _, stmt := range tb.body {
-			curStmt, err := p.inlineSpecFactStmt_skip_terminator(&stmt)
+			curStmt, err := p.SpecFactOrOrStmt(&stmt)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
@@ -2445,7 +2445,7 @@ func (p *TbParser) proveByInductionStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	// Parse inlineFact
-	fact, err := p.inlineSpecFactStmt_skip_terminator(tb)
+	fact, err := p.SpecFactOrOrStmt(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -2639,22 +2639,12 @@ func (p *TbParser) factStmt(tb *tokenBlock, uniFactDepth uniFactEnum) (FactStmt,
 // 	return NewOrStmt(orFacts, tb.line), nil
 // }
 
-func (p *TbParser) SpecFactOrOrStmt(tb *tokenBlock) (FactStmt, error) {
-	// if tb.header.is(glob.KeywordOr) {
-	// return p.orStmt(tb)
-	// return p.inlineOrFact(tb)
-	// } else if tb.header.is(glob.KeySymbolEqual) {
-	// 	return p.equalsFactStmt(tb)
-	// } else {
-	// 	return p.specFactStmt(tb)
-	// }
-
+func (p *TbParser) SpecFactOrOrStmt(tb *tokenBlock) (Spec_OrFact, error) {
 	start, err := p.specFactStmt(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
-	// 如果有 or，那就直到 后面没有or了
 	if !tb.header.is(glob.KeywordOr) {
 		return start, nil
 	}
@@ -3864,7 +3854,7 @@ func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]Spec_OrFact, []Spec_O
 			return nil, nil, nil, err
 		}
 		for _, stmt := range body[0].body {
-			curStmt, err := p.inlineSpecFactStmt_skip_terminator(&stmt)
+			curStmt, err := p.SpecFactOrOrStmt(&stmt)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -3881,7 +3871,7 @@ func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]Spec_OrFact, []Spec_O
 		}
 
 		for _, stmt := range body[1].body {
-			curStmt, err := p.inlineSpecFactStmt_skip_terminator(&stmt)
+			curStmt, err := p.SpecFactOrOrStmt(&stmt)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -3923,7 +3913,7 @@ func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]Spec_OrFact, []Spec_O
 				return nil, nil, nil, err
 			}
 			for _, stmt := range body[i].body {
-				curStmt, err := p.inlineSpecFactStmt_skip_terminator(&stmt)
+				curStmt, err := p.SpecFactOrOrStmt(&stmt)
 				if err != nil {
 					return nil, nil, nil, err
 				}
@@ -3954,7 +3944,7 @@ func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]Spec_OrFact, []Spec_O
 				}
 
 				for _, stmt := range body[i].body {
-					curStmt, err := p.inlineSpecFactStmt_skip_terminator(&stmt)
+					curStmt, err := p.SpecFactOrOrStmt(&stmt)
 					if err != nil {
 						return nil, nil, nil, err
 					}
@@ -3962,7 +3952,7 @@ func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]Spec_OrFact, []Spec_O
 				}
 			} else {
 				// It's a direct fact statement (no => needed)
-				curStmt, err := p.inlineSpecFactStmt_skip_terminator(&body[i])
+				curStmt, err := p.SpecFactOrOrStmt(&body[i])
 				if err != nil {
 					return nil, nil, nil, err
 				}
