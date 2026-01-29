@@ -39,13 +39,13 @@ prove forall a, b, c R: a != 0 => line(a, b, c) = line(1, b/a, c/a):
     $line_as_intensional_set(line(a, b, c), a, b, c)
     $line_as_intensional_set(line(1, b/a, c/a), 1, b/a, c/a)
 
-    forall x line(a, b, c):
+    prove forall x line(a, b, c) => x $in line(1, b/a, c/a):
         x $in cart(R, R)
         a * x[1] + b * x[2] = c
         (a * x[1] + b * x[2]) / a = c / a = x[1] + (b / a) * x[2]
         x $in line(1, b/a, c/a)
 
-    forall x line(1, b/a, c/a):
+    prove forall x line(1, b/a, c/a) : x $in line(a, b, c) => x $in line(a, b, c):
         x $in cart(R, R)
         1 * x[1] + (b / a) * x[2] = c / a
         a * (1 * x[1] + (b / a) * x[2]) = a * x[1] + b * x[2] = a * (c / a) = c

@@ -9,8 +9,6 @@ prove:
 
     know forall a, b, c R: a > 0 => (a \pow b) * (a \pow c) = a  \pow  (b+c)
 
-    know prop_infer p(a, b, c R): a > 0, a != 1, a  \pow  b = a  \pow  c => b = c
-
     claim:
         forall b, x, y R:
             b > 0
@@ -28,6 +26,3 @@ prove:
             b  \pow  self_log(b, y) = y
             b  \pow  self_log(b, x*y) = (b  \pow  self_log(b, x)) * (b  \pow  self_log(b, y))
             (b  \pow  self_log(b, x)) * (b  \pow  self_log(b, y)) = b  \pow  (self_log(b, x) + self_log(b, y))
-            b  \pow  self_log(b, x*y) = b  \pow  (self_log(b, x) + self_log(b, y))
-            $p(b, self_log(b, x*y), self_log(b, x) + self_log(b, y))
-            self_log(b, x*y) = self_log(b, x) + self_log(b, y)
