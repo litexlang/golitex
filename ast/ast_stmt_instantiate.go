@@ -95,22 +95,22 @@ func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Obj) (*UniFactStmt,
 	newParams := []string{}
 	newParams = append(newParams, stmt.Params...)
 
-	newDomFacts := []FactStmt{}
+	newDomFacts := []Spec_OrFact{}
 	for _, fact := range stmt.DomFacts {
 		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
-		newDomFacts = append(newDomFacts, newFact)
+		newDomFacts = append(newDomFacts, newFact.(Spec_OrFact))
 	}
 
-	newThenFacts := []FactStmt{}
+	newThenFacts := []Spec_OrFact{}
 	for _, fact := range stmt.ThenFacts {
 		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
-		newThenFacts = append(newThenFacts, newFact)
+		newThenFacts = append(newThenFacts, newFact.(Spec_OrFact))
 	}
 
 	newSetParams := []Obj{}
@@ -250,13 +250,13 @@ func (stmt *UniFactWithIffStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt
 		return nil, err
 	}
 
-	instantiatedIffFacts := []FactStmt{}
+	instantiatedIffFacts := []Spec_OrFact{}
 	for _, fact := range stmt.IffFacts {
 		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
-		instantiatedIffFacts = append(instantiatedIffFacts, newFact)
+		instantiatedIffFacts = append(instantiatedIffFacts, newFact.(Spec_OrFact))
 	}
 
 	return NewUniFactWithIff(newUniFact.(*UniFactStmt), instantiatedIffFacts, stmt.Line), nil

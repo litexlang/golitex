@@ -383,7 +383,7 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt ast.SpecificFactStmt, state *
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	iffToProp := defStmt.IffToPropUniFact()
+	// iffToProp := defStmt.IffToPropUniFact()
 	paramArrMap := map[string]ast.Obj{}
 	for i, param := range asStmt.Params {
 		paramArrMap[defStmt.DefHeader.Params[i]] = param
@@ -403,13 +403,14 @@ func (ver *Verifier) verNotPureSpecFact_ByDef(stmt ast.SpecificFactStmt, state *
 	}
 
 	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
-	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
-	if err != nil {
-		return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
-	}
+	// instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
+
+	// if err != nil {
+	// 	return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+	// }
 
 	// 某个fact是false的，那就OK了
-	for _, domFact := range instantiatedIffToProp.DomFacts {
+	for _, domFact := range defStmt.IffFactsOrNil {
 		domFactAsSpecFact, ok := domFact.(*ast.PureSpecificFactStmt)
 		if !ok {
 			continue
@@ -476,7 +477,7 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt ast.SpecificFactStmt, sta
 
 	defStmt := ver.Env.MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(curDefStmt)
 
-	iffToProp := defStmt.IffToPropUniFact()
+	// iffToProp := defStmt.IffToPropUniFact()
 	paramArrMap := map[string]ast.Obj{}
 	for i, param := range asStmt.Params {
 		paramArrMap[defStmt.DefHeader.Params[i]] = param
@@ -496,14 +497,17 @@ func (ver *Verifier) verPureSpecFact_ByDefinition(stmt ast.SpecificFactStmt, sta
 	}
 
 	// 本质上不需要把所有的参数都instantiate，只需要instantiate在dom里的就行
-	instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
+	// instantiatedIffToProp, err := ast.InstantiateUniFact(iffToProp, paramArrMap)
 	if err != nil {
 		return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
 	}
 	// prove all domFacts are true
-	for _, domFact := range instantiatedIffToProp.DomFacts {
-		// verRet := ver.VerFactStmt(domFact, nextState)
-		verRet := ver.VerFactStmt(domFact, state)
+	for _, domFact := range defStmt.IffFactsOrNil {
+		instantiatedDomFact, err := domFact.InstantiateFact(paramArrMap)
+		if err != nil {
+			return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		}
+		verRet := ver.VerFactStmt(instantiatedDomFact, state)
 		if verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
 		}

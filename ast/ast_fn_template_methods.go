@@ -15,6 +15,7 @@
 package litex_ast
 
 import (
+	"fmt"
 	"maps"
 )
 
@@ -24,10 +25,33 @@ func (fnTemplate *AnonymousFn) DeriveUniFact_WithGivenFn(obj Obj) (*UniFactStmt,
 		paramAsObj = append(paramAsObj, Atom(param))
 	}
 
-	thenFacts := []FactStmt{NewInFactWithParamObj(NewFnObj(obj, paramAsObj), fnTemplate.RetSet, fnTemplate.Line)}
-	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
+	thenFacts := []Spec_OrFact{NewInFactWithParamObj(NewFnObj(obj, paramAsObj), fnTemplate.RetSet, fnTemplate.Line)}
 
-	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts, fnTemplate.Line)
+	thenFactsReversible := []Spec_OrFact{}
+	for _, thenFact := range fnTemplate.ThenFacts {
+		if specFact, ok := thenFact.(SpecificFactStmt); ok {
+			thenFactsReversible = append(thenFactsReversible, specFact)
+		} else if orStmt, ok := thenFact.(*OrStmt); ok {
+			thenFactsReversible = append(thenFactsReversible, orStmt)
+		} else {
+			return nil, fmt.Errorf("then fact is not SpecificFactStmt or OrStmt")
+		}
+	}
+
+	thenFacts = append(thenFacts, thenFactsReversible...)
+
+	fnTemplateDomFacts := []Spec_OrFact{}
+	for _, domFact := range fnTemplate.DomFacts {
+		if specFact, ok := domFact.(SpecificFactStmt); ok {
+			fnTemplateDomFacts = append(fnTemplateDomFacts, specFact)
+		} else if orStmt, ok := domFact.(*OrStmt); ok {
+			fnTemplateDomFacts = append(fnTemplateDomFacts, orStmt)
+		} else {
+			return nil, fmt.Errorf("dom fact is not SpecificFactStmt or OrStmt")
+		}
+	}
+
+	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplateDomFacts, thenFacts, fnTemplate.Line)
 
 	return notInstantiated, nil
 }
@@ -38,10 +62,33 @@ func (fnTemplate *AnonymousFn) DeriveUniFact(defFnTemplateName string, fnObj Obj
 		paramAsObj = append(paramAsObj, Atom(param))
 	}
 
-	thenFacts := []FactStmt{NewInFactWithParamObj(NewFnObj(fnObj, paramAsObj), fnTemplate.RetSet, fnTemplate.Line)}
-	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
+	thenFacts := []Spec_OrFact{NewInFactWithParamObj(NewFnObj(fnObj, paramAsObj), fnTemplate.RetSet, fnTemplate.Line)}
 
-	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts, fnTemplate.Line)
+	thenFactsReversible := []Spec_OrFact{}
+	for _, thenFact := range fnTemplate.ThenFacts {
+		if specFact, ok := thenFact.(SpecificFactStmt); ok {
+			thenFactsReversible = append(thenFactsReversible, specFact)
+		} else if orStmt, ok := thenFact.(*OrStmt); ok {
+			thenFactsReversible = append(thenFactsReversible, orStmt)
+		} else {
+			return nil, fmt.Errorf("then fact is not SpecificFactStmt or OrStmt")
+		}
+	}
+
+	thenFacts = append(thenFacts, thenFactsReversible...)
+
+	fnTemplateDomFacts := []Spec_OrFact{}
+	for _, domFact := range fnTemplate.DomFacts {
+		if specFact, ok := domFact.(SpecificFactStmt); ok {
+			fnTemplateDomFacts = append(fnTemplateDomFacts, specFact)
+		} else if orStmt, ok := domFact.(*OrStmt); ok {
+			fnTemplateDomFacts = append(fnTemplateDomFacts, orStmt)
+		} else {
+			return nil, fmt.Errorf("dom fact is not SpecificFactStmt or OrStmt")
+		}
+	}
+
+	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplateDomFacts, thenFacts, fnTemplate.Line)
 
 	uniMap := maps.Clone(templateParamUniMap)
 	uniMap[defFnTemplateName] = fnObj

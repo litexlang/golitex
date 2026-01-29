@@ -263,17 +263,17 @@ func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) *glob.StmtR
 	defineMsgs = append(defineMsgs, execRet.Define...)
 	newFactMsgs = append(newFactMsgs, execRet.NewFact...)
 
-	if len(stmt.DefProp.IffFactsOrNil) == 0 {
-		_, iffToProp, err := stmt.DefProp.Make_PropToIff_IffToProp()
-		if err != nil {
-			return glob.ErrRet(err.Error())
-		}
-		ret := exec.Env.NewFactWithCheckingNameDefined(iffToProp)
-		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
-		}
-		newFactMsgs = append(newFactMsgs, iffToProp.String())
-	}
+	// if len(stmt.DefProp.IffFactsOrNil) == 0 {
+	// 	_, iffToProp, err := stmt.DefProp.Make_PropToIff_IffToProp()
+	// 	if err != nil {
+	// 		return glob.ErrRet(err.Error())
+	// 	}
+	// 	ret := exec.Env.NewFactWithCheckingNameDefined(iffToProp)
+	// 	if ret.IsErr() {
+	// 		return glob.ErrRet(ret.String())
+	// 	}
+	// 	newFactMsgs = append(newFactMsgs, iffToProp.String())
+	// }
 
 	paramsAsObj := []ast.Obj{}
 	for i := range stmt.DefProp.DefHeader.Params {
