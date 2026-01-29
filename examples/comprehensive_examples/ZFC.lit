@@ -1,22 +1,11 @@
 # 1. Axiom of extensionality: two sets are equal if and only if they have the same elements. We use keyword $equal_set for this.
 
 forall x, y set:
-    forall t x:
-        t $in y
-    forall t y:
-        t $in x
+    x $subset_of y
+    y $subset_of x
     =>:
         $equal_set(x, y)
         x = y
-
-forall x, y set:
-    x = y
-    =>:
-        $equal_set(x, y)
-        forall t x:
-            t $in y
-        forall t y:
-            t $in x
 
 # 2. Axiom of regularity: every non-empty set has an element that is disjoint from the set
 
@@ -87,11 +76,10 @@ exist x set st $axiom_of_infinity(x)
 
 # 8. Axiom of power set: for any set, there exists a set of all subsets of the set. We use keyword power_set for this.
 
-forall X set:
-    forall y set:
-        y $subset_of X
-        =>:
-            y $in power_set(X)
+forall X set, y set:
+    y $subset_of X
+    =>:
+        y $in power_set(X)
 
-    forall y power_set(X):
-        y $subset_of X
+forall X set, y power_set(X):
+    y $subset_of X
