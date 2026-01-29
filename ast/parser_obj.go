@@ -460,9 +460,13 @@ func (p *TbParser) fnSet(tb *tokenBlock) (Obj, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	ret := NewFnObj(NewFnObj(Atom(glob.KeywordFn), fnSets), []Obj{retSet})
+	ret := NewAnonymousFnSetObj(fnSets, retSet)
 
 	return ret, nil
+}
+
+func NewAnonymousFnSetObj(fnSets []Obj, retSet Obj) Obj {
+	return NewFnObj(NewFnObj(Atom(glob.KeywordFn), fnSets), []Obj{retSet})
 }
 
 func (p *TbParser) backSlashExpr(tb *tokenBlock) (Obj, error) {
