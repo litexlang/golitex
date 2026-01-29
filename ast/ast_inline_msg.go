@@ -40,7 +40,7 @@ func (c *DefPropStmt) InlineString() string {
 	}
 	if len(c.ImplicationFactsOrNil) > 0 {
 		builder.WriteString(glob.KeySymbolRightArrow)
-		builder.WriteString(inlineFactsString(c.ImplicationFactsOrNil))
+		builder.WriteString(inlineReversibleFactsString(c.ImplicationFactsOrNil))
 	}
 	return builder.String()
 }
@@ -69,11 +69,11 @@ func (l *UniFactStmt) InlineString() string {
 	builder.WriteString(StrObjSetPairs(l.Params, l.ParamSets))
 	if len(l.DomFacts) > 0 {
 		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteString(inlineFactsString(l.DomFacts))
+		builder.WriteString(inlineReversibleFactsString(l.DomFacts))
 	}
 	if len(l.ThenFacts) > 0 {
 		builder.WriteString(glob.KeySymbolRightArrow)
-		builder.WriteString(inlineFactsString(l.ThenFacts))
+		builder.WriteString(inlineReversibleFactsString(l.ThenFacts))
 	}
 	return builder.String()
 }
@@ -273,15 +273,15 @@ func (s *UniFactWithIffStmt) InlineString() string {
 	builder.WriteString(StrObjSetPairs(s.UniFact.Params, s.UniFact.ParamSets))
 	builder.WriteString(glob.KeySymbolColon)
 	if len(s.UniFact.DomFacts) > 0 {
-		builder.WriteString(inlineFactsString(s.UniFact.DomFacts))
+		builder.WriteString(inlineReversibleFactsString(s.UniFact.DomFacts))
 	}
 	if len(s.UniFact.ThenFacts) > 0 {
 		builder.WriteString(glob.KeySymbolRightArrow)
-		builder.WriteString(inlineFactsString(s.UniFact.ThenFacts))
+		builder.WriteString(inlineReversibleFactsString(s.UniFact.ThenFacts))
 	}
 	if len(s.IffFacts) > 0 {
 		builder.WriteString(glob.KeySymbolEquivalent)
-		builder.WriteString(inlineFactsString(s.IffFacts))
+		builder.WriteString(inlineReversibleFactsString(s.IffFacts))
 	}
 	return builder.String()
 }
@@ -349,6 +349,16 @@ func inlineFactsString(facts FactStmtSlice) string {
 	default:
 		builder.WriteString(asFact.InlineString())
 	}
+	return builder.String()
+}
+
+func inlineReversibleFactsString(facts ReversibleFacts) string {
+	var builder strings.Builder
+	for i := range len(facts) - 1 {
+		builder.WriteString(facts[i].InlineString())
+		builder.WriteString(", ")
+	}
+	builder.WriteString(facts[len(facts)-1].InlineString())
 	return builder.String()
 }
 

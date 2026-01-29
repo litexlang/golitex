@@ -601,7 +601,10 @@ func (s *UniFactWithIffStmt) ToLatexString() string {
 
 	if len(s.UniFact.DomFacts) > 0 {
 
-		domFactStrSlice := s.UniFact.DomFacts.factStmtSliceToLatexStringSlice()
+		domFactStrSlice := make([]string, len(s.UniFact.DomFacts))
+		for i, fact := range s.UniFact.DomFacts {
+			domFactStrSlice[i] = fact.ToLatexString()
+		}
 
 		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
 			builder.WriteString(",  ")
@@ -615,7 +618,10 @@ func (s *UniFactWithIffStmt) ToLatexString() string {
 	}
 
 	if len(s.UniFact.ThenFacts) > 0 {
-		thenFactStrSlice := s.UniFact.ThenFacts.factStmtSliceToLatexStringSlice()
+		thenFactStrSlice := make([]string, len(s.UniFact.ThenFacts))
+		for i, fact := range s.UniFact.ThenFacts {
+			thenFactStrSlice[i] = fact.ToLatexString()
+		}
 		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
 			builder.WriteString("$\\Rightarrow$ ")
 			builder.WriteString(strings.Join(thenFactStrSlice, ", "))
@@ -629,7 +635,10 @@ func (s *UniFactWithIffStmt) ToLatexString() string {
 
 	if len(s.IffFacts) > 0 {
 		builder.WriteString("if and only if ")
-		iffFactStrSlice := s.IffFacts.factStmtSliceToLatexStringSlice()
+		iffFactStrSlice := make([]string, len(s.IffFacts))
+		for i, fact := range s.IffFacts {
+			iffFactStrSlice[i] = fact.ToLatexString()
+		}
 		if ShouldInSingleLineAsLatexString(iffFactStrSlice) {
 			builder.WriteString(" ")
 			builder.WriteString(strings.Join(iffFactStrSlice, ", "))

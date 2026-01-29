@@ -72,11 +72,11 @@ func NewHaveObjStWithParamSetsStmt(objNames []string, objSets []Obj, fact *PureS
 // 	return &DefExistPropStmtBody{declHeader, domFacts, iffFacts, thenFacts, line}
 // }
 
-func NewUniFact(params []string, setParams []Obj, domFacts []FactStmt, thenFacts []FactStmt, line uint) *UniFactStmt {
+func NewUniFact(params []string, setParams []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, line uint) *UniFactStmt {
 	return &UniFactStmt{params, setParams, domFacts, thenFacts, line}
 }
 
-func NewUniFactWithIff(uniFact *UniFactStmt, iffFacts []FactStmt, line uint) *UniFactWithIffStmt {
+func NewUniFactWithIff(uniFact *UniFactStmt, iffFacts ReversibleFacts, line uint) *UniFactWithIffStmt {
 	return &UniFactWithIffStmt{uniFact, iffFacts, line}
 }
 
@@ -203,7 +203,7 @@ func NewClaimIffStmt(uniFactWithIffStmt *UniFactWithIffStmt, proofs []Stmt, proo
 	return &ClaimIffStmt{uniFactWithIffStmt, proofs, proofs2, line}
 }
 
-func NewProveForStmt(params []string, lefts []Obj, rights []Obj, isProveIRange []bool, domFacts []FactStmt, thenFacts []FactStmt, proofs []Stmt, line uint) *ProveForStmt {
+func NewProveForStmt(params []string, lefts []Obj, rights []Obj, isProveIRange []bool, domFacts ReversibleFacts, thenFacts ReversibleFacts, proofs []Stmt, line uint) *ProveForStmt {
 	return &ProveForStmt{Params: params, Lefts: lefts, Rights: rights, IsProveIRange: isProveIRange, DomFacts: domFacts, ThenFacts: thenFacts, Proofs: proofs, Line: line}
 }
 
@@ -231,7 +231,7 @@ func NewAlgoReturnStmt(value Obj, line uint) *AlgoReturnStmt {
 	return &AlgoReturnStmt{value, line}
 }
 
-func NewUniFactWithSafeGuard(params []string, setParams []Obj, domFacts []FactStmt, thenFacts []FactStmt, line uint) (*UniFactStmt, error) {
+func NewUniFactWithSafeGuard(params []string, setParams []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, line uint) (*UniFactStmt, error) {
 	if len(thenFacts) == 0 {
 		return nil, fmt.Errorf("expect %s section to have at least one fact in %s", glob.KeySymbolRightArrow, NewUniFact(params, setParams, domFacts, thenFacts, line))
 	}
@@ -265,7 +265,7 @@ func NewUniFactWithSafeGuard(params []string, setParams []Obj, domFacts []FactSt
 	return NewUniFact(params, setParams, domFacts, thenFacts, line), nil
 }
 
-func NewUniFactWithIffWithSafeGuard(params []string, setParams []Obj, domFacts []FactStmt, thenFacts []FactStmt, iffFacts []FactStmt, line uint) (*UniFactWithIffStmt, error) {
+func NewUniFactWithIffWithSafeGuard(params []string, setParams []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, iffFacts ReversibleFacts, line uint) (*UniFactWithIffStmt, error) {
 	uniFact, err := NewUniFactWithSafeGuard(params, setParams, domFacts, thenFacts, line)
 	if err != nil {
 		return nil, err
