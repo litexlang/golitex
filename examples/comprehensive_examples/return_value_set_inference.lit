@@ -23,8 +23,9 @@ prove:
     let DOMAIN set, f_RET set, g_RET set, optRET set
     let fn opt(x f_RET, y g_RET) optRET
 
-    let fn a(f fn(DOMAIN)f_RET, g fn(DOMAIN)g_RET) fn(DOMAIN)optRET: # 最右侧的R，因为+的返回值是R所以是R
-        forall x DOMAIN:
+    let fn a(f fn(DOMAIN)f_RET, g fn(DOMAIN)g_RET) fn(DOMAIN)optRET # 最右侧的R，因为+的返回值是R所以是R
+    know:
+        forall f fn(DOMAIN)f_RET, g fn(DOMAIN)g_RET, x DOMAIN:
             a(f,g)(x) = opt(f(x),g(x))
             
     let fn f(x DOMAIN)f_RET

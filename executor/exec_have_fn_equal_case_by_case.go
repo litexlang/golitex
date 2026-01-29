@@ -127,8 +127,8 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap_ReturnValue
 }
 
 func (exec *Executor) haveFnEqualCaseByCaseStmt_Define(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
-	fnObj := ast.NewAnonymousFnSetObj(stmt.DefHeader.ParamSets, stmt.RetSet)
-	defFn := ast.NewDefLetStmt([]string{stmt.DefHeader.Name}, []ast.Obj{fnObj}, []ast.FactStmt{}, stmt.Line)
+	anonymousSetTheFnIsIn := ast.NewAnonymousFnSetObj(stmt.DefHeader.ParamSets, stmt.RetSet)
+	defFn := ast.NewDefLetStmt([]string{stmt.DefHeader.Name}, []ast.Obj{anonymousSetTheFnIsIn}, []ast.FactStmt{}, stmt.Line)
 	defRet := exec.defLetStmt(defFn)
 	if defRet.IsNotTrue() {
 		return exec.AddStmtToStmtRet(defRet, stmt)
