@@ -40,7 +40,7 @@ type DefHeader struct {
 type DefPropStmt struct {
 	DefHeader             *DefHeader
 	IffFactsOrNil         FactStmtSlice // nil 表示没有iff，无法从定义来验证prop正确性；如果是 []FactStmt{}，表示只要dom和def满足了，那就prop成立。1
-	ImplicationFactsOrNil FactStmtSlice
+	ImplicationFactsOrNil ReversibleFacts
 
 	Line uint
 }
@@ -55,15 +55,15 @@ type LetFnStmt struct {
 type UniFactStmt struct {
 	Params    StrSlice
 	ParamSets ObjSlice
-	DomFacts  FactStmtSlice
-	ThenFacts FactStmtSlice
+	DomFacts  ReversibleFacts
+	ThenFacts ReversibleFacts
 
 	Line uint
 }
 
 type UniFactWithIffStmt struct {
 	UniFact  *UniFactStmt
-	IffFacts FactStmtSlice
+	IffFacts ReversibleFacts
 
 	Line uint
 }
@@ -387,8 +387,8 @@ type ProveForStmt struct {
 	Lefts         ObjSlice
 	Rights        ObjSlice
 	IsProveIRange []bool // true for range, false for closed_range
-	DomFacts      FactStmtSlice
-	ThenFacts     FactStmtSlice
+	DomFacts      ReversibleFacts
+	ThenFacts     ReversibleFacts
 	Proofs        StmtSlice
 
 	Line uint

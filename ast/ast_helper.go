@@ -167,7 +167,7 @@ func (head DefHeader) ToSpecFact() *PureSpecificFactStmt {
 }
 
 func (stmt *DefPropStmt) ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue() *UniFactStmt {
-	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []FactStmt{stmt.DefHeader.ToSpecFact()}, stmt.ImplicationFactsOrNil, glob.BuiltinLine0)
+	return NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []Spec_OrFact{stmt.DefHeader.ToSpecFact()}, stmt.ImplicationFactsOrNil, glob.BuiltinLine0)
 }
 
 // func (stmt *DefExistPropStmt) ToProp() *SpecFactStmt {
@@ -658,3 +658,15 @@ func ParamsInSpecFactAreStrings(specFact *PureSpecificFactStmt) ([]string, error
 // func (stmt *HaveObjStWithParamSetsStmt) ToHaveObjStStmt() *HaveObjStStmt {
 // 	return NewHaveObjStStmt(stmt.ObjNames, stmt.Fact, stmt.Line)
 // }
+
+func (reversibleFacts ReversibleFacts) InstantiateFact(uniMap map[string]Obj) (ReversibleFacts, error) {
+	newReversibleFacts := []Spec_OrFact{}
+	for _, fact := range reversibleFacts {
+		newFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newReversibleFacts = append(newReversibleFacts, newFact.(Spec_OrFact))
+	}
+	return newReversibleFacts, nil
+}

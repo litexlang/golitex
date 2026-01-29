@@ -176,7 +176,7 @@ func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactS
 		}
 	}
 
-	// All free params must match some inst params
+	// All free params must match some inst params and those inst params must be equal
 	for _, key := range knownUniFact.Params {
 		if _, ok := freeParamObjMaps[key]; !ok || len(freeParamObjMaps[key]) == 0 {
 			return false, nil

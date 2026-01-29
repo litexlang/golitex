@@ -50,43 +50,43 @@ func MergeOuterInnerUniFacts(outer *UniFactStmt, inner *UniFactStmt) *UniFactStm
 	return newOuter
 }
 
-func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactStmt, error) {
-	propSpecFactParams := []Obj{}
-	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, Atom(param))
-	}
+// func (defStmt *DefPropStmt) Make_PropToIff_IffToProp() (*UniFactStmt, *UniFactStmt, error) {
+// 	propSpecFactParams := []Obj{}
+// 	for _, param := range defStmt.DefHeader.Params {
+// 		propSpecFactParams = append(propSpecFactParams, Atom(param))
+// 	}
 
-	propSpecFact := NewPureSpecificFactStmt(true, Atom((defStmt.DefHeader.Name)), propSpecFactParams, defStmt.Line)
+// 	propSpecFact := NewPureSpecificFactStmt(true, Atom((defStmt.DefHeader.Name)), propSpecFactParams, defStmt.Line)
 
-	// prop to iff
-	propToIffDomFacts := []FactStmt{propSpecFact}
+// 	// prop to iff
+// 	propToIffDomFacts := []FactStmt{propSpecFact}
 
-	propToIff := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, propToIffDomFacts, defStmt.IffFactsOrNil, defStmt.Line)
+// 	propToIff := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, propToIffDomFacts, defStmt.IffFactsOrNil, defStmt.Line)
 
-	// iff to prop
-	IffToPropDomFacts := []FactStmt{}
-	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFactsOrNil...)
+// 	// iff to prop
+// 	IffToPropDomFacts := []FactStmt{}
+// 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFactsOrNil...)
 
-	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, IffToPropDomFacts, []FactStmt{propSpecFact}, defStmt.Line)
+// 	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, IffToPropDomFacts, []FactStmt{propSpecFact}, defStmt.Line)
 
-	return propToIff, IffToProp, nil
-}
+// 	return propToIff, IffToProp, nil
+// }
 
-func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
-	propSpecFactParams := []Obj{}
-	for _, param := range defStmt.DefHeader.Params {
-		propSpecFactParams = append(propSpecFactParams, Atom(param))
-	}
+// func (defStmt *DefPropStmt) IffToPropUniFact() *UniFactStmt {
+// 	propSpecFactParams := []Obj{}
+// 	for _, param := range defStmt.DefHeader.Params {
+// 		propSpecFactParams = append(propSpecFactParams, Atom(param))
+// 	}
 
-	propSpecFact := NewPureSpecificFactStmt(true, Atom(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
+// 	propSpecFact := NewPureSpecificFactStmt(true, Atom(defStmt.DefHeader.Name), propSpecFactParams, defStmt.Line)
 
-	IffToPropDomFacts := []FactStmt{}
-	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFactsOrNil...)
+// 	IffToPropDomFacts := []FactStmt{}
+// 	IffToPropDomFacts = append(IffToPropDomFacts, defStmt.IffFactsOrNil...)
 
-	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, IffToPropDomFacts, []FactStmt{propSpecFact}, defStmt.Line)
+// 	IffToProp := NewUniFact(defStmt.DefHeader.Params, defStmt.DefHeader.ParamSets, IffToPropDomFacts, []FactStmt{propSpecFact}, defStmt.Line)
 
-	return IffToProp
-}
+// 	return IffToProp
+// }
 
 // func (defStmt *DefExistPropStmt) ToSpecFact() *SpecFactStmt {
 // 	propSpecFactParams := []Obj{}
@@ -323,7 +323,7 @@ func TransformEnumToUniFact(setName Obj, enumObjs []Obj) (*UniFactStmt, []*PureS
 	}
 
 	orFact := NewOrStmt(equalFactsInOrFact, glob.BuiltinLine0)
-	forallItemInSetEqualToOneOfGivenItems := NewUniFact([]string{string(freeObjName)}, []Obj{setName}, []FactStmt{}, []FactStmt{orFact}, glob.BuiltinLine0)
+	forallItemInSetEqualToOneOfGivenItems := NewUniFact([]string{string(freeObjName)}, []Obj{setName}, []Spec_OrFact{}, []Spec_OrFact{orFact}, glob.BuiltinLine0)
 
 	return forallItemInSetEqualToOneOfGivenItems, pairwiseNotEqualFacts, itemsInSetFacts
 }
@@ -336,7 +336,7 @@ func (stmt *ProveForStmt) UniFact() *UniFactStmt {
 	}
 
 	// Build dom facts based on range type for each parameter
-	domFacts := []FactStmt{}
+	domFacts := []Spec_OrFact{}
 	for i, param := range params {
 		left := stmt.Lefts[i]
 		right := stmt.Rights[i]
