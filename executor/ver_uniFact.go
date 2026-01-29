@@ -125,8 +125,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 		}
 	}
 
-	// 声明param
-	defLeftStmt := ast.NewDefLetStmt(oldStmt.Params, oldStmt.ParamSets, oldStmt.DomFacts, oldStmt.Line)
+	defLeftStmt := ast.NewDefLetStmt(oldStmt.Params, oldStmt.ParamSets, oldStmt.DomFacts.ToFactStmtSlice(), oldStmt.Line)
 	ret := ver.Env.DefLetStmt(defLeftStmt)
 	if ret.IsErr() {
 		return glob.NewVerRet(glob.StmtRetTypeError, oldStmt.String(), glob.BuiltinLine0, []string{ret.String()})

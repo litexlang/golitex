@@ -263,24 +263,12 @@ func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) *glob.StmtR
 	defineMsgs = append(defineMsgs, execRet.Define...)
 	newFactMsgs = append(newFactMsgs, execRet.NewFact...)
 
-	// if len(stmt.DefProp.IffFactsOrNil) == 0 {
-	// 	_, iffToProp, err := stmt.DefProp.Make_PropToIff_IffToProp()
-	// 	if err != nil {
-	// 		return glob.ErrRet(err.Error())
-	// 	}
-	// 	ret := exec.Env.NewFactWithCheckingNameDefined(iffToProp)
-	// 	if ret.IsErr() {
-	// 		return glob.ErrRet(ret.String())
-	// 	}
-	// 	newFactMsgs = append(newFactMsgs, iffToProp.String())
-	// }
-
 	paramsAsObj := []ast.Obj{}
 	for i := range stmt.DefProp.DefHeader.Params {
 		paramsAsObj = append(paramsAsObj, ast.Atom(stmt.DefProp.DefHeader.Params[i]))
 	}
 
-	uniFact := ast.NewUniFact(stmt.DefProp.DefHeader.Params, stmt.DefProp.DefHeader.ParamSets, []ast.FactStmt{ast.NewPureSpecificFactStmt(true, ast.Atom(stmt.DefProp.DefHeader.Name), paramsAsObj, stmt.Line)}, stmt.DefProp.ImplicationFactsOrNil, stmt.Line)
+	uniFact := ast.NewUniFact(stmt.DefProp.DefHeader.Params, stmt.DefProp.DefHeader.ParamSets, []ast.Spec_OrFact{ast.NewPureSpecificFactStmt(true, ast.Atom(stmt.DefProp.DefHeader.Name), paramsAsObj, stmt.Line)}, stmt.DefProp.ImplicationFactsOrNil, stmt.Line)
 
 	ret := exec.Env.NewFactWithCheckingNameDefined(uniFact)
 	if ret.IsErr() {
@@ -288,7 +276,16 @@ func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) *glob.StmtR
 	}
 	newFactMsgs = append(newFactMsgs, uniFact.String())
 
-	uniFact2 := ast.NewUniFact(stmt.DefProp.DefHeader.Params, stmt.DefProp.DefHeader.ParamSets, stmt.DefProp.IffFactsOrNil, stmt.DefProp.ImplicationFactsOrNil, stmt.Line)
+	iffFacts := []ast.Spec_OrFact{}
+	for _, iffFact := range stmt.DefProp.IffFactsOrNil {
+		iffFact, err := iffFact.InstantiateFact(map[string]ast.Obj{})
+		if err != nil {
+			return glob.ErrRet(err.Error())
+		}
+		iffFacts = append(iffFacts, iffFact.(ast.Spec_OrFact))
+	}
+
+	uniFact2 := ast.NewUniFact(stmt.DefProp.DefHeader.Params, stmt.DefProp.DefHeader.ParamSets, iffFacts, stmt.DefProp.ImplicationFactsOrNil, stmt.Line)
 	ret = exec.Env.NewFactWithCheckingNameDefined(uniFact2)
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
@@ -889,8 +886,8 @@ func (exec *Executor) equalSetStmtProveProcess(stmt *ast.EqualSetStmt) *glob.Stm
 	forall1 := ast.NewUniFact(
 		[]string{"t"},
 		[]ast.Obj{a},
-		[]ast.FactStmt{},
-		[]ast.FactStmt{
+		[]ast.Spec_OrFact{},
+		[]ast.Spec_OrFact{
 			ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("t"), b}, stmt.Line),
 		},
 		stmt.Line,
@@ -900,8 +897,8 @@ func (exec *Executor) equalSetStmtProveProcess(stmt *ast.EqualSetStmt) *glob.Stm
 	forall2 := ast.NewUniFact(
 		[]string{"t"},
 		[]ast.Obj{b},
-		[]ast.FactStmt{},
-		[]ast.FactStmt{
+		[]ast.Spec_OrFact{},
+		[]ast.Spec_OrFact{
 			ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{ast.Atom("t"), a}, stmt.Line),
 		},
 		stmt.Line,

@@ -379,7 +379,7 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt ast.Sp
 		return glob.NewEmptyVerRetUnknown()
 	}
 
-	notAllItemsInThatSetAreNotEqualToIt := ast.NewUniFact([]string{"x"}, []ast.Obj{asPureStmt.Params[1]}, []ast.FactStmt{}, []ast.FactStmt{ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.Atom("x"), asPureStmt.Params[0]}, asPureStmt.GetLine())}, asPureStmt.GetLine())
+	notAllItemsInThatSetAreNotEqualToIt := ast.NewUniFact([]string{"x"}, []ast.Obj{asPureStmt.Params[1]}, []ast.Spec_OrFact{}, []ast.Spec_OrFact{ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.Atom("x"), asPureStmt.Params[0]}, asPureStmt.GetLine())}, asPureStmt.GetLine())
 
 	verRet := ver.VerFactStmt(notAllItemsInThatSetAreNotEqualToIt, state)
 	return verRet
@@ -1116,7 +1116,7 @@ func (ver *Verifier) verInFactByRightIsPowerSet(stmt ast.SpecificFactStmt, state
 	}
 
 	randomName := ver.Env.GenerateUnusedRandomName()
-	equivalentForallFact := ast.NewUniFact([]string{randomName}, []ast.Obj{asPureStmt.Params[0]}, []ast.FactStmt{}, []ast.FactStmt{ast.NewInFactWithObj(ast.Atom(randomName), asFnObj.Params[0])}, glob.BuiltinLine0)
+	equivalentForallFact := ast.NewUniFact([]string{randomName}, []ast.Obj{asPureStmt.Params[0]}, []ast.Spec_OrFact{}, []ast.Spec_OrFact{ast.NewInFactWithObj(ast.Atom(randomName), asFnObj.Params[0])}, glob.BuiltinLine0)
 
 	verRet := ver.VerFactStmt(equivalentForallFact, state)
 	if verRet.IsErr() {

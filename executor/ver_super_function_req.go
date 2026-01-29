@@ -224,8 +224,8 @@ func (ver *Verifier) verChoiceReq(fnObj *ast.FnObj, state *VerState) *glob.VerRe
 	uniFact := ast.NewUniFact(
 		[]string{x},
 		[]ast.Obj{S},
-		[]ast.FactStmt{}, // no domain facts
-		[]ast.FactStmt{ast.NewIsANonEmptySetFact(ast.Atom(x), glob.BuiltinLine0)},
+		[]ast.Spec_OrFact{}, // no domain facts
+		[]ast.Spec_OrFact{ast.NewIsANonEmptySetFact(ast.Atom(x), glob.BuiltinLine0)},
 		glob.BuiltinLine0,
 	)
 

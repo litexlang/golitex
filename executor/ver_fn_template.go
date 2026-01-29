@@ -80,8 +80,25 @@ func (ver *Verifier) leftFnTStructDom_Is_SubsetOf_RightFnTStructDom(leftFnTStruc
 	// forall x in right dom, x in left dom
 	uniParams := instRightFnT.Params
 	uniParamSets := instRightFnT.ParamSets
-	uniDom := instRightFnT.DomFacts
-	uniThen := leftDom
+
+	uniDom := []ast.Spec_OrFact{}
+	for _, domFact := range instRightFnT.DomFacts {
+		domFact, err := domFact.InstantiateFact(mapLeftParamsToRightParams)
+		if err != nil {
+			return false
+		}
+		uniDom = append(uniDom, domFact.(ast.Spec_OrFact))
+	}
+
+	uniThen := []ast.Spec_OrFact{}
+	for _, then := range leftDom {
+		then, err := then.InstantiateFact(mapLeftParamsToRightParams)
+		if err != nil {
+			return false
+		}
+		uniThen = append(uniThen, then.(ast.Spec_OrFact))
+	}
+
 	uniFact := ast.NewUniFact(uniParams, uniParamSets, uniDom, uniThen, rightFnTDef.Line)
 
 	verRet := ver.VerFactStmt(uniFact, state)

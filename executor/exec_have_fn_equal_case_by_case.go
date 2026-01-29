@@ -142,8 +142,8 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_Define(stmt *ast.HaveFnEqualCase
 		uniFact := ast.NewUniFact(
 			[]string{},
 			[]ast.Obj{},
-			[]ast.FactStmt{caseFact},
-			[]ast.FactStmt{equalFact},
+			[]ast.Spec_OrFact{caseFact},
+			[]ast.Spec_OrFact{equalFact},
 			stmt.Line,
 		)
 		thenFacts = append(thenFacts, uniFact)

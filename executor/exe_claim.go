@@ -302,7 +302,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.Stmt
 	// TODO: 让claim能forall if
 	// if asUnivFact.IffFacts == nil || len(asUnivFact.IffFacts) == 0 {
 	// execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(asUnivFact.ThenFacts, exec.env, verifier.Round0NoMsg)
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(asUnivFact.ThenFacts, Round0NoMsg())
+	execState, failedFact, err := exec.verifyFactsAtCurEnv(asUnivFact.ThenFacts.ToFactStmtSlice(), Round0NoMsg())
 	if err != nil {
 		return glob.ErrRet(fmt.Sprintf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err))
 	} else if execState.IsUnknown() {
@@ -315,36 +315,38 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.Stmt
 
 // 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
 func (exec *Executor) claimImplyStmt(stmt *ast.ClaimImplicationStmt) *glob.StmtRet {
-	// prop all atoms declared
-	uniFact := ast.NewUniFact(stmt.Implication.DefHeader.Params, stmt.Implication.DefHeader.ParamSets, stmt.Implication.IffFactsOrNil, stmt.Implication.ImplicationFactsOrNil, stmt.Line)
+	panic("claimImplyStmt is not supported")
 
-	ret := exec.Env.LookUpNamesInFact(uniFact, map[string]struct{}{})
-	if ret.IsErr() {
-		ret.AddError("in claim prop statement")
-		return glob.ErrRet(ret.String())
-	}
+	// // prop all atoms declared
+	// uniFact := ast.NewUniFact(stmt.Implication.DefHeader.Params, stmt.Implication.DefHeader.ParamSets, stmt.Implication.IffFactsOrNil, stmt.Implication.ImplicationFactsOrNil, stmt.Line)
 
-	// check proofs
-	// if stmt.IsProve {
-	execState := exec.checkClaimPropStmtProofs(stmt)
-	if execState.IsNotTrue() {
-		return execState
-	}
-	// } else {
-	// 	execState := exec.checkClaimPropStmtProveByContradiction(stmt)
-	// 	if execState.IsNotTrue() {
-	// 		return execState
-	// 	}
+	// ret := exec.Env.LookUpNamesInFact(uniFact, map[string]struct{}{})
+	// if ret.IsErr() {
+	// 	ret.AddError("in claim prop statement")
+	// 	return glob.ErrRet(ret.String())
 	// }
 
-	// know exec
-	prop := stmt.Implication
-	execRet := exec.knowPropInferStmt(ast.NewKnowPropInferStmt(prop, stmt.Line))
-	if execRet.IsNotTrue() {
-		return execRet
-	}
+	// // check proofs
+	// // if stmt.IsProve {
+	// execState := exec.checkClaimPropStmtProofs(stmt)
+	// if execState.IsNotTrue() {
+	// 	return execState
+	// }
+	// // } else {
+	// // 	execState := exec.checkClaimPropStmtProveByContradiction(stmt)
+	// // 	if execState.IsNotTrue() {
+	// // 		return execState
+	// // 	}
+	// // }
 
-	return execRet
+	// // know exec
+	// prop := stmt.Implication
+	// execRet := exec.knowPropInferStmt(ast.NewKnowPropInferStmt(prop, stmt.Line))
+	// if execRet.IsNotTrue() {
+	// 	return execRet
+	// }
+
+	// return execRet
 }
 
 // func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) *glob.StmtRet {
@@ -427,19 +429,22 @@ func (exec *Executor) claimImplyStmt(stmt *ast.ClaimImplicationStmt) *glob.StmtR
 // }
 
 func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimImplicationStmt) *glob.StmtRet {
-	uniFact := ast.NewUniFact(stmt.Implication.DefHeader.Params, stmt.Implication.DefHeader.ParamSets, stmt.Implication.IffFactsOrNil, stmt.Implication.ImplicationFactsOrNil, stmt.Line)
 
-	exec.NewEnv()
-	defer func() {
-		exec.deleteEnv()
-	}()
+	panic("checkClaimPropStmtProofs is not supported")
 
-	execRet := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs, stmt.Line))
-	if execRet.IsNotTrue() {
-		return execRet
-	}
+	// uniFact := ast.NewUniFact(stmt.Implication.DefHeader.Params, stmt.Implication.DefHeader.ParamSets, stmt.Implication.IffFactsOrNil, stmt.Implication.ImplicationFactsOrNil, stmt.Line)
 
-	return execRet
+	// exec.NewEnv()
+	// defer func() {
+	// 	exec.deleteEnv()
+	// }()
+
+	// execRet := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs, stmt.Line))
+	// if execRet.IsNotTrue() {
+	// 	return execRet
+	// }
+
+	// return execRet
 }
 
 func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) *glob.StmtRet {

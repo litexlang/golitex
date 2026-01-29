@@ -139,8 +139,8 @@ func (stmt *EqualsFactStmt) ToEqualFacts() []*PureSpecificFactStmt {
 	return ret
 }
 
-func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []FactStmt {
-	ret := []FactStmt{}
+func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []Spec_OrFact {
+	ret := []Spec_OrFact{}
 	for i := range len(stmt.Params) - 1 {
 		for j := i + 1; j < len(stmt.Params); j++ {
 			ret = append(ret, NewEqualFact(stmt.Params[i], stmt.Params[j]))
@@ -669,4 +669,12 @@ func (reversibleFacts ReversibleFacts) InstantiateFact(uniMap map[string]Obj) (R
 		newReversibleFacts = append(newReversibleFacts, newFact.(Spec_OrFact))
 	}
 	return newReversibleFacts, nil
+}
+
+func (reversibleFacts ReversibleFacts) ToFactStmtSlice() []FactStmt {
+	ret := []FactStmt{}
+	for _, fact := range reversibleFacts {
+		ret = append(ret, fact)
+	}
+	return ret
 }

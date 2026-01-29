@@ -18,19 +18,19 @@ import (
 	ast "golitex/ast"
 )
 
-func (envMgr *EnvMgr) MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(defPropStmt *ast.DefPropStmt) *ast.DefPropStmt {
-	newIffFacts := []ast.FactStmt{}
-	for _, iffFact := range defPropStmt.IffFactsOrNil {
-		newIffFacts = append(newIffFacts, envMgr.makeUniFactParamsInThisFactDoNotConflictWithEnv(iffFact))
-	}
+// func (envMgr *EnvMgr) MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(defPropStmt *ast.DefPropStmt) *ast.DefPropStmt {
+// 	newIffFacts := []ast.FactStmt{}
+// 	for _, iffFact := range defPropStmt.IffFactsOrNil {
+// 		newIffFacts = append(newIffFacts, envMgr.makeUniFactParamsInThisFactDoNotConflictWithEnv(iffFact))
+// 	}
 
-	newThenFacts := []ast.FactStmt{}
-	for _, thenFact := range defPropStmt.ImplicationFactsOrNil {
-		newThenFacts = append(newThenFacts, envMgr.makeUniFactParamsInThisFactDoNotConflictWithEnv(thenFact))
-	}
+// 	newThenFacts := []ast.FactStmt{}
+// 	for _, thenFact := range defPropStmt.ImplicationFactsOrNil {
+// 		newThenFacts = append(newThenFacts, envMgr.makeUniFactParamsInThisFactDoNotConflictWithEnv(thenFact))
+// 	}
 
-	return ast.NewDefPropStmt(defPropStmt.DefHeader, newIffFacts, newThenFacts, defPropStmt.Line)
-}
+// 	return ast.NewDefPropStmt(defPropStmt.DefHeader, newIffFacts, newThenFacts, defPropStmt.Line)
+// }
 
 func (envMgr *EnvMgr) makeUniFactParamsInThisFactDoNotConflictWithEnv(fact ast.FactStmt) ast.FactStmt {
 	switch asFact := fact.(type) {

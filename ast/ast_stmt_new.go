@@ -24,17 +24,9 @@ func NewDefLetStmt(objs []string, objSets []Obj, facts []FactStmt, line uint) *D
 	return &DefLetStmt{objs, objSets, facts, line}
 }
 
-func NewDefPropStmt(defHeader *DefHeader, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefPropStmt {
+func NewDefPropStmt(defHeader *DefHeader, iffFacts []FactStmt, thenFacts []Spec_OrFact, line uint) *DefPropStmt {
 	return &DefPropStmt{defHeader, iffFacts, thenFacts, line}
 }
-
-// func NewDefExistPropStmt(def *DefExistPropStmtBody, existParams []string, existParamSets []Obj, line uint) *DefExistPropStmt {
-// 	return &DefExistPropStmt{def, existParams, existParamSets, line}
-// }
-
-// func NewSpecFactStmt(typeEnum SpecFactType, propName Atom, params []Obj, line uint) *SpecFactStmt {
-// 	return &SpecFactStmt{typeEnum, propName, params, line}
-// }
 
 func NewImplyStmt(domFacts []Spec_OrFact, thenFacts []Spec_OrFact, line uint) *InferStmt {
 	return &InferStmt{domFacts, thenFacts, line}
@@ -175,7 +167,7 @@ func NewInlineFactsStmt(facts []FactStmt, line uint) *InlineFactsStmt {
 	return &InlineFactsStmt{facts, line}
 }
 
-func NewProveByInductionStmt(fact FactStmt, param string, proof StmtSlice, inducFrom Obj, line uint) *ProveByInductionStmt {
+func NewProveByInductionStmt(fact Spec_OrFact, param string, proof StmtSlice, inducFrom Obj, line uint) *ProveByInductionStmt {
 	return &ProveByInductionStmt{fact, param, proof, inducFrom, line}
 }
 
