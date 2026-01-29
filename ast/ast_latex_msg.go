@@ -52,7 +52,7 @@ func (c *DefPropStmt) ToLatexString() string {
 	var builder strings.Builder
 
 	builder.WriteString("\\begin{definition}[Proposition]\n")
-	builder.WriteString(prop_fn_bodyToLatexString(c.DefHeader, c.DomFactsOrNil, c.IffFactsOrNil, false))
+	builder.WriteString(prop_fn_bodyToLatexString(c.DefHeader, []FactStmt{}, c.IffFactsOrNil, false))
 	builder.WriteString("\n\\end{definition}")
 	return builder.String()
 }

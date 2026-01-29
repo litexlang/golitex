@@ -125,8 +125,7 @@ have fn:
 prop is_vertical(s1 power_set(cart(R, R)), s2 power_set(cart(R, R)), a, b, c, d, e, f R):
     s1 = line(a, b, c)
     s2 = line(d, e, f)
-    <=>:
-        a * d + b * e = 0
+    a * d + b * e = 0
 
 """
 # 点到直线的距离公式：点 pt 到直线 a * x + b * y = c 的距离

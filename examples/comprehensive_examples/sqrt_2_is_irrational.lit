@@ -1,8 +1,6 @@
 prop dvd(x, y Z):
-    dom:
-        x != 0
-    <=>:
-        y % x = 0
+    x != 0
+    y % x = 0
 
 have gcd fn(Z, Z) N_pos
 

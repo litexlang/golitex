@@ -1,10 +1,4 @@
-prop p(x, y R):
+prop p(x R):
     x > 0
-    y > 0
 
-know exist x, y st $p(x, y)
-
-have x, y st $p(x, y)
-
-x > 0
-y > 0
+know $p(1)

@@ -246,22 +246,11 @@ func (fact *DefPropStmt) String() string {
 	builder.WriteByte(' ')
 	builder.WriteString(fact.DefHeader.String())
 
-	if len(fact.DomFactsOrNil) == 0 && len(fact.IffFactsOrNil) == 0 {
+	if len(fact.IffFactsOrNil) == 0 {
 		return strings.TrimSuffix(builder.String(), glob.KeySymbolColon)
 	}
 
 	builder.WriteByte('\n')
-	if len(fact.DomFactsOrNil) > 0 {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordDom, 1))
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteByte('\n')
-		domFactStrSlice := make([]string, len(fact.DomFactsOrNil))
-		for i := range len(fact.DomFactsOrNil) {
-			domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(fact.DomFactsOrNil[i].String(), 2)
-		}
-		builder.WriteString(strings.Join(domFactStrSlice, "\n"))
-		builder.WriteByte('\n')
-	}
 
 	if len(fact.IffFactsOrNil) > 0 {
 		// builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordIff, 1))

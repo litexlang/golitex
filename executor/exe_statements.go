@@ -499,7 +499,7 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 	verifyProcessMsgs = append(verifyProcessMsgs, state.VerifyProcess...)
 
 	// 这里最好检查一下，是不是 Param set 依赖了 Param，如果依赖了，那其实是要报错了，不过暂时不管了
-	execState := exec.defLetStmt(ast.NewDefLetStmt(stmt.Params, []ast.Obj{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0]}, def.DomFactsOrNil, stmt.Line))
+	execState := exec.defLetStmt(ast.NewDefLetStmt(stmt.Params, []ast.Obj{def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0], def.DefHeader.ParamSets[0]}, []ast.FactStmt{}, stmt.Line))
 	if execState.IsNotTrue() {
 		return execState
 	}
@@ -512,10 +512,6 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 	ret = exec.Env.LookupNamesInObjOrObjStringIsSetNonemptySetFiniteSet(def.DefHeader.ParamSets[1], map[string]struct{}{})
 	if ret.IsErr() {
 		return glob.ErrRet(ret.String())
-	}
-
-	if len(def.DomFactsOrNil) > 0 {
-		return glob.ErrRet(fmt.Sprintf("dom facts are not allowed in %s", glob.KeywordTransProp))
 	}
 
 	ret = exec.Env.NewFactWithCheckingNameDefined(ast.NewPureSpecificFactStmt(true, ast.Atom(stmt.Prop), []ast.Obj{ast.Atom(stmt.Params[0]), ast.Atom(stmt.Params[1])}, stmt.Line))
@@ -821,17 +817,6 @@ func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveInferStmt) *glob
 		}
 
 		uniMap[param] = stmt.SpecFact.Params[i]
-	}
-
-	for _, domFact := range def.DomFactsOrNil {
-		instDomFact, err := domFact.InstantiateFact(uniMap)
-		if err != nil {
-			return glob.ErrRet(err.Error())
-		}
-		ret := exec.Env.NewFactWithCheckingNameDefined(instDomFact)
-		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
-		}
 	}
 
 	// itself is true
