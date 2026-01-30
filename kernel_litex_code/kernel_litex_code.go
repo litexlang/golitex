@@ -231,11 +231,6 @@ know prop_infer cancel_general(a, b, c, d R):
     =>:
         a = b
 
-know prop_infer product_is_0_then_at_least_one_factor_is_0(a, b R):
-	a * b = 0
-	=>:
-		a = 0 or	b = 0
-
 know:
 	forall a, b, c, e, f, g R:
 		a = e
@@ -1186,4 +1181,6 @@ know forall x, y R: x != 0 or y != 0 <=> x^2 + y^2 != 0
 know forall x, y R: x^2 + y^2 != 0 => not x = 0 or not y = 0
 
 know exist a, b st a < b
+
+know forall x, y R: x * y = 0 => x = 0 or y = 0
 `

@@ -1,16 +1,14 @@
-# Multivariate linear equation example: Solve the equation 2x + 3y = 10 and 4x + 5y = 14.
-# 多元线性方程组：解方程 2x + 3y = 10 和 4x + 5y = 14。
-
 claim:
-    forall x R, y R: 
-        2 * x + 3 * y = 10
-        4 * x + 5 * y = 14
+    forall a, b, x R:
+        x^2 + 2 * a * x + b = 0
+        a^2 - b >= 0
         =>:
-            x = -4
-            y = 6
+            x = -a + sqrt(a^2 - b) or x = -a - sqrt(a^2 - b)
     prove:
-        2 * (2 * x + 3 * y) = 2 * 10 = 4 * x + 6 * y
-        y = (4 * x + 6 * y) - (4 * x + 5 * y) = 2 * 10 - 14 = 6
-        2 * x + 3 * 6 = 2 * x + 3 * y = 10
-        2 * x + 18 - 18 = 10 - 18 = -8
-        x = (2 * x) / 2 = -8 / 2 = -4
+        sqrt(a^2 - b) * sqrt(a^2 - b) = sqrt(a^2 - b) ^ 2 = a^2 - b
+        (x + a - sqrt(a^2 - b)) * (x + a + sqrt(a^2 - b)) = x ^ 2 + 2 * a * x + a^2 - sqrt(a^2 - b) ^ 2 = x ^ 2 + 2 * a * x + a^2 - (a^2 - b) = 0
+        cases x = -a + sqrt(a^2 - b) or x = -a - sqrt(a^2 - b):
+            case x + a - sqrt(a^2 - b) = 0:
+                x = -(a - sqrt(a^2 - b))
+            case x + a + sqrt(a^2 - b) = 0:
+                x = -(a + sqrt(a^2 - b))
