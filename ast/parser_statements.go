@@ -108,6 +108,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.equalSetStmt(tb)
 	case glob.KeywordWitnessNonempty:
 		ret, err = p.witnessNonemptyStmt(tb)
+	case glob.KeywordSetIsFn:
+		ret, err = p.setIsFnStmt(tb)
 	default:
 		ret, err = p.factOrFactInferStmt(tb)
 	}
@@ -4201,4 +4203,32 @@ func (p *TbParser) witnessNonemptyStmt(tb *tokenBlock) (*WitnessNonemptyStmt, er
 	}
 
 	return NewWitnessNonemptyStmt(obj, objSet, proofs, tb.line), nil
+}
+
+func (p *TbParser) setIsFnStmt(tb *tokenBlock) (*SetIsFnStmt, error) {
+	err := tb.header.skip(glob.KeywordSetIsFn)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	setObj, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	fnSetObj, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+	fnSetObjAsFnObj, ok := fnSetObj.(*FnObj)
+	if !ok {
+		return nil, ErrInLine(fmt.Errorf("expect fn object, got %T", fnSetObj), tb)
+	}
+
+	proofs, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	return NewSetIsFnStmt(setObj, fnSetObjAsFnObj, proofs, tb.line), nil
 }

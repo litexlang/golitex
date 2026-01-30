@@ -1620,3 +1620,21 @@ func (stmt *WitnessNonemptyStmt) String() string {
 	}
 	return builder.String()
 }
+
+func (stmt *SetIsFnStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordSetIsFn)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.SetObj.String())
+	builder.WriteString(" ")
+	builder.WriteString(stmt.FnSetObj.String())
+	if len(stmt.Proof) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+		for _, proof := range stmt.Proof {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+			builder.WriteByte('\n')
+		}
+	}
+	return builder.String()
+}

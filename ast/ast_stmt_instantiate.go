@@ -1201,3 +1201,23 @@ func (stmt *WitnessNonemptyStmt) Instantiate(uniMap map[string]Obj) (Stmt, error
 	}
 	return NewWitnessNonemptyStmt(obj, objSet, proofs, stmt.Line), nil
 }
+
+func (stmt *SetIsFnStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	setObj, err := stmt.SetObj.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	fnSetObj, err := stmt.FnSetObj.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	proofs := make(StmtSlice, len(stmt.Proof))
+	for i, proof := range stmt.Proof {
+		instProof, err := proof.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		proofs[i] = instProof
+	}
+	return NewSetIsFnStmt(setObj, fnSetObj.(*FnObj), proofs, stmt.Line), nil
+}

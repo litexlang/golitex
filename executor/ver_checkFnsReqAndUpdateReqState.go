@@ -72,7 +72,7 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 	}
 
 	// If not a super function, check if it's a function template
-	if ast.IsFnTemplate_ObjFn(objAsFnObj) {
+	if ast.IsAnonymousFnSet(objAsFnObj) {
 		return glob.NewEmptyVerRetTrue()
 	}
 

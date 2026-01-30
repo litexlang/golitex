@@ -119,6 +119,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		execRet = exec.inferStmt(stmt)
 	case *ast.InferTemplateStmt:
 		execRet = exec.inferTemplateStmt(stmt)
+	case *ast.SetIsFnStmt:
+		execRet = exec.setIsFnStmt(stmt)
 	default:
 		execRet = glob.ErrRet(fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -962,4 +964,113 @@ func (exec *Executor) witnessNonemptyStmtProveProcess(stmt *ast.WitnessNonemptyS
 	}
 
 	return exec.NewTrueStmtRet(stmt)
+}
+
+func (exec *Executor) setIsFnStmt(stmt *ast.SetIsFnStmt) *glob.StmtRet {
+	// fnSetObj 是 fnSetObj
+	if !ast.IsFnSet(stmt.FnSetObj) {
+		return glob.ErrRet(fmt.Sprintf("%s is not a fn set object", stmt.FnSetObj))
+	}
+
+	verRet := exec.setIsFnStmt_ver(stmt)
+	if verRet.IsNotTrue() {
+		return exec.AddStmtToStmtRet(verRet, stmt)
+	}
+
+	defRet := exec.setIsFnStmt_def(stmt)
+	if defRet.IsNotTrue() {
+		return exec.AddStmtToStmtRet(defRet, stmt)
+	}
+
+	return exec.NewTrueStmtRet(stmt)
+}
+
+func (exec *Executor) setIsFnStmt_ver(stmt *ast.SetIsFnStmt) *glob.StmtRet {
+	exec.NewEnv()
+	defer exec.deleteEnv()
+
+	for _, curStmt := range stmt.Proof {
+		ret := exec.Stmt(curStmt)
+		if ret.IsNotTrue() {
+			return ret
+		}
+	}
+
+	fnParamSets := stmt.FnSetObj.FnHead.(*ast.FnObj).Params
+	retSet := stmt.FnSetObj.Params[0]
+
+	// 如果证明 x $in fn(A, B, C) D，那么要证明
+	// 1. x subset_of cart(A, B, C, D)
+	// 2. forall a A, b B, c C, d1 D, d2 D: (a, b, c, d1) $in x, (a, b, c, d2) $in x => d1 = d2
+	// 3. forall a A, b B, c C: exist d D st (a, b, c, d) $in x
+	allParamSets := append([]ast.Obj{}, fnParamSets...)
+	allParamSets = append(allParamSets, retSet)
+	subsetOfFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordSubsetOf), []ast.Obj{stmt.SetObj, ast.NewFnObj(ast.Atom(glob.KeywordCart), allParamSets)}, glob.BuiltinLine0)
+	ret := exec.factStmt(subsetOfFact)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	// 生成随机参数名
+	randomParams := exec.Env.GenerateNUnusedRandomNames(len(fnParamSets) + 2) // a, b, c, d1, d2
+
+	// 创建元组 (a, b, c, d1) 和 (a, b, c, d2)
+	tupleParams1 := make([]ast.Obj, len(fnParamSets)+1)
+	tupleParams2 := make([]ast.Obj, len(fnParamSets)+1)
+	for i := range len(fnParamSets) {
+		tupleParams1[i] = ast.Atom(randomParams[i])
+		tupleParams2[i] = ast.Atom(randomParams[i])
+	}
+	tupleParams1[len(fnParamSets)] = ast.Atom(randomParams[len(fnParamSets)])   // d1
+	tupleParams2[len(fnParamSets)] = ast.Atom(randomParams[len(fnParamSets)+1]) // d2
+
+	tuple1 := ast.NewFnObj(ast.Atom(glob.KeywordTuple), tupleParams1)
+	tuple2 := ast.NewFnObj(ast.Atom(glob.KeywordTuple), tupleParams2)
+
+	// 2. forall a A, b B, c C, d1 D, d2 D: (a, b, c, d1) $in x, (a, b, c, d2) $in x => d1 = d2
+	paramSetsForUniFact1 := append([]ast.Obj{}, fnParamSets...)
+	paramSetsForUniFact1 = append(paramSetsForUniFact1, retSet, retSet) // d1 D, d2 D
+
+	domFacts1 := []ast.Spec_OrFact{
+		ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{tuple1, stmt.SetObj}, glob.BuiltinLine0),
+		ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{tuple2, stmt.SetObj}, glob.BuiltinLine0),
+	}
+	thenFacts1 := []ast.Spec_OrFact{
+		ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.Atom(randomParams[len(fnParamSets)]), ast.Atom(randomParams[len(fnParamSets)+1])}, glob.BuiltinLine0),
+	}
+
+	paramMapToTheSameImage := ast.NewUniFact(randomParams, paramSetsForUniFact1, domFacts1, thenFacts1, stmt.Line)
+	ver := NewVerifier(exec.Env)
+	verRet1 := ver.VerFactStmt(paramMapToTheSameImage, Round0Msg())
+	if verRet1.IsNotTrue() {
+		return glob.ErrRet(verRet1.String())
+	}
+
+	// 3. forall a A, b B, c C: exist d D st (a, b, c, d) $in x
+	randomParamsForExist := randomParams[:len(fnParamSets)+1] // a, b, c, d
+	tupleParamsForExist := make([]ast.Obj, len(fnParamSets)+1)
+	for i := range len(fnParamSets) {
+		tupleParamsForExist[i] = ast.Atom(randomParamsForExist[i])
+	}
+	tupleParamsForExist[len(fnParamSets)] = ast.Atom(randomParamsForExist[len(fnParamSets)]) // d
+	tupleForExist := ast.NewFnObj(ast.Atom(glob.KeywordTuple), tupleParamsForExist)
+
+	existFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{tupleForExist, stmt.SetObj}, glob.BuiltinLine0)
+	existStFact := ast.NewExistSpecificFactStmt(true, []string{randomParamsForExist[len(fnParamSets)]}, []ast.Obj{retSet}, existFact, stmt.Line)
+
+	paramSetsForUniFact2 := fnParamSets
+	domFacts2 := []ast.Spec_OrFact{}
+	thenFacts2 := []ast.Spec_OrFact{existStFact}
+
+	paramMapToExistImage := ast.NewUniFact(randomParamsForExist[:len(fnParamSets)], paramSetsForUniFact2, domFacts2, thenFacts2, stmt.Line)
+	verRet2 := ver.VerFactStmt(paramMapToExistImage, Round0Msg())
+	if verRet2.IsNotTrue() {
+		return glob.ErrRet(verRet2.String())
+	}
+
+	return exec.NewTrueStmtRet(stmt)
+}
+
+func (exec *Executor) setIsFnStmt_def(stmt *ast.SetIsFnStmt) *glob.StmtRet {
+	panic("")
 }

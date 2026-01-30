@@ -323,6 +323,10 @@ func NewWitnessNonemptyStmt(obj Obj, objSet Obj, proofs StmtSlice, line uint) *W
 	return &WitnessNonemptyStmt{Obj: obj, ObjSet: objSet, Proofs: proofs, Line: line}
 }
 
+func NewSetIsFnStmt(setObj Obj, fnSetObj *FnObj, proof StmtSlice, line uint) *SetIsFnStmt {
+	return &SetIsFnStmt{SetObj: setObj, FnSetObj: fnSetObj, Proof: proof, Line: line}
+}
+
 func NewHaveFnEqualCaseByCaseStmt(defHeader *DefHeader, retSet Obj, caseByCaseFacts SpecFactPtrSlice, caseByCaseEqualTo ObjSlice, proofs StmtSliceSlice, proveCases StmtSlice, line uint) *HaveFnEqualCaseByCaseStmt {
 	return &HaveFnEqualCaseByCaseStmt{
 		DefHeader:         defHeader,
