@@ -119,14 +119,6 @@ func NewRunFileStmt(path string, line uint) *RunFileStmt {
 	return &RunFileStmt{path, line}
 }
 
-func NewClaimPropStmt(implication *DefPropStmt, proofs []Stmt, line uint) *ClaimImplicationStmt {
-	return &ClaimImplicationStmt{implication, proofs, line}
-}
-
-// func NewClaimExistPropStmt(existProp *DefExistPropStmt, proofs []Stmt, haveObj []Obj, line uint) *ClaimExistPropStmt {
-// 	return &ClaimExistPropStmt{existProp, proofs, haveObj, line}
-// }
-
 func NewProveByEnumStmt(fact *UniFactStmt, proofs []Stmt, line uint) *ProveByEnumStmt {
 	return &ProveByEnumStmt{fact, proofs, line}
 }

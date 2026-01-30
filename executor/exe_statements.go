@@ -56,8 +56,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 		if execRet.IsTrue() {
 			execRet = execRet.AddWarning("`let fn` may introduce non-existent functions. If you want to ensure the function exists, please use `have fn` instead!\n")
 		}
-	case *ast.ClaimImplicationStmt:
-		execRet = exec.claimImplyStmt(stmt)
 	case *ast.ProveStmt:
 		execRet = exec.proveStmt(stmt)
 	case *ast.ClaimProveByContradictionStmt:
