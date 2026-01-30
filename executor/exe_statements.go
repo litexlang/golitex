@@ -977,7 +977,7 @@ func (exec *Executor) setIsFnStmt(stmt *ast.SetIsFnStmt) *glob.StmtRet {
 		return exec.AddStmtToStmtRet(verRet, stmt)
 	}
 
-	defRet := exec.setIsFnStmt_def(stmt)
+	defRet := exec.setIsFnStmt_NewFact(stmt)
 	if defRet.IsNotTrue() {
 		return exec.AddStmtToStmtRet(defRet, stmt)
 	}
@@ -1071,7 +1071,7 @@ func (exec *Executor) setIsFnStmt_ver(stmt *ast.SetIsFnStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt)
 }
 
-func (exec *Executor) setIsFnStmt_def(stmt *ast.SetIsFnStmt) *glob.StmtRet {
+func (exec *Executor) setIsFnStmt_NewFact(stmt *ast.SetIsFnStmt) *glob.StmtRet {
 	// x $in fn(A, B, C) D
 	inFact := ast.NewInFactWithObj(stmt.Obj, stmt.FnSetObj)
 	ret := exec.Env.NewFactWithCheckingNameDefined(inFact)
