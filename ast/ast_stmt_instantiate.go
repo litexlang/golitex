@@ -358,18 +358,6 @@ func (stmt *ClaimProveByContradictionStmt) Instantiate(uniMap map[string]Obj) (S
 	return NewClaimProveByContradictionStmt(newToCheckFact.(Spec_OrFact), newProofs, stmt.Line), nil
 }
 
-func (stmt *ClaimImplicationStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newImplication, err := stmt.Implication.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newProofs, err := stmt.Proofs.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewClaimPropStmt(newImplication.(*DefPropStmt), newProofs, stmt.Line), nil
-}
-
 func (stmt CanBeKnownStmtSlice) Instantiate(uniMap map[string]Obj) (CanBeKnownStmtSlice, error) {
 	newFacts := []CanBeKnownStmt{}
 	for _, fact := range stmt {

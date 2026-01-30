@@ -198,41 +198,6 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 	}
 
 	return NewDefPropStmt(declHeader, iffFacts, nil, tb.line), nil
-
-	// if tb.header.ExceedEnd() {
-	// 	// domFacts, iffFacts, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
-	// 	// domFacts, iffFacts, err := tb.dom_and_section(glob.KeywordIff, glob.KeySymbolEqualLarger)
-	// 	domFacts, iffFacts, err := p.dom_and_section(tb, glob.KeySymbolEquivalent, glob.KeySymbolRightArrow)
-	// 	if err != nil {
-	// 		return nil, ErrInLine(err, tb)
-	// 	}
-
-	// 	// iff, dom 里不能出现和被定义的prop同名的prop，否则用def做验证的时候会出问题
-	// 	for _, fact := range iffFacts {
-	// 		if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
-	// 			if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
-	// 				return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
-	// 			}
-	// 		}
-	// 	}
-
-	// 	for _, fact := range domFacts {
-	// 		if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
-	// 			if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
-	// 				return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
-	// 			}
-	// 		}
-	// 	}
-
-	// 	return NewDefPropStmt(declHeader, domFacts, iffFacts, nil, tb.line), nil
-	// } else {
-	// 	domFacts, iffFacts, err := p.bodyOfInlineDomAndThen(tb, glob.KeySymbolEquivalent, []string{})
-	// 	if err != nil {
-	// 		return nil, ErrInLine(err, tb)
-	// 	}
-
-	// 	return NewDefPropStmt(declHeader, domFacts, iffFacts, nil, tb.line), nil
-	// }
 }
 
 func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (Stmt, error) {
@@ -634,20 +599,8 @@ func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
 			}
 		}
 
-		// return &HaveFnEqualCaseByCaseStmt{
-		// 	DefHeader:         defHeader,
-		// 	RetSet:            retSet,
-		// 	CaseByCaseFacts:   caseByCaseFacts,
-		// 	CaseByCaseEqualTo: caseByCaseEqualTo,
-		// 	Proofs:            caseByCaseProofs,
-		// 	ProveCases:        proveOr,
-		// 	Line:              tb.line,
-		// }, nil
-
 		return NewHaveFnEqualCaseByCaseStmt(defHeader, retSet, caseByCaseFacts, caseByCaseEqualTo, caseByCaseProofs, proveOr, tb.line), nil
 	} else {
-		// Simple equal with optional proof
-		// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
 		proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
@@ -679,69 +632,6 @@ func (p *TbParser) haveObjStStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, fmt.Errorf("expect pure specific fact, got %T", fact)
 	}
 }
-
-// func (p *TbParser) haveObjStWithParamSetsStmt(tb *tokenBlock) (Stmt, error) {
-// 	// Parse param-set pairs similar to param_paramSet_paramInSetFacts but ending with "st"
-// 	objNames := []string{}
-// 	objSets := []Obj{}
-
-// 	for {
-// 		objName, err := tb.header.next()
-// 		if err != nil {
-// 			return nil, ErrInLine(err, tb)
-// 		}
-// 		objNames = append(objNames, objName)
-
-// 		if tb.header.is(glob.KeywordSt) {
-// 			return nil, fmt.Errorf("expect set after parameter '%s' but got '%s'", objName, glob.KeywordSt)
-// 		}
-
-// 		setObj, err := p.Obj(tb)
-// 		if err != nil {
-// 			return nil, fmt.Errorf("expect set after parameter '%s' but got error: %v", objName, err)
-// 		}
-// 		objSets = append(objSets, setObj)
-
-// 		if tb.header.is(glob.KeySymbolComma) {
-// 			tb.header.skip(glob.KeySymbolComma)
-// 			continue
-// 		}
-
-// 		if tb.header.is(glob.KeywordSt) {
-// 			break
-// 		}
-
-// 		return nil, fmt.Errorf("expect ',' or '%s' but got '%s'", glob.KeywordSt, tb.header.strAtCurIndexPlus(0))
-// 	}
-
-// 	// Check that we have sets for all params
-// 	if len(objSets) != len(objNames) {
-// 		return nil, fmt.Errorf("number of sets (%d) does not match number of parameters (%d)", len(objSets), len(objNames))
-// 	}
-
-// 	for _, objName := range objNames {
-// 		err := p.NewDefinedNameInCurrentParseEnv(string(objName))
-// 		if err != nil {
-// 			return nil, ErrInLine(err, tb)
-// 		}
-// 	}
-
-// 	err := tb.header.skip(glob.KeywordSt)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	fact, err := p.specFactStmt(tb)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	if factAsPureSpecificFactStmt, ok := fact.(*PureSpecificFactStmt); ok {
-// 		return NewHaveObjStWithParamSetsStmt(objNames, objSets, factAsPureSpecificFactStmt, tb.line), nil
-// 	} else {
-// 		return nil, fmt.Errorf("expect pure specific fact, got %T", fact)
-// 	}
-// }
 
 func (p *TbParser) bodyBlockSpecOrFacts(tb *tokenBlock, parseBodyFactNum int) ([]Spec_OrFact, error) {
 	facts := []Spec_OrFact{}
@@ -785,126 +675,6 @@ func (p *TbParser) bodyBlockFacts(tb *tokenBlock, uniFactDepth uniFactEnum, pars
 
 	return facts, nil
 }
-
-// func (p *TbParser) defExistPropStmtBody(tb *tokenBlock) (*DefExistPropStmtBody, error) {
-// 	declHeader, err := p.defHeaderWithoutParsingColonAtEnd(tb)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	for _, param := range declHeader.Params {
-// 		if _, ok := p.FreeParams[param]; ok {
-// 			return nil, fmt.Errorf("parameter %s in prop definition conflicts with a free parameter in the outer scope", param)
-// 		}
-// 		p.FreeParams[param] = struct{}{}
-// 	}
-
-// 	defer func() {
-// 		for _, param := range declHeader.Params {
-// 			delete(p.FreeParams, param)
-// 		}
-// 	}()
-
-// 	err = p.NewDefinedNameInCurrentParseEnv(string(declHeader.Name))
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	if tb.header.ExceedEnd() {
-// 		return NewExistPropDef(declHeader, []FactStmt{}, []FactStmt{}, []FactStmt{}, tb.line), nil
-// 	}
-
-// 	if tb.header.is(glob.KeySymbolEquivalent) {
-// 		err = tb.header.skip(glob.KeySymbolEquivalent)
-// 		if err != nil {
-// 			return nil, ErrInLine(err, tb)
-// 		}
-// 		unitFacts, err := p.inlineFacts_checkUniDepth1(tb, []string{})
-// 		if err != nil {
-// 			return nil, ErrInLine(err, tb)
-// 		}
-// 		return NewExistPropDef(declHeader, []FactStmt{}, unitFacts, []FactStmt{}, tb.line), nil
-// 	}
-
-// 	err = tb.header.skip(glob.KeySymbolColon)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	if tb.header.ExceedEnd() {
-
-// 		// domFacts, iffFactsAsFactStatements, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
-// 		// domFacts, iffFactsAsFactStatements, err := tb.dom_and_section(glob.KeywordIff, glob.KeySymbolEqualLarger)
-// 		domFacts, iffFactsAsFactStatements, err := p.dom_and_section(tb, glob.KeySymbolEquivalent, glob.KeySymbolRightArrow)
-// 		if err != nil {
-// 			return nil, ErrInLine(err, tb)
-// 		}
-
-// 		if len(iffFactsAsFactStatements) == 0 {
-// 			return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
-// 		}
-
-// 		return NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, []FactStmt{}, tb.line), nil
-// 	} else {
-// 		domFacts, iffFactsAsFactStatements, err := p.bodyOfInlineDomAndThen(tb, glob.KeySymbolEquivalent, []string{})
-// 		if err != nil {
-// 			return nil, ErrInLine(err, tb)
-// 		}
-
-// 		return NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, []FactStmt{}, tb.line), nil
-// 	}
-// }
-
-// func (p *TbParser) haveObjFromCartSetStmt(tb *tokenBlock) (Stmt, error) {
-// 	err := tb.header.skip(glob.KeywordHave)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	// Parse object name
-// 	objName, err := tb.header.next()
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	err = p.NewDefinedNameInCurrentParseEnv(string(objName))
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	// Parse cart(...)
-// 	cartSetObj, err := p.Obj(tb)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	cartSet, ok := cartSetObj.(*FnObj)
-// 	if !ok {
-// 		return nil, ErrInLine(fmt.Errorf("expected cart to be FnObj"), tb)
-// 	}
-
-// 	if !IsFn_WithHeadName(cartSetObj, glob.KeywordCart) {
-// 		return nil, ErrInLine(fmt.Errorf("expected cart function call"), tb)
-// 	}
-
-// 	// Parse = ...
-// 	err = tb.header.skip(glob.KeySymbolEqual)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	equalTo, err := p.Obj(tb)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	// Check end of line
-// 	if !tb.header.ExceedEnd() {
-// 		return nil, ErrInLine(fmt.Errorf("expect end of line"), tb)
-// 	}
-
-// 	return NewHaveObjFromCartSetStmt(objName, cartSet, equalTo, tb.line), nil
-// }
 
 func (p *TbParser) haveObjEqualStmt(tb *tokenBlock) (Stmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
@@ -979,14 +749,6 @@ func (p *TbParser) claimStmt(tb *tokenBlock) (Stmt, error) {
 	err = tb.header.skip(glob.KeySymbolColon)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
-	}
-
-	if tb.body[0].header.is(glob.KeywordPropInfer) {
-		// if tb.body[0].header.strAtCurIndexPlus(1) == glob.KeywordExist {
-		// 	return p.claimExistPropStmt(tb)
-		// } else {
-		return p.claimImply(tb)
-		// }
 	}
 
 	if len(tb.body) != 2 {
@@ -3570,81 +3332,6 @@ func (p *TbParser) dom_and_section(tb *tokenBlock, kw string, kw_should_not_exis
 	} else {
 		return nil, nil, fmt.Errorf("unexpected body structure in dom_and_section")
 	}
-}
-
-// func (p *TbParser) claimExistPropStmt(tb *tokenBlock) (Stmt, error) {
-// 	if len(tb.body) != 3 {
-// 		return nil, fmt.Errorf("expect 3 body blocks")
-// 	}
-
-// 	existProp, err := p.atExistPropDefStmt(&tb.body[0])
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	proofs := []Stmt{}
-// 	for _, stmt := range tb.body[1].body {
-// 		curStmt, err := p.Stmt(&stmt)
-// 		if err != nil {
-// 			return nil, ErrInLine(err, tb)
-// 		}
-// 		proofs = append(proofs, curStmt)
-// 	}
-
-// 	err = tb.body[2].header.skip(glob.KeywordHave)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	haveObj := []Obj{}
-// 	for !tb.body[2].header.ExceedEnd() {
-// 		curObj, err := p.Obj(&tb.body[2])
-// 		if err != nil {
-// 			return nil, ErrInLine(err, tb)
-// 		}
-// 		haveObj = append(haveObj, curObj)
-// 	}
-
-// 	if len(proofs) == 0 {
-// 		return nil, fmt.Errorf("expect proof after claim")
-// 	}
-
-// 	return NewClaimExistPropStmt(existProp, proofs, haveObj, tb.line), nil
-// }
-
-func (p *TbParser) claimImply(tb *tokenBlock) (Stmt, error) {
-	implicationStmt, err := p.DefPropInferStmt(&tb.body[0])
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	if tb.body[1].header.is(glob.KeywordProve) {
-		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-	} else if tb.body[1].header.is(glob.KeywordContra) {
-		panic("contra is not supported for prop statement")
-	} else {
-		return nil, fmt.Errorf("expect 'prove' or 'contra'")
-	}
-
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	proofs := []Stmt{}
-	for _, stmt := range tb.body[1].body {
-		curStmt, err := p.Stmt(&stmt)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		proofs = append(proofs, curStmt)
-	}
-
-	if len(proofs) == 0 {
-		return nil, fmt.Errorf("expect proof after claim")
-	}
-
-	// return NewClaimPropStmt(NewDefPropStmt(declHeader, []FactStmt{}, iffFacts, thenFacts), proofs, isProve), nil
-	return NewClaimPropStmt(implicationStmt, proofs, tb.line), nil
 }
 
 func (p *TbParser) relaEqualsFactStmt(tb *tokenBlock, obj, obj2 Obj) (*EqualsFactStmt, error) {

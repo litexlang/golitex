@@ -656,18 +656,6 @@ func (s *ClaimProveByContradictionStmt) ToLatexString() string {
 	return claimProveBodyToLatexString(s.ToCheckFact, s.Proofs, false)
 }
 
-func (s *ClaimImplicationStmt) ToLatexString() string {
-	var builder strings.Builder
-
-	builder.WriteString(s.Implication.ToLatexString())
-
-	builder.WriteString("\n\n")
-
-	builder.WriteString(claimProveBodyToLatexString(s.Implication.ToForallWhenPropIsTrue_Then_ThenSectionOfPropIsTrue(), s.Proofs, true))
-
-	return builder.String()
-}
-
 // TODO
 // func (s *ClaimExistPropStmt) ToLatexString() string {
 // 	var builder strings.Builder
