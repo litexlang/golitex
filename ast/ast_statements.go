@@ -492,3 +492,11 @@ type OrStmt struct {
 
 	Line uint
 }
+
+type SetIsFnStmt struct {
+	SetObj   Obj
+	FnSetObj *FnObj
+	Proof    StmtSlice
+
+	Line uint
+}

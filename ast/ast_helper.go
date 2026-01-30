@@ -275,7 +275,7 @@ func GetFnHeadChain_AndItSelf(obj Obj) ([]Obj, [][]Obj) {
 }
 
 func (objAsFnObj *FnObj) GetParamSetsAndRetSetOfAnonymousFn(fnObj *FnObj) (bool, []Obj, Obj) {
-	if !IsFnTemplate_ObjFn(objAsFnObj) {
+	if !IsAnonymousFnSet(objAsFnObj) {
 		return false, nil, nil
 	}
 

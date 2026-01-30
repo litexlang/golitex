@@ -1028,3 +1028,7 @@ func (s *EvalStmt) ToLatexString() string {
 func (s *HaveFnEqualCaseByCaseStmt) ToLatexString() string {
 	return s.String()
 }
+
+func (s *SetIsFnStmt) ToLatexString() string {
+	return s.String()
+}

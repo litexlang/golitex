@@ -200,7 +200,7 @@ func (ver *Verifier) verInFactByRightParamIsFnTemplateFact(stmt ast.SpecificFact
 	}
 
 	if asFcFn, ok := asPureStmt.Params[1].(*ast.FnObj); ok {
-		if ast.IsFnTemplate_ObjFn(asFcFn) {
+		if ast.IsAnonymousFnSet(asFcFn) {
 			verRet := ver.ver_In_FnFcFn_FnTT(asPureStmt.Params[0], asFcFn, state)
 			if verRet.IsErr() {
 				return verRet

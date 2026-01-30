@@ -122,6 +122,8 @@ const (
 	KeywordRNot0 = "R_not0"
 	KeywordZNot0 = "Z_not0"
 	KeywordQNot0 = "Q_not0"
+
+	KeywordSetIsFn = "set_is_fn"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{

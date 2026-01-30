@@ -140,6 +140,8 @@ func (s *WitnessNonemptyStmt) stmt()           {}
 func (s *WitnessNonemptyStmt) algoStmt()       {}
 func (s *ImpossibleStmt) stmt()                {}
 func (s *ImpossibleStmt) algoStmt()            {}
+func (s *SetIsFnStmt) stmt()                   {}
+func (s *SetIsFnStmt) algoStmt()               {}
 func (s *DefLetStmt) GetLine() uint            { return s.Line }
 func (s *DefPropStmt) GetLine() uint           { return s.Line }
 func (s *LetFnStmt) GetLine() uint             { return s.Line }
@@ -199,6 +201,7 @@ func (s *WitnessStmt) GetLine() uint               { return s.Line }
 func (s *EqualSetStmt) GetLine() uint              { return s.Line }
 func (s *WitnessNonemptyStmt) GetLine() uint       { return s.Line }
 func (s *ImpossibleStmt) GetLine() uint            { return s.Line }
+func (s *SetIsFnStmt) GetLine() uint               { return s.Line }
 func (p *PureSpecificFactStmt) GetLine() uint      { return p.Line }
 func (e *ExistSpecificFactStmt) GetLine() uint     { return e.Line }
 
@@ -265,6 +268,7 @@ func (s *WitnessStmt) SetLine(l uint)               { s.Line = l }
 func (s *EqualSetStmt) SetLine(l uint)              { s.Line = l }
 func (s *WitnessNonemptyStmt) SetLine(l uint)       { s.Line = l }
 func (s *ImpossibleStmt) SetLine(l uint)            { s.Line = l }
+func (s *SetIsFnStmt) SetLine(l uint)                { s.Line = l }
 func (p *PureSpecificFactStmt) SetLine(l uint)      { p.Line = l }
 func (e *ExistSpecificFactStmt) SetLine(l uint)     { e.Line = l }
 

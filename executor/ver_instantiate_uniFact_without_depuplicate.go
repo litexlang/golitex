@@ -15,7 +15,6 @@
 package litex_executor
 
 import (
-	"errors"
 	ast "golitex/ast"
 	env "golitex/environment"
 	glob "golitex/glob"
@@ -26,34 +25,6 @@ func (ver *Verifier) instantiateUniFactWithoutDuplicate(oldStmt *ast.UniFactStmt
 	paramMap, paramMapStrToStr := processUniFactParamsDuplicateDeclared(ver.Env, oldStmt.Params)
 
 	return useRandomParamToReplaceOriginalParamInUniFact(oldStmt, paramMap, paramMapStrToStr)
-}
-
-func useRandomParamToReplaceOriginalParamInUniFactWithIff(oldStmt *ast.UniFactWithIffStmt, paramMap map[string]ast.Obj, paramMapStrToStr map[string]string) (*ast.UniFactWithIffStmt, map[string]ast.Obj, error) {
-	if len(paramMap) == 0 {
-		return oldStmt, nil, nil
-	}
-
-	instantiatedOldStmt, err := oldStmt.InstantiateFact(paramMap)
-	if err != nil {
-		return nil, nil, err
-	}
-	instantiatedOldStmtAsUniFactIff, ok := instantiatedOldStmt.(*ast.UniFactWithIffStmt)
-	if !ok {
-		return nil, nil, errors.New("instantiatedOldStmt is not a UniFactWithIffStmt")
-	}
-
-	newParams := []string{}
-	for _, param := range instantiatedOldStmtAsUniFactIff.UniFact.Params {
-		if newParam, ok := paramMapStrToStr[param]; ok {
-			newParams = append(newParams, newParam)
-		} else {
-			newParams = append(newParams, param)
-		}
-	}
-
-	newStmtPtr := ast.NewUniFactWithIff(ast.NewUniFact(newParams, instantiatedOldStmtAsUniFactIff.UniFact.ParamSets, instantiatedOldStmtAsUniFactIff.UniFact.DomFacts, instantiatedOldStmtAsUniFactIff.UniFact.ThenFacts, instantiatedOldStmtAsUniFactIff.UniFact.Line), instantiatedOldStmtAsUniFactIff.IffFacts, instantiatedOldStmtAsUniFactIff.UniFact.Line)
-
-	return newStmtPtr, paramMap, nil
 }
 
 func useRandomParamToReplaceOriginalParamInUniFact(oldStmt *ast.UniFactStmt, paramMap map[string]ast.Obj, paramMapStrToStr map[string]string) (*ast.UniFactStmt, map[string]ast.Obj, error) {
