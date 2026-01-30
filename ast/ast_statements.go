@@ -90,13 +90,6 @@ type ClaimProveByContradictionStmt struct {
 	Line uint
 }
 
-type ClaimImplicationStmt struct {
-	Implication *DefPropStmt
-	Proofs      StmtSlice
-
-	Line uint
-}
-
 type KnowFactStmt struct {
 	Facts CanBeKnownStmtSlice
 
@@ -494,7 +487,7 @@ type OrStmt struct {
 }
 
 type SetIsFnStmt struct {
-	Obj   Obj
+	Obj      Obj
 	FnSetObj *FnObj
 	Proof    StmtSlice
 

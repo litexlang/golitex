@@ -784,36 +784,6 @@ func (stmt *DefPropStmt) ToNamedUniFactString() string {
 	return builder.String()
 }
 
-func (stmt *ClaimImplicationStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordClaim)
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteString("\n")
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.Implication.ToNamedUniFactString(), 1))
-	builder.WriteByte('\n')
-	proofStrSlice := make([]string, len(stmt.Proofs))
-	for i, proof := range stmt.Proofs {
-		proofStrSlice[i] = glob.SplitLinesAndAdd4NIndents(proof.String(), 1)
-	}
-	builder.WriteString(strings.Join(proofStrSlice, "\n"))
-	return builder.String()
-}
-
-// func (stmt *ClaimExistPropStmt) String() string {
-// 	var builder strings.Builder
-// 	builder.WriteString(glob.KeywordClaim)
-// 	builder.WriteString(glob.KeySymbolColon)
-// 	builder.WriteString("\n")
-// 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.ExistPropWithoutDom.String(), 1))
-// 	builder.WriteByte('\n')
-// 	proofStrSlice := make([]string, len(stmt.Proofs))
-// 	for i, proof := range stmt.Proofs {
-// 		proofStrSlice[i] = glob.SplitLinesAndAdd4NIndents(proof.String(), 1)
-// 	}
-// 	builder.WriteString(strings.Join(proofStrSlice, "\n"))
-// 	return builder.String()
-// }
-
 func (stmt *ProveByEnumStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordEnum)

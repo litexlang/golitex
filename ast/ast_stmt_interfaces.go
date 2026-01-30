@@ -52,7 +52,6 @@ func (s *ProveInferStmt) stmt()      {}
 // func (s *DefImplicationStmt) stmt()            {}
 func (s *UniFactWithIffStmt) stmt()            {}
 func (s *ClaimProveByContradictionStmt) stmt() {}
-func (s *ClaimImplicationStmt) stmt()          {}
 
 // func (s *ClaimExistPropStmt) stmt()            {}
 func (s *ProveByEnumStmt) stmt()          {}
@@ -103,7 +102,6 @@ func (s *RunFileStmt) algoStmt()                   {}
 func (s *ProveStmt) algoStmt()                     {}
 func (s *UniFactWithIffStmt) algoStmt()            {}
 func (s *ClaimProveByContradictionStmt) algoStmt() {}
-func (s *ClaimImplicationStmt) algoStmt()          {}
 
 // func (s *ClaimExistPropStmt) algoStmt()                {}
 func (s *ProveByEnumStmt) algoStmt()          {}
@@ -163,8 +161,6 @@ func (s *RunFileStmt) GetLine() uint                   { return s.Line }
 func (s *ProveStmt) GetLine() uint                     { return s.Line }
 func (s *UniFactWithIffStmt) GetLine() uint            { return s.Line }
 func (s *ClaimProveByContradictionStmt) GetLine() uint { return s.Line }
-
-func (s *ClaimImplicationStmt) GetLine() uint { return s.Line }
 
 // func (s *ClaimExistPropStmt) GetLine() uint       { return s.Line }
 func (s *ProveByEnumStmt) GetLine() uint          { return s.Line }
@@ -227,8 +223,6 @@ func (s *ProveStmt) SetLine(l uint)                     { s.Line = l }
 func (s *UniFactWithIffStmt) SetLine(l uint)            { s.Line = l }
 func (s *ClaimProveByContradictionStmt) SetLine(l uint) { s.Line = l }
 
-func (s *ClaimImplicationStmt) SetLine(l uint) { s.Line = l }
-
 // func (s *ClaimExistPropStmt) SetLine(l uint)       { s.Line = l }
 func (s *ProveByEnumStmt) SetLine(l uint)          { s.Line = l }
 func (s *HaveObjInNonEmptySetStmt) SetLine(l uint) { s.Line = l }
@@ -268,7 +262,7 @@ func (s *WitnessStmt) SetLine(l uint)               { s.Line = l }
 func (s *EqualSetStmt) SetLine(l uint)              { s.Line = l }
 func (s *WitnessNonemptyStmt) SetLine(l uint)       { s.Line = l }
 func (s *ImpossibleStmt) SetLine(l uint)            { s.Line = l }
-func (s *SetIsFnStmt) SetLine(l uint)                { s.Line = l }
+func (s *SetIsFnStmt) SetLine(l uint)               { s.Line = l }
 func (p *PureSpecificFactStmt) SetLine(l uint)      { p.Line = l }
 func (e *ExistSpecificFactStmt) SetLine(l uint)     { e.Line = l }
 
