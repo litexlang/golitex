@@ -68,14 +68,6 @@ type UniFactWithIffStmt struct {
 	Line uint
 }
 
-// type SpecFactStmt struct {
-// 	FactType SpecFactType
-// 	PropName Atom
-// 	Params   ObjSlice
-
-// 	Line uint
-// }
-
 type ClaimProveStmt struct {
 	ToCheckFact FactStmt
 	Proofs      StmtSlice
@@ -347,34 +339,6 @@ type EvalStmt struct {
 	Line uint
 }
 
-// type DefProveAlgoStmt struct {
-// 	ProveAlgoName string
-// 	Params        StrSlice
-// 	Stmts         ProveAlgoStmtSlice
-//
-// 	Line uint
-// }
-
-// type ByStmt struct {
-// 	ProveAlgoName string
-// 	Params        ObjSlice
-//
-// 	Line uint
-// }
-
-// type ProveAlgoIfStmt struct {
-// 	Conditions FactStmtSlice
-// 	ThenStmts  ProveAlgoStmtSlice
-//
-// 	Line uint
-// }
-
-// type ProveAlgoReturnStmt struct {
-// 	Facts FactOrByStmtSlice
-//
-// 	Line uint
-// }
-
 type ProveForStmt struct {
 	Params        StrSlice
 	Lefts         ObjSlice
@@ -386,14 +350,6 @@ type ProveForStmt struct {
 
 	Line uint
 }
-
-// type DefImplicationStmt struct {
-// 	DefHeader        *DefHeader
-// 	DomFacts         FactStmtSlice
-// 	ImplicationFacts FactStmtSlice
-
-// 	Line uint
-// }
 
 type ProveInferStmt struct {
 	SpecFact        *PureSpecificFactStmt
@@ -421,13 +377,6 @@ type WitnessStmt struct {
 
 	Line uint
 }
-
-// type WitnessShortStmt struct {
-// 	SpecFact *PureSpecificFactStmt
-// 	Proofs   StmtSlice
-
-// 	Line uint
-// }
 
 type InferStmt struct {
 	DomFacts  ReversibleFacts

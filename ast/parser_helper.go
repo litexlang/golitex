@@ -90,7 +90,7 @@ func ParseSourceCodeGetFact(sourceCode string) (FactStmt, error) {
 	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr("")
 	p := NewTbParser(pkgPathNameMgr)
 
-	return p.factStmt(&blocks[0], UniFactDepth0)
+	return p.factStmt(&blocks[0])
 }
 
 // ParseSingleLineFact parses a single line fact statement from a string
