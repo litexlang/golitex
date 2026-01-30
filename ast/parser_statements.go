@@ -190,7 +190,7 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 	iffFacts := []FactStmt{}
 
 	for _, fact := range tb.body {
-		iffFact, err := p.factStmt(&fact, UniFactDepth1)
+		iffFact, err := p.factStmt(&fact)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -319,7 +319,7 @@ func (p *TbParser) letDefObjStmt(tb *tokenBlock) (Stmt, error) {
 	if tb.header.ExceedEnd() && len(tb.body) == 0 {
 		return NewDefLetStmt(objNames, objSets, []FactStmt{}, tb.line), nil
 	} else if tb.header.ExceedEnd() && len(tb.body) != 0 {
-		facts, err := p.bodyFacts(tb, UniFactDepth0)
+		facts, err := p.bodyFacts(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -646,31 +646,20 @@ func (p *TbParser) bodyBlockSpecOrFacts(tb *tokenBlock, parseBodyFactNum int) ([
 	return facts, nil
 }
 
-func (p *TbParser) bodyBlockFacts(tb *tokenBlock, uniFactDepth uniFactEnum, parseBodyFactNum int) ([]FactStmt, error) {
+func (p *TbParser) bodyBlockFacts(tb *tokenBlock, parseBodyFactNum int) ([]FactStmt, error) {
 	facts := []FactStmt{}
 
-	if uniFactDepth.allowMoreDepth() {
-		for i := range parseBodyFactNum {
-			stmt := tb.body[i]
-			fact, err := p.factStmt(&stmt, uniFactDepth) // no longer allow further uniFact
-			if err != nil {
+	for i := range parseBodyFactNum {
+		stmt := tb.body[i]
+		fact, err := p.SpecFactOrOrStmt(&stmt)
+		if err != nil {
+			if tb.body[i].header.is(glob.KeywordForall) {
+				return nil, fmt.Errorf("expect specific fact: at most 2 layers of universal quantifier is allowed")
+			} else {
 				return nil, ErrInLine(err, tb)
 			}
-			facts = append(facts, fact)
 		}
-	} else {
-		for i := range parseBodyFactNum {
-			stmt := tb.body[i]
-			fact, err := p.SpecFactOrOrStmt(&stmt)
-			if err != nil {
-				if tb.body[i].header.is(glob.KeywordForall) {
-					return nil, fmt.Errorf("expect specific fact: at most 2 layers of universal quantifier is allowed")
-				} else {
-					return nil, ErrInLine(err, tb)
-				}
-			}
-			facts = append(facts, fact)
-		}
+		facts = append(facts, fact)
 	}
 
 	return facts, nil
@@ -755,7 +744,7 @@ func (p *TbParser) claimStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, fmt.Errorf("expect 2 body blocks after claim")
 	}
 
-	toCheck, err := p.factStmt(&tb.body[0], UniFactDepth0)
+	toCheck, err := p.factStmt(&tb.body[0])
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -961,7 +950,7 @@ func (p *TbParser) knowInferStmt(tb *tokenBlock) (*KnowInferStmt, error) {
 	// Parse then facts (after =>)
 	thenFacts := ReversibleFacts{}
 	for {
-		fact, err := p.factStmt(tb, UniFactDepth0)
+		fact, err := p.factStmt(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -984,7 +973,7 @@ func (p *TbParser) knowInferStmt(tb *tokenBlock) (*KnowInferStmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 		for {
-			fact, err := p.factStmt(tb, UniFactDepth0)
+			fact, err := p.factStmt(tb)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
@@ -1024,7 +1013,7 @@ func (p *TbParser) knowFactStmt(tb *tokenBlock) (Stmt, error) {
 
 	var err error
 	var facts FactStmtSlice = FactStmtSlice{}
-	facts, err = p.bodyFacts(tb, UniFactDepth0)
+	facts, err = p.bodyFacts(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1146,7 +1135,7 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		curThenFacts, err := p.bodyBlockFacts(&firstBlock, UniFactDepth0, len(firstBlock.body))
+		curThenFacts, err := p.bodyBlockFacts(&firstBlock, len(firstBlock.body))
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -1302,7 +1291,7 @@ func (p *TbParser) DefFnSetStmt(tb *tokenBlock) (Stmt, error) {
 				return nil, ErrInLine(err, tb)
 			}
 
-			templateDomFacts, err := p.bodyFacts(&tb.body[0], UniFactDepth1)
+			templateDomFacts, err := p.bodyFacts(&tb.body[0])
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
@@ -1318,7 +1307,7 @@ func (p *TbParser) DefFnSetStmt(tb *tokenBlock) (Stmt, error) {
 		} else {
 			templateDomFacts := []FactStmt{}
 			for i := range len(tb.body) - 1 {
-				curStmt, err := p.factStmt(&tb.body[i], UniFactDepth1)
+				curStmt, err := p.factStmt(&tb.body[i])
 				if err != nil {
 					return nil, ErrInLine(err, tb)
 				}
@@ -1976,7 +1965,7 @@ func (p *TbParser) provePropInferStmt(tb *tokenBlock) (*ProveInferStmt, error) {
 		}
 
 		for _, stmt := range tb.body[0].body {
-			curStmt, err := p.factStmt(&stmt, UniFactDepth0)
+			curStmt, err := p.factStmt(&stmt)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
@@ -2005,7 +1994,7 @@ func (p *TbParser) provePropInferStmt(tb *tokenBlock) (*ProveInferStmt, error) {
 		// Case 2: All are implications, no prove section
 		// Parse all body blocks as fact statements
 		for i := range len(tb.body) {
-			curStmt, err := p.factStmt(&tb.body[i], UniFactDepth0)
+			curStmt, err := p.factStmt(&tb.body[i])
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
@@ -2091,7 +2080,7 @@ func (p *TbParser) implyStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt,
 		// Case 1: body 的最后一位是 =>:，那么前面的每一行是 prop 的 iff，然后 => 后面的是 then
 		// Parse iff facts (all lines before =>:)
 		for i := 0; i < len(tb.body)-1; i++ {
-			curStmt, err := p.factStmt(&tb.body[i], UniFactDepth1)
+			curStmt, err := p.factStmt(&tb.body[i])
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
@@ -2241,7 +2230,7 @@ func (p *TbParser) factOrFactInferStmt(tb *tokenBlock) (Stmt, error) {
 	// 	return p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{})
 	// }
 	if tb.EndWith(glob.KeySymbolColon) {
-		return p.uniFactInterface(tb, UniFactDepth0)
+		return p.uniFactInterface(tb)
 	}
 
 	cur, err := tb.header.currentToken()
@@ -2344,7 +2333,7 @@ func (p *TbParser) factOrFactInferStmt(tb *tokenBlock) (Stmt, error) {
 	}
 }
 
-func (p *TbParser) factStmt(tb *tokenBlock, uniFactDepth uniFactEnum) (FactStmt, error) {
+func (p *TbParser) factStmt(tb *tokenBlock) (FactStmt, error) {
 	if !tb.EndWith(glob.KeySymbolColon) {
 		return p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{})
 	}
@@ -2357,7 +2346,7 @@ func (p *TbParser) factStmt(tb *tokenBlock, uniFactDepth uniFactEnum) (FactStmt,
 	switch cur {
 	case glob.KeywordForall:
 		if tb.GetEnd() == glob.KeySymbolColon {
-			uniFact, err := p.uniFactInterface(tb, uniFactDepth)
+			uniFact, err := p.uniFactInterface(tb)
 			if err != nil {
 				return nil, err
 			}
@@ -2508,7 +2497,7 @@ func (p *TbParser) specFactWithoutExist_WithoutNot_Or_EqualsFact(tb *tokenBlock)
 	}
 }
 
-func (p *TbParser) uniFactInterface(tb *tokenBlock, uniFactDepth uniFactEnum) (FactStmt, error) {
+func (p *TbParser) uniFactInterface(tb *tokenBlock) (FactStmt, error) {
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -2535,7 +2524,7 @@ func (p *TbParser) uniFactInterface(tb *tokenBlock, uniFactDepth uniFactEnum) (F
 	}()
 
 	// domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(uniFactDepth.addDepth(), glob.KeywordThen)
-	domainFacts, thenFacts, iffFacts, err := p.uniFactBodyFacts(tb, uniFactDepth.addDepth(), glob.KeySymbolRightArrow)
+	domainFacts, thenFacts, iffFacts, err := p.uniFactBodyFacts(tb, glob.KeySymbolRightArrow)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -2558,10 +2547,10 @@ func (p *TbParser) uniFactInterface(tb *tokenBlock, uniFactDepth uniFactEnum) (F
 	}
 }
 
-func (p *TbParser) bodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum) ([]FactStmt, error) {
+func (p *TbParser) bodyFacts(tb *tokenBlock) ([]FactStmt, error) {
 	facts := []FactStmt{}
 	for _, f := range tb.body {
-		fact, err := p.factStmt(&f, uniFactDepth)
+		fact, err := p.factStmt(&f)
 		if err != nil {
 			return nil, err
 		}
@@ -3077,7 +3066,7 @@ func (p *TbParser) defHeaderWithoutParsingColonAtEnd_MustFollowWithFreeParamChec
 	return NewDefHeader(name, params, setParams), nil
 }
 
-func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, defaultSectionName string) ([]Spec_OrFact, []Spec_OrFact, []Spec_OrFact, error) {
+func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, defaultSectionName string) ([]Spec_OrFact, []Spec_OrFact, []Spec_OrFact, error) {
 	domFacts := []Spec_OrFact{}
 	thenFacts := []Spec_OrFact{}
 	iffFacts := []Spec_OrFact{}
@@ -3238,7 +3227,7 @@ func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, de
 	return domFacts, thenFacts, iffFacts, nil
 }
 
-func (p *TbParser) parseFactBodyWithHeaderNameAndUniFactDepth(tb *tokenBlock, headerName string, uniFactDepth uniFactEnum) ([]FactStmt, error) {
+func (p *TbParser) parseFactBodyWithHeaderNameAndUniFactDepth(tb *tokenBlock, headerName string) ([]FactStmt, error) {
 	err := tb.header.skipKwAndColonCheckEOL(headerName)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -3246,7 +3235,7 @@ func (p *TbParser) parseFactBodyWithHeaderNameAndUniFactDepth(tb *tokenBlock, he
 
 	facts := []FactStmt{}
 	for _, stmt := range tb.body {
-		curStmt, err := p.factStmt(&stmt, uniFactDepth)
+		curStmt, err := p.factStmt(&stmt)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -3293,7 +3282,7 @@ func (p *TbParser) dom_and_section(tb *tokenBlock, kw string, kw_should_not_exis
 	// there are 5 cases: 1. no dom, just section 2. dom and section without dom specification 3. dom and section with both specification 4. just dom 5. just section
 	if !tb.body[0].header.is(glob.KeywordDom) && !tb.body[len(tb.body)-1].header.is(kw) {
 		for _, stmt := range tb.body {
-			curStmt, err := p.factStmt(&stmt, UniFactDepth1)
+			curStmt, err := p.factStmt(&stmt)
 			if err != nil {
 				return nil, nil, ErrInLine(err, tb)
 			}
@@ -3302,29 +3291,29 @@ func (p *TbParser) dom_and_section(tb *tokenBlock, kw string, kw_should_not_exis
 		return domFacts, sectionFacts, nil
 	} else if !tb.body[0].header.is(glob.KeywordDom) && tb.body[len(tb.body)-1].header.is(kw) {
 		for i := range len(tb.body) - 1 {
-			curStmt, err := p.factStmt(&tb.body[i], UniFactDepth1)
+			curStmt, err := p.factStmt(&tb.body[i])
 			if err != nil {
 				return nil, nil, ErrInLine(err, tb)
 			}
 			domFacts = append(domFacts, curStmt)
 		}
-		sectionFacts, err = p.parseFactBodyWithHeaderNameAndUniFactDepth(&tb.body[len(tb.body)-1], kw, UniFactDepth1)
+		sectionFacts, err = p.parseFactBodyWithHeaderNameAndUniFactDepth(&tb.body[len(tb.body)-1], kw)
 		if err != nil {
 			return nil, nil, ErrInLine(err, tb)
 		}
 		return domFacts, sectionFacts, nil
 	} else if len(tb.body) == 2 && tb.body[0].header.is(glob.KeywordDom) && tb.body[1].header.is(kw) {
-		domFacts, err = p.parseFactBodyWithHeaderNameAndUniFactDepth(&tb.body[0], glob.KeywordDom, UniFactDepth1)
+		domFacts, err = p.parseFactBodyWithHeaderNameAndUniFactDepth(&tb.body[0], glob.KeywordDom)
 		if err != nil {
 			return nil, nil, ErrInLine(err, tb)
 		}
-		sectionFacts, err = p.parseFactBodyWithHeaderNameAndUniFactDepth(&tb.body[1], kw, UniFactDepth1)
+		sectionFacts, err = p.parseFactBodyWithHeaderNameAndUniFactDepth(&tb.body[1], kw)
 		if err != nil {
 			return nil, nil, ErrInLine(err, tb)
 		}
 		return domFacts, sectionFacts, nil
 	} else if len(tb.body) == 1 && tb.body[0].header.is(glob.KeywordDom) {
-		domFacts, err = p.parseFactBodyWithHeaderNameAndUniFactDepth(&tb.body[0], glob.KeywordDom, UniFactDepth1)
+		domFacts, err = p.parseFactBodyWithHeaderNameAndUniFactDepth(&tb.body[0], glob.KeywordDom)
 		if err != nil {
 			return nil, nil, ErrInLine(err, tb)
 		}
