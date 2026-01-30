@@ -1625,7 +1625,7 @@ func (stmt *SetIsFnStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordSetIsFn)
 	builder.WriteString(" ")
-	builder.WriteString(stmt.SetObj.String())
+	builder.WriteString(stmt.Obj.String())
 	builder.WriteString(" ")
 	builder.WriteString(stmt.FnSetObj.String())
 	if len(stmt.Proof) > 0 {
