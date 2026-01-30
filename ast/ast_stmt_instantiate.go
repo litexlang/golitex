@@ -1203,7 +1203,7 @@ func (stmt *WitnessNonemptyStmt) Instantiate(uniMap map[string]Obj) (Stmt, error
 }
 
 func (stmt *SetIsFnStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	setObj, err := stmt.SetObj.Instantiate(uniMap)
+	setObj, err := stmt.Obj.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}

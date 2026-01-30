@@ -494,7 +494,7 @@ type OrStmt struct {
 }
 
 type SetIsFnStmt struct {
-	SetObj   Obj
+	Obj   Obj
 	FnSetObj *FnObj
 	Proof    StmtSlice
 
