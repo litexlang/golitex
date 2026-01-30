@@ -510,3 +510,7 @@ func (s *EqualSetStmt) InlineString() string {
 func (s *WitnessNonemptyStmt) InlineString() string {
 	return s.String()
 }
+
+func (s *SetIsFnStmt) InlineString() string {
+	return s.String()
+}

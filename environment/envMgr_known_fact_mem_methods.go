@@ -78,7 +78,7 @@ func (envMgr *EnvMgr) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn a
 }
 
 func (envMgr *EnvMgr) getInstantiatedFnTTOfFnObj(fnObj *ast.FnObj) (*ast.AnonymousFn, bool, *glob.StmtRet) {
-	if ast.IsFnTemplate_ObjFn(fnObj) {
+	if ast.IsAnonymousFnSet(fnObj) {
 		fnTNoName, err := fnObj.FnTObj_ToFnTNoName()
 		if err != nil {
 			return nil, false, glob.ErrRetWithErr(err)

@@ -290,7 +290,7 @@ func isObjWithObjFnHeadWithName(obj Obj, name string) bool {
 	return IsAtomObjAndEqualToStr(objAsFnObjHeadAsFnObj.FnHead, name)
 }
 
-func IsFnTemplate_ObjFn(objFn *FnObj) bool {
+func IsAnonymousFnSet(objFn *FnObj) bool {
 	return isObjWithObjFnHeadWithName(objFn, glob.KeywordFn)
 }
 

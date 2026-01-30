@@ -116,7 +116,7 @@ func (ie *InferEngine) trueInFactByNamedFnSet(fact *ast.PureSpecificFactStmt) *g
 // Inference: Inserts the function x into the function template table
 func (ie *InferEngine) trueInFactByAnonymousFnSetObj(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
 	fnFn, ok := fact.Params[1].(*ast.FnObj)
-	if !ok || !ast.IsFnTemplate_ObjFn(fnFn) {
+	if !ok || !ast.IsAnonymousFnSet(fnFn) {
 		return glob.NewEmptyShortUnknownRet()
 	}
 
