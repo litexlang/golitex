@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
+func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByContradictionStmt) ast.StmtRet{
 	innerStmtRets := []*glob.StmtRet{}
 
 	// know reverse of
@@ -65,7 +65,7 @@ func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByC
 	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
 }
 
-func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
+func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) ast.StmtRet{
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
 	ret := exec.Env.LookUpNamesInFact(stmt.ToCheckFact, map[string]struct{}{})
 	if ret.IsErr() {
@@ -81,7 +81,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 	}
 }
 
-// func (exec *Executor) claimUniFactByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
+// func (exec *Executor) claimUniFactByContradiction(stmt *ast.ClaimProveByContradictionStmt) ast.StmtRet{
 // 	asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt)
 // 	if !ok {
 // 		return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support uni fact"))
@@ -150,7 +150,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 // 	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
 // }
 
-func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet {
+func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) ast.StmtRet{
 	state := exec.claimStmtProve(stmt)
 	if state.IsNotTrue() {
 		return state
@@ -171,7 +171,7 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet
 
 }
 
-func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
+func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) ast.StmtRet{
 	state := exec.claimStmtProveByContradiction(stmt)
 	if state.IsNotTrue() {
 		return state
@@ -186,7 +186,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(state.InnerStmtRetSlice)
 }
 
-// func (exec *Executor) execImpossibleStmt(stmt *ast.ImpossibleStmt) *glob.StmtRet {
+// func (exec *Executor) execImpossibleStmt(stmt *ast.ImpossibleStmt) ast.StmtRet{
 // 	state := exec.impossibleStmt(stmt)
 // 	if state.IsNotTrue() {
 // 		return state
@@ -201,7 +201,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 // 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(state.InnerStmtRetSlice)
 // }
 
-// func (exec *Executor) impossibleStmt(stmt *ast.ImpossibleStmt) *glob.StmtRet {
+// func (exec *Executor) impossibleStmt(stmt *ast.ImpossibleStmt) ast.StmtRet{
 // 	exec.NewEnv()
 // 	defer func() {
 // 		exec.deleteEnv()
@@ -228,7 +228,7 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 // 	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
 // }
 
-func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet {
+func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ast.StmtRet{
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -267,7 +267,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet {
 }
 
 // prove uniFact in claim at current env
-func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.StmtRet {
+func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ast.StmtRet{
 	asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt)
 	if !ok {
 		return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support uni fact"))
@@ -313,7 +313,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.Stmt
 
 }
 
-func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) *glob.StmtRet {
+func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) ast.StmtRet{
 	innerStmtRets := []*glob.StmtRet{}
 
 	thenToIff := stmt.UniFactWithIffStmt.NewUniFactWithThenToIff()

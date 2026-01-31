@@ -195,7 +195,7 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWit
 	return nil, glob.ErrRet(fmt.Sprintf("There is no return value of %s", fnObjWithValueParams))
 }
 
-func (exec *Executor) fnObjParamsInFnDomain(fnObj *ast.FnObj) *glob.StmtRet {
+func (exec *Executor) fnObjParamsInFnDomain(fnObj *ast.FnObj) ast.StmtRet{
 	ver := NewVerifier(exec.Env)
 	return ver.objIsDefinedAtomOrIsFnSatisfyItsReq(fnObj, Round0NoMsg()).ToStmtRet()
 }

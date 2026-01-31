@@ -6,6 +6,7 @@ type VerRet interface {
 	IsUnknown() bool
 	IsErr() bool
 	IsNotTrue() bool
+	ToStmtRet() StmtRet
 }
 
 type TrueVerRet struct {
@@ -58,4 +59,14 @@ func NewEmptyVerRetErr() *ErrVerRet {
 
 func NewEmptyUnknownVerRet() *UnknownVerRet {
 	return &UnknownVerRet{ToCheck: nil}
+}
+
+func (r *TrueVerRet) ToStmtRet() StmtRet {
+	return NewTrueStmtEmptyRet(r.ToCheck).AddVerifyProcess(r)
+}
+func (r *UnknownVerRet) ToStmtRet() StmtRet {
+	return NewUnknownStmtEmptyRet(r.ToCheck)
+}
+func (r *ErrVerRet) ToStmtRet() StmtRet {
+	return NewErrStmtEmptyRet(r.ToCheck)
 }

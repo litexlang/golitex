@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) inferTemplateStmt(stmt *ast.InferTemplateStmt) *glob.StmtRet {
+func (exec *Executor) inferTemplateStmt(stmt *ast.InferTemplateStmt) ast.StmtRet{
 	// Step 1: Verify like claim forall
 	execRet := exec.implyTemplateStmtVerify(stmt)
 	if execRet.IsNotTrue() {
@@ -36,7 +36,7 @@ func (exec *Executor) inferTemplateStmt(stmt *ast.InferTemplateStmt) *glob.StmtR
 	return execRet
 }
 
-func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) *glob.StmtRet {
+func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) ast.StmtRet{
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -102,7 +102,7 @@ func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) *glob
 	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
 }
 
-func (exec *Executor) implyTemplateStmtStore(stmt *ast.InferTemplateStmt) *glob.StmtRet {
+func (exec *Executor) implyTemplateStmtStore(stmt *ast.InferTemplateStmt) ast.StmtRet{
 	// Store each thenFact in appropriate memory
 	for _, thenFact := range stmt.ThenFacts {
 		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {

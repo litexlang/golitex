@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePropStmt) *glob.StmtRet {
+func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePropStmt) ast.StmtRet{
 	innerStmtRets := []*glob.StmtRet{}
 	verifyProcessMsgs := []VerRet{}
 	newFactMsgs := []string{}
@@ -103,9 +103,9 @@ func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePro
 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactMsgs)
 }
 
-func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact ast.SpecificFactStmt, rightToLeft ast.SpecificFactStmt) (*glob.StmtRet, []VerRet, []*glob.StmtRet) {
+func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact ast.SpecificFactStmt, rightToLeft ast.SpecificFactStmt) (*glob.StmtRet, []ast.VerRet, []*glob.StmtRet) {
 	innerStmtRets := []*glob.StmtRet{}
-	verifyProcessMsgs := []VerRet{}
+	verifyProcessMsgs := []ast.VerRet{}
 
 	exec.NewEnv()
 	defer exec.deleteEnv()

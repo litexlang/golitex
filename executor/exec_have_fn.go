@@ -14,7 +14,7 @@
 
 package litex_executor
 
-// func (exec *Executor) haveFnStmtCaseByCase(stmt *ast.HaveFnCaseByCaseStmt) *glob.StmtRet {
+// func (exec *Executor) haveFnStmtCaseByCase(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet{
 // 	ret := exec.haveFnEqualCaseByCase_Verify(stmt)
 // 	if ret.IsNotTrue() {
 // 		return ret
@@ -28,7 +28,7 @@ package litex_executor
 // 	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(ret.VerifyProcess).AddDefineMsgs(newRet.Define)
 // }
 
-// func (exec *Executor) haveFnEqualCaseByCase_Verify(stmt *ast.HaveFnCaseByCaseStmt) *glob.StmtRet {
+// func (exec *Executor) haveFnEqualCaseByCase_Verify(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet{
 // 	verifyProcessMsgs := []VerRet{}
 
 // 	exec.NewEnv()
@@ -49,7 +49,7 @@ package litex_executor
 // 	return glob.NewEmptyStmtTrue().AddVerifyProcesses(verifyProcessMsgs)
 // }
 
-// func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNoOverlap_ReturnValueInRetSetAndSatisfyThen(stmt *ast.HaveFnCaseByCaseStmt) *glob.StmtRet {
+// func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNoOverlap_ReturnValueInRetSetAndSatisfyThen(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet{
 // 	exec.NewEnv()
 // 	defer exec.deleteEnv()
 
@@ -79,7 +79,7 @@ package litex_executor
 // 	return exec.NewTrueStmtRet(orFact)
 // }
 
-// func (exec *Executor) haveFnCaseByCaseStmt_CheckCasesNotOverlap_ReturnValueInRetSet(stmt *ast.HaveFnCaseByCaseStmt, index int) *glob.StmtRet {
+// func (exec *Executor) haveFnCaseByCaseStmt_CheckCasesNotOverlap_ReturnValueInRetSet(stmt *ast.HaveFnCaseByCaseStmt, index int) ast.StmtRet{
 // 	exec.NewEnv()
 // 	defer exec.deleteEnv()
 
@@ -122,7 +122,7 @@ package litex_executor
 
 // }
 
-// func (exec *Executor) haveFnCaseByCase_Define(stmt *ast.HaveFnCaseByCaseStmt) *glob.StmtRet {
+// func (exec *Executor) haveFnCaseByCase_Define(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet{
 // 	defineMsgs := []string{}
 
 // 	// 定义函数

@@ -21,8 +21,8 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
-	var execRet *glob.StmtRet = glob.NewEmptyStmtError()
+func (exec *Executor) Stmt(stmt ast.Stmt) ast.StmtRet{
+	var execRet ast.StmtRet= glob.NewEmptyStmtError()
 
 	switch stmt := (stmt).(type) {
 	case ast.FactStmt:
@@ -126,7 +126,7 @@ func (exec *Executor) Stmt(stmt ast.Stmt) *glob.StmtRet {
 	return execRet
 }
 
-func (exec *Executor) factStmt(stmt ast.FactStmt) *glob.StmtRet {
+func (exec *Executor) factStmt(stmt ast.FactStmt) ast.StmtRet{
 	curVerifier := NewVerifier(exec.Env)
 	state := NewVerState(0, true, false)
 	verRet := curVerifier.VerFactStmt(stmt, state)
@@ -148,7 +148,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) *glob.StmtRet {
 }
 
 // TODO: 再know时就检查，仅仅依赖写在dom里的事实，是否真的能让涉及到的函数和prop能真的满足条件。如果不满足条件，那就warning
-func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) *glob.StmtRet {
+func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ast.StmtRet{
 	newFactMsgs := []string{}
 	implicationMsgs := []string{}
 
@@ -171,7 +171,7 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs).AddInfers(implicationMsgs)
 }
 
-func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) *glob.StmtRet {
+func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) ast.StmtRet{
 	defineMsgs := []string{}
 	newFactMsgs := []string{}
 
@@ -213,7 +213,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs).AddNewFacts(newFactMsgs)
 }
 
-func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
+func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) ast.StmtRet{
 	ret := exec.Env.DefLetStmt(stmt)
 	if ret.IsUnknown() || ret.IsErr() {
 		return glob.ErrRet(ret.String())
@@ -222,7 +222,7 @@ func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(ret.Define).AddInfers(ret.Infer)
 }
 
-// func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) *glob.StmtRet {
+// func (exec *Executor) defExistPropStmt(stmt *ast.DefExistPropStmt) ast.StmtRet{
 // 	ret := exec.Env.NewDefExistProp_InsideAtomsDeclared(stmt)
 // 	if ret.IsErr() {
 // 		return exec.AddStmtToStmtRet(ret, stmt).AddErrors(ret.Error)
@@ -236,7 +236,7 @@ func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
 // }
 
 // TODO: 我认为打印一下 claim 里面的各个语句的输出还是有道理的
-func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) *glob.StmtRet {
+func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) ast.StmtRet{
 	innerExecRets := []*glob.StmtRet{}
 
 	for _, curStmt := range proof {
@@ -250,7 +250,7 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) *glob.StmtRet {
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
-func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) *glob.StmtRet {
+func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) ast.StmtRet{
 	innerStmtRets := []*glob.StmtRet{}
 	defineMsgs := []string{}
 	newFactMsgs := []string{}
@@ -295,13 +295,13 @@ func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) *glob.StmtR
 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddDefineMsgs(defineMsgs).AddNewFacts(newFactMsgs)
 }
 
-func (exec *Executor) knowInferStmt(stmt *ast.KnowInferStmt) *glob.StmtRet {
+func (exec *Executor) knowInferStmt(stmt *ast.KnowInferStmt) ast.StmtRet{
 	newInferTemplate := ast.NewInferTemplateStmt(stmt.Params, stmt.ParamSets, stmt.DomFacts, stmt.ThenFacts, stmt.IfFacts, []ast.Stmt{}, stmt.Line)
 
 	return exec.implyTemplateStmtStore(newInferTemplate)
 }
 
-func (exec *Executor) proveStmt(stmt *ast.ProveStmt) *glob.StmtRet {
+func (exec *Executor) proveStmt(stmt *ast.ProveStmt) ast.StmtRet{
 	// new env
 	exec.NewEnv()
 	defer exec.deleteEnv()
@@ -313,7 +313,7 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) *glob.StmtRet {
 	return exec.AddStmtToStmtRet(execState, stmt)
 }
 
-func (exec *Executor) lefDefFnStmt(stmt *ast.LetFnStmt) *glob.StmtRet {
+func (exec *Executor) lefDefFnStmt(stmt *ast.LetFnStmt) ast.StmtRet{
 	defineMsgs := []string{}
 	newFactMsgs := []string{}
 
@@ -355,7 +355,7 @@ func (exec *Executor) lefDefFnStmt(stmt *ast.LetFnStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs).AddNewFacts(newFactMsgs)
 }
 
-func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) *glob.StmtRet {
+func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) ast.StmtRet{
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -367,7 +367,7 @@ func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) *glob.Stmt
 	return execState
 }
 
-func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) *glob.StmtRet {
+func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ast.StmtRet{
 	innerStmtRets := []*glob.StmtRet{}
 	verifyProcessMsgs := []VerRet{}
 	newFactMsgs := []string{}
@@ -390,7 +390,7 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) *glob.StmtRet {
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
-// func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) *glob.StmtRet {
+// func (exec *Executor) knowExistPropStmt(stmt *ast.KnowExistPropStmt) ast.StmtRet{
 // 	execState := exec.defExistPropStmt(stmt.ExistProp)
 // 	if execState.IsNotTrue() {
 // 		return execState
@@ -407,7 +407,7 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) *glob.StmtRet {
 // 	return exec.NewTrueStmtRet(stmt).AddNewFact(fmt.Sprintf("%s\nis true by definition", knownUniFact))
 // }
 
-func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) *glob.StmtRet {
+func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) ast.StmtRet{
 
 	ret := exec.Env.NewFnTemplateInEnvMem(stmt)
 	if ret.IsErr() {
@@ -417,19 +417,19 @@ func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt)
 }
 
-func (exec *Executor) ClearStmt() *glob.StmtRet {
+func (exec *Executor) ClearStmt() ast.StmtRet{
 	// newEnvMgr := env.CopyEnvMgrAndOwnPkgMgr(env.BuiltinEnvMgrWithEmptyEnvPkgMgr, exec.Env.EnvPkgMgr)
 	// exec.Env = newEnvMgr.NewEnv()
 	exec.Env = litex_env.NewEmptyEnvMgr(exec.Env.EnvPkgMgr)
 	return glob.NewStmtTrueWithStmt("clear all definitions and facts")
 }
 
-func (exec *Executor) DoNothingStmt() *glob.StmtRet {
+func (exec *Executor) DoNothingStmt() ast.StmtRet{
 	// do_nothing statement does nothing
 	return glob.NewEmptyStmtTrue()
 }
 
-func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) *glob.StmtRet {
+func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) ast.StmtRet{
 	verifyProcessMsgs := []VerRet{}
 	newFactMsgs := []string{}
 
@@ -445,7 +445,7 @@ func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactMsgs)
 }
 
-func (exec *Executor) Verify(fact ast.FactStmt) *glob.StmtRet {
+func (exec *Executor) Verify(fact ast.FactStmt) ast.StmtRet{
 	ver := NewVerifier(exec.Env)
 	state := Round0Msg()
 	return ver.VerFactStmt(fact, state).ToStmtRet()
@@ -461,7 +461,7 @@ func (exec *Executor) Verify(fact ast.FactStmt) *glob.StmtRet {
 // 	return NewExecEmptyTrue()
 // }
 
-func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) *glob.StmtRet {
+func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) ast.StmtRet{
 	innerStmtRets := []*glob.StmtRet{}
 	verifyProcessMsgs := []VerRet{}
 	newFactMsgs := []string{}
@@ -544,13 +544,13 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactMsgs)
 }
 
-func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) *glob.StmtRet {
+func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) ast.StmtRet{
 	exec.Env.CurEnv().AlgoDefMem[stmt.FuncName] = struct{}{}
 	exec.Env.AllDefinedAlgoNames[stmt.FuncName] = litex_env.NewDefinedStuff(stmt, exec.Env.CurEnvDepth())
 	return exec.NewTrueStmtRet(stmt)
 }
 
-func (exec *Executor) evalStmt(stmt *ast.EvalStmt) *glob.StmtRet {
+func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ast.StmtRet{
 	trueEvalRet := glob.NewEmptyStmtTrue()
 
 	value, execRet := exec.evalObjInLocalEnv(stmt.ObjToEval)
@@ -578,13 +578,13 @@ func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, *glob.StmtR
 	return value, glob.NewStmtTrueWithStmt(fmt.Sprintf("By evaluation of algo %s\nWe get %s = %s\n", objToEval.(*ast.FnObj).FnHead.String(), objToEval.String(), value.String()))
 }
 
-// func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) *glob.StmtRet {
+// func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) ast.StmtRet{
 // 	exec.Env.CurEnv().DefProveAlgoMem[stmt.ProveAlgoName] = struct{}{}
 // 	exec.Env.AllDefinedProveAlgoNames[stmt.ProveAlgoName] = litex_env.NewDefinedStuff(stmt, exec.Env.CurEnvDepth())
 // 	return exec.NewTrueStmtRet(stmt)
 // }
 
-func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.StmtRet {
+func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) ast.StmtRet{
 	// Generate integer lists for each range
 	ranges := [][]ast.Obj{}
 	for i := range len(stmt.Params) {
@@ -655,7 +655,7 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
 }
 
-func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, indices []ast.Obj) *glob.StmtRet {
+func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, indices []ast.Obj) ast.StmtRet{
 	uniMap := map[string]ast.Obj{}
 	for i, param := range stmt.Params {
 		uniMap[param] = indices[i]
@@ -747,7 +747,7 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 	return glob.NewEmptyStmtTrue()
 }
 
-func (exec *Executor) proveImplyStmt(stmt *ast.ProveInferStmt) *glob.StmtRet {
+func (exec *Executor) proveImplyStmt(stmt *ast.ProveInferStmt) ast.StmtRet{
 	ret := exec.proveImplyStmtProveProcess(stmt)
 	if ret.IsNotTrue() {
 		return ret
@@ -761,7 +761,7 @@ func (exec *Executor) proveImplyStmt(stmt *ast.ProveInferStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt).AddWarning(fmt.Sprintf("%s is a powerful feature. The implication section will be automatically generated after every time %s is true later. Don't use it too much, since it is very memory consuming.", glob.KeywordProvePropInfer, stmt.SpecFact.PropName))
 }
 
-func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveInferStmt) *glob.StmtRet {
+func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveInferStmt) ast.StmtRet{
 
 	exec.NewEnv()
 	defer exec.deleteEnv()
@@ -845,7 +845,7 @@ func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveInferStmt) *glob
 	return exec.NewTrueStmtRet(stmt)
 }
 
-func (exec *Executor) equalSetStmt(stmt *ast.EqualSetStmt) *glob.StmtRet {
+func (exec *Executor) equalSetStmt(stmt *ast.EqualSetStmt) ast.StmtRet{
 	// 1. prove 过程（在局部环境中）
 	ret := exec.equalSetStmtProveProcess(stmt)
 	if ret.IsNotTrue() {
@@ -862,7 +862,7 @@ func (exec *Executor) equalSetStmt(stmt *ast.EqualSetStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt).AddNewFacts(ret2.Infer)
 }
 
-func (exec *Executor) equalSetStmtProveProcess(stmt *ast.EqualSetStmt) *glob.StmtRet {
+func (exec *Executor) equalSetStmtProveProcess(stmt *ast.EqualSetStmt) ast.StmtRet{
 	// 开局部环境
 	exec.NewEnv()
 	defer exec.deleteEnv()
@@ -918,7 +918,7 @@ func (exec *Executor) equalSetStmtProveProcess(stmt *ast.EqualSetStmt) *glob.Stm
 	return exec.NewTrueStmtRet(stmt)
 }
 
-func (exec *Executor) witnessNonemptyStmt(stmt *ast.WitnessNonemptyStmt) *glob.StmtRet {
+func (exec *Executor) witnessNonemptyStmt(stmt *ast.WitnessNonemptyStmt) ast.StmtRet{
 	// 1. prove 过程（在局部环境中）
 	ret := exec.witnessNonemptyStmtProveProcess(stmt)
 	if ret.IsNotTrue() {
@@ -935,7 +935,7 @@ func (exec *Executor) witnessNonemptyStmt(stmt *ast.WitnessNonemptyStmt) *glob.S
 	return exec.NewTrueStmtRet(stmt).AddNewFacts(ret2.Infer)
 }
 
-func (exec *Executor) witnessNonemptyStmtProveProcess(stmt *ast.WitnessNonemptyStmt) *glob.StmtRet {
+func (exec *Executor) witnessNonemptyStmtProveProcess(stmt *ast.WitnessNonemptyStmt) ast.StmtRet{
 	// 开局部环境
 	exec.NewEnv()
 	defer exec.deleteEnv()
@@ -964,7 +964,7 @@ func (exec *Executor) witnessNonemptyStmtProveProcess(stmt *ast.WitnessNonemptyS
 	return exec.NewTrueStmtRet(stmt)
 }
 
-func (exec *Executor) setIsFnStmt(stmt *ast.SetIsFnStmt) *glob.StmtRet {
+func (exec *Executor) setIsFnStmt(stmt *ast.SetIsFnStmt) ast.StmtRet{
 	// fnSetObj 是 fnSetObj
 	if !ast.IsFnSet(stmt.FnSetObj) {
 		return glob.ErrRet(fmt.Sprintf("%s is not a fn set object", stmt.FnSetObj))
@@ -983,7 +983,7 @@ func (exec *Executor) setIsFnStmt(stmt *ast.SetIsFnStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt)
 }
 
-func (exec *Executor) setIsFnStmt_ver(stmt *ast.SetIsFnStmt) *glob.StmtRet {
+func (exec *Executor) setIsFnStmt_ver(stmt *ast.SetIsFnStmt) ast.StmtRet{
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -1069,7 +1069,7 @@ func (exec *Executor) setIsFnStmt_ver(stmt *ast.SetIsFnStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt)
 }
 
-func (exec *Executor) setIsFnStmt_NewFact(stmt *ast.SetIsFnStmt) *glob.StmtRet {
+func (exec *Executor) setIsFnStmt_NewFact(stmt *ast.SetIsFnStmt) ast.StmtRet{
 	// x $in fn(A, B, C) D
 	inFact := ast.NewInFactWithObj(stmt.Obj, stmt.FnSetObj)
 	ret := exec.Env.NewFactWithCheckingNameDefined(inFact)

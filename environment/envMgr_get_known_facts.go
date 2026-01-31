@@ -77,7 +77,7 @@ import (
 // 	return sameEnumPkgPropFacts, true
 // }
 
-// func (s SpecFactMem) newFact(stmt ast.PureSpecificFactStmt) *glob.StmtRet {
+// func (s SpecFactMem) newFact(stmt ast.PureSpecificFactStmt) ast.StmtRet{
 // 	// 要考虑pkgName和propName是否存在
 // 	sameEnumFacts, ret := s.getSameEnumFacts(stmt)
 // 	if ret.IsErr() {
@@ -124,7 +124,7 @@ import (
 // 	return sameEnumPkgPropFacts, true
 // }
 
-// func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt) *glob.StmtRet {
+// func (s SpecFactInLogicExprMem) newFact(logicExpr *ast.OrStmt) ast.StmtRet{
 // 	for i, fact := range logicExpr.Facts {
 // 		sameEnumFacts, ret := s.getSameEnumFacts(fact)
 // 		if ret.IsErr() {
@@ -173,7 +173,7 @@ func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt ast.SpecificFactStmt)
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInUniFactMem) newFact(stmtAsSpecFactIndex int, uniFact *ast.UniFactStmt) *glob.StmtRet {
+func (s SpecFactInUniFactMem) newFact(stmtAsSpecFactIndex int, uniFact *ast.UniFactStmt) ast.StmtRet{
 	stmtAsSpecFact := uniFact.ThenFacts[stmtAsSpecFactIndex].(ast.SpecificFactStmt)
 
 	sameEnumFacts, ret := s.getSameEnumFacts(stmtAsSpecFact)
@@ -222,7 +222,7 @@ func (s SpecFactInUniFactMem) newFact(stmtAsSpecFactIndex int, uniFact *ast.UniF
 // 	return sameEnumPkgPropFacts, true
 // }
 
-// func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, logicExpr *ast.OrStmt) *glob.StmtRet {
+// func (s SpecFact_InLogicExpr_InUniFactMem) NewFact(uniStmt *ast.UniFactStmt, logicExpr *ast.OrStmt) ast.StmtRet{
 // 	for i, fact := range logicExpr.Facts {
 // 		sameEnumFacts, ret := s.getSameEnumFacts(fact)
 // 		if ret.IsErr() {
@@ -271,7 +271,7 @@ func (s SpecFactInImplyTemplateMem) GetSameEnumPkgPropFacts(stmt ast.SpecificFac
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInImplyTemplateMem) newFact(known ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) *glob.StmtRet {
+func (s SpecFactInImplyTemplateMem) newFact(known ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) ast.StmtRet{
 	stmtAsSpecFact, ok := known.(ast.SpecificFactStmt)
 	if !ok {
 		knownAsOr, ok := known.(*ast.OrStmt)

@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) *glob.StmtRet {
+func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ast.StmtRet{
 	// 如果结论是uniFact，那么dom和then全部不能是uniFact；然后不允许是uniFactIff
 	_, ok := stmt.Fact.(ast.SpecificFactStmt)
 	if !ok {
@@ -50,7 +50,7 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) *glob
 	return exec.NewTrueStmtRet(stmt).AddNewFact(finalUniFact.String())
 }
 
-func (exec *Executor) proveByInductionStmtProveProcess(stmt *ast.ProveByInductionStmt) *glob.StmtRet {
+func (exec *Executor) proveByInductionStmtProveProcess(stmt *ast.ProveByInductionStmt) ast.StmtRet{
 	// 步骤1：开一个局部环境
 	exec.NewEnv()
 	defer exec.deleteEnv()

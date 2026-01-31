@@ -15,7 +15,6 @@
 package litex_comparator
 
 import (
-	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 )
@@ -99,7 +98,7 @@ func CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right a
 		return ast.NewEmptyVerRetErr()
 	}
 	if ok {
-		return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{"they are literally the same"})
+		return ast.NewTrueVerRet(ast.EqualFact(left, right), nil, "they are literally the same")
 	}
 
 	areNumLit, areEqual, err := NumLitEqual_ByEval(left, right)
@@ -107,7 +106,7 @@ func CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right a
 		return ast.NewEmptyVerRetErr()
 	}
 	if areNumLit && areEqual {
-		return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{"calculation"})
+		return ast.NewTrueVerRet(ast.EqualFact(left, right), nil, "calculation")
 	}
 
 	leftStr := left.String()
@@ -115,7 +114,7 @@ func CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right a
 
 	cmp := cmpArith_ByBIR(leftStr, rightStr)
 	if cmp {
-		return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{"polynomial simplification"})
+		return ast.NewTrueVerRet(ast.EqualFact(left, right), nil, "polynomial simplification")
 	}
 
 	return ast.NewEmptyUnknownVerRet()
@@ -148,18 +147,4 @@ func NumLitEqual_ByEval(left, right ast.Obj) (bool, bool, error) {
 
 	areEqual, err := glob.NumLitExprEqual_ByEval(leftAsNumLitExpr, rightAsNumLitExpr)
 	return true, areEqual, err
-}
-
-func SliceObjAllEqualToGivenObjBuiltinRule(valuesToBeComped *[]ast.Obj, objToComp ast.Obj) (bool, error) {
-	for _, equalObj := range *valuesToBeComped {
-		ret := CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(equalObj, objToComp)
-		if ret.IsErr() {
-			return false, fmt.Errorf(ret.String())
-		}
-		if ret.IsTrue() {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }
