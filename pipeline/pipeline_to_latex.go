@@ -16,13 +16,14 @@ package litex_pipeline
 
 import (
 	"errors"
+	ast "golitex/ast"
 	glob "golitex/glob"
 	litex_to_latex_compiler "golitex/to_latex"
 	"os"
 	"strings"
 )
 
-func CompileFileToLatex(path string) (*glob.StmtRet, error) {
+func CompileFileToLatex(path string) (ast.StmtRet, error) {
 	// 需要先确定这个path是以.lit结尾的
 	if !strings.HasSuffix(path, glob.LitexFileSuffix) {
 		return glob.ErrRet("the path is not a .lit file"), errors.New("the path is not a .lit file")
@@ -38,7 +39,7 @@ func CompileFileToLatex(path string) (*glob.StmtRet, error) {
 	return CompileCodeToLatex(string(content))
 }
 
-func CompileCodeToLatex(code string) (*glob.StmtRet, error) {
+func CompileCodeToLatex(code string) (ast.StmtRet, error) {
 	latexStr, err := litex_to_latex_compiler.CompileStmtToLatexString(code)
 	if err != nil {
 		return glob.ErrRet(err.Error()), err

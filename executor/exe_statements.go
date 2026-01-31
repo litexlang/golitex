@@ -237,7 +237,7 @@ func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) ast.StmtRet{
 
 // TODO: 我认为打印一下 claim 里面的各个语句的输出还是有道理的
 func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) ast.StmtRet{
-	innerExecRets := []*glob.StmtRet{}
+	innerExecRets := []ast.StmtRet{}
 
 	for _, curStmt := range proof {
 		execState := exec.Stmt(curStmt)
@@ -251,7 +251,7 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) ast.StmtRet{
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
 func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) ast.StmtRet{
-	innerStmtRets := []*glob.StmtRet{}
+	innerStmtRets := []ast.StmtRet{}
 	defineMsgs := []string{}
 	newFactMsgs := []string{}
 
@@ -368,7 +368,7 @@ func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) ast.StmtRe
 }
 
 func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ast.StmtRet{
-	innerStmtRets := []*glob.StmtRet{}
+	innerStmtRets := []ast.StmtRet{}
 	verifyProcessMsgs := []VerRet{}
 	newFactMsgs := []string{}
 
@@ -462,7 +462,7 @@ func (exec *Executor) Verify(fact ast.FactStmt) ast.StmtRet{
 // }
 
 func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) ast.StmtRet{
-	innerStmtRets := []*glob.StmtRet{}
+	innerStmtRets := []ast.StmtRet{}
 	verifyProcessMsgs := []VerRet{}
 	newFactMsgs := []string{}
 
@@ -566,7 +566,7 @@ func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ast.StmtRet{
 	return exec.AddStmtToStmtRet(trueEvalRet, stmt)
 }
 
-func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, *glob.StmtRet) {
+func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, ast.StmtRet) {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -632,7 +632,7 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) ast.StmtRet{
 	// Calculate Cartesian product of all ranges
 	cartesianProductOfObjs := glob.CartesianProduct(ranges)
 
-	innerStmtRets := []*glob.StmtRet{}
+	innerStmtRets := []ast.StmtRet{}
 	newFactMsgs := []string{}
 
 	// Iterate through all combinations

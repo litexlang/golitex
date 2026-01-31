@@ -39,7 +39,7 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.WitnessStmt) ast.StmtRet{
 	defer exec.deleteEnv()
 
 	// prove proofs
-	bodyRets := []*glob.StmtRet{}
+	bodyRets := []ast.StmtRet{}
 	for _, proof := range stmt.Proofs {
 		execState := exec.Stmt(proof)
 		if execState.IsNotTrue() {

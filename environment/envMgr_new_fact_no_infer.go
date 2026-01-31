@@ -97,7 +97,7 @@ func (envMgr *EnvMgr) newEqualsFactNoInfer(stmt *ast.EqualsFactStmt) ast.StmtRet
 
 func (envMgr *EnvMgr) newUniFactNoInfer(stmt *ast.UniFactStmt) ast.StmtRet{
 	for index, thenStmt := range stmt.ThenFacts {
-		var ret *glob.StmtRet
+		var ret ast.StmtRet
 		switch thenStmt.(type) {
 		case ast.SpecificFactStmt:
 			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, index)

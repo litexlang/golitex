@@ -21,7 +21,7 @@ import (
 )
 
 func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByContradictionStmt) ast.StmtRet{
-	innerStmtRets := []*glob.StmtRet{}
+	innerStmtRets := []ast.StmtRet{}
 
 	// know reverse of
 	facts := stmt.ToCheckFact.(ast.Spec_OrFact).ReverseIsTrue()
@@ -115,7 +115,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 // 		}
 // 	}
 
-// 	innerStmtRets := []*glob.StmtRet{}
+// 	innerStmtRets := []ast.StmtRet{}
 // 	for i := 0; i < len(stmt.Proofs)-1; i++ {
 // 		curStmt := stmt.Proofs[i]
 // 		execState := exec.Stmt(curStmt)
@@ -249,7 +249,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ast.StmtRet{
 		}
 		return isSuccess
 	default:
-		innerStmtRets := []*glob.StmtRet{}
+		innerStmtRets := []ast.StmtRet{}
 		execState := exec.execStmtsAtCurEnv(stmt.Proofs)
 		if execState.IsNotTrue() {
 			return execState
@@ -273,7 +273,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ast.StmtRe
 		return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support uni fact"))
 	}
 
-	innerStmtRets := []*glob.StmtRet{}
+	innerStmtRets := []ast.StmtRet{}
 
 	// declare parameters in asUnivFact in the env
 	objDefStmt := ast.NewDefLetStmt(asUnivFact.Params, asUnivFact.ParamSets, []ast.FactStmt{}, stmt.Line)
@@ -314,7 +314,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ast.StmtRe
 }
 
 func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) ast.StmtRet{
-	innerStmtRets := []*glob.StmtRet{}
+	innerStmtRets := []ast.StmtRet{}
 
 	thenToIff := stmt.UniFactWithIffStmt.NewUniFactWithThenToIff()
 	iffToThen := stmt.UniFactWithIffStmt.NewUniFactWithIffToThen()
