@@ -22,7 +22,8 @@ func (r *TrueVerRet) IsErr() bool     { return false }
 func (r *TrueVerRet) IsNotTrue() bool { return false }
 
 type UnknownVerRet struct {
-	ToCheck FactStmt
+	ToCheck   FactStmt
+	ExtraInfo []string
 }
 
 func (r *UnknownVerRet) verRet()         {}
@@ -32,7 +33,8 @@ func (r *UnknownVerRet) IsErr() bool     { return false }
 func (r *UnknownVerRet) IsNotTrue() bool { return true }
 
 type ErrVerRet struct {
-	ToCheck FactStmt
+	ToCheck   FactStmt
+	ExtraInfo []string
 }
 
 func (r *ErrVerRet) verRet()         {}
@@ -69,4 +71,17 @@ func (r *UnknownVerRet) ToStmtRet() StmtRet {
 }
 func (r *ErrVerRet) ToStmtRet() StmtRet {
 	return NewErrStmtEmptyRet(r.ToCheck)
+}
+
+func (r *UnknownVerRet) AddExtraInfo(extraInfo string) *UnknownVerRet {
+	r.ExtraInfo = append(r.ExtraInfo, extraInfo)
+	return r
+}
+func (r *ErrVerRet) AddExtraInfo(extraInfo string) *ErrVerRet {
+	r.ExtraInfo = append(r.ExtraInfo, extraInfo)
+	return r
+}
+func (r *ErrVerRet) AddErr(err error) *ErrVerRet {
+	r.ExtraInfo = append(r.ExtraInfo, err.Error())
+	return r
 }
