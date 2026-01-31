@@ -20,7 +20,7 @@ import (
 )
 
 // BuiltinPropExceptTrueEqual handles postprocessing for builtin properties except equality
-func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact ast.SpecificFactStmt) ast.StmtRet {
+func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact ast.SpecificFactStmt) ast.InferRet {
 	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordIn) {
 		return ie.trueInFact(fact)
 	}
