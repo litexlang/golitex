@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) execCases(stmt *ast.ProveCaseByCaseStmt) *glob.StmtRet {
+func (exec *Executor) execCases(stmt *ast.ProveCaseByCaseStmt) ast.StmtRet{
 	verifyProcessRet := exec.execCases_Verify(stmt)
 	if verifyProcessRet.IsNotTrue() {
 		return verifyProcessRet
@@ -33,7 +33,7 @@ func (exec *Executor) execCases(stmt *ast.ProveCaseByCaseStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessRet.VerifyProcess).AddNewFacts(newFactRet.NewFact)
 }
 
-func (exec *Executor) execCases_NewFact(stmt *ast.ProveCaseByCaseStmt) *glob.StmtRet {
+func (exec *Executor) execCases_NewFact(stmt *ast.ProveCaseByCaseStmt) ast.StmtRet{
 	newMsg := []string{}
 	for _, thenFact := range stmt.ThenFacts {
 		ret := exec.Env.NewFactWithCheckingNameDefined(thenFact)
@@ -46,7 +46,7 @@ func (exec *Executor) execCases_NewFact(stmt *ast.ProveCaseByCaseStmt) *glob.Stm
 	return glob.NewEmptyStmtTrue().AddNewFacts(newMsg)
 }
 
-func (exec *Executor) execCases_Verify(stmt *ast.ProveCaseByCaseStmt) *glob.StmtRet {
+func (exec *Executor) execCases_Verify(stmt *ast.ProveCaseByCaseStmt) ast.StmtRet{
 	// check cases cover all situations
 	ret := exec.execCases_Verify_all_cases_cover_all_situations(stmt)
 	if ret.IsNotTrue() {
@@ -64,7 +64,7 @@ func (exec *Executor) execCases_Verify(stmt *ast.ProveCaseByCaseStmt) *glob.Stmt
 	return glob.NewEmptyStmtTrue()
 }
 
-func (exec *Executor) execCases_Verify_all_cases_cover_all_situations(stmt *ast.ProveCaseByCaseStmt) *glob.StmtRet {
+func (exec *Executor) execCases_Verify_all_cases_cover_all_situations(stmt *ast.ProveCaseByCaseStmt) ast.StmtRet{
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -80,7 +80,7 @@ func (exec *Executor) execCases_Verify_all_cases_cover_all_situations(stmt *ast.
 	return ret
 }
 
-func (exec *Executor) execCases_Verify_case_by_case(stmt *ast.ProveCaseByCaseStmt, index int) *glob.StmtRet {
+func (exec *Executor) execCases_Verify_case_by_case(stmt *ast.ProveCaseByCaseStmt, index int) ast.StmtRet{
 	exec.NewEnv()
 	defer exec.deleteEnv()
 

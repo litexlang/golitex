@@ -25,7 +25,7 @@ import (
 	"path/filepath"
 )
 
-func RunStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) *glob.StmtRet {
+func RunStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) ast.StmtRet{
 	switch asStmt := stmt.(type) {
 	case *ast.RunFileStmt:
 		return RunFileStmtInExecutor(curExec, asStmt)
@@ -36,7 +36,7 @@ func RunStmtInExecutor(curExec *exe.Executor, stmt ast.Stmt) *glob.StmtRet {
 	}
 }
 
-func RunFileStmtInExecutor(curExec *exe.Executor, importFileStmt *ast.RunFileStmt) *glob.StmtRet {
+func RunFileStmtInExecutor(curExec *exe.Executor, importFileStmt *ast.RunFileStmt) ast.StmtRet{
 	// 把 entrance repo path 和 importFileStmt.Path结合起来
 	path := filepath.Join(curExec.Env.EnvPkgMgr.PkgMgr.CurRepoAbsPath, importFileStmt.Path)
 
@@ -75,7 +75,7 @@ func RunFileStmtInExecutor(curExec *exe.Executor, importFileStmt *ast.RunFileStm
 	return glob.NewStmtWithInnerStmtsRet(msgs, glob.StmtRetTypeTrue)
 }
 
-func RunImportStmtInExecutor(curExec *exe.Executor, importStmt *ast.ImportDirStmt) *glob.StmtRet {
+func RunImportStmtInExecutor(curExec *exe.Executor, importStmt *ast.ImportDirStmt) ast.StmtRet{
 	newPkgImported, newEnvMgr, ret := RunImportStmtToGetEnvMgr(curExec.Env.EnvPkgMgr.PkgMgr, importStmt)
 	if ret.IsNotTrue() {
 		return ret

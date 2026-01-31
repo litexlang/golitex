@@ -21,7 +21,7 @@ import (
 	"slices"
 )
 
-func (envMgr *EnvMgr) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) ast.StmtRet{
 	// prop名不能和parameter名重叠
 	if slices.Contains(stmt.DefHeader.Params, string(stmt.DefHeader.Name)) {
 		return glob.ErrRet(fmt.Sprintf("prop name %s cannot be the same as parameter name %s", stmt.DefHeader.Name, stmt.DefHeader.Name))
@@ -57,7 +57,7 @@ func (envMgr *EnvMgr) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) *glo
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.DefFnSetStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.DefFnSetStmt) ast.StmtRet{
 	// fn名不能和parameter名重叠
 	if slices.Contains(stmt.TemplateDefHeader.Params, string(name)) {
 		return glob.ErrRet(fmt.Sprintf("fn name %s cannot be the same as parameter name %s", name, name))
@@ -112,7 +112,7 @@ func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *a
 	return glob.NewEmptyStmtTrue()
 }
 
-// func (envMgr *EnvMgr) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) *glob.StmtRet {
+// func (envMgr *EnvMgr) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) ast.StmtRet{
 // 	// prop名不能和parameter名重叠
 // 	if slices.Contains(append(stmt.ExistParams, stmt.DefBody.DefHeader.Params...), string(stmt.DefBody.DefHeader.Name)) {
 // 		return glob.ErrRet(fmt.Sprintf("prop name %s cannot be the same as parameter name %s", stmt.DefBody.DefHeader.Name, stmt.DefBody.DefHeader.Name))
@@ -160,7 +160,7 @@ func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *a
 // 	return glob.NewEmptyStmtTrue()
 // }
 
-func (envMgr *EnvMgr) CheckAtomObjNameIsValidAndAvailableThenDefineIt(name string) *glob.StmtRet {
+func (envMgr *EnvMgr) CheckAtomObjNameIsValidAndAvailableThenDefineIt(name string) ast.StmtRet{
 	ret := envMgr.IsValidAndAvailableName(name)
 	if ret.IsErr() {
 		return glob.ErrRet(fmt.Sprintf("invalid name: %s", name))
@@ -178,7 +178,7 @@ func (envMgr *EnvMgr) CheckAtomObjNameIsValidAndAvailableThenDefineIt(name strin
 // DefLetStmt defines new objects in the environment
 // and checks that all atoms inside the facts are declared.
 // If the obj is a function, it will be inserted into the function definition memory.
-func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) ast.StmtRet{
 	implyMsgs := []string{}
 	defineFacts := []string{}
 	// If this obj is a function, it will be inserted into the function definition memory

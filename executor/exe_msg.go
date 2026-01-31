@@ -32,13 +32,13 @@ func ErrorExecStmtStr(stmt ast.Stmt) string {
 	return fmt.Sprintf("Error: line %d\n", stmt.GetLine())
 }
 
-func (exec *Executor) AddStmtToStmtRet(ret *glob.StmtRet, stmt ast.Stmt) *glob.StmtRet {
+func (exec *Executor) AddStmtToStmtRet(ret *glob.StmtRet, stmt ast.Stmt) ast.StmtRet{
 	ret.SetLine(stmt.GetLine())
 	ret.AddStmt(stmt.String())
 	return ret
 }
 
-func (exec *Executor) NewTrueStmtRet(stmt ast.Stmt) *glob.StmtRet {
+func (exec *Executor) NewTrueStmtRet(stmt ast.Stmt) ast.StmtRet{
 	ret := glob.NewEmptyStmtTrue()
 	exec.AddStmtToStmtRet(ret, stmt)
 	return ret
