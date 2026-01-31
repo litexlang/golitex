@@ -69,36 +69,36 @@ func (envMgr *EnvMgr) GenerateNUnusedRandomNames(n int) []string {
 	return result
 }
 
-func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.AnonymousFn, *glob.ShortRet) {
+func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.AnonymousFn, ast.ShortRet) {
 	if objFnTypeToFnTStruct, ok := envMgr.AnonymousFnToInstFnTemplate(fnTName); ok {
-		return objFnTypeToFnTStruct, glob.NewEmptyShortTrueRet()
+		return objFnTypeToFnTStruct, ast.NewTrueShortRet()
 	} else {
 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
 		if !ok {
-			return nil, glob.NewShortRetTrue(fmt.Sprintf("fnTNameHead is not an atom"))
+			return nil, ast.NewTrueShortRetWithMsg(fmt.Sprintf("fnTNameHead is not an atom"))
 		}
 
 		return envMgr.getFnTDef_InstFnTStructOfIt(fnTNameHeadAsAtom, fnTName.Params)
 	}
 }
 
-func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.AnonymousFn, *glob.ShortRet) {
+func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.AnonymousFn, ast.ShortRet) {
 	defOfT := envMgr.GetFnTemplateDef(fnTDefName)
 	if defOfT == nil {
-		return nil, glob.NewShortRetErr(fmt.Sprintf("fnTNameHead %s is not a fn template", fnTDefName))
+		return nil, ast.NewErrShortRetWithMsg(fmt.Sprintf("fnTNameHead %s is not a fn template", fnTDefName))
 	}
 
 	uniMap, err := ast.MakeUniMap(defOfT.TemplateDefHeader.Params, templateParams)
 	if err != nil {
-		return nil, glob.NewShortRetErr(err.Error())
+		return nil, ast.NewErrShortRetWithMsg(err.Error())
 	}
 
 	fnTStruct, err := defOfT.AnonymousFn.Instantiate(uniMap)
 	if err != nil {
-		return nil, glob.NewShortRetErr(err.Error())
+		return nil, ast.NewErrShortRetWithMsg(err.Error())
 	}
 
-	return fnTStruct, glob.NewEmptyShortTrueRet()
+	return fnTStruct, ast.NewTrueShortRet()
 }
 
 func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecificFactStmt) ast.StmtRet {
@@ -298,13 +298,13 @@ func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFa
 }
 
 // storeSpecFactInMemAndCollect collects the fact string for derived facts tracking
-func (ie *InferEngine) storeSpecFactInMemAndCollect(fact ast.SpecificFactStmt, derivedFacts *[]string) *glob.ShortRet {
+func (ie *InferEngine) storeSpecFactInMemAndCollect(fact ast.SpecificFactStmt, derivedFacts *[]string) ast.ShortRet {
 	ret := ie.EnvMgr.storeSpecFactInMem(fact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrShortRetWithMsg(fmt.Sprintf("failed to store spec fact %s", fact.String()))
 	}
 	*derivedFacts = append(*derivedFacts, fact.String())
-	return glob.NewEmptyShortTrueRet()
+	return ast.NewTrueShortRet()
 }
 
 func (envMgr *EnvMgr) AnonymousFnToInstFnTemplate(objFnTypeT *ast.FnObj) (*ast.AnonymousFn, bool) {

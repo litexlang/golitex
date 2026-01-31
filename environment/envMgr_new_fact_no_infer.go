@@ -131,7 +131,7 @@ func (envMgr *EnvMgr) newUniFactWithIffNoInfer(stmt *ast.UniFactWithIffStmt) ast
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) *glob.ShortRet {
+func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) ast.ShortRet {
 	for _, specFact := range fact.Facts {
 		propName := specFact.GetPropName()
 		knowns, ok := envMgr.CurEnv().OrFactsMem[propName.String()]

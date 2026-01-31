@@ -72,7 +72,7 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 // 	return exec.Env.GetSecondUpMostEnv()
 // }
 
-func checkParamsInFnDefNotDefinedAndParamSetsDefined(exec *Executor, params []string, paramSets []ast.Obj) *glob.ShortRet {
+func checkParamsInFnDefNotDefinedAndParamSetsDefined(exec *Executor, params []string, paramSets []ast.Obj) ast.ShortRet {
 	for _, paramSet := range paramSets {
 		ret := exec.Env.LookupNamesInObj(paramSet, map[string]struct{}{})
 		if ret.IsNotTrue() {

@@ -71,9 +71,8 @@ func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *a
 	}
 
 	ret := envMgr.LookupNamesInObj(stmt.AnonymousFn.RetSet, extraAtomNames)
-	if ret.IsErr() {
-		ret.AddExtraInfo(fmt.Sprintf("in return set of fn template %s", name))
-		return ret
+	if !ret {
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("in return set of fn template %s", name))
 	}
 
 	extraAtomNames[string(name)] = struct{}{}
