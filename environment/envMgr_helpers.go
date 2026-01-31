@@ -28,7 +28,7 @@ func (envMgr *EnvMgr) GenerateUnusedRandomName() string {
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
 		ret := envMgr.IsNameUnavailable((randomStr), map[string]struct{}{})
-		if ret.IsNotTrue() {
+		if !ret {
 			return randomStr
 		}
 		i++
@@ -42,7 +42,7 @@ func (envMgr *EnvMgr) GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(m map[str
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
 		ret := envMgr.IsNameUnavailable(randomStr, map[string]struct{}{})
-		if ret.IsNotTrue() {
+		if !ret {
 			_, ok := m[randomStr]
 			if !ok {
 				return randomStr
@@ -101,7 +101,7 @@ func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateP
 	return fnTStruct, glob.NewEmptyShortTrueRet()
 }
 
-func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecificFactStmt) ast.StmtRet{
+func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecificFactStmt) ast.StmtRet {
 	switch asFact := stmt.(type) {
 	case *ast.PureSpecificFactStmt:
 		if asFact.IsTrue {
@@ -111,14 +111,14 @@ func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecificFactStmt) ast.StmtRet{
 			}
 
 			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())], asFact)
-			return glob.NewEmptyStmtTrue()
+			return ast.NewTrueStmtEmptyRet(stmt)
 		} else {
 			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())]
 			if !ok {
 				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())] = []*ast.PureSpecificFactStmt{}
 			}
 			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())], asFact)
-			return glob.NewEmptyStmtTrue()
+			return ast.NewTrueStmtEmptyRet(stmt)
 		}
 	case *ast.ExistSpecificFactStmt:
 		if asFact.IsTrue {
@@ -127,29 +127,29 @@ func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecificFactStmt) ast.StmtRet{
 				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())] = []*ast.ExistSpecificFactStmt{}
 			}
 			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())], asFact)
-			return glob.NewEmptyStmtTrue()
+			return ast.NewTrueStmtEmptyRet(stmt)
 		} else {
 			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())]
 			if !ok {
 				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())] = []*ast.ExistSpecificFactStmt{}
 			}
 			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())], asFact)
-			return glob.NewEmptyStmtTrue()
+			return ast.NewTrueStmtEmptyRet(stmt)
 		}
 	}
 
-	return glob.ErrRet(fmt.Sprintf("invalid spec fact type: %T", stmt))
+	return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("invalid spec fact type: %T", stmt))
 }
 
-func (envMgr *EnvMgr) StoreSpecFactInImplyTemplateMem(specFact ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) ast.StmtRet{
+func (envMgr *EnvMgr) StoreSpecFactInImplyTemplateMem(specFact ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) ast.StmtRet {
 	return envMgr.CurEnv().KnownFactsStruct.SpecFactInImplyTemplateMem.newFact(specFact, implyTemplate)
 }
 
-func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.PureSpecificFactStmt) ast.StmtRet{
+func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.PureSpecificFactStmt) ast.StmtRet {
 	mem := envMgr.CurEnv().EqualMem
 
 	if len(fact.Params) != 2 {
-		return glob.ErrRet(fmt.Sprintf("commutative transitive fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
+		return ast.NewErrStmtEmptyRet(fact).AddExtraInfo(fmt.Sprintf("commutative transitive fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
 
 	leftAsStr := fact.Params[0].String()
@@ -160,37 +160,37 @@ func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.PureSpecificFact
 
 	if leftGot && rightGot {
 		if storedEqualLeftFcs == storedEqualRightFcs {
-			return glob.NewEmptyStmtTrue()
+			return ast.NewTrueStmtEmptyRet(fact)
 		} else {
 			newEqualFcs := []ast.Obj{}
 			newEqualFcs = append(newEqualFcs, *storedEqualLeftFcs...)
 			newEqualFcs = append(newEqualFcs, *storedEqualRightFcs...)
 			*storedEqualLeftFcs = newEqualFcs
 			*storedEqualRightFcs = newEqualFcs
-			return glob.NewEmptyStmtTrue()
+			return ast.NewTrueStmtEmptyRet(fact)
 		}
 	}
 
 	if leftGot && !rightGot {
 		*storedEqualLeftFcs = append(*storedEqualLeftFcs, fact.Params[1])
 		mem[rightAsStr] = storedEqualLeftFcs
-		return glob.NewEmptyStmtTrue()
+		return ast.NewTrueStmtEmptyRet(fact)
 	}
 
 	if !leftGot && rightGot {
 		*storedEqualRightFcs = append(*storedEqualRightFcs, fact.Params[0])
 		mem[leftAsStr] = storedEqualRightFcs
-		return glob.NewEmptyStmtTrue()
+		return ast.NewTrueStmtEmptyRet(fact)
 	}
 
 	if !leftGot && !rightGot {
 		newEqualFcs := []ast.Obj{fact.Params[0], fact.Params[1]}
 		mem[leftAsStr] = &newEqualFcs
 		mem[rightAsStr] = &newEqualFcs
-		return glob.NewEmptyStmtTrue()
+		return ast.NewTrueStmtEmptyRet(fact)
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueStmtEmptyRet(fact)
 }
 
 func (envMgr *EnvMgr) StoreTrueEqualValues(key, value ast.Obj) {
@@ -201,7 +201,7 @@ func (envMgr *EnvMgr) StoreTrueEqualValues(key, value ast.Obj) {
 	envMgr.CurEnv().SymbolSimplifiedValueMem[key.String()] = value
 }
 
-func (envMgr *EnvMgr) storeSymbolSimplifiedValue(left, right ast.Obj) ast.StmtRet{
+func (envMgr *EnvMgr) storeSymbolSimplifiedValue(left, right ast.Obj) ast.StmtRet {
 	_, newLeft := envMgr.GetStoredSymbolValue(left)
 	if cmp.IsNumExprLitObj(newLeft) {
 		simplifiedNewLeft := cmp.IsNumExprObjThenSimplify(newLeft)
@@ -214,7 +214,7 @@ func (envMgr *EnvMgr) storeSymbolSimplifiedValue(left, right ast.Obj) ast.StmtRe
 		envMgr.StoreTrueEqualValues(left, simplifiedNewRight)
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueStmtEmptyRet(ast.EqualFact(left, right))
 }
 
 func (envMgr *EnvMgr) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
@@ -329,7 +329,7 @@ func (envMgr *EnvMgr) GetUniFactFactFreeParamsNotConflictWithDefinedParams(fact 
 	updated := false
 
 	for _, freeParam := range fact.Params {
-		if envMgr.IsNameUnavailable(freeParam, moreUnAvailableParams).IsNotTrue() {
+		if envMgr.IsNameUnavailable(freeParam, moreUnAvailableParams) {
 			noConflictedParam := envMgr.GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(extraNamesThatCanNotBeUsed)
 			newFreeParams = append(newFreeParams, noConflictedParam)
 			moreUnAvailableParams[noConflictedParam] = struct{}{}

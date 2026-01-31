@@ -466,7 +466,7 @@ func (exec *Executor) verifyCasesOrAndNoOverlap(caseFacts ast.SpecFactPtrSlice, 
 
 // verifyCasesOr is a helper function to verify that cases cover all possibilities
 // Deprecated: Use verifyCasesOrAndNoOverlap instead
-// func (exec *Executor) verifyCasesOr(caseFacts ast.SpecFactPtrSlice, params ast.StrSlice, paramSets ast.ObjSlice, proveOr ast.StmtSlice, line uint) (*glob.StmtRet, error) {
+// func (exec *Executor) verifyCasesOr(caseFacts ast.SpecFactPtrSlice, params ast.StrSlice, paramSets ast.ObjSlice, proveOr ast.StmtSlice, line uint) (ast.StmtRet, error) {
 // 	exec.NewEnv()
 // 	defer func() {
 // 		exec.deleteEnv()
@@ -516,7 +516,7 @@ func (exec *Executor) verifyCasesOrAndNoOverlap(caseFacts ast.SpecFactPtrSlice, 
 
 // verifyCasesNoOverlap is a helper function to verify that cases don't overlap
 // Deprecated: Use verifyCasesOrAndNoOverlap instead
-// func (exec *Executor) verifyCasesNoOverlap(caseFacts ast.SpecFactPtrSlice, params ast.StrSlice, paramSets ast.ObjSlice, proveOr ast.StmtSlice, line uint) (*glob.StmtRet, error) {
+// func (exec *Executor) verifyCasesNoOverlap(caseFacts ast.SpecFactPtrSlice, params ast.StrSlice, paramSets ast.ObjSlice, proveOr ast.StmtSlice, line uint) (ast.StmtRet, error) {
 // 	exec.NewEnv()
 // 	defer func() {
 // 		exec.deleteEnv()

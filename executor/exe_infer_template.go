@@ -42,7 +42,7 @@ func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) ast.S
 		exec.deleteEnv()
 	}()
 
-	innerStmtRets := []*glob.StmtRet{}
+	innerStmtRets := []ast.StmtRet{}
 
 	// Declare parameters in the env
 	objDefStmt := ast.NewDefLetStmt(stmt.Params, stmt.ParamSets, stmt.IfFacts, stmt.Line)

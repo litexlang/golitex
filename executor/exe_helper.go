@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func notOkExec(state *glob.StmtRet, err error) bool {
+func notOkExec(state ast.StmtRet, err error) bool {
 	if err != nil {
 		return true
 	}
@@ -46,7 +46,7 @@ func (exec *Executor) NewCommutativeProp(specFact *ast.PureSpecificFactStmt) {
 	}
 }
 
-func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerState) (*glob.StmtRet, ast.Stmt, error) {
+func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerState) (ast.StmtRet, ast.Stmt, error) {
 	ver := NewVerifier(exec.Env)
 	for _, proof := range proofs {
 		verRet := ver.VerFactStmt(proof, verState)
