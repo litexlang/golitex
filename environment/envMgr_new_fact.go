@@ -100,7 +100,7 @@ func (envMgr *EnvMgr) NewFactWithCheckingNameDefined_UniFact(stmt *ast.UniFactSt
 
 func (envMgr *EnvMgr) newUniFact(stmt *ast.UniFactStmt) ast.StmtRet{
 	for i, thenStmt := range stmt.ThenFacts {
-		var ret *glob.StmtRet
+		var ret ast.StmtRet
 		switch asFact := thenStmt.(type) {
 		case ast.SpecificFactStmt:
 			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, i)

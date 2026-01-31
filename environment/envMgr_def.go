@@ -29,8 +29,8 @@ func (envMgr *EnvMgr) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) ast.
 	}
 
 	ret := envMgr.IsValidAndAvailableName(string(stmt.DefHeader.Name))
-	if ret.IsErr() {
-		return ret
+	if !ret {
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("invalid or unavailable name: %s", stmt.DefHeader.Name))
 	}
 
 	extraAtomNames := map[string]struct{}{}
@@ -164,7 +164,7 @@ func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *a
 
 func (envMgr *EnvMgr) CheckAtomObjNameIsValidAndAvailableThenDefineIt(name string) (bool, string) {
 	ret := envMgr.IsValidAndAvailableName(name)
-	if ret.IsErr() {
+	if !ret {
 		return false, fmt.Sprintf("invalid name: %s", name)
 	}
 

@@ -15,37 +15,36 @@
 package litex_env
 
 import (
-	"fmt"
 	glob "golitex/glob"
 )
 
-func (envMgr *EnvMgr) IsNameUnavailable(name string, extraParams map[string]struct{}) ast.StmtRet{
+func (envMgr *EnvMgr) IsNameUnavailable(name string, extraParams map[string]struct{}) bool {
 	if _, ok := extraParams[name]; ok {
-		return glob.NewEmptyStmtTrue()
+		return true
 	}
 
 	if glob.IsBuiltinName(name) {
-		return glob.NewEmptyStmtTrue()
+		return true
 	}
 
 	if envMgr.IsAtomNameDefinedByUser(name) || envMgr.IsPropNameDefinedByUser(name) || envMgr.IsFnSetNameDefinedByUser(name) || envMgr.IsAlgoNameDefinedByUser(name) || envMgr.IsProveAlgoNameDefinedByUser(name) || envMgr.IsPkgNameDefinedByUser(name) {
 		// ||envMgr.IsExistPropNameDefinedByUser(name){
-		return glob.NewEmptyStmtTrue()
+		return true
 	}
 
-	return glob.ErrRet(fmt.Sprintf("undefined: %s", name))
+	return false
 }
 
-func (envMgr *EnvMgr) IsValidAndAvailableName(name string) ast.StmtRet{
+func (envMgr *EnvMgr) IsValidAndAvailableName(name string) bool {
 	err := glob.IsValidUseDefinedName(name)
 	if err != nil {
-		return glob.ErrRetWithErr(err)
+		return false
 	}
 
 	defined := envMgr.IsNameUnavailable(name, map[string]struct{}{})
-	if defined.IsTrue() {
-		return glob.ErrRetWithErr(duplicateDefError(name))
+	if defined {
+		return false
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return true
 }

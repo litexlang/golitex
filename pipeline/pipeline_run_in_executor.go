@@ -57,7 +57,7 @@ func RunFileStmtInExecutor(curExec *exe.Executor, importFileStmt *ast.RunFileStm
 	}
 
 	p := ast.NewTbParser(curExec.Env.EnvPkgMgr.PkgMgr)
-	msgs := []*glob.StmtRet{}
+	msgs := []ast.StmtRet{}
 	for _, block := range blocks {
 		topStmt, err := p.Stmt(&block)
 		if err != nil {
@@ -65,7 +65,7 @@ func RunFileStmtInExecutor(curExec *exe.Executor, importFileStmt *ast.RunFileStm
 		}
 		ret := RunStmtInExecutor(curExec, topStmt)
 		if ret.IsNotTrue() {
-			return glob.NewStmtWithInnerStmtsRet([]*glob.StmtRet{ret}, ret.RetType)
+			return glob.NewStmtWithInnerStmtsRet([]ast.StmtRet{ret}, ret.RetType)
 		} else {
 			msgs = append(msgs, ret)
 		}
@@ -92,7 +92,7 @@ func RunImportStmtInExecutor(curExec *exe.Executor, importStmt *ast.ImportDirStm
 }
 
 // return: new imported pkg, new envMgr, globRet
-func RunImportStmtToGetEnvMgr(pkgMgr *packageMgr.PkgMgr, importStmt *ast.ImportDirStmt) (bool, *env.EnvMgr, *glob.StmtRet) {
+func RunImportStmtToGetEnvMgr(pkgMgr *packageMgr.PkgMgr, importStmt *ast.ImportDirStmt) (bool, *env.EnvMgr, ast.StmtRet) {
 	var importRepoAbsPath string
 	var err error
 

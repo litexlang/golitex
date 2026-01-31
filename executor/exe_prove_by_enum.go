@@ -20,8 +20,8 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (*glob.StmtRet, error) {
-	innerStmtRets := []*glob.StmtRet{}
+func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ast.StmtRet, error) {
+	innerStmtRets := []ast.StmtRet{}
 	verifyProcessMsgs := []VerRet{}
 
 	enums := [][]ast.Obj{}
@@ -59,8 +59,8 @@ func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (*glob.Stm
 	}
 }
 
-func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveByEnumStmt, cartesianProductAtI []ast.Obj) (*glob.StmtRet, error) {
-	innerStmtRets := []*glob.StmtRet{}
+func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.ProveByEnumStmt, cartesianProductAtI []ast.Obj) (ast.StmtRet, error) {
+	innerStmtRets := []ast.StmtRet{}
 	verifyProcessMsgs := []VerRet{}
 
 	exec.NewEnv()
@@ -132,7 +132,7 @@ func getParamEqualObjSlice(params []string, equalTo []ast.Obj) []ast.FactStmt {
 	return result
 }
 
-func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnumStmt, cartesianProductOfObjs [][]ast.Obj) (*glob.StmtRet, error) {
+func (exec *Executor) verProveOverFiniteSet_NoProveSection(stmt *ast.ProveByEnumStmt, cartesianProductOfObjs [][]ast.Obj) (ast.StmtRet, error) {
 	verifyProcessMsgs := []VerRet{}
 
 	for _, ObjSlice := range cartesianProductOfObjs {
