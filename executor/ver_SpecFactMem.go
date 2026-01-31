@@ -50,7 +50,7 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt ast.SpecificFactStmt, state *Ver
 
 func (ver *Verifier) checkSpecFactUseUniMemAtCurEnv(curEnv *env.EnvMemory, stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	if state.Round == 0 && !state.ReqOk {
-		return glob.NewVerRet(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state)})
+		return ast.NewUnknownVerRet(stmt).AddExtraInfo(fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state))
 	}
 
 	searchedSpecFacts, got := curEnv.KnownFactsStruct.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
@@ -89,7 +89,7 @@ func (ver *Verifier) matchGivenExistFactWithOnesInKnownUniFacts(knownFacts []env
 
 	newGiven, err := given.ReplaceFreeParamsWithNewParams(newFreeExistParamsUnused)
 	if err != nil {
-		return  ast.NewEmptyVerRetErr()
+		return ast.NewEmptyVerRetErr()
 	}
 
 	for i := len(knownFacts) - 1; i >= 0; i-- {
@@ -103,7 +103,7 @@ func (ver *Verifier) matchGivenExistFactWithOnesInKnownUniFacts(knownFacts []env
 
 		newKnownExistInUni, err := knownExistFactInUni.ReplaceFreeParamsWithNewParams(newFreeExistParamsUnused)
 		if err != nil {
-			return  ast.NewEmptyVerRetErr()
+			return ast.NewEmptyVerRetErr()
 		}
 
 		ret := ver.matchExistFactWithOneInKnownUniFactAndCheckMatchedObjsSatisfyUniFactConditions(newKnownUniFact, newKnownExistInUni, newGiven, state)

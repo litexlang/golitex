@@ -20,7 +20,7 @@ import (
 )
 
 // BuiltinPropExceptTrueEqual handles postprocessing for builtin properties except equality
-func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact ast.SpecificFactStmt) ast.ShortRet {
+func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact ast.SpecificFactStmt) ast.StmtRet {
 	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordIn) {
 		return ie.trueInFact(fact)
 	}
@@ -639,21 +639,21 @@ func (ie *InferEngine) subsetOfFactPostProcess(fact ast.SpecificFactStmt) ast.Sh
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) falseEqualFact(fact ast.SpecificFactStmt) ast.ShortRet {
+func (ie *InferEngine) falseEqualFact(fact ast.SpecificFactStmt) ast.StmtRet {
 	derivedFacts := []string{}
 	asFact, ok := fact.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownStmtEmptyRet(fact)
 	}
 
 	// x - y != 0
 	notEqualFact := ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolNotEqual), []ast.Obj{ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{asFact.Params[0], asFact.Params[1]}), ast.Atom("0")}, fact.GetLine())
 	retShort := ie.storeSpecFactInMemAndCollect(notEqualFact, &derivedFacts)
 	if retShort.IsErr() {
-		return retShort
+		return ast.NewErrStmtEmptyRet(fact)
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+	return ast.NewTrueStmtEmptyRet(fact)
 }
 
 // func (ie *InferEngine) isNonEmptyWithItemFactPostProcess(fact *ast.SpecFactStmt) ast.ShortRet {
