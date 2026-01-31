@@ -6,6 +6,7 @@ type StmtRet interface {
 	IsUnknown() bool
 	IsErr() bool
 	IsNotTrue() bool
+	AddExtraInfo(extraInfo string) StmtRet
 }
 
 type TrueStmtRet struct {
@@ -43,8 +44,31 @@ func (r *TrueStmtRet) AddInnerStmtRet(innerStmtRet StmtRet) *TrueStmtRet {
 	r.InnerStmtRetSlice = append(r.InnerStmtRetSlice, innerStmtRet)
 	return r
 }
-func (r *TrueStmtRet) AddExtraInfo(extraInfo string) *TrueStmtRet {
-	r.ExtraInfo = append(r.ExtraInfo, extraInfo)
+func (r *TrueStmtRet) AddInfers(infers []Stmt) *TrueStmtRet {
+	r.Infer = append(r.Infer, infers...)
+	return r
+}
+
+func (r *TrueStmtRet) AddInnerStmtRets(innerStmtRets []StmtRet) *TrueStmtRet {
+	r.InnerStmtRetSlice = append(r.InnerStmtRetSlice, innerStmtRets...)
+	return r
+}
+
+func (r *TrueStmtRet) AddDefines(defines []string) *TrueStmtRet {
+	r.Define = append(r.Define, defines...)
+	return r
+}
+func (r *TrueStmtRet) AddNewFacts(newFacts []Stmt) *TrueStmtRet {
+	r.NewFact = append(r.NewFact, newFacts...)
+	return r
+}
+func (r *TrueStmtRet) AddVerifyProcesses(verifyProcesses []VerRet) *TrueStmtRet {
+	r.VerifyProcess = append(r.VerifyProcess, verifyProcesses...)
+	return r
+}
+
+func (r *TrueStmtRet) AddExtraInfos(extras []string) *TrueStmtRet {
+	r.ExtraInfo = append(r.ExtraInfo, extras...)
 	return r
 }
 
@@ -78,4 +102,17 @@ func NewUnknownStmtEmptyRet(stmt Stmt) *UnknownStmtRet {
 }
 func NewErrStmtEmptyRet(stmt Stmt) *ErrStmtRet {
 	return &ErrStmtRet{Stmt: stmt, ExtraInfo: []string{}}
+}
+
+func (r *UnknownStmtRet) AddExtraInfo(extraInfo string) StmtRet {
+	r.ExtraInfo = append(r.ExtraInfo, extraInfo)
+	return r
+}
+func (r *ErrStmtRet) AddExtraInfo(extraInfo string) StmtRet {
+	r.ExtraInfo = append(r.ExtraInfo, extraInfo)
+	return r
+}
+func (r *TrueStmtRet) AddExtraInfo(extraInfo string) StmtRet {
+	r.ExtraInfo = append(r.ExtraInfo, extraInfo)
+	return r
 }
