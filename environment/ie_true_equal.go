@@ -21,7 +21,7 @@ import (
 	"strconv"
 )
 
-func (ie *InferEngine) newTrueEqual(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) newTrueEqual(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	msgs := []string{}
 
 	shortRet := ie.trueEqualFactByCart(fact)
@@ -101,7 +101,7 @@ func (ie *InferEngine) newTrueEqual(fact *ast.PureSpecificFactStmt) *glob.ShortR
 //   - is_cart(x) fact
 //   - dim(x) = len(cart.Params) fact
 //   - proj(x, i+1) = cart.Params[i] facts for each i
-func (ie *InferEngine) trueEqualFactByCart(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueEqualFactByCart(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	cart, ok := fact.Params[1].(*ast.FnObj)
 	if !ok || !ast.IsAtomObjAndEqualToStr(cart.FnHead, glob.KeywordCart) {
 		return glob.NewEmptyShortUnknownRet()
@@ -143,7 +143,7 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.PureSpecificFactStmt) *glob
 
 // trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex handles postprocessing for obj = tuple
 // It generates obj[index] = tuple[i] facts for each index
-func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(obj ast.Obj, tupleObj ast.Obj) *glob.ShortRet {
+func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(obj ast.Obj, tupleObj ast.Obj) ast.ShortRet {
 	tuple, ok := tupleObj.(*ast.FnObj)
 	if !ok || !ast.IsTupleFnObj(tuple) {
 		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("expected tuple to be a tuple object, got %T", tupleObj)})
@@ -175,7 +175,7 @@ func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIn
 //   - (.., …) = (.., ..): tuple = tuple
 //   - a = (.., ..): obj = tuple
 //   - (.., ..) = a: tuple = obj
-func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) *glob.ShortRet {
+func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) ast.ShortRet {
 	inferMsgs := []string{}
 
 	leftTuple, leftIsTuple := left.(*ast.FnObj)
@@ -210,7 +210,7 @@ func (ie *InferEngine) trueEqualFactByTuple(left ast.Obj, right ast.Obj) *glob.S
 	return glob.NewEmptyShortUnknownRet()
 }
 
-func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj, rightTuple *ast.FnObj) *glob.ShortRet {
+func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj, rightTuple *ast.FnObj) ast.ShortRet {
 	// 如果两个 tuple 的长度不同，返回错误
 	if len(leftTuple.Params) != len(rightTuple.Params) {
 		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("tuple length mismatch: left has %d elements, right has %d elements", len(leftTuple.Params), len(rightTuple.Params))})
@@ -237,7 +237,7 @@ func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj,
 //   - An or fact indicating that forall items in the list set, the equals one of the list set elements
 //   - count(x) = len(listSet) fact
 //   - is_finite_set(x) fact
-func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob.ShortRet {
+func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) ast.ShortRet {
 	inferMsgs := []string{}
 
 	// 尝试获取 list set（可能是直接的，也可能是通过 equal facts 得到的）
@@ -376,7 +376,7 @@ func (ie *InferEngine) trueEqualFactByListSet(left ast.Obj, right ast.Obj) *glob
 // 	return glob.NewEmptyGlobUnknown()
 // }
 
-func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(left ast.Obj, right ast.Obj) *glob.ShortRet {
+func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(left ast.Obj, right ast.Obj) ast.ShortRet {
 	// 检查 left 是否是 x + y 或 x - y 的形式
 	leftFn, leftIsFn := left.(*ast.FnObj)
 	if !leftIsFn || len(leftFn.Params) != 2 {
@@ -510,7 +510,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(lef
 // Note: We only handle the case where the second parameter (denominator) is the same,
 // because if the first parameter (numerator) is the same (b / a = b / c), we cannot
 // conclude a = c since b might be 0.
-func (ie *InferEngine) trueEqualFactByLeftIsADivBRightIsCDivB(left ast.Obj, right ast.Obj) *glob.ShortRet {
+func (ie *InferEngine) trueEqualFactByLeftIsADivBRightIsCDivB(left ast.Obj, right ast.Obj) ast.ShortRet {
 	// 检查 left 是否是 a / b 的形式
 	leftFn, leftIsFn := left.(*ast.FnObj)
 	if !leftIsFn || len(leftFn.Params) != 2 {
@@ -562,7 +562,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsADivBRightIsCDivB(left ast.Obj, righ
 }
 
 // trueEqualFactByLeftIsXDivYRightIsZ handles the case where x / y = z => x = y * z, x = z * y
-func (ie *InferEngine) trueEqualFactByLeftIsXDivYRightIsZ(left ast.Obj, right ast.Obj) *glob.ShortRet {
+func (ie *InferEngine) trueEqualFactByLeftIsXDivYRightIsZ(left ast.Obj, right ast.Obj) ast.ShortRet {
 	// 检查 left 是否是 x / y 的形式
 	leftFn, leftIsFn := left.(*ast.FnObj)
 	if !leftIsFn || len(leftFn.Params) != 2 {
@@ -617,7 +617,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXDivYRightIsZ(left ast.Obj, right as
 }
 
 // trueEqualFactByLeftIsXAddYRightIsZ handles the case where x + y = z => x = z - y and y = z - x
-func (ie *InferEngine) trueEqualFactByLeftIsXAddYRightIsZ(left ast.Obj, right ast.Obj) *glob.ShortRet {
+func (ie *InferEngine) trueEqualFactByLeftIsXAddYRightIsZ(left ast.Obj, right ast.Obj) ast.ShortRet {
 	// 检查 left 是否是 x + y 的形式
 	leftFn, leftIsFn := left.(*ast.FnObj)
 	if !leftIsFn || len(leftFn.Params) != 2 {

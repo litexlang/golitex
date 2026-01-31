@@ -191,7 +191,7 @@ func (envMgr *EnvMgr) newSpecFact(fact ast.SpecificFactStmt) ast.StmtRet{
 
 	ie := NewInferenceEngine(envMgr)
 
-	var ieShortRet *glob.ShortRet
+	var ieShortRet ast.ShortRet
 	switch asFact := fact.(type) {
 	case *ast.ExistSpecificFactStmt:
 		if asFact.IsTrue {

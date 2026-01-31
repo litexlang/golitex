@@ -20,7 +20,7 @@ import (
 )
 
 // BuiltinPropExceptTrueEqual handles postprocessing for builtin properties except equality
-func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact ast.SpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact ast.SpecificFactStmt) ast.ShortRet {
 	if ast.IsTrueSpecFactWithPropName(fact, glob.KeywordIn) {
 		return ie.trueInFact(fact)
 	}
@@ -56,7 +56,7 @@ func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact ast.SpecificFactStmt) *gl
 }
 
 // orFactPostProcess handles post-processing for OrStmt facts
-func (ie *InferEngine) orFactPostProcess(orFact *ast.OrStmt) *glob.ShortRet {
+func (ie *InferEngine) orFactPostProcess(orFact *ast.OrStmt) ast.ShortRet {
 	// Special case: a != 0 or b != 0 => a^2 + b^2 > 0
 	if len(orFact.Facts) == 2 {
 		// Check if both facts are "not equal to 0" facts
@@ -149,7 +149,7 @@ func isSumOfTwoSquares(expr ast.Obj) (ast.Obj, ast.Obj, bool) {
 	return leftPower.Params[0], rightPower.Params[0], true
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact ast.SpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(fact ast.SpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 
 	// Special case: a^2 + b^2 > 0 => a != 0 or b != 0
@@ -247,7 +247,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRig
 	return glob.NewEmptyShortUnknownRet()
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsZero(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsZero(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 
 	// abs(x) = x
@@ -279,7 +279,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAn
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 
 	// x != 0 store spec Mem
@@ -339,7 +339,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightP
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsZero(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsZero(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 
 	// abs(x) = -x
@@ -368,7 +368,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndR
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsNotZero(fact ast.SpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsNotZero(fact ast.SpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 	asFact, ok := fact.(*ast.PureSpecificFactStmt)
 	if !ok {
@@ -444,7 +444,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRig
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsNotZero(fact ast.SpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAndRightParamIsNotZero(fact ast.SpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 	asFact, ok := fact.(*ast.PureSpecificFactStmt)
 	if !ok {
@@ -492,7 +492,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLargerEqualAn
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsNotZero(fact ast.SpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsNotZero(fact ast.SpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 	asFact, ok := fact.(*ast.PureSpecificFactStmt)
 	if !ok {
@@ -568,7 +568,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightP
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(fact ast.SpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(fact ast.SpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 	asFact, ok := fact.(*ast.PureSpecificFactStmt)
 	if !ok {
@@ -616,7 +616,7 @@ func (ie *InferEngine) builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndR
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) subsetOfFactPostProcess(fact ast.SpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) subsetOfFactPostProcess(fact ast.SpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 	asFact, ok := fact.(*ast.PureSpecificFactStmt)
 	if !ok {
@@ -639,7 +639,7 @@ func (ie *InferEngine) subsetOfFactPostProcess(fact ast.SpecificFactStmt) *glob.
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) falseEqualFact(fact ast.SpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) falseEqualFact(fact ast.SpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 	asFact, ok := fact.(*ast.PureSpecificFactStmt)
 	if !ok {
@@ -656,7 +656,7 @@ func (ie *InferEngine) falseEqualFact(fact ast.SpecificFactStmt) *glob.ShortRet 
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-// func (ie *InferEngine) isNonEmptyWithItemFactPostProcess(fact *ast.SpecFactStmt) *glob.ShortRet {
+// func (ie *InferEngine) isNonEmptyWithItemFactPostProcess(fact *ast.SpecFactStmt) ast.ShortRet {
 // 	derivedFacts := []string{}
 
 // 	// fact.Params[0] 非空
@@ -669,7 +669,7 @@ func (ie *InferEngine) falseEqualFact(fact ast.SpecificFactStmt) *glob.ShortRet 
 // 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 // }
 
-// func (ie *InferEngine) notEqualSetFactPostProcess(fact *ast.SpecFactStmt) *glob.ShortRet {
+// func (ie *InferEngine) notEqualSetFactPostProcess(fact *ast.SpecFactStmt) ast.ShortRet {
 // 	derivedFacts := []string{}
 
 // 	// x != y
@@ -693,7 +693,7 @@ func (ie *InferEngine) falseEqualFact(fact ast.SpecificFactStmt) *glob.ShortRet 
 // 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 // }
 
-func (ie *InferEngine) InferByPropNameIsGreater(fact ast.SpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) InferByPropNameIsGreater(fact ast.SpecificFactStmt) ast.ShortRet {
 	asFact, ok := fact.(*ast.PureSpecificFactStmt)
 	if !ok || len(asFact.Params) != 2 {
 		return glob.NewEmptyShortUnknownRet()
@@ -718,7 +718,7 @@ func (ie *InferEngine) InferByPropNameIsGreater(fact ast.SpecificFactStmt) *glob
 	}
 }
 
-func (ie *InferEngine) InferByPropNameIsLargerEqual(fact ast.SpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) InferByPropNameIsLargerEqual(fact ast.SpecificFactStmt) ast.ShortRet {
 	asFact, ok := fact.(*ast.PureSpecificFactStmt)
 	if !ok || len(asFact.Params) != 2 {
 		return glob.NewEmptyShortUnknownRet()
@@ -743,7 +743,7 @@ func (ie *InferEngine) InferByPropNameIsLargerEqual(fact ast.SpecificFactStmt) *
 	}
 }
 
-func (ie *InferEngine) InferByPropNameIsLess(fact ast.SpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) InferByPropNameIsLess(fact ast.SpecificFactStmt) ast.ShortRet {
 	asFact, ok := fact.(*ast.PureSpecificFactStmt)
 	if !ok || len(asFact.Params) != 2 {
 		return glob.NewEmptyShortUnknownRet()
@@ -768,7 +768,7 @@ func (ie *InferEngine) InferByPropNameIsLess(fact ast.SpecificFactStmt) *glob.Sh
 	}
 }
 
-func (ie *InferEngine) InferByPropNameIsLessEqual(fact ast.SpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) InferByPropNameIsLessEqual(fact ast.SpecificFactStmt) ast.ShortRet {
 	asFact, ok := fact.(*ast.PureSpecificFactStmt)
 	if !ok || len(asFact.Params) != 2 {
 		return glob.NewEmptyShortUnknownRet()

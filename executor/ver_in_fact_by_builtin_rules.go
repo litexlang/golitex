@@ -717,7 +717,7 @@ func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FnObj) (ast.Obj, err
 		}
 
 		var ret VerRet
-		var shortRet *glob.ShortRet
+		var shortRet ast.ShortRet
 		// curFnTStruct, ret = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
 		curFnTStruct, shortRet = ver.Env.GetFnStructFromFnTName(curRetSet)
 		if shortRet.IsErr() {
