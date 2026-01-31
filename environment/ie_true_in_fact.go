@@ -21,10 +21,11 @@ import (
 	"strconv"
 )
 
-func (ie *InferEngine) trueInFact(fact ast.SpecificFactStmt) ast.StmtRet {
+func (ie *InferEngine) trueInFact(fact ast.SpecificFactStmt) ast.InferRet {
 	asFact, ok := fact.(*ast.PureSpecificFactStmt)
 	if !ok || len(asFact.Params) != 2 {
-		return ast.NewErrStmtEmptyRet(fact).AddExtraInfo(fmt.Sprintf("in fact expect 2 parameters, get %d in %s", len(asFact.Params), fact))
+		extraInfo := fmt.Sprintf("in fact expect 2 parameters, get %d in %s", len(asFact.Params), fact.String())
+		return ast.NewErrInferRet(fact).AddExtraInfo(extraInfo)
 	}
 
 	if ret := ie.trueInFactByNamedFnSet(asFact); ret.IsTrue() || ret.IsErr() {
@@ -101,15 +102,15 @@ func (ie *InferEngine) trueInFact(fact ast.SpecificFactStmt) ast.StmtRet {
 // trueInFactByNamedFnSet handles inference for x $in fnTemplate(...)
 // Inference: Derives a universal fact from the function template definition
 // and stores the function-template satisfaction relationship
-func (ie *InferEngine) trueInFactByNamedFnSet(fact *ast.PureSpecificFactStmt) ast.StmtRet {
+func (ie *InferEngine) trueInFactByNamedFnSet(fact *ast.PureSpecificFactStmt) ast.InferRet {
 	isTemplate, ret := ie.trueInFactInFnSet(fact)
 	if ret.IsErr() {
-		return ast.NewErrStmtEmptyRet(fact)
+		return ast.NewErrInferRet(fact).AddExtraInfo(ret.String())
 	}
 	if isTemplate {
-		return ast.NewTrueStmtEmptyRet(fact)
+		return ast.NewTrueInferRet(fact)
 	}
-	return ast.NewUnknownStmtEmptyRet(fact)
+	return ast.NewUnknownInferRet(fact)
 }
 
 // trueInFactByAnonymousFnSetObj handles inference for x $in fnTemplateFnObj
@@ -292,7 +293,7 @@ func (ie *InferEngine) trueInFactBySetBuilder(fact *ast.PureSpecificFactStmt) as
 func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.FnObj) ast.StmtRet {
 	tempFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{obj, setBuilderObj}, glob.BuiltinLine0)
 	result := ast.NewTrueStmtEmptyRet(tempFact)
-	
+
 	setBuilderStruct, err := setBuilderObj.ToSetBuilderStruct()
 	if err != nil {
 		return ast.NewErrStmtEmptyRet(tempFact).AddExtraInfo(err.Error())
@@ -935,7 +936,7 @@ func (ie *InferEngine) trueInFactBySetOperations(fact *ast.PureSpecificFactStmt)
 // Inference: exist x_item x st item $in x_item
 func (ie *InferEngine) trueInFactInCup(item ast.Obj, cupSet *ast.FnObj) ast.StmtRet {
 	tempFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{item, cupSet}, glob.BuiltinLine0)
-	
+
 	if len(cupSet.Params) != 1 {
 		return ast.NewErrStmtEmptyRet(tempFact).AddExtraInfo(fmt.Sprintf("cup expects 1 parameter, got %d", len(cupSet.Params)))
 	}
@@ -964,7 +965,7 @@ func (ie *InferEngine) trueInFactInCup(item ast.Obj, cupSet *ast.FnObj) ast.Stmt
 // Inference: forall x_item x: item $in x_item
 func (ie *InferEngine) trueInFactInCap(item ast.Obj, capSet *ast.FnObj) ast.StmtRet {
 	tempFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{item, capSet}, glob.BuiltinLine0)
-	
+
 	if len(capSet.Params) != 1 {
 		return ast.NewErrStmtEmptyRet(tempFact).AddExtraInfo(fmt.Sprintf("cap expects 1 parameter, got %d", len(capSet.Params)))
 	}
@@ -997,7 +998,7 @@ func (ie *InferEngine) trueInFactInCap(item ast.Obj, capSet *ast.FnObj) ast.Stmt
 func (ie *InferEngine) trueInFactInUnion(item ast.Obj, x ast.Obj, y ast.Obj) ast.StmtRet {
 	unionSet := ast.NewFnObj(ast.Atom(glob.KeywordUnion), []ast.Obj{x, y})
 	tempFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{item, unionSet}, glob.BuiltinLine0)
-	
+
 	// Create or fact: item $in x or item $in y
 	inXFact := ast.NewInFactWithObj(item, x)
 	inYFact := ast.NewInFactWithObj(item, y)
@@ -1043,7 +1044,7 @@ func (ie *InferEngine) trueInFactInIntersect(item ast.Obj, x ast.Obj, y ast.Obj)
 func (ie *InferEngine) trueInFactInPowerSet(y ast.Obj, x ast.Obj) ast.StmtRet {
 	powerSet := ast.NewFnObj(ast.Atom(glob.KeywordPowerSet), []ast.Obj{x})
 	tempFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{y, powerSet}, glob.BuiltinLine0)
-	
+
 	// Create fact: y $subset_of x
 	subsetFact := ast.NewPureSpecificFactStmt(
 		true,
