@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func successVerString(stmt, stmtVerifiedBy ast.Stmt) *glob.VerRet {
+func successVerString(stmt, stmtVerifiedBy ast.Stmt) ast.VerRet {
 	stmtStr := ""
 	line := uint(0)
 	if stmt != nil {
@@ -44,7 +44,7 @@ func successVerString(stmt, stmtVerifiedBy ast.Stmt) *glob.VerRet {
 }
 
 // successVerStringString is a helper function for backward compatibility with string-based calls
-func successVerStringString(stmtStr, stmtVerifiedByStr string) *glob.VerRet {
+func successVerStringString(stmtStr, stmtVerifiedByStr string) ast.VerRet {
 	verifyMsgs := []string{}
 	if stmtVerifiedByStr != "" {
 		verifyMsgs = append(verifyMsgs, stmtVerifiedByStr)
@@ -55,7 +55,7 @@ func successVerStringString(stmtStr, stmtVerifiedByStr string) *glob.VerRet {
 	return glob.NewVerRet(glob.StmtRetTypeTrue, stmtStr, glob.BuiltinLine0, verifyMsgs)
 }
 
-func newMaybeSuccessMsgVerRet(state *VerState, stmt ast.Stmt, stmtVerifiedBy string) *glob.VerRet {
+func newMaybeSuccessMsgVerRet(state *VerState, stmt ast.Stmt, stmtVerifiedBy string) ast.VerRet {
 	if state.WithMsg {
 		return successVerStringString(stmt.String(), stmtVerifiedBy)
 	}

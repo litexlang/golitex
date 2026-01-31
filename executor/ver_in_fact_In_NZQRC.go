@@ -21,15 +21,15 @@ import (
 )
 
 // 这是必要的，因为 2 $in N 是这个检查的
-func (ver *Verifier) verInFactByRightParamIsN_Z_Q_R_N_pos_Z_pos_R_pos_etc_BySpecMem_ReturnValueOfUserDefinedFnInFnReturn(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verInFactByRightParamIsN_Z_Q_R_N_pos_Z_pos_R_pos_etc_BySpecMem_ReturnValueOfUserDefinedFnInFnReturn(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	inSet, ok := asPureStmt.Params[1].(ast.Atom)
 	if !ok {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	nextState := state.GetFinalRound().GetNoMsg()
@@ -72,7 +72,7 @@ func (ver *Verifier) verInFactByRightParamIsN_Z_Q_R_N_pos_Z_pos_R_pos_etc_BySpec
 		}
 		return ver.maybeAddSuccessMsgString(state, stmt.String(), verifiedBy, glob.NewEmptyVerRetTrue())
 	}
-	return glob.NewEmptyVerRetUnknown()
+	return ast.NewEmptyUnknownVerRet()
 }
 
 func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt ast.SpecificFactStmt, state *VerState) (bool, string) {

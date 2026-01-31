@@ -48,7 +48,7 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.WitnessStmt) *glob.StmtRet 
 		bodyRets = append(bodyRets, execState)
 	}
 
-	verProcessRets := []*glob.VerRet{}
+	verProcessRets := []VerRet{}
 	// prove in each param set
 	uniMap := map[string]ast.Obj{}
 	for i, equalTo := range stmt.EqualTos {

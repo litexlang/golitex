@@ -29,7 +29,7 @@ package litex_executor
 // }
 
 // func (exec *Executor) haveFnEqualCaseByCase_Verify(stmt *ast.HaveFnCaseByCaseStmt) *glob.StmtRet {
-// 	verifyProcessMsgs := []*glob.VerRet{}
+// 	verifyProcessMsgs := []VerRet{}
 
 // 	exec.NewEnv()
 // 	defer exec.deleteEnv()

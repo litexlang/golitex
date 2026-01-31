@@ -20,24 +20,24 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt *ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
 	nextState := state.CopyAndReqOkToTrue()
 	if !state.ReqOk {
-		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
+		if ast.VerRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
 		}
 	}
 
-	if verRet := ver.verTrueEqualWholeProcess(stmt, nextState); verRet.IsTrue() || verRet.IsErr() {
+	if ast.VerRet := ver.verTrueEqualWholeProcess(stmt, nextState); verRet.IsTrue() || verRet.IsErr() {
 		return verRet
 	}
 
-	return glob.NewEmptyVerRetUnknown()
+	return ast.NewEmptyUnknownVerRet()
 }
 
-func (ver *Verifier) verTrueEqualWholeProcess(stmt *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verTrueEqualWholeProcess(stmt *ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
 	if len(stmt.Params) != 2 {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	verRet := ver.verTrueEqualPreProcess(stmt, state)
@@ -55,41 +55,41 @@ func (ver *Verifier) verTrueEqualWholeProcess(stmt *ast.PureSpecificFactStmt, st
 		return verRet
 	}
 
-	return glob.NewEmptyVerRetUnknown()
+	return ast.NewEmptyUnknownVerRet()
 }
 
-func (ver *Verifier) verTrueEqualPreProcess(stmt *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verTrueEqualPreProcess(stmt *ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
 	return ver.verByReplaceObjInSpecFactWithValue(stmt, state)
 }
 
-func (ver *Verifier) verTrueEqualMainProcess(stmt *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verTrueEqualMainProcess(stmt *ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
 	left := stmt.Params[0]
 	right := stmt.Params[1]
 
-	if verRet := ver.verEqualMainProcessByBuiltinRules(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+	if ast.VerRet := ver.verEqualMainProcessByBuiltinRules(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
-	if verRet := ver.verEqualBySpecMem(left, right); verRet.IsErr() || verRet.IsTrue() {
+	if ast.VerRet := ver.verEqualBySpecMem(left, right); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
 	if !state.isFinalRound() {
-		if verRet := ver.verEqualUniMem(left, right, state); verRet.IsErr() {
+		if ast.VerRet := ver.verEqualUniMem(left, right, state); verRet.IsErr() {
 			return verRet
 		} else if verRet.IsTrue() {
 			return verRet
 		}
 	}
 
-	return glob.NewEmptyVerRetUnknown()
+	return ast.NewEmptyUnknownVerRet()
 }
 
-func (ver *Verifier) verTrueEqualPostProcess(stmt *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verTrueEqualPostProcess(stmt *ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
 	return ver.verObjsEqualByTheyAreFnObjsAndTheirHeadsAndParamsAreEqual(stmt.Params[0], stmt.Params[1], state)
 }
 
-func (ver *Verifier) verObjsEqualByTheyAreFnObjsAndTheirHeadsAndParamsAreEqual(left, right ast.Obj, state *VerState) *glob.VerRet {
+func (ver *Verifier) verObjsEqualByTheyAreFnObjsAndTheirHeadsAndParamsAreEqual(left, right ast.Obj, state *VerState) ast.VerRet {
 	if leftAsFn, ok := left.(*ast.FnObj); ok {
 		if rightAsFn, ok := right.(*ast.FnObj); ok {
 			verRet := ver.verTrueEqualFact_ObjFnEqual_NoCheckRequirements(leftAsFn, rightAsFn, state)
@@ -98,12 +98,12 @@ func (ver *Verifier) verObjsEqualByTheyAreFnObjsAndTheirHeadsAndParamsAreEqual(l
 			}
 		}
 	}
-	return glob.NewEmptyVerRetUnknown()
+	return ast.NewEmptyUnknownVerRet()
 }
 
-func (ver *Verifier) verTrueEqualFact_ObjFnEqual_NoCheckRequirements(left, right *ast.FnObj, state *VerState) *glob.VerRet {
+func (ver *Verifier) verTrueEqualFact_ObjFnEqual_NoCheckRequirements(left, right *ast.FnObj, state *VerState) ast.VerRet {
 	if len(left.Params) != len(right.Params) {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)

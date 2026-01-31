@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) parasSatisfyFnReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+func (ver *Verifier) parasSatisfyFnReq(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
 	fnHeadChain_AndItSelf, paramsChain := ast.GetFnHeadChain_AndItSelf(fnObj)
 
@@ -127,7 +127,7 @@ func (ver *Verifier) getFnSetDef_InstFnInFnSet_CheckParamsSatisfyFnSetReq(fnTDef
 	return defOfT.AnonymousFn.Instantiate(uniMap)
 }
 
-func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.DefFnSetStmt, uniMap map[string]ast.Obj, state *VerState) *glob.VerRet {
+func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreTrue(fnTDef *ast.DefFnSetStmt, uniMap map[string]ast.Obj, state *VerState) ast.VerRet {
 	ver.newEnv()
 	defer ver.deleteEnv()
 
@@ -146,7 +146,7 @@ func (ver *Verifier) getFnTDef_InstFnTStructOfIt_CheckTemplateParamsDomFactsAreT
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParams ast.ObjSlice, fnTStruct *ast.AnonymousFn, state *VerState) *glob.VerRet {
+func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParams ast.ObjSlice, fnTStruct *ast.AnonymousFn, state *VerState) ast.VerRet {
 	if len(concreteParams) != len(fnTStruct.ParamSets) {
 		return glob.NewVerRet(glob.StmtRetTypeError, fnObj.String(), 0, []string{"params and sets length mismatch"})
 	}
@@ -162,7 +162,7 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParam
 		}
 	}
 
-	// // verRet := ver.paramsInSets(concreteParams, fnTStruct.ParamSets, state.GetNoMsg())
+	// // ast.VerRet := ver.paramsInSets(concreteParams, fnTStruct.ParamSets, state.GetNoMsg())
 	// if verRet.IsErr() {
 	// 	return verRet
 	// }
@@ -180,7 +180,7 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParam
 		}
 	}
 
-	// verRet = ver.factsAreTrue(fnTStruct.DomFacts, state.GetNoMsg())
+	// ast.VerRet = ver.factsAreTrue(fnTStruct.DomFacts, state.GetNoMsg())
 	// if verRet.IsErr() {
 	// 	return verRet
 	// }
@@ -191,10 +191,10 @@ func (ver *Verifier) checkParamsSatisfyFnTStruct(fnObj *ast.FnObj, concreteParam
 	return glob.NewEmptyVerRetTrue()
 }
 
-func paramsOfFnObjMustInDomainSetErrMsg(fnObj *ast.FnObj, i int, fact ast.FactStmt) *glob.VerRet {
+func paramsOfFnObjMustInDomainSetErrMsg(fnObj *ast.FnObj, i int, fact ast.FactStmt) ast.VerRet {
 	return glob.NewVerRet(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("Function %s requires its %s argument to satisfy the domain constraint:\n%s\nbut verification failed\n", fnObj.FnHead, ordinalSuffix(i+1), fact.String())})
 }
 
-func domainFactOfFnObjMustBeTrueErrMsg(fnObj *ast.FnObj, i int, fact ast.FactStmt) *glob.VerRet {
+func domainFactOfFnObjMustBeTrueErrMsg(fnObj *ast.FnObj, i int, fact ast.FactStmt) ast.VerRet {
 	return glob.NewVerRet(glob.StmtRetTypeError, fnObj.String(), glob.BuiltinLine0, []string{fmt.Sprintf("Function %s requires its %s domain constraint to hold:\n%s\nbut verification failed\n", fnObj.FnHead, ordinalSuffix(i+1), fact.String())})
 }
