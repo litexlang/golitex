@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verOrStmtByUniFactMem(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verOrStmtByUniFactMem(stmt *ast.OrStmt, state *VerState) ast.VerRet {
 	nextState := state.GetAddRound()
 
 	// 生成 given facts 的所有排列
@@ -53,14 +53,14 @@ func (ver *Verifier) verOrStmtByUniFactMem(stmt *ast.OrStmt, state *VerState) *g
 		}
 	}
 
-	return glob.NewEmptyVerRetUnknown()
+	return ast.NewEmptyUnknownVerRet()
 }
 
-func (ver *Verifier) verOrFactByUniFactMemAtEnv(curEnv *env.EnvMemory, stmt *ast.OrStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verOrFactByUniFactMemAtEnv(curEnv *env.EnvMemory, stmt *ast.OrStmt, state *VerState) ast.VerRet {
 	key := string(stmt.Facts[0].GetPropName())
 	knownOrFacts, got := curEnv.OrFactInUniFactMem[key]
 	if !got {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	for _, knownOrFactInUniFact := range knownOrFacts {
@@ -70,12 +70,12 @@ func (ver *Verifier) verOrFactByUniFactMemAtEnv(curEnv *env.EnvMemory, stmt *ast
 		}
 	}
 
-	return glob.NewEmptyVerRetUnknown()
+	return ast.NewEmptyUnknownVerRet()
 }
 
-func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt, knownOrFactInUni *env.OrFactInUniFact, state *VerState) *glob.VerRet {
+func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt, knownOrFactInUni *env.OrFactInUniFact, state *VerState) ast.VerRet {
 	if len(given.Facts) != len(knownOrFactInUni.OrFact.Facts) {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	ok, freeParamObjMap := ver.matchOrFactWithOneInKnownUniFact(knownOrFactInUni.UniFact, knownOrFactInUni.OrFact, given, state)
@@ -90,11 +90,11 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 		}
 	}
 
-	return glob.NewEmptyVerRetUnknown()
+	return ast.NewEmptyUnknownVerRet()
 }
 
 // verifyDomAndParamSets 验证 dom 和 paramSet 是否成立
-func (ver *Verifier) verifyDomAndParamSets(knownOrFactInUni *env.OrFactInUniFact, freeParamObjMap map[string]ast.Obj, state *VerState) *glob.VerRet {
+func (ver *Verifier) verifyDomAndParamSets(knownOrFactInUni *env.OrFactInUniFact, freeParamObjMap map[string]ast.Obj, state *VerState) ast.VerRet {
 	// 让dom和paramSet都成立
 	for _, domFact := range knownOrFactInUni.UniFact.DomFacts {
 		instDomFact, err := domFact.Instantiate(freeParamObjMap)

@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) ast.VerRet {
 	for i := range len(stmt.Facts) {
 		ret := ver.verOrStmtByAssumeAllFactsAreFalseToProveTheRemainingOneIsTrue(stmt, i, state)
 		if ret.IsTrue() || ret.IsErr() {
@@ -40,10 +40,10 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
 		}
 	}
 
-	return glob.NewEmptyVerRetUnknown()
+	return ast.NewEmptyUnknownVerRet()
 }
 
-func (ver *Verifier) verOrStmtUseSpecMem(stmt *ast.OrStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verOrStmtUseSpecMem(stmt *ast.OrStmt, state *VerState) ast.VerRet {
 	for curEnvIndex := range ver.Env.EnvSlice {
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.verOrStmtUseSpecMemAtEnv(curEnv, stmt, state)
@@ -66,13 +66,13 @@ func (ver *Verifier) verOrStmtUseSpecMem(stmt *ast.OrStmt, state *VerState) *glo
 		}
 	}
 
-	return glob.NewEmptyVerRetUnknown()
+	return ast.NewEmptyUnknownVerRet()
 }
 
-func (ver *Verifier) verOrStmtUseSpecMemAtEnv(curEnv *env.EnvMemory, stmt *ast.OrStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verOrStmtUseSpecMemAtEnv(curEnv *env.EnvMemory, stmt *ast.OrStmt, state *VerState) ast.VerRet {
 	knownOrFacts, got := curEnv.OrFactsMem[string(stmt.Facts[0].GetPropName())]
 	if !got {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	for _, knownOrFact := range knownOrFacts {
@@ -82,13 +82,13 @@ func (ver *Verifier) verOrStmtUseSpecMemAtEnv(curEnv *env.EnvMemory, stmt *ast.O
 		}
 	}
 
-	return glob.NewEmptyVerRetUnknown()
+	return ast.NewEmptyUnknownVerRet()
 }
 
-func (ver *Verifier) useKnownOrFactToCheckGivenOrFact(given *ast.OrStmt, known *ast.OrStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) useKnownOrFactToCheckGivenOrFact(given *ast.OrStmt, known *ast.OrStmt, state *VerState) ast.VerRet {
 	givenSpecFactWithTheSameNameMap, knownSpecFactWithTheSameNameMap, isValid := ver.groupFactsByPropNameAndValidate(given, known)
 	if !isValid {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	for key := range givenSpecFactWithTheSameNameMap {
@@ -108,7 +108,7 @@ func (ver *Verifier) useKnownOrFactToCheckGivenOrFact(given *ast.OrStmt, known *
 		}
 
 		if !verified {
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 	}
 
@@ -158,25 +158,25 @@ func (ver *Verifier) groupFactsByPropNameAndValidate(given *ast.OrStmt, known *a
 	return givenSpecFactWithTheSameNameMap, knownSpecFactWithTheSameNameMap, true
 }
 
-func (ver *Verifier) matchEachSpecFactInGivenOrFactAndKnownOrFact(knowns []ast.SpecificFactStmt, givens []ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) matchEachSpecFactInGivenOrFactAndKnownOrFact(knowns []ast.SpecificFactStmt, givens []ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	for i := range knowns {
 		known := knowns[i]
 		given := givens[i]
 
 		if known.GetFactType() != given.GetFactType() {
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 
 		switch knownAs := known.(type) {
 		case *ast.PureSpecificFactStmt:
 			if len(knownAs.Params) != len(given.(*ast.PureSpecificFactStmt).Params) {
-				return glob.NewEmptyVerRetUnknown()
+				return ast.NewEmptyUnknownVerRet()
 			}
 
 			for param := range knownAs.Params {
 				ret := ver.VerFactStmt(ast.NewEqualFact(knownAs.Params[param], given.(*ast.PureSpecificFactStmt).Params[param]), state)
 				if ret.IsNotTrue() {
-					return glob.NewEmptyVerRetUnknown()
+					return ast.NewEmptyUnknownVerRet()
 				}
 			}
 
@@ -184,17 +184,17 @@ func (ver *Verifier) matchEachSpecFactInGivenOrFactAndKnownOrFact(knowns []ast.S
 			given := given.(*ast.ExistSpecificFactStmt)
 
 			if given.PureFact.IsTrue != knownAs.PureFact.IsTrue {
-				return glob.NewEmptyVerRetUnknown()
+				return ast.NewEmptyUnknownVerRet()
 			}
 
 			newFreeExistParamsUnused := ver.Env.GenerateNoDuplicateNames(len(given.ExistFreeParams), map[string]struct{}{})
 			newGiven, err := given.ReplaceFreeParamsWithNewParams(newFreeExistParamsUnused)
 			if err != nil {
-				return glob.NewEmptyVerRetUnknown()
+				return ast.NewEmptyUnknownVerRet()
 			}
 			newKnown, err := knownAs.ReplaceFreeParamsWithNewParams(newFreeExistParamsUnused)
 			if err != nil {
-				return glob.NewEmptyVerRetUnknown()
+				return ast.NewEmptyUnknownVerRet()
 			}
 
 			if newGiven.String() == newKnown.String() {
@@ -237,7 +237,7 @@ func generatePermutations(facts []ast.SpecificFactStmt) [][]ast.SpecificFactStmt
 	return result
 }
 
-func (ver *Verifier) verOrStmtByAssumeAllFactsAreFalseToProveTheRemainingOneIsTrue(stmt *ast.OrStmt, index int, state *VerState) *glob.VerRet {
+func (ver *Verifier) verOrStmtByAssumeAllFactsAreFalseToProveTheRemainingOneIsTrue(stmt *ast.OrStmt, index int, state *VerState) ast.VerRet {
 	ver.newEnv()
 	defer ver.deleteEnv()
 
@@ -249,14 +249,14 @@ func (ver *Verifier) verOrStmtByAssumeAllFactsAreFalseToProveTheRemainingOneIsTr
 		for _, fact := range reversedFact {
 			ret := ver.Env.NewFactWithCheckingNameDefined(fact)
 			if ret.IsNotTrue() {
-				return glob.NewEmptyVerRetUnknown().AddUnknown(ret.String())
+				return ast.NewEmptyUnknownVerRet().AddUnknown(ret.String())
 			}
 		}
 	}
 
 	ret := ver.VerFactStmt(stmt.Facts[index], state)
 	if ret.IsNotTrue() {
-		return glob.NewEmptyVerRetUnknown().AddUnknown(ret.String())
+		return ast.NewEmptyUnknownVerRet().AddUnknown(ret.String())
 	}
 
 	return glob.NewEmptyVerRetTrue()

@@ -18,7 +18,7 @@ package litex_global
 
 // import "strings"
 
-// type VerRet interface {
+// type ast.VerRet interface {
 // 	VerRet()
 // 	IsTrue() bool
 // 	IsUnknown() bool

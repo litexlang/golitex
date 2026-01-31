@@ -92,11 +92,11 @@ func IsNumExprObjThenSimplify(obj ast.Obj) ast.Obj {
 	return nil
 }
 
-func CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right ast.Obj) *glob.VerRet {
+func CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right ast.Obj) ast.VerRet {
 	// case 0: 按字面量来比较。这必须在比较div和比较polynomial之前，因为可能比较的是 * 和 *，即比较两个函数是不是一样。这种函数的比较，跑到div和polynomial就会出问题，因为在那些地方*都会被当成有参数的东西
 	ok, err := cmpObjLiterally(left, right)
 	if err != nil {
-		return glob.NewEmptyVerRetErr()
+		return ast.NewEmptyVerRetErr()
 	}
 	if ok {
 		return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{"they are literally the same"})
@@ -104,7 +104,7 @@ func CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right a
 
 	areNumLit, areEqual, err := NumLitEqual_ByEval(left, right)
 	if err != nil {
-		return glob.NewEmptyVerRetErr()
+		return ast.NewEmptyVerRetErr()
 	}
 	if areNumLit && areEqual {
 		return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{"calculation"})
@@ -118,7 +118,7 @@ func CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right a
 		return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), glob.BuiltinLine0, []string{"polynomial simplification"})
 	}
 
-	return glob.NewEmptyVerRetUnknown()
+	return ast.NewEmptyUnknownVerRet()
 }
 
 func IsNumExprLitObj(obj ast.Obj) bool {

@@ -14,23 +14,23 @@
 
 package litex_executor
 
-// func (ver *Verifier) MatchExistFact(given *ast.ExistSpecificFactStmt, stored *ast.ExistSpecificFactStmt, verState *VerState) *glob.VerRet {
-// 	return glob.NewEmptyVerRetUnknown()
+// func (ver *Verifier) MatchExistFact(given *ast.ExistSpecificFactStmt, stored *ast.ExistSpecificFactStmt, verState *VerState) ast.VerRet {
+// 	return ast.NewEmptyUnknownVerRet()
 // 	// return ver.MatchExistFactStruct(given, stored)
 // }
 
-// func (ver *Verifier) MatchExistFactStruct(given *ast.ExistSpecificFactStmt, stored *ast.ExistSpecificFactStmt) *glob.VerRet {
-// 	return glob.NewEmptyVerRetUnknown()
+// func (ver *Verifier) MatchExistFactStruct(given *ast.ExistSpecificFactStmt, stored *ast.ExistSpecificFactStmt) ast.VerRet {
+// 	return ast.NewEmptyUnknownVerRet()
 // 	// if len(given.ExistFreeParams) != len(stored.ExistFreeParams) {
-// 	// 	return glob.NewEmptyVerRetUnknown()
+// 	// 	return ast.NewEmptyUnknownVerRet()
 // 	// }
 
 // 	// if given.IsTrue != stored.IsTrue {
-// 	// 	return glob.NewEmptyVerRetUnknown()
+// 	// 	return ast.NewEmptyUnknownVerRet()
 // 	// }
 
 // 	// if given.PureFact.IsTrue != given.PureFact.IsTrue {
-// 	// 	return glob.NewEmptyVerRetUnknown()
+// 	// 	return ast.NewEmptyUnknownVerRet()
 // 	// }
 
 // 	// // given: exist x Z : x > 0; stored: exist y N: y > 0
@@ -42,24 +42,24 @@ package litex_executor
 // 	// propStoredFact := stored.PureFact
 // 	// instPropStoredFact, err := propStoredFact.Instantiate(uniMap)
 // 	// if err != nil {
-// 	// 	return glob.NewEmptyVerRetUnknown()
+// 	// 	return ast.NewEmptyUnknownVerRet()
 // 	// }
 
 // 	// instPropStoredFactStr := instPropStoredFact.String()
 // 	// givenPropStr := given.PureFact.String()
 // 	// if instPropStoredFactStr != givenPropStr {
-// 	// 	return glob.NewEmptyVerRetUnknown()
+// 	// 	return ast.NewEmptyUnknownVerRet()
 // 	// }
 
 // 	// uniMap2 := map[string]ast.Obj{}
 // 	// for i := range stored.ExistFreeParamSets {
 // 	// 	instSet, err := stored.ExistFreeParamSets[i].Instantiate(uniMap2)
 // 	// 	if err != nil {
-// 	// 		return glob.NewEmptyVerRetErr()
+// 	// 		return  ast.NewEmptyVerRetErr()
 // 	// 	}
 
 // 	// 	if instSet.String() != given.ExistFreeParamSets[i].String() {
-// 	// 		return glob.NewEmptyVerRetUnknown()
+// 	// 		return ast.NewEmptyUnknownVerRet()
 // 	// 	}
 
 // 	// 	uniMap[stored.ExistFreeParams[i]] = ast.Atom(given.ExistFreeParams[i])

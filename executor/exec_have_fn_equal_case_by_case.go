@@ -34,7 +34,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 }
 
 func (exec *Executor) haveFnEqualCaseByCaseStmt_Verify(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
-	verifyProcessMsgs := []*glob.VerRet{}
+	verifyProcessMsgs := []VerRet{}
 
 	exec.NewEnv()
 	defer exec.deleteEnv()

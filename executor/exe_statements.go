@@ -369,7 +369,7 @@ func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) *glob.Stmt
 
 func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) *glob.StmtRet {
 	innerStmtRets := []*glob.StmtRet{}
-	verifyProcessMsgs := []*glob.VerRet{}
+	verifyProcessMsgs := []VerRet{}
 	newFactMsgs := []string{}
 
 	execRet := exec.proveByEnumStmtProve(stmt)
@@ -430,7 +430,7 @@ func (exec *Executor) DoNothingStmt() *glob.StmtRet {
 }
 
 func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) *glob.StmtRet {
-	verifyProcessMsgs := []*glob.VerRet{}
+	verifyProcessMsgs := []VerRet{}
 	newFactMsgs := []string{}
 
 	for _, fact := range stmt.Facts {
@@ -463,7 +463,7 @@ func (exec *Executor) Verify(fact ast.FactStmt) *glob.StmtRet {
 
 func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) *glob.StmtRet {
 	innerStmtRets := []*glob.StmtRet{}
-	verifyProcessMsgs := []*glob.VerRet{}
+	verifyProcessMsgs := []VerRet{}
 	newFactMsgs := []string{}
 
 	exec.NewEnv()

@@ -66,10 +66,10 @@ func (ver *Verifier) ReplaceObjsInSpecFactWithValue(fact ast.SpecificFactStmt) (
 	return false, nil
 }
 
-func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	replaced, newStmt := ver.ReplaceObjsInSpecFactWithValue(asStmt)

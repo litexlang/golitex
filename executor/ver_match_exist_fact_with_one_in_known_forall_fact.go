@@ -19,22 +19,22 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) matchExistFactWithOneInKnownUniFactAndCheckMatchedObjsSatisfyUniFactConditions(knownUniFact *ast.UniFactStmt, existFactInKnownUniFact *ast.ExistSpecificFactStmt, given *ast.ExistSpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) matchExistFactWithOneInKnownUniFactAndCheckMatchedObjsSatisfyUniFactConditions(knownUniFact *ast.UniFactStmt, existFactInKnownUniFact *ast.ExistSpecificFactStmt, given *ast.ExistSpecificFactStmt, state *VerState) ast.VerRet {
 	ok, uniMap := ver.matchObjectsWithFreeParamsWithInstObjectsInExistFact(knownUniFact.Params, existFactInKnownUniFact.ExistFreeParams, existFactInKnownUniFact.ExistFreeParamSets, given.ExistFreeParamSets, existFactInKnownUniFact.PureFact.Params, given.PureFact.Params)
 
 	if !ok {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	for i, paramSet := range knownUniFact.ParamSets {
 		instParamSet, err := paramSet.Instantiate(uniMap)
 		if err != nil {
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 		inFact := ast.NewInFactWithObj(uniMap[knownUniFact.Params[i]], instParamSet)
 		ret := ver.VerFactStmt(inFact, state)
 		if ret.IsNotTrue() {
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 	}
 
@@ -42,22 +42,22 @@ func (ver *Verifier) matchExistFactWithOneInKnownUniFactAndCheckMatchedObjsSatis
 	for _, domFact := range knownUniFact.DomFacts {
 		instDomFact, err := domFact.InstantiateFact(uniMap)
 		if err != nil {
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 
 		switch asInstDomFact := instDomFact.(type) {
 		case ast.SpecificFactStmt:
 			ret := ver.VerFactStmt(asInstDomFact, nextState)
 			if ret.IsNotTrue() {
-				return glob.NewEmptyVerRetUnknown()
+				return ast.NewEmptyUnknownVerRet()
 			}
 		case *ast.OrStmt:
 			ret := ver.VerFactStmt(instDomFact, nextState)
 			if ret.IsNotTrue() {
-				return glob.NewEmptyVerRetUnknown()
+				return ast.NewEmptyUnknownVerRet()
 			}
 		default:
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 
 	}

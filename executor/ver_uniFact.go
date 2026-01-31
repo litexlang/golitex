@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) ast.VerRet {
 	ret := ver.verUniFact_checkFactOneByOne(oldStmt, state)
 	if ret.IsTrue() || ret.IsErr() {
 		return ret
@@ -30,9 +30,9 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) *glob
 	return ver.verUniFact_useInfer(oldStmt, state)
 }
 
-func (ver *Verifier) verUniFact_checkFactOneByOne(oldStmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verUniFact_checkFactOneByOne(oldStmt *ast.UniFactStmt, state *VerState) ast.VerRet {
 	if state.isFinalRound() {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	// 在局部环境声明新变量
@@ -64,9 +64,9 @@ func (ver *Verifier) verUniFact_checkFactOneByOne(oldStmt *ast.UniFactStmt, stat
 	return ver.uniFact_checkThenFacts(newStmtPtr, state)
 }
 
-func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerState) ast.VerRet {
 	if state.isFinalRound() {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	// 0. 如果dom和then里全是or_spec 那可以继续，否则就不行
@@ -78,7 +78,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 			domFactsReversible = append(domFactsReversible, orStmt)
 		} else {
 			// Not all facts are Spec_OrFact, cannot use infer
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 	}
 
@@ -90,7 +90,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 			thenFactsReversible = append(thenFactsReversible, orStmt)
 		} else {
 			// Not all facts are Spec_OrFact, cannot use infer
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 	}
 
@@ -141,11 +141,11 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 	} else if execRet.IsTrue() {
 		return glob.NewVerRet(glob.StmtRetTypeTrue, oldStmt.String(), glob.BuiltinLine0, []string{})
 	} else {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 }
 
-func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) ast.VerRet {
 	msgs := []string{}
 
 	// check then facts
@@ -159,7 +159,7 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 				msgs := append(verRet.VerifyMsgs, fmt.Sprintf("%s is unknown", thenFact))
 				return glob.NewVerRet(glob.StmtRetTypeUnknown, thenFact.String(), glob.BuiltinLine0, msgs)
 			}
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 
 		// if true, store it
@@ -224,17 +224,17 @@ func (ver *Verifier) allParamSetsAreListSet(paramSets []ast.Obj) bool {
 }
 
 // verUniFactByProveByEnum 使用 enum 的逻辑来验证 forall 语句
-func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerState) ast.VerRet {
 	// 获取所有 paramSet 对应的 list_set
 	enums := [][]ast.Obj{}
 	for _, paramSet := range stmt.ParamSets {
 		enumSet := ver.Env.GetListSetEqualToObj(paramSet)
 		if enumSet == nil {
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 		listSetFnObj, ok := enumSet.(*ast.FnObj)
 		if !ok {
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 		enums = append(enums, listSetFnObj.Params)
 	}
@@ -242,7 +242,7 @@ func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerSt
 	// 计算笛卡尔积
 	cartesianProductOfObjs := glob.CartesianProduct(enums)
 
-	verifyProcessMsgs := []*glob.VerRet{}
+	verifyProcessMsgs := []VerRet{}
 
 	// 遍历所有组合
 	for _, objSlice := range cartesianProductOfObjs {
@@ -313,7 +313,7 @@ func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerSt
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) ast.VerRet {
 	thenToIff := stmt.NewUniFactWithThenToIff()
 	verRet := ver.verUniFact(thenToIff, state)
 	if verRet.IsErr() || verRet.IsUnknown() {
