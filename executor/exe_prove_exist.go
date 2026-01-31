@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) proveExistStmt(stmt *ast.WitnessStmt) *glob.StmtRet {
+func (exec *Executor) proveExistStmt(stmt *ast.WitnessStmt) ast.StmtRet{
 	// given equal tos are in those
 	execState := exec.proveExistStmt_Prove(stmt)
 	if execState.IsNotTrue() {
@@ -34,7 +34,7 @@ func (exec *Executor) proveExistStmt(stmt *ast.WitnessStmt) *glob.StmtRet {
 	return execState
 }
 
-func (exec *Executor) proveExistStmt_Prove(stmt *ast.WitnessStmt) *glob.StmtRet {
+func (exec *Executor) proveExistStmt_Prove(stmt *ast.WitnessStmt) ast.StmtRet{
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -84,7 +84,7 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.WitnessStmt) *glob.StmtRet 
 	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verProcessRets)
 }
 
-func (exec *Executor) proveExistStmt_NewFact(stmt *ast.WitnessStmt) *glob.StmtRet {
+func (exec *Executor) proveExistStmt_NewFact(stmt *ast.WitnessStmt) ast.StmtRet{
 	newFact := stmt.ToTrueExistStFact()
 	ret := exec.Env.NewFactWithCheckingNameDefined(newFact)
 	if ret.IsErr() {

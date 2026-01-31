@@ -90,7 +90,7 @@ func checkParamsInFnDefNotDefinedAndParamSetsDefined(exec *Executor, params []st
 	return glob.NewEmptyShortTrueRet()
 }
 
-// func (exec *Executor) declareParamsAndDomFactsInUniFact(stmt *ast.UniFactStmt) *glob.StmtRet {
+// func (exec *Executor) declareParamsAndDomFactsInUniFact(stmt *ast.UniFactStmt) ast.StmtRet{
 // 	// declare parameters in asUnivFact in the env
 // 	objDefStmt := ast.NewDefLetStmt(stmt.Params, stmt.ParamSets, stmt.DomFacts.Copy(), stmt.Line)
 
@@ -128,7 +128,7 @@ func checkParamsInFnDefNotDefinedAndParamSetsDefined(exec *Executor, params []st
 // 	return ast.NewExistSpecificFactStmt(true, randomParams, randomParamSets, ast.NewPureSpecificFactStmt(specFact.IsTrue, specFact.PropName, specFact, specFact.Line), specFact.Line)
 // }
 
-func (exec *Executor) NewErrStmtRet(stmt ast.Stmt) *glob.StmtRet {
+func (exec *Executor) NewErrStmtRet(stmt ast.Stmt) ast.StmtRet{
 	ret := glob.NewEmptyStmtError()
 	exec.AddStmtToStmtRet(ret, stmt)
 	return ret

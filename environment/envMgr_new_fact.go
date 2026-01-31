@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (envMgr *EnvMgr) NewFactWithCheckingNameDefined(stmt ast.FactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) NewFactWithCheckingNameDefined(stmt ast.FactStmt) ast.StmtRet{
 	// 检查是否符合要求：比如涉及到的符号是否都定义了
 	if ret := envMgr.LookUpNamesInFact(stmt, map[string]struct{}{}); ret.IsNotTrue() {
 		// return glob.ErrRet(stmt.String()).AddMsg(ret.String())
@@ -86,7 +86,7 @@ func (envMgr *EnvMgr) storeUniFactAsInferTemplateIfApplicable(stmt *ast.UniFactS
 	}
 }
 
-func (envMgr *EnvMgr) NewFactWithCheckingNameDefined_UniFact(stmt *ast.UniFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) NewFactWithCheckingNameDefined_UniFact(stmt *ast.UniFactStmt) ast.StmtRet{
 	ret := envMgr.newUniFact(stmt)
 	if ret.IsNotTrue() {
 		return ret
@@ -98,7 +98,7 @@ func (envMgr *EnvMgr) NewFactWithCheckingNameDefined_UniFact(stmt *ast.UniFactSt
 	return ret
 }
 
-func (envMgr *EnvMgr) newUniFact(stmt *ast.UniFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newUniFact(stmt *ast.UniFactStmt) ast.StmtRet{
 	for i, thenStmt := range stmt.ThenFacts {
 		var ret *glob.StmtRet
 		switch asFact := thenStmt.(type) {
@@ -124,7 +124,7 @@ func (envMgr *EnvMgr) newUniFact(stmt *ast.UniFactStmt) *glob.StmtRet {
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) ast.StmtRet{
 	thenToIff := stmt.NewUniFactWithThenToIff()
 	ret := envMgr.newUniFact(thenToIff)
 	if ret.IsErr() {
@@ -146,7 +146,7 @@ func (envMgr *EnvMgr) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) *glob.Stmt
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) newOrFact(fact *ast.OrStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newOrFact(fact *ast.OrStmt) ast.StmtRet{
 	// ret := envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
 	// if ret.IsErr() {
 	// 	return ret
@@ -169,7 +169,7 @@ func (envMgr *EnvMgr) newOrFact(fact *ast.OrStmt) *glob.StmtRet {
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) newSpecFact(fact ast.SpecificFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newSpecFact(fact ast.SpecificFactStmt) ast.StmtRet{
 	if isEqualFact := ast.IsTrueEqualFact(fact); isEqualFact {
 		return envMgr.newTrueEqual(fact.(*ast.PureSpecificFactStmt))
 	}
@@ -206,7 +206,7 @@ func (envMgr *EnvMgr) newSpecFact(fact ast.SpecificFactStmt) *glob.StmtRet {
 	return ret.AddInfers(ieShortRet.Msgs)
 }
 
-func (envMgr *EnvMgr) newTrueEqual(fact *ast.PureSpecificFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newTrueEqual(fact *ast.PureSpecificFactStmt) ast.StmtRet{
 	ret := envMgr.newTrueEqualNoInfer(fact)
 	if ret.IsNotTrue() {
 		return ret
@@ -230,7 +230,7 @@ func (envMgr *EnvMgr) newTrueEqual(fact *ast.PureSpecificFactStmt) *glob.StmtRet
 	// return ret
 }
 
-func (envMgr *EnvMgr) newEqualsFact(stmt *ast.EqualsFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newEqualsFact(stmt *ast.EqualsFactStmt) ast.StmtRet{
 	equalFacts := stmt.ToEqualFacts()
 	for _, equalFact := range equalFacts {
 		ret := envMgr.NewFactWithCheckingNameDefined(equalFact)
@@ -241,16 +241,16 @@ func (envMgr *EnvMgr) newEqualsFact(stmt *ast.EqualsFactStmt) *glob.StmtRet {
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFactIndex int) *glob.StmtRet {
+func (envMgr *EnvMgr) newUniFact_ThenFactIsSpecFact(stmt *ast.UniFactStmt, thenFactIndex int) ast.StmtRet{
 	// return envMgr.storeUniFactInMem(thenFact, stmt)
 	return envMgr.CurEnv().KnownFactsStruct.SpecFactInUniFactMem.newFact(thenFactIndex, stmt)
 }
 
-// func (envMgr *EnvMgr) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) *glob.StmtRet {
+// func (envMgr *EnvMgr) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) ast.StmtRet{
 // 	return envMgr.CurEnv().KnownFactsStruct.SpecFact_InLogicExpr_InUniFactMem.NewFact(stmt, thenFact)
 // }
 
-func (envMgr *EnvMgr) newUniFact_ThenFactIsIffStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactWithIffStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newUniFact_ThenFactIsIffStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactWithIffStmt) ast.StmtRet{
 	thenToIff := thenFact.NewUniFactWithThenToIff()
 	iffToThen := thenFact.NewUniFactWithIffToThen()
 
@@ -269,12 +269,12 @@ func (envMgr *EnvMgr) newUniFact_ThenFactIsIffStmt(stmt *ast.UniFactStmt, thenFa
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) newUniFact_ThenFactIsUniFactStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newUniFact_ThenFactIsUniFactStmt(stmt *ast.UniFactStmt, thenFact *ast.UniFactStmt) ast.StmtRet{
 	mergedUniFact := ast.MergeOuterInnerUniFacts(stmt, thenFact)
 	return envMgr.newUniFact(mergedUniFact)
 }
 
-func (envMgr *EnvMgr) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt, thenFact *ast.EqualsFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt, thenFact *ast.EqualsFactStmt) ast.StmtRet{
 	equalFacts := thenFact.ToEqualFacts_PairwiseCombination()
 
 	newUniFact := ast.NewUniFact(stmt.Params, stmt.ParamSets, stmt.DomFacts, equalFacts, stmt.Line)
@@ -288,11 +288,11 @@ func (envMgr *EnvMgr) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt,
 	return glob.NewEmptyStmtTrue()
 }
 
-// func (envMgr *EnvMgr) storeUniFactInMem(specFact ast.SpecificFactStmt, uniFact *ast.UniFactStmt) *glob.StmtRet {
+// func (envMgr *EnvMgr) storeUniFactInMem(specFact ast.SpecificFactStmt, uniFact *ast.UniFactStmt) ast.StmtRet{
 // 	return envMgr.CurEnv().KnownFactsStruct.SpecFactInUniFactMem.newFact(specFact, uniFact)
 // }
 
-func (envMgr *EnvMgr) ProveImplyNewThenFactInPropDef(stmt *ast.ProveInferStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) ProveImplyNewThenFactInPropDef(stmt *ast.ProveInferStmt) ast.StmtRet{
 	specFactAsParams, err := ast.ParamsInSpecFactAreStrings(stmt.SpecFact)
 	if err != nil {
 		return glob.ErrRet(err.Error())
@@ -328,6 +328,6 @@ func (envMgr *EnvMgr) ProveImplyNewThenFactInPropDef(stmt *ast.ProveInferStmt) *
 	return glob.NewEmptyStmtTrue()
 }
 
-func (envMgr *EnvMgr) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) ast.StmtRet{
 	return envMgr.storeOrFactInUniFactMem(thenFact, stmt)
 }

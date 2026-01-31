@@ -31,7 +31,7 @@ func (envMgr *EnvMgr) GenerateNoDuplicateNames(length int, usedNames map[string]
 	return names
 }
 
-func (e *EnvMgr) MatchExistSpecificFacts(given *ast.ExistSpecificFactStmt, stored *ast.ExistSpecificFactStmt, newExistFreeParams []string) *glob.StmtRet {
+func (e *EnvMgr) MatchExistSpecificFacts(given *ast.ExistSpecificFactStmt, stored *ast.ExistSpecificFactStmt, newExistFreeParams []string) ast.StmtRet{
 	if len(stored.ExistFreeParams) != len(given.ExistFreeParams) {
 		return glob.NewEmptyStmtUnknown()
 	}

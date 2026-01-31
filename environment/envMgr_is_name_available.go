@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (envMgr *EnvMgr) IsNameUnavailable(name string, extraParams map[string]struct{}) *glob.StmtRet {
+func (envMgr *EnvMgr) IsNameUnavailable(name string, extraParams map[string]struct{}) ast.StmtRet{
 	if _, ok := extraParams[name]; ok {
 		return glob.NewEmptyStmtTrue()
 	}
@@ -36,7 +36,7 @@ func (envMgr *EnvMgr) IsNameUnavailable(name string, extraParams map[string]stru
 	return glob.ErrRet(fmt.Sprintf("undefined: %s", name))
 }
 
-func (envMgr *EnvMgr) IsValidAndAvailableName(name string) *glob.StmtRet {
+func (envMgr *EnvMgr) IsValidAndAvailableName(name string) ast.StmtRet{
 	err := glob.IsValidUseDefinedName(name)
 	if err != nil {
 		return glob.ErrRetWithErr(err)

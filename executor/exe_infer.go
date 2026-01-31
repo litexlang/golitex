@@ -21,7 +21,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) inferStmt(stmt *ast.InferStmt) *glob.StmtRet {
+func (exec *Executor) inferStmt(stmt *ast.InferStmt) ast.StmtRet {
 	ver := NewVerifier(exec.Env)
 
 	for _, domFact := range stmt.DomFacts {
@@ -59,7 +59,7 @@ func (exec *Executor) inferStmt(stmt *ast.InferStmt) *glob.StmtRet {
 	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
 }
 
-func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.InferStmt, thenFact ast.Spec_OrFact, state *VerState) *glob.StmtRet {
+func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.InferStmt, thenFact ast.Spec_OrFact, state *VerState) ast.StmtRet {
 	for curEnvIndex := range ver.Env.EnvSlice {
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_ImplyMem_atCurEnv(curEnv, stmt, thenFact, state)
@@ -87,7 +87,7 @@ func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.InferStmt, thenFact a
 
 func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.InferStmt, fact ast.Spec_OrFact, state *VerState) ast.VerRet {
 	if !state.ReqOk {
-		return glob.NewVerRet(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state)})
+		return ast.NewUnknownVerRet(nil)
 	}
 
 	searchedKnownFacts := []env.KnownSpecFact_InImplyTemplate{}
@@ -97,7 +97,7 @@ func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast
 	} else if asOr, ok := fact.(*ast.OrStmt); ok {
 		searchedKnownFacts, got = curEnv.KnownFactsStruct.SpecFactInImplyTemplateMem.GetSameEnumPkgPropFacts(asOr.Facts[0])
 	} else {
-		return  ast.NewEmptyVerRetErr()
+		return ast.NewEmptyVerRetErr()
 	}
 
 	if !got {

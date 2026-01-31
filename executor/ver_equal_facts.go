@@ -130,7 +130,7 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 	return ast.NewEmptyUnknownVerRet()
 }
 
-func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, state *VerState) *glob.StmtRet {
+func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, state *VerState) ast.StmtRet{
 	for curEnvIndex := range ver.Env.EnvSlice {
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		leftEqualObjs, ok := curEnv.EqualMem[left.String()]

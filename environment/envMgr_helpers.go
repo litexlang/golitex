@@ -101,7 +101,7 @@ func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateP
 	return fnTStruct, glob.NewEmptyShortTrueRet()
 }
 
-func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecificFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecificFactStmt) ast.StmtRet{
 	switch asFact := stmt.(type) {
 	case *ast.PureSpecificFactStmt:
 		if asFact.IsTrue {
@@ -141,11 +141,11 @@ func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecificFactStmt) *glob.StmtRe
 	return glob.ErrRet(fmt.Sprintf("invalid spec fact type: %T", stmt))
 }
 
-func (envMgr *EnvMgr) StoreSpecFactInImplyTemplateMem(specFact ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) StoreSpecFactInImplyTemplateMem(specFact ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) ast.StmtRet{
 	return envMgr.CurEnv().KnownFactsStruct.SpecFactInImplyTemplateMem.newFact(specFact, implyTemplate)
 }
 
-func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.PureSpecificFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.PureSpecificFactStmt) ast.StmtRet{
 	mem := envMgr.CurEnv().EqualMem
 
 	if len(fact.Params) != 2 {
@@ -201,7 +201,7 @@ func (envMgr *EnvMgr) StoreTrueEqualValues(key, value ast.Obj) {
 	envMgr.CurEnv().SymbolSimplifiedValueMem[key.String()] = value
 }
 
-func (envMgr *EnvMgr) storeSymbolSimplifiedValue(left, right ast.Obj) *glob.StmtRet {
+func (envMgr *EnvMgr) storeSymbolSimplifiedValue(left, right ast.Obj) ast.StmtRet{
 	_, newLeft := envMgr.GetStoredSymbolValue(left)
 	if cmp.IsNumExprLitObj(newLeft) {
 		simplifiedNewLeft := cmp.IsNumExprObjThenSimplify(newLeft)

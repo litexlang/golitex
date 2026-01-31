@@ -19,7 +19,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
+func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) ast.StmtRet{
 	ret := exec.haveFnEqualCaseByCaseStmt_Verify(stmt)
 	if ret.IsNotTrue() {
 		return ret
@@ -33,7 +33,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(ret.VerifyProcess).AddDefineMsgs(newRet.Define)
 }
 
-func (exec *Executor) haveFnEqualCaseByCaseStmt_Verify(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
+func (exec *Executor) haveFnEqualCaseByCaseStmt_Verify(stmt *ast.HaveFnEqualCaseByCaseStmt) ast.StmtRet{
 	verifyProcessMsgs := []VerRet{}
 
 	exec.NewEnv()
@@ -54,7 +54,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_Verify(stmt *ast.HaveFnEqualCase
 	return glob.NewEmptyStmtTrue().AddVerifyProcesses(verifyProcessMsgs)
 }
 
-func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNoOverlap_ReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
+func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNoOverlap_ReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt) ast.StmtRet{
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -84,7 +84,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNo
 	return exec.NewTrueStmtRet(orFact)
 }
 
-func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap_ReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, index int) *glob.StmtRet {
+func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap_ReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, index int) ast.StmtRet{
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -126,7 +126,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap_ReturnValue
 	return exec.NewTrueStmtRet(stmt)
 }
 
-func (exec *Executor) haveFnEqualCaseByCaseStmt_Define(stmt *ast.HaveFnEqualCaseByCaseStmt) *glob.StmtRet {
+func (exec *Executor) haveFnEqualCaseByCaseStmt_Define(stmt *ast.HaveFnEqualCaseByCaseStmt) ast.StmtRet{
 	anonymousSetTheFnIsIn := ast.NewAnonymousFnSetObj(stmt.DefHeader.ParamSets, stmt.RetSet)
 	defFn := ast.NewDefLetStmt([]string{stmt.DefHeader.Name}, []ast.Obj{anonymousSetTheFnIsIn}, []ast.FactStmt{}, stmt.Line)
 	defRet := exec.defLetStmt(defFn)
