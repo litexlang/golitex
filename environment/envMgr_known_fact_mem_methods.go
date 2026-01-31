@@ -54,59 +54,60 @@ func (envMgr *EnvMgr) IsFnDeclared(obj ast.Atom) (*FnInFnTMemItem, bool) {
 	return fnDef, true
 }
 
-func (envMgr *EnvMgr) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, fnTemplateFnObj *ast.FnObj, fnTStruct *ast.AnonymousFn) ast.StmtRet{
+func (envMgr *EnvMgr) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, fnTemplateFnObj *ast.FnObj, fnTStruct *ast.AnonymousFn) ast.StmtRet {
+	inFact := ast.NewPureSpecificFactStmt(true, fnTemplateFnObj.FnHead.(ast.Atom), fnTemplateFnObj.Params, glob.BuiltinLine0)
 	if fnTemplateFnObj != nil {
 		fnTStruct, shortRet := envMgr.GetFnStructFromFnTName(fnTemplateFnObj)
 		if shortRet.IsErr() {
-			return glob.NewEmptyStmtError().AddErrors(shortRet.Msgs)
+			return ast.NewErrStmtEmptyRet(inFact).AddExtraInfo(fmt.Sprintf("failed to get fn struct from fn template name %s", fnTemplateFnObj.FnHead.(ast.Atom)))
 		}
 
 		ret := envMgr.InsertFnInFnTT(fn, fnTStruct)
-		if ret.IsErr() {
-			return ret
+		if !ret {
+			return ast.NewErrStmtEmptyRet(inFact).AddExtraInfo(fmt.Sprintf("failed to insert fn %s into fn template %s", fn.String(), fnTemplateFnObj.FnHead.(ast.Atom)))
 		}
 
-		return glob.NewEmptyStmtTrue()
+		return ast.NewTrueStmtEmptyRet(inFact)
 	} else {
 		ret := envMgr.InsertFnInFnTT(fn, fnTStruct)
-		if ret.IsErr() {
-			return ret
+		if !ret {
+			return ast.NewErrStmtEmptyRet(inFact).AddExtraInfo(fmt.Sprintf("failed to insert fn %s into fn template %s", fn.String(), fnTemplateFnObj.FnHead.(ast.Atom)))
 		}
 
-		return glob.NewEmptyStmtTrue()
+		return ast.NewTrueStmtEmptyRet(inFact)
 	}
 }
 
-func (envMgr *EnvMgr) getInstantiatedFnTTOfFnObj(fnObj *ast.FnObj) (*ast.AnonymousFn, bool, ast.StmtRet) {
+func (envMgr *EnvMgr) getInstantiatedFnTTOfFnObj(fnObj *ast.FnObj) (*ast.AnonymousFn, bool, error) {
 	if ast.IsAnonymousFnSet(fnObj) {
 		fnTNoName, err := fnObj.FnTObj_ToFnTNoName()
 		if err != nil {
-			return nil, false, glob.ErrRetWithErr(err)
+			return nil, false, err
 		}
-		return fnTNoName, true, glob.NewEmptyStmtTrue()
+		return fnTNoName, true, nil
 	}
 
 	def := envMgr.GetFnTemplateDef(fnObj.FnHead.(ast.Atom))
 	if def == nil {
-		return nil, false, glob.NewEmptyStmtTrue()
+		return nil, false, nil
 	}
 
 	fnTNoName, err := def.Instantiate_GetFnTemplateNoName(fnObj)
 	if err != nil {
-		return nil, false, glob.ErrRetWithErr(err)
+		return nil, false, err
 	}
 
-	return fnTNoName, true, glob.NewEmptyStmtTrue()
+	return fnTNoName, true, nil
 }
 
-func (envMgr *EnvMgr) NewFnTemplateInEnvMem(stmt *ast.DefFnSetStmt) ast.StmtRet{
+func (envMgr *EnvMgr) NewFnTemplateInEnvMem(stmt *ast.DefFnSetStmt) ast.StmtRet {
 	// 确保template name 没有被声明过
-	ret := envMgr.IsValidAndAvailableName(string(stmt.TemplateDefHeader.Name))
-	if ret.IsNotTrue() {
-		return glob.ErrRet(fmt.Sprintf("fn template name %s is already declared", stmt.TemplateDefHeader.Name))
+	ok := envMgr.IsValidAndAvailableName(string(stmt.TemplateDefHeader.Name))
+	if !ok {
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("fn template name %s is already declared", stmt.TemplateDefHeader.Name))
 	}
 
-	ret = envMgr.AtomsInFnTemplateFnTemplateDeclared(ast.Atom(stmt.TemplateDefHeader.Name), stmt)
+	ret := envMgr.AtomsInFnTemplateFnTemplateDeclared(ast.Atom(stmt.TemplateDefHeader.Name), stmt)
 	if ret.IsErr() {
 		return ret
 	}
@@ -117,5 +118,5 @@ func (envMgr *EnvMgr) NewFnTemplateInEnvMem(stmt *ast.DefFnSetStmt) ast.StmtRet{
 	// Mark in current EnvSlice
 	envMgr.CurEnv().FnTemplateDefMem[string(stmt.TemplateDefHeader.Name)] = struct{}{}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueStmtEmptyRet(stmt)
 }

@@ -21,7 +21,7 @@ import (
 	"strconv"
 )
 
-func (ie *InferEngine) trueInFact(fact ast.SpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFact(fact ast.SpecificFactStmt) ast.ShortRet {
 	asFact, ok := fact.(*ast.PureSpecificFactStmt)
 	if !ok || len(asFact.Params) != 2 {
 		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("in fact expect 2 parameters, get %d in %s", len(asFact.Params), fact)})
@@ -101,7 +101,7 @@ func (ie *InferEngine) trueInFact(fact ast.SpecificFactStmt) *glob.ShortRet {
 // trueInFactByNamedFnSet handles inference for x $in fnTemplate(...)
 // Inference: Derives a universal fact from the function template definition
 // and stores the function-template satisfaction relationship
-func (ie *InferEngine) trueInFactByNamedFnSet(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByNamedFnSet(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	isTemplate, ret := ie.trueInFactInFnSet(fact)
 	if ret.IsErr() {
 		return ret
@@ -114,7 +114,7 @@ func (ie *InferEngine) trueInFactByNamedFnSet(fact *ast.PureSpecificFactStmt) *g
 
 // trueInFactByAnonymousFnSetObj handles inference for x $in fnTemplateFnObj
 // Inference: Inserts the function x into the function template table
-func (ie *InferEngine) trueInFactByAnonymousFnSetObj(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByAnonymousFnSetObj(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	fnFn, ok := fact.Params[1].(*ast.FnObj)
 	if !ok || !ast.IsAnonymousFnSet(fnFn) {
 		return glob.NewEmptyShortUnknownRet()
@@ -136,7 +136,7 @@ func (ie *InferEngine) trueInFactByAnonymousFnSetObj(fact *ast.PureSpecificFactS
 // trueInFactByCart handles inference for x $in cart(S1, S2, ..., Sn)
 // It tries both direct cart and cart from equal facts
 // Inference: If x is in a cartesian product, then each component of x is in the corresponding set
-func (ie *InferEngine) trueInFactByCart(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByCart(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	// Try direct cart first
 	if fnObj, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordCart) {
 		return ie.trueInFactInCart(fact.Params[0], fnObj)
@@ -163,7 +163,7 @@ func (ie *InferEngine) trueInFactByCart(fact *ast.PureSpecificFactStmt) *glob.Sh
 //   - a[i] $in Si for each i (each component is in the corresponding set)
 //   - dim(a) = n (dimension equals the number of sets)
 //   - is_tuple(a) (the object is a tuple)
-func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) *glob.ShortRet {
+func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) ast.ShortRet {
 	derivedFacts := []string{}
 
 	// 为每个索引生成 a[i] $in cartSet.Params[i-1] 的事实（索引从1开始）
@@ -199,7 +199,7 @@ func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) *glob.S
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) trueInFactInFnSet(fact *ast.PureSpecificFactStmt) (bool, *glob.ShortRet) {
+func (ie *InferEngine) trueInFactInFnSet(fact *ast.PureSpecificFactStmt) (bool, ast.ShortRet) {
 	if _, ok := fact.Params[1].(*ast.FnObj); !ok {
 		return false, glob.NewEmptyShortTrueRet()
 	}
@@ -248,7 +248,7 @@ func (ie *InferEngine) trueInFactInFnSet(fact *ast.PureSpecificFactStmt) (bool, 
 // trueInFactByListSet handles inference for x $in listSet(...)
 // It tries to get the listSet either directly or from equal facts
 // Inference: If x is in a finite list set, then x equals one of the elements
-func (ie *InferEngine) trueInFactByListSet(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByListSet(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	// Try to get listSet, either directly or from equal facts
 	listSetObj := ie.EnvMgr.GetListSetEqualToObj(fact.Params[1])
 	if listSetObj == nil {
@@ -274,7 +274,7 @@ func (ie *InferEngine) trueInFactByListSet(fact *ast.PureSpecificFactStmt) *glob
 
 // trueInFactBySetBuilder handles inference for x $in {y in T: P(y)}
 // Inference: If x is in a set builder, then x is in the parent set T and satisfies all intentional facts P(x)
-func (ie *InferEngine) trueInFactBySetBuilder(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactBySetBuilder(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	setBuilderObj := ie.EnvMgr.GetSetBuilderEqualToObj(fact.Params[1])
 	if setBuilderObj == nil {
 		return glob.NewEmptyShortUnknownRet()
@@ -287,7 +287,7 @@ func (ie *InferEngine) trueInFactBySetBuilder(fact *ast.PureSpecificFactStmt) *g
 // Inference generates:
 //   - obj $in parentSet (membership in parent set)
 //   - All instantiated intentional facts from the set builder
-func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.FnObj) *glob.ShortRet {
+func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.FnObj) ast.ShortRet {
 	derivedFactStrings := []string{}
 	setBuilderStruct, err := setBuilderObj.ToSetBuilderStruct()
 	if err != nil {
@@ -332,7 +332,7 @@ func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.Fn
 //   - x >= a (lower bound)
 //   - x < b (for range) or x <= b (for closed_range)
 //   - Additional derived facts from comparison postprocessing (e.g., x != 0, x^2 > 0, etc.)
-func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	// Check if the second parameter is a range or closed_range function call
 	if !ast.ObjIsRangeOrClosedRangeWith2Params(fact.Params[1]) {
 		return glob.NewEmptyShortUnknownRet()
@@ -362,7 +362,7 @@ func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.PureSpecificFact
 		return glob.ErrStmtMsgToShortRet(ret)
 	}
 	derivedFactStrings = append(derivedFactStrings, greaterEqualLeftFact.String())
-	var retShort *glob.ShortRet
+	var retShort ast.ShortRet
 	retShort = ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterEqualLeftFact)
 	if retShort.IsErr() {
 		return retShort
@@ -422,7 +422,7 @@ func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.PureSpecificFact
 // trueInFactByN handles inference for x $in N (natural numbers including 0)
 // Inference generates:
 //   - 0 <= x (non-negativity fact)
-// func (ie *InferEngine) trueInFactByN(fact *ast.SpecFactStmt) *glob.ShortRet {
+// func (ie *InferEngine) trueInFactByN(fact *ast.SpecFactStmt) ast.ShortRet {
 // 	derivedFacts := []string{}
 
 // 	obj := fact.Params[0]
@@ -443,7 +443,7 @@ func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.PureSpecificFact
 //   - x $in N, x $in Q, x $in R (number type memberships)
 //   - x > 0, x >= 1 (positivity facts)
 //   - Additional derived facts from comparison postprocessing (e.g., x != 0, x^2 > 0, sqrt(x) > 0, etc.)
-func (ie *InferEngine) trueInFactByNPos(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByNPos(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 
 	obj := fact.Params[0]
@@ -501,7 +501,7 @@ func (ie *InferEngine) trueInFactByNPos(fact *ast.PureSpecificFactStmt) *glob.Sh
 //   - x $in R (real number membership)
 //   - x > 0 (positivity fact)
 //   - Additional derived facts from comparison postprocessing (e.g., x != 0, x^2 > 0, sqrt(x) > 0, etc.)
-func (ie *InferEngine) trueInFactByRPos(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByRPos(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 
 	obj := fact.Params[0]
@@ -535,7 +535,7 @@ func (ie *InferEngine) trueInFactByRPos(fact *ast.PureSpecificFactStmt) *glob.Sh
 //   - x $in R (real number membership)
 //   - x < 0 (negativity fact)
 //   - Additional derived facts from comparison postprocessing (e.g., x != 0, -x > 0, etc.)
-func (ie *InferEngine) trueInFactByRNeg(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByRNeg(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 
 	obj := fact.Params[0]
@@ -570,7 +570,7 @@ func (ie *InferEngine) trueInFactByRNeg(fact *ast.PureSpecificFactStmt) *glob.Sh
 //   - x $in Q, x $in R (number type memberships)
 //   - x < 0 (negativity fact)
 //   - Additional derived facts from comparison postprocessing (e.g., x != 0, -x > 0, etc.)
-func (ie *InferEngine) trueInFactByZNeg(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByZNeg(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 
 	obj := fact.Params[0]
@@ -621,7 +621,7 @@ func (ie *InferEngine) trueInFactByZNeg(fact *ast.PureSpecificFactStmt) *glob.Sh
 //   - x $in R (real number membership)
 //   - x < 0 (negativity fact)
 //   - Additional derived facts from comparison postprocessing (e.g., x != 0, -x > 0, etc.)
-func (ie *InferEngine) trueInFactByQNeg(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByQNeg(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 
 	obj := fact.Params[0]
@@ -664,7 +664,7 @@ func (ie *InferEngine) trueInFactByQNeg(fact *ast.PureSpecificFactStmt) *glob.Sh
 //   - x $in R (real number membership)
 //   - x > 0 (positivity fact)
 //   - Additional derived facts from comparison postprocessing (e.g., x != 0, x^2 > 0, sqrt(x) > 0, etc.)
-func (ie *InferEngine) trueInFactByQPos(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByQPos(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 
 	obj := fact.Params[0]
@@ -705,7 +705,7 @@ func (ie *InferEngine) trueInFactByQPos(fact *ast.PureSpecificFactStmt) *glob.Sh
 // Inference generates:
 //   - x != 0 (non-zero fact)
 //   - x $in R (real number membership)
-func (ie *InferEngine) trueInFactByRNot0(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByRNot0(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 
 	obj := fact.Params[0]
@@ -733,7 +733,7 @@ func (ie *InferEngine) trueInFactByRNot0(fact *ast.PureSpecificFactStmt) *glob.S
 // Inference generates:
 //   - x != 0 (non-zero fact)
 //   - x $in Z (integer membership)
-func (ie *InferEngine) trueInFactByZNot0(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByZNot0(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 
 	obj := fact.Params[0]
@@ -762,7 +762,7 @@ func (ie *InferEngine) trueInFactByZNot0(fact *ast.PureSpecificFactStmt) *glob.S
 //   - x != 0 (non-zero fact)
 //   - x $in Q (rational number membership)
 //   - x $in R (real number membership)
-func (ie *InferEngine) trueInFactByQNot0(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByQNot0(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 
 	obj := fact.Params[0]
@@ -796,7 +796,7 @@ func (ie *InferEngine) trueInFactByQNot0(fact *ast.PureSpecificFactStmt) *glob.S
 
 // trueInFactBySetOperations handles inference for set operations (cup, cap, union, intersect, power_set, set_minus)
 // It checks if the second parameter is a set operation function call
-func (ie *InferEngine) trueInFactBySetOperations(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactBySetOperations(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	fnObj, ok := fact.Params[1].(*ast.FnObj)
 	if !ok {
 		return glob.NewEmptyShortUnknownRet()
@@ -838,7 +838,7 @@ func (ie *InferEngine) trueInFactBySetOperations(fact *ast.PureSpecificFactStmt)
 
 // trueInFactInCup handles inference for item $in cup(x)
 // Inference: exist x_item x st item $in x_item
-func (ie *InferEngine) trueInFactInCup(item ast.Obj, cupSet *ast.FnObj) *glob.ShortRet {
+func (ie *InferEngine) trueInFactInCup(item ast.Obj, cupSet *ast.FnObj) ast.ShortRet {
 	if len(cupSet.Params) != 1 {
 		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("cup expects 1 parameter, got %d", len(cupSet.Params))})
 	}
@@ -865,7 +865,7 @@ func (ie *InferEngine) trueInFactInCup(item ast.Obj, cupSet *ast.FnObj) *glob.Sh
 
 // trueInFactInCap handles inference for item $in cap(x)
 // Inference: forall x_item x: item $in x_item
-func (ie *InferEngine) trueInFactInCap(item ast.Obj, capSet *ast.FnObj) *glob.ShortRet {
+func (ie *InferEngine) trueInFactInCap(item ast.Obj, capSet *ast.FnObj) ast.ShortRet {
 	if len(capSet.Params) != 1 {
 		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("cap expects 1 parameter, got %d", len(capSet.Params))})
 	}
@@ -895,7 +895,7 @@ func (ie *InferEngine) trueInFactInCap(item ast.Obj, capSet *ast.FnObj) *glob.Sh
 
 // trueInFactInUnion handles inference for item $in union(x, y)
 // Inference: item $in x or item $in y
-func (ie *InferEngine) trueInFactInUnion(item ast.Obj, x ast.Obj, y ast.Obj) *glob.ShortRet {
+func (ie *InferEngine) trueInFactInUnion(item ast.Obj, x ast.Obj, y ast.Obj) ast.ShortRet {
 	// Create or fact: item $in x or item $in y
 	inXFact := ast.NewInFactWithObj(item, x)
 	inYFact := ast.NewInFactWithObj(item, y)
@@ -912,7 +912,7 @@ func (ie *InferEngine) trueInFactInUnion(item ast.Obj, x ast.Obj, y ast.Obj) *gl
 
 // trueInFactInIntersect handles inference for item $in intersect(x, y)
 // Inference: item $in x and item $in y
-func (ie *InferEngine) trueInFactInIntersect(item ast.Obj, x ast.Obj, y ast.Obj) *glob.ShortRet {
+func (ie *InferEngine) trueInFactInIntersect(item ast.Obj, x ast.Obj, y ast.Obj) ast.ShortRet {
 	derivedFacts := []string{}
 
 	// Create fact: item $in x
@@ -936,7 +936,7 @@ func (ie *InferEngine) trueInFactInIntersect(item ast.Obj, x ast.Obj, y ast.Obj)
 
 // trueInFactInPowerSet handles inference for y $in power_set(x)
 // Inference: y $subset_of x
-func (ie *InferEngine) trueInFactInPowerSet(y ast.Obj, x ast.Obj) *glob.ShortRet {
+func (ie *InferEngine) trueInFactInPowerSet(y ast.Obj, x ast.Obj) ast.ShortRet {
 	// Create fact: y $subset_of x
 	subsetFact := ast.NewPureSpecificFactStmt(
 		true,
@@ -955,7 +955,7 @@ func (ie *InferEngine) trueInFactInPowerSet(y ast.Obj, x ast.Obj) *glob.ShortRet
 
 // trueInFactInSetMinus handles inference for item $in set_minus(x, y)
 // Inference: item $in x and not item $in y
-func (ie *InferEngine) trueInFactInSetMinus(item ast.Obj, x ast.Obj, y ast.Obj) *glob.ShortRet {
+func (ie *InferEngine) trueInFactInSetMinus(item ast.Obj, x ast.Obj, y ast.Obj) ast.ShortRet {
 	derivedFacts := []string{}
 
 	// Create fact: item $in x
@@ -982,7 +982,7 @@ func (ie *InferEngine) trueInFactInSetMinus(item ast.Obj, x ast.Obj, y ast.Obj) 
 	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
 }
 
-func (ie *InferEngine) trueInFactByN(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByN(fact *ast.PureSpecificFactStmt) ast.ShortRet {
 	derivedFacts := []string{}
 
 	obj := fact.Params[0]
