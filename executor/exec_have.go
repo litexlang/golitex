@@ -25,7 +25,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet
 
 	newFactMsgs := []string{}
 	defineMsgs := []string{}
-	verifyProcessMsgs := []*glob.VerRet{}
+	verifyProcessMsgs := []VerRet{}
 
 	for i := range len(stmt.ObjNames) {
 		objName := stmt.ObjNames[i]
@@ -77,7 +77,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) *glob.StmtRet
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) *glob.StmtRet {
 	defineMsgs := []string{}
-	verifyProcessMsgs := []*glob.VerRet{}
+	verifyProcessMsgs := []VerRet{}
 
 	for i := range len(stmt.Objs) {
 		if !glob.IsKeywordSetOrNonEmptySetOrFiniteSet(stmt.ObjSets[i].String()) {
@@ -116,7 +116,7 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) *glob.StmtRet {
 		return glob.ErrRet(shortRet.String())
 	}
 
-	verifyProcessMsgs := []*glob.VerRet{}
+	verifyProcessMsgs := []VerRet{}
 	defineMsgs := []string{}
 
 	// 返回值要是set
@@ -201,7 +201,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) *glob.StmtRet {
 		return glob.ErrRet(shortRet.String())
 	}
 
-	verifyProcessMsgs := []*glob.VerRet{}
+	verifyProcessMsgs := []VerRet{}
 	defineMsgs := []string{}
 
 	// Verify first
@@ -305,7 +305,7 @@ func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob
 		return glob.ErrRet(shortRet.String())
 	}
 
-	verifyProcessMsgs := []*glob.VerRet{}
+	verifyProcessMsgs := []VerRet{}
 	defineMsgs := []string{}
 	// Verify first and get thenFacts
 	execRet := exec.checkHaveFnCaseByCaseStmt(stmt)
@@ -323,7 +323,7 @@ func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob
 }
 
 func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) *glob.StmtRet {
-	verifyProcessMsgs := []*glob.VerRet{}
+	verifyProcessMsgs := []VerRet{}
 
 	// Verify all cases cover domain and don't overlap
 	execState := exec.haveFnCaseByCase_AllCasesCoverDomainAndNotOverlap(stmt)
@@ -347,7 +347,7 @@ func (exec *Executor) haveFnCaseByCase_AllCasesCoverDomainAndNotOverlap(stmt *as
 }
 
 func (exec *Executor) checkHaveFnCaseByCaseStmt_Cases(stmt *ast.HaveFnCaseByCaseStmt) *glob.StmtRet {
-	verifyProcessMsgs := []*glob.VerRet{}
+	verifyProcessMsgs := []VerRet{}
 	// Verify each case: execute proof and verify return value
 	for i := range len(stmt.CaseByCaseFacts) {
 		execState := exec.verifyHaveFnCaseByCase_OneCase(stmt, i)

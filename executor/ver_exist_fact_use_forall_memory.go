@@ -14,7 +14,7 @@
 
 package litex_executor
 
-// func (ver *Verifier) MatchExistFactUseForallMemory(given *ast.ExistSpecificFactStmt, knownFacts []env.KnownSpecFact_InUniFact, verState *VerState) *glob.VerRet {
+// func (ver *Verifier) MatchExistFactUseForallMemory(given *ast.ExistSpecificFactStmt, knownFacts []env.KnownSpecFact_InUniFact, verState *VerState) ast.VerRet {
 // LoopOverFacts:
 // 	for _, knownFact := range knownFacts {
 // 		verRet := ver.MatchExistSpecificFactWithExistSpecFactInUniFact(given, knownFact, verState)
@@ -29,25 +29,25 @@ package litex_executor
 // 		}
 // 	}
 
-// 	return glob.NewEmptyVerRetUnknown()
+// 	return ast.NewEmptyUnknownVerRet()
 // }
 
-// func (ver *Verifier) MatchExistSpecificFactWithExistSpecFactInUniFact(given *ast.ExistSpecificFactStmt, knownFact env.KnownSpecFact_InUniFact, verState *VerState) *glob.VerRet {
+// func (ver *Verifier) MatchExistSpecificFactWithExistSpecFactInUniFact(given *ast.ExistSpecificFactStmt, knownFact env.KnownSpecFact_InUniFact, verState *VerState) ast.VerRet {
 // 	stored := knownFact.UniFact.ThenFacts[knownFact.SpecFactIndex].(*ast.ExistSpecificFactStmt)
 
 // 	if len(stored.ExistFreeParams) != len(given.ExistFreeParams) {
-// 		return glob.NewEmptyVerRetUnknown()
+// 		return ast.NewEmptyUnknownVerRet()
 // 	}
 
 // 	if given.IsTrue != stored.IsTrue {
-// 		return glob.NewEmptyVerRetUnknown()
+// 		return ast.NewEmptyUnknownVerRet()
 // 	}
 
 // 	if given.PureFact.IsTrue != stored.PureFact.IsTrue {
-// 		return glob.NewEmptyVerRetUnknown()
+// 		return ast.NewEmptyUnknownVerRet()
 // 	}
 
-// 	uniMap, _, _, verRet := ver.matchFcInExistFactWithFreeParamsInForallFact(given, knownFact.UniFact.Params, knownFact.UniFact.ThenFacts[knownFact.SpecFactIndex].(*ast.ExistSpecificFactStmt), verState)
+// 	uniMap, _, _, ast.VerRet := ver.matchFcInExistFactWithFreeParamsInForallFact(given, knownFact.UniFact.Params, knownFact.UniFact.ThenFacts[knownFact.SpecFactIndex].(*ast.ExistSpecificFactStmt), verState)
 // 	if verRet.IsErr() || verRet.IsUnknown() {
 // 		return verRet
 // 	}
@@ -63,7 +63,7 @@ package litex_executor
 
 // 		instParam, ok := uniMap[string(knownFact.UniFact.Params[i])]
 // 		if !ok {
-// 			return glob.NewEmptyVerRetUnknown()
+// 			return ast.NewEmptyUnknownVerRet()
 // 		}
 
 // 		verRet := ver.VerFactStmt(ast.NewInFactWithObj(instParam, instParamSet), verState)
@@ -71,7 +71,7 @@ package litex_executor
 // 			return verRet
 // 		}
 // 		if verRet.IsUnknown() {
-// 			return glob.NewEmptyVerRetUnknown()
+// 			return ast.NewEmptyUnknownVerRet()
 // 		}
 // 	}
 
@@ -86,14 +86,14 @@ package litex_executor
 // 			return verRet
 // 		}
 // 		if verRet.IsUnknown() {
-// 			return glob.NewEmptyVerRetUnknown()
+// 			return ast.NewEmptyUnknownVerRet()
 // 		}
 // 	}
 
 // 	return glob.NewEmptyVerRetTrue()
 // }
 
-// func (ver *Verifier) matchFcInExistFactWithFreeParamsInForallFact(given *ast.ExistSpecificFactStmt, freeParams []string, knownExistFactInUniFact *ast.ExistSpecificFactStmt, verState *VerState) (map[string]ast.Obj, *ast.ExistSpecificFactStmt, *ast.ExistSpecificFactStmt, *glob.VerRet) {
+// func (ver *Verifier) matchFcInExistFactWithFreeParamsInForallFact(given *ast.ExistSpecificFactStmt, freeParams []string, knownExistFactInUniFact *ast.ExistSpecificFactStmt, verState *VerState) (map[string]ast.Obj, *ast.ExistSpecificFactStmt, *ast.ExistSpecificFactStmt, VerRet) {
 // 	givenFcs, knownFcs, newGiven, newKnown, ret := ver.GetParamsFromExistFactForMatchUniFactParams(given, knownExistFactInUniFact, freeParams)
 // 	if ret.IsNotTrue() {
 // 		return nil, nil, nil, ret
@@ -105,7 +105,7 @@ package litex_executor
 // 	}
 
 // 	if !ok {
-// 		return nil, nil, nil, glob.NewEmptyVerRetUnknown()
+// 		return nil, nil, nil, ast.NewEmptyUnknownVerRet()
 // 	}
 
 // 	instKnownFact, err := newKnown.Instantiate(uniConMap)
@@ -117,10 +117,10 @@ package litex_executor
 // 		return uniConMap, newGiven, newKnown, glob.NewEmptyVerRetTrue()
 // 	}
 
-// 	return nil, nil, nil, glob.NewEmptyVerRetUnknown()
+// 	return nil, nil, nil, ast.NewEmptyUnknownVerRet()
 // }
 
-// func (ver *Verifier) GetParamsFromExistFactForMatchUniFactParams(given *ast.ExistSpecificFactStmt, knownExistFactInUniFact *ast.ExistSpecificFactStmt, freeParams []string) ([]ast.Obj, []ast.Obj, *ast.ExistSpecificFactStmt, *ast.ExistSpecificFactStmt, *glob.VerRet) {
+// func (ver *Verifier) GetParamsFromExistFactForMatchUniFactParams(given *ast.ExistSpecificFactStmt, knownExistFactInUniFact *ast.ExistSpecificFactStmt, freeParams []string) ([]ast.Obj, []ast.Obj, *ast.ExistSpecificFactStmt, *ast.ExistSpecificFactStmt, VerRet) {
 // 	usedNames := map[string]struct{}{}
 // 	for _, param := range freeParams {
 // 		usedNames[string(param)] = struct{}{}

@@ -21,7 +21,7 @@ import (
 	"strings"
 )
 
-func (ver *Verifier) checkFnsReq(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) checkFnsReq(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	if _, ok := stmt.(*ast.PureSpecificFactStmt); ok {
 		stateNoMsg := state.GetNoMsg()
 		for _, param := range stmt.(*ast.PureSpecificFactStmt).Params {
@@ -46,7 +46,7 @@ func (ver *Verifier) checkFnsReq(stmt ast.SpecificFactStmt, state *VerState) *gl
 	}
 }
 
-func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) *glob.VerRet {
+func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) ast.VerRet {
 	if atom, ok := obj.(ast.Atom); ok {
 		if ret := ver.Env.LookupNamesInObj(atom, map[string]struct{}{}); ret.IsNotTrue() {
 			return glob.NewVerRet(glob.StmtRetTypeError, obj.String(), 0, []string{ret.String()})
@@ -81,7 +81,7 @@ func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *Ver
 }
 
 // TODO: 非常缺乏检查。因为这里的验证非常麻烦，{}里包括了事实，而事实里有fn，所以需要检查fn行不行
-func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerState) *glob.VerRet {
+func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ast.VerRet {
 	ver.newEnv()
 	defer ver.deleteEnv()
 
@@ -151,7 +151,7 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) listSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) *glob.VerRet {
+func (ver *Verifier) listSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ast.VerRet {
 	// // 所有参数都是$in list set
 	// for _, param := range objAsFnObj.Params {
 	// 	verRet := ver.VerFactStmt(ast.NewIsASetFact(param, glob.BuiltinLine), state)
@@ -180,7 +180,7 @@ func (ver *Verifier) listSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) tupleFnReq(objAsFnObj *ast.FnObj, state *VerState) *glob.VerRet {
+func (ver *Verifier) tupleFnReq(objAsFnObj *ast.FnObj, state *VerState) ast.VerRet {
 	if len(objAsFnObj.Params) < 2 {
 		return glob.NewVerRet(glob.StmtRetTypeError, objAsFnObj.String(), 0, []string{fmt.Sprintf("parameters in %s must be at least 2, %s in %s is not valid", objAsFnObj.FnHead, objAsFnObj, objAsFnObj)})
 	}
@@ -200,7 +200,7 @@ func (ver *Verifier) tupleFnReq(objAsFnObj *ast.FnObj, state *VerState) *glob.Ve
 	return glob.NewEmptyVerRetTrue()
 }
 
-// func (ver *Verifier) dimFnRequirement(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+// func (ver *Verifier) dimFnRequirement(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 // 	if len(fnObj.Params) != 1 {
 // 		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj)})
 // 	}
@@ -216,7 +216,7 @@ func (ver *Verifier) tupleFnReq(objAsFnObj *ast.FnObj, state *VerState) *glob.Ve
 // 	return glob.NewEmptyVerRetTrue()
 // }
 
-func (ver *Verifier) setDimFnRequirement(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+func (ver *Verifier) setDimFnRequirement(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 	if len(fnObj.Params) != 1 {
 		return glob.NewVerRet(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj)})
 	}
@@ -231,7 +231,7 @@ func (ver *Verifier) setDimFnRequirement(fnObj *ast.FnObj, state *VerState) *glo
 	return glob.NewEmptyVerRetTrue()
 }
 
-// func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+// func (ver *Verifier) parasSatisfyProjReq(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 // 	if len(fnObj.Params) != 2 {
 // 		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("parameters in %s must be 2, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj)})
 // 	}
@@ -283,7 +283,7 @@ func (ver *Verifier) setDimFnRequirement(fnObj *ast.FnObj, state *VerState) *glo
 // 	return verRet
 // }
 
-// func (ver *Verifier) countFnRequirement(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+// func (ver *Verifier) countFnRequirement(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 // 	if len(fnObj.Params) != 1 {
 // 		return glob.NewVerMsg(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("parameters in %s must be 1, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj)})
 // 	}
@@ -298,7 +298,7 @@ func (ver *Verifier) setDimFnRequirement(fnObj *ast.FnObj, state *VerState) *glo
 // 	return glob.NewEmptyVerRetTrue()
 // }
 
-func (ver *Verifier) cartFnRequirement(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+func (ver *Verifier) cartFnRequirement(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 	if len(fnObj.Params) < 2 {
 		return glob.NewVerRet(glob.StmtRetTypeError, fnObj.String(), 0, []string{fmt.Sprintf("parameters in %s must be at least 2, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj)})
 	}
@@ -316,7 +316,7 @@ func (ver *Verifier) cartFnRequirement(fnObj *ast.FnObj, state *VerState) *glob.
 	return glob.NewEmptyVerRetTrue()
 }
 
-func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) *glob.VerRet {
+func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 	_ = state
 
 	// [] 操作需要两个参数：obj 和 index
