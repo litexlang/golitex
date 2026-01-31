@@ -42,8 +42,7 @@ func (envMgr *EnvMgr) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) ast.
 	for _, fact := range stmt.IffFactsOrNil {
 		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
 		if ret.IsErr() {
-			ret.AddExtraInfo(fmt.Sprintf("in iff fact of prop %s definition", stmt.DefHeader.Name))
-			return ret
+			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("in iff fact of prop %s definition", stmt.DefHeader.Name))
 		}
 	}
 
@@ -71,7 +70,7 @@ func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *a
 	}
 
 	ret := envMgr.LookupNamesInObj(stmt.AnonymousFn.RetSet, extraAtomNames)
-	if !ret {
+	if ret.IsErr() {
 		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("in return set of fn template %s", name))
 	}
 
@@ -80,8 +79,7 @@ func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *a
 	for _, fact := range stmt.TemplateDomFacts {
 		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
 		if ret.IsErr() {
-			ret.AddExtraInfo(fmt.Sprintf("in template dom fact of fn %s definition", name))
-			return ret
+			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("in template dom fact of fn %s definition", name))
 		}
 	}
 
@@ -97,16 +95,14 @@ func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *a
 	for _, fact := range stmt.AnonymousFn.DomFacts {
 		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
 		if ret.IsErr() {
-			ret.AddExtraInfo(fmt.Sprintf("in dom fact of fn %s definition", name))
-			return ret
+			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("in dom fact of fn %s definition", name))
 		}
 	}
 
 	for _, fact := range stmt.AnonymousFn.ThenFacts {
 		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
 		if ret.IsErr() {
-			ret.AddExtraInfo(fmt.Sprintf("in then fact of fn %s definition", name))
-			return ret
+			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("in then fact of fn %s definition", name))
 		}
 	}
 
@@ -194,12 +190,11 @@ func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) ast.StmtRet {
 	for _, fact := range stmt.NewInFacts() {
 		ret := envMgr.LookUpNamesInFact(fact, map[string]struct{}{})
 		if ret.IsErr() {
-			ret.AddExtraInfo("in new in fact of def let statement")
-			return ret
+			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo("in new in fact of def let statement")
 		}
-		ret = envMgr.NewFactWithCheckingNameDefined(fact)
-		if ret.IsErr() {
-			return ret
+		ret2 := envMgr.NewFactWithCheckingNameDefined(fact)
+		if ret2.IsErr() {
+			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo("in new fact with checking name defined of def let statement")
 		}
 		defineFacts = append(defineFacts, fact.String())
 		implyMsgs = append(implyMsgs)
@@ -208,14 +203,13 @@ func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) ast.StmtRet {
 	for _, fact := range stmt.Facts {
 		ret := envMgr.LookUpNamesInFact(fact, map[string]struct{}{})
 		if ret.IsErr() {
-			ret.AddExtraInfo("in fact of def let statement")
-			return ret
+			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo("in fact of def let statement")
 		}
-		ret = envMgr.NewFactWithCheckingNameDefined(fact)
-		if ret.IsErr() {
-			return ret
+		ret2 := envMgr.NewFactWithCheckingNameDefined(fact)
+		if ret2.IsErr() {
+			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo("in new fact with checking name defined of def let statement")
 		}
-		if ret.IsTrue() {
+		if ret2.IsTrue() {
 			defineFacts = append(defineFacts, fact.String())
 		}
 		implyMsgs = append(implyMsgs, fact)

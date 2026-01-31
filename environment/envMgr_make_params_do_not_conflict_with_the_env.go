@@ -47,7 +47,7 @@ func (envMgr *EnvMgr) makeUniFactParamsInThisUniFactDoNotConflictWithEnv_getNewP
 	conflictingParams := map[string]struct{}{}
 	for _, param := range params {
 		ret := envMgr.IsNameUnavailable(param, map[string]struct{}{})
-		if ret.IsTrue() {
+		if ret {
 			conflictingParams[param] = struct{}{}
 		}
 	}

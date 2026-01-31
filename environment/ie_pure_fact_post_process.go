@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ie *InferEngine) newPureFact(fact *ast.PureSpecificFactStmt) ast.ShortRet {
+func (ie *InferEngine) newPureFact(fact *ast.PureSpecificFactStmt) ast.StmtRet {
 	if glob.IsBuiltinPropName(string(fact.PropName)) {
 		ret := ie.BuiltinPropExceptTrueEqual(fact)
 		return ret
@@ -33,10 +33,10 @@ func (ie *InferEngine) newPureFact(fact *ast.PureSpecificFactStmt) ast.ShortRet 
 			ret := ie.inferByUserDefinedProp(fact)
 			return ret
 		}
-		return glob.NewEmptyShortTrueRet()
+		return ast.NewTrueShortRet()
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("undefined prop: %s", fact.PropName)})
+	return ast.NewErrShortRetWithMsg(fmt.Sprintf("undefined prop: %s", fact.PropName))
 }
 
 func (ie *InferEngine) newFalseExist(fact *ast.ExistSpecificFactStmt) ast.ShortRet {
