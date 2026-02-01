@@ -17,7 +17,6 @@ package litex_env
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 	"slices"
 )
 
@@ -176,15 +175,13 @@ func (envMgr *EnvMgr) CheckAtomObjNameIsValidAndAvailableThenDefineIt(name strin
 // and checks that all atoms inside the facts are declared.
 // If the obj is a function, it will be inserted into the function definition memory.
 func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) ast.StmtRet {
-	implyMsgs := []ast.Stmt{}
-	defineFacts := []string{}
+	implyMsgs := []ast.InferRet{}
 	// If this obj is a function, it will be inserted into the function definition memory
 	for _, objName := range stmt.Objs {
 		ok, msg := envMgr.CheckAtomObjNameIsValidAndAvailableThenDefineIt(objName)
 		if !ok {
 			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(msg)
 		}
-		defineFacts = append(defineFacts, glob.IsANewObjectMsg(objName))
 	}
 
 	for _, fact := range stmt.NewInFacts() {
@@ -196,24 +193,20 @@ func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) ast.StmtRet {
 		if ret2.IsErr() {
 			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo("in new fact with checking name defined of def let statement")
 		}
-		defineFacts = append(defineFacts, fact.String())
 		implyMsgs = append(implyMsgs)
 	}
 
 	for _, fact := range stmt.Facts {
 		ret := envMgr.LookUpNamesInFact(fact, map[string]struct{}{})
-		if ret.IsErr() {
+		if ret.IsNotTrue() {
 			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo("in fact of def let statement")
 		}
 		ret2 := envMgr.NewFactWithCheckingNameDefined(fact)
-		if ret2.IsErr() {
+		if ret2.IsNotTrue() {
 			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo("in new fact with checking name defined of def let statement")
 		}
-		if ret2.IsTrue() {
-			defineFacts = append(defineFacts, fact.String())
-		}
-		implyMsgs = append(implyMsgs, fact)
+		implyMsgs = append(implyMsgs, ret2)
 	}
 
-	return ast.NewTrueStmtEmptyRet(stmt).AddDefines(defineFacts).AddInfers(implyMsgs)
+	return ast.NewTrueStmtEmptyRet(stmt).AddInfers(implyMsgs)
 }

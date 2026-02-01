@@ -1,11 +1,15 @@
 package litex_ast
 
+import "strings"
+
 type ShortRet interface {
 	shortRet()
 	IsTrue() bool
 	IsUnknown() bool
 	IsErr() bool
 	IsNotTrue() bool
+	String() string
+	GetMsg() []string
 }
 
 type TrueShortRet struct {
@@ -59,4 +63,28 @@ func NewUnknownShortRetWithMsg(msg string) ShortRet {
 
 func NewErrShortRetWithMsg(msg string) ShortRet {
 	return &ErrShortRet{Msg: []string{msg}}
+}
+
+func (r *TrueShortRet) String() string {
+	return strings.Join(r.Msg, "\n")
+}
+
+func (r *UnknownShortRet) String() string {
+	return strings.Join(r.Msg, "\n")
+}
+
+func (r *ErrShortRet) String() string {
+	return strings.Join(r.Msg, "\n")
+}
+
+func (r *TrueShortRet) GetMsg() []string {
+	return r.Msg
+}
+
+func (r *UnknownShortRet) GetMsg() []string {
+	return r.Msg
+}
+
+func (r *ErrShortRet) GetMsg() []string {
+	return r.Msg
 }
