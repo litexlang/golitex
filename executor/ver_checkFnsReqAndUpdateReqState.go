@@ -156,10 +156,10 @@ func (ver *Verifier) listSetFnRequirement(objAsFnObj *ast.FnObj, state *VerState
 	// for _, param := range objAsFnObj.Params {
 	// 	verRet := ver.VerFactStmt(ast.NewIsASetFact(param, glob.BuiltinLine), state)
 	// 	if verRet.IsErr() {
-	// 		return glob.ErrRet(verRet.String())
+	// 		return ast.StmtErrRet(verRet.String())
 	// 	}
 	// 	if verRet.IsUnknown() {
-	// 		return glob.ErrRet(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", objAsFnObj.FnHead, param, objAsFnObj))
+	// 		return ast.StmtErrRet(fmt.Sprintf("parameters in %s must be sets, %s in %s is not valid", objAsFnObj.FnHead, param, objAsFnObj))
 	// 	}
 	// }
 
@@ -269,12 +269,12 @@ func (ver *Verifier) setDimFnRequirement(fnObj *ast.FnObj, state *VerState) ast.
 // // TODO: 这里需要检查！
 // func (ver *Verifier) setDefinedByReplacementFnRequirement(fnObj *ast.FnObj, state *VerState) *glob.GlobRet {
 // 	if len(fnObj.Params) != 3 {
-// 		return glob.ErrRet(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
+// 		return ast.StmtErrRet(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 // 	}
 
 // 	propName, ok := fnObj.Params[2].(ast.AtomObj)
 // 	if !ok {
-// 		return glob.ErrRet(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
+// 		return ast.StmtErrRet(fmt.Sprintf("parameters in %s must be 3, %s in %s is not valid", fnObj.FnHead, fnObj, fnObj))
 // 	}
 
 // 	forallXOnlyOneYSatisfyGivenProp := ast.GetForallXOnlyOneYSatisfyGivenProp(fnObj.Params[0], fnObj.Params[1], propName)

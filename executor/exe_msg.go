@@ -17,7 +17,6 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 func SuccessExecStmtStr(stmt ast.Stmt) string {
@@ -32,14 +31,8 @@ func ErrorExecStmtStr(stmt ast.Stmt) string {
 	return fmt.Sprintf("Error: line %d\n", stmt.GetLine())
 }
 
-func (exec *Executor) AddStmtToStmtRet(ret ast.StmtRet, stmt ast.Stmt) ast.StmtRet{
+func (exec *Executor) AddStmtToStmtRet(ret ast.StmtRet, stmt ast.Stmt) ast.StmtRet {
 	ret.SetLine(stmt.GetLine())
 	ret.AddStmt(stmt.String())
-	return ret
-}
-
-func (exec *Executor) NewTrueStmtRet(stmt ast.Stmt) ast.StmtRet{
-	ret := glob.NewEmptyStmtTrue()
-	exec.AddStmtToStmtRet(ret, stmt)
 	return ret
 }

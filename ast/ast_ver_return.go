@@ -7,12 +7,17 @@ type VerRet interface {
 	IsErr() bool
 	IsNotTrue() bool
 	ToStmtRet() StmtRet
+	AddExtraInfo(extraInfo string) VerRet
+	AddExtraInfos(extraInfos []string) VerRet
+	GetExtraInfos() []string
+	GetToCheck() FactStmt
 }
 
 type TrueVerRet struct {
 	ToCheck                FactStmt
 	VerifiedByKnownFact    FactStmt
 	VerifiedByBuiltinRules string
+	ExtraInfo              []string
 }
 
 func (r *TrueVerRet) verRet()         {}
@@ -73,15 +78,54 @@ func (r *ErrVerRet) ToStmtRet() StmtRet {
 	return NewErrStmtEmptyRet(r.ToCheck)
 }
 
-func (r *UnknownVerRet) AddExtraInfo(extraInfo string) *UnknownVerRet {
+func (r *UnknownVerRet) AddExtraInfo(extraInfo string) VerRet {
 	r.ExtraInfo = append(r.ExtraInfo, extraInfo)
 	return r
 }
-func (r *ErrVerRet) AddExtraInfo(extraInfo string) *ErrVerRet {
+func (r *ErrVerRet) AddExtraInfo(extraInfo string) VerRet {
 	r.ExtraInfo = append(r.ExtraInfo, extraInfo)
 	return r
 }
 func (r *ErrVerRet) AddErr(err error) *ErrVerRet {
 	r.ExtraInfo = append(r.ExtraInfo, err.Error())
 	return r
+}
+
+func (r *TrueVerRet) AddExtraInfos(extraInfos []string) VerRet {
+	r.ExtraInfo = append(r.ExtraInfo, extraInfos...)
+	return r
+}
+
+func (r *TrueVerRet) GetExtraInfos() []string {
+	return r.ExtraInfo
+}
+
+func (r *UnknownVerRet) AddExtraInfos(extraInfos []string) VerRet {
+	r.ExtraInfo = append(r.ExtraInfo, extraInfos...)
+	return r
+}
+func (r *UnknownVerRet) GetExtraInfos() []string {
+	return r.ExtraInfo
+}
+func (r *ErrVerRet) AddExtraInfos(extraInfos []string) VerRet {
+	r.ExtraInfo = append(r.ExtraInfo, extraInfos...)
+	return r
+}
+func (r *ErrVerRet) GetExtraInfos() []string {
+	return r.ExtraInfo
+}
+
+func (r *TrueVerRet) AddExtraInfo(extraInfo string) VerRet {
+	r.ExtraInfo = append(r.ExtraInfo, extraInfo)
+	return r
+}
+
+func (r *TrueVerRet) GetToCheck() FactStmt {
+	return r.ToCheck
+}
+func (r *UnknownVerRet) GetToCheck() FactStmt {
+	return r.ToCheck
+}
+func (r *ErrVerRet) GetToCheck() FactStmt {
+	return r.ToCheck
 }

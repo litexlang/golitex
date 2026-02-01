@@ -27,7 +27,7 @@ func (exec *Executor) inferStmt(stmt *ast.InferStmt) ast.StmtRet {
 	for _, domFact := range stmt.DomFacts {
 		ret := exec.factStmt(domFact.(ast.FactStmt))
 		if ret.IsNotTrue() {
-			return exec.AddStmtToStmtRet(glob.ErrRet(fmt.Sprintf("failed to verify fact: %s", domFact.String())), stmt)
+			return exec.AddStmtToStmtRet(ast.StmtErrRet(fmt.Sprintf("failed to verify fact: %s", domFact.String())), stmt)
 		}
 	}
 
@@ -47,7 +47,7 @@ func (exec *Executor) inferStmt(stmt *ast.InferStmt) ast.StmtRet {
 		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
 			factStmt = orStmt
 		} else {
-			return glob.ErrRet(fmt.Sprintf("imply statement error: unsupported fact type in thenFacts: %T", thenFact))
+			return ast.StmtErrRet(fmt.Sprintf("imply statement error: unsupported fact type in thenFacts: %T", thenFact))
 		}
 		ret := ver.Env.NewFactWithCheckingNameDefined(factStmt)
 		if ret.IsNotTrue() {

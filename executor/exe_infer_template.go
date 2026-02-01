@@ -62,11 +62,11 @@ func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) ast.S
 		} else if orStmt, ok := domFact.(*ast.OrStmt); ok {
 			factStmt = orStmt
 		} else {
-			return glob.ErrRet(fmt.Sprintf("implyTemplate statement error: unsupported fact type in domFacts: %T", domFact))
+			return ast.StmtErrRet(fmt.Sprintf("implyTemplate statement error: unsupported fact type in domFacts: %T", domFact))
 		}
 		ret := exec.Env.NewFactWithCheckingNameDefined(factStmt)
 		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
+			return ast.StmtErrRet(ret.String())
 		}
 	}
 
@@ -88,15 +88,15 @@ func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) ast.S
 		} else if orStmt, ok := fact.(*ast.OrStmt); ok {
 			thenFactsAsFactStmt[i] = orStmt
 		} else {
-			return glob.ErrRet(fmt.Sprintf("implyTemplate statement error: unsupported fact type in thenFacts: %T", fact))
+			return ast.StmtErrRet(fmt.Sprintf("implyTemplate statement error: unsupported fact type in thenFacts: %T", fact))
 		}
 	}
 
 	execState, failedFact, err := exec.verifyFactsAtCurEnv(thenFactsAsFactStmt, Round0NoMsg())
 	if err != nil {
-		return glob.ErrRet(fmt.Sprintf("implyTemplate statement error: failed to verify fact:\n%s\n%s", failedFact, err))
+		return ast.StmtErrRet(fmt.Sprintf("implyTemplate statement error: failed to verify fact:\n%s\n%s", failedFact, err))
 	} else if execState.IsUnknown() {
-		return glob.ErrRet(fmt.Sprintf("implyTemplate statement error: failed to verify fact:\n%s", failedFact))
+		return ast.StmtErrRet(fmt.Sprintf("implyTemplate statement error: failed to verify fact:\n%s", failedFact))
 	}
 
 	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
@@ -118,7 +118,7 @@ func (exec *Executor) implyTemplateStmtStore(stmt *ast.InferTemplateStmt) ast.St
 				return ret
 			}
 		} else {
-			return glob.ErrRet(fmt.Sprintf("implyTemplate statement error: unsupported fact type in thenFacts: %T", thenFact))
+			return ast.StmtErrRet(fmt.Sprintf("implyTemplate statement error: unsupported fact type in thenFacts: %T", thenFact))
 		}
 	}
 

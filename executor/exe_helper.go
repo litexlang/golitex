@@ -58,7 +58,7 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 
 		ret := exec.Env.NewFactWithCheckingNameDefined(proof)
 		if ret.IsErr() {
-			return glob.ErrRet(ret.String()), proof, fmt.Errorf(ret.String())
+			return ast.StmtErrRet(ret.String()), proof, fmt.Errorf(ret.String())
 		}
 	}
 	return glob.NewEmptyStmtTrue(), nil, nil

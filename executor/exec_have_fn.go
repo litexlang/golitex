@@ -38,7 +38,7 @@ package litex_executor
 // 	newLetStmt := ast.NewDefLetStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts, stmt.Line)
 // 	execState := exec.defLetStmt(newLetStmt)
 // 	if execState.IsNotTrue() {
-// 		return glob.ErrRet(execState.String())
+// 		return ast.StmtErrRet(execState.String())
 // 	}
 
 // 	verRet := exec.haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNoOverlap_ReturnValueInRetSetAndSatisfyThen(stmt)
@@ -57,7 +57,7 @@ package litex_executor
 // 	for _, proof := range stmt.ProveCases {
 // 		execState := exec.Stmt(proof)
 // 		if execState.IsNotTrue() {
-// 			return glob.ErrRet(execState.String())
+// 			return ast.StmtErrRet(execState.String())
 // 		}
 // 	}
 
@@ -65,14 +65,14 @@ package litex_executor
 // 	orFact := ast.NewOrStmt(stmt.CaseByCaseFacts, stmt.Line)
 // 	execState := exec.factStmt(orFact)
 // 	if execState.IsNotTrue() {
-// 		return glob.ErrRet(execState.String())
+// 		return ast.StmtErrRet(execState.String())
 // 	}
 
 // 	// 证明 cases 互相不冲突且返回值在 retSet里且then fact成立
 // 	for i := range len(stmt.CaseByCaseFacts) {
 // 		execState = exec.haveFnCaseByCaseStmt_CheckCasesNotOverlap_ReturnValueInRetSet(stmt, i)
 // 		if execState.IsNotTrue() {
-// 			return glob.ErrRet(execState.String())
+// 			return ast.StmtErrRet(execState.String())
 // 		}
 // 	}
 
@@ -86,7 +86,7 @@ package litex_executor
 // 	// index known是对的
 // 	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.CaseByCaseFacts[index])
 // 	if ret.IsNotTrue() {
-// 		return glob.ErrRet(ret.String())
+// 		return ast.StmtErrRet(ret.String())
 // 	}
 
 // 	// 其他index的逆都是错的
@@ -98,7 +98,7 @@ package litex_executor
 // 		for _, notOtherCaseFact := range notOtherCaseFacts {
 // 			execState := exec.factStmt(notOtherCaseFact)
 // 			if execState.IsNotTrue() {
-// 				return glob.ErrRet(execState.String())
+// 				return ast.StmtErrRet(execState.String())
 // 			}
 // 		}
 // 	}
@@ -115,7 +115,7 @@ package litex_executor
 // 	inFact := ast.NewInFactWithObj(stmt.EqualToObjs[index], stmt.DefFnStmt.FnTemplate.RetSet)
 // 	ret = exec.factStmt(inFact)
 // 	if ret.IsNotTrue() {
-// 		return glob.ErrRet(ret.String())
+// 		return ast.StmtErrRet(ret.String())
 // 	}
 
 // 	panic("not implemented: 验证 then fact成立。这里可能要得在这里把函数先声明了，约束x在这个case上，然后验证里面的forall")

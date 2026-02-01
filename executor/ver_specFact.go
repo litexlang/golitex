@@ -332,7 +332,7 @@ func (ver *Verifier) verNotTrueEqualFact_BuiltinRules_WithState(stmt ast.Specifi
 	// // 如果左右两边能是能被处理的数字
 	// areBothNumLit, areEqual, err := cmp.NumLitEqual_ByEval(stmt.Params[0], stmt.Params[1])
 	// if err != nil {
-	// 	return glob.ErrRet(err.Error())
+	// 	return ast.StmtErrRet(err.Error())
 	// }
 	// if areBothNumLit {
 	// 	if !areEqual { // 这里是在证明两边不相等
