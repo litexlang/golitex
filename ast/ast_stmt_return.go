@@ -12,7 +12,6 @@ type StmtRet interface {
 type TrueStmtRet struct {
 	Stmt              Stmt
 	Define            []string
-	NewFact           []Stmt
 	VerifyProcess     []VerRet
 	Infer             []InferRet
 	InnerStmtRetSlice []StmtRet
@@ -26,10 +25,6 @@ func (r *TrueStmtRet) IsErr() bool     { return false }
 func (r *TrueStmtRet) IsNotTrue() bool { return false }
 func (r *TrueStmtRet) AddDefine(define string) *TrueStmtRet {
 	r.Define = append(r.Define, define)
-	return r
-}
-func (r *TrueStmtRet) AddNewFact(newFact Stmt) *TrueStmtRet {
-	r.NewFact = append(r.NewFact, newFact)
 	return r
 }
 func (r *TrueStmtRet) AddVerifyProcess(verifyProcess VerRet) *TrueStmtRet {
@@ -56,10 +51,6 @@ func (r *TrueStmtRet) AddInnerStmtRets(innerStmtRets []StmtRet) *TrueStmtRet {
 
 func (r *TrueStmtRet) AddDefines(defines []string) *TrueStmtRet {
 	r.Define = append(r.Define, defines...)
-	return r
-}
-func (r *TrueStmtRet) AddNewFacts(newFacts []Stmt) *TrueStmtRet {
-	r.NewFact = append(r.NewFact, newFacts...)
 	return r
 }
 func (r *TrueStmtRet) AddVerifyProcesses(verifyProcesses []VerRet) *TrueStmtRet {
@@ -95,7 +86,7 @@ func (r *ErrStmtRet) IsErr() bool     { return true }
 func (r *ErrStmtRet) IsNotTrue() bool { return true }
 
 func NewTrueStmtEmptyRet(stmt Stmt) *TrueStmtRet {
-	return &TrueStmtRet{Stmt: stmt, Define: []string{}, NewFact: []Stmt{}, VerifyProcess: []VerRet{}, Infer: []InferRet{}, InnerStmtRetSlice: []StmtRet{}, ExtraInfo: []string{}}
+	return &TrueStmtRet{Stmt: stmt, Define: []string{}, VerifyProcess: []VerRet{}, Infer: []InferRet{}, InnerStmtRetSlice: []StmtRet{}, ExtraInfo: []string{}}
 }
 func NewUnknownStmtEmptyRet(stmt Stmt) *UnknownStmtRet {
 	return &UnknownStmtRet{Stmt: stmt, ExtraInfo: []string{}}
