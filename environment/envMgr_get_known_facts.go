@@ -172,12 +172,12 @@ func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt ast.SpecificFactStmt)
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInUniFactMem) newFact(stmtAsSpecFactIndex int, uniFact *ast.UniFactStmt) ast.StmtRet {
+func (s SpecFactInUniFactMem) newFact(stmtAsSpecFactIndex int, uniFact *ast.UniFactStmt) ast.InferRet {
 	stmtAsSpecFact := uniFact.ThenFacts[stmtAsSpecFactIndex].(ast.SpecificFactStmt)
 
 	sameEnumFacts, ok := s.getSameEnumFacts(stmtAsSpecFact)
 	if !ok {
-		return ast.NewErrStmtEmptyRet(uniFact).AddExtraInfo(fmt.Sprintf("failed to get same enum facts for spec fact %s", stmtAsSpecFact.GetPropName()))
+		return ast.NewErrInferRet(uniFact).AddExtraInfo(fmt.Sprintf("failed to get same enum facts for spec fact %s", stmtAsSpecFact.GetPropName()))
 	}
 
 	if _, ok := sameEnumFacts[string(stmtAsSpecFact.GetPropName())]; !ok {
@@ -185,7 +185,7 @@ func (s SpecFactInUniFactMem) newFact(stmtAsSpecFactIndex int, uniFact *ast.UniF
 	}
 	sameEnumFacts[string(stmtAsSpecFact.GetPropName())] = append(sameEnumFacts[string(stmtAsSpecFact.GetPropName())], KnownSpecFact_InUniFact{stmtAsSpecFactIndex, uniFact})
 
-	return ast.NewTrueStmtEmptyRet(uniFact)
+	return ast.NewTrueInferRet(uniFact)
 }
 
 func (s SpecFactInImplyTemplateMem) getSameEnumFacts(stmt ast.SpecificFactStmt) (map[string][]KnownSpecFact_InImplyTemplate, ast.StmtRet) {

@@ -21,7 +21,7 @@ import (
 
 // newFactNoInfer stores facts without performing any inference.
 // This is used to prevent circular definitions (e.g., p => q, q => p).
-func (envMgr *EnvMgr) newFactNoInfer(stmt ast.FactStmt) ast.StmtRet {
+func (envMgr *EnvMgr) newFactNoInfer(stmt ast.FactStmt) ast.InferRet {
 	switch f := stmt.(type) {
 	case ast.SpecificFactStmt:
 		return envMgr.newSpecFactNoInfer(f)
@@ -34,13 +34,13 @@ func (envMgr *EnvMgr) newFactNoInfer(stmt ast.FactStmt) ast.StmtRet {
 	case *ast.EqualsFactStmt:
 		return envMgr.newEqualsFactNoInfer(f)
 	default:
-		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("unknown fact type: %T", stmt))
+		return ast.NewErrInferRet(stmt).AddExtraInfo(fmt.Sprintf("unknown fact type: %T", stmt))
 	}
 }
 
 // newSpecFactNoInfer stores a SpecFact without performing any inference.
 // It only stores the fact in memory, without triggering post-processing.
-func (envMgr *EnvMgr) newSpecFactNoInfer(fact ast.SpecificFactStmt) ast.StmtRet {
+func (envMgr *EnvMgr) newSpecFactNoInfer(fact ast.SpecificFactStmt) ast.InferRet {
 	if isEqualFact := ast.IsTrueEqualFact(fact); isEqualFact {
 		return envMgr.newTrueEqualNoInfer(fact.(*ast.PureSpecificFactStmt))
 	}
@@ -50,15 +50,15 @@ func (envMgr *EnvMgr) newSpecFactNoInfer(fact ast.SpecificFactStmt) ast.StmtRet 
 		return ret
 	}
 
-	return ast.NewTrueStmtEmptyRet(fact)
+	return ast.NewTrueInferRet(fact)
 }
 
 // newTrueEqualNoInfer stores an equality fact without performing any inference.
 // It stores the equality in the equal memory and simplifies symbol values,
 // but does not trigger equality-related inferences (e.g., cart, tuple, listSet).
-func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.PureSpecificFactStmt) ast.StmtRet {
+func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.PureSpecificFactStmt) ast.InferRet {
 	if len(fact.Params) != 2 {
-		return ast.NewErrStmtEmptyRet(fact).AddExtraInfo(fmt.Sprintf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
+		return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
 
 	ret := envMgr.storeTrueEqualInEqualMemNoInfer(fact)
@@ -72,12 +72,12 @@ func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.PureSpecificFactStmt) ast.St
 		return ret
 	}
 
-	return ast.NewTrueStmtEmptyRet(fact)
+	return ast.NewTrueInferRet(fact)
 }
 
 // newEqualsFactNoInfer stores an EqualsFact without performing any inference.
 // It converts the EqualsFact to individual equality facts and stores them without inference.
-func (envMgr *EnvMgr) newEqualsFactNoInfer(stmt *ast.EqualsFactStmt) ast.StmtRet {
+func (envMgr *EnvMgr) newEqualsFactNoInfer(stmt *ast.EqualsFactStmt) ast.InferRet {
 	equalFacts := stmt.ToEqualFacts()
 	for _, equalFact := range equalFacts {
 		ret := envMgr.newSpecFactNoInfer(equalFact)
@@ -85,35 +85,35 @@ func (envMgr *EnvMgr) newEqualsFactNoInfer(stmt *ast.EqualsFactStmt) ast.StmtRet
 			return ret
 		}
 	}
-	return ast.NewTrueStmtEmptyRet(stmt)
+	return ast.NewTrueInferRet(stmt)
 }
 
-// func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) ast.StmtRet{
+// func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) ast.InferRet{
 // 	ret := envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
 // 	return ret
 // }
 
-func (envMgr *EnvMgr) newUniFactNoInfer(stmt *ast.UniFactStmt) ast.StmtRet {
+func (envMgr *EnvMgr) newUniFactNoInfer(stmt *ast.UniFactStmt) ast.InferRet {
 	for index, thenStmt := range stmt.ThenFacts {
-		var ret ast.StmtRet
+		var ret ast.InferRet
 		switch thenStmt.(type) {
 		case ast.SpecificFactStmt:
 			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, index)
 		case *ast.OrStmt:
 			// ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
-			ret = ast.NewTrueStmtEmptyRet(stmt)
+			ret = ast.NewTrueInferRet(stmt)
 		default:
-			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("invalid then fact type: %s", thenStmt))
+			return ast.NewErrInferRet(stmt).AddExtraInfo(fmt.Sprintf("invalid then fact type: %s", thenStmt))
 		}
 
 		if ret.IsErr() {
 			return ret
 		}
 	}
-	return ast.NewTrueStmtEmptyRet(stmt)
+	return ast.NewTrueInferRet(stmt)
 }
 
-func (envMgr *EnvMgr) newUniFactWithIffNoInfer(stmt *ast.UniFactWithIffStmt) ast.StmtRet {
+func (envMgr *EnvMgr) newUniFactWithIffNoInfer(stmt *ast.UniFactWithIffStmt) ast.InferRet {
 	thenToIff := stmt.NewUniFactWithThenToIff()
 	ret := envMgr.newUniFactNoInfer(thenToIff)
 	if ret.IsErr() {
@@ -126,10 +126,10 @@ func (envMgr *EnvMgr) newUniFactWithIffNoInfer(stmt *ast.UniFactWithIffStmt) ast
 		return ret
 	}
 
-	return ast.NewTrueStmtEmptyRet(stmt)
+	return ast.NewTrueInferRet(stmt)
 }
 
-func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) ast.StmtRet {
+func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) ast.InferRet {
 	for _, specFact := range fact.Facts {
 		propName := specFact.GetPropName()
 		knowns, ok := envMgr.CurEnv().OrFactsMem[propName.String()]
@@ -139,10 +139,10 @@ func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) ast.StmtRet {
 			envMgr.CurEnv().OrFactsMem[propName.String()] = []*ast.OrStmt{fact}
 		}
 	}
-	return ast.NewTrueStmtEmptyRet(fact)
+	return ast.NewTrueInferRet(fact)
 }
 
-func (envMgr *EnvMgr) storeOrFactInUniFactMem(orFact *ast.OrStmt, uniFact *ast.UniFactStmt) ast.StmtRet {
+func (envMgr *EnvMgr) storeOrFactInUniFactMem(orFact *ast.OrStmt, uniFact *ast.UniFactStmt) ast.InferRet {
 	propName := orFact.Facts[0].GetPropName()
 	knowns, ok := envMgr.CurEnv().OrFactInUniFactMem[propName.String()]
 	if ok {
@@ -150,5 +150,5 @@ func (envMgr *EnvMgr) storeOrFactInUniFactMem(orFact *ast.OrStmt, uniFact *ast.U
 	} else {
 		envMgr.CurEnv().OrFactInUniFactMem[propName.String()] = []*OrFactInUniFact{NewOrFactInUniFactMem(orFact, uniFact)}
 	}
-	return ast.NewTrueStmtEmptyRet(orFact)
+	return ast.NewTrueInferRet(orFact)
 }

@@ -8,6 +8,20 @@ type InferRet interface {
 	IsNotTrue() bool
 }
 
+type NotTrueInferRet interface {
+	notTrueInferRet()
+	GetExtraInfos() []string
+}
+
+func (r *UnknownInferRet) notTrueInferRet() {}
+func (r *ErrInferRet) notTrueInferRet()     {}
+func (r *UnknownInferRet) GetExtraInfos() []string {
+	return r.ExtraInfo
+}
+func (r *ErrInferRet) GetExtraInfos() []string {
+	return r.ExtraInfo
+}
+
 type TrueInferRet struct {
 	Fact  FactStmt
 	Infer []FactStmt
@@ -69,5 +83,20 @@ func (r *UnknownInferRet) AddExtraInfo(extraInfo string) *UnknownInferRet {
 
 func (r *ErrInferRet) AddExtraInfo(extraInfo string) *ErrInferRet {
 	r.ExtraInfo = append(r.ExtraInfo, extraInfo)
+	return r
+}
+
+func (r *UnknownInferRet) AddExtraInfos(extraInfos []string) *UnknownInferRet {
+	r.ExtraInfo = append(r.ExtraInfo, extraInfos...)
+	return r
+}
+
+func (r *ErrInferRet) AddExtraInfos(extraInfos []string) *ErrInferRet {
+	r.ExtraInfo = append(r.ExtraInfo, extraInfos...)
+	return r
+}
+
+func (r *TrueInferRet) AddInfers(infers []FactStmt) *TrueInferRet {
+	r.Infer = append(r.Infer, infers...)
 	return r
 }
