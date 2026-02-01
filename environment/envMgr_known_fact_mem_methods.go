@@ -54,27 +54,27 @@ func (envMgr *EnvMgr) IsFnDeclared(obj ast.Atom) (*FnInFnTMemItem, bool) {
 	return fnDef, true
 }
 
-func (envMgr *EnvMgr) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, fnTemplateFnObj *ast.FnObj, fnTStruct *ast.AnonymousFn) ast.StmtRet {
+func (envMgr *EnvMgr) StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fn ast.Obj, fnTemplateFnObj *ast.FnObj, fnTStruct *ast.AnonymousFn) ast.InferRet {
 	inFact := ast.NewPureSpecificFactStmt(true, fnTemplateFnObj.FnHead.(ast.Atom), fnTemplateFnObj.Params, glob.BuiltinLine0)
 	if fnTemplateFnObj != nil {
 		fnTStruct, shortRet := envMgr.GetFnStructFromFnTName(fnTemplateFnObj)
 		if shortRet.IsErr() {
-			return ast.NewErrStmtEmptyRet(inFact).AddExtraInfo(fmt.Sprintf("failed to get fn struct from fn template name %s", fnTemplateFnObj.FnHead.(ast.Atom)))
+			return ast.NewErrInferRet(inFact).AddExtraInfo(fmt.Sprintf("failed to get fn struct from fn template name %s", fnTemplateFnObj.FnHead.(ast.Atom)))
 		}
 
 		ret := envMgr.InsertFnInFnTT(fn, fnTStruct)
 		if !ret {
-			return ast.NewErrStmtEmptyRet(inFact).AddExtraInfo(fmt.Sprintf("failed to insert fn %s into fn template %s", fn.String(), fnTemplateFnObj.FnHead.(ast.Atom)))
+			return ast.NewErrInferRet(inFact).AddExtraInfo(fmt.Sprintf("failed to insert fn %s into fn template %s", fn.String(), fnTemplateFnObj.FnHead.(ast.Atom)))
 		}
 
-		return ast.NewTrueStmtEmptyRet(inFact)
+		return ast.NewTrueInferRet(inFact)
 	} else {
 		ret := envMgr.InsertFnInFnTT(fn, fnTStruct)
 		if !ret {
-			return ast.NewErrStmtEmptyRet(inFact).AddExtraInfo(fmt.Sprintf("failed to insert fn %s into fn template %s", fn.String(), fnTemplateFnObj.FnHead.(ast.Atom)))
+			return ast.NewErrInferRet(inFact).AddExtraInfo(fmt.Sprintf("failed to insert fn %s into fn template %s", fn.String(), fnTemplateFnObj.FnHead.(ast.Atom)))
 		}
 
-		return ast.NewTrueStmtEmptyRet(inFact)
+		return ast.NewTrueInferRet(inFact)
 	}
 }
 
