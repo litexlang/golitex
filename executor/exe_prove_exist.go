@@ -54,7 +54,7 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.WitnessStmt) ast.StmtRet{
 	for i, equalTo := range stmt.EqualTos {
 		curParamSet, err := stmt.ExistParamSets[i].Instantiate(uniMap)
 		if err != nil {
-			return glob.ErrRet(err.Error())
+			return ast.StmtErrRet(err.Error())
 		}
 
 		inFact := ast.NewInFactWithObj(equalTo, curParamSet)
@@ -71,7 +71,7 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.WitnessStmt) ast.StmtRet{
 
 	instFact, err := stmt.Fact.InstantiateFact(uniMap)
 	if err != nil {
-		return glob.ErrRet(err.Error())
+		return ast.StmtErrRet(err.Error())
 	}
 
 	execState := exec.factStmt(instFact)
@@ -88,7 +88,7 @@ func (exec *Executor) proveExistStmt_NewFact(stmt *ast.WitnessStmt) ast.StmtRet{
 	newFact := stmt.ToTrueExistStFact()
 	ret := exec.Env.NewFactWithCheckingNameDefined(newFact)
 	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
+		return ast.StmtErrRet(ret.String())
 	}
 
 	return glob.NewStmtTrueWithInfers(ret.Infer).AddNewFact(newFact.String())

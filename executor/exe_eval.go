@@ -42,14 +42,14 @@ func (exec *Executor) evalObjThenSimplify(obj ast.Obj) (ast.Obj, ast.StmtRet) {
 	case ast.Atom:
 		// symbolValue := exec.Env.GetSymbolSimplifiedValue(obj)
 		// if symbolValue == nil {
-		// 	return nil, glob.ErrRet(fmt.Sprintf("symbol %s has no value", obj.String()))
+		// 	return nil, ast.StmtErrRet(fmt.Sprintf("symbol %s has no value", obj.String()))
 		// }
 		// return symbolValue, glob.NewEmptyStmtTrue()
-		return nil, glob.ErrRet(fmt.Sprintf("symbol %s has no value", obj.String()))
+		return nil, ast.StmtErrRet(fmt.Sprintf("symbol %s has no value", obj.String()))
 	case *ast.FnObj:
 		return exec.evalFnObjThenSimplify(asObj)
 	default:
-		return nil, glob.ErrRet(fmt.Sprintf("unexpected type: %T", obj))
+		return nil, ast.StmtErrRet(fmt.Sprintf("unexpected type: %T", obj))
 	}
 }
 
@@ -81,7 +81,7 @@ func (exec *Executor) evalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, ast.Stmt
 		numExprObj := ast.NewFnObj(fnObj.FnHead, []ast.Obj{left, right})
 		execRet = exec.fnObjParamsInFnDomain(numExprObj)
 		if execRet.IsNotTrue() {
-			return nil, glob.ErrRet(fmt.Sprintf("%s = %s is invalid", fnObj, numExprObj))
+			return nil, ast.StmtErrRet(fmt.Sprintf("%s = %s is invalid", fnObj, numExprObj))
 		}
 
 		return exec.simplifyNumExprObj(numExprObj)
@@ -102,17 +102,17 @@ func (exec *Executor) evalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, ast.Stmt
 func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, ast.StmtRet) {
 	algoDef := exec.Env.GetAlgoDef(fnObj.FnHead.String())
 	if algoDef == nil {
-		return nil, glob.ErrRet(fmt.Sprintf("algo %s is not found", fnObj.FnHead.String()))
+		return nil, ast.StmtErrRet(fmt.Sprintf("algo %s is not found", fnObj.FnHead.String()))
 	}
 
 	if len(fnObj.Params) != len(algoDef.Params) {
-		return nil, glob.ErrRet(fmt.Sprintf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(fnObj.Params)))
+		return nil, ast.StmtErrRet(fmt.Sprintf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(fnObj.Params)))
 	}
 
 	// 传入的参数真的在fn的domain里
 	execRet := exec.fnObjParamsInFnDomain(fnObj)
 	if execRet.IsNotTrue() {
-		return nil, glob.ErrRet(fmt.Sprintf("parameters of %s are not in domain of %s", fnObj, fnObj.FnHead))
+		return nil, ast.StmtErrRet(fmt.Sprintf("parameters of %s are not in domain of %s", fnObj, fnObj.FnHead))
 	}
 
 	// for i, param := range algoDef.Params {
@@ -122,7 +122,7 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 	// 	} else {
 	// 		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(param), fnObj.Params[i])}, glob.BuiltinLine0))
 	// 		if execState.IsNotTrue() {
-	// 			return nil, glob.ErrRet(execState.String())
+	// 			return nil, ast.StmtErrRet(execState.String())
 	// 		}
 	// 	}
 	// }
@@ -133,7 +133,7 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 		// simplifiedValue := value
 		simplifiedValue, execRet := exec.simplifyNumExprObj(value)
 		if execRet.IsNotTrue() {
-			return nil, glob.ErrRet(fmt.Sprintf("value of %s of %s is unknown.", param, fnObj))
+			return nil, ast.StmtErrRet(fmt.Sprintf("value of %s of %s is unknown.", param, fnObj))
 		}
 		fnObjParamsValues = append(fnObjParamsValues, simplifiedValue)
 	}
@@ -147,7 +147,7 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 
 	instAlgoDef, err := algoDef.Instantiate(uniMap)
 	if err != nil {
-		return nil, glob.ErrRetWithErr(err)
+		return nil, ast.StmtErrRetWithErr(err)
 	}
 
 	value, execRet := exec.runAlgoStmtsWhenEval(instAlgoDef.(*ast.DefAlgoStmt).Stmts, fnObjWithValueParams)
@@ -192,7 +192,7 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWit
 		}
 	}
 
-	return nil, glob.ErrRet(fmt.Sprintf("There is no return value of %s", fnObjWithValueParams))
+	return nil, ast.StmtErrRet(fmt.Sprintf("There is no return value of %s", fnObjWithValueParams))
 }
 
 func (exec *Executor) fnObjParamsInFnDomain(fnObj *ast.FnObj) ast.StmtRet{
