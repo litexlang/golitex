@@ -43,7 +43,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_Verify(stmt *ast.HaveFnEqualCase
 	newLetStmt := ast.NewDefLetStmt(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []ast.FactStmt{}, stmt.Line)
 	execState := exec.defLetStmt(newLetStmt)
 	if execState.IsNotTrue() {
-		return glob.ErrRet(execState.String())
+		return ast.StmtErrRet(execState.String())
 	}
 
 	verRet := exec.haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNoOverlap_ReturnValueInRetSet(stmt)
@@ -62,7 +62,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNo
 	for _, proof := range stmt.ProveCases {
 		execState := exec.Stmt(proof)
 		if execState.IsNotTrue() {
-			return glob.ErrRet(execState.String())
+			return ast.StmtErrRet(execState.String())
 		}
 	}
 
@@ -70,14 +70,14 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNo
 	orFact := ast.NewOrStmt(stmt.CaseByCaseFacts, stmt.Line)
 	execState := exec.factStmt(orFact)
 	if execState.IsNotTrue() {
-		return glob.ErrRet(execState.String())
+		return ast.StmtErrRet(execState.String())
 	}
 
 	// 证明 cases 互相不冲突
 	for i := range len(stmt.CaseByCaseFacts) {
 		execState = exec.haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap_ReturnValueInRetSet(stmt, i)
 		if execState.IsNotTrue() {
-			return glob.ErrRet(execState.String())
+			return ast.StmtErrRet(execState.String())
 		}
 	}
 
@@ -91,7 +91,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap_ReturnValue
 	// index known是对的
 	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.CaseByCaseFacts[index])
 	if ret.IsNotTrue() {
-		return glob.ErrRet(ret.String())
+		return ast.StmtErrRet(ret.String())
 	}
 
 	// 其他index的逆都是错的
@@ -103,7 +103,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap_ReturnValue
 		for _, notOtherCaseFact := range notOtherCaseFacts {
 			execState := exec.factStmt(notOtherCaseFact)
 			if execState.IsNotTrue() {
-				return glob.ErrRet(execState.String())
+				return ast.StmtErrRet(execState.String())
 			}
 		}
 	}

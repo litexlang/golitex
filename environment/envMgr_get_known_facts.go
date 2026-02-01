@@ -34,7 +34,7 @@ import (
 // 			return s.NotExist_St_Facts.(SpecificFactStmtMap), glob.NewEmptyStmtTrue()
 // 		}
 // 	default:
-// 		return nil, glob.ErrRet(("invalid spec fact type"))
+// 		return nil, ast.StmtErrRet(("invalid spec fact type"))
 // 	}
 
 // 	switch stmt.FactType {
@@ -47,7 +47,7 @@ import (
 // 	case ast.FalseExist_St:
 // 		return s.NotExist_St_Facts, glob.NewEmptyStmtTrue()
 // 	default:
-// 		return nil, glob.ErrRet(("invalid spec fact type"))
+// 		return nil, ast.StmtErrRet(("invalid spec fact type"))
 // 	}
 // }
 
@@ -105,7 +105,7 @@ import (
 // 			return s.NotExist_St_Facts, glob.NewEmptyStmtTrue()
 // 		}
 // 	default:
-// 		return nil, glob.ErrRet(("invalid spec fact type"))
+// 		return nil, ast.StmtErrRet(("invalid spec fact type"))
 // 	}
 // }
 

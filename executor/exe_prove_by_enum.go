@@ -81,7 +81,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	for _, fact := range stmt.Fact.DomFacts {
 		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
-			return glob.ErrRet(err.Error()), err
+			return ast.StmtErrRet(err.Error()), err
 		}
 		state := exec.factStmt(instFact)
 		if state.IsErr() {
@@ -93,7 +93,7 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 			for _, revFact := range revFacts {
 				state := exec.factStmt(revFact)
 				if state.IsNotTrue() {
-					return glob.ErrRet(fmt.Sprintf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instFact)), fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instFact)
+					return ast.StmtErrRet(fmt.Sprintf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instFact)), fmt.Errorf("domain fact in universal fact in prove over finite set statement must be true or not true, it can not be unknown:\n%s", instFact)
 				}
 				verifyProcessMsgs = append(verifyProcessMsgs, state.VerifyProcess...)
 			}
@@ -112,11 +112,11 @@ func (exec *Executor) verProveOverFiniteSet_ProveAtProveSectionI(stmt *ast.Prove
 	for _, fact := range stmt.Fact.ThenFacts {
 		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
-			return glob.ErrRet(err.Error()), err
+			return ast.StmtErrRet(err.Error()), err
 		}
 		state := exec.factStmt(instFact)
 		if state.IsNotTrue() {
-			return glob.ErrRet(fmt.Sprintf("failed to prove instantiated then facts: %s", instFact)), fmt.Errorf("failed to prove instantiated then facts: %s", instFact)
+			return ast.StmtErrRet(fmt.Sprintf("failed to prove instantiated then facts: %s", instFact)), fmt.Errorf("failed to prove instantiated then facts: %s", instFact)
 		}
 		verifyProcessMsgs = append(verifyProcessMsgs, state.VerifyProcess...)
 	}

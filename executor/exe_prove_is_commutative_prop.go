@@ -35,22 +35,22 @@ func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePro
 
 	definedStuff, ok := exec.Env.GetPropDef(stmt.SpecFact.PropName)
 	if !ok {
-		return glob.ErrRet(fmt.Sprintf("prop %s is not defined", stmt.SpecFact.PropName))
+		return ast.StmtErrRet(fmt.Sprintf("prop %s is not defined", stmt.SpecFact.PropName))
 	}
 
 	def := definedStuff.Defined
 
 	if len(def.DefHeader.Params) != 2 {
-		return glob.ErrRet(fmt.Sprintf("prop %s has %d params, but 2 params are expected", stmt.SpecFact.PropName, len(def.DefHeader.Params)))
+		return ast.StmtErrRet(fmt.Sprintf("prop %s has %d params, but 2 params are expected", stmt.SpecFact.PropName, len(def.DefHeader.Params)))
 	}
 
 	ret := exec.Env.LookupNamesInObjOrObjStringIsSetNonemptySetFiniteSet(def.DefHeader.ParamSets[0], map[string]struct{}{})
 	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
+		return ast.StmtErrRet(ret.String())
 	}
 	ret = exec.Env.LookupNamesInObjOrObjStringIsSetNonemptySetFiniteSet(def.DefHeader.ParamSets[1], map[string]struct{}{})
 	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
+		return ast.StmtErrRet(ret.String())
 	}
 
 	// 这里最好检查一下，是不是 Param set 依赖了 Param，如果依赖了，那其实是要报错了，不过暂时不管了
@@ -59,7 +59,7 @@ func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePro
 	for _, param := range stmt.SpecFact.Params {
 		asAtomObj, ok := param.(ast.Atom)
 		if !ok {
-			return glob.ErrRet(fmt.Sprintf("param %s is not an atom", param))
+			return ast.StmtErrRet(fmt.Sprintf("param %s is not an atom", param))
 		}
 		params = append(params, string(asAtomObj))
 	}
@@ -71,13 +71,13 @@ func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePro
 	innerStmtRets = append(innerStmtRets, execState.InnerStmtRetSlice...)
 
 	// if len(def.DomFacts) > 0 {
-	// 	return glob.ErrRet(fmt.Sprintf("dom facts are not allowed in %s", glob.KeywordProveIsCommutativeProp))
+	// 	return ast.StmtErrRet(fmt.Sprintf("dom facts are not allowed in %s", glob.KeywordProveIsCommutativeProp))
 	// }
 
 	leftToRightFact := stmt.SpecFact
 	rightToLeftFact, err := leftToRightFact.ReverseParameterOrder()
 	if err != nil {
-		return glob.ErrRet(err.Error())
+		return ast.StmtErrRet(err.Error())
 	}
 
 	// Prove left to right
@@ -112,7 +112,7 @@ func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact ast
 
 	ret := exec.Env.NewFactWithCheckingNameDefined(fact)
 	if ret.IsErr() {
-		return glob.ErrRet(ret.String()), nil, nil
+		return ast.StmtErrRet(ret.String()), nil, nil
 	}
 
 	for _, proof := range proofs {
@@ -128,7 +128,7 @@ func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact ast
 		return state, nil, nil
 	}
 	if state.IsUnknown() {
-		return glob.ErrRet(fmt.Sprintf("proof in %s must be proved to be true, but %s is not true", glob.KeywordComProp, rightToLeft)), nil, nil
+		return ast.StmtErrRet(fmt.Sprintf("proof in %s must be proved to be true, but %s is not true", glob.KeywordComProp, rightToLeft)), nil, nil
 	}
 	verifyProcessMsgs = append(verifyProcessMsgs, state.VerifyProcess...)
 
