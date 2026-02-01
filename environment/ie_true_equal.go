@@ -22,52 +22,52 @@ import (
 )
 
 func (ie *InferEngine) newTrueEqual(fact *ast.PureSpecificFactStmt) ast.InferRet {
-	shortRet := ie.trueEqualFactByCart(fact)
-	if shortRet.IsErr() || shortRet.IsTrue() {
-		return shortRet
+	inferRet := ie.trueEqualFactByCart(fact)
+	if inferRet.IsErr() || inferRet.IsTrue() {
+		return inferRet
 	}
 
 	// 处理 tuple 相等的情况
-	shortRet = ie.trueEqualFactByTuple(fact)
-	if shortRet.IsErr() || shortRet.IsTrue() {
-		return shortRet
+	inferRet = ie.trueEqualFactByTuple(fact)
+	if inferRet.IsErr() || inferRet.IsTrue() {
+		return inferRet
 	}
 
 	// 处理 x = {1, 2, 3} 的情况
-	shortRet = ie.trueEqualFactByListSet(fact)
-	if shortRet.IsErr() || shortRet.IsTrue() {
-		return shortRet
+	inferRet = ie.trueEqualFactByListSet(fact)
+	if inferRet.IsErr() || inferRet.IsTrue() {
+		return inferRet
 	}
 	// 处理 x + y = x + z 或 x - y = x - z 或 y + x = z + x 或 y - x = z - x 时，让 y = z 自动成立
-	shortRet = ie.trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(fact.Params[0], fact.Params[1])
-	if shortRet.IsErr() || shortRet.IsTrue() {
-		return shortRet
+	inferRet = ie.trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(fact)
+	if inferRet.IsErr() || inferRet.IsTrue() {
+		return inferRet
 	}
 	// 处理 a / b = c / b 时，让 a = c 自动成立（注意：不能处理 b / a = b / c，因为 b 可能是 0）
-	shortRet = ie.trueEqualFactByLeftIsADivBRightIsCDivB(fact.Params[0], fact.Params[1])
-	if shortRet.IsErr() || shortRet.IsTrue() {
-		return shortRet
+	inferRet = ie.trueEqualFactByLeftIsADivBRightIsCDivB(fact)
+	if inferRet.IsErr() || inferRet.IsTrue() {
+		return inferRet
 	}
 
 	// 处理 x / y = z 时，让 x = y * z 自动成立
-	shortRet = ie.trueEqualFactByLeftIsXDivYRightIsZ(fact.Params[0], fact.Params[1])
-	if shortRet.IsErr() || shortRet.IsTrue() {
-		return shortRet
+	inferRet = ie.trueEqualFactByLeftIsXDivYRightIsZ(fact)
+	if inferRet.IsErr() || inferRet.IsTrue() {
+		return inferRet
 	}
 	// 处理 z = x / y 时，让 x = y * z 自动成立
-	shortRet = ie.trueEqualFactByLeftIsXDivYRightIsZ(fact.Params[1], fact.Params[0])
-	if shortRet.IsErr() || shortRet.IsTrue() {
-		return shortRet
+	inferRet = ie.trueEqualFactByLeftIsXDivYRightIsZReverse(fact)
+	if inferRet.IsErr() || inferRet.IsTrue() {
+		return inferRet
 	}
 	// 处理 x + y = z 时，让 x = z - y 和 y = z - x 自动成立
-	shortRet = ie.trueEqualFactByLeftIsXAddYRightIsZ(fact.Params[0], fact.Params[1])
-	if shortRet.IsErr() || shortRet.IsTrue() {
-		return shortRet
+	inferRet = ie.trueEqualFactByLeftIsXAddYRightIsZ(fact)
+	if inferRet.IsErr() || inferRet.IsTrue() {
+		return inferRet
 	}
 	// 处理 z = x + y 时，让 x = z - y 和 y = z - x 自动成立
-	shortRet = ie.trueEqualFactByLeftIsXAddYRightIsZ(fact.Params[1], fact.Params[0])
-	if shortRet.IsErr() || shortRet.IsTrue() {
-		return shortRet
+	inferRet = ie.trueEqualFactByLeftIsXAddYRightIsZReverse(fact)
+	if inferRet.IsErr() || inferRet.IsTrue() {
+		return inferRet
 	}
 	return ast.NewTrueInferRet(fact)
 }
@@ -119,13 +119,13 @@ func (ie *InferEngine) trueEqualFactByCart(fact *ast.PureSpecificFactStmt) ast.I
 
 // trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex handles postprocessing for obj = tuple
 // It generates obj[index] = tuple[i] facts for each index
-func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(obj ast.Obj, tupleObj ast.Obj) ast.ShortRet {
+func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(obj ast.Obj, tupleObj ast.Obj, fact *ast.PureSpecificFactStmt) ast.InferRet {
 	tuple, ok := tupleObj.(*ast.FnObj)
 	if !ok || !ast.IsTupleFnObj(tuple) {
-		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("expected tuple to be a tuple object, got %T", tupleObj)})
+		return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("expected tuple to be a tuple object, got %T", tupleObj))
 	}
 
-	inferMsgs := []string{}
+	inferMsgs := []ast.FactStmt{}
 	// 让 obj 的每一位对应等于 tuple 的每一位
 	for i := range len(tuple.Params) {
 		index := i + 1 // 索引从1开始
@@ -138,12 +138,15 @@ func (ie *InferEngine) trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIn
 		indexEqualFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{indexedObj, tuple.Params[i]}, glob.BuiltinLine0)
 		ret := ie.EnvMgr.newSpecFactNoInfer(indexEqualFact)
 		if ret.IsErr() {
-			return glob.ErrStmtMsgToShortRet(ret)
+			return ret
 		}
-		inferMsgs = append(inferMsgs, ret.Infer...)
+		if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+			inferMsgs = append(inferMsgs, trueRet.Infer...)
+		}
+		inferMsgs = append(inferMsgs, indexEqualFact)
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 }
 
 // trueEqualFactByTuple handles postprocessing for tuple equality
@@ -162,34 +165,40 @@ func (ie *InferEngine) trueEqualFactByTuple(fact *ast.PureSpecificFactStmt) ast.
 
 	if leftIsTuple && rightIsTuple && ast.IsTupleFnObj(leftTuple) && ast.IsTupleFnObj(rightTuple) {
 		// 处理 tuple = tuple 的情况，让每一位相等
-		ret := ie.trueEqualByLeftAndRightAreBothTuple(leftTuple, rightTuple)
+		ret := ie.trueEqualByLeftAndRightAreBothTuple(leftTuple, rightTuple, fact)
 		if ret.IsErr() {
-			return ast.NewUnknownInferRet(fact)
+			return ret
 		}
-		inferMsgs = append(inferMsgs, ret.Msgs...)
+		if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+			inferMsgs = append(inferMsgs, trueRet.Infer...)
+		}
 		return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 	} else if rightIsTuple && ast.IsTupleFnObj(rightTuple) {
 		// 如果右边是 tuple，左边是对象: a = (1, 2, ..)
-		ret := ie.trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(left, right)
+		ret := ie.trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(left, right, fact)
 		if ret.IsErr() {
-			return glob.NewEmptyShortUnknownRet()
+			return ret
 		}
-		inferMsgs = append(inferMsgs, ret.Msgs...)
-		return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
+		if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+			inferMsgs = append(inferMsgs, trueRet.Infer...)
+		}
+		return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 	} else if leftIsTuple && ast.IsTupleFnObj(leftTuple) {
 		// 如果左边是 tuple，右边是对象: (1, 2, ..) = a
-		ret := ie.trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(right, left)
+		ret := ie.trueEqualByLeftAtEachIndexIsEqualToTupleAtCorrespondingIndex(right, left, fact)
 		if ret.IsErr() {
-			return glob.NewEmptyShortUnknownRet()
+			return ret
 		}
-		inferMsgs = append(inferMsgs, ret.Msgs...)
-		return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
+		if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+			inferMsgs = append(inferMsgs, trueRet.Infer...)
+		}
+		return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 	}
 
-	return glob.NewEmptyShortUnknownRet()
+	return ast.NewUnknownInferRet(fact)
 }
 
-func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj, rightTuple *ast.FnObj) ast.InferRet {
+func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj, rightTuple *ast.FnObj, fact *ast.PureSpecificFactStmt) ast.InferRet {
 	// 如果两个 tuple 的长度不同，返回错误
 	if len(leftTuple.Params) != len(rightTuple.Params) {
 		return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("tuple length mismatch: left has %d elements, right has %d elements", len(leftTuple.Params), len(rightTuple.Params)))
@@ -201,9 +210,12 @@ func (ie *InferEngine) trueEqualByLeftAndRightAreBothTuple(leftTuple *ast.FnObj,
 		equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{leftTuple.Params[i], rightTuple.Params[i]}, glob.BuiltinLine0)
 		ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 		if ret.IsErr() {
-			return ast.NewErrInferRet(fact).AddExtraInfos(ret.GetMsg())
+			return ret
 		}
-		inferMsgs = append(inferMsgs, ret.Infer...)
+		if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+			inferMsgs = append(inferMsgs, trueRet.Infer...)
+		}
+		inferMsgs = append(inferMsgs, equalFact)
 	}
 
 	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
@@ -394,7 +406,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(fac
 		return ast.NewUnknownInferRet(fact)
 	}
 
-	inferMsgs := []string{}
+	inferMsgs := []ast.FactStmt{}
 
 	// 情况1: 第一参数相同（都是 x）
 	// x + y = x + z => y = z
@@ -409,9 +421,12 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(fac
 			equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, z}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 			if ret.IsErr() {
-				return glob.NewEmptyShortUnknownRet()
+				return ret
 			}
-			inferMsgs = append(inferMsgs, equalFact.String())
+			inferMsgs = append(inferMsgs, equalFact)
+			if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+				inferMsgs = append(inferMsgs, trueRet.Infer...)
+			}
 		} else if leftOp == glob.KeySymbolPlus && rightOp == glob.KeySymbolMinus {
 			// x + y = x - z => y + z = 0
 			y := leftFn.Params[1]
@@ -421,9 +436,12 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(fac
 			equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 			if ret.IsErr() {
-				return glob.NewEmptyShortUnknownRet()
+				return ret
 			}
-			inferMsgs = append(inferMsgs, equalFact.String())
+			inferMsgs = append(inferMsgs, equalFact)
+			if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+				inferMsgs = append(inferMsgs, trueRet.Infer...)
+			}
 		} else if leftOp == glob.KeySymbolMinus && rightOp == glob.KeySymbolPlus {
 			// x - y = x + z => y + z = 0
 			y := leftFn.Params[1]
@@ -433,12 +451,15 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(fac
 			equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 			if ret.IsErr() {
-				return glob.NewEmptyShortUnknownRet()
+				return ret
 			}
-			inferMsgs = append(inferMsgs, equalFact.String())
+			inferMsgs = append(inferMsgs, equalFact)
+			if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+				inferMsgs = append(inferMsgs, trueRet.Infer...)
+			}
 		}
 		if len(inferMsgs) > 0 {
-			return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
+			return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 		}
 	}
 
@@ -455,9 +476,12 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(fac
 			equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, z}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 			if ret.IsErr() {
-				return glob.NewEmptyShortUnknownRet()
+				return ret
 			}
-			inferMsgs = append(inferMsgs, equalFact.String())
+			inferMsgs = append(inferMsgs, equalFact)
+			if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+				inferMsgs = append(inferMsgs, trueRet.Infer...)
+			}
 		} else if leftOp == glob.KeySymbolPlus && rightOp == glob.KeySymbolMinus {
 			// y + x = z - x => y + z = 0
 			y := leftFn.Params[0]
@@ -467,9 +491,12 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(fac
 			equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 			if ret.IsErr() {
-				return glob.NewEmptyShortUnknownRet()
+				return ret
 			}
-			inferMsgs = append(inferMsgs, equalFact.String())
+			inferMsgs = append(inferMsgs, equalFact)
+			if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+				inferMsgs = append(inferMsgs, trueRet.Infer...)
+			}
 		} else if leftOp == glob.KeySymbolMinus && rightOp == glob.KeySymbolPlus {
 			// y - x = z + x => y + z = 0
 			y := leftFn.Params[0]
@@ -479,53 +506,59 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddOrMinusYRightIsXPlusOrMinusZ(fac
 			equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{yPlusZ, zero}, glob.BuiltinLine0)
 			ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 			if ret.IsErr() {
-				return glob.NewEmptyShortUnknownRet()
+				return ret
 			}
-			inferMsgs = append(inferMsgs, equalFact.String())
+			inferMsgs = append(inferMsgs, equalFact)
+			if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+				inferMsgs = append(inferMsgs, trueRet.Infer...)
+			}
 		}
 		if len(inferMsgs) > 0 {
-			return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
+			return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 		}
 	}
 
-	return glob.NewEmptyShortUnknownRet()
+	return ast.NewUnknownInferRet(fact)
 }
 
 // trueEqualFactByLeftIsADivBRightIsCDivB handles the case where a / b = c / b => a = c
 // Note: We only handle the case where the second parameter (denominator) is the same,
 // because if the first parameter (numerator) is the same (b / a = b / c), we cannot
 // conclude a = c since b might be 0.
-func (ie *InferEngine) trueEqualFactByLeftIsADivBRightIsCDivB(left ast.Obj, right ast.Obj) ast.ShortRet {
+func (ie *InferEngine) trueEqualFactByLeftIsADivBRightIsCDivB(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	left := fact.Params[0]
+	right := fact.Params[1]
+
 	// 检查 left 是否是 a / b 的形式
 	leftFn, leftIsFn := left.(*ast.FnObj)
 	if !leftIsFn || len(leftFn.Params) != 2 {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	leftHead, leftHeadIsAtom := leftFn.FnHead.(ast.Atom)
 	if !leftHeadIsAtom {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	leftOp := string(leftHead)
 	if leftOp != glob.KeySymbolSlash {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	// 检查 right 是否是 c / b 的形式
 	rightFn, rightIsFn := right.(*ast.FnObj)
 	if !rightIsFn || len(rightFn.Params) != 2 {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	rightHead, rightHeadIsAtom := rightFn.FnHead.(ast.Atom)
 	if !rightHeadIsAtom {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	rightOp := string(rightHead)
 	if rightOp != glob.KeySymbolSlash {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	// 只处理第二参数相同的情况（分母相同）
@@ -538,30 +571,37 @@ func (ie *InferEngine) trueEqualFactByLeftIsADivBRightIsCDivB(left ast.Obj, righ
 		equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{a, c}, glob.BuiltinLine0)
 		ret := ie.EnvMgr.newSpecFactNoInfer(equalFact)
 		if ret.IsErr() {
-			return glob.NewEmptyShortUnknownRet()
+			return ret
 		}
-		return glob.NewShortRet(glob.StmtRetTypeTrue, []string{equalFact.String()})
+		inferMsgs := []ast.FactStmt{equalFact}
+		if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+			inferMsgs = append(inferMsgs, trueRet.Infer...)
+		}
+		return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 	}
 
-	return glob.NewEmptyShortUnknownRet()
+	return ast.NewUnknownInferRet(fact)
 }
 
 // trueEqualFactByLeftIsXDivYRightIsZ handles the case where x / y = z => x = y * z, x = z * y
-func (ie *InferEngine) trueEqualFactByLeftIsXDivYRightIsZ(left ast.Obj, right ast.Obj) ast.ShortRet {
+func (ie *InferEngine) trueEqualFactByLeftIsXDivYRightIsZ(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	left := fact.Params[0]
+	right := fact.Params[1]
+
 	// 检查 left 是否是 x / y 的形式
 	leftFn, leftIsFn := left.(*ast.FnObj)
 	if !leftIsFn || len(leftFn.Params) != 2 {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	leftHead, leftHeadIsAtom := leftFn.FnHead.(ast.Atom)
 	if !leftHeadIsAtom {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	leftOp := string(leftHead)
 	if leftOp != glob.KeySymbolSlash {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	// 检查 right 是否是单个对象（不是除法）
@@ -571,7 +611,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXDivYRightIsZ(left ast.Obj, right as
 		rightHead, rightHeadIsAtom := rightFn.FnHead.(ast.Atom)
 		if rightHeadIsAtom && string(rightHead) == glob.KeySymbolSlash {
 			// right 也是除法，不处理
-			return glob.NewEmptyShortUnknownRet()
+			return ast.NewUnknownInferRet(fact)
 		}
 	}
 
@@ -580,6 +620,8 @@ func (ie *InferEngine) trueEqualFactByLeftIsXDivYRightIsZ(left ast.Obj, right as
 	y := leftFn.Params[1]
 	z := right
 
+	inferMsgs := []ast.FactStmt{}
+
 	// 创建 y * z
 	multiplyObj := ast.NewFnObj(ast.Atom(glob.KeySymbolStar), []ast.Obj{y, z})
 
@@ -587,8 +629,9 @@ func (ie *InferEngine) trueEqualFactByLeftIsXDivYRightIsZ(left ast.Obj, right as
 	equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{x, multiplyObj}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.storeTrueEqualInEqualMemNoInfer(equalFact)
 	if ret.IsErr() {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
+	inferMsgs = append(inferMsgs, equalFact)
 
 	// 创建 x = z * y
 	multiplyObj2 := ast.NewFnObj(ast.Atom(glob.KeySymbolStar), []ast.Obj{z, y})
@@ -596,27 +639,38 @@ func (ie *InferEngine) trueEqualFactByLeftIsXDivYRightIsZ(left ast.Obj, right as
 	equalFact2 := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{x, multiplyObj2}, glob.BuiltinLine0)
 	ret2 := ie.EnvMgr.storeTrueEqualInEqualMemNoInfer(equalFact2)
 	if ret2.IsErr() {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
-	return glob.NewShortRet(glob.StmtRetTypeTrue, []string{equalFact.String(), equalFact2.String()})
+	inferMsgs = append(inferMsgs, equalFact2)
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
+}
+
+// trueEqualFactByLeftIsXDivYRightIsZReverse handles the case where z = x / y => x = y * z, x = z * y
+func (ie *InferEngine) trueEqualFactByLeftIsXDivYRightIsZReverse(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	// z = x / y，交换参数后调用原函数
+	reversedFact := ast.NewPureSpecificFactStmt(true, fact.PropName, []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
+	return ie.trueEqualFactByLeftIsXDivYRightIsZ(reversedFact)
 }
 
 // trueEqualFactByLeftIsXAddYRightIsZ handles the case where x + y = z => x = z - y and y = z - x
-func (ie *InferEngine) trueEqualFactByLeftIsXAddYRightIsZ(left ast.Obj, right ast.Obj) ast.ShortRet {
+func (ie *InferEngine) trueEqualFactByLeftIsXAddYRightIsZ(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	left := fact.Params[0]
+	right := fact.Params[1]
+
 	// 检查 left 是否是 x + y 的形式
 	leftFn, leftIsFn := left.(*ast.FnObj)
 	if !leftIsFn || len(leftFn.Params) != 2 {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	leftHead, leftHeadIsAtom := leftFn.FnHead.(ast.Atom)
 	if !leftHeadIsAtom {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	leftOp := string(leftHead)
 	if leftOp != glob.KeySymbolPlus {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	// 检查 right 是否是单个对象（不是加法表达式）
@@ -626,7 +680,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddYRightIsZ(left ast.Obj, right as
 		rightHead, rightHeadIsAtom := rightFn.FnHead.(ast.Atom)
 		if rightHeadIsAtom && string(rightHead) == glob.KeySymbolPlus {
 			// right 也是加法，不处理
-			return glob.NewEmptyShortUnknownRet()
+			return ast.NewUnknownInferRet(fact)
 		}
 	}
 
@@ -635,7 +689,7 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddYRightIsZ(left ast.Obj, right as
 	y := leftFn.Params[1]
 	z := right
 
-	inferMsgs := []string{}
+	inferMsgs := []ast.FactStmt{}
 
 	// 创建 z - y
 	subtractObj1 := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{z, y})
@@ -644,9 +698,9 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddYRightIsZ(left ast.Obj, right as
 	equalFact1 := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{x, subtractObj1}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.storeTrueEqualInEqualMemNoInfer(equalFact1)
 	if ret.IsErr() {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
-	inferMsgs = append(inferMsgs, equalFact1.String())
+	inferMsgs = append(inferMsgs, equalFact1)
 
 	// 创建 z - x
 	subtractObj2 := ast.NewFnObj(ast.Atom(glob.KeySymbolMinus), []ast.Obj{z, x})
@@ -655,9 +709,16 @@ func (ie *InferEngine) trueEqualFactByLeftIsXAddYRightIsZ(left ast.Obj, right as
 	equalFact2 := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, subtractObj2}, glob.BuiltinLine0)
 	ret2 := ie.EnvMgr.storeTrueEqualInEqualMemNoInfer(equalFact2)
 	if ret2.IsErr() {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
-	inferMsgs = append(inferMsgs, equalFact2.String())
+	inferMsgs = append(inferMsgs, equalFact2)
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, inferMsgs)
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
+}
+
+// trueEqualFactByLeftIsXAddYRightIsZReverse handles the case where z = x + y => x = z - y and y = z - x
+func (ie *InferEngine) trueEqualFactByLeftIsXAddYRightIsZReverse(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	// z = x + y，交换参数后调用原函数
+	reversedFact := ast.NewPureSpecificFactStmt(true, fact.PropName, []ast.Obj{fact.Params[1], fact.Params[0]}, fact.Line)
+	return ie.trueEqualFactByLeftIsXAddYRightIsZ(reversedFact)
 }
