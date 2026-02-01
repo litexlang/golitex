@@ -298,13 +298,13 @@ func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFa
 }
 
 // storeSpecFactInMemAndCollect collects the fact string for derived facts tracking
-func (ie *InferEngine) storeSpecFactInMemAndCollect(fact ast.SpecificFactStmt, derivedFacts *[]string) ast.ShortRet {
+func (ie *InferEngine) storeSpecFactInMemAndCollect(fact ast.SpecificFactStmt, derivedFacts *[]ast.FactStmt) ast.InferRet {
 	ret := ie.EnvMgr.storeSpecFactInMem(fact)
 	if ret.IsErr() {
-		return ast.NewErrShortRetWithMsg(fmt.Sprintf("failed to store spec fact %s", fact.String()))
+		return ret
 	}
-	*derivedFacts = append(*derivedFacts, fact.String())
-	return ast.NewTrueShortRet()
+	*derivedFacts = append(*derivedFacts, fact)
+	return ast.NewTrueInferRet(fact)
 }
 
 func (envMgr *EnvMgr) AnonymousFnToInstFnTemplate(objFnTypeT *ast.FnObj) (*ast.AnonymousFn, bool) {
