@@ -16,7 +16,6 @@ package litex_executor
 
 import (
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 func (ver *Verifier) matchExistFactWithOneInKnownUniFactAndCheckMatchedObjsSatisfyUniFactConditions(knownUniFact *ast.UniFactStmt, existFactInKnownUniFact *ast.ExistSpecificFactStmt, given *ast.ExistSpecificFactStmt, state *VerState) ast.VerRet {
@@ -62,5 +61,5 @@ func (ver *Verifier) matchExistFactWithOneInKnownUniFactAndCheckMatchedObjsSatis
 
 	}
 
-	return glob.NewVerRet(glob.StmtRetTypeTrue, given.String(), knownUniFact.Line, []string{knownUniFact.String()})
+	return ast.NewTrueVerRet(given, nil, knownUniFact.String())
 }

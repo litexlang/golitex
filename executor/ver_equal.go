@@ -23,12 +23,12 @@ import (
 func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt *ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
 	nextState := state.CopyAndReqOkToTrue()
 	if !state.ReqOk {
-		if ast.VerRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
+		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
 		}
 	}
 
-	if ast.VerRet := ver.verTrueEqualWholeProcess(stmt, nextState); verRet.IsTrue() || verRet.IsErr() {
+	if verRet := ver.verTrueEqualWholeProcess(stmt, nextState); verRet.IsTrue() || verRet.IsErr() {
 		return verRet
 	}
 
@@ -66,16 +66,16 @@ func (ver *Verifier) verTrueEqualMainProcess(stmt *ast.PureSpecificFactStmt, sta
 	left := stmt.Params[0]
 	right := stmt.Params[1]
 
-	if ast.VerRet := ver.verEqualMainProcessByBuiltinRules(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+	if verRet := ver.verEqualMainProcessByBuiltinRules(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
-	if ast.VerRet := ver.verEqualBySpecMem(left, right); verRet.IsErr() || verRet.IsTrue() {
+	if verRet := ver.verEqualBySpecMem(left, right); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
 	if !state.isFinalRound() {
-		if ast.VerRet := ver.verEqualUniMem(left, right, state); verRet.IsErr() {
+		if verRet := ver.verEqualUniMem(left, right, state); verRet.IsErr() {
 			return verRet
 		} else if verRet.IsTrue() {
 			return verRet
@@ -119,5 +119,6 @@ func (ver *Verifier) verTrueEqualFact_ObjFnEqual_NoCheckRequirements(left, right
 		}
 	}
 
-	return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left.String(), right.String()), glob.BuiltinLine0, []string{fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right)})
+	equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, right}, glob.BuiltinLine0)
+	return ast.NewTrueVerRet(equalFact, nil, fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right))
 }

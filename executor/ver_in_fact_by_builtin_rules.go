@@ -24,7 +24,7 @@ import (
 
 func (ver *Verifier) trueInFactBuiltinRules(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	if len(stmt.(*ast.PureSpecificFactStmt).Params) != 2 {
-		return glob.NewErrVerRet(fmt.Sprintf("invalid number of parameters for in fact: %d", len(stmt.(*ast.PureSpecificFactStmt).Params)))
+		return ast.NewErrVerRet(stmt).AddExtraInfo(fmt.Sprintf("invalid number of parameters for in fact: %d", len(stmt.(*ast.PureSpecificFactStmt).Params)))
 	}
 
 	verRet := ver.verInFactByLeftParamIsNumberExpr(stmt, state)
@@ -69,7 +69,7 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt ast.SpecificFactStmt, state *Ve
 
 	verRet = ver.verInFactByRightParamIsFnTemplateFact(stmt, state)
 	if verRet.IsErr() {
-		return glob.NewErrVerRet(verRet.String())
+		return ast.NewErrVerRet(stmt).AddExtraInfo(verRet.String())
 	}
 	if verRet.IsTrue() {
 		return verRet
@@ -77,7 +77,7 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt ast.SpecificFactStmt, state *Ve
 
 	verRet = ver.verInFactByRightParamIsSetProduct(stmt, state)
 	if verRet.IsErr() {
-		return glob.NewErrVerRet(verRet.String())
+		return ast.NewErrVerRet(stmt).AddExtraInfo(verRet.String())
 	}
 	if verRet.IsTrue() {
 		return verRet
@@ -85,7 +85,7 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt ast.SpecificFactStmt, state *Ve
 
 	verRet = ver.verInFactByRightParamIsCartSet(stmt, state)
 	if verRet.IsErr() {
-		return glob.NewErrVerRet(verRet.String())
+		return ast.NewErrVerRet(stmt).AddExtraInfo(verRet.String())
 	}
 	if verRet.IsTrue() {
 		return verRet
@@ -169,7 +169,7 @@ func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt a
 		}
 	}
 
-	return glob.NewTrueVerRetWithMsg(fmt.Sprintf("all arguments of %s are in nonempty.", stmt.(*ast.PureSpecificFactStmt).Params[0]))
+	return ast.NewTrueVerRet(stmt, nil, fmt.Sprintf("all arguments of %s are in nonempty.", stmt.(*ast.PureSpecificFactStmt).Params[0]))
 }
 
 func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
@@ -185,7 +185,7 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt ast.Sp
 
 		if ok {
 			msg := fmt.Sprintf("return value of builtin arithmetic function %s is in Real", asPureStmt.Params[0])
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyVerRetTrue())
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 		}
 		return ast.NewEmptyUnknownVerRet()
 	}
@@ -207,7 +207,7 @@ func (ver *Verifier) verInFactByRightParamIsFnTemplateFact(stmt ast.SpecificFact
 			}
 			if verRet.IsTrue() {
 				msg := fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", asPureStmt.Params[1], asPureStmt.Params[0], asPureStmt.Params[1])
-				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyVerRetTrue())
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 			}
 		} else {
 			// return false, nil
@@ -217,7 +217,7 @@ func (ver *Verifier) verInFactByRightParamIsFnTemplateFact(stmt ast.SpecificFact
 			}
 			if verRet.IsTrue() {
 				msg := fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", asPureStmt.Params[1], asPureStmt.Params[0], asPureStmt.Params[1])
-				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyVerRetTrue())
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 			}
 		}
 		return ast.NewEmptyUnknownVerRet()
@@ -469,7 +469,7 @@ func (ver *Verifier) verInFactByRightParamIsSetProduct(stmt ast.SpecificFactStmt
 	}
 
 	msg := fmt.Sprintf("each item in tuple %s is in corresponding set %s", asPureStmt.Params[0], asPureStmt.Params[1])
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyVerRetTrue())
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 }
 
 // getCartSetFromObj gets the cart set from obj if obj = cart(...)
@@ -531,7 +531,7 @@ func (ver *Verifier) verInCartSet_DimAndElements(obj ast.Obj, cartSet *ast.FnObj
 	}
 
 	msg := fmt.Sprintf("dim(%s) = %d and each element %s[i] is in corresponding cart set %s", obj, cartDimValue, obj, cartSet)
-	return (glob.NewVerRet(glob.StmtRetTypeTrue, "", glob.BuiltinLine0, []string{msg}))
+	return ast.NewTrueVerRet(nil, nil, "").AddExtraInfo(msg)
 }
 
 // verInFactByRightParamIsCartSet verifies a $in cart(...) by checking:
@@ -593,24 +593,24 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 
 	// check parameters of the left satisfies the fn template template requirement
 	for i, randomName := range randomNames {
-		ret := ver.Env.CheckAtomObjNameIsValidAndAvailableThenDefineIt(randomName)
-		if ret.IsErr() {
-			return glob.NewErrVerRet(ret.String())
+		ok, errMsg := ver.Env.CheckAtomObjNameIsValidAndAvailableThenDefineIt(randomName)
+		if !ok {
+			return ast.NewErrVerRet(nil).AddExtraInfo(errMsg)
 		}
-		ret = ver.Env.NewFactWithCheckingNameDefined(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i], glob.BuiltinLine0))
+		ret := ver.Env.NewFactWithCheckingNameDefined(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i], glob.BuiltinLine0))
 		if ret.IsErr() {
-			return glob.NewErrVerRet(ret.String())
+			return ast.NewErrVerRet(nil).AddExtraInfo(ret.String())
 		}
 	}
 
 	leftToUniFact, err := leftIsInWhichFnTT.AsFnTStruct.DeriveUniFact_WithGivenFn(left)
 	if err != nil {
-		return glob.NewErrVerRet(err.Error())
+		return ast.NewErrVerRet(nil).AddExtraInfo(err.Error())
 	}
 
 	instantiatedLeftToUniFact, err := leftToUniFact.InstantiateFact(uniMap)
 	if err != nil {
-		return glob.NewErrVerRet(err.Error())
+		return ast.NewErrVerRet(nil).AddExtraInfo(err.Error())
 	}
 	instLeftUniFactAsUniFactStmt, ok := instantiatedLeftToUniFact.(*ast.UniFactStmt)
 	if !ok {
@@ -626,7 +626,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 
 		ret := ver.Env.NewFactWithCheckingNameDefined(fact)
 		if ret.IsErr() {
-			return glob.NewErrVerRet(ret.String())
+			return ast.NewErrVerRet(nil).AddExtraInfo(ret.String())
 		}
 	}
 
@@ -639,7 +639,7 @@ func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *
 
 		ret := ver.Env.NewFactWithCheckingNameDefined(fact)
 		if ret.IsErr() {
-			return glob.NewErrVerRet(ret.String())
+			return ast.NewErrVerRet(nil).AddExtraInfo(ret.String())
 		}
 	}
 
@@ -663,7 +663,7 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt ast.S
 	if fcFn.HasHeadInSlice([]string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}) {
 		if asPureStmt.Params[1] == ast.Atom(glob.KeywordReal) {
 			msg := fmt.Sprintf("return value of builtin arithmetic function %s is in Real", fcFn)
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyVerRetTrue())
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 		}
 		return ast.NewEmptyUnknownVerRet()
 	}
@@ -671,7 +671,7 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt ast.S
 	if fcFn.HasHeadInSlice([]string{glob.KeywordCount, glob.KeySymbolPercent}) {
 		if asPureStmt.Params[1] == ast.Atom(glob.KeywordNatural) {
 			msg := fmt.Sprintf("return value of builtin function %s is in Natural", fcFn)
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyVerRetTrue())
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 		}
 		return ast.NewEmptyUnknownVerRet()
 	}
@@ -687,7 +687,7 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt ast.S
 	}
 	if verRet.IsTrue() {
 		msg := fmt.Sprintf("return value of function %s is in its function template return set %s", fcFn, setFcFnIsIn_ByItsFnT)
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyVerRetTrue())
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 	}
 	return ast.NewEmptyUnknownVerRet()
 }
@@ -716,12 +716,11 @@ func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FnObj) (ast.Obj, err
 			return nil, fmt.Errorf("curRetSet is not an FcFn")
 		}
 
-		var ret VerRet
 		var shortRet ast.ShortRet
 		// curFnTStruct, ret = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
 		curFnTStruct, shortRet = ver.Env.GetFnStructFromFnTName(curRetSet)
 		if shortRet.IsErr() {
-			return nil, fmt.Errorf(ret.String())
+			return nil, fmt.Errorf(shortRet.String())
 		}
 
 		curParamsChainIndex++
@@ -762,13 +761,13 @@ func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt ast.SpecificFactStmt,
 	if !isAtom {
 		// 有运算符，不是纯数字，不在 N 中
 		msg := fmt.Sprintf("%s is not a pure number (has operators), so it is not in N", toEval)
-		return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, glob.NewEmptyVerRetTrue())
+		return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 	}
 
 	// 检查是否有小数点
 	if ast.IsObjLiterallyRationalNumber(toEval) {
 		msg := fmt.Sprintf("%s has a decimal point, so it is not in N", toEval)
-		return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, glob.NewEmptyVerRetTrue())
+		return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 	}
 
 	// 检查是否有负号（一元负号运算符）
@@ -777,7 +776,7 @@ func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt ast.SpecificFactStmt,
 			if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
 				// 有负号，不在 N 中
 				msg := fmt.Sprintf("%s has a minus sign, so it is not in N", asPureStmt.Params[0])
-				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyVerRetTrue())
+				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 			}
 		}
 	}
@@ -787,7 +786,7 @@ func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt ast.SpecificFactStmt,
 			if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
 				// 有负号，不在 N 中
 				msg := fmt.Sprintf("%s has a minus sign, so it is not in N", toEval)
-				return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, glob.NewEmptyVerRetTrue())
+				return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 			}
 		}
 	}
@@ -801,7 +800,7 @@ func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt ast.SpecificFactStmt,
 
 	// 如果是纯数字但不是自然数形状（负数），可以证明它不在自然数中
 	msg := fmt.Sprintf("%s is literally not a natural number (not in the shape of natural number)", toEval)
-	return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, glob.NewEmptyVerRetTrue())
+	return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 }
 
 func (ver *Verifier) litNumNotInIntegerByLiteralShape(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
@@ -826,13 +825,13 @@ func (ver *Verifier) litNumNotInIntegerByLiteralShape(stmt ast.SpecificFactStmt,
 	if !isAtom {
 		// 有运算符，不是纯数字，不在 Z 中
 		msg := fmt.Sprintf("%s is not a pure number (has operators), so it is not in Z", toEval)
-		return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, glob.NewEmptyVerRetTrue())
+		return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 	}
 
 	// 检查是否有小数点
 	if ast.IsObjLiterallyRationalNumber(toEval) {
 		msg := fmt.Sprintf("%s has a decimal point, so it is not in Z", toEval)
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, glob.NewEmptyVerRetTrue())
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 	}
 
 	return ast.NewEmptyUnknownVerRet()
@@ -860,13 +859,13 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt ast.SpecificFactStmt, st
 	if !isAtom {
 		// 有运算符，不是纯数字，不在 N_pos 中
 		msg := fmt.Sprintf("%s is not a pure number (has operators), so it is not in N_pos", toEval)
-		return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, glob.NewEmptyVerRetTrue())
+		return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 	}
 
 	// 检查是否有小数点
 	if ast.IsObjLiterallyRationalNumber(toEval) {
 		msg := fmt.Sprintf("%s has a decimal point, so it is not in N_pos", toEval)
-		return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, glob.NewEmptyVerRetTrue())
+		return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 	}
 
 	// 检查是否有负号（一元负号运算符）
@@ -875,7 +874,7 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt ast.SpecificFactStmt, st
 			if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
 				// 有负号，不在 N_pos 中
 				msg := fmt.Sprintf("%s has a minus sign, so it is not in N_pos", asPureStmt.Params[0])
-				return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, glob.NewEmptyVerRetTrue())
+				return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 			}
 		}
 	}
@@ -885,7 +884,7 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt ast.SpecificFactStmt, st
 			if headAtom, ok := fnObj.FnHead.(ast.Atom); ok && string(headAtom) == glob.KeySymbolMinus {
 				// 有负号，不在 N_pos 中
 				msg := fmt.Sprintf("%s has a minus sign, so it is not in N_pos", toEval)
-				return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, glob.NewEmptyVerRetTrue())
+				return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 			}
 		}
 	}
@@ -899,7 +898,7 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt ast.SpecificFactStmt, st
 
 	// 如果是纯数字但不是正整数形状（负数、0），可以证明它不在正整数中
 	msg := fmt.Sprintf("%s is literally not a positive integer (not in the shape of positive integer)", toEval)
-	return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, glob.NewEmptyVerRetTrue())
+	return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 }
 
 func (ver *Verifier) verInFactByLeftIsIndexOfObjInSomeSet(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
@@ -972,7 +971,7 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt ast.SpecificFactStmt, sta
 
 	setBuilderStruct, err := setBuilder.ToSetBuilderStruct()
 	if err != nil {
-		return glob.NewErrVerRet(err.Error())
+		return ast.NewErrVerRet(stmt).AddExtraInfo(err.Error())
 	}
 
 	uniMap := map[string]ast.Obj{setBuilderStruct.Param: asPureStmt.Params[0]}
@@ -982,7 +981,7 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt ast.SpecificFactStmt, sta
 	for _, fact := range setBuilderStruct.Facts {
 		instFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
-			return glob.NewErrVerRet(err.Error())
+			return ast.NewErrVerRet(stmt).AddExtraInfo(err.Error())
 		}
 		instFacts = append(instFacts, instFact)
 	}
@@ -1002,7 +1001,7 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt ast.SpecificFactStmt, sta
 		}
 	}
 
-	return (glob.NewVerRet(glob.StmtRetTypeTrue, asPureStmt.String(), glob.BuiltinLine0, []string{"definition of set builder"}))
+	return ast.NewTrueVerRet(stmt, nil, "definition of set builder")
 }
 
 func (ver *Verifier) verInFactByRightIsListSet(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
@@ -1031,10 +1030,10 @@ func (ver *Verifier) verInFactByRightIsListSet(stmt ast.SpecificFactStmt, state 
 		if verRet.IsTrue() {
 			// 找到了相等的元素，返回 true
 			if asPureStmt.Params[0].String() == item.String() {
-				return (glob.NewVerRet(glob.StmtRetTypeTrue, asPureStmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s $in %s, %s = %s", asPureStmt.Params[0], listSetFnObj.String(), asPureStmt.Params[1], listSetFnObj)}))
+				return ast.NewTrueVerRet(stmt, nil, fmt.Sprintf("%s $in %s, %s = %s", asPureStmt.Params[0], listSetFnObj.String(), asPureStmt.Params[1], listSetFnObj))
 			}
 
-			return (glob.NewVerRet(glob.StmtRetTypeTrue, asPureStmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s $in %s, %s = %s, %s = %s", asPureStmt.Params[0], listSetFnObj.String(), asPureStmt.Params[1], listSetFnObj, item, asPureStmt.Params[0])}))
+			return ast.NewTrueVerRet(stmt, nil, fmt.Sprintf("%s $in %s, %s = %s, %s = %s", asPureStmt.Params[0], listSetFnObj.String(), asPureStmt.Params[1], listSetFnObj, item, asPureStmt.Params[0]))
 		}
 	}
 
