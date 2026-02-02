@@ -1,5 +1,7 @@
 package litex_ast
 
+import "fmt"
+
 type StmtRet interface {
 	stmtRet()
 	IsTrue() bool
@@ -11,6 +13,10 @@ type StmtRet interface {
 	GetExtraInfos() []string
 	AddVerifyProcesses(verifyProcesses []VerRet) StmtRet
 	AddInfers(infers []InferRet) StmtRet
+	AddInnerStmtRets(innerStmtRets []StmtRet) StmtRet
+	GetVerifyProcess() []VerRet
+	GetInnerStmtRets() []StmtRet
+	String() string
 }
 
 func (r *UnknownStmtRet) notTrueStmtRet() {}
@@ -46,15 +52,6 @@ func (r *TrueStmtRet) AddVerifyProcess(verifyProcess VerRet) *TrueStmtRet {
 }
 func (r *TrueStmtRet) AddInfer(infer InferRet) *TrueStmtRet {
 	r.Infer = append(r.Infer, infer)
-	return r
-}
-func (r *TrueStmtRet) AddInnerStmtRet(innerStmtRet StmtRet) *TrueStmtRet {
-	r.InnerStmtRetSlice = append(r.InnerStmtRetSlice, innerStmtRet)
-	return r
-}
-
-func (r *TrueStmtRet) AddInnerStmtRets(innerStmtRets []StmtRet) *TrueStmtRet {
-	r.InnerStmtRetSlice = append(r.InnerStmtRetSlice, innerStmtRets...)
 	return r
 }
 
@@ -181,4 +178,51 @@ func (r *ErrStmtRet) AddInfers(infers []InferRet) StmtRet {
 func (r *TrueStmtRet) AddInfers(infers []InferRet) StmtRet {
 	r.Infer = append(r.Infer, infers...)
 	return r
+}
+
+func (r *UnknownStmtRet) AddInnerStmtRets(innerStmtRets []StmtRet) StmtRet {
+	r.InnerStmtRetSlice = append(r.InnerStmtRetSlice, innerStmtRets...)
+	return r
+}
+func (r *ErrStmtRet) AddInnerStmtRets(innerStmtRets []StmtRet) StmtRet {
+	r.InnerStmtRetSlice = append(r.InnerStmtRetSlice, innerStmtRets...)
+	return r
+}
+func (r *TrueStmtRet) AddInnerStmtRets(innerStmtRets []StmtRet) StmtRet {
+	r.InnerStmtRetSlice = append(r.InnerStmtRetSlice, innerStmtRets...)
+	return r
+}
+
+func (r *UnknownStmtRet) GetVerifyProcess() []VerRet {
+	return r.VerifyProcess
+}
+
+func (r *UnknownStmtRet) GetInnerStmtRets() []StmtRet {
+	return r.InnerStmtRetSlice
+}
+
+func (r *UnknownStmtRet) String() string {
+	return fmt.Sprintf("UnknownStmtRet: %s", r.Stmt.String())
+}
+func (r *ErrStmtRet) GetVerifyProcess() []VerRet {
+	return r.VerifyProcess
+}
+
+func (r *ErrStmtRet) GetInnerStmtRets() []StmtRet {
+	return r.InnerStmtRetSlice
+}
+
+func (r *ErrStmtRet) String() string {
+	return fmt.Sprintf("ErrStmtRet: %s", r.Stmt.String())
+}
+func (r *TrueStmtRet) GetVerifyProcess() []VerRet {
+	return r.VerifyProcess
+}
+
+func (r *TrueStmtRet) GetInnerStmtRets() []StmtRet {
+	return r.InnerStmtRetSlice
+}
+
+func (r *TrueStmtRet) String() string {
+	return fmt.Sprintf("TrueStmtRet: %s", r.Stmt.String())
 }

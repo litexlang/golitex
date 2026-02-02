@@ -32,7 +32,5 @@ func ErrorExecStmtStr(stmt ast.Stmt) string {
 }
 
 func (exec *Executor) AddStmtToStmtRet(ret ast.StmtRet, stmt ast.Stmt) ast.StmtRet {
-	ret.SetLine(stmt.GetLine())
-	ret.AddStmt(stmt.String())
 	return ret
 }

@@ -15,19 +15,20 @@
 package litex_executor
 
 import (
+	"errors"
 	"fmt"
 	ast "golitex/ast"
 	cmp "golitex/cmp"
 	glob "golitex/glob"
 )
 
-func (exec *Executor) simplifyNumExprObj(obj ast.Obj) (ast.Obj, ast.StmtRet) {
+func (exec *Executor) simplifyNumExprObj(obj ast.Obj) (ast.Obj, error) {
 	simplifiedNumExprObj := cmp.IsNumExprObjThenSimplify(obj)
 	if simplifiedNumExprObj == nil {
-		return nil, glob.NewEmptyStmtError()
+		return nil, errors.New("simplify num expr obj failed")
 	}
 
-	return simplifiedNumExprObj, glob.NewEmptyStmtTrue()
+	return simplifiedNumExprObj, nil
 }
 
 // 这里 bool 表示，是否启动过 用algo 计算；如果仅仅是用 algo 来计算，那是不会返回true的
@@ -35,21 +36,20 @@ func (exec *Executor) evalObjThenSimplify(obj ast.Obj) (ast.Obj, ast.StmtRet) {
 	// fmt.Println(obj)
 
 	if cmp.IsNumExprLitObj(obj) {
-		return exec.simplifyNumExprObj(obj)
+		simplifiedNumExprObj, err := exec.simplifyNumExprObj(obj)
+		if err != nil {
+			return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(obj, glob.BuiltinLine0)).AddExtraInfo(err.Error())
+		}
+		return simplifiedNumExprObj, ast.NewTrueStmtEmptyRet(ast.NewEvalStmt(obj, glob.BuiltinLine0))
 	}
 
 	switch asObj := obj.(type) {
 	case ast.Atom:
-		// symbolValue := exec.Env.GetSymbolSimplifiedValue(obj)
-		// if symbolValue == nil {
-		// 	return nil, ast.StmtErrRet(fmt.Sprintf("symbol %s has no value", obj.String()))
-		// }
-		// return symbolValue, glob.NewEmptyStmtTrue()
-		return nil, ast.StmtErrRet(fmt.Sprintf("symbol %s has no value", obj.String()))
+		return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(obj, glob.BuiltinLine0)).AddExtraInfo(fmt.Sprintf("symbol %s has no value", obj.String()))
 	case *ast.FnObj:
 		return exec.evalFnObjThenSimplify(asObj)
 	default:
-		return nil, ast.StmtErrRet(fmt.Sprintf("unexpected type: %T", obj))
+		return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(obj, glob.BuiltinLine0)).AddExtraInfo(fmt.Sprintf("unexpected type: %T", obj))
 	}
 }
 
@@ -81,59 +81,51 @@ func (exec *Executor) evalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, ast.Stmt
 		numExprObj := ast.NewFnObj(fnObj.FnHead, []ast.Obj{left, right})
 		execRet = exec.fnObjParamsInFnDomain(numExprObj)
 		if execRet.IsNotTrue() {
-			return nil, ast.StmtErrRet(fmt.Sprintf("%s = %s is invalid", fnObj, numExprObj))
+			return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(fnObj, glob.BuiltinLine0)).AddExtraInfo(fmt.Sprintf("%s = %s is invalid", fnObj, numExprObj))
 		}
 
-		return exec.simplifyNumExprObj(numExprObj)
+		obj, err := exec.simplifyNumExprObj(numExprObj)
+		if err != nil {
+			return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(fnObj, glob.BuiltinLine0)).AddExtraInfo(err.Error())
+		}
+		return obj, ast.NewTrueStmtEmptyRet(ast.NewEvalStmt(fnObj, glob.BuiltinLine0))
 	}
 
 	if ok := exec.Env.IsFnWithDefinedAlgo(fnObj); ok {
 		numExprObj, execRet := exec.useAlgoToEvalFnObjThenSimplify(fnObj)
 		if execRet.IsNotTrue() {
-			return nil, execRet
+			return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(fnObj, glob.BuiltinLine0)).AddExtraInfo(fmt.Sprintf("failed to use algo to evaluate %s", fnObj))
 		}
 
-		return numExprObj, glob.NewEmptyStmtTrue()
+		return numExprObj, ast.NewTrueStmtEmptyRet(ast.NewEvalStmt(fnObj, glob.BuiltinLine0))
 	}
 
-	return nil, glob.NewEmptyStmtUnknown()
+	return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(fnObj, glob.BuiltinLine0)).AddExtraInfo("failed to evaluate fn obj")
 }
 
 func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj, ast.StmtRet) {
 	algoDef := exec.Env.GetAlgoDef(fnObj.FnHead.String())
 	if algoDef == nil {
-		return nil, ast.StmtErrRet(fmt.Sprintf("algo %s is not found", fnObj.FnHead.String()))
+		return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(fnObj, glob.BuiltinLine0)).AddExtraInfo(fmt.Sprintf("algo %s is not found", fnObj.FnHead.String()))
 	}
 
 	if len(fnObj.Params) != len(algoDef.Params) {
-		return nil, ast.StmtErrRet(fmt.Sprintf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(fnObj.Params)))
+		return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(fnObj, glob.BuiltinLine0)).AddExtraInfo(fmt.Sprintf("algorithm %s requires %d parameters, get %d instead", algoDef.FuncName, len(algoDef.Params), len(fnObj.Params)))
 	}
 
 	// 传入的参数真的在fn的domain里
 	execRet := exec.fnObjParamsInFnDomain(fnObj)
 	if execRet.IsNotTrue() {
-		return nil, ast.StmtErrRet(fmt.Sprintf("parameters of %s are not in domain of %s", fnObj, fnObj.FnHead))
+		return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(fnObj, glob.BuiltinLine0)).AddExtraInfo(fmt.Sprintf("parameters of %s are not in domain of %s", fnObj, fnObj.FnHead))
 	}
-
-	// for i, param := range algoDef.Params {
-	// 	ret := exec.Env.IsNameUnavailable(param, map[string]struct{}{})
-	// 	if ret.IsTrue() {
-	// 		continue
-	// 	} else {
-	// 		execState := exec.defLetStmt(ast.NewDefLetStmt([]string{param}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{ast.NewEqualFact(ast.Atom(param), fnObj.Params[i])}, glob.BuiltinLine0))
-	// 		if execState.IsNotTrue() {
-	// 			return nil, ast.StmtErrRet(execState.String())
-	// 		}
-	// 	}
-	// }
 
 	fnObjParamsValues := []ast.Obj{}
 	for _, param := range fnObj.Params {
 		_, value := exec.Env.GetStoredSymbolValue(param)
 		// simplifiedValue := value
-		simplifiedValue, execRet := exec.simplifyNumExprObj(value)
-		if execRet.IsNotTrue() {
-			return nil, ast.StmtErrRet(fmt.Sprintf("value of %s of %s is unknown.", param, fnObj))
+		simplifiedValue, err := exec.simplifyNumExprObj(value)
+		if err != nil {
+			return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(fnObj, glob.BuiltinLine0)).AddExtraInfo(fmt.Sprintf("value of %s of %s is unknown.", param, fnObj))
 		}
 		fnObjParamsValues = append(fnObjParamsValues, simplifiedValue)
 	}
@@ -147,7 +139,7 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 
 	instAlgoDef, err := algoDef.Instantiate(uniMap)
 	if err != nil {
-		return nil, ast.StmtErrRetWithErr(err)
+		return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(fnObj, glob.BuiltinLine0)).AddExtraInfo(err.Error())
 	}
 
 	value, execRet := exec.runAlgoStmtsWhenEval(instAlgoDef.(*ast.DefAlgoStmt).Stmts, fnObjWithValueParams)
@@ -155,7 +147,11 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 		return nil, execRet
 	}
 
-	return exec.simplifyNumExprObj(value)
+	simplifiedValue, err := exec.simplifyNumExprObj(value)
+	if err != nil {
+		return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(fnObj, glob.BuiltinLine0)).AddExtraInfo(err.Error())
+	}
+	return simplifiedValue, ast.NewTrueStmtEmptyRet(ast.NewEvalStmt(fnObj, glob.BuiltinLine0))
 }
 
 // 要做到这样的效果：每一步只是做验证，所以不应该有中间过程被know下来
@@ -173,7 +169,7 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWit
 			}
 
 			if cmp.IsNumExprLitObj(asStmt.Value) {
-				return asStmt.Value, glob.NewEmptyStmtTrue()
+				return asStmt.Value, ast.NewTrueStmtEmptyRet(ast.NewEvalStmt(asStmt.Value, glob.BuiltinLine0))
 			}
 
 			numExprObj, ret := exec.evalObjThenSimplify(asStmt.Value)
@@ -192,10 +188,10 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWit
 		}
 	}
 
-	return nil, ast.StmtErrRet(fmt.Sprintf("There is no return value of %s", fnObjWithValueParams))
+	return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(fnObjWithValueParams, glob.BuiltinLine0)).AddExtraInfo(fmt.Sprintf("There is no return value of %s", fnObjWithValueParams))
 }
 
-func (exec *Executor) fnObjParamsInFnDomain(fnObj *ast.FnObj) ast.StmtRet{
+func (exec *Executor) fnObjParamsInFnDomain(fnObj *ast.FnObj) ast.StmtRet {
 	ver := NewVerifier(exec.Env)
 	return ver.objIsDefinedAtomOrIsFnSatisfyItsReq(fnObj, Round0NoMsg()).ToStmtRet()
 }
@@ -211,7 +207,7 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ast.Stm
 		continue
 	}
 
-	return true, glob.NewEmptyStmtTrue()
+	return true, ast.NewTrueStmtEmptyRet(nil)
 }
 
 func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValueParams *ast.FnObj) (ast.Obj, ast.StmtRet) {
@@ -228,9 +224,9 @@ func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValuePar
 
 func (exec *Executor) GetSimplifiedValue(obj ast.Obj) (ast.Obj, ast.StmtRet) {
 	_, value := exec.Env.GetStoredSymbolValue(obj)
-	simplifiedValue, execRet := exec.simplifyNumExprObj(value)
-	if execRet.IsNotTrue() {
-		return nil, execRet
+	simplifiedValue, err := exec.simplifyNumExprObj(value)
+	if err != nil {
+		return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(obj, glob.BuiltinLine0)).AddExtraInfo(err.Error())
 	}
-	return simplifiedValue, execRet
+	return simplifiedValue, ast.NewTrueStmtEmptyRet(ast.NewEvalStmt(obj, glob.BuiltinLine0))
 }
