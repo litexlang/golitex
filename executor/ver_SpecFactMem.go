@@ -115,7 +115,7 @@ func (ver *Verifier) matchGivenExistFactWithOnesInKnownUniFacts(knownFacts []env
 	return ast.NewEmptyUnknownVerRet()
 }
 
-func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Obj, state *VerState) (map[string]ast.Obj, VerRet) {
+func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Obj, state *VerState) (map[string]ast.Obj, ast.VerRet) {
 	newMap := map[string]ast.Obj{}
 	for key, value := range paramArrMap {
 		if len(value) == 1 {
@@ -133,7 +133,7 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 		newMap[key] = value[0]
 	}
 
-	return newMap, glob.NewEmptyVerRetTrue()
+	return newMap, ast.NewTrueVerRet(nil, nil, "")
 }
 
 // func (ver *Verifier) SpecFactSpecUnderLogicalExpr(knownFact *env.KnownSpecFact_InLogicExpr, stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
@@ -268,18 +268,15 @@ func (ver *Verifier) iterateKnownExistSpecFacts_applyObjEqualSpec(stmt ast.Speci
 
 LoopOverFacts:
 	for _, knownFact := range knownFacts {
-		verRet := ver.Env.MatchExistSpecificFacts(stmt.(*ast.ExistSpecificFactStmt), knownFact, newParams)
-		if verRet.IsErr() {
-			return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{verRet.String()})
-		}
-		if verRet.IsUnknown() {
+		matched := ver.Env.MatchExistSpecificFacts(stmt.(*ast.ExistSpecificFactStmt), knownFact, newParams)
+		if !matched {
 			continue LoopOverFacts
 		}
 
 		if state.WithMsg {
 			return successVerString(stmt, knownFact)
 		}
-		return glob.NewEmptyVerRetTrue()
+		return ast.NewTrueVerRet(stmt, nil, "")
 	}
 
 	return ast.NewEmptyUnknownVerRet()
@@ -299,7 +296,7 @@ LoopOverFacts:
 		if state.WithMsg {
 			return successVerString(stmt, knownFact)
 		}
-		return glob.NewEmptyVerRetTrue()
+		return ast.NewTrueVerRet(stmt, nil, "")
 	}
 
 	return ast.NewEmptyUnknownVerRet()
@@ -329,7 +326,7 @@ func (ver *Verifier) matchTwoPureSpecFacts(stmt *ast.PureSpecificFactStmt, known
 		}
 	}
 
-	return glob.NewEmptyVerRetTrue()
+	return ast.NewTrueVerRet(nil, nil, "")
 }
 
 // func (ver *Verifier) useKnownOrFactToProveSpecFact(knownFact *env.KnownSpecFact_InLogicExpr, stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
@@ -393,7 +390,7 @@ func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerSta
 				}
 			}
 		}
-		return glob.NewEmptyVerRetTrue()
+		return ast.NewTrueVerRet(nil, nil, "")
 	} else {
 		for _, fact := range domFacts {
 			asSpecFact, ok := fact.(ast.SpecificFactStmt)
@@ -405,7 +402,7 @@ func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerSta
 				return verRet
 			}
 		}
-		return glob.NewEmptyVerRetTrue()
+		return ast.NewTrueVerRet(nil, nil, "")
 	}
 }
 
@@ -425,9 +422,9 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt ast.Specific
 	}
 
 	if state.WithMsg {
-		return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{orStmt.String()})
+		return ast.NewTrueVerRet(stmt, nil, orStmt.String())
 	}
-	return glob.NewEmptyVerRetTrue()
+	return ast.NewTrueVerRet(stmt, nil, "")
 }
 
 // func (ver *Verifier) iterate_KnownPureSpecInUniFacts_applyMatch(stmtToMatch *ast.PureSpecificFactStmt, knownFacts []env.KnownSpecFact_InUniFact, getOkUniConMapErr func([]ast.Obj, []string, []ast.Obj) (bool, map[string]ast.Obj, error), state *VerState) ast.VerRet {

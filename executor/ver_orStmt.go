@@ -17,7 +17,6 @@ package litex_executor
 import (
 	ast "golitex/ast"
 	env "golitex/environment"
-	glob "golitex/glob"
 )
 
 func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) ast.VerRet {
@@ -112,7 +111,7 @@ func (ver *Verifier) useKnownOrFactToCheckGivenOrFact(given *ast.OrStmt, known *
 		}
 	}
 
-	return glob.NewEmptyVerRetTrue()
+	return ast.NewTrueVerRet(nil, nil, "")
 }
 
 // groupFactsByPropNameAndValidate 将 given 和 known 的 facts 按 propName 分组，并验证两个 map 的结构是否匹配
@@ -198,12 +197,12 @@ func (ver *Verifier) matchEachSpecFactInGivenOrFactAndKnownOrFact(knowns []ast.S
 			}
 
 			if newGiven.String() == newKnown.String() {
-				return glob.NewEmptyVerRetTrue()
+				return ast.NewTrueVerRet(nil, nil, "")
 			}
 		}
 	}
 
-	return glob.NewEmptyVerRetTrue()
+	return ast.NewTrueVerRet(nil, nil, "")
 }
 
 // generatePermutations 生成给定切片的所有排列
@@ -249,15 +248,15 @@ func (ver *Verifier) verOrStmtByAssumeAllFactsAreFalseToProveTheRemainingOneIsTr
 		for _, fact := range reversedFact {
 			ret := ver.Env.NewFactWithCheckingNameDefined(fact)
 			if ret.IsNotTrue() {
-				return ast.NewEmptyUnknownVerRet().AddUnknown(ret.String())
+				return ast.NewEmptyUnknownVerRet().AddExtraInfo(ret.String())
 			}
 		}
 	}
 
 	ret := ver.VerFactStmt(stmt.Facts[index], state)
 	if ret.IsNotTrue() {
-		return ast.NewEmptyUnknownVerRet().AddUnknown(ret.String())
+		return ast.NewEmptyUnknownVerRet().AddExtraInfo(ret.String())
 	}
 
-	return glob.NewEmptyVerRetTrue()
+	return ast.NewTrueVerRet(nil, nil, "")
 }

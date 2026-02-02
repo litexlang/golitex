@@ -58,10 +58,10 @@ func processUniFactParamsDuplicateDeclared(env *env.EnvMgr, params []string) (ma
 		for {
 			newParam := param
 			ret := env.IsNameUnavailable(newParam, map[string]struct{}{})
-			if ret.IsTrue() {
+			if ret {
 				newParam = env.GenerateUnusedRandomName()
 				ret = env.IsNameUnavailable(newParam, map[string]struct{}{})
-				if ret.IsErr() {
+				if !ret {
 					paramMap[param] = ast.Atom(newParam)
 					paramMapStrToStr[param] = newParam
 					break
@@ -82,12 +82,12 @@ func processUniFactParamsDuplicateDeclared_notInGivenMap(env *env.EnvMgr, params
 			newParam := param
 			_, inNotOnMap := notInMap[newParam]
 			ret := env.IsNameUnavailable(newParam, map[string]struct{}{})
-			if ret.IsTrue() || inNotOnMap {
+			if ret || inNotOnMap {
 				newParam = env.GenerateUnusedRandomName()
 
 				_, inNotOnMap = notInMap[newParam]
 				ret = env.IsNameUnavailable(newParam, map[string]struct{}{})
-				if ret.IsErr() && !inNotOnMap {
+				if !ret && !inNotOnMap {
 					paramMap[param] = ast.Atom(newParam)
 					paramMapStrToStr[param] = newParam
 					break
