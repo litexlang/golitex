@@ -87,6 +87,7 @@ prove forall n N: $exist_truncated_factorial(n):
         case n > 0:
             n $in N_pos
 
+
 """
 prop factorial_cond(f fn(N)N_pos, n N):
     forall: n = 0 => f(n) = 1 

@@ -127,12 +127,12 @@ func (exec *Executor) execCases_Verify_case_by_case(stmt *ast.ProveCaseByCaseStm
 			if ret.IsNotTrue() {
 				return ret
 			}
-		}
 
-		for _, thenFact := range stmt.ThenFacts {
-			ret := exec.Stmt(thenFact)
-			if ret.IsNotTrue() {
-				return ret
+			for _, thenFact := range stmt.ThenFacts {
+				ret := exec.Stmt(thenFact)
+				if ret.IsNotTrue() {
+					return ret
+				}
 			}
 		}
 	}
