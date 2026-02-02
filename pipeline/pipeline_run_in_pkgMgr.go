@@ -25,16 +25,16 @@ import (
 	"path/filepath"
 )
 
-func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, glob.StmtRetType, []ast.StmtRet) {
+func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, string, []ast.StmtRet) {
 	envPkgMgr := env.NewEnvPkgMgr(pkgMgr)
 	envMgr, err := NewBuiltinEnvMgrWithNewEmptyEnv(envPkgMgr)
 	if err != nil {
-		return nil, glob.StmtRetTypeError, []ast.StmtRet{ast.StmtErrRet(err.Error())}
+		return nil, glob.ERROR, []ast.StmtRet{ast.StmtErrRet(nil, err.Error())}
 	}
 
 	blocks, err := ast.PreprocessAndMakeSourceCodeIntoBlocks(code)
 	if err != nil {
-		return nil, glob.StmtRetTypeError, []ast.StmtRet{ast.StmtErrRet(err.Error())}
+		return nil, glob.ERROR, []ast.StmtRet{ast.StmtErrRet(nil, err.Error())}
 	}
 
 	p := ast.NewTbParser(pkgMgr)
@@ -43,12 +43,15 @@ func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bo
 	for _, block := range blocks {
 		topStmt, err := p.Stmt(&block)
 		if err != nil {
-			return nil, glob.StmtRetTypeError, []ast.StmtRet{ast.StmtErrRet(err.Error())}
+			return nil, glob.ERROR, []ast.StmtRet{ast.StmtErrRet(nil, err.Error())}
 		}
 		ret := RunStmtInExecutor(curExec, topStmt)
 
 		if ret.IsNotTrue() {
-			return nil, ret.RetType, []ast.StmtRet{ret}
+			if ret.IsErr() {
+				return nil, glob.ERROR, []ast.StmtRet{ret}
+			}
+			return nil, glob.UNKNOWN, []ast.StmtRet{ret}
 		} else {
 			innerGlobRets = append(innerGlobRets, ret)
 		}
@@ -56,21 +59,21 @@ func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bo
 
 	if removeBuiltinEnv {
 		// envMgrWithoutBuiltinLogic := envMgr.RemoveBuiltinEnv()
-		// return envMgrWithoutBuiltinLogic, glob.StmtRetTypeTrue, innerGlobRets
-		return envMgr, glob.StmtRetTypeTrue, innerGlobRets
+		// return envMgrWithoutBuiltinLogic, "true", innerGlobRets
+		return envMgr, glob.TRUE, innerGlobRets
 	}
 
-	return envMgr, glob.StmtRetTypeTrue, innerGlobRets
+	return envMgr, glob.TRUE, innerGlobRets
 }
 
-func RunFileInPkgMgr(fileAbsPath string, curPkgName string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, glob.StmtRetType, []ast.StmtRet) {
+func RunFileInPkgMgr(fileAbsPath string, curPkgName string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bool) (*env.EnvMgr, string, []ast.StmtRet) {
 	if fileAbsPath == "" {
-		return nil, glob.StmtRetTypeError, []ast.StmtRet{ast.StmtErrRet("filePath is empty")}
+		return nil, glob.ERROR, []ast.StmtRet{ast.StmtErrRet(nil, "filePath is empty")}
 	}
 
 	cleanFileAbsPath := filepath.Clean(fileAbsPath)
 	if cleanFileAbsPath == "" {
-		return nil, glob.StmtRetTypeError, []ast.StmtRet{ast.StmtErrRet(fmt.Sprintf("file path %s error", fileAbsPath))}
+		return nil, glob.ERROR, []ast.StmtRet{ast.StmtErrRet(nil, fmt.Sprintf("file path %s error", fileAbsPath))}
 	}
 
 	// 更新 current working repo
@@ -87,7 +90,7 @@ func RunFileInPkgMgr(fileAbsPath string, curPkgName string, pkgMgr *packageMgr.P
 	// 获得那个 main.lit
 	code, err := os.ReadFile(cleanFileAbsPath)
 	if err != nil {
-		return nil, glob.StmtRetTypeError, []ast.StmtRet{ast.StmtErrRet(err.Error())}
+		return nil, glob.ERROR, []ast.StmtRet{ast.StmtErrRet(nil, err.Error())}
 	}
 
 	return RunCodeInPkgMgr(string(code), pkgMgr, removeBuiltinEnv)
