@@ -139,7 +139,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_Define(stmt *ast.HaveFnEqualCase
 	defFn := ast.NewDefLetStmt([]string{stmt.DefHeader.Name}, []ast.Obj{anonymousSetTheFnIsIn}, []ast.FactStmt{}, stmt.Line)
 	defRet := exec.defLetStmt(defFn)
 	if defRet.IsNotTrue() {
-		return exec.AddStmtToStmtRet(defRet, stmt)
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(defRet.String())
 	}
 
 	curFnObjParams := []ast.Obj{}
@@ -158,8 +158,10 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_Define(stmt *ast.HaveFnEqualCase
 		inferRets = append(inferRets, retInfer)
 	}
 
-	if trueRet, ok := defRet.(*ast.TrueStmtRet); ok {
-		return exec.AddStmtToStmtRet(trueRet.AddInfers(inferRets), stmt)
-	}
-	return exec.AddStmtToStmtRet(defRet, stmt)
+	return ast.NewTrueStmtEmptyRet(stmt).AddInfers(inferRets)
+	// if trueRet, ok := defRet.(*ast.TrueStmtRet); ok {
+	// 	// return exec.AddStmtToStmtRet(trueRet.AddInfers(inferRets), stmt)
+	// 	return ast.NewTrueStmtEmptyRet(stmt).AddInfers(inferRets)
+	// }
+	// return exec.AddStmtToStmtRet(defRet, stmt)
 }
