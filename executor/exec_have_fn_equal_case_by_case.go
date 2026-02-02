@@ -16,10 +16,9 @@ package litex_executor
 
 import (
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
-func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) ast.StmtRet{
+func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseStmt) ast.StmtRet {
 	ret := exec.haveFnEqualCaseByCaseStmt_Verify(stmt)
 	if ret.IsNotTrue() {
 		return ret
@@ -30,11 +29,20 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt(stmt *ast.HaveFnEqualCaseByCaseS
 		return newRet
 	}
 
-	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(ret.VerifyProcess).AddDefineMsgs(newRet.Define)
+	verifyProcessMsgs := []ast.VerRet{}
+	defineMsgs := []string{}
+	if trueRet, ok := ret.(*ast.TrueStmtRet); ok {
+		verifyProcessMsgs = append(verifyProcessMsgs, trueRet.VerifyProcess...)
+	}
+	if trueRet, ok := newRet.(*ast.TrueStmtRet); ok {
+		defineMsgs = append(defineMsgs, trueRet.Define...)
+	}
+
+	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
 }
 
-func (exec *Executor) haveFnEqualCaseByCaseStmt_Verify(stmt *ast.HaveFnEqualCaseByCaseStmt) ast.StmtRet{
-	verifyProcessMsgs := []VerRet{}
+func (exec *Executor) haveFnEqualCaseByCaseStmt_Verify(stmt *ast.HaveFnEqualCaseByCaseStmt) ast.StmtRet {
+	verifyProcessMsgs := []ast.VerRet{}
 
 	exec.NewEnv()
 	defer exec.deleteEnv()
@@ -43,7 +51,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_Verify(stmt *ast.HaveFnEqualCase
 	newLetStmt := ast.NewDefLetStmt(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []ast.FactStmt{}, stmt.Line)
 	execState := exec.defLetStmt(newLetStmt)
 	if execState.IsNotTrue() {
-		return ast.StmtErrRet(execState.String())
+		return ast.StmtErrRet(stmt, execState.String())
 	}
 
 	verRet := exec.haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNoOverlap_ReturnValueInRetSet(stmt)
@@ -51,10 +59,10 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_Verify(stmt *ast.HaveFnEqualCase
 		return verRet
 	}
 
-	return glob.NewEmptyStmtTrue().AddVerifyProcesses(verifyProcessMsgs)
+	return ast.NewTrueStmtEmptyRet(nil).AddVerifyProcesses(verifyProcessMsgs)
 }
 
-func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNoOverlap_ReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt) ast.StmtRet{
+func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNoOverlap_ReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt) ast.StmtRet {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -62,7 +70,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNo
 	for _, proof := range stmt.ProveCases {
 		execState := exec.Stmt(proof)
 		if execState.IsNotTrue() {
-			return ast.StmtErrRet(execState.String())
+			return ast.StmtErrRet(stmt, execState.String())
 		}
 	}
 
@@ -70,28 +78,28 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNo
 	orFact := ast.NewOrStmt(stmt.CaseByCaseFacts, stmt.Line)
 	execState := exec.factStmt(orFact)
 	if execState.IsNotTrue() {
-		return ast.StmtErrRet(execState.String())
+		return ast.StmtErrRet(stmt, execState.String())
 	}
 
 	// 证明 cases 互相不冲突
 	for i := range len(stmt.CaseByCaseFacts) {
 		execState = exec.haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap_ReturnValueInRetSet(stmt, i)
 		if execState.IsNotTrue() {
-			return ast.StmtErrRet(execState.String())
+			return ast.StmtErrRet(stmt, execState.String())
 		}
 	}
 
 	return exec.NewTrueStmtRet(orFact)
 }
 
-func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap_ReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, index int) ast.StmtRet{
+func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap_ReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt, index int) ast.StmtRet {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	// index known是对的
-	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.CaseByCaseFacts[index])
-	if ret.IsNotTrue() {
-		return ast.StmtErrRet(ret.String())
+	retInfer := exec.Env.NewFactWithCheckingNameDefined(stmt.CaseByCaseFacts[index])
+	if retInfer.IsNotTrue() {
+		return ast.StmtErrRet(stmt, retInfer.String())
 	}
 
 	// 其他index的逆都是错的
@@ -103,30 +111,30 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap_ReturnValue
 		for _, notOtherCaseFact := range notOtherCaseFacts {
 			execState := exec.factStmt(notOtherCaseFact)
 			if execState.IsNotTrue() {
-				return ast.StmtErrRet(execState.String())
+				return ast.StmtErrRet(stmt, execState.String())
 			}
 		}
 	}
 
 	// 跑case proof
 	for _, curStmt := range stmt.Proofs[index] {
-		ret := exec.Stmt(curStmt)
-		if ret.IsNotTrue() {
-			return ret
+		retStmt := exec.Stmt(curStmt)
+		if retStmt.IsNotTrue() {
+			return retStmt
 		}
 	}
 
 	// 返回值在 retSet里
 	inFact := ast.NewInFactWithObj(stmt.CaseByCaseEqualTo[index], stmt.RetSet)
-	ret = exec.factStmt(inFact)
-	if ret.IsNotTrue() {
-		return ret
+	retStmt := exec.factStmt(inFact)
+	if retStmt.IsNotTrue() {
+		return retStmt
 	}
 
 	return exec.NewTrueStmtRet(stmt)
 }
 
-func (exec *Executor) haveFnEqualCaseByCaseStmt_Define(stmt *ast.HaveFnEqualCaseByCaseStmt) ast.StmtRet{
+func (exec *Executor) haveFnEqualCaseByCaseStmt_Define(stmt *ast.HaveFnEqualCaseByCaseStmt) ast.StmtRet {
 	anonymousSetTheFnIsIn := ast.NewAnonymousFnSetObj(stmt.DefHeader.ParamSets, stmt.RetSet)
 	defFn := ast.NewDefLetStmt([]string{stmt.DefHeader.Name}, []ast.Obj{anonymousSetTheFnIsIn}, []ast.FactStmt{}, stmt.Line)
 	defRet := exec.defLetStmt(defFn)
@@ -140,15 +148,18 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_Define(stmt *ast.HaveFnEqualCase
 	}
 	curFnObj := ast.NewFnObj(ast.Atom(stmt.DefHeader.Name), curFnObjParams)
 
-	infers := []string{}
+	inferRets := []ast.InferRet{}
 	for i, curCase := range stmt.CaseByCaseFacts {
 		uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []ast.Spec_OrFact{curCase}, []ast.Spec_OrFact{ast.NewEqualFact(curFnObj, stmt.CaseByCaseEqualTo[i])}, curCase.GetLine())
-		ret := exec.Env.NewFactWithCheckingNameDefined(uniFact)
-		if ret.IsNotTrue() {
-			return ret
+		retInfer := exec.Env.NewFactWithCheckingNameDefined(uniFact)
+		if retInfer.IsNotTrue() {
+			return ast.StmtErrRet(stmt, retInfer.String())
 		}
-		infers = append(infers, uniFact.String())
+		inferRets = append(inferRets, retInfer)
 	}
 
-	return exec.AddStmtToStmtRet(defRet.AddInfers(infers), stmt)
+	if trueRet, ok := defRet.(*ast.TrueStmtRet); ok {
+		return exec.AddStmtToStmtRet(trueRet.AddInfers(inferRets), stmt)
+	}
+	return exec.AddStmtToStmtRet(defRet, stmt)
 }

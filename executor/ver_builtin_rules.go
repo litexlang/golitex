@@ -53,7 +53,7 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt ast.SpecificFactStmt, state 
 		return ver.verIsTupleByBuiltinRules(stmt, state)
 	}
 
-	if ast.VerRet := ver.verNumberTrueLogicRelaOpt_BuiltinRules(stmt, state); verRet.IsErr() {
+	if verRet := ver.verNumberTrueLogicRelaOpt_BuiltinRules(stmt, state); verRet.IsErr() {
 		return verRet
 	} else if verRet.IsTrue() {
 		return verRet
@@ -100,12 +100,12 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt ast.SpecificFactStmt) ast.Ver
 	}
 
 	if len(asPureStmt.Params) != 2 {
-		return glob.NewErrVerRet(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(asPureStmt.Params)))
+		return ast.NewErrVerRet(stmt).AddExtraInfo(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(asPureStmt.Params)))
 	}
 
 	leftNumLitExpr, ok, err := ast.MakeObjIntoNumLitExpr(asPureStmt.Params[0])
 	if err != nil {
-		return glob.NewErrVerRet(err.Error())
+		return ast.NewErrVerRet(stmt).AddExtraInfo(err.Error())
 	}
 	if !ok {
 		return ast.NewEmptyUnknownVerRet()
@@ -113,7 +113,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt ast.SpecificFactStmt) ast.Ver
 
 	rightNumLitExpr, ok, err := ast.MakeObjIntoNumLitExpr(asPureStmt.Params[1])
 	if err != nil {
-		return glob.NewErrVerRet(err.Error())
+		return ast.NewErrVerRet(stmt).AddExtraInfo(err.Error())
 	}
 	if !ok {
 		return ast.NewEmptyUnknownVerRet()
@@ -122,10 +122,10 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt ast.SpecificFactStmt) ast.Ver
 	ok, err = glob.NumLitExprCompareOpt(leftNumLitExpr, rightNumLitExpr, string(asPureStmt.PropName))
 
 	if err != nil {
-		return glob.NewErrVerRet(err.Error())
+		return ast.NewErrVerRet(stmt).AddExtraInfo(err.Error())
 	}
 	if ok {
-		return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{"builtin rules"})
+		return ast.NewTrueVerRet(stmt, nil, "builtin rules")
 	}
 
 	return ast.NewEmptyUnknownVerRet()
@@ -150,7 +150,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt ast.SpecificFactStmt,
 	}
 
 	if len(asPureStmt.Params) != 2 {
-		return glob.NewErrVerRet(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(asPureStmt.Params)))
+		return ast.NewErrVerRet(stmt).AddExtraInfo(fmt.Sprintf("builtin logic opt rule should have 2 params, but got %d", len(asPureStmt.Params)))
 	}
 
 	// 先评估表达式
@@ -193,13 +193,13 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt ast.SpecificFactStmt,
 
 	leftObj, ok, err := ast.MakeObjIntoNumLitExpr(toEval)
 	if err != nil {
-		return glob.NewErrVerRet(err.Error())
+		return ast.NewErrVerRet(stmt).AddExtraInfo(err.Error())
 	}
 	if ok {
 		if ast.IsAtomObjAndEqualToStr(asPureStmt.Params[1], glob.KeywordReal) {
 			isSuccess = glob.IsRealNumLitExpr(leftObj)
 			if isSuccess {
-				return (glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s is literally a real number", asPureStmt.Params[0])}))
+				return ast.NewTrueVerRet(stmt, nil, fmt.Sprintf("%s is literally a real number", asPureStmt.Params[0]))
 			} else {
 				return ast.NewEmptyUnknownVerRet()
 			}
@@ -208,7 +208,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt ast.SpecificFactStmt,
 		if ast.IsAtomObjAndEqualToStr(asPureStmt.Params[1], glob.KeywordNatural) {
 			isSuccess = glob.IsNatNumLitExpr(leftObj)
 			if isSuccess {
-				return (glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s is literally a natural number", asPureStmt.Params[0])}))
+				return ast.NewTrueVerRet(stmt, nil, fmt.Sprintf("%s is literally a natural number", asPureStmt.Params[0]))
 			} else {
 				return ast.NewEmptyUnknownVerRet()
 			}
@@ -217,7 +217,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt ast.SpecificFactStmt,
 		if ast.IsAtomObjAndEqualToStr(asPureStmt.Params[1], glob.KeywordInteger) {
 			isSuccess = glob.IsIntegerNumLitExpr(leftObj)
 			if isSuccess {
-				return (glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s is literally an integer number", asPureStmt.Params[0])}))
+				return ast.NewTrueVerRet(stmt, nil, fmt.Sprintf("%s is literally an integer number", asPureStmt.Params[0]))
 			} else {
 				return ast.NewEmptyUnknownVerRet()
 			}
@@ -226,7 +226,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt ast.SpecificFactStmt,
 		if ast.IsAtomObjAndEqualToStr(asPureStmt.Params[1], glob.KeywordRational) {
 			isSuccess = glob.IsRationalNumLitExpr(leftObj)
 			if isSuccess {
-				return (glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s is literally a rational number", asPureStmt.Params[0])}))
+				return ast.NewTrueVerRet(stmt, nil, fmt.Sprintf("%s is literally a rational number", asPureStmt.Params[0]))
 			} else {
 				return ast.NewEmptyUnknownVerRet()
 			}
@@ -235,7 +235,7 @@ func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt ast.SpecificFactStmt,
 		if ast.IsAtomObjAndEqualToStr(asPureStmt.Params[1], glob.KeywordNPos) {
 			isSuccess = glob.IsNPosNumLitExpr(leftObj)
 			if isSuccess {
-				return (glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s is literally a positive natural number", asPureStmt.Params[0])}))
+				return ast.NewTrueVerRet(stmt, nil, fmt.Sprintf("%s is literally a positive natural number", asPureStmt.Params[0]))
 			} else {
 				return ast.NewEmptyUnknownVerRet()
 			}
@@ -253,14 +253,14 @@ func (ver *Verifier) verIsASetByBuiltinRules(stmt ast.SpecificFactStmt, state *V
 	}
 
 	if len(asPureStmt.Params) != 1 {
-		return glob.NewErrVerRet(fmt.Sprintf("%s expects 1 parameter, got %d", glob.KeywordIsASet, len(asPureStmt.Params)))
+		return ast.NewErrVerRet(stmt).AddExtraInfo(fmt.Sprintf("%s expects 1 parameter, got %d", glob.KeywordIsASet, len(asPureStmt.Params)))
 	}
 
 	if glob.IsKeywordSetOrNonEmptySetOrFiniteSet(asPureStmt.Params[0].String()) {
 		return ast.NewEmptyUnknownVerRet()
 	}
 
-	return ver.maybeAddSuccessMsgString(state, stmt.String(), fmt.Sprintf("In ZFC set theory, everything is a set. Since Litex is based on ZFC set theory, $%s(x) is true for any object x.", glob.KeywordIsASet), glob.NewEmptyVerRetTrue())
+	return ver.maybeAddSuccessMsgString(state, stmt.String(), fmt.Sprintf("In ZFC set theory, everything is a set. Since Litex is based on ZFC set theory, $%s(x) is true for any object x.", glob.KeywordIsASet), ast.NewTrueVerRet(stmt, nil, ""))
 }
 
 func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
@@ -270,11 +270,11 @@ func (ver *Verifier) verIsAFiniteSetByBuiltinRules(stmt ast.SpecificFactStmt, st
 	}
 
 	if len(asPureStmt.Params) != 1 {
-		return glob.NewErrVerRet(fmt.Sprintf("%s expects 1 parameter, got %d", glob.KeywordIsAFiniteSet, len(asPureStmt.Params)))
+		return ast.NewErrVerRet(stmt).AddExtraInfo(fmt.Sprintf("%s expects 1 parameter, got %d", glob.KeywordIsAFiniteSet, len(asPureStmt.Params)))
 	}
 
 	if ast.IsListSetObj(asPureStmt.Params[0]) {
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), "A list set is a finite set.", glob.NewEmptyVerRetTrue())
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), "A list set is a finite set.", ast.NewTrueVerRet(stmt, nil, ""))
 	}
 
 	// 如果是 cart，那cart的每一位是有限集，所以cart也是有限集
@@ -292,12 +292,12 @@ func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt ast.SpecificFactStmt, 
 	}
 
 	if len(asPureStmt.Params) != 1 {
-		return glob.NewErrVerRet(fmt.Sprintf("%s expects 1 parameter, got %d", glob.KeywordIsANonEmptySet, len(asPureStmt.Params)))
+		return ast.NewErrVerRet(stmt).AddExtraInfo(fmt.Sprintf("%s expects 1 parameter, got %d", glob.KeywordIsANonEmptySet, len(asPureStmt.Params)))
 	}
 
 	if ast.IsListSetObj(asPureStmt.Params[0]) {
 		if len(asPureStmt.Params[0].(*ast.FnObj).Params) > 0 {
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), "A list set with at least one element is a nonempty set.", glob.NewEmptyVerRetTrue())
+			return ver.maybeAddSuccessMsgString(state, stmt.String(), "A list set with at least one element is a nonempty set.", ast.NewTrueVerRet(stmt, nil, ""))
 		}
 	}
 
@@ -307,7 +307,7 @@ func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt ast.SpecificFactStmt, 
 			if state.WithMsg {
 				return NewVerTrueByBuiltinRule(stmt, []string{fmt.Sprintf("%s is a built-in nonempty set.", paramAsStr)})
 			}
-			return glob.NewEmptyVerRetTrue()
+			return ast.NewTrueVerRet(stmt, nil, "")
 		}
 	}
 
@@ -349,7 +349,7 @@ func (ver *Verifier) verIsAFiniteSetByAllItemsInCartAreNonempty(cart ast.Obj, st
 	}
 
 	// 如果所有项都是有限集，那么 cart 也是有限集
-	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("cart %s is a finite set because all its items are finite sets.", cart), glob.NewEmptyVerRetTrue())
+	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("cart %s is a finite set because all its items are finite sets.", cart), ast.NewTrueVerRet(nil, nil, ""))
 }
 
 func (ver *Verifier) verIsANonEmptySetByAllItemsInCartAreNonempty(cart ast.Obj, state *VerState) ast.VerRet {
@@ -373,7 +373,7 @@ func (ver *Verifier) verIsANonEmptySetByAllItemsInCartAreNonempty(cart ast.Obj, 
 	}
 
 	// 如果所有项都是非空集合，那么 cart 也是非空集合
-	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("cart %s is a nonempty set because all its items are nonempty sets.", cart), glob.NewEmptyVerRetTrue())
+	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("cart %s is a nonempty set because all its items are nonempty sets.", cart), ast.NewTrueVerRet(nil, nil, ""))
 }
 
 func (ver *Verifier) verIsTupleByBuiltinRules(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
@@ -385,7 +385,7 @@ func (ver *Verifier) verIsTupleByBuiltinRules(stmt ast.SpecificFactStmt, state *
 	_ = state
 
 	if len(asPureStmt.Params) != 1 {
-		return glob.NewErrVerRet(fmt.Sprintf("is_tuple expects 1 parameter, got %d", len(asPureStmt.Params)))
+		return ast.NewErrVerRet(stmt).AddExtraInfo(fmt.Sprintf("is_tuple expects 1 parameter, got %d", len(asPureStmt.Params)))
 	}
 
 	fnObj, ok := asPureStmt.Params[0].(*ast.FnObj)
@@ -394,7 +394,7 @@ func (ver *Verifier) verIsTupleByBuiltinRules(stmt ast.SpecificFactStmt, state *
 	}
 
 	if ast.IsTupleFnObj(fnObj) {
-		return glob.NewEmptyVerRetTrue()
+		return ast.NewTrueVerRet(stmt, nil, "")
 	}
 
 	equalTo := ver.Env.GetObjTuple(asPureStmt.Params[0])
@@ -402,7 +402,7 @@ func (ver *Verifier) verIsTupleByBuiltinRules(stmt ast.SpecificFactStmt, state *
 		return ast.NewEmptyUnknownVerRet()
 	}
 
-	return glob.NewEmptyVerRetTrue()
+	return ast.NewTrueVerRet(stmt, nil, "")
 
 }
 
@@ -427,7 +427,7 @@ func (ver *Verifier) verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonemp
 		return ast.NewEmptyUnknownVerRet()
 	}
 
-	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("fn set %s is a nonempty set because its return set is a nonempty set.", fnSet), glob.NewEmptyVerRetTrue())
+	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("fn set %s is a nonempty set because its return set is a nonempty set.", fnSet), ast.NewTrueVerRet(nil, nil, ""))
 }
 
 // func (ver *Verifier) verIsNonEmptyWithItemByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ast.VerRet {
@@ -462,6 +462,6 @@ func (ver *Verifier) verIsANonEmptySetByIsPowerSetAndAllParamSetsAndRetSetAreNon
 		return ast.NewEmptyUnknownVerRet()
 	}
 
-	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("power set %s is a nonempty set because its param is a nonempty set.", powerSet), glob.NewEmptyVerRetTrue())
+	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("power set %s is a nonempty set because its param is a nonempty set.", powerSet), ast.NewTrueVerRet(nil, nil, ""))
 
 }

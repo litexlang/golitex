@@ -56,6 +56,7 @@ func (exec *Executor) proveByEnumMainLogic(stmt *ast.ProveByEnumStmt) (ast.StmtR
 			verifyProcessMsgs = append(verifyProcessMsgs, execRet.GetVerifyProcess()...)
 		}
 		return ast.NewTrueStmtEmptyRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs), nil
+
 	}
 }
 
