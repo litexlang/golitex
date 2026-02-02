@@ -52,7 +52,7 @@ func (ie *InferEngine) BuiltinPropExceptTrueEqual(fact ast.SpecificFactStmt) ast
 		return ret
 	}
 
-	return ast.NewUnknownInferRet(fact)
+	return ast.NewTrueInferRet(fact)
 }
 
 // orFactPostProcess handles post-processing for OrStmt facts
