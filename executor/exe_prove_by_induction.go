@@ -24,7 +24,8 @@ func (exec *Executor) proveByInductionStmt(stmt *ast.ProveByInductionStmt) ast.S
 	// 如果结论是uniFact，那么dom和then全部不能是uniFact；然后不允许是uniFactIff
 	_, ok := stmt.Fact.(ast.SpecificFactStmt)
 	if !ok {
-		return exec.AddStmtToStmtRet(ast.StmtErrRet(stmt, fmt.Sprintf("expect specific fact for induction, get:\n%s", stmt.Fact.String())), stmt)
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("expect specific fact for induction, get:\n%s", stmt.Fact.String()))
+		// return exec.AddStmtToStmtRet(ast.StmtErrRet(stmt, fmt.Sprintf("expect specific fact for induction, get:\n%s", stmt.Fact.String())), stmt)
 	}
 
 	// 证明 start 是 整数

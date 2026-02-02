@@ -129,11 +129,10 @@ func checkParamsInFnDefNotDefinedAndParamSetsDefined(exec *Executor, params []st
 
 func (exec *Executor) NewErrStmtRet(stmt ast.Stmt) ast.StmtRet {
 	ret := ast.NewErrStmtEmptyRet(stmt)
-	exec.AddStmtToStmtRet(ret, stmt)
 	return ret
 }
 
 func (exec *Executor) NewTrueStmtRet(stmt ast.Stmt) ast.StmtRet {
 	ret := ast.NewTrueStmtEmptyRet(stmt)
-	return exec.AddStmtToStmtRet(ret, stmt)
+	return ret
 }

@@ -26,7 +26,8 @@ func (exec *Executor) inferStmt(stmt *ast.InferStmt) ast.StmtRet {
 	for _, domFact := range stmt.DomFacts {
 		ret := exec.factStmt(domFact.(ast.FactStmt))
 		if ret.IsNotTrue() {
-			return exec.AddStmtToStmtRet(ast.StmtErrRet(domFact, fmt.Sprintf("failed to verify fact: %s", domFact.String())), stmt)
+			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("failed to verify fact: %s", domFact.String()))
+			// return exec.AddStmtToStmtRet(ast.StmtErrRet(domFact, fmt.Sprintf("failed to verify fact: %s", domFact.String())), stmt)
 		}
 	}
 

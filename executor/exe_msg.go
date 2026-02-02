@@ -31,6 +31,6 @@ func ErrorExecStmtStr(stmt ast.Stmt) string {
 	return fmt.Sprintf("Error: line %d\n", stmt.GetLine())
 }
 
-func (exec *Executor) AddStmtToStmtRet(ret ast.StmtRet, stmt ast.Stmt) ast.StmtRet {
-	return ret
-}
+// func (exec *Executor) AddStmtToStmtRet(ret ast.StmtRet, stmt ast.Stmt) ast.StmtRet {
+// 	return ret
+// }
