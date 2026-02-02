@@ -39,7 +39,13 @@ func Test_File(t *testing.T) {
 		fmt.Println(glob.StringWithOptimizedNewline(ret.String()))
 	}
 
-	fmt.Println(glob.REPLMsg(retType))
+	if retType == glob.TRUE {
+		fmt.Println(glob.REPLSuccessMessage)
+	} else if retType == glob.ERROR {
+		fmt.Println(glob.REPLErrorMessage)
+	} else {
+		fmt.Println(glob.REPLUnknownMessage)
+	}
 	executionTime := time.Since(start)
 	fmt.Printf("execution time: %s\n", executionTime)
 }
@@ -57,7 +63,13 @@ func Test_ImportFile(t *testing.T) {
 	for _, ret := range rets {
 		fmt.Println(glob.StringWithOptimizedNewline(ret.String()))
 	}
-	fmt.Println(glob.REPLMsg(retType))
+	if retType == glob.TRUE {
+		fmt.Println(glob.REPLSuccessMessage)
+	} else if retType == glob.ERROR {
+		fmt.Println(glob.REPLErrorMessage)
+	} else {
+		fmt.Println(glob.REPLUnknownMessage)
+	}
 	executionTime := time.Since(start)
 	fmt.Printf("execution time: %s\n", executionTime)
 }
