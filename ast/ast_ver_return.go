@@ -1,5 +1,7 @@
 package litex_ast
 
+import "fmt"
+
 type VerRet interface {
 	verRet()
 	IsTrue() bool
@@ -11,6 +13,7 @@ type VerRet interface {
 	AddExtraInfos(extraInfos []string) VerRet
 	GetExtraInfos() []string
 	GetToCheck() FactStmt
+	String() string
 }
 
 type TrueVerRet struct {
@@ -128,4 +131,14 @@ func (r *UnknownVerRet) GetToCheck() FactStmt {
 }
 func (r *ErrVerRet) GetToCheck() FactStmt {
 	return r.ToCheck
+}
+
+func (r *TrueVerRet) String() string {
+	return fmt.Sprintf("TrueVerRet: %s", r.ToCheck.String())
+}
+func (r *UnknownVerRet) String() string {
+	return fmt.Sprintf("UnknownVerRet: %s", r.ToCheck.String())
+}
+func (r *ErrVerRet) String() string {
+	return fmt.Sprintf("ErrVerRet: %s", r.ToCheck.String())
 }

@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
-	glob "golitex/glob"
 )
 
 func notOkExec(state ast.StmtRet, err error) bool {
@@ -58,10 +57,10 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 
 		ret := exec.Env.NewFactWithCheckingNameDefined(proof)
 		if ret.IsErr() {
-			return ast.StmtErrRet(ret.String()), proof, fmt.Errorf(ret.String())
+			return ast.StmtErrRet(proof, ret.String()), proof, fmt.Errorf(ret.String())
 		}
 	}
-	return glob.NewEmptyStmtTrue(), nil, nil
+	return ast.NewTrueStmtEmptyRet(nil), nil, nil
 }
 
 // func (exec *Executor) GetBuiltinEnv() *env.EnvMemory {
@@ -76,18 +75,18 @@ func checkParamsInFnDefNotDefinedAndParamSetsDefined(exec *Executor, params []st
 	for _, paramSet := range paramSets {
 		ret := exec.Env.LookupNamesInObj(paramSet, map[string]struct{}{})
 		if ret.IsNotTrue() {
-			return glob.NewShortRetErr(ret.String())
+			return ast.NewErrShortRetWithMsg(ret.String())
 		}
 	}
 
 	for _, param := range params {
 		ret := exec.Env.LookupNamesInObj(ast.Atom(param), map[string]struct{}{})
 		if ret.IsTrue() {
-			return glob.NewShortRetErr(fmt.Sprintf("parameter %s is already defined. To avoid ambiguity, please use a different name for the parameter", param))
+			return ast.NewErrShortRetWithMsg(fmt.Sprintf("parameter %s is already defined. To avoid ambiguity, please use a different name for the parameter", param))
 		}
 	}
 
-	return glob.NewEmptyShortTrueRet()
+	return ast.NewTrueShortRet()
 }
 
 // func (exec *Executor) declareParamsAndDomFactsInUniFact(stmt *ast.UniFactStmt) ast.StmtRet{
@@ -128,8 +127,8 @@ func checkParamsInFnDefNotDefinedAndParamSetsDefined(exec *Executor, params []st
 // 	return ast.NewExistSpecificFactStmt(true, randomParams, randomParamSets, ast.NewPureSpecificFactStmt(specFact.IsTrue, specFact.PropName, specFact, specFact.Line), specFact.Line)
 // }
 
-func (exec *Executor) NewErrStmtRet(stmt ast.Stmt) ast.StmtRet{
-	ret := glob.NewEmptyStmtError()
+func (exec *Executor) NewErrStmtRet(stmt ast.Stmt) ast.StmtRet {
+	ret := ast.NewErrStmtEmptyRet(stmt)
 	exec.AddStmtToStmtRet(ret, stmt)
 	return ret
 }

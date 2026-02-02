@@ -100,7 +100,7 @@ func (exec *Executor) execCases_Verify_case_by_case(stmt *ast.ProveCaseByCaseStm
 	if len(stmt.Proofs[index]) != 0 {
 		for i := 0; i < len(stmt.Proofs[index])-1; i++ {
 			curStmt := stmt.Proofs[index][i]
-			ret = exec.Stmt(curStmt)
+			ret := exec.Stmt(curStmt)
 			if ret.IsNotTrue() {
 				return ret
 			}
@@ -109,7 +109,7 @@ func (exec *Executor) execCases_Verify_case_by_case(stmt *ast.ProveCaseByCaseStm
 		lastStmt := stmt.Proofs[index][len(stmt.Proofs[index])-1]
 
 		if impossibleStmt, ok := lastStmt.(*ast.ImpossibleStmt); ok {
-			ret = exec.Stmt(impossibleStmt.Fact)
+			ret := exec.Stmt(impossibleStmt.Fact)
 			if ret.IsNotTrue() {
 				return ret
 			}
@@ -123,19 +123,19 @@ func (exec *Executor) execCases_Verify_case_by_case(stmt *ast.ProveCaseByCaseStm
 			}
 
 		} else {
-			ret = exec.Stmt(lastStmt)
+			ret := exec.Stmt(lastStmt)
 			if ret.IsNotTrue() {
 				return ret
 			}
 		}
 
 		for _, thenFact := range stmt.ThenFacts {
-			ret = exec.Stmt(thenFact)
+			ret := exec.Stmt(thenFact)
 			if ret.IsNotTrue() {
 				return ret
 			}
 		}
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueStmtEmptyRet(stmt)
 }

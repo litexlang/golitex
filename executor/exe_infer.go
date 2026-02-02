@@ -18,7 +18,6 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
-	glob "golitex/glob"
 )
 
 func (exec *Executor) inferStmt(stmt *ast.InferStmt) ast.StmtRet {
@@ -27,7 +26,7 @@ func (exec *Executor) inferStmt(stmt *ast.InferStmt) ast.StmtRet {
 	for _, domFact := range stmt.DomFacts {
 		ret := exec.factStmt(domFact.(ast.FactStmt))
 		if ret.IsNotTrue() {
-			return exec.AddStmtToStmtRet(ast.StmtErrRet(fmt.Sprintf("failed to verify fact: %s", domFact.String())), stmt)
+			return exec.AddStmtToStmtRet(ast.StmtErrRet(domFact, fmt.Sprintf("failed to verify fact: %s", domFact.String())), stmt)
 		}
 	}
 
@@ -39,7 +38,7 @@ func (exec *Executor) inferStmt(stmt *ast.InferStmt) ast.StmtRet {
 	}
 
 	// emit then
-	newFactMsgs := []string{}
+	newFacts := []ast.InferRet{}
 	for _, thenFact := range stmt.ThenFacts {
 		var factStmt ast.FactStmt
 		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
@@ -47,16 +46,16 @@ func (exec *Executor) inferStmt(stmt *ast.InferStmt) ast.StmtRet {
 		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
 			factStmt = orStmt
 		} else {
-			return ast.StmtErrRet(fmt.Sprintf("imply statement error: unsupported fact type in thenFacts: %T", thenFact))
+			return ast.StmtErrRet(thenFact, fmt.Sprintf("imply statement error: unsupported fact type in thenFacts: %T", thenFact))
 		}
 		ret := ver.Env.NewFactWithCheckingNameDefined(factStmt)
 		if ret.IsNotTrue() {
-			return ret
+			return ast.StmtErrRet(factStmt, ret.String())
 		}
-		newFactMsgs = append(newFactMsgs, factStmt.String())
+		newFacts = append(newFacts, ret)
 	}
 
-	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
+	return ast.NewTrueStmtEmptyRet(stmt).AddInfers(newFacts)
 }
 
 func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.InferStmt, thenFact ast.Spec_OrFact, state *VerState) ast.StmtRet {
@@ -149,7 +148,8 @@ outerLoop:
 			}
 		}
 
-		return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{})
+		// return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{})
+		return ast.NewTrueVerRet(toCheck, nil, "")
 	}
 
 	return ast.NewEmptyUnknownVerRet()

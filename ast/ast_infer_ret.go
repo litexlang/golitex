@@ -1,11 +1,14 @@
 package litex_ast
 
+import "fmt"
+
 type InferRet interface {
 	inferRet()
 	IsTrue() bool
 	IsUnknown() bool
 	IsErr() bool
 	IsNotTrue() bool
+	String() string
 }
 
 type NotTrueInferRet interface {
@@ -99,4 +102,14 @@ func (r *ErrInferRet) AddExtraInfos(extraInfos []string) *ErrInferRet {
 func (r *TrueInferRet) AddInfers(infers []FactStmt) *TrueInferRet {
 	r.Infer = append(r.Infer, infers...)
 	return r
+}
+
+func (r *TrueInferRet) String() string {
+	return fmt.Sprintf("TrueInferRet: %s", r.Fact.String())
+}
+func (r *UnknownInferRet) String() string {
+	return fmt.Sprintf("UnknownInferRet: %s", r.Fact.String())
+}
+func (r *ErrInferRet) String() string {
+	return fmt.Sprintf("ErrInferRet: %s", r.Fact.String())
 }
