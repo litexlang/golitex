@@ -17,32 +17,31 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState) ast.VerRet {
 	if len(stmt.Params) < 2 {
-		return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{"equals fact must have at least 2 params"})
+		return ast.NewErrVerRet(stmt).AddExtraInfo("equals fact must have at least 2 params")
 	}
 
 	trueMsgs := []string{}
 
 	for i := 1; i < len(stmt.Params); i++ {
 		checked := false
-		unknownRet := ast.NewEmptyUnknownVerRet()
+		var unknownRet ast.VerRet = ast.NewEmptyUnknownVerRet()
 
 		for j := i - 1; j >= 0; j-- {
 			newFact := ast.NewEqualFact(stmt.Params[j], stmt.Params[i])
 			verRet := ver.VerFactStmt(newFact, state)
 			if verRet.IsErr() {
 				newFact := ast.NewEqualFact(stmt.Params[i-1], stmt.Params[i])
-				msgs := append(verRet.VerifyMsgs, fmt.Sprintf("%s\nis error", newFact.String()))
-				return glob.NewVerRet(glob.StmtRetTypeError, newFact.String(), glob.BuiltinLine0, msgs)
+				msgs := append(verRet.GetExtraInfos(), fmt.Sprintf("%s\nis error", newFact.String()))
+				return ast.NewErrVerRet(newFact).AddExtraInfos(msgs)
 			}
 			if verRet.IsTrue() {
 				ret := ver.Env.NewFactWithCheckingNameDefined(newFact)
 				if ret.IsErr() {
-					return glob.NewVerRet(glob.StmtRetTypeError, newFact.String(), glob.BuiltinLine0, []string{ret.String()})
+					return ast.NewErrVerRet(newFact).AddExtraInfo(ret.String())
 				}
 				checked = true
 				trueMsgs = append(trueMsgs, verRet.String())
@@ -56,12 +55,12 @@ func (ver *Verifier) verEqualsFactStmt(stmt *ast.EqualsFactStmt, state *VerState
 
 		if !checked {
 			newFact := ast.NewEqualFact(stmt.Params[i-1], stmt.Params[i])
-			msgs := append(unknownRet.VerifyMsgs, fmt.Sprintf("%s\nis unknown", newFact.String()))
-			return glob.NewVerRet(glob.StmtRetTypeUnknown, newFact.String(), glob.BuiltinLine0, msgs)
+			msgs := append(unknownRet.GetExtraInfos(), fmt.Sprintf("%s\nis unknown", newFact.String()))
+			return ast.NewUnknownVerRet(newFact).AddExtraInfos(msgs)
 		}
 	}
 	if state.WithMsg {
-		return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, trueMsgs)
+		return ast.NewTrueVerRet(stmt, nil, "").AddExtraInfos(trueMsgs)
 	}
-	return glob.NewEmptyVerRetTrue()
+	return ast.NewTrueVerRet(stmt, nil, "")
 }

@@ -17,7 +17,6 @@ package litex_executor
 import (
 	ast "golitex/ast"
 	env "golitex/environment"
-	glob "golitex/glob"
 )
 
 func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState) ast.VerRet {
@@ -48,7 +47,7 @@ func (ver *Verifier) ver_In_FnTT(left ast.Obj, right *ast.FnObj, state *VerState
 		return ast.NewEmptyUnknownVerRet()
 	}
 
-	return glob.NewEmptyVerRetTrue()
+	return ast.NewTrueVerRet(nil, nil, "")
 }
 
 // right dom is subset of left dom

@@ -70,7 +70,7 @@ func (ver *Verifier) verInFactByRightParamIsN_Z_Q_R_N_pos_Z_pos_R_pos_etc_BySpec
 		if verifiedBy == "" {
 			verifiedBy = fmt.Sprintf("%s is in %s", asPureStmt.Params[0], inSet)
 		}
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), verifiedBy, glob.NewEmptyVerRetTrue())
+		return ver.maybeAddSuccessMsgString(state, stmt.String(), verifiedBy, ast.NewTrueVerRet(stmt, nil, ""))
 	}
 	return ast.NewEmptyUnknownVerRet()
 }

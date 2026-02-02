@@ -17,7 +17,6 @@ package litex_executor
 import (
 	ast "golitex/ast"
 	env "golitex/environment"
-	glob "golitex/glob"
 )
 
 func (ver *Verifier) verOrStmtByUniFactMem(stmt *ast.OrStmt, state *VerState) ast.VerRet {
@@ -83,7 +82,7 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 		// 验证 dom 和 paramSet
 		verRet := ver.verifyDomAndParamSets(knownOrFactInUni, freeParamObjMap, state)
 		if verRet.IsTrue() {
-			return glob.NewVerRet(glob.StmtRetTypeTrue, given.String(), knownOrFactInUni.OrFact.Line, []string{knownOrFactInUni.UniFact.String()})
+			return ast.NewTrueVerRet(given, nil, knownOrFactInUni.UniFact.String())
 		}
 		if verRet.IsErr() {
 			return verRet
@@ -99,7 +98,7 @@ func (ver *Verifier) verifyDomAndParamSets(knownOrFactInUni *env.OrFactInUniFact
 	for _, domFact := range knownOrFactInUni.UniFact.DomFacts {
 		instDomFact, err := domFact.Instantiate(freeParamObjMap)
 		if err != nil {
-			return glob.NewVerRet(glob.StmtRetTypeError, domFact.String(), glob.BuiltinLine0, []string{err.Error()})
+			return ast.NewErrVerRet(domFact).AddExtraInfo(err.Error())
 		}
 		verRet := ver.VerFactStmt(instDomFact.(ast.FactStmt), state)
 		if verRet.IsNotTrue() {
@@ -111,7 +110,7 @@ func (ver *Verifier) verifyDomAndParamSets(knownOrFactInUni *env.OrFactInUniFact
 	for i, paramSet := range knownOrFactInUni.UniFact.ParamSets {
 		instParamSet, err := paramSet.Instantiate(newUniMap)
 		if err != nil {
-			return glob.NewVerRet(glob.StmtRetTypeError, paramSet.String(), glob.BuiltinLine0, []string{err.Error()})
+			return ast.NewErrVerRet(nil).AddExtraInfo(err.Error())
 		}
 		verRet := ver.VerFactStmt(ast.NewInFactWithObj(freeParamObjMap[knownOrFactInUni.UniFact.Params[i]], instParamSet.(ast.Obj)), state)
 		if verRet.IsNotTrue() {
@@ -120,7 +119,7 @@ func (ver *Verifier) verifyDomAndParamSets(knownOrFactInUni *env.OrFactInUniFact
 		newUniMap[knownOrFactInUni.UniFact.Params[i]] = freeParamObjMap[knownOrFactInUni.UniFact.Params[i]]
 	}
 
-	return glob.NewEmptyVerRetTrue()
+	return ast.NewTrueVerRet(nil, nil, "")
 }
 
 func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactStmt, orFactInKnownUniFact *ast.OrStmt, given *ast.OrStmt, state *VerState) (bool, map[string]ast.Obj) {

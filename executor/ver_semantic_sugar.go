@@ -17,7 +17,6 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 func (ver *Verifier) ReplaceObjsInSpecFactWithValue(fact ast.SpecificFactStmt) (bool, ast.SpecificFactStmt) {
@@ -77,17 +76,17 @@ func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt ast.SpecificFactStm
 	if replaced {
 		verRet := ver.verTrueEqualWholeProcess(newStmt.(*ast.PureSpecificFactStmt), state.CopyAndReqOkToFalse())
 		if verRet.IsErr() {
-			return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{"failed to verify true equal fact: " + verRet.String()})
+			return ast.NewErrVerRet(stmt).AddExtraInfo("failed to verify true equal fact: " + verRet.String())
 		}
 
 		if verRet.IsTrue() {
 			msg := fmt.Sprintf("replacing the symbols with their values:\n%s", newStmt.String())
 			if state.WithMsg {
-				return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
+				return ast.NewTrueVerRet(stmt, nil, msg)
 			}
-			return glob.NewEmptyVerRetTrue()
+			return ast.NewTrueVerRet(stmt, nil, "")
 		}
 	}
 
-	return glob.NewVerRet(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())})
+	return ast.NewEmptyUnknownVerRet().AddExtraInfo(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 }

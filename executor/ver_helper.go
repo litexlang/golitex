@@ -17,17 +17,20 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 // maybeAddSuccessMsgString is a backward compatibility function for string-based
-func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet VerRet) ast.VerRet {
+func (ver *Verifier) maybeAddSuccessMsgString(state *VerState, stmtStr, verifiedByStr string, execRet ast.VerRet) ast.VerRet {
 	if state == nil {
 		panic("")
 	}
 
 	if state.WithMsg {
-		execRet.VerifyMsgs = append(execRet.VerifyMsgs, successVerStringString(stmtStr, verifiedByStr).VerifyMsgs...)
+		successRet := successVerStringString(stmtStr, verifiedByStr)
+		// Add extra info from successRet to execRet
+		for _, info := range successRet.GetExtraInfos() {
+			execRet = execRet.AddExtraInfo(info)
+		}
 		return execRet
 	}
 	return execRet
@@ -122,5 +125,15 @@ func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistSpe
 }
 
 func NewVerTrueByBuiltinRule(stmt ast.Stmt, verifyMsgs []string) ast.VerRet {
-	return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, verifyMsgs)
+	var stmtFact ast.FactStmt
+	if stmt != nil {
+		if factStmt, ok := stmt.(ast.FactStmt); ok {
+			stmtFact = factStmt
+		}
+	}
+	var ret ast.VerRet = ast.NewTrueVerRet(stmtFact, nil, "")
+	for _, msg := range verifyMsgs {
+		ret = ret.AddExtraInfo(msg)
+	}
+	return ret
 }
