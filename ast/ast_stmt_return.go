@@ -205,6 +205,9 @@ func (r *UnknownStmtRet) GetInnerStmtRets() []StmtRet {
 }
 
 func (r *UnknownStmtRet) String() string {
+	if r.Stmt == nil {
+		return "UnknownStmtRet: <nil>"
+	}
 	return fmt.Sprintf("UnknownStmtRet: %s", r.Stmt.String())
 }
 func (r *ErrStmtRet) GetVerifyProcess() []VerRet {
@@ -216,6 +219,9 @@ func (r *ErrStmtRet) GetInnerStmtRets() []StmtRet {
 }
 
 func (r *ErrStmtRet) String() string {
+	if r.Stmt == nil {
+		return "ErrStmtRet: <nil>"
+	}
 	return fmt.Sprintf("ErrStmtRet: %s", r.Stmt.String())
 }
 func (r *TrueStmtRet) GetVerifyProcess() []VerRet {
@@ -227,6 +233,9 @@ func (r *TrueStmtRet) GetInnerStmtRets() []StmtRet {
 }
 
 func (r *TrueStmtRet) String() string {
+	if r.Stmt == nil {
+		return "TrueStmtRet: <nil>"
+	}
 	return fmt.Sprintf("TrueStmtRet: %s", r.Stmt.String())
 }
 

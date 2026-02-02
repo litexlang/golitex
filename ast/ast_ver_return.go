@@ -134,11 +134,20 @@ func (r *ErrVerRet) GetToCheck() FactStmt {
 }
 
 func (r *TrueVerRet) String() string {
+	if r.ToCheck == nil {
+		return "TrueVerRet: <nil>"
+	}
 	return fmt.Sprintf("TrueVerRet: %s", r.ToCheck.String())
 }
 func (r *UnknownVerRet) String() string {
+	if r.ToCheck == nil {
+		return "UnknownVerRet: <nil>"
+	}
 	return fmt.Sprintf("UnknownVerRet: %s", r.ToCheck.String())
 }
 func (r *ErrVerRet) String() string {
+	if r.ToCheck == nil {
+		return "ErrVerRet: <nil>"
+	}
 	return fmt.Sprintf("ErrVerRet: %s", r.ToCheck.String())
 }
