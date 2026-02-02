@@ -14,6 +14,8 @@ type StmtRet interface {
 	AddVerifyProcesses(verifyProcesses []VerRet) StmtRet
 	AddInfers(infers []InferRet) StmtRet
 	AddInnerStmtRets(innerStmtRets []StmtRet) StmtRet
+	AddNewFacts(newFacts []string) StmtRet
+	AddDefineMsgs(defines []string) StmtRet
 	GetVerifyProcess() []VerRet
 	GetInnerStmtRets() []StmtRet
 	String() string
@@ -31,6 +33,7 @@ func (r *ErrStmtRet) GetExtraInfos() []string {
 type TrueStmtRet struct {
 	Stmt              Stmt
 	Define            []string
+	NewFact           []string
 	VerifyProcess     []VerRet
 	Infer             []InferRet
 	InnerStmtRetSlice []StmtRet
@@ -91,7 +94,7 @@ func (r *ErrStmtRet) IsErr() bool     { return true }
 func (r *ErrStmtRet) IsNotTrue() bool { return true }
 
 func NewTrueStmtEmptyRet(stmt Stmt) *TrueStmtRet {
-	return &TrueStmtRet{Stmt: stmt, Define: []string{}, VerifyProcess: []VerRet{}, Infer: []InferRet{}, InnerStmtRetSlice: []StmtRet{}, ExtraInfo: []string{}}
+	return &TrueStmtRet{Stmt: stmt, Define: []string{}, NewFact: []string{}, VerifyProcess: []VerRet{}, Infer: []InferRet{}, InnerStmtRetSlice: []StmtRet{}, ExtraInfo: []string{}}
 }
 func NewUnknownStmtEmptyRet(stmt Stmt) *UnknownStmtRet {
 	return &UnknownStmtRet{Stmt: stmt, ExtraInfo: []string{}}
@@ -225,4 +228,45 @@ func (r *TrueStmtRet) GetInnerStmtRets() []StmtRet {
 
 func (r *TrueStmtRet) String() string {
 	return fmt.Sprintf("TrueStmtRet: %s", r.Stmt.String())
+}
+
+func (r *TrueStmtRet) AddNewFact(newFact string) StmtRet {
+	if newFact != "" {
+		r.NewFact = append(r.NewFact, newFact)
+	}
+	return r
+}
+
+func (r *TrueStmtRet) AddNewFacts(newFacts []string) StmtRet {
+	for _, newFact := range newFacts {
+		if newFact != "" {
+			r.NewFact = append(r.NewFact, newFact)
+		}
+	}
+	return r
+}
+
+func (r *TrueStmtRet) AddDefineMsgs(defines []string) StmtRet {
+	r.Define = append(r.Define, defines...)
+	return r
+}
+
+func (r *UnknownStmtRet) AddNewFacts(newFacts []string) StmtRet {
+	// UnknownStmtRet doesn't track new facts
+	return r
+}
+
+func (r *UnknownStmtRet) AddDefineMsgs(defines []string) StmtRet {
+	r.Define = append(r.Define, defines...)
+	return r
+}
+
+func (r *ErrStmtRet) AddNewFacts(newFacts []string) StmtRet {
+	// ErrStmtRet doesn't track new facts
+	return r
+}
+
+func (r *ErrStmtRet) AddDefineMsgs(defines []string) StmtRet {
+	r.Define = append(r.Define, defines...)
+	return r
 }
