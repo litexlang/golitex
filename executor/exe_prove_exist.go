@@ -16,7 +16,6 @@ package litex_executor
 
 import (
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 func (exec *Executor) proveExistStmt(stmt *ast.WitnessStmt) ast.StmtRet{
@@ -43,18 +42,18 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.WitnessStmt) ast.StmtRet{
 	for _, proof := range stmt.Proofs {
 		execState := exec.Stmt(proof)
 		if execState.IsNotTrue() {
-			return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(bodyRets)
+			return execState
 		}
 		bodyRets = append(bodyRets, execState)
 	}
 
-	verProcessRets := []VerRet{}
+	verProcessRets := []ast.VerRet{}
 	// prove in each param set
 	uniMap := map[string]ast.Obj{}
 	for i, equalTo := range stmt.EqualTos {
 		curParamSet, err := stmt.ExistParamSets[i].Instantiate(uniMap)
 		if err != nil {
-			return ast.StmtErrRet(err.Error())
+			return ast.StmtErrRet(stmt, err.Error())
 		}
 
 		inFact := ast.NewInFactWithObj(equalTo, curParamSet)
@@ -64,14 +63,14 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.WitnessStmt) ast.StmtRet{
 			return execState
 		}
 
-		verProcessRets = append(verProcessRets, execState.VerifyProcess...)
+		verProcessRets = append(verProcessRets, execState.GetVerifyProcess()...)
 
 		uniMap[stmt.ExistParams[i]] = equalTo
 	}
 
 	instFact, err := stmt.Fact.InstantiateFact(uniMap)
 	if err != nil {
-		return ast.StmtErrRet(err.Error())
+		return ast.StmtErrRet(stmt, err.Error())
 	}
 
 	execState := exec.factStmt(instFact)
@@ -79,17 +78,17 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.WitnessStmt) ast.StmtRet{
 		return execState
 	}
 
-	verProcessRets = append(verProcessRets, execState.VerifyProcess...)
+	verProcessRets = append(verProcessRets, execState.GetVerifyProcess()...)
 
-	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verProcessRets)
+	return ast.NewTrueStmtEmptyRet(stmt).AddVerifyProcesses(verProcessRets)
 }
 
 func (exec *Executor) proveExistStmt_NewFact(stmt *ast.WitnessStmt) ast.StmtRet{
 	newFact := stmt.ToTrueExistStFact()
 	ret := exec.Env.NewFactWithCheckingNameDefined(newFact)
 	if ret.IsErr() {
-		return ast.StmtErrRet(ret.String())
+		return ast.StmtErrRet(stmt, ret.String())
 	}
 
-	return glob.NewStmtTrueWithInfers(ret.Infer).AddNewFact(newFact.String())
+	return ast.NewTrueStmtEmptyRet(stmt).AddInfers([]ast.InferRet{ret}).AddExtraInfo(newFact.String())
 }
