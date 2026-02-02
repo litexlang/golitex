@@ -58,8 +58,6 @@ func RunCodeInPkgMgr(code string, pkgMgr *packageMgr.PkgMgr, removeBuiltinEnv bo
 	}
 
 	if removeBuiltinEnv {
-		// envMgrWithoutBuiltinLogic := envMgr.RemoveBuiltinEnv()
-		// return envMgrWithoutBuiltinLogic, "true", innerGlobRets
 		return envMgr, glob.TRUE, innerGlobRets
 	}
 

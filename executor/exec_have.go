@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ast.StmtRet{
+func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ast.StmtRet {
 	ver := NewVerifier(exec.Env)
 
 	newFactMsgs := []string{}
@@ -74,7 +74,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ast.StmtRet{
 	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs).AddDefineMsgs(defineMsgs).AddVerifyProcesses(verifyProcessMsgs)
 }
 
-func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) ast.StmtRet{
+func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) ast.StmtRet {
 	defineMsgs := []string{}
 	verifyProcessMsgs := []ast.VerRet{}
 
@@ -106,10 +106,11 @@ func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStm
 		defineMsgs = append(defineMsgs, inFact.String())
 	}
 
-	return exec.AddStmtToStmtRet(ast.NewTrueStmtEmptyRet(nil), stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
+	return ast.NewTrueStmtEmptyRet(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
+	// return exec.AddStmtToStmtRet(ast.NewTrueStmtEmptyRet(nil), stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
 }
 
-func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) ast.StmtRet{
+func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) ast.StmtRet {
 	shortRet := checkParamsInFnDefNotDefinedAndParamSetsDefined(exec, stmt.DefHeader.Params, stmt.DefHeader.ParamSets)
 	if shortRet.IsNotTrue() {
 		return ast.StmtErrRet(stmt, shortRet.String())
@@ -129,7 +130,8 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) ast.StmtRet{
 
 	execRet := exec.checkFnEqualStmt(stmt)
 	if execRet.IsNotTrue() {
-		return exec.AddStmtToStmtRet(execRet, stmt)
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(execRet.String())
+		// return exec.AddStmtToStmtRet(execRet, stmt)
 	}
 	if trueRet, ok := execRet.(*ast.TrueStmtRet); ok {
 		verifyProcessMsgs = append(verifyProcessMsgs, trueRet.VerifyProcess...)
@@ -138,14 +140,16 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) ast.StmtRet{
 	newFnDefStmt := ast.NewLetFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(stmt.DefHeader), stmt.EqualTo)}, stmt.Line), stmt.Line)
 	execRet = exec.lefDefFnStmt(newFnDefStmt)
 	if execRet.IsNotTrue() {
-		return exec.AddStmtToStmtRet(execRet.AddExtraInfo(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String())), stmt)
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(execRet.String()).AddExtraInfo(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String()))
+		// return exec.AddStmtToStmtRet(execRet.AddExtraInfo(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String())), stmt)
 	}
 	defineMsgs = append(defineMsgs, newFnDefStmt.String())
 
-	return exec.AddStmtToStmtRet(ast.NewTrueStmtEmptyRet(nil), stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
+	return ast.NewTrueStmtEmptyRet(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
+	// return exec.AddStmtToStmtRet(ast.NewTrueStmtEmptyRet(nil), stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
 }
 
-func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) ast.StmtRet{
+func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) ast.StmtRet {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -196,7 +200,7 @@ func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {
 	return ast.NewFnObj(fnName, params)
 }
 
-func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet{
+func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet {
 	shortRet := checkParamsInFnDefNotDefinedAndParamSetsDefined(exec, stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets)
 	if shortRet.IsNotTrue() {
 		return ast.StmtErrRet(stmt, shortRet.String())
@@ -217,7 +221,8 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet{
 	execRet = exec.lefDefFnStmt(stmt.DefFnStmt)
 
 	if execRet.IsNotTrue() {
-		return exec.AddStmtToStmtRet(execRet, stmt)
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(execRet.String())
+		// return exec.AddStmtToStmtRet(execRet, stmt)
 	}
 
 	defineMsgs = append(defineMsgs, stmt.DefFnStmt.String())
@@ -225,7 +230,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet{
 	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
 }
 
-func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet{
+func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet {
 	// Create a new environment for verification and proof
 	exec.NewEnv()
 	defer func() {
@@ -302,7 +307,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet{
 	return exec.NewTrueStmtRet(stmt)
 }
 
-func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet{
+func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet {
 	shortRet := checkParamsInFnDefNotDefinedAndParamSetsDefined(exec, stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets)
 	if shortRet.IsNotTrue() {
 		return ast.StmtErrRet(stmt, shortRet.String())
@@ -321,13 +326,14 @@ func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) ast.S
 	// Only after all verifications pass, declare the function
 	execRet = exec.lefDefFnStmt(stmt.DefFnStmt)
 	if execRet.IsNotTrue() {
-		return exec.AddStmtToStmtRet(execRet, stmt)
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(execRet.String())
+		// return exec.AddStmtToStmtRet(execRet, stmt)
 	}
 	defineMsgs = append(defineMsgs, stmt.DefFnStmt.String())
 	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
 }
 
-func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet{
+func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet {
 	verifyProcessMsgs := []ast.VerRet{}
 
 	// Verify all cases cover domain and don't overlap
@@ -351,11 +357,11 @@ func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) 
 	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs)
 }
 
-func (exec *Executor) haveFnCaseByCase_AllCasesCoverDomainAndNotOverlap(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet{
+func (exec *Executor) haveFnCaseByCase_AllCasesCoverDomainAndNotOverlap(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet {
 	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.ProveCases, stmt.Line)
 }
 
-func (exec *Executor) checkHaveFnCaseByCaseStmt_Cases(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet{
+func (exec *Executor) checkHaveFnCaseByCaseStmt_Cases(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet {
 	verifyProcessMsgs := []ast.VerRet{}
 	// Verify each case: execute proof and verify return value
 	for i := range len(stmt.CaseByCaseFacts) {
@@ -371,7 +377,7 @@ func (exec *Executor) checkHaveFnCaseByCaseStmt_Cases(stmt *ast.HaveFnCaseByCase
 	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs)
 }
 
-func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) ast.StmtRet{
+func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) ast.StmtRet {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -428,7 +434,7 @@ func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseS
 // 2. cases don't overlap
 // If proveOr is provided and non-empty, it executes the proof in a local environment, then verifies both conditions.
 // Otherwise, it verifies both conditions directly.
-func (exec *Executor) verifyCasesOrAndNoOverlap(caseFacts ast.SpecFactPtrSlice, params ast.StrSlice, paramSets ast.ObjSlice, proveOr ast.StmtSlice, line uint) ast.StmtRet{
+func (exec *Executor) verifyCasesOrAndNoOverlap(caseFacts ast.SpecFactPtrSlice, params ast.StrSlice, paramSets ast.ObjSlice, proveOr ast.StmtSlice, line uint) ast.StmtRet {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -577,7 +583,7 @@ func (exec *Executor) verifyCasesOrAndNoOverlap(caseFacts ast.SpecFactPtrSlice, 
 
 // verifyCaseNoOverlapWithOthers verifies that when case i holds, all other cases don't hold
 // If proveOr is provided, it runs proveOr in the new environment before verifying
-func (exec *Executor) verifyCaseNoOverlapWithOthers(caseFacts ast.SpecFactPtrSlice, caseIndex int) ast.StmtRet{
+func (exec *Executor) verifyCaseNoOverlapWithOthers(caseFacts ast.SpecFactPtrSlice, caseIndex int) ast.StmtRet {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -618,7 +624,7 @@ func (exec *Executor) verifyCaseNoOverlapWithOthers(caseFacts ast.SpecFactPtrSli
 	return exec.NewTrueStmtRet(caseFact)
 }
 
-func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) ast.StmtRet{
+func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) ast.StmtRet {
 	existStFact := stmt.ToTruePurePropExistStFact()
 	retStmt := exec.factStmt(existStFact)
 	if retStmt.IsUnknown() || retStmt.IsErr() {

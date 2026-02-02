@@ -132,7 +132,8 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ast.StmtRet {
 	verRet := curVerifier.VerFactStmt(stmt, state)
 
 	if verRet.IsErr() {
-		return exec.AddStmtToStmtRet(verRet.ToStmtRet(), stmt)
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(verRet.String())
+		// return exec.AddStmtToStmtRet(verRet.ToStmtRet(), stmt)
 	} else if verRet.IsTrue() {
 		ret := exec.Env.NewFactWithCheckingNameDefined(stmt)
 		if ret.IsErr() {
@@ -147,7 +148,8 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ast.StmtRet {
 		}
 		return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs).AddVerifyProcesses([]ast.VerRet{verRet}).AddInfers(inferRets)
 	} else if verRet.IsUnknown() {
-		return exec.AddStmtToStmtRet(verRet.ToStmtRet(), stmt).AddExtraInfo(stmt.String())
+		return ast.NewUnknownStmtEmptyRet(stmt).AddExtraInfo(stmt.String())
+		// return exec.AddStmtToStmtRet(verRet.ToStmtRet(), stmt).AddExtraInfo(stmt.String())
 	} else {
 		execRet := ast.StmtErrRet(stmt, "unknown ver ret")
 		return execRet.AddExtraInfo(fmt.Sprintf("%s\n", stmt.String())).AddExtraInfo(stmt.String())
@@ -331,7 +333,8 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) ast.StmtRet {
 	if execState.IsNotTrue() {
 		return execState
 	}
-	return exec.AddStmtToStmtRet(execState, stmt)
+	return ast.NewTrueStmtEmptyRet(stmt).AddInnerStmtRets([]ast.StmtRet{execState})
+	// return exec.AddStmtToStmtRet(execState, stmt)
 }
 
 func (exec *Executor) lefDefFnStmt(stmt *ast.LetFnStmt) ast.StmtRet {
@@ -592,7 +595,8 @@ func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ast.StmtRet {
 	}
 	trueEvalRet := ast.NewTrueStmtEmptyRet(nil).AddInnerStmtRets([]ast.StmtRet{execRet})
 
-	return exec.AddStmtToStmtRet(trueEvalRet, stmt)
+	// return exec.AddStmtToStmtRet(trueEvalRet, stmt)
+	return trueEvalRet
 }
 
 func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, ast.StmtRet) {
@@ -642,7 +646,8 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) ast.StmtRet {
 				return ast.StmtErrRet(stmt, ret.String())
 			}
 
-			return exec.AddStmtToStmtRet(ast.NewTrueStmtEmptyRet(stmt).AddVerifyProcesses([]ast.VerRet{verMsg}), stmt).AddNewFacts([]string{uniFact.String()})
+			return ast.NewTrueStmtEmptyRet(stmt).AddVerifyProcesses([]ast.VerRet{verMsg}).AddNewFacts([]string{uniFact.String()})
+			// return exec.AddStmtToStmtRet(ast.NewTrueStmtEmptyRet(stmt).AddVerifyProcesses([]ast.VerRet{verMsg}), stmt).AddNewFacts([]string{uniFact.String()})
 		}
 
 		rightMost := rightAsInt
@@ -1015,12 +1020,12 @@ func (exec *Executor) setIsFnStmt(stmt *ast.SetIsFnStmt) ast.StmtRet {
 
 	verRet := exec.setIsFnStmt_ver(stmt)
 	if verRet.IsNotTrue() {
-		return exec.AddStmtToStmtRet(verRet, stmt)
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(verRet.String())
 	}
 
 	defRet := exec.setIsFnStmt_NewFact(stmt)
 	if defRet.IsNotTrue() {
-		return exec.AddStmtToStmtRet(defRet, stmt)
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(defRet.String())
 	}
 
 	return exec.NewTrueStmtRet(stmt)
