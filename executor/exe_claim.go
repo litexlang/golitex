@@ -17,7 +17,6 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByContradictionStmt) ast.StmtRet {
@@ -26,9 +25,9 @@ func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByC
 	// know reverse of
 	facts := stmt.ToCheckFact.(ast.Spec_OrFact).ReverseIsTrue()
 	for _, curFact := range facts {
-		execState := exec.Env.NewFactWithCheckingNameDefined(curFact)
-		if execState.IsErr() {
-			return ast.StmtErrRet(execState.String())
+		inferRet := exec.Env.NewFactWithCheckingNameDefined(curFact)
+		if inferRet.IsErr() {
+			return ast.NewErrStmtEmptyRet(stmt).AddInfer(inferRet)
 		}
 	}
 
@@ -36,14 +35,14 @@ func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByC
 		curStmt := stmt.Proofs[i]
 		execState := exec.Stmt(curStmt)
 		if execState.IsNotTrue() {
-			return execState.AddError(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
+			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
 		}
 		innerStmtRets = append(innerStmtRets, execState)
 	}
 
 	lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(*ast.ImpossibleStmt)
 	if !ok {
-		return ast.StmtErrRet("prove by contradiction only support impossible reversible fact as last statement")
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo("prove by contradiction only support impossible reversible fact as last statement")
 	}
 
 	reversedLastFact := lastStmtAsFact.Fact.ReverseIsTrue()
@@ -57,27 +56,26 @@ func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByC
 	for _, curFact := range reversedLastFact {
 		execState := exec.factStmt(curFact)
 		if execState.IsNotTrue() {
-			return execState
+			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("%s\nfailed :( line %d\n", curFact.String(), curFact.GetLine()))
 		}
 		innerStmtRets = append(innerStmtRets, execState)
 	}
 
-	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
+	return ast.NewTrueStmtEmptyRet(stmt).AddInnerStmtRets(innerStmtRets)
 }
 
 func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) ast.StmtRet {
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
 	ret := exec.Env.LookUpNamesInFact(stmt.ToCheckFact, map[string]struct{}{})
 	if ret.IsErr() {
-		ret.AddError("in claim statement")
-		return ast.StmtErrRet(ret.String())
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(ret.String())
 	}
 
 	switch stmt.ToCheckFact.(type) {
 	case ast.Spec_OrFact:
 		return exec.claimReversibleFactByContradiction(stmt)
 	default:
-		return ast.StmtErrRet(fmt.Sprintf("claim prove by contradiction only support reversible fact or forall fact"))
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo("claim prove by contradiction only support reversible fact or forall fact")
 	}
 }
 
@@ -159,14 +157,14 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) ast.StmtRet {
 	// 检查 stmt fact 中的所有元素已经定义过了
 	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.ToCheckFact)
 	if ret.IsErr() {
-		return ast.StmtErrRet(ret.String())
+		return ast.NewErrStmtEmptyRet(stmt).AddInfer(ret)
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
 	if ret.IsNotTrue() {
-		return glob.NewStmtWithInnerStmtsRet(state.InnerStmtRetSlice, ret.RetType)
+		return ast.NewErrStmtEmptyRet(stmt).AddInfer(ret)
 	} else {
-		return glob.NewStmtWithInnerStmtsRet(state.InnerStmtRetSlice, ret.RetType)
+		return ast.NewTrueStmtEmptyRet(stmt).AddInfer(ret)
 	}
 
 }
@@ -180,10 +178,10 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	// 检查 stmt fact 中的所有元素已经定义过了
 	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.ToCheckFact)
 	if ret.IsErr() {
-		return ast.StmtErrRet(ret.String())
+		return ast.NewErrStmtEmptyRet(stmt).AddInfer(ret)
 	}
 
-	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(state.InnerStmtRetSlice)
+	return ast.NewTrueStmtEmptyRet(stmt).AddInfer(ret)
 }
 
 // func (exec *Executor) execImpossibleStmt(stmt *ast.ImpossibleStmt) ast.StmtRet{
@@ -287,14 +285,14 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ast.StmtRe
 	for _, domFact := range asUnivFact.DomFacts {
 		ret := exec.Env.NewFactWithCheckingNameDefined(domFact)
 		if ret.IsErr() {
-			return ast.StmtErrRet(stmt, ret.String())
+			return ast.NewErrStmtEmptyRet(stmt).AddInfer(ret)
 		}
 	}
 
 	// exec proof block
 	execState = exec.execStmtsAtCurEnv(stmt.Proofs)
 	if execState.IsNotTrue() {
-		return ast.StmtErrRet(stmt, execState.String())
+		return ast.NewErrStmtEmptyRet(stmt).AddInnerStmtRets(innerStmtRets)
 	}
 	innerStmtRets = append(innerStmtRets, execState)
 
@@ -326,17 +324,17 @@ func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) ast.StmtRet {
 	innerStmtRets = append(innerStmtRets, execState)
 	execState = exec.claimStmtProve(claimIffToThen)
 	if execState.IsNotTrue() {
-		return ast.StmtErrRet(stmt, execState.String())
+		return ast.NewErrStmtEmptyRet(stmt).AddInnerStmtRets(innerStmtRets)
 	}
 	innerStmtRets = append(innerStmtRets, execState)
 
 	ret := exec.Env.NewFactWithCheckingNameDefined(thenToIff)
 	if ret.IsErr() {
-		return ast.StmtErrRet(stmt, ret.String())
+		return ast.NewErrStmtEmptyRet(stmt).AddInfer(ret)
 	}
 	ret = exec.Env.NewFactWithCheckingNameDefined(iffToThen)
 	if ret.IsErr() {
-		return ast.StmtErrRet(stmt, ret.String())
+		return ast.NewErrStmtEmptyRet(stmt).AddInfer(ret)
 	}
 
 	return ast.NewTrueStmtEmptyRet(stmt).AddInnerStmtRets(innerStmtRets)
