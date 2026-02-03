@@ -138,7 +138,7 @@ func (r *ErrVerRet) GetToCheck() FactStmt {
 
 func (r *TrueVerRet) String() string {
 	if r.ToCheck == nil {
-		return "TrueVerRet: <nil>"
+		return "some fact is true"
 	}
 
 	var builder strings.Builder
@@ -163,13 +163,36 @@ func (r *TrueVerRet) String() string {
 
 func (r *UnknownVerRet) String() string {
 	if r.ToCheck == nil {
-		return "UnknownVerRet: <nil>"
+		return "some fact is unknown"
 	}
-	return fmt.Sprintf("UnknownVerRet: %s", r.ToCheck.String())
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("unknown:\n%s\n", r.ToCheck.String()))
+
+	if len(r.ExtraInfo) > 0 {
+		builder.WriteString("\n\nExtra Info:\n")
+		for _, extraInfo := range r.ExtraInfo {
+			builder.WriteString(extraInfo)
+			builder.WriteString("\n")
+		}
+	}
+
+	return builder.String()
 }
 func (r *ErrVerRet) String() string {
 	if r.ToCheck == nil {
-		return "ErrVerRet: <nil>"
+		return "some fact is error"
 	}
-	return fmt.Sprintf("ErrVerRet: %s", r.ToCheck.String())
+
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("error:\n%s\n", r.ToCheck.String()))
+
+	if len(r.ExtraInfo) > 0 {
+		builder.WriteString("\n\nExtra Info:\n")
+		for _, extraInfo := range r.ExtraInfo {
+			builder.WriteString(extraInfo)
+			builder.WriteString("\n")
+		}
+	}
+
+	return builder.String()
 }
