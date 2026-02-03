@@ -1608,3 +1608,11 @@ func (stmt *SetIsFnStmt) String() string {
 	}
 	return builder.String()
 }
+
+func (stmt *FnIsSubsetOfCartStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordFnIsSubsetOfCartSet)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.FnSetObj.String())
+	return builder.String()
+}
