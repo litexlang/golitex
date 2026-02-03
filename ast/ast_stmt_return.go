@@ -204,10 +204,15 @@ func (r *UnknownStmtRet) GetInnerStmtRets() []StmtRet {
 }
 
 func (r *UnknownStmtRet) String() string {
+
+	var builder strings.Builder
 	if r.Stmt == nil {
-		return "UnknownStmtRet: <nil>"
+		builder.WriteString("some statement is unknown")
+	} else {
+		builder.WriteString(fmt.Sprintf("Line %d\nStatus: Unknown\nStatement:\n%s\n", r.Stmt.GetLine(), r.Stmt.String()))
 	}
-	return fmt.Sprintf("UnknownStmtRet: %s", r.Stmt.String())
+	appendStmtRetCommonDetails(&builder, r.Define, r.VerifyProcess, r.Infer, r.InnerStmtRetSlice, r.ExtraInfo)
+	return builder.String()
 }
 func (r *ErrStmtRet) GetVerifyProcess() []VerRet {
 	return r.VerifyProcess
@@ -218,10 +223,16 @@ func (r *ErrStmtRet) GetInnerStmtRets() []StmtRet {
 }
 
 func (r *ErrStmtRet) String() string {
+	var builder strings.Builder
+
 	if r.Stmt == nil {
-		return "ErrStmtRet: <nil>"
+		builder.WriteString("some statement is error")
+	} else {
+		builder.WriteString(fmt.Sprintf("Line %d\nStatus: Error\nStatement:\n%s\n", r.Stmt.GetLine(), r.Stmt.String()))
 	}
-	return fmt.Sprintf("ErrStmtRet: %s", r.Stmt.String())
+
+	appendStmtRetCommonDetails(&builder, r.Define, r.VerifyProcess, r.Infer, r.InnerStmtRetSlice, r.ExtraInfo)
+	return builder.String()
 }
 func (r *TrueStmtRet) GetVerifyProcess() []VerRet {
 	return r.VerifyProcess
@@ -232,12 +243,12 @@ func (r *TrueStmtRet) GetInnerStmtRets() []StmtRet {
 }
 
 func (r *TrueStmtRet) String() string {
-	if r.Stmt == nil {
-		return "TrueStmtRet: <nil>"
-	}
-
 	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("Line %d\nStatus: Success\nStatement:\n%s\n", r.Stmt.GetLine(), r.Stmt.String()))
+	if r.Stmt == nil {
+		builder.WriteString("some statement is true")
+	} else {
+		builder.WriteString(fmt.Sprintf("Line %d\nStatus: Success\nStatement:\n%s\n", r.Stmt.GetLine(), r.Stmt.String()))
+	}
 
 	if len(r.Define) > 0 {
 		builder.WriteString("\n\ndefine:\n")
@@ -247,31 +258,53 @@ func (r *TrueStmtRet) String() string {
 		}
 	}
 
-	if len(r.VerifyProcess) > 0 {
-		builder.WriteString("\n\nverification process:\n")
-		for _, verifyProcess := range r.VerifyProcess {
-			builder.WriteString(verifyProcess.String())
-			builder.WriteString("\n")
-		}
-	}
-
-	if len(r.Infer) > 0 {
-		builder.WriteString("\n\nnew facts:\n")
-		for _, infer := range r.Infer {
-			builder.WriteString(infer.String())
-			builder.WriteString("\n")
-		}
-	}
-
-	if len(r.ExtraInfo) > 0 {
-		builder.WriteString("\n\nextra info:\n")
-		for _, extraInfo := range r.ExtraInfo {
-			builder.WriteString(extraInfo)
-			builder.WriteString("\n")
-		}
-	}
-
+	appendStmtRetCommonDetails(&builder, r.Define, r.VerifyProcess, r.Infer, r.InnerStmtRetSlice, r.ExtraInfo)
 	return builder.String()
+}
+
+// appendStmtRetCommonDetails 将验证过程、推理、内部语句返回和额外信息追加到 builder 中
+func appendStmtRetCommonDetails(builder *strings.Builder, define []string, verifyProcess []VerRet, infer []InferRet, innerStmtRets []StmtRet, extraInfo []string) {
+
+	if len(define) > 0 {
+		builder.WriteString("\n\ndefine:\n")
+		for _, define := range define {
+			builder.WriteString(define)
+			builder.WriteString("\n")
+		}
+	}
+	if len(verifyProcess) > 0 {
+		builder.WriteString("\n\nverification process:\n")
+		for _, vp := range verifyProcess {
+			builder.WriteString(vp.String())
+			builder.WriteString("\n")
+		}
+	}
+
+	if len(infer) > 0 {
+		builder.WriteString("\n\nnew facts:\n")
+		for _, inf := range infer {
+			builder.WriteString(inf.String())
+			builder.WriteString("\n")
+		}
+	}
+
+	if len(innerStmtRets) > 0 {
+		builder.WriteString("\n\ndetails:\n")
+		for _, innerRet := range innerStmtRets {
+			builder.WriteString(innerRet.String())
+			builder.WriteString("\n")
+		}
+	}
+
+	if len(extraInfo) > 0 {
+		builder.WriteString("\n\nextra info:\n")
+		for _, info := range extraInfo {
+			builder.WriteString(info)
+			builder.WriteString("\n")
+		}
+	}
+
+	builder.WriteString("\n---\n")
 }
 
 func (r *TrueStmtRet) AddDefineMsgs(defines []string) StmtRet {
