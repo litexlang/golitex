@@ -635,30 +635,30 @@ func (p *TbParser) skipStmtComma(tb *tokenBlock) {
 // 	}
 // }
 
-func (p *TbParser) inlineFacts_checkUniDepth0(tb *tokenBlock, ends []string) ([]FactStmt, error) {
+func (p *TbParser) inlineFacts(tb *tokenBlock, ends []string) ([]FactStmt, error) {
 	facts, err := p.inlineFacts_untilEndOfInline(tb, ends)
 	if err != nil {
 		return nil, err
 	}
 
-	err = checkFactsUniDepth0(facts)
-	if err != nil {
-		return nil, err
-	}
+	// err = checkFactsUniDepth0(facts)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return facts, nil
 }
 
-func (p *TbParser) inlineFacts_checkUniDepth1(tb *tokenBlock, ends []string) ([]FactStmt, error) {
-	facts, err := p.inlineFacts_untilEndOfInline(tb, ends)
-	if err != nil {
-		return nil, err
-	}
+// func (p *TbParser) inlineFacts_checkUniDepth1(tb *tokenBlock, ends []string) ([]FactStmt, error) {
+// 	facts, err := p.inlineFacts_untilEndOfInline(tb, ends)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	err = checkFactsUniDepth1(facts)
-	if err != nil {
-		return nil, err
-	}
+// err = checkFactsUniDepth1(facts)
+// if err != nil {
+// 	return nil, err
+// }
 
-	return facts, nil
-}
+// 	return facts, nil
+// }

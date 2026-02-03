@@ -442,3 +442,10 @@ type SetIsFnStmt struct {
 
 	Line uint
 }
+
+type FnIsSubsetOfCartStmt struct {
+	Obj      Obj
+	FnSetObj *FnObj
+
+	Line uint
+}

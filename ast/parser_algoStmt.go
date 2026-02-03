@@ -75,7 +75,7 @@ func (p *TbParser) algoIfStmt(tb *tokenBlock) (*AlgoIfStmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	condition, err := p.inlineFacts_checkUniDepth0(tb, []string{glob.KeySymbolColon})
+	condition, err := p.inlineFacts(tb, []string{glob.KeySymbolColon})
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}

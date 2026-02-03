@@ -319,6 +319,10 @@ func NewSetIsFnStmt(setObj Obj, fnSetObj *FnObj, proof StmtSlice, line uint) *Se
 	return &SetIsFnStmt{Obj: setObj, FnSetObj: fnSetObj, Proof: proof, Line: line}
 }
 
+func NewFnIsSubsetOfCartStmt(obj Obj, fnSetObj *FnObj, line uint) *FnIsSubsetOfCartStmt {
+	return &FnIsSubsetOfCartStmt{Obj: obj, FnSetObj: fnSetObj, Line: line}
+}
+
 func NewHaveFnEqualCaseByCaseStmt(defHeader *DefHeader, retSet Obj, caseByCaseFacts SpecFactPtrSlice, caseByCaseEqualTo ObjSlice, proofs StmtSliceSlice, proveCases StmtSlice, line uint) *HaveFnEqualCaseByCaseStmt {
 	return &HaveFnEqualCaseByCaseStmt{
 		DefHeader:         defHeader,

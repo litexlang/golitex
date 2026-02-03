@@ -14,56 +14,52 @@
 
 package litex_ast
 
-import (
-	"fmt"
-)
+// func checkFactsUniDepth0(facts []FactStmt) error {
+// 	for _, fact := range facts {
+// 		switch asFact := fact.(type) {
+// 		case *UniFactStmt:
+// 			err := checkUniFactDepth0(asFact)
+// 			if err != nil {
+// 				return err
+// 			}
+// 		}
+// 	}
 
-func checkFactsUniDepth0(facts []FactStmt) error {
-	for _, fact := range facts {
-		switch asFact := fact.(type) {
-		case *UniFactStmt:
-			err := checkUniFactDepth0(asFact)
-			if err != nil {
-				return err
-			}
-		}
-	}
+// 	return nil
+// }
 
-	return nil
-}
+// func checkFactsUniDepth1(facts []FactStmt) error {
+// 	for _, fact := range facts {
+// 		switch asFact := fact.(type) {
+// 		case *UniFactStmt:
+// 			ok := checkUniFactDepth1(asFact)
+// 			if !ok {
+// 				return fmt.Errorf("too many levels of universal fact in universal fact:\n%s\nthere must be at most two levels of universal fact", asFact.String())
+// 			}
+// 		}
+// 	}
 
-func checkFactsUniDepth1(facts []FactStmt) error {
-	for _, fact := range facts {
-		switch asFact := fact.(type) {
-		case *UniFactStmt:
-			ok := checkUniFactDepth1(asFact)
-			if !ok {
-				return fmt.Errorf("too many levels of universal fact in universal fact:\n%s\nthere must be at most two levels of universal fact", asFact.String())
-			}
-		}
-	}
+// 	return nil
+// }
 
-	return nil
-}
+// func checkUniFactDepth0(uniFact *UniFactStmt) error {
+// 	return nil
+// }
 
-func checkUniFactDepth0(uniFact *UniFactStmt) error {
-	return nil
-}
+// func checkUniFactDepth1(uniFact *UniFactStmt) bool {
+// for _, fact := range uniFact.DomFacts {
+// 	switch fact.(type) {
+// 	case *UniFactStmt:
+// 		return false
+// 	}
+// }
 
-func checkUniFactDepth1(uniFact *UniFactStmt) bool {
-	// for _, fact := range uniFact.DomFacts {
-	// 	switch fact.(type) {
-	// 	case *UniFactStmt:
-	// 		return false
-	// 	}
-	// }
+// for _, fact := range uniFact.ThenFacts {
+// 	switch fact.(type) {
+// 	case *UniFactStmt:
+// 		return false
+// 	}
+// }
 
-	// for _, fact := range uniFact.ThenFacts {
-	// 	switch fact.(type) {
-	// 	case *UniFactStmt:
-	// 		return false
-	// 	}
-	// }
-
-	return true
-}
+// 	return true
+// }

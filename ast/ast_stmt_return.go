@@ -209,7 +209,7 @@ func (r *UnknownStmtRet) String() string {
 	if r.Stmt == nil {
 		builder.WriteString("some statement is unknown")
 	} else {
-		builder.WriteString(fmt.Sprintf("Line %d\nStatus: Unknown\nStatement:\n%s\n", r.Stmt.GetLine(), r.Stmt.String()))
+		builder.WriteString(fmt.Sprintf("line %d: unknown\nstatement:\n%s\n", r.Stmt.GetLine(), r.Stmt.String()))
 	}
 	appendStmtRetCommonDetails(&builder, r.Define, r.VerifyProcess, r.Infer, r.InnerStmtRetSlice, r.ExtraInfo)
 	return builder.String()
@@ -228,7 +228,7 @@ func (r *ErrStmtRet) String() string {
 	if r.Stmt == nil {
 		builder.WriteString("some statement is error")
 	} else {
-		builder.WriteString(fmt.Sprintf("Line %d\nStatus: Error\nStatement:\n%s\n", r.Stmt.GetLine(), r.Stmt.String()))
+		builder.WriteString(fmt.Sprintf("line %d: error\nstatement:\n%s\n", r.Stmt.GetLine(), r.Stmt.String()))
 	}
 
 	appendStmtRetCommonDetails(&builder, r.Define, r.VerifyProcess, r.Infer, r.InnerStmtRetSlice, r.ExtraInfo)
@@ -247,15 +247,7 @@ func (r *TrueStmtRet) String() string {
 	if r.Stmt == nil {
 		builder.WriteString("some statement is true")
 	} else {
-		builder.WriteString(fmt.Sprintf("Line %d\nStatus: Success\nStatement:\n%s\n", r.Stmt.GetLine(), r.Stmt.String()))
-	}
-
-	if len(r.Define) > 0 {
-		builder.WriteString("\n\ndefine:\n")
-		for _, define := range r.Define {
-			builder.WriteString(define)
-			builder.WriteString("\n")
-		}
+		builder.WriteString(fmt.Sprintf("line %d: success!\nstatement:\n%s\n", r.Stmt.GetLine(), r.Stmt.String()))
 	}
 
 	appendStmtRetCommonDetails(&builder, r.Define, r.VerifyProcess, r.Infer, r.InnerStmtRetSlice, r.ExtraInfo)

@@ -1,6 +1,8 @@
 package litex_ast
 
-import "fmt"
+import (
+	"strings"
+)
 
 type InferRet interface {
 	inferRet()
@@ -105,11 +107,44 @@ func (r *TrueInferRet) AddInfers(infers []FactStmt) *TrueInferRet {
 }
 
 func (r *TrueInferRet) String() string {
-	return fmt.Sprintf("TrueInferRet: %s", r.Fact.String())
+	var builder strings.Builder
+	if r.Fact != nil {
+		builder.WriteString(r.Fact.String())
+	}
+	if len(r.Infer) > 0 {
+		builder.WriteString("\n")
+	}
+	for _, infer := range r.Infer {
+		builder.WriteString("\n")
+		builder.WriteString(infer.String())
+	}
+	return builder.String()
 }
 func (r *UnknownInferRet) String() string {
-	return fmt.Sprintf("UnknownInferRet: %s", r.Fact.String())
+	var builder strings.Builder
+	if r.Fact != nil {
+		builder.WriteString(r.Fact.String())
+	}
+	if len(r.ExtraInfo) > 0 {
+		builder.WriteString("\n")
+	}
+	for _, extraInfo := range r.ExtraInfo {
+		builder.WriteString("\n")
+		builder.WriteString(extraInfo)
+	}
+	return builder.String()
 }
 func (r *ErrInferRet) String() string {
-	return fmt.Sprintf("ErrInferRet: %s", r.Fact.String())
+	var builder strings.Builder
+	if r.Fact != nil {
+		builder.WriteString(r.Fact.String())
+	}
+	if len(r.ExtraInfo) > 0 {
+		builder.WriteString("\n")
+	}
+	for _, extraInfo := range r.ExtraInfo {
+		builder.WriteString("\n")
+		builder.WriteString(extraInfo)
+	}
+	return builder.String()
 }

@@ -512,3 +512,7 @@ func (s *WitnessNonemptyStmt) InlineString() string {
 func (s *SetIsFnStmt) InlineString() string {
 	return s.String()
 }
+
+func (s *FnIsSubsetOfCartStmt) InlineString() string {
+	return s.String()
+}
