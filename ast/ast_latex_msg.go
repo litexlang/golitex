@@ -1020,3 +1020,7 @@ func (s *HaveFnEqualCaseByCaseStmt) ToLatexString() string {
 func (s *SetIsFnStmt) ToLatexString() string {
 	return s.String()
 }
+
+func (s *FnIsSubsetOfCartStmt) ToLatexString() string {
+	return s.String()
+}

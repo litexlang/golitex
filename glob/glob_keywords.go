@@ -123,7 +123,8 @@ const (
 	KeywordZNot0 = "Z_not0"
 	KeywordQNot0 = "Q_not0"
 
-	KeywordSetIsFn = "set_is_fn"
+	KeywordSetIsFn             = "set_is_fn"
+	KeywordFnIsSubsetOfCartSet = "fn_is_subset_of_cart"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{

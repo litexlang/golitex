@@ -1,1 +1,5 @@
-1 = 2
+have X, Y, z nonempty_set 
+
+have f fn(X, Y) z
+
+fn_is_subset_of_cart f fn(X, Y) z

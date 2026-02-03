@@ -1209,3 +1209,17 @@ func (stmt *SetIsFnStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	}
 	return NewSetIsFnStmt(setObj, fnSetObj.(*FnObj), proofs, stmt.Line), nil
 }
+
+func (stmt *FnIsSubsetOfCartStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+
+	obj, err := stmt.Obj.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	fnSetObj, err := stmt.FnSetObj.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewFnIsSubsetOfCartStmt(obj, fnSetObj.(*FnObj), stmt.Line), nil
+}

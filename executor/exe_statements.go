@@ -119,6 +119,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ast.StmtRet {
 		execRet = exec.inferTemplateStmt(stmt)
 	case *ast.SetIsFnStmt:
 		execRet = exec.setIsFnStmt(stmt)
+	case *ast.FnIsSubsetOfCartStmt:
+		execRet = exec.fnIsSubsetOfCartStmt(stmt)
 	default:
 		execRet = ast.StmtErrRet(stmt, fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -1098,4 +1100,74 @@ func (exec *Executor) setIsFnStmt_NewFact(stmt *ast.SetIsFnStmt) ast.StmtRet {
 	}
 
 	return exec.NewTrueStmtRet(stmt)
+}
+
+func (exec *Executor) fnIsSubsetOfCartStmt(stmt *ast.FnIsSubsetOfCartStmt) ast.StmtRet {
+	// 证明 obj 在 setObj
+	inFact := ast.NewInFactWithObj(stmt.Obj, stmt.FnSetObj)
+	verRet := exec.factStmt(inFact)
+	if verRet.IsNotTrue() {
+		return ast.StmtErrRet(stmt, verRet.String())
+	}
+
+	// setObj 确实是 形如 fn(X1, X2, ..., Xn) Y 的 obj
+	if !ast.IsFnSet(stmt.FnSetObj) {
+		return ast.StmtErrRet(stmt, fmt.Sprintf("%s is not a fn set object", stmt.FnSetObj))
+	}
+
+	newFacts := []ast.InferRet{}
+
+	// obj subset_of cart(X1, X2, ..., Xn, Y) 中
+	doms := stmt.FnSetObj.FnHead.(*ast.FnObj).Params
+	fName := stmt.Obj
+	carXToYParams := []ast.Obj{}
+	for _, dom := range doms {
+		carXToYParams = append(carXToYParams, dom)
+	}
+	carXToYParams = append(carXToYParams, stmt.FnSetObj.Params[0])
+	cartSet := ast.NewFnObj(ast.Atom(glob.KeywordCart), carXToYParams)
+	subsetOfFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordSubsetOf), []ast.Obj{stmt.Obj, cartSet}, stmt.Line)
+	inferRet := exec.Env.NewFactWithCheckingNameDefined(subsetOfFact)
+	if inferRet.IsNotTrue() {
+		return ast.StmtErrRet(stmt, inferRet.String())
+	}
+	newFacts = append(newFacts, inferRet)
+
+	// obj 满足： forall x1, x2, ..., xn X: (x1, x2, ..., xn, f(x1, x2, ..., xn)) $in obj
+	nRandomParams := exec.Env.GenerateNUnusedRandomNames(len(doms))
+	tupleParams := []ast.Obj{}
+	for _, param := range nRandomParams {
+		tupleParams = append(tupleParams, ast.Atom(param))
+	}
+	tupleParams = append(tupleParams, ast.NewFnObj(fName, tupleParams))
+	tupleOfX := ast.NewFnObj(ast.Atom(glob.KeywordTuple), tupleParams)
+	forallFact := ast.NewUniFact(nRandomParams, doms, []ast.Spec_OrFact{}, []ast.Spec_OrFact{ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{tupleOfX, stmt.Obj}, stmt.Line)}, stmt.Line)
+	inferRet = exec.Env.NewFactWithCheckingNameDefined(forallFact)
+	if inferRet.IsNotTrue() {
+		return ast.StmtErrRet(stmt, inferRet.String())
+	}
+
+	newFacts = append(newFacts, inferRet)
+
+	// obj 满足: forall x1, x2, ..., xn X, y Y: (x1, x2, ..., xn, y) $in obj => y = obj(x1, x2, ..., xn)
+	nPlus1RandomParams := exec.Env.GenerateNUnusedRandomNames(len(doms) + 1)
+	tupleParamsForEqual := []ast.Obj{}
+	for _, param := range nPlus1RandomParams {
+		tupleParamsForEqual = append(tupleParamsForEqual, ast.Atom(param))
+	}
+	fX1ToXn := ast.NewFnObj(fName, tupleParamsForEqual[:len(doms)])
+	y := ast.Atom(nPlus1RandomParams[len(doms)])
+	tupleFromXToY := ast.NewFnObj(ast.Atom(glob.KeywordTuple), tupleParamsForEqual)
+	equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, fX1ToXn}, stmt.Line)
+	dom2 := append([]ast.Obj{}, doms...)
+	dom2 = append(dom2, stmt.FnSetObj.Params[0])
+	forallFact2 := ast.NewUniFact(nPlus1RandomParams, dom2, []ast.Spec_OrFact{ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{tupleFromXToY, stmt.Obj}, stmt.Line)}, []ast.Spec_OrFact{equalFact}, stmt.Line)
+	inferRet = exec.Env.NewFactWithCheckingNameDefined(forallFact2)
+	if inferRet.IsNotTrue() {
+		return ast.StmtErrRet(stmt, inferRet.String())
+	}
+
+	newFacts = append(newFacts, inferRet)
+
+	return exec.NewTrueStmtRet(stmt).AddInfers(newFacts)
 }
