@@ -68,7 +68,10 @@ func (l *LetFnStmt) ToLatexString() string {
 	if len(l.FnTemplate.DomFacts) > 0 {
 		builder.WriteString(" Its domain is:")
 
-		domFactStrSlice := l.FnTemplate.DomFacts.factStmtSliceToLatexStringSlice()
+		domFactStrSlice := make([]string, len(l.FnTemplate.DomFacts))
+		for i := range len(l.FnTemplate.DomFacts) {
+			domFactStrSlice[i] = l.FnTemplate.DomFacts[i].ToLatexString()
+		}
 
 		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
 			builder.WriteString(" ")
@@ -87,7 +90,12 @@ func (l *LetFnStmt) ToLatexString() string {
 
 	if len(l.FnTemplate.ThenFacts) > 0 {
 		builder.WriteString(" When its parameters satisfies the above condition, it has the following properties:")
-		thenFactStrSlice := l.FnTemplate.ThenFacts.factStmtSliceToLatexStringSlice()
+
+		thenFactStrSlice := make([]string, len(l.FnTemplate.ThenFacts))
+		for i := range len(l.FnTemplate.ThenFacts) {
+			thenFactStrSlice[i] = l.FnTemplate.ThenFacts[i].ToLatexString()
+		}
+
 		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
 			builder.WriteString(" ")
 			builder.WriteString(strings.Join(thenFactStrSlice, ", "))
@@ -841,7 +849,10 @@ func (s *DefFnSetStmt) ToLatexString() string {
 	if len(s.AnonymousFn.ThenFacts) > 0 {
 		builder.WriteString("\n\n")
 		builder.WriteString("When its parameters satisfies the above condition, it has the following properties:")
-		thenFactStrSlice := s.AnonymousFn.ThenFacts.factStmtSliceToLatexStringSlice()
+		thenFactStrSlice := make([]string, len(s.AnonymousFn.ThenFacts))
+		for i := range len(s.AnonymousFn.ThenFacts) {
+			thenFactStrSlice[i] = s.AnonymousFn.ThenFacts[i].ToLatexString()
+		}
 		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
 			builder.WriteString(" ")
 			builder.WriteString(strings.Join(thenFactStrSlice, ", "))

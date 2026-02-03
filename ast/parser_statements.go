@@ -251,18 +251,19 @@ func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (Stmt, error) {
 		}
 	}
 
-	domFacts := []FactStmt{}
-	thenFacts := []FactStmt{}
+	domFacts := []Spec_OrFact{}
+	thenFacts := []Spec_OrFact{}
 
 	if tb.header.is(glob.KeySymbolColon) {
 		tb.header.skip("")
 		if tb.header.ExceedEnd() {
-			domFacts, thenFacts, err = p.dom_and_section(tb, glob.KeySymbolRightArrow, glob.KeySymbolEquivalent)
+			domFacts, thenFacts, err = p.dom_and_section_SpecOrFact(tb, glob.KeySymbolRightArrow, glob.KeySymbolEquivalent)
+
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
 		} else {
-			domFacts, err = p.inlineFacts_untilWord_or_exceedEnd_notSkipWord(tb, glob.KeySymbolRightArrow, []string{})
+			domFacts, err = p.inlineFacts_untilWord_SpecOrFact(tb, glob.KeySymbolRightArrow, []string{})
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
@@ -276,21 +277,11 @@ func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (Stmt, error) {
 				return nil, ErrInLine(err, tb)
 			}
 
-			thenFacts, err = p.inlineFacts_untilEndOfInline(tb, []string{})
+			thenFacts, err = p.inlineFacts_untilWord_SpecOrFact(tb, glob.KeySymbolRightArrow, []string{})
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
 		}
-	} else if tb.header.is(glob.KeySymbolRightArrow) {
-		err = tb.header.skip(glob.KeySymbolRightArrow)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		unitFacts, err := p.inlineFacts(tb, []string{})
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		thenFacts = append(thenFacts, unitFacts...)
 	}
 
 	return NewLetFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
@@ -1274,7 +1265,24 @@ func (p *TbParser) DefFnSetStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, tb.body[0].line)
+		reversibleDomFacts := ReversibleFacts{}
+		for _, domFact := range domFacts {
+			if specFact, ok := domFact.(Spec_OrFact); ok {
+				reversibleDomFacts = append(reversibleDomFacts, specFact)
+			} else {
+				return nil, fmt.Errorf("expect spec fact or or fact in dom section")
+			}
+		}
+		reversibleThenFacts := ReversibleFacts{}
+		for _, thenFact := range thenFacts {
+			if specFact, ok := thenFact.(Spec_OrFact); ok {
+				reversibleThenFacts = append(reversibleThenFacts, specFact)
+			} else {
+				return nil, fmt.Errorf("expect spec fact or or fact in then section")
+			}
+		}
+
+		newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, reversibleDomFacts, reversibleThenFacts, tb.body[0].line)
 
 		return NewDefFnSetStmt(defHeader, []FactStmt{}, newFnTStruct, tb.line), nil
 	} else if len(tb.body) >= 2 {
@@ -1294,7 +1302,23 @@ func (p *TbParser) DefFnSetStmt(tb *tokenBlock) (Stmt, error) {
 				return nil, ErrInLine(err, tb)
 			}
 
-			newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, tb.body[1].line)
+			domFactsAsReversibleFacts := ReversibleFacts{}
+			for _, domFact := range domFacts {
+				if specFact, ok := domFact.(Spec_OrFact); ok {
+					domFactsAsReversibleFacts = append(domFactsAsReversibleFacts, specFact)
+				} else {
+					return nil, fmt.Errorf("expect spec fact or or fact in dom section")
+				}
+			}
+			thenFactsAsReversibleFacts := ReversibleFacts{}
+			for _, thenFact := range thenFacts {
+				if specFact, ok := thenFact.(Spec_OrFact); ok {
+					thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, specFact)
+				} else {
+					return nil, fmt.Errorf("expect spec fact or or fact in then section")
+				}
+			}
+			newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFactsAsReversibleFacts, thenFactsAsReversibleFacts, tb.body[1].line)
 
 			return NewDefFnSetStmt(defHeader, templateDomFacts, newFnTStruct, tb.line), nil
 		} else {
@@ -1312,7 +1336,25 @@ func (p *TbParser) DefFnSetStmt(tb *tokenBlock) (Stmt, error) {
 				return nil, ErrInLine(err, tb)
 			}
 
-			newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, tb.body[len(tb.body)-1].line)
+			domFactsAsReversibleFacts := ReversibleFacts{}
+			for _, domFact := range domFacts {
+				if specFact, ok := domFact.(Spec_OrFact); ok {
+					domFactsAsReversibleFacts = append(domFactsAsReversibleFacts, specFact)
+				} else {
+					return nil, fmt.Errorf("expect spec fact or or fact in dom section")
+				}
+			}
+
+			thenFactsAsReversibleFacts := ReversibleFacts{}
+			for _, thenFact := range thenFacts {
+				if specFact, ok := thenFact.(Spec_OrFact); ok {
+					thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, specFact)
+				} else {
+					return nil, fmt.Errorf("expect spec fact or or fact in then section")
+				}
+			}
+
+			newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFactsAsReversibleFacts, thenFactsAsReversibleFacts, tb.body[len(tb.body)-1].line)
 
 			return NewDefFnSetStmt(defHeader, templateDomFacts, newFnTStruct, tb.line), nil
 		}
@@ -3238,6 +3280,32 @@ func (p *TbParser) getStringInDoubleQuotes(tb *tokenBlock) (string, error) {
 	tb.header.skip(glob.KeySymbolDoubleQuote)
 
 	return builder.String(), nil
+}
+
+func (p *TbParser) dom_and_section_SpecOrFact(tb *tokenBlock, kw string, kw_should_not_exist_in_body string) ([]Spec_OrFact, []Spec_OrFact, error) {
+	domFacts := []Spec_OrFact{}
+	thenFacts := []Spec_OrFact{}
+
+	doms, thens, err := p.dom_and_section(tb, kw, kw_should_not_exist_in_body)
+	if err != nil {
+		return nil, nil, ErrInLine(err, tb)
+	}
+	for _, dom := range doms {
+		if specOrFact, ok := dom.(Spec_OrFact); ok {
+			domFacts = append(domFacts, specOrFact)
+		} else {
+			return nil, nil, fmt.Errorf("expect spec fact or or fact in dom section")
+		}
+	}
+	for _, then := range thens {
+		if specOrFact, ok := then.(Spec_OrFact); ok {
+			thenFacts = append(thenFacts, specOrFact)
+		} else {
+			return nil, nil, fmt.Errorf("expect spec fact or or fact in then section")
+		}
+	}
+
+	return domFacts, thenFacts, nil
 }
 
 // Placeholder methods for functions that will be implemented later

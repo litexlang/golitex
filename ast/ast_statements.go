@@ -178,8 +178,8 @@ type AnonymousFn struct {
 	Params    StrSlice
 	ParamSets ObjSlice
 	RetSet    Obj
-	DomFacts  FactStmtSlice
-	ThenFacts FactStmtSlice
+	DomFacts  ReversibleFacts
+	ThenFacts ReversibleFacts
 
 	Line uint
 }
