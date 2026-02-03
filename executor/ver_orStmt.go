@@ -111,7 +111,7 @@ func (ver *Verifier) useKnownOrFactToCheckGivenOrFact(given *ast.OrStmt, known *
 		}
 	}
 
-	return ast.NewTrueVerRet(nil, nil, "")
+	return ast.NewTrueVerRet(given, known, "")
 }
 
 // groupFactsByPropNameAndValidate 将 given 和 known 的 facts 按 propName 分组，并验证两个 map 的结构是否匹配

@@ -30,17 +30,17 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ast.StmtRet {
 	case *ast.KnowFactStmt:
 		execRet = exec.knowStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddExtraInfo("`know` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
+			execRet = execRet.AddExtraInfo("Warning: The `know` statement stores facts without verification. Incorrect facts may be introduced unintentionally. Use with caution.\n")
 		}
 	case *ast.KnowPropInferStmt:
 		execRet = exec.knowPropInferStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddExtraInfo("`know imply ` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
+			execRet = execRet.AddExtraInfo("Warning: The `know imply` statement stores facts without verification. Incorrect facts may be introduced unintentionally. Use with caution.\n")
 		}
 	case *ast.KnowInferStmt:
 		execRet = exec.knowInferStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddExtraInfo("`know infer` saves the facts you write without verification. You may introduce incorrect facts by mistake. Use it with great caution!\n")
+			execRet = execRet.AddExtraInfo("Warning: The `know infer` statement stores facts without verification. Incorrect facts may be introduced unintentionally. Use with caution.\n")
 		}
 	case *ast.ClaimProveStmt:
 		execRet = exec.execClaimStmtProve(stmt)
@@ -49,12 +49,12 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ast.StmtRet {
 	case *ast.DefLetStmt:
 		execRet = exec.defLetStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddExtraInfo("`let` may introduce non-existent objects. If you want to ensure the object exists, please use `have` instead!\n")
+			execRet = execRet.AddExtraInfo("Note: The `let` statement may introduce objects without existence verification. To ensure object existence, use `have` instead.\n")
 		}
 	case *ast.LetFnStmt:
 		execRet = exec.lefDefFnStmt(stmt)
 		if execRet.IsTrue() {
-			execRet = execRet.AddExtraInfo("`let fn` may introduce non-existent functions. If you want to ensure the function exists, please use `have fn` instead!\n")
+			execRet = execRet.AddExtraInfo("Note: The `let fn` statement may introduce functions without existence verification. To ensure function existence, use `have fn` instead.\n")
 		}
 	case *ast.ProveStmt:
 		execRet = exec.proveStmt(stmt)
@@ -258,7 +258,7 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) ast.StmtRet {
 	for _, curStmt := range proof {
 		execState := exec.Stmt(curStmt)
 		if execState.IsNotTrue() {
-			return execState.AddExtraInfo(fmt.Sprintf("failed :( line %d\n", curStmt.GetLine()))
+			return execState.AddExtraInfo(fmt.Sprintf("Execution failed at line %d.\n", curStmt.GetLine()))
 		}
 		innerExecRets = append(innerExecRets, execState)
 	}
@@ -434,7 +434,7 @@ func (exec *Executor) ClearStmt() ast.StmtRet {
 	// newEnvMgr := env.CopyEnvMgrAndOwnPkgMgr(env.BuiltinEnvMgrWithEmptyEnvPkgMgr, exec.Env.EnvPkgMgr)
 	// exec.Env = newEnvMgr.NewEnv()
 	exec.Env = litex_env.NewEmptyEnvMgr(exec.Env.EnvPkgMgr)
-	return ast.NewTrueStmtEmptyRet(nil).AddExtraInfo("clear all definitions and facts")
+	return ast.NewTrueStmtEmptyRet(nil).AddExtraInfo("All definitions and facts have been cleared.\n")
 }
 
 func (exec *Executor) DoNothingStmt() ast.StmtRet {
@@ -482,7 +482,7 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 	defer exec.deleteEnv()
 
 	if exec.Env.IsTransitiveProp(string(stmt.Prop)) {
-		return exec.NewTrueStmtRet(stmt).AddExtraInfo(fmt.Sprintf("%s is transitive prop", stmt.Prop.String()))
+		return exec.NewTrueStmtRet(stmt).AddExtraInfo(fmt.Sprintf("Property %s is already known to be transitive.\n", stmt.Prop.String()))
 	}
 
 	definedStuff, ok := exec.Env.GetPropDef(stmt.Prop)
@@ -556,7 +556,7 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 
 	exec.Env.CurEnv().TransitivePropMem[string(stmt.Prop)] = make(map[string][]ast.Obj)
 
-	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs).AddExtraInfo(fmt.Sprintf("%s is transitive prop", stmt.Prop.String()))
+	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs).AddExtraInfo(fmt.Sprintf("Property %s has been proven to be transitive.\n", stmt.Prop.String()))
 }
 
 func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) ast.StmtRet {
@@ -589,7 +589,7 @@ func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, ast.StmtRet
 		return nil, execRet
 	}
 
-	return value, ast.NewTrueStmtEmptyRet(nil).AddExtraInfo(fmt.Sprintf("By evaluation of algo %s\nWe get %s = %s\n", objToEval.(*ast.FnObj).FnHead.String(), objToEval.String(), value.String()))
+	return value, ast.NewTrueStmtEmptyRet(nil).AddExtraInfo(fmt.Sprintf("Evaluation result: %s = %s (via algorithm %s)\n", objToEval.String(), value.String(), objToEval.(*ast.FnObj).FnHead.String()))
 }
 
 // func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) ast.StmtRet{
@@ -773,7 +773,7 @@ func (exec *Executor) proveImplyStmt(stmt *ast.ProveInferStmt) ast.StmtRet {
 		return ast.StmtErrRet(stmt, retInfer.String())
 	}
 
-	return exec.NewTrueStmtRet(stmt).AddExtraInfo(fmt.Sprintf("%s is a powerful feature. The implication section will be automatically generated after every time %s is true later. Don't use it too much, since it is very memory consuming.", glob.KeywordProvePropInfer, stmt.SpecFact.PropName))
+	return exec.NewTrueStmtRet(stmt).AddExtraInfo(fmt.Sprintf("Note: %s is a powerful feature. The implication section will be automatically generated whenever %s becomes true. Use sparingly as it is memory-intensive.\n", glob.KeywordProvePropInfer, stmt.SpecFact.PropName))
 }
 
 func (exec *Executor) proveImplyStmtProveProcess(stmt *ast.ProveInferStmt) ast.StmtRet {
