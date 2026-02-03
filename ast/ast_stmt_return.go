@@ -17,7 +17,6 @@ type StmtRet interface {
 	AddVerifyProcesses(verifyProcesses []VerRet) StmtRet
 	AddInfers(infers []InferRet) StmtRet
 	AddInnerStmtRets(innerStmtRets []StmtRet) StmtRet
-	AddNewFacts(newFacts []string) StmtRet
 	AddDefineMsgs(defines []string) StmtRet
 	GetVerifyProcess() []VerRet
 	GetInnerStmtRets() []StmtRet
@@ -34,7 +33,6 @@ func (r *ErrStmtRet) GetExtraInfos() []string {
 type TrueStmtRet struct {
 	Stmt              Stmt
 	Define            []string
-	NewFact           []string
 	VerifyProcess     []VerRet
 	Infer             []InferRet
 	InnerStmtRetSlice []StmtRet
@@ -95,7 +93,7 @@ func (r *ErrStmtRet) IsErr() bool     { return true }
 func (r *ErrStmtRet) IsNotTrue() bool { return true }
 
 func NewTrueStmtEmptyRet(stmt Stmt) *TrueStmtRet {
-	return &TrueStmtRet{Stmt: stmt, Define: []string{}, NewFact: []string{}, VerifyProcess: []VerRet{}, Infer: []InferRet{}, InnerStmtRetSlice: []StmtRet{}, ExtraInfo: []string{}}
+	return &TrueStmtRet{Stmt: stmt, Define: []string{}, VerifyProcess: []VerRet{}, Infer: []InferRet{}, InnerStmtRetSlice: []StmtRet{}, ExtraInfo: []string{}}
 }
 func NewUnknownStmtEmptyRet(stmt Stmt) *UnknownStmtRet {
 	return &UnknownStmtRet{Stmt: stmt, ExtraInfo: []string{}}
@@ -248,13 +246,6 @@ func (r *TrueStmtRet) String() string {
 			builder.WriteString("\n")
 		}
 	}
-	if len(r.NewFact) > 0 {
-		builder.WriteString("\n\nnew fact:\n")
-		for _, newFact := range r.NewFact {
-			builder.WriteString(newFact)
-			builder.WriteString("\n")
-		}
-	}
 
 	if len(r.VerifyProcess) > 0 {
 		builder.WriteString("\n\nverification process:\n")
@@ -265,7 +256,7 @@ func (r *TrueStmtRet) String() string {
 	}
 
 	if len(r.Infer) > 0 {
-		builder.WriteString("\n\ninfer:\n")
+		builder.WriteString("\n\nnew facts:\n")
 		for _, infer := range r.Infer {
 			builder.WriteString(infer.String())
 			builder.WriteString("\n")
@@ -281,22 +272,6 @@ func (r *TrueStmtRet) String() string {
 	}
 
 	return builder.String()
-}
-
-func (r *TrueStmtRet) AddNewFact(newFact string) StmtRet {
-	if newFact != "" {
-		r.NewFact = append(r.NewFact, newFact)
-	}
-	return r
-}
-
-func (r *TrueStmtRet) AddNewFacts(newFacts []string) StmtRet {
-	for _, newFact := range newFacts {
-		if newFact != "" {
-			r.NewFact = append(r.NewFact, newFact)
-		}
-	}
-	return r
 }
 
 func (r *TrueStmtRet) AddDefineMsgs(defines []string) StmtRet {

@@ -23,7 +23,6 @@ import (
 func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ast.StmtRet {
 	ver := NewVerifier(exec.Env)
 
-	newFactMsgs := []string{}
 	defineMsgs := []string{}
 	verifyProcessMsgs := []ast.VerRet{}
 
@@ -71,7 +70,7 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ast.StmtRet {
 
 	}
 
-	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs).AddDefineMsgs(defineMsgs).AddVerifyProcesses(verifyProcessMsgs)
+	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs).AddVerifyProcesses(verifyProcessMsgs)
 }
 
 func (exec *Executor) haveObjInNonEmptySetStmt(stmt *ast.HaveObjInNonEmptySetStmt) ast.StmtRet {
