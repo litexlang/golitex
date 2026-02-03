@@ -20,17 +20,15 @@ import (
 	glob "golitex/glob"
 )
 
-func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePropStmt) ast.StmtRet{
+func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePropStmt) ast.StmtRet {
 	innerStmtRets := []ast.StmtRet{}
 	verifyProcessMsgs := []ast.VerRet{}
-	newFactMsgs := []string{}
 
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	if exec.Env.IsCommutativeProp(stmt.SpecFact) {
-		newFactMsgs = append(newFactMsgs, fmt.Sprintf("%s is commutative prop", stmt.SpecFact.PropName.String()))
-		return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
+		return exec.NewTrueStmtRet(stmt).AddExtraInfo(fmt.Sprintf("%s is commutative prop", stmt.SpecFact.PropName.String()))
 	}
 
 	definedStuff, ok := exec.Env.GetPropDef(stmt.SpecFact.PropName)
@@ -98,9 +96,7 @@ func (exec *Executor) proveIsCommutativePropStmt(stmt *ast.ProveIsCommutativePro
 
 	exec.NewCommutativeProp(stmt.SpecFact)
 
-	newFactMsgs = append(newFactMsgs, fmt.Sprintf("%s is commutative prop", stmt.SpecFact.PropName.String()))
-
-	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactMsgs)
+	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs).AddExtraInfo(fmt.Sprintf("%s is commutative prop", stmt.SpecFact.PropName.String()))
 }
 
 func (exec *Executor) proveIsCommutativePropStmtBody(proofs []ast.Stmt, fact ast.SpecificFactStmt, rightToLeft ast.SpecificFactStmt) (ast.StmtRet, []ast.VerRet, []ast.StmtRet) {
