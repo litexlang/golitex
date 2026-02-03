@@ -27,20 +27,22 @@ func (stmt *AnonymousFn) Instantiate(uniMap map[string]Obj) (*AnonymousFn, error
 		}
 	}
 
-	newDomFacts := make(FactStmtSlice, len(stmt.DomFacts))
+	newDomFacts := make(ReversibleFacts, len(stmt.DomFacts))
 	for i := range stmt.DomFacts {
-		newDomFacts[i], err = stmt.DomFacts[i].InstantiateFact(uniMap)
+		cur, err := stmt.DomFacts[i].InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
+		newDomFacts[i] = cur.(Spec_OrFact)
 	}
 
-	newThenFacts := make(FactStmtSlice, len(stmt.ThenFacts))
+	newThenFacts := make(ReversibleFacts, len(stmt.ThenFacts))
 	for i := range stmt.ThenFacts {
-		newThenFacts[i], err = stmt.ThenFacts[i].InstantiateFact(uniMap)
+		cur, err := stmt.ThenFacts[i].InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
 		}
+		newThenFacts[i] = cur.(Spec_OrFact)
 	}
 
 	newRetSet, err := stmt.RetSet.Instantiate(uniMap)

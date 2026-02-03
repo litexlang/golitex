@@ -143,7 +143,7 @@ func NewDefFnSetStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnTStruc
 	return &DefFnSetStmt{defHeader, templateDomFacts, fnTStruct, line}
 }
 
-func NewFnTStruct(params []string, paramSets []Obj, retSet Obj, domFacts []FactStmt, thenFacts []FactStmt, line uint) *AnonymousFn {
+func NewFnTStruct(params []string, paramSets []Obj, retSet Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, line uint) *AnonymousFn {
 	return &AnonymousFn{params, paramSets, retSet, domFacts, thenFacts, line}
 }
 

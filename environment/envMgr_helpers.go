@@ -318,7 +318,7 @@ func (envMgr *EnvMgr) AnonymousFnToInstFnTemplate(objFnTypeT *ast.FnObj) (*ast.A
 		randomParams = append(randomParams, envMgr.GenerateUnusedRandomName())
 	}
 
-	return ast.NewFnTStruct(randomParams, paramSets, retSet, []ast.FactStmt{}, []ast.FactStmt{}, glob.BuiltinLine0), true
+	return ast.NewFnTStruct(randomParams, paramSets, retSet, []ast.Spec_OrFact{}, []ast.Spec_OrFact{}, glob.BuiltinLine0), true
 }
 
 func (envMgr *EnvMgr) GetUniFactFactFreeParamsNotConflictWithDefinedParams(fact *ast.UniFactStmt, extraNamesThatCanNotBeUsed map[string]struct{}) *ast.UniFactStmt {
