@@ -258,14 +258,14 @@ func (r *TrueStmtRet) String() string {
 func appendStmtRetCommonDetails(builder *strings.Builder, define []string, verifyProcess []VerRet, infer []InferRet, innerStmtRets []StmtRet, extraInfo []string) {
 
 	if len(define) > 0 {
-		builder.WriteString("\n\ndefine:\n")
+		builder.WriteString("\n\ndefinition(s):\n")
 		for _, define := range define {
 			builder.WriteString(define)
 			builder.WriteString("\n")
 		}
 	}
 	if len(verifyProcess) > 0 {
-		builder.WriteString("\n\nverification process:\n")
+		builder.WriteString("\n\nverification process(es):\n")
 		for _, vp := range verifyProcess {
 			builder.WriteString(vp.String())
 			builder.WriteString("\n")
@@ -273,7 +273,7 @@ func appendStmtRetCommonDetails(builder *strings.Builder, define []string, verif
 	}
 
 	if len(infer) > 0 {
-		builder.WriteString("\n\nnew facts:\n")
+		builder.WriteString("\n\nnew fact(s):\n")
 		for _, inf := range infer {
 			builder.WriteString(inf.String())
 			builder.WriteString("\n")
@@ -281,7 +281,7 @@ func appendStmtRetCommonDetails(builder *strings.Builder, define []string, verif
 	}
 
 	if len(innerStmtRets) > 0 {
-		builder.WriteString("\n\ndetails:\n")
+		builder.WriteString("\n\ndetail(s):\n")
 		for _, innerRet := range innerStmtRets {
 			builder.WriteString(innerRet.String())
 			builder.WriteString("\n")
