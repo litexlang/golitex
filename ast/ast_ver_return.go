@@ -1,6 +1,9 @@
 package litex_ast
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type VerRet interface {
 	verRet()
@@ -137,8 +140,27 @@ func (r *TrueVerRet) String() string {
 	if r.ToCheck == nil {
 		return "TrueVerRet: <nil>"
 	}
-	return fmt.Sprintf("TrueVerRet: %s", r.ToCheck.String())
+
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("true:\n%s\n", r.ToCheck.String()))
+
+	if r.VerifiedByKnownFact != nil {
+		builder.WriteString(fmt.Sprintf("verified by known fact on line %d:\n%s\n", r.VerifiedByKnownFact.GetLine(), r.VerifiedByKnownFact.String()))
+	} else if r.VerifiedByBuiltinRules != "" {
+		builder.WriteString(fmt.Sprintf("verified by builtin rules:\n%s\n", r.VerifiedByBuiltinRules))
+	}
+
+	if len(r.ExtraInfo) > 0 {
+		builder.WriteString("\n\nExtra Info:\n")
+		for _, extraInfo := range r.ExtraInfo {
+			builder.WriteString(extraInfo)
+			builder.WriteString("\n")
+		}
+	}
+
+	return builder.String()
 }
+
 func (r *UnknownVerRet) String() string {
 	if r.ToCheck == nil {
 		return "UnknownVerRet: <nil>"

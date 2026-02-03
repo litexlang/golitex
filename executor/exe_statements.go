@@ -139,14 +139,8 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ast.StmtRet {
 		if ret.IsErr() {
 			return ast.StmtErrRet(stmt, ret.String()).AddExtraInfo(stmt.String())
 		}
-		newFactMsgs := []string{stmt.String()}
 		inferRets := []ast.InferRet{ret}
-		if trueRet, ok := ret.(*ast.TrueInferRet); ok {
-			for _, inferFact := range trueRet.Infer {
-				newFactMsgs = append(newFactMsgs, inferFact.String())
-			}
-		}
-		return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs).AddVerifyProcesses([]ast.VerRet{verRet}).AddInfers(inferRets)
+		return exec.NewTrueStmtRet(stmt).AddVerifyProcesses([]ast.VerRet{verRet}).AddInfers(inferRets)
 	} else if verRet.IsUnknown() {
 		return ast.NewUnknownStmtEmptyRet(stmt).AddExtraInfo(stmt.String())
 		// return exec.AddStmtToStmtRet(verRet.ToStmtRet(), stmt).AddExtraInfo(stmt.String())
@@ -182,12 +176,11 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ast.StmtRet {
 	}
 
 	// Build the result with all derived facts
-	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs).AddInfers(implicationRets)
+	return exec.NewTrueStmtRet(stmt).AddInfers(implicationRets)
 }
 
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) ast.StmtRet {
 	defineMsgs := []string{}
-	newFactMsgs := []string{}
 
 	ret := exec.Env.NewDefProp_InsideAtomsDeclared(stmt)
 	if ret.IsErr() {
@@ -224,7 +217,7 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) ast.StmtRet {
 	// 	newFactMsgs = append(newFactMsgs, iffToProp.String())
 	// }
 
-	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs).AddNewFacts(newFactMsgs)
+	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
 }
 
 func (exec *Executor) defLetStmt(stmt *ast.DefLetStmt) ast.StmtRet {
@@ -274,7 +267,6 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) ast.StmtRet {
 func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) ast.StmtRet {
 	innerStmtRets := []ast.StmtRet{}
 	defineMsgs := []string{}
-	newFactMsgs := []string{}
 
 	execRet := exec.defPropStmt(stmt.DefProp)
 	if execRet.IsNotTrue() {
@@ -283,7 +275,6 @@ func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) ast.StmtRet
 	if trueRet, ok := execRet.(*ast.TrueStmtRet); ok {
 		innerStmtRets = append(innerStmtRets, trueRet.InnerStmtRetSlice...)
 		defineMsgs = append(defineMsgs, trueRet.Define...)
-		newFactMsgs = append(newFactMsgs, trueRet.NewFact...)
 	}
 
 	paramsAsObj := []ast.Obj{}
@@ -297,7 +288,6 @@ func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) ast.StmtRet
 	if ret.IsErr() {
 		return ast.StmtErrRet(stmt, ret.String())
 	}
-	newFactMsgs = append(newFactMsgs, uniFact.String())
 
 	iffFacts := []ast.Spec_OrFact{}
 	for _, iffFact := range stmt.DefProp.IffFactsOrNil {
@@ -313,9 +303,8 @@ func (exec *Executor) knowPropInferStmt(stmt *ast.KnowPropInferStmt) ast.StmtRet
 	if ret.IsErr() {
 		return ast.StmtErrRet(stmt, ret.String())
 	}
-	newFactMsgs = append(newFactMsgs, uniFact2.String())
 
-	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddDefineMsgs(defineMsgs).AddNewFacts(newFactMsgs)
+	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddDefineMsgs(defineMsgs)
 }
 
 func (exec *Executor) knowInferStmt(stmt *ast.KnowInferStmt) ast.StmtRet {
@@ -339,7 +328,6 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) ast.StmtRet {
 
 func (exec *Executor) lefDefFnStmt(stmt *ast.LetFnStmt) ast.StmtRet {
 	defineMsgs := []string{}
-	newFactMsgs := []string{}
 
 	ret := exec.Env.IsValidAndAvailableName(stmt.Name)
 	if !ret {
@@ -374,9 +362,8 @@ func (exec *Executor) lefDefFnStmt(stmt *ast.LetFnStmt) ast.StmtRet {
 	if retInfer2.IsErr() {
 		return ast.StmtErrRet(stmt, retInfer2.String())
 	}
-	newFactMsgs = append(newFactMsgs, derivedFact.String())
 
-	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs).AddNewFacts(newFactMsgs)
+	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
 }
 
 func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) ast.StmtRet {
@@ -394,7 +381,6 @@ func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) ast.StmtRe
 func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ast.StmtRet {
 	innerStmtRets := []ast.StmtRet{}
 	verifyProcessMsgs := []ast.VerRet{}
-	newFactMsgs := []string{}
 
 	execRet := exec.proveByEnumStmtProve(stmt)
 	if execRet.IsNotTrue() {
@@ -410,9 +396,8 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ast.StmtRet {
 	if ret.IsErr() {
 		return ast.StmtErrRet(stmt, ret.String())
 	}
-	newFactMsgs = append(newFactMsgs, stmt.Fact.String())
 
-	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactMsgs)
+	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs)
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
@@ -457,7 +442,6 @@ func (exec *Executor) DoNothingStmt() ast.StmtRet {
 
 func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) ast.StmtRet {
 	verifyProcessMsgs := []ast.VerRet{}
-	newFactMsgs := []string{}
 
 	for _, fact := range stmt.Facts {
 		execState := exec.factStmt(fact)
@@ -467,10 +451,9 @@ func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) ast.StmtRet {
 		if trueRet, ok := execState.(*ast.TrueStmtRet); ok {
 			verifyProcessMsgs = append(verifyProcessMsgs, trueRet.VerifyProcess...)
 		}
-		newFactMsgs = append(newFactMsgs, fact.String())
 	}
 
-	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactMsgs)
+	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs)
 }
 
 func (exec *Executor) Verify(fact ast.FactStmt) ast.StmtRet {
@@ -492,14 +475,12 @@ func (exec *Executor) Verify(fact ast.FactStmt) ast.StmtRet {
 func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropStmt) ast.StmtRet {
 	innerStmtRets := []ast.StmtRet{}
 	verifyProcessMsgs := []ast.VerRet{}
-	newFactMsgs := []string{}
 
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	if exec.Env.IsTransitiveProp(string(stmt.Prop)) {
-		newFactMsgs = append(newFactMsgs, fmt.Sprintf("%s is transitive prop", stmt.Prop.String()))
-		return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
+		return exec.NewTrueStmtRet(stmt).AddExtraInfo(fmt.Sprintf("%s is transitive prop", stmt.Prop.String()))
 	}
 
 	definedStuff, ok := exec.Env.GetPropDef(stmt.Prop)
@@ -573,9 +554,7 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 
 	exec.Env.CurEnv().TransitivePropMem[string(stmt.Prop)] = make(map[string][]ast.Obj)
 
-	newFactMsgs = append(newFactMsgs, fmt.Sprintf("%s is transitive prop", stmt.Prop.String()))
-
-	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs).AddNewFacts(newFactMsgs)
+	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs).AddExtraInfo(fmt.Sprintf("%s is transitive prop", stmt.Prop.String()))
 }
 
 func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) ast.StmtRet {
@@ -646,7 +625,7 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) ast.StmtRet {
 				return ast.StmtErrRet(stmt, ret.String())
 			}
 
-			return ast.NewTrueStmtEmptyRet(stmt).AddVerifyProcesses([]ast.VerRet{verMsg}).AddNewFacts([]string{uniFact.String()})
+			return ast.NewTrueStmtEmptyRet(stmt).AddVerifyProcesses([]ast.VerRet{verMsg})
 			// return exec.AddStmtToStmtRet(ast.NewTrueStmtEmptyRet(stmt).AddVerifyProcesses([]ast.VerRet{verMsg}), stmt).AddNewFacts([]string{uniFact.String()})
 		}
 
@@ -686,7 +665,7 @@ func (exec *Executor) proveForStmt(stmt *ast.ProveForStmt) ast.StmtRet {
 	}
 	newFactMsgs = append(newFactMsgs, uniFact.String())
 
-	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
+	return exec.NewTrueStmtRet(stmt)
 }
 
 func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, indices []ast.Obj) ast.StmtRet {
@@ -900,7 +879,7 @@ func (exec *Executor) equalSetStmt(stmt *ast.EqualSetStmt) ast.StmtRet {
 		}
 	}
 
-	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
+	return exec.NewTrueStmtRet(stmt)
 }
 
 func (exec *Executor) equalSetStmtProveProcess(stmt *ast.EqualSetStmt) ast.StmtRet {
@@ -973,14 +952,7 @@ func (exec *Executor) witnessNonemptyStmt(stmt *ast.WitnessNonemptyStmt) ast.Stm
 		return ast.StmtErrRet(stmt, ret2.String())
 	}
 
-	newFactMsgs := []string{}
-	if trueRet, ok := ret2.(*ast.TrueInferRet); ok {
-		for _, inferFact := range trueRet.Infer {
-			newFactMsgs = append(newFactMsgs, inferFact.String())
-		}
-	}
-
-	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
+	return exec.NewTrueStmtRet(stmt)
 }
 
 func (exec *Executor) witnessNonemptyStmtProveProcess(stmt *ast.WitnessNonemptyStmt) ast.StmtRet {
@@ -1125,12 +1097,5 @@ func (exec *Executor) setIsFnStmt_NewFact(stmt *ast.SetIsFnStmt) ast.StmtRet {
 		return ast.StmtErrRet(stmt, ret.String())
 	}
 
-	newFactMsgs := []string{}
-	if trueRet, ok := ret.(*ast.TrueInferRet); ok {
-		for _, inferFact := range trueRet.Infer {
-			newFactMsgs = append(newFactMsgs, inferFact.String())
-		}
-	}
-
-	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
+	return exec.NewTrueStmtRet(stmt)
 }
