@@ -1,6 +1,9 @@
 package litex_ast
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type StmtRet interface {
 	stmtRet()
@@ -21,8 +24,6 @@ type StmtRet interface {
 	String() string
 }
 
-func (r *UnknownStmtRet) notTrueStmtRet() {}
-func (r *ErrStmtRet) notTrueStmtRet()     {}
 func (r *UnknownStmtRet) GetExtraInfos() []string {
 	return r.ExtraInfo
 }
@@ -236,7 +237,50 @@ func (r *TrueStmtRet) String() string {
 	if r.Stmt == nil {
 		return "TrueStmtRet: <nil>"
 	}
-	return fmt.Sprintf("TrueStmtRet: %s", r.Stmt.String())
+
+	var builder strings.Builder
+	builder.WriteString(fmt.Sprintf("Line %d\nStatus: Success\nStatement:\n%s\n", r.Stmt.GetLine(), r.Stmt.String()))
+
+	if len(r.Define) > 0 {
+		builder.WriteString("\n\ndefine:\n")
+		for _, define := range r.Define {
+			builder.WriteString(define)
+			builder.WriteString("\n")
+		}
+	}
+	if len(r.NewFact) > 0 {
+		builder.WriteString("\n\nnew fact:\n")
+		for _, newFact := range r.NewFact {
+			builder.WriteString(newFact)
+			builder.WriteString("\n")
+		}
+	}
+
+	if len(r.VerifyProcess) > 0 {
+		builder.WriteString("\n\nverification process:\n")
+		for _, verifyProcess := range r.VerifyProcess {
+			builder.WriteString(verifyProcess.String())
+			builder.WriteString("\n")
+		}
+	}
+
+	if len(r.Infer) > 0 {
+		builder.WriteString("\n\ninfer:\n")
+		for _, infer := range r.Infer {
+			builder.WriteString(infer.String())
+			builder.WriteString("\n")
+		}
+	}
+
+	if len(r.ExtraInfo) > 0 {
+		builder.WriteString("\n\nextra info:\n")
+		for _, extraInfo := range r.ExtraInfo {
+			builder.WriteString(extraInfo)
+			builder.WriteString("\n")
+		}
+	}
+
+	return builder.String()
 }
 
 func (r *TrueStmtRet) AddNewFact(newFact string) StmtRet {
