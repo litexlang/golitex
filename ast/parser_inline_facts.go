@@ -112,6 +112,20 @@ func (p *TbParser) inlineFacts_untilWord(tb *tokenBlock, word string, ends []str
 	return facts, nil
 }
 
+func (p *TbParser) inlineFacts_untilWord_SpecOrFact(tb *tokenBlock, word string, ends []string) ([]Spec_OrFact, error) {
+	facts, err := p.inlineFacts_untilWord_or_exceedEnd_notSkipWord(tb, word, ends)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+	specOrFacts := []Spec_OrFact{}
+	for _, fact := range facts {
+		if specOrFact, ok := fact.(Spec_OrFact); ok {
+			specOrFacts = append(specOrFacts, specOrFact)
+		}
+	}
+	return specOrFacts, nil
+}
+
 func (p *TbParser) inlineFacts_untilWord_or_exceedEnd_notSkipWord(tb *tokenBlock, word string, ends []string) ([]FactStmt, error) {
 	facts := []FactStmt{}
 	for {

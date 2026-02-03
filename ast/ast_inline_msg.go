@@ -53,11 +53,11 @@ func (l *LetFnStmt) InlineString() string {
 	builder.WriteString(l.FnTemplate.RetSet.String())
 	if len(l.FnTemplate.DomFacts) > 0 {
 		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteString(inlineFactsString(l.FnTemplate.DomFacts))
+		builder.WriteString(inlineReversibleFactsString(l.FnTemplate.DomFacts))
 	}
 	if len(l.FnTemplate.ThenFacts) > 0 {
 		builder.WriteString(glob.KeySymbolRightArrow)
-		builder.WriteString(inlineFactsString(l.FnTemplate.ThenFacts))
+		builder.WriteString(inlineReversibleFactsString(l.FnTemplate.ThenFacts))
 	}
 
 	return builder.String()

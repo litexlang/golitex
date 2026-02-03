@@ -101,7 +101,7 @@ func (fnTemplate *AnonymousFn) DeriveUniFact(defFnTemplateName string, fnObj Obj
 	return instantiated.(*UniFactStmt), nil
 }
 
-func (stmt *AnonymousFn) InstantiateFnTWithoutChangingTName(uniMap map[string]Obj) ([]Obj, FactStmtSlice, FactStmtSlice, Obj, error) {
+func (stmt *AnonymousFn) InstantiateFnTWithoutChangingTName(uniMap map[string]Obj) ([]Obj, ReversibleFacts, ReversibleFacts, Obj, error) {
 	// 1. instantiate set params in facts
 	newSetParams := []Obj{}
 	for _, setParam := range stmt.ParamSets {

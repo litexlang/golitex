@@ -136,7 +136,7 @@ func (exec *Executor) haveFnEqualStmt(stmt *ast.HaveFnEqualStmt) ast.StmtRet {
 		verifyProcessMsgs = append(verifyProcessMsgs, trueRet.VerifyProcess...)
 	}
 
-	newFnDefStmt := ast.NewLetFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.FactStmt{}, []ast.FactStmt{ast.NewEqualFact(fnHeaderToReturnValueOfFn(stmt.DefHeader), stmt.EqualTo)}, stmt.Line), stmt.Line)
+	newFnDefStmt := ast.NewLetFnStmt(string(stmt.DefHeader.Name), ast.NewFnTStruct(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, stmt.RetSet, []ast.Spec_OrFact{}, []ast.Spec_OrFact{ast.NewEqualFact(fnHeaderToReturnValueOfFn(stmt.DefHeader), stmt.EqualTo)}, stmt.Line), stmt.Line)
 	execRet = exec.lefDefFnStmt(newFnDefStmt)
 	if execRet.IsNotTrue() {
 		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(execRet.String()).AddExtraInfo(fmt.Sprintf("failed to declare fn: %s", newFnDefStmt.String()))
@@ -237,7 +237,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet {
 	}()
 
 	// 声明一下函数，这样证明then的时候不会因为没声明这个函数而g了
-	localTemplate := ast.NewFnTStruct(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.RetSet, stmt.DefFnStmt.FnTemplate.DomFacts, []ast.FactStmt{}, stmt.Line)
+	localTemplate := ast.NewFnTStruct(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.RetSet, stmt.DefFnStmt.FnTemplate.DomFacts, []ast.Spec_OrFact{}, stmt.Line)
 	fnDefStmt := ast.NewLetFnStmt(stmt.DefFnStmt.Name, localTemplate, stmt.Line)
 	execState := exec.lefDefFnStmt(fnDefStmt)
 	if execState.IsNotTrue() {
@@ -254,7 +254,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet {
 	}
 
 	// Define parameters in the new environment
-	defObjStmt := ast.NewDefLetStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts, stmt.Line)
+	defObjStmt := ast.NewDefLetStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts.ToFactStmtSlice(), stmt.Line)
 	execState = exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return execState
@@ -386,7 +386,7 @@ func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseS
 	defObjStmt := ast.NewDefLetStmt(
 		stmt.DefFnStmt.FnTemplate.Params,
 		stmt.DefFnStmt.FnTemplate.ParamSets,
-		stmt.DefFnStmt.FnTemplate.DomFacts,
+		stmt.DefFnStmt.FnTemplate.DomFacts.ToFactStmtSlice(),
 		stmt.Line,
 	)
 	execState := exec.defLetStmt(defObjStmt)

@@ -255,7 +255,7 @@ func (objAsFnObj *FnObj) FnTObj_ToFnTNoName() (*AnonymousFn, error) {
 	paramSets := objAsFnObjHeadAsFnObj.Params
 	retSet := objAsFnObj.Params[0]
 
-	fnTNoName := NewFnTStruct(randomParams, paramSets, retSet, []FactStmt{}, []FactStmt{}, glob.BuiltinLine0)
+	fnTNoName := NewFnTStruct(randomParams, paramSets, retSet, []Spec_OrFact{}, []Spec_OrFact{}, glob.BuiltinLine0)
 
 	return fnTNoName, nil
 }
