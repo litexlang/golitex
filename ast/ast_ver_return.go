@@ -137,12 +137,12 @@ func (r *ErrVerRet) GetToCheck() FactStmt {
 }
 
 func (r *TrueVerRet) String() string {
-	if r.ToCheck == nil {
-		return "some fact is true"
-	}
-
 	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("true:\n%s\n", r.ToCheck.String()))
+	if r.ToCheck == nil {
+		builder.WriteString("some fact is true")
+	} else {
+		builder.WriteString(fmt.Sprintf("true:\n%s\n", r.ToCheck.String()))
+	}
 
 	if r.VerifiedByKnownFact != nil {
 		builder.WriteString(fmt.Sprintf("verified by known fact on line %d:\n%s\n", r.VerifiedByKnownFact.GetLine(), r.VerifiedByKnownFact.String()))
@@ -162,11 +162,12 @@ func (r *TrueVerRet) String() string {
 }
 
 func (r *UnknownVerRet) String() string {
-	if r.ToCheck == nil {
-		return "some fact is unknown"
-	}
 	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("unknown:\n%s\n", r.ToCheck.String()))
+	if r.ToCheck == nil {
+		builder.WriteString("some fact is unknown")
+	} else {
+		builder.WriteString(fmt.Sprintf("unknown:\n%s\n", r.ToCheck.String()))
+	}
 
 	if len(r.ExtraInfo) > 0 {
 		builder.WriteString("\n\nExtra Info:\n")
@@ -179,12 +180,12 @@ func (r *UnknownVerRet) String() string {
 	return builder.String()
 }
 func (r *ErrVerRet) String() string {
-	if r.ToCheck == nil {
-		return "some fact is error"
-	}
-
 	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("error:\n%s\n", r.ToCheck.String()))
+	if r.ToCheck == nil {
+		builder.WriteString("some fact is error")
+	} else {
+		builder.WriteString(fmt.Sprintf("error:\n%s\n", r.ToCheck.String()))
+	}
 
 	if len(r.ExtraInfo) > 0 {
 		builder.WriteString("\n\nExtra Info:\n")
