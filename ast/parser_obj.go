@@ -466,9 +466,9 @@ func (p *TbParser) fnObjWithRepeatedBraceAndBracket(tb *tokenBlock, head Obj) (O
 // 	return ret, nil
 // }
 
-func NewAnonymousFnSetObj(fnSets []Obj, retSet Obj) Obj {
-	return NewFnObj(NewFnObj(Atom(glob.KeywordFn), fnSets), []Obj{retSet})
-}
+// func NewAnonymousFnSetObj(fnSets []Obj, retSet Obj) Obj {
+// 	return NewFnObj(NewFnObj(Atom(glob.KeywordFn), fnSets), []Obj{retSet})
+// }
 
 func (p *TbParser) backSlashExpr(tb *tokenBlock) (Obj, error) {
 	err := tb.header.skip(glob.KeySymbolBackSlash)

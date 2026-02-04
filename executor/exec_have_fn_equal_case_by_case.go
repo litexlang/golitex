@@ -135,30 +135,31 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckCasesNotOverlap_ReturnValue
 }
 
 func (exec *Executor) haveFnEqualCaseByCaseStmt_Define(stmt *ast.HaveFnEqualCaseByCaseStmt) ast.StmtRet {
-	anonymousSetTheFnIsIn := ast.NewAnonymousFnSetObj(stmt.DefHeader.ParamSets, stmt.RetSet)
-	defFn := ast.NewDefLetStmt([]string{stmt.DefHeader.Name}, []ast.Obj{anonymousSetTheFnIsIn}, []ast.FactStmt{}, stmt.Line)
-	defRet := exec.defLetStmt(defFn)
-	if defRet.IsNotTrue() {
-		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(defRet.String())
-	}
+	panic("")
+	// anonymousSetTheFnIsIn := ast.NewAnonymousFnSetObj(stmt.DefHeader.ParamSets, stmt.RetSet)
+	// defFn := ast.NewDefLetStmt([]string{stmt.DefHeader.Name}, []ast.Obj{anonymousSetTheFnIsIn}, []ast.FactStmt{}, stmt.Line)
+	// defRet := exec.defLetStmt(defFn)
+	// if defRet.IsNotTrue() {
+	// 	return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(defRet.String())
+	// }
 
-	curFnObjParams := []ast.Obj{}
-	for _, paramSet := range stmt.DefHeader.Params {
-		curFnObjParams = append(curFnObjParams, ast.Atom(paramSet))
-	}
-	curFnObj := ast.NewFnObj(ast.Atom(stmt.DefHeader.Name), curFnObjParams)
+	// curFnObjParams := []ast.Obj{}
+	// for _, paramSet := range stmt.DefHeader.Params {
+	// 	curFnObjParams = append(curFnObjParams, ast.Atom(paramSet))
+	// }
+	// curFnObj := ast.NewFnObj(ast.Atom(stmt.DefHeader.Name), curFnObjParams)
 
-	inferRets := []ast.InferRet{}
-	for i, curCase := range stmt.CaseByCaseFacts {
-		uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []ast.Spec_OrFact{curCase}, []ast.Spec_OrFact{ast.NewEqualFact(curFnObj, stmt.CaseByCaseEqualTo[i])}, curCase.GetLine())
-		retInfer := exec.Env.NewFactWithCheckingNameDefined(uniFact)
-		if retInfer.IsNotTrue() {
-			return ast.StmtErrRet(stmt, retInfer.String())
-		}
-		inferRets = append(inferRets, retInfer)
-	}
+	// inferRets := []ast.InferRet{}
+	// for i, curCase := range stmt.CaseByCaseFacts {
+	// 	uniFact := ast.NewUniFact(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, []ast.Spec_OrFact{curCase}, []ast.Spec_OrFact{ast.NewEqualFact(curFnObj, stmt.CaseByCaseEqualTo[i])}, curCase.GetLine())
+	// 	retInfer := exec.Env.NewFactWithCheckingNameDefined(uniFact)
+	// 	if retInfer.IsNotTrue() {
+	// 		return ast.StmtErrRet(stmt, retInfer.String())
+	// 	}
+	// 	inferRets = append(inferRets, retInfer)
+	// }
 
-	return ast.NewTrueStmtEmptyRet(stmt).AddInfers(inferRets)
+	// return ast.NewTrueStmtEmptyRet(stmt).AddInfers(inferRets)
 	// if trueRet, ok := defRet.(*ast.TrueStmtRet); ok {
 	// 	// return exec.AddStmtToStmtRet(trueRet.AddInfers(inferRets), stmt)
 	// 	return ast.NewTrueStmtEmptyRet(stmt).AddInfers(inferRets)
