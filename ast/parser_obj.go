@@ -675,3 +675,74 @@ func (p *TbParser) SetBuilderObjBeginWithKeywordSetBuilder(tb *tokenBlock) (Obj,
 
 	return MakeSetBuilderObj(paramStr, parentSet, facts)
 }
+
+func (p *TbParser) fnSetObj(tb *tokenBlock) (Obj, error) {
+	tb.header.skip(glob.KeywordFn)
+
+	params, paramSets, doms, err := p.leftBraceParamsAndParamSetsAndDomsAndRightBrace(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	retSet, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	var thens ReversibleFacts = []Spec_OrFact{}
+
+	if tb.header.is(glob.KeySymbolLeftCurly) {
+		thens, err = p.inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb, []string{glob.KeySymbolRightBrace})
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		skipErr := tb.header.skip(glob.KeySymbolRightCurly)
+		if skipErr != nil {
+			return nil, skipErr
+		}
+	}
+
+	return NewFnSetObj(params, paramSets, doms, retSet, thens), nil
+}
+
+func (p *TbParser) leftBraceParamsAndParamSetsAndDomsAndRightBrace(tb *tokenBlock) ([]string, []Obj, ReversibleFacts, error) {
+	err := tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	params := []string{}
+	paramSets := []Obj{}
+	doms := ReversibleFacts{}
+
+	// 获得 param paramset pair
+	params, paramSets, err = p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolRightBrace, glob.KeySymbolColon}, false, false)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	if tb.header.is(glob.KeySymbolColon) {
+		skipErr := tb.header.skip(glob.KeySymbolColon)
+		if skipErr != nil {
+			return nil, nil, nil, skipErr
+		}
+		doms, err = p.inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb, []string{glob.KeySymbolRightBrace})
+		if err != nil {
+			return nil, nil, nil, ErrInLine(err, tb)
+		}
+
+		skipErr = tb.header.skip(glob.KeySymbolRightBrace)
+		if skipErr != nil {
+			return nil, nil, nil, skipErr
+		}
+
+	} else {
+		skipErr := tb.header.skip(glob.KeySymbolRightBrace)
+		if skipErr != nil {
+			return nil, nil, nil, skipErr
+		}
+	}
+
+	return params, paramSets, doms, nil
+}
