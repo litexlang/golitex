@@ -138,7 +138,8 @@ func (p *TbParser) unaryOptObj(tb *tokenBlock) (Obj, error) {
 // Higher precedence means more "primitive" - parentheses and atoms are at the bottom of the precedence hierarchy.
 func (p *TbParser) fnSetObjAndBracedExprAndAtomObjAndFnObj(tb *tokenBlock) (Obj, error) {
 	if tb.header.is(glob.KeywordFn) {
-		return p.fnSet(tb)
+		// return p.fnSet(tb)
+		return p.fnSetObj(tb)
 	}
 
 	if tb.header.is(glob.KeySymbolLeftBrace) {
@@ -428,42 +429,42 @@ func (p *TbParser) fnObjWithRepeatedBraceAndBracket(tb *tokenBlock, head Obj) (O
 	return head, nil
 }
 
-func (p *TbParser) fnSet(tb *tokenBlock) (Obj, error) {
-	tb.header.skip(glob.KeywordFn)
-	tb.header.skip(glob.KeySymbolLeftBrace)
+// func (p *TbParser) fnSet(tb *tokenBlock) (Obj, error) {
+// 	tb.header.skip(glob.KeywordFn)
+// 	tb.header.skip(glob.KeySymbolLeftBrace)
 
-	fnSets := []Obj{}
-	var retSet Obj
-	for !(tb.header.is(glob.KeySymbolRightBrace)) {
-		fnSet, err := p.Obj(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		fnSets = append(fnSets, fnSet)
+// 	fnSets := []Obj{}
+// 	var retSet Obj
+// 	for !(tb.header.is(glob.KeySymbolRightBrace)) {
+// 		fnSet, err := p.Obj(tb)
+// 		if err != nil {
+// 			return nil, ErrInLine(err, tb)
+// 		}
+// 		fnSets = append(fnSets, fnSet)
 
-		done, err := tb.expectAndSkipCommaOr(glob.KeySymbolRightBrace)
-		if err != nil {
-			return nil, err
-		}
-		if done {
-			break
-		}
-	}
+// 		done, err := tb.expectAndSkipCommaOr(glob.KeySymbolRightBrace)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		if done {
+// 			break
+// 		}
+// 	}
 
-	err := tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	err := tb.header.skip(glob.KeySymbolRightBrace)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	retSet, err = p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	retSet, err = p.Obj(tb)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	ret := NewAnonymousFnSetObj(fnSets, retSet)
+// 	ret := NewAnonymousFnSetObj(fnSets, retSet)
 
-	return ret, nil
-}
+// 	return ret, nil
+// }
 
 func NewAnonymousFnSetObj(fnSets []Obj, retSet Obj) Obj {
 	return NewFnObj(NewFnObj(Atom(glob.KeywordFn), fnSets), []Obj{retSet})
@@ -679,6 +680,11 @@ func (p *TbParser) SetBuilderObjBeginWithKeywordSetBuilder(tb *tokenBlock) (Obj,
 func (p *TbParser) fnSetObj(tb *tokenBlock) (Obj, error) {
 	tb.header.skip(glob.KeywordFn)
 
+	fnName, err := tb.header.next()
+	if err != nil {
+		return nil, err
+	}
+
 	params, paramSets, doms, err := p.leftBraceParamsAndParamSetsAndDomsAndRightBrace(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -692,6 +698,11 @@ func (p *TbParser) fnSetObj(tb *tokenBlock) (Obj, error) {
 	var thens ReversibleFacts = []Spec_OrFact{}
 
 	if tb.header.is(glob.KeySymbolLeftCurly) {
+		err = tb.header.skip(glob.KeySymbolLeftCurly)
+		if err != nil {
+			return nil, err
+		}
+
 		thens, err = p.inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb, []string{glob.KeySymbolRightBrace})
 		if err != nil {
 			return nil, ErrInLine(err, tb)
@@ -703,7 +714,7 @@ func (p *TbParser) fnSetObj(tb *tokenBlock) (Obj, error) {
 		}
 	}
 
-	return NewFnSetObj(params, paramSets, doms, retSet, thens), nil
+	return NewFnSetObj(fnName, params, paramSets, doms, retSet, thens), nil
 }
 
 func (p *TbParser) leftBraceParamsAndParamSetsAndDomsAndRightBrace(tb *tokenBlock) ([]string, []Obj, ReversibleFacts, error) {

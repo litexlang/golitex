@@ -21,22 +21,26 @@ import (
 )
 
 type FnSetObj struct {
-	Params    StrSlice
-	FnSets    ObjSlice
+	FnName    string
+	Params    []string
+	ParamSets ObjSlice
 	DomFacts  ReversibleFacts
 	RetSet    Obj
 	ThenFacts ReversibleFacts
 }
 
-func NewFnSetObj(params StrSlice, fnSets ObjSlice, domFacts ReversibleFacts, retSet Obj, thenFacts ReversibleFacts) *FnSetObj {
-	return &FnSetObj{params, fnSets, domFacts, retSet, thenFacts}
+func NewFnSetObj(fnName string, params []string, paramSets ObjSlice, domFacts ReversibleFacts, retSet Obj, thenFacts ReversibleFacts) *FnSetObj {
+	return &FnSetObj{fnName, params, paramSets, domFacts, retSet, thenFacts}
 }
 
 func (f *FnSetObj) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFn)
+
+	builder.WriteString(f.FnName)
+
 	builder.WriteString("(")
-	builder.WriteString(StrObjSetPairs(f.Params, f.FnSets))
+	builder.WriteString(StrObjSetPairs(f.Params, f.ParamSets))
 
 	if len(f.DomFacts) > 0 {
 		builder.WriteString(glob.KeySymbolColon)
@@ -67,7 +71,7 @@ func (f *FnSetObj) Instantiate(uniMap map[string]Obj) (Obj, error) {
 		}
 	}
 
-	newFnSets, err := f.FnSets.Instantiate(newUniMap)
+	newParamSets, err := f.ParamSets.Instantiate(newUniMap)
 	if err != nil {
 		return nil, err
 	}
@@ -82,5 +86,5 @@ func (f *FnSetObj) Instantiate(uniMap map[string]Obj) (Obj, error) {
 		return nil, err
 	}
 
-	return NewFnSetObj(f.Params, newFnSets, newDomFacts, f.RetSet, newThenFacts), nil
+	return NewFnSetObj(f.FnName, f.Params, newParamSets, newDomFacts, f.RetSet, newThenFacts), nil
 }
