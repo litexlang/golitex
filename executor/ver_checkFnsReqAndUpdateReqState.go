@@ -420,6 +420,7 @@ func (ver *Verifier) indexOptFnRequirement(fnObj *ast.FnObj, state *VerState) as
 	return ast.NewTrueVerRet(objFact, nil, "")
 }
 
+// WARNING: 这个函数是错的
 func (ver *Verifier) replaceParamWithUndeclaredRandomName(setBuilderStruct *ast.SetBuilderStruct) *ast.SetBuilderStruct {
 	oldParam := ast.Atom(setBuilderStruct.Param)
 
@@ -427,16 +428,21 @@ func (ver *Verifier) replaceParamWithUndeclaredRandomName(setBuilderStruct *ast.
 	newParamName := ver.Env.GenerateUnusedRandomName()
 	newParam := ast.Atom(newParamName)
 
+	_ = oldParam
+	_ = newParam
+
 	// Replace param in all facts
 	newFacts := make([]*ast.PureSpecificFactStmt, len(setBuilderStruct.Facts))
 	for i, fact := range setBuilderStruct.Facts {
 		// Replace param in propName
-		newPropName := fact.PropName.ReplaceObj(oldParam, newParam).(ast.Atom)
+		// newPropName := fact.PropName.ReplaceObj(oldParam, newParam).(ast.Atom)
+		newPropName := fact.PropName
 
 		// Replace param in fact params
 		newFactParams := make([]ast.Obj, len(fact.Params))
 		for j, param := range fact.Params {
-			newFactParams[j] = param.ReplaceObj(oldParam, newParam)
+			// newFactParams[j] = param.ReplaceObj(oldParam, newParam)
+			newFactParams[j] = param
 		}
 
 		// Create new fact with replaced param
