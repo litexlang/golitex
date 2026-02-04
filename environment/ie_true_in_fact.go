@@ -28,6 +28,10 @@ func (ie *InferEngine) trueInFact(fact ast.SpecificFactStmt) ast.InferRet {
 		return ast.NewErrInferRet(fact).AddExtraInfo(extraInfo)
 	}
 
+	if ret := ie.trueInFactByFnInFnSet(asFact); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
 	if ret := ie.trueInFactByNamedFnSet(asFact); ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
@@ -1046,4 +1050,17 @@ func (ie *InferEngine) trueInFactByN(fact *ast.PureSpecificFactStmt) ast.InferRe
 	result.AddInfer(greaterEqualZeroFact)
 
 	return result
+}
+
+func (ie *InferEngine) trueInFactByFnInFnSet(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	fn := fact.Params[0]
+	fnSet := fact.Params[1]
+
+	fnSetObj, ok := fnSet.(*ast.FnSetObj)
+	if !ok {
+		return ast.NewUnknownInferRet(fact)
+	}
+
+	ie.EnvMgr.StoreFnIsAFn(fn, fnSetObj)
+	return ast.NewTrueInferRet(fact)
 }

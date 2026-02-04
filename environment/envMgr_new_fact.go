@@ -301,3 +301,7 @@ func (envMgr *EnvMgr) ProveImplyNewThenFactInPropDef(stmt *ast.ProveInferStmt) a
 func (envMgr *EnvMgr) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFact *ast.OrStmt) ast.InferRet {
 	return envMgr.storeOrFactInUniFactMem(thenFact, stmt)
 }
+
+func (envMgr *EnvMgr) StoreFnIsAFn(fnName ast.Obj, fnSet *ast.FnSetObj) {
+	envMgr.CurEnv().FnInFnSetMem[fnName.String()] = fnSet
+}
