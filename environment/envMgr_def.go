@@ -177,8 +177,7 @@ func (envMgr *EnvMgr) StoreFnIsAFn(fnName ast.Obj, fnSet *ast.FnSetObj) (bool, s
 		return false, fmt.Sprintf("invalid name: %s", fnName)
 	}
 
-	envMgr.AllDefinedFns[fnName.String()] = NewDefinedStuff(fnSet, envMgr.CurEnvDepth())
-	envMgr.CurEnv().FnDefMem[fnName.String()] = struct{}{}
+	envMgr.CurEnv().FnDefMem[fnName.String()] = fnSet
 
 	return true, ""
 }
