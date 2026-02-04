@@ -1035,3 +1035,7 @@ func (s *SetIsFnStmt) ToLatexString() string {
 func (s *FnIsSubsetOfCartStmt) ToLatexString() string {
 	return s.String()
 }
+
+func (s *FnSetObj) ToLatexString() string {
+	return s.String()
+}
