@@ -74,55 +74,55 @@ func ordinalSuffix(n int) string {
 	}
 }
 
-func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistSpecificFactStmt) *ast.ExistSpecificFactStmt {
-	if len(existStruct.ExistFreeParams) == 0 {
-		return existStruct
-	}
+// func (ver *Verifier) replaceExistParamsWithRandomNames(existStruct *ast.ExistSpecificFactStmt) *ast.ExistSpecificFactStmt {
+// 	if len(existStruct.ExistFreeParams) == 0 {
+// 		return existStruct
+// 	}
 
-	// 生成随机名称替换映射
-	paramReplaceMap := map[string]ast.Obj{}
-	newExistParams := make([]string, len(existStruct.ExistFreeParams))
-	usedNames := map[string]struct{}{}
+// 	// 生成随机名称替换映射
+// 	paramReplaceMap := map[string]ast.Obj{}
+// 	newExistParams := make([]string, len(existStruct.ExistFreeParams))
+// 	usedNames := map[string]struct{}{}
 
-	for i, oldParam := range existStruct.ExistFreeParams {
-		// 生成一个不冲突的随机名称
-		newParamName := ver.Env.GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(usedNames)
-		newExistParams[i] = newParamName
-		usedNames[newParamName] = struct{}{}
-		paramReplaceMap[oldParam] = ast.Atom(newParamName)
-	}
+// 	for i, oldParam := range existStruct.ExistFreeParams {
+// 		// 生成一个不冲突的随机名称
+// 		newParamName := ver.Env.GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(usedNames)
+// 		newExistParams[i] = newParamName
+// 		usedNames[newParamName] = struct{}{}
+// 		paramReplaceMap[oldParam] = ast.Atom(newParamName)
+// 	}
 
-	newParams := []ast.Obj{}
-	for _, param := range existStruct.PureFact.Params {
-		newParam, err := param.Instantiate(paramReplaceMap)
-		if err != nil {
-			panic("failed to instantiate exist free param set")
-		}
-		newParams = append(newParams, newParam)
-	}
+// 	newParams := []ast.Obj{}
+// 	for _, param := range existStruct.PureFact.Params {
+// 		newParam, err := param.Instantiate(paramReplaceMap)
+// 		if err != nil {
+// 			panic("failed to instantiate exist free param set")
+// 		}
+// 		newParams = append(newParams, newParam)
+// 	}
 
-	// 替换 ExistFreeParamSets 中的参数引用
-	newExistParamSets := make([]ast.Obj, len(existStruct.ExistFreeParamSets))
-	for i, paramSet := range existStruct.ExistFreeParamSets {
-		newParamSet := paramSet
-		for oldParam, newParam := range paramReplaceMap {
-			newParamSet = newParamSet.ReplaceObj(ast.Atom(oldParam), newParam)
-		}
-		newExistParamSets[i] = newParamSet
-	}
+// 	// 替换 ExistFreeParamSets 中的参数引用
+// 	newExistParamSets := make([]ast.Obj, len(existStruct.ExistFreeParamSets))
+// 	for i, paramSet := range existStruct.ExistFreeParamSets {
+// 		newParamSet := paramSet
+// 		for oldParam, newParam := range paramReplaceMap {
+// 			newParamSet = newParamSet.ReplaceObj(ast.Atom(oldParam), newParam)
+// 		}
+// 		newExistParamSets[i] = newParamSet
+// 	}
 
-	// // 替换 Params 中的参数引用
-	// newParams := make([]ast.Obj, len(existStruct.Params))
-	// for i, param := range existStruct.Params {
-	// 	newParam := param
-	// 	for oldParam, newParamObj := range paramReplaceMap {
-	// 		newParam = newParam.ReplaceObj(ast.Atom(oldParam), newParamObj)
-	// 	}
-	// 	newParams[i] = newParam
-	// }
+// 	// // 替换 Params 中的参数引用
+// 	// newParams := make([]ast.Obj, len(existStruct.Params))
+// 	// for i, param := range existStruct.Params {
+// 	// 	newParam := param
+// 	// 	for oldParam, newParamObj := range paramReplaceMap {
+// 	// 		newParam = newParam.ReplaceObj(ast.Atom(oldParam), newParamObj)
+// 	// 	}
+// 	// 	newParams[i] = newParam
+// 	// }
 
-	return ast.NewExistSpecificFactStmt(existStruct.IsTrue, newExistParams, newExistParamSets, ast.NewPureSpecificFactStmt(existStruct.PureFact.IsTrue, existStruct.PureFact.PropName, newParams, existStruct.Line), existStruct.Line)
-}
+// 	return ast.NewExistSpecificFactStmt(existStruct.IsTrue, newExistParams, newExistParamSets, ast.NewPureSpecificFactStmt(existStruct.PureFact.IsTrue, existStruct.PureFact.PropName, newParams, existStruct.Line), existStruct.Line)
+// }
 
 func NewVerTrueByBuiltinRule(stmt ast.Stmt, verifyMsgs []string) ast.VerRet {
 	var stmtFact ast.FactStmt

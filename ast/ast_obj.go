@@ -25,11 +25,12 @@ type Obj interface {
 	String() string
 	Instantiate(map[string]Obj) (Obj, error)
 	ToLatexString() string
-	ReplaceObj(oldObj Obj, newObj Obj) Obj // 这是必要的，因为 have fn 的 proof 里可能出现 replace obj 的情况
+	// ReplaceObj(oldObj Obj, newObj Obj) Obj // 这是必要的，因为 have fn 的 proof 里可能出现 replace obj 的情况
 }
 
-func (f Atom) obj()   {}
-func (f *FnObj) obj() {}
+func (f Atom) obj()      {}
+func (f *FnObj) obj()    {}
+func (f *FnSetObj) obj() {}
 
 func (f Atom) ReplaceObj(oldObj Obj, newObj Obj) Obj {
 	if f.String() == oldObj.String() {
@@ -38,21 +39,21 @@ func (f Atom) ReplaceObj(oldObj Obj, newObj Obj) Obj {
 	return f
 }
 
-func (f *FnObj) ReplaceObj(oldObj Obj, newObj Obj) Obj {
-	if f.String() == oldObj.String() {
-		return newObj
-	}
+// func (f *FnObj) ReplaceObj(oldObj Obj, newObj Obj) Obj {
+// 	if f.String() == oldObj.String() {
+// 		return newObj
+// 	}
 
-	var newFnObjHead = f.FnHead.ReplaceObj(oldObj, newObj)
+// 	var newFnObjHead = f.FnHead.ReplaceObj(oldObj, newObj)
 
-	newObjParams := make([]Obj, len(f.Params))
-	for i, param := range f.Params {
-		newObjParams[i] = param.ReplaceObj(oldObj, newObj)
-	}
+// 	newObjParams := make([]Obj, len(f.Params))
+// 	for i, param := range f.Params {
+// 		newObjParams[i] = param.ReplaceObj(oldObj, newObj)
+// 	}
 
-	newFnObj := NewFnObj(newFnObjHead, newObjParams)
-	return newFnObj
-}
+// 	newFnObj := NewFnObj(newFnObjHead, newObjParams)
+// 	return newFnObj
+// }
 
 type Atom string
 
