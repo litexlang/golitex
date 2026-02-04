@@ -120,32 +120,6 @@ func (envMgr *EnvMgr) IsFnSetNameDefinedByUser(FnSetName string) bool {
 	}
 }
 
-func (envMgr *EnvMgr) IsFnNameDefinedByUser(FnName string) bool {
-	withPkgName, pkgName, _ := glob.GetPkgNameAndName(FnName)
-
-	if withPkgName && pkgName != envMgr.EnvPkgMgr.PkgMgr.CurPkgDefaultName {
-		pkgEnvMgr := envMgr.GetEnvMgrOfPkgName(pkgName)
-		if pkgEnvMgr == nil {
-			return false
-		}
-
-		_, ok := pkgEnvMgr.AllDefinedFns[FnName]
-		return ok
-	} else {
-		_, ok := envMgr.AllDefinedFns[FnName]
-		if ok {
-			return true
-		}
-
-		_, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedFns[FnName]
-		if ok {
-			return true
-		}
-		return false
-	}
-	return false
-}
-
 func (envMgr *EnvMgr) IsAlgoNameDefinedByUser(AlgoName string) bool {
 	withPkgName, pkgName, _ := glob.GetPkgNameAndName(AlgoName)
 
