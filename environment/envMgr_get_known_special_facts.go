@@ -33,6 +33,22 @@ func (envMgr *EnvMgr) GetLatestFnT_GivenNameIsIn(fnName string) *FnInFnTMemItem 
 	return nil
 }
 
+func (envMgr *EnvMgr) GetFnInFnSet(fnName string) *ast.FnSetObj {
+	for depth := envMgr.CurEnvDepth(); depth >= 0; depth-- {
+		fnInFnSet, ok := envMgr.EnvSlice[depth].FnInFnSetMem[fnName]
+		if ok {
+			return fnInFnSet
+		}
+	}
+
+	fnInFnSet, ok := BuiltinEnvMgrWithEmptyEnvPkgMgr.EnvSlice[0].FnInFnSetMem[fnName]
+	if ok {
+		return fnInFnSet
+	}
+
+	return nil
+}
+
 func (envMgr *EnvMgr) IsTransitiveProp(propName string) bool {
 	// Search from current depth upward to depth 0
 	for depth := envMgr.CurEnvDepth(); depth >= 0; depth-- {
