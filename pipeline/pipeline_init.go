@@ -44,7 +44,7 @@ func NewBuiltinEnvMgrWithNewEmptyEnv(envPkgMgr *env.EnvPkgMgr) (*env.EnvMgr, err
 }
 
 func NewBuiltinEnvMgr() (*env.EnvMgr, error) {
-	curEnvMgr := env.NewEnvMgr(env.NewEnvPkgMgr(pkgMgr.NewEmptyPkgMgr("")), []env.EnvMemory{*env.NewEnvMemory()}, make(map[string]env.DefinedStuff[struct{}]), make(map[string]env.DefinedStuff[*ast.DefPropStmt]), make(map[string]env.DefinedStuff[*ast.DefFnSetStmt]), make(map[string]env.DefinedStuff[*ast.DefAlgoStmt]), make(map[string]env.DefinedStuff[*ast.FnSetObj]))
+	curEnvMgr := env.NewEnvMgr(env.NewEnvPkgMgr(pkgMgr.NewEmptyPkgMgr("")), []env.EnvMemory{*env.NewEnvMemory()}, make(map[string]env.DefinedStuff[struct{}]), make(map[string]env.DefinedStuff[*ast.DefPropStmt]), make(map[string]env.DefinedStuff[*ast.DefFnSetStmt]), make(map[string]env.DefinedStuff[*ast.DefAlgoStmt]))
 	env.BuiltinEnvMgrWithEmptyEnvPkgMgr = curEnvMgr
 	curEnvMgr.Init()
 	err := useHardcodedCodeToInitEnvMgr(curEnvMgr)
@@ -65,10 +65,6 @@ func InitAstBuiltinAndKernelDefinedNames(curEnvMgr *env.EnvMgr) error {
 		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
 	}
 	for k := range curEnvMgr.AllDefinedAtomObjNames {
-		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
-	}
-
-	for k := range curEnvMgr.AllDefinedFns {
 		ast.BuiltinAndKernelDefinedNames[k] = struct{}{}
 	}
 
