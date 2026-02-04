@@ -376,7 +376,7 @@ func (p *TbParser) inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb *tokenB
 			return nil, ErrInLine(err, tb)
 		}
 		facts = append(facts, specFact)
-		if tb.header.is(glob.KeySymbolRightArrow) || tb.header.is(glob.KeySymbolSemiColon) || tb.header.is(glob.KeySymbolEquivalent) {
+		if tb.header.is(glob.KeySymbolRightArrow) || tb.header.is(glob.KeySymbolSemiColon) || tb.header.is(glob.KeySymbolEquivalent) || tb.header.is(glob.KeySymbolRightCurly) {
 			return facts, nil
 		}
 		if p.IsEnding(tb, ends) {
