@@ -72,11 +72,6 @@ func (envMgr *EnvMgr) lookupNamesInFnObj(fnObj *ast.FnObj, extraParams map[strin
 		}
 	}
 
-	// 如果head是fn,那直接成立了
-	if fnObj.IsAtomHeadEqualToStr(glob.KeywordFn) {
-		return ast.NewTrueShortRet()
-	}
-
 	// 如果head 是 fn_template 那也OK了
 	if envMgr.FnObjHeadIsAtomAndIsFnSet(fnObj) {
 		return ast.NewTrueShortRet()

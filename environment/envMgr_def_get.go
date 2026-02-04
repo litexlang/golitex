@@ -126,3 +126,4 @@ func (envMgr *EnvMgr) IsFnWithDefinedAlgo(obj ast.Obj) bool {
 	}
 	return envMgr.GetAlgoDef(objAsFnObjHeadAsAtom.String()) != nil
 }
+

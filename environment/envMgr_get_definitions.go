@@ -66,3 +66,23 @@ func (envMgr *EnvMgr) GetPropDefWithoutSearchingInBuiltinEnv(propName ast.Atom) 
 
 	return DefinedStuff[*ast.DefPropStmt]{}, false
 }
+
+func (envMgr *EnvMgr) GetFnDef(fnName ast.Atom) (DefinedStuff[*ast.FnSetObj], bool) {
+	var pkgName string
+	var envMgrContainsDef = envMgr
+
+	withPkgName, pkgName, _ := glob.GetPkgNameAndName(string(fnName))
+
+	if withPkgName {
+		envMgrContainsDef = envMgr.GetEnvMgrOfName(pkgName)
+	} else {
+		envMgrContainsDef = envMgr
+	}
+
+	fnDef, ok := envMgrContainsDef.AllDefinedFns[string(fnName)]
+	if ok {
+		return fnDef, true
+	}
+
+	return DefinedStuff[*ast.FnSetObj]{}, false
+}

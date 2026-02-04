@@ -171,6 +171,18 @@ func (envMgr *EnvMgr) CheckAtomObjNameIsValidAndAvailableThenDefineIt(name strin
 	return true, ""
 }
 
+func (envMgr *EnvMgr) StoreFnIsAFn(fnName ast.Obj, fnSet *ast.FnSetObj) (bool, string) {
+	ret := envMgr.IsValidAndAvailableName(fnName.String())
+	if !ret {
+		return false, fmt.Sprintf("invalid name: %s", fnName)
+	}
+
+	envMgr.AllDefinedFns[fnName.String()] = NewDefinedStuff(fnSet, envMgr.CurEnvDepth())
+	envMgr.CurEnv().FnDefMem[fnName.String()] = struct{}{}
+
+	return true, ""
+}
+
 // DefLetStmt defines new objects in the environment
 // and checks that all atoms inside the facts are declared.
 // If the obj is a function, it will be inserted into the function definition memory.
