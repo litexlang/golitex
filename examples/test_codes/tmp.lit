@@ -1,3 +1,8 @@
-1 $in fn f(x N, y N) N
-2 $in fn f(x N, y N: x = y) N
-3 $in fn f(x N, y N: x = y) N {f(x-1, y-1) = f(x, y)}
+have a R = 1
+prop larger(x, y R):
+    x > y
+
+$is_prime(17)
+forall x R_pos: x > 0
+exist a, b st a > b
+
