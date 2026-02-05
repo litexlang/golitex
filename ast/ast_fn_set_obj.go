@@ -52,7 +52,7 @@ func NewFnSetObjWithName(fnName string, params []string, paramSets ObjSlice, dom
 func (f *FnSetObjWithName) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFn)
-
+	builder.WriteString(" ")
 	builder.WriteString(f.FnName)
 
 	builder.WriteString("(")
