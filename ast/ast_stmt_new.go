@@ -354,3 +354,7 @@ func NewFnSetObjWithoutName(paramSets ObjSlice, retSet Obj) *FnSetObjWithoutName
 func NewHaveFnEqual(defHeaderWithDom *DefHeaderWithDom, retSet Obj, equalTo Obj, proofs StmtSlice, line uint) *HaveFnEqual {
 	return &HaveFnEqual{defHeaderWithDom, retSet, equalTo, proofs, line}
 }
+
+func NewHaveFnEqualCaseByCase(defHeaderWithDom *DefHeaderWithDom, retSet Obj, caseByCaseFacts SpecFactPtrSlice, caseByCaseEqualTo ObjSlice, proofs StmtSliceSlice, proveCases StmtSlice, line uint) *HaveFnEqualCaseByCase {
+	return &HaveFnEqualCaseByCase{defHeaderWithDom, retSet, caseByCaseFacts, caseByCaseEqualTo, proofs, proveCases, line}
+}
