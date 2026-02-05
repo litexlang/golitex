@@ -1,3 +1,1 @@
-have a set = fn(R) R
-
-a = fn(R)R
+have fn f(x, y R) R = x + y

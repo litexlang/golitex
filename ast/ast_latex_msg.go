@@ -925,6 +925,20 @@ func (s *HaveFnEqualStmt) ToLatexString() string {
 	return builder.String()
 }
 
+func (s *HaveFnEqual) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\begin{definition}[Function]\n")
+	if s.DefHeaderWithDom != nil {
+		builder.WriteString(s.DefHeaderWithDom.NameWithParamsLatexString())
+		builder.WriteString(" ")
+	}
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(" ")
+	builder.WriteString(s.EqualTo.ToLatexString())
+	builder.WriteString("\\end{definition}")
+	return builder.String()
+}
+
 // func (s *HaveFnLiftStmt) ToLatexString() string {
 // 	var builder strings.Builder
 // 	builder.WriteString("\\begin{definition}[Function]\n")
