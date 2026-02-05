@@ -112,7 +112,7 @@ func (envMgr *EnvMgr) lookupNamesInSetBuilder(obj ast.Obj, extraParams map[strin
 }
 
 func (envMgr *EnvMgr) lookupNamesInFnSetObj(fnSetObj *ast.FnSetObj, extraParams map[string]struct{}) ast.ShortRet {
-	if fnSetObj.FnName == "" {
+	if fnSetObj.IsNameEmpty() {
 		for _, paramSet := range fnSetObj.ParamSets {
 			if ret := envMgr.LookupNamesInObj(paramSet, extraParams); ret.IsNotTrue() {
 				return ret

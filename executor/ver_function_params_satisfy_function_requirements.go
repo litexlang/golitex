@@ -17,7 +17,7 @@ func (ver *Verifier) objSatisfyFnReq(obj ast.Obj, state *VerState) ast.VerRet {
 
 		return ver.fnObjSatisfyFnReq(objAs, state)
 	case *ast.FnSetObj:
-		panic("")
+		return ver.fnSetObjSatisfyFnReq(objAs, state)
 	case *ast.SetBuilderObj:
 		panic("")
 	default:
@@ -41,7 +41,7 @@ func (ver *Verifier) fnObjSatisfyFnReq(fnObj *ast.FnObj, state *VerState) ast.Ve
 		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("the number of parameters of %s is not equal to the number of parameter sets of %s", fnObj, fnSet))
 	}
 
-	if fnSet.FnName != "" {
+	if fnSet.IsNameEmpty() {
 		verRetOfFnArgs := ver.ArgsSatisfyFnParamRequirements(fnSet, fnObj.Params, state)
 		if verRetOfFnArgs.IsNotTrue() {
 			return verRetOfFnArgs
@@ -104,4 +104,32 @@ func (ver *Verifier) ArgsSatisfyFnParamRequirements(fnSet *ast.FnSetObj, argumen
 	}
 
 	return ast.NewTrueVerRet(nil, nil, "")
+}
+
+func (ver *Verifier) fnSetObjSatisfyFnReq(fnSetObj *ast.FnSetObj, state *VerState) ast.VerRet {
+	if fnSetObj.IsNameEmpty() {
+		return ver.fnSetObjSatisfyFnReqWhenFnNameIsEmpty(fnSetObj, state)
+	} else {
+		return ver.fnSetObjSatisfyFnReqWhenFnNameIsNotEmpty(fnSetObj, state)
+	}
+}
+
+func (ver *Verifier) fnSetObjSatisfyFnReqWhenFnNameIsEmpty(fnSetObj *ast.FnSetObj, state *VerState) ast.VerRet {
+	for _, paramSet := range fnSetObj.ParamSets {
+		verRet := ver.objSatisfyFnReq(paramSet, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	}
+
+	verRet := ver.objSatisfyFnReq(fnSetObj.RetSet, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	return ast.NewTrueVerRet(nil, nil, "")
+}
+
+func (ver *Verifier) fnSetObjSatisfyFnReqWhenFnNameIsNotEmpty(fnSetObj *ast.FnSetObj, state *VerState) ast.VerRet {
+	panic("")
 }
