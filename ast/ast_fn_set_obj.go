@@ -25,7 +25,11 @@ type FnSetObj interface {
 	String() string
 	Instantiate(map[string]Obj) (Obj, error)
 	ToLatexString() string
+	fnSetObj()
 }
+
+func (f *FnSetObjWithoutName) fnSetObj() {}
+func (f *FnSetObjWithName) fnSetObj()    {}
 
 type FnSetObjWithoutName struct {
 	ParamSets ObjSlice
