@@ -321,9 +321,9 @@ func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt ast.SpecificFactStmt, 
 	}
 
 	// 如果是形如 fn(X, Y ...) RetSet 这样的函数，那就如果X, Y ... 都是非空集合，RetSet也是非空集合，那就OK了
-	if ret := ver.verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonempty(asPureStmt.Params[0], state); ret.IsTrue() || ret.IsErr() {
-		return ret
-	}
+	// if ret := ver.verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonempty(asPureStmt.Params[0], state); ret.IsTrue() || ret.IsErr() {
+	// 	return ret
+	// }
 
 	if ret := ver.verIsANonEmptySetByIsPowerSetAndAllParamSetsAndRetSetAreNonempty(asPureStmt.Params[0], state); ret.IsTrue() || ret.IsErr() {
 		return ret
@@ -410,29 +410,29 @@ func (ver *Verifier) verIsTupleByBuiltinRules(stmt ast.SpecificFactStmt, state *
 
 }
 
-func (ver *Verifier) verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonempty(fnSet ast.Obj, state *VerState) ast.VerRet {
-	fnObj, ok := fnSet.(*ast.FnObj)
-	if !ok {
-		return ast.NewEmptyUnknownVerRet()
-	}
+// func (ver *Verifier) verIsANonEmptySetByIsFnSetAndAllParamSetsAndRetSetAreNonempty(fnSet ast.Obj, state *VerState) ast.VerRet {
+// 	fnObj, ok := fnSet.(*ast.FnObj)
+// 	if !ok {
+// 		return ast.NewEmptyUnknownVerRet()
+// 	}
 
-	if !ast.IsFnSet(fnObj) {
-		return ast.NewEmptyUnknownVerRet()
-	}
+// 	if _, ok := fnSet.(ast.FnSetObj); !ok {
+// 		return ast.NewEmptyUnknownVerRet()
+// 	}
 
-	_, retSet, err := ast.GetParamSetsAndRetSetFromFnSet(fnObj)
-	if err != nil {
-		return ast.NewEmptyUnknownVerRet()
-	}
+// 	_, retSet, err := ast.GetParamSetsAndRetSetFromFnSet(fnObj)
+// 	if err != nil {
+// 		return ast.NewEmptyUnknownVerRet()
+// 	}
 
-	isNonEmptyFact := ast.NewIsANonEmptySetFact(retSet, glob.BuiltinLine0)
-	verRet := ver.VerFactStmt(isNonEmptyFact, state)
-	if verRet.IsErr() || verRet.IsUnknown() {
-		return ast.NewEmptyUnknownVerRet()
-	}
+// 	isNonEmptyFact := ast.NewIsANonEmptySetFact(retSet, glob.BuiltinLine0)
+// 	verRet := ver.VerFactStmt(isNonEmptyFact, state)
+// 	if verRet.IsErr() || verRet.IsUnknown() {
+// 		return ast.NewEmptyUnknownVerRet()
+// 	}
 
-	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("fn set %s is a nonempty set because its return set is a nonempty set.", fnSet), ast.NewTrueVerRet(nil, nil, ""))
-}
+// 	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("fn set %s is a nonempty set because its return set is a nonempty set.", fnSet), ast.NewTrueVerRet(nil, nil, ""))
+// }
 
 // func (ver *Verifier) verIsNonEmptyWithItemByBuiltinRules(stmt *ast.SpecFactStmt, state *VerState) ast.VerRet {
 // 	if len(stmt.Params) != 2 {
