@@ -24,7 +24,8 @@ func (ver *Verifier) checkFnsReq(stmt ast.SpecificFactStmt, state *VerState) ast
 	if _, ok := stmt.(*ast.PureSpecificFactStmt); ok {
 		stateNoMsg := state.GetNoMsg()
 		for _, param := range stmt.(*ast.PureSpecificFactStmt).Params {
-			verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, stateNoMsg)
+			// verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, stateNoMsg)
+			verRet := ver.objSatisfyFnReq(param, stateNoMsg)
 			if verRet.IsErr() {
 				return verRet
 			}
@@ -35,6 +36,7 @@ func (ver *Verifier) checkFnsReq(stmt ast.SpecificFactStmt, state *VerState) ast
 		stmtFact := stmt.(*ast.PureSpecificFactStmt)
 		return ast.NewTrueVerRet(stmtFact, nil, "")
 	} else {
+		// TODO: 这里检查 exist 的方式大概率有问题
 		ret := ver.Env.LookUpNamesInFact(stmt, map[string]struct{}{})
 		if ret.IsErr() {
 			return ast.NewErrVerRet(stmt).AddExtraInfos(ret.GetMsg())
@@ -46,43 +48,37 @@ func (ver *Verifier) checkFnsReq(stmt ast.SpecificFactStmt, state *VerState) ast
 	}
 }
 
-func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) ast.VerRet {
-	if atom, ok := obj.(ast.Atom); ok {
-		if ret := ver.Env.LookupNamesInObj(atom, map[string]struct{}{}); ret.IsNotTrue() {
-			objFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIsASet), []ast.Obj{obj}, glob.BuiltinLine0)
-			return ast.NewErrVerRet(objFact).AddExtraInfo(ret.String())
-		} else {
-			objFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIsASet), []ast.Obj{obj}, glob.BuiltinLine0)
-			return ast.NewTrueVerRet(objFact, nil, "")
-		}
-	}
+// func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) ast.VerRet {
+// 	switch objAs := obj.(type) {
+// 	case ast.Atom:
+// 		return ver.objSatisfyFnReq(objAs, state)
+// 	case *ast.FnObj:
+// 		objAsFnObj := objAs
+// If it's val(...), check the requirement of the inner function
+// if ast.IsAtomObjAndEqualToStr(objAsFnObj.FnHead, glob.KeywordVal) && len(objAsFnObj.Params) == 1 {
+// 	// Check the requirement of the inner function/object
+// 	return ver.objIsDefinedAtomOrIsFnSatisfyItsReq(objAsFnObj.Params[0], state)
+// }
 
-	objAsFnObj, ok := obj.(*ast.FnObj)
-	if !ok {
-		objFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIsASet), []ast.Obj{obj}, glob.BuiltinLine0)
-		return ast.NewErrVerRet(objFact).AddExtraInfo(fmt.Sprintf("%s is not a function", obj))
-	}
+// // Try super function first (includes all special functions)
+// if ret := ver.isBuiltinFunction_VerReq(objAsFnObj, state); ret.IsTrue() || ret.IsErr() {
+// 	return ret
+// }
 
-	// If it's val(...), check the requirement of the inner function
-	if ast.IsAtomObjAndEqualToStr(objAsFnObj.FnHead, glob.KeywordVal) && len(objAsFnObj.Params) == 1 {
-		// Check the requirement of the inner function/object
-		return ver.objIsDefinedAtomOrIsFnSatisfyItsReq(objAsFnObj.Params[0], state)
-	}
+// If not a super function, check if it's a function template
+// if ast.IsAnonymousFnSet(objAsFnObj) {
+// 	objFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIsASet), []ast.Obj{obj}, glob.BuiltinLine0)
+// 	return ast.NewTrueVerRet(objFact, nil, "")
+// }
 
-	// Try super function first (includes all special functions)
-	if ret := ver.isBuiltinFunction_VerReq(objAsFnObj, state); ret.IsTrue() || ret.IsErr() {
-		return ret
-	}
-
-	// If not a super function, check if it's a function template
-	if ast.IsAnonymousFnSet(objAsFnObj) {
-		objFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIsASet), []ast.Obj{obj}, glob.BuiltinLine0)
-		return ast.NewTrueVerRet(objFact, nil, "")
-	}
-
-	// Otherwise, treat it as a regular function
-	return ver.parasSatisfyFnReq(objAsFnObj, state)
-}
+// Otherwise, treat it as a regular function
+// return ver.parasSatisfyFnReq(objAsFnObj, state)
+// 		return ver.objSatisfyFnReq(objAsFnObj, state)
+// 	case *ast.FnSetObj:
+// 	default:
+// 		panic(fmt.Sprintf("\n\nTODO:unknown object type in objIsDefinedAtomOrIsFnSatisfyItsReq: %T\n\n", obj))
+// 	}
+// }
 
 // TODO: 非常缺乏检查。因为这里的验证非常麻烦，{}里包括了事实，而事实里有fn，所以需要检查fn行不行
 func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerState) ast.VerRet {
@@ -107,7 +103,8 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 	}
 
 	// parent is ok
-	ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(setBuilderStruct.ParentSet, state)
+	// ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(setBuilderStruct.ParentSet, state)
+	ret := ver.objSatisfyFnReq(setBuilderStruct.ParentSet, state)
 	if ret.IsErr() {
 		return ret
 	}
@@ -198,7 +195,8 @@ func (ver *Verifier) tupleFnReq(objAsFnObj *ast.FnObj, state *VerState) ast.VerR
 	_ = state
 
 	for _, param := range objAsFnObj.Params {
-		execRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, state)
+		// execRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, state)
+		execRet := ver.objSatisfyFnReq(param, state)
 		if execRet.IsErr() {
 			return execRet
 		}
