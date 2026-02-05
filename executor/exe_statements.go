@@ -121,6 +121,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ast.StmtRet {
 		execRet = exec.setIsFnStmt(stmt)
 	case *ast.FnIsSubsetOfCartStmt:
 		execRet = exec.fnIsSubsetOfCartStmt(stmt)
+	case *ast.HaveFnEqual:
+		execRet = exec.haveFnEqual(stmt)
 	default:
 		execRet = ast.StmtErrRet(stmt, fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -1170,4 +1172,19 @@ func (exec *Executor) fnIsSubsetOfCartStmt(stmt *ast.FnIsSubsetOfCartStmt) ast.S
 	newFacts = append(newFacts, inferRet)
 
 	return exec.NewTrueStmtRet(stmt).AddInfers(newFacts)
+}
+
+func (exec *Executor) haveFnEqual(stmt *ast.HaveFnEqual) ast.StmtRet {
+	fnObj := ast.NewFnObj(ast.Atom(stmt.DefHeaderWithDom.Name), stmt.DefHeaderWithDom.Params.ToObjSlice())
+	equalFact := ast.NewEqualFact(fnObj, stmt.EqualTo)
+
+	fnSetWithName := ast.NewFnSetObjWithName(stmt.DefHeaderWithDom.Name, stmt.DefHeaderWithDom.Params, stmt.DefHeaderWithDom.ParamSets, stmt.DefHeaderWithDom.DomFacts, stmt.RetSet, []ast.Spec_OrFact{equalFact})
+
+	inFact := ast.NewInFactWithObj(ast.Atom(stmt.DefHeaderWithDom.Name), fnSetWithName)
+	ret := exec.Env.NewFactWithCheckingNameDefined(inFact)
+	if ret.IsNotTrue() {
+		return ast.StmtErrRet(stmt, ret.String())
+	}
+
+	return exec.NewTrueStmtRet(stmt).AddInfers([]ast.InferRet{ret})
 }
