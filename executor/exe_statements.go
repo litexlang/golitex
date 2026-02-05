@@ -1180,11 +1180,16 @@ func (exec *Executor) haveFnEqual(stmt *ast.HaveFnEqual) ast.StmtRet {
 
 	fnSetWithName := ast.NewFnSetObjWithName(stmt.DefHeaderWithDom.Name, stmt.DefHeaderWithDom.Params, stmt.DefHeaderWithDom.ParamSets, stmt.DefHeaderWithDom.DomFacts, stmt.RetSet, []ast.Spec_OrFact{equalFact})
 
-	inFact := ast.NewInFactWithObj(ast.Atom(stmt.DefHeaderWithDom.Name), fnSetWithName)
-	ret := exec.Env.NewFactWithCheckingNameDefined(inFact)
-	if ret.IsNotTrue() {
-		return ast.StmtErrRet(stmt, ret.String())
+	ret, msg := exec.Env.CheckAtomObjNameIsValidAndAvailableThenDefineIt(stmt.DefHeaderWithDom.Name)
+	if !ret {
+		return ast.StmtErrRet(stmt, msg)
 	}
 
-	return exec.NewTrueStmtRet(stmt).AddInfers([]ast.InferRet{ret})
+	inFact := ast.NewInFactWithObj(ast.Atom(stmt.DefHeaderWithDom.Name), fnSetWithName)
+	ret2 := exec.Env.NewFactWithCheckingNameDefined(inFact)
+	if ret2.IsNotTrue() {
+		return ast.StmtErrRet(stmt, ret2.String())
+	}
+
+	return exec.NewTrueStmtRet(stmt).AddInfers([]ast.InferRet{ret2})
 }

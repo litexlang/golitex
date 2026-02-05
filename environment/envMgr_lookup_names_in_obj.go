@@ -126,7 +126,38 @@ func (envMgr *EnvMgr) lookupNamesInFnSetObj(obj ast.FnSetObj, extraParams map[st
 
 		return ast.NewTrueShortRet()
 	case *ast.FnSetObjWithName:
-		panic("TODO: lookupNamesInFnSetObj: FnSetObjWithName is not implemented")
+		newExtraParams := make(map[string]struct{})
+		for k, v := range extraParams {
+			newExtraParams[k] = v
+		}
+		for _, param := range fnSetObj.Params {
+			newExtraParams[param] = struct{}{}
+		}
+
+		for _, paramSet := range fnSetObj.ParamSets {
+			if ret := envMgr.LookupNamesInObj(paramSet, newExtraParams); ret.IsNotTrue() {
+				return ret
+			}
+		}
+
+		if ret := envMgr.LookupNamesInObj(fnSetObj.RetSet, newExtraParams); ret.IsNotTrue() {
+			return ret
+		}
+
+		for _, domFact := range fnSetObj.DomFacts {
+			if ret := envMgr.LookUpNamesInFact(domFact, newExtraParams); ret.IsNotTrue() {
+				return ret
+			}
+		}
+
+		for _, thenFact := range fnSetObj.ThenFacts {
+			if ret := envMgr.LookUpNamesInFact(thenFact, newExtraParams); ret.IsNotTrue() {
+				return ret
+			}
+		}
+
+		return ast.NewTrueShortRet()
+
 	default:
 		panic(fmt.Sprintf("unknown function set object type: %T", fnSetObj))
 	}
