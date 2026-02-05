@@ -56,7 +56,7 @@ func (ver *Verifier) checkFnsReq(stmt ast.SpecificFactStmt, state *VerState) ast
 // 		objAsFnObj := objAs
 // If it's val(...), check the requirement of the inner function
 // if ast.IsAtomObjAndEqualToStr(objAsFnObj.FnHead, glob.KeywordVal) && len(objAsFnObj.Params) == 1 {
-// 	// Check the requirement of the inner function/object
+// Check the requirement of the inner function/object
 // 	return ver.objIsDefinedAtomOrIsFnSatisfyItsReq(objAsFnObj.Params[0], state)
 // }
 
