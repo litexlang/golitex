@@ -19,7 +19,7 @@ func (ver *Verifier) objSatisfyFnReq(obj ast.Obj, state *VerState) ast.VerRet {
 	case ast.FnSetObj:
 		return ver.fnSetObjSatisfyFnReq(objAs, state)
 	case *ast.SetBuilderObj:
-		panic("")
+		panic("object type SetBuilderObj is not supported")
 	default:
 		panic(fmt.Sprintf("unknown object type: %T", obj))
 	}
@@ -143,5 +143,5 @@ func (ver *Verifier) fnSetObjSatisfyFnReqWhenFnNameIsEmpty(fnSetObj *ast.FnSetOb
 }
 
 func (ver *Verifier) fnSetObjSatisfyFnReqWhenFnNameIsNotEmpty(fnSetObj *ast.FnSetObjWithName, state *VerState) ast.VerRet {
-	panic("")
+	panic("fnSetObjSatisfyFnReqWhenFnNameIsNotEmpty is not supported")
 }
