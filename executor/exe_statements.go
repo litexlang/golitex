@@ -146,7 +146,7 @@ func (exec *Executor) factStmt(stmt ast.FactStmt) ast.StmtRet {
 		inferRets := []ast.InferRet{ret}
 		return exec.NewTrueStmtRet(stmt).AddVerifyProcesses([]ast.VerRet{verRet}).AddInfers(inferRets)
 	} else if verRet.IsUnknown() {
-		return ast.NewUnknownStmtEmptyRet(stmt)
+		return ast.NewUnknownStmtEmptyRet(stmt).AddExtraInfo(verRet.String())
 		// return exec.AddStmtToStmtRet(verRet.ToStmtRet(), stmt).AddExtraInfo(stmt.String())
 	} else {
 		execRet := ast.StmtErrRet(stmt, "unknown ver ret")
