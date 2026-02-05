@@ -1178,8 +1178,6 @@ func (exec *Executor) haveFnEqual(stmt *ast.HaveFnEqual) ast.StmtRet {
 	fnObj := ast.NewFnObj(ast.Atom(stmt.DefHeaderWithDom.Name), stmt.DefHeaderWithDom.Params.ToObjSlice())
 	equalFact := ast.NewEqualFact(fnObj, stmt.EqualTo)
 
-	forallFact := ast.NewUniFact(stmt.DefHeaderWithDom.Params, stmt.DefHeaderWithDom.ParamSets, stmt.DefHeaderWithDom.DomFacts, []ast.Spec_OrFact{equalFact}, stmt.Line)
-
 	fnSetWithName := ast.NewFnSetObjWithName(stmt.DefHeaderWithDom.Name, stmt.DefHeaderWithDom.Params, stmt.DefHeaderWithDom.ParamSets, stmt.DefHeaderWithDom.DomFacts, stmt.RetSet, []ast.Spec_OrFact{equalFact})
 
 	ret, msg := exec.Env.CheckAtomObjNameIsValidAndAvailableThenDefineIt(stmt.DefHeaderWithDom.Name)
@@ -1193,10 +1191,5 @@ func (exec *Executor) haveFnEqual(stmt *ast.HaveFnEqual) ast.StmtRet {
 		return ast.StmtErrRet(stmt, ret2.String())
 	}
 
-	ret3 := exec.Env.NewFactWithCheckingNameDefined(forallFact)
-	if ret3.IsNotTrue() {
-		return ast.StmtErrRet(stmt, ret3.String())
-	}
-
-	return exec.NewTrueStmtRet(stmt).AddInfers([]ast.InferRet{ret2, ret3})
+	return exec.NewTrueStmtRet(stmt).AddInfers([]ast.InferRet{ret2})
 }

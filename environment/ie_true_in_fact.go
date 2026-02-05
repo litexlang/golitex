@@ -1062,5 +1062,23 @@ func (ie *InferEngine) trueInFactByFnInFnSet(fact *ast.PureSpecificFactStmt) ast
 	}
 
 	ie.EnvMgr.StoreFnIsAFn(fn, fnSetObj)
-	return ast.NewTrueInferRet(fact)
+
+	switch asFnSetObj := fnSetObj.(type) {
+	case *ast.FnSetObjWithoutName:
+		return ast.NewTrueInferRet(fact)
+	case *ast.FnSetObjWithName:
+		result := ast.NewTrueInferRet(fact)
+		for _, thenFact := range asFnSetObj.ThenFacts {
+			forallFact := ast.NewUniFact(asFnSetObj.Params, asFnSetObj.ParamSets, asFnSetObj.DomFacts, []ast.Spec_OrFact{thenFact}, glob.BuiltinLine0)
+			inferRet := ie.EnvMgr.NewFactWithCheckingNameDefined(forallFact)
+			if inferRet.IsErr() {
+				return inferRet
+			}
+			result = result.AddInfer(forallFact)
+		}
+
+		return result
+	default:
+		panic(fmt.Sprintf("unknown function set object type: %T", fnSetObj))
+	}
 }
