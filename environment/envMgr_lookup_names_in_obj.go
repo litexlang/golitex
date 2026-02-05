@@ -26,6 +26,8 @@ func (envMgr *EnvMgr) LookupNamesInObj(obj ast.Obj, extraParams map[string]struc
 		return envMgr.lookupAtomObjName(asObj, extraParams)
 	case *ast.FnObj:
 		return envMgr.lookupNamesInFnObj(asObj, extraParams)
+	case *ast.FnSetObj:
+		return envMgr.lookupNamesInFnSetObj(asObj, extraParams)
 	default:
 		return ast.NewErrShortRet()
 	}
@@ -107,4 +109,22 @@ func (envMgr *EnvMgr) lookupNamesInSetBuilder(obj ast.Obj, extraParams map[strin
 	}
 
 	return ast.NewTrueShortRet()
+}
+
+func (envMgr *EnvMgr) lookupNamesInFnSetObj(fnSetObj *ast.FnSetObj, extraParams map[string]struct{}) ast.ShortRet {
+	if fnSetObj.FnName == "" {
+		for _, paramSet := range fnSetObj.ParamSets {
+			if ret := envMgr.LookupNamesInObj(paramSet, extraParams); ret.IsNotTrue() {
+				return ret
+			}
+		}
+
+		if ret := envMgr.LookupNamesInObj(fnSetObj.RetSet, extraParams); ret.IsNotTrue() {
+			return ret
+		}
+
+		return ast.NewTrueShortRet()
+	} else {
+		panic("目前如果有函数的名字，那lookupNamesInFnSetObj不应该被调用")
+	}
 }
