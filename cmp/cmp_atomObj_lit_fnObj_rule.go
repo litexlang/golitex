@@ -15,48 +15,49 @@
 package litex_comparator
 
 import (
-	"fmt"
 	ast "golitex/ast"
 )
 
 func cmpObjLiterally(left, right ast.Obj) (bool, error) {
-	typeComp, objEnum, err := CmpObjType(left, right)
-	if typeComp != 0 || err != nil {
-		return false, err
-	}
+	return left.String() == right.String(), nil
 
-	if objEnum == AtomObjEnum {
-		cmp, err := cmpAtomObjLit(left.(ast.Atom), right.(ast.Atom))
-		if err != nil {
-			return false, err
-		}
-		return cmp == 0, nil
-	} else if objEnum == FnObjEnum {
-		ok, err := cmpFnObjRule(left.(*ast.FnObj), right.(*ast.FnObj))
-		if err != nil {
-			return false, err
-		}
-		return ok, nil
-	}
+	// typeComp, objEnum, err := CmpObjType(left, right)
+	// if typeComp != 0 || err != nil {
+	// 	return false, err
+	// }
 
-	return false, fmt.Errorf("")
+	// if objEnum == AtomObjEnum {
+	// 	cmp, err := cmpAtomObjLit(left.(ast.Atom), right.(ast.Atom))
+	// 	if err != nil {
+	// 		return false, err
+	// 	}
+	// 	return cmp == 0, nil
+	// } else if objEnum == FnObjEnum {
+	// 	ok, err := cmpFnObjRule(left.(*ast.FnObj), right.(*ast.FnObj))
+	// 	if err != nil {
+	// 		return false, err
+	// 	}
+	// 	return ok, nil
+	// }
+
+	// return false, fmt.Errorf("")
 }
 
-func cmpFnObjRule(left, right *ast.FnObj) (bool, error) {
-	if comp, err := cmpObjLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
-		return comp == 0, err
-	}
+// func cmpFnObjRule(left, right *ast.FnObj) (bool, error) {
+// if comp, err := cmpObjLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
+// 	return comp == 0, err
+// }
 
-	if len(left.Params) != len(right.Params) {
-		return false, nil
-	}
+// if len(left.Params) != len(right.Params) {
+// 	return false, nil
+// }
 
-	for i := range len(left.Params) {
-		ret := CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left.Params[i], right.Params[i])
-		if ret.IsNotTrue() {
-			return false, nil
-		}
-	}
+// for i := range len(left.Params) {
+// 	ret := CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left.Params[i], right.Params[i])
+// 	if ret.IsNotTrue() {
+// 		return false, nil
+// 	}
+// }
 
-	return true, nil
-}
+// return true, nil
+// }

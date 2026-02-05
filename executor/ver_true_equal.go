@@ -23,22 +23,9 @@ import (
 )
 
 func (ver *Verifier) verEqualMainProcessByBuiltinRules(left ast.Obj, right ast.Obj, state *VerState) ast.VerRet {
-	// if verRet := ver.verEqualByUseValuesOfSymbols(left, right, state); verRet.IsErr() || verRet.IsTrue() {
-	// 	return verRet
-	// }
-
-	// if verRet := ver.verEqualBySetMinusOfListSets(left, right, state); verRet.IsErr() || verRet.IsTrue() {
-	// 	return verRet
-	// }
-
 	if verRet := ver.verEqualByEitherLeftOrRightIsTuple(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
-
-	// if verRet := ver.verEqualByLeftAndRightAreSetBuilders(left, right, state); verRet.IsErr() || verRet.IsTrue() {
-	// 	return verRet
-	// }
-
 	return ast.NewEmptyUnknownVerRet()
 }
 
