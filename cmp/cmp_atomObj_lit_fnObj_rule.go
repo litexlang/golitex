@@ -15,49 +15,46 @@
 package litex_comparator
 
 import (
+	"fmt"
 	ast "golitex/ast"
 )
 
 func cmpObjLiterally(left, right ast.Obj) (bool, error) {
-	return left.String() == right.String(), nil
-
-	// typeComp, objEnum, err := CmpObjType(left, right)
-	// if typeComp != 0 || err != nil {
-	// 	return false, err
-	// }
-
-	// if objEnum == AtomObjEnum {
-	// 	cmp, err := cmpAtomObjLit(left.(ast.Atom), right.(ast.Atom))
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-	// 	return cmp == 0, nil
-	// } else if objEnum == FnObjEnum {
-	// 	ok, err := cmpFnObjRule(left.(*ast.FnObj), right.(*ast.FnObj))
-	// 	if err != nil {
-	// 		return false, err
-	// 	}
-	// 	return ok, nil
-	// }
-
-	// return false, fmt.Errorf("")
+	switch asLeft := left.(type) {
+	case ast.Atom:
+		switch asRight := right.(type) {
+		case ast.Atom:
+			return asLeft.String() == asRight.String(), nil
+		default:
+			return false, fmt.Errorf("unknown type: %T", right)
+		}
+	case *ast.FnObj:
+		switch asRight := right.(type) {
+		case *ast.FnObj:
+			return asLeft.String() == asRight.String(), nil
+		default:
+			return false, fmt.Errorf("unknown type: %T", right)
+		}
+	case *ast.FnSetObj:
+		switch asRight := right.(type) {
+		case *ast.FnSetObj:
+			return cmpFnSetObjLiterally(asLeft, asRight)
+		default:
+			return false, fmt.Errorf("unknown type: %T", right)
+		}
+	default:
+		panic("TODO: cmpObjLiterally: unknown type: " + fmt.Sprintf("%T", left))
+	}
 }
 
-// func cmpFnObjRule(left, right *ast.FnObj) (bool, error) {
-// if comp, err := cmpObjLit(left.FnHead, right.FnHead); comp != 0 || err != nil {
-// 	return comp == 0, err
-// }
-
-// if len(left.Params) != len(right.Params) {
-// 	return false, nil
-// }
-
-// for i := range len(left.Params) {
-// 	ret := CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left.Params[i], right.Params[i])
-// 	if ret.IsNotTrue() {
-// 		return false, nil
-// 	}
-// }
-
-// return true, nil
-// }
+func cmpFnSetObjLiterally(left, right *ast.FnSetObj) (bool, error) {
+	if left.IsNameEmpty() && right.IsNameEmpty() {
+		return left.String() == right.String(), nil
+	} else if left.IsNameEmpty() && !right.IsNameEmpty() {
+		return false, nil
+	} else if !left.IsNameEmpty() && right.IsNameEmpty() {
+		return false, nil
+	} else {
+		panic("\n\nTODO: 如果两个fn set对象都有名字，那应该怎么比较？\n\n")
+	}
+}
