@@ -32,9 +32,35 @@ func (ver *Verifier) fnObjSatisfyFnReq(fnObj *ast.FnObj, state *VerState) ast.Ve
 		return verRetOfHead
 	}
 
-	verRetOfFnArgs := ver.ArgsSatisfyFnParamRequirements(fnSet, fnObj.Params, state)
-	if verRetOfFnArgs.IsNotTrue() {
-		return verRetOfFnArgs
+	if len(fnObj.Params) != len(fnSet.ParamSets) {
+		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("the number of parameters of %s is not equal to the number of parameter sets of %s", fnObj, fnSet))
+	}
+
+	if fnSet.FnName != "" {
+		verRetOfFnArgs := ver.ArgsSatisfyFnParamRequirements(fnSet, fnObj.Params, state)
+		if verRetOfFnArgs.IsNotTrue() {
+			return verRetOfFnArgs
+		}
+		return ast.NewTrueVerRet(nil, nil, "")
+	} else {
+		verRetOfHead := ver.ArgsSatisfyFnParamRequirementsWhenFnNameIsEmpty(fnSet, fnObj.Params, state)
+		if verRetOfHead.IsNotTrue() {
+			return verRetOfHead
+		}
+		return ast.NewTrueVerRet(nil, nil, "")
+	}
+}
+
+func (ver *Verifier) ArgsSatisfyFnParamRequirementsWhenFnNameIsEmpty(fnSet *ast.FnSetObj, arguments ast.ObjSlice, state *VerState) ast.VerRet {
+	ver.newEnv()
+	defer ver.deleteEnv()
+
+	for i, paramSet := range fnSet.ParamSets {
+		inFact := ast.NewInFactWithObj(arguments[i], paramSet)
+		verRet := ver.VerFactStmt(inFact, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
 	}
 
 	return ast.NewTrueVerRet(nil, nil, "")
