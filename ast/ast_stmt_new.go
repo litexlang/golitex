@@ -52,8 +52,8 @@ func NewDefHeader(name string, params []string, setParams []Obj) *DefHeader {
 	return &DefHeader{name, params, setParams}
 }
 
-func NewDefHeaderWithDom(name string, params []string, paramSets []Obj, domFacts ReversibleFacts, line uint) *DefHeaderWithDom {
-	return &DefHeaderWithDom{name, params, paramSets, domFacts, line}
+func NewDefHeaderWithDom(name string, params []string, paramSets []Obj, domFacts ReversibleFacts) *DefHeaderWithDom {
+	return &DefHeaderWithDom{name, params, paramSets, domFacts}
 }
 
 // func NewHaveObjStStmt(objNames []string, fact *SpecFactStmt, line uint) *HaveObjStStmt {
@@ -349,4 +349,8 @@ func NewExistSpecificFactStmt(isTrue bool, existFreeParams []string, existFreePa
 
 func NewFnSetObjWithoutName(paramSets ObjSlice, retSet Obj) *FnSetObjWithoutName {
 	return &FnSetObjWithoutName{ParamSets: paramSets, RetSet: retSet}
+}
+
+func NewHaveFnEqual(defHeaderWithDom *DefHeaderWithDom, retSet Obj, equalTo Obj, proofs StmtSlice, line uint) *HaveFnEqual {
+	return &HaveFnEqual{defHeaderWithDom, retSet, equalTo, proofs, line}
 }

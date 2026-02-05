@@ -158,7 +158,7 @@ func (defHeaderWithDom *DefHeaderWithDom) Instantiate(uniMap map[string]Obj) (*D
 		return nil, err
 	}
 
-	return NewDefHeaderWithDom(defHeaderWithDom.Name, defHeaderWithDom.Params, newParamSets, newDomFacts, defHeaderWithDom.Line), nil
+	return NewDefHeaderWithDom(defHeaderWithDom.Name, defHeaderWithDom.Params, newParamSets, newDomFacts), nil
 }
 
 func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
@@ -689,6 +689,11 @@ func (stmt *HaveFnEqual) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 			return nil, err
 		}
 	}
+	newRetSet, err := stmt.RetSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
 	newEqualTo, err := stmt.EqualTo.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
@@ -697,7 +702,7 @@ func (stmt *HaveFnEqual) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &HaveFnEqual{newDefHeaderWithDom, newEqualTo, newProofs, stmt.Line}, nil
+	return NewHaveFnEqual(newDefHeaderWithDom, newRetSet, newEqualTo, newProofs, stmt.Line), nil
 }
 
 // func (stmt *HaveFnLiftStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

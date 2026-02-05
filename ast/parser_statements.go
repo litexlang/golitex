@@ -44,7 +44,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColon {
 				ret, err = p.haveFnStmt(tb)
 			} else {
-				ret, err = p.haveFnEqualStmt(tb)
+				// ret, err = p.haveFnEqualStmt(tb)
+				ret, err = p.haveFnEqual(tb)
 			}
 		} else if slices.Contains(tb.header.slice, glob.KeywordSt) {
 			ret, err = p.haveObjStStmt(tb)
@@ -3981,4 +3982,48 @@ func (p *TbParser) fnIsSubsetOfCartStmt(tb *tokenBlock) (*FnIsSubsetOfCartStmt, 
 	}
 
 	return NewFnIsSubsetOfCartStmt(obj, fnSetObjAsFnObj, tb.line), nil
+}
+
+func (p *TbParser) haveFnEqual(tb *tokenBlock) (*HaveFnEqual, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeywordFn)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	name, err := tb.header.next()
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	params, paramSets, doms, err := p.leftBraceParamsAndParamSetsAndDomsAndRightBrace(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	retSet, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolEqual)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	equalTo, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	proofs, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	return NewHaveFnEqual(NewDefHeaderWithDom(name, params, paramSets, doms), retSet, equalTo, proofs, tb.line), nil
 }
