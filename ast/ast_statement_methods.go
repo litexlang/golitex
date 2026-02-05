@@ -165,20 +165,8 @@ func NewInFactWithObj(param Obj, paramSet Obj) *PureSpecificFactStmt {
 }
 
 func IsFnSet(obj Obj) bool {
-	_, ok := obj.(*FnSetObj)
+	_, ok := obj.(FnSetObj)
 	return ok
-
-	// objAsFnObj, ok := obj.(*FnObj)
-	// if !ok {
-	// 	return false
-	// }
-
-	// objHeadAsFnObj, ok := objAsFnObj.FnHead.(*FnObj)
-	// if !ok {
-	// 	return false
-	// }
-
-	// return IsAtomObjAndEqualToStr(objHeadAsFnObj.FnHead, glob.KeywordFn)
 }
 
 func (stmt *PureSpecificFactStmt) ReverseSpecFactParamsOrder() (*PureSpecificFactStmt, error) {

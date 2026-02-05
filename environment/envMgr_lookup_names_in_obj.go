@@ -26,7 +26,7 @@ func (envMgr *EnvMgr) LookupNamesInObj(obj ast.Obj, extraParams map[string]struc
 		return envMgr.lookupAtomObjName(asObj, extraParams)
 	case *ast.FnObj:
 		return envMgr.lookupNamesInFnObj(asObj, extraParams)
-	case *ast.FnSetObj:
+	case ast.FnSetObj:
 		return envMgr.lookupNamesInFnSetObj(asObj, extraParams)
 	default:
 		return ast.NewErrShortRet()
@@ -111,8 +111,9 @@ func (envMgr *EnvMgr) lookupNamesInSetBuilder(obj ast.Obj, extraParams map[strin
 	return ast.NewTrueShortRet()
 }
 
-func (envMgr *EnvMgr) lookupNamesInFnSetObj(fnSetObj *ast.FnSetObj, extraParams map[string]struct{}) ast.ShortRet {
-	if fnSetObj.IsNameEmpty() {
+func (envMgr *EnvMgr) lookupNamesInFnSetObj(obj ast.FnSetObj, extraParams map[string]struct{}) ast.ShortRet {
+	switch fnSetObj := obj.(type) {
+	case *ast.FnSetObjWithoutName:
 		for _, paramSet := range fnSetObj.ParamSets {
 			if ret := envMgr.LookupNamesInObj(paramSet, extraParams); ret.IsNotTrue() {
 				return ret
@@ -124,7 +125,9 @@ func (envMgr *EnvMgr) lookupNamesInFnSetObj(fnSetObj *ast.FnSetObj, extraParams 
 		}
 
 		return ast.NewTrueShortRet()
-	} else {
-		panic("目前如果有函数的名字，那lookupNamesInFnSetObj不应该被调用")
+	case *ast.FnSetObjWithName:
+		panic("TODO: lookupNamesInFnSetObj: FnSetObjWithName is not implemented")
+	default:
+		panic(fmt.Sprintf("unknown function set object type: %T", fnSetObj))
 	}
 }

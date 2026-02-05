@@ -20,10 +20,23 @@ import (
 	"strings"
 )
 
+type FnSetObj interface {
+	obj()
+	String() string
+	Instantiate(map[string]Obj) (Obj, error)
+	ToLatexString() string
+}
+
+type FnSetObjWithoutName struct {
+	ParamSets ObjSlice
+	DomFacts  ReversibleFacts
+	RetSet    Obj
+}
+
 // 有两种情况： 有名字，没名字
 // 有名字：fn f(x, y R: ... ) ret {...}
 // 没名字：fn (R, R) ret {...}。这时候 param 和 fnName 和 dom 和 then 全是空的
-type FnSetObj struct {
+type FnSetObjWithName struct {
 	FnName    string
 	Params    []string
 	ParamSets ObjSlice
@@ -32,50 +45,40 @@ type FnSetObj struct {
 	ThenFacts ReversibleFacts
 }
 
-func NewFnSetObj(fnName string, params []string, paramSets ObjSlice, domFacts ReversibleFacts, retSet Obj, thenFacts ReversibleFacts) *FnSetObj {
-	return &FnSetObj{fnName, params, paramSets, domFacts, retSet, thenFacts}
+func NewFnSetObjWithName(fnName string, params []string, paramSets ObjSlice, domFacts ReversibleFacts, retSet Obj, thenFacts ReversibleFacts) *FnSetObjWithName {
+	return &FnSetObjWithName{fnName, params, paramSets, domFacts, retSet, thenFacts}
 }
 
-func (f *FnSetObj) String() string {
+func (f *FnSetObjWithName) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFn)
 
-	if !f.IsNameEmpty() {
-		builder.WriteString(f.FnName)
+	builder.WriteString(f.FnName)
 
-		builder.WriteString("(")
-		builder.WriteString(StrObjSetPairs(f.Params, f.ParamSets))
+	builder.WriteString("(")
+	builder.WriteString(StrObjSetPairs(f.Params, f.ParamSets))
 
-		if len(f.DomFacts) > 0 {
-			builder.WriteString(glob.KeySymbolColon)
-			builder.WriteString(" ")
-			builder.WriteString(inlineReversibleFactsString(f.DomFacts))
-		}
-
-		builder.WriteString(")")
-
-		builder.WriteString(f.RetSet.String())
-
-		if len(f.ThenFacts) > 0 {
-			builder.WriteString(" ")
-			builder.WriteString(glob.KeySymbolLeftCurly)
-			builder.WriteString(inlineReversibleFactsString(f.ThenFacts))
-			builder.WriteString(glob.KeySymbolRightCurly)
-		}
-
-		return builder.String()
-	} else {
-		builder.WriteString("(")
-		for i := range len(f.ParamSets) {
-			builder.WriteString(f.ParamSets[i].String())
-		}
-		builder.WriteString(")")
-		builder.WriteString(f.RetSet.String())
-		return builder.String()
+	if len(f.DomFacts) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteString(" ")
+		builder.WriteString(inlineReversibleFactsString(f.DomFacts))
 	}
+
+	builder.WriteString(")")
+
+	builder.WriteString(f.RetSet.String())
+
+	if len(f.ThenFacts) > 0 {
+		builder.WriteString(" ")
+		builder.WriteString(glob.KeySymbolLeftCurly)
+		builder.WriteString(inlineReversibleFactsString(f.ThenFacts))
+		builder.WriteString(glob.KeySymbolRightCurly)
+	}
+
+	return builder.String()
 }
 
-func (f *FnSetObj) Instantiate(uniMap map[string]Obj) (Obj, error) {
+func (f *FnSetObjWithName) Instantiate(uniMap map[string]Obj) (Obj, error) {
 	// 把 uniMap 里的 和 params 冲突的拿出来
 	newUniMap := maps.Clone(uniMap)
 	for _, param := range f.Params {
@@ -99,9 +102,5 @@ func (f *FnSetObj) Instantiate(uniMap map[string]Obj) (Obj, error) {
 		return nil, err
 	}
 
-	return NewFnSetObj(f.FnName, f.Params, newParamSets, newDomFacts, f.RetSet, newThenFacts), nil
-}
-
-func (f *FnSetObj) IsNameEmpty() bool {
-	return f.FnName == ""
+	return NewFnSetObjWithName(f.FnName, f.Params, newParamSets, newDomFacts, f.RetSet, newThenFacts), nil
 }

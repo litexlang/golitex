@@ -1056,7 +1056,7 @@ func (ie *InferEngine) trueInFactByFnInFnSet(fact *ast.PureSpecificFactStmt) ast
 	fn := fact.Params[0]
 	fnSet := fact.Params[1]
 
-	fnSetObj, ok := fnSet.(*ast.FnSetObj)
+	fnSetObj, ok := fnSet.(ast.FnSetObj)
 	if !ok {
 		return ast.NewUnknownInferRet(fact)
 	}

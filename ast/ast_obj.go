@@ -25,12 +25,12 @@ type Obj interface {
 	String() string
 	Instantiate(map[string]Obj) (Obj, error)
 	ToLatexString() string
-	// ReplaceObj(oldObj Obj, newObj Obj) Obj // 这是必要的，因为 have fn 的 proof 里可能出现 replace obj 的情况
 }
 
-func (f Atom) obj()      {}
-func (f *FnObj) obj()    {}
-func (f *FnSetObj) obj() {}
+func (f Atom) obj()                 {}
+func (f *FnObj) obj()               {}
+func (f *FnSetObjWithName) obj()    {}
+func (f *FnSetObjWithoutName) obj() {}
 
 func (f Atom) ReplaceObj(oldObj Obj, newObj Obj) Obj {
 	if f.String() == oldObj.String() {

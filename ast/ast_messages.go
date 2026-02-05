@@ -1616,3 +1616,15 @@ func (stmt *FnIsSubsetOfCartStmt) String() string {
 	builder.WriteString(stmt.FnSetObj.String())
 	return builder.String()
 }
+
+func (f *FnSetObjWithoutName) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordFn)
+	builder.WriteString("(")
+	for i := range len(f.ParamSets) {
+		builder.WriteString(f.ParamSets[i].String())
+	}
+	builder.WriteString(")")
+	builder.WriteString(f.RetSet.String())
+	return builder.String()
+}

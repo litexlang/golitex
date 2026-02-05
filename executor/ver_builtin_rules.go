@@ -295,7 +295,7 @@ func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt ast.SpecificFactStmt, 
 		return ast.NewErrVerRet(stmt).AddExtraInfo(fmt.Sprintf("%s expects 1 parameter, got %d", glob.KeywordIsANonEmptySet, len(asPureStmt.Params)))
 	}
 
-	if _, ok := asPureStmt.Params[0].(*ast.FnSetObj); ok {
+	if _, ok := asPureStmt.Params[0].(ast.FnSetObj); ok {
 		return ver.verFnSetIsNonEmpty(stmt, state)
 	}
 
@@ -480,28 +480,26 @@ func (ver *Verifier) verFnSetIsNonEmpty(stmt ast.SpecificFactStmt, state *VerSta
 		return ast.NewEmptyUnknownVerRet()
 	}
 
-	fnSetObj, ok := asPureStmt.Params[0].(*ast.FnSetObj)
-	if !ok {
-		return ast.NewEmptyUnknownVerRet()
-	}
+	switch fnSetObj := asPureStmt.Params[0].(type) {
+	case *ast.FnSetObjWithoutName:
+		for _, paramSet := range fnSetObj.ParamSets {
+			isNonEmptySet := ast.NewIsANonEmptySetFact(paramSet, glob.BuiltinLine0)
+			verRet := ver.VerFactStmt(isNonEmptySet, state)
+			if verRet.IsNotTrue() {
+				return verRet
+			}
+		}
 
-	if !fnSetObj.IsNameEmpty() {
-		return ast.NewEmptyUnknownVerRet()
-	}
-
-	for _, paramSet := range fnSetObj.ParamSets {
-		isNonEmptySet := ast.NewIsANonEmptySetFact(paramSet, glob.BuiltinLine0)
+		isNonEmptySet := ast.NewIsANonEmptySetFact(fnSetObj.RetSet, glob.BuiltinLine0)
 		verRet := ver.VerFactStmt(isNonEmptySet, state)
 		if verRet.IsNotTrue() {
 			return verRet
 		}
+	case *ast.FnSetObjWithName:
+		panic("TODO: verFnSetIsNonEmpty: FnSetObjWithName is not implemented")
+	default:
+		panic(fmt.Sprintf("unknown function set object type: %T", asPureStmt.Params[0]))
 	}
 
-	isNonEmptySet := ast.NewIsANonEmptySetFact(fnSetObj.RetSet, glob.BuiltinLine0)
-	verRet := ver.VerFactStmt(isNonEmptySet, state)
-	if verRet.IsNotTrue() {
-		return verRet
-	}
-
-	return ast.NewTrueVerRet(stmt, nil, fmt.Sprintf("%s is a nonempty set because its param sets and return set are nonempty sets", fnSetObj))
+	return ast.NewTrueVerRet(stmt, nil, "")
 }
