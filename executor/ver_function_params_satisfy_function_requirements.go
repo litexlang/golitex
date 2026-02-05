@@ -41,5 +41,36 @@ func (ver *Verifier) fnObjSatisfyFnReq(fnObj *ast.FnObj, state *VerState) ast.Ve
 }
 
 func (ver *Verifier) ArgsSatisfyFnParamRequirements(fnSet *ast.FnSetObj, arguments ast.ObjSlice, state *VerState) ast.VerRet {
-	panic("")
+	ver.newEnv()
+	defer ver.deleteEnv()
+
+	paramArgMap := make(map[string]ast.Obj)
+	for i, param := range fnSet.Params {
+		paramArgMap[param] = arguments[i]
+	}
+
+	for i, paramSet := range fnSet.ParamSets {
+		newParamSet, err := paramSet.Instantiate(paramArgMap)
+		if err != nil {
+			return ast.NewErrVerRet(nil).AddExtraInfo(err.Error())
+		}
+		inFact := ast.NewInFactWithObj(arguments[i], newParamSet)
+		verRet := ver.VerFactStmt(inFact, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	}
+
+	for _, fact := range fnSet.DomFacts {
+		newFact, err := fact.InstantiateFact(paramArgMap)
+		if err != nil {
+			return ast.NewErrVerRet(fact).AddExtraInfo(err.Error())
+		}
+		verRet := ver.VerFactStmt(newFact.(ast.FactStmt), state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	}
+
+	return ast.NewTrueVerRet(nil, nil, "")
 }
