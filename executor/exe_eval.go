@@ -193,7 +193,8 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWit
 
 func (exec *Executor) fnObjParamsInFnDomain(fnObj *ast.FnObj) ast.StmtRet {
 	ver := NewVerifier(exec.Env)
-	return ver.objIsDefinedAtomOrIsFnSatisfyItsReq(fnObj, Round0NoMsg()).ToStmtRet()
+	// return ver.objIsDefinedAtomOrIsFnSatisfyItsReq(fnObj, Round0NoMsg()).ToStmtRet()
+	return ver.objSatisfyFnReq(fnObj, Round0NoMsg()).ToStmtRet()
 }
 
 func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ast.StmtRet) {
