@@ -1,1 +1,3 @@
-have fn f(x, y Z) R = x + y
+have fn f(x, y Z) R =:
+    case x = y: x + y
+    case x > y: x - y

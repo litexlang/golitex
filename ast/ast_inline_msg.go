@@ -501,6 +501,10 @@ func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
 	return s.String()
 }
 
+func (s *HaveFnEqualCaseByCase) InlineString() string {
+	return s.String()
+}
+
 func (s *WitnessStmt) InlineString() string {
 	return s.String()
 }

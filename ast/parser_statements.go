@@ -3984,7 +3984,7 @@ func (p *TbParser) fnIsSubsetOfCartStmt(tb *tokenBlock) (*FnIsSubsetOfCartStmt, 
 	return NewFnIsSubsetOfCartStmt(obj, fnSetObjAsFnObj, tb.line), nil
 }
 
-func (p *TbParser) haveFnEqual(tb *tokenBlock) (*HaveFnEqual, error) {
+func (p *TbParser) haveFnEqual(tb *tokenBlock) (Stmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -4015,15 +4015,98 @@ func (p *TbParser) haveFnEqual(tb *tokenBlock) (*HaveFnEqual, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	equalTo, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+	// Check if it's case-by-case or simple equal
+	if tb.header.is(glob.KeySymbolColon) {
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
 
-	proofs, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+		// Case-by-case structure (possibly with prove cases: at the end)
+		caseByCaseFacts := []SpecificFactStmt{}
+		caseByCaseEqualTo := []Obj{}
+		caseByCaseProofs := []StmtSlice{}
 
-	return NewHaveFnEqual(NewDefHeaderWithDom(name, params, paramSets, doms), retSet, equalTo, proofs, tb.line), nil
+		// Check if the last body block is "prove cases:"
+		proveOr := StmtSlice{}
+		lastBlockIndex := -1
+		if len(tb.body) > 0 {
+			lastIdx := len(tb.body) - 1
+			lastBlock := tb.body[lastIdx]
+			if lastBlock.header.is(glob.KeywordProve) {
+				savedIndex := lastBlock.header.index
+				err := lastBlock.header.skip(glob.KeywordProve)
+				if err == nil && lastBlock.header.is(glob.KeywordCases) {
+					err := lastBlock.header.skip(glob.KeywordCases)
+					if err == nil {
+						lastBlockIndex = lastIdx
+					} else {
+						lastBlock.header.index = savedIndex
+					}
+				} else {
+					if err == nil {
+						lastBlock.header.index = savedIndex
+					}
+				}
+			}
+		}
+
+		// Process case blocks (skip the last one if it's "prove cases:")
+		endIdx := len(tb.body)
+		if lastBlockIndex >= 0 {
+			endIdx = lastBlockIndex
+		}
+		for i := 0; i < endIdx; i++ {
+			block := tb.body[i]
+			err := block.header.skip(glob.KeywordCase)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			curStmt, err := p.specFactStmt(&block)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			err = block.header.skip(glob.KeySymbolColon)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			obj, err := p.Obj(&block)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
+			proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&block)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			caseByCaseEqualTo = append(caseByCaseEqualTo, obj)
+			caseByCaseFacts = append(caseByCaseFacts, curStmt)
+			caseByCaseProofs = append(caseByCaseProofs, proof)
+		}
+
+		// Parse "prove or:" block if it exists
+		if lastBlockIndex >= 0 {
+			lastBlock := tb.body[lastBlockIndex]
+			lastBlock.header.skip(glob.KeywordProve)
+			lastBlock.header.skip(glob.KeywordCases)
+			proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+		}
+
+		return NewHaveFnEqualCaseByCase(NewDefHeaderWithDom(name, params, paramSets, doms), retSet, caseByCaseFacts, caseByCaseEqualTo, caseByCaseProofs, proveOr, tb.line), nil
+	} else {
+		equalTo, err := p.Obj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		proofs, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		return NewHaveFnEqual(NewDefHeaderWithDom(name, params, paramSets, doms), retSet, equalTo, proofs, tb.line), nil
+	}
 }
