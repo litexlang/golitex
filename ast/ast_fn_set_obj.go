@@ -20,6 +20,9 @@ import (
 	"strings"
 )
 
+// 有两种情况： 有名字，没名字
+// 有名字：fn f(x, y R: ... ) ret {...}
+// 没名字：fn (R, R) ret {...}。这时候 param 和 fnName 和 dom 和 then 全是空的
 type FnSetObj struct {
 	FnName    string
 	Params    []string

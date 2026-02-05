@@ -680,41 +680,80 @@ func (p *TbParser) SetBuilderObjBeginWithKeywordSetBuilder(tb *tokenBlock) (Obj,
 func (p *TbParser) fnSetObj(tb *tokenBlock) (Obj, error) {
 	tb.header.skip(glob.KeywordFn)
 
-	fnName, err := tb.header.next()
-	if err != nil {
-		return nil, err
-	}
+	if !tb.header.is(glob.KeySymbolLeftBrace) {
+		// 形如 fn f(x, y R: ... ) ret {...} 即dom或者then存在的情况
 
-	params, paramSets, doms, err := p.leftBraceParamsAndParamSetsAndDomsAndRightBrace(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	retSet, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	var thens ReversibleFacts = []Spec_OrFact{}
-
-	if tb.header.is(glob.KeySymbolLeftCurly) {
-		err = tb.header.skip(glob.KeySymbolLeftCurly)
+		fnName, err := tb.header.next()
 		if err != nil {
 			return nil, err
 		}
 
-		thens, err = p.inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb, []string{glob.KeySymbolRightBrace})
+		params, paramSets, doms, err := p.leftBraceParamsAndParamSetsAndDomsAndRightBrace(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
 
-		skipErr := tb.header.skip(glob.KeySymbolRightCurly)
+		retSet, err := p.Obj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		var thens ReversibleFacts = []Spec_OrFact{}
+
+		if tb.header.is(glob.KeySymbolLeftCurly) {
+			err = tb.header.skip(glob.KeySymbolLeftCurly)
+			if err != nil {
+				return nil, err
+			}
+
+			thens, err = p.inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb, []string{glob.KeySymbolRightBrace})
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+
+			skipErr := tb.header.skip(glob.KeySymbolRightCurly)
+			if skipErr != nil {
+				return nil, skipErr
+			}
+		}
+
+		return NewFnSetObj(fnName, params, paramSets, doms, retSet, thens), nil
+	} else {
+		// 形如 fn (R, R) ret 即dom和then都不存在的情况
+		skipErr := tb.header.skip(glob.KeySymbolLeftBrace)
 		if skipErr != nil {
 			return nil, skipErr
 		}
-	}
 
-	return NewFnSetObj(fnName, params, paramSets, doms, retSet, thens), nil
+		paramSets := []Obj{}
+		for !tb.header.is(glob.KeySymbolRightBrace) {
+			paramSet, err := p.Obj(tb)
+			if err != nil {
+				return nil, err
+			}
+			paramSets = append(paramSets, paramSet)
+
+			if tb.header.is(glob.KeySymbolComma) {
+				skipErr := tb.header.skip(glob.KeySymbolComma)
+				if skipErr != nil {
+					return nil, skipErr
+				}
+				continue
+			}
+		}
+
+		skipErr = tb.header.skip(glob.KeySymbolRightBrace)
+		if skipErr != nil {
+			return nil, skipErr
+		}
+
+		retSet, err := p.Obj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		return NewFnSetObj("", []string{}, paramSets, []Spec_OrFact{}, retSet, []Spec_OrFact{}), nil
+	}
 }
 
 func (p *TbParser) leftBraceParamsAndParamSetsAndDomsAndRightBrace(tb *tokenBlock) ([]string, []Obj, ReversibleFacts, error) {
