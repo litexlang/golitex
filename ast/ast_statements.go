@@ -456,12 +456,11 @@ type DefHeaderWithDom struct {
 	Params    StrSlice
 	ParamSets ObjSlice
 	DomFacts  ReversibleFacts
-
-	Line uint
 }
 
 type HaveFnEqual struct {
 	DefHeaderWithDom *DefHeaderWithDom
+	RetSet           Obj
 	EqualTo          Obj
 	Proofs           StmtSlice
 
