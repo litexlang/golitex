@@ -522,9 +522,6 @@ func IndexOptObjString(f *FnObj) string {
 }
 
 func (f *FnObj) String() string {
-	if IsFnSet(f) {
-		return fnSetString(f)
-	}
 
 	if IsTupleFnObj(f) {
 		return TupleObjString(f)
@@ -645,14 +642,6 @@ func (stmt *KnowInferStmt) String() string {
 		builder.WriteString(strings.Join(ifFactStrSlice, "\n"))
 	}
 
-	return builder.String()
-}
-
-func fnSetString(f *FnObj) string {
-	var builder strings.Builder
-	builder.WriteString(f.FnHead.String())
-	builder.WriteString(" ")
-	builder.WriteString(f.Params[0].String())
 	return builder.String()
 }
 
