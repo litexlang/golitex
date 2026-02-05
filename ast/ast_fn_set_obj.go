@@ -40,29 +40,39 @@ func (f *FnSetObj) String() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFn)
 
-	builder.WriteString(f.FnName)
+	if !f.IsNameEmpty() {
+		builder.WriteString(f.FnName)
 
-	builder.WriteString("(")
-	builder.WriteString(StrObjSetPairs(f.Params, f.ParamSets))
+		builder.WriteString("(")
+		builder.WriteString(StrObjSetPairs(f.Params, f.ParamSets))
 
-	if len(f.DomFacts) > 0 {
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteString(" ")
-		builder.WriteString(inlineReversibleFactsString(f.DomFacts))
+		if len(f.DomFacts) > 0 {
+			builder.WriteString(glob.KeySymbolColon)
+			builder.WriteString(" ")
+			builder.WriteString(inlineReversibleFactsString(f.DomFacts))
+		}
+
+		builder.WriteString(")")
+
+		builder.WriteString(f.RetSet.String())
+
+		if len(f.ThenFacts) > 0 {
+			builder.WriteString(" ")
+			builder.WriteString(glob.KeySymbolLeftCurly)
+			builder.WriteString(inlineReversibleFactsString(f.ThenFacts))
+			builder.WriteString(glob.KeySymbolRightCurly)
+		}
+
+		return builder.String()
+	} else {
+		builder.WriteString("(")
+		for i := range len(f.ParamSets) {
+			builder.WriteString(f.ParamSets[i].String())
+		}
+		builder.WriteString(")")
+		builder.WriteString(f.RetSet.String())
+		return builder.String()
 	}
-
-	builder.WriteString(")")
-
-	builder.WriteString(f.RetSet.String())
-
-	if len(f.ThenFacts) > 0 {
-		builder.WriteString(" ")
-		builder.WriteString(glob.KeySymbolLeftCurly)
-		builder.WriteString(inlineReversibleFactsString(f.ThenFacts))
-		builder.WriteString(glob.KeySymbolRightCurly)
-	}
-
-	return builder.String()
 }
 
 func (f *FnSetObj) Instantiate(uniMap map[string]Obj) (Obj, error) {
@@ -90,4 +100,8 @@ func (f *FnSetObj) Instantiate(uniMap map[string]Obj) (Obj, error) {
 	}
 
 	return NewFnSetObj(f.FnName, f.Params, newParamSets, newDomFacts, f.RetSet, newThenFacts), nil
+}
+
+func (f *FnSetObj) IsNameEmpty() bool {
+	return f.FnName == ""
 }
