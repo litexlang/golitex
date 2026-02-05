@@ -34,20 +34,20 @@ func (ver *Verifier) fnObjSatisfyFnReq(fnObj *ast.FnObj, state *VerState) ast.Ve
 	// 因为我们已经知道了 f(a) 是函数了，所以f(a)的正确性已经在之前检查过了，所以不检查了。但，我们还是查一下 fnHead 是不是满足条件，比如fnObj是 f(a)(b) 那么要看看a是不是满足f的条件。
 	verRetOfHead := ver.objSatisfyFnReq(fnObj.FnHead, state)
 	if verRetOfHead.IsNotTrue() {
-		return verRetOfHead
+		return verRetOfHead.AddExtraInfo(fmt.Sprintf("%s is not a valid function", fnObj.String()))
 	}
 
 	switch fnSet := fnSet.(type) {
 	case *ast.FnSetObjWithoutName:
 		verRetOfFnArgs := ver.ArgsSatisfyFnSetObjWhenNameIsEmpty(fnSet, fnObj.Params, state)
 		if verRetOfFnArgs.IsNotTrue() {
-			return verRetOfFnArgs
+			return verRetOfFnArgs.AddExtraInfo(fmt.Sprintf("%s is not a valid function", fnObj.String()))
 		}
 		return ast.NewTrueVerRet(nil, nil, "")
 	case *ast.FnSetObjWithName:
 		verRetOfFnArgs := ver.ArgsSatisfyFnSetObjWithName(fnSet, fnObj.Params, state)
 		if verRetOfFnArgs.IsNotTrue() {
-			return verRetOfFnArgs
+			return verRetOfFnArgs.AddExtraInfo(fmt.Sprintf("%s is not a valid function", fnObj.String()))
 		}
 		return ast.NewTrueVerRet(nil, nil, "")
 	default:
