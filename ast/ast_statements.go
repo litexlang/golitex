@@ -466,3 +466,14 @@ type HaveFnEqual struct {
 
 	Line uint
 }
+
+type HaveFnEqualCaseByCase struct {
+	DefHeaderWithDom  *DefHeaderWithDom
+	RetSet            Obj
+	CaseByCaseFacts   SpecFactPtrSlice
+	CaseByCaseEqualTo ObjSlice
+	Proofs            StmtSliceSlice
+	ProveCases        StmtSlice
+
+	Line uint
+}
