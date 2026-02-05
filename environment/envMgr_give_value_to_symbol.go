@@ -31,8 +31,11 @@ func (envMgr *EnvMgr) GetStoredSymbolValue(obj ast.Obj) (bool, ast.Obj) {
 		return envMgr.GetStoredValueOfAtomObj(asObj)
 	case *ast.FnObj:
 		return envMgr.GetStoredValueOfFnObj(asObj)
+	case *ast.FnSetObj:
+		return false, nil
+	default:
+		panic(fmt.Sprintf("\n\nTODO:unknown object type in GetStoredSymbolValue: %T\n\n", obj))
 	}
-	panic("")
 }
 
 func (envMgr *EnvMgr) IsIndexOfTupleFnObjAndGetValueAtIndex(obj *ast.FnObj) (bool, ast.Obj) {
