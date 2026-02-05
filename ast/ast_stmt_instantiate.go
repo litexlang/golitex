@@ -143,6 +143,24 @@ func (defHeader *DefHeader) Instantiate(uniMap map[string]Obj) (*DefHeader, erro
 	return newDefHeader, nil
 }
 
+func (defHeaderWithDom *DefHeaderWithDom) Instantiate(uniMap map[string]Obj) (*DefHeaderWithDom, error) {
+	newParamSets := make([]Obj, len(defHeaderWithDom.ParamSets))
+	for i, setParam := range defHeaderWithDom.ParamSets {
+		newSetParam, err := setParam.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newParamSets[i] = newSetParam
+	}
+
+	newDomFacts, err := defHeaderWithDom.DomFacts.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewDefHeaderWithDom(defHeaderWithDom.Name, defHeaderWithDom.Params, newParamSets, newDomFacts, defHeaderWithDom.Line), nil
+}
+
 func (defPropStmt *DefPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newDefHeader, err := defPropStmt.DefHeader.Instantiate(uniMap)
 	if err != nil {
@@ -660,6 +678,26 @@ func (stmt *HaveFnEqualStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 		return nil, err
 	}
 	return NewHaveFnEqualStmt(newDefHeader, newRetSet, newEqualTo, newProofs, stmt.Line), nil
+}
+
+func (stmt *HaveFnEqual) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	var newDefHeaderWithDom *DefHeaderWithDom
+	if stmt.DefHeaderWithDom != nil {
+		var err error
+		newDefHeaderWithDom, err = stmt.DefHeaderWithDom.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+	}
+	newEqualTo, err := stmt.EqualTo.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newProofs, err := stmt.Proofs.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return &HaveFnEqual{newDefHeaderWithDom, newEqualTo, newProofs, stmt.Line}, nil
 }
 
 // func (stmt *HaveFnLiftStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

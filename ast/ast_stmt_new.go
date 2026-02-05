@@ -52,6 +52,10 @@ func NewDefHeader(name string, params []string, setParams []Obj) *DefHeader {
 	return &DefHeader{name, params, setParams}
 }
 
+func NewDefHeaderWithDom(name string, params []string, paramSets []Obj, domFacts ReversibleFacts, line uint) *DefHeaderWithDom {
+	return &DefHeaderWithDom{name, params, paramSets, domFacts, line}
+}
+
 // func NewHaveObjStStmt(objNames []string, fact *SpecFactStmt, line uint) *HaveObjStStmt {
 // 	return &HaveObjStStmt{objNames, fact, line}
 // }

@@ -470,6 +470,17 @@ func (head DefHeader) String() string {
 	return builder.String()
 }
 
+func (head *DefHeaderWithDom) StringWithoutColonAtEnd() string {
+	var builder strings.Builder
+	builder.WriteString(string(head.Name))
+	builder.WriteString("(")
+
+	builder.WriteString(StrObjSetPairs(head.Params, head.ParamSets))
+
+	builder.WriteString(")")
+	return builder.String()
+}
+
 // func (stmt *HaveObjStStmt) String() string {
 // 	var builder strings.Builder
 // 	builder.WriteString(glob.KeywordHave)
@@ -922,6 +933,31 @@ func (stmt *HaveFnEqualStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(stmt.RetSet.String())
 	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(" ")
+	builder.WriteString(stmt.EqualTo.String())
+	if len(stmt.Proofs) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+		for _, proof := range stmt.Proofs {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+			builder.WriteByte('\n')
+		}
+		return strings.TrimSuffix(builder.String(), "\n")
+	}
+	return builder.String()
+}
+
+func (stmt *HaveFnEqual) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordFn)
+	builder.WriteString(" ")
+	if stmt.DefHeaderWithDom != nil {
+		builder.WriteString(stmt.DefHeaderWithDom.StringWithoutColonAtEnd())
+		builder.WriteString(" ")
+	}
 	builder.WriteString(glob.KeySymbolEqual)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.EqualTo.String())
