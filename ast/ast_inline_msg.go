@@ -399,6 +399,10 @@ func (s *HaveFnEqualStmt) InlineString() string {
 	return s.String()
 }
 
+func (s *HaveFnEqual) InlineString() string {
+	return s.String()
+}
+
 // func (s *HaveFnLiftStmt) InlineString() string {
 // 	var builder strings.Builder
 // 	builder.WriteString(glob.KeywordHave)

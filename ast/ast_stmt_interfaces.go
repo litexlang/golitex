@@ -78,6 +78,7 @@ func (s *EvalStmt) stmt()                   {}
 func (s *HaveFnEqualCaseByCaseStmt) stmt() {}
 func (s *HaveFnCaseByCaseStmt) stmt()      {}
 func (s *WitnessStmt) stmt()               {}
+func (s *HaveFnEqual) stmt()               {}
 
 func (s *DefLetStmt) algoStmt()            {}
 func (s *DefPropStmt) algoStmt()           {}
@@ -132,6 +133,7 @@ func (s *EvalStmt) algoStmt()                  {}
 func (s *HaveFnEqualCaseByCaseStmt) algoStmt() {}
 func (s *HaveFnCaseByCaseStmt) algoStmt()      {}
 func (s *WitnessStmt) algoStmt()               {}
+func (s *HaveFnEqual) algoStmt()               {}
 func (s *EqualSetStmt) stmt()                  {}
 func (s *EqualSetStmt) algoStmt()              {}
 func (s *WitnessNonemptyStmt) stmt()           {}
@@ -196,6 +198,7 @@ func (s *ProveInferStmt) GetLine() uint { return s.Line }
 func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint { return s.Line }
 func (s *HaveFnCaseByCaseStmt) GetLine() uint      { return s.Line }
 func (s *WitnessStmt) GetLine() uint               { return s.Line }
+func (s *HaveFnEqual) GetLine() uint               { return s.Line }
 func (s *EqualSetStmt) GetLine() uint              { return s.Line }
 func (s *WitnessNonemptyStmt) GetLine() uint       { return s.Line }
 func (s *ImpossibleStmt) GetLine() uint            { return s.Line }
@@ -261,6 +264,7 @@ func (s *ProveInferStmt) SetLine(l uint) { s.Line = l }
 func (s *HaveFnEqualCaseByCaseStmt) SetLine(l uint) { s.Line = l }
 func (s *HaveFnCaseByCaseStmt) SetLine(l uint)      { s.Line = l }
 func (s *WitnessStmt) SetLine(l uint)               { s.Line = l }
+func (s *HaveFnEqual) SetLine(l uint)               { s.Line = l }
 func (s *EqualSetStmt) SetLine(l uint)              { s.Line = l }
 func (s *WitnessNonemptyStmt) SetLine(l uint)       { s.Line = l }
 func (s *ImpossibleStmt) SetLine(l uint)            { s.Line = l }

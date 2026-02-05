@@ -450,3 +450,20 @@ type FnIsSubsetOfCartStmt struct {
 
 	Line uint
 }
+
+type DefHeaderWithDom struct {
+	Name      string
+	Params    StrSlice
+	ParamSets ObjSlice
+	DomFacts  ReversibleFacts
+
+	Line uint
+}
+
+type HaveFnEqual struct {
+	DefHeaderWithDom *DefHeaderWithDom
+	EqualTo          Obj
+	Proofs           StmtSlice
+
+	Line uint
+}
