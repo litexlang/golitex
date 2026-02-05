@@ -32,7 +32,8 @@ func (exec *Executor) haveObjEqualStmt(stmt *ast.HaveObjEqualStmt) ast.StmtRet {
 		objSet := stmt.ObjSets[i]
 
 		// 验证等号右边的对象是否已定义
-		if ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(objEqualTo, Round0NoMsg()); ret.IsNotTrue() {
+		// if ret := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(objEqualTo, Round0NoMsg()); ret.IsNotTrue() {
+		if ret := ver.objSatisfyFnReq(objEqualTo, Round0NoMsg()); ret.IsNotTrue() {
 			return ret.ToStmtRet()
 		}
 
@@ -163,7 +164,8 @@ func (exec *Executor) checkFnEqualStmt(stmt *ast.HaveFnEqualStmt) ast.StmtRet {
 
 	// Check if equalTo is defined
 	ver := NewVerifier(exec.Env)
-	verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(stmt.EqualTo, Round0NoMsg())
+	// verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(stmt.EqualTo, Round0NoMsg())
+	verRet := ver.objSatisfyFnReq(stmt.EqualTo, Round0NoMsg())
 	if verRet.IsNotTrue() {
 		return verRet.ToStmtRet()
 	}

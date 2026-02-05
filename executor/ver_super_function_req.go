@@ -56,6 +56,8 @@ func (ver *Verifier) isBuiltinFunction_VerReq(fnObj *ast.FnObj, state *VerState)
 		return ver.indexOptFnRequirement(fnObj, state)
 	case glob.KeywordChoice:
 		return ver.verChoiceReq(fnObj, state)
+	case glob.KeywordVal:
+		return ver.verValReq(fnObj, state)
 
 	default:
 		return ast.NewEmptyUnknownVerRet()
@@ -239,4 +241,12 @@ func (ver *Verifier) verChoiceReq(fnObj *ast.FnObj, state *VerState) ast.VerRet 
 	}
 
 	return ast.NewTrueVerRet(nil, nil, "")
+}
+
+func (ver *Verifier) verValReq(fnObj *ast.FnObj, state *VerState) ast.VerRet {
+	if len(fnObj.Params) != 1 {
+		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("val expects 1 parameter, got %d", len(fnObj.Params)))
+	}
+
+	return ver.objSatisfyFnReq(fnObj.Params[0], state)
 }

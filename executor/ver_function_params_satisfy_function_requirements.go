@@ -10,6 +10,11 @@ func (ver *Verifier) objSatisfyFnReq(obj ast.Obj, state *VerState) ast.VerRet {
 	case ast.Atom:
 		return ver.Env.LookupNamesInObj(objAs, map[string]struct{}{}).ToEmptyVerREt()
 	case *ast.FnObj:
+		objAsFnObj := objAs
+		if ret := ver.isBuiltinFunction_VerReq(objAsFnObj, state); ret.IsTrue() || ret.IsErr() {
+			return ret
+		}
+
 		return ver.fnObjSatisfyFnReq(objAs, state)
 	case *ast.FnSetObj:
 		panic("")
