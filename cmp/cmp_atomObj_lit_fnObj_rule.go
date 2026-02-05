@@ -35,9 +35,9 @@ func cmpObjLiterally(left, right ast.Obj) (bool, error) {
 		default:
 			return false, fmt.Errorf("unknown type: %T", right)
 		}
-	case *ast.FnSetObj:
+	case ast.FnSetObj:
 		switch asRight := right.(type) {
-		case *ast.FnSetObj:
+		case ast.FnSetObj:
 			return cmpFnSetObjLiterally(asLeft, asRight)
 		default:
 			return false, fmt.Errorf("unknown type: %T", right)
@@ -47,14 +47,6 @@ func cmpObjLiterally(left, right ast.Obj) (bool, error) {
 	}
 }
 
-func cmpFnSetObjLiterally(left, right *ast.FnSetObj) (bool, error) {
-	if left.IsNameEmpty() && right.IsNameEmpty() {
-		return left.String() == right.String(), nil
-	} else if left.IsNameEmpty() && !right.IsNameEmpty() {
-		return false, nil
-	} else if !left.IsNameEmpty() && right.IsNameEmpty() {
-		return false, nil
-	} else {
-		panic("\n\nTODO: 如果两个fn set对象都有名字，那应该怎么比较？\n\n")
-	}
+func cmpFnSetObjLiterally(left, right ast.FnSetObj) (bool, error) {
+	return left.String() == right.String(), nil
 }

@@ -717,7 +717,7 @@ func (p *TbParser) fnSetObj(tb *tokenBlock) (Obj, error) {
 			}
 		}
 
-		return NewFnSetObj(fnName, params, paramSets, doms, retSet, thens), nil
+		return NewFnSetObjWithName(fnName, params, paramSets, doms, retSet, thens), nil
 	} else {
 		// 形如 fn (R, R) ret 即dom和then都不存在的情况
 		skipErr := tb.header.skip(glob.KeySymbolLeftBrace)
@@ -752,7 +752,7 @@ func (p *TbParser) fnSetObj(tb *tokenBlock) (Obj, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		return NewFnSetObj("", []string{}, paramSets, []Spec_OrFact{}, retSet, []Spec_OrFact{}), nil
+		return NewFnSetObjWithoutName(paramSets, retSet), nil
 	}
 }
 

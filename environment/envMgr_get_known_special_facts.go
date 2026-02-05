@@ -33,7 +33,7 @@ func (envMgr *EnvMgr) GetLatestFnT_GivenNameIsIn(fnName string) *FnInFnTMemItem 
 	return nil
 }
 
-func (envMgr *EnvMgr) GetFnInFnSet(fnName string) *ast.FnSetObj {
+func (envMgr *EnvMgr) GetFnInFnSet(fnName string) ast.FnSetObj {
 	for depth := envMgr.CurEnvDepth(); depth >= 0; depth-- {
 		fnInFnSet, ok := envMgr.EnvSlice[depth].FnInFnSetMem[fnName]
 		if ok {

@@ -69,7 +69,7 @@ type EnvMemory struct {
 	FnTemplateDefMem map[string]struct{}
 	ExistPropDefMem  map[string]struct{}
 	AlgoDefMem       map[string]struct{}
-	FnInFnSetMem     map[string]*ast.FnSetObj
+	FnInFnSetMem     map[string]ast.FnSetObj
 	// DefProveAlgoMem  map[string]struct{}
 
 	// facts memory
@@ -104,7 +104,7 @@ func NewEnvMemory() *EnvMemory {
 		FnTemplateDefMem: make(map[string]struct{}),
 		ExistPropDefMem:  make(map[string]struct{}),
 		AlgoDefMem:       make(map[string]struct{}),
-		FnInFnSetMem:     make(map[string]*ast.FnSetObj),
+		FnInFnSetMem:     make(map[string]ast.FnSetObj),
 		// DefProveAlgoMem:  make(map[string]struct{}),
 
 		EqualMem:                 make(map[string]shared_ptr_to_slice_of_obj),

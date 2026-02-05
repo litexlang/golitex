@@ -342,3 +342,7 @@ func NewPureSpecificFactStmt(isTrue bool, propName Atom, params ObjSlice, line u
 func NewExistSpecificFactStmt(isTrue bool, existFreeParams []string, existFreeParamSets ObjSlice, pureFact *PureSpecificFactStmt, line uint) *ExistSpecificFactStmt {
 	return &ExistSpecificFactStmt{isTrue, existFreeParams, existFreeParamSets, pureFact, line}
 }
+
+func NewFnSetObjWithoutName(paramSets ObjSlice, retSet Obj) *FnSetObjWithoutName {
+	return &FnSetObjWithoutName{ParamSets: paramSets, RetSet: retSet}
+}

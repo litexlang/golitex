@@ -16,7 +16,7 @@ func (ver *Verifier) objSatisfyFnReq(obj ast.Obj, state *VerState) ast.VerRet {
 		}
 
 		return ver.fnObjSatisfyFnReq(objAs, state)
-	case *ast.FnSetObj:
+	case ast.FnSetObj:
 		return ver.fnSetObjSatisfyFnReq(objAs, state)
 	case *ast.SetBuilderObj:
 		panic("")
@@ -37,26 +37,30 @@ func (ver *Verifier) fnObjSatisfyFnReq(fnObj *ast.FnObj, state *VerState) ast.Ve
 		return verRetOfHead
 	}
 
-	if len(fnObj.Params) != len(fnSet.ParamSets) {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("the number of parameters of %s is not equal to the number of parameter sets of %s", fnObj, fnSet))
-	}
-
-	if fnSet.IsNameEmpty() {
-		verRetOfFnArgs := ver.ArgsSatisfyFnParamRequirements(fnSet, fnObj.Params, state)
+	switch fnSet := fnSet.(type) {
+	case *ast.FnSetObjWithoutName:
+		verRetOfFnArgs := ver.ArgsSatisfyFnSetObjWhenNameIsEmpty(fnSet, fnObj.Params, state)
 		if verRetOfFnArgs.IsNotTrue() {
 			return verRetOfFnArgs
 		}
 		return ast.NewTrueVerRet(nil, nil, "")
-	} else {
-		verRetOfHead := ver.ArgsSatisfyFnParamRequirementsWhenFnNameIsEmpty(fnSet, fnObj.Params, state)
-		if verRetOfHead.IsNotTrue() {
-			return verRetOfHead
+	case *ast.FnSetObjWithName:
+		verRetOfFnArgs := ver.ArgsSatisfyFnSetObjWithName(fnSet, fnObj.Params, state)
+		if verRetOfFnArgs.IsNotTrue() {
+			return verRetOfFnArgs
 		}
 		return ast.NewTrueVerRet(nil, nil, "")
+	default:
+		panic(fmt.Sprintf("unknown function set type: %T", fnSet))
 	}
 }
 
-func (ver *Verifier) ArgsSatisfyFnParamRequirementsWhenFnNameIsEmpty(fnSet *ast.FnSetObj, arguments ast.ObjSlice, state *VerState) ast.VerRet {
+func (ver *Verifier) ArgsSatisfyFnSetObjWhenNameIsEmpty(fnSet *ast.FnSetObjWithoutName, arguments ast.ObjSlice, state *VerState) ast.VerRet {
+
+	if len(arguments) != len(fnSet.ParamSets) {
+		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("the number of arguments is not equal to the number of parameter sets of %s", fnSet))
+	}
+
 	ver.newEnv()
 	defer ver.deleteEnv()
 
@@ -71,7 +75,12 @@ func (ver *Verifier) ArgsSatisfyFnParamRequirementsWhenFnNameIsEmpty(fnSet *ast.
 	return ast.NewTrueVerRet(nil, nil, "")
 }
 
-func (ver *Verifier) ArgsSatisfyFnParamRequirements(fnSet *ast.FnSetObj, arguments ast.ObjSlice, state *VerState) ast.VerRet {
+func (ver *Verifier) ArgsSatisfyFnSetObjWithName(fnSet *ast.FnSetObjWithName, arguments ast.ObjSlice, state *VerState) ast.VerRet {
+
+	if len(arguments) != len(fnSet.ParamSets) {
+		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("the number of arguments is not equal to the number of parameter sets of %s", fnSet))
+	}
+
 	ver.newEnv()
 	defer ver.deleteEnv()
 
@@ -106,15 +115,18 @@ func (ver *Verifier) ArgsSatisfyFnParamRequirements(fnSet *ast.FnSetObj, argumen
 	return ast.NewTrueVerRet(nil, nil, "")
 }
 
-func (ver *Verifier) fnSetObjSatisfyFnReq(fnSetObj *ast.FnSetObj, state *VerState) ast.VerRet {
-	if fnSetObj.IsNameEmpty() {
+func (ver *Verifier) fnSetObjSatisfyFnReq(fnSetObj ast.FnSetObj, state *VerState) ast.VerRet {
+	switch fnSetObj := fnSetObj.(type) {
+	case *ast.FnSetObjWithoutName:
 		return ver.fnSetObjSatisfyFnReqWhenFnNameIsEmpty(fnSetObj, state)
-	} else {
+	case *ast.FnSetObjWithName:
 		return ver.fnSetObjSatisfyFnReqWhenFnNameIsNotEmpty(fnSetObj, state)
+	default:
+		panic(fmt.Sprintf("unknown function set object type: %T", fnSetObj))
 	}
 }
 
-func (ver *Verifier) fnSetObjSatisfyFnReqWhenFnNameIsEmpty(fnSetObj *ast.FnSetObj, state *VerState) ast.VerRet {
+func (ver *Verifier) fnSetObjSatisfyFnReqWhenFnNameIsEmpty(fnSetObj *ast.FnSetObjWithoutName, state *VerState) ast.VerRet {
 	for _, paramSet := range fnSetObj.ParamSets {
 		verRet := ver.objSatisfyFnReq(paramSet, state)
 		if verRet.IsNotTrue() {
@@ -130,6 +142,6 @@ func (ver *Verifier) fnSetObjSatisfyFnReqWhenFnNameIsEmpty(fnSetObj *ast.FnSetOb
 	return ast.NewTrueVerRet(nil, nil, "")
 }
 
-func (ver *Verifier) fnSetObjSatisfyFnReqWhenFnNameIsNotEmpty(fnSetObj *ast.FnSetObj, state *VerState) ast.VerRet {
+func (ver *Verifier) fnSetObjSatisfyFnReqWhenFnNameIsNotEmpty(fnSetObj *ast.FnSetObjWithName, state *VerState) ast.VerRet {
 	panic("")
 }
