@@ -295,6 +295,10 @@ func (ver *Verifier) verIsANonEmptySetByBuiltinRules(stmt ast.SpecificFactStmt, 
 		return ast.NewErrVerRet(stmt).AddExtraInfo(fmt.Sprintf("%s expects 1 parameter, got %d", glob.KeywordIsANonEmptySet, len(asPureStmt.Params)))
 	}
 
+	if _, ok := asPureStmt.Params[0].(*ast.FnSetObj); ok {
+		return ver.verFnSetIsNonEmpty(stmt, state)
+	}
+
 	if ast.IsListSetObj(asPureStmt.Params[0]) {
 		if len(asPureStmt.Params[0].(*ast.FnObj).Params) > 0 {
 			return ver.maybeAddSuccessMsgString(state, stmt.String(), "A list set with at least one element is a nonempty set.", ast.NewTrueVerRet(stmt, nil, ""))
@@ -464,4 +468,40 @@ func (ver *Verifier) verIsANonEmptySetByIsPowerSetAndAllParamSetsAndRetSetAreNon
 
 	return ver.maybeAddSuccessMsgString(state, "", fmt.Sprintf("power set %s is a nonempty set because its param is a nonempty set.", powerSet), ast.NewTrueVerRet(nil, nil, ""))
 
+}
+
+func (ver *Verifier) verFnSetIsNonEmpty(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
+	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+	if !ok {
+		return ast.NewEmptyUnknownVerRet()
+	}
+
+	if len(asPureStmt.Params) != 1 {
+		return ast.NewEmptyUnknownVerRet()
+	}
+
+	fnSetObj, ok := asPureStmt.Params[0].(*ast.FnSetObj)
+	if !ok {
+		return ast.NewEmptyUnknownVerRet()
+	}
+
+	if !fnSetObj.IsNameEmpty() {
+		return ast.NewEmptyUnknownVerRet()
+	}
+
+	for _, paramSet := range fnSetObj.ParamSets {
+		isNonEmptySet := ast.NewIsANonEmptySetFact(paramSet, glob.BuiltinLine0)
+		verRet := ver.VerFactStmt(isNonEmptySet, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	}
+
+	isNonEmptySet := ast.NewIsANonEmptySetFact(fnSetObj.RetSet, glob.BuiltinLine0)
+	verRet := ver.VerFactStmt(isNonEmptySet, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	return ast.NewTrueVerRet(stmt, nil, fmt.Sprintf("%s is a nonempty set because its param sets and return set are nonempty sets", fnSetObj))
 }
