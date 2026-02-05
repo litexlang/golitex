@@ -1042,6 +1042,10 @@ func (s *HaveFnEqualCaseByCaseStmt) ToLatexString() string {
 	return s.String()
 }
 
+func (s *HaveFnEqualCaseByCase) ToLatexString() string {
+	return s.String()
+}
+
 func (s *SetIsFnStmt) ToLatexString() string {
 	return s.String()
 }

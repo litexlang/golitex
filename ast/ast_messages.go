@@ -958,6 +958,8 @@ func (stmt *HaveFnEqual) String() string {
 		builder.WriteString(stmt.DefHeaderWithDom.StringWithoutColonAtEnd())
 		builder.WriteString(" ")
 	}
+	builder.WriteString(stmt.RetSet.String())
+	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolEqual)
 	builder.WriteString(" ")
 	builder.WriteString(stmt.EqualTo.String())
@@ -1482,6 +1484,55 @@ func (stmt *HaveFnEqualCaseByCaseStmt) String() string {
 	builder.WriteString(" ")
 	builder.WriteString(stmt.DefHeader.StringWithoutColonAtEnd())
 	builder.WriteString(" ")
+	builder.WriteString(stmt.RetSet.String())
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeySymbolEqual)
+	builder.WriteString(glob.KeySymbolColon)
+	builder.WriteByte('\n')
+	for i, fact := range stmt.CaseByCaseFacts {
+		builder.WriteString("    ")
+		builder.WriteString(glob.KeywordCase)
+		builder.WriteString(" ")
+		builder.WriteString(fact.String())
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteString(" ")
+		builder.WriteString(stmt.CaseByCaseEqualTo[i].String())
+		if i < len(stmt.Proofs) && len(stmt.Proofs[i]) > 0 {
+			builder.WriteString(glob.KeySymbolColon)
+			builder.WriteByte('\n')
+			for _, proof := range stmt.Proofs[i] {
+				builder.WriteString(glob.SplitLinesAndAdd4NIndents(proof.String(), 1))
+				builder.WriteByte('\n')
+			}
+		} else {
+			builder.WriteByte('\n')
+		}
+	}
+	if len(stmt.ProveCases) > 0 {
+		builder.WriteString("    ")
+		builder.WriteString(glob.KeywordProve)
+		builder.WriteString(" ")
+		builder.WriteString(glob.KeywordCases)
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteByte('\n')
+		for _, proofStmt := range stmt.ProveCases {
+			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 1))
+			builder.WriteByte('\n')
+		}
+	}
+	return strings.TrimSpace(builder.String())
+}
+
+func (stmt *HaveFnEqualCaseByCase) String() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordHave)
+	builder.WriteString(" ")
+	builder.WriteString(glob.KeywordFn)
+	builder.WriteString(" ")
+	if stmt.DefHeaderWithDom != nil {
+		builder.WriteString(stmt.DefHeaderWithDom.StringWithoutColonAtEnd())
+		builder.WriteString(" ")
+	}
 	builder.WriteString(stmt.RetSet.String())
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeySymbolEqual)
