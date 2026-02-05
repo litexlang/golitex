@@ -302,6 +302,6 @@ func (envMgr *EnvMgr) newUniFact_ThenFactIsOrStmt(stmt *ast.UniFactStmt, thenFac
 	return envMgr.storeOrFactInUniFactMem(thenFact, stmt)
 }
 
-func (envMgr *EnvMgr) StoreFnIsAFn(fnName ast.Obj, fnSet *ast.FnSetObj) {
+func (envMgr *EnvMgr) StoreFnIsAFn(fnName ast.Obj, fnSet ast.FnSetObj) {
 	envMgr.CurEnv().FnInFnSetMem[fnName.String()] = fnSet
 }

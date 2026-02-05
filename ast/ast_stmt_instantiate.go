@@ -1223,3 +1223,15 @@ func (stmt *FnIsSubsetOfCartStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 
 	return NewFnIsSubsetOfCartStmt(obj, fnSetObj.(*FnObj), stmt.Line), nil
 }
+
+func (stmt *FnSetObjWithoutName) Instantiate(uniMap map[string]Obj) (Obj, error) {
+	newParamSets, err := stmt.ParamSets.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newRetSet, err := stmt.RetSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewFnSetObjWithoutName(newParamSets, newRetSet), nil
+}

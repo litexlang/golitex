@@ -1,1 +1,3 @@
-fn(R) R = fn(R)R
+have a set = fn(R) R
+
+a = fn(R)R
