@@ -48,6 +48,7 @@ type DefPropStmt struct {
 type LetFnStmt struct {
 	Name       string
 	FnTemplate *AnonymousFn
+	// FnTemplate *FnSetObj
 
 	Line uint
 }

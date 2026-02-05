@@ -165,17 +165,20 @@ func NewInFactWithObj(param Obj, paramSet Obj) *PureSpecificFactStmt {
 }
 
 func IsFnSet(obj Obj) bool {
-	objAsFnObj, ok := obj.(*FnObj)
-	if !ok {
-		return false
-	}
+	_, ok := obj.(*FnSetObj)
+	return ok
 
-	objHeadAsFnObj, ok := objAsFnObj.FnHead.(*FnObj)
-	if !ok {
-		return false
-	}
+	// objAsFnObj, ok := obj.(*FnObj)
+	// if !ok {
+	// 	return false
+	// }
 
-	return IsAtomObjAndEqualToStr(objHeadAsFnObj.FnHead, glob.KeywordFn)
+	// objHeadAsFnObj, ok := objAsFnObj.FnHead.(*FnObj)
+	// if !ok {
+	// 	return false
+	// }
+
+	// return IsAtomObjAndEqualToStr(objHeadAsFnObj.FnHead, glob.KeywordFn)
 }
 
 func (stmt *PureSpecificFactStmt) ReverseSpecFactParamsOrder() (*PureSpecificFactStmt, error) {
@@ -211,31 +214,31 @@ func (defHeader *DefHeader) NewInFacts() []*PureSpecificFactStmt {
 	return facts
 }
 
-func Get_FnTemplate_InObjForm_ParamSetsAndRetSet(obj Obj) ([]Obj, Obj, bool) {
-	// given obj must be a function
-	objAsFnObj, ok := obj.(*FnObj)
-	if !ok {
-		return nil, nil, false
-	}
+// func Get_FnTemplate_InObjForm_ParamSetsAndRetSet(obj Obj) ([]Obj, Obj, bool) {
+// 	// given obj must be a function
+// 	objAsFnObj, ok := obj.(*FnObj)
+// 	if !ok {
+// 		return nil, nil, false
+// 	}
 
-	objAsFnObjHeadAsFnObj, ok := objAsFnObj.FnHead.(*FnObj)
-	if !ok {
-		return nil, nil, false
-	}
+// 	objAsFnObjHeadAsFnObj, ok := objAsFnObj.FnHead.(*FnObj)
+// 	if !ok {
+// 		return nil, nil, false
+// 	}
 
-	if len(objAsFnObj.Params) != 1 {
-		return nil, nil, false
-	}
+// 	if len(objAsFnObj.Params) != 1 {
+// 		return nil, nil, false
+// 	}
 
-	if !IsAtomObjAndEqualToStr(objAsFnObjHeadAsFnObj.FnHead, glob.KeywordFn) {
-		return nil, nil, false
-	}
+// 	if !IsAtomObjAndEqualToStr(objAsFnObjHeadAsFnObj.FnHead, glob.KeywordFn) {
+// 		return nil, nil, false
+// 	}
 
-	paramSets := []Obj{}
-	paramSets = append(paramSets, objAsFnObjHeadAsFnObj.Params...)
+// 	paramSets := []Obj{}
+// 	paramSets = append(paramSets, objAsFnObjHeadAsFnObj.Params...)
 
-	return paramSets, objAsFnObj.Params[0], true
-}
+// 	return paramSets, objAsFnObj.Params[0], true
+// }
 
 func GetExistParamsAndFactParamsFromExistFactStmt(stmt *PureSpecificFactStmt) ([]Obj, []Obj) {
 	lengthOfExistParams, _ := strconv.Atoi(string(stmt.Params[0].(Atom)))
