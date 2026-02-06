@@ -35,7 +35,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.defPropStmt(tb)
 	case glob.KeywordLet:
 		if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
-			ret, err = p.defFnStmt(tb, true)
+			// ret, err = p.defFnStmt(tb, true)
+			ret, err = p.defFn(tb, true)
 		} else {
 			ret, err = p.letDefObjStmt(tb)
 		}
@@ -203,7 +204,7 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 	return NewDefPropStmt(declHeader, iffFacts, nil, tb.line), nil
 }
 
-func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (Stmt, error) {
+func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (*LetFnStmt, error) {
 	if skipLetAndFn {
 		err := tb.header.skip(glob.KeywordLet)
 		if err != nil {
@@ -271,6 +272,7 @@ func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (Stmt, error) {
 
 			if !tb.header.is(glob.KeySymbolRightArrow) {
 				return NewLetFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
+				// return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
 			}
 
 			err = tb.header.skip(glob.KeySymbolRightArrow)
@@ -286,6 +288,7 @@ func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (Stmt, error) {
 	}
 
 	return NewLetFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
+	// return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
 }
 
 func (p *TbParser) letDefObjStmt(tb *tokenBlock) (Stmt, error) {
@@ -381,7 +384,7 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		return NewClaimHaveFnStmt(defFnStmt.(*LetFnStmt), proof, haveObjSatisfyFn, tb.line), nil
+		return NewClaimHaveFnStmt(defFnStmt, proof, haveObjSatisfyFn, tb.line), nil
 	} else if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordCase) {
 		// Case-by-case structure: body[0] is defFnStmt, body[1..n] are case blocks (possibly with prove cases: at the end)
 		// Each case block has format: case <condition>: <equalTo>:
@@ -458,146 +461,147 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 			}
 		}
 
-		return NewHaveFnCaseByCaseStmt(defFnStmt.(*LetFnStmt), cases, proofs, EqualTo, proveOr, tb.line), nil
+		return NewHaveFnCaseByCaseStmt(defFnStmt, cases, proofs, EqualTo, proveOr, tb.line), nil
 	} else {
 		return nil, fmt.Errorf("expect 'prove:' or 'case' after defFnStmt in have fn statement")
 	}
 }
 
-func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordHave)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
+// 	err := tb.header.skip(glob.KeywordHave)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeywordFn)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeywordFn)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	defHeader, err := p.defHeaderWithoutParsingColonAtEnd_MustFollowWithFreeParamCheck(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	defHeader, err := p.defHeaderWithoutParsingColonAtEnd_MustFollowWithFreeParamCheck(tb)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	err = p.NewDefinedNameInCurrentParseEnv(string(defHeader.Name))
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	err = p.NewDefinedNameInCurrentParseEnv(string(defHeader.Name))
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	for _, param := range defHeader.Params {
-		if _, ok := p.FreeParams[param]; ok {
-			return nil, fmt.Errorf("parameter %s is already defined", param)
-		}
-		p.FreeParams[param] = struct{}{}
-	}
+// 	for _, param := range defHeader.Params {
+// 		if _, ok := p.FreeParams[param]; ok {
+// 			return nil, fmt.Errorf("parameter %s is already defined", param)
+// 		}
+// 		p.FreeParams[param] = struct{}{}
+// 	}
 
-	defer func() {
-		for _, param := range defHeader.Params {
-			delete(p.FreeParams, param)
-		}
-	}()
+// 	defer func() {
+// 		for _, param := range defHeader.Params {
+// 			delete(p.FreeParams, param)
+// 		}
+// 	}()
 
-	retSet, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	retSet, err := p.Obj(tb)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	err = tb.header.skip(glob.KeySymbolEqual)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolEqual)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	equalTo, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	equalTo, err := p.Obj(tb)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	// Check if it's case-by-case or simple equal
-	if len(tb.body) > 0 && tb.body[0].header.is(glob.KeywordCase) {
-		// Case-by-case structure (possibly with prove cases: at the end)
-		caseByCaseFacts := []SpecificFactStmt{}
-		caseByCaseEqualTo := []Obj{}
-		caseByCaseProofs := []StmtSlice{}
+// 	// Check if it's case-by-case or simple equal
+// 	if len(tb.body) > 0 && tb.body[0].header.is(glob.KeywordCase) {
+// 		// Case-by-case structure (possibly with prove cases: at the end)
+// 		caseByCaseFacts := []SpecificFactStmt{}
+// 		caseByCaseEqualTo := []Obj{}
+// 		caseByCaseProofs := []StmtSlice{}
 
-		// Check if the last body block is "prove cases:"
-		proveOr := StmtSlice{}
-		lastBlockIndex := -1
-		if len(tb.body) > 0 {
-			lastIdx := len(tb.body) - 1
-			lastBlock := tb.body[lastIdx]
-			if lastBlock.header.is(glob.KeywordProve) {
-				savedIndex := lastBlock.header.index
-				err := lastBlock.header.skip(glob.KeywordProve)
-				if err == nil && lastBlock.header.is(glob.KeywordCases) {
-					err := lastBlock.header.skip(glob.KeywordCases)
-					if err == nil {
-						lastBlockIndex = lastIdx
-					} else {
-						lastBlock.header.index = savedIndex
-					}
-				} else {
-					if err == nil {
-						lastBlock.header.index = savedIndex
-					}
-				}
-			}
-		}
+// 		// Check if the last body block is "prove cases:"
+// 		proveOr := StmtSlice{}
+// 		lastBlockIndex := -1
+// 		if len(tb.body) > 0 {
+// 			lastIdx := len(tb.body) - 1
+// 			lastBlock := tb.body[lastIdx]
+// 			if lastBlock.header.is(glob.KeywordProve) {
+// 				savedIndex := lastBlock.header.index
+// 				err := lastBlock.header.skip(glob.KeywordProve)
+// 				if err == nil && lastBlock.header.is(glob.KeywordCases) {
+// 					err := lastBlock.header.skip(glob.KeywordCases)
+// 					if err == nil {
+// 						lastBlockIndex = lastIdx
+// 					} else {
+// 						lastBlock.header.index = savedIndex
+// 					}
+// 				} else {
+// 					if err == nil {
+// 						lastBlock.header.index = savedIndex
+// 					}
+// 				}
+// 			}
+// 		}
 
-		// Process case blocks (skip the last one if it's "prove cases:")
-		endIdx := len(tb.body)
-		if lastBlockIndex >= 0 {
-			endIdx = lastBlockIndex
-		}
-		for i := 0; i < endIdx; i++ {
-			block := tb.body[i]
-			err := block.header.skip(glob.KeywordCase)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			curStmt, err := p.specFactStmt(&block)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			err = block.header.skip(glob.KeySymbolColon)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			obj, err := p.Obj(&block)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
-			proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&block)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			caseByCaseEqualTo = append(caseByCaseEqualTo, obj)
-			caseByCaseFacts = append(caseByCaseFacts, curStmt)
-			caseByCaseProofs = append(caseByCaseProofs, proof)
-		}
+// 		// Process case blocks (skip the last one if it's "prove cases:")
+// 		endIdx := len(tb.body)
+// 		if lastBlockIndex >= 0 {
+// 			endIdx = lastBlockIndex
+// 		}
+// 		for i := 0; i < endIdx; i++ {
+// 			block := tb.body[i]
+// 			err := block.header.skip(glob.KeywordCase)
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
+// 			curStmt, err := p.specFactStmt(&block)
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
+// 			err = block.header.skip(glob.KeySymbolColon)
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
+// 			obj, err := p.Obj(&block)
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
+// 			// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
+// 			proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&block)
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
+// 			caseByCaseEqualTo = append(caseByCaseEqualTo, obj)
+// 			caseByCaseFacts = append(caseByCaseFacts, curStmt)
+// 			caseByCaseProofs = append(caseByCaseProofs, proof)
+// 		}
 
-		// Parse "prove or:" block if it exists
-		if lastBlockIndex >= 0 {
-			lastBlock := tb.body[lastBlockIndex]
-			lastBlock.header.skip(glob.KeywordProve)
-			lastBlock.header.skip(glob.KeywordCases)
-			proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-		}
+// 		// Parse "prove or:" block if it exists
+// 		if lastBlockIndex >= 0 {
+// 			lastBlock := tb.body[lastBlockIndex]
+// 			lastBlock.header.skip(glob.KeywordProve)
+// 			lastBlock.header.skip(glob.KeywordCases)
+// 			proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
+// 		}
 
-		return NewHaveFnEqualCaseByCaseStmt(defHeader, retSet, caseByCaseFacts, caseByCaseEqualTo, caseByCaseProofs, proveOr, tb.line), nil
-	} else {
-		proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
+// 		return NewHaveFnEqualCaseByCaseStmt(defHeader, retSet, caseByCaseFacts, caseByCaseEqualTo, caseByCaseProofs, proveOr, tb.line), nil
+// 	} else {
+// 		// proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
+// 		// if err != nil {
+// 		// 	return nil, ErrInLine(err, tb)
+// 		// }
 
-		return NewHaveFnEqualStmt(defHeader, retSet, equalTo, proof, tb.line), nil
-	}
-}
+// 		// return NewHaveFnEqualStmt(defHeader, retSet, equalTo, proof, tb.line), nil
+// 		panic("")
+// 	}
+// }
 
 func (p *TbParser) haveObjStStmt(tb *tokenBlock) (Stmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
@@ -4109,4 +4113,91 @@ func (p *TbParser) haveFnEqual(tb *tokenBlock) (Stmt, error) {
 
 		return NewHaveFnEqual(NewDefHeaderWithDom(name, params, paramSets, doms), retSet, equalTo, proofs, tb.line), nil
 	}
+}
+
+func (p *TbParser) defFn(tb *tokenBlock, skipLetAndFn bool) (*LetFn, error) {
+	if skipLetAndFn {
+		err := tb.header.skip(glob.KeywordLet)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		err = tb.header.skip(glob.KeywordFn)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+	}
+
+	decl, err := p.defHeaderWithoutParsingColonAtEnd(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	err = p.NewDefinedNameInCurrentParseEnv(string(decl.Name))
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Add fn params to FreeParams
+	for _, param := range decl.Params {
+		if _, exists := p.FreeParams[param]; exists {
+			return nil, ErrInLine(fmt.Errorf("parameter %s in fn definition conflicts with a free parameter in the outer scope", param), tb)
+		}
+
+		p.FreeParams[param] = struct{}{}
+	}
+
+	// Defer: remove the params we added when leaving this fn scope
+	defer func() {
+		for _, param := range decl.Params {
+			delete(p.FreeParams, param)
+		}
+	}()
+
+	retSet, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+	if asAtom, ok := retSet.(Atom); ok {
+		if string(asAtom) == glob.KeySymbolColon {
+			return nil, fmt.Errorf(": is not allowed in return set")
+		}
+	}
+
+	domFacts := []Spec_OrFact{}
+	thenFacts := []Spec_OrFact{}
+
+	if tb.header.is(glob.KeySymbolColon) {
+		tb.header.skip("")
+		if tb.header.ExceedEnd() {
+			domFacts, thenFacts, err = p.dom_and_section_SpecOrFact(tb, glob.KeySymbolRightArrow, glob.KeySymbolEquivalent)
+
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+		} else {
+			domFacts, err = p.inlineFacts_untilWord_SpecOrFact(tb, glob.KeySymbolRightArrow, []string{})
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+
+			if !tb.header.is(glob.KeySymbolRightArrow) {
+				// return NewLetFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
+				return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
+			}
+
+			err = tb.header.skip(glob.KeySymbolRightArrow)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+
+			thenFacts, err = p.inlineFacts_untilWord_SpecOrFact(tb, glob.KeySymbolRightArrow, []string{})
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+		}
+	}
+
+	// return NewLetFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
+	return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
 }

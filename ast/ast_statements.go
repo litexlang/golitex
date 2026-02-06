@@ -218,14 +218,14 @@ type HaveObjEqualStmt struct {
 }
 
 // 这是have fn 语法糖。理论上可以用 exist_prop + have fn equal case by case + 给定义的函数定义它的函数集合，来彻底实现
-type HaveFnEqualStmt struct {
-	DefHeader *DefHeader
-	RetSet    Obj
-	EqualTo   Obj
-	Proofs    StmtSlice
+// type HaveFnEqualStmt struct {
+// 	DefHeader *DefHeader
+// 	RetSet    Obj
+// 	EqualTo   Obj
+// 	Proofs    StmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 // 这是have fn case by case，然后case by case下fn的then都满足的语法糖。理论上可以用 exist_prop + have fn equal case by case + fn_template (可以写复杂的dom, then) + 在定义的外部写如果参数符合dom，那对应的equalTo符合fn_template的then，来彻底实现have fn case by case 的功能。
 // Have fn case by case 和 have fn equal 就是单纯的语法糖，不要想有什么额外的功能。不要想着怎么让 HaveFn, HaveFnCaseByCase 用HaveEqual 来替代。
@@ -474,6 +474,14 @@ type HaveFnEqualCaseByCase struct {
 	CaseByCaseEqualTo ObjSlice
 	Proofs            StmtSliceSlice
 	ProveCases        StmtSlice
+
+	Line uint
+}
+
+type LetFn struct {
+	DefHeaderWithDom *DefHeaderWithDom
+	RetSet           Obj
+	ThenFacts        ReversibleFacts
 
 	Line uint
 }
