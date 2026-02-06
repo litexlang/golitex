@@ -327,17 +327,17 @@ func NewFnIsSubsetOfCartStmt(obj Obj, fnSetObj *FnObj, line uint) *FnIsSubsetOfC
 	return &FnIsSubsetOfCartStmt{Obj: obj, FnSetObj: fnSetObj, Line: line}
 }
 
-func NewHaveFnEqualCaseByCaseStmt(defHeader *DefHeader, retSet Obj, caseByCaseFacts SpecFactPtrSlice, caseByCaseEqualTo ObjSlice, proofs StmtSliceSlice, proveCases StmtSlice, line uint) *HaveFnEqualCaseByCaseStmt {
-	return &HaveFnEqualCaseByCaseStmt{
-		DefHeader:         defHeader,
-		RetSet:            retSet,
-		CaseByCaseFacts:   caseByCaseFacts,
-		CaseByCaseEqualTo: caseByCaseEqualTo,
-		Proofs:            proofs,
-		ProveCases:        proveCases,
-		Line:              line,
-	}
-}
+// func NewHaveFnEqualCaseByCaseStmt(defHeader *DefHeader, retSet Obj, caseByCaseFacts SpecFactPtrSlice, caseByCaseEqualTo ObjSlice, proofs StmtSliceSlice, proveCases StmtSlice, line uint) *HaveFnEqualCaseByCaseStmt {
+// 	return &HaveFnEqualCaseByCaseStmt{
+// 		DefHeader:         defHeader,
+// 		RetSet:            retSet,
+// 		CaseByCaseFacts:   caseByCaseFacts,
+// 		CaseByCaseEqualTo: caseByCaseEqualTo,
+// 		Proofs:            proofs,
+// 		ProveCases:        proveCases,
+// 		Line:              line,
+// 	}
+// }
 
 func NewPureSpecificFactStmt(isTrue bool, propName Atom, params ObjSlice, line uint) *PureSpecificFactStmt {
 	return &PureSpecificFactStmt{isTrue, propName, params, line}
