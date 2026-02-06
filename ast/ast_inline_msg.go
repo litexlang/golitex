@@ -518,9 +518,9 @@ func (s *EvalStmt) InlineString() string {
 // 	return s.String()
 // }
 
-func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
-	return s.String()
-}
+// func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
+// 	return s.String()
+// }
 
 func (s *HaveFnEqualCaseByCase) InlineString() string {
 	return s.String()

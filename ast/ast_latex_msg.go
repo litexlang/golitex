@@ -1092,9 +1092,9 @@ func (s *EvalStmt) ToLatexString() string {
 // 	return s.String()
 // }
 
-func (s *HaveFnEqualCaseByCaseStmt) ToLatexString() string {
-	return s.String()
-}
+// func (s *HaveFnEqualCaseByCaseStmt) ToLatexString() string {
+// 	return s.String()
+// }
 
 func (s *HaveFnEqualCaseByCase) ToLatexString() string {
 	return s.String()

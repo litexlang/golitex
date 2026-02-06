@@ -76,12 +76,12 @@ func (s *EvalStmt) stmt()                   {}
 
 // func (s *DefProveAlgoStmt) stmt()           {}
 // func (s *ByStmt) stmt()                     {}
-func (s *HaveFnEqualCaseByCaseStmt) stmt() {}
-func (s *HaveFnCaseByCaseStmt) stmt()      {}
-func (s *WitnessStmt) stmt()               {}
-func (s *HaveFnEqual) stmt()               {}
-func (s *HaveFnEqualCaseByCase) stmt()     {}
-func (s *LetFn) stmt()                     {}
+// func (s *HaveFnEqualCaseByCaseStmt) stmt() {}
+func (s *HaveFnCaseByCaseStmt) stmt()  {}
+func (s *WitnessStmt) stmt()           {}
+func (s *HaveFnEqual) stmt()           {}
+func (s *HaveFnEqualCaseByCase) stmt() {}
+func (s *LetFn) stmt()                 {}
 
 func (s *DefLetStmt) algoStmt()            {}
 func (s *DefPropStmt) algoStmt()           {}
@@ -134,28 +134,29 @@ func (s *ProveInferStmt) algoStmt() {}
 func (s *ProveIsTransitivePropStmt) algoStmt() {}
 func (s *DefAlgoStmt) algoStmt()               {}
 func (s *EvalStmt) algoStmt()                  {}
-func (s *HaveFnEqualCaseByCaseStmt) algoStmt() {}
-func (s *HaveFnCaseByCaseStmt) algoStmt()      {}
-func (s *WitnessStmt) algoStmt()               {}
-func (s *HaveFnEqual) algoStmt()               {}
-func (s *HaveFnEqualCaseByCase) algoStmt()     {}
-func (s *LetFn) algoStmt()                     {}
-func (s *EqualSetStmt) stmt()                  {}
-func (s *EqualSetStmt) algoStmt()              {}
-func (s *WitnessNonemptyStmt) stmt()           {}
-func (s *WitnessNonemptyStmt) algoStmt()       {}
-func (s *ImpossibleStmt) stmt()                {}
-func (s *ImpossibleStmt) algoStmt()            {}
-func (s *SetIsFnStmt) stmt()                   {}
-func (s *SetIsFnStmt) algoStmt()               {}
-func (s *FnIsSubsetOfCartStmt) stmt()          {}
-func (s *FnIsSubsetOfCartStmt) algoStmt()      {}
-func (s *DefLetStmt) GetLine() uint            { return s.Line }
-func (s *DefPropStmt) GetLine() uint           { return s.Line }
-func (s *LetFnStmt) GetLine() uint             { return s.Line }
-func (s *UniFactStmt) GetLine() uint           { return s.Line }
-func (s *ClaimProveStmt) GetLine() uint        { return s.Line }
-func (s *KnowFactStmt) GetLine() uint          { return s.Line }
+
+// func (s *HaveFnEqualCaseByCaseStmt) algoStmt() {}
+func (s *HaveFnCaseByCaseStmt) algoStmt()  {}
+func (s *WitnessStmt) algoStmt()           {}
+func (s *HaveFnEqual) algoStmt()           {}
+func (s *HaveFnEqualCaseByCase) algoStmt() {}
+func (s *LetFn) algoStmt()                 {}
+func (s *EqualSetStmt) stmt()              {}
+func (s *EqualSetStmt) algoStmt()          {}
+func (s *WitnessNonemptyStmt) stmt()       {}
+func (s *WitnessNonemptyStmt) algoStmt()   {}
+func (s *ImpossibleStmt) stmt()            {}
+func (s *ImpossibleStmt) algoStmt()        {}
+func (s *SetIsFnStmt) stmt()               {}
+func (s *SetIsFnStmt) algoStmt()           {}
+func (s *FnIsSubsetOfCartStmt) stmt()      {}
+func (s *FnIsSubsetOfCartStmt) algoStmt()  {}
+func (s *DefLetStmt) GetLine() uint        { return s.Line }
+func (s *DefPropStmt) GetLine() uint       { return s.Line }
+func (s *LetFnStmt) GetLine() uint         { return s.Line }
+func (s *UniFactStmt) GetLine() uint       { return s.Line }
+func (s *ClaimProveStmt) GetLine() uint    { return s.Line }
+func (s *KnowFactStmt) GetLine() uint      { return s.Line }
 
 // func (s *DefExistPropStmt) GetLine() uint              { return s.Line }
 // func (s *HaveObjStStmt) GetLine() uint                 { return s.Line }
@@ -202,18 +203,18 @@ func (s *ProveForStmt) GetLine() uint   { return s.Line }
 func (s *ProveInferStmt) GetLine() uint { return s.Line }
 
 // func (s *DefImplicationStmt) GetLine() uint         { return s.Line }
-func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint { return s.Line }
-func (s *HaveFnCaseByCaseStmt) GetLine() uint      { return s.Line }
-func (s *WitnessStmt) GetLine() uint               { return s.Line }
-func (s *HaveFnEqual) GetLine() uint               { return s.Line }
-func (s *HaveFnEqualCaseByCase) GetLine() uint     { return s.Line }
-func (s *LetFn) GetLine() uint                     { return s.Line }
-func (s *EqualSetStmt) GetLine() uint              { return s.Line }
-func (s *WitnessNonemptyStmt) GetLine() uint       { return s.Line }
-func (s *ImpossibleStmt) GetLine() uint            { return s.Line }
-func (s *SetIsFnStmt) GetLine() uint               { return s.Line }
-func (p *PureSpecificFactStmt) GetLine() uint      { return p.Line }
-func (e *ExistSpecificFactStmt) GetLine() uint     { return e.Line }
+// func (s *HaveFnEqualCaseByCaseStmt) GetLine() uint { return s.Line }
+func (s *HaveFnCaseByCaseStmt) GetLine() uint  { return s.Line }
+func (s *WitnessStmt) GetLine() uint           { return s.Line }
+func (s *HaveFnEqual) GetLine() uint           { return s.Line }
+func (s *HaveFnEqualCaseByCase) GetLine() uint { return s.Line }
+func (s *LetFn) GetLine() uint                 { return s.Line }
+func (s *EqualSetStmt) GetLine() uint          { return s.Line }
+func (s *WitnessNonemptyStmt) GetLine() uint   { return s.Line }
+func (s *ImpossibleStmt) GetLine() uint        { return s.Line }
+func (s *SetIsFnStmt) GetLine() uint           { return s.Line }
+func (p *PureSpecificFactStmt) GetLine() uint  { return p.Line }
+func (e *ExistSpecificFactStmt) GetLine() uint { return e.Line }
 
 func (s *DefLetStmt) SetLine(l uint)     { s.Line = l }
 func (s *DefPropStmt) SetLine(l uint)    { s.Line = l }
@@ -271,20 +272,20 @@ func (s *ProveForStmt) SetLine(l uint)   { s.Line = l }
 func (s *ProveInferStmt) SetLine(l uint) { s.Line = l }
 
 // func (s *DefImplicationStmt) SetLine(l uint)         { s.Line = l }
-func (s *HaveFnEqualCaseByCaseStmt) SetLine(l uint) { s.Line = l }
-func (s *HaveFnCaseByCaseStmt) SetLine(l uint)      { s.Line = l }
-func (s *WitnessStmt) SetLine(l uint)               { s.Line = l }
-func (s *HaveFnEqual) SetLine(l uint)               { s.Line = l }
-func (s *HaveFnEqualCaseByCase) SetLine(l uint)     { s.Line = l }
-func (s *LetFn) SetLine(l uint)                     { s.Line = l }
-func (s *EqualSetStmt) SetLine(l uint)              { s.Line = l }
-func (s *WitnessNonemptyStmt) SetLine(l uint)       { s.Line = l }
-func (s *ImpossibleStmt) SetLine(l uint)            { s.Line = l }
-func (s *SetIsFnStmt) SetLine(l uint)               { s.Line = l }
-func (s *FnIsSubsetOfCartStmt) GetLine() uint       { return s.Line }
-func (s *FnIsSubsetOfCartStmt) SetLine(l uint)      { s.Line = l }
-func (p *PureSpecificFactStmt) SetLine(l uint)      { p.Line = l }
-func (e *ExistSpecificFactStmt) SetLine(l uint)     { e.Line = l }
+// func (s *HaveFnEqualCaseByCaseStmt) SetLine(l uint) { s.Line = l }
+func (s *HaveFnCaseByCaseStmt) SetLine(l uint)  { s.Line = l }
+func (s *WitnessStmt) SetLine(l uint)           { s.Line = l }
+func (s *HaveFnEqual) SetLine(l uint)           { s.Line = l }
+func (s *HaveFnEqualCaseByCase) SetLine(l uint) { s.Line = l }
+func (s *LetFn) SetLine(l uint)                 { s.Line = l }
+func (s *EqualSetStmt) SetLine(l uint)          { s.Line = l }
+func (s *WitnessNonemptyStmt) SetLine(l uint)   { s.Line = l }
+func (s *ImpossibleStmt) SetLine(l uint)        { s.Line = l }
+func (s *SetIsFnStmt) SetLine(l uint)           { s.Line = l }
+func (s *FnIsSubsetOfCartStmt) GetLine() uint   { return s.Line }
+func (s *FnIsSubsetOfCartStmt) SetLine(l uint)  { s.Line = l }
+func (p *PureSpecificFactStmt) SetLine(l uint)  { p.Line = l }
+func (e *ExistSpecificFactStmt) SetLine(l uint) { e.Line = l }
 
 type FactStmt interface {
 	factStmt()
