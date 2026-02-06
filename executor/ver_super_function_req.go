@@ -353,7 +353,7 @@ func (ver *Verifier) verSlashReq(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 	}
 
 	// param 1 not zero
-	notZeroFact := ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fnObj.Params[0], ast.Atom("0")}, glob.BuiltinLine0)
+	notZeroFact := ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fnObj.Params[1], ast.Atom("0")}, glob.BuiltinLine0)
 	verRet = ver.VerFactStmt(notZeroFact, state)
 	if verRet.IsNotTrue() {
 		return verRet

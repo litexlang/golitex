@@ -312,7 +312,7 @@ func (ver *Verifier) matchTwoPureSpecFacts(stmt *ast.PureSpecificFactStmt, known
 		for i, knownParam := range knownFact.Params {
 			verRet := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(knownParam, stmt.Params[i])
 			if verRet.IsErr() || verRet.IsUnknown() {
-				return ast.NewEmptyUnknownVerRet()
+				return verRet
 			}
 		}
 
@@ -321,7 +321,7 @@ func (ver *Verifier) matchTwoPureSpecFacts(stmt *ast.PureSpecificFactStmt, known
 		for i, knownParam := range knownFact.Params {
 			verRet := ver.objEqualSpec(knownParam, stmt.Params[i], newState)
 			if verRet.IsErr() || verRet.IsUnknown() {
-				return ast.NewEmptyUnknownVerRet()
+				return verRet
 			}
 		}
 	}
