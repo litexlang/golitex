@@ -1184,4 +1184,5 @@ know forall x, y Z: $is_finite_set(closed_range(x, y)), $is_finite_set(range(x, 
 know forall x, y Z: x <= y => count(closed_range(x, y)) = y - x + 1
 know forall x, y Z: x <= y => count(range(x, y)) = y - x
 
+know forall x, y Z: y != 0 => x % y $in Z
 `
