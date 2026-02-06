@@ -150,7 +150,7 @@ func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, sta
 			rightEqualObjs, ok := curEnv.EqualMem[right.String()]
 			if ok {
 				if leftEqualObjs == rightEqualObjs {
-					return ast.NewTrueStmtEmptyRet(nil)
+					return newTrueStmtRetWithCaller()
 				}
 			}
 		}
@@ -158,29 +158,29 @@ func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, sta
 
 	leftEqualObjs, ok := ver.Env.GetEqualObjs(left)
 	if !ok {
-		return ast.NewUnknownStmtEmptyRet(nil)
+		return newUnknownStmtRetWithCaller("")
 	}
 
 	rightEqualObjs, ok := ver.Env.GetEqualObjs(right)
 	if !ok {
-		return ast.NewUnknownStmtEmptyRet(nil)
+		return newUnknownStmtRetWithCaller("")
 	}
 
 	for _, leftEqualObj := range *leftEqualObjs {
 		for _, rightEqualObj := range *rightEqualObjs {
 			if leftEqualObj.String() == rightEqualObj.String() {
-				return ast.NewTrueStmtEmptyRet(nil)
+				return newTrueStmtRetWithCaller()
 			} else {
 				_, newLeft := ver.Env.GetStoredSymbolValue(leftEqualObj)
 				if cmp.IsNumExprLitObj(newLeft) {
 					_, newRight := ver.Env.GetStoredSymbolValue(rightEqualObj)
 					if ret := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(newLeft, newRight); ret.IsTrue() {
-						return ast.NewTrueStmtEmptyRet(nil)
+						return newTrueStmtRetWithCaller()
 					}
 				}
 			}
 		}
 	}
 
-	return ast.NewUnknownStmtEmptyRet(nil)
+	return newUnknownStmtRetWithCaller("")
 }

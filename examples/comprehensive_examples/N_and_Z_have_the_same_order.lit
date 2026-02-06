@@ -1,3 +1,4 @@
+"""
 have fn g(x Z) N =:
     case x < 0: 7 * (-x) + 2:
         -x $in N
@@ -65,3 +66,4 @@ witness g: g2 fn(Z)N st $is_injective_fn(Z, N, g2)
 
 $order_is_the_same(N, Z)
 
+"""

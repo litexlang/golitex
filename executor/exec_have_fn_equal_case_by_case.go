@@ -59,7 +59,7 @@ func (exec *Executor) haveFnEqualCaseByCaseStmt_Verify(stmt *ast.HaveFnEqualCase
 		return verRet
 	}
 
-	return ast.NewTrueStmtEmptyRet(nil).AddVerifyProcesses(verifyProcessMsgs)
+	return newTrueStmtRetWithCaller().AddVerifyProcesses(verifyProcessMsgs)
 }
 
 func (exec *Executor) haveFnEqualCaseByCaseStmt_CheckAllCasesCoverDomain_CasesNoOverlap_ReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCaseStmt) ast.StmtRet {

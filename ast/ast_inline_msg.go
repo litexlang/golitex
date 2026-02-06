@@ -62,6 +62,27 @@ func (l *LetFnStmt) InlineString() string {
 
 	return builder.String()
 }
+
+func (l *LetFn) InlineString() string {
+	var builder strings.Builder
+	builder.WriteString(glob.KeywordFn)
+	builder.WriteString(" ")
+	if l.DefHeaderWithDom != nil {
+		builder.WriteString(l.DefHeaderWithDom.StringWithoutColonAtEnd())
+		builder.WriteString(" ")
+	}
+	builder.WriteString(l.RetSet.String())
+	if l.DefHeaderWithDom != nil && len(l.DefHeaderWithDom.DomFacts) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteString(inlineReversibleFactsString(l.DefHeaderWithDom.DomFacts))
+	}
+	if len(l.ThenFacts) > 0 {
+		builder.WriteString(glob.KeySymbolRightArrow)
+		builder.WriteString(inlineReversibleFactsString(l.ThenFacts))
+	}
+
+	return builder.String()
+}
 func (l *UniFactStmt) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordForall)
@@ -395,9 +416,9 @@ func (s *HaveObjEqualStmt) InlineString() string {
 	return s.String()
 }
 
-func (s *HaveFnEqualStmt) InlineString() string {
-	return s.String()
-}
+// func (s *HaveFnEqualStmt) InlineString() string {
+// 	return s.String()
+// }
 
 func (s *HaveFnEqual) InlineString() string {
 	return s.String()

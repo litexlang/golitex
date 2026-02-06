@@ -208,7 +208,7 @@ func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ast.Stm
 		continue
 	}
 
-	return true, ast.NewTrueStmtEmptyRet(nil)
+	return true, newTrueStmtRetWithCaller()
 }
 
 func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValueParams *ast.FnObj) (ast.Obj, ast.StmtRet) {

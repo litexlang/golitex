@@ -332,6 +332,26 @@ func (stmt *LetFnStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewLetFnStmt(stmt.Name, fnTemplateInstantiated, stmt.Line), nil
 }
 
+func (stmt *LetFn) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	var newDefHeaderWithDom *DefHeaderWithDom
+	if stmt.DefHeaderWithDom != nil {
+		var err error
+		newDefHeaderWithDom, err = stmt.DefHeaderWithDom.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+	}
+	newRetSet, err := stmt.RetSet.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newThenFacts, err := stmt.ThenFacts.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return &LetFn{newDefHeaderWithDom, newRetSet, newThenFacts, stmt.Line}, nil
+}
+
 func (s StmtSlice) Instantiate(uniMap map[string]Obj) (StmtSlice, error) {
 	newStmts := make([]Stmt, len(s))
 	for i, stmt := range s {
@@ -660,25 +680,25 @@ func (stmt *HaveObjEqualStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewHaveObjEqualStmt(stmt.ObjNames, newObjEqualTos, newObjSets, stmt.Line), nil
 }
 
-func (stmt *HaveFnEqualStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newDefHeader, err := stmt.DefHeader.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newRetSet, err := stmt.RetSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newEqualTo, err := stmt.EqualTo.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newProofs, err := stmt.Proofs.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewHaveFnEqualStmt(newDefHeader, newRetSet, newEqualTo, newProofs, stmt.Line), nil
-}
+// func (stmt *HaveFnEqualStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+// 	newDefHeader, err := stmt.DefHeader.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	newRetSet, err := stmt.RetSet.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	newEqualTo, err := stmt.EqualTo.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	newProofs, err := stmt.Proofs.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return NewHaveFnEqualStmt(newDefHeader, newRetSet, newEqualTo, newProofs, stmt.Line), nil
+// }
 
 func (stmt *HaveFnEqual) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	var newDefHeaderWithDom *DefHeaderWithDom

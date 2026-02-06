@@ -270,21 +270,15 @@ func (ver *Verifier) verPlusReq(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 	// in R
 	inRFact := ast.NewInFactWithObj(fnObj.Params[0], ast.Atom(glob.KeywordReal))
 	verRet := ver.VerFactStmt(inRFact, state)
-	if verRet.IsErr() {
+	if verRet.IsNotTrue() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("parameters in %s must be in R, %s in %s is not valid", fnObj, fnObj.Params[0], fnObj))
 	}
 
 	// in R
 	inRFact = ast.NewInFactWithObj(fnObj.Params[1], ast.Atom(glob.KeywordReal))
 	verRet = ver.VerFactStmt(inRFact, state)
-	if verRet.IsErr() {
+	if verRet.IsNotTrue() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("parameters in %s must be in R, %s in %s is not valid", fnObj, fnObj.Params[1], fnObj))
 	}
 	return ast.NewTrueVerRet(nil, nil, "")
 }
@@ -297,21 +291,15 @@ func (ver *Verifier) verMinusReq(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 	// in R
 	inRFact := ast.NewInFactWithObj(fnObj.Params[0], ast.Atom(glob.KeywordReal))
 	verRet := ver.VerFactStmt(inRFact, state)
-	if verRet.IsErr() {
+	if verRet.IsNotTrue() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("parameters in %s must be in R, %s in %s is not valid", fnObj, fnObj.Params[0], fnObj))
 	}
 
 	// in R
 	inRFact = ast.NewInFactWithObj(fnObj.Params[1], ast.Atom(glob.KeywordReal))
 	verRet = ver.VerFactStmt(inRFact, state)
-	if verRet.IsErr() {
+	if verRet.IsNotTrue() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("parameters in %s must be in R, %s in %s is not valid", fnObj, fnObj.Params[1], fnObj))
 	}
 
 	return ast.NewTrueVerRet(nil, nil, "")
@@ -327,21 +315,15 @@ func (ver *Verifier) verStarReq(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 	// in R
 	inRFact := ast.NewInFactWithObj(fnObj.Params[0], ast.Atom(glob.KeywordReal))
 	verRet := ver.VerFactStmt(inRFact, state)
-	if verRet.IsErr() {
+	if verRet.IsNotTrue() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("parameters in %s must be in R, %s in %s is not valid", fnObj, fnObj.Params[0], fnObj))
 	}
 
 	// in R
 	inRFact = ast.NewInFactWithObj(fnObj.Params[1], ast.Atom(glob.KeywordReal))
 	verRet = ver.VerFactStmt(inRFact, state)
-	if verRet.IsErr() {
+	if verRet.IsNotTrue() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("parameters in %s must be in R, %s in %s is not valid", fnObj, fnObj.Params[1], fnObj))
 	}
 
 	return ast.NewTrueVerRet(nil, nil, "")
@@ -355,31 +337,22 @@ func (ver *Verifier) verSlashReq(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 	// in R
 	inRNot0Fact := ast.NewInFactWithObj(fnObj.Params[0], ast.Atom(glob.KeywordReal))
 	verRet := ver.VerFactStmt(inRNot0Fact, state)
-	if verRet.IsErr() {
+	if verRet.IsNotTrue() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("parameters in %s must be in R_not0, %s in %s is not valid", fnObj, fnObj.Params[0], fnObj))
 	}
 
 	// in R
 	inRNot0Fact = ast.NewInFactWithObj(fnObj.Params[1], ast.Atom(glob.KeywordReal))
 	verRet = ver.VerFactStmt(inRNot0Fact, state)
-	if verRet.IsErr() {
+	if verRet.IsNotTrue() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("parameters in %s must be in R_not0, %s in %s is not valid", fnObj, fnObj.Params[1], fnObj))
 	}
 
 	// param 1 not zero
 	notZeroFact := ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fnObj.Params[0], ast.Atom("0")}, glob.BuiltinLine0)
 	verRet = ver.VerFactStmt(notZeroFact, state)
-	if verRet.IsErr() {
+	if verRet.IsNotTrue() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("parameters in %s must not be zero, %s in %s is not valid", fnObj, fnObj.Params[0], fnObj))
 	}
 
 	return ast.NewTrueVerRet(nil, nil, "")
@@ -393,32 +366,23 @@ func (ver *Verifier) verPowerReq(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 	// in R
 	inRFact := ast.NewInFactWithObj(fnObj.Params[0], ast.Atom(glob.KeywordReal))
 	verRet := ver.VerFactStmt(inRFact, state)
-	if verRet.IsErr() {
+	if verRet.IsNotTrue() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("parameters in %s must be in R, %s in %s is not valid", fnObj, fnObj.Params[0], fnObj))
 	}
 
 	// in Z
 	inZFact := ast.NewInFactWithObj(fnObj.Params[1], ast.Atom(glob.KeywordInteger))
 	verRet = ver.VerFactStmt(inZFact, state)
-	if verRet.IsErr() {
+	if verRet.IsNotTrue() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("parameters in %s must be in R, %s in %s is not valid", fnObj, fnObj.Params[1], fnObj))
 	}
 
 	// param0 不是 0 or param1 不是 0
 	orNotZero := ast.NewOrStmt([]ast.SpecificFactStmt{ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fnObj.Params[0], ast.Atom("0")}, glob.BuiltinLine0), ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fnObj.Params[1], ast.Atom("0")}, glob.BuiltinLine0)}, glob.BuiltinLine0)
 
 	verRet = ver.VerFactStmt(orNotZero, state)
-	if verRet.IsErr() {
+	if verRet.IsNotTrue() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("parameters in %s must not be zero, %s in %s is not valid", fnObj, fnObj.Params[0], fnObj.Params[1]))
 	}
 
 	return ast.NewTrueVerRet(nil, nil, "")
@@ -432,31 +396,22 @@ func (ver *Verifier) verPercentReq(fnObj *ast.FnObj, state *VerState) ast.VerRet
 	// in Z
 	inZFact := ast.NewInFactWithObj(fnObj.Params[0], ast.Atom(glob.KeywordInteger))
 	verRet := ver.VerFactStmt(inZFact, state)
-	if verRet.IsErr() {
+	if verRet.IsNotTrue() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("parameters in %s must be in Z, %s in %s is not valid", fnObj, fnObj.Params[0], fnObj))
 	}
 
 	// in Z
 	inZFact = ast.NewInFactWithObj(fnObj.Params[1], ast.Atom(glob.KeywordInteger))
 	verRet = ver.VerFactStmt(inZFact, state)
-	if verRet.IsErr() {
+	if verRet.IsNotTrue() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("parameters in %s must be in Z, %s in %s is not valid", fnObj, fnObj.Params[1], fnObj))
 	}
 
 	// y != 0
 	notZeroFact := ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fnObj.Params[1], ast.Atom("0")}, glob.BuiltinLine0)
 	verRet = ver.VerFactStmt(notZeroFact, state)
-	if verRet.IsErr() {
+	if verRet.IsNotTrue() {
 		return verRet
-	}
-	if verRet.IsUnknown() {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("parameters in %s must not be zero, %s in %s is not valid", fnObj, fnObj.Params[1], fnObj))
 	}
 
 	return ast.NewTrueVerRet(nil, nil, "")
