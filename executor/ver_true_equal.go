@@ -150,13 +150,13 @@ func (ver *Verifier) verEqualByEqualSpecMemAtEnv(curEnv *env.EnvMemory, left ast
 	}
 
 	if verRet := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right); verRet.IsErr() || verRet.IsTrue() {
-		return verRet
+		return ast.NewUnknownVerRet(nil)
 	}
 
 	if gotLeftEqualObjs {
 		for _, equalToLeftObj := range *equalToLeftObjs {
 			if verRet := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(equalToLeftObj, right); verRet.IsErr() {
-				return verRet
+				return ast.NewUnknownVerRet(nil)
 			} else if verRet.IsTrue() {
 				return ast.NewTrueVerRet(nil, nil, fmt.Sprintf("It is known that:\n%s = %s and %s = %s", equalToLeftObj, right, equalToLeftObj, left))
 			}
@@ -166,7 +166,7 @@ func (ver *Verifier) verEqualByEqualSpecMemAtEnv(curEnv *env.EnvMemory, left ast
 	if gotRightEqualObjs {
 		for _, equalToRightObj := range *equalToRightObjs {
 			if verRet := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(equalToRightObj, left); verRet.IsErr() {
-				return verRet
+				return ast.NewUnknownVerRet(nil)
 			} else if verRet.IsTrue() {
 				return ast.NewTrueVerRet(nil, nil, fmt.Sprintf("It is known that\n%s = %s and %s = %s", left, equalToRightObj, equalToRightObj, right))
 			}

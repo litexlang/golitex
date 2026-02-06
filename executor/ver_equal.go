@@ -32,7 +32,7 @@ func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt *ast.PureSpecificFactStm
 		return verRet
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) verTrueEqualWholeProcess(stmt *ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
@@ -59,6 +59,10 @@ func (ver *Verifier) verTrueEqualWholeProcess(stmt *ast.PureSpecificFactStmt, st
 }
 
 func (ver *Verifier) verTrueEqualPreProcess(stmt *ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
+	if stmt.Params[0].String() == stmt.Params[1].String() {
+		return ast.NewTrueVerRet(stmt, nil, "the two objects are literally equal")
+	}
+
 	return ver.verByReplaceObjInSpecFactWithValue(stmt, state)
 }
 
