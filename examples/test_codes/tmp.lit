@@ -1,4 +1,2 @@
-let absolute fn(R) R
-know forall x R: absolute(x) = x
-
-absolute(1) = 1
+let a, b R: b != 0
+a / b = a * (1 / b)

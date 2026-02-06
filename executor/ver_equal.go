@@ -17,6 +17,7 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	cmp "golitex/cmp"
 	glob "golitex/glob"
 )
 
@@ -59,8 +60,8 @@ func (ver *Verifier) verTrueEqualWholeProcess(stmt *ast.PureSpecificFactStmt, st
 }
 
 func (ver *Verifier) verTrueEqualPreProcess(stmt *ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
-	if stmt.Params[0].String() == stmt.Params[1].String() {
-		return ast.NewTrueVerRet(stmt, nil, "the two objects are literally equal")
+	if verRet := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(stmt.Params[0], stmt.Params[1]); verRet.IsTrue() || verRet.IsErr() {
+		return verRet
 	}
 
 	return ver.verByReplaceObjInSpecFactWithValue(stmt, state)

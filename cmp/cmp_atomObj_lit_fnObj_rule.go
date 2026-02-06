@@ -15,7 +15,6 @@
 package litex_comparator
 
 import (
-	"fmt"
 	ast "golitex/ast"
 )
 
@@ -26,24 +25,24 @@ func cmpObjLiterally(left, right ast.Obj) (bool, error) {
 		case ast.Atom:
 			return asLeft.String() == asRight.String(), nil
 		default:
-			return false, fmt.Errorf("unknown type: %T", right)
+			return false, nil
 		}
 	case *ast.FnObj:
 		switch asRight := right.(type) {
 		case *ast.FnObj:
 			return asLeft.String() == asRight.String(), nil
 		default:
-			return false, fmt.Errorf("unknown type: %T", right)
+			return false, nil
 		}
 	case ast.FnSetObj:
 		switch asRight := right.(type) {
 		case ast.FnSetObj:
 			return cmpFnSetObjLiterally(asLeft, asRight)
 		default:
-			return false, fmt.Errorf("unknown type: %T", right)
+			return false, nil
 		}
 	default:
-		panic("TODO: cmpObjLiterally: unknown type: " + fmt.Sprintf("%T", left))
+		return false, nil
 	}
 }
 

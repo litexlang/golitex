@@ -1183,4 +1183,5 @@ know forall x, y Z: range(x, y) = {self Z: self >= x, self < y}
 know forall x, y Z: $is_finite_set(closed_range(x, y)), $is_finite_set(range(x, y))
 know forall x, y Z: x <= y => count(closed_range(x, y)) = y - x + 1
 know forall x, y Z: x <= y => count(range(x, y)) = y - x
+
 `
