@@ -1288,7 +1288,7 @@ func (stmt *FnIsSubsetOfCartStmt) Instantiate(uniMap map[string]Obj) (Stmt, erro
 		return nil, err
 	}
 
-	return NewFnIsSubsetOfCartStmt(obj, fnSetObj.(*FnObj), stmt.Line), nil
+	return NewFnIsSubsetOfCartStmt(obj, fnSetObj.(FnSetObj), stmt.Line), nil
 }
 
 func (stmt *FnSetObjWithoutName) Instantiate(uniMap map[string]Obj) (Obj, error) {

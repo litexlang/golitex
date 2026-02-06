@@ -1,10 +1,5 @@
-have fn f(x R) R =:
-    case x >= 1: x
-    case x < 1: x - 1
+have X, Y, z nonempty_set 
 
-f(1) = 1
-f(2) = 2
-f(3) = 3
+have f fn(X, Y) z
 
-prove:
-    f(f(1)) = f(1) = 1
+fn_is_subset_of_cart f fn(X, Y) z

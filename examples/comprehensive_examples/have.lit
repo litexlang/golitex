@@ -91,3 +91,15 @@ prove:
 
     x > 0
     y > 0
+
+prove:
+    have fn:
+        f (x R) R:
+            x > 0
+            =>:
+                f(x) = x + 1
+        witness:
+            do_nothing
+        = x + 1
+
+    f(2) = 3
