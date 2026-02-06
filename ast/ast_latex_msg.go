@@ -109,6 +109,60 @@ func (l *LetFnStmt) ToLatexString() string {
 	return builder.String()
 }
 
+func (l *LetFn) ToLatexString() string {
+	var builder strings.Builder
+	builder.WriteString("\\begin{definition}[Function]\n")
+	if l.DefHeaderWithDom != nil {
+		builder.WriteString(l.DefHeaderWithDom.Name)
+		builder.WriteString(" is defined for ")
+		builder.WriteString(strObjSetPairsLatexString(l.DefHeaderWithDom.Params, l.DefHeaderWithDom.ParamSets))
+		builder.WriteString(".")
+
+		if len(l.DefHeaderWithDom.DomFacts) > 0 {
+			builder.WriteString(" Its domain is:")
+
+			domFactStrSlice := make([]string, len(l.DefHeaderWithDom.DomFacts))
+			for i := range len(l.DefHeaderWithDom.DomFacts) {
+				domFactStrSlice[i] = l.DefHeaderWithDom.DomFacts[i].ToLatexString()
+			}
+
+			if ShouldInSingleLineAsLatexString(domFactStrSlice) {
+				builder.WriteString(" ")
+				builder.WriteString(strings.Join(domFactStrSlice, ", "))
+				builder.WriteString(".")
+			} else {
+				builder.WriteString("\n\n")
+				builder.WriteString(strings.Join(domFactStrSlice, "\n\n"))
+				builder.WriteString("\n\n")
+			}
+		}
+	}
+
+	builder.WriteString(" Its return value is $\\in$ ")
+	builder.WriteString(l.RetSet.ToLatexString())
+	builder.WriteString(".")
+
+	if len(l.ThenFacts) > 0 {
+		builder.WriteString(" When its parameters satisfies the above condition, it has the following properties:")
+
+		thenFactStrSlice := make([]string, len(l.ThenFacts))
+		for i := range len(l.ThenFacts) {
+			thenFactStrSlice[i] = l.ThenFacts[i].ToLatexString()
+		}
+
+		if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
+			builder.WriteString(" ")
+			builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+		} else {
+			builder.WriteString("\n\n")
+			builder.WriteString(strings.Join(thenFactStrSlice, "\n\n"))
+		}
+	}
+
+	builder.WriteString("\n\\end{definition}")
+	return builder.String()
+}
+
 func (l *UniFactStmt) ToLatexString() string {
 	var builder strings.Builder
 	builder.WriteString("$\\forall$ ")
@@ -913,17 +967,17 @@ func (s *HaveObjEqualStmt) ToLatexString() string {
 	return builder.String()
 }
 
-func (s *HaveFnEqualStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\begin{definition}[Function]\n")
-	builder.WriteString(s.DefHeader.NameWithParamsLatexString())
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolEqual)
-	builder.WriteString(" ")
-	builder.WriteString(s.EqualTo.ToLatexString())
-	builder.WriteString("\\end{definition}")
-	return builder.String()
-}
+// func (s *HaveFnEqualStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString("\\begin{definition}[Function]\n")
+// 	builder.WriteString(s.DefHeader.NameWithParamsLatexString())
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeySymbolEqual)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(s.EqualTo.ToLatexString())
+// 	builder.WriteString("\\end{definition}")
+// 	return builder.String()
+// }
 
 func (s *HaveFnEqual) ToLatexString() string {
 	var builder strings.Builder

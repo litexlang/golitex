@@ -22,7 +22,7 @@ import (
 )
 
 func (exec *Executor) Stmt(stmt ast.Stmt) ast.StmtRet {
-	var execRet ast.StmtRet = ast.NewErrStmtEmptyRet(nil)
+	var execRet ast.StmtRet = newErrStmtRetWithCaller("")
 
 	switch stmt := (stmt).(type) {
 	case ast.FactStmt:
@@ -76,8 +76,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ast.StmtRet {
 		execRet = exec.proveByInductionStmt(stmt)
 	case *ast.HaveObjEqualStmt:
 		execRet = exec.haveObjEqualStmt(stmt)
-	case *ast.HaveFnEqualStmt:
-		execRet = exec.haveFnEqualStmt(stmt)
+	// case *ast.HaveFnEqualStmt:
+	// 	execRet = exec.haveFnEqualStmt(stmt)
 	case *ast.HaveFnStmt:
 		execRet = exec.haveFnStmt(stmt)
 	case *ast.HaveFnCaseByCaseStmt:
@@ -266,7 +266,7 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) ast.StmtRet {
 		}
 		innerExecRets = append(innerExecRets, execState)
 	}
-	return ast.NewTrueStmtEmptyRet(nil).AddInnerStmtRets(innerExecRets)
+	return newTrueStmtRetWithCaller().AddInnerStmtRets(innerExecRets)
 }
 
 // 只要 dom 成立，那prop成立，进而prop的iff成立
@@ -438,12 +438,12 @@ func (exec *Executor) ClearStmt() ast.StmtRet {
 	// newEnvMgr := env.CopyEnvMgrAndOwnPkgMgr(env.BuiltinEnvMgrWithEmptyEnvPkgMgr, exec.Env.EnvPkgMgr)
 	// exec.Env = newEnvMgr.NewEnv()
 	exec.Env = litex_env.NewEmptyEnvMgr(exec.Env.EnvPkgMgr)
-	return ast.NewTrueStmtEmptyRet(nil).AddExtraInfo("All definitions and facts have been cleared.\n")
+	return newTrueStmtRetWithCaller().AddExtraInfo("All definitions and facts have been cleared.\n")
 }
 
 func (exec *Executor) DoNothingStmt() ast.StmtRet {
 	// do_nothing statement does nothing
-	return ast.NewTrueStmtEmptyRet(nil)
+	return newTrueStmtRetWithCaller()
 }
 
 func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) ast.StmtRet {
@@ -578,7 +578,7 @@ func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ast.StmtRet {
 	if ret.IsErr() {
 		return ast.StmtErrRet(stmt, ret.String())
 	}
-	trueEvalRet := ast.NewTrueStmtEmptyRet(nil).AddInnerStmtRets([]ast.StmtRet{execRet})
+	trueEvalRet := newTrueStmtRetWithCaller().AddInnerStmtRets([]ast.StmtRet{execRet})
 
 	// return exec.AddStmtToStmtRet(trueEvalRet, stmt)
 	return trueEvalRet
@@ -593,7 +593,7 @@ func (exec *Executor) evalObjInLocalEnv(objToEval ast.Obj) (ast.Obj, ast.StmtRet
 		return nil, execRet
 	}
 
-	return value, ast.NewTrueStmtEmptyRet(nil).AddExtraInfo(fmt.Sprintf("Evaluation result: %s = %s (via algorithm %s)\n", objToEval.String(), value.String(), objToEval.(*ast.FnObj).FnHead.String()))
+	return value, newTrueStmtRetWithCaller().AddExtraInfo(fmt.Sprintf("Evaluation result: %s = %s (via algorithm %s)\n", objToEval.String(), value.String(), objToEval.(*ast.FnObj).FnHead.String()))
 }
 
 // func (exec *Executor) defProveAlgoStmt(stmt *ast.DefProveAlgoStmt) ast.StmtRet{
@@ -730,7 +730,7 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 				}
 			}
 
-			return ast.NewTrueStmtEmptyRet(nil)
+			return newTrueStmtRetWithCaller()
 		}
 
 		ret := exec.Env.NewFactWithCheckingNameDefined(domFact)
@@ -763,7 +763,7 @@ func (exec *Executor) proveForStmtWhenParamsAreIndices(stmt *ast.ProveForStmt, i
 		}
 	}
 
-	return ast.NewTrueStmtEmptyRet(nil)
+	return newTrueStmtRetWithCaller()
 }
 
 func (exec *Executor) proveImplyStmt(stmt *ast.ProveInferStmt) ast.StmtRet {
@@ -1239,7 +1239,7 @@ func (exec *Executor) haveFnEqualCaseByCase_Verify(stmt *ast.HaveFnEqualCaseByCa
 		return verRet
 	}
 
-	return ast.NewTrueStmtEmptyRet(nil).AddVerifyProcesses(verifyProcessMsgs)
+	return newTrueStmtRetWithCaller().AddVerifyProcesses(verifyProcessMsgs)
 }
 
 func (exec *Executor) haveFnEqualCaseByCase_CheckAllCasesCoverDomain_CasesNoOverlap_ReturnValueInRetSet(stmt *ast.HaveFnEqualCaseByCase) ast.StmtRet {

@@ -16,6 +16,7 @@ package litex_executor
 
 import (
 	"fmt"
+	"runtime"
 	ast "golitex/ast"
 	env "golitex/environment"
 )
@@ -60,7 +61,7 @@ func (exec *Executor) verifyFactsAtCurEnv(proofs []ast.FactStmt, verState *VerSt
 			return ast.StmtErrRet(proof, ret.String()), proof, fmt.Errorf(ret.String())
 		}
 	}
-	return ast.NewTrueStmtEmptyRet(nil), nil, nil
+	return newTrueStmtRetWithCaller(), nil, nil
 }
 
 // func (exec *Executor) GetBuiltinEnv() *env.EnvMemory {
@@ -135,4 +136,38 @@ func (exec *Executor) NewErrStmtRet(stmt ast.Stmt) ast.StmtRet {
 func (exec *Executor) NewTrueStmtRet(stmt ast.Stmt) ast.StmtRet {
 	ret := ast.NewTrueStmtEmptyRet(stmt)
 	return ret
+}
+
+// getCallerFuncName returns the name of the function that called the current function
+func getCallerFuncName() string {
+	pc, _, _, ok := runtime.Caller(2)
+	if !ok {
+		return "unknown"
+	}
+	fn := runtime.FuncForPC(pc)
+	if fn == nil {
+		return "unknown"
+	}
+	return fn.Name()
+}
+
+// helper functions to create StmtRet with nil stmt and caller function name
+func newErrStmtRetWithCaller(msg string) ast.StmtRet {
+	caller := getCallerFuncName()
+	return ast.NewErrStmtEmptyRet(nil).AddExtraInfo(fmt.Sprintf("[Called from: %s]\n", caller))
+}
+
+func newTrueStmtRetWithCaller() ast.StmtRet {
+	caller := getCallerFuncName()
+	return ast.NewTrueStmtEmptyRet(nil).AddExtraInfo(fmt.Sprintf("[Called from: %s]\n", caller))
+}
+
+func newUnknownStmtRetWithCaller(msg string) ast.StmtRet {
+	caller := getCallerFuncName()
+	return ast.NewUnknownStmtEmptyRet(nil).AddExtraInfo(fmt.Sprintf("[Called from: %s]\n%s", caller, msg))
+}
+
+func stmtErrRetWithCaller(msg string) ast.StmtRet {
+	caller := getCallerFuncName()
+	return ast.StmtErrRet(nil, msg).AddExtraInfo(fmt.Sprintf("[Called from: %s]\n", caller))
 }

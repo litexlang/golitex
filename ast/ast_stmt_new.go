@@ -171,9 +171,9 @@ func NewHaveObjEqualStmt(objNames []string, objEqualTos []Obj, objSets []Obj, li
 	return &HaveObjEqualStmt{objNames, objEqualTos, objSets, line}
 }
 
-func NewHaveFnEqualStmt(defHeader *DefHeader, retSet Obj, equalTo Obj, proofs StmtSlice, line uint) *HaveFnEqualStmt {
-	return &HaveFnEqualStmt{defHeader, retSet, equalTo, proofs, line}
-}
+// func NewHaveFnEqualStmt(defHeader *DefHeader, retSet Obj, equalTo Obj, proofs StmtSlice, line uint) *HaveFnEqualStmt {
+// 	return &HaveFnEqualStmt{defHeader, retSet, equalTo, proofs, line}
+// }
 
 // func NewHaveFnLiftStmt(fnName string, opt Obj, domainOfEachParamOfGivenFn []Obj, line uint) *HaveFnLiftStmt {
 // 	return &HaveFnLiftStmt{fnName, opt, domainOfEachParamOfGivenFn, line}
@@ -357,4 +357,8 @@ func NewHaveFnEqual(defHeaderWithDom *DefHeaderWithDom, retSet Obj, equalTo Obj,
 
 func NewHaveFnEqualCaseByCase(defHeaderWithDom *DefHeaderWithDom, retSet Obj, caseByCaseFacts SpecFactPtrSlice, caseByCaseEqualTo ObjSlice, proofs StmtSliceSlice, proveCases StmtSlice, line uint) *HaveFnEqualCaseByCase {
 	return &HaveFnEqualCaseByCase{defHeaderWithDom, retSet, caseByCaseFacts, caseByCaseEqualTo, proofs, proveCases, line}
+}
+
+func NewLetFn(defHeaderWithDom *DefHeaderWithDom, retSet Obj, thenFacts ReversibleFacts, line uint) *LetFn {
+	return &LetFn{defHeaderWithDom, retSet, thenFacts, line}
 }
