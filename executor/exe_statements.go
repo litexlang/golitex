@@ -1116,20 +1116,33 @@ func (exec *Executor) fnIsSubsetOfCartStmt(stmt *ast.FnIsSubsetOfCartStmt) ast.S
 	}
 
 	// setObj 确实是 形如 fn(X1, X2, ..., Xn) Y 的 obj
-	if !ast.IsFnSet(stmt.FnSetObj) {
-		return ast.StmtErrRet(stmt, fmt.Sprintf("%s is not a fn set object", stmt.FnSetObj))
+	switch stmt.FnSetObj.(type) {
+	case *ast.FnSetObjWithName:
+		panic("not implemented: fnIsSubsetOfCartStmt: FnSetObjWithName is not implemented")
+	case *ast.FnSetObjWithoutName:
+		return exec.fnIsSubsetOfCartStmt_FnSetObjWithOutName(stmt)
+	default:
+		return ast.StmtErrRet(stmt, fmt.Sprintf("unknown FnSetObj type: %T", stmt.FnSetObj))
 	}
 
+}
+
+func (exec *Executor) fnIsSubsetOfCartStmt_FnSetObjWithOutName(stmt *ast.FnIsSubsetOfCartStmt) ast.StmtRet {
 	newFacts := []ast.InferRet{}
 
+	fnSetObjWithOutName, ok := stmt.FnSetObj.(*ast.FnSetObjWithoutName)
+	if !ok {
+		return ast.StmtErrRet(stmt, fmt.Sprintf("fnSetObj is not a FnSetObjWithoutName: %s", stmt.FnSetObj.String()))
+	}
+
 	// obj subset_of cart(X1, X2, ..., Xn, Y) 中
-	doms := stmt.FnSetObj.FnHead.(*ast.FnObj).Params
+	doms := fnSetObjWithOutName.ParamSets
 	fName := stmt.Obj
 	carXToYParams := []ast.Obj{}
 	for _, dom := range doms {
 		carXToYParams = append(carXToYParams, dom)
 	}
-	carXToYParams = append(carXToYParams, stmt.FnSetObj.Params[0])
+	carXToYParams = append(carXToYParams, fnSetObjWithOutName.RetSet)
 	cartSet := ast.NewFnObj(ast.Atom(glob.KeywordCart), carXToYParams)
 	subsetOfFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordSubsetOf), []ast.Obj{stmt.Obj, cartSet}, stmt.Line)
 	inferRet := exec.Env.NewFactWithCheckingNameDefined(subsetOfFact)
@@ -1165,7 +1178,7 @@ func (exec *Executor) fnIsSubsetOfCartStmt(stmt *ast.FnIsSubsetOfCartStmt) ast.S
 	tupleFromXToY := ast.NewFnObj(ast.Atom(glob.KeywordTuple), tupleParamsForEqual)
 	equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{y, fX1ToXn}, stmt.Line)
 	dom2 := append([]ast.Obj{}, doms...)
-	dom2 = append(dom2, stmt.FnSetObj.Params[0])
+	dom2 = append(dom2, fnSetObjWithOutName.RetSet)
 	forallFact2 := ast.NewUniFact(nPlus1RandomParams, dom2, []ast.Spec_OrFact{ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{tupleFromXToY, stmt.Obj}, stmt.Line)}, []ast.Spec_OrFact{equalFact}, stmt.Line)
 	inferRet = exec.Env.NewFactWithCheckingNameDefined(forallFact2)
 	if inferRet.IsNotTrue() {

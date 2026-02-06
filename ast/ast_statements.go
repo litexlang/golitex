@@ -438,7 +438,7 @@ type SetIsFnStmt struct {
 
 type FnIsSubsetOfCartStmt struct {
 	Obj      Obj
-	FnSetObj *FnObj
+	FnSetObj FnSetObj
 
 	Line uint
 }
