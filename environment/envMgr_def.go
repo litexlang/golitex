@@ -56,57 +56,57 @@ func (envMgr *EnvMgr) NewDefProp_InsideAtomsDeclared(stmt *ast.DefPropStmt) ast.
 	return ast.NewTrueStmtEmptyRet(stmt)
 }
 
-func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.DefFnSetStmt) ast.StmtRet {
-	// fn名不能和parameter名重叠
-	if slices.Contains(stmt.TemplateDefHeader.Params, string(name)) {
-		ret := ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("fn name %s cannot be the same as parameter name %s", name, name))
-		return ret
-	}
+// func (envMgr *EnvMgr) AtomsInFnTemplateFnTemplateDeclared(name ast.Atom, stmt *ast.DefFnSetStmt) ast.StmtRet {
+// 	// fn名不能和parameter名重叠
+// 	if slices.Contains(stmt.TemplateDefHeader.Params, string(name)) {
+// 		ret := ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("fn name %s cannot be the same as parameter name %s", name, name))
+// 		return ret
+// 	}
 
-	extraAtomNames := map[string]struct{}{}
-	for _, param := range stmt.TemplateDefHeader.Params {
-		extraAtomNames[param] = struct{}{}
-	}
+// 	extraAtomNames := map[string]struct{}{}
+// 	for _, param := range stmt.TemplateDefHeader.Params {
+// 		extraAtomNames[param] = struct{}{}
+// 	}
 
-	ret := envMgr.LookupNamesInObj(stmt.AnonymousFn.RetSet, extraAtomNames)
-	if ret.IsErr() {
-		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("in return set of fn template %s", name))
-	}
+// 	ret := envMgr.LookupNamesInObj(stmt.AnonymousFn.RetSet, extraAtomNames)
+// 	if ret.IsErr() {
+// 		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("in return set of fn template %s", name))
+// 	}
 
-	extraAtomNames[string(name)] = struct{}{}
+// 	extraAtomNames[string(name)] = struct{}{}
 
-	for _, fact := range stmt.TemplateDomFacts {
-		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
-		if ret.IsErr() {
-			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("in template dom fact of fn %s definition", name))
-		}
-	}
+// 	for _, fact := range stmt.TemplateDomFacts {
+// 		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
+// 		if ret.IsErr() {
+// 			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("in template dom fact of fn %s definition", name))
+// 		}
+// 	}
 
-	// ret = envMgr.NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(stmt.Fn.Params, stmt.Fn.ParamSets, extraAtomNames, false)
-	// if ret.IsErr() {
-	// 	return ret
-	// }
+// 	// ret = envMgr.NonDuplicateParam_NoUndeclaredParamSet_ExtraAtomNames(stmt.Fn.Params, stmt.Fn.ParamSets, extraAtomNames, false)
+// 	// if ret.IsErr() {
+// 	// 	return ret
+// 	// }
 
-	for _, param := range stmt.AnonymousFn.Params {
-		extraAtomNames[param] = struct{}{}
-	}
+// 	for _, param := range stmt.AnonymousFn.Params {
+// 		extraAtomNames[param] = struct{}{}
+// 	}
 
-	for _, fact := range stmt.AnonymousFn.DomFacts {
-		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
-		if ret.IsErr() {
-			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("in dom fact of fn %s definition", name))
-		}
-	}
+// 	for _, fact := range stmt.AnonymousFn.DomFacts {
+// 		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
+// 		if ret.IsErr() {
+// 			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("in dom fact of fn %s definition", name))
+// 		}
+// 	}
 
-	for _, fact := range stmt.AnonymousFn.ThenFacts {
-		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
-		if ret.IsErr() {
-			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("in then fact of fn %s definition", name))
-		}
-	}
+// 	for _, fact := range stmt.AnonymousFn.ThenFacts {
+// 		ret := envMgr.LookUpNamesInFact(fact, extraAtomNames)
+// 		if ret.IsErr() {
+// 			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("in then fact of fn %s definition", name))
+// 		}
+// 	}
 
-	return ast.NewTrueStmtEmptyRet(stmt)
-}
+// 	return ast.NewTrueStmtEmptyRet(stmt)
+// }
 
 // func (envMgr *EnvMgr) NewDefExistProp_InsideAtomsDeclared(stmt *ast.DefExistPropStmt) ast.StmtRet{
 // 	// prop名不能和parameter名重叠

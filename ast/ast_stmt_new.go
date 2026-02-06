@@ -111,9 +111,9 @@ func NewProveStmt(proof []Stmt, line uint) *ProveStmt {
 	return &ProveStmt{proof, line}
 }
 
-func NewLetFnStmt(name string, fnTemplate *AnonymousFn, line uint) *LetFnStmt {
-	return &LetFnStmt{name, fnTemplate, line}
-}
+// func NewLetFnStmt(name string, fnTemplate *AnonymousFn, line uint) *LetFnStmt {
+// 	return &LetFnStmt{name, fnTemplate, line}
+// }
 
 // func NewEnumStmt(enumName Obj, enumValues []Obj, line uint) *EnumStmt {
 // 	return &EnumStmt{enumName, enumValues, line}
@@ -143,9 +143,9 @@ func NewEqualsFactStmt(params ObjSlice, line uint) *EqualsFactStmt {
 // 	return &KnowExistPropStmt{existProp, line}
 // }
 
-func NewDefFnSetStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnTStruct *AnonymousFn, line uint) *DefFnSetStmt {
-	return &DefFnSetStmt{defHeader, templateDomFacts, fnTStruct, line}
-}
+// func NewDefFnSetStmt(defHeader *DefHeader, templateDomFacts []FactStmt, fnTStruct *AnonymousFn, line uint) *DefFnSetStmt {
+// 	return &DefFnSetStmt{defHeader, templateDomFacts, fnTStruct, line}
+// }
 
 func NewFnTStruct(params []string, paramSets []Obj, retSet Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, line uint) *AnonymousFn {
 	return &AnonymousFn{params, paramSets, retSet, domFacts, thenFacts, line}
@@ -179,9 +179,9 @@ func NewHaveObjEqualStmt(objNames []string, objEqualTos []Obj, objSets []Obj, li
 // 	return &HaveFnLiftStmt{fnName, opt, domainOfEachParamOfGivenFn, line}
 // }
 
-func NewClaimHaveFnStmt(defFnStmt *LetFnStmt, proof []Stmt, haveObjSatisfyFn Obj, line uint) *HaveFnStmt {
-	return &HaveFnStmt{defFnStmt, proof, haveObjSatisfyFn, line}
-}
+// func NewClaimHaveFnStmt(defFnStmt *LetFnStmt, proof []Stmt, haveObjSatisfyFn Obj, line uint) *HaveFnStmt {
+// 	return &HaveFnStmt{defFnStmt, proof, haveObjSatisfyFn, line}
+// }
 
 // func NewMarkdownStmt(comment string, line uint) *MarkdownStmt {
 // 	return &MarkdownStmt{comment, line}
@@ -295,10 +295,6 @@ func NewEvalStmt(value Obj, line uint) *EvalStmt {
 // 	return &ProveAlgoReturnStmt{Facts: facts, Line: line}
 // }
 
-func NewHaveFnCaseByCaseStmt(defFnStmt *LetFnStmt, caseByCaseFacts SpecFactPtrSlice, proofs StmtSliceSlice, haveObjSatisfyFn ObjSlice, proveOr StmtSlice, line uint) *HaveFnCaseByCaseStmt {
-	return &HaveFnCaseByCaseStmt{defFnStmt, caseByCaseFacts, proofs, haveObjSatisfyFn, proveOr, line}
-}
-
 func NewProveImplicationStmt(specFact *PureSpecificFactStmt, implicationFact FactStmtSlice, proof StmtSlice, line uint) *ProveInferStmt {
 	return &ProveInferStmt{specFact, implicationFact, proof, line}
 }
@@ -361,4 +357,8 @@ func NewHaveFnEqualCaseByCase(defHeaderWithDom *DefHeaderWithDom, retSet Obj, ca
 
 func NewLetFn(defHeaderWithDom *DefHeaderWithDom, retSet Obj, thenFacts ReversibleFacts, line uint) *LetFn {
 	return &LetFn{defHeaderWithDom, retSet, thenFacts, line}
+}
+
+func NewHaveFnStmt(defFnStmt *LetFn, proof []Stmt, haveObjSatisfyFn Obj, line uint) *HaveFnStmt {
+	return &HaveFnStmt{defFnStmt, proof, haveObjSatisfyFn, line}
 }

@@ -75,9 +75,9 @@ func (envMgr *EnvMgr) lookupNamesInFnObj(fnObj *ast.FnObj, extraParams map[strin
 	}
 
 	// 如果head 是 fn_template 那也OK了
-	if envMgr.FnObjHeadIsAtomAndIsFnSet(fnObj) {
-		return ast.NewTrueShortRet()
-	}
+	// if envMgr.FnObjHeadIsAtomAndIsFnSet(fnObj) {
+	// 	return ast.NewTrueShortRet()
+	// }
 
 	return envMgr.LookupNamesInObj(fnObj.FnHead, extraParams)
 }

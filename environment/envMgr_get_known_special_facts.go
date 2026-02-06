@@ -16,22 +16,22 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (envMgr *EnvMgr) GetLatestFnT_GivenNameIsIn(fnName string) *FnInFnTMemItem {
-	// Search from current depth upward to depth 0
-	for depth := envMgr.CurEnvDepth(); depth >= 0; depth-- {
-		fnInFnTemplateFacts, ok := envMgr.EnvSlice[depth].FnInFnTemplateFactsMem[fnName]
-		if ok {
-			return &fnInFnTemplateFacts[len(fnInFnTemplateFacts)-1]
-		}
-	}
+// func (envMgr *EnvMgr) GetLatestFnT_GivenNameIsIn(fnName string) *FnInFnTMemItem {
+// 	// Search from current depth upward to depth 0
+// 	for depth := envMgr.CurEnvDepth(); depth >= 0; depth-- {
+// 		fnInFnTemplateFacts, ok := envMgr.EnvSlice[depth].FnInFnTemplateFactsMem[fnName]
+// 		if ok {
+// 			return &fnInFnTemplateFacts[len(fnInFnTemplateFacts)-1]
+// 		}
+// 	}
 
-	fnInFnTemplateFacts, ok := BuiltinEnvMgrWithEmptyEnvPkgMgr.EnvSlice[0].FnInFnTemplateFactsMem[fnName]
-	if ok {
-		return &fnInFnTemplateFacts[len(fnInFnTemplateFacts)-1]
-	}
+// 	fnInFnTemplateFacts, ok := BuiltinEnvMgrWithEmptyEnvPkgMgr.EnvSlice[0].FnInFnTemplateFactsMem[fnName]
+// 	if ok {
+// 		return &fnInFnTemplateFacts[len(fnInFnTemplateFacts)-1]
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (envMgr *EnvMgr) GetFnInFnSet(fnName string) ast.FnSetObj {
 	for depth := envMgr.CurEnvDepth(); depth >= 0; depth-- {
