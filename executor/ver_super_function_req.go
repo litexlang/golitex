@@ -70,6 +70,10 @@ func (ver *Verifier) isBuiltinFunction_VerReq(fnObj *ast.FnObj, state *VerState)
 		return ver.verPowerReq(fnObj, state)
 	case glob.KeySymbolPercent:
 		return ver.verPercentReq(fnObj, state)
+	case glob.KeywordRange:
+		return ver.verRangeReq(fnObj, state)
+	case glob.KeywordClosedRange:
+		return ver.verClosedRangeReq(fnObj, state)
 	default:
 		return ast.NewEmptyUnknownVerRet()
 	}
@@ -410,6 +414,52 @@ func (ver *Verifier) verPercentReq(fnObj *ast.FnObj, state *VerState) ast.VerRet
 	// y != 0
 	notZeroFact := ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fnObj.Params[1], ast.Atom("0")}, glob.BuiltinLine0)
 	verRet = ver.VerFactStmt(notZeroFact, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	return ast.NewTrueVerRet(nil, nil, "")
+}
+
+func (ver *Verifier) verRangeReq(fnObj *ast.FnObj, state *VerState) ast.VerRet {
+	if len(fnObj.Params) != 2 {
+		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("range expects 2 parameters, got %d", len(fnObj.Params)))
+	}
+
+	// in Z
+	inZFact := ast.NewInFactWithObj(fnObj.Params[0], ast.Atom(glob.KeywordInteger))
+	verRet := ver.VerFactStmt(inZFact, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	// in Z
+	inZFact = ast.NewInFactWithObj(fnObj.Params[1], ast.Atom(glob.KeywordInteger))
+	verRet = ver.VerFactStmt(inZFact, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	return ast.NewTrueVerRet(nil, nil, "")
+}
+
+func (ver *Verifier) verClosedRangeReq(fnObj *ast.FnObj, state *VerState) ast.VerRet {
+	if len(fnObj.Params) != 2 {
+		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("closed_range expects 2 parameters, got %d", len(fnObj.Params)))
+	}
+
+	_ = state
+
+	// in Z
+	inZFact := ast.NewInFactWithObj(fnObj.Params[0], ast.Atom(glob.KeywordInteger))
+	verRet := ver.VerFactStmt(inZFact, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	// in Z
+	inZFact = ast.NewInFactWithObj(fnObj.Params[1], ast.Atom(glob.KeywordInteger))
+	verRet = ver.VerFactStmt(inZFact, state)
 	if verRet.IsNotTrue() {
 		return verRet
 	}

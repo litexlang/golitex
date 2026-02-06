@@ -187,7 +187,7 @@ func (envMgr *EnvMgr) DefLetStmt(stmt *ast.DefLetStmt) ast.StmtRet {
 	for _, fact := range stmt.NewInFacts() {
 		ret := envMgr.LookUpNamesInFact(fact, map[string]struct{}{})
 		if ret.IsErr() {
-			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo("in new in fact of def let statement")
+			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo("in new in fact of def let statement").AddExtraInfo(ret.String())
 		}
 		ret2 := envMgr.NewFactWithCheckingNameDefined(fact)
 		if ret2.IsErr() {
