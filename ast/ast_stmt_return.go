@@ -35,6 +35,8 @@ type StmtRet interface {
 	GetVerifyProcess() []VerRet
 	GetInnerStmtRets() []StmtRet
 	String() string
+	GetDefineMsgs() []string
+	GetInfers() []InferRet
 }
 
 func (r *UnknownStmtRet) GetExtraInfos() []string {
@@ -336,4 +338,28 @@ func (r *ErrStmtRet) AddNewFacts(newFacts []string) StmtRet {
 func (r *ErrStmtRet) AddDefineMsgs(defines []string) StmtRet {
 	r.Define = append(r.Define, defines...)
 	return r
+}
+
+func (r *TrueStmtRet) GetDefineMsgs() []string {
+	return r.Define
+}
+
+func (r *UnknownStmtRet) GetDefineMsgs() []string {
+	return r.Define
+}
+
+func (r *ErrStmtRet) GetDefineMsgs() []string {
+	return r.Define
+}
+
+func (r *TrueStmtRet) GetInfers() []InferRet {
+	return r.Infer
+}
+
+func (r *UnknownStmtRet) GetInfers() []InferRet {
+	return r.Infer
+}
+
+func (r *ErrStmtRet) GetInfers() []InferRet {
+	return r.Infer
 }

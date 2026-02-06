@@ -15,6 +15,7 @@
 package kernel_lib_litex_code
 
 var PipelineInitCode = `
+
 know forall x2, y2 R: x2 != 0, y2 != 0 => x2 * y2 != 0
 know forall x, y R: x * y = 0 => x = 0 or y = 0
 
@@ -310,13 +311,6 @@ know forall a, b, c, d R: c != 0, a = (b / c) * d => a * c = b * d
 know forall a, b, c, d R: c != 0, a = d * (b / c) => a * c = d * b
 know forall x, y, z R: z != 0, x = y / z => x * z = y
 
-let fn range(x Z, y Z) set:
-	=>:
-		range(x, y) = {self Z: self >= x, self < y}
-
-let fn closed_range(x Z, y Z) set:
-	=>:
-		closed_range(x, y) = {self Z: self >= x, self <= y}
 
 """
 know:
@@ -1183,4 +1177,10 @@ know forall x, y R: x^2 + y^2 != 0 => not x = 0 or not y = 0
 know exist a, b st a < b
 
 know forall x, y R: x * y = 0 => x = 0 or y = 0
+
+know forall x, y Z: closed_range(x, y) = {self Z: self >= x, self <= y}
+know forall x, y Z: range(x, y) = {self Z: self >= x, self < y}
+know forall x, y Z: $is_finite_set(closed_range(x, y)), $is_finite_set(range(x, y))
+know forall x, y Z: x <= y => count(closed_range(x, y)) = y - x + 1
+know forall x, y Z: x <= y => count(range(x, y)) = y - x
 `

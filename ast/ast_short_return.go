@@ -25,6 +25,7 @@ type ShortRet interface {
 	String() string
 	GetMsg() []string
 	ToEmptyVerREt() VerRet
+	AddExtraInfo(extraInfo string) ShortRet
 }
 
 type TrueShortRet struct {
@@ -114,4 +115,19 @@ func (r *ErrShortRet) ToEmptyVerREt() VerRet {
 
 func (r *UnknownShortRet) ToEmptyVerREt() VerRet {
 	return NewUnknownVerRet(nil).AddExtraInfo(r.String())
+}
+
+func (r *TrueShortRet) AddExtraInfo(extraInfo string) ShortRet {
+	r.Msg = append(r.Msg, extraInfo)
+	return r
+}
+
+func (r *UnknownShortRet) AddExtraInfo(extraInfo string) ShortRet {
+	r.Msg = append(r.Msg, extraInfo)
+	return r
+}
+
+func (r *ErrShortRet) AddExtraInfo(extraInfo string) ShortRet {
+	r.Msg = append(r.Msg, extraInfo)
+	return r
 }
