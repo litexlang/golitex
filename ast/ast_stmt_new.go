@@ -319,7 +319,7 @@ func NewSetIsFnStmt(setObj Obj, fnSetObj *FnObj, proof StmtSlice, line uint) *Se
 	return &SetIsFnStmt{Obj: setObj, FnSetObj: fnSetObj, Proof: proof, Line: line}
 }
 
-func NewFnIsSubsetOfCartStmt(obj Obj, fnSetObj *FnObj, line uint) *FnIsSubsetOfCartStmt {
+func NewFnIsSubsetOfCartStmt(obj Obj, fnSetObj FnSetObj, line uint) *FnIsSubsetOfCartStmt {
 	return &FnIsSubsetOfCartStmt{Obj: obj, FnSetObj: fnSetObj, Line: line}
 }
 

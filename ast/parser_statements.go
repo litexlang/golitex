@@ -3900,7 +3900,7 @@ func (p *TbParser) fnIsSubsetOfCartStmt(tb *tokenBlock) (*FnIsSubsetOfCartStmt, 
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
-	fnSetObjAsFnObj, ok := fnSetObj.(*FnObj)
+	fnSetObjAsFnObj, ok := fnSetObj.(FnSetObj)
 	if !ok {
 		return nil, ErrInLine(fmt.Errorf("expect fn object, got %T", fnSetObj), tb)
 	}
