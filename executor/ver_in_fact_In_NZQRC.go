@@ -183,6 +183,10 @@ func (ver *Verifier) verInZ_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(st
 		return true, stmt.String()
 	}
 
+	if ok := ast.IsFn_WithHeadName(asPureStmt.Params[0], glob.KeySymbolPercent); ok {
+		return true, stmt.String()
+	}
+
 	if ast.IsFn_WithHeadNameInSlice(asPureStmt.Params[0], glob.AddMinusStarSet) {
 		fnObj, ok := asPureStmt.Params[0].(*ast.FnObj)
 		if ok {

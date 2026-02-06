@@ -292,7 +292,7 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ast.StmtRe
 	// exec proof block
 	execState = exec.execStmtsAtCurEnv(stmt.Proofs)
 	if execState.IsNotTrue() {
-		return ast.NewErrStmtEmptyRet(stmt).AddInnerStmtRets(innerStmtRets)
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(execState.String())
 	}
 	innerStmtRets = append(innerStmtRets, execState)
 
