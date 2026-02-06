@@ -264,7 +264,7 @@ func (exec *Executor) execStmtsAtCurEnv(proof []ast.Stmt) ast.StmtRet {
 	for _, curStmt := range proof {
 		execState := exec.Stmt(curStmt)
 		if execState.IsNotTrue() {
-			return execState.AddExtraInfo(fmt.Sprintf("Execution failed at line %d.\n", curStmt.GetLine()))
+			return execState.AddExtraInfo(fmt.Sprintf("Execution failed at line %d:\n%s\n", curStmt.GetLine(), curStmt.String()))
 		}
 		innerExecRets = append(innerExecRets, execState)
 	}
