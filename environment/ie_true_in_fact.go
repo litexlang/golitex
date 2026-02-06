@@ -32,9 +32,9 @@ func (ie *InferEngine) trueInFact(fact ast.SpecificFactStmt) ast.InferRet {
 		return ret
 	}
 
-	if ret := ie.trueInFactByNamedFnSet(asFact); ret.IsTrue() || ret.IsErr() {
-		return ret
-	}
+	// if ret := ie.trueInFactByNamedFnSet(asFact); ret.IsTrue() || ret.IsErr() {
+	// 	return ret
+	// }
 
 	if ret := ie.trueInFactByAnonymousFnSetObj(asFact); ret.IsTrue() || ret.IsErr() {
 		return ret
@@ -106,16 +106,16 @@ func (ie *InferEngine) trueInFact(fact ast.SpecificFactStmt) ast.InferRet {
 // trueInFactByNamedFnSet handles inference for x $in fnTemplate(...)
 // Inference: Derives a universal fact from the function template definition
 // and stores the function-template satisfaction relationship
-func (ie *InferEngine) trueInFactByNamedFnSet(fact *ast.PureSpecificFactStmt) ast.InferRet {
-	isTemplate, ret := ie.trueInFactInFnSet(fact)
-	if ret.IsErr() {
-		return ret
-	}
-	if isTemplate {
-		return ret
-	}
-	return ast.NewUnknownInferRet(fact)
-}
+// func (ie *InferEngine) trueInFactByNamedFnSet(fact *ast.PureSpecificFactStmt) ast.InferRet {
+// 	isTemplate, ret := ie.trueInFactInFnSet(fact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
+// 	if isTemplate {
+// 		return ret
+// 	}
+// 	return ast.NewUnknownInferRet(fact)
+// }
 
 // trueInFactByAnonymousFnSetObj handles inference for x $in fnTemplateFnObj
 // Inference: Inserts the function x into the function template table
@@ -213,51 +213,51 @@ func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj, fact *a
 	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 }
 
-func (ie *InferEngine) trueInFactInFnSet(fact *ast.PureSpecificFactStmt) (bool, ast.InferRet) {
-	if _, ok := fact.Params[1].(*ast.FnObj); !ok {
-		return false, ast.NewTrueInferRet(fact)
-	}
+// func (ie *InferEngine) trueInFactInFnSet(fact *ast.PureSpecificFactStmt) (bool, ast.InferRet) {
+// 	if _, ok := fact.Params[1].(*ast.FnObj); !ok {
+// 		return false, ast.NewTrueInferRet(fact)
+// 	}
 
-	head, ok := fact.Params[1].(*ast.FnObj).IsObjFn_HasAtomHead_ReturnHead()
-	if !ok {
-		return false, ast.NewTrueInferRet(fact)
-	}
+// 	head, ok := fact.Params[1].(*ast.FnObj).IsObjFn_HasAtomHead_ReturnHead()
+// 	if !ok {
+// 		return false, ast.NewTrueInferRet(fact)
+// 	}
 
-	def := ie.EnvMgr.GetFnTemplateDef_KeyIsObjHead(fact.Params[1].(*ast.FnObj))
-	if def == nil {
-		return false, ast.NewTrueInferRet(fact)
-	}
+// def := ie.EnvMgr.GetFnTemplateDef_KeyIsObjHead(fact.Params[1].(*ast.FnObj))
+// if def == nil {
+// 	return false, ast.NewTrueInferRet(fact)
+// }
 
-	fnTNoName, ok, err := ie.EnvMgr.getInstantiatedFnTTOfFnObj(fact.Params[1].(*ast.FnObj))
-	if err != nil {
-		return false, ast.NewErrInferRet(fact).AddExtraInfo(err.Error())
-	}
-	if !ok {
-		return false, ast.NewTrueInferRet(fact)
-	}
+// fnTNoName, ok, err := ie.EnvMgr.getInstantiatedFnTTOfFnObj(fact.Params[1].(*ast.FnObj))
+// if err != nil {
+// 	return false, ast.NewErrInferRet(fact).AddExtraInfo(err.Error())
+// }
+// if !ok {
+// 	return false, ast.NewTrueInferRet(fact)
+// }
 
-	templateParamUniMap := map[string]ast.Obj{}
-	for i, param := range def.TemplateDefHeader.Params {
-		templateParamUniMap[param] = fact.Params[1].(*ast.FnObj).Params[i]
-	}
+// templateParamUniMap := map[string]ast.Obj{}
+// for i, param := range def.TemplateDefHeader.Params {
+// 	templateParamUniMap[param] = fact.Params[1].(*ast.FnObj).Params[i]
+// }
 
-	derivedFact, err := fnTNoName.DeriveUniFact(string(head), fact.Params[0], templateParamUniMap)
-	if err != nil {
-		return false, ast.NewErrInferRet(fact).AddExtraInfo(err.Error())
-	}
+// derivedFact, err := fnTNoName.DeriveUniFact(string(head), fact.Params[0], templateParamUniMap)
+// if err != nil {
+// 	return false, ast.NewErrInferRet(fact).AddExtraInfo(err.Error())
+// }
 
-	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(derivedFact)
-	if ret.IsErr() {
-		return false, ast.NewErrInferRet(fact)
-	}
+// ret := ie.EnvMgr.NewFactWithCheckingNameDefined(derivedFact)
+// if ret.IsErr() {
+// 	return false, ast.NewErrInferRet(fact)
+// }
 
-	ret = ie.EnvMgr.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fact.Params[0], fact.Params[1].(*ast.FnObj), fnTNoName)
-	if ret.IsErr() {
-		return false, ast.NewErrInferRet(fact)
-	}
+// ret = ie.EnvMgr.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fact.Params[0], fact.Params[1].(*ast.FnObj), fnTNoName)
+// if ret.IsErr() {
+// 	return false, ast.NewErrInferRet(fact)
+// }
 
-	return true, ast.NewTrueInferRet(fact)
-}
+// 	return true, ast.NewTrueInferRet(fact)
+// }
 
 // trueInFactByListSet handles inference for x $in listSet(...)
 // It tries to get the listSet either directly or from equal facts

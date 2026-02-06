@@ -95,30 +95,30 @@ func (envMgr *EnvMgr) IsPropNameDefinedByUser(PropName string) bool {
 // 	}
 // }
 
-func (envMgr *EnvMgr) IsFnSetNameDefinedByUser(FnSetName string) bool {
-	withPkgName, pkgName, _ := glob.GetPkgNameAndName(FnSetName)
+// func (envMgr *EnvMgr) IsFnSetNameDefinedByUser(FnSetName string) bool {
+// 	withPkgName, pkgName, _ := glob.GetPkgNameAndName(FnSetName)
 
-	if withPkgName && pkgName != envMgr.EnvPkgMgr.PkgMgr.CurPkgDefaultName {
-		pkgEnvMgr := envMgr.GetEnvMgrOfPkgName(pkgName)
-		if pkgEnvMgr == nil {
-			return false
-		}
+// 	if withPkgName && pkgName != envMgr.EnvPkgMgr.PkgMgr.CurPkgDefaultName {
+// 		pkgEnvMgr := envMgr.GetEnvMgrOfPkgName(pkgName)
+// 		if pkgEnvMgr == nil {
+// 			return false
+// 		}
 
-		_, ok := pkgEnvMgr.AllDefinedFnSetNames[FnSetName]
-		return ok
-	} else {
-		_, ok := envMgr.AllDefinedFnSetNames[FnSetName]
-		if ok {
-			return true
-		}
+// 		_, ok := pkgEnvMgr.AllDefinedFnSetNames[FnSetName]
+// 		return ok
+// 	} else {
+// 		_, ok := envMgr.AllDefinedFnSetNames[FnSetName]
+// 		if ok {
+// 			return true
+// 		}
 
-		_, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedFnSetNames[FnSetName]
-		if ok {
-			return true
-		}
-		return false
-	}
-}
+// 		_, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedFnSetNames[FnSetName]
+// 		if ok {
+// 			return true
+// 		}
+// 		return false
+// 	}
+// }
 
 func (envMgr *EnvMgr) IsAlgoNameDefinedByUser(AlgoName string) bool {
 	withPkgName, pkgName, _ := glob.GetPkgNameAndName(AlgoName)

@@ -202,7 +202,7 @@ func fnHeaderToReturnValueOfFn(head *ast.DefHeader) ast.Obj {
 }
 
 func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet {
-	shortRet := checkParamsInFnDefNotDefinedAndParamSetsDefined(exec, stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets)
+	shortRet := checkParamsInFnDefNotDefinedAndParamSetsDefined(exec, stmt.DefFnStmt.DefHeaderWithDom.Params, stmt.DefFnStmt.DefHeaderWithDom.ParamSets)
 	if shortRet.IsNotTrue() {
 		return ast.StmtErrRet(stmt, shortRet.String())
 	}
@@ -219,7 +219,7 @@ func (exec *Executor) haveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet {
 		verifyProcessMsgs = append(verifyProcessMsgs, trueRet.VerifyProcess...)
 	}
 
-	execRet = exec.lefDefFnStmt(stmt.DefFnStmt)
+	execRet = exec.letFn(stmt.DefFnStmt)
 
 	if execRet.IsNotTrue() {
 		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(execRet.String())
@@ -239,24 +239,29 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet {
 	}()
 
 	// 声明一下函数，这样证明then的时候不会因为没声明这个函数而g了
-	localTemplate := ast.NewFnTStruct(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.RetSet, stmt.DefFnStmt.FnTemplate.DomFacts, []ast.Spec_OrFact{}, stmt.Line)
-	fnDefStmt := ast.NewLetFnStmt(stmt.DefFnStmt.Name, localTemplate, stmt.Line)
-	execState := exec.lefDefFnStmt(fnDefStmt)
+	localDefHeaderWithDom := ast.NewDefHeaderWithDom(
+		stmt.DefFnStmt.DefHeaderWithDom.Name,
+		stmt.DefFnStmt.DefHeaderWithDom.Params,
+		stmt.DefFnStmt.DefHeaderWithDom.ParamSets,
+		stmt.DefFnStmt.DefHeaderWithDom.DomFacts,
+	)
+	localLetFn := ast.NewLetFn(localDefHeaderWithDom, stmt.DefFnStmt.RetSet, ast.ReversibleFacts{}, stmt.Line)
+	execState := exec.letFn(localLetFn)
 	if execState.IsNotTrue() {
 		return execState
 	}
 
 	// Verify retSet is in set type
-	execState = exec.factStmt(ast.NewIsASetFact(stmt.DefFnStmt.FnTemplate.RetSet, stmt.Line))
+	execState = exec.factStmt(ast.NewIsASetFact(stmt.DefFnStmt.RetSet, stmt.Line))
 	if execState.IsErr() {
 		return execState
 	}
 	if execState.IsUnknown() {
-		return ast.StmtErrRet(stmt, fmt.Sprintf("return set (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.FnTemplate.RetSet.String(), stmt.DefFnStmt.FnTemplate.RetSet.String()))
+		return ast.StmtErrRet(stmt, fmt.Sprintf("return set (%s) must be a set, i.e. `%s in set` must be true, but it is unknown", stmt.DefFnStmt.RetSet.String(), stmt.DefFnStmt.RetSet.String()))
 	}
 
 	// Define parameters in the new environment
-	defObjStmt := ast.NewDefLetStmt(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.DomFacts.ToFactStmtSlice(), stmt.Line)
+	defObjStmt := ast.NewDefLetStmt(stmt.DefFnStmt.DefHeaderWithDom.Params, stmt.DefFnStmt.DefHeaderWithDom.ParamSets, stmt.DefFnStmt.DefHeaderWithDom.DomFacts.ToFactStmtSlice(), stmt.Line)
 	execState = exec.defLetStmt(defObjStmt)
 	if execState.IsNotTrue() {
 		return execState
@@ -271,26 +276,18 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet {
 	}
 
 	// Verify that HaveObjSatisfyFn is in the return set
-	execState = exec.factStmt(ast.NewInFactWithObj(stmt.HaveObjSatisfyFn, stmt.DefFnStmt.FnTemplate.RetSet))
+	execState = exec.factStmt(ast.NewInFactWithObj(stmt.HaveObjSatisfyFn, stmt.DefFnStmt.RetSet))
 	if execState.IsNotTrue() {
 		return execState
 	}
 
-	// // 声明一下函数，这样证明then的时候不会因为没声明这个函数而g了
-	// localTemplate := ast.NewFnTStruct(stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.DefFnStmt.FnTemplate.RetSet, stmt.DefFnStmt.FnTemplate.DomFacts, []ast.FactStmt{}, stmt.Line)
-	// fnDefStmt := ast.NewLetFnStmt(stmt.DefFnStmt.Name, localTemplate, stmt.Line)
-	// execState = exec.lefDefFnStmt(fnDefStmt)
-	// if execState.IsNotTrue() {
-	// 	return execState
-	// }
-
 	// know 一下 函数等于 等号右边的东西
 	params := []ast.Obj{}
-	for i := range len(stmt.DefFnStmt.FnTemplate.Params) {
-		params = append(params, ast.Atom(stmt.DefFnStmt.FnTemplate.Params[i]))
+	for i := range len(stmt.DefFnStmt.DefHeaderWithDom.Params) {
+		params = append(params, ast.Atom(stmt.DefFnStmt.DefHeaderWithDom.Params[i]))
 	}
 
-	fnObj := ast.NewFnObj(ast.Atom(stmt.DefFnStmt.Name), params)
+	fnObj := ast.NewFnObj(ast.Atom(stmt.DefFnStmt.DefHeaderWithDom.Name), params)
 	fnObjIsEqualTo := ast.NewEqualFact(fnObj, stmt.HaveObjSatisfyFn)
 	retInfer := exec.Env.NewFactWithCheckingNameDefined(fnObjIsEqualTo)
 	if retInfer.IsErr() {
@@ -298,7 +295,7 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet {
 	}
 
 	// 证明 fn then 里全是对的
-	for _, thenFact := range stmt.DefFnStmt.FnTemplate.ThenFacts {
+	for _, thenFact := range stmt.DefFnStmt.ThenFacts {
 		execState = exec.factStmt(thenFact)
 		if execState.IsNotTrue() {
 			return execState
@@ -308,127 +305,6 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet {
 	return exec.NewTrueStmtRet(stmt)
 }
 
-func (exec *Executor) haveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet {
-	shortRet := checkParamsInFnDefNotDefinedAndParamSetsDefined(exec, stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets)
-	if shortRet.IsNotTrue() {
-		return ast.StmtErrRet(stmt, shortRet.String())
-	}
-
-	verifyProcessMsgs := []ast.VerRet{}
-	defineMsgs := []string{}
-	// Verify first and get thenFacts
-	execRet := exec.checkHaveFnCaseByCaseStmt(stmt)
-	if execRet.IsNotTrue() {
-		return execRet
-	}
-	if trueRet, ok := execRet.(*ast.TrueStmtRet); ok {
-		verifyProcessMsgs = append(verifyProcessMsgs, trueRet.VerifyProcess...)
-	}
-	// Only after all verifications pass, declare the function
-	execRet = exec.lefDefFnStmt(stmt.DefFnStmt)
-	if execRet.IsNotTrue() {
-		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(execRet.String())
-		// return exec.AddStmtToStmtRet(execRet, stmt)
-	}
-	defineMsgs = append(defineMsgs, stmt.DefFnStmt.String())
-	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs).AddDefineMsgs(defineMsgs)
-}
-
-func (exec *Executor) checkHaveFnCaseByCaseStmt(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet {
-	verifyProcessMsgs := []ast.VerRet{}
-
-	// Verify all cases cover domain and don't overlap
-	execState := exec.haveFnCaseByCase_AllCasesCoverDomainAndNotOverlap(stmt)
-	if execState.IsNotTrue() {
-		return execState
-	}
-	if trueRet, ok := execState.(*ast.TrueStmtRet); ok {
-		verifyProcessMsgs = append(verifyProcessMsgs, trueRet.VerifyProcess...)
-	}
-
-	// Verify each case: execute proof and verify return value
-	execState = exec.checkHaveFnCaseByCaseStmt_Cases(stmt)
-	if execState.IsNotTrue() {
-		return execState
-	}
-	if trueRet, ok := execState.(*ast.TrueStmtRet); ok {
-		verifyProcessMsgs = append(verifyProcessMsgs, trueRet.VerifyProcess...)
-	}
-
-	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs)
-}
-
-func (exec *Executor) haveFnCaseByCase_AllCasesCoverDomainAndNotOverlap(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet {
-	return exec.verifyCasesOrAndNoOverlap(stmt.CaseByCaseFacts, stmt.DefFnStmt.FnTemplate.Params, stmt.DefFnStmt.FnTemplate.ParamSets, stmt.ProveCases, stmt.Line)
-}
-
-func (exec *Executor) checkHaveFnCaseByCaseStmt_Cases(stmt *ast.HaveFnCaseByCaseStmt) ast.StmtRet {
-	verifyProcessMsgs := []ast.VerRet{}
-	// Verify each case: execute proof and verify return value
-	for i := range len(stmt.CaseByCaseFacts) {
-		execState := exec.verifyHaveFnCaseByCase_OneCase(stmt, i)
-		if execState.IsNotTrue() {
-			return execState
-		}
-		if trueRet, ok := execState.(*ast.TrueStmtRet); ok {
-			verifyProcessMsgs = append(verifyProcessMsgs, trueRet.VerifyProcess...)
-		}
-	}
-
-	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs)
-}
-
-func (exec *Executor) verifyHaveFnCaseByCase_OneCase(stmt *ast.HaveFnCaseByCaseStmt, caseIndex int) ast.StmtRet {
-	exec.NewEnv()
-	defer func() {
-		exec.deleteEnv()
-	}()
-
-	// Define parameters
-	defObjStmt := ast.NewDefLetStmt(
-		stmt.DefFnStmt.FnTemplate.Params,
-		stmt.DefFnStmt.FnTemplate.ParamSets,
-		stmt.DefFnStmt.FnTemplate.DomFacts.ToFactStmtSlice(),
-		stmt.Line,
-	)
-	execState := exec.defLetStmt(defObjStmt)
-	if execState.IsNotTrue() {
-		return ast.StmtErrRet(stmt, execState.String())
-	}
-
-	// Add case condition as fact
-	caseFact := stmt.CaseByCaseFacts[caseIndex]
-	retInfer := exec.Env.NewFactWithCheckingNameDefined(caseFact)
-	if retInfer.IsErr() {
-		return ast.StmtErrRet(stmt, fmt.Sprintf("case %d: failed to add case fact: %s", caseIndex, retInfer.String()))
-	}
-
-	// Execute proof for this case
-	for _, proof := range stmt.Proofs[caseIndex] {
-		execState := exec.Stmt(proof)
-		if execState.IsNotTrue() {
-			return ast.StmtErrRet(stmt, fmt.Sprintf("case %d: proof failed", caseIndex))
-		}
-	}
-
-	// Verify return value is in retSet
-	equalTo := stmt.EqualToObjs[caseIndex]
-	ver := NewVerifier(exec.Env)
-	verRet := ver.VerFactStmt(ast.NewInFactWithObj(equalTo, stmt.DefFnStmt.FnTemplate.RetSet), Round0Msg())
-	if verRet.IsErr() {
-		return ast.StmtErrRet(stmt, fmt.Sprintf("case %d: %s", caseIndex, verRet.String()))
-	}
-	if verRet.IsUnknown() {
-		return ast.NewUnknownStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("case %d: according to the definition of %s, when %s is true, the returned value %s must be in %s, but\n%s is unknown", caseIndex, stmt, caseFact, equalTo, stmt.DefFnStmt.FnTemplate.RetSet, ast.NewInFactWithObj(equalTo, stmt.DefFnStmt.FnTemplate.RetSet)))
-	}
-
-	// The proof statements should have established the necessary conditions
-	// Note: We don't verify thenFacts here because the function is not yet defined,
-	// and object substitution (ReplaceObj) is not currently available.
-	// The proof statements in each case should prove what's needed.
-
-	return exec.NewTrueStmtRet(stmt)
-}
 
 // verifyCasesOrAndNoOverlap is a helper function to verify both:
 // 1. cases cover all possibilities (or cases holds)

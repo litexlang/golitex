@@ -67,13 +67,13 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt ast.SpecificFactStmt, state *Ve
 		return verRet
 	}
 
-	verRet = ver.verInFactByRightParamIsFnTemplateFact(stmt, state)
-	if verRet.IsErr() {
-		return ast.NewErrVerRet(stmt).AddExtraInfo(verRet.String())
-	}
-	if verRet.IsTrue() {
-		return verRet
-	}
+	// verRet = ver.verInFactByRightParamIsFnTemplateFact(stmt, state)
+	// if verRet.IsErr() {
+	// 	return ast.NewErrVerRet(stmt).AddExtraInfo(verRet.String())
+	// }
+	// if verRet.IsTrue() {
+	// 	return verRet
+	// }
 
 	verRet = ver.verInFactByRightParamIsSetProduct(stmt, state)
 	if verRet.IsErr() {
@@ -201,39 +201,39 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt ast.Sp
 	return ast.NewEmptyUnknownVerRet()
 }
 
-func (ver *Verifier) verInFactByRightParamIsFnTemplateFact(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
-	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
-	if !ok {
-		return ast.NewEmptyUnknownVerRet()
-	}
+// func (ver *Verifier) verInFactByRightParamIsFnTemplateFact(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
+// 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+// 	if !ok {
+// 		return ast.NewEmptyUnknownVerRet()
+// 	}
 
-	if asFcFn, ok := asPureStmt.Params[1].(*ast.FnObj); ok {
-		if ast.IsAnonymousFnSet(asFcFn) {
-			verRet := ver.ver_In_FnFcFn_FnTT(asPureStmt.Params[0], asFcFn, state)
-			if verRet.IsErr() {
-				return verRet
-			}
-			if verRet.IsTrue() {
-				msg := fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", asPureStmt.Params[1], asPureStmt.Params[0], asPureStmt.Params[1])
-				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
-			}
-		} else {
-			// return false, nil
-			verRet := ver.ver_In_FnTT(asPureStmt.Params[0], asFcFn, state)
-			if verRet.IsErr() {
-				return verRet
-			}
-			if verRet.IsTrue() {
-				msg := fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", asPureStmt.Params[1], asPureStmt.Params[0], asPureStmt.Params[1])
-				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
-			}
-		}
-		return ast.NewEmptyUnknownVerRet()
-		// }
-	}
+// 	if asFcFn, ok := asPureStmt.Params[1].(*ast.FnObj); ok {
+// 		if ast.IsAnonymousFnSet(asFcFn) {
+// 			verRet := ver.ver_In_FnFcFn_FnTT(asPureStmt.Params[0], asFcFn, state)
+// 			if verRet.IsErr() {
+// 				return verRet
+// 			}
+// 			if verRet.IsTrue() {
+// 				msg := fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", asPureStmt.Params[1], asPureStmt.Params[0], asPureStmt.Params[1])
+// 				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
+// 			}
+// 		} else {
+// 			// return false, nil
+// 			verRet := ver.ver_In_FnTT(asPureStmt.Params[0], asFcFn, state)
+// 			if verRet.IsErr() {
+// 				return verRet
+// 			}
+// 			if verRet.IsTrue() {
+// 				msg := fmt.Sprintf("dom of template %s is in the domain of the template where function %s is in. Also, the return value of the function is in the return set of the template where function %s is in", asPureStmt.Params[1], asPureStmt.Params[0], asPureStmt.Params[1])
+// 				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
+// 			}
+// 		}
+// 		return ast.NewEmptyUnknownVerRet()
+// 		// }
+// 	}
 
-	return ast.NewEmptyUnknownVerRet()
-}
+// 	return ast.NewEmptyUnknownVerRet()
+// }
 
 // func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
 // 	var ast.VerRet *glob.GlobRet
@@ -574,88 +574,88 @@ func (ver *Verifier) verInFactByRightParamIsCartSet(stmt ast.SpecificFactStmt, s
 	return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), ret.String(), ret)
 }
 
-func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *VerState) ast.VerRet {
-	ver.newEnv()
-	defer ver.deleteEnv()
+// func (ver *Verifier) ver_In_FnFcFn_FnTT(left ast.Obj, fnFcFn *ast.FnObj, state *VerState) ast.VerRet {
+// 	ver.newEnv()
+// 	defer ver.deleteEnv()
 
-	// check when parameters satisfy given fnFcFn parameter requirements, then it satisfies the fn template template requirement
+// 	// check when parameters satisfy given fnFcFn parameter requirements, then it satisfies the fn template template requirement
 
-	leftIsInWhichFnTT := ver.Env.GetLatestFnT_GivenNameIsIn(left.String())
-	if leftIsInWhichFnTT == nil {
-		return ast.NewEmptyUnknownVerRet()
-	}
+// 	leftIsInWhichFnTT := ver.Env.GetLatestFnT_GivenNameIsIn(left.String())
+// 	if leftIsInWhichFnTT == nil {
+// 		return ast.NewEmptyUnknownVerRet()
+// 	}
 
-	randomNames := []string{}
-	for i := 0; i < len(leftIsInWhichFnTT.AsFnTStruct.Params); i++ {
-		randomNames = append(randomNames, ver.Env.GenerateUnusedRandomName())
-	}
-	randomAtoms := []ast.Obj{}
-	for i := 0; i < len(leftIsInWhichFnTT.AsFnTStruct.Params); i++ {
-		randomAtoms = append(randomAtoms, ast.Atom(randomNames[i]))
-	}
+// 	randomNames := []string{}
+// 	for i := 0; i < len(leftIsInWhichFnTT.AsFnTStruct.Params); i++ {
+// 		randomNames = append(randomNames, ver.Env.GenerateUnusedRandomName())
+// 	}
+// 	randomAtoms := []ast.Obj{}
+// 	for i := 0; i < len(leftIsInWhichFnTT.AsFnTStruct.Params); i++ {
+// 		randomAtoms = append(randomAtoms, ast.Atom(randomNames[i]))
+// 	}
 
-	uniMap := map[string]ast.Obj{}
-	for i := 0; i < len(leftIsInWhichFnTT.AsFnTStruct.Params); i++ {
-		uniMap[leftIsInWhichFnTT.AsFnTStruct.Params[i]] = ast.Atom(randomNames[i])
-	}
+// 	uniMap := map[string]ast.Obj{}
+// 	for i := 0; i < len(leftIsInWhichFnTT.AsFnTStruct.Params); i++ {
+// 		uniMap[leftIsInWhichFnTT.AsFnTStruct.Params[i]] = ast.Atom(randomNames[i])
+// 	}
 
-	// check parameters of the left satisfies the fn template template requirement
-	for i, randomName := range randomNames {
-		ok, errMsg := ver.Env.CheckAtomObjNameIsValidAndAvailableThenDefineIt(randomName)
-		if !ok {
-			return ast.NewErrVerRet(nil).AddExtraInfo(errMsg)
-		}
-		ret := ver.Env.NewFactWithCheckingNameDefined(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i], glob.BuiltinLine0))
-		if ret.IsErr() {
-			return ast.NewErrVerRet(nil).AddExtraInfo(ret.String())
-		}
-	}
+// 	// check parameters of the left satisfies the fn template template requirement
+// 	for i, randomName := range randomNames {
+// 		ok, errMsg := ver.Env.CheckAtomObjNameIsValidAndAvailableThenDefineIt(randomName)
+// 		if !ok {
+// 			return ast.NewErrVerRet(nil).AddExtraInfo(errMsg)
+// 		}
+// 		ret := ver.Env.NewFactWithCheckingNameDefined(ast.NewInFactWithParamObj(ast.Atom(randomName), (fnFcFn.FnHead).(*ast.FnObj).Params[i], glob.BuiltinLine0))
+// 		if ret.IsErr() {
+// 			return ast.NewErrVerRet(nil).AddExtraInfo(ret.String())
+// 		}
+// 	}
 
-	leftToUniFact, err := leftIsInWhichFnTT.AsFnTStruct.DeriveUniFact_WithGivenFn(left)
-	if err != nil {
-		return ast.NewErrVerRet(nil).AddExtraInfo(err.Error())
-	}
+// 	leftToUniFact, err := leftIsInWhichFnTT.AsFnTStruct.DeriveUniFact_WithGivenFn(left)
+// 	if err != nil {
+// 		return ast.NewErrVerRet(nil).AddExtraInfo(err.Error())
+// 	}
 
-	instantiatedLeftToUniFact, err := leftToUniFact.InstantiateFact(uniMap)
-	if err != nil {
-		return ast.NewErrVerRet(nil).AddExtraInfo(err.Error())
-	}
-	instLeftUniFactAsUniFactStmt, ok := instantiatedLeftToUniFact.(*ast.UniFactStmt)
-	if !ok {
-		return ast.NewEmptyUnknownVerRet()
-	}
+// 	instantiatedLeftToUniFact, err := leftToUniFact.InstantiateFact(uniMap)
+// 	if err != nil {
+// 		return ast.NewErrVerRet(nil).AddExtraInfo(err.Error())
+// 	}
+// 	instLeftUniFactAsUniFactStmt, ok := instantiatedLeftToUniFact.(*ast.UniFactStmt)
+// 	if !ok {
+// 		return ast.NewEmptyUnknownVerRet()
+// 	}
 
-	for i := range instLeftUniFactAsUniFactStmt.Params {
-		fact := ast.NewInFactWithParamObj(ast.Atom(randomNames[i]), leftIsInWhichFnTT.AsFnTStruct.ParamSets[i], glob.BuiltinLine0)
-		verRet := ver.VerFactStmt(fact, state)
-		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet
-		}
+// 	for i := range instLeftUniFactAsUniFactStmt.Params {
+// 		fact := ast.NewInFactWithParamObj(ast.Atom(randomNames[i]), leftIsInWhichFnTT.AsFnTStruct.ParamSets[i], glob.BuiltinLine0)
+// 		verRet := ver.VerFactStmt(fact, state)
+// 		if verRet.IsErr() || verRet.IsUnknown() {
+// 			return verRet
+// 		}
 
-		ret := ver.Env.NewFactWithCheckingNameDefined(fact)
-		if ret.IsErr() {
-			return ast.NewErrVerRet(nil).AddExtraInfo(ret.String())
-		}
-	}
+// 		ret := ver.Env.NewFactWithCheckingNameDefined(fact)
+// 		if ret.IsErr() {
+// 			return ast.NewErrVerRet(nil).AddExtraInfo(ret.String())
+// 		}
+// 	}
 
-	for i := range leftIsInWhichFnTT.AsFnTStruct.DomFacts {
-		fact := leftIsInWhichFnTT.AsFnTStruct.DomFacts[i]
-		verRet := ver.VerFactStmt(fact, state)
-		if verRet.IsErr() || verRet.IsUnknown() {
-			return verRet
-		}
+// 	for i := range leftIsInWhichFnTT.AsFnTStruct.DomFacts {
+// 		fact := leftIsInWhichFnTT.AsFnTStruct.DomFacts[i]
+// 		verRet := ver.VerFactStmt(fact, state)
+// 		if verRet.IsErr() || verRet.IsUnknown() {
+// 			return verRet
+// 		}
 
-		ret := ver.Env.NewFactWithCheckingNameDefined(fact)
-		if ret.IsErr() {
-			return ast.NewErrVerRet(nil).AddExtraInfo(ret.String())
-		}
-	}
+// 		ret := ver.Env.NewFactWithCheckingNameDefined(fact)
+// 		if ret.IsErr() {
+// 			return ast.NewErrVerRet(nil).AddExtraInfo(ret.String())
+// 		}
+// 	}
 
-	// whether return value is in ret set of fnFcFn
-	fn := ast.NewFnObj(left, randomAtoms)
-	verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(fn, fnFcFn.Params[0], glob.BuiltinLine0), state)
-	return verRet
-}
+// 	// whether return value is in ret set of fnFcFn
+// 	fn := ast.NewFnObj(left, randomAtoms)
+// 	verRet := ver.VerFactStmt(ast.NewInFactWithParamObj(fn, fnFcFn.Params[0], glob.BuiltinLine0), state)
+// 	return verRet
+// }
 
 func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
@@ -730,52 +730,52 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt ast.S
 // 	return ast.NewEmptyUnknownVerRet()
 // }
 
-func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FnObj) (ast.Obj, error) {
-	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
-	fnHeadChain_AndItSelf, _ := ast.GetFnHeadChain_AndItSelf(fcFn)
+// func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FnObj) (ast.Obj, error) {
+// 	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
+// 	fnHeadChain_AndItSelf, _ := ast.GetFnHeadChain_AndItSelf(fcFn)
 
-	// 从后往前找，直到找到有个 fnHead 被已知在一个 fnInFnTInterface 中
-	// 比如 f(a)(b,c)(e,d,f) 我不知道 f(a)(b,c) 是哪个 fn_template 里的，但我发现 f(a) $in T 是知道的。那之后就是按T的返回值去套入b,c，然后再把e,d,f套入T的返回值的返回值
-	// 此时 indexWhereLatestFnTIsGot 就是 1, FnToFnItemWhereLatestFnTIsGot 就是 f(a) 的 fnInFnTMemItem
-	indexWhereLatestFnTIsGot, FnToFnItemWhereLatestFnTIsGot := ver.Env.FindRightMostResolvedFn_Return_ResolvedIndexAndFnTMemItem(fnHeadChain_AndItSelf)
+// 	// 从后往前找，直到找到有个 fnHead 被已知在一个 fnInFnTInterface 中
+// 	// 比如 f(a)(b,c)(e,d,f) 我不知道 f(a)(b,c) 是哪个 fn_template 里的，但我发现 f(a) $in T 是知道的。那之后就是按T的返回值去套入b,c，然后再把e,d,f套入T的返回值的返回值
+// 	// 此时 indexWhereLatestFnTIsGot 就是 1, FnToFnItemWhereLatestFnTIsGot 就是 f(a) 的 fnInFnTMemItem
+// 	indexWhereLatestFnTIsGot, FnToFnItemWhereLatestFnTIsGot := ver.Env.FindRightMostResolvedFn_Return_ResolvedIndexAndFnTMemItem(fnHeadChain_AndItSelf)
 
-	if FnToFnItemWhereLatestFnTIsGot == nil {
-		return nil, fmt.Errorf("no fn template found for %s", fcFn)
-	}
+// 	if FnToFnItemWhereLatestFnTIsGot == nil {
+// 		return nil, fmt.Errorf("no fn template found for %s", fcFn)
+// 	}
 
-	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
-	curFnTStruct := (FnToFnItemWhereLatestFnTIsGot.AsFnTStruct)
-	curParamsChainIndex := indexWhereLatestFnTIsGot + 1
+// 	// 比如 f(a)(b,c)(e,d,f) 我们现在得到了 f(a) 的 fnTStruct，那 curParamsChainIndex 就是 2, 表示 f(a) 对应的params就是 (b,c)
+// 	curFnTStruct := (FnToFnItemWhereLatestFnTIsGot.AsFnTStruct)
+// 	curParamsChainIndex := indexWhereLatestFnTIsGot + 1
 
-	// 验证 paramsChain 是否满足 fnTStruct，比如 b,c 是否满足 f(a) 的参数要求
-	for curParamsChainIndex < len(fnHeadChain_AndItSelf)-1 {
-		curRetSet, ok := curFnTStruct.RetSet.(*ast.FnObj)
-		if !ok {
-			return nil, fmt.Errorf("curRetSet is not an FcFn")
-		}
+// 	// 验证 paramsChain 是否满足 fnTStruct，比如 b,c 是否满足 f(a) 的参数要求
+// 	for curParamsChainIndex < len(fnHeadChain_AndItSelf)-1 {
+// 		curRetSet, ok := curFnTStruct.RetSet.(*ast.FnObj)
+// 		if !ok {
+// 			return nil, fmt.Errorf("curRetSet is not an FcFn")
+// 		}
 
-		var shortRet ast.ShortRet
-		// curFnTStruct, ret = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
-		curFnTStruct, shortRet = ver.Env.GetFnStructFromFnTName(curRetSet)
-		if shortRet.IsErr() {
-			return nil, fmt.Errorf(shortRet.String())
-		}
+// 		var shortRet ast.ShortRet
+// 		// curFnTStruct, ret = ver.GetFnStructFromFnTName_CheckFnTParamsReq(curRetSet, state)
+// 		curFnTStruct, shortRet = ver.Env.GetFnStructFromFnTName(curRetSet)
+// 		if shortRet.IsErr() {
+// 			return nil, fmt.Errorf(shortRet.String())
+// 		}
 
-		curParamsChainIndex++
-	}
+// 		curParamsChainIndex++
+// 	}
 
-	uniMap := map[string]ast.Obj{}
-	for i := 0; i < len(curFnTStruct.Params); i++ {
-		uniMap[curFnTStruct.Params[i]] = fcFn.Params[i]
-	}
-	// inst return set
-	instRetSet, err := curFnTStruct.RetSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, fmt.Errorf(err.Error())
-	}
+// 	uniMap := map[string]ast.Obj{}
+// 	for i := 0; i < len(curFnTStruct.Params); i++ {
+// 		uniMap[curFnTStruct.Params[i]] = fcFn.Params[i]
+// 	}
+// 	// inst return set
+// 	instRetSet, err := curFnTStruct.RetSet.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, fmt.Errorf(err.Error())
+// 	}
 
-	return instRetSet, nil
-}
+// 	return instRetSet, nil
+// }
 
 func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)

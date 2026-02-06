@@ -45,13 +45,13 @@ type DefPropStmt struct {
 	Line uint
 }
 
-type LetFnStmt struct {
-	Name       string
-	FnTemplate *AnonymousFn
-	// FnTemplate *FnSetObj
+// type LetFnStmt struct {
+// 	Name       string
+// 	FnTemplate *AnonymousFn
+// 	// FnTemplate *FnSetObj
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type UniFactStmt struct {
 	Params    StrSlice
@@ -167,13 +167,14 @@ type EqualsFactStmt struct {
 
 	Line uint
 }
-type DefFnSetStmt struct {
-	TemplateDefHeader *DefHeader
-	TemplateDomFacts  FactStmtSlice
-	AnonymousFn       *AnonymousFn
 
-	Line uint
-}
+// type DefFnSetStmt struct {
+// 	TemplateDefHeader *DefHeader
+// 	TemplateDomFacts  FactStmtSlice
+// 	AnonymousFn       *AnonymousFn
+
+// 	Line uint
+// }
 
 type AnonymousFn struct {
 	Params    StrSlice
@@ -252,7 +253,7 @@ have fn:
 	= ...
 */
 type HaveFnStmt struct {
-	DefFnStmt        *LetFnStmt
+	DefFnStmt        *LetFn
 	Proofs           StmtSlice
 	HaveObjSatisfyFn Obj
 
@@ -273,15 +274,6 @@ have fn:
 	    ...
 	= ...
 */
-type HaveFnCaseByCaseStmt struct {
-	DefFnStmt       *LetFnStmt
-	CaseByCaseFacts SpecFactPtrSlice
-	Proofs          StmtSliceSlice
-	EqualToObjs     ObjSlice
-	ProveCases      StmtSlice
-
-	Line uint
-}
 
 type ClaimIffStmt struct {
 	UniFactWithIffStmt *UniFactWithIffStmt

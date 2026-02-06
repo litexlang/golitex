@@ -16,30 +16,30 @@ package litex_env
 
 import ast "golitex/ast"
 
-func (envMgr *EnvMgr) GetFnTemplateDef(objAtomName ast.Atom) *ast.DefFnSetStmt {
-	fnTemplateDef, ok := envMgr.AllDefinedFnSetNames[string(objAtomName)]
-	if ok {
-		return fnTemplateDef.Defined
-	}
+// func (envMgr *EnvMgr) GetFnTemplateDef(objAtomName ast.Atom) *ast.DefFnSetStmt {
+// 	fnTemplateDef, ok := envMgr.AllDefinedFnSetNames[string(objAtomName)]
+// 	if ok {
+// 		return fnTemplateDef.Defined
+// 	}
 
-	// Search in builtin env
-	fnTemplateDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedFnSetNames[string(objAtomName)]
-	if ok {
-		return fnTemplateDef.Defined
-	}
+// 	// Search in builtin env
+// 	fnTemplateDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedFnSetNames[string(objAtomName)]
+// 	if ok {
+// 		return fnTemplateDef.Defined
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-func (envMgr *EnvMgr) GetFnTemplateDef_KeyIsObjHead(obj *ast.FnObj) *ast.DefFnSetStmt {
-	fnHeadAsAtom, ok := obj.FnHead.(ast.Atom)
-	if !ok {
-		return nil
-	}
+// func (envMgr *EnvMgr) GetFnTemplateDef_KeyIsObjHead(obj *ast.FnObj) *ast.DefFnSetStmt {
+// 	fnHeadAsAtom, ok := obj.FnHead.(ast.Atom)
+// 	if !ok {
+// 		return nil
+// 	}
 
-	fnTemplateDef := envMgr.GetFnTemplateDef(fnHeadAsAtom)
-	return fnTemplateDef
-}
+// 	fnTemplateDef := envMgr.GetFnTemplateDef(fnHeadAsAtom)
+// 	return fnTemplateDef
+// }
 
 func (envMgr *EnvMgr) GetSymbolSimplifiedValue(obj ast.Obj) ast.Obj {
 	// Search from current depth upward to depth 0
@@ -126,4 +126,3 @@ func (envMgr *EnvMgr) IsFnWithDefinedAlgo(obj ast.Obj) bool {
 	}
 	return envMgr.GetAlgoDef(objAsFnObjHeadAsAtom.String()) != nil
 }
-

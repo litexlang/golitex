@@ -50,9 +50,10 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 			}
 		} else if slices.Contains(tb.header.slice, glob.KeywordSt) {
 			ret, err = p.haveObjStStmt(tb)
-		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFnSet {
-			tb.header.skip(glob.KeywordHave)
-			ret, err = p.DefFnSetStmt(tb)
+			// } else
+			// if tb.header.strAtCurIndexPlus(1) == glob.KeywordFnSet {
+			// 	tb.header.skip(glob.KeywordHave)
+			// 	ret, err = p.DefFnSetStmt(tb)
 		} else if slices.Contains(tb.header.slice, glob.KeySymbolEqual) {
 			ret, err = p.haveObjEqualStmt(tb)
 		} else {
@@ -204,7 +205,7 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 	return NewDefPropStmt(declHeader, iffFacts, nil, tb.line), nil
 }
 
-func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (*LetFnStmt, error) {
+func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (*LetFn, error) {
 	if skipLetAndFn {
 		err := tb.header.skip(glob.KeywordLet)
 		if err != nil {
@@ -271,7 +272,7 @@ func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (*LetFnStmt, err
 			}
 
 			if !tb.header.is(glob.KeySymbolRightArrow) {
-				return NewLetFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
+				return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
 				// return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
 			}
 
@@ -287,7 +288,7 @@ func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (*LetFnStmt, err
 		}
 	}
 
-	return NewLetFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
+	return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
 	// return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
 }
 
@@ -384,86 +385,9 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		return NewClaimHaveFnStmt(defFnStmt, proof, haveObjSatisfyFn, tb.line), nil
-	} else if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordCase) {
-		// Case-by-case structure: body[0] is defFnStmt, body[1..n] are case blocks (possibly with prove cases: at the end)
-		// Each case block has format: case <condition>: <equalTo>:
-		cases := []SpecificFactStmt{}
-		proofs := []StmtSlice{}
-		EqualTo := []Obj{}
-
-		// Check if the last body block is "prove cases:"
-		proveOr := StmtSlice{}
-		lastBlockIndex := -1
-		if len(tb.body) > 1 {
-			lastIdx := len(tb.body) - 1
-			lastBlock := tb.body[lastIdx]
-			if lastBlock.header.is(glob.KeywordProve) {
-				savedIndex := lastBlock.header.index
-				err := lastBlock.header.skip(glob.KeywordProve)
-				if err == nil && lastBlock.header.is(glob.KeywordCases) {
-					err := lastBlock.header.skip(glob.KeywordCases)
-					if err == nil {
-						lastBlockIndex = lastIdx
-					} else {
-						lastBlock.header.index = savedIndex
-					}
-				} else {
-					if err == nil {
-						lastBlock.header.index = savedIndex
-					}
-				}
-			}
-		}
-
-		// Process case blocks (skip the last one if it's "prove cases:")
-		endIdx := len(tb.body)
-		if lastBlockIndex >= 0 {
-			endIdx = lastBlockIndex
-		}
-		for i := 1; i < endIdx; i++ {
-			// Case block: case <condition>: <equalTo>:
-			err := tb.body[i].header.skip(glob.KeywordCase)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			curStmt, err := p.specFactStmt(&tb.body[i])
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			cases = append(cases, curStmt)
-			err = tb.body[i].header.skip(glob.KeySymbolColon)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			// Parse equalTo object
-			curHaveObj, err := p.Obj(&tb.body[i])
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			EqualTo = append(EqualTo, curHaveObj)
-			// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
-			curProof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&tb.body[i])
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			proofs = append(proofs, curProof)
-		}
-
-		// Parse "prove or:" block if it exists
-		if lastBlockIndex >= 0 {
-			lastBlock := tb.body[lastBlockIndex]
-			lastBlock.header.skip(glob.KeywordProve)
-			lastBlock.header.skip(glob.KeywordCases)
-			proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-		}
-
-		return NewHaveFnCaseByCaseStmt(defFnStmt, cases, proofs, EqualTo, proveOr, tb.line), nil
+		return NewHaveFnStmt(defFnStmt, proof, haveObjSatisfyFn, tb.line), nil
 	} else {
-		return nil, fmt.Errorf("expect 'prove:' or 'case' after defFnStmt in have fn statement")
+		return nil, fmt.Errorf("expect 'witness:' after defFnStmt in have fn statement")
 	}
 }
 
@@ -1232,141 +1156,141 @@ func (p *TbParser) proveByEnum(tb *tokenBlock) (Stmt, error) {
 	return NewProveByEnumStmt(uniFact, proofs, tb.line), nil
 }
 
-func (p *TbParser) DefFnSetStmt(tb *tokenBlock) (Stmt, error) {
-	tb.header.skipNext()
+// func (p *TbParser) DefFnSetStmt(tb *tokenBlock) (Stmt, error) {
+// 	tb.header.skipNext()
 
-	defHeader, err := p.defHeaderWithoutParsingColonAtEnd(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	defHeader, err := p.defHeaderWithoutParsingColonAtEnd(tb)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	// Add fn template params to FreeParams
-	for _, param := range defHeader.Params {
-		if _, exists := p.FreeParams[param]; exists {
-			return nil, ErrInLine(fmt.Errorf("parameter %s in fn template definition conflicts with a free parameter in the outer scope", param), tb)
-		}
-		p.FreeParams[param] = struct{}{}
-	}
+// 	// Add fn template params to FreeParams
+// 	for _, param := range defHeader.Params {
+// 		if _, exists := p.FreeParams[param]; exists {
+// 			return nil, ErrInLine(fmt.Errorf("parameter %s in fn template definition conflicts with a free parameter in the outer scope", param), tb)
+// 		}
+// 		p.FreeParams[param] = struct{}{}
+// 	}
 
-	// Defer: remove the params we added when leaving this fn template scope
-	defer func() {
-		for _, param := range defHeader.Params {
-			delete(p.FreeParams, param)
-		}
-	}()
+// 	// Defer: remove the params we added when leaving this fn template scope
+// 	defer func() {
+// 		for _, param := range defHeader.Params {
+// 			delete(p.FreeParams, param)
+// 		}
+// 	}()
 
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	if !tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("expect end of line")
-	}
+// 	if !tb.header.ExceedEnd() {
+// 		return nil, fmt.Errorf("expect end of line")
+// 	}
 
-	if len(tb.body) == 1 {
-		fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := p.fnInFnTemplateStmt(&tb.body[0])
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
+// 	if len(tb.body) == 1 {
+// 		fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := p.fnInFnTemplateStmt(&tb.body[0])
+// 		if err != nil {
+// 			return nil, ErrInLine(err, tb)
+// 		}
 
-		reversibleDomFacts := ReversibleFacts{}
-		for _, domFact := range domFacts {
-			if specFact, ok := domFact.(Spec_OrFact); ok {
-				reversibleDomFacts = append(reversibleDomFacts, specFact)
-			} else {
-				return nil, fmt.Errorf("expect spec fact or or fact in dom section")
-			}
-		}
-		reversibleThenFacts := ReversibleFacts{}
-		for _, thenFact := range thenFacts {
-			if specFact, ok := thenFact.(Spec_OrFact); ok {
-				reversibleThenFacts = append(reversibleThenFacts, specFact)
-			} else {
-				return nil, fmt.Errorf("expect spec fact or or fact in then section")
-			}
-		}
+// 		reversibleDomFacts := ReversibleFacts{}
+// 		for _, domFact := range domFacts {
+// 			if specFact, ok := domFact.(Spec_OrFact); ok {
+// 				reversibleDomFacts = append(reversibleDomFacts, specFact)
+// 			} else {
+// 				return nil, fmt.Errorf("expect spec fact or or fact in dom section")
+// 			}
+// 		}
+// 		reversibleThenFacts := ReversibleFacts{}
+// 		for _, thenFact := range thenFacts {
+// 			if specFact, ok := thenFact.(Spec_OrFact); ok {
+// 				reversibleThenFacts = append(reversibleThenFacts, specFact)
+// 			} else {
+// 				return nil, fmt.Errorf("expect spec fact or or fact in then section")
+// 			}
+// 		}
 
-		newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, reversibleDomFacts, reversibleThenFacts, tb.body[0].line)
+// 		newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, reversibleDomFacts, reversibleThenFacts, tb.body[0].line)
 
-		return NewDefFnSetStmt(defHeader, []FactStmt{}, newFnTStruct, tb.line), nil
-	} else if len(tb.body) >= 2 {
-		if tb.body[0].header.is(glob.KeywordDom) {
-			err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeywordDom)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
+// 		return NewDefFnSetStmt(defHeader, []FactStmt{}, newFnTStruct, tb.line), nil
+// 	} else if len(tb.body) >= 2 {
+// 		if tb.body[0].header.is(glob.KeywordDom) {
+// 			err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeywordDom)
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
 
-			templateDomFacts, err := p.bodyFacts(&tb.body[0])
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
+// 			templateDomFacts, err := p.bodyFacts(&tb.body[0])
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
 
-			fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := p.fnInFnTemplateStmt(&tb.body[1])
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
+// 			fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := p.fnInFnTemplateStmt(&tb.body[1])
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
 
-			domFactsAsReversibleFacts := ReversibleFacts{}
-			for _, domFact := range domFacts {
-				if specFact, ok := domFact.(Spec_OrFact); ok {
-					domFactsAsReversibleFacts = append(domFactsAsReversibleFacts, specFact)
-				} else {
-					return nil, fmt.Errorf("expect spec fact or or fact in dom section")
-				}
-			}
-			thenFactsAsReversibleFacts := ReversibleFacts{}
-			for _, thenFact := range thenFacts {
-				if specFact, ok := thenFact.(Spec_OrFact); ok {
-					thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, specFact)
-				} else {
-					return nil, fmt.Errorf("expect spec fact or or fact in then section")
-				}
-			}
-			newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFactsAsReversibleFacts, thenFactsAsReversibleFacts, tb.body[1].line)
+// 			domFactsAsReversibleFacts := ReversibleFacts{}
+// 			for _, domFact := range domFacts {
+// 				if specFact, ok := domFact.(Spec_OrFact); ok {
+// 					domFactsAsReversibleFacts = append(domFactsAsReversibleFacts, specFact)
+// 				} else {
+// 					return nil, fmt.Errorf("expect spec fact or or fact in dom section")
+// 				}
+// 			}
+// 			thenFactsAsReversibleFacts := ReversibleFacts{}
+// 			for _, thenFact := range thenFacts {
+// 				if specFact, ok := thenFact.(Spec_OrFact); ok {
+// 					thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, specFact)
+// 				} else {
+// 					return nil, fmt.Errorf("expect spec fact or or fact in then section")
+// 				}
+// 			}
+// 			newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFactsAsReversibleFacts, thenFactsAsReversibleFacts, tb.body[1].line)
 
-			return NewDefFnSetStmt(defHeader, templateDomFacts, newFnTStruct, tb.line), nil
-		} else {
-			templateDomFacts := []FactStmt{}
-			for i := range len(tb.body) - 1 {
-				curStmt, err := p.factStmt(&tb.body[i])
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				templateDomFacts = append(templateDomFacts, curStmt)
-			}
+// 			return NewDefFnSetStmt(defHeader, templateDomFacts, newFnTStruct, tb.line), nil
+// 		} else {
+// 			templateDomFacts := []FactStmt{}
+// 			for i := range len(tb.body) - 1 {
+// 				curStmt, err := p.factStmt(&tb.body[i])
+// 				if err != nil {
+// 					return nil, ErrInLine(err, tb)
+// 				}
+// 				templateDomFacts = append(templateDomFacts, curStmt)
+// 			}
 
-			fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := p.fnInFnTemplateStmt(&tb.body[len(tb.body)-1])
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
+// 			fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := p.fnInFnTemplateStmt(&tb.body[len(tb.body)-1])
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
 
-			domFactsAsReversibleFacts := ReversibleFacts{}
-			for _, domFact := range domFacts {
-				if specFact, ok := domFact.(Spec_OrFact); ok {
-					domFactsAsReversibleFacts = append(domFactsAsReversibleFacts, specFact)
-				} else {
-					return nil, fmt.Errorf("expect spec fact or or fact in dom section")
-				}
-			}
+// 			domFactsAsReversibleFacts := ReversibleFacts{}
+// 			for _, domFact := range domFacts {
+// 				if specFact, ok := domFact.(Spec_OrFact); ok {
+// 					domFactsAsReversibleFacts = append(domFactsAsReversibleFacts, specFact)
+// 				} else {
+// 					return nil, fmt.Errorf("expect spec fact or or fact in dom section")
+// 				}
+// 			}
 
-			thenFactsAsReversibleFacts := ReversibleFacts{}
-			for _, thenFact := range thenFacts {
-				if specFact, ok := thenFact.(Spec_OrFact); ok {
-					thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, specFact)
-				} else {
-					return nil, fmt.Errorf("expect spec fact or or fact in then section")
-				}
-			}
+// 			thenFactsAsReversibleFacts := ReversibleFacts{}
+// 			for _, thenFact := range thenFacts {
+// 				if specFact, ok := thenFact.(Spec_OrFact); ok {
+// 					thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, specFact)
+// 				} else {
+// 					return nil, fmt.Errorf("expect spec fact or or fact in then section")
+// 				}
+// 			}
 
-			newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFactsAsReversibleFacts, thenFactsAsReversibleFacts, tb.body[len(tb.body)-1].line)
+// 			newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFactsAsReversibleFacts, thenFactsAsReversibleFacts, tb.body[len(tb.body)-1].line)
 
-			return NewDefFnSetStmt(defHeader, templateDomFacts, newFnTStruct, tb.line), nil
-		}
-	} else {
-		return nil, fmt.Errorf("expect one or two body blocks")
-	}
-}
+// 			return NewDefFnSetStmt(defHeader, templateDomFacts, newFnTStruct, tb.line), nil
+// 		}
+// 	} else {
+// 		return nil, fmt.Errorf("expect one or two body blocks")
+// 	}
+// }
 
 func (p *TbParser) fnInFnTemplateStmt(tb *tokenBlock) ([]string, []Obj, Obj, []FactStmt, []FactStmt, error) {
 	var err error

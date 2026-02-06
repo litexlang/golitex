@@ -69,37 +69,37 @@ func (envMgr *EnvMgr) GenerateNUnusedRandomNames(n int) []string {
 	return result
 }
 
-func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.AnonymousFn, ast.ShortRet) {
-	if objFnTypeToFnTStruct, ok := envMgr.AnonymousFnToInstFnTemplate(fnTName); ok {
-		return objFnTypeToFnTStruct, ast.NewTrueShortRet()
-	} else {
-		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
-		if !ok {
-			return nil, ast.NewTrueShortRetWithMsg(fmt.Sprintf("fnTNameHead is not an atom"))
-		}
+// func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.AnonymousFn, ast.ShortRet) {
+// 	if objFnTypeToFnTStruct, ok := envMgr.AnonymousFnToInstFnTemplate(fnTName); ok {
+// 		return objFnTypeToFnTStruct, ast.NewTrueShortRet()
+// 	} else {
+// 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
+// 		if !ok {
+// 			return nil, ast.NewTrueShortRetWithMsg(fmt.Sprintf("fnTNameHead is not an atom"))
+// 		}
 
-		return envMgr.getFnTDef_InstFnTStructOfIt(fnTNameHeadAsAtom, fnTName.Params)
-	}
-}
+// 		return envMgr.getFnTDef_InstFnTStructOfIt(fnTNameHeadAsAtom, fnTName.Params)
+// 	}
+// }
 
-func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.AnonymousFn, ast.ShortRet) {
-	defOfT := envMgr.GetFnTemplateDef(fnTDefName)
-	if defOfT == nil {
-		return nil, ast.NewErrShortRetWithMsg(fmt.Sprintf("fnTNameHead %s is not a fn template", fnTDefName))
-	}
+// func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.AnonymousFn, ast.ShortRet) {
+// 	defOfT := envMgr.GetFnTemplateDef(fnTDefName)
+// 	if defOfT == nil {
+// 		return nil, ast.NewErrShortRetWithMsg(fmt.Sprintf("fnTNameHead %s is not a fn template", fnTDefName))
+// 	}
 
-	uniMap, err := ast.MakeUniMap(defOfT.TemplateDefHeader.Params, templateParams)
-	if err != nil {
-		return nil, ast.NewErrShortRetWithMsg(err.Error())
-	}
+// 	uniMap, err := ast.MakeUniMap(defOfT.TemplateDefHeader.Params, templateParams)
+// 	if err != nil {
+// 		return nil, ast.NewErrShortRetWithMsg(err.Error())
+// 	}
 
-	fnTStruct, err := defOfT.AnonymousFn.Instantiate(uniMap)
-	if err != nil {
-		return nil, ast.NewErrShortRetWithMsg(err.Error())
-	}
+// 	fnTStruct, err := defOfT.AnonymousFn.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, ast.NewErrShortRetWithMsg(err.Error())
+// 	}
 
-	return fnTStruct, ast.NewTrueShortRet()
-}
+// 	return fnTStruct, ast.NewTrueShortRet()
+// }
 
 func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecificFactStmt) ast.InferRet {
 	switch asFact := stmt.(type) {
@@ -229,14 +229,14 @@ func (envMgr *EnvMgr) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
 	return facts, ok
 }
 
-func (envMgr *EnvMgr) FnObjHeadIsAtomAndIsFnSet(fnObj *ast.FnObj) bool {
-	if asAtom, ok := fnObj.FnHead.(ast.Atom); ok {
-		_, ok := envMgr.AllDefinedFnSetNames[string(asAtom)]
-		return ok
-	}
+// func (envMgr *EnvMgr) FnObjHeadIsAtomAndIsFnSet(fnObj *ast.FnObj) bool {
+// 	if asAtom, ok := fnObj.FnHead.(ast.Atom); ok {
+// 		_, ok := envMgr.AllDefinedFnSetNames[string(asAtom)]
+// 		return ok
+// 	}
 
-	return false
-}
+// 	return false
+// }
 
 func (envMgr *EnvMgr) GetEnvMgrOfPkgName(pkgName string) *EnvMgr {
 	path, ok := envMgr.EnvPkgMgr.PkgMgr.NameAbsPathMap[pkgName]
