@@ -1,8 +1,8 @@
-have S nonempty_set
+have S nonempty_set, x S
 
 have f fn (S) S
 
-f(f(1)) = f(f(1))
+f(f(x)) = f(f(x))
 
 
 """

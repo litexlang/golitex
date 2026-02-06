@@ -26,6 +26,7 @@ type FnSetObj interface {
 	Instantiate(map[string]Obj) (Obj, error)
 	ToLatexString() string
 	fnSetObj()
+	GetRetSet() Obj
 }
 
 func (f *FnSetObjWithoutName) fnSetObj() {}
@@ -107,4 +108,12 @@ func (f *FnSetObjWithName) Instantiate(uniMap map[string]Obj) (Obj, error) {
 	}
 
 	return NewFnSetObjWithName(f.FnName, f.Params, newParamSets, newDomFacts, f.RetSet, newThenFacts), nil
+}
+
+func (f *FnSetObjWithName) GetRetSet() Obj {
+	return f.RetSet
+}
+
+func (f *FnSetObjWithoutName) GetRetSet() Obj {
+	return f.RetSet
 }
