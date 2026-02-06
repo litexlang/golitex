@@ -125,6 +125,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ast.StmtRet {
 		execRet = exec.haveFnEqual(stmt)
 	case *ast.HaveFnEqualCaseByCase:
 		execRet = exec.haveFnEqualCaseByCase(stmt)
+	case *ast.LetFn:
+		execRet = exec.letFn(stmt)
 	default:
 		execRet = ast.StmtErrRet(stmt, fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -1350,4 +1352,18 @@ func (exec *Executor) haveFnEqualCaseByCase_Define(stmt *ast.HaveFnEqualCaseByCa
 	}
 
 	return exec.NewTrueStmtRet(stmt).AddInfers([]ast.InferRet{ret2})
+}
+
+func (exec *Executor) letFn(stmt *ast.LetFn) ast.StmtRet {
+	fnWithName := ast.NewFnSetObjWithName(stmt.DefHeaderWithDom.Name, stmt.DefHeaderWithDom.Params, stmt.DefHeaderWithDom.ParamSets, stmt.DefHeaderWithDom.DomFacts, stmt.RetSet, stmt.ThenFacts)
+
+	// 先定义f
+	defLetStmt := ast.NewDefLetStmt([]string{stmt.DefHeaderWithDom.Name}, []ast.Obj{fnWithName}, []ast.FactStmt{}, stmt.Line)
+
+	ret := exec.defLetStmt(defLetStmt)
+	if ret.IsNotTrue() {
+		return ast.StmtErrRet(stmt, ret.String())
+	}
+
+	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(ret.GetDefineMsgs()).AddInfers(ret.GetInfers())
 }

@@ -57,7 +57,7 @@ func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.ExistSpecificFactStmt, ex
 	newExtraParams := maps.Clone(extraParams)
 	for i, paramSet := range stmt.ExistFreeParams {
 		if envMgr.lookupAtomObjName(ast.Atom(stmt.ExistFreeParams[i]), extraParams).IsTrue() {
-			return ast.NewErrShortRetWithMsg(fmt.Sprintf("exist fact exist parameter %s conflicts with defined parameter", paramSet))
+			return ast.NewErrShortRetWithMsg(fmt.Sprintf("failed to lookup name %s in exist fact exist parameter %s", stmt.ExistFreeParams[i], paramSet))
 		}
 		newExtraParams[stmt.ExistFreeParams[i]] = struct{}{}
 	}
@@ -74,7 +74,7 @@ func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.ExistSpecificFactStmt, ex
 
 	for _, param := range stmt.PureFact.Params {
 		if envMgr.LookupNamesInObj(param, newExtraParams).IsNotTrue() {
-			return ast.NewErrShortRetWithMsg(fmt.Sprintf("exist fact exist parameter %s conflicts with defined parameter", param.String()))
+			return ast.NewErrShortRetWithMsg(fmt.Sprintf("failed to lookup name %s in exist fact exist parameter %s", param.String(), param.String()))
 		}
 	}
 
@@ -83,12 +83,12 @@ func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.ExistSpecificFactStmt, ex
 
 func (envMgr *EnvMgr) lookupNamesInPureFact(stmt *ast.PureSpecificFactStmt, extraParams map[string]struct{}) ast.ShortRet {
 	if ret := envMgr.IsPropDefinedOrBuiltinProp(stmt); ret.IsNotTrue() {
-		return ast.NewErrShortRetWithMsg(fmt.Sprintf("pure fact prop %s is not defined or builtin prop", stmt.PropName))
+		return ast.NewErrShortRetWithMsg(fmt.Sprintf("failed to lookup names in pure fact prop %s", stmt.PropName)).AddExtraInfo(ret.String())
 	}
 
 	for _, param := range stmt.Params {
 		if envMgr.LookupNamesInObj(param, extraParams).IsNotTrue() {
-			return ast.NewErrShortRetWithMsg(fmt.Sprintf("pure fact parameter %s conflicts with defined parameter", param.String()))
+			return ast.NewErrShortRetWithMsg(fmt.Sprintf("failed to lookup names in pure fact parameter %s", param.String()))
 		}
 	}
 
