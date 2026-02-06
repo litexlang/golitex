@@ -745,9 +745,9 @@ func (stmt *ProveStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *LetFnStmt) String() string {
-	return fnDefStmtStringGivenKw(glob.KeywordFn, stmt.FnTemplate, stmt.Name)
-}
+// func (stmt *LetFnStmt) String() string {
+// 	return fnDefStmtStringGivenKw(glob.KeywordFn, stmt.FnTemplate, stmt.Name)
+// }
 
 func (stmt *LetFn) String() string {
 	var builder strings.Builder
@@ -896,29 +896,29 @@ func (stmt *EqualsFactStmt) String() string {
 // 	return stmt.Comment
 // }
 
-func (stmt *DefFnSetStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordFnSet)
-	builder.WriteString(" ")
-	builder.WriteString(stmt.TemplateDefHeader.String())
-	builder.WriteString("\n")
+// func (stmt *DefFnSetStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordFnSet)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(stmt.TemplateDefHeader.String())
+// 	builder.WriteString("\n")
 
-	if len(stmt.TemplateDomFacts) > 0 {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordDom, 1))
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteByte('\n')
-		domFactStrSlice := make([]string, len(stmt.TemplateDomFacts))
-		for i := range len(stmt.TemplateDomFacts) {
-			domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.TemplateDomFacts[i].String(), 2)
-		}
-		builder.WriteString(strings.Join(domFactStrSlice, "\n"))
-		builder.WriteByte('\n')
-	}
+// 	if len(stmt.TemplateDomFacts) > 0 {
+// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordDom, 1))
+// 		builder.WriteString(glob.KeySymbolColon)
+// 		builder.WriteByte('\n')
+// 		domFactStrSlice := make([]string, len(stmt.TemplateDomFacts))
+// 		for i := range len(stmt.TemplateDomFacts) {
+// 			domFactStrSlice[i] = glob.SplitLinesAndAdd4NIndents(stmt.TemplateDomFacts[i].String(), 2)
+// 		}
+// 		builder.WriteString(strings.Join(domFactStrSlice, "\n"))
+// 		builder.WriteByte('\n')
+// 	}
 
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(NewLetFnStmt("", NewFnTStruct(stmt.AnonymousFn.Params, stmt.AnonymousFn.ParamSets, stmt.AnonymousFn.RetSet, stmt.AnonymousFn.DomFacts, stmt.AnonymousFn.ThenFacts, stmt.Line), stmt.Line).String(), 1))
+// 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(NewLetFnStmt("", NewFnTStruct(stmt.AnonymousFn.Params, stmt.AnonymousFn.ParamSets, stmt.AnonymousFn.RetSet, stmt.AnonymousFn.DomFacts, stmt.AnonymousFn.ThenFacts, stmt.Line), stmt.Line).String(), 1))
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
 func (stmt *ClearStmt) String() string {
 	return glob.KeywordClear
@@ -1036,49 +1036,6 @@ func (stmt *HaveFnStmt) String() string {
 	}
 	builder.WriteString(glob.SplitLinesAndAdd4NIndents(fmt.Sprintf("%s %s", glob.KeywordHave, stmt.HaveObjSatisfyFn.String()), 1))
 	return builder.String()
-}
-
-func (stmt *HaveFnCaseByCaseStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordHave)
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeywordFn)
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteString("\n")
-	builder.WriteString(glob.SplitLinesAndAdd4NIndents(stmt.DefFnStmt.String(), 1))
-	builder.WriteString("\n")
-	for i := range len(stmt.CaseByCaseFacts) {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordCase, 1))
-		builder.WriteString(" ")
-		builder.WriteString(stmt.CaseByCaseFacts[i].String())
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteString(" ")
-		if i < len(stmt.EqualToObjs) {
-			builder.WriteString(stmt.EqualToObjs[i].String())
-		}
-		if i < len(stmt.Proofs) && len(stmt.Proofs[i]) > 0 {
-			builder.WriteString(glob.KeySymbolColon)
-			builder.WriteByte('\n')
-			for _, proofStmt := range stmt.Proofs[i] {
-				builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 2))
-				builder.WriteByte('\n')
-			}
-		} else {
-			builder.WriteByte('\n')
-		}
-	}
-	if len(stmt.ProveCases) > 0 {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(glob.KeywordProve, 1))
-		builder.WriteString(" ")
-		builder.WriteString(glob.KeywordCases)
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteByte('\n')
-		for _, proofStmt := range stmt.ProveCases {
-			builder.WriteString(glob.SplitLinesAndAdd4NIndents(proofStmt.String(), 2))
-			builder.WriteByte('\n')
-		}
-	}
-	return strings.TrimSuffix(builder.String(), "\n")
 }
 
 func (objSlice ObjSlice) String() string {

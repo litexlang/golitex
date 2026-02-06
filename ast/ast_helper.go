@@ -191,39 +191,39 @@ func (objFn *FnObj) IsObjFn_HasAtomHead_ReturnHead() (Atom, bool) {
 	return head, true
 }
 
-func (stmt *DefFnSetStmt) Instantiate_GetFnTemplateNoName(fnObj *FnObj) (*AnonymousFn, error) {
-	uniMap := map[string]Obj{}
-	templateParams := stmt.TemplateDefHeader.Params
-	if len(templateParams) != len(fnObj.Params) {
-		return nil, fmt.Errorf("template params and obj params must have the same length")
-	}
+// func (stmt *DefFnSetStmt) Instantiate_GetFnTemplateNoName(fnObj *FnObj) (*AnonymousFn, error) {
+// 	uniMap := map[string]Obj{}
+// 	templateParams := stmt.TemplateDefHeader.Params
+// 	if len(templateParams) != len(fnObj.Params) {
+// 		return nil, fmt.Errorf("template params and obj params must have the same length")
+// 	}
 
-	for i, param := range templateParams {
-		uniMap[param] = fnObj.Params[i]
-	}
+// 	for i, param := range templateParams {
+// 		uniMap[param] = fnObj.Params[i]
+// 	}
 
-	instantiatedParamSets, err := stmt.AnonymousFn.ParamSets.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
+// 	instantiatedParamSets, err := stmt.AnonymousFn.ParamSets.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	instantiatedDomFacts, err := stmt.AnonymousFn.DomFacts.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
+// 	instantiatedDomFacts, err := stmt.AnonymousFn.DomFacts.InstantiateFact(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	instantiatedThenFacts, err := stmt.AnonymousFn.ThenFacts.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
+// 	instantiatedThenFacts, err := stmt.AnonymousFn.ThenFacts.InstantiateFact(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	instantiatedRetSet, err := stmt.AnonymousFn.RetSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
+// 	instantiatedRetSet, err := stmt.AnonymousFn.RetSet.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return NewFnTStruct(stmt.AnonymousFn.Params, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts, stmt.Line), nil
-}
+// 	return NewFnTStruct(stmt.AnonymousFn.Params, instantiatedParamSets, instantiatedRetSet, instantiatedDomFacts, instantiatedThenFacts, stmt.Line), nil
+// }
 
 func (objFn *FnObj) HasHeadInSlice(headNames []string) bool {
 	headAtom, ok := objFn.FnHead.(Atom)

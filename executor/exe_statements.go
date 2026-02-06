@@ -51,11 +51,11 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ast.StmtRet {
 		if execRet.IsTrue() {
 			execRet = execRet.AddExtraInfo("Note: The `let` statement may introduce objects without existence verification. To ensure object existence, use `have` instead.\n")
 		}
-	case *ast.LetFnStmt:
-		execRet = exec.lefDefFnStmt(stmt)
-		if execRet.IsTrue() {
-			execRet = execRet.AddExtraInfo("Note: The `let fn` statement may introduce functions without existence verification. To ensure function existence, use `have fn` instead.\n")
-		}
+	// case *ast.LetFnStmt:
+	// 	execRet = exec.lefDefFnStmt(stmt)
+	// 	if execRet.IsTrue() {
+	// 		execRet = execRet.AddExtraInfo("Note: The `let fn` statement may introduce functions without existence verification. To ensure function existence, use `have fn` instead.\n")
+	// 	}
 	case *ast.ProveStmt:
 		execRet = exec.proveStmt(stmt)
 	case *ast.ClaimProveByContradictionStmt:
@@ -64,8 +64,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ast.StmtRet {
 		execRet = exec.proveByEnumStmt(stmt)
 	case *ast.HaveObjInNonEmptySetStmt:
 		execRet = exec.haveObjInNonEmptySetStmt(stmt)
-	case *ast.DefFnSetStmt:
-		execRet = exec.DefFnTemplateStmt(stmt)
+	// case *ast.DefFnSetStmt:
+	// 	execRet = exec.DefFnTemplateStmt(stmt)
 	case *ast.ClearStmt:
 		execRet = exec.ClearStmt()
 	case *ast.DoNothingStmt:
@@ -80,8 +80,6 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ast.StmtRet {
 	// 	execRet = exec.haveFnEqualStmt(stmt)
 	case *ast.HaveFnStmt:
 		execRet = exec.haveFnStmt(stmt)
-	case *ast.HaveFnCaseByCaseStmt:
-		execRet = exec.haveFnCaseByCaseStmt(stmt)
 	case *ast.ClaimIffStmt:
 		execRet = exec.claimIffStmt(stmt)
 	case *ast.ProveIsTransitivePropStmt:
@@ -334,45 +332,45 @@ func (exec *Executor) proveStmt(stmt *ast.ProveStmt) ast.StmtRet {
 	// return exec.AddStmtToStmtRet(execState, stmt)
 }
 
-func (exec *Executor) lefDefFnStmt(stmt *ast.LetFnStmt) ast.StmtRet {
-	defineMsgs := []string{}
+// func (exec *Executor) lefDefFnStmt(stmt *ast.LetFnStmt) ast.StmtRet {
+// 	defineMsgs := []string{}
 
-	ret := exec.Env.IsValidAndAvailableName(stmt.Name)
-	if !ret {
-		return ast.StmtErrRet(stmt, fmt.Sprintf("invalid or unavailable name: %s", stmt.Name))
-	}
+// 	ret := exec.Env.IsValidAndAvailableName(stmt.Name)
+// 	if !ret {
+// 		return ast.StmtErrRet(stmt, fmt.Sprintf("invalid or unavailable name: %s", stmt.Name))
+// 	}
 
-	shortRet := checkParamsInFnDefNotDefinedAndParamSetsDefined(exec, stmt.FnTemplate.Params, stmt.FnTemplate.ParamSets)
-	if shortRet.IsNotTrue() {
-		return ast.StmtErrRet(stmt, shortRet.String())
-	}
+// 	shortRet := checkParamsInFnDefNotDefinedAndParamSetsDefined(exec, stmt.FnTemplate.Params, stmt.FnTemplate.ParamSets)
+// 	if shortRet.IsNotTrue() {
+// 		return ast.StmtErrRet(stmt, shortRet.String())
+// 	}
 
-	// 在 objMem 里记录一下
-	defLetStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
-	retStmt := exec.Env.DefLetStmt(defLetStmt)
-	if retStmt.IsErr() {
-		return ast.StmtErrRet(stmt, retStmt.String())
-	}
-	exec.Env.AllDefinedAtomObjNames[stmt.Name] = litex_env.NewDefinedStuff(struct{}{}, exec.Env.CurEnvDepth())
-	defineMsgs = append(defineMsgs, glob.IsANewObjectMsg(stmt.Name))
+// 	// 在 objMem 里记录一下
+// 	defLetStmt := ast.NewDefLetStmt([]string{stmt.Name}, []ast.Obj{ast.Atom(glob.KeywordSet)}, []ast.FactStmt{}, stmt.Line)
+// 	retStmt := exec.Env.DefLetStmt(defLetStmt)
+// 	if retStmt.IsErr() {
+// 		return ast.StmtErrRet(stmt, retStmt.String())
+// 	}
+// 	exec.Env.AllDefinedAtomObjNames[stmt.Name] = litex_env.NewDefinedStuff(struct{}{}, exec.Env.CurEnvDepth())
+// 	defineMsgs = append(defineMsgs, glob.IsANewObjectMsg(stmt.Name))
 
-	retInfer := exec.Env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.Atom(stmt.Name), nil, stmt.FnTemplate)
-	if retInfer.IsErr() {
-		return ast.StmtErrRet(stmt, retInfer.String())
-	}
+// 	retInfer := exec.Env.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(ast.Atom(stmt.Name), nil, stmt.FnTemplate)
+// 	if retInfer.IsErr() {
+// 		return ast.StmtErrRet(stmt, retInfer.String())
+// 	}
 
-	derivedFact, err := stmt.FnTemplate.DeriveUniFact_WithGivenFn(ast.Atom(stmt.Name))
-	if err != nil {
-		return ast.StmtErrRet(stmt, err.Error())
-	}
+// 	derivedFact, err := stmt.FnTemplate.DeriveUniFact_WithGivenFn(ast.Atom(stmt.Name))
+// 	if err != nil {
+// 		return ast.StmtErrRet(stmt, err.Error())
+// 	}
 
-	retInfer2 := exec.Env.NewFactWithCheckingNameDefined(derivedFact)
-	if retInfer2.IsErr() {
-		return ast.StmtErrRet(stmt, retInfer2.String())
-	}
+// 	retInfer2 := exec.Env.NewFactWithCheckingNameDefined(derivedFact)
+// 	if retInfer2.IsErr() {
+// 		return ast.StmtErrRet(stmt, retInfer2.String())
+// 	}
 
-	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
-}
+// 	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
+// }
 
 func (exec *Executor) proveByEnumStmtProve(stmt *ast.ProveByEnumStmt) ast.StmtRet {
 	exec.NewEnv()
@@ -426,15 +424,16 @@ func (exec *Executor) proveByEnumStmt(stmt *ast.ProveByEnumStmt) ast.StmtRet {
 // 	return exec.NewTrueStmtRet(stmt).AddNewFact(fmt.Sprintf("%s\nis true by definition", knownUniFact))
 // }
 
-func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) ast.StmtRet {
+// func (exec *Executor) DefFnTemplateStmt(stmt *ast.DefFnSetStmt) ast.StmtRet {
 
-	ret := exec.Env.NewFnTemplateInEnvMem(stmt)
-	if ret.IsErr() {
-		return ast.StmtErrRet(stmt, ret.String())
-	}
+// 	// ret := exec.Env.NewFnTemplateInEnvMem(stmt)
+// 	// if ret.IsErr() {
+// 	// 	return ast.StmtErrRet(stmt, ret.String())
+// 	// }
 
-	return exec.NewTrueStmtRet(stmt)
-}
+// 	// return exec.NewTrueStmtRet(stmt)
+// 	panic("")
+// }
 
 func (exec *Executor) ClearStmt() ast.StmtRet {
 	// newEnvMgr := env.CopyEnvMgrAndOwnPkgMgr(env.BuiltinEnvMgrWithEmptyEnvPkgMgr, exec.Env.EnvPkgMgr)
