@@ -92,8 +92,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ast.StmtRet {
 		execRet = exec.defAlgoStmt(stmt)
 	case *ast.EvalStmt:
 		execRet = exec.evalStmt(stmt)
-	case *ast.HaveFnEqualCaseByCaseStmt:
-		execRet = exec.haveFnEqualCaseByCaseStmt(stmt)
+	// case *ast.HaveFnEqualCaseByCaseStmt:
+	// execRet = exec.haveFnEqualCaseByCaseStmt(stmt)
 	case *ast.ProveCaseByCaseStmt:
 		// execRet = exec.proveCaseByCaseStmt(stmt)
 		execRet = exec.execCases(stmt)
