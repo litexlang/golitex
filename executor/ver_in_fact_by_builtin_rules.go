@@ -663,42 +663,72 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt ast.S
 		return ast.NewEmptyUnknownVerRet()
 	}
 
+	if len(asPureStmt.Params) != 2 {
+		return ast.NewEmptyUnknownVerRet()
+	}
+
 	fcFn, ok := asPureStmt.Params[0].(*ast.FnObj)
 	if !ok {
 		return ast.NewEmptyUnknownVerRet()
 	}
 
-	if fcFn.HasHeadInSlice([]string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}) {
-		if asPureStmt.Params[1] == ast.Atom(glob.KeywordReal) {
-			msg := fmt.Sprintf("return value of builtin arithmetic function %s is in Real", fcFn)
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
-		}
+	fnSet := ver.Env.GetFnInFnSet(fcFn.FnHead.String())
+	if fnSet == nil {
 		return ast.NewEmptyUnknownVerRet()
 	}
 
-	if fcFn.HasHeadInSlice([]string{glob.KeywordCount, glob.KeySymbolPercent}) {
-		if asPureStmt.Params[1] == ast.Atom(glob.KeywordNatural) {
-			msg := fmt.Sprintf("return value of builtin function %s is in Natural", fcFn)
-			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
-		}
-		return ast.NewEmptyUnknownVerRet()
-	}
-
-	setFcFnIsIn_ByItsFnT, err := ver.getRetSetOfFcFnByUsingItsFnT(fcFn)
-	if err != nil {
-		return ast.NewEmptyUnknownVerRet()
-	}
-
-	verRet := ver.VerFactStmt(ast.EqualFact(asPureStmt.Params[1], setFcFnIsIn_ByItsFnT), state)
+	retSet := fnSet.GetRetSet()
+	equalFact := ast.NewEqualFact(asPureStmt.Params[1], retSet)
+	verRet := ver.VerFactStmt(equalFact, state)
 	if verRet.IsErr() {
 		return verRet
 	}
-	if verRet.IsTrue() {
-		msg := fmt.Sprintf("return value of function %s is in its function template return set %s", fcFn, setFcFnIsIn_ByItsFnT)
-		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
-	}
-	return ast.NewEmptyUnknownVerRet()
+	return verRet
 }
+
+// TODO
+// func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
+// 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+// 	if !ok {
+// 		return ast.NewEmptyUnknownVerRet()
+// 	}
+
+// 	fcFn, ok := asPureStmt.Params[0].(*ast.FnObj)
+// 	if !ok {
+// 		return ast.NewEmptyUnknownVerRet()
+// 	}
+
+// 	if fcFn.HasHeadInSlice([]string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}) {
+// 		if asPureStmt.Params[1] == ast.Atom(glob.KeywordReal) {
+// 			msg := fmt.Sprintf("return value of builtin arithmetic function %s is in Real", fcFn)
+// 			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
+// 		}
+// 		return ast.NewEmptyUnknownVerRet()
+// 	}
+
+// 	if fcFn.HasHeadInSlice([]string{glob.KeywordCount, glob.KeySymbolPercent}) {
+// 		if asPureStmt.Params[1] == ast.Atom(glob.KeywordNatural) {
+// 			msg := fmt.Sprintf("return value of builtin function %s is in Natural", fcFn)
+// 			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
+// 		}
+// 		return ast.NewEmptyUnknownVerRet()
+// 	}
+
+// 	setFcFnIsIn_ByItsFnT, err := ver.getRetSetOfFcFnByUsingItsFnT(fcFn)
+// 	if err != nil {
+// 		return ast.NewEmptyUnknownVerRet()
+// 	}
+
+// 	verRet := ver.VerFactStmt(ast.EqualFact(asPureStmt.Params[1], setFcFnIsIn_ByItsFnT), state)
+// 	if verRet.IsErr() {
+// 		return verRet
+// 	}
+// 	if verRet.IsTrue() {
+// 		msg := fmt.Sprintf("return value of function %s is in its function template return set %s", fcFn, setFcFnIsIn_ByItsFnT)
+// 		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
+// 	}
+// 	return ast.NewEmptyUnknownVerRet()
+// }
 
 func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FnObj) (ast.Obj, error) {
 	// f(a)(b,c)(e,d,f) 返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
