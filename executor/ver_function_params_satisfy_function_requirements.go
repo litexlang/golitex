@@ -159,42 +159,40 @@ func (ver *Verifier) fnSetObjSatisfyFnReqWhenFnNameIsNotEmpty(fnSetObj *ast.FnSe
 	ver.newEnv()
 	defer ver.deleteEnv()
 
-	noDuplicateParams := ver.Env.GenerateNoDuplicateNames(len(fnSetObj.Params), map[string]struct{}{})
-
-	uniMap := make(map[string]ast.Obj)
-	for i, param := range noDuplicateParams {
-		uniMap[fnSetObj.Params[i]] = ast.Atom(param)
+	newFnSetObj, err := ver.Env.ReplaceFnNameAndParamsWithNoDuplicateNames(fnSetObj)
+	if err != nil {
+		return ast.NewErrVerRet(nil).AddExtraInfo(err.Error())
 	}
 
-	instDoms := []ast.FactStmt{}
-	for _, dom := range fnSetObj.DomFacts {
-		newDom, err := dom.InstantiateFact(uniMap)
-		if err != nil {
-			return ast.NewErrVerRet(dom).AddExtraInfo(err.Error())
-		}
-		instDoms = append(instDoms, newDom.(ast.FactStmt))
-	}
-
-	// 定义变量
-	defLetStmt := ast.NewDefLetStmt(noDuplicateParams, fnSetObj.ParamSets, instDoms, glob.BuiltinLine0)
-
+	// 声明这个函数
+	defLetStmt := ast.NewDefLetStmt([]string{newFnSetObj.FnName}, []ast.Obj{newFnSetObj}, []ast.FactStmt{}, glob.BuiltinLine0)
 	ret := ver.Env.DefLetStmt(defLetStmt)
 	if ret.IsNotTrue() {
 		return ast.NewErrVerRet(nil).AddExtraInfo(ret.String())
 	}
 
-	// 检查then里的东西的req
-	for _, thenFact := range fnSetObj.ThenFacts {
-		instThen, err := thenFact.InstantiateFact(uniMap)
-		if err != nil {
-			return ast.NewErrVerRet(thenFact).AddExtraInfo(err.Error())
-		}
+	// 声明里面的变量
+	defLet2 := ast.NewDefLetStmt(newFnSetObj.Params, newFnSetObj.ParamSets, newFnSetObj.DomFacts.ToFactStmtSlice(), glob.BuiltinLine0)
+	ret2 := ver.Env.DefLetStmt(defLet2)
+	if ret2.IsNotTrue() {
+		return ast.NewErrVerRet(nil).AddExtraInfo(ret2.String())
+	}
 
-		nextState := state.CopyAndReqOkToFalse()
-
-		verRet := ver.VerFactStmt(instThen.(ast.FactStmt), nextState)
-		if verRet.IsNotTrue() {
-			return verRet
+	// 检查then里的东西是不是满足条件
+	for _, then := range newFnSetObj.ThenFacts {
+		switch then := then.(type) {
+		case ast.SpecificFactStmt:
+			verRet := ver.checkFnsReq(then, state)
+			if verRet.IsNotTrue() {
+				return verRet
+			}
+		case *ast.OrStmt:
+			verRet := ver.checkOrFnReq(then, state)
+			if verRet.IsNotTrue() {
+				return verRet
+			}
+		default:
+			panic(fmt.Sprintf("unknown then type: %T", then))
 		}
 	}
 
