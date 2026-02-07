@@ -103,3 +103,10 @@ prove:
         = x + 1
 
     f(2) = 3
+
+prove:
+    have f fn(Z) fn(Z) Z
+
+    f(1) $in fn(Z)Z
+
+    f(1)(2) = f(1)(2)

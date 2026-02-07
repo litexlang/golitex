@@ -37,6 +37,10 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt ast.SpecificFactStmt, state 
 		}
 	}
 
+	if stmt.GetPropName() == glob.KeywordRestrict {
+		return ver.verRestrictByBuiltinRules(stmt, state)
+	}
+
 	if ast.IsTrueSpecFactWithPropName(stmt, glob.KeywordIsASet) {
 		return ver.verIsASetByBuiltinRules(stmt, state)
 	}
@@ -502,4 +506,78 @@ func (ver *Verifier) verFnSetIsNonEmpty(stmt ast.SpecificFactStmt, state *VerSta
 	}
 
 	return ast.NewTrueVerRet(stmt, nil, "")
+}
+
+func (ver *Verifier) verRestrictByBuiltinRules(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
+	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+	if !ok {
+		return ast.NewEmptyUnknownVerRet()
+	}
+
+	if len(asPureStmt.Params) != 2 {
+		return ast.NewEmptyUnknownVerRet()
+	}
+
+	// have f fn(R)Q
+	// restrict(f, fn(Q)Q)
+
+	fIsInFnSet := ver.Env.GetFnInFnSet(asPureStmt.Params[0].String())
+	if fIsInFnSet == nil {
+		return ast.NewEmptyUnknownVerRet()
+	}
+
+	switch restrictTo := asPureStmt.Params[1].(type) {
+	case *ast.FnSetObjWithoutName:
+		return ver.verRestrictByFnSetObjWithoutName(asPureStmt, fIsInFnSet, restrictTo, state)
+	case *ast.FnSetObjWithName:
+		return ver.verRestrictByFnSetObjWithName(fIsInFnSet, restrictTo, state)
+	default:
+		return ast.NewEmptyUnknownVerRet()
+	}
+}
+
+func (ver *Verifier) verRestrictByFnSetObjWithoutName(stmt *ast.PureSpecificFactStmt, fIsInFnSet ast.FnSetObj, restrictTo *ast.FnSetObjWithoutName, state *VerState) ast.VerRet {
+	switch fIsInFnSet := fIsInFnSet.(type) {
+	case *ast.FnSetObjWithoutName:
+		if len(fIsInFnSet.ParamSets) != len(restrictTo.ParamSets) {
+			return ast.NewEmptyUnknownVerRet()
+		}
+
+		// f $in fn(R)Q => f $restrict fn(Q)Q
+		randomParams := ver.Env.GenerateNUnusedRandomNames(len(fIsInFnSet.ParamSets))
+
+		// forall x R: x $in Q
+		thenFacts := []ast.Spec_OrFact{}
+		for i, paramSet := range fIsInFnSet.ParamSets {
+			thenFacts = append(thenFacts, ast.NewInFactWithObj(ast.Atom(randomParams[i]), paramSet))
+		}
+		forallFact := ast.NewUniFact(randomParams, restrictTo.ParamSets, []ast.Spec_OrFact{}, thenFacts, glob.BuiltinLine0)
+		verRet := ver.VerFactStmt(forallFact, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+
+		// forall x Q: f(x) $in return set of restrictTo
+		paramsAsObjs := []ast.Obj{}
+		for _, param := range randomParams {
+			paramsAsObjs = append(paramsAsObjs, ast.Atom(param))
+		}
+		fX := ast.NewFnObj(stmt.Params[0], paramsAsObjs)
+
+		forallFact2 := ast.NewUniFact(randomParams, restrictTo.ParamSets, []ast.Spec_OrFact{}, []ast.Spec_OrFact{ast.NewInFactWithObj(fX, restrictTo.RetSet)}, glob.BuiltinLine0)
+		verRet = ver.VerFactStmt(forallFact2, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+
+		return ast.NewTrueVerRet(stmt, nil, "by definition of restrict")
+	case *ast.FnSetObjWithName:
+		return ast.NewEmptyUnknownVerRet()
+	default:
+		return ast.NewEmptyUnknownVerRet()
+	}
+}
+
+func (ver *Verifier) verRestrictByFnSetObjWithName(fIsInFnSet ast.FnSetObj, restrictTo *ast.FnSetObjWithName, state *VerState) ast.VerRet {
+	return ast.NewEmptyUnknownVerRet()
 }

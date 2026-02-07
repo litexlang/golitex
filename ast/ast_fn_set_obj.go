@@ -32,6 +32,7 @@ type FnSetObj interface {
 func (f *FnSetObjWithoutName) fnSetObj() {}
 func (f *FnSetObjWithName) fnSetObj()    {}
 
+// fn(R) R
 type FnSetObjWithoutName struct {
 	ParamSets ObjSlice
 	DomFacts  ReversibleFacts
