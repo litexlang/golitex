@@ -530,7 +530,7 @@ func (ver *Verifier) verRestrictByBuiltinRules(stmt ast.SpecificFactStmt, state 
 	case *ast.FnSetObjWithoutName:
 		return ver.verRestrictByFnSetObjWithoutName(asPureStmt, fIsInFnSet, restrictTo, state)
 	case *ast.FnSetObjWithName:
-		return ver.verRestrictByFnSetObjWithName(fIsInFnSet, restrictTo, state)
+		return ver.verRestrictByFnSetObjWithName(asPureStmt, fIsInFnSet, restrictTo, state)
 	default:
 		return ast.NewEmptyUnknownVerRet()
 	}
@@ -572,12 +572,176 @@ func (ver *Verifier) verRestrictByFnSetObjWithoutName(stmt *ast.PureSpecificFact
 
 		return ast.NewTrueVerRet(stmt, nil, "by definition of restrict")
 	case *ast.FnSetObjWithName:
-		return ast.NewEmptyUnknownVerRet()
+		// f $in fn f(x R: domFacts) Q {thenFacts}
+		// f $restrict fn(Q)Q
+		if len(fIsInFnSet.ParamSets) != len(restrictTo.ParamSets) {
+			return ast.NewEmptyUnknownVerRet()
+		}
+
+		randomParams := ver.Env.GenerateNUnusedRandomNames(len(restrictTo.ParamSets))
+
+		// forall x Q: x $in R
+		thenFacts := []ast.Spec_OrFact{}
+		for i, paramSet := range fIsInFnSet.ParamSets {
+			thenFacts = append(thenFacts, ast.NewInFactWithObj(ast.Atom(randomParams[i]), paramSet))
+		}
+
+		uniMap := map[string]ast.Obj{}
+		for i, param := range randomParams {
+			uniMap[fIsInFnSet.Params[i]] = ast.Atom(param)
+		}
+
+		for _, domFact := range fIsInFnSet.DomFacts {
+			instDomFact, err := domFact.Instantiate(uniMap)
+			if err != nil {
+				return ast.NewEmptyUnknownVerRet()
+			}
+			thenFacts = append(thenFacts, instDomFact.(ast.Spec_OrFact))
+		}
+
+		forallFact := ast.NewUniFact(randomParams, restrictTo.ParamSets, []ast.Spec_OrFact{}, thenFacts, glob.BuiltinLine0)
+		verRet := ver.VerFactStmt(forallFact, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+
+		// forall x Q: f(x) $in return set of restrictTo
+		paramsAsObjs := []ast.Obj{}
+		for _, param := range randomParams {
+			paramsAsObjs = append(paramsAsObjs, ast.Atom(param))
+		}
+		fX := ast.NewFnObj(stmt.Params[0], paramsAsObjs)
+
+		forallFact2 := ast.NewUniFact(randomParams, restrictTo.ParamSets, []ast.Spec_OrFact{}, []ast.Spec_OrFact{ast.NewInFactWithObj(fX, restrictTo.RetSet)}, glob.BuiltinLine0)
+		verRet = ver.VerFactStmt(forallFact2, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+
+		return ast.NewTrueVerRet(stmt, nil, "by definition of restrict")
 	default:
 		return ast.NewEmptyUnknownVerRet()
 	}
 }
 
-func (ver *Verifier) verRestrictByFnSetObjWithName(fIsInFnSet ast.FnSetObj, restrictTo *ast.FnSetObjWithName, state *VerState) ast.VerRet {
-	return ast.NewEmptyUnknownVerRet()
+func (ver *Verifier) verRestrictByFnSetObjWithName(stmt *ast.PureSpecificFactStmt, fIsInFnSet ast.FnSetObj, restrictTo *ast.FnSetObjWithName, state *VerState) ast.VerRet {
+	switch fIsInFnSet := fIsInFnSet.(type) {
+	case *ast.FnSetObjWithoutName:
+		// f $in fn(R)Q
+		// f $restrict fn f(x R: x > 0) Q {f(x) > 0}
+
+		freeParams := restrictTo.Params
+
+		if len(fIsInFnSet.ParamSets) != len(restrictTo.ParamSets) {
+			return ast.NewEmptyUnknownVerRet()
+		}
+
+		// x R: x > 0 => x $in R
+		thenFacts := []ast.Spec_OrFact{}
+		for i, paramSet := range fIsInFnSet.ParamSets {
+			thenFacts = append(thenFacts, ast.NewInFactWithObj(ast.Atom(freeParams[i]), paramSet))
+		}
+
+		forallFact := ast.NewUniFact(freeParams, restrictTo.ParamSets, restrictTo.DomFacts, thenFacts, glob.BuiltinLine0)
+		verRet := ver.VerFactStmt(forallFact, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+
+		// forall x R: x > 0 => f(x) $in Q
+		fX := ast.NewFnObj(stmt.Params[0], []ast.Obj{ast.Atom(freeParams[0])})
+		inFact := ast.NewInFactWithObj(fX, restrictTo.RetSet)
+		forallFact2 := ast.NewUniFact(freeParams, restrictTo.ParamSets, restrictTo.DomFacts, []ast.Spec_OrFact{inFact}, glob.BuiltinLine0)
+		verRet = ver.VerFactStmt(forallFact2, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+
+		instThenOfRestrictTo := []ast.Spec_OrFact{}
+		uniMap := map[string]ast.Obj{restrictTo.FnName: stmt.Params[0]}
+		for _, thenFact := range restrictTo.ThenFacts {
+			instThen, err := thenFact.Instantiate(uniMap)
+			if err != nil {
+				return ast.NewEmptyUnknownVerRet()
+			}
+			instThenOfRestrictTo = append(instThenOfRestrictTo, instThen.(ast.Spec_OrFact))
+		}
+
+		forallFact3 := ast.NewUniFact(freeParams, restrictTo.ParamSets, restrictTo.DomFacts, instThenOfRestrictTo, glob.BuiltinLine0)
+		verRet = ver.VerFactStmt(forallFact3, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+
+		return ast.NewTrueVerRet(stmt, nil, "by definition of restrict")
+
+	case *ast.FnSetObjWithName:
+		// f $in fn f(x R: domFacts1) Q {thenFacts1}
+		// f $restrict fn g(x Q: domFacts2) Q {thenFacts2}
+		if len(fIsInFnSet.ParamSets) != len(restrictTo.ParamSets) {
+			return ast.NewEmptyUnknownVerRet()
+		}
+
+		freeParams := restrictTo.Params
+
+		// forall x Q: (domFacts2) => x $in R
+		thenFacts := []ast.Spec_OrFact{}
+		for i, paramSet := range fIsInFnSet.ParamSets {
+			thenFacts = append(thenFacts, ast.NewInFactWithObj(ast.Atom(freeParams[i]), paramSet))
+		}
+
+		uniMap := map[string]ast.Obj{}
+		for i, param := range freeParams {
+			uniMap[fIsInFnSet.Params[i]] = ast.Atom(param)
+		}
+
+		for _, domFact := range fIsInFnSet.DomFacts {
+			instDomFact, err := domFact.Instantiate(uniMap)
+			if err != nil {
+				return ast.NewEmptyUnknownVerRet()
+			}
+			thenFacts = append(thenFacts, instDomFact.(ast.Spec_OrFact))
+		}
+
+		forallFact := ast.NewUniFact(freeParams, restrictTo.ParamSets, restrictTo.DomFacts, thenFacts, glob.BuiltinLine0)
+		verRet := ver.VerFactStmt(forallFact, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+
+		// forall x Q: (domFacts2) => f(x) $in restrictTo.RetSet
+		paramsAsObjs := []ast.Obj{}
+		for _, param := range freeParams {
+			paramsAsObjs = append(paramsAsObjs, ast.Atom(param))
+		}
+		fX := ast.NewFnObj(stmt.Params[0], paramsAsObjs)
+		inFact := ast.NewInFactWithObj(fX, restrictTo.RetSet)
+		forallFact2 := ast.NewUniFact(freeParams, restrictTo.ParamSets, restrictTo.DomFacts, []ast.Spec_OrFact{inFact}, glob.BuiltinLine0)
+		verRet = ver.VerFactStmt(forallFact2, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+
+		// forall x Q: (domFacts2) => 满足 restrictTo 的 thenFacts2
+		instThenOfRestrictTo := []ast.Spec_OrFact{}
+		uniMap2 := map[string]ast.Obj{restrictTo.FnName: stmt.Params[0]}
+		for _, thenFact := range restrictTo.ThenFacts {
+			instThen, err := thenFact.Instantiate(uniMap2)
+			if err != nil {
+				return ast.NewEmptyUnknownVerRet()
+			}
+			instThenOfRestrictTo = append(instThenOfRestrictTo, instThen.(ast.Spec_OrFact))
+		}
+
+		forallFact3 := ast.NewUniFact(freeParams, restrictTo.ParamSets, restrictTo.DomFacts, instThenOfRestrictTo, glob.BuiltinLine0)
+		verRet = ver.VerFactStmt(forallFact3, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+
+		return ast.NewTrueVerRet(stmt, nil, "by definition of restrict")
+	default:
+		return ast.NewEmptyUnknownVerRet()
+	}
+
 }
