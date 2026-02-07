@@ -133,6 +133,7 @@ func (envMgr *EnvMgr) lookupNamesInFnSetObj(obj ast.FnSetObj, extraParams map[st
 		for _, param := range fnSetObj.Params {
 			newExtraParams[param] = struct{}{}
 		}
+		newExtraParams[fnSetObj.FnName] = struct{}{}
 
 		for _, paramSet := range fnSetObj.ParamSets {
 			if ret := envMgr.LookupNamesInObj(paramSet, newExtraParams); ret.IsNotTrue() {
