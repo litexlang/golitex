@@ -125,6 +125,8 @@ const (
 
 	KeywordSetIsFn             = "set_is_fn"
 	KeywordFnIsSubsetOfCartSet = "fn_is_subset_of_cart"
+
+	KeywordRestrict = "restrict"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -232,6 +234,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordPropInfer: {},
 	KeywordInfer:     {},
+
+	KeywordRestrict: {},
 }
 
 const (
@@ -369,6 +373,7 @@ var BuiltinPropNames map[string]struct{} = map[string]struct{}{
 	KeySymbolGreater:     {},
 	KeySymbolLess:        {},
 	// KeywordEqualTuple:     {},
+	KeywordRestrict: {},
 }
 
 func IsBuiltinPropName(name string) bool {
