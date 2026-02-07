@@ -453,3 +453,13 @@ func (ver *Verifier) replaceParamWithUndeclaredRandomName(setBuilderStruct *ast.
 		Facts:     newFacts,
 	}
 }
+
+func (ver *Verifier) checkOrFnReq(orFact *ast.OrStmt, state *VerState) ast.VerRet {
+	for _, fact := range orFact.Facts {
+		verRet := ver.checkFnsReq(fact, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	}
+	return ast.NewTrueVerRet(nil, nil, "")
+}
