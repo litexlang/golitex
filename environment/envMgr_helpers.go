@@ -358,3 +358,36 @@ func (envMgr *EnvMgr) GetUniFactFactFreeParamsNotConflictWithDefinedParams(fact 
 		return ast.NewUniFact(newFreeParams, newParamSets, newDomFacts, newThenFacts, glob.BuiltinLine0)
 	}
 }
+
+func (envMgr *EnvMgr) ReplaceFnNameAndParamsWithNoDuplicateNames(fnSetObj *ast.FnSetObjWithName) (*ast.FnSetObjWithName, error) {
+	fnName := envMgr.GenerateUnusedRandomName()
+
+	newParams := envMgr.GenerateNoDuplicateNames(len(fnSetObj.Params), map[string]struct{}{fnName: struct{}{}})
+
+	uniMap := make(map[string]ast.Obj)
+	for i, param := range newParams {
+		uniMap[fnSetObj.Params[i]] = ast.Atom(param)
+	}
+
+	newDom := ast.ReversibleFacts{}
+	for _, dom := range fnSetObj.DomFacts {
+		newDomFact, err := dom.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newDom = append(newDom, newDomFact.(ast.Spec_OrFact))
+	}
+
+	uniMap[fnSetObj.FnName] = ast.Atom(fnName)
+
+	newThen := ast.ReversibleFacts{}
+	for _, then := range fnSetObj.ThenFacts {
+		newThenFact, err := then.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newThen = append(newThen, newThenFact.(ast.Spec_OrFact))
+	}
+
+	return ast.NewFnSetObjWithName(fnName, newParams, fnSetObj.ParamSets, newDom, fnSetObj.RetSet, newThen), nil
+}
