@@ -3,6 +3,7 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
+	glob "golitex/glob"
 )
 
 func (ver *Verifier) objSatisfyFnReq(obj ast.Obj, state *VerState) ast.VerRet {
@@ -143,5 +144,59 @@ func (ver *Verifier) fnSetObjSatisfyFnReqWhenFnNameIsEmpty(fnSetObj *ast.FnSetOb
 }
 
 func (ver *Verifier) fnSetObjSatisfyFnReqWhenFnNameIsNotEmpty(fnSetObj *ast.FnSetObjWithName, state *VerState) ast.VerRet {
-	panic("fnSetObjSatisfyFnReqWhenFnNameIsNotEmpty is not supported")
+	for _, paramSet := range fnSetObj.ParamSets {
+		verRet := ver.objSatisfyFnReq(paramSet, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	}
+
+	verRet := ver.objSatisfyFnReq(fnSetObj.RetSet, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	ver.newEnv()
+	defer ver.deleteEnv()
+
+	noDuplicateParams := ver.Env.GenerateNoDuplicateNames(len(fnSetObj.Params), map[string]struct{}{})
+
+	uniMap := make(map[string]ast.Obj)
+	for i, param := range noDuplicateParams {
+		uniMap[fnSetObj.Params[i]] = ast.Atom(param)
+	}
+
+	instDoms := []ast.FactStmt{}
+	for _, dom := range fnSetObj.DomFacts {
+		newDom, err := dom.InstantiateFact(uniMap)
+		if err != nil {
+			return ast.NewErrVerRet(dom).AddExtraInfo(err.Error())
+		}
+		instDoms = append(instDoms, newDom.(ast.FactStmt))
+	}
+
+	// 定义变量
+	defLetStmt := ast.NewDefLetStmt(noDuplicateParams, fnSetObj.ParamSets, instDoms, glob.BuiltinLine0)
+
+	ret := ver.Env.DefLetStmt(defLetStmt)
+	if ret.IsNotTrue() {
+		return ast.NewErrVerRet(nil).AddExtraInfo(ret.String())
+	}
+
+	// 检查then里的东西的req
+	for _, thenFact := range fnSetObj.ThenFacts {
+		instThen, err := thenFact.InstantiateFact(uniMap)
+		if err != nil {
+			return ast.NewErrVerRet(thenFact).AddExtraInfo(err.Error())
+		}
+
+		nextState := state.CopyAndReqOkToFalse()
+
+		verRet := ver.VerFactStmt(instThen.(ast.FactStmt), nextState)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	}
+
+	return ast.NewTrueVerRet(nil, nil, "")
 }

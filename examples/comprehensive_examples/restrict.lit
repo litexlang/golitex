@@ -1,0 +1,5 @@
+have f fn(R) Q
+
+$restrict(f, fn(Q)Q)
+
+# $restrict(f, fn f(x R: x > 0) Q {f(x) > 0})
