@@ -205,12 +205,12 @@ know:
 	forall x, y R => not x >= y <=> x < y
 
 prop mul_cancel_cond(a, b, c R):
+	c != 0
     a * c = b * c
-    c != 0
 
 prop div_cancel_cond(a, b, c R):
+	c != 0
     a / c = b / c
-    c != 0
 
 know prop_infer cancel(a, b, c R):
 	a + c = b + c or a - c = b - c or $mul_cancel_cond(a, b, c)or $div_cancel_cond(a, b, c)
@@ -222,8 +222,9 @@ prop mul_cancel_general_cond(a, b, c, d R):
     c != 0
 
 prop div_cancel_general_cond(a, b, c, d R):
+	c != 0
+	d != 0
     a / c = b / d
-    c != 0
 
 
 know prop_infer cancel_general(a, b, c, d R):
