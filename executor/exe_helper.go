@@ -243,9 +243,11 @@ func (ver *Verifier) declareParamsInUniFactAndCheckFnReqOfParamSetsAndDoms(fact 
 
 func (ver *Verifier) declareParamsAndCheckFnReqOfParamSets(params []string, paramSets []ast.Obj, state *VerState) ast.VerRet {
 	for i := range params {
-		ret := ver.checkFnReqOfObj(paramSets[i], state)
-		if ret.IsNotTrue() {
-			return ret
+		if !glob.IsKeywordSetOrNonEmptySetOrFiniteSet(paramSets[i].String()) {
+			ret := ver.checkFnReqOfObj(paramSets[i], state)
+			if ret.IsNotTrue() {
+				return ret
+			}
 		}
 
 		letStmt := ast.NewDefLetStmt([]string{params[i]}, []ast.Obj{paramSets[i]}, []ast.FactStmt{}, glob.BuiltinLine0)
