@@ -35,7 +35,6 @@ func (f *FnSetObjWithName) fnSetObj()    {}
 // fn(R) R
 type FnSetObjWithoutName struct {
 	ParamSets ObjSlice
-	DomFacts  ReversibleFacts
 	RetSet    Obj
 }
 
