@@ -1,3 +1,8 @@
 prop field(s set, zero s, add fn(s, s) s, mul fn(s, s) s, inv fn(s) s)
 
 prop p([s, s0, sa, sm, si] field)
+
+know:
+    forall [s, s0, sa, sm, si] field, a s:
+        a \sa s0 = s0 \sa a
+    
