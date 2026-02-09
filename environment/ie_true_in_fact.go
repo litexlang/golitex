@@ -36,9 +36,9 @@ func (ie *InferEngine) trueInFact(fact ast.SpecificFactStmt) ast.InferRet {
 	// 	return ret
 	// }
 
-	if ret := ie.trueInFactByAnonymousFnSetObj(asFact); ret.IsTrue() || ret.IsErr() {
-		return ret
-	}
+	// if ret := ie.trueInFactByAnonymousFnSetObj(asFact); ret.IsTrue() || ret.IsErr() {
+	// 	return ret
+	// }
 
 	if ret := ie.trueInFactByCart(asFact); ret.IsTrue() || ret.IsErr() {
 		return ret
@@ -119,24 +119,24 @@ func (ie *InferEngine) trueInFact(fact ast.SpecificFactStmt) ast.InferRet {
 
 // trueInFactByAnonymousFnSetObj handles inference for x $in fnTemplateFnObj
 // Inference: Inserts the function x into the function template table
-func (ie *InferEngine) trueInFactByAnonymousFnSetObj(fact *ast.PureSpecificFactStmt) ast.InferRet {
-	fnFn, ok := fact.Params[1].(*ast.FnObj)
-	if !ok || !ast.IsAnonymousFnSet(fnFn) {
-		return ast.NewUnknownInferRet(fact)
-	}
+// func (ie *InferEngine) trueInFactByAnonymousFnSetObj(fact *ast.PureSpecificFactStmt) ast.InferRet {
+// 	fnFn, ok := fact.Params[1].(*ast.FnObj)
+// 	if !ok || !ast.IsAnonymousFnSet(fnFn) {
+// 		return ast.NewUnknownInferRet(fact)
+// 	}
 
-	fnTStruct, ok := ie.EnvMgr.AnonymousFnToInstFnTemplate(fnFn)
-	if !ok {
-		return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("%s is not obj type fn template", fnFn.String()))
-	}
+// fnTStruct, ok := ie.EnvMgr.AnonymousFnToInstFnTemplate(fnFn)
+// if !ok {
+// 	return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("%s is not obj type fn template", fnFn.String()))
+// }
 
-	ok = ie.EnvMgr.InsertFnInFnTT(fact.Params[0], fnTStruct)
-	if !ok {
-		return ast.NewErrInferRet(fact).AddExtraInfo("failed to insert function in function template table")
-	}
+// ok = ie.EnvMgr.InsertFnInFnTT(fact.Params[0], fnTStruct)
+// if !ok {
+// 	return ast.NewErrInferRet(fact).AddExtraInfo("failed to insert function in function template table")
+// }
 
-	return ast.NewTrueInferRet(fact)
-}
+// 	return ast.NewTrueInferRet(fact)
+// }
 
 // trueInFactByCart handles inference for x $in cart(S1, S2, ..., Sn)
 // It tries both direct cart and cart from equal facts

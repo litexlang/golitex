@@ -176,15 +176,15 @@ type EqualsFactStmt struct {
 // 	Line uint
 // }
 
-type AnonymousFn struct {
-	Params    StrSlice
-	ParamSets ObjSlice
-	RetSet    Obj
-	DomFacts  ReversibleFacts
-	ThenFacts ReversibleFacts
+// type AnonymousFn struct {
+// 	Params    StrSlice
+// 	ParamSets ObjSlice
+// 	RetSet    Obj
+// 	DomFacts  ReversibleFacts
+// 	ThenFacts ReversibleFacts
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type ClearStmt struct {
 	Line uint

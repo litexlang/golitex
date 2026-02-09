@@ -14,35 +14,31 @@
 
 package litex_env
 
-import (
-	ast "golitex/ast"
-)
-
 // func (envMgr *EnvMgr) InsertFnInFnTT(fc ast.Fc, asFcFn *ast.FcFn, fnTNoName *ast.FnTStruct) error {
-func (envMgr *EnvMgr) InsertFnInFnTT(fc ast.Obj, fnTNoName *ast.AnonymousFn) bool {
-	// var fnTFcIsIn = fnTNoName
-	// var ok bool
+// func (envMgr *EnvMgr) InsertFnInFnTT(fc ast.Obj, fnTNoName *ast.AnonymousFn) bool {
+// var fnTFcIsIn = fnTNoName
+// var ok bool
 
-	// memory := envMgr.CurEnv().FnInFnTemplateFactsMem
-	// fnDefs, ok := memory[fc.String()]
-	// if !ok {
-	// 	memory[fc.String()] = []FnInFnTMemItem{
-	// 		{
-	// 			// AsFcFn:      asFcFn,
-	// 			AsFnTStruct: fnTFcIsIn,
-	// 		},
-	// 	}
-	// 	return true
-	// } else {
-	// 	fnDefs = append(fnDefs, FnInFnTMemItem{
-	// 		// AsFcFn:      asFcFn,
-	// 		AsFnTStruct: fnTFcIsIn,
-	// 	})
-	// 	memory[fc.String()] = fnDefs
-	// 	return true
-	// }
-	panic("")
-}
+// memory := envMgr.CurEnv().FnInFnTemplateFactsMem
+// fnDefs, ok := memory[fc.String()]
+// if !ok {
+// 	memory[fc.String()] = []FnInFnTMemItem{
+// 		{
+// 			// AsFcFn:      asFcFn,
+// 			AsFnTStruct: fnTFcIsIn,
+// 		},
+// 	}
+// 	return true
+// } else {
+// 	fnDefs = append(fnDefs, FnInFnTMemItem{
+// 		// AsFcFn:      asFcFn,
+// 		AsFnTStruct: fnTFcIsIn,
+// 	})
+// 	memory[fc.String()] = fnDefs
+// 	return true
+// }
+// 	panic("")
+// }
 
 // 从后往前找，直到找到有个 fnHead 被已知在一个 fnInFnTInterface 中
 // 比如 f(a)(b,c)(e,d,f) 我不知道 f(a)(b,c) 是哪个 fn_template 里的，但我发现 f(a) $in T 是知道的。那之后就是按T的返回值去套入b,c，然后再把e,d,f套入T的返回值的返回值

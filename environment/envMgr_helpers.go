@@ -307,19 +307,19 @@ func (ie *InferEngine) storeSpecFactInMemAndCollect(fact ast.SpecificFactStmt, d
 	return ast.NewTrueInferRet(fact)
 }
 
-func (envMgr *EnvMgr) AnonymousFnToInstFnTemplate(objFnTypeT *ast.FnObj) (*ast.AnonymousFn, bool) {
-	ok, paramSets, retSet := objFnTypeT.GetParamSetsAndRetSetOfAnonymousFn(objFnTypeT)
-	if !ok {
-		return nil, false
-	}
+// func (envMgr *EnvMgr) AnonymousFnToInstFnTemplate(objFnTypeT *ast.FnObj) (*ast.AnonymousFn, bool) {
+// 	ok, paramSets, retSet := objFnTypeT.GetParamSetsAndRetSetOfAnonymousFn(objFnTypeT)
+// 	if !ok {
+// 		return nil, false
+// 	}
 
-	randomParams := []string{}
-	for range len(paramSets) {
-		randomParams = append(randomParams, envMgr.GenerateUnusedRandomName())
-	}
+// 	randomParams := []string{}
+// 	for range len(paramSets) {
+// 		randomParams = append(randomParams, envMgr.GenerateUnusedRandomName())
+// 	}
 
-	return ast.NewFnTStruct(randomParams, paramSets, retSet, []ast.Spec_OrFact{}, []ast.Spec_OrFact{}, glob.BuiltinLine0), true
-}
+// 	return ast.NewFnTStruct(randomParams, paramSets, retSet, []ast.Spec_OrFact{}, []ast.Spec_OrFact{}, glob.BuiltinLine0), true
+// }
 
 func (envMgr *EnvMgr) GetUniFactFactFreeParamsNotConflictWithDefinedParams(fact *ast.UniFactStmt, extraNamesThatCanNotBeUsed map[string]struct{}) *ast.UniFactStmt {
 	uniMap := map[string]ast.Obj{}
