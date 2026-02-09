@@ -11,6 +11,10 @@ func (ver *Verifier) checkFnReqInsideFact(originalFact ast.FactStmt, state *VerS
 		return ver.checkFnReqInsidePureSpecificFactStmt(fact, state)
 	case *ast.ExistSpecificFactStmt:
 		return ver.checkFnReqInsideExistSpecificFactStmt(fact, state)
+	case *ast.OrStmt:
+		return ver.checkFnReqInsideOrStmt(fact, state)
+	case *ast.UniFactStmt:
+		return ver.checkFnReqInsideUniFactStmt(fact, state)
 	default:
 		return ast.NewErrVerRet(originalFact).AddExtraInfo(fmt.Sprintf("unexpected fact statement: %s", originalFact.String()))
 	}
@@ -43,7 +47,35 @@ func (ver *Verifier) checkFnReqInsideExistSpecificFactStmt(fact *ast.ExistSpecif
 	return ast.NewTrueVerRet(fact, nil, "")
 }
 
-func (ver *Verifier) checkFnReqInsideParamSets(paramSets ast.ObjSlice, state *VerState) ast.VerRet {
+func (ver *Verifier) checkFnReqInsideOrStmt(fact *ast.OrStmt, state *VerState) ast.VerRet {
+	for _, fact := range fact.Facts {
+		verRet := ver.checkFnReqInsideFact(fact, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	}
+
+	return ast.NewTrueVerRet(fact, nil, "")
+}
+
+func (ver *Verifier) checkFnReqInsideUniFactStmt(fact *ast.UniFactStmt, state *VerState) ast.VerRet {
+	ver.newEnv()
+	defer ver.deleteEnv()
+
+	newFact, err := ver.replaceUniFactParamsWithRandomParams(fact)
+	if err != nil {
+		return ast.NewErrVerRet(fact).AddExtraInfo(err.Error())
+	}
+
+	declareRet := ver.declareParamsInUniFactAndCheckFnReqOfParamSetsAndDoms(newFact, state)
+	if declareRet.IsNotTrue() {
+		return ast.NewErrVerRet(fact).AddExtraInfo(declareRet.String())
+	}
+
+	panic("")
+}
+
+func (ver *Verifier) checkFnReqInsideObjs(paramSets ast.ObjSlice, state *VerState) ast.VerRet {
 	for _, paramSet := range paramSets {
 		verRet := ver.objSatisfyFnReq(paramSet, state)
 		if verRet.IsNotTrue() {
@@ -68,7 +100,7 @@ func (exec *Executor) checkFnReqInsideDefProp(stmt *ast.DefPropStmt, state *VerS
 	ver := NewVerifier(exec.Env)
 
 	// check fn req of param sets
-	verRet := ver.checkFnReqInsideParamSets(stmt.DefHeader.ParamSets, state)
+	verRet := ver.checkFnReqInsideObjs(stmt.DefHeader.ParamSets, state)
 	if verRet.IsNotTrue() {
 		return verRet
 	}
