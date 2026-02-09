@@ -1638,16 +1638,16 @@ func (p *TbParser) algoDefStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	stmts := []AlgoStmt{}
+	stmts := []AlgoIfAlgoReturn{}
 	for _, block := range tb.body {
-		curStmt, err := p.algoStmt(&block)
+		curStmt, err := p.algoIfAlgoReturn(&block)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
 		stmts = append(stmts, curStmt)
 	}
 
-	return NewAlgoDefStmt(funcName, params, stmts, tb.line), nil
+	return NewDefAlgoStmt(funcName, params, stmts, tb.line), nil
 }
 
 func (p *TbParser) evalStmt(tb *tokenBlock) (Stmt, error) {
@@ -4261,4 +4261,52 @@ func (p *TbParser) paramParamSetWithBracket(tb *tokenBlock, endWith []string) (S
 	}
 
 	return params, paramSets, domFacts, nil
+}
+
+func (p *TbParser) algoIfAlgoReturn(tb *tokenBlock) (AlgoIfAlgoReturn, error) {
+	switch tb.header.strAtCurIndexPlus(0) {
+	case glob.KeywordIf:
+		return p.algoIf(tb)
+	case glob.KeywordReturn:
+		return p.algoReturn(tb)
+	default:
+		return nil, fmt.Errorf("expect %s or %s, got %s", glob.KeywordIf, glob.KeywordReturn, tb.header.strAtCurIndexPlus(0))
+	}
+}
+
+func (p *TbParser) algoIf(tb *tokenBlock) (AlgoIfAlgoReturn, error) {
+	err := tb.header.skip(glob.KeywordIf)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	condition, err := p.specFactStmt(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	if len(tb.body) != 1 {
+		return nil, fmt.Errorf("expect 1 body block, got %d", len(tb.body))
+	}
+
+	thenFact, err := p.algoReturn(&tb.body[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return NewAlgoIf(condition, thenFact, tb.line), nil
+}
+
+func (p *TbParser) algoReturn(tb *tokenBlock) (*AlgoReturn, error) {
+	err := tb.header.skip(glob.KeywordReturn)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	value, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	return NewAlgoReturn(value, tb.line), nil
 }

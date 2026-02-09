@@ -154,11 +154,39 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 	return simplifiedValue, ast.NewTrueStmtEmptyRet(ast.NewEvalStmt(fnObj, glob.BuiltinLine0))
 }
 
+func (exec *Executor) runAlgoIfAlgoReturn(stmt ast.AlgoIfAlgoReturn, fnObjWithValueParams *ast.FnObj) (ast.Obj, ast.StmtRet) {
+	switch asStmt := stmt.(type) {
+	case *ast.AlgoReturn:
+		ver := NewVerifier(exec.Env)
+		execRet := ver.VerFactStmt(ast.EqualFact(fnObjWithValueParams, asStmt.Value), Round0NoMsg())
+		if execRet.IsNotTrue() {
+			return nil, execRet.ToStmtRet()
+		}
+
+		if cmp.IsNumExprLitObj(asStmt.Value) {
+			return asStmt.Value, ast.NewTrueStmtEmptyRet(ast.NewEvalStmt(asStmt.Value, glob.BuiltinLine0))
+		}
+
+		numExprObj, ret := exec.evalObjThenSimplify(asStmt.Value)
+		return numExprObj, ret
+	case *ast.AlgoIf:
+		if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); execRet.IsNotTrue() {
+			return nil, execRet
+		} else if conditionIsTrue {
+			return exec.algoIfStmtWhenEval(asStmt, fnObjWithValueParams)
+		}
+	default:
+		return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(fnObjWithValueParams, glob.BuiltinLine0)).AddExtraInfo(fmt.Sprintf("unknown algo if algo return type: %T", asStmt))
+	}
+
+	return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(fnObjWithValueParams, glob.BuiltinLine0)).AddExtraInfo("unknown algo if algo return type")
+}
+
 // 要做到这样的效果：每一步只是做验证，所以不应该有中间过程被know下来
-func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWithValueParams *ast.FnObj) (ast.Obj, ast.StmtRet) {
+func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoIfAlgoReturnSlice, fnObjWithValueParams *ast.FnObj) (ast.Obj, ast.StmtRet) {
 	for _, stmt := range algoStmts {
 		switch asStmt := stmt.(type) {
-		case *ast.AlgoReturnStmt:
+		case *ast.AlgoReturn:
 			ver := NewVerifier(exec.Env)
 			execRet := ver.VerFactStmt(ast.EqualFact(fnObjWithValueParams, asStmt.Value), Round0NoMsg())
 			if execRet.IsErr() {
@@ -174,7 +202,7 @@ func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoStmtSlice, fnObjWit
 
 			numExprObj, ret := exec.evalObjThenSimplify(asStmt.Value)
 			return numExprObj, ret
-		case *ast.AlgoIfStmt:
+		case *ast.AlgoIf:
 			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); execRet.IsNotTrue() {
 				continue
 			} else if conditionIsTrue {
@@ -197,21 +225,13 @@ func (exec *Executor) fnObjParamsInFnDomain(fnObj *ast.FnObj) ast.StmtRet {
 	return ver.objSatisfyFnReq(fnObj, Round0NoMsg()).ToStmtRet()
 }
 
-func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIfStmt) (bool, ast.StmtRet) {
+func (exec *Executor) IsAlgoIfConditionTrue(stmt *ast.AlgoIf) (bool, ast.StmtRet) {
 	ver := NewVerifier(exec.Env)
-	for _, fact := range stmt.Conditions {
-		execRet := ver.VerFactStmt(fact, Round0NoMsg()).ToStmtRet()
-		if execRet.IsErr() || execRet.IsUnknown() {
-			return false, execRet
-		}
-
-		continue
-	}
-
-	return true, newTrueStmtRetWithCaller()
+	execRet := ver.VerFactStmt(stmt.Condition, Round0NoMsg()).ToStmtRet()
+	return execRet.IsTrue(), execRet
 }
 
-func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValueParams *ast.FnObj) (ast.Obj, ast.StmtRet) {
+func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIf, fnObjWithValueParams *ast.FnObj) (ast.Obj, ast.StmtRet) {
 	// all conditions are true
 	// knowStmt := ast.NewKnowStmt(stmt.Conditions.ToCanBeKnownStmtSlice(), stmt.GetLine())
 	// execRet := exec.knowStmt(knowStmt)
@@ -219,7 +239,7 @@ func (exec *Executor) algoIfStmtWhenEval(stmt *ast.AlgoIfStmt, fnObjWithValuePar
 	// 	return nil, execRet
 	// }
 
-	value, execRet := exec.runAlgoStmtsWhenEval(stmt.ThenStmts, fnObjWithValueParams)
+	value, execRet := exec.runAlgoIfAlgoReturn(stmt.ReturnStmt, fnObjWithValueParams)
 	return value, execRet
 }
 
