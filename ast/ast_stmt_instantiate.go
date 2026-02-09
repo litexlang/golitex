@@ -862,17 +862,17 @@ func (stmt *ProveIsCommutativePropStmt) Instantiate(uniMap map[string]Obj) (Stmt
 	return NewProveIsCommutativePropStmt(stmt.SpecFact, newProofs, newProofsRightToLeft, stmt.Line), nil
 }
 
-func InstantiateAlgoStmt(stmt AlgoStmt, uniMap map[string]Obj) (AlgoStmt, error) {
-	switch stmt := stmt.(type) {
-	case *AlgoIfStmt:
-		return stmt.InstantiateAlgo(uniMap)
-	case *AlgoReturnStmt:
-		return stmt.InstantiateAlgo(uniMap)
-	case Stmt:
-		return stmt.Instantiate(uniMap)
-	}
-	return nil, fmt.Errorf("unknown algo statement type: %T", stmt)
-}
+// func InstantiateAlgoStmt(stmt AlgoStmt, uniMap map[string]Obj) (AlgoStmt, error) {
+// 	switch stmt := stmt.(type) {
+// 	case *AlgoIfStmt:
+// 		return stmt.InstantiateAlgo(uniMap)
+// 	case *AlgoReturnStmt:
+// 		return stmt.InstantiateAlgo(uniMap)
+// 	case Stmt:
+// 		return stmt.Instantiate(uniMap)
+// 	}
+// 	return nil, fmt.Errorf("unknown algo statement type: %T", stmt)
+// }
 
 // func InstantiateProveAlgoStmt(stmt ProveAlgoStmt, uniMap map[string]Obj) (ProveAlgoStmt, error) {
 // 	switch stmt := stmt.(type) {
@@ -884,44 +884,67 @@ func InstantiateAlgoStmt(stmt AlgoStmt, uniMap map[string]Obj) (AlgoStmt, error)
 // 	return nil, fmt.Errorf("unknown prove algo statement type: %T", stmt)
 // }
 
-func (s AlgoStmtSlice) Instantiate(uniMap map[string]Obj) (AlgoStmtSlice, error) {
-	newStmts := make([]AlgoStmt, len(s))
-	for i, stmt := range s {
-		newStmt, err := InstantiateAlgoStmt(stmt, uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newStmts[i] = newStmt
-	}
-	return newStmts, nil
-}
+// func (s AlgoStmtSlice) Instantiate(uniMap map[string]Obj) (AlgoStmtSlice, error) {
+// 	newStmts := make([]AlgoStmt, len(s))
+// 	for i, stmt := range s {
+// 		newStmt, err := InstantiateAlgoStmt(stmt, uniMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newStmts[i] = newStmt
+// 	}
+// 	return newStmts, nil
+// }
 
-func (stmt *AlgoIfStmt) InstantiateAlgo(uniMap map[string]Obj) (AlgoStmt, error) {
-	newConditions, err := stmt.Conditions.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	newThenStmts, err := stmt.ThenStmts.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewAlgoIfStmt(newConditions, newThenStmts, stmt.Line), nil
-}
+// func (stmt *AlgoIfStmt) InstantiateAlgo(uniMap map[string]Obj) (AlgoStmt, error) {
+// 	newConditions, err := stmt.Conditions.InstantiateFact(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	newThenStmts, err := stmt.ThenStmts.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return NewAlgoIfStmt(newConditions, newThenStmts, stmt.Line), nil
+// }
 
-func (stmt *AlgoReturnStmt) InstantiateAlgo(uniMap map[string]Obj) (AlgoStmt, error) {
-	newValue, err := stmt.Value.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewAlgoReturnStmt(newValue, stmt.Line), nil
-}
+// func (stmt *AlgoReturnStmt) InstantiateAlgo(uniMap map[string]Obj) (AlgoStmt, error) {
+// 	newValue, err := stmt.Value.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return NewAlgoReturnStmt(newValue, stmt.Line), nil
+// }
 
 func (stmt *DefAlgoStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newStmts, err := stmt.Stmts.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
+	newStmts := make(AlgoIfAlgoReturnSlice, len(stmt.Stmts))
+	for i, algoStmt := range stmt.Stmts {
+		switch algoStmt := algoStmt.(type) {
+		case *AlgoReturn:
+			newValue, err := algoStmt.Value.Instantiate(uniMap)
+			if err != nil {
+				return nil, err
+			}
+			newStmts[i] = &AlgoReturn{Value: newValue, Line: algoStmt.Line}
+		case *AlgoIf:
+			newCondition, err := algoStmt.Condition.InstantiateFact(uniMap)
+			if err != nil {
+				return nil, err
+			}
+			newReturnValue, err := algoStmt.ReturnStmt.Value.Instantiate(uniMap)
+			if err != nil {
+				return nil, err
+			}
+			newStmts[i] = &AlgoIf{
+				Condition:  newCondition.(SpecificFactStmt),
+				ReturnStmt: &AlgoReturn{Value: newReturnValue, Line: algoStmt.ReturnStmt.Line},
+				Line:       algoStmt.Line,
+			}
+		default:
+			return nil, fmt.Errorf("unknown AlgoIfAlgoReturn type: %T", algoStmt)
+		}
 	}
-	return NewAlgoDefStmt(stmt.FuncName, stmt.Params, newStmts, stmt.Line), nil
+	return NewDefAlgoStmt(stmt.FuncName, stmt.Params, newStmts, stmt.Line), nil
 }
 
 func (stmt *EvalStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

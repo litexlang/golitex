@@ -1060,13 +1060,13 @@ func (s *ProveIsCommutativePropStmt) ToLatexString() string {
 // 	return s.String()
 // }
 
-func (s *AlgoIfStmt) ToLatexString() string {
-	return s.String()
-}
+// func (s *AlgoIfStmt) ToLatexString() string {
+// 	return s.String()
+// }
 
-func (s *AlgoReturnStmt) ToLatexString() string {
-	return s.String()
-}
+// func (s *AlgoReturnStmt) ToLatexString() string {
+// 	return s.String()
+// }
 
 func (s *DefAlgoStmt) ToLatexString() string {
 	return s.String()

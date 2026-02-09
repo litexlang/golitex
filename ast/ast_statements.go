@@ -301,30 +301,30 @@ type ProveIsCommutativePropStmt struct {
 	Line uint
 }
 
-type AlgoStmtSlice []AlgoStmt
+// type AlgoStmtSlice []AlgoStmt
 
-// type ProveAlgoStmtSlice []ProveAlgoStmt
+// // type ProveAlgoStmtSlice []ProveAlgoStmt
 
-type AlgoIfStmt struct {
-	Conditions FactStmtSlice
-	ThenStmts  AlgoStmtSlice
+// type AlgoIfStmt struct {
+// 	Conditions FactStmtSlice
+// 	ThenStmts  AlgoStmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
-type AlgoReturnStmt struct {
-	Value Obj
+// type AlgoReturnStmt struct {
+// 	Value Obj
 
-	Line uint
-}
+// 	Line uint
+// }
 
-type DefAlgoStmt struct {
-	FuncName string
-	Params   StrSlice
-	Stmts    AlgoStmtSlice
+// type DefAlgoStmt struct {
+// 	FuncName string
+// 	Params   StrSlice
+// 	Stmts    AlgoStmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type EvalStmt struct {
 	ObjToEval Obj

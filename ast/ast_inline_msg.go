@@ -487,13 +487,13 @@ func (s *ProveIsCommutativePropStmt) InlineString() string {
 // 	return "TODO"
 // }
 
-func (s *AlgoIfStmt) InlineString() string {
-	return "TODO"
-}
+// func (s *AlgoIfStmt) InlineString() string {
+// 	return "TODO"
+// }
 
-func (s *AlgoReturnStmt) InlineString() string {
-	return "TODO"
-}
+// func (s *AlgoReturnStmt) InlineString() string {
+// 	return "TODO"
+// }
 
 func (s *DefAlgoStmt) InlineString() string {
 	return "TODO"
