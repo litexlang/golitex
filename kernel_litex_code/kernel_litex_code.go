@@ -15,6 +15,10 @@
 package kernel_lib_litex_code
 
 var PipelineInitCode = `
+prop subset_of(x, y set):
+	forall z x:
+		=>:
+			z $in y
 
 know forall x2, y2 R: x2 != 0, y2 != 0 => x2 * y2 != 0
 know forall x, y R: x * y = 0 => x = 0 or y = 0
@@ -550,11 +554,6 @@ let fn negate(x R) R:
 
 know forall x set: not x $in x
 
-prop subset_of(x, y set):
-	forall z x:
-		=>:
-			z $in y
-
 prop is_superset_of(A, B set):
 	forall x B: x $in A
 
@@ -951,7 +950,7 @@ prop is_bijective_fn(X set, Y set, f fn(X)Y):
 	$is_injective_fn(X, Y, f)
 	$is_surjective_fn(X, Y, f)
 	
-know prop_infer is_injective_fn_to_finite_set_implies(X set, Y finite_set, f fn(X)Y):
+know prop_infer is_injective_fn_to_finite_set_implies(X finite_set, Y finite_set, f fn(X)Y):
 	$is_injective_fn(X, Y, f)
 	=>:
 		$is_finite_set(Y)

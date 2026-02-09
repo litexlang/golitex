@@ -151,12 +151,6 @@ func (exec *Executor) checkFnReqInsideDefProp(stmt *ast.DefPropStmt, state *VerS
 		return verRet
 	}
 
-	// check fn req of param sets
-	verRet = ver.checkFnReqInsideObjs(stmt.DefHeader.ParamSets, state)
-	if verRet.IsNotTrue() {
-		return verRet
-	}
-
 	// check fn req of iff facts
 	verRet = ver.checkFnReqInsideFacts(stmt.IffFactsOrNil, state)
 	if verRet.IsNotTrue() {
