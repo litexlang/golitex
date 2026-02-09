@@ -72,7 +72,13 @@ func (ver *Verifier) checkFnReqInsideUniFactStmt(fact *ast.UniFactStmt, state *V
 		return ast.NewErrVerRet(fact).AddExtraInfo(declareRet.String())
 	}
 
-	panic("")
+	// check thens
+	verRet := ver.checkFnReqInsideReversibleFacts(newFact.ThenFacts, state)
+	if verRet.IsNotTrue() {
+		return ast.NewErrVerRet(fact).AddExtraInfo(verRet.String())
+	}
+
+	return ast.NewTrueVerRet(fact, nil, "")
 }
 
 func (ver *Verifier) checkFnReqInsideObjs(paramSets ast.ObjSlice, state *VerState) ast.VerRet {
@@ -86,11 +92,23 @@ func (ver *Verifier) checkFnReqInsideObjs(paramSets ast.ObjSlice, state *VerStat
 }
 
 func (ver *Verifier) checkFnReqInsideReversibleFacts(domFacts ast.ReversibleFacts, state *VerState) ast.VerRet {
-	panic("")
+	for _, domFact := range domFacts {
+		verRet := ver.checkFnReqInsideFact(domFact, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	}
+	return ast.NewTrueVerRet(nil, nil, "")
 }
 
 func (ver *Verifier) checkFnReqInsideFacts(iffFacts ast.FactStmtSlice, state *VerState) ast.VerRet {
-	panic("not implemented")
+	for _, iffFact := range iffFacts {
+		verRet := ver.checkFnReqInsideFact(iffFact, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	}
+	return ast.NewTrueVerRet(nil, nil, "")
 }
 
 func (exec *Executor) checkFnReqInsideDefProp(stmt *ast.DefPropStmt, state *VerState) ast.VerRet {

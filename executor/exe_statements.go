@@ -189,6 +189,10 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) ast.StmtRet {
 	defineMsgs := []string{}
 
 	// check fn req of facts inside
+	ret1 := exec.checkFnReqInsideDefProp(stmt, Round0NoMsg())
+	if ret1.IsNotTrue() {
+		return ast.StmtErrRet(stmt, ret1.String())
+	}
 
 	ret := exec.Env.NewDefProp_InsideAtomsDeclared(stmt)
 	if ret.IsErr() {
