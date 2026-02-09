@@ -20,32 +20,33 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) checkFnsReq(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
-	if _, ok := stmt.(*ast.PureSpecificFactStmt); ok {
-		stateNoMsg := state.GetNoMsg()
-		for _, param := range stmt.(*ast.PureSpecificFactStmt).Params {
-			// verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, stateNoMsg)
-			verRet := ver.objSatisfyFnReq(param, stateNoMsg)
-			if verRet.IsErr() {
-				return verRet
-			}
-			if verRet.IsUnknown() {
-				return verRet
-			}
-		}
-		stmtFact := stmt.(*ast.PureSpecificFactStmt)
-		return ast.NewTrueVerRet(stmtFact, nil, "")
-	} else {
-		// TODO: 这里检查 exist 的方式大概率有问题
-		ret := ver.Env.LookUpNamesInFact(stmt, map[string]struct{}{})
-		if ret.IsErr() {
-			return ast.NewErrVerRet(stmt).AddExtraInfos(ret.GetMsg())
-		}
-		if ret.IsUnknown() {
-			return ast.NewUnknownVerRet(stmt).AddExtraInfos(ret.GetMsg())
-		}
-		return ast.NewTrueVerRet(stmt, nil, "")
-	}
+func (ver *Verifier) checkFnsReqInSpecFact(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
+	return ver.checkFnReqInsideFact(stmt, state)
+	// if _, ok := stmt.(*ast.PureSpecificFactStmt); ok {
+	// 	stateNoMsg := state.GetNoMsg()
+	// 	for _, param := range stmt.(*ast.PureSpecificFactStmt).Params {
+	// 		// verRet := ver.objIsDefinedAtomOrIsFnSatisfyItsReq(param, stateNoMsg)
+	// 		verRet := ver.objSatisfyFnReq(param, stateNoMsg)
+	// 		if verRet.IsErr() {
+	// 			return verRet
+	// 		}
+	// 		if verRet.IsUnknown() {
+	// 			return verRet
+	// 		}
+	// 	}
+	// 	stmtFact := stmt.(*ast.PureSpecificFactStmt)
+	// 	return ast.NewTrueVerRet(stmtFact, nil, "")
+	// } else {
+	// 	// TODO: 这里检查 exist 的方式大概率有问题
+	// 	ret := ver.Env.LookUpNamesInFact(stmt, map[string]struct{}{})
+	// 	if ret.IsErr() {
+	// 		return ast.NewErrVerRet(stmt).AddExtraInfos(ret.GetMsg())
+	// 	}
+	// 	if ret.IsUnknown() {
+	// 		return ast.NewUnknownVerRet(stmt).AddExtraInfos(ret.GetMsg())
+	// 	}
+	// 	return ast.NewTrueVerRet(stmt, nil, "")
+	// }
 }
 
 // func (ver *Verifier) objIsDefinedAtomOrIsFnSatisfyItsReq(obj ast.Obj, state *VerState) ast.VerRet {
@@ -137,8 +138,8 @@ func (ver *Verifier) SetBuilderFnRequirement(objAsFnObj *ast.FnObj, state *VerSt
 		}
 
 		// Check all params in the fact
-		if ver.checkFnsReq(fact, state).IsNotTrue() {
-			return ver.checkFnsReq(fact, state)
+		if ver.checkFnsReqInSpecFact(fact, state).IsNotTrue() {
+			return ver.checkFnsReqInSpecFact(fact, state)
 		}
 
 		// for _, param := range fact.Params {
@@ -456,7 +457,7 @@ func (ver *Verifier) replaceParamWithUndeclaredRandomName(setBuilderStruct *ast.
 
 func (ver *Verifier) checkOrFnReq(orFact *ast.OrStmt, state *VerState) ast.VerRet {
 	for _, fact := range orFact.Facts {
-		verRet := ver.checkFnsReq(fact, state)
+		verRet := ver.checkFnsReqInSpecFact(fact, state)
 		if verRet.IsNotTrue() {
 			return verRet
 		}

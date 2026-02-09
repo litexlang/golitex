@@ -25,7 +25,7 @@ import (
 func (ver *Verifier) verSpecFactNotInFormOfTrueEqualAndCheckFnReq(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	nextState := state.CopyAndReqOkToTrue()
 	if !state.ReqOk {
-		if verRet := ver.checkFnsReq(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
+		if verRet := ver.checkFnsReqInSpecFact(stmt, state); verRet.IsErr() || verRet.IsUnknown() {
 			return verRet
 		}
 
