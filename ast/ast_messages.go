@@ -1340,28 +1340,28 @@ func (stmt *ProveIsCommutativePropStmt) String() string {
 // 	return builder.String()
 // }
 
-func (stmt *AlgoIfStmt) String() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeywordIf)
-	builder.WriteString(" ")
-	conditionStrSlice := make([]string, len(stmt.Conditions))
-	for i, fact := range stmt.Conditions {
-		conditionStrSlice[i] = fact.String()
-	}
-	builder.WriteString(strings.Join(conditionStrSlice, ", "))
-	builder.WriteString(" ")
-	builder.WriteString(glob.KeySymbolColon)
-	builder.WriteByte('\n')
-	for _, fact := range stmt.ThenStmts {
-		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
-		builder.WriteByte('\n')
-	}
-	return builder.String()
-}
+// func (stmt *AlgoIfStmt) String() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordIf)
+// 	builder.WriteString(" ")
+// 	conditionStrSlice := make([]string, len(stmt.Conditions))
+// 	for i, fact := range stmt.Conditions {
+// 		conditionStrSlice[i] = fact.String()
+// 	}
+// 	builder.WriteString(strings.Join(conditionStrSlice, ", "))
+// 	builder.WriteString(" ")
+// 	builder.WriteString(glob.KeySymbolColon)
+// 	builder.WriteByte('\n')
+// 	for _, fact := range stmt.ThenStmts {
+// 		builder.WriteString(glob.SplitLinesAndAdd4NIndents(fact.String(), 1))
+// 		builder.WriteByte('\n')
+// 	}
+// 	return builder.String()
+// }
 
-func (stmt *AlgoReturnStmt) String() string {
-	return fmt.Sprintf("%s %s", glob.KeywordReturn, stmt.Value.String())
-}
+// func (stmt *AlgoReturnStmt) String() string {
+// 	return fmt.Sprintf("%s %s", glob.KeywordReturn, stmt.Value.String())
+// }
 
 func (stmt *DefAlgoStmt) String() string {
 	var builder strings.Builder

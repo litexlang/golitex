@@ -195,8 +195,9 @@ func (s *HaveFnStmt) GetLine() uint { return s.Line }
 func (s *ClaimIffStmt) GetLine() uint               { return s.Line }
 func (s *ProveIsTransitivePropStmt) GetLine() uint  { return s.Line }
 func (s *ProveIsCommutativePropStmt) GetLine() uint { return s.Line }
-func (s *DefAlgoStmt) GetLine() uint                { return s.Line }
-func (s *EvalStmt) GetLine() uint                   { return s.Line }
+
+// func (s *DefAlgoStmt) GetLine() uint                { return s.Line }
+func (s *EvalStmt) GetLine() uint { return s.Line }
 
 // func (s *DefProveAlgoStmt) GetLine() uint           { return s.Line }
 // func (s *ByStmt) GetLine() uint                     { return s.Line }
@@ -368,21 +369,21 @@ func (s FactStmtSlice) ToCanBeKnownStmtSlice() CanBeKnownStmtSlice {
 }
 
 // AlgoStmt 不一定是 Stmt
-type AlgoStmt interface {
-	algoStmt()
-	String() string
-	ToLatexString() string
-	InlineString() string
-	GetLine() uint
-	SetLine(l uint)
-}
+// type AlgoStmt interface {
+// 	algoStmt()
+// 	String() string
+// 	ToLatexString() string
+// 	InlineString() string
+// 	GetLine() uint
+// 	SetLine(l uint)
+// }
 
-func (s *AlgoIfStmt) algoStmt()          {}
-func (s *AlgoReturnStmt) algoStmt()      {}
-func (s *AlgoIfStmt) GetLine() uint      { return s.Line }
-func (s *AlgoReturnStmt) GetLine() uint  { return s.Line }
-func (s *AlgoIfStmt) SetLine(l uint)     { s.Line = l }
-func (s *AlgoReturnStmt) SetLine(l uint) { s.Line = l }
+// func (s *AlgoIfStmt) algoStmt()          {}
+// func (s *AlgoReturnStmt) algoStmt()      {}
+// func (s *AlgoIfStmt) GetLine() uint      { return s.Line }
+// func (s *AlgoReturnStmt) GetLine() uint  { return s.Line }
+// func (s *AlgoIfStmt) SetLine(l uint)     { s.Line = l }
+// func (s *AlgoReturnStmt) SetLine(l uint) { s.Line = l }
 
 // type ProveAlgoStmt interface {
 // 	proveAlgoStmt()

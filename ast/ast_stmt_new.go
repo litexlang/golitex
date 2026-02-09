@@ -203,21 +203,21 @@ func NewProveIsCommutativePropStmt(specFact *PureSpecificFactStmt, proofs []Stmt
 	return &ProveIsCommutativePropStmt{specFact, proofs, proofsRightToLeft, line}
 }
 
-func NewAlgoDefStmt(funcName string, params StrSlice, stmts AlgoStmtSlice, line uint) *DefAlgoStmt {
-	return &DefAlgoStmt{funcName, params, stmts, line}
-}
+// func NewAlgoDefStmt(funcName string, params StrSlice, stmts AlgoStmtSlice, line uint) *DefAlgoStmt {
+// 	return &DefAlgoStmt{funcName, params, stmts, line}
+// }
 
-func NewAlgoIfStmt(condition []FactStmt, thenFacts AlgoStmtSlice, line uint) *AlgoIfStmt {
-	return &AlgoIfStmt{condition, thenFacts, line}
-}
+// func NewAlgoIfStmt(condition []FactStmt, thenFacts AlgoStmtSlice, line uint) *AlgoIfStmt {
+// 	return &AlgoIfStmt{condition, thenFacts, line}
+// }
 
 // func NewProveAlgoIfStmt(condition []FactStmt, thenFacts ProveAlgoStmtSlice, line uint) *ProveAlgoIfStmt {
 // 	return &ProveAlgoIfStmt{condition, thenFacts, line}
 // }
 
-func NewAlgoReturnStmt(value Obj, line uint) *AlgoReturnStmt {
-	return &AlgoReturnStmt{value, line}
-}
+// func NewAlgoReturnStmt(value Obj, line uint) *AlgoReturnStmt {
+// 	return &AlgoReturnStmt{value, line}
+// }
 
 func NewUniFactWithSafeGuard(params []string, setParams []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, line uint) (*UniFactStmt, error) {
 	if len(thenFacts) == 0 {
@@ -361,4 +361,16 @@ func NewLetFn(defHeaderWithDom *DefHeaderWithDom, retSet Obj, thenFacts Reversib
 
 func NewHaveFnStmt(defFnStmt *LetFn, proof []Stmt, haveObjSatisfyFn Obj, line uint) *HaveFnStmt {
 	return &HaveFnStmt{defFnStmt, proof, haveObjSatisfyFn, line}
+}
+
+func NewAlgoIf(condition SpecificFactStmt, thenFact *AlgoReturn, line uint) *AlgoIf {
+	return &AlgoIf{condition, thenFact, line}
+}
+
+func NewAlgoReturn(value Obj, line uint) *AlgoReturn {
+	return &AlgoReturn{value, line}
+}
+
+func NewDefAlgoStmt(funcName string, params []string, stmts AlgoIfAlgoReturnSlice, line uint) *DefAlgoStmt {
+	return &DefAlgoStmt{funcName, params, stmts, line}
 }

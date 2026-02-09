@@ -14,23 +14,20 @@
 
 package litex_ast
 
-import (
-	// "fmt"
-	glob "golitex/glob"
-)
+// "fmt"
 
-func (p *TbParser) algoStmt(tb *tokenBlock) (AlgoStmt, error) {
-	if tb.header.is(glob.KeywordIf) {
-		return p.algoIfStmt(tb)
-	}
+// func (p *TbParser) algoStmt(tb *tokenBlock) (AlgoStmt, error) {
+// 	if tb.header.is(glob.KeywordIf) {
+// 		return p.algoIfStmt(tb)
+// 	}
 
-	if tb.header.is(glob.KeywordReturn) {
-		return p.algoReturnStmt(tb)
-	}
+// 	if tb.header.is(glob.KeywordReturn) {
+// 		return p.algoReturnStmt(tb)
+// 	}
 
-	return p.Stmt(tb)
-	// panic("not implemented")
-}
+// 	return p.Stmt(tb)
+// 	// panic("not implemented")
+// }
 
 // func (p *TbParser) proveAlgoStmt(tb *tokenBlock) (ProveAlgoStmt, error) {
 // 	if tb.header.is(glob.KeywordIf) {
@@ -69,42 +66,42 @@ func (p *TbParser) algoStmt(tb *tokenBlock) (AlgoStmt, error) {
 // 	return NewProveAlgoIfStmt(condition, thenFacts, tb.line), nil
 // }
 
-func (p *TbParser) algoIfStmt(tb *tokenBlock) (*AlgoIfStmt, error) {
-	err := tb.header.skip(glob.KeywordIf)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// func (p *TbParser) algoIfStmt(tb *tokenBlock) (*AlgoIfStmt, error) {
+// 	err := tb.header.skip(glob.KeywordIf)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	condition, err := p.inlineFacts(tb, []string{glob.KeySymbolColon})
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	condition, err := p.inlineFacts(tb, []string{glob.KeySymbolColon})
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	thenFacts := []AlgoStmt{}
-	for _, bodyStmt := range tb.body {
-		stmt, err := p.algoStmt(&bodyStmt)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		thenFacts = append(thenFacts, stmt)
-	}
+// 	thenFacts := []AlgoStmt{}
+// 	for _, bodyStmt := range tb.body {
+// 		stmt, err := p.algoStmt(&bodyStmt)
+// 		if err != nil {
+// 			return nil, ErrInLine(err, tb)
+// 		}
+// 		thenFacts = append(thenFacts, stmt)
+// 	}
 
-	return NewAlgoIfStmt(condition, thenFacts, tb.line), nil
-}
+// 	return NewAlgoIfStmt(condition, thenFacts, tb.line), nil
+// }
 
-func (p *TbParser) algoReturnStmt(tb *tokenBlock) (*AlgoReturnStmt, error) {
-	err := tb.header.skip(glob.KeywordReturn)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// func (p *TbParser) algoReturnStmt(tb *tokenBlock) (*AlgoReturnStmt, error) {
+// 	err := tb.header.skip(glob.KeywordReturn)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	obj, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	obj, err := p.Obj(tb)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	return NewAlgoReturnStmt(obj, tb.line), nil
-}
+// 	return NewAlgoReturnStmt(obj, tb.line), nil
+// }
 
 // func (p *TbParser) proveAlgoReturnStmt(tb *tokenBlock) (*ProveAlgoReturnStmt, error) {
 // 	err := tb.header.skip(glob.KeywordReturn)
