@@ -154,6 +154,8 @@ func (exec *Executor) useAlgoToEvalFnObjThenSimplify(fnObj *ast.FnObj) (ast.Obj,
 	return simplifiedValue, ast.NewTrueStmtEmptyRet(ast.NewEvalStmt(fnObj, glob.BuiltinLine0))
 }
 
+// 如果是 return，那返回 obj
+// 如果是 if，那 如果condition 满足了，就返回 if 里的 return value；如果是 condition 不满足，那返回 nil
 func (exec *Executor) runAlgoIfAlgoReturn(stmt ast.AlgoIfAlgoReturn, fnObjWithValueParams *ast.FnObj) (ast.Obj, ast.StmtRet) {
 	switch asStmt := stmt.(type) {
 	case *ast.AlgoReturn:
@@ -171,7 +173,7 @@ func (exec *Executor) runAlgoIfAlgoReturn(stmt ast.AlgoIfAlgoReturn, fnObjWithVa
 		return numExprObj, ret
 	case *ast.AlgoIf:
 		if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); execRet.IsNotTrue() {
-			return nil, execRet
+			return nil, ast.NewTrueStmtEmptyRet(nil)
 		} else if conditionIsTrue {
 			return exec.algoIfStmtWhenEval(asStmt, fnObjWithValueParams)
 		}
@@ -185,38 +187,16 @@ func (exec *Executor) runAlgoIfAlgoReturn(stmt ast.AlgoIfAlgoReturn, fnObjWithVa
 // 要做到这样的效果：每一步只是做验证，所以不应该有中间过程被know下来
 func (exec *Executor) runAlgoStmtsWhenEval(algoStmts ast.AlgoIfAlgoReturnSlice, fnObjWithValueParams *ast.FnObj) (ast.Obj, ast.StmtRet) {
 	for _, stmt := range algoStmts {
-		switch asStmt := stmt.(type) {
-		case *ast.AlgoReturn:
-			ver := NewVerifier(exec.Env)
-			execRet := ver.VerFactStmt(ast.EqualFact(fnObjWithValueParams, asStmt.Value), Round0NoMsg())
-			if execRet.IsErr() {
-				return nil, execRet.ToStmtRet()
-			}
-			if execRet.IsNotTrue() {
-				return nil, execRet.ToStmtRet()
-			}
-
-			if cmp.IsNumExprLitObj(asStmt.Value) {
-				return asStmt.Value, ast.NewTrueStmtEmptyRet(ast.NewEvalStmt(asStmt.Value, glob.BuiltinLine0))
-			}
-
-			numExprObj, ret := exec.evalObjThenSimplify(asStmt.Value)
-			return numExprObj, ret
-		case *ast.AlgoIf:
-			if conditionIsTrue, execRet := exec.IsAlgoIfConditionTrue(asStmt); execRet.IsNotTrue() {
-				continue
-			} else if conditionIsTrue {
-				return exec.algoIfStmtWhenEval(asStmt, fnObjWithValueParams)
-			}
-		default:
-			execRet := exec.Stmt(stmt.(ast.Stmt))
-			if execRet.IsNotTrue() {
-				return nil, execRet
-			}
+		value, execRet := exec.runAlgoIfAlgoReturn(stmt, fnObjWithValueParams)
+		if execRet.IsNotTrue() {
+			return nil, execRet
+		}
+		if value != nil {
+			return value, execRet
 		}
 	}
 
-	return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(fnObjWithValueParams, glob.BuiltinLine0)).AddExtraInfo(fmt.Sprintf("There is no return value of %s", fnObjWithValueParams))
+	return nil, ast.NewErrStmtEmptyRet(ast.NewEvalStmt(fnObjWithValueParams, glob.BuiltinLine0)).AddExtraInfo("There is no return value of algoStmts")
 }
 
 func (exec *Executor) fnObjParamsInFnDomain(fnObj *ast.FnObj) ast.StmtRet {
