@@ -155,7 +155,13 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 		return nil, ErrInLine(err, tb)
 	}
 
-	declHeader, err := p.defHeaderWithoutParsingColonAtEnd(tb)
+	// declHeader, err := p.defHeaderWithoutParsingColonAtEnd(tb)
+	// if err != nil {
+	// 	return nil, ErrInLine(err, tb)
+	// }
+
+	declHeader, moreIffs, err := p.defHeaderOfPropDef(tb)
+
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -193,6 +199,7 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 	}
 
 	iffFacts := []FactStmt{}
+	iffFacts = append(iffFacts, moreIffs...)
 
 	for _, fact := range tb.body {
 		iffFact, err := p.factStmt(&fact)
@@ -2995,26 +3002,47 @@ func (p *TbParser) defHeaderWithoutParsingColonAtEnd(tb *tokenBlock) (*DefHeader
 	return NewDefHeader(name, params, setParams), nil
 }
 
-func (p *TbParser) defHeaderWithoutParsingColonAtEnd_MustFollowWithFreeParamCheck(tb *tokenBlock) (*DefHeader, error) {
+func (p *TbParser) defHeaderOfPropDef(tb *tokenBlock) (*DefHeader, FactStmtSlice, error) {
 	name, err := tb.header.next()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	name = AddPkgNameToName(p.PkgPathNameMgr.CurPkgDefaultName, name)
 
 	err = tb.header.skip(glob.KeySymbolLeftBrace)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	params, setParams, err := p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolRightBrace}, false, true)
+	params, setParams, doms, err := p.paramParamSetWithBracket(tb, []string{glob.KeySymbolRightBrace})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return NewDefHeader(name, params, setParams), nil
+	return NewDefHeader(name, params, setParams), doms, nil
 }
+
+// func (p *TbParser) defHeaderWithoutParsingColonAtEnd_MustFollowWithFreeParamCheck(tb *tokenBlock) (*DefHeader, error) {
+// 	name, err := tb.header.next()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	name = AddPkgNameToName(p.PkgPathNameMgr.CurPkgDefaultName, name)
+
+// 	err = tb.header.skip(glob.KeySymbolLeftBrace)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	params, setParams, err := p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolRightBrace}, false, true)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return NewDefHeader(name, params, setParams), nil
+// }
 
 func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, defaultSectionName string) ([]Spec_OrFact, []Spec_OrFact, []Spec_OrFact, error) {
 	domFacts := []Spec_OrFact{}
@@ -4126,10 +4154,10 @@ func (p *TbParser) defFn(tb *tokenBlock, skipLetAndFn bool) (*LetFn, error) {
 	return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
 }
 
-func (p *TbParser) paramParamSetWithBracket(tb *tokenBlock, endWith []string) (StrSlice, ObjSlice, ReversibleFacts, error) {
+func (p *TbParser) paramParamSetWithBracket(tb *tokenBlock, endWith []string) (StrSlice, ObjSlice, FactStmtSlice, error) {
 	params := StrSlice{}
 	paramSets := ObjSlice{}
-	domFacts := ReversibleFacts{}
+	domFacts := FactStmtSlice{}
 
 	for !slices.Contains(endWith, tb.header.strAtCurIndexPlus(0)) && !tb.header.ExceedEnd() {
 		if tb.header.is(glob.KeySymbolLeftBracket) {
@@ -4182,6 +4210,16 @@ func (p *TbParser) paramParamSetWithBracket(tb *tokenBlock, endWith []string) (S
 				for range len(paramsWithTheSameParamSet) {
 					paramSets = append(paramSets, paramSet)
 				}
+
+				if slices.Contains(endWith, tb.header.strAtCurIndexPlus(0)) {
+					break
+				}
+
+				err = tb.header.skip(glob.KeySymbolComma)
+				if err != nil {
+					return nil, nil, nil, err
+				}
+
 				break
 			}
 		}
