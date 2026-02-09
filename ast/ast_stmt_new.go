@@ -147,9 +147,9 @@ func NewEqualsFactStmt(params ObjSlice, line uint) *EqualsFactStmt {
 // 	return &DefFnSetStmt{defHeader, templateDomFacts, fnTStruct, line}
 // }
 
-func NewFnTStruct(params []string, paramSets []Obj, retSet Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, line uint) *AnonymousFn {
-	return &AnonymousFn{params, paramSets, retSet, domFacts, thenFacts, line}
-}
+// func NewFnTStruct(params []string, paramSets []Obj, retSet Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, line uint) *AnonymousFn {
+// 	return &AnonymousFn{params, paramSets, retSet, domFacts, thenFacts, line}
+// }
 
 func NewClearStmt(line uint) *ClearStmt {
 	return &ClearStmt{line}

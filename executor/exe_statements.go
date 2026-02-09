@@ -188,6 +188,8 @@ func (exec *Executor) knowStmt(stmt *ast.KnowFactStmt) ast.StmtRet {
 func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) ast.StmtRet {
 	defineMsgs := []string{}
 
+	// check fn req of facts inside
+
 	ret := exec.Env.NewDefProp_InsideAtomsDeclared(stmt)
 	if ret.IsErr() {
 		return ast.StmtErrRet(stmt, ret.String())
@@ -198,30 +200,6 @@ func (exec *Executor) defPropStmt(stmt *ast.DefPropStmt) ast.StmtRet {
 	for _, param := range stmt.DefHeader.Params {
 		paramMap[param] = struct{}{}
 	}
-
-	// if (stmt.IffFactsOrNil) == nil {
-	// 	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
-	// }
-
-	// if generateIffUniFact {
-	// 	// prop leads to iff
-	// 	propToIff, iffToProp, err := stmt.Make_PropToIff_IffToProp()
-	// 	if err != nil {
-	// 		return ast.StmtErrRet(err.Error())
-	// 	}
-
-	// 	ret = exec.Env.NewFactWithCheckingNameDefined(propToIff)
-	// 	if ret.IsErr() {
-	// 		return ast.StmtErrRet(ret.String())
-	// 	}
-
-	// 	ret = exec.Env.NewFactWithCheckingNameDefined(iffToProp)
-	// 	if ret.IsErr() {
-	// 		return ast.StmtErrRet(ret.String())
-	// 	}
-	// 	newFactMsgs = append(newFactMsgs, propToIff.String())
-	// 	newFactMsgs = append(newFactMsgs, iffToProp.String())
-	// }
 
 	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(defineMsgs)
 }

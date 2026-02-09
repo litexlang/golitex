@@ -233,32 +233,32 @@ func (objFn *FnObj) HasHeadInSlice(headNames []string) bool {
 	return slices.Contains(headNames, string(headAtom))
 }
 
-func (objAsFnObj *FnObj) FnTObj_ToFnTNoName() (*AnonymousFn, error) {
-	objAsFnObjHeadAsFnObj, ok := objAsFnObj.FnHead.(*FnObj)
-	if !ok {
-		return nil, fmt.Errorf("expected ObjFn, but got %T", objAsFnObj.FnHead)
-	}
+// func (objAsFnObj *FnObj) FnTObj_ToFnTNoName() (*AnonymousFn, error) {
+// 	objAsFnObjHeadAsFnObj, ok := objAsFnObj.FnHead.(*FnObj)
+// 	if !ok {
+// 		return nil, fmt.Errorf("expected ObjFn, but got %T", objAsFnObj.FnHead)
+// 	}
 
-	if len(objAsFnObj.Params) != 1 {
-		return nil, fmt.Errorf("expected 1 param, but got %d", len(objAsFnObj.Params))
-	}
+// 	if len(objAsFnObj.Params) != 1 {
+// 		return nil, fmt.Errorf("expected 1 param, but got %d", len(objAsFnObj.Params))
+// 	}
 
-	randomParams := []string{}
-	for range len(objAsFnObjHeadAsFnObj.Params) {
-		currentParam := glob.RandomString(4)
-		if slices.Contains(randomParams, currentParam) {
-			continue
-		}
-		randomParams = append(randomParams, currentParam)
-	}
+// 	randomParams := []string{}
+// 	for range len(objAsFnObjHeadAsFnObj.Params) {
+// 		currentParam := glob.RandomString(4)
+// 		if slices.Contains(randomParams, currentParam) {
+// 			continue
+// 		}
+// 		randomParams = append(randomParams, currentParam)
+// 	}
 
-	paramSets := objAsFnObjHeadAsFnObj.Params
-	retSet := objAsFnObj.Params[0]
+// 	paramSets := objAsFnObjHeadAsFnObj.Params
+// 	retSet := objAsFnObj.Params[0]
 
-	fnTNoName := NewFnTStruct(randomParams, paramSets, retSet, []Spec_OrFact{}, []Spec_OrFact{}, glob.BuiltinLine0)
+// 	fnTNoName := NewFnTStruct(randomParams, paramSets, retSet, []Spec_OrFact{}, []Spec_OrFact{}, glob.BuiltinLine0)
 
-	return fnTNoName, nil
-}
+// 	return fnTNoName, nil
+// }
 
 // 给定 f(a)(b,c)(e,d,f)，返回 {f, f(a), f(a)(b,c), f(a)(b,c)(e,d,f)}, {nil, {a}, {b,c}, {e,d,f}}
 func GetFnHeadChain_AndItSelf(obj Obj) ([]Obj, [][]Obj) {
