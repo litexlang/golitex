@@ -4125,3 +4125,75 @@ func (p *TbParser) defFn(tb *tokenBlock, skipLetAndFn bool) (*LetFn, error) {
 	// return NewLetFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
 	return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
 }
+
+func (p *TbParser) paramParamSetWithBracket(tb *tokenBlock, endWith []string) (StrSlice, ObjSlice, ReversibleFacts, error) {
+	params := StrSlice{}
+	paramSets := ObjSlice{}
+	domFacts := ReversibleFacts{}
+
+	for !slices.Contains(endWith, tb.header.strAtCurIndexPlus(0)) && !tb.header.ExceedEnd() {
+		if tb.header.is(glob.KeySymbolLeftBracket) {
+			paramsInBracket := StrSlice{}
+			tb.header.skip(glob.KeySymbolLeftBracket)
+			for !tb.header.is(glob.KeySymbolRightBracket) {
+				cur, err := tb.header.next()
+				if err != nil {
+					return nil, nil, nil, err
+				}
+				paramsInBracket = append(paramsInBracket, cur)
+			}
+			err := tb.header.skip(glob.KeySymbolRightBracket)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			params = append(params, paramsInBracket...)
+
+			for range len(paramsInBracket) {
+				paramSets = append(paramSets, Atom(glob.KeywordSet))
+			}
+
+			propName, err := p.notNumberAtom(tb)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+
+			domFacts = append(domFacts, NewPureSpecificFactStmt(true, propName, paramsInBracket.ToObjSlice(), glob.BuiltinLine0))
+
+			continue
+		}
+
+		paramsWithTheSameParamSet := StrSlice{}
+
+		for {
+			cur, err := tb.header.next()
+			if err != nil {
+				return nil, nil, nil, err
+			}
+
+			paramsWithTheSameParamSet = append(paramsWithTheSameParamSet, cur)
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+			} else {
+				paramSet, err := p.Obj(tb)
+				if err != nil {
+					return nil, nil, nil, err
+				}
+				for range len(paramsWithTheSameParamSet) {
+					paramSets = append(paramSets, paramSet)
+				}
+				break
+			}
+		}
+
+		params = append(params, paramsWithTheSameParamSet...)
+	}
+
+	if slices.Contains(endWith, tb.header.strAtCurIndexPlus(0)) {
+		tb.header.skip("")
+	} else {
+		return nil, nil, nil, fmt.Errorf("expect %s as end of parameter and parameter pairs", endWith)
+	}
+
+	return params, paramSets, domFacts, nil
+}
