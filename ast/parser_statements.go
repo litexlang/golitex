@@ -174,6 +174,9 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 		p.FreeParams[param] = struct{}{}
 	}
 
+	iffFacts := []FactStmt{}
+	iffFacts = append(iffFacts, moreIffs...)
+
 	// Defer: remove the params we added when leaving this prop scope
 	defer func() {
 		for _, param := range declHeader.Params {
@@ -183,7 +186,11 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 
 	if !tb.header.is(glob.KeySymbolColon) {
 		if tb.header.ExceedEnd() {
-			return NewDefPropStmt(declHeader, nil, nil, tb.line), nil
+			if len(iffFacts) == 0 {
+				return NewDefPropStmt(declHeader, nil, nil, tb.line), nil
+			} else {
+				return NewDefPropStmt(declHeader, iffFacts, []Spec_OrFact{}, tb.line), nil
+			}
 		} else {
 			return nil, fmt.Errorf("expect ':' or end of block")
 		}
@@ -197,9 +204,6 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 	if !tb.header.ExceedEnd() {
 		return nil, fmt.Errorf("expect end of block")
 	}
-
-	iffFacts := []FactStmt{}
-	iffFacts = append(iffFacts, moreIffs...)
 
 	for _, fact := range tb.body {
 		iffFact, err := p.factStmt(&fact)
@@ -3015,12 +3019,12 @@ func (p *TbParser) defHeaderOfPropDef(tb *tokenBlock) (*DefHeader, FactStmtSlice
 		return nil, nil, err
 	}
 
-	params, setParams, doms, err := p.paramParamSetWithBracket(tb, []string{glob.KeySymbolRightBrace})
+	params, setParams, extraIffs, err := p.paramParamSetWithBracket(tb, []string{glob.KeySymbolRightBrace})
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return NewDefHeader(name, params, setParams), doms, nil
+	return NewDefHeader(name, params, setParams), extraIffs, nil
 }
 
 // func (p *TbParser) defHeaderWithoutParsingColonAtEnd_MustFollowWithFreeParamCheck(tb *tokenBlock) (*DefHeader, error) {
@@ -4163,12 +4167,21 @@ func (p *TbParser) paramParamSetWithBracket(tb *tokenBlock, endWith []string) (S
 		if tb.header.is(glob.KeySymbolLeftBracket) {
 			paramsInBracket := StrSlice{}
 			tb.header.skip(glob.KeySymbolLeftBracket)
-			for !tb.header.is(glob.KeySymbolRightBracket) {
+			for {
 				cur, err := tb.header.next()
 				if err != nil {
 					return nil, nil, nil, err
 				}
 				paramsInBracket = append(paramsInBracket, cur)
+
+				if tb.header.is(glob.KeySymbolRightBracket) {
+					break
+				}
+
+				err = tb.header.skip(glob.KeySymbolComma)
+				if err != nil {
+					return nil, nil, nil, err
+				}
 			}
 			err := tb.header.skip(glob.KeySymbolRightBracket)
 			if err != nil {
