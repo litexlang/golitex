@@ -171,3 +171,77 @@ func stmtErrRetWithCaller(msg string) ast.StmtRet {
 	caller := getCallerFuncName()
 	return ast.StmtErrRet(nil, msg).AddExtraInfo(fmt.Sprintf("[Called from: %s]\n", caller))
 }
+
+func (ver *Verifier) replaceUniFactParamsWithRandomParams(stmt *ast.UniFactStmt) (*ast.UniFactStmt, error) {
+	indexesOfParamsToReplace := []int{}
+	for i, param := range stmt.Params {
+		if ok := ver.Env.IsValidAndAvailableName(param); !ok {
+			indexesOfParamsToReplace = append(indexesOfParamsToReplace, i)
+		}
+	}
+
+	if len(indexesOfParamsToReplace) == 0 {
+		return stmt, nil
+	}
+
+	randomParams := ver.Env.GenerateNUnusedRandomNames(len(indexesOfParamsToReplace))
+	uniMap := make(map[string]ast.Obj)
+	for i, index := range indexesOfParamsToReplace {
+		uniMap[stmt.Params[index]] = ast.Atom(randomParams[i])
+	}
+
+	newParamSets := []ast.Obj{}
+	for _, index := range indexesOfParamsToReplace {
+		newParamSets = append(newParamSets, stmt.ParamSets[index])
+	}
+
+	newDomFacts := []ast.Spec_OrFact{}
+	for _, domFact := range stmt.DomFacts {
+		newDomFact, err := domFact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newDomFacts = append(newDomFacts, newDomFact.(ast.Spec_OrFact))
+	}
+
+	newThenFacts := []ast.Spec_OrFact{}
+	for _, thenFact := range stmt.ThenFacts {
+		newThenFact, err := thenFact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newThenFacts = append(newThenFacts, newThenFact.(ast.Spec_OrFact))
+	}
+
+	newParams := []string{}
+	for _, param := range stmt.Params {
+		if _, ok := uniMap[param]; ok {
+			newParams = append(newParams, string(uniMap[param].(ast.Atom)))
+		} else {
+			newParams = append(newParams, param)
+		}
+	}
+
+	return ast.NewUniFact(newParams, newParamSets, newDomFacts, newThenFacts, stmt.Line), nil
+}
+
+func (ver *Verifier) declareParamsInUniFactAndCheckFnReqOfParamSetsAndDoms(fact *ast.UniFactStmt, state *VerState) ast.StmtRet {
+	// check fn set req
+	ret := ver.checkFnReqInsideObjs(fact.ParamSets, state)
+	if ret.IsNotTrue() {
+		return ast.StmtErrRet(fact, ret.String())
+	}
+
+	// check fn req inside dom facts
+	ret = ver.checkFnReqInsideReversibleFacts(fact.DomFacts, state)
+	if ret.IsNotTrue() {
+		return ast.StmtErrRet(fact, ret.String())
+	}
+
+	defObjStmt := ast.NewDefLetStmt(fact.Params, fact.ParamSets, fact.DomFacts.ToFactStmtSlice(), fact.Line)
+	ret2 := ver.Env.DefLetStmt(defObjStmt)
+	if ret2.IsErr() {
+		return ret2
+	}
+	return ast.NewTrueStmtEmptyRet(fact)
+}
