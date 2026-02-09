@@ -2460,7 +2460,10 @@ func (p *TbParser) uniFactInterface(tb *tokenBlock) (FactStmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	params, setParams, err := p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolColon}, false, true)
+	// params, setParams, err := p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolColon}, false, true)
+
+	params, setParams, extraDoms, err := p.paramParamSetWithBracket(tb, []string{glob.KeySymbolColon})
+
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -2484,6 +2487,9 @@ func (p *TbParser) uniFactInterface(tb *tokenBlock) (FactStmt, error) {
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
+
+	// 把 extra dom 插到 domainFacts 前面
+	domainFacts = append(extraDoms, domainFacts...)
 
 	if len(iffFacts) == 0 {
 		if len(thenFacts) == 0 {
@@ -3024,7 +3030,7 @@ func (p *TbParser) defHeaderOfPropDef(tb *tokenBlock) (*DefHeader, FactStmtSlice
 		return nil, nil, err
 	}
 
-	return NewDefHeader(name, params, setParams), extraIffs, nil
+	return NewDefHeader(name, params, setParams), extraIffs.ToFactStmtSlice(), nil
 }
 
 // func (p *TbParser) defHeaderWithoutParsingColonAtEnd_MustFollowWithFreeParamCheck(tb *tokenBlock) (*DefHeader, error) {
@@ -4158,10 +4164,10 @@ func (p *TbParser) defFn(tb *tokenBlock, skipLetAndFn bool) (*LetFn, error) {
 	return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
 }
 
-func (p *TbParser) paramParamSetWithBracket(tb *tokenBlock, endWith []string) (StrSlice, ObjSlice, FactStmtSlice, error) {
+func (p *TbParser) paramParamSetWithBracket(tb *tokenBlock, endWith []string) (StrSlice, ObjSlice, ReversibleFacts, error) {
 	params := StrSlice{}
 	paramSets := ObjSlice{}
-	domFacts := FactStmtSlice{}
+	domFacts := ReversibleFacts{}
 
 	for !slices.Contains(endWith, tb.header.strAtCurIndexPlus(0)) && !tb.header.ExceedEnd() {
 		if tb.header.is(glob.KeySymbolLeftBracket) {
@@ -4200,6 +4206,14 @@ func (p *TbParser) paramParamSetWithBracket(tb *tokenBlock, endWith []string) (S
 
 			domFacts = append(domFacts, NewPureSpecificFactStmt(true, propName, paramsInBracket.ToObjSlice(), glob.BuiltinLine0))
 
+			if slices.Contains(endWith, tb.header.strAtCurIndexPlus(0)) {
+				break
+			} else {
+
+				if tb.header.is(glob.KeySymbolComma) {
+					tb.header.skip(glob.KeySymbolComma)
+				}
+			}
 			continue
 		}
 
@@ -4226,14 +4240,14 @@ func (p *TbParser) paramParamSetWithBracket(tb *tokenBlock, endWith []string) (S
 
 				if slices.Contains(endWith, tb.header.strAtCurIndexPlus(0)) {
 					break
-				}
+				} else {
+					err = tb.header.skip(glob.KeySymbolComma)
+					if err != nil {
+						return nil, nil, nil, err
+					}
 
-				err = tb.header.skip(glob.KeySymbolComma)
-				if err != nil {
-					return nil, nil, nil, err
+					break
 				}
-
-				break
 			}
 		}
 
