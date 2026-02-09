@@ -182,7 +182,7 @@ func (ver *Verifier) fnSetObjSatisfyFnReqWhenFnNameIsNotEmpty(fnSetObj *ast.FnSe
 	for _, then := range newFnSetObj.ThenFacts {
 		switch then := then.(type) {
 		case ast.SpecificFactStmt:
-			verRet := ver.checkFnsReq(then, state)
+			verRet := ver.checkFnsReqInSpecFact(then, state)
 			if verRet.IsNotTrue() {
 				return verRet
 			}
