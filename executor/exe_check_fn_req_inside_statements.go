@@ -5,6 +5,44 @@ import (
 	ast "golitex/ast"
 )
 
+func (ver *Verifier) checkFnReqInsideFact(originalFact ast.FactStmt, state *VerState) ast.VerRet {
+	switch fact := originalFact.(type) {
+	case *ast.PureSpecificFactStmt:
+		return ver.checkFnReqInsidePureSpecificFactStmt(fact, state)
+	case *ast.ExistSpecificFactStmt:
+		return ver.checkFnReqInsideExistSpecificFactStmt(fact, state)
+	default:
+		return ast.NewErrVerRet(originalFact).AddExtraInfo(fmt.Sprintf("unexpected fact statement: %s", originalFact.String()))
+	}
+}
+
+func (ver *Verifier) checkFnReqInsidePureSpecificFactStmt(fact *ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
+	stateNoMsg := state.GetNoMsg()
+	for _, param := range fact.Params {
+		verRet := ver.objSatisfyFnReq(param, stateNoMsg)
+		if verRet.IsErr() {
+			return verRet
+		}
+		if verRet.IsUnknown() {
+			return verRet
+		}
+	}
+
+	return ast.NewTrueVerRet(fact, nil, "")
+}
+
+func (ver *Verifier) checkFnReqInsideExistSpecificFactStmt(fact *ast.ExistSpecificFactStmt, state *VerState) ast.VerRet {
+	// TODO: 这里检查 exist 的方式大概率有问题
+	ret := ver.Env.LookUpNamesInFact(fact, map[string]struct{}{})
+	if ret.IsErr() {
+		return ast.NewErrVerRet(fact).AddExtraInfos(ret.GetMsg())
+	}
+	if ret.IsUnknown() {
+		return ast.NewUnknownVerRet(fact).AddExtraInfos(ret.GetMsg())
+	}
+	return ast.NewTrueVerRet(fact, nil, "")
+}
+
 func (ver *Verifier) checkFnReqInsideParamSets(paramSets ast.ObjSlice, state *VerState) ast.VerRet {
 	for _, paramSet := range paramSets {
 		verRet := ver.objSatisfyFnReq(paramSet, state)
