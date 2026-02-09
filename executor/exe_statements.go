@@ -546,12 +546,6 @@ func (exec *Executor) proveIsTransitivePropStmt(stmt *ast.ProveIsTransitivePropS
 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(innerStmtRets).AddVerifyProcesses(verifyProcessMsgs).AddExtraInfo(fmt.Sprintf("Property %s has been proven to be transitive.\n", stmt.Prop.String()))
 }
 
-func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) ast.StmtRet {
-	exec.Env.CurEnv().AlgoDefMem[stmt.FuncName] = struct{}{}
-	exec.Env.AllDefinedAlgoNames[stmt.FuncName] = litex_env.NewDefinedStuff(stmt, exec.Env.CurEnvDepth())
-	return exec.NewTrueStmtRet(stmt)
-}
-
 func (exec *Executor) evalStmt(stmt *ast.EvalStmt) ast.StmtRet {
 	value, execRet := exec.evalObjInLocalEnv(stmt.ObjToEval)
 	if execRet.IsNotTrue() {
