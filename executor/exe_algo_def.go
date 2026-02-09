@@ -36,10 +36,51 @@ func (exec *Executor) checkDefAlgoStmt(stmt *ast.DefAlgoStmt) ast.VerRet {
 		return ret
 	}
 
-	// 在每个if 下面检查是不是OK
-	panic("")
+	if len(stmt.Stmts) == 0 {
+		return ast.NewErrVerRet(nil).AddExtraInfo("no statements in algo def")
+	}
 
-	return ast.NewTrueVerRet(nil, nil, "")
+	if asIf := stmt.Stmts[len(stmt.Stmts)-1].(*ast.AlgoIf); asIf != nil {
+		// 所有case 的 合并是 真的
+		caseByCaseFacts := make([]ast.SpecificFactStmt, len(stmt.Stmts))
+		for i := 0; i < len(stmt.Stmts); i++ {
+			if asIf := stmt.Stmts[i].(*ast.AlgoIf); asIf != nil {
+				caseByCaseFacts[i] = asIf.Condition
+			} else {
+				return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("expect algo if, got %T", stmt.Stmts[i]))
+			}
+		}
+
+		orFact := ast.NewOrStmt(caseByCaseFacts, glob.BuiltinLine0)
+		verRet := ver.VerFactStmt(orFact, Round0NoMsg())
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	}
+
+	// 在每个if 下面检查是不是OK
+	for i := 0; i < len(stmt.Stmts)-1; i++ {
+		// 必须是 if
+		if _, ok := stmt.Stmts[i].(*ast.AlgoIf); !ok {
+			return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("expect algo if, got %T", stmt.Stmts[i]))
+		}
+
+		verRet := ver.checkDefAlgoUnderIf(stmt, i)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	}
+
+	// 最后一个是 return 或 if
+	switch stmt.Stmts[len(stmt.Stmts)-1].(type) {
+	case *ast.AlgoIf:
+		return ver.checkDefAlgoUnderIf(stmt, len(stmt.Stmts)-1)
+	case *ast.AlgoReturn:
+		return ver.checkDefAlgoUnderReturn(stmt, len(stmt.Stmts)-1)
+	default:
+		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("expect algo if or algo return, got %T", stmt.Stmts[len(stmt.Stmts)-1]))
+	}
+
 }
 
 func (ver *Verifier) defineParamsInAlgoDef(stmt *ast.DefAlgoStmt, fnSetObj ast.FnSetObj) ast.VerRet {
@@ -96,5 +137,55 @@ func (ver *Verifier) defineParamsInFnSetObjWithName(stmt *ast.DefAlgoStmt, fnSet
 	if ret.IsNotTrue() {
 		return ast.NewErrVerRet(nil).AddExtraInfo(ret.String())
 	}
+	return ast.NewTrueVerRet(nil, nil, "")
+}
+
+func (ver *Verifier) checkDefAlgoUnderIf(stmt *ast.DefAlgoStmt, i int) ast.VerRet {
+	// 假装 这个 if 是对的，然后验证
+	algoIf := stmt.Stmts[i].(*ast.AlgoIf)
+
+	ret := ver.storeFactAndCheckFnReq(algoIf.Condition)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	// 检查 返回值是不是等于 f(x)
+	fnObj := ast.NewFnObj(ast.Atom(stmt.FuncName), stmt.Params.ToObjSlice())
+
+	equalFact := ast.NewEqualFact(algoIf.ReturnStmt.Value, fnObj)
+	ret = ver.storeFactAndCheckFnReq(equalFact)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
+	return ast.NewTrueVerRet(nil, nil, "")
+}
+
+func (ver *Verifier) checkDefAlgoUnderReturn(algoDef *ast.DefAlgoStmt, i int) ast.VerRet {
+	// 其他的事实全是错的
+	for j := 0; j < len(algoDef.Stmts)-1; j++ {
+		if _, ok := algoDef.Stmts[j].(*ast.AlgoIf); !ok {
+			return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("expect algo if, got %T", algoDef.Stmts[j]))
+		}
+
+		notCase := algoDef.Stmts[j].(*ast.AlgoIf).Condition.ReverseIsTrue()
+		for _, notCase := range notCase {
+			ret := ver.storeFactAndCheckFnReq(notCase)
+			if ret.IsNotTrue() {
+				return ret
+			}
+		}
+	}
+
+	// 其他的所有的 if 都是 错的，这时候等于
+	algoReturn := algoDef.Stmts[i].(*ast.AlgoReturn)
+
+	fnObj := ast.NewFnObj(ast.Atom(algoDef.FuncName), algoDef.Params.ToObjSlice())
+	equalFact := ast.NewEqualFact(algoReturn.Value, fnObj)
+	ret := ver.storeFactAndCheckFnReq(equalFact)
+	if ret.IsNotTrue() {
+		return ret
+	}
+
 	return ast.NewTrueVerRet(nil, nil, "")
 }
