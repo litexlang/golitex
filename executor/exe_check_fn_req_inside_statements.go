@@ -81,6 +81,10 @@ func (ver *Verifier) checkFnReqInsideUniFactStmt(fact *ast.UniFactStmt, state *V
 	return ast.NewTrueVerRet(fact, nil, "")
 }
 
+func (ver *Verifier) checkFnReqOfObj(param ast.Obj, state *VerState) ast.VerRet {
+	return ver.objSatisfyFnReq(param, state)
+}
+
 func (ver *Verifier) checkFnReqInsideObjs(paramSets ast.ObjSlice, state *VerState) ast.VerRet {
 	for _, paramSet := range paramSets {
 		verRet := ver.objSatisfyFnReq(paramSet, state)
@@ -92,20 +96,38 @@ func (ver *Verifier) checkFnReqInsideObjs(paramSets ast.ObjSlice, state *VerStat
 }
 
 func (ver *Verifier) checkFnReqInsideReversibleFacts(domFacts ast.ReversibleFacts, state *VerState) ast.VerRet {
+	ver.newEnv()
+	defer ver.deleteEnv()
+
 	for _, domFact := range domFacts {
 		verRet := ver.checkFnReqInsideFact(domFact, state)
 		if verRet.IsNotTrue() {
 			return verRet
+		}
+
+		ret := ver.Env.NewFact(domFact)
+		if ret.IsNotTrue() {
+			return ast.NewErrVerRet(nil).AddExtraInfo(ret.String())
 		}
 	}
 	return ast.NewTrueVerRet(nil, nil, "")
 }
 
 func (ver *Verifier) checkFnReqInsideFacts(iffFacts ast.FactStmtSlice, state *VerState) ast.VerRet {
+
+	ver.newEnv()
+	defer ver.deleteEnv()
+
 	for _, iffFact := range iffFacts {
 		verRet := ver.checkFnReqInsideFact(iffFact, state)
 		if verRet.IsNotTrue() {
 			return verRet
+		}
+
+		// prop p(x R): x != 0, x / x = 1. 这里如果不能 new fact，那 x / x 的fn req验证就不行了
+		ret := ver.Env.NewFact(iffFact)
+		if ret.IsNotTrue() {
+			return ast.NewErrVerRet(nil).AddExtraInfo(ret.String())
 		}
 	}
 	return ast.NewTrueVerRet(nil, nil, "")
@@ -116,9 +138,21 @@ func (exec *Executor) checkFnReqInsideDefProp(stmt *ast.DefPropStmt, state *VerS
 	defer exec.deleteEnv()
 
 	ver := NewVerifier(exec.Env)
+	var err error
+
+	stmt, err = ver.replaceParamsInDefPropWithRandomParams(stmt)
+	if err != nil {
+		return ast.NewErrVerRet(nil).AddExtraInfo(err.Error()).AddExtraInfo(stmt.String())
+	}
+
+	// declare params in def prop and check fn req of param sets
+	verRet := ver.declareParamsInDefPropAndCheckFnReqOfParamSets(stmt, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
 
 	// check fn req of param sets
-	verRet := ver.checkFnReqInsideObjs(stmt.DefHeader.ParamSets, state)
+	verRet = ver.checkFnReqInsideObjs(stmt.DefHeader.ParamSets, state)
 	if verRet.IsNotTrue() {
 		return verRet
 	}

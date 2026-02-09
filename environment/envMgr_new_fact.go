@@ -19,6 +19,23 @@ import (
 	ast "golitex/ast"
 )
 
+func (envMgr *EnvMgr) NewFact(stmt ast.FactStmt) ast.InferRet {
+	switch f := stmt.(type) {
+	case ast.SpecificFactStmt:
+		return envMgr.newSpecFact(f)
+	case *ast.OrStmt:
+		return envMgr.newOrFact(f)
+	case *ast.UniFactStmt:
+		return envMgr.NewFactWithCheckingNameDefined_UniFact(f)
+	case *ast.UniFactWithIffStmt:
+		return envMgr.newUniFactWithIff(f)
+	case *ast.EqualsFactStmt:
+		return envMgr.newEqualsFact(f)
+	default:
+		return ast.NewErrInferRet(stmt).AddExtraInfo(fmt.Sprintf("unknown fact type: %T", stmt))
+	}
+}
+
 func (envMgr *EnvMgr) NewFactWithCheckingNameDefined(stmt ast.FactStmt) ast.InferRet {
 	// 检查是否符合要求：比如涉及到的符号是否都定义了
 	if ret := envMgr.LookUpNamesInFact(stmt, map[string]struct{}{}); ret.IsNotTrue() {

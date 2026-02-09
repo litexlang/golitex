@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
+	glob "golitex/glob"
 	"runtime"
 )
 
@@ -226,8 +227,7 @@ func (ver *Verifier) replaceUniFactParamsWithRandomParams(stmt *ast.UniFactStmt)
 }
 
 func (ver *Verifier) declareParamsInUniFactAndCheckFnReqOfParamSetsAndDoms(fact *ast.UniFactStmt, state *VerState) ast.StmtRet {
-	// check fn set req
-	ret := ver.checkFnReqInsideObjs(fact.ParamSets, state)
+	ret := ver.declareParamsAndCheckFnReqOfParamSets(fact.Params, fact.ParamSets, state)
 	if ret.IsNotTrue() {
 		return ast.StmtErrRet(fact, ret.String())
 	}
@@ -238,10 +238,85 @@ func (ver *Verifier) declareParamsInUniFactAndCheckFnReqOfParamSetsAndDoms(fact 
 		return ast.StmtErrRet(fact, ret.String())
 	}
 
-	defObjStmt := ast.NewDefLetStmt(fact.Params, fact.ParamSets, fact.DomFacts.ToFactStmtSlice(), fact.Line)
-	ret2 := ver.Env.DefLetStmt(defObjStmt)
-	if ret2.IsErr() {
-		return ret2
-	}
 	return ast.NewTrueStmtEmptyRet(fact)
+}
+
+func (ver *Verifier) declareParamsAndCheckFnReqOfParamSets(params []string, paramSets []ast.Obj, state *VerState) ast.VerRet {
+	for i := range params {
+		ret := ver.checkFnReqOfObj(paramSets[i], state)
+		if ret.IsNotTrue() {
+			return ret
+		}
+
+		letStmt := ast.NewDefLetStmt([]string{params[i]}, []ast.Obj{paramSets[i]}, []ast.FactStmt{}, glob.BuiltinLine0)
+		ret2 := ver.Env.DefLetStmt(letStmt)
+		if ret2.IsErr() {
+			return ast.NewErrVerRet(nil).AddExtraInfo(ret2.String())
+		}
+	}
+	return ast.NewTrueVerRet(nil, nil, "")
+}
+
+func (ver *Verifier) declareParamsInDefPropAndCheckFnReqOfParamSets(stmt *ast.DefPropStmt, state *VerState) ast.VerRet {
+	verRet := ver.declareParamsAndCheckFnReqOfParamSets(stmt.DefHeader.Params, stmt.DefHeader.ParamSets, state)
+	return verRet
+}
+
+func (ver *Verifier) replaceParamsInDefPropWithRandomParams(stmt *ast.DefPropStmt) (*ast.DefPropStmt, error) {
+	indexesOfParamsToReplace := []int{}
+	for i, param := range stmt.DefHeader.Params {
+		if ok := ver.Env.IsValidAndAvailableName(param); !ok {
+			indexesOfParamsToReplace = append(indexesOfParamsToReplace, i)
+		}
+	}
+
+	if len(indexesOfParamsToReplace) == 0 {
+		return stmt, nil
+	}
+
+	randomParams := ver.Env.GenerateNUnusedRandomNames(len(indexesOfParamsToReplace))
+	uniMap := make(map[string]ast.Obj)
+	for i, index := range indexesOfParamsToReplace {
+		uniMap[stmt.DefHeader.Params[index]] = ast.Atom(randomParams[i])
+	}
+
+	// 实例化 DefHeader.ParamSets
+	newParamSets := []ast.Obj{}
+	for _, paramSet := range stmt.DefHeader.ParamSets {
+		newParamSet, err := paramSet.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newParamSets = append(newParamSets, newParamSet)
+	}
+
+	// 更新 Params 列表
+	newParams := []string{}
+	for _, param := range stmt.DefHeader.Params {
+		if _, ok := uniMap[param]; ok {
+			newParams = append(newParams, string(uniMap[param].(ast.Atom)))
+		} else {
+			newParams = append(newParams, param)
+		}
+	}
+
+	newDefHeader := ast.NewDefHeader(stmt.DefHeader.Name, newParams, newParamSets)
+
+	// 实例化 IffFactsOrNil
+	newIffFacts := []ast.FactStmt{}
+	for _, fact := range stmt.IffFactsOrNil {
+		newFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newIffFacts = append(newIffFacts, newFact)
+	}
+
+	// 实例化 ImplicationFactsOrNil
+	instantiatedThenFacts, err := stmt.ImplicationFactsOrNil.InstantiateFact(uniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return ast.NewDefPropStmt(newDefHeader, newIffFacts, instantiatedThenFacts, stmt.Line), nil
 }
