@@ -196,9 +196,9 @@ func (ver *Verifier) checkDefAlgoUnderReturn(algoDef *ast.DefAlgoStmt, i int) as
 
 	fnObj := ast.NewFnObj(ast.Atom(algoDef.FuncName), algoDef.Params.ToObjSlice())
 	equalFact := ast.NewEqualFact(algoReturn.Value, fnObj)
-	ret := ver.storeFactAndCheckFnReq(equalFact)
+	ret := ver.VerFactStmt(equalFact, Round0NoMsg())
 	if ret.IsNotTrue() {
-		return ret
+		return ret.AddExtraInfo(fmt.Sprintf("on line %d, equal fact %s is not true in %s when all cases in algo return are false", algoDef.GetLine(), equalFact.String(), algoDef.FuncName))
 	}
 
 	return ast.NewTrueVerRet(nil, nil, "")

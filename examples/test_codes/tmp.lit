@@ -4,6 +4,10 @@ know:
     forall x R: x < 0 => f(x) = f(x+1)-1
     f(0) = 0
 
+prove forall x R: not x > 0, not x < 0 => f(x) = 0:
+    contra x = 0:
+        impossible x > 0 or x = 0 or x < 0
+
 algo f(x):
     if x > 0:
         return f(x-1)+1
@@ -11,6 +15,10 @@ algo f(x):
         return f(x+1)-1
     return 0
 
+"""
 eval f(10000)
 f(10000) = 10000
+"""
 
+eval f(-1000)
+f(-1000) = -1000
