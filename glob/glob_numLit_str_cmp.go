@@ -131,6 +131,27 @@ func compareFractionalParts(a, b string) int {
 	return 0
 }
 
+func IsNumber(s string) bool {
+	hasDigit := false
+	hasDot := false
+
+	for _, c := range s {
+		switch {
+		case c >= '0' && c <= '9':
+			hasDigit = true
+		case c == '.':
+			if hasDot {
+				return false // Multiple dots
+			}
+			hasDot = true
+		default:
+			return false // Invalid character
+		}
+	}
+
+	return hasDigit
+}
+
 func IsNumLitStr(s string) bool {
 	if s == "" {
 		return false
