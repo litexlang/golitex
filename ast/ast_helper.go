@@ -466,6 +466,14 @@ func IsListSetObj(obj Obj) bool {
 }
 
 func NegateObj(right Obj) Obj {
+	// return NewFnObj(Atom(glob.KeySymbolStar), []Obj{Atom("-1"), right})
+
+	// 如果right 是数字
+	if asAtom, ok := right.(Atom); ok {
+		if glob.IsNumber(string(asAtom)) {
+			return Atom(fmt.Sprintf("-%s", string(asAtom)))
+		}
+	}
 	return NewFnObj(Atom(glob.KeySymbolStar), []Obj{Atom("-1"), right})
 }
 
