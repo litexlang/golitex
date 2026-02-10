@@ -81,6 +81,7 @@ prove:
 
 # 是截距
 prop is_intercept(i R, a, b, c R):
+    a != 0 or b != 0
     (0, i) $in line(a, b, c)
 
 # 1 是 line(1, 1, 1) 的截距
@@ -123,6 +124,8 @@ have fn:
 
 # 两个直线垂直
 prop is_vertical(s1 power_set(cart(R, R)), s2 power_set(cart(R, R)), a, b, c, d, e, f R):
+    a != 0 or b != 0
+    d != 0 or e != 0
     s1 = line(a, b, c)
     s2 = line(d, e, f)
     a * d + b * e = 0

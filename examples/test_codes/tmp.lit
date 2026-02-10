@@ -1,24 +1,15 @@
-let fn f(x R) R
+have factorial fn(N) N_pos
 know:
-    forall x R: x > 0 => f(x) = f(x-1)+1
-    forall x R: x < 0 => f(x) = f(x+1)-1
-    f(0) = 0
+    factorial(0) = 1
+    factorial(1) = 1
+    forall n N: factorial(n) = factorial(n - 1) * n
 
-prove forall x R: not x > 0, not x < 0 => f(x) = 0:
-    contra x = 0:
-        impossible x > 0 or x = 0 or x < 0
+algo factorial(n):
+    if n = 0:
+        return 1
+    if n = 1:
+        return 1
+    return factorial(n - 1) * n
 
-algo f(x):
-    if x > 0:
-        return f(x-1)+1
-    if x < 0:
-        return f(x+1)-1
-    return 0
-
-"""
-eval f(10000)
-f(10000) = 10000
-"""
-
-eval f(-1000)
-f(-1000) = -1000
+eval factorial(10)
+factorial(10) = 3628800
