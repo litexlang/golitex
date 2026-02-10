@@ -194,20 +194,29 @@ func (ver *Verifier) fnSetObjSatisfyFnReqWhenFnNameIsNotEmpty(fnSetObj *ast.FnSe
 
 	// 检查then里的东西是不是满足条件
 	for _, then := range newFnSetObj.ThenFacts {
-		switch then := then.(type) {
-		case ast.SpecificFactStmt:
-			verRet := ver.checkFnsReqInSpecFact(then, state)
-			if verRet.IsNotTrue() {
-				return verRet
-			}
-		case *ast.OrStmt:
-			verRet := ver.checkOrFnReq(then, state)
-			if verRet.IsNotTrue() {
-				return verRet
-			}
-		default:
-			panic(fmt.Sprintf("unknown then type: %T", then))
+		verRet := ver.checkFnsReqInReversibleFact(then, state)
+		if verRet.IsNotTrue() {
+			return verRet
 		}
+	}
+
+	return ast.NewTrueVerRet(nil, nil, "")
+}
+
+func (ver *Verifier) checkFnsReqInReversibleFact(stmt ast.Spec_OrFact, state *VerState) ast.VerRet {
+	switch then := stmt.(type) {
+	case ast.SpecificFactStmt:
+		verRet := ver.checkFnsReqInSpecFact(then, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	case *ast.OrStmt:
+		verRet := ver.checkOrFnReq(then, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	default:
+		panic(fmt.Sprintf("unknown then type: %T", then))
 	}
 
 	return ast.NewTrueVerRet(nil, nil, "")
