@@ -18,8 +18,8 @@ import (
 	ast "golitex/ast"
 )
 
-func (ver *Verifier) storeFactAndCheckFnReq(stmt ast.FactStmt) ast.VerRet {
-	verRet := ver.VerFactStmt(stmt, Round0NoMsg())
+func (ver *Verifier) storeFactAndCheckFnReq(stmt ast.Spec_OrFact) ast.VerRet {
+	verRet := ver.checkFnsReqInReversibleFact(stmt, Round0NoMsg())
 	if verRet.IsNotTrue() {
 		return verRet
 	}

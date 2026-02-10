@@ -54,7 +54,7 @@ func (exec *Executor) checkDefAlgoStmt(stmt *ast.DefAlgoStmt) ast.VerRet {
 		return ast.NewErrVerRet(nil).AddExtraInfo("no statements in algo def")
 	}
 
-	if asIf := stmt.Stmts[len(stmt.Stmts)-1].(*ast.AlgoIf); asIf != nil {
+	if _, ok := stmt.Stmts[len(stmt.Stmts)-1].(*ast.AlgoIf); ok {
 		// 所有case 的 合并是 真的
 		caseByCaseFacts := make([]ast.SpecificFactStmt, len(stmt.Stmts))
 		for i := 0; i < len(stmt.Stmts); i++ {
