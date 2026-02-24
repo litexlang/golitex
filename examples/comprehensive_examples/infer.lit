@@ -1,3 +1,4 @@
+"""
 prove:
     prop p(x, y R)
     prop q(x, y R)
@@ -78,3 +79,4 @@ prove:
 
     let x2, y2, z2 R: x2 * y2 = x2 * z2, x2 != 0
     x2 * y2 = x2 * z2 => y2 = z2
+"""
