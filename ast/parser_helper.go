@@ -27,7 +27,7 @@ func NoSelfReferenceInPropDef(propName string, facts []FactStmt) error {
 				return fmt.Errorf("self reference in prop definition: %s", propName)
 			}
 		case *ExistSpecificFactStmt:
-			for _, pureFact := range asFactStmt.PureFact {
+			for _, pureFact := range asFactStmt.PureFacts {
 				if pureFact.Key().String() == propName {
 					return fmt.Errorf("self reference in prop definition: %s", propName)
 				}

@@ -20,12 +20,12 @@ import (
 
 func (ver *Verifier) matchExistFactWithOneInKnownUniFactAndCheckMatchedObjsSatisfyUniFactConditions(knownUniFact *ast.UniFactStmt, existFactInKnownUniFact *ast.ExistSpecificFactStmt, given *ast.ExistSpecificFactStmt, state *VerState) ast.VerRet {
 	allParamsInExistFactInKnownUni := []ast.Obj{}
-	for _, fact := range existFactInKnownUniFact.PureFact {
+	for _, fact := range existFactInKnownUniFact.PureFacts {
 		allParamsInExistFactInKnownUni = append(allParamsInExistFactInKnownUni, fact.Params...)
 	}
 
 	allParamsInGiven := []ast.Obj{}
-	for _, fact := range given.PureFact {
+	for _, fact := range given.PureFacts {
 		allParamsInGiven = append(allParamsInGiven, fact.Params...)
 	}
 

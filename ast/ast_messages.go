@@ -125,14 +125,14 @@ func (e *ExistSpecificFactStmt) String() string {
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
 
-	if len(e.PureFact) == 1 {
-		builder.WriteString(e.PureFact[0].String())
+	if len(e.PureFacts) == 1 {
+		builder.WriteString(e.PureFacts[0].String())
 		return builder.String()
 	} else {
 		builder.WriteString(glob.KeySymbolLeftCurly)
-		for i, pureFact := range e.PureFact {
+		for i, pureFact := range e.PureFacts {
 			builder.WriteString(pureFact.String())
-			if i != len(e.PureFact)-1 {
+			if i != len(e.PureFacts)-1 {
 				builder.WriteString(", ")
 			}
 		}
