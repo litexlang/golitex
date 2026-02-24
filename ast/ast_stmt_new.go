@@ -60,7 +60,7 @@ func NewDefHeaderWithDom(name string, params []string, paramSets []Obj, domFacts
 // 	return &HaveObjStStmt{objNames, fact, line}
 // }
 
-func NewHaveObjStWithParamSetsStmt(objNames []string, objSets []Obj, fact *PureSpecificFactStmt, line uint) *HaveObjStStmt {
+func NewHaveObjStWithParamSetsStmt(objNames []string, objSets []Obj, fact []*PureSpecificFactStmt, line uint) *HaveObjStStmt {
 	return &HaveObjStStmt{objNames, objSets, fact, line}
 }
 
@@ -299,7 +299,7 @@ func NewProveImplicationStmt(specFact *PureSpecificFactStmt, implicationFact Fac
 	return &ProveInferStmt{specFact, implicationFact, proof, line}
 }
 
-func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact *PureSpecificFactStmt, proofs []Stmt, line uint) *WitnessStmt {
+func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact []*PureSpecificFactStmt, proofs []Stmt, line uint) *WitnessStmt {
 	return &WitnessStmt{params, paramSets, equalTos, fact, proofs, line}
 }
 
@@ -339,7 +339,7 @@ func NewPureSpecificFactStmt(isTrue bool, propName Atom, params ObjSlice, line u
 	return &PureSpecificFactStmt{isTrue, propName, params, line}
 }
 
-func NewExistSpecificFactStmt(isTrue bool, existFreeParams []string, existFreeParamSets ObjSlice, pureFact *PureSpecificFactStmt, line uint) *ExistSpecificFactStmt {
+func NewExistSpecificFactStmt(isTrue bool, existFreeParams []string, existFreeParamSets ObjSlice, pureFact []*PureSpecificFactStmt, line uint) *ExistSpecificFactStmt {
 	return &ExistSpecificFactStmt{isTrue, existFreeParams, existFreeParamSets, pureFact, line}
 }
 

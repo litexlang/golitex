@@ -84,11 +84,16 @@ func (e *ExistSpecificFactStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt
 		newExistFreeParamSets = append(newExistFreeParamSets, newParamSet)
 	}
 
-	newPureFact, err := e.PureFact.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
+	newPureFact := make([]*PureSpecificFactStmt, len(e.PureFact))
+	for i, fact := range e.PureFact {
+		newFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newPureFact[i] = newFact.(*PureSpecificFactStmt)
 	}
-	return NewExistSpecificFactStmt(e.IsTrue, e.ExistFreeParams, newExistFreeParamSets, newPureFact.(*PureSpecificFactStmt), e.Line), nil
+
+	return NewExistSpecificFactStmt(e.IsTrue, e.ExistFreeParams, newExistFreeParamSets, newPureFact, e.Line), nil
 }
 
 func InstantiateUniFact(stmt *UniFactStmt, uniMap map[string]Obj) (*UniFactStmt, error) {
@@ -485,15 +490,19 @@ func (stmt *KnowInferStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 // }
 
 func (stmt *HaveObjStStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newFact, err := stmt.Fact.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
+	newFacts := []*PureSpecificFactStmt{}
+	for _, fact := range stmt.Fact {
+		newFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newFacts = append(newFacts, newFact.(*PureSpecificFactStmt))
 	}
 	newObjSets, err := stmt.ObjSets.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
-	return NewHaveObjStWithParamSetsStmt(stmt.ObjNames, newObjSets, newFact.(*PureSpecificFactStmt), stmt.Line), nil
+	return NewHaveObjStWithParamSetsStmt(stmt.ObjNames, newObjSets, newFacts, stmt.Line), nil
 }
 
 func (stmt *ProveCaseByCaseStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

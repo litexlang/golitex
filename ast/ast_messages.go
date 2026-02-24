@@ -125,7 +125,9 @@ func (e *ExistSpecificFactStmt) String() string {
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
 
-	builder.WriteString(e.PureFact.String())
+	for _, pureFact := range e.PureFact {
+		builder.WriteString(pureFact.String())
+	}
 
 	return builder.String()
 }
@@ -503,7 +505,10 @@ func (stmt *HaveObjStStmt) String() string {
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
 
-	builder.WriteString(stmt.Fact.String())
+	for _, fact := range stmt.Fact {
+		builder.WriteString(fact.String())
+		builder.WriteString(", ")
+	}
 	return builder.String()
 }
 
@@ -1626,7 +1631,10 @@ func (stmt *WitnessStmt) String() string {
 
 	builder.WriteString(fmt.Sprintf(" %s ", glob.KeywordSt))
 
-	builder.WriteString(stmt.Fact.String())
+	for _, fact := range stmt.Fact {
+		builder.WriteString(fact.String())
+		builder.WriteString(", ")
+	}
 
 	builder.WriteString(glob.KeySymbolColon)
 	builder.WriteByte('\n')

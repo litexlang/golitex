@@ -549,15 +549,29 @@ func (p *TbParser) haveObjStStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	fact, err := p.specFactStmt(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	if factAsPureSpecificFactStmt, ok := fact.(*PureSpecificFactStmt); ok {
-		return NewHaveObjStWithParamSetsStmt(names, sets, factAsPureSpecificFactStmt, tb.line), nil
+	if tb.header.is(glob.KeySymbolLeftCurly) {
+		tb.header.skip(glob.KeySymbolLeftCurly)
+		facts := []*PureSpecificFactStmt{}
+		for !tb.header.is(glob.KeySymbolRightCurly) {
+			fact, err := p.pureFuncSpecFact(tb)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			facts = append(facts, fact)
+		}
+		tb.header.skip(glob.KeySymbolRightCurly)
+		return NewHaveObjStWithParamSetsStmt(names, sets, facts, tb.line), nil
 	} else {
-		return nil, fmt.Errorf("expect pure specific fact, got %T", fact)
+		fact, err := p.specFactStmt(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		if factAsPureSpecificFactStmt, ok := fact.(*PureSpecificFactStmt); ok {
+			return NewHaveObjStWithParamSetsStmt(names, sets, []*PureSpecificFactStmt{factAsPureSpecificFactStmt}, tb.line), nil
+		} else {
+			return nil, fmt.Errorf("expect pure specific fact, got %T", fact)
+		}
 	}
 }
 
