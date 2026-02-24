@@ -1,0 +1,12 @@
+prove:
+    know exist a, b, c R st a < b < c
+
+    have a, b, c R st a < b < c
+
+prove:
+    prop p(x R, y R)
+    prop q(x R, y R)
+
+    know exist a, b R st {$p(a, b), $q(a, b)}
+
+    exist a, b R st {$p(a, b), $q(a, b)}
