@@ -69,7 +69,7 @@ func (ver *Verifier) verOrStmtUseSpecMem(stmt *ast.OrStmt, state *VerState) ast.
 }
 
 func (ver *Verifier) verOrStmtUseSpecMemAtEnv(curEnv *env.EnvMemory, stmt *ast.OrStmt, state *VerState) ast.VerRet {
-	knownOrFacts, got := curEnv.OrFactsMem[string(stmt.Facts[0].GetPropName())]
+	knownOrFacts, got := curEnv.OrFactsMem[string(stmt.Facts[0].Key())]
 	if !got {
 		return ast.NewEmptyUnknownVerRet()
 	}
@@ -121,7 +121,7 @@ func (ver *Verifier) groupFactsByPropNameAndValidate(given *ast.OrStmt, known *a
 	knownSpecFactWithTheSameNameMap := map[string][]ast.SpecificFactStmt{}
 
 	for _, fact := range given.Facts {
-		propName := string(fact.GetPropName())
+		propName := string(fact.Key())
 		if _, got := givenSpecFactWithTheSameNameMap[propName]; got {
 			givenSpecFactWithTheSameNameMap[propName] = append(givenSpecFactWithTheSameNameMap[propName], fact)
 		} else {
@@ -130,7 +130,7 @@ func (ver *Verifier) groupFactsByPropNameAndValidate(given *ast.OrStmt, known *a
 	}
 
 	for _, fact := range known.Facts {
-		propName := string(fact.GetPropName())
+		propName := string(fact.Key())
 		if _, got := knownSpecFactWithTheSameNameMap[propName]; got {
 			knownSpecFactWithTheSameNameMap[propName] = append(knownSpecFactWithTheSameNameMap[propName], fact)
 		} else {

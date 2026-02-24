@@ -2109,7 +2109,7 @@ func (p *TbParser) implyStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt,
 	// Check that facts don't reference the same prop name
 	for _, fact := range iffFacts {
 		if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
-			if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
+			if factAsSpecFact.Key() == Atom(declHeader.Name) {
 				return nil, fmt.Errorf("iff fact cannot be the same as the implication being defined")
 			}
 		}
@@ -2117,7 +2117,7 @@ func (p *TbParser) implyStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt,
 
 	for _, fact := range implicationFacts {
 		if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
-			if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
+			if factAsSpecFact.Key() == Atom(declHeader.Name) {
 				return nil, fmt.Errorf("implication fact cannot be the same as the implication being defined")
 			}
 		}
@@ -2949,7 +2949,7 @@ func (p *TbParser) relaFactStmt_orRelaEquals(tb *tokenBlock) (FactStmt, error) {
 	}
 
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
-	if ret.GetPropName() == glob.KeySymbolNotEqual {
+	if ret.Key() == glob.KeySymbolNotEqual {
 		return NewPureSpecificFactStmt(false, Atom(glob.KeySymbolEqual), ret.Params, tb.line), nil
 	}
 
@@ -3451,7 +3451,7 @@ func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, err
 	}
 
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
-	if ret.GetPropName() == glob.KeySymbolNotEqual {
+	if ret.Key() == glob.KeySymbolNotEqual {
 		return NewPureSpecificFactStmt(false, Atom(glob.KeySymbolEqual), ret.Params, tb.line), nil
 	}
 

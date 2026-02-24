@@ -29,7 +29,7 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt ast.SpecificFactStmt, state 
 	// 	return ver.verNotEqualSetByBuiltinRules(stmt, state)
 	// }
 
-	if stmt.GetPropName() == glob.KeywordIn {
+	if stmt.Key() == glob.KeywordIn {
 		if stmt.GetFactType() == ast.FalsePure {
 			return ver.falseInFactBuiltinRules(stmt, state)
 		} else if stmt.GetFactType() == ast.TruePure {
@@ -37,7 +37,7 @@ func (ver *Verifier) verSpecFactByBuiltinRules(stmt ast.SpecificFactStmt, state 
 		}
 	}
 
-	if stmt.GetPropName() == glob.KeywordRestrict {
+	if stmt.Key() == glob.KeywordRestrict {
 		return ver.verRestrictByBuiltinRules(stmt, state)
 	}
 
@@ -94,7 +94,7 @@ func (ver *Verifier) verNumberTrueLogicRelaOpt_BuiltinRules(stmt ast.SpecificFac
 }
 
 func (ver *Verifier) btNumberInfixCompareProp(stmt ast.SpecificFactStmt) ast.VerRet {
-	if !glob.IsBuiltinNumberInfixRelaProp(string(stmt.GetPropName())) {
+	if !glob.IsBuiltinNumberInfixRelaProp(string(stmt.Key())) {
 		return ast.NewEmptyUnknownVerRet()
 	}
 
@@ -138,7 +138,7 @@ func (ver *Verifier) btNumberInfixCompareProp(stmt ast.SpecificFactStmt) ast.Ver
 func (ver *Verifier) verInFactByLeftParamIsNumberExpr(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	_ = state
 
-	if stmt.GetPropName() != glob.KeywordIn {
+	if stmt.Key() != glob.KeywordIn {
 		return ast.NewEmptyUnknownVerRet()
 	}
 

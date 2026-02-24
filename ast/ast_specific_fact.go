@@ -29,7 +29,7 @@ type SpecificFactStmt interface {
 	Instantiate(map[string]Obj) (Stmt, error)
 	SetLine(l uint)
 	ReverseIsTrue() []SpecificFactStmt
-	GetPropName() Atom
+	Key() Atom
 	GetFactType() SpecFactType
 }
 
@@ -39,14 +39,17 @@ func (s *ExistSpecificFactStmt) reversibleFact() {}
 func (s *PureSpecificFactStmt) specificFactStmt()  {}
 func (s *ExistSpecificFactStmt) specificFactStmt() {}
 
-func (s *PureSpecificFactStmt) GetPropName() Atom {
+func (s *PureSpecificFactStmt) Key() Atom {
 	return s.PropName
 }
 
-func (s *ExistSpecificFactStmt) GetPropName() Atom {
+func (s *ExistSpecificFactStmt) Key() Atom {
 	ret := ""
-	for _, pureFact := range s.PureFact {
+	for i, pureFact := range s.PureFact {
 		ret += pureFact.PropName.String()
+		if i != len(s.PureFact)-1 {
+			ret += ","
+		}
 	}
 	return Atom(ret)
 }

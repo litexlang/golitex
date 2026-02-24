@@ -549,7 +549,7 @@ func (p *TbParser) parseInfixRelationalFact(tb *tokenBlock, leftObj Obj, operato
 // normalizeNotEqualFact converts != to "not =" for easier processing
 // This allows us to reuse the commutative property of =
 func (p *TbParser) normalizeNotEqualFact(fact *PureSpecificFactStmt) *PureSpecificFactStmt {
-	if fact != nil && fact.GetPropName() == glob.KeySymbolNotEqual {
+	if fact != nil && fact.Key() == glob.KeySymbolNotEqual {
 		return NewPureSpecificFactStmt(false, glob.KeySymbolEqual, fact.Params, fact.Line)
 	}
 	return fact
