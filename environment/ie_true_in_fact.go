@@ -890,7 +890,7 @@ func (ie *InferEngine) trueInFactInCup(item ast.Obj, cupSet *ast.FnObj, fact *as
 		true,
 		[]string{xItemParam},
 		[]ast.Obj{cupSet.Params[0]},
-		pureFact,
+		[]*ast.PureSpecificFactStmt{pureFact},
 		glob.BuiltinLine0,
 	)
 

@@ -1057,7 +1057,7 @@ func (exec *Executor) setIsFnStmt_ver(stmt *ast.SetIsFnStmt) ast.StmtRet {
 	tupleForExist := ast.NewFnObj(ast.Atom(glob.KeywordTuple), tupleParamsForExist)
 
 	existFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{tupleForExist, stmt.Obj}, glob.BuiltinLine0)
-	existStFact := ast.NewExistSpecificFactStmt(true, []string{randomParamsForExist[len(fnParamSets)]}, []ast.Obj{retSet}, existFact, stmt.Line)
+	existStFact := ast.NewExistSpecificFactStmt(true, []string{randomParamsForExist[len(fnParamSets)]}, []ast.Obj{retSet}, []*ast.PureSpecificFactStmt{existFact}, stmt.Line)
 
 	paramSetsForUniFact2 := fnParamSets
 	domFacts2 := []ast.Spec_OrFact{}

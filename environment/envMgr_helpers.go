@@ -285,16 +285,20 @@ func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFa
 		uniMap2[existFactStruct.ExistFreeParams[i]] = ast.Atom(newExistParams[i])
 	}
 
-	newParams := make([]ast.Obj, len(existFactStruct.PureFact.Params))
-	for i, param := range existFactStruct.PureFact.Params {
-		newParam, err := param.Instantiate(uniMap2)
-		if err != nil {
-			return nil, err
+	newFacts := make([]*ast.PureSpecificFactStmt, len(existFactStruct.PureFact))
+	for i, fact := range existFactStruct.PureFact {
+		newParams := make([]ast.Obj, len(fact.Params))
+		for i, param := range fact.Params {
+			newParam, err := param.Instantiate(uniMap2)
+			if err != nil {
+				return nil, err
+			}
+			newParams[i] = newParam
 		}
-		newParams[i] = newParam
+		newFacts[i] = ast.NewPureSpecificFactStmt(fact.IsTrue, fact.PropName, newParams, existFactStruct.Line)
 	}
 
-	return ast.NewExistSpecificFactStmt(existFactStruct.IsTrue, newExistParams, newExistParamSets, ast.NewPureSpecificFactStmt(existFactStruct.PureFact.IsTrue, existFactStruct.PureFact.PropName, newParams, existFactStruct.Line), existFactStruct.Line), nil
+	return ast.NewExistSpecificFactStmt(existFactStruct.IsTrue, newExistParams, newExistParamSets, newFacts, existFactStruct.Line), nil
 }
 
 // storeSpecFactInMemAndCollect collects the fact string for derived facts tracking
