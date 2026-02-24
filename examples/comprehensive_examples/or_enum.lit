@@ -38,7 +38,7 @@ $equal_set(s, {1,2,3,4,5,6})
 
 let s2 set
 know s2 = {1,2,3,4,5,6}
-s2 $is_finite_set
+$is_finite_set(s2)
 count(s2) = 6
 
 enum x s2:

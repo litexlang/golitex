@@ -441,13 +441,33 @@ func (p *TbParser) inlineOrFactWithFirstFact(tb *tokenBlock, firstFact SpecificF
 // 4. Enum intensional facts (x := {y | ...})
 // After parsing, it skips the statement terminator (comma) if present.
 func (p *TbParser) inline_spec_or_Chain_fact_skip_terminator(tb *tokenBlock) (FactStmt, error) {
+	var ret FactStmt
+	var err error
+
 	// Case 1: Handle facts starting with special prefixes
 	if p.isCurTokenSpecFactPrefix(tb) {
-		return p.parseSpecialPrefixFact(tb)
+		ret, err = p.parseSpecialPrefixFact(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+	} else {
+		// Case 2-4: Handle facts starting with a first-class citizen (obj)
+		ret, err = p.parseFactStartWithObj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
 	}
 
-	// Case 2-4: Handle facts starting with a first-class citizen (obj)
-	return p.parseFactStartWithObj(tb)
+	if tb.header.is(glob.KeywordOr) {
+		retAsSpecificFactStmt, ok := ret.(SpecificFactStmt)
+		if !ok {
+			return nil, fmt.Errorf("expect specific fact statement, got: %T", ret)
+		}
+		return p.inlineOrFactWithFirstFact(tb, retAsSpecificFactStmt)
+	} else {
+		return ret, nil
+	}
 }
 
 // isCurTokenSpecFactPrefix checks if the fact starts with a special prefix
@@ -484,15 +504,45 @@ func (p *TbParser) parseFactStartWithObj(tb *tokenBlock) (FactStmt, error) {
 
 	// Dispatch based on operator type
 	var fact FactStmt
+	var nextObj Obj
+	var propName Atom
 	if operator == glob.FuncFactPrefix {
-		fact, err = p.parseFunctionPropertyFact(tb, obj)
+		// fact, err = p.parseFunctionPropertyFact(tb, obj)
 		// } else if operator == glob.KeySymbolColonEqual {
+
+		propName, err = p.notNumberAtom(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		nextObj, err = p.Obj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
 	} else {
-		fact, err = p.parseInfixRelationalFact(tb, obj, operator)
+		propName = Atom(operator)
+		nextObj, err = p.Obj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
 	}
 
 	if err != nil {
 		return nil, err
+	}
+
+	if tb.header.is(glob.FuncFactPrefix) || glob.IsEqualAndComparisonSignal(tb.header.strAtCurIndexPlus(0)) {
+		fact, err = p.chainPureFact(tb, obj, nextObj, propName)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+	} else {
+		if propName != glob.KeySymbolNotEqual {
+			fact = NewPureSpecificFactStmt(true, propName, []Obj{obj, nextObj}, tb.line)
+		} else {
+			fact = NewPureSpecificFactStmt(false, glob.KeySymbolEqual, []Obj{obj, nextObj}, tb.line)
+		}
 	}
 
 	p.skipStmtComma(tb)

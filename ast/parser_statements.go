@@ -116,7 +116,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 	case glob.KeywordFnIsSubsetOfCartSet:
 		ret, err = p.fnIsSubsetOfCartStmt(tb)
 	default:
-		ret, err = p.factOrFactInferStmt(tb)
+		// ret, err = p.factOrFactInferStmt(tb)
+		ret, err = p.factStmt(tb)
 	}
 
 	if err != nil {
@@ -3416,7 +3417,11 @@ func (p *TbParser) relationalSpecFactOrChainFact(tb *tokenBlock) (FactStmt, erro
 
 			params := []Obj{obj, obj2}
 
-			ret = NewPureSpecificFactStmt(true, propName, params, tb.line)
+			if propName != glob.KeySymbolNotEqual {
+				ret = NewPureSpecificFactStmt(true, propName, params, tb.line)
+			} else {
+				ret = NewPureSpecificFactStmt(false, glob.KeySymbolEqual, params, tb.line)
+			}
 		}
 	} else if glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		obj2, err := p.Obj(tb)
@@ -3441,7 +3446,11 @@ func (p *TbParser) relationalSpecFactOrChainFact(tb *tokenBlock) (FactStmt, erro
 
 		params := []Obj{obj, obj2}
 
-		ret = NewPureSpecificFactStmt(true, Atom(opt), params, tb.line)
+		if Atom(opt) != glob.KeySymbolNotEqual {
+			ret = NewPureSpecificFactStmt(true, Atom(opt), params, tb.line)
+		} else {
+			ret = NewPureSpecificFactStmt(false, glob.KeySymbolEqual, params, tb.line)
+		}
 	} else {
 		return nil, fmt.Errorf("expect relation prop")
 	}
