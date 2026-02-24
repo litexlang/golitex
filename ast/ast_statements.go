@@ -356,7 +356,7 @@ type ProveInferStmt struct {
 type HaveObjStStmt struct {
 	ObjNames StrSlice
 	ObjSets  ObjSlice
-	Fact     *PureSpecificFactStmt
+	Fact     []*PureSpecificFactStmt
 
 	Line uint
 }
@@ -365,7 +365,7 @@ type WitnessStmt struct {
 	ExistParams    StrSlice
 	ExistParamSets ObjSlice
 	EqualTos       ObjSlice
-	Fact           *PureSpecificFactStmt
+	Fact           []*PureSpecificFactStmt
 	Proofs         StmtSlice
 
 	Line uint

@@ -170,7 +170,10 @@ func (s *HaveObjStStmt) InlineString() string {
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
-	builder.WriteString(s.Fact.InlineString())
+	for _, fact := range s.Fact {
+		builder.WriteString(fact.InlineString())
+		builder.WriteString(", ")
+	}
 	return builder.String()
 }
 
