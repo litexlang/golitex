@@ -558,6 +558,13 @@ func (p *TbParser) haveObjStStmt(tb *tokenBlock) (Stmt, error) {
 				return nil, ErrInLine(err, tb)
 			}
 			facts = append(facts, fact)
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+				continue
+			}
+			if tb.header.is(glob.KeySymbolRightCurly) {
+				break
+			}
 		}
 		tb.header.skip(glob.KeySymbolRightCurly)
 		return NewHaveObjStWithParamSetsStmt(names, sets, facts, tb.line), nil
@@ -2697,16 +2704,6 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (SpecificFactStmt,
 		}
 	}()
 
-	pureSpecFact, err := p.specFactStmt(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	// spec fact 必须是 pureFact
-	if _, ok := pureSpecFact.(*PureSpecificFactStmt); !ok {
-		return nil, fmt.Errorf("exist fact can not take exist fact, get %s", pureSpecFact)
-	}
-
 	// params 互相不能相同
 	for i := 0; i < len(existParams); i++ {
 		for j := i + 1; j < len(existParams); j++ {
@@ -2725,6 +2722,10 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (SpecificFactStmt,
 				return nil, ErrInLine(err, tb)
 			}
 			facts = append(facts, fact)
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+				continue
+			}
 		}
 		tb.header.skip(glob.KeySymbolRightCurly)
 		if isTrue {
@@ -2733,6 +2734,11 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (SpecificFactStmt,
 			return NewExistSpecificFactStmt(false, existParams, existParamSets, facts, tb.line), nil
 		}
 	} else {
+		pureSpecFact, err := p.specFactStmt(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
 		specFactAsPureSpecificFactStmt, ok := pureSpecFact.(*PureSpecificFactStmt)
 		if !ok {
 			return nil, fmt.Errorf("expect pure specific fact, got %T", pureSpecFact)
@@ -3761,6 +3767,14 @@ func (p *TbParser) witnessStmt(tb *tokenBlock) (Stmt, error) {
 				return nil, ErrInLine(err, tb)
 			}
 			facts = append(facts, fact)
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+				continue
+			}
+			if tb.header.is(glob.KeySymbolRightCurly) {
+				break
+			}
 		}
 		tb.header.skip(glob.KeySymbolRightCurly)
 	} else {
