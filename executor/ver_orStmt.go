@@ -182,8 +182,14 @@ func (ver *Verifier) matchEachSpecFactInGivenOrFactAndKnownOrFact(knowns []ast.S
 		case *ast.ExistSpecificFactStmt:
 			given := given.(*ast.ExistSpecificFactStmt)
 
-			if given.PureFact.IsTrue != knownAs.PureFact.IsTrue {
+			if len(given.PureFact) != len(knownAs.PureFact) {
 				return ast.NewEmptyUnknownVerRet()
+			}
+
+			for j := range given.PureFact {
+				if given.PureFact[j].IsTrue != knownAs.PureFact[j].IsTrue {
+					return ast.NewEmptyUnknownVerRet()
+				}
 			}
 
 			newFreeExistParamsUnused := ver.Env.GenerateNoDuplicateNames(len(given.ExistFreeParams), map[string]struct{}{})
