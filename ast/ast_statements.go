@@ -22,6 +22,7 @@ type StrSlice []string // 在定义的时候，用string而不是 atom 是有道
 type ObjSlice []Obj
 type ReversibleFacts []Spec_OrFact
 type FactOrByStmtSlice []FactOrByStmt
+type AtomSlice []Atom
 
 type DefLetStmt struct {
 	Objs    StrSlice
@@ -162,11 +163,11 @@ type HaveObjInNonEmptySetStmt struct {
 	Line uint
 }
 
-type EqualsFactStmt struct {
-	Params ObjSlice
+// type ChainPureFact struct {
+// 	Params ObjSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 // type DefFnSetStmt struct {
 // 	TemplateDefHeader *DefHeader
@@ -474,6 +475,13 @@ type LetFn struct {
 	DefHeaderWithDom *DefHeaderWithDom
 	RetSet           Obj
 	ThenFacts        ReversibleFacts
+
+	Line uint
+}
+
+type ChainPureFact struct {
+	Objs      ObjSlice
+	PropNames AtomSlice
 
 	Line uint
 }

@@ -281,16 +281,18 @@ func (stmt *UniFactWithIffStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt
 	return NewUniFactWithIff(newUniFact.(*UniFactStmt), instantiatedIffFacts, stmt.Line), nil
 }
 
-func (stmt *EqualsFactStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {
-	newParams := []Obj{}
-	for _, param := range stmt.Params {
-		newParam, err := param.Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-		newParams = append(newParams, newParam)
+// func (stmt *ChainPureFact) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {
+// 	newObjs, err := stmt.Objs.Instantiate(uniMap)
+// 	...
+// 	return NewChainPureFact(newObjs, stmt.PropNames, stmt.Line), nil
+// }
+
+func (stmt *ChainPureFact) InstantiateFact(uniMap map[string]Obj) (FactStmt, error) {
+	newObjs, err := stmt.Objs.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
 	}
-	return NewEqualsFactStmt(newParams, stmt.Line), nil
+	return NewChainPureFact(newObjs, stmt.PropNames, stmt.Line), nil
 }
 
 func (objSlice ObjSlice) Instantiate(uniMap map[string]Obj) (ObjSlice, error) {
@@ -603,12 +605,18 @@ func (stmt *HaveObjInNonEmptySetStmt) Instantiate(uniMap map[string]Obj) (Stmt, 
 // 	return NewNamedUniFactStmt(newProp.(*DefPropStmt), stmt.Line), nil
 // }
 
-func (stmt *EqualsFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newParams, err := stmt.Params.Instantiate(uniMap)
+// func (stmt *ChainPureFact) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+// 	newObjs, err := stmt.Objs.Instantiate(uniMap)
+// 	...
+// 	return NewChainPureFact(newObjs, stmt.PropNames, stmt.Line), nil
+// }
+
+func (stmt *ChainPureFact) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newObjs, err := stmt.Objs.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
 	}
-	return NewEqualsFactStmt(newParams, stmt.Line), nil
+	return NewChainPureFact(newObjs, stmt.PropNames, stmt.Line), nil
 }
 
 // func (stmt *KnowExistPropStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {

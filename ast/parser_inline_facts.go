@@ -65,7 +65,7 @@ func (p *TbParser) inlineFactThenSkipStmtTerminatorUntilEndSignals(tb *tokenBloc
 		}
 		return uniFact, nil
 	default:
-		return p.inline_spec_or_Equals_fact_skip_terminator(tb)
+		return p.inline_spec_or_Chain_fact_skip_terminator(tb)
 	}
 }
 
@@ -433,14 +433,14 @@ func (p *TbParser) inlineOrFactWithFirstFact(tb *tokenBlock, firstFact SpecificF
 	return NewOrStmt(orFacts, tb.line), nil
 }
 
-// inline_spec_or_Equals_fact_skip_terminator is the main entry point for parsing inline facts.
+// inline_spec_or_Chain_fact_skip_terminator is the main entry point for parsing inline facts.
 // It handles four main cases:
 // 1. Facts starting with special prefixes ($, not, exist)
 // 2. Facts with function-like properties (x $prop y)
 // 3. Facts with infix relational operators (x = y, x > y, etc.)
 // 4. Enum intensional facts (x := {y | ...})
 // After parsing, it skips the statement terminator (comma) if present.
-func (p *TbParser) inline_spec_or_Equals_fact_skip_terminator(tb *tokenBlock) (FactStmt, error) {
+func (p *TbParser) inline_spec_or_Chain_fact_skip_terminator(tb *tokenBlock) (FactStmt, error) {
 	// Case 1: Handle facts starting with special prefixes
 	if p.isCurTokenSpecFactPrefix(tb) {
 		return p.parseSpecialPrefixFact(tb)
@@ -529,11 +529,6 @@ func (p *TbParser) parseInfixRelationalFact(tb *tokenBlock, leftObj Obj, operato
 	rightObj, err := p.Obj(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
-	}
-
-	// Handle special case: double equals (==)
-	if operator == glob.KeySymbolEqual && tb.header.is(glob.KeySymbolEqual) {
-		return p.relaEqualsFactStmt(tb, leftObj, rightObj)
 	}
 
 	// Create the fact
@@ -676,3 +671,44 @@ func (p *TbParser) inlineFacts(tb *tokenBlock, ends []string) ([]FactStmt, error
 
 // 	return facts, nil
 // }
+
+func (p *TbParser) chainPureFact(tb *tokenBlock, leftObj Obj, rightObj Obj, propName Atom) (FactStmt, error) {
+	objs := ObjSlice{leftObj, rightObj}
+	propNames := AtomSlice{propName}
+
+	for !tb.header.ExceedEnd() {
+		curToken, err := tb.header.currentToken()
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		if glob.IsEqualAndComparisonSignal(curToken) {
+			nextToken, err := tb.header.next()
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			nextObj, err := p.Obj(tb)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			objs = append(objs, nextObj)
+			propNames = append(propNames, Atom(nextToken))
+		} else if tb.header.is(glob.FuncFactPrefix) {
+			tb.header.skip(glob.FuncFactPrefix)
+			propName, err := p.notNumberAtom(tb)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			propNames = append(propNames, propName)
+
+			nextObj, err := p.Obj(tb)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			objs = append(objs, nextObj)
+		} else {
+			break
+		}
+	}
+
+	return NewChainPureFact(objs, propNames, tb.line), nil
+}

@@ -321,17 +321,28 @@ func (s *HaveObjInNonEmptySetStmt) InlineString() string { panic("") }
 
 // func (s *NamedUniFactStmt) InlineString() string    { panic("") }
 
-func (s *EqualsFactStmt) InlineString() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeySymbolEqual)
-	builder.WriteString(glob.KeySymbolLeftBrace)
-	objSlice := make([]string, len(s.Params))
-	for i, param := range s.Params {
-		objSlice[i] = param.String()
+// func (s *ChainPureFact) InlineString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeySymbolEqual)
+// 	builder.WriteString(glob.KeySymbolLeftBrace)
+// 	objSlice := make([]string, len(s.Params))
+// 	for i, param := range s.Params {
+// 		objSlice[i] = param.String()
+// 	}
+// 	builder.WriteString(strings.Join(objSlice, ", "))
+// 	builder.WriteString(glob.KeySymbolRightBrace)
+// 	return builder.String()
+// }
+
+func (c *ChainPureFact) InlineString() string {
+	var parts []string
+	for i, obj := range c.Objs {
+		parts = append(parts, obj.String())
+		if i < len(c.PropNames) {
+			parts = append(parts, c.PropNames[i].String())
+		}
 	}
-	builder.WriteString(strings.Join(objSlice, ", "))
-	builder.WriteString(glob.KeySymbolRightBrace)
-	return builder.String()
+	return strings.Join(parts, " ")
 }
 
 // func (s *KnowExistPropStmt) InlineString() string { panic("") }

@@ -356,6 +356,19 @@ var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 	KeywordRange:       {},
 }
 
+var EqualAndComparisonSignals map[string]struct{} = map[string]struct{}{
+	KeySymbolEqual:       {},
+	KeySymbolLargerEqual: {},
+	KeySymbolLessEqual:   {},
+	KeySymbolGreater:     {},
+	KeySymbolLess:        {},
+}
+
+func IsEqualAndComparisonSignal(name string) bool {
+	_, ok := EqualAndComparisonSignals[name]
+	return ok
+}
+
 var BuiltinPropNames map[string]struct{} = map[string]struct{}{
 	KeywordIn:             {},
 	KeywordIsASet:         {},

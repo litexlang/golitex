@@ -135,8 +135,12 @@ func NewHaveObjInNonEmptySetStmt(objNames []string, objSets []Obj, line uint) *H
 // 	return &NamedUniFactStmt{defPropStmt, line}
 // }
 
-func NewEqualsFactStmt(params ObjSlice, line uint) *EqualsFactStmt {
-	return &EqualsFactStmt{params, line}
+// func NewEqualsFactStmt(params ObjSlice, line uint) *ChainPureFact {
+// 	return &ChainPureFact{...}  // now NewChainPureFact(objs, propNames, line)
+// }
+
+func NewChainPureFact(objs ObjSlice, propNames AtomSlice, line uint) *ChainPureFact {
+	return &ChainPureFact{Objs: objs, PropNames: propNames, Line: line}
 }
 
 // func NewKnowExistPropStmt(existProp *DefExistPropStmt, line uint) *KnowExistPropStmt {
