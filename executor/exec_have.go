@@ -305,7 +305,6 @@ func (exec *Executor) checkHaveFnStmt(stmt *ast.HaveFnStmt) ast.StmtRet {
 	return exec.NewTrueStmtRet(stmt)
 }
 
-
 // verifyCasesOrAndNoOverlap is a helper function to verify both:
 // 1. cases cover all possibilities (or cases holds)
 // 2. cases don't overlap
@@ -513,7 +512,12 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) ast.StmtRet {
 	}
 
 	// define
-	retStmt2 := exec.Env.DefLetStmt(ast.NewDefLetStmt(stmt.ObjNames, stmt.ObjSets, []ast.FactStmt{stmt.Fact}, stmt.Line))
+	factStmts := []ast.FactStmt{}
+	for _, fact := range existStFact.PureFact {
+		factStmts = append(factStmts, fact)
+	}
+
+	retStmt2 := exec.Env.DefLetStmt(ast.NewDefLetStmt(stmt.ObjNames, stmt.ObjSets, factStmts, stmt.Line))
 	if retStmt2.IsErr() {
 		return exec.NewTrueStmtRet(stmt).AddExtraInfos(retStmt2.GetExtraInfos())
 	}

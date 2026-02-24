@@ -18,7 +18,7 @@ import (
 	ast "golitex/ast"
 )
 
-func (exec *Executor) proveExistStmt(stmt *ast.WitnessStmt) ast.StmtRet{
+func (exec *Executor) proveExistStmt(stmt *ast.WitnessStmt) ast.StmtRet {
 	// given equal tos are in those
 	execState := exec.proveExistStmt_Prove(stmt)
 	if execState.IsNotTrue() {
@@ -33,7 +33,7 @@ func (exec *Executor) proveExistStmt(stmt *ast.WitnessStmt) ast.StmtRet{
 	return execState
 }
 
-func (exec *Executor) proveExistStmt_Prove(stmt *ast.WitnessStmt) ast.StmtRet{
+func (exec *Executor) proveExistStmt_Prove(stmt *ast.WitnessStmt) ast.StmtRet {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -68,22 +68,24 @@ func (exec *Executor) proveExistStmt_Prove(stmt *ast.WitnessStmt) ast.StmtRet{
 		uniMap[stmt.ExistParams[i]] = equalTo
 	}
 
-	instFact, err := stmt.Fact.InstantiateFact(uniMap)
-	if err != nil {
-		return ast.StmtErrRet(stmt, err.Error())
-	}
+	for _, fact := range stmt.Fact {
+		instFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return ast.StmtErrRet(stmt, err.Error())
+		}
 
-	execState := exec.factStmt(instFact)
-	if execState.IsNotTrue() {
-		return execState
-	}
+		execState := exec.factStmt(instFact)
+		if execState.IsNotTrue() {
+			return execState
+		}
 
-	verProcessRets = append(verProcessRets, execState.GetVerifyProcess()...)
+		verProcessRets = append(verProcessRets, execState.GetVerifyProcess()...)
+	}
 
 	return ast.NewTrueStmtEmptyRet(stmt).AddVerifyProcesses(verProcessRets)
 }
 
-func (exec *Executor) proveExistStmt_NewFact(stmt *ast.WitnessStmt) ast.StmtRet{
+func (exec *Executor) proveExistStmt_NewFact(stmt *ast.WitnessStmt) ast.StmtRet {
 	newFact := stmt.ToTrueExistStFact()
 	ret := exec.Env.NewFactWithCheckingNameDefined(newFact)
 	if ret.IsErr() {

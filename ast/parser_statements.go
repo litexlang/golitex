@@ -2716,15 +2716,32 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (SpecificFactStmt,
 		}
 	}
 
-	specFactAsPureSpecificFactStmt, ok := pureSpecFact.(*PureSpecificFactStmt)
-	if !ok {
-		return nil, fmt.Errorf("expect pure specific fact, got %T", pureSpecFact)
-	}
-
-	if isTrue {
-		return NewExistSpecificFactStmt(true, existParams, existParamSets, specFactAsPureSpecificFactStmt, tb.line), nil
+	if tb.header.is(glob.KeySymbolLeftCurly) {
+		tb.header.skip(glob.KeySymbolLeftCurly)
+		facts := []*PureSpecificFactStmt{}
+		for !tb.header.is(glob.KeySymbolRightCurly) {
+			fact, err := p.pureFuncSpecFact(tb)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			facts = append(facts, fact)
+		}
+		tb.header.skip(glob.KeySymbolRightCurly)
+		if isTrue {
+			return NewExistSpecificFactStmt(true, existParams, existParamSets, facts, tb.line), nil
+		} else {
+			return NewExistSpecificFactStmt(false, existParams, existParamSets, facts, tb.line), nil
+		}
 	} else {
-		return NewExistSpecificFactStmt(false, existParams, existParamSets, specFactAsPureSpecificFactStmt, tb.line), nil
+		specFactAsPureSpecificFactStmt, ok := pureSpecFact.(*PureSpecificFactStmt)
+		if !ok {
+			return nil, fmt.Errorf("expect pure specific fact, got %T", pureSpecFact)
+		}
+		if isTrue {
+			return NewExistSpecificFactStmt(true, existParams, existParamSets, []*PureSpecificFactStmt{specFactAsPureSpecificFactStmt}, tb.line), nil
+		} else {
+			return NewExistSpecificFactStmt(false, existParams, existParamSets, []*PureSpecificFactStmt{specFactAsPureSpecificFactStmt}, tb.line), nil
+		}
 	}
 }
 
@@ -3735,18 +3752,32 @@ func (p *TbParser) witnessStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(fmt.Errorf("number of equal tos must be equal to number of parameters, got %d equal tos and %d param sets", len(equalTos), len(paramSets)), tb)
 	}
 
-	fact, err := p.specFactWithoutExist_WithoutNot(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+	facts := []*PureSpecificFactStmt{}
+	if tb.header.is(glob.KeySymbolLeftCurly) {
+		tb.header.skip(glob.KeySymbolLeftCurly)
+		for !tb.header.is(glob.KeySymbolRightCurly) {
+			fact, err := p.pureFuncSpecFact(tb)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			facts = append(facts, fact)
+		}
+		tb.header.skip(glob.KeySymbolRightCurly)
+	} else {
+		fact, err := p.specFactWithoutExist_WithoutNot(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
 
-	specFactAsPureSpecificFactStmt, ok := fact.(*PureSpecificFactStmt)
-	if !ok {
-		return nil, fmt.Errorf("expect pure specific fact, got %T", fact)
+		specFactAsPureSpecificFactStmt, ok := fact.(*PureSpecificFactStmt)
+		if !ok {
+			return nil, fmt.Errorf("expect pure specific fact, got %T", fact)
+		}
+		facts = append(facts, specFactAsPureSpecificFactStmt)
 	}
 
 	if tb.header.ExceedEnd() {
-		return NewProveExistStmt(params, paramSets, equalTos, specFactAsPureSpecificFactStmt, []Stmt{}, tb.line), nil
+		return NewProveExistStmt(params, paramSets, equalTos, facts, []Stmt{}, tb.line), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -3759,7 +3790,7 @@ func (p *TbParser) witnessStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	return NewProveExistStmt(params, paramSets, equalTos, specFactAsPureSpecificFactStmt, proofs, tb.line), nil
+	return NewProveExistStmt(params, paramSets, equalTos, facts, proofs, tb.line), nil
 }
 
 func (p *TbParser) inferTemplateStmt(tb *tokenBlock) (*InferTemplateStmt, error) {

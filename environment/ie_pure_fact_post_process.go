@@ -45,7 +45,12 @@ func (ie *InferEngine) newFalseExist(fact *ast.ExistSpecificFactStmt) ast.InferR
 		paramSets = append(paramSets, ast.Atom(glob.KeywordSet))
 	}
 
-	equivalentForall := ast.NewUniFact(fact.ExistFreeParams, paramSets, []ast.Spec_OrFact{}, []ast.Spec_OrFact{fact.PureFact.ReverseIsTrue()[0]}, fact.Line)
+	reversePureFacts := ast.SpecFactPtrSlice{}
+	for _, fact := range fact.PureFact {
+		reversePureFacts = append(reversePureFacts, fact.ReverseIsTrue()[0].(*ast.PureSpecificFactStmt))
+	}
+
+	equivalentForall := ast.NewUniFact(fact.ExistFreeParams, paramSets, []ast.Spec_OrFact{}, []ast.Spec_OrFact{ast.NewOrStmt(reversePureFacts, fact.Line)}, fact.Line)
 	ret := ie.EnvMgr.newUniFact(equivalentForall)
 	if ret.IsErr() {
 		return ret
