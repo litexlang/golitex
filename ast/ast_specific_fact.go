@@ -44,7 +44,11 @@ func (s *PureSpecificFactStmt) GetPropName() Atom {
 }
 
 func (s *ExistSpecificFactStmt) GetPropName() Atom {
-	return s.PureFact.PropName
+	ret := ""
+	for _, pureFact := range s.PureFact {
+		ret += pureFact.PropName.String()
+	}
+	return Atom(ret)
 }
 
 type PureSpecificFactStmt struct {
@@ -58,7 +62,7 @@ type ExistSpecificFactStmt struct {
 	IsTrue             bool
 	ExistFreeParams    []string
 	ExistFreeParamSets ObjSlice
-	PureFact           *PureSpecificFactStmt
+	PureFact           []*PureSpecificFactStmt
 	Line               uint
 }
 
@@ -113,10 +117,14 @@ func (e *ExistSpecificFactStmt) ReplaceFreeParamsWithNewParams(newExistFreeParam
 		uniMap[e.ExistFreeParams[i]] = Atom(newExistFreeParams[i])
 	}
 
-	newPureFact, err := e.PureFact.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
+	newPureFact := make([]*PureSpecificFactStmt, len(e.PureFact))
+	for i, pureFact := range e.PureFact {
+		tmp, err := pureFact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newPureFact[i] = tmp.(*PureSpecificFactStmt)
 	}
 
-	return NewExistSpecificFactStmt(e.IsTrue, newExistFreeParams, newParamSets, newPureFact.(*PureSpecificFactStmt), e.Line), nil
+	return NewExistSpecificFactStmt(e.IsTrue, newExistFreeParams, newParamSets, newPureFact, e.Line), nil
 }

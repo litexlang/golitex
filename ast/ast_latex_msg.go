@@ -485,8 +485,15 @@ func (s *HaveObjStStmt) ToLatexString() string {
 	builder.WriteString("\\begin{definition}[Object(s) Exists By Verified Existential Fact]\n")
 
 	builder.WriteString(" we have ")
-	builder.WriteString(objParamsLatexString(s.Fact.Params))
-	builder.WriteString(fmt.Sprintf(" which makes existential fact %s true", propNameParamsLatexString(s.Fact.PropName, s.Fact.Params)))
+	for _, fact := range s.Fact {
+		builder.WriteString(objParamsLatexString(fact.Params))
+		builder.WriteString(", ")
+	}
+
+	for _, fact := range s.Fact {
+		builder.WriteString(fmt.Sprintf(" which makes existential fact %s true", propNameParamsLatexString(fact.PropName, fact.Params)))
+		builder.WriteString(", ")
+	}
 
 	builder.WriteString("\n\\end{definition}")
 	return builder.String()
