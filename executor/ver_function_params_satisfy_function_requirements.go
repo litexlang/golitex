@@ -18,6 +18,7 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
+	kernel_lib_litex_code "golitex/kernel_litex_code"
 )
 
 func (ver *Verifier) objSatisfyFnReq(obj ast.Obj, state *VerState) ast.VerRet {
@@ -41,9 +42,24 @@ func (ver *Verifier) objSatisfyFnReq(obj ast.Obj, state *VerState) ast.VerRet {
 }
 
 func (ver *Verifier) fnObjSatisfyFnReq(fnObj *ast.FnObj, state *VerState) ast.VerRet {
-	fnSet := ver.Env.GetFnInFnSet(fnObj.FnHead.String())
-	if fnSet == nil {
-		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("%s is not defined function", fnObj.String()))
+	var fnSet ast.FnSetObj
+	if fnObj.FnHead.String() == glob.KeySymbolPlus {
+		fnSet = kernel_lib_litex_code.AddFn
+	} else if fnObj.FnHead.String() == glob.KeySymbolMinus {
+		fnSet = kernel_lib_litex_code.SubtractFn
+	} else if fnObj.FnHead.String() == glob.KeySymbolStar {
+		fnSet = kernel_lib_litex_code.MultiplyFn
+	} else if fnObj.FnHead.String() == glob.KeySymbolSlash {
+		fnSet = kernel_lib_litex_code.DivideFn
+	} else if fnObj.FnHead.String() == glob.KeySymbolPercent {
+		fnSet = kernel_lib_litex_code.ModFn
+	} else if fnObj.FnHead.String() == glob.KeySymbolPower {
+		fnSet = kernel_lib_litex_code.PowerFn
+	} else {
+		fnSet = ver.Env.GetFnInFnSet(fnObj.FnHead.String())
+		if fnSet == nil {
+			return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("%s is not defined function", fnObj.String()))
+		}
 	}
 
 	// 因为我们已经知道了 f(a) 是函数了，所以f(a)的正确性已经在之前检查过了，所以不检查了。但，我们还是查一下 fnHead 是不是满足条件，比如fnObj是 f(a)(b) 那么要看看a是不是满足f的条件。

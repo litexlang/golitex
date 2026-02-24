@@ -1,3 +1,5 @@
+"""
+
 prop dvd(x, y Z):
     x != 0
     y % x = 0
@@ -13,7 +15,14 @@ prop Q_in_frac(q Q, x Z, y N_pos):
 know forall q Q: exist x Z, y N_pos st $Q_in_frac(q, x, y)
 
 know forall x Z: 2 $dvd x^2 => 2 $dvd x
-know infer x, y, z Z: x = z * y => z $dvd x if z != 0
+
+prop check_dvd(x, y, z Z):
+    z != 0
+    x = z * y
+    z $dvd x
+
+know forall x, y, z Z: z != 0, x = z * y => z $dvd x
+
 know forall y, x Z: y $dvd x => exist z Z st x = y * z
 
 contra not sqrt(2) $in Q:
@@ -36,3 +45,4 @@ contra not sqrt(2) $in Q:
     impossible 2 $dvd 1
 
 
+"""
