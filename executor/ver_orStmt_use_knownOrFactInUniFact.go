@@ -147,8 +147,14 @@ func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactS
 				return false, nil
 			}
 
-			if curGivenAs.PureFact.IsTrue != curGivenAs.PureFact.IsTrue {
+			if len(curGivenAs.PureFact) != len(curKnownAs.PureFact) {
 				return false, nil
+			}
+
+			for j := range curGivenAs.PureFact {
+				if curGivenAs.PureFact[j].IsTrue != curKnownAs.PureFact[j].IsTrue {
+					return false, nil
+				}
 			}
 
 			newFreeExistParamsUnused := ver.Env.GenerateNoDuplicateNames(len(curGivenAs.ExistFreeParams), map[string]struct{}{})
@@ -163,7 +169,17 @@ func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactS
 				return false, nil
 			}
 
-			allInstParamsThatEachFreeParamMatchesMap := ver.getAllObjectsThatEachFreeParamMatchesInExistFactByItsPureFact(knownUniFact.Params, newCurGiven.ExistFreeParams, newCurKnown.PureFact.Params, newCurGiven.PureFact.Params)
+			allParamsInNewCurKnown := []ast.Obj{}
+			for _, fact := range newCurKnown.PureFact {
+				allParamsInNewCurKnown = append(allParamsInNewCurKnown, fact.Params...)
+			}
+
+			allParamsInNewCurGiven := []ast.Obj{}
+			for _, fact := range newCurGiven.PureFact {
+				allParamsInNewCurGiven = append(allParamsInNewCurGiven, fact.Params...)
+			}
+
+			allInstParamsThatEachFreeParamMatchesMap := ver.getAllObjectsThatEachFreeParamMatchesInExistFactByItsPureFact(knownUniFact.Params, newCurGiven.ExistFreeParams, allParamsInNewCurKnown, allParamsInNewCurGiven)
 			for key, value := range allInstParamsThatEachFreeParamMatchesMap {
 				freeParamObjMaps[key] = append(freeParamObjMaps[key], value...)
 			}

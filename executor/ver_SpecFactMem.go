@@ -92,13 +92,24 @@ func (ver *Verifier) matchGivenExistFactWithOnesInKnownUniFacts(knownFacts []env
 		return ast.NewEmptyVerRetErr()
 	}
 
+LoopOverKnownFacts:
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		newKnownUniFact := ver.Env.GetUniFactFactFreeParamsNotConflictWithDefinedParams(knownFacts[i].UniFact, usedNamesAsExistFreeParams)
 
 		knownExistFactInUni := newKnownUniFact.ThenFacts[knownFacts[i].SpecFactIndex].(*ast.ExistSpecificFactStmt)
 
-		if len(knownExistFactInUni.ExistFreeParams) != len(given.ExistFreeParams) || len(knownExistFactInUni.PureFact.Params) != len(given.PureFact.Params) {
-			return ast.NewEmptyUnknownVerRet()
+		if len(knownExistFactInUni.ExistFreeParams) != len(given.ExistFreeParams) {
+			continue LoopOverKnownFacts
+		}
+
+		if len(knownExistFactInUni.PureFact) != len(given.PureFact) {
+			continue LoopOverKnownFacts
+		}
+
+		for j := range knownExistFactInUni.PureFact {
+			if given.PureFact[j].IsTrue != knownExistFactInUni.PureFact[j].IsTrue {
+				continue LoopOverKnownFacts
+			}
 		}
 
 		newKnownExistInUni, err := knownExistFactInUni.ReplaceFreeParamsWithNewParams(newFreeExistParamsUnused)
@@ -106,10 +117,26 @@ func (ver *Verifier) matchGivenExistFactWithOnesInKnownUniFacts(knownFacts []env
 			return ast.NewEmptyVerRetErr()
 		}
 
-		ret := ver.matchExistFactWithOneInKnownUniFactAndCheckMatchedObjsSatisfyUniFactConditions(newKnownUniFact, newKnownExistInUni, newGiven, state)
-		if ret.IsTrue() {
-			return ret
+		verRet := ver.matchExistFactWithOneInKnownUniFactAndCheckMatchedObjsSatisfyUniFactConditions(newKnownUniFact, newKnownExistInUni, newGiven, state)
+		if verRet.IsErr() || verRet.IsUnknown() {
+			continue LoopOverKnownFacts
 		}
+
+		return ast.NewTrueVerRet(nil, nil, "")
+
+		// if len(knownExistFactInUni.ExistFreeParams) != len(given.ExistFreeParams) || len(knownExistFactInUni.PureFact.Params) != len(given.PureFact.Params) {
+		// 	return ast.NewEmptyUnknownVerRet()
+		// }
+
+		// newKnownExistInUni, err := knownExistFactInUni.ReplaceFreeParamsWithNewParams(newFreeExistParamsUnused)
+		// if err != nil {
+		// 	return ast.NewEmptyVerRetErr()
+		// }
+
+		// ret := ver.matchExistFactWithOneInKnownUniFactAndCheckMatchedObjsSatisfyUniFactConditions(newKnownUniFact, newKnownExistInUni, newGiven, state)
+		// if ret.IsTrue() {
+		// 	return ret
+		// }
 	}
 
 	return ast.NewEmptyUnknownVerRet()
