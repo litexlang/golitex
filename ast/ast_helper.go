@@ -142,7 +142,7 @@ func (stmt *UniFactStmt) ParamInParamSet() []*PureSpecificFactStmt {
 func (stmt *ChainPureFact) ToFacts() []*PureSpecificFactStmt {
 	ret := make([]*PureSpecificFactStmt, len(stmt.Objs)-1)
 	for i := range len(stmt.Objs) - 1 {
-		ret[i] = NewEqualFact(stmt.Objs[i], stmt.Objs[i+1])
+		ret[i] = NewPureSpecificFactStmt(true, Atom(stmt.PropNames[i]), []Obj{stmt.Objs[i], stmt.Objs[i+1]}, glob.BuiltinLine0)
 	}
 	return ret
 }
