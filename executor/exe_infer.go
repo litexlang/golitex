@@ -160,7 +160,7 @@ func (ver *Verifier) checkFactTypeAndPropNamesMatch(knownFact ast.Spec_OrFact, i
 	switch knownAs := knownFact.(type) {
 	case ast.SpecificFactStmt:
 		if implyAs, ok := implyFact.(ast.SpecificFactStmt); ok {
-			if knownAs.GetPropName() != implyAs.GetPropName() {
+			if knownAs.Key() != implyAs.Key() {
 				return false
 			}
 
@@ -178,7 +178,7 @@ func (ver *Verifier) checkFactTypeAndPropNamesMatch(knownFact ast.Spec_OrFact, i
 			}
 
 			for j := range implyAs.Facts {
-				if knownAs.Facts[j].GetPropName() != implyAs.Facts[j].GetPropName() {
+				if knownAs.Facts[j].Key() != implyAs.Facts[j].Key() {
 					return false
 				}
 			}
@@ -274,7 +274,7 @@ func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImply
 func (ver *Verifier) matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFact ast.SpecificFactStmt, freeVars []string, instFact ast.SpecificFactStmt) (bool, map[string]ast.Obj, error) {
 	switch instFactAs := instFact.(type) {
 	case *ast.PureSpecificFactStmt:
-		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.(*ast.PureSpecificFactStmt).Params, freeVars, instFactAs.Params, string(instFactAs.GetPropName()), map[string]ast.Obj{})
+		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.(*ast.PureSpecificFactStmt).Params, freeVars, instFactAs.Params, string(instFactAs.Key()), map[string]ast.Obj{})
 	default:
 		return false, nil, nil
 	}

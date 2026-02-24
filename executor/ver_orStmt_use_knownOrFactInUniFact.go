@@ -56,7 +56,7 @@ func (ver *Verifier) verOrStmtByUniFactMem(stmt *ast.OrStmt, state *VerState) as
 }
 
 func (ver *Verifier) verOrFactByUniFactMemAtEnv(curEnv *env.EnvMemory, stmt *ast.OrStmt, state *VerState) ast.VerRet {
-	key := string(stmt.Facts[0].GetPropName())
+	key := string(stmt.Facts[0].Key())
 	knownOrFacts, got := curEnv.OrFactInUniFactMem[key]
 	if !got {
 		return ast.NewEmptyUnknownVerRet()

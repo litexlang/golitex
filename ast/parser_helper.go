@@ -22,13 +22,19 @@ import (
 func NoSelfReferenceInPropDef(propName string, facts []FactStmt) error {
 	for _, fact := range facts {
 		switch asFactStmt := fact.(type) {
-		case SpecificFactStmt:
-			if asFactStmt.GetPropName().String() == propName {
+		case *PureSpecificFactStmt:
+			if asFactStmt.Key().String() == propName {
 				return fmt.Errorf("self reference in prop definition: %s", propName)
+			}
+		case *ExistSpecificFactStmt:
+			for _, pureFact := range asFactStmt.PureFact {
+				if pureFact.Key().String() == propName {
+					return fmt.Errorf("self reference in prop definition: %s", propName)
+				}
 			}
 		case *OrStmt:
 			for _, fact := range asFactStmt.Facts {
-				if fact.GetPropName().String() == propName {
+				if fact.Key().String() == propName {
 					return fmt.Errorf("self reference in prop definition: %s", propName)
 				}
 			}

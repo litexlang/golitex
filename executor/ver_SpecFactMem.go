@@ -224,13 +224,13 @@ func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.EnvMemory, stmt ast.Spec
 		}
 	case *ast.ExistSpecificFactStmt:
 		if asFact.IsTrue {
-			sameEnumPkgPropFacts, memExist := curEnv.KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())]
+			sameEnumPkgPropFacts, memExist := curEnv.KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.Key())]
 			if !memExist {
 				return ast.NewEmptyUnknownVerRet()
 			}
 			return ver.iterateKnownExistSpecFacts_applyObjEqualSpec(asFact, sameEnumPkgPropFacts, state)
 		} else {
-			sameEnumPkgPropFacts, memExist := curEnv.KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())]
+			sameEnumPkgPropFacts, memExist := curEnv.KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.Key())]
 			if !memExist {
 				return ast.NewEmptyUnknownVerRet()
 			}

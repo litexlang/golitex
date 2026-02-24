@@ -50,13 +50,22 @@ func (ie *InferEngine) newFalseExist(fact *ast.ExistSpecificFactStmt) ast.InferR
 		reversePureFacts = append(reversePureFacts, fact.ReverseIsTrue()[0].(*ast.PureSpecificFactStmt))
 	}
 
-	equivalentForall := ast.NewUniFact(fact.ExistFreeParams, paramSets, []ast.Spec_OrFact{}, []ast.Spec_OrFact{ast.NewOrStmt(reversePureFacts, fact.Line)}, fact.Line)
-	ret := ie.EnvMgr.newUniFact(equivalentForall)
-	if ret.IsErr() {
-		return ret
-	}
+	if len(reversePureFacts) == 1 {
+		equivalentForall := ast.NewUniFact(fact.ExistFreeParams, paramSets, []ast.Spec_OrFact{}, []ast.Spec_OrFact{reversePureFacts[0]}, fact.Line)
+		ret := ie.EnvMgr.newUniFact(equivalentForall)
+		if ret.IsErr() {
+			return ret
+		}
+		return ast.NewTrueInferRet(equivalentForall)
+	} else {
+		equivalentForall := ast.NewUniFact(fact.ExistFreeParams, paramSets, []ast.Spec_OrFact{}, []ast.Spec_OrFact{ast.NewOrStmt(reversePureFacts, fact.Line)}, fact.Line)
+		ret := ie.EnvMgr.newUniFact(equivalentForall)
+		if ret.IsErr() {
+			return ret
+		}
 
-	return ast.NewTrueInferRet(equivalentForall)
+		return ast.NewTrueInferRet(equivalentForall)
+	}
 }
 
 // newTrueExist handles postprocessing for TrueExist_St facts

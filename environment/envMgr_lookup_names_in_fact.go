@@ -105,7 +105,7 @@ func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.PureSpecificFactStmt)
 	}
 
 	// Check if it's a regular prop defined by user
-	_, ok := envMgr.GetPropDef(stmt.GetPropName())
+	_, ok := envMgr.GetPropDef(stmt.Key())
 	if ok {
 		return ast.NewTrueStmtEmptyRet(stmt)
 	}

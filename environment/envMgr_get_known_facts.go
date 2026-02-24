@@ -164,7 +164,7 @@ func (s SpecFactInUniFactMem) GetSameEnumPkgPropFacts(stmt ast.SpecificFactStmt)
 		return nil, false
 	}
 
-	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.GetPropName())]
+	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.Key())]
 	if !memExist {
 		return nil, false
 	}
@@ -177,13 +177,13 @@ func (s SpecFactInUniFactMem) newFact(stmtAsSpecFactIndex int, uniFact *ast.UniF
 
 	sameEnumFacts, ok := s.getSameEnumFacts(stmtAsSpecFact)
 	if !ok {
-		return ast.NewErrInferRet(uniFact).AddExtraInfo(fmt.Sprintf("failed to get same enum facts for spec fact %s", stmtAsSpecFact.GetPropName()))
+		return ast.NewErrInferRet(uniFact).AddExtraInfo(fmt.Sprintf("failed to get same enum facts for spec fact %s", stmtAsSpecFact.Key()))
 	}
 
-	if _, ok := sameEnumFacts[string(stmtAsSpecFact.GetPropName())]; !ok {
-		sameEnumFacts[string(stmtAsSpecFact.GetPropName())] = []KnownSpecFact_InUniFact{}
+	if _, ok := sameEnumFacts[string(stmtAsSpecFact.Key())]; !ok {
+		sameEnumFacts[string(stmtAsSpecFact.Key())] = []KnownSpecFact_InUniFact{}
 	}
-	sameEnumFacts[string(stmtAsSpecFact.GetPropName())] = append(sameEnumFacts[string(stmtAsSpecFact.GetPropName())], KnownSpecFact_InUniFact{stmtAsSpecFactIndex, uniFact})
+	sameEnumFacts[string(stmtAsSpecFact.Key())] = append(sameEnumFacts[string(stmtAsSpecFact.Key())], KnownSpecFact_InUniFact{stmtAsSpecFactIndex, uniFact})
 
 	return ast.NewTrueInferRet(uniFact)
 }
@@ -213,7 +213,7 @@ func (s SpecFactInImplyTemplateMem) GetSameEnumPkgPropFacts(stmt ast.SpecificFac
 		return nil, false
 	}
 
-	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.GetPropName())]
+	sameEnumPkgPropFacts, memExist := sameEnumFacts[string(stmt.Key())]
 	if !memExist {
 		return nil, false
 	}
@@ -236,10 +236,10 @@ func (s SpecFactInImplyTemplateMem) newFact(known ast.Spec_OrFact, implyTemplate
 		return ret
 	}
 
-	if _, ok := sameEnumFacts[string(stmtAsSpecFact.GetPropName())]; !ok {
-		sameEnumFacts[string(stmtAsSpecFact.GetPropName())] = []KnownSpecFact_InImplyTemplate{}
+	if _, ok := sameEnumFacts[string(stmtAsSpecFact.Key())]; !ok {
+		sameEnumFacts[string(stmtAsSpecFact.Key())] = []KnownSpecFact_InImplyTemplate{}
 	}
-	sameEnumFacts[string(stmtAsSpecFact.GetPropName())] = append(sameEnumFacts[string(stmtAsSpecFact.GetPropName())], NewKnownSpecFact_InImplyTemplate(known, implyTemplate))
+	sameEnumFacts[string(stmtAsSpecFact.Key())] = append(sameEnumFacts[string(stmtAsSpecFact.Key())], NewKnownSpecFact_InImplyTemplate(known, implyTemplate))
 
 	return ast.NewTrueStmtEmptyRet(implyTemplate)
 }

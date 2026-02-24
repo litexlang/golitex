@@ -105,35 +105,35 @@ func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecificFactStmt) ast.InferRet
 	switch asFact := stmt.(type) {
 	case *ast.PureSpecificFactStmt:
 		if asFact.IsTrue {
-			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())]
+			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.Key())]
 			if !ok {
-				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())] = []*ast.PureSpecificFactStmt{}
+				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.Key())] = []*ast.PureSpecificFactStmt{}
 			}
 
-			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())], asFact)
+			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.Key())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.Key())], asFact)
 			return ast.NewTrueInferRet(stmt)
 		} else {
-			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())]
+			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.Key())]
 			if !ok {
-				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())] = []*ast.PureSpecificFactStmt{}
+				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.Key())] = []*ast.PureSpecificFactStmt{}
 			}
-			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())], asFact)
+			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.Key())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.Key())], asFact)
 			return ast.NewTrueInferRet(stmt)
 		}
 	case *ast.ExistSpecificFactStmt:
 		if asFact.IsTrue {
-			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())]
+			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.Key())]
 			if !ok {
-				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())] = []*ast.ExistSpecificFactStmt{}
+				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.Key())] = []*ast.ExistSpecificFactStmt{}
 			}
-			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())], asFact)
+			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.Key())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.Key())], asFact)
 			return ast.NewTrueInferRet(stmt)
 		} else {
-			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())]
+			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.Key())]
 			if !ok {
-				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())] = []*ast.ExistSpecificFactStmt{}
+				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.Key())] = []*ast.ExistSpecificFactStmt{}
 			}
-			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())], asFact)
+			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.Key())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.Key())], asFact)
 			return ast.NewTrueInferRet(stmt)
 		}
 	}
