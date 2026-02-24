@@ -46,7 +46,7 @@ func (ie *InferEngine) newFalseExist(fact *ast.ExistSpecificFactStmt) ast.InferR
 	}
 
 	reversePureFacts := ast.SpecFactPtrSlice{}
-	for _, fact := range fact.PureFact {
+	for _, fact := range fact.PureFacts {
 		reversePureFacts = append(reversePureFacts, fact.ReverseIsTrue()[0].(*ast.PureSpecificFactStmt))
 	}
 

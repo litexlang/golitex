@@ -182,12 +182,16 @@ func (ver *Verifier) matchEachSpecFactInGivenOrFactAndKnownOrFact(knowns []ast.S
 		case *ast.ExistSpecificFactStmt:
 			given := given.(*ast.ExistSpecificFactStmt)
 
-			if len(given.PureFact) != len(knownAs.PureFact) {
+			if len(given.PureFacts) != len(knownAs.PureFacts) {
 				return ast.NewEmptyUnknownVerRet()
 			}
 
-			for j := range given.PureFact {
-				if given.PureFact[j].IsTrue != knownAs.PureFact[j].IsTrue {
+			for j := range given.PureFacts {
+				if given.PureFacts[j].IsTrue != knownAs.PureFacts[j].IsTrue {
+					return ast.NewEmptyUnknownVerRet()
+				}
+
+				if given.PureFacts[j].PropName != knownAs.PureFacts[j].PropName {
 					return ast.NewEmptyUnknownVerRet()
 				}
 			}

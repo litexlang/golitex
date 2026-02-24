@@ -39,12 +39,16 @@ func (e *EnvMgr) MatchExistSpecificFacts(given *ast.ExistSpecificFactStmt, store
 		return false
 	}
 
-	if len(given.PureFact) != len(stored.PureFact) {
+	if len(given.PureFacts) != len(stored.PureFacts) {
 		return false
 	}
 
-	for i, fact := range given.PureFact {
-		if fact.IsTrue != stored.PureFact[i].IsTrue {
+	for i, fact := range given.PureFacts {
+		if fact.IsTrue != stored.PureFacts[i].IsTrue {
+			return false
+		}
+
+		if fact.PropName != stored.PureFacts[i].PropName {
 			return false
 		}
 	}

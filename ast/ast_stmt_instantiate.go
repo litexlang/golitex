@@ -84,8 +84,8 @@ func (e *ExistSpecificFactStmt) InstantiateFact(uniMap map[string]Obj) (FactStmt
 		newExistFreeParamSets = append(newExistFreeParamSets, newParamSet)
 	}
 
-	newPureFact := make([]*PureSpecificFactStmt, len(e.PureFact))
-	for i, fact := range e.PureFact {
+	newPureFact := make([]*PureSpecificFactStmt, len(e.PureFacts))
+	for i, fact := range e.PureFacts {
 		newFact, err := fact.InstantiateFact(uniMap)
 		if err != nil {
 			return nil, err
