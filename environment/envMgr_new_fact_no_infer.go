@@ -131,7 +131,7 @@ func (envMgr *EnvMgr) newUniFactWithIffNoInfer(stmt *ast.UniFactWithIffStmt) ast
 
 func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) ast.InferRet {
 	for _, specFact := range fact.Facts {
-		propName := specFact.GetPropName()
+		propName := specFact.Key()
 		knowns, ok := envMgr.CurEnv().OrFactsMem[propName.String()]
 		if ok {
 			envMgr.CurEnv().OrFactsMem[propName.String()] = append(knowns, fact)
@@ -143,7 +143,7 @@ func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) ast.InferRet {
 }
 
 func (envMgr *EnvMgr) storeOrFactInUniFactMem(orFact *ast.OrStmt, uniFact *ast.UniFactStmt) ast.InferRet {
-	propName := orFact.Facts[0].GetPropName()
+	propName := orFact.Facts[0].Key()
 	knowns, ok := envMgr.CurEnv().OrFactInUniFactMem[propName.String()]
 	if ok {
 		envMgr.CurEnv().OrFactInUniFactMem[propName.String()] = append(knowns, NewOrFactInUniFactMem(orFact, uniFact))

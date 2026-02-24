@@ -1,29 +1,16 @@
-prove:
-    prop p(x R)
+prove forall s1, s2 finite_set, f fn(s1)s2: count(s1) > count(s2) => not $is_injective_fn(s1, s2, f):
+    contra not $is_injective_fn(s1, s2, f):
+        witness f: f2 fn(s1)s2 st $is_injective_fn(s1, s2, f2)
+        impossible count(s1) <= count(s2)
 
-    know exist a R st $p(a)
+prop collide(s1 set, s2 nonempty_set, f fn(s1)s2, z1 s1, z2 s1):
+    z1 != z2
+    f(z1) = f(z2)
 
-    exist a R st $p(a)
-
-prove:
-    prop q(x R, y R)
-
-    know forall x R: x > 0 => exist y R st $q(x, y)
-
-    exist y R st $q(1, y)
-
-prove:
-    prop p(x R)
-    prop q(x R, y R)
-
-    know exist a, b R st {$p(a), $q(a, b)}
-
-    exist a, b R st {$p(a), $q(a, b)}
-
-prove:
-    prop t(x R, y R)
-    prop r(x R, y R)
-
-    know forall x R: x > 0 => exist y R st {$t(x, y), $r(x, y)}
-
-    exist y R st {$t(1, y), $r(1, y)}
+prove forall s1, s2 finite_set, f fn(s1)s2: count(s1) > count(s2) => exist a s1, b s1 st $collide(s1, s2, f, a, b):
+    contra exist a s1, b s1 st $collide(s1, s2, f, a, b):
+        forall a s1, b s1: not $collide(s1, s2, f, a, b)
+        prove forall a s1, b s1: a != b => f(a) != f(b):
+            contra f(a) != f(b):
+                impossible $collide(s1, s2, f, a, b)
+        impossible $is_injective_fn(s1, s2, f)
