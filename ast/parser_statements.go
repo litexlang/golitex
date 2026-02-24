@@ -550,37 +550,11 @@ func (p *TbParser) haveObjStStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	if tb.header.is(glob.KeySymbolLeftCurly) {
-		tb.header.skip(glob.KeySymbolLeftCurly)
-		facts := []*PureSpecificFactStmt{}
-		for !tb.header.is(glob.KeySymbolRightCurly) {
-			fact, err := p.pureFuncSpecFact(tb)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			facts = append(facts, fact)
-			if tb.header.is(glob.KeySymbolComma) {
-				tb.header.skip(glob.KeySymbolComma)
-				continue
-			}
-			if tb.header.is(glob.KeySymbolRightCurly) {
-				break
-			}
-		}
-		tb.header.skip(glob.KeySymbolRightCurly)
-		return NewHaveObjStWithParamSetsStmt(names, sets, facts, tb.line), nil
-	} else {
-		fact, err := p.specFactStmt(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		if factAsPureSpecificFactStmt, ok := fact.(*PureSpecificFactStmt); ok {
-			return NewHaveObjStWithParamSetsStmt(names, sets, []*PureSpecificFactStmt{factAsPureSpecificFactStmt}, tb.line), nil
-		} else {
-			return nil, fmt.Errorf("expect pure specific fact, got %T", fact)
-		}
+	facts, err := p.parsePureFactsOrChainFacts(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
 	}
+	return NewHaveObjStWithParamSetsStmt(names, sets, facts, tb.line), nil
 }
 
 func (p *TbParser) bodyBlockSpecOrFacts(tb *tokenBlock, parseBodyFactNum int) ([]Spec_OrFact, error) {
@@ -2718,42 +2692,11 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (SpecificFactStmt,
 		}
 	}
 
-	if tb.header.is(glob.KeySymbolLeftCurly) {
-		tb.header.skip(glob.KeySymbolLeftCurly)
-		facts := []*PureSpecificFactStmt{}
-		for !tb.header.is(glob.KeySymbolRightCurly) {
-			fact, err := p.pureFuncSpecFact(tb)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			facts = append(facts, fact)
-			if tb.header.is(glob.KeySymbolComma) {
-				tb.header.skip(glob.KeySymbolComma)
-				continue
-			}
-		}
-		tb.header.skip(glob.KeySymbolRightCurly)
-		if isTrue {
-			return NewExistSpecificFactStmt(true, existParams, existParamSets, facts, tb.line), nil
-		} else {
-			return NewExistSpecificFactStmt(false, existParams, existParamSets, facts, tb.line), nil
-		}
-	} else {
-		pureSpecFact, err := p.specFactStmt(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		specFactAsPureSpecificFactStmt, ok := pureSpecFact.(*PureSpecificFactStmt)
-		if !ok {
-			return nil, fmt.Errorf("expect pure specific fact, got %T", pureSpecFact)
-		}
-		if isTrue {
-			return NewExistSpecificFactStmt(true, existParams, existParamSets, []*PureSpecificFactStmt{specFactAsPureSpecificFactStmt}, tb.line), nil
-		} else {
-			return NewExistSpecificFactStmt(false, existParams, existParamSets, []*PureSpecificFactStmt{specFactAsPureSpecificFactStmt}, tb.line), nil
-		}
+	facts, err := p.parsePureFactsOrChainFacts(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
 	}
+	return NewExistSpecificFactStmt(isTrue, existParams, existParamSets, facts, tb.line), nil
 }
 
 // parseExistParamsAndSets parses parameters and parameter sets for exist statements.
@@ -3763,36 +3706,9 @@ func (p *TbParser) witnessStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(fmt.Errorf("number of equal tos must be equal to number of parameters, got %d equal tos and %d param sets", len(equalTos), len(paramSets)), tb)
 	}
 
-	facts := []*PureSpecificFactStmt{}
-	if tb.header.is(glob.KeySymbolLeftCurly) {
-		tb.header.skip(glob.KeySymbolLeftCurly)
-		for !tb.header.is(glob.KeySymbolRightCurly) {
-			fact, err := p.pureFuncSpecFact(tb)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			facts = append(facts, fact)
-
-			if tb.header.is(glob.KeySymbolComma) {
-				tb.header.skip(glob.KeySymbolComma)
-				continue
-			}
-			if tb.header.is(glob.KeySymbolRightCurly) {
-				break
-			}
-		}
-		tb.header.skip(glob.KeySymbolRightCurly)
-	} else {
-		fact, err := p.specFactWithoutExist_WithoutNot(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		specFactAsPureSpecificFactStmt, ok := fact.(*PureSpecificFactStmt)
-		if !ok {
-			return nil, fmt.Errorf("expect pure specific fact, got %T", fact)
-		}
-		facts = append(facts, specFactAsPureSpecificFactStmt)
+	facts, err := p.parsePureFactsOrChainFacts(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
 	}
 
 	if tb.header.ExceedEnd() {
@@ -4373,4 +4289,75 @@ func (p *TbParser) algoReturn(tb *tokenBlock) (*AlgoReturn, error) {
 	}
 
 	return NewAlgoReturn(value, tb.line), nil
+}
+
+// parsePureFactsOrChainFacts parses either `{ fact1, fact2, ... }` or a single fact (pure or chain).
+// Used by exist, haveObjSt, witness. Returns []*PureSpecificFactStmt (chain facts are expanded via ToFacts()).
+func (p *TbParser) parsePureFactsOrChainFacts(tb *tokenBlock) ([]*PureSpecificFactStmt, error) {
+	if tb.header.is(glob.KeySymbolLeftCurly) {
+		tb.header.skip(glob.KeySymbolLeftCurly)
+		facts := []*PureSpecificFactStmt{}
+		for !tb.header.is(glob.KeySymbolRightCurly) {
+			fact, err := p.pureFact_chainFact(tb)
+			if err != nil {
+				return nil, err
+			}
+			switch asFact := fact.(type) {
+			case *PureSpecificFactStmt:
+				facts = append(facts, asFact)
+			case *ChainPureFact:
+				facts = append(facts, asFact.ToFacts()...)
+			default:
+				return nil, fmt.Errorf("expect pure specific fact or chain fact, got %T", fact)
+			}
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+				continue
+			}
+		}
+		tb.header.skip(glob.KeySymbolRightCurly)
+		return facts, nil
+	}
+	// single fact
+	fact, err := p.pureFact_chainFact(tb)
+	if err != nil {
+		return nil, err
+	}
+	switch asFact := fact.(type) {
+	case *PureSpecificFactStmt:
+		return []*PureSpecificFactStmt{asFact}, nil
+	case *ChainPureFact:
+		return asFact.ToFacts(), nil
+	default:
+		return nil, fmt.Errorf("expect pure specific fact or chain fact, got %T", fact)
+	}
+}
+
+func (p *TbParser) pureFact_chainFact(tb *tokenBlock) (FactStmt, error) {
+	var ret FactStmt
+	var err error
+
+	// Case 1: Handle facts starting with special prefixes
+	if p.isCurTokenSpecFactPrefix(tb) {
+		ret, err = p.pureFuncSpecFact(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+	} else {
+		// Case 2-4: Handle facts starting with a first-class citizen (obj)
+		ret, err = p.parseFactStartWithObj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+	}
+
+	switch ret.(type) {
+	case *PureSpecificFactStmt:
+		return ret, nil
+	case *ChainPureFact:
+		return ret, nil
+	default:
+		return nil, fmt.Errorf("expect pure fact or chain fact, got: %T", ret)
+	}
 }
