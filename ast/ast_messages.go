@@ -125,8 +125,18 @@ func (e *ExistSpecificFactStmt) String() string {
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
 
-	for _, pureFact := range e.PureFact {
-		builder.WriteString(pureFact.String())
+	if len(e.PureFact) == 1 {
+		builder.WriteString(e.PureFact[0].String())
+		return builder.String()
+	} else {
+		builder.WriteString(glob.KeySymbolLeftCurly)
+		for i, pureFact := range e.PureFact {
+			builder.WriteString(pureFact.String())
+			if i != len(e.PureFact)-1 {
+				builder.WriteString(", ")
+			}
+		}
+		builder.WriteString(glob.KeySymbolRightCurly)
 	}
 
 	return builder.String()
@@ -505,11 +515,20 @@ func (stmt *HaveObjStStmt) String() string {
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
 
-	for _, fact := range stmt.Fact {
-		builder.WriteString(fact.String())
-		builder.WriteString(", ")
+	if len(stmt.Fact) == 1 {
+		builder.WriteString(stmt.Fact[0].String())
+		return builder.String()
+	} else {
+		builder.WriteString(glob.KeySymbolLeftCurly)
+		for i, fact := range stmt.Fact {
+			builder.WriteString(fact.String())
+			if i != len(stmt.Fact)-1 {
+				builder.WriteString(", ")
+			}
+		}
+		builder.WriteString(glob.KeySymbolRightCurly)
+		return builder.String()
 	}
-	return builder.String()
 }
 
 func (f Atom) String() string {
@@ -1631,9 +1650,22 @@ func (stmt *WitnessStmt) String() string {
 
 	builder.WriteString(fmt.Sprintf(" %s ", glob.KeywordSt))
 
-	for _, fact := range stmt.Fact {
-		builder.WriteString(fact.String())
-		builder.WriteString(", ")
+	if len(stmt.Fact) == 1 {
+		builder.WriteString(stmt.Fact[0].String())
+		return builder.String()
+	} else {
+		builder.WriteString(glob.KeySymbolLeftCurly)
+		for i, fact := range stmt.Fact {
+			builder.WriteString(fact.String())
+			if i != len(stmt.Fact)-1 {
+				builder.WriteString(", ")
+			}
+		}
+		builder.WriteString(glob.KeySymbolRightCurly)
+	}
+
+	if len(stmt.Proofs) == 0 {
+		return builder.String()
 	}
 
 	builder.WriteString(glob.KeySymbolColon)
