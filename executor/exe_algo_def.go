@@ -155,6 +155,9 @@ func (ver *Verifier) defineParamsInFnSetObjWithName(stmt *ast.DefAlgoStmt, fnSet
 }
 
 func (ver *Verifier) checkDefAlgoUnderIf(stmt *ast.DefAlgoStmt, i int) ast.VerRet {
+	ver.newEnv()
+	defer ver.deleteEnv()
+
 	// 假装 这个 if 是对的，然后验证
 	algoIf := stmt.Stmts[i].(*ast.AlgoIf)
 
@@ -176,6 +179,9 @@ func (ver *Verifier) checkDefAlgoUnderIf(stmt *ast.DefAlgoStmt, i int) ast.VerRe
 }
 
 func (ver *Verifier) checkDefAlgoUnderReturn(algoDef *ast.DefAlgoStmt, i int) ast.VerRet {
+
+	ver.newEnv()
+	defer ver.deleteEnv()
 	// 其他的事实全是错的
 	for j := 0; j < len(algoDef.Stmts)-1; j++ {
 		if _, ok := algoDef.Stmts[j].(*ast.AlgoIf); !ok {
@@ -195,7 +201,7 @@ func (ver *Verifier) checkDefAlgoUnderReturn(algoDef *ast.DefAlgoStmt, i int) as
 	algoReturn := algoDef.Stmts[i].(*ast.AlgoReturn)
 
 	fnObj := ast.NewFnObj(ast.Atom(algoDef.FuncName), algoDef.Params.ToObjSlice())
-	equalFact := ast.NewEqualFact(algoReturn.Value, fnObj)
+	equalFact := ast.NewEqualFact(fnObj, algoReturn.Value)
 	ret := ver.VerFactStmt(equalFact, Round0NoMsg())
 	if ret.IsNotTrue() {
 		return ret.AddExtraInfo(fmt.Sprintf("on line %d, equal fact %s is not true in %s when all cases in algo return are false", algoDef.GetLine(), equalFact.String(), algoDef.FuncName))
