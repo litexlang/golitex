@@ -35,31 +35,7 @@ func (ver *Verifier) ReplaceObjsInSpecFactWithValue(fact ast.SpecificFactStmt) (
 		}
 		return replaced, ast.NewPureSpecificFactStmt(fact.IsTrue, fact.PropName, newParams, fact.Line)
 	case *ast.ExistSpecificFactStmt:
-		replaced := false
-
-		newParamSets := make([]ast.Obj, len(fact.ExistFreeParamSets))
-		for i, param := range fact.ExistFreeParamSets {
-			replacedByEval, newObj := ver.GetValueOfSymbol(param)
-			if replacedByEval {
-				replaced = true
-				newParamSets[i] = newObj
-			} else {
-				newParamSets[i] = param
-			}
-		}
-
-		newParams := make([]ast.Obj, len(fact.PureFact.Params))
-		for i, param := range fact.PureFact.Params {
-			replacedByEval, newObj := ver.GetValueOfSymbol(param)
-			if replacedByEval {
-				replaced = true
-				newParams[i] = newObj
-			} else {
-				newParams[i] = param
-			}
-		}
-
-		return replaced, ast.NewExistSpecificFactStmt(fact.IsTrue, fact.ExistFreeParams, newParamSets, ast.NewPureSpecificFactStmt(fact.PureFact.IsTrue, fact.PureFact.PropName, fact.PureFact.Params, fact.PureFact.Line), fact.Line)
+		return false, fact
 	}
 
 	return false, nil

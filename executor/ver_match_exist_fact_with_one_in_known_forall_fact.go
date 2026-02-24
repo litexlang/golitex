@@ -19,7 +19,17 @@ import (
 )
 
 func (ver *Verifier) matchExistFactWithOneInKnownUniFactAndCheckMatchedObjsSatisfyUniFactConditions(knownUniFact *ast.UniFactStmt, existFactInKnownUniFact *ast.ExistSpecificFactStmt, given *ast.ExistSpecificFactStmt, state *VerState) ast.VerRet {
-	ok, uniMap := ver.matchObjectsWithFreeParamsWithInstObjectsInExistFact(knownUniFact.Params, existFactInKnownUniFact.ExistFreeParams, existFactInKnownUniFact.ExistFreeParamSets, given.ExistFreeParamSets, existFactInKnownUniFact.PureFact.Params, given.PureFact.Params)
+	allParamsInExistFactInKnownUni := []ast.Obj{}
+	for _, fact := range existFactInKnownUniFact.PureFact {
+		allParamsInExistFactInKnownUni = append(allParamsInExistFactInKnownUni, fact.Params...)
+	}
+
+	allParamsInGiven := []ast.Obj{}
+	for _, fact := range given.PureFact {
+		allParamsInGiven = append(allParamsInGiven, fact.Params...)
+	}
+
+	ok, uniMap := ver.matchObjectsWithFreeParamsWithInstObjectsInExistFact(knownUniFact.Params, existFactInKnownUniFact.ExistFreeParams, existFactInKnownUniFact.ExistFreeParamSets, given.ExistFreeParamSets, allParamsInExistFactInKnownUni, allParamsInGiven)
 
 	if !ok {
 		return ast.NewEmptyUnknownVerRet()
