@@ -2230,8 +2230,12 @@ func (p *TbParser) factOrFactInferStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		if equalsFact, ok := fact.(*EqualsFactStmt); ok {
-			return equalsFact, nil
+		// if chainFact, ok := fact.(*ChainPureFact); ok {
+		// 	return chainFact, nil
+		// }
+
+		if chainPureFact, ok := fact.(*ChainPureFact); ok {
+			return chainPureFact, nil
 		}
 
 		var specFactOrOrFact Spec_OrFact = fact.(Spec_OrFact)
@@ -2337,9 +2341,9 @@ func (p *TbParser) factStmt(tb *tokenBlock) (FactStmt, error) {
 			return uniFact, nil
 		}
 	// case glob.KeySymbolEqual:
-	// 	return p.equalsFactStmt(tb)
+	// 	return p.chainFactStmt(tb)
 	default:
-		return p.fact(tb)
+		return p.specFact_or_chainFact(tb)
 	}
 }
 
@@ -2408,7 +2412,7 @@ func (p *TbParser) SpecFactOrOrStmt(tb *tokenBlock) (Spec_OrFact, error) {
 // }
 
 func (p *TbParser) specFactStmt(tb *tokenBlock) (SpecificFactStmt, error) {
-	stmt, err := p.specFactStmt_OrOneLineEqualsFact(tb)
+	stmt, err := p.specFactStmt_OrOneLineChainFact(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -2421,7 +2425,7 @@ func (p *TbParser) specFactStmt(tb *tokenBlock) (SpecificFactStmt, error) {
 	}
 }
 
-func (p *TbParser) specFactStmt_OrOneLineEqualsFact(tb *tokenBlock) (FactStmt, error) {
+func (p *TbParser) specFactStmt_OrOneLineChainFact(tb *tokenBlock) (FactStmt, error) {
 	isTrue := true
 	if tb.header.is(glob.KeywordNot) {
 		tb.header.skip("")
@@ -2446,7 +2450,7 @@ func (p *TbParser) specFactStmt_OrOneLineEqualsFact(tb *tokenBlock) (FactStmt, e
 }
 
 func (p *TbParser) specFactWithoutExist_WithoutNot(tb *tokenBlock) (SpecificFactStmt, error) {
-	stmt, err := p.specFactWithoutExist_WithoutNot_Or_EqualsFact(tb)
+	stmt, err := p.specFactWithoutExist_WithoutNot_Or_ChainFact(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -2459,7 +2463,7 @@ func (p *TbParser) specFactWithoutExist_WithoutNot(tb *tokenBlock) (SpecificFact
 	}
 }
 
-func (p *TbParser) specFactWithoutExist_WithoutNot_Or_EqualsFact(tb *tokenBlock) (FactStmt, error) {
+func (p *TbParser) specFactWithoutExist_WithoutNot_Or_ChainFact(tb *tokenBlock) (FactStmt, error) {
 	if tb.header.is(glob.FuncFactPrefix) {
 		ret, err := p.pureFuncSpecFact(tb)
 		if err != nil {
@@ -2467,7 +2471,7 @@ func (p *TbParser) specFactWithoutExist_WithoutNot_Or_EqualsFact(tb *tokenBlock)
 		}
 		return ret, nil
 	} else {
-		ret, err := p.relaFactStmt_orRelaEquals(tb)
+		ret, err := p.relaFactStmt_orRelaChain(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -2544,7 +2548,7 @@ func (p *TbParser) bodyFacts(tb *tokenBlock) ([]FactStmt, error) {
 }
 
 // Placeholder methods - to be implemented later
-// func (p *TbParser) equalsFactStmt(tb *tokenBlock) (*EqualsFactStmt, error) {
+// func (p *TbParser) chainFactStmt(tb *tokenBlock) (*ChainPureFact, error) {
 // 	tb.header.skip(glob.KeySymbolEqual)
 
 // 	if tb.header.is(glob.KeySymbolColon) {
@@ -2618,7 +2622,7 @@ func (p *TbParser) bodyFacts(tb *tokenBlock) ([]FactStmt, error) {
 // 	}
 // }
 
-func (p *TbParser) fact(tb *tokenBlock) (FactStmt, error) {
+func (p *TbParser) specFact_or_chainFact(tb *tokenBlock) (FactStmt, error) {
 	if tb.header.is(glob.KeywordNot) {
 		return p.specFactStmt(tb)
 	}
@@ -2634,7 +2638,7 @@ func (p *TbParser) fact(tb *tokenBlock) (FactStmt, error) {
 		}
 		return ret, nil
 	} else {
-		ret, err := p.relationalSpecFactOrEqualsFact(tb)
+		ret, err := p.relationalSpecFactOrChainFact(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -2895,7 +2899,7 @@ func (p *TbParser) pureFuncSpecFact(tb *tokenBlock) (*PureSpecificFactStmt, erro
 	return ret, nil
 }
 
-func (p *TbParser) relaFactStmt_orRelaEquals(tb *tokenBlock) (FactStmt, error) {
+func (p *TbParser) relaFactStmt_orRelaChain(tb *tokenBlock) (FactStmt, error) {
 	var ret *PureSpecificFactStmt
 
 	obj, err := p.Obj(tb)
@@ -2936,15 +2940,10 @@ func (p *TbParser) relaFactStmt_orRelaEquals(tb *tokenBlock) (FactStmt, error) {
 
 		params := []Obj{obj, obj2}
 
-		if opt != glob.KeySymbolEqual {
-			ret = NewPureSpecificFactStmt(true, Atom(opt), params, tb.line)
+		if glob.IsEqualAndComparisonSignal(tb.header.strAtCurIndexPlus(0)) || tb.header.is(glob.FuncFactPrefix) {
+			return p.chainPureFact(tb, obj, obj2, Atom(opt))
 		} else {
-			// 循环地看下面一位是不是 = ，直到不是
-			if tb.header.is(glob.KeySymbolEqual) {
-				return p.relaEqualsFactStmt(tb, obj, obj2)
-			} else {
-				ret = NewPureSpecificFactStmt(true, Atom(opt), params, tb.line)
-			}
+			ret = NewPureSpecificFactStmt(true, Atom(opt), params, tb.line)
 		}
 	}
 
@@ -3374,21 +3373,21 @@ func (p *TbParser) dom_and_section(tb *tokenBlock, kw string, kw_should_not_exis
 	}
 }
 
-func (p *TbParser) relaEqualsFactStmt(tb *tokenBlock, obj, obj2 Obj) (*EqualsFactStmt, error) {
-	params := []Obj{obj, obj2}
-	for tb.header.is(glob.KeySymbolEqual) {
-		tb.header.skip(glob.KeySymbolEqual)
-		nextObj, err := p.Obj(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		params = append(params, nextObj)
-	}
+// func (p *TbParser) relaChainFactStmt(tb *tokenBlock, obj, obj2 Obj) (*ChainPureFact, error) {
+// 	params := []Obj{obj, obj2}
+// 	for tb.header.is(glob.KeySymbolEqual) {
+// 		tb.header.skip(glob.KeySymbolEqual)
+// 		nextObj, err := p.Obj(tb)
+// 		if err != nil {
+// 			return nil, ErrInLine(err, tb)
+// 		}
+// 		params = append(params, nextObj)
+// 	}
 
-	return NewEqualsFactStmt(params, tb.line), nil
-}
+// 	return NewEqualsFactStmt(params, tb.line), nil
+// }
 
-func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, error) {
+func (p *TbParser) relationalSpecFactOrChainFact(tb *tokenBlock) (FactStmt, error) {
 	var ret *PureSpecificFactStmt
 
 	obj, err := p.Obj(tb)
@@ -3425,11 +3424,8 @@ func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, err
 			return nil, ErrInLine(err, tb)
 		}
 
-		if opt == glob.KeySymbolEqual {
-			// 循环地看下面一位是不是 = ，直到不是
-			if tb.header.is(glob.KeySymbolEqual) {
-				return p.relaEqualsFactStmt(tb, obj, obj2)
-			}
+		if glob.IsEqualAndComparisonSignal(opt) || tb.header.is(glob.FuncFactPrefix) {
+			return p.chainPureFact(tb, obj, obj2, Atom(opt))
 		}
 
 		// 必须到底了

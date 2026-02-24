@@ -31,8 +31,8 @@ func (envMgr *EnvMgr) LookUpNamesInFact(stmt ast.FactStmt, extraParams map[strin
 		return envMgr.LookupNamesInUniFactWithIff(s, extraParams)
 	case *ast.OrStmt:
 		return envMgr.LookupNamesInOrFact(s, extraParams)
-	case *ast.EqualsFactStmt:
-		return envMgr.LookupNamesInEqualsFact(s, extraParams)
+	case *ast.ChainPureFact:
+		return envMgr.LookupNamesInChainFact(s, extraParams)
 	default:
 		return ast.NewErrShortRetWithMsg(fmt.Sprintf("unknown fact type: %T", stmt))
 	}
@@ -187,10 +187,10 @@ func (envMgr *EnvMgr) LookupNamesInOrFact(stmt *ast.OrStmt, extraParams map[stri
 	return ast.NewTrueShortRet()
 }
 
-func (envMgr *EnvMgr) LookupNamesInEqualsFact(stmt *ast.EqualsFactStmt, extraParams map[string]struct{}) ast.ShortRet {
-	for _, obj := range stmt.Params {
+func (envMgr *EnvMgr) LookupNamesInChainFact(stmt *ast.ChainPureFact, extraParams map[string]struct{}) ast.ShortRet {
+	for _, obj := range stmt.Objs {
 		if envMgr.LookupNamesInObj(obj, extraParams).IsNotTrue() {
-			return ast.NewErrShortRetWithMsg(fmt.Sprintf("equals fact parameter %s conflicts with defined parameter", obj.String()))
+			return ast.NewErrShortRetWithMsg(fmt.Sprintf("chain fact parameter %s conflicts with defined parameter", obj.String()))
 		}
 	}
 

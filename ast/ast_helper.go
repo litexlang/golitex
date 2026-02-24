@@ -131,23 +131,31 @@ func (stmt *UniFactStmt) ParamInParamSet() []*PureSpecificFactStmt {
 	return paramSetFacts
 }
 
-func (stmt *EqualsFactStmt) ToEqualFacts() []*PureSpecificFactStmt {
-	ret := make([]*PureSpecificFactStmt, len(stmt.Params)-1)
-	for i := range len(stmt.Params) - 1 {
-		ret[i] = NewEqualFact(stmt.Params[i], stmt.Params[i+1])
+// func (stmt *ChainPureFact) ToEqualFacts() []*PureSpecificFactStmt {
+// 	ret := make([]*PureSpecificFactStmt, len(stmt.Params)-1)
+// 	for i := range len(stmt.Params) - 1 {
+// 		ret[i] = NewEqualFact(stmt.Params[i], stmt.Params[i+1])
+// 	}
+// 	return ret
+// }
+
+func (stmt *ChainPureFact) ToFacts() []*PureSpecificFactStmt {
+	ret := make([]*PureSpecificFactStmt, len(stmt.Objs)-1)
+	for i := range len(stmt.Objs) - 1 {
+		ret[i] = NewEqualFact(stmt.Objs[i], stmt.Objs[i+1])
 	}
 	return ret
 }
 
-func (stmt *EqualsFactStmt) ToEqualFacts_PairwiseCombination() []Spec_OrFact {
-	ret := []Spec_OrFact{}
-	for i := range len(stmt.Params) - 1 {
-		for j := i + 1; j < len(stmt.Params); j++ {
-			ret = append(ret, NewEqualFact(stmt.Params[i], stmt.Params[j]))
-		}
-	}
-	return ret
-}
+// func (stmt *ChainPureFact) ToEqualFacts_PairwiseCombination() []Spec_OrFact {
+// 	ret := []Spec_OrFact{}
+// 	for i := range len(stmt.Params) - 1 {
+// 		for j := i + 1; j < len(stmt.Params); j++ {
+// 			ret = append(ret, NewEqualFact(stmt.Params[i], stmt.Params[j]))
+// 		}
+// 	}
+// 	return ret
+// }
 
 // func (stmt *ClaimImplicationStmt) ToProp() *DefPropStmt {
 // 	return stmt.Implication.ToProp()

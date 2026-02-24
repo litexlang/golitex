@@ -898,14 +898,25 @@ func (stmt *ProveByEnumStmt) String() string {
 // 	return builder.String()
 // }
 
-func (stmt *EqualsFactStmt) String() string {
-	var builder strings.Builder
-	factStrSlice := make([]string, len(stmt.Params))
-	for i := range len(stmt.Params) {
-		factStrSlice[i] = stmt.Params[i].String()
+// func (stmt *ChainPureFact) String() string {
+// 	var builder strings.Builder
+// 	factStrSlice := make([]string, len(stmt.Params))
+// 	for i := range len(stmt.Params) {
+// 		factStrSlice[i] = stmt.Params[i].String()
+// 	}
+// 	builder.WriteString(strings.Join(factStrSlice, " = "))
+// 	return builder.String()
+// }
+
+func (c *ChainPureFact) String() string {
+	var parts []string
+	for i, obj := range c.Objs {
+		parts = append(parts, obj.String())
+		if i < len(c.PropNames) {
+			parts = append(parts, c.PropNames[i].String())
+		}
 	}
-	builder.WriteString(strings.Join(factStrSlice, " = "))
-	return builder.String()
+	return strings.Join(parts, " ")
 }
 
 // func (stmt *KnowExistPropStmt) String() string {
