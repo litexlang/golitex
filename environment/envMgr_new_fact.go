@@ -29,8 +29,8 @@ func (envMgr *EnvMgr) NewFact(stmt ast.FactStmt) ast.InferRet {
 		return envMgr.NewFactWithCheckingNameDefined_UniFact(f)
 	case *ast.UniFactWithIffStmt:
 		return envMgr.newUniFactWithIff(f)
-	case *ast.EqualsFactStmt:
-		return envMgr.newEqualsFact(f)
+	case *ast.ChainPureFact:
+		return envMgr.newChainFact(f)
 	default:
 		return ast.NewErrInferRet(stmt).AddExtraInfo(fmt.Sprintf("unknown fact type: %T", stmt))
 	}
@@ -51,8 +51,8 @@ func (envMgr *EnvMgr) NewFactWithCheckingNameDefined(stmt ast.FactStmt) ast.Infe
 		return envMgr.NewFactWithCheckingNameDefined_UniFact(f)
 	case *ast.UniFactWithIffStmt:
 		return envMgr.newUniFactWithIff(f)
-	case *ast.EqualsFactStmt:
-		return envMgr.newEqualsFact(f)
+	case *ast.ChainPureFact:
+		return envMgr.newChainFact(f)
 	default:
 		return ast.NewErrInferRet(stmt).AddExtraInfo(fmt.Sprintf("unknown fact type: %T", stmt))
 	}
@@ -217,10 +217,10 @@ func (envMgr *EnvMgr) newTrueEqual(fact *ast.PureSpecificFactStmt) ast.InferRet 
 	return shortRet
 }
 
-func (envMgr *EnvMgr) newEqualsFact(stmt *ast.EqualsFactStmt) ast.InferRet {
-	equalFacts := stmt.ToEqualFacts()
-	for _, equalFact := range equalFacts {
-		ret := envMgr.NewFactWithCheckingNameDefined(equalFact)
+func (envMgr *EnvMgr) newChainFact(stmt *ast.ChainPureFact) ast.InferRet {
+	chainFacts := stmt.ToFacts()
+	for _, chainFact := range chainFacts {
+		ret := envMgr.NewFactWithCheckingNameDefined(chainFact)
 		if ret.IsErr() {
 			return ret
 		}
@@ -261,12 +261,16 @@ func (envMgr *EnvMgr) newUniFact_ThenFactIsUniFactStmt(stmt *ast.UniFactStmt, th
 	return envMgr.newUniFact(mergedUniFact)
 }
 
-func (envMgr *EnvMgr) newUniFact_ThenFactIsEqualsFactStmt(stmt *ast.UniFactStmt, thenFact *ast.EqualsFactStmt) ast.InferRet {
-	equalFacts := thenFact.ToEqualFacts_PairwiseCombination()
+func (envMgr *EnvMgr) newUniFact_ThenFactIsChainFactStmt(stmt *ast.UniFactStmt, thenFact *ast.ChainPureFact) ast.InferRet {
+	chainFacts := thenFact.ToFacts()
+	reversibleFacts := []ast.Spec_OrFact{}
+	for _, chainFact := range chainFacts {
+		reversibleFacts = append(reversibleFacts, chainFact)
+	}
 
-	newUniFact := ast.NewUniFact(stmt.Params, stmt.ParamSets, stmt.DomFacts, equalFacts, stmt.Line)
+	newUniFact := ast.NewUniFact(stmt.Params, stmt.ParamSets, stmt.DomFacts, reversibleFacts, stmt.Line)
 
-	for i, _ := range equalFacts {
+	for i := range chainFacts {
 		ret := envMgr.newUniFact_ThenFactIsSpecFact(newUniFact, i)
 		if ret.IsErr() {
 			return ret

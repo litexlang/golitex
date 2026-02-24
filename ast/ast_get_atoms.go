@@ -106,7 +106,7 @@ package litex_ast
 // // 	return atoms
 // // }
 
-// func (stmt *EqualsFactStmt) GetAtoms() []Atom {
+// func (stmt *ChainPureFact) GetAtoms() []Atom {
 // 	atoms := []Atom{}
 // 	for _, param := range stmt.Params {
 // 		atoms = append(atoms, GetAtomObjsInObj(param)...)

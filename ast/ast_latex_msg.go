@@ -844,12 +844,23 @@ func VerifiedFactsSectionToLatexString(verifiedFacts []FactStmt) string {
 	return builder.String()
 }
 
-func (s *EqualsFactStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("The following objects are equal: ")
-	builder.WriteString(strings.Join(s.Params.objSliceToLatexStringSlice(), ", "))
-	builder.WriteString(".")
-	return builder.String()
+// func (s *ChainPureFact) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString("The following objects are equal: ")
+// 	builder.WriteString(strings.Join(s.Params.objSliceToLatexStringSlice(), ", "))
+// 	builder.WriteString(".")
+// 	return builder.String()
+// }
+
+func (c *ChainPureFact) ToLatexString() string {
+	var parts []string
+	for i, obj := range c.Objs {
+		parts = append(parts, obj.ToLatexString())
+		if i < len(c.PropNames) {
+			parts = append(parts, c.PropNames[i].String())
+		}
+	}
+	return strings.Join(parts, " ")
 }
 
 // func (s *KnowExistPropStmt) ToLatexString() string {

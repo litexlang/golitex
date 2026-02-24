@@ -31,8 +31,8 @@ func (envMgr *EnvMgr) newFactNoInfer(stmt ast.FactStmt) ast.InferRet {
 		return envMgr.newUniFactNoInfer(f)
 	case *ast.UniFactWithIffStmt:
 		return envMgr.newUniFactWithIffNoInfer(f)
-	case *ast.EqualsFactStmt:
-		return envMgr.newEqualsFactNoInfer(f)
+	case *ast.ChainPureFact:
+		return envMgr.newChainFactNoInfer(f)
 	default:
 		return ast.NewErrInferRet(stmt).AddExtraInfo(fmt.Sprintf("unknown fact type: %T", stmt))
 	}
@@ -75,12 +75,12 @@ func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.PureSpecificFactStmt) ast.In
 	return ast.NewTrueInferRet(fact)
 }
 
-// newEqualsFactNoInfer stores an EqualsFact without performing any inference.
-// It converts the EqualsFact to individual equality facts and stores them without inference.
-func (envMgr *EnvMgr) newEqualsFactNoInfer(stmt *ast.EqualsFactStmt) ast.InferRet {
-	equalFacts := stmt.ToEqualFacts()
-	for _, equalFact := range equalFacts {
-		ret := envMgr.newSpecFactNoInfer(equalFact)
+// newChainFactNoInfer stores a ChainFact without performing any inference.
+// It converts the ChainFact to individual equality facts and stores them without inference.
+func (envMgr *EnvMgr) newChainFactNoInfer(stmt *ast.ChainPureFact) ast.InferRet {
+	chainFacts := stmt.ToFacts()
+	for _, chainFact := range chainFacts {
+		ret := envMgr.newSpecFactNoInfer(chainFact)
 		if ret.IsErr() {
 			return ret
 		}

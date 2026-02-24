@@ -35,8 +35,8 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) ast.VerRet 
 		return ver.verUniFact(asStmt, state)
 	case *ast.UniFactWithIffStmt:
 		return ver.verUniFactWithIff(asStmt, state)
-	case *ast.EqualsFactStmt:
-		return ver.verEqualsFactStmt(asStmt, state)
+	case *ast.ChainPureFact:
+		return ver.verChainFactStmt(asStmt, state)
 	default:
 		return ast.NewErrVerRet(stmt).AddExtraInfo(fmt.Sprintf("unexpected fact statement: %s", asStmt))
 	}
