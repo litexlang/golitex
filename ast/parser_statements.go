@@ -1622,6 +1622,9 @@ func (p *TbParser) algoDefStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 		params = append(params, param)
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
 	}
 
 	err = tb.header.skip(glob.KeySymbolRightBrace)
@@ -3849,6 +3852,7 @@ func (p *TbParser) equalSetStmt(tb *tokenBlock) (*EqualSetStmt, error) {
 	return NewEqualSetStmt(left, right, proofs, tb.line), nil
 }
 
+// witness_nonempty(obj, objSet)
 func (p *TbParser) witnessNonemptyStmt(tb *tokenBlock) (*WitnessNonemptyStmt, error) {
 	err := tb.header.skip(glob.KeywordWitnessNonempty)
 	if err != nil {
