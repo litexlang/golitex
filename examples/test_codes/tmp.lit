@@ -1,17 +1,29 @@
-have factorial fn(N) N_pos
-know:
-    factorial(0) = 1
-    factorial(1) = 1
-    forall n N: n != 0, n != 1 => factorial(n) = factorial(n - 1) * n
+prove:
+    prop p(x R)
 
-know forall n N: n != 0, n != 1 => n - 1 $in N
+    know exist a R st $p(a)
 
-algo factorial(n):
-    if n = 0:
-        return 1
-    if n = 1:
-        return 1
-    return factorial(n - 1) * n
+    exist a R st $p(a)
 
-eval factorial(10)
-factorial(10) = 3628800
+prove:
+    prop q(x R, y R)
+
+    know forall x R: x > 0 => exist y R st $q(x, y)
+
+    exist y R st $q(1, y)
+
+prove:
+    prop p(x R)
+    prop q(x R, y R)
+
+    know exist a, b R st {$p(a), $q(a, b)}
+
+    exist a, b R st {$p(a), $q(a, b)}
+
+prove:
+    prop t(x R, y R)
+    prop r(x R, y R)
+
+    know forall x R: x > 0 => exist y R st {$t(x, y), $r(x, y)}
+
+    exist y R st {$t(1, y), $r(1, y)}
