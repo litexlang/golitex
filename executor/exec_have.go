@@ -513,7 +513,7 @@ func (exec *Executor) haveObjStStmt(stmt *ast.HaveObjStStmt) ast.StmtRet {
 
 	// define
 	factStmts := []ast.FactStmt{}
-	for _, fact := range existStFact.PureFact {
+	for _, fact := range existStFact.PureFacts {
 		factStmts = append(factStmts, fact)
 	}
 

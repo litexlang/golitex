@@ -285,8 +285,8 @@ func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFa
 		uniMap2[existFactStruct.ExistFreeParams[i]] = ast.Atom(newExistParams[i])
 	}
 
-	newFacts := make([]*ast.PureSpecificFactStmt, len(existFactStruct.PureFact))
-	for i, fact := range existFactStruct.PureFact {
+	newFacts := make([]*ast.PureSpecificFactStmt, len(existFactStruct.PureFacts))
+	for i, fact := range existFactStruct.PureFacts {
 		newParams := make([]ast.Obj, len(fact.Params))
 		for i, param := range fact.Params {
 			newParam, err := param.Instantiate(uniMap2)

@@ -102,12 +102,16 @@ LoopOverKnownFacts:
 			continue LoopOverKnownFacts
 		}
 
-		if len(knownExistFactInUni.PureFact) != len(given.PureFact) {
+		if len(knownExistFactInUni.PureFacts) != len(given.PureFacts) {
 			continue LoopOverKnownFacts
 		}
 
-		for j := range knownExistFactInUni.PureFact {
-			if given.PureFact[j].IsTrue != knownExistFactInUni.PureFact[j].IsTrue {
+		for j := range knownExistFactInUni.PureFacts {
+			if given.PureFacts[j].IsTrue != knownExistFactInUni.PureFacts[j].IsTrue {
+				continue LoopOverKnownFacts
+			}
+
+			if given.PureFacts[j].PropName != knownExistFactInUni.PureFacts[j].PropName {
 				continue LoopOverKnownFacts
 			}
 		}

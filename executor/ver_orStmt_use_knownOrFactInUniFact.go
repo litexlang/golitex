@@ -147,12 +147,12 @@ func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactS
 				return false, nil
 			}
 
-			if len(curGivenAs.PureFact) != len(curKnownAs.PureFact) {
+			if len(curGivenAs.PureFacts) != len(curKnownAs.PureFacts) {
 				return false, nil
 			}
 
-			for j := range curGivenAs.PureFact {
-				if curGivenAs.PureFact[j].IsTrue != curKnownAs.PureFact[j].IsTrue {
+			for j := range curGivenAs.PureFacts {
+				if curGivenAs.PureFacts[j].IsTrue != curKnownAs.PureFacts[j].IsTrue {
 					return false, nil
 				}
 			}
@@ -170,12 +170,12 @@ func (ver *Verifier) matchOrFactWithOneInKnownUniFact(knownUniFact *ast.UniFactS
 			}
 
 			allParamsInNewCurKnown := []ast.Obj{}
-			for _, fact := range newCurKnown.PureFact {
+			for _, fact := range newCurKnown.PureFacts {
 				allParamsInNewCurKnown = append(allParamsInNewCurKnown, fact.Params...)
 			}
 
 			allParamsInNewCurGiven := []ast.Obj{}
-			for _, fact := range newCurGiven.PureFact {
+			for _, fact := range newCurGiven.PureFacts {
 				allParamsInNewCurGiven = append(allParamsInNewCurGiven, fact.Params...)
 			}
 
