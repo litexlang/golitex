@@ -1460,7 +1460,7 @@ func (stmt *EvalStmt) String() string {
 	return fmt.Sprintf("%s(%s)", glob.KeywordEval, stmt.ObjToEval.String())
 }
 
-func (s *SetTemplateStmt) String() string {
+func (s *DefSetTemplateStmt) String() string {
 	var builder strings.Builder
 	builder.WriteString(s.Name)
 	if len(s.Params) > 0 {

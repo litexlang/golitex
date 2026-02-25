@@ -59,7 +59,7 @@ type EnvMgr struct {
 	// AllDefinedFnSetNames map[string]DefinedStuff[*ast.DefFnSetStmt]
 	AllDefinedAlgoNames map[string]DefinedStuff[*ast.DefAlgoStmt]
 	// AllDefinedProveAlgoNames map[string]DefinedStuff[*ast.DefProveAlgoStmt]
-	AllDefinedSetTemplateNames map[string]DefinedStuff[*ast.SetTemplateStmt]
+	AllDefinedSetTemplateNames map[string]DefinedStuff[*ast.DefSetTemplateStmt]
 }
 
 type EnvMemory struct {
@@ -88,7 +88,7 @@ type EnvMemory struct {
 	// FnInFnTemplateFactsMem FnInFnTMem
 
 	// set template facts
-	SetTemplateFactsMem map[string]struct{}
+	SetTemplateDefMem map[string]struct{}
 }
 
 type OrFactInUniFact struct {
@@ -120,13 +120,13 @@ func NewEnvMemory() *EnvMemory {
 		OrFactsMem:         make(map[string][]*ast.OrStmt),
 		OrFactInUniFactMem: make(map[string][]*OrFactInUniFact),
 
-		SetTemplateFactsMem: make(map[string]struct{}),
+		SetTemplateDefMem: make(map[string]struct{}),
 
 		// FnInFnTemplateFactsMem: make(FnInFnTMem),
 	}
 }
 
-func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames map[string]DefinedStuff[struct{}], allDefinedPropNames map[string]DefinedStuff[*ast.DefPropStmt], allDefinedAlgoNames map[string]DefinedStuff[*ast.DefAlgoStmt], allDefinedSetTemplateNames map[string]DefinedStuff[*ast.SetTemplateStmt]) *EnvMgr {
+func NewEnvMgr(pkgMgr *EnvPkgMgr, envMemory []EnvMemory, allDefinedAtomObjNames map[string]DefinedStuff[struct{}], allDefinedPropNames map[string]DefinedStuff[*ast.DefPropStmt], allDefinedAlgoNames map[string]DefinedStuff[*ast.DefAlgoStmt], allDefinedSetTemplateNames map[string]DefinedStuff[*ast.DefSetTemplateStmt]) *EnvMgr {
 	return &EnvMgr{
 		AllDefinedAtomObjNames: allDefinedAtomObjNames,
 		AllDefinedPropNames:    allDefinedPropNames,
@@ -170,7 +170,7 @@ func (envMgr *EnvMgr) DeleteEnv() {
 		delete(envMgr.AllDefinedAlgoNames, k)
 	}
 
-	for k := range envMgr.CurEnv().SetTemplateFactsMem {
+	for k := range envMgr.CurEnv().SetTemplateDefMem {
 		delete(envMgr.AllDefinedSetTemplateNames, k)
 	}
 
@@ -335,5 +335,5 @@ func (envMgr *EnvMgr) CurEnv() *EnvMemory {
 }
 
 func NewEmptyEnvMgr(envPkgMgr *EnvPkgMgr) *EnvMgr {
-	return NewEnvMgr(envPkgMgr, []EnvMemory{*NewEnvMemory()}, make(map[string]DefinedStuff[struct{}]), make(map[string]DefinedStuff[*ast.DefPropStmt]), make(map[string]DefinedStuff[*ast.DefAlgoStmt]), make(map[string]DefinedStuff[*ast.SetTemplateStmt]))
+	return NewEnvMgr(envPkgMgr, []EnvMemory{*NewEnvMemory()}, make(map[string]DefinedStuff[struct{}]), make(map[string]DefinedStuff[*ast.DefPropStmt]), make(map[string]DefinedStuff[*ast.DefAlgoStmt]), make(map[string]DefinedStuff[*ast.DefSetTemplateStmt]))
 }
