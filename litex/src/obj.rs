@@ -1,6 +1,6 @@
 use crate::consts::{
-    ADD, CAP, COMMA, DIV, DISJOINT_UNION, INTERSECT, LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE, MOD, MUL, PKG_SEPARATOR, POW, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, SET_DIM, PROJ, CART,
-    RIGHT_BRACE, SET_MINUS, SUB, UNION, CUP, N_POS, N, Q, Z, R,
+    ADD, CAP, COMMA, DIV, DISJOINT_UNION, INTERSECT, LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE, MOD, MUL, PKG_SEPARATOR, POW, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, SET_DIM, PROJ, CART, RANGE, CLOSED_RANGE, VAL,
+    RIGHT_BRACE, SET_MINUS, SUB, UNION, CUP, N_POS, N, Q, Z, R, COUNT,
 };
 use std::fmt;
 use crate::helper::{braced_vec_to_string, curly_braced_vec_to_string};
@@ -38,10 +38,37 @@ pub enum Obj {
     SetDim(SetDim),
     Proj(Proj),
     Dim(Dim),
+    Tuple(Tuple),
+    Count(Count),
+    Range(Range),
+    ClosedRange(ClosedRange),
+    Val(Val),
+    
+}
+pub struct Val {
+    pub value: box_Obj,
 }
 
 #[allow(non_camel_case_types)]
 pub type box_Obj = Box<Obj>;
+
+pub struct Range {
+    pub start: box_Obj,
+    pub end: box_Obj,
+}
+
+pub struct ClosedRange {
+    pub start: box_Obj,
+    pub end: box_Obj,
+}
+
+pub struct Count {
+    pub set: box_Obj,
+}
+
+pub struct Tuple {
+    pub elements: Vec<box_Obj>,
+}
 
 pub struct Dim {
     pub dim: box_Obj,
@@ -263,6 +290,21 @@ impl Obj {
     pub fn box_dim(dim: box_Obj) -> box_Obj {
         Box::new(Obj::Dim(Dim::new(dim)))
     }
+    pub fn box_tuple(elements: Vec<box_Obj>) -> box_Obj {
+        Box::new(Obj::Tuple(Tuple::new(elements)))
+    }
+    pub fn box_count(set: box_Obj) -> box_Obj {
+        Box::new(Obj::Count(Count::new(set)))
+    }
+    pub fn box_range(start: box_Obj, end: box_Obj) -> box_Obj {
+        Box::new(Obj::Range(Range::new(start, end)))
+    }
+    pub fn box_closed_range(start: box_Obj, end: box_Obj) -> box_Obj {
+        Box::new(Obj::ClosedRange(ClosedRange::new(start, end)))
+    }
+    pub fn box_val(value: box_Obj) -> box_Obj {
+        Box::new(Obj::Val(Val::new(value)))
+    }
 }
 
 impl AtomWithoutPkg {
@@ -445,6 +487,36 @@ impl Cart {
     }
 }
 
+impl Tuple {
+    pub fn new(elements: Vec<box_Obj>) -> Self {
+        Tuple { elements }
+    }
+}
+
+impl Count {
+    pub fn new(set: box_Obj) -> Self {
+        Count { set }
+    }
+}
+
+impl Range {
+    pub fn new(start: box_Obj, end: box_Obj) -> Self {
+        Range { start, end }
+    }
+}
+
+impl ClosedRange {
+    pub fn new(start: box_Obj, end: box_Obj) -> Self {
+        ClosedRange { start, end }
+    }
+}
+
+impl Val {
+    pub fn new(value: box_Obj) -> Self {
+        Val { value }
+    }
+}
+
 // Display implementations
 impl fmt::Display for Obj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -479,7 +551,36 @@ impl fmt::Display for Obj {
             Obj::SetDim(set_dim) => write!(f, "{}", set_dim),
             Obj::Proj(proj) => write!(f, "{}", proj),
             Obj::Dim(dim) => write!(f, "{}", dim),
+            Obj::Tuple(tuple) => write!(f, "{}", tuple),
+            Obj::Count(count) => write!(f, "{}", count),
+            Obj::Range(range) => write!(f, "{}", range),
+            Obj::ClosedRange(closed_range) => write!(f, "{}", closed_range),
+            Obj::Val(val) => write!(f, "{}", val),
         }
+    }
+}
+
+impl fmt::Display for Range {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}{} {}{}", RANGE, LEFT_BRACE, self.start, COMMA, self.end, RIGHT_BRACE)
+    }
+}
+
+impl fmt::Display for ClosedRange {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}{} {}{}", CLOSED_RANGE, LEFT_BRACE, self.start, COMMA, self.end, RIGHT_BRACE)
+    }
+}
+
+impl fmt::Display for Count {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}{}", COUNT, LEFT_BRACE, self.set, RIGHT_BRACE)
+    }
+}
+
+impl fmt::Display for Tuple {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}",  braced_vec_to_string(&self.elements))
     }
 }
 
@@ -492,8 +593,7 @@ impl fmt::Display for SetDim {
 
 impl fmt::Display for Proj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}{}{}", PROJ, LEFT_BRACE, self.set, COMMA, self.dim, RIGHT_BRACE)?;
-        write!(f, "{}", RIGHT_BRACE)
+        write!(f, "{}{}{}{} {}{}", PROJ, LEFT_BRACE, self.set, COMMA, self.dim, RIGHT_BRACE)
     }
 }
 
@@ -671,7 +771,13 @@ impl fmt::Display for InstSetTemplateObj {
 
 impl fmt::Display for Cart {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}", CART, LEFT_BRACE, braced_vec_to_string(&self.args), RIGHT_BRACE)
+        write!(f, "{}{}", CART,  braced_vec_to_string(&self.args))
+    }
+}
+
+impl fmt::Display for Val {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}{}", VAL, LEFT_BRACE, self.value, RIGHT_BRACE)
     }
 }
 
@@ -797,6 +903,26 @@ impl Obj {
             },
             Obj::Dim(a) => match right {
                 Obj::Dim(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Tuple(a) => match right {
+                Obj::Tuple(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Count(a) => match right {
+                Obj::Count(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Range(a) => match right {
+                Obj::Range(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::ClosedRange(a) => match right {
+                Obj::ClosedRange(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Val(a) => match right {
+                Obj::Val(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
         }
