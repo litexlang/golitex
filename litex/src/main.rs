@@ -26,6 +26,7 @@ fn main() {
     try_n_pos_obj();
     try_parameter_set();
     try_instantiated_set_template_obj();
+    try_cart_set_dim_proj_dim();
 }
 
 fn try_atom_fn_obj() {
@@ -139,4 +140,16 @@ fn try_instantiated_set_template_obj() {
         vec![],
     );
     println!("{}", instantiated_set_template_obj2);
+}
+
+
+fn try_cart_set_dim_proj_dim() {
+    let cart = Obj::box_cart(vec![Obj::box_atom_without_pkg("a"), Obj::box_atom_without_pkg("b")]);
+    let set_dim = Obj::box_set_dim(Obj::box_atom_without_pkg("a"));
+    let proj = Obj::box_proj(Obj::box_atom_without_pkg("a"), Obj::box_atom_without_pkg("b"));
+    let dim = Obj::box_dim(Obj::box_atom_without_pkg("b"));
+    println!("{}", cart);
+    println!("{}", set_dim);
+    println!("{}", proj);
+    println!("{}", dim);
 }

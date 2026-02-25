@@ -32,3 +32,6 @@ pub const Q: &str = "Q";
 pub const Z: &str = "Z";
 pub const R: &str = "R";
 
+pub const CART: &str = "cart";
+pub const SET_DIM: &str = "set_dim";
+pub const PROJ: &str = "proj";

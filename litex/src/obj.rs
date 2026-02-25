@@ -1,5 +1,5 @@
 use crate::consts::{
-    ADD, CAP, COMMA, DIV, DISJOINT_UNION, INTERSECT, LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE, MOD, MUL, PKG_SEPARATOR, POW, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL,
+    ADD, CAP, COMMA, DIV, DISJOINT_UNION, INTERSECT, LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE, MOD, MUL, PKG_SEPARATOR, POW, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, SET_DIM, PROJ, CART,
     RIGHT_BRACE, SET_MINUS, SUB, UNION, CUP, N_POS, N, Q, Z, R,
 };
 use std::fmt;
@@ -34,12 +34,27 @@ pub enum Obj {
     ZObj(ZObj),
     RObj(RObj),
     InstSetTemplateObj(InstSetTemplateObj),
+    Cart(Cart),
+    SetDim(SetDim),
+    Proj(Proj),
+    Dim(Dim),
 }
 
 #[allow(non_camel_case_types)]
 pub type box_Obj = Box<Obj>;
 
+pub struct Dim {
+    pub dim: box_Obj,
+}
 
+pub struct SetDim {
+    pub set: box_Obj,
+}
+
+pub struct Proj {
+    pub set: box_Obj,
+    pub dim: box_Obj,
+}
 
 pub struct FnObj {
     pub head: box_Obj,
@@ -152,6 +167,10 @@ pub struct InstSetTemplateObj {
     pub param_sets: Vec<box_Obj>,
 }
 
+pub struct Cart {
+    pub args: Vec<box_Obj>,
+}
+
 
 impl Obj {
     pub fn box_atom_without_pkg(name: &str) -> box_Obj {
@@ -231,6 +250,18 @@ impl Obj {
     }
     pub fn box_inst_set_template_obj(set_template: Box<Atom>, param_sets: Vec<box_Obj>) -> box_Obj {
         Box::new(Obj::InstSetTemplateObj(InstSetTemplateObj::new(set_template, param_sets)))
+    }
+    pub fn box_cart(args: Vec<box_Obj>) -> box_Obj {
+        Box::new(Obj::Cart(Cart::new(args)))
+    }
+    pub fn box_set_dim(set: box_Obj) -> box_Obj {
+        Box::new(Obj::SetDim(SetDim::new(set)))
+    }
+    pub fn box_proj(set: box_Obj, dim: box_Obj) -> box_Obj {
+        Box::new(Obj::Proj(Proj::new(set, dim)))
+    }
+    pub fn box_dim(dim: box_Obj) -> box_Obj {
+        Box::new(Obj::Dim(Dim::new(dim)))
     }
 }
 
@@ -390,6 +421,30 @@ impl InstSetTemplateObj {
     }
 }
 
+impl SetDim {
+    pub fn new(set: box_Obj) -> Self {
+        SetDim { set }
+    }
+}
+
+impl Proj {
+    pub fn new(set: box_Obj, dim: box_Obj) -> Self {
+        Proj { set, dim }
+    }
+}
+
+impl Dim {
+    pub fn new(dim: box_Obj) -> Self {
+        Dim { dim }
+    }
+}
+
+impl Cart {
+    pub fn new(args: Vec<box_Obj>) -> Self {
+        Cart { args }
+    }
+}
+
 // Display implementations
 impl fmt::Display for Obj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -420,7 +475,31 @@ impl fmt::Display for Obj {
             Obj::ZObj(z_obj) => write!(f, "{}", z_obj),
             Obj::RObj(r_obj) => write!(f, "{}", r_obj),
             Obj::InstSetTemplateObj(instantiated_set_template_obj) => write!(f, "{}", instantiated_set_template_obj),
+            Obj::Cart(cart) => write!(f, "{}", cart),
+            Obj::SetDim(set_dim) => write!(f, "{}", set_dim),
+            Obj::Proj(proj) => write!(f, "{}", proj),
+            Obj::Dim(dim) => write!(f, "{}", dim),
         }
+    }
+}
+
+impl fmt::Display for SetDim {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}{}", SET_DIM, LEFT_BRACE, self.set, RIGHT_BRACE)?;
+        write!(f, "{}", RIGHT_BRACE)
+    }
+}
+
+impl fmt::Display for Proj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}{}{}{}", PROJ, LEFT_BRACE, self.set, COMMA, self.dim, RIGHT_BRACE)?;
+        write!(f, "{}", RIGHT_BRACE)
+    }
+}
+
+impl fmt::Display for Dim {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}{}", SET_DIM, LEFT_BRACE, self.dim, RIGHT_BRACE)
     }
 }
 
@@ -590,6 +669,12 @@ impl fmt::Display for InstSetTemplateObj {
     }
 }
 
+impl fmt::Display for Cart {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}{}", CART, LEFT_BRACE, braced_vec_to_string(&self.args), RIGHT_BRACE)
+    }
+}
+
 // obj helper functions
 impl Obj {
     pub fn equal_literally(left: &Obj, right: &Obj) -> bool {
@@ -696,6 +781,22 @@ impl Obj {
             },
             Obj::InstSetTemplateObj(a) => match right {
                 Obj::InstSetTemplateObj(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Cart(a) => match right {
+                Obj::Cart(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::SetDim(a) => match right {
+                Obj::SetDim(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Proj(a) => match right {
+                Obj::Proj(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Dim(a) => match right {
+                Obj::Dim(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
         }
