@@ -323,8 +323,8 @@ func NewSetIsFnStmt(setObj Obj, fnSetObj *FnObj, proof StmtSlice, line uint) *Se
 	return &SetIsFnStmt{Obj: setObj, FnSetObj: fnSetObj, Proof: proof, Line: line}
 }
 
-func NewSetTemplateStmt(name string, params StrSlice, paramSets ObjSlice, domFacts ReversibleFacts, equalTo Obj, line uint) *SetTemplateStmt {
-	return &SetTemplateStmt{Name: name, Params: params, ParamSets: paramSets, DomFacts: domFacts, EqualTo: equalTo, Line: line}
+func NewSetTemplateStmt(name string, params StrSlice, paramSets ObjSlice, domFacts ReversibleFacts, equalTo Obj, line uint) *DefSetTemplateStmt {
+	return &DefSetTemplateStmt{Name: name, Params: params, ParamSets: paramSets, DomFacts: domFacts, EqualTo: equalTo, Line: line}
 }
 
 func NewFnIsSubsetOfCartStmt(obj Obj, fnSetObj FnSetObj, line uint) *FnIsSubsetOfCartStmt {

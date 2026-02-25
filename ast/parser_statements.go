@@ -4368,7 +4368,7 @@ func (p *TbParser) pureFact_chainFact(tb *tokenBlock) (FactStmt, error) {
 	}
 }
 
-func (p *TbParser) defSetTemplateStmt(tb *tokenBlock) (*SetTemplateStmt, error) {
+func (p *TbParser) defSetTemplateStmt(tb *tokenBlock) (*DefSetTemplateStmt, error) {
 	err := tb.header.skip(glob.KeywordSetTemplate)
 	if err != nil {
 		return nil, ErrInLine(err, tb)

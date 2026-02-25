@@ -44,7 +44,7 @@ func NewBuiltinEnvMgrWithNewEmptyEnv(envPkgMgr *env.EnvPkgMgr) (*env.EnvMgr, err
 }
 
 func NewBuiltinEnvMgr() (*env.EnvMgr, error) {
-	curEnvMgr := env.NewEnvMgr(env.NewEnvPkgMgr(pkgMgr.NewEmptyPkgMgr("")), []env.EnvMemory{*env.NewEnvMemory()}, make(map[string]env.DefinedStuff[struct{}]), make(map[string]env.DefinedStuff[*ast.DefPropStmt]), make(map[string]env.DefinedStuff[*ast.DefAlgoStmt]), make(map[string]env.DefinedStuff[*ast.SetTemplateStmt]))
+	curEnvMgr := env.NewEnvMgr(env.NewEnvPkgMgr(pkgMgr.NewEmptyPkgMgr("")), []env.EnvMemory{*env.NewEnvMemory()}, make(map[string]env.DefinedStuff[struct{}]), make(map[string]env.DefinedStuff[*ast.DefPropStmt]), make(map[string]env.DefinedStuff[*ast.DefAlgoStmt]), make(map[string]env.DefinedStuff[*ast.DefSetTemplateStmt]))
 	env.BuiltinEnvMgrWithEmptyEnvPkgMgr = curEnvMgr
 	curEnvMgr.Init()
 	err := useHardcodedCodeToInitEnvMgr(curEnvMgr)

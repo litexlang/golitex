@@ -36,6 +36,8 @@ func (ver *Verifier) objSatisfyFnReq(obj ast.Obj, state *VerState) ast.VerRet {
 		return ver.fnSetObjSatisfyFnReq(objAs, state)
 	case *ast.SetBuilderObj:
 		panic("object type SetBuilderObj is not supported")
+	case *ast.InstSetTemplateObj:
+		return ver.setTemplateObjSatisfyFnReq(objAs, state)
 	default:
 		panic(fmt.Sprintf("unknown object type: %T", obj))
 	}
@@ -233,6 +235,47 @@ func (ver *Verifier) checkFnsReqInReversibleFact(stmt ast.Spec_OrFact, state *Ve
 		}
 	default:
 		panic(fmt.Sprintf("unknown then type: %T", then))
+	}
+
+	return ast.NewTrueVerRet(nil, nil, "")
+}
+
+func (ver *Verifier) setTemplateObjSatisfyFnReq(setTemplateObj *ast.InstSetTemplateObj, state *VerState) ast.VerRet {
+	setTemplateDef := ver.Env.GetSetTemplateDef(string(setTemplateObj.Name))
+	if setTemplateDef == nil {
+		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("set template %s not defined", setTemplateObj.Name))
+	}
+
+	if len(setTemplateObj.Params) != len(setTemplateDef.Params) {
+		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("the number of parameters is not equal to the number of parameter sets of %s", setTemplateDef))
+	}
+
+	uniMap := make(map[string]ast.Obj)
+	for i, param := range setTemplateObj.Params {
+		uniMap[setTemplateDef.Params[i]] = param
+	}
+
+	for i, paramSet := range setTemplateDef.ParamSets {
+		newParamSet, err := paramSet.Instantiate(uniMap)
+		if err != nil {
+			return ast.NewErrVerRet(nil).AddExtraInfo(err.Error())
+		}
+		inFact := ast.NewInFactWithObj(setTemplateObj.Params[i], newParamSet)
+		verRet := ver.VerFactStmt(inFact, state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
+	}
+
+	for _, fact := range setTemplateDef.DomFacts {
+		newFact, err := fact.InstantiateFact(uniMap)
+		if err != nil {
+			return ast.NewErrVerRet(fact).AddExtraInfo(err.Error())
+		}
+		verRet := ver.VerFactStmt(newFact.(ast.FactStmt), state)
+		if verRet.IsNotTrue() {
+			return verRet
+		}
 	}
 
 	return ast.NewTrueVerRet(nil, nil, "")
