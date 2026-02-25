@@ -107,7 +107,12 @@ func (f *FnSetObjWithName) Instantiate(uniMap map[string]Obj) (Obj, error) {
 		return nil, err
 	}
 
-	return NewFnSetObjWithName(f.FnName, f.Params, newParamSets, newDomFacts, f.RetSet, newThenFacts), nil
+	newRetSet, err := f.RetSet.Instantiate(newUniMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewFnSetObjWithName(f.FnName, f.Params, newParamSets, newDomFacts, newRetSet, newThenFacts), nil
 }
 
 func (f *FnSetObjWithName) GetRetSet() Obj {
