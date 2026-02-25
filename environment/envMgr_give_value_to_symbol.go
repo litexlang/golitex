@@ -33,6 +33,8 @@ func (envMgr *EnvMgr) GetStoredSymbolValue(obj ast.Obj) (bool, ast.Obj) {
 		return envMgr.GetStoredValueOfFnObj(asObj)
 	case ast.FnSetObj:
 		return false, nil
+	case *ast.InstSetTemplateObj:
+		return false, nil
 	default:
 		panic(fmt.Sprintf("\n\nTODO:unknown object type in GetStoredSymbolValue: %T\n\n", obj))
 	}
