@@ -972,6 +972,18 @@ func (stmt *EvalStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewEvalStmt(obj, stmt.Line), nil
 }
 
+func (stmt *SetTemplateStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+	newParamSets, err := stmt.ParamSets.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	newEqualTo, err := stmt.EqualTo.Instantiate(uniMap)
+	if err != nil {
+		return nil, err
+	}
+	return NewSetTemplateStmt(stmt.Name, stmt.Params, newParamSets, newEqualTo, stmt.Line), nil
+}
+
 // func (stmt *SpecFactStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 // 	return stmt.InstantiateFact(uniMap)
 // }

@@ -127,6 +127,8 @@ const (
 	KeywordFnIsSubsetOfCartSet = "fn_is_subset_of_cart"
 
 	KeywordRestrict = "restrict"
+
+	KeywordSetTemplate = "set_template"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -236,6 +238,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordInfer:     {},
 
 	KeywordRestrict: {},
+
+	KeywordSetTemplate: {},
 }
 
 const (

@@ -115,6 +115,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.setIsFnStmt(tb)
 	case glob.KeywordFnIsSubsetOfCartSet:
 		ret, err = p.fnIsSubsetOfCartStmt(tb)
+	case glob.KeywordSetTemplate:
+		ret, err = p.defSetTemplateStmt(tb)
 	default:
 		// ret, err = p.factOrFactInferStmt(tb)
 		ret, err = p.factStmt(tb)
@@ -4364,4 +4366,38 @@ func (p *TbParser) pureFact_chainFact(tb *tokenBlock) (FactStmt, error) {
 	default:
 		return nil, fmt.Errorf("expect pure fact or chain fact, got: %T", ret)
 	}
+}
+
+func (p *TbParser) defSetTemplateStmt(tb *tokenBlock) (*SetTemplateStmt, error) {
+	err := tb.header.skip(glob.KeywordSetTemplate)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	name, err := tb.header.next()
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	params, paramSets, _, err := p.paramParamSetWithBracket(tb, []string{glob.KeySymbolRightBrace})
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	if !tb.header.is(glob.KeySymbolEqual) {
+		return nil, ErrInLine(fmt.Errorf("expect %s, got %s", glob.KeySymbolEqual, tb.header.strAtCurIndexPlus(0)), tb)
+	}
+	tb.header.skip(glob.KeySymbolEqual)
+
+	equalTo, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	return NewSetTemplateStmt(name, params, paramSets, equalTo, tb.line), nil
 }

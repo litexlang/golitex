@@ -100,6 +100,21 @@ func (envMgr *EnvMgr) IsCommutativeProp(specFact *ast.PureSpecificFactStmt) bool
 // 	return nil
 // }
 
+func (envMgr *EnvMgr) GetSetTemplateDef(setName string) *ast.SetTemplateStmt {
+	setTemplateDef, ok := envMgr.AllDefinedSetTemplateNames[setName]
+	if ok {
+		return setTemplateDef.Defined
+	}
+
+	// Search in builtin env
+	setTemplateDef, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedSetTemplateNames[setName]
+	if ok {
+		return setTemplateDef.Defined
+	}
+
+	return nil
+}
+
 func (envMgr *EnvMgr) GetAlgoDef(funcName string) *ast.DefAlgoStmt {
 	algoDef, ok := envMgr.AllDefinedAlgoNames[funcName]
 	if ok {
