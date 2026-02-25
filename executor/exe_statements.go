@@ -1359,5 +1359,5 @@ func (exec *Executor) letFn(stmt *ast.LetFn) ast.StmtRet {
 }
 
 func (exec *Executor) setTemplateStmt(stmt *ast.SetTemplateStmt) ast.StmtRet {
-	return exec.NewTrueStmtRet(stmt)
+	return exec.NewErrStmtRet(stmt)
 }

@@ -490,6 +490,7 @@ type SetTemplateStmt struct {
 	Name      string
 	Params    StrSlice
 	ParamSets ObjSlice
+	DomFacts  ReversibleFacts
 	EqualTo   Obj
 
 	Line uint

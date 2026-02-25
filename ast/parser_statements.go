@@ -4384,7 +4384,7 @@ func (p *TbParser) defSetTemplateStmt(tb *tokenBlock) (*SetTemplateStmt, error) 
 		return nil, ErrInLine(err, tb)
 	}
 
-	params, paramSets, _, err := p.paramParamSetWithBracket(tb, []string{glob.KeySymbolRightBrace})
+	params, paramSets, domFacts, err := p.leftBraceParamsAndParamSetsAndDomsAndRightBrace(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -4399,5 +4399,5 @@ func (p *TbParser) defSetTemplateStmt(tb *tokenBlock) (*SetTemplateStmt, error) 
 		return nil, ErrInLine(err, tb)
 	}
 
-	return NewSetTemplateStmt(name, params, paramSets, equalTo, tb.line), nil
+	return NewSetTemplateStmt(name, params, paramSets, domFacts, equalTo, tb.line), nil
 }

@@ -270,7 +270,7 @@ const (
 	// KeySymbolColonEqual   = ":="
 	KeySymbolLeftCurly  = "{"
 	KeySymbolRightCurly = "}"
-	// KeySymbolAt         = "@"
+	KeySymbolAt         = "@"
 	KeySymbolRightArrow = "=>"
 
 	KeySymbolSemiColon  = ";"
