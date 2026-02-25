@@ -35,3 +35,8 @@ pub const R: &str = "R";
 pub const CART: &str = "cart";
 pub const SET_DIM: &str = "set_dim";
 pub const PROJ: &str = "proj";
+pub const COUNT: &str = "count";
+pub const RANGE: &str = "range";
+pub const CLOSED_RANGE: &str = "closed_range";
+
+pub const VAL: &str = "val";

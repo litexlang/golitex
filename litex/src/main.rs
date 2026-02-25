@@ -26,7 +26,8 @@ fn main() {
     try_n_pos_obj();
     try_parameter_set();
     try_instantiated_set_template_obj();
-    try_cart_set_dim_proj_dim();
+    try_cart_set_dim_proj_dim_tuple();
+    try_count_range_closed_range_val();
 }
 
 fn try_atom_fn_obj() {
@@ -143,7 +144,7 @@ fn try_instantiated_set_template_obj() {
 }
 
 
-fn try_cart_set_dim_proj_dim() {
+fn try_cart_set_dim_proj_dim_tuple() {
     let cart = Obj::box_cart(vec![Obj::box_atom_without_pkg("a"), Obj::box_atom_without_pkg("b")]);
     let set_dim = Obj::box_set_dim(Obj::box_atom_without_pkg("a"));
     let proj = Obj::box_proj(Obj::box_atom_without_pkg("a"), Obj::box_atom_without_pkg("b"));
@@ -152,4 +153,17 @@ fn try_cart_set_dim_proj_dim() {
     println!("{}", set_dim);
     println!("{}", proj);
     println!("{}", dim);
+    let tuple = Obj::box_tuple(vec![Obj::box_atom_without_pkg("a"), Obj::box_atom_without_pkg("b")]);
+    println!("{}", tuple);
+}
+
+fn try_count_range_closed_range_val() {
+    let count = Obj::box_count(Obj::box_atom_without_pkg("a"));
+    let range = Obj::box_range(Obj::box_atom_without_pkg("a"), Obj::box_atom_without_pkg("b"));
+    let closed_range = Obj::box_closed_range(Obj::box_atom_without_pkg("a"), Obj::box_atom_without_pkg("b"));
+    let val = Obj::box_val(Obj::box_atom_without_pkg("a"));
+    println!("{}", count);
+    println!("{}", range);
+    println!("{}", closed_range);
+    println!("{}", val);
 }
