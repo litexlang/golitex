@@ -1,3 +1,6 @@
+use crate::atom::Atom;
+use crate::obj::Obj;
+
 enum Fact {
     AtomicFact(Box<AtomicFact>),
     ExistFact(ExistFact),
@@ -20,7 +23,7 @@ enum AtomicFact {
 }
 
 struct OrdinaryAtomicFact {
-    pub predicate: Box<Predicate>,
+    pub predicate: Box<Atom>,
     pub body: Vec<Box<Obj>>,
 }
 
