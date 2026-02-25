@@ -24,3 +24,4 @@ process_tmp.py
 .cursor
 .cursor/Tutorial
 golitex
+/litex/target/
