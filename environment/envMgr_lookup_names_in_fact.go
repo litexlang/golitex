@@ -21,7 +21,7 @@ import (
 	"maps"
 )
 
-func (envMgr *EnvMgr) LookUpNamesInFact(stmt ast.FactStmt, extraParams map[string]struct{}) *glob.StmtRet {
+func (envMgr *EnvMgr) LookUpNamesInFact(stmt ast.FactStmt, extraParams map[string]struct{}) ast.ShortRet {
 	switch s := stmt.(type) {
 	case ast.SpecificFactStmt:
 		return envMgr.LookupNamesInSpecFact(s, extraParams)
@@ -31,33 +31,35 @@ func (envMgr *EnvMgr) LookUpNamesInFact(stmt ast.FactStmt, extraParams map[strin
 		return envMgr.LookupNamesInUniFactWithIff(s, extraParams)
 	case *ast.OrStmt:
 		return envMgr.LookupNamesInOrFact(s, extraParams)
-	case *ast.EqualsFactStmt:
-		return envMgr.LookupNamesInEqualsFact(s, extraParams)
+	case *ast.ChainPureFact:
+		return envMgr.LookupNamesInChainFact(s, extraParams)
 	default:
-		return glob.ErrRet(fmt.Sprintf("unknown fact type: %T", stmt))
+		return ast.NewErrShortRetWithMsg(fmt.Sprintf("unknown fact type: %T", stmt))
 	}
 }
 
-func (envMgr *EnvMgr) LookupNamesInSpecFact(stmt ast.SpecificFactStmt, extraParams map[string]struct{}) *glob.StmtRet {
+func (envMgr *EnvMgr) LookupNamesInSpecFact(stmt ast.SpecificFactStmt, extraParams map[string]struct{}) ast.ShortRet {
 	switch asFact := stmt.(type) {
 	case *ast.PureSpecificFactStmt:
 		return envMgr.lookupNamesInPureFact(asFact, extraParams)
 	case *ast.ExistSpecificFactStmt:
 		return envMgr.lookupNamesInExistFact(asFact, extraParams)
 	default:
-		return glob.ErrRet(fmt.Sprintf("unknown specific fact type: %T", stmt))
+		return ast.NewErrShortRetWithMsg(fmt.Sprintf("unknown specific fact type: %T", stmt))
 	}
 }
 
-func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.ExistSpecificFactStmt, extraParams map[string]struct{}) *glob.StmtRet {
-	if ret := envMgr.IsPropDefinedOrBuiltinProp(stmt.PureFact); ret.IsNotTrue() {
-		return ret
+func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.ExistSpecificFactStmt, extraParams map[string]struct{}) ast.ShortRet {
+	for _, fact := range stmt.PureFacts {
+		if ret := envMgr.IsPropDefinedOrBuiltinProp(fact); ret.IsNotTrue() {
+			return ast.NewErrShortRetWithMsg(fmt.Sprintf("exist fact prop %s is not defined or builtin prop", fact.PropName))
+		}
 	}
 
 	newExtraParams := maps.Clone(extraParams)
 	for i, paramSet := range stmt.ExistFreeParams {
 		if envMgr.lookupAtomObjName(ast.Atom(stmt.ExistFreeParams[i]), extraParams).IsTrue() {
-			return glob.ErrRetWithErr(fmt.Errorf("exist fact exist parameter %s conflicts with defined parameter", paramSet))
+			return ast.NewErrShortRetWithMsg(fmt.Sprintf("failed to lookup name %s in exist fact exist parameter %s", stmt.ExistFreeParams[i], paramSet))
 		}
 		newExtraParams[stmt.ExistFreeParams[i]] = struct{}{}
 	}
@@ -72,38 +74,40 @@ func (envMgr *EnvMgr) lookupNamesInExistFact(stmt *ast.ExistSpecificFactStmt, ex
 	// 	newExtraParams[stmt.ExistFreeParams[i]] = struct{}{}
 	// }
 
-	for _, param := range stmt.PureFact.Params {
-		if ret := envMgr.LookupNamesInObj(param, newExtraParams); ret.IsNotTrue() {
-			return ret
+	for _, fact := range stmt.PureFacts {
+		for _, param := range fact.Params {
+			if envMgr.LookupNamesInObj(param, newExtraParams).IsNotTrue() {
+				return ast.NewErrShortRetWithMsg(fmt.Sprintf("failed to lookup name %s in exist fact exist parameter %s", param.String(), param.String()))
+			}
 		}
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueShortRet()
 }
 
-func (envMgr *EnvMgr) lookupNamesInPureFact(stmt *ast.PureSpecificFactStmt, extraParams map[string]struct{}) *glob.StmtRet {
+func (envMgr *EnvMgr) lookupNamesInPureFact(stmt *ast.PureSpecificFactStmt, extraParams map[string]struct{}) ast.ShortRet {
 	if ret := envMgr.IsPropDefinedOrBuiltinProp(stmt); ret.IsNotTrue() {
-		return ret
+		return ast.NewErrShortRetWithMsg(fmt.Sprintf("failed to lookup names in pure fact prop %s", stmt.PropName)).AddExtraInfo(ret.String())
 	}
 
 	for _, param := range stmt.Params {
-		if ret := envMgr.LookupNamesInObj(param, extraParams); ret.IsNotTrue() {
-			return ret
+		if envMgr.LookupNamesInObj(param, extraParams).IsNotTrue() {
+			return ast.NewErrShortRetWithMsg(fmt.Sprintf("failed to lookup names in pure fact parameter %s", param.String()))
 		}
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueShortRet()
 }
 
-func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.PureSpecificFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.PureSpecificFactStmt) ast.StmtRet {
 	if glob.IsBuiltinPropName(string(stmt.PropName)) {
-		return glob.NewEmptyStmtTrue()
+		return ast.NewTrueStmtEmptyRet(stmt)
 	}
 
 	// Check if it's a regular prop defined by user
-	_, ok := envMgr.GetPropDef(stmt.GetPropName())
+	_, ok := envMgr.GetPropDef(stmt.Key())
 	if ok {
-		return glob.NewEmptyStmtTrue()
+		return ast.NewTrueStmtEmptyRet(stmt)
 	}
 
 	// existPropDef := envMgr.GetExistPropDef(stmt.PropName)
@@ -111,11 +115,11 @@ func (envMgr *EnvMgr) IsPropDefinedOrBuiltinProp(stmt *ast.PureSpecificFactStmt)
 	// 	return glob.NewEmptyStmtTrue()
 	// }
 
-	return glob.ErrRet(fmt.Sprintf("undefined prop or exist_prop: %s", stmt.PropName))
+	return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("undefined prop or exist_prop: %s", stmt.PropName))
 	// }
 }
 
-func (envMgr *EnvMgr) LookupNamesInUniFact(stmt *ast.UniFactStmt, extraParams map[string]struct{}) *glob.StmtRet {
+func (envMgr *EnvMgr) LookupNamesInUniFact(stmt *ast.UniFactStmt, extraParams map[string]struct{}) ast.ShortRet {
 	// Merge stmt.Params into extraParams for this uni fact
 	combinedParams := make(map[string]struct{})
 	for k, v := range extraParams {
@@ -126,11 +130,11 @@ func (envMgr *EnvMgr) LookupNamesInUniFact(stmt *ast.UniFactStmt, extraParams ma
 	for i, paramSet := range stmt.ParamSets {
 		ret := envMgr.LookupNamesInObjOrObjStringIsSetNonemptySetFiniteSet(paramSet, combinedParams)
 		if ret.IsNotTrue() {
-			return ret
+			return ast.NewErrShortRetWithMsg(fmt.Sprintf("param set %s conflicts with defined parameter", paramSet.String()))
 		}
 
 		if _, ok := combinedParams[stmt.Params[i]]; ok {
-			return glob.ErrRet(fmt.Sprintf("duplicate free parameter: %s", stmt.Params[i]))
+			return ast.NewErrShortRetWithMsg(fmt.Sprintf("duplicate free parameter: %s", stmt.Params[i]))
 		}
 		combinedParams[stmt.Params[i]] = struct{}{}
 	}
@@ -147,10 +151,10 @@ func (envMgr *EnvMgr) LookupNamesInUniFact(stmt *ast.UniFactStmt, extraParams ma
 		}
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueShortRet()
 }
 
-func (envMgr *EnvMgr) LookupNamesInUniFactWithIff(stmt *ast.UniFactWithIffStmt, extraParams map[string]struct{}) *glob.StmtRet {
+func (envMgr *EnvMgr) LookupNamesInUniFactWithIff(stmt *ast.UniFactWithIffStmt, extraParams map[string]struct{}) ast.ShortRet {
 	if ret := envMgr.LookupNamesInUniFact(stmt.UniFact, extraParams); ret.IsNotTrue() {
 		return ret
 	}
@@ -170,32 +174,32 @@ func (envMgr *EnvMgr) LookupNamesInUniFactWithIff(stmt *ast.UniFactWithIffStmt, 
 		}
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueShortRet()
 }
 
-func (envMgr *EnvMgr) LookupNamesInOrFact(stmt *ast.OrStmt, extraParams map[string]struct{}) *glob.StmtRet {
+func (envMgr *EnvMgr) LookupNamesInOrFact(stmt *ast.OrStmt, extraParams map[string]struct{}) ast.ShortRet {
 	for _, stmt := range stmt.Facts {
 		if ret := envMgr.LookUpNamesInFact(stmt, extraParams); ret.IsNotTrue() {
 			return ret
 		}
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueShortRet()
 }
 
-func (envMgr *EnvMgr) LookupNamesInEqualsFact(stmt *ast.EqualsFactStmt, extraParams map[string]struct{}) *glob.StmtRet {
-	for _, obj := range stmt.Params {
-		if ret := envMgr.LookupNamesInObj(obj, extraParams); ret.IsNotTrue() {
-			return ret
+func (envMgr *EnvMgr) LookupNamesInChainFact(stmt *ast.ChainPureFact, extraParams map[string]struct{}) ast.ShortRet {
+	for _, obj := range stmt.Objs {
+		if envMgr.LookupNamesInObj(obj, extraParams).IsNotTrue() {
+			return ast.NewErrShortRetWithMsg(fmt.Sprintf("chain fact parameter %s conflicts with defined parameter", obj.String()))
 		}
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueShortRet()
 }
 
-func (envMgr *EnvMgr) LookupNamesInObjOrObjStringIsSetNonemptySetFiniteSet(obj ast.Obj, extraParams map[string]struct{}) *glob.StmtRet {
+func (envMgr *EnvMgr) LookupNamesInObjOrObjStringIsSetNonemptySetFiniteSet(obj ast.Obj, extraParams map[string]struct{}) ast.ShortRet {
 	if asAtom, ok := obj.(ast.Atom); ok && glob.IsKeywordSetOrNonEmptySetOrFiniteSet(string(asAtom)) {
-		return glob.NewEmptyStmtTrue()
+		return ast.NewTrueShortRet()
 	}
 
 	return envMgr.LookupNamesInObj(obj, extraParams)

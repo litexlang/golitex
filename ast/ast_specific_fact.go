@@ -29,7 +29,7 @@ type SpecificFactStmt interface {
 	Instantiate(map[string]Obj) (Stmt, error)
 	SetLine(l uint)
 	ReverseIsTrue() []SpecificFactStmt
-	GetPropName() Atom
+	Key() Atom
 	GetFactType() SpecFactType
 }
 
@@ -39,12 +39,19 @@ func (s *ExistSpecificFactStmt) reversibleFact() {}
 func (s *PureSpecificFactStmt) specificFactStmt()  {}
 func (s *ExistSpecificFactStmt) specificFactStmt() {}
 
-func (s *PureSpecificFactStmt) GetPropName() Atom {
+func (s *PureSpecificFactStmt) Key() Atom {
 	return s.PropName
 }
 
-func (s *ExistSpecificFactStmt) GetPropName() Atom {
-	return s.PureFact.PropName
+func (s *ExistSpecificFactStmt) Key() Atom {
+	ret := ""
+	for i, pureFact := range s.PureFacts {
+		ret += pureFact.PropName.String()
+		if i != len(s.PureFacts)-1 {
+			ret += ","
+		}
+	}
+	return Atom(ret)
 }
 
 type PureSpecificFactStmt struct {
@@ -58,7 +65,7 @@ type ExistSpecificFactStmt struct {
 	IsTrue             bool
 	ExistFreeParams    []string
 	ExistFreeParamSets ObjSlice
-	PureFact           *PureSpecificFactStmt
+	PureFacts          []*PureSpecificFactStmt
 	Line               uint
 }
 
@@ -67,7 +74,7 @@ func (s *PureSpecificFactStmt) ReverseIsTrue() []SpecificFactStmt {
 }
 
 func (s *ExistSpecificFactStmt) ReverseIsTrue() []SpecificFactStmt {
-	return []SpecificFactStmt{NewExistSpecificFactStmt(!s.IsTrue, s.ExistFreeParams, s.ExistFreeParamSets, s.PureFact, s.GetLine())}
+	return []SpecificFactStmt{NewExistSpecificFactStmt(!s.IsTrue, s.ExistFreeParams, s.ExistFreeParamSets, s.PureFacts, s.GetLine())}
 }
 
 func (s *PureSpecificFactStmt) GetFactType() SpecFactType {
@@ -113,10 +120,14 @@ func (e *ExistSpecificFactStmt) ReplaceFreeParamsWithNewParams(newExistFreeParam
 		uniMap[e.ExistFreeParams[i]] = Atom(newExistFreeParams[i])
 	}
 
-	newPureFact, err := e.PureFact.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
+	newPureFact := make([]*PureSpecificFactStmt, len(e.PureFacts))
+	for i, pureFact := range e.PureFacts {
+		tmp, err := pureFact.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newPureFact[i] = tmp.(*PureSpecificFactStmt)
 	}
 
-	return NewExistSpecificFactStmt(e.IsTrue, newExistFreeParams, newParamSets, newPureFact.(*PureSpecificFactStmt), e.Line), nil
+	return NewExistSpecificFactStmt(e.IsTrue, newExistFreeParams, newParamSets, newPureFact, e.Line), nil
 }

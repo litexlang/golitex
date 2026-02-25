@@ -58,6 +58,6 @@ package litex_ast
 // 	panic("")
 // }
 
-// func (stmt *EqualsFactStmt) ReplaceObj(oldObj Obj, newObj Obj) FactStmt {
+// func (stmt *ChainPureFact) ReplaceObj(oldObj Obj, newObj Obj) FactStmt {
 // 	panic("")
 // }

@@ -1,13 +1,30 @@
-prop p(x R)
-prop q(x R)
-prop r(x R)
+prove:
+    prop p(x R)
+    prop q(x R)
+    prop r(x R)
 
-know:
-    $p(1) or $q(1) or $r(2)
-    not $p(1)
-    not $q(1)
+    know:
+        $p(1) or $q(1) or $r(2)
+        not $p(1)
+        not $q(1)
 
-contra $r(2):
-    impossible $p(1) or $q(1) or $r(2)
+    contra $r(2):
+        impossible $p(1) or $q(1) or $r(2)
 
 $q(1) or $r(2) or $p(1)
+
+prove:
+    prop p(x R)
+    prop q(x R)
+
+    know forall x R: $p(x) or $q(x)
+
+    $q(1) or $p(1)
+
+prove:
+    prop p(x R)
+    prop q(x R)
+
+    know $p(1) or $q(1)
+
+    $q(1) or $p(1)

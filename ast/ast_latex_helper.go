@@ -52,6 +52,15 @@ func (head DefHeader) NameWithParamsLatexString() string {
 	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "_", "\\_"))
 }
 
+func (head *DefHeaderWithDom) NameWithParamsLatexString() string {
+	var builder strings.Builder
+	builder.WriteString(string(head.Name))
+	builder.WriteString("(")
+	builder.WriteString(strings.Join(head.Params, ", "))
+	builder.WriteString(")")
+	return fmt.Sprintf("$%s$", strings.ReplaceAll(builder.String(), "_", "\\_"))
+}
+
 func (s FactStmtSlice) factStmtSliceToLatexStringSlice() []string {
 	factStrSlice := make([]string, len(s))
 	for i := range len(s) {

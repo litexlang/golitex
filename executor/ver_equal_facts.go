@@ -25,31 +25,52 @@ import (
 // WARNING
 // REMARK
 // TODO: cmpFc_Builtin_Then_Decompose_Spec, fcEqualSpec 大循环本质上是有问题的，会有循环论证的风险：know p(p(1,2), 0) = 1, 则现在问 p(1,2) =1 吗？我会比较 p(1,2) = p(p(1,2), 0)，那这时候就出问题了：我因为一位位地比，所以又回到了比较 1 = p(1,2)
-func (ver *Verifier) cmpObj_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-	ok, msg, err := cmp.CmpBy_Literally_NumLit_PolynomialArith(left, right) // 完全一样
-	if err != nil {
-		return glob.NewVerRet(glob.StmtRetTypeError, fmt.Sprintf("%s = %s", left, right), 0, []string{err.Error()})
-	}
-	if ok {
-		if state.WithMsg {
-			return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("%s = %s", left, right), 0, []string{msg})
+// func (ver *Verifier) cmpObj_Builtin_Then_Decompose_Spec(left ast.Obj, right ast.Obj, state *VerState) ast.VerRet {
+// 	ret := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right) // 完全一样
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
+// 	if ret.IsTrue() {
+// 		if state.WithMsg {
+// 			return ret
+// 		}
+// 		return glob.NewEmptyVerRetTrue()
+// 	}
+
+// 	// return ver.decomposeObjFnsAndCheckEquality(left, right, state, ver.objEqualSpec)
+// 	return ast.NewEmptyUnknownVerRet()
+// }
+
+func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj, state *VerState, areEqualObjs func(left ast.Obj, right ast.Obj, state *VerState) ast.VerRet) ast.VerRet {
+	if leftAsFn, ok := left.(*ast.FnObj); ok {
+		if rightAsFn, ok := right.(*ast.FnObj); ok {
+			if len(leftAsFn.Params) != len(rightAsFn.Params) {
+				return ast.NewEmptyUnknownVerRet()
+			}
+
+			// compare head
+			verRet := areEqualObjs(leftAsFn.FnHead, rightAsFn.FnHead, state)
+			if verRet.IsErr() || verRet.IsUnknown() {
+				return verRet
+			}
+			// compare params
+			for i := range leftAsFn.Params {
+				verRet := areEqualObjs(leftAsFn.Params[i], rightAsFn.Params[i], state)
+				if verRet.IsErr() || verRet.IsUnknown() {
+					return verRet
+				}
+			}
+
+			equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, right}, glob.BuiltinLine0)
+			return ast.NewTrueVerRet(equalFact, nil, fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right))
 		}
-		return glob.NewEmptyVerRetTrue()
 	}
-
-	// if ok {
-	// 	return true, nil
-	// }
-
-	// if ok, err := ver.decomposeFcFnsAndCheckEquality_WithoutState(left, right, cmp.Cmp_ByBIR); err != nil {
-	// if ok, msg, err := ver.decomposeFcFnsAndCheckEquality(left, right, state, ver.FcsEqualBy_Eval_ShareKnownEqualMem); err != nil {
-	return ver.decomposeObjFnsAndCheckEquality(left, right, state, ver.objEqualSpec)
-
+	return ast.NewEmptyUnknownVerRet()
 }
 
 // Iterate over all equal facts. On each equal fact, use commutative, associative, cmp rule to compare.
-func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) *glob.VerRet {
-	if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(left, right, state); verRet.IsErr() || verRet.IsTrue() {
+func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) ast.VerRet {
+	if verRet := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
 
@@ -63,10 +84,11 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 
 		if gotLeftEqualObjs && gotRightEqualObjs {
 			if equalToLeftObjs == equalToRightObjs {
+				equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, right}, glob.BuiltinLine0)
 				if state.WithMsg {
-					return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("known %s = %s", left, right), 0, []string{})
+					return ast.NewTrueVerRet(equalFact, nil, fmt.Sprintf("known %s = %s", left, right))
 				}
-				return glob.NewEmptyVerRetTrue()
+				return ast.NewTrueVerRet(equalFact, nil, "")
 			}
 		}
 
@@ -77,11 +99,16 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 					continue
 				}
 
-				if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToLeftObj, right, state); verRet.IsErr() {
+				if verRet := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(equalToLeftObj, right); verRet.IsErr() {
 					return verRet
 				} else if verRet.IsTrue() {
+					equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, right}, glob.BuiltinLine0)
 					if state.WithMsg {
-						return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftObj, right, equalToLeftObj, left), 0, verRet.VerifyMsgs)
+						msg := fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToLeftObj, right, equalToLeftObj, left)
+						if len(verRet.GetExtraInfos()) > 0 {
+							msg += "\n" + fmt.Sprintf("%v", verRet.GetExtraInfos())
+						}
+						return ast.NewTrueVerRet(equalFact, nil, msg)
 					}
 					return verRet
 				}
@@ -95,11 +122,16 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 					continue
 				}
 
-				if verRet := ver.cmpObj_Builtin_Then_Decompose_Spec(equalToRightObj, left, state); verRet.IsErr() {
+				if verRet := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(equalToRightObj, left); verRet.IsErr() {
 					return verRet
 				} else if verRet.IsTrue() {
+					equalFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left, right}, glob.BuiltinLine0)
 					if state.WithMsg {
-						return glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightObj, left, equalToRightObj, right), 0, verRet.VerifyMsgs)
+						msg := fmt.Sprintf("known:\n%s = %s\n%s = %s", equalToRightObj, left, equalToRightObj, right)
+						if len(verRet.GetExtraInfos()) > 0 {
+							msg += "\n" + fmt.Sprintf("%v", verRet.GetExtraInfos())
+						}
+						return ast.NewTrueVerRet(equalFact, nil, msg)
 					}
 					return verRet
 				}
@@ -107,40 +139,10 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 		}
 	}
 
-	return glob.NewEmptyVerRetUnknown()
+	return ast.NewEmptyUnknownVerRet()
 }
 
-func (ver *Verifier) verTrueEqualFact_ObjFnEqual_NoCheckRequirements(left, right *ast.FnObj, state *VerState) *glob.VerRet {
-	if len(left.Params) != len(right.Params) {
-		return glob.NewEmptyVerRetUnknown()
-	}
-
-	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)
-	verRet := ver.VerTrueEqualFactAndCheckFnReq(ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left.FnHead, right.FnHead}, glob.BuiltinLine0), state.CopyAndReqOkToTrue())
-	if verRet.IsErr() {
-		return verRet
-	}
-	if verRet.IsUnknown() {
-		return glob.NewEmptyVerRetUnknown()
-	}
-
-	for i := range left.Params {
-		// ok, err := ver.fcEqualSpec(left.Params[i], right.Params[i], state)
-
-		verRet := ver.VerTrueEqualFactAndCheckFnReq(ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{left.Params[i], right.Params[i]}, glob.BuiltinLine0), state.CopyAndReqOkToTrue())
-		if verRet.IsErr() {
-			return verRet
-		}
-		if verRet.IsUnknown() {
-			return verRet
-		}
-	}
-
-	// return newTrueVerRet("")
-	return glob.NewEmptyVerRetTrue()
-}
-
-func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, state *VerState) *glob.StmtRet {
+func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, state *VerState) ast.StmtRet {
 	for curEnvIndex := range ver.Env.EnvSlice {
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		leftEqualObjs, ok := curEnv.EqualMem[left.String()]
@@ -148,7 +150,7 @@ func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, sta
 			rightEqualObjs, ok := curEnv.EqualMem[right.String()]
 			if ok {
 				if leftEqualObjs == rightEqualObjs {
-					return glob.NewEmptyStmtTrue()
+					return newTrueStmtRetWithCaller()
 				}
 			}
 		}
@@ -156,29 +158,29 @@ func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, sta
 
 	leftEqualObjs, ok := ver.Env.GetEqualObjs(left)
 	if !ok {
-		return glob.NewEmptyStmtUnknown()
+		return newUnknownStmtRetWithCaller("")
 	}
 
 	rightEqualObjs, ok := ver.Env.GetEqualObjs(right)
 	if !ok {
-		return glob.NewEmptyStmtUnknown()
+		return newUnknownStmtRetWithCaller("")
 	}
 
 	for _, leftEqualObj := range *leftEqualObjs {
 		for _, rightEqualObj := range *rightEqualObjs {
 			if leftEqualObj.String() == rightEqualObj.String() {
-				return glob.NewEmptyStmtTrue()
+				return newTrueStmtRetWithCaller()
 			} else {
-				_, newLeft := ver.Env.ReplaceSymbolWithValue(leftEqualObj)
+				_, newLeft := ver.Env.GetStoredSymbolValue(leftEqualObj)
 				if cmp.IsNumExprLitObj(newLeft) {
-					_, newRight := ver.Env.ReplaceSymbolWithValue(rightEqualObj)
-					if ok, _, _ := cmp.CmpBy_Literally_NumLit_PolynomialArith(newLeft, newRight); ok {
-						return glob.NewEmptyStmtTrue()
+					_, newRight := ver.Env.GetStoredSymbolValue(rightEqualObj)
+					if ret := cmp.CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(newLeft, newRight); ret.IsTrue() {
+						return newTrueStmtRetWithCaller()
 					}
 				}
 			}
 		}
 	}
 
-	return glob.NewEmptyStmtUnknown()
+	return newUnknownStmtRetWithCaller("")
 }

@@ -18,16 +18,16 @@ import (
 	"fmt"
 	ast "golitex/ast"
 	env "golitex/environment"
-	glob "golitex/glob"
 )
 
-func (exec *Executor) inferStmt(stmt *ast.InferStmt) *glob.StmtRet {
+func (exec *Executor) inferStmt(stmt *ast.InferStmt) ast.StmtRet {
 	ver := NewVerifier(exec.Env)
 
 	for _, domFact := range stmt.DomFacts {
 		ret := exec.factStmt(domFact.(ast.FactStmt))
 		if ret.IsNotTrue() {
-			return exec.AddStmtToStmtRet(glob.ErrRet(fmt.Sprintf("failed to verify fact: %s", domFact.String())), stmt)
+			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("failed to verify fact: %s", domFact.String()))
+			// return exec.AddStmtToStmtRet(ast.StmtErrRet(domFact, fmt.Sprintf("failed to verify fact: %s", domFact.String())), stmt)
 		}
 	}
 
@@ -39,7 +39,7 @@ func (exec *Executor) inferStmt(stmt *ast.InferStmt) *glob.StmtRet {
 	}
 
 	// emit then
-	newFactMsgs := []string{}
+	newFacts := []ast.InferRet{}
 	for _, thenFact := range stmt.ThenFacts {
 		var factStmt ast.FactStmt
 		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
@@ -47,19 +47,19 @@ func (exec *Executor) inferStmt(stmt *ast.InferStmt) *glob.StmtRet {
 		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
 			factStmt = orStmt
 		} else {
-			return glob.ErrRet(fmt.Sprintf("imply statement error: unsupported fact type in thenFacts: %T", thenFact))
+			return ast.StmtErrRet(thenFact, fmt.Sprintf("imply statement error: unsupported fact type in thenFacts: %T", thenFact))
 		}
 		ret := ver.Env.NewFactWithCheckingNameDefined(factStmt)
 		if ret.IsNotTrue() {
-			return ret
+			return ast.StmtErrRet(factStmt, ret.String())
 		}
-		newFactMsgs = append(newFactMsgs, factStmt.String())
+		newFacts = append(newFacts, ret)
 	}
 
-	return exec.NewTrueStmtRet(stmt).AddNewFacts(newFactMsgs)
+	return ast.NewTrueStmtEmptyRet(stmt).AddInfers(newFacts)
 }
 
-func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.InferStmt, thenFact ast.Spec_OrFact, state *VerState) *glob.StmtRet {
+func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.InferStmt, thenFact ast.Spec_OrFact, state *VerState) ast.StmtRet {
 	for curEnvIndex := range ver.Env.EnvSlice {
 		curEnv := &ver.Env.EnvSlice[curEnvIndex]
 		verRet := ver.specFact_ImplyMem_atCurEnv(curEnv, stmt, thenFact, state)
@@ -82,12 +82,12 @@ func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.InferStmt, thenFact a
 		}
 	}
 
-	return glob.NewEmptyVerRetUnknown().ToStmtRet()
+	return ast.NewEmptyUnknownVerRet().ToStmtRet()
 }
 
-func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.InferStmt, fact ast.Spec_OrFact, state *VerState) *glob.VerRet {
+func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.InferStmt, fact ast.Spec_OrFact, state *VerState) ast.VerRet {
 	if !state.ReqOk {
-		return glob.NewVerRet(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("specFact_UniMem_atCurEnv: state is %s", state)})
+		return ast.NewUnknownVerRet(nil)
 	}
 
 	searchedKnownFacts := []env.KnownSpecFact_InImplyTemplate{}
@@ -97,23 +97,23 @@ func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast
 	} else if asOr, ok := fact.(*ast.OrStmt); ok {
 		searchedKnownFacts, got = curEnv.KnownFactsStruct.SpecFactInImplyTemplateMem.GetSameEnumPkgPropFacts(asOr.Facts[0])
 	} else {
-		return glob.NewEmptyVerRetErr()
+		return ast.NewEmptyVerRetErr()
 	}
 
 	if !got {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	return ver.iterate_KnownPureSpecInImplyStmt_applyMatch_InstObjInParamSetAndSatisfyIfFacts(stmt, searchedKnownFacts, fact, state)
 }
 
-func (ver *Verifier) iterate_KnownPureSpecInImplyStmt_applyMatch_InstObjInParamSetAndSatisfyIfFacts(stmt *ast.InferStmt, knownFacts []env.KnownSpecFact_InImplyTemplate, toCheck ast.Spec_OrFact, state *VerState) *glob.VerRet {
+func (ver *Verifier) iterate_KnownPureSpecInImplyStmt_applyMatch_InstObjInParamSetAndSatisfyIfFacts(stmt *ast.InferStmt, knownFacts []env.KnownSpecFact_InImplyTemplate, toCheck ast.Spec_OrFact, state *VerState) ast.VerRet {
 outerLoop:
 	for i := len(knownFacts) - 1; i >= 0; i-- {
 		ok, uniMap, err := ver.
 			matchImplyTemplateParamsWithAllParamsInImplyStmt(&knownFacts[i], stmt, toCheck)
 		if err != nil {
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 		if !ok {
 			continue outerLoop
@@ -124,7 +124,7 @@ outerLoop:
 		for j, knownParamSet := range knownFacts[i].ImplyTemplate.ParamSets {
 			instKnownParamSet, err := knownParamSet.Instantiate(localUniMap)
 			if err != nil {
-				return glob.NewEmptyVerRetUnknown()
+				return ast.NewEmptyUnknownVerRet()
 			}
 
 			inFact := ast.NewInFactWithObj(uniMap[knownFacts[i].ImplyTemplate.Params[j]], instKnownParamSet)
@@ -140,7 +140,7 @@ outerLoop:
 		for _, ifFact := range knownFacts[i].ImplyTemplate.IfFacts {
 			instIfFact, err := ifFact.Instantiate(localUniMap)
 			if err != nil {
-				return glob.NewEmptyVerRetUnknown()
+				return ast.NewEmptyUnknownVerRet()
 			}
 
 			ret := ver.VerFactStmt(instIfFact.(ast.FactStmt), state)
@@ -149,17 +149,18 @@ outerLoop:
 			}
 		}
 
-		return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{})
+		// return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{})
+		return ast.NewTrueVerRet(toCheck, nil, "")
 	}
 
-	return glob.NewEmptyVerRetUnknown()
+	return ast.NewEmptyUnknownVerRet()
 }
 
 func (ver *Verifier) checkFactTypeAndPropNamesMatch(knownFact ast.Spec_OrFact, implyFact ast.Spec_OrFact) bool {
 	switch knownAs := knownFact.(type) {
 	case ast.SpecificFactStmt:
 		if implyAs, ok := implyFact.(ast.SpecificFactStmt); ok {
-			if knownAs.GetPropName() != implyAs.GetPropName() {
+			if knownAs.Key() != implyAs.Key() {
 				return false
 			}
 
@@ -177,7 +178,7 @@ func (ver *Verifier) checkFactTypeAndPropNamesMatch(knownFact ast.Spec_OrFact, i
 			}
 
 			for j := range implyAs.Facts {
-				if knownAs.Facts[j].GetPropName() != implyAs.Facts[j].GetPropName() {
+				if knownAs.Facts[j].Key() != implyAs.Facts[j].Key() {
 					return false
 				}
 			}
@@ -273,7 +274,7 @@ func (ver *Verifier) matchImplyTemplateParamsWithAllParamsInImplyStmt(knownImply
 func (ver *Verifier) matchInstSpecFactWithKnownFreeParamsInImply(knownSpecFact ast.SpecificFactStmt, freeVars []string, instFact ast.SpecificFactStmt) (bool, map[string]ast.Obj, error) {
 	switch instFactAs := instFact.(type) {
 	case *ast.PureSpecificFactStmt:
-		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.(*ast.PureSpecificFactStmt).Params, freeVars, instFactAs.Params, string(instFactAs.GetPropName()), map[string]ast.Obj{})
+		return ver.matchUniFactParamsWithSpecFactParamsInImply(knownSpecFact.(*ast.PureSpecificFactStmt).Params, freeVars, instFactAs.Params, string(instFactAs.Key()), map[string]ast.Obj{})
 	default:
 		return false, nil, nil
 	}

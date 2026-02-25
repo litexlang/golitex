@@ -8,8 +8,11 @@ prove:
     know forall x R: $p(x) => $q(x)
     know forall x R: $q(x) => $t(x)
 
+    prop p_to_t(x R):
+        $p(x)
+
     claim:
-        prop_infer p_to_t(x R):
+        forall x R:
             $p(x)
             =>:
                 $t(x)
@@ -17,19 +20,3 @@ prove:
             $q(x)
             $t(x)
 
-prove:
-    prop p(x, y N)
-    prop p2(x, y, z N)
-    claim:
-        prop_infer q(x, y, z N):
-            $p2(x, y, z)
-            =>:
-                $p(x, y)
-        prove:
-            know $p(x, y)
-
-    let a, b, c N:
-        $p2(a, b, c)
-
-    $q(a, b, c)
-    $p(a, b)

@@ -16,25 +16,24 @@ package litex_executor
 
 import (
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
-func (ver *Verifier) matchPureFactWithOneInKnownUniFact(knownUniFact *ast.UniFactStmt, pureFactInKnownUniFact *ast.PureSpecificFactStmt, given *ast.PureSpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) matchPureFactWithOneInKnownUniFactAndCheckMatchedObjectsSatisfyUniFactConditions(knownUniFact *ast.UniFactStmt, pureFactInKnownUniFact *ast.PureSpecificFactStmt, given *ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
 	ok, uniMap := ver.matchObjectsWithFreeParamsWithInstObjectsInPureFact(knownUniFact.Params, pureFactInKnownUniFact.Params, given.Params)
 
 	if !ok {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	for i, paramSet := range knownUniFact.ParamSets {
 		instParamSet, err := paramSet.Instantiate(uniMap)
 		if err != nil {
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 		inFact := ast.NewInFactWithObj(uniMap[knownUniFact.Params[i]], instParamSet)
 		ret := ver.VerFactStmt(inFact, state)
 		if ret.IsNotTrue() {
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 	}
 
@@ -42,25 +41,25 @@ func (ver *Verifier) matchPureFactWithOneInKnownUniFact(knownUniFact *ast.UniFac
 	for _, domFact := range knownUniFact.DomFacts {
 		instDomFact, err := domFact.InstantiateFact(uniMap)
 		if err != nil {
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 
 		switch asInstDomFact := instDomFact.(type) {
 		case ast.SpecificFactStmt:
 			ret := ver.VerFactStmt(asInstDomFact, nextState)
 			if ret.IsNotTrue() {
-				return glob.NewEmptyVerRetUnknown()
+				return ast.NewEmptyUnknownVerRet()
 			}
 		case *ast.OrStmt:
 			ret := ver.VerFactStmt(instDomFact, nextState)
 			if ret.IsNotTrue() {
-				return glob.NewEmptyVerRetUnknown()
+				return ast.NewEmptyUnknownVerRet()
 			}
 		default:
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 
 	}
 
-	return glob.NewVerRet(glob.StmtRetTypeTrue, given.String(), knownUniFact.Line, []string{knownUniFact.String()})
+	return ast.NewTrueVerRet(given, nil, knownUniFact.String())
 }
