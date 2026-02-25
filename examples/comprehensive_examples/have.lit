@@ -80,4 +80,33 @@ prove:
 
     exist x R st $p(x, 1) or exist x R st $q(x, 1)
 
+prove:
+    prop p(x, y R):
+        x > 0
+        y > 0
 
+    know exist x, y st $p(x, y)
+
+    have x, y st $p(x, y)
+
+    x > 0
+    y > 0
+
+prove:
+    have fn:
+        f (x R) R:
+            x > 0
+            =>:
+                f(x) = x + 1
+        witness:
+            do_nothing
+        = x + 1
+
+    f(2) = 3
+
+prove:
+    have f fn(Z) fn(Z) Z
+
+    f(1) $in fn(Z)Z
+
+    f(1)(2) = f(1)(2)

@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ie *InferEngine) newPureFact(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) newPureFact(fact *ast.PureSpecificFactStmt) ast.InferRet {
 	if glob.IsBuiltinPropName(string(fact.PropName)) {
 		ret := ie.BuiltinPropExceptTrueEqual(fact)
 		return ret
@@ -30,33 +30,47 @@ func (ie *InferEngine) newPureFact(fact *ast.PureSpecificFactStmt) *glob.ShortRe
 
 	if ok {
 		if fact.IsTrue {
-			ret := ie.newUserDefinedTruePureFactByDef(fact)
+			ret := ie.inferByUserDefinedProp(fact)
 			return ret
 		}
-		return glob.NewEmptyShortTrueRet()
+		return ast.NewTrueInferRet(fact)
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("undefined prop: %s", fact.PropName)})
+	return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("undefined prop: %s", fact.PropName))
 }
 
-func (ie *InferEngine) newFalseExist(fact *ast.ExistSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) newFalseExist(fact *ast.ExistSpecificFactStmt) ast.InferRet {
 	paramSets := []ast.Obj{}
 	for i := 0; i < len(fact.ExistFreeParams); i++ {
 		paramSets = append(paramSets, ast.Atom(glob.KeywordSet))
 	}
 
-	equivalentForall := ast.NewUniFact(fact.ExistFreeParams, paramSets, []ast.FactStmt{}, []ast.FactStmt{fact.PureFact.ReverseIsTrue()[0]}, fact.Line)
-	ret := ie.EnvMgr.newUniFact(equivalentForall)
-	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+	reversePureFacts := ast.SpecFactPtrSlice{}
+	for _, fact := range fact.PureFacts {
+		reversePureFacts = append(reversePureFacts, fact.ReverseIsTrue()[0].(*ast.PureSpecificFactStmt))
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, []string{equivalentForall.String()})
+	if len(reversePureFacts) == 1 {
+		equivalentForall := ast.NewUniFact(fact.ExistFreeParams, paramSets, []ast.Spec_OrFact{}, []ast.Spec_OrFact{reversePureFacts[0]}, fact.Line)
+		ret := ie.EnvMgr.newUniFact(equivalentForall)
+		if ret.IsErr() {
+			return ret
+		}
+		return ast.NewTrueInferRet(equivalentForall)
+	} else {
+		equivalentForall := ast.NewUniFact(fact.ExistFreeParams, paramSets, []ast.Spec_OrFact{}, []ast.Spec_OrFact{ast.NewOrStmt(reversePureFacts, fact.Line)}, fact.Line)
+		ret := ie.EnvMgr.newUniFact(equivalentForall)
+		if ret.IsErr() {
+			return ret
+		}
+
+		return ast.NewTrueInferRet(equivalentForall)
+	}
 }
 
 // newTrueExist handles postprocessing for TrueExist_St facts
 // have(exist ... st ...) => exist
-// func (ie *InferEngine) newTrueExist(fact *ast.SpecFactStmt) *glob.ShortRet {
+// func (ie *InferEngine) newTrueExist(fact *ast.SpecFactStmt) ast.ShortRet {
 // 	if ie.EnvMgr.GetPropDef(fact.PropName) != nil {
 // 		return glob.NewEmptyShortTrueRet()
 // 	}
@@ -99,7 +113,7 @@ func (ie *InferEngine) newFalseExist(fact *ast.ExistSpecificFactStmt) *glob.Shor
 
 // newFalseExistFact_EmitEquivalentUniFact handles postprocessing for FalseExist facts
 // not exist => forall not
-// func (ie *InferEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) *glob.ShortRet {
+// func (ie *InferEngine) newFalseExistFact_EmitEquivalentUniFact(fact *ast.SpecFactStmt) ast.ShortRet {
 // 	uniFact, ret := ie.EnvMgr.notExistToForall(fact)
 // 	if ret.IsErr() {
 // 		return glob.ErrStmtMsgToShortRet(ret)

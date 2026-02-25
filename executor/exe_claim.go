@@ -17,18 +17,17 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
-func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
-	innerStmtRets := []*glob.StmtRet{}
+func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByContradictionStmt) ast.StmtRet {
+	innerStmtRets := []ast.StmtRet{}
 
 	// know reverse of
 	facts := stmt.ToCheckFact.(ast.Spec_OrFact).ReverseIsTrue()
 	for _, curFact := range facts {
-		execState := exec.Env.NewFactWithCheckingNameDefined(curFact)
-		if execState.IsErr() {
-			return glob.ErrRet(execState.String())
+		inferRet := exec.Env.NewFactWithCheckingNameDefined(curFact)
+		if inferRet.IsErr() {
+			return ast.NewErrStmtEmptyRet(stmt).AddInfer(inferRet)
 		}
 	}
 
@@ -36,14 +35,14 @@ func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByC
 		curStmt := stmt.Proofs[i]
 		execState := exec.Stmt(curStmt)
 		if execState.IsNotTrue() {
-			return execState.AddError(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
+			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("%s\nfailed :( line %d\n", curStmt.String(), curStmt.GetLine()))
 		}
 		innerStmtRets = append(innerStmtRets, execState)
 	}
 
 	lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(*ast.ImpossibleStmt)
 	if !ok {
-		return glob.ErrRet("prove by contradiction only support impossible reversible fact as last statement")
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo("prove by contradiction only support impossible reversible fact as last statement")
 	}
 
 	reversedLastFact := lastStmtAsFact.Fact.ReverseIsTrue()
@@ -57,44 +56,43 @@ func (exec *Executor) claimReversibleFactByContradiction(stmt *ast.ClaimProveByC
 	for _, curFact := range reversedLastFact {
 		execState := exec.factStmt(curFact)
 		if execState.IsNotTrue() {
-			return execState
+			return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(fmt.Sprintf("%s\nfailed :( line %d\n", curFact.String(), curFact.GetLine()))
 		}
 		innerStmtRets = append(innerStmtRets, execState)
 	}
 
-	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
+	return ast.NewTrueStmtEmptyRet(stmt).AddInnerStmtRets(innerStmtRets)
 }
 
-func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
+func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) ast.StmtRet {
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
 	ret := exec.Env.LookUpNamesInFact(stmt.ToCheckFact, map[string]struct{}{})
 	if ret.IsErr() {
-		ret.AddError("in claim statement")
-		return glob.ErrRet(ret.String())
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(ret.String())
 	}
 
 	switch stmt.ToCheckFact.(type) {
 	case ast.Spec_OrFact:
 		return exec.claimReversibleFactByContradiction(stmt)
 	default:
-		return glob.ErrRet(fmt.Sprintf("claim prove by contradiction only support reversible fact or forall fact"))
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo("claim prove by contradiction only support reversible fact or forall fact")
 	}
 }
 
-// func (exec *Executor) claimUniFactByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
+// func (exec *Executor) claimUniFactByContradiction(stmt *ast.ClaimProveByContradictionStmt) ast.StmtRet{
 // 	asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt)
 // 	if !ok {
-// 		return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support uni fact"))
+// 		return ast.StmtErrRet(fmt.Sprintf("claim stmt prove uni fact only support uni fact"))
 // 	}
 
 // 	var thenFact ast.Spec_OrFact
 // 	if len(asUnivFact.ThenFacts) == 1 {
 // 		thenFact, ok = asUnivFact.ThenFacts[0].(ast.Spec_OrFact)
 // 		if !ok {
-// 			return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support forall fact with one then fact"))
+// 			return ast.StmtErrRet(fmt.Sprintf("claim stmt prove uni fact only support forall fact with one then fact"))
 // 		}
 // 	} else {
-// 		return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support forall fact with one then fact"))
+// 		return ast.StmtErrRet(fmt.Sprintf("claim stmt prove uni fact only support forall fact with one then fact"))
 // 	}
 
 // 	exec.NewEnv()
@@ -115,7 +113,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 // 		}
 // 	}
 
-// 	innerStmtRets := []*glob.StmtRet{}
+// 	innerStmtRets := []ast.StmtRet{}
 // 	for i := 0; i < len(stmt.Proofs)-1; i++ {
 // 		curStmt := stmt.Proofs[i]
 // 		execState := exec.Stmt(curStmt)
@@ -128,7 +126,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 // 	// 最后一位是impossible stmt
 // 	lastStmtAsFact, ok := stmt.Proofs[len(stmt.Proofs)-1].(*ast.ImpossibleStmt)
 // 	if !ok {
-// 		return glob.ErrRet("prove by contradiction only support impossible reversible fact as last statement")
+// 		return ast.StmtErrRet("prove by contradiction only support impossible reversible fact as last statement")
 // 	}
 
 // 	// 最后一位既对又错
@@ -150,7 +148,7 @@ func (exec *Executor) claimStmtProveByContradiction(stmt *ast.ClaimProveByContra
 // 	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
 // }
 
-func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet {
+func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) ast.StmtRet {
 	state := exec.claimStmtProve(stmt)
 	if state.IsNotTrue() {
 		return state
@@ -159,19 +157,19 @@ func (exec *Executor) execClaimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet
 	// 检查 stmt fact 中的所有元素已经定义过了
 	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.ToCheckFact)
 	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
+		return ast.NewErrStmtEmptyRet(stmt).AddInfer(ret)
 	}
 	// exec.knowStmt(ast.NewKnowStmt([]ast.CanBeKnownStmt{stmt.ToCheckFact}))
 
 	if ret.IsNotTrue() {
-		return glob.NewStmtWithInnerStmtsRet(state.InnerStmtRetSlice, ret.RetType)
+		return ast.NewErrStmtEmptyRet(stmt).AddInfer(ret)
 	} else {
-		return glob.NewStmtWithInnerStmtsRet(state.InnerStmtRetSlice, ret.RetType)
+		return ast.NewTrueStmtEmptyRet(stmt).AddInfer(ret)
 	}
 
 }
 
-func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) *glob.StmtRet {
+func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByContradictionStmt) ast.StmtRet {
 	state := exec.claimStmtProveByContradiction(stmt)
 	if state.IsNotTrue() {
 		return state
@@ -180,13 +178,13 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 	// 检查 stmt fact 中的所有元素已经定义过了
 	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.ToCheckFact)
 	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
+		return ast.NewErrStmtEmptyRet(stmt).AddInfer(ret)
 	}
 
-	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(state.InnerStmtRetSlice)
+	return ast.NewTrueStmtEmptyRet(stmt).AddInfer(ret)
 }
 
-// func (exec *Executor) execImpossibleStmt(stmt *ast.ImpossibleStmt) *glob.StmtRet {
+// func (exec *Executor) execImpossibleStmt(stmt *ast.ImpossibleStmt) ast.StmtRet{
 // 	state := exec.impossibleStmt(stmt)
 // 	if state.IsNotTrue() {
 // 		return state
@@ -195,13 +193,13 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 // 	// 检查 stmt fact 中的所有元素已经定义过了
 // 	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.Fact)
 // 	if ret.IsErr() {
-// 		return glob.ErrRet(ret.String())
+// 		return ast.StmtErrRet(ret.String())
 // 	}
 
 // 	return exec.NewTrueStmtRet(stmt).AddInnerStmtRets(state.InnerStmtRetSlice)
 // }
 
-// func (exec *Executor) impossibleStmt(stmt *ast.ImpossibleStmt) *glob.StmtRet {
+// func (exec *Executor) impossibleStmt(stmt *ast.ImpossibleStmt) ast.StmtRet{
 // 	exec.NewEnv()
 // 	defer func() {
 // 		exec.deleteEnv()
@@ -211,24 +209,24 @@ func (exec *Executor) execClaimStmtProveByContradiction(stmt *ast.ClaimProveByCo
 // 	ret := exec.Env.LookUpNamesInFact(stmt.Fact, map[string]struct{}{})
 // 	if ret.IsErr() {
 // 		ret.AddError("in impossible statement")
-// 		return glob.ErrRet(ret.String())
+// 		return ast.StmtErrRet(ret.String())
 // 	}
 
 // 	// check that the fact is impossible (i.e., its negation is true)
 // 	execState = exec.factStmt(stmt.Fact)
 // 	if execState.IsTrue() {
 // 		// If the fact is true, then it's not impossible - this is an error
-// 		return glob.ErrRet(fmt.Sprintf("impossible statement error: the fact is actually true, not impossible:\n%s", stmt.Fact))
+// 		return ast.StmtErrRet(fmt.Sprintf("impossible statement error: the fact is actually true, not impossible:\n%s", stmt.Fact))
 // 	}
 // 	if execState.IsUnknown() {
-// 		return glob.ErrRet(fmt.Sprintf("impossible statement error: cannot determine if the fact is impossible:\n%s", stmt.Fact))
+// 		return ast.StmtErrRet(fmt.Sprintf("impossible statement error: cannot determine if the fact is impossible:\n%s", stmt.Fact))
 // 	}
 // 	// If execState.IsNotTrue(), then the fact is indeed impossible, which is what we want
 // 	innerStmtRets = append(innerStmtRets, execState)
 // 	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
 // }
 
-func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet {
+func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) ast.StmtRet {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
@@ -237,8 +235,7 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet {
 	// 需要检查stmt.ToCheckFact里的东西都是在外部声明好了的
 	ret := exec.Env.LookUpNamesInFact(stmt.ToCheckFact, map[string]struct{}{})
 	if ret.IsErr() {
-		ret.AddError("in claim statement")
-		return glob.ErrRet(ret.String())
+		return ast.StmtErrRet(stmt, ret.String())
 	}
 
 	switch stmt.ToCheckFact.(type) {
@@ -249,38 +246,38 @@ func (exec *Executor) claimStmtProve(stmt *ast.ClaimProveStmt) *glob.StmtRet {
 		}
 		return isSuccess
 	default:
-		innerStmtRets := []*glob.StmtRet{}
+		innerStmtRets := []ast.StmtRet{}
 		execState := exec.execStmtsAtCurEnv(stmt.Proofs)
 		if execState.IsNotTrue() {
 			return execState
 		}
-		innerStmtRets = append(innerStmtRets, execState.InnerStmtRetSlice...)
+		innerStmtRets = append(innerStmtRets, execState)
 		// check claim
 		execState = exec.factStmt(stmt.ToCheckFact)
 		if execState.IsNotTrue() {
 			return execState
 		}
 		innerStmtRets = append(innerStmtRets, execState)
-		return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
+		return ast.NewTrueStmtEmptyRet(stmt).AddInnerStmtRets(innerStmtRets)
 	}
 
 }
 
 // prove uniFact in claim at current env
-func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.StmtRet {
+func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) ast.StmtRet {
 	asUnivFact, ok := stmt.ToCheckFact.(*ast.UniFactStmt)
 	if !ok {
-		return glob.ErrRet(fmt.Sprintf("claim stmt prove uni fact only support uni fact"))
+		return ast.StmtErrRet(stmt, fmt.Sprintf("claim stmt prove uni fact only support uni fact"))
 	}
 
-	innerStmtRets := []*glob.StmtRet{}
+	innerStmtRets := []ast.StmtRet{}
 
 	// declare parameters in asUnivFact in the env
 	objDefStmt := ast.NewDefLetStmt(asUnivFact.Params, asUnivFact.ParamSets, []ast.FactStmt{}, stmt.Line)
 
 	execState := exec.defLetStmt(objDefStmt)
 	if execState.IsNotTrue() {
-		return execState.AddError(fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt))
+		return ast.StmtErrRet(stmt, fmt.Sprintf("Claim statement error: Failed to declare parameters in universal fact:\n%s\n", objDefStmt))
 	}
 	innerStmtRets = append(innerStmtRets, execState)
 
@@ -288,162 +285,33 @@ func (exec *Executor) claimStmtProveUniFact(stmt *ast.ClaimProveStmt) *glob.Stmt
 	for _, domFact := range asUnivFact.DomFacts {
 		ret := exec.Env.NewFactWithCheckingNameDefined(domFact)
 		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
+			return ast.NewErrStmtEmptyRet(stmt).AddInfer(ret)
 		}
 	}
 
 	// exec proof block
 	execState = exec.execStmtsAtCurEnv(stmt.Proofs)
 	if execState.IsNotTrue() {
-		return execState
+		return ast.NewErrStmtEmptyRet(stmt).AddExtraInfo(execState.String())
 	}
-	innerStmtRets = append(innerStmtRets, execState.InnerStmtRetSlice...)
+	innerStmtRets = append(innerStmtRets, execState)
 
 	// TODO: 让claim能forall if
 	// if asUnivFact.IffFacts == nil || len(asUnivFact.IffFacts) == 0 {
 	// execState, failedFact, err := verifier.ExecFactsAtCurEnv_retFailedFact(asUnivFact.ThenFacts, exec.env, verifier.Round0NoMsg)
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(asUnivFact.ThenFacts, Round0NoMsg())
+	execState, failedFact, err := exec.verifyFactsAtCurEnv(asUnivFact.ThenFacts.ToFactStmtSlice(), Round0NoMsg())
 	if err != nil {
-		return glob.ErrRet(fmt.Sprintf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err))
+		return ast.StmtErrRet(stmt, fmt.Sprintf("claim statement error: failed to verify fact:\n%s\n%s", failedFact, err))
 	} else if execState.IsUnknown() {
-		return glob.ErrRet(fmt.Sprintf("claim statement error: failed to verify fact:\n%s", failedFact))
+		return ast.StmtErrRet(stmt, fmt.Sprintf("claim statement error: failed to verify fact:\n%s", failedFact))
 	}
 
-	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
+	return ast.NewTrueStmtEmptyRet(stmt).AddInnerStmtRets(innerStmtRets)
 
 }
 
-// 也许我应该语义改成，先声明prop，然后再证明prop，而不是现在这个样子
-func (exec *Executor) claimImplyStmt(stmt *ast.ClaimImplicationStmt) *glob.StmtRet {
-	// prop all atoms declared
-	uniFact := ast.NewUniFact(stmt.Implication.DefHeader.Params, stmt.Implication.DefHeader.ParamSets, stmt.Implication.IffFactsOrNil, stmt.Implication.ImplicationFactsOrNil, stmt.Line)
-
-	ret := exec.Env.LookUpNamesInFact(uniFact, map[string]struct{}{})
-	if ret.IsErr() {
-		ret.AddError("in claim prop statement")
-		return glob.ErrRet(ret.String())
-	}
-
-	// check proofs
-	// if stmt.IsProve {
-	execState := exec.checkClaimPropStmtProofs(stmt)
-	if execState.IsNotTrue() {
-		return execState
-	}
-	// } else {
-	// 	execState := exec.checkClaimPropStmtProveByContradiction(stmt)
-	// 	if execState.IsNotTrue() {
-	// 		return execState
-	// 	}
-	// }
-
-	// know exec
-	prop := stmt.Implication
-	execRet := exec.knowPropInferStmt(ast.NewKnowPropInferStmt(prop, stmt.Line))
-	if execRet.IsNotTrue() {
-		return execRet
-	}
-
-	return execRet
-}
-
-// func (exec *Executor) claimExistPropStmt(stmt *ast.ClaimExistPropStmt) *glob.StmtRet {
-// 	execState := exec.claimExistPropStmtCheckProofs(stmt)
-// 	if execState.IsNotTrue() {
-// 		return execState
-// 	}
-
-// 	// declare exist prop
-// 	execState = exec.defExistPropStmt(stmt.ExistPropWithoutDom)
-// 	if execState.IsNotTrue() {
-// 		return execState
-// 	}
-
-// 	// know forall
-// 	uniFact := ast.NewUniFact(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFactsOrNil, []ast.FactStmt{stmt.ExistPropWithoutDom.DefBody.DefHeader.ToSpecFact()}, stmt.Line)
-// 	ret := exec.Env.NewFactWithoutCheckingNameDefined(uniFact)
-// 	if ret.IsErr() {
-// 		return glob.ErrRet(ret.String())
-// 	}
-
-// 	return glob.NewEmptyStmtTrue()
-// }
-
-// func (exec *Executor) claimExistPropStmtCheckProofs(stmt *ast.ClaimExistPropStmt) *glob.StmtRet {
-// 	exec.NewEnv()
-// 	defer func() {
-// 		exec.deleteEnv()
-// 	}()
-
-// 	innerStmtRets := []*glob.StmtRet{}
-
-// 	// declare parameters in exist prop
-// 	defObjStmt := ast.NewDefLetStmt(stmt.ExistPropWithoutDom.DefBody.DefHeader.Params, stmt.ExistPropWithoutDom.DefBody.DefHeader.ParamSets, stmt.ExistPropWithoutDom.DefBody.IffFactsOrNil, stmt.Line)
-
-// 	execState := exec.defLetStmt(defObjStmt)
-// 	if execState.IsNotTrue() {
-// 		return execState
-// 	}
-// 	innerStmtRets = append(innerStmtRets, execState)
-
-// 	for _, curStmt := range stmt.Proofs {
-// 		execState := exec.Stmt(curStmt)
-// 		if execState.IsNotTrue() {
-// 			if execState.IsUnknown() {
-// 				return execState.AddUnknown(fmt.Sprintf("unknown :( line %d\n", curStmt.GetLine()))
-// 			} else {
-// 				return execState.AddError(fmt.Sprintf("failed :( line %d:\n", curStmt.GetLine()))
-// 			}
-// 		}
-// 		innerStmtRets = append(innerStmtRets, execState)
-// 	}
-
-// 	// 把haveObj 代入 existParams 看看是否真的符合 then
-// 	if len(stmt.HaveObj) != len(stmt.ExistPropWithoutDom.ExistParams) {
-// 		return glob.ErrRet(fmt.Sprintf("claim exist prop statement error: have obj length is not equal to exist params length"))
-// 	}
-
-// 	uniMap := make(map[string]ast.Obj)
-// 	for i, haveObj := range stmt.HaveObj {
-// 		uniMap[stmt.ExistPropWithoutDom.ExistParams[i]] = haveObj
-// 	}
-
-// 	for _, fact := range stmt.ExistPropWithoutDom.DefBody.ImplicationFactsOrNil {
-// 		instFact, err := fact.InstantiateFact(uniMap)
-// 		if err != nil {
-// 			return glob.ErrRet(err.Error())
-// 		}
-// 		execState := exec.factStmt(instFact)
-// 		if execState.IsErr() {
-// 			return execState
-// 		}
-// 		if notOkExec(execState, err) {
-// 			return execState
-// 		}
-// 		innerStmtRets = append(innerStmtRets, execState)
-// 	}
-
-// 	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
-// }
-
-func (exec *Executor) checkClaimPropStmtProofs(stmt *ast.ClaimImplicationStmt) *glob.StmtRet {
-	uniFact := ast.NewUniFact(stmt.Implication.DefHeader.Params, stmt.Implication.DefHeader.ParamSets, stmt.Implication.IffFactsOrNil, stmt.Implication.ImplicationFactsOrNil, stmt.Line)
-
-	exec.NewEnv()
-	defer func() {
-		exec.deleteEnv()
-	}()
-
-	execRet := exec.claimStmtProveUniFact(ast.NewClaimProveStmt(uniFact, stmt.Proofs, stmt.Line))
-	if execRet.IsNotTrue() {
-		return execRet
-	}
-
-	return execRet
-}
-
-func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) *glob.StmtRet {
-	innerStmtRets := []*glob.StmtRet{}
+func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) ast.StmtRet {
+	innerStmtRets := []ast.StmtRet{}
 
 	thenToIff := stmt.UniFactWithIffStmt.NewUniFactWithThenToIff()
 	iffToThen := stmt.UniFactWithIffStmt.NewUniFactWithIffToThen()
@@ -453,21 +321,21 @@ func (exec *Executor) claimIffStmt(stmt *ast.ClaimIffStmt) *glob.StmtRet {
 	if execState.IsNotTrue() {
 		return execState
 	}
-	innerStmtRets = append(innerStmtRets, execState.InnerStmtRetSlice...)
+	innerStmtRets = append(innerStmtRets, execState)
 	execState = exec.claimStmtProve(claimIffToThen)
 	if execState.IsNotTrue() {
-		return execState
+		return ast.NewErrStmtEmptyRet(stmt).AddInnerStmtRets(innerStmtRets)
 	}
-	innerStmtRets = append(innerStmtRets, execState.InnerStmtRetSlice...)
+	innerStmtRets = append(innerStmtRets, execState)
 
 	ret := exec.Env.NewFactWithCheckingNameDefined(thenToIff)
 	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
+		return ast.NewErrStmtEmptyRet(stmt).AddInfer(ret)
 	}
 	ret = exec.Env.NewFactWithCheckingNameDefined(iffToThen)
 	if ret.IsErr() {
-		return glob.ErrRet(ret.String())
+		return ast.NewErrStmtEmptyRet(stmt).AddInfer(ret)
 	}
 
-	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
+	return ast.NewTrueStmtEmptyRet(stmt).AddInnerStmtRets(innerStmtRets)
 }

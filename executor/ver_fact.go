@@ -20,11 +20,12 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) ast.VerRet {
 	switch asStmt := stmt.(type) {
 	case ast.SpecificFactStmt:
 		if ast.IsTrueSpecFactWithPropName(asStmt, glob.KeySymbolEqual) {
-			return ver.VerTrueEqualFactAndCheckFnReq(asStmt, state)
+			// return ver.VerTrueEqualFactAndCheckFnReq(asStmt, state)
+			return ver.verTrueEqualFactAndCheckFnReq(asStmt.(*ast.PureSpecificFactStmt), state)
 		} else {
 			return ver.verSpecFactNotInFormOfTrueEqualAndCheckFnReq(asStmt, state)
 		}
@@ -34,9 +35,9 @@ func (ver *Verifier) VerFactStmt(stmt ast.FactStmt, state *VerState) *glob.VerRe
 		return ver.verUniFact(asStmt, state)
 	case *ast.UniFactWithIffStmt:
 		return ver.verUniFactWithIff(asStmt, state)
-	case *ast.EqualsFactStmt:
-		return ver.verEqualsFactStmt(asStmt, state)
+	case *ast.ChainPureFact:
+		return ver.verChainFactStmt(asStmt, state)
 	default:
-		return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("unexpected fact statement: %s", asStmt)})
+		return ast.NewErrVerRet(stmt).AddExtraInfo(fmt.Sprintf("unexpected fact statement: %s", asStmt))
 	}
 }

@@ -20,47 +20,51 @@ import (
 	glob "golitex/glob"
 )
 
-func (envMgr *EnvMgr) LookupNamesInObj(obj ast.Obj, extraParams map[string]struct{}) *glob.StmtRet {
+func (envMgr *EnvMgr) LookupNamesInObj(obj ast.Obj, extraParams map[string]struct{}) ast.ShortRet {
 	switch asObj := obj.(type) {
 	case ast.Atom:
 		return envMgr.lookupAtomObjName(asObj, extraParams)
 	case *ast.FnObj:
 		return envMgr.lookupNamesInFnObj(asObj, extraParams)
+	case ast.FnSetObj:
+		return envMgr.lookupNamesInFnSetObj(asObj, extraParams)
+	case *ast.InstSetTemplateObj:
+		return envMgr.lookupNamesInInstSetTemplateObj(asObj, extraParams)
 	default:
-		return glob.ErrRet(fmt.Sprintf("unknown object type: %T", obj))
+		return ast.NewErrShortRet()
 	}
 }
 
 // TODO: 目前只是检查了在当前的envMgr中是否定义了，没有检查在parent envMgr中是否定义了
-func (envMgr *EnvMgr) lookupAtomObjName(atom ast.Atom, extraParams map[string]struct{}) *glob.StmtRet {
+func (envMgr *EnvMgr) lookupAtomObjName(atom ast.Atom, extraParams map[string]struct{}) ast.ShortRet {
 	if _, ok := extraParams[string(atom)]; ok {
-		return glob.NewEmptyStmtTrue()
+		return ast.NewTrueShortRet()
 	}
 
 	// Check if it's a builtin atom
 	if glob.IsBuiltinAtomName(string(atom)) {
-		return glob.NewEmptyStmtTrue()
+		return ast.NewTrueShortRet()
 	}
 
 	// Check if it's a number literal
 	if _, ok := ast.IsNumLitAtomObj(atom); ok {
-		return glob.NewEmptyStmtTrue()
+		return ast.NewTrueShortRet()
 	}
 
 	// Check if it's defined by user
 	defined := envMgr.IsAtomNameDefinedByUser(string(atom))
 	if !defined {
 		if glob.IsKeywordSetOrNonEmptySetOrFiniteSet(string(atom)) {
-			return glob.ErrRet(fmt.Sprintf("undefined atom name: %s. Be careful, %s, %s, %s are syntax sugar for %s, %s, %s respectively. They are not objects.", string(atom), glob.KeywordSet, glob.KeywordNonEmptySet, glob.KeywordFiniteSet, glob.KeywordSet, glob.KeywordNonEmptySet, glob.KeywordFiniteSet))
+			return ast.NewErrShortRetWithMsg(fmt.Sprintf("undefined atom name: %s. Be careful, %s, %s, %s are syntax sugar for %s, %s, %s respectively. They are not objects.", string(atom), glob.KeywordSet, glob.KeywordNonEmptySet, glob.KeywordFiniteSet, glob.KeywordSet, glob.KeywordNonEmptySet, glob.KeywordFiniteSet))
 		} else {
-			return glob.ErrRet(fmt.Sprintf("undefined atom name: %s", atom))
+			return ast.NewErrShortRetWithMsg(fmt.Sprintf("undefined atom name: %s", atom))
 		}
 	} else {
-		return glob.NewEmptyStmtTrue()
+		return ast.NewTrueShortRet()
 	}
 }
 
-func (envMgr *EnvMgr) lookupNamesInFnObj(fnObj *ast.FnObj, extraParams map[string]struct{}) *glob.StmtRet {
+func (envMgr *EnvMgr) lookupNamesInFnObj(fnObj *ast.FnObj, extraParams map[string]struct{}) ast.ShortRet {
 	// Special handling for setBuilder
 	if ast.IsSetBuilder(fnObj) {
 		return envMgr.lookupNamesInSetBuilder(fnObj, extraParams)
@@ -72,24 +76,19 @@ func (envMgr *EnvMgr) lookupNamesInFnObj(fnObj *ast.FnObj, extraParams map[strin
 		}
 	}
 
-	// 如果head是fn,那直接成立了
-	if fnObj.IsAtomHeadEqualToStr(glob.KeywordFn) {
-		return glob.NewEmptyStmtTrue()
-	}
-
 	// 如果head 是 fn_template 那也OK了
-	if envMgr.FnObjHeadIsAtomAndIsFnSet(fnObj) {
-		return glob.NewEmptyStmtTrue()
-	}
+	// if envMgr.FnObjHeadIsAtomAndIsFnSet(fnObj) {
+	// 	return ast.NewTrueShortRet()
+	// }
 
 	return envMgr.LookupNamesInObj(fnObj.FnHead, extraParams)
 }
 
-func (envMgr *EnvMgr) lookupNamesInSetBuilder(obj ast.Obj, extraParams map[string]struct{}) *glob.StmtRet {
+func (envMgr *EnvMgr) lookupNamesInSetBuilder(obj ast.Obj, extraParams map[string]struct{}) ast.ShortRet {
 	setBuilderObj := obj.(*ast.FnObj)
 	setBuilder, err := setBuilderObj.ToSetBuilderStruct()
 	if err != nil {
-		return glob.ErrRet(fmt.Sprintf("failed to parse setBuilder: %s", err.Error()))
+		return ast.NewErrShortRetWithMsg(fmt.Sprintf("failed to parse setBuilder: %s", err.Error()))
 	}
 
 	// Check parentSet
@@ -111,5 +110,73 @@ func (envMgr *EnvMgr) lookupNamesInSetBuilder(obj ast.Obj, extraParams map[strin
 		}
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueShortRet()
+}
+
+func (envMgr *EnvMgr) lookupNamesInFnSetObj(obj ast.FnSetObj, extraParams map[string]struct{}) ast.ShortRet {
+	switch fnSetObj := obj.(type) {
+	case *ast.FnSetObjWithoutName:
+		for _, paramSet := range fnSetObj.ParamSets {
+			if ret := envMgr.LookupNamesInObj(paramSet, extraParams); ret.IsNotTrue() {
+				return ret
+			}
+		}
+
+		if ret := envMgr.LookupNamesInObj(fnSetObj.RetSet, extraParams); ret.IsNotTrue() {
+			return ret
+		}
+
+		return ast.NewTrueShortRet()
+	case *ast.FnSetObjWithName:
+		newExtraParams := make(map[string]struct{})
+		for k, v := range extraParams {
+			newExtraParams[k] = v
+		}
+		for _, param := range fnSetObj.Params {
+			newExtraParams[param] = struct{}{}
+		}
+		newExtraParams[fnSetObj.FnName] = struct{}{}
+
+		for _, paramSet := range fnSetObj.ParamSets {
+			if ret := envMgr.LookupNamesInObj(paramSet, newExtraParams); ret.IsNotTrue() {
+				return ret
+			}
+		}
+
+		if ret := envMgr.LookupNamesInObj(fnSetObj.RetSet, newExtraParams); ret.IsNotTrue() {
+			return ret
+		}
+
+		for _, domFact := range fnSetObj.DomFacts {
+			if ret := envMgr.LookUpNamesInFact(domFact, newExtraParams); ret.IsNotTrue() {
+				return ret
+			}
+		}
+
+		for _, thenFact := range fnSetObj.ThenFacts {
+			if ret := envMgr.LookUpNamesInFact(thenFact, newExtraParams); ret.IsNotTrue() {
+				return ret
+			}
+		}
+
+		return ast.NewTrueShortRet()
+
+	default:
+		panic(fmt.Sprintf("unknown function set object type: %T", fnSetObj))
+	}
+}
+
+func (envMgr *EnvMgr) lookupNamesInInstSetTemplateObj(obj *ast.InstSetTemplateObj, extraParams map[string]struct{}) ast.ShortRet {
+	setTemplateDef := envMgr.GetSetTemplateDef(string(obj.Name))
+	if setTemplateDef == nil {
+		return ast.NewErrShortRetWithMsg(fmt.Sprintf("undefined set template name: %s", string(obj.Name)))
+	}
+
+	for _, param := range obj.Params {
+		if ret := envMgr.LookupNamesInObj(param, extraParams); ret.IsNotTrue() {
+			return ret
+		}
+	}
+
+	return ast.NewTrueShortRet()
 }

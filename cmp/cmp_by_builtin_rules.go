@@ -91,22 +91,22 @@ func IsNumExprObjThenSimplify(obj ast.Obj) ast.Obj {
 	return nil
 }
 
-func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Obj) (bool, string, error) {
+func CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right ast.Obj) ast.VerRet {
 	// case 0: 按字面量来比较。这必须在比较div和比较polynomial之前，因为可能比较的是 * 和 *，即比较两个函数是不是一样。这种函数的比较，跑到div和polynomial就会出问题，因为在那些地方*都会被当成有参数的东西
 	ok, err := cmpObjLiterally(left, right)
 	if err != nil {
-		return false, "", err
+		return ast.NewEmptyVerRetErr()
 	}
 	if ok {
-		return true, "they are literally the same", nil
+		return ast.NewTrueVerRet(ast.EqualFact(left, right), nil, "they are literally the same")
 	}
 
 	areNumLit, areEqual, err := NumLitEqual_ByEval(left, right)
 	if err != nil {
-		return false, "", err
+		return ast.NewEmptyVerRetErr()
 	}
 	if areNumLit && areEqual {
-		return true, "calculation", nil
+		return ast.NewTrueVerRet(ast.EqualFact(left, right), nil, "calculation")
 	}
 
 	leftStr := left.String()
@@ -114,10 +114,10 @@ func CmpBy_Literally_NumLit_PolynomialArith(left, right ast.Obj) (bool, string, 
 
 	cmp := cmpArith_ByBIR(leftStr, rightStr)
 	if cmp {
-		return true, "The two polynomials become the same after simplification.", nil
+		return ast.NewTrueVerRet(ast.EqualFact(left, right), nil, "polynomial simplification")
 	}
 
-	return false, "", nil
+	return ast.NewEmptyUnknownVerRet()
 }
 
 func IsNumExprLitObj(obj ast.Obj) bool {
@@ -147,18 +147,4 @@ func NumLitEqual_ByEval(left, right ast.Obj) (bool, bool, error) {
 
 	areEqual, err := glob.NumLitExprEqual_ByEval(leftAsNumLitExpr, rightAsNumLitExpr)
 	return true, areEqual, err
-}
-
-func SliceObjAllEqualToGivenObjBuiltinRule(valuesToBeComped *[]ast.Obj, objToComp ast.Obj) (bool, error) {
-	for _, equalObj := range *valuesToBeComped {
-		ok, _, err := CmpBy_Literally_NumLit_PolynomialArith(equalObj, objToComp)
-		if err != nil {
-			return false, err
-		}
-		if ok {
-			return true, nil
-		}
-	}
-
-	return false, nil
 }

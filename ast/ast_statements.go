@@ -22,6 +22,7 @@ type StrSlice []string // 在定义的时候，用string而不是 atom 是有道
 type ObjSlice []Obj
 type ReversibleFacts []Spec_OrFact
 type FactOrByStmtSlice []FactOrByStmt
+type AtomSlice []Atom
 
 type DefLetStmt struct {
 	Objs    StrSlice
@@ -39,43 +40,35 @@ type DefHeader struct {
 
 type DefPropStmt struct {
 	DefHeader             *DefHeader
-	DomFactsOrNil         FactStmtSlice
 	IffFactsOrNil         FactStmtSlice // nil 表示没有iff，无法从定义来验证prop正确性；如果是 []FactStmt{}，表示只要dom和def满足了，那就prop成立。1
-	ImplicationFactsOrNil FactStmtSlice
+	ImplicationFactsOrNil ReversibleFacts
 
 	Line uint
 }
 
-type LetFnStmt struct {
-	Name       string
-	FnTemplate *AnonymousFn
+// type LetFnStmt struct {
+// 	Name       string
+// 	FnTemplate *AnonymousFn
+// 	// FnTemplate *FnSetObj
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type UniFactStmt struct {
 	Params    StrSlice
 	ParamSets ObjSlice
-	DomFacts  FactStmtSlice
-	ThenFacts FactStmtSlice
+	DomFacts  ReversibleFacts
+	ThenFacts ReversibleFacts
 
 	Line uint
 }
 
 type UniFactWithIffStmt struct {
 	UniFact  *UniFactStmt
-	IffFacts FactStmtSlice
+	IffFacts ReversibleFacts
 
 	Line uint
 }
-
-// type SpecFactStmt struct {
-// 	FactType SpecFactType
-// 	PropName Atom
-// 	Params   ObjSlice
-
-// 	Line uint
-// }
 
 type ClaimProveStmt struct {
 	ToCheckFact FactStmt
@@ -86,13 +79,6 @@ type ClaimProveStmt struct {
 
 type ClaimProveByContradictionStmt struct {
 	ToCheckFact Spec_OrFact
-	Proofs      StmtSlice
-
-	Line uint
-}
-
-type ClaimImplicationStmt struct {
-	Implication *DefPropStmt
 	Proofs      StmtSlice
 
 	Line uint
@@ -177,28 +163,29 @@ type HaveObjInNonEmptySetStmt struct {
 	Line uint
 }
 
-type EqualsFactStmt struct {
-	Params ObjSlice
+// type ChainPureFact struct {
+// 	Params ObjSlice
 
-	Line uint
-}
-type DefFnSetStmt struct {
-	TemplateDefHeader *DefHeader
-	TemplateDomFacts  FactStmtSlice
-	AnonymousFn       *AnonymousFn
+// 	Line uint
+// }
 
-	Line uint
-}
+// type DefFnSetStmt struct {
+// 	TemplateDefHeader *DefHeader
+// 	TemplateDomFacts  FactStmtSlice
+// 	AnonymousFn       *AnonymousFn
 
-type AnonymousFn struct {
-	Params    StrSlice
-	ParamSets ObjSlice
-	RetSet    Obj
-	DomFacts  FactStmtSlice
-	ThenFacts FactStmtSlice
+// 	Line uint
+// }
 
-	Line uint
-}
+// type AnonymousFn struct {
+// 	Params    StrSlice
+// 	ParamSets ObjSlice
+// 	RetSet    Obj
+// 	DomFacts  ReversibleFacts
+// 	ThenFacts ReversibleFacts
+
+// 	Line uint
+// }
 
 type ClearStmt struct {
 	Line uint
@@ -215,9 +202,11 @@ type InlineFactsStmt struct {
 }
 
 type ProveByInductionStmt struct {
-	Fact  FactStmt
+	Fact  Spec_OrFact
 	Param string
 	Proof StmtSlice
+
+	InducFrom Obj
 
 	Line uint
 }
@@ -231,27 +220,27 @@ type HaveObjEqualStmt struct {
 }
 
 // 这是have fn 语法糖。理论上可以用 exist_prop + have fn equal case by case + 给定义的函数定义它的函数集合，来彻底实现
-type HaveFnEqualStmt struct {
-	DefHeader *DefHeader
-	RetSet    Obj
-	EqualTo   Obj
-	Proofs    StmtSlice
+// type HaveFnEqualStmt struct {
+// 	DefHeader *DefHeader
+// 	RetSet    Obj
+// 	EqualTo   Obj
+// 	Proofs    StmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 // 这是have fn case by case，然后case by case下fn的then都满足的语法糖。理论上可以用 exist_prop + have fn equal case by case + fn_template (可以写复杂的dom, then) + 在定义的外部写如果参数符合dom，那对应的equalTo符合fn_template的then，来彻底实现have fn case by case 的功能。
 // Have fn case by case 和 have fn equal 就是单纯的语法糖，不要想有什么额外的功能。不要想着怎么让 HaveFn, HaveFnCaseByCase 用HaveEqual 来替代。
-type HaveFnEqualCaseByCaseStmt struct {
-	DefHeader         *DefHeader
-	RetSet            Obj
-	CaseByCaseFacts   SpecFactPtrSlice
-	CaseByCaseEqualTo ObjSlice
-	Proofs            StmtSliceSlice
-	ProveCases        StmtSlice
+// type HaveFnEqualCaseByCaseStmt struct {
+// 	DefHeader         *DefHeader
+// 	RetSet            Obj
+// 	CaseByCaseFacts   SpecFactPtrSlice
+// 	CaseByCaseEqualTo ObjSlice
+// 	Proofs            StmtSliceSlice
+// 	ProveCases        StmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 /*
 have fn:
@@ -265,7 +254,7 @@ have fn:
 	= ...
 */
 type HaveFnStmt struct {
-	DefFnStmt        *LetFnStmt
+	DefFnStmt        *LetFn
 	Proofs           StmtSlice
 	HaveObjSatisfyFn Obj
 
@@ -286,15 +275,6 @@ have fn:
 	    ...
 	= ...
 */
-type HaveFnCaseByCaseStmt struct {
-	DefFnStmt       *LetFnStmt
-	CaseByCaseFacts SpecFactPtrSlice
-	Proofs          StmtSliceSlice
-	EqualToObjs     ObjSlice
-	ProveCases      StmtSlice
-
-	Line uint
-}
 
 type ClaimIffStmt struct {
 	UniFactWithIffStmt *UniFactWithIffStmt
@@ -322,30 +302,30 @@ type ProveIsCommutativePropStmt struct {
 	Line uint
 }
 
-type AlgoStmtSlice []AlgoStmt
+// type AlgoStmtSlice []AlgoStmt
 
-// type ProveAlgoStmtSlice []ProveAlgoStmt
+// // type ProveAlgoStmtSlice []ProveAlgoStmt
 
-type AlgoIfStmt struct {
-	Conditions FactStmtSlice
-	ThenStmts  AlgoStmtSlice
+// type AlgoIfStmt struct {
+// 	Conditions FactStmtSlice
+// 	ThenStmts  AlgoStmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
-type AlgoReturnStmt struct {
-	Value Obj
+// type AlgoReturnStmt struct {
+// 	Value Obj
 
-	Line uint
-}
+// 	Line uint
+// }
 
-type DefAlgoStmt struct {
-	FuncName string
-	Params   StrSlice
-	Stmts    AlgoStmtSlice
+// type DefAlgoStmt struct {
+// 	FuncName string
+// 	Params   StrSlice
+// 	Stmts    AlgoStmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type EvalStmt struct {
 	ObjToEval Obj
@@ -353,53 +333,17 @@ type EvalStmt struct {
 	Line uint
 }
 
-// type DefProveAlgoStmt struct {
-// 	ProveAlgoName string
-// 	Params        StrSlice
-// 	Stmts         ProveAlgoStmtSlice
-//
-// 	Line uint
-// }
-
-// type ByStmt struct {
-// 	ProveAlgoName string
-// 	Params        ObjSlice
-//
-// 	Line uint
-// }
-
-// type ProveAlgoIfStmt struct {
-// 	Conditions FactStmtSlice
-// 	ThenStmts  ProveAlgoStmtSlice
-//
-// 	Line uint
-// }
-
-// type ProveAlgoReturnStmt struct {
-// 	Facts FactOrByStmtSlice
-//
-// 	Line uint
-// }
-
 type ProveForStmt struct {
 	Params        StrSlice
 	Lefts         ObjSlice
 	Rights        ObjSlice
 	IsProveIRange []bool // true for range, false for closed_range
-	DomFacts      FactStmtSlice
-	ThenFacts     FactStmtSlice
+	DomFacts      ReversibleFacts
+	ThenFacts     ReversibleFacts
 	Proofs        StmtSlice
 
 	Line uint
 }
-
-// type DefImplicationStmt struct {
-// 	DefHeader        *DefHeader
-// 	DomFacts         FactStmtSlice
-// 	ImplicationFacts FactStmtSlice
-
-// 	Line uint
-// }
 
 type ProveInferStmt struct {
 	SpecFact        *PureSpecificFactStmt
@@ -413,7 +357,7 @@ type ProveInferStmt struct {
 type HaveObjStStmt struct {
 	ObjNames StrSlice
 	ObjSets  ObjSlice
-	Fact     *PureSpecificFactStmt
+	Fact     []*PureSpecificFactStmt
 
 	Line uint
 }
@@ -422,18 +366,11 @@ type WitnessStmt struct {
 	ExistParams    StrSlice
 	ExistParamSets ObjSlice
 	EqualTos       ObjSlice
-	Fact           *PureSpecificFactStmt
+	Fact           []*PureSpecificFactStmt
 	Proofs         StmtSlice
 
 	Line uint
 }
-
-// type WitnessShortStmt struct {
-// 	SpecFact *PureSpecificFactStmt
-// 	Proofs   StmtSlice
-
-// 	Line uint
-// }
 
 type InferStmt struct {
 	DomFacts  ReversibleFacts
@@ -488,6 +425,73 @@ type ImpossibleStmt struct {
 
 type OrStmt struct {
 	Facts SpecFactPtrSlice
+
+	Line uint
+}
+
+type SetIsFnStmt struct {
+	Obj      Obj
+	FnSetObj *FnObj
+	Proof    StmtSlice
+
+	Line uint
+}
+
+type FnIsSubsetOfCartStmt struct {
+	Obj      Obj
+	FnSetObj FnSetObj
+
+	Line uint
+}
+
+type DefHeaderWithDom struct {
+	Name      string
+	Params    StrSlice
+	ParamSets ObjSlice
+	DomFacts  ReversibleFacts
+}
+
+type HaveFnEqual struct {
+	DefHeaderWithDom *DefHeaderWithDom
+	RetSet           Obj
+	EqualTo          Obj
+	Proofs           StmtSlice
+
+	Line uint
+}
+
+type HaveFnEqualCaseByCase struct {
+	DefHeaderWithDom  *DefHeaderWithDom
+	RetSet            Obj
+	CaseByCaseFacts   SpecFactPtrSlice
+	CaseByCaseEqualTo ObjSlice
+	Proofs            StmtSliceSlice
+	ProveCases        StmtSlice
+
+	Line uint
+}
+
+type LetFn struct {
+	DefHeaderWithDom *DefHeaderWithDom
+	RetSet           Obj
+	ThenFacts        ReversibleFacts
+
+	Line uint
+}
+
+type ChainPureFact struct {
+	Objs      ObjSlice
+	PropNames AtomSlice
+
+	Line uint
+}
+
+type DefSetTemplateStmt struct {
+	Name      string
+	Params    StrSlice
+	ParamSets ObjSlice
+	DomFacts  ReversibleFacts
+	EqualTo   Obj
 
 	Line uint
 }

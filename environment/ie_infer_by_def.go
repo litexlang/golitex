@@ -17,45 +17,68 @@ package litex_env
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
-func (ie *InferEngine) newUserDefinedTruePureFactByDef(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) inferByUserDefinedProp(fact *ast.PureSpecificFactStmt) ast.InferRet {
 	// 通过 prop 定义中的 iff 和 implication 规则，推导出后续结论
 	// 因为 prop 的定义包含了 iff（当且仅当）和 implication（蕴含）关系，
 	// 所以当该 prop 为真时，可以推导出定义中指定的后续事实
-	definedStuff, ok := ie.EnvMgr.GetPropDef(fact.GetPropName())
+	definedStuff, ok := ie.EnvMgr.GetPropDef(fact.Key())
 	if !ok {
 		// TODO 这里需要考虑prop的定义是否在当前包中。当然这里有点复杂，因为如果是内置的prop，那么可能需要到builtin包中去找
-		return glob.NewEmptyShortTrueRet()
+		return ast.NewTrueInferRet(fact)
 	}
 
 	propDef := definedStuff.Defined
 
-	iffFacts := []string{}
-	implicationFacts := []string{}
+	iffFacts := []ast.FactStmt{}
+	implicationFacts := []ast.FactStmt{}
 
 	uniMap := map[string]ast.Obj{}
 	for i, propParam := range propDef.DefHeader.Params {
 		uniMap[propParam] = fact.Params[i]
 	}
 
+	instParamSets := []ast.Obj{}
+	for i := range propDef.DefHeader.ParamSets {
+		paramSet, err := propDef.DefHeader.ParamSets[i].Instantiate(uniMap)
+		if err != nil {
+			return ast.NewErrInferRet(fact).AddExtraInfo(err.Error())
+		}
+		instParamSets = append(instParamSets, paramSet)
+	}
+
+	if len(instParamSets) != len(fact.Params) {
+		return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("param sets length %d does not match fact params length %d", len(instParamSets), len(fact.Params)))
+	}
+
+	for i, paramSet := range instParamSets {
+		inFact := ast.NewInFactWithObj(fact.Params[i], paramSet)
+		ret := ie.EnvMgr.newFactNoInfer(inFact)
+		if ret.IsNotTrue() {
+			return ret
+		}
+		if ret.IsTrue() {
+			iffFacts = append(iffFacts, inFact)
+		}
+	}
+
 	// 通过 iff（当且仅当）规则推导出的事实
 	for _, thenFact := range propDef.IffFactsOrNil {
 		instantiated, err := thenFact.InstantiateFact(uniMap)
 		if err != nil {
-			return glob.NewShortRet(glob.StmtRetTypeError, []string{err.Error()})
+			return ast.NewErrInferRet(fact).AddExtraInfo(err.Error())
 		}
 
 		ret := ie.EnvMgr.newFactNoInfer(instantiated)
 
 		if ret.IsErr() {
-			return glob.ErrStmtMsgToShortRet(ret)
+			return ret
 		}
 
 		// Collect the instantiated fact itself as a derived fact
 		if ret.IsTrue() {
-			iffFacts = append(iffFacts, instantiated.String())
+			iffFacts = append(iffFacts, instantiated)
 		}
 	}
 
@@ -63,29 +86,27 @@ func (ie *InferEngine) newUserDefinedTruePureFactByDef(fact *ast.PureSpecificFac
 	for _, thenFact := range propDef.ImplicationFactsOrNil {
 		instantiated, err := thenFact.InstantiateFact(uniMap)
 		if err != nil {
-			return glob.NewShortRet(glob.StmtRetTypeError, []string{err.Error()})
+			return ast.NewErrInferRet(fact).AddExtraInfo(err.Error())
 		}
 
 		ret := ie.EnvMgr.newFactNoInfer(instantiated)
 
 		if ret.IsErr() {
-			return glob.ErrStmtMsgToShortRet(ret)
+			return ret
 		}
 
 		// Collect the instantiated fact itself as a derived fact
 		if ret.IsTrue() {
-			implicationFacts = append(implicationFacts, instantiated.String())
+			implicationFacts = append(implicationFacts, instantiated)
 		}
 	}
 
 	// 构建返回消息，明确标注哪些来自 iff，哪些来自 implication
-	derivedFacts := []string{}
+	derivedFacts := []ast.FactStmt{}
 	if len(iffFacts) > 0 || len(implicationFacts) > 0 {
-		derivedFacts = append(derivedFacts, fmt.Sprintf("derive facts from %s:", fact.String()))
 		derivedFacts = append(derivedFacts, iffFacts...)
 		derivedFacts = append(derivedFacts, implicationFacts...)
-		derivedFacts = append(derivedFacts, "")
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+	return ast.NewTrueInferRet(fact).AddInfers(derivedFacts)
 }

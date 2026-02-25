@@ -27,12 +27,10 @@ prop is_bijective_fn(X set, Y set, f fn(X)Y):
 
 have fn f(x R) R = x + 1
 
-forall x1, x2 R:
-    f(x1) = f(x2)
-    =>:
-        f(x2) = f(x1) = x1 + 1 = x2 + 1
-        x1 = x1 + 1 - 1 = x2 + 1 - 1 = x2
-        x1 = x2
+prove forall x1, x2 R: f(x1) = f(x2) => x1 = x2:
+    f(x2) = f(x1) = x1 + 1 = x2 + 1
+    x1 = x1 + 1 - 1 = x2 + 1 - 1 = x2
+    x1 = x2
 
 $is_injective_fn(R, R, f)
 

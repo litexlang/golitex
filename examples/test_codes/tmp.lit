@@ -1,9 +1,6 @@
-have f fn(R) R
-have t fn(R) R
-prop p(x, y R)
+set_template finite_seq(s set, n N_pos) = fn f(i N_pos: i <= n) s
 
-know forall x R: $p(x, t(x+1))
+forall a @finite_seq(R, 1):
+    a(1) = a(1)
 
-know t(2) = f(1)
-
-$p(1, f(1))
+@finite_seq(R, 1) = fn f(i N_pos: i <= 1) R

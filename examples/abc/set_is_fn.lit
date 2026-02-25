@@ -1,0 +1,15 @@
+have A, B, C, D set
+let x set
+
+set_is_fn x fn(A, B, C) D:
+    know:
+        x $subset_of cart(A, B, C, D)
+        forall a A, b B, c C, d1 D, d2 D:
+            (a, b, c, d1) $in x
+            (a, b, c, d2) $in x
+            =>:
+                d1 = d2
+        forall a A, b B, c C:
+            exist d D st (a, b, c, d) $in x
+
+x $in fn(A, B, C) D

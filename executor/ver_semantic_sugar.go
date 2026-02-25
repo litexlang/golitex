@@ -17,77 +17,52 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
-func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt ast.SpecificFactStmt, state *VerState) *glob.VerRet {
-	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
-	if !ok {
-		return glob.NewEmptyVerRetUnknown()
-	}
-
-	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
-
-	// After replacing symbols with values, evaluate any val(...) expressions
-	newParams := make([]ast.Obj, len(asStmt.Params))
-	valReplaced := false
-	for i, param := range asStmt.Params {
-		if fnObj, ok := param.(*ast.FnObj); ok {
-			if ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordVal) && len(fnObj.Params) == 1 {
-				// val(...) should be evaluated (like eval)
-				exec := NewExecutor(ver.Env)
-				exec.NewEnv()
-				defer exec.deleteEnv()
-				value, execRet := exec.evalObjThenSimplify(fnObj.Params[0])
-				if execRet.IsTrue() {
-					newParams[i] = value
-					valReplaced = true
-					continue
-				}
+func (ver *Verifier) ReplaceObjsInSpecFactWithValue(fact ast.SpecificFactStmt) (bool, ast.SpecificFactStmt) {
+	switch fact := fact.(type) {
+	case *ast.PureSpecificFactStmt:
+		newParams := make([]ast.Obj, len(fact.Params))
+		replaced := false
+		for i, param := range fact.Params {
+			replacedByEval, newObj := ver.GetValueOfSymbol(param)
+			if replacedByEval {
+				replaced = true
+				newParams[i] = newObj
+			} else {
+				newParams[i] = param
 			}
 		}
-		newParams[i] = param
+		return replaced, ast.NewPureSpecificFactStmt(fact.IsTrue, fact.PropName, newParams, fact.Line)
+	case *ast.ExistSpecificFactStmt:
+		return false, fact
 	}
 
-	if valReplaced {
-		newStmt = ast.NewPureSpecificFactStmt(asStmt.IsTrue, asStmt.PropName, newParams, asStmt.Line)
-		replaced = true
+	return false, nil
+}
+
+func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
+	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
+	if !ok {
+		return ast.NewEmptyUnknownVerRet()
 	}
+
+	replaced, newStmt := ver.ReplaceObjsInSpecFactWithValue(asStmt)
 
 	if replaced {
-		verRet := ver.verTrueEqualFactOldMainLogic(newStmt, state.CopyAndReqOkToFalse())
+		verRet := ver.verTrueEqualWholeProcess(newStmt.(*ast.PureSpecificFactStmt), state.CopyAndReqOkToFalse())
 		if verRet.IsErr() {
-			return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{"failed to verify true equal fact: " + verRet.String()})
+			return ast.NewErrVerRet(stmt).AddExtraInfo("failed to verify true equal fact: " + verRet.String())
 		}
 
 		if verRet.IsTrue() {
 			msg := fmt.Sprintf("replacing the symbols with their values:\n%s", newStmt.String())
 			if state.WithMsg {
-				return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, []string{msg})
+				return ast.NewTrueVerRet(stmt, nil, msg)
 			}
-			return glob.NewEmptyVerRetTrue()
+			return ast.NewTrueVerRet(stmt, nil, "")
 		}
 	}
 
-	return glob.NewVerRet(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String())})
+	return ast.NewEmptyUnknownVerRet().AddExtraInfo(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 }
-
-// func (ver *Verifier) verByReplaceObjInSpecFactWithValueAndCompute(stmt *ast.SpecFactStmt, state *VerState) *glob.VerRet {
-// 	replaced, newStmt := ver.Env.ReplaceObjInSpecFactWithValue(stmt)
-
-// 	if replaced {
-// 		verRet := ver.verTrueEqualFactMainLogic(newStmt, state.CopyAndReqOkToFalse())
-// 		if verRet.IsErr() {
-// 			return verRet
-// 		}
-// 		if verRet.IsTrue() {
-// 			msg := fmt.Sprintf("%s is equivalent to %s by replacing the symbols with their values and computing", stmt.String(), newStmt.String())
-// 			if state.WithMsg {
-// 				return glob.NewVerMsg(glob.StmtRetTypeTrue, stmt.String(), stmt.Line, []string{msg})
-// 			}
-// 			return glob.NewEmptyVerRetTrue()
-// 		}
-// 	}
-
-// 	return glob.NewEmptyVerRetUnknown()
-// }

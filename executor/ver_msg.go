@@ -16,19 +16,9 @@ package litex_executor
 
 import (
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
-func successVerString(stmt, stmtVerifiedBy ast.Stmt) *glob.VerRet {
-	stmtStr := ""
-	line := uint(0)
-	if stmt != nil {
-		stmtStr = stmt.String()
-		if stmtVerifiedBy != nil {
-			line = stmtVerifiedBy.GetLine()
-		}
-	}
-
+func successVerString(stmt, stmtVerifiedBy ast.Stmt) ast.VerRet {
 	verifyMsgs := []string{}
 	if stmtVerifiedBy != nil {
 		if stmtVerifiedBy.GetLine() == 0 {
@@ -40,11 +30,21 @@ func successVerString(stmt, stmtVerifiedBy ast.Stmt) *glob.VerRet {
 		verifyMsgs = append(verifyMsgs, "is true.")
 	}
 
-	return glob.NewVerRet(glob.StmtRetTypeTrue, stmtStr, line, verifyMsgs)
+	var stmtFact ast.FactStmt
+	if stmt != nil {
+		if factStmt, ok := stmt.(ast.FactStmt); ok {
+			stmtFact = factStmt
+		}
+	}
+	var ret ast.VerRet = ast.NewTrueVerRet(stmtFact, nil, "")
+	for _, msg := range verifyMsgs {
+		ret = ret.AddExtraInfo(msg)
+	}
+	return ret
 }
 
 // successVerStringString is a helper function for backward compatibility with string-based calls
-func successVerStringString(stmtStr, stmtVerifiedByStr string) *glob.VerRet {
+func successVerStringString(stmtStr, stmtVerifiedByStr string) ast.VerRet {
 	verifyMsgs := []string{}
 	if stmtVerifiedByStr != "" {
 		verifyMsgs = append(verifyMsgs, stmtVerifiedByStr)
@@ -52,12 +52,16 @@ func successVerStringString(stmtStr, stmtVerifiedByStr string) *glob.VerRet {
 		verifyMsgs = append(verifyMsgs, "is true.")
 	}
 
-	return glob.NewVerRet(glob.StmtRetTypeTrue, stmtStr, glob.BuiltinLine0, verifyMsgs)
+	var ret ast.VerRet = ast.NewTrueVerRet(nil, nil, "")
+	for _, msg := range verifyMsgs {
+		ret = ret.AddExtraInfo(msg)
+	}
+	return ret
 }
 
-func newMaybeSuccessMsgVerRet(state *VerState, stmt ast.Stmt, stmtVerifiedBy string) *glob.VerRet {
+func newMaybeSuccessMsgVerRet(state *VerState, stmt ast.Stmt, stmtVerifiedBy string) ast.VerRet {
 	if state.WithMsg {
 		return successVerStringString(stmt.String(), stmtVerifiedBy)
 	}
-	return glob.NewEmptyVerRetTrue()
+	return ast.NewTrueVerRet(nil, nil, "")
 }

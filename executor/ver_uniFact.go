@@ -20,7 +20,7 @@ import (
 	glob "golitex/glob"
 )
 
-func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) ast.VerRet {
 	ret := ver.verUniFact_checkFactOneByOne(oldStmt, state)
 	if ret.IsTrue() || ret.IsErr() {
 		return ret
@@ -30,9 +30,9 @@ func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) *glob
 	return ver.verUniFact_useInfer(oldStmt, state)
 }
 
-func (ver *Verifier) verUniFact_checkFactOneByOne(oldStmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verUniFact_checkFactOneByOne(oldStmt *ast.UniFactStmt, state *VerState) ast.VerRet {
 	if state.isFinalRound() {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	// 在局部环境声明新变量
@@ -41,7 +41,7 @@ func (ver *Verifier) verUniFact_checkFactOneByOne(oldStmt *ast.UniFactStmt, stat
 
 	newStmtPtr, err := ver.PreprocessUniFactParams_DeclareParams(oldStmt)
 	if err != nil {
-		return glob.NewVerRet(glob.StmtRetTypeError, oldStmt.String(), glob.BuiltinLine0, []string{err.Error()})
+		return ast.NewErrVerRet(oldStmt).AddExtraInfo(err.Error())
 	}
 
 	// 检查所有 paramSet 是否都是 list_set，如果是，自动使用 enum 的逻辑
@@ -57,16 +57,16 @@ func (ver *Verifier) verUniFact_checkFactOneByOne(oldStmt *ast.UniFactStmt, stat
 	for _, condFact := range newStmtPtr.DomFacts {
 		ret := ver.Env.NewFactWithCheckingNameDefined(condFact)
 		if ret.IsErr() {
-			return glob.NewVerRet(glob.StmtRetTypeError, condFact.String(), glob.BuiltinLine0, []string{ret.String()})
+			return ast.NewErrVerRet(condFact).AddExtraInfo(ret.String())
 		}
 	}
 
 	return ver.uniFact_checkThenFacts(newStmtPtr, state)
 }
 
-func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerState) ast.VerRet {
 	if state.isFinalRound() {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 
 	// 0. 如果dom和then里全是or_spec 那可以继续，否则就不行
@@ -78,7 +78,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 			domFactsReversible = append(domFactsReversible, orStmt)
 		} else {
 			// Not all facts are Spec_OrFact, cannot use infer
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 	}
 
@@ -90,7 +90,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 			thenFactsReversible = append(thenFactsReversible, orStmt)
 		} else {
 			// Not all facts are Spec_OrFact, cannot use infer
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 	}
 
@@ -103,7 +103,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 		// Replace parameters in UniFactStmt
 		newStmtPtr, _, err := useRandomParamToReplaceOriginalParamInUniFact(oldStmt, paramMap, paramMapStrToStr)
 		if err != nil {
-			return glob.NewVerRet(glob.StmtRetTypeError, oldStmt.String(), glob.BuiltinLine0, []string{err.Error()})
+			return ast.NewErrVerRet(oldStmt).AddExtraInfo(err.Error())
 		}
 		oldStmt = newStmtPtr
 		// Rebuild reversible facts with replaced parameters
@@ -125,11 +125,10 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 		}
 	}
 
-	// 声明param
-	defLeftStmt := ast.NewDefLetStmt(oldStmt.Params, oldStmt.ParamSets, oldStmt.DomFacts, oldStmt.Line)
+	defLeftStmt := ast.NewDefLetStmt(oldStmt.Params, oldStmt.ParamSets, oldStmt.DomFacts.ToFactStmtSlice(), oldStmt.Line)
 	ret := ver.Env.DefLetStmt(defLeftStmt)
 	if ret.IsErr() {
-		return glob.NewVerRet(glob.StmtRetTypeError, oldStmt.String(), glob.BuiltinLine0, []string{ret.String()})
+		return ast.NewErrVerRet(oldStmt).AddExtraInfo(ret.String())
 	}
 
 	// 2. 把uni变成 inferStmt，然后执行inferStmt
@@ -138,15 +137,15 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 	execRet := exec.inferStmt(inferStmt)
 
 	if execRet.IsErr() {
-		return glob.NewVerRet(glob.StmtRetTypeError, oldStmt.String(), glob.BuiltinLine0, []string{execRet.String()})
+		return ast.NewErrVerRet(oldStmt).AddExtraInfo(execRet.String())
 	} else if execRet.IsTrue() {
-		return glob.NewVerRet(glob.StmtRetTypeTrue, oldStmt.String(), glob.BuiltinLine0, []string{})
+		return ast.NewTrueVerRet(oldStmt, nil, "")
 	} else {
-		return glob.NewEmptyVerRetUnknown()
+		return ast.NewEmptyUnknownVerRet()
 	}
 }
 
-func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) ast.VerRet {
 	msgs := []string{}
 
 	// check then facts
@@ -157,25 +156,34 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 		}
 		if verRet.IsUnknown() {
 			if state.WithMsg {
-				msgs := append(verRet.VerifyMsgs, fmt.Sprintf("%s is unknown", thenFact))
-				return glob.NewVerRet(glob.StmtRetTypeUnknown, thenFact.String(), glob.BuiltinLine0, msgs)
+				extraInfos := verRet.GetExtraInfos()
+				extraInfos = append(extraInfos, fmt.Sprintf("%s is unknown", thenFact))
+				return ast.NewEmptyUnknownVerRet().AddExtraInfos(extraInfos)
 			}
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 
 		// if true, store it
 		ret := ver.Env.NewFactWithCheckingNameDefined(thenFact)
 		if ret.IsErr() {
-			return glob.NewVerRet(glob.StmtRetTypeError, thenFact.String(), glob.BuiltinLine0, []string{ret.String()})
+			return ast.NewErrVerRet(thenFact).AddExtraInfo(ret.String())
 		}
 
 		msgs = append(msgs, verRet.String())
 	}
 
 	if state.WithMsg {
-		return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, msgs)
+		var ret ast.VerRet = ast.NewTrueVerRet(stmt, nil, "")
+		for _, msg := range msgs {
+			ret = ret.AddExtraInfo(msg)
+		}
+		return ret
 	}
-	return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, msgs)
+	var ret ast.VerRet = ast.NewTrueVerRet(stmt, nil, "")
+	for _, msg := range msgs {
+		ret = ret.AddExtraInfo(msg)
+	}
+	return ret
 }
 
 func (ver *Verifier) PreprocessUniFactParams_DeclareParams(oldStmt *ast.UniFactStmt) (*ast.UniFactStmt, error) {
@@ -225,17 +233,17 @@ func (ver *Verifier) allParamSetsAreListSet(paramSets []ast.Obj) bool {
 }
 
 // verUniFactByProveByEnum 使用 enum 的逻辑来验证 forall 语句
-func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerState) ast.VerRet {
 	// 获取所有 paramSet 对应的 list_set
 	enums := [][]ast.Obj{}
 	for _, paramSet := range stmt.ParamSets {
 		enumSet := ver.Env.GetListSetEqualToObj(paramSet)
 		if enumSet == nil {
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 		listSetFnObj, ok := enumSet.(*ast.FnObj)
 		if !ok {
-			return glob.NewEmptyVerRetUnknown()
+			return ast.NewEmptyUnknownVerRet()
 		}
 		enums = append(enums, listSetFnObj.Params)
 	}
@@ -243,7 +251,7 @@ func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerSt
 	// 计算笛卡尔积
 	cartesianProductOfObjs := glob.CartesianProduct(enums)
 
-	verifyProcessMsgs := []*glob.VerRet{}
+	verifyProcessMsgs := []ast.VerRet{}
 
 	// 遍历所有组合
 	for _, objSlice := range cartesianProductOfObjs {
@@ -257,7 +265,7 @@ func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerSt
 		for _, domFact := range stmt.DomFacts {
 			instantiatedDomFact, err := domFact.InstantiateFact(uniMap)
 			if err != nil {
-				return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+				return ast.NewErrVerRet(stmt).AddExtraInfo(err.Error())
 			}
 
 			verRet := ver.VerFactStmt(instantiatedDomFact, state)
@@ -274,7 +282,7 @@ func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerSt
 						return verRet
 					}
 					if verRet.IsUnknown() {
-						return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("domain fact in universal fact must be true or false, cannot be unknown: %s", instantiatedDomFact)})
+						return ast.NewErrVerRet(stmt).AddExtraInfo(fmt.Sprintf("domain fact in universal fact must be true or false, cannot be unknown: %s", instantiatedDomFact))
 					}
 					verifyProcessMsgs = append(verifyProcessMsgs, verRet)
 				}
@@ -292,7 +300,7 @@ func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerSt
 		for _, thenFact := range stmt.ThenFacts {
 			instantiatedThenFact, err := thenFact.InstantiateFact(uniMap)
 			if err != nil {
-				return glob.NewVerRet(glob.StmtRetTypeError, stmt.String(), glob.BuiltinLine0, []string{err.Error()})
+				return ast.NewErrVerRet(stmt).AddExtraInfo(err.Error())
 			}
 
 			verRet := ver.VerFactStmt(instantiatedThenFact, state)
@@ -300,7 +308,7 @@ func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerSt
 				return verRet
 			}
 			if verRet.IsUnknown() {
-				return glob.NewVerRet(glob.StmtRetTypeUnknown, stmt.String(), glob.BuiltinLine0, []string{fmt.Sprintf("failed to prove instantiated then fact: %s", instantiatedThenFact)})
+				return ast.NewEmptyUnknownVerRet().AddExtraInfo(fmt.Sprintf("failed to prove instantiated then fact: %s", instantiatedThenFact))
 			}
 			verifyProcessMsgs = append(verifyProcessMsgs, verRet)
 		}
@@ -308,13 +316,12 @@ func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerSt
 
 	// 所有组合都验证通过
 	if state.WithMsg {
-		msgs := []string{"proved by enumeration (all paramSets are list_set)"}
-		return glob.NewVerRet(glob.StmtRetTypeTrue, stmt.String(), glob.BuiltinLine0, msgs)
+		return ast.NewTrueVerRet(stmt, nil, "proved by enumeration (all paramSets are list_set)")
 	}
-	return glob.NewEmptyVerRetTrue()
+	return ast.NewTrueVerRet(stmt, nil, "")
 }
 
-func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) verUniFactWithIff(stmt *ast.UniFactWithIffStmt, state *VerState) ast.VerRet {
 	thenToIff := stmt.NewUniFactWithThenToIff()
 	verRet := ver.verUniFact(thenToIff, state)
 	if verRet.IsErr() || verRet.IsUnknown() {

@@ -15,56 +15,64 @@
 package litex_executor
 
 import (
+	"fmt"
 	ast "golitex/ast"
 	glob "golitex/glob"
 )
 
-func (exec *Executor) execCases(stmt *ast.ProveCaseByCaseStmt) *glob.StmtRet {
-	verifyProcessRet := exec.execCases_Verify(stmt)
-	if verifyProcessRet.IsNotTrue() {
-		return verifyProcessRet
+func (exec *Executor) execCases(stmt *ast.ProveCaseByCaseStmt) ast.StmtRet {
+	verifyProcessRet, ok := exec.execCases_Verify(stmt)
+	if !ok {
+		return ast.NewErrStmtEmptyRet(stmt).AddVerifyProcesses(verifyProcessRet)
 	}
 
-	newFactRet := exec.execCases_NewFact(stmt)
-	if newFactRet.IsNotTrue() {
-		return verifyProcessRet
+	newFactRet, ok := exec.execCases_NewFact(stmt)
+	if !ok {
+		return ast.NewErrStmtEmptyRet(stmt).AddInfers(newFactRet)
 	}
 
-	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessRet.VerifyProcess).AddNewFacts(newFactRet.NewFact)
+	return ast.NewTrueStmtEmptyRet(stmt).AddVerifyProcesses(verifyProcessRet).AddInfers(newFactRet)
 }
 
-func (exec *Executor) execCases_NewFact(stmt *ast.ProveCaseByCaseStmt) *glob.StmtRet {
-	newMsg := []string{}
+func (exec *Executor) execCases_NewFact(stmt *ast.ProveCaseByCaseStmt) ([]ast.InferRet, bool) {
+	newInferRetSlice := []ast.InferRet{}
 	for _, thenFact := range stmt.ThenFacts {
 		ret := exec.Env.NewFactWithCheckingNameDefined(thenFact)
 		if ret.IsNotTrue() {
-			return ret
+			newInferRetSlice = append(newInferRetSlice, ast.NewErrInferRet(thenFact))
+			return newInferRetSlice, false
 		}
-		newMsg = append(newMsg, ret.NewFact...)
+		newInferRetSlice = append(newInferRetSlice, ret)
 	}
 
-	return glob.NewEmptyStmtTrue().AddNewFacts(newMsg)
+	return newInferRetSlice, true
 }
 
-func (exec *Executor) execCases_Verify(stmt *ast.ProveCaseByCaseStmt) *glob.StmtRet {
+func (exec *Executor) execCases_Verify(stmt *ast.ProveCaseByCaseStmt) ([]ast.VerRet, bool) {
+	retSlice := []ast.VerRet{}
+
 	// check cases cover all situations
 	ret := exec.execCases_Verify_all_cases_cover_all_situations(stmt)
 	if ret.IsNotTrue() {
-		return ret
+		// or fact
+		orFact := ast.NewOrStmt(stmt.CaseFacts, glob.BuiltinLine0)
+		retSlice = append(retSlice, ast.NewErrVerRet(orFact))
+		return retSlice, false
 	}
 
 	// check case by case
 	for i := range len(stmt.CaseFacts) {
 		ret = exec.execCases_Verify_case_by_case(stmt, i)
 		if ret.IsNotTrue() {
-			return ret
+			return []ast.VerRet{ast.NewErrVerRet(stmt.CaseFacts[i]).AddExtraInfo(fmt.Sprintf("failed to execute proof for case %d", i)).AddExtraInfos(ret.GetExtraInfos())}, false
 		}
+		retSlice = append(retSlice, ast.NewErrVerRet(stmt.CaseFacts[i]))
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return retSlice, true
 }
 
-func (exec *Executor) execCases_Verify_all_cases_cover_all_situations(stmt *ast.ProveCaseByCaseStmt) *glob.StmtRet {
+func (exec *Executor) execCases_Verify_all_cases_cover_all_situations(stmt *ast.ProveCaseByCaseStmt) ast.StmtRet {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
@@ -80,19 +88,19 @@ func (exec *Executor) execCases_Verify_all_cases_cover_all_situations(stmt *ast.
 	return ret
 }
 
-func (exec *Executor) execCases_Verify_case_by_case(stmt *ast.ProveCaseByCaseStmt, index int) *glob.StmtRet {
+func (exec *Executor) execCases_Verify_case_by_case(stmt *ast.ProveCaseByCaseStmt, index int) ast.StmtRet {
 	exec.NewEnv()
 	defer exec.deleteEnv()
 
 	ret := exec.Env.NewFactWithCheckingNameDefined(stmt.CaseFacts[index])
 	if ret.IsNotTrue() {
-		return ret
+		return ast.NewErrStmtEmptyRet(stmt.CaseFacts[index]).AddExtraInfo(fmt.Sprintf("failed to store new fact %s", stmt.CaseFacts[index].String()))
 	}
 
 	if len(stmt.Proofs[index]) != 0 {
 		for i := 0; i < len(stmt.Proofs[index])-1; i++ {
 			curStmt := stmt.Proofs[index][i]
-			ret = exec.Stmt(curStmt)
+			ret := exec.Stmt(curStmt)
 			if ret.IsNotTrue() {
 				return ret
 			}
@@ -101,7 +109,7 @@ func (exec *Executor) execCases_Verify_case_by_case(stmt *ast.ProveCaseByCaseStm
 		lastStmt := stmt.Proofs[index][len(stmt.Proofs[index])-1]
 
 		if impossibleStmt, ok := lastStmt.(*ast.ImpossibleStmt); ok {
-			ret = exec.Stmt(impossibleStmt.Fact)
+			ret := exec.Stmt(impossibleStmt.Fact)
 			if ret.IsNotTrue() {
 				return ret
 			}
@@ -115,19 +123,19 @@ func (exec *Executor) execCases_Verify_case_by_case(stmt *ast.ProveCaseByCaseStm
 			}
 
 		} else {
-			ret = exec.Stmt(lastStmt)
+			ret := exec.Stmt(lastStmt)
 			if ret.IsNotTrue() {
 				return ret
 			}
-		}
 
-		for _, thenFact := range stmt.ThenFacts {
-			ret = exec.Stmt(thenFact)
-			if ret.IsNotTrue() {
-				return ret
+			for _, thenFact := range stmt.ThenFacts {
+				ret := exec.Stmt(thenFact)
+				if ret.IsNotTrue() {
+					return ret
+				}
 			}
 		}
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueStmtEmptyRet(stmt)
 }

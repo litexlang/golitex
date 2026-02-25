@@ -4,9 +4,9 @@
 
 <div align="center">
 
-# Litex: A Simple Formal Language Learnable in 2 Hours
+# Litex: Reinvent the language of mathematics
 
-## For Verifiable Intellectual Discovery in AI Age
+## A Simple Formal Language Learnable in 2 Hours
 
 **version v0.2-beta (not yet ready for production use)**  
 *Jiachen Shen and The Litex Team*

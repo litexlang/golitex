@@ -14,7 +14,7 @@
 
 package litex_executor
 
-// func (ver *Verifier) iterateKnownExistFactsAndMatchGivenFact(stmt ast.SpecificFactStmt, knownFacts []ast.SpecificFactStmt, state *VerState) *glob.VerRet {
+// func (ver *Verifier) iterateKnownExistFactsAndMatchGivenFact(stmt ast.SpecificFactStmt, knownFacts []ast.SpecificFactStmt, state *VerState) ast.VerRet {
 // LoopOverFacts:
 // 	for _, knownFact := range knownFacts {
 // 		verRet := ver.MatchExistFact(stmt.(*ast.ExistSpecificFactStmt), knownFact.(*ast.ExistSpecificFactStmt), state)
@@ -31,5 +31,5 @@ package litex_executor
 // 		return glob.NewEmptyVerRetTrue()
 // 	}
 
-// 	return glob.NewEmptyVerRetUnknown()
+// 	return ast.NewEmptyUnknownVerRet()
 // }

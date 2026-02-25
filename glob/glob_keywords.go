@@ -122,6 +122,13 @@ const (
 	KeywordRNot0 = "R_not0"
 	KeywordZNot0 = "Z_not0"
 	KeywordQNot0 = "Q_not0"
+
+	KeywordSetIsFn             = "set_is_fn"
+	KeywordFnIsSubsetOfCartSet = "fn_is_subset_of_cart"
+
+	KeywordRestrict = "restrict"
+
+	KeywordSetTemplate = "set_template"
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
@@ -229,6 +236,10 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 
 	KeywordPropInfer: {},
 	KeywordInfer:     {},
+
+	KeywordRestrict: {},
+
+	KeywordSetTemplate: {},
 }
 
 const (
@@ -259,7 +270,7 @@ const (
 	// KeySymbolColonEqual   = ":="
 	KeySymbolLeftCurly  = "{"
 	KeySymbolRightCurly = "}"
-	// KeySymbolAt         = "@"
+	KeySymbolAt         = "@"
 	KeySymbolRightArrow = "=>"
 
 	KeySymbolSemiColon  = ";"
@@ -300,6 +311,7 @@ var SymbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolSemiColon:    {}, // ";"
 	KeySymbolEquivalent:   {}, // "<=>"
 	KeySymbolBackSlash:    {},
+	KeySymbolAt:           {}, // "@"
 	// KeySymbolQuestionMark: {}, // "?"
 }
 
@@ -344,6 +356,22 @@ var BuiltinAtomNames map[string]struct{} = map[string]struct{}{
 
 	KeywordVal:    {},
 	KeywordChoice: {},
+
+	KeywordClosedRange: {},
+	KeywordRange:       {},
+}
+
+var EqualAndComparisonSignals map[string]struct{} = map[string]struct{}{
+	KeySymbolEqual:       {},
+	KeySymbolLargerEqual: {},
+	KeySymbolLessEqual:   {},
+	KeySymbolGreater:     {},
+	KeySymbolLess:        {},
+}
+
+func IsEqualAndComparisonSignal(name string) bool {
+	_, ok := EqualAndComparisonSignals[name]
+	return ok
 }
 
 var BuiltinPropNames map[string]struct{} = map[string]struct{}{
@@ -363,6 +391,7 @@ var BuiltinPropNames map[string]struct{} = map[string]struct{}{
 	KeySymbolGreater:     {},
 	KeySymbolLess:        {},
 	// KeywordEqualTuple:     {},
+	KeywordRestrict: {},
 }
 
 func IsBuiltinPropName(name string) bool {
@@ -434,23 +463,25 @@ var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struc
 	KeywordIsAFiniteSet:   {},
 	KeywordIsANonEmptySet: {},
 	// KeywordIsNonEmptyWithItem:     {},
-	KeywordRunFile:   {},
-	KeywordUnion:     {},
-	KeywordIntersect: {},
-	KeywordRPos:      {},
-	KeywordRNeg:      {},
-	KeywordZNeg:      {},
-	KeywordQNeg:      {},
-	KeywordQPos:      {},
-	KeywordRNot0:     {},
-	KeywordZNot0:     {},
-	KeywordQNot0:     {},
-	KeywordPowerSet:  {},
-	KeywordCup:       {},
-	KeywordCap:       {},
-	KeywordSetMinus:  {},
-	KeywordSetDiff:   {},
-	KeywordVal:       {},
-	KeywordPropInfer: {},
-	KeywordInfer:     {},
+	KeywordRunFile:     {},
+	KeywordUnion:       {},
+	KeywordIntersect:   {},
+	KeywordRPos:        {},
+	KeywordRNeg:        {},
+	KeywordZNeg:        {},
+	KeywordQNeg:        {},
+	KeywordQPos:        {},
+	KeywordRNot0:       {},
+	KeywordZNot0:       {},
+	KeywordQNot0:       {},
+	KeywordPowerSet:    {},
+	KeywordCup:         {},
+	KeywordCap:         {},
+	KeywordSetMinus:    {},
+	KeywordSetDiff:     {},
+	KeywordVal:         {},
+	KeywordPropInfer:   {},
+	KeywordInfer:       {},
+	KeywordClosedRange: {},
+	KeywordRange:       {},
 }

@@ -16,7 +16,6 @@ package litex_env
 
 import (
 	ast "golitex/ast"
-	glob "golitex/glob"
 	"maps"
 )
 
@@ -31,32 +30,42 @@ func (envMgr *EnvMgr) GenerateNoDuplicateNames(length int, usedNames map[string]
 	return names
 }
 
-func (e *EnvMgr) MatchExistSpecificFacts(given *ast.ExistSpecificFactStmt, stored *ast.ExistSpecificFactStmt, newExistFreeParams []string) *glob.StmtRet {
+func (e *EnvMgr) MatchExistSpecificFacts(given *ast.ExistSpecificFactStmt, stored *ast.ExistSpecificFactStmt, newExistFreeParams []string) bool {
 	if len(stored.ExistFreeParams) != len(given.ExistFreeParams) {
-		return glob.NewEmptyStmtUnknown()
+		return false
 	}
 
 	if given.IsTrue != stored.IsTrue {
-		return glob.NewEmptyStmtUnknown()
+		return false
 	}
 
-	if given.PureFact.IsTrue != stored.PureFact.IsTrue {
-		return glob.NewEmptyStmtUnknown()
+	if len(given.PureFacts) != len(stored.PureFacts) {
+		return false
+	}
+
+	for i, fact := range given.PureFacts {
+		if fact.IsTrue != stored.PureFacts[i].IsTrue {
+			return false
+		}
+
+		if fact.PropName != stored.PureFacts[i].PropName {
+			return false
+		}
 	}
 
 	newExistSpecificFactStmt, err := given.ReplaceFreeParamsWithNewParams(newExistFreeParams)
 	if err != nil {
-		return glob.StmtRetFromErr(err)
+		return false
 	}
 
 	newStoredExistSpecificFactStmt, err := stored.ReplaceFreeParamsWithNewParams(newExistFreeParams)
 	if err != nil {
-		return glob.StmtRetFromErr(err)
+		return false
 	}
 
 	if newExistSpecificFactStmt.String() == newStoredExistSpecificFactStmt.String() {
-		return glob.NewEmptyStmtTrue()
+		return true
 	}
 
-	return glob.NewEmptyStmtUnknown()
+	return false
 }

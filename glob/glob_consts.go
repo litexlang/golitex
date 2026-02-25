@@ -35,3 +35,7 @@ const DefaultPkgName string = ""
 const PkgNameAtomSeparator = KeySymbolDot
 
 const ExistStFactContainsFalsePureSignature = "-1"
+
+const ERROR = "error"
+const UNKNOWN = "unknown"
+const TRUE = "true"

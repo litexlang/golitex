@@ -35,7 +35,8 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.defPropStmt(tb)
 	case glob.KeywordLet:
 		if tb.header.strAtCurIndexPlus(1) == glob.KeywordFn {
-			ret, err = p.defFnStmt(tb, true)
+			// ret, err = p.defFnStmt(tb, true)
+			ret, err = p.defFn(tb, true)
 		} else {
 			ret, err = p.letDefObjStmt(tb)
 		}
@@ -44,13 +45,15 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 			if tb.header.strAtCurIndexPlus(2) == glob.KeySymbolColon {
 				ret, err = p.haveFnStmt(tb)
 			} else {
-				ret, err = p.haveFnEqualStmt(tb)
+				// ret, err = p.haveFnEqualStmt(tb)
+				ret, err = p.haveFnEqual(tb)
 			}
 		} else if slices.Contains(tb.header.slice, glob.KeywordSt) {
 			ret, err = p.haveObjStStmt(tb)
-		} else if tb.header.strAtCurIndexPlus(1) == glob.KeywordFnSet {
-			tb.header.skip(glob.KeywordHave)
-			ret, err = p.DefFnSetStmt(tb)
+			// } else
+			// if tb.header.strAtCurIndexPlus(1) == glob.KeywordFnSet {
+			// 	tb.header.skip(glob.KeywordHave)
+			// 	ret, err = p.DefFnSetStmt(tb)
 		} else if slices.Contains(tb.header.slice, glob.KeySymbolEqual) {
 			ret, err = p.haveObjEqualStmt(tb)
 		} else {
@@ -108,8 +111,15 @@ func (p *TbParser) Stmt(tb *tokenBlock) (Stmt, error) {
 		ret, err = p.equalSetStmt(tb)
 	case glob.KeywordWitnessNonempty:
 		ret, err = p.witnessNonemptyStmt(tb)
+	case glob.KeywordSetIsFn:
+		ret, err = p.setIsFnStmt(tb)
+	case glob.KeywordFnIsSubsetOfCartSet:
+		ret, err = p.fnIsSubsetOfCartStmt(tb)
+	case glob.KeywordSetTemplate:
+		ret, err = p.defSetTemplateStmt(tb)
 	default:
-		ret, err = p.factOrFactInferStmt(tb)
+		// ret, err = p.factOrFactInferStmt(tb)
+		ret, err = p.factStmt(tb)
 	}
 
 	if err != nil {
@@ -129,7 +139,7 @@ func (p *TbParser) defPropStmt(tb *tokenBlock) (*DefPropStmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	err = NoSelfReferenceInPropDef(string(body.DefHeader.Name), append(append(body.DomFactsOrNil, body.IffFactsOrNil...), body.ImplicationFactsOrNil...))
+	err = NoSelfReferenceInPropDef(string(body.DefHeader.Name), body.IffFactsOrNil)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -148,7 +158,13 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 		return nil, ErrInLine(err, tb)
 	}
 
-	declHeader, err := p.defHeaderWithoutParsingColonAtEnd(tb)
+	// declHeader, err := p.defHeaderWithoutParsingColonAtEnd(tb)
+	// if err != nil {
+	// 	return nil, ErrInLine(err, tb)
+	// }
+
+	declHeader, moreIffs, err := p.defHeaderOfPropDef(tb)
+
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -161,6 +177,9 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 		p.FreeParams[param] = struct{}{}
 	}
 
+	iffFacts := []FactStmt{}
+	iffFacts = append(iffFacts, moreIffs...)
+
 	// Defer: remove the params we added when leaving this prop scope
 	defer func() {
 		for _, param := range declHeader.Params {
@@ -170,17 +189,11 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 
 	if !tb.header.is(glob.KeySymbolColon) {
 		if tb.header.ExceedEnd() {
-			return NewDefPropStmt(declHeader, nil, nil, nil, tb.line), nil
-		} else if tb.header.is(glob.KeySymbolEquivalent) {
-			err = tb.header.skip(glob.KeySymbolEquivalent)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
+			if len(iffFacts) == 0 {
+				return NewDefPropStmt(declHeader, nil, nil, tb.line), nil
+			} else {
+				return NewDefPropStmt(declHeader, iffFacts, []Spec_OrFact{}, tb.line), nil
 			}
-			iffFacts, err := p.inlineFacts_checkUniDepth1(tb, []string{})
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			return NewDefPropStmt(declHeader, nil, iffFacts, nil, tb.line), nil
 		} else {
 			return nil, fmt.Errorf("expect ':' or end of block")
 		}
@@ -191,43 +204,22 @@ func (p *TbParser) defPropStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStm
 		return nil, ErrInLine(err, tb)
 	}
 
-	if tb.header.ExceedEnd() {
-		// domFacts, iffFacts, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
-		// domFacts, iffFacts, err := tb.dom_and_section(glob.KeywordIff, glob.KeySymbolEqualLarger)
-		domFacts, iffFacts, err := p.dom_and_section(tb, glob.KeySymbolEquivalent, glob.KeySymbolRightArrow)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		// iff, dom 里不能出现和被定义的prop同名的prop，否则用def做验证的时候会出问题
-		for _, fact := range iffFacts {
-			if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
-				if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
-					return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
-				}
-			}
-		}
-
-		for _, fact := range domFacts {
-			if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
-				if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
-					return nil, fmt.Errorf("iff or dom fact cannot be the same as the prop being defined")
-				}
-			}
-		}
-
-		return NewDefPropStmt(declHeader, domFacts, iffFacts, nil, tb.line), nil
-	} else {
-		domFacts, iffFacts, err := p.bodyOfInlineDomAndThen(tb, glob.KeySymbolEquivalent, []string{})
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		return NewDefPropStmt(declHeader, domFacts, iffFacts, nil, tb.line), nil
+	if !tb.header.ExceedEnd() {
+		return nil, fmt.Errorf("expect end of block")
 	}
+
+	for _, fact := range tb.body {
+		iffFact, err := p.factStmt(&fact)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		iffFacts = append(iffFacts, iffFact)
+	}
+
+	return NewDefPropStmt(declHeader, iffFacts, nil, tb.line), nil
 }
 
-func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (Stmt, error) {
+func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (*LetFn, error) {
 	if skipLetAndFn {
 		err := tb.header.skip(glob.KeywordLet)
 		if err != nil {
@@ -276,24 +268,26 @@ func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (Stmt, error) {
 		}
 	}
 
-	domFacts := []FactStmt{}
-	thenFacts := []FactStmt{}
+	domFacts := []Spec_OrFact{}
+	thenFacts := []Spec_OrFact{}
 
 	if tb.header.is(glob.KeySymbolColon) {
 		tb.header.skip("")
 		if tb.header.ExceedEnd() {
-			domFacts, thenFacts, err = p.dom_and_section(tb, glob.KeySymbolRightArrow, glob.KeySymbolEquivalent)
+			domFacts, thenFacts, err = p.dom_and_section_SpecOrFact(tb, glob.KeySymbolRightArrow, glob.KeySymbolEquivalent)
+
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
 		} else {
-			domFacts, err = p.inlineFacts_untilWord_or_exceedEnd_notSkipWord(tb, glob.KeySymbolRightArrow, []string{})
+			domFacts, err = p.inlineFacts_untilWord_SpecOrFact(tb, glob.KeySymbolRightArrow, []string{})
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
 
 			if !tb.header.is(glob.KeySymbolRightArrow) {
-				return NewLetFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
+				return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
+				// return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
 			}
 
 			err = tb.header.skip(glob.KeySymbolRightArrow)
@@ -301,24 +295,15 @@ func (p *TbParser) defFnStmt(tb *tokenBlock, skipLetAndFn bool) (Stmt, error) {
 				return nil, ErrInLine(err, tb)
 			}
 
-			thenFacts, err = p.inlineFacts_untilEndOfInline(tb, []string{})
+			thenFacts, err = p.inlineFacts_untilWord_SpecOrFact(tb, glob.KeySymbolRightArrow, []string{})
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
 		}
-	} else if tb.header.is(glob.KeySymbolRightArrow) {
-		err = tb.header.skip(glob.KeySymbolRightArrow)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		unitFacts, err := p.inlineFacts_checkUniDepth1(tb, []string{})
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		thenFacts = append(thenFacts, unitFacts...)
 	}
 
-	return NewLetFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
+	return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
+	// return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
 }
 
 func (p *TbParser) letDefObjStmt(tb *tokenBlock) (Stmt, error) {
@@ -327,7 +312,7 @@ func (p *TbParser) letDefObjStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	objNames, objSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolColon, true)
+	objNames, objSets, err := p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolColon}, true, true)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -346,18 +331,13 @@ func (p *TbParser) letDefObjStmt(tb *tokenBlock) (Stmt, error) {
 	if tb.header.ExceedEnd() && len(tb.body) == 0 {
 		return NewDefLetStmt(objNames, objSets, []FactStmt{}, tb.line), nil
 	} else if tb.header.ExceedEnd() && len(tb.body) != 0 {
-		facts, err := p.bodyFacts(tb, UniFactDepth0)
+		facts, err := p.bodyFacts(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
 		return NewDefLetStmt(objNames, objSets, facts, tb.line), nil
 	} else {
-		facts, err := p.inlineFacts_checkUniDepth0(tb, []string{})
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		err = checkFactsUniDepth0(facts)
+		facts, err := p.inlineFacts(tb, []string{})
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -419,513 +399,51 @@ func (p *TbParser) haveFnStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		return NewClaimHaveFnStmt(defFnStmt.(*LetFnStmt), proof, haveObjSatisfyFn, tb.line), nil
-	} else if len(tb.body) >= 2 && tb.body[1].header.is(glob.KeywordCase) {
-		// Case-by-case structure: body[0] is defFnStmt, body[1..n] are case blocks (possibly with prove cases: at the end)
-		// Each case block has format: case <condition>: <equalTo>:
-		cases := []SpecificFactStmt{}
-		proofs := []StmtSlice{}
-		EqualTo := []Obj{}
-
-		// Check if the last body block is "prove cases:"
-		proveOr := StmtSlice{}
-		lastBlockIndex := -1
-		if len(tb.body) > 1 {
-			lastIdx := len(tb.body) - 1
-			lastBlock := tb.body[lastIdx]
-			if lastBlock.header.is(glob.KeywordProve) {
-				savedIndex := lastBlock.header.index
-				err := lastBlock.header.skip(glob.KeywordProve)
-				if err == nil && lastBlock.header.is(glob.KeywordCases) {
-					err := lastBlock.header.skip(glob.KeywordCases)
-					if err == nil {
-						lastBlockIndex = lastIdx
-					} else {
-						lastBlock.header.index = savedIndex
-					}
-				} else {
-					if err == nil {
-						lastBlock.header.index = savedIndex
-					}
-				}
-			}
-		}
-
-		// Process case blocks (skip the last one if it's "prove cases:")
-		endIdx := len(tb.body)
-		if lastBlockIndex >= 0 {
-			endIdx = lastBlockIndex
-		}
-		for i := 1; i < endIdx; i++ {
-			// Case block: case <condition>: <equalTo>:
-			err := tb.body[i].header.skip(glob.KeywordCase)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			curStmt, err := p.specFactStmt(&tb.body[i])
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			cases = append(cases, curStmt)
-			err = tb.body[i].header.skip(glob.KeySymbolColon)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			// Parse equalTo object
-			curHaveObj, err := p.Obj(&tb.body[i])
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			EqualTo = append(EqualTo, curHaveObj)
-			// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
-			curProof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&tb.body[i])
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			proofs = append(proofs, curProof)
-		}
-
-		// Parse "prove or:" block if it exists
-		if lastBlockIndex >= 0 {
-			lastBlock := tb.body[lastBlockIndex]
-			lastBlock.header.skip(glob.KeywordProve)
-			lastBlock.header.skip(glob.KeywordCases)
-			proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-		}
-
-		return NewHaveFnCaseByCaseStmt(defFnStmt.(*LetFnStmt), cases, proofs, EqualTo, proveOr, tb.line), nil
+		return NewHaveFnStmt(defFnStmt, proof, haveObjSatisfyFn, tb.line), nil
 	} else {
-		return nil, fmt.Errorf("expect 'prove:' or 'case' after defFnStmt in have fn statement")
+		return nil, fmt.Errorf("expect 'witness:' after defFnStmt in have fn statement")
 	}
 }
 
-func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordHave)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeywordFn)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	defHeader, err := p.defHeaderWithoutParsingColonAtEnd_MustFollowWithFreeParamCheck(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = p.NewDefinedNameInCurrentParseEnv(string(defHeader.Name))
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	for _, param := range defHeader.Params {
-		if _, ok := p.FreeParams[param]; ok {
-			return nil, fmt.Errorf("parameter %s is already defined", param)
-		}
-		p.FreeParams[param] = struct{}{}
-	}
-
-	defer func() {
-		for _, param := range defHeader.Params {
-			delete(p.FreeParams, param)
-		}
-	}()
-
-	retSet, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	err = tb.header.skip(glob.KeySymbolEqual)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	equalTo, err := p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	// Check if it's case-by-case or simple equal
-	if len(tb.body) > 0 && tb.body[0].header.is(glob.KeywordCase) {
-		// Case-by-case structure (possibly with prove cases: at the end)
-		caseByCaseFacts := []SpecificFactStmt{}
-		caseByCaseEqualTo := []Obj{}
-		caseByCaseProofs := []StmtSlice{}
-
-		// Check if the last body block is "prove cases:"
-		proveOr := StmtSlice{}
-		lastBlockIndex := -1
-		if len(tb.body) > 0 {
-			lastIdx := len(tb.body) - 1
-			lastBlock := tb.body[lastIdx]
-			if lastBlock.header.is(glob.KeywordProve) {
-				savedIndex := lastBlock.header.index
-				err := lastBlock.header.skip(glob.KeywordProve)
-				if err == nil && lastBlock.header.is(glob.KeywordCases) {
-					err := lastBlock.header.skip(glob.KeywordCases)
-					if err == nil {
-						lastBlockIndex = lastIdx
-					} else {
-						lastBlock.header.index = savedIndex
-					}
-				} else {
-					if err == nil {
-						lastBlock.header.index = savedIndex
-					}
-				}
-			}
-		}
-
-		// Process case blocks (skip the last one if it's "prove cases:")
-		endIdx := len(tb.body)
-		if lastBlockIndex >= 0 {
-			endIdx = lastBlockIndex
-		}
-		for i := 0; i < endIdx; i++ {
-			block := tb.body[i]
-			err := block.header.skip(glob.KeywordCase)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			curStmt, err := p.specFactStmt(&block)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			err = block.header.skip(glob.KeySymbolColon)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			obj, err := p.Obj(&block)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
-			proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&block)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			caseByCaseEqualTo = append(caseByCaseEqualTo, obj)
-			caseByCaseFacts = append(caseByCaseFacts, curStmt)
-			caseByCaseProofs = append(caseByCaseProofs, proof)
-		}
-
-		// Parse "prove or:" block if it exists
-		if lastBlockIndex >= 0 {
-			lastBlock := tb.body[lastBlockIndex]
-			lastBlock.header.skip(glob.KeywordProve)
-			lastBlock.header.skip(glob.KeywordCases)
-			proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-		}
-
-		// return &HaveFnEqualCaseByCaseStmt{
-		// 	DefHeader:         defHeader,
-		// 	RetSet:            retSet,
-		// 	CaseByCaseFacts:   caseByCaseFacts,
-		// 	CaseByCaseEqualTo: caseByCaseEqualTo,
-		// 	Proofs:            caseByCaseProofs,
-		// 	ProveCases:        proveOr,
-		// 	Line:              tb.line,
-		// }, nil
-
-		return NewHaveFnEqualCaseByCaseStmt(defHeader, retSet, caseByCaseFacts, caseByCaseEqualTo, caseByCaseProofs, proveOr, tb.line), nil
-	} else {
-		// Simple equal with optional proof
-		// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
-		proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-
-		return NewHaveFnEqualStmt(defHeader, retSet, equalTo, proof, tb.line), nil
-	}
-}
-
-func (p *TbParser) haveObjStStmt(tb *tokenBlock) (Stmt, error) {
-	err := tb.header.skip(glob.KeywordHave)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	// Save position to check if we have sets
-	savedIndex := tb.header.index
-
-	// Try to parse first object name
-	_, err = tb.header.next()
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	// Check if next token is a set (Obj) or comma/st
-	hasSets := false
-	if !tb.header.is(glob.KeySymbolComma) && !tb.header.is(glob.KeywordSt) {
-		// Try to parse as Obj (set) - save position before trying
-		peekIndex := tb.header.index
-		_, parseErr := p.Obj(tb)
-		if parseErr == nil {
-			// Successfully parsed as Obj, so we have sets
-			hasSets = true
-			// Restore to parse properly
-			tb.header.index = savedIndex
-		} else {
-			// Not an Obj, restore position
-			tb.header.index = peekIndex
-		}
-	}
-
-	if hasSets {
-		// Parse with sets: have x set1, y set2 st ...
-		return p.haveObjStWithParamSetsStmt(tb)
-	}
-
-	return nil, fmt.Errorf("expect sets after 'have' but got '%s'", tb.header.strAtCurIndexPlus(0))
-
-	// else {
-	// 	// Parse without sets: have x, y st ...
-	// 	tb.header.index = savedIndex
-	// 	objNames := []string{}
-
-	// 	// there is at least one object name
-	// 	for {
-	// 		objName, err := tb.header.next()
-	// 		if err != nil {
-	// 			return nil, ErrInLine(err, tb)
-	// 		}
-	// 		objNames = append(objNames, objName)
-	// 		if tb.header.is(glob.KeySymbolComma) {
-	// 			tb.header.skip(glob.KeySymbolComma)
-	// 			continue
-	// 		}
-	// 		if tb.header.is(glob.KeywordSt) {
-	// 			break
-	// 		}
-	// 		return nil, fmt.Errorf("expect '%s' or '%s' but got '%s'", glob.KeywordSt, glob.KeySymbolComma, tb.header.strAtCurIndexPlus(0))
-	// 	}
-
-	// 	for _, objName := range objNames {
-	// 		err = p.NewDefinedNameInCurrentParseEnv(string(objName))
-	// 		if err != nil {
-	// 			return nil, ErrInLine(err, tb)
-	// 		}
-	// 	}
-
-	// 	err = tb.header.skip(glob.KeywordSt)
-	// 	if err != nil {
-	// 		return nil, ErrInLine(err, tb)
-	// 	}
-
-	// 	fact, err := p.specFactStmt(tb)
-	// 	if err != nil {
-	// 		return nil, ErrInLine(err, tb)
-	// 	}
-
-	// 	return NewHaveObjStStmt(objNames, fact, tb.line), nil
-	// }
-}
-
-func (p *TbParser) haveObjStWithParamSetsStmt(tb *tokenBlock) (Stmt, error) {
-	// Parse param-set pairs similar to param_paramSet_paramInSetFacts but ending with "st"
-	objNames := []string{}
-	objSets := []Obj{}
-
-	for {
-		objName, err := tb.header.next()
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		objNames = append(objNames, objName)
-
-		if tb.header.is(glob.KeywordSt) {
-			return nil, fmt.Errorf("expect set after parameter '%s' but got '%s'", objName, glob.KeywordSt)
-		}
-
-		setObj, err := p.Obj(tb)
-		if err != nil {
-			return nil, fmt.Errorf("expect set after parameter '%s' but got error: %v", objName, err)
-		}
-		objSets = append(objSets, setObj)
-
-		if tb.header.is(glob.KeySymbolComma) {
-			tb.header.skip(glob.KeySymbolComma)
-			continue
-		}
-
-		if tb.header.is(glob.KeywordSt) {
-			break
-		}
-
-		return nil, fmt.Errorf("expect ',' or '%s' but got '%s'", glob.KeywordSt, tb.header.strAtCurIndexPlus(0))
-	}
-
-	// Check that we have sets for all params
-	if len(objSets) != len(objNames) {
-		return nil, fmt.Errorf("number of sets (%d) does not match number of parameters (%d)", len(objSets), len(objNames))
-	}
-
-	for _, objName := range objNames {
-		err := p.NewDefinedNameInCurrentParseEnv(string(objName))
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-	}
-
-	err := tb.header.skip(glob.KeywordSt)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	fact, err := p.specFactStmt(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	if factAsPureSpecificFactStmt, ok := fact.(*PureSpecificFactStmt); ok {
-		return NewHaveObjStWithParamSetsStmt(objNames, objSets, factAsPureSpecificFactStmt, tb.line), nil
-	} else {
-		return nil, fmt.Errorf("expect pure specific fact, got %T", fact)
-	}
-}
-
-func (p *TbParser) bodyBlockFacts(tb *tokenBlock, uniFactDepth uniFactEnum, parseBodyFactNum int) ([]FactStmt, error) {
-	facts := []FactStmt{}
-
-	if uniFactDepth.allowMoreDepth() {
-		for i := range parseBodyFactNum {
-			stmt := tb.body[i]
-			fact, err := p.factStmt(&stmt, uniFactDepth) // no longer allow further uniFact
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
-			facts = append(facts, fact)
-		}
-	} else {
-		for i := range parseBodyFactNum {
-			stmt := tb.body[i]
-			fact, err := p.SpecFactOrOrStmt(&stmt)
-			if err != nil {
-				if tb.body[i].header.is(glob.KeywordForall) {
-					return nil, fmt.Errorf("expect specific fact: at most 2 layers of universal quantifier is allowed")
-				} else {
-					return nil, ErrInLine(err, tb)
-				}
-			}
-			facts = append(facts, fact)
-		}
-	}
-
-	return facts, nil
-}
-
-// func (p *TbParser) defExistPropStmtBody(tb *tokenBlock) (*DefExistPropStmtBody, error) {
-// 	declHeader, err := p.defHeaderWithoutParsingColonAtEnd(tb)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	for _, param := range declHeader.Params {
-// 		if _, ok := p.FreeParams[param]; ok {
-// 			return nil, fmt.Errorf("parameter %s in prop definition conflicts with a free parameter in the outer scope", param)
-// 		}
-// 		p.FreeParams[param] = struct{}{}
-// 	}
-
-// 	defer func() {
-// 		for _, param := range declHeader.Params {
-// 			delete(p.FreeParams, param)
-// 		}
-// 	}()
-
-// 	err = p.NewDefinedNameInCurrentParseEnv(string(declHeader.Name))
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	if tb.header.ExceedEnd() {
-// 		return NewExistPropDef(declHeader, []FactStmt{}, []FactStmt{}, []FactStmt{}, tb.line), nil
-// 	}
-
-// 	if tb.header.is(glob.KeySymbolEquivalent) {
-// 		err = tb.header.skip(glob.KeySymbolEquivalent)
-// 		if err != nil {
-// 			return nil, ErrInLine(err, tb)
-// 		}
-// 		unitFacts, err := p.inlineFacts_checkUniDepth1(tb, []string{})
-// 		if err != nil {
-// 			return nil, ErrInLine(err, tb)
-// 		}
-// 		return NewExistPropDef(declHeader, []FactStmt{}, unitFacts, []FactStmt{}, tb.line), nil
-// 	}
-
-// 	err = tb.header.skip(glob.KeySymbolColon)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	if tb.header.ExceedEnd() {
-
-// 		// domFacts, iffFactsAsFactStatements, err := tb.dom_and_section(glob.KeywordIff, glob.KeywordThen)
-// 		// domFacts, iffFactsAsFactStatements, err := tb.dom_and_section(glob.KeywordIff, glob.KeySymbolEqualLarger)
-// 		domFacts, iffFactsAsFactStatements, err := p.dom_and_section(tb, glob.KeySymbolEquivalent, glob.KeySymbolRightArrow)
-// 		if err != nil {
-// 			return nil, ErrInLine(err, tb)
-// 		}
-
-// 		if len(iffFactsAsFactStatements) == 0 {
-// 			return nil, fmt.Errorf("expect 'iff' section in proposition definition has at least one fact")
-// 		}
-
-// 		return NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, []FactStmt{}, tb.line), nil
-// 	} else {
-// 		domFacts, iffFactsAsFactStatements, err := p.bodyOfInlineDomAndThen(tb, glob.KeySymbolEquivalent, []string{})
-// 		if err != nil {
-// 			return nil, ErrInLine(err, tb)
-// 		}
-
-// 		return NewExistPropDef(declHeader, domFacts, iffFactsAsFactStatements, []FactStmt{}, tb.line), nil
-// 	}
-// }
-
-// func (p *TbParser) haveObjFromCartSetStmt(tb *tokenBlock) (Stmt, error) {
+// func (p *TbParser) haveFnEqualStmt(tb *tokenBlock) (Stmt, error) {
 // 	err := tb.header.skip(glob.KeywordHave)
 // 	if err != nil {
 // 		return nil, ErrInLine(err, tb)
 // 	}
 
-// 	// Parse object name
-// 	objName, err := tb.header.next()
+// 	err = tb.header.skip(glob.KeywordFn)
 // 	if err != nil {
 // 		return nil, ErrInLine(err, tb)
 // 	}
 
-// 	err = p.NewDefinedNameInCurrentParseEnv(string(objName))
+// 	defHeader, err := p.defHeaderWithoutParsingColonAtEnd_MustFollowWithFreeParamCheck(tb)
 // 	if err != nil {
 // 		return nil, ErrInLine(err, tb)
 // 	}
 
-// 	// Parse cart(...)
-// 	cartSetObj, err := p.Obj(tb)
+// 	err = p.NewDefinedNameInCurrentParseEnv(string(defHeader.Name))
 // 	if err != nil {
 // 		return nil, ErrInLine(err, tb)
 // 	}
 
-// 	cartSet, ok := cartSetObj.(*FnObj)
-// 	if !ok {
-// 		return nil, ErrInLine(fmt.Errorf("expected cart to be FnObj"), tb)
+// 	for _, param := range defHeader.Params {
+// 		if _, ok := p.FreeParams[param]; ok {
+// 			return nil, fmt.Errorf("parameter %s is already defined", param)
+// 		}
+// 		p.FreeParams[param] = struct{}{}
 // 	}
 
-// 	if !IsFn_WithHeadName(cartSetObj, glob.KeywordCart) {
-// 		return nil, ErrInLine(fmt.Errorf("expected cart function call"), tb)
+// 	defer func() {
+// 		for _, param := range defHeader.Params {
+// 			delete(p.FreeParams, param)
+// 		}
+// 	}()
+
+// 	retSet, err := p.Obj(tb)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
 // 	}
 
-// 	// Parse = ...
 // 	err = tb.header.skip(glob.KeySymbolEqual)
 // 	if err != nil {
 // 		return nil, ErrInLine(err, tb)
@@ -936,13 +454,142 @@ func (p *TbParser) bodyBlockFacts(tb *tokenBlock, uniFactDepth uniFactEnum, pars
 // 		return nil, ErrInLine(err, tb)
 // 	}
 
-// 	// Check end of line
-// 	if !tb.header.ExceedEnd() {
-// 		return nil, ErrInLine(fmt.Errorf("expect end of line"), tb)
-// 	}
+// 	// Check if it's case-by-case or simple equal
+// 	if len(tb.body) > 0 && tb.body[0].header.is(glob.KeywordCase) {
+// 		// Case-by-case structure (possibly with prove cases: at the end)
+// 		caseByCaseFacts := []SpecificFactStmt{}
+// 		caseByCaseEqualTo := []Obj{}
+// 		caseByCaseProofs := []StmtSlice{}
 
-// 	return NewHaveObjFromCartSetStmt(objName, cartSet, equalTo, tb.line), nil
+// 		// Check if the last body block is "prove cases:"
+// 		proveOr := StmtSlice{}
+// 		lastBlockIndex := -1
+// 		if len(tb.body) > 0 {
+// 			lastIdx := len(tb.body) - 1
+// 			lastBlock := tb.body[lastIdx]
+// 			if lastBlock.header.is(glob.KeywordProve) {
+// 				savedIndex := lastBlock.header.index
+// 				err := lastBlock.header.skip(glob.KeywordProve)
+// 				if err == nil && lastBlock.header.is(glob.KeywordCases) {
+// 					err := lastBlock.header.skip(glob.KeywordCases)
+// 					if err == nil {
+// 						lastBlockIndex = lastIdx
+// 					} else {
+// 						lastBlock.header.index = savedIndex
+// 					}
+// 				} else {
+// 					if err == nil {
+// 						lastBlock.header.index = savedIndex
+// 					}
+// 				}
+// 			}
+// 		}
+
+// 		// Process case blocks (skip the last one if it's "prove cases:")
+// 		endIdx := len(tb.body)
+// 		if lastBlockIndex >= 0 {
+// 			endIdx = lastBlockIndex
+// 		}
+// 		for i := 0; i < endIdx; i++ {
+// 			block := tb.body[i]
+// 			err := block.header.skip(glob.KeywordCase)
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
+// 			curStmt, err := p.specFactStmt(&block)
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
+// 			err = block.header.skip(glob.KeySymbolColon)
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
+// 			obj, err := p.Obj(&block)
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
+// 			// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
+// 			proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&block)
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
+// 			caseByCaseEqualTo = append(caseByCaseEqualTo, obj)
+// 			caseByCaseFacts = append(caseByCaseFacts, curStmt)
+// 			caseByCaseProofs = append(caseByCaseProofs, proof)
+// 		}
+
+// 		// Parse "prove or:" block if it exists
+// 		if lastBlockIndex >= 0 {
+// 			lastBlock := tb.body[lastBlockIndex]
+// 			lastBlock.header.skip(glob.KeywordProve)
+// 			lastBlock.header.skip(glob.KeywordCases)
+// 			proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
+// 		}
+
+// 		return NewHaveFnEqualCaseByCaseStmt(defHeader, retSet, caseByCaseFacts, caseByCaseEqualTo, caseByCaseProofs, proveOr, tb.line), nil
+// 	} else {
+// 		// proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
+// 		// if err != nil {
+// 		// 	return nil, ErrInLine(err, tb)
+// 		// }
+
+// 		// return NewHaveFnEqualStmt(defHeader, retSet, equalTo, proof, tb.line), nil
+// 		panic("")
+// 	}
 // }
+
+func (p *TbParser) haveObjStStmt(tb *tokenBlock) (Stmt, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	names, sets, err := p.parseExistParamsAndSets(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	facts, err := p.parsePureFactsOrChainFacts(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+	return NewHaveObjStWithParamSetsStmt(names, sets, facts, tb.line), nil
+}
+
+func (p *TbParser) bodyBlockSpecOrFacts(tb *tokenBlock, parseBodyFactNum int) ([]Spec_OrFact, error) {
+	facts := []Spec_OrFact{}
+	for i := range parseBodyFactNum {
+		stmt := tb.body[i]
+		fact, err := p.SpecFactOrOrStmt(&stmt)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		facts = append(facts, fact)
+	}
+	return facts, nil
+}
+
+func (p *TbParser) bodyBlockFacts(tb *tokenBlock, parseBodyFactNum int) ([]FactStmt, error) {
+	facts := []FactStmt{}
+
+	for i := range parseBodyFactNum {
+		stmt := tb.body[i]
+		fact, err := p.SpecFactOrOrStmt(&stmt)
+		if err != nil {
+			if tb.body[i].header.is(glob.KeywordForall) {
+				return nil, fmt.Errorf("expect matchable	 fact: at most 2 layers of universal quantifier is allowed")
+			} else {
+				return nil, ErrInLine(err, tb)
+			}
+		}
+		facts = append(facts, fact)
+	}
+
+	return facts, nil
+}
 
 func (p *TbParser) haveObjEqualStmt(tb *tokenBlock) (Stmt, error) {
 	err := tb.header.skip(glob.KeywordHave)
@@ -952,7 +599,7 @@ func (p *TbParser) haveObjEqualStmt(tb *tokenBlock) (Stmt, error) {
 
 	objectEqualTos := []Obj{}
 
-	objectNames, setSlice, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolEqual, false)
+	objectNames, setSlice, err := p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolEqual}, false, true)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -989,7 +636,7 @@ func (p *TbParser) haveObjInNonEmptySetStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	objNames, objSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolColon, true)
+	objNames, objSets, err := p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolColon}, true, true)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1019,19 +666,11 @@ func (p *TbParser) claimStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	if tb.body[0].header.is(glob.KeywordPropInfer) {
-		// if tb.body[0].header.strAtCurIndexPlus(1) == glob.KeywordExist {
-		// 	return p.claimExistPropStmt(tb)
-		// } else {
-		return p.claimImply(tb)
-		// }
-	}
-
 	if len(tb.body) != 2 {
 		return nil, fmt.Errorf("expect 2 body blocks after claim")
 	}
 
-	toCheck, err := p.factStmt(&tb.body[0], UniFactDepth0)
+	toCheck, err := p.factStmt(&tb.body[0])
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1205,7 +844,7 @@ func (p *TbParser) knowInferStmt(tb *tokenBlock) (*KnowInferStmt, error) {
 	}
 
 	// Parse parameters and parameter sets
-	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolColon, false)
+	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolColon}, false, true)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1237,7 +876,7 @@ func (p *TbParser) knowInferStmt(tb *tokenBlock) (*KnowInferStmt, error) {
 	// Parse then facts (after =>)
 	thenFacts := ReversibleFacts{}
 	for {
-		fact, err := p.factStmt(tb, UniFactDepth0)
+		fact, err := p.factStmt(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -1260,7 +899,7 @@ func (p *TbParser) knowInferStmt(tb *tokenBlock) (*KnowInferStmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 		for {
-			fact, err := p.factStmt(tb, UniFactDepth0)
+			fact, err := p.factStmt(tb)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
@@ -1283,11 +922,7 @@ func (p *TbParser) knowFactStmt(tb *tokenBlock) (Stmt, error) {
 	if !tb.header.is(glob.KeySymbolColon) {
 		var facts FactStmtSlice = FactStmtSlice{}
 		var err error
-		facts, err = p.inlineFacts_checkUniDepth0(tb, []string{})
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		err = checkFactsUniDepth0(facts)
+		facts, err = p.inlineFacts(tb, []string{})
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -1300,7 +935,7 @@ func (p *TbParser) knowFactStmt(tb *tokenBlock) (Stmt, error) {
 
 	var err error
 	var facts FactStmtSlice = FactStmtSlice{}
-	facts, err = p.bodyFacts(tb, UniFactDepth0)
+	facts, err = p.bodyFacts(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1422,7 +1057,7 @@ func (p *TbParser) proveCaseByCaseStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		curThenFacts, err := p.bodyBlockFacts(&firstBlock, UniFactDepth0, len(firstBlock.body))
+		curThenFacts, err := p.bodyBlockFacts(&firstBlock, len(firstBlock.body))
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -1500,7 +1135,7 @@ func (p *TbParser) proveByEnum(tb *tokenBlock) (Stmt, error) {
 	}
 
 	// param paramSet pairs
-	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolColon, false)
+	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolColon}, false, true)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -1530,90 +1165,141 @@ func (p *TbParser) proveByEnum(tb *tokenBlock) (Stmt, error) {
 	return NewProveByEnumStmt(uniFact, proofs, tb.line), nil
 }
 
-func (p *TbParser) DefFnSetStmt(tb *tokenBlock) (Stmt, error) {
-	tb.header.skipNext()
+// func (p *TbParser) DefFnSetStmt(tb *tokenBlock) (Stmt, error) {
+// 	tb.header.skipNext()
 
-	defHeader, err := p.defHeaderWithoutParsingColonAtEnd(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	defHeader, err := p.defHeaderWithoutParsingColonAtEnd(tb)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	// Add fn template params to FreeParams
-	for _, param := range defHeader.Params {
-		if _, exists := p.FreeParams[param]; exists {
-			return nil, ErrInLine(fmt.Errorf("parameter %s in fn template definition conflicts with a free parameter in the outer scope", param), tb)
-		}
-		p.FreeParams[param] = struct{}{}
-	}
+// 	// Add fn template params to FreeParams
+// 	for _, param := range defHeader.Params {
+// 		if _, exists := p.FreeParams[param]; exists {
+// 			return nil, ErrInLine(fmt.Errorf("parameter %s in fn template definition conflicts with a free parameter in the outer scope", param), tb)
+// 		}
+// 		p.FreeParams[param] = struct{}{}
+// 	}
 
-	// Defer: remove the params we added when leaving this fn template scope
-	defer func() {
-		for _, param := range defHeader.Params {
-			delete(p.FreeParams, param)
-		}
-	}()
+// 	// Defer: remove the params we added when leaving this fn template scope
+// 	defer func() {
+// 		for _, param := range defHeader.Params {
+// 			delete(p.FreeParams, param)
+// 		}
+// 	}()
 
-	err = tb.header.skip(glob.KeySymbolColon)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	err = tb.header.skip(glob.KeySymbolColon)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	if !tb.header.ExceedEnd() {
-		return nil, fmt.Errorf("expect end of line")
-	}
+// 	if !tb.header.ExceedEnd() {
+// 		return nil, fmt.Errorf("expect end of line")
+// 	}
 
-	if len(tb.body) == 1 {
-		fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := p.fnInFnTemplateStmt(&tb.body[0])
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
+// 	if len(tb.body) == 1 {
+// 		fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := p.fnInFnTemplateStmt(&tb.body[0])
+// 		if err != nil {
+// 			return nil, ErrInLine(err, tb)
+// 		}
 
-		newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, tb.body[0].line)
+// 		reversibleDomFacts := ReversibleFacts{}
+// 		for _, domFact := range domFacts {
+// 			if specFact, ok := domFact.(Spec_OrFact); ok {
+// 				reversibleDomFacts = append(reversibleDomFacts, specFact)
+// 			} else {
+// 				return nil, fmt.Errorf("expect spec fact or or fact in dom section")
+// 			}
+// 		}
+// 		reversibleThenFacts := ReversibleFacts{}
+// 		for _, thenFact := range thenFacts {
+// 			if specFact, ok := thenFact.(Spec_OrFact); ok {
+// 				reversibleThenFacts = append(reversibleThenFacts, specFact)
+// 			} else {
+// 				return nil, fmt.Errorf("expect spec fact or or fact in then section")
+// 			}
+// 		}
 
-		return NewDefFnSetStmt(defHeader, []FactStmt{}, newFnTStruct, tb.line), nil
-	} else if len(tb.body) >= 2 {
-		if tb.body[0].header.is(glob.KeywordDom) {
-			err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeywordDom)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
+// 		newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, reversibleDomFacts, reversibleThenFacts, tb.body[0].line)
 
-			templateDomFacts, err := p.bodyFacts(&tb.body[0], UniFactDepth1)
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
+// 		return NewDefFnSetStmt(defHeader, []FactStmt{}, newFnTStruct, tb.line), nil
+// 	} else if len(tb.body) >= 2 {
+// 		if tb.body[0].header.is(glob.KeywordDom) {
+// 			err = tb.body[0].header.skipKwAndColonCheckEOL(glob.KeywordDom)
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
 
-			fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := p.fnInFnTemplateStmt(&tb.body[1])
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
+// 			templateDomFacts, err := p.bodyFacts(&tb.body[0])
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
 
-			newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, tb.body[1].line)
+// 			fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := p.fnInFnTemplateStmt(&tb.body[1])
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
 
-			return NewDefFnSetStmt(defHeader, templateDomFacts, newFnTStruct, tb.line), nil
-		} else {
-			templateDomFacts := []FactStmt{}
-			for i := range len(tb.body) - 1 {
-				curStmt, err := p.factStmt(&tb.body[i], UniFactDepth1)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				templateDomFacts = append(templateDomFacts, curStmt)
-			}
+// 			domFactsAsReversibleFacts := ReversibleFacts{}
+// 			for _, domFact := range domFacts {
+// 				if specFact, ok := domFact.(Spec_OrFact); ok {
+// 					domFactsAsReversibleFacts = append(domFactsAsReversibleFacts, specFact)
+// 				} else {
+// 					return nil, fmt.Errorf("expect spec fact or or fact in dom section")
+// 				}
+// 			}
+// 			thenFactsAsReversibleFacts := ReversibleFacts{}
+// 			for _, thenFact := range thenFacts {
+// 				if specFact, ok := thenFact.(Spec_OrFact); ok {
+// 					thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, specFact)
+// 				} else {
+// 					return nil, fmt.Errorf("expect spec fact or or fact in then section")
+// 				}
+// 			}
+// 			newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFactsAsReversibleFacts, thenFactsAsReversibleFacts, tb.body[1].line)
 
-			fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := p.fnInFnTemplateStmt(&tb.body[len(tb.body)-1])
-			if err != nil {
-				return nil, ErrInLine(err, tb)
-			}
+// 			return NewDefFnSetStmt(defHeader, templateDomFacts, newFnTStruct, tb.line), nil
+// 		} else {
+// 			templateDomFacts := []FactStmt{}
+// 			for i := range len(tb.body) - 1 {
+// 				curStmt, err := p.factStmt(&tb.body[i])
+// 				if err != nil {
+// 					return nil, ErrInLine(err, tb)
+// 				}
+// 				templateDomFacts = append(templateDomFacts, curStmt)
+// 			}
 
-			newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, tb.body[len(tb.body)-1].line)
+// 			fnParams, fnParamSets, fnRetSet, domFacts, thenFacts, err := p.fnInFnTemplateStmt(&tb.body[len(tb.body)-1])
+// 			if err != nil {
+// 				return nil, ErrInLine(err, tb)
+// 			}
 
-			return NewDefFnSetStmt(defHeader, templateDomFacts, newFnTStruct, tb.line), nil
-		}
-	} else {
-		return nil, fmt.Errorf("expect one or two body blocks")
-	}
-}
+// 			domFactsAsReversibleFacts := ReversibleFacts{}
+// 			for _, domFact := range domFacts {
+// 				if specFact, ok := domFact.(Spec_OrFact); ok {
+// 					domFactsAsReversibleFacts = append(domFactsAsReversibleFacts, specFact)
+// 				} else {
+// 					return nil, fmt.Errorf("expect spec fact or or fact in dom section")
+// 				}
+// 			}
+
+// 			thenFactsAsReversibleFacts := ReversibleFacts{}
+// 			for _, thenFact := range thenFacts {
+// 				if specFact, ok := thenFact.(Spec_OrFact); ok {
+// 					thenFactsAsReversibleFacts = append(thenFactsAsReversibleFacts, specFact)
+// 				} else {
+// 					return nil, fmt.Errorf("expect spec fact or or fact in then section")
+// 				}
+// 			}
+
+// 			newFnTStruct := NewFnTStruct(fnParams, fnParamSets, fnRetSet, domFactsAsReversibleFacts, thenFactsAsReversibleFacts, tb.body[len(tb.body)-1].line)
+
+// 			return NewDefFnSetStmt(defHeader, templateDomFacts, newFnTStruct, tb.line), nil
+// 		}
+// 	} else {
+// 		return nil, fmt.Errorf("expect one or two body blocks")
+// 	}
+// }
 
 func (p *TbParser) fnInFnTemplateStmt(tb *tokenBlock) ([]string, []Obj, Obj, []FactStmt, []FactStmt, error) {
 	var err error
@@ -1628,7 +1314,7 @@ func (p *TbParser) fnInFnTemplateStmt(tb *tokenBlock) ([]string, []Obj, Obj, []F
 		return nil, nil, nil, nil, nil, ErrInLine(err, tb)
 	}
 
-	fnParams, fnParamSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolRightBrace, false)
+	fnParams, fnParamSets, err := p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolRightBrace}, false, true)
 	if err != nil {
 		return nil, nil, nil, nil, nil, ErrInLine(err, tb)
 	}
@@ -1938,6 +1624,9 @@ func (p *TbParser) algoDefStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 		params = append(params, param)
+		if tb.header.is(glob.KeySymbolComma) {
+			tb.header.skip(glob.KeySymbolComma)
+		}
 	}
 
 	err = tb.header.skip(glob.KeySymbolRightBrace)
@@ -1950,16 +1639,16 @@ func (p *TbParser) algoDefStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	stmts := []AlgoStmt{}
+	stmts := []AlgoIfAlgoReturn{}
 	for _, block := range tb.body {
-		curStmt, err := p.algoStmt(&block)
+		curStmt, err := p.algoIfAlgoReturn(&block)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
 		stmts = append(stmts, curStmt)
 	}
 
-	return NewAlgoDefStmt(funcName, params, stmts, tb.line), nil
+	return NewDefAlgoStmt(funcName, params, stmts, tb.line), nil
 }
 
 func (p *TbParser) evalStmt(tb *tokenBlock) (Stmt, error) {
@@ -2195,7 +1884,7 @@ func (p *TbParser) provePropInferStmt(tb *tokenBlock) (*ProveInferStmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		implicationFacts, err := p.inlineFacts_checkUniDepth0(tb, []string{glob.KeySymbolColon})
+		implicationFacts, err := p.inlineFacts(tb, []string{glob.KeySymbolColon})
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -2252,7 +1941,7 @@ func (p *TbParser) provePropInferStmt(tb *tokenBlock) (*ProveInferStmt, error) {
 		}
 
 		for _, stmt := range tb.body[0].body {
-			curStmt, err := p.factStmt(&stmt, UniFactDepth0)
+			curStmt, err := p.factStmt(&stmt)
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
@@ -2281,7 +1970,7 @@ func (p *TbParser) provePropInferStmt(tb *tokenBlock) (*ProveInferStmt, error) {
 		// Case 2: All are implications, no prove section
 		// Parse all body blocks as fact statements
 		for i := range len(tb.body) {
-			curStmt, err := p.factStmt(&tb.body[i], UniFactDepth0)
+			curStmt, err := p.factStmt(&tb.body[i])
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
@@ -2303,7 +1992,7 @@ func (p *TbParser) DefPropInferStmt(tb *tokenBlock) (*DefPropStmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	err = NoSelfReferenceInPropDef(string(body.DefHeader.Name), append(append(body.DomFactsOrNil, body.IffFactsOrNil...), body.ImplicationFactsOrNil...))
+	err = NoSelfReferenceInPropDef(string(body.DefHeader.Name), body.IffFactsOrNil)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -2344,7 +2033,7 @@ func (p *TbParser) implyStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt,
 
 	if !tb.header.is(glob.KeySymbolColon) {
 		if tb.header.ExceedEnd() {
-			return NewDefPropStmt(declHeader, nil, nil, nil, tb.line), nil
+			return NewDefPropStmt(declHeader, nil, nil, tb.line), nil
 		} else {
 			return nil, fmt.Errorf("expect ':' or end of block")
 		}
@@ -2355,100 +2044,67 @@ func (p *TbParser) implyStmtWithoutSelfReferCheck(tb *tokenBlock) (*DefPropStmt,
 		return nil, ErrInLine(err, tb)
 	}
 
-	if tb.header.ExceedEnd() {
-		// Check if the last body block has =>: separator
-		iffFacts := []FactStmt{}
-		implicationFacts := []FactStmt{}
+	if !tb.header.ExceedEnd() {
+		return nil, ErrInLine(fmt.Errorf("expect end of block"), tb)
+	}
 
-		if len(tb.body) > 0 && tb.body[len(tb.body)-1].header.is(glob.KeySymbolRightArrow) {
-			// Case 1: body 的最后一位是 =>:，那么前面的每一行是 prop 的 iff，然后 => 后面的是 then
-			// Parse iff facts (all lines before =>:)
-			for i := 0; i < len(tb.body)-1; i++ {
-				curStmt, err := p.factStmt(&tb.body[i], UniFactDepth1)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				iffFacts = append(iffFacts, curStmt)
-			}
+	// Check if the last body block has =>: separator
+	iffFacts := []FactStmt{}
+	implicationFacts := []Spec_OrFact{}
 
-			// Parse then facts (after =>:)
-			thenFacts, err := p.parseFactBodyWithHeaderNameAndUniFactDepth(&tb.body[len(tb.body)-1], glob.KeySymbolRightArrow, UniFactDepth1)
+	if len(tb.body) > 0 && tb.body[len(tb.body)-1].header.is(glob.KeySymbolRightArrow) {
+		// Case 1: body 的最后一位是 =>:，那么前面的每一行是 prop 的 iff，然后 => 后面的是 then
+		// Parse iff facts (all lines before =>:)
+		for i := 0; i < len(tb.body)-1; i++ {
+			curStmt, err := p.factStmt(&tb.body[i])
 			if err != nil {
 				return nil, ErrInLine(err, tb)
 			}
-			implicationFacts = thenFacts
-		} else {
-			// Case 2: 没有 =>:，那么 iff 是没有，全是 then
-			// All lines are implication facts
-			for _, stmt := range tb.body {
-				curStmt, err := p.factStmt(&stmt, UniFactDepth1)
-				if err != nil {
-					return nil, ErrInLine(err, tb)
-				}
-				implicationFacts = append(implicationFacts, curStmt)
-			}
-
+			iffFacts = append(iffFacts, curStmt)
 		}
 
-		// Check that facts don't reference the same prop name
-		for _, fact := range iffFacts {
-			if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
-				if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
-					return nil, fmt.Errorf("iff fact cannot be the same as the implication being defined")
-				}
+		// Parse then facts (after =>:)
+		thenFact := []Spec_OrFact{}
+		for _, stmt := range tb.body[len(tb.body)-1].body {
+			curStmt, err := p.SpecFactOrOrStmt(&stmt)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
 			}
+			thenFact = append(thenFact, curStmt)
 		}
-
-		for _, fact := range implicationFacts {
-			if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
-				if factAsSpecFact.GetPropName() == Atom(declHeader.Name) {
-					return nil, fmt.Errorf("implication fact cannot be the same as the implication being defined")
-				}
-			}
-		}
-
-		return NewDefPropStmt(declHeader, nil, iffFacts, implicationFacts, tb.line), nil
+		implicationFacts = thenFact
 	} else {
-		// Inline format: check if there's => separator
-		// bodyOfInlineDomAndThen returns (facts before =>, facts after =>)
-		// For implication: if => exists, first part is iff, second part is then
-		// If => doesn't exist, all facts are then (iff is empty)
-		iffFacts, implicationFacts, err := p.bodyOfInlineDomAndThen(tb, glob.KeySymbolRightArrow, []string{})
-		if err != nil {
-			return nil, ErrInLine(err, tb)
+		// Case 2: 没有 =>:，那么 iff 是没有，全是 then
+		// All lines are implication facts
+		for _, stmt := range tb.body {
+			curStmt, err := p.SpecFactOrOrStmt(&stmt)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			implicationFacts = append(implicationFacts, curStmt)
 		}
 
-		// bodyOfInlineDomAndThen behavior:
-		// - If => found: returns (facts before =>, facts after =>)
-		// - If => not found: returns (all facts, empty)
-		// For implication: if => not found, all facts should be implication facts
-		if len(implicationFacts) == 0 && len(iffFacts) > 0 {
-			// => not found, all facts are implication facts
-			implicationFacts = iffFacts
-			iffFacts = nil
-		}
-
-		return NewDefPropStmt(declHeader, nil, iffFacts, implicationFacts, tb.line), nil
 	}
+
+	// Check that facts don't reference the same prop name
+	for _, fact := range iffFacts {
+		if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
+			if factAsSpecFact.Key() == Atom(declHeader.Name) {
+				return nil, fmt.Errorf("iff fact cannot be the same as the implication being defined")
+			}
+		}
+	}
+
+	for _, fact := range implicationFacts {
+		if factAsSpecFact, ok := fact.(SpecificFactStmt); ok {
+			if factAsSpecFact.Key() == Atom(declHeader.Name) {
+				return nil, fmt.Errorf("implication fact cannot be the same as the implication being defined")
+			}
+		}
+	}
+
+	return NewDefPropStmt(declHeader, iffFacts, implicationFacts, tb.line), nil
 }
-
-// func (p *TbParser) factsStmt(tb *tokenBlock) (Stmt, error) {
-// 	return p.factStmt(tb, UniFactDepth0)
-// if tb.GetEnd() != glob.KeySymbolColon { // 因为可能是 forall : 这样的
-// 	facts, err := p.inlineFacts_checkUniDepth0(tb, []string{})
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	if len(facts) == 1 {
-// 		return facts[0], nil
-// 	}
-
-// 	return NewInlineFactsStmt(facts, tb.line), nil
-// } else {
-// 	return p.factStmt(tb, UniFactDepth0)
-// }
-// }
 
 func (p *TbParser) proveByInductionStmt(tb *tokenBlock) (Stmt, error) {
 	err := tb.header.skip(glob.KeywordInduc)
@@ -2468,9 +2124,29 @@ func (p *TbParser) proveByInductionStmt(tb *tokenBlock) (Stmt, error) {
 	}()
 
 	// Parse N_pos (or other paramSet type) as Obj, but we don't store it in the struct
-	err = tb.header.skip(glob.KeywordNPos)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
+	var inducFrom Obj
+	if tb.header.is(glob.KeywordNPos) {
+		err = tb.header.skip(glob.KeywordNPos)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		inducFrom = Atom("1")
+	} else if tb.header.is(glob.KeywordNatural) {
+		err = tb.header.skip(glob.KeywordNatural)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		inducFrom = Atom("0")
+	} else if tb.header.is(glob.KeySymbolLargerEqual) {
+		err = tb.header.skip(glob.KeySymbolLargerEqual)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		inducFrom, err = p.Obj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
 	}
 
 	// Skip colon
@@ -2480,7 +2156,7 @@ func (p *TbParser) proveByInductionStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	// Parse inlineFact
-	fact, err := p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{glob.KeySymbolColon})
+	fact, err := p.SpecFactOrOrStmt(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -2498,7 +2174,7 @@ func (p *TbParser) proveByInductionStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	// Create ProveByInductionStmt with proof
-	result := NewProveByInductionStmt(fact, param, proof, tb.line)
+	result := NewProveByInductionStmt(fact, param, proof, inducFrom, tb.line)
 	return result, nil
 }
 
@@ -2512,7 +2188,7 @@ func (p *TbParser) factOrFactInferStmt(tb *tokenBlock) (Stmt, error) {
 	// 	return p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{})
 	// }
 	if tb.EndWith(glob.KeySymbolColon) {
-		return p.uniFactInterface(tb, UniFactDepth0)
+		return p.uniFactInterface(tb)
 	}
 
 	cur, err := tb.header.currentToken()
@@ -2534,8 +2210,12 @@ func (p *TbParser) factOrFactInferStmt(tb *tokenBlock) (Stmt, error) {
 			return nil, ErrInLine(err, tb)
 		}
 
-		if equalsFact, ok := fact.(*EqualsFactStmt); ok {
-			return equalsFact, nil
+		// if chainFact, ok := fact.(*ChainPureFact); ok {
+		// 	return chainFact, nil
+		// }
+
+		if chainPureFact, ok := fact.(*ChainPureFact); ok {
+			return chainPureFact, nil
 		}
 
 		var specFactOrOrFact Spec_OrFact = fact.(Spec_OrFact)
@@ -2615,7 +2295,7 @@ func (p *TbParser) factOrFactInferStmt(tb *tokenBlock) (Stmt, error) {
 	}
 }
 
-func (p *TbParser) factStmt(tb *tokenBlock, uniFactDepth uniFactEnum) (FactStmt, error) {
+func (p *TbParser) factStmt(tb *tokenBlock) (FactStmt, error) {
 	if !tb.EndWith(glob.KeySymbolColon) {
 		return p.inlineFactThenSkipStmtTerminatorUntilEndSignals(tb, []string{})
 	}
@@ -2628,7 +2308,7 @@ func (p *TbParser) factStmt(tb *tokenBlock, uniFactDepth uniFactEnum) (FactStmt,
 	switch cur {
 	case glob.KeywordForall:
 		if tb.GetEnd() == glob.KeySymbolColon {
-			uniFact, err := p.uniFactInterface(tb, uniFactDepth)
+			uniFact, err := p.uniFactInterface(tb)
 			if err != nil {
 				return nil, err
 			}
@@ -2641,9 +2321,9 @@ func (p *TbParser) factStmt(tb *tokenBlock, uniFactDepth uniFactEnum) (FactStmt,
 			return uniFact, nil
 		}
 	// case glob.KeySymbolEqual:
-	// 	return p.equalsFactStmt(tb)
+	// 	return p.chainFactStmt(tb)
 	default:
-		return p.fact(tb)
+		return p.specFact_or_chainFact(tb)
 	}
 }
 
@@ -2674,22 +2354,12 @@ func (p *TbParser) factStmt(tb *tokenBlock, uniFactDepth uniFactEnum) (FactStmt,
 // 	return NewOrStmt(orFacts, tb.line), nil
 // }
 
-func (p *TbParser) SpecFactOrOrStmt(tb *tokenBlock) (FactStmt, error) {
-	// if tb.header.is(glob.KeywordOr) {
-	// return p.orStmt(tb)
-	// return p.inlineOrFact(tb)
-	// } else if tb.header.is(glob.KeySymbolEqual) {
-	// 	return p.equalsFactStmt(tb)
-	// } else {
-	// 	return p.specFactStmt(tb)
-	// }
-
+func (p *TbParser) SpecFactOrOrStmt(tb *tokenBlock) (Spec_OrFact, error) {
 	start, err := p.specFactStmt(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
-	// 如果有 or，那就直到 后面没有or了
 	if !tb.header.is(glob.KeywordOr) {
 		return start, nil
 	}
@@ -2722,7 +2392,7 @@ func (p *TbParser) SpecFactOrOrStmt(tb *tokenBlock) (FactStmt, error) {
 // }
 
 func (p *TbParser) specFactStmt(tb *tokenBlock) (SpecificFactStmt, error) {
-	stmt, err := p.specFactStmt_OrOneLineEqualsFact(tb)
+	stmt, err := p.specFactStmt_OrOneLineChainFact(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -2735,7 +2405,7 @@ func (p *TbParser) specFactStmt(tb *tokenBlock) (SpecificFactStmt, error) {
 	}
 }
 
-func (p *TbParser) specFactStmt_OrOneLineEqualsFact(tb *tokenBlock) (FactStmt, error) {
+func (p *TbParser) specFactStmt_OrOneLineChainFact(tb *tokenBlock) (FactStmt, error) {
 	isTrue := true
 	if tb.header.is(glob.KeywordNot) {
 		tb.header.skip("")
@@ -2760,7 +2430,7 @@ func (p *TbParser) specFactStmt_OrOneLineEqualsFact(tb *tokenBlock) (FactStmt, e
 }
 
 func (p *TbParser) specFactWithoutExist_WithoutNot(tb *tokenBlock) (SpecificFactStmt, error) {
-	stmt, err := p.specFactWithoutExist_WithoutNot_Or_EqualsFact(tb)
+	stmt, err := p.specFactWithoutExist_WithoutNot_Or_ChainFact(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -2773,7 +2443,7 @@ func (p *TbParser) specFactWithoutExist_WithoutNot(tb *tokenBlock) (SpecificFact
 	}
 }
 
-func (p *TbParser) specFactWithoutExist_WithoutNot_Or_EqualsFact(tb *tokenBlock) (FactStmt, error) {
+func (p *TbParser) specFactWithoutExist_WithoutNot_Or_ChainFact(tb *tokenBlock) (FactStmt, error) {
 	if tb.header.is(glob.FuncFactPrefix) {
 		ret, err := p.pureFuncSpecFact(tb)
 		if err != nil {
@@ -2781,7 +2451,7 @@ func (p *TbParser) specFactWithoutExist_WithoutNot_Or_EqualsFact(tb *tokenBlock)
 		}
 		return ret, nil
 	} else {
-		ret, err := p.relaFactStmt_orRelaEquals(tb)
+		ret, err := p.relaFactStmt_orRelaChain(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -2789,13 +2459,16 @@ func (p *TbParser) specFactWithoutExist_WithoutNot_Or_EqualsFact(tb *tokenBlock)
 	}
 }
 
-func (p *TbParser) uniFactInterface(tb *tokenBlock, uniFactDepth uniFactEnum) (FactStmt, error) {
+func (p *TbParser) uniFactInterface(tb *tokenBlock) (FactStmt, error) {
 	err := tb.header.skip(glob.KeywordForall)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
-	params, setParams, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolColon, false)
+	// params, setParams, err := p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolColon}, false, true)
+
+	params, setParams, extraDoms, err := p.paramParamSetWithBracket(tb, []string{glob.KeySymbolColon})
+
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -2815,11 +2488,13 @@ func (p *TbParser) uniFactInterface(tb *tokenBlock, uniFactDepth uniFactEnum) (F
 		}
 	}()
 
-	// domainFacts, thenFacts, iffFacts, err := tb.uniFactBodyFacts(uniFactDepth.addDepth(), glob.KeywordThen)
-	domainFacts, thenFacts, iffFacts, err := p.uniFactBodyFacts(tb, uniFactDepth.addDepth(), glob.KeySymbolRightArrow)
+	domainFacts, thenFacts, iffFacts, err := p.uniFactBodyFacts(tb, glob.KeySymbolRightArrow)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
+
+	// 把 extra dom 插到 domainFacts 前面
+	domainFacts = append(extraDoms, domainFacts...)
 
 	if len(iffFacts) == 0 {
 		if len(thenFacts) == 0 {
@@ -2839,10 +2514,10 @@ func (p *TbParser) uniFactInterface(tb *tokenBlock, uniFactDepth uniFactEnum) (F
 	}
 }
 
-func (p *TbParser) bodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum) ([]FactStmt, error) {
+func (p *TbParser) bodyFacts(tb *tokenBlock) ([]FactStmt, error) {
 	facts := []FactStmt{}
 	for _, f := range tb.body {
-		fact, err := p.factStmt(&f, uniFactDepth)
+		fact, err := p.factStmt(&f)
 		if err != nil {
 			return nil, err
 		}
@@ -2853,7 +2528,7 @@ func (p *TbParser) bodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum) ([]FactSt
 }
 
 // Placeholder methods - to be implemented later
-// func (p *TbParser) equalsFactStmt(tb *tokenBlock) (*EqualsFactStmt, error) {
+// func (p *TbParser) chainFactStmt(tb *tokenBlock) (*ChainPureFact, error) {
 // 	tb.header.skip(glob.KeySymbolEqual)
 
 // 	if tb.header.is(glob.KeySymbolColon) {
@@ -2927,7 +2602,7 @@ func (p *TbParser) bodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum) ([]FactSt
 // 	}
 // }
 
-func (p *TbParser) fact(tb *tokenBlock) (FactStmt, error) {
+func (p *TbParser) specFact_or_chainFact(tb *tokenBlock) (FactStmt, error) {
 	if tb.header.is(glob.KeywordNot) {
 		return p.specFactStmt(tb)
 	}
@@ -2943,7 +2618,7 @@ func (p *TbParser) fact(tb *tokenBlock) (FactStmt, error) {
 		}
 		return ret, nil
 	} else {
-		ret, err := p.relationalSpecFactOrEqualsFact(tb)
+		ret, err := p.relationalSpecFactOrChainFact(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -2994,30 +2669,6 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (SpecificFactStmt,
 		return nil, ErrInLine(err, tb)
 	}
 
-	if tb.header.is(glob.KeySymbolDollar) {
-		return nil, fmt.Errorf("for the time being exist $p(...) does not support")
-		// propName, params, err := p.skipDollarAtomParamsAsString(tb)
-		// if err != nil {
-		// 	return nil, ErrInLine(err, tb)
-		// }
-
-		// paramSet := []Obj{}
-		// for i := 0; i < len(params); i++ {
-		// 	paramSet = append(paramSet, Atom(glob.KeywordSet))
-		// }
-
-		// // params 互相不能相同
-		// for i := 0; i < len(params); i++ {
-		// 	for j := i + 1; j < len(params); j++ {
-		// 		if params[i] == params[j] {
-		// 			return nil, fmt.Errorf("params %s and %s are the same", params[i], params[j])
-		// 		}
-		// 	}
-		// }
-
-		// return NewExistSpecificFactStmt(true, params, NewPureSpecificFactStmt(isTrue, propName, paramAsObj, tb.line), tb.line), nil
-	}
-
 	// Parse parameters and parameter sets for exist statement
 	existParams, existParamSets, err := p.parseExistParamsAndSets(tb)
 	if err != nil {
@@ -3037,16 +2688,6 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (SpecificFactStmt,
 		}
 	}()
 
-	pureSpecFact, err := p.specFactStmt(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	// spec fact 必须是 pureFact
-	if _, ok := pureSpecFact.(*PureSpecificFactStmt); !ok {
-		return nil, fmt.Errorf("exist fact can not take exist fact, get %s", pureSpecFact)
-	}
-
 	// params 互相不能相同
 	for i := 0; i < len(existParams); i++ {
 		for j := i + 1; j < len(existParams); j++ {
@@ -3056,16 +2697,11 @@ func (p *TbParser) existFactStmt(tb *tokenBlock, isTrue bool) (SpecificFactStmt,
 		}
 	}
 
-	specFactAsPureSpecificFactStmt, ok := pureSpecFact.(*PureSpecificFactStmt)
-	if !ok {
-		return nil, fmt.Errorf("expect pure specific fact, got %T", pureSpecFact)
+	facts, err := p.parsePureFactsOrChainFacts(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
 	}
-
-	if isTrue {
-		return NewExistSpecificFactStmt(true, existParams, existParamSets, specFactAsPureSpecificFactStmt, tb.line), nil
-	} else {
-		return NewExistSpecificFactStmt(false, existParams, existParamSets, specFactAsPureSpecificFactStmt, tb.line), nil
-	}
+	return NewExistSpecificFactStmt(isTrue, existParams, existParamSets, facts, tb.line), nil
 }
 
 // parseExistParamsAndSets parses parameters and parameter sets for exist statements.
@@ -3212,7 +2848,7 @@ func (p *TbParser) pureFuncSpecFact(tb *tokenBlock) (*PureSpecificFactStmt, erro
 	return ret, nil
 }
 
-func (p *TbParser) relaFactStmt_orRelaEquals(tb *tokenBlock) (FactStmt, error) {
+func (p *TbParser) relaFactStmt_orRelaChain(tb *tokenBlock) (FactStmt, error) {
 	var ret *PureSpecificFactStmt
 
 	obj, err := p.Obj(tb)
@@ -3253,32 +2889,27 @@ func (p *TbParser) relaFactStmt_orRelaEquals(tb *tokenBlock) (FactStmt, error) {
 
 		params := []Obj{obj, obj2}
 
-		if opt != glob.KeySymbolEqual {
-			ret = NewPureSpecificFactStmt(true, Atom(opt), params, tb.line)
+		if glob.IsEqualAndComparisonSignal(tb.header.strAtCurIndexPlus(0)) || tb.header.is(glob.FuncFactPrefix) {
+			return p.chainPureFact(tb, obj, obj2, Atom(opt))
 		} else {
-			// 循环地看下面一位是不是 = ，直到不是
-			if tb.header.is(glob.KeySymbolEqual) {
-				return p.relaEqualsFactStmt(tb, obj, obj2)
-			} else {
-				ret = NewPureSpecificFactStmt(true, Atom(opt), params, tb.line)
-			}
+			ret = NewPureSpecificFactStmt(true, Atom(opt), params, tb.line)
 		}
 	}
 
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
-	if ret.GetPropName() == glob.KeySymbolNotEqual {
+	if ret.Key() == glob.KeySymbolNotEqual {
 		return NewPureSpecificFactStmt(false, Atom(glob.KeySymbolEqual), ret.Params, tb.line), nil
 	}
 
 	return ret, nil
 }
 
-func (p *TbParser) param_paramSet_paramInSetFacts(tb *tokenBlock, endWith string, allowExceedEnd bool) ([]string, []Obj, error) {
+func (p *TbParser) param_paramSet_paramInSetFacts(tb *tokenBlock, endWith []string, allowExceedEnd bool, skipEnd bool) ([]string, []Obj, error) {
 	params := []string{}
 	setParams := []Obj{}
 	paramWithoutSetCount := 0
 
-	if !tb.header.is(endWith) {
+	if !slices.Contains(endWith, tb.header.strAtCurIndexPlus(0)) {
 		for {
 			param, err := tb.header.next()
 			if err != nil {
@@ -3313,7 +2944,7 @@ func (p *TbParser) param_paramSet_paramInSetFacts(tb *tokenBlock, endWith string
 				continue
 			}
 
-			if tb.header.is(endWith) || (allowExceedEnd && tb.header.ExceedEnd()) {
+			if slices.Contains(endWith, tb.header.strAtCurIndexPlus(0)) || (allowExceedEnd && tb.header.ExceedEnd()) {
 				break
 			}
 
@@ -3321,8 +2952,13 @@ func (p *TbParser) param_paramSet_paramInSetFacts(tb *tokenBlock, endWith string
 		}
 	}
 
-	if !allowExceedEnd || !tb.header.ExceedEnd() {
-		err := tb.header.skip(endWith)
+	if (!allowExceedEnd || !tb.header.ExceedEnd()) && skipEnd {
+		curToken, err := tb.header.next()
+
+		if !slices.Contains(endWith, curToken) {
+			return nil, nil, fmt.Errorf("expected '%s' but got '%s'", endWith, curToken)
+		}
+
 		if err != nil {
 			return nil, nil, err
 		}
@@ -3353,7 +2989,7 @@ func (p *TbParser) defHeaderWithoutParsingColonAtEnd(tb *tokenBlock) (*DefHeader
 		return nil, err
 	}
 
-	params, setParams, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolRightBrace, false)
+	params, setParams, err := p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolRightBrace}, false, true)
 	if err != nil {
 		return nil, err
 	}
@@ -3361,31 +2997,52 @@ func (p *TbParser) defHeaderWithoutParsingColonAtEnd(tb *tokenBlock) (*DefHeader
 	return NewDefHeader(name, params, setParams), nil
 }
 
-func (p *TbParser) defHeaderWithoutParsingColonAtEnd_MustFollowWithFreeParamCheck(tb *tokenBlock) (*DefHeader, error) {
+func (p *TbParser) defHeaderOfPropDef(tb *tokenBlock) (*DefHeader, FactStmtSlice, error) {
 	name, err := tb.header.next()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	name = AddPkgNameToName(p.PkgPathNameMgr.CurPkgDefaultName, name)
 
 	err = tb.header.skip(glob.KeySymbolLeftBrace)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	params, setParams, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolRightBrace, false)
+	params, setParams, extraIffs, err := p.paramParamSetWithBracket(tb, []string{glob.KeySymbolRightBrace})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return NewDefHeader(name, params, setParams), nil
+	return NewDefHeader(name, params, setParams), extraIffs.ToFactStmtSlice(), nil
 }
 
-func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, defaultSectionName string) ([]FactStmt, []FactStmt, []FactStmt, error) {
-	domFacts := []FactStmt{}
-	thenFacts := []FactStmt{}
-	iffFacts := []FactStmt{}
+// func (p *TbParser) defHeaderWithoutParsingColonAtEnd_MustFollowWithFreeParamCheck(tb *tokenBlock) (*DefHeader, error) {
+// 	name, err := tb.header.next()
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	name = AddPkgNameToName(p.PkgPathNameMgr.CurPkgDefaultName, name)
+
+// 	err = tb.header.skip(glob.KeySymbolLeftBrace)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	params, setParams, err := p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolRightBrace}, false, true)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return NewDefHeader(name, params, setParams), nil
+// }
+
+func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, defaultSectionName string) ([]Spec_OrFact, []Spec_OrFact, []Spec_OrFact, error) {
+	domFacts := []Spec_OrFact{}
+	thenFacts := []Spec_OrFact{}
+	iffFacts := []Spec_OrFact{}
 	err := error(nil)
 
 	if len(tb.body) == 0 {
@@ -3410,7 +3067,7 @@ func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, de
 			if err != nil {
 				return nil, nil, nil, err
 			}
-			facts, err := p.bodyBlockFacts(&stmt, uniFactDepth, len(stmt.body))
+			facts, err := p.bodyBlockSpecOrFacts(&stmt, len(stmt.body))
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -3429,7 +3086,7 @@ func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, de
 		}
 		// } else if tb.body[len(tb.body)-1].header.is(glob.KeywordThen) {
 	} else if tb.body[len(tb.body)-1].header.is(glob.KeySymbolRightArrow) {
-		domFacts, err = p.bodyBlockFacts(tb, uniFactDepth, len(tb.body)-1)
+		domFacts, err = p.bodyBlockSpecOrFacts(tb, len(tb.body)-1)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -3439,7 +3096,7 @@ func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, de
 		if err != nil {
 			return nil, nil, nil, err
 		}
-		thenFacts, err = p.bodyBlockFacts(&tb.body[len(tb.body)-1], uniFactDepth, len(tb.body[len(tb.body)-1].body))
+		thenFacts, err = p.bodyBlockSpecOrFacts(&tb.body[len(tb.body)-1], len(tb.body[len(tb.body)-1].body))
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -3454,7 +3111,7 @@ func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, de
 			if err != nil {
 				return nil, nil, nil, err
 			}
-			domFacts, err = p.bodyBlockFacts(&tb.body[0], uniFactDepth, len(tb.body[0].body))
+			domFacts, err = p.bodyBlockSpecOrFacts(&tb.body[0], len(tb.body[0].body))
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -3467,7 +3124,7 @@ func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, de
 			if err != nil {
 				return nil, nil, nil, err
 			}
-			thenFacts, err = p.bodyBlockFacts(&tb.body[len(tb.body)-2], uniFactDepth, len(tb.body[len(tb.body)-2].body))
+			thenFacts, err = p.bodyBlockSpecOrFacts(&tb.body[len(tb.body)-2], len(tb.body[len(tb.body)-2].body))
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -3477,14 +3134,14 @@ func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, de
 			if err != nil {
 				return nil, nil, nil, err
 			}
-			thenFacts, err = p.bodyBlockFacts(&tb.body[0], uniFactDepth, len(tb.body[0].body))
+			thenFacts, err = p.bodyBlockSpecOrFacts(&tb.body[0], len(tb.body[0].body))
 			if err != nil {
 				return nil, nil, nil, err
 			}
 		} else {
 			if tb.body[len(tb.body)-2].header.is(glob.KeySymbolRightArrow) {
 
-				domFacts, err = p.bodyBlockFacts(tb, uniFactDepth, len(tb.body)-2)
+				domFacts, err = p.bodyBlockSpecOrFacts(tb, len(tb.body)-2)
 				if err != nil {
 					return nil, nil, nil, err
 				}
@@ -3494,13 +3151,13 @@ func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, de
 				if err != nil {
 					return nil, nil, nil, err
 				}
-				thenFacts, err = p.bodyBlockFacts(&tb.body[len(tb.body)-2], uniFactDepth, len(tb.body[len(tb.body)-2].body))
+				thenFacts, err = p.bodyBlockSpecOrFacts(&tb.body[len(tb.body)-2], len(tb.body[len(tb.body)-2].body))
 				if err != nil {
 					return nil, nil, nil, err
 				}
 			} else {
 				// 全部是 then
-				thenFacts, err = p.bodyBlockFacts(tb, uniFactDepth, len(tb.body)-1)
+				thenFacts, err = p.bodyBlockSpecOrFacts(tb, len(tb.body)-1)
 				if err != nil {
 					return nil, nil, nil, err
 				}
@@ -3518,20 +3175,20 @@ func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, de
 		if err != nil {
 			return nil, nil, nil, err
 		}
-		iffFacts, err = p.bodyBlockFacts(&tb.body[len(tb.body)-1], uniFactDepth, len(tb.body[len(tb.body)-1].body))
+		iffFacts, err = p.bodyBlockSpecOrFacts(&tb.body[len(tb.body)-1], len(tb.body[len(tb.body)-1].body))
 		if err != nil {
 			return nil, nil, nil, err
 		}
 	} else {
 		// if defaultSectionName == glob.KeywordThen {
 		if defaultSectionName == glob.KeySymbolRightArrow {
-			thenFacts, err = p.bodyBlockFacts(tb, uniFactDepth, len(tb.body))
+			thenFacts, err = p.bodyBlockSpecOrFacts(tb, len(tb.body))
 			if err != nil {
 				return nil, nil, nil, err
 			}
 			// } else if defaultSectionName == glob.KeywordIff {
 		} else if defaultSectionName == glob.KeySymbolEquivalent {
-			iffFacts, err = p.bodyBlockFacts(tb, uniFactDepth, len(tb.body))
+			iffFacts, err = p.bodyBlockSpecOrFacts(tb, len(tb.body))
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -3543,7 +3200,7 @@ func (p *TbParser) uniFactBodyFacts(tb *tokenBlock, uniFactDepth uniFactEnum, de
 	return domFacts, thenFacts, iffFacts, nil
 }
 
-func (p *TbParser) parseFactBodyWithHeaderNameAndUniFactDepth(tb *tokenBlock, headerName string, uniFactDepth uniFactEnum) ([]FactStmt, error) {
+func (p *TbParser) parseFactBodyWithHeaderName(tb *tokenBlock, headerName string) ([]FactStmt, error) {
 	err := tb.header.skipKwAndColonCheckEOL(headerName)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
@@ -3551,7 +3208,7 @@ func (p *TbParser) parseFactBodyWithHeaderNameAndUniFactDepth(tb *tokenBlock, he
 
 	facts := []FactStmt{}
 	for _, stmt := range tb.body {
-		curStmt, err := p.factStmt(&stmt, uniFactDepth)
+		curStmt, err := p.factStmt(&stmt)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
@@ -3582,6 +3239,32 @@ func (p *TbParser) getStringInDoubleQuotes(tb *tokenBlock) (string, error) {
 	return builder.String(), nil
 }
 
+func (p *TbParser) dom_and_section_SpecOrFact(tb *tokenBlock, kw string, kw_should_not_exist_in_body string) ([]Spec_OrFact, []Spec_OrFact, error) {
+	domFacts := []Spec_OrFact{}
+	thenFacts := []Spec_OrFact{}
+
+	doms, thens, err := p.dom_and_section(tb, kw, kw_should_not_exist_in_body)
+	if err != nil {
+		return nil, nil, ErrInLine(err, tb)
+	}
+	for _, dom := range doms {
+		if specOrFact, ok := dom.(Spec_OrFact); ok {
+			domFacts = append(domFacts, specOrFact)
+		} else {
+			return nil, nil, fmt.Errorf("expect spec fact or or fact in dom section")
+		}
+	}
+	for _, then := range thens {
+		if specOrFact, ok := then.(Spec_OrFact); ok {
+			thenFacts = append(thenFacts, specOrFact)
+		} else {
+			return nil, nil, fmt.Errorf("expect spec fact or or fact in then section")
+		}
+	}
+
+	return domFacts, thenFacts, nil
+}
+
 // Placeholder methods for functions that will be implemented later
 func (p *TbParser) dom_and_section(tb *tokenBlock, kw string, kw_should_not_exist_in_body string) ([]FactStmt, []FactStmt, error) {
 	if len(tb.body) == 0 {
@@ -3598,7 +3281,7 @@ func (p *TbParser) dom_and_section(tb *tokenBlock, kw string, kw_should_not_exis
 	// there are 5 cases: 1. no dom, just section 2. dom and section without dom specification 3. dom and section with both specification 4. just dom 5. just section
 	if !tb.body[0].header.is(glob.KeywordDom) && !tb.body[len(tb.body)-1].header.is(kw) {
 		for _, stmt := range tb.body {
-			curStmt, err := p.factStmt(&stmt, UniFactDepth1)
+			curStmt, err := p.factStmt(&stmt)
 			if err != nil {
 				return nil, nil, ErrInLine(err, tb)
 			}
@@ -3607,29 +3290,29 @@ func (p *TbParser) dom_and_section(tb *tokenBlock, kw string, kw_should_not_exis
 		return domFacts, sectionFacts, nil
 	} else if !tb.body[0].header.is(glob.KeywordDom) && tb.body[len(tb.body)-1].header.is(kw) {
 		for i := range len(tb.body) - 1 {
-			curStmt, err := p.factStmt(&tb.body[i], UniFactDepth1)
+			curStmt, err := p.factStmt(&tb.body[i])
 			if err != nil {
 				return nil, nil, ErrInLine(err, tb)
 			}
 			domFacts = append(domFacts, curStmt)
 		}
-		sectionFacts, err = p.parseFactBodyWithHeaderNameAndUniFactDepth(&tb.body[len(tb.body)-1], kw, UniFactDepth1)
+		sectionFacts, err = p.parseFactBodyWithHeaderName(&tb.body[len(tb.body)-1], kw)
 		if err != nil {
 			return nil, nil, ErrInLine(err, tb)
 		}
 		return domFacts, sectionFacts, nil
 	} else if len(tb.body) == 2 && tb.body[0].header.is(glob.KeywordDom) && tb.body[1].header.is(kw) {
-		domFacts, err = p.parseFactBodyWithHeaderNameAndUniFactDepth(&tb.body[0], glob.KeywordDom, UniFactDepth1)
+		domFacts, err = p.parseFactBodyWithHeaderName(&tb.body[0], glob.KeywordDom)
 		if err != nil {
 			return nil, nil, ErrInLine(err, tb)
 		}
-		sectionFacts, err = p.parseFactBodyWithHeaderNameAndUniFactDepth(&tb.body[1], kw, UniFactDepth1)
+		sectionFacts, err = p.parseFactBodyWithHeaderName(&tb.body[1], kw)
 		if err != nil {
 			return nil, nil, ErrInLine(err, tb)
 		}
 		return domFacts, sectionFacts, nil
 	} else if len(tb.body) == 1 && tb.body[0].header.is(glob.KeywordDom) {
-		domFacts, err = p.parseFactBodyWithHeaderNameAndUniFactDepth(&tb.body[0], glob.KeywordDom, UniFactDepth1)
+		domFacts, err = p.parseFactBodyWithHeaderName(&tb.body[0], glob.KeywordDom)
 		if err != nil {
 			return nil, nil, ErrInLine(err, tb)
 		}
@@ -3639,96 +3322,21 @@ func (p *TbParser) dom_and_section(tb *tokenBlock, kw string, kw_should_not_exis
 	}
 }
 
-// func (p *TbParser) claimExistPropStmt(tb *tokenBlock) (Stmt, error) {
-// 	if len(tb.body) != 3 {
-// 		return nil, fmt.Errorf("expect 3 body blocks")
-// 	}
-
-// 	existProp, err := p.atExistPropDefStmt(&tb.body[0])
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	proofs := []Stmt{}
-// 	for _, stmt := range tb.body[1].body {
-// 		curStmt, err := p.Stmt(&stmt)
+// func (p *TbParser) relaChainFactStmt(tb *tokenBlock, obj, obj2 Obj) (*ChainPureFact, error) {
+// 	params := []Obj{obj, obj2}
+// 	for tb.header.is(glob.KeySymbolEqual) {
+// 		tb.header.skip(glob.KeySymbolEqual)
+// 		nextObj, err := p.Obj(tb)
 // 		if err != nil {
 // 			return nil, ErrInLine(err, tb)
 // 		}
-// 		proofs = append(proofs, curStmt)
+// 		params = append(params, nextObj)
 // 	}
 
-// 	err = tb.body[2].header.skip(glob.KeywordHave)
-// 	if err != nil {
-// 		return nil, ErrInLine(err, tb)
-// 	}
-
-// 	haveObj := []Obj{}
-// 	for !tb.body[2].header.ExceedEnd() {
-// 		curObj, err := p.Obj(&tb.body[2])
-// 		if err != nil {
-// 			return nil, ErrInLine(err, tb)
-// 		}
-// 		haveObj = append(haveObj, curObj)
-// 	}
-
-// 	if len(proofs) == 0 {
-// 		return nil, fmt.Errorf("expect proof after claim")
-// 	}
-
-// 	return NewClaimExistPropStmt(existProp, proofs, haveObj, tb.line), nil
+// 	return NewEqualsFactStmt(params, tb.line), nil
 // }
 
-func (p *TbParser) claimImply(tb *tokenBlock) (Stmt, error) {
-	implicationStmt, err := p.DefPropInferStmt(&tb.body[0])
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	if tb.body[1].header.is(glob.KeywordProve) {
-		err = tb.body[1].header.skipKwAndColonCheckEOL(glob.KeywordProve)
-	} else if tb.body[1].header.is(glob.KeywordContra) {
-		panic("contra is not supported for prop statement")
-	} else {
-		return nil, fmt.Errorf("expect 'prove' or 'contra'")
-	}
-
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
-	proofs := []Stmt{}
-	for _, stmt := range tb.body[1].body {
-		curStmt, err := p.Stmt(&stmt)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		proofs = append(proofs, curStmt)
-	}
-
-	if len(proofs) == 0 {
-		return nil, fmt.Errorf("expect proof after claim")
-	}
-
-	// return NewClaimPropStmt(NewDefPropStmt(declHeader, []FactStmt{}, iffFacts, thenFacts), proofs, isProve), nil
-	return NewClaimPropStmt(implicationStmt, proofs, tb.line), nil
-}
-
-func (p *TbParser) relaEqualsFactStmt(tb *tokenBlock, obj, obj2 Obj) (*EqualsFactStmt, error) {
-	params := []Obj{obj, obj2}
-	for tb.header.is(glob.KeySymbolEqual) {
-		tb.header.skip(glob.KeySymbolEqual)
-		nextObj, err := p.Obj(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		params = append(params, nextObj)
-	}
-
-	return NewEqualsFactStmt(params, tb.line), nil
-}
-
-func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, error) {
+func (p *TbParser) relationalSpecFactOrChainFact(tb *tokenBlock) (FactStmt, error) {
 	var ret *PureSpecificFactStmt
 
 	obj, err := p.Obj(tb)
@@ -3757,7 +3365,11 @@ func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, err
 
 			params := []Obj{obj, obj2}
 
-			ret = NewPureSpecificFactStmt(true, propName, params, tb.line)
+			if propName != glob.KeySymbolNotEqual {
+				ret = NewPureSpecificFactStmt(true, propName, params, tb.line)
+			} else {
+				ret = NewPureSpecificFactStmt(false, glob.KeySymbolEqual, params, tb.line)
+			}
 		}
 	} else if glob.IsBuiltinInfixRelaPropSymbol(opt) {
 		obj2, err := p.Obj(tb)
@@ -3765,11 +3377,8 @@ func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, err
 			return nil, ErrInLine(err, tb)
 		}
 
-		if opt == glob.KeySymbolEqual {
-			// 循环地看下面一位是不是 = ，直到不是
-			if tb.header.is(glob.KeySymbolEqual) {
-				return p.relaEqualsFactStmt(tb, obj, obj2)
-			}
+		if glob.IsEqualAndComparisonSignal(opt) || tb.header.is(glob.FuncFactPrefix) {
+			return p.chainPureFact(tb, obj, obj2, Atom(opt))
 		}
 
 		// 必须到底了
@@ -3785,13 +3394,17 @@ func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, err
 
 		params := []Obj{obj, obj2}
 
-		ret = NewPureSpecificFactStmt(true, Atom(opt), params, tb.line)
+		if Atom(opt) != glob.KeySymbolNotEqual {
+			ret = NewPureSpecificFactStmt(true, Atom(opt), params, tb.line)
+		} else {
+			ret = NewPureSpecificFactStmt(false, glob.KeySymbolEqual, params, tb.line)
+		}
 	} else {
 		return nil, fmt.Errorf("expect relation prop")
 	}
 
 	// 这里加入语法糖：!= 等价于 not =，好处是我 = 有 commutative的性质，我不用额外处理 != 了
-	if ret.GetPropName() == glob.KeySymbolNotEqual {
+	if ret.Key() == glob.KeySymbolNotEqual {
 		return NewPureSpecificFactStmt(false, Atom(glob.KeySymbolEqual), ret.Params, tb.line), nil
 	}
 
@@ -3901,9 +3514,9 @@ func (p *TbParser) relationalSpecFactOrEqualsFact(tb *tokenBlock) (FactStmt, err
 // 1. dom:, =>:, prove: (all three sections)
 // 2. =>:, prove: (no dom section)
 // 3. =>: (only then section, no dom and no prove)
-func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]FactStmt, []FactStmt, []Stmt, error) {
-	domFacts := []FactStmt{}
-	thenFacts := []FactStmt{}
+func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]Spec_OrFact, []Spec_OrFact, []Stmt, error) {
+	domFacts := []Spec_OrFact{}
+	thenFacts := []Spec_OrFact{}
 	proofs := []Stmt{}
 
 	if len(body) == 0 {
@@ -3923,7 +3536,7 @@ func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]FactStmt, []FactStmt,
 			return nil, nil, nil, err
 		}
 		for _, stmt := range body[0].body {
-			curStmt, err := p.factStmt(&stmt, UniFactDepth1)
+			curStmt, err := p.SpecFactOrOrStmt(&stmt)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -3940,7 +3553,7 @@ func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]FactStmt, []FactStmt,
 		}
 
 		for _, stmt := range body[1].body {
-			curStmt, err := p.factStmt(&stmt, UniFactDepth1)
+			curStmt, err := p.SpecFactOrOrStmt(&stmt)
 			if err != nil {
 				return nil, nil, nil, err
 			}
@@ -3982,7 +3595,7 @@ func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]FactStmt, []FactStmt,
 				return nil, nil, nil, err
 			}
 			for _, stmt := range body[i].body {
-				curStmt, err := p.factStmt(&stmt, UniFactDepth1)
+				curStmt, err := p.SpecFactOrOrStmt(&stmt)
 				if err != nil {
 					return nil, nil, nil, err
 				}
@@ -4013,7 +3626,7 @@ func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]FactStmt, []FactStmt,
 				}
 
 				for _, stmt := range body[i].body {
-					curStmt, err := p.factStmt(&stmt, UniFactDepth1)
+					curStmt, err := p.SpecFactOrOrStmt(&stmt)
 					if err != nil {
 						return nil, nil, nil, err
 					}
@@ -4021,7 +3634,7 @@ func (p *TbParser) parseDomThenProve(body []tokenBlock) ([]FactStmt, []FactStmt,
 				}
 			} else {
 				// It's a direct fact statement (no => needed)
-				curStmt, err := p.factStmt(&body[i], UniFactDepth1)
+				curStmt, err := p.SpecFactOrOrStmt(&body[i])
 				if err != nil {
 					return nil, nil, nil, err
 				}
@@ -4089,7 +3702,7 @@ func (p *TbParser) witnessStmt(tb *tokenBlock) (Stmt, error) {
 	}
 
 	// params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeywordSt, false)
-	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeywordSt, false)
+	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, []string{glob.KeywordSt}, false, true)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -4098,18 +3711,13 @@ func (p *TbParser) witnessStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(fmt.Errorf("number of equal tos must be equal to number of parameters, got %d equal tos and %d param sets", len(equalTos), len(paramSets)), tb)
 	}
 
-	fact, err := p.specFactWithoutExist_WithoutNot(tb)
+	facts, err := p.parsePureFactsOrChainFacts(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
 
-	specFactAsPureSpecificFactStmt, ok := fact.(*PureSpecificFactStmt)
-	if !ok {
-		return nil, fmt.Errorf("expect pure specific fact, got %T", fact)
-	}
-
 	if tb.header.ExceedEnd() {
-		return NewProveExistStmt(params, paramSets, equalTos, specFactAsPureSpecificFactStmt, []Stmt{}, tb.line), nil
+		return NewProveExistStmt(params, paramSets, equalTos, facts, []Stmt{}, tb.line), nil
 	}
 
 	err = tb.header.skip(glob.KeySymbolColon)
@@ -4122,7 +3730,7 @@ func (p *TbParser) witnessStmt(tb *tokenBlock) (Stmt, error) {
 		return nil, ErrInLine(err, tb)
 	}
 
-	return NewProveExistStmt(params, paramSets, equalTos, specFactAsPureSpecificFactStmt, proofs, tb.line), nil
+	return NewProveExistStmt(params, paramSets, equalTos, facts, proofs, tb.line), nil
 }
 
 func (p *TbParser) inferTemplateStmt(tb *tokenBlock) (*InferTemplateStmt, error) {
@@ -4132,7 +3740,7 @@ func (p *TbParser) inferTemplateStmt(tb *tokenBlock) (*InferTemplateStmt, error)
 	}
 
 	// parameters paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeywordSt, false)
-	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, glob.KeySymbolColon, false)
+	params, paramSets, err := p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolColon}, false, true)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
 	}
@@ -4246,6 +3854,7 @@ func (p *TbParser) equalSetStmt(tb *tokenBlock) (*EqualSetStmt, error) {
 	return NewEqualSetStmt(left, right, proofs, tb.line), nil
 }
 
+// witness_nonempty(obj, objSet)
 func (p *TbParser) witnessNonemptyStmt(tb *tokenBlock) (*WitnessNonemptyStmt, error) {
 	err := tb.header.skip(glob.KeywordWitnessNonempty)
 	if err != nil {
@@ -4270,4 +3879,520 @@ func (p *TbParser) witnessNonemptyStmt(tb *tokenBlock) (*WitnessNonemptyStmt, er
 	}
 
 	return NewWitnessNonemptyStmt(obj, objSet, proofs, tb.line), nil
+}
+
+func (p *TbParser) setIsFnStmt(tb *tokenBlock) (*SetIsFnStmt, error) {
+	err := tb.header.skip(glob.KeywordSetIsFn)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	setObj, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	fnSetObj, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+	fnSetObjAsFnObj, ok := fnSetObj.(*FnObj)
+	if !ok {
+		return nil, ErrInLine(fmt.Errorf("expect fn object, got %T", fnSetObj), tb)
+	}
+
+	proofs, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	return NewSetIsFnStmt(setObj, fnSetObjAsFnObj, proofs, tb.line), nil
+}
+
+func (p *TbParser) fnIsSubsetOfCartStmt(tb *tokenBlock) (*FnIsSubsetOfCartStmt, error) {
+	err := tb.header.skip(glob.KeywordFnIsSubsetOfCartSet)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	obj, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	fnSetObj, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+	fnSetObjAsFnObj, ok := fnSetObj.(FnSetObj)
+	if !ok {
+		return nil, ErrInLine(fmt.Errorf("expect fn object, got %T", fnSetObj), tb)
+	}
+
+	if !tb.header.ExceedEnd() {
+		return nil, ErrInLine(fmt.Errorf("expect end of line"), tb)
+	}
+
+	return NewFnIsSubsetOfCartStmt(obj, fnSetObjAsFnObj, tb.line), nil
+}
+
+func (p *TbParser) haveFnEqual(tb *tokenBlock) (Stmt, error) {
+	err := tb.header.skip(glob.KeywordHave)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeywordFn)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	name, err := tb.header.next()
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	params, paramSets, doms, err := p.leftBraceParamsAndParamSetsAndDomsAndRightBrace(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	retSet, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	err = tb.header.skip(glob.KeySymbolEqual)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Check if it's case-by-case or simple equal
+	if tb.header.is(glob.KeySymbolColon) {
+		err = tb.header.skip(glob.KeySymbolColon)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		// Case-by-case structure (possibly with prove cases: at the end)
+		caseByCaseFacts := []SpecificFactStmt{}
+		caseByCaseEqualTo := []Obj{}
+		caseByCaseProofs := []StmtSlice{}
+
+		// Check if the last body block is "prove cases:"
+		proveOr := StmtSlice{}
+		lastBlockIndex := -1
+		if len(tb.body) > 0 {
+			lastIdx := len(tb.body) - 1
+			lastBlock := tb.body[lastIdx]
+			if lastBlock.header.is(glob.KeywordProve) {
+				savedIndex := lastBlock.header.index
+				err := lastBlock.header.skip(glob.KeywordProve)
+				if err == nil && lastBlock.header.is(glob.KeywordCases) {
+					err := lastBlock.header.skip(glob.KeywordCases)
+					if err == nil {
+						lastBlockIndex = lastIdx
+					} else {
+						lastBlock.header.index = savedIndex
+					}
+				} else {
+					if err == nil {
+						lastBlock.header.index = savedIndex
+					}
+				}
+			}
+		}
+
+		// Process case blocks (skip the last one if it's "prove cases:")
+		endIdx := len(tb.body)
+		if lastBlockIndex >= 0 {
+			endIdx = lastBlockIndex
+		}
+		for i := 0; i < endIdx; i++ {
+			block := tb.body[i]
+			err := block.header.skip(glob.KeywordCase)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			curStmt, err := p.specFactStmt(&block)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			err = block.header.skip(glob.KeySymbolColon)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			obj, err := p.Obj(&block)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			// Parse proof using skipColonAndParseBodyOrReturnEmptyStmtSlice
+			proof, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&block)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			caseByCaseEqualTo = append(caseByCaseEqualTo, obj)
+			caseByCaseFacts = append(caseByCaseFacts, curStmt)
+			caseByCaseProofs = append(caseByCaseProofs, proof)
+		}
+
+		// Parse "prove or:" block if it exists
+		if lastBlockIndex >= 0 {
+			lastBlock := tb.body[lastBlockIndex]
+			lastBlock.header.skip(glob.KeywordProve)
+			lastBlock.header.skip(glob.KeywordCases)
+			proveOr, err = p.skipColonAndParseBodyOrReturnEmptyStmtSlice(&lastBlock)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+		}
+
+		return NewHaveFnEqualCaseByCase(NewDefHeaderWithDom(name, params, paramSets, doms), retSet, caseByCaseFacts, caseByCaseEqualTo, caseByCaseProofs, proveOr, tb.line), nil
+	} else {
+		equalTo, err := p.Obj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		proofs, err := p.skipColonAndParseBodyOrReturnEmptyStmtSlice(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		return NewHaveFnEqual(NewDefHeaderWithDom(name, params, paramSets, doms), retSet, equalTo, proofs, tb.line), nil
+	}
+}
+
+func (p *TbParser) defFn(tb *tokenBlock, skipLetAndFn bool) (*LetFn, error) {
+	if skipLetAndFn {
+		err := tb.header.skip(glob.KeywordLet)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		err = tb.header.skip(glob.KeywordFn)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+	}
+
+	decl, err := p.defHeaderWithoutParsingColonAtEnd(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	err = p.NewDefinedNameInCurrentParseEnv(string(decl.Name))
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	// Add fn params to FreeParams
+	for _, param := range decl.Params {
+		if _, exists := p.FreeParams[param]; exists {
+			return nil, ErrInLine(fmt.Errorf("parameter %s in fn definition conflicts with a free parameter in the outer scope", param), tb)
+		}
+
+		p.FreeParams[param] = struct{}{}
+	}
+
+	// Defer: remove the params we added when leaving this fn scope
+	defer func() {
+		for _, param := range decl.Params {
+			delete(p.FreeParams, param)
+		}
+	}()
+
+	retSet, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+	if asAtom, ok := retSet.(Atom); ok {
+		if string(asAtom) == glob.KeySymbolColon {
+			return nil, fmt.Errorf(": is not allowed in return set")
+		}
+	}
+
+	domFacts := []Spec_OrFact{}
+	thenFacts := []Spec_OrFact{}
+
+	if tb.header.is(glob.KeySymbolColon) {
+		tb.header.skip("")
+		if tb.header.ExceedEnd() {
+			domFacts, thenFacts, err = p.dom_and_section_SpecOrFact(tb, glob.KeySymbolRightArrow, glob.KeySymbolEquivalent)
+
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+		} else {
+			domFacts, err = p.inlineFacts_untilWord_SpecOrFact(tb, glob.KeySymbolRightArrow, []string{})
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+
+			if !tb.header.is(glob.KeySymbolRightArrow) {
+				// return NewLetFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
+				return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
+			}
+
+			err = tb.header.skip(glob.KeySymbolRightArrow)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+
+			thenFacts, err = p.inlineFacts_untilWord_SpecOrFact(tb, glob.KeySymbolRightArrow, []string{})
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+		}
+	}
+
+	// return NewLetFnStmt(string(decl.Name), NewFnTStruct(decl.Params, decl.ParamSets, retSet, domFacts, thenFacts, tb.line), tb.line), nil
+	return NewLetFn(NewDefHeaderWithDom(decl.Name, decl.Params, decl.ParamSets, domFacts), retSet, thenFacts, tb.line), nil
+}
+
+func (p *TbParser) paramParamSetWithBracket(tb *tokenBlock, endWith []string) (StrSlice, ObjSlice, ReversibleFacts, error) {
+	params := StrSlice{}
+	paramSets := ObjSlice{}
+	domFacts := ReversibleFacts{}
+
+	for !slices.Contains(endWith, tb.header.strAtCurIndexPlus(0)) && !tb.header.ExceedEnd() {
+		if tb.header.is(glob.KeySymbolLeftBracket) {
+			paramsInBracket := StrSlice{}
+			tb.header.skip(glob.KeySymbolLeftBracket)
+			for {
+				cur, err := tb.header.next()
+				if err != nil {
+					return nil, nil, nil, err
+				}
+				paramsInBracket = append(paramsInBracket, cur)
+
+				if tb.header.is(glob.KeySymbolRightBracket) {
+					break
+				}
+
+				err = tb.header.skip(glob.KeySymbolComma)
+				if err != nil {
+					return nil, nil, nil, err
+				}
+			}
+			err := tb.header.skip(glob.KeySymbolRightBracket)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+			params = append(params, paramsInBracket...)
+
+			for range len(paramsInBracket) {
+				paramSets = append(paramSets, Atom(glob.KeywordSet))
+			}
+
+			propName, err := p.notNumberAtom(tb)
+			if err != nil {
+				return nil, nil, nil, err
+			}
+
+			domFacts = append(domFacts, NewPureSpecificFactStmt(true, propName, paramsInBracket.ToObjSlice(), glob.BuiltinLine0))
+
+			if slices.Contains(endWith, tb.header.strAtCurIndexPlus(0)) {
+				break
+			} else {
+
+				if tb.header.is(glob.KeySymbolComma) {
+					tb.header.skip(glob.KeySymbolComma)
+				}
+			}
+			continue
+		}
+
+		paramsWithTheSameParamSet := StrSlice{}
+
+		for {
+			cur, err := tb.header.next()
+			if err != nil {
+				return nil, nil, nil, err
+			}
+
+			paramsWithTheSameParamSet = append(paramsWithTheSameParamSet, cur)
+
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+			} else {
+				paramSet, err := p.Obj(tb)
+				if err != nil {
+					return nil, nil, nil, err
+				}
+				for range len(paramsWithTheSameParamSet) {
+					paramSets = append(paramSets, paramSet)
+				}
+
+				if slices.Contains(endWith, tb.header.strAtCurIndexPlus(0)) {
+					break
+				} else {
+					err = tb.header.skip(glob.KeySymbolComma)
+					if err != nil {
+						return nil, nil, nil, err
+					}
+
+					break
+				}
+			}
+		}
+
+		params = append(params, paramsWithTheSameParamSet...)
+	}
+
+	if slices.Contains(endWith, tb.header.strAtCurIndexPlus(0)) {
+		tb.header.skip("")
+	} else {
+		return nil, nil, nil, fmt.Errorf("expect %s as end of parameter and parameter pairs", endWith)
+	}
+
+	return params, paramSets, domFacts, nil
+}
+
+func (p *TbParser) algoIfAlgoReturn(tb *tokenBlock) (AlgoIfAlgoReturn, error) {
+	switch tb.header.strAtCurIndexPlus(0) {
+	case glob.KeywordIf:
+		return p.algoIf(tb)
+	case glob.KeywordReturn:
+		return p.algoReturn(tb)
+	default:
+		return nil, fmt.Errorf("expect %s or %s, got %s", glob.KeywordIf, glob.KeywordReturn, tb.header.strAtCurIndexPlus(0))
+	}
+}
+
+func (p *TbParser) algoIf(tb *tokenBlock) (AlgoIfAlgoReturn, error) {
+	err := tb.header.skip(glob.KeywordIf)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	condition, err := p.specFactStmt(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	if len(tb.body) != 1 {
+		return nil, fmt.Errorf("expect 1 body block, got %d", len(tb.body))
+	}
+
+	thenFact, err := p.algoReturn(&tb.body[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return NewAlgoIf(condition, thenFact, tb.line), nil
+}
+
+func (p *TbParser) algoReturn(tb *tokenBlock) (*AlgoReturn, error) {
+	err := tb.header.skip(glob.KeywordReturn)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	value, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	return NewAlgoReturn(value, tb.line), nil
+}
+
+// parsePureFactsOrChainFacts parses either `{ fact1, fact2, ... }` or a single fact (pure or chain).
+// Used by exist, haveObjSt, witness. Returns []*PureSpecificFactStmt (chain facts are expanded via ToFacts()).
+func (p *TbParser) parsePureFactsOrChainFacts(tb *tokenBlock) ([]*PureSpecificFactStmt, error) {
+	if tb.header.is(glob.KeySymbolLeftCurly) {
+		tb.header.skip(glob.KeySymbolLeftCurly)
+		facts := []*PureSpecificFactStmt{}
+		for !tb.header.is(glob.KeySymbolRightCurly) {
+			fact, err := p.pureFact_chainFact(tb)
+			if err != nil {
+				return nil, err
+			}
+			switch asFact := fact.(type) {
+			case *PureSpecificFactStmt:
+				facts = append(facts, asFact)
+			case *ChainPureFact:
+				facts = append(facts, asFact.ToFacts()...)
+			default:
+				return nil, fmt.Errorf("expect pure specific fact or chain fact, got %T", fact)
+			}
+			if tb.header.is(glob.KeySymbolComma) {
+				tb.header.skip(glob.KeySymbolComma)
+				continue
+			}
+		}
+		tb.header.skip(glob.KeySymbolRightCurly)
+		return facts, nil
+	}
+	// single fact
+	fact, err := p.pureFact_chainFact(tb)
+	if err != nil {
+		return nil, err
+	}
+	switch asFact := fact.(type) {
+	case *PureSpecificFactStmt:
+		return []*PureSpecificFactStmt{asFact}, nil
+	case *ChainPureFact:
+		return asFact.ToFacts(), nil
+	default:
+		return nil, fmt.Errorf("expect pure specific fact or chain fact, got %T", fact)
+	}
+}
+
+func (p *TbParser) pureFact_chainFact(tb *tokenBlock) (FactStmt, error) {
+	var ret FactStmt
+	var err error
+
+	// Case 1: Handle facts starting with special prefixes
+	if p.isCurTokenSpecFactPrefix(tb) {
+		ret, err = p.pureFuncSpecFact(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+	} else {
+		// Case 2-4: Handle facts starting with a first-class citizen (obj)
+		ret, err = p.parseFactStartWithObj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+	}
+
+	switch ret.(type) {
+	case *PureSpecificFactStmt:
+		return ret, nil
+	case *ChainPureFact:
+		return ret, nil
+	default:
+		return nil, fmt.Errorf("expect pure fact or chain fact, got: %T", ret)
+	}
+}
+
+func (p *TbParser) defSetTemplateStmt(tb *tokenBlock) (*DefSetTemplateStmt, error) {
+	err := tb.header.skip(glob.KeywordSetTemplate)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	name, err := tb.header.next()
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	params, paramSets, domFacts, err := p.leftBraceParamsAndParamSetsAndDomsAndRightBrace(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	if !tb.header.is(glob.KeySymbolEqual) {
+		return nil, ErrInLine(fmt.Errorf("expect %s, got %s", glob.KeySymbolEqual, tb.header.strAtCurIndexPlus(0)), tb)
+	}
+	tb.header.skip(glob.KeySymbolEqual)
+
+	equalTo, err := p.Obj(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	return NewSetTemplateStmt(name, params, paramSets, domFacts, equalTo, tb.line), nil
 }

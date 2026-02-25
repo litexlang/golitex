@@ -16,11 +16,10 @@ package litex_executor
 
 import (
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
-func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(stmt *ast.HaveObjStStmt, freeExistStFact *ast.ExistSpecificFactStmt, instExistStFactToBeMatched *ast.ExistSpecificFactStmt, verState *VerState) *glob.VerRet {
-	return glob.NewEmptyVerRetUnknown()
+func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(stmt *ast.HaveObjStStmt, freeExistStFact *ast.ExistSpecificFactStmt, instExistStFactToBeMatched *ast.ExistSpecificFactStmt, verState *VerState) ast.VerRet {
+	return ast.NewEmptyUnknownVerRet()
 
 	// ver.newEnv()
 	// defer ver.deleteEnv()
@@ -29,7 +28,7 @@ func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFac
 	// toBeMatchedExistParams, toBeMatchedParams := instExistStFactToBeMatched.PureFact.Params, instExistStFactToBeMatched.ExistFreeParamSets
 
 	// if len(freeExistParams) != len(toBeMatchedExistParams) || len(freeParams) != len(toBeMatchedParams) {
-	// 	return glob.NewEmptyVerRetUnknown()
+	// 	return ast.NewEmptyUnknownVerRet()
 	// }
 
 	// uniMap := map[string]ast.Obj{}
@@ -39,14 +38,14 @@ func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFac
 
 	// instFreeSpecFact, err := freeSpecFact.Instantiate(uniMap)
 	// if err != nil {
-	// 	return glob.NewEmptyVerRetUnknown()
+	// 	return ast.NewEmptyUnknownVerRet()
 	// }
 
 	// // 证明 inst Free Spec Fact 的每一个 param 等于 right 的 对应的 param
 	// for i, instFreeSpecFactParam := range instFreeSpecFact.(*ast.PureSpecificFactStmt).Params {
 	// 	verRet := ver.VerFactStmt(ast.NewEqualFact(instFreeSpecFactParam, instExistStFactToBeMatched.PureFact.Params[i]), verState)
 	// 	if verRet.IsNotTrue() {
-	// 		return glob.NewEmptyVerRetUnknown()
+	// 		return ast.NewEmptyUnknownVerRet()
 	// 	}
 	// }
 
@@ -55,14 +54,14 @@ func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFac
 	// for i, paramSet := range stmt.ObjSets {
 	// 	instParamSet, err := paramSet.Instantiate(newUniMap)
 	// 	if err != nil {
-	// 		return glob.NewEmptyVerRetUnknown()
+	// 		return ast.NewEmptyUnknownVerRet()
 	// 	}
 
 	// 	inFact := ast.NewInFactWithObj(instExistStFactToBeMatched.PureFact.Params[i], instParamSet)
 
 	// 	ret := ver.VerFactStmt(inFact, verState)
 	// 	if ret.IsNotTrue() {
-	// 		return glob.NewEmptyVerRetUnknown()
+	// 		return ast.NewEmptyUnknownVerRet()
 	// 	}
 
 	// 	newUniMap[stmt.ObjNames[i]] = instExistStFactToBeMatched.PureFact.Params[i]
@@ -71,7 +70,7 @@ func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFac
 	// return glob.NewVerMsg(glob.StmtRetTypeTrue, freeExistStFact.String(), instExistStFactToBeMatched.Line, []string{instExistStFactToBeMatched.String()})
 }
 
-func (ver *Verifier) ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt *ast.HaveObjStStmt, freeExistStFact *ast.ExistSpecificFactStmt, instExistStFactToBeMatched []ast.ExistSpecificFactStmt, state *VerState) *glob.VerRet {
+func (ver *Verifier) ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFacts(stmt *ast.HaveObjStStmt, freeExistStFact *ast.ExistSpecificFactStmt, instExistStFactToBeMatched []ast.ExistSpecificFactStmt, state *VerState) ast.VerRet {
 	for _, curToMatch := range instExistStFactToBeMatched {
 		ret := ver.ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(stmt, freeExistStFact, &curToMatch, state)
 		if ret.IsTrue() {
@@ -79,5 +78,5 @@ func (ver *Verifier) ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFact
 		}
 	}
 
-	return glob.NewEmptyVerRetUnknown()
+	return ast.NewEmptyUnknownVerRet()
 }

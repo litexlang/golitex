@@ -17,23 +17,22 @@ package litex_pipeline
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 	pkgMgr "golitex/package_manager"
 	"os"
 	"strings"
 )
 
-func FormatCode(path string) (*glob.StmtRet, error) {
+func FormatCode(path string) (ast.StmtRet, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
-		return glob.ErrRet(fmt.Sprintf("failed to read file %s: %s", path, err.Error())), err
+		return ast.StmtErrRet(nil, fmt.Sprintf("failed to read file %s: %s", path, err.Error())), err
 	}
 
 	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr("")
 
 	blocks, err := ast.PreprocessAndMakeSourceCodeIntoBlocks(string(content))
 	if err != nil {
-		return glob.ErrRet(err.Error()), err
+		return ast.StmtErrRet(nil, err.Error()), err
 	}
 
 	p := ast.NewTbParser(pkgPathNameMgr)
@@ -41,7 +40,7 @@ func FormatCode(path string) (*glob.StmtRet, error) {
 	for _, block := range blocks {
 		topStmt, err := p.Stmt(&block)
 		if err != nil {
-			return glob.ErrRet(err.Error()), err
+			return ast.StmtErrRet(nil, err.Error()), err
 		}
 		stmtStrSlice = append(stmtStrSlice, topStmt.String())
 	}
@@ -49,7 +48,7 @@ func FormatCode(path string) (*glob.StmtRet, error) {
 	// 把 code 写到 path 里
 	err = os.WriteFile(path, []byte((strings.Join(stmtStrSlice, "\n\n"))), 0644)
 	if err != nil {
-		return glob.ErrRet(fmt.Sprintf("failed to write file %s: %s", path, err.Error())), err
+		return ast.StmtErrRet(nil, fmt.Sprintf("failed to write file %s: %s", path, err.Error())), err
 	}
-	return glob.NewStmtTrueWithVerifyProcess(glob.NewVerRet(glob.StmtRetTypeTrue, fmt.Sprintf("formatted code written to %s", path), glob.BuiltinLine0, []string{})), nil
+	return ast.NewTrueStmtEmptyRet(nil).AddVerifyProcess(ast.NewTrueVerRet(nil, nil, fmt.Sprintf("formatted code written to %s", path))), nil
 }

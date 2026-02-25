@@ -15,6 +15,11 @@
 package kernel_lib_litex_code
 
 var PipelineInitCode = `
+prop subset_of(x, y set):
+	forall z x:
+		=>:
+			z $in y
+
 know forall x2, y2 R: x2 != 0, y2 != 0 => x2 * y2 != 0
 know forall x, y R: x * y = 0 => x = 0 or y = 0
 
@@ -82,12 +87,15 @@ know:
 
 know forall x R: x > 0 or x < 0 => x != 0
 
+"""
 # 必须要有，否则不能说明有限集合的子集还是有限集合
 know prop_infer finite_set_subset_is_finite_set(s1 finite_set, s2 set):
 	forall x s2:
 		x $in s1
 	=>:
 		$is_finite_set(s2)
+
+"""
 
 know forall x N: x != 0 => x > 0
 
@@ -201,12 +209,12 @@ know:
 	forall x, y R => not x >= y <=> x < y
 
 prop mul_cancel_cond(a, b, c R):
+	c != 0
     a * c = b * c
-    c != 0
 
 prop div_cancel_cond(a, b, c R):
+	c != 0
     a / c = b / c
-    c != 0
 
 know prop_infer cancel(a, b, c R):
 	a + c = b + c or a - c = b - c or $mul_cancel_cond(a, b, c)or $div_cancel_cond(a, b, c)
@@ -218,8 +226,9 @@ prop mul_cancel_general_cond(a, b, c, d R):
     c != 0
 
 prop div_cancel_general_cond(a, b, c, d R):
+	c != 0
+	d != 0
     a / c = b / d
-    c != 0
 
 
 know prop_infer cancel_general(a, b, c, d R):
@@ -227,11 +236,6 @@ know prop_infer cancel_general(a, b, c, d R):
     a + c = b + d or a - c = b - d or $mul_cancel_general_cond(a, b, c, d) or $div_cancel_general_cond(a, b, c, d)
     =>:
         a = b
-
-know prop_infer product_is_0_then_at_least_one_factor_is_0(a, b R):
-	a * b = 0
-	=>:
-		a = 0 or	b = 0
 
 know:
 	forall a, b, c, e, f, g R:
@@ -312,13 +316,6 @@ know forall a, b, c, d R: c != 0, a = (b / c) * d => a * c = b * d
 know forall a, b, c, d R: c != 0, a = d * (b / c) => a * c = d * b
 know forall x, y, z R: z != 0, x = y / z => x * z = y
 
-let fn range(x Z, y Z) set:
-	=>:
-		range(x, y) = {self Z: self >= x, self < y}
-
-let fn closed_range(x Z, y Z) set:
-	=>:
-		closed_range(x, y) = {self Z: self >= x, self <= y}
 
 """
 know:
@@ -557,11 +554,6 @@ let fn negate(x R) R:
 
 know forall x set: not x $in x
 
-prop subset_of(x, y set):
-	forall z x:
-		=>:
-			z $in y
-
 prop is_superset_of(A, B set):
 	forall x B: x $in A
 
@@ -721,9 +713,9 @@ prop equal_tuple(x, y set, dim N_pos):
 	$is_tuple(y)
 	dim(x) = dim
 	dim(y) = dim
-	<=>:
-		x = y
+	x = y
 
+"""
 know:
 	forall x, y set:
 		$is_tuple(x)
@@ -732,6 +724,7 @@ know:
 		forall i N_pos: i <= dim(x) => x[i] = y[i]
 		=>:
 			x = y
+"""
 
 """
 let fn power_set(x set) set
@@ -836,6 +829,7 @@ know forall x set, cup_x_item cup(x) => exist x_item x st cup_x_item $in x_item
 	
 ### cap
 
+"""
 # check item in cap
 know:
 	forall x set, item set:
@@ -843,11 +837,14 @@ know:
 			item $in x_item
 		=>:
 			item $in cap(x)
+"""
 
+"""
 # when item in cap, it has properties
 know prop_infer item_in_cap_implies(x set, item cap(x)):
 	forall x_item x:
 		item $in x_item
+"""
 
 ### union
 
@@ -904,12 +901,14 @@ know:
 
 	forall s set, s2 set:
 		union(s2, set_minus(s, s2)) = s
-		forall x s2:
-			not x $in set_minus(s, s2)
-		forall x s2:
-			not x $in s
-			=>:
-				x $in set_minus(s, s2)
+
+	forall s set, s2 set, x s2:
+		not x $in set_minus(s, s2)
+	
+	forall s set, s2 set, x s2:
+		not x $in s
+		=>:
+			x $in set_minus(s, s2)
 
 # when item in set minus, it has properties
 know prop_infer item_in_set_minus_implies(x, y set, item set_minus(x, y)):
@@ -932,6 +931,7 @@ prop is_injective_fn(X set, Y set, f fn(X)Y):
 		=>:
 			f(x1) != f(x2)
 
+"""
 know:
 	forall X set, Y set, f fn(X)Y:
 		forall x1, x2 X:
@@ -940,6 +940,7 @@ know:
 				x1 = x2
 		=>:
 			$is_injective_fn(X, Y, f)
+"""
 
 prop is_surjective_fn(X set, Y set, f fn(X)Y):
 	forall y Y:
@@ -949,7 +950,7 @@ prop is_bijective_fn(X set, Y set, f fn(X)Y):
 	$is_injective_fn(X, Y, f)
 	$is_surjective_fn(X, Y, f)
 	
-know prop_infer is_injective_fn_to_finite_set_implies(X set, Y finite_set, f fn(X)Y):
+know prop_infer is_injective_fn_to_finite_set_implies(X finite_set, Y finite_set, f fn(X)Y):
 	$is_injective_fn(X, Y, f)
 	=>:
 		$is_finite_set(Y)
@@ -1008,10 +1009,13 @@ know exist x set st $axiom_of_infinity(x)
 # choice(S, s) chooses an element from s, where s is an element of S
 # For any set S (which is a set of sets), if each element of S is a non-empty set,
 # then for any s in S, choice(S, s) is in s.
+prop all_items_in_set_are_nonempty(S set):
+	forall x S:
+		$is_nonempty_set(x)
+
 know:
 	forall S set, s S:
-		forall x S:
-			$is_nonempty_set(x)
+		$all_items_in_set_are_nonempty(S)
 		=>:
 			choice(S, s) $in s
 
@@ -1019,29 +1023,25 @@ know:
 
 prop is_max(r R, s set):
     forall x s: x $in R
-    <=>:
-        r $in s
-        forall x s: x <= r
+	r $in s
+	forall x s: x <= r
 
 know:
-    forall s finite_set:
-        forall x s:
-            x $in R
-        =>:
-            exist z R st $is_max(z, s)
+    forall s power_set(R):
+		$is_finite_set(s)
+		=>:
+			exist z s st $is_max(z, s)
 
 prop is_min(r R, s set):
 	forall x s: x $in R
-	<=>:
-		r $in s
-		forall x s: r <= x
+	r $in s
+	forall x s: r <= x
 
 know:
-    forall s finite_set:
-        forall x s:
-            x $in R
-        =>:
-            exist z R st $is_min(z, s)
+    forall s power_set(R):
+		$is_finite_set(s)
+		=>:
+			exist z s st $is_min(z, s)
 
 know:
 	forall x Z: x >= 0 => x $in N
@@ -1107,8 +1107,7 @@ know forall a, b, c R: b < c, a < 0 => a + b < c
 
 know:
 	forall s1, s2 finite_set:
-		forall x s2:
-			x $in s1
+		s2 $subset_of s1
 		<=>:
 			count(set_minus(s1, s2)) = count(s1) - count(s2)
 
@@ -1171,4 +1170,19 @@ know forall x Z, n Z: x <= n + 1 => x <= n or x = n+ 1
 know forall s power_set(R): $is_finite_set(s) => exist a s st $is_max(a, s)
 
 know forall q Q: exist x Z, y N_pos st q = x / y
+
+know forall x, y R: x != 0 or y != 0 <=> x^2 + y^2 != 0
+know forall x, y R: x^2 + y^2 != 0 => not x = 0 or not y = 0
+
+know exist a, b st a < b
+
+know forall x, y R: x * y = 0 => x = 0 or y = 0
+
+know forall x, y Z: closed_range(x, y) = {self Z: self >= x, self <= y}
+know forall x, y Z: range(x, y) = {self Z: self >= x, self < y}
+know forall x, y Z: $is_finite_set(closed_range(x, y)), $is_finite_set(range(x, y))
+know forall x, y Z: x <= y => count(closed_range(x, y)) = y - x + 1
+know forall x, y Z: x <= y => count(range(x, y)) = y - x
+
+know forall x, y Z: y != 0 => x % y $in Z
 `
