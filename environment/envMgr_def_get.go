@@ -14,7 +14,10 @@
 
 package litex_env
 
-import ast "golitex/ast"
+import (
+	"fmt"
+	ast "golitex/ast"
+)
 
 // func (envMgr *EnvMgr) GetFnTemplateDef(objAtomName ast.Atom) *ast.DefFnSetStmt {
 // 	fnTemplateDef, ok := envMgr.AllDefinedFnSetNames[string(objAtomName)]
@@ -100,7 +103,19 @@ func (envMgr *EnvMgr) IsCommutativeProp(specFact *ast.PureSpecificFactStmt) bool
 // 	return nil
 // }
 
-func (envMgr *EnvMgr) GetSetTemplateDef(setName string) *ast.SetTemplateStmt {
+func (envMgr *EnvMgr) DefineSetTemplate(stmt *ast.DefSetTemplateStmt) (bool, string) {
+	if _, ok := envMgr.AllDefinedSetTemplateNames[stmt.Name]; ok {
+		return false, fmt.Sprintf("set template %s already defined", stmt.Name)
+	}
+
+	envMgr.AllDefinedSetTemplateNames[stmt.Name] = NewDefinedStuff(stmt, envMgr.CurEnvDepth())
+
+	envMgr.CurEnv().SetTemplateDefMem[stmt.Name] = struct{}{}
+
+	return true, ""
+}
+
+func (envMgr *EnvMgr) GetSetTemplateDef(setName string) *ast.DefSetTemplateStmt {
 	setTemplateDef, ok := envMgr.AllDefinedSetTemplateNames[setName]
 	if ok {
 		return setTemplateDef.Defined

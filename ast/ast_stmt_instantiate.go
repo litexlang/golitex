@@ -972,7 +972,7 @@ func (stmt *EvalStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return NewEvalStmt(obj, stmt.Line), nil
 }
 
-func (stmt *SetTemplateStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+func (stmt *DefSetTemplateStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newParamSets, err := stmt.ParamSets.Instantiate(uniMap)
 	if err != nil {
 		return nil, err
