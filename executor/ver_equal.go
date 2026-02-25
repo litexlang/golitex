@@ -64,6 +64,53 @@ func (ver *Verifier) verTrueEqualPreProcess(stmt *ast.PureSpecificFactStmt, stat
 		return verRet
 	}
 
+	if leftAsInstSetTemplate, ok := stmt.Params[0].(*ast.InstSetTemplateObj); ok {
+		if rightAsFnSetObjWithName, ok := stmt.Params[1].(*ast.FnSetObjWithName); ok {
+			def := ver.Env.GetSetTemplateDef(string(leftAsInstSetTemplate.Name))
+			if def == nil {
+				return ast.NewEmptyUnknownVerRet()
+			}
+			if len(leftAsInstSetTemplate.Params) != len(def.Params) {
+				return ast.NewEmptyUnknownVerRet()
+			}
+			uniMap := make(map[string]ast.Obj)
+			for i, param := range def.Params {
+				uniMap[param] = leftAsInstSetTemplate.Params[i]
+			}
+			equalTo, err := def.EqualTo.Instantiate(uniMap)
+			if err != nil {
+				return ast.NewEmptyUnknownVerRet()
+			}
+			equality := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{rightAsFnSetObjWithName, equalTo}, glob.BuiltinLine0)
+
+			verRet := ver.verTrueEqualFactAndCheckFnReq(equality, state.CopyAndReqOkToTrue())
+
+			if verRet.IsErr() || verRet.IsTrue() {
+				return verRet
+			}
+		} else if rightAsFnSetObjWithoutName, ok := stmt.Params[1].(*ast.FnSetObjWithoutName); ok {
+			def := ver.Env.GetSetTemplateDef(string(leftAsInstSetTemplate.Name))
+			if def == nil {
+				return ast.NewEmptyUnknownVerRet()
+			}
+			if len(leftAsInstSetTemplate.Params) != len(def.Params) {
+				return ast.NewEmptyUnknownVerRet()
+			}
+			uniMap := make(map[string]ast.Obj)
+			for i, param := range def.Params {
+				uniMap[param] = leftAsInstSetTemplate.Params[i]
+			}
+			equalTo, err := def.EqualTo.Instantiate(uniMap)
+			if err != nil {
+				return ast.NewEmptyUnknownVerRet()
+			}
+			verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{rightAsFnSetObjWithoutName, equalTo}, glob.BuiltinLine0), state.CopyAndReqOkToTrue())
+			if verRet.IsErr() || verRet.IsTrue() {
+				return verRet
+			}
+		}
+	}
+
 	return ver.verByReplaceObjInSpecFactWithValue(stmt, state)
 }
 
