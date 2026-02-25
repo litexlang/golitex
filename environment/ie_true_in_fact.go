@@ -32,6 +32,10 @@ func (ie *InferEngine) trueInFact(fact ast.SpecificFactStmt) ast.InferRet {
 		return ret
 	}
 
+	if ret := ie.trueInFactByInstSetTemplateObj(asFact); ret.IsTrue() || ret.IsErr() {
+		return ret
+	}
+
 	// if ret := ie.trueInFactByNamedFnSet(asFact); ret.IsTrue() || ret.IsErr() {
 	// 	return ret
 	// }
@@ -1081,4 +1085,38 @@ func (ie *InferEngine) trueInFactByFnInFnSet(fact *ast.PureSpecificFactStmt) ast
 	default:
 		panic(fmt.Sprintf("unknown function set object type: %T", fnSetObj))
 	}
+}
+
+func (ie *InferEngine) trueInFactByInstSetTemplateObj(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	instSetTemplateObj, ok := fact.Params[1].(*ast.InstSetTemplateObj)
+	if !ok {
+		return ast.NewUnknownInferRet(fact)
+	}
+
+	def := ie.EnvMgr.GetSetTemplateDef(string(instSetTemplateObj.Name))
+	if def == nil {
+		return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("set template %s not defined", instSetTemplateObj.Name))
+	}
+
+	if len(instSetTemplateObj.Params) != len(def.Params) {
+		return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("the number of parameters is not equal to the number of parameter sets of %s", def))
+	}
+
+	uniMap := make(map[string]ast.Obj)
+	for i, param := range def.Params {
+		uniMap[param] = instSetTemplateObj.Params[i]
+	}
+
+	equalTo, err := def.EqualTo.Instantiate(uniMap)
+	if err != nil {
+		return ast.NewErrInferRet(fact).AddExtraInfo(err.Error())
+	}
+
+	inFact := ast.NewInFactWithObj(fact.Params[0], equalTo)
+	ret := ie.EnvMgr.NewFact(inFact)
+	if ret.IsErr() {
+		return ast.NewErrInferRet(fact)
+	}
+
+	return ast.NewTrueInferRet(fact).AddInfer(inFact)
 }

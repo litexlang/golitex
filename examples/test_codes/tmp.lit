@@ -1,5 +1,4 @@
 set_template seq(s set, n N_pos) = fn f(i N_pos: i <= n) s
 
 forall a @seq(R, 1):
-    a $in fn(i N_pos: i <= 1) R
     a(1) = a(1)
