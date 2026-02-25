@@ -104,7 +104,7 @@ func (envMgr *EnvMgr) IsCommutativeProp(specFact *ast.PureSpecificFactStmt) bool
 // }
 
 func (envMgr *EnvMgr) DefineSetTemplate(stmt *ast.DefSetTemplateStmt) (bool, string) {
-	if _, ok := envMgr.AllDefinedSetTemplateNames[stmt.Name]; ok {
+	if envMgr.GetSetTemplateDef(string(stmt.Name)) != nil {
 		return false, fmt.Sprintf("set template %s already defined", stmt.Name)
 	}
 

@@ -40,6 +40,8 @@ func (p *TbParser) Obj(tb *tokenBlock) (Obj, error) {
 		return p.ListSetObjOrSetBuilderObjWrittenInCurly(tb)
 	} else if tb.header.is(glob.KeywordSetBuilder) {
 		return p.SetBuilderObjBeginWithKeywordSetBuilder(tb)
+	} else if tb.header.is(glob.KeySymbolAt) {
+		return p.InstSetTemplateObj(tb)
 	}
 
 	return p.objInfixExpr(tb, glob.PrecLowest)
@@ -795,4 +797,23 @@ func (p *TbParser) leftBraceParamsAndParamSetsAndDomsAndRightBrace(tb *tokenBloc
 	}
 
 	return params, paramSets, doms, nil
+}
+
+func (p *TbParser) InstSetTemplateObj(tb *tokenBlock) (Obj, error) {
+	err := tb.header.skip(glob.KeySymbolAt)
+	if err != nil {
+		return nil, err
+	}
+
+	name, err := p.notNumberAtom(tb)
+	if err != nil {
+		return nil, err
+	}
+
+	params, err := p.bracedObjSlice(tb)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewInstSetTemplateObj(name, params), nil
 }
