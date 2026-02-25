@@ -28,7 +28,7 @@ func (envMgr *EnvMgr) GenerateUnusedRandomName() string {
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
 		ret := envMgr.IsNameUnavailable((randomStr), map[string]struct{}{})
-		if ret.IsNotTrue() {
+		if !ret {
 			return randomStr
 		}
 		i++
@@ -42,7 +42,7 @@ func (envMgr *EnvMgr) GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(m map[str
 		randomStr = glob.RandomString(i)
 		// check if the string is undeclared
 		ret := envMgr.IsNameUnavailable(randomStr, map[string]struct{}{})
-		if ret.IsNotTrue() {
+		if !ret {
 			_, ok := m[randomStr]
 			if !ok {
 				return randomStr
@@ -52,87 +52,104 @@ func (envMgr *EnvMgr) GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(m map[str
 	}
 }
 
-func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.AnonymousFn, *glob.ShortRet) {
-	if objFnTypeToFnTStruct, ok := envMgr.AnonymousFnToInstFnTemplate(fnTName); ok {
-		return objFnTypeToFnTStruct, glob.NewEmptyShortTrueRet()
-	} else {
-		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
-		if !ok {
-			return nil, glob.NewShortRetTrue(fmt.Sprintf("fnTNameHead is not an atom"))
-		}
-
-		return envMgr.getFnTDef_InstFnTStructOfIt(fnTNameHeadAsAtom, fnTName.Params)
+func (envMgr *EnvMgr) GenerateNUnusedRandomNames(n int) []string {
+	if n <= 0 {
+		return []string{}
 	}
+
+	usedNames := make(map[string]struct{})
+	result := make([]string, n)
+
+	for i := 0; i < n; i++ {
+		randomName := envMgr.GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(usedNames)
+		result[i] = randomName
+		usedNames[randomName] = struct{}{}
+	}
+
+	return result
 }
 
-func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.AnonymousFn, *glob.ShortRet) {
-	defOfT := envMgr.GetFnTemplateDef(fnTDefName)
-	if defOfT == nil {
-		return nil, glob.NewShortRetErr(fmt.Sprintf("fnTNameHead %s is not a fn template", fnTDefName))
-	}
+// func (envMgr *EnvMgr) GetFnStructFromFnTName(fnTName *ast.FnObj) (*ast.AnonymousFn, ast.ShortRet) {
+// 	if objFnTypeToFnTStruct, ok := envMgr.AnonymousFnToInstFnTemplate(fnTName); ok {
+// 		return objFnTypeToFnTStruct, ast.NewTrueShortRet()
+// 	} else {
+// 		fnTNameHeadAsAtom, ok := fnTName.FnHead.(ast.Atom)
+// 		if !ok {
+// 			return nil, ast.NewTrueShortRetWithMsg(fmt.Sprintf("fnTNameHead is not an atom"))
+// 		}
 
-	uniMap, err := ast.MakeUniMap(defOfT.TemplateDefHeader.Params, templateParams)
-	if err != nil {
-		return nil, glob.NewShortRetErr(err.Error())
-	}
+// 		return envMgr.getFnTDef_InstFnTStructOfIt(fnTNameHeadAsAtom, fnTName.Params)
+// 	}
+// }
 
-	fnTStruct, err := defOfT.AnonymousFn.Instantiate(uniMap)
-	if err != nil {
-		return nil, glob.NewShortRetErr(err.Error())
-	}
+// func (envMgr *EnvMgr) getFnTDef_InstFnTStructOfIt(fnTDefName ast.Atom, templateParams []ast.Obj) (*ast.AnonymousFn, ast.ShortRet) {
+// 	defOfT := envMgr.GetFnTemplateDef(fnTDefName)
+// 	if defOfT == nil {
+// 		return nil, ast.NewErrShortRetWithMsg(fmt.Sprintf("fnTNameHead %s is not a fn template", fnTDefName))
+// 	}
 
-	return fnTStruct, glob.NewEmptyShortTrueRet()
-}
+// 	uniMap, err := ast.MakeUniMap(defOfT.TemplateDefHeader.Params, templateParams)
+// 	if err != nil {
+// 		return nil, ast.NewErrShortRetWithMsg(err.Error())
+// 	}
 
-func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecificFactStmt) *glob.StmtRet {
+// 	fnTStruct, err := defOfT.AnonymousFn.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, ast.NewErrShortRetWithMsg(err.Error())
+// 	}
+
+// 	return fnTStruct, ast.NewTrueShortRet()
+// }
+
+func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecificFactStmt) ast.InferRet {
 	switch asFact := stmt.(type) {
 	case *ast.PureSpecificFactStmt:
 		if asFact.IsTrue {
-			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())]
+			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.Key())]
 			if !ok {
-				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())] = []*ast.PureSpecificFactStmt{}
+				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.Key())] = []*ast.PureSpecificFactStmt{}
 			}
 
-			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.GetPropName())], asFact)
-			return glob.NewEmptyStmtTrue()
+			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.Key())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.Key())], asFact)
+			return ast.NewTrueInferRet(stmt)
 		} else {
-			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())]
+			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.Key())]
 			if !ok {
-				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())] = []*ast.PureSpecificFactStmt{}
+				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.Key())] = []*ast.PureSpecificFactStmt{}
 			}
-			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.GetPropName())], asFact)
-			return glob.NewEmptyStmtTrue()
+			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.Key())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.Key())], asFact)
+			return ast.NewTrueInferRet(stmt)
 		}
 	case *ast.ExistSpecificFactStmt:
 		if asFact.IsTrue {
-			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())]
+			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.Key())]
 			if !ok {
-				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())] = []*ast.ExistSpecificFactStmt{}
+				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.Key())] = []*ast.ExistSpecificFactStmt{}
 			}
-			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.GetPropName())], asFact)
-			return glob.NewEmptyStmtTrue()
+			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.Key())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.Key())], asFact)
+			return ast.NewTrueInferRet(stmt)
 		} else {
-			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())]
+			_, ok := envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.Key())]
 			if !ok {
-				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())] = []*ast.ExistSpecificFactStmt{}
+				envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.Key())] = []*ast.ExistSpecificFactStmt{}
 			}
-			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.GetPropName())], asFact)
-			return glob.NewEmptyStmtTrue()
+			envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.Key())] = append(envMgr.CurEnv().KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.Key())], asFact)
+			return ast.NewTrueInferRet(stmt)
 		}
 	}
 
-	return glob.ErrRet(fmt.Sprintf("invalid spec fact type: %T", stmt))
+	return ast.NewErrInferRet(stmt).AddExtraInfo(fmt.Sprintf("invalid spec fact type: %T", stmt))
 }
 
-func (envMgr *EnvMgr) StoreSpecFactInImplyTemplateMem(specFact ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) StoreSpecFactInImplyTemplateMem(specFact ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) ast.StmtRet {
 	return envMgr.CurEnv().KnownFactsStruct.SpecFactInImplyTemplateMem.newFact(specFact, implyTemplate)
 }
 
-func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.PureSpecificFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.PureSpecificFactStmt) ast.InferRet {
 	mem := envMgr.CurEnv().EqualMem
 
 	if len(fact.Params) != 2 {
-		return glob.ErrRet(fmt.Sprintf("commutative transitive fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
+		return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("commutative transitive fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
 
 	leftAsStr := fact.Params[0].String()
@@ -143,112 +160,38 @@ func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.PureSpecificFact
 
 	if leftGot && rightGot {
 		if storedEqualLeftFcs == storedEqualRightFcs {
-			return glob.NewEmptyStmtTrue()
+			return ast.NewTrueInferRet(fact)
 		} else {
 			newEqualFcs := []ast.Obj{}
 			newEqualFcs = append(newEqualFcs, *storedEqualLeftFcs...)
 			newEqualFcs = append(newEqualFcs, *storedEqualRightFcs...)
 			*storedEqualLeftFcs = newEqualFcs
 			*storedEqualRightFcs = newEqualFcs
-			return glob.NewEmptyStmtTrue()
+			return ast.NewTrueInferRet(fact)
 		}
 	}
 
 	if leftGot && !rightGot {
 		*storedEqualLeftFcs = append(*storedEqualLeftFcs, fact.Params[1])
 		mem[rightAsStr] = storedEqualLeftFcs
-		return glob.NewEmptyStmtTrue()
+		return ast.NewTrueInferRet(fact)
 	}
 
 	if !leftGot && rightGot {
 		*storedEqualRightFcs = append(*storedEqualRightFcs, fact.Params[0])
 		mem[leftAsStr] = storedEqualRightFcs
-		return glob.NewEmptyStmtTrue()
+		return ast.NewTrueInferRet(fact)
 	}
 
 	if !leftGot && !rightGot {
 		newEqualFcs := []ast.Obj{fact.Params[0], fact.Params[1]}
 		mem[leftAsStr] = &newEqualFcs
 		mem[rightAsStr] = &newEqualFcs
-		return glob.NewEmptyStmtTrue()
+		return ast.NewTrueInferRet(fact)
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueInferRet(fact)
 }
-
-// func (envMgr *EnvMgr) notExistToForall(fact *ast.SpecFactStmt) (*ast.UniFactStmt, *glob.StmtRet) {
-// 	existPropDef := envMgr.GetExistPropDef(fact.PropName)
-// 	if existPropDef == nil {
-// 		return nil, glob.ErrRet(fmt.Sprintf("exist fact %s has no definition", fact))
-// 	}
-
-// 	uniMap := map[string]ast.Obj{}
-// 	for i, propParam := range existPropDef.DefBody.DefHeader.Params {
-// 		uniMap[propParam] = fact.Params[i]
-// 	}
-
-// 	// IffFactsOrNil 中的 facts 是 OR 关系，先实例化它们
-// 	orFactOrs := []*ast.SpecFactStmt{}
-// 	for _, thenFact := range existPropDef.DefBody.IffFactsOrNil {
-// 		asSpecFactStmt, ok := thenFact.(*ast.SpecFactStmt)
-// 		if !ok {
-// 			return nil, glob.ErrRet(fmt.Sprintf("exist fact %s has no definition", fact))
-// 		}
-
-// 		instantiated, err := asSpecFactStmt.InstantiateFact(uniMap)
-// 		if err != nil {
-// 			return nil, glob.ErrRetWithErr(err)
-// 		}
-
-// 		reversedFact := instantiated.(*ast.SpecFactStmt).ReverseIsTrue()
-
-// 		orFactOrs = append(orFactOrs, reversedFact[0])
-// 	}
-
-// 	// 创建 OrStmt 表示 OR 关系，然后整体取反
-// 	orStmt := ast.NewOrStmt(orFactOrs, existPropDef.Line)
-
-// 	return ast.NewUniFact(existPropDef.ExistParams, existPropDef.ExistParamSets, []ast.FactStmt{}, []ast.FactStmt{orStmt}, fact.Line), glob.NewEmptyStmtTrue()
-// }
-
-// func (envMgr *EnvMgr) iffFactsInExistStFact(fact *ast.SpecFactStmt) ([]ast.FactStmt, []ast.FactStmt, *glob.StmtRet) {
-// 	existParams, factParams := fact.ExistStFactToPropNameExistParamsParams()
-
-// 	existPropDef := envMgr.GetExistPropDef(fact.PropName)
-// 	if existPropDef == nil {
-// 		return nil, nil, glob.ErrRet(fmt.Sprintf("exist fact %s has no definition", fact))
-// 	}
-
-// 	uniMap := map[string]ast.Obj{}
-// 	for i := range existParams {
-// 		uniMap[existPropDef.ExistParams[i]] = existParams[i]
-// 	}
-
-// 	for i := range factParams {
-// 		uniMap[existPropDef.DefBody.DefHeader.Params[i]] = factParams[i]
-// 	}
-
-// 	instantiatedIffFacts := []ast.FactStmt{}
-// 	// instantiate iff facts
-// 	for _, iffFact := range existPropDef.DefBody.IffFactsOrNil {
-// 		instantiated, err := iffFact.InstantiateFact(uniMap)
-// 		if err != nil {
-// 			return nil, nil, glob.ErrRetWithErr(err)
-// 		}
-// 		instantiatedIffFacts = append(instantiatedIffFacts, instantiated)
-// 	}
-
-// 	instantiatedThenFacts := []ast.FactStmt{}
-// 	for _, thenFact := range existPropDef.DefBody.ImplicationFactsOrNil {
-// 		instantiated, err := thenFact.InstantiateFact(uniMap)
-// 		if err != nil {
-// 			return nil, nil, glob.ErrRetWithErr(err)
-// 		}
-// 		instantiatedThenFacts = append(instantiatedThenFacts, instantiated)
-// 	}
-
-// 	return instantiatedIffFacts, instantiatedThenFacts, glob.NewEmptyStmtTrue()
-// }
 
 func (envMgr *EnvMgr) StoreTrueEqualValues(key, value ast.Obj) {
 	// 如果已经知道它的值了，那不能存了；否则比如我在外部环境里知道了a = 3，内部环境在反证法证明 a != 1，那我 a = 1就把a = 3覆盖掉了，a = 3这个取值貌似就不work了。某种程度上就是弄了个const
@@ -258,20 +201,20 @@ func (envMgr *EnvMgr) StoreTrueEqualValues(key, value ast.Obj) {
 	envMgr.CurEnv().SymbolSimplifiedValueMem[key.String()] = value
 }
 
-func (envMgr *EnvMgr) storeSymbolSimplifiedValue(left, right ast.Obj) *glob.StmtRet {
-	_, newLeft := envMgr.ReplaceSymbolWithValue(left)
+func (envMgr *EnvMgr) storeSymbolSimplifiedValue(left, right ast.Obj) ast.InferRet {
+	_, newLeft := envMgr.GetStoredSymbolValue(left)
 	if cmp.IsNumExprLitObj(newLeft) {
 		simplifiedNewLeft := cmp.IsNumExprObjThenSimplify(newLeft)
 		envMgr.StoreTrueEqualValues(right, simplifiedNewLeft)
 	}
 
-	_, newRight := envMgr.ReplaceSymbolWithValue(right)
+	_, newRight := envMgr.GetStoredSymbolValue(right)
 	if cmp.IsNumExprLitObj(newRight) {
 		simplifiedNewRight := cmp.IsNumExprObjThenSimplify(newRight)
 		envMgr.StoreTrueEqualValues(left, simplifiedNewRight)
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueInferRet(ast.EqualFact(left, right))
 }
 
 func (envMgr *EnvMgr) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
@@ -286,14 +229,14 @@ func (envMgr *EnvMgr) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
 	return facts, ok
 }
 
-func (envMgr *EnvMgr) FnObjHeadIsAtomAndIsFnSet(fnObj *ast.FnObj) bool {
-	if asAtom, ok := fnObj.FnHead.(ast.Atom); ok {
-		_, ok := envMgr.AllDefinedFnSetNames[string(asAtom)]
-		return ok
-	}
+// func (envMgr *EnvMgr) FnObjHeadIsAtomAndIsFnSet(fnObj *ast.FnObj) bool {
+// 	if asAtom, ok := fnObj.FnHead.(ast.Atom); ok {
+// 		_, ok := envMgr.AllDefinedFnSetNames[string(asAtom)]
+// 		return ok
+// 	}
 
-	return false
-}
+// 	return false
+// }
 
 func (envMgr *EnvMgr) GetEnvMgrOfPkgName(pkgName string) *EnvMgr {
 	path, ok := envMgr.EnvPkgMgr.PkgMgr.NameAbsPathMap[pkgName]
@@ -305,242 +248,6 @@ func (envMgr *EnvMgr) GetEnvMgrOfPkgName(pkgName string) *EnvMgr {
 }
 
 var BuiltinEnvMgrWithEmptyEnvPkgMgr *EnvMgr = nil
-
-// func CopyEnvMgrAndOwnPkgMgr(givenEnvMgr *EnvMgr, envPkgMgr *EnvPkgMgr) *EnvMgr {
-// 	// 复制所有的 map
-// 	allDefinedAtomObjNames := make(map[string]struct{})
-// 	for k, v := range givenEnvMgr.AllDefinedAtomObjNames {
-// 		allDefinedAtomObjNames[k] = v
-// 	}
-
-// 	allDefinedPropNames := make(map[string]*ast.DefPropStmt)
-// 	for k, v := range givenEnvMgr.AllDefinedPropNames {
-// 		allDefinedPropNames[k] = v
-// 	}
-
-// 	allDefinedExistPropNames := make(map[string]*ast.DefExistPropStmt)
-// 	for k, v := range givenEnvMgr.AllDefinedExistPropNames {
-// 		allDefinedExistPropNames[k] = v
-// 	}
-
-// 	allDefinedFnSetNames := make(map[string]*ast.DefFnSetStmt)
-// 	for k, v := range givenEnvMgr.AllDefinedFnSetNames {
-// 		allDefinedFnSetNames[k] = v
-// 	}
-
-// 	allDefinedAlgoNames := make(map[string]*ast.DefAlgoStmt)
-// 	for k, v := range givenEnvMgr.AllDefinedAlgoNames {
-// 		allDefinedAlgoNames[k] = v
-// 	}
-
-// 	allDefinedProveAlgoNames := make(map[string]*ast.DefProveAlgoStmt)
-// 	for k, v := range givenEnvMgr.AllDefinedProveAlgoNames {
-// 		allDefinedProveAlgoNames[k] = v
-// 	}
-
-// 	// 复制 EnvSlice
-// 	envSlice := make([]EnvMemory, len(givenEnvMgr.EnvSlice))
-// 	for i, envMem := range givenEnvMgr.EnvSlice {
-// 		envSlice[i] = copyEnvMemory(envMem)
-// 	}
-
-// 	return NewEnvMgr(
-// 		envPkgMgr,
-// 		envSlice,
-// 		allDefinedAtomObjNames,
-// 		allDefinedPropNames,
-// 		allDefinedExistPropNames,
-// 		allDefinedFnSetNames,
-// 		allDefinedAlgoNames,
-// 		allDefinedProveAlgoNames,
-// 	)
-// }
-
-// copyEnvMemory 深拷贝 EnvMemory
-// func copyEnvMemory(src EnvMemory) EnvMemory {
-// 	dst := EnvMemory{
-// 		AtomObjDefMem:            make(map[string]struct{}),
-// 		PropDefMem:               make(map[string]struct{}),
-// 		FnTemplateDefMem:         make(map[string]struct{}),
-// 		ExistPropDefMem:          make(map[string]struct{}),
-// 		AlgoDefMem:               make(map[string]struct{}),
-// 		DefProveAlgoMem:          make(map[string]struct{}),
-// 		EqualMem:                 make(map[string]shared_ptr_to_slice_of_obj),
-// 		SymbolSimplifiedValueMem: make(map[string]ast.Obj),
-// 		TransitivePropMem:        make(map[string]map[string][]ast.Obj),
-// 		CommutativePropMem:       make(map[string]*PropCommutativeCase),
-// 		FnInFnTemplateFactsMem:   make(FnInFnTMem),
-// 	}
-
-// 	// 复制定义内存
-// 	for k := range src.AtomObjDefMem {
-// 		dst.AtomObjDefMem[k] = struct{}{}
-// 	}
-// 	for k := range src.PropDefMem {
-// 		dst.PropDefMem[k] = struct{}{}
-// 	}
-// 	for k := range src.FnTemplateDefMem {
-// 		dst.FnTemplateDefMem[k] = struct{}{}
-// 	}
-// 	for k := range src.ExistPropDefMem {
-// 		dst.ExistPropDefMem[k] = struct{}{}
-// 	}
-// 	for k := range src.AlgoDefMem {
-// 		dst.AlgoDefMem[k] = struct{}{}
-// 	}
-// 	for k := range src.DefProveAlgoMem {
-// 		dst.DefProveAlgoMem[k] = struct{}{}
-// 	}
-
-// 	// 复制 EqualMem
-// 	for k, v := range src.EqualMem {
-// 		if v != nil {
-// 			newSlice := make([]ast.Obj, len(*v))
-// 			copy(newSlice, *v)
-// 			dst.EqualMem[k] = &newSlice
-// 		}
-// 	}
-
-// 	// 复制 SymbolSimplifiedValueMem
-// 	for k, v := range src.SymbolSimplifiedValueMem {
-// 		dst.SymbolSimplifiedValueMem[k] = v
-// 	}
-
-// 	// 复制 TransitivePropMem
-// 	for k, v := range src.TransitivePropMem {
-// 		newMap := make(map[string][]ast.Obj)
-// 		for k2, v2 := range v {
-// 			newSlice := make([]ast.Obj, len(v2))
-// 			copy(newSlice, v2)
-// 			newMap[k2] = newSlice
-// 		}
-// 		dst.TransitivePropMem[k] = newMap
-// 	}
-
-// 	// 复制 CommutativePropMem
-// 	for k, v := range src.CommutativePropMem {
-// 		if v != nil {
-// 			dst.CommutativePropMem[k] = &PropCommutativeCase{
-// 				TruePureIsCommutative:  v.TruePureIsCommutative,
-// 				FalsePureIsCommutative: v.FalsePureIsCommutative,
-// 			}
-// 		}
-// 	}
-
-// 	// 复制 FnInFnTemplateFactsMem
-// 	for k, v := range src.FnInFnTemplateFactsMem {
-// 		newSlice := make([]FnInFnTMemItem, len(v))
-// 		copy(newSlice, v)
-// 		dst.FnInFnTemplateFactsMem[k] = newSlice
-// 	}
-
-// 	// 复制 KnownFactsStruct
-// 	dst.KnownFactsStruct = copyKnownFactsStruct(src.KnownFactsStruct)
-
-// 	return dst
-// }
-
-// copyKnownFactsStruct 深拷贝 KnownFactsStruct
-// func copyKnownFactsStruct(src KnownFactsStruct) KnownFactsStruct {
-// 	return KnownFactsStruct{
-// 		SpecFactMem:                       copySpecFactMem(src.SpecFactMem),
-// 		SpecFactInLogicExprMem:            copySpecFactInLogicExprMem(src.SpecFactInLogicExprMem),
-// 		SpecFactInUniFactMem:              copySpecFactInUniFactMem(src.SpecFactInUniFactMem),
-// 		SpecFact_InLogicExpr_InUniFactMem: copySpecFact_InLogicExpr_InUniFactMem(src.SpecFact_InLogicExpr_InUniFactMem),
-// 	}
-// }
-
-// copySpecFactMem 深拷贝 SpecFactMem
-// func copySpecFactMem(src SpecFactMem) SpecFactMem {
-// 	dst := SpecFactMem{
-// 		PureFacts:         make(map[string][]ast.SpecFactStmt),
-// 		NotPureFacts:      make(map[string][]ast.SpecFactStmt),
-// 		Exist_St_Facts:    make(map[string][]ast.SpecFactStmt),
-// 		NotExist_St_Facts: make(map[string][]ast.SpecFactStmt),
-// 	}
-// 	for k, v := range src.PureFacts {
-// 		dst.PureFacts[k] = append([]ast.SpecFactStmt{}, v...)
-// 	}
-// 	for k, v := range src.NotPureFacts {
-// 		dst.NotPureFacts[k] = append([]ast.SpecFactStmt{}, v...)
-// 	}
-// 	for k, v := range src.Exist_St_Facts {
-// 		dst.Exist_St_Facts[k] = append([]ast.SpecFactStmt{}, v...)
-// 	}
-// 	for k, v := range src.NotExist_St_Facts {
-// 		dst.NotExist_St_Facts[k] = append([]ast.SpecFactStmt{}, v...)
-// 	}
-// 	return dst
-// }
-
-// // copySpecFactInLogicExprMem 深拷贝 SpecFactInLogicExprMem
-// func copySpecFactInLogicExprMem(src SpecFactInLogicExprMem) SpecFactInLogicExprMem {
-// 	dst := SpecFactInLogicExprMem{
-// 		PureFacts:         make(map[string][]KnownSpecFact_InLogicExpr),
-// 		NotPureFacts:      make(map[string][]KnownSpecFact_InLogicExpr),
-// 		Exist_St_Facts:    make(map[string][]KnownSpecFact_InLogicExpr),
-// 		NotExist_St_Facts: make(map[string][]KnownSpecFact_InLogicExpr),
-// 	}
-// 	for k, v := range src.PureFacts {
-// 		dst.PureFacts[k] = append([]KnownSpecFact_InLogicExpr{}, v...)
-// 	}
-// 	for k, v := range src.NotPureFacts {
-// 		dst.NotPureFacts[k] = append([]KnownSpecFact_InLogicExpr{}, v...)
-// 	}
-// 	for k, v := range src.Exist_St_Facts {
-// 		dst.Exist_St_Facts[k] = append([]KnownSpecFact_InLogicExpr{}, v...)
-// 	}
-// 	for k, v := range src.NotExist_St_Facts {
-// 		dst.NotExist_St_Facts[k] = append([]KnownSpecFact_InLogicExpr{}, v...)
-// 	}
-// 	return dst
-// }
-
-// // copySpecFactInUniFactMem 深拷贝 SpecFactInUniFactMem
-// func copySpecFactInUniFactMem(src SpecFactInUniFactMem) SpecFactInUniFactMem {
-// 	dst := SpecFactInUniFactMem{
-// 		PureFacts:         make(map[string][]KnownSpecFact_InUniFact),
-// 		NotPureFacts:      make(map[string][]KnownSpecFact_InUniFact),
-// 		Exist_St_Facts:    make(map[string][]KnownSpecFact_InUniFact),
-// 		NotExist_St_Facts: make(map[string][]KnownSpecFact_InUniFact),
-// 	}
-// 	for k, v := range src.PureFacts {
-// 		dst.PureFacts[k] = append([]KnownSpecFact_InUniFact{}, v...)
-// 	}
-// 	for k, v := range src.NotPureFacts {
-// 		dst.NotPureFacts[k] = append([]KnownSpecFact_InUniFact{}, v...)
-// 	}
-// 	for k, v := range src.Exist_St_Facts {
-// 		dst.Exist_St_Facts[k] = append([]KnownSpecFact_InUniFact{}, v...)
-// 	}
-// 	for k, v := range src.NotExist_St_Facts {
-// 		dst.NotExist_St_Facts[k] = append([]KnownSpecFact_InUniFact{}, v...)
-// 	}
-// 	return dst
-// }
-
-// // copySpecFact_InLogicExpr_InUniFactMem 深拷贝 SpecFact_InLogicExpr_InUniFactMem
-// func copySpecFact_InLogicExpr_InUniFactMem(src SpecFact_InLogicExpr_InUniFactMem) SpecFact_InLogicExpr_InUniFactMem {
-// 	dst := SpecFact_InLogicExpr_InUniFactMem{
-// 		PureFacts:         make(map[string][]SpecFact_InLogicExpr_InUniFact),
-// 		NotPureFacts:      make(map[string][]SpecFact_InLogicExpr_InUniFact),
-// 		Exist_St_Facts:    make(map[string][]SpecFact_InLogicExpr_InUniFact),
-// 		NotExist_St_Facts: make(map[string][]SpecFact_InLogicExpr_InUniFact),
-// 	}
-// 	for k, v := range src.PureFacts {
-// 		dst.PureFacts[k] = append([]SpecFact_InLogicExpr_InUniFact{}, v...)
-// 	}
-// 	for k, v := range src.NotPureFacts {
-// 		dst.NotPureFacts[k] = append([]SpecFact_InLogicExpr_InUniFact{}, v...)
-// 	}
-// 	for k, v := range src.Exist_St_Facts {
-// 		dst.Exist_St_Facts[k] = append([]SpecFact_InLogicExpr_InUniFact{}, v...)
-// 	}
-// 	for k, v := range src.NotExist_St_Facts {
-// 		dst.NotExist_St_Facts[k] = append([]SpecFact_InLogicExpr_InUniFact{}, v...)
-// 	}
-// 	return dst
-// }
 
 func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFactStruct *ast.ExistSpecificFactStmt, definedParams []string) (*ast.ExistSpecificFactStmt, error) {
 	uniMap := map[string]struct{}{}
@@ -578,41 +285,45 @@ func (envMgr *EnvMgr) MakeExistFactStructDoesNotConflictWithDefinedNames(existFa
 		uniMap2[existFactStruct.ExistFreeParams[i]] = ast.Atom(newExistParams[i])
 	}
 
-	newParams := make([]ast.Obj, len(existFactStruct.PureFact.Params))
-	for i, param := range existFactStruct.PureFact.Params {
-		newParam, err := param.Instantiate(uniMap2)
-		if err != nil {
-			return nil, err
+	newFacts := make([]*ast.PureSpecificFactStmt, len(existFactStruct.PureFacts))
+	for i, fact := range existFactStruct.PureFacts {
+		newParams := make([]ast.Obj, len(fact.Params))
+		for i, param := range fact.Params {
+			newParam, err := param.Instantiate(uniMap2)
+			if err != nil {
+				return nil, err
+			}
+			newParams[i] = newParam
 		}
-		newParams[i] = newParam
+		newFacts[i] = ast.NewPureSpecificFactStmt(fact.IsTrue, fact.PropName, newParams, existFactStruct.Line)
 	}
 
-	return ast.NewExistSpecificFactStmt(existFactStruct.IsTrue, newExistParams, newExistParamSets, ast.NewPureSpecificFactStmt(existFactStruct.PureFact.IsTrue, existFactStruct.PureFact.PropName, newParams, existFactStruct.Line), existFactStruct.Line), nil
+	return ast.NewExistSpecificFactStmt(existFactStruct.IsTrue, newExistParams, newExistParamSets, newFacts, existFactStruct.Line), nil
 }
 
 // storeSpecFactInMemAndCollect collects the fact string for derived facts tracking
-func (ie *InferEngine) storeSpecFactInMemAndCollect(fact ast.SpecificFactStmt, derivedFacts *[]string) *glob.ShortRet {
+func (ie *InferEngine) storeSpecFactInMemAndCollect(fact ast.SpecificFactStmt, derivedFacts *[]ast.FactStmt) ast.InferRet {
 	ret := ie.EnvMgr.storeSpecFactInMem(fact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ret
 	}
-	*derivedFacts = append(*derivedFacts, fact.String())
-	return glob.NewEmptyShortTrueRet()
+	*derivedFacts = append(*derivedFacts, fact)
+	return ast.NewTrueInferRet(fact)
 }
 
-func (envMgr *EnvMgr) AnonymousFnToInstFnTemplate(objFnTypeT *ast.FnObj) (*ast.AnonymousFn, bool) {
-	ok, paramSets, retSet := objFnTypeT.GetParamSetsAndRetSetOfAnonymousFn(objFnTypeT)
-	if !ok {
-		return nil, false
-	}
+// func (envMgr *EnvMgr) AnonymousFnToInstFnTemplate(objFnTypeT *ast.FnObj) (*ast.AnonymousFn, bool) {
+// 	ok, paramSets, retSet := objFnTypeT.GetParamSetsAndRetSetOfAnonymousFn(objFnTypeT)
+// 	if !ok {
+// 		return nil, false
+// 	}
 
-	randomParams := []string{}
-	for range len(paramSets) {
-		randomParams = append(randomParams, envMgr.GenerateUnusedRandomName())
-	}
+// 	randomParams := []string{}
+// 	for range len(paramSets) {
+// 		randomParams = append(randomParams, envMgr.GenerateUnusedRandomName())
+// 	}
 
-	return ast.NewFnTStruct(randomParams, paramSets, retSet, []ast.FactStmt{}, []ast.FactStmt{}, glob.BuiltinLine0), true
-}
+// 	return ast.NewFnTStruct(randomParams, paramSets, retSet, []ast.Spec_OrFact{}, []ast.Spec_OrFact{}, glob.BuiltinLine0), true
+// }
 
 func (envMgr *EnvMgr) GetUniFactFactFreeParamsNotConflictWithDefinedParams(fact *ast.UniFactStmt, extraNamesThatCanNotBeUsed map[string]struct{}) *ast.UniFactStmt {
 	uniMap := map[string]ast.Obj{}
@@ -622,7 +333,7 @@ func (envMgr *EnvMgr) GetUniFactFactFreeParamsNotConflictWithDefinedParams(fact 
 	updated := false
 
 	for _, freeParam := range fact.Params {
-		if envMgr.IsNameUnavailable(freeParam, moreUnAvailableParams).IsNotTrue() {
+		if envMgr.IsNameUnavailable(freeParam, moreUnAvailableParams) {
 			noConflictedParam := envMgr.GenerateUnusedRandomNameWhichIsAlsoNotInGivenMap(extraNamesThatCanNotBeUsed)
 			newFreeParams = append(newFreeParams, noConflictedParam)
 			moreUnAvailableParams[noConflictedParam] = struct{}{}
@@ -650,4 +361,37 @@ func (envMgr *EnvMgr) GetUniFactFactFreeParamsNotConflictWithDefinedParams(fact 
 
 		return ast.NewUniFact(newFreeParams, newParamSets, newDomFacts, newThenFacts, glob.BuiltinLine0)
 	}
+}
+
+func (envMgr *EnvMgr) ReplaceFnNameAndParamsWithNoDuplicateNames(fnSetObj *ast.FnSetObjWithName) (*ast.FnSetObjWithName, error) {
+	fnName := envMgr.GenerateUnusedRandomName()
+
+	newParams := envMgr.GenerateNoDuplicateNames(len(fnSetObj.Params), map[string]struct{}{fnName: struct{}{}})
+
+	uniMap := make(map[string]ast.Obj)
+	for i, param := range newParams {
+		uniMap[fnSetObj.Params[i]] = ast.Atom(param)
+	}
+
+	newDom := ast.ReversibleFacts{}
+	for _, dom := range fnSetObj.DomFacts {
+		newDomFact, err := dom.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newDom = append(newDom, newDomFact.(ast.Spec_OrFact))
+	}
+
+	uniMap[fnSetObj.FnName] = ast.Atom(fnName)
+
+	newThen := ast.ReversibleFacts{}
+	for _, then := range fnSetObj.ThenFacts {
+		newThenFact, err := then.Instantiate(uniMap)
+		if err != nil {
+			return nil, err
+		}
+		newThen = append(newThen, newThenFact.(ast.Spec_OrFact))
+	}
+
+	return ast.NewFnSetObjWithName(fnName, newParams, fnSetObj.ParamSets, newDom, fnSetObj.RetSet, newThen), nil
 }

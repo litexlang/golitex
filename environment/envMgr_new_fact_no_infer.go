@@ -17,32 +17,30 @@ package litex_env
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
 // newFactNoInfer stores facts without performing any inference.
 // This is used to prevent circular definitions (e.g., p => q, q => p).
-func (envMgr *EnvMgr) newFactNoInfer(stmt ast.FactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newFactNoInfer(stmt ast.FactStmt) ast.InferRet {
 	switch f := stmt.(type) {
 	case ast.SpecificFactStmt:
 		return envMgr.newSpecFactNoInfer(f)
 	case *ast.OrStmt:
-		return glob.NewEmptyStmtTrue()
-		// return envMgr.newOrFactNoInfer(f)
+		return envMgr.newOrFactNoInfer(f)
 	case *ast.UniFactStmt:
 		return envMgr.newUniFactNoInfer(f)
 	case *ast.UniFactWithIffStmt:
 		return envMgr.newUniFactWithIffNoInfer(f)
-	case *ast.EqualsFactStmt:
-		return envMgr.newEqualsFactNoInfer(f)
+	case *ast.ChainPureFact:
+		return envMgr.newChainFactNoInfer(f)
 	default:
-		return glob.ErrRet(fmt.Sprintf("unknown fact type: %T", stmt))
+		return ast.NewErrInferRet(stmt).AddExtraInfo(fmt.Sprintf("unknown fact type: %T", stmt))
 	}
 }
 
 // newSpecFactNoInfer stores a SpecFact without performing any inference.
 // It only stores the fact in memory, without triggering post-processing.
-func (envMgr *EnvMgr) newSpecFactNoInfer(fact ast.SpecificFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newSpecFactNoInfer(fact ast.SpecificFactStmt) ast.InferRet {
 	if isEqualFact := ast.IsTrueEqualFact(fact); isEqualFact {
 		return envMgr.newTrueEqualNoInfer(fact.(*ast.PureSpecificFactStmt))
 	}
@@ -52,15 +50,15 @@ func (envMgr *EnvMgr) newSpecFactNoInfer(fact ast.SpecificFactStmt) *glob.StmtRe
 		return ret
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueInferRet(fact)
 }
 
 // newTrueEqualNoInfer stores an equality fact without performing any inference.
 // It stores the equality in the equal memory and simplifies symbol values,
 // but does not trigger equality-related inferences (e.g., cart, tuple, listSet).
-func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.PureSpecificFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.PureSpecificFactStmt) ast.InferRet {
 	if len(fact.Params) != 2 {
-		return glob.ErrRet(fmt.Sprintf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
+		return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("'=' fact expect 2 parameters, get %d in %s", len(fact.Params), fact))
 	}
 
 	ret := envMgr.storeTrueEqualInEqualMemNoInfer(fact)
@@ -74,48 +72,48 @@ func (envMgr *EnvMgr) newTrueEqualNoInfer(fact *ast.PureSpecificFactStmt) *glob.
 		return ret
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueInferRet(fact)
 }
 
-// newEqualsFactNoInfer stores an EqualsFact without performing any inference.
-// It converts the EqualsFact to individual equality facts and stores them without inference.
-func (envMgr *EnvMgr) newEqualsFactNoInfer(stmt *ast.EqualsFactStmt) *glob.StmtRet {
-	equalFacts := stmt.ToEqualFacts()
-	for _, equalFact := range equalFacts {
-		ret := envMgr.newSpecFactNoInfer(equalFact)
+// newChainFactNoInfer stores a ChainFact without performing any inference.
+// It converts the ChainFact to individual equality facts and stores them without inference.
+func (envMgr *EnvMgr) newChainFactNoInfer(stmt *ast.ChainPureFact) ast.InferRet {
+	chainFacts := stmt.ToFacts()
+	for _, chainFact := range chainFacts {
+		ret := envMgr.newSpecFactNoInfer(chainFact)
 		if ret.IsErr() {
 			return ret
 		}
 	}
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueInferRet(stmt)
 }
 
-// func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) *glob.StmtRet {
+// func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) ast.InferRet{
 // 	ret := envMgr.CurEnv().KnownFactsStruct.SpecFactInLogicExprMem.newFact(fact)
 // 	return ret
 // }
 
-func (envMgr *EnvMgr) newUniFactNoInfer(stmt *ast.UniFactStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newUniFactNoInfer(stmt *ast.UniFactStmt) ast.InferRet {
 	for index, thenStmt := range stmt.ThenFacts {
-		var ret *glob.StmtRet
+		var ret ast.InferRet
 		switch thenStmt.(type) {
 		case ast.SpecificFactStmt:
 			ret = envMgr.newUniFact_ThenFactIsSpecFact(stmt, index)
 		case *ast.OrStmt:
 			// ret = envMgr.newUniFact_ThenFactIsOrStmt(stmt, asFact)
-			ret = glob.NewEmptyStmtTrue()
+			ret = ast.NewTrueInferRet(stmt)
 		default:
-			return glob.ErrRet(fmt.Sprintf("invalid then fact type: %s", thenStmt))
+			return ast.NewErrInferRet(stmt).AddExtraInfo(fmt.Sprintf("invalid then fact type: %s", thenStmt))
 		}
 
 		if ret.IsErr() {
 			return ret
 		}
 	}
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueInferRet(stmt)
 }
 
-func (envMgr *EnvMgr) newUniFactWithIffNoInfer(stmt *ast.UniFactWithIffStmt) *glob.StmtRet {
+func (envMgr *EnvMgr) newUniFactWithIffNoInfer(stmt *ast.UniFactWithIffStmt) ast.InferRet {
 	thenToIff := stmt.NewUniFactWithThenToIff()
 	ret := envMgr.newUniFactNoInfer(thenToIff)
 	if ret.IsErr() {
@@ -128,12 +126,12 @@ func (envMgr *EnvMgr) newUniFactWithIffNoInfer(stmt *ast.UniFactWithIffStmt) *gl
 		return ret
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueInferRet(stmt)
 }
 
-func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) *glob.ShortRet {
+func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) ast.InferRet {
 	for _, specFact := range fact.Facts {
-		propName := specFact.GetPropName()
+		propName := specFact.Key()
 		knowns, ok := envMgr.CurEnv().OrFactsMem[propName.String()]
 		if ok {
 			envMgr.CurEnv().OrFactsMem[propName.String()] = append(knowns, fact)
@@ -141,16 +139,16 @@ func (envMgr *EnvMgr) newOrFactNoInfer(fact *ast.OrStmt) *glob.ShortRet {
 			envMgr.CurEnv().OrFactsMem[propName.String()] = []*ast.OrStmt{fact}
 		}
 	}
-	return glob.NewEmptyShortTrueRet()
+	return ast.NewTrueInferRet(fact)
 }
 
-func (envMgr *EnvMgr) storeOrFactInUniFactMem(orFact *ast.OrStmt, uniFact *ast.UniFactStmt) *glob.StmtRet {
-	propName := orFact.Facts[0].GetPropName()
+func (envMgr *EnvMgr) storeOrFactInUniFactMem(orFact *ast.OrStmt, uniFact *ast.UniFactStmt) ast.InferRet {
+	propName := orFact.Facts[0].Key()
 	knowns, ok := envMgr.CurEnv().OrFactInUniFactMem[propName.String()]
 	if ok {
 		envMgr.CurEnv().OrFactInUniFactMem[propName.String()] = append(knowns, NewOrFactInUniFactMem(orFact, uniFact))
 	} else {
 		envMgr.CurEnv().OrFactInUniFactMem[propName.String()] = []*OrFactInUniFact{NewOrFactInUniFactMem(orFact, uniFact)}
 	}
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueInferRet(orFact)
 }

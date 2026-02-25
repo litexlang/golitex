@@ -22,35 +22,41 @@ import (
 func NoSelfReferenceInPropDef(propName string, facts []FactStmt) error {
 	for _, fact := range facts {
 		switch asFactStmt := fact.(type) {
-		case SpecificFactStmt:
-			if asFactStmt.GetPropName().String() == propName {
+		case *PureSpecificFactStmt:
+			if asFactStmt.Key().String() == propName {
 				return fmt.Errorf("self reference in prop definition: %s", propName)
+			}
+		case *ExistSpecificFactStmt:
+			for _, pureFact := range asFactStmt.PureFacts {
+				if pureFact.Key().String() == propName {
+					return fmt.Errorf("self reference in prop definition: %s", propName)
+				}
 			}
 		case *OrStmt:
 			for _, fact := range asFactStmt.Facts {
-				if fact.GetPropName().String() == propName {
+				if fact.Key().String() == propName {
 					return fmt.Errorf("self reference in prop definition: %s", propName)
 				}
 			}
 		case *UniFactStmt:
-			err := NoSelfReferenceInPropDef(propName, asFactStmt.DomFacts)
+			err := NoSelfReferenceInPropDef(propName, asFactStmt.DomFacts.ToFactStmtSlice())
 			if err != nil {
 				return err
 			}
-			err = NoSelfReferenceInPropDef(propName, asFactStmt.ThenFacts)
+			err = NoSelfReferenceInPropDef(propName, asFactStmt.ThenFacts.ToFactStmtSlice())
 			if err != nil {
 				return err
 			}
 		case *UniFactWithIffStmt:
-			err := NoSelfReferenceInPropDef(propName, asFactStmt.UniFact.DomFacts)
+			err := NoSelfReferenceInPropDef(propName, asFactStmt.UniFact.DomFacts.ToFactStmtSlice())
 			if err != nil {
 				return err
 			}
-			err = NoSelfReferenceInPropDef(propName, asFactStmt.UniFact.ThenFacts)
+			err = NoSelfReferenceInPropDef(propName, asFactStmt.UniFact.ThenFacts.ToFactStmtSlice())
 			if err != nil {
 				return err
 			}
-			err = NoSelfReferenceInPropDef(propName, asFactStmt.IffFacts)
+			err = NoSelfReferenceInPropDef(propName, asFactStmt.IffFacts.ToFactStmtSlice())
 			if err != nil {
 				return err
 			}
@@ -90,7 +96,7 @@ func ParseSourceCodeGetFact(sourceCode string) (FactStmt, error) {
 	pkgPathNameMgr := pkgMgr.NewEmptyPkgMgr("")
 	p := NewTbParser(pkgPathNameMgr)
 
-	return p.factStmt(&blocks[0], UniFactDepth0)
+	return p.factStmt(&blocks[0])
 }
 
 // ParseSingleLineFact parses a single line fact statement from a string

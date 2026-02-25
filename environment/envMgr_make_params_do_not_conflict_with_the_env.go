@@ -18,24 +18,19 @@ import (
 	ast "golitex/ast"
 )
 
-func (envMgr *EnvMgr) MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(defPropStmt *ast.DefPropStmt) *ast.DefPropStmt {
-	newDomFacts := []ast.FactStmt{}
-	for _, domFact := range defPropStmt.DomFactsOrNil {
-		newDomFacts = append(newDomFacts, envMgr.makeUniFactParamsInThisFactDoNotConflictWithEnv(domFact))
-	}
+// func (envMgr *EnvMgr) MakeUniFactParamsInThisDefPropDoNotConflictWithEnv(defPropStmt *ast.DefPropStmt) *ast.DefPropStmt {
+// 	newIffFacts := []ast.FactStmt{}
+// 	for _, iffFact := range defPropStmt.IffFactsOrNil {
+// 		newIffFacts = append(newIffFacts, envMgr.makeUniFactParamsInThisFactDoNotConflictWithEnv(iffFact))
+// 	}
 
-	newIffFacts := []ast.FactStmt{}
-	for _, iffFact := range defPropStmt.IffFactsOrNil {
-		newIffFacts = append(newIffFacts, envMgr.makeUniFactParamsInThisFactDoNotConflictWithEnv(iffFact))
-	}
+// 	newThenFacts := []ast.FactStmt{}
+// 	for _, thenFact := range defPropStmt.ImplicationFactsOrNil {
+// 		newThenFacts = append(newThenFacts, envMgr.makeUniFactParamsInThisFactDoNotConflictWithEnv(thenFact))
+// 	}
 
-	newThenFacts := []ast.FactStmt{}
-	for _, thenFact := range defPropStmt.ImplicationFactsOrNil {
-		newThenFacts = append(newThenFacts, envMgr.makeUniFactParamsInThisFactDoNotConflictWithEnv(thenFact))
-	}
-
-	return ast.NewDefPropStmt(defPropStmt.DefHeader, newDomFacts, newIffFacts, newThenFacts, defPropStmt.Line)
-}
+// 	return ast.NewDefPropStmt(defPropStmt.DefHeader, newIffFacts, newThenFacts, defPropStmt.Line)
+// }
 
 func (envMgr *EnvMgr) makeUniFactParamsInThisFactDoNotConflictWithEnv(fact ast.FactStmt) ast.FactStmt {
 	switch asFact := fact.(type) {
@@ -52,7 +47,7 @@ func (envMgr *EnvMgr) makeUniFactParamsInThisUniFactDoNotConflictWithEnv_getNewP
 	conflictingParams := map[string]struct{}{}
 	for _, param := range params {
 		ret := envMgr.IsNameUnavailable(param, map[string]struct{}{})
-		if ret.IsTrue() {
+		if ret {
 			conflictingParams[param] = struct{}{}
 		}
 	}

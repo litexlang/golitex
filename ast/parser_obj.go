@@ -40,6 +40,8 @@ func (p *TbParser) Obj(tb *tokenBlock) (Obj, error) {
 		return p.ListSetObjOrSetBuilderObjWrittenInCurly(tb)
 	} else if tb.header.is(glob.KeywordSetBuilder) {
 		return p.SetBuilderObjBeginWithKeywordSetBuilder(tb)
+	} else if tb.header.is(glob.KeySymbolAt) {
+		return p.InstSetTemplateObj(tb)
 	}
 
 	return p.objInfixExpr(tb, glob.PrecLowest)
@@ -138,7 +140,8 @@ func (p *TbParser) unaryOptObj(tb *tokenBlock) (Obj, error) {
 // Higher precedence means more "primitive" - parentheses and atoms are at the bottom of the precedence hierarchy.
 func (p *TbParser) fnSetObjAndBracedExprAndAtomObjAndFnObj(tb *tokenBlock) (Obj, error) {
 	if tb.header.is(glob.KeywordFn) {
-		return p.fnSet(tb)
+		// return p.fnSet(tb)
+		return p.fnSetObj(tb)
 	}
 
 	if tb.header.is(glob.KeySymbolLeftBrace) {
@@ -428,42 +431,46 @@ func (p *TbParser) fnObjWithRepeatedBraceAndBracket(tb *tokenBlock, head Obj) (O
 	return head, nil
 }
 
-func (p *TbParser) fnSet(tb *tokenBlock) (Obj, error) {
-	tb.header.skip(glob.KeywordFn)
-	tb.header.skip(glob.KeySymbolLeftBrace)
+// func (p *TbParser) fnSet(tb *tokenBlock) (Obj, error) {
+// 	tb.header.skip(glob.KeywordFn)
+// 	tb.header.skip(glob.KeySymbolLeftBrace)
 
-	fnSets := []Obj{}
-	var retSet Obj
-	for !(tb.header.is(glob.KeySymbolRightBrace)) {
-		fnSet, err := p.Obj(tb)
-		if err != nil {
-			return nil, ErrInLine(err, tb)
-		}
-		fnSets = append(fnSets, fnSet)
+// 	fnSets := []Obj{}
+// 	var retSet Obj
+// 	for !(tb.header.is(glob.KeySymbolRightBrace)) {
+// 		fnSet, err := p.Obj(tb)
+// 		if err != nil {
+// 			return nil, ErrInLine(err, tb)
+// 		}
+// 		fnSets = append(fnSets, fnSet)
 
-		done, err := tb.expectAndSkipCommaOr(glob.KeySymbolRightBrace)
-		if err != nil {
-			return nil, err
-		}
-		if done {
-			break
-		}
-	}
+// 		done, err := tb.expectAndSkipCommaOr(glob.KeySymbolRightBrace)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		if done {
+// 			break
+// 		}
+// 	}
 
-	err := tb.header.skip(glob.KeySymbolRightBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	err := tb.header.skip(glob.KeySymbolRightBrace)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	retSet, err = p.Obj(tb)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
+// 	retSet, err = p.Obj(tb)
+// 	if err != nil {
+// 		return nil, ErrInLine(err, tb)
+// 	}
 
-	ret := NewFnObj(NewFnObj(Atom(glob.KeywordFn), fnSets), []Obj{retSet})
+// 	ret := NewAnonymousFnSetObj(fnSets, retSet)
 
-	return ret, nil
-}
+// 	return ret, nil
+// }
+
+// func NewAnonymousFnSetObj(fnSets []Obj, retSet Obj) Obj {
+// 	return NewFnObj(NewFnObj(Atom(glob.KeywordFn), fnSets), []Obj{retSet})
+// }
 
 func (p *TbParser) backSlashExpr(tb *tokenBlock) (Obj, error) {
 	err := tb.header.skip(glob.KeySymbolBackSlash)
@@ -670,4 +677,143 @@ func (p *TbParser) SetBuilderObjBeginWithKeywordSetBuilder(tb *tokenBlock) (Obj,
 	}
 
 	return MakeSetBuilderObj(paramStr, parentSet, facts)
+}
+
+func (p *TbParser) fnSetObj(tb *tokenBlock) (Obj, error) {
+	tb.header.skip(glob.KeywordFn)
+
+	if !tb.header.is(glob.KeySymbolLeftBrace) {
+		// 形如 fn f(x, y R: ... ) ret {...} 即dom或者then存在的情况
+
+		fnName, err := tb.header.next()
+		if err != nil {
+			return nil, err
+		}
+
+		params, paramSets, doms, err := p.leftBraceParamsAndParamSetsAndDomsAndRightBrace(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		retSet, err := p.Obj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		var thens ReversibleFacts = []Spec_OrFact{}
+
+		if tb.header.is(glob.KeySymbolLeftCurly) {
+			err = tb.header.skip(glob.KeySymbolLeftCurly)
+			if err != nil {
+				return nil, err
+			}
+
+			thens, err = p.inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb, []string{glob.KeySymbolRightBrace})
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+
+			skipErr := tb.header.skip(glob.KeySymbolRightCurly)
+			if skipErr != nil {
+				return nil, skipErr
+			}
+		}
+
+		return NewFnSetObjWithName(fnName, params, paramSets, doms, retSet, thens), nil
+	} else {
+		// 形如 fn (R, R) ret 即dom和then都不存在的情况
+		skipErr := tb.header.skip(glob.KeySymbolLeftBrace)
+		if skipErr != nil {
+			return nil, skipErr
+		}
+
+		paramSets := []Obj{}
+		for !tb.header.is(glob.KeySymbolRightBrace) {
+			paramSet, err := p.Obj(tb)
+			if err != nil {
+				return nil, err
+			}
+			paramSets = append(paramSets, paramSet)
+
+			if tb.header.is(glob.KeySymbolComma) {
+				skipErr := tb.header.skip(glob.KeySymbolComma)
+				if skipErr != nil {
+					return nil, skipErr
+				}
+				continue
+			}
+		}
+
+		skipErr = tb.header.skip(glob.KeySymbolRightBrace)
+		if skipErr != nil {
+			return nil, skipErr
+		}
+
+		retSet, err := p.Obj(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+
+		return NewFnSetObjWithoutName(paramSets, retSet), nil
+	}
+}
+
+func (p *TbParser) leftBraceParamsAndParamSetsAndDomsAndRightBrace(tb *tokenBlock) ([]string, []Obj, ReversibleFacts, error) {
+	err := tb.header.skip(glob.KeySymbolLeftBrace)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	params := []string{}
+	paramSets := []Obj{}
+	doms := ReversibleFacts{}
+
+	// 获得 param paramset pair
+	params, paramSets, err = p.param_paramSet_paramInSetFacts(tb, []string{glob.KeySymbolRightBrace, glob.KeySymbolColon}, false, false)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	if tb.header.is(glob.KeySymbolColon) {
+		skipErr := tb.header.skip(glob.KeySymbolColon)
+		if skipErr != nil {
+			return nil, nil, nil, skipErr
+		}
+		doms, err = p.inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb, []string{glob.KeySymbolRightBrace})
+		if err != nil {
+			return nil, nil, nil, ErrInLine(err, tb)
+		}
+
+		skipErr = tb.header.skip(glob.KeySymbolRightBrace)
+		if skipErr != nil {
+			return nil, nil, nil, skipErr
+		}
+
+	} else {
+		skipErr := tb.header.skip(glob.KeySymbolRightBrace)
+		if skipErr != nil {
+			return nil, nil, nil, skipErr
+		}
+	}
+
+	return params, paramSets, doms, nil
+}
+
+func (p *TbParser) InstSetTemplateObj(tb *tokenBlock) (Obj, error) {
+	err := tb.header.skip(glob.KeySymbolAt)
+	if err != nil {
+		return nil, err
+	}
+
+	name, err := p.notNumberAtom(tb)
+	if err != nil {
+		return nil, err
+	}
+
+	params, err := p.bracedObjSlice(tb)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewInstSetTemplateObj(name, params), nil
 }

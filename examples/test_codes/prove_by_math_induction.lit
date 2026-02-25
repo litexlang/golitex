@@ -1,22 +1,27 @@
 prop p(n N_pos)
 
-know:
-    $p(1)
-    forall n N_pos: $p(n) => $p(n+1)
+prove:
+    know:
+        $p(1)
+        forall n N_pos: $p(n) => $p(n+1)
 
-induc n N_pos: $p(n):
-    do_nothing
+    induc n N_pos: $p(n):
+        do_nothing
 
-prop q(x N_pos)
+prove:
+    know:
+        $p(2)
+        forall n N_pos: $p(n) => $p(n+1)
 
-know:
-    forall x N_pos: $q(x, 1)
-    forall d N_pos:
-        forall x N_pos:
-            $q(x, d)
-        =>:
-            forall x N_pos:
-                $q(x, (d + 1))
+    induc n >= 2: $p(n):
+        do_nothing
 
-induc y N_pos: forall x N_pos: $q(x, y):
-    do_nothing
+prove:
+    know:
+        $p(0)
+        forall n N_pos: $p(n) => $p(n+1)
+
+    induc n N: $p(n):
+        do_nothing
+
+ 

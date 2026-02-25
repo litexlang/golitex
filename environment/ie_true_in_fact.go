@@ -21,19 +21,28 @@ import (
 	"strconv"
 )
 
-func (ie *InferEngine) trueInFact(fact ast.SpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFact(fact ast.SpecificFactStmt) ast.InferRet {
 	asFact, ok := fact.(*ast.PureSpecificFactStmt)
 	if !ok || len(asFact.Params) != 2 {
-		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("in fact expect 2 parameters, get %d in %s", len(asFact.Params), fact)})
+		extraInfo := fmt.Sprintf("in fact expect 2 parameters, get %d in %s", len(asFact.Params), fact.String())
+		return ast.NewErrInferRet(fact).AddExtraInfo(extraInfo)
 	}
 
-	if ret := ie.trueInFactByNamedFnSet(asFact); ret.IsTrue() || ret.IsErr() {
+	if ret := ie.trueInFactByFnInFnSet(asFact); ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
 
-	if ret := ie.trueInFactByAnonymousFnSetObj(asFact); ret.IsTrue() || ret.IsErr() {
+	if ret := ie.trueInFactByInstSetTemplateObj(asFact); ret.IsTrue() || ret.IsErr() {
 		return ret
 	}
+
+	// if ret := ie.trueInFactByNamedFnSet(asFact); ret.IsTrue() || ret.IsErr() {
+	// 	return ret
+	// }
+
+	// if ret := ie.trueInFactByAnonymousFnSetObj(asFact); ret.IsTrue() || ret.IsErr() {
+	// 	return ret
+	// }
 
 	if ret := ie.trueInFactByCart(asFact); ret.IsTrue() || ret.IsErr() {
 		return ret
@@ -95,67 +104,67 @@ func (ie *InferEngine) trueInFact(fact ast.SpecificFactStmt) *glob.ShortRet {
 		return ie.trueInFactByQNot0(asFact)
 	}
 
-	return glob.NewEmptyShortTrueRet()
+	return ast.NewTrueInferRet(asFact)
 }
 
 // trueInFactByNamedFnSet handles inference for x $in fnTemplate(...)
 // Inference: Derives a universal fact from the function template definition
 // and stores the function-template satisfaction relationship
-func (ie *InferEngine) trueInFactByNamedFnSet(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
-	isTemplate, ret := ie.trueInFactInFnSet(fact)
-	if ret.IsErr() {
-		return ret
-	}
-	if isTemplate {
-		return ret
-	}
-	return glob.NewEmptyShortUnknownRet()
-}
+// func (ie *InferEngine) trueInFactByNamedFnSet(fact *ast.PureSpecificFactStmt) ast.InferRet {
+// 	isTemplate, ret := ie.trueInFactInFnSet(fact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
+// 	if isTemplate {
+// 		return ret
+// 	}
+// 	return ast.NewUnknownInferRet(fact)
+// }
 
 // trueInFactByAnonymousFnSetObj handles inference for x $in fnTemplateFnObj
 // Inference: Inserts the function x into the function template table
-func (ie *InferEngine) trueInFactByAnonymousFnSetObj(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
-	fnFn, ok := fact.Params[1].(*ast.FnObj)
-	if !ok || !ast.IsFnTemplate_ObjFn(fnFn) {
-		return glob.NewEmptyShortUnknownRet()
-	}
+// func (ie *InferEngine) trueInFactByAnonymousFnSetObj(fact *ast.PureSpecificFactStmt) ast.InferRet {
+// 	fnFn, ok := fact.Params[1].(*ast.FnObj)
+// 	if !ok || !ast.IsAnonymousFnSet(fnFn) {
+// 		return ast.NewUnknownInferRet(fact)
+// 	}
 
-	fnTStruct, ok := ie.EnvMgr.AnonymousFnToInstFnTemplate(fnFn)
-	if !ok {
-		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("%s is not obj type fn template", fnFn.String())})
-	}
+// fnTStruct, ok := ie.EnvMgr.AnonymousFnToInstFnTemplate(fnFn)
+// if !ok {
+// 	return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("%s is not obj type fn template", fnFn.String()))
+// }
 
-	ret := ie.EnvMgr.InsertFnInFnTT(fact.Params[0], fnTStruct)
-	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
-	}
+// ok = ie.EnvMgr.InsertFnInFnTT(fact.Params[0], fnTStruct)
+// if !ok {
+// 	return ast.NewErrInferRet(fact).AddExtraInfo("failed to insert function in function template table")
+// }
 
-	return glob.NewEmptyShortTrueRet()
-}
+// 	return ast.NewTrueInferRet(fact)
+// }
 
 // trueInFactByCart handles inference for x $in cart(S1, S2, ..., Sn)
 // It tries both direct cart and cart from equal facts
 // Inference: If x is in a cartesian product, then each component of x is in the corresponding set
-func (ie *InferEngine) trueInFactByCart(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByCart(fact *ast.PureSpecificFactStmt) ast.InferRet {
 	// Try direct cart first
 	if fnObj, ok := fact.Params[1].(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(fnObj.FnHead, glob.KeywordCart) {
-		return ie.trueInFactInCart(fact.Params[0], fnObj)
+		return ie.trueInFactInCart(fact.Params[0], fnObj, fact)
 	}
 
 	// Try cart from equal facts
 	equalObjs, ok := ie.EnvMgr.GetEqualObjs(fact.Params[1])
 	if !ok || equalObjs == nil {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	// Look for a cart set in the equal facts
 	for _, equalObj := range *equalObjs {
 		if cartAsFn, ok := equalObj.(*ast.FnObj); ok && ast.IsAtomObjAndEqualToStr(cartAsFn.FnHead, glob.KeywordCart) {
-			return ie.trueInFactInCart(fact.Params[0], cartAsFn)
+			return ie.trueInFactInCart(fact.Params[0], cartAsFn, fact)
 		}
 	}
 
-	return glob.NewEmptyShortUnknownRet()
+	return ast.NewUnknownInferRet(fact)
 }
 
 // trueInFactInCart handles inference for obj $in cart(S1, S2, ..., Sn)
@@ -163,8 +172,8 @@ func (ie *InferEngine) trueInFactByCart(fact *ast.PureSpecificFactStmt) *glob.Sh
 //   - a[i] $in Si for each i (each component is in the corresponding set)
 //   - dim(a) = n (dimension equals the number of sets)
 //   - is_tuple(a) (the object is a tuple)
-func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) *glob.ShortRet {
-	derivedFacts := []string{}
+func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj, fact *ast.PureSpecificFactStmt) ast.InferRet {
+	inferMsgs := []ast.FactStmt{}
 
 	// 为每个索引生成 a[i] $in cartSet.Params[i-1] 的事实（索引从1开始）
 	for i := range len(cartSet.Params) {
@@ -176,9 +185,12 @@ func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) *glob.S
 		inFact := ast.NewInFactWithObj(indexedObj, cartSet.Params[i])
 		ret := ie.EnvMgr.NewFactWithCheckingNameDefined(inFact)
 		if ret.IsErr() {
-			return glob.ErrStmtMsgToShortRet(ret)
+			return ast.NewErrInferRet(fact)
 		}
-		derivedFacts = append(derivedFacts, inFact.String())
+		inferMsgs = append(inferMsgs, inFact)
+		if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+			inferMsgs = append(inferMsgs, trueRet.Infer...)
+		}
 	}
 	// 添加 dim(obj) = len(cartSet.Params) 的事实
 	dimFn := ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{obj})
@@ -186,78 +198,84 @@ func (ie *InferEngine) trueInFactInCart(obj ast.Obj, cartSet *ast.FnObj) *glob.S
 	dimEqualFact := ast.NewEqualFact(dimFn, dimValue)
 	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(dimEqualFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, dimEqualFact.String())
+	inferMsgs = append(inferMsgs, dimEqualFact)
+	if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+		inferMsgs = append(inferMsgs, trueRet.Infer...)
+	}
 	// 添加 is_tuple(obj) 的事实
 	isTupleFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIsTuple), []ast.Obj{obj}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.NewFactWithCheckingNameDefined(isTupleFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, isTupleFact.String())
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+	inferMsgs = append(inferMsgs, isTupleFact)
+	if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+		inferMsgs = append(inferMsgs, trueRet.Infer...)
+	}
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 }
 
-func (ie *InferEngine) trueInFactInFnSet(fact *ast.PureSpecificFactStmt) (bool, *glob.ShortRet) {
-	if _, ok := fact.Params[1].(*ast.FnObj); !ok {
-		return false, glob.NewEmptyShortTrueRet()
-	}
+// func (ie *InferEngine) trueInFactInFnSet(fact *ast.PureSpecificFactStmt) (bool, ast.InferRet) {
+// 	if _, ok := fact.Params[1].(*ast.FnObj); !ok {
+// 		return false, ast.NewTrueInferRet(fact)
+// 	}
 
-	head, ok := fact.Params[1].(*ast.FnObj).IsObjFn_HasAtomHead_ReturnHead()
-	if !ok {
-		return false, glob.NewEmptyShortTrueRet()
-	}
+// 	head, ok := fact.Params[1].(*ast.FnObj).IsObjFn_HasAtomHead_ReturnHead()
+// 	if !ok {
+// 		return false, ast.NewTrueInferRet(fact)
+// 	}
 
-	def := ie.EnvMgr.GetFnTemplateDef_KeyIsObjHead(fact.Params[1].(*ast.FnObj))
-	if def == nil {
-		return false, glob.NewEmptyShortTrueRet()
-	}
+// def := ie.EnvMgr.GetFnTemplateDef_KeyIsObjHead(fact.Params[1].(*ast.FnObj))
+// if def == nil {
+// 	return false, ast.NewTrueInferRet(fact)
+// }
 
-	fnTNoName, ok, ret := ie.EnvMgr.getInstantiatedFnTTOfFnObj(fact.Params[1].(*ast.FnObj))
-	if ret.IsErr() {
-		return false, glob.NewShortRet(glob.StmtRetTypeError, ret.Error)
-	}
-	if !ok {
-		return false, glob.NewEmptyShortTrueRet()
-	}
+// fnTNoName, ok, err := ie.EnvMgr.getInstantiatedFnTTOfFnObj(fact.Params[1].(*ast.FnObj))
+// if err != nil {
+// 	return false, ast.NewErrInferRet(fact).AddExtraInfo(err.Error())
+// }
+// if !ok {
+// 	return false, ast.NewTrueInferRet(fact)
+// }
 
-	templateParamUniMap := map[string]ast.Obj{}
-	for i, param := range def.TemplateDefHeader.Params {
-		templateParamUniMap[param] = fact.Params[1].(*ast.FnObj).Params[i]
-	}
+// templateParamUniMap := map[string]ast.Obj{}
+// for i, param := range def.TemplateDefHeader.Params {
+// 	templateParamUniMap[param] = fact.Params[1].(*ast.FnObj).Params[i]
+// }
 
-	derivedFact, err := fnTNoName.DeriveUniFact(string(head), fact.Params[0], templateParamUniMap)
-	if err != nil {
-		return false, glob.NewShortRet(glob.StmtRetTypeError, []string{err.Error()})
-	}
+// derivedFact, err := fnTNoName.DeriveUniFact(string(head), fact.Params[0], templateParamUniMap)
+// if err != nil {
+// 	return false, ast.NewErrInferRet(fact).AddExtraInfo(err.Error())
+// }
 
-	ret = ie.EnvMgr.NewFactWithCheckingNameDefined(derivedFact)
-	if ret.IsErr() {
-		return false, glob.NewShortRet(glob.StmtRetTypeError, ret.Error)
-	}
+// ret := ie.EnvMgr.NewFactWithCheckingNameDefined(derivedFact)
+// if ret.IsErr() {
+// 	return false, ast.NewErrInferRet(fact)
+// }
 
-	ret = ie.EnvMgr.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fact.Params[0], fact.Params[1].(*ast.FnObj), fnTNoName)
-	if ret.IsErr() {
-		return false, glob.NewShortRet(glob.StmtRetTypeError, ret.Error)
-	}
+// ret = ie.EnvMgr.StoreFnSatisfyFnTemplateFact_PassInInstTemplateNoName(fact.Params[0], fact.Params[1].(*ast.FnObj), fnTNoName)
+// if ret.IsErr() {
+// 	return false, ast.NewErrInferRet(fact)
+// }
 
-	return true, glob.NewEmptyShortTrueRet()
-}
+// 	return true, ast.NewTrueInferRet(fact)
+// }
 
 // trueInFactByListSet handles inference for x $in listSet(...)
 // It tries to get the listSet either directly or from equal facts
 // Inference: If x is in a finite list set, then x equals one of the elements
-func (ie *InferEngine) trueInFactByListSet(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByListSet(fact *ast.PureSpecificFactStmt) ast.InferRet {
 	// Try to get listSet, either directly or from equal facts
 	listSetObj := ie.EnvMgr.GetListSetEqualToObj(fact.Params[1])
 	if listSetObj == nil {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	listSetFnObj, ok := listSetObj.(*ast.FnObj)
 	if !ok {
-		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("expected list set to be FnObj, got %T", listSetObj)})
+		return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("expected list set to be FnObj, got %T", listSetObj))
 	}
 
 	orFact := ast.NewOrStmt([]ast.SpecificFactStmt{}, glob.BuiltinLine0)
@@ -266,42 +284,43 @@ func (ie *InferEngine) trueInFactByListSet(fact *ast.PureSpecificFactStmt) *glob
 	}
 	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(orFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, []string{orFact.String()})
+	return ast.NewTrueInferRet(fact).AddInfer(orFact)
 }
 
 // trueInFactBySetBuilder handles inference for x $in {y in T: P(y)}
 // Inference: If x is in a set builder, then x is in the parent set T and satisfies all intentional facts P(x)
-func (ie *InferEngine) trueInFactBySetBuilder(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactBySetBuilder(fact *ast.PureSpecificFactStmt) ast.InferRet {
 	setBuilderObj := ie.EnvMgr.GetSetBuilderEqualToObj(fact.Params[1])
 	if setBuilderObj == nil {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
-	return ie.trueInFactInSetBuilder(fact.Params[0], setBuilderObj)
+	return ie.trueInFactInSetBuilder(fact.Params[0], setBuilderObj, fact)
 }
 
 // trueInFactInSetBuilder handles inference for obj $in {param in parentSet: facts}
 // Inference generates:
 //   - obj $in parentSet (membership in parent set)
 //   - All instantiated intentional facts from the set builder
-func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.FnObj) *glob.ShortRet {
-	derivedFactStrings := []string{}
+func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.FnObj, fact *ast.PureSpecificFactStmt) ast.InferRet {
+	inferMsgs := []ast.FactStmt{}
+
 	setBuilderStruct, err := setBuilderObj.ToSetBuilderStruct()
 	if err != nil {
-		return glob.NewShortRet(glob.StmtRetTypeError, []string{err.Error()})
+		return ast.NewErrInferRet(fact).AddExtraInfo(err.Error())
 	}
 
 	uniMap := map[string]ast.Obj{setBuilderStruct.Param: obj}
 
 	instFacts := []ast.FactStmt{}
 
-	for _, fact := range setBuilderStruct.Facts {
-		instFact, err := fact.InstantiateFact(uniMap)
+	for _, f := range setBuilderStruct.Facts {
+		instFact, err := f.InstantiateFact(uniMap)
 		if err != nil {
-			return glob.NewShortRet(glob.StmtRetTypeError, []string{err.Error()})
+			return ast.NewErrInferRet(fact).AddExtraInfo(err.Error())
 		}
 		instFacts = append(instFacts, instFact)
 	}
@@ -310,20 +329,26 @@ func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.Fn
 	inParentSetFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{obj, setBuilderStruct.ParentSet}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(inParentSetFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFactStrings = append(derivedFactStrings, inParentSetFact.String())
+	inferMsgs = append(inferMsgs, inParentSetFact)
+	if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+		inferMsgs = append(inferMsgs, trueRet.Infer...)
+	}
 
 	// intentional facts are true
-	for _, fact := range instFacts {
-		ret := ie.EnvMgr.NewFactWithCheckingNameDefined(fact)
+	for _, f := range instFacts {
+		ret := ie.EnvMgr.NewFactWithCheckingNameDefined(f)
 		if ret.IsErr() {
-			return glob.ErrStmtMsgToShortRet(ret)
+			return ast.NewErrInferRet(fact)
 		}
-		derivedFactStrings = append(derivedFactStrings, fact.String())
+		inferMsgs = append(inferMsgs, f)
+		if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+			inferMsgs = append(inferMsgs, trueRet.Infer...)
+		}
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFactStrings)
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 }
 
 // trueInFactByRangeOrClosedRange handles inference for x $in range(a, b) or x $in closed_range(a, b)
@@ -332,13 +357,13 @@ func (ie *InferEngine) trueInFactInSetBuilder(obj ast.Obj, setBuilderObj *ast.Fn
 //   - x >= a (lower bound)
 //   - x < b (for range) or x <= b (for closed_range)
 //   - Additional derived facts from comparison postprocessing (e.g., x != 0, x^2 > 0, etc.)
-func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.PureSpecificFactStmt) ast.InferRet {
 	// Check if the second parameter is a range or closed_range function call
 	if !ast.ObjIsRangeOrClosedRangeWith2Params(fact.Params[1]) {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
-	derivedFactStrings := []string{}
+	inferMsgs := []ast.FactStmt{}
 
 	obj := fact.Params[0]
 	rangeOrClosedRange := fact.Params[1].(*ast.FnObj)
@@ -350,79 +375,85 @@ func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.PureSpecificFact
 	inZFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordInteger))
 	ret := ie.EnvMgr.storeSpecFactInMem(inZFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFactStrings = append(derivedFactStrings, inZFact.String())
-	derivedFactStrings = append(derivedFactStrings, "\n")
+	inferMsgs = append(inferMsgs, inZFact)
 
 	// Generate x >= left
 	greaterEqualLeftFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{obj, left}, fact.Line)
 	ret = ie.EnvMgr.storeSpecFactInMem(greaterEqualLeftFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFactStrings = append(derivedFactStrings, greaterEqualLeftFact.String())
-	var retShort *glob.ShortRet
-	retShort = ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterEqualLeftFact)
-	if retShort.IsErr() {
-		return retShort
+	inferMsgs = append(inferMsgs, greaterEqualLeftFact)
+	retInfer := ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterEqualLeftFact)
+	if retInfer.IsErr() {
+		return retInfer
 	}
-	derivedFactStrings = append(derivedFactStrings, retShort.Msgs...)
+	if trueRet, ok := retInfer.(*ast.TrueInferRet); ok {
+		inferMsgs = append(inferMsgs, trueRet.Infer...)
+	}
 
 	// Generate left <= x
 	lessEqualLeftFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{left, obj}, fact.Line)
 	ret = ie.EnvMgr.storeSpecFactInMem(lessEqualLeftFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFactStrings = append(derivedFactStrings, lessEqualLeftFact.String())
-	retShort = ie.builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(lessEqualLeftFact)
-	if retShort.IsErr() {
-		return retShort
+	inferMsgs = append(inferMsgs, lessEqualLeftFact)
+	retInfer = ie.builtinPropExceptEqualPostProcess_WhenPropIsLessEqualAndRightParamIsNotZero(lessEqualLeftFact)
+	if retInfer.IsErr() {
+		return retInfer
 	}
-	derivedFactStrings = append(derivedFactStrings, retShort.Msgs...)
+	if trueRet, ok := retInfer.(*ast.TrueInferRet); ok {
+		inferMsgs = append(inferMsgs, trueRet.Infer...)
+	}
 
 	if isRange {
 		// range: generate x < right
 		lessRightFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolLess), []ast.Obj{obj, right}, fact.Line)
 		ret = ie.EnvMgr.storeSpecFactInMem(lessRightFact)
 		if ret.IsErr() {
-			return glob.ErrStmtMsgToShortRet(ret)
+			return ast.NewErrInferRet(fact)
 		}
-		derivedFactStrings = append(derivedFactStrings, lessRightFact.String())
-		retShort = ie.BuiltinPropExceptTrueEqual(lessRightFact)
-		if retShort.IsErr() {
-			return retShort
+		inferMsgs = append(inferMsgs, lessRightFact)
+		retInfer = ie.BuiltinPropExceptTrueEqual(lessRightFact)
+		if retInfer.IsErr() {
+			return retInfer
 		}
-		if retShort.IsUnknown() {
-			return glob.NewShortRet(glob.StmtRetTypeUnknown, retShort.Msgs)
+		if retInfer.IsUnknown() {
+			return retInfer
 		}
-		derivedFactStrings = append(derivedFactStrings, retShort.Msgs...)
+		if trueRet, ok := retInfer.(*ast.TrueInferRet); ok {
+			inferMsgs = append(inferMsgs, trueRet.Infer...)
+		}
 	} else {
 		// closed_range: generate x <= right
 		lessEqualRightFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{obj, right}, fact.Line)
 		ret = ie.EnvMgr.storeSpecFactInMem(lessEqualRightFact)
 		if ret.IsErr() {
-			return glob.ErrStmtMsgToShortRet(ret)
+			return ast.NewErrInferRet(fact)
 		}
-		derivedFactStrings = append(derivedFactStrings, lessEqualRightFact.String())
-		retShort = ie.BuiltinPropExceptTrueEqual(lessEqualRightFact)
-		if retShort.IsErr() {
-			return retShort
+		inferMsgs = append(inferMsgs, lessEqualRightFact)
+		retInfer = ie.BuiltinPropExceptTrueEqual(lessEqualRightFact)
+		if retInfer.IsErr() {
+			return retInfer
 		}
-		if retShort.IsUnknown() {
-			return glob.NewShortRet(glob.StmtRetTypeUnknown, retShort.Msgs)
+		if retInfer.IsUnknown() {
+			return retInfer
 		}
-		derivedFactStrings = append(derivedFactStrings, retShort.Msgs...)
+		if trueRet, ok := retInfer.(*ast.TrueInferRet); ok {
+			inferMsgs = append(inferMsgs, trueRet.Infer...)
+		}
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFactStrings)
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 }
 
 // trueInFactByN handles inference for x $in N (natural numbers including 0)
 // Inference generates:
 //   - 0 <= x (non-negativity fact)
-// func (ie *InferEngine) trueInFactByN(fact *ast.SpecFactStmt) *glob.ShortRet {
+// func (ie *InferEngine) trueInFactByN(fact *ast.SpecFactStmt) ast.ShortRet {
 // 	derivedFacts := []string{}
 
 // 	obj := fact.Params[0]
@@ -443,8 +474,8 @@ func (ie *InferEngine) trueInFactByRangeOrClosedRange(fact *ast.PureSpecificFact
 //   - x $in N, x $in Q, x $in R (number type memberships)
 //   - x > 0, x >= 1 (positivity facts)
 //   - Additional derived facts from comparison postprocessing (e.g., x != 0, x^2 > 0, sqrt(x) > 0, etc.)
-func (ie *InferEngine) trueInFactByNPos(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
-	derivedFacts := []string{}
+func (ie *InferEngine) trueInFactByNPos(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	inferMsgs := []ast.FactStmt{}
 
 	obj := fact.Params[0]
 
@@ -452,48 +483,50 @@ func (ie *InferEngine) trueInFactByNPos(fact *ast.PureSpecificFactStmt) *glob.Sh
 	inNFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordNatural))
 	ret := ie.EnvMgr.storeSpecFactInMem(inNFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inNFact.String())
+	inferMsgs = append(inferMsgs, inNFact)
 
 	// x $in Q
 	inQFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordRational))
 	ret = ie.EnvMgr.storeSpecFactInMem(inQFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inQFact.String())
+	inferMsgs = append(inferMsgs, inQFact)
 
 	// x $in R
 	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
 	ret = ie.EnvMgr.storeSpecFactInMem(inRFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inRFact.String())
+	inferMsgs = append(inferMsgs, inRFact)
 
 	// x > 0
 	greaterThanZeroFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolGreater), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.storeSpecFactInMem(greaterThanZeroFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, greaterThanZeroFact.String())
-	retShort := ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterThanZeroFact)
-	if retShort.IsErr() {
-		return retShort
+	inferMsgs = append(inferMsgs, greaterThanZeroFact)
+	retInfer := ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterThanZeroFact)
+	if retInfer.IsErr() {
+		return retInfer
 	}
-	derivedFacts = append(derivedFacts, retShort.Msgs...)
+	if trueRet, ok := retInfer.(*ast.TrueInferRet); ok {
+		inferMsgs = append(inferMsgs, trueRet.Infer...)
+	}
 
 	// x >= 1
 	greaterEqualOneFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{obj, ast.Atom("1")}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.storeSpecFactInMem(greaterEqualOneFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, greaterEqualOneFact.String())
+	inferMsgs = append(inferMsgs, greaterEqualOneFact)
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 }
 
 // trueInFactByRPos handles inference for x $in RPos (positive real numbers)
@@ -501,8 +534,8 @@ func (ie *InferEngine) trueInFactByNPos(fact *ast.PureSpecificFactStmt) *glob.Sh
 //   - x $in R (real number membership)
 //   - x > 0 (positivity fact)
 //   - Additional derived facts from comparison postprocessing (e.g., x != 0, x^2 > 0, sqrt(x) > 0, etc.)
-func (ie *InferEngine) trueInFactByRPos(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
-	derivedFacts := []string{}
+func (ie *InferEngine) trueInFactByRPos(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	inferMsgs := []ast.FactStmt{}
 
 	obj := fact.Params[0]
 
@@ -510,24 +543,26 @@ func (ie *InferEngine) trueInFactByRPos(fact *ast.PureSpecificFactStmt) *glob.Sh
 	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
 	ret := ie.EnvMgr.storeSpecFactInMem(inRFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inRFact.String())
+	inferMsgs = append(inferMsgs, inRFact)
 
 	// x > 0
 	greaterThanZeroFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolGreater), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.storeSpecFactInMem(greaterThanZeroFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, greaterThanZeroFact.String())
-	retShort := ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterThanZeroFact)
-	if retShort.IsErr() {
-		return retShort
+	inferMsgs = append(inferMsgs, greaterThanZeroFact)
+	retInfer := ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterThanZeroFact)
+	if retInfer.IsErr() {
+		return retInfer
 	}
-	derivedFacts = append(derivedFacts, retShort.Msgs...)
+	if trueRet, ok := retInfer.(*ast.TrueInferRet); ok {
+		inferMsgs = append(inferMsgs, trueRet.Infer...)
+	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 }
 
 // trueInFactByRNeg handles inference for x $in RNeg (negative real numbers)
@@ -535,8 +570,8 @@ func (ie *InferEngine) trueInFactByRPos(fact *ast.PureSpecificFactStmt) *glob.Sh
 //   - x $in R (real number membership)
 //   - x < 0 (negativity fact)
 //   - Additional derived facts from comparison postprocessing (e.g., x != 0, -x > 0, etc.)
-func (ie *InferEngine) trueInFactByRNeg(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
-	derivedFacts := []string{}
+func (ie *InferEngine) trueInFactByRNeg(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	inferMsgs := []ast.FactStmt{}
 
 	obj := fact.Params[0]
 
@@ -544,24 +579,26 @@ func (ie *InferEngine) trueInFactByRNeg(fact *ast.PureSpecificFactStmt) *glob.Sh
 	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
 	ret := ie.EnvMgr.storeSpecFactInMem(inRFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inRFact.String())
+	inferMsgs = append(inferMsgs, inRFact)
 
 	// x < 0
 	lessThanZeroFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolLess), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.storeSpecFactInMem(lessThanZeroFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, lessThanZeroFact.String())
-	retShort := ie.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(lessThanZeroFact)
-	if retShort.IsErr() {
-		return retShort
+	inferMsgs = append(inferMsgs, lessThanZeroFact)
+	retInfer := ie.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(lessThanZeroFact)
+	if retInfer.IsErr() {
+		return retInfer
 	}
-	derivedFacts = append(derivedFacts, retShort.Msgs...)
+	if trueRet, ok := retInfer.(*ast.TrueInferRet); ok {
+		inferMsgs = append(inferMsgs, trueRet.Infer...)
+	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 }
 
 // trueInFactByZNeg handles inference for x $in ZNeg (negative integers)
@@ -570,8 +607,8 @@ func (ie *InferEngine) trueInFactByRNeg(fact *ast.PureSpecificFactStmt) *glob.Sh
 //   - x $in Q, x $in R (number type memberships)
 //   - x < 0 (negativity fact)
 //   - Additional derived facts from comparison postprocessing (e.g., x != 0, -x > 0, etc.)
-func (ie *InferEngine) trueInFactByZNeg(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
-	derivedFacts := []string{}
+func (ie *InferEngine) trueInFactByZNeg(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	inferMsgs := []ast.FactStmt{}
 
 	obj := fact.Params[0]
 
@@ -579,40 +616,42 @@ func (ie *InferEngine) trueInFactByZNeg(fact *ast.PureSpecificFactStmt) *glob.Sh
 	inZFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordInteger))
 	ret := ie.EnvMgr.storeSpecFactInMem(inZFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inZFact.String())
+	inferMsgs = append(inferMsgs, inZFact)
 
 	// x $in Q
 	inQFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordRational))
 	ret = ie.EnvMgr.storeSpecFactInMem(inQFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inQFact.String())
+	inferMsgs = append(inferMsgs, inQFact)
 
 	// x $in R
 	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
 	ret = ie.EnvMgr.storeSpecFactInMem(inRFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inRFact.String())
+	inferMsgs = append(inferMsgs, inRFact)
 
 	// x < 0
 	lessThanZeroFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolLess), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.storeSpecFactInMem(lessThanZeroFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, lessThanZeroFact.String())
-	retShort := ie.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(lessThanZeroFact)
-	if retShort.IsErr() {
-		return retShort
+	inferMsgs = append(inferMsgs, lessThanZeroFact)
+	retInfer := ie.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(lessThanZeroFact)
+	if retInfer.IsErr() {
+		return retInfer
 	}
-	derivedFacts = append(derivedFacts, retShort.Msgs...)
+	if trueRet, ok := retInfer.(*ast.TrueInferRet); ok {
+		inferMsgs = append(inferMsgs, trueRet.Infer...)
+	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 }
 
 // trueInFactByQNeg handles inference for x $in QNeg (negative rational numbers)
@@ -621,8 +660,8 @@ func (ie *InferEngine) trueInFactByZNeg(fact *ast.PureSpecificFactStmt) *glob.Sh
 //   - x $in R (real number membership)
 //   - x < 0 (negativity fact)
 //   - Additional derived facts from comparison postprocessing (e.g., x != 0, -x > 0, etc.)
-func (ie *InferEngine) trueInFactByQNeg(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
-	derivedFacts := []string{}
+func (ie *InferEngine) trueInFactByQNeg(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	inferMsgs := []ast.FactStmt{}
 
 	obj := fact.Params[0]
 
@@ -630,32 +669,34 @@ func (ie *InferEngine) trueInFactByQNeg(fact *ast.PureSpecificFactStmt) *glob.Sh
 	inQFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordRational))
 	ret := ie.EnvMgr.storeSpecFactInMem(inQFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inQFact.String())
+	inferMsgs = append(inferMsgs, inQFact)
 
 	// x $in R
 	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
 	ret = ie.EnvMgr.storeSpecFactInMem(inRFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inRFact.String())
+	inferMsgs = append(inferMsgs, inRFact)
 
 	// x < 0
 	lessThanZeroFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolLess), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.storeSpecFactInMem(lessThanZeroFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, lessThanZeroFact.String())
-	retShort := ie.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(lessThanZeroFact)
-	if retShort.IsErr() {
-		return retShort
+	inferMsgs = append(inferMsgs, lessThanZeroFact)
+	retInfer := ie.builtinPropExceptEqualPostProcess_WhenPropIsLessAndRightParamIsZero(lessThanZeroFact)
+	if retInfer.IsErr() {
+		return retInfer
 	}
-	derivedFacts = append(derivedFacts, retShort.Msgs...)
+	if trueRet, ok := retInfer.(*ast.TrueInferRet); ok {
+		inferMsgs = append(inferMsgs, trueRet.Infer...)
+	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 }
 
 // trueInFactByQPos handles inference for x $in QPos (positive rational numbers)
@@ -664,8 +705,8 @@ func (ie *InferEngine) trueInFactByQNeg(fact *ast.PureSpecificFactStmt) *glob.Sh
 //   - x $in R (real number membership)
 //   - x > 0 (positivity fact)
 //   - Additional derived facts from comparison postprocessing (e.g., x != 0, x^2 > 0, sqrt(x) > 0, etc.)
-func (ie *InferEngine) trueInFactByQPos(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
-	derivedFacts := []string{}
+func (ie *InferEngine) trueInFactByQPos(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	inferMsgs := []ast.FactStmt{}
 
 	obj := fact.Params[0]
 
@@ -673,40 +714,42 @@ func (ie *InferEngine) trueInFactByQPos(fact *ast.PureSpecificFactStmt) *glob.Sh
 	inQFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordRational))
 	ret := ie.EnvMgr.storeSpecFactInMem(inQFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inQFact.String())
+	inferMsgs = append(inferMsgs, inQFact)
 
 	// x $in R
 	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
 	ret = ie.EnvMgr.storeSpecFactInMem(inRFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inRFact.String())
+	inferMsgs = append(inferMsgs, inRFact)
 
 	// x > 0
 	greaterThanZeroFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolGreater), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.storeSpecFactInMem(greaterThanZeroFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, greaterThanZeroFact.String())
-	retShort := ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterThanZeroFact)
-	if retShort.IsErr() {
-		return retShort
+	inferMsgs = append(inferMsgs, greaterThanZeroFact)
+	retInfer := ie.builtinPropExceptEqualPostProcess_WhenPropIsGreaterAndRightParamIsZero(greaterThanZeroFact)
+	if retInfer.IsErr() {
+		return retInfer
 	}
-	derivedFacts = append(derivedFacts, retShort.Msgs...)
+	if trueRet, ok := retInfer.(*ast.TrueInferRet); ok {
+		inferMsgs = append(inferMsgs, trueRet.Infer...)
+	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 }
 
 // trueInFactByRNot0 handles inference for x $in R_not0 (non-zero real numbers)
 // Inference generates:
 //   - x != 0 (non-zero fact)
 //   - x $in R (real number membership)
-func (ie *InferEngine) trueInFactByRNot0(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
-	derivedFacts := []string{}
+func (ie *InferEngine) trueInFactByRNot0(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	inferMsgs := []ast.FactStmt{}
 
 	obj := fact.Params[0]
 
@@ -714,27 +757,27 @@ func (ie *InferEngine) trueInFactByRNot0(fact *ast.PureSpecificFactStmt) *glob.S
 	notEqualZeroFact := ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.storeSpecFactInMem(notEqualZeroFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, notEqualZeroFact.String())
+	inferMsgs = append(inferMsgs, notEqualZeroFact)
 
 	// x $in R
 	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
 	ret = ie.EnvMgr.storeSpecFactInMem(inRFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inRFact.String())
+	inferMsgs = append(inferMsgs, inRFact)
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 }
 
 // trueInFactByZNot0 handles inference for x $in Z_not0 (non-zero integers)
 // Inference generates:
 //   - x != 0 (non-zero fact)
 //   - x $in Z (integer membership)
-func (ie *InferEngine) trueInFactByZNot0(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
-	derivedFacts := []string{}
+func (ie *InferEngine) trueInFactByZNot0(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	inferMsgs := []ast.FactStmt{}
 
 	obj := fact.Params[0]
 
@@ -742,19 +785,19 @@ func (ie *InferEngine) trueInFactByZNot0(fact *ast.PureSpecificFactStmt) *glob.S
 	notEqualZeroFact := ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.storeSpecFactInMem(notEqualZeroFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, notEqualZeroFact.String())
+	inferMsgs = append(inferMsgs, notEqualZeroFact)
 
 	// x $in Z
 	inZFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordInteger))
 	ret = ie.EnvMgr.storeSpecFactInMem(inZFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inZFact.String())
+	inferMsgs = append(inferMsgs, inZFact)
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 }
 
 // trueInFactByQNot0 handles inference for x $in Q_not0 (non-zero rational numbers)
@@ -762,8 +805,8 @@ func (ie *InferEngine) trueInFactByZNot0(fact *ast.PureSpecificFactStmt) *glob.S
 //   - x != 0 (non-zero fact)
 //   - x $in Q (rational number membership)
 //   - x $in R (real number membership)
-func (ie *InferEngine) trueInFactByQNot0(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
-	derivedFacts := []string{}
+func (ie *InferEngine) trueInFactByQNot0(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	inferMsgs := []ast.FactStmt{}
 
 	obj := fact.Params[0]
 
@@ -771,40 +814,40 @@ func (ie *InferEngine) trueInFactByQNot0(fact *ast.PureSpecificFactStmt) *glob.S
 	notEqualZeroFact := ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.storeSpecFactInMem(notEqualZeroFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, notEqualZeroFact.String())
+	inferMsgs = append(inferMsgs, notEqualZeroFact)
 
 	// x $in Q
 	inQFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordRational))
 	ret = ie.EnvMgr.storeSpecFactInMem(inQFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inQFact.String())
+	inferMsgs = append(inferMsgs, inQFact)
 
 	// x $in R
 	inRFact := ast.NewInFactWithObj(obj, ast.Atom(glob.KeywordReal))
 	ret = ie.EnvMgr.storeSpecFactInMem(inRFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inRFact.String())
+	inferMsgs = append(inferMsgs, inRFact)
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 }
 
 // trueInFactBySetOperations handles inference for set operations (cup, cap, union, intersect, power_set, set_minus)
 // It checks if the second parameter is a set operation function call
-func (ie *InferEngine) trueInFactBySetOperations(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
+func (ie *InferEngine) trueInFactBySetOperations(fact *ast.PureSpecificFactStmt) ast.InferRet {
 	fnObj, ok := fact.Params[1].(*ast.FnObj)
 	if !ok {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	head, ok := fnObj.IsObjFn_HasAtomHead_ReturnHead()
 	if !ok {
-		return glob.NewEmptyShortUnknownRet()
+		return ast.NewUnknownInferRet(fact)
 	}
 
 	headStr := string(head)
@@ -812,20 +855,20 @@ func (ie *InferEngine) trueInFactBySetOperations(fact *ast.PureSpecificFactStmt)
 	// Try direct set operation first
 	switch headStr {
 	case glob.KeywordCup:
-		return ie.trueInFactInCup(fact.Params[0], fnObj)
+		return ie.trueInFactInCup(fact.Params[0], fnObj, fact)
 	case glob.KeywordCap:
-		return ie.trueInFactInCap(fact.Params[0], fnObj)
+		return ie.trueInFactInCap(fact.Params[0], fnObj, fact)
 	case glob.KeywordUnion:
 		if len(fnObj.Params) == 2 {
-			return ie.trueInFactInUnion(fact.Params[0], fnObj.Params[0], fnObj.Params[1])
+			return ie.trueInFactInUnion(fact.Params[0], fnObj.Params[0], fnObj.Params[1], fact)
 		}
 	case glob.KeywordIntersect:
 		if len(fnObj.Params) == 2 {
-			return ie.trueInFactInIntersect(fact.Params[0], fnObj.Params[0], fnObj.Params[1])
+			return ie.trueInFactInIntersect(fact.Params[0], fnObj.Params[0], fnObj.Params[1], fact)
 		}
 	case glob.KeywordPowerSet:
 		if len(fnObj.Params) == 1 {
-			return ie.trueInFactInPowerSet(fact.Params[0], fnObj.Params[0])
+			return ie.trueInFactInPowerSet(fact.Params[0], fnObj.Params[0], fact)
 		}
 	case glob.KeywordSetMinus:
 		if len(fnObj.Params) == 2 {
@@ -833,14 +876,14 @@ func (ie *InferEngine) trueInFactBySetOperations(fact *ast.PureSpecificFactStmt)
 		}
 	}
 
-	return glob.NewEmptyShortUnknownRet()
+	return ast.NewUnknownInferRet(fact)
 }
 
 // trueInFactInCup handles inference for item $in cup(x)
 // Inference: exist x_item x st item $in x_item
-func (ie *InferEngine) trueInFactInCup(item ast.Obj, cupSet *ast.FnObj) *glob.ShortRet {
+func (ie *InferEngine) trueInFactInCup(item ast.Obj, cupSet *ast.FnObj, fact *ast.PureSpecificFactStmt) ast.InferRet {
 	if len(cupSet.Params) != 1 {
-		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("cup expects 1 parameter, got %d", len(cupSet.Params))})
+		return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("cup expects 1 parameter, got %d", len(cupSet.Params)))
 	}
 
 	xItemParam := ie.EnvMgr.GenerateUnusedRandomName()
@@ -851,23 +894,23 @@ func (ie *InferEngine) trueInFactInCup(item ast.Obj, cupSet *ast.FnObj) *glob.Sh
 		true,
 		[]string{xItemParam},
 		[]ast.Obj{cupSet.Params[0]},
-		pureFact,
+		[]*ast.PureSpecificFactStmt{pureFact},
 		glob.BuiltinLine0,
 	)
 
 	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(existFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, []string{existFact.String()})
+	return ast.NewTrueInferRet(fact).AddInfer(existFact)
 }
 
 // trueInFactInCap handles inference for item $in cap(x)
 // Inference: forall x_item x: item $in x_item
-func (ie *InferEngine) trueInFactInCap(item ast.Obj, capSet *ast.FnObj) *glob.ShortRet {
+func (ie *InferEngine) trueInFactInCap(item ast.Obj, capSet *ast.FnObj, fact *ast.PureSpecificFactStmt) ast.InferRet {
 	if len(capSet.Params) != 1 {
-		return glob.NewShortRet(glob.StmtRetTypeError, []string{fmt.Sprintf("cap expects 1 parameter, got %d", len(capSet.Params))})
+		return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("cap expects 1 parameter, got %d", len(capSet.Params)))
 	}
 
 	x := capSet.Params[0]
@@ -880,22 +923,22 @@ func (ie *InferEngine) trueInFactInCap(item ast.Obj, capSet *ast.FnObj) *glob.Sh
 	uniFact := ast.NewUniFact(
 		[]string{xItemParam},
 		[]ast.Obj{x},
-		[]ast.FactStmt{inFact},
-		[]ast.FactStmt{thenFact},
+		[]ast.Spec_OrFact{inFact},
+		[]ast.Spec_OrFact{thenFact},
 		glob.BuiltinLine0,
 	)
 
 	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(uniFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, []string{uniFact.String()})
+	return ast.NewTrueInferRet(fact).AddInfer(uniFact)
 }
 
 // trueInFactInUnion handles inference for item $in union(x, y)
 // Inference: item $in x or item $in y
-func (ie *InferEngine) trueInFactInUnion(item ast.Obj, x ast.Obj, y ast.Obj) *glob.ShortRet {
+func (ie *InferEngine) trueInFactInUnion(item ast.Obj, x ast.Obj, y ast.Obj, fact *ast.PureSpecificFactStmt) ast.InferRet {
 	// Create or fact: item $in x or item $in y
 	inXFact := ast.NewInFactWithObj(item, x)
 	inYFact := ast.NewInFactWithObj(item, y)
@@ -904,39 +947,45 @@ func (ie *InferEngine) trueInFactInUnion(item ast.Obj, x ast.Obj, y ast.Obj) *gl
 
 	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(orFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, []string{orFact.String()})
+	return ast.NewTrueInferRet(fact).AddInfer(orFact)
 }
 
 // trueInFactInIntersect handles inference for item $in intersect(x, y)
 // Inference: item $in x and item $in y
-func (ie *InferEngine) trueInFactInIntersect(item ast.Obj, x ast.Obj, y ast.Obj) *glob.ShortRet {
-	derivedFacts := []string{}
+func (ie *InferEngine) trueInFactInIntersect(item ast.Obj, x ast.Obj, y ast.Obj, fact *ast.PureSpecificFactStmt) ast.InferRet {
+	inferMsgs := []ast.FactStmt{}
 
 	// Create fact: item $in x
 	inXFact := ast.NewInFactWithObj(item, x)
 	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(inXFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inXFact.String())
+	inferMsgs = append(inferMsgs, inXFact)
+	if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+		inferMsgs = append(inferMsgs, trueRet.Infer...)
+	}
 
 	// Create fact: item $in y
 	inYFact := ast.NewInFactWithObj(item, y)
 	ret = ie.EnvMgr.NewFactWithCheckingNameDefined(inYFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
-	derivedFacts = append(derivedFacts, inYFact.String())
+	inferMsgs = append(inferMsgs, inYFact)
+	if trueRet, ok := ret.(*ast.TrueInferRet); ok {
+		inferMsgs = append(inferMsgs, trueRet.Infer...)
+	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+	return ast.NewTrueInferRet(fact).AddInfers(inferMsgs)
 }
 
 // trueInFactInPowerSet handles inference for y $in power_set(x)
 // Inference: y $subset_of x
-func (ie *InferEngine) trueInFactInPowerSet(y ast.Obj, x ast.Obj) *glob.ShortRet {
+func (ie *InferEngine) trueInFactInPowerSet(y ast.Obj, x ast.Obj, fact *ast.PureSpecificFactStmt) ast.InferRet {
 	// Create fact: y $subset_of x
 	subsetFact := ast.NewPureSpecificFactStmt(
 		true,
@@ -947,24 +996,26 @@ func (ie *InferEngine) trueInFactInPowerSet(y ast.Obj, x ast.Obj) *glob.ShortRet
 
 	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(subsetFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ast.NewErrInferRet(fact)
 	}
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, []string{subsetFact.String()})
+	return ast.NewTrueInferRet(fact).AddInfer(subsetFact)
 }
 
 // trueInFactInSetMinus handles inference for item $in set_minus(x, y)
 // Inference: item $in x and not item $in y
-func (ie *InferEngine) trueInFactInSetMinus(item ast.Obj, x ast.Obj, y ast.Obj) *glob.ShortRet {
-	derivedFacts := []string{}
+func (ie *InferEngine) trueInFactInSetMinus(item ast.Obj, x ast.Obj, y ast.Obj) ast.InferRet {
+	setMinus := ast.NewFnObj(ast.Atom(glob.KeywordSetMinus), []ast.Obj{x, y})
+	tempFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordIn), []ast.Obj{item, setMinus}, glob.BuiltinLine0)
+	result := ast.NewTrueInferRet(tempFact)
 
 	// Create fact: item $in x
 	inXFact := ast.NewInFactWithObj(item, x)
 	ret := ie.EnvMgr.NewFactWithCheckingNameDefined(inXFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ret
 	}
-	derivedFacts = append(derivedFacts, inXFact.String())
+	result.AddInfer(inXFact)
 
 	// Create fact: not item $in y
 	notInYFact := ast.NewPureSpecificFactStmt(
@@ -975,15 +1026,15 @@ func (ie *InferEngine) trueInFactInSetMinus(item ast.Obj, x ast.Obj, y ast.Obj) 
 	)
 	ret = ie.EnvMgr.NewFactWithCheckingNameDefined(notInYFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ret
 	}
-	derivedFacts = append(derivedFacts, notInYFact.String())
+	result.AddInfer(notInYFact)
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+	return result
 }
 
-func (ie *InferEngine) trueInFactByN(fact *ast.PureSpecificFactStmt) *glob.ShortRet {
-	derivedFacts := []string{}
+func (ie *InferEngine) trueInFactByN(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	result := ast.NewTrueInferRet(fact)
 
 	obj := fact.Params[0]
 
@@ -991,16 +1042,81 @@ func (ie *InferEngine) trueInFactByN(fact *ast.PureSpecificFactStmt) *glob.Short
 	lessEqualZeroFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolLessEqual), []ast.Obj{ast.Atom("0"), obj}, glob.BuiltinLine0)
 	ret := ie.EnvMgr.storeSpecFactInMem(lessEqualZeroFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ret
 	}
 
 	// x >= 0
 	greaterEqualZeroFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolLargerEqual), []ast.Obj{obj, ast.Atom("0")}, glob.BuiltinLine0)
 	ret = ie.EnvMgr.storeSpecFactInMem(greaterEqualZeroFact)
 	if ret.IsErr() {
-		return glob.ErrStmtMsgToShortRet(ret)
+		return ret
 	}
-	derivedFacts = append(derivedFacts, greaterEqualZeroFact.String())
+	result.AddInfer(greaterEqualZeroFact)
 
-	return glob.NewShortRet(glob.StmtRetTypeTrue, derivedFacts)
+	return result
+}
+
+func (ie *InferEngine) trueInFactByFnInFnSet(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	fn := fact.Params[0]
+	fnSet := fact.Params[1]
+
+	fnSetObj, ok := fnSet.(ast.FnSetObj)
+	if !ok {
+		return ast.NewUnknownInferRet(fact)
+	}
+
+	ie.EnvMgr.StoreFnIsAFn(fn, fnSetObj)
+
+	switch asFnSetObj := fnSetObj.(type) {
+	case *ast.FnSetObjWithoutName:
+		return ast.NewTrueInferRet(fact)
+	case *ast.FnSetObjWithName:
+		result := ast.NewTrueInferRet(fact)
+		for _, thenFact := range asFnSetObj.ThenFacts {
+			forallFact := ast.NewUniFact(asFnSetObj.Params, asFnSetObj.ParamSets, asFnSetObj.DomFacts, []ast.Spec_OrFact{thenFact}, glob.BuiltinLine0)
+			inferRet := ie.EnvMgr.NewFactWithCheckingNameDefined(forallFact)
+			if inferRet.IsErr() {
+				return inferRet
+			}
+			result = result.AddInfer(forallFact)
+		}
+
+		return result
+	default:
+		panic(fmt.Sprintf("unknown function set object type: %T", fnSetObj))
+	}
+}
+
+func (ie *InferEngine) trueInFactByInstSetTemplateObj(fact *ast.PureSpecificFactStmt) ast.InferRet {
+	instSetTemplateObj, ok := fact.Params[1].(*ast.InstSetTemplateObj)
+	if !ok {
+		return ast.NewUnknownInferRet(fact)
+	}
+
+	def := ie.EnvMgr.GetSetTemplateDef(string(instSetTemplateObj.Name))
+	if def == nil {
+		return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("set template %s not defined", instSetTemplateObj.Name))
+	}
+
+	if len(instSetTemplateObj.Params) != len(def.Params) {
+		return ast.NewErrInferRet(fact).AddExtraInfo(fmt.Sprintf("the number of parameters is not equal to the number of parameter sets of %s", def))
+	}
+
+	uniMap := make(map[string]ast.Obj)
+	for i, param := range def.Params {
+		uniMap[param] = instSetTemplateObj.Params[i]
+	}
+
+	equalTo, err := def.EqualTo.Instantiate(uniMap)
+	if err != nil {
+		return ast.NewErrInferRet(fact).AddExtraInfo(err.Error())
+	}
+
+	inFact := ast.NewInFactWithObj(fact.Params[0], equalTo)
+	ret := ie.EnvMgr.NewFact(inFact)
+	if ret.IsErr() {
+		return ast.NewErrInferRet(fact)
+	}
+
+	return ast.NewTrueInferRet(fact).AddInfer(inFact)
 }

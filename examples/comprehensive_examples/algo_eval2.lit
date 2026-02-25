@@ -1,28 +1,23 @@
-prop p(x R):
-    x > 2
-
 let fn f(x R) R
 know:
-    forall x R: $p(x) => f(x) = x - 2
-    forall x R: not $p(x) => f(x) = 0
+    forall x R: x > 0 => f(x) = f(x-1)+1
+    forall x R: x < 0 => f(x) = f(x+1)-1
+    f(0) = 0
+
+prove forall x R: not x > 0, not x < 0 => f(x) = 0:
+    contra x = 0:
+        impossible x > 0 or x = 0 or x < 0
 
 algo f(x):
-    if x > 2:
-        $p(x)
-        return x - 2
-    if x <= 2:
-        claim:
-            not $p(x) 
-            contra:
-                $p(x)
-                x > 2
-                impossible not x <= 2
-        return 0
+    if x > 0:
+        return f(x-1)+1
+    if x < 0:
+        return f(x+1)-1
+    return 0
 
-have a, b R = 3, -1
+eval f(100)
+f(100) = 100
 
-eval(f(3))
-f(3) = 1
-
-eval(f(-1))
-f(-1) = 0
+# strange: eval f(1000) is 10x faster than eval f(-10). Don't know why when evaluating negative numbers like -100, it writes -100+1+1+1 instead of -97
+eval f(-10)
+f(-10) = -10

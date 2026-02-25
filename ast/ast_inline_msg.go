@@ -34,34 +34,52 @@ func (c *DefPropStmt) InlineString() string {
 	builder.WriteString(glob.KeywordProp)
 	builder.WriteString(" ")
 	builder.WriteString(string(c.DefHeader.Name))
-	if len(c.DomFactsOrNil) > 0 {
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteString(inlineFactsString(c.DomFactsOrNil))
-	}
 	if len(c.IffFactsOrNil) > 0 {
 		builder.WriteString(glob.KeySymbolEquivalent)
 		builder.WriteString(inlineFactsString(c.IffFactsOrNil))
 	}
 	if len(c.ImplicationFactsOrNil) > 0 {
 		builder.WriteString(glob.KeySymbolRightArrow)
-		builder.WriteString(inlineFactsString(c.ImplicationFactsOrNil))
+		builder.WriteString(inlineReversibleFactsString(c.ImplicationFactsOrNil))
 	}
 	return builder.String()
 }
-func (l *LetFnStmt) InlineString() string {
+
+// func (l *LetFnStmt) InlineString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeywordFn)
+// 	builder.WriteString(" ")
+// 	builder.WriteString(NewDefHeader(l.Name, l.FnTemplate.Params, l.FnTemplate.ParamSets).StringWithoutColonAtEnd())
+// 	builder.WriteString(" ")
+// 	builder.WriteString(l.FnTemplate.RetSet.String())
+// 	if len(l.FnTemplate.DomFacts) > 0 {
+// 		builder.WriteString(glob.KeySymbolColon)
+// 		builder.WriteString(inlineReversibleFactsString(l.FnTemplate.DomFacts))
+// 	}
+// 	if len(l.FnTemplate.ThenFacts) > 0 {
+// 		builder.WriteString(glob.KeySymbolRightArrow)
+// 		builder.WriteString(inlineReversibleFactsString(l.FnTemplate.ThenFacts))
+// 	}
+
+// 	return builder.String()
+// }
+
+func (l *LetFn) InlineString() string {
 	var builder strings.Builder
 	builder.WriteString(glob.KeywordFn)
 	builder.WriteString(" ")
-	builder.WriteString(NewDefHeader(l.Name, l.FnTemplate.Params, l.FnTemplate.ParamSets).StringWithoutColonAtEnd())
-	builder.WriteString(" ")
-	builder.WriteString(l.FnTemplate.RetSet.String())
-	if len(l.FnTemplate.DomFacts) > 0 {
-		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteString(inlineFactsString(l.FnTemplate.DomFacts))
+	if l.DefHeaderWithDom != nil {
+		builder.WriteString(l.DefHeaderWithDom.StringWithoutColonAtEnd())
+		builder.WriteString(" ")
 	}
-	if len(l.FnTemplate.ThenFacts) > 0 {
+	builder.WriteString(l.RetSet.String())
+	if l.DefHeaderWithDom != nil && len(l.DefHeaderWithDom.DomFacts) > 0 {
+		builder.WriteString(glob.KeySymbolColon)
+		builder.WriteString(inlineReversibleFactsString(l.DefHeaderWithDom.DomFacts))
+	}
+	if len(l.ThenFacts) > 0 {
 		builder.WriteString(glob.KeySymbolRightArrow)
-		builder.WriteString(inlineFactsString(l.FnTemplate.ThenFacts))
+		builder.WriteString(inlineReversibleFactsString(l.ThenFacts))
 	}
 
 	return builder.String()
@@ -73,11 +91,11 @@ func (l *UniFactStmt) InlineString() string {
 	builder.WriteString(StrObjSetPairs(l.Params, l.ParamSets))
 	if len(l.DomFacts) > 0 {
 		builder.WriteString(glob.KeySymbolColon)
-		builder.WriteString(inlineFactsString(l.DomFacts))
+		builder.WriteString(inlineReversibleFactsString(l.DomFacts))
 	}
 	if len(l.ThenFacts) > 0 {
 		builder.WriteString(glob.KeySymbolRightArrow)
-		builder.WriteString(inlineFactsString(l.ThenFacts))
+		builder.WriteString(inlineReversibleFactsString(l.ThenFacts))
 	}
 	return builder.String()
 }
@@ -152,7 +170,10 @@ func (s *HaveObjStStmt) InlineString() string {
 	builder.WriteString(" ")
 	builder.WriteString(glob.KeywordSt)
 	builder.WriteString(" ")
-	builder.WriteString(s.Fact.InlineString())
+	for _, fact := range s.Fact {
+		builder.WriteString(fact.InlineString())
+		builder.WriteString(", ")
+	}
 	return builder.String()
 }
 
@@ -277,21 +298,19 @@ func (s *UniFactWithIffStmt) InlineString() string {
 	builder.WriteString(StrObjSetPairs(s.UniFact.Params, s.UniFact.ParamSets))
 	builder.WriteString(glob.KeySymbolColon)
 	if len(s.UniFact.DomFacts) > 0 {
-		builder.WriteString(inlineFactsString(s.UniFact.DomFacts))
+		builder.WriteString(inlineReversibleFactsString(s.UniFact.DomFacts))
 	}
 	if len(s.UniFact.ThenFacts) > 0 {
 		builder.WriteString(glob.KeySymbolRightArrow)
-		builder.WriteString(inlineFactsString(s.UniFact.ThenFacts))
+		builder.WriteString(inlineReversibleFactsString(s.UniFact.ThenFacts))
 	}
 	if len(s.IffFacts) > 0 {
 		builder.WriteString(glob.KeySymbolEquivalent)
-		builder.WriteString(inlineFactsString(s.IffFacts))
+		builder.WriteString(inlineReversibleFactsString(s.IffFacts))
 	}
 	return builder.String()
 }
 func (s *ClaimProveByContradictionStmt) InlineString() string { panic("") }
-
-func (s *ClaimImplicationStmt) InlineString() string { panic("") }
 
 // func (s *ClaimExistPropStmt) InlineString() string   { panic("") }
 
@@ -302,23 +321,34 @@ func (s *HaveObjInNonEmptySetStmt) InlineString() string { panic("") }
 
 // func (s *NamedUniFactStmt) InlineString() string    { panic("") }
 
-func (s *EqualsFactStmt) InlineString() string {
-	var builder strings.Builder
-	builder.WriteString(glob.KeySymbolEqual)
-	builder.WriteString(glob.KeySymbolLeftBrace)
-	objSlice := make([]string, len(s.Params))
-	for i, param := range s.Params {
-		objSlice[i] = param.String()
+// func (s *ChainPureFact) InlineString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(glob.KeySymbolEqual)
+// 	builder.WriteString(glob.KeySymbolLeftBrace)
+// 	objSlice := make([]string, len(s.Params))
+// 	for i, param := range s.Params {
+// 		objSlice[i] = param.String()
+// 	}
+// 	builder.WriteString(strings.Join(objSlice, ", "))
+// 	builder.WriteString(glob.KeySymbolRightBrace)
+// 	return builder.String()
+// }
+
+func (c *ChainPureFact) InlineString() string {
+	var parts []string
+	for i, obj := range c.Objs {
+		parts = append(parts, obj.String())
+		if i < len(c.PropNames) {
+			parts = append(parts, c.PropNames[i].String())
+		}
 	}
-	builder.WriteString(strings.Join(objSlice, ", "))
-	builder.WriteString(glob.KeySymbolRightBrace)
-	return builder.String()
+	return strings.Join(parts, " ")
 }
 
 // func (s *KnowExistPropStmt) InlineString() string { panic("") }
 
 // func (s *LatexStmt) InlineString() string         { panic("") }
-func (s *DefFnSetStmt) InlineString() string    { panic("") }
+// func (s *DefFnSetStmt) InlineString() string    { panic("") }
 func (s *ClearStmt) InlineString() string       { return s.String() }
 func (s *DoNothingStmt) InlineString() string   { return s.String() }
 func (s *InlineFactsStmt) InlineString() string { return inlineFactsString(s.Facts) }
@@ -353,6 +383,16 @@ func inlineFactsString(facts FactStmtSlice) string {
 	default:
 		builder.WriteString(asFact.InlineString())
 	}
+	return builder.String()
+}
+
+func inlineReversibleFactsString(facts ReversibleFacts) string {
+	var builder strings.Builder
+	for i := range len(facts) - 1 {
+		builder.WriteString(facts[i].InlineString())
+		builder.WriteString(", ")
+	}
+	builder.WriteString(facts[len(facts)-1].InlineString())
 	return builder.String()
 }
 
@@ -391,7 +431,11 @@ func (s *HaveObjEqualStmt) InlineString() string {
 	return s.String()
 }
 
-func (s *HaveFnEqualStmt) InlineString() string {
+// func (s *HaveFnEqualStmt) InlineString() string {
+// 	return s.String()
+// }
+
+func (s *HaveFnEqual) InlineString() string {
 	return s.String()
 }
 
@@ -419,10 +463,6 @@ func (s *HaveFnEqualStmt) InlineString() string {
 
 func (s *HaveFnStmt) InlineString() string {
 	return "TODO"
-}
-
-func (s *HaveFnCaseByCaseStmt) InlineString() string {
-	return s.String()
 }
 
 // func (s *MarkdownStmt) InlineString() string {
@@ -461,13 +501,13 @@ func (s *ProveIsCommutativePropStmt) InlineString() string {
 // 	return "TODO"
 // }
 
-func (s *AlgoIfStmt) InlineString() string {
-	return "TODO"
-}
+// func (s *AlgoIfStmt) InlineString() string {
+// 	return "TODO"
+// }
 
-func (s *AlgoReturnStmt) InlineString() string {
-	return "TODO"
-}
+// func (s *AlgoReturnStmt) InlineString() string {
+// 	return "TODO"
+// }
 
 func (s *DefAlgoStmt) InlineString() string {
 	return "TODO"
@@ -475,6 +515,10 @@ func (s *DefAlgoStmt) InlineString() string {
 
 func (s *EvalStmt) InlineString() string {
 	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.ObjToEval.String())
+}
+
+func (s *DefSetTemplateStmt) InlineString() string {
+	return s.String()
 }
 
 // func (s *DefProveAlgoStmt) InlineString() string {
@@ -489,7 +533,11 @@ func (s *EvalStmt) InlineString() string {
 // 	return s.String()
 // }
 
-func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
+// func (s *HaveFnEqualCaseByCaseStmt) InlineString() string {
+// 	return s.String()
+// }
+
+func (s *HaveFnEqualCaseByCase) InlineString() string {
 	return s.String()
 }
 
@@ -502,5 +550,13 @@ func (s *EqualSetStmt) InlineString() string {
 }
 
 func (s *WitnessNonemptyStmt) InlineString() string {
+	return s.String()
+}
+
+func (s *SetIsFnStmt) InlineString() string {
+	return s.String()
+}
+
+func (s *FnIsSubsetOfCartStmt) InlineString() string {
 	return s.String()
 }

@@ -14,74 +14,116 @@
 
 package litex_ast
 
-import (
-	"maps"
-)
+// func (fnTemplate *AnonymousFn) DeriveUniFact_WithGivenFn(obj Obj) (*UniFactStmt, error) {
+// 	paramAsObj := []Obj{}
+// 	for _, param := range fnTemplate.Params {
+// 		paramAsObj = append(paramAsObj, Atom(param))
+// 	}
 
-func (fnTemplate *AnonymousFn) DeriveUniFact_WithGivenFn(obj Obj) (*UniFactStmt, error) {
-	paramAsObj := []Obj{}
-	for _, param := range fnTemplate.Params {
-		paramAsObj = append(paramAsObj, Atom(param))
-	}
+// 	thenFacts := []Spec_OrFact{NewInFactWithParamObj(NewFnObj(obj, paramAsObj), fnTemplate.RetSet, fnTemplate.Line)}
 
-	thenFacts := []FactStmt{NewInFactWithParamObj(NewFnObj(obj, paramAsObj), fnTemplate.RetSet, fnTemplate.Line)}
-	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
+// 	thenFactsReversible := []Spec_OrFact{}
+// 	for _, thenFact := range fnTemplate.ThenFacts {
+// 		if specFact, ok := thenFact.(SpecificFactStmt); ok {
+// 			thenFactsReversible = append(thenFactsReversible, specFact)
+// 		} else if orStmt, ok := thenFact.(*OrStmt); ok {
+// 			thenFactsReversible = append(thenFactsReversible, orStmt)
+// 		} else {
+// 			return nil, fmt.Errorf("then fact is not SpecificFactStmt or OrStmt")
+// 		}
+// 	}
 
-	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts, fnTemplate.Line)
+// 	thenFacts = append(thenFacts, thenFactsReversible...)
 
-	return notInstantiated, nil
-}
+// 	fnTemplateDomFacts := []Spec_OrFact{}
+// 	for _, domFact := range fnTemplate.DomFacts {
+// 		if specFact, ok := domFact.(SpecificFactStmt); ok {
+// 			fnTemplateDomFacts = append(fnTemplateDomFacts, specFact)
+// 		} else if orStmt, ok := domFact.(*OrStmt); ok {
+// 			fnTemplateDomFacts = append(fnTemplateDomFacts, orStmt)
+// 		} else {
+// 			return nil, fmt.Errorf("dom fact is not SpecificFactStmt or OrStmt")
+// 		}
+// 	}
 
-func (fnTemplate *AnonymousFn) DeriveUniFact(defFnTemplateName string, fnObj Obj, templateParamUniMap map[string]Obj) (*UniFactStmt, error) {
-	paramAsObj := []Obj{}
-	for _, param := range fnTemplate.Params {
-		paramAsObj = append(paramAsObj, Atom(param))
-	}
+// 	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplateDomFacts, thenFacts, fnTemplate.Line)
 
-	thenFacts := []FactStmt{NewInFactWithParamObj(NewFnObj(fnObj, paramAsObj), fnTemplate.RetSet, fnTemplate.Line)}
-	thenFacts = append(thenFacts, fnTemplate.ThenFacts...)
+// 	return notInstantiated, nil
+// }
 
-	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplate.DomFacts, thenFacts, fnTemplate.Line)
+// func (fnTemplate *AnonymousFn) DeriveUniFact(defFnTemplateName string, fnObj Obj, templateParamUniMap map[string]Obj) (*UniFactStmt, error) {
+// 	paramAsObj := []Obj{}
+// 	for _, param := range fnTemplate.Params {
+// 		paramAsObj = append(paramAsObj, Atom(param))
+// 	}
 
-	uniMap := maps.Clone(templateParamUniMap)
-	uniMap[defFnTemplateName] = fnObj
+// 	thenFacts := []Spec_OrFact{NewInFactWithParamObj(NewFnObj(fnObj, paramAsObj), fnTemplate.RetSet, fnTemplate.Line)}
 
-	instantiated, err := notInstantiated.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
+// 	thenFactsReversible := []Spec_OrFact{}
+// 	for _, thenFact := range fnTemplate.ThenFacts {
+// 		if specFact, ok := thenFact.(SpecificFactStmt); ok {
+// 			thenFactsReversible = append(thenFactsReversible, specFact)
+// 		} else if orStmt, ok := thenFact.(*OrStmt); ok {
+// 			thenFactsReversible = append(thenFactsReversible, orStmt)
+// 		} else {
+// 			return nil, fmt.Errorf("then fact is not SpecificFactStmt or OrStmt")
+// 		}
+// 	}
 
-	return instantiated.(*UniFactStmt), nil
-}
+// 	thenFacts = append(thenFacts, thenFactsReversible...)
 
-func (stmt *AnonymousFn) InstantiateFnTWithoutChangingTName(uniMap map[string]Obj) ([]Obj, FactStmtSlice, FactStmtSlice, Obj, error) {
-	// 1. instantiate set params in facts
-	newSetParams := []Obj{}
-	for _, setParam := range stmt.ParamSets {
-		instantiatedParam, err := setParam.Instantiate(uniMap)
-		if err != nil {
-			return nil, nil, nil, nil, err
-		}
-		newSetParams = append(newSetParams, instantiatedParam)
-	}
+// 	fnTemplateDomFacts := []Spec_OrFact{}
+// 	for _, domFact := range fnTemplate.DomFacts {
+// 		if specFact, ok := domFact.(SpecificFactStmt); ok {
+// 			fnTemplateDomFacts = append(fnTemplateDomFacts, specFact)
+// 		} else if orStmt, ok := domFact.(*OrStmt); ok {
+// 			fnTemplateDomFacts = append(fnTemplateDomFacts, orStmt)
+// 		} else {
+// 			return nil, fmt.Errorf("dom fact is not SpecificFactStmt or OrStmt")
+// 		}
+// 	}
 
-	// 2. instantiate dom facts
-	instantiatedDomFacts, err := stmt.DomFacts.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, nil, nil, nil, err
-	}
+// 	notInstantiated := NewUniFact(fnTemplate.Params, fnTemplate.ParamSets, fnTemplateDomFacts, thenFacts, fnTemplate.Line)
 
-	// 3. instantiate then facts
-	instantiatedThenFacts, err := stmt.ThenFacts.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, nil, nil, nil, err
-	}
+// 	uniMap := maps.Clone(templateParamUniMap)
+// 	uniMap[defFnTemplateName] = fnObj
 
-	// 4. instantiate ret set
-	instantiatedRetSet, err := stmt.RetSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, nil, nil, nil, err
-	}
+// 	instantiated, err := notInstantiated.InstantiateFact(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return newSetParams, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, nil
-}
+// 	return instantiated.(*UniFactStmt), nil
+// }
+
+// func (stmt *AnonymousFn) InstantiateFnTWithoutChangingTName(uniMap map[string]Obj) ([]Obj, ReversibleFacts, ReversibleFacts, Obj, error) {
+// 	// 1. instantiate set params in facts
+// 	newSetParams := []Obj{}
+// 	for _, setParam := range stmt.ParamSets {
+// 		instantiatedParam, err := setParam.Instantiate(uniMap)
+// 		if err != nil {
+// 			return nil, nil, nil, nil, err
+// 		}
+// 		newSetParams = append(newSetParams, instantiatedParam)
+// 	}
+
+// 	// 2. instantiate dom facts
+// 	instantiatedDomFacts, err := stmt.DomFacts.InstantiateFact(uniMap)
+// 	if err != nil {
+// 		return nil, nil, nil, nil, err
+// 	}
+
+// 	// 3. instantiate then facts
+// 	instantiatedThenFacts, err := stmt.ThenFacts.InstantiateFact(uniMap)
+// 	if err != nil {
+// 		return nil, nil, nil, nil, err
+// 	}
+
+// 	// 4. instantiate ret set
+// 	instantiatedRetSet, err := stmt.RetSet.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, nil, nil, nil, err
+// 	}
+
+// 	return newSetParams, instantiatedDomFacts, instantiatedThenFacts, instantiatedRetSet, nil
+// }

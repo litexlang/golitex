@@ -14,24 +14,24 @@
 
 package litex_ast
 
-type uniFactEnum uint8
+// type uniFactEnum uint8
 
-const (
-	UniFactDepth0 uniFactEnum = iota
-	UniFactDepth1
-	UniFactDepth2
-)
+// const (
+// 	UniFactDepth0 uniFactEnum = iota
+// 	UniFactDepth1
+// 	UniFactDepth2
+// )
 
-func (enum uniFactEnum) allowMoreDepth() bool {
-	return enum == UniFactDepth0 || enum == UniFactDepth1
-}
+// func (enum uniFactEnum) allowMoreDepth() bool {
+// 	return enum == UniFactDepth0 || enum == UniFactDepth1
+// }
 
-func (enum uniFactEnum) addDepth() uniFactEnum {
-	switch enum {
-	case UniFactDepth0:
-		return UniFactDepth1
-	case UniFactDepth1:
-		return UniFactDepth2
-	}
-	return enum
-}
+// func (enum uniFactEnum) addDepth() uniFactEnum {
+// 	switch enum {
+// 	case UniFactDepth0:
+// 		return UniFactDepth1
+// 	case UniFactDepth1:
+// 		return UniFactDepth2
+// 	}
+// 	return enum
+// }

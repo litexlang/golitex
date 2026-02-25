@@ -17,10 +17,9 @@ package litex_executor
 import (
 	"fmt"
 	ast "golitex/ast"
-	glob "golitex/glob"
 )
 
-func (exec *Executor) inferTemplateStmt(stmt *ast.InferTemplateStmt) *glob.StmtRet {
+func (exec *Executor) inferTemplateStmt(stmt *ast.InferTemplateStmt) ast.StmtRet {
 	// Step 1: Verify like claim forall
 	execRet := exec.implyTemplateStmtVerify(stmt)
 	if execRet.IsNotTrue() {
@@ -36,20 +35,20 @@ func (exec *Executor) inferTemplateStmt(stmt *ast.InferTemplateStmt) *glob.StmtR
 	return execRet
 }
 
-func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) *glob.StmtRet {
+func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) ast.StmtRet {
 	exec.NewEnv()
 	defer func() {
 		exec.deleteEnv()
 	}()
 
-	innerStmtRets := []*glob.StmtRet{}
+	innerStmtRets := []ast.StmtRet{}
 
 	// Declare parameters in the env
 	objDefStmt := ast.NewDefLetStmt(stmt.Params, stmt.ParamSets, stmt.IfFacts, stmt.Line)
 
 	execState := exec.defLetStmt(objDefStmt)
 	if execState.IsNotTrue() {
-		return execState.AddError(fmt.Sprintf("ImplyTemplate statement error: Failed to declare parameters:\n%s\n", objDefStmt))
+		return ast.StmtErrRet(objDefStmt, fmt.Sprintf("ImplyTemplate statement error: Failed to declare parameters:\n%s\n", objDefStmt))
 	}
 	innerStmtRets = append(innerStmtRets, execState)
 
@@ -62,11 +61,11 @@ func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) *glob
 		} else if orStmt, ok := domFact.(*ast.OrStmt); ok {
 			factStmt = orStmt
 		} else {
-			return glob.ErrRet(fmt.Sprintf("implyTemplate statement error: unsupported fact type in domFacts: %T", domFact))
+			return ast.StmtErrRet(domFact, fmt.Sprintf("implyTemplate statement error: unsupported fact type in domFacts: %T", domFact))
 		}
 		ret := exec.Env.NewFactWithCheckingNameDefined(factStmt)
 		if ret.IsErr() {
-			return glob.ErrRet(ret.String())
+			return ast.StmtErrRet(factStmt, ret.String())
 		}
 	}
 
@@ -76,7 +75,6 @@ func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) *glob
 		if execState.IsNotTrue() {
 			return execState
 		}
-		innerStmtRets = append(innerStmtRets, execState.InnerStmtRetSlice...)
 	}
 
 	// Verify thenFacts
@@ -88,21 +86,21 @@ func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) *glob
 		} else if orStmt, ok := fact.(*ast.OrStmt); ok {
 			thenFactsAsFactStmt[i] = orStmt
 		} else {
-			return glob.ErrRet(fmt.Sprintf("implyTemplate statement error: unsupported fact type in thenFacts: %T", fact))
+			return ast.StmtErrRet(fact, fmt.Sprintf("implyTemplate statement error: unsupported fact type in thenFacts: %T", fact))
 		}
 	}
 
 	execState, failedFact, err := exec.verifyFactsAtCurEnv(thenFactsAsFactStmt, Round0NoMsg())
 	if err != nil {
-		return glob.ErrRet(fmt.Sprintf("implyTemplate statement error: failed to verify fact:\n%s\n%s", failedFact, err))
+		return ast.StmtErrRet(failedFact, fmt.Sprintf("implyTemplate statement error: failed to verify fact:\n%s\n%s", failedFact, err))
 	} else if execState.IsUnknown() {
-		return glob.ErrRet(fmt.Sprintf("implyTemplate statement error: failed to verify fact:\n%s", failedFact))
+		return ast.StmtErrRet(failedFact, fmt.Sprintf("implyTemplate statement error: failed to verify fact:\n%s", failedFact))
 	}
 
-	return glob.NewStmtWithInnerStmtsRet(innerStmtRets, glob.StmtRetTypeTrue)
+	return ast.NewTrueStmtEmptyRet(stmt).AddInnerStmtRets(innerStmtRets)
 }
 
-func (exec *Executor) implyTemplateStmtStore(stmt *ast.InferTemplateStmt) *glob.StmtRet {
+func (exec *Executor) implyTemplateStmtStore(stmt *ast.InferTemplateStmt) ast.StmtRet {
 	// Store each thenFact in appropriate memory
 	for _, thenFact := range stmt.ThenFacts {
 		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
@@ -118,9 +116,9 @@ func (exec *Executor) implyTemplateStmtStore(stmt *ast.InferTemplateStmt) *glob.
 				return ret
 			}
 		} else {
-			return glob.ErrRet(fmt.Sprintf("implyTemplate statement error: unsupported fact type in thenFacts: %T", thenFact))
+			return ast.StmtErrRet(thenFact, fmt.Sprintf("implyTemplate statement error: unsupported fact type in thenFacts: %T", thenFact))
 		}
 	}
 
-	return glob.NewEmptyStmtTrue()
+	return ast.NewTrueStmtEmptyRet(stmt)
 }

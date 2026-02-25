@@ -14,57 +14,57 @@
 
 package litex_ast
 
-import "fmt"
+// func (stmt *AnonymousFn) Instantiate(uniMap map[string]Obj) (*AnonymousFn, error) {
+// 	var err error
 
-func (stmt *AnonymousFn) Instantiate(uniMap map[string]Obj) (*AnonymousFn, error) {
-	var err error
+// 	newParamSets := make(ObjSlice, len(stmt.ParamSets))
+// 	for i := range stmt.ParamSets {
+// 		newParamSets[i], err = stmt.ParamSets[i].Instantiate(uniMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 	}
 
-	newParamSets := make(ObjSlice, len(stmt.ParamSets))
-	for i := range stmt.ParamSets {
-		newParamSets[i], err = stmt.ParamSets[i].Instantiate(uniMap)
-		if err != nil {
-			return nil, err
-		}
-	}
+// 	newDomFacts := make(ReversibleFacts, len(stmt.DomFacts))
+// 	for i := range stmt.DomFacts {
+// 		cur, err := stmt.DomFacts[i].InstantiateFact(uniMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newDomFacts[i] = cur.(Spec_OrFact)
+// 	}
 
-	newDomFacts := make(FactStmtSlice, len(stmt.DomFacts))
-	for i := range stmt.DomFacts {
-		newDomFacts[i], err = stmt.DomFacts[i].InstantiateFact(uniMap)
-		if err != nil {
-			return nil, err
-		}
-	}
+// 	newThenFacts := make(ReversibleFacts, len(stmt.ThenFacts))
+// 	for i := range stmt.ThenFacts {
+// 		cur, err := stmt.ThenFacts[i].InstantiateFact(uniMap)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		newThenFacts[i] = cur.(Spec_OrFact)
+// 	}
 
-	newThenFacts := make(FactStmtSlice, len(stmt.ThenFacts))
-	for i := range stmt.ThenFacts {
-		newThenFacts[i], err = stmt.ThenFacts[i].InstantiateFact(uniMap)
-		if err != nil {
-			return nil, err
-		}
-	}
+// 	newRetSet, err := stmt.RetSet.Instantiate(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	newRetSet, err := stmt.RetSet.Instantiate(uniMap)
-	if err != nil {
-		return nil, err
-	}
+// 	return NewFnTStruct(stmt.Params, newParamSets, newRetSet, newDomFacts, newThenFacts, stmt.Line), nil
+// }
 
-	return NewFnTStruct(stmt.Params, newParamSets, newRetSet, newDomFacts, newThenFacts, stmt.Line), nil
-}
+// func (stmt *AnonymousFn) Instantiate_FnTDefParams(templateParams []string, params []Obj) (*AnonymousFn, error) {
+// 	if len(params) != len(templateParams) {
+// 		return nil, fmt.Errorf("params length mismatch")
+// 	}
 
-func (stmt *AnonymousFn) Instantiate_FnTDefParams(templateParams []string, params []Obj) (*AnonymousFn, error) {
-	if len(params) != len(templateParams) {
-		return nil, fmt.Errorf("params length mismatch")
-	}
+// 	uniMap := map[string]Obj{}
+// 	for i := range len(templateParams) {
+// 		uniMap[templateParams[i]] = params[i]
+// 	}
 
-	uniMap := map[string]Obj{}
-	for i := range len(templateParams) {
-		uniMap[templateParams[i]] = params[i]
-	}
+// 	return stmt.Instantiate(uniMap)
+// }
 
-	return stmt.Instantiate(uniMap)
-}
-
-func (stmt *AnonymousFn) InstantiateFnStruct_FnName(fnTName string, obj Obj) (*AnonymousFn, error) {
-	uniMap := map[string]Obj{fnTName: obj}
-	return stmt.Instantiate(uniMap)
-}
+// func (stmt *AnonymousFn) InstantiateFnStruct_FnName(fnTName string, obj Obj) (*AnonymousFn, error) {
+// 	uniMap := map[string]Obj{fnTName: obj}
+// 	return stmt.Instantiate(uniMap)
+// }

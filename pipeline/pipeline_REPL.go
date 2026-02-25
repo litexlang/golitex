@@ -50,7 +50,13 @@ func RunREPL(version string) {
 		for _, ret := range rets {
 			fmt.Fprint(writer, glob.StringWithOptimizedNewline(ret.String()))
 		}
-		fmt.Fprint(writer, glob.REPLMsg(retType))
+		if retType == glob.TRUE {
+			fmt.Fprint(writer, glob.REPLSuccessMessage)
+		} else if retType == glob.ERROR {
+			fmt.Fprint(writer, glob.REPLErrorMessage)
+		} else {
+			fmt.Fprint(writer, glob.REPLUnknownMessage)
+		}
 	}
 }
 
