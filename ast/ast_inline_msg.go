@@ -517,6 +517,10 @@ func (s *EvalStmt) InlineString() string {
 	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.ObjToEval.String())
 }
 
+func (s *SetTemplateStmt) InlineString() string {
+	return s.String()
+}
+
 // func (s *DefProveAlgoStmt) InlineString() string {
 // 	return "TODO"
 // }

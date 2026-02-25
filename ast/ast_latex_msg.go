@@ -1094,6 +1094,10 @@ func (s *EvalStmt) ToLatexString() string {
 	return fmt.Sprintf("%s(%s)", glob.KeywordEval, s.ObjToEval.ToLatexString())
 }
 
+func (s *SetTemplateStmt) ToLatexString() string {
+	return s.String()
+}
+
 // func (s *DefProveAlgoStmt) ToLatexString() string {
 // 	return s.String()
 // }
