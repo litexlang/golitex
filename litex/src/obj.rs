@@ -4,9 +4,11 @@ use crate::consts::{
 };
 use std::fmt;
 use crate::helper::{braced_vec_to_string, curly_braced_vec_to_string};
+use crate::atom::{AtomWithoutPkg, AtomWithPkg};
+use crate::atom::Atom;
 
 pub enum Obj {
-    Atom(Atom),
+    AtomWithoutPkg(AtomWithoutPkg),
     AtomWithPkg(AtomWithPkg),
     FnObj(FnObj),
     Number(Number),
@@ -37,14 +39,6 @@ pub enum Obj {
 #[allow(non_camel_case_types)]
 pub type box_Obj = Box<Obj>;
 
-pub struct Atom {
-    pub name: String,
-}
-
-pub struct AtomWithPkg {
-    pub pkg: String,
-    pub name: String,
-}
 
 
 pub struct FnObj {
@@ -153,28 +147,15 @@ pub struct ZObj {
 pub struct RObj {   
 }
 
-pub enum AtomOrAtomWithPkg {
-    Atom(Atom),
-    AtomWithPkg(AtomWithPkg),
-}
-
 pub struct InstSetTemplateObj {
-    pub set_template: Box<AtomOrAtomWithPkg>,
+    pub set_template: Box<Atom>,
     pub param_sets: Vec<box_Obj>,
 }
 
-impl AtomOrAtomWithPkg {
-    pub fn box_atom(atom: Atom) -> Box<AtomOrAtomWithPkg> {
-        Box::new(AtomOrAtomWithPkg::Atom(atom))
-    }
-    pub fn box_atom_with_pkg(atom_with_pkg: AtomWithPkg) -> Box<AtomOrAtomWithPkg> {
-        Box::new(AtomOrAtomWithPkg::AtomWithPkg(atom_with_pkg))
-    }
-}
 
 impl Obj {
-    pub fn box_atom(name: &str) -> box_Obj {
-        Box::new(Obj::Atom(Atom::new(name)))
+    pub fn box_atom_without_pkg(name: &str) -> box_Obj {
+        Box::new(Obj::AtomWithoutPkg(AtomWithoutPkg::new(name)))
     }
     pub fn box_atom_with_pkg(pkg: &str, name: &str) -> box_Obj {
         Box::new(Obj::AtomWithPkg(AtomWithPkg::new(pkg, name)))
@@ -248,14 +229,14 @@ impl Obj {
     pub fn box_r_obj() -> box_Obj {
         Box::new(Obj::RObj(RObj::new()))
     }
-    pub fn box_inst_set_template_obj(set_template: Box<AtomOrAtomWithPkg>, param_sets: Vec<box_Obj>) -> box_Obj {
+    pub fn box_inst_set_template_obj(set_template: Box<Atom>, param_sets: Vec<box_Obj>) -> box_Obj {
         Box::new(Obj::InstSetTemplateObj(InstSetTemplateObj::new(set_template, param_sets)))
     }
 }
 
-impl Atom {
+impl AtomWithoutPkg {
     pub fn new(name: &str) -> Self {
-        Atom { name: name.to_string() }
+        AtomWithoutPkg { name: name.to_string() }
     }
 }
 
@@ -404,7 +385,7 @@ impl RObj {
 }
 
 impl InstSetTemplateObj {
-    pub fn new(set_template: Box<AtomOrAtomWithPkg>, param_sets: Vec<box_Obj>) -> Self {
+    pub fn new(set_template: Box<Atom>, param_sets: Vec<box_Obj>) -> Self {
         InstSetTemplateObj { set_template, param_sets }
     }
 }
@@ -413,7 +394,7 @@ impl InstSetTemplateObj {
 impl fmt::Display for Obj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Obj::Atom(a) => write!(f, "{}", a),
+            Obj::AtomWithoutPkg(a) => write!(f, "{}", a),
             Obj::AtomWithPkg(a) => write!(f, "{}", a),
             Obj::FnObj(a) => write!(f, "{}", a),
             Obj::Number(number) => write!(f, "{}", number),
@@ -443,7 +424,7 @@ impl fmt::Display for Obj {
     }
 }
 
-impl fmt::Display for Atom {
+impl fmt::Display for AtomWithoutPkg {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.name)
     }
@@ -602,8 +583,8 @@ impl fmt::Display for RObj {
 impl fmt::Display for InstSetTemplateObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let template_str = match self.set_template.as_ref() {
-            AtomOrAtomWithPkg::Atom(atom) => atom.to_string(),
-            AtomOrAtomWithPkg::AtomWithPkg(atom_with_pkg) => atom_with_pkg.to_string(),
+            Atom::AtomWithoutPkg(atom) => atom.to_string(),
+            Atom::AtomWithPkg(atom_with_pkg) => atom_with_pkg.to_string(),
         };
         write!(f, "{}{}{}", INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, template_str, braced_vec_to_string(&self.param_sets))
     }
@@ -613,8 +594,8 @@ impl fmt::Display for InstSetTemplateObj {
 impl Obj {
     pub fn equal_literally(left: &Obj, right: &Obj) -> bool {
         match left {
-            Obj::Atom(a) => match right {
-                Obj::Atom(b) => a.to_string() == b.to_string(),
+            Obj::AtomWithoutPkg(a) => match right {
+                Obj::AtomWithoutPkg(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::AtomWithPkg(a) => match right {

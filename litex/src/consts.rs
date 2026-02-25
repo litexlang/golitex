@@ -26,20 +26,9 @@ pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
 pub const FINITE_SET: &str = "finite_set";
 
-// pub const IS_SET: &str = "is_set";
-// pub const IS_NONEMPTY_SET: &str = "is_nonempty_set";
-// pub const IS_FINITE_SET: &str = "is_finite_set";
-
 pub const N_POS: &str = "N_pos";
 pub const N: &str = "N";
 pub const Q: &str = "Q";
 pub const Z: &str = "Z";
 pub const R: &str = "R";
-
-// pub const NOT: &str = "not";
-// pub const OR: &str = "or";
-// pub const FORALL: &str = "forall";
-// pub const EXIST: &str = "exist";
-
-// pub const PROP: &str = "prop";
 
