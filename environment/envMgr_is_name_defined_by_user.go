@@ -145,6 +145,31 @@ func (envMgr *EnvMgr) IsAlgoNameDefinedByUser(AlgoName string) bool {
 	}
 }
 
+func (envMgr *EnvMgr) IsSetTemplateNameDefinedByUser(SetTemplateName string) bool {
+	withPkgName, pkgName, _ := glob.GetPkgNameAndName(SetTemplateName)
+
+	if withPkgName && pkgName != envMgr.EnvPkgMgr.PkgMgr.CurPkgDefaultName {
+		pkgEnvMgr := envMgr.GetEnvMgrOfPkgName(pkgName)
+		if pkgEnvMgr == nil {
+			return false
+		}
+
+		_, ok := pkgEnvMgr.AllDefinedSetTemplateNames[SetTemplateName]
+		return ok
+	} else {
+		_, ok := envMgr.AllDefinedSetTemplateNames[SetTemplateName]
+		if ok {
+			return true
+		}
+
+		_, ok = BuiltinEnvMgrWithEmptyEnvPkgMgr.AllDefinedSetTemplateNames[SetTemplateName]
+		if ok {
+			return true
+		}
+		return false
+	}
+}
+
 func (envMgr *EnvMgr) IsProveAlgoNameDefinedByUser(ProveAlgoName string) bool {
 	withPkgName, pkgName, _ := glob.GetPkgNameAndName(ProveAlgoName)
 

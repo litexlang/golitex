@@ -84,6 +84,7 @@ func (s *HaveFnEqual) stmt()           {}
 func (s *HaveFnEqualCaseByCase) stmt() {}
 func (s *LetFn) stmt()                 {}
 func (s *ChainPureFact) stmt()         {}
+func (s *SetTemplateStmt) stmt()       {}
 
 func (s *DefLetStmt) algoStmt()  {}
 func (s *DefPropStmt) algoStmt() {}
@@ -116,6 +117,7 @@ func (s *HaveObjInNonEmptySetStmt) algoStmt() {}
 
 // func (s *ChainPureFact) algoStmt()           {}
 func (s *ChainPureFact) algoStmt() {}
+func (s *SetTemplateStmt) algoStmt() {}
 
 // func (s *KnowExistPropStmt) algoStmt()                 {}
 // func (s *DefFnSetStmt) algoStmt()         {}
@@ -222,6 +224,7 @@ func (s *SetIsFnStmt) GetLine() uint           { return s.Line }
 func (p *PureSpecificFactStmt) GetLine() uint  { return p.Line }
 func (e *ExistSpecificFactStmt) GetLine() uint { return e.Line }
 func (c *ChainPureFact) GetLine() uint         { return c.Line }
+func (s *SetTemplateStmt) GetLine() uint      { return s.Line }
 
 func (s *DefLetStmt) SetLine(l uint)  { s.Line = l }
 func (s *DefPropStmt) SetLine(l uint) { s.Line = l }
@@ -294,6 +297,7 @@ func (s *FnIsSubsetOfCartStmt) SetLine(l uint)  { s.Line = l }
 func (p *PureSpecificFactStmt) SetLine(l uint)  { p.Line = l }
 func (e *ExistSpecificFactStmt) SetLine(l uint) { e.Line = l }
 func (c *ChainPureFact) SetLine(l uint)         { c.Line = l }
+func (s *SetTemplateStmt) SetLine(l uint)      { s.Line = l }
 
 type FactStmt interface {
 	factStmt()

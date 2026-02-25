@@ -125,6 +125,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ast.StmtRet {
 		execRet = exec.haveFnEqualCaseByCase(stmt)
 	case *ast.LetFn:
 		execRet = exec.letFn(stmt)
+	case *ast.SetTemplateStmt:
+		execRet = exec.setTemplateStmt(stmt)
 	default:
 		execRet = ast.StmtErrRet(stmt, fmt.Sprintf("unknown statement type: %T", stmt))
 	}
@@ -1354,4 +1356,8 @@ func (exec *Executor) letFn(stmt *ast.LetFn) ast.StmtRet {
 	}
 
 	return exec.NewTrueStmtRet(stmt).AddDefineMsgs(ret.GetDefineMsgs()).AddInfers(ret.GetInfers())
+}
+
+func (exec *Executor) setTemplateStmt(stmt *ast.SetTemplateStmt) ast.StmtRet {
+	return exec.NewTrueStmtRet(stmt)
 }

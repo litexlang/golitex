@@ -485,3 +485,12 @@ type ChainPureFact struct {
 
 	Line uint
 }
+
+type SetTemplateStmt struct {
+	Name      string
+	Params    StrSlice
+	ParamSets ObjSlice
+	EqualTo   Obj
+
+	Line uint
+}

@@ -1460,6 +1460,19 @@ func (stmt *EvalStmt) String() string {
 	return fmt.Sprintf("%s(%s)", glob.KeywordEval, stmt.ObjToEval.String())
 }
 
+func (s *SetTemplateStmt) String() string {
+	var builder strings.Builder
+	builder.WriteString(s.Name)
+	if len(s.Params) > 0 {
+		builder.WriteString("(")
+		builder.WriteString(strings.Join(s.Params, ", "))
+		builder.WriteString(")")
+	}
+	builder.WriteString(" = ")
+	builder.WriteString(s.EqualTo.String())
+	return builder.String()
+}
+
 // func (stmt *DefProveAlgoStmt) String() string {
 // 	var builder strings.Builder
 // 	builder.WriteString(glob.KeywordProveAlgo)
