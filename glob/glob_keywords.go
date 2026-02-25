@@ -311,6 +311,7 @@ var SymbolSet map[string]struct{} = map[string]struct{}{
 	KeySymbolSemiColon:    {}, // ";"
 	KeySymbolEquivalent:   {}, // "<=>"
 	KeySymbolBackSlash:    {},
+	KeySymbolAt:           {}, // "@"
 	// KeySymbolQuestionMark: {}, // "?"
 }
 
