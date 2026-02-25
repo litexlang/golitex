@@ -1,52 +1,5 @@
-prove:
-    let fn f(x R, y R) R
-    know forall x R, y R: f(x, y) = 0
+set_template seq(s set, n N_pos) = fn f(i N_pos: i <= n) s
 
-    algo f(x, y):
-        return 0
-
-    eval f(1, 2)
-    f(1, 2) = 0
-
-prove:
-    let fn f(x R, y R) R
-    know forall x R, y R: f(x, y) = x + y
-
-    algo f(x, y):
-        return x + y
-
-    eval f(1, 2)
-    f(1, 2) = 3
-
-prove:
-    let fn f(x R, y R) R
-    know:
-        forall x, y R:
-            x < y
-            =>:
-                f(x, y) = y
-        forall x, y R:
-            x > y
-            =>:
-                f(x, y) = x
-        forall x, y R:
-            x = y
-            =>:
-                f(x, y) = x
-
-    algo f(x, y):
-        if x < y:
-            return y
-        if x > y:
-            return x
-        if x = y:
-            return x
-
-    eval f(1, 2)
-    f(1, 2) = 2
-
-    eval f(2, 1)
-    f(2, 1) = 2
-
-    eval f(1, 1)
-    f(1, 1) = 1
+forall a @seq(R, 1):
+    a $in fn(i N_pos: i <= 1) R
+    a(1) = a(1)

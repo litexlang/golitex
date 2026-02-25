@@ -4379,11 +4379,6 @@ func (p *TbParser) defSetTemplateStmt(tb *tokenBlock) (*DefSetTemplateStmt, erro
 		return nil, ErrInLine(err, tb)
 	}
 
-	err = tb.header.skip(glob.KeySymbolLeftBrace)
-	if err != nil {
-		return nil, ErrInLine(err, tb)
-	}
-
 	params, paramSets, domFacts, err := p.leftBraceParamsAndParamSetsAndDomsAndRightBrace(tb)
 	if err != nil {
 		return nil, ErrInLine(err, tb)
