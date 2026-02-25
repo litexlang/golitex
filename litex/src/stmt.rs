@@ -2,7 +2,7 @@ use std::fmt;
 use crate::consts::FACT_PREFIX;
 use crate::helper::braced_vec_to_string;
 use crate::obj::box_Obj;
-use crate::predicate::box_Predicate;
+use crate::atom::Atom;
 
 pub enum Stmt {
     Fact(PureSpecFact),
@@ -12,7 +12,7 @@ pub enum Stmt {
 pub type box_Stmt = Box<Stmt>;
 
 pub struct PureSpecFact {
-    pub predicate: box_Predicate,
+    pub predicate: Box<Atom>,
     pub body: Vec<box_Obj>,
 }
 
@@ -25,13 +25,13 @@ impl fmt::Display for Stmt {
 }
 
 impl Stmt {
-    pub fn box_fact(predicate: box_Predicate, body: Vec<box_Obj>) -> box_Stmt {
+    pub fn box_fact(predicate: Box<Atom>, body: Vec<box_Obj>) -> box_Stmt {
         Box::new(Stmt::Fact(PureSpecFact::new(predicate, body)))
     }
 }
 
 impl PureSpecFact {
-    pub fn new(predicate: box_Predicate, body: Vec<box_Obj>) -> Self {
+    pub fn new(predicate: Box<Atom>, body: Vec<box_Obj>) -> Self {
         PureSpecFact { predicate, body }
     }
 }
