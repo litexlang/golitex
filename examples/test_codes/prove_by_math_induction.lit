@@ -24,3 +24,4 @@ prove:
     induc n N: $p(n):
         do_nothing
 
+ 
