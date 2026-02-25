@@ -1,3 +1,6 @@
 set_template finite_seq(s set, n N_pos) = fn f(i N_pos: i <= n) s
 
+forall a @finite_seq(R, 1):
+    a(1) = a(1)
+
 @finite_seq(R, 1) = fn f(i N_pos: i <= 1) R
