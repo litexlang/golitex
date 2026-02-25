@@ -1,9 +1,9 @@
 use crate::consts::{
-    ADD, CAP, COMMA, DIV, DISJOINT_UNION, INTERSECT, LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE, MOD, MUL, PKG_SEPARATOR, POW, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, SET_DIM, PROJ, CART, RANGE, CLOSED_RANGE, VAL,
-    RIGHT_BRACE, SET_MINUS, SUB, UNION, CUP, N_POS, N, Q, Z, R, COUNT,
+    ADD, CAP, DIV, DISJOINT_UNION, INTERSECT, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE, MOD, MUL, PKG_SEPARATOR, POW, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, SET_DIM, PROJ, CART, RANGE, CLOSED_RANGE, VAL,
+    SET_MINUS, SUB, UNION, CUP, N_POS, N, Q, Z, R, COUNT, POWER_SET, CHOICE,
 };
 use std::fmt;
-use crate::helper::{braced_vec_to_string, curly_braced_vec_to_string};
+use crate::helper::{braced_string, braced_two_strings, braced_vec_to_string, curly_braced_vec_to_string};
 use crate::atom::{AtomWithoutPkg, AtomWithPkg};
 use crate::atom::Atom;
 
@@ -43,14 +43,25 @@ pub enum Obj {
     Range(Range),
     ClosedRange(ClosedRange),
     Val(Val),
-    
-}
-pub struct Val {
-    pub value: box_Obj,
+    PowerSet(PowerSet),
+    Choice(Choice),
 }
 
 #[allow(non_camel_case_types)]
 pub type box_Obj = Box<Obj>;
+
+pub struct Choice {
+    pub element: box_Obj,
+    pub set: box_Obj,
+}
+
+pub struct PowerSet {
+    pub set: box_Obj,
+}
+
+pub struct Val {
+    pub value: box_Obj,
+}
 
 pub struct Range {
     pub start: box_Obj,
@@ -305,7 +316,15 @@ impl Obj {
     pub fn box_val(value: box_Obj) -> box_Obj {
         Box::new(Obj::Val(Val::new(value)))
     }
+    pub fn box_power_set(set: box_Obj) -> box_Obj {
+        Box::new(Obj::PowerSet(PowerSet::new(set)))
+    }
+    pub fn box_choice(element: box_Obj, set: box_Obj) -> box_Obj {
+        Box::new(Obj::Choice(Choice::new(element, set)))
+    }
 }
+
+
 
 impl AtomWithoutPkg {
     pub fn new(name: &str) -> Self {
@@ -463,6 +482,18 @@ impl InstSetTemplateObj {
     }
 }
 
+impl PowerSet {
+    pub fn new(set: box_Obj) -> Self {
+        PowerSet { set }
+    }
+}
+
+impl Choice {
+    pub fn new(element: box_Obj, set: box_Obj) -> Self {
+        Choice { element, set }
+    }
+}
+
 impl SetDim {
     pub fn new(set: box_Obj) -> Self {
         SetDim { set }
@@ -556,25 +587,33 @@ impl fmt::Display for Obj {
             Obj::Range(range) => write!(f, "{}", range),
             Obj::ClosedRange(closed_range) => write!(f, "{}", closed_range),
             Obj::Val(val) => write!(f, "{}", val),
+            Obj::PowerSet(power_set) => write!(f, "{}", power_set),
+            Obj::Choice(choice) => write!(f, "{}", choice),
         }
+    }
+}
+
+impl fmt::Display for Choice {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}", CHOICE, braced_two_strings(&self.element, &self.set))
     }
 }
 
 impl fmt::Display for Range {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{} {}{}", RANGE, LEFT_BRACE, self.start, COMMA, self.end, RIGHT_BRACE)
+        write!(f, "{}{}", RANGE, braced_two_strings(&self.start, &self.end))
     }
 }
 
 impl fmt::Display for ClosedRange {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{} {}{}", CLOSED_RANGE, LEFT_BRACE, self.start, COMMA, self.end, RIGHT_BRACE)
+        write!(f, "{}{}", CLOSED_RANGE, braced_two_strings(&self.start, &self.end))
     }
 }
 
 impl fmt::Display for Count {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}", COUNT, LEFT_BRACE, self.set, RIGHT_BRACE)
+        write!(f, "{}{}", COUNT, braced_string(&self.set))
     }
 }
 
@@ -586,20 +625,19 @@ impl fmt::Display for Tuple {
 
 impl fmt::Display for SetDim {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}", SET_DIM, LEFT_BRACE, self.set, RIGHT_BRACE)?;
-        write!(f, "{}", RIGHT_BRACE)
+        write!(f, "{}{}", SET_DIM, braced_string(&self.set))
     }
 }
 
 impl fmt::Display for Proj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{} {}{}", PROJ, LEFT_BRACE, self.set, COMMA, self.dim, RIGHT_BRACE)
+        write!(f, "{}{}", PROJ, braced_two_strings(&self.set, &self.dim))
     }
 }
 
 impl fmt::Display for Dim {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}", SET_DIM, LEFT_BRACE, self.dim, RIGHT_BRACE)
+        write!(f, "{}{}", SET_DIM, braced_string(&self.dim))
     }
 }
 
@@ -659,43 +697,37 @@ impl fmt::Display for Pow {
 
 impl fmt::Display for Union {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}{}", UNION, LEFT_BRACE, self.left, COMMA, self.right)?;
-        write!(f, "{}", RIGHT_BRACE)
+        write!(f, "{}{}", UNION, braced_two_strings(&self.left, &self.right))
     }
 }
 
 impl fmt::Display for Intersect {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}{}", INTERSECT, LEFT_BRACE, self.left, COMMA, self.right)?;
-        write!(f, "{}", RIGHT_BRACE)
+        write!(f, "{}{}", INTERSECT, braced_two_strings(&self.left, &self.right))
     }
 }
 
 impl fmt::Display for SetMinus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}{}", SET_MINUS, LEFT_BRACE, self.left, COMMA, self.right)?;
-        write!(f, "{}", RIGHT_BRACE)
+        write!(f, "{}{}", SET_MINUS, braced_two_strings(&self.left, &self.right))
     }
 }
 
 impl fmt::Display for DisjointUnion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}{}", DISJOINT_UNION, LEFT_BRACE, self.left, COMMA, self.right)?;
-        write!(f, "{}", RIGHT_BRACE)
+        write!(f, "{}{}", DISJOINT_UNION, braced_two_strings(&self.left, &self.right))
     }
 }
 
 impl fmt::Display for Cup {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}", CUP, LEFT_BRACE, self.left)?;
-        write!(f, "{}", RIGHT_BRACE)
+        write!(f, "{}{}", CUP, braced_string(&self.left))
     }
 }
 
 impl fmt::Display for Cap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}{}", CAP, LEFT_BRACE, self.left, COMMA, self.right)?;
-        write!(f, "{}", RIGHT_BRACE)
+        write!(f, "{}{}", CAP, braced_two_strings(&self.left, &self.right))
     }
 }
 
@@ -725,7 +757,7 @@ impl fmt::Display for FnSetWithoutParams {
 
 impl fmt::Display for FnSetWithParams {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}", FN, LEFT_BRACE, RIGHT_BRACE)
+        write!(f, "{}{}", FN, braced_string(&""))
     }
 }
 
@@ -777,7 +809,13 @@ impl fmt::Display for Cart {
 
 impl fmt::Display for Val {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}", VAL, LEFT_BRACE, self.value, RIGHT_BRACE)
+        write!(f, "{}{}", VAL, braced_string(&self.value))
+    }
+}
+
+impl fmt::Display for PowerSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}", POWER_SET, braced_string(&self.set))
     }
 }
 
@@ -923,6 +961,14 @@ impl Obj {
             },
             Obj::Val(a) => match right {
                 Obj::Val(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::PowerSet(a) => match right {
+                Obj::PowerSet(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::Choice(a) => match right {
+                Obj::Choice(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
         }

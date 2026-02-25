@@ -28,6 +28,7 @@ fn main() {
     try_instantiated_set_template_obj();
     try_cart_set_dim_proj_dim_tuple();
     try_count_range_closed_range_val();
+    try_power_set_choice();
 }
 
 fn try_atom_fn_obj() {
@@ -166,4 +167,11 @@ fn try_count_range_closed_range_val() {
     println!("{}", range);
     println!("{}", closed_range);
     println!("{}", val);
+}
+
+fn try_power_set_choice() {
+    let power_set = Obj::box_power_set(Obj::box_atom_without_pkg("a"));
+    let choice = Obj::box_choice(Obj::box_atom_without_pkg("a"), Obj::box_atom_without_pkg("b"));
+    println!("{}", power_set);
+    println!("{}", choice);
 }

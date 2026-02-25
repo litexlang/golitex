@@ -13,6 +13,8 @@ pub const SET_MINUS: &str = "set_minus";
 pub const DISJOINT_UNION: &str = "disjoint_union";
 pub const CUP: &str = "cup";
 pub const CAP: &str = "cap";
+pub const POWER_SET: &str = "power_set";
+pub const CHOICE: &str = "choice";
 
 pub const LEFT_BRACE: &str = "(";
 pub const RIGHT_BRACE: &str = ")";
