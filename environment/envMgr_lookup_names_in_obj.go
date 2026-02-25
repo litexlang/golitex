@@ -28,6 +28,8 @@ func (envMgr *EnvMgr) LookupNamesInObj(obj ast.Obj, extraParams map[string]struc
 		return envMgr.lookupNamesInFnObj(asObj, extraParams)
 	case ast.FnSetObj:
 		return envMgr.lookupNamesInFnSetObj(asObj, extraParams)
+	case *ast.InstSetTemplateObj:
+		return envMgr.lookupNamesInInstSetTemplateObj(asObj, extraParams)
 	default:
 		return ast.NewErrShortRet()
 	}
@@ -162,4 +164,19 @@ func (envMgr *EnvMgr) lookupNamesInFnSetObj(obj ast.FnSetObj, extraParams map[st
 	default:
 		panic(fmt.Sprintf("unknown function set object type: %T", fnSetObj))
 	}
+}
+
+func (envMgr *EnvMgr) lookupNamesInInstSetTemplateObj(obj *ast.InstSetTemplateObj, extraParams map[string]struct{}) ast.ShortRet {
+	setTemplateDef := envMgr.GetSetTemplateDef(string(obj.Name))
+	if setTemplateDef == nil {
+		return ast.NewErrShortRetWithMsg(fmt.Sprintf("undefined set template name: %s", string(obj.Name)))
+	}
+
+	for _, param := range obj.Params {
+		if ret := envMgr.LookupNamesInObj(param, extraParams); ret.IsNotTrue() {
+			return ret
+		}
+	}
+
+	return ast.NewTrueShortRet()
 }

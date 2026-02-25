@@ -31,6 +31,7 @@ func (f Atom) obj()                 {}
 func (f *FnObj) obj()               {}
 func (f *FnSetObjWithName) obj()    {}
 func (f *FnSetObjWithoutName) obj() {}
+func (f *InstSetTemplateObj) obj()       {}
 
 func (f Atom) ReplaceObj(oldObj Obj, newObj Obj) Obj {
 	if f.String() == oldObj.String() {
