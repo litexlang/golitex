@@ -2,9 +2,6 @@ use std::fmt;
 use crate::obj::box_Obj;
 use crate::consts::{SET, NONEMPTY_SET, FINITE_SET};
 
-#[allow(non_camel_case_types)]
-pub type box_ParameterSet = Box<ParameterSet>;
-
 pub enum ParameterSet {
     Set(SetAsParamSet),
     NonemptySet(NonemptySetAsParamSet),
