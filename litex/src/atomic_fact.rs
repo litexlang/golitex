@@ -1,7 +1,7 @@
 use std::fmt;
 use crate::obj::Obj;
 use crate::atom::Atom;
-use crate::consts::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, NOT_EQUAL};
+use crate::consts::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, NOT_EQUAL, IN};
 use crate::helper::{braced_string, braced_vec_to_string, str_with_line_file};
 
 pub enum AtomicFact {
@@ -14,6 +14,7 @@ pub enum AtomicFact {
     IsSetFact(IsSetFact),
     IsNonemptySetFact(IsNonemptySetFact),
     IsFiniteSetFact(IsFiniteSetFact),
+    InFact(InFact),
 
     NotNormalAtomicFact(NotNormalAtomicFact),
     NotEqualFact(NotEqualFact),
@@ -24,6 +25,21 @@ pub enum AtomicFact {
     NotIsSetFact(NotIsSetFact),
     NotIsNonemptySetFact(NotIsNonemptySetFact),
     NotIsFiniteSetFact(NotIsFiniteSetFact),
+    NotInFact(NotInFact),
+}
+
+pub struct InFact {
+    pub element: Box<Obj>,
+    pub set: Box<Obj>,
+    pub line: u32,
+    pub file_index: usize,
+}
+
+pub struct NotInFact {
+    pub element: Box<Obj>,
+    pub set: Box<Obj>,
+    pub line: u32,
+    pub file_index: usize,
 }
 
 pub struct NormalAtomicFact {
@@ -254,6 +270,19 @@ impl NotIsFiniteSetFact {
     }
 }
 
+impl InFact {
+    pub fn new(element: Box<Obj>, set: Box<Obj>, line: u32, file_index: usize) -> Self {
+        InFact { element, set, line, file_index }
+    }
+}
+
+impl NotInFact {
+    pub fn new(element: Box<Obj>, set: Box<Obj>, line: u32, file_index: usize) -> Self {
+        NotInFact { element, set, line, file_index }
+    }
+}
+
+
 impl fmt::Display for AtomicFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -275,6 +304,8 @@ impl fmt::Display for AtomicFact {
             AtomicFact::NotIsSetFact(x) => write!(f, "{}", x),
             AtomicFact::NotIsNonemptySetFact(x) => write!(f, "{}", x),
             AtomicFact::NotIsFiniteSetFact(x) => write!(f, "{}", x),
+            AtomicFact::InFact(x) => write!(f, "{}", x),
+            AtomicFact::NotInFact(x) => write!(f, "{}", x),
         }
     }
 }
@@ -300,7 +331,21 @@ impl AtomicFact {
             AtomicFact::NotIsSetFact(x) => x.file_index,
             AtomicFact::NotIsNonemptySetFact(x) => x.file_index,
             AtomicFact::NotIsFiniteSetFact(x) => x.file_index,
+            AtomicFact::InFact(x) => x.file_index,
+            AtomicFact::NotInFact(x) => x.file_index,
         }
+    }
+}
+
+impl fmt::Display for InFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}", self.element, IN, self.set)
+    }
+}
+
+impl fmt::Display for NotInFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {} {}", NOT, self.element, IN, self.set)
     }
 }
 
@@ -433,6 +478,8 @@ impl AtomicFact {
             AtomicFact::NotIsSetFact(x) => x.line,
             AtomicFact::NotIsNonemptySetFact(x) => x.line,
             AtomicFact::NotIsFiniteSetFact(x) => x.line,
+            AtomicFact::InFact(x) => x.line,
+            AtomicFact::NotInFact(x) => x.line,
         }
     }
 
