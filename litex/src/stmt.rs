@@ -8,9 +8,6 @@ pub enum Stmt {
     Fact(PureSpecFact),
 }
 
-#[allow(non_camel_case_types)]
-pub type box_Stmt = Box<Stmt>;
-
 pub struct PureSpecFact {
     pub predicate: Box<Atom>,
     pub body: Vec<box_Obj>,

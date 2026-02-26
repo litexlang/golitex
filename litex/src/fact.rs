@@ -1,3 +1,4 @@
+use std::fmt;
 use crate::atomic_fact::AtomicFact;
 use crate::exist_fact::ExistFact;
 use crate::or_fact::OrFact;
@@ -14,24 +15,15 @@ pub enum Fact {
     ForallFactWithIff(ForallFactWithIff),
 }
 
-// impl Fact {
-//     pub fn box_atomic_fact(fact: Box<AtomicFact>) -> Box<Fact> {
-//         Box::new(Fact::AtomicFact(fact))
-//     }
-//     pub fn box_exist_fact(fact: Box<ExistFact>) -> Box<Fact> {
-//         Box::new(Fact::ExistFact(fact))
-//     }
-//     pub fn box_or_fact(fact: OrFact) -> Box<Fact> {
-//         Box::new(Fact::OrFact(fact))
-//     }
-//     pub fn box_forall_fact(fact: ForallFact) -> Box<Fact> {
-//         Box::new(Fact::ForallFact(fact))
-//     }
-//     pub fn box_chain_fact(fact: ChainFact) -> Box<Fact> {
-//         Box::new(Fact::ChainFact(fact))
-//     }
-//     pub fn box_forall_fact_with_iff(fact: ForallFactWithIff) -> Box<Fact> {
-//         Box::new(Fact::ForallFactWithIff(fact))
-//     }
-// }
-
+impl fmt::Display for Fact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Fact::AtomicFact(atomic_fact) => write!(f, "{}", atomic_fact),
+            Fact::ExistFact(exist_fact) => write!(f, "{}", exist_fact),
+            Fact::OrFact(or_fact) => write!(f, "{}", or_fact),
+            Fact::ForallFact(forall_fact) => write!(f, "{}", forall_fact),
+            Fact::ChainFact(chain_fact) => write!(f, "{}", chain_fact),
+            Fact::ForallFactWithIff(forall_fact_with_iff) => write!(f, "{}", forall_fact_with_iff),
+        }
+    }
+}

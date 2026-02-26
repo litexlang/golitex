@@ -1,3 +1,4 @@
+use std::fmt;
 use crate::atomic_fact::AtomicFact;
 use crate::exist_fact::ExistFact;
 
@@ -6,11 +7,11 @@ pub enum SpecFact {
     ExistFact(Box<ExistFact>),
 }
 
-// impl SpecFact {
-//     pub fn box_atomic_fact(fact: Box<AtomicFact>) -> Box<SpecFact> {
-//         Box::new(SpecFact::AtomicFact(fact))
-//     }
-//     pub fn box_exist_fact(fact: Box<ExistFact>) -> Box<SpecFact> {
-//         Box::new(SpecFact::ExistFact(fact))
-//     }
-// }
+impl fmt::Display for SpecFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SpecFact::AtomicFact(atomic_fact) => write!(f, "{}", atomic_fact),
+            SpecFact::ExistFact(exist_fact) => write!(f, "{}", exist_fact),
+        }
+    }
+}
