@@ -46,13 +46,13 @@ func (ver *Verifier) verUniFact_checkFactOneByOne(oldStmt *ast.UniFactStmt, stat
 	}
 
 	// 检查所有 paramSet 是否都是 list_set，如果是，自动使用 enum 的逻辑
-	if ver.allParamSetsAreListSet(newStmtPtr.ParamSets) {
-		verRet := ver.verUniFactByProveByEnum(newStmtPtr, state)
-		if verRet.IsTrue() || verRet.IsErr() {
-			return verRet
-		}
-		// 如果 enum 失败，继续使用常规验证方法
-	}
+	// if len(newStmtPtr.ParamSets) > 0 && ver.allParamSetsAreListSet(newStmtPtr.ParamSets) {
+	// 	verRet := ver.verUniFactByProveByEnum(newStmtPtr, state)
+	// 	if verRet.IsTrue() || verRet.IsErr() {
+	// 		return verRet
+	// 	}
+	// 	// 如果 enum 失败，继续使用常规验证方法
+	// }
 
 	// know cond facts
 	for _, condFact := range newStmtPtr.DomFacts {
