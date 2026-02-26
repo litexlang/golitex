@@ -29,3 +29,11 @@ pub fn vec_pair_to_string_ab<A: fmt::Display, B: fmt::Display>(left: &Vec<A>, ri
     }
     left.iter().zip(right.iter()).map(|(l, r)| format!("{} {}", l, r)).collect::<Vec<String>>().join(", ")
 }
+
+pub fn add_four_spaces_to_vec_at_beginning<A: fmt::Display>(facts: &Vec<A>, number_of_four_spaces: usize) -> String {
+    facts.iter().map(|fact| format!("{}{}", "    ".repeat(number_of_four_spaces), fact)).collect::<Vec<String>>().join("\n")
+}
+
+pub fn add_four_spaces_to_str_at_beginning(facts: &str, number_of_four_spaces: usize) -> String {
+    format!("{}{}", "    ".repeat(number_of_four_spaces), facts)
+}

@@ -11,6 +11,10 @@ impl OrFact {
     pub fn new(facts: Vec<Box<SpecFact>>, line: u32) -> Self {
         OrFact { facts, line }
     }
+
+    pub fn line(&self) -> u32 {
+        self.line
+    }
 }
 
 impl fmt::Display for OrFact {
