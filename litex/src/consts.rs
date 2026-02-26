@@ -47,3 +47,16 @@ pub const EXIST: &str = "exist";
 pub const ST: &str = "st";
 pub const FORALL: &str = "forall";
 pub const NOT: &str = "not";
+
+pub const EQUAL: &str = "=";
+pub const NOT_EQUAL: &str = "!=";
+pub const LESS: &str = "<";
+pub const GREATER: &str = ">";
+pub const LESS_EQUAL: &str = "<=";
+pub const GREATER_EQUAL: &str = ">=";
+
+pub const IS_SET: &str = "is_set";
+pub const IS_NONEMPTY_SET: &str = "is_nonempty_set";
+pub const IS_FINITE_SET: &str = "is_finite_set";
+
+pub const OR: &str = "or";

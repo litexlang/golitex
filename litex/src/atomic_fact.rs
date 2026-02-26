@@ -1,8 +1,8 @@
 use std::fmt;
 use crate::obj::Obj;
 use crate::atom::Atom;
-use crate::consts::NOT;
-use crate::helper::{braced_vec_to_string, braced_string, braced_two_strings};
+use crate::consts::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, NOT_EQUAL};
+use crate::helper::{braced_vec_to_string};
 
 pub enum AtomicFact {
     NormalAtomicFact(NormalAtomicFact),
@@ -275,97 +275,97 @@ impl fmt::Display for NotNormalAtomicFact {
 
 impl fmt::Display for EqualFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "eq{}", braced_two_strings(&self.left, &self.right))
+        write!(f, "{} {} {}", self.left, EQUAL, self.right)
     }
 }
 
 impl fmt::Display for NotEqualFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} eq{}", NOT, braced_two_strings(&self.left, &self.right))
+        write!(f, "{} {} {}", self.left, NOT_EQUAL, self.right)
     }
 }
 
 impl fmt::Display for LessFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "less{}", braced_two_strings(&self.left, &self.right))
+        write!(f, "{} {} {}", self.left, LESS, self.right)
     }
 }
 
 impl fmt::Display for NotLessFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} less{}", NOT, braced_two_strings(&self.left, &self.right))
+        write!(f, "{} {} {} {}", NOT, self.left, LESS, self.right)
     }
 }
 
 impl fmt::Display for GreaterFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "greater{}", braced_two_strings(&self.left, &self.right))
+        write!(f, "{} {} {}", self.left, GREATER, self.right)
     }
 }
 
 impl fmt::Display for NotGreaterFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} greater{}", NOT, braced_two_strings(&self.left, &self.right))
+        write!(f, "{} {} {} {}", NOT, self.left, GREATER, self.right)
     }
 }
 
 impl fmt::Display for LessEqualFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "less_eq{}", braced_two_strings(&self.left, &self.right))
+        write!(f, "{} {} {}", self.left, LESS_EQUAL, self.right)
     }
 }
 
 impl fmt::Display for NotLessEqualFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} less_eq{}", NOT, braced_two_strings(&self.left, &self.right))
+        write!(f, "{} {} {} {}", NOT, self.left, LESS_EQUAL, self.right)
     }
 }
 
 impl fmt::Display for GreaterEqualFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "greater_eq{}", braced_two_strings(&self.left, &self.right))
+        write!(f, "{} {} {}", self.left, GREATER_EQUAL, self.right)
     }
 }
 
 impl fmt::Display for NotGreaterEqualFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} greater_eq{}", NOT, braced_two_strings(&self.left, &self.right))
+        write!(f, "{} {} {} {}", NOT, self.left, GREATER_EQUAL, self.right)
     }
 }
 
 impl fmt::Display for IsSetFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "is_set{}", braced_string(&self.set))
+        write!(f, "{}{}{}", FACT_PREFIX, IS_SET, self.set)
     }
 }
 
 impl fmt::Display for NotIsSetFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} is_set{}", NOT, braced_string(&self.set))
+        write!(f, "{} {}{}{}", NOT, FACT_PREFIX, IS_SET, self.set)
     }
 }
 
 impl fmt::Display for IsNonemptySetFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "is_nonempty_set{}", braced_string(&self.set))
+        write!(f, "{}{}{}", FACT_PREFIX, IS_NONEMPTY_SET, self.set)
     }
 }
 
 impl fmt::Display for NotIsNonemptySetFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} is_nonempty_set{}", NOT, braced_string(&self.set))
+        write!(f, "{} {}{}{}", NOT, FACT_PREFIX, IS_NONEMPTY_SET, self.set)
     }
 }
 
 impl fmt::Display for IsFiniteSetFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "is_finite_set{}", braced_string(&self.set))
+        write!(f, "{}{}{}", FACT_PREFIX, IS_FINITE_SET, self.set)
     }
 }
 
 impl fmt::Display for NotIsFiniteSetFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} is_finite_set{}", NOT, braced_string(&self.set))
+        write!(f, "{} {}{}{}", NOT, FACT_PREFIX, IS_FINITE_SET, self.set)
     }
 }
 

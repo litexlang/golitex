@@ -22,11 +22,8 @@ impl ForallFact {
     }
 }
 
-// impl fmt::Display for ForallFact {
-//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-//         match self.dom_facts.len() {
-//             0 => ""
-//             1 =>""
-//         }
-//     }
-// }
+impl fmt::Display for ForallFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        panic!("ForallFact is not implemented");
+    }
+}
