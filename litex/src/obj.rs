@@ -324,20 +324,6 @@ impl Obj {
     }
 }
 
-
-
-impl AtomWithoutPkg {
-    pub fn new(name: &str) -> Self {
-        AtomWithoutPkg { name: name.to_string() }
-    }
-}
-
-impl AtomWithPkg {
-    pub fn new(pkg: &str, name: &str) -> Self {
-        AtomWithPkg { pkg: pkg.to_string(), name: name.to_string() }
-    }
-}
-
 impl FnObj {
     pub fn new(head: box_Obj, body: Vec<box_Obj>) -> Self {
         FnObj { head, body }
