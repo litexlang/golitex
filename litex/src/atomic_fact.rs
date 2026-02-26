@@ -1,7 +1,7 @@
 use std::fmt;
 use crate::obj::Obj;
 use crate::atom::Atom;
-use crate::consts::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, NOT_EQUAL, IN};
+use crate::consts::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, NOT_EQUAL, IN, IS_CART, IS_TUPLE};
 use crate::helper::{braced_string, braced_vec_to_string, str_with_line_file};
 
 pub enum AtomicFact {
@@ -15,6 +15,8 @@ pub enum AtomicFact {
     IsNonemptySetFact(IsNonemptySetFact),
     IsFiniteSetFact(IsFiniteSetFact),
     InFact(InFact),
+    IsCartFact(IsCartFact),
+    IsTupleFact(IsTupleFact),
 
     NotNormalAtomicFact(NotNormalAtomicFact),
     NotEqualFact(NotEqualFact),
@@ -26,6 +28,32 @@ pub enum AtomicFact {
     NotIsNonemptySetFact(NotIsNonemptySetFact),
     NotIsFiniteSetFact(NotIsFiniteSetFact),
     NotInFact(NotInFact),
+    NotIsCartFact(NotIsCartFact),
+    NotIsTupleFact(NotIsTupleFact),
+}
+
+pub struct IsTupleFact {
+    pub set: Box<Obj>,
+    pub line: u32,
+    pub file_index: usize,
+}
+
+pub struct NotIsTupleFact {
+    pub set: Box<Obj>,
+    pub line: u32,
+    pub file_index: usize,
+}
+
+pub struct IsCartFact {
+    pub set: Box<Obj>,
+    pub line: u32,
+    pub file_index: usize,
+}
+
+pub struct NotIsCartFact {
+    pub set: Box<Obj>,
+    pub line: u32,
+    pub file_index: usize,
 }
 
 pub struct InFact {
@@ -283,6 +311,30 @@ impl NotInFact {
 }
 
 
+impl IsCartFact {
+    pub fn new(set: Box<Obj>, line: u32, file_index: usize) -> Self {
+        IsCartFact { set, line, file_index }
+    }
+}
+
+impl NotIsCartFact {
+    pub fn new(set: Box<Obj>, line: u32, file_index: usize) -> Self {
+        NotIsCartFact { set, line, file_index }
+    }
+}
+
+impl IsTupleFact {
+    pub fn new(tuple: Box<Obj>, line: u32, file_index: usize) -> Self {
+        IsTupleFact { set: tuple, line, file_index }
+    }
+}
+
+impl NotIsTupleFact {
+    pub fn new(tuple: Box<Obj>, line: u32, file_index: usize) -> Self {
+        NotIsTupleFact { set: tuple, line, file_index }
+    }
+}
+
 impl fmt::Display for AtomicFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -306,6 +358,10 @@ impl fmt::Display for AtomicFact {
             AtomicFact::NotIsFiniteSetFact(x) => write!(f, "{}", x),
             AtomicFact::InFact(x) => write!(f, "{}", x),
             AtomicFact::NotInFact(x) => write!(f, "{}", x),
+            AtomicFact::IsCartFact(x) => write!(f, "{}", x),
+            AtomicFact::NotIsCartFact(x) => write!(f, "{}", x),
+            AtomicFact::IsTupleFact(x) => write!(f, "{}", x),
+            AtomicFact::NotIsTupleFact(x) => write!(f, "{}", x),
         }
     }
 }
@@ -333,19 +389,47 @@ impl AtomicFact {
             AtomicFact::NotIsFiniteSetFact(x) => x.file_index,
             AtomicFact::InFact(x) => x.file_index,
             AtomicFact::NotInFact(x) => x.file_index,
+            AtomicFact::IsCartFact(x) => x.file_index,
+            AtomicFact::NotIsCartFact(x) => x.file_index,
+            AtomicFact::IsTupleFact(x) => x.file_index,
+            AtomicFact::NotIsTupleFact(x) => x.file_index,
         }
     }
 }
 
 impl fmt::Display for InFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}", self.element, IN, self.set)
+        write!(f, "{} {}{} {}", self.element, FACT_PREFIX, IN, self.set)
     }
 }
 
 impl fmt::Display for NotInFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {} {}", NOT, self.element, IN, self.set)
+        write!(f, "{} {} {}{} {}", NOT, self.element, FACT_PREFIX, IN, self.set)
+    }
+}
+
+impl fmt::Display for IsCartFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}", FACT_PREFIX, IS_CART, braced_string(&self.set))
+    }
+}
+
+impl fmt::Display for NotIsCartFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}{}{}", NOT, FACT_PREFIX, IS_CART, braced_string(&self.set))
+    }
+}
+
+impl fmt::Display for IsTupleFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}", FACT_PREFIX, IS_TUPLE, braced_string(&self.set))
+    }
+}
+
+impl fmt::Display for NotIsTupleFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}{}{}", NOT, FACT_PREFIX, IS_TUPLE, braced_string(&self.set))
     }
 }
 
@@ -480,6 +564,10 @@ impl AtomicFact {
             AtomicFact::NotIsFiniteSetFact(x) => x.line,
             AtomicFact::InFact(x) => x.line,
             AtomicFact::NotInFact(x) => x.line,
+            AtomicFact::IsCartFact(x) => x.line,
+            AtomicFact::NotIsCartFact(x) => x.line,
+            AtomicFact::IsTupleFact(x) => x.line,
+            AtomicFact::NotIsTupleFact(x) => x.line,
         }
     }
 
