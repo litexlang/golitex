@@ -27,7 +27,7 @@ use obj::{
 };
 use parameter_set::{ParameterSet, SetAsParamSet, NonemptySetAsParamSet, FiniteSetAsParamSet};
 use stmt::{Stmt};
-use atomic_fact::{
+use atomic_fact::{InFact, NotInFact,
     AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact,
     LessFact, NotLessFact, GreaterFact, NotGreaterFact,
     LessEqualFact, NotLessEqualFact, GreaterEqualFact, NotGreaterEqualFact,
@@ -307,6 +307,11 @@ fn try_atomic_fact() {
     println!("{}", _not_is_set.str_with_line_file());
     println!("{}", _not_is_nonempty_set.str_with_line_file());
     println!("{}", _not_is_finite_set.str_with_line_file());
+
+    let _in = Box::new(AtomicFact::InFact(InFact::new(mk_obj("a"), mk_obj("S"), line, 0)));
+    let _not_in = Box::new(AtomicFact::NotInFact(NotInFact::new(mk_obj("a"), mk_obj("S"), line, 0)));
+    println!("{}", _in.str_with_line_file());
+    println!("{}", _not_in.str_with_line_file());
 }
 
 fn try_exist_fact() {
