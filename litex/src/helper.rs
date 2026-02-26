@@ -23,7 +23,7 @@ pub fn braced_two_strings<T: fmt::Display>(str1: &T, str2: &T) -> String {
 }
 
 /// 两列不同类型（如 参数名 Vec<String> 与 参数类型 Vec<ParameterSet>）配对成 "a set, b nonempty_set" 形式
-pub fn vec_pair_to_string_ab<A: fmt::Display, B: fmt::Display>(left: &Vec<A>, right: &Vec<B>) -> String {
+pub fn vec_pair_to_string<A: fmt::Display, B: fmt::Display>(left: &Vec<A>, right: &Vec<B>) -> String {
     if left.len() != right.len() {
         panic!("left and right must have the same length");
     }
@@ -36,4 +36,12 @@ pub fn add_four_spaces_to_vec_at_beginning<A: fmt::Display>(facts: &Vec<A>, numb
 
 pub fn add_four_spaces_to_str_at_beginning(facts: &str, number_of_four_spaces: usize) -> String {
     format!("{}{}", "    ".repeat(number_of_four_spaces), facts)
+}
+
+pub fn curly_braced_vec_to_string_with_sep<T: fmt::Display>(vec: &Vec<T>, sep: &str) -> String {
+    format!("{}{}{}", LEFT_CURLY_BRACE, vec_to_string_with_sep(vec, sep), RIGHT_CURLY_BRACE)
+}
+
+pub fn str_with_line_file(s: &str, line: u32, file_index: usize) -> String {
+    format!("{}\non line {}\nin file {}", s, line, file_index)
 }
