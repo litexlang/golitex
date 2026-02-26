@@ -42,11 +42,3 @@ impl NotExistFact {
     }
 }
 
-// impl ExistFact {
-//     pub fn box_true_exist_fact(...) -> Box<ExistFact> {
-//         Box::new(ExistFact::TrueExistFact(TrueExistFact::new(...)))
-//     }
-//     pub fn box_not_exist_fact(...) -> Box<ExistFact> {
-//         Box::new(ExistFact::NotExistFact(NotExistFact::new(...)))
-//     }
-// }
