@@ -1,2 +1,9 @@
-forall:
-    1 = 0
+have sum fn(N_pos) N_pos
+know:
+    sum(1) = 1
+    forall n N_pos: sum(n + 1) - (n+1) = sum(n)
+algo sum(n):
+    if n = 1:
+        return 1
+    if n != 1:
+        return sum(n + 1) - (n+1)
