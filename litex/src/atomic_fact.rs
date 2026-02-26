@@ -1,6 +1,7 @@
 use std::fmt;
 use crate::obj::Obj;
 use crate::atom::Atom;
+use crate::consts::NOT;
 use crate::helper::{braced_vec_to_string, braced_string, braced_two_strings};
 
 pub enum AtomicFact {
@@ -268,7 +269,7 @@ impl fmt::Display for NormalAtomicFact {
 
 impl fmt::Display for NotNormalAtomicFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "not_{}{}", self.predicate, braced_vec_to_string(&self.body))
+        write!(f, "{} {}{}", NOT, self.predicate, braced_vec_to_string(&self.body))
     }
 }
 
@@ -280,7 +281,7 @@ impl fmt::Display for EqualFact {
 
 impl fmt::Display for NotEqualFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "neq{}", braced_two_strings(&self.left, &self.right))
+        write!(f, "{} eq{}", NOT, braced_two_strings(&self.left, &self.right))
     }
 }
 
@@ -292,7 +293,7 @@ impl fmt::Display for LessFact {
 
 impl fmt::Display for NotLessFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "not_less{}", braced_two_strings(&self.left, &self.right))
+        write!(f, "{} less{}", NOT, braced_two_strings(&self.left, &self.right))
     }
 }
 
@@ -304,7 +305,7 @@ impl fmt::Display for GreaterFact {
 
 impl fmt::Display for NotGreaterFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "not_greater{}", braced_two_strings(&self.left, &self.right))
+        write!(f, "{} greater{}", NOT, braced_two_strings(&self.left, &self.right))
     }
 }
 
@@ -316,7 +317,7 @@ impl fmt::Display for LessEqualFact {
 
 impl fmt::Display for NotLessEqualFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "not_less_eq{}", braced_two_strings(&self.left, &self.right))
+        write!(f, "{} less_eq{}", NOT, braced_two_strings(&self.left, &self.right))
     }
 }
 
@@ -328,7 +329,7 @@ impl fmt::Display for GreaterEqualFact {
 
 impl fmt::Display for NotGreaterEqualFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "not_greater_eq{}", braced_two_strings(&self.left, &self.right))
+        write!(f, "{} greater_eq{}", NOT, braced_two_strings(&self.left, &self.right))
     }
 }
 
@@ -340,7 +341,7 @@ impl fmt::Display for IsSetFact {
 
 impl fmt::Display for NotIsSetFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "not_is_set{}", braced_string(&self.set))
+        write!(f, "{} is_set{}", NOT, braced_string(&self.set))
     }
 }
 
@@ -352,7 +353,7 @@ impl fmt::Display for IsNonemptySetFact {
 
 impl fmt::Display for NotIsNonemptySetFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "not_is_nonempty_set{}", braced_string(&self.set))
+        write!(f, "{} is_nonempty_set{}", NOT, braced_string(&self.set))
     }
 }
 
@@ -364,7 +365,7 @@ impl fmt::Display for IsFiniteSetFact {
 
 impl fmt::Display for NotIsFiniteSetFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "not_is_finite_set{}", braced_string(&self.set))
+        write!(f, "{} is_finite_set{}", NOT, braced_string(&self.set))
     }
 }
 

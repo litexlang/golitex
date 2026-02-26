@@ -313,20 +313,22 @@ fn try_atomic_fact() {
 }
 
 fn try_exist_fact() {
-    let af1 = Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("a"), mk_obj("b"), 1)));
+    let af1 = vec![Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("a"), mk_obj("b"), 1)))];
     let _true_exist = Box::new(ExistFact::TrueExistFact(TrueExistFact::new(
         vec!["x".to_string()],
         vec![ParameterSet::Set(SetAsParamSet::new())],
         af1,
         1,
     )));
-    let af2 = Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("a"), mk_obj("b"), 1)));
+    let af2 = vec![Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("a"), mk_obj("b"), 1)))];
     let _not_exist = Box::new(ExistFact::NotExistFact(NotExistFact::new(
         vec!["y".to_string()],
         vec![],
         af2,
         2,
     )));
+    println!("{} on line {}", _true_exist, _true_exist.line());
+    println!("{} on line {}", _not_exist, _not_exist.line());
 }
 
 fn try_spec_fact() {
@@ -335,7 +337,7 @@ fn try_spec_fact() {
     let ef = Box::new(ExistFact::TrueExistFact(TrueExistFact::new(
         vec![],
         vec![],
-        Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("u"), mk_obj("v"), 1))),
+        vec![Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("u"), mk_obj("v"), 1)))],
         1,
     )));
     let _spec_exist = Box::new(SpecFact::ExistFact(ef));
@@ -407,7 +409,7 @@ fn try_fact() {
     let ef = Box::new(ExistFact::TrueExistFact(TrueExistFact::new(
         vec![],
         vec![],
-        Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("u"), mk_obj("v"), 1))),
+        vec![Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("u"), mk_obj("v"), 1)))],
         1,
     )));
     let _f_exist = Box::new(Fact::ExistFact(ef));

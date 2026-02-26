@@ -1,3 +1,4 @@
+use std::fmt;
 use crate::parameter_set::ParameterSet;
 use crate::specific_fact::SpecFact;
 
@@ -20,3 +21,12 @@ impl ForallFact {
         ForallFact { params, param_sets, dom_facts, then_facts, line }
     }
 }
+
+// impl fmt::Display for ForallFact {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         match self.dom_facts.len() {
+//             0 => ""
+//             1 =>""
+//         }
+//     }
+// }
