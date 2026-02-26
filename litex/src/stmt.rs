@@ -24,11 +24,11 @@ impl fmt::Display for Stmt {
     }
 }
 
-impl Stmt {
-    pub fn box_fact(predicate: Box<Atom>, body: Vec<box_Obj>) -> box_Stmt {
-        Box::new(Stmt::Fact(PureSpecFact::new(predicate, body)))
-    }
-}
+// impl Stmt {
+//     pub fn box_fact(predicate: Box<Atom>, body: Vec<box_Obj>) -> box_Stmt {
+//         Box::new(Stmt::Fact(PureSpecFact::new(predicate, body)))
+//     }
+// }
 
 impl PureSpecFact {
     pub fn new(predicate: Box<Atom>, body: Vec<box_Obj>) -> Self {
