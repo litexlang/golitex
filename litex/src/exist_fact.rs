@@ -1,7 +1,7 @@
 use std::fmt;
 use crate::atomic_fact::AtomicFact;
 use crate::consts::{EXIST, NOT, ST};
-use crate::helper::{braced_vec_to_string, vec_pair_to_string_ab};
+use crate::helper::{curly_braced_vec_to_string_with_sep, str_with_line_file, vec_pair_to_string};
 use crate::parameter_set::ParameterSet;
 
 pub enum ExistFact {
@@ -14,6 +14,7 @@ pub struct TrueExistFact {
     pub param_sets: Vec<ParameterSet>,
     pub facts: Vec<Box<AtomicFact>>,
     pub line: u32,
+    pub file_index: usize,
 }
 
 pub struct NotExistFact {
@@ -21,6 +22,7 @@ pub struct NotExistFact {
     pub param_sets: Vec<ParameterSet>,
     pub facts: Vec<Box<AtomicFact>>,
     pub line: u32,
+    pub file_index: usize,
 }
 
 impl TrueExistFact {
@@ -29,8 +31,9 @@ impl TrueExistFact {
         param_sets: Vec<ParameterSet>,
         facts: Vec<Box<AtomicFact>>,
         line: u32,
+        file_index: usize,
     ) -> Self {
-        TrueExistFact { exist_params, param_sets, facts, line }
+        TrueExistFact { exist_params, param_sets, facts, line, file_index }
     }
 }
 
@@ -40,20 +43,27 @@ impl NotExistFact {
         param_sets: Vec<ParameterSet>,
         facts: Vec<Box<AtomicFact>>,
         line: u32,
+        file_index: usize,
     ) -> Self {
-        NotExistFact { exist_params, param_sets, facts, line }
+        NotExistFact { exist_params, param_sets, facts, line, file_index }
     }
 }
 
 impl fmt::Display for TrueExistFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{} {} {}", EXIST, vec_pair_to_string_ab(&self.exist_params, &self.param_sets), ST, braced_vec_to_string(&self.facts))
+        match self.facts.len() {
+            1 => write!(f, "{} {} {} {}", EXIST, vec_pair_to_string(&self.exist_params, &self.param_sets), ST, self.facts[0]),
+            _ => write!(f, "{} {} {} {}", EXIST, vec_pair_to_string(&self.exist_params, &self.param_sets), ST, curly_braced_vec_to_string_with_sep(&self.facts, ", ")),
+        }
     }
 }
 
 impl fmt::Display for NotExistFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}{} {} {}", NOT, EXIST, vec_pair_to_string_ab(&self.exist_params, &self.param_sets), ST, braced_vec_to_string(&self.facts))
+        match self.facts.len() {
+            1 => write!(f, "{} {} {} {} {}", NOT, EXIST, vec_pair_to_string(&self.exist_params, &self.param_sets), ST, self.facts[0]),
+            _ => write!(f, "{} {} {} {} {}", NOT, EXIST, vec_pair_to_string(&self.exist_params, &self.param_sets), ST, curly_braced_vec_to_string_with_sep(&self.facts, ", ")),
+        }
     }
 }
 
@@ -64,6 +74,13 @@ impl ExistFact {
             ExistFact::NotExistFact(x) => x.line,
         }
     }
+
+    pub fn file_index(&self) -> usize {
+        match self {
+            ExistFact::TrueExistFact(x) => x.file_index,
+            ExistFact::NotExistFact(x) => x.file_index,
+        }
+    }
 }
 
 impl fmt::Display for ExistFact {
@@ -72,5 +89,11 @@ impl fmt::Display for ExistFact {
             ExistFact::TrueExistFact(x) => write!(f, "{}", x),
             ExistFact::NotExistFact(x) => write!(f, "{}", x),
         }
+    }
+}
+
+impl ExistFact {
+    pub fn str_with_line_file(&self) -> String {
+        return str_with_line_file(&self.to_string(), self.line(), self.file_index());
     }
 }

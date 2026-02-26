@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::consts::{RIGHT_ARROW, COLON};
+use crate::consts::{EQUIVALENT_SIGN, COLON};
 use crate::helper::{add_four_spaces_to_str_at_beginning, add_four_spaces_to_vec_at_beginning};
 use crate::forall_fact::ForallFact;
 use crate::specific_fact::SpecFact;
@@ -22,6 +22,6 @@ impl ForallFactWithIff {
 
 impl fmt::Display for ForallFactWithIff {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}{}\n{}", self.forall_fact, add_four_spaces_to_str_at_beginning(&RIGHT_ARROW, 1), COLON, add_four_spaces_to_vec_at_beginning(&self.iff_facts, 2))
+        write!(f, "{}\n{}{}\n{}", self.forall_fact, add_four_spaces_to_str_at_beginning(&EQUIVALENT_SIGN, 1), COLON, add_four_spaces_to_vec_at_beginning(&self.iff_facts, 2))
     }
 }

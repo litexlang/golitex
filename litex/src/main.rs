@@ -127,6 +127,7 @@ fn try_stmt() {
         Box::new(Atom::AtomWithoutPkg(AtomWithoutPkg::new("p"))),
         body3,
         1,
+        0,
     ))))));
     println!("{}", fact1.to_string());
 
@@ -138,6 +139,7 @@ fn try_stmt() {
         Box::new(Atom::AtomWithPkg(AtomWithPkg::new("PkgA", "name_a"))),
         body2,
         1,
+        0,
     ))))));
     println!("{}", fact2.to_string());
 }
@@ -262,83 +264,81 @@ fn try_atomic_fact() {
         Box::new(Atom::AtomWithoutPkg(AtomWithoutPkg::new("p"))),
         vec![mk_obj("a"), mk_obj("b")],
         line,
+        0,
     )));
-    let _equal = Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("x"), mk_obj("y"), line)));
-    let _less = Box::new(AtomicFact::LessFact(LessFact::new(mk_obj("a"), mk_obj("b"), line)));
-    let _greater = Box::new(AtomicFact::GreaterFact(GreaterFact::new(mk_obj("a"), mk_obj("b"), line)));
-    let _less_equal = Box::new(AtomicFact::LessEqualFact(LessEqualFact::new(mk_obj("a"), mk_obj("b"), line)));
-    let _greater_equal = Box::new(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(mk_obj("a"), mk_obj("b"), line)));
-    let _is_set = Box::new(AtomicFact::IsSetFact(IsSetFact::new(mk_obj("S"), line)));
-    let _is_nonempty_set = Box::new(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(mk_obj("S"), line)));
-    let _is_finite_set = Box::new(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(mk_obj("S"), line)));
+    let _equal = Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("x"), mk_obj("y"), line, 0)));
+    let _less = Box::new(AtomicFact::LessFact(LessFact::new(mk_obj("a"), mk_obj("b"), line, 0)));
+    let _greater = Box::new(AtomicFact::GreaterFact(GreaterFact::new(mk_obj("a"), mk_obj("b"), line, 0)));
+    let _less_equal = Box::new(AtomicFact::LessEqualFact(LessEqualFact::new(mk_obj("a"), mk_obj("b"), line, 0)));
+    let _greater_equal = Box::new(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(mk_obj("a"), mk_obj("b"), line, 0)));
+    let _is_set = Box::new(AtomicFact::IsSetFact(IsSetFact::new(mk_obj("S"), line, 0)));
+    let _is_nonempty_set = Box::new(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(mk_obj("S"), line, 0)));
+    let _is_finite_set = Box::new(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(mk_obj("S"), line, 0)));
 
     let _not_normal = Box::new(AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(
         Box::new(Atom::AtomWithoutPkg(AtomWithoutPkg::new("p"))),
         vec![mk_obj("a")],
         line,
+        0,
     )));
-    let _not_equal = Box::new(AtomicFact::NotEqualFact(NotEqualFact::new(mk_obj("x"), mk_obj("y"), line)));
-    let _not_less = Box::new(AtomicFact::NotLessFact(NotLessFact::new(mk_obj("a"), mk_obj("b"), line)));
-    let _not_greater = Box::new(AtomicFact::NotGreaterFact(NotGreaterFact::new(mk_obj("a"), mk_obj("b"), line)));
-    let _not_less_equal = Box::new(AtomicFact::NotLessEqualFact(NotLessEqualFact::new(mk_obj("a"), mk_obj("b"), line)));
-    let _not_greater_equal = Box::new(AtomicFact::NotGreaterEqualFact(NotGreaterEqualFact::new(mk_obj("a"), mk_obj("b"), line)));
-    let _not_is_set = Box::new(AtomicFact::NotIsSetFact(NotIsSetFact::new(mk_obj("S"), line)));
-    let _not_is_nonempty_set = Box::new(AtomicFact::NotIsNonemptySetFact(NotIsNonemptySetFact::new(mk_obj("S"), line)));
-    let _not_is_finite_set = Box::new(AtomicFact::NotIsFiniteSetFact(NotIsFiniteSetFact::new(mk_obj("S"), line)));
-    println!("{} on line {}", _normal, _normal.line());
-    println!("{} on line {}", _equal, _equal.line());
-    println!("{} on line {}", _less, _less.line());
-    println!("{} on line {}", _greater, _greater.line());
-    println!("{} on line {}", _less_equal, _less_equal.line());
-    println!("{} on line {}", _greater_equal, _greater_equal.line());
-    println!("{} on line {}", _is_set, _is_set.line());
-    println!("{} on line {}", _is_nonempty_set, _is_nonempty_set.line());
-    println!("{} on line {}", _is_finite_set, _is_finite_set.line());
-    println!("{} on line {}", _less, _less.line());
-    println!("{} on line {}", _greater, _greater.line());
-    println!("{} on line {}", _less_equal, _less_equal.line());
-    println!("{} on line {}", _greater_equal, _greater_equal.line());
-    println!("{} on line {}", _is_set, _is_set.line());
-    println!("{} on line {}", _is_nonempty_set, _is_nonempty_set.line());
-    println!("{} on line {}", _is_finite_set, _is_finite_set.line());
-    println!("{}", _not_normal);
+    let _not_equal = Box::new(AtomicFact::NotEqualFact(NotEqualFact::new(mk_obj("x"), mk_obj("y"), line, 0)));
+    let _not_less = Box::new(AtomicFact::NotLessFact(NotLessFact::new(mk_obj("a"), mk_obj("b"), line, 0)));
+    let _not_greater = Box::new(AtomicFact::NotGreaterFact(NotGreaterFact::new(mk_obj("a"), mk_obj("b"), line, 0)));
+    let _not_less_equal = Box::new(AtomicFact::NotLessEqualFact(NotLessEqualFact::new(mk_obj("a"), mk_obj("b"), line, 0)));
+    let _not_greater_equal = Box::new(AtomicFact::NotGreaterEqualFact(NotGreaterEqualFact::new(mk_obj("a"), mk_obj("b"), line, 0)));
+    let _not_is_set = Box::new(AtomicFact::NotIsSetFact(NotIsSetFact::new(mk_obj("S"), line, 0)));
+    let _not_is_nonempty_set = Box::new(AtomicFact::NotIsNonemptySetFact(NotIsNonemptySetFact::new(mk_obj("S"), line, 0)));
+    let _not_is_finite_set = Box::new(AtomicFact::NotIsFiniteSetFact(NotIsFiniteSetFact::new(mk_obj("S"), line, 0)));
+    println!("{}", _normal.str_with_line_file());
+    println!("{}", _equal.str_with_line_file());
+    println!("{}", _less.str_with_line_file());
+    println!("{}", _greater.str_with_line_file());
+    println!("{}", _less_equal.str_with_line_file());
+    println!("{}", _greater_equal.str_with_line_file());
+    println!("{}", _is_set.str_with_line_file());
+    println!("{}", _is_nonempty_set.str_with_line_file());
+    println!("{}", _is_finite_set.str_with_line_file());
+    println!("{}", _not_normal.str_with_line_file());
     println!("{} on line {}", _not_equal, _not_equal.line());
-    println!("{} on line {}", _not_less, _not_less.line());
-    println!("{} on line {}", _not_greater, _not_greater.line());
-    println!("{} on line {}", _not_less_equal, _not_less_equal.line());
-    println!("{} on line {}", _not_greater_equal, _not_greater_equal.line());
-    println!("{} on line {}", _not_is_set, _not_is_set.line());
-    println!("{} on line {}", _not_is_nonempty_set, _not_is_nonempty_set.line());
-    println!("{} on line {}", _not_is_finite_set, _not_is_finite_set.line());
+    println!("{}", _not_less.str_with_line_file());
+    println!("{}", _not_greater.str_with_line_file());
+    println!("{}", _not_less_equal.str_with_line_file());
+    println!("{}", _not_greater_equal.str_with_line_file());
+    println!("{}", _not_is_set.str_with_line_file());
+    println!("{}", _not_is_nonempty_set.str_with_line_file());
+    println!("{}", _not_is_finite_set.str_with_line_file());
 }
 
 fn try_exist_fact() {
-    let af1 = vec![Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("a"), mk_obj("b"), 1)))];
+    let af1 = vec![Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("a"), mk_obj("b"), 1, 0)))];
     let _true_exist = Box::new(ExistFact::TrueExistFact(TrueExistFact::new(
         vec!["x".to_string()],
         vec![ParameterSet::Set(SetAsParamSet::new())],
         af1,
         1,
+        0,
     )));
-    let af2 = vec![Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("a"), mk_obj("b"), 1)))];
+    let af2 = vec![Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("a"), mk_obj("b"), 1, 0)))];
     let _not_exist = Box::new(ExistFact::NotExistFact(NotExistFact::new(
         vec!["y".to_string()],
         vec![ParameterSet::Set(SetAsParamSet::new())],
         af2,
         2,
+        0,
     )));
-    println!("{} on line {}", _true_exist, _true_exist.line());
-    println!("{} on line {}", _not_exist, _not_exist.line());
+    println!("{}", _true_exist.str_with_line_file());
+    println!("{}", _not_exist.str_with_line_file());
 }
 
 fn try_spec_fact() {
-    let af = Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("a"), mk_obj("b"), 1)));
+    let af = Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("a"), mk_obj("b"), 1, 0)));
     let _spec_atom = Box::new(SpecFact::AtomicFact(af));
     let ef = Box::new(ExistFact::TrueExistFact(TrueExistFact::new(
         vec![],
         vec![],
-        vec![Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("u"), mk_obj("v"), 1)))],
+        vec![Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("u"), mk_obj("v"), 1, 0)))],
         1,
+        0,
     )));
     let _spec_exist = Box::new(SpecFact::ExistFact(ef));
 }
@@ -349,6 +349,7 @@ fn try_or_fact() {
             mk_obj("p"),
             mk_obj("q"),
             1,
+            0,
         ))))),
     ];
     let _or = OrFact::new(facts, 1);
@@ -361,7 +362,7 @@ fn try_forall_fact() {
         vec![ParameterSet::Set(SetAsParamSet::new())],
         vec![],
         vec![Box::new(SpecFact::AtomicFact(Box::new(AtomicFact::EqualFact(
-            EqualFact::new(mk_obj("a"), mk_obj("b"), 1),
+            EqualFact::new(mk_obj("a"), mk_obj("b"), 1, 0),
         ))))],
         1,
     );
@@ -371,13 +372,19 @@ fn try_forall_fact() {
 
 fn try_forall_fact_with_iff() {
     let forall = ForallFact::new(
-        vec![],
-        vec![],
-        vec![],
-        vec![],
+        vec!["n".to_string()],
+        vec![ParameterSet::Set(SetAsParamSet::new())],
+        vec![Box::new(SpecFact::AtomicFact(Box::new(AtomicFact::EqualFact(
+            EqualFact::new(mk_obj("a"), mk_obj("b"), 1, 0),
+        ))))],
+        vec![Box::new(SpecFact::AtomicFact(Box::new(AtomicFact::EqualFact(
+            EqualFact::new(mk_obj("a"), mk_obj("b"), 1, 0),
+        ))))],
         1,
     );
-    let _forall_fact_with_iff = ForallFactWithIff::new(Box::new(forall), vec![], 2);
+    let _forall_fact_with_iff = ForallFactWithIff::new(Box::new(forall), vec![Box::new(SpecFact::AtomicFact(Box::new(AtomicFact::EqualFact(
+        EqualFact::new(mk_obj("a"), mk_obj("b"), 1, 0),
+    ))))], 2);
     println!("{} on line {}", _forall_fact_with_iff, _forall_fact_with_iff.line());
 }
 
@@ -394,13 +401,14 @@ fn try_chain_fact() {
 }
 
 fn try_fact() {
-    let af = Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("a"), mk_obj("b"), 1)));
+    let af = Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("a"), mk_obj("b"), 1, 0)));
     let _f_atom = Box::new(Fact::AtomicFact(af));
     let ef = Box::new(ExistFact::TrueExistFact(TrueExistFact::new(
         vec![],
         vec![],
-        vec![Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("u"), mk_obj("v"), 1)))],
+        vec![Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("u"), mk_obj("v"), 1, 0)))],
         1,
+        0,
     )));
     let _f_exist = Box::new(Fact::ExistFact(ef));
     let _f_or = Box::new(Fact::OrFact(OrFact::new(vec![], 1)));
