@@ -1,5 +1,7 @@
+use std::fmt;
 use crate::obj::Obj;
 use crate::atom::Atom;
+use crate::helper::{braced_vec_to_string, braced_string, braced_two_strings};
 
 pub enum AtomicFact {
     NormalAtomicFact(NormalAtomicFact),
@@ -62,11 +64,13 @@ pub struct NotLessFact {
 pub struct GreaterFact {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
+    pub line: u32,
 }
 
 pub struct NotGreaterFact {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
+    pub line: u32,
 }
 
 pub struct LessEqualFact {
@@ -160,14 +164,14 @@ impl NotLessFact {
 }
 
 impl GreaterFact {
-    pub fn new(left: Box<Obj>, right: Box<Obj>) -> Self {
-        GreaterFact { left, right }
+    pub fn new(left: Box<Obj>, right: Box<Obj>, line: u32) -> Self {
+        GreaterFact { left, right, line }
     }
 }
 
 impl NotGreaterFact {
-    pub fn new(left: Box<Obj>, right: Box<Obj>) -> Self {
-        NotGreaterFact { left, right }
+    pub fn new(left: Box<Obj>, right: Box<Obj>, line: u32) -> Self {
+        NotGreaterFact { left, right, line }
     }
 }
 
@@ -228,5 +232,163 @@ impl IsFiniteSetFact {
 impl NotIsFiniteSetFact {
     pub fn new(set: Box<Obj>, line: u32) -> Self {
         NotIsFiniteSetFact { set, line }
+    }
+}
+
+impl fmt::Display for AtomicFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AtomicFact::NormalAtomicFact(x) => write!(f, "{}", x),
+            AtomicFact::EqualFact(x) => write!(f, "{}", x),
+            AtomicFact::LessFact(x) => write!(f, "{}", x),
+            AtomicFact::GreaterFact(x) => write!(f, "{}", x),
+            AtomicFact::LessEqualFact(x) => write!(f, "{}", x),
+            AtomicFact::GreaterEqualFact(x) => write!(f, "{}", x),
+            AtomicFact::IsSetFact(x) => write!(f, "{}", x),
+            AtomicFact::IsNonemptySetFact(x) => write!(f, "{}", x),
+            AtomicFact::IsFiniteSetFact(x) => write!(f, "{}", x),
+            AtomicFact::NotNormalAtomicFact(x) => write!(f, "{}", x),
+            AtomicFact::NotEqualFact(x) => write!(f, "{}", x),
+            AtomicFact::NotLessFact(x) => write!(f, "{}", x),
+            AtomicFact::NotGreaterFact(x) => write!(f, "{}", x),
+            AtomicFact::NotLessEqualFact(x) => write!(f, "{}", x),
+            AtomicFact::NotGreaterEqualFact(x) => write!(f, "{}", x),
+            AtomicFact::NotIsSetFact(x) => write!(f, "{}", x),
+            AtomicFact::NotIsNonemptySetFact(x) => write!(f, "{}", x),
+            AtomicFact::NotIsFiniteSetFact(x) => write!(f, "{}", x),
+        }
+    }
+}
+
+impl fmt::Display for NormalAtomicFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}", self.predicate, braced_vec_to_string(&self.body))
+    }
+}
+
+impl fmt::Display for NotNormalAtomicFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "not_{}{}", self.predicate, braced_vec_to_string(&self.body))
+    }
+}
+
+impl fmt::Display for EqualFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "eq{}", braced_two_strings(&self.left, &self.right))
+    }
+}
+
+impl fmt::Display for NotEqualFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "neq{}", braced_two_strings(&self.left, &self.right))
+    }
+}
+
+impl fmt::Display for LessFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "less{}", braced_two_strings(&self.left, &self.right))
+    }
+}
+
+impl fmt::Display for NotLessFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "not_less{}", braced_two_strings(&self.left, &self.right))
+    }
+}
+
+impl fmt::Display for GreaterFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "greater{}", braced_two_strings(&self.left, &self.right))
+    }
+}
+
+impl fmt::Display for NotGreaterFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "not_greater{}", braced_two_strings(&self.left, &self.right))
+    }
+}
+
+impl fmt::Display for LessEqualFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "less_eq{}", braced_two_strings(&self.left, &self.right))
+    }
+}
+
+impl fmt::Display for NotLessEqualFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "not_less_eq{}", braced_two_strings(&self.left, &self.right))
+    }
+}
+
+impl fmt::Display for GreaterEqualFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "greater_eq{}", braced_two_strings(&self.left, &self.right))
+    }
+}
+
+impl fmt::Display for NotGreaterEqualFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "not_greater_eq{}", braced_two_strings(&self.left, &self.right))
+    }
+}
+
+impl fmt::Display for IsSetFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "is_set{}", braced_string(&self.set))
+    }
+}
+
+impl fmt::Display for NotIsSetFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "not_is_set{}", braced_string(&self.set))
+    }
+}
+
+impl fmt::Display for IsNonemptySetFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "is_nonempty_set{}", braced_string(&self.set))
+    }
+}
+
+impl fmt::Display for NotIsNonemptySetFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "not_is_nonempty_set{}", braced_string(&self.set))
+    }
+}
+
+impl fmt::Display for IsFiniteSetFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "is_finite_set{}", braced_string(&self.set))
+    }
+}
+
+impl fmt::Display for NotIsFiniteSetFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "not_is_finite_set{}", braced_string(&self.set))
+    }
+}
+
+impl AtomicFact {
+    pub fn line(&self) -> u32 {
+        match self {
+            AtomicFact::NormalAtomicFact(x) => x.line,
+            AtomicFact::EqualFact(x) => x.line,
+            AtomicFact::LessFact(x) => x.line,
+            AtomicFact::GreaterFact(x) => x.line,
+            AtomicFact::LessEqualFact(x) => x.line,
+            AtomicFact::GreaterEqualFact(x) => x.line,
+            AtomicFact::IsSetFact(x) => x.line,
+            AtomicFact::IsNonemptySetFact(x) => x.line,
+            AtomicFact::IsFiniteSetFact(x) => x.line,
+            AtomicFact::NotNormalAtomicFact(x) => x.line,
+            AtomicFact::NotEqualFact(x) => x.line,
+            AtomicFact::NotLessFact(x) => x.line,
+            AtomicFact::NotGreaterFact(x) => x.line,
+            AtomicFact::NotLessEqualFact(x) => x.line,
+            AtomicFact::NotGreaterEqualFact(x) => x.line,
+            AtomicFact::NotIsSetFact(x) => x.line,
+            AtomicFact::NotIsNonemptySetFact(x) => x.line,
+            AtomicFact::NotIsFiniteSetFact(x) => x.line,
+        }
     }
 }
