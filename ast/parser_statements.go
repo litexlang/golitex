@@ -563,11 +563,21 @@ func (p *TbParser) bodyBlockSpecOrFacts(tb *tokenBlock, parseBodyFactNum int) ([
 	facts := []Spec_OrFact{}
 	for i := range parseBodyFactNum {
 		stmt := tb.body[i]
-		fact, err := p.SpecFactOrOrStmt(&stmt)
+		fact, err := p.SpecFactOrOrStmtOrChainFact(&stmt)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
-		facts = append(facts, fact)
+
+		switch fact := fact.(type) {
+		case Spec_OrFact:
+			facts = append(facts, fact)
+		case *ChainPureFact:
+			facts = append(facts, fact.ToSpecFacts()...)
+		case *OrStmt:
+			facts = append(facts, fact)
+		default:
+			return nil, fmt.Errorf("expect spec fact or chain fact, get %s", fact.String())
+		}
 	}
 	return facts, nil
 }
@@ -2378,6 +2388,39 @@ func (p *TbParser) SpecFactOrOrStmt(tb *tokenBlock) (Spec_OrFact, error) {
 	return NewOrStmt(orFacts, tb.line), nil
 }
 
+func (p *TbParser) SpecFactOrOrStmtOrChainFact(tb *tokenBlock) (FactStmt, error) {
+	start, err := p.specFact_or_chainFact(tb)
+	if err != nil {
+		return nil, ErrInLine(err, tb)
+	}
+
+	if chainFact, ok := start.(*ChainPureFact); ok {
+		return chainFact, nil
+	}
+
+	if !tb.header.is(glob.KeywordOr) {
+		return start, nil
+	}
+
+	startAsSpecFact, ok := start.(SpecificFactStmt)
+	if !ok {
+		return nil, fmt.Errorf("expect specific fact, get %s", start.String())
+	}
+
+	orFacts := []SpecificFactStmt{startAsSpecFact}
+	for tb.header.is(glob.KeywordOr) {
+		tb.header.skip(glob.KeywordOr)
+
+		next, err := p.specFactStmt(tb)
+		if err != nil {
+			return nil, ErrInLine(err, tb)
+		}
+		orFacts = append(orFacts, next)
+	}
+
+	return NewOrStmt(orFacts, tb.line), nil
+}
+
 // func (p *TbParser) specFactStmt_ExceedEnd(tb *tokenBlock) (*SpecFactStmt, error) {
 // 	ret, err := p.specFactStmt(tb)
 // 	if err != nil {
@@ -3377,20 +3420,21 @@ func (p *TbParser) relationalSpecFactOrChainFact(tb *tokenBlock) (FactStmt, erro
 			return nil, ErrInLine(err, tb)
 		}
 
-		if glob.IsEqualAndComparisonSignal(opt) || tb.header.is(glob.FuncFactPrefix) {
+		nextT := tb.header.strAtCurIndexPlus(0)
+
+		if glob.IsEqualAndComparisonSignal(nextT) || tb.header.is(glob.FuncFactPrefix) {
 			return p.chainPureFact(tb, obj, obj2, Atom(opt))
 		}
 
-		// 必须到底了
-		if !tb.header.ExceedEnd() {
-			// or 的情况
-			if tb.header.is(glob.KeywordOr) {
-				ret = NewPureSpecificFactStmt(true, Atom(opt), []Obj{obj, obj2}, tb.line)
-				return p.inlineOrFactWithFirstFact(tb, ret)
-			}
+		// if !glob.IsBuiltinInfixRelaPropSymbol(opt) && !tb.header.ExceedEnd() && !tb.header.is(glob.FuncFactPrefix) {
+		// 	// or 的情况
+		// 	if tb.header.is(glob.KeywordOr) {
+		// 		ret = NewPureSpecificFactStmt(true, Atom(opt), []Obj{obj, obj2}, tb.line)
+		// 		return p.inlineOrFactWithFirstFact(tb, ret)
+		// 	}
 
-			return nil, fmt.Errorf("expect end of line")
-		}
+		// 	return nil, fmt.Errorf("expect end of line")
+		// }
 
 		params := []Obj{obj, obj2}
 
