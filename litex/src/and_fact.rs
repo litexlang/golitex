@@ -1,17 +1,17 @@
 use crate::specific_fact::SpecFact;
-use crate::consts::OR;
 use std::fmt;
+use crate::consts::AND;
 use crate::helper::str_with_line_file;
 
-pub struct OrFact {
+pub struct AndFact {
     pub facts: Vec<Box<SpecFact>>,
     pub line: u32,
     pub file_index: usize,
 }
 
-impl OrFact {
+impl AndFact {
     pub fn new(facts: Vec<Box<SpecFact>>, line: u32, file_index: usize) -> Self {
-        OrFact { facts, line, file_index }
+        AndFact { facts, line, file_index }
     }
 
     pub fn line(&self) -> u32 {
@@ -27,10 +27,9 @@ impl OrFact {
     }
 }
 
-impl fmt::Display for OrFact {
+impl fmt::Display for AndFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // 把这些fact用 " or " 连接起来
-        let fact_strings = self.facts.iter().map(|fact| fact.to_string()).collect::<Vec<String>>();
-        write!(f, "{}", fact_strings.join(format!(" {} ", OR).as_str()))
+        // join by " and "
+        write!(f, "{}", self.facts.iter().map(|fact| fact.to_string()).collect::<Vec<String>>().join(format!(" {} ", AND).as_str()))
     }
 }
