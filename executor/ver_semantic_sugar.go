@@ -44,7 +44,7 @@ func (ver *Verifier) ReplaceObjsInSpecFactWithValue(fact ast.SpecificFactStmt) (
 func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	replaced, newStmt := ver.ReplaceObjsInSpecFactWithValue(asStmt)
@@ -64,5 +64,5 @@ func (ver *Verifier) verByReplaceObjInSpecFactWithValue(stmt ast.SpecificFactStm
 		}
 	}
 
-	return ast.NewEmptyUnknownVerRet().AddExtraInfo(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
+	return ast.NewUnknownVerRet(stmt).AddExtraInfo(fmt.Sprintf("%s is not equivalent to %s by replacing the symbols with their values", stmt.String(), newStmt.String()))
 }

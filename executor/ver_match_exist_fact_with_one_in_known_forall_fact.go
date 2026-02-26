@@ -32,18 +32,18 @@ func (ver *Verifier) matchExistFactWithOneInKnownUniFactAndCheckMatchedObjsSatis
 	ok, uniMap := ver.matchObjectsWithFreeParamsWithInstObjectsInExistFact(knownUniFact.Params, existFactInKnownUniFact.ExistFreeParams, existFactInKnownUniFact.ExistFreeParamSets, given.ExistFreeParamSets, allParamsInExistFactInKnownUni, allParamsInGiven)
 
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(given)
 	}
 
 	for i, paramSet := range knownUniFact.ParamSets {
 		instParamSet, err := paramSet.Instantiate(uniMap)
 		if err != nil {
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(given)
 		}
 		inFact := ast.NewInFactWithObj(uniMap[knownUniFact.Params[i]], instParamSet)
 		ret := ver.VerFactStmt(inFact, state)
 		if ret.IsNotTrue() {
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(given)
 		}
 	}
 
@@ -51,22 +51,22 @@ func (ver *Verifier) matchExistFactWithOneInKnownUniFactAndCheckMatchedObjsSatis
 	for _, domFact := range knownUniFact.DomFacts {
 		instDomFact, err := domFact.InstantiateFact(uniMap)
 		if err != nil {
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(given)
 		}
 
 		switch asInstDomFact := instDomFact.(type) {
 		case ast.SpecificFactStmt:
 			ret := ver.VerFactStmt(asInstDomFact, nextState)
 			if ret.IsNotTrue() {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(given)
 			}
 		case *ast.OrStmt:
 			ret := ver.VerFactStmt(instDomFact, nextState)
 			if ret.IsNotTrue() {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(given)
 			}
 		default:
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(given)
 		}
 
 	}

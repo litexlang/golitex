@@ -84,9 +84,9 @@ func NewEmptyVerRetErr() *ErrVerRet {
 	return &ErrVerRet{ToCheck: nil}
 }
 
-func NewEmptyUnknownVerRet() *UnknownVerRet {
-	return &UnknownVerRet{ToCheck: nil}
-}
+// func NewEmptyUnknownVerRet() *UnknownVerRet {
+// 	return &UnknownVerRet{ToCheck: nil}
+// }
 
 func (r *TrueVerRet) ToStmtRet() StmtRet {
 	return NewTrueStmtEmptyRet(r.ToCheck).AddVerifyProcess(r)

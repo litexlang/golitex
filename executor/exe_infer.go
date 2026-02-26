@@ -82,7 +82,7 @@ func (ver *Verifier) proveOneThenFactInImplyStmt(stmt *ast.InferStmt, thenFact a
 		}
 	}
 
-	return ast.NewEmptyUnknownVerRet().ToStmtRet()
+	return ast.NewUnknownVerRet(thenFact).ToStmtRet()
 }
 
 func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast.InferStmt, fact ast.Spec_OrFact, state *VerState) ast.VerRet {
@@ -101,7 +101,7 @@ func (ver *Verifier) specFact_ImplyMem_atCurEnv(curEnv *env.EnvMemory, stmt *ast
 	}
 
 	if !got {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(fact)
 	}
 
 	return ver.iterate_KnownPureSpecInImplyStmt_applyMatch_InstObjInParamSetAndSatisfyIfFacts(stmt, searchedKnownFacts, fact, state)
@@ -113,7 +113,7 @@ outerLoop:
 		ok, uniMap, err := ver.
 			matchImplyTemplateParamsWithAllParamsInImplyStmt(&knownFacts[i], stmt, toCheck)
 		if err != nil {
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(toCheck)
 		}
 		if !ok {
 			continue outerLoop
@@ -124,7 +124,7 @@ outerLoop:
 		for j, knownParamSet := range knownFacts[i].ImplyTemplate.ParamSets {
 			instKnownParamSet, err := knownParamSet.Instantiate(localUniMap)
 			if err != nil {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(toCheck)
 			}
 
 			inFact := ast.NewInFactWithObj(uniMap[knownFacts[i].ImplyTemplate.Params[j]], instKnownParamSet)
@@ -140,7 +140,7 @@ outerLoop:
 		for _, ifFact := range knownFacts[i].ImplyTemplate.IfFacts {
 			instIfFact, err := ifFact.Instantiate(localUniMap)
 			if err != nil {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(toCheck)
 			}
 
 			ret := ver.VerFactStmt(instIfFact.(ast.FactStmt), state)
@@ -153,7 +153,7 @@ outerLoop:
 		return ast.NewTrueVerRet(toCheck, nil, "")
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(toCheck)
 }
 
 func (ver *Verifier) checkFactTypeAndPropNamesMatch(knownFact ast.Spec_OrFact, implyFact ast.Spec_OrFact) bool {

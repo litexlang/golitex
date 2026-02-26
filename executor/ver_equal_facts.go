@@ -45,7 +45,7 @@ func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj
 	if leftAsFn, ok := left.(*ast.FnObj); ok {
 		if rightAsFn, ok := right.(*ast.FnObj); ok {
 			if len(leftAsFn.Params) != len(rightAsFn.Params) {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(ast.EqualFact(left, right))
 			}
 
 			// compare head
@@ -65,7 +65,7 @@ func (ver *Verifier) decomposeObjFnsAndCheckEquality(left ast.Obj, right ast.Obj
 			return ast.NewTrueVerRet(equalFact, nil, fmt.Sprintf("headers and parameters of %s and %s are equal correspondingly", left, right))
 		}
 	}
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(ast.EqualFact(left, right))
 }
 
 // Iterate over all equal facts. On each equal fact, use commutative, associative, cmp rule to compare.
@@ -139,7 +139,7 @@ func (ver *Verifier) objEqualSpec(left ast.Obj, right ast.Obj, state *VerState) 
 		}
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(ast.EqualFact(left, right))
 }
 
 func (ver *Verifier) FcsEqualBy_Eval_ShareKnownEqualMem(left, right ast.Obj, state *VerState) ast.StmtRet {

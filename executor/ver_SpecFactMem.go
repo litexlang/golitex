@@ -45,7 +45,7 @@ func (ver *Verifier) verSpecFact_BySpecMem(stmt ast.SpecificFactStmt, state *Ver
 		}
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) checkSpecFactUseUniMemAtCurEnv(curEnv *env.EnvMemory, stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
@@ -56,7 +56,7 @@ func (ver *Verifier) checkSpecFactUseUniMemAtCurEnv(curEnv *env.EnvMemory, stmt 
 	searchedSpecFacts, got := curEnv.KnownFactsStruct.SpecFactInUniFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	if !got {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	if _, ok := stmt.(*ast.PureSpecificFactStmt); ok {
@@ -76,7 +76,7 @@ func (ver *Verifier) matchGivenPureFactWithOnesInKnownUniFacts(knownFacts []env.
 		}
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(given)
 }
 
 func (ver *Verifier) matchGivenExistFactWithOnesInKnownUniFacts(knownFacts []env.KnownSpecFact_InUniFact, given *ast.ExistSpecificFactStmt, state *VerState) ast.VerRet {
@@ -129,7 +129,7 @@ LoopOverKnownFacts:
 		return ast.NewTrueVerRet(nil, nil, "")
 
 		// if len(knownExistFactInUni.ExistFreeParams) != len(given.ExistFreeParams) || len(knownExistFactInUni.PureFact.Params) != len(given.PureFact.Params) {
-		// 	return ast.NewEmptyUnknownVerRet()
+		// 	return ast.NewUnknownVerRet(stmt)
 		// }
 
 		// newKnownExistInUni, err := knownExistFactInUni.ReplaceFreeParamsWithNewParams(newFreeExistParamsUnused)
@@ -143,7 +143,7 @@ LoopOverKnownFacts:
 		// }
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(given)
 }
 
 func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]ast.Obj, state *VerState) (map[string]ast.Obj, ast.VerRet) {
@@ -171,11 +171,11 @@ func (ver *Verifier) ValuesUnderKeyInMatchMapEqualSpec(paramArrMap map[string][]
 
 // 	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 // 	if !ok {
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 
 // 	if len(knownFact.SpecFact.(*ast.PureSpecificFactStmt).Params) != len(asStmt.Params) {
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 
 // 	for i, knownParam := range knownFact.SpecFact.(*ast.PureSpecificFactStmt).Params {
@@ -216,13 +216,13 @@ func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.EnvMemory, stmt ast.Spec
 		if asFact.IsTrue {
 			sameEnumPkgPropFacts, memExist := curEnv.KnownFactsStruct.SpecFactMem.PureFacts[string(asFact.PropName)]
 			if !memExist {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(stmt)
 			}
 			return ver.iterateKnownPureSpecFacts_applyObjEqualSpec(asFact, sameEnumPkgPropFacts, state)
 		} else {
 			sameEnumPkgPropFacts, memExist := curEnv.KnownFactsStruct.SpecFactMem.NotPureFacts[string(asFact.PropName)]
 			if !memExist {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(stmt)
 			}
 			return ver.iterateKnownPureSpecFacts_applyObjEqualSpec(asFact, sameEnumPkgPropFacts, state)
 		}
@@ -230,13 +230,13 @@ func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.EnvMemory, stmt ast.Spec
 		if asFact.IsTrue {
 			sameEnumPkgPropFacts, memExist := curEnv.KnownFactsStruct.SpecFactMem.Exist_St_Facts[string(asFact.Key())]
 			if !memExist {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(stmt)
 			}
 			return ver.iterateKnownExistSpecFacts_applyObjEqualSpec(asFact, sameEnumPkgPropFacts, state)
 		} else {
 			sameEnumPkgPropFacts, memExist := curEnv.KnownFactsStruct.SpecFactMem.NotExist_St_Facts[string(asFact.Key())]
 			if !memExist {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(stmt)
 			}
 			return ver.iterateKnownExistSpecFacts_applyObjEqualSpec(asFact, sameEnumPkgPropFacts, state)
 		}
@@ -257,7 +257,7 @@ func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.EnvMemory, stmt ast.Spec
 	// knownFacts, got := curEnv.KnownFactsStruct.SpecFactMem.GetSameEnumPkgPropFacts(stmt)
 
 	// if !got {
-	// 	return ast.NewEmptyUnknownVerRet()
+	// 	return ast.NewUnknownVerRet(stmt)
 	// }
 
 	// if stmt.FactType == ast.TruePure || stmt.FactType == ast.FalsePure {
@@ -265,14 +265,14 @@ func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.EnvMemory, stmt ast.Spec
 	// } else {
 	// 	return ver.iterateKnownExistFactsAndMatchGivenFact(stmt, knownFacts, state)
 	// }
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 // func (ver *Verifier) specFact_LogicMem(curEnv *env.EnvMemory, stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 // 	knownFacts, got := curEnv.KnownFactsStruct.SpecFactInLogicExprMem.GetSameEnumPkgPropFacts(stmt)
 
 // 	if !got {
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 
 // 	if got {
@@ -291,7 +291,7 @@ func (ver *Verifier) specFact_SpecMem_atEnv(curEnv *env.EnvMemory, stmt ast.Spec
 
 // 	}
 
-// 	return ast.NewEmptyUnknownVerRet()
+// 	return ast.NewUnknownVerRet(stmt)
 // }
 
 func (ver *Verifier) iterateKnownExistSpecFacts_applyObjEqualSpec(stmt ast.SpecificFactStmt, knownFacts []*ast.ExistSpecificFactStmt, state *VerState) ast.VerRet {
@@ -310,7 +310,7 @@ LoopOverFacts:
 		return ast.NewTrueVerRet(stmt, nil, "")
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) iterateKnownPureSpecFacts_applyObjEqualSpec(stmt ast.SpecificFactStmt, knownFacts []*ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
@@ -330,12 +330,12 @@ LoopOverFacts:
 		return ast.NewTrueVerRet(stmt, nil, "")
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) matchTwoPureSpecFacts(stmt *ast.PureSpecificFactStmt, knownFact *ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
 	if len(knownFact.Params) != len(stmt.Params) {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// 如果不区分 equal 和 其他事实的话，可能会出死循环
@@ -366,7 +366,7 @@ func (ver *Verifier) matchTwoPureSpecFacts(stmt *ast.PureSpecificFactStmt, known
 
 // 	asStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 // 	if !ok {
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 
 // 	if asStmt.IsTrue {
@@ -379,7 +379,7 @@ func (ver *Verifier) matchTwoPureSpecFacts(stmt *ast.PureSpecificFactStmt, known
 // 		// if verRet.IsErr() || verRet.IsUnknown() {
 // 		// 	return verRet
 // 		// }
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 // 	// ast.VerRet := ver.matchTwoSpecFacts(stmt, knownFact.SpecFact, state)
 // 	// if verRet.IsErr() || verRet.IsUnknown() {
@@ -426,7 +426,7 @@ func (ver *Verifier) proveUniFactDomFacts(domFacts []ast.FactStmt, state *VerSta
 		for _, fact := range domFacts {
 			asSpecFact, ok := fact.(ast.SpecificFactStmt)
 			if !ok {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(fact)
 			}
 			verRet := ver.VerFactStmt(asSpecFact, state.GetFinalRound())
 			if verRet.IsErr() || verRet.IsUnknown() {
@@ -527,11 +527,11 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt ast.Specific
 // 		}
 // 	}
 
-// 	return ast.NewEmptyUnknownVerRet()
+// 	return ast.NewUnknownVerRet(stmt)
 // }
 
 // func (ver *Verifier) iterate_KnownExistSpecInUniFacts_applyMatch_new(stmtToMatch ast.SpecificFactStmt, knownFacts []env.KnownSpecFact_InUniFact, state *VerState) ast.VerRet {
-// 	return ast.NewEmptyUnknownVerRet()
+// 	return ast.NewUnknownVerRet(stmt)
 // for i := len(knownFacts) - 1; i >= 0; i-- {
 // 	knownFact_paramProcessed := knownFacts[i]
 // 	// 这里需要用的是 instantiated 的 knownFact
@@ -605,11 +605,11 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt ast.Specific
 // 	}
 // }
 
-// return ast.NewEmptyUnknownVerRet()
+// return ast.NewUnknownVerRet(stmt)
 // }
 
 // func (ver *Verifier) iterate_KnownExistSpecInLogic_InUni_applyMatch_new(stmt ast.SpecificFactStmt, knownFacts []env.SpecFact_InLogicExpr_InUniFact, state *VerState) ast.VerRet {
-// 	return ast.NewEmptyUnknownVerRet()
+// 	return ast.NewUnknownVerRet(stmt)
 
 // for i := len(knownFacts) - 1; i >= 0; i-- {
 // 	knownFactUnderLogicExpr := knownFacts[i]
@@ -695,5 +695,5 @@ func (ver *Verifier) verify_specFact_when_given_orStmt_is_true(stmt ast.Specific
 // 	}
 // }
 
-// return ast.NewEmptyUnknownVerRet()
+// return ast.NewUnknownVerRet(stmt)
 // }
