@@ -15,7 +15,8 @@ mod forall_fact;
 mod reversible_fact;
 mod specific_fact;
 mod forall_fact_with_iff;
-mod chain_fact;
+mod and_fact;
+use and_fact::AndFact;
 use atom::{AtomWithoutPkg, AtomWithPkg, Atom};
 use obj::{
     Obj, FnObj, Number, Add, Sub, Mul, Div, Mod, Pow,
@@ -38,7 +39,6 @@ use specific_fact::SpecFact;
 use or_fact::OrFact;
 use forall_fact::ForallFact;
 use forall_fact_with_iff::ForallFactWithIff;
-use chain_fact::ChainFact;
 use fact::Fact;
 use errors::ArithmeticError;
 
@@ -64,9 +64,9 @@ fn main() {
     try_or_fact();
     try_forall_fact();
     try_forall_fact_with_iff();
-    try_chain_fact();
     try_fact();
     try_errors();
+    try_and_fact();
 }
 
 fn try_atom_fn_obj() {
@@ -299,7 +299,7 @@ fn try_atomic_fact() {
     println!("{}", _is_nonempty_set.str_with_line_file());
     println!("{}", _is_finite_set.str_with_line_file());
     println!("{}", _not_normal.str_with_line_file());
-    println!("{} on line {}", _not_equal, _not_equal.line());
+    println!("{}", _not_equal.str_with_line_file());
     println!("{}", _not_less.str_with_line_file());
     println!("{}", _not_greater.str_with_line_file());
     println!("{}", _not_less_equal.str_with_line_file());
@@ -352,8 +352,8 @@ fn try_or_fact() {
             0,
         ))))),
     ];
-    let _or = OrFact::new(facts, 1);
-    println!("{} on line {}", _or, _or.line());
+    let _or = OrFact::new(facts, 1, 0);
+    println!("{}", _or.str_with_line_file());
 }
 
 fn try_forall_fact() {
@@ -365,9 +365,10 @@ fn try_forall_fact() {
             EqualFact::new(mk_obj("a"), mk_obj("b"), 1, 0),
         ))))],
         1,
+        0,
     );
 
-    println!("{} on line {}", _forall, _forall.line());
+    println!("{}", _forall.str_with_line_file());
 }
 
 fn try_forall_fact_with_iff() {
@@ -381,24 +382,14 @@ fn try_forall_fact_with_iff() {
             EqualFact::new(mk_obj("a"), mk_obj("b"), 1, 0),
         ))))],
         1,
+        0,
     );
     let _forall_fact_with_iff = ForallFactWithIff::new(Box::new(forall), vec![Box::new(SpecFact::AtomicFact(Box::new(AtomicFact::EqualFact(
         EqualFact::new(mk_obj("a"), mk_obj("b"), 1, 0),
-    ))))], 2);
-    println!("{} on line {}", _forall_fact_with_iff, _forall_fact_with_iff.line());
+    ))))], 2, 0);
+    println!("{}", _forall_fact_with_iff.str_with_line_file());
 }
 
-fn try_chain_fact() {
-    let _chain = ChainFact::new(
-        vec![mk_obj("a"), mk_obj("b")],
-        vec![
-            Box::new(Atom::AtomWithoutPkg(AtomWithoutPkg::new("R"))),
-            Box::new(Atom::AtomWithoutPkg(AtomWithoutPkg::new("S"))),
-        ],
-        1,
-    );
-    println!("{} on line {}", _chain, _chain.line());
-}
 
 fn try_fact() {
     let af = Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("a"), mk_obj("b"), 1, 0)));
@@ -411,23 +402,48 @@ fn try_fact() {
         0,
     )));
     let _f_exist = Box::new(Fact::ExistFact(ef));
-    let _f_or = Box::new(Fact::OrFact(OrFact::new(vec![], 1)));
+    let _f_or = Box::new(Fact::OrFact(OrFact::new(vec![], 1, 0)));
     let _f_forall = Box::new(Fact::ForallFact(ForallFact::new(
         vec![],
         vec![],
         vec![],
         vec![],
         1,
+        0,
     )));
-    let _f_chain = Box::new(Fact::ChainFact(ChainFact::new(vec![mk_obj("a")], vec![], 1)));
-    let forall = ForallFact::new(vec![], vec![], vec![], vec![], 1);
+    let forall = ForallFact::new(vec![], vec![], vec![], vec![], 1, 0);
     let _f_forall_fact_with_iff = Box::new(Fact::ForallFactWithIff(ForallFactWithIff::new(
         Box::new(forall),
         vec![],
         1,
+        0,
     )));
+
+    let facts = vec![
+        Box::new(SpecFact::AtomicFact(Box::new(AtomicFact::EqualFact(EqualFact::new(
+            mk_obj("p"),
+            mk_obj("q"),
+            1,
+            0,
+        ))))),
+    ];
+    let _f_and = Box::new(Fact::AndFact(AndFact::new(facts, 1, 0)));
+    println!("{}", _f_and.str_with_line_file());
 }
 
 fn try_errors() {
     let _err = ArithmeticError::new("demo");
+}
+
+fn try_and_fact() {
+    let facts = vec![
+        Box::new(SpecFact::AtomicFact(Box::new(AtomicFact::EqualFact(EqualFact::new(
+            mk_obj("p"),
+            mk_obj("q"),
+            1,
+            0,
+        ))))),
+    ];
+    let _and = AndFact::new(facts, 1, 0);
+    println!("{}", _and.str_with_line_file());
 }
