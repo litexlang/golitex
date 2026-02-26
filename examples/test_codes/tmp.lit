@@ -1,9 +1,42 @@
-have sum fn(N_pos) N_pos
-know:
-    sum(1) = 1
-    forall n N_pos: sum(n + 1) - (n+1) = sum(n)
-algo sum(n):
-    if n = 1:
-        return 1
-    if n != 1:
-        return sum(n + 1) - (n+1)
+# Problem: Units digit of 2^2010
+# Answer: 4
+
+
+know forall m N_pos: 2 \pow m $in Z
+know forall a, b N_pos: 2 \pow (a + b) = (2 \pow a) * (2 \pow b)
+know forall n, k Z, m N_pos: ((k * n) % m) = (k * (n % m)) % m
+
+prop p(n N_pos):
+    (2 \pow (4 * n + 2)) % 10 = 4
+
+2 \pow (4 * 1 + 2) = 2 \pow 6 = 64
+64 % 10 = 4
+(2 \pow (4 * 1 + 2)) % 10 = 64 % 10 = 4
+$p(1)
+"""
+forall n N_pos:
+    $p(n)
+    =>:
+        (2 \pow (4 * n + 2)) % 10 = 4
+        2 \pow (4 * (n + 1) + 2) = 2 \pow ((4 * n + 2) + 4) 
+        2 \pow ((4 * n + 2) + 4) = (2 \pow (4 * n + 2)) * (2 \pow 4) 
+        (2 \pow (4 * n + 2)) * (2 \pow 4) = (2 \pow (4 * n + 2)) * 16
+        2 \pow ((4 * n + 2) + 4) = (2 \pow (4 * n + 2)) * 16
+        2 \pow (4 * (n + 1) + 2) = (2 \pow (4 * n + 2)) * 16
+        (2 \pow (4 * n + 2)) * 16 = 16 * (2 \pow (4 * n + 2))
+        ((2 \pow (4 * n + 2)) * 16) % 10 = (16 * (2 \pow (4 * n + 2))) % 10
+"""
+
+know forall n N_pos: $p(n) => $p(n + 1)
+induc k N_pos: $p(k):
+    do_nothing
+
+claim:
+    (2 \pow 2010) % 10 = 4
+    prove:
+        $p(502)
+        2010 = 4 * 502 + 2
+        (2 \pow (4 * 502 + 2)) % 10 = 4
+        2 \pow (4 * 502 + 2) = 2 \pow 2010
+        (2 \pow (4 * 502 + 2)) % 10 = (2 \pow 2010) % 10 = 4
+        know (2 \pow 2010) % 10 = 4
