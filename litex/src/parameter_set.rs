@@ -18,15 +18,33 @@ pub struct NonemptySetAsParamSet {}
 
 pub struct FiniteSetAsParamSet {}
 
+impl SetAsParamSet {
+    pub fn new() -> Self {
+        SetAsParamSet {}
+    }
+}
+
+impl NonemptySetAsParamSet {
+    pub fn new() -> Self {
+        NonemptySetAsParamSet {}
+    }
+}
+
+impl FiniteSetAsParamSet {
+    pub fn new() -> Self {
+        FiniteSetAsParamSet {}
+    }
+}
+
 impl ParameterSet {
     pub fn box_set() -> box_ParameterSet {
-        Box::new(ParameterSet::Set(SetAsParamSet {}))
+        Box::new(ParameterSet::Set(SetAsParamSet::new()))
     }
     pub fn box_nonempty_set() -> box_ParameterSet {
-        Box::new(ParameterSet::NonemptySet(NonemptySetAsParamSet {}))
+        Box::new(ParameterSet::NonemptySet(NonemptySetAsParamSet::new()))
     }
     pub fn box_finite_set() -> box_ParameterSet {
-        Box::new(ParameterSet::FiniteSet(FiniteSetAsParamSet {}))
+        Box::new(ParameterSet::FiniteSet(FiniteSetAsParamSet::new()))
     }
     /// 仅用于 Obj 变体：从 box_Obj 构造 box_ParameterSet
     pub fn box_obj(obj: box_Obj) -> box_ParameterSet {
