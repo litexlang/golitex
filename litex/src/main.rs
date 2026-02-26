@@ -27,8 +27,7 @@ use obj::{
 };
 use parameter_set::{ParameterSet, SetAsParamSet, NonemptySetAsParamSet, FiniteSetAsParamSet};
 use stmt::{Stmt};
-use atomic_fact::{InFact, NotInFact,
-    AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact,
+use atomic_fact::{InFact, NotInFact,IsCartFact, NotIsCartFact, IsTupleFact, NotIsTupleFact, AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact,
     LessFact, NotLessFact, GreaterFact, NotGreaterFact,
     LessEqualFact, NotLessEqualFact, GreaterEqualFact, NotGreaterEqualFact,
     IsSetFact, NotIsSetFact, IsNonemptySetFact, NotIsNonemptySetFact,
@@ -274,6 +273,8 @@ fn try_atomic_fact() {
     let _is_set = Box::new(AtomicFact::IsSetFact(IsSetFact::new(mk_obj("S"), line, 0)));
     let _is_nonempty_set = Box::new(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(mk_obj("S"), line, 0)));
     let _is_finite_set = Box::new(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(mk_obj("S"), line, 0)));
+    let _is_cart = Box::new(AtomicFact::IsCartFact(IsCartFact::new(mk_obj("S"), line, 0)));
+    let _not_is_cart = Box::new(AtomicFact::NotIsCartFact(NotIsCartFact::new(mk_obj("S"), line, 0)));
 
     let _not_normal = Box::new(AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(
         Box::new(Atom::AtomWithoutPkg(AtomWithoutPkg::new("p"))),
@@ -307,11 +308,18 @@ fn try_atomic_fact() {
     println!("{}", _not_is_set.str_with_line_file());
     println!("{}", _not_is_nonempty_set.str_with_line_file());
     println!("{}", _not_is_finite_set.str_with_line_file());
+    println!("{}", _is_cart.str_with_line_file());
+    println!("{}", _not_is_cart.str_with_line_file());
 
     let _in = Box::new(AtomicFact::InFact(InFact::new(mk_obj("a"), mk_obj("S"), line, 0)));
     let _not_in = Box::new(AtomicFact::NotInFact(NotInFact::new(mk_obj("a"), mk_obj("S"), line, 0)));
     println!("{}", _in.str_with_line_file());
     println!("{}", _not_in.str_with_line_file());
+
+    let _is_tuple = Box::new(AtomicFact::IsTupleFact(IsTupleFact::new(mk_obj("t"), line, 0)));
+    let _not_is_tuple = Box::new(AtomicFact::NotIsTupleFact(NotIsTupleFact::new(mk_obj("t"), line, 0)));
+    println!("{}", _is_tuple.str_with_line_file());
+    println!("{}", _not_is_tuple.str_with_line_file());
 }
 
 fn try_exist_fact() {
