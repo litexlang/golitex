@@ -58,6 +58,7 @@ pub const GREATER_EQUAL: &str = ">=";
 pub const IS_SET: &str = "is_set";
 pub const IS_NONEMPTY_SET: &str = "is_nonempty_set";
 pub const IS_FINITE_SET: &str = "is_finite_set";
+pub const IN: &str = "in";
 
 pub const OR: &str = "or";
 pub const AND: &str = "and";
