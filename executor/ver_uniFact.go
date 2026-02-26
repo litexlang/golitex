@@ -22,17 +22,18 @@ import (
 
 func (ver *Verifier) verUniFact(oldStmt *ast.UniFactStmt, state *VerState) ast.VerRet {
 	ret := ver.verUniFact_checkFactOneByOne(oldStmt, state)
-	if ret.IsTrue() || ret.IsErr() {
-		return ret
-	}
+	// if ret.IsTrue() || ret.IsErr() {
+	// 	return ret
+	// }
 
 	// Try using infer if applicable
-	return ver.verUniFact_useInfer(oldStmt, state)
+	// return ver.verUniFact_useInfer(oldStmt, state)
+	return ret
 }
 
 func (ver *Verifier) verUniFact_checkFactOneByOne(oldStmt *ast.UniFactStmt, state *VerState) ast.VerRet {
 	if state.isFinalRound() {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(oldStmt)
 	}
 
 	// 在局部环境声明新变量
@@ -66,7 +67,7 @@ func (ver *Verifier) verUniFact_checkFactOneByOne(oldStmt *ast.UniFactStmt, stat
 
 func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerState) ast.VerRet {
 	if state.isFinalRound() {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(oldStmt)
 	}
 
 	// 0. 如果dom和then里全是or_spec 那可以继续，否则就不行
@@ -78,7 +79,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 			domFactsReversible = append(domFactsReversible, orStmt)
 		} else {
 			// Not all facts are Spec_OrFact, cannot use infer
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(oldStmt)
 		}
 	}
 
@@ -90,7 +91,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 			thenFactsReversible = append(thenFactsReversible, orStmt)
 		} else {
 			// Not all facts are Spec_OrFact, cannot use infer
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(oldStmt)
 		}
 	}
 
@@ -141,7 +142,7 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 	} else if execRet.IsTrue() {
 		return ast.NewTrueVerRet(oldStmt, nil, "")
 	} else {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(oldStmt)
 	}
 }
 
@@ -158,9 +159,9 @@ func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerSta
 			if state.WithMsg {
 				extraInfos := verRet.GetExtraInfos()
 				extraInfos = append(extraInfos, fmt.Sprintf("%s is unknown", thenFact))
-				return ast.NewEmptyUnknownVerRet().AddExtraInfos(extraInfos)
+				return ast.NewUnknownVerRet(thenFact).AddExtraInfos(extraInfos)
 			}
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(thenFact)
 		}
 
 		// if true, store it
@@ -239,11 +240,11 @@ func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerSt
 	for _, paramSet := range stmt.ParamSets {
 		enumSet := ver.Env.GetListSetEqualToObj(paramSet)
 		if enumSet == nil {
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(stmt)
 		}
 		listSetFnObj, ok := enumSet.(*ast.FnObj)
 		if !ok {
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(stmt)
 		}
 		enums = append(enums, listSetFnObj.Params)
 	}
@@ -308,7 +309,7 @@ func (ver *Verifier) verUniFactByProveByEnum(stmt *ast.UniFactStmt, state *VerSt
 				return verRet
 			}
 			if verRet.IsUnknown() {
-				return ast.NewEmptyUnknownVerRet().AddExtraInfo(fmt.Sprintf("failed to prove instantiated then fact: %s", instantiatedThenFact))
+				return ast.NewUnknownVerRet(instantiatedThenFact).AddExtraInfo(fmt.Sprintf("failed to prove instantiated then fact: %s", instantiatedThenFact))
 			}
 			verifyProcessMsgs = append(verifyProcessMsgs, verRet)
 		}

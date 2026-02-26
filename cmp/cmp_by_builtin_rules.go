@@ -117,7 +117,7 @@ func CmpByLiteralEqualityAndCalculationAndPolynomialSimplification(left, right a
 		return ast.NewTrueVerRet(ast.EqualFact(left, right), nil, "polynomial simplification")
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(ast.EqualFact(left, right))
 }
 
 func IsNumExprLitObj(obj ast.Obj) bool {

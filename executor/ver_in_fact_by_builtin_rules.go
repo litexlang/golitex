@@ -156,24 +156,24 @@ func (ver *Verifier) trueInFactBuiltinRules(stmt ast.SpecificFactStmt, state *Ve
 		return verRet
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) verInFactByLeftIsCartSetAndRightIsKeywordNonemptySet(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	if !ast.IsFn_WithHeadName(stmt.(*ast.PureSpecificFactStmt).Params[0], glob.KeywordCart) {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	asFnObj, ok := stmt.(*ast.PureSpecificFactStmt).Params[0].(*ast.FnObj)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// 所有的cart里的参数都是非空集合
 	for i := range asFnObj.Params {
 		verRet := ver.VerFactStmt(ast.NewIsANonEmptySetFact(asFnObj.Params[i], stmt.GetLine()), state)
 		if verRet.IsErr() || verRet.IsUnknown() {
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(stmt)
 		}
 	}
 
@@ -184,7 +184,7 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt ast.Sp
 
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	ok = ast.IsAtomObjAndEqualToStr(asPureStmt.Params[1], glob.KeywordReal)
@@ -195,16 +195,16 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt ast.Sp
 			msg := fmt.Sprintf("return value of builtin arithmetic function %s is in Real", asPureStmt.Params[0])
 			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 		}
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 // func (ver *Verifier) verInFactByRightParamIsFnTemplateFact(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 // 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 // 	if !ok {
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 
 // 	if asFcFn, ok := asPureStmt.Params[1].(*ast.FnObj); ok {
@@ -228,11 +228,11 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt ast.Sp
 // 				return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 // 			}
 // 		}
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 		// }
 // 	}
 
-// 	return ast.NewEmptyUnknownVerRet()
+// 	return ast.NewUnknownVerRet(stmt)
 // }
 
 // func (ver *Verifier) verInSet_btRules(stmt *ast.SpecFactStmt, state *VerState) *glob.GlobRet {
@@ -290,7 +290,7 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfArithmeticFn(stmt ast.Sp
 func (ver *Verifier) falseInFactBuiltinRules(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// 任何东西不在空集里
@@ -356,14 +356,14 @@ func (ver *Verifier) falseInFactBuiltinRules(stmt ast.SpecificFactStmt, state *V
 		return verRet
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 // TODO 需要先证明一下它是finite set 去开始验证 len(n) = 0
 func (ver *Verifier) nothingIsInEmptySet(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	verRet := ver.VerFactStmt(ast.NewIsAFiniteSetFact(asPureStmt.Params[1], stmt.GetLine()), state)
@@ -380,11 +380,11 @@ func (ver *Verifier) nothingIsInEmptySet(stmt ast.SpecificFactStmt, state *VerSt
 func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	if asPureStmt.IsTrue {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	notAllItemsInThatSetAreNotEqualToIt := ast.NewUniFact([]string{"x"}, []ast.Obj{asPureStmt.Params[1]}, []ast.Spec_OrFact{}, []ast.Spec_OrFact{ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{ast.Atom("x"), asPureStmt.Params[0]}, asPureStmt.GetLine())}, asPureStmt.GetLine())
@@ -446,13 +446,13 @@ func (ver *Verifier) objNotInSetWhenAllItemsInThatSetAreNotEqualToIt(stmt ast.Sp
 func (ver *Verifier) verInFactByRightParamIsSetProduct(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// left must be (x, y, ...) right must be product(xSet, ySet, ...)
 	fcFn, ok := asPureStmt.Params[0].(*ast.FnObj)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 	// ok = ast.IsAtomObjAndEqualToStr(fcFn.FnHead, glob.TupleFcFnHead)
 	// if !ok {
@@ -461,11 +461,11 @@ func (ver *Verifier) verInFactByRightParamIsSetProduct(stmt ast.SpecificFactStmt
 
 	setProductFn, ok := asPureStmt.Params[1].(*ast.FnObj)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	if len(fcFn.Params) != len(setProductFn.Params) {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	for i := range len(fcFn.Params) {
@@ -509,7 +509,7 @@ func (ver *Verifier) verInCartSet_DimAndElements(obj ast.Obj, cartSet *ast.FnObj
 		return ret
 	}
 	if ret.IsUnknown() {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(ast.NewInFactWithObj(obj, cartSet))
 	}
 
 	// Step 2: Verify a[i] $in cartSet.Params[i-1] for each i
@@ -534,7 +534,7 @@ func (ver *Verifier) verInCartSet_DimAndElements(obj ast.Obj, cartSet *ast.FnObj
 			return verRet
 		}
 		if verRet.IsUnknown() {
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(ast.NewInFactWithObj(obj, cartSet))
 		}
 	}
 
@@ -548,16 +548,16 @@ func (ver *Verifier) verInCartSet_DimAndElements(obj ast.Obj, cartSet *ast.FnObj
 func (ver *Verifier) verInFactByRightParamIsCartSet(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// Check if right side is cart(...)
 	cartSet, ok := asPureStmt.Params[1].(*ast.FnObj)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 	if !ast.IsAtomObjAndEqualToStr(cartSet.FnHead, glob.KeywordCart) {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	obj := asPureStmt.Params[0]
@@ -568,7 +568,7 @@ func (ver *Verifier) verInFactByRightParamIsCartSet(stmt ast.SpecificFactStmt, s
 	// Verify dim and elements
 	ret := ver.verInCartSet_DimAndElements(obj, cartSet, objCartSet, state)
 	if ret.IsNotTrue() {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	return ver.maybeAddSuccessMsgString(state, asPureStmt.String(), ret.String(), ret)
@@ -582,7 +582,7 @@ func (ver *Verifier) verInFactByRightParamIsCartSet(stmt ast.SpecificFactStmt, s
 
 // 	leftIsInWhichFnTT := ver.Env.GetLatestFnT_GivenNameIsIn(left.String())
 // 	if leftIsInWhichFnTT == nil {
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 
 // 	randomNames := []string{}
@@ -622,7 +622,7 @@ func (ver *Verifier) verInFactByRightParamIsCartSet(stmt ast.SpecificFactStmt, s
 // 	}
 // 	instLeftUniFactAsUniFactStmt, ok := instantiatedLeftToUniFact.(*ast.UniFactStmt)
 // 	if !ok {
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 
 // 	for i := range instLeftUniFactAsUniFactStmt.Params {
@@ -660,21 +660,21 @@ func (ver *Verifier) verInFactByRightParamIsCartSet(stmt ast.SpecificFactStmt, s
 func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	if len(asPureStmt.Params) != 2 {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	fcFn, ok := asPureStmt.Params[0].(*ast.FnObj)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	fnSet := ver.Env.GetFnInFnSet(fcFn.FnHead.String())
 	if fnSet == nil {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	retSet := fnSet.GetRetSet()
@@ -690,12 +690,12 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt ast.S
 // func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 // 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 // 	if !ok {
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 
 // 	fcFn, ok := asPureStmt.Params[0].(*ast.FnObj)
 // 	if !ok {
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 
 // 	if fcFn.HasHeadInSlice([]string{glob.KeySymbolPlus, glob.KeySymbolMinus, glob.KeySymbolStar, glob.KeySymbolSlash, glob.KeySymbolPower}) {
@@ -703,7 +703,7 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt ast.S
 // 			msg := fmt.Sprintf("return value of builtin arithmetic function %s is in Real", fcFn)
 // 			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 // 		}
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 
 // 	if fcFn.HasHeadInSlice([]string{glob.KeywordCount, glob.KeySymbolPercent}) {
@@ -711,12 +711,12 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt ast.S
 // 			msg := fmt.Sprintf("return value of builtin function %s is in Natural", fcFn)
 // 			return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 // 		}
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 
 // 	setFcFnIsIn_ByItsFnT, err := ver.getRetSetOfFcFnByUsingItsFnT(fcFn)
 // 	if err != nil {
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 
 // 	verRet := ver.VerFactStmt(ast.EqualFact(asPureStmt.Params[1], setFcFnIsIn_ByItsFnT), state)
@@ -727,7 +727,7 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt ast.S
 // 		msg := fmt.Sprintf("return value of function %s is in its function template return set %s", fcFn, setFcFnIsIn_ByItsFnT)
 // 		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 // 	}
-// 	return ast.NewEmptyUnknownVerRet()
+// 	return ast.NewUnknownVerRet(stmt)
 // }
 
 // func (ver *Verifier) getRetSetOfFcFnByUsingItsFnT(fcFn *ast.FnObj) (ast.Obj, error) {
@@ -780,18 +780,18 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfUserDefinedFn(stmt ast.S
 func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// 检查是否是 not x $in N 的形式
 	if !ast.IsAtomObjAndEqualToStr(asPureStmt.Params[1], glob.KeywordNatural) {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	_, toEval := ver.GetValueOfSymbol(asPureStmt.Params[0])
 
 	if !cmp.IsNumExprLitObj(toEval) {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// 检查 toEval 是否是纯数字（Atom），如果不是（有运算符），则不在 N 中
@@ -833,7 +833,7 @@ func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt ast.SpecificFactStmt,
 	// 如果字面上就是自然数形状（比如 "5"），不能证明它不在自然数中
 	if ast.IsObjLiterallyNatNumber(toEval) {
 		// 字面上是自然数，不能证明它不在自然数中
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// 如果是纯数字但不是自然数形状（负数），可以证明它不在自然数中
@@ -844,18 +844,18 @@ func (ver *Verifier) litNumNotInNaturalByLiteralShape(stmt ast.SpecificFactStmt,
 func (ver *Verifier) litNumNotInIntegerByLiteralShape(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// 检查是否是 not x $in Z 的形式
 	if !ast.IsAtomObjAndEqualToStr(asPureStmt.Params[1], glob.KeywordInteger) {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	_, toEval := ver.GetValueOfSymbol(asPureStmt.Params[0])
 
 	if !cmp.IsNumExprLitObj(toEval) {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// 检查 toEval 是否是纯数字（Atom），如果不是（有运算符），则不在 Z 中
@@ -872,24 +872,24 @@ func (ver *Verifier) litNumNotInIntegerByLiteralShape(stmt ast.SpecificFactStmt,
 		return ver.maybeAddSuccessMsgString(state, stmt.String(), msg, ast.NewTrueVerRet(stmt, nil, ""))
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// 检查是否是 not x $in N_pos 的形式
 	if !ast.IsAtomObjAndEqualToStr(asPureStmt.Params[1], glob.KeywordNPos) {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	_, toEval := ver.GetValueOfSymbol(asPureStmt.Params[0])
 
 	if !cmp.IsNumExprLitObj(toEval) {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// 检查 toEval 是否是纯数字（Atom），如果不是（有运算符），则不在 N_pos 中
@@ -931,7 +931,7 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt ast.SpecificFactStmt, st
 	// 如果字面上就是正整数形状（比如 "5"），不能证明它不在正整数中
 	if ast.IsObjLiterallyNPosNumber(toEval) {
 		// 字面上是正整数，不能证明它不在正整数中
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// 如果是纯数字但不是正整数形状（负数、0），可以证明它不在正整数中
@@ -942,7 +942,7 @@ func (ver *Verifier) litNumNotInNPosByLiteralShape(stmt ast.SpecificFactStmt, st
 func (ver *Verifier) verInFactByLeftIsIndexOfObjInSomeSet(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	left := asPureStmt.Params[0]
@@ -951,30 +951,30 @@ func (ver *Verifier) verInFactByLeftIsIndexOfObjInSomeSet(stmt ast.SpecificFactS
 	var leftAsFn *ast.FnObj
 
 	if leftAsFn, ok = left.(*ast.FnObj); !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	if leftAsFn.FnHead.String() != glob.KeywordObjAtIndexOpt {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// 找到它所在的 cart
 	objCartSet := ver.getCartSetFromObj(left)
 	if objCartSet == nil {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	if len(leftAsFn.Params) != 2 {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	index := leftAsFn.Params[1]
 	indexAsInt, err := strconv.Atoi(string(index.(ast.Atom)))
 	if err != nil {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 	if indexAsInt < 1 || indexAsInt > len(objCartSet.Params) {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// 看看在index处是不是在someSet中, index 是 整数
@@ -987,22 +987,22 @@ func (ver *Verifier) verInFactByLeftIsIndexOfObjInSomeSet(stmt ast.SpecificFactS
 		return verRet
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) verInFactByRightIsSetBuilder(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	if state.isFinalRound() {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	setBuilder := ver.Env.GetSetBuilderEqualToObj(asPureStmt.Params[1])
 	if setBuilder == nil {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// nextState := state.GetAddRound()
@@ -1035,7 +1035,7 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt ast.SpecificFactStmt, sta
 	for _, fact := range instFacts {
 		verRet := ver.VerFactStmt(fact, state)
 		if verRet.IsNotTrue() {
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(stmt)
 		}
 	}
 
@@ -1045,17 +1045,17 @@ func (ver *Verifier) verInFactByRightIsSetBuilder(stmt ast.SpecificFactStmt, sta
 func (ver *Verifier) verInFactByRightIsListSet(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	listSetObj := ver.Env.GetListSetEqualToObj(asPureStmt.Params[1])
 	if listSetObj == nil {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	listSetFnObj, ok := listSetObj.(*ast.FnObj)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	// 遍历 list set 的所有元素，检查是否有任何一个等于 stmt.Params[0]
@@ -1076,18 +1076,18 @@ func (ver *Verifier) verInFactByRightIsListSet(stmt ast.SpecificFactStmt, state 
 	}
 
 	// 没有找到相等的元素，返回 unknown
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) verInFactByLeftParamIsReturnValueOfSuperFn(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	setWhereObjIsIn, ok := asPureStmt.Params[0].(*ast.FnObj)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	switch setWhereObjIsIn.FnHead.String() {
@@ -1096,26 +1096,26 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfSuperFn(stmt ast.Specifi
 	case glob.KeywordCount:
 		return ver.VerFactStmt(ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeywordSubsetOf), []ast.Obj{ast.Atom(glob.KeywordNatural), asPureStmt.Params[1]}, glob.BuiltinLine0), state)
 	default:
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 }
 
 // func (ver *Verifier) verInFactByRightIsPowerSet(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 // 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 // 	if !ok {
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 
 // 	if len(asPureStmt.Params) != 2 {
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 
 // 	if asFnObj, ok := asPureStmt.Params[1].(*ast.FnObj); ok {
 // 		if asFnObj.FnHead.String() != glob.KeywordPowerSet || len(asFnObj.Params) != 1 {
-// 			return ast.NewEmptyUnknownVerRet()
+// 			return ast.NewUnknownVerRet(stmt)
 // 		}
 // 	} else {
-// 		return ast.NewEmptyUnknownVerRet()
+// 		return ast.NewUnknownVerRet(stmt)
 // 	}
 
 // 	randomAtom := ver.Env.GenerateUndeclaredRandomName()
@@ -1136,20 +1136,20 @@ func (ver *Verifier) verInFactByLeftParamIsReturnValueOfSuperFn(stmt ast.Specifi
 func (ver *Verifier) verInFactByRightIsPowerSet(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	if len(asPureStmt.Params) != 2 {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	var asFnObj *ast.FnObj
 	if asFnObj, ok = asPureStmt.Params[1].(*ast.FnObj); ok {
 		if asFnObj.FnHead.String() != glob.KeywordPowerSet {
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(stmt)
 		}
 	} else {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	randomName := ver.Env.GenerateUnusedRandomName()
@@ -1163,5 +1163,5 @@ func (ver *Verifier) verInFactByRightIsPowerSet(stmt ast.SpecificFactStmt, state
 		return verRet
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }

@@ -24,12 +24,12 @@ import (
 func (ver *Verifier) verInFactByRightParamIsN_Z_Q_R_N_pos_Z_pos_R_pos_etc_BySpecMem_ReturnValueOfUserDefinedFnInFnReturn(stmt ast.SpecificFactStmt, state *VerState) ast.VerRet {
 	asPureStmt, ok := stmt.(*ast.PureSpecificFactStmt)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	inSet, ok := asPureStmt.Params[1].(ast.Atom)
 	if !ok {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	nextState := state.GetFinalRound().GetNoMsg()
@@ -72,7 +72,7 @@ func (ver *Verifier) verInFactByRightParamIsN_Z_Q_R_N_pos_Z_pos_R_pos_etc_BySpec
 		}
 		return ver.maybeAddSuccessMsgString(state, stmt.String(), verifiedBy, ast.NewTrueVerRet(stmt, nil, ""))
 	}
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) verInNPos_BySpecMem_ReturnValueOfUserDefinedFnInFnReturnSet(stmt ast.SpecificFactStmt, state *VerState) (bool, string) {

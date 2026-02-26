@@ -19,7 +19,7 @@ import (
 )
 
 func (ver *Verifier) ExistStFactWithPureProp_FreeExistsStFactMatchInstExistStFact(stmt *ast.HaveObjStStmt, freeExistStFact *ast.ExistSpecificFactStmt, instExistStFactToBeMatched *ast.ExistSpecificFactStmt, verState *VerState) ast.VerRet {
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(freeExistStFact)
 
 	// ver.newEnv()
 	// defer ver.deleteEnv()
@@ -78,5 +78,5 @@ func (ver *Verifier) ExistStFactWithPureProp_FreeExistStFactMatchInstExistStFact
 		}
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(freeExistStFact)
 }

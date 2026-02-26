@@ -52,14 +52,14 @@ func (ver *Verifier) verOrStmtByUniFactMem(stmt *ast.OrStmt, state *VerState) as
 		}
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) verOrFactByUniFactMemAtEnv(curEnv *env.EnvMemory, stmt *ast.OrStmt, state *VerState) ast.VerRet {
 	key := string(stmt.Facts[0].Key())
 	knownOrFacts, got := curEnv.OrFactInUniFactMem[key]
 	if !got {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	for _, knownOrFactInUniFact := range knownOrFacts {
@@ -69,12 +69,12 @@ func (ver *Verifier) verOrFactByUniFactMemAtEnv(curEnv *env.EnvMemory, stmt *ast
 		}
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt, knownOrFactInUni *env.OrFactInUniFact, state *VerState) ast.VerRet {
 	if len(given.Facts) != len(knownOrFactInUni.OrFact.Facts) {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(given)
 	}
 
 	ok, freeParamObjMap := ver.matchOrFactWithOneInKnownUniFact(knownOrFactInUni.UniFact, knownOrFactInUni.OrFact, given, state)
@@ -89,7 +89,7 @@ func (ver *Verifier) useKnownOrFactInUniFactToCheckGivenOrFact(given *ast.OrStmt
 		}
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(given)
 }
 
 // verifyDomAndParamSets 验证 dom 和 paramSet 是否成立
