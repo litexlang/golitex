@@ -1,24 +1,2 @@
-# Problem: Show sum_{k=0}^{n-1} (2k+1) = n^2
-
-
-have sum fn(N) N_pos
-know sum(0) = 1
-know forall n N_pos => sum(n) = sum(n - 1) + (2 * n + 1)
-
-prop p(n N_pos):
-    sum(n - 1) = n^2
-
-claim:
-    forall n N_pos => $p(n)
-    prove:
-        sum(1 - 1) = sum(0) = 1
-        $p(1)
-        forall n N_pos:
-            $p(n)
-            =>:
-                sum(n - 1) = n^2
-                sum(n) = sum(n - 1) + (2 * n + 1) = n^2 + 2 * n + 1 = (n + 1)^2
-                sum(n + 1 - 1) = (n + 1)^2
-                $p(n + 1)
-        induc k N_pos: $p(k):
-            do_nothing
+forall:
+    1 = 0
