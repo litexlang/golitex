@@ -367,6 +367,62 @@ func (ver *Verifier) verPowerReq(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 		return ast.NewErrVerRet(nil).AddExtraInfo(fmt.Sprintf("power expects 2 parameters, got %d", len(fnObj.Params)))
 	}
 
+	verRet := ver.verPowerReqWhenLeftIsPos(fnObj, state)
+	if verRet.IsTrue() || verRet.IsErr() {
+		return verRet
+	}
+
+	verRet = ver.verPowerReqWhenLeftIsZero(fnObj, state)
+	if verRet.IsTrue() || verRet.IsErr() {
+		return verRet
+	}
+
+	verRet = ver.verPowerReqWhenLeftIsNeg(fnObj, state)
+	if verRet.IsTrue() || verRet.IsErr() {
+		return verRet
+	}
+
+	return ast.NewEmptyUnknownVerRet()
+}
+
+func (ver *Verifier) verPowerReqWhenLeftIsPos(fnObj *ast.FnObj, state *VerState) ast.VerRet {
+	// in R_pos
+	inRPosFact := ast.NewInFactWithObj(fnObj.Params[0], ast.Atom(glob.KeywordRPos))
+	verRet := ver.VerFactStmt(inRPosFact, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	// right in R
+	inRFact := ast.NewInFactWithObj(fnObj.Params[1], ast.Atom(glob.KeywordReal))
+	verRet = ver.VerFactStmt(inRFact, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	return ast.NewTrueVerRet(nil, nil, "")
+}
+
+func (ver *Verifier) verPowerReqWhenLeftIsZero(fnObj *ast.FnObj, state *VerState) ast.VerRet {
+	// left = 0
+	equalZeroFact := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fnObj.Params[0], ast.Atom("0")}, glob.BuiltinLine0)
+	verRet := ver.VerFactStmt(equalZeroFact, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	// right in R_pos
+	inRPosFact := ast.NewInFactWithObj(fnObj.Params[1], ast.Atom(glob.KeywordRPos))
+	verRet = ver.VerFactStmt(inRPosFact, state)
+	if verRet.IsNotTrue() {
+		return verRet
+	}
+
+	return ast.NewTrueVerRet(nil, nil, "")
+}
+
+// TODO: 本质上应该是 right 是 a / b，b是奇数有理数（最简有理数）
+func (ver *Verifier) verPowerReqWhenLeftIsNeg(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 	// in R
 	inRFact := ast.NewInFactWithObj(fnObj.Params[0], ast.Atom(glob.KeywordReal))
 	verRet := ver.VerFactStmt(inRFact, state)
@@ -374,17 +430,9 @@ func (ver *Verifier) verPowerReq(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 		return verRet
 	}
 
-	// in Z
+	// right in integer
 	inZFact := ast.NewInFactWithObj(fnObj.Params[1], ast.Atom(glob.KeywordInteger))
 	verRet = ver.VerFactStmt(inZFact, state)
-	if verRet.IsNotTrue() {
-		return verRet
-	}
-
-	// param0 不是 0 or param1 不是 0
-	orNotZero := ast.NewOrStmt([]ast.SpecificFactStmt{ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fnObj.Params[0], ast.Atom("0")}, glob.BuiltinLine0), ast.NewPureSpecificFactStmt(false, ast.Atom(glob.KeySymbolEqual), []ast.Obj{fnObj.Params[1], ast.Atom("0")}, glob.BuiltinLine0)}, glob.BuiltinLine0)
-
-	verRet = ver.VerFactStmt(orNotZero, state)
 	if verRet.IsNotTrue() {
 		return verRet
 	}
