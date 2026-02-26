@@ -25,7 +25,7 @@ use obj::{
     Cart, SetDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choice,
 };
 use parameter_set::{ParameterSet, SetAsParamSet, NonemptySetAsParamSet, FiniteSetAsParamSet};
-use stmt::{Stmt, PureSpecFact};
+use stmt::{Stmt};
 use atomic_fact::{
     AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact,
     LessFact, NotLessFact, GreaterFact, NotGreaterFact,
@@ -125,20 +125,22 @@ fn try_stmt() {
         Box::new(Obj::AtomWithoutPkg(AtomWithoutPkg::new("a"))),
         Box::new(Obj::AtomWithoutPkg(AtomWithoutPkg::new("b"))),
     ];
-    let stmt = Box::new(Stmt::Fact(PureSpecFact::new(
-        Box::new(Atom::AtomWithoutPkg(AtomWithoutPkg::new("name_a"))),
+    let fact1 = Box::new(Stmt::Fact(Fact::AtomicFact(Box::new(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
+        Box::new(Atom::AtomWithoutPkg(AtomWithoutPkg::new("p"))),
         body3,
-    )));
-    println!("{}", stmt.to_string());
+        1,
+    ))))));
+    println!("{}", fact1.to_string());
 
     let body2 = vec![
         Box::new(Obj::AtomWithoutPkg(AtomWithoutPkg::new("a"))),
         Box::new(Obj::AtomWithoutPkg(AtomWithoutPkg::new("b"))),
     ];
-    let fact2 = Box::new(Stmt::Fact(PureSpecFact::new(
-        Box::new(Atom::AtomWithPkg(AtomWithPkg::new("pkg_a", "name_a"))),
+    let fact2 = Box::new(Stmt::Fact(Fact::AtomicFact(Box::new(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
+        Box::new(Atom::AtomWithPkg(AtomWithPkg::new("PkgA", "name_a"))),
         body2,
-    )));
+        1,
+    ))))));
     println!("{}", fact2.to_string());
 }
 
