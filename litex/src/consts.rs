@@ -63,3 +63,4 @@ pub const OR: &str = "or";
 
 pub const COLON: &str = ":";
 pub const RIGHT_ARROW: &str = "=>";
+pub const EQUIVALENT_SIGN: &str = "<=>";
