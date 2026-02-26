@@ -170,7 +170,7 @@ func (ver *Verifier) checkDefAlgoUnderIf(stmt *ast.DefAlgoStmt, i int) ast.VerRe
 	fnObj := ast.NewFnObj(ast.Atom(stmt.FuncName), stmt.Params.ToObjSlice())
 
 	equalFact := ast.NewEqualFact(algoIf.ReturnStmt.Value, fnObj)
-	ret = ver.storeFactAndCheckFnReq(equalFact)
+	ret = ver.VerFactStmt(equalFact, Round0NoMsg())
 	if ret.IsNotTrue() {
 		return ret
 	}
