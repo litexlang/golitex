@@ -6,11 +6,11 @@ pub enum SpecFact {
     ExistFact(Box<ExistFact>),
 }
 
-impl SpecFact {
-    pub fn box_atomic_fact(fact: Box<AtomicFact>) -> Box<SpecFact> {
-        Box::new(SpecFact::AtomicFact(fact))
-    }
-    pub fn box_exist_fact(fact: Box<ExistFact>) -> Box<SpecFact> {
-        Box::new(SpecFact::ExistFact(fact))
-    }
-}
+// impl SpecFact {
+//     pub fn box_atomic_fact(fact: Box<AtomicFact>) -> Box<SpecFact> {
+//         Box::new(SpecFact::AtomicFact(fact))
+//     }
+//     pub fn box_exist_fact(fact: Box<ExistFact>) -> Box<SpecFact> {
+//         Box::new(SpecFact::ExistFact(fact))
+//     }
+// }

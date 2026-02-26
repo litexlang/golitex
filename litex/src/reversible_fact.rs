@@ -6,11 +6,11 @@ pub enum ReversibleFact {
     OrFact(Box<OrFact>),
 }
 
-impl ReversibleFact {
-    pub fn box_spec_fact(fact: Box<SpecFact>) -> Box<ReversibleFact> {
-        Box::new(ReversibleFact::SpecFact(fact))
-    }
-    pub fn box_or_fact(fact: Box<OrFact>) -> Box<ReversibleFact> {
-        Box::new(ReversibleFact::OrFact(fact))
-    }
-}
+// impl ReversibleFact {
+//     pub fn box_spec_fact(fact: Box<SpecFact>) -> Box<ReversibleFact> {
+//         Box::new(ReversibleFact::SpecFact(fact))
+//     }
+//     pub fn box_or_fact(fact: Box<OrFact>) -> Box<ReversibleFact> {
+//         Box::new(ReversibleFact::OrFact(fact))
+//     }
+// }

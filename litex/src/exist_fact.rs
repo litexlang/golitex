@@ -42,21 +42,11 @@ impl NotExistFact {
     }
 }
 
-impl ExistFact {
-    pub fn box_true_exist_fact(
-        exist_params: Vec<String>,
-        param_sets: Vec<ParameterSet>,
-        fact: Box<AtomicFact>,
-        line: u32,
-    ) -> Box<ExistFact> {
-        Box::new(ExistFact::TrueExistFact(TrueExistFact::new(exist_params, param_sets, fact, line)))
-    }
-    pub fn box_not_exist_fact(
-        exist_params: Vec<String>,
-        param_sets: Vec<ParameterSet>,
-        fact: Box<AtomicFact>,
-        line: u32,
-    ) -> Box<ExistFact> {
-        Box::new(ExistFact::NotExistFact(NotExistFact::new(exist_params, param_sets, fact, line)))
-    }
-}
+// impl ExistFact {
+//     pub fn box_true_exist_fact(...) -> Box<ExistFact> {
+//         Box::new(ExistFact::TrueExistFact(TrueExistFact::new(...)))
+//     }
+//     pub fn box_not_exist_fact(...) -> Box<ExistFact> {
+//         Box::new(ExistFact::NotExistFact(NotExistFact::new(...)))
+//     }
+// }
