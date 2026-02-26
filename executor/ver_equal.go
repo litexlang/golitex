@@ -38,7 +38,7 @@ func (ver *Verifier) verTrueEqualFactAndCheckFnReq(stmt *ast.PureSpecificFactStm
 
 func (ver *Verifier) verTrueEqualWholeProcess(stmt *ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
 	if len(stmt.Params) != 2 {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	verRet := ver.verTrueEqualPreProcess(stmt, state)
@@ -56,7 +56,7 @@ func (ver *Verifier) verTrueEqualWholeProcess(stmt *ast.PureSpecificFactStmt, st
 		return verRet
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) verTrueEqualPreProcess(stmt *ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
@@ -68,10 +68,10 @@ func (ver *Verifier) verTrueEqualPreProcess(stmt *ast.PureSpecificFactStmt, stat
 		if rightAsFnSetObjWithName, ok := stmt.Params[1].(*ast.FnSetObjWithName); ok {
 			def := ver.Env.GetSetTemplateDef(string(leftAsInstSetTemplate.Name))
 			if def == nil {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(stmt)
 			}
 			if len(leftAsInstSetTemplate.Params) != len(def.Params) {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(stmt)
 			}
 			uniMap := make(map[string]ast.Obj)
 			for i, param := range def.Params {
@@ -79,7 +79,7 @@ func (ver *Verifier) verTrueEqualPreProcess(stmt *ast.PureSpecificFactStmt, stat
 			}
 			equalTo, err := def.EqualTo.Instantiate(uniMap)
 			if err != nil {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(stmt)
 			}
 			equality := ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{rightAsFnSetObjWithName, equalTo}, glob.BuiltinLine0)
 
@@ -91,10 +91,10 @@ func (ver *Verifier) verTrueEqualPreProcess(stmt *ast.PureSpecificFactStmt, stat
 		} else if rightAsFnSetObjWithoutName, ok := stmt.Params[1].(*ast.FnSetObjWithoutName); ok {
 			def := ver.Env.GetSetTemplateDef(string(leftAsInstSetTemplate.Name))
 			if def == nil {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(stmt)
 			}
 			if len(leftAsInstSetTemplate.Params) != len(def.Params) {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(stmt)
 			}
 			uniMap := make(map[string]ast.Obj)
 			for i, param := range def.Params {
@@ -102,7 +102,7 @@ func (ver *Verifier) verTrueEqualPreProcess(stmt *ast.PureSpecificFactStmt, stat
 			}
 			equalTo, err := def.EqualTo.Instantiate(uniMap)
 			if err != nil {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(stmt)
 			}
 			verRet := ver.verTrueEqualFactAndCheckFnReq(ast.NewPureSpecificFactStmt(true, ast.Atom(glob.KeySymbolEqual), []ast.Obj{rightAsFnSetObjWithoutName, equalTo}, glob.BuiltinLine0), state.CopyAndReqOkToTrue())
 			if verRet.IsErr() || verRet.IsTrue() {
@@ -134,7 +134,7 @@ func (ver *Verifier) verTrueEqualMainProcess(stmt *ast.PureSpecificFactStmt, sta
 		}
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) verTrueEqualPostProcess(stmt *ast.PureSpecificFactStmt, state *VerState) ast.VerRet {
@@ -150,12 +150,12 @@ func (ver *Verifier) verObjsEqualByTheyAreFnObjsAndTheirHeadsAndParamsAreEqual(l
 			}
 		}
 	}
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(ast.EqualFact(left, right))
 }
 
 func (ver *Verifier) verTrueEqualFact_ObjFnEqual_NoCheckRequirements(left, right *ast.FnObj, state *VerState) ast.VerRet {
 	if len(left.Params) != len(right.Params) {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(ast.EqualFact(left, right))
 	}
 
 	// ok, err = ver.fcEqualSpec(left.FnHead, right.FnHead, state)

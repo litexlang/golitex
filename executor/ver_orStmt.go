@@ -39,7 +39,7 @@ func (ver *Verifier) verOrStmt(stmt *ast.OrStmt, state *VerState) ast.VerRet {
 		}
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) verOrStmtUseSpecMem(stmt *ast.OrStmt, state *VerState) ast.VerRet {
@@ -65,13 +65,13 @@ func (ver *Verifier) verOrStmtUseSpecMem(stmt *ast.OrStmt, state *VerState) ast.
 		}
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) verOrStmtUseSpecMemAtEnv(curEnv *env.EnvMemory, stmt *ast.OrStmt, state *VerState) ast.VerRet {
 	knownOrFacts, got := curEnv.OrFactsMem[string(stmt.Facts[0].Key())]
 	if !got {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(stmt)
 	}
 
 	for _, knownOrFact := range knownOrFacts {
@@ -81,13 +81,13 @@ func (ver *Verifier) verOrStmtUseSpecMemAtEnv(curEnv *env.EnvMemory, stmt *ast.O
 		}
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(stmt)
 }
 
 func (ver *Verifier) useKnownOrFactToCheckGivenOrFact(given *ast.OrStmt, known *ast.OrStmt, state *VerState) ast.VerRet {
 	givenSpecFactWithTheSameNameMap, knownSpecFactWithTheSameNameMap, isValid := ver.groupFactsByPropNameAndValidate(given, known)
 	if !isValid {
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(given)
 	}
 
 	for key := range givenSpecFactWithTheSameNameMap {
@@ -107,7 +107,7 @@ func (ver *Verifier) useKnownOrFactToCheckGivenOrFact(given *ast.OrStmt, known *
 		}
 
 		if !verified {
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(given)
 		}
 	}
 
@@ -163,19 +163,19 @@ func (ver *Verifier) matchEachSpecFactInGivenOrFactAndKnownOrFact(knowns []ast.S
 		given := givens[i]
 
 		if known.GetFactType() != given.GetFactType() {
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(given)
 		}
 
 		switch knownAs := known.(type) {
 		case *ast.PureSpecificFactStmt:
 			if len(knownAs.Params) != len(given.(*ast.PureSpecificFactStmt).Params) {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(given)
 			}
 
 			for param := range knownAs.Params {
 				ret := ver.VerFactStmt(ast.NewEqualFact(knownAs.Params[param], given.(*ast.PureSpecificFactStmt).Params[param]), state)
 				if ret.IsNotTrue() {
-					return ast.NewEmptyUnknownVerRet()
+					return ast.NewUnknownVerRet(given)
 				}
 			}
 
@@ -183,27 +183,27 @@ func (ver *Verifier) matchEachSpecFactInGivenOrFactAndKnownOrFact(knowns []ast.S
 			given := given.(*ast.ExistSpecificFactStmt)
 
 			if len(given.PureFacts) != len(knownAs.PureFacts) {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(given)
 			}
 
 			for j := range given.PureFacts {
 				if given.PureFacts[j].IsTrue != knownAs.PureFacts[j].IsTrue {
-					return ast.NewEmptyUnknownVerRet()
+					return ast.NewUnknownVerRet(given)
 				}
 
 				if given.PureFacts[j].PropName != knownAs.PureFacts[j].PropName {
-					return ast.NewEmptyUnknownVerRet()
+					return ast.NewUnknownVerRet(given)
 				}
 			}
 
 			newFreeExistParamsUnused := ver.Env.GenerateNoDuplicateNames(len(given.ExistFreeParams), map[string]struct{}{})
 			newGiven, err := given.ReplaceFreeParamsWithNewParams(newFreeExistParamsUnused)
 			if err != nil {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(given)
 			}
 			newKnown, err := knownAs.ReplaceFreeParamsWithNewParams(newFreeExistParamsUnused)
 			if err != nil {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(given)
 			}
 
 			if newGiven.String() == newKnown.String() {
@@ -258,14 +258,14 @@ func (ver *Verifier) verOrStmtByAssumeAllFactsAreFalseToProveTheRemainingOneIsTr
 		for _, fact := range reversedFact {
 			ret := ver.Env.NewFactWithCheckingNameDefined(fact)
 			if ret.IsNotTrue() {
-				return ast.NewEmptyUnknownVerRet().AddExtraInfo(ret.String())
+				return ast.NewUnknownVerRet(stmt).AddExtraInfo(ret.String())
 			}
 		}
 	}
 
 	ret := ver.VerFactStmt(stmt.Facts[index], state)
 	if ret.IsNotTrue() {
-		return ast.NewEmptyUnknownVerRet().AddExtraInfo(ret.String())
+		return ast.NewUnknownVerRet(stmt).AddExtraInfo(ret.String())
 	}
 
 	return ast.NewTrueVerRet(nil, nil, "")

@@ -75,7 +75,7 @@ func (ver *Verifier) isBuiltinFunction_VerReq(fnObj *ast.FnObj, state *VerState)
 	case glob.KeywordClosedRange:
 		return ver.verClosedRangeReq(fnObj, state)
 	default:
-		return ast.NewEmptyUnknownVerRet()
+		return ast.NewUnknownVerRet(ast.NewInFactWithObj(fnObj, ast.Atom("builtin_req")))
 	}
 }
 
@@ -382,7 +382,7 @@ func (ver *Verifier) verPowerReq(fnObj *ast.FnObj, state *VerState) ast.VerRet {
 		return verRet
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(ast.NewInFactWithObj(fnObj, ast.Atom("power_req")))
 }
 
 func (ver *Verifier) verPowerReqWhenLeftIsPos(fnObj *ast.FnObj, state *VerState) ast.VerRet {

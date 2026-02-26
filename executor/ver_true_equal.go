@@ -26,7 +26,7 @@ func (ver *Verifier) verEqualMainProcessByBuiltinRules(left ast.Obj, right ast.O
 	if verRet := ver.verEqualByEitherLeftOrRightIsTuple(left, right, state); verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(ast.EqualFact(left, right))
 }
 
 func (ver *Verifier) verEqualByEitherLeftOrRightIsTuple(left, right ast.Obj, state *VerState) ast.VerRet {
@@ -38,7 +38,7 @@ func (ver *Verifier) verEqualByEitherLeftOrRightIsTuple(left, right ast.Obj, sta
 		return verRet
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(ast.EqualFact(left, right))
 }
 
 func (ver *Verifier) verEqualRightIsTuple(left ast.Obj, right ast.Obj, state *VerState) ast.VerRet {
@@ -50,14 +50,14 @@ func (ver *Verifier) verEqualRightIsTuple(left ast.Obj, right ast.Obj, state *Ve
 		isTupleFact := ast.NewPureSpecificFactStmt(true, glob.KeywordIsTuple, []ast.Obj{left}, glob.BuiltinLine0)
 		ret := ver.VerFactStmt(isTupleFact, state)
 		if ret.IsNotTrue() {
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(ast.EqualFact(left, right))
 		}
 
 		// 查 left 的 dim 等于 rightLen 吗
 		equalFact := ast.NewEqualFact(ast.NewFnObj(ast.Atom(glob.KeywordDim), []ast.Obj{left}), ast.Atom(fmt.Sprintf("%d", rightLen)))
 		ret = ver.VerFactStmt(equalFact, state)
 		if ret.IsNotTrue() {
-			return ast.NewEmptyUnknownVerRet()
+			return ast.NewUnknownVerRet(ast.EqualFact(left, right))
 		}
 
 		// 查 每一位都相等
@@ -66,11 +66,11 @@ func (ver *Verifier) verEqualRightIsTuple(left ast.Obj, right ast.Obj, state *Ve
 			equalFact := ast.EqualFact(leftAtIndex, rightTuple.Params[i])
 			ret = ver.VerFactStmt(equalFact, state)
 			if ret.IsNotTrue() {
-				return ast.NewEmptyUnknownVerRet()
+				return ast.NewUnknownVerRet(ast.EqualFact(left, right))
 			}
 		}
 	}
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(ast.EqualFact(left, right))
 }
 
 // func (ver *Verifier) verEqualByUseValuesOfSymbols(left ast.Obj, right ast.Obj, state *VerState) ast.VerRet {
@@ -118,7 +118,7 @@ func (ver *Verifier) verEqualBySpecMem(left ast.Obj, right ast.Obj) ast.VerRet {
 		}
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(ast.EqualFact(left, right))
 }
 
 func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState) ast.VerRet {
@@ -136,7 +136,7 @@ func (ver *Verifier) verEqualUniMem(left ast.Obj, right ast.Obj, state *VerState
 	if verRet.IsErr() || verRet.IsTrue() {
 		return verRet
 	}
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(equalFact)
 }
 
 func (ver *Verifier) verEqualByEqualSpecMemAtEnv(curEnv *env.EnvMemory, left ast.Obj, right ast.Obj) ast.VerRet {
@@ -173,7 +173,7 @@ func (ver *Verifier) verEqualByEqualSpecMemAtEnv(curEnv *env.EnvMemory, left ast
 		}
 	}
 
-	return ast.NewEmptyUnknownVerRet()
+	return ast.NewUnknownVerRet(ast.EqualFact(left, right))
 }
 
 // func (ver *Verifier) verEqualByLeftAndRightAreSetBuilders(left, right ast.Obj, state *VerState) ast.VerRet {
