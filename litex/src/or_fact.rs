@@ -1,19 +1,29 @@
 use crate::specific_fact::SpecFact;
 use crate::consts::OR;
 use std::fmt;
+use crate::helper::str_with_line_file;
 
 pub struct OrFact {
     pub facts: Vec<Box<SpecFact>>,
     pub line: u32,
+    pub file_index: usize,
 }
 
 impl OrFact {
-    pub fn new(facts: Vec<Box<SpecFact>>, line: u32) -> Self {
-        OrFact { facts, line }
+    pub fn new(facts: Vec<Box<SpecFact>>, line: u32, file_index: usize) -> Self {
+        OrFact { facts, line, file_index }
     }
 
     pub fn line(&self) -> u32 {
         self.line
+    }
+
+    pub fn file_index(&self) -> usize {
+        self.file_index
+    }
+
+    pub fn str_with_line_file(&self) -> String {
+        return str_with_line_file(&self.to_string(), self.line(), self.file_index());
     }
 }
 
