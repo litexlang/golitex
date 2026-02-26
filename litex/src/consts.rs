@@ -42,3 +42,8 @@ pub const RANGE: &str = "range";
 pub const CLOSED_RANGE: &str = "closed_range";
 
 pub const VAL: &str = "val";
+
+pub const EXIST: &str = "exist";
+pub const ST: &str = "st";
+pub const FORALL: &str = "forall";
+pub const NOT: &str = "not";
