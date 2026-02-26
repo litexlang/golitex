@@ -317,11 +317,21 @@ func (p *TbParser) inlineUniInterfaceSkipTerminator(tb *tokenBlock, ends []strin
 func (p *TbParser) thenFactsInUniFactInterface(tb *tokenBlock, ends []string) ([]Spec_OrFact, bool, error) {
 	facts := []Spec_OrFact{}
 	for {
-		specFact, err := p.SpecFactOrOrStmt(tb)
+		specFact, err := p.SpecFactOrOrStmtOrChainFact(tb)
 		if err != nil {
 			return nil, false, ErrInLine(err, tb)
 		}
-		facts = append(facts, specFact)
+
+		switch specFact := specFact.(type) {
+		case Spec_OrFact:
+			facts = append(facts, specFact)
+		case *ChainPureFact:
+			facts = append(facts, specFact.ToSpecFacts()...)
+		case *OrStmt:
+			facts = append(facts, specFact)
+		default:
+			return nil, false, fmt.Errorf("expect spec fact or chain fact, get %s", specFact.String())
+		}
 		if tb.header.is(glob.KeySymbolEquivalent) {
 			return facts, false, nil
 		}
@@ -345,11 +355,21 @@ func (p *TbParser) thenFactsInUniFactInterface(tb *tokenBlock, ends []string) ([
 func (p *TbParser) thenFacts_SkipEnd_Semicolon_or_EOL(tb *tokenBlock, ends []string) ([]Spec_OrFact, error) {
 	facts := []Spec_OrFact{}
 	for {
-		specFact, err := p.SpecFactOrOrStmt(tb)
+		specFact, err := p.SpecFactOrOrStmtOrChainFact(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
-		facts = append(facts, specFact)
+
+		switch specFact := specFact.(type) {
+		case Spec_OrFact:
+			facts = append(facts, specFact)
+		case *ChainPureFact:
+			facts = append(facts, specFact.ToSpecFacts()...)
+		case *OrStmt:
+			facts = append(facts, specFact)
+		default:
+			return nil, fmt.Errorf("expect spec fact or chain fact, get %s", specFact.String())
+		}
 
 		if p.IsEnding(tb, ends) {
 			return facts, nil
@@ -371,11 +391,21 @@ func (p *TbParser) thenFacts_SkipEnd_Semicolon_or_EOL(tb *tokenBlock, ends []str
 func (p *TbParser) inlineDomFactInUniFactInterface_WithoutSkippingEnd(tb *tokenBlock, ends []string) ([]Spec_OrFact, error) {
 	facts := []Spec_OrFact{}
 	for {
-		specFact, err := p.SpecFactOrOrStmt(tb)
+		specFact, err := p.SpecFactOrOrStmtOrChainFact(tb)
 		if err != nil {
 			return nil, ErrInLine(err, tb)
 		}
-		facts = append(facts, specFact)
+
+		switch specFact := specFact.(type) {
+		case Spec_OrFact:
+			facts = append(facts, specFact)
+		case *ChainPureFact:
+			facts = append(facts, specFact.ToSpecFacts()...)
+		case *OrStmt:
+			facts = append(facts, specFact)
+		default:
+			return nil, fmt.Errorf("expect spec fact or chain fact, get %s", specFact.String())
+		}
 		if tb.header.is(glob.KeySymbolRightArrow) || tb.header.is(glob.KeySymbolSemiColon) || tb.header.is(glob.KeySymbolEquivalent) || tb.header.is(glob.KeySymbolRightCurly) {
 			return facts, nil
 		}

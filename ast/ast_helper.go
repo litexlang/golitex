@@ -694,3 +694,11 @@ func (reversibleFacts ReversibleFacts) ToFactStmtSlice() []FactStmt {
 	}
 	return ret
 }
+
+func (stmt *ChainPureFact) ToSpecFacts() []Spec_OrFact {
+	ret := []Spec_OrFact{}
+	for i := range len(stmt.Objs) - 1 {
+		ret = append(ret, NewPureSpecificFactStmt(true, stmt.PropNames[i], []Obj{stmt.Objs[i], stmt.Objs[i+1]}, stmt.Line))
+	}
+	return ret
+}
