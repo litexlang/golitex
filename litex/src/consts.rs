@@ -60,3 +60,6 @@ pub const IS_NONEMPTY_SET: &str = "is_nonempty_set";
 pub const IS_FINITE_SET: &str = "is_finite_set";
 
 pub const OR: &str = "or";
+
+pub const COLON: &str = ":";
+pub const RIGHT_ARROW: &str = "=>";

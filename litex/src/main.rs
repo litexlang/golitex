@@ -36,7 +36,6 @@ use atomic_fact::{
 use exist_fact::{ExistFact, TrueExistFact, NotExistFact};
 use specific_fact::SpecFact;
 use or_fact::OrFact;
-use reversible_fact::ReversibleFact;
 use forall_fact::ForallFact;
 use forall_fact_with_iff::ForallFactWithIff;
 use chain_fact::ChainFact;
@@ -66,7 +65,6 @@ fn main() {
     try_forall_fact();
     try_forall_fact_with_iff();
     try_chain_fact();
-    try_reversible_fact();
     try_fact();
     try_errors();
 }
@@ -325,7 +323,7 @@ fn try_exist_fact() {
     let af2 = vec![Box::new(AtomicFact::EqualFact(EqualFact::new(mk_obj("a"), mk_obj("b"), 1)))];
     let _not_exist = Box::new(ExistFact::NotExistFact(NotExistFact::new(
         vec!["y".to_string()],
-        vec![],
+        vec![ParameterSet::Set(SetAsParamSet::new())],
         af2,
         2,
     )));
@@ -354,6 +352,7 @@ fn try_or_fact() {
         ))))),
     ];
     let _or = OrFact::new(facts, 1);
+    println!("{} on line {}", _or, _or.line());
 }
 
 fn try_forall_fact() {
@@ -366,6 +365,8 @@ fn try_forall_fact() {
         ))))],
         1,
     );
+
+    println!("{} on line {}", _forall, _forall.line());
 }
 
 fn try_forall_fact_with_iff() {
@@ -377,6 +378,7 @@ fn try_forall_fact_with_iff() {
         1,
     );
     let _forall_fact_with_iff = ForallFactWithIff::new(Box::new(forall), vec![], 2);
+    println!("{} on line {}", _forall_fact_with_iff, _forall_fact_with_iff.line());
 }
 
 fn try_chain_fact() {
@@ -389,20 +391,6 @@ fn try_chain_fact() {
         1,
     );
     println!("{} on line {}", _chain, _chain.line());
-}
-
-fn try_reversible_fact() {
-    let spec = Box::new(SpecFact::AtomicFact(Box::new(AtomicFact::EqualFact(
-        EqualFact::new(mk_obj("a"), mk_obj("b"), 1),
-    ))));
-    let _rev_spec = Box::new(ReversibleFact::SpecFact(spec));
-    let or = OrFact::new(
-        vec![Box::new(SpecFact::AtomicFact(Box::new(AtomicFact::EqualFact(
-            EqualFact::new(mk_obj("x"), mk_obj("y"), 1),
-        ))))],
-        1,
-    );
-    let _rev_or = Box::new(ReversibleFact::OrFact(Box::new(or)));
 }
 
 fn try_fact() {
