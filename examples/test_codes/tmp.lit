@@ -1,8 +1,2 @@
-have a, b set
-know forall x a : x $in b
-know forall x b : x $in a
 
-equal_set a, b:
-    do_nothing
-
-a = b
+pow(5, 999999) = pow(5, 6 * 166666 + 3)

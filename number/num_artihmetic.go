@@ -211,14 +211,12 @@ func isCoeffZero(s string) bool {
 func eval(ast *arithAST) polynomial {
 	switch ast.Type {
 	case N_NUM:
-		// 处理数字，包括负数
 		value := ast.Value
-		if value == "-1" {
-			value = "-1"
+		if isCoeffZero(value) {
+			value = "0"
 		}
 		return polynomial{{CoEff: value}}
 	case N_VAR:
-		// return polynomial{{CoEff: 1.0, Vars: []string{ast.Value}}}
 		return polynomial{{CoEff: "1", Vars: []string{ast.Value}}}
 	case N_ADD:
 		left := eval(ast.Children[0])
@@ -231,8 +229,10 @@ func eval(ast *arithAST) polynomial {
 		for _, l := range left {
 			for _, r := range right {
 				coEff := MulDecimalStr(l.CoEff, r.CoEff)
+				if isCoeffZero(coEff) {
+					coEff = "0"
+				}
 				combined := arithmeticTerm{
-					// CoEff: l.CoEff * r.CoEff,
 					CoEff: coEff,
 					Vars:  append([]string{}, l.Vars...),
 				}
@@ -253,8 +253,10 @@ func simplify(poly polynomial) polynomial {
 	group := map[string]string{}
 	for _, term := range poly {
 		key := term.Key()
-		// group[key] += term.CoEff
 		coEff := AddDecimalStr(group[key], term.CoEff)
+		if isCoeffZero(coEff) {
+			coEff = "0"
+		}
 		group[key] = coEff
 	}
 	var result polynomial
