@@ -1,7 +1,7 @@
 use std::fmt;
 use crate::obj::Obj;
 use crate::atom::Atom;
-use crate::consts::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, NOT_EQUAL, IN, IS_CART, IS_TUPLE};
+use crate::consts::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, NOT_EQUAL, IN, IS_CART, IS_TUPLE, SUBSET, SUPERSET};
 use crate::helper::{braced_string, braced_vec_to_string, str_with_line_file};
 
 pub enum AtomicFact {
@@ -17,6 +17,8 @@ pub enum AtomicFact {
     InFact(InFact),
     IsCartFact(IsCartFact),
     IsTupleFact(IsTupleFact),
+    SubsetFact(SubsetFact),
+    SupersetFact(SupersetFact),
 
     NotNormalAtomicFact(NotNormalAtomicFact),
     NotEqualFact(NotEqualFact),
@@ -30,6 +32,36 @@ pub enum AtomicFact {
     NotInFact(NotInFact),
     NotIsCartFact(NotIsCartFact),
     NotIsTupleFact(NotIsTupleFact),
+    NotSubsetFact(NotSubsetFact),
+    NotSupersetFact(NotSupersetFact),
+}
+
+pub struct SupersetFact {
+    pub left: Obj,
+    pub right: Obj,
+    pub line: u32,
+    pub file_index: usize,
+}
+
+pub struct NotSupersetFact {    
+    pub left: Obj,
+    pub right: Obj,
+    pub line: u32,
+    pub file_index: usize,
+}
+
+pub struct SubsetFact {
+    pub left: Obj,
+    pub right: Obj,
+    pub line: u32,
+    pub file_index: usize,
+}
+
+pub struct NotSubsetFact {
+    pub left: Obj,
+    pub right: Obj,
+    pub line: u32,
+    pub file_index: usize,
 }
 
 pub struct IsTupleFact {
@@ -190,6 +222,18 @@ pub struct NotIsFiniteSetFact {
     pub file_index: usize,
 }
 
+impl SubsetFact {
+    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
+        SubsetFact { left, right, line, file_index }
+    }
+}
+
+impl NotSubsetFact {
+    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
+        NotSubsetFact { left, right, line, file_index }
+    }
+}
+
 impl NormalAtomicFact {
     pub fn new(predicate: Atom, body: Vec<Obj>, line: u32, file_index: usize) -> Self {
         NormalAtomicFact { predicate, body, line, file_index }
@@ -335,6 +379,19 @@ impl NotIsTupleFact {
     }
 }
 
+impl SupersetFact {
+    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
+        SupersetFact { left, right, line, file_index }
+    }
+}
+
+impl NotSupersetFact {
+
+    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
+        NotSupersetFact { left, right, line, file_index }
+    }
+}
+
 impl fmt::Display for AtomicFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -362,6 +419,10 @@ impl fmt::Display for AtomicFact {
             AtomicFact::NotIsCartFact(x) => write!(f, "{}", x),
             AtomicFact::IsTupleFact(x) => write!(f, "{}", x),
             AtomicFact::NotIsTupleFact(x) => write!(f, "{}", x),
+            AtomicFact::SubsetFact(x) => write!(f, "{}", x),
+            AtomicFact::NotSubsetFact(x) => write!(f, "{}", x),
+            AtomicFact::SupersetFact(x) => write!(f, "{}", x),
+            AtomicFact::NotSupersetFact(x) => write!(f, "{}", x),
         }
     }
 }
@@ -393,7 +454,35 @@ impl AtomicFact {
             AtomicFact::NotIsCartFact(x) => x.file_index,
             AtomicFact::IsTupleFact(x) => x.file_index,
             AtomicFact::NotIsTupleFact(x) => x.file_index,
+            AtomicFact::SubsetFact(x) => x.file_index,
+            AtomicFact::NotSubsetFact(x) => x.file_index,
+            AtomicFact::SupersetFact(x) => x.file_index,
+            AtomicFact::NotSupersetFact(x) => x.file_index,
         }
+    }
+}
+
+impl fmt::Display for SupersetFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}{} {}", self.left, FACT_PREFIX, SUPERSET, self.right)
+    }
+}
+
+impl fmt::Display for NotSupersetFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}{} {}", NOT, self.left, FACT_PREFIX, SUPERSET, self.right)
+    }
+}
+
+impl fmt::Display for SubsetFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}{} {}", self.left, FACT_PREFIX, SUBSET, self.right)
+    }
+}
+
+impl fmt::Display for NotSubsetFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {}{} {}", NOT, self.left, FACT_PREFIX, SUBSET, self.right)
     }
 }
 
@@ -568,6 +657,10 @@ impl AtomicFact {
             AtomicFact::NotIsCartFact(x) => x.line,
             AtomicFact::IsTupleFact(x) => x.line,
             AtomicFact::NotIsTupleFact(x) => x.line,
+            AtomicFact::SubsetFact(x) => x.line,
+            AtomicFact::NotSubsetFact(x) => x.line,
+            AtomicFact::SupersetFact(x) => x.line,
+            AtomicFact::NotSupersetFact(x) => x.line,
         }
     }
 
