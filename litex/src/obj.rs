@@ -1,11 +1,11 @@
 use crate::consts::{
-    ADD, CAP, DIV, DISJOINT_UNION, INTERSECT, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE, MOD, MUL, PKG_SEPARATOR, POW, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, SET_DIM, PROJ, CART, RANGE, CLOSED_RANGE, VAL,
-    SET_MINUS, SUB, UNION, CUP, N_POS, N, Q, Z, R, COUNT, POWER_SET, CHOICE,
+    ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_BRACE, LEFT_CURLY_BRACE, MOD, MUL, N, N_POS, PKG_SEPARATOR, POW, POWER_SET, PROJ, Q, R, RANGE, RIGHT_BRACE, RIGHT_CURLY_BRACE, SET_DIM, SET_MINUS, SUB, UNION, VAL, Z
 };
 use std::fmt;
-use crate::helper::{braced_string, braced_two_strings, braced_vec_to_string, curly_braced_vec_to_string};
+use crate::helper::{braced_string, braced_two_strings, braced_vec_to_string, curly_braced_vec_to_string, vec_pair_to_string, vec_to_string};
 use crate::atom::{AtomWithoutPkg, AtomWithPkg};
 use crate::atom::Atom;
+use crate::atomic_fact::AtomicFact;
 
 pub enum Obj {
     AtomWithoutPkg(AtomWithoutPkg),
@@ -172,6 +172,9 @@ pub struct ListSet {
 }
 
 pub struct SetBuilder {
+    pub param: String,
+    pub param_set: Box<Obj>,
+    pub facts: Vec<AtomicFact>,
 }
 
 pub struct FnSetWithoutParams {
@@ -180,6 +183,12 @@ pub struct FnSetWithoutParams {
 }
 
 pub struct FnSetWithParams {
+    pub fn_name: String,
+    pub params: Vec<String>,
+    pub param_sets: Vec<Box<Obj>>,
+    pub dom_facts: Vec<AtomicFact>,
+    pub ret_set: Box<Obj>,
+    pub then_facts: Vec<AtomicFact>,
 }
 
 pub struct NPosObj {
@@ -341,8 +350,12 @@ impl ListSet {
 }
 
 impl SetBuilder {
-    pub fn new() -> Self {
-        SetBuilder {}
+    pub fn new(param: String, param_set: Obj, facts: Vec<AtomicFact>) -> Self {
+        SetBuilder {
+            param: param,
+            param_set: Box::new(param_set),
+            facts: facts,
+        }
     }
 }
 
@@ -356,8 +369,15 @@ impl FnSetWithoutParams {
 }
 
 impl FnSetWithParams {
-    pub fn new() -> Self {
-        FnSetWithParams {}
+    pub fn new(fn_name: String, params: Vec<String>, param_sets: Vec<Obj>, dom_facts: Vec<AtomicFact>, ret_set: Obj, then_facts: Vec<AtomicFact>) -> Self {
+        FnSetWithParams {
+            fn_name: fn_name,
+            params: params,
+            param_sets: param_sets.into_iter().map(Box::new).collect(),
+            dom_facts: dom_facts,
+            ret_set: Box::new(ret_set),
+            then_facts: then_facts,
+        }
     }
 }
 
@@ -681,7 +701,7 @@ impl fmt::Display for ListSet {
 
 impl fmt::Display for SetBuilder {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE)
+        write!(f, "{}{} {}{} {}{}", LEFT_CURLY_BRACE, self.param, self.param_set, COLON, vec_to_string(&self.facts), RIGHT_CURLY_BRACE)
     }
 }
 
@@ -693,7 +713,30 @@ impl fmt::Display for FnSetWithoutParams {
 
 impl fmt::Display for FnSetWithParams {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", FN, braced_string(&""))
+        // 参数列表：要求 params 与 param_sets 长度一致，否则会 panic 便于发现构造错误
+        let param_str = vec_pair_to_string(&self.params, &self.param_sets);
+
+        let mut ret = match self.dom_facts.len() {
+            0 => format!("{} {}{}{}{}", FN, self.fn_name, LEFT_BRACE, param_str, RIGHT_BRACE),
+            _ => format!(
+                "{} {}{}{}{} {}{}",
+                FN,
+                self.fn_name,
+                LEFT_BRACE,
+                param_str,
+                COLON,
+                vec_to_string(&self.dom_facts),
+                RIGHT_BRACE
+            ),
+        };
+
+        ret.push_str(&self.ret_set.to_string());
+
+        if !self.then_facts.is_empty() {
+            ret.push_str(&format!(" {}", curly_braced_vec_to_string(&self.then_facts)));
+        }
+
+        write!(f, "{}", ret)
     }
 }
 
