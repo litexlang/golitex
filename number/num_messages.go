@@ -67,8 +67,10 @@ func fnObjString(fnObj *ast.FnObj) string {
 			if expInt == 0 {
 				return "1"
 			}
-			if expInt > 0 {
-				// For positive integers, expand into multiplication
+			// 指数过大时不展开，避免 pow(5, 999999) 变成一长串 5*5*... 或产生诡异显示
+			const maxExpandPowerExponent = 100
+			if expInt > 0 && expInt <= maxExpandPowerExponent {
+				// For small positive integers, expand into multiplication
 				terms := make([]string, expInt)
 				for i := 0; i < expInt; i++ {
 					terms[i] = base
@@ -76,7 +78,7 @@ func fnObjString(fnObj *ast.FnObj) string {
 				return fmt.Sprintf("(%s)", strings.Join(terms, " * "))
 			}
 		}
-		// For non-integer or negative exponents, keep original form
+		// For non-integer, negative, or very large exponents, keep original form
 		// return "(" + base + "^" + exp + ")"
 		return fmt.Sprintf("{%s}", fnObj.String())
 	}
