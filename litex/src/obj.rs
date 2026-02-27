@@ -47,56 +47,53 @@ pub enum Obj {
     Choice(Choice),
 }
 
-#[allow(non_camel_case_types)]
-pub type box_Obj = Box<Obj>;
-
 pub struct Choice {
-    pub element: box_Obj,
-    pub set: box_Obj,
+    pub element: Box<Obj>,
+    pub set: Box<Obj>,
 }
 
 pub struct PowerSet {
-    pub set: box_Obj,
+    pub set: Box<Obj>,
 }
 
 pub struct Val {
-    pub value: box_Obj,
+    pub value: Box<Obj>,
 }
 
 pub struct Range {
-    pub start: box_Obj,
-    pub end: box_Obj,
+    pub start: Box<Obj>,
+    pub end: Box<Obj>,
 }
 
 pub struct ClosedRange {
-    pub start: box_Obj,
-    pub end: box_Obj,
+    pub start: Box<Obj>,
+    pub end: Box<Obj>,
 }
 
 pub struct Count {
-    pub set: box_Obj,
+    pub set: Box<Obj>,
 }
 
 pub struct Tuple {
-    pub elements: Vec<box_Obj>,
+    pub elements: Vec<Box<Obj>>,
 }
 
 pub struct Dim {
-    pub dim: box_Obj,
+    pub dim: Box<Obj>,
 }
 
 pub struct SetDim {
-    pub set: box_Obj,
+    pub set: Box<Obj>,
 }
 
 pub struct Proj {
-    pub set: box_Obj,
-    pub dim: box_Obj,
+    pub set: Box<Obj>,
+    pub dim: Box<Obj>,
 }
 
 pub struct FnObj {
-    pub head: box_Obj,
-    pub body: Vec<box_Obj>,
+    pub head: Box<Obj>,
+    pub body: Vec<Box<Obj>>,
 }
 
 
@@ -106,80 +103,80 @@ pub struct Number {
 
 
 pub struct Add {
-    pub left: box_Obj,
-    pub right: box_Obj,
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
     pub is_arithmetic_expr: bool,
 }
 
 pub struct Sub {
-    pub left: box_Obj,
-    pub right: box_Obj,
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
     pub is_arithmetic_expr: bool,
 }
 
 pub struct Mul {
-    pub left: box_Obj,
-    pub right: box_Obj,
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
     pub is_arithmetic_expr: bool,
 }
 
 pub struct Div {
-    pub left: box_Obj,
-    pub right: box_Obj,
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
     pub is_arithmetic_expr: bool,
 }
 
 pub struct Mod {
-    pub left: box_Obj,
-    pub right: box_Obj,
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
     pub is_arithmetic_expr: bool,
 }
 
 pub struct Pow {
-    pub base: box_Obj,
-    pub exponent: box_Obj,
+    pub base: Box<Obj>,
+    pub exponent: Box<Obj>,
     pub is_arithmetic_expr: bool,
 }
 
 pub struct Union {
-    pub left: box_Obj,
-    pub right: box_Obj,
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
 }
 
 pub struct Intersect {
-    pub left: box_Obj,
-    pub right: box_Obj,
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
 }
 
 pub struct SetMinus {
-    pub left: box_Obj,
-    pub right: box_Obj,
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
 }
 
 pub struct DisjointUnion {
-    pub left: box_Obj,
-    pub right: box_Obj,
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
 }
 
 pub struct Cup {
-    pub left: box_Obj,
+    pub left: Box<Obj>,
 }
 
 pub struct Cap {
-    pub left: box_Obj,
-    pub right: box_Obj,
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
 }
 
 pub struct ListSet {
-    pub list: Vec<box_Obj>,
+    pub list: Vec<Box<Obj>>,
 }
 
 pub struct SetBuilder {
 }
 
 pub struct FnSetWithoutParams {
-    pub param_sets: Vec<box_Obj>,
-    pub ret_set: box_Obj,
+    pub param_sets: Vec<Box<Obj>>,
+    pub ret_set: Box<Obj>,
 }
 
 pub struct FnSetWithParams {
@@ -201,17 +198,20 @@ pub struct RObj {
 }
 
 pub struct InstSetTemplateObj {
-    pub set_template: Box<Atom>,
-    pub param_sets: Vec<box_Obj>,
+    pub set_template: Atom,
+    pub param_sets: Vec<Box<Obj>>,
 }
 
 pub struct Cart {
-    pub args: Vec<box_Obj>,
+    pub args: Vec<Box<Obj>>,
 }
 
 impl FnObj {
-    pub fn new(head: box_Obj, body: Vec<box_Obj>) -> Self {
-        FnObj { head, body }
+    pub fn new(head: Obj, body: Vec<Obj>) -> Self {
+        FnObj {
+            head: Box::new(head),
+            body: body.into_iter().map(Box::new).collect(),
+        }
     }
 }
 
@@ -222,80 +222,121 @@ impl Number {
 }
 
 impl Add {
-    pub fn new(left: box_Obj, right: box_Obj, is_arithmetic_expr: bool) -> Self {
-        Add { left, right, is_arithmetic_expr }
+    pub fn new(left: Obj, right: Obj, is_arithmetic_expr: bool) -> Self {
+        Add {
+            left: Box::new(left),
+            right: Box::new(right),
+            is_arithmetic_expr,
+        }
     }
 }
 
 impl Sub {
-    pub fn new(left: box_Obj, right: box_Obj, is_arithmetic_expr: bool) -> Self {
-        Sub { left, right, is_arithmetic_expr }
+    pub fn new(left: Obj, right: Obj, is_arithmetic_expr: bool) -> Self {
+        Sub {
+            left: Box::new(left),
+            right: Box::new(right),
+            is_arithmetic_expr,
+        }
     }
 }
 
 impl Mul {
-    pub fn new(left: box_Obj, right: box_Obj, is_arithmetic_expr: bool) -> Self {
-        Mul { left, right, is_arithmetic_expr }
+    pub fn new(left: Obj, right: Obj, is_arithmetic_expr: bool) -> Self {
+        Mul {
+            left: Box::new(left),
+            right: Box::new(right),
+            is_arithmetic_expr,
+        }
     }
 }
 
 impl Div {
-    pub fn new(left: box_Obj, right: box_Obj, is_arithmetic_expr: bool) -> Self {
-        Div { left, right, is_arithmetic_expr }
+    pub fn new(left: Obj, right: Obj, is_arithmetic_expr: bool) -> Self {
+        Div {
+            left: Box::new(left),
+            right: Box::new(right),
+            is_arithmetic_expr,
+        }
     }
 }
 
 impl Mod {
-    pub fn new(left: box_Obj, right: box_Obj, is_arithmetic_expr: bool) -> Self {
-        Mod { left, right, is_arithmetic_expr }
+    pub fn new(left: Obj, right: Obj, is_arithmetic_expr: bool) -> Self {
+        Mod {
+            left: Box::new(left),
+            right: Box::new(right),
+            is_arithmetic_expr,
+        }
     }
 }
 
 impl Pow {
-    pub fn new(base: box_Obj, exponent: box_Obj, is_arithmetic_expr: bool) -> Self {
-        Pow { base, exponent, is_arithmetic_expr }
+    pub fn new(base: Obj, exponent: Obj, is_arithmetic_expr: bool) -> Self {
+        Pow {
+            base: Box::new(base),
+            exponent: Box::new(exponent),
+            is_arithmetic_expr,
+        }
     }
 }
 
 impl Union {
-    pub fn new(left: box_Obj, right: box_Obj) -> Self {
-        Union { left, right }
+    pub fn new(left: Obj, right: Obj) -> Self {
+        Union {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
     }
 }
 
 impl Intersect {
-    pub fn new(left: box_Obj, right: box_Obj) -> Self {
-        Intersect { left, right }
+    pub fn new(left: Obj, right: Obj) -> Self {
+        Intersect {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
     }
 }
 
 impl SetMinus {
-    pub fn new(left: box_Obj, right: box_Obj) -> Self {
-        SetMinus { left, right }
+    pub fn new(left: Obj, right: Obj) -> Self {
+        SetMinus {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
     }
 }
 
 impl DisjointUnion {
-    pub fn new(left: box_Obj, right: box_Obj) -> Self {
-        DisjointUnion { left, right }
+    pub fn new(left: Obj, right: Obj) -> Self {
+        DisjointUnion {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
     }
 }
 
 impl Cup {
-    pub fn new(left: box_Obj) -> Self {
-        Cup { left }
+    pub fn new(left: Obj) -> Self {
+        Cup { left: Box::new(left) }
     }
 }
 
 impl Cap {
-    pub fn new(left: box_Obj, right: box_Obj) -> Self {
-        Cap { left, right }
+    pub fn new(left: Obj, right: Obj) -> Self {
+        Cap {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
     }
 }
 
 impl ListSet {
-    pub fn new(list: Vec<box_Obj>) -> Self {
-        ListSet { list }
+    pub fn new(list: Vec<Obj>) -> Self {
+        ListSet {
+            list: list.into_iter().map(Box::new).collect(),
+        }
     }
 }
 
@@ -306,8 +347,11 @@ impl SetBuilder {
 }
 
 impl FnSetWithoutParams {
-    pub fn new(param_sets: Vec<box_Obj>, ret_set: box_Obj) -> Self {
-        FnSetWithoutParams { param_sets, ret_set }
+    pub fn new(param_sets: Vec<Obj>, ret_set: Obj) -> Self {
+        FnSetWithoutParams {
+            param_sets: param_sets.into_iter().map(Box::new).collect(),
+            ret_set: Box::new(ret_set),
+        }
     }
 }
 
@@ -348,74 +392,95 @@ impl RObj {
 }
 
 impl InstSetTemplateObj {
-    pub fn new(set_template: Box<Atom>, param_sets: Vec<box_Obj>) -> Self {
-        InstSetTemplateObj { set_template, param_sets }
+    pub fn new(set_template: Atom, param_sets: Vec<Obj>) -> Self {
+        InstSetTemplateObj {
+            set_template,
+            param_sets: param_sets.into_iter().map(Box::new).collect(),
+        }
     }
 }
 
 impl PowerSet {
-    pub fn new(set: box_Obj) -> Self {
-        PowerSet { set }
+    pub fn new(set: Obj) -> Self {
+        PowerSet { set: Box::new(set) }
     }
 }
 
 impl Choice {
-    pub fn new(element: box_Obj, set: box_Obj) -> Self {
-        Choice { element, set }
+    pub fn new(element: Obj, set: Obj) -> Self {
+        Choice {
+            element: Box::new(element),
+            set: Box::new(set),
+        }
     }
 }
 
 impl SetDim {
-    pub fn new(set: box_Obj) -> Self {
-        SetDim { set }
+    pub fn new(set: Obj) -> Self {
+        SetDim { set: Box::new(set) }
     }
 }
 
 impl Proj {
-    pub fn new(set: box_Obj, dim: box_Obj) -> Self {
-        Proj { set, dim }
+    pub fn new(set: Obj, dim: Obj) -> Self {
+        Proj {
+            set: Box::new(set),
+            dim: Box::new(dim),
+        }
     }
 }
 
 impl Dim {
-    pub fn new(dim: box_Obj) -> Self {
-        Dim { dim }
+    pub fn new(dim: Obj) -> Self {
+        Dim { dim: Box::new(dim) }
     }
 }
 
 impl Cart {
-    pub fn new(args: Vec<box_Obj>) -> Self {
-        Cart { args }
+    pub fn new(args: Vec<Obj>) -> Self {
+        Cart {
+            args: args.into_iter().map(Box::new).collect(),
+        }
     }
 }
 
 impl Tuple {
-    pub fn new(elements: Vec<box_Obj>) -> Self {
-        Tuple { elements }
+    pub fn new(elements: Vec<Obj>) -> Self {
+        Tuple {
+            elements: elements.into_iter().map(Box::new).collect(),
+        }
     }
 }
 
 impl Count {
-    pub fn new(set: box_Obj) -> Self {
-        Count { set }
+    pub fn new(set: Obj) -> Self {
+        Count { set: Box::new(set) }
     }
 }
 
 impl Range {
-    pub fn new(start: box_Obj, end: box_Obj) -> Self {
-        Range { start, end }
+    pub fn new(start: Obj, end: Obj) -> Self {
+        Range {
+            start: Box::new(start),
+            end: Box::new(end),
+        }
     }
 }
 
 impl ClosedRange {
-    pub fn new(start: box_Obj, end: box_Obj) -> Self {
-        ClosedRange { start, end }
+    pub fn new(start: Obj, end: Obj) -> Self {
+        ClosedRange {
+            start: Box::new(start),
+            end: Box::new(end),
+        }
     }
 }
 
 impl Val {
-    pub fn new(value: box_Obj) -> Self {
-        Val { value }
+    pub fn new(value: Obj) -> Self {
+        Val {
+            value: Box::new(value),
+        }
     }
 }
 
@@ -664,7 +729,7 @@ impl fmt::Display for RObj {
 
 impl fmt::Display for InstSetTemplateObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let template_str = match self.set_template.as_ref() {
+        let template_str = match &self.set_template {
             Atom::AtomWithoutPkg(atom) => atom.to_string(),
             Atom::AtomWithPkg(atom_with_pkg) => atom_with_pkg.to_string(),
         };
@@ -689,6 +754,7 @@ impl fmt::Display for PowerSet {
         write!(f, "{}{}", POWER_SET, braced_string(&self.set))
     }
 }
+
 
 // obj helper functions
 
@@ -846,8 +912,8 @@ impl Obj {
         }
     }
 
-    pub fn mk(s: &str) -> box_Obj {
-        Box::new(Obj::AtomWithoutPkg(AtomWithoutPkg::new(s)))
+    pub fn mk(s: &str) -> Obj {
+        Obj::AtomWithoutPkg(AtomWithoutPkg::new(s))
     }
 
 }

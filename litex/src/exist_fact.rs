@@ -12,7 +12,7 @@ pub enum ExistFact {
 pub struct TrueExistFact {
     pub exist_params: Vec<String>,
     pub param_sets: Vec<ParameterSet>,
-    pub facts: Vec<Box<AtomicFact>>,
+    pub facts: Vec<AtomicFact>,
     pub line: u32,
     pub file_index: usize,
 }
@@ -20,7 +20,7 @@ pub struct TrueExistFact {
 pub struct NotExistFact {
     pub exist_params: Vec<String>,
     pub param_sets: Vec<ParameterSet>,
-    pub facts: Vec<Box<AtomicFact>>,
+    pub facts: Vec<AtomicFact>,
     pub line: u32,
     pub file_index: usize,
 }
@@ -29,7 +29,7 @@ impl TrueExistFact {
     pub fn new(
         exist_params: Vec<String>,
         param_sets: Vec<ParameterSet>,
-        facts: Vec<Box<AtomicFact>>,
+        facts: Vec<AtomicFact>,
         line: u32,
         file_index: usize,
     ) -> Self {
@@ -41,7 +41,7 @@ impl NotExistFact {
     pub fn new(
         exist_params: Vec<String>,
         param_sets: Vec<ParameterSet>,
-        facts: Vec<Box<AtomicFact>>,
+        facts: Vec<AtomicFact>,
         line: u32,
         file_index: usize,
     ) -> Self {

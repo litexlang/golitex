@@ -14,15 +14,6 @@ pub struct AtomWithPkg {
     pub name: String,
 }
 
-// impl Atom {
-//     pub fn box_atom_without_pkg(atom: AtomWithoutPkg) -> Box<Atom> {
-//         Box::new(Atom::AtomWithoutPkg(atom))
-//     }
-//     pub fn box_atom_with_pkg(atom_with_pkg: AtomWithPkg) -> Box<Atom> {
-//         Box::new(Atom::AtomWithPkg(atom_with_pkg))
-//     }
-// }
-
 impl fmt::Display for Atom {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

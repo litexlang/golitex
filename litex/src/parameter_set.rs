@@ -33,22 +33,6 @@ impl FiniteSetAsParamSet {
     }
 }
 
-// impl ParameterSet {
-//     pub fn box_set() -> box_ParameterSet {
-//         Box::new(ParameterSet::Set(SetAsParamSet::new()))
-//     }
-//     pub fn box_nonempty_set() -> box_ParameterSet {
-//         Box::new(ParameterSet::NonemptySet(NonemptySetAsParamSet::new()))
-//     }
-//     pub fn box_finite_set() -> box_ParameterSet {
-//         Box::new(ParameterSet::FiniteSet(FiniteSetAsParamSet::new()))
-//     }
-//     pub fn box_obj(obj: box_Obj) -> box_ParameterSet {
-//         Box::new(ParameterSet::Obj(obj))
-//     }
-// }
-
-
 impl fmt::Display for ParameterSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

@@ -4,13 +4,13 @@ use crate::consts::AND;
 use crate::helper::str_with_line_file;
 
 pub struct AndFact {
-    pub facts: Vec<Box<SpecFact>>,
+    pub facts: Vec<SpecFact>,
     pub line: u32,
     pub file_index: usize,
 }
 
 impl AndFact {
-    pub fn new(facts: Vec<Box<SpecFact>>, line: u32, file_index: usize) -> Self {
+    pub fn new(facts: Vec<SpecFact>, line: u32, file_index: usize) -> Self {
         AndFact { facts, line, file_index }
     }
 

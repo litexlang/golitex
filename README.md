@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Litex: Reinvent the language of mathematics
+# Litex: A computer language for the essence of mathematics
 
 ## A Simple Formal Language Learnable in 2 Hours
 
@@ -26,7 +26,7 @@ _Simplicity is the ultimate sophistication._
 
 _– Leonardo da Vinci_
 
-Litex is a simple and intuitive open-source computer language for mathematical proofs. It aims to express mathematics as code with verified correctness while staying as close to natural language as possible. Think of it as an eye-opening exploration of finding `what mathematics is`! ([Github](https://github.com/litexlang/golitex), [Official Site](https://litexlang.com))
+Litex is a simple and intuitive open-source computer language for mathematical proofs. It provides its user with a eye-opening perspective of what mathematics is. It aims to express mathematics as code with verified correctness while staying as close to natural language as possible, thus making it easier for ANYONE to understand and use.
 
 Formal code written in Litex is typically 2-10x simpler than traditional formal languages, and even high-school students (instead of just math PhDs) can understand it. Much lower barrier to entry means Litex could be a game changer for people without PhD-level math background, ranging from AI researchers and scientists to engineers and math-lovers.
 
