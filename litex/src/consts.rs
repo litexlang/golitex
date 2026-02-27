@@ -73,6 +73,9 @@ pub const EQUIVALENT_SIGN: &str = "<=>";
 pub const SUBSET: &str = "subset";
 pub const SUPERSET: &str = "superset";
 
-pub const SUCCESS_COLON: &str = "success:";
-pub const UNKNOWN_COLON: &str = "unknown:";
-pub const ERROR_COLON: &str = "error:";
+pub const SUCCESS: &str = "success";
+pub const UNKNOWN: &str = "unknown";
+pub const ERROR: &str = "error";
+
+pub const LET: &str = "let";
+pub const PROP: &str = "prop";

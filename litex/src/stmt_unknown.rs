@@ -1,6 +1,7 @@
 use crate::fact::Fact;
 use std::fmt;
-use crate::consts::UNKNOWN_COLON;
+use crate::consts::UNKNOWN;
+use crate::helper::on_line_in_file_colon;
 
 pub struct StmtUnknown<'a> {
     pub fact: &'a Fact,
@@ -8,7 +9,7 @@ pub struct StmtUnknown<'a> {
 
 impl<'a> fmt::Display for StmtUnknown<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}", UNKNOWN_COLON, self.fact)
+        write!(f, "{} {}\n{}", UNKNOWN, on_line_in_file_colon(self.fact.line(), self.fact.file_index()), self.fact)
     }
 }
 
