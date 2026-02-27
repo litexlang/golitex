@@ -691,6 +691,7 @@ impl fmt::Display for PowerSet {
 }
 
 // obj helper functions
+
 impl Obj {
     pub fn equal_literally(left: &Obj, right: &Obj) -> bool {
         match left {
@@ -844,4 +845,9 @@ impl Obj {
             },
         }
     }
+
+    pub fn mk(s: &str) -> box_Obj {
+        Box::new(Obj::AtomWithoutPkg(AtomWithoutPkg::new(s)))
+    }
+
 }

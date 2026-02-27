@@ -43,5 +43,8 @@ pub fn curly_braced_vec_to_string_with_sep<T: fmt::Display>(vec: &Vec<T>, sep: &
 }
 
 pub fn str_with_line_file(s: &str, line: u32, file_index: usize) -> String {
-    format!("{}\non line {}\nin file {}", s, line, file_index)
+    // format!("{}\non line {}\nin file {}", s, line, file_index)
+    _ = line;
+    _ = file_index;
+    format!("{}", s)
 }
