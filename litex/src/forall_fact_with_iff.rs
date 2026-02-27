@@ -5,14 +5,14 @@ use crate::forall_fact::ForallFact;
 use crate::specific_fact::SpecFact;
 
 pub struct ForallFactWithIff {
-    pub forall_fact: Box<ForallFact>,
-    pub iff_facts: Vec<Box<SpecFact>>,
+    pub forall_fact: ForallFact,
+    pub iff_facts: Vec<SpecFact>,
     pub line: u32,
     pub file_index: usize,
 }
 
 impl ForallFactWithIff {
-    pub fn new(forall_fact: Box<ForallFact>, iff_facts: Vec<Box<SpecFact>>, line: u32, file_index: usize) -> Self {
+    pub fn new(forall_fact: ForallFact, iff_facts: Vec<SpecFact>, line: u32, file_index: usize) -> Self {
         ForallFactWithIff { forall_fact, iff_facts, line, file_index }
     }
 

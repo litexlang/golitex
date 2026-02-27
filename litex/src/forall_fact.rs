@@ -7,8 +7,8 @@ use crate::specific_fact::SpecFact;
 pub struct ForallFact {
     pub params: Vec<String>,
     pub param_sets: Vec<ParameterSet>,
-    pub dom_facts: Vec<Box<SpecFact>>,
-    pub then_facts: Vec<Box<SpecFact>>,
+    pub dom_facts: Vec<SpecFact>,
+    pub then_facts: Vec<SpecFact>,
     pub line: u32,
     pub file_index: usize,
 }
@@ -17,8 +17,8 @@ impl ForallFact {
     pub fn new(
         params: Vec<String>,
         param_sets: Vec<ParameterSet>,
-        dom_facts: Vec<Box<SpecFact>>,
-        then_facts: Vec<Box<SpecFact>>,
+        dom_facts: Vec<SpecFact>,
+        then_facts: Vec<SpecFact>,
         line: u32,
         file_index: usize,
     ) -> Self {

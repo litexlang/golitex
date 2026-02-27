@@ -33,304 +33,304 @@ pub enum AtomicFact {
 }
 
 pub struct IsTupleFact {
-    pub set: Box<Obj>,
+    pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct NotIsTupleFact {
-    pub set: Box<Obj>,
+    pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct IsCartFact {
-    pub set: Box<Obj>,
+    pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct NotIsCartFact {
-    pub set: Box<Obj>,
+    pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct InFact {
-    pub element: Box<Obj>,
-    pub set: Box<Obj>,
+    pub element: Obj,
+    pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct NotInFact {
-    pub element: Box<Obj>,
-    pub set: Box<Obj>,
+    pub element: Obj,
+    pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct NormalAtomicFact {
-    pub predicate: Box<Atom>,
-    pub body: Vec<Box<Obj>>,
+    pub predicate: Atom,
+    pub body: Vec<Obj>,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct NotNormalAtomicFact {
-    pub predicate: Box<Atom>,
-    pub body: Vec<Box<Obj>>,
+    pub predicate: Atom,
+    pub body: Vec<Obj>,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct EqualFact {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
+    pub left: Obj,
+    pub right: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct NotEqualFact {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
+    pub left: Obj,
+    pub right: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct LessFact {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
+    pub left: Obj,
+    pub right: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct NotLessFact {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
+    pub left: Obj,
+    pub right: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct GreaterFact {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
+    pub left: Obj,
+    pub right: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct NotGreaterFact {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
+    pub left: Obj,
+    pub right: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct LessEqualFact {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
+    pub left: Obj,
+    pub right: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct NotLessEqualFact {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
+    pub left: Obj,
+    pub right: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct GreaterEqualFact {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
+    pub left: Obj,
+    pub right: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct NotGreaterEqualFact {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
+    pub left: Obj,
+    pub right: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct IsSetFact {
-    pub set: Box<Obj>,
+    pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct NotIsSetFact {
-    pub set: Box<Obj>,
+    pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct IsNonemptySetFact {
-    pub set: Box<Obj>,
+    pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct NotIsNonemptySetFact {
-    pub set: Box<Obj>,
+    pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct IsFiniteSetFact {
-    pub set: Box<Obj>,
+    pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct NotIsFiniteSetFact {
-    pub set: Box<Obj>,
+    pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
 impl NormalAtomicFact {
-    pub fn new(predicate: Box<Atom>, body: Vec<Box<Obj>>, line: u32, file_index: usize) -> Self {
+    pub fn new(predicate: Atom, body: Vec<Obj>, line: u32, file_index: usize) -> Self {
         NormalAtomicFact { predicate, body, line, file_index }
     }
 }
 
 impl NotNormalAtomicFact {
-    pub fn new(predicate: Box<Atom>, body: Vec<Box<Obj>>, line: u32, file_index: usize) -> Self {
+    pub fn new(predicate: Atom, body: Vec<Obj>, line: u32, file_index: usize) -> Self {
         NotNormalAtomicFact { predicate, body, line, file_index }
     }
 }
 
 impl EqualFact {
-    pub fn new(left: Box<Obj>, right: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
         EqualFact { left, right, line, file_index }
     }
 }
 
 impl NotEqualFact {
-    pub fn new(left: Box<Obj>, right: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
         NotEqualFact { left, right, line, file_index }
     }
 }
 
 impl LessFact {
-    pub fn new(left: Box<Obj>, right: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
         LessFact { left, right, line, file_index }
     }
 }
 
 impl NotLessFact {
-    pub fn new(left: Box<Obj>, right: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
         NotLessFact { left, right, line, file_index }
     }
 }
 
 impl GreaterFact {
-    pub fn new(left: Box<Obj>, right: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
         GreaterFact { left, right, line, file_index }
     }
 }
 
 impl NotGreaterFact {
-    pub fn new(left: Box<Obj>, right: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
         NotGreaterFact { left, right, line, file_index }
     }
 }
 
 impl LessEqualFact {
-    pub fn new(left: Box<Obj>, right: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
         LessEqualFact { left, right, line, file_index }
     }
 }
 
 impl NotLessEqualFact {
-    pub fn new(left: Box<Obj>, right: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
         NotLessEqualFact { left, right, line, file_index }
     }
 }
 
 impl GreaterEqualFact {
-    pub fn new(left: Box<Obj>, right: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
         GreaterEqualFact { left, right, line, file_index }
     }
 }
 
 impl NotGreaterEqualFact {
-    pub fn new(left: Box<Obj>, right: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
         NotGreaterEqualFact { left, right, line, file_index }
     }
 }
 
 impl IsSetFact {
-    pub fn new(set: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
         IsSetFact { set, line, file_index }
     }
 }
 
 impl NotIsSetFact {
-    pub fn new(set: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
         NotIsSetFact { set, line, file_index }
     }
 }
 
 impl IsNonemptySetFact {
-    pub fn new(set: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
         IsNonemptySetFact { set, line, file_index }
     }
 }
 
 impl NotIsNonemptySetFact {
-    pub fn new(set: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
         NotIsNonemptySetFact { set, line, file_index }
     }
 }
 
 impl IsFiniteSetFact {
-    pub fn new(set: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
         IsFiniteSetFact { set, line, file_index }
     }
 }
 
 impl NotIsFiniteSetFact {
-    pub fn new(set: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
         NotIsFiniteSetFact { set, line, file_index }
     }
 }
 
 impl InFact {
-    pub fn new(element: Box<Obj>, set: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(element: Obj, set: Obj, line: u32, file_index: usize) -> Self {
         InFact { element, set, line, file_index }
     }
 }
 
 impl NotInFact {
-    pub fn new(element: Box<Obj>, set: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(element: Obj, set: Obj, line: u32, file_index: usize) -> Self {
         NotInFact { element, set, line, file_index }
     }
 }
 
 
 impl IsCartFact {
-    pub fn new(set: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
         IsCartFact { set, line, file_index }
     }
 }
 
 impl NotIsCartFact {
-    pub fn new(set: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
         NotIsCartFact { set, line, file_index }
     }
 }
 
 impl IsTupleFact {
-    pub fn new(tuple: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(tuple: Obj, line: u32, file_index: usize) -> Self {
         IsTupleFact { set: tuple, line, file_index }
     }
 }
 
 impl NotIsTupleFact {
-    pub fn new(tuple: Box<Obj>, line: u32, file_index: usize) -> Self {
+    pub fn new(tuple: Obj, line: u32, file_index: usize) -> Self {
         NotIsTupleFact { set: tuple, line, file_index }
     }
 }
