@@ -932,6 +932,17 @@ func (p *TbParser) knowFactStmt(tb *tokenBlock) (Stmt, error) {
 	if !tb.header.is(glob.KeySymbolColon) {
 		var facts FactStmtSlice = FactStmtSlice{}
 		var err error
+
+		if tb.EndWith(glob.KeySymbolColon) {
+			forallFact, err := p.uniFactInterface(tb)
+			if err != nil {
+				return nil, ErrInLine(err, tb)
+			}
+			facts = append(facts, forallFact)
+
+			return NewKnowStmt(facts.ToCanBeKnownStmtSlice(), tb.line), nil
+		}
+
 		facts, err = p.inlineFacts(tb, []string{})
 		if err != nil {
 			return nil, ErrInLine(err, tb)

@@ -30,7 +30,7 @@ use obj::{
 };
 use parameter_set::{ParameterSet, SetAsParamSet, NonemptySetAsParamSet, FiniteSetAsParamSet};
 use stmt::{Stmt};
-use atomic_fact::{InFact, NotInFact,IsCartFact, NotIsCartFact, IsTupleFact, NotIsTupleFact, AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact,
+use atomic_fact::{InFact, NotInFact,IsCartFact, NotIsCartFact, IsTupleFact, NotIsTupleFact, AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact, SubsetFact, NotSubsetFact, SupersetFact, NotSupersetFact,
     LessFact, NotLessFact, GreaterFact, NotGreaterFact,
     LessEqualFact, NotLessEqualFact, GreaterEqualFact, NotGreaterEqualFact,
     IsSetFact, NotIsSetFact, IsNonemptySetFact, NotIsNonemptySetFact,
@@ -71,6 +71,7 @@ fn main() {
     try_and_fact();
     try_and_fact_or_spec_fact();
     try_or_fact_or_and_fact_or_specific_fact();
+    try_subset_superset_fact();
 }
 
 fn try_atom_fn_obj() {
@@ -532,4 +533,24 @@ fn try_or_fact_or_and_fact_or_specific_fact() {
         0,
     ))))], 1, 0));
     println!("{}", fact3.str_with_line_file());
+}
+
+fn try_subset_superset_fact() {
+    let subset = AtomicFact::SubsetFact(SubsetFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0));
+    let superset = AtomicFact::SupersetFact(SupersetFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0));
+    let not_subset = AtomicFact::NotSubsetFact(NotSubsetFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0));
+    let not_superset = AtomicFact::NotSupersetFact(NotSupersetFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0));
+    println!("{}", subset.str_with_line_file());
+    println!("{}", superset.str_with_line_file());
+    println!("{}", not_subset.str_with_line_file());
+    println!("{}", not_superset.str_with_line_file());
+
+    let subset_fact = Fact::SpecFact(SpecFact::AtomicFact(subset));
+    let superset_fact = Fact::SpecFact(SpecFact::AtomicFact(superset));
+    let not_subset_fact = Fact::SpecFact(SpecFact::AtomicFact(not_subset));
+    let not_superset_fact = Fact::SpecFact(SpecFact::AtomicFact(not_superset));
+    println!("{}", subset_fact.str_with_line_file());
+    println!("{}", superset_fact.str_with_line_file());
+    println!("{}", not_subset_fact.str_with_line_file());
+    println!("{}", not_superset_fact.str_with_line_file());
 }
