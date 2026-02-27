@@ -1,0 +1,7 @@
+prop p(x R)
+
+have n R
+
+know $p(n)
+
+$p(n - 1 + 1)

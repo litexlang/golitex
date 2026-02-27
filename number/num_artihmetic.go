@@ -201,6 +201,11 @@ func (p *arithParser) prev() arithToken {
 	return p.tokens[p.pos-1]
 }
 
+// isCoeffZero 判断系数是否为零（包括 "0" 和 "-0"），用于 v+0、v-0、v+(-0)、v-(-0) 都返回自身
+func isCoeffZero(s string) bool {
+	return s == "0" || s == "-0"
+}
+
 // --- Evaluation ---
 
 func eval(ast *arithAST) polynomial {
@@ -254,10 +259,8 @@ func simplify(poly polynomial) polynomial {
 	}
 	var result polynomial
 	for key, coEff := range group {
-		// if coEff == 0 {
-		// 	continue
-		// }
-		if coEff == "0" {
+		// 系数为 0 或 -0 的项不输出，保证 v+0、v-0、v+(-0)、v-(-0) 都等于 v
+		if isCoeffZero(coEff) {
 			continue
 		}
 		vars := []string{}
