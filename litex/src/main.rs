@@ -40,7 +40,7 @@ use or_fact::OrFact;
 use forall_fact::ForallFact;
 use forall_fact_with_iff::ForallFactWithIff;
 use fact::Fact;
-use errors::ArithmeticError;
+use errors::{ArithmeticErr, Err};
 
 fn main() {
     try_atom_fn_obj();
@@ -484,7 +484,12 @@ fn try_fact() {
 }
 
 fn try_errors() {
-    let _err = ArithmeticError::new("demo");
+    let _err = ArithmeticErr::new("demo");
+
+    println!("{}", _err);
+
+    let err: Err = Err::ArithmeticErr(ArithmeticErr::new("demo"));
+    println!("{}", err);
 }
 
 fn try_and_fact() {
