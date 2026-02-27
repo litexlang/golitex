@@ -16,8 +16,10 @@ mod specific_fact;
 mod forall_fact_with_iff;
 mod and_fact;
 mod and_fact_or_specific_fact;
+mod or_fact_or_and_fact_or_specific_fact;
 use and_fact::AndFact;
 use and_fact_or_specific_fact::AndFactOrSpecFact;
+use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use atom::{AtomWithoutPkg, AtomWithPkg, Atom};
 use obj::{
     Obj, FnObj, Number, Add, Sub, Mul, Div, Mod, Pow,
@@ -68,6 +70,7 @@ fn main() {
     try_errors();
     try_and_fact();
     try_and_fact_or_spec_fact();
+    try_or_fact_or_and_fact_or_specific_fact();
 }
 
 fn try_atom_fn_obj() {
@@ -124,24 +127,24 @@ fn try_stmt() {
         Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")),
         Obj::AtomWithoutPkg(AtomWithoutPkg::new("b")),
     ];
-    let fact1 = Stmt::Fact(Fact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
+    let fact1 = Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
         Atom::AtomWithoutPkg(AtomWithoutPkg::new("p")),
         body3,
         1,
         0,
-    ))));
+    )))));
     println!("{}", fact1.to_string());
 
     let body2 = vec![
         Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")),
         Obj::AtomWithoutPkg(AtomWithoutPkg::new("b")),
     ];
-    let fact2 = Stmt::Fact(Fact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
+    let fact2 = Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
         Atom::AtomWithPkg(AtomWithPkg::new("PkgA", "name_a")),
         body2,
         1,
         0,
-    ))));
+    )))));
     println!("{}", fact2.to_string());
 }
 
@@ -445,7 +448,7 @@ fn try_forall_fact_with_iff() {
 
 fn try_fact() {
     let af = AtomicFact::EqualFact(EqualFact::new(Obj::mk("a"), Obj::mk("b"), 1, 0));
-    let _f_atom = Fact::AtomicFact(af);
+    let _f_atom = Fact::SpecFact(SpecFact::AtomicFact(af));
     let ef = ExistFact::TrueExistFact(TrueExistFact::new(
         vec![],
         vec![],
@@ -453,7 +456,7 @@ fn try_fact() {
         1,
         0,
     ));
-    let _f_exist = Fact::ExistFact(ef);
+    let _f_exist = Fact::SpecFact(SpecFact::ExistFact(ef));
     let _f_or = Fact::OrFact(OrFact::new(vec![], 1, 0));
     let _f_forall = Fact::ForallFact(ForallFact::new(
         vec![],
@@ -503,4 +506,30 @@ fn try_and_fact() {
     ];
     let _and = AndFact::new(facts, 1, 0);
     println!("{}", _and.str_with_line_file());
+}
+
+fn try_or_fact_or_and_fact_or_specific_fact() {
+    let fact1: OrFactOrAndFactOrSpecFact = OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))));
+    println!("{}", fact1.str_with_line_file());
+
+    let fact2: OrFactOrAndFactOrSpecFact = OrFactOrAndFactOrSpecFact::AndFact(AndFact::new(vec![SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    )))], 1, 0));
+    println!("{}", fact2.str_with_line_file());
+
+    let fact3: OrFactOrAndFactOrSpecFact = OrFactOrAndFactOrSpecFact::OrFact(OrFact::new(vec![AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))))], 1, 0));
+    println!("{}", fact3.str_with_line_file());
 }
