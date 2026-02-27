@@ -1,5 +1,5 @@
 // Evaluate implementations
-use crate::errors::ArithmeticError;
+use crate::errors::ArithmeticErr;
 use crate::obj::Obj;
 use crate::obj::{Add, Div, Mod, Mul, Number, Pow, Sub};
 
@@ -12,7 +12,7 @@ fn num_value(obj: &Obj) -> f64 {
 }
 
 impl Obj {
-    pub fn calculate(&self) -> Result<Obj, ArithmeticError> {
+    pub fn calculate(&self) -> Result<Obj, ArithmeticErr> {
         match self {
             Obj::Number(n) => Ok(Obj::Number(Number { value: n.value.clone() })),
             Obj::Add(a) => a.calculate(),
@@ -21,15 +21,15 @@ impl Obj {
             Obj::Div(d) => d.calculate(),
             Obj::Mod(m) => m.calculate(),
             Obj::Pow(p) => p.calculate(),
-            _ => Err(ArithmeticError::new("非算术表达式，无法 calculate")),
+            _ => Err(ArithmeticErr::new("非算术表达式，无法 calculate")),
         }   
     }
 }
 
 impl Add {
-    pub fn calculate(&self) -> Result<Obj, ArithmeticError> {
+    pub fn calculate(&self) -> Result<Obj, ArithmeticErr> {
         if !self.is_arithmetic_expr {
-            return Err(ArithmeticError::new("非算术表达式，无法 calculate"));
+            return Err(ArithmeticErr::new("非算术表达式，无法 calculate"));
         }
         
         let l = self.left.as_ref().calculate();
@@ -46,9 +46,9 @@ impl Add {
 }
 
 impl Sub {
-    pub fn calculate(&self) -> Result<Obj, ArithmeticError> {
+    pub fn calculate(&self) -> Result<Obj, ArithmeticErr> {
         if !self.is_arithmetic_expr {
-            return Err(ArithmeticError::new("非算术表达式，无法 calculate"));
+            return Err(ArithmeticErr::new("非算术表达式，无法 calculate"));
         }   
         
         let l = self.left.as_ref().calculate();
@@ -65,9 +65,9 @@ impl Sub {
 }
 
 impl Mul {
-    pub fn calculate(&self) -> Result<Obj, ArithmeticError> {
+    pub fn calculate(&self) -> Result<Obj, ArithmeticErr> {
         if !self.is_arithmetic_expr {
-            return Err(ArithmeticError::new("非算术表达式，无法 calculate"));
+            return Err(ArithmeticErr::new("非算术表达式，无法 calculate"));
         }
         let l = self.left.as_ref().calculate();
         if l.is_err() {
@@ -83,9 +83,9 @@ impl Mul {
 }
 
 impl Div {
-    pub fn calculate(&self) -> Result<Obj, ArithmeticError> {
+    pub fn calculate(&self) -> Result<Obj, ArithmeticErr> {
         if !self.is_arithmetic_expr {
-            return Err(ArithmeticError::new("非算术表达式，无法 calculate"));
+            return Err(ArithmeticErr::new("非算术表达式，无法 calculate"));
         }
         let l = self.left.as_ref().calculate();
         if l.is_err() {
@@ -101,9 +101,9 @@ impl Div {
 }
 
 impl Mod {
-    pub fn calculate(&self) -> Result<Obj, ArithmeticError> {
+    pub fn calculate(&self) -> Result<Obj, ArithmeticErr> {
         if !self.is_arithmetic_expr {
-            return Err(ArithmeticError::new("非算术表达式，无法 calculate"));
+            return Err(ArithmeticErr::new("非算术表达式，无法 calculate"));
         }
         let l = self.left.as_ref().calculate();
         if l.is_err() {
@@ -119,9 +119,9 @@ impl Mod {
 }
 
 impl Pow {
-    fn calculate(&self) -> Result<Obj, ArithmeticError> {
+    fn calculate(&self) -> Result<Obj, ArithmeticErr> {
         if !self.is_arithmetic_expr {
-            return Err(ArithmeticError::new("非算术表达式，无法 calculate"));
+            return Err(ArithmeticErr::new("非算术表达式，无法 calculate"));
         }
         let b = self.base.as_ref().calculate();
         if b.is_err() {
