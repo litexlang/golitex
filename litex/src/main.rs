@@ -426,9 +426,9 @@ fn try_forall_fact() {
         vec!["n".to_string()],
         vec![ParameterType::Set(SetAsParamSet::new())],
         vec![],
-        vec![SpecFact::AtomicFact(AtomicFact::EqualFact(
+        vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
             EqualFact::new(Obj::mk("a"), Obj::mk("b"), 1, 0),
-        ))],
+        )))],
         1,
         0,
     );
@@ -440,12 +440,12 @@ fn try_forall_fact_with_iff() {
     let forall = ForallFact::new(
         vec!["n".to_string()],
         vec![ParameterType::Set(SetAsParamSet::new())],
-        vec![SpecFact::AtomicFact(AtomicFact::EqualFact(
+        vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
             EqualFact::new(Obj::mk("a"), Obj::mk("b"), 1, 0),
-        ))],
-        vec![SpecFact::AtomicFact(AtomicFact::EqualFact(
+        )))],
+        vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
             EqualFact::new(Obj::mk("a"), Obj::mk("b"), 1, 0),
-        ))],
+        )))],
         1,
         0,
     );
