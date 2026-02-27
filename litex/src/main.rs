@@ -166,7 +166,7 @@ fn try_list_set() {
 }
 
 fn try_set_builder() {
-    let set_builder = Obj::SetBuilder(SetBuilder::new());
+    let set_builder = Obj::SetBuilder(SetBuilder::new("a".to_string(), Obj::AtomWithoutPkg(AtomWithoutPkg::new("b")), vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))]));
     println!("{}", set_builder);
 }
 
@@ -182,7 +182,7 @@ fn try_fn_set_without_params() {
 }
 
 fn try_fn_set_with_params() {
-    let fn_set_with_params = Obj::FnSetWithParams(FnSetWithParams::new());
+    let fn_set_with_params = Obj::FnSetWithParams(FnSetWithParams::new("f".to_string(), vec!["a".to_string(), "b".to_string()], vec![Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")), Obj::AtomWithoutPkg(AtomWithoutPkg::new("b"))], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::AtomWithoutPkg(AtomWithoutPkg::new("c")), vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))]));
     println!("{}", fn_set_with_params);
 }
 
