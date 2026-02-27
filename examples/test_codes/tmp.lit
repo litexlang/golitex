@@ -1,7 +1,8 @@
-prop p(x R)
+have a, b set
+know forall x a : x $in b
+know forall x b : x $in a
 
-have n R
+equal_set a, b:
+    do_nothing
 
-know $p(n)
-
-$p(n - 1 + 1)
+a = b
