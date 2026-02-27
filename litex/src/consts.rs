@@ -69,3 +69,6 @@ pub const AND: &str = "and";
 pub const COLON: &str = ":";
 pub const RIGHT_ARROW: &str = "=>";
 pub const EQUIVALENT_SIGN: &str = "<=>";
+
+pub const SUBSET: &str = "subset";
+pub const SUPERSET: &str = "superset";

@@ -1,2 +1,2 @@
-
-pow(5, 999999) = pow(5, 6 * 166666 + 3)
+know forall x R:
+    x $in R
