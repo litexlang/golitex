@@ -1,6 +1,6 @@
 mod arithmetic;
 mod consts;
-mod errors;
+mod stmt_error;
 mod helper;
 mod obj;
 mod stmt;
@@ -17,6 +17,9 @@ mod forall_fact_with_iff;
 mod and_fact;
 mod and_fact_or_specific_fact;
 mod or_fact_or_and_fact_or_specific_fact;
+mod stmt_result;
+mod stmt_success;
+mod stmt_unknown;
 use and_fact::AndFact;
 use and_fact_or_specific_fact::AndFactOrSpecFact;
 use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
@@ -42,8 +45,11 @@ use or_fact::OrFact;
 use forall_fact::ForallFact;
 use forall_fact_with_iff::ForallFactWithIff;
 use fact::Fact;
-use errors::{ArithmeticErr, Err};
-
+use stmt_error::{ArithmeticError, StmtError};
+use stmt_result::StmtResult;
+use stmt_success::StmtSuccess;
+use stmt_success::{NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules};
+use stmt_unknown::StmtUnknown;
 fn main() {
     try_atom_fn_obj();
     try_arithmetic();
@@ -72,6 +78,7 @@ fn main() {
     try_and_fact_or_spec_fact();
     try_or_fact_or_and_fact_or_specific_fact();
     try_subset_superset_fact();
+    try_stmt_result();
 }
 
 fn try_atom_fn_obj() {
@@ -488,11 +495,11 @@ fn try_fact() {
 }
 
 fn try_errors() {
-    let _err = ArithmeticErr::new("demo");
+    let _err = ArithmeticError::new("demo");
 
     println!("{}", _err);
 
-    let err: Err = Err::ArithmeticErr(ArithmeticErr::new("demo"));
+    let err: StmtError = StmtError::ArithmeticError(ArithmeticError::new("demo"));
     println!("{}", err);
 }
 
@@ -553,4 +560,40 @@ fn try_subset_superset_fact() {
     println!("{}", superset_fact.str_with_line_file());
     println!("{}", not_subset_fact.str_with_line_file());
     println!("{}", not_superset_fact.str_with_line_file());
+}
+
+fn try_stmt_result() {
+    let stmt = Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    )))));
+    let result = StmtResult::StmtSuccess(StmtSuccess::NonFactualStmtSuccess(NonFactualStmtSuccess::new(&stmt)));
+    println!("{}", result);
+
+
+    let fact = Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))));
+    let unknown = StmtUnknown::new(&fact);
+    let result = StmtResult::StmtUnknown(unknown);
+    println!("{}", result);
+
+    let err = StmtError::ArithmeticError(ArithmeticError::new("demo"));
+    let result = StmtResult::StmtError(err);
+    println!("{}", result);
+
+
+
+    let fact_verified_by_fact = FactVerifiedByFact::new(&fact, &fact);
+    let result = StmtResult::StmtSuccess(StmtSuccess::FactVerifiedByFact(fact_verified_by_fact));
+    println!("{}", result);
+
+    let fact_verified_by_builtin_rules = FactVerifiedByBuiltinRules::new(&fact, "demo".to_string());
+    let result = StmtResult::StmtSuccess(StmtSuccess::FactVerifiedByBuiltinRules(fact_verified_by_builtin_rules));
+    println!("{}", result);
 }

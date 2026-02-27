@@ -52,7 +52,3 @@ pub fn str_with_line_file(s: &str, line: u32, file_index: usize) -> String {
 pub fn vec_to_string<T: fmt::Display>(vec: &Vec<T>) -> String {
     vec.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(", ")
 }
-
-pub fn pair_vec_to_string<A: fmt::Display, B: fmt::Display>(left: &Vec<A>, right: &Vec<B>) -> String {
-    left.iter().zip(right.iter()).map(|(l, r)| format!("{} {}", l, r)).collect::<Vec<String>>().join(", ")
-}
