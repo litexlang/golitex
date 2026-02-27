@@ -221,28 +221,28 @@ func (s SpecFactInImplyTemplateMem) GetSameEnumPkgPropFacts(stmt ast.SpecificFac
 	return sameEnumPkgPropFacts, true
 }
 
-func (s SpecFactInImplyTemplateMem) newFact(known ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) ast.StmtRet {
-	stmtAsSpecFact, ok := known.(ast.SpecificFactStmt)
-	if !ok {
-		knownAsOr, ok := known.(*ast.OrStmt)
-		if !ok {
-			return ast.NewErrStmtEmptyRet(implyTemplate).AddExtraInfo(fmt.Sprintf("invalid known fact type: %T", known))
-		}
-		stmtAsSpecFact = knownAsOr.Facts[0]
-	}
+// func (s SpecFactInImplyTemplateMem) newFact(known ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) ast.StmtRet {
+// 	stmtAsSpecFact, ok := known.(ast.SpecificFactStmt)
+// 	if !ok {
+// 		knownAsOr, ok := known.(*ast.OrStmt)
+// 		if !ok {
+// 			return ast.NewErrStmtEmptyRet(implyTemplate).AddExtraInfo(fmt.Sprintf("invalid known fact type: %T", known))
+// 		}
+// 		stmtAsSpecFact = knownAsOr.Facts[0]
+// 	}
 
-	sameEnumFacts, ret := s.getSameEnumFacts(stmtAsSpecFact)
-	if ret.IsErr() {
-		return ret
-	}
+// 	sameEnumFacts, ret := s.getSameEnumFacts(stmtAsSpecFact)
+// 	if ret.IsErr() {
+// 		return ret
+// 	}
 
-	if _, ok := sameEnumFacts[string(stmtAsSpecFact.Key())]; !ok {
-		sameEnumFacts[string(stmtAsSpecFact.Key())] = []KnownSpecFact_InImplyTemplate{}
-	}
-	sameEnumFacts[string(stmtAsSpecFact.Key())] = append(sameEnumFacts[string(stmtAsSpecFact.Key())], NewKnownSpecFact_InImplyTemplate(known, implyTemplate))
+// 	if _, ok := sameEnumFacts[string(stmtAsSpecFact.Key())]; !ok {
+// 		sameEnumFacts[string(stmtAsSpecFact.Key())] = []KnownSpecFact_InImplyTemplate{}
+// 	}
+// 	sameEnumFacts[string(stmtAsSpecFact.Key())] = append(sameEnumFacts[string(stmtAsSpecFact.Key())], NewKnownSpecFact_InImplyTemplate(known, implyTemplate))
 
-	return ast.NewTrueStmtEmptyRet(implyTemplate)
-}
+// 	return ast.NewTrueStmtEmptyRet(implyTemplate)
+// }
 
 func (envMemory *EnvMemory) GetEqualObjs(obj ast.Obj) (*[]ast.Obj, bool) {
 	objAsStr := obj.String()
