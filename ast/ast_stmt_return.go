@@ -297,11 +297,11 @@ func appendStmtRetCommonDetails(builder *strings.Builder, define []string, verif
 	}
 
 	if len(innerStmtRets) > 0 {
-		builder.WriteString("\n\ndetail(s):\n")
-		for _, innerRet := range innerStmtRets {
-			builder.WriteString(innerRet.String())
-			builder.WriteString("\n")
-		}
+		// builder.WriteString("\n\ndetail(s):\n")
+		// for _, innerRet := range innerStmtRets {
+		// 	builder.WriteString(innerRet.String())
+		// 	builder.WriteString("\n")
+		// }
 	}
 
 	if len(extraInfo) > 0 {
