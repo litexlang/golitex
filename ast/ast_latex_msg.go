@@ -1056,10 +1056,10 @@ func (s *ProveForStmt) ToLatexString() string {
 	return "TODO"
 }
 
-func (s *ProveInferStmt) ToLatexString() string {
-	// TODO: implement LaTeX conversion for prove_implication
-	return s.String()
-}
+// func (s *ProveInferStmt) ToLatexString() string {
+// 	// TODO: implement LaTeX conversion for prove_implication
+// 	return s.String()
+// }
 
 // func (s *DefImplicationStmt) ToLatexString() string {
 // 	// TODO: implement LaTeX conversion for implication

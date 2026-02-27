@@ -14,111 +14,106 @@
 
 package litex_executor
 
-import (
-	"fmt"
-	ast "golitex/ast"
-)
+// func (exec *Executor) inferTemplateStmt(stmt *ast.InferTemplateStmt) ast.StmtRet {
+// 	// Step 1: Verify like claim forall
+// 	execRet := exec.implyTemplateStmtVerify(stmt)
+// 	if execRet.IsNotTrue() {
+// 		return execRet
+// 	}
 
-func (exec *Executor) inferTemplateStmt(stmt *ast.InferTemplateStmt) ast.StmtRet {
-	// Step 1: Verify like claim forall
-	execRet := exec.implyTemplateStmtVerify(stmt)
-	if execRet.IsNotTrue() {
-		return execRet
-	}
+// 	// Step 2: Store facts in SpecFactInImplyTemplateMem
+// 	execRet = exec.implyTemplateStmtStore(stmt)
+// 	if execRet.IsNotTrue() {
+// 		return execRet
+// 	}
 
-	// Step 2: Store facts in SpecFactInImplyTemplateMem
-	execRet = exec.implyTemplateStmtStore(stmt)
-	if execRet.IsNotTrue() {
-		return execRet
-	}
+// 	return execRet
+// }
 
-	return execRet
-}
+// func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) ast.StmtRet {
+// 	exec.NewEnv()
+// 	defer func() {
+// 		exec.deleteEnv()
+// 	}()
 
-func (exec *Executor) implyTemplateStmtVerify(stmt *ast.InferTemplateStmt) ast.StmtRet {
-	exec.NewEnv()
-	defer func() {
-		exec.deleteEnv()
-	}()
+// 	innerStmtRets := []ast.StmtRet{}
 
-	innerStmtRets := []ast.StmtRet{}
+// 	// Declare parameters in the env
+// 	objDefStmt := ast.NewDefLetStmt(stmt.Params, stmt.ParamSets, stmt.IfFacts, stmt.Line)
 
-	// Declare parameters in the env
-	objDefStmt := ast.NewDefLetStmt(stmt.Params, stmt.ParamSets, stmt.IfFacts, stmt.Line)
+// 	execState := exec.defLetStmt(objDefStmt)
+// 	if execState.IsNotTrue() {
+// 		return ast.StmtErrRet(objDefStmt, fmt.Sprintf("ImplyTemplate statement error: Failed to declare parameters:\n%s\n", objDefStmt))
+// 	}
+// 	innerStmtRets = append(innerStmtRets, execState)
 
-	execState := exec.defLetStmt(objDefStmt)
-	if execState.IsNotTrue() {
-		return ast.StmtErrRet(objDefStmt, fmt.Sprintf("ImplyTemplate statement error: Failed to declare parameters:\n%s\n", objDefStmt))
-	}
-	innerStmtRets = append(innerStmtRets, execState)
+// 	// Know dom facts
+// 	for _, domFact := range stmt.DomFacts {
+// 		// Convert Spec_OrFact to FactStmt
+// 		var factStmt ast.FactStmt
+// 		if specFact, ok := domFact.(ast.SpecificFactStmt); ok {
+// 			factStmt = specFact
+// 		} else if orStmt, ok := domFact.(*ast.OrStmt); ok {
+// 			factStmt = orStmt
+// 		} else {
+// 			return ast.StmtErrRet(domFact, fmt.Sprintf("implyTemplate statement error: unsupported fact type in domFacts: %T", domFact))
+// 		}
+// 		ret := exec.Env.NewFactWithCheckingNameDefined(factStmt)
+// 		if ret.IsErr() {
+// 			return ast.StmtErrRet(factStmt, ret.String())
+// 		}
+// 	}
 
-	// Know dom facts
-	for _, domFact := range stmt.DomFacts {
-		// Convert Spec_OrFact to FactStmt
-		var factStmt ast.FactStmt
-		if specFact, ok := domFact.(ast.SpecificFactStmt); ok {
-			factStmt = specFact
-		} else if orStmt, ok := domFact.(*ast.OrStmt); ok {
-			factStmt = orStmt
-		} else {
-			return ast.StmtErrRet(domFact, fmt.Sprintf("implyTemplate statement error: unsupported fact type in domFacts: %T", domFact))
-		}
-		ret := exec.Env.NewFactWithCheckingNameDefined(factStmt)
-		if ret.IsErr() {
-			return ast.StmtErrRet(factStmt, ret.String())
-		}
-	}
+// 	// Execute proof block if present
+// 	if len(stmt.Proof) > 0 {
+// 		execState = exec.execStmtsAtCurEnv(stmt.Proof)
+// 		if execState.IsNotTrue() {
+// 			return execState
+// 		}
+// 	}
 
-	// Execute proof block if present
-	if len(stmt.Proof) > 0 {
-		execState = exec.execStmtsAtCurEnv(stmt.Proof)
-		if execState.IsNotTrue() {
-			return execState
-		}
-	}
+// 	// Verify thenFacts
+// 	thenFactsAsFactStmt := make([]ast.FactStmt, len(stmt.ThenFacts))
+// 	for i, fact := range stmt.ThenFacts {
+// 		// Convert Spec_OrFact to FactStmt
+// 		if specFact, ok := fact.(ast.SpecificFactStmt); ok {
+// 			thenFactsAsFactStmt[i] = specFact
+// 		} else if orStmt, ok := fact.(*ast.OrStmt); ok {
+// 			thenFactsAsFactStmt[i] = orStmt
+// 		} else {
+// 			return ast.StmtErrRet(fact, fmt.Sprintf("implyTemplate statement error: unsupported fact type in thenFacts: %T", fact))
+// 		}
+// 	}
 
-	// Verify thenFacts
-	thenFactsAsFactStmt := make([]ast.FactStmt, len(stmt.ThenFacts))
-	for i, fact := range stmt.ThenFacts {
-		// Convert Spec_OrFact to FactStmt
-		if specFact, ok := fact.(ast.SpecificFactStmt); ok {
-			thenFactsAsFactStmt[i] = specFact
-		} else if orStmt, ok := fact.(*ast.OrStmt); ok {
-			thenFactsAsFactStmt[i] = orStmt
-		} else {
-			return ast.StmtErrRet(fact, fmt.Sprintf("implyTemplate statement error: unsupported fact type in thenFacts: %T", fact))
-		}
-	}
+// 	execState, failedFact, err := exec.verifyFactsAtCurEnv(thenFactsAsFactStmt, Round0NoMsg())
+// 	if err != nil {
+// 		return ast.StmtErrRet(failedFact, fmt.Sprintf("implyTemplate statement error: failed to verify fact:\n%s\n%s", failedFact, err))
+// 	} else if execState.IsUnknown() {
+// 		return ast.StmtErrRet(failedFact, fmt.Sprintf("implyTemplate statement error: failed to verify fact:\n%s", failedFact))
+// 	}
 
-	execState, failedFact, err := exec.verifyFactsAtCurEnv(thenFactsAsFactStmt, Round0NoMsg())
-	if err != nil {
-		return ast.StmtErrRet(failedFact, fmt.Sprintf("implyTemplate statement error: failed to verify fact:\n%s\n%s", failedFact, err))
-	} else if execState.IsUnknown() {
-		return ast.StmtErrRet(failedFact, fmt.Sprintf("implyTemplate statement error: failed to verify fact:\n%s", failedFact))
-	}
+// 	return ast.NewTrueStmtEmptyRet(stmt).AddInnerStmtRets(innerStmtRets)
+// }
 
-	return ast.NewTrueStmtEmptyRet(stmt).AddInnerStmtRets(innerStmtRets)
-}
+// func (exec *Executor) implyTemplateStmtStore(stmt *ast.InferTemplateStmt) ast.StmtRet {
+// 	// Store each thenFact in appropriate memory
+// 	for _, thenFact := range stmt.ThenFacts {
+// 		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
+// 			// Store SpecFactStmt in SpecFactInImplyTemplateMem
+// 			ret := exec.Env.StoreSpecFactInImplyTemplateMem(specFact, stmt)
+// 			if ret.IsErr() {
+// 				return ret
+// 			}
+// 		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
+// 			// Store OrStmt in SpecFact_InLogicExpr_InImplyTemplateMem
+// 			ret := exec.Env.StoreSpecFactInImplyTemplateMem(orStmt, stmt)
+// 			if ret.IsErr() {
+// 				return ret
+// 			}
+// 		} else {
+// 			return ast.StmtErrRet(thenFact, fmt.Sprintf("implyTemplate statement error: unsupported fact type in thenFacts: %T", thenFact))
+// 		}
+// 	}
 
-func (exec *Executor) implyTemplateStmtStore(stmt *ast.InferTemplateStmt) ast.StmtRet {
-	// Store each thenFact in appropriate memory
-	for _, thenFact := range stmt.ThenFacts {
-		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
-			// Store SpecFactStmt in SpecFactInImplyTemplateMem
-			ret := exec.Env.StoreSpecFactInImplyTemplateMem(specFact, stmt)
-			if ret.IsErr() {
-				return ret
-			}
-		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
-			// Store OrStmt in SpecFact_InLogicExpr_InImplyTemplateMem
-			ret := exec.Env.StoreSpecFactInImplyTemplateMem(orStmt, stmt)
-			if ret.IsErr() {
-				return ret
-			}
-		} else {
-			return ast.StmtErrRet(thenFact, fmt.Sprintf("implyTemplate statement error: unsupported fact type in thenFacts: %T", thenFact))
-		}
-	}
-
-	return ast.NewTrueStmtEmptyRet(stmt)
-}
+// 	return ast.NewTrueStmtEmptyRet(stmt)
+// }
