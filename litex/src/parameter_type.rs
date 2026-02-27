@@ -2,7 +2,7 @@ use std::fmt;
 use crate::obj::Obj;
 use crate::consts::{SET, NONEMPTY_SET, FINITE_SET};
 
-pub enum ParameterSet {
+pub enum ParameterType {
     Set(SetAsParamSet),
     NonemptySet(NonemptySetAsParamSet),
     FiniteSet(FiniteSetAsParamSet),
@@ -33,13 +33,13 @@ impl FiniteSetAsParamSet {
     }
 }
 
-impl fmt::Display for ParameterSet {
+impl fmt::Display for ParameterType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ParameterSet::Set(set) => write!(f, "{}", set.to_string()),
-            ParameterSet::NonemptySet(nonempty_set) => write!(f, "{}", nonempty_set.to_string()),
-            ParameterSet::FiniteSet(finite_set) => write!(f, "{}", finite_set.to_string()),
-            ParameterSet::Obj(obj) => write!(f, "{}", obj),
+            ParameterType::Set(set) => write!(f, "{}", set.to_string()),
+            ParameterType::NonemptySet(nonempty_set) => write!(f, "{}", nonempty_set.to_string()),
+            ParameterType::FiniteSet(finite_set) => write!(f, "{}", finite_set.to_string()),
+            ParameterType::Obj(obj) => write!(f, "{}", obj),
         }
     }
 }

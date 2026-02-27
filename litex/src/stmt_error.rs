@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::consts::ERROR_COLON;
+use crate::consts::ERROR;
 
 #[derive(Debug)]
 pub enum StmtError {
@@ -16,14 +16,14 @@ impl std::error::Error for StmtError {}
 impl fmt::Display for StmtError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            StmtError::ArithmeticError(e) => write!(f, "{}\n{}", ERROR_COLON, e),
+            StmtError::ArithmeticError(e) => write!(f, "{}", e),
         }
     }
 }
 
 impl fmt::Display for ArithmeticError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.msg)
+        write!(f, "{}\n{}", ERROR, self.msg)
     }
 }
 

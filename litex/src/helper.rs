@@ -52,3 +52,8 @@ pub fn str_with_line_file(s: &str, line: u32, file_index: usize) -> String {
 pub fn vec_to_string<T: fmt::Display>(vec: &Vec<T>) -> String {
     vec.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(", ")
 }
+
+pub fn on_line_in_file_colon(line: u32, file_index: usize) -> String {
+    _ = file_index;
+    format!("on line {}:", line)
+}

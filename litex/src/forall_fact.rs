@@ -1,12 +1,12 @@
 use std::fmt;
 use crate::consts::{FORALL, COLON, RIGHT_ARROW};
 use crate::helper::{add_four_spaces_to_vec_at_beginning, add_four_spaces_to_str_at_beginning, str_with_line_file, vec_pair_to_string};
-use crate::parameter_set::ParameterSet;
+use crate::parameter_type::ParameterType;
 use crate::specific_fact::SpecFact;
 
 pub struct ForallFact {
     pub params: Vec<String>,
-    pub param_sets: Vec<ParameterSet>,
+    pub param_types: Vec<ParameterType>,
     pub dom_facts: Vec<SpecFact>,
     pub then_facts: Vec<SpecFact>,
     pub line: u32,
@@ -16,13 +16,13 @@ pub struct ForallFact {
 impl ForallFact {
     pub fn new(
         params: Vec<String>,
-        param_sets: Vec<ParameterSet>,
+        param_sets: Vec<ParameterType>,
         dom_facts: Vec<SpecFact>,
         then_facts: Vec<SpecFact>,
         line: u32,
         file_index: usize,
     ) -> Self {
-        ForallFact { params, param_sets, dom_facts, then_facts, line, file_index }
+        ForallFact { params, param_types: param_sets, dom_facts, then_facts, line, file_index }
     }
 
     pub fn line(&self) -> u32 {
@@ -41,8 +41,8 @@ impl ForallFact {
 impl fmt::Display for ForallFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.dom_facts.len() {
-            0 => write!(f, "{} {}{}\n{}", FORALL, vec_pair_to_string(&self.params, &self.param_sets),COLON, add_four_spaces_to_vec_at_beginning(&self.then_facts, 1)),
-            _ => write!(f, "{} {}{}\n{}\n{}{}\n{}", FORALL, vec_pair_to_string(&self.params, &self.param_sets),COLON, add_four_spaces_to_vec_at_beginning(&self.dom_facts, 1), add_four_spaces_to_str_at_beginning(&RIGHT_ARROW, 1), COLON,add_four_spaces_to_vec_at_beginning(&self.then_facts, 2)),
+            0 => write!(f, "{} {}{}\n{}", FORALL, vec_pair_to_string(&self.params, &self.param_types),COLON, add_four_spaces_to_vec_at_beginning(&self.then_facts, 1)),
+            _ => write!(f, "{} {}{}\n{}\n{}{}\n{}", FORALL, vec_pair_to_string(&self.params, &self.param_types),COLON, add_four_spaces_to_vec_at_beginning(&self.dom_facts, 1), add_four_spaces_to_str_at_beginning(&RIGHT_ARROW, 1), COLON,add_four_spaces_to_vec_at_beginning(&self.then_facts, 2)),
         }
     }
 }

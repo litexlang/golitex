@@ -4,7 +4,7 @@ mod stmt_error;
 mod helper;
 mod obj;
 mod stmt;
-mod parameter_set;
+mod parameter_type;
 mod atom;
 mod atomic_fact;
 mod fact;
@@ -20,6 +20,7 @@ mod or_fact_or_and_fact_or_specific_fact;
 mod stmt_result;
 mod stmt_success;
 mod stmt_unknown;
+mod definitions;
 use and_fact::AndFact;
 use and_fact_or_specific_fact::AndFactOrSpecFact;
 use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
@@ -31,7 +32,7 @@ use obj::{
     NPosObj, NObj, QObj, ZObj, RObj, InstSetTemplateObj,
     Cart, SetDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choice,
 };
-use parameter_set::{ParameterSet, SetAsParamSet, NonemptySetAsParamSet, FiniteSetAsParamSet};
+use parameter_type::{ParameterType, SetAsParamSet, NonemptySetAsParamSet, FiniteSetAsParamSet};
 use stmt::{Stmt};
 use atomic_fact::{InFact, NotInFact,IsCartFact, NotIsCartFact, IsTupleFact, NotIsTupleFact, AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact, SubsetFact, NotSubsetFact, SupersetFact, NotSupersetFact,
     LessFact, NotLessFact, GreaterFact, NotGreaterFact,
@@ -50,6 +51,7 @@ use stmt_result::StmtResult;
 use stmt_success::StmtSuccess;
 use stmt_success::{NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules};
 use stmt_unknown::StmtUnknown;
+use definitions::{DefHeader, DefPropStmt, DefLetStmt};
 fn main() {
     try_atom_fn_obj();
     try_arithmetic();
@@ -79,6 +81,7 @@ fn main() {
     try_or_fact_or_and_fact_or_specific_fact();
     try_subset_superset_fact();
     try_stmt_result();
+    try_definitions();
 }
 
 fn try_atom_fn_obj() {
@@ -153,7 +156,7 @@ fn try_stmt() {
         1,
         0,
     )))));
-    println!("{}", fact2.to_string());
+    println!("{}", fact2.str_with_line_file());
 }
 
 fn try_equal_literally() {
@@ -207,13 +210,13 @@ fn try_n_pos_obj() {
 }
 
 fn try_parameter_set() {
-    let parameter_set = ParameterSet::Set(SetAsParamSet::new());
+    let parameter_set = ParameterType::Set(SetAsParamSet::new());
     println!("{}", parameter_set);
-    let nonempty_parameter_set = ParameterSet::NonemptySet(NonemptySetAsParamSet::new());
+    let nonempty_parameter_set = ParameterType::NonemptySet(NonemptySetAsParamSet::new());
     println!("{}", nonempty_parameter_set);
-    let finite_parameter_set = ParameterSet::FiniteSet(FiniteSetAsParamSet::new());
+    let finite_parameter_set = ParameterType::FiniteSet(FiniteSetAsParamSet::new());
     println!("{}", finite_parameter_set);
-    let obj_parameter_set = ParameterSet::Obj(Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")));
+    let obj_parameter_set = ParameterType::Obj(Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")));
     println!("{}", obj_parameter_set);
 }
 
@@ -335,7 +338,7 @@ fn try_exist_fact() {
     let af1 = vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("a"), Obj::mk("b"), 1, 0))];
     let _true_exist = ExistFact::TrueExistFact(TrueExistFact::new(
         vec!["x".to_string()],
-        vec![ParameterSet::Set(SetAsParamSet::new())],
+        vec![ParameterType::Set(SetAsParamSet::new())],
         af1,
         1,
         0,
@@ -343,7 +346,7 @@ fn try_exist_fact() {
     let af2 = vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("a"), Obj::mk("b"), 1, 0))];
     let _not_exist = ExistFact::NotExistFact(NotExistFact::new(
         vec!["y".to_string()],
-        vec![ParameterSet::Set(SetAsParamSet::new())],
+        vec![ParameterType::Set(SetAsParamSet::new())],
         af2,
         2,
         0,
@@ -421,7 +424,7 @@ fn try_and_fact_or_spec_fact() {
 fn try_forall_fact() {
     let _forall = ForallFact::new(
         vec!["n".to_string()],
-        vec![ParameterSet::Set(SetAsParamSet::new())],
+        vec![ParameterType::Set(SetAsParamSet::new())],
         vec![],
         vec![SpecFact::AtomicFact(AtomicFact::EqualFact(
             EqualFact::new(Obj::mk("a"), Obj::mk("b"), 1, 0),
@@ -436,7 +439,7 @@ fn try_forall_fact() {
 fn try_forall_fact_with_iff() {
     let forall = ForallFact::new(
         vec!["n".to_string()],
-        vec![ParameterSet::Set(SetAsParamSet::new())],
+        vec![ParameterType::Set(SetAsParamSet::new())],
         vec![SpecFact::AtomicFact(AtomicFact::EqualFact(
             EqualFact::new(Obj::mk("a"), Obj::mk("b"), 1, 0),
         ))],
@@ -596,4 +599,27 @@ fn try_stmt_result() {
     let fact_verified_by_builtin_rules = FactVerifiedByBuiltinRules::new(&fact, "demo".to_string());
     let result = StmtResult::StmtSuccess(StmtSuccess::FactVerifiedByBuiltinRules(fact_verified_by_builtin_rules));
     println!("{}", result);
+}
+
+fn try_definitions() {
+    let def_header = DefHeader::new("f".to_string(), vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())]);
+    let def_prop_stmt = DefPropStmt::new(def_header, Some(vec![Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))))]), 1, 0);
+    println!("{}", def_prop_stmt.str_with_line_file());
+
+    let def_let_stmt = DefLetStmt::new(vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())], vec![Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))))], 1, 0);
+    println!("{}", def_let_stmt.str_with_line_file());
+
+    let def_header2 = DefHeader::new("f".to_string(), vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())]);
+    let def_prop_stmt2 = DefPropStmt::new(def_header2, None, 1, 0);
+    println!("{}", def_prop_stmt2.str_with_line_file());
 }
