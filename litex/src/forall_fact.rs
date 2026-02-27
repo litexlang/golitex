@@ -1,14 +1,14 @@
 use std::fmt;
 use crate::consts::{FORALL, COLON, RIGHT_ARROW};
 use crate::helper::{add_four_spaces_to_vec_at_beginning, add_four_spaces_to_str_at_beginning, str_with_line_file, vec_pair_to_string};
+use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::parameter_type::ParameterType;
-use crate::specific_fact::SpecFact;
 
 pub struct ForallFact {
     pub params: Vec<String>,
     pub param_types: Vec<ParameterType>,
-    pub dom_facts: Vec<SpecFact>,
-    pub then_facts: Vec<SpecFact>,
+    pub dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
+    pub then_facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub line: u32,
     pub file_index: usize,
 }
@@ -17,8 +17,8 @@ impl ForallFact {
     pub fn new(
         params: Vec<String>,
         param_sets: Vec<ParameterType>,
-        dom_facts: Vec<SpecFact>,
-        then_facts: Vec<SpecFact>,
+        dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
+        then_facts: Vec<OrFactOrAndFactOrSpecFact>,
         line: u32,
         file_index: usize,
     ) -> Self {
