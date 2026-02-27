@@ -7,8 +7,8 @@ use crate::forall_fact::ForallFact;
 use crate::forall_fact_with_iff::ForallFactWithIff;
 use crate::and_fact::AndFact;
 pub enum Fact {
-    AtomicFact(Box<AtomicFact>),
-    ExistFact(Box<ExistFact>),
+    AtomicFact(AtomicFact),
+    ExistFact(ExistFact),
     OrFact(OrFact),
     AndFact(AndFact),
     ForallFact(ForallFact),

@@ -1,6 +1,6 @@
 enum MatchableFact {
-    AtomicFact(Box<AtomicFact>),
-    ExistFact(Box<ExistFact>),
+    AtomicFact(AtomicFact),
+    ExistFact(ExistFact),
     AndFact(AndFact),
     OrFact(OrFact),
 }

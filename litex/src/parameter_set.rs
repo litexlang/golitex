@@ -1,12 +1,12 @@
 use std::fmt;
-use crate::obj::box_Obj;
+use crate::obj::Obj;
 use crate::consts::{SET, NONEMPTY_SET, FINITE_SET};
 
 pub enum ParameterSet {
     Set(SetAsParamSet),
     NonemptySet(NonemptySetAsParamSet),
     FiniteSet(FiniteSetAsParamSet),
-    Obj(box_Obj),
+    Obj(Obj),
 }
 
 pub struct SetAsParamSet {}
