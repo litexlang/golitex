@@ -34,8 +34,6 @@ claim:
 enum x {1,2,3,4,5,6}:
     x $in s
 
-$equal_set(s, {1,2,3,4,5,6})
-
 let s2 set
 know s2 = {1,2,3,4,5,6}
 $is_finite_set(s2)
@@ -50,8 +48,3 @@ enum x s2:
 4 $in s2
 5 $in s2
 6 $in s2
-
-# use forall directly
-
-forall x s2:
-    x = 1 or x = 2 or x = 3 or x = 4 or x = 5 or x = 6
