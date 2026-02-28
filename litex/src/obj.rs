@@ -49,6 +49,13 @@ pub enum Obj {
     ObjAtIndex(ObjAtIndex),
 }
 
+pub struct SetBuilderWithCartAsParentSet {
+    pub param: String,
+    pub param_set: Cart,
+    pub facts: Vec<AtomicFact>,
+}
+
+
 pub enum FnSetObj {
     FnSetWithoutParams(FnSetWithoutParams),
     FnSetWithParams(FnSetWithParams),
@@ -982,5 +989,17 @@ impl Obj {
 
     pub fn mk(s: &str) -> Obj {
         Obj::AtomWithoutPkg(AtomWithoutPkg::new(s))
+    }
+}
+
+impl SetBuilderWithCartAsParentSet {
+    pub fn new(param: String, param_set: Cart, facts: Vec<AtomicFact>) -> Self {
+        SetBuilderWithCartAsParentSet { param, param_set, facts }
+    }
+}
+
+impl fmt::Display for SetBuilderWithCartAsParentSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{} {}{} {}{}", LEFT_CURLY_BRACE, self.param, self.param_set,COLON, vec_to_string_join_by_comma(&self.facts), RIGHT_CURLY_BRACE)
     }
 }

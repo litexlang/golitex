@@ -1,8 +1,8 @@
 use crate::parameter_type::ParameterType;
 use crate::fact::{ Fact};
-use crate::obj::Obj;
+use crate::obj::{Obj, SetBuilderWithCartAsParentSet};
 use std::fmt;
-use crate::consts::{CASE, COLON, COMMA, CONSTRUCT, DOM, EQUAL, FN, HAVE, LET, PROP, RIGHT_ARROW, ST};
+use crate::consts::{AS, CASE, COLON, COMMA, CONSTRUCT, DOM, EQUAL, FN, HAVE, LET, PROP, RIGHT_ARROW, SET, ST};
 use crate::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, braced_pair_vec_to_string, braced_param_param_set_with_dom, braced_vec_to_string, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
 use crate::obj::FnSetWithParams;
 use crate::stmt::Stmt;
@@ -19,6 +19,15 @@ pub enum DefStmt {
     HaveObjStStmt(HaveObjStStmt),
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
+    HaveFnAsSetStmt(HaveFnAsSetStmt),
+}
+
+pub struct HaveFnAsSetStmt {
+    pub fn_set_with_params: FnSetWithParams,
+    pub equal_to_set: SetBuilderWithCartAsParentSet,
+    pub proof: Vec<Stmt>,
+    pub line: u32,
+    pub file_index: usize,
 }
 
 pub struct HaveFnEqualCaseByCaseStmt {
@@ -110,6 +119,7 @@ impl fmt::Display for DefStmt {
             DefStmt::HaveObjStStmt(have_obj_st_stmt) => write!(f, "{}", have_obj_st_stmt),
             DefStmt::HaveFnEqualStmt(have_fn_equal_stmt) => write!(f, "{}", have_fn_equal_stmt),
             DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt) => write!(f, "{}", have_fn_equal_case_by_case_stmt),
+            DefStmt::HaveFnAsSetStmt(have_fn_as_set_stmt) => write!(f, "{}", have_fn_as_set_stmt),
         }
     }
 }
@@ -168,6 +178,7 @@ impl DefStmt {
             DefStmt::HaveObjStStmt(have_obj_st_stmt) => (have_obj_st_stmt.line, have_obj_st_stmt.file_index),
             DefStmt::HaveFnEqualStmt(have_fn_equal_stmt) => (have_fn_equal_stmt.line, have_fn_equal_stmt.file_index),
             DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt) => (have_fn_equal_case_by_case_stmt.line, have_fn_equal_case_by_case_stmt.file_index),
+            DefStmt::HaveFnAsSetStmt(have_fn_as_set_stmt) => (have_fn_as_set_stmt.line, have_fn_as_set_stmt.file_index),
         }
     }
 }
@@ -282,5 +293,20 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
 impl HaveFnEqualCaseByCaseStmt {
     pub fn new(fn_set_with_params: FnSetWithParams, cases: Vec<AndFactOrSpecFact>, equal_tos: Vec<Obj>, line: u32, file_index: usize) -> Self {
         HaveFnEqualCaseByCaseStmt { fn_set_with_params, cases, equal_tos, line, file_index }
+    }
+}
+
+impl HaveFnAsSetStmt {
+    pub fn new(fn_set_with_params: FnSetWithParams, equal_to_set: SetBuilderWithCartAsParentSet, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
+        HaveFnAsSetStmt { fn_set_with_params, equal_to_set, proof, line, file_index }
+    }
+}
+
+impl fmt::Display for HaveFnAsSetStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.proof.len() {
+            0 => write!(f, "{} {} {} {} {} {} {}", HAVE, FN, AS, SET, self.fn_set_with_params, EQUAL, self.equal_to_set),
+            _ => write!(f, "{} {} {} {} {} {} {}{}\n{}", HAVE, FN, AS, SET, self.fn_set_with_params, EQUAL, self.equal_to_set, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)),
+        }
     }
 }
