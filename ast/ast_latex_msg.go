@@ -512,62 +512,62 @@ func (s *ProveCaseByCaseStmt) ToLatexString() string {
 // 	return builder.String()
 // }
 
-func (s *KnowInferStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\text{know } \\text{infer } ")
-	builder.WriteString(strObjSetPairsLatexString(s.Params, s.ParamSets))
+// func (s *KnowInferStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString("\\text{know } \\text{infer } ")
+// 	builder.WriteString(strObjSetPairsLatexString(s.Params, s.ParamSets))
 
-	if len(s.DomFacts) > 0 {
-		builder.WriteString(", ")
-		domFactStrSlice := make([]string, len(s.DomFacts))
-		for i := range len(s.DomFacts) {
-			domFactStrSlice[i] = s.DomFacts[i].ToLatexString()
-		}
+// 	if len(s.DomFacts) > 0 {
+// 		builder.WriteString(", ")
+// 		domFactStrSlice := make([]string, len(s.DomFacts))
+// 		for i := range len(s.DomFacts) {
+// 			domFactStrSlice[i] = s.DomFacts[i].ToLatexString()
+// 		}
 
-		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
-			builder.WriteString(" ")
-			builder.WriteString(strings.Join(domFactStrSlice, ", "))
-			builder.WriteString(" ")
-		} else {
-			builder.WriteString("\n\n")
-			builder.WriteString(strings.Join(domFactStrSlice, "\n\n"))
-			builder.WriteString("\n\n")
-		}
-	} else {
-		builder.WriteString(" ")
-	}
+// 		if ShouldInSingleLineAsLatexString(domFactStrSlice) {
+// 			builder.WriteString(" ")
+// 			builder.WriteString(strings.Join(domFactStrSlice, ", "))
+// 			builder.WriteString(" ")
+// 		} else {
+// 			builder.WriteString("\n\n")
+// 			builder.WriteString(strings.Join(domFactStrSlice, "\n\n"))
+// 			builder.WriteString("\n\n")
+// 		}
+// 	} else {
+// 		builder.WriteString(" ")
+// 	}
 
-	builder.WriteString("$\\Rightarrow$")
-	thenFactStrSlice := make([]string, len(s.ThenFacts))
-	for i := range len(s.ThenFacts) {
-		thenFactStrSlice[i] = s.ThenFacts[i].ToLatexString()
-	}
+// 	builder.WriteString("$\\Rightarrow$")
+// 	thenFactStrSlice := make([]string, len(s.ThenFacts))
+// 	for i := range len(s.ThenFacts) {
+// 		thenFactStrSlice[i] = s.ThenFacts[i].ToLatexString()
+// 	}
 
-	if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
-		builder.WriteString(" ")
-		builder.WriteString(strings.Join(thenFactStrSlice, ", "))
-	} else {
-		builder.WriteString("\n\n")
-		builder.WriteString(strings.Join(thenFactStrSlice, "\n\n"))
-	}
+// 	if ShouldInSingleLineAsLatexString(thenFactStrSlice) {
+// 		builder.WriteString(" ")
+// 		builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+// 	} else {
+// 		builder.WriteString("\n\n")
+// 		builder.WriteString(strings.Join(thenFactStrSlice, "\n\n"))
+// 	}
 
-	if len(s.IfFacts) > 0 {
-		builder.WriteString(" \\text{ if } ")
-		ifFactStrSlice := make([]string, len(s.IfFacts))
-		for i := range len(s.IfFacts) {
-			ifFactStrSlice[i] = s.IfFacts[i].ToLatexString()
-		}
+// 	if len(s.IfFacts) > 0 {
+// 		builder.WriteString(" \\text{ if } ")
+// 		ifFactStrSlice := make([]string, len(s.IfFacts))
+// 		for i := range len(s.IfFacts) {
+// 			ifFactStrSlice[i] = s.IfFacts[i].ToLatexString()
+// 		}
 
-		if ShouldInSingleLineAsLatexString(ifFactStrSlice) {
-			builder.WriteString(strings.Join(ifFactStrSlice, ", "))
-		} else {
-			builder.WriteString("\n\n")
-			builder.WriteString(strings.Join(ifFactStrSlice, "\n\n"))
-		}
-	}
+// 		if ShouldInSingleLineAsLatexString(ifFactStrSlice) {
+// 			builder.WriteString(strings.Join(ifFactStrSlice, ", "))
+// 		} else {
+// 			builder.WriteString("\n\n")
+// 			builder.WriteString(strings.Join(ifFactStrSlice, "\n\n"))
+// 		}
+// 	}
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
 func (s *OrStmt) ToLatexString() string {
 	factStrSlice := make([]string, len(s.Facts))
@@ -589,40 +589,40 @@ func (s *OrStmt) ToLatexString() string {
 // 	return strings.Join(domFactStrSlice, ", ") + " \\Rightarrow " + strings.Join(thenFactStrSlice, ", ")
 // }
 
-func (s *InferTemplateStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString("\\text{imply} ")
+// func (s *InferTemplateStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString("\\text{imply} ")
 
-	// Params
-	if len(s.Params) > 0 {
-		paramStrings := make([]string, len(s.Params))
-		for i, param := range s.Params {
-			paramStrings[i] = param
-			if i < len(s.ParamSets) {
-				paramStrings[i] += " " + s.ParamSets[i].ToLatexString()
-			}
-		}
-		builder.WriteString(strings.Join(paramStrings, ", "))
-		builder.WriteString(": ")
-	}
+// 	// Params
+// 	if len(s.Params) > 0 {
+// 		paramStrings := make([]string, len(s.Params))
+// 		for i, param := range s.Params {
+// 			paramStrings[i] = param
+// 			if i < len(s.ParamSets) {
+// 				paramStrings[i] += " " + s.ParamSets[i].ToLatexString()
+// 			}
+// 		}
+// 		builder.WriteString(strings.Join(paramStrings, ", "))
+// 		builder.WriteString(": ")
+// 	}
 
-	// DomFacts
-	domFactStrSlice := make([]string, len(s.DomFacts))
-	for i, fact := range s.DomFacts {
-		domFactStrSlice[i] = fact.ToLatexString()
-	}
-	builder.WriteString(strings.Join(domFactStrSlice, ", "))
-	builder.WriteString(" \\Rightarrow ")
+// 	// DomFacts
+// 	domFactStrSlice := make([]string, len(s.DomFacts))
+// 	for i, fact := range s.DomFacts {
+// 		domFactStrSlice[i] = fact.ToLatexString()
+// 	}
+// 	builder.WriteString(strings.Join(domFactStrSlice, ", "))
+// 	builder.WriteString(" \\Rightarrow ")
 
-	// ThenFacts
-	thenFactStrSlice := make([]string, len(s.ThenFacts))
-	for i, fact := range s.ThenFacts {
-		thenFactStrSlice[i] = fact.ToLatexString()
-	}
-	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+// 	// ThenFacts
+// 	thenFactStrSlice := make([]string, len(s.ThenFacts))
+// 	for i, fact := range s.ThenFacts {
+// 		thenFactStrSlice[i] = fact.ToLatexString()
+// 	}
+// 	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
 
-	return builder.String()
-}
+// 	return builder.String()
+// }
 
 func (s *ImportDirStmt) ToLatexString() string {
 	var builder strings.Builder

@@ -112,3 +112,7 @@ pub const EVAL: &str = "eval";
 pub const FOR: &str = "for";
 
 pub const WITNESS: &str = "witness";
+
+pub const EQUAL_SET: &str = "equal_set";
+
+pub const IMPOSSIBLE: &str = "impossible";

@@ -379,27 +379,27 @@ type WitnessStmt struct {
 // 	Line uint
 // }
 
-type InferTemplateStmt struct {
-	Params    StrSlice
-	ParamSets ObjSlice
-	DomFacts  ReversibleFacts
-	ThenFacts ReversibleFacts
-	Proof     StmtSlice
+// type InferTemplateStmt struct {
+// 	Params    StrSlice
+// 	ParamSets ObjSlice
+// 	DomFacts  ReversibleFacts
+// 	ThenFacts ReversibleFacts
+// 	Proof     StmtSlice
 
-	IfFacts FactStmtSlice
+// 	IfFacts FactStmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
-type KnowInferStmt struct {
-	Params    StrSlice
-	ParamSets ObjSlice
-	DomFacts  ReversibleFacts
-	ThenFacts ReversibleFacts
-	IfFacts   FactStmtSlice
+// type KnowInferStmt struct {
+// 	Params    StrSlice
+// 	ParamSets ObjSlice
+// 	DomFacts  ReversibleFacts
+// 	ThenFacts ReversibleFacts
+// 	IfFacts   FactStmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type EqualSetStmt struct {
 	Left   Obj
