@@ -24,18 +24,18 @@ mod definition_stmt;
 mod claim_stmt;
 mod know_stmt;
 mod proof_techniques_stmt;
-mod import_stmt;
 mod prove_stmt;
 mod run_file_stmt;
+mod tooling_stmt;
 use prove_stmt::{ProveStmt};
 use run_file_stmt::{RunFileStmt};
-use proof_techniques_stmt::{ProveCaseByCase, ProveByContradictionStmt, ProofTechnique, ProveByEnumerationStmt};
-use definition_stmt::DefStmt;
+use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalPkgStmt, ClearStmt, DoNothingStmt};
+use proof_techniques_stmt::{ProveCaseByCase, ProveByContradictionStmt, ProofTechnique, ProveByEnumerationStmt, ProveByInductionStmt};
+use definition_stmt::{DefStmt, HaveObjInNonemptySetStmt};
 use claim_stmt::{ClaimProveStmt};
 use and_fact::AndFact;
 use and_fact_or_specific_fact::AndFactOrSpecFact;
 use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
-use import_stmt::{ImportRelativePathStmt, ImportGlobalPkgStmt, ImportStmt};
 use atom::{AtomWithoutPkg, AtomWithPkg, Atom};
 use obj::{
     Obj, FnObj, Number, Add, Sub, Mul, Div, Mod, Pow,
@@ -104,6 +104,9 @@ fn main() {
     try_prove_stmt();
     try_run_file_stmt();
     try_prove_by_enumeration_stmt();
+    try_have_obj_in_nonempty_set_stmt();
+    try_tooling_stmt();
+    try_prove_by_induction_stmt();
 }
 
 fn try_atom_fn_obj() {
@@ -728,10 +731,10 @@ fn try_import_stmt() {
     let import_global_pkg_stmt = ImportGlobalPkgStmt::new("pkg", "pkg", 1, 0);
     println!("{}", import_global_pkg_stmt);
 
-    let stmt = Stmt::ImportStmt(ImportStmt::ImportRelativePath(import_relative_path_stmt));
+    let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportRelativePath(import_relative_path_stmt)));
     println!("{}", stmt);
 
-    let stmt = Stmt::ImportStmt(ImportStmt::ImportGlobalPkg(import_global_pkg_stmt));
+    let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportGlobalPkg(import_global_pkg_stmt)));
     println!("{}", stmt);
 }
 
@@ -766,9 +769,73 @@ fn try_prove_by_enumeration_stmt() {
         1,
         0,
     )))))];
-    let prove_by_enumeration_stmt = ProveByEnumerationStmt::new(params, param_sets, proof, 1, 0);
+
+    let to_prove = vec![Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))))];
+    
+    let prove_by_enumeration_stmt = ProveByEnumerationStmt::new(params, param_sets, to_prove, proof, 1, 0);
     println!("{}", prove_by_enumeration_stmt);
 
     let stmt = Stmt::ProofTechnique(ProofTechnique::ProveByEnumeration(prove_by_enumeration_stmt));
+    println!("{}", stmt);
+}
+
+fn try_have_obj_in_nonempty_set_stmt() {
+    let have_obj_in_nonempty_set_stmt = HaveObjInNonemptySetStmt::new(vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())], 1, 0);
+    println!("{}", have_obj_in_nonempty_set_stmt);
+
+    let stmt = Stmt::DefStmt(DefStmt::HaveObjInNonemptySetStmt(have_obj_in_nonempty_set_stmt));
+    println!("{}", stmt);
+}
+
+fn try_tooling_stmt() {
+    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/pkg", "pkg", 1, 0);
+    println!("{}", import_relative_path_stmt);
+
+    let import_global_pkg_stmt = ImportGlobalPkgStmt::new("pkg", "pkg", 1, 0);
+    println!("{}", import_global_pkg_stmt);
+
+    let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportRelativePath(import_relative_path_stmt)));
+    println!("{}", stmt);
+
+    let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportGlobalPkg(import_global_pkg_stmt)));
+    println!("{}", stmt);
+
+    let clear_stmt = ClearStmt::new(1, 0);
+    println!("{}", clear_stmt);
+
+    let stmt = Stmt::ToolingStmt(ToolingStmt::Clear(clear_stmt));
+    println!("{}", stmt);
+
+    let do_nothing_stmt = DoNothingStmt::new(1, 0);
+    println!("{}", do_nothing_stmt);
+
+    let stmt = Stmt::ToolingStmt(ToolingStmt::DoNothing(do_nothing_stmt));
+    println!("{}", stmt);
+}
+
+fn try_prove_by_induction_stmt() {
+    let fact = vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))))];
+    let param = "x".to_string();
+    let proof = vec![Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    )))))];
+    let induc_from = Obj::mk("N");
+    let prove_by_induction_stmt = ProveByInductionStmt::new(fact, param, proof, induc_from, 1, 0);
+    println!("{}", prove_by_induction_stmt);
+
+    let stmt = Stmt::ProofTechnique(ProofTechnique::ProveByInduction(prove_by_induction_stmt));
     println!("{}", stmt);
 }

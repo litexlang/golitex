@@ -1,5 +1,11 @@
 use std::fmt;
-use crate::consts::{IMPORT, DOUBLE_QUOTE, AS};
+use crate::consts::{CLEAR, DO_NOTHING, IMPORT, DOUBLE_QUOTE, AS};
+
+pub enum ToolingStmt {
+    Import(ImportStmt),
+    Clear(ClearStmt),
+    DoNothing(DoNothingStmt),
+}
 
 pub enum ImportStmt {
     ImportRelativePath(ImportRelativePathStmt),
@@ -62,3 +68,56 @@ impl ImportStmt {
     }
 }
 
+pub struct DoNothingStmt {
+    pub line: u32,
+    pub file_index: usize,
+}
+
+pub struct ClearStmt {
+    pub line: u32,
+    pub file_index: usize,
+}
+
+impl fmt::Display for ToolingStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ToolingStmt::Import(import_stmt) => write!(f, "{}", import_stmt),
+            ToolingStmt::Clear(clear_stmt) => write!(f, "{}", clear_stmt),
+            ToolingStmt::DoNothing(do_nothing_stmt) => write!(f, "{}", do_nothing_stmt),
+        }
+    }
+}
+
+impl ToolingStmt {
+    pub fn line_file(&self) -> (u32, usize) {
+        match self {
+            ToolingStmt::Import(import_stmt) => import_stmt.line_file(),
+            ToolingStmt::Clear(clear_stmt) => (clear_stmt.line, clear_stmt.file_index),
+            ToolingStmt::DoNothing(do_nothing_stmt) => (do_nothing_stmt.line, do_nothing_stmt.file_index),
+        }
+    }
+}
+
+impl ClearStmt {
+    pub fn new(line: u32, file_index: usize) -> Self {
+        ClearStmt { line, file_index }
+    }
+}
+
+impl fmt::Display for ClearStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", CLEAR)
+    }
+}
+
+impl DoNothingStmt {
+    pub fn new(line: u32, file_index: usize) -> Self {
+        DoNothingStmt { line, file_index }
+    }
+}
+
+impl fmt::Display for DoNothingStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", DO_NOTHING)
+    }
+}
