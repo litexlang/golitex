@@ -10,7 +10,7 @@ pub fn curly_braced_vec_to_string<T: fmt::Display>(vec: &Vec<T>) -> String {
 }
 
 /// 使用自定义分隔符
-fn vec_to_string_with_sep<T: fmt::Display>(vec: &Vec<T>, sep: &str) -> String {
+pub fn vec_to_string_with_sep<T: fmt::Display>(vec: &Vec<T>, sep: &str) -> String {
     vec.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(sep)
 }
 
@@ -34,19 +34,23 @@ pub fn add_four_spaces_to_vec_at_beginning<A: fmt::Display>(facts: &Vec<A>, numb
     facts.iter().map(|fact| format!("{}{}", "    ".repeat(number_of_four_spaces), fact)).collect::<Vec<String>>().join("\n")
 }
 
-pub fn add_four_spaces_to_str_at_beginning(facts: &str, number_of_four_spaces: usize) -> String {
-    format!("{}{}", "    ".repeat(number_of_four_spaces), facts)
+pub fn to_string_and_add_four_spaces_at_beginning_of_each_line<T: fmt::Display>(fact: &T, number_of_four_spaces: usize) -> String {
+    fact.to_string().split("\n").map(|fact| format!("{}{}", "    ".repeat(number_of_four_spaces), fact)).collect::<Vec<String>>().join("\n")
 }
 
 pub fn curly_braced_vec_to_string_with_sep<T: fmt::Display>(vec: &Vec<T>, sep: &str) -> String {
     format!("{}{}{}", LEFT_CURLY_BRACE, vec_to_string_with_sep(vec, sep), RIGHT_CURLY_BRACE)
 }
 
-pub fn vec_to_string<T: fmt::Display>(vec: &Vec<T>) -> String {
+pub fn vec_to_string_join_by_comma<T: fmt::Display>(vec: &Vec<T>) -> String {
     vec.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(", ")
 }
 
 pub fn on_line_in_file_colon(line: u32, file_index: usize) -> String {
     _ = file_index;
     format!("on line {}:", line)
+}
+
+pub fn vec_to_str_add_four_spaces_at_beginning_of_each_line<T: fmt::Display>(vec: &Vec<T>, number_of_four_spaces: usize) -> String {
+    to_string_and_add_four_spaces_at_beginning_of_each_line(&vec_to_string_with_sep(vec, "\n"), number_of_four_spaces)
 }
