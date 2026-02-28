@@ -132,18 +132,20 @@ func (ver *Verifier) verUniFact_useInfer(oldStmt *ast.UniFactStmt, state *VerSta
 		return ast.NewErrVerRet(oldStmt).AddExtraInfo(ret.String())
 	}
 
-	// 2. 把uni变成 inferStmt，然后执行inferStmt
-	inferStmt := ast.NewImplyStmt(domFactsReversible, thenFactsReversible, oldStmt.Line)
-	exec := NewExecutor(ver.Env)
-	execRet := exec.inferStmt(inferStmt)
+	return ast.NewUnknownVerRet(oldStmt)
 
-	if execRet.IsErr() {
-		return ast.NewErrVerRet(oldStmt).AddExtraInfo(execRet.String())
-	} else if execRet.IsTrue() {
-		return ast.NewTrueVerRet(oldStmt, nil, "")
-	} else {
-		return ast.NewUnknownVerRet(oldStmt)
-	}
+	// 2. 把uni变成 inferStmt，然后执行inferStmt
+	// inferStmt := ast.NewImplyStmt(domFactsReversible, thenFactsReversible, oldStmt.Line)
+	// exec := NewExecutor(ver.Env)
+	// execRet := exec.inferStmt(inferStmt)
+
+	// if execRet.IsErr() {
+	// 	return ast.NewErrVerRet(oldStmt).AddExtraInfo(execRet.String())
+	// } else if execRet.IsTrue() {
+	// 	return ast.NewTrueVerRet(oldStmt, nil, "")
+	// } else {
+	// 	return ast.NewUnknownVerRet(oldStmt)
+	// }
 }
 
 func (ver *Verifier) uniFact_checkThenFacts(stmt *ast.UniFactStmt, state *VerState) ast.VerRet {

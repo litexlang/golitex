@@ -110,3 +110,5 @@ pub const CONSTRUCT: &str = "construct";
 pub const EVAL: &str = "eval";
 
 pub const FOR: &str = "for";
+
+pub const WITNESS: &str = "witness";

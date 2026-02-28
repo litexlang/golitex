@@ -2309,7 +2309,7 @@ func (p *TbParser) factOrFactInferStmt(tb *tokenBlock) (Stmt, error) {
 				return nil, ErrInLine(fmt.Errorf("expect at least one fact after '=>' in imply statement"), tb)
 			}
 
-			return NewImplyStmt(domFacts, thenFacts, tb.line), nil
+			return nil, ErrInLine(fmt.Errorf("expect at least one fact after '=>' in imply statement"), tb)
 		} else {
 			return specFactOrOrFact, nil
 		}

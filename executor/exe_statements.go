@@ -111,8 +111,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ast.StmtRet {
 		execRet = exec.haveObjStStmt(stmt)
 	case *ast.WitnessStmt:
 		execRet = exec.proveExistStmt(stmt)
-	case *ast.InferStmt:
-		execRet = exec.inferStmt(stmt)
+	// case *ast.InferStmt:
+	// 	execRet = exec.inferStmt(stmt)
 	// case *ast.InferTemplateStmt:
 	// 	execRet = exec.inferTemplateStmt(stmt)
 	case *ast.SetIsFnStmt:

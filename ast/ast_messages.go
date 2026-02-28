@@ -690,21 +690,21 @@ func (stmt *OrStmt) String() string {
 	return builder.String()
 }
 
-func (stmt *InferStmt) String() string {
-	var builder strings.Builder
-	domFactStrSlice := make([]string, len(stmt.DomFacts))
-	for i, fact := range stmt.DomFacts {
-		domFactStrSlice[i] = fact.String()
-	}
-	builder.WriteString(strings.Join(domFactStrSlice, ", "))
-	builder.WriteString(" => ")
-	thenFactStrSlice := make([]string, len(stmt.ThenFacts))
-	for i, fact := range stmt.ThenFacts {
-		thenFactStrSlice[i] = fact.String()
-	}
-	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
-	return builder.String()
-}
+// func (stmt *InferStmt) String() string {
+// 	var builder strings.Builder
+// 	domFactStrSlice := make([]string, len(stmt.DomFacts))
+// 	for i, fact := range stmt.DomFacts {
+// 		domFactStrSlice[i] = fact.String()
+// 	}
+// 	builder.WriteString(strings.Join(domFactStrSlice, ", "))
+// 	builder.WriteString(" => ")
+// 	thenFactStrSlice := make([]string, len(stmt.ThenFacts))
+// 	for i, fact := range stmt.ThenFacts {
+// 		thenFactStrSlice[i] = fact.String()
+// 	}
+// 	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+// 	return builder.String()
+// }
 
 // func (stmt *InferTemplateStmt) String() string {
 // 	var builder strings.Builder

@@ -28,9 +28,9 @@ func NewDefPropStmt(defHeader *DefHeader, iffFacts []FactStmt, thenFacts []Spec_
 	return &DefPropStmt{defHeader, iffFacts, thenFacts, line}
 }
 
-func NewImplyStmt(domFacts []Spec_OrFact, thenFacts []Spec_OrFact, line uint) *InferStmt {
-	return &InferStmt{domFacts, thenFacts, line}
-}
+// func NewImplyStmt(domFacts []Spec_OrFact, thenFacts []Spec_OrFact, line uint) *InferStmt {
+// 	return &InferStmt{domFacts, thenFacts, line}
+// }
 
 func NewClaimProveByContradictionStmt(toCheckFact Spec_OrFact, proofs []Stmt, line uint) *ClaimProveByContradictionStmt {
 	return &ClaimProveByContradictionStmt{toCheckFact, proofs, line}
