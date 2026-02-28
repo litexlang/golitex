@@ -195,11 +195,11 @@ type DoNothingStmt struct {
 	Line uint
 }
 
-type InlineFactsStmt struct {
-	Facts FactStmtSlice
+// type InlineFactsStmt struct {
+// 	Facts FactStmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type ProveByInductionStmt struct {
 	Fact  Spec_OrFact

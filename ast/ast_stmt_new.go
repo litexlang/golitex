@@ -163,9 +163,9 @@ func NewDoNothingStmt(line uint) *DoNothingStmt {
 	return &DoNothingStmt{line}
 }
 
-func NewInlineFactsStmt(facts []FactStmt, line uint) *InlineFactsStmt {
-	return &InlineFactsStmt{facts, line}
-}
+// func NewInlineFactsStmt(facts []FactStmt, line uint) *InlineFactsStmt {
+// 	return &InlineFactsStmt{facts, line}
+// }
 
 func NewProveByInductionStmt(fact Spec_OrFact, param string, proof StmtSlice, inducFrom Obj, line uint) *ProveByInductionStmt {
 	return &ProveByInductionStmt{fact, param, proof, inducFrom, line}

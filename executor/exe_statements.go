@@ -70,8 +70,8 @@ func (exec *Executor) Stmt(stmt ast.Stmt) ast.StmtRet {
 		execRet = exec.ClearStmt()
 	case *ast.DoNothingStmt:
 		execRet = exec.DoNothingStmt()
-	case *ast.InlineFactsStmt:
-		execRet = exec.inlineFactsStmt(stmt)
+	// case *ast.InlineFactsStmt:
+	// 	execRet = exec.inlineFactsStmt(stmt)
 	case *ast.ProveByInductionStmt:
 		execRet = exec.proveByInductionStmt(stmt)
 	case *ast.HaveObjEqualStmt:
@@ -431,21 +431,21 @@ func (exec *Executor) DoNothingStmt() ast.StmtRet {
 	return newTrueStmtRetWithCaller()
 }
 
-func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) ast.StmtRet {
-	verifyProcessMsgs := []ast.VerRet{}
+// func (exec *Executor) inlineFactsStmt(stmt *ast.InlineFactsStmt) ast.StmtRet {
+// 	verifyProcessMsgs := []ast.VerRet{}
 
-	for _, fact := range stmt.Facts {
-		execState := exec.factStmt(fact)
-		if execState.IsNotTrue() {
-			return execState
-		}
-		if trueRet, ok := execState.(*ast.TrueStmtRet); ok {
-			verifyProcessMsgs = append(verifyProcessMsgs, trueRet.VerifyProcess...)
-		}
-	}
+// 	for _, fact := range stmt.Facts {
+// 		execState := exec.factStmt(fact)
+// 		if execState.IsNotTrue() {
+// 			return execState
+// 		}
+// 		if trueRet, ok := execState.(*ast.TrueStmtRet); ok {
+// 			verifyProcessMsgs = append(verifyProcessMsgs, trueRet.VerifyProcess...)
+// 		}
+// 	}
 
-	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs)
-}
+// 	return exec.NewTrueStmtRet(stmt).AddVerifyProcesses(verifyProcessMsgs)
+// }
 
 func (exec *Executor) Verify(fact ast.FactStmt) ast.StmtRet {
 	ver := NewVerifier(exec.Env)

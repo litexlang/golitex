@@ -655,13 +655,13 @@ func (stmt *DoNothingStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	return stmt, nil
 }
 
-func (stmt *InlineFactsStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
-	newFacts, err := stmt.Facts.InstantiateFact(uniMap)
-	if err != nil {
-		return nil, err
-	}
-	return NewInlineFactsStmt(newFacts, stmt.Line), nil
-}
+// func (stmt *InlineFactsStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
+// 	newFacts, err := stmt.Facts.InstantiateFact(uniMap)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return NewInlineFactsStmt(newFacts, stmt.Line), nil
+// }
 
 func (stmt *ProveByInductionStmt) Instantiate(uniMap map[string]Obj) (Stmt, error) {
 	newFact, err := stmt.Fact.InstantiateFact(uniMap)
