@@ -16,6 +16,15 @@ pub enum DefStmt {
     LetFnStmt(LetFnStmt),
     HaveFnStmt(HaveFnStmt),
     HaveObjStStmt(HaveObjStStmt),
+    HaveFnEqualStmt(HaveFnEqualStmt),
+}
+
+pub struct HaveFnEqualStmt {
+    pub fn_set_with_params: FnSetWithParams,
+    pub equal_to: Obj,
+    pub proof: Vec<Stmt>,
+    pub line: u32,
+    pub file_index: usize,
 }
 
 pub struct HaveObjStStmt {
@@ -86,6 +95,7 @@ impl fmt::Display for DefStmt {
             DefStmt::LetFnStmt(let_fn_stmt) => write!(f, "{}", let_fn_stmt),
             DefStmt::HaveFnStmt(have_fn_stmt) => write!(f, "{}", have_fn_stmt),
             DefStmt::HaveObjStStmt(have_obj_st_stmt) => write!(f, "{}", have_obj_st_stmt),
+            DefStmt::HaveFnEqualStmt(have_fn_equal_stmt) => write!(f, "{}", have_fn_equal_stmt),
         }
     }
 }
@@ -142,6 +152,7 @@ impl DefStmt {
             DefStmt::LetFnStmt(let_fn_stmt) => (let_fn_stmt.line, let_fn_stmt.file_index),
             DefStmt::HaveFnStmt(have_fn_stmt) => (have_fn_stmt.line, have_fn_stmt.file_index),
             DefStmt::HaveObjStStmt(have_obj_st_stmt) => (have_obj_st_stmt.line, have_obj_st_stmt.file_index),
+            DefStmt::HaveFnEqualStmt(have_fn_equal_stmt) => (have_fn_equal_stmt.line, have_fn_equal_stmt.file_index),
         }
     }
 }
@@ -224,5 +235,20 @@ impl HaveObjStStmt {
 impl fmt::Display for HaveObjStStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {} {} {}", HAVE, vec_pair_to_string(&self.names, &self.param_types), ST, vec_to_string_join_by_comma(&self.obj_st))
+    }
+}
+
+impl HaveFnEqualStmt {
+    pub fn new(fn_set_with_params: FnSetWithParams, equal_to: Obj, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
+        HaveFnEqualStmt { fn_set_with_params, equal_to, proof, line, file_index }
+    }
+}
+
+impl fmt::Display for HaveFnEqualStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.proof.len() {
+            0 => write!(f, "{} {} {} {}", HAVE, self.fn_set_with_params, EQUAL, self.equal_to),
+            _ => write!(f, "{} {} {} {}{}\n{}", HAVE, self.fn_set_with_params, EQUAL, self.equal_to, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2)),
+        }
     }
 }
