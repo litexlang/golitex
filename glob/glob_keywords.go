@@ -79,8 +79,7 @@ const (
 	KeywordWitnessNonempty = "witness_nonempty"
 	KeywordEqualSet        = "equal_set"
 
-	KeywordFn    = "fn"
-	KeywordFnSet = "fn_set"
+	KeywordFn = "fn"
 
 	KeywordClaim      = "claim"
 	KeywordProve      = "prove"
@@ -161,7 +160,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordFiniteSet: {},
 	KeywordEnum:      {},
 	// KeywordItemExistsIn: {},
-	KeywordFnSet:         {},
 	KeywordNPos:          {},
 	KeywordLet:           {},
 	KeywordClear:         {},
@@ -436,7 +434,6 @@ var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struc
 	KeywordCount:          {},
 	KeywordFiniteSet:      {},
 	KeywordEnum:           {},
-	KeywordFnSet:          {},
 	KeywordNPos:           {},
 	KeywordLet:            {},
 	KeywordClear:          {},

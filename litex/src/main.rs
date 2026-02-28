@@ -32,6 +32,7 @@ use obj::{
     ListSet, SetBuilder, FnSetWithoutParams, FnSetWithParams,
     NPosObj, NObj, QObj, ZObj, RObj, InstSetTemplateObj,
     Cart, SetDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choice,
+    ObjAtIndex,
 };
 use parameter_type::{ParameterType, SetAsParamSet, NonemptySetAsParamSet, FiniteSetAsParamSet};
 use stmt::{Stmt};
@@ -83,6 +84,7 @@ fn main() {
     try_subset_superset_fact();
     try_stmt_result();
     try_definitions();
+    try_obj_at_index();
 }
 
 fn try_atom_fn_obj() {
@@ -639,4 +641,9 @@ fn try_definitions() {
     let def_header2 = DefHeader::new("f".to_string(), vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())]);
     let def_prop_stmt2 = DefPropStmt::new(def_header2, None, 1, 0);
     println!("{}", def_prop_stmt2);
+}
+
+fn try_obj_at_index() {
+    let obj = Obj::ObjAtIndex(ObjAtIndex::new(Obj::mk("a"), Obj::mk("b")));
+    println!("{}", obj);
 }
