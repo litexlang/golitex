@@ -89,10 +89,6 @@ func IsANewPropMsg(prop string) string {
 // 	return fmt.Sprintf("%s is a new %s", existProp, KeywordExistProp)
 // }
 
-func IsANewFnSetMsg(fnSet string) string {
-	return fmt.Sprintf("%s is a new %s", fnSet, KeywordFnSet)
-}
-
 func VerifyProcessMsgs(msgs []string) string {
 	if len(msgs) == 0 {
 		return ""

@@ -1,5 +1,5 @@
 use crate::consts::{
-    ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_BRACE, LEFT_CURLY_BRACE, MOD, MUL, N, N_POS, PKG_SEPARATOR, POW, POWER_SET, PROJ, Q, R, RANGE, RIGHT_BRACE, RIGHT_CURLY_BRACE, SET_DIM, SET_MINUS, SUB, UNION, VAL, Z
+    ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_BRACE, LEFT_CURLY_BRACE, LEFT_BRACKET, MOD, MUL, N, N_POS, PKG_SEPARATOR, POW, POWER_SET, PROJ, Q, R, RANGE, RIGHT_BRACE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB, UNION, VAL, Z
 };
 use std::fmt;
 use crate::helper::{braced_string, braced_two_strings, braced_vec_to_string, curly_braced_vec_to_string, vec_pair_to_string, vec_to_string};
@@ -45,6 +45,12 @@ pub enum Obj {
     Val(Val),
     PowerSet(PowerSet),
     Choice(Choice),
+    ObjAtIndex(ObjAtIndex),
+}
+
+pub struct ObjAtIndex {
+    pub obj: Box<Obj>,
+    pub index: Box<Obj>,
 }
 
 pub struct Choice {
@@ -213,6 +219,15 @@ pub struct InstSetTemplateObj {
 
 pub struct Cart {
     pub args: Vec<Box<Obj>>,
+}
+
+impl ObjAtIndex {
+    pub fn new(obj: Obj, index: Obj) -> Self {
+        ObjAtIndex {
+            obj: Box::new(obj),
+            index: Box::new(index),
+        }
+    }
 }
 
 impl FnObj {
@@ -545,7 +560,14 @@ impl fmt::Display for Obj {
             Obj::Val(val) => write!(f, "{}", val),
             Obj::PowerSet(power_set) => write!(f, "{}", power_set),
             Obj::Choice(choice) => write!(f, "{}", choice),
+            Obj::ObjAtIndex(obj_at_index) => write!(f, "{}", obj_at_index),
         }
+    }
+}
+
+impl fmt::Display for ObjAtIndex {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}{}", self.obj, LEFT_BRACKET, self.index, RIGHT_BRACKET)
     }
 }
 
@@ -950,6 +972,10 @@ impl Obj {
             },
             Obj::Choice(a) => match right {
                 Obj::Choice(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::ObjAtIndex(a) => match right {
+                Obj::ObjAtIndex(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
         }
