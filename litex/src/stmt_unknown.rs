@@ -9,7 +9,8 @@ pub struct StmtUnknown<'a> {
 
 impl<'a> fmt::Display for StmtUnknown<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}\n{}", UNKNOWN, on_line_in_file_colon(self.fact.line(), self.fact.file_index()), self.fact)
+        let (line, file_index) = self.fact.line_file();
+        write!(f, "{} {}\n{}", UNKNOWN, on_line_in_file_colon(line, file_index), self.fact)
     }
 }
 

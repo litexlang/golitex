@@ -90,11 +90,11 @@ type KnowFactStmt struct {
 	Line uint
 }
 
-type KnowPropInferStmt struct {
-	DefProp *DefPropStmt
+// type KnowPropInferStmt struct {
+// 	DefProp *DefPropStmt
 
-	Line uint
-}
+// 	Line uint
+// }
 
 // TODO: 可以把caseFacts换成[]Spec_orFact，这样更合理
 type ProveCaseByCaseStmt struct {
