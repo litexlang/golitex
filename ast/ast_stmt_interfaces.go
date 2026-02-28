@@ -39,7 +39,7 @@ func (s *KnowFactStmt) stmt()          {}
 // func (s *HaveObjStStmt) stmt()                 {}
 func (s *HaveObjStStmt) stmt()       {}
 func (s *ProveCaseByCaseStmt) stmt() {}
-func (s *KnowPropInferStmt) stmt()   {}
+// func (s *KnowPropInferStmt) stmt()   {}
 func (s *KnowInferStmt) stmt()       {}
 func (s *OrStmt) stmt()              {}
 func (s *InferStmt) stmt()           {}
@@ -100,7 +100,7 @@ func (s *KnowFactStmt) algoStmt()          {}
 // func (s *HaveObjStStmt) algoStmt()                 {}
 func (s *HaveObjStStmt) algoStmt()                 {}
 func (s *ProveCaseByCaseStmt) algoStmt()           {}
-func (s *KnowPropInferStmt) algoStmt()             {}
+// func (s *KnowPropInferStmt) algoStmt()             {}
 func (s *KnowInferStmt) algoStmt()                 {}
 func (s *OrStmt) algoStmt()                        {}
 func (s *InferStmt) algoStmt()                     {}
@@ -169,7 +169,7 @@ func (s *KnowFactStmt) GetLine() uint   { return s.Line }
 // func (s *HaveObjStStmt) GetLine() uint                 { return s.Line }
 func (s *HaveObjStStmt) GetLine() uint                 { return s.Line }
 func (s *ProveCaseByCaseStmt) GetLine() uint           { return s.Line }
-func (s *KnowPropInferStmt) GetLine() uint             { return s.Line }
+// func (s *KnowPropInferStmt) GetLine() uint             { return s.Line }
 func (s *KnowInferStmt) GetLine() uint                 { return s.Line }
 func (s *OrStmt) GetLine() uint                        { return s.Line }
 func (s *InferStmt) GetLine() uint                     { return s.Line }
@@ -238,7 +238,7 @@ func (s *KnowFactStmt) SetLine(l uint)   { s.Line = l }
 // func (s *HaveObjStStmt) SetLine(l uint)                 { s.Line = l }
 func (s *HaveObjStStmt) SetLine(l uint)                 { s.Line = l }
 func (s *ProveCaseByCaseStmt) SetLine(l uint)           { s.Line = l }
-func (s *KnowPropInferStmt) SetLine(l uint)             { s.Line = l }
+// func (s *KnowPropInferStmt) SetLine(l uint)             { s.Line = l }
 func (s *KnowInferStmt) SetLine(l uint)                 { s.Line = l }
 func (s *OrStmt) SetLine(l uint)                        { s.Line = l }
 func (s *InferStmt) SetLine(l uint)                     { s.Line = l }
@@ -366,7 +366,7 @@ func (s *UniFactWithIffStmt) canBeKnown() {}
 func (s *OrStmt) canBeKnown()             {}
 
 // func (s *ChainPureFact) canBeKnown()        {}
-func (s *KnowPropInferStmt) canBeKnown()     {}
+// func (s *KnowPropInferStmt) canBeKnown()     {}
 func (s *KnowInferStmt) canBeKnown()         {}
 func (p *PureSpecificFactStmt) canBeKnown()  {}
 func (e *ExistSpecificFactStmt) canBeKnown() {}

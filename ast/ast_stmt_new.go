@@ -80,9 +80,9 @@ func NewProveCaseByCaseStmt(caseFacts []SpecificFactStmt, thenFacts []FactStmt, 
 	return &ProveCaseByCaseStmt{caseFacts, thenFacts, proofs, proveOr, line}
 }
 
-func NewKnowPropInferStmt(prop *DefPropStmt, line uint) *KnowPropInferStmt {
-	return &KnowPropInferStmt{prop, line}
-}
+// func NewKnowPropInferStmt(prop *DefPropStmt, line uint) *KnowPropInferStmt {
+// 	return &KnowPropInferStmt{prop, line}
+// }
 
 func NewKnowInferStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts FactStmtSlice, line uint) *KnowInferStmt {
 	return &KnowInferStmt{

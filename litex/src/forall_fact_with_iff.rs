@@ -1,6 +1,6 @@
 use std::fmt;
 use crate::consts::{EQUIVALENT_SIGN, COLON};
-use crate::helper::{add_four_spaces_to_str_at_beginning, add_four_spaces_to_vec_at_beginning, str_with_line_file};
+use crate::helper::{add_four_spaces_to_str_at_beginning, add_four_spaces_to_vec_at_beginning};
 use crate::forall_fact::ForallFact;
 use crate::specific_fact::SpecFact;
 
@@ -14,18 +14,6 @@ pub struct ForallFactWithIff {
 impl ForallFactWithIff {
     pub fn new(forall_fact: ForallFact, iff_facts: Vec<SpecFact>, line: u32, file_index: usize) -> Self {
         ForallFactWithIff { forall_fact, iff_facts, line, file_index }
-    }
-
-    pub fn line(&self) -> u32 {
-        self.line
-    }
-
-    pub fn file_index(&self) -> usize {
-        self.file_index
-    }
-
-    pub fn str_with_line_file(&self) -> String {
-        return str_with_line_file(&self.to_string(), self.line(), self.file_index());
     }
 }
 

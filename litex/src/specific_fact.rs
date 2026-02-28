@@ -1,7 +1,14 @@
 use std::fmt;
 use crate::atomic_fact::AtomicFact;
 use crate::exist_fact::ExistFact;
-use crate::helper::str_with_line_file;
+
+/// 从 SpecFact 取得 line 与 file_index
+pub fn line_file(s: &SpecFact) -> (u32, usize) {
+    match s {
+        SpecFact::AtomicFact(a) => crate::atomic_fact::line_file(a),
+        SpecFact::ExistFact(e) => crate::exist_fact::line_file(e),
+    }
+}
 
 pub enum SpecFact {
     AtomicFact(AtomicFact),
@@ -17,24 +24,3 @@ impl fmt::Display for SpecFact {
     }
 }
 
-impl SpecFact {
-    pub fn line(&self) -> u32 {
-        match self {
-            SpecFact::AtomicFact(atomic_fact) => atomic_fact.line(),
-            SpecFact::ExistFact(exist_fact) => exist_fact.line(),
-        }
-    }
-
-    pub fn file_index(&self) -> usize {
-        match self {
-            SpecFact::AtomicFact(atomic_fact) => atomic_fact.file_index(),
-            SpecFact::ExistFact(exist_fact) => exist_fact.file_index(),
-        }
-    }
-}
-
-impl SpecFact {
-    pub fn str_with_line_file(&self) -> String {
-        return str_with_line_file(&self.to_string(), self.line(), self.file_index());
-    }
-}

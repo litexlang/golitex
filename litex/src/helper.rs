@@ -42,13 +42,6 @@ pub fn curly_braced_vec_to_string_with_sep<T: fmt::Display>(vec: &Vec<T>, sep: &
     format!("{}{}{}", LEFT_CURLY_BRACE, vec_to_string_with_sep(vec, sep), RIGHT_CURLY_BRACE)
 }
 
-pub fn str_with_line_file(s: &str, line: u32, file_index: usize) -> String {
-    // format!("{}\non line {}\nin file {}", s, line, file_index)
-    _ = line;
-    _ = file_index;
-    format!("{}", s)
-}
-
 pub fn vec_to_string<T: fmt::Display>(vec: &Vec<T>) -> String {
     vec.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(", ")
 }
