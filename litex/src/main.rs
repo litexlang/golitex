@@ -34,7 +34,7 @@ use prove_stmt::{ProveStmt};
 use run_file_stmt::{RunFileStmt};
 use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalPkgStmt, ClearStmt, DoNothingStmt};
 use prove_by_builtin_techniques_stmt::{ProveCaseByCase, ProveByContradictionStmt, ProveByBuiltinTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveEqualSetStmt, ProveFnSetIsSubsetOfCartSetStmt};
-use definition_stmt::{DefStmt, HaveObjInNonemptySetStmt, HaveObjEqualStmt, LetFnStmt, HaveFnStmt, HaveObjStStmt};
+use definition_stmt::{DefStmt, HaveObjInNonemptySetStmt, HaveObjEqualStmt, LetFnStmt, HaveFnStmt, HaveObjStStmt, HaveFnEqualStmt};
 use claim_stmt::{ClaimProveStmt, ClaimStmt, ClaimIffStmt};
 use and_fact::AndFact;
 use and_fact_or_specific_fact::AndFactOrSpecFact;
@@ -120,6 +120,7 @@ fn main() {
     try_prove_equal_set_stmt();
     try_witness_nonempty_set_stmt();
     try_prove_fn_is_set_stmt();
+    try_have_fn_equal_stmt();
 }
 
 fn try_atom_fn_obj() {
@@ -1034,5 +1035,13 @@ fn try_prove_fn_is_set_stmt() {
     println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
 
     let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveFnIsSet(prove_fn_set_is_subset_of_cart_set_stmt));
+    println!("{}", stmt);
+}
+
+fn try_have_fn_equal_stmt() {
+    let have_fn_equal_stmt = HaveFnEqualStmt::new(FnSetWithParams::new("f".to_string(), vec!["x".to_string()], vec![Obj::mk("p")], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p"), vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))]), Obj::mk("p"), vec![], 1, 0);
+    println!("{}", have_fn_equal_stmt);
+
+    let stmt = Stmt::DefStmt(DefStmt::HaveFnEqualStmt(have_fn_equal_stmt));
     println!("{}", stmt);
 }
