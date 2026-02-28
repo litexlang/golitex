@@ -5,13 +5,29 @@ use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::fact::Fact;
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::stmt::Stmt;
-use crate::obj::Obj;
+use crate::obj::{Obj, ClosedRange, Range};
 
-pub enum ProofTechnique {
+pub enum ProveByBuiltinTechniqueStmt {
     ProveCaseByCase(ProveCaseByCase),
     ProveByContradiction(ProveByContradictionStmt),
     ProveByEnumeration(ProveByEnumerationStmt),
     ProveByInduction(ProveByInductionStmt),
+    ProveForStmt(ProveForStmt),
+}
+
+
+pub enum ClosedRangeOrRange {
+    ClosedRange(ClosedRange),
+    Range(Range),
+}
+pub struct ProveForStmt {
+    pub params: Vec<String>,
+    pub param_sets: ClosedRangeOrRange,
+    pub dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
+    pub then_facts: Vec<OrFactOrAndFactOrSpecFact>,
+    pub proof: Vec<Stmt>,
+    pub line: u32,
+    pub file_index: usize,
 }
 
 pub struct ProveByInductionStmt {
@@ -80,24 +96,26 @@ impl fmt::Display for ProveByContradictionStmt {
     }
 }
 
-impl fmt::Display for ProofTechnique {
+impl fmt::Display for ProveByBuiltinTechniqueStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ProofTechnique::ProveCaseByCase(prove_case_by_case) => write!(f, "{}", prove_case_by_case),
-            ProofTechnique::ProveByContradiction(claim_prove_by_contradiction_stmt) => write!(f, "{}", claim_prove_by_contradiction_stmt),
-            ProofTechnique::ProveByEnumeration(prove_by_enumeration_stmt) => write!(f, "{}", prove_by_enumeration_stmt),
-            ProofTechnique::ProveByInduction(prove_by_induction_stmt) => write!(f, "{}", prove_by_induction_stmt),
+            ProveByBuiltinTechniqueStmt::ProveCaseByCase(prove_case_by_case) => write!(f, "{}", prove_case_by_case),
+            ProveByBuiltinTechniqueStmt::ProveByContradiction(prove_by_contradiction_stmt) => write!(f, "{}", prove_by_contradiction_stmt),
+            ProveByBuiltinTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt) => write!(f, "{}", prove_by_enumeration_stmt),
+            ProveByBuiltinTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => write!(f, "{}", prove_by_induction_stmt),
+            ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt) => write!(f, "{}", prove_for_stmt),
         }
     }
 }
 
-impl ProofTechnique {
+impl ProveByBuiltinTechniqueStmt {
     pub fn line_file(&self) -> (u32, usize) {
         match self {
-            ProofTechnique::ProveCaseByCase(prove_case_by_case) => (prove_case_by_case.line, prove_case_by_case.file_index),
-            ProofTechnique::ProveByContradiction(claim_prove_by_contradiction_stmt) => (claim_prove_by_contradiction_stmt.line, claim_prove_by_contradiction_stmt.file_index),
-            ProofTechnique::ProveByEnumeration(prove_by_enumeration_stmt) => (prove_by_enumeration_stmt.line, prove_by_enumeration_stmt.file_index),
-            ProofTechnique::ProveByInduction(prove_by_induction_stmt) => (prove_by_induction_stmt.line, prove_by_induction_stmt.file_index),
+            ProveByBuiltinTechniqueStmt::ProveCaseByCase(prove_case_by_case) => (prove_case_by_case.line, prove_case_by_case.file_index),
+            ProveByBuiltinTechniqueStmt::ProveByContradiction(claim_prove_by_contradiction_stmt) => (claim_prove_by_contradiction_stmt.line, claim_prove_by_contradiction_stmt.file_index),
+            ProveByBuiltinTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt) => (prove_by_enumeration_stmt.line, prove_by_enumeration_stmt.file_index),
+            ProveByBuiltinTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => (prove_by_induction_stmt.line, prove_by_induction_stmt.file_index),
+            ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt) => (prove_for_stmt.line, prove_for_stmt.file_index),
         }
     }
 }
@@ -117,5 +135,17 @@ impl ProveByInductionStmt {
 impl fmt::Display for ProveByInductionStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {} {} {}{}\n{}\n{}{}\n{}", INDUC, self.param, FROM, self.induc_from, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.fact, 1), add_four_spaces_at_beginning(PROVE, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
+    }
+}
+
+impl fmt::Display for ProveForStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        panic!("ProveForStmt is not implemented");
+    }
+}
+
+impl ProveForStmt {
+    pub fn new(params: Vec<String>, param_sets: ClosedRangeOrRange, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, then_facts: Vec<OrFactOrAndFactOrSpecFact>, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
+        ProveForStmt { params, param_sets, dom_facts, then_facts, proof, line, file_index }
     }
 }

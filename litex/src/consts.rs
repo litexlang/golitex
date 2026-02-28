@@ -106,3 +106,5 @@ pub const FROM: &str = "from";
 
 pub const DOM: &str = "dom";
 pub const CONSTRUCT: &str = "construct";
+
+pub const EVAL: &str = "eval";

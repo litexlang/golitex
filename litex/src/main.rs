@@ -27,10 +27,11 @@ mod proof_techniques_stmt;
 mod prove_stmt;
 mod run_file_stmt;
 mod tooling_stmt;
+mod eval_stmt;
 use prove_stmt::{ProveStmt};
 use run_file_stmt::{RunFileStmt};
 use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalPkgStmt, ClearStmt, DoNothingStmt};
-use proof_techniques_stmt::{ProveCaseByCase, ProveByContradictionStmt, ProofTechnique, ProveByEnumerationStmt, ProveByInductionStmt};
+use proof_techniques_stmt::{ProveCaseByCase, ProveByContradictionStmt, ProveByBuiltinTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange};
 use definition_stmt::{DefStmt, HaveObjInNonemptySetStmt, HaveObjEqualStmt, LetFnStmt, HaveFnStmt};
 use claim_stmt::{ClaimProveStmt, ClaimStmt, ClaimIffStmt};
 use and_fact::AndFact;
@@ -66,6 +67,7 @@ use stmt_success::{NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuil
 use stmt_unknown::StmtUnknown;
 use definition_stmt::{DefHeaderWithParamType, DefPropStmt, DefLetStmt};
 use know_stmt::KnowStmt;
+use eval_stmt::{EvalStmt};
 fn main() {
     try_atom_fn_obj();
     try_arithmetic();
@@ -110,6 +112,8 @@ fn main() {
     try_have_obj_equal_stmt();
     try_let_fn_stmt();
     try_have_fn_stmt();
+    try_eval_stmt();
+    try_prove_for_stmt();
 }
 
 fn try_atom_fn_obj() {
@@ -738,10 +742,10 @@ fn try_proof_techniques() {
     )))), vec![], 1, 0);
     println!("{}", claim_prove_by_contradiction_stmt);
 
-    let proof_technique = ProofTechnique::ProveCaseByCase(prove_case_by_case);
+    let proof_technique = ProveByBuiltinTechniqueStmt::ProveCaseByCase(prove_case_by_case);
     println!("{}", proof_technique);
 
-    let proof_technique = ProofTechnique::ProveByContradiction(claim_prove_by_contradiction_stmt);
+    let proof_technique = ProveByBuiltinTechniqueStmt::ProveByContradiction(claim_prove_by_contradiction_stmt);
     println!("{}", proof_technique);
 
     let stmt = Stmt::ProofTechnique(proof_technique);
@@ -804,7 +808,7 @@ fn try_prove_by_enumeration_stmt() {
     let prove_by_enumeration_stmt = ProveByEnumerationStmt::new(params, param_sets, to_prove, proof, 1, 0);
     println!("{}", prove_by_enumeration_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProofTechnique::ProveByEnumeration(prove_by_enumeration_stmt));
+    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt));
     println!("{}", stmt);
 }
 
@@ -860,7 +864,7 @@ fn try_prove_by_induction_stmt() {
     let prove_by_induction_stmt = ProveByInductionStmt::new(fact, param, proof, induc_from, 1, 0);
     println!("{}", prove_by_induction_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProofTechnique::ProveByInduction(prove_by_induction_stmt));
+    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveByInduction(prove_by_induction_stmt));
     println!("{}", stmt);
 }
 
@@ -890,5 +894,44 @@ fn try_have_fn_stmt() {
     println!("{}", have_fn_stmt);
 
     let stmt = Stmt::DefStmt(DefStmt::HaveFnStmt(have_fn_stmt));
+    println!("{}", stmt);
+}
+
+fn try_eval_stmt() {
+    let eval_stmt = EvalStmt::new(Obj::mk("p"), 1, 0);
+    println!("{}", eval_stmt);
+
+    let stmt = Stmt::EvalStmt(eval_stmt);
+    println!("{}", stmt);
+
+    let stmt = Stmt::EvalStmt(EvalStmt::new(Obj::mk("p"), 1, 0));
+    println!("{}", stmt);
+}
+
+fn try_prove_for_stmt() {
+    let params = vec!["x".to_string()];
+    let param_sets = ClosedRangeOrRange::ClosedRange(ClosedRange::new(Obj::mk("0"), Obj::mk("10")));
+    let dom_facts = vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))))];
+    let then_facts = vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))))];
+    let proof = vec![Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    )))))];
+    let prove_for_stmt = ProveForStmt::new(params, param_sets, dom_facts, then_facts, proof, 1, 0);
+    println!("{}", prove_for_stmt);
+
+    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt));
     println!("{}", stmt);
 }
