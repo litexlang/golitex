@@ -577,17 +577,17 @@ func (s *OrStmt) ToLatexString() string {
 	return strings.Join(factStrSlice, " or ")
 }
 
-func (s *InferStmt) ToLatexString() string {
-	domFactStrSlice := make([]string, len(s.DomFacts))
-	for i, fact := range s.DomFacts {
-		domFactStrSlice[i] = fact.ToLatexString()
-	}
-	thenFactStrSlice := make([]string, len(s.ThenFacts))
-	for i, fact := range s.ThenFacts {
-		thenFactStrSlice[i] = fact.ToLatexString()
-	}
-	return strings.Join(domFactStrSlice, ", ") + " \\Rightarrow " + strings.Join(thenFactStrSlice, ", ")
-}
+// func (s *InferStmt) ToLatexString() string {
+// 	domFactStrSlice := make([]string, len(s.DomFacts))
+// 	for i, fact := range s.DomFacts {
+// 		domFactStrSlice[i] = fact.ToLatexString()
+// 	}
+// 	thenFactStrSlice := make([]string, len(s.ThenFacts))
+// 	for i, fact := range s.ThenFacts {
+// 		thenFactStrSlice[i] = fact.ToLatexString()
+// 	}
+// 	return strings.Join(domFactStrSlice, ", ") + " \\Rightarrow " + strings.Join(thenFactStrSlice, ", ")
+// }
 
 func (s *InferTemplateStmt) ToLatexString() string {
 	var builder strings.Builder

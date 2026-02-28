@@ -372,12 +372,12 @@ type WitnessStmt struct {
 	Line uint
 }
 
-type InferStmt struct {
-	DomFacts  ReversibleFacts
-	ThenFacts ReversibleFacts
+// type InferStmt struct {
+// 	DomFacts  ReversibleFacts
+// 	ThenFacts ReversibleFacts
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type InferTemplateStmt struct {
 	Params    StrSlice

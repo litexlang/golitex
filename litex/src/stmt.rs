@@ -8,6 +8,7 @@ use crate::tooling_stmt::ToolingStmt;
 use crate::prove_stmt::ProveStmt;
 use crate::run_file_stmt::RunFileStmt;
 use crate::eval_stmt::EvalStmt;
+use crate::witness_stmt::WitnessStmt;
 pub enum Stmt {
     Fact(Fact),
     DefStmt(DefStmt),
@@ -18,6 +19,7 @@ pub enum Stmt {
     ProveStmt(ProveStmt),
     RunFileStmt(RunFileStmt),
     EvalStmt(EvalStmt),
+    WitnessStmt(WitnessStmt),
 }
 
 impl fmt::Display for Stmt {
@@ -32,6 +34,7 @@ impl fmt::Display for Stmt {
             Stmt::ProveStmt(prove_stmt) => write!(f, "{}", prove_stmt),
             Stmt::RunFileStmt(run_file_stmt) => write!(f, "{}", run_file_stmt),
             Stmt::EvalStmt(eval_stmt) => write!(f, "{}", eval_stmt),
+            Stmt::WitnessStmt(witness_stmt) => write!(f, "{}", witness_stmt),
         }
     }
 }
@@ -48,6 +51,7 @@ pub fn line_file(stmt: &Stmt) -> (u32, usize) {
         Stmt::ProveStmt(prove_stmt) => (prove_stmt.line, prove_stmt.file_index),
         Stmt::RunFileStmt(run_file_stmt) => (run_file_stmt.line, run_file_stmt.file_index),
         Stmt::EvalStmt(eval_stmt) => (eval_stmt.line, eval_stmt.file_index),
+        Stmt::WitnessStmt(witness_stmt) => witness_stmt.line_file(),
     }
 }
 
