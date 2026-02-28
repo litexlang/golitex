@@ -1,8 +1,9 @@
+use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::parameter_type::ParameterType;
 use crate::fact::{ Fact};
 use crate::obj::{Obj, SetBuilderWithCartAsParentSet};
 use std::fmt;
-use crate::consts::{AS, CASE, COLON, COMMA, CONSTRUCT, DOM, EQUAL, FN, HAVE, LET, PROP, RIGHT_ARROW, SET, ST};
+use crate::consts::{AS, CASE, COLON, COMMA, CONSTRUCT, DOM, EQUAL, FN, HAVE, LET, PROP, RIGHT_ARROW, SET, ST, SET_TEMPLATE};
 use crate::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, braced_pair_vec_to_string, braced_param_param_set_with_dom, braced_vec_to_string, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
 use crate::obj::FnSetWithParams;
 use crate::stmt::Stmt;
@@ -20,6 +21,17 @@ pub enum DefStmt {
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnAsSetStmt(HaveFnAsSetStmt),
+    DefSetTemplateStmt(DefSetTemplateStmt),
+}
+
+pub struct DefSetTemplateStmt {
+    pub name: String,
+    pub params: Vec<String>,
+    pub param_sets: Vec<ParameterType>,
+    pub dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
+    pub equal_to: Obj,
+    pub line: u32,
+    pub file_index: usize,
 }
 
 pub struct HaveFnAsSetStmt {
@@ -120,6 +132,7 @@ impl fmt::Display for DefStmt {
             DefStmt::HaveFnEqualStmt(have_fn_equal_stmt) => write!(f, "{}", have_fn_equal_stmt),
             DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt) => write!(f, "{}", have_fn_equal_case_by_case_stmt),
             DefStmt::HaveFnAsSetStmt(have_fn_as_set_stmt) => write!(f, "{}", have_fn_as_set_stmt),
+            DefStmt::DefSetTemplateStmt(def_set_template_stmt) => write!(f, "{}", def_set_template_stmt),
         }
     }
 }
@@ -179,6 +192,7 @@ impl DefStmt {
             DefStmt::HaveFnEqualStmt(have_fn_equal_stmt) => (have_fn_equal_stmt.line, have_fn_equal_stmt.file_index),
             DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt) => (have_fn_equal_case_by_case_stmt.line, have_fn_equal_case_by_case_stmt.file_index),
             DefStmt::HaveFnAsSetStmt(have_fn_as_set_stmt) => (have_fn_as_set_stmt.line, have_fn_as_set_stmt.file_index),
+            DefStmt::DefSetTemplateStmt(def_set_template_stmt) => (def_set_template_stmt.line, def_set_template_stmt.file_index),
         }
     }
 }
@@ -308,5 +322,17 @@ impl fmt::Display for HaveFnAsSetStmt {
             0 => write!(f, "{} {} {} {} {} {} {}", HAVE, FN, AS, SET, self.fn_set_with_params, EQUAL, self.equal_to_set),
             _ => write!(f, "{} {} {} {} {} {} {}{}\n{}", HAVE, FN, AS, SET, self.fn_set_with_params, EQUAL, self.equal_to_set, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)),
         }
+    }
+}
+
+impl DefSetTemplateStmt {
+    pub fn new(name: String, params: Vec<String>, param_sets: Vec<ParameterType>, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, equal_to: Obj, line: u32, file_index: usize) -> Self {
+        DefSetTemplateStmt { name, params, param_sets, dom_facts, equal_to, line, file_index }
+    }
+}
+
+impl fmt::Display for DefSetTemplateStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {} {}", SET_TEMPLATE, braced_param_param_set_with_dom(&self.name, &self.params, &self.param_sets, &self.dom_facts), EQUAL, self.equal_to)
     }
 }
