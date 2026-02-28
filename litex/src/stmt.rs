@@ -3,19 +3,21 @@ use crate::fact::Fact;
 use crate::definition_stmt::DefStmt;
 use crate::claim_stmt::ClaimStmt;
 use crate::know_stmt::KnowStmt;
-use crate::proof_techniques_stmt::ProofTechnique;
+use crate::proof_techniques_stmt::ProveByBuiltinTechniqueStmt;
 use crate::tooling_stmt::ToolingStmt;
 use crate::prove_stmt::ProveStmt;
 use crate::run_file_stmt::RunFileStmt;
+use crate::eval_stmt::EvalStmt;
 pub enum Stmt {
     Fact(Fact),
     DefStmt(DefStmt),
     ClaimStmt(ClaimStmt),
     KnowStmt(KnowStmt),
-    ProofTechnique(ProofTechnique),
+    ProofTechnique(ProveByBuiltinTechniqueStmt),
     ToolingStmt(ToolingStmt),
     ProveStmt(ProveStmt),
     RunFileStmt(RunFileStmt),
+    EvalStmt(EvalStmt),
 }
 
 impl fmt::Display for Stmt {
@@ -29,6 +31,7 @@ impl fmt::Display for Stmt {
             Stmt::ToolingStmt(tooling_stmt) => write!(f, "{}", tooling_stmt),
             Stmt::ProveStmt(prove_stmt) => write!(f, "{}", prove_stmt),
             Stmt::RunFileStmt(run_file_stmt) => write!(f, "{}", run_file_stmt),
+            Stmt::EvalStmt(eval_stmt) => write!(f, "{}", eval_stmt),
         }
     }
 }
@@ -44,6 +47,7 @@ pub fn line_file(stmt: &Stmt) -> (u32, usize) {
         Stmt::ToolingStmt(tooling_stmt) => tooling_stmt.line_file(),
         Stmt::ProveStmt(prove_stmt) => (prove_stmt.line, prove_stmt.file_index),
         Stmt::RunFileStmt(run_file_stmt) => (run_file_stmt.line, run_file_stmt.file_index),
+        Stmt::EvalStmt(eval_stmt) => (eval_stmt.line, eval_stmt.file_index),
     }
 }
 
