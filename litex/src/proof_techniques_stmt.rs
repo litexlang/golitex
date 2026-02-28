@@ -1,8 +1,9 @@
 use std::fmt;
-use crate::consts::{CLAIM, COLON, CONTRA, CASES, CASE, ENUM};
+use crate::consts::{CLAIM, COLON, CONTRA, CASES, CASE, ENUM, PROVE, INDUC, FROM};
 use crate::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line};
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::fact::Fact;
+use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::stmt::Stmt;
 use crate::obj::Obj;
 
@@ -10,11 +11,22 @@ pub enum ProofTechnique {
     ProveCaseByCase(ProveCaseByCase),
     ProveByContradiction(ProveByContradictionStmt),
     ProveByEnumeration(ProveByEnumerationStmt),
+    ProveByInduction(ProveByInductionStmt),
+}
+
+pub struct ProveByInductionStmt {
+    pub fact: Vec<OrFactOrAndFactOrSpecFact>,
+    pub param: String,
+    pub proof: Vec<Stmt>,
+    pub induc_from: Obj,
+    pub line: u32,
+    pub file_index: usize,
 }
 
 pub struct ProveByEnumerationStmt {
     pub params: Vec<String>,
     pub param_sets: Vec<Obj>,
+    pub to_prove: Vec<Fact>,
     pub proof: Vec<Stmt>,
     pub line: u32,
     pub file_index: usize,
@@ -37,8 +49,8 @@ pub struct ProveByContradictionStmt {
 
 
 impl ProveByEnumerationStmt {
-    pub fn new(params: Vec<String>, param_sets: Vec<Obj>, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
-        ProveByEnumerationStmt { params, param_sets, proof, line, file_index }
+    pub fn new(params: Vec<String>, param_sets: Vec<Obj>, to_prove: Vec<Fact>, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
+        ProveByEnumerationStmt { params, param_sets, to_prove, proof, line, file_index }
     }
 }
 
@@ -74,6 +86,7 @@ impl fmt::Display for ProofTechnique {
             ProofTechnique::ProveCaseByCase(prove_case_by_case) => write!(f, "{}", prove_case_by_case),
             ProofTechnique::ProveByContradiction(claim_prove_by_contradiction_stmt) => write!(f, "{}", claim_prove_by_contradiction_stmt),
             ProofTechnique::ProveByEnumeration(prove_by_enumeration_stmt) => write!(f, "{}", prove_by_enumeration_stmt),
+            ProofTechnique::ProveByInduction(prove_by_induction_stmt) => write!(f, "{}", prove_by_induction_stmt),
         }
     }
 }
@@ -84,12 +97,25 @@ impl ProofTechnique {
             ProofTechnique::ProveCaseByCase(prove_case_by_case) => (prove_case_by_case.line, prove_case_by_case.file_index),
             ProofTechnique::ProveByContradiction(claim_prove_by_contradiction_stmt) => (claim_prove_by_contradiction_stmt.line, claim_prove_by_contradiction_stmt.file_index),
             ProofTechnique::ProveByEnumeration(prove_by_enumeration_stmt) => (prove_by_enumeration_stmt.line, prove_by_enumeration_stmt.file_index),
+            ProofTechnique::ProveByInduction(prove_by_induction_stmt) => (prove_by_induction_stmt.line, prove_by_induction_stmt.file_index),
         }
     }
 }
 
 impl fmt::Display for ProveByEnumerationStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}{}\n{}", ENUM, vec_pair_to_string(&self.params, &self.param_sets), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1))
+        write!(f, "{} {}{}\n{}\n{}{}\n{}", ENUM, vec_pair_to_string(&self.params, &self.param_sets), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1), add_four_spaces_at_beginning(PROVE, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
+    }
+}
+
+impl ProveByInductionStmt {
+    pub fn new(fact: Vec<OrFactOrAndFactOrSpecFact>, param: String, proof: Vec<Stmt>, induc_from: Obj, line: u32, file_index: usize) -> Self {
+        ProveByInductionStmt { fact, param, proof, induc_from, line, file_index }
+    }
+}
+
+impl fmt::Display for ProveByInductionStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {} {}{}\n{}\n{}{}\n{}", INDUC, self.param, FROM, self.induc_from, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.fact, 1), add_four_spaces_at_beginning(PROVE, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
     }
 }
