@@ -92,3 +92,5 @@ pub const CASES: &str = "cases";
 pub const IMPORT: &str = "import";
 pub const DOUBLE_QUOTE: &str = "\"";
 pub const AS: &str = "as";
+
+pub const ENUM: &str = "enum";

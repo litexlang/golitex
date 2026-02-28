@@ -25,7 +25,11 @@ mod claim_stmt;
 mod know_stmt;
 mod proof_techniques_stmt;
 mod import_stmt;
-use proof_techniques_stmt::{ProveCaseByCase, ClaimProveByContradictionStmt, ProofTechnique};
+mod prove_stmt;
+mod run_file_stmt;
+use prove_stmt::{ProveStmt};
+use run_file_stmt::{RunFileStmt};
+use proof_techniques_stmt::{ProveCaseByCase, ProveByContradictionStmt, ProofTechnique, ProveByEnumerationStmt};
 use definition_stmt::DefStmt;
 use claim_stmt::{ClaimProveStmt};
 use and_fact::AndFact;
@@ -97,6 +101,9 @@ fn main() {
     try_know_stmt();
     try_proof_techniques();
     try_import_stmt();
+    try_prove_stmt();
+    try_run_file_stmt();
+    try_prove_by_enumeration_stmt();
 }
 
 fn try_atom_fn_obj() {
@@ -667,12 +674,12 @@ fn try_claim_stmt() {
         1,
         0,
     )))))];
-    let claim_prove_stmt = ClaimProveStmt::new(Some(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let claim_prove_stmt = ClaimProveStmt::new(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
         1,
         0,
-    ))))), proof, 1, 0);
+    )))), proof, 1, 0);
     println!("{}", claim_prove_stmt);
 
     let stmt = Stmt::ClaimProveStmt(claim_prove_stmt);
@@ -696,7 +703,7 @@ fn try_proof_techniques() {
     let prove_case_by_case = ProveCaseByCase::new(vec![], vec![], vec![], 1, 0);
     println!("{}", prove_case_by_case);
 
-    let claim_prove_by_contradiction_stmt = ClaimProveByContradictionStmt::new(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let claim_prove_by_contradiction_stmt = ProveByContradictionStmt::new(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
         1,
@@ -707,7 +714,7 @@ fn try_proof_techniques() {
     let proof_technique = ProofTechnique::ProveCaseByCase(prove_case_by_case);
     println!("{}", proof_technique);
 
-    let proof_technique = ProofTechnique::ClaimProveByContradiction(claim_prove_by_contradiction_stmt);
+    let proof_technique = ProofTechnique::ProveByContradiction(claim_prove_by_contradiction_stmt);
     println!("{}", proof_technique);
 
     let stmt = Stmt::ProofTechnique(proof_technique);
@@ -725,5 +732,43 @@ fn try_import_stmt() {
     println!("{}", stmt);
 
     let stmt = Stmt::ImportStmt(ImportStmt::ImportGlobalPkg(import_global_pkg_stmt));
+    println!("{}", stmt);
+}
+
+fn try_prove_stmt() {
+    let proof = vec![Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    )))))];
+    let prove_stmt = ProveStmt::new(proof, 1, 0);
+    println!("{}", prove_stmt);
+
+    let stmt = Stmt::ProveStmt(prove_stmt);
+    println!("{}", stmt);
+}
+
+fn try_run_file_stmt() {
+    let run_file_stmt = RunFileStmt::new("path/to/file.txt", 1, 0);
+    println!("{}", run_file_stmt);
+
+    let stmt = Stmt::RunFileStmt(run_file_stmt);
+    println!("{}", stmt);
+}
+
+fn try_prove_by_enumeration_stmt() {
+    let params = vec!["x".to_string()];
+    let param_sets = vec![Obj::mk("p")];
+    let proof = vec![Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    )))))];
+    let prove_by_enumeration_stmt = ProveByEnumerationStmt::new(params, param_sets, proof, 1, 0);
+    println!("{}", prove_by_enumeration_stmt);
+
+    let stmt = Stmt::ProofTechnique(ProofTechnique::ProveByEnumeration(prove_by_enumeration_stmt));
     println!("{}", stmt);
 }
