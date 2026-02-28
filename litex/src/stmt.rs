@@ -3,7 +3,7 @@ use crate::fact::Fact;
 use crate::definition_stmt::DefStmt;
 use crate::claim_stmt::ClaimStmt;
 use crate::know_stmt::KnowStmt;
-use crate::proof_techniques_stmt::ProveByBuiltinTechniqueStmt;
+use crate::prove_by_builtin_techniques_stmt::ProveByBuiltinTechniqueStmt;
 use crate::tooling_stmt::ToolingStmt;
 use crate::prove_stmt::ProveStmt;
 use crate::run_file_stmt::RunFileStmt;
