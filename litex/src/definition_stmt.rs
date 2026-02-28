@@ -2,10 +2,11 @@ use crate::parameter_type::ParameterType;
 use crate::fact::{ Fact};
 use crate::obj::Obj;
 use std::fmt;
-use crate::consts::{COLON, CONSTRUCT, DOM, EQUAL, FN, HAVE, LET, PROP, RIGHT_ARROW};
+use crate::consts::{COLON, CONSTRUCT, DOM, EQUAL, FN, HAVE, LET, PROP, RIGHT_ARROW, ST};
 use crate::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, braced_pair_vec_to_string, braced_vec_to_string, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma};
 use crate::obj::FnSetWithParams;
 use crate::stmt::Stmt;
+use crate::atomic_fact::AtomicFact;
 
 pub enum DefStmt {
     DefLetStmt(DefLetStmt),
@@ -14,6 +15,15 @@ pub enum DefStmt {
     HaveObjEqualStmt(HaveObjEqualStmt),
     LetFnStmt(LetFnStmt),
     HaveFnStmt(HaveFnStmt),
+    HaveObjStStmt(HaveObjStStmt),
+}
+
+pub struct HaveObjStStmt {
+    pub names: Vec<String>,
+    pub param_types: Vec<ParameterType>,
+    pub obj_st: Vec<AtomicFact>,
+    pub line: u32,
+    pub file_index: usize,
 }
 
 pub struct HaveFnStmt {
@@ -75,6 +85,7 @@ impl fmt::Display for DefStmt {
             DefStmt::HaveObjEqualStmt(have_obj_equal_stmt) => write!(f, "{}", have_obj_equal_stmt),
             DefStmt::LetFnStmt(let_fn_stmt) => write!(f, "{}", let_fn_stmt),
             DefStmt::HaveFnStmt(have_fn_stmt) => write!(f, "{}", have_fn_stmt),
+            DefStmt::HaveObjStStmt(have_obj_st_stmt) => write!(f, "{}", have_obj_st_stmt),
         }
     }
 }
@@ -130,6 +141,7 @@ impl DefStmt {
             DefStmt::HaveObjEqualStmt(have_obj_equal_stmt) => (have_obj_equal_stmt.line, have_obj_equal_stmt.file_index),
             DefStmt::LetFnStmt(let_fn_stmt) => (let_fn_stmt.line, let_fn_stmt.file_index),
             DefStmt::HaveFnStmt(have_fn_stmt) => (have_fn_stmt.line, have_fn_stmt.file_index),
+            DefStmt::HaveObjStStmt(have_obj_st_stmt) => (have_obj_st_stmt.line, have_obj_st_stmt.file_index),
         }
     }
 }
@@ -200,5 +212,17 @@ impl fmt::Display for HaveFnStmt {
 impl HaveFnStmt {
     pub fn new(fn_set_with_params: FnSetWithParams, proof: Vec<Stmt>, construct_fn_equal_to: Obj, line: u32, file_index: usize) -> Self {
         HaveFnStmt { fn_set_with_params, proof, construct_fn_equal_to, line, file_index }
+    }
+}
+
+impl HaveObjStStmt {
+    pub fn new(names: Vec<String>, param_types: Vec<ParameterType>, obj_st: Vec<AtomicFact>, line: u32, file_index: usize) -> Self {
+        HaveObjStStmt { names, param_types, obj_st, line, file_index }
+    }
+}
+
+impl fmt::Display for HaveObjStStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {} {} {}", HAVE, vec_pair_to_string(&self.names, &self.param_types), ST, vec_to_string_join_by_comma(&self.obj_st))
     }
 }

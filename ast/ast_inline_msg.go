@@ -229,21 +229,21 @@ func (s *OrStmt) InlineString() string {
 	return builder.String()
 }
 
-func (s *InferStmt) InlineString() string {
-	var builder strings.Builder
-	domFactStrSlice := make([]string, len(s.DomFacts))
-	for i, fact := range s.DomFacts {
-		domFactStrSlice[i] = fact.InlineString()
-	}
-	builder.WriteString(strings.Join(domFactStrSlice, ", "))
-	builder.WriteString(" => ")
-	thenFactStrSlice := make([]string, len(s.ThenFacts))
-	for i, fact := range s.ThenFacts {
-		thenFactStrSlice[i] = fact.InlineString()
-	}
-	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
-	return builder.String()
-}
+// func (s *InferStmt) InlineString() string {
+// 	var builder strings.Builder
+// 	domFactStrSlice := make([]string, len(s.DomFacts))
+// 	for i, fact := range s.DomFacts {
+// 		domFactStrSlice[i] = fact.InlineString()
+// 	}
+// 	builder.WriteString(strings.Join(domFactStrSlice, ", "))
+// 	builder.WriteString(" => ")
+// 	thenFactStrSlice := make([]string, len(s.ThenFacts))
+// 	for i, fact := range s.ThenFacts {
+// 		thenFactStrSlice[i] = fact.InlineString()
+// 	}
+// 	builder.WriteString(strings.Join(thenFactStrSlice, ", "))
+// 	return builder.String()
+// }
 
 // func (s *InferTemplateStmt) InlineString() string {
 // 	var builder strings.Builder

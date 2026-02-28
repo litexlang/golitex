@@ -28,11 +28,13 @@ mod prove_stmt;
 mod run_file_stmt;
 mod tooling_stmt;
 mod eval_stmt;
+mod witness_stmt;
+use witness_stmt::{WitnessStmt, WitnessExistFact};
 use prove_stmt::{ProveStmt};
 use run_file_stmt::{RunFileStmt};
 use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalPkgStmt, ClearStmt, DoNothingStmt};
 use proof_techniques_stmt::{ProveCaseByCase, ProveByContradictionStmt, ProveByBuiltinTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange};
-use definition_stmt::{DefStmt, HaveObjInNonemptySetStmt, HaveObjEqualStmt, LetFnStmt, HaveFnStmt};
+use definition_stmt::{DefStmt, HaveObjInNonemptySetStmt, HaveObjEqualStmt, LetFnStmt, HaveFnStmt, HaveObjStStmt};
 use claim_stmt::{ClaimProveStmt, ClaimStmt, ClaimIffStmt};
 use and_fact::AndFact;
 use and_fact_or_specific_fact::AndFactOrSpecFact;
@@ -114,6 +116,8 @@ fn main() {
     try_have_fn_stmt();
     try_eval_stmt();
     try_prove_for_stmt();
+    try_have_obj_st_stmt();
+    try_witness_stmt();
 }
 
 fn try_atom_fn_obj() {
@@ -962,5 +966,21 @@ fn try_prove_for_stmt() {
     println!("{}", prove_for_stmt);
 
     let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt));
+    println!("{}", stmt);
+}
+
+fn try_have_obj_st_stmt() {
+    let have_obj_st_stmt = HaveObjStStmt::new(vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())], vec![], 1, 0);
+    println!("{}", have_obj_st_stmt);
+
+    let stmt = Stmt::DefStmt(DefStmt::HaveObjStStmt(have_obj_st_stmt));
+    println!("{}", stmt);
+}
+
+fn try_witness_stmt() {
+    let witness_exist_fact = WitnessExistFact::new(vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())], vec![Obj::mk("p")], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], vec![], 1, 0);
+    println!("{}", witness_exist_fact);
+
+    let stmt = Stmt::WitnessStmt(WitnessStmt::WitnessExistFact(witness_exist_fact));
     println!("{}", stmt);
 }
