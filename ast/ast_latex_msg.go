@@ -953,11 +953,11 @@ func (s *DoNothingStmt) ToLatexString() string {
 	return glob.KeywordDoNothing
 }
 
-func (s *InlineFactsStmt) ToLatexString() string {
-	var builder strings.Builder
-	builder.WriteString(strings.Join(s.Facts.factStmtSliceToLatexStringSlice(), "\n\n"))
-	return builder.String()
-}
+// func (s *InlineFactsStmt) ToLatexString() string {
+// 	var builder strings.Builder
+// 	builder.WriteString(strings.Join(s.Facts.factStmtSliceToLatexStringSlice(), "\n\n"))
+// 	return builder.String()
+// }
 
 func (s *ProveByInductionStmt) ToLatexString() string {
 	var builder strings.Builder

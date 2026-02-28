@@ -963,13 +963,13 @@ func (stmt *DoNothingStmt) String() string {
 	return glob.KeywordDoNothing
 }
 
-func (stmt *InlineFactsStmt) String() string {
-	strSlice := make([]string, len(stmt.Facts))
-	for i := range len(stmt.Facts) {
-		strSlice[i] = stmt.Facts[i].String()
-	}
-	return strings.Join(strSlice, "\n")
-}
+// func (stmt *InlineFactsStmt) String() string {
+// 	strSlice := make([]string, len(stmt.Facts))
+// 	for i := range len(stmt.Facts) {
+// 		strSlice[i] = stmt.Facts[i].String()
+// 	}
+// 	return strings.Join(strSlice, "\n")
+// }
 
 func (stmt *ProveByInductionStmt) String() string {
 	var builder strings.Builder

@@ -103,3 +103,6 @@ pub const DO_NOTHING: &str = "do_nothing";
 
 pub const INDUC: &str = "induc";
 pub const FROM: &str = "from";
+
+pub const DOM: &str = "dom";
+pub const CONSTRUCT: &str = "construct";
