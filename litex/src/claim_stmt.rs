@@ -1,53 +1,28 @@
 use std::fmt;
-use crate::consts::{CLAIM, COLON, PROVE, CONTRA};
+use crate::consts::{CLAIM, COLON, PROVE};
 use crate::fact::Fact;
-use crate::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line,  vec_to_str_add_four_spaces_at_beginning_of_each_line};
+use crate::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line,  vec_to_string_add_four_spaces_at_beginning_of_each_line, add_four_spaces_at_beginning};
 use crate::stmt::Stmt;
 
-pub enum ClaimStmt {
-    Prove(ClaimProveStmt),
-    ProveByContradiction(ClaimProveByContradictionStmt),
-}
-
 pub struct ClaimProveStmt {
-    pub to_prove: Fact,
+    pub to_prove: Option<Fact>,
     pub proof: Vec<Stmt>,
-}
-
-pub struct ClaimProveByContradictionStmt {
-    pub to_prove: Fact,
-    pub proof: Vec<Stmt>,
+    pub line: u32,
+    pub file_index: usize,
 }
 
 impl ClaimProveStmt {
-    pub fn new(to_prove: Fact, proof: Vec<Stmt>) -> Self {
-        ClaimProveStmt { to_prove, proof }
-    }
-}
-
-impl ClaimProveByContradictionStmt {
-    pub fn new(to_prove: Fact, proof: Vec<Stmt>) -> Self {
-        ClaimProveByContradictionStmt { to_prove, proof }
-    }
-}
-
-impl fmt::Display for ClaimStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ClaimStmt::Prove(claim_prove_stmt) => write!(f, "{}", claim_prove_stmt),
-            ClaimStmt::ProveByContradiction(claim_prove_by_contradiction_stmt) => write!(f, "{}", claim_prove_by_contradiction_stmt),
-        }
+    pub fn new(to_prove: Option<Fact>, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
+        ClaimProveStmt { to_prove, proof, line, file_index }
     }
 }
 
 impl fmt::Display for ClaimProveStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}\n{}\n{}{}\n{}", CLAIM, COLON,to_string_and_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1), PROVE, COLON, vec_to_str_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
+        match &self.to_prove {
+            Some(to_prove) => write!(f, "{}{}\n{}\n{}{}\n{}", CLAIM, COLON,to_string_and_add_four_spaces_at_beginning_of_each_line(to_prove, 1), add_four_spaces_at_beginning(PROVE, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2)),
+            None => write!(f, "{}{}\n{}", PROVE, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)),
+        }
     }
 }
 
-impl fmt::Display for ClaimProveByContradictionStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}\n{}\n{}{}\n{}", CLAIM, COLON,to_string_and_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1), CONTRA, COLON, vec_to_str_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
-    }
-}

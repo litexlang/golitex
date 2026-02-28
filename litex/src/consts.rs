@@ -86,3 +86,9 @@ pub const RIGHT_BRACKET: &str = "]";
 pub const CLAIM: &str = "claim";
 pub const PROVE: &str = "prove";
 pub const CONTRA: &str = "contra";
+pub const CASE: &str = "case";
+pub const CASES: &str = "cases";
+
+pub const IMPORT: &str = "import";
+pub const DOUBLE_QUOTE: &str = "\"";
+pub const AS: &str = "as";
