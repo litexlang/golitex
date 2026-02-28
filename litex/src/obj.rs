@@ -2,7 +2,7 @@ use crate::consts::{
     ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_BRACE, LEFT_CURLY_BRACE, LEFT_BRACKET, MOD, MUL, N, N_POS, PKG_SEPARATOR, POW, POWER_SET, PROJ, Q, R, RANGE, RIGHT_BRACE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB, UNION, VAL, Z
 };
 use std::fmt;
-use crate::helper::{braced_string, braced_two_strings, braced_vec_to_string, curly_braced_vec_to_string, vec_pair_to_string, vec_to_string};
+use crate::helper::{braced_string, braced_two_strings, braced_vec_to_string, curly_braced_vec_to_string, vec_pair_to_string, vec_to_string_join_by_comma};
 use crate::atom::{AtomWithoutPkg, AtomWithPkg};
 use crate::atom::Atom;
 use crate::atomic_fact::AtomicFact;
@@ -723,7 +723,7 @@ impl fmt::Display for ListSet {
 
 impl fmt::Display for SetBuilder {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{} {}{} {}{}", LEFT_CURLY_BRACE, self.param, self.param_set, COLON, vec_to_string(&self.facts), RIGHT_CURLY_BRACE)
+        write!(f, "{}{} {}{} {}{}", LEFT_CURLY_BRACE, self.param, self.param_set, COLON, vec_to_string_join_by_comma(&self.facts), RIGHT_CURLY_BRACE)
     }
 }
 
@@ -747,7 +747,7 @@ impl fmt::Display for FnSetWithParams {
                 LEFT_BRACE,
                 param_str,
                 COLON,
-                vec_to_string(&self.dom_facts),
+                vec_to_string_join_by_comma(&self.dom_facts),
                 RIGHT_BRACE
             ),
         };

@@ -21,7 +21,9 @@ mod stmt_result;
 mod stmt_success;
 mod stmt_unknown;
 mod definitions;
+mod claim_stmt;
 use definitions::DefStmt;
+use claim_stmt::{ClaimProveStmt, ClaimProveByContradictionStmt};
 use and_fact::AndFact;
 use and_fact_or_specific_fact::AndFactOrSpecFact;
 use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
@@ -54,6 +56,8 @@ use stmt_success::StmtSuccess;
 use stmt_success::{NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules};
 use stmt_unknown::StmtUnknown;
 use definitions::{DefHeader, DefPropStmt, DefLetStmt};
+
+use crate::claim_stmt::ClaimStmt;
 fn main() {
     try_atom_fn_obj();
     try_arithmetic();
@@ -85,6 +89,7 @@ fn main() {
     try_stmt_result();
     try_definitions();
     try_obj_at_index();
+    try_claim_stmt();
 }
 
 fn try_atom_fn_obj() {
@@ -646,4 +651,31 @@ fn try_definitions() {
 fn try_obj_at_index() {
     let obj = Obj::ObjAtIndex(ObjAtIndex::new(Obj::mk("a"), Obj::mk("b")));
     println!("{}", obj);
+}
+
+fn try_claim_stmt() {
+    let claim_prove_stmt: ClaimStmt = ClaimStmt::Prove(ClaimProveStmt::new(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    )))), vec![Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    )))))]));
+    println!("{}", claim_prove_stmt);
+    let claim_prove_by_contradiction_stmt: ClaimStmt = ClaimStmt::ProveByContradiction(ClaimProveByContradictionStmt::new(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    )))), vec![Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    )))))]));
+    println!("{}", claim_prove_by_contradiction_stmt);
 }

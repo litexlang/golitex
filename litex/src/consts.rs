@@ -82,3 +82,7 @@ pub const PROP: &str = "prop";
 
 pub const LEFT_BRACKET: &str = "[";
 pub const RIGHT_BRACKET: &str = "]";
+
+pub const CLAIM: &str = "claim";
+pub const PROVE: &str = "prove";
+pub const CONTRA: &str = "contra";
