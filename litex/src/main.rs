@@ -32,7 +32,7 @@ use run_file_stmt::{RunFileStmt};
 use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalPkgStmt, ClearStmt, DoNothingStmt};
 use proof_techniques_stmt::{ProveCaseByCase, ProveByContradictionStmt, ProofTechnique, ProveByEnumerationStmt, ProveByInductionStmt};
 use definition_stmt::{DefStmt, HaveObjInNonemptySetStmt, HaveObjEqualStmt, LetFnStmt, HaveFnStmt};
-use claim_stmt::{ClaimProveStmt};
+use claim_stmt::{ClaimProveStmt, ClaimStmt, ClaimIffStmt};
 use and_fact::AndFact;
 use and_fact_or_specific_fact::AndFactOrSpecFact;
 use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
@@ -688,7 +688,28 @@ fn try_claim_stmt() {
     )))), proof, 1, 0);
     println!("{}", claim_prove_stmt);
 
-    let stmt = Stmt::ClaimProveStmt(claim_prove_stmt);
+    let stmt = Stmt::ClaimStmt(ClaimStmt::ClaimProveStmt(claim_prove_stmt));
+    println!("{}", stmt);
+
+    let proof2 = vec![Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    )))))];
+
+    let proof3 = vec![Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    )))))];
+    
+    let forall = ForallFact::new(vec![], vec![], vec![], vec![], 1, 0);
+    let claim_iff_stmt = ClaimIffStmt::new(forall, proof2, proof3, 1, 0);
+    println!("{}", claim_iff_stmt);
+
+    let stmt = Stmt::ClaimStmt(ClaimStmt::ClaimIffStmt(claim_iff_stmt));
     println!("{}", stmt);
 }
 
