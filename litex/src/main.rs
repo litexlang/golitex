@@ -33,7 +33,7 @@ use witness_stmt::{WitnessStmt, WitnessExistFact, WitnessNonemptySet};
 use prove_stmt::{ProveStmt};
 use run_file_stmt::{RunFileStmt};
 use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalPkgStmt, ClearStmt, DoNothingStmt};
-use prove_by_builtin_techniques_stmt::{ProveCaseByCase, ProveByContradictionStmt, ProveByBuiltinTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveEqualSetStmt};
+use prove_by_builtin_techniques_stmt::{ProveCaseByCase, ProveByContradictionStmt, ProveByBuiltinTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveEqualSetStmt, ProveFnSetIsSubsetOfCartSetStmt};
 use definition_stmt::{DefStmt, HaveObjInNonemptySetStmt, HaveObjEqualStmt, LetFnStmt, HaveFnStmt, HaveObjStStmt};
 use claim_stmt::{ClaimProveStmt, ClaimStmt, ClaimIffStmt};
 use and_fact::AndFact;
@@ -45,8 +45,7 @@ use obj::{
     Union, Intersect, SetMinus, DisjointUnion, Cup, Cap,
     ListSet, SetBuilder, FnSetWithoutParams, FnSetWithParams,
     NPosObj, NObj, QObj, ZObj, RObj, InstSetTemplateObj,
-    Cart, SetDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choose,
-    ObjAtIndex,
+    Cart, SetDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choose, FnSetObj, ObjAtIndex,
 };
 use parameter_type::{ParameterType, SetAsParamSet, NonemptySetAsParamSet, FiniteSetAsParamSet};
 use stmt::{Stmt};
@@ -120,6 +119,7 @@ fn main() {
     try_witness_stmt();
     try_prove_equal_set_stmt();
     try_witness_nonempty_set_stmt();
+    try_prove_fn_is_set_stmt();
 }
 
 fn try_atom_fn_obj() {
@@ -1020,5 +1020,19 @@ fn try_witness_nonempty_set_stmt() {
     println!("{}", witness_nonempty_set_stmt);
 
     let stmt = Stmt::WitnessStmt(WitnessStmt::WitnessNonemptySet(witness_nonempty_set_stmt));
+    println!("{}", stmt);
+}
+
+fn try_prove_fn_is_set_stmt() {
+    let prove_fn_set_is_subset_of_cart_set_stmt = ProveFnSetIsSubsetOfCartSetStmt::new(FnSetObj::FnSetWithoutParams(FnSetWithoutParams::new(vec![Obj::mk("p")], Obj::mk("p"))), SetBuilder::new("x".to_string(), Obj::mk("p"), vec![]), vec![], 1, 0);
+    println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
+
+    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveFnIsSet(prove_fn_set_is_subset_of_cart_set_stmt));
+    println!("{}", stmt);
+
+    let prove_fn_set_is_subset_of_cart_set_stmt = ProveFnSetIsSubsetOfCartSetStmt::new(FnSetObj::FnSetWithParams(FnSetWithParams::new("f".to_string(), vec!["x".to_string()], vec![Obj::mk("p")], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p"), vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))])), SetBuilder::new("x".to_string(), Obj::mk("p"), vec![]), vec![], 1, 0);
+    println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
+
+    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveFnIsSet(prove_fn_set_is_subset_of_cart_set_stmt));
     println!("{}", stmt);
 }
