@@ -31,7 +31,7 @@ use prove_stmt::{ProveStmt};
 use run_file_stmt::{RunFileStmt};
 use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalPkgStmt, ClearStmt, DoNothingStmt};
 use proof_techniques_stmt::{ProveCaseByCase, ProveByContradictionStmt, ProofTechnique, ProveByEnumerationStmt, ProveByInductionStmt};
-use definition_stmt::{DefStmt, HaveObjInNonemptySetStmt};
+use definition_stmt::{DefStmt, HaveObjInNonemptySetStmt, HaveObjEqualStmt, LetFnStmt, DefHeaderWithParamSetAndDomFacts};
 use claim_stmt::{ClaimProveStmt};
 use and_fact::AndFact;
 use and_fact_or_specific_fact::AndFactOrSpecFact;
@@ -64,7 +64,7 @@ use stmt_result::StmtResult;
 use stmt_success::StmtSuccess;
 use stmt_success::{NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules};
 use stmt_unknown::StmtUnknown;
-use definition_stmt::{DefHeader, DefPropStmt, DefLetStmt};
+use definition_stmt::{DefHeaderWithParamType, DefPropStmt, DefLetStmt};
 use know_stmt::KnowStmt;
 fn main() {
     try_atom_fn_obj();
@@ -107,6 +107,8 @@ fn main() {
     try_have_obj_in_nonempty_set_stmt();
     try_tooling_stmt();
     try_prove_by_induction_stmt();
+    try_have_obj_equal_stmt();
+    try_let_fn_stmt();
 }
 
 fn try_atom_fn_obj() {
@@ -191,7 +193,7 @@ fn try_stmt() {
     ))))], 1, 0)));
     println!("{}", def_stmt);
 
-    let def_stmt2 = Stmt::DefStmt(DefStmt::DefPropStmt(DefPropStmt::new(DefHeader::new("f".to_string(), vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())]), Some(vec![Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let def_stmt2 = Stmt::DefStmt(DefStmt::DefPropStmt(DefPropStmt::new(DefHeaderWithParamType::new("f".to_string(), vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())]), Some(vec![Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
         1,
@@ -643,7 +645,7 @@ fn try_stmt_result() {
 }
 
 fn try_definitions() {
-    let def_header = DefHeader::new("f".to_string(), vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())]);
+    let def_header = DefHeaderWithParamType::new("f".to_string(), vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())]);
     let def_prop_stmt = DefPropStmt::new(def_header, Some(vec![Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
@@ -660,7 +662,7 @@ fn try_definitions() {
     ))))], 1, 0);
     println!("{}", def_let_stmt);
 
-    let def_header2 = DefHeader::new("f".to_string(), vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())]);
+    let def_header2 = DefHeaderWithParamType::new("f".to_string(), vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())]);
     let def_prop_stmt2 = DefPropStmt::new(def_header2, None, 1, 0);
     println!("{}", def_prop_stmt2);
 }
@@ -837,5 +839,34 @@ fn try_prove_by_induction_stmt() {
     println!("{}", prove_by_induction_stmt);
 
     let stmt = Stmt::ProofTechnique(ProofTechnique::ProveByInduction(prove_by_induction_stmt));
+    println!("{}", stmt);
+}
+
+fn try_have_obj_equal_stmt() {
+    let have_obj_equal_stmt = HaveObjEqualStmt::new(vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())], vec![Obj::mk("p")], 1, 0);
+    println!("{}", have_obj_equal_stmt);
+
+    let stmt = Stmt::DefStmt(DefStmt::HaveObjEqualStmt(have_obj_equal_stmt));
+    println!("{}", stmt);
+}
+
+fn try_let_fn_stmt() {
+    let def_header_with_dom = DefHeaderWithParamSetAndDomFacts::new("f".to_string(), vec!["x".to_string()], vec![Obj::mk("p")], vec![AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))]);
+    let ret_set = Obj::mk("p");
+    let facts = vec![Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))))];
+    let let_fn_stmt = LetFnStmt::new(def_header_with_dom, ret_set, facts, 1, 0);
+    println!("{}", let_fn_stmt);
+
+    let stmt = Stmt::DefStmt(DefStmt::LetFnStmt(let_fn_stmt));
     println!("{}", stmt);
 }
