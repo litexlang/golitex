@@ -3,7 +3,7 @@ use crate::fact::{ Fact};
 use crate::obj::Obj;
 use std::fmt;
 use crate::consts::{COLON, CONSTRUCT, DOM, EQUAL, FN, HAVE, LET, PROP, RIGHT_ARROW};
-use crate::helper::{add_four_spaces_at_beginning, braced_pair_vec_to_string, braced_vec_to_string, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma};
+use crate::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, braced_pair_vec_to_string, braced_vec_to_string, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma};
 use crate::obj::FnSetWithParams;
 use crate::stmt::Stmt;
 
@@ -174,27 +174,26 @@ fn multiple_line_fn_stmt_str(fn_set_with_params: &FnSetWithParams) -> String {
     
     let dom_empty = dom_facts.is_empty();
     let then_empty = then_facts.is_empty();
-    let header = format!("{} {}{}\n{}{}{}", FN, name, COLON, add_four_spaces_at_beginning(FN, 1), braced_pair_vec_to_string(params, param_sets), COLON);
-    let ret = ret_set.to_string();
+    let header = format!("{}{}{}{}", name, braced_pair_vec_to_string(params, param_sets), ret_set, COLON);
     match (dom_empty, then_empty) {
-        (true, true) => format!("{}\n{}{}\n{}", header, add_four_spaces_at_beginning(RIGHT_ARROW, 2), COLON, ret),
-        (true, false) => format!("{}\n{}{}\n{}\n{}", header, add_four_spaces_at_beginning(RIGHT_ARROW, 2), COLON, ret, vec_to_string_add_four_spaces_at_beginning_of_each_line(then_facts, 3)),
-        (false, true) => format!("{}\n{}{}\n{}\n{}{}\n{}", header, add_four_spaces_at_beginning(DOM, 2), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(dom_facts, 3), add_four_spaces_at_beginning(RIGHT_ARROW, 2), COLON, ret),
-        (false, false) => format!("{}\n{}{}\n{}\n{}{}\n{}\n{}", header, add_four_spaces_at_beginning(DOM, 2), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(dom_facts, 3), add_four_spaces_at_beginning(RIGHT_ARROW, 2), COLON, ret, vec_to_string_add_four_spaces_at_beginning_of_each_line(then_facts, 3)),
+        (true, true) => format!("{}\n{}{}", header, add_four_spaces_at_beginning(RIGHT_ARROW, 1), COLON),
+        (true, false) => format!("{}\n{}{}\n{}", header, add_four_spaces_at_beginning(RIGHT_ARROW, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(then_facts, 3)),
+        (false, true) => format!("{}\n{}{}\n{}\n{}{}", header, add_four_spaces_at_beginning(DOM, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(dom_facts, 2), add_four_spaces_at_beginning(RIGHT_ARROW, 1), COLON),
+        (false, false) => format!("{}\n{}{}\n{}\n{}{}\n{}", header, add_four_spaces_at_beginning(DOM, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(dom_facts, 2), add_four_spaces_at_beginning(RIGHT_ARROW, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(then_facts, 2)),
     }
 }
 
 impl fmt::Display for LetFnStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", multiple_line_fn_stmt_str(&self.fn_set_with_params))
+        write!(f, "{} {}{}\n{}", LET, FN, COLON, to_string_and_add_four_spaces_at_beginning_of_each_line(&multiple_line_fn_stmt_str(&self.fn_set_with_params), 1))
     }
 }
 
 impl fmt::Display for HaveFnStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let construct_str_and_proof = match self.proof.len() { 0 => format!("{} {}{} {}{}", add_four_spaces_at_beginning(CONSTRUCT, 1), self.fn_set_with_params.fn_name, braced_vec_to_string(&self.fn_set_with_params.params), EQUAL, self.construct_fn_equal_to), _ => format!("{} {}{} {}{}{}\n{}", add_four_spaces_at_beginning(CONSTRUCT, 1), self.fn_set_with_params.fn_name, braced_vec_to_string(&self.fn_set_with_params.params), EQUAL, self.construct_fn_equal_to, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2)) };
+        let construct_str_and_proof = match self.proof.len() { 0 => format!("{} {}{} {}{}", add_four_spaces_at_beginning(CONSTRUCT, 1), self.fn_set_with_params.fn_name, braced_vec_to_string(&self.fn_set_with_params.params), EQUAL, self.construct_fn_equal_to), _ => format!("{} {}{} {} {}{}\n{}", add_four_spaces_at_beginning(CONSTRUCT, 1), self.fn_set_with_params.fn_name, braced_vec_to_string(&self.fn_set_with_params.params), EQUAL, self.construct_fn_equal_to, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2)) };
         
-        write!(f, "{}\n{}", multiple_line_fn_stmt_str(&self.fn_set_with_params), construct_str_and_proof)
+        write!(f, "{} {}{}\n{}\n{}", HAVE, FN, COLON, to_string_and_add_four_spaces_at_beginning_of_each_line(&multiple_line_fn_stmt_str(&self.fn_set_with_params), 1), construct_str_and_proof)
     }
 }
 
