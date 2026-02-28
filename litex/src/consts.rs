@@ -94,3 +94,12 @@ pub const DOUBLE_QUOTE: &str = "\"";
 pub const AS: &str = "as";
 
 pub const ENUM: &str = "enum";
+
+pub const HAVE: &str = "have";
+
+pub const CLEAR: &str = "clear";
+
+pub const DO_NOTHING: &str = "do_nothing";
+
+pub const INDUC: &str = "induc";
+pub const FROM: &str = "from";

@@ -1,12 +1,20 @@
 use crate::parameter_type::ParameterType;
 use crate::fact::Fact;
 use std::fmt;
-use crate::consts::{LET, COLON, PROP};
+use crate::consts::{LET, COLON, PROP, HAVE};
 use crate::helper::{vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line};
 
 pub enum DefStmt {
     DefLetStmt(DefLetStmt),
     DefPropStmt(DefPropStmt),
+    HaveObjInNonemptySetStmt(HaveObjInNonemptySetStmt),
+}
+
+pub struct HaveObjInNonemptySetStmt {
+    pub names: Vec<String>,
+    pub param_types: Vec<ParameterType>,
+    pub line: u32,
+    pub file_index: usize,
 }
 
 pub struct DefHeader {
@@ -35,6 +43,7 @@ impl fmt::Display for DefStmt {
         match self {
             DefStmt::DefLetStmt(def_let_stmt) => write!(f, "{}", def_let_stmt),
             DefStmt::DefPropStmt(def_prop_stmt) => write!(f, "{}", def_prop_stmt),
+            DefStmt::HaveObjInNonemptySetStmt(have_obj_in_nonempty_set_stmt) => write!(f, "{}", have_obj_in_nonempty_set_stmt),
         }
     }
 }
@@ -86,6 +95,19 @@ impl DefStmt {
         match self {
             DefStmt::DefLetStmt(def_let_stmt) => (def_let_stmt.line, def_let_stmt.file_index),
             DefStmt::DefPropStmt(def_prop_stmt) => (def_prop_stmt.line, def_prop_stmt.file_index),
+            DefStmt::HaveObjInNonemptySetStmt(have_obj_in_nonempty_set_stmt) => (have_obj_in_nonempty_set_stmt.line, have_obj_in_nonempty_set_stmt.file_index),
         }
+    }
+}
+
+impl HaveObjInNonemptySetStmt {
+    pub fn new(names: Vec<String>, param_types: Vec<ParameterType>, line: u32, file_index: usize) -> Self {
+        HaveObjInNonemptySetStmt { names, param_types, line, file_index }
+    }
+}
+
+impl fmt::Display for HaveObjInNonemptySetStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}", HAVE, vec_pair_to_string(&self.names, &self.param_types))
     }
 }
