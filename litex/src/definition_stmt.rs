@@ -2,7 +2,7 @@ use crate::parameter_type::ParameterType;
 use crate::fact::Fact;
 use std::fmt;
 use crate::consts::{LET, COLON, PROP};
-use crate::helper::{vec_pair_to_string, add_four_spaces_to_vec_at_beginning};
+use crate::helper::{vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line};
 
 pub enum DefStmt {
     DefLetStmt(DefLetStmt),
@@ -48,7 +48,7 @@ impl DefPropStmt {
 impl fmt::Display for DefPropStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.iff_facts {
-            Some(iff_facts) => write!(f, "{} {}{}\n{}", PROP, self.def_header, COLON, add_four_spaces_to_vec_at_beginning(&iff_facts, 1)),
+            Some(iff_facts) => write!(f, "{} {}{}\n{}", PROP, self.def_header, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&iff_facts, 1)),
             None => write!(f, "{} {}", PROP, self.def_header),
         }
     }
@@ -76,7 +76,7 @@ impl fmt::Display for DefLetStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.facts.len() {
             0 => write!(f, "{} {}", LET, vec_pair_to_string(&self.names, &self.param_types)),
-            _ => write!(f, "{} {}{}\n{}", LET, vec_pair_to_string(&self.names, &self.param_types), COLON, add_four_spaces_to_vec_at_beginning(&self.facts, 1)),
+            _ => write!(f, "{} {}{}\n{}", LET, vec_pair_to_string(&self.names, &self.param_types), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1)),
         }
     }
 }

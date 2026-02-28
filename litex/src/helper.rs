@@ -30,10 +30,6 @@ pub fn vec_pair_to_string<A: fmt::Display, B: fmt::Display>(left: &Vec<A>, right
     left.iter().zip(right.iter()).map(|(l, r)| format!("{} {}", l, r)).collect::<Vec<String>>().join(", ")
 }
 
-pub fn add_four_spaces_to_vec_at_beginning<A: fmt::Display>(facts: &Vec<A>, number_of_four_spaces: usize) -> String {
-    facts.iter().map(|fact| format!("{}{}", "    ".repeat(number_of_four_spaces), fact)).collect::<Vec<String>>().join("\n")
-}
-
 pub fn to_string_and_add_four_spaces_at_beginning_of_each_line<T: fmt::Display>(fact: &T, number_of_four_spaces: usize) -> String {
     fact.to_string().split("\n").map(|fact| format!("{}{}", "    ".repeat(number_of_four_spaces), fact)).collect::<Vec<String>>().join("\n")
 }
@@ -51,6 +47,10 @@ pub fn on_line_in_file_colon(line: u32, file_index: usize) -> String {
     format!("on line {}:", line)
 }
 
-pub fn vec_to_str_add_four_spaces_at_beginning_of_each_line<T: fmt::Display>(vec: &Vec<T>, number_of_four_spaces: usize) -> String {
+pub fn vec_to_string_add_four_spaces_at_beginning_of_each_line<T: fmt::Display>(vec: &Vec<T>, number_of_four_spaces: usize) -> String {
     to_string_and_add_four_spaces_at_beginning_of_each_line(&vec_to_string_with_sep(vec, "\n"), number_of_four_spaces)
+}
+
+pub fn add_four_spaces_at_beginning(str: &str, number_of_four_spaces: usize) -> String {
+    format!("{}{}", "    ".repeat(number_of_four_spaces), str)
 }

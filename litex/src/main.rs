@@ -20,13 +20,18 @@ mod or_fact_or_and_fact_or_specific_fact;
 mod stmt_result;
 mod stmt_success;
 mod stmt_unknown;
-mod definitions;
+mod definition_stmt;
 mod claim_stmt;
-use definitions::DefStmt;
-use claim_stmt::{ClaimProveStmt, ClaimProveByContradictionStmt};
+mod know_stmt;
+mod proof_techniques_stmt;
+mod import_stmt;
+use proof_techniques_stmt::{ProveCaseByCase, ClaimProveByContradictionStmt, ProofTechnique};
+use definition_stmt::DefStmt;
+use claim_stmt::{ClaimProveStmt};
 use and_fact::AndFact;
 use and_fact_or_specific_fact::AndFactOrSpecFact;
 use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
+use import_stmt::{ImportRelativePathStmt, ImportGlobalPkgStmt, ImportStmt};
 use atom::{AtomWithoutPkg, AtomWithPkg, Atom};
 use obj::{
     Obj, FnObj, Number, Add, Sub, Mul, Div, Mod, Pow,
@@ -55,9 +60,8 @@ use stmt_result::StmtResult;
 use stmt_success::StmtSuccess;
 use stmt_success::{NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules};
 use stmt_unknown::StmtUnknown;
-use definitions::{DefHeader, DefPropStmt, DefLetStmt};
-
-use crate::claim_stmt::ClaimStmt;
+use definition_stmt::{DefHeader, DefPropStmt, DefLetStmt};
+use know_stmt::KnowStmt;
 fn main() {
     try_atom_fn_obj();
     try_arithmetic();
@@ -90,6 +94,9 @@ fn main() {
     try_definitions();
     try_obj_at_index();
     try_claim_stmt();
+    try_know_stmt();
+    try_proof_techniques();
+    try_import_stmt();
 }
 
 fn try_atom_fn_obj() {
@@ -654,28 +661,69 @@ fn try_obj_at_index() {
 }
 
 fn try_claim_stmt() {
-    let claim_prove_stmt: ClaimStmt = ClaimStmt::Prove(ClaimProveStmt::new(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let proof = vec![Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
         1,
         0,
-    )))), vec![Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    )))))];
+    let claim_prove_stmt = ClaimProveStmt::new(Some(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
         1,
         0,
-    )))))]));
+    ))))), proof, 1, 0);
     println!("{}", claim_prove_stmt);
-    let claim_prove_by_contradiction_stmt: ClaimStmt = ClaimStmt::ProveByContradiction(ClaimProveByContradictionStmt::new(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+
+    let stmt = Stmt::ClaimProveStmt(claim_prove_stmt);
+    println!("{}", stmt);
+}
+
+fn try_know_stmt() {
+    let know_stmt = KnowStmt::new(vec![Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
         1,
         0,
-    )))), vec![Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    ))))], 1, 0);
+    println!("{}", know_stmt);
+
+    let stmt = Stmt::KnowStmt(know_stmt);
+    println!("{}", stmt);
+}
+
+fn try_proof_techniques() {
+    let prove_case_by_case = ProveCaseByCase::new(vec![], vec![], vec![], 1, 0);
+    println!("{}", prove_case_by_case);
+
+    let claim_prove_by_contradiction_stmt = ClaimProveByContradictionStmt::new(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
         1,
         0,
-    )))))]));
+    )))), vec![], 1, 0);
     println!("{}", claim_prove_by_contradiction_stmt);
+
+    let proof_technique = ProofTechnique::ProveCaseByCase(prove_case_by_case);
+    println!("{}", proof_technique);
+
+    let proof_technique = ProofTechnique::ClaimProveByContradiction(claim_prove_by_contradiction_stmt);
+    println!("{}", proof_technique);
+
+    let stmt = Stmt::ProofTechnique(proof_technique);
+    println!("{}", stmt);
+}
+
+fn try_import_stmt() {
+    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/pkg", "pkg", 1, 0);
+    println!("{}", import_relative_path_stmt);
+
+    let import_global_pkg_stmt = ImportGlobalPkgStmt::new("pkg", "pkg", 1, 0);
+    println!("{}", import_global_pkg_stmt);
+
+    let stmt = Stmt::ImportStmt(ImportStmt::ImportRelativePath(import_relative_path_stmt));
+    println!("{}", stmt);
+
+    let stmt = Stmt::ImportStmt(ImportStmt::ImportGlobalPkg(import_global_pkg_stmt));
+    println!("{}", stmt);
 }
