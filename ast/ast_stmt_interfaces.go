@@ -41,15 +41,15 @@ func (s *HaveObjStStmt) stmt()       {}
 func (s *ProveCaseByCaseStmt) stmt() {}
 
 // func (s *KnowPropInferStmt) stmt()   {}
-func (s *KnowInferStmt) stmt() {}
-func (s *OrStmt) stmt()        {}
+// func (s *KnowInferStmt) stmt() {}
+func (s *OrStmt) stmt() {}
 
 // func (s *InferStmt) stmt()         {}
-func (s *InferTemplateStmt) stmt() {}
-func (s *ImportDirStmt) stmt()     {}
-func (s *RunFileStmt) stmt()       {}
-func (s *ProveStmt) stmt()         {}
-func (s *ProveForStmt) stmt()      {}
+// func (s *InferTemplateStmt) stmt() {}
+func (s *ImportDirStmt) stmt() {}
+func (s *RunFileStmt) stmt()   {}
+func (s *ProveStmt) stmt()     {}
+func (s *ProveForStmt) stmt()  {}
 
 func (s *ProveInferStmt) stmt() {}
 
@@ -107,11 +107,11 @@ func (s *HaveObjStStmt) algoStmt()       {}
 func (s *ProveCaseByCaseStmt) algoStmt() {}
 
 // func (s *KnowPropInferStmt) algoStmt()             {}
-func (s *KnowInferStmt) algoStmt() {}
-func (s *OrStmt) algoStmt()        {}
+// func (s *KnowInferStmt) algoStmt() {}
+func (s *OrStmt) algoStmt() {}
 
 // func (s *InferStmt) algoStmt()                     {}
-func (s *InferTemplateStmt) algoStmt()             {}
+// func (s *InferTemplateStmt) algoStmt()             {}
 func (s *ImportDirStmt) algoStmt()                 {}
 func (s *RunFileStmt) algoStmt()                   {}
 func (s *ProveStmt) algoStmt()                     {}
@@ -179,11 +179,11 @@ func (s *HaveObjStStmt) GetLine() uint       { return s.Line }
 func (s *ProveCaseByCaseStmt) GetLine() uint { return s.Line }
 
 // func (s *KnowPropInferStmt) GetLine() uint             { return s.Line }
-func (s *KnowInferStmt) GetLine() uint { return s.Line }
-func (s *OrStmt) GetLine() uint        { return s.Line }
+// func (s *KnowInferStmt) GetLine() uint { return s.Line }
+func (s *OrStmt) GetLine() uint { return s.Line }
 
 // func (s *InferStmt) GetLine() uint                     { return s.Line }
-func (s *InferTemplateStmt) GetLine() uint             { return s.Line }
+// func (s *InferTemplateStmt) GetLine() uint             { return s.Line }
 func (s *ImportDirStmt) GetLine() uint                 { return s.Line }
 func (s *RunFileStmt) GetLine() uint                   { return s.Line }
 func (s *ProveStmt) GetLine() uint                     { return s.Line }
@@ -251,11 +251,11 @@ func (s *HaveObjStStmt) SetLine(l uint)       { s.Line = l }
 func (s *ProveCaseByCaseStmt) SetLine(l uint) { s.Line = l }
 
 // func (s *KnowPropInferStmt) SetLine(l uint)             { s.Line = l }
-func (s *KnowInferStmt) SetLine(l uint) { s.Line = l }
-func (s *OrStmt) SetLine(l uint)        { s.Line = l }
+// func (s *KnowInferStmt) SetLine(l uint) { s.Line = l }
+func (s *OrStmt) SetLine(l uint) { s.Line = l }
 
 // func (s *InferStmt) SetLine(l uint)                     { s.Line = l }
-func (s *InferTemplateStmt) SetLine(l uint)             { s.Line = l }
+// func (s *InferTemplateStmt) SetLine(l uint)             { s.Line = l }
 func (s *ImportDirStmt) SetLine(l uint)                 { s.Line = l }
 func (s *RunFileStmt) SetLine(l uint)                   { s.Line = l }
 func (s *ProveStmt) SetLine(l uint)                     { s.Line = l }
@@ -381,7 +381,7 @@ func (s *OrStmt) canBeKnown()             {}
 
 // func (s *ChainPureFact) canBeKnown()        {}
 // func (s *KnowPropInferStmt) canBeKnown()     {}
-func (s *KnowInferStmt) canBeKnown()         {}
+// func (s *KnowInferStmt) canBeKnown()         {}
 func (p *PureSpecificFactStmt) canBeKnown()  {}
 func (e *ExistSpecificFactStmt) canBeKnown() {}
 func (c *ChainPureFact) canBeKnown()         {}

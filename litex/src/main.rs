@@ -23,17 +23,17 @@ mod stmt_unknown;
 mod definition_stmt;
 mod claim_stmt;
 mod know_stmt;
-mod proof_techniques_stmt;
+mod prove_by_builtin_techniques_stmt;
 mod prove_stmt;
 mod run_file_stmt;
 mod tooling_stmt;
 mod eval_stmt;
 mod witness_stmt;
-use witness_stmt::{WitnessStmt, WitnessExistFact};
+use witness_stmt::{WitnessStmt, WitnessExistFact, WitnessNonemptySet};
 use prove_stmt::{ProveStmt};
 use run_file_stmt::{RunFileStmt};
 use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalPkgStmt, ClearStmt, DoNothingStmt};
-use proof_techniques_stmt::{ProveCaseByCase, ProveByContradictionStmt, ProveByBuiltinTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange};
+use prove_by_builtin_techniques_stmt::{ProveCaseByCase, ProveByContradictionStmt, ProveByBuiltinTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveEqualSetStmt};
 use definition_stmt::{DefStmt, HaveObjInNonemptySetStmt, HaveObjEqualStmt, LetFnStmt, HaveFnStmt, HaveObjStStmt};
 use claim_stmt::{ClaimProveStmt, ClaimStmt, ClaimIffStmt};
 use and_fact::AndFact;
@@ -118,6 +118,8 @@ fn main() {
     try_prove_for_stmt();
     try_have_obj_st_stmt();
     try_witness_stmt();
+    try_prove_equal_set_stmt();
+    try_witness_nonempty_set_stmt();
 }
 
 fn try_atom_fn_obj() {
@@ -735,15 +737,22 @@ fn try_know_stmt() {
 }
 
 fn try_proof_techniques() {
-    let prove_case_by_case = ProveCaseByCase::new(vec![], vec![], vec![], 1, 0);
+    let prove_case_by_case = ProveCaseByCase::new(vec![], vec![], vec![], vec![], 1, 0);
     println!("{}", prove_case_by_case);
+
+    let impossible_fact = OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))));
 
     let claim_prove_by_contradiction_stmt = ProveByContradictionStmt::new(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
         1,
         0,
-    )))), vec![], 1, 0);
+    )))), vec![], impossible_fact, 1, 0);
     println!("{}", claim_prove_by_contradiction_stmt);
 
     let proof_technique = ProveByBuiltinTechniqueStmt::ProveCaseByCase(prove_case_by_case);
@@ -982,5 +991,34 @@ fn try_witness_stmt() {
     println!("{}", witness_exist_fact);
 
     let stmt = Stmt::WitnessStmt(WitnessStmt::WitnessExistFact(witness_exist_fact));
+    println!("{}", stmt);
+}
+
+fn try_prove_equal_set_stmt() {
+    let prove_equal_set_stmt = ProveEqualSetStmt::new(Obj::mk("p"), Obj::mk("q"), vec![], 1, 0);
+    println!("{}", prove_equal_set_stmt);
+
+    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveEqualSet(prove_equal_set_stmt));
+    println!("{}", stmt);
+
+    let proof2 = vec![Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    )))))];
+
+    let prove_equal_set_stmt = ProveEqualSetStmt::new(Obj::mk("p"), Obj::mk("q"), proof2, 1, 0);
+    println!("{}", prove_equal_set_stmt);
+
+    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveEqualSet(prove_equal_set_stmt));
+    println!("{}", stmt);
+}
+
+fn try_witness_nonempty_set_stmt() {
+    let witness_nonempty_set_stmt = WitnessNonemptySet::new(Obj::mk("p"), Obj::mk("q"), vec![], 1, 0);
+    println!("{}", witness_nonempty_set_stmt);
+
+    let stmt = Stmt::WitnessStmt(WitnessStmt::WitnessNonemptySet(witness_nonempty_set_stmt));
     println!("{}", stmt);
 }

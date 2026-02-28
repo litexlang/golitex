@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::consts::{CASE, CASES, CLAIM, COLON, CONTRA, ENUM, FOR, FROM, INDUC, PROVE, RIGHT_ARROW};
+use crate::consts::{CASE, CASES, CLAIM, COLON, CONTRA, ENUM, FOR, FROM, INDUC, PROVE, RIGHT_ARROW, EQUAL_SET, EQUAL, IMPOSSIBLE};
 use crate::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line};
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::fact::Fact;
@@ -13,6 +13,16 @@ pub enum ProveByBuiltinTechniqueStmt {
     ProveByEnumeration(ProveByEnumerationStmt),
     ProveByInduction(ProveByInductionStmt),
     ProveForStmt(ProveForStmt),
+    ProveEqualSet(ProveEqualSetStmt),
+}
+
+
+pub struct ProveEqualSetStmt {
+    pub left: Obj,
+    pub right: Obj,
+    pub proof: Vec<Stmt>,
+    pub line: u32,
+    pub file_index: usize,
 }
 
 
@@ -53,6 +63,7 @@ pub struct ProveCaseByCase {
     pub cases: Vec<AndFactOrSpecFact>,
     pub then_facts: Vec<Fact>,
     pub proofs: Vec<Vec<Stmt>>,
+    pub impossible_facts: Vec<Option<OrFactOrAndFactOrSpecFact>>,
     pub line: u32,
     pub file_index: usize,
 }
@@ -60,6 +71,7 @@ pub struct ProveCaseByCase {
 pub struct ProveByContradictionStmt {
     pub to_prove: Fact,
     pub proof: Vec<Stmt>,
+    pub impossible_fact: OrFactOrAndFactOrSpecFact,
     pub line: u32,
     pub file_index: usize,
 }
@@ -72,28 +84,35 @@ impl ProveByEnumerationStmt {
 }
 
 impl ProveCaseByCase {
-    pub fn new(cases: Vec<AndFactOrSpecFact>, then_facts: Vec<Fact>, proofs: Vec<Vec<Stmt>>, line: u32, file_index: usize) -> Self {
-        ProveCaseByCase { cases, then_facts, proofs, line, file_index }
+    pub fn new(cases: Vec<AndFactOrSpecFact>, then_facts: Vec<Fact>, proofs: Vec<Vec<Stmt>>, impossible_facts: Vec<Option<OrFactOrAndFactOrSpecFact>>, line: u32, file_index: usize) -> Self {
+        ProveCaseByCase { cases, then_facts, proofs, impossible_facts, line, file_index }
     }
 }
 
 impl fmt::Display for ProveCaseByCase {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let case_and_proof_of_each_case = self.cases.iter().zip(self.proofs.iter()).map(|(case, proof)| format!("{} {}{}\n{}", CASE,case, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(proof, 2))).collect::<Vec<String>>();
+        // 还要考虑：如果这一位的 impossible_fact 是 None，则不输出 impossible_fact；否则再在后面一行写上 impossible ...
+        let case_and_proof_of_each_case = self.cases.iter().zip(self.proofs.iter()).zip(self.impossible_facts.iter()).map(|((case, proof), impossible_fact)| {
+            if let Some(impossible_fact) = impossible_fact {
+                format!("{} {}{}\n{}\n{} {}", CASE,case, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(proof, 2), IMPOSSIBLE, add_four_spaces_at_beginning(&impossible_fact.to_string(), 2))
+            } else {
+                format!("{} {}{}\n{}", CASE,case, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(proof, 2))
+            }
+        }).collect::<Vec<String>>();
         
         write!(f, "{}{}\n{}\n{}", CASES, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.then_facts, 1), case_and_proof_of_each_case.join("\n"))
     }
 }
 
 impl ProveByContradictionStmt {
-    pub fn new(to_prove: Fact, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
-        ProveByContradictionStmt { to_prove, proof, line, file_index }
+    pub fn new(to_prove: Fact, proof: Vec<Stmt>, impossible_fact: OrFactOrAndFactOrSpecFact, line: u32, file_index: usize) -> Self {
+        ProveByContradictionStmt { to_prove, proof, impossible_fact, line, file_index }
     }
 }
 
 impl fmt::Display for ProveByContradictionStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}\n{}\n{}{}\n{}", CLAIM, COLON,to_string_and_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1),add_four_spaces_at_beginning(CONTRA, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
+        write!(f, "{}{}\n{}\n{}{}\n{}\n{} {}", CLAIM, COLON,to_string_and_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1),add_four_spaces_at_beginning(CONTRA, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2), IMPOSSIBLE, add_four_spaces_at_beginning(&self.impossible_fact.to_string(), 2))
     }
 }
 
@@ -105,6 +124,7 @@ impl fmt::Display for ProveByBuiltinTechniqueStmt {
             ProveByBuiltinTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt) => write!(f, "{}", prove_by_enumeration_stmt),
             ProveByBuiltinTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => write!(f, "{}", prove_by_induction_stmt),
             ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt) => write!(f, "{}", prove_for_stmt),
+            ProveByBuiltinTechniqueStmt::ProveEqualSet(prove_equal_set_stmt) => write!(f, "{}", prove_equal_set_stmt),
         }
     }
 }
@@ -117,6 +137,7 @@ impl ProveByBuiltinTechniqueStmt {
             ProveByBuiltinTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt) => (prove_by_enumeration_stmt.line, prove_by_enumeration_stmt.file_index),
             ProveByBuiltinTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => (prove_by_induction_stmt.line, prove_by_induction_stmt.file_index),
             ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt) => (prove_for_stmt.line, prove_for_stmt.file_index),
+            ProveByBuiltinTechniqueStmt::ProveEqualSet(prove_equal_set_stmt) => (prove_equal_set_stmt.line, prove_equal_set_stmt.file_index),
         }
     }
 }
@@ -165,5 +186,20 @@ impl fmt::Display for ClosedRangeOrRange {
             ClosedRangeOrRange::ClosedRange(closed_range) => write!(f, "{}", closed_range),
             ClosedRangeOrRange::Range(range) => write!(f, "{}", range),
         }
+    }
+}
+
+impl fmt::Display for ProveEqualSetStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.proof.len() {
+            0 => write!(f, "{} {} {} {}", EQUAL_SET, self.left, EQUAL, self.right),
+            _ => write!(f, "{} {} {} {}{}\n{}", EQUAL_SET, self.left, EQUAL, self.right, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)),
+        }
+    }
+}
+
+impl ProveEqualSetStmt {
+    pub fn new(left: Obj, right: Obj, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
+        ProveEqualSetStmt { left, right, proof, line, file_index }
     }
 }
