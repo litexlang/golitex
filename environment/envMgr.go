@@ -41,12 +41,11 @@ type KnownFactsStruct struct {
 }
 
 type DefinedStuff[T any] struct {
-	Defined  T
-	EnvDepth int
+	Defined T
 }
 
-func NewDefinedStuff[T any](defined T, envDepth int) DefinedStuff[T] {
-	return DefinedStuff[T]{Defined: defined, EnvDepth: envDepth}
+func NewDefinedStuff[T any](defined T) DefinedStuff[T] {
+	return DefinedStuff[T]{Defined: defined}
 }
 
 type EnvMgr struct {

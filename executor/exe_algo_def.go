@@ -28,7 +28,7 @@ func (exec *Executor) defAlgoStmt(stmt *ast.DefAlgoStmt) ast.StmtRet {
 	}
 
 	exec.Env.CurEnv().AlgoDefMem[stmt.FuncName] = struct{}{}
-	exec.Env.AllDefinedAlgoNames[stmt.FuncName] = litex_env.NewDefinedStuff(stmt, exec.Env.CurEnvDepth())
+	exec.Env.AllDefinedAlgoNames[stmt.FuncName] = litex_env.NewDefinedStuff(stmt)
 	return exec.NewTrueStmtRet(stmt)
 }
 

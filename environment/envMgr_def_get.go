@@ -108,7 +108,7 @@ func (envMgr *EnvMgr) DefineSetTemplate(stmt *ast.DefSetTemplateStmt) (bool, str
 		return false, fmt.Sprintf("set template %s already defined", stmt.Name)
 	}
 
-	envMgr.AllDefinedSetTemplateNames[stmt.Name] = NewDefinedStuff(stmt, envMgr.CurEnvDepth())
+	envMgr.AllDefinedSetTemplateNames[stmt.Name] = NewDefinedStuff(stmt)
 
 	envMgr.CurEnv().SetTemplateDefMem[stmt.Name] = struct{}{}
 
