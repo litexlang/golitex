@@ -1,3 +1,4 @@
+use crate::atomic_fact::AtomicFact;
 use crate::consts::{
     ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_BRACE, LEFT_CURLY_BRACE, LEFT_BRACKET, MOD, MUL, N, N_POS, PKG_SEPARATOR, POW, POWER_SET, PROJ, Q, R, RANGE, RIGHT_BRACE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB, UNION, VAL, Z
 };
@@ -5,7 +6,6 @@ use std::fmt;
 use crate::helper::{braced_string, braced_two_strings, braced_vec_to_string, curly_braced_vec_to_string, vec_pair_to_string, vec_to_string_join_by_comma};
 use crate::atom::{AtomWithoutPkg, AtomWithPkg};
 use crate::atom::Atom;
-use crate::atomic_fact::AtomicFact;
 
 pub enum Obj {
     AtomWithoutPkg(AtomWithoutPkg),
@@ -44,7 +44,7 @@ pub enum Obj {
     ClosedRange(ClosedRange),
     Val(Val),
     PowerSet(PowerSet),
-    Choice(Choice),
+    Choose(Choose),
     ObjAtIndex(ObjAtIndex),
 }
 
@@ -53,7 +53,7 @@ pub struct ObjAtIndex {
     pub index: Box<Obj>,
 }
 
-pub struct Choice {
+pub struct Choose {
     pub element: Box<Obj>,
     pub set: Box<Obj>,
 }
@@ -441,9 +441,9 @@ impl PowerSet {
     }
 }
 
-impl Choice {
+impl Choose {
     pub fn new(element: Obj, set: Obj) -> Self {
-        Choice {
+        Choose {
             element: Box::new(element),
             set: Box::new(set),
         }
@@ -559,7 +559,7 @@ impl fmt::Display for Obj {
             Obj::ClosedRange(closed_range) => write!(f, "{}", closed_range),
             Obj::Val(val) => write!(f, "{}", val),
             Obj::PowerSet(power_set) => write!(f, "{}", power_set),
-            Obj::Choice(choice) => write!(f, "{}", choice),
+            Obj::Choose(choice) => write!(f, "{}", choice),
             Obj::ObjAtIndex(obj_at_index) => write!(f, "{}", obj_at_index),
         }
     }
@@ -571,7 +571,7 @@ impl fmt::Display for ObjAtIndex {
     }
 }
 
-impl fmt::Display for Choice {
+impl fmt::Display for Choose {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}", CHOICE, braced_two_strings(&self.element, &self.set))
     }
@@ -970,8 +970,8 @@ impl Obj {
                 Obj::PowerSet(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::Choice(a) => match right {
-                Obj::Choice(b) => a.to_string() == b.to_string(),
+            Obj::Choose(a) => match right {
+                Obj::Choose(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::ObjAtIndex(a) => match right {
