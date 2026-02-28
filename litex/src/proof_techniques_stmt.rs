@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::consts::{CLAIM, COLON, CONTRA, CASES, CASE, ENUM, PROVE, INDUC, FROM};
+use crate::consts::{CASE, CASES, CLAIM, COLON, CONTRA, ENUM, FOR, FROM, INDUC, PROVE, RIGHT_ARROW};
 use crate::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line};
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::fact::Fact;
@@ -20,9 +20,10 @@ pub enum ClosedRangeOrRange {
     ClosedRange(ClosedRange),
     Range(Range),
 }
+
 pub struct ProveForStmt {
     pub params: Vec<String>,
-    pub param_sets: ClosedRangeOrRange,
+    pub param_sets: Vec<ClosedRangeOrRange>,
     pub dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub then_facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub proof: Vec<Stmt>,
@@ -140,12 +141,29 @@ impl fmt::Display for ProveByInductionStmt {
 
 impl fmt::Display for ProveForStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        panic!("ProveForStmt is not implemented");
+        let head = match self.dom_facts.len() {
+            0 => format!("{} {}{}\n{}", FOR, vec_pair_to_string(&self.params, &self.param_sets), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.then_facts, 1)),
+            _ => format!("{} {}{}\n{}\n{}{}\n{}", FOR, vec_pair_to_string(&self.params, &self.param_sets), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.dom_facts, 1), add_four_spaces_at_beginning(RIGHT_ARROW, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.then_facts, 2)),
+        };
+
+        match self.proof.len() {
+            0 => write!(f, "{}", head),
+            _ => write!(f, "{}\n{}{}\n{}", head, add_four_spaces_at_beginning(PROVE, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2)),
+        }
     }
 }
 
 impl ProveForStmt {
-    pub fn new(params: Vec<String>, param_sets: ClosedRangeOrRange, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, then_facts: Vec<OrFactOrAndFactOrSpecFact>, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
+    pub fn new(params: Vec<String>, param_sets: Vec<ClosedRangeOrRange>, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, then_facts: Vec<OrFactOrAndFactOrSpecFact>, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
         ProveForStmt { params, param_sets, dom_facts, then_facts, proof, line, file_index }
+    }
+}
+
+impl fmt::Display for ClosedRangeOrRange {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ClosedRangeOrRange::ClosedRange(closed_range) => write!(f, "{}", closed_range),
+            ClosedRangeOrRange::Range(range) => write!(f, "{}", range),
+        }
     }
 }

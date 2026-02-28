@@ -929,7 +929,36 @@ fn try_prove_for_stmt() {
         1,
         0,
     )))))];
-    let prove_for_stmt = ProveForStmt::new(params, param_sets, dom_facts, then_facts, proof, 1, 0);
+    let prove_for_stmt = ProveForStmt::new(params, vec![param_sets], dom_facts, then_facts, proof, 1, 0);
+    println!("{}", prove_for_stmt);
+
+    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt));
+    println!("{}", stmt);
+
+    let params2 = vec!["x".to_string()];
+    
+    let param_sets2 = ClosedRangeOrRange::Range(Range::new(Obj::mk("0"), Obj::mk("10")));
+    let dom_facts2 = vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))))];
+    let then_facts2 = vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))))];
+
+    let proof2 = vec![Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    )))))];
+    
+    let prove_for_stmt = ProveForStmt::new(params2, vec![param_sets2], dom_facts2, then_facts2, proof2, 1, 0);
     println!("{}", prove_for_stmt);
 
     let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt));
