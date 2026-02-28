@@ -48,6 +48,20 @@ pub enum Obj {
     ObjAtIndex(ObjAtIndex),
 }
 
+pub enum FnSetObj {
+    FnSetWithoutParams(FnSetWithoutParams),
+    FnSetWithParams(FnSetWithParams),
+}
+
+impl fmt::Display for FnSetObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            FnSetObj::FnSetWithoutParams(fn_set_without_params) => write!(f, "{}", fn_set_without_params),
+            FnSetObj::FnSetWithParams(fn_set_with_params) => write!(f, "{}", fn_set_with_params),
+        }
+    }
+}
+
 pub struct ObjAtIndex {
     pub obj: Box<Obj>,
     pub index: Box<Obj>,

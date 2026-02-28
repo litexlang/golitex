@@ -1,11 +1,11 @@
 use std::fmt;
-use crate::consts::{CASE, CASES, CLAIM, COLON, CONTRA, ENUM, FOR, FROM, INDUC, PROVE, RIGHT_ARROW, EQUAL_SET, EQUAL, IMPOSSIBLE};
+use crate::consts::{CASE, CASES, CLAIM, COLON, CONTRA, ENUM, FOR, FROM, INDUC, PROVE, RIGHT_ARROW, EQUAL_SET, EQUAL, IMPOSSIBLE, FN_SET_IS_SUBSET_OF_CART_SET};
 use crate::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line};
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::fact::Fact;
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::stmt::Stmt;
-use crate::obj::{Obj, ClosedRange, Range};
+use crate::obj::{ClosedRange, FnSetObj, Obj, Range,     SetBuilder};
 
 pub enum ProveByBuiltinTechniqueStmt {
     ProveCaseByCase(ProveCaseByCase),
@@ -14,6 +14,15 @@ pub enum ProveByBuiltinTechniqueStmt {
     ProveByInduction(ProveByInductionStmt),
     ProveForStmt(ProveForStmt),
     ProveEqualSet(ProveEqualSetStmt),
+    ProveFnIsSet(ProveFnSetIsSubsetOfCartSetStmt),
+}
+
+pub struct ProveFnSetIsSubsetOfCartSetStmt {
+    pub fn_obj: FnSetObj,
+    pub equal_to_set: SetBuilder,
+    pub proof: Vec<Stmt>,
+    pub line: u32,
+    pub file_index: usize,
 }
 
 
@@ -125,6 +134,7 @@ impl fmt::Display for ProveByBuiltinTechniqueStmt {
             ProveByBuiltinTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => write!(f, "{}", prove_by_induction_stmt),
             ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt) => write!(f, "{}", prove_for_stmt),
             ProveByBuiltinTechniqueStmt::ProveEqualSet(prove_equal_set_stmt) => write!(f, "{}", prove_equal_set_stmt),
+            ProveByBuiltinTechniqueStmt::ProveFnIsSet(prove_fn_is_set_stmt) => write!(f, "{}", prove_fn_is_set_stmt),
         }
     }
 }
@@ -138,6 +148,7 @@ impl ProveByBuiltinTechniqueStmt {
             ProveByBuiltinTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => (prove_by_induction_stmt.line, prove_by_induction_stmt.file_index),
             ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt) => (prove_for_stmt.line, prove_for_stmt.file_index),
             ProveByBuiltinTechniqueStmt::ProveEqualSet(prove_equal_set_stmt) => (prove_equal_set_stmt.line, prove_equal_set_stmt.file_index),
+            ProveByBuiltinTechniqueStmt::ProveFnIsSet(prove_fn_is_set_stmt) => (prove_fn_is_set_stmt.line, prove_fn_is_set_stmt.file_index),
         }
     }
 }
@@ -201,5 +212,20 @@ impl fmt::Display for ProveEqualSetStmt {
 impl ProveEqualSetStmt {
     pub fn new(left: Obj, right: Obj, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
         ProveEqualSetStmt { left, right, proof, line, file_index }
+    }
+}
+
+impl fmt::Display for ProveFnSetIsSubsetOfCartSetStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.proof.len() {
+            0 => write!(f, "{} {} {} {}", FN_SET_IS_SUBSET_OF_CART_SET, self.fn_obj, EQUAL, self.equal_to_set),
+            _ => write!(f, "{} {} {} {}{}\n{}", FN_SET_IS_SUBSET_OF_CART_SET, self.fn_obj, EQUAL, self.equal_to_set, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)),
+        }
+    }
+}
+
+impl ProveFnSetIsSubsetOfCartSetStmt {
+    pub fn new(fn_obj: FnSetObj, equal_to_set: SetBuilder, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
+        ProveFnSetIsSubsetOfCartSetStmt { fn_obj, equal_to_set, proof, line, file_index }
     }
 }
