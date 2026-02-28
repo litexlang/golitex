@@ -5,24 +5,21 @@ use crate::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line,  ve
 use crate::stmt::Stmt;
 
 pub struct ClaimProveStmt {
-    pub to_prove: Option<Fact>,
+    pub to_prove: Fact,
     pub proof: Vec<Stmt>,
     pub line: u32,
     pub file_index: usize,
 }
 
 impl ClaimProveStmt {
-    pub fn new(to_prove: Option<Fact>, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
+    pub fn new(to_prove: Fact, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
         ClaimProveStmt { to_prove, proof, line, file_index }
     }
 }
 
 impl fmt::Display for ClaimProveStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match &self.to_prove {
-            Some(to_prove) => write!(f, "{}{}\n{}\n{}{}\n{}", CLAIM, COLON,to_string_and_add_four_spaces_at_beginning_of_each_line(to_prove, 1), add_four_spaces_at_beginning(PROVE, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2)),
-            None => write!(f, "{}{}\n{}", PROVE, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)),
-        }
+        write!(f, "{}{}\n{}\n{}{}\n{}", CLAIM, COLON,to_string_and_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1), add_four_spaces_at_beginning(PROVE, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
     }
 }
 
