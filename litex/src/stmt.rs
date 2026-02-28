@@ -5,6 +5,8 @@ use crate::claim_stmt::ClaimProveStmt;
 use crate::know_stmt::KnowStmt;
 use crate::proof_techniques_stmt::ProofTechnique;
 use crate::import_stmt::ImportStmt;
+use crate::prove_stmt::ProveStmt;
+use crate::run_file_stmt::RunFileStmt;
 pub enum Stmt {
     Fact(Fact),
     DefStmt(DefStmt),
@@ -12,6 +14,8 @@ pub enum Stmt {
     KnowStmt(KnowStmt),
     ProofTechnique(ProofTechnique),
     ImportStmt(ImportStmt),
+    ProveStmt(ProveStmt),
+    RunFileStmt(RunFileStmt),
 }
 
 impl fmt::Display for Stmt {
@@ -23,6 +27,8 @@ impl fmt::Display for Stmt {
             Stmt::KnowStmt(know_stmt) => write!(f, "{}", know_stmt),
             Stmt::ProofTechnique(proof_technique) => write!(f, "{}", proof_technique),
             Stmt::ImportStmt(import_stmt) => write!(f, "{}", import_stmt),
+            Stmt::ProveStmt(prove_stmt) => write!(f, "{}", prove_stmt),
+            Stmt::RunFileStmt(run_file_stmt) => write!(f, "{}", run_file_stmt),
         }
     }
 }
@@ -36,6 +42,8 @@ pub fn line_file(stmt: &Stmt) -> (u32, usize) {
         Stmt::KnowStmt(know_stmt) => know_stmt.line_file(),
         Stmt::ProofTechnique(proof_technique) => proof_technique.line_file(),
         Stmt::ImportStmt(import_stmt) => import_stmt.line_file(),
+        Stmt::ProveStmt(prove_stmt) => (prove_stmt.line, prove_stmt.file_index),
+        Stmt::RunFileStmt(run_file_stmt) => (run_file_stmt.line, run_file_stmt.file_index),
     }
 }
 
