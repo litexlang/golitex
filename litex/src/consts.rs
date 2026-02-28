@@ -79,3 +79,6 @@ pub const ERROR: &str = "error";
 
 pub const LET: &str = "let";
 pub const PROP: &str = "prop";
+
+pub const LEFT_BRACKET: &str = "[";
+pub const RIGHT_BRACKET: &str = "]";
