@@ -1,7 +1,7 @@
 use std::fmt;
 use crate::atomic_fact::AtomicFact;
 use crate::consts::{EXIST, NOT, ST};
-use crate::helper::{curly_braced_vec_to_string_with_sep, str_with_line_file, vec_pair_to_string};
+use crate::helper::{curly_braced_vec_to_string_with_sep, vec_pair_to_string};
 use crate::parameter_type::ParameterType;
 
 pub enum ExistFact {
@@ -67,19 +67,11 @@ impl fmt::Display for NotExistFact {
     }
 }
 
-impl ExistFact {
-    pub fn line(&self) -> u32 {
-        match self {
-            ExistFact::TrueExistFact(x) => x.line,
-            ExistFact::NotExistFact(x) => x.line,
-        }
-    }
-
-    pub fn file_index(&self) -> usize {
-        match self {
-            ExistFact::TrueExistFact(x) => x.file_index,
-            ExistFact::NotExistFact(x) => x.file_index,
-        }
+/// 从 ExistFact 取得 line 与 file_index
+pub fn line_file(e: &ExistFact) -> (u32, usize) {
+    match e {
+        ExistFact::TrueExistFact(x) => (x.line, x.file_index),
+        ExistFact::NotExistFact(x) => (x.line, x.file_index),
     }
 }
 
@@ -89,11 +81,5 @@ impl fmt::Display for ExistFact {
             ExistFact::TrueExistFact(x) => write!(f, "{}", x),
             ExistFact::NotExistFact(x) => write!(f, "{}", x),
         }
-    }
-}
-
-impl ExistFact {
-    pub fn str_with_line_file(&self) -> String {
-        return str_with_line_file(&self.to_string(), self.line(), self.file_index());
     }
 }

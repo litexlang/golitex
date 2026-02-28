@@ -21,6 +21,7 @@ mod stmt_result;
 mod stmt_success;
 mod stmt_unknown;
 mod definitions;
+use definitions::DefStmt;
 use and_fact::AndFact;
 use and_fact_or_specific_fact::AndFactOrSpecFact;
 use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
@@ -156,7 +157,23 @@ fn try_stmt() {
         1,
         0,
     )))));
-    println!("{}", fact2.str_with_line_file());
+    println!("{}", fact2);
+
+    let def_stmt = Stmt::DefStmt(DefStmt::DefLetStmt(DefLetStmt::new(vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())], vec![Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))))], 1, 0)));
+    println!("{}", def_stmt);
+
+    let def_stmt2 = Stmt::DefStmt(DefStmt::DefPropStmt(DefPropStmt::new(DefHeader::new("f".to_string(), vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())]), Some(vec![Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        Obj::mk("p"),
+        Obj::mk("q"),
+        1,
+        0,
+    ))))]), 1, 0)));
+    println!("{}", def_stmt2);
 }
 
 fn try_equal_literally() {
@@ -302,36 +319,36 @@ fn try_atomic_fact() {
     let _not_is_set = AtomicFact::NotIsSetFact(NotIsSetFact::new(Obj::mk("S"), line, 0));
     let _not_is_nonempty_set = AtomicFact::NotIsNonemptySetFact(NotIsNonemptySetFact::new(Obj::mk("S"), line, 0));
     let _not_is_finite_set = AtomicFact::NotIsFiniteSetFact(NotIsFiniteSetFact::new(Obj::mk("S"), line, 0));
-    println!("{}", _normal.str_with_line_file());
-    println!("{}", _equal.str_with_line_file());
-    println!("{}", _less.str_with_line_file());
-    println!("{}", _greater.str_with_line_file());
-    println!("{}", _less_equal.str_with_line_file());
-    println!("{}", _greater_equal.str_with_line_file());
-    println!("{}", _is_set.str_with_line_file());
-    println!("{}", _is_nonempty_set.str_with_line_file());
-    println!("{}", _is_finite_set.str_with_line_file());
-    println!("{}", _not_normal.str_with_line_file());
-    println!("{}", _not_equal.str_with_line_file());
-    println!("{}", _not_less.str_with_line_file());
-    println!("{}", _not_greater.str_with_line_file());
-    println!("{}", _not_less_equal.str_with_line_file());
-    println!("{}", _not_greater_equal.str_with_line_file());
-    println!("{}", _not_is_set.str_with_line_file());
-    println!("{}", _not_is_nonempty_set.str_with_line_file());
-    println!("{}", _not_is_finite_set.str_with_line_file());
-    println!("{}", _is_cart.str_with_line_file());
-    println!("{}", _not_is_cart.str_with_line_file());
+    println!("{}", _normal);
+    println!("{}", _equal);
+    println!("{}", _less);
+    println!("{}", _greater);
+    println!("{}", _less_equal);
+    println!("{}", _greater_equal);
+    println!("{}", _is_set);
+    println!("{}", _is_nonempty_set);
+    println!("{}", _is_finite_set);
+    println!("{}", _not_normal);
+    println!("{}", _not_equal);
+    println!("{}", _not_less);
+    println!("{}", _not_greater);
+    println!("{}", _not_less_equal);
+    println!("{}", _not_greater_equal);
+    println!("{}", _not_is_set);
+    println!("{}", _not_is_nonempty_set);
+    println!("{}", _not_is_finite_set);
+    println!("{}", _is_cart);
+    println!("{}", _not_is_cart);
 
     let _in = AtomicFact::InFact(InFact::new(Obj::mk("a"), Obj::mk("S"), line, 0));
     let _not_in = AtomicFact::NotInFact(NotInFact::new(Obj::mk("a"), Obj::mk("S"), line, 0));
-    println!("{}", _in.str_with_line_file());
-    println!("{}", _not_in.str_with_line_file());
+    println!("{}", _in);
+    println!("{}", _not_in);
 
     let _is_tuple = AtomicFact::IsTupleFact(IsTupleFact::new(Obj::mk("t"), line, 0));
     let _not_is_tuple = AtomicFact::NotIsTupleFact(NotIsTupleFact::new(Obj::mk("t"), line, 0));
-    println!("{}", _is_tuple.str_with_line_file());
-    println!("{}", _not_is_tuple.str_with_line_file());
+    println!("{}", _is_tuple);
+    println!("{}", _not_is_tuple);
 }
 
 fn try_exist_fact() {
@@ -351,8 +368,8 @@ fn try_exist_fact() {
         2,
         0,
     ));
-    println!("{}", _true_exist.str_with_line_file());
-    println!("{}", _not_exist.str_with_line_file());
+    println!("{}", _true_exist);
+    println!("{}", _not_exist);
 }
 
 fn try_spec_fact() {
@@ -365,8 +382,8 @@ fn try_spec_fact() {
         0,
     ));
     let _spec_exist = SpecFact::ExistFact(ef);
-    println!("{}", _spec_atom.str_with_line_file());
-    println!("{}", _spec_exist.str_with_line_file());
+    println!("{}", _spec_atom);
+    println!("{}", _spec_exist);
 }
 
 fn try_or_fact() {
@@ -379,7 +396,7 @@ fn try_or_fact() {
         )))),
     ];
     let _or = OrFact::new(facts, 1, 0);
-    println!("{}", _or.str_with_line_file());
+    println!("{}", _or);
 
     let facts2 = vec![
         AndFactOrSpecFact::AndFact(AndFact::new(vec![], 1, 0)),
@@ -391,7 +408,7 @@ fn try_or_fact() {
         )))),
     ];
     let _or2 = OrFact::new(facts2, 1, 0);
-    println!("{}", _or2.str_with_line_file());
+    println!("{}", _or2);
 }
 
 fn try_and_fact_or_spec_fact() {
@@ -401,7 +418,7 @@ fn try_and_fact_or_spec_fact() {
         1,
         0,
     ))));
-    println!("{}", _spec.str_with_line_file());
+    println!("{}", _spec);
 
     let facts = vec![
         SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
@@ -418,7 +435,7 @@ fn try_and_fact_or_spec_fact() {
         ))),
     ];
     let _and = AndFactOrSpecFact::AndFact(AndFact::new(facts, 1, 0));
-    println!("{}", _and.str_with_line_file());
+    println!("{}", _and);
 }
 
 fn try_forall_fact() {
@@ -433,7 +450,7 @@ fn try_forall_fact() {
         0,
     );
 
-    println!("{}", _forall.str_with_line_file());
+    println!("{}", _forall);
 }
 
 fn try_forall_fact_with_iff() {
@@ -453,7 +470,7 @@ fn try_forall_fact_with_iff() {
     let _forall_fact_with_iff = ForallFactWithIff::new(forall, vec![SpecFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), 1, 0),
     ))], 2, 0);
-    println!("{}", _forall_fact_with_iff.str_with_line_file());
+    println!("{}", _forall_fact_with_iff);
 }
 
 
@@ -494,7 +511,7 @@ fn try_fact() {
         ))),
     ];
     let _f_and = Fact::AndFact(AndFact::new(facts, 1, 0));
-    println!("{}", _f_and.str_with_line_file());
+    println!("{}", _f_and);
 }
 
 fn try_errors() {
@@ -516,7 +533,7 @@ fn try_and_fact() {
         ))),
     ];
     let _and = AndFact::new(facts, 1, 0);
-    println!("{}", _and.str_with_line_file());
+    println!("{}", _and);
 }
 
 fn try_or_fact_or_and_fact_or_specific_fact() {
@@ -526,7 +543,7 @@ fn try_or_fact_or_and_fact_or_specific_fact() {
         1,
         0,
     ))));
-    println!("{}", fact1.str_with_line_file());
+    println!("{}", fact1);
 
     let fact2: OrFactOrAndFactOrSpecFact = OrFactOrAndFactOrSpecFact::AndFact(AndFact::new(vec![SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
@@ -534,7 +551,7 @@ fn try_or_fact_or_and_fact_or_specific_fact() {
         1,
         0,
     )))], 1, 0));
-    println!("{}", fact2.str_with_line_file());
+    println!("{}", fact2);
 
     let fact3: OrFactOrAndFactOrSpecFact = OrFactOrAndFactOrSpecFact::OrFact(OrFact::new(vec![AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
@@ -542,7 +559,7 @@ fn try_or_fact_or_and_fact_or_specific_fact() {
         1,
         0,
     ))))], 1, 0));
-    println!("{}", fact3.str_with_line_file());
+    println!("{}", fact3);
 }
 
 fn try_subset_superset_fact() {
@@ -550,19 +567,19 @@ fn try_subset_superset_fact() {
     let superset = AtomicFact::SupersetFact(SupersetFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0));
     let not_subset = AtomicFact::NotSubsetFact(NotSubsetFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0));
     let not_superset = AtomicFact::NotSupersetFact(NotSupersetFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0));
-    println!("{}", subset.str_with_line_file());
-    println!("{}", superset.str_with_line_file());
-    println!("{}", not_subset.str_with_line_file());
-    println!("{}", not_superset.str_with_line_file());
+    println!("{}", subset);
+    println!("{}", superset);
+    println!("{}", not_subset);
+    println!("{}", not_superset);
 
     let subset_fact = Fact::SpecFact(SpecFact::AtomicFact(subset));
     let superset_fact = Fact::SpecFact(SpecFact::AtomicFact(superset));
     let not_subset_fact = Fact::SpecFact(SpecFact::AtomicFact(not_subset));
     let not_superset_fact = Fact::SpecFact(SpecFact::AtomicFact(not_superset));
-    println!("{}", subset_fact.str_with_line_file());
-    println!("{}", superset_fact.str_with_line_file());
-    println!("{}", not_subset_fact.str_with_line_file());
-    println!("{}", not_superset_fact.str_with_line_file());
+    println!("{}", subset_fact);
+    println!("{}", superset_fact);
+    println!("{}", not_subset_fact);
+    println!("{}", not_superset_fact);
 }
 
 fn try_stmt_result() {
@@ -609,7 +626,7 @@ fn try_definitions() {
         1,
         0,
     ))))]), 1, 0);
-    println!("{}", def_prop_stmt.str_with_line_file());
+    println!("{}", def_prop_stmt);
 
     let def_let_stmt = DefLetStmt::new(vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())], vec![Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
@@ -617,9 +634,9 @@ fn try_definitions() {
         1,
         0,
     ))))], 1, 0);
-    println!("{}", def_let_stmt.str_with_line_file());
+    println!("{}", def_let_stmt);
 
     let def_header2 = DefHeader::new("f".to_string(), vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())]);
     let def_prop_stmt2 = DefPropStmt::new(def_header2, None, 1, 0);
-    println!("{}", def_prop_stmt2.str_with_line_file());
+    println!("{}", def_prop_stmt2);
 }

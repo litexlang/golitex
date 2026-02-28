@@ -1,5 +1,4 @@
 use std::fmt;
-use crate::helper::str_with_line_file;
 use crate::or_fact::OrFact;
 use crate::forall_fact::ForallFact;
 use crate::forall_fact_with_iff::ForallFactWithIff;
@@ -25,28 +24,15 @@ impl fmt::Display for Fact {
     }
 }
 
+/// 从 Fact 取得 line 与 file_index（仅用于 Display 等，不保留方法）
 impl Fact {
-    pub fn line(&self) -> u32 {
+    pub fn line_file(&self) -> (u32, usize) {
         match self {
-            Fact::SpecFact(spec_fact) => spec_fact.line(),
-            Fact::OrFact(or_fact) => or_fact.line(),
-            Fact::AndFact(and_fact) => and_fact.line(),
-            Fact::ForallFact(forall_fact) => forall_fact.line(),
-            Fact::ForallFactWithIff(forall_fact_with_iff) => forall_fact_with_iff.line(),
+            Fact::SpecFact(s) => crate::specific_fact::line_file(s),
+            Fact::OrFact(o) => (o.line, o.file_index),
+            Fact::AndFact(a) => (a.line, a.file_index),
+            Fact::ForallFact(f) => (f.line, f.file_index),
+            Fact::ForallFactWithIff(f) => (f.line, f.file_index),
         }
-    }
-
-    pub fn file_index(&self) -> usize {
-        match self {
-            Fact::SpecFact(spec_fact) => spec_fact.file_index(),
-            Fact::OrFact(or_fact) => or_fact.file_index(),
-            Fact::AndFact(and_fact) => and_fact.file_index(),
-            Fact::ForallFact(forall_fact) => forall_fact.file_index(),
-            Fact::ForallFactWithIff(forall_fact_with_iff) => forall_fact_with_iff.file_index(),
-        }
-    }
-
-    pub fn str_with_line_file(&self) -> String {
-        return str_with_line_file(&self.to_string(), self.line(), self.file_index());
     }
 }

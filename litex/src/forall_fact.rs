@@ -1,6 +1,6 @@
 use std::fmt;
 use crate::consts::{FORALL, COLON, RIGHT_ARROW};
-use crate::helper::{add_four_spaces_to_vec_at_beginning, add_four_spaces_to_str_at_beginning, str_with_line_file, vec_pair_to_string};
+use crate::helper::{add_four_spaces_to_vec_at_beginning, add_four_spaces_to_str_at_beginning, vec_pair_to_string};
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::parameter_type::ParameterType;
 
@@ -23,18 +23,6 @@ impl ForallFact {
         file_index: usize,
     ) -> Self {
         ForallFact { params, param_types: param_sets, dom_facts, then_facts, line, file_index }
-    }
-
-    pub fn line(&self) -> u32 {
-        self.line
-    }
-
-    pub fn file_index(&self) -> usize {
-        self.file_index
-    }
-
-    pub fn str_with_line_file(&self) -> String {
-        return str_with_line_file(&self.to_string(), self.line(), self.file_index());
     }
 }
 

@@ -1,6 +1,5 @@
 use crate::consts::OR;
 use std::fmt;
-use crate::helper::str_with_line_file;
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 
 pub struct OrFact {
@@ -12,18 +11,6 @@ pub struct OrFact {
 impl OrFact {
     pub fn new(facts: Vec<AndFactOrSpecFact>, line: u32, file_index: usize) -> Self {
         OrFact { facts, line, file_index }
-    }
-
-    pub fn line(&self) -> u32 {
-        self.line
-    }
-
-    pub fn file_index(&self) -> usize {
-        self.file_index
-    }
-
-    pub fn str_with_line_file(&self) -> String {
-        return str_with_line_file(&self.to_string(), self.line(), self.file_index());
     }
 }
 
