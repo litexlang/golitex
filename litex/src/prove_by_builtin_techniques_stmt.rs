@@ -1,6 +1,7 @@
 use std::fmt;
+use crate::atom::Atom;
 use crate::consts::{CASE, CASES, CLAIM, COLON, CONTRA, ENUM, FOR, FROM, INDUC, PROVE, RIGHT_ARROW, EQUAL_SET, EQUAL, IMPOSSIBLE, FN_SET_AS_SET};
-use crate::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line};
+use crate::helper::{add_four_spaces_at_beginning, braced_vec_to_string, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line};
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::fact::Fact;
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
@@ -17,7 +18,12 @@ pub enum ProveByBuiltinTechniqueStmt {
     FnSetAsSet(ProveFnSetAsSetStmt),
 }
 
+// TODO: 改成 cart(A, B, C)
+// fn f(A, B) C = {t cart(cart(A, B), C): forall x cart(A, B) => exist z t st st z[1] = x; forall x t, y t: x[1] = y[1] => x = y}
+// fn f(a A, b B: $p(a, b)) C {$q(a, b, f)} = {t cart(cart(A, B), C): forall x cart(A, B) => exist z t st st z[1] = x; forall x t, y t: x[1] = y[1] => x = y; forall x t: $p(x[1][1], x[1][2]); forall x cart(A, B): $p(x[1], x[2]) => exist z t st st z[1] = x; forall z t: $q(z[1][1], z[1][2], t)}
+// 这里的 forall x t: $p(x[1][1], x[1][2]) 可能表示不了，因为 $p 对 kernel 来说是变量，所以要让用户自己传入一个和这个fact等价的prop进来。
 pub struct ProveFnSetAsSetStmt {
+    pub props: Vec<Atom>,
     pub fn_obj: FnSetObj,
     pub line: u32,
     pub file_index: usize,
@@ -215,12 +221,12 @@ impl ProveEqualSetStmt {
 
 impl fmt::Display for ProveFnSetAsSetStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", FN_SET_AS_SET, self.fn_obj)
+        write!(f, "{}{} {}", FN_SET_AS_SET, braced_vec_to_string(&self.props), self.fn_obj)
     }
 }
 
 impl ProveFnSetAsSetStmt {
-    pub fn new(fn_obj: FnSetObj, line: u32, file_index: usize) -> Self {
-        ProveFnSetAsSetStmt { fn_obj, line, file_index }
+    pub fn new(props: Vec<Atom>, fn_obj: FnSetObj, line: u32, file_index: usize) -> Self {
+        ProveFnSetAsSetStmt { props, fn_obj, line, file_index }
     }
 }
