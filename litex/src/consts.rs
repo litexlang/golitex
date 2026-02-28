@@ -117,4 +117,6 @@ pub const EQUAL_SET: &str = "equal_set";
 
 pub const IMPOSSIBLE: &str = "impossible";
 
-pub const FN_SET_IS_SUBSET_OF_CART: &str = "fn_set_is_subset_of_cart";
+pub const FN_SET_AS_SET: &str = "fn_set_as_set";
+
+pub const SET_TEMPLATE: &str = "set_template";
