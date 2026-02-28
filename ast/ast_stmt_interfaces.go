@@ -49,6 +49,7 @@ func (s *ImportDirStmt) stmt()     {}
 func (s *RunFileStmt) stmt()       {}
 func (s *ProveStmt) stmt()         {}
 func (s *ProveForStmt) stmt()      {}
+
 func (s *ProveInferStmt) stmt()    {}
 
 // func (s *DefImplicationStmt) stmt()            {}
@@ -74,7 +75,7 @@ func (s *HaveObjEqualStmt) stmt()     {}
 func (s *HaveFnStmt) stmt()                 {}
 func (s *ProveIsCommutativePropStmt) stmt() {}
 
-func (s *ClaimIffStmt) stmt()               {}
+func (s *ClaimIffStmt) stmt()              {}
 func (s *ProveIsTransitivePropStmt) stmt() {}
 func (s *DefAlgoStmt) stmt()               {}
 func (s *EvalStmt) stmt()                  {}
