@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::consts::{COMMA,  LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_BRACE, RIGHT_CURLY_BRACE};
+use crate::consts::{COMMA, COLON, LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_BRACE, RIGHT_CURLY_BRACE};
 
 pub fn braced_vec_to_string<T: fmt::Display>(vec: &Vec<T>) -> String {
     format!("{}{}{}", LEFT_BRACE, vec_to_string_with_sep(vec, ", "), RIGHT_BRACE)
@@ -57,4 +57,8 @@ pub fn add_four_spaces_at_beginning(str: &str, number_of_four_spaces: usize) -> 
 
 pub fn braced_pair_vec_to_string<A: fmt::Display, B: fmt::Display>(left: &Vec<A>, right: &Vec<B>) -> String {
     format!("{}{}{}", LEFT_BRACE, vec_pair_to_string(&left, &right), RIGHT_BRACE)
+}
+
+pub fn braced_param_param_set_with_dom<T: fmt::Display, U: fmt::Display>(name: &str, params: &Vec<String>, param_sets: &Vec<T>, dom_facts: &Vec<U>) -> String {
+    format!("{}{}{}{} {}{}", name, LEFT_BRACE, vec_pair_to_string(&params, &param_sets), COLON, vec_to_string_join_by_comma(&dom_facts), RIGHT_BRACE)
 }
