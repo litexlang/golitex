@@ -34,7 +34,7 @@ use witness_stmt::{WitnessStmt, WitnessExistFact, WitnessNonemptySet};
 use prove_stmt::{ProveStmt};
 use run_file_stmt::{RunFileStmt};
 use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalPkgStmt, ClearStmt, DoNothingStmt};
-use prove_by_builtin_techniques_stmt::{ProveCaseByCase, ProveByContradictionStmt, ProveByBuiltinTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveEqualSetStmt, ProveFnSetAsSetStmt};
+use prove_by_builtin_techniques_stmt::{ProveCaseByCaseStmt, ProveByContradictionStmt, ProveByBuiltinTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveEqualSetByDefStmt, ViewFnAsSetStmt};
 use definition_stmt::{DefStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, LetFnStmt,  HaveObjStStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, HaveFnAsSetStmt, DefSetTemplateStmt};
 use claim_stmt::{ClaimProveStmt, ClaimStmt, ClaimIffStmt};
 use and_fact::AndFact;
@@ -121,7 +121,7 @@ fn main() {
     try_witness_stmt();
     try_prove_equal_set_stmt();
     try_witness_nonempty_set_stmt();
-    try_prove_fn_is_set_stmt();
+    try_view_fn_as_set();
     try_have_fn_equal_stmt();
     try_have_fn_equal_case_by_case_stmt();
     try_have_fn_as_set_stmt();
@@ -763,7 +763,7 @@ fn try_know_stmt() {
 }
 
 fn try_proof_techniques() {
-    let prove_case_by_case = ProveCaseByCase::new(vec![], vec![], vec![], vec![], 1, 0);
+    let prove_case_by_case = ProveCaseByCaseStmt::new(vec![], vec![], vec![], vec![], 1, 0);
     println!("{}", prove_case_by_case);
 
     let impossible_fact = OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
@@ -1009,10 +1009,10 @@ fn try_witness_stmt() {
 }
 
 fn try_prove_equal_set_stmt() {
-    let prove_equal_set_stmt = ProveEqualSetStmt::new(Obj::mk("p"), Obj::mk("q"), vec![], 1, 0);
+    let prove_equal_set_stmt = ProveEqualSetByDefStmt::new(Obj::mk("p"), Obj::mk("q"), vec![], 1, 0);
     println!("{}", prove_equal_set_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveEqualSet(prove_equal_set_stmt));
+    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveEqualByDefSet(prove_equal_set_stmt));
     println!("{}", stmt);
 
     let proof2 = vec![Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
@@ -1022,10 +1022,10 @@ fn try_prove_equal_set_stmt() {
         0,
     )))))];
 
-    let prove_equal_set_stmt = ProveEqualSetStmt::new(Obj::mk("p"), Obj::mk("q"), proof2, 1, 0);
+    let prove_equal_set_stmt = ProveEqualSetByDefStmt::new(Obj::mk("p"), Obj::mk("q"), proof2, 1, 0);
     println!("{}", prove_equal_set_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveEqualSet(prove_equal_set_stmt));
+    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveEqualByDefSet(prove_equal_set_stmt));
     println!("{}", stmt);
 }
 
@@ -1037,17 +1037,17 @@ fn try_witness_nonempty_set_stmt() {
     println!("{}", stmt);
 }
 
-fn try_prove_fn_is_set_stmt() {
-    let prove_fn_set_is_subset_of_cart_set_stmt = ProveFnSetAsSetStmt::new(vec![Atom::AtomWithoutPkg(AtomWithoutPkg::new("p"))], FnSetObj::FnSetWithoutParams(FnSetWithoutDom::new(vec![Obj::mk("p")], Obj::mk("p"))), 1, 0);
+fn try_view_fn_as_set() {
+    let prove_fn_set_is_subset_of_cart_set_stmt = ViewFnAsSetStmt::new(Obj::mk("p"), FnSetObj::FnSetWithoutParams(FnSetWithoutDom::new(vec![Obj::mk("p")], Obj::mk("p"))), 1, 0);
     println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::FnSetAsSet(prove_fn_set_is_subset_of_cart_set_stmt));
+    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ViewFnAsSet(prove_fn_set_is_subset_of_cart_set_stmt));
     println!("{}", stmt);
 
-    let prove_fn_set_is_subset_of_cart_set_stmt = ProveFnSetAsSetStmt::new(vec![Atom::AtomWithoutPkg(AtomWithoutPkg::new("p"))], FnSetObj::FnSetWithParams(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("x".to_string(), Obj::mk("p"))], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p"))), 1, 0);
+    let prove_fn_set_is_subset_of_cart_set_stmt = ViewFnAsSetStmt::new(Obj::mk("p"), FnSetObj::FnSetWithParams(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("x".to_string(), Obj::mk("p"))], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p"))), 1, 0);
     println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::FnSetAsSet(prove_fn_set_is_subset_of_cart_set_stmt));
+    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ViewFnAsSet(prove_fn_set_is_subset_of_cart_set_stmt));
     println!("{}", stmt);
 }
 
