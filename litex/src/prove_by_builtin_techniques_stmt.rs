@@ -104,9 +104,9 @@ impl fmt::Display for ProveCaseByCaseStmt {
         // 还要考虑：如果这一位的 impossible_fact 是 None，则不输出 impossible_fact；否则再在后面一行写上 impossible ...
         let case_and_proof_of_each_case = self.cases.iter().zip(self.proofs.iter()).zip(self.impossible_facts.iter()).map(|((case, proof), impossible_fact)| {
             if let Some(impossible_fact) = impossible_fact {
-                format!("{} {}{}\n{}\n{} {}", CASE,case, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(proof, 2), IMPOSSIBLE, add_four_spaces_at_beginning(&impossible_fact.to_string(), 2))
+                format!("{} {}{}\n{}\n{} {}", add_four_spaces_at_beginning(CASE, 1),case, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(proof, 2), add_four_spaces_at_beginning(IMPOSSIBLE, 2), &impossible_fact.to_string())
             } else {
-                format!("{} {}{}\n{}", CASE,case, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(proof, 2))
+                format!("{} {}{}\n{}", add_four_spaces_at_beginning(CASE, 1),case, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(proof, 2))
             }
         }).collect::<Vec<String>>();
         
@@ -122,7 +122,7 @@ impl ProveByContradictionStmt {
 
 impl fmt::Display for ProveByContradictionStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}\n{}\n{}{}\n{}\n{} {}", CLAIM, COLON,to_string_and_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1),add_four_spaces_at_beginning(CONTRA, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2), IMPOSSIBLE, add_four_spaces_at_beginning(&self.impossible_fact.to_string(), 2))
+        write!(f, "{}{}\n{}\n{}{}\n{}\n{} {}", CLAIM, COLON,to_string_and_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1),add_four_spaces_at_beginning(CONTRA, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2), add_four_spaces_at_beginning(IMPOSSIBLE, 2), &self.impossible_fact.to_string())
     }
 }
 
