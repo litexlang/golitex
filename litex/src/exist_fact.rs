@@ -2,7 +2,7 @@ use std::fmt;
 use crate::atomic_fact::AtomicFact;
 use crate::consts::{EXIST, NOT, ST};
 use crate::helper::{curly_braced_vec_to_string_with_sep, vec_pair_to_string};
-use crate::parameter_type::ParameterType;
+use crate::parameter_type_and_property::ParameterType;
 
 pub enum ExistFact {
     TrueExistFact(TrueExistFact),
