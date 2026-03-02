@@ -8,6 +8,7 @@ use crate::helper::{add_four_spaces_at_beginning,   braced_vec_to_string, to_str
 use crate::obj::FnSetWithDom;
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::exist_fact::TrueExistFact;
+use crate::define_algorithm_stmt::DefineAlgorithmStmt;
 
 pub enum DefStmt {
     DefLetStmt(DefLetStmt),
@@ -19,6 +20,7 @@ pub enum DefStmt {
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     DefSetTemplateStmt(DefSetTemplateStmt),
+    DefineAlgorithmStmt(DefineAlgorithmStmt),
 }
 
 pub struct DefSetTemplateStmt {
@@ -103,6 +105,7 @@ impl fmt::Display for DefStmt {
             DefStmt::HaveFnEqualStmt(have_fn_equal_stmt) => write!(f, "{}", have_fn_equal_stmt),
             DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt) => write!(f, "{}", have_fn_equal_case_by_case_stmt),
             DefStmt::DefSetTemplateStmt(def_set_template_stmt) => write!(f, "{}", def_set_template_stmt),
+            DefStmt::DefineAlgorithmStmt(define_algorithm_stmt) => write!(f, "{}", define_algorithm_stmt),
         }
     }
 }
@@ -149,6 +152,7 @@ impl DefStmt {
             DefStmt::HaveFnEqualStmt(have_fn_equal_stmt) => (have_fn_equal_stmt.line, have_fn_equal_stmt.file_index),
             DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt) => (have_fn_equal_case_by_case_stmt.line, have_fn_equal_case_by_case_stmt.file_index),
             DefStmt::DefSetTemplateStmt(def_set_template_stmt) => (def_set_template_stmt.line, def_set_template_stmt.file_index),
+            DefStmt::DefineAlgorithmStmt(define_algorithm_stmt) => (define_algorithm_stmt.line, define_algorithm_stmt.file_index),
         }
     }
 }

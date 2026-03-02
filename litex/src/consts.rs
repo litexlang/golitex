@@ -119,3 +119,7 @@ pub const IMPOSSIBLE: &str = "impossible";
 pub const VIEW_FN_AS_SET: &str = "view_fn_as_set";
 
 pub const SET_TEMPLATE: &str = "set_template";
+
+pub const RETURN: &str = "return";
+pub const IF: &str = "if";
+pub const ALGO: &str = "algo";
