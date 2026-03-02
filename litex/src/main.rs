@@ -34,7 +34,7 @@ use prove_stmt::{ProveStmt};
 use run_file_stmt::{RunFileStmt};
 use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalPkgStmt, ClearStmt, DoNothingStmt};
 use prove_by_builtin_techniques_stmt::{ProveCaseByCase, ProveByContradictionStmt, ProveByBuiltinTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveEqualSetStmt, ProveFnSetAsSetStmt};
-use definition_stmt::{DefStmt, HaveObjInNonemptySetStmt, HaveObjEqualStmt, LetFnStmt, HaveFnStmt, HaveObjStStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, HaveFnAsSetStmt, DefSetTemplateStmt};
+use definition_stmt::{DefStmt, HaveObjInNonemptySetStmt, HaveObjEqualStmt, LetFnStmt,  HaveObjStStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, HaveFnAsSetStmt, DefSetTemplateStmt};
 use claim_stmt::{ClaimProveStmt, ClaimStmt, ClaimIffStmt};
 use and_fact::AndFact;
 use and_fact_or_specific_fact::AndFactOrSpecFact;
@@ -43,7 +43,7 @@ use atom::{AtomWithoutPkg, AtomWithPkg, Atom};
 use obj::{
     Obj, FnObj, Number, Add, Sub, Mul, Div, Mod, Pow,
     Union, Intersect, SetMinus, DisjointUnion, Cup, Cap,
-    ListSet, SetBuilder, FnSetWithoutParams, FnSetWithParams,
+    ListSet, SetBuilder, FnSetWithoutDom, FnSetWithDom,
     NPosObj, NObj, QObj, ZObj, RObj, InstSetTemplateObj,
     Cart, SetDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choose, FnSetObj, ObjAtIndex,
     SetBuilderWithCartAsParentSet,
@@ -113,7 +113,6 @@ fn main() {
     try_prove_by_induction_stmt();
     try_have_obj_equal_stmt();
     try_let_fn_stmt();
-    try_have_fn_stmt();
     try_eval_stmt();
     try_prove_for_stmt();
     try_have_obj_st_stmt();
@@ -240,7 +239,7 @@ fn try_set_builder() {
 }
 
 fn try_fn_set_without_params() {
-    let fn_set_without_params = Obj::FnSetWithoutParams(FnSetWithoutParams::new(
+    let fn_set_without_params = Obj::FnSetWithoutDom(FnSetWithoutDom::new(
         vec![
             Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")),
             Obj::AtomWithoutPkg(AtomWithoutPkg::new("b")),
@@ -251,7 +250,7 @@ fn try_fn_set_without_params() {
 }
 
 fn try_fn_set_with_params() {
-    let fn_set_with_params = Obj::FnSetWithParams(FnSetWithParams::new("f".to_string(), vec!["a".to_string(), "b".to_string()], vec![Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")), Obj::AtomWithoutPkg(AtomWithoutPkg::new("b"))], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::AtomWithoutPkg(AtomWithoutPkg::new("c")), vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))]));
+    let fn_set_with_params = Obj::FnSetWithDom(FnSetWithDom::new(vec!["a".to_string(), "b".to_string()], vec![Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")), Obj::AtomWithoutPkg(AtomWithoutPkg::new("b"))], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::AtomWithoutPkg(AtomWithoutPkg::new("c"))));
     println!("{}", fn_set_with_params);
 }
 
@@ -895,25 +894,13 @@ fn try_have_obj_equal_stmt() {
 }
 
 fn try_let_fn_stmt() {
-    let let_fn_stmt = LetFnStmt::new(FnSetWithParams::new("f".to_string(), vec!["x".to_string()], vec![Obj::mk("p")], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p"), vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))]), 1, 0);
+    let let_fn_stmt = LetFnStmt::new("f".to_string(), FnSetWithDom::new(vec!["x".to_string()], vec![Obj::mk("p")], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p")), 1, 0);
     println!("{}", let_fn_stmt);
 
     let stmt = Stmt::DefStmt(DefStmt::LetFnStmt(let_fn_stmt));
     println!("{}", stmt);
 }
 
-fn try_have_fn_stmt() {
-    let have_fn_stmt = HaveFnStmt::new(FnSetWithParams::new("f".to_string(), vec!["x".to_string()], vec![Obj::mk("p")], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p"), vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))]), vec![Stmt::Fact(Fact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Obj::mk("p"),
-        Obj::mk("q"),
-        1,
-        0,
-    )))))], Obj::mk("p"), 1, 0);
-    println!("{}", have_fn_stmt);
-
-    let stmt = Stmt::DefStmt(DefStmt::HaveFnStmt(have_fn_stmt));
-    println!("{}", stmt);
-}
 
 fn try_eval_stmt() {
     let eval_stmt = EvalStmt::new(Obj::mk("p"), 1, 0);
@@ -1029,13 +1016,13 @@ fn try_witness_nonempty_set_stmt() {
 }
 
 fn try_prove_fn_is_set_stmt() {
-    let prove_fn_set_is_subset_of_cart_set_stmt = ProveFnSetAsSetStmt::new(vec![Atom::AtomWithoutPkg(AtomWithoutPkg::new("p"))], FnSetObj::FnSetWithoutParams(FnSetWithoutParams::new(vec![Obj::mk("p")], Obj::mk("p"))), 1, 0);
+    let prove_fn_set_is_subset_of_cart_set_stmt = ProveFnSetAsSetStmt::new(vec![Atom::AtomWithoutPkg(AtomWithoutPkg::new("p"))], FnSetObj::FnSetWithoutParams(FnSetWithoutDom::new(vec![Obj::mk("p")], Obj::mk("p"))), 1, 0);
     println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
 
     let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::FnSetAsSet(prove_fn_set_is_subset_of_cart_set_stmt));
     println!("{}", stmt);
 
-    let prove_fn_set_is_subset_of_cart_set_stmt = ProveFnSetAsSetStmt::new(vec![Atom::AtomWithoutPkg(AtomWithoutPkg::new("p"))], FnSetObj::FnSetWithParams(FnSetWithParams::new("f".to_string(), vec!["x".to_string()], vec![Obj::mk("p")], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p"), vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))])), 1, 0);
+    let prove_fn_set_is_subset_of_cart_set_stmt = ProveFnSetAsSetStmt::new(vec![Atom::AtomWithoutPkg(AtomWithoutPkg::new("p"))], FnSetObj::FnSetWithParams(FnSetWithDom::new(vec!["x".to_string()], vec![Obj::mk("p")], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p"))), 1, 0);
     println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
 
     let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::FnSetAsSet(prove_fn_set_is_subset_of_cart_set_stmt));
@@ -1044,7 +1031,7 @@ fn try_prove_fn_is_set_stmt() {
 
 fn try_have_fn_equal_stmt() {
     let have_fn_equal_stmt = 
-    HaveFnEqualStmt::new("f".to_string(), vec!["x".to_string()], vec![Obj::mk("p")], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p"), Obj::mk("p"), 1, 0);
+    HaveFnEqualStmt::new("f".to_string(), FnSetWithDom::new(vec!["x".to_string()], vec![Obj::mk("p")], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p")), Obj::mk("p"), 1, 0);
     have_fn_equal_stmt.to_string();
     println!("{}", have_fn_equal_stmt);
 
@@ -1053,7 +1040,7 @@ fn try_have_fn_equal_stmt() {
 }
 
 fn try_have_fn_equal_case_by_case_stmt() {
-    let have_fn_equal_case_by_case_stmt = HaveFnEqualCaseByCaseStmt::new(FnSetWithParams::new("f".to_string(), vec!["x".to_string()], vec![Obj::mk("p")], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p"), vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))]), vec![AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))))], vec![Obj::mk("p")], 1, 0);
+    let have_fn_equal_case_by_case_stmt = HaveFnEqualCaseByCaseStmt::new("f".to_string(), FnSetWithDom::new(vec!["x".to_string()], vec![Obj::mk("p")], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p")), vec![AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))))], vec![Obj::mk("p")], 1, 0);
     println!("{}", have_fn_equal_case_by_case_stmt);
 
     let stmt = Stmt::DefStmt(DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt));
@@ -1061,7 +1048,8 @@ fn try_have_fn_equal_case_by_case_stmt() {
 }
 
 fn try_have_fn_as_set_stmt() {
-    let have_fn_as_set_stmt = HaveFnAsSetStmt::new(FnSetWithParams::new("f".to_string(), vec!["x".to_string()], vec![Obj::mk("p")], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p"), vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))]), SetBuilderWithCartAsParentSet::new("x".to_string(), Cart::new(vec![Obj::mk("p")]), vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))]), vec![], 1, 0);
+    let equal_to_set = SetBuilderWithCartAsParentSet::new("x".to_string(), Cart::new(vec![Obj::mk("p")]), vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))]);
+    let have_fn_as_set_stmt = HaveFnAsSetStmt::new("f".to_string(), FnSetWithDom::new(vec!["x".to_string()], vec![Obj::mk("p")], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p")), equal_to_set, 1, 0);
     println!("{}", have_fn_as_set_stmt);
 
     let stmt = Stmt::DefStmt(DefStmt::HaveFnAsSetStmt(have_fn_as_set_stmt));
