@@ -1,0 +1,93 @@
+use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
+use crate::obj::Obj;
+use crate::helper::{add_four_spaces_at_beginning, vec_to_string_with_sep, to_string_and_add_four_spaces_at_beginning_of_each_line, braced_vec_to_string};
+use crate::consts::{RETURN, IF, COLON, ALGO};
+use std::fmt;
+
+pub struct DefineAlgorithmStmt {
+    pub name: String,
+    pub params: Vec<String>,
+    pub return_or_algo_if: Vec<AlgoReturnOrAlgoIf>,
+    pub line: u32,
+    pub file_index: usize,
+}
+
+pub struct AlgoReturn {
+    pub value: Obj,
+    pub line: u32,
+    pub file_index: usize,
+}
+
+pub struct AlgoIf {
+    pub condition: AndFactOrSpecFact,
+    pub return_stmt: AlgoReturn,
+    pub line: u32,
+    pub file_index: usize,
+}
+
+pub enum AlgoReturnOrAlgoIf {
+    AlgoReturn(AlgoReturn),
+    AlgoIf(AlgoIf),
+}
+
+impl DefineAlgorithmStmt {
+    pub fn new(name: String, params: Vec<String>, return_or_algo_if: Vec<AlgoReturnOrAlgoIf>, line: u32, file_index: usize) -> Self {
+        DefineAlgorithmStmt { name, params, return_or_algo_if, line, file_index }
+    }
+}
+
+impl fmt::Display for AlgoReturnOrAlgoIf {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AlgoReturnOrAlgoIf::AlgoReturn(algo_return) => write!(f, "{}", algo_return),
+            AlgoReturnOrAlgoIf::AlgoIf(algo_if) => write!(f, "{}", algo_if),
+        }
+    }
+}
+
+impl fmt::Display for AlgoReturn {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}", RETURN, (&self.value))
+    }
+}
+
+impl fmt::Display for AlgoIf {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}{}\n{}", IF, self.condition, COLON, add_four_spaces_at_beginning(&self.return_stmt.to_string(), 1))
+    }
+}
+
+impl fmt::Display for DefineAlgorithmStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{} {}{}{}\n{}",
+            ALGO,
+            self.name,
+            braced_vec_to_string(&self.params),
+            COLON,
+            to_string_and_add_four_spaces_at_beginning_of_each_line(&vec_to_string_with_sep(&self.return_or_algo_if, "\n"), 1)
+        )
+    }
+}
+
+impl AlgoReturn {
+    pub fn new(value: Obj, line: u32, file_index: usize) -> Self {
+        AlgoReturn { value, line, file_index }
+    }
+}
+
+impl AlgoIf {
+    pub fn new(condition: AndFactOrSpecFact, return_stmt: AlgoReturn, line: u32, file_index: usize) -> Self {
+        AlgoIf { condition, return_stmt, line, file_index }
+    }
+}
+
+impl AlgoReturnOrAlgoIf {
+    pub fn line_file(&self) -> (u32, usize) {
+        match self {
+            AlgoReturnOrAlgoIf::AlgoReturn(algo_return) => (algo_return.line, algo_return.file_index),
+            AlgoReturnOrAlgoIf::AlgoIf(algo_if) => (algo_if.line, algo_if.file_index),
+        }
+    }
+}
