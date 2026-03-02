@@ -34,7 +34,7 @@ impl Fact {
             Fact::AtomicFact(a) => crate::atomic_fact::line_file(a),
             Fact::ExistFact(e) => crate::exist_fact::line_file(e),
             Fact::OrFact(o) => (o.line, o.file_index),
-            Fact::AndFact(a) => (a.line, a.file_index),
+            Fact::AndFact(a) => a.line_file(),
             Fact::ForallFact(f) => (f.line, f.file_index),
             Fact::ForallFactWithIff(f) => (f.line, f.file_index),
         }
