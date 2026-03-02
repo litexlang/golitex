@@ -35,6 +35,7 @@ mod runtime_context;
 mod environment;
 mod define_algorithm_stmt;
 use std::collections::HashMap;
+use environment::Environment;
 use module_manager::ModuleManager;
 use runtime_context::RuntimeContext;
 use witness_stmt::{WitnessStmt, WitnessExistFact, WitnessNonemptySet};
@@ -1127,7 +1128,7 @@ fn try_module_manager() {
 
 fn try_runtime_context() {
     let module_manager = ModuleManager::new();
-    let runtime_context = RuntimeContext::new(&module_manager, vec![], HashMap::new(), HashMap::new(), HashMap::new());
+    let runtime_context = RuntimeContext::new(&module_manager, vec![Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()))], HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
     println!("{}", runtime_context);
 }
 
