@@ -4,9 +4,8 @@ use crate::fact::{ Fact};
 use crate::obj::{Obj, SetBuilderWithCartAsParentSet};
 use std::fmt;
 use crate::consts::{AS, CASE, COLON, COMMA, CONSTRUCT, DOM, EQUAL, FN, HAVE, LET, PROP, RIGHT_ARROW, SET, ST, SET_TEMPLATE};
-use crate::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, braced_pair_vec_to_string, braced_param_param_set_with_dom, braced_vec_to_string, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
-use crate::obj::FnSetWithParams;
-use crate::stmt::Stmt;
+use crate::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, braced_pair_vec_to_string, braced_vec_to_string, name_param_param_type_pairs_with_dom_with_ret, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
+use crate::obj::FnSetWithDom;
 use crate::atomic_fact::AtomicFact;
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 
@@ -16,7 +15,6 @@ pub enum DefStmt {
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
     LetFnStmt(LetFnStmt),
-    HaveFnStmt(HaveFnStmt),
     HaveObjStStmt(HaveObjStStmt),
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
@@ -35,15 +33,16 @@ pub struct DefSetTemplateStmt {
 }
 
 pub struct HaveFnAsSetStmt {
-    pub fn_set_with_params: FnSetWithParams,
+    pub name: String,
+    pub fn_set_with_params: FnSetWithDom,
     pub equal_to_set: SetBuilderWithCartAsParentSet,
-    pub proof: Vec<Stmt>,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct HaveFnEqualCaseByCaseStmt {
-    pub fn_set_with_params: FnSetWithParams,
+    pub name: String,
+    pub fn_set_with_params: FnSetWithDom,
     pub cases: Vec<AndFactOrSpecFact>,
     pub equal_tos: Vec<Obj>,
     pub line: u32,
@@ -51,11 +50,8 @@ pub struct HaveFnEqualCaseByCaseStmt {
 }
 
 pub struct HaveFnEqualStmt {
-    pub fn_name: String,
-    pub params: Vec<String>,
-    pub param_sets: Vec<Obj>,
-    pub dom_facts: Vec<AtomicFact>,
-    pub ret_set: Obj,
+    pub name: String,
+    pub fn_set_with_params: FnSetWithDom,
     pub equal_to: Obj,
     pub line: u32,
     pub file_index: usize,
@@ -69,16 +65,9 @@ pub struct HaveObjStStmt {
     pub file_index: usize,
 }
 
-pub struct HaveFnStmt {
-    pub fn_set_with_params: FnSetWithParams,
-    pub proof: Vec<Stmt>,
-    pub construct_fn_equal_to: Obj,
-    pub line: u32,
-    pub file_index: usize,
-}
-
 pub struct LetFnStmt {
-    pub fn_set_with_params: FnSetWithParams,
+    pub name: String,
+    pub fn_set_with_params: FnSetWithDom,
     pub line: u32,
     pub file_index: usize,
 }
@@ -127,7 +116,6 @@ impl fmt::Display for DefStmt {
             DefStmt::HaveObjInNonemptySetStmt(have_obj_in_nonempty_set_stmt) => write!(f, "{}", have_obj_in_nonempty_set_stmt),
             DefStmt::HaveObjEqualStmt(have_obj_equal_stmt) => write!(f, "{}", have_obj_equal_stmt),
             DefStmt::LetFnStmt(let_fn_stmt) => write!(f, "{}", let_fn_stmt),
-            DefStmt::HaveFnStmt(have_fn_stmt) => write!(f, "{}", have_fn_stmt),
             DefStmt::HaveObjStStmt(have_obj_st_stmt) => write!(f, "{}", have_obj_st_stmt),
             DefStmt::HaveFnEqualStmt(have_fn_equal_stmt) => write!(f, "{}", have_fn_equal_stmt),
             DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt) => write!(f, "{}", have_fn_equal_case_by_case_stmt),
@@ -187,7 +175,6 @@ impl DefStmt {
             DefStmt::HaveObjInNonemptySetStmt(have_obj_in_nonempty_set_stmt) => (have_obj_in_nonempty_set_stmt.line, have_obj_in_nonempty_set_stmt.file_index),
             DefStmt::HaveObjEqualStmt(have_obj_equal_stmt) => (have_obj_equal_stmt.line, have_obj_equal_stmt.file_index),
             DefStmt::LetFnStmt(let_fn_stmt) => (let_fn_stmt.line, let_fn_stmt.file_index),
-            DefStmt::HaveFnStmt(have_fn_stmt) => (have_fn_stmt.line, have_fn_stmt.file_index),
             DefStmt::HaveObjStStmt(have_obj_st_stmt) => (have_obj_st_stmt.line, have_obj_st_stmt.file_index),
             DefStmt::HaveFnEqualStmt(have_fn_equal_stmt) => (have_fn_equal_stmt.line, have_fn_equal_stmt.file_index),
             DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt) => (have_fn_equal_case_by_case_stmt.line, have_fn_equal_case_by_case_stmt.file_index),
@@ -222,47 +209,27 @@ impl fmt::Display for HaveObjEqualStmt {
 }
 
 impl LetFnStmt {
-    pub fn new(fn_set_with_params: FnSetWithParams, line: u32, file_index: usize) -> Self {
-        LetFnStmt { fn_set_with_params, line, file_index }
+    pub fn new(name: String, fn_set_with_params: FnSetWithDom, line: u32, file_index: usize) -> Self {
+        LetFnStmt { name, fn_set_with_params, line, file_index }
     }
 }
 
-fn multiple_line_fn_stmt_str(fn_set_with_params: &FnSetWithParams) -> String {
-    let name = &fn_set_with_params.fn_name;
+fn multiple_line_fn_stmt_str(name: &String, fn_set_with_params: &FnSetWithDom) -> String {
     let params = &fn_set_with_params.params;
     let param_sets = &fn_set_with_params.param_sets;
     let dom_facts = &fn_set_with_params.dom_facts;
-    let then_facts = &fn_set_with_params.then_facts;
     let ret_set = &fn_set_with_params.ret_set;
     
-    let dom_empty = dom_facts.is_empty();
-    let then_empty = then_facts.is_empty();
     let header = format!("{}{}{}{}", name, braced_pair_vec_to_string(params, param_sets), ret_set, COLON);
-    match (dom_empty, then_empty) {
-        (true, true) => format!("{}\n{}{}", header, add_four_spaces_at_beginning(RIGHT_ARROW, 1), COLON),
-        (true, false) => format!("{}\n{}{}\n{}", header, add_four_spaces_at_beginning(RIGHT_ARROW, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(then_facts, 3)),
-        (false, true) => format!("{}\n{}{}\n{}\n{}{}", header, add_four_spaces_at_beginning(DOM, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(dom_facts, 2), add_four_spaces_at_beginning(RIGHT_ARROW, 1), COLON),
-        (false, false) => format!("{}\n{}{}\n{}\n{}{}\n{}", header, add_four_spaces_at_beginning(DOM, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(dom_facts, 2), add_four_spaces_at_beginning(RIGHT_ARROW, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(then_facts, 2)),
+    match dom_facts.is_empty() {
+        true => format!("{}\n{}{}", header, add_four_spaces_at_beginning(RIGHT_ARROW, 1), COLON),
+        false => format!("{}\n{}{}\n{}", header, add_four_spaces_at_beginning(DOM, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(dom_facts, 2)),
     }
 }
 
 impl fmt::Display for LetFnStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}{}\n{}", LET, FN, COLON, to_string_and_add_four_spaces_at_beginning_of_each_line(&multiple_line_fn_stmt_str(&self.fn_set_with_params), 1))
-    }
-}
-
-impl fmt::Display for HaveFnStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let construct_str_and_proof = match self.proof.len() { 0 => format!("{} {}{} {}{}", add_four_spaces_at_beginning(CONSTRUCT, 1), self.fn_set_with_params.fn_name, braced_vec_to_string(&self.fn_set_with_params.params), EQUAL, self.construct_fn_equal_to), _ => format!("{} {}{} {} {}{}\n{}", add_four_spaces_at_beginning(CONSTRUCT, 1), self.fn_set_with_params.fn_name, braced_vec_to_string(&self.fn_set_with_params.params), EQUAL, self.construct_fn_equal_to, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2)) };
-        
-        write!(f, "{} {}{}\n{}\n{}", HAVE, FN, COLON, to_string_and_add_four_spaces_at_beginning_of_each_line(&multiple_line_fn_stmt_str(&self.fn_set_with_params), 1), construct_str_and_proof)
-    }
-}
-
-impl HaveFnStmt {
-    pub fn new(fn_set_with_params: FnSetWithParams, proof: Vec<Stmt>, construct_fn_equal_to: Obj, line: u32, file_index: usize) -> Self {
-        HaveFnStmt { fn_set_with_params, proof, construct_fn_equal_to, line, file_index }
+        write!(f, "{} {}{}\n{}", LET, FN, COLON, to_string_and_add_four_spaces_at_beginning_of_each_line(&multiple_line_fn_stmt_str(&self.name, &self.fn_set_with_params), 1))
     }
 }
 
@@ -279,17 +246,14 @@ impl fmt::Display for HaveObjStStmt {
 }
 
 impl HaveFnEqualStmt {
-    pub fn new(fn_name: String, params: Vec<String>, param_sets: Vec<Obj>, dom_facts: Vec<AtomicFact>, ret_set: Obj, equal_to: Obj, line: u32, file_index: usize) -> Self {
-        HaveFnEqualStmt { fn_name, params, param_sets, dom_facts, ret_set, equal_to, line, file_index }
+    pub fn new(name: String, fn_set_with_params: FnSetWithDom, equal_to: Obj, line: u32, file_index: usize) -> Self {
+        HaveFnEqualStmt { name, fn_set_with_params, equal_to, line, file_index }
     }
 }
 
 impl fmt::Display for HaveFnEqualStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.dom_facts.len() {
-            0 => write!(f, "{} {} {}{}{} {} {}", HAVE, FN, self.fn_name,  braced_pair_vec_to_string(&self.params, &self.param_sets),self.ret_set, EQUAL, self.equal_to),
-            _ => write!(f, "{} {} {} {} {}", HAVE, FN, braced_param_param_set_with_dom(&self.fn_name, &self.params, &self.param_sets, &self.dom_facts), EQUAL, self.equal_to),
-        }
+        write!(f, "{} {} {}{}", HAVE, self.fn_set_with_params.with_keyword_fn_with_name_to_string(Some(&self.name)), EQUAL, self.equal_to)
     }
 }
 
@@ -297,7 +261,7 @@ impl fmt::Display for HaveFnEqualStmt {
 impl fmt::Display for HaveFnEqualCaseByCaseStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let cases_and_proofs = self.cases.iter().enumerate().map(|(i, case)| {
-            format!("{} {}{}{} {}{} {} {}", CASE, case, COMMA, CONSTRUCT, self.fn_set_with_params.fn_name, braced_vec_to_string(&self.fn_set_with_params.params), EQUAL, self.equal_tos[i])
+            format!("{} {}{}{} {}{} {} {}", CASE, case, COMMA, CONSTRUCT, self.name, braced_vec_to_string(&self.fn_set_with_params.params), EQUAL, self.equal_tos[i])
         }).collect::<Vec<String>>();
         
         write!(f, "{} {} {}{}\n{}", HAVE, self.fn_set_with_params, EQUAL, COLON, vec_to_string_with_sep(&cases_and_proofs, "\n"))
@@ -305,23 +269,20 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
 }
 
 impl HaveFnEqualCaseByCaseStmt {
-    pub fn new(fn_set_with_params: FnSetWithParams, cases: Vec<AndFactOrSpecFact>, equal_tos: Vec<Obj>, line: u32, file_index: usize) -> Self {
-        HaveFnEqualCaseByCaseStmt { fn_set_with_params, cases, equal_tos, line, file_index }
+    pub fn new(name: String, fn_set_with_params: FnSetWithDom, cases: Vec<AndFactOrSpecFact>, equal_tos: Vec<Obj>, line: u32, file_index: usize) -> Self {
+        HaveFnEqualCaseByCaseStmt { name, fn_set_with_params, cases, equal_tos, line, file_index }
     }
 }
 
 impl HaveFnAsSetStmt {
-    pub fn new(fn_set_with_params: FnSetWithParams, equal_to_set: SetBuilderWithCartAsParentSet, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
-        HaveFnAsSetStmt { fn_set_with_params, equal_to_set, proof, line, file_index }
+    pub fn new(name: String, fn_set_with_params: FnSetWithDom, equal_to_set: SetBuilderWithCartAsParentSet, line: u32, file_index: usize) -> Self {
+        HaveFnAsSetStmt { name, fn_set_with_params, equal_to_set, line, file_index }
     }
 }
 
 impl fmt::Display for HaveFnAsSetStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self.proof.len() {
-            0 => write!(f, "{} {} {} {} {} {} {}", HAVE, FN, AS, SET, self.fn_set_with_params, EQUAL, self.equal_to_set),
-            _ => write!(f, "{} {} {} {} {} {} {}{}\n{}", HAVE, FN, AS, SET, self.fn_set_with_params, EQUAL, self.equal_to_set, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)),
-        }
+        write!(f, "{} {} {} {} {} {}", HAVE, AS, SET, self.fn_set_with_params.with_keyword_fn_with_name_to_string(Some(&self.name)), EQUAL, self.equal_to_set)
     }
 }
 
@@ -333,6 +294,6 @@ impl DefSetTemplateStmt {
 
 impl fmt::Display for DefSetTemplateStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {} {}", SET_TEMPLATE, braced_param_param_set_with_dom(&self.name, &self.params, &self.param_sets, &self.dom_facts), EQUAL, self.equal_to)
+        write!(f, "{} {} {} {}", SET_TEMPLATE, name_param_param_type_pairs_with_dom_with_ret(Some(&self.name), &self.params, &self.param_sets, &self.dom_facts, &self.equal_to), EQUAL, self.equal_to)
     }
 }
