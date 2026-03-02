@@ -1,13 +1,13 @@
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
-use crate::parameter_type_and_property::ParameterType;
+use crate::parameter_type_and_property::{ParameterType, ParamDefWithParamTypeAndProperty};
 use crate::fact::{ Fact};
 use crate::obj::{Obj, SetBuilderWithCartAsParentSet};
 use std::fmt;
-use crate::consts::{AS, CASE, COLON, COMMA, CONSTRUCT, DOM, EQUAL, FN, HAVE, LET, PROP, RIGHT_ARROW, SET, ST, SET_TEMPLATE};
-use crate::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, braced_pair_vec_to_string, braced_vec_to_string, name_param_param_type_pairs_with_dom_with_ret, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
+use crate::consts::{AS, CASE, COLON, COMMA, CONSTRUCT, DOM, EQUAL, FN, HAVE, LEFT_BRACE, LET, PROP, RIGHT_ARROW, RIGHT_BRACE, SET, SET_TEMPLATE, ST};
+use crate::helper::{add_four_spaces_at_beginning,   braced_vec_to_string, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
 use crate::obj::FnSetWithDom;
-use crate::atomic_fact::AtomicFact;
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
+use crate::exist_fact::ExistFact;
 
 pub enum DefStmt {
     DefLetStmt(DefLetStmt),
@@ -24,8 +24,7 @@ pub enum DefStmt {
 
 pub struct DefSetTemplateStmt {
     pub name: String,
-    pub params: Vec<String>,
-    pub param_sets: Vec<ParameterType>,
+    pub params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
     pub dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub equal_to: Obj,
     pub line: u32,
@@ -59,8 +58,7 @@ pub struct HaveFnEqualStmt {
 
 pub struct HaveObjStStmt {
     pub names: Vec<String>,
-    pub param_types: Vec<ParameterType>,
-    pub obj_st: Vec<AtomicFact>,
+    pub exist_fact_in_have_obj_st: ExistFact,
     pub line: u32,
     pub file_index: usize,
 }
@@ -87,12 +85,6 @@ pub struct HaveObjInNonemptySetOrParamTypeStmt {
     pub file_index: usize,
 }
 
-pub struct DefHeaderWithParamType {
-    pub name: String,
-    pub param_names: Vec<String>,
-    pub param_types: Vec<ParameterType>,
-}
-
 pub struct DefLetStmt {
     pub names: Vec<String>,
     pub param_types: Vec<ParameterType>,
@@ -102,7 +94,8 @@ pub struct DefLetStmt {
 }
 
 pub struct DefPropStmt {
-    pub def_header: DefHeaderWithParamType,
+    pub name: String,
+    pub params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
     pub iff_facts: Option<Vec<Fact>>,
     pub line: u32,
     pub file_index: usize,
@@ -126,29 +119,17 @@ impl fmt::Display for DefStmt {
 }
 
 impl DefPropStmt {
-    pub fn new(def_header: DefHeaderWithParamType, iff_facts: Option<Vec<Fact>>, line: u32, file_index: usize) -> Self {
-        DefPropStmt { def_header, iff_facts, line, file_index }
+    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>, iff_facts: Option<Vec<Fact>>, line: u32, file_index: usize) -> Self {
+        DefPropStmt { name, params_def_with_type, iff_facts, line, file_index }
     }
 }
 
 impl fmt::Display for DefPropStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.iff_facts {
-            Some(iff_facts) => write!(f, "{} {}{}\n{}", PROP, self.def_header, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&iff_facts, 1)),
-            None => write!(f, "{} {}", PROP, self.def_header),
+            Some(iff_facts) => write!(f, "{} {}{}{}\n{}", PROP, self.name, braced_vec_to_string(&self.params_def_with_type), COLON,  vec_to_string_add_four_spaces_at_beginning_of_each_line(&iff_facts, 1)),
+            None => write!(f, "{} {}{}", PROP, self.name, braced_vec_to_string(&self.params_def_with_type)),
         }
-    }
-}
-
-impl DefHeaderWithParamType {
-    pub fn new(name: String, param_names: Vec<String>, param_types: Vec<ParameterType>) -> Self {
-        DefHeaderWithParamType { name, param_names, param_types }
-    }
-}
-
-impl fmt::Display for DefHeaderWithParamType {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", self.name, vec_pair_to_string(&self.param_names, &self.param_types))
     }
 }
 
@@ -215,12 +196,10 @@ impl LetFnStmt {
 }
 
 fn multiple_line_fn_stmt_str(name: &String, fn_set_with_params: &FnSetWithDom) -> String {
-    let params = &fn_set_with_params.params;
-    let param_sets = &fn_set_with_params.param_sets;
     let dom_facts = &fn_set_with_params.dom_facts;
     let ret_set = &fn_set_with_params.ret_set;
     
-    let header = format!("{}{}{}{}", name, braced_pair_vec_to_string(params, param_sets), ret_set, COLON);
+    let header = format!("{}{}{}{}", name, braced_vec_to_string(&fn_set_with_params.params_def_with_set), ret_set, COLON);
     match dom_facts.is_empty() {
         true => format!("{}\n{}{}", header, add_four_spaces_at_beginning(RIGHT_ARROW, 1), COLON),
         false => format!("{}\n{}{}\n{}", header, add_four_spaces_at_beginning(DOM, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(dom_facts, 2)),
@@ -234,14 +213,14 @@ impl fmt::Display for LetFnStmt {
 }
 
 impl HaveObjStStmt {
-    pub fn new(names: Vec<String>, param_types: Vec<ParameterType>, obj_st: Vec<AtomicFact>, line: u32, file_index: usize) -> Self {
-        HaveObjStStmt { names, param_types, obj_st, line, file_index }
+    pub fn new(names: Vec<String>, exist_fact_in_have_obj_st: ExistFact, line: u32, file_index: usize) -> Self {
+        HaveObjStStmt { names, exist_fact_in_have_obj_st, line, file_index }
     }
 }
 
 impl fmt::Display for HaveObjStStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {} {}", HAVE, vec_pair_to_string(&self.names, &self.param_types), ST, vec_to_string_join_by_comma(&self.obj_st))
+        write!(f, "{} {} {} {}", HAVE, vec_pair_to_string(&self.names, &self.exist_fact_in_have_obj_st.params_def_with_type()), ST, vec_to_string_join_by_comma(&self.exist_fact_in_have_obj_st.facts()))
     }
 }
 
@@ -261,7 +240,7 @@ impl fmt::Display for HaveFnEqualStmt {
 impl fmt::Display for HaveFnEqualCaseByCaseStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let cases_and_proofs = self.cases.iter().enumerate().map(|(i, case)| {
-            format!("{} {}{}{} {}{} {} {}", CASE, case, COMMA, CONSTRUCT, self.name, braced_vec_to_string(&self.fn_set_with_params.params), EQUAL, self.equal_tos[i])
+            format!("{} {}{}{} {}{} {} {}", CASE, case, COMMA, CONSTRUCT, self.name, braced_vec_to_string(&self.fn_set_with_params.params_def_with_set), EQUAL, self.equal_tos[i])
         }).collect::<Vec<String>>();
         
         write!(f, "{} {} {}{}\n{}", HAVE, self.fn_set_with_params, EQUAL, COLON, vec_to_string_with_sep(&cases_and_proofs, "\n"))
@@ -287,13 +266,13 @@ impl fmt::Display for HaveFnAsSetStmt {
 }
 
 impl DefSetTemplateStmt {
-    pub fn new(name: String, params: Vec<String>, param_sets: Vec<ParameterType>, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, equal_to: Obj, line: u32, file_index: usize) -> Self {
-        DefSetTemplateStmt { name, params, param_sets, dom_facts, equal_to, line, file_index }
+    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, equal_to: Obj, line: u32, file_index: usize) -> Self {
+        DefSetTemplateStmt { name, params_def_with_type, dom_facts, equal_to, line, file_index }
     }
 }
 
 impl fmt::Display for DefSetTemplateStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {} {}", SET_TEMPLATE, name_param_param_type_pairs_with_dom_with_ret(Some(&self.name), &self.params, &self.param_sets, &self.dom_facts, &self.equal_to), EQUAL, self.equal_to)
+        write!(f, "{} {}{}{} {} {}{} {} {}", SET_TEMPLATE, self.name,LEFT_BRACE, vec_to_string_join_by_comma(&self.params_def_with_type), COLON, vec_to_string_join_by_comma(&self.dom_facts), RIGHT_BRACE, EQUAL, self.equal_to)
     }
 }

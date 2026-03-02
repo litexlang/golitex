@@ -4,7 +4,12 @@ use crate::obj::Obj;
 use crate::atom::Atom;
 use crate::consts::{FINITE_SET, LEFT_BRACKET, NONEMPTY_SET, RIGHT_BRACKET, SET};
 
-pub enum ParameterTypeOrParameterProperty {
+pub enum ParamDefWithParamSet {
+    ParamAndItsSetPair(String, Obj),
+    ParamsAndTheirSetsPair(Vec<String>, Obj),
+}
+
+pub enum ParamDefWithParamTypeAndProperty {
     ParamAndItsTypePair(String, ParameterType),
     ParamsAndTheirTypePair(Vec<String>, ParameterType),
     ParamsPropertyPair(Vec<String>, Atom),
@@ -70,12 +75,21 @@ impl fmt::Display for FiniteSetAsParamSet {
     }
 }
 
-impl fmt::Display for ParameterTypeOrParameterProperty {
+impl fmt::Display for ParamDefWithParamTypeAndProperty {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ParameterTypeOrParameterProperty::ParamAndItsTypePair(param, param_type) => write!(f, "{} {}", param, param_type),
-            ParameterTypeOrParameterProperty::ParamsAndTheirTypePair(params, param_type) => write!(f, "{} {}", vec_to_string_join_by_comma(params), param_type),
-            ParameterTypeOrParameterProperty::ParamsPropertyPair(params, property) => write!(f, "{}{}{} {}", LEFT_BRACKET, vec_to_string_join_by_comma(params), RIGHT_BRACKET, property),
+            ParamDefWithParamTypeAndProperty::ParamAndItsTypePair(param, param_type) => write!(f, "{} {}", param, param_type),
+            ParamDefWithParamTypeAndProperty::ParamsAndTheirTypePair(params, param_type) => write!(f, "{} {}", vec_to_string_join_by_comma(params), param_type),
+            ParamDefWithParamTypeAndProperty::ParamsPropertyPair(params, property) => write!(f, "{}{}{} {}", LEFT_BRACKET, vec_to_string_join_by_comma(params), RIGHT_BRACKET, property),
+        }
+    }
+}
+
+impl fmt::Display for ParamDefWithParamSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParamDefWithParamSet::ParamAndItsSetPair(param, param_set) => write!(f, "{} {}", param, param_set),
+            ParamDefWithParamSet::ParamsAndTheirSetsPair(params, param_set) => write!(f, "{} {}", vec_to_string_join_by_comma(params), param_set),
         }
     }
 }
