@@ -3,7 +3,7 @@ use crate::parameter_type_and_property::{ParameterType, ParamDefWithParamTypeAnd
 use crate::fact::{ Fact};
 use crate::obj::{Obj};
 use std::fmt;
-use crate::consts::{CASE, COLON, COMMA, CONSTRUCT, DOM, EQUAL, FN, HAVE, LEFT_BRACE, LET, PROP, RIGHT_ARROW, RIGHT_BRACE, SET_TEMPLATE, ST};
+use crate::consts::{CASE, COLON, COMMA, DOM, EQUAL, FN, HAVE, LEFT_BRACE, LET, PROP, RIGHT_ARROW, RIGHT_BRACE, SET_TEMPLATE, ST};
 use crate::helper::{add_four_spaces_at_beginning,   braced_vec_to_string, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
 use crate::obj::FnSetWithDom;
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
@@ -221,7 +221,7 @@ impl HaveFnEqualStmt {
 
 impl fmt::Display for HaveFnEqualStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}{}", HAVE, self.fn_set_with_params.with_keyword_fn_with_name_to_string(Some(&self.name)), EQUAL, self.equal_to)
+        write!(f, "{} {} {} {}", HAVE, self.fn_set_with_params.with_keyword_fn_with_name_to_string(Some(&self.name)), EQUAL, self.equal_to)
     }
 }
 
@@ -229,7 +229,7 @@ impl fmt::Display for HaveFnEqualStmt {
 impl fmt::Display for HaveFnEqualCaseByCaseStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let cases_and_proofs = self.cases.iter().enumerate().map(|(i, case)| {
-            format!("{} {}{}{} {}{} {} {}", CASE, case, COMMA, CONSTRUCT, self.name, braced_vec_to_string(&self.fn_set_with_params.params_def_with_set), EQUAL, self.equal_tos[i])
+            to_string_and_add_four_spaces_at_beginning_of_each_line(&format!("{} {}{} {}{} {} {}", CASE, case, COMMA, self.name, braced_vec_to_string(&self.fn_set_with_params.params()), EQUAL, self.equal_tos[i]),1)
         }).collect::<Vec<String>>();
         
         write!(f, "{} {} {}{}\n{}", HAVE, self.fn_set_with_params, EQUAL, COLON, vec_to_string_with_sep(&cases_and_proofs, "\n"))
