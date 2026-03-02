@@ -1,5 +1,5 @@
 pub const FACT_PREFIX: &str = "$";
-pub const PKG_SEPARATOR: &str = ".";
+pub const MOD_SEPARATOR: &str = ".";
 
 pub const ADD: &str = "+";
 pub const SUB: &str = "-";

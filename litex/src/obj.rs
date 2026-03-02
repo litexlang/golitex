@@ -1,16 +1,16 @@
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::parameter_type_and_property::ParamDefWithParamSet;
 use crate::consts::{
-    ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT,  LEFT_CURLY_BRACE, LEFT_BRACKET, MOD, MUL, N, N_POS, PKG_SEPARATOR, POW, POWER_SET, PROJ, Q, R, RANGE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB, UNION, VAL, Z
+    ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT,  LEFT_CURLY_BRACE, LEFT_BRACKET, MOD, MUL, N, N_POS, MOD_SEPARATOR, POW, POWER_SET, PROJ, Q, R, RANGE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB, UNION, VAL, Z
 };
 use std::fmt;
 use crate::helper::{braced_string, braced_two_strings, braced_vec_to_string, curly_braced_vec_to_string,  vec_to_string_join_by_comma};
-use crate::atom::{AtomWithoutPkg, AtomWithPkg};
+use crate::atom::{AtomWithoutModName, AtomWithModName};
 use crate::atom::Atom;
 
 pub enum Obj {
-    AtomWithoutPkg(AtomWithoutPkg),
-    AtomWithPkg(AtomWithPkg),
+    AtomWithoutModName(AtomWithoutModName),
+    AtomWithModName(AtomWithModName),
     FnObj(FnObj),
     Number(Number),
     Add(Add),
@@ -47,20 +47,6 @@ pub enum Obj {
     PowerSet(PowerSet),
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
-}
-
-pub enum FnSetObj {
-    FnSetWithoutParams(FnSetWithoutDom),
-    FnSetWithParams(FnSetWithDom),
-}
-
-impl fmt::Display for FnSetObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            FnSetObj::FnSetWithoutParams(fn_set_without_params) => write!(f, "{}", fn_set_without_params),
-            FnSetObj::FnSetWithParams(fn_set_with_params) => write!(f, "{}", fn_set_with_params),
-        }
-    }
 }
 
 pub struct ObjAtIndex {
@@ -549,8 +535,8 @@ impl Val {
 impl fmt::Display for Obj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Obj::AtomWithoutPkg(a) => write!(f, "{}", a),
-            Obj::AtomWithPkg(a) => write!(f, "{}", a),
+            Obj::AtomWithoutModName(a) => write!(f, "{}", a),
+            Obj::AtomWithModName(a) => write!(f, "{}", a),
             Obj::FnObj(a) => write!(f, "{}", a),
             Obj::Number(number) => write!(f, "{}", number),
             Obj::Add(add) => write!(f, "{}", add),
@@ -645,7 +631,7 @@ impl fmt::Display for Dim {
     }
 }
 
-impl fmt::Display for AtomWithoutPkg {
+impl fmt::Display for AtomWithoutModName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.name)
     }
@@ -735,9 +721,9 @@ impl fmt::Display for Cap {
     }
 }
 
-impl fmt::Display for AtomWithPkg {
+impl fmt::Display for AtomWithModName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}", self.pkg, PKG_SEPARATOR, self.name)
+        write!(f, "{}{}{}", self.mod_name, MOD_SEPARATOR, self.name)
     }
 }
 
@@ -804,8 +790,8 @@ impl fmt::Display for RObj {
 impl fmt::Display for InstSetTemplateObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let template_str = match &self.set_template {
-            Atom::AtomWithoutPkg(atom) => atom.to_string(),
-            Atom::AtomWithPkg(atom_with_pkg) => atom_with_pkg.to_string(),
+            Atom::AtomWithoutModName(atom) => atom.to_string(),
+            Atom::AtomWithModName(atom_with_mod_name) => atom_with_mod_name.to_string(),
         };
         write!(f, "{}{}{}", INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, template_str, braced_vec_to_string(&self.param_sets))
     }
@@ -834,6 +820,6 @@ impl fmt::Display for PowerSet {
 
 impl Obj {
     pub fn mk(s: &str) -> Obj {
-        Obj::AtomWithoutPkg(AtomWithoutPkg::new(s))
+        Obj::AtomWithoutModName(AtomWithoutModName::new(s))
     }
 }
