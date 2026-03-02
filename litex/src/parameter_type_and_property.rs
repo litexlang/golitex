@@ -1,6 +1,13 @@
 use std::fmt;
 use crate::obj::Obj;
+use crate::atom::Atom;
 use crate::consts::{SET, NONEMPTY_SET, FINITE_SET};
+
+pub enum ParameterTypeOrParameterProperty {
+    ParamAndItsTypePair(String, ParameterType),
+    ParamsAndTheirTypePair(Vec<String>, ParameterType),
+    ParamPropertyPair(Vec<String>, Atom),
+}
 
 pub enum ParameterType {
     Set(SetAsParamSet),

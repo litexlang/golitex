@@ -1,5 +1,5 @@
 use crate::helper::{vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
-use crate::parameter_type::ParameterType;
+use crate::parameter_type_and_property::ParameterType;
 use std::fmt;
 use crate::obj::Obj;
 use crate::atomic_fact::AtomicFact;

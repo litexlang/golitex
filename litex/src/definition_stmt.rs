@@ -1,5 +1,5 @@
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
-use crate::parameter_type::ParameterType;
+use crate::parameter_type_and_property::ParameterType;
 use crate::fact::{ Fact};
 use crate::obj::{Obj, SetBuilderWithCartAsParentSet};
 use std::fmt;

@@ -2,7 +2,7 @@ use std::fmt;
 use crate::consts::{FORALL, COLON, RIGHT_ARROW};
 use crate::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string};
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
-use crate::parameter_type::ParameterType;
+use crate::parameter_type_and_property::{ParameterType};
 
 pub struct ForallFact {
     pub params: Vec<String>,
