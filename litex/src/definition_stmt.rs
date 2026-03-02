@@ -3,11 +3,11 @@ use crate::parameter_type_and_property::{ParameterType, ParamDefWithParamTypeAnd
 use crate::fact::{ Fact};
 use crate::obj::{Obj};
 use std::fmt;
-use crate::consts::{CASE, COLON, COMMA, DOM, EQUAL, FN, HAVE, LEFT_BRACE, LET, PROP, RIGHT_ARROW, RIGHT_BRACE, SET_TEMPLATE, ST};
+use crate::consts::{CASE, COLON, COMMA, DOM, EQUAL, FN, HAVE, LEFT_BRACE, LET, PROP, RIGHT_ARROW, RIGHT_BRACE, SET_TEMPLATE};
 use crate::helper::{add_four_spaces_at_beginning,   braced_vec_to_string, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
 use crate::obj::FnSetWithDom;
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
-use crate::exist_fact::ExistFact;
+use crate::exist_fact::TrueExistFact;
 
 pub enum DefStmt {
     DefLetStmt(DefLetStmt),
@@ -48,8 +48,7 @@ pub struct HaveFnEqualStmt {
 }
 
 pub struct HaveObjStStmt {
-    pub names: Vec<String>,
-    pub exist_fact_in_have_obj_st: ExistFact,
+    pub exist_fact_in_have_obj_st: TrueExistFact,
     pub line: u32,
     pub file_index: usize,
 }
@@ -202,14 +201,14 @@ impl fmt::Display for LetFnStmt {
 }
 
 impl HaveObjStStmt {
-    pub fn new(names: Vec<String>, exist_fact_in_have_obj_st: ExistFact, line: u32, file_index: usize) -> Self {
-        HaveObjStStmt { names, exist_fact_in_have_obj_st, line, file_index }
+    pub fn new(exist_fact_in_have_obj_st: TrueExistFact, line: u32, file_index: usize) -> Self {
+        HaveObjStStmt { exist_fact_in_have_obj_st, line, file_index }
     }
 }
 
 impl fmt::Display for HaveObjStStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {} {}", HAVE, vec_pair_to_string(&self.names, &self.exist_fact_in_have_obj_st.params_def_with_type()), ST, vec_to_string_join_by_comma(&self.exist_fact_in_have_obj_st.facts()))
+        write!(f, "{} {}", HAVE, self.exist_fact_in_have_obj_st.exist_fact_string_without_exist_as_prefix())
     }
 }
 
