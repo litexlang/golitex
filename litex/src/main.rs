@@ -30,6 +30,9 @@ mod tooling_stmt;
 mod eval_stmt;
 mod witness_stmt;
 mod syntactic_verifier;
+mod module_manager;
+mod runtime_context;
+use module_manager::ModuleManager;
 use witness_stmt::{WitnessStmt, WitnessExistFact, WitnessNonemptySet};
 use prove_stmt::{ProveStmt};
 use run_file_stmt::{RunFileStmt};
@@ -126,6 +129,7 @@ fn main() {
     try_have_fn_equal_stmt();
     try_have_fn_equal_case_by_case_stmt();
     try_def_set_template_stmt();
+    try_module_manager();
 }
 
 fn try_atom_fn_obj() {
@@ -1104,4 +1108,9 @@ fn try_def_set_template_stmt() {
 
     let stmt = Stmt::DefStmt(DefStmt::DefSetTemplateStmt(def_set_template_stmt));
     println!("{}", stmt);
+}
+
+fn try_module_manager() {
+    let module_manager = ModuleManager::new();
+    println!("{}", module_manager);
 }
