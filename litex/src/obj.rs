@@ -1,5 +1,5 @@
 use crate::atomic_fact::AtomicFact;
-use crate::helper::{name_param_param_type_pairs_with_dom_with_ret, };
+use crate::parameter_type_and_property::ParamDefWithParamSet;
 use crate::consts::{
     ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT,  LEFT_CURLY_BRACE, LEFT_BRACKET, MOD, MUL, N, N_POS, PKG_SEPARATOR, POW, POWER_SET, PROJ, Q, R, RANGE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB, UNION, VAL, Z
 };
@@ -211,8 +211,7 @@ pub struct FnSetWithoutDom {
 }
 
 pub struct FnSetWithDom {
-    pub params: Vec<String>,
-    pub param_sets: Vec<Box<Obj>>,
+    pub params_def_with_set: Vec<ParamDefWithParamSet>,
     pub dom_facts: Vec<AtomicFact>,
     pub ret_set: Box<Obj>,
 }
@@ -404,10 +403,9 @@ impl FnSetWithoutDom {
 }
 
 impl FnSetWithDom {
-    pub fn new(params: Vec<String>, param_sets: Vec<Obj>, dom_facts: Vec<AtomicFact>, ret_set: Obj) -> Self {
+    pub fn new(params_and_their_sets: Vec<ParamDefWithParamSet>, dom_facts: Vec<AtomicFact>, ret_set: Obj) -> Self {
         FnSetWithDom {
-            params: params,
-            param_sets: param_sets.into_iter().map(Box::new).collect(),
+            params_def_with_set: params_and_their_sets,
             dom_facts: dom_facts,
             ret_set: Box::new(ret_set),
         }
@@ -759,7 +757,7 @@ impl fmt::Display for FnSetWithDom {
 
 impl FnSetWithDom {
     pub fn with_keyword_fn_with_name_to_string(&self, name: Option<&str>) -> String {
-        format!("{} {}", FN, name_param_param_type_pairs_with_dom_with_ret(name, &self.params, &self.param_sets, &self.dom_facts, &self.ret_set))
+        format!("{} {}{}{}", FN, name.unwrap_or(""), braced_vec_to_string(&self.params_def_with_set), self.ret_set)
     }
 }
 
@@ -825,163 +823,6 @@ impl fmt::Display for PowerSet {
 // obj helper functions
 
 impl Obj {
-    pub fn equal_literally(left: &Obj, right: &Obj) -> bool {
-        match left {
-            Obj::AtomWithoutPkg(a) => match right {
-                Obj::AtomWithoutPkg(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::AtomWithPkg(a) => match right {
-                Obj::AtomWithPkg(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::FnObj(f) => match right {
-                Obj::FnObj(g) => f.to_string() == g.to_string(),
-                _ => false,
-            },
-            Obj::Number(n) => match right {
-                Obj::Number(m) => n.to_string() == m.to_string(),
-                _ => false,
-            },
-            Obj::Add(a) => match right {
-                Obj::Add(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Sub(a) => match right {
-                Obj::Sub(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Mul(a) => match right {
-                Obj::Mul(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Div(a) => match right {
-                Obj::Div(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Mod(a) => match right {
-                Obj::Mod(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Pow(a) => match right {
-                Obj::Pow(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Union(a) => match right {
-                Obj::Union(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Intersect(a) => match right {
-                Obj::Intersect(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::SetMinus(a) => match right {
-                Obj::SetMinus(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::DisjointUnion(a) => match right {
-                Obj::DisjointUnion(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Cup(a) => match right {
-                Obj::Cup(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Cap(a) => match right {
-                Obj::Cap(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::ListSet(a) => match right {
-                Obj::ListSet(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::SetBuilder(a) => match right {
-                Obj::SetBuilder(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::FnSetWithoutDom(a) => match right {    
-                Obj::FnSetWithoutDom(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::FnSetWithDom(a) => match right {
-                Obj::FnSetWithDom(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::NPosObj(_) => match right {
-                Obj::NPosObj(_) => true,
-                _ => false,
-            },
-            Obj::NObj(_) => match right {
-                Obj::NObj(_) => true,
-                _ => false,
-            },
-            Obj::QObj(_) => match right {
-                Obj::QObj(_) => true,
-                _ => false,
-            },
-            Obj::ZObj(_) => match right {
-                Obj::ZObj(_) => true,
-                _ => false,
-            },
-            Obj::RObj(_) => match right {
-                Obj::RObj(_) => true,
-                _ => false,
-            },
-            Obj::InstSetTemplateObj(a) => match right {
-                Obj::InstSetTemplateObj(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Cart(a) => match right {
-                Obj::Cart(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::SetDim(a) => match right {
-                Obj::SetDim(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Proj(a) => match right {
-                Obj::Proj(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Dim(a) => match right {
-                Obj::Dim(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Tuple(a) => match right {
-                Obj::Tuple(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Count(a) => match right {
-                Obj::Count(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Range(a) => match right {
-                Obj::Range(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::ClosedRange(a) => match right {
-                Obj::ClosedRange(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Val(a) => match right {
-                Obj::Val(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::PowerSet(a) => match right {
-                Obj::PowerSet(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::Choose(a) => match right {
-                Obj::Choose(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::ObjAtIndex(a) => match right {
-                Obj::ObjAtIndex(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-        }
-    }
-
     pub fn mk(s: &str) -> Obj {
         Obj::AtomWithoutPkg(AtomWithoutPkg::new(s))
     }
