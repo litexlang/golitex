@@ -12,7 +12,7 @@ use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 pub enum DefStmt {
     DefLetStmt(DefLetStmt),
     DefPropStmt(DefPropStmt),
-    HaveObjInNonemptySetStmt(HaveObjInNonemptySetStmt),
+    HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
     LetFnStmt(LetFnStmt),
     HaveObjStStmt(HaveObjStStmt),
@@ -80,7 +80,7 @@ pub struct HaveObjEqualStmt {
     pub file_index: usize,
 }
 
-pub struct HaveObjInNonemptySetStmt {
+pub struct HaveObjInNonemptySetOrParamTypeStmt {
     pub names: Vec<String>,
     pub param_types: Vec<ParameterType>,
     pub line: u32,
@@ -184,13 +184,13 @@ impl DefStmt {
     }
 }
 
-impl HaveObjInNonemptySetStmt {
+impl HaveObjInNonemptySetOrParamTypeStmt {
     pub fn new(names: Vec<String>, param_types: Vec<ParameterType>, line: u32, file_index: usize) -> Self {
-        HaveObjInNonemptySetStmt { names, param_types, line, file_index }
+        HaveObjInNonemptySetOrParamTypeStmt { names, param_types, line, file_index }
     }
 }
 
-impl fmt::Display for HaveObjInNonemptySetStmt {
+impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}", HAVE, vec_pair_to_string(&self.names, &self.param_types))
     }

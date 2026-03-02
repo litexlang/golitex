@@ -1,12 +1,13 @@
 use std::fmt;
+use crate::helper::vec_to_string_join_by_comma;
 use crate::obj::Obj;
 use crate::atom::Atom;
-use crate::consts::{SET, NONEMPTY_SET, FINITE_SET};
+use crate::consts::{FINITE_SET, LEFT_BRACKET, NONEMPTY_SET, RIGHT_BRACKET, SET};
 
 pub enum ParameterTypeOrParameterProperty {
     ParamAndItsTypePair(String, ParameterType),
     ParamsAndTheirTypePair(Vec<String>, ParameterType),
-    ParamPropertyPair(Vec<String>, Atom),
+    ParamsPropertyPair(Vec<String>, Atom),
 }
 
 pub enum ParameterType {
@@ -66,5 +67,15 @@ impl fmt::Display for NonemptySetAsParamSet {
 impl fmt::Display for FiniteSetAsParamSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", FINITE_SET)
+    }
+}
+
+impl fmt::Display for ParameterTypeOrParameterProperty {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParameterTypeOrParameterProperty::ParamAndItsTypePair(param, param_type) => write!(f, "{} {}", param, param_type),
+            ParameterTypeOrParameterProperty::ParamsAndTheirTypePair(params, param_type) => write!(f, "{} {}", vec_to_string_join_by_comma(params), param_type),
+            ParameterTypeOrParameterProperty::ParamsPropertyPair(params, property) => write!(f, "{}{}{} {}", LEFT_BRACKET, vec_to_string_join_by_comma(params), RIGHT_BRACKET, property),
+        }
     }
 }
