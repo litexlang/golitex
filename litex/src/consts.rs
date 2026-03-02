@@ -117,6 +117,6 @@ pub const EQUAL_SET: &str = "equal_set";
 
 pub const IMPOSSIBLE: &str = "impossible";
 
-pub const FN_SET_AS_SET: &str = "fn_set_as_set";
+pub const VIEW_FN_AS_SET: &str = "view_fn_as_set";
 
 pub const SET_TEMPLATE: &str = "set_template";
