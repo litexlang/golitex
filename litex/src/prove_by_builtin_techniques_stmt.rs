@@ -5,7 +5,7 @@ use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::fact::Fact;
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::stmt::Stmt;
-use crate::obj::{ClosedRange, FnSetObj, Obj, Range };
+use crate::obj::{ClosedRange, Obj, Range };
 
 pub enum ProveByBuiltinTechniqueStmt {
     ProveCaseByCase(ProveCaseByCaseStmt),
@@ -21,7 +21,6 @@ pub enum ProveByBuiltinTechniqueStmt {
 // f $in fn(a A, b B: $p(a, b)) C {$q(a, b, f)} => forall a A, b B: $p(a, b) => ((a, b), f(a, b)) $in f; forall x f: exist a A, b B st {$p(a, b), ((a, b), f(a, b)) = x}
 pub struct ViewFnAsSetStmt {
     pub function: Obj,
-    pub fn_set: FnSetObj,
     pub line: u32,
     pub file_index: usize,
 }
@@ -218,13 +217,13 @@ impl ProveEqualSetByDefStmt {
 
 impl fmt::Display for ViewFnAsSetStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}", VIEW_FN_AS_SET, self.function, self.fn_set)
+        write!(f, "{} {}", VIEW_FN_AS_SET, self.function)
     }
 }
 
 impl ViewFnAsSetStmt {
-    pub fn new(function: Obj, fn_set: FnSetObj, line: u32, file_index: usize) -> Self {
-        ViewFnAsSetStmt { function, fn_set, line, file_index }
+    pub fn new(function: Obj, line: u32, file_index: usize) -> Self {
+        ViewFnAsSetStmt { function, line, file_index }
     }
 }
 

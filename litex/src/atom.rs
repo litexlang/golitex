@@ -1,36 +1,36 @@
 use std::fmt;
 
 pub enum Atom {
-    AtomWithoutPkg(AtomWithoutPkg),
-    AtomWithPkg(AtomWithPkg),
+    AtomWithoutModName(AtomWithoutModName),
+    AtomWithModName(AtomWithModName),
 }
 
-pub struct AtomWithoutPkg {
+pub struct AtomWithoutModName {
     pub name: String,
 }
 
-pub struct AtomWithPkg {
-    pub pkg: String,
+pub struct AtomWithModName {
+    pub mod_name: String,
     pub name: String,
 }
 
 impl fmt::Display for Atom {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Atom::AtomWithoutPkg(atom) => write!(f, "{}", atom),
-            Atom::AtomWithPkg(atom) => write!(f, "{}", atom),
+            Atom::AtomWithoutModName(atom) => write!(f, "{}", atom),
+            Atom::AtomWithModName(atom) => write!(f, "{}", atom),
         }
     }
 }
 
-impl AtomWithoutPkg {
+impl AtomWithoutModName {
     pub fn new(name: &str) -> Self {
-        AtomWithoutPkg { name: name.to_string() }
+        AtomWithoutModName { name: name.to_string() }
     }
 }
 
-impl AtomWithPkg {
-    pub fn new(pkg: &str, name: &str) -> Self {
-        AtomWithPkg { pkg: pkg.to_string(), name: name.to_string() }
+impl AtomWithModName {
+    pub fn new(mod_name: &str, name: &str) -> Self {
+        AtomWithModName { mod_name: mod_name.to_string(), name: name.to_string() }
     }
 }
