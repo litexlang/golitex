@@ -27,8 +27,7 @@ pub enum Obj {
     Cap(Cap),
     ListSet(ListSet),
     SetBuilder(SetBuilder),
-    FnSetWithoutDom(FnSetWithoutDom),
-    FnSetWithDom(FnSetWithDom),
+    FnSet(FnSetObj),
     NPosObj(NPosObj),
     NObj(NObj),
     QObj(QObj),
@@ -48,13 +47,6 @@ pub enum Obj {
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
 }
-
-pub struct SetBuilderWithCartAsParentSet {
-    pub param: String,
-    pub param_set: Cart,
-    pub facts: Vec<AtomicFact>,
-}
-
 
 pub enum FnSetObj {
     FnSetWithoutParams(FnSetWithoutDom),
@@ -557,8 +549,7 @@ impl fmt::Display for Obj {
             Obj::Cap(cap) => write!(f, "{}", cap),
             Obj::ListSet(list_set) => write!(f, "{}", list_set),
             Obj::SetBuilder(set_builder) => write!(f, "{}", set_builder),
-            Obj::FnSetWithoutDom(function_set) => write!(f, "{}", function_set),
-            Obj::FnSetWithDom(function_set_with_params) => write!(f, "{}", function_set_with_params),
+            Obj::FnSet(function_set) => write!(f, "{}", function_set),
             Obj::NPosObj(n_pos_obj) => write!(f, "{}", n_pos_obj),
             Obj::NObj(n_obj) => write!(f, "{}", n_obj),
             Obj::QObj(q_obj) => write!(f, "{}", q_obj),
@@ -825,17 +816,5 @@ impl fmt::Display for PowerSet {
 impl Obj {
     pub fn mk(s: &str) -> Obj {
         Obj::AtomWithoutPkg(AtomWithoutPkg::new(s))
-    }
-}
-
-impl SetBuilderWithCartAsParentSet {
-    pub fn new(param: String, param_set: Cart, facts: Vec<AtomicFact>) -> Self {
-        SetBuilderWithCartAsParentSet { param, param_set, facts }
-    }
-}
-
-impl fmt::Display for SetBuilderWithCartAsParentSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{} {}{} {}{}", LEFT_CURLY_BRACE, self.param, self.param_set,COLON, vec_to_string_join_by_comma(&self.facts), RIGHT_CURLY_BRACE)
     }
 }
