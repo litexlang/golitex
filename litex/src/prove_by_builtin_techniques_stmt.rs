@@ -1,7 +1,6 @@
 use std::fmt;
-use crate::atom::Atom;
-use crate::consts::{CASE, CASES, CLAIM, COLON, CONTRA, ENUM, FOR, FROM, INDUC, PROVE, RIGHT_ARROW, EQUAL_SET, EQUAL, IMPOSSIBLE, FN_SET_AS_SET};
-use crate::helper::{add_four_spaces_at_beginning, braced_vec_to_string, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line};
+use crate::consts::{CASE, CASES, CLAIM, COLON, CONTRA, ENUM, FOR, FROM, INDUC, PROVE, RIGHT_ARROW, EQUAL_SET, EQUAL, IMPOSSIBLE, VIEW_FN_AS_SET};
+use crate::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line};
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::fact::Fact;
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
@@ -9,28 +8,26 @@ use crate::stmt::Stmt;
 use crate::obj::{ClosedRange, FnSetObj, Obj, Range };
 
 pub enum ProveByBuiltinTechniqueStmt {
-    ProveCaseByCase(ProveCaseByCase),
+    ProveCaseByCase(ProveCaseByCaseStmt),
     ProveByContradiction(ProveByContradictionStmt),
     ProveByEnumeration(ProveByEnumerationStmt),
     ProveByInduction(ProveByInductionStmt),
     ProveForStmt(ProveForStmt),
-    ProveEqualSet(ProveEqualSetStmt),
-    FnSetAsSet(ProveFnSetAsSetStmt),
+    ProveEqualByDefSet(ProveEqualSetByDefStmt),
+    ViewFnAsSet(ViewFnAsSetStmt),
 }
 
-// TODO: 改成 cart(A, B, C)
-// fn f(A, B) C = {t cart(cart(A, B), C): forall x cart(A, B) => exist z t st st z[1] = x; forall x t, y t: x[1] = y[1] => x = y}
-// fn f(a A, b B: $p(a, b)) C {$q(a, b, f)} = {t cart(cart(A, B), C): forall x cart(A, B) => exist z t st st z[1] = x; forall x t, y t: x[1] = y[1] => x = y; forall x t: $p(x[1][1], x[1][2]); forall x cart(A, B): $p(x[1], x[2]) => exist z t st st z[1] = x; forall z t: $q(z[1][1], z[1][2], t)}
-// 这里的 forall x t: $p(x[1][1], x[1][2]) 可能表示不了，因为 $p 对 kernel 来说是变量，所以要让用户自己传入一个和这个fact等价的prop进来。
-pub struct ProveFnSetAsSetStmt {
-    pub props: Vec<Atom>,
-    pub fn_obj: FnSetObj,
+// f $in fn(A, B) C => forall a A, b B => ((a, b), f(a, b)) $in f; forall x f: exist a A, b B st ((a, b), f(a, b)) = x
+// f $in fn(a A, b B: $p(a, b)) C {$q(a, b, f)} => forall a A, b B: $p(a, b) => ((a, b), f(a, b)) $in f; forall x f: exist a A, b B st {$p(a, b), ((a, b), f(a, b)) = x}
+pub struct ViewFnAsSetStmt {
+    pub function: Obj,
+    pub fn_set: FnSetObj,
     pub line: u32,
     pub file_index: usize,
 }
 
 
-pub struct ProveEqualSetStmt {
+pub struct ProveEqualSetByDefStmt {
     pub left: Obj,
     pub right: Obj,
     pub proof: Vec<Stmt>,
@@ -72,7 +69,7 @@ pub struct ProveByEnumerationStmt {
     pub file_index: usize,
 }
 
-pub struct ProveCaseByCase {
+pub struct ProveCaseByCaseStmt {
     pub cases: Vec<AndFactOrSpecFact>,
     pub then_facts: Vec<Fact>,
     pub proofs: Vec<Vec<Stmt>>,
@@ -96,13 +93,13 @@ impl ProveByEnumerationStmt {
     }
 }
 
-impl ProveCaseByCase {
+impl ProveCaseByCaseStmt {
     pub fn new(cases: Vec<AndFactOrSpecFact>, then_facts: Vec<Fact>, proofs: Vec<Vec<Stmt>>, impossible_facts: Vec<Option<OrFactOrAndFactOrSpecFact>>, line: u32, file_index: usize) -> Self {
-        ProveCaseByCase { cases, then_facts, proofs, impossible_facts, line, file_index }
+        ProveCaseByCaseStmt { cases, then_facts, proofs, impossible_facts, line, file_index }
     }
 }
 
-impl fmt::Display for ProveCaseByCase {
+impl fmt::Display for ProveCaseByCaseStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         // 还要考虑：如果这一位的 impossible_fact 是 None，则不输出 impossible_fact；否则再在后面一行写上 impossible ...
         let case_and_proof_of_each_case = self.cases.iter().zip(self.proofs.iter()).zip(self.impossible_facts.iter()).map(|((case, proof), impossible_fact)| {
@@ -137,8 +134,8 @@ impl fmt::Display for ProveByBuiltinTechniqueStmt {
             ProveByBuiltinTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt) => write!(f, "{}", prove_by_enumeration_stmt),
             ProveByBuiltinTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => write!(f, "{}", prove_by_induction_stmt),
             ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt) => write!(f, "{}", prove_for_stmt),
-            ProveByBuiltinTechniqueStmt::ProveEqualSet(prove_equal_set_stmt) => write!(f, "{}", prove_equal_set_stmt),
-            ProveByBuiltinTechniqueStmt::FnSetAsSet(prove_fn_is_set_stmt) => write!(f, "{}", prove_fn_is_set_stmt),
+            ProveByBuiltinTechniqueStmt::ProveEqualByDefSet(prove_equal_set_stmt) => write!(f, "{}", prove_equal_set_stmt),
+            ProveByBuiltinTechniqueStmt::ViewFnAsSet(prove_fn_is_set_stmt) => write!(f, "{}", prove_fn_is_set_stmt),
         }
     }
 }
@@ -151,8 +148,8 @@ impl ProveByBuiltinTechniqueStmt {
             ProveByBuiltinTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt) => (prove_by_enumeration_stmt.line, prove_by_enumeration_stmt.file_index),
             ProveByBuiltinTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => (prove_by_induction_stmt.line, prove_by_induction_stmt.file_index),
             ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt) => (prove_for_stmt.line, prove_for_stmt.file_index),
-            ProveByBuiltinTechniqueStmt::ProveEqualSet(prove_equal_set_stmt) => (prove_equal_set_stmt.line, prove_equal_set_stmt.file_index),
-            ProveByBuiltinTechniqueStmt::FnSetAsSet(prove_fn_is_set_stmt) => (prove_fn_is_set_stmt.line, prove_fn_is_set_stmt.file_index),
+            ProveByBuiltinTechniqueStmt::ProveEqualByDefSet(prove_equal_set_stmt) => (prove_equal_set_stmt.line, prove_equal_set_stmt.file_index),
+            ProveByBuiltinTechniqueStmt::ViewFnAsSet(prove_fn_is_set_stmt) => (prove_fn_is_set_stmt.line, prove_fn_is_set_stmt.file_index),
         }
     }
 }
@@ -204,7 +201,7 @@ impl fmt::Display for ClosedRangeOrRange {
     }
 }
 
-impl fmt::Display for ProveEqualSetStmt {
+impl fmt::Display for ProveEqualSetByDefStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.proof.len() {
             0 => write!(f, "{} {} {} {}", EQUAL_SET, self.left, EQUAL, self.right),
@@ -213,20 +210,21 @@ impl fmt::Display for ProveEqualSetStmt {
     }
 }
 
-impl ProveEqualSetStmt {
+impl ProveEqualSetByDefStmt {
     pub fn new(left: Obj, right: Obj, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
-        ProveEqualSetStmt { left, right, proof, line, file_index }
+        ProveEqualSetByDefStmt { left, right, proof, line, file_index }
     }
 }
 
-impl fmt::Display for ProveFnSetAsSetStmt {
+impl fmt::Display for ViewFnAsSetStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{} {}", FN_SET_AS_SET, braced_vec_to_string(&self.props), self.fn_obj)
+        write!(f, "{} {} {}", VIEW_FN_AS_SET, self.function, self.fn_set)
     }
 }
 
-impl ProveFnSetAsSetStmt {
-    pub fn new(props: Vec<Atom>, fn_obj: FnSetObj, line: u32, file_index: usize) -> Self {
-        ProveFnSetAsSetStmt { props, fn_obj, line, file_index }
+impl ViewFnAsSetStmt {
+    pub fn new(function: Obj, fn_set: FnSetObj, line: u32, file_index: usize) -> Self {
+        ViewFnAsSetStmt { function, fn_set, line, file_index }
     }
 }
+
