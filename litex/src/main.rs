@@ -35,7 +35,7 @@ use prove_stmt::{ProveStmt};
 use run_file_stmt::{RunFileStmt};
 use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalPkgStmt, ClearStmt, DoNothingStmt};
 use prove_by_builtin_techniques_stmt::{ProveCaseByCaseStmt, ProveByContradictionStmt, ProveByBuiltinTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveEqualSetByDefStmt, ViewFnAsSetStmt};
-use definition_stmt::{DefStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, LetFnStmt,  HaveObjStStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, HaveFnAsSetStmt, DefSetTemplateStmt};
+use definition_stmt::{DefStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, LetFnStmt,  HaveObjStStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, DefSetTemplateStmt};
 use claim_stmt::{ClaimProveStmt, ClaimStmt, ClaimIffStmt};
 use and_fact::AndFact;
 use and_fact_or_specific_fact::AndFactOrSpecFact;
@@ -47,7 +47,6 @@ use obj::{
     ListSet, SetBuilder, FnSetWithoutDom, FnSetWithDom,
     NPosObj, NObj, QObj, ZObj, RObj, InstSetTemplateObj,
     Cart, SetDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choose, FnSetObj, ObjAtIndex,
-    SetBuilderWithCartAsParentSet,
 };
 use parameter_type_and_property::{ParameterType, SetAsParamSet, NonemptySetAsParamSet, FiniteSetAsParamSet, ParamDefWithParamTypeAndProperty, ParamDefWithParamSet};
 use stmt::{Stmt};
@@ -124,7 +123,6 @@ fn main() {
     try_view_fn_as_set();
     try_have_fn_equal_stmt();
     try_have_fn_equal_case_by_case_stmt();
-    try_have_fn_as_set_stmt();
     try_def_set_template_stmt();
 }
 
@@ -241,21 +239,21 @@ fn try_set_builder() {
 }
 
 fn try_fn_set_without_params() {
-    let fn_set_without_params = Obj::FnSetWithoutDom(FnSetWithoutDom::new(
+    let fn_set_without_params = Obj::FnSet(FnSetObj::FnSetWithoutParams(FnSetWithoutDom::new(
         vec![
             Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")),
             Obj::AtomWithoutPkg(AtomWithoutPkg::new("b")),
         ],
         Obj::AtomWithoutPkg(AtomWithoutPkg::new("c")),
-    ));
+    )));
     println!("{}", fn_set_without_params);
 }
 
 fn try_fn_set_with_params() {
-    let fn_set_with_params = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("a".to_string(), Obj::AtomWithoutPkg(AtomWithoutPkg::new("a"))), ParamDefWithParamSet::ParamAndItsSetPair("b".to_string(), Obj::AtomWithoutPkg(AtomWithoutPkg::new("b")))], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::AtomWithoutPkg(AtomWithoutPkg::new("c"))));
+    let fn_set_with_params = Obj::FnSet(FnSetObj::FnSetWithParams(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("a".to_string(), Obj::AtomWithoutPkg(AtomWithoutPkg::new("a"))), ParamDefWithParamSet::ParamAndItsSetPair("b".to_string(), Obj::AtomWithoutPkg(AtomWithoutPkg::new("b")))], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::AtomWithoutPkg(AtomWithoutPkg::new("c")))));
     println!("{}", fn_set_with_params);
 
-    let fn_set_with_params2 = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("a".to_string(), Obj::AtomWithoutPkg(AtomWithoutPkg::new("a"))), ParamDefWithParamSet::ParamAndItsSetPair("b".to_string(), Obj::AtomWithoutPkg(AtomWithoutPkg::new("b"))), ParamDefWithParamSet::ParamsAndTheirSetsPair(vec!["c".to_string()], Obj::AtomWithoutPkg(AtomWithoutPkg::new("c")))], vec![], Obj::AtomWithoutPkg(AtomWithoutPkg::new("c"))));
+    let fn_set_with_params2 = Obj::FnSet(FnSetObj::FnSetWithParams(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("a".to_string(), Obj::AtomWithoutPkg(AtomWithoutPkg::new("a"))), ParamDefWithParamSet::ParamAndItsSetPair("b".to_string(), Obj::AtomWithoutPkg(AtomWithoutPkg::new("b"))), ParamDefWithParamSet::ParamsAndTheirSetsPair(vec!["c".to_string()], Obj::AtomWithoutPkg(AtomWithoutPkg::new("c")))], vec![], Obj::AtomWithoutPkg(AtomWithoutPkg::new("c")))));
     println!("{}", fn_set_with_params2);
 }
 
@@ -1066,15 +1064,6 @@ fn try_have_fn_equal_case_by_case_stmt() {
     println!("{}", have_fn_equal_case_by_case_stmt);
 
     let stmt = Stmt::DefStmt(DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt));
-    println!("{}", stmt);
-}
-
-fn try_have_fn_as_set_stmt() {
-    let equal_to_set = SetBuilderWithCartAsParentSet::new("x".to_string(), Cart::new(vec![Obj::mk("p")]), vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))]);
-    let have_fn_as_set_stmt = HaveFnAsSetStmt::new("f".to_string(), FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("x".to_string(), Obj::mk("p"))], vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))], Obj::mk("p")), equal_to_set, 1, 0);
-    println!("{}", have_fn_as_set_stmt);
-
-    let stmt = Stmt::DefStmt(DefStmt::HaveFnAsSetStmt(have_fn_as_set_stmt));
     println!("{}", stmt);
 }
 
