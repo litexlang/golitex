@@ -1,17 +1,31 @@
 use crate::obj::{Obj};
+use crate::module_manager::ModuleManager;
 
-pub struct SyntacticVerifier {
+pub struct SyntacticVerifier<'a> {
+    pub module_manager: &'a ModuleManager<'a>,
 }
 
-impl SyntacticVerifier {
-    pub fn equal_literally(left: &Obj, right: &Obj) -> bool {
+impl<'a> SyntacticVerifier<'a> {
+    pub fn new(module_manager: &'a ModuleManager<'a>) -> Self {
+        SyntacticVerifier { module_manager }
+    }
+}
+
+impl<'a> SyntacticVerifier<'a> {
+    pub fn equal_literally(&self, left: &Obj, right: &Obj) -> bool {
         match left {
             Obj::AtomWithoutModName(a) => match right {
                 Obj::AtomWithoutModName(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::AtomWithModName(a) => match right {
-                Obj::AtomWithModName(b) => a.to_string() == b.to_string(),
+                Obj::AtomWithModName(b) => {
+                    if a.mod_name == b.mod_name {
+                        a.name == b.name
+                    } else {
+                        self.module_manager.module_name_and_path_map.get(&a.mod_name) == self.module_manager.module_name_and_path_map.get(&b.mod_name) && a.name == b.name
+                    }
+                },
                 _ => false,
             },
             Obj::FnObj(f) => match right {

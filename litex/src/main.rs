@@ -32,7 +32,11 @@ mod witness_stmt;
 mod syntactic_verifier;
 mod module_manager;
 mod runtime_context;
+mod environment;
+mod define_algorithm_stmt;
+use std::collections::HashMap;
 use module_manager::ModuleManager;
+use runtime_context::RuntimeContext;
 use witness_stmt::{WitnessStmt, WitnessExistFact, WitnessNonemptySet};
 use prove_stmt::{ProveStmt};
 use run_file_stmt::{RunFileStmt};
@@ -43,6 +47,7 @@ use claim_stmt::{ClaimProveStmt, ClaimStmt, ClaimIffStmt};
 use and_fact::{AndFact, ChainFacts, AndSpecFacts};
 use and_fact_or_specific_fact::AndFactOrSpecFact;
 use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
+use define_algorithm_stmt::{DefineAlgorithmStmt, AlgoReturn, AlgoIf, AlgoReturnOrAlgoIf};
 use atom::{AtomWithoutModName, AtomWithModName, Atom};
 use obj::{
     Obj, FnObj, Number, Add, Sub, Mul, Div, Mod, Pow,
@@ -130,6 +135,8 @@ fn main() {
     try_have_fn_equal_case_by_case_stmt();
     try_def_set_template_stmt();
     try_module_manager();
+    try_runtime_context();
+    try_define_algorithm_stmt();
 }
 
 fn try_atom_fn_obj() {
@@ -224,11 +231,14 @@ fn try_stmt() {
 }
 
 fn try_equal_literally() {
+    let module_manager = ModuleManager::new();
+    let syntactic_verifier = SyntacticVerifier::new(&module_manager);
+    
     let a = Obj::AtomWithoutModName(AtomWithoutModName::new("a"));
     let b = Obj::AtomWithoutModName(AtomWithoutModName::new("b"));
-    println!("{}", SyntacticVerifier::equal_literally(&a, &b));
+    println!("{}", syntactic_verifier.equal_literally(&a, &b));
     let a2 = Obj::AtomWithoutModName(AtomWithoutModName::new("a"));
-    println!("{}", SyntacticVerifier::equal_literally(&a2, &a));
+    println!("{}", syntactic_verifier.equal_literally(&a2, &a));
 }
 
 fn try_list_set() {
@@ -1113,4 +1123,23 @@ fn try_def_set_template_stmt() {
 fn try_module_manager() {
     let module_manager = ModuleManager::new();
     println!("{}", module_manager);
+}
+
+fn try_runtime_context() {
+    let module_manager = ModuleManager::new();
+    let runtime_context = RuntimeContext::new(&module_manager, vec![], HashMap::new(), HashMap::new(), HashMap::new());
+    println!("{}", runtime_context);
+}
+
+fn try_define_algorithm_stmt() {
+    let return_or_algo_if = vec![AlgoReturnOrAlgoIf::AlgoIf(AlgoIf::new(AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0)))), AlgoReturn::new(Obj::mk("p"), 1, 0), 1, 0)), AlgoReturnOrAlgoIf::AlgoReturn(AlgoReturn::new(Obj::mk("p"), 1, 0))];
+
+    println!("{} on {:?}", return_or_algo_if[0], return_or_algo_if[0].line_file());
+    println!("{} on {:?}", return_or_algo_if[1], return_or_algo_if[1].line_file());
+    
+    let define_algorithm_stmt = DefineAlgorithmStmt::new("f".to_string(), vec!["x".to_string()], return_or_algo_if, 1, 0);
+    println!("{}", define_algorithm_stmt);
+
+    let stmt = Stmt::DefStmt(DefStmt::DefineAlgorithmStmt(define_algorithm_stmt));
+    println!("{}", stmt);
 }
