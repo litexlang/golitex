@@ -6,12 +6,12 @@ pub struct SyntacticVerifier {
 impl SyntacticVerifier {
     pub fn equal_literally(left: &Obj, right: &Obj) -> bool {
         match left {
-            Obj::AtomWithoutPkg(a) => match right {
-                Obj::AtomWithoutPkg(b) => a.to_string() == b.to_string(),
+            Obj::AtomWithoutModName(a) => match right {
+                Obj::AtomWithoutModName(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::AtomWithPkg(a) => match right {
-                Obj::AtomWithPkg(b) => a.to_string() == b.to_string(),
+            Obj::AtomWithModName(a) => match right {
+                Obj::AtomWithModName(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::FnObj(f) => match right {

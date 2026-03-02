@@ -33,20 +33,20 @@ mod syntactic_verifier;
 use witness_stmt::{WitnessStmt, WitnessExistFact, WitnessNonemptySet};
 use prove_stmt::{ProveStmt};
 use run_file_stmt::{RunFileStmt};
-use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalPkgStmt, ClearStmt, DoNothingStmt};
+use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalModuleStmt, ClearStmt, DoNothingStmt};
 use prove_by_builtin_techniques_stmt::{ProveCaseByCaseStmt, ProveByContradictionStmt, ProveByBuiltinTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveEqualSetByDefStmt, ViewFnAsSetStmt};
 use definition_stmt::{DefStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, LetFnStmt,  HaveObjStStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, DefSetTemplateStmt};
 use claim_stmt::{ClaimProveStmt, ClaimStmt, ClaimIffStmt};
 use and_fact::{AndFact, ChainFacts, AndSpecFacts};
 use and_fact_or_specific_fact::AndFactOrSpecFact;
 use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
-use atom::{AtomWithoutPkg, AtomWithPkg, Atom};
+use atom::{AtomWithoutModName, AtomWithModName, Atom};
 use obj::{
     Obj, FnObj, Number, Add, Sub, Mul, Div, Mod, Pow,
     Union, Intersect, SetMinus, DisjointUnion, Cup, Cap,
     ListSet, SetBuilder, FnSetWithoutDom, FnSetWithDom,
     NPosObj, NObj, QObj, ZObj, RObj, InstSetTemplateObj,
-    Cart, SetDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choose, FnSetObj, ObjAtIndex,
+    Cart, SetDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choose, ObjAtIndex,
 };
 use parameter_type_and_property::{ParameterType, SetAsParamSet, NonemptySetAsParamSet, FiniteSetAsParamSet, ParamDefWithParamTypeAndProperty, ParamDefWithParamSet};
 use stmt::{Stmt};
@@ -130,22 +130,22 @@ fn main() {
 
 fn try_atom_fn_obj() {
     let a_add_b = Obj::FnObj(FnObj::new(
-        Obj::AtomWithoutPkg(AtomWithoutPkg::new("+")),
+        Obj::AtomWithoutModName(AtomWithoutModName::new("+")),
         vec![
-            Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")),
-            Obj::AtomWithoutPkg(AtomWithoutPkg::new("b")),
+            Obj::AtomWithoutModName(AtomWithoutModName::new("a")),
+            Obj::AtomWithoutModName(AtomWithoutModName::new("b")),
         ],
     ));
     println!("{}", a_add_b);
 
-    let a_add_b_with_pkg = Obj::FnObj(FnObj::new(
-        Obj::AtomWithPkg(AtomWithPkg::new("PkgA", "name_a")),
+    let a_add_b_with_mod = Obj::FnObj(FnObj::new(
+        Obj::AtomWithModName(AtomWithModName::new("ModA", "name_a")),
         vec![
-            Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")),
-            Obj::AtomWithoutPkg(AtomWithoutPkg::new("b")),
+            Obj::AtomWithoutModName(AtomWithoutModName::new("a")),
+            Obj::AtomWithoutModName(AtomWithoutModName::new("b")),
         ],
     ));
-    println!("{}", a_add_b_with_pkg);
+    println!("{}", a_add_b_with_mod);
 }
 
 fn try_arithmetic() {
@@ -167,7 +167,7 @@ fn try_arithmetic() {
 }
 
 fn try_set_operations() {
-    let mk = |s: &str| Obj::AtomWithoutPkg(AtomWithoutPkg::new(s));
+    let mk = |s: &str| Obj::AtomWithoutModName(AtomWithoutModName::new(s));
     let union_result = Obj::Union(Union::new(mk("A"), mk("B")));
     let intersect_result = Obj::Intersect(Intersect::new(mk("A"), mk("B")));
     let set_minus_result = Obj::SetMinus(SetMinus::new(mk("A"), mk("B")));
@@ -179,11 +179,11 @@ fn try_set_operations() {
 
 fn try_stmt() {
     let body3 = vec![
-        Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")),
-        Obj::AtomWithoutPkg(AtomWithoutPkg::new("b")),
+        Obj::AtomWithoutModName(AtomWithoutModName::new("a")),
+        Obj::AtomWithoutModName(AtomWithoutModName::new("b")),
     ];
     let fact1 = Stmt::Fact(Fact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
-        Atom::AtomWithoutPkg(AtomWithoutPkg::new("p")),
+        Atom::AtomWithoutModName(AtomWithoutModName::new("p")),
         body3,
         1,
         0,
@@ -191,11 +191,11 @@ fn try_stmt() {
     println!("{}", fact1.to_string());
 
     let body2 = vec![
-        Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")),
-        Obj::AtomWithoutPkg(AtomWithoutPkg::new("b")),
+        Obj::AtomWithoutModName(AtomWithoutModName::new("a")),
+        Obj::AtomWithoutModName(AtomWithoutModName::new("b")),
     ];
     let fact2 = Stmt::Fact(Fact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
-        Atom::AtomWithPkg(AtomWithPkg::new("PkgA", "name_a")),
+        Atom::AtomWithModName(AtomWithModName::new("ModA", "name_a")),
         body2,
         1,
         0,
@@ -220,42 +220,42 @@ fn try_stmt() {
 }
 
 fn try_equal_literally() {
-    let a = Obj::AtomWithoutPkg(AtomWithoutPkg::new("a"));
-    let b = Obj::AtomWithoutPkg(AtomWithoutPkg::new("b"));
+    let a = Obj::AtomWithoutModName(AtomWithoutModName::new("a"));
+    let b = Obj::AtomWithoutModName(AtomWithoutModName::new("b"));
     println!("{}", SyntacticVerifier::equal_literally(&a, &b));
-    let a2 = Obj::AtomWithoutPkg(AtomWithoutPkg::new("a"));
+    let a2 = Obj::AtomWithoutModName(AtomWithoutModName::new("a"));
     println!("{}", SyntacticVerifier::equal_literally(&a2, &a));
 }
 
 fn try_list_set() {
     let list_set = Obj::ListSet(ListSet::new(vec![
-        Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")),
-        Obj::AtomWithoutPkg(AtomWithoutPkg::new("b")),
+        Obj::AtomWithoutModName(AtomWithoutModName::new("a")),
+        Obj::AtomWithoutModName(AtomWithoutModName::new("b")),
     ]));
     println!("{}", list_set);
 }
 
 fn try_set_builder() {
-    let set_builder = Obj::SetBuilder(SetBuilder::new("a".to_string(), Obj::AtomWithoutPkg(AtomWithoutPkg::new("b")), vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))))]));
+    let set_builder = Obj::SetBuilder(SetBuilder::new("a".to_string(), Obj::AtomWithoutModName(AtomWithoutModName::new("b")), vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))))]));
     println!("{}", set_builder);
 }
 
 fn try_fn_set_without_params() {
     let fn_set_without_params = Obj::FnSetWithoutDom(FnSetWithoutDom::new(
         vec![
-            Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")),
-            Obj::AtomWithoutPkg(AtomWithoutPkg::new("b")),
+            Obj::AtomWithoutModName(AtomWithoutModName::new("a")),
+            Obj::AtomWithoutModName(AtomWithoutModName::new("b")),
         ],
-        Obj::AtomWithoutPkg(AtomWithoutPkg::new("c")),
+        Obj::AtomWithoutModName(AtomWithoutModName::new("c")),
     ));
     println!("{}", fn_set_without_params);
 }
 
 fn try_fn_set_with_params() {
-    let fn_set_with_params = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("a".to_string(), Obj::AtomWithoutPkg(AtomWithoutPkg::new("a"))), ParamDefWithParamSet::ParamAndItsSetPair("b".to_string(), Obj::AtomWithoutPkg(AtomWithoutPkg::new("b")))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))))], Obj::AtomWithoutPkg(AtomWithoutPkg::new("c"))));
+    let fn_set_with_params = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("a".to_string(), Obj::AtomWithoutModName(AtomWithoutModName::new("a"))), ParamDefWithParamSet::ParamAndItsSetPair("b".to_string(), Obj::AtomWithoutModName(AtomWithoutModName::new("b")))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))))], Obj::AtomWithoutModName(AtomWithoutModName::new("c"))));
     println!("{}", fn_set_with_params);
 
-    let fn_set_with_params2 = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("a".to_string(), Obj::AtomWithoutPkg(AtomWithoutPkg::new("a"))), ParamDefWithParamSet::ParamAndItsSetPair("b".to_string(), Obj::AtomWithoutPkg(AtomWithoutPkg::new("b"))), ParamDefWithParamSet::ParamsAndTheirSetsPair(vec!["c".to_string()], Obj::AtomWithoutPkg(AtomWithoutPkg::new("c")))], vec![], Obj::AtomWithoutPkg(AtomWithoutPkg::new("c"))));
+    let fn_set_with_params2 = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("a".to_string(), Obj::AtomWithoutModName(AtomWithoutModName::new("a"))), ParamDefWithParamSet::ParamAndItsSetPair("b".to_string(), Obj::AtomWithoutModName(AtomWithoutModName::new("b"))), ParamDefWithParamSet::ParamsAndTheirSetsPair(vec!["c".to_string()], Obj::AtomWithoutModName(AtomWithoutModName::new("c")))], vec![], Obj::AtomWithoutModName(AtomWithoutModName::new("c"))));
     println!("{}", fn_set_with_params2);
 }
 
@@ -279,19 +279,19 @@ fn try_parameter_set() {
     println!("{}", nonempty_parameter_set);
     let finite_parameter_set = ParameterType::FiniteSet(FiniteSetAsParamSet::new());
     println!("{}", finite_parameter_set);
-    let obj_parameter_set = ParameterType::Obj(Obj::AtomWithoutPkg(AtomWithoutPkg::new("a")));
+    let obj_parameter_set = ParameterType::Obj(Obj::AtomWithoutModName(AtomWithoutModName::new("a")));
     println!("{}", obj_parameter_set);
 }
 
 fn try_instantiated_set_template_obj() {
     let instantiated_set_template_obj = Obj::InstSetTemplateObj(InstSetTemplateObj::new(
-        Atom::AtomWithPkg(AtomWithPkg::new("PkgA", "name_a")),
-        vec![Obj::AtomWithoutPkg(AtomWithoutPkg::new("b"))],
+        Atom::AtomWithModName(AtomWithModName::new("ModA", "name_a")),
+        vec![Obj::AtomWithoutModName(AtomWithoutModName::new("b"))],
     ));
     println!("{}", instantiated_set_template_obj);
 
     let instantiated_set_template_obj2 = Obj::InstSetTemplateObj(InstSetTemplateObj::new(
-        Atom::AtomWithoutPkg(AtomWithoutPkg::new("a")),
+        Atom::AtomWithoutModName(AtomWithoutModName::new("a")),
         vec![],
     ));
     println!("{}", instantiated_set_template_obj2);
@@ -299,7 +299,7 @@ fn try_instantiated_set_template_obj() {
 
 
 fn try_cart_set_dim_proj_dim_tuple() {
-    let mk = |s: &str| Obj::AtomWithoutPkg(AtomWithoutPkg::new(s));
+    let mk = |s: &str| Obj::AtomWithoutModName(AtomWithoutModName::new(s));
     let cart = Obj::Cart(Cart::new(vec![mk("a"), mk("b")]));
     let set_dim = Obj::SetDim(SetDim::new(mk("a")));
     let proj = Obj::Proj(Proj::new(mk("a"), mk("b")));
@@ -313,7 +313,7 @@ fn try_cart_set_dim_proj_dim_tuple() {
 }
 
 fn try_count_range_closed_range_val() {
-    let mk = |s: &str| Obj::AtomWithoutPkg(AtomWithoutPkg::new(s));
+    let mk = |s: &str| Obj::AtomWithoutModName(AtomWithoutModName::new(s));
     let count = Obj::Count(Count::new(mk("a")));
     let range = Obj::Range(Range::new(mk("a"), mk("b")));
     let closed_range = Obj::ClosedRange(ClosedRange::new(mk("a"), mk("b")));
@@ -325,7 +325,7 @@ fn try_count_range_closed_range_val() {
 }
 
 fn try_power_set_choice() {
-    let mk = |s: &str| Obj::AtomWithoutPkg(AtomWithoutPkg::new(s));
+    let mk = |s: &str| Obj::AtomWithoutModName(AtomWithoutModName::new(s));
     let power_set = Obj::PowerSet(PowerSet::new(mk("a")));
     let choice = Obj::Choose(Choose::new(mk("a"), mk("b")));
     println!("{}", power_set);
@@ -335,7 +335,7 @@ fn try_power_set_choice() {
 fn try_atomic_fact() {
     let line = 1u32;
     let _normal = AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
-        Atom::AtomWithoutPkg(AtomWithoutPkg::new("p")),
+        Atom::AtomWithoutModName(AtomWithoutModName::new("p")),
         vec![Obj::mk("a"), Obj::mk("b")],
         line,
         0,
@@ -352,7 +352,7 @@ fn try_atomic_fact() {
     let _not_is_cart = AtomicFact::NotIsCartFact(NotIsCartFact::new(Obj::mk("S"), line, 0));
 
     let _not_normal = AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(
-        Atom::AtomWithoutPkg(AtomWithoutPkg::new("p")),
+        Atom::AtomWithoutModName(AtomWithoutModName::new("p")),
         vec![Obj::mk("a")],
         line,
         0,
@@ -451,7 +451,7 @@ fn try_or_fact() {
     println!("{}", _or);
 
     let facts2 = vec![
-        AndFactOrSpecFact::AndFact(AndFact::ChainFacts(ChainFacts::new(vec![Obj::mk("p"), Obj::mk("q"), Obj::mk("r")], vec![Atom::AtomWithoutPkg(AtomWithoutPkg::new("p")), Atom::AtomWithoutPkg(AtomWithoutPkg::new("q"))], 1, 0))),
+        AndFactOrSpecFact::AndFact(AndFact::ChainFacts(ChainFacts::new(vec![Obj::mk("p"), Obj::mk("q"), Obj::mk("r")], vec![Atom::AtomWithoutModName(AtomWithoutModName::new("p")), Atom::AtomWithoutModName(AtomWithoutModName::new("q"))], 1, 0))),
     ];
     let _or2 = OrFact::new(facts2, 1, 0);
     println!("{}", _or2);
@@ -495,7 +495,7 @@ fn try_forall_fact() {
     let _forall = ForallFact::new(param_type_or_property_pairs, dom_facts, then_facts, 1, 0);
     println!("{}", _forall);
 
-    let param_type_or_property_pairs2 = vec![ParamDefWithParamTypeAndProperty::ParamsPropertyPair(vec!["n".to_string(), "m".to_string()], Atom::AtomWithoutPkg(AtomWithoutPkg::new("p")))];
+    let param_type_or_property_pairs2 = vec![ParamDefWithParamTypeAndProperty::ParamsPropertyPair(vec!["n".to_string(), "m".to_string()], Atom::AtomWithoutModName(AtomWithoutModName::new("p")))];
     let dom_facts2 = vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), 1, 0),
     )))];
@@ -820,16 +820,16 @@ fn try_proof_techniques() {
 }
 
 fn try_import_stmt() {
-    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/pkg", "pkg", 1, 0);
+    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/mod", "mod", 1, 0);
     println!("{}", import_relative_path_stmt);
 
-    let import_global_pkg_stmt = ImportGlobalPkgStmt::new("pkg", "pkg", 1, 0);
-    println!("{}", import_global_pkg_stmt);
+    let import_global_mod_stmt = ImportGlobalModuleStmt::new("mod", "mod", 1, 0);
+    println!("{}", import_global_mod_stmt);
 
     let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportRelativePath(import_relative_path_stmt)));
     println!("{}", stmt);
 
-    let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportGlobalPkg(import_global_pkg_stmt)));
+    let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportGlobalModule(import_global_mod_stmt)));
     println!("{}", stmt);
 }
 
@@ -888,16 +888,16 @@ fn try_have_obj_in_nonempty_set_stmt() {
 }
 
 fn try_tooling_stmt() {
-    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/pkg", "pkg", 1, 0);
+    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/mod", "mod", 1, 0);
     println!("{}", import_relative_path_stmt);
 
-    let import_global_pkg_stmt = ImportGlobalPkgStmt::new("pkg", "pkg", 1, 0);
-    println!("{}", import_global_pkg_stmt);
+    let import_global_mod_stmt = ImportGlobalModuleStmt::new("mod", "mod", 1, 0);
+    println!("{}", import_global_mod_stmt);
 
     let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportRelativePath(import_relative_path_stmt)));
     println!("{}", stmt);
 
-    let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportGlobalPkg(import_global_pkg_stmt)));
+    let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportGlobalModule(import_global_mod_stmt)));
     println!("{}", stmt);
 
     let clear_stmt = ClearStmt::new(1, 0);
@@ -1066,13 +1066,13 @@ fn try_witness_nonempty_set_stmt() {
 }
 
 fn try_view_fn_as_set() {
-    let prove_fn_set_is_subset_of_cart_set_stmt = ViewFnAsSetStmt::new(Obj::mk("p"), FnSetObj::FnSetWithoutParams(FnSetWithoutDom::new(vec![Obj::mk("p")], Obj::mk("p"))), 1, 0);
+    let prove_fn_set_is_subset_of_cart_set_stmt = ViewFnAsSetStmt::new(Obj::mk("p"), 1, 0);
     println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
 
     let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ViewFnAsSet(prove_fn_set_is_subset_of_cart_set_stmt));
     println!("{}", stmt);
 
-    let prove_fn_set_is_subset_of_cart_set_stmt = ViewFnAsSetStmt::new(Obj::mk("p"), FnSetObj::FnSetWithParams(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("x".to_string(), Obj::mk("p"))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))))], Obj::mk("p"))), 1, 0);
+    let prove_fn_set_is_subset_of_cart_set_stmt = ViewFnAsSetStmt::new(Obj::mk("p"), 1, 0);
     println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
 
     let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ViewFnAsSet(prove_fn_set_is_subset_of_cart_set_stmt));
