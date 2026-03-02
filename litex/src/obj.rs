@@ -27,7 +27,8 @@ pub enum Obj {
     Cap(Cap),
     ListSet(ListSet),
     SetBuilder(SetBuilder),
-    FnSet(FnSetObj),
+    FnSetWithoutDom(FnSetWithoutDom),
+    FnSetWithDom(FnSetWithDom),
     NPosObj(NPosObj),
     NObj(NObj),
     QObj(QObj),
@@ -200,6 +201,23 @@ pub struct SetBuilder {
 pub struct FnSetWithoutDom {
     pub param_sets: Vec<Box<Obj>>,
     pub ret_set: Box<Obj>,
+}
+
+impl FnSetWithDom {
+    pub fn params(&self) -> Vec<String> {
+        let mut ret = vec![];
+        for param_def_with_set in &self.params_def_with_set {
+            match param_def_with_set {
+                ParamDefWithParamSet::ParamAndItsSetPair(param_name, _) => {
+                    ret.push(param_name.clone());
+                }
+                ParamDefWithParamSet::ParamsAndTheirSetsPair(param_names, _) => {
+                    ret.extend(param_names.iter().map(|param_name| param_name.clone()));
+                }
+            }
+        }
+        ret
+    }
 }
 
 pub struct FnSetWithDom {
@@ -549,7 +567,8 @@ impl fmt::Display for Obj {
             Obj::Cap(cap) => write!(f, "{}", cap),
             Obj::ListSet(list_set) => write!(f, "{}", list_set),
             Obj::SetBuilder(set_builder) => write!(f, "{}", set_builder),
-            Obj::FnSet(function_set) => write!(f, "{}", function_set),
+            Obj::FnSetWithoutDom(fn_set_without_dom) => write!(f, "{}", fn_set_without_dom),
+            Obj::FnSetWithDom(fn_set_with_dom) => write!(f, "{}", fn_set_with_dom),
             Obj::NPosObj(n_pos_obj) => write!(f, "{}", n_pos_obj),
             Obj::NObj(n_obj) => write!(f, "{}", n_obj),
             Obj::QObj(q_obj) => write!(f, "{}", q_obj),

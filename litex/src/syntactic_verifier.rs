@@ -1,4 +1,4 @@
-use crate::obj::{Obj, FnSetObj};
+use crate::obj::{Obj};
 
 pub struct SyntacticVerifier {
 }
@@ -78,17 +78,12 @@ impl SyntacticVerifier {
                 Obj::SetBuilder(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::FnSet(a) => match right {    
-                Obj::FnSet(b) => match a {
-                    FnSetObj::FnSetWithoutParams(a) => match b {
-                        FnSetObj::FnSetWithoutParams(b) => a.to_string() == b.to_string(),
-                        _ => false,
-                    },
-                    FnSetObj::FnSetWithParams(a) => match b {
-                        FnSetObj::FnSetWithParams(b) => a.to_string() == b.to_string(),
-                        _ => false,
-                    },
-                }
+            Obj::FnSetWithoutDom(a) => match right {
+                Obj::FnSetWithoutDom(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::FnSetWithDom(a) => match right {
+                Obj::FnSetWithDom(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::NPosObj(_) => match right {
