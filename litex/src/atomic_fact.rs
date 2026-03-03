@@ -3,6 +3,7 @@ use crate::obj::Obj;
 use crate::atom::Atom;
 use crate::consts::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, IN, IS_CART, IS_TUPLE, SUBSET, SUPERSET, NOT_EQUAL};
 use crate::helper::{braced_string, braced_vec_to_string};
+use crate::stmt_error::NewAtomicFactError;
 
 #[derive(Clone)]
 pub enum AtomicFact {
@@ -758,5 +759,212 @@ impl AtomicFact {
 
     pub fn key(&self) -> String {
         return self.predicate_string();
+    }
+}
+
+
+impl AtomicFact {
+    pub fn to_atomic_fact(prop_name: Atom, is_true: bool, args: Vec<Obj>, line: u32, file_index: usize) -> Result<AtomicFact, NewAtomicFactError> {
+        let prop_name_as_string = prop_name.to_string();
+        match prop_name_as_string.as_str() {
+            EQUAL => {
+                if args.len() != 2 {
+                    let msg = format!("{} requires 2 arguments, but got {}", EQUAL, args.len());
+                    return Err(NewAtomicFactError::new(&msg));
+                }
+                let mut args = args;
+                let a0 = args.remove(0);
+                let a1 = args.remove(0);
+                if is_true {
+                    Ok(AtomicFact::EqualFact(EqualFact::new(a0, a1, line, file_index)))
+                } else {
+                    Ok(AtomicFact::NotEqualFact(NotEqualFact::new(a0, a1, line, file_index)))
+                }
+            }
+            NOT_EQUAL => {
+                if args.len() != 2 {
+                    let msg = format!("{} requires 2 arguments, but got {}", NOT_EQUAL, args.len());
+                    return Err(NewAtomicFactError::new(&msg));
+                }
+                let mut args = args;
+                let a0 = args.remove(0);
+                let a1 = args.remove(0);
+                if is_true {
+                    Ok(AtomicFact::NotEqualFact(NotEqualFact::new(a0, a1, line, file_index)))
+                } else {
+                    Ok(AtomicFact::EqualFact(EqualFact::new(a0, a1, line, file_index)))
+                }
+            }
+            LESS => {
+                if args.len() != 2 {
+                    let msg = format!("{} requires 2 arguments, but got {}", LESS, args.len());
+                    return Err(NewAtomicFactError::new(&msg));
+                }
+                let mut args = args;
+                let a0 = args.remove(0);
+                let a1 = args.remove(0);
+                if is_true {
+                    Ok(AtomicFact::LessFact(LessFact::new(a0, a1, line, file_index)))
+                } else {
+                    Ok(AtomicFact::GreaterFact(GreaterFact::new(a0, a1, line, file_index)))
+                }
+            }
+            GREATER => {
+                if args.len() != 2 {
+                    let msg = format!("{} requires 2 arguments, but got {}", GREATER, args.len());
+                    return Err(NewAtomicFactError::new(&msg));
+                }
+                let mut args = args;
+                let a0 = args.remove(0);
+                let a1 = args.remove(0);
+                if is_true {
+                    Ok(AtomicFact::GreaterFact(GreaterFact::new(a0, a1, line, file_index)))
+                } else {
+                    Ok(AtomicFact::LessFact(LessFact::new(a0, a1, line, file_index)))
+                }
+            }
+            LESS_EQUAL => {
+                if args.len() != 2 {
+                    let msg = format!("{} requires 2 arguments, but got {}", LESS_EQUAL, args.len());
+                    return Err(NewAtomicFactError::new(&msg));
+                }
+                let mut args = args;
+                let a0 = args.remove(0);
+                let a1 = args.remove(0);
+                if is_true {
+                    Ok(AtomicFact::LessEqualFact(LessEqualFact::new(a0, a1, line, file_index)))
+                } else {
+                    Ok(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(a0, a1, line, file_index)))
+                }
+            }
+            GREATER_EQUAL => {
+                if args.len() != 2 {
+                    let msg = format!("{} requires 2 arguments, but got {}", GREATER_EQUAL, args.len());
+                    return Err(NewAtomicFactError::new(&msg));
+                }
+                let mut args = args;
+                let a0 = args.remove(0);
+                let a1 = args.remove(0);
+                if is_true {
+                    Ok(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(a0, a1, line, file_index)))
+                } else {
+                    Ok(AtomicFact::LessEqualFact(LessEqualFact::new(a0, a1, line, file_index)))
+                }
+            }
+            IS_SET => {
+                if args.len() != 1 {
+                    let msg = format!("{} requires 1 argument, but got {}", IS_SET, args.len());
+                    return Err(NewAtomicFactError::new(&msg));
+                }
+                let mut args = args;
+                let a0 = args.remove(0);
+                if is_true {
+                    Ok(AtomicFact::IsSetFact(IsSetFact::new(a0, line, file_index)))
+                } else {
+                    Ok(AtomicFact::NotIsSetFact(NotIsSetFact::new(a0, line, file_index)))
+                }
+            }
+            IS_NONEMPTY_SET => {
+                if args.len() != 1 {
+                    let msg = format!("{} requires 1 argument, but got {}", IS_NONEMPTY_SET, args.len());
+                    return Err(NewAtomicFactError::new(&msg));
+                }
+                let mut args = args;
+                let a0 = args.remove(0);
+                if is_true {
+                    Ok(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(a0, line, file_index)))
+                } else {
+                    Ok(AtomicFact::NotIsNonemptySetFact(NotIsNonemptySetFact::new(a0, line, file_index)))
+                }
+            }
+            IS_FINITE_SET => {
+                if args.len() != 1 {
+                    let msg = format!("{} requires 1 argument, but got {}", IS_FINITE_SET, args.len());
+                    return Err(NewAtomicFactError::new(&msg));
+                }
+                let mut args = args;
+                let a0 = args.remove(0);
+                if is_true {
+                    Ok(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(a0, line, file_index)))
+                } else {
+                    Ok(AtomicFact::NotIsFiniteSetFact(NotIsFiniteSetFact::new(a0, line, file_index)))
+                }
+            }
+            IN => {
+                if args.len() != 2 {
+                    let msg = format!("{} requires 2 arguments, but got {}", IN, args.len());
+                    return Err(NewAtomicFactError::new(&msg));
+                }
+                let mut args = args;
+                let a0 = args.remove(0);
+                let a1 = args.remove(0);
+                if is_true {
+                    Ok(AtomicFact::InFact(InFact::new(a0, a1, line, file_index)))
+                } else {
+                    Ok(AtomicFact::NotInFact(NotInFact::new(a0, a1, line, file_index)))
+                }
+            }
+            IS_CART => {
+                if args.len() != 1 {
+                    let msg = format!("{} requires 1 argument, but got {}", IS_CART, args.len());
+                    return Err(NewAtomicFactError::new(&msg));
+                }
+                let mut args = args;
+                let a0 = args.remove(0);
+                if is_true {
+                    Ok(AtomicFact::IsCartFact(IsCartFact::new(a0, line, file_index)))
+                } else {
+                    Ok(AtomicFact::NotIsCartFact(NotIsCartFact::new(a0, line, file_index)))
+                }
+            }
+            IS_TUPLE => {
+                if args.len() != 1 {
+                    let msg = format!("{} requires 1 argument, but got {}", IS_TUPLE, args.len());
+                    return Err(NewAtomicFactError::new(&msg));
+                }
+                let mut args = args;
+                let a0 = args.remove(0);
+                if is_true {
+                    Ok(AtomicFact::IsTupleFact(IsTupleFact::new(a0, line, file_index)))
+                } else {
+                    Ok(AtomicFact::NotIsTupleFact(NotIsTupleFact::new(a0, line, file_index)))
+                }
+            }
+            SUBSET => {
+                if args.len() != 2 {
+                    let msg = format!("{} requires 2 arguments, but got {}", SUBSET, args.len());
+                    return Err(NewAtomicFactError::new(&msg));
+                }
+                let mut args = args;
+                let a0 = args.remove(0);
+                let a1 = args.remove(0);
+                if is_true {
+                    Ok(AtomicFact::SubsetFact(SubsetFact::new(a0, a1, line, file_index)))
+                } else {
+                    Ok(AtomicFact::NotSubsetFact(NotSubsetFact::new(a0, a1, line, file_index)))
+                }
+            }
+            SUPERSET => {
+                if args.len() != 2 {
+                    let msg = format!("{} requires 2 arguments, but got {}", SUPERSET, args.len());
+                    return Err(NewAtomicFactError::new(&msg));
+                }
+                let mut args = args;
+                let a0 = args.remove(0);
+                let a1 = args.remove(0);
+                if is_true {
+                    Ok(AtomicFact::SupersetFact(SupersetFact::new(a0, a1, line, file_index)))
+                } else {
+                    Ok(AtomicFact::NotSupersetFact(NotSupersetFact::new(a0, a1, line, file_index)))
+                }
+            }
+            _ => {
+                if is_true {
+                    Ok(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(prop_name, args, line, file_index)))
+                } else {
+                    Ok(AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(prop_name, args, line, file_index)))
+                }
+            }
+        }
     }
 }

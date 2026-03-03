@@ -72,7 +72,7 @@ use or_fact::OrFact;
 use forall_fact::ForallFact;
 use forall_fact_with_iff::ForallFactWithIff;
 use fact::Fact;
-use stmt_error::{ArithmeticError, StmtError};
+use stmt_error::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError};
 use stmt_result::StmtResult;
 use stmt_success::StmtSuccess;
 use stmt_success::{NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules};
@@ -602,6 +602,12 @@ fn try_errors() {
     println!("{}", _err);
 
     let err: StmtError = StmtError::ArithmeticError(ArithmeticError::new("demo"));
+    println!("{}", err);
+
+    let err: StmtError = StmtError::NewAtomicFactError(NewAtomicFactError::new("demo"));
+    println!("{}", err);
+
+    let err: StmtError = StmtError::StoreFactError(StoreFactError::new("demo"));
     println!("{}", err);
 }
 
@@ -1162,7 +1168,10 @@ fn try_runtime_context() {
     println!("{}", atomic_fact.key());
 
     // 通过 runtime_context.get_upmost_env_ref() 拿到 &mut Environment，即可改该层 env
-    runtime_context.top_level_env().store_fact(Fact::AtomicFact(atomic_fact));
+    let stored_fact_result = runtime_context.top_level_env().store_fact(Fact::AtomicFact(atomic_fact));
+    if stored_fact_result.is_err() {
+        panic!("{}", stored_fact_result.err().unwrap());
+    }
 
     println!("{}", runtime_context.top_level_env());
 
@@ -1173,7 +1182,10 @@ fn try_runtime_context() {
         0,
     ));
     println!("{}", exist_fact.key());
-    runtime_context.top_level_env().store_fact(Fact::ExistFact(exist_fact));
+    let stored_fact_result = runtime_context.top_level_env().store_fact(Fact::ExistFact(exist_fact));
+    if stored_fact_result.is_err() {
+        panic!("{}", stored_fact_result.err().unwrap());
+    }
     println!("{}", runtime_context.top_level_env());
 
     let param_type_or_property_pairs = vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("n".to_string(), ParameterType::Set(SetAsParamSet::new()))];
@@ -1185,6 +1197,9 @@ fn try_runtime_context() {
     )))];
     let _forall = ForallFact::new(param_type_or_property_pairs, dom_facts, then_facts, 1, 0);
     
-    runtime_context.top_level_env().store_fact(Fact::ForallFact(_forall));
+    let stored_fact_result = runtime_context.top_level_env().store_fact(Fact::ForallFact(_forall));
+    if stored_fact_result.is_err() {
+        panic!("{}", stored_fact_result.err().unwrap());
+    }
     
 }
