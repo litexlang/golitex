@@ -96,10 +96,10 @@ impl ChainFact {
 }
 
 impl AndFact {
-    pub fn clone_facts(&self) -> Vec<SpecFact> {
+    pub fn facts(&self) -> &Vec<SpecFact> {
         match self {
-            AndFact::AndSpecFacts(and_spec_facts) => and_spec_facts.facts.clone(),
-            _ => panic!("chain fact is not supported"),
+            AndFact::AndSpecFacts(and_spec_facts) => &and_spec_facts.facts,
+            AndFact::ChainFact(_) => panic!("chain fact is not supported"),
         }
     }
 }
