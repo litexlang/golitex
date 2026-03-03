@@ -16,3 +16,11 @@ impl fmt::Display for SpecFact {
     }
 }
 
+impl SpecFact {
+    pub fn key(&self) -> String {
+        match self {
+            SpecFact::AtomicFact(atomic_fact) => atomic_fact.key(),
+            SpecFact::ExistFact(exist_fact) => exist_fact.key(),
+        }
+    }
+}

@@ -49,6 +49,11 @@ pub enum Obj {
     ObjAtIndex(ObjAtIndex),
 }
 
+pub enum FnSetObj {
+    FnSetWithoutDom(FnSetWithoutDom),
+    FnSetWithDom(FnSetWithDom),
+}
+
 pub struct ObjAtIndex {
     pub obj: Box<Obj>,
     pub index: Box<Obj>,
@@ -821,5 +826,14 @@ impl fmt::Display for PowerSet {
 impl Obj {
     pub fn mk(s: &str) -> Obj {
         Obj::AtomWithoutModName(AtomWithoutModName::new(s))
+    }
+}
+
+impl fmt::Display for FnSetObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            FnSetObj::FnSetWithoutDom(fn_set_without_dom) => write!(f, "{}", fn_set_without_dom),
+            FnSetObj::FnSetWithDom(fn_set_with_dom) => write!(f, "{}", fn_set_with_dom),
+        }
     }
 }

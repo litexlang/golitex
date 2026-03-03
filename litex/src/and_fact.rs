@@ -7,7 +7,7 @@ use crate::helper::vec_to_string_with_sep;
 
 pub enum AndFact {
     AndSpecFacts(AndSpecFacts),
-    ChainFacts(ChainFacts),
+    ChainFact(ChainFact),
 }
 
 pub struct AndSpecFacts {
@@ -16,7 +16,7 @@ pub struct AndSpecFacts {
     pub file_index: usize,
 }
 
-pub struct ChainFacts {
+pub struct ChainFact {
     pub objs: Vec<Obj>,
     pub prop_names: Vec<Atom>,
     pub line: u32,
@@ -36,13 +36,13 @@ impl fmt::Display for AndSpecFacts {
     }
 }
 
-impl ChainFacts {
+impl ChainFact {
     pub fn new(objs: Vec<Obj>, prop_names: Vec<Atom>, line: u32, file_index: usize) -> Self {
-        ChainFacts { objs, prop_names, line, file_index }
+        ChainFact { objs, prop_names, line, file_index }
     }
 }
 
-impl fmt::Display for ChainFacts {
+impl fmt::Display for ChainFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut result = String::new();
         result.push_str(&self.objs[0].to_string());
@@ -59,7 +59,7 @@ impl fmt::Display for AndFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             AndFact::AndSpecFacts(and_spec_facts) => write!(f, "{}", and_spec_facts),
-            AndFact::ChainFacts(chain_facts) => write!(f, "{}", chain_facts),
+            AndFact::ChainFact(chain_facts) => write!(f, "{}", chain_facts),
         }
     }
 }
@@ -68,7 +68,26 @@ impl AndFact {
     pub fn line_file(&self) -> (u32, usize) {
         match self {
             AndFact::AndSpecFacts(and_spec_facts) => (and_spec_facts.line, and_spec_facts.file_index),
-            AndFact::ChainFacts(chain_facts) => (chain_facts.line, chain_facts.file_index),
+            AndFact::ChainFact(chain_facts) => (chain_facts.line, chain_facts.file_index),
         }
+    }
+
+    pub fn key(&self) -> String {
+        match self {
+            AndFact::AndSpecFacts(and_spec_facts) => and_spec_facts.key(),
+            AndFact::ChainFact(chain_facts) => chain_facts.key(),
+        }
+    }
+}
+
+impl AndSpecFacts {
+    pub fn key(&self) -> String {
+        return format!("{}", vec_to_string_with_sep(&self.facts.iter().map(|fact| fact.key()).collect::<Vec<String>>(), format!(" {} ", AND).as_str()));
+    }
+}
+
+impl ChainFact {
+    pub fn key(&self) -> String {
+        return format!("{}", vec_to_string_with_sep(&self.prop_names.iter().map(|prop_name| prop_name.to_string()).collect::<Vec<String>>(), format!(" {} ", AND).as_str()));
     }
 }

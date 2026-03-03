@@ -19,4 +19,13 @@ impl fmt::Display for OrFactOrAndFactOrSpecFact {
     }
 }
 
+impl OrFactOrAndFactOrSpecFact {
+    pub fn key(&self) -> String {
+        match self {
+            OrFactOrAndFactOrSpecFact::OrFact(or_fact) => or_fact.key(),
+            OrFactOrAndFactOrSpecFact::AndFact(and_fact) => and_fact.key(),
+            OrFactOrAndFactOrSpecFact::SpecFact(spec_fact) => spec_fact.key(),
+        }
+    }
+}
 
