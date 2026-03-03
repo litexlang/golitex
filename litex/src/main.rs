@@ -34,7 +34,7 @@ mod module_manager;
 mod runtime_context;
 mod environment;
 mod define_algorithm_stmt;
-use obj::{QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QN0, ZN0, RN0};
+use obj::{QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz};
 use std::collections::HashMap;
 use environment::Environment;
 use module_manager::ModuleManager;
@@ -294,11 +294,11 @@ fn try_n_pos_obj() {
     println!("{}", z_neg_obj);
     let r_neg_obj = Obj::RNeg(RNeg::new());
     println!("{}", r_neg_obj);
-    let q_n0_obj = Obj::QN0(QN0::new());
+    let q_n0_obj = Obj::QNz(QNz::new());
     println!("{}", q_n0_obj);
-    let z_n0_obj = Obj::ZN0(ZN0::new());
+    let z_n0_obj = Obj::ZNz(ZNz::new());
     println!("{}", z_n0_obj);
-    let r_n0_obj = Obj::RN0(RN0::new());
+    let r_n0_obj = Obj::RNz(RNz::new());
     println!("{}", r_n0_obj);
 }
 
