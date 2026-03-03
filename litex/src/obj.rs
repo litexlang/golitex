@@ -1,7 +1,7 @@
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::parameter_type_and_property::ParamDefWithParamSet;
 use crate::consts::{
-    ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_CURLY_BRACE, LEFT_BRACKET, MOD, MUL, N,  N_POS, MOD_SEPARATOR, POW, POWER_SET, PROJ, Q, Q_NEG, Q_N0, Q_POS, R, R_NEG, R_N0, R_POS, RANGE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_N0, Z_POS
+    ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_CURLY_BRACE, LEFT_BRACKET, MOD, MUL, N,  N_POS, MOD_SEPARATOR, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
 };
 use std::fmt;
 use crate::helper::{braced_string, braced_two_strings, braced_vec_to_string, curly_braced_vec_to_string,  vec_to_string_join_by_comma};
@@ -54,9 +54,9 @@ pub enum Obj {
     QNeg(QNeg),
     ZNeg(ZNeg),
     RNeg(RNeg),
-    QN0(QN0),
-    ZN0(ZN0),
-    RN0(RN0),
+    QNz(QNz),
+    ZNz(ZNz),
+    RNz(RNz),
 }
 
 #[derive(Clone)]
@@ -296,13 +296,13 @@ pub struct ZNeg {}
 pub struct RNeg {}
 
 #[derive(Clone)]
-pub struct QN0 {}
+pub struct QNz {}
 
 #[derive(Clone)]
-pub struct ZN0 {}
+pub struct ZNz {}
 
 #[derive(Clone)]
-pub struct RN0 {}
+pub struct RNz {}
 
 #[derive(Clone)]
 pub struct InstSetTemplateObj {
@@ -541,16 +541,16 @@ impl RNeg {
     pub fn new() -> Self { RNeg {} }
 }
 
-impl QN0 {
-    pub fn new() -> Self { QN0 {} }
+impl QNz {
+    pub fn new() -> Self { QNz {} }
 }
 
-impl ZN0 {
-    pub fn new() -> Self { ZN0 {} }
+impl ZNz {
+    pub fn new() -> Self { ZNz {} }
 }
 
-impl RN0 {
-    pub fn new() -> Self { RN0 {} }
+impl RNz {
+    pub fn new() -> Self { RNz {} }
 }
 
 impl InstSetTemplateObj {
@@ -694,9 +694,9 @@ impl fmt::Display for Obj {
             Obj::QNeg(x) => write!(f, "{}", x),
             Obj::ZNeg(x) => write!(f, "{}", x),
             Obj::RNeg(x) => write!(f, "{}", x),
-            Obj::QN0(x) => write!(f, "{}", x),
-            Obj::ZN0(x) => write!(f, "{}", x),
-            Obj::RN0(x) => write!(f, "{}", x),
+            Obj::QNz(x) => write!(f, "{}", x),
+            Obj::ZNz(x) => write!(f, "{}", x),
+            Obj::RNz(x) => write!(f, "{}", x),
         }
     }
 }
@@ -948,21 +948,21 @@ impl fmt::Display for RNeg {
 }
 
 
-impl fmt::Display for QN0 {
+impl fmt::Display for QNz {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Q_N0)
+        write!(f, "{}", Q_NZ)
     }
 }
 
-impl fmt::Display for ZN0 {
+impl fmt::Display for ZNz {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Z_N0)
+        write!(f, "{}", Z_NZ)
     }
 }
 
-impl fmt::Display for RN0 {
+impl fmt::Display for RNz {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", R_N0)
+        write!(f, "{}", R_NZ)
     }
 }
 
