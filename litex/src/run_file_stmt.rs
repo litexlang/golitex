@@ -2,13 +2,12 @@ use std::fmt;
 
 pub struct RunFileStmt {
     pub file_path: String,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 impl RunFileStmt {
-    pub fn new(file_path: &str, line: u32, file_index: usize) -> Self {
-        RunFileStmt { file_path: file_path.to_string(), line, file_index }
+    pub fn new(file_path: &str, line_file_index: Option<(u16, usize)>) -> Self {
+        RunFileStmt { file_path: file_path.to_string(), line_file_index }
     }
 }
 

@@ -42,383 +42,355 @@ pub enum AtomicFact {
 pub struct SupersetFact {
     pub left: Obj,
     pub right: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotSupersetFact {
     pub left: Obj,
     pub right: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct SubsetFact {
     pub left: Obj,
     pub right: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotSubsetFact {
     pub left: Obj,
     pub right: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct IsTupleFact {
     pub set: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotIsTupleFact {
     pub set: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct IsCartFact {
     pub set: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotIsCartFact {
     pub set: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct InFact {
     pub element: Obj,
     pub set: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotInFact {
     pub element: Obj,
     pub set: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NormalAtomicFact {
     pub predicate: Atom,
     pub body: Vec<Obj>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotNormalAtomicFact {
     pub predicate: Atom,
     pub body: Vec<Obj>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct EqualFact {
     pub left: Obj,
     pub right: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotEqualFact {
     pub left: Obj,
     pub right: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct LessFact {
     pub left: Obj,
     pub right: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotLessFact {
     pub left: Obj,
     pub right: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct GreaterFact {
     pub left: Obj,
     pub right: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotGreaterFact {
     pub left: Obj,
     pub right: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct LessEqualFact {
     pub left: Obj,
     pub right: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotLessEqualFact {
     pub left: Obj,
     pub right: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct GreaterEqualFact {
     pub left: Obj,
     pub right: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotGreaterEqualFact {
     pub left: Obj,
     pub right: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct IsSetFact {
     pub set: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotIsSetFact {
     pub set: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct IsNonemptySetFact {
     pub set: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotIsNonemptySetFact {
     pub set: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct IsFiniteSetFact {
     pub set: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotIsFiniteSetFact {
     pub set: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 impl SubsetFact {
-    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
-        SubsetFact { left, right, line, file_index }
+    pub fn new(left: Obj, right: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        SubsetFact { left, right, line_file_index }
     }
 }
 
 impl NotSubsetFact {
-    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
-        NotSubsetFact { left, right, line, file_index }
+    pub fn new(left: Obj, right: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        NotSubsetFact { left, right, line_file_index }
     }
 }
 
 impl NormalAtomicFact {
-    pub fn new(predicate: Atom, body: Vec<Obj>, line: u32, file_index: usize) -> Self {
-        NormalAtomicFact { predicate, body, line, file_index }
+    pub fn new(predicate: Atom, body: Vec<Obj>, line_file_index: Option<(u16, usize)>) -> Self {
+        NormalAtomicFact { predicate, body, line_file_index }
     }
 }
 
 impl NotNormalAtomicFact {
-    pub fn new(predicate: Atom, body: Vec<Obj>, line: u32, file_index: usize) -> Self {
-        NotNormalAtomicFact { predicate, body, line, file_index }
+    pub fn new(predicate: Atom, body: Vec<Obj>, line_file_index: Option<(u16, usize)>) -> Self {
+        NotNormalAtomicFact { predicate, body, line_file_index }
     }
 }
 
 impl EqualFact {
-    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
-        EqualFact { left, right, line, file_index }
+    pub fn new(left: Obj, right: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        EqualFact { left, right, line_file_index }
     }
 }
 
 impl NotEqualFact {
-    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
-        NotEqualFact { left, right, line, file_index }
+    pub fn new(left: Obj, right: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        NotEqualFact { left, right, line_file_index }
     }
 }
 
 impl LessFact {
-    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
-        LessFact { left, right, line, file_index }
+    pub fn new(left: Obj, right: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        LessFact { left, right, line_file_index }
     }
 }
 
 impl NotLessFact {
-    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
-        NotLessFact { left, right, line, file_index }
+    pub fn new(left: Obj, right: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        NotLessFact { left, right, line_file_index }
     }
 }
 
 impl GreaterFact {
-    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
-        GreaterFact { left, right, line, file_index }
+    pub fn new(left: Obj, right: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        GreaterFact { left, right, line_file_index }
     }
 }
 
 impl NotGreaterFact {
-    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
-        NotGreaterFact { left, right, line, file_index }
+    pub fn new(left: Obj, right: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        NotGreaterFact { left, right, line_file_index }
     }
 }
 
 impl LessEqualFact {
-    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
-        LessEqualFact { left, right, line, file_index }
+    pub fn new(left: Obj, right: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        LessEqualFact { left, right, line_file_index }
     }
 }
 
 impl NotLessEqualFact {
-    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
-        NotLessEqualFact { left, right, line, file_index }
+    pub fn new(left: Obj, right: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        NotLessEqualFact { left, right, line_file_index }
     }
 }
 
 impl GreaterEqualFact {
-    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
-        GreaterEqualFact { left, right, line, file_index }
+    pub fn new(left: Obj, right: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        GreaterEqualFact { left, right, line_file_index }
     }
 }
 
 impl NotGreaterEqualFact {
-    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
-        NotGreaterEqualFact { left, right, line, file_index }
+    pub fn new(left: Obj, right: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        NotGreaterEqualFact { left, right, line_file_index }
     }
 }
 
 impl IsSetFact {
-    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
-        IsSetFact { set, line, file_index }
+    pub fn new(set: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        IsSetFact { set, line_file_index }
     }
 }
 
 impl NotIsSetFact {
-    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
-        NotIsSetFact { set, line, file_index }
+    pub fn new(set: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        NotIsSetFact { set, line_file_index }
     }
 }
 
 impl IsNonemptySetFact {
-    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
-        IsNonemptySetFact { set, line, file_index }
+    pub fn new(set: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        IsNonemptySetFact { set, line_file_index }
     }
 }
 
 impl NotIsNonemptySetFact {
-    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
-        NotIsNonemptySetFact { set, line, file_index }
+    pub fn new(set: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        NotIsNonemptySetFact { set, line_file_index }
     }
 }
 
 impl IsFiniteSetFact {
-    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
-        IsFiniteSetFact { set, line, file_index }
+    pub fn new(set: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        IsFiniteSetFact { set, line_file_index }
     }
 }
 
 impl NotIsFiniteSetFact {
-    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
-        NotIsFiniteSetFact { set, line, file_index }
+    pub fn new(set: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        NotIsFiniteSetFact { set, line_file_index }
     }
 }
 
 impl InFact {
-    pub fn new(element: Obj, set: Obj, line: u32, file_index: usize) -> Self {
-        InFact { element, set, line, file_index }
+    pub fn new(element: Obj, set: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        InFact { element, set, line_file_index }
     }
 }
 
 impl NotInFact {
-    pub fn new(element: Obj, set: Obj, line: u32, file_index: usize) -> Self {
-        NotInFact { element, set, line, file_index }
+    pub fn new(element: Obj, set: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        NotInFact { element, set, line_file_index }
     }
 }
 
 
 impl IsCartFact {
-    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
-        IsCartFact { set, line, file_index }
+    pub fn new(set: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        IsCartFact { set, line_file_index }
     }
 }
 
 impl NotIsCartFact {
-    pub fn new(set: Obj, line: u32, file_index: usize) -> Self {
-        NotIsCartFact { set, line, file_index }
+    pub fn new(set: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        NotIsCartFact { set, line_file_index }
     }
 }
 
 impl IsTupleFact {
-    pub fn new(tuple: Obj, line: u32, file_index: usize) -> Self {
-        IsTupleFact { set: tuple, line, file_index }
+    pub fn new(tuple: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        IsTupleFact { set: tuple, line_file_index }
     }
 }
 
 impl NotIsTupleFact {
-    pub fn new(tuple: Obj, line: u32, file_index: usize) -> Self {
-        NotIsTupleFact { set: tuple, line, file_index }
+    pub fn new(tuple: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        NotIsTupleFact { set: tuple, line_file_index }
     }
 }
 
 impl SupersetFact {
-    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
-        SupersetFact { left, right, line, file_index }
+    pub fn new(left: Obj, right: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        SupersetFact { left, right, line_file_index }
     }
 }
 
 impl NotSupersetFact {
 
-    pub fn new(left: Obj, right: Obj, line: u32, file_index: usize) -> Self {
-        NotSupersetFact { left, right, line, file_index }
+    pub fn new(left: Obj, right: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        NotSupersetFact { left, right, line_file_index }
     }
 }
 
@@ -458,68 +430,37 @@ impl fmt::Display for AtomicFact {
 }
 
 /// 从 AtomicFact 取得 line 与 file_index
-pub fn line_file(a: &AtomicFact) -> (u32, usize) {
-    let line = match a {
-        AtomicFact::NormalAtomicFact(x) => x.line,
-        AtomicFact::EqualFact(x) => x.line,
-        AtomicFact::LessFact(x) => x.line,
-        AtomicFact::GreaterFact(x) => x.line,
-        AtomicFact::LessEqualFact(x) => x.line,
-        AtomicFact::GreaterEqualFact(x) => x.line,
-        AtomicFact::IsSetFact(x) => x.line,
-        AtomicFact::IsNonemptySetFact(x) => x.line,
-        AtomicFact::IsFiniteSetFact(x) => x.line,
-        AtomicFact::NotNormalAtomicFact(x) => x.line,
-        AtomicFact::NotEqualFact(x) => x.line,
-        AtomicFact::NotLessFact(x) => x.line,
-        AtomicFact::NotGreaterFact(x) => x.line,
-        AtomicFact::NotLessEqualFact(x) => x.line,
-        AtomicFact::NotGreaterEqualFact(x) => x.line,
-        AtomicFact::NotIsSetFact(x) => x.line,
-        AtomicFact::NotIsNonemptySetFact(x) => x.line,
-        AtomicFact::NotIsFiniteSetFact(x) => x.line,
-        AtomicFact::InFact(x) => x.line,
-        AtomicFact::NotInFact(x) => x.line,
-        AtomicFact::IsCartFact(x) => x.line,
-        AtomicFact::NotIsCartFact(x) => x.line,
-        AtomicFact::IsTupleFact(x) => x.line,
-        AtomicFact::NotIsTupleFact(x) => x.line,
-        AtomicFact::SubsetFact(x) => x.line,
-        AtomicFact::NotSubsetFact(x) => x.line,
-        AtomicFact::SupersetFact(x) => x.line,
-        AtomicFact::NotSupersetFact(x) => x.line,
-    };
-    let file_index = match a {
-        AtomicFact::NormalAtomicFact(x) => x.file_index,
-        AtomicFact::EqualFact(x) => x.file_index,
-        AtomicFact::LessFact(x) => x.file_index,
-        AtomicFact::GreaterFact(x) => x.file_index,
-        AtomicFact::LessEqualFact(x) => x.file_index,
-        AtomicFact::GreaterEqualFact(x) => x.file_index,
-        AtomicFact::IsSetFact(x) => x.file_index,
-        AtomicFact::IsNonemptySetFact(x) => x.file_index,
-        AtomicFact::IsFiniteSetFact(x) => x.file_index,
-        AtomicFact::NotNormalAtomicFact(x) => x.file_index,
-        AtomicFact::NotEqualFact(x) => x.file_index,
-        AtomicFact::NotLessFact(x) => x.file_index,
-        AtomicFact::NotGreaterFact(x) => x.file_index,
-        AtomicFact::NotLessEqualFact(x) => x.file_index,
-        AtomicFact::NotGreaterEqualFact(x) => x.file_index,
-        AtomicFact::NotIsSetFact(x) => x.file_index,
-        AtomicFact::NotIsNonemptySetFact(x) => x.file_index,
-        AtomicFact::NotIsFiniteSetFact(x) => x.file_index,
-        AtomicFact::InFact(x) => x.file_index,
-        AtomicFact::NotInFact(x) => x.file_index,
-        AtomicFact::IsCartFact(x) => x.file_index,
-        AtomicFact::NotIsCartFact(x) => x.file_index,
-        AtomicFact::IsTupleFact(x) => x.file_index,
-        AtomicFact::NotIsTupleFact(x) => x.file_index,
-        AtomicFact::SubsetFact(x) => x.file_index,
-        AtomicFact::NotSubsetFact(x) => x.file_index,
-        AtomicFact::SupersetFact(x) => x.file_index,
-        AtomicFact::NotSupersetFact(x) => x.file_index,
-    };
-    (line, file_index)
+pub fn line_file(a: &AtomicFact) -> Option<(u16, usize)> {
+    match a {
+        AtomicFact::NormalAtomicFact(x) => x.line_file_index,
+        AtomicFact::EqualFact(x) => x.line_file_index,
+        AtomicFact::LessFact(x) => x.line_file_index,
+        AtomicFact::GreaterFact(x) => x.line_file_index,
+        AtomicFact::LessEqualFact(x) => x.line_file_index,
+        AtomicFact::GreaterEqualFact(x) => x.line_file_index,
+        AtomicFact::IsSetFact(x) => x.line_file_index,
+        AtomicFact::IsNonemptySetFact(x) => x.line_file_index,
+        AtomicFact::IsFiniteSetFact(x) => x.line_file_index,
+        AtomicFact::NotNormalAtomicFact(x) => x.line_file_index,
+        AtomicFact::NotEqualFact(x) => x.line_file_index,
+        AtomicFact::NotLessFact(x) => x.line_file_index,
+        AtomicFact::NotGreaterFact(x) => x.line_file_index,
+        AtomicFact::NotLessEqualFact(x) => x.line_file_index,
+        AtomicFact::NotGreaterEqualFact(x) => x.line_file_index,
+        AtomicFact::NotIsSetFact(x) => x.line_file_index,
+        AtomicFact::NotIsNonemptySetFact(x) => x.line_file_index,
+        AtomicFact::NotIsFiniteSetFact(x) => x.line_file_index,
+        AtomicFact::InFact(x) => x.line_file_index,
+        AtomicFact::NotInFact(x) => x.line_file_index,
+        AtomicFact::IsCartFact(x) => x.line_file_index,
+        AtomicFact::NotIsCartFact(x) => x.line_file_index,
+        AtomicFact::IsTupleFact(x) => x.line_file_index,
+        AtomicFact::NotIsTupleFact(x) => x.line_file_index,
+        AtomicFact::SubsetFact(x) => x.line_file_index,
+        AtomicFact::NotSubsetFact(x) => x.line_file_index,
+        AtomicFact::SupersetFact(x) => x.line_file_index,
+        AtomicFact::NotSupersetFact(x) => x.line_file_index,
+    }
 }
 
 impl fmt::Display for SupersetFact {
@@ -764,7 +705,7 @@ impl AtomicFact {
 
 
 impl AtomicFact {
-    pub fn to_atomic_fact(prop_name: Atom, is_true: bool, args: Vec<Obj>, line: u32, file_index: usize) -> Result<AtomicFact, NewAtomicFactError> {
+    pub fn to_atomic_fact(prop_name: Atom, is_true: bool, args: Vec<Obj>, line_file_index: Option<(u16, usize)>) -> Result<AtomicFact, NewAtomicFactError> {
         let prop_name_as_string = prop_name.to_string();
         match prop_name_as_string.as_str() {
             EQUAL => {
@@ -776,9 +717,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::EqualFact(EqualFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::EqualFact(EqualFact::new(a0, a1, line_file_index)))
                 } else {
-                    Ok(AtomicFact::NotEqualFact(NotEqualFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::NotEqualFact(NotEqualFact::new(a0, a1, line_file_index)))
                 }
             }
             NOT_EQUAL => {
@@ -790,9 +731,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::NotEqualFact(NotEqualFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::NotEqualFact(NotEqualFact::new(a0, a1, line_file_index)))
                 } else {
-                    Ok(AtomicFact::EqualFact(EqualFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::EqualFact(EqualFact::new(a0, a1, line_file_index)))
                 }
             }
             LESS => {
@@ -804,9 +745,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::LessFact(LessFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::LessFact(LessFact::new(a0, a1, line_file_index)))
                 } else {
-                    Ok(AtomicFact::GreaterFact(GreaterFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::GreaterFact(GreaterFact::new(a0, a1, line_file_index)))
                 }
             }
             GREATER => {
@@ -818,9 +759,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::GreaterFact(GreaterFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::GreaterFact(GreaterFact::new(a0, a1, line_file_index)))
                 } else {
-                    Ok(AtomicFact::LessFact(LessFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::LessFact(LessFact::new(a0, a1, line_file_index)))
                 }
             }
             LESS_EQUAL => {
@@ -832,9 +773,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::LessEqualFact(LessEqualFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::LessEqualFact(LessEqualFact::new(a0, a1, line_file_index)))
                 } else {
-                    Ok(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(a0, a1, line_file_index)))
                 }
             }
             GREATER_EQUAL => {
@@ -846,9 +787,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(a0, a1, line_file_index)))
                 } else {
-                    Ok(AtomicFact::LessEqualFact(LessEqualFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::LessEqualFact(LessEqualFact::new(a0, a1, line_file_index)))
                 }
             }
             IS_SET => {
@@ -859,9 +800,9 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::IsSetFact(IsSetFact::new(a0, line, file_index)))
+                    Ok(AtomicFact::IsSetFact(IsSetFact::new(a0, line_file_index)))
                 } else {
-                    Ok(AtomicFact::NotIsSetFact(NotIsSetFact::new(a0, line, file_index)))
+                    Ok(AtomicFact::NotIsSetFact(NotIsSetFact::new(a0, line_file_index)))
                 }
             }
             IS_NONEMPTY_SET => {
@@ -872,9 +813,9 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(a0, line, file_index)))
+                    Ok(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(a0, line_file_index)))
                 } else {
-                    Ok(AtomicFact::NotIsNonemptySetFact(NotIsNonemptySetFact::new(a0, line, file_index)))
+                    Ok(AtomicFact::NotIsNonemptySetFact(NotIsNonemptySetFact::new(a0, line_file_index)))
                 }
             }
             IS_FINITE_SET => {
@@ -885,9 +826,9 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(a0, line, file_index)))
+                    Ok(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(a0, line_file_index)))
                 } else {
-                    Ok(AtomicFact::NotIsFiniteSetFact(NotIsFiniteSetFact::new(a0, line, file_index)))
+                    Ok(AtomicFact::NotIsFiniteSetFact(NotIsFiniteSetFact::new(a0, line_file_index)))
                 }
             }
             IN => {
@@ -899,9 +840,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::InFact(InFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::InFact(InFact::new(a0, a1, line_file_index)))
                 } else {
-                    Ok(AtomicFact::NotInFact(NotInFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::NotInFact(NotInFact::new(a0, a1, line_file_index)))
                 }
             }
             IS_CART => {
@@ -912,9 +853,9 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::IsCartFact(IsCartFact::new(a0, line, file_index)))
+                    Ok(AtomicFact::IsCartFact(IsCartFact::new(a0, line_file_index)))
                 } else {
-                    Ok(AtomicFact::NotIsCartFact(NotIsCartFact::new(a0, line, file_index)))
+                    Ok(AtomicFact::NotIsCartFact(NotIsCartFact::new(a0, line_file_index)))
                 }
             }
             IS_TUPLE => {
@@ -925,9 +866,9 @@ impl AtomicFact {
                 let mut args = args;
                 let a0 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::IsTupleFact(IsTupleFact::new(a0, line, file_index)))
+                    Ok(AtomicFact::IsTupleFact(IsTupleFact::new(a0, line_file_index)))
                 } else {
-                    Ok(AtomicFact::NotIsTupleFact(NotIsTupleFact::new(a0, line, file_index)))
+                    Ok(AtomicFact::NotIsTupleFact(NotIsTupleFact::new(a0, line_file_index)))
                 }
             }
             SUBSET => {
@@ -939,9 +880,9 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::SubsetFact(SubsetFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::SubsetFact(SubsetFact::new(a0, a1, line_file_index)))
                 } else {
-                    Ok(AtomicFact::NotSubsetFact(NotSubsetFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::NotSubsetFact(NotSubsetFact::new(a0, a1, line_file_index)))
                 }
             }
             SUPERSET => {
@@ -953,16 +894,16 @@ impl AtomicFact {
                 let a0 = args.remove(0);
                 let a1 = args.remove(0);
                 if is_true {
-                    Ok(AtomicFact::SupersetFact(SupersetFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::SupersetFact(SupersetFact::new(a0, a1, line_file_index)))
                 } else {
-                    Ok(AtomicFact::NotSupersetFact(NotSupersetFact::new(a0, a1, line, file_index)))
+                    Ok(AtomicFact::NotSupersetFact(NotSupersetFact::new(a0, a1, line_file_index)))
                 }
             }
             _ => {
                 if is_true {
-                    Ok(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(prop_name, args, line, file_index)))
+                    Ok(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(prop_name, args, line_file_index)))
                 } else {
-                    Ok(AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(prop_name, args, line, file_index)))
+                    Ok(AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(prop_name, args, line_file_index)))
                 }
             }
         }

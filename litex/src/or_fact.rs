@@ -6,13 +6,12 @@ use crate::helper::vec_to_string_with_sep;
 #[derive(Clone)]
 pub struct OrFact {
     pub facts: Vec<AndFactOrSpecFact>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 impl OrFact {
-    pub fn new(facts: Vec<AndFactOrSpecFact>, line: u32, file_index: usize) -> Self {
-        OrFact { facts, line, file_index }
+    pub fn new(facts: Vec<AndFactOrSpecFact>, line_file_index: Option<(u16, usize)>) -> Self {
+        OrFact { facts, line_file_index }
     }
 }
 

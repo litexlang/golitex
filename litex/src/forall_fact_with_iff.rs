@@ -7,13 +7,12 @@ use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 pub struct ForallFactWithIff {
     pub forall_fact: ForallFact,
     pub iff_facts: Vec<OrFactOrAndFactOrSpecFact>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 impl ForallFactWithIff {
-    pub fn new(forall_fact: ForallFact, iff_facts: Vec<OrFactOrAndFactOrSpecFact>, line: u32, file_index: usize) -> Self {
-        ForallFactWithIff { forall_fact, iff_facts, line, file_index }
+    pub fn new(forall_fact: ForallFact, iff_facts: Vec<OrFactOrAndFactOrSpecFact>, line_file_index: Option<(u16, usize)>) -> Self {
+        ForallFactWithIff { forall_fact, iff_facts, line_file_index }
     }
 }
 
@@ -32,8 +31,7 @@ impl ForallFactWithIff {
             params_def_with_type,
             dom_facts,
             then_facts,
-            line,
-            file_index,
+            line_file_index,
         } = self.forall_fact;
         let iff_facts = self.iff_facts;
 
@@ -44,8 +42,7 @@ impl ForallFactWithIff {
             params_def_with_type.clone(),
             dom_then,
             iff_facts.clone(),
-            line,
-            file_index,
+            line_file_index,
         );
 
         // 第二个：dom 并 iff => then
@@ -55,8 +52,7 @@ impl ForallFactWithIff {
             params_def_with_type,
             dom_iff,
             then_facts,
-            line,
-            file_index,
+            line_file_index,
         );
 
         (forall_then_implies_iff, forall_iff_implies_then)
