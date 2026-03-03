@@ -38,7 +38,7 @@ impl<'a> fmt::Display for RuntimeContext<'a> {
 
 impl<'a> RuntimeContext<'a> {
     /// 顶层（当前栈顶）env 的可变引用。
-    pub fn top_level_env_mut_ref(&mut self) -> &mut Environment {
+    pub fn top_level_env(&mut self) -> &mut Environment {
         self.environments.last_mut().unwrap()
     }
 }
