@@ -4,17 +4,20 @@ use crate::obj::Obj;
 use crate::atom::Atom;
 use crate::consts::{FINITE_SET, LEFT_BRACKET, NONEMPTY_SET, RIGHT_BRACKET, SET};
 
+#[derive(Clone)]
 pub enum ParamDefWithParamSet {
     ParamAndItsSetPair(String, Obj),
     ParamsAndTheirSetsPair(Vec<String>, Obj),
 }
 
+#[derive(Clone)]
 pub enum ParamDefWithParamTypeAndProperty {
     ParamAndItsTypePair(String, ParameterType),
     ParamsAndTheirTypePair(Vec<String>, ParameterType),
     ParamsPropertyPair(Vec<String>, Atom),
 }
 
+#[derive(Clone)]
 pub enum ParameterType {
     Set(SetAsParamSet),
     NonemptySet(NonemptySetAsParamSet),
@@ -22,10 +25,13 @@ pub enum ParameterType {
     Obj(Obj),
 }
 
+#[derive(Clone)]
 pub struct SetAsParamSet {}
 
+#[derive(Clone)]
 pub struct NonemptySetAsParamSet {}
 
+#[derive(Clone)]
 pub struct FiniteSetAsParamSet {}
 
 impl SetAsParamSet {

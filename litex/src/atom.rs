@@ -1,14 +1,17 @@
 use std::fmt;
 
+#[derive(Clone)]
 pub enum Atom {
     AtomWithoutModName(AtomWithoutModName),
     AtomWithModName(AtomWithModName),
 }
 
+#[derive(Clone)]
 pub struct AtomWithoutModName {
     pub name: String,
 }
 
+#[derive(Clone)]
 pub struct AtomWithModName {
     pub mod_name: String,
     pub name: String,

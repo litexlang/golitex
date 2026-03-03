@@ -13,6 +13,8 @@ use crate::obj::FnSetObj;
 use crate::obj::SetBuilder;
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::specific_fact::SpecFact;
+use crate::and_fact::AndFact;
+use crate::forall_fact_with_iff::ForallFactWithIff;
 
 pub struct Environment {
     // defined things in local scope
@@ -154,13 +156,29 @@ impl Environment {
         }
     }
 
+    fn store_and_fact(&mut self, and_fact: AndFact) {
+        for fact in and_fact.clone_facts() {
+            match fact {
+                SpecFact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact),
+                SpecFact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact),
+            }
+        }
+    }
+
+    fn store_forall_fact_with_iff(&mut self, forall_fact_with_iff: ForallFactWithIff) {
+        let (forall_then_implies_iff, forall_iff_implies_then) = forall_fact_with_iff.to_two_forall_facts();
+        self.store_forall_fact(Rc::new(forall_then_implies_iff));
+        self.store_forall_fact(Rc::new(forall_iff_implies_then));
+    }
+
     pub fn store_fact(&mut self, fact: Fact) {
         match fact {
             Fact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact),
             Fact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact),
             Fact::OrFact(or_fact) => self.store_or_fact(or_fact),
+            Fact::AndFact(and_fact) => self.store_and_fact(and_fact),
             Fact::ForallFact(forall_fact) => self.store_forall_fact(Rc::new(forall_fact)),
-            _ => panic!("Invalid fact type" ),
+            Fact::ForallFactWithIff(forall_fact_with_iff) => self.store_forall_fact_with_iff(forall_fact_with_iff),
         }
     }
 }

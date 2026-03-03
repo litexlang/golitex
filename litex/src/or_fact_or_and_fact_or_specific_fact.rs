@@ -3,6 +3,7 @@ use crate::and_fact::AndFact;
 use crate::specific_fact::SpecFact;
 use std::fmt;
 
+#[derive(Clone)]
 pub enum OrFactOrAndFactOrSpecFact {
     OrFact(OrFact),
     AndFact(AndFact),

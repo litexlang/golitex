@@ -2,6 +2,7 @@ use std::fmt;
 use crate::atomic_fact::AtomicFact;
 use crate::exist_fact::ExistFact;
 
+#[derive(Clone)]
 pub enum SpecFact {
     AtomicFact(AtomicFact),
     ExistFact(ExistFact),
