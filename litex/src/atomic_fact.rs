@@ -4,6 +4,7 @@ use crate::atom::Atom;
 use crate::consts::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, IN, IS_CART, IS_TUPLE, SUBSET, SUPERSET, NOT_EQUAL};
 use crate::helper::{braced_string, braced_vec_to_string};
 
+#[derive(Clone)]
 pub enum AtomicFact {
     NormalAtomicFact(NormalAtomicFact),
     EqualFact(EqualFact),
@@ -36,6 +37,7 @@ pub enum AtomicFact {
     NotSupersetFact(NotSupersetFact),
 }
 
+#[derive(Clone)]
 pub struct SupersetFact {
     pub left: Obj,
     pub right: Obj,
@@ -43,13 +45,15 @@ pub struct SupersetFact {
     pub file_index: usize,
 }
 
-pub struct NotSupersetFact {    
+#[derive(Clone)]
+pub struct NotSupersetFact {
     pub left: Obj,
     pub right: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct SubsetFact {
     pub left: Obj,
     pub right: Obj,
@@ -57,6 +61,7 @@ pub struct SubsetFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct NotSubsetFact {
     pub left: Obj,
     pub right: Obj,
@@ -64,30 +69,35 @@ pub struct NotSubsetFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct IsTupleFact {
     pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct NotIsTupleFact {
     pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct IsCartFact {
     pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct NotIsCartFact {
     pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct InFact {
     pub element: Obj,
     pub set: Obj,
@@ -95,6 +105,7 @@ pub struct InFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct NotInFact {
     pub element: Obj,
     pub set: Obj,
@@ -102,6 +113,7 @@ pub struct NotInFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct NormalAtomicFact {
     pub predicate: Atom,
     pub body: Vec<Obj>,
@@ -109,6 +121,7 @@ pub struct NormalAtomicFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct NotNormalAtomicFact {
     pub predicate: Atom,
     pub body: Vec<Obj>,
@@ -116,6 +129,7 @@ pub struct NotNormalAtomicFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct EqualFact {
     pub left: Obj,
     pub right: Obj,
@@ -123,6 +137,7 @@ pub struct EqualFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct NotEqualFact {
     pub left: Obj,
     pub right: Obj,
@@ -130,6 +145,7 @@ pub struct NotEqualFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct LessFact {
     pub left: Obj,
     pub right: Obj,
@@ -137,6 +153,7 @@ pub struct LessFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct NotLessFact {
     pub left: Obj,
     pub right: Obj,
@@ -144,6 +161,7 @@ pub struct NotLessFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct GreaterFact {
     pub left: Obj,
     pub right: Obj,
@@ -151,6 +169,7 @@ pub struct GreaterFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct NotGreaterFact {
     pub left: Obj,
     pub right: Obj,
@@ -158,6 +177,7 @@ pub struct NotGreaterFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct LessEqualFact {
     pub left: Obj,
     pub right: Obj,
@@ -165,6 +185,7 @@ pub struct LessEqualFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct NotLessEqualFact {
     pub left: Obj,
     pub right: Obj,
@@ -172,6 +193,7 @@ pub struct NotLessEqualFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct GreaterEqualFact {
     pub left: Obj,
     pub right: Obj,
@@ -179,6 +201,7 @@ pub struct GreaterEqualFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct NotGreaterEqualFact {
     pub left: Obj,
     pub right: Obj,
@@ -186,36 +209,42 @@ pub struct NotGreaterEqualFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct IsSetFact {
     pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct NotIsSetFact {
     pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct IsNonemptySetFact {
     pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct NotIsNonemptySetFact {
     pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct IsFiniteSetFact {
     pub set: Obj,
     pub line: u32,
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct NotIsFiniteSetFact {
     pub set: Obj,
     pub line: u32,

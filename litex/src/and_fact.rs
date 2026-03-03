@@ -5,17 +5,20 @@ use crate::obj::Obj;
 use crate::atom::Atom;
 use crate::helper::vec_to_string_with_sep;
 
+#[derive(Clone)]
 pub enum AndFact {
     AndSpecFacts(AndSpecFacts),
     ChainFact(ChainFact),
 }
 
+#[derive(Clone)]
 pub struct AndSpecFacts {
     pub facts: Vec<SpecFact>,
     pub line: u32,
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct ChainFact {
     pub objs: Vec<Obj>,
     pub prop_names: Vec<Atom>,
@@ -89,5 +92,14 @@ impl AndSpecFacts {
 impl ChainFact {
     pub fn key(&self) -> String {
         return format!("{}", vec_to_string_with_sep(&self.prop_names.iter().map(|prop_name| prop_name.to_string()).collect::<Vec<String>>(), format!(" {} ", AND).as_str()));
+    }
+}
+
+impl AndFact {
+    pub fn clone_facts(&self) -> Vec<SpecFact> {
+        match self {
+            AndFact::AndSpecFacts(and_spec_facts) => and_spec_facts.facts.clone(),
+            _ => panic!("chain fact is not supported"),
+        }
     }
 }

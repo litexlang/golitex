@@ -4,11 +4,13 @@ use crate::helper::{curly_braced_vec_to_string_with_sep, vec_to_string_join_by_c
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::parameter_type_and_property::ParamDefWithParamTypeAndProperty;
 
+#[derive(Clone)]
 pub enum ExistFact {
     TrueExistFact(TrueExistFact),
     NotExistFact(NotExistFact),
 }
 
+#[derive(Clone)]
 pub struct TrueExistFact {
     pub params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
     pub facts: Vec<OrFactOrAndFactOrSpecFact>,
@@ -16,6 +18,7 @@ pub struct TrueExistFact {
     pub file_index: usize,
 }
 
+#[derive(Clone)]
 pub struct NotExistFact {
     pub params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
     pub facts: Vec<OrFactOrAndFactOrSpecFact>,
