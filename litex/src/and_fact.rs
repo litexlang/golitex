@@ -99,7 +99,7 @@ impl ChainFact {
     pub fn facts(&self) -> Result<Vec<SpecFact>, NewAtomicFactError> {
         let mut facts = Vec::new();
         for prop_name in self.prop_names.iter() {
-            let fact = AtomicFact::to_atomic_fact(prop_name.clone(), true, Vec::new(), Option::None);
+            let fact = AtomicFact::to_atomic_fact(prop_name.clone(), true, Vec::new(), self.line_file_index);
             if fact.is_err() {
                 return Err(fact.err().unwrap());
             }
