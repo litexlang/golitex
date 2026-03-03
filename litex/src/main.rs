@@ -35,7 +35,6 @@ mod runtime_context;
 mod environment;
 mod define_algorithm_stmt;
 use std::collections::HashMap;
-use std::rc::Rc;
 use environment::Environment;
 use module_manager::ModuleManager;
 use runtime_context::RuntimeContext;
@@ -1163,7 +1162,7 @@ fn try_runtime_context() {
     println!("{}", atomic_fact.key());
 
     // 通过 runtime_context.get_upmost_env_ref() 拿到 &mut Environment，即可改该层 env
-    runtime_context.top_level_env().store_atomic_fact(atomic_fact);
+    runtime_context.top_level_env().store_fact(Fact::AtomicFact(atomic_fact));
 
     println!("{}", runtime_context.top_level_env());
 
@@ -1174,7 +1173,7 @@ fn try_runtime_context() {
         0,
     ));
     println!("{}", exist_fact.key());
-    runtime_context.top_level_env().store_exist_fact(exist_fact);
+    runtime_context.top_level_env().store_fact(Fact::ExistFact(exist_fact));
     println!("{}", runtime_context.top_level_env());
 
     let param_type_or_property_pairs = vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("n".to_string(), ParameterType::Set(SetAsParamSet::new()))];
@@ -1184,8 +1183,8 @@ fn try_runtime_context() {
     let then_facts = vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), 1, 0),
     )))];
-    let _forall = Rc::new(ForallFact::new(param_type_or_property_pairs, dom_facts, then_facts, 1, 0));
+    let _forall = ForallFact::new(param_type_or_property_pairs, dom_facts, then_facts, 1, 0);
     
-    runtime_context.top_level_env().store_or_fact_or_and_fact_or_spec_fact_in_forall_fact(&_forall.then_facts[0], 0, _forall.clone());
+    runtime_context.top_level_env().store_fact(Fact::ForallFact(_forall));
     
 }
