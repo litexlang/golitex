@@ -1158,17 +1158,21 @@ fn try_runtime_context() {
     let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
     println!("{}", runtime_context);
 
+    let atomic_fact = AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0));
+    println!("{}", atomic_fact.key());
+
     // 通过 runtime_context.get_upmost_env_ref() 拿到 &mut Environment，即可改该层 env
-    runtime_context.top_level_env_mut_ref().store_atomic_fact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0)));
+    runtime_context.top_level_env_mut_ref().store_atomic_fact(atomic_fact);
 
     println!("{}", runtime_context.top_level_env_mut_ref());
 
     let exist_fact = ExistFact::TrueExistFact(TrueExistFact::new(
         vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(SetAsParamSet::new()))],
-        vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))))],
+        vec![OrFactOrAndFactOrSpecFact::OrFact(OrFact::new(vec![AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0)))), AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))))], 1, 0)),OrFactOrAndFactOrSpecFact::OrFact(OrFact::new(vec![AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), 1, 0))))], 1, 0))],
         1,
         0,
     ));
+    println!("{}", exist_fact.key());
     runtime_context.top_level_env_mut_ref().store_exist_fact(exist_fact);
     println!("{}", runtime_context.top_level_env_mut_ref());
 }
