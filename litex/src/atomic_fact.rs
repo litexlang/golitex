@@ -661,7 +661,7 @@ impl fmt::Display for NotIsFiniteSetFact {
 }
 
 impl AtomicFact {
-    pub fn predicate_string(&self) -> String {
+    fn predicate_string(&self) -> String {
         match self {
             AtomicFact::NormalAtomicFact(x) => x.predicate.to_string(),
             AtomicFact::EqualFact(_) => EQUAL.to_string(),
