@@ -34,6 +34,7 @@ mod module_manager;
 mod runtime_context;
 mod environment;
 mod define_algorithm_stmt;
+use obj::{QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QN0, ZN0, RN0};
 use std::collections::HashMap;
 use environment::Environment;
 use module_manager::ModuleManager;
@@ -281,6 +282,24 @@ fn try_n_pos_obj() {
     println!("{}", z_obj);
     let r_obj = Obj::RObj(RObj::new());
     println!("{}", r_obj);
+    let q_pos_obj = Obj::QPos(QPos::new());
+    println!("{}", q_pos_obj);
+    let z_pos_obj = Obj::ZPos(ZPos::new());
+    println!("{}", z_pos_obj);
+    let r_pos_obj = Obj::RPos(RPos::new());
+    println!("{}", r_pos_obj);
+    let q_neg_obj = Obj::QNeg(QNeg::new());
+    println!("{}", q_neg_obj);
+    let z_neg_obj = Obj::ZNeg(ZNeg::new());
+    println!("{}", z_neg_obj);
+    let r_neg_obj = Obj::RNeg(RNeg::new());
+    println!("{}", r_neg_obj);
+    let q_n0_obj = Obj::QN0(QN0::new());
+    println!("{}", q_n0_obj);
+    let z_n0_obj = Obj::ZN0(ZN0::new());
+    println!("{}", z_n0_obj);
+    let r_n0_obj = Obj::RN0(RN0::new());
+    println!("{}", r_n0_obj);
 }
 
 fn try_parameter_set() {

@@ -172,6 +172,15 @@ impl<'a> SyntacticVerifier<'a> {
                 Obj::ObjAtIndex(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::QPos(_) => match right { Obj::QPos(_) => true, _ => false },
+            Obj::ZPos(_) => match right { Obj::ZPos(_) => true, _ => false },
+            Obj::RPos(_) => match right { Obj::RPos(_) => true, _ => false },
+            Obj::QNeg(_) => match right { Obj::QNeg(_) => true, _ => false },
+            Obj::ZNeg(_) => match right { Obj::ZNeg(_) => true, _ => false },
+            Obj::RNeg(_) => match right { Obj::RNeg(_) => true, _ => false },
+            Obj::QN0(_) => match right { Obj::QN0(_) => true, _ => false },
+            Obj::ZN0(_) => match right { Obj::ZN0(_) => true, _ => false },
+            Obj::RN0(_) => match right { Obj::RN0(_) => true, _ => false },
         }
     }
 }
