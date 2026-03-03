@@ -146,7 +146,16 @@ impl Environment {
                 }
             }
             OrFactOrAndFactOrSpecFact::OrFact(or_fact) => self.store_or_fact_in_forall_fact(&or_fact, index, forall_fact),
-            _ => panic!("Invalid fact type"),
+            OrFactOrAndFactOrSpecFact::AndFact(and_fact) => self.store_and_fact_in_forall_fact(&and_fact, index, forall_fact),
+        }
+    }
+
+    fn store_and_fact_in_forall_fact(&mut self, and_fact: &AndFact, index: usize, forall_fact: Rc<ForallFact>) {
+        for fact in and_fact.facts() {
+            match fact {
+                SpecFact::AtomicFact(atomic_fact) => self.store_atomic_fact_in_forall_fact(&atomic_fact, index, forall_fact.clone()),
+                SpecFact::ExistFact(exist_fact) => self.store_exist_fact_in_forall_fact(&exist_fact, index, forall_fact.clone()),
+            }
         }
     }
 
@@ -157,10 +166,10 @@ impl Environment {
     }
 
     fn store_and_fact(&mut self, and_fact: AndFact) {
-        for fact in and_fact.clone_facts() {
+        for fact in and_fact.facts() {
             match fact {
-                SpecFact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact),
-                SpecFact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact),
+                SpecFact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact.clone()),
+                SpecFact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact.clone()),
             }
         }
     }
