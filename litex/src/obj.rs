@@ -8,6 +8,7 @@ use crate::helper::{braced_string, braced_two_strings, braced_vec_to_string, cur
 use crate::atom::{AtomWithoutModName, AtomWithModName};
 use crate::atom::Atom;
 
+#[derive(Clone)]
 pub enum Obj {
     AtomWithoutModName(AtomWithoutModName),
     AtomWithModName(AtomWithModName),
@@ -49,146 +50,175 @@ pub enum Obj {
     ObjAtIndex(ObjAtIndex),
 }
 
+#[derive(Clone)]
 pub enum FnSetObj {
     FnSetWithoutDom(FnSetWithoutDom),
     FnSetWithDom(FnSetWithDom),
 }
 
+#[derive(Clone)]
 pub struct ObjAtIndex {
     pub obj: Box<Obj>,
     pub index: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct Choose {
     pub element: Box<Obj>,
     pub set: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct PowerSet {
     pub set: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct Val {
     pub value: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct Range {
     pub start: Box<Obj>,
     pub end: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct ClosedRange {
     pub start: Box<Obj>,
     pub end: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct Count {
     pub set: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct Tuple {
     pub elements: Vec<Box<Obj>>,
 }
 
+#[derive(Clone)]
 pub struct Dim {
     pub dim: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct SetDim {
     pub set: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct Proj {
     pub set: Box<Obj>,
     pub dim: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct FnObj {
     pub head: Box<Obj>,
     pub body: Vec<Box<Obj>>,
 }
 
 
+#[derive(Clone)]
 pub struct Number {
     pub value: String,
 }
 
 
+#[derive(Clone)]
 pub struct Add {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
     pub is_arithmetic_expr: bool,
 }
 
+#[derive(Clone)]
 pub struct Sub {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
     pub is_arithmetic_expr: bool,
 }
 
+#[derive(Clone)]
 pub struct Mul {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
     pub is_arithmetic_expr: bool,
 }
 
+#[derive(Clone)]
 pub struct Div {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
     pub is_arithmetic_expr: bool,
 }
 
+#[derive(Clone)]
 pub struct Mod {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
     pub is_arithmetic_expr: bool,
 }
 
+#[derive(Clone)]
 pub struct Pow {
     pub base: Box<Obj>,
     pub exponent: Box<Obj>,
     pub is_arithmetic_expr: bool,
 }
 
+#[derive(Clone)]
 pub struct Union {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct Intersect {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct SetMinus {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct DisjointUnion {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct Cup {
     pub left: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct Cap {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct ListSet {
     pub list: Vec<Box<Obj>>,
 }
 
+#[derive(Clone)]
 pub struct SetBuilder {
     pub param: String,
     pub param_set: Box<Obj>,
     pub facts: Vec<OrFactOrAndFactOrSpecFact>,
 }
 
+#[derive(Clone)]
 pub struct FnSetWithoutDom {
     pub param_sets: Vec<Box<Obj>>,
     pub ret_set: Box<Obj>,
@@ -211,32 +241,40 @@ impl FnSetWithDom {
     }
 }
 
+#[derive(Clone)]
 pub struct FnSetWithDom {
     pub params_def_with_set: Vec<ParamDefWithParamSet>,
     pub dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub ret_set: Box<Obj>,
 }
 
+#[derive(Clone)]
 pub struct NPosObj {
 }
 
+#[derive(Clone)]
 pub struct NObj {
 }
 
+#[derive(Clone)]
 pub struct QObj {
 }
 
+#[derive(Clone)]
 pub struct ZObj {
 }
 
-pub struct RObj {   
+#[derive(Clone)]
+pub struct RObj {
 }
 
+#[derive(Clone)]
 pub struct InstSetTemplateObj {
     pub set_template: Atom,
     pub param_sets: Vec<Box<Obj>>,
 }
 
+#[derive(Clone)]
 pub struct Cart {
     pub args: Vec<Box<Obj>>,
 }

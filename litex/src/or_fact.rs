@@ -3,6 +3,7 @@ use std::fmt;
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::helper::vec_to_string_with_sep;
 
+#[derive(Clone)]
 pub struct OrFact {
     pub facts: Vec<AndFactOrSpecFact>,
     pub line: u32,
