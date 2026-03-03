@@ -1,7 +1,7 @@
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::parameter_type_and_property::ParamDefWithParamSet;
 use crate::consts::{
-    ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT,  LEFT_CURLY_BRACE, LEFT_BRACKET, MOD, MUL, N, N_POS, MOD_SEPARATOR, POW, POWER_SET, PROJ, Q, R, RANGE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB, UNION, VAL, Z
+    ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_CURLY_BRACE, LEFT_BRACKET, MOD, MUL, N,  N_POS, MOD_SEPARATOR, POW, POWER_SET, PROJ, Q, Q_NEG, Q_N0, Q_POS, R, R_NEG, R_N0, R_POS, RANGE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_N0, Z_POS
 };
 use std::fmt;
 use crate::helper::{braced_string, braced_two_strings, braced_vec_to_string, curly_braced_vec_to_string,  vec_to_string_join_by_comma};
@@ -48,6 +48,15 @@ pub enum Obj {
     PowerSet(PowerSet),
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
+    QPos(QPos),
+    ZPos(ZPos),
+    RPos(RPos),
+    QNeg(QNeg),
+    ZNeg(ZNeg),
+    RNeg(RNeg),
+    QN0(QN0),
+    ZN0(ZN0),
+    RN0(RN0),
 }
 
 #[derive(Clone)]
@@ -269,6 +278,33 @@ pub struct RObj {
 }
 
 #[derive(Clone)]
+pub struct QPos {}
+
+#[derive(Clone)]
+pub struct ZPos {}
+
+#[derive(Clone)]
+pub struct RPos {}
+
+#[derive(Clone)]
+pub struct QNeg {}
+
+#[derive(Clone)]
+pub struct ZNeg {}
+
+#[derive(Clone)]
+pub struct RNeg {}
+
+#[derive(Clone)]
+pub struct QN0 {}
+
+#[derive(Clone)]
+pub struct ZN0 {}
+
+#[derive(Clone)]
+pub struct RN0 {}
+
+#[derive(Clone)]
 pub struct InstSetTemplateObj {
     pub set_template: Atom,
     pub param_sets: Vec<Box<Obj>>,
@@ -481,6 +517,42 @@ impl RObj {
     }
 }
 
+impl QPos {
+    pub fn new() -> Self { QPos {} }
+}
+
+impl ZPos {
+    pub fn new() -> Self { ZPos {} }
+}
+
+impl RPos {
+    pub fn new() -> Self { RPos {} }
+}
+
+impl QNeg {
+    pub fn new() -> Self { QNeg {} }
+}
+
+impl ZNeg {
+    pub fn new() -> Self { ZNeg {} }
+}
+
+impl RNeg {
+    pub fn new() -> Self { RNeg {} }
+}
+
+impl QN0 {
+    pub fn new() -> Self { QN0 {} }
+}
+
+impl ZN0 {
+    pub fn new() -> Self { ZN0 {} }
+}
+
+impl RN0 {
+    pub fn new() -> Self { RN0 {} }
+}
+
 impl InstSetTemplateObj {
     pub fn new(set_template: Atom, param_sets: Vec<Obj>) -> Self {
         InstSetTemplateObj {
@@ -616,6 +688,15 @@ impl fmt::Display for Obj {
             Obj::PowerSet(power_set) => write!(f, "{}", power_set),
             Obj::Choose(choice) => write!(f, "{}", choice),
             Obj::ObjAtIndex(obj_at_index) => write!(f, "{}", obj_at_index),
+            Obj::QPos(x) => write!(f, "{}", x),
+            Obj::ZPos(x) => write!(f, "{}", x),
+            Obj::RPos(x) => write!(f, "{}", x),
+            Obj::QNeg(x) => write!(f, "{}", x),
+            Obj::ZNeg(x) => write!(f, "{}", x),
+            Obj::RNeg(x) => write!(f, "{}", x),
+            Obj::QN0(x) => write!(f, "{}", x),
+            Obj::ZN0(x) => write!(f, "{}", x),
+            Obj::RN0(x) => write!(f, "{}", x),
         }
     }
 }
@@ -827,6 +908,61 @@ impl fmt::Display for ZObj {
 impl fmt::Display for RObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", R)
+    }
+}
+
+impl fmt::Display for QPos {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", Q_POS)
+    }
+}
+
+impl fmt::Display for ZPos {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", Z_POS)
+    }
+}
+
+impl fmt::Display for RPos {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", R_POS)
+    }
+}
+
+impl fmt::Display for QNeg {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", Q_NEG)
+    }
+}
+
+impl fmt::Display for ZNeg {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", Z_NEG)
+    }
+}
+
+impl fmt::Display for RNeg {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", R_NEG)
+    }
+}
+
+
+impl fmt::Display for QN0 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", Q_N0)
+    }
+}
+
+impl fmt::Display for ZN0 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", Z_N0)
+    }
+}
+
+impl fmt::Display for RN0 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", R_N0)
     }
 }
 

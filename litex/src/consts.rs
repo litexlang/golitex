@@ -123,3 +123,13 @@ pub const IF: &str = "if";
 pub const ALGO: &str = "algo";
 
 pub const COLON: &str = ":";
+
+pub const Q_POS: &str = "Q_pos";
+pub const Z_POS: &str = "Z_pos";
+pub const R_POS: &str = "R_pos";
+pub const Q_NEG: &str = "Q_neg";
+pub const Z_NEG: &str = "Z_neg";
+pub const R_NEG: &str = "R_neg";
+pub const Q_N0: &str = "Q_n0";
+pub const Z_N0: &str = "Z_n0";
+pub const R_N0: &str = "R_n0";
