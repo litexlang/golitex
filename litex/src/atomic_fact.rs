@@ -1,7 +1,7 @@
 use std::fmt;
 use crate::obj::Obj;
 use crate::atom::Atom;
-use crate::consts::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, NOT_EQUAL, IN, IS_CART, IS_TUPLE, SUBSET, SUPERSET};
+use crate::consts::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, IN, IS_CART, IS_TUPLE, SUBSET, SUPERSET, NOT_EQUAL};
 use crate::helper::{braced_string, braced_vec_to_string};
 
 pub enum AtomicFact {
@@ -657,5 +657,77 @@ impl fmt::Display for IsFiniteSetFact {
 impl fmt::Display for NotIsFiniteSetFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}{}{}", NOT, FACT_PREFIX, IS_FINITE_SET, braced_string(&self.set))
+    }
+}
+
+impl AtomicFact {
+    pub fn predicate_string(&self) -> String {
+        match self {
+            AtomicFact::NormalAtomicFact(x) => x.predicate.to_string(),
+            AtomicFact::EqualFact(_) => EQUAL.to_string(),
+            AtomicFact::LessFact(_) => LESS.to_string(),
+            AtomicFact::GreaterFact(_) => GREATER.to_string(),
+            AtomicFact::LessEqualFact(_) => LESS_EQUAL.to_string(),
+            AtomicFact::GreaterEqualFact(_) => GREATER_EQUAL.to_string(),
+            AtomicFact::IsSetFact(_) => IS_SET.to_string(),
+            AtomicFact::IsNonemptySetFact(_) => IS_NONEMPTY_SET.to_string(),
+            AtomicFact::IsFiniteSetFact(_) => IS_FINITE_SET.to_string(),
+            AtomicFact::InFact(_) => IN.to_string(),
+            AtomicFact::IsCartFact(_) => IS_CART.to_string(),
+            AtomicFact::IsTupleFact(_) => IS_TUPLE.to_string(),
+            AtomicFact::SubsetFact(_) => SUBSET.to_string(),
+            AtomicFact::SupersetFact(_) => SUPERSET.to_string(),
+            AtomicFact::NotNormalAtomicFact(x) => x.predicate.to_string(),
+            AtomicFact::NotEqualFact(_) => EQUAL.to_string(),
+            AtomicFact::NotLessFact(_) => LESS.to_string(),
+            AtomicFact::NotGreaterFact(_) => GREATER.to_string(),
+            AtomicFact::NotLessEqualFact(_) => LESS_EQUAL.to_string(),
+            AtomicFact::NotGreaterEqualFact(_) => GREATER_EQUAL.to_string(),
+            AtomicFact::NotIsSetFact(_) => IS_SET.to_string(),
+            AtomicFact::NotIsNonemptySetFact(_) => IS_NONEMPTY_SET.to_string(),
+            AtomicFact::NotIsFiniteSetFact(_) => IS_FINITE_SET.to_string(),
+            AtomicFact::NotInFact(_) => IN.to_string(),
+            AtomicFact::NotIsCartFact(_) => IS_CART.to_string(),
+            AtomicFact::NotIsTupleFact(_) => IS_TUPLE.to_string(),
+            AtomicFact::NotSubsetFact(_) => SUBSET.to_string(),
+            AtomicFact::NotSupersetFact(_) => SUPERSET.to_string(),
+        }
+    }
+
+    pub fn is_true(&self) -> bool {
+        match self {
+            AtomicFact::NormalAtomicFact(_) => true,
+            AtomicFact::EqualFact(_) => true,
+            AtomicFact::LessFact(_) => true,
+            AtomicFact::GreaterFact(_) => true,
+            AtomicFact::LessEqualFact(_) => true,
+            AtomicFact::GreaterEqualFact(_) => true,
+            AtomicFact::IsSetFact(_) => true,
+            AtomicFact::IsNonemptySetFact(_) => true,
+            AtomicFact::IsFiniteSetFact(_) => true,
+            AtomicFact::InFact(_) => true,
+            AtomicFact::IsCartFact(_) => true,
+            AtomicFact::IsTupleFact(_) => true,
+            AtomicFact::SubsetFact(_) => true,
+            AtomicFact::SupersetFact(_) => true,
+            AtomicFact::NotNormalAtomicFact(_) => false,
+            AtomicFact::NotEqualFact(_) => false,
+            AtomicFact::NotLessFact(_) => false,
+            AtomicFact::NotGreaterFact(_) => false,
+            AtomicFact::NotLessEqualFact(_) => false,
+            AtomicFact::NotGreaterEqualFact(_) => false,
+            AtomicFact::NotIsSetFact(_) => false,
+            AtomicFact::NotIsNonemptySetFact(_) => false,
+            AtomicFact::NotIsFiniteSetFact(_) => false,
+            AtomicFact::NotInFact(_) => false,
+            AtomicFact::NotIsCartFact(_) => false,
+            AtomicFact::NotIsTupleFact(_) => false,
+            AtomicFact::NotSubsetFact(_) => false,
+            AtomicFact::NotSupersetFact(_) => false,
+        }
+    }
+
+    pub fn key(&self) -> String {
+        return self.predicate_string();
     }
 }
