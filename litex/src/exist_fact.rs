@@ -14,26 +14,23 @@ pub enum ExistFact {
 pub struct TrueExistFact {
     pub params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
     pub facts: Vec<OrFactOrAndFactOrSpecFact>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotExistFact {
     pub params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
     pub facts: Vec<OrFactOrAndFactOrSpecFact>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 impl TrueExistFact {
     pub fn new(
         params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
         facts: Vec<OrFactOrAndFactOrSpecFact>,
-        line: u32,
-        file_index: usize,
+        line_file_index: Option<(u16, usize)>,
     ) -> Self {
-        TrueExistFact { params_def_with_type, facts, line, file_index }
+        TrueExistFact { params_def_with_type, facts, line_file_index }
     }
 }
 
@@ -41,10 +38,9 @@ impl NotExistFact {
     pub fn new(
         params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
         facts: Vec<OrFactOrAndFactOrSpecFact>,
-        line: u32,
-        file_index: usize,
+        line_file_index: Option<(u16, usize)>,
     ) -> Self {
-        NotExistFact { params_def_with_type, facts, line, file_index }
+        NotExistFact { params_def_with_type, facts, line_file_index }
     }
 }
 
@@ -78,11 +74,11 @@ impl fmt::Display for NotExistFact {
     }
 }
 
-/// 从 ExistFact 取得 line 与 file_index
-pub fn line_file(e: &ExistFact) -> (u32, usize) {
+/// 从 ExistFact 取得 line 与 file_index（可能无文件信息）
+pub fn line_file(e: &ExistFact) -> Option<(u16, usize)> {
     match e {
-        ExistFact::TrueExistFact(x) => (x.line, x.file_index),
-        ExistFact::NotExistFact(x) => (x.line, x.file_index),
+        ExistFact::TrueExistFact(x) => x.line_file_index,
+        ExistFact::NotExistFact(x) => x.line_file_index,
     }
 }
 

@@ -27,16 +27,16 @@ impl fmt::Display for Fact {
     }
 }
 
-/// 从 Fact 取得 line 与 file_index（仅用于 Display 等，不保留方法）
+/// 从 Fact 取得 line 与 file_index（可能无文件信息）
 impl Fact {
-    pub fn line_file(&self) -> (u32, usize) {
+    pub fn line_file(&self) -> Option<(u16, usize)> {
         match self {
             Fact::AtomicFact(a) => crate::atomic_fact::line_file(a),
             Fact::ExistFact(e) => crate::exist_fact::line_file(e),
-            Fact::OrFact(o) => (o.line, o.file_index),
+            Fact::OrFact(o) => o.line_file_index,
             Fact::AndFact(a) => a.line_file(),
-            Fact::ForallFact(f) => (f.line, f.file_index),
-            Fact::ForallFactWithIff(f) => (f.line, f.file_index),
+            Fact::ForallFact(f) => f.line_file_index,
+            Fact::ForallFactWithIff(f) => f.line_file_index,
         }
     }
 }

@@ -21,8 +21,7 @@ pub enum ProveByBuiltinTechniqueStmt {
 // f $in fn(a A, b B: $p(a, b)) C {$q(a, b, f)} => forall a A, b B: $p(a, b) => ((a, b), f(a, b)) $in f; forall x f: exist a A, b B st {$p(a, b), ((a, b), f(a, b)) = x}
 pub struct ViewFnAsSetStmt {
     pub function: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 
@@ -30,8 +29,7 @@ pub struct ProveEqualSetByDefStmt {
     pub left: Obj,
     pub right: Obj,
     pub proof: Vec<Stmt>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 
@@ -46,8 +44,7 @@ pub struct ProveForStmt {
     pub dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub then_facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub proof: Vec<Stmt>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 pub struct ProveByInductionStmt {
@@ -55,8 +52,7 @@ pub struct ProveByInductionStmt {
     pub param: String,
     pub proof: Vec<Stmt>,
     pub induc_from: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 pub struct ProveByEnumerationStmt {
@@ -64,8 +60,7 @@ pub struct ProveByEnumerationStmt {
     pub param_sets: Vec<Obj>,
     pub to_prove: Vec<Fact>,
     pub proof: Vec<Stmt>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 pub struct ProveCaseByCaseStmt {
@@ -73,28 +68,26 @@ pub struct ProveCaseByCaseStmt {
     pub then_facts: Vec<Fact>,
     pub proofs: Vec<Vec<Stmt>>,
     pub impossible_facts: Vec<Option<OrFactOrAndFactOrSpecFact>>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 pub struct ProveByContradictionStmt {
     pub to_prove: Fact,
     pub proof: Vec<Stmt>,
     pub impossible_fact: OrFactOrAndFactOrSpecFact,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 
 impl ProveByEnumerationStmt {
-    pub fn new(params: Vec<String>, param_sets: Vec<Obj>, to_prove: Vec<Fact>, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
-        ProveByEnumerationStmt { params, param_sets, to_prove, proof, line, file_index }
+    pub fn new(params: Vec<String>, param_sets: Vec<Obj>, to_prove: Vec<Fact>, proof: Vec<Stmt>, line_file_index: Option<(u16, usize)>) -> Self {
+        ProveByEnumerationStmt { params, param_sets, to_prove, proof, line_file_index }
     }
 }
 
 impl ProveCaseByCaseStmt {
-    pub fn new(cases: Vec<AndFactOrSpecFact>, then_facts: Vec<Fact>, proofs: Vec<Vec<Stmt>>, impossible_facts: Vec<Option<OrFactOrAndFactOrSpecFact>>, line: u32, file_index: usize) -> Self {
-        ProveCaseByCaseStmt { cases, then_facts, proofs, impossible_facts, line, file_index }
+    pub fn new(cases: Vec<AndFactOrSpecFact>, then_facts: Vec<Fact>, proofs: Vec<Vec<Stmt>>, impossible_facts: Vec<Option<OrFactOrAndFactOrSpecFact>>, line_file_index: Option<(u16, usize)>) -> Self {
+        ProveCaseByCaseStmt { cases, then_facts, proofs, impossible_facts, line_file_index }
     }
 }
 
@@ -114,8 +107,8 @@ impl fmt::Display for ProveCaseByCaseStmt {
 }
 
 impl ProveByContradictionStmt {
-    pub fn new(to_prove: Fact, proof: Vec<Stmt>, impossible_fact: OrFactOrAndFactOrSpecFact, line: u32, file_index: usize) -> Self {
-        ProveByContradictionStmt { to_prove, proof, impossible_fact, line, file_index }
+    pub fn new(to_prove: Fact, proof: Vec<Stmt>, impossible_fact: OrFactOrAndFactOrSpecFact, line_file_index: Option<(u16, usize)>) -> Self {
+        ProveByContradictionStmt { to_prove, proof, impossible_fact, line_file_index }
     }
 }
 
@@ -140,15 +133,15 @@ impl fmt::Display for ProveByBuiltinTechniqueStmt {
 }
 
 impl ProveByBuiltinTechniqueStmt {
-    pub fn line_file(&self) -> (u32, usize) {
+    pub fn line_file(&self) -> Option<(u16, usize)> {
         match self {
-            ProveByBuiltinTechniqueStmt::ProveCaseByCase(prove_case_by_case) => (prove_case_by_case.line, prove_case_by_case.file_index),
-            ProveByBuiltinTechniqueStmt::ProveByContradiction(claim_prove_by_contradiction_stmt) => (claim_prove_by_contradiction_stmt.line, claim_prove_by_contradiction_stmt.file_index),
-            ProveByBuiltinTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt) => (prove_by_enumeration_stmt.line, prove_by_enumeration_stmt.file_index),
-            ProveByBuiltinTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => (prove_by_induction_stmt.line, prove_by_induction_stmt.file_index),
-            ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt) => (prove_for_stmt.line, prove_for_stmt.file_index),
-            ProveByBuiltinTechniqueStmt::ProveEqualByDefSet(prove_equal_set_stmt) => (prove_equal_set_stmt.line, prove_equal_set_stmt.file_index),
-            ProveByBuiltinTechniqueStmt::ViewFnAsSet(prove_fn_is_set_stmt) => (prove_fn_is_set_stmt.line, prove_fn_is_set_stmt.file_index),
+            ProveByBuiltinTechniqueStmt::ProveCaseByCase(prove_case_by_case) => prove_case_by_case.line_file_index,
+            ProveByBuiltinTechniqueStmt::ProveByContradiction(claim_prove_by_contradiction_stmt) => claim_prove_by_contradiction_stmt.line_file_index,
+            ProveByBuiltinTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt) => prove_by_enumeration_stmt.line_file_index,
+            ProveByBuiltinTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => prove_by_induction_stmt.line_file_index,
+            ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt) => prove_for_stmt.line_file_index,
+            ProveByBuiltinTechniqueStmt::ProveEqualByDefSet(prove_equal_set_stmt) => prove_equal_set_stmt.line_file_index,
+            ProveByBuiltinTechniqueStmt::ViewFnAsSet(prove_fn_is_set_stmt) => prove_fn_is_set_stmt.line_file_index,
         }
     }
 }
@@ -160,8 +153,8 @@ impl fmt::Display for ProveByEnumerationStmt {
 }
 
 impl ProveByInductionStmt {
-    pub fn new(fact: Vec<OrFactOrAndFactOrSpecFact>, param: String, proof: Vec<Stmt>, induc_from: Obj, line: u32, file_index: usize) -> Self {
-        ProveByInductionStmt { fact, param, proof, induc_from, line, file_index }
+    pub fn new(fact: Vec<OrFactOrAndFactOrSpecFact>, param: String, proof: Vec<Stmt>, induc_from: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        ProveByInductionStmt { fact, param, proof, induc_from, line_file_index }
     }
 }
 
@@ -186,8 +179,8 @@ impl fmt::Display for ProveForStmt {
 }
 
 impl ProveForStmt {
-    pub fn new(params: Vec<String>, param_sets: Vec<ClosedRangeOrRange>, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, then_facts: Vec<OrFactOrAndFactOrSpecFact>, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
-        ProveForStmt { params, param_sets, dom_facts, then_facts, proof, line, file_index }
+    pub fn new(params: Vec<String>, param_sets: Vec<ClosedRangeOrRange>, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, then_facts: Vec<OrFactOrAndFactOrSpecFact>, proof: Vec<Stmt>, line_file_index: Option<(u16, usize)>) -> Self {
+        ProveForStmt { params, param_sets, dom_facts, then_facts, proof, line_file_index }
     }
 }
 
@@ -210,8 +203,8 @@ impl fmt::Display for ProveEqualSetByDefStmt {
 }
 
 impl ProveEqualSetByDefStmt {
-    pub fn new(left: Obj, right: Obj, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
-        ProveEqualSetByDefStmt { left, right, proof, line, file_index }
+    pub fn new(left: Obj, right: Obj, proof: Vec<Stmt>, line_file_index: Option<(u16, usize)>) -> Self {
+        ProveEqualSetByDefStmt { left, right, proof, line_file_index }
     }
 }
 
@@ -222,8 +215,8 @@ impl fmt::Display for ViewFnAsSetStmt {
 }
 
 impl ViewFnAsSetStmt {
-    pub fn new(function: Obj, line: u32, file_index: usize) -> Self {
-        ViewFnAsSetStmt { function, line, file_index }
+    pub fn new(function: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        ViewFnAsSetStmt { function, line_file_index }
     }
 }
 

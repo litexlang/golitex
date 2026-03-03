@@ -14,21 +14,19 @@ pub struct WitnessNonemptySet {
     pub obj: Obj,
     pub set: Obj,
     pub proof: Vec<Stmt>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 pub struct WitnessExistFact {
     pub equal_tos: Vec<Obj>,
     pub exist_fact_in_witness: TrueExistFact,
     pub proof: Vec<Stmt>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 impl WitnessExistFact {
-    pub fn new(equal_tos: Vec<Obj>, exist_fact_in_witness: TrueExistFact, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
-        WitnessExistFact { equal_tos, exist_fact_in_witness, proof, line, file_index }
+    pub fn new(equal_tos: Vec<Obj>, exist_fact_in_witness: TrueExistFact, proof: Vec<Stmt>, line_file_index: Option<(u16, usize)>) -> Self {
+        WitnessExistFact { equal_tos, exist_fact_in_witness, proof, line_file_index }
     }
 }
 
@@ -42,10 +40,10 @@ impl fmt::Display for WitnessExistFact {
 }
 
 impl WitnessStmt {
-    pub fn line_file(&self) -> (u32, usize) {
+    pub fn line_file(&self) -> Option<(u16, usize)> {
         match self {
-            WitnessStmt::WitnessExistFact(witness_exist_fact) => (witness_exist_fact.line, witness_exist_fact.file_index),
-            WitnessStmt::WitnessNonemptySet(witness_nonempty_set) => (witness_nonempty_set.line, witness_nonempty_set.file_index),
+            WitnessStmt::WitnessExistFact(witness_exist_fact) => witness_exist_fact.line_file_index,
+            WitnessStmt::WitnessNonemptySet(witness_nonempty_set) => witness_nonempty_set.line_file_index,
         }
     }
 }
@@ -69,7 +67,7 @@ impl fmt::Display for WitnessNonemptySet {
 }
 
 impl WitnessNonemptySet {
-    pub fn new(obj: Obj, set: Obj, proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
-        WitnessNonemptySet { obj, set, proof, line, file_index }
+    pub fn new(obj: Obj, set: Obj, proof: Vec<Stmt>, line_file_index: Option<(u16, usize)>) -> Self {
+        WitnessNonemptySet { obj, set, proof, line_file_index }
     }
 }

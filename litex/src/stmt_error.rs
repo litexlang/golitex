@@ -1,5 +1,4 @@
 use std::fmt;
-use crate::consts::ERROR;
 
 #[derive(Debug)]
 pub enum StmtError {
@@ -30,7 +29,7 @@ pub struct ArithmeticError{
 
 impl fmt::Display for ArithmeticError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}", ERROR, self.msg)
+        write!(f, "{}\n{}", "ArithmeticError:".to_string(), self.msg)
     }
 }
 
@@ -49,7 +48,7 @@ impl std::error::Error for NewAtomicFactError {}
 
 impl fmt::Display for NewAtomicFactError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.msg)
+        write!(f, "{}\n{}", "NewAtomicFactError:".to_string(), self.msg)
     }
 }
 
@@ -69,7 +68,7 @@ impl std::error::Error for StoreFactError {}
 
 impl fmt::Display for StoreFactError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.msg)
+        write!(f, "{}\n{}", "StoreFactError:".to_string(), self.msg)
     }
 }
 

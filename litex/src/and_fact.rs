@@ -16,22 +16,20 @@ pub enum AndFact {
 #[derive(Clone)]
 pub struct AndSpecFacts {
     pub facts: Vec<SpecFact>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 #[derive(Clone)]
 pub struct ChainFact {
     pub objs: Vec<Obj>,
     pub prop_names: Vec<Atom>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 
 impl AndSpecFacts {
-    pub fn new(facts: Vec<SpecFact>, line: u32, file_index: usize) -> Self {
-        AndSpecFacts { facts, line, file_index }
+    pub fn new(facts: Vec<SpecFact>, line_file_index: Option<(u16, usize)>) -> Self {
+        AndSpecFacts { facts, line_file_index }
     }
 }
 
@@ -42,8 +40,8 @@ impl fmt::Display for AndSpecFacts {
 }
 
 impl ChainFact {
-    pub fn new(objs: Vec<Obj>, prop_names: Vec<Atom>, line: u32, file_index: usize) -> Self {
-        ChainFact { objs, prop_names, line, file_index }
+    pub fn new(objs: Vec<Obj>, prop_names: Vec<Atom>, line_file_index: Option<(u16, usize)>) -> Self {
+        ChainFact { objs, prop_names, line_file_index }
     }
 }
 
@@ -70,10 +68,10 @@ impl fmt::Display for AndFact {
 }
 
 impl AndFact {
-    pub fn line_file(&self) -> (u32, usize) {
+    pub fn line_file(&self) -> Option<(u16, usize)> {
         match self {
-            AndFact::AndSpecFacts(and_spec_facts) => (and_spec_facts.line, and_spec_facts.file_index),
-            AndFact::ChainFact(chain_facts) => (chain_facts.line, chain_facts.file_index),
+            AndFact::AndSpecFacts(and_spec_facts) => and_spec_facts.line_file_index,
+            AndFact::ChainFact(chain_facts) => chain_facts.line_file_index,
         }
     }
 
@@ -101,7 +99,7 @@ impl ChainFact {
     pub fn facts(&self) -> Result<Vec<SpecFact>, NewAtomicFactError> {
         let mut facts = Vec::new();
         for prop_name in self.prop_names.iter() {
-            let fact = AtomicFact::to_atomic_fact(prop_name.clone(), true, Vec::new(), self.line, self.file_index);
+            let fact = AtomicFact::to_atomic_fact(prop_name.clone(), true, Vec::new(), Option::None);
             if fact.is_err() {
                 return Err(fact.err().unwrap());
             }

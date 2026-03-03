@@ -4,13 +4,12 @@ use crate::helper::vec_to_string_add_four_spaces_at_beginning_of_each_line;
 
 pub struct ProveStmt {
     pub proof: Vec<Stmt>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 impl ProveStmt {
-    pub fn new(proof: Vec<Stmt>, line: u32, file_index: usize) -> Self {
-        ProveStmt { proof, line, file_index }
+    pub fn new(proof: Vec<Stmt>, line_file_index: Option<(u16, usize)>) -> Self {
+        ProveStmt { proof, line_file_index }
     }
 }
 

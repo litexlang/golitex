@@ -42,9 +42,11 @@ pub fn vec_to_string_join_by_comma<T: fmt::Display>(vec: &Vec<T>) -> String {
     vec.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(", ")
 }
 
-pub fn on_line_in_file_colon(line: u32, file_index: usize) -> String {
-    _ = file_index;
-    format!("on line {}:", line)
+pub fn line_file_suffix(line_file_index: Option<(u16, usize)>) -> String {
+    match line_file_index {
+        Some((line, _)) => format!(" on line {}:", line),
+        None => ":".to_string(),
+    }
 }
 
 pub fn vec_to_string_add_four_spaces_at_beginning_of_each_line<T: fmt::Display>(vec: &Vec<T>, number_of_four_spaces: usize) -> String {

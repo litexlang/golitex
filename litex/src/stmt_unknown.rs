@@ -1,7 +1,7 @@
 use crate::fact::Fact;
 use std::fmt;
 use crate::consts::UNKNOWN;
-use crate::helper::on_line_in_file_colon;
+use crate::helper::line_file_suffix;
 
 pub struct StmtUnknown<'a> {
     pub fact: &'a Fact,
@@ -9,8 +9,8 @@ pub struct StmtUnknown<'a> {
 
 impl<'a> fmt::Display for StmtUnknown<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let (line, file_index) = self.fact.line_file();
-        write!(f, "{} {}\n{}", UNKNOWN, on_line_in_file_colon(line, file_index), self.fact)
+        let loc = line_file_suffix(self.fact.line_file());
+        write!(f, "{}{}\n{}", UNKNOWN, loc, self.fact)
     }
 }
 

@@ -8,21 +8,18 @@ pub struct DefineAlgorithmStmt {
     pub name: String,
     pub params: Vec<String>,
     pub return_or_algo_if: Vec<AlgoReturnOrAlgoIf>,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 pub struct AlgoReturn {
     pub value: Obj,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 pub struct AlgoIf {
     pub condition: AndFactOrSpecFact,
     pub return_stmt: AlgoReturn,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 pub enum AlgoReturnOrAlgoIf {
@@ -31,8 +28,8 @@ pub enum AlgoReturnOrAlgoIf {
 }
 
 impl DefineAlgorithmStmt {
-    pub fn new(name: String, params: Vec<String>, return_or_algo_if: Vec<AlgoReturnOrAlgoIf>, line: u32, file_index: usize) -> Self {
-        DefineAlgorithmStmt { name, params, return_or_algo_if, line, file_index }
+    pub fn new(name: String, params: Vec<String>, return_or_algo_if: Vec<AlgoReturnOrAlgoIf>, line_file_index: Option<(u16, usize)>) -> Self {
+        DefineAlgorithmStmt { name, params, return_or_algo_if, line_file_index }
     }
 }
 
@@ -72,22 +69,22 @@ impl fmt::Display for DefineAlgorithmStmt {
 }
 
 impl AlgoReturn {
-    pub fn new(value: Obj, line: u32, file_index: usize) -> Self {
-        AlgoReturn { value, line, file_index }
+    pub fn new(value: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+        AlgoReturn { value, line_file_index }
     }
 }
 
 impl AlgoIf {
-    pub fn new(condition: AndFactOrSpecFact, return_stmt: AlgoReturn, line: u32, file_index: usize) -> Self {
-        AlgoIf { condition, return_stmt, line, file_index }
+    pub fn new(condition: AndFactOrSpecFact, return_stmt: AlgoReturn, line_file_index: Option<(u16, usize)>) -> Self {
+        AlgoIf { condition, return_stmt, line_file_index }
     }
 }
 
 impl AlgoReturnOrAlgoIf {
-    pub fn line_file(&self) -> (u32, usize) {
+    pub fn line_file(&self) -> Option<(u16, usize)> {
         match self {
-            AlgoReturnOrAlgoIf::AlgoReturn(algo_return) => (algo_return.line, algo_return.file_index),
-            AlgoReturnOrAlgoIf::AlgoIf(algo_if) => (algo_if.line, algo_if.file_index),
+            AlgoReturnOrAlgoIf::AlgoReturn(algo_return) => algo_return.line_file_index,
+            AlgoReturnOrAlgoIf::AlgoIf(algo_if) => algo_if.line_file_index,
         }
     }
 }
