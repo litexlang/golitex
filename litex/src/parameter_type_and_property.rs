@@ -1,4 +1,5 @@
 use std::fmt;
+use crate::consts::NOT;
 use crate::helper::vec_to_string_join_by_comma;
 use crate::obj::Obj;
 use crate::atom::Atom;
@@ -14,7 +15,7 @@ pub enum ParamDefWithParamSet {
 pub enum ParamDefWithParamTypeAndProperty {
     ParamAndItsTypePair(String, ParameterType),
     ParamsAndTheirTypePair(Vec<String>, ParameterType),
-    ParamsPropertyPair(Vec<String>, Atom),
+    ParamsPropertyPair(Vec<String>, bool, Atom),
 }
 
 #[derive(Clone)]
@@ -86,7 +87,7 @@ impl fmt::Display for ParamDefWithParamTypeAndProperty {
         match self {
             ParamDefWithParamTypeAndProperty::ParamAndItsTypePair(param, param_type) => write!(f, "{} {}", param, param_type),
             ParamDefWithParamTypeAndProperty::ParamsAndTheirTypePair(params, param_type) => write!(f, "{} {}", vec_to_string_join_by_comma(params), param_type),
-            ParamDefWithParamTypeAndProperty::ParamsPropertyPair(params, property) => write!(f, "{}{}{} {}", LEFT_BRACKET, vec_to_string_join_by_comma(params), RIGHT_BRACKET, property),
+            ParamDefWithParamTypeAndProperty::ParamsPropertyPair(params, is_true, property) => if *is_true { write!(f, "{}{}{} {}", LEFT_BRACKET, vec_to_string_join_by_comma(params), RIGHT_BRACKET, property) } else { write!(f, "{}{}{} {} {}", LEFT_BRACKET, vec_to_string_join_by_comma(params), RIGHT_BRACKET, format!(" {} ", NOT), property) },
         }
     }
 }

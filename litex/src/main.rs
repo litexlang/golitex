@@ -515,7 +515,7 @@ fn try_forall_fact() {
     let _forall = ForallFact::new(param_type_or_property_pairs, dom_facts, then_facts, 1, 0);
     println!("{}", _forall);
 
-    let param_type_or_property_pairs2 = vec![ParamDefWithParamTypeAndProperty::ParamsPropertyPair(vec!["n".to_string(), "m".to_string()], Atom::AtomWithoutModName(AtomWithoutModName::new("p")))];
+    let param_type_or_property_pairs2 = vec![ParamDefWithParamTypeAndProperty::ParamsPropertyPair(vec!["n".to_string(), "m".to_string()], true, Atom::AtomWithoutModName(AtomWithoutModName::new("p")))];
     let dom_facts2 = vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), 1, 0),
     )))];
