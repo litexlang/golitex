@@ -178,9 +178,9 @@ impl<'a> SyntacticVerifier<'a> {
             Obj::QNeg(_) => match right { Obj::QNeg(_) => true, _ => false },
             Obj::ZNeg(_) => match right { Obj::ZNeg(_) => true, _ => false },
             Obj::RNeg(_) => match right { Obj::RNeg(_) => true, _ => false },
-            Obj::QN0(_) => match right { Obj::QN0(_) => true, _ => false },
-            Obj::ZN0(_) => match right { Obj::ZN0(_) => true, _ => false },
-            Obj::RN0(_) => match right { Obj::RN0(_) => true, _ => false },
+            Obj::QNz(_) => match right { Obj::QNz(_) => true, _ => false },
+            Obj::ZNz(_) => match right { Obj::ZNz(_) => true, _ => false },
+            Obj::RNz(_) => match right { Obj::RNz(_) => true, _ => false },
         }
     }
 }
