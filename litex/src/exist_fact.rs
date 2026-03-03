@@ -1,29 +1,24 @@
 use std::fmt;
-use crate::consts::{EXIST, NOT, ST};
+use crate::consts::{EXIST, LEFT_CURLY_BRACE, NOT,  RIGHT_CURLY_BRACE, ST};
 use crate::helper::{curly_braced_vec_to_string_with_sep, vec_to_string_join_by_comma};
+use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::parameter_type_and_property::ParamDefWithParamTypeAndProperty;
-use crate::specific_fact::SpecFact;
 
 pub enum ExistFact {
     TrueExistFact(TrueExistFact),
     NotExistFact(NotExistFact),
 }
 
-pub enum SpecFactOrAndFactWithSpecFacts {
-    SpecFact(SpecFact),
-    AndFactWithSpecFacts(Vec<SpecFact>),
-}
-
 pub struct TrueExistFact {
     pub params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
-    pub facts: Vec<SpecFactOrAndFactWithSpecFacts>,
+    pub facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub line: u32,
     pub file_index: usize,
 }
 
 pub struct NotExistFact {
     pub params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
-    pub facts: Vec<SpecFactOrAndFactWithSpecFacts>,
+    pub facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub line: u32,
     pub file_index: usize,
 }
@@ -31,7 +26,7 @@ pub struct NotExistFact {
 impl TrueExistFact {
     pub fn new(
         params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
-        facts: Vec<SpecFactOrAndFactWithSpecFacts>,
+        facts: Vec<OrFactOrAndFactOrSpecFact>,
         line: u32,
         file_index: usize,
     ) -> Self {
@@ -42,7 +37,7 @@ impl TrueExistFact {
 impl NotExistFact {
     pub fn new(
         params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
-        facts: Vec<SpecFactOrAndFactWithSpecFacts>,
+        facts: Vec<OrFactOrAndFactOrSpecFact>,
         line: u32,
         file_index: usize,
     ) -> Self {
@@ -97,12 +92,23 @@ impl fmt::Display for ExistFact {
     }
 }
 
-
-impl fmt::Display for SpecFactOrAndFactWithSpecFacts {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl ExistFact {
+    pub fn is_true(&self) -> bool {
         match self {
-            SpecFactOrAndFactWithSpecFacts::SpecFact(spec_fact) => write!(f, "{}", spec_fact),
-            SpecFactOrAndFactWithSpecFacts::AndFactWithSpecFacts(and_fact_with_spec_facts) => write!(f, "{}", vec_to_string_join_by_comma(and_fact_with_spec_facts)),
+            ExistFact::TrueExistFact(_) => true,
+            ExistFact::NotExistFact(_) => false,
         }
     }
+
+    pub fn facts(&self) -> &Vec<OrFactOrAndFactOrSpecFact> {
+        match self {
+            ExistFact::TrueExistFact(x) => &x.facts,
+            ExistFact::NotExistFact(x) => &x.facts,
+        }
+    }
+
+    pub fn key(&self) -> String {
+        return format!("{} {}{}{}", EXIST, LEFT_CURLY_BRACE, vec_to_string_join_by_comma(&self.facts().iter().map(|fact| fact.key()).collect::<Vec<String>>()), RIGHT_CURLY_BRACE);
+    }
 }
+

@@ -16,3 +16,11 @@ impl fmt::Display for AndFactOrSpecFact {
     }
 }
 
+impl AndFactOrSpecFact {
+    pub fn key(&self) -> String {
+        match self {
+            AndFactOrSpecFact::AndFact(and_fact) => and_fact.key(),
+            AndFactOrSpecFact::SpecFact(spec_fact) => spec_fact.key(),
+        }
+    }
+}
