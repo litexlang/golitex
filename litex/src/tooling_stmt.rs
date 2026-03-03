@@ -15,15 +15,13 @@ pub enum ImportStmt {
 pub struct ImportRelativePathStmt {
     pub path: String,
     pub as_mod_name: String,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 pub struct ImportGlobalModuleStmt {
     pub mod_name: String,
     pub as_mod_name: String,
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 impl fmt::Display for ImportStmt {
@@ -36,14 +34,14 @@ impl fmt::Display for ImportStmt {
 }
 
 impl ImportRelativePathStmt {
-    pub fn new(path: &str, as_mod_name: &str, line: u32, file_index: usize) -> Self {
-        ImportRelativePathStmt { path: path.to_string(), as_mod_name: as_mod_name.to_string(), line, file_index }
+    pub fn new(path: &str, as_mod_name: &str, line_file_index: Option<(u16, usize)>) -> Self {
+        ImportRelativePathStmt { path: path.to_string(), as_mod_name: as_mod_name.to_string(), line_file_index }
     }
 }
 
 impl ImportGlobalModuleStmt {
-    pub fn new(mod_name: &str, as_mod_name: &str, line: u32, file_index: usize) -> Self {
-        ImportGlobalModuleStmt { mod_name: mod_name.to_string(), as_mod_name: as_mod_name.to_string(), line, file_index }
+    pub fn new(mod_name: &str, as_mod_name: &str, line_file_index: Option<(u16, usize)>) -> Self {
+        ImportGlobalModuleStmt { mod_name: mod_name.to_string(), as_mod_name: as_mod_name.to_string(), line_file_index }
     }
 }
 
@@ -60,22 +58,20 @@ impl fmt::Display for ImportGlobalModuleStmt {
 }
 
 impl ImportStmt {
-    pub fn line_file(&self) -> (u32, usize) {
+    pub fn line_file(&self) -> Option<(u16, usize)> {
         match self {
-            ImportStmt::ImportRelativePath(import_relative_path) => (import_relative_path.line, import_relative_path.file_index),
-            ImportStmt::ImportGlobalModule(import_global_mod) => (import_global_mod.line, import_global_mod.file_index),
+            ImportStmt::ImportRelativePath(import_relative_path) => import_relative_path.line_file_index,
+            ImportStmt::ImportGlobalModule(import_global_mod) => import_global_mod.line_file_index,
         }
     }
 }
 
 pub struct DoNothingStmt {
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 pub struct ClearStmt {
-    pub line: u32,
-    pub file_index: usize,
+    pub line_file_index: Option<(u16, usize)>,
 }
 
 impl fmt::Display for ToolingStmt {
@@ -89,18 +85,18 @@ impl fmt::Display for ToolingStmt {
 }
 
 impl ToolingStmt {
-    pub fn line_file(&self) -> (u32, usize) {
+    pub fn line_file(&self) -> Option<(u16, usize)> {
         match self {
             ToolingStmt::Import(import_stmt) => import_stmt.line_file(),
-            ToolingStmt::Clear(clear_stmt) => (clear_stmt.line, clear_stmt.file_index),
-            ToolingStmt::DoNothing(do_nothing_stmt) => (do_nothing_stmt.line, do_nothing_stmt.file_index),
+            ToolingStmt::Clear(clear_stmt) => clear_stmt.line_file_index,
+            ToolingStmt::DoNothing(do_nothing_stmt) => do_nothing_stmt.line_file_index,
         }
     }
 }
 
 impl ClearStmt {
-    pub fn new(line: u32, file_index: usize) -> Self {
-        ClearStmt { line, file_index }
+    pub fn new(line_file_index: Option<(u16, usize)>) -> Self {
+        ClearStmt { line_file_index }
     }
 }
 
@@ -111,8 +107,8 @@ impl fmt::Display for ClearStmt {
 }
 
 impl DoNothingStmt {
-    pub fn new(line: u32, file_index: usize) -> Self {
-        DoNothingStmt { line, file_index }
+    pub fn new(line_file_index: Option<(u16, usize)>) -> Self {
+        DoNothingStmt { line_file_index }
     }
 }
 

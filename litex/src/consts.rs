@@ -66,7 +66,6 @@ pub const IN: &str = "in";
 pub const OR: &str = "or";
 pub const AND: &str = "and";
 
-pub const COLON: &str = ":";
 pub const RIGHT_ARROW: &str = "=>";
 pub const EQUIVALENT_SIGN: &str = "<=>";
 
@@ -75,7 +74,6 @@ pub const SUPERSET: &str = "superset";
 
 pub const SUCCESS: &str = "success";
 pub const UNKNOWN: &str = "unknown";
-pub const ERROR: &str = "error";
 
 pub const LET: &str = "let";
 pub const PROP: &str = "prop";
@@ -123,3 +121,5 @@ pub const SET_TEMPLATE: &str = "set_template";
 pub const RETURN: &str = "return";
 pub const IF: &str = "if";
 pub const ALGO: &str = "algo";
+
+pub const COLON: &str = ":";

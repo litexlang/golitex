@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::helper::on_line_in_file_colon;
+use crate::helper::line_file_suffix;
 use crate::stmt::Stmt;
 use crate::fact::Fact;
 use crate::consts::SUCCESS;
@@ -38,22 +38,22 @@ const VERIFIED_BY: &str = "verified by:";
 
 impl<'a> fmt::Display for NonFactualStmtSuccess<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let (line, file_index) = crate::stmt::line_file(self.stmt);
-        write!(f, "{} {}\n{}", SUCCESS, on_line_in_file_colon(line, file_index), self.stmt)
+        let loc = line_file_suffix(crate::stmt::line_file(self.stmt));
+        write!(f, "{}{}\n{}", SUCCESS, loc, self.stmt)
     }
 }
 
 impl<'a> fmt::Display for FactVerifiedByFact<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let (line, file_index) = self.fact.line_file();
-        write!(f, "{} {}\n{}\n{}\n{}", SUCCESS, on_line_in_file_colon(line, file_index), self.fact, VERIFIED_BY, self.verified_by)
+        let loc = line_file_suffix(self.fact.line_file());
+        write!(f, "{}{}\n{}\n{}\n{}", SUCCESS, loc, self.fact, VERIFIED_BY, self.verified_by)
     }
 }
 
 impl<'a> fmt::Display for FactVerifiedByBuiltinRules<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let (line, file_index) = self.fact.line_file();
-        write!(f, "{} {}\n{}\n{}\n{}", SUCCESS, on_line_in_file_colon(line, file_index), self.fact, VERIFIED_BY, self.verified_by)
+        let loc = line_file_suffix(self.fact.line_file());
+        write!(f, "{}{}\n{}\n{}\n{}", SUCCESS, loc, self.fact, VERIFIED_BY, self.verified_by)
     }
 }
 
