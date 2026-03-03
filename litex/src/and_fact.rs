@@ -1,4 +1,6 @@
 use crate::specific_fact::SpecFact;
+use crate::atomic_fact::AtomicFact;
+use crate::stmt_error::NewAtomicFactError;
 use std::fmt;
 use crate::consts::{AND, FACT_PREFIX};
 use crate::obj::Obj;
@@ -95,11 +97,16 @@ impl ChainFact {
     }
 }
 
-impl AndFact {
-    pub fn facts(&self) -> &Vec<SpecFact> {
-        match self {
-            AndFact::AndSpecFacts(and_spec_facts) => &and_spec_facts.facts,
-            AndFact::ChainFact(_) => panic!("chain fact is not supported"),
+impl ChainFact {
+    pub fn facts(&self) -> Result<Vec<SpecFact>, NewAtomicFactError> {
+        let mut facts = Vec::new();
+        for prop_name in self.prop_names.iter() {
+            let fact = AtomicFact::to_atomic_fact(prop_name.clone(), true, Vec::new(), self.line, self.file_index);
+            if fact.is_err() {
+                return Err(fact.err().unwrap());
+            }
+            facts.push(SpecFact::AtomicFact(fact.unwrap()));
         }
+        Ok(facts)
     }
 }
