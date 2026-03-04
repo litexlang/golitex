@@ -1208,4 +1208,9 @@ fn try_token_block() {
 fn try_parser() {
     let parser = Parser::new();
     println!("{}", parser);
+    let s = "a+b";
+    let tokens = tokenizer::tokenize_line(s);
+    let mut token_block = TokenBlock::new(tokens, vec![], (0, 0));
+    let obj = parser.obj(&mut token_block);
+    println!("{}", obj.unwrap());
 }

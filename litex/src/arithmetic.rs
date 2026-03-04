@@ -11,6 +11,18 @@ fn num_value(obj: &Obj) -> f64 {
 }
 
 impl Obj {
+    pub fn is_add_sub_mul_div_mod_pow(&self) -> bool {
+        match self {
+            Obj::Add(_) => true,
+            Obj::Sub(_) => true,
+            Obj::Mul(_) => true,
+            Obj::Div(_) => true,
+            Obj::Mod(_) => true,
+            Obj::Pow(_) => true,
+            _ => false,
+        }
+    }
+    
     pub fn calculate(&self) -> Result<Obj, ArithmeticError> {
         match self {
             Obj::Number(n) => Ok(Obj::Number(Number { value: n.value.clone() })),
