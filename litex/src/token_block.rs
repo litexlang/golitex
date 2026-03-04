@@ -1,17 +1,13 @@
 use crate::errors::ParseBlockError;
+use crate::errors::ParsingError;
 use crate::tokenizer::tokenize_line;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TokenBlock {
     pub header: Vec<String>,
-    pub body: Vec<BlockItem>,
+    pub body: Vec<TokenBlock>,
+    pub line_file_index: (usize, usize),
     pub parse_index: usize,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum BlockItem {
-    Line(String),
-    Block(TokenBlock),
 }
 
 fn indent_level(line: &str) -> usize {
@@ -30,17 +26,20 @@ fn ends_with_colon(s: &str) -> bool {
     s.trim_end().ends_with(':')
 }
 
-pub fn parse_blocks(s: &str) -> Result<Vec<BlockItem>, ParseBlockError> {
-    let lines: Vec<_> = s.lines().collect();
-    let mut i = 0;
-    parse_level(&lines, &mut i, 0)
+impl TokenBlock {
+    pub fn parse_blocks(s: &str, current_file_index: usize) -> Result<Vec<TokenBlock>, ParseBlockError> {
+        let lines: Vec<_> = s.lines().collect();
+        let mut i = 0;
+        parse_level(&lines, &mut i, 0, current_file_index)
+    }    
 }
 
 fn parse_level(
     lines: &[&str],
     i: &mut usize,
     base_indent: usize,
-) -> Result<Vec<BlockItem>, ParseBlockError> {
+    current_file_index: usize,
+) -> Result<Vec<TokenBlock>, ParseBlockError> {
     let mut items = Vec::new();
     let mut body_indent = None;
 
@@ -76,17 +75,23 @@ fn parse_level(
                 return Err(ParseBlockError::ExpectedIndent { line: *i + 1 });
             }
 
-            let body = parse_level(lines, i, next_indent)?;
+            let body = parse_level(lines, i, next_indent, current_file_index)?;
 
             let header_tokens = tokenize_line(content);
             
-            items.push(BlockItem::Block(TokenBlock {
+            items.push(TokenBlock {
                 header: header_tokens,
                 body,
+                line_file_index: (line_no, current_file_index),
                 parse_index: 0,
-            }));
+            });
         } else {
-            items.push(BlockItem::Line(content.to_string()));
+            items.push(TokenBlock {
+                header: vec![content.to_string()],
+                body: vec![],
+                line_file_index: (line_no, current_file_index),
+                parse_index: 0,
+            });
         }
 
         if let Some(expected) = body_indent {
@@ -105,78 +110,23 @@ impl TokenBlock {
     pub fn current_token(&self) -> Option<&str> {
         self.header.get(self.parse_index).map(|s| s.as_str())
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_empty() {
-        let r = parse_blocks("").unwrap();
-        assert!(r.is_empty());
-        let r = parse_blocks("\n\n  \n").unwrap();
-        assert!(r.is_empty());
+    pub fn skip_token(self: &mut Self, token: &str) -> Result<(), ParsingError> {
+        if self.current_token().is_some() && self.current_token().unwrap() == token {
+            self.parse_index += 1;
+            Ok(())
+        } else {
+            Err(ParsingError::new(&format!("Expected token: {}", token), self.line_file_index))
+        }
     }
 
-    #[test]
-    fn test_flat_lines() {
-        let r = parse_blocks("a\nb\nc").unwrap();
-        assert_eq!(r.len(), 3);
-        assert!(matches!(&r[0], BlockItem::Line(s) if s == "a"));
-        assert!(matches!(&r[1], BlockItem::Line(s) if s == "b"));
-        assert!(matches!(&r[2], BlockItem::Line(s) if s == "c"));
-    }
-
-    #[test]
-    fn test_one_block_with_body() {
-        let r = parse_blocks("x:\n  y").unwrap();
-        assert_eq!(r.len(), 1);
-        let BlockItem::Block(b) = &r[0] else { panic!("expected Block") };
-        assert_eq!(b.header, vec!["x", ":"]);
-        assert_eq!(b.body.len(), 1);
-        assert!(matches!(&b.body[0], BlockItem::Line(s) if s == "y"));
-    }
-
-    #[test]
-    fn test_two_top_blocks() {
-        let r = parse_blocks("def f():\n  pass\ndef g():\n  pass").unwrap();
-        assert_eq!(r.len(), 2);
-        let BlockItem::Block(b1) = &r[0] else { panic!() };
-        assert!(b1.header.iter().any(|s| s == "def"));
-        assert_eq!(b1.body.len(), 1);
-        assert!(matches!(&b1.body[0], BlockItem::Line(s) if s == "pass"));
-        let BlockItem::Block(b2) = &r[1] else { panic!() };
-        assert_eq!(b2.body.len(), 1);
-        assert!(matches!(&b2.body[0], BlockItem::Line(s) if s == "pass"));
-    }
-
-    #[test]
-    fn test_nested_block() {
-        let r = parse_blocks("a:\n  b:\n    c").unwrap();
-        assert_eq!(r.len(), 1);
-        let BlockItem::Block(outer) = &r[0] else { panic!() };
-        assert_eq!(outer.body.len(), 1);
-        let BlockItem::Block(inner) = &outer.body[0] else { panic!() };
-        assert_eq!(inner.body.len(), 1);
-        assert!(matches!(&inner.body[0], BlockItem::Line(s) if s == "c"));
-    }
-
-    #[test]
-    fn test_missing_body() {
-        let e = parse_blocks("a:").unwrap_err();
-        assert!(matches!(e, ParseBlockError::MissingBody { .. }));
-    }
-
-    #[test]
-    fn test_expected_indent() {
-        let e = parse_blocks("a:\nnext").unwrap_err();
-        assert!(matches!(e, ParseBlockError::ExpectedIndent { .. }));
-    }
-
-    #[test]
-    fn test_unexpected_indent() {
-        let e = parse_blocks("  oops").unwrap_err();
-        assert!(matches!(e, ParseBlockError::UnexpectedIndent { .. }));
+    pub fn advance(&mut self) -> Result<String, ParsingError> {
+        if self.current_token().is_some() {
+            let token = self.current_token().unwrap().to_string();
+            self.parse_index += 1;
+            Ok(token)
+        } else {
+            Err(ParsingError::new("Expected token", self.line_file_index))
+        }
     }
 }

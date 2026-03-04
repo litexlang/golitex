@@ -115,18 +115,19 @@ impl fmt::Display for ParseBlockError {
 #[derive(Debug)]
 pub struct ParsingError {
     pub msg: String,
+    pub line_file_index: (usize, usize),
 }
 
 impl std::error::Error for ParsingError {}
 
 impl fmt::Display for ParsingError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.msg)
+        write!(f, "ParsingError on line {} in file index {}: {}", self.line_file_index.0, self.line_file_index.1, self.msg)
     }
 }
 
 impl ParsingError {
-    pub fn new(msg: &str) -> Self {
-        ParsingError { msg: msg.to_string() }
+    pub fn new(msg: &str, line_file_index: (usize, usize)) -> Self {
+        ParsingError { msg: msg.to_string(), line_file_index }
     }
 }

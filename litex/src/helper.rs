@@ -40,7 +40,7 @@ pub fn vec_to_string_join_by_comma<T: fmt::Display>(vec: &Vec<T>) -> String {
     vec.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(", ")
 }
 
-pub fn line_file_suffix(line_file_index: Option<(u16, usize)>) -> String {
+pub fn line_file_suffix(line_file_index: Option<(usize, usize)>) -> String {
     match line_file_index {
         Some((line, _)) => format!(" on line {}:", line),
         None => ":".to_string(),
