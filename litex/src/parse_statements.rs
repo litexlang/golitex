@@ -43,35 +43,9 @@ impl Parser {
         token_block.skip_token(RIGHT_BRACE)?;
         Ok(param_def_with_param_type_and_property)
     }
-    
-    pub fn parse_param_def_with_param_type_and_property(&self, token_block: &mut TokenBlock) -> Result<Vec<ParamDefWithParamTypeAndProperty>, ParsingError> {
-        let mut def: Vec<ParamDefWithParamTypeAndProperty> = Vec::new();
-        panic!("Not implemented");
-    }
 
-    pub fn parse_param_def_with_property(&self, token_block: &mut TokenBlock) -> Result<ParamDefWithParamTypeAndProperty, ParsingError> {
-        panic!("Not implemented");
-    }
 
-    pub fn parse_param_type_set(&self, token_block: &mut TokenBlock) -> Result<ParameterType, ParsingError> {
-        token_block.skip_token(SET)?;
-        Ok(ParameterType::Set(Set::new()))
-    }
 
-    pub fn parse_param_type_nonempty_set(&self, token_block: &mut TokenBlock) -> Result<ParameterType, ParsingError> {
-        token_block.skip_token(NONEMPTY_SET)?;
-        Ok(ParameterType::NonemptySet(NonemptySet::new()))
-    }
-
-    pub fn parse_param_type_finite_set(&self, token_block: &mut TokenBlock) -> Result<ParameterType, ParsingError> {
-        token_block.skip_token(FINITE_SET)?;
-        Ok(ParameterType::FiniteSet(FiniteSet::new()))
-    }
-
-    pub fn parse_param_type_obj(&self, token_block: &mut TokenBlock) -> Result<ParameterType, ParsingError> {
-        let obj = self.parse_obj(token_block)?;
-        Ok(ParameterType::Obj(obj))
-    }
 }
 
 impl Parser {

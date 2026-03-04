@@ -2,7 +2,7 @@ use std::fmt;
 use crate::keywords::{EXIST, LEFT_CURLY_BRACE, NOT,  RIGHT_CURLY_BRACE, ST};
 use crate::helper::{curly_braced_vec_to_string_with_sep, vec_to_string_join_by_comma};
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
-use crate::parameter_type_and_property::ParamDefWithParamTypeAndProperty;
+use crate::parameter_type_and_property::ParamDefWithParamType;
 
 #[derive(Clone)]
 pub enum ExistFact {
@@ -12,21 +12,21 @@ pub enum ExistFact {
 
 #[derive(Clone)]
 pub struct TrueExistFact {
-    pub params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
+    pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotExistFact {
-    pub params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
+    pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
 impl TrueExistFact {
     pub fn new(
-        params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
+        params_def_with_type: Vec<ParamDefWithParamType>,
         facts: Vec<OrFactOrAndFactOrSpecFact>,
         line_file_index: Option<(usize, usize)>,
     ) -> Self {
@@ -36,7 +36,7 @@ impl TrueExistFact {
 
 impl NotExistFact {
     pub fn new(
-        params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
+        params_def_with_type: Vec<ParamDefWithParamType>,
         facts: Vec<OrFactOrAndFactOrSpecFact>,
         line_file_index: Option<(usize, usize)>,
     ) -> Self {

@@ -1,9 +1,7 @@
-use core::panic;
-
-use crate::keywords::{ADD, COMMA, DIV, INFIX_FN_NAME_SIGN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, LEFT_BRACE, LEFT_CURLY_BRACE, MOD, MOD_SEPARATOR, MUL, POW, RIGHT_BRACE, SUB, is_key_symbol_or_keyword};
+use crate::keywords::{ADD, COMMA, COLON, DIV, INFIX_FN_NAME_SIGN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, LEFT_BRACE, LEFT_CURLY_BRACE, MOD, MOD_SEPARATOR, MUL, POW, RIGHT_BRACE, RIGHT_CURLY_BRACE, SUB, is_key_symbol_or_keyword};
 use crate::parser::Parser;
 use crate::token_block::TokenBlock;
-use crate::obj::{Obj, FnObj, Add, Mul, Div, Mod, Sub, Pow, Number};
+use crate::obj::{Obj, FnObj, Add, Mul, Div, Mod, Sub, Pow, Number, InstSetTemplateObj, ListSet};
 use crate::atom::{Atom, AtomWithoutModName, AtomWithModName};
 use crate::errors::ParsingError;
 
@@ -137,15 +135,15 @@ impl Parser {
             }
         } else {
             let left = self.atom(token_block)?;
-            let mut head_obj: Obj = match left {
+            let mut result: Obj = match left {
                 Atom::AtomWithoutModName(a) => Obj::AtomWithoutModName(a),
                 Atom::AtomWithModName(a) => Obj::AtomWithModName(a),
             };
             while token_block.current_token() == Some(LEFT_BRACE) {
                 let args = self.braced_objs(token_block)?;
-                head_obj = Obj::FnObj(FnObj::new(head_obj, args));
+                result = Obj::FnObj(FnObj::new(result, args));
             }
-            Ok(head_obj)
+            Ok(result)
         }
     }
 
@@ -161,11 +159,43 @@ impl Parser {
     }
 
     fn set_builder_or_set_list(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        panic!("Not implemented");
+        let left = self.obj(token_block)?;
+        if token_block.current_token() == Some(COMMA) {
+            self.set_builder(token_block, left)
+        } else {
+            self.set_list(token_block, left)
+        }
+    }
+
+    fn set_list(&self, token_block: &mut TokenBlock, left_most_obj: Obj) -> Result<Obj, ParsingError> {
+        let mut objs = vec![left_most_obj];
+        while token_block.current_token() != Some(RIGHT_CURLY_BRACE) {
+            let obj = self.obj(token_block)?;
+            objs.push(obj);
+        }
+        token_block.skip_token(RIGHT_CURLY_BRACE)?;
+        Ok(Obj::ListSet(ListSet::new(objs)))
+    }
+
+    fn set_builder(&self, token_block: &mut TokenBlock, left_most_obj: Obj) -> Result<Obj, ParsingError> {
+        match left_most_obj {
+            Obj::AtomWithoutModName(a) => {
+                let param = a.name;
+                let param_set = self.obj(token_block)?;
+                _ = param;
+                _ = param_set;
+                token_block.skip_token(COLON)?;
+                panic!("需要能parse fact")
+            }
+            _ => Err(ParsingError::new("Expected atom without mod name", token_block.line_file_index))
+        }
     }
 
     fn instantiated_set_template_obj(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        panic!("Not implemented");
+        token_block.skip_token(INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL)?;
+        let name = self.atom(token_block)?;
+        let args = self.braced_objs(token_block)?;
+        Ok(Obj::InstSetTemplateObj(InstSetTemplateObj::new(name, args)))
     }
 
     pub fn atom(&self, token_block: &mut TokenBlock) -> Result<Atom, ParsingError> {
