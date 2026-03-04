@@ -15,7 +15,7 @@ use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::specific_fact::SpecFact;
 use crate::and_fact::AndFact;
 use crate::forall_fact_with_iff::ForallFactWithIff;
-use crate::stmt_error::StoreFactError;
+use crate::errors::StoreFactError;
 
 pub struct Environment {
     pub defined_objs: HashMap<String, ()>,
