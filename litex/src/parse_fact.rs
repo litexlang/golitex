@@ -124,7 +124,17 @@ impl Parser {
     }
 
     fn or_and_spec_fact(&self, token_block: &mut TokenBlock) -> Result<OrFactOrAndFactOrSpecFact, ParsingError> {
+        _ = token_block;
         panic!("")
     }
 
+    pub fn parse_facts_in_body(&self, token_block: &mut TokenBlock) -> Result<Vec<Fact>, ParsingError> 
+    {
+        let mut facts: Vec<Fact> = vec![];
+        for i in 0..token_block.body.len() {
+            let fact = self.fact(token_block.body.get_mut(i).unwrap())?;
+            facts.push(fact);
+        }
+        Ok(facts)
+    }
 }
