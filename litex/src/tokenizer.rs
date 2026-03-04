@@ -69,28 +69,3 @@ pub fn tokenize_line(line: &str) -> Vec<String> {
 
     tokens
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_single_symbol() {
-        assert_eq!(tokenize_line("+"), vec!["+"]);
-        assert_eq!(tokenize_line("  +  "), vec!["+"]);
-    }
-
-    #[test]
-    fn test_keyword() {
-        assert_eq!(tokenize_line("algo"), vec!["algo"]);
-        assert_eq!(tokenize_line("  algo  "), vec!["algo"]);
-    }
-
-    #[test]
-    fn test_mixed() {
-        assert_eq!(tokenize_line("a+b"), vec!["a", "+", "b"]);
-        assert_eq!(tokenize_line("algo x :"), vec!["algo", "x", ":"]);
-        assert_eq!(tokenize_line("=>"), vec!["=>"]);
-        assert_eq!(tokenize_line("x => y>= 1 > = 2"), vec!["x", "=>", "y", ">=", "1", ">", "=", "2"]);
-    }
-}

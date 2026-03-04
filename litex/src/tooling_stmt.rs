@@ -15,13 +15,13 @@ pub enum ImportStmt {
 pub struct ImportRelativePathStmt {
     pub path: String,
     pub as_mod_name: String,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 pub struct ImportGlobalModuleStmt {
     pub mod_name: String,
     pub as_mod_name: String,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 impl fmt::Display for ImportStmt {
@@ -34,13 +34,13 @@ impl fmt::Display for ImportStmt {
 }
 
 impl ImportRelativePathStmt {
-    pub fn new(path: &str, as_mod_name: &str, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(path: &str, as_mod_name: &str, line_file_index: Option<(usize, usize)>) -> Self {
         ImportRelativePathStmt { path: path.to_string(), as_mod_name: as_mod_name.to_string(), line_file_index }
     }
 }
 
 impl ImportGlobalModuleStmt {
-    pub fn new(mod_name: &str, as_mod_name: &str, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(mod_name: &str, as_mod_name: &str, line_file_index: Option<(usize, usize)>) -> Self {
         ImportGlobalModuleStmt { mod_name: mod_name.to_string(), as_mod_name: as_mod_name.to_string(), line_file_index }
     }
 }
@@ -58,7 +58,7 @@ impl fmt::Display for ImportGlobalModuleStmt {
 }
 
 impl ImportStmt {
-    pub fn line_file(&self) -> Option<(u16, usize)> {
+    pub fn line_file(&self) -> Option<(usize, usize)> {
         match self {
             ImportStmt::ImportRelativePath(import_relative_path) => import_relative_path.line_file_index,
             ImportStmt::ImportGlobalModule(import_global_mod) => import_global_mod.line_file_index,
@@ -67,11 +67,11 @@ impl ImportStmt {
 }
 
 pub struct DoNothingStmt {
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 pub struct ClearStmt {
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 impl fmt::Display for ToolingStmt {
@@ -85,7 +85,7 @@ impl fmt::Display for ToolingStmt {
 }
 
 impl ToolingStmt {
-    pub fn line_file(&self) -> Option<(u16, usize)> {
+    pub fn line_file(&self) -> Option<(usize, usize)> {
         match self {
             ToolingStmt::Import(import_stmt) => import_stmt.line_file(),
             ToolingStmt::Clear(clear_stmt) => clear_stmt.line_file_index,
@@ -95,7 +95,7 @@ impl ToolingStmt {
 }
 
 impl ClearStmt {
-    pub fn new(line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(line_file_index: Option<(usize, usize)>) -> Self {
         ClearStmt { line_file_index }
     }
 }
@@ -107,7 +107,7 @@ impl fmt::Display for ClearStmt {
 }
 
 impl DoNothingStmt {
-    pub fn new(line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(line_file_index: Option<(usize, usize)>) -> Self {
         DoNothingStmt { line_file_index }
     }
 }

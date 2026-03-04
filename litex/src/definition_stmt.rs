@@ -28,7 +28,7 @@ pub struct DefSetTemplateStmt {
     pub params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
     pub dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub equal_to: Obj,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 pub struct HaveFnEqualCaseByCaseStmt {
@@ -36,52 +36,52 @@ pub struct HaveFnEqualCaseByCaseStmt {
     pub fn_set_with_params: FnSetWithDom,
     pub cases: Vec<AndFactOrSpecFact>,
     pub equal_tos: Vec<Obj>,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 pub struct HaveFnEqualStmt {
     pub name: String,
     pub fn_set_with_params: FnSetWithDom,
     pub equal_to: Obj,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 pub struct HaveObjStStmt {
     pub exist_fact_in_have_obj_st: TrueExistFact,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 pub struct LetFnStmt {
     pub name: String,
     pub fn_set_with_params: FnSetWithDom,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 pub struct HaveObjEqualStmt {
     pub names: Vec<String>,
     pub param_types: Vec<ParameterType>,
     pub objs_equal_to: Vec<Obj>,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 pub struct HaveObjInNonemptySetOrParamTypeStmt {
     pub names: Vec<String>,
     pub param_types: Vec<ParameterType>,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 pub struct DefLetStmt {
     pub names: Vec<String>,
     pub param_types: Vec<ParameterType>,
     pub facts: Vec<Fact>,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 pub struct DefPropStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
     pub iff_facts: Option<Vec<Fact>>,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 impl fmt::Display for DefStmt {
@@ -102,7 +102,7 @@ impl fmt::Display for DefStmt {
 }
 
 impl DefPropStmt {
-    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>, iff_facts: Option<Vec<Fact>>, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>, iff_facts: Option<Vec<Fact>>, line_file_index: Option<(usize, usize)>) -> Self {
         DefPropStmt { name, params_def_with_type, iff_facts, line_file_index }
     }
 }
@@ -117,7 +117,7 @@ impl fmt::Display for DefPropStmt {
 }
 
 impl DefLetStmt {
-    pub fn new(names: Vec<String>, param_types: Vec<ParameterType>, facts: Vec<Fact>, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(names: Vec<String>, param_types: Vec<ParameterType>, facts: Vec<Fact>, line_file_index: Option<(usize, usize)>) -> Self {
         DefLetStmt { names, param_types, facts, line_file_index }
     }
 }
@@ -132,7 +132,7 @@ impl fmt::Display for DefLetStmt {
 }
 
 impl DefStmt {
-    pub fn line_file(&self) -> Option<(u16, usize)> {
+    pub fn line_file(&self) -> Option<(usize, usize)> {
         match self {
             DefStmt::DefLetStmt(def_let_stmt) => def_let_stmt.line_file_index,
             DefStmt::DefPropStmt(def_prop_stmt) => def_prop_stmt.line_file_index,
@@ -149,7 +149,7 @@ impl DefStmt {
 }
 
 impl HaveObjInNonemptySetOrParamTypeStmt {
-    pub fn new(names: Vec<String>, param_types: Vec<ParameterType>, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(names: Vec<String>, param_types: Vec<ParameterType>, line_file_index: Option<(usize, usize)>) -> Self {
         HaveObjInNonemptySetOrParamTypeStmt { names, param_types, line_file_index }
     }
 }
@@ -161,7 +161,7 @@ impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
 }
 
 impl HaveObjEqualStmt {
-    pub fn new(names: Vec<String>, param_types: Vec<ParameterType>, objs_equal_to: Vec<Obj>, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(names: Vec<String>, param_types: Vec<ParameterType>, objs_equal_to: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Self {
         HaveObjEqualStmt { names, param_types, objs_equal_to, line_file_index }
     }
 }
@@ -173,7 +173,7 @@ impl fmt::Display for HaveObjEqualStmt {
 }
 
 impl LetFnStmt {
-    pub fn new(name: String, fn_set_with_params: FnSetWithDom, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(name: String, fn_set_with_params: FnSetWithDom, line_file_index: Option<(usize, usize)>) -> Self {
         LetFnStmt { name, fn_set_with_params, line_file_index }
     }
 }
@@ -196,7 +196,7 @@ impl fmt::Display for LetFnStmt {
 }
 
 impl HaveObjStStmt {
-    pub fn new(exist_fact_in_have_obj_st: TrueExistFact, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(exist_fact_in_have_obj_st: TrueExistFact, line_file_index: Option<(usize, usize)>) -> Self {
         HaveObjStStmt { exist_fact_in_have_obj_st, line_file_index }
     }
 }
@@ -208,7 +208,7 @@ impl fmt::Display for HaveObjStStmt {
 }
 
 impl HaveFnEqualStmt {
-    pub fn new(name: String, fn_set_with_params: FnSetWithDom, equal_to: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(name: String, fn_set_with_params: FnSetWithDom, equal_to: Obj, line_file_index: Option<(usize, usize)>) -> Self {
         HaveFnEqualStmt { name, fn_set_with_params, equal_to, line_file_index }
     }
 }
@@ -231,13 +231,13 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
 }
 
 impl HaveFnEqualCaseByCaseStmt {
-    pub fn new(name: String, fn_set_with_params: FnSetWithDom, cases: Vec<AndFactOrSpecFact>, equal_tos: Vec<Obj>, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(name: String, fn_set_with_params: FnSetWithDom, cases: Vec<AndFactOrSpecFact>, equal_tos: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Self {
         HaveFnEqualCaseByCaseStmt { name, fn_set_with_params, cases, equal_tos, line_file_index }
     }
 }
 
 impl DefSetTemplateStmt {
-    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, equal_to: Obj, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, equal_to: Obj, line_file_index: Option<(usize, usize)>) -> Self {
         DefSetTemplateStmt { name, params_def_with_type, dom_facts, equal_to, line_file_index }
     }
 }
