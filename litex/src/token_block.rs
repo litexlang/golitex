@@ -129,4 +129,8 @@ impl TokenBlock {
             Err(ParsingError::new("Expected token", self.line_file_index))
         }
     }
+
+    pub fn skip_without_checking(&mut self) {
+        self.parse_index += 1;
+    }
 }
