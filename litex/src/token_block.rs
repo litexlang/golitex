@@ -98,14 +98,14 @@ fn parse_level(
 
 impl TokenBlock {
     /// 返回当前 token；若已读完则返回 Error。
-    pub fn current_token(&self) -> Result<&str, ParsingError> {
+    pub fn current(&self) -> Result<&str, ParsingError> {
         self.header.get(self.parse_index).map(|s| s.as_str()).ok_or_else(|| {
             ParsingError::new("Unexpected end of tokens", self.line_file_index)
         })
     }
 
     pub fn skip_token(self: &mut Self, token: &str) -> Result<(), ParsingError> {
-        if self.current_token()? == token {
+        if self.current()? == token {
             self.parse_index += 1;
             Ok(())
         } else {
@@ -114,13 +114,13 @@ impl TokenBlock {
     }
 
     pub fn advance(&mut self) -> Result<String, ParsingError> {
-        let t = self.current_token()?.to_string();
+        let t = self.current()?.to_string();
         self.parse_index += 1;
         Ok(t)
     }
 
-    pub fn skip_without_checking(&mut self) -> Result<(), ParsingError> {
-        self.current_token()?;
+    pub fn no_check_skip(&mut self) -> Result<(), ParsingError> {
+        self.current()?;
         self.parse_index += 1;
         Ok(())
     }

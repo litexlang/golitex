@@ -1,7 +1,7 @@
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::parameter_type_and_property::ParamDefWithParamSet;
 use crate::keywords::{
-    ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_CURLY_BRACE, LEFT_BRACKET, MOD, MUL, N,  N_POS, MOD_SEPARATOR, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
+    ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_CURLY_BRACE, LEFT_BRACKET, MOD, MUL, N,  N_POS, DOT, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
 };
 use std::fmt;
 use crate::helper::{braced_string, braced_two_strings, braced_vec_to_string, curly_braced_vec_to_string,  vec_to_string_join_by_comma};
@@ -846,7 +846,7 @@ impl fmt::Display for Cap {
 
 impl fmt::Display for AtomWithModName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}", self.mod_name, MOD_SEPARATOR, self.name)
+        write!(f, "{}{}{}", self.mod_name, DOT, self.name)
     }
 }
 
