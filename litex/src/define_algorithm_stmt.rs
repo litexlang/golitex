@@ -1,7 +1,7 @@
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::obj::Obj;
 use crate::helper::{add_four_spaces_at_beginning, vec_to_string_with_sep, to_string_and_add_four_spaces_at_beginning_of_each_line, braced_vec_to_string};
-use crate::consts::{RETURN, IF, COLON, ALGO};
+use crate::keywords::{RETURN, IF, COLON, ALGO};
 use std::fmt;
 
 pub struct DefineAlgorithmStmt {

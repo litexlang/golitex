@@ -3,7 +3,7 @@ use std::fmt;
 use crate::exist_fact::{TrueExistFact};
 use crate::obj::Obj;
 use crate::stmt::Stmt;
-use crate::consts::{COLON, COMMA, ST, WITNESS};
+use crate::keywords::{COLON, COMMA, ST, WITNESS};
 
 pub enum WitnessStmt {
     WitnessExistFact(WitnessExistFact),

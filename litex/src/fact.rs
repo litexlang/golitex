@@ -27,7 +27,6 @@ impl fmt::Display for Fact {
     }
 }
 
-/// 从 Fact 取得 line 与 file_index（可能无文件信息）
 impl Fact {
     pub fn line_file(&self) -> Option<(u16, usize)> {
         match self {

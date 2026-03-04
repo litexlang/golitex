@@ -1,6 +1,6 @@
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::parameter_type_and_property::ParamDefWithParamSet;
-use crate::consts::{
+use crate::keywords::{
     ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_CURLY_BRACE, LEFT_BRACKET, MOD, MUL, N,  N_POS, MOD_SEPARATOR, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
 };
 use std::fmt;
@@ -646,7 +646,6 @@ impl Val {
     }
 }
 
-// Display implementations
 impl fmt::Display for Obj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -994,8 +993,6 @@ impl fmt::Display for PowerSet {
     }
 }
 
-
-// obj helper functions
 
 impl Obj {
     pub fn mk(s: &str) -> Obj {
