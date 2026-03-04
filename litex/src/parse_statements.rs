@@ -10,14 +10,9 @@ use crate::obj::Obj;
 
 impl Parser {
     pub fn parse_stmt(&self, token_block: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        match token_block.current_token() {
-            None => Err(ParsingError::new("Expected statement", token_block.line_file_index)),
-            Some(token) => {
-                match token {
-                    PROP => self.parse_def_prop_stmt(token_block),
-                    _ => Err(ParsingError::new("Expected statement", token_block.line_file_index)),
-                }
-            }
+        match token_block.current_token()? {
+            PROP => self.parse_def_prop_stmt(token_block),
+            _ => Err(ParsingError::new("Expected statement", token_block.line_file_index)),
         }
     }
 

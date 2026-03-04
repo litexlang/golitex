@@ -6,28 +6,22 @@ use crate::parameter_type_and_property::{ParamDefWithParamType, ParamType, Set, 
 
 impl Parser {
     pub fn param_def_with_param_type(&self, token_block: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
-        match token_block.current_token() {
-            None => Err(ParsingError::new("Expected parameter definition", token_block.line_file_index)),
-            Some(token) => {
-                match token {
-                    LEFT_BRACKET => self.param_def_with_property(token_block),
-                    _ => self.param_def_with_type(token_block),
-                }
-            }
+        match token_block.current_token()? {
+            LEFT_BRACKET => self.param_def_with_property(token_block),
+            _ => self.param_def_with_type(token_block),
         }
     }
 
     pub fn param_def_with_property(&self, token_block: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
         token_block.skip_token(LEFT_BRACKET)?;
         let mut params: Vec<String> = vec![];
-        // 直到 right_bracket 都是 advance
-        while token_block.current_token() != Some(RIGHT_BRACKET) {
+        while token_block.current_token()? != RIGHT_BRACKET {
             let param = token_block.advance()?;
             params.push(param);
         }
         token_block.skip_token(RIGHT_BRACKET)?;
 
-        let is_true: bool = if token_block.current_token() == Some(NOT) {
+        let is_true: bool = if token_block.current_token()? == NOT {
             token_block.skip_without_checking()?;
             false
         } else {
@@ -40,12 +34,11 @@ impl Parser {
 
     pub fn param_def_with_type(&self, token_block: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
         let param = token_block.advance()?;
-        if token_block.current_token() != Some(COMMA) {
+        if token_block.current_token()? != COMMA {
             Ok(ParamDefWithParamType::ParamAndItsTypePair(param, self.param_type(token_block)?))
         } else {
             let mut vec_of_params = vec![param];
-            // 直到没有 ,
-            while token_block.current_token() == Some(COMMA) {
+            while token_block.current_token()? == COMMA {
                 token_block.skip_without_checking()?;
                 let param = token_block.advance()?;
                 vec_of_params.push(param);
@@ -56,10 +49,10 @@ impl Parser {
     }
 
     pub fn param_type(&self, token_block: &mut TokenBlock) -> Result<ParamType, ParsingError> {
-        match token_block.current_token() {
-            Some(NONEMPTY_SET) => self.param_type_nonempty_set(token_block),
-            Some(FINITE_SET) => self.param_type_finite_set(token_block),
-            Some(SET) => self.param_type_set(token_block),
+        match token_block.current_token()? {
+            NONEMPTY_SET => self.param_type_nonempty_set(token_block),
+            FINITE_SET => self.param_type_finite_set(token_block),
+            SET => self.param_type_set(token_block),
             _ => self.param_type_obj(token_block),
         }
     }
