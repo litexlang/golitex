@@ -1,5 +1,5 @@
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
-use crate::parameter_type_and_property::{ParameterType, ParamDefWithParamTypeAndProperty};
+use crate::parameter_type_and_property::{ParamType, ParamDefWithParamType};
 use crate::fact::{ Fact};
 use crate::obj::{Obj};
 use std::fmt;
@@ -25,7 +25,7 @@ pub enum DefStmt {
 
 pub struct DefSetTemplateStmt {
     pub name: String,
-    pub params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
+    pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub equal_to: Obj,
     pub line_file_index: Option<(usize, usize)>,
@@ -59,27 +59,27 @@ pub struct LetFnStmt {
 
 pub struct HaveObjEqualStmt {
     pub names: Vec<String>,
-    pub param_types: Vec<ParameterType>,
+    pub param_types: Vec<ParamType>,
     pub objs_equal_to: Vec<Obj>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
 pub struct HaveObjInNonemptySetOrParamTypeStmt {
     pub names: Vec<String>,
-    pub param_types: Vec<ParameterType>,
+    pub param_types: Vec<ParamType>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
 pub struct DefLetStmt {
     pub names: Vec<String>,
-    pub param_types: Vec<ParameterType>,
+    pub param_types: Vec<ParamType>,
     pub facts: Vec<Fact>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
 pub struct DefPropStmt {
     pub name: String,
-    pub params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>,
+    pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub iff_facts: Option<Vec<Fact>>,
     pub line_file_index: Option<(usize, usize)>,
 }
@@ -102,7 +102,7 @@ impl fmt::Display for DefStmt {
 }
 
 impl DefPropStmt {
-    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>, iff_facts: Option<Vec<Fact>>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, iff_facts: Option<Vec<Fact>>, line_file_index: Option<(usize, usize)>) -> Self {
         DefPropStmt { name, params_def_with_type, iff_facts, line_file_index }
     }
 }
@@ -117,7 +117,7 @@ impl fmt::Display for DefPropStmt {
 }
 
 impl DefLetStmt {
-    pub fn new(names: Vec<String>, param_types: Vec<ParameterType>, facts: Vec<Fact>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(names: Vec<String>, param_types: Vec<ParamType>, facts: Vec<Fact>, line_file_index: Option<(usize, usize)>) -> Self {
         DefLetStmt { names, param_types, facts, line_file_index }
     }
 }
@@ -149,7 +149,7 @@ impl DefStmt {
 }
 
 impl HaveObjInNonemptySetOrParamTypeStmt {
-    pub fn new(names: Vec<String>, param_types: Vec<ParameterType>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(names: Vec<String>, param_types: Vec<ParamType>, line_file_index: Option<(usize, usize)>) -> Self {
         HaveObjInNonemptySetOrParamTypeStmt { names, param_types, line_file_index }
     }
 }
@@ -161,7 +161,7 @@ impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
 }
 
 impl HaveObjEqualStmt {
-    pub fn new(names: Vec<String>, param_types: Vec<ParameterType>, objs_equal_to: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(names: Vec<String>, param_types: Vec<ParamType>, objs_equal_to: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Self {
         HaveObjEqualStmt { names, param_types, objs_equal_to, line_file_index }
     }
 }
@@ -237,7 +237,7 @@ impl HaveFnEqualCaseByCaseStmt {
 }
 
 impl DefSetTemplateStmt {
-    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamTypeAndProperty>, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, equal_to: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, equal_to: Obj, line_file_index: Option<(usize, usize)>) -> Self {
         DefSetTemplateStmt { name, params_def_with_type, dom_facts, equal_to, line_file_index }
     }
 }
