@@ -160,3 +160,11 @@ pub fn key_symbols_sorted_by_len_desc() -> Vec<&'static str> {
 pub fn is_keyword(atom_name: &str) -> bool {
     keywords_map().contains_key(atom_name)
 }
+
+fn is_key_symbol(atom_name: &str) -> bool {
+    key_symbols_map().contains_key(atom_name)
+}
+
+pub fn is_key_symbol_or_keyword(atom_name: &str) -> bool {
+    is_key_symbol(atom_name) || is_keyword(atom_name)
+}

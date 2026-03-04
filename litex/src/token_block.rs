@@ -79,19 +79,9 @@ fn parse_level(
 
             let header_tokens = tokenize_line(content);
             
-            items.push(TokenBlock {
-                header: header_tokens,
-                body,
-                line_file_index: (line_no, current_file_index),
-                parse_index: 0,
-            });
+            items.push(TokenBlock::new(header_tokens, body, (line_no, current_file_index)));
         } else {
-            items.push(TokenBlock {
-                header: vec![content.to_string()],
-                body: vec![],
-                line_file_index: (line_no, current_file_index),
-                parse_index: 0,
-            });
+            items.push(TokenBlock::new(vec![content.to_string()], vec![], (line_no, current_file_index)));
         }
 
         if let Some(expected) = body_indent {
@@ -130,7 +120,23 @@ impl TokenBlock {
         }
     }
 
-    pub fn skip_without_checking(&mut self) {
+    pub fn skip_without_checking(&mut self) -> Result<(), ParsingError> {
+        if !self.current_token().is_some() {
+            return Err(ParsingError::new("Expected token", self.line_file_index));
+        }
         self.parse_index += 1;
+        Ok(())
+    }
+}
+
+
+impl TokenBlock {
+    pub fn new(tokens: Vec<String>, body: Vec<TokenBlock>, line_file_index: (usize, usize)) -> TokenBlock {
+        TokenBlock {
+            header: tokens,
+            body,
+            line_file_index,
+            parse_index: 0,
+        }
     }
 }
