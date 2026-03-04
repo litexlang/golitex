@@ -36,6 +36,8 @@ mod runtime_context;
 mod environment;
 mod define_algorithm_stmt;
 mod parser;
+mod parse_obj;
+use parser::Parser;
 use obj::{QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz};
 use std::collections::HashMap;
 use environment::Environment;
@@ -84,7 +86,6 @@ use definition_stmt::{DefPropStmt, DefLetStmt};
 use know_stmt::KnowStmt;
 use eval_stmt::{EvalStmt};
 use syntactic_verifier::SyntacticVerifier;
-use parser::Parser;
 use token_block::TokenBlock;
 use errors::ParsingError;
 
@@ -1184,6 +1185,12 @@ fn try_runtime_context() {
         panic!("{}", stored_fact_result.err().unwrap());
     }
     
+    let atom_name = "a";
+    if runtime_context.is_unused_valid_atom_name(atom_name) {
+        runtime_context.top_level_env().defined_atom_names.insert(atom_name.to_string(), ());
+    } else {
+        panic!("")
+    }
 }
 
 fn try_tokenizer() {
@@ -1199,9 +1206,6 @@ fn try_token_block() {
 }
 
 fn try_parser() {
-    let s = "a:\n    b\n  c";
     let parser = Parser::new();
-    let mut token_block = TokenBlock::parse_blocks(s, 0).unwrap().into_iter().next().unwrap();
-    let stmt = parser.parse_stmt(&mut token_block);
-    println!("{}", stmt.unwrap());
+    println!("{}", parser);
 }
