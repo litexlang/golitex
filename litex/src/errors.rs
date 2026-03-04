@@ -6,6 +6,7 @@ pub enum StmtError {
     NewAtomicFactError(NewAtomicFactError),
     StoreFactError(StoreFactError),
     ParseBlockError(ParseBlockError),
+    ParsingError(ParsingError),
 }
 
 impl std::error::Error for StmtError {}
@@ -18,6 +19,7 @@ impl fmt::Display for StmtError {
             StmtError::NewAtomicFactError(e) => write!(f, "{}", e),
             StmtError::StoreFactError(e) => write!(f, "{}", e),
             StmtError::ParseBlockError(e) => write!(f, "{}", e),
+            StmtError::ParsingError(e) => write!(f, "{}", e),
         }
     }
 }
@@ -106,5 +108,25 @@ impl fmt::Display for ParseBlockError {
                 write!(f, "line {}: block header missing body", line)
             }
         }
+    }
+}
+
+
+#[derive(Debug)]
+pub struct ParsingError {
+    pub msg: String,
+}
+
+impl std::error::Error for ParsingError {}
+
+impl fmt::Display for ParsingError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.msg)
+    }
+}
+
+impl ParsingError {
+    pub fn new(msg: &str) -> Self {
+        ParsingError { msg: msg.to_string() }
     }
 }

@@ -1,10 +1,11 @@
-use crate::stmt_error::ParseBlockError;
+use crate::errors::ParseBlockError;
 use crate::tokenizer::tokenize_line;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TokenBlock {
     pub header: Vec<String>,
     pub body: Vec<BlockItem>,
+    pub parse_index: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -82,6 +83,7 @@ fn parse_level(
             items.push(BlockItem::Block(TokenBlock {
                 header: header_tokens,
                 body,
+                parse_index: 0,
             }));
         } else {
             items.push(BlockItem::Line(content.to_string()));
@@ -97,6 +99,12 @@ fn parse_level(
     }
 
     Ok(items)
+}
+
+impl TokenBlock {
+    pub fn current_token(&self) -> Option<&str> {
+        self.header.get(self.parse_index).map(|s| s.as_str())
+    }
 }
 
 #[cfg(test)]
