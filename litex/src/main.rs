@@ -152,6 +152,8 @@ fn main() {
     try_token_block();
     try_parser();
     try_parse_obj();
+    try_parse_fact();
+    try_parse_statements();
 }
 
 fn try_atom_fn_obj() {
@@ -1227,4 +1229,24 @@ fn try_parse_obj() {
     let mut token_block = TokenBlock::new(tokens, vec![], (0, 0));
     let obj = parser.obj(&mut token_block);
     println!("{}", obj.unwrap());
+}
+
+fn try_parse_fact() {
+    let parser = Parser::new();
+    println!("{}", parser);
+    let s = "a+b=0";
+    let tokens = tokenizer::tokenize_line(s);
+    let mut token_block = TokenBlock::new(tokens, vec![], (0, 0));
+    let fact = parser.fact(&mut token_block);
+    println!("{}", fact.unwrap());
+}
+
+fn try_parse_statements() {
+    let parser = Parser::new();
+    println!("{}", parser);
+    let s = "a+b=0";
+    let tokens = tokenizer::tokenize_line(s);
+    let mut token_block = TokenBlock::new(tokens, vec![], (0, 0));
+    let stmt = parser.parse_stmt(&mut token_block);
+    println!("{}", stmt.unwrap());
 }
