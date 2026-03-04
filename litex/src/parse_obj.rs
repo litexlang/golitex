@@ -1,7 +1,9 @@
-use crate::keywords::{ADD, DIV, INFIX_FN_NAME_SIGN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, LEFT_CURLY_BRACE, MOD, MOD_SEPARATOR, MUL, POW, SUB, is_key_symbol_or_keyword};
+use core::panic;
+
+use crate::keywords::{ADD, COMMA, DIV, INFIX_FN_NAME_SIGN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, LEFT_BRACE, LEFT_CURLY_BRACE, MOD, MOD_SEPARATOR, MUL, POW, RIGHT_BRACE, SUB, is_key_symbol_or_keyword};
 use crate::parser::Parser;
 use crate::token_block::TokenBlock;
-use crate::obj::{Obj, FnObj, Add, Mul, Div, Mod, Sub, Pow};
+use crate::obj::{Obj, FnObj, Add, Mul, Div, Mod, Sub, Pow, Number};
 use crate::atom::{Atom, AtomWithoutModName, AtomWithModName};
 use crate::errors::ParsingError;
 
@@ -119,7 +121,43 @@ impl Parser {
     }
 
     fn fn_obj_or_number_or_atom(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        panic!("Not implemented");
+        let token = token_block.current_token();
+
+        if token.is_none() {
+            return Err(ParsingError::new("Expected token", token_block.line_file_index));
+        }
+
+        let token = token.unwrap();
+
+        if starts_with_digit(&token) {
+            if is_number(&token) {
+                Ok(Obj::Number(Number::new(&token)))
+            } else {
+                Err(ParsingError::new(&format!("Invalid number: {}", token), token_block.line_file_index))
+            }
+        } else {
+            let left = self.atom(token_block)?;
+            let mut head_obj: Obj = match left {
+                Atom::AtomWithoutModName(a) => Obj::AtomWithoutModName(a),
+                Atom::AtomWithModName(a) => Obj::AtomWithModName(a),
+            };
+            while token_block.current_token() == Some(LEFT_BRACE) {
+                let args = self.braced_objs(token_block)?;
+                head_obj = Obj::FnObj(FnObj::new(head_obj, args));
+            }
+            Ok(head_obj)
+        }
+    }
+
+    fn braced_objs(&self, token_block: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
+        token_block.skip_token(LEFT_BRACE)?;
+        let mut objs = vec![self.obj(token_block)?];
+        while token_block.current_token() == Some(COMMA) {
+            token_block.skip_token(COMMA)?;
+            objs.push(self.obj(token_block)?);
+        }
+        token_block.skip_token(RIGHT_BRACE)?;
+        Ok(objs)
     }
 
     fn set_builder_or_set_list(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
@@ -140,4 +178,32 @@ impl Parser {
             Ok(Atom::AtomWithoutModName(AtomWithoutModName::new(&left)))
         }
     }
+}
+
+fn starts_with_digit(s: &str) -> bool {
+    s.chars()
+        .next()
+        .map(|c| c.is_ascii_digit())
+        .unwrap_or(false)
+}
+
+fn is_number(s: &str) -> bool {
+    if s.is_empty() {
+        return false;
+    }
+
+    let mut dot_count = 0;
+
+    for c in s.chars() {
+        if c == '.' {
+            dot_count += 1;
+            if dot_count > 1 {
+                return false;
+            }
+        } else if !c.is_ascii_digit() {
+            return false;
+        }
+    }
+
+    s != "."
 }
