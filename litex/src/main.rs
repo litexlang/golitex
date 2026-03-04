@@ -38,6 +38,7 @@ mod define_algorithm_stmt;
 mod parser;
 mod parse_obj;
 mod parse_param_def;
+mod parse_fact;
 use parser::Parser;
 mod parse_statements;
 use obj::{QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz};
@@ -150,6 +151,7 @@ fn main() {
     try_tokenizer();
     try_token_block();
     try_parser();
+    try_parse_obj();
 }
 
 fn try_atom_fn_obj() {
@@ -1208,6 +1210,16 @@ fn try_token_block() {
 }
 
 fn try_parser() {
+    let parser = Parser::new();
+    println!("{}", parser);
+    let s = "a+b";
+    let tokens = tokenizer::tokenize_line(s);
+    let mut token_block = TokenBlock::new(tokens, vec![], (0, 0));
+    let obj = parser.obj(&mut token_block);
+    println!("{}", obj.unwrap());
+}
+
+fn try_parse_obj() {
     let parser = Parser::new();
     println!("{}", parser);
     let s = "a+b";
