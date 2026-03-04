@@ -1,7 +1,7 @@
 use std::fmt;
 use crate::stmt_success::StmtSuccess;
 use crate::stmt_unknown::StmtUnknown;
-use crate::stmt_error::StmtError;
+use crate::errors::StmtError;
 
 pub enum StmtResult<'a> {
     StmtSuccess(StmtSuccess<'a>),

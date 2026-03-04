@@ -1,6 +1,6 @@
 use crate::specific_fact::SpecFact;
 use crate::atomic_fact::AtomicFact;
-use crate::stmt_error::NewAtomicFactError;
+use crate::errors::NewAtomicFactError;
 use std::fmt;
 use crate::keywords::{AND, FACT_PREFIX};
 use crate::obj::Obj;
