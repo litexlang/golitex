@@ -140,13 +140,13 @@ impl Parser {
             INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL => {
                 self.instantiated_set_template_obj(token_block)
             },
-            _ => self.fn_obj_or_number_or_atom(token_block)
+            _ => self.number_or_primary_obj_or_fn_obj(token_block)
         }
     }
 
     /// 解析「主元」：数字、单符号集合(N/Q/...)、多元关键字(union/intersect/...)、或普通 atom。
     /// 若得到 atom，调用方再给其接若干 (args) 变成 FnObj。
-    fn fn_obj_or_number_or_atom(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn number_or_primary_obj_or_fn_obj(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let token = token_block.current()?;
 
         // 0. (...)
