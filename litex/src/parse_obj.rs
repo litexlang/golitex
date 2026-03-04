@@ -12,8 +12,8 @@ impl Parser {
 
     fn obj_hierarchy0(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj_hierarchy1(token_block)?;
-        match token_block.current_token() {
-            Some(INFIX_FN_NAME_SIGN) => {
+        match token_block.current_token()? {
+            INFIX_FN_NAME_SIGN => {
                 let fn_name = self.atom(token_block)?;
 
                 if is_key_symbol_or_keyword(&fn_name.to_string()) {
@@ -33,8 +33,8 @@ impl Parser {
 
     fn obj_hierarchy1(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj_hierarchy2(token_block)?;
-        match token_block.current_token() {
-            Some(MUL) => {
+        match token_block.current_token()? {
+            MUL => {
                 token_block.skip_without_checking()?;
                 let right = self.obj_hierarchy2(token_block)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
@@ -43,7 +43,7 @@ impl Parser {
                     Ok(Obj::Mul(Mul::new(left, right, true)))
                 }
             },
-            Some(DIV) => {
+            DIV => {
                 token_block.skip_without_checking()?;
                 let right = self.obj_hierarchy2(token_block)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
@@ -52,7 +52,7 @@ impl Parser {
                     Ok(Obj::Div(Div::new(left, right, true)))
                 }
             },
-            Some(MOD) => {
+            MOD => {
                 token_block.skip_without_checking()?;
                 let right = self.obj_hierarchy2(token_block)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
@@ -67,8 +67,8 @@ impl Parser {
 
     fn obj_hierarchy2(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj_hierarchy3(token_block)?;
-        match token_block.current_token() {
-            Some(ADD) => {
+        match token_block.current_token()? {
+            ADD => {
                 token_block.skip_without_checking()?;
                 let right = self.obj_hierarchy3(token_block)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
@@ -77,7 +77,7 @@ impl Parser {
                     Ok(Obj::Add(Add::new(left, right, true)))
                 }
             },
-            Some(SUB) => {
+            SUB => {
                 token_block.skip_without_checking()?;
                 let right = self.obj_hierarchy3(token_block)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
@@ -92,8 +92,8 @@ impl Parser {
 
     fn obj_hierarchy3(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj_hierarchy4(token_block)?;
-        match token_block.current_token() {
-            Some(POW) => {
+        match token_block.current_token()? {
+            POW => {
                 token_block.skip_without_checking()?;
                 let right = self.obj_hierarchy4(token_block)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
@@ -107,11 +107,11 @@ impl Parser {
     }
 
     fn obj_hierarchy4(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        match token_block.current_token() {
-            Some(LEFT_CURLY_BRACE) => {
+        match token_block.current_token()? {
+            LEFT_CURLY_BRACE => {
                 self.set_builder_or_set_list(token_block)
             },
-            Some(INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL) => {
+            INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL => {
                 self.instantiated_set_template_obj(token_block)
             },
             _ => self.fn_obj_or_number_or_atom(token_block)
@@ -119,17 +119,11 @@ impl Parser {
     }
 
     fn fn_obj_or_number_or_atom(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        let token = token_block.current_token();
+        let token = token_block.current_token()?;
 
-        if token.is_none() {
-            return Err(ParsingError::new("Expected token", token_block.line_file_index));
-        }
-
-        let token = token.unwrap();
-
-        if starts_with_digit(&token) {
-            if is_number(&token) {
-                Ok(Obj::Number(Number::new(&token)))
+        if starts_with_digit(token) {
+            if is_number(token) {
+                Ok(Obj::Number(Number::new(token)))
             } else {
                 Err(ParsingError::new(&format!("Invalid number: {}", token), token_block.line_file_index))
             }
@@ -139,7 +133,7 @@ impl Parser {
                 Atom::AtomWithoutModName(a) => Obj::AtomWithoutModName(a),
                 Atom::AtomWithModName(a) => Obj::AtomWithModName(a),
             };
-            while token_block.current_token() == Some(LEFT_BRACE) {
+            while token_block.current_token()? == LEFT_BRACE {
                 let args = self.braced_objs(token_block)?;
                 result = Obj::FnObj(FnObj::new(result, args));
             }
@@ -150,7 +144,7 @@ impl Parser {
     fn braced_objs(&self, token_block: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
         token_block.skip_token(LEFT_BRACE)?;
         let mut objs = vec![self.obj(token_block)?];
-        while token_block.current_token() == Some(COMMA) {
+        while token_block.current_token()? == COMMA {
             token_block.skip_token(COMMA)?;
             objs.push(self.obj(token_block)?);
         }
@@ -160,7 +154,7 @@ impl Parser {
 
     fn set_builder_or_set_list(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj(token_block)?;
-        if token_block.current_token() == Some(COMMA) {
+        if token_block.current_token()? == COMMA {
             self.set_builder(token_block, left)
         } else {
             self.set_list(token_block, left)
@@ -169,7 +163,7 @@ impl Parser {
 
     fn set_list(&self, token_block: &mut TokenBlock, left_most_obj: Obj) -> Result<Obj, ParsingError> {
         let mut objs = vec![left_most_obj];
-        while token_block.current_token() != Some(RIGHT_CURLY_BRACE) {
+        while token_block.current_token()? != RIGHT_CURLY_BRACE {
             let obj = self.obj(token_block)?;
             objs.push(obj);
         }
@@ -200,7 +194,7 @@ impl Parser {
 
     pub fn atom(&self, token_block: &mut TokenBlock) -> Result<Atom, ParsingError> {
         let left = token_block.advance()?;
-        if token_block.current_token() == Some(MOD_SEPARATOR) {
+        if token_block.current_token()? == MOD_SEPARATOR {
             token_block.skip_without_checking()?;
             let right = token_block.advance()?;
             Ok(Atom::AtomWithModName(AtomWithModName::new(&left, &right)))
