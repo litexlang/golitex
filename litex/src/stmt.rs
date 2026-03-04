@@ -39,7 +39,7 @@ impl fmt::Display for Stmt {
     }
 }
 
-pub fn line_file(stmt: &Stmt) -> Option<(u16, usize)> {
+pub fn line_file(stmt: &Stmt) -> Option<(usize, usize)> {
     match stmt {
         Stmt::Fact(fact) => fact.line_file(),
         Stmt::DefStmt(def_stmt) => def_stmt.line_file(),

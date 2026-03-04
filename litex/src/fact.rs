@@ -28,7 +28,7 @@ impl fmt::Display for Fact {
 }
 
 impl Fact {
-    pub fn line_file(&self) -> Option<(u16, usize)> {
+    pub fn line_file(&self) -> Option<(usize, usize)> {
         match self {
             Fact::AtomicFact(a) => crate::atomic_fact::line_file(a),
             Fact::ExistFact(e) => crate::exist_fact::line_file(e),

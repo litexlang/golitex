@@ -16,19 +16,19 @@ pub enum AndFact {
 #[derive(Clone)]
 pub struct AndSpecFacts {
     pub facts: Vec<SpecFact>,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 #[derive(Clone)]
 pub struct ChainFact {
     pub objs: Vec<Obj>,
     pub prop_names: Vec<Atom>,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 
 impl AndSpecFacts {
-    pub fn new(facts: Vec<SpecFact>, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(facts: Vec<SpecFact>, line_file_index: Option<(usize, usize)>) -> Self {
         AndSpecFacts { facts, line_file_index }
     }
 }
@@ -40,7 +40,7 @@ impl fmt::Display for AndSpecFacts {
 }
 
 impl ChainFact {
-    pub fn new(objs: Vec<Obj>, prop_names: Vec<Atom>, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(objs: Vec<Obj>, prop_names: Vec<Atom>, line_file_index: Option<(usize, usize)>) -> Self {
         ChainFact { objs, prop_names, line_file_index }
     }
 }
@@ -68,7 +68,7 @@ impl fmt::Display for AndFact {
 }
 
 impl AndFact {
-    pub fn line_file(&self) -> Option<(u16, usize)> {
+    pub fn line_file(&self) -> Option<(usize, usize)> {
         match self {
             AndFact::AndSpecFacts(and_spec_facts) => and_spec_facts.line_file_index,
             AndFact::ChainFact(chain_facts) => chain_facts.line_file_index,

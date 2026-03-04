@@ -61,7 +61,7 @@ use obj::{
     Cart, SetDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choose, ObjAtIndex,
     FnSetObj,
 };
-use parameter_type_and_property::{ParameterType, SetAsParamSet, NonemptySetAsParamSet, FiniteSetAsParamSet, ParamDefWithParamTypeAndProperty, ParamDefWithParamSet};
+use parameter_type_and_property::{ParameterType, Set, NonemptySet, FiniteSet, ParamDefWithParamTypeAndProperty, ParamDefWithParamSet};
 use stmt::{Stmt};
 use atomic_fact::{InFact, NotInFact,IsCartFact, NotIsCartFact, IsTupleFact, NotIsTupleFact, AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact, SubsetFact, NotSubsetFact, SupersetFact, NotSupersetFact,
     LessFact, NotLessFact, GreaterFact, NotGreaterFact,
@@ -85,6 +85,9 @@ use know_stmt::KnowStmt;
 use eval_stmt::{EvalStmt};
 use syntactic_verifier::SyntacticVerifier;
 use parser::Parser;
+use token_block::TokenBlock;
+use errors::ParsingError;
+
 fn main() {
     try_atom_fn_obj();
     try_arithmetic();
@@ -143,6 +146,7 @@ fn main() {
     try_runtime_context();
     try_tokenizer();
     try_token_block();
+    try_parser();
 }
 
 fn try_atom_fn_obj() {
@@ -217,14 +221,14 @@ fn try_stmt() {
     ))));
     println!("{}", fact2);
 
-    let def_stmt = Stmt::DefStmt(DefStmt::DefLetStmt(DefLetStmt::new(vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())], vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let def_stmt = Stmt::DefStmt(DefStmt::DefLetStmt(DefLetStmt::new(vec!["x".to_string()], vec![ParameterType::Set(Set::new())], vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
         Some((1, 0)),
     )))], Some((1, 0)))));
     println!("{}", def_stmt);
 
-    let def_stmt2 = Stmt::DefStmt(DefStmt::DefPropStmt(DefPropStmt::new("f".to_string(), vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(SetAsParamSet::new()))], Some(vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let def_stmt2 = Stmt::DefStmt(DefStmt::DefPropStmt(DefPropStmt::new("f".to_string(), vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(Set::new()))], Some(vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
         Some((1, 0)),
@@ -307,11 +311,11 @@ fn try_n_pos_obj() {
 }
 
 fn try_parameter_set() {
-    let parameter_set = ParameterType::Set(SetAsParamSet::new());
+    let parameter_set = ParameterType::Set(Set::new());
     println!("{}", parameter_set);
-    let nonempty_parameter_set = ParameterType::NonemptySet(NonemptySetAsParamSet::new());
+    let nonempty_parameter_set = ParameterType::NonemptySet(NonemptySet::new());
     println!("{}", nonempty_parameter_set);
-    let finite_parameter_set = ParameterType::FiniteSet(FiniteSetAsParamSet::new());
+    let finite_parameter_set = ParameterType::FiniteSet(FiniteSet::new());
     println!("{}", finite_parameter_set);
     let obj_parameter_set = ParameterType::Obj(Obj::AtomWithoutModName(AtomWithoutModName::new("a")));
     println!("{}", obj_parameter_set);
@@ -367,7 +371,7 @@ fn try_power_set_choice() {
 }
 
 fn try_atomic_fact() {
-    let line = 1u16;
+    let line = 1usize;
     let _normal = AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
         Atom::AtomWithoutModName(AtomWithoutModName::new("p")),
         vec![Obj::mk("a"), Obj::mk("b")],
@@ -431,12 +435,12 @@ fn try_atomic_fact() {
 
 fn try_exist_fact() {
     let _true_exist = ExistFact::TrueExistFact(TrueExistFact::new(
-        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(SetAsParamSet::new()))],
+        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(Set::new()))],
         vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))))))],
         Some((1, 0)),
     ));
     let _not_exist = ExistFact::NotExistFact(NotExistFact::new(
-        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("y".to_string(), ParameterType::Set(SetAsParamSet::new()))],
+        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("y".to_string(), ParameterType::Set(Set::new()))],
         vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))))))],
         Some((2, 0)),
     ));
@@ -444,14 +448,14 @@ fn try_exist_fact() {
     println!("{}", _not_exist);
 
     let _true_exist2 = ExistFact::TrueExistFact(TrueExistFact::new(
-        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(SetAsParamSet::new()))],
+        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(Set::new()))],
         vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0)))))), OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("c"), Obj::mk("d"), Some((1, 0))))))],
         Some((1, 0)),
     ));
     println!("{}", _true_exist2);
 
     let _true_exist3 = ExistFact::TrueExistFact(TrueExistFact::new(
-        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(SetAsParamSet::new()))],
+        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(Set::new()))],
         vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0)))))), OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("c"), Obj::mk("d"), Some((1, 0))))))],
         Some((1, 0)),
     ));
@@ -461,7 +465,7 @@ fn try_exist_fact() {
 fn try_spec_fact() {
     let _spec_atom = SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0)))));
     let ef = ExistFact::TrueExistFact(TrueExistFact::new(
-        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("u".to_string(), ParameterType::Set(SetAsParamSet::new()))],
+        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("u".to_string(), ParameterType::Set(Set::new()))],
         vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("u"), Obj::mk("v"), Some((1, 0))))))],
         Some((1, 0)),
     ));
@@ -513,7 +517,7 @@ fn try_and_fact_or_spec_fact() {
 }
 
 fn try_forall_fact() {
-    let param_type_or_property_pairs = vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("n".to_string(), ParameterType::Set(SetAsParamSet::new()))];
+    let param_type_or_property_pairs = vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("n".to_string(), ParameterType::Set(Set::new()))];
     let dom_facts = vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     )))];
@@ -533,7 +537,7 @@ fn try_forall_fact() {
     let _forall2 = ForallFact::new(param_type_or_property_pairs2, dom_facts2, then_facts2, Some((1, 0)));
     println!("{}", _forall2);
 
-    let param_type_or_property_pairs3 = vec![ParamDefWithParamTypeAndProperty::ParamsAndTheirTypePair(vec!["n".to_string(), "m".to_string()], ParameterType::Set(SetAsParamSet::new()))];
+    let param_type_or_property_pairs3 = vec![ParamDefWithParamTypeAndProperty::ParamsAndTheirTypePair(vec!["n".to_string(), "m".to_string()], ParameterType::Set(Set::new()))];
     let dom_facts3 = vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     )))];
@@ -545,7 +549,7 @@ fn try_forall_fact() {
 }
 
 fn try_forall_fact_with_iff() {
-    let param_type_or_property_pairs = vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("n".to_string(), ParameterType::Set(SetAsParamSet::new()))];
+    let param_type_or_property_pairs = vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("n".to_string(), ParameterType::Set(Set::new()))];
     let dom_facts = vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     )))];
@@ -565,14 +569,14 @@ fn try_fact() {
     let af = AtomicFact::EqualFact(EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))));
     let _f_atom = Fact::AtomicFact(af);
     let ef = ExistFact::TrueExistFact(TrueExistFact::new(
-        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("u".to_string(), ParameterType::Set(SetAsParamSet::new()))],
+        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("u".to_string(), ParameterType::Set(Set::new()))],
         vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("u"), Obj::mk("v"), Some((1, 0))))))],
         Some((1, 0)),
     ));
     let _f_exist = Fact::ExistFact(ef);
     let _f_or = Fact::OrFact(OrFact::new(vec![], Some((1, 0))));
     let _f_forall = Fact::ForallFact(ForallFact::new(
-        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("n".to_string(), ParameterType::Set(SetAsParamSet::new()))],
+        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("n".to_string(), ParameterType::Set(Set::new()))],
         vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
             EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
         )))],
@@ -582,7 +586,7 @@ fn try_fact() {
         Some((1, 0)),
     ));
     let _f_forall_fact_with_iff = Fact::ForallFactWithIff(ForallFactWithIff::new(ForallFact::new(
-        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("n".to_string(), ParameterType::Set(SetAsParamSet::new()))],
+        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("n".to_string(), ParameterType::Set(Set::new()))],
         vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
             EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
         )))],
@@ -616,6 +620,9 @@ fn try_errors() {
     println!("{}", err);
 
     let err: StmtError = StmtError::ParseBlockError(ParseBlockError::ExpectedIndent { line: 1 });
+    println!("{}", err);
+
+    let err: StmtError = StmtError::ParsingError(ParsingError::new("demo", (1, 0)));
     println!("{}", err);
 }
 
@@ -709,7 +716,7 @@ fn try_stmt_result() {
 }
 
 fn try_definitions() {
-    let params_def_with_type = vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(SetAsParamSet::new()))];
+    let params_def_with_type = vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(Set::new()))];
     let def_prop_stmt = DefPropStmt::new("f".to_string(), params_def_with_type, Some(vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
@@ -717,14 +724,14 @@ fn try_definitions() {
     )))]), Some((1, 0)));
     println!("{}", def_prop_stmt);
 
-    let def_let_stmt = DefLetStmt::new(vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())], vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let def_let_stmt = DefLetStmt::new(vec!["x".to_string()], vec![ParameterType::Set(Set::new())], vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
         Some((1, 0)),
     )))], Some((1, 0)));
     println!("{}", def_let_stmt);
 
-    let params_def_with_type2 = vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(SetAsParamSet::new()))];
+    let params_def_with_type2 = vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(Set::new()))];
     let def_prop_stmt2 = DefPropStmt::new("f".to_string(), params_def_with_type2, None, Some((1, 0)));
     println!("{}", def_prop_stmt2);
 }
@@ -762,7 +769,7 @@ fn try_claim_stmt() {
         Some((1, 0)),
     ))))];
     
-    let forall = ForallFact::new(vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("n".to_string(), ParameterType::Set(SetAsParamSet::new()))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
+    let forall = ForallFact::new(vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("n".to_string(), ParameterType::Set(Set::new()))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     )))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
@@ -892,7 +899,7 @@ fn try_prove_by_enumeration_stmt() {
 }
 
 fn try_have_obj_in_nonempty_set_stmt() {
-    let have_obj_in_nonempty_set_stmt = HaveObjInNonemptySetOrParamTypeStmt::new(vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())], Some((1, 0)));
+    let have_obj_in_nonempty_set_stmt = HaveObjInNonemptySetOrParamTypeStmt::new(vec!["x".to_string()], vec![ParameterType::Set(Set::new())], Some((1, 0)));
     println!("{}", have_obj_in_nonempty_set_stmt);
 
     let stmt = Stmt::DefStmt(DefStmt::HaveObjInNonemptySetStmt(have_obj_in_nonempty_set_stmt));
@@ -946,7 +953,7 @@ fn try_prove_by_induction_stmt() {
 }
 
 fn try_have_obj_equal_stmt() {
-    let have_obj_equal_stmt = HaveObjEqualStmt::new(vec!["x".to_string()], vec![ParameterType::Set(SetAsParamSet::new())], vec![Obj::mk("p")], Some((1, 0)));
+    let have_obj_equal_stmt = HaveObjEqualStmt::new(vec!["x".to_string()], vec![ParameterType::Set(Set::new())], vec![Obj::mk("p")], Some((1, 0)));
     println!("{}", have_obj_equal_stmt);
 
     let stmt = Stmt::DefStmt(DefStmt::HaveObjEqualStmt(have_obj_equal_stmt));
@@ -1025,7 +1032,7 @@ fn try_prove_for_stmt() {
 }
 
 fn try_have_obj_st_stmt() {
-    let have_obj_st_stmt = HaveObjStStmt::new(TrueExistFact::new(vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(SetAsParamSet::new()))], vec![], Some((1, 0))), Some((1, 0)));
+    let have_obj_st_stmt = HaveObjStStmt::new(TrueExistFact::new(vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(Set::new()))], vec![], Some((1, 0))), Some((1, 0)));
     println!("{}", have_obj_st_stmt);
 
     let stmt = Stmt::DefStmt(DefStmt::HaveObjStStmt(have_obj_st_stmt));
@@ -1033,7 +1040,7 @@ fn try_have_obj_st_stmt() {
 }
 
 fn try_witness_stmt() {
-    let witness_exist_fact = WitnessExistFact::new(vec![Obj::mk("p")], TrueExistFact::new(vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(SetAsParamSet::new()))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))], Some((1, 0))), vec![], Some((1, 0)));
+    let witness_exist_fact = WitnessExistFact::new(vec![Obj::mk("p")], TrueExistFact::new(vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(Set::new()))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))], Some((1, 0))), vec![], Some((1, 0)));
     println!("{}", witness_exist_fact);
 
     let stmt = Stmt::WitnessStmt(WitnessStmt::WitnessExistFact(witness_exist_fact));
@@ -1101,7 +1108,7 @@ fn try_have_fn_equal_case_by_case_stmt() {
 }
 
 fn try_def_set_template_stmt() {
-    let params_def_with_type = vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(SetAsParamSet::new()))];
+    let params_def_with_type = vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(Set::new()))];
     let def_set_template_stmt = DefSetTemplateStmt::new("A".to_string(), params_def_with_type, vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))], Obj::mk("p"), Some((1, 0)));
     println!("{}", def_set_template_stmt);
 
@@ -1152,7 +1159,7 @@ fn try_runtime_context() {
     println!("{}", runtime_context.top_level_env());
 
     let exist_fact = ExistFact::TrueExistFact(TrueExistFact::new(
-        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(SetAsParamSet::new()))],
+        vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("x".to_string(), ParameterType::Set(Set::new()))],
         vec![OrFactOrAndFactOrSpecFact::OrFact(OrFact::new(vec![AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))), AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))], Some((1, 0)))),OrFactOrAndFactOrSpecFact::OrFact(OrFact::new(vec![AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))], Some((1, 0))))],
         Some((1, 0)),
     ));
@@ -1163,7 +1170,7 @@ fn try_runtime_context() {
     }
     println!("{}", runtime_context.top_level_env());
 
-    let param_type_or_property_pairs = vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("n".to_string(), ParameterType::Set(SetAsParamSet::new()))];
+    let param_type_or_property_pairs = vec![ParamDefWithParamTypeAndProperty::ParamAndItsTypePair("n".to_string(), ParameterType::Set(Set::new()))];
     let dom_facts = vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     )))];
@@ -1187,6 +1194,14 @@ fn try_tokenizer() {
 
 fn try_token_block() {
     let s = "a:\n    b\n  c";
-    let blocks = token_block::parse_blocks(s);
+    let blocks = TokenBlock::parse_blocks(s, 0);
     println!("{:?}", blocks);
+}
+
+fn try_parser() {
+    let s = "a:\n    b\n  c";
+    let parser = Parser::new();
+    let mut token_block = TokenBlock::parse_blocks(s, 0).unwrap().into_iter().next().unwrap();
+    let stmt = parser.parse_stmt(&mut token_block);
+    println!("{}", stmt.unwrap());
 }

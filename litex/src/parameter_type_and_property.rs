@@ -20,36 +20,36 @@ pub enum ParamDefWithParamTypeAndProperty {
 
 #[derive(Clone)]
 pub enum ParameterType {
-    Set(SetAsParamSet),
-    NonemptySet(NonemptySetAsParamSet),
-    FiniteSet(FiniteSetAsParamSet),
+    Set(Set),
+    NonemptySet(NonemptySet),
+    FiniteSet(FiniteSet),
     Obj(Obj),
 }
 
 #[derive(Clone)]
-pub struct SetAsParamSet {}
+pub struct Set {}
 
 #[derive(Clone)]
-pub struct NonemptySetAsParamSet {}
+pub struct NonemptySet {}
 
 #[derive(Clone)]
-pub struct FiniteSetAsParamSet {}
+pub struct FiniteSet {}
 
-impl SetAsParamSet {
+impl Set {
     pub fn new() -> Self {
-        SetAsParamSet {}
+        Set {}
     }
 }
 
-impl NonemptySetAsParamSet {
+impl NonemptySet {
     pub fn new() -> Self {
-        NonemptySetAsParamSet {}
+        NonemptySet {}
     }
 }
 
-impl FiniteSetAsParamSet {
+impl FiniteSet {
     pub fn new() -> Self {
-        FiniteSetAsParamSet {}
+        FiniteSet {}
     }
 }
 
@@ -64,19 +64,19 @@ impl fmt::Display for ParameterType {
     }
 }
 
-impl fmt::Display for SetAsParamSet {
+impl fmt::Display for Set {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", SET)
     }
 }
 
-impl fmt::Display for NonemptySetAsParamSet {
+impl fmt::Display for NonemptySet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", NONEMPTY_SET)
     }
 }
 
-impl fmt::Display for FiniteSetAsParamSet {
+impl fmt::Display for FiniteSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", FINITE_SET)
     }

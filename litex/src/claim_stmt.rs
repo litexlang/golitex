@@ -14,11 +14,11 @@ pub struct ClaimIffStmt {
     pub to_prove: ForallFact,
     pub then_to_iff_proof: Vec<Stmt>,
     pub iff_to_then_proof: Vec<Stmt>,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 impl ClaimIffStmt {
-    pub fn new(to_prove: ForallFact, then_to_iff_proof: Vec<Stmt>, iff_to_then_proof: Vec<Stmt>, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(to_prove: ForallFact, then_to_iff_proof: Vec<Stmt>, iff_to_then_proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
         ClaimIffStmt { to_prove, then_to_iff_proof, iff_to_then_proof, line_file_index }
     }
 }
@@ -26,11 +26,11 @@ impl ClaimIffStmt {
 pub struct ClaimProveStmt {
     pub to_prove: Fact,
     pub proof: Vec<Stmt>,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 impl ClaimProveStmt {
-    pub fn new(to_prove: Fact, proof: Vec<Stmt>, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(to_prove: Fact, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
         ClaimProveStmt { to_prove, proof, line_file_index }
     }
 }
@@ -51,7 +51,7 @@ impl fmt::Display for ClaimStmt {
 }
 
 impl ClaimStmt {
-    pub fn line_file(&self) -> Option<(u16, usize)> {
+    pub fn line_file(&self) -> Option<(usize, usize)> {
         match self {
             ClaimStmt::ClaimProveStmt(claim_prove_stmt) => claim_prove_stmt.line_file_index,
             ClaimStmt::ClaimIffStmt(claim_iff_stmt) => claim_iff_stmt.line_file_index,

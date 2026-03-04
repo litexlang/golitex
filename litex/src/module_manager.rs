@@ -8,6 +8,7 @@ pub struct ModuleManager<'a> {
     pub module_path_and_names_map: HashMap<String, Vec<String>>,
     pub current_module_path: String,
     pub current_module_name: String,
+    pub current_file_index: usize,
     pub entrance_path: String,
     pub imported_module_environments: HashMap<String, Box<RuntimeContext<'a>>>,
 }
@@ -20,6 +21,7 @@ impl<'a> ModuleManager<'a> {
             module_path_and_names_map: HashMap::new(),
             current_module_path: String::new(),
             current_module_name: String::new(),
+            current_file_index: 0,
             entrance_path: String::new(),
             imported_module_environments: HashMap::new(),
         }
@@ -36,6 +38,7 @@ impl<'a>  fmt::Display for ModuleManager<'a> {
         write!(f, "current_module_name: {}", self.current_module_name)?;
         write!(f, "entrance_path: {}", self.entrance_path)?;
         write!(f, "imported_module_environments: {:?}", self.imported_module_environments.keys().collect::<Vec<&String>>())?;
+        write!(f, "current_file_index: {}", self.current_file_index)?;
         write!(f, "}}")
     }
 }

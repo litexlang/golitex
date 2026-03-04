@@ -7,11 +7,11 @@ use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 pub struct ForallFactWithIff {
     pub forall_fact: ForallFact,
     pub iff_facts: Vec<OrFactOrAndFactOrSpecFact>,
-    pub line_file_index: Option<(u16, usize)>,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 impl ForallFactWithIff {
-    pub fn new(forall_fact: ForallFact, iff_facts: Vec<OrFactOrAndFactOrSpecFact>, line_file_index: Option<(u16, usize)>) -> Self {
+    pub fn new(forall_fact: ForallFact, iff_facts: Vec<OrFactOrAndFactOrSpecFact>, line_file_index: Option<(usize, usize)>) -> Self {
         ForallFactWithIff { forall_fact, iff_facts, line_file_index }
     }
 }
