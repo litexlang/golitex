@@ -39,6 +39,7 @@ mod parser;
 mod parse_obj;
 mod parse_param_def;
 use parser::Parser;
+mod parse_statements;
 use obj::{QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz};
 use std::collections::HashMap;
 use environment::Environment;
