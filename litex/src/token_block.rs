@@ -97,12 +97,15 @@ fn parse_level(
 }
 
 impl TokenBlock {
-    pub fn current_token(&self) -> Option<&str> {
-        self.header.get(self.parse_index).map(|s| s.as_str())
+    /// 返回当前 token；若已读完则返回 Error。
+    pub fn current_token(&self) -> Result<&str, ParsingError> {
+        self.header.get(self.parse_index).map(|s| s.as_str()).ok_or_else(|| {
+            ParsingError::new("Unexpected end of tokens", self.line_file_index)
+        })
     }
 
     pub fn skip_token(self: &mut Self, token: &str) -> Result<(), ParsingError> {
-        if self.current_token().is_some() && self.current_token().unwrap() == token {
+        if self.current_token()? == token {
             self.parse_index += 1;
             Ok(())
         } else {
@@ -111,19 +114,13 @@ impl TokenBlock {
     }
 
     pub fn advance(&mut self) -> Result<String, ParsingError> {
-        if self.current_token().is_some() {
-            let token = self.current_token().unwrap().to_string();
-            self.parse_index += 1;
-            Ok(token)
-        } else {
-            Err(ParsingError::new("Expected token", self.line_file_index))
-        }
+        let t = self.current_token()?.to_string();
+        self.parse_index += 1;
+        Ok(t)
     }
 
     pub fn skip_without_checking(&mut self) -> Result<(), ParsingError> {
-        if !self.current_token().is_some() {
-            return Err(ParsingError::new("Expected token", self.line_file_index));
-        }
+        self.current_token()?;
         self.parse_index += 1;
         Ok(())
     }
