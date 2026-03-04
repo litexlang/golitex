@@ -3,7 +3,6 @@ use crate::token_block::TokenBlock;
 use crate::stmt::Stmt;
 use crate::definition_stmt::{DefStmt, DefPropStmt};
 use crate::errors::ParsingError;
-use crate::fact::Fact;
 use crate::parser::Parser;
 use crate::parameter_type_and_property::{ParamDefWithParamType};
 
@@ -34,8 +33,3 @@ impl Parser {
     }
 }
 
-impl Parser {
-    pub fn parse_facts_in_body(&self, token_block: &mut TokenBlock) -> Result<Vec<Fact>, ParsingError> {
-        panic!("Not implemented");
-    }
-}
