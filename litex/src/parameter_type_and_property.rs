@@ -1,9 +1,9 @@
 use std::fmt;
-use crate::consts::NOT;
+use crate::keywords::NOT;
 use crate::helper::vec_to_string_join_by_comma;
 use crate::obj::Obj;
 use crate::atom::Atom;
-use crate::consts::{FINITE_SET, LEFT_BRACKET, NONEMPTY_SET, RIGHT_BRACKET, SET};
+use crate::keywords::{FINITE_SET, LEFT_BRACKET, NONEMPTY_SET, RIGHT_BRACKET, SET};
 
 #[derive(Clone)]
 pub enum ParamDefWithParamSet {

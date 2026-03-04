@@ -1,6 +1,6 @@
 use crate::fact::Fact;
 use std::fmt;
-use crate::consts::UNKNOWN;
+use crate::keywords::UNKNOWN;
 use crate::helper::line_file_suffix;
 
 pub struct StmtUnknown<'a> {

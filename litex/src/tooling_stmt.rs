@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::consts::{CLEAR, DO_NOTHING, IMPORT, DOUBLE_QUOTE, AS};
+use crate::keywords::{CLEAR, DO_NOTHING, IMPORT, DOUBLE_QUOTE, AS};
 
 pub enum ToolingStmt {
     Import(ImportStmt),

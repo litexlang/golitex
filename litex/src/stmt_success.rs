@@ -2,7 +2,7 @@ use std::fmt;
 use crate::helper::line_file_suffix;
 use crate::stmt::Stmt;
 use crate::fact::Fact;
-use crate::consts::SUCCESS;
+use crate::keywords::SUCCESS;
 
 pub enum StmtSuccess<'a> {
     NonFactualStmtSuccess(NonFactualStmtSuccess<'a>),

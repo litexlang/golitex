@@ -1,4 +1,4 @@
-use crate::consts::OR;
+use crate::keywords::OR;
 use std::fmt;
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::helper::vec_to_string_with_sep;
@@ -17,7 +17,6 @@ impl OrFact {
 
 impl fmt::Display for OrFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // 把这些fact用 " or " 连接起来
         let fact_strings = self.facts.iter().map(|fact| fact.to_string()).collect::<Vec<String>>();
         write!(f, "{}", fact_strings.join(format!(" {} ", OR).as_str()))
     }

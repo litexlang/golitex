@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::consts::{CASE, CASES, CLAIM, COLON, CONTRA, ENUM, FOR, FROM, INDUC, PROVE, RIGHT_ARROW, EQUAL_SET, EQUAL, IMPOSSIBLE, VIEW_FN_AS_SET};
+use crate::keywords::{CASE, CASES, CLAIM, COLON, CONTRA, ENUM, FOR, FROM, INDUC, PROVE, RIGHT_ARROW, EQUAL_SET, EQUAL, IMPOSSIBLE, VIEW_FN_AS_SET};
 use crate::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line};
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::fact::Fact;
@@ -93,7 +93,6 @@ impl ProveCaseByCaseStmt {
 
 impl fmt::Display for ProveCaseByCaseStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // 还要考虑：如果这一位的 impossible_fact 是 None，则不输出 impossible_fact；否则再在后面一行写上 impossible ...
         let case_and_proof_of_each_case = self.cases.iter().zip(self.proofs.iter()).zip(self.impossible_facts.iter()).map(|((case, proof), impossible_fact)| {
             if let Some(impossible_fact) = impossible_fact {
                 format!("{} {}{}\n{}\n{} {}", add_four_spaces_at_beginning(CASE, 1),case, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(proof, 2), add_four_spaces_at_beginning(IMPOSSIBLE, 2), &impossible_fact.to_string())

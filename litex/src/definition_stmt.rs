@@ -3,7 +3,7 @@ use crate::parameter_type_and_property::{ParameterType, ParamDefWithParamTypeAnd
 use crate::fact::{ Fact};
 use crate::obj::{Obj};
 use std::fmt;
-use crate::consts::{CASE, COLON, COMMA, DOM, EQUAL, FN, HAVE, LEFT_BRACE, LET, PROP, RIGHT_ARROW, RIGHT_BRACE, SET_TEMPLATE};
+use crate::keywords::{CASE, COLON, COMMA, DOM, EQUAL, FN, HAVE, LEFT_BRACE, LET, PROP, RIGHT_ARROW, RIGHT_BRACE, SET_TEMPLATE};
 use crate::helper::{add_four_spaces_at_beginning,   braced_vec_to_string, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
 use crate::obj::FnSetWithDom;
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;

@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::consts::{EXIST, LEFT_CURLY_BRACE, NOT,  RIGHT_CURLY_BRACE, ST};
+use crate::keywords::{EXIST, LEFT_CURLY_BRACE, NOT,  RIGHT_CURLY_BRACE, ST};
 use crate::helper::{curly_braced_vec_to_string_with_sep, vec_to_string_join_by_comma};
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::parameter_type_and_property::ParamDefWithParamTypeAndProperty;
@@ -74,7 +74,6 @@ impl fmt::Display for NotExistFact {
     }
 }
 
-/// 从 ExistFact 取得 line 与 file_index（可能无文件信息）
 pub fn line_file(e: &ExistFact) -> Option<(u16, usize)> {
     match e {
         ExistFact::TrueExistFact(x) => x.line_file_index,

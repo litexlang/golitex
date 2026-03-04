@@ -1,4 +1,3 @@
-// Evaluate implementations
 use crate::stmt_error::ArithmeticError;
 use crate::obj::Obj;
 use crate::obj::{Add, Div, Mod, Mul, Number, Pow, Sub};

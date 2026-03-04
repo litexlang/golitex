@@ -1,12 +1,33 @@
+use std::collections::HashMap;
+use std::sync::OnceLock;
+
 pub const FACT_PREFIX: &str = "$";
 pub const MOD_SEPARATOR: &str = ".";
-
 pub const ADD: &str = "+";
 pub const SUB: &str = "-";
 pub const MUL: &str = "*";
 pub const DIV: &str = "/";
 pub const MOD: &str = "%";
 pub const POW: &str = "^";
+pub const LEFT_BRACE: &str = "(";
+pub const RIGHT_BRACE: &str = ")";
+pub const COMMA: &str = ",";
+pub const LEFT_CURLY_BRACE: &str = "{";
+pub const RIGHT_CURLY_BRACE: &str = "}";
+pub const INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL: &str = "@";
+pub const EQUAL: &str = "=";
+pub const NOT_EQUAL: &str = "!=";
+pub const LESS: &str = "<";
+pub const GREATER: &str = ">";
+pub const LESS_EQUAL: &str = "<=";
+pub const GREATER_EQUAL: &str = ">=";
+pub const RIGHT_ARROW: &str = "=>";
+pub const EQUIVALENT_SIGN: &str = "<=>";
+pub const LEFT_BRACKET: &str = "[";
+pub const RIGHT_BRACKET: &str = "]";
+pub const DOUBLE_QUOTE: &str = "\"";
+pub const COLON: &str = ":";
+
 pub const UNION: &str = "union";
 pub const INTERSECT: &str = "intersect";
 pub const SET_MINUS: &str = "set_minus";
@@ -15,115 +36,64 @@ pub const CUP: &str = "cup";
 pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
 pub const CHOICE: &str = "choice";
-
-pub const LEFT_BRACE: &str = "(";
-pub const RIGHT_BRACE: &str = ")";
-pub const COMMA: &str = ",";
-pub const LEFT_CURLY_BRACE: &str = "{";
-pub const RIGHT_CURLY_BRACE: &str = "}";
 pub const FN: &str = "fn";
-pub const INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL: &str = "@";
-
 pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
 pub const FINITE_SET: &str = "finite_set";
-
 pub const N_POS: &str = "N_pos";
 pub const N: &str = "N";
 pub const Q: &str = "Q";
 pub const Z: &str = "Z";
 pub const R: &str = "R";
-
 pub const CART: &str = "cart";
 pub const SET_DIM: &str = "set_dim";
 pub const PROJ: &str = "proj";
 pub const COUNT: &str = "count";
 pub const RANGE: &str = "range";
 pub const CLOSED_RANGE: &str = "closed_range";
-
 pub const VAL: &str = "val";
-
 pub const EXIST: &str = "exist";
 pub const ST: &str = "st";
 pub const FORALL: &str = "forall";
 pub const NOT: &str = "not";
-
-pub const EQUAL: &str = "=";
-pub const NOT_EQUAL: &str = "!=";
-pub const LESS: &str = "<";
-pub const GREATER: &str = ">";
-pub const LESS_EQUAL: &str = "<=";
-pub const GREATER_EQUAL: &str = ">=";
-
 pub const IS_SET: &str = "is_set";
 pub const IS_NONEMPTY_SET: &str = "is_nonempty_set";
 pub const IS_FINITE_SET: &str = "is_finite_set";
 pub const IS_CART: &str = "is_cart";
 pub const IS_TUPLE: &str = "is_tuple";
-
 pub const IN: &str = "in";
-
 pub const OR: &str = "or";
 pub const AND: &str = "and";
-
-pub const RIGHT_ARROW: &str = "=>";
-pub const EQUIVALENT_SIGN: &str = "<=>";
-
 pub const SUBSET: &str = "subset";
 pub const SUPERSET: &str = "superset";
-
 pub const SUCCESS: &str = "success";
 pub const UNKNOWN: &str = "unknown";
-
 pub const LET: &str = "let";
 pub const PROP: &str = "prop";
-
-pub const LEFT_BRACKET: &str = "[";
-pub const RIGHT_BRACKET: &str = "]";
-
 pub const CLAIM: &str = "claim";
 pub const PROVE: &str = "prove";
 pub const CONTRA: &str = "contra";
 pub const CASE: &str = "case";
 pub const CASES: &str = "cases";
-
 pub const IMPORT: &str = "import";
-pub const DOUBLE_QUOTE: &str = "\"";
 pub const AS: &str = "as";
-
 pub const ENUM: &str = "enum";
-
 pub const HAVE: &str = "have";
-
 pub const CLEAR: &str = "clear";
-
 pub const DO_NOTHING: &str = "do_nothing";
-
 pub const INDUC: &str = "induc";
 pub const FROM: &str = "from";
-
 pub const DOM: &str = "dom";
-
 pub const EVAL: &str = "eval";
-
 pub const FOR: &str = "for";
-
 pub const WITNESS: &str = "witness";
-
 pub const EQUAL_SET: &str = "equal_set";
-
 pub const IMPOSSIBLE: &str = "impossible";
-
 pub const VIEW_FN_AS_SET: &str = "view_fn_as_set";
-
 pub const SET_TEMPLATE: &str = "set_template";
-
 pub const RETURN: &str = "return";
 pub const IF: &str = "if";
 pub const ALGO: &str = "algo";
-
-pub const COLON: &str = ":";
-
 pub const Q_POS: &str = "Q_pos";
 pub const Z_POS: &str = "Z_pos";
 pub const R_POS: &str = "R_pos";
@@ -133,3 +103,54 @@ pub const R_NEG: &str = "R_neg";
 pub const Q_NZ: &str = "Q_nz";
 pub const Z_NZ: &str = "Z_nz";
 pub const R_NZ: &str = "R_nz";
+
+fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
+    let mut m = HashMap::new();
+    let symbols = [
+        EQUIVALENT_SIGN, NOT_EQUAL, LESS_EQUAL, GREATER_EQUAL, RIGHT_ARROW,
+        FACT_PREFIX, MOD_SEPARATOR, ADD, SUB, MUL, DIV, MOD, POW,
+        LEFT_BRACE, RIGHT_BRACE, COMMA, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE,
+        INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, EQUAL, LESS, GREATER,
+        LEFT_BRACKET, RIGHT_BRACKET, DOUBLE_QUOTE, COLON,
+    ];
+    for &s in &symbols {
+        m.insert(s, s);
+    }
+    m
+}
+
+fn build_keywords_map() -> HashMap<&'static str, &'static str> {
+    let mut m = HashMap::new();
+    let words = [
+        UNION, INTERSECT, SET_MINUS, DISJOINT_UNION, CUP, CAP, POWER_SET, CHOICE,
+        FN, SET, NONEMPTY_SET, FINITE_SET, N_POS, N, Q, Z, R,
+        CART, SET_DIM, PROJ, COUNT, RANGE, CLOSED_RANGE, VAL,
+        EXIST, ST, FORALL, NOT, IS_SET, IS_NONEMPTY_SET, IS_FINITE_SET, IS_CART, IS_TUPLE,
+        IN, OR, AND, SUBSET, SUPERSET, SUCCESS, UNKNOWN, LET, PROP,
+        CLAIM, PROVE, CONTRA, CASE, CASES, IMPORT, AS, ENUM, HAVE,
+        CLEAR, DO_NOTHING, INDUC, FROM, DOM, EVAL, FOR, WITNESS,
+        EQUAL_SET, IMPOSSIBLE, VIEW_FN_AS_SET, SET_TEMPLATE, RETURN, IF, ALGO,
+        Q_POS, Z_POS, R_POS, Q_NEG, Z_NEG, R_NEG, Q_NZ, Z_NZ, R_NZ,
+    ];
+    for &s in &words {
+        m.insert(s, s);
+    }
+    m
+}
+
+static KEY_SYMBOLS_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+static KEYWORDS_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+
+fn key_symbols_map() -> &'static HashMap<&'static str, &'static str> {
+    KEY_SYMBOLS_MAP.get_or_init(build_key_symbols_map)
+}
+
+fn keywords_map() -> &'static HashMap<&'static str, &'static str> {
+    KEYWORDS_MAP.get_or_init(build_keywords_map)
+}
+
+pub fn key_symbols_sorted_by_len_desc() -> Vec<&'static str> {
+    let mut v: Vec<&'static str> = key_symbols_map().keys().copied().collect();
+    v.sort_by(|a, b| b.len().cmp(&a.len()));
+    v
+}

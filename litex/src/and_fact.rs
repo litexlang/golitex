@@ -2,7 +2,7 @@ use crate::specific_fact::SpecFact;
 use crate::atomic_fact::AtomicFact;
 use crate::stmt_error::NewAtomicFactError;
 use std::fmt;
-use crate::consts::{AND, FACT_PREFIX};
+use crate::keywords::{AND, FACT_PREFIX};
 use crate::obj::Obj;
 use crate::atom::Atom;
 use crate::helper::vec_to_string_with_sep;

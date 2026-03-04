@@ -1,5 +1,7 @@
 mod arithmetic;
-mod consts;
+mod keywords;
+mod tokenizer;
+mod token_block;
 mod stmt_error;
 mod helper;
 mod obj;
@@ -11,7 +13,6 @@ mod fact;
 mod exist_fact;
 mod or_fact;
 mod forall_fact;
-mod reversible_fact;
 mod specific_fact;
 mod forall_fact_with_iff;
 mod and_fact;
@@ -73,7 +74,7 @@ use or_fact::OrFact;
 use forall_fact::ForallFact;
 use forall_fact_with_iff::ForallFactWithIff;
 use fact::Fact;
-use stmt_error::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError};
+use stmt_error::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError};
 use stmt_result::StmtResult;
 use stmt_success::StmtSuccess;
 use stmt_success::{NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules};
@@ -82,7 +83,6 @@ use definition_stmt::{DefPropStmt, DefLetStmt};
 use know_stmt::KnowStmt;
 use eval_stmt::{EvalStmt};
 use syntactic_verifier::SyntacticVerifier;
-
 fn main() {
     try_atom_fn_obj();
     try_arithmetic();
@@ -139,6 +139,8 @@ fn main() {
     try_module_manager();
     try_define_algorithm_stmt();
     try_runtime_context();
+    try_tokenizer();
+    try_token_block();
 }
 
 fn try_atom_fn_obj() {
@@ -609,6 +611,9 @@ fn try_errors() {
     println!("{}", err);
 
     let err: StmtError = StmtError::StoreFactError(StoreFactError::new("demo"));
+    println!("{}", err);
+
+    let err: StmtError = StmtError::ParseBlockError(ParseBlockError::ExpectedIndent { line: 1 });
     println!("{}", err);
 }
 
@@ -1137,7 +1142,6 @@ fn try_runtime_context() {
     let atomic_fact = AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))));
     println!("{}", atomic_fact.key());
 
-    // 通过 runtime_context.get_upmost_env_ref() 拿到 &mut Environment，即可改该层 env
     let stored_fact_result = runtime_context.top_level_env().store_fact(Fact::AtomicFact(atomic_fact));
     if stored_fact_result.is_err() {
         panic!("{}", stored_fact_result.err().unwrap());
@@ -1171,4 +1175,16 @@ fn try_runtime_context() {
         panic!("{}", stored_fact_result.err().unwrap());
     }
     
+}
+
+fn try_tokenizer() {
+    let line = "a+b";
+    let tokens = tokenizer::tokenize_line(line);
+    println!("{:?}", tokens);
+}
+
+fn try_token_block() {
+    let s = "a:\n    b\n  c";
+    let blocks = token_block::parse_blocks(s);
+    println!("{:?}", blocks);
 }
