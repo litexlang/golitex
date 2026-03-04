@@ -1,3 +1,4 @@
+use crate::keywords::COLON;
 use crate::errors::ParseBlockError;
 use crate::errors::ParsingError;
 use crate::tokenizer::tokenize_line;
@@ -122,6 +123,26 @@ impl TokenBlock {
     pub fn no_check_skip(&mut self) -> Result<(), ParsingError> {
         self.current()?;
         self.parse_index += 1;
+        Ok(())
+    }
+
+    pub fn head_last_token_is(&self, token: &str) -> Result<bool, ParsingError> {
+        if self.header.is_empty() {
+            return Err(ParsingError::new("Expected token: at head", self.line_file_index));
+        }
+        Ok(self.header.last().unwrap() == token)
+    }
+
+    pub fn exceed_end_of_head(&self) -> bool {
+        return self.parse_index >= self.header.len()
+    }
+
+    pub fn skip_token_and_colon_and_exceed_end_of_head(&mut self, token: &str) -> Result<(), ParsingError> {
+        self.skip_token(token)?;
+        self.skip_token(COLON)?;
+        if !self.exceed_end_of_head() {
+            return Err(ParsingError::new("Expected token: at head", self.line_file_index));
+        }   
         Ok(())
     }
 }
