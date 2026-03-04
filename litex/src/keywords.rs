@@ -27,6 +27,7 @@ pub const LEFT_BRACKET: &str = "[";
 pub const RIGHT_BRACKET: &str = "]";
 pub const DOUBLE_QUOTE: &str = "\"";
 pub const COLON: &str = ":";
+pub const INFIX_FN_NAME_SIGN: &str = "\\";
 
 pub const UNION: &str = "union";
 pub const INTERSECT: &str = "intersect";
@@ -112,6 +113,7 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         LEFT_BRACE, RIGHT_BRACE, COMMA, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE,
         INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, EQUAL, LESS, GREATER,
         LEFT_BRACKET, RIGHT_BRACKET, DOUBLE_QUOTE, COLON,
+        INFIX_FN_NAME_SIGN,
     ];
     for &s in &symbols {
         m.insert(s, s);
@@ -153,4 +155,8 @@ pub fn key_symbols_sorted_by_len_desc() -> Vec<&'static str> {
     let mut v: Vec<&'static str> = key_symbols_map().keys().copied().collect();
     v.sort_by(|a, b| b.len().cmp(&a.len()));
     v
+}
+
+pub fn is_keyword(atom_name: &str) -> bool {
+    keywords_map().contains_key(atom_name)
 }

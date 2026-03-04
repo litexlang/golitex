@@ -15,10 +15,10 @@ use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::specific_fact::SpecFact;
 use crate::and_fact::AndFact;
 use crate::forall_fact_with_iff::ForallFactWithIff;
-use crate::errors::StoreFactError;
+use crate::errors::{StoreFactError};
 
 pub struct Environment {
-    pub defined_objs: HashMap<String, ()>,
+    pub defined_atom_names: HashMap<String, ()>,
     pub defined_props: HashMap<String, DefPropStmt>,
     pub defined_set_templates: HashMap<String, DefSetTemplateStmt>,
     pub defined_algorithms: HashMap<String, DefineAlgorithmStmt>,
@@ -38,7 +38,7 @@ pub struct Environment {
 impl Environment {
     pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, set_templates: HashMap<String, DefSetTemplateStmt>, algorithms: HashMap<String, DefineAlgorithmStmt>, known_equality: HashMap<String, Rc<Vec<String>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts: HashMap<(String, bool), Vec<AtomicFact>>, known_exist_facts: HashMap<(String, bool), Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_exist_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_fn_obj_with_requirements_checked: HashMap<String,()>) -> Self {
         Environment {
-            defined_objs: objs,
+            defined_atom_names: objs,
             defined_props: props,
             defined_set_templates: set_templates,
             defined_algorithms: algorithms,
@@ -59,7 +59,7 @@ impl Environment {
 impl fmt::Display for Environment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Environment {{\n")?;
-        write!(f, "    objs: {:?}\n", self.defined_objs.len())?;
+        write!(f, "    objs: {:?}\n", self.defined_atom_names.len())?;
         write!(f, "    props: {:?}\n", self.defined_props.len())?;
         write!(f, "    set_templates: {:?}\n", self.defined_set_templates.len())?;
         write!(f, "    algorithms: {:?}\n", self.defined_algorithms.len())?;
