@@ -39,7 +39,6 @@ impl fmt::Display for Stmt {
     }
 }
 
-/// 从 Stmt 取得 line 与 file_index（可能无文件信息）
 pub fn line_file(stmt: &Stmt) -> Option<(u16, usize)> {
     match stmt {
         Stmt::Fact(fact) => fact.line_file(),

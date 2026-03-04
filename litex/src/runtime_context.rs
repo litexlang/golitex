@@ -10,7 +10,6 @@ pub struct RuntimeContext<'a> {
     pub module_manager: &'a mut ModuleManager<'a>,
     pub environments: Vec<Box<Environment>>,
 
-    // defined things in global scope
     pub defined_objs: HashMap<String, ()>,
     pub defined_props: HashMap<String, DefPropStmt>,
     pub defined_set_templates: HashMap<String, DefSetTemplateStmt>,
@@ -37,7 +36,6 @@ impl<'a> fmt::Display for RuntimeContext<'a> {
 }
 
 impl<'a> RuntimeContext<'a> {
-    /// 顶层（当前栈顶）env 的可变引用。
     pub fn top_level_env(&mut self) -> &mut Environment {
         self.environments.last_mut().unwrap()
     }

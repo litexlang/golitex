@@ -18,13 +18,11 @@ use crate::forall_fact_with_iff::ForallFactWithIff;
 use crate::stmt_error::StoreFactError;
 
 pub struct Environment {
-    // defined things in local scope
     pub defined_objs: HashMap<String, ()>,
     pub defined_props: HashMap<String, DefPropStmt>,
     pub defined_set_templates: HashMap<String, DefSetTemplateStmt>,
     pub defined_algorithms: HashMap<String, DefineAlgorithmStmt>,
 
-    // known facts
     pub known_equality: HashMap<String, Rc<Vec<String>>>,
     pub known_fn_in_fn_set: HashMap<String, FnSetObj>,
     pub known_set_equal_to_set_builder: HashMap<String, SetBuilder>,

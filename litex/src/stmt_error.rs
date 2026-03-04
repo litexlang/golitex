@@ -5,6 +5,7 @@ pub enum StmtError {
     ArithmeticError(ArithmeticError),
     NewAtomicFactError(NewAtomicFactError),
     StoreFactError(StoreFactError),
+    ParseBlockError(ParseBlockError),
 }
 
 impl std::error::Error for StmtError {}
@@ -16,6 +17,7 @@ impl fmt::Display for StmtError {
             StmtError::ArithmeticError(e) => write!(f, "{}", e),
             StmtError::NewAtomicFactError(e) => write!(f, "{}", e),
             StmtError::StoreFactError(e) => write!(f, "{}", e),
+            StmtError::ParseBlockError(e) => write!(f, "{}", e),
         }
     }
 }
@@ -75,5 +77,34 @@ impl fmt::Display for StoreFactError {
 impl StoreFactError {
     pub fn new(msg: &str) -> Self {
         StoreFactError { msg: msg.to_string() }
+    }
+}
+
+#[derive(Debug)]
+pub enum ParseBlockError {
+    ExpectedIndent { line: usize },
+    UnexpectedIndent { line: usize },
+    InconsistentIndent { line: usize },
+    MissingBody { line: usize },
+}
+
+impl std::error::Error for ParseBlockError {}
+
+impl fmt::Display for ParseBlockError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParseBlockError::ExpectedIndent { line } => {
+                write!(f, "line {}: expected indent", line)
+            }
+            ParseBlockError::UnexpectedIndent { line } => {
+                write!(f, "line {}: unexpected indent", line)
+            }
+            ParseBlockError::InconsistentIndent { line } => {
+                write!(f, "line {}: inconsistent indent", line)
+            }
+            ParseBlockError::MissingBody { line } => {
+                write!(f, "line {}: block header missing body", line)
+            }
+        }
     }
 }

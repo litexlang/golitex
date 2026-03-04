@@ -1,7 +1,7 @@
 use std::fmt;
 use crate::obj::Obj;
 use crate::atom::Atom;
-use crate::consts::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, IN, IS_CART, IS_TUPLE, SUBSET, SUPERSET, NOT_EQUAL};
+use crate::keywords::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, IN, IS_CART, IS_TUPLE, SUBSET, SUPERSET, NOT_EQUAL};
 use crate::helper::{braced_string, braced_vec_to_string};
 use crate::stmt_error::NewAtomicFactError;
 
@@ -429,7 +429,6 @@ impl fmt::Display for AtomicFact {
     }
 }
 
-/// 从 AtomicFact 取得 line 与 file_index
 pub fn line_file(a: &AtomicFact) -> Option<(u16, usize)> {
     match a {
         AtomicFact::NormalAtomicFact(x) => x.line_file_index,
