@@ -405,6 +405,16 @@ impl Parser {
         Ok(objs)
     }
 
+    /// 解析逗号分隔的 obj 列表，直到遇到非 COMMA 的 token（如 COLON）。
+    pub fn obj_list(&self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
+        let mut objs = vec![self.obj(tb)?];
+        while tb.current()? == COMMA {
+            tb.skip_token(COMMA)?;
+            objs.push(self.obj(tb)?);
+        }
+        Ok(objs)
+    }
+
     fn set_builder_or_set_list(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj(tb)?;
         if tb.current()? == COMMA {
