@@ -128,8 +128,8 @@ impl<'a> SyntacticVerifier<'a> {
                 Obj::Cart(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::SetDim(a) => match right {
-                Obj::SetDim(b) => a.to_string() == b.to_string(),
+            Obj::CartDim(a) => match right {
+                Obj::CartDim(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::Proj(a) => match right {
