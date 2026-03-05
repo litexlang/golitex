@@ -1,8 +1,8 @@
 use std::fmt;
+use crate::fact::Fact;
 use crate::forall_fact_with_iff::ForallFactWithIff;
 use crate::keywords::{CLAIM, COLON, PROVE};
-use crate::fact::Fact;
-use crate::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line,  vec_to_string_add_four_spaces_at_beginning_of_each_line, add_four_spaces_at_beginning};
+use crate::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line, add_four_spaces_at_beginning};
 use crate::stmt::Stmt;
 
 pub enum ClaimStmt {
@@ -24,20 +24,20 @@ impl ClaimIffStmt {
 }
 
 pub struct ClaimProveStmt {
-    pub to_prove: Vec<Fact>,
+    pub fact: Fact,
     pub proof: Vec<Stmt>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
 impl ClaimProveStmt {
-    pub fn new(to_prove: Vec<Fact>, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
-        ClaimProveStmt { to_prove, proof, line_file_index }
+    pub fn new(fact: Fact, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
+        ClaimProveStmt { fact, proof, line_file_index }
     }
 }
 
 impl fmt::Display for ClaimProveStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}\n{}\n{}{}\n{}", CLAIM, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1), add_four_spaces_at_beginning(PROVE, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
+        write!(f, "{}{}\n{}\n{}{}\n{}", CLAIM, COLON, to_string_and_add_four_spaces_at_beginning_of_each_line(&self.fact.to_string(), 1), add_four_spaces_at_beginning(PROVE, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
     }
 }
 

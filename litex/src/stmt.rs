@@ -6,7 +6,6 @@ use crate::know_stmt::KnowStmt;
 use crate::prove_by_builtin_techniques_stmt::ProveByBuiltinTechniqueStmt;
 use crate::tooling_stmt::ToolingStmt;
 use crate::prove_stmt::ProveStmt;
-use crate::run_file_stmt::RunFileStmt;
 use crate::eval_stmt::EvalStmt;
 use crate::witness_stmt::WitnessStmt;
 pub enum Stmt {
@@ -14,12 +13,11 @@ pub enum Stmt {
     DefStmt(DefStmt),
     ClaimStmt(ClaimStmt),
     KnowStmt(KnowStmt),
-    ProofTechnique(ProveByBuiltinTechniqueStmt),
-    ToolingStmt(ToolingStmt),
     ProveStmt(ProveStmt),
-    RunFileStmt(RunFileStmt),
+    ToolingStmt(ToolingStmt),
     EvalStmt(EvalStmt),
     WitnessStmt(WitnessStmt),
+    ProofTechnique(ProveByBuiltinTechniqueStmt),
 }
 
 impl fmt::Display for Stmt {
@@ -32,7 +30,6 @@ impl fmt::Display for Stmt {
             Stmt::ProofTechnique(proof_technique) => write!(f, "{}", proof_technique),
             Stmt::ToolingStmt(tooling_stmt) => write!(f, "{}", tooling_stmt),
             Stmt::ProveStmt(prove_stmt) => write!(f, "{}", prove_stmt),
-            Stmt::RunFileStmt(run_file_stmt) => write!(f, "{}", run_file_stmt),
             Stmt::EvalStmt(eval_stmt) => write!(f, "{}", eval_stmt),
             Stmt::WitnessStmt(witness_stmt) => write!(f, "{}", witness_stmt),
         }
@@ -48,7 +45,6 @@ pub fn line_file(stmt: &Stmt) -> Option<(usize, usize)> {
         Stmt::ProofTechnique(proof_technique) => proof_technique.line_file(),
         Stmt::ToolingStmt(tooling_stmt) => tooling_stmt.line_file(),
         Stmt::ProveStmt(prove_stmt) => prove_stmt.line_file_index,
-        Stmt::RunFileStmt(run_file_stmt) => run_file_stmt.line_file_index,
         Stmt::EvalStmt(eval_stmt) => eval_stmt.line_file_index,
         Stmt::WitnessStmt(witness_stmt) => witness_stmt.line_file(),
     }
