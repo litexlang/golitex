@@ -41,6 +41,7 @@ mod parse_param_def;
 mod parse_fact;
 mod parse_def_stmt;
 mod parse_know_stmt;
+mod parse_claim_stmt;
 use parser::Parser;
 mod parse_stmt;
 use parameter_type_and_property::ParamDefWithParamType;
