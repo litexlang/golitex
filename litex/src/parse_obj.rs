@@ -6,6 +6,7 @@ use crate::keywords::{
     RIGHT_BRACE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB,
     UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, CUP, FN,
     is_key_symbol_or_keyword,
+    is_set_operator,
 };
 use crate::parser::Parser;
 use crate::token_block::TokenBlock;
@@ -29,12 +30,23 @@ impl Parser {
         match tb.current()? {
             INFIX_FN_NAME_SIGN => {
                 let fn_name = self.atom(tb)?;
+                
+                let right = self.obj(tb)?;
+
+                if is_set_operator(&fn_name.to_string()) {
+                    return match fn_name.to_string().as_str() {
+                        UNION => Ok(Obj::Union(Union::new(left, right))),
+                        INTERSECT => Ok(Obj::Intersect(Intersect::new(left, right))),
+                        SET_MINUS => Ok(Obj::SetMinus(SetMinus::new(left, right))),
+                        DISJOINT_UNION => Ok(Obj::DisjointUnion(DisjointUnion::new(left, right))),
+                        _ => Err(ParsingError::new(&format!("Invalid set operator: {}", fn_name), tb.line_file_index)),
+                    };
+                }
 
                 if is_key_symbol_or_keyword(&fn_name.to_string()) {
                     return Err(ParsingError::new(&format!("Invalid function name behind infix function name sign {}: {}", INFIX_FN_NAME_SIGN, fn_name), tb.line_file_index));
                 }
                 
-                let right = self.obj(tb)?;
                 let head = match fn_name {
                     Atom::AtomWithoutModName(a) => Obj::AtomWithoutModName(a),
                     Atom::AtomWithModName(a) => Obj::AtomWithModName(a),
