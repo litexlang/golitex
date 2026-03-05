@@ -168,3 +168,7 @@ fn is_key_symbol(atom_name: &str) -> bool {
 pub fn is_key_symbol_or_keyword(atom_name: &str) -> bool {
     is_key_symbol(atom_name) || is_keyword(atom_name)
 }
+
+pub fn is_comparison_str(atom_name: &str) -> bool {
+    atom_name == EQUAL || atom_name == NOT_EQUAL || atom_name == LESS || atom_name == GREATER || atom_name == LESS_EQUAL || atom_name == GREATER_EQUAL
+}

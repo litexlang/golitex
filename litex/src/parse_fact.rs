@@ -1,3 +1,7 @@
+use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
+use crate::atom::Atom;
+use crate::atomic_fact::{AtomicFact, NormalAtomicFact, NotNormalAtomicFact};
+use crate::exist_fact::{ExistFact, TrueExistFact, NotExistFact};
 use crate::parameter_type_and_property::ParamDefWithParamType;
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::forall_fact::ForallFact;
@@ -6,8 +10,12 @@ use crate::parser::Parser;
 use crate::token_block::TokenBlock;
 use crate::errors::ParsingError;
 use crate::fact::Fact;
-use crate::keywords::{COLON, EQUIVALENT_SIGN, FORALL, RIGHT_ARROW};
+use crate::and_fact::{AndFact, AndSpecFacts, ChainFact};
+use crate::atom::AtomWithoutModName;
+use crate::keywords::{AND, COLON, COMMA, EQUIVALENT_SIGN, EXIST, FACT_PREFIX, FORALL, LEFT_CURLY_BRACE, NOT, OR, RIGHT_ARROW, RIGHT_CURLY_BRACE, ST};
+use crate::or_fact::OrFact;
 use crate::specific_fact::SpecFact;
+use crate::keywords::is_comparison_str;
 
 impl Parser {
     pub fn fact(&self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
@@ -126,8 +134,141 @@ impl Parser {
     }
 
     fn or_and_spec_fact(&self, tb: &mut TokenBlock) -> Result<OrFactOrAndFactOrSpecFact, ParsingError> {
-        _ = tb;
-        panic!("")
+        let left_most = self.and_spec_fact(tb)?;
+        let mut facts = vec![left_most];
+        while tb.current()? == OR {
+            tb.skip_token(OR)?;
+            facts.push(self.and_spec_fact(tb)?);
+        }
+        if facts.len() == 1 {
+            let one = facts.into_iter().next().unwrap();
+            Ok(match one {
+                AndFactOrSpecFact::AndFact(a) => OrFactOrAndFactOrSpecFact::AndFact(a),
+                AndFactOrSpecFact::SpecFact(s) => OrFactOrAndFactOrSpecFact::SpecFact(s),
+            })
+        } else {
+            Ok(OrFactOrAndFactOrSpecFact::OrFact(OrFact::new(facts, Some(tb.line_file_index))))
+        }
+    }
+
+    fn and_spec_fact(&self, tb: &mut TokenBlock) -> Result<AndFactOrSpecFact, ParsingError> {
+        let left_most = self.spec_fact_chain_fact(tb, true)?;
+        let mut facts = vec![left_most];
+        while tb.current()? == AND {
+            tb.skip_token(AND)?;
+            facts.push(self.spec_fact_chain_fact(tb, true)?);
+        }
+        if facts.len() == 1 {
+            Ok(facts.into_iter().next().unwrap())
+        } else {
+            let spec_facts: Vec<SpecFact> = facts
+                .into_iter()
+                .map(|f| match f {
+                    AndFactOrSpecFact::SpecFact(s) => Ok(s),
+                    AndFactOrSpecFact::AndFact(_) => Err(ParsingError::new("and-list cannot mix chain and spec fact", tb.line_file_index)),
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok(AndFactOrSpecFact::AndFact(AndFact::AndSpecFacts(AndSpecFacts::new(spec_facts, Some(tb.line_file_index)))))
+        }
+    }
+
+    /// 返回 AndFactOrSpecFact：要么单个 SpecFact（含 NOT/EXIST/原子），要么链式 AndFact::ChainFact。
+    fn spec_fact_chain_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<AndFactOrSpecFact, ParsingError> {
+        if tb.current()? == NOT {
+            tb.skip_token(NOT)?;
+            self.spec_fact_chain_fact(tb, !is_true)
+        } else if tb.current()? == EXIST {
+            Ok(AndFactOrSpecFact::SpecFact(SpecFact::ExistFact(self.exist_fact(tb, is_true)?)))
+        } else {
+            self.atomic_or_chain_fact(tb, is_true)
+        }
+    }
+
+    fn atomic_or_chain_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<AndFactOrSpecFact, ParsingError> {
+        if tb.current()? == FACT_PREFIX {
+            tb.skip_token(FACT_PREFIX)?;
+            let prop_name = self.atom(tb)?;
+            let args = self.braced_objs(tb)?;
+            let line = Some(tb.line_file_index);
+            let atomic = if is_true {
+                AtomicFact::NormalAtomicFact(NormalAtomicFact::new(prop_name, args, line))
+            } else {
+                AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(prop_name, args, line))
+            };
+            Ok(AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(atomic)))
+        } else {
+            let left_most_obj = self.obj(tb)?;
+            let mut objs = vec![left_most_obj];
+            let mut prop_names: Vec<Atom> = vec![];
+
+            loop {
+                let tok = tb.current()?.to_string();
+                if is_comparison_str(&tok) {
+                    tb.no_check_skip()?;
+                    let next_obj = self.obj(tb)?;
+                    prop_names.push(Atom::AtomWithoutModName(AtomWithoutModName::new(&tok)));
+                    objs.push(next_obj);
+                } else if tok == FACT_PREFIX {
+                    tb.skip_token(FACT_PREFIX)?;
+                    let prop_name = self.atom(tb)?;
+                    let next_obj = self.obj(tb)?;
+                    prop_names.push(prop_name);
+                    objs.push(next_obj);
+                } else {
+                    break;
+                }
+            }
+
+            if prop_names.is_empty() {
+                return Err(ParsingError::new("Expected operator or $prop after object in chain", tb.line_file_index));
+            }
+            if prop_names.len() == 1 {
+                let prop_name = prop_names.into_iter().next().unwrap();
+                let line = Some(tb.line_file_index);
+                let atomic = if is_true {
+                    AtomicFact::NormalAtomicFact(NormalAtomicFact::new(prop_name, objs, line))
+                } else {
+                    AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(prop_name, objs, line))
+                };
+                return Ok(AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(atomic)));
+            }
+            if !is_true {
+                return Err(ParsingError::new("chain fact cannot be negated", tb.line_file_index));
+            }
+            Ok(AndFactOrSpecFact::AndFact(AndFact::ChainFact(ChainFact::new(objs, prop_names, Some(tb.line_file_index)))))
+        }
+    }
+
+    fn exist_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<ExistFact, ParsingError> {
+        tb.skip_token(EXIST)?;
+        let mut param_def: Vec<ParamDefWithParamType> = vec![];
+        while tb.current()? != ST {
+            param_def.push(self.param_def_with_param_type(tb)?);
+            if tb.current()? == COMMA {
+                tb.skip_token(COMMA)?;
+            }
+        }
+        tb.skip_token(ST)?;
+
+        let facts = if tb.current()? == LEFT_CURLY_BRACE {
+            tb.skip_token(LEFT_CURLY_BRACE)?;
+            let mut facts = vec![self.or_and_spec_fact(tb)?];
+            while tb.current()? == COMMA {
+                tb.skip_token(COMMA)?;
+                facts.push(self.or_and_spec_fact(tb)?);
+            }
+            tb.skip_token(RIGHT_CURLY_BRACE)?;
+            facts
+        } else {
+            vec![self.or_and_spec_fact(tb)?]
+        };
+
+        let line = Some(tb.line_file_index);
+        if is_true {
+            Ok(ExistFact::TrueExistFact(TrueExistFact::new(param_def, facts, line)))
+        } else {
+            Ok(ExistFact::NotExistFact(NotExistFact::new(param_def, facts, line)))
+        }
     }
 
     pub fn parse_facts_in_body(&self, tb: &mut TokenBlock) -> Result<Vec<Fact>, ParsingError> 
