@@ -299,7 +299,7 @@ impl Parser {
         // 3. 若是 atom，后面可以接多组 (args)，每组变成 FnObj(head, args)
         let is_atom = matches!(result, Obj::AtomWithoutModName(_) | Obj::AtomWithModName(_));
         if is_atom {
-            while tb.current()? == LEFT_BRACE {
+            while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
                 let args = self.braced_objs(tb)?;
                 result = Obj::FnObj(FnObj::new(result, args));
             }
