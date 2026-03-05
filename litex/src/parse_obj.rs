@@ -319,7 +319,7 @@ impl Parser {
         }
     }
 
-    fn braced_objs(&self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
+    pub fn braced_objs(&self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut objs = vec![self.obj(tb)?];
         while tb.current()? == COMMA {
