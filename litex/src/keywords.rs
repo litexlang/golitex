@@ -47,7 +47,7 @@ pub const Q: &str = "Q";
 pub const Z: &str = "Z";
 pub const R: &str = "R";
 pub const CART: &str = "cart";
-pub const SET_DIM: &str = "set_dim";
+pub const CART_DIM: &str = "cart_dim";
 pub const PROJ: &str = "proj";
 pub const COUNT: &str = "count";
 pub const RANGE: &str = "range";
@@ -127,7 +127,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
     let words = [
         UNION, INTERSECT, SET_MINUS, DISJOINT_UNION, CUP, CAP, POWER_SET, CHOICE,
         FN, SET, NONEMPTY_SET, FINITE_SET, N_POS, N, Q, Z, R,
-        CART, SET_DIM, PROJ, COUNT, RANGE, CLOSED_RANGE, VAL,
+        CART, CART_DIM, PROJ, COUNT, RANGE, CLOSED_RANGE, VAL,
         EXIST, ST, FORALL, NOT, IS_SET, IS_NONEMPTY_SET, IS_FINITE_SET, IS_CART, IS_TUPLE,
         IN, OR, AND, SUBSET, SUPERSET, SUCCESS, UNKNOWN, LET, PROP,
         CLAIM, PROVE, CONTRA, CASE, CASES, IMPORT, AS, ENUM, HAVE, KNOW,

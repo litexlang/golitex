@@ -3,7 +3,7 @@ use crate::keywords::{
     INFIX_FN_NAME_SIGN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT,
     LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, DOT, MUL, N, N_POS, POW,
     POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, RANGE, R_NEG, R_NZ, R_POS,
-    RIGHT_BRACE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB,
+    RIGHT_BRACE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, CART_DIM, SET_MINUS, SUB,
     UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, CUP, FN,
     is_key_symbol_or_keyword,
     is_set_operator,
@@ -14,7 +14,7 @@ use crate::obj::{
     Obj, FnObj, FnSetObj, FnSetWithDom, FnSetWithoutDom, Add, Mul, Div, Mod, Sub, Pow, Number, InstSetTemplateObj, ListSet,
     NPosObj, NObj, QObj, ZObj, RObj, QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz,
     ObjAtIndex, Union, Intersect, SetMinus, DisjointUnion, Cup, Cap, PowerSet, Choose,
-    Cart, SetDim, Proj, Count, Range, ClosedRange, Val,
+    Cart, CartDim, Proj, Count, Range, ClosedRange, Val,
 };
 use crate::atom::{Atom, AtomWithoutModName, AtomWithModName};
 use crate::errors::ParsingError;
@@ -27,6 +27,9 @@ impl Parser {
 
     fn obj_hierarchy0(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj_hierarchy1(tb)?;
+        if tb.exceed_end_of_head() {
+            return Ok(left);
+        }
         match tb.current()? {
             INFIX_FN_NAME_SIGN => {
                 let fn_name = self.atom(tb)?;
@@ -59,6 +62,9 @@ impl Parser {
 
     fn obj_hierarchy1(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj_hierarchy2(tb)?;
+        if tb.exceed_end_of_head() {
+            return Ok(left);
+        }
         match tb.current()? {
             MUL => {
                 tb.skip()?;
@@ -93,6 +99,9 @@ impl Parser {
 
     fn obj_hierarchy2(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj_hierarchy3(tb)?;
+        if tb.exceed_end_of_head() {
+            return Ok(left);
+        }
         match tb.current()? {
             ADD => {
                 tb.skip()?;
@@ -118,6 +127,9 @@ impl Parser {
 
     fn obj_hierarchy3(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj_hierarchy4(tb)?;
+        if tb.exceed_end_of_head() {
+            return Ok(left);
+        }
         match tb.current()? {
             POW => {
                 tb.skip()?;
@@ -134,6 +146,9 @@ impl Parser {
 
     fn obj_hierarchy4(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj_hierarchy5(tb)?;
+        if tb.exceed_end_of_head() {
+            return Ok(left);
+        }
         match tb.current()? {
             LEFT_BRACKET => {
                 tb.skip_token(LEFT_BRACKET)?;
@@ -256,7 +271,15 @@ impl Parser {
         // 1. 数字
         if starts_with_digit(token) {
             let number = tb.advance()?;
-            if tb.current()? != DOT {
+            // 若已经到行尾，则直接检查并返回
+            if tb.exceed_end_of_head() {
+                if !is_number(&number) {
+                    return Err(ParsingError::new(&format!("Invalid number: {}", number), tb.line_file_index));
+                }
+                return Ok(Obj::Number(Number::new(&number)));
+            }
+
+            if tb.current()? == DOT {
                 tb.skip()?;
                 let fraction = tb.advance()?;
                 let number = format!("{}{}{}", number, DOT, fraction);
@@ -264,12 +287,12 @@ impl Parser {
                     return Err(ParsingError::new(&format!("Invalid number: {}", number), tb.line_file_index));
                 }
                 return Ok(Obj::Number(Number::new(&number)));
-            } else {
-                if !is_number(&number) {
-                    return Err(ParsingError::new(&format!("Invalid number: {}", number), tb.line_file_index));
-                }
-                return Ok(Obj::Number(Number::new(&number)));
             }
+
+            if !is_number(&number) {
+                return Err(ParsingError::new(&format!("Invalid number: {}", number), tb.line_file_index));
+            }
+            return Ok(Obj::Number(Number::new(&number)));
         }
 
         // 2. 单符号集合、多元关键字、或 atom
@@ -383,11 +406,11 @@ impl Parser {
             if args.len() != 1 { return Err(ParsingError::new("power_set expects 1 argument", tb.line_file_index)); }
             return Ok(Obj::PowerSet(PowerSet::new(args.into_iter().next().unwrap())));
         }
-        if tok == SET_DIM {
+        if tok == CART_DIM {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 1 { return Err(ParsingError::new("set_dim expects 1 argument", tb.line_file_index)); }
-            return Ok(Obj::SetDim(SetDim::new(args.into_iter().next().unwrap())));
+            return Ok(Obj::CartDim(CartDim::new(args.into_iter().next().unwrap())));
         }
         if tok == COUNT {
             tb.skip()?;
@@ -478,7 +501,7 @@ impl Parser {
 
     pub fn atom(&self, tb: &mut TokenBlock) -> Result<Atom, ParsingError> {
         let left = tb.advance()?;
-        if tb.current()? == DOT {
+        if !tb.exceed_end_of_head() && tb.current()? == DOT {
             tb.skip()?;
             let right = tb.advance()?;
             Ok(Atom::AtomWithModName(AtomWithModName::new(&left, &right)))
