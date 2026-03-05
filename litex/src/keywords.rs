@@ -36,7 +36,7 @@ pub const DISJOINT_UNION: &str = "disjoint_union";
 pub const CUP: &str = "cup";
 pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
-pub const CHOICE: &str = "choice";
+pub const CHOOSE: &str = "choose";
 pub const FN: &str = "fn";
 pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
@@ -125,7 +125,7 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
 fn build_keywords_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
     let words = [
-        UNION, INTERSECT, SET_MINUS, DISJOINT_UNION, CUP, CAP, POWER_SET, CHOICE,
+        UNION, INTERSECT, SET_MINUS, DISJOINT_UNION, CUP, CAP, POWER_SET, CHOOSE,
         FN, SET, NONEMPTY_SET, FINITE_SET, N_POS, N, Q, Z, R,
         CART, CART_DIM, PROJ, COUNT, RANGE, CLOSED_RANGE, VAL,
         EXIST, ST, FORALL, NOT, IS_SET, IS_NONEMPTY_SET, IS_FINITE_SET, IS_CART, IS_TUPLE,
@@ -172,8 +172,4 @@ pub fn is_key_symbol_or_keyword(atom_name: &str) -> bool {
 
 pub fn is_comparison_str(atom_name: &str) -> bool {
     atom_name == EQUAL || atom_name == NOT_EQUAL || atom_name == LESS || atom_name == GREATER || atom_name == LESS_EQUAL || atom_name == GREATER_EQUAL
-}
-
-pub fn is_set_operator(atom_name: &str) -> bool {
-    return atom_name == UNION || atom_name == INTERSECT || atom_name == SET_MINUS || atom_name == DISJOINT_UNION
 }

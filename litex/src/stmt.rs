@@ -36,17 +36,19 @@ impl fmt::Display for Stmt {
     }
 }
 
-pub fn line_file(stmt: &Stmt) -> Option<(usize, usize)> {
-    match stmt {
-        Stmt::Fact(fact) => fact.line_file(),
-        Stmt::DefStmt(def_stmt) => def_stmt.line_file(),
-        Stmt::ClaimStmt(claim_stmt) => claim_stmt.line_file(),
-        Stmt::KnowStmt(know_stmt) => know_stmt.line_file(),
-        Stmt::ProofTechnique(proof_technique) => proof_technique.line_file(),
-        Stmt::ToolingStmt(tooling_stmt) => tooling_stmt.line_file(),
-        Stmt::ProveStmt(prove_stmt) => prove_stmt.line_file_index,
-        Stmt::EvalStmt(eval_stmt) => eval_stmt.line_file_index,
-        Stmt::WitnessStmt(witness_stmt) => witness_stmt.line_file(),
+impl Stmt {
+    pub fn line_file(&self) -> Option<(usize, usize)> {
+        match self {
+            Stmt::Fact(fact) => fact.line_file(),
+            Stmt::DefStmt(def_stmt) => def_stmt.line_file(),
+            Stmt::ClaimStmt(claim_stmt) => claim_stmt.line_file(),
+            Stmt::KnowStmt(know_stmt) => know_stmt.line_file(),
+            Stmt::ProofTechnique(proof_technique) => proof_technique.line_file(),
+            Stmt::ToolingStmt(tooling_stmt) => tooling_stmt.line_file(),
+            Stmt::ProveStmt(prove_stmt) => prove_stmt.line_file_index,
+            Stmt::EvalStmt(eval_stmt) => eval_stmt.line_file_index,
+            Stmt::WitnessStmt(witness_stmt) => witness_stmt.line_file(),
+        }
     }
 }
 

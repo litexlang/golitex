@@ -113,12 +113,11 @@ impl Parser {
     }
 
 
-    // hierarchy 2
-    pub(crate) fn or_and_spec_fact(&self, tb: &mut TokenBlock) -> Result<OrFactOrAndFactOrSpecFact, ParsingError> {
-        let left_most = self.and_spec_fact(tb)?;
-        let mut facts = vec![left_most];
-        while tb.current()? == OR {
-            tb.skip_token(OR)?;
+    // hierarchy 2: or 并列
+    pub fn or_and_spec_fact(&self, tb: &mut TokenBlock) -> Result<OrFactOrAndFactOrSpecFact, ParsingError> {
+        let mut facts = vec![self.and_spec_fact(tb)?];
+        while !tb.exceed_end_of_head() && tb.current()? == OR {
+            tb.skip()?;
             facts.push(self.and_spec_fact(tb)?);
         }
         if facts.len() == 1 {
@@ -132,12 +131,11 @@ impl Parser {
         }
     }
 
-    // hierarchy 3
-    pub(crate) fn and_spec_fact(&self, tb: &mut TokenBlock) -> Result<AndFactOrSpecFact, ParsingError> {
-        let left_most = self.spec_fact_chain_fact(tb, true)?;
-        let mut facts = vec![left_most];
-        while tb.current()? == AND {
-            tb.skip_token(AND)?;
+    // hierarchy 3: and 并列
+    pub fn and_spec_fact(&self, tb: &mut TokenBlock) -> Result<AndFactOrSpecFact, ParsingError> {
+        let mut facts = vec![self.spec_fact_chain_fact(tb, true)?];
+        while !tb.exceed_end_of_head() && tb.current()? == AND {
+            tb.skip()?;
             facts.push(self.spec_fact_chain_fact(tb, true)?);
         }
         if facts.len() == 1 {
@@ -158,7 +156,7 @@ impl Parser {
     // hierarchy 4
     fn spec_fact_chain_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<AndFactOrSpecFact, ParsingError> {
         if tb.current()? == NOT {
-            tb.skip_token(NOT)?;
+            tb.skip()?;
             self.spec_fact_chain_fact(tb, !is_true)
         } else if tb.current()? == EXIST {
             Ok(AndFactOrSpecFact::SpecFact(SpecFact::ExistFact(self.exist_fact(tb, is_true)?)))
@@ -169,7 +167,7 @@ impl Parser {
 
     fn atomic_or_chain_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<AndFactOrSpecFact, ParsingError> {
         if tb.current()? == FACT_PREFIX {
-            tb.skip_token(FACT_PREFIX)?;
+            tb.skip()?;
             let prop_name = self.atom(tb)?;
             let args = self.braced_objs(tb)?;
             let line = Some(tb.line_file_index);
@@ -184,7 +182,7 @@ impl Parser {
             let mut objs = vec![left_most_obj];
             let mut prop_names: Vec<Atom> = vec![];
 
-            loop {
+            while !tb.exceed_end_of_head() && (is_comparison_str(tb.current()?) || tb.current()? != FACT_PREFIX) {
                 let tok = tb.current()?.to_string();
                 if is_comparison_str(&tok) {
                     tb.skip()?;

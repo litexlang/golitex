@@ -38,7 +38,7 @@ const VERIFIED_BY: &str = "verified by:";
 
 impl<'a> fmt::Display for NonFactualStmtSuccess<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let loc = line_file_suffix(crate::stmt::line_file(self.stmt));
+        let loc = line_file_suffix(self.stmt.line_file());
         write!(f, "{}{}\n{}", SUCCESS, loc, self.stmt)
     }
 }
