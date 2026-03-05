@@ -1,8 +1,9 @@
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
-use crate::definition_stmt::{DefLetStmt, DefPropStmt, DefStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt};
+use crate::definition_stmt::{DefLetStmt, DefPropStmt, DefSetTemplateStmt, DefStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt};
 use crate::exist_fact::ExistFact;
 use crate::errors::ParsingError;
-use crate::keywords::{CASE, COLON, COMMA, EQUAL, FN, HAVE, LEFT_BRACE, LET, PROP, RIGHT_BRACE};
+use crate::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefineAlgorithmStmt};
+use crate::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, FN, HAVE, IF, LEFT_BRACE, LET, PROP, RETURN, RIGHT_BRACE, SET_TEMPLATE};
 use crate::parameter_type_and_property::{ParamDefWithParamType, ParamDefWithParamTypeOrProperty};
 use crate::parser::Parser;
 use crate::stmt::Stmt;
@@ -137,4 +138,99 @@ impl Parser {
             Some(tb.line_file_index),
         ))))
     }
+
+    pub fn def_set_template_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        tb.skip_token(SET_TEMPLATE)?;
+        let name = tb.advance()?;
+        tb.skip_token(LEFT_BRACE)?;
+        let mut params_def_with_type: Vec<ParamDefWithParamTypeOrProperty> = vec![];
+        while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
+            params_def_with_type.push(self.param_def_with_param_type(tb)?);
+            if tb.current()? == COMMA {
+                tb.skip_token(COMMA)?;
+            }
+        }
+        let dom_facts = if tb.current()? == COLON {
+            tb.skip_token(COLON)?;
+            let mut facts = vec![];
+            while tb.current()? != RIGHT_BRACE {
+                facts.push(self.or_and_spec_fact(tb)?);
+                if tb.current()? == COMMA {
+                    tb.skip_token(COMMA)?;
+                }
+            }
+            facts
+        } else {
+            vec![]
+        };
+        tb.skip_token(RIGHT_BRACE)?;
+        tb.skip_token(EQUAL)?;
+        let equal_to = self.obj(tb)?;
+        Ok(Stmt::DefStmt(DefStmt::DefSetTemplateStmt(DefSetTemplateStmt::new(
+            name,
+            params_def_with_type,
+            dom_facts,
+            equal_to,
+            Some(tb.line_file_index),
+        ))))
+    }
+
+    pub fn def_algorithm_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        tb.skip_token(ALGO)?;
+        let name = tb.advance()?;
+        tb.skip_token(LEFT_BRACE)?;
+        let mut params: Vec<String> = vec![];
+        while tb.current()? != RIGHT_BRACE {
+            params.push(tb.advance()?);
+            if tb.current()? == COMMA {
+                tb.skip_token(COMMA)?;
+            }
+        }
+        tb.skip_token(RIGHT_BRACE)?;
+        tb.skip_token(COLON)?;
+        let mut return_or_algo_if: Vec<AlgoReturnOrAlgoIf> = vec![];
+        for block in tb.body.iter_mut() {
+            let item = if block.current()? == IF {
+                AlgoReturnOrAlgoIf::AlgoIf(self.parse_algo_if(block)?)
+            } else if block.current()? == RETURN {
+                AlgoReturnOrAlgoIf::AlgoReturn(self.parse_algo_return(block)?)
+            } else {
+                return Err(ParsingError::new("algo body block must start with if or return", block.line_file_index));
+            };
+            return_or_algo_if.push(item);
+        }
+        Ok(Stmt::DefStmt(DefStmt::DefineAlgorithmStmt(DefineAlgorithmStmt::new(
+            name,
+            params,
+            return_or_algo_if,
+            Some(tb.line_file_index),
+        ))))
+    }
+
+    /// head 里是 if and_spec_fact :，body 有且只有一个块，即 return obj。
+    fn parse_algo_if(&self, block: &mut TokenBlock) -> Result<AlgoIf, ParsingError> {
+        block.skip_token(IF)?;
+        let condition = self.and_spec_fact(block)?;
+        block.skip_token(COLON)?;
+        if !block.exceed_end_of_head() {
+            return Err(ParsingError::new("algo if: expected end of head after condition", block.line_file_index));
+        }
+        if block.body.len() != 1 {
+            return Err(ParsingError::new("algo if block must have exactly one body block (return stmt)", block.line_file_index));
+        }
+        let return_stmt = self.parse_algo_return(block.body.first_mut().unwrap())?;
+        Ok(AlgoIf::new(
+            condition,
+            return_stmt,
+            Some(block.line_file_index),
+        ))
+    }
+
+    /// head 里是 return，后跟 obj。
+    fn parse_algo_return(&self, block: &mut TokenBlock) -> Result<AlgoReturn, ParsingError> {
+        block.skip_token(RETURN)?;
+        let value = self.obj(block)?;
+        Ok(AlgoReturn::new(value, Some(block.line_file_index)))
+    }
+
 }

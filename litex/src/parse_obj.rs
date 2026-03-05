@@ -147,7 +147,7 @@ impl Parser {
                     FnSetObj::FnSetWithoutDom(fs) => Ok(Obj::FnSetWithoutDom(fs)),
                 }
             },
-            _ => self.number_or_primary_obj_or_fn_obj(tb)
+            _ => self.number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
         }
     }
 
@@ -217,6 +217,16 @@ impl Parser {
         tb.skip_token(RIGHT_BRACE)?;
         let ret_set = self.obj(tb)?;
         Ok(FnSetWithoutDom::new(param_sets, ret_set))
+    }
+
+    pub fn number_or_primary_obj_or_fn_obj_with_minus_prefix(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+        if tb.current()? == SUB {
+            tb.skip()?;
+            let obj = self.number_or_primary_obj_or_fn_obj(tb)?;
+            Ok(Obj::Mul(Mul::new(Obj::Number(Number::new("-1")), obj, false)))
+        } else {
+            self.number_or_primary_obj_or_fn_obj(tb)
+        }
     }
 
     /// 若得到 atom，调用方再给其接若干 (args) 变成 FnObj。
