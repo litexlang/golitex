@@ -16,7 +16,7 @@ use obj::{
     Union, Intersect, SetMinus, DisjointUnion, Cup, Cap,
     ListSet, SetBuilder, FnSetWithoutDom, FnSetWithDom,
     NPosObj, NObj, QObj, ZObj, RObj, InstSetTemplateObj,
-    Cart, SetDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choose, ObjAtIndex,
+    Cart, CartDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choose, ObjAtIndex,
     FnSetObj,
 };
 mod stmt;
@@ -99,6 +99,9 @@ mod parse_witness;
 mod parse_stmt;
 mod parse_eval_stmt;
 mod parse_proof_technique_stmt;
+
+#[cfg(test)]
+mod parser_tests;
 
 fn main() {
     try_atom_fn_obj();
@@ -354,7 +357,7 @@ fn try_instantiated_set_template_obj() {
 fn try_cart_set_dim_proj_dim_tuple() {
     let mk = |s: &str| Obj::AtomWithoutModName(AtomWithoutModName::new(s));
     let cart = Obj::Cart(Cart::new(vec![mk("a"), mk("b")]));
-    let set_dim = Obj::SetDim(SetDim::new(mk("a")));
+    let set_dim = Obj::CartDim(CartDim::new(mk("a")));
     let proj = Obj::Proj(Proj::new(mk("a"), mk("b")));
     let dim = Obj::Dim(Dim::new(mk("b")));
     println!("{}", cart);
@@ -1133,7 +1136,7 @@ fn try_runtime_context() {
     let fn_set_obj = FnSetObj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("x".to_string(), Obj::mk("p"))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))], Obj::mk("p")));
     println!("{}", fn_set_obj);
 
-    let environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
+    let environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
 
     let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
     println!("{}", runtime_context);
