@@ -145,6 +145,12 @@ impl TokenBlock {
         }   
         Ok(())
     }
+
+    pub fn token_at_index(&self, index: usize) -> Result<&str, ParsingError> {
+        self.header.get(index).map(|s| s.as_str()).ok_or_else(|| {
+            ParsingError::new(&format!("Expected token: at index {}", index), self.line_file_index)
+        })
+    }
 }
 
 

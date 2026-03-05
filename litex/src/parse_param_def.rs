@@ -2,22 +2,21 @@ use crate::keywords::{COMMA, FINITE_SET, LEFT_BRACKET, NONEMPTY_SET, NOT, RIGHT_
 use crate::parser::Parser;
 use crate::token_block::TokenBlock;
 use crate::errors::ParsingError;
-use crate::parameter_type_and_property::{ParamDefWithParamType, ParamType, Set, NonemptySet, FiniteSet};
+use crate::parameter_type_and_property::{ParamDefWithParamTypeOrProperty, ParamType, Set, NonemptySet, FiniteSet};
 
 impl Parser {
-    pub fn param_def_with_param_type(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
+    pub fn param_def_with_param_type(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamTypeOrProperty, ParsingError> {
         match tb.current()? {
             LEFT_BRACKET => self.param_def_with_property(tb),
             _ => self.param_def_with_type(tb),
         }
     }
 
-    pub fn param_def_with_property(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
+    pub fn param_def_with_property(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamTypeOrProperty, ParsingError> {
         tb.skip_token(LEFT_BRACKET)?;
         let mut params: Vec<String> = vec![];
         while tb.current()? != RIGHT_BRACKET {
-            let param = tb.advance()?;
-            params.push(param);
+            params.push(tb.advance()?);
         }
         tb.skip_token(RIGHT_BRACKET)?;
 
@@ -34,22 +33,21 @@ impl Parser {
             return Err(ParsingError::new(&format!("Invalid property name: {}", property_name.to_string()), tb.line_file_index));
         }
         
-        Ok(ParamDefWithParamType::ParamsPropertyPair(params, is_true, property_name))
+        Ok(ParamDefWithParamTypeOrProperty::ParamsPropertyPair(params, is_true, property_name))
     }
 
-    pub fn param_def_with_type(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
+    pub fn param_def_with_type(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamTypeOrProperty, ParsingError> {
         let param = tb.advance()?;
         if tb.current()? != COMMA {
-            Ok(ParamDefWithParamType::ParamAndItsTypePair(param, self.param_type(tb)?))
+            Ok(ParamDefWithParamTypeOrProperty::ParamAndItsTypePair(param, self.param_type(tb)?))
         } else {
             let mut vec_of_params = vec![param];
             while tb.current()? == COMMA {
                 tb.no_check_skip()?;
-                let param = tb.advance()?;
-                vec_of_params.push(param);
+                vec_of_params.push(tb.advance()?);
             }
             let param_type = self.param_type(tb)?;
-            Ok(ParamDefWithParamType::ParamsAndTheirTypePair(vec_of_params, param_type))
+            Ok(ParamDefWithParamTypeOrProperty::ParamsAndTheirTypePair(vec_of_params, param_type))
         }
     }
 

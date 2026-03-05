@@ -2,9 +2,9 @@ use std::fmt;
 use crate::keywords::{FORALL, COLON, RIGHT_ARROW};
 use crate::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma};
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
-use crate::parameter_type_and_property::ParamDefWithParamType;
+use crate::parameter_type_and_property::ParamDefWithParamTypeOrProperty;
 pub struct ForallFact {
-    pub params_def_with_type: Vec<ParamDefWithParamType>,
+    pub params_def_with_type: Vec<ParamDefWithParamTypeOrProperty>,
     pub dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub then_facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub line_file_index: Option<(usize, usize)>,
@@ -12,7 +12,7 @@ pub struct ForallFact {
 
 impl ForallFact {
     pub fn new(
-        params_def_with_type: Vec<ParamDefWithParamType>,
+        params_def_with_type: Vec<ParamDefWithParamTypeOrProperty>,
         dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
         then_facts: Vec<OrFactOrAndFactOrSpecFact>,
         line_file_index: Option<(usize, usize)>,
