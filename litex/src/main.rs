@@ -211,7 +211,7 @@ fn try_set_operations() {
     let set_minus_result = Obj::SetMinus(SetMinus::new(mk("A"), mk("B")));
     let disjoint_union_result = Obj::DisjointUnion(DisjointUnion::new(mk("A"), mk("B")));
     let cup_result = Obj::Cup(Cup::new(mk("A")));
-    let cap_result = Obj::Cap(Cap::new(mk("A"), mk("B")));
+    let cap_result = Obj::Cap(Cap::new(mk("A")));
     println!("{}, {}, {}, {}, {}, {}", union_result, intersect_result, set_minus_result, disjoint_union_result, cup_result, cap_result);
 }
 
@@ -383,7 +383,7 @@ fn try_count_range_closed_range_val() {
 fn try_power_set_choice() {
     let mk = |s: &str| Obj::AtomWithoutModName(AtomWithoutModName::new(s));
     let power_set = Obj::PowerSet(PowerSet::new(mk("a")));
-    let choice = Obj::Choose(Choose::new(mk("a"), mk("b")));
+    let choice = Obj::Choose(Choose::new(mk("b")));
     println!("{}", power_set);
     println!("{}", choice);
 }
