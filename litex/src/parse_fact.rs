@@ -37,15 +37,8 @@ impl Parser {
         }
     }
 
+    // fact_hierarchy 1
     fn forall_or_forall_with_iff(&self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
-        if tb.head_last_token_is(COLON)? {
-            self.multiline_forall_or_forall_with_iff(tb)
-        } else {
-            self.single_line_forall_or_forall_with_iff(tb)
-        }
-    }
-
-    fn multiline_forall_or_forall_with_iff(&self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
         tb.skip_token(FORALL)?;
         let mut param_def: Vec<ParamDefWithParamTypeOrProperty> = vec![];
         while tb.current()? != COLON {
@@ -57,13 +50,13 @@ impl Parser {
             ParsingError::new("Expected body", tb.line_file_index)
         })?;
         if last_body.current()? == EQUIVALENT_SIGN {
-            self.multiline_forall_with_iff(tb, param_def)
+            self.forall_with_iff(tb, param_def)
         } else {
-            self.multiline_forall(tb, param_def)
+            self.forall(tb, param_def)
         }
     }
 
-    fn multiline_forall_with_iff(&self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamTypeOrProperty>) -> Result<Fact, ParsingError> {
+    fn forall_with_iff(&self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamTypeOrProperty>) -> Result<Fact, ParsingError> {
         if tb.body.len() < 2 {
             return Err(ParsingError::new("Expected at least 2 body blocks", tb.line_file_index));
         }
@@ -102,7 +95,7 @@ impl Parser {
         Ok(Fact::ForallFactWithIff(ForallFactWithIff::new(forall_fact, iff_facts, Some(tb.line_file_index))))
     }
 
-    fn multiline_forall(&self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamTypeOrProperty>) -> Result<Fact, ParsingError> {
+    fn forall(&self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamTypeOrProperty>) -> Result<Fact, ParsingError> {
         let last_body = tb.body.last().ok_or_else(|| {
             ParsingError::new("Expected body", tb.line_file_index)
         })?;
@@ -128,11 +121,8 @@ impl Parser {
         }
     }
 
-    fn single_line_forall_or_forall_with_iff(&self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
-        tb.skip_token(FORALL)?;
-        panic!("")
-    }
 
+    // hierarchy 2
     pub(crate) fn or_and_spec_fact(&self, tb: &mut TokenBlock) -> Result<OrFactOrAndFactOrSpecFact, ParsingError> {
         let left_most = self.and_spec_fact(tb)?;
         let mut facts = vec![left_most];
@@ -151,6 +141,7 @@ impl Parser {
         }
     }
 
+    // hierarchy 3
     pub(crate) fn and_spec_fact(&self, tb: &mut TokenBlock) -> Result<AndFactOrSpecFact, ParsingError> {
         let left_most = self.spec_fact_chain_fact(tb, true)?;
         let mut facts = vec![left_most];
@@ -173,6 +164,7 @@ impl Parser {
     }
 
     /// 返回 AndFactOrSpecFact：要么单个 SpecFact（含 NOT/EXIST/原子），要么链式 AndFact::ChainFact。
+    // hierarchy 4
     fn spec_fact_chain_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<AndFactOrSpecFact, ParsingError> {
         if tb.current()? == NOT {
             tb.skip_token(NOT)?;

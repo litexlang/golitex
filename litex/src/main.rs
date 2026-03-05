@@ -40,6 +40,7 @@ mod parse_obj;
 mod parse_param_def;
 mod parse_fact;
 mod parse_def_stmt;
+mod parse_know_stmt;
 use parser::Parser;
 mod parse_stmt;
 use parameter_type_and_property::ParamDefWithParamType;
@@ -757,11 +758,11 @@ fn try_claim_stmt() {
         Obj::mk("q"),
         Some((1, 0)),
     ))))];
-    let claim_prove_stmt = ClaimProveStmt::new(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let claim_prove_stmt = ClaimProveStmt::new(vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
         Some((1, 0)),
-    ))), proof, Some((1, 0)));
+    )))], proof, Some((1, 0)));
     println!("{}", claim_prove_stmt);
 
     let stmt = Stmt::ClaimStmt(ClaimStmt::ClaimProveStmt(claim_prove_stmt));
@@ -784,7 +785,7 @@ fn try_claim_stmt() {
     )))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     )))], Some((1, 0)));
-    let claim_iff_stmt = ClaimIffStmt::new(forall, proof2, proof3, Some((1, 0)));
+    let claim_iff_stmt = ClaimIffStmt::new(ForallFactWithIff::new(forall, vec![], Some((1, 0))), proof2, proof3, Some((1, 0)));
     println!("{}", claim_iff_stmt);
 
     let stmt = Stmt::ClaimStmt(ClaimStmt::ClaimIffStmt(claim_iff_stmt));
