@@ -19,21 +19,21 @@ use crate::atom::{Atom, AtomWithoutModName, AtomWithModName};
 use crate::errors::ParsingError;
 
 impl Parser {
-    pub fn obj(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        self.obj_hierarchy0(token_block)
+    pub fn obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+        self.obj_hierarchy0(tb)
     }
 
-    fn obj_hierarchy0(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        let left = self.obj_hierarchy1(token_block)?;
-        match token_block.current()? {
+    fn obj_hierarchy0(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+        let left = self.obj_hierarchy1(tb)?;
+        match tb.current()? {
             INFIX_FN_NAME_SIGN => {
-                let fn_name = self.atom(token_block)?;
+                let fn_name = self.atom(tb)?;
 
                 if is_key_symbol_or_keyword(&fn_name.to_string()) {
-                    return Err(ParsingError::new(&format!("Invalid function name behind infix function name sign {}: {}", INFIX_FN_NAME_SIGN, fn_name), token_block.line_file_index));
+                    return Err(ParsingError::new(&format!("Invalid function name behind infix function name sign {}: {}", INFIX_FN_NAME_SIGN, fn_name), tb.line_file_index));
                 }
                 
-                let right = self.obj(token_block)?;
+                let right = self.obj(tb)?;
                 let head = match fn_name {
                     Atom::AtomWithoutModName(a) => Obj::AtomWithoutModName(a),
                     Atom::AtomWithModName(a) => Obj::AtomWithModName(a),
@@ -44,12 +44,12 @@ impl Parser {
         }
     }
 
-    fn obj_hierarchy1(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        let left = self.obj_hierarchy2(token_block)?;
-        match token_block.current()? {
+    fn obj_hierarchy1(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+        let left = self.obj_hierarchy2(tb)?;
+        match tb.current()? {
             MUL => {
-                token_block.no_check_skip()?;
-                let right = self.obj_hierarchy2(token_block)?;
+                tb.no_check_skip()?;
+                let right = self.obj_hierarchy2(tb)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
                     Ok(Obj::Mul(Mul::new(left, right, false)))
                 } else {
@@ -57,8 +57,8 @@ impl Parser {
                 }
             },
             DIV => {
-                token_block.no_check_skip()?;
-                let right = self.obj_hierarchy2(token_block)?;
+                tb.no_check_skip()?;
+                let right = self.obj_hierarchy2(tb)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
                     Ok(Obj::Div(Div::new(left, right, false)))
                 } else {
@@ -66,8 +66,8 @@ impl Parser {
                 }
             },
             MOD => {
-                token_block.no_check_skip()?;
-                let right = self.obj_hierarchy2(token_block)?;
+                tb.no_check_skip()?;
+                let right = self.obj_hierarchy2(tb)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
                     Ok(Obj::Mod(Mod::new(left, right, false)))
                 } else {
@@ -78,12 +78,12 @@ impl Parser {
         }
     }
 
-    fn obj_hierarchy2(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        let left = self.obj_hierarchy3(token_block)?;
-        match token_block.current()? {
+    fn obj_hierarchy2(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+        let left = self.obj_hierarchy3(tb)?;
+        match tb.current()? {
             ADD => {
-                token_block.no_check_skip()?;
-                let right = self.obj_hierarchy3(token_block)?;
+                tb.no_check_skip()?;
+                let right = self.obj_hierarchy3(tb)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
                     Ok(Obj::Add(Add::new(left, right, false)))
                 } else {
@@ -91,8 +91,8 @@ impl Parser {
                 }
             },
             SUB => {
-                token_block.no_check_skip()?;
-                let right = self.obj_hierarchy3(token_block)?;
+                tb.no_check_skip()?;
+                let right = self.obj_hierarchy3(tb)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
                     Ok(Obj::Sub(Sub::new(left, right, false)))
                 } else {
@@ -103,12 +103,12 @@ impl Parser {
         }
     }
 
-    fn obj_hierarchy3(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        let left = self.obj_hierarchy4(token_block)?;
-        match token_block.current()? {
+    fn obj_hierarchy3(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+        let left = self.obj_hierarchy4(tb)?;
+        match tb.current()? {
             POW => {
-                token_block.no_check_skip()?;
-                let right = self.obj_hierarchy4(token_block)?;
+                tb.no_check_skip()?;
+                let right = self.obj_hierarchy4(tb)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
                     Ok(Obj::Pow(Pow::new(left, right, false)))
                 } else {
@@ -119,71 +119,70 @@ impl Parser {
         }
     }
 
-    fn obj_hierarchy4(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        let left = self.obj_hierarchy5(token_block)?;
-        match token_block.current()? {
+    fn obj_hierarchy4(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+        let left = self.obj_hierarchy5(tb)?;
+        match tb.current()? {
             LEFT_BRACKET => {
-                token_block.skip_token(LEFT_BRACKET)?;
-                let obj = self.obj(token_block)?;
-                token_block.skip_token(RIGHT_BRACKET)?;
+                tb.skip_token(LEFT_BRACKET)?;
+                let obj = self.obj(tb)?;
+                tb.skip_token(RIGHT_BRACKET)?;
                 Ok(Obj::ObjAtIndex(ObjAtIndex::new(left, obj)))
             }
             _ => Ok(left),
         }
     }
 
-    fn obj_hierarchy5(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        match token_block.current()? {
+    fn obj_hierarchy5(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+        match tb.current()? {
             LEFT_CURLY_BRACE => {
-                self.set_builder_or_set_list(token_block)
+                self.set_builder_or_set_list(tb)
             },
             INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL => {
-                self.instantiated_set_template_obj(token_block)
+                self.instantiated_set_template_obj(tb)
             },
-            _ => self.number_or_primary_obj_or_fn_obj(token_block)
+            _ => self.number_or_primary_obj_or_fn_obj(tb)
         }
     }
 
-    /// 解析「主元」：数字、单符号集合(N/Q/...)、多元关键字(union/intersect/...)、或普通 atom。
     /// 若得到 atom，调用方再给其接若干 (args) 变成 FnObj。
-    fn number_or_primary_obj_or_fn_obj(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        let token = token_block.current()?;
+    fn number_or_primary_obj_or_fn_obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+        let token = tb.current()?;
 
-        // 0. (...)
+        // 0. (obj)
         if token == LEFT_BRACE {
-            token_block.no_check_skip()?;
-            let obj = self.obj(token_block)?;
-            token_block.skip_token(RIGHT_BRACE)?;
+            tb.no_check_skip()?;
+            let obj = self.obj(tb)?;
+            tb.skip_token(RIGHT_BRACE)?;
             return Ok(obj);
         }
 
         // 1. 数字
         if starts_with_digit(token) {
-            let number = token_block.advance()?;
-            if token_block.current()? != DOT {
-                token_block.no_check_skip()?;
-                let fraction = token_block.advance()?;
+            let number = tb.advance()?;
+            if tb.current()? != DOT {
+                tb.no_check_skip()?;
+                let fraction = tb.advance()?;
                 let number = format!("{}{}{}", number, DOT, fraction);
                 if !is_number(&number) {
-                    return Err(ParsingError::new(&format!("Invalid number: {}", number), token_block.line_file_index));
+                    return Err(ParsingError::new(&format!("Invalid number: {}", number), tb.line_file_index));
                 }
                 return Ok(Obj::Number(Number::new(&number)));
             } else {
                 if !is_number(&number) {
-                    return Err(ParsingError::new(&format!("Invalid number: {}", number), token_block.line_file_index));
+                    return Err(ParsingError::new(&format!("Invalid number: {}", number), tb.line_file_index));
                 }
                 return Ok(Obj::Number(Number::new(&number)));
             }
         }
 
         // 2. 单符号集合、多元关键字、或 atom
-        let mut result = self.parse_primary_obj(token_block)?;
+        let mut result = self.parse_primary_obj(tb)?;
 
         // 3. 若是 atom，后面可以接多组 (args)，每组变成 FnObj(head, args)
         let is_atom = matches!(result, Obj::AtomWithoutModName(_) | Obj::AtomWithModName(_));
         if is_atom {
-            while token_block.current()? == LEFT_BRACE {
-                let args = self.braced_objs(token_block)?;
+            while tb.current()? == LEFT_BRACE {
+                let args = self.braced_objs(tb)?;
                 result = Obj::FnObj(FnObj::new(result, args));
             }
         }
@@ -191,191 +190,191 @@ impl Parser {
     }
 
     /// 解析「主元」：当前 token 必须是单符号集合名、多元关键字、或普通标识符(atom)。
-    fn parse_primary_obj(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        let tok = token_block.current()?;
+    fn parse_primary_obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+        let tok = tb.current()?;
 
         // 单符号集合（无参）
-        if tok == N_POS { token_block.no_check_skip()?; return Ok(Obj::NPosObj(NPosObj::new())); }
-        if tok == N { token_block.no_check_skip()?; return Ok(Obj::NObj(NObj::new())); }
-        if tok == Q { token_block.no_check_skip()?; return Ok(Obj::QObj(QObj::new())); }
-        if tok == Z { token_block.no_check_skip()?; return Ok(Obj::ZObj(ZObj::new())); }
-        if tok == R { token_block.no_check_skip()?; return Ok(Obj::RObj(RObj::new())); }
-        if tok == Q_POS { token_block.no_check_skip()?; return Ok(Obj::QPos(QPos::new())); }
-        if tok == Z_POS { token_block.no_check_skip()?; return Ok(Obj::ZPos(ZPos::new())); }
-        if tok == R_POS { token_block.no_check_skip()?; return Ok(Obj::RPos(RPos::new())); }
-        if tok == Q_NEG { token_block.no_check_skip()?; return Ok(Obj::QNeg(QNeg::new())); }
-        if tok == Z_NEG { token_block.no_check_skip()?; return Ok(Obj::ZNeg(ZNeg::new())); }
-        if tok == R_NEG { token_block.no_check_skip()?; return Ok(Obj::RNeg(RNeg::new())); }
-        if tok == Q_NZ { token_block.no_check_skip()?; return Ok(Obj::QNz(QNz::new())); }
-        if tok == Z_NZ { token_block.no_check_skip()?; return Ok(Obj::ZNz(ZNz::new())); }
-        if tok == R_NZ { token_block.no_check_skip()?; return Ok(Obj::RNz(RNz::new())); }
+        if tok == N_POS { tb.no_check_skip()?; return Ok(Obj::NPosObj(NPosObj::new())); }
+        if tok == N { tb.no_check_skip()?; return Ok(Obj::NObj(NObj::new())); }
+        if tok == Q { tb.no_check_skip()?; return Ok(Obj::QObj(QObj::new())); }
+        if tok == Z { tb.no_check_skip()?; return Ok(Obj::ZObj(ZObj::new())); }
+        if tok == R { tb.no_check_skip()?; return Ok(Obj::RObj(RObj::new())); }
+        if tok == Q_POS { tb.no_check_skip()?; return Ok(Obj::QPos(QPos::new())); }
+        if tok == Z_POS { tb.no_check_skip()?; return Ok(Obj::ZPos(ZPos::new())); }
+        if tok == R_POS { tb.no_check_skip()?; return Ok(Obj::RPos(RPos::new())); }
+        if tok == Q_NEG { tb.no_check_skip()?; return Ok(Obj::QNeg(QNeg::new())); }
+        if tok == Z_NEG { tb.no_check_skip()?; return Ok(Obj::ZNeg(ZNeg::new())); }
+        if tok == R_NEG { tb.no_check_skip()?; return Ok(Obj::RNeg(RNeg::new())); }
+        if tok == Q_NZ { tb.no_check_skip()?; return Ok(Obj::QNz(QNz::new())); }
+        if tok == Z_NZ { tb.no_check_skip()?; return Ok(Obj::ZNz(ZNz::new())); }
+        if tok == R_NZ { tb.no_check_skip()?; return Ok(Obj::RNz(RNz::new())); }
 
         // 多元关键字：吃关键字 + 括号里若干 obj
         if tok == UNION {
-            token_block.no_check_skip()?;
-            let args = self.braced_objs(token_block)?;
-            if args.len() != 2 { return Err(ParsingError::new("union expects 2 arguments", token_block.line_file_index)); }
+            tb.no_check_skip()?;
+            let args = self.braced_objs(tb)?;
+            if args.len() != 2 { return Err(ParsingError::new("union expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::Union(Union::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == INTERSECT {
-            token_block.no_check_skip()?;
-            let args = self.braced_objs(token_block)?;
-            if args.len() != 2 { return Err(ParsingError::new("intersect expects 2 arguments", token_block.line_file_index)); }
+            tb.no_check_skip()?;
+            let args = self.braced_objs(tb)?;
+            if args.len() != 2 { return Err(ParsingError::new("intersect expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::Intersect(Intersect::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == SET_MINUS {
-            token_block.no_check_skip()?;
-            let args = self.braced_objs(token_block)?;
-            if args.len() != 2 { return Err(ParsingError::new("set_minus expects 2 arguments", token_block.line_file_index)); }
+            tb.no_check_skip()?;
+            let args = self.braced_objs(tb)?;
+            if args.len() != 2 { return Err(ParsingError::new("set_minus expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::SetMinus(SetMinus::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == DISJOINT_UNION {
-            token_block.no_check_skip()?;
-            let args = self.braced_objs(token_block)?;
-            if args.len() != 2 { return Err(ParsingError::new("disjoint_union expects 2 arguments", token_block.line_file_index)); }
+            tb.no_check_skip()?;
+            let args = self.braced_objs(tb)?;
+            if args.len() != 2 { return Err(ParsingError::new("disjoint_union expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::DisjointUnion(DisjointUnion::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == CAP {
-            token_block.no_check_skip()?;
-            let args = self.braced_objs(token_block)?;
-            if args.len() != 2 { return Err(ParsingError::new("cap expects 2 arguments", token_block.line_file_index)); }
+            tb.no_check_skip()?;
+            let args = self.braced_objs(tb)?;
+            if args.len() != 2 { return Err(ParsingError::new("cap expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::Cap(Cap::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == CHOICE {
-            token_block.no_check_skip()?;
-            let args = self.braced_objs(token_block)?;
-            if args.len() != 2 { return Err(ParsingError::new("choice expects 2 arguments", token_block.line_file_index)); }
+            tb.no_check_skip()?;
+            let args = self.braced_objs(tb)?;
+            if args.len() != 2 { return Err(ParsingError::new("choice expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::Choose(Choose::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == PROJ {
-            token_block.no_check_skip()?;
-            let args = self.braced_objs(token_block)?;
-            if args.len() != 2 { return Err(ParsingError::new("proj expects 2 arguments", token_block.line_file_index)); }
+            tb.no_check_skip()?;
+            let args = self.braced_objs(tb)?;
+            if args.len() != 2 { return Err(ParsingError::new("proj expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::Proj(Proj::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == RANGE {
-            token_block.no_check_skip()?;
-            let args = self.braced_objs(token_block)?;
-            if args.len() != 2 { return Err(ParsingError::new("range expects 2 arguments", token_block.line_file_index)); }
+            tb.no_check_skip()?;
+            let args = self.braced_objs(tb)?;
+            if args.len() != 2 { return Err(ParsingError::new("range expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::Range(Range::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == CLOSED_RANGE {
-            token_block.no_check_skip()?;
-            let args = self.braced_objs(token_block)?;
-            if args.len() != 2 { return Err(ParsingError::new("closed_range expects 2 arguments", token_block.line_file_index)); }
+            tb.no_check_skip()?;
+            let args = self.braced_objs(tb)?;
+            if args.len() != 2 { return Err(ParsingError::new("closed_range expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::ClosedRange(ClosedRange::new(it.next().unwrap(), it.next().unwrap())));
         }
 
         if tok == CUP {
-            token_block.no_check_skip()?;
-            let args = self.braced_objs(token_block)?;
-            if args.len() != 1 { return Err(ParsingError::new("cup expects 1 argument", token_block.line_file_index)); }
+            tb.no_check_skip()?;
+            let args = self.braced_objs(tb)?;
+            if args.len() != 1 { return Err(ParsingError::new("cup expects 1 argument", tb.line_file_index)); }
             return Ok(Obj::Cup(Cup::new(args.into_iter().next().unwrap())));
         }
         if tok == POWER_SET {
-            token_block.no_check_skip()?;
-            let args = self.braced_objs(token_block)?;
-            if args.len() != 1 { return Err(ParsingError::new("power_set expects 1 argument", token_block.line_file_index)); }
+            tb.no_check_skip()?;
+            let args = self.braced_objs(tb)?;
+            if args.len() != 1 { return Err(ParsingError::new("power_set expects 1 argument", tb.line_file_index)); }
             return Ok(Obj::PowerSet(PowerSet::new(args.into_iter().next().unwrap())));
         }
         if tok == SET_DIM {
-            token_block.no_check_skip()?;
-            let args = self.braced_objs(token_block)?;
-            if args.len() != 1 { return Err(ParsingError::new("set_dim expects 1 argument", token_block.line_file_index)); }
+            tb.no_check_skip()?;
+            let args = self.braced_objs(tb)?;
+            if args.len() != 1 { return Err(ParsingError::new("set_dim expects 1 argument", tb.line_file_index)); }
             return Ok(Obj::SetDim(SetDim::new(args.into_iter().next().unwrap())));
         }
         if tok == COUNT {
-            token_block.no_check_skip()?;
-            let args = self.braced_objs(token_block)?;
-            if args.len() != 1 { return Err(ParsingError::new("count expects 1 argument", token_block.line_file_index)); }
+            tb.no_check_skip()?;
+            let args = self.braced_objs(tb)?;
+            if args.len() != 1 { return Err(ParsingError::new("count expects 1 argument", tb.line_file_index)); }
             return Ok(Obj::Count(Count::new(args.into_iter().next().unwrap())));
         }
         if tok == VAL {
-            token_block.no_check_skip()?;
-            let args = self.braced_objs(token_block)?;
-            if args.len() != 1 { return Err(ParsingError::new("val expects 1 argument", token_block.line_file_index)); }
+            tb.no_check_skip()?;
+            let args = self.braced_objs(tb)?;
+            if args.len() != 1 { return Err(ParsingError::new("val expects 1 argument", tb.line_file_index)); }
             return Ok(Obj::Val(Val::new(args.into_iter().next().unwrap())));
         }
 
         if tok == CART {
-            token_block.no_check_skip()?;
-            let args = self.braced_objs(token_block)?;
+            tb.no_check_skip()?;
+            let args = self.braced_objs(tb)?;
             return Ok(Obj::Cart(Cart::new(args)));
         }
 
         // 普通 atom（标识符）
-        let atom = self.atom(token_block)?;
+        let atom = self.atom(tb)?;
         match atom {
             Atom::AtomWithoutModName(a) => Ok(Obj::AtomWithoutModName(a)),
             Atom::AtomWithModName(a) => Ok(Obj::AtomWithModName(a)),
         }
     }
 
-    fn braced_objs(&self, token_block: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
-        token_block.skip_token(LEFT_BRACE)?;
-        let mut objs = vec![self.obj(token_block)?];
-        while token_block.current()? == COMMA {
-            token_block.skip_token(COMMA)?;
-            objs.push(self.obj(token_block)?);
+    fn braced_objs(&self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
+        tb.skip_token(LEFT_BRACE)?;
+        let mut objs = vec![self.obj(tb)?];
+        while tb.current()? == COMMA {
+            tb.skip_token(COMMA)?;
+            objs.push(self.obj(tb)?);
         }
-        token_block.skip_token(RIGHT_BRACE)?;
+        tb.skip_token(RIGHT_BRACE)?;
         Ok(objs)
     }
 
-    fn set_builder_or_set_list(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        let left = self.obj(token_block)?;
-        if token_block.current()? == COMMA {
-            self.set_builder(token_block, left)
+    fn set_builder_or_set_list(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+        let left = self.obj(tb)?;
+        if tb.current()? == COMMA {
+            self.set_builder(tb, left)
         } else {
-            self.set_list(token_block, left)
+            self.set_list(tb, left)
         }
     }
 
-    fn set_list(&self, token_block: &mut TokenBlock, left_most_obj: Obj) -> Result<Obj, ParsingError> {
+    fn set_list(&self, tb: &mut TokenBlock, left_most_obj: Obj) -> Result<Obj, ParsingError> {
         let mut objs = vec![left_most_obj];
-        while token_block.current()? != RIGHT_CURLY_BRACE {
-            let obj = self.obj(token_block)?;
+        while tb.current()? != RIGHT_CURLY_BRACE {
+            let obj = self.obj(tb)?;
             objs.push(obj);
         }
-        token_block.skip_token(RIGHT_CURLY_BRACE)?;
+        tb.skip_token(RIGHT_CURLY_BRACE)?;
         Ok(Obj::ListSet(ListSet::new(objs)))
     }
 
-    fn set_builder(&self, token_block: &mut TokenBlock, left_most_obj: Obj) -> Result<Obj, ParsingError> {
+    fn set_builder(&self, tb: &mut TokenBlock, left_most_obj: Obj) -> Result<Obj, ParsingError> {
         match left_most_obj {
             Obj::AtomWithoutModName(a) => {
                 let param = a.name;
-                let param_set = self.obj(token_block)?;
+                let param_set = self.obj(tb)?;
                 _ = param;
                 _ = param_set;
-                token_block.skip_token(COLON)?;
+                tb.skip_token(COLON)?;
                 panic!("需要能parse fact")
             }
-            _ => Err(ParsingError::new("Expected atom without mod name", token_block.line_file_index))
+            _ => Err(ParsingError::new("Expected atom without mod name", tb.line_file_index))
         }
     }
 
-    fn instantiated_set_template_obj(&self, token_block: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        token_block.skip_token(INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL)?;
-        let name = self.atom(token_block)?;
-        let args = self.braced_objs(token_block)?;
+    fn instantiated_set_template_obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+        tb.skip_token(INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL)?;
+        let name = self.atom(tb)?;
+        let args = self.braced_objs(tb)?;
         Ok(Obj::InstSetTemplateObj(InstSetTemplateObj::new(name, args)))
     }
 
-    pub fn atom(&self, token_block: &mut TokenBlock) -> Result<Atom, ParsingError> {
-        let left = token_block.advance()?;
-        if token_block.current()? == DOT {
-            token_block.no_check_skip()?;
-            let right = token_block.advance()?;
+    pub fn atom(&self, tb: &mut TokenBlock) -> Result<Atom, ParsingError> {
+        let left = tb.advance()?;
+        if tb.current()? == DOT {
+            tb.no_check_skip()?;
+            let right = tb.advance()?;
             Ok(Atom::AtomWithModName(AtomWithModName::new(&left, &right)))
         } else {
             Ok(Atom::AtomWithoutModName(AtomWithoutModName::new(&left)))
