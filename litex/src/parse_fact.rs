@@ -23,16 +23,7 @@ impl Parser {
             FORALL => self.forall_or_forall_with_iff(tb),
             _ => {
                 let or_and_spec_fact = self.or_and_spec_fact(tb)?;
-                match or_and_spec_fact {
-                    OrFactOrAndFactOrSpecFact::OrFact(or_fact) => Ok(Fact::OrFact(or_fact)),
-                    OrFactOrAndFactOrSpecFact::AndFact(and_fact) => Ok(Fact::AndFact(and_fact)),
-                    OrFactOrAndFactOrSpecFact::SpecFact(spec_fact) => {
-                        match spec_fact {
-                            SpecFact::AtomicFact(atomic_fact) => Ok(Fact::AtomicFact(atomic_fact)),
-                            SpecFact::ExistFact(exist_fact) => Ok(Fact::ExistFact(exist_fact)),
-                        }
-                    }
-                }
+                Ok(or_and_spec_fact.to_fact())
             }
         }
     }
@@ -196,7 +187,7 @@ impl Parser {
             loop {
                 let tok = tb.current()?.to_string();
                 if is_comparison_str(&tok) {
-                    tb.no_check_skip()?;
+                    tb.skip()?;
                     prop_names.push(Atom::AtomWithoutModName(AtomWithoutModName::new(&tok)));
                     objs.push(self.obj(tb)?);
                 } else if tok == FACT_PREFIX {

@@ -21,7 +21,7 @@ impl Parser {
         tb.skip_token(RIGHT_BRACKET)?;
 
         let is_true: bool = if tb.current()? == NOT {
-            tb.no_check_skip()?;
+            tb.skip()?;
             false
         } else {
             true
@@ -43,7 +43,7 @@ impl Parser {
         } else {
             let mut vec_of_params = vec![param];
             while tb.current()? == COMMA {
-                tb.no_check_skip()?;
+                tb.skip()?;
                 vec_of_params.push(tb.advance()?);
             }
             let param_type = self.param_type(tb)?;
