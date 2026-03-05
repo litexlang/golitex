@@ -2,7 +2,7 @@ use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::atom::Atom;
 use crate::atomic_fact::{AtomicFact, NormalAtomicFact, NotNormalAtomicFact};
 use crate::exist_fact::{ExistFact, TrueExistFact, NotExistFact};
-use crate::parameter_type_and_property::ParamDefWithParamType;
+use crate::parameter_type_and_property::ParamDefWithParamTypeOrProperty;
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::forall_fact::ForallFact;
 use crate::forall_fact_with_iff::ForallFactWithIff;
@@ -47,7 +47,7 @@ impl Parser {
 
     fn multiline_forall_or_forall_with_iff(&self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
         tb.skip_token(FORALL)?;
-        let mut param_def: Vec<ParamDefWithParamType> = vec![];
+        let mut param_def: Vec<ParamDefWithParamTypeOrProperty> = vec![];
         while tb.current()? != COLON {
             param_def.push(self.param_def_with_param_type(tb)?);
         } 
@@ -63,7 +63,7 @@ impl Parser {
         }
     }
 
-    fn multiline_forall_with_iff(&self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamType>) -> Result<Fact, ParsingError> {
+    fn multiline_forall_with_iff(&self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamTypeOrProperty>) -> Result<Fact, ParsingError> {
         if tb.body.len() < 2 {
             return Err(ParsingError::new("Expected at least 2 body blocks", tb.line_file_index));
         }
@@ -102,7 +102,7 @@ impl Parser {
         Ok(Fact::ForallFactWithIff(ForallFactWithIff::new(forall_fact, iff_facts, Some(tb.line_file_index))))
     }
 
-    fn multiline_forall(&self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamType>) -> Result<Fact, ParsingError> {
+    fn multiline_forall(&self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamTypeOrProperty>) -> Result<Fact, ParsingError> {
         let last_body = tb.body.last().ok_or_else(|| {
             ParsingError::new("Expected body", tb.line_file_index)
         })?;
@@ -133,7 +133,7 @@ impl Parser {
         panic!("")
     }
 
-    fn or_and_spec_fact(&self, tb: &mut TokenBlock) -> Result<OrFactOrAndFactOrSpecFact, ParsingError> {
+    pub(crate) fn or_and_spec_fact(&self, tb: &mut TokenBlock) -> Result<OrFactOrAndFactOrSpecFact, ParsingError> {
         let left_most = self.and_spec_fact(tb)?;
         let mut facts = vec![left_most];
         while tb.current()? == OR {
@@ -151,7 +151,7 @@ impl Parser {
         }
     }
 
-    fn and_spec_fact(&self, tb: &mut TokenBlock) -> Result<AndFactOrSpecFact, ParsingError> {
+    pub(crate) fn and_spec_fact(&self, tb: &mut TokenBlock) -> Result<AndFactOrSpecFact, ParsingError> {
         let left_most = self.spec_fact_chain_fact(tb, true)?;
         let mut facts = vec![left_most];
         while tb.current()? == AND {
@@ -205,15 +205,12 @@ impl Parser {
                 let tok = tb.current()?.to_string();
                 if is_comparison_str(&tok) {
                     tb.no_check_skip()?;
-                    let next_obj = self.obj(tb)?;
                     prop_names.push(Atom::AtomWithoutModName(AtomWithoutModName::new(&tok)));
-                    objs.push(next_obj);
+                    objs.push(self.obj(tb)?);
                 } else if tok == FACT_PREFIX {
                     tb.skip_token(FACT_PREFIX)?;
-                    let prop_name = self.atom(tb)?;
-                    let next_obj = self.obj(tb)?;
-                    prop_names.push(prop_name);
-                    objs.push(next_obj);
+                    prop_names.push(self.atom(tb)?);
+                    objs.push(self.obj(tb)?);
                 } else {
                     break;
                 }
@@ -239,9 +236,9 @@ impl Parser {
         }
     }
 
-    fn exist_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<ExistFact, ParsingError> {
+    pub fn exist_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<ExistFact, ParsingError> {
         tb.skip_token(EXIST)?;
-        let mut param_def: Vec<ParamDefWithParamType> = vec![];
+        let mut param_def: Vec<ParamDefWithParamTypeOrProperty> = vec![];
         while tb.current()? != ST {
             param_def.push(self.param_def_with_param_type(tb)?);
             if tb.current()? == COMMA {

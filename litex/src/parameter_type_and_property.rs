@@ -11,8 +11,13 @@ pub enum ParamDefWithParamSet {
     ParamsAndTheirSetsPair(Vec<String>, Obj),
 }
 
-#[derive(Clone)]
 pub enum ParamDefWithParamType {
+    ParamAndItsTypePair(String, ParamType),
+    ParamsAndTheirTypePair(Vec<String>, ParamType),
+}
+
+#[derive(Clone)]
+pub enum ParamDefWithParamTypeOrProperty {
     ParamAndItsTypePair(String, ParamType),
     ParamsAndTheirTypePair(Vec<String>, ParamType),
     ParamsPropertyPair(Vec<String>, bool, Atom),
@@ -82,12 +87,12 @@ impl fmt::Display for FiniteSet {
     }
 }
 
-impl fmt::Display for ParamDefWithParamType {
+impl fmt::Display for ParamDefWithParamTypeOrProperty {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ParamDefWithParamType::ParamAndItsTypePair(param, param_type) => write!(f, "{} {}", param, param_type),
-            ParamDefWithParamType::ParamsAndTheirTypePair(params, param_type) => write!(f, "{} {}", vec_to_string_join_by_comma(params), param_type),
-            ParamDefWithParamType::ParamsPropertyPair(params, is_true, property) => if *is_true { write!(f, "{}{}{} {}", LEFT_BRACKET, vec_to_string_join_by_comma(params), RIGHT_BRACKET, property) } else { write!(f, "{}{}{} {} {}", LEFT_BRACKET, vec_to_string_join_by_comma(params), RIGHT_BRACKET, format!(" {} ", NOT), property) },
+            ParamDefWithParamTypeOrProperty::ParamAndItsTypePair(param, param_type) => write!(f, "{} {}", param, param_type),
+            ParamDefWithParamTypeOrProperty::ParamsAndTheirTypePair(params, param_type) => write!(f, "{} {}", vec_to_string_join_by_comma(params), param_type),
+            ParamDefWithParamTypeOrProperty::ParamsPropertyPair(params, is_true, property) => if *is_true { write!(f, "{}{}{} {}", LEFT_BRACKET, vec_to_string_join_by_comma(params), RIGHT_BRACKET, property) } else { write!(f, "{}{}{} {} {}", LEFT_BRACKET, vec_to_string_join_by_comma(params), RIGHT_BRACKET, format!(" {} ", NOT), property) },
         }
     }
 }
@@ -98,5 +103,20 @@ impl fmt::Display for ParamDefWithParamSet {
             ParamDefWithParamSet::ParamAndItsSetPair(param, param_set) => write!(f, "{} {}", param, param_set),
             ParamDefWithParamSet::ParamsAndTheirSetsPair(params, param_set) => write!(f, "{} {}", vec_to_string_join_by_comma(params), param_set),
         }
+    }
+}
+
+impl fmt::Display for ParamDefWithParamType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ParamDefWithParamType::ParamAndItsTypePair(param, param_type) => write!(f, "{} {}", param, param_type),
+            ParamDefWithParamType::ParamsAndTheirTypePair(params, param_type) => write!(f, "{} {}", vec_to_string_join_by_comma(params), param_type),
+        }
+    }
+}
+
+impl ParamDefWithParamType {
+    pub fn new(param: String, param_type: ParamType) -> Self {
+        ParamDefWithParamType::ParamAndItsTypePair(param, param_type)
     }
 }

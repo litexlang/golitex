@@ -2,7 +2,7 @@ use std::fmt;
 use crate::keywords::{COMMA, EXIST, LEFT_CURLY_BRACE, NOT,  RIGHT_CURLY_BRACE, ST};
 use crate::helper::{curly_braced_vec_to_string_with_sep, vec_to_string_join_by_comma};
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
-use crate::parameter_type_and_property::ParamDefWithParamType;
+use crate::parameter_type_and_property::ParamDefWithParamTypeOrProperty;
 
 #[derive(Clone)]
 pub enum ExistFact {
@@ -12,21 +12,21 @@ pub enum ExistFact {
 
 #[derive(Clone)]
 pub struct TrueExistFact {
-    pub params_def_with_type: Vec<ParamDefWithParamType>,
+    pub params_def_with_type: Vec<ParamDefWithParamTypeOrProperty>,
     pub facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotExistFact {
-    pub params_def_with_type: Vec<ParamDefWithParamType>,
+    pub params_def_with_type: Vec<ParamDefWithParamTypeOrProperty>,
     pub facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
 impl TrueExistFact {
     pub fn new(
-        params_def_with_type: Vec<ParamDefWithParamType>,
+        params_def_with_type: Vec<ParamDefWithParamTypeOrProperty>,
         facts: Vec<OrFactOrAndFactOrSpecFact>,
         line_file_index: Option<(usize, usize)>,
     ) -> Self {
@@ -36,7 +36,7 @@ impl TrueExistFact {
 
 impl NotExistFact {
     pub fn new(
-        params_def_with_type: Vec<ParamDefWithParamType>,
+        params_def_with_type: Vec<ParamDefWithParamTypeOrProperty>,
         facts: Vec<OrFactOrAndFactOrSpecFact>,
         line_file_index: Option<(usize, usize)>,
     ) -> Self {
@@ -44,7 +44,7 @@ impl NotExistFact {
     }
 }
 
-fn exist_fact_string_without_exist_as_prefix(param_defs: &Vec<ParamDefWithParamType>, facts: &Vec<OrFactOrAndFactOrSpecFact>) -> String {
+fn exist_fact_string_without_exist_as_prefix(param_defs: &Vec<ParamDefWithParamTypeOrProperty>, facts: &Vec<OrFactOrAndFactOrSpecFact>) -> String {
     match facts.len() {
         1 => format!("{} {} {}", vec_to_string_join_by_comma(param_defs), ST, facts[0].to_string()),
         _ => format!("{} {} {}", vec_to_string_join_by_comma(param_defs), ST, curly_braced_vec_to_string_with_sep(&facts.iter().map(|fact| fact.to_string()).collect::<Vec<String>>(), format!("{} ", COMMA).as_str())),

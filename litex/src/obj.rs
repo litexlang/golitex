@@ -877,7 +877,11 @@ impl fmt::Display for FnSetWithDom {
 
 impl FnSetWithDom {
     pub fn with_keyword_fn_with_name_to_string(&self, name: Option<&str>) -> String {
-        format!("{} {}{}{}", FN, name.unwrap_or(""), braced_vec_to_string(&self.params_def_with_set), self.ret_set)
+        if self.params_def_with_set.is_empty() {
+            format!("{} {}{}{}", FN, name.unwrap_or(""), braced_vec_to_string(&self.params_def_with_set), self.ret_set)} 
+        else {
+            format!("{} {}{}{} {}{}", FN, name.unwrap_or(""), vec_to_string_join_by_comma(&self.params_def_with_set), COLON, vec_to_string_join_by_comma(&self.dom_facts), self.ret_set)
+        }
     }
 }
 
