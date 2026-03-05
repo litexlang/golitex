@@ -1,5 +1,5 @@
 use crate::errors::ParsingError;
-use crate::keywords::{EXIST, FN, HAVE, LET, PROP};
+use crate::keywords::{EXIST, FN, HAVE, KNOW, LET, PROP};
 use crate::parser::Parser;
 use crate::stmt::Stmt;
 use crate::token_block::TokenBlock;
@@ -17,7 +17,8 @@ impl Parser {
                 } else {
                     self.have_obj_stmt(tb)
                 }
-            }
+            },
+            KNOW => self.know_stmt(tb),
             _ => {
                 let fact = self.fact(tb)?;
                 Ok(Stmt::Fact(fact))

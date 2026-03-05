@@ -80,6 +80,7 @@ pub const IMPORT: &str = "import";
 pub const AS: &str = "as";
 pub const ENUM: &str = "enum";
 pub const HAVE: &str = "have";
+pub const KNOW: &str = "know";
 pub const CLEAR: &str = "clear";
 pub const DO_NOTHING: &str = "do_nothing";
 pub const INDUC: &str = "induc";
@@ -129,7 +130,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CART, SET_DIM, PROJ, COUNT, RANGE, CLOSED_RANGE, VAL,
         EXIST, ST, FORALL, NOT, IS_SET, IS_NONEMPTY_SET, IS_FINITE_SET, IS_CART, IS_TUPLE,
         IN, OR, AND, SUBSET, SUPERSET, SUCCESS, UNKNOWN, LET, PROP,
-        CLAIM, PROVE, CONTRA, CASE, CASES, IMPORT, AS, ENUM, HAVE,
+        CLAIM, PROVE, CONTRA, CASE, CASES, IMPORT, AS, ENUM, HAVE, KNOW,
         CLEAR, DO_NOTHING, INDUC, FROM, DOM, EVAL, FOR, WITNESS,
         EQUAL_SET, IMPOSSIBLE, VIEW_FN_AS_SET, SET_TEMPLATE, RETURN, IF, ALGO,
         Q_POS, Z_POS, R_POS, Q_NEG, Z_NEG, R_NEG, Q_NZ, Z_NZ, R_NZ,
