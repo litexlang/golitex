@@ -197,6 +197,8 @@ impl Parser {
             } else {
                 return Err(ParsingError::new("algo body block must start with if or return", block.line_file_index));
             };
+
+            
             return_or_algo_if.push(item);
         }
         Ok(Stmt::DefStmt(DefStmt::DefineAlgorithmStmt(DefineAlgorithmStmt::new(
