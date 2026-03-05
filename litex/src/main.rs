@@ -62,11 +62,11 @@ mod definition_stmt;
 use definition_stmt::{DefStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, DefSetTemplateStmt};
 use definition_stmt::{DefPropStmt, DefLetStmt};
 mod claim_stmt;
-use claim_stmt::{ClaimProveStmt, ClaimStmt, ClaimIffStmt};
+use claim_stmt::ClaimStmt;
 mod know_stmt;
 use know_stmt::KnowStmt;
-mod prove_by_builtin_techniques_stmt;
-use prove_by_builtin_techniques_stmt::{ProveCaseByCaseStmt, ProveByContradictionStmt, ProveByBuiltinTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveEqualSetByDefStmt, ViewFnAsSetStmt};
+mod proof_technique_stmt;
+use proof_technique_stmt::{ProveCaseByCaseStmt, ProveByContradictionStmt, ProofTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveByEqualSetStmt, ViewFnAsSetStmt};
 mod prove_stmt;
 use prove_stmt::ProveStmt;
 mod tooling_stmt;
@@ -98,6 +98,8 @@ mod parse_prove_stmt;
 mod parse_witness;
 mod parse_stmt;
 mod parse_eval_stmt;
+mod parse_proof_technique_stmt;
+
 fn main() {
     try_atom_fn_obj();
     try_arithmetic();
@@ -761,7 +763,7 @@ fn try_claim_stmt() {
         Obj::mk("q"),
         Some((1, 0)),
     ))))];
-    let claim_prove_stmt = ClaimProveStmt::new(
+    let claim_stmt = ClaimStmt::new(
         Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
             Obj::mk("p"),
             Obj::mk("q"),
@@ -770,32 +772,9 @@ fn try_claim_stmt() {
         proof,
         Some((1, 0)),
     );
-    println!("{}", claim_prove_stmt);
+    println!("{}", claim_stmt);
 
-    let stmt = Stmt::ClaimStmt(ClaimStmt::ClaimProveStmt(claim_prove_stmt));
-    println!("{}", stmt);
-
-    let proof2 = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Obj::mk("p"),
-        Obj::mk("q"),
-        Some((1, 0)),
-    ))))];
-
-    let proof3 = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Obj::mk("p"),
-        Obj::mk("q"),
-        Some((1, 0)),
-    ))))];
-    
-    let forall = ForallFact::new(vec![ParamDefWithParamTypeOrProperty::ParamAndItsTypePair("n".to_string(), ParamType::Set(Set::new()))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
-        EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
-    )))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
-        EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
-    )))], Some((1, 0)));
-    let claim_iff_stmt = ClaimIffStmt::new(ForallFactWithIff::new(forall, vec![], Some((1, 0))), proof2, proof3, Some((1, 0)));
-    println!("{}", claim_iff_stmt);
-
-    let stmt = Stmt::ClaimStmt(ClaimStmt::ClaimIffStmt(claim_iff_stmt));
+    let stmt = Stmt::ClaimStmt(claim_stmt);
     println!("{}", stmt);
 }
 
@@ -849,10 +828,10 @@ fn try_proof_techniques() {
     ))))], impossible_fact, Some((1, 0)));
     println!("{}", claim_prove_by_contradiction_stmt);
 
-    let proof_technique = ProveByBuiltinTechniqueStmt::ProveCaseByCase(prove_case_by_case);
+    let proof_technique = ProofTechniqueStmt::ProveCaseByCase(prove_case_by_case);
     println!("{}", proof_technique);
 
-    let proof_technique = ProveByBuiltinTechniqueStmt::ProveByContradiction(claim_prove_by_contradiction_stmt);
+    let proof_technique = ProofTechniqueStmt::ProveByContradiction(claim_prove_by_contradiction_stmt);
     println!("{}", proof_technique);
 
     let stmt = Stmt::ProofTechnique(proof_technique);
@@ -912,7 +891,7 @@ fn try_prove_by_enumeration_stmt() {
     let prove_by_enumeration_stmt = ProveByEnumerationStmt::new(params, param_sets, to_prove, proof, Some((1, 0)));
     println!("{}", prove_by_enumeration_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt));
+    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt));
     println!("{}", stmt);
 }
 
@@ -966,7 +945,7 @@ fn try_prove_by_induction_stmt() {
     let prove_by_induction_stmt = ProveByInductionStmt::new(fact, param, proof, induc_from, Some((1, 0)));
     println!("{}", prove_by_induction_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveByInduction(prove_by_induction_stmt));
+    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ProveByInduction(prove_by_induction_stmt));
     println!("{}", stmt);
 }
 
@@ -1012,7 +991,7 @@ fn try_prove_for_stmt() {
     let prove_for_stmt = ProveForStmt::new(params, vec![param_sets], dom_facts, then_facts, proof, Some((1, 0)));
     println!("{}", prove_for_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt));
+    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ProveForStmt(prove_for_stmt));
     println!("{}", stmt);
 
     let params2 = vec!["x".to_string()];
@@ -1038,7 +1017,7 @@ fn try_prove_for_stmt() {
     let prove_for_stmt = ProveForStmt::new(params2, vec![param_sets2], dom_facts2, then_facts2, proof2, Some((1, 0)));
     println!("{}", prove_for_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt));
+    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ProveForStmt(prove_for_stmt));
     println!("{}", stmt);
 }
 
@@ -1059,10 +1038,10 @@ fn try_witness_stmt() {
 }
 
 fn try_prove_equal_set_stmt() {
-    let prove_equal_set_stmt = ProveEqualSetByDefStmt::new(Obj::mk("p"), Obj::mk("q"), vec![], Some((1, 0)));
+    let prove_equal_set_stmt = ProveByEqualSetStmt::new(Obj::mk("p"), Obj::mk("q"), vec![], Some((1, 0)));
     println!("{}", prove_equal_set_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveEqualByDefSet(prove_equal_set_stmt));
+    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ProveByEqualSet(prove_equal_set_stmt));
     println!("{}", stmt);
 
     let proof2 = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
@@ -1071,10 +1050,10 @@ fn try_prove_equal_set_stmt() {
         Some((1, 0)),
     ))))];
 
-    let prove_equal_set_stmt = ProveEqualSetByDefStmt::new(Obj::mk("p"), Obj::mk("q"), proof2, Some((1, 0)));
+    let prove_equal_set_stmt = ProveByEqualSetStmt::new(Obj::mk("p"), Obj::mk("q"), proof2, Some((1, 0)));
     println!("{}", prove_equal_set_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ProveEqualByDefSet(prove_equal_set_stmt));
+    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ProveByEqualSet(prove_equal_set_stmt));
     println!("{}", stmt);
 }
 
@@ -1090,13 +1069,13 @@ fn try_view_fn_as_set() {
     let prove_fn_set_is_subset_of_cart_set_stmt = ViewFnAsSetStmt::new(Obj::mk("p"), Some((1, 0)));
     println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ViewFnAsSet(prove_fn_set_is_subset_of_cart_set_stmt));
+    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ViewFnAsSet(prove_fn_set_is_subset_of_cart_set_stmt));
     println!("{}", stmt);
 
     let prove_fn_set_is_subset_of_cart_set_stmt = ViewFnAsSetStmt::new(Obj::mk("p"), Some((1, 0)));
     println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProveByBuiltinTechniqueStmt::ViewFnAsSet(prove_fn_set_is_subset_of_cart_set_stmt));
+    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ViewFnAsSet(prove_fn_set_is_subset_of_cart_set_stmt));
     println!("{}", stmt);
 }
 

@@ -3,7 +3,7 @@ use crate::fact::Fact;
 use crate::definition_stmt::DefStmt;
 use crate::claim_stmt::ClaimStmt;
 use crate::know_stmt::KnowStmt;
-use crate::prove_by_builtin_techniques_stmt::ProveByBuiltinTechniqueStmt;
+use crate::proof_technique_stmt::ProofTechniqueStmt;
 use crate::tooling_stmt::ToolingStmt;
 use crate::prove_stmt::ProveStmt;
 use crate::eval_stmt::EvalStmt;
@@ -17,7 +17,7 @@ pub enum Stmt {
     ToolingStmt(ToolingStmt),
     EvalStmt(EvalStmt),
     WitnessStmt(WitnessStmt),
-    ProofTechnique(ProveByBuiltinTechniqueStmt),
+    ProofTechnique(ProofTechniqueStmt),
 }
 
 impl fmt::Display for Stmt {

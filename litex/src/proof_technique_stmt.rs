@@ -7,13 +7,13 @@ use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::stmt::Stmt;
 use crate::obj::{ClosedRange, Obj, Range };
 
-pub enum ProveByBuiltinTechniqueStmt {
+pub enum ProofTechniqueStmt {
     ProveCaseByCase(ProveCaseByCaseStmt),
     ProveByContradiction(ProveByContradictionStmt),
     ProveByEnumeration(ProveByEnumerationStmt),
     ProveByInduction(ProveByInductionStmt),
     ProveForStmt(ProveForStmt),
-    ProveEqualByDefSet(ProveEqualSetByDefStmt),
+    ProveByEqualSet(ProveByEqualSetStmt),
     ViewFnAsSet(ViewFnAsSetStmt),
 }
 
@@ -25,7 +25,7 @@ pub struct ViewFnAsSetStmt {
 }
 
 
-pub struct ProveEqualSetByDefStmt {
+pub struct ProveByEqualSetStmt {
     pub left: Obj,
     pub right: Obj,
     pub proof: Vec<Stmt>,
@@ -117,30 +117,30 @@ impl fmt::Display for ProveByContradictionStmt {
     }
 }
 
-impl fmt::Display for ProveByBuiltinTechniqueStmt {
+impl fmt::Display for ProofTechniqueStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ProveByBuiltinTechniqueStmt::ProveCaseByCase(prove_case_by_case) => write!(f, "{}", prove_case_by_case),
-            ProveByBuiltinTechniqueStmt::ProveByContradiction(prove_by_contradiction_stmt) => write!(f, "{}", prove_by_contradiction_stmt),
-            ProveByBuiltinTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt) => write!(f, "{}", prove_by_enumeration_stmt),
-            ProveByBuiltinTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => write!(f, "{}", prove_by_induction_stmt),
-            ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt) => write!(f, "{}", prove_for_stmt),
-            ProveByBuiltinTechniqueStmt::ProveEqualByDefSet(prove_equal_set_stmt) => write!(f, "{}", prove_equal_set_stmt),
-            ProveByBuiltinTechniqueStmt::ViewFnAsSet(prove_fn_is_set_stmt) => write!(f, "{}", prove_fn_is_set_stmt),
+            ProofTechniqueStmt::ProveCaseByCase(prove_case_by_case) => write!(f, "{}", prove_case_by_case),
+            ProofTechniqueStmt::ProveByContradiction(prove_by_contradiction_stmt) => write!(f, "{}", prove_by_contradiction_stmt),
+            ProofTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt) => write!(f, "{}", prove_by_enumeration_stmt),
+            ProofTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => write!(f, "{}", prove_by_induction_stmt),
+            ProofTechniqueStmt::ProveForStmt(prove_for_stmt) => write!(f, "{}", prove_for_stmt),
+            ProofTechniqueStmt::ProveByEqualSet(prove_equal_set_stmt) => write!(f, "{}", prove_equal_set_stmt),
+            ProofTechniqueStmt::ViewFnAsSet(prove_fn_is_set_stmt) => write!(f, "{}", prove_fn_is_set_stmt),
         }
     }
 }
 
-impl ProveByBuiltinTechniqueStmt {
+impl ProofTechniqueStmt {
     pub fn line_file(&self) -> Option<(usize, usize)> {
         match self {
-            ProveByBuiltinTechniqueStmt::ProveCaseByCase(prove_case_by_case) => prove_case_by_case.line_file_index,
-            ProveByBuiltinTechniqueStmt::ProveByContradiction(claim_prove_by_contradiction_stmt) => claim_prove_by_contradiction_stmt.line_file_index,
-            ProveByBuiltinTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt) => prove_by_enumeration_stmt.line_file_index,
-            ProveByBuiltinTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => prove_by_induction_stmt.line_file_index,
-            ProveByBuiltinTechniqueStmt::ProveForStmt(prove_for_stmt) => prove_for_stmt.line_file_index,
-            ProveByBuiltinTechniqueStmt::ProveEqualByDefSet(prove_equal_set_stmt) => prove_equal_set_stmt.line_file_index,
-            ProveByBuiltinTechniqueStmt::ViewFnAsSet(prove_fn_is_set_stmt) => prove_fn_is_set_stmt.line_file_index,
+            ProofTechniqueStmt::ProveCaseByCase(prove_case_by_case) => prove_case_by_case.line_file_index,
+            ProofTechniqueStmt::ProveByContradiction(claim_prove_by_contradiction_stmt) => claim_prove_by_contradiction_stmt.line_file_index,
+            ProofTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt) => prove_by_enumeration_stmt.line_file_index,
+            ProofTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => prove_by_induction_stmt.line_file_index,
+            ProofTechniqueStmt::ProveForStmt(prove_for_stmt) => prove_for_stmt.line_file_index,
+            ProofTechniqueStmt::ProveByEqualSet(prove_equal_set_stmt) => prove_equal_set_stmt.line_file_index,
+            ProofTechniqueStmt::ViewFnAsSet(prove_fn_is_set_stmt) => prove_fn_is_set_stmt.line_file_index,
         }
     }
 }
@@ -192,7 +192,7 @@ impl fmt::Display for ClosedRangeOrRange {
     }
 }
 
-impl fmt::Display for ProveEqualSetByDefStmt {
+impl fmt::Display for ProveByEqualSetStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.proof.len() {
             0 => write!(f, "{} {} {} {}", EQUAL_SET, self.left, EQUAL, self.right),
@@ -201,9 +201,9 @@ impl fmt::Display for ProveEqualSetByDefStmt {
     }
 }
 
-impl ProveEqualSetByDefStmt {
+impl ProveByEqualSetStmt {
     pub fn new(left: Obj, right: Obj, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
-        ProveEqualSetByDefStmt { left, right, proof, line_file_index }
+        ProveByEqualSetStmt { left, right, proof, line_file_index }
     }
 }
 

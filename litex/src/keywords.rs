@@ -173,3 +173,7 @@ pub fn is_key_symbol_or_keyword(atom_name: &str) -> bool {
 pub fn is_comparison_str(atom_name: &str) -> bool {
     atom_name == EQUAL || atom_name == NOT_EQUAL || atom_name == LESS || atom_name == GREATER || atom_name == LESS_EQUAL || atom_name == GREATER_EQUAL
 }
+
+pub fn is_set_operator(atom_name: &str) -> bool {
+    return atom_name == UNION || atom_name == INTERSECT || atom_name == SET_MINUS || atom_name == DISJOINT_UNION
+}
