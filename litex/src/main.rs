@@ -1,67 +1,16 @@
+use std::collections::HashMap;
+
 mod arithmetic;
 mod keywords;
 mod tokenizer;
 mod token_block;
+use token_block::TokenBlock;
 mod errors;
+use errors::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError};
+use errors::ParsingError;
 mod helper;
 mod obj;
-mod stmt;
-mod parameter_type_and_property;
-mod atom;
-mod atomic_fact;
-mod fact;
-mod exist_fact;
-mod or_fact;
-mod forall_fact;
-mod specific_fact;
-mod forall_fact_with_iff;
-mod and_fact;
-mod and_fact_or_specific_fact;
-mod or_fact_or_and_fact_or_specific_fact;
-mod stmt_result;
-mod stmt_success;
-mod stmt_unknown;
-mod definition_stmt;
-mod claim_stmt;
-mod know_stmt;
-mod prove_by_builtin_techniques_stmt;
-mod prove_stmt;
-mod run_file_stmt;
-mod tooling_stmt;
-mod eval_stmt;
-mod witness_stmt;
-mod syntactic_verifier;
-mod module_manager;
-mod runtime_context;
-mod environment;
-mod define_algorithm_stmt;
-mod parser;
-mod parse_obj;
-mod parse_param_def;
-mod parse_fact;
-mod parse_def_stmt;
-mod parse_know_stmt;
-mod parse_claim_stmt;
-use parser::Parser;
-mod parse_stmt;
-use parameter_type_and_property::ParamDefWithParamType;
 use obj::{QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz};
-use std::collections::HashMap;
-use environment::Environment;
-use module_manager::ModuleManager;
-use runtime_context::RuntimeContext;
-use witness_stmt::{WitnessStmt, WitnessExistFact, WitnessNonemptySet};
-use prove_stmt::{ProveStmt};
-use run_file_stmt::{RunFileStmt};
-use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalModuleStmt, ClearStmt, DoNothingStmt};
-use prove_by_builtin_techniques_stmt::{ProveCaseByCaseStmt, ProveByContradictionStmt, ProveByBuiltinTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveEqualSetByDefStmt, ViewFnAsSetStmt};
-use definition_stmt::{DefStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt,  HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, DefSetTemplateStmt};
-use claim_stmt::{ClaimProveStmt, ClaimStmt, ClaimIffStmt};
-use and_fact::{AndFact, ChainFact, AndSpecFacts};
-use and_fact_or_specific_fact::AndFactOrSpecFact;
-use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
-use define_algorithm_stmt::{DefineAlgorithmStmt, AlgoReturn, AlgoIf, AlgoReturnOrAlgoIf};
-use atom::{AtomWithoutModName, AtomWithModName, Atom};
 use obj::{
     Obj, FnObj, Number, Add, Sub, Mul, Div, Mod, Pow,
     Union, Intersect, SetMinus, DisjointUnion, Cup, Cap,
@@ -70,32 +19,85 @@ use obj::{
     Cart, SetDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choose, ObjAtIndex,
     FnSetObj,
 };
+mod stmt;
+use stmt::Stmt;
+mod parameter_type_and_property;
+use parameter_type_and_property::ParamDefWithParamType;
 use parameter_type_and_property::{ParamType, Set, NonemptySet, FiniteSet, ParamDefWithParamTypeOrProperty, ParamDefWithParamSet};
-use stmt::{Stmt};
-use atomic_fact::{InFact, NotInFact,IsCartFact, NotIsCartFact, IsTupleFact, NotIsTupleFact, AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact, SubsetFact, NotSubsetFact, SupersetFact, NotSupersetFact,
+mod atom;
+use atom::{AtomWithoutModName, AtomWithModName, Atom};
+mod atomic_fact;
+use atomic_fact::{InFact, NotInFact, IsCartFact, NotIsCartFact, IsTupleFact, NotIsTupleFact, AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact, SubsetFact, NotSubsetFact, SupersetFact, NotSupersetFact,
     LessFact, NotLessFact, GreaterFact, NotGreaterFact,
     LessEqualFact, NotLessEqualFact, GreaterEqualFact, NotGreaterEqualFact,
     IsSetFact, NotIsSetFact, IsNonemptySetFact, NotIsNonemptySetFact,
     IsFiniteSetFact, NotIsFiniteSetFact,
 };
-use exist_fact::{ExistFact, TrueExistFact, NotExistFact};
-use specific_fact::SpecFact;
-use or_fact::OrFact;
-use forall_fact::ForallFact;
-use forall_fact_with_iff::ForallFactWithIff;
+mod fact;
 use fact::Fact;
-use errors::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError};
+mod exist_fact;
+use exist_fact::{ExistFact, TrueExistFact, NotExistFact};
+mod or_fact;
+use or_fact::OrFact;
+mod forall_fact;
+use forall_fact::ForallFact;
+mod specific_fact;
+use specific_fact::SpecFact;
+mod forall_fact_with_iff;
+use forall_fact_with_iff::ForallFactWithIff;
+mod and_fact;
+use and_fact::{AndFact, ChainFact, AndSpecFacts};
+mod and_fact_or_specific_fact;
+use and_fact_or_specific_fact::AndFactOrSpecFact;
+mod or_fact_or_and_fact_or_specific_fact;
+use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
+mod stmt_result;
 use stmt_result::StmtResult;
+mod stmt_success;
 use stmt_success::StmtSuccess;
 use stmt_success::{NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules};
+mod stmt_unknown;
 use stmt_unknown::StmtUnknown;
+mod definition_stmt;
+use definition_stmt::{DefStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, DefSetTemplateStmt};
 use definition_stmt::{DefPropStmt, DefLetStmt};
+mod claim_stmt;
+use claim_stmt::{ClaimProveStmt, ClaimStmt, ClaimIffStmt};
+mod know_stmt;
 use know_stmt::KnowStmt;
-use eval_stmt::{EvalStmt};
+mod prove_by_builtin_techniques_stmt;
+use prove_by_builtin_techniques_stmt::{ProveCaseByCaseStmt, ProveByContradictionStmt, ProveByBuiltinTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveEqualSetByDefStmt, ViewFnAsSetStmt};
+mod prove_stmt;
+use prove_stmt::ProveStmt;
+mod tooling_stmt;
+use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalModuleStmt, ClearStmt, DoNothingStmt, RunFileStmt};
+mod eval_stmt;
+use eval_stmt::EvalStmt;
+mod witness_stmt;
+use witness_stmt::{WitnessStmt, WitnessExistFact, WitnessNonemptySet};
+mod syntactic_verifier;
 use syntactic_verifier::SyntacticVerifier;
-use token_block::TokenBlock;
-use errors::ParsingError;
-
+mod module_manager;
+use module_manager::ModuleManager;
+mod runtime_context;
+use runtime_context::RuntimeContext;
+mod environment;
+use environment::Environment;
+mod define_algorithm_stmt;
+use define_algorithm_stmt::{DefineAlgorithmStmt, AlgoReturn, AlgoIf, AlgoReturnOrAlgoIf};
+mod parser;
+use parser::Parser;
+mod parse_tooling_stmt;
+mod parse_obj;
+mod parse_param_def;
+mod parse_fact;
+mod parse_def_stmt;
+mod parse_know_stmt;
+mod parse_claim_stmt;
+mod parse_prove_stmt;
+mod parse_witness;
+mod parse_stmt;
+mod parse_eval_stmt;
 fn main() {
     try_atom_fn_obj();
     try_arithmetic();
@@ -759,11 +761,15 @@ fn try_claim_stmt() {
         Obj::mk("q"),
         Some((1, 0)),
     ))))];
-    let claim_prove_stmt = ClaimProveStmt::new(vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Obj::mk("p"),
-        Obj::mk("q"),
+    let claim_prove_stmt = ClaimProveStmt::new(
+        Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            Obj::mk("p"),
+            Obj::mk("q"),
+            Some((1, 0)),
+        ))),
+        proof,
         Some((1, 0)),
-    )))], proof, Some((1, 0)));
+    );
     println!("{}", claim_prove_stmt);
 
     let stmt = Stmt::ClaimStmt(ClaimStmt::ClaimProveStmt(claim_prove_stmt));
@@ -854,10 +860,10 @@ fn try_proof_techniques() {
 }
 
 fn try_import_stmt() {
-    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/mod", "mod", Some((1, 0)));
+    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/mod", Some("mod".to_string()), Some((1, 0)));
     println!("{}", import_relative_path_stmt);
 
-    let import_global_mod_stmt = ImportGlobalModuleStmt::new("mod", "mod", Some((1, 0)));
+    let import_global_mod_stmt = ImportGlobalModuleStmt::new("mod", Some("mod".to_string()), Some((1, 0)));
     println!("{}", import_global_mod_stmt);
 
     let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportRelativePath(import_relative_path_stmt)));
@@ -884,7 +890,7 @@ fn try_run_file_stmt() {
     let run_file_stmt = RunFileStmt::new("path/to/file.txt", Some((1, 0)));
     println!("{}", run_file_stmt);
 
-    let stmt = Stmt::RunFileStmt(run_file_stmt);
+    let stmt = Stmt::ToolingStmt(ToolingStmt::RunFile(run_file_stmt));
     println!("{}", stmt);
 }
 
@@ -919,10 +925,10 @@ fn try_have_obj_in_nonempty_set_stmt() {
 }
 
 fn try_tooling_stmt() {
-    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/mod", "mod", Some((1, 0)));
+    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/mod", Some("mod".to_string()), Some((1, 0)));
     println!("{}", import_relative_path_stmt);
 
-    let import_global_mod_stmt = ImportGlobalModuleStmt::new("mod", "mod", Some((1, 0)));
+    let import_global_mod_stmt = ImportGlobalModuleStmt::new("mod", Some("mod".to_string()), Some((1, 0)));
     println!("{}", import_global_mod_stmt);
 
     let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportRelativePath(import_relative_path_stmt)));
