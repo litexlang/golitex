@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::keywords::{EXIST, LEFT_CURLY_BRACE, NOT,  RIGHT_CURLY_BRACE, ST};
+use crate::keywords::{COMMA, EXIST, LEFT_CURLY_BRACE, NOT,  RIGHT_CURLY_BRACE, ST};
 use crate::helper::{curly_braced_vec_to_string_with_sep, vec_to_string_join_by_comma};
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::parameter_type_and_property::ParamDefWithParamType;
@@ -44,21 +44,22 @@ impl NotExistFact {
     }
 }
 
+fn exist_fact_string_without_exist_as_prefix(param_defs: &Vec<ParamDefWithParamType>, facts: &Vec<OrFactOrAndFactOrSpecFact>) -> String {
+    match facts.len() {
+        1 => format!("{} {} {}", vec_to_string_join_by_comma(param_defs), ST, facts[0].to_string()),
+        _ => format!("{} {} {}", vec_to_string_join_by_comma(param_defs), ST, curly_braced_vec_to_string_with_sep(&facts.iter().map(|fact| fact.to_string()).collect::<Vec<String>>(), format!("{} ", COMMA).as_str())),
+    }
+}
+
 impl TrueExistFact {
     pub fn exist_fact_string_without_exist_as_prefix(&self) -> String {
-        match self.facts.len() {
-            1 => format!("{} {} {}", vec_to_string_join_by_comma(&self.params_def_with_type), ST, self.facts[0].to_string()),
-            _ => format!("{} {} {}", vec_to_string_join_by_comma(&self.params_def_with_type), ST, curly_braced_vec_to_string_with_sep(&self.facts.iter().map(|fact| fact.to_string()).collect::<Vec<String>>(), ", ")),
-        }
+        exist_fact_string_without_exist_as_prefix(&self.params_def_with_type, &self.facts)
     }
 }
 
 impl NotExistFact {
     pub fn exist_fact_string_without_exist_as_prefix(&self) -> String {
-        match self.facts.len() {
-            1 => format!("{} {} {}", vec_to_string_join_by_comma(&self.params_def_with_type), ST, self.facts[0].to_string()),
-            _ => format!("{} {} {}", vec_to_string_join_by_comma(&self.params_def_with_type), ST, curly_braced_vec_to_string_with_sep(&self.facts.iter().map(|fact| fact.to_string()).collect::<Vec<String>>(), ", ")),
-        }
+        exist_fact_string_without_exist_as_prefix(&self.params_def_with_type, &self.facts)
     }
 }
 

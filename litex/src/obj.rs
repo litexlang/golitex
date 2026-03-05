@@ -324,7 +324,8 @@ impl ObjAtIndex {
     }
 }
 
-impl FnObj {
+impl FnObj 
+{
     pub fn new(head: Obj, body: Vec<Obj>) -> Self {
         FnObj {
             head: Box::new(head),

@@ -149,7 +149,7 @@ fn main() {
     try_define_algorithm_stmt();
     try_runtime_context();
     try_tokenizer();
-    try_token_block();
+    try_tb();
     try_parser();
     try_parse_obj();
     try_parse_fact();
@@ -1205,7 +1205,7 @@ fn try_tokenizer() {
     println!("{:?}", tokens);
 }
 
-fn try_token_block() {
+fn try_tb() {
     let s = "a:\n    b\n  c";
     let blocks = TokenBlock::parse_blocks(s, 0);
     println!("{:?}", blocks);
@@ -1216,8 +1216,8 @@ fn try_parser() {
     println!("{}", parser);
     let s = "a+b";
     let tokens = tokenizer::tokenize_line(s);
-    let mut token_block = TokenBlock::new(tokens, vec![], (0, 0));
-    let obj = parser.obj(&mut token_block);
+    let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
+    let obj = parser.obj(&mut tb);
     println!("{}", obj.unwrap());
 }
 
@@ -1226,8 +1226,8 @@ fn try_parse_obj() {
     println!("{}", parser);
     let s = "a+b";
     let tokens = tokenizer::tokenize_line(s);
-    let mut token_block = TokenBlock::new(tokens, vec![], (0, 0));
-    let obj = parser.obj(&mut token_block);
+    let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
+    let obj = parser.obj(&mut tb);
     println!("{}", obj.unwrap());
 }
 
@@ -1236,8 +1236,8 @@ fn try_parse_fact() {
     println!("{}", parser);
     let s = "a+b=0";
     let tokens = tokenizer::tokenize_line(s);
-    let mut token_block = TokenBlock::new(tokens, vec![], (0, 0));
-    let fact = parser.fact(&mut token_block);
+    let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
+    let fact = parser.fact(&mut tb);
     println!("{}", fact.unwrap());
 }
 
@@ -1246,7 +1246,7 @@ fn try_parse_statements() {
     println!("{}", parser);
     let s = "a+b=0";
     let tokens = tokenizer::tokenize_line(s);
-    let mut token_block = TokenBlock::new(tokens, vec![], (0, 0));
-    let stmt = parser.parse_stmt(&mut token_block);
+    let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
+    let stmt = parser.stmt(&mut tb);
     println!("{}", stmt.unwrap());
 }

@@ -50,9 +50,9 @@ impl fmt::Display for ChainFact {
         let mut result = String::new();
         result.push_str(&self.objs[0].to_string());
         
-        for i in 1..self.objs.len() {
-            result.push_str(&format!(" {}{}", FACT_PREFIX, self.prop_names[i - 1]));
-            result.push_str(&format!(" {} {}", AND, self.objs[i].to_string()));
+        for (i, x) in self.objs[1..].iter().enumerate() {
+            result.push_str(&format!(" {}{}", FACT_PREFIX, self.prop_names[i]));
+            result.push_str(&format!(" {} {}", AND, x.to_string()));
         }
         write!(f, "{}", result)
     }
