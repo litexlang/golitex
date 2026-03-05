@@ -4,19 +4,20 @@ use crate::keywords::{
     LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, DOT, MUL, N, N_POS, POW,
     POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, RANGE, R_NEG, R_NZ, R_POS,
     RIGHT_BRACE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, SET_DIM, SET_MINUS, SUB,
-    UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, CUP,
+    UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, CUP, FN,
     is_key_symbol_or_keyword,
 };
 use crate::parser::Parser;
 use crate::token_block::TokenBlock;
 use crate::obj::{
-    Obj, FnObj, Add, Mul, Div, Mod, Sub, Pow, Number, InstSetTemplateObj, ListSet,
+    Obj, FnObj, FnSetObj, FnSetWithDom, FnSetWithoutDom, Add, Mul, Div, Mod, Sub, Pow, Number, InstSetTemplateObj, ListSet,
     NPosObj, NObj, QObj, ZObj, RObj, QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz,
     ObjAtIndex, Union, Intersect, SetMinus, DisjointUnion, Cup, Cap, PowerSet, Choose,
     Cart, SetDim, Proj, Count, Range, ClosedRange, Val,
 };
 use crate::atom::{Atom, AtomWithoutModName, AtomWithModName};
 use crate::errors::ParsingError;
+use crate::parameter_type_and_property::ParamDefWithParamSet;
 
 impl Parser {
     pub fn obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
@@ -140,8 +141,82 @@ impl Parser {
             INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL => {
                 self.instantiated_set_template_obj(tb)
             },
+            FN => {
+                match self.fn_set_obj(tb)? {
+                    FnSetObj::FnSetWithDom(fs) => Ok(Obj::FnSetWithDom(fs)),
+                    FnSetObj::FnSetWithoutDom(fs) => Ok(Obj::FnSetWithoutDom(fs)),
+                }
+            },
             _ => self.number_or_primary_obj_or_fn_obj(tb)
         }
+    }
+
+    pub fn fn_set_obj(&self, tb: &mut TokenBlock) -> Result<FnSetObj, ParsingError> {
+        tb.skip_token(FN)?;
+        self.fn_set_obj_without_prefix_fn(tb)
+    }
+
+    pub fn fn_set_obj_without_prefix_fn(&self, tb: &mut TokenBlock) -> Result<FnSetObj, ParsingError> {
+        if tb.current()? != LEFT_BRACE {
+            return Err(ParsingError::new("Expected left brace", tb.line_file_index));
+        }
+        
+        let start = tb.parse_index + 1;
+        let mut depth = 1;
+        let mut i = start;
+        while i < tb.header.len() {
+            if tb.header[i] == LEFT_BRACE {
+                depth += 1;
+            } else if tb.header[i] == RIGHT_BRACE {
+                depth -= 1;
+                if depth == 0 {
+                    break;
+                }
+            }
+            i += 1;
+        }
+        let end = i;
+        let has_colon = tb.header[start..end].iter().any(|t| t.as_str() == COLON);
+        if has_colon {
+            Ok(FnSetObj::FnSetWithDom(self.fn_set_with_dom_without_fn_prefix(tb)?))
+        } else {
+            Ok(FnSetObj::FnSetWithoutDom(self.fn_set_without_dom_without_fn_prefix(tb)?))
+        }
+    }
+
+    pub fn fn_set_with_dom_without_fn_prefix(&self, tb: &mut TokenBlock) -> Result<FnSetWithDom, ParsingError> {
+        tb.skip_token(LEFT_BRACE)?;
+        let mut params_def_with_set: Vec<ParamDefWithParamSet> = vec![];
+        loop {
+            let param = tb.advance()?;
+            let set = self.obj(tb)?;
+            params_def_with_set.push(ParamDefWithParamSet::ParamAndItsSetPair(param, set));
+            if tb.current()? == COLON {
+                break;
+            }
+            tb.skip_token(COMMA)?;
+        }
+        tb.skip_token(COLON)?;
+        let mut dom_facts = vec![self.or_and_spec_fact(tb)?];
+        while tb.current()? == COMMA {
+            tb.skip_token(COMMA)?;
+            dom_facts.push(self.or_and_spec_fact(tb)?);
+        }
+        tb.skip_token(RIGHT_BRACE)?;
+        let ret_set = self.obj(tb)?;
+        Ok(FnSetWithDom::new(params_def_with_set, dom_facts, ret_set))
+    }
+
+    pub fn fn_set_without_dom_without_fn_prefix(&self, tb: &mut TokenBlock) -> Result<FnSetWithoutDom, ParsingError> {
+        tb.skip_token(LEFT_BRACE)?;
+        let mut param_sets = vec![self.obj(tb)?];
+        while tb.current()? == COMMA {
+            tb.skip_token(COMMA)?;
+            param_sets.push(self.obj(tb)?);
+        }
+        tb.skip_token(RIGHT_BRACE)?;
+        let ret_set = self.obj(tb)?;
+        Ok(FnSetWithoutDom::new(param_sets, ret_set))
     }
 
     /// 若得到 atom，调用方再给其接若干 (args) 变成 FnObj。
@@ -342,8 +417,7 @@ impl Parser {
     fn set_list(&self, tb: &mut TokenBlock, left_most_obj: Obj) -> Result<Obj, ParsingError> {
         let mut objs = vec![left_most_obj];
         while tb.current()? != RIGHT_CURLY_BRACE {
-            let obj = self.obj(tb)?;
-            objs.push(obj);
+            objs.push(self.obj(tb)?);
         }
         tb.skip_token(RIGHT_CURLY_BRACE)?;
         Ok(Obj::ListSet(ListSet::new(objs)))
