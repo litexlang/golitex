@@ -49,7 +49,7 @@ impl Parser {
         let left = self.obj_hierarchy2(tb)?;
         match tb.current()? {
             MUL => {
-                tb.no_check_skip()?;
+                tb.skip()?;
                 let right = self.obj_hierarchy2(tb)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
                     Ok(Obj::Mul(Mul::new(left, right, false)))
@@ -58,7 +58,7 @@ impl Parser {
                 }
             },
             DIV => {
-                tb.no_check_skip()?;
+                tb.skip()?;
                 let right = self.obj_hierarchy2(tb)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
                     Ok(Obj::Div(Div::new(left, right, false)))
@@ -67,7 +67,7 @@ impl Parser {
                 }
             },
             MOD => {
-                tb.no_check_skip()?;
+                tb.skip()?;
                 let right = self.obj_hierarchy2(tb)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
                     Ok(Obj::Mod(Mod::new(left, right, false)))
@@ -83,7 +83,7 @@ impl Parser {
         let left = self.obj_hierarchy3(tb)?;
         match tb.current()? {
             ADD => {
-                tb.no_check_skip()?;
+                tb.skip()?;
                 let right = self.obj_hierarchy3(tb)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
                     Ok(Obj::Add(Add::new(left, right, false)))
@@ -92,7 +92,7 @@ impl Parser {
                 }
             },
             SUB => {
-                tb.no_check_skip()?;
+                tb.skip()?;
                 let right = self.obj_hierarchy3(tb)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
                     Ok(Obj::Sub(Sub::new(left, right, false)))
@@ -108,7 +108,7 @@ impl Parser {
         let left = self.obj_hierarchy4(tb)?;
         match tb.current()? {
             POW => {
-                tb.no_check_skip()?;
+                tb.skip()?;
                 let right = self.obj_hierarchy4(tb)?;
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
                     Ok(Obj::Pow(Pow::new(left, right, false)))
@@ -225,7 +225,7 @@ impl Parser {
 
         // 0. (obj)
         if token == LEFT_BRACE {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let obj = self.obj(tb)?;
             tb.skip_token(RIGHT_BRACE)?;
             return Ok(obj);
@@ -235,7 +235,7 @@ impl Parser {
         if starts_with_digit(token) {
             let number = tb.advance()?;
             if tb.current()? != DOT {
-                tb.no_check_skip()?;
+                tb.skip()?;
                 let fraction = tb.advance()?;
                 let number = format!("{}{}{}", number, DOT, fraction);
                 if !is_number(&number) {
@@ -269,80 +269,80 @@ impl Parser {
         let tok = tb.current()?;
 
         // 单符号集合（无参）
-        if tok == N_POS { tb.no_check_skip()?; return Ok(Obj::NPosObj(NPosObj::new())); }
-        if tok == N { tb.no_check_skip()?; return Ok(Obj::NObj(NObj::new())); }
-        if tok == Q { tb.no_check_skip()?; return Ok(Obj::QObj(QObj::new())); }
-        if tok == Z { tb.no_check_skip()?; return Ok(Obj::ZObj(ZObj::new())); }
-        if tok == R { tb.no_check_skip()?; return Ok(Obj::RObj(RObj::new())); }
-        if tok == Q_POS { tb.no_check_skip()?; return Ok(Obj::QPos(QPos::new())); }
-        if tok == Z_POS { tb.no_check_skip()?; return Ok(Obj::ZPos(ZPos::new())); }
-        if tok == R_POS { tb.no_check_skip()?; return Ok(Obj::RPos(RPos::new())); }
-        if tok == Q_NEG { tb.no_check_skip()?; return Ok(Obj::QNeg(QNeg::new())); }
-        if tok == Z_NEG { tb.no_check_skip()?; return Ok(Obj::ZNeg(ZNeg::new())); }
-        if tok == R_NEG { tb.no_check_skip()?; return Ok(Obj::RNeg(RNeg::new())); }
-        if tok == Q_NZ { tb.no_check_skip()?; return Ok(Obj::QNz(QNz::new())); }
-        if tok == Z_NZ { tb.no_check_skip()?; return Ok(Obj::ZNz(ZNz::new())); }
-        if tok == R_NZ { tb.no_check_skip()?; return Ok(Obj::RNz(RNz::new())); }
+        if tok == N_POS { tb.skip()?; return Ok(Obj::NPosObj(NPosObj::new())); }
+        if tok == N { tb.skip()?; return Ok(Obj::NObj(NObj::new())); }
+        if tok == Q { tb.skip()?; return Ok(Obj::QObj(QObj::new())); }
+        if tok == Z { tb.skip()?; return Ok(Obj::ZObj(ZObj::new())); }
+        if tok == R { tb.skip()?; return Ok(Obj::RObj(RObj::new())); }
+        if tok == Q_POS { tb.skip()?; return Ok(Obj::QPos(QPos::new())); }
+        if tok == Z_POS { tb.skip()?; return Ok(Obj::ZPos(ZPos::new())); }
+        if tok == R_POS { tb.skip()?; return Ok(Obj::RPos(RPos::new())); }
+        if tok == Q_NEG { tb.skip()?; return Ok(Obj::QNeg(QNeg::new())); }
+        if tok == Z_NEG { tb.skip()?; return Ok(Obj::ZNeg(ZNeg::new())); }
+        if tok == R_NEG { tb.skip()?; return Ok(Obj::RNeg(RNeg::new())); }
+        if tok == Q_NZ { tb.skip()?; return Ok(Obj::QNz(QNz::new())); }
+        if tok == Z_NZ { tb.skip()?; return Ok(Obj::ZNz(ZNz::new())); }
+        if tok == R_NZ { tb.skip()?; return Ok(Obj::RNz(RNz::new())); }
 
         // 多元关键字：吃关键字 + 括号里若干 obj
         if tok == UNION {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("union expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::Union(Union::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == INTERSECT {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("intersect expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::Intersect(Intersect::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == SET_MINUS {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("set_minus expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::SetMinus(SetMinus::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == DISJOINT_UNION {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("disjoint_union expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::DisjointUnion(DisjointUnion::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == CAP {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("cap expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::Cap(Cap::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == CHOICE {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("choice expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::Choose(Choose::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == PROJ {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("proj expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::Proj(Proj::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == RANGE {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("range expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
             return Ok(Obj::Range(Range::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == CLOSED_RANGE {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("closed_range expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
@@ -350,38 +350,38 @@ impl Parser {
         }
 
         if tok == CUP {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 1 { return Err(ParsingError::new("cup expects 1 argument", tb.line_file_index)); }
             return Ok(Obj::Cup(Cup::new(args.into_iter().next().unwrap())));
         }
         if tok == POWER_SET {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 1 { return Err(ParsingError::new("power_set expects 1 argument", tb.line_file_index)); }
             return Ok(Obj::PowerSet(PowerSet::new(args.into_iter().next().unwrap())));
         }
         if tok == SET_DIM {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 1 { return Err(ParsingError::new("set_dim expects 1 argument", tb.line_file_index)); }
             return Ok(Obj::SetDim(SetDim::new(args.into_iter().next().unwrap())));
         }
         if tok == COUNT {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 1 { return Err(ParsingError::new("count expects 1 argument", tb.line_file_index)); }
             return Ok(Obj::Count(Count::new(args.into_iter().next().unwrap())));
         }
         if tok == VAL {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 1 { return Err(ParsingError::new("val expects 1 argument", tb.line_file_index)); }
             return Ok(Obj::Val(Val::new(args.into_iter().next().unwrap())));
         }
 
         if tok == CART {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let args = self.braced_objs(tb)?;
             return Ok(Obj::Cart(Cart::new(args)));
         }
@@ -447,7 +447,7 @@ impl Parser {
     pub fn atom(&self, tb: &mut TokenBlock) -> Result<Atom, ParsingError> {
         let left = tb.advance()?;
         if tb.current()? == DOT {
-            tb.no_check_skip()?;
+            tb.skip()?;
             let right = tb.advance()?;
             Ok(Atom::AtomWithModName(AtomWithModName::new(&left, &right)))
         } else {

@@ -120,17 +120,10 @@ impl TokenBlock {
         Ok(t)
     }
 
-    pub fn no_check_skip(&mut self) -> Result<(), ParsingError> {
+    pub fn skip(&mut self) -> Result<(), ParsingError> {
         self.current()?;
         self.parse_index += 1;
         Ok(())
-    }
-
-    pub fn head_last_token_is(&self, token: &str) -> Result<bool, ParsingError> {
-        if self.header.is_empty() {
-            return Err(ParsingError::new("Expected token: at head", self.line_file_index));
-        }
-        Ok(self.header.last().unwrap() == token)
     }
 
     pub fn exceed_end_of_head(&self) -> bool {
