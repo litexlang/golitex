@@ -82,7 +82,8 @@ fn parse_level(
             
             items.push(TokenBlock::new(header_tokens, body, (line_no, current_file_index)));
         } else {
-            items.push(TokenBlock::new(vec![content.to_string()], vec![], (line_no, current_file_index)));
+            let header_tokens = tokenize_line(content);
+            items.push(TokenBlock::new(header_tokens, vec![], (line_no, current_file_index)));
         }
 
         if let Some(expected) = body_indent {
@@ -143,6 +144,13 @@ impl TokenBlock {
         self.header.get(index).map(|s| s.as_str()).ok_or_else(|| {
             ParsingError::new(&format!("Expected token: at index {}", index), self.line_file_index)
         })
+    }
+
+    pub fn current_token_empty_if_exceed_end_of_head(&self) -> &str {
+        if self.exceed_end_of_head() {
+            return "";
+        }
+        self.header.get(self.parse_index).map(|s| s.as_str()).unwrap_or("")
     }
 }
 

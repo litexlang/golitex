@@ -1,7 +1,7 @@
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::parameter_type_and_property::ParamDefWithParamSet;
 use crate::keywords::{
-    ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_CURLY_BRACE, LEFT_BRACKET, MOD, MUL, N,  N_POS, DOT, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, CART_DIM, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
+    ADD, CAP, CART, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_CURLY_BRACE, LEFT_BRACKET, MOD, MUL, N,  N_POS, DOT, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, CART_DIM, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
 };
 use std::fmt;
 use crate::helper::{braced_string, braced_two_strings, braced_vec_to_string, curly_braced_vec_to_string,  vec_to_string_join_by_comma};
@@ -73,7 +73,6 @@ pub struct ObjAtIndex {
 
 #[derive(Clone)]
 pub struct Choose {
-    pub element: Box<Obj>,
     pub set: Box<Obj>,
 }
 
@@ -212,7 +211,6 @@ pub struct Cup {
 #[derive(Clone)]
 pub struct Cap {
     pub left: Box<Obj>,
-    pub right: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -443,11 +441,8 @@ impl Cup {
 }
 
 impl Cap {
-    pub fn new(left: Obj, right: Obj) -> Self {
-        Cap {
-            left: Box::new(left),
-            right: Box::new(right),
-        }
+    pub fn new(left: Obj) -> Self {
+        Cap { left: Box::new(left) }
     }
 }
 
@@ -570,9 +565,8 @@ impl PowerSet {
 }
 
 impl Choose {
-    pub fn new(element: Obj, set: Obj) -> Self {
+    pub fn new(set: Obj) -> Self {
         Choose {
-            element: Box::new(element),
             set: Box::new(set),
         }
     }
@@ -709,7 +703,7 @@ impl fmt::Display for ObjAtIndex {
 
 impl fmt::Display for Choose {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", CHOICE, braced_two_strings(&self.element, &self.set))
+        write!(f, "{}{}", CHOOSE, braced_string(&self.set))
     }
 }
 
@@ -841,7 +835,7 @@ impl fmt::Display for Cup {
 
 impl fmt::Display for Cap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", CAP, braced_two_strings(&self.left, &self.right))
+        write!(f, "{}{}", CAP, braced_string(&self.left))
     }
 }
 

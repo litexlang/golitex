@@ -1,12 +1,11 @@
 use crate::keywords::{
-    ADD, CAP, CART, CHOICE, CLOSED_RANGE, COLON, COMMA, COUNT, DISJOINT_UNION, DIV,
+    ADD, CAP, CART, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, DISJOINT_UNION, DIV,
     INFIX_FN_NAME_SIGN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT,
     LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, DOT, MUL, N, N_POS, POW,
     POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, RANGE, R_NEG, R_NZ, R_POS,
     RIGHT_BRACE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, CART_DIM, SET_MINUS, SUB,
     UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, CUP, FN,
     is_key_symbol_or_keyword,
-    is_set_operator,
 };
 use crate::parser::Parser;
 use crate::token_block::TokenBlock;
@@ -30,26 +29,25 @@ impl Parser {
         if tb.exceed_end_of_head() {
             return Ok(left);
         }
-        match tb.current()? {
+        match tb.current_token_empty_if_exceed_end_of_head() {
             INFIX_FN_NAME_SIGN => {
                 let fn_name = self.atom(tb)?;
                 
                 let right = self.obj(tb)?;
 
-                if is_set_operator(&fn_name.to_string()) {
+                if is_key_symbol_or_keyword(&fn_name.to_string()) {
                     return match fn_name.to_string().as_str() {
                         UNION => Ok(Obj::Union(Union::new(left, right))),
                         INTERSECT => Ok(Obj::Intersect(Intersect::new(left, right))),
                         SET_MINUS => Ok(Obj::SetMinus(SetMinus::new(left, right))),
                         DISJOINT_UNION => Ok(Obj::DisjointUnion(DisjointUnion::new(left, right))),
-                        _ => Err(ParsingError::new(&format!("Invalid set operator: {}", fn_name), tb.line_file_index)),
+                        RANGE => Ok(Obj::Range(Range::new(left, right))),
+                        CLOSED_RANGE => Ok(Obj::ClosedRange(ClosedRange::new(left, right))),
+                        PROJ => Ok(Obj::Proj(Proj::new(left, right))),
+                        _ => Err(ParsingError::new(&format!("Invalid infix function name: {}", fn_name), tb.line_file_index)),
                     };
                 }
 
-                if is_key_symbol_or_keyword(&fn_name.to_string()) {
-                    return Err(ParsingError::new(&format!("Invalid function name behind infix function name sign {}: {}", INFIX_FN_NAME_SIGN, fn_name), tb.line_file_index));
-                }
-                
                 let head = match fn_name {
                     Atom::AtomWithoutModName(a) => Obj::AtomWithoutModName(a),
                     Atom::AtomWithModName(a) => Obj::AtomWithModName(a),
@@ -65,7 +63,7 @@ impl Parser {
         if tb.exceed_end_of_head() {
             return Ok(left);
         }
-        match tb.current()? {
+        match tb.current_token_empty_if_exceed_end_of_head() {
             MUL => {
                 tb.skip()?;
                 let right = self.obj_hierarchy2(tb)?;
@@ -102,7 +100,7 @@ impl Parser {
         if tb.exceed_end_of_head() {
             return Ok(left);
         }
-        match tb.current()? {
+        match tb.current_token_empty_if_exceed_end_of_head() {
             ADD => {
                 tb.skip()?;
                 let right = self.obj_hierarchy3(tb)?;
@@ -130,7 +128,7 @@ impl Parser {
         if tb.exceed_end_of_head() {
             return Ok(left);
         }
-        match tb.current()? {
+        match tb.current_token_empty_if_exceed_end_of_head() {
             POW => {
                 tb.skip()?;
                 let right = self.obj_hierarchy4(tb)?;
@@ -149,7 +147,7 @@ impl Parser {
         if tb.exceed_end_of_head() {
             return Ok(left);
         }
-        match tb.current()? {
+        match tb.current_token_empty_if_exceed_end_of_head() {
             LEFT_BRACKET => {
                 tb.skip_token(LEFT_BRACKET)?;
                 let obj = self.obj(tb)?;
@@ -161,7 +159,7 @@ impl Parser {
     }
 
     fn obj_hierarchy5(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        match tb.current()? {
+        match tb.current_token_empty_if_exceed_end_of_head() {
             LEFT_CURLY_BRACE => {
                 self.set_builder_or_set_list(tb)
             },
@@ -247,7 +245,7 @@ impl Parser {
     }
 
     pub fn number_or_primary_obj_or_fn_obj_with_minus_prefix(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        if tb.current()? == SUB {
+        if tb.current_token_empty_if_exceed_end_of_head() == SUB {
             tb.skip()?;
             let obj = self.number_or_primary_obj_or_fn_obj(tb)?;
             Ok(Obj::Mul(Mul::new(Obj::Number(Number::new("-1")), obj, false)))
@@ -287,12 +285,12 @@ impl Parser {
                     return Err(ParsingError::new(&format!("Invalid number: {}", number), tb.line_file_index));
                 }
                 return Ok(Obj::Number(Number::new(&number)));
+            } else {
+                if !is_number(&number) {
+                    return Err(ParsingError::new(&format!("Invalid number: {}", number), tb.line_file_index));
+                }
+                return Ok(Obj::Number(Number::new(&number)));
             }
-
-            if !is_number(&number) {
-                return Err(ParsingError::new(&format!("Invalid number: {}", number), tb.line_file_index));
-            }
-            return Ok(Obj::Number(Number::new(&number)));
         }
 
         // 2. 单符号集合、多元关键字、或 atom
@@ -361,16 +359,14 @@ impl Parser {
         if tok == CAP {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
-            if args.len() != 2 { return Err(ParsingError::new("cap expects 2 arguments", tb.line_file_index)); }
-            let mut it = args.into_iter();
-            return Ok(Obj::Cap(Cap::new(it.next().unwrap(), it.next().unwrap())));
+            if args.len() != 1 { return Err(ParsingError::new("cap expects 1 argument", tb.line_file_index)); }
+            return Ok(Obj::Cap(Cap::new(args.into_iter().next().unwrap())));
         }
-        if tok == CHOICE {
+        if tok == CHOOSE {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
-            if args.len() != 2 { return Err(ParsingError::new("choice expects 2 arguments", tb.line_file_index)); }
-            let mut it = args.into_iter();
-            return Ok(Obj::Choose(Choose::new(it.next().unwrap(), it.next().unwrap())));
+            if args.len() != 1 { return Err(ParsingError::new("choice expects 1 argument", tb.line_file_index)); }
+            return Ok(Obj::Choose(Choose::new(args.into_iter().next().unwrap())));
         }
         if tok == PROJ {
             tb.skip()?;
