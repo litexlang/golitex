@@ -1,6 +1,6 @@
 use std::fmt;
 use crate::obj::Obj;
-use crate::atom::Atom;
+use crate::atom::IdentifierOrIdentifierWithMod;
 use crate::keywords::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, IN, IS_CART, IS_TUPLE, SUBSET, SUPERSET, NOT_EQUAL};
 use crate::helper::{braced_string, braced_vec_to_string};
 use crate::errors::NewAtomicFactError;
@@ -106,14 +106,14 @@ pub struct NotInFact {
 
 #[derive(Clone)]
 pub struct NormalAtomicFact {
-    pub predicate: Atom,
+    pub predicate: IdentifierOrIdentifierWithMod,
     pub body: Vec<Obj>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
 #[derive(Clone)]
 pub struct NotNormalAtomicFact {
-    pub predicate: Atom,
+    pub predicate: IdentifierOrIdentifierWithMod,
     pub body: Vec<Obj>,
     pub line_file_index: Option<(usize, usize)>,
 }
@@ -237,13 +237,13 @@ impl NotSubsetFact {
 }
 
 impl NormalAtomicFact {
-    pub fn new(predicate: Atom, body: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(predicate: IdentifierOrIdentifierWithMod, body: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Self {
         NormalAtomicFact { predicate, body, line_file_index }
     }
 }
 
 impl NotNormalAtomicFact {
-    pub fn new(predicate: Atom, body: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(predicate: IdentifierOrIdentifierWithMod, body: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Self {
         NotNormalAtomicFact { predicate, body, line_file_index }
     }
 }
@@ -704,7 +704,7 @@ impl AtomicFact {
 
 
 impl AtomicFact {
-    pub fn to_atomic_fact(prop_name: Atom, is_true: bool, args: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Result<AtomicFact, NewAtomicFactError> {
+    pub fn to_atomic_fact(prop_name: IdentifierOrIdentifierWithMod, is_true: bool, args: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Result<AtomicFact, NewAtomicFactError> {
         let prop_name_as_string = prop_name.to_string();
         match prop_name_as_string.as_str() {
             EQUAL => {

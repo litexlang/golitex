@@ -24,7 +24,7 @@ use stmt::Stmt;
 mod parameter_type_and_property;
 use parameter_type_and_property::{ParamType, Set, NonemptySet, FiniteSet, ParamDefWithParamType, ParamDefWithParamSet};
 mod atom;
-use atom::{AtomWithoutModName, AtomWithModName, Atom};
+use atom::{Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod};
 mod atomic_fact;
 use atomic_fact::{InFact, NotInFact, IsCartFact, NotIsCartFact, IsTupleFact, NotIsTupleFact, AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact, SubsetFact, NotSubsetFact, SupersetFact, NotSupersetFact,
     LessFact, NotLessFact, GreaterFact, NotGreaterFact,
@@ -167,19 +167,19 @@ fn main() {
 
 fn try_atom_fn_obj() {
     let a_add_b = Obj::FnObj(FnObj::new(
-        Obj::AtomWithoutModName(AtomWithoutModName::new("+")),
+        Obj::Identifier(Identifier::new("+")),
         vec![
-            Obj::AtomWithoutModName(AtomWithoutModName::new("a")),
-            Obj::AtomWithoutModName(AtomWithoutModName::new("b")),
+            Obj::Identifier(Identifier::new("a")),
+            Obj::Identifier(Identifier::new("b")),
         ],
     ));
     println!("{}", a_add_b);
 
     let a_add_b_with_mod = Obj::FnObj(FnObj::new(
-        Obj::AtomWithModName(AtomWithModName::new("ModA", "name_a")),
+        Obj::IdentifierWithMod(IdentifierWithMod::new("ModA", "name_a")),
         vec![
-            Obj::AtomWithoutModName(AtomWithoutModName::new("a")),
-            Obj::AtomWithoutModName(AtomWithoutModName::new("b")),
+            Obj::Identifier(Identifier::new("a")),
+            Obj::Identifier(Identifier::new("b")),
         ],
     ));
     println!("{}", a_add_b_with_mod);
@@ -204,7 +204,7 @@ fn try_arithmetic() {
 }
 
 fn try_set_operations() {
-    let mk = |s: &str| Obj::AtomWithoutModName(AtomWithoutModName::new(s));
+    let mk = |s: &str| Obj::Identifier(Identifier::new(s));
     let union_result = Obj::Union(Union::new(mk("A"), mk("B")));
     let intersect_result = Obj::Intersect(Intersect::new(mk("A"), mk("B")));
     let set_minus_result = Obj::SetMinus(SetMinus::new(mk("A"), mk("B")));
@@ -216,22 +216,22 @@ fn try_set_operations() {
 
 fn try_stmt() {
     let body3 = vec![
-        Obj::AtomWithoutModName(AtomWithoutModName::new("a")),
-        Obj::AtomWithoutModName(AtomWithoutModName::new("b")),
+        Obj::Identifier(Identifier::new("a")),
+        Obj::Identifier(Identifier::new("b")),
     ];
     let fact1 = Stmt::Fact(Fact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
-        Atom::AtomWithoutModName(AtomWithoutModName::new("p")),
+        IdentifierOrIdentifierWithMod::Identifier(Identifier::new("p")),
         body3,
         Some((1, 0)),
     ))));
     println!("{}", fact1.to_string());
 
     let body2 = vec![
-        Obj::AtomWithoutModName(AtomWithoutModName::new("a")),
-        Obj::AtomWithoutModName(AtomWithoutModName::new("b")),
+        Obj::Identifier(Identifier::new("a")),
+        Obj::Identifier(Identifier::new("b")),
     ];
     let fact2 = Stmt::Fact(Fact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
-        Atom::AtomWithModName(AtomWithModName::new("ModA", "name_a")),
+        IdentifierOrIdentifierWithMod::IdentifierWithMod(IdentifierWithMod::new("ModA", "name_a")),
         body2,
         Some((1, 0)),
     ))));
@@ -257,42 +257,42 @@ fn try_equal_literally() {
     let module_manager = ModuleManager::new();
     let syntactic_verifier = SyntacticVerifier::new(&module_manager);
     
-    let a = Obj::AtomWithoutModName(AtomWithoutModName::new("a"));
-    let b = Obj::AtomWithoutModName(AtomWithoutModName::new("b"));
+    let a = Obj::Identifier(Identifier::new("a"));
+    let b = Obj::Identifier(Identifier::new("b"));
     println!("{}", syntactic_verifier.equal_literally(&a, &b));
-    let a2 = Obj::AtomWithoutModName(AtomWithoutModName::new("a"));
+    let a2 = Obj::Identifier(Identifier::new("a"));
     println!("{}", syntactic_verifier.equal_literally(&a2, &a));
 }
 
 fn try_list_set() {
     let list_set = Obj::ListSet(ListSet::new(vec![
-        Obj::AtomWithoutModName(AtomWithoutModName::new("a")),
-        Obj::AtomWithoutModName(AtomWithoutModName::new("b")),
+        Obj::Identifier(Identifier::new("a")),
+        Obj::Identifier(Identifier::new("b")),
     ]));
     println!("{}", list_set);
 }
 
 fn try_set_builder() {
-    let set_builder = Obj::SetBuilder(SetBuilder::new("a".to_string(), Obj::AtomWithoutModName(AtomWithoutModName::new("b")), vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))]));
+    let set_builder = Obj::SetBuilder(SetBuilder::new("a".to_string(), Obj::Identifier(Identifier::new("b")), vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))]));
     println!("{}", set_builder);
 }
 
 fn try_fn_set_without_params() {
     let fn_set_without_params = Obj::FnSetWithoutDom(FnSetWithoutDom::new(
         vec![
-            Obj::AtomWithoutModName(AtomWithoutModName::new("a")),
-            Obj::AtomWithoutModName(AtomWithoutModName::new("b")),
+            Obj::Identifier(Identifier::new("a")),
+            Obj::Identifier(Identifier::new("b")),
         ],
-        Obj::AtomWithoutModName(AtomWithoutModName::new("c")),
+        Obj::Identifier(Identifier::new("c")),
     ));
     println!("{}", fn_set_without_params);
 }
 
 fn try_fn_set_with_params() {
-    let fn_set_with_params = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("a".to_string(), Obj::AtomWithoutModName(AtomWithoutModName::new("a"))), ParamDefWithParamSet::ParamAndItsSetPair("b".to_string(), Obj::AtomWithoutModName(AtomWithoutModName::new("b")))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))], Obj::AtomWithoutModName(AtomWithoutModName::new("c"))));
+    let fn_set_with_params = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("a".to_string(), Obj::Identifier(Identifier::new("a"))), ParamDefWithParamSet::ParamAndItsSetPair("b".to_string(), Obj::Identifier(Identifier::new("b")))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))], Obj::Identifier(Identifier::new("c"))));
     println!("{}", fn_set_with_params);
 
-    let fn_set_with_params2 = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("a".to_string(), Obj::AtomWithoutModName(AtomWithoutModName::new("a"))), ParamDefWithParamSet::ParamAndItsSetPair("b".to_string(), Obj::AtomWithoutModName(AtomWithoutModName::new("b"))), ParamDefWithParamSet::ParamsAndTheirSetsPair(vec!["c".to_string()], Obj::AtomWithoutModName(AtomWithoutModName::new("c")))], vec![], Obj::AtomWithoutModName(AtomWithoutModName::new("c"))));
+    let fn_set_with_params2 = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet::ParamAndItsSetPair("a".to_string(), Obj::Identifier(Identifier::new("a"))), ParamDefWithParamSet::ParamAndItsSetPair("b".to_string(), Obj::Identifier(Identifier::new("b"))), ParamDefWithParamSet::ParamsAndTheirSetsPair(vec!["c".to_string()], Obj::Identifier(Identifier::new("c")))], vec![], Obj::Identifier(Identifier::new("c"))));
     println!("{}", fn_set_with_params2);
 }
 
@@ -334,19 +334,19 @@ fn try_parameter_set() {
     println!("{}", nonempty_parameter_set);
     let finite_parameter_set = ParamType::FiniteSet(FiniteSet::new());
     println!("{}", finite_parameter_set);
-    let obj_parameter_set = ParamType::Obj(Obj::AtomWithoutModName(AtomWithoutModName::new("a")));
+    let obj_parameter_set = ParamType::Obj(Obj::Identifier(Identifier::new("a")));
     println!("{}", obj_parameter_set);
 }
 
 fn try_instantiated_set_template_obj() {
     let instantiated_set_template_obj = Obj::InstSetTemplateObj(InstSetTemplateObj::new(
-        Atom::AtomWithModName(AtomWithModName::new("ModA", "name_a")),
-        vec![Obj::AtomWithoutModName(AtomWithoutModName::new("b"))],
+        IdentifierOrIdentifierWithMod::IdentifierWithMod(IdentifierWithMod::new("ModA", "name_a")),
+        vec![Obj::Identifier(Identifier::new("b"))],
     ));
     println!("{}", instantiated_set_template_obj);
 
     let instantiated_set_template_obj2 = Obj::InstSetTemplateObj(InstSetTemplateObj::new(
-        Atom::AtomWithoutModName(AtomWithoutModName::new("a")),
+        IdentifierOrIdentifierWithMod::Identifier(Identifier::new("a")),
         vec![],
     ));
     println!("{}", instantiated_set_template_obj2);
@@ -354,7 +354,7 @@ fn try_instantiated_set_template_obj() {
 
 
 fn try_cart_set_dim_proj_dim_tuple() {
-    let mk = |s: &str| Obj::AtomWithoutModName(AtomWithoutModName::new(s));
+    let mk = |s: &str| Obj::Identifier(Identifier::new(s));
     let cart = Obj::Cart(Cart::new(vec![mk("a"), mk("b")]));
     let set_dim = Obj::CartDim(CartDim::new(mk("a")));
     let proj = Obj::Proj(Proj::new(mk("a"), mk("b")));
@@ -368,7 +368,7 @@ fn try_cart_set_dim_proj_dim_tuple() {
 }
 
 fn try_count_range_closed_range_val() {
-    let mk = |s: &str| Obj::AtomWithoutModName(AtomWithoutModName::new(s));
+    let mk = |s: &str| Obj::Identifier(Identifier::new(s));
     let count = Obj::Count(Count::new(mk("a")));
     let range = Obj::Range(Range::new(mk("a"), mk("b")));
     let closed_range = Obj::ClosedRange(ClosedRange::new(mk("a"), mk("b")));
@@ -380,7 +380,7 @@ fn try_count_range_closed_range_val() {
 }
 
 fn try_power_set_choice() {
-    let mk = |s: &str| Obj::AtomWithoutModName(AtomWithoutModName::new(s));
+    let mk = |s: &str| Obj::Identifier(Identifier::new(s));
     let power_set = Obj::PowerSet(PowerSet::new(mk("a")));
     let choice = Obj::Choose(Choose::new(mk("b")));
     println!("{}", power_set);
@@ -390,7 +390,7 @@ fn try_power_set_choice() {
 fn try_atomic_fact() {
     let line = 1usize;
     let _normal = AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
-        Atom::AtomWithoutModName(AtomWithoutModName::new("p")),
+        IdentifierOrIdentifierWithMod::Identifier(Identifier::new("p")),
         vec![Obj::mk("a"), Obj::mk("b")],
         Some((line, 0)),
     ));
@@ -406,7 +406,7 @@ fn try_atomic_fact() {
     let _not_is_cart = AtomicFact::NotIsCartFact(NotIsCartFact::new(Obj::mk("S"), Some((line, 0))));
 
     let _not_normal = AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(
-        Atom::AtomWithoutModName(AtomWithoutModName::new("p")),
+        IdentifierOrIdentifierWithMod::Identifier(Identifier::new("p")),
         vec![Obj::mk("a")],
         Some((line, 0)),
     ));
@@ -503,7 +503,7 @@ fn try_or_fact() {
     println!("{}", _or);
 
     let facts2 = vec![
-        AndFactOrSpecFact::AndFact(AndFact::ChainFact(ChainFact::new(vec![Obj::mk("p"), Obj::mk("q"), Obj::mk("r")], vec![Atom::AtomWithoutModName(AtomWithoutModName::new("p")), Atom::AtomWithoutModName(AtomWithoutModName::new("q"))], Some((1, 0))))),
+        AndFactOrSpecFact::AndFact(AndFact::ChainFact(ChainFact::new(vec![Obj::mk("p"), Obj::mk("q"), Obj::mk("r")], vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("p")), IdentifierOrIdentifierWithMod::Identifier(Identifier::new("q"))], Some((1, 0))))),
     ];
     let _or2 = OrFact::new(facts2, Some((1, 0)));
     println!("{}", _or2);

@@ -14,16 +14,30 @@ impl<'a> SyntacticVerifier<'a> {
 impl<'a> SyntacticVerifier<'a> {
     pub fn equal_literally(&self, left: &Obj, right: &Obj) -> bool {
         match left {
-            Obj::AtomWithoutModName(a) => match right {
-                Obj::AtomWithoutModName(b) => a.to_string() == b.to_string(),
+            Obj::Identifier(a) => match right {
+                Obj::Identifier(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::AtomWithModName(a) => match right {
-                Obj::AtomWithModName(b) => {
+            Obj::IdentifierWithMod(a) => match right {
+                Obj::IdentifierWithMod(b) => {
                     if a.mod_name == b.mod_name {
                         a.name == b.name
                     } else {
                         self.module_manager.module_name_and_path_map.get(&a.mod_name) == self.module_manager.module_name_and_path_map.get(&b.mod_name) && a.name == b.name
+                    }
+                },
+                _ => false,
+            },
+            Obj::FieldAccess(a) => match right {
+                Obj::FieldAccess(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::FieldAccessWithMod(a) => match right {
+                Obj::FieldAccessWithMod(b) => {
+                    if a.mod_name == b.mod_name {
+                        a.name == b.name && a.fields.len() == b.fields.len() && a.fields.iter().zip(b.fields.iter()).all(|(a_field, b_field)| a_field.to_string() == b_field.to_string())
+                    } else {
+                        self.module_manager.module_name_and_path_map.get(&a.mod_name) == self.module_manager.module_name_and_path_map.get(&b.mod_name) && a.name == b.name && a.fields.len() == b.fields.len() && a.fields.iter().zip(b.fields.iter()).all(|(a_field, b_field)| a_field.to_string() == b_field.to_string())
                     }
                 },
                 _ => false,
