@@ -162,6 +162,7 @@ impl ParsingError {
 #[derive(Debug)]
 pub struct ExecError {
     pub msg: String,
+    pub previous_errors: Vec<StmtError>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
@@ -169,12 +170,16 @@ impl std::error::Error for ExecError {}
 
 impl fmt::Display for ExecError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}", "Execution Error:".to_string(), self.msg)
+        write!(f, "{}\n{}", "Execution Error:".to_string(), self.msg)?;
+        for error in self.previous_errors.iter() {
+            write!(f, "\n{}", error)?;
+        }
+        Ok(())
     }
 }
 
 impl ExecError {
-    pub fn new(msg: &str, line_file_index: Option<(usize, usize)>) -> Self {
-        ExecError { msg: msg.to_string(), line_file_index }
+    pub fn new(msg: &str, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
+        ExecError { msg: msg.to_string(), previous_errors, line_file_index }
     }
 }
