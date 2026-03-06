@@ -104,6 +104,7 @@ mod exec_stmt;
 mod exec_def_stmt;
 mod exec_store;
 mod pipeline;
+mod exec_know_stmt;
 
 #[cfg(test)]
 mod parser_tests;
@@ -650,7 +651,7 @@ fn try_errors() {
     let err: StmtError = StmtError::ParsingError(ParsingError::new("demo", (1, 0)));
     println!("{}", err);
 
-    let err: StmtError = StmtError::ExecError(ExecError::new("demo", Some((1, 0))));
+    let err: StmtError = StmtError::ExecError(ExecError::new("demo", vec![], Some((1, 0))));
     println!("{}", err);
 }
 
