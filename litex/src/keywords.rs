@@ -15,7 +15,7 @@ pub const RIGHT_BRACE: &str = ")";
 pub const COMMA: &str = ",";
 pub const LEFT_CURLY_BRACE: &str = "{";
 pub const RIGHT_CURLY_BRACE: &str = "}";
-pub const INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL: &str = "@";
+pub const INST_STRUCT_OBJ_SIGN: &str = "&";
 pub const EQUAL: &str = "=";
 pub const NOT_EQUAL: &str = "!=";
 pub const LESS: &str = "<";
@@ -93,7 +93,6 @@ pub const WITNESS: &str = "witness";
 pub const EQUAL_SET: &str = "equal_set";
 pub const IMPOSSIBLE: &str = "impossible";
 pub const VIEW_FN_AS_SET: &str = "view_fn_as_set";
-pub const SET_TEMPLATE: &str = "set_template";
 pub const RETURN: &str = "return";
 pub const IF: &str = "if";
 pub const ALGO: &str = "algo";
@@ -114,7 +113,7 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         EQUIVALENT_SIGN, NOT_EQUAL, LESS_EQUAL, GREATER_EQUAL, RIGHT_ARROW,
         FACT_PREFIX, DOT_AKA_FIELD_ACCESS_SIGN, MOD_NAME_SEPARATOR, ADD, SUB, MUL, DIV, MOD, POW,
         LEFT_BRACE, RIGHT_BRACE, COMMA, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE,
-        INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, EQUAL, LESS, GREATER,
+        INST_STRUCT_OBJ_SIGN, EQUAL, LESS, GREATER,
         LEFT_BRACKET, RIGHT_BRACKET, DOUBLE_QUOTE, COLON,
         INFIX_FN_NAME_SIGN,
     ];
@@ -134,7 +133,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         IN, OR, AND, SUBSET, SUPERSET, SUCCESS, UNKNOWN, LET, PROP,
         CLAIM, PROVE, CONTRA, CASE, CASES, IMPORT, AS, ENUM, HAVE, KNOW,
         CLEAR, DO_NOTHING, INDUC, FROM, EVAL, FOR, WITNESS,
-        EQUAL_SET, IMPOSSIBLE, VIEW_FN_AS_SET, SET_TEMPLATE, RETURN, IF, ALGO,
+        EQUAL_SET, IMPOSSIBLE, VIEW_FN_AS_SET, RETURN, IF, ALGO,
         Q_POS, Z_POS, R_POS, Q_NEG, Z_NEG, R_NEG, Q_NZ, Z_NZ, R_NZ,
         STRUCT,
     ];

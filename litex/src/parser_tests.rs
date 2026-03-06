@@ -84,10 +84,9 @@ fn test_obj() {
         // 单符号集合
         "N_pos", "N", "Q", "Z", "R",
         "Q_pos", "Z_pos", "R_pos", "Q_neg", "Z_neg", "R_neg", "Q_nz", "Z_nz", "R_nz",
-        // ObjAtIndex, InstSetTemplateObj
         "a[0]",
         "f(1)[0]",
-        "@Foo(R)",
+        "&Foo(R)",
         "{1, 0, 2}",
         "fn(x R, y R: x < y)R",
         "{z R: exist a R st {a > z}, z = 10 or $p(z), 1 $in R or $in(a, R)}",

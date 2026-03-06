@@ -1,7 +1,7 @@
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::parameter_type_and_property::ParamDefWithParamSet;
 use crate::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_NAME_SEPARATOR, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_NAME_SEPARATOR, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
 };
 use std::fmt;
 use crate::helper::{braced_vec_to_string, curly_braced_vec_to_string, vec_to_string_join_by_comma};
@@ -36,7 +36,7 @@ pub enum Obj {
     QObj(QObj),
     ZObj(ZObj),
     RObj(RObj),
-    InstSetTemplateObj(InstSetTemplateObj),
+    InstSetStructObj(InstStructObj),
     Cart(Cart),
     CartDim(CartDim),
     Proj(Proj),
@@ -236,14 +236,7 @@ impl FnSetWithDom {
     pub fn params(&self) -> Vec<String> {
         let mut ret = vec![];
         for param_def_with_set in &self.params_def_with_set {
-            match param_def_with_set {
-                ParamDefWithParamSet::ParamAndItsSetPair(param_name, _) => {
-                    ret.push(param_name.clone());
-                }
-                ParamDefWithParamSet::ParamsAndTheirSetsPair(param_names, _) => {
-                    ret.extend(param_names.iter().map(|param_name| param_name.clone()));
-                }
-            }
+            ret.extend(param_def_with_set.0.iter().cloned());
         }
         ret
     }
@@ -304,8 +297,8 @@ pub struct ZNz {}
 pub struct RNz {}
 
 #[derive(Clone)]
-pub struct InstSetTemplateObj {
-    pub set_template: IdentifierOrIdentifierWithMod,
+pub struct InstStructObj {
+    pub struct_name: IdentifierOrIdentifierWithMod,
     pub param_sets: Vec<Box<Obj>>,
 }
 
@@ -550,10 +543,10 @@ impl RNz {
     pub fn new() -> Self { RNz {} }
 }
 
-impl InstSetTemplateObj {
-    pub fn new(set_template: IdentifierOrIdentifierWithMod, param_sets: Vec<Obj>) -> Self {
-        InstSetTemplateObj {
-            set_template,
+impl InstStructObj {
+    pub fn new(struct_name: IdentifierOrIdentifierWithMod, param_sets: Vec<Obj>) -> Self {
+        InstStructObj {
+            struct_name,
             param_sets: param_sets.into_iter().map(Box::new).collect(),
         }
     }
@@ -718,7 +711,7 @@ impl Obj {
             Obj::QObj(x) => write!(f, "{}", x)?,
             Obj::ZObj(x) => write!(f, "{}", x)?,
             Obj::RObj(x) => write!(f, "{}", x)?,
-            Obj::InstSetTemplateObj(x) => write!(f, "{}", x)?,
+            Obj::InstSetStructObj(x) => write!(f, "{}", x)?,
             Obj::Cart(x) => write!(f, "{}", x)?,
             Obj::CartDim(x) => write!(f, "{}", x)?,
             Obj::Proj(x) => write!(f, "{}", x)?,
@@ -1039,10 +1032,10 @@ impl fmt::Display for RNz {
     }
 }
 
-impl fmt::Display for InstSetTemplateObj {
+impl fmt::Display for InstStructObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL)?;
-        match &self.set_template {
+        write!(f, "{}", INST_STRUCT_OBJ_SIGN)?;
+        match &self.struct_name {
             IdentifierOrIdentifierWithMod::Identifier(identifier) => write!(f, "{}", identifier)?,
             IdentifierOrIdentifierWithMod::IdentifierWithMod(identifier_with_mod) => write!(f, "{}", identifier_with_mod)?,
         };
