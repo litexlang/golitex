@@ -6,7 +6,7 @@ mod tokenizer;
 mod token_block;
 use token_block::TokenBlock;
 mod errors;
-use errors::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError};
+use errors::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError, ExecError};
 use errors::ParsingError;
 mod helper;
 mod obj;
@@ -100,6 +100,10 @@ mod parse_eval_stmt;
 mod parse_proof_technique_stmt;
 mod executor;
 use executor::Executor;
+mod exec_stmt;
+mod exec_def_stmt;
+mod exec_store;
+mod pipeline;
 
 #[cfg(test)]
 mod parser_tests;
@@ -644,6 +648,9 @@ fn try_errors() {
 
     let err: StmtError = StmtError::ParsingError(ParsingError::new("demo", (1, 0)));
     println!("{}", err);
+
+    let err: StmtError = StmtError::ExecError(ExecError::new("demo"));
+    println!("{}", err);
 }
 
 fn try_and_fact() {
@@ -707,7 +714,7 @@ fn try_stmt_result() {
         Obj::mk("q"),
         Some((1, 0)),
     ))));
-    let result = StmtResult::StmtSuccess(StmtSuccess::NonFactualStmtSuccess(NonFactualStmtSuccess::new(&stmt)));
+    let result = StmtResult::StmtSuccess(StmtSuccess::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), None)));
     println!("{}", result);
 
 
@@ -716,21 +723,21 @@ fn try_stmt_result() {
         Obj::mk("q"),
         Some((1, 0)),
     )));
-    let unknown = StmtUnknown::new(&fact);
+    let unknown = StmtUnknown::new(fact.to_string(), None);
     let result = StmtResult::StmtUnknown(unknown);
     println!("{}", result);
 
     let err = StmtError::ArithmeticError(ArithmeticError::new("demo"));
-    let result = StmtResult::StmtError(err);
+    let result = StmtResult::StmtError(err, None);
     println!("{}", result);
 
 
 
-    let fact_verified_by_fact = FactVerifiedByFact::new(&fact, &fact);
+    let fact_verified_by_fact = FactVerifiedByFact::new(fact.to_string(), fact.to_string(), None);
     let result = StmtResult::StmtSuccess(StmtSuccess::FactVerifiedByFact(fact_verified_by_fact));
     println!("{}", result);
 
-    let fact_verified_by_builtin_rules = FactVerifiedByBuiltinRules::new(&fact, "demo".to_string());
+    let fact_verified_by_builtin_rules = FactVerifiedByBuiltinRules::new(fact.to_string(), "demo".to_string(), None);
     let result = StmtResult::StmtSuccess(StmtSuccess::FactVerifiedByBuiltinRules(fact_verified_by_builtin_rules));
     println!("{}", result);
 }
@@ -1186,12 +1193,6 @@ fn try_runtime_context() {
         panic!("{}", stored_fact_result.err().unwrap());
     }
     
-    let atom_name = "a";
-    if runtime_context.is_unused_valid_atom_name(atom_name) {
-        runtime_context.top_level_env().defined_atom_names.insert(atom_name.to_string(), ());
-    } else {
-        panic!("")
-    }
 }
 
 fn try_tokenizer() {

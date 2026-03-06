@@ -41,12 +41,3 @@ impl<'a> RuntimeContext<'a> {
         self.environments.last_mut().unwrap()
     }
 }
-
-impl<'a> RuntimeContext<'a> {
-    pub fn is_unused_valid_atom_name(&self, atom_name: &str) -> bool {
-        // 没被定义过
-        // 不是 keyword 的 atom name 才能被使用
-        // 开头不能是数字，且只能全是字母或数字或下划线
-        !self.defined_atom_names.contains_key(atom_name) && !keywords::is_keyword(atom_name) && atom_name.chars().next().unwrap().is_alphabetic() && atom_name.chars().all(|c| c.is_alphanumeric() || c == '_')
-    }
-}

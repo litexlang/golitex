@@ -1,21 +1,23 @@
-use crate::fact::Fact;
 use std::fmt;
 use crate::keywords::UNKNOWN;
-use crate::helper::line_file_suffix;
 
-pub struct StmtUnknown<'a> {
-    pub fact: &'a Fact,
+pub struct StmtUnknown {
+    pub fact: String,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
-impl<'a> fmt::Display for StmtUnknown<'a> {
+impl fmt::Display for StmtUnknown {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let loc = line_file_suffix(self.fact.line_file());
-        write!(f, "{}{}\n{}", UNKNOWN, loc, self.fact)
+        if let Some((line, file_index)) = self.line_file_index {
+            write!(f, "line {}, file index {}\n{}\n{}", line, file_index, UNKNOWN, self.fact)
+        } else {
+            write!(f, "{}\n{}", UNKNOWN, self.fact)
+        }
     }
 }
 
-impl<'a> StmtUnknown<'a> {
-    pub fn new(fact: &'a Fact) -> Self {
-        StmtUnknown { fact }
+impl StmtUnknown {
+    pub fn new(fact: String, line_file_index: Option<(usize, usize)>) -> Self {
+        StmtUnknown { fact, line_file_index }
     }
 }

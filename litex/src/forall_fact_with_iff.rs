@@ -4,6 +4,7 @@ use crate::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line, vec
 use crate::forall_fact::ForallFact;
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 
+#[derive(Clone)]
 pub struct ForallFactWithIff {
     pub forall_fact: ForallFact,
     pub iff_facts: Vec<OrFactOrAndFactOrSpecFact>,
