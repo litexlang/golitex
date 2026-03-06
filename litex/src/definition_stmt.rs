@@ -3,8 +3,8 @@ use crate::parameter_type_and_property::ParamDefWithParamType;
 use crate::fact::{ Fact};
 use crate::obj::{Obj};
 use std::fmt;
-use crate::keywords::{CASE, COLON, COMMA, EQUAL, HAVE, LEFT_BRACE, LET, PROP, RIGHT_BRACE, SET_TEMPLATE, STRUCT};
-use crate::helper::{braced_vec_to_string, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
+use crate::keywords::{CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, HAVE, LEFT_BRACE, LET, PROP, RIGHT_BRACE, STRUCT};
+use crate::helper::{add_four_spaces_at_beginning, braced_vec_to_string, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
 use crate::obj::FnSetWithDom;
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::exist_fact::TrueExistFact;
@@ -18,19 +18,24 @@ pub enum DefStmt {
     HaveExistObjStmt(HaveExistObjStmt),
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
-    DefSetTemplateStmt(DefSetTemplateStmt),
-    DefAlgoStmt(DefAlgoStmt),
     DefStructStmt(DefStructStmt),
+    DefAlgoStmt(DefAlgoStmt),
 }
 
-pub struct DefStructStmt {
+pub enum DefStructStmt {
+    DefStructWithFieldsStmt(DefStructWithFieldsStmt),
+    DefStructWithNoFieldStmt(DefStructWithNoFieldStmt),
+}
+
+pub struct DefStructWithFieldsStmt {
     pub name: String,
-    pub param_def: Vec<ParamDefWithParamType>,
-    pub facts: Vec<Fact>,
+    pub params_def_with_type: Vec<ParamDefWithParamType>,
+    pub fields: Vec<(String, OrFactOrAndFactOrSpecFact)>,
+    pub facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
-pub struct DefSetTemplateStmt {
+pub struct DefStructWithNoFieldStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
@@ -92,10 +97,38 @@ impl fmt::Display for DefStmt {
             DefStmt::HaveExistObjStmt(have_obj_st_stmt) => write!(f, "{}", have_obj_st_stmt),
             DefStmt::HaveFnEqualStmt(have_fn_equal_stmt) => write!(f, "{}", have_fn_equal_stmt),
             DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt) => write!(f, "{}", have_fn_equal_case_by_case_stmt),
-            DefStmt::DefSetTemplateStmt(def_set_template_stmt) => write!(f, "{}", def_set_template_stmt),
-            DefStmt::DefAlgoStmt(define_algorithm_stmt) => write!(f, "{}", define_algorithm_stmt),
             DefStmt::DefStructStmt(def_struct_stmt) => write!(f, "{}", def_struct_stmt),
+            DefStmt::DefAlgoStmt(define_algorithm_stmt) => write!(f, "{}", define_algorithm_stmt),
         }
+    }
+}
+
+impl fmt::Display for DefStructStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DefStructStmt::DefStructWithFieldsStmt(x) => write!(f, "{}", x),
+            DefStructStmt::DefStructWithNoFieldStmt(x) => write!(f, "{}", x),
+        }
+    }
+}
+
+impl DefStructStmt {
+    pub fn line_file_index(&self) -> Option<(usize, usize)> {
+        match self {
+            DefStructStmt::DefStructWithFieldsStmt(x) => x.line_file_index,
+            DefStructStmt::DefStructWithNoFieldStmt(x) => x.line_file_index,
+        }
+    }
+}
+
+impl fmt::Display for DefStructWithFieldsStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // 格式: struct name(params): \n  field1 or1 \n  field2 or2 \n  <=>: \n  facts...
+        let fields_str: String = self.fields.iter().map(|(name, or_val)| format!("{} {}", name, or_val)).collect::<Vec<_>>().join("\n");
+        let fields_indented = to_string_and_add_four_spaces_at_beginning_of_each_line(&fields_str, 1);
+        let equiv_line = add_four_spaces_at_beginning(&format!("{}{}", EQUIVALENT_SIGN, COLON), 1);
+        let facts_indented = vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1);
+        write!(f, "{} {}{}{}{} {}\n{}\n{}\n{}", STRUCT, self.name, LEFT_BRACE, vec_to_string_join_by_comma(&self.params_def_with_type), RIGHT_BRACE, COLON, fields_indented, equiv_line, facts_indented)
     }
 }
 
@@ -140,9 +173,8 @@ impl DefStmt {
             DefStmt::HaveExistObjStmt(have_obj_st_stmt) => have_obj_st_stmt.line_file_index,
             DefStmt::HaveFnEqualStmt(have_fn_equal_stmt) => have_fn_equal_stmt.line_file_index,
             DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt) => have_fn_equal_case_by_case_stmt.line_file_index,
-            DefStmt::DefSetTemplateStmt(def_set_template_stmt) => def_set_template_stmt.line_file_index,
+            DefStmt::DefStructStmt(def_struct_stmt) => def_struct_stmt.line_file_index(),
             DefStmt::DefAlgoStmt(define_algorithm_stmt) => define_algorithm_stmt.line_file_index,
-            DefStmt::DefStructStmt(def_struct_stmt) => def_struct_stmt.line_file_index,
         }
     }
 }
@@ -212,26 +244,20 @@ impl HaveFnEqualCaseByCaseStmt {
     }
 }
 
-impl DefSetTemplateStmt {
+impl DefStructWithNoFieldStmt {
     pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, equal_to: Obj, line_file_index: Option<(usize, usize)>) -> Self {
-        DefSetTemplateStmt { name, params_def_with_type, dom_facts, equal_to, line_file_index }
+        DefStructWithNoFieldStmt { name, params_def_with_type, dom_facts, equal_to, line_file_index }
     }
 }
 
-impl fmt::Display for DefSetTemplateStmt {
+impl fmt::Display for DefStructWithNoFieldStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}{}{} {} {}{} {} {}", SET_TEMPLATE, self.name,LEFT_BRACE, vec_to_string_join_by_comma(&self.params_def_with_type), COLON, vec_to_string_join_by_comma(&self.dom_facts), RIGHT_BRACE, EQUAL, self.equal_to)
+        write!(f, "{} {}{}{} {} {}{} {} {}", STRUCT, self.name,LEFT_BRACE, vec_to_string_join_by_comma(&self.params_def_with_type), COLON, vec_to_string_join_by_comma(&self.dom_facts), RIGHT_BRACE, EQUAL, self.equal_to)
     }
 }
 
-impl DefStructStmt {
-    pub fn new(name: String, param_def: Vec<ParamDefWithParamType>, facts: Vec<Fact>, line_file_index: Option<(usize, usize)>) -> Self {
-        DefStructStmt { name, param_def, facts, line_file_index }
-    }
-}
-
-impl fmt::Display for DefStructStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}{}\n{}", STRUCT, self.name, braced_vec_to_string(&self.param_def), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1))
+impl DefStructWithFieldsStmt {
+    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, fields: Vec<(String, OrFactOrAndFactOrSpecFact)>, facts: Vec<OrFactOrAndFactOrSpecFact>, line_file_index: Option<(usize, usize)>) -> Self {
+        DefStructWithFieldsStmt { name, params_def_with_type, fields, facts, line_file_index }
     }
 }

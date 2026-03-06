@@ -1,10 +1,10 @@
 use crate::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, DISJOINT_UNION, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_NAME_SEPARATOR, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, DISJOINT_UNION, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_NAME_SEPARATOR, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
 };
 use crate::parser::Parser;
 use crate::token_block::TokenBlock;
 use crate::obj::{
-    Obj, FnObj, FnSetObj, FnSetWithDom, FnSetWithoutDom, Add, Mul, Div, Mod, Sub, Pow, Number, InstSetTemplateObj, ListSet, SetBuilder,
+    Obj, FnObj, FnSetObj, FnSetWithDom, FnSetWithoutDom, Add, Mul, Div, Mod, Sub, Pow, Number, InstStructObj, ListSet, SetBuilder,
     NPosObj, NObj, QObj, ZObj, RObj, QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz,
     ObjAtIndex, Union, Intersect, SetMinus, DisjointUnion, Cup, Cap, PowerSet, Choose,
     Cart, CartDim, Proj, Count, Range, ClosedRange, Val,
@@ -149,8 +149,8 @@ impl Parser {
             LEFT_CURLY_BRACE => {
                 self.set_builder_or_set_list(tb)
             },
-            INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL => {
-                self.instantiated_set_template_obj(tb)
+            INST_STRUCT_OBJ_SIGN => {
+                self.instantiated_struct_obj(tb)
             },
             FN => {
                 match self.fn_set_obj(tb)? {
@@ -201,7 +201,7 @@ impl Parser {
         loop {
             let param = tb.advance()?;
             let set = self.obj(tb)?;
-            params_def_with_set.push(ParamDefWithParamSet::ParamAndItsSetPair(param, set));
+            params_def_with_set.push(ParamDefWithParamSet(vec![param], set));
             if tb.current()? == COLON {
                 break;
             }
@@ -481,11 +481,11 @@ impl Parser {
         Ok(Obj::SetBuilder(SetBuilder::new(param, param_set, facts)))
     }
 
-    fn instantiated_set_template_obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        tb.skip_token(INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL)?;
+    fn instantiated_struct_obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+        tb.skip_token(INST_STRUCT_OBJ_SIGN)?;
         let name = self.identifier_or_identifier_with_mod(tb)?;
         let args = self.braced_objs(tb)?;
-        Ok(Obj::InstSetTemplateObj(InstSetTemplateObj::new(name, args)))
+        Ok(Obj::InstSetStructObj(InstStructObj::new(name, args)))
     }
 
     pub fn atom(&self, tb: &mut TokenBlock) -> Result<Atom, ParsingError> {
