@@ -1,9 +1,10 @@
 use crate::token_block::TokenBlock;
 use crate::parser::Parser;
+use crate::tokenizer::tokenize_line;
 
 #[test]
 #[ignore]
-fn tmp() {
+fn test_fact() {
     let code = "1 + 1 = 2\n$p(a, b)\nexist a R st {a > 0}";
     let blocks = TokenBlock::parse_blocks(code, 0).expect("parse blocks failed");
     let parser = Parser::new();
@@ -13,6 +14,73 @@ fn tmp() {
             println!("{}", e);
         } else {
             println!("{}\n", stmt.unwrap());
+        }
+    }
+    println!("success! :)\n");
+}
+
+#[test]
+#[ignore]
+
+fn test_obj() {
+    let objs = vec![
+        // Number
+        "0",
+        "42",
+        "3.14",
+        // AtomWithoutModName
+        "x",
+        // AtomWithModName
+        "M.x",
+        // FnObj
+        "p(a, b)",
+        // Add, Sub, Mul, Div, Mod, Pow（算术）
+        "1 + 1",
+        "5 - 3",
+        "2 * 3",
+        "6 / 2",
+        "7 % 4",
+        "2 ^ 10",
+        "1 + 2 * 3",
+        "2 + 10 * (f(a)[0]- 10) ^ 2 ^ 3 - 19",
+        // Union, Intersect, SetMinus, DisjointUnion, Proj, Range, ClosedRange（前缀 keyword(args)）
+        "union(A, B)",
+        "intersect(A, B)",
+        "set_minus(A, B)",
+        "disjoint_union(A, B)",
+        "proj(S, 0)",
+        "range(0, 1)",
+        "closed_range(0, 1)",
+        // Cup, Cap, PowerSet, Choose（前缀单参）
+        "cup(S)",
+        "cap(T)",
+        "power_set(S)",
+        "choose(S)",
+        // CartDim, Count, Val
+        "cart_dim(S)",
+        "count(S)",
+        "val(x)",
+        // Cart, ListSet, FnSetWithoutDom（ListSet 如 "{a b c}" 解析递归较深，可单独测）
+        "cart(R, R)",
+        // "{a b c}",  // ListSet
+        "fn(R, R) R",
+        // 单符号集合
+        "N_pos", "N", "Q", "Z", "R",
+        "Q_pos", "Z_pos", "R_pos", "Q_neg", "Z_neg", "R_neg", "Q_nz", "Z_nz", "R_nz",
+        // ObjAtIndex, InstSetTemplateObj
+        "a[0]",
+        "f(1)[0]",
+        "@Foo(R)",
+    ];
+
+    let parser = Parser::new();
+    for obj in objs {
+        let mut tb = TokenBlock::new(tokenize_line(obj), vec![], (1, 0));
+        let result = parser.obj(&mut tb);
+        if let Err(e) = result {
+            println!("{}", e);
+        } else {
+            println!("{}\n", result.unwrap());
         }
     }
     println!("success! :)\n");
