@@ -106,6 +106,7 @@ pub const R_NEG: &str = "R_neg";
 pub const Q_NZ: &str = "Q_nz";
 pub const Z_NZ: &str = "Z_nz";
 pub const R_NZ: &str = "R_nz";
+pub const STRUCT: &str = "struct";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
@@ -135,6 +136,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CLEAR, DO_NOTHING, INDUC, FROM, EVAL, FOR, WITNESS,
         EQUAL_SET, IMPOSSIBLE, VIEW_FN_AS_SET, SET_TEMPLATE, RETURN, IF, ALGO,
         Q_POS, Z_POS, R_POS, Q_NEG, Z_NEG, R_NEG, Q_NZ, Z_NZ, R_NZ,
+        STRUCT,
     ];
     for &s in &words {
         m.insert(s, s);

@@ -4,7 +4,7 @@ use crate::helper::{add_four_spaces_at_beginning, vec_to_string_with_sep, to_str
 use crate::keywords::{RETURN, IF, COLON, ALGO};
 use std::fmt;
 
-pub struct DefineAlgorithmStmt {
+pub struct DefAlgoStmt {
     pub name: String,
     pub params: Vec<String>,
     pub return_or_algo_if: Vec<AlgoReturnOrAlgoIf>,
@@ -27,9 +27,9 @@ pub enum AlgoReturnOrAlgoIf {
     AlgoIf(AlgoIf),
 }
 
-impl DefineAlgorithmStmt {
+impl DefAlgoStmt {
     pub fn new(name: String, params: Vec<String>, return_or_algo_if: Vec<AlgoReturnOrAlgoIf>, line_file_index: Option<(usize, usize)>) -> Self {
-        DefineAlgorithmStmt { name, params, return_or_algo_if, line_file_index }
+        DefAlgoStmt { name, params, return_or_algo_if, line_file_index }
     }
 }
 
@@ -54,7 +54,7 @@ impl fmt::Display for AlgoIf {
     }
 }
 
-impl fmt::Display for DefineAlgorithmStmt {
+impl fmt::Display for DefAlgoStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
