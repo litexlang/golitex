@@ -1,39 +1,117 @@
 use std::fmt;
+use crate::keywords::{DOT_AKA_FIELD_ACCESS_SIGN, MOD_NAME_SEPARATOR};
 
 #[derive(Clone)]
 pub enum Atom {
-    AtomWithoutModName(AtomWithoutModName),
-    AtomWithModName(AtomWithModName),
+    Identifier(Identifier),
+    IdentifierWithMod(IdentifierWithMod),
+    FieldAccess(FieldAccess),
+    FieldAccessWithMod(FieldAccessWithMod),
 }
 
 #[derive(Clone)]
-pub struct AtomWithoutModName {
+pub enum IdentifierOrIdentifierWithMod {
+    Identifier(Identifier),
+    IdentifierWithMod(IdentifierWithMod),
+}
+
+impl fmt::Display for IdentifierOrIdentifierWithMod {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            IdentifierOrIdentifierWithMod::Identifier(i) => write!(f, "{}", i),
+            IdentifierOrIdentifierWithMod::IdentifierWithMod(m) => write!(f, "{}", m),
+        }
+    }
+}
+
+impl From<IdentifierOrIdentifierWithMod> for Atom {
+    fn from(x: IdentifierOrIdentifierWithMod) -> Self {
+        match x {
+            IdentifierOrIdentifierWithMod::Identifier(i) => Atom::Identifier(i),
+            IdentifierOrIdentifierWithMod::IdentifierWithMod(m) => Atom::IdentifierWithMod(m),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct Identifier {
     pub name: String,
 }
 
 #[derive(Clone)]
-pub struct AtomWithModName {
+pub struct IdentifierWithMod {
     pub mod_name: String,
     pub name: String,
+}
+
+#[derive(Clone)]
+pub struct FieldAccess {
+    pub name: String,
+    pub fields: Vec<String>,
+}
+
+#[derive(Clone)]
+pub struct FieldAccessWithMod {
+    pub mod_name: String,
+    pub name: String,
+    pub fields: Vec<String>,
+}
+
+impl Atom {
+    /// 转为 IdentifierOrIdentifierWithMod：Identifier/IdentifierWithMod 直接映射，FieldAccess/FieldAccessWithMod 用整体字符串作 Identifier。
+    pub fn to_identifier_or_identifier_with_mod(&self) -> IdentifierOrIdentifierWithMod {
+        match self {
+            Atom::Identifier(i) => IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&i.name)),
+            Atom::IdentifierWithMod(m) => IdentifierOrIdentifierWithMod::IdentifierWithMod(IdentifierWithMod::new(&m.mod_name, &m.name)),
+            Atom::FieldAccess(fa) => IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&fa.to_string())),
+            Atom::FieldAccessWithMod(fa) => IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&fa.to_string())),
+        }
+    }
 }
 
 impl fmt::Display for Atom {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Atom::AtomWithoutModName(atom) => write!(f, "{}", atom),
-            Atom::AtomWithModName(atom) => write!(f, "{}", atom),
+            Atom::Identifier(atom) => write!(f, "{}", atom),
+            Atom::IdentifierWithMod(atom) => write!(f, "{}", atom),
+            Atom::FieldAccess(atom) => write!(f, "{}", atom),
+            Atom::FieldAccessWithMod(atom) => write!(f, "{}", atom),
         }
     }
 }
 
-impl AtomWithoutModName {
+impl Identifier {
     pub fn new(name: &str) -> Self {
-        AtomWithoutModName { name: name.to_string() }
+        Identifier { name: name.to_string() }
     }
 }
 
-impl AtomWithModName {
+impl IdentifierWithMod {
     pub fn new(mod_name: &str, name: &str) -> Self {
-        AtomWithModName { mod_name: mod_name.to_string(), name: name.to_string() }
+        IdentifierWithMod { mod_name: mod_name.to_string(), name: name.to_string() }
+    }
+}
+
+impl FieldAccess {
+    pub fn new(name: &str, fields: Vec<String>) -> Self {
+        FieldAccess { name: name.to_string(), fields }
+    }
+}
+
+impl FieldAccessWithMod {
+    pub fn new(mod_name: &str, name: &str, fields: Vec<String>) -> Self {
+        FieldAccessWithMod { mod_name: mod_name.to_string(), name: name.to_string(), fields }
+    }
+}
+
+impl fmt::Display for FieldAccess {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}", self.name, DOT_AKA_FIELD_ACCESS_SIGN, self.fields.join(DOT_AKA_FIELD_ACCESS_SIGN))
+    }
+}
+
+impl fmt::Display for FieldAccessWithMod {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}{}{}{}", self.mod_name, MOD_NAME_SEPARATOR, self.name, DOT_AKA_FIELD_ACCESS_SIGN, self.fields.join(DOT_AKA_FIELD_ACCESS_SIGN))
     }
 }

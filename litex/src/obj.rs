@@ -5,13 +5,14 @@ use crate::keywords::{
 };
 use std::fmt;
 use crate::helper::{braced_vec_to_string, curly_braced_vec_to_string, vec_to_string_join_by_comma};
-use crate::atom::{AtomWithoutModName, AtomWithModName};
-use crate::atom::Atom;
+use crate::atom::{Atom, Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod, FieldAccess, FieldAccessWithMod};
 
 #[derive(Clone)]
 pub enum Obj {
-    AtomWithoutModName(AtomWithoutModName),
-    AtomWithModName(AtomWithModName),
+    Identifier(Identifier),
+    IdentifierWithMod(IdentifierWithMod),
+    FieldAccess(FieldAccess),
+    FieldAccessWithMod(FieldAccessWithMod),
     FnObj(FnObj),
     Number(Number),
     Add(Add),
@@ -304,7 +305,7 @@ pub struct RNz {}
 
 #[derive(Clone)]
 pub struct InstSetTemplateObj {
-    pub set_template: Atom,
+    pub set_template: IdentifierOrIdentifierWithMod,
     pub param_sets: Vec<Box<Obj>>,
 }
 
@@ -550,7 +551,7 @@ impl RNz {
 }
 
 impl InstSetTemplateObj {
-    pub fn new(set_template: Atom, param_sets: Vec<Obj>) -> Self {
+    pub fn new(set_template: IdentifierOrIdentifierWithMod, param_sets: Vec<Obj>) -> Self {
         InstSetTemplateObj {
             set_template,
             param_sets: param_sets.into_iter().map(Box::new).collect(),
@@ -702,8 +703,10 @@ impl Obj {
             Obj::DisjointUnion(x) => write!(f, "{}", x)?,
             Obj::Cup(x) => write!(f, "{}", x)?,
             Obj::Cap(x) => write!(f, "{}", x)?,
-            Obj::AtomWithoutModName(x) => write!(f, "{}", x)?,
-            Obj::AtomWithModName(x) => write!(f, "{}", x)?,
+            Obj::Identifier(x) => write!(f, "{}", x)?,
+            Obj::IdentifierWithMod(x) => write!(f, "{}", x)?,
+            Obj::FieldAccess(x) => write!(f, "{}", x)?,
+            Obj::FieldAccessWithMod(x) => write!(f, "{}", x)?,
             Obj::FnObj(x) => write!(f, "{}", x)?,
             Obj::Number(x) => write!(f, "{}", x)?,
             Obj::ListSet(x) => write!(f, "{}", x)?,
@@ -799,7 +802,7 @@ impl fmt::Display for Dim {
     }
 }
 
-impl fmt::Display for AtomWithoutModName {
+impl fmt::Display for Identifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.name)
     }
@@ -889,7 +892,7 @@ impl fmt::Display for Cap {
     }
 }
 
-impl fmt::Display for AtomWithModName {
+impl fmt::Display for IdentifierWithMod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}{}", self.mod_name, MOD_NAME_SEPARATOR, self.name)
     }
@@ -1040,8 +1043,8 @@ impl fmt::Display for InstSetTemplateObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL)?;
         match &self.set_template {
-            Atom::AtomWithoutModName(atom) => write!(f, "{}", atom)?,
-            Atom::AtomWithModName(atom_with_mod_name) => write!(f, "{}", atom_with_mod_name)?,
+            IdentifierOrIdentifierWithMod::Identifier(identifier) => write!(f, "{}", identifier)?,
+            IdentifierOrIdentifierWithMod::IdentifierWithMod(identifier_with_mod) => write!(f, "{}", identifier_with_mod)?,
         };
         write!(f, "{}", braced_vec_to_string(&self.param_sets))
     }
@@ -1066,9 +1069,20 @@ impl fmt::Display for PowerSet {
 }
 
 
+impl From<Atom> for Obj {
+    fn from(atom: Atom) -> Self {
+        match atom {
+            Atom::Identifier(a) => Obj::Identifier(a),
+            Atom::IdentifierWithMod(a) => Obj::IdentifierWithMod(a),
+            Atom::FieldAccess(a) => Obj::FieldAccess(a),
+            Atom::FieldAccessWithMod(a) => Obj::FieldAccessWithMod(a),
+        }
+    }
+}
+
 impl Obj {
     pub fn mk(s: &str) -> Obj {
-        Obj::AtomWithoutModName(AtomWithoutModName::new(s))
+        Obj::Identifier(Identifier::new(s))
     }
 }
 
@@ -1080,4 +1094,3 @@ impl fmt::Display for FnSetObj {
         }
     }
 }
-

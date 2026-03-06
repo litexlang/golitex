@@ -4,7 +4,7 @@ use crate::errors::NewAtomicFactError;
 use std::fmt;
 use crate::keywords::{AND, FACT_PREFIX};
 use crate::obj::Obj;
-use crate::atom::Atom;
+use crate::atom::IdentifierOrIdentifierWithMod;
 use crate::helper::vec_to_string_with_sep;
 
 #[derive(Clone)]
@@ -22,7 +22,7 @@ pub struct AndSpecFacts {
 #[derive(Clone)]
 pub struct ChainFact {
     pub objs: Vec<Obj>,
-    pub prop_names: Vec<Atom>,
+    pub prop_names: Vec<IdentifierOrIdentifierWithMod>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
@@ -40,7 +40,7 @@ impl fmt::Display for AndSpecFacts {
 }
 
 impl ChainFact {
-    pub fn new(objs: Vec<Obj>, prop_names: Vec<Atom>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(objs: Vec<Obj>, prop_names: Vec<IdentifierOrIdentifierWithMod>, line_file_index: Option<(usize, usize)>) -> Self {
         ChainFact { objs, prop_names, line_file_index }
     }
 }

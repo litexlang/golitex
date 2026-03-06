@@ -1,5 +1,5 @@
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
-use crate::atom::Atom;
+use crate::atom::IdentifierOrIdentifierWithMod;
 use crate::atomic_fact::{AtomicFact, NormalAtomicFact, NotNormalAtomicFact};
 use crate::exist_fact::{ExistFact, TrueExistFact, NotExistFact};
 use crate::parameter_type_and_property::ParamDefWithParamType;
@@ -11,7 +11,7 @@ use crate::token_block::TokenBlock;
 use crate::errors::ParsingError;
 use crate::fact::Fact;
 use crate::and_fact::{AndFact, AndSpecFacts, ChainFact};
-use crate::atom::AtomWithoutModName;
+use crate::atom::Identifier;
 use crate::keywords::{AND, COLON, COMMA, EQUIVALENT_SIGN, EXIST, FACT_PREFIX, FORALL, LEFT_CURLY_BRACE, NOT, OR, RIGHT_ARROW, RIGHT_CURLY_BRACE, ST};
 use crate::or_fact::OrFact;
 use crate::specific_fact::SpecFact;
@@ -168,7 +168,7 @@ impl Parser {
     fn atomic_or_chain_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<AndFactOrSpecFact, ParsingError> {
         if tb.current()? == FACT_PREFIX {
             tb.skip()?;
-            let prop_name = self.atom(tb)?;
+            let prop_name = self.atom(tb)?.to_identifier_or_identifier_with_mod();
             let args = self.braced_objs(tb)?;
             let line = Some(tb.line_file_index);
             let atomic = if is_true {
@@ -180,17 +180,17 @@ impl Parser {
         } else {
             let left_most_obj = self.obj(tb)?;
             let mut objs = vec![left_most_obj];
-            let mut prop_names: Vec<Atom> = vec![];
+            let mut prop_names: Vec<IdentifierOrIdentifierWithMod> = vec![];
 
             while !tb.exceed_end_of_head() && (is_comparison_str(tb.current()?) || tb.current()? != FACT_PREFIX) {
                 let tok = tb.current()?.to_string();
                 if is_comparison_str(&tok) {
                     tb.skip()?;
-                    prop_names.push(Atom::AtomWithoutModName(AtomWithoutModName::new(&tok)));
+                    prop_names.push(IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&tok)));
                     objs.push(self.obj(tb)?);
                 } else if tok == FACT_PREFIX {
                     tb.skip_token(FACT_PREFIX)?;
-                    prop_names.push(self.atom(tb)?);
+                    prop_names.push(self.identifier_or_identifier_with_mod(tb)?);
                     objs.push(self.obj(tb)?);
                 } else {
                     break;
