@@ -495,7 +495,7 @@ impl Parser {
             let right = tb.advance()?;
             if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
                 tb.skip()?;
-                let mut fields = vec![];
+                let mut fields = vec![tb.advance()?.to_string()];
                 while !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
                     tb.skip()?;
                     fields.push(tb.advance()?.to_string());
@@ -508,7 +508,7 @@ impl Parser {
             // 如果后面有 .，则解析为 FieldAccess
             if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
                 tb.skip()?;
-                let mut fields = vec![];
+                let mut fields = vec![tb.advance()?.to_string()];
                 while !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
                     tb.skip()?;
                     fields.push(tb.advance()?.to_string());
