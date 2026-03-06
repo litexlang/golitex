@@ -1,6 +1,6 @@
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::atom::IdentifierOrIdentifierWithMod;
-use crate::atomic_fact::{AtomicFact, NormalAtomicFact, NotNormalAtomicFact};
+use crate::atomic_fact::AtomicFact;
 use crate::exist_fact::{ExistFact, TrueExistFact, NotExistFact};
 use crate::parameter_type_and_property::ParamDefWithParamType;
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
@@ -8,7 +8,7 @@ use crate::forall_fact::ForallFact;
 use crate::forall_fact_with_iff::ForallFactWithIff;
 use crate::parser::Parser;
 use crate::token_block::TokenBlock;
-use crate::errors::ParsingError;
+use crate::errors::{NewAtomicFactError, ParsingError};
 use crate::fact::Fact;
 use crate::and_fact::{AndFact, AndSpecFacts, ChainFact};
 use crate::atom::Identifier;
@@ -171,18 +171,15 @@ impl Parser {
             let prop_name = self.atom(tb)?.to_identifier_or_identifier_with_mod();
             let args = self.braced_objs(tb)?;
             let line = Some(tb.line_file_index);
-            let atomic = if is_true {
-                AtomicFact::NormalAtomicFact(NormalAtomicFact::new(prop_name, args, line))
-            } else {
-                AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(prop_name, args, line))
-            };
+            let atomic = AtomicFact::to_atomic_fact(prop_name, is_true, args, line)
+                .map_err(|e: NewAtomicFactError| ParsingError::new(&e.msg, tb.line_file_index))?;
             Ok(AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(atomic)))
         } else {
             let left_most_obj = self.obj(tb)?;
             let mut objs = vec![left_most_obj];
             let mut prop_names: Vec<IdentifierOrIdentifierWithMod> = vec![];
 
-            while !tb.exceed_end_of_head() && (is_comparison_str(tb.current()?) || tb.current()? != FACT_PREFIX) {
+            while !tb.exceed_end_of_head() && (is_comparison_str(tb.current()?) || tb.current()? == FACT_PREFIX) {
                 let tok = tb.current()?.to_string();
                 if is_comparison_str(&tok) {
                     tb.skip()?;
@@ -203,11 +200,8 @@ impl Parser {
             if prop_names.len() == 1 {
                 let prop_name = prop_names.into_iter().next().unwrap();
                 let line = Some(tb.line_file_index);
-                let atomic = if is_true {
-                    AtomicFact::NormalAtomicFact(NormalAtomicFact::new(prop_name, objs, line))
-                } else {
-                    AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(prop_name, objs, line))
-                };
+                let atomic = AtomicFact::to_atomic_fact(prop_name, is_true, objs, line)
+                    .map_err(|e: NewAtomicFactError| ParsingError::new(&e.msg, tb.line_file_index))?;
                 return Ok(AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(atomic)));
             }
             if !is_true {

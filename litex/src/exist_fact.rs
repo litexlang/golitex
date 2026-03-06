@@ -45,10 +45,7 @@ impl NotExistFact {
 }
 
 fn exist_fact_string_without_exist_as_prefix(param_defs: &Vec<ParamDefWithParamType>, facts: &Vec<OrFactOrAndFactOrSpecFact>) -> String {
-    match facts.len() {
-        1 => format!("{} {} {}", vec_to_string_join_by_comma(param_defs), ST, facts[0].to_string()),
-        _ => format!("{} {} {}", vec_to_string_join_by_comma(param_defs), ST, curly_braced_vec_to_string_with_sep(&facts.iter().map(|fact| fact.to_string()).collect::<Vec<String>>(), format!("{} ", COMMA).as_str())),
-    }
+    format!("{} {} {}", vec_to_string_join_by_comma(param_defs), ST,  curly_braced_vec_to_string_with_sep(&facts.iter().map(|fact| fact.to_string()).collect::<Vec<String>>(), format!("{} ", COMMA).as_str()))
 }
 
 impl TrueExistFact {
