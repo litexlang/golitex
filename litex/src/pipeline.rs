@@ -1,9 +1,55 @@
+use std::collections::HashMap;
 use crate::runtime_context::RuntimeContext;
+use crate::module_manager::ModuleManager;
+use crate::environment::Environment;
+use crate::token_block::TokenBlock;
+use crate::parser::Parser;
+use crate::executor::Executor;
+use crate::stmt::Stmt;
 
 pub fn run_source_code(source_code: &str) -> String {
-    // 新建runtime_context
-    let runtime_context: &mut RuntimeContext = RuntimeContext::new();
-    // tokenize
-    // parse
-    // 执行
+    let mut module_manager = ModuleManager::new();
+    let environment: Box<Environment> = Box::new(Environment::new(
+        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
+        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
+        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
+        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
+        HashMap::new(), HashMap::new(),
+    ));
+    let mut runtime_context = RuntimeContext::new(
+        &mut module_manager,
+        vec![environment],
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+        HashMap::new(),
+    );
+
+    let blocks = match TokenBlock::parse_blocks(source_code, 0) {
+        Ok(b) => b,
+        Err(e) => return format!("parse block error: {}", e),
+    };
+
+    let parser = Parser::new();
+    let mut executor = Executor::new(&mut runtime_context);
+    let mut out = String::new();
+
+    for block in blocks {
+        let mut tb = block;
+        let stmt: Stmt = match parser.stmt(&mut tb) {
+            Ok(s) => s,
+            Err(e) => return format!("parse error: {}", e),
+        };
+        let line_file_index = stmt.line_file();
+        let result = match executor.stmt(stmt) {
+            Ok(r) => r,
+            Err(e) => return format!("exec error: {}", e),
+        };
+        if !out.is_empty() {
+            out.push('\n');
+        }
+        out.push_str(format!("{}\n{}", executor.line_file_index_string(line_file_index.unwrap().0, line_file_index.unwrap().1), result).as_str());
+    }
+
+    out
 }
