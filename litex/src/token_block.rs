@@ -60,7 +60,7 @@ fn parse_level(
         }
 
         if indent > base_indent {
-            return Err(ParseBlockError::UnexpectedIndent { line: line_no });
+            return Err(ParseBlockError::UnexpectedIndent(line_no, current_file_index));
         }
 
         *i += 1;
@@ -68,12 +68,12 @@ fn parse_level(
         if ends_with_colon(content) {
             // 必须有 body
             if *i >= lines.len() {
-                return Err(ParseBlockError::MissingBody { line: line_no });
+                return Err(ParseBlockError::MissingBody(line_no, current_file_index));
             }
 
             let next_indent = indent_level(lines[*i]);
             if next_indent <= indent {
-                return Err(ParseBlockError::ExpectedIndent { line: *i + 1 });
+                return Err(ParseBlockError::ExpectedIndent(*i + 1, current_file_index));
             }
 
             let body = parse_level(lines, i, next_indent, current_file_index)?;
@@ -88,7 +88,7 @@ fn parse_level(
 
         if let Some(expected) = body_indent {
             if indent != expected {
-                return Err(ParseBlockError::InconsistentIndent { line: line_no });
+                return Err(ParseBlockError::InconsistentIndent(line_no, current_file_index));
             }
         } else {
             body_indent = Some(indent);

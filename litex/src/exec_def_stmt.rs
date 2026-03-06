@@ -16,7 +16,7 @@ impl<'a> Executor<'a> {
             DefStmt::DefLetStmt(def_let_stmt) => self.def_let_stmt(def_let_stmt),
             DefStmt::DefAlgoStmt(def_algo_stmt) => self.def_algo_stmt(def_algo_stmt),
             DefStmt::DefStructStmt(def_struct_stmt) => self.def_struct_stmt(def_struct_stmt),
-            _ => Err(ExecError::new("不支持的定义语句类型")),
+            _ => Err(ExecError::new("不支持的定义语句类型", def_stmt.line_file())),
         }
     }
 
@@ -28,11 +28,7 @@ impl<'a> Executor<'a> {
     }
 
     pub fn def_let_stmt(&mut self, def_let_stmt: DefLetStmt) -> Result<StmtResult, ExecError> {
-        for param_def in def_let_stmt.param_def {
-            for name in param_def.0.iter() {
-                self.validate_name_and_store_atom_name(name.clone())?;
-            }
-        }
+        self.validate_name_and_store_atom_name(def_let_stmt.param_def, def_let_stmt.line_file_index)?;
         panic!("not implemented");
     }
 

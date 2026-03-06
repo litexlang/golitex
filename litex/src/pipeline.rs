@@ -40,7 +40,6 @@ pub fn run_source_code(source_code: &str) -> String {
             Ok(s) => s,
             Err(e) => return format!("parse error: {}", e),
         };
-        let line_file_index = stmt.line_file();
         let result = match executor.stmt(stmt) {
             Ok(r) => r,
             Err(e) => return format!("exec error: {}", e),
@@ -48,7 +47,11 @@ pub fn run_source_code(source_code: &str) -> String {
         if !out.is_empty() {
             out.push('\n');
         }
-        out.push_str(format!("{}\n{}", executor.line_file_index_string(line_file_index.unwrap().0, line_file_index.unwrap().1), result).as_str());
+        if let Some(line_file_index) = result.line_file() {
+            out.push_str(format!("{}\n{}", executor.line_file_index_string(line_file_index.0, line_file_index.1), result).as_str());
+        } else {
+            out.push_str(format!("{}", result).as_str());
+        }
     }
 
     out

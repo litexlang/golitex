@@ -74,3 +74,14 @@ impl FactVerifiedByBuiltinRules {
         FactVerifiedByBuiltinRules { fact, verified_by, line_file_index }
     }
 }
+
+
+impl StmtSuccess {
+    pub fn line_file(&self) -> Option<(usize, usize)> {
+        match self {
+            StmtSuccess::NonFactualStmtSuccess(non_factual_stmt_success) => non_factual_stmt_success.line_file_index,
+            StmtSuccess::FactVerifiedByFact(fact_verified_by_fact) => fact_verified_by_fact.line_file_index,
+            StmtSuccess::FactVerifiedByBuiltinRules(fact_verified_by_builtin_rules) => fact_verified_by_builtin_rules.line_file_index,
+        }
+    }
+}
