@@ -134,8 +134,8 @@ impl<'a> SyntacticVerifier<'a> {
                 Obj::RObj(_) => true,
                 _ => false,
             },
-            Obj::InstSetTemplateObj(a) => match right {
-                Obj::InstSetTemplateObj(b) => a.to_string() == b.to_string(),
+            Obj::InstSetStructObj(a) => match right {
+                Obj::InstSetStructObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::Cart(a) => match right {

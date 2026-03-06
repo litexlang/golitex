@@ -1,8 +1,8 @@
-use crate::keywords::{COMMA, FINITE_SET, NONEMPTY_SET, SET, STRUCT};
+use crate::keywords::{COMMA, FINITE_SET, NONEMPTY_SET, SET};
 use crate::parser::Parser;
 use crate::token_block::TokenBlock;
 use crate::errors::ParsingError;
-use crate::parameter_type_and_property::{ParamDefWithParamType, ParamType, Set, NonemptySet, FiniteSet, StructParamType};
+use crate::parameter_type_and_property::{ParamDefWithParamType, ParamType, Set, NonemptySet, FiniteSet};
 
 impl Parser {
     pub fn param_def_with_param_type(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
@@ -12,7 +12,7 @@ impl Parser {
     pub fn param_def_with_type(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
         let param = tb.advance()?;
         if tb.current()? != COMMA {
-            Ok(ParamDefWithParamType::ParamAndItsTypePair(param, self.param_type(tb)?))
+            Ok(ParamDefWithParamType(vec![param], self.param_type(tb)?))
         } else {
             let mut vec_of_params = vec![param];
             while tb.current()? == COMMA {
@@ -20,7 +20,7 @@ impl Parser {
                 vec_of_params.push(tb.advance()?);
             }
             let param_type = self.param_type(tb)?;
-            Ok(ParamDefWithParamType::ParamsAndTheirTypePair(vec_of_params, param_type))
+            Ok(ParamDefWithParamType(vec_of_params, param_type))
         }
     }
 
@@ -29,15 +29,8 @@ impl Parser {
             NONEMPTY_SET => self.param_type_nonempty_set(tb),
             FINITE_SET => self.param_type_finite_set(tb),
             SET => self.param_type_set(tb),
-            STRUCT => self.param_type_struct(tb),
             _ => self.param_type_obj(tb),
         }
-    }
-
-    pub fn param_type_struct(&self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
-        tb.skip_token(STRUCT)?;
-        let identifier = self.identifier_or_identifier_with_mod(tb)?;
-        Ok(ParamType::Struct(StructParamType::new(identifier)))
     }
 
     pub fn param_type_nonempty_set(&self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {

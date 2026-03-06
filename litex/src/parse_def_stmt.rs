@@ -1,9 +1,9 @@
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
-use crate::definition_stmt::{DefLetStmt, DefPropStmt, DefSetTemplateStmt, DefStmt, DefStructStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt};
+use crate::definition_stmt::{DefLetStmt, DefPropStmt, DefStructStmt, DefStructWithNoFieldStmt, DefStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt};
 use crate::exist_fact::ExistFact;
 use crate::errors::ParsingError;
 use crate::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
-use crate::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, FN, HAVE, IF, LEFT_BRACE, LET, PROP, RETURN, RIGHT_BRACE, SET_TEMPLATE, STRUCT};
+use crate::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, FN, HAVE, IF, LEFT_BRACE, LET, PROP, RETURN, RIGHT_BRACE, STRUCT};
 use crate::parameter_type_and_property::ParamDefWithParamType;
 use crate::parser::Parser;
 use crate::stmt::Stmt;
@@ -123,8 +123,8 @@ impl Parser {
         ))))
     }
 
-    pub fn def_set_template_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(SET_TEMPLATE)?;
+    pub fn def_struct_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        tb.skip_token(STRUCT)?;
         let name = tb.advance()?;
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_type: Vec<ParamDefWithParamType> = vec![];
@@ -150,13 +150,13 @@ impl Parser {
         tb.skip_token(RIGHT_BRACE)?;
         tb.skip_token(EQUAL)?;
         let equal_to = self.obj(tb)?;
-        Ok(Stmt::DefStmt(DefStmt::DefSetTemplateStmt(DefSetTemplateStmt::new(
+        Ok(Stmt::DefStmt(DefStmt::DefStructStmt(DefStructStmt::DefStructWithNoFieldStmt(DefStructWithNoFieldStmt::new(
             name,
             params_def_with_type,
             dom_facts,
             equal_to,
             Some(tb.line_file_index),
-        ))))
+        )))))
     }
 
     pub fn def_algorithm_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -189,30 +189,6 @@ impl Parser {
             name,
             params,
             return_or_algo_if,
-            Some(tb.line_file_index),
-        ))))
-    }
-
-    pub fn def_struct_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(STRUCT)?;
-        let name = tb.advance()?;
-        let mut param_defs: Vec<ParamDefWithParamType> = vec![];
-        while !tb.exceed_end_of_head() && tb.current()? != COLON {
-            param_defs.push(self.param_def_with_type(tb)?);
-            if tb.current()? == COMMA {
-                tb.skip_token(COMMA)?;
-            }
-        }
-        let facts = if tb.current().map(|c| c == COLON).unwrap_or(false) {
-            tb.skip_token(COLON)?;
-            self.parse_facts_in_body(tb)?
-        } else {
-            vec![]
-        };
-        Ok(Stmt::DefStmt(DefStmt::DefStructStmt(DefStructStmt::new(
-            name,
-            param_defs,
-            facts,
             Some(tb.line_file_index),
         ))))
     }
