@@ -1,16 +1,10 @@
 use crate::keywords::{
-    ADD, CAP, CART, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, DISJOINT_UNION, DIV,
-    INFIX_FN_NAME_SIGN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT,
-    LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, DOT, MUL, N, N_POS, POW,
-    POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, RANGE, R_NEG, R_NZ, R_POS,
-    RIGHT_BRACE, RIGHT_CURLY_BRACE, RIGHT_BRACKET, CART_DIM, SET_MINUS, SUB,
-    UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, CUP, FN,
-    is_key_symbol_or_keyword,
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, DISJOINT_UNION, DIV, DOT, FN, INFIX_FN_NAME_SIGN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_NAME_SEPARATOR, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
 };
 use crate::parser::Parser;
 use crate::token_block::TokenBlock;
 use crate::obj::{
-    Obj, FnObj, FnSetObj, FnSetWithDom, FnSetWithoutDom, Add, Mul, Div, Mod, Sub, Pow, Number, InstSetTemplateObj, ListSet,
+    Obj, FnObj, FnSetObj, FnSetWithDom, FnSetWithoutDom, Add, Mul, Div, Mod, Sub, Pow, Number, InstSetTemplateObj, ListSet, SetBuilder,
     NPosObj, NObj, QObj, ZObj, RObj, QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz,
     ObjAtIndex, Union, Intersect, SetMinus, DisjointUnion, Cup, Cap, PowerSet, Choose,
     Cart, CartDim, Proj, Count, Range, ClosedRange, Val,
@@ -452,35 +446,45 @@ impl Parser {
     }
 
     fn set_builder_or_set_list(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+        tb.skip_token(LEFT_CURLY_BRACE)?; // 先吃掉 {，再解析首元
         let left = self.obj(tb)?;
-        if tb.current()? == COMMA {
-            self.set_builder(tb, left)
-        } else {
-            self.set_list(tb, left)
+        match left {
+            Obj::AtomWithoutModName(a) => {
+                if tb.current()? != COMMA && tb.current()? != RIGHT_CURLY_BRACE {
+                    self.set_builder(tb, a)
+                } else {
+                    self.set_list(tb, Obj::AtomWithoutModName(a))
+                }
+            }
+            _ => self.set_list(tb, left)
         }
     }
 
+    /// ListSet: { a b c } 或 { 1, 0, 2 }；遇逗号先 skip 再解析下一项
     fn set_list(&self, tb: &mut TokenBlock, left_most_obj: Obj) -> Result<Obj, ParsingError> {
         let mut objs = vec![left_most_obj];
         while tb.current()? != RIGHT_CURLY_BRACE {
+            tb.skip_token(COMMA)?;
             objs.push(self.obj(tb)?);
         }
         tb.skip_token(RIGHT_CURLY_BRACE)?;
         Ok(Obj::ListSet(ListSet::new(objs)))
     }
 
-    fn set_builder(&self, tb: &mut TokenBlock, left_most_obj: Obj) -> Result<Obj, ParsingError> {
-        match left_most_obj {
-            Obj::AtomWithoutModName(a) => {
-                let param = a.name;
-                let param_set = self.obj(tb)?;
-                _ = param;
-                _ = param_set;
-                tb.skip_token(COLON)?;
-                panic!("需要能parse fact")
+    fn set_builder(&self, tb: &mut TokenBlock, left_most_obj: AtomWithoutModName) -> Result<Obj, ParsingError> {
+        let param = left_most_obj.name;
+        let param_set = self.obj(tb)?;
+        tb.skip_token(COLON)?;
+        // 直到 }
+        let mut facts = vec![];
+        while tb.current()? != RIGHT_CURLY_BRACE {
+            facts.push(self.or_and_spec_fact(tb)?);
+            if tb.current()? == COMMA {
+                tb.skip_token(COMMA)?;
             }
-            _ => Err(ParsingError::new("Expected atom without mod name", tb.line_file_index))
         }
+        tb.skip_token(RIGHT_CURLY_BRACE)?;
+        Ok(Obj::SetBuilder(SetBuilder::new(param, param_set, facts)))
     }
 
     fn instantiated_set_template_obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
@@ -492,7 +496,7 @@ impl Parser {
 
     pub fn atom(&self, tb: &mut TokenBlock) -> Result<Atom, ParsingError> {
         let left = tb.advance()?;
-        if !tb.exceed_end_of_head() && tb.current()? == DOT {
+        if !tb.exceed_end_of_head() && tb.current()? == MOD_NAME_SEPARATOR {
             tb.skip()?;
             let right = tb.advance()?;
             Ok(Atom::AtomWithModName(AtomWithModName::new(&left, &right)))

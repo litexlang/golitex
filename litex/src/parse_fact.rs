@@ -2,7 +2,7 @@ use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::atom::Atom;
 use crate::atomic_fact::{AtomicFact, NormalAtomicFact, NotNormalAtomicFact};
 use crate::exist_fact::{ExistFact, TrueExistFact, NotExistFact};
-use crate::parameter_type_and_property::ParamDefWithParamTypeOrProperty;
+use crate::parameter_type_and_property::ParamDefWithParamType;
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::forall_fact::ForallFact;
 use crate::forall_fact_with_iff::ForallFactWithIff;
@@ -31,7 +31,7 @@ impl Parser {
     // fact_hierarchy 1
     fn forall_or_forall_with_iff(&self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
         tb.skip_token(FORALL)?;
-        let mut param_def: Vec<ParamDefWithParamTypeOrProperty> = vec![];
+        let mut param_def: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != COLON {
             param_def.push(self.param_def_with_param_type(tb)?);
         } 
@@ -47,7 +47,7 @@ impl Parser {
         }
     }
 
-    fn forall_with_iff(&self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamTypeOrProperty>) -> Result<Fact, ParsingError> {
+    fn forall_with_iff(&self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamType>) -> Result<Fact, ParsingError> {
         if tb.body.len() < 2 {
             return Err(ParsingError::new("Expected at least 2 body blocks", tb.line_file_index));
         }
@@ -86,7 +86,7 @@ impl Parser {
         Ok(Fact::ForallFactWithIff(ForallFactWithIff::new(forall_fact, iff_facts, Some(tb.line_file_index))))
     }
 
-    fn forall(&self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamTypeOrProperty>) -> Result<Fact, ParsingError> {
+    fn forall(&self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamType>) -> Result<Fact, ParsingError> {
         let last_body = tb.body.last().ok_or_else(|| {
             ParsingError::new("Expected body", tb.line_file_index)
         })?;
@@ -219,7 +219,7 @@ impl Parser {
 
     pub fn exist_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<ExistFact, ParsingError> {
         tb.skip_token(EXIST)?;
-        let mut param_def: Vec<ParamDefWithParamTypeOrProperty> = vec![];
+        let mut param_def: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != ST {
             param_def.push(self.param_def_with_param_type(tb)?);
             if tb.current()? == COMMA {

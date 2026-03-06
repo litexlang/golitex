@@ -4,7 +4,7 @@ use crate::exist_fact::ExistFact;
 use crate::errors::ParsingError;
 use crate::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefineAlgorithmStmt};
 use crate::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, FN, HAVE, IF, LEFT_BRACE, LET, PROP, RETURN, RIGHT_BRACE, SET_TEMPLATE};
-use crate::parameter_type_and_property::{ParamDefWithParamType, ParamDefWithParamTypeOrProperty};
+use crate::parameter_type_and_property::ParamDefWithParamType;
 use crate::parser::Parser;
 use crate::stmt::Stmt;
 use crate::token_block::TokenBlock;
@@ -14,9 +14,9 @@ impl Parser {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
         tb.skip_token(LEFT_BRACE)?;
-        let mut param_defs: Vec<ParamDefWithParamTypeOrProperty> = vec![];
+        let mut param_defs: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != RIGHT_BRACE {
-            param_defs.push(self.param_def_with_property(tb)?);
+            param_defs.push(self.param_def_with_type(tb)?);
         }
         tb.skip_token(RIGHT_BRACE)?;
         let facts = self.parse_facts_in_body(tb)?;
@@ -35,15 +35,7 @@ impl Parser {
                 Err(_) => break,
                 Ok(_) => {}
             }
-            let p = self.param_def_with_param_type(tb)?;
-            let pd = match p {
-                ParamDefWithParamTypeOrProperty::ParamAndItsTypePair(n, t) => ParamDefWithParamType::ParamAndItsTypePair(n, t),
-                ParamDefWithParamTypeOrProperty::ParamsAndTheirTypePair(ns, t) => ParamDefWithParamType::ParamsAndTheirTypePair(ns, t),
-                ParamDefWithParamTypeOrProperty::ParamsPropertyPair(..) => {
-                    return Err(ParsingError::new("let does not support property params here", tb.line_file_index));
-                }
-            };
-            param_def.push(pd);
+            param_def.push(self.param_def_with_param_type(tb)?);
             if matches!(tb.current(), Ok(t) if t == COMMA) {
                 tb.skip_token(COMMA)?;
             }
@@ -66,15 +58,7 @@ impl Parser {
         tb.skip_token(HAVE)?;
         let mut param_defs: Vec<ParamDefWithParamType> = vec![];
         loop {
-            let p = self.param_def_with_param_type(tb)?;
-            let param_def = match p {
-                ParamDefWithParamTypeOrProperty::ParamAndItsTypePair(n, t) => ParamDefWithParamType::ParamAndItsTypePair(n, t),
-                ParamDefWithParamTypeOrProperty::ParamsAndTheirTypePair(ns, t) => ParamDefWithParamType::ParamsAndTheirTypePair(ns, t),
-                ParamDefWithParamTypeOrProperty::ParamsPropertyPair(..) => {
-                    return Err(ParsingError::new("have obj in nonempty set does not support property params", tb.line_file_index));
-                }
-            };
-            param_defs.push(param_def);
+            param_defs.push(self.param_def_with_param_type(tb)?);
             if !matches!(tb.current(), Ok(t) if t == COMMA) {
                 break;
             }
@@ -143,7 +127,7 @@ impl Parser {
         tb.skip_token(SET_TEMPLATE)?;
         let name = tb.advance()?;
         tb.skip_token(LEFT_BRACE)?;
-        let mut params_def_with_type: Vec<ParamDefWithParamTypeOrProperty> = vec![];
+        let mut params_def_with_type: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
             params_def_with_type.push(self.param_def_with_param_type(tb)?);
             if tb.current()? == COMMA {

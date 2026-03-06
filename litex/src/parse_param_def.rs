@@ -1,45 +1,18 @@
-use crate::keywords::{COMMA, FINITE_SET, LEFT_BRACKET, NONEMPTY_SET, NOT, RIGHT_BRACKET, SET, is_key_symbol_or_keyword};
+use crate::keywords::{COMMA, FINITE_SET, NONEMPTY_SET, SET};
 use crate::parser::Parser;
 use crate::token_block::TokenBlock;
 use crate::errors::ParsingError;
-use crate::parameter_type_and_property::{ParamDefWithParamTypeOrProperty, ParamType, Set, NonemptySet, FiniteSet};
+use crate::parameter_type_and_property::{ParamDefWithParamType, ParamType, Set, NonemptySet, FiniteSet};
 
 impl Parser {
-    pub fn param_def_with_param_type(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamTypeOrProperty, ParsingError> {
-        match tb.current()? {
-            LEFT_BRACKET => self.param_def_with_property(tb),
-            _ => self.param_def_with_type(tb),
-        }
+    pub fn param_def_with_param_type(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
+        self.param_def_with_type(tb)
     }
 
-    pub fn param_def_with_property(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamTypeOrProperty, ParsingError> {
-        tb.skip_token(LEFT_BRACKET)?;
-        let mut params: Vec<String> = vec![];
-        while tb.current()? != RIGHT_BRACKET {
-            params.push(tb.advance()?);
-        }
-        tb.skip_token(RIGHT_BRACKET)?;
-
-        let is_true: bool = if tb.current()? == NOT {
-            tb.skip()?;
-            false
-        } else {
-            true
-        };
-        
-        let property_name = self.atom(tb)?;
-
-        if is_key_symbol_or_keyword(&property_name.to_string()) {
-            return Err(ParsingError::new(&format!("Invalid property name: {}", property_name.to_string()), tb.line_file_index));
-        }
-        
-        Ok(ParamDefWithParamTypeOrProperty::ParamsPropertyPair(params, is_true, property_name))
-    }
-
-    pub fn param_def_with_type(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamTypeOrProperty, ParsingError> {
+    pub fn param_def_with_type(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
         let param = tb.advance()?;
         if tb.current()? != COMMA {
-            Ok(ParamDefWithParamTypeOrProperty::ParamAndItsTypePair(param, self.param_type(tb)?))
+            Ok(ParamDefWithParamType::ParamAndItsTypePair(param, self.param_type(tb)?))
         } else {
             let mut vec_of_params = vec![param];
             while tb.current()? == COMMA {
@@ -47,7 +20,7 @@ impl Parser {
                 vec_of_params.push(tb.advance()?);
             }
             let param_type = self.param_type(tb)?;
-            Ok(ParamDefWithParamTypeOrProperty::ParamsAndTheirTypePair(vec_of_params, param_type))
+            Ok(ParamDefWithParamType::ParamsAndTheirTypePair(vec_of_params, param_type))
         }
     }
 
