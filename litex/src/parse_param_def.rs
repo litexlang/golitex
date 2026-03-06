@@ -1,8 +1,8 @@
-use crate::keywords::{COMMA, FINITE_SET, NONEMPTY_SET, SET};
+use crate::keywords::{COMMA, FINITE_SET, NONEMPTY_SET, SET, STRUCT};
 use crate::parser::Parser;
 use crate::token_block::TokenBlock;
 use crate::errors::ParsingError;
-use crate::parameter_type_and_property::{ParamDefWithParamType, ParamType, Set, NonemptySet, FiniteSet};
+use crate::parameter_type_and_property::{ParamDefWithParamType, ParamType, Set, NonemptySet, FiniteSet, StructParamType};
 
 impl Parser {
     pub fn param_def_with_param_type(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
@@ -29,8 +29,15 @@ impl Parser {
             NONEMPTY_SET => self.param_type_nonempty_set(tb),
             FINITE_SET => self.param_type_finite_set(tb),
             SET => self.param_type_set(tb),
+            STRUCT => self.param_type_struct(tb),
             _ => self.param_type_obj(tb),
         }
+    }
+
+    pub fn param_type_struct(&self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
+        tb.skip_token(STRUCT)?;
+        let identifier = self.identifier_or_identifier_with_mod(tb)?;
+        Ok(ParamType::Struct(StructParamType::new(identifier)))
     }
 
     pub fn param_type_nonempty_set(&self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {

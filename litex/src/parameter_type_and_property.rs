@@ -1,4 +1,6 @@
 use std::fmt;
+use crate::atom::{IdentifierOrIdentifierWithMod};
+use crate::keywords::STRUCT;
 use crate::helper::vec_to_string_join_by_comma;
 use crate::obj::Obj;
 use crate::keywords::{FINITE_SET, NONEMPTY_SET, SET};
@@ -21,6 +23,18 @@ pub enum ParamType {
     NonemptySet(NonemptySet),
     FiniteSet(FiniteSet),
     Obj(Obj),
+    Struct(StructParamType),
+}
+
+#[derive(Clone)]
+pub struct StructParamType {
+    pub name: IdentifierOrIdentifierWithMod,
+}
+
+impl StructParamType {
+    pub fn new(name: IdentifierOrIdentifierWithMod) -> Self {
+        StructParamType { name }
+    }
 }
 
 #[derive(Clone)]
@@ -57,7 +71,14 @@ impl fmt::Display for ParamType {
             ParamType::NonemptySet(nonempty_set) => write!(f, "{}", nonempty_set.to_string()),
             ParamType::FiniteSet(finite_set) => write!(f, "{}", finite_set.to_string()),
             ParamType::Obj(obj) => write!(f, "{}", obj),
+            ParamType::Struct(struct_param_type) => write!(f, "{}", struct_param_type),
         }
+    }
+}
+
+impl fmt::Display for StructParamType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}", STRUCT, self.name)
     }
 }
 
