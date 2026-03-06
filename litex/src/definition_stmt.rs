@@ -22,11 +22,13 @@ pub enum DefStmt {
     DefAlgoStmt(DefAlgoStmt),
 }
 
+#[derive(Clone)]
 pub enum DefStructStmt {
     DefStructWithFieldsStmt(DefStructWithFieldsStmt),
     DefStructWithNoFieldStmt(DefStructWithNoFieldStmt),
 }
 
+#[derive(Clone)]
 pub struct DefStructWithFieldsStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
@@ -35,6 +37,7 @@ pub struct DefStructWithFieldsStmt {
     pub line_file_index: Option<(usize, usize)>,
 }
 
+#[derive(Clone)]
 pub struct DefStructWithNoFieldStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
@@ -80,6 +83,7 @@ pub struct DefLetStmt {
     pub line_file_index: Option<(usize, usize)>,
 }
 
+#[derive(Clone)]
 pub struct DefPropStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
@@ -113,6 +117,13 @@ impl fmt::Display for DefStructStmt {
 }
 
 impl DefStructStmt {
+    pub fn name(&self) -> &str {
+        match self {
+            DefStructStmt::DefStructWithFieldsStmt(x) => &x.name,
+            DefStructStmt::DefStructWithNoFieldStmt(x) => &x.name,
+        }
+    }
+
     pub fn line_file_index(&self) -> Option<(usize, usize)> {
         match self {
             DefStructStmt::DefStructWithFieldsStmt(x) => x.line_file_index,

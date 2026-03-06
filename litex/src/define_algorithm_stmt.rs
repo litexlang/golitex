@@ -4,6 +4,7 @@ use crate::helper::{add_four_spaces_at_beginning, vec_to_string_with_sep, to_str
 use crate::keywords::{RETURN, IF, COLON, ALGO};
 use std::fmt;
 
+#[derive(Clone)]
 pub struct DefAlgoStmt {
     pub name: String,
     pub params: Vec<String>,
@@ -11,17 +12,20 @@ pub struct DefAlgoStmt {
     pub line_file_index: Option<(usize, usize)>,
 }
 
+#[derive(Clone)]
 pub struct AlgoReturn {
     pub value: Obj,
     pub line_file_index: Option<(usize, usize)>,
 }
 
+#[derive(Clone)]
 pub struct AlgoIf {
     pub condition: AndFactOrSpecFact,
     pub return_stmt: AlgoReturn,
     pub line_file_index: Option<(usize, usize)>,
 }
 
+#[derive(Clone)]
 pub enum AlgoReturnOrAlgoIf {
     AlgoReturn(AlgoReturn),
     AlgoIf(AlgoIf),

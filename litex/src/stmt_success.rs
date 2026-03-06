@@ -1,30 +1,30 @@
 use std::fmt;
-use crate::helper::line_file_suffix;
-use crate::stmt::Stmt;
-use crate::fact::Fact;
 use crate::keywords::SUCCESS;
 
-pub enum StmtSuccess<'a> {
-    NonFactualStmtSuccess(NonFactualStmtSuccess<'a>),
-    FactVerifiedByFact(FactVerifiedByFact<'a>),
-    FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules<'a>),
+pub enum StmtSuccess {
+    NonFactualStmtSuccess(NonFactualStmtSuccess),
+    FactVerifiedByFact(FactVerifiedByFact),
+    FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules),
 }
 
-pub struct NonFactualStmtSuccess<'a> {
-    pub stmt: &'a Stmt,
+pub struct NonFactualStmtSuccess {
+    pub stmt: String,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
-pub struct FactVerifiedByFact<'a> {
-    pub fact: &'a Fact,
-    pub verified_by: &'a Fact,
-}
-
-pub struct FactVerifiedByBuiltinRules<'a> {
-    pub fact: &'a Fact,
+pub struct FactVerifiedByFact {
+    pub fact: String,
     pub verified_by: String,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
-impl<'a> fmt::Display for StmtSuccess<'a> {
+pub struct FactVerifiedByBuiltinRules {
+    pub fact: String,
+    pub verified_by: String,
+    pub line_file_index: Option<(usize, usize)>,
+}
+
+impl fmt::Display for StmtSuccess {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             StmtSuccess::NonFactualStmtSuccess(non_factual_stmt_success) => write!(f, "{}",  non_factual_stmt_success.to_string()),
@@ -36,41 +36,38 @@ impl<'a> fmt::Display for StmtSuccess<'a> {
 
 const VERIFIED_BY: &str = "verified by:";
 
-impl<'a> fmt::Display for NonFactualStmtSuccess<'a> {
+impl fmt::Display for NonFactualStmtSuccess {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let loc = line_file_suffix(self.stmt.line_file());
-        write!(f, "{}{}\n{}", SUCCESS, loc, self.stmt)
+        write!(f, "{}", self.stmt)
     }
 }
 
-impl<'a> fmt::Display for FactVerifiedByFact<'a> {
+impl fmt::Display for FactVerifiedByFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let loc = line_file_suffix(self.fact.line_file());
-        write!(f, "{}{}\n{}\n{}\n{}", SUCCESS, loc, self.fact, VERIFIED_BY, self.verified_by)
+        write!(f, "{}\n{}\n{}", self.fact, VERIFIED_BY, self.verified_by)
     }
 }
 
-impl<'a> fmt::Display for FactVerifiedByBuiltinRules<'a> {
+impl fmt::Display for FactVerifiedByBuiltinRules {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let loc = line_file_suffix(self.fact.line_file());
-        write!(f, "{}{}\n{}\n{}\n{}", SUCCESS, loc, self.fact, VERIFIED_BY, self.verified_by)
+        write!(f, "{}\n{}\n{}", self.fact, VERIFIED_BY, self.verified_by)
     }
 }
 
-impl<'a> NonFactualStmtSuccess<'a> {
-    pub fn new(stmt: &'a Stmt) -> Self {
-        NonFactualStmtSuccess { stmt }
+impl NonFactualStmtSuccess {
+    pub fn new(stmt: String, line_file_index: Option<(usize, usize)>) -> Self {
+        NonFactualStmtSuccess { stmt, line_file_index }
     }
 }
 
-impl<'a> FactVerifiedByFact<'a> {
-    pub fn new(fact: &'a Fact, verified_by: &'a Fact) -> Self {
-        FactVerifiedByFact { fact, verified_by }
+impl FactVerifiedByFact {
+    pub fn new(fact: String, verified_by: String, line_file_index: Option<(usize, usize)>) -> Self {
+        FactVerifiedByFact { fact, verified_by, line_file_index }
     }
 }
 
-impl<'a> FactVerifiedByBuiltinRules<'a> {
-    pub fn new(fact: &'a Fact, verified_by: String) -> Self {
-        FactVerifiedByBuiltinRules { fact, verified_by }
+impl FactVerifiedByBuiltinRules {
+    pub fn new(fact: String, verified_by: String, line_file_index: Option<(usize, usize)>) -> Self {
+        FactVerifiedByBuiltinRules { fact, verified_by, line_file_index }
     }
 }
