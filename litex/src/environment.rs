@@ -3,7 +3,7 @@ use std::fmt;
 use crate::fact::Fact;
 use crate::definition_stmt::DefPropStmt;
 use crate::definition_stmt::DefSetTemplateStmt;
-use crate::define_algorithm_stmt::DefineAlgorithmStmt;
+use crate::define_algorithm_stmt::DefAlgoStmt;
 use crate::atomic_fact::AtomicFact;
 use crate::exist_fact::ExistFact;
 use crate::forall_fact::ForallFact;
@@ -21,7 +21,7 @@ pub struct Environment {
     pub defined_atom_names: HashMap<String, ()>,
     pub defined_props: HashMap<String, DefPropStmt>,
     pub defined_set_templates: HashMap<String, DefSetTemplateStmt>,
-    pub defined_algorithms: HashMap<String, DefineAlgorithmStmt>,
+    pub defined_algorithms: HashMap<String, DefAlgoStmt>,
 
     pub known_equality: HashMap<String, Rc<Vec<String>>>,
     pub known_fn_in_fn_set: HashMap<String, FnSetObj>,
@@ -43,7 +43,7 @@ pub struct Environment {
 }
 
 impl Environment {
-    pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, set_templates: HashMap<String, DefSetTemplateStmt>, algorithms: HashMap<String, DefineAlgorithmStmt>, known_equality: HashMap<String, Rc<Vec<String>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, ()>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), ()>>, known_exist_facts: HashMap<(String, bool), Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_exist_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_fn_obj_with_requirements_checked: HashMap<String,()>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, (usize, usize)>) -> Self {
+    pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, set_templates: HashMap<String, DefSetTemplateStmt>, algorithms: HashMap<String, DefAlgoStmt>, known_equality: HashMap<String, Rc<Vec<String>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, ()>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), ()>>, known_exist_facts: HashMap<(String, bool), Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_exist_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_fn_obj_with_requirements_checked: HashMap<String,()>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, (usize, usize)>) -> Self {
         Environment {
             defined_atom_names: objs,
             defined_props: props,

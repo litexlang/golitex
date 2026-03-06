@@ -83,7 +83,7 @@ use runtime_context::RuntimeContext;
 mod environment;
 use environment::Environment;
 mod define_algorithm_stmt;
-use define_algorithm_stmt::{DefineAlgorithmStmt, AlgoReturn, AlgoIf, AlgoReturnOrAlgoIf};
+use define_algorithm_stmt::{DefAlgoStmt, AlgoReturn, AlgoIf, AlgoReturnOrAlgoIf};
 mod parser;
 use parser::Parser;
 mod parse_tooling_stmt;
@@ -1119,10 +1119,10 @@ fn try_define_algorithm_stmt() {
     println!("{} on {:?}", return_or_algo_if[0], return_or_algo_if[0].line_file());
     println!("{} on {:?}", return_or_algo_if[1], return_or_algo_if[1].line_file());
     
-    let define_algorithm_stmt = DefineAlgorithmStmt::new("f".to_string(), vec!["x".to_string()], return_or_algo_if, Some((1, 0)));
+    let define_algorithm_stmt = DefAlgoStmt::new("f".to_string(), vec!["x".to_string()], return_or_algo_if, Some((1, 0)));
     println!("{}", define_algorithm_stmt);
 
-    let stmt = Stmt::DefStmt(DefStmt::DefineAlgorithmStmt(define_algorithm_stmt));
+    let stmt = Stmt::DefStmt(DefStmt::DefAlgoStmt(define_algorithm_stmt));
     println!("{}", stmt);
 }
 

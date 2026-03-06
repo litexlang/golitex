@@ -1,5 +1,5 @@
 use crate::errors::ParsingError;
-use crate::keywords::{ALGO, CLAIM, CLEAR, DO_NOTHING, EVAL, EXIST, FN, HAVE, IMPORT, KNOW, LET, PROP, PROVE, RUN_FILE, SET_TEMPLATE, VIEW_FN_AS_SET, WITNESS, CASES, CONTRA, ENUM, INDUC, FOR, EQUAL_SET};
+use crate::keywords::{ALGO, CLAIM, CLEAR, DO_NOTHING, EVAL, EXIST, FN, HAVE, IMPORT, KNOW, LET, PROP, PROVE, RUN_FILE, SET_TEMPLATE, VIEW_FN_AS_SET, WITNESS, CASES, CONTRA, ENUM, INDUC, FOR, EQUAL_SET, STRUCT};
 use crate::parser::Parser;
 use crate::stmt::Stmt;
 use crate::token_block::TokenBlock;
@@ -36,6 +36,7 @@ impl Parser {
             FOR => self.prove_for_stmt(tb),
             EQUAL_SET => self.prove_equal_set_by_def_stmt(tb),
             VIEW_FN_AS_SET => self.view_fn_as_set_stmt(tb),
+            STRUCT => self.def_struct_stmt(tb),
             _ => {
                 let fact = self.fact(tb)?;
                 Ok(Stmt::Fact(fact))

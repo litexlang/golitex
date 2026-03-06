@@ -5,7 +5,7 @@ use crate::environment::Environment;
 use std::collections::HashMap;
 use crate::definition_stmt::DefPropStmt;
 use crate::definition_stmt::DefSetTemplateStmt;
-use crate::define_algorithm_stmt::DefineAlgorithmStmt;
+use crate::define_algorithm_stmt::DefAlgoStmt;
 
 pub struct RuntimeContext<'a> {
     pub module_manager: &'a mut ModuleManager<'a>,
@@ -14,11 +14,11 @@ pub struct RuntimeContext<'a> {
     pub defined_atom_names: HashMap<String, ()>,
     pub defined_props: HashMap<String, DefPropStmt>,
     pub defined_set_templates: HashMap<String, DefSetTemplateStmt>,
-    pub defined_algorithms: HashMap<String, DefineAlgorithmStmt>,
+    pub defined_algorithms: HashMap<String, DefAlgoStmt>,
 }
 
 impl<'a> RuntimeContext<'a> {
-    pub fn new(module_manager: &'a mut ModuleManager<'a>, environments: Vec<Box<Environment>>, objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, set_templates: HashMap<String, DefSetTemplateStmt>, algorithms: HashMap<String, DefineAlgorithmStmt>) -> Self {
+    pub fn new(module_manager: &'a mut ModuleManager<'a>, environments: Vec<Box<Environment>>, objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, set_templates: HashMap<String, DefSetTemplateStmt>, algorithms: HashMap<String, DefAlgoStmt>) -> Self {
         RuntimeContext { module_manager, environments, defined_atom_names: objs, defined_props: props, defined_set_templates: set_templates, defined_algorithms: algorithms }
     }
 }
