@@ -524,13 +524,21 @@ impl fmt::Display for NotIsTupleFact {
 
 impl fmt::Display for NormalAtomicFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}", FACT_PREFIX, self.predicate, braced_vec_to_string(&self.body))
+        if self.body.len() == 2 {
+            write!(f, "{} {}{} {}", self.body[0], FACT_PREFIX, self.predicate, self.body[1])
+        } else {
+            write!(f, "{}{}{}", FACT_PREFIX, self.predicate, braced_vec_to_string(&self.body))
+        }
     }
 }
 
 impl fmt::Display for NotNormalAtomicFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}{}{}", NOT, FACT_PREFIX, self.predicate, braced_vec_to_string(&self.body))
+        if self.body.len() == 2 {
+            write!(f, "{} {} {}{} {}", NOT, self.body[0], FACT_PREFIX, self.predicate, self.body[1])
+        } else {
+            write!(f, "{} {}{}{}", NOT, FACT_PREFIX, self.predicate, braced_vec_to_string(&self.body))
+        }
     }
 }
 

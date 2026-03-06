@@ -5,7 +5,7 @@ use crate::tokenizer::tokenize_line;
 #[test]
 #[ignore]
 fn test_fact() {
-    let code = "1 + 1 = 2\n$p(a, b)\nexist a R st {a > 0}";
+    let code = "1 + 1 = 2";
     let blocks = TokenBlock::parse_blocks(code, 0).expect("parse blocks failed");
     let parser = Parser::new();
     for mut b in blocks {
@@ -90,7 +90,10 @@ fn test_obj() {
         "@Foo(R)",
         "{1, 0, 2}",
         "fn(x R, y R: x < y)R",
-        "{z R: exist a R st {a > z}, z = 10 or $p(z)}",
+        "{z R: exist a R st {a > z}, z = 10 or $p(z), 1 $in R or $in(a, R)}",
+        "M.x.y.z",
+        "1 \\pkg::a 2",
+        "1 \\pkg::a.b 2",
     ];
 
     let parser = Parser::new();
