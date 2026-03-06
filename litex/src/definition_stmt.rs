@@ -1,5 +1,5 @@
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
-use crate::parameter_type_and_property::{ParamDefWithParamTypeOrProperty, ParamDefWithParamType};
+use crate::parameter_type_and_property::ParamDefWithParamType;
 use crate::fact::{ Fact};
 use crate::obj::{Obj};
 use std::fmt;
@@ -24,7 +24,7 @@ pub enum DefStmt {
 
 pub struct DefSetTemplateStmt {
     pub name: String,
-    pub params_def_with_type: Vec<ParamDefWithParamTypeOrProperty>,
+    pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
     pub equal_to: Obj,
     pub line_file_index: Option<(usize, usize)>,
@@ -69,7 +69,7 @@ pub struct DefLetStmt {
 
 pub struct DefPropStmt {
     pub name: String,
-    pub params_def_with_type: Vec<ParamDefWithParamTypeOrProperty>,
+    pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub iff_facts: Option<Vec<Fact>>,
     pub line_file_index: Option<(usize, usize)>,
 }
@@ -91,7 +91,7 @@ impl fmt::Display for DefStmt {
 }
 
 impl DefPropStmt {
-    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamTypeOrProperty>, iff_facts: Option<Vec<Fact>>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, iff_facts: Option<Vec<Fact>>, line_file_index: Option<(usize, usize)>) -> Self {
         DefPropStmt { name, params_def_with_type, iff_facts, line_file_index }
     }
 }
@@ -203,7 +203,7 @@ impl HaveFnEqualCaseByCaseStmt {
 }
 
 impl DefSetTemplateStmt {
-    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamTypeOrProperty>, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, equal_to: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, equal_to: Obj, line_file_index: Option<(usize, usize)>) -> Self {
         DefSetTemplateStmt { name, params_def_with_type, dom_facts, equal_to, line_file_index }
     }
 }

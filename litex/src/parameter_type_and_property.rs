@@ -1,9 +1,7 @@
 use std::fmt;
-use crate::keywords::NOT;
 use crate::helper::vec_to_string_join_by_comma;
 use crate::obj::Obj;
-use crate::atom::Atom;
-use crate::keywords::{FINITE_SET, LEFT_BRACKET, NONEMPTY_SET, RIGHT_BRACKET, SET};
+use crate::keywords::{FINITE_SET, NONEMPTY_SET, SET};
 
 #[derive(Clone)]
 pub enum ParamDefWithParamSet {
@@ -11,16 +9,10 @@ pub enum ParamDefWithParamSet {
     ParamsAndTheirSetsPair(Vec<String>, Obj),
 }
 
+#[derive(Clone)]
 pub enum ParamDefWithParamType {
     ParamAndItsTypePair(String, ParamType),
     ParamsAndTheirTypePair(Vec<String>, ParamType),
-}
-
-#[derive(Clone)]
-pub enum ParamDefWithParamTypeOrProperty {
-    ParamAndItsTypePair(String, ParamType),
-    ParamsAndTheirTypePair(Vec<String>, ParamType),
-    ParamsPropertyPair(Vec<String>, bool, Atom),
 }
 
 #[derive(Clone)]
@@ -84,16 +76,6 @@ impl fmt::Display for NonemptySet {
 impl fmt::Display for FiniteSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", FINITE_SET)
-    }
-}
-
-impl fmt::Display for ParamDefWithParamTypeOrProperty {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ParamDefWithParamTypeOrProperty::ParamAndItsTypePair(param, param_type) => write!(f, "{} {}", param, param_type),
-            ParamDefWithParamTypeOrProperty::ParamsAndTheirTypePair(params, param_type) => write!(f, "{} {}", vec_to_string_join_by_comma(params), param_type),
-            ParamDefWithParamTypeOrProperty::ParamsPropertyPair(params, is_true, property) => if *is_true { write!(f, "{}{}{} {}", LEFT_BRACKET, vec_to_string_join_by_comma(params), RIGHT_BRACKET, property) } else { write!(f, "{}{}{} {} {}", LEFT_BRACKET, vec_to_string_join_by_comma(params), RIGHT_BRACKET, format!(" {} ", NOT), property) },
-        }
     }
 }
 
