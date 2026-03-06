@@ -5,6 +5,7 @@ use crate::forall_fact_with_iff::ForallFactWithIff;
 use crate::and_fact::AndFact;
 use crate::atomic_fact::AtomicFact;
 use crate::exist_fact::ExistFact;
+#[derive(Clone)]
 pub enum Fact {
     AtomicFact(AtomicFact),
     ExistFact(ExistFact),

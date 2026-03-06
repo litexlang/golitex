@@ -7,6 +7,7 @@ pub enum StmtError {
     StoreFactError(StoreFactError),
     ParseBlockError(ParseBlockError),
     ParsingError(ParsingError),
+    ExecError(ExecError), 
 }
 
 impl std::error::Error for StmtError {}
@@ -20,6 +21,7 @@ impl fmt::Display for StmtError {
             StmtError::StoreFactError(e) => write!(f, "{}", e),
             StmtError::ParseBlockError(e) => write!(f, "{}", e),
             StmtError::ParsingError(e) => write!(f, "{}", e),
+            StmtError::ExecError(e) => write!(f, "{}", e),
         }
     }
 }
@@ -129,5 +131,25 @@ impl fmt::Display for ParsingError {
 impl ParsingError {
     pub fn new(msg: &str, line_file_index: (usize, usize)) -> Self {
         ParsingError { msg: msg.to_string(), line_file_index }
+    }
+}
+
+
+#[derive(Debug)]
+pub struct ExecError {
+    pub msg: String,
+}
+
+impl std::error::Error for ExecError {}
+
+impl fmt::Display for ExecError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}\n{}", "Execution Error:".to_string(), self.msg)
+    }
+}
+
+impl ExecError {
+    pub fn new(msg: &str) -> Self {
+        ExecError { msg: msg.to_string() }
     }
 }
