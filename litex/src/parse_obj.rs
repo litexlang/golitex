@@ -1,5 +1,5 @@
 use crate::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, DISJOINT_UNION, DIV, DOT, FN, INFIX_FN_NAME_SIGN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_NAME_SEPARATOR, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, DISJOINT_UNION, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_NAME_SEPARATOR, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
 };
 use crate::parser::Parser;
 use crate::token_block::TokenBlock;
@@ -9,7 +9,7 @@ use crate::obj::{
     ObjAtIndex, Union, Intersect, SetMinus, DisjointUnion, Cup, Cap, PowerSet, Choose,
     Cart, CartDim, Proj, Count, Range, ClosedRange, Val,
 };
-use crate::atom::{Atom, AtomWithoutModName, AtomWithModName};
+use crate::atom::{Atom, Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod, FieldAccess, FieldAccessWithMod};
 use crate::errors::ParsingError;
 use crate::parameter_type_and_property::ParamDefWithParamSet;
 
@@ -43,10 +43,7 @@ impl Parser {
                     };
                 }
 
-                let head = match fn_name {
-                    Atom::AtomWithoutModName(a) => Obj::AtomWithoutModName(a),
-                    Atom::AtomWithModName(a) => Obj::AtomWithModName(a),
-                };
+                let head = Obj::from(fn_name);
                 Ok(Obj::FnObj(FnObj::new(head, vec![left, right])))
             },
             _ => Ok(left),
@@ -266,10 +263,10 @@ impl Parser {
                 return Ok(Obj::Number(Number::new(&number)));
             }
 
-            if tb.current()? == DOT {
+            if tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
                 tb.skip()?;
                 let fraction = tb.advance()?;
-                let number = format!("{}{}{}", number, DOT, fraction);
+                let number = format!("{}{}{}", number, DOT_AKA_FIELD_ACCESS_SIGN, fraction);
                 if !is_number(&number) {
                     return Err(ParsingError::new(&format!("Invalid number: {}", number), tb.line_file_index));
                 }
@@ -286,7 +283,7 @@ impl Parser {
         let mut result = self.parse_primary_obj(tb)?;
 
         // 3. 若是 atom，后面可以接多组 (args)，每组变成 FnObj(head, args)
-        let is_atom = matches!(result, Obj::AtomWithoutModName(_) | Obj::AtomWithModName(_));
+        let is_atom = matches!(result, Obj::Identifier(_) | Obj::IdentifierWithMod(_));
         if is_atom {
             while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
                 let args = self.braced_objs(tb)?;
@@ -418,10 +415,7 @@ impl Parser {
 
         // 普通 atom（标识符）
         let atom = self.atom(tb)?;
-        match atom {
-            Atom::AtomWithoutModName(a) => Ok(Obj::AtomWithoutModName(a)),
-            Atom::AtomWithModName(a) => Ok(Obj::AtomWithModName(a)),
-        }
+        Ok(Obj::from(atom))
     }
 
     pub fn braced_objs(&self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
@@ -449,11 +443,11 @@ impl Parser {
         tb.skip_token(LEFT_CURLY_BRACE)?; // 先吃掉 {，再解析首元
         let left = self.obj(tb)?;
         match left {
-            Obj::AtomWithoutModName(a) => {
+            Obj::Identifier(a) => {
                 if tb.current()? != COMMA && tb.current()? != RIGHT_CURLY_BRACE {
                     self.set_builder(tb, a)
                 } else {
-                    self.set_list(tb, Obj::AtomWithoutModName(a))
+                    self.set_list(tb, Obj::Identifier(a))
                 }
             }
             _ => self.set_list(tb, left)
@@ -471,7 +465,7 @@ impl Parser {
         Ok(Obj::ListSet(ListSet::new(objs)))
     }
 
-    fn set_builder(&self, tb: &mut TokenBlock, left_most_obj: AtomWithoutModName) -> Result<Obj, ParsingError> {
+    fn set_builder(&self, tb: &mut TokenBlock, left_most_obj: Identifier) -> Result<Obj, ParsingError> {
         let param = left_most_obj.name;
         let param_set = self.obj(tb)?;
         tb.skip_token(COLON)?;
@@ -489,7 +483,7 @@ impl Parser {
 
     fn instantiated_set_template_obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         tb.skip_token(INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL)?;
-        let name = self.atom(tb)?;
+        let name = self.identifier_or_identifier_with_mod(tb)?;
         let args = self.braced_objs(tb)?;
         Ok(Obj::InstSetTemplateObj(InstSetTemplateObj::new(name, args)))
     }
@@ -499,9 +493,41 @@ impl Parser {
         if !tb.exceed_end_of_head() && tb.current()? == MOD_NAME_SEPARATOR {
             tb.skip()?;
             let right = tb.advance()?;
-            Ok(Atom::AtomWithModName(AtomWithModName::new(&left, &right)))
+            if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
+                tb.skip()?;
+                let mut fields = vec![];
+                while !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
+                    tb.skip()?;
+                    fields.push(tb.advance()?.to_string());
+                }
+                Ok(Atom::FieldAccessWithMod(FieldAccessWithMod::new(&left, &right, fields)))
+            } else {
+                Ok(Atom::IdentifierWithMod(IdentifierWithMod::new(&left, &right)))
+            }
         } else {
-            Ok(Atom::AtomWithoutModName(AtomWithoutModName::new(&left)))
+            // 如果后面有 .，则解析为 FieldAccess
+            if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
+                tb.skip()?;
+                let mut fields = vec![];
+                while !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
+                    tb.skip()?;
+                    fields.push(tb.advance()?.to_string());
+                }
+                Ok(Atom::FieldAccess(FieldAccess::new(&left, fields)))
+            } else {
+                Ok(Atom::Identifier(Identifier::new(&left)))
+            }
+        }
+    }
+
+    pub fn identifier_or_identifier_with_mod(&self, tb: &mut TokenBlock) -> Result<IdentifierOrIdentifierWithMod, ParsingError> {
+        let left = tb.advance()?;
+        if !tb.exceed_end_of_head() && tb.current()? == MOD_NAME_SEPARATOR {
+            tb.skip()?;
+            let right = tb.advance()?;
+            Ok(IdentifierOrIdentifierWithMod::IdentifierWithMod(IdentifierWithMod::new(&left, &right)))
+        } else {
+            Ok(IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&left)))
         }
     }
 }

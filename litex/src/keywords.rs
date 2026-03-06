@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::OnceLock;
 
 pub const FACT_PREFIX: &str = "$";
-pub const DOT: &str = ".";
+pub const DOT_AKA_FIELD_ACCESS_SIGN: &str = ".";
 pub const MOD_NAME_SEPARATOR: &str = "::";
 pub const ADD: &str = "+";
 pub const SUB: &str = "-";
@@ -111,7 +111,7 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
     let symbols = [
         EQUIVALENT_SIGN, NOT_EQUAL, LESS_EQUAL, GREATER_EQUAL, RIGHT_ARROW,
-        FACT_PREFIX, DOT, MOD_NAME_SEPARATOR, ADD, SUB, MUL, DIV, MOD, POW,
+        FACT_PREFIX, DOT_AKA_FIELD_ACCESS_SIGN, MOD_NAME_SEPARATOR, ADD, SUB, MUL, DIV, MOD, POW,
         LEFT_BRACE, RIGHT_BRACE, COMMA, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE,
         INSTANTIATED_SET_TEMPLATE_OBJ_SIGNAL, EQUAL, LESS, GREATER,
         LEFT_BRACKET, RIGHT_BRACKET, DOUBLE_QUOTE, COLON,
