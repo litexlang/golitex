@@ -24,6 +24,7 @@ impl Parser {
         self.obj_hierarchy0(tb)
     }
 
+    /// 中缀 \ 最松散；往下依次为 +-、*/%、^、[]、主元
     fn obj_hierarchy0(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj_hierarchy1(tb)?;
         if tb.exceed_end_of_head() {
@@ -31,8 +32,8 @@ impl Parser {
         }
         match tb.current_token_empty_if_exceed_end_of_head() {
             INFIX_FN_NAME_SIGN => {
+                tb.skip()?; // 先吃掉 \，再读中缀函数名
                 let fn_name = self.atom(tb)?;
-                
                 let right = self.obj(tb)?;
 
                 if is_key_symbol_or_keyword(&fn_name.to_string()) {
@@ -44,7 +45,7 @@ impl Parser {
                         RANGE => Ok(Obj::Range(Range::new(left, right))),
                         CLOSED_RANGE => Ok(Obj::ClosedRange(ClosedRange::new(left, right))),
                         PROJ => Ok(Obj::Proj(Proj::new(left, right))),
-                        _ => Err(ParsingError::new(&format!("Invalid infix function name: {}", fn_name), tb.line_file_index)),
+                        _ => Err(ParsingError::new(&format!("{} does not support infix function syntax", fn_name), tb.line_file_index)),
                     };
                 }
 
@@ -58,71 +59,63 @@ impl Parser {
         }
     }
 
+    /// + - 优先级最低，左结合，可连续 2 + 3 - 4
     fn obj_hierarchy1(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        let left = self.obj_hierarchy2(tb)?;
-        if tb.exceed_end_of_head() {
-            return Ok(left);
-        }
-        match tb.current_token_empty_if_exceed_end_of_head() {
-            MUL => {
-                tb.skip()?;
-                let right = self.obj_hierarchy2(tb)?;
-                if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
-                    Ok(Obj::Mul(Mul::new(left, right, false)))
-                } else {
-                    Ok(Obj::Mul(Mul::new(left, right, true)))
-                }
-            },
-            DIV => {
-                tb.skip()?;
-                let right = self.obj_hierarchy2(tb)?;
-                if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
-                    Ok(Obj::Div(Div::new(left, right, false)))
-                } else {
-                    Ok(Obj::Div(Div::new(left, right, true)))
-                }
-            },
-            MOD => {
-                tb.skip()?;
-                let right = self.obj_hierarchy2(tb)?;
-                if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
-                    Ok(Obj::Mod(Mod::new(left, right, false)))
-                } else {
-                    Ok(Obj::Mod(Mod::new(left, right, true)))
-                }
-            },
-            _ => Ok(left),
+        let mut left = self.obj_hierarchy2(tb)?;
+        loop {
+            if tb.exceed_end_of_head() {
+                return Ok(left);
+            }
+            match tb.current_token_empty_if_exceed_end_of_head() {
+                ADD => {
+                    tb.skip()?;
+                    let right = self.obj_hierarchy2(tb)?;
+                    let is_arith = left.is_add_sub_mul_div_mod_pow() && right.is_add_sub_mul_div_mod_pow();
+                    left = Obj::Add(Add::new(left, right, is_arith));
+                },
+                SUB => {
+                    tb.skip()?;
+                    let right = self.obj_hierarchy2(tb)?;
+                    let is_arith = left.is_add_sub_mul_div_mod_pow() && right.is_add_sub_mul_div_mod_pow();
+                    left = Obj::Sub(Sub::new(left, right, is_arith));
+                },
+                _ => return Ok(left),
+            }
         }
     }
 
+    /// * / % 高于 + -，左结合
     fn obj_hierarchy2(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        let left = self.obj_hierarchy3(tb)?;
-        if tb.exceed_end_of_head() {
-            return Ok(left);
-        }
-        match tb.current_token_empty_if_exceed_end_of_head() {
-            ADD => {
-                tb.skip()?;
-                let right = self.obj_hierarchy3(tb)?;
-                if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
-                    Ok(Obj::Add(Add::new(left, right, false)))
-                } else {
-                    Ok(Obj::Add(Add::new(left, right, true)))
-                }
-            },
-            SUB => {
-                tb.skip()?;
-                let right = self.obj_hierarchy3(tb)?;
-                if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
-                    Ok(Obj::Sub(Sub::new(left, right, false)))
-                } else {
-                    Ok(Obj::Sub(Sub::new(left, right, true)))
-                }
-            },
-            _ => Ok(left),
+        let mut left = self.obj_hierarchy3(tb)?;
+        loop {
+            if tb.exceed_end_of_head() {
+                return Ok(left);
+            }
+            match tb.current_token_empty_if_exceed_end_of_head() {
+                MUL => {
+                    tb.skip()?;
+                    let right = self.obj_hierarchy3(tb)?;
+                    let is_arith = left.is_add_sub_mul_div_mod_pow() && right.is_add_sub_mul_div_mod_pow();
+                    left = Obj::Mul(Mul::new(left, right, is_arith));
+                },
+                DIV => {
+                    tb.skip()?;
+                    let right = self.obj_hierarchy3(tb)?;
+                    let is_arith = left.is_add_sub_mul_div_mod_pow() && right.is_add_sub_mul_div_mod_pow();
+                    left = Obj::Div(Div::new(left, right, is_arith));
+                },
+                MOD => {
+                    tb.skip()?;
+                    let right = self.obj_hierarchy3(tb)?;
+                    let is_arith = left.is_add_sub_mul_div_mod_pow() && right.is_add_sub_mul_div_mod_pow();
+                    left = Obj::Mod(Mod::new(left, right, is_arith));
+                },
+                _ => return Ok(left),
+            }
         }
     }
 
+    /// ^ 高于 * / %，右结合：2^3^2 = 2^(3^2)
     fn obj_hierarchy3(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj_hierarchy4(tb)?;
         if tb.exceed_end_of_head() {
@@ -131,7 +124,7 @@ impl Parser {
         match tb.current_token_empty_if_exceed_end_of_head() {
             POW => {
                 tb.skip()?;
-                let right = self.obj_hierarchy4(tb)?;
+                let right = self.obj_hierarchy3(tb)?; // 右结合：右侧可继续接 ^
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
                     Ok(Obj::Pow(Pow::new(left, right, false)))
                 } else {
@@ -142,6 +135,7 @@ impl Parser {
         }
     }
 
+    /// [] 下标，优先级高于 ^
     fn obj_hierarchy4(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj_hierarchy5(tb)?;
         if tb.exceed_end_of_head() {
@@ -158,6 +152,7 @@ impl Parser {
         }
     }
 
+    /// 主元：{ }、@、fn、数字、括号、关键字、atom
     fn obj_hierarchy5(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         match tb.current_token_empty_if_exceed_end_of_head() {
             LEFT_CURLY_BRACE => {
