@@ -40,7 +40,7 @@ pub fn run_source_code(source_code: &str) -> String {
             Ok(s) => s,
             Err(e) => return format!("parse error: {}", e),
         };
-        let result = match executor.stmt(stmt) {
+        let result = match executor.stmt(&stmt) {
             Ok(r) => r,
             Err(e) => return format!("exec error: {}", e),
         };
