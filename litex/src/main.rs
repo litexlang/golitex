@@ -170,6 +170,7 @@ fn main() {
     try_parse_fact();
     try_parse_statements();
     try_executor();
+    try_pipeline();
 }
 
 fn try_atom_fn_obj() {
@@ -1253,4 +1254,10 @@ fn try_executor() {
     let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
     let executor = Executor::new(&mut runtime_context);
     println!("{}", executor);
+}
+
+fn try_pipeline() {
+    let s = "a+b=0";
+    let result = pipeline::run_source_code(s);
+    println!("{}", result);
 }
