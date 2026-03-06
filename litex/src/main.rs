@@ -644,13 +644,13 @@ fn try_errors() {
     let err: StmtError = StmtError::StoreFactError(StoreFactError::new("demo"));
     println!("{}", err);
 
-    let err: StmtError = StmtError::ParseBlockError(ParseBlockError::ExpectedIndent { line: 1 });
+    let err: StmtError = StmtError::ParseBlockError(ParseBlockError::ExpectedIndent(1, 0));
     println!("{}", err);
 
     let err: StmtError = StmtError::ParsingError(ParsingError::new("demo", (1, 0)));
     println!("{}", err);
 
-    let err: StmtError = StmtError::ExecError(ExecError::new("demo"));
+    let err: StmtError = StmtError::ExecError(ExecError::new("demo", Some((1, 0))));
     println!("{}", err);
 }
 
@@ -729,7 +729,7 @@ fn try_stmt_result() {
     println!("{}", result);
 
     let err = StmtError::ArithmeticError(ArithmeticError::new("demo"));
-    let result = StmtResult::StmtError(err, None);
+    let result = StmtResult::StmtError(err);
     println!("{}", result);
 
 

@@ -12,6 +12,19 @@ pub enum StmtError {
 
 impl std::error::Error for StmtError {}
 
+impl StmtError {
+    pub fn line_file(&self) -> Option<(usize, usize)> {
+        match self {
+            StmtError::ArithmeticError(_) => None,
+            StmtError::NewAtomicFactError(_) => None,
+            StmtError::StoreFactError(_) => None,
+            StmtError::ParseBlockError(e) => e.line_file(),
+            StmtError::ParsingError(e) => Some(e.line_file_index),
+            StmtError::ExecError(e) => e.line_file_index,
+        }
+    }
+}
+
 
 impl fmt::Display for StmtError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -86,10 +99,10 @@ impl StoreFactError {
 
 #[derive(Debug)]
 pub enum ParseBlockError {
-    ExpectedIndent { line: usize },
-    UnexpectedIndent { line: usize },
-    InconsistentIndent { line: usize },
-    MissingBody { line: usize },
+    ExpectedIndent(usize, usize),
+    UnexpectedIndent(usize, usize),
+    InconsistentIndent(usize, usize),
+    MissingBody(usize, usize),
 }
 
 impl std::error::Error for ParseBlockError {}
@@ -97,18 +110,29 @@ impl std::error::Error for ParseBlockError {}
 impl fmt::Display for ParseBlockError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ParseBlockError::ExpectedIndent { line } => {
-                write!(f, "line {}: expected indent", line)
+            ParseBlockError::ExpectedIndent(_, _) => {
+                write!(f, "expected indent")
             }
-            ParseBlockError::UnexpectedIndent { line } => {
-                write!(f, "line {}: unexpected indent", line)
+            ParseBlockError::UnexpectedIndent(_, _) => {
+                write!(f, "unexpected indent")
             }
-            ParseBlockError::InconsistentIndent { line } => {
-                write!(f, "line {}: inconsistent indent", line)
+            ParseBlockError::InconsistentIndent(_, _) => {
+                write!(f, "inconsistent indent")
             }
-            ParseBlockError::MissingBody { line } => {
-                write!(f, "line {}: block header missing body", line)
+            ParseBlockError::MissingBody(_, _) => {
+                write!(f, "block header missing body")
             }
+        }
+    }
+}
+
+impl ParseBlockError {
+    pub fn line_file(&self) -> Option<(usize, usize)> {
+        match self {
+            ParseBlockError::ExpectedIndent(line, file) => Some((*line, *file)),
+            ParseBlockError::UnexpectedIndent(line, file) => Some((*line, *file)),
+            ParseBlockError::InconsistentIndent(line, file) => Some((*line, *file)),
+            ParseBlockError::MissingBody(line, file) => Some((*line, *file)),
         }
     }
 }
@@ -138,6 +162,7 @@ impl ParsingError {
 #[derive(Debug)]
 pub struct ExecError {
     pub msg: String,
+    pub line_file_index: Option<(usize, usize)>,
 }
 
 impl std::error::Error for ExecError {}
@@ -149,7 +174,7 @@ impl fmt::Display for ExecError {
 }
 
 impl ExecError {
-    pub fn new(msg: &str) -> Self {
-        ExecError { msg: msg.to_string() }
+    pub fn new(msg: &str, line_file_index: Option<(usize, usize)>) -> Self {
+        ExecError { msg: msg.to_string(), line_file_index }
     }
 }
