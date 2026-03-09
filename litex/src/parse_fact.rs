@@ -1,7 +1,10 @@
 use crate::and_fact_or_specific_fact::AndFactOrSpecFact;
 use crate::atom::IdentifierOrIdentifierWithMod;
 use crate::atomic_fact::AtomicFact;
-use crate::exist_fact::{ExistFact, TrueExistFact, NotExistFact};
+use crate::exist_fact::{
+    AndAtomicFact, ChainAtomicFact, ExistFact, FactInOrAtomicFact, FactInsideExistFact,
+    NotExistFact, OrAtomicFact, TrueExistFact,
+};
 use crate::parameter_type_and_property::ParamDefWithParamType;
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::forall_fact::ForallFact;
@@ -222,24 +225,97 @@ impl Parser {
         }
         tb.skip_token(ST)?;
 
-        let facts = if tb.current()? == LEFT_CURLY_BRACE {
-            tb.skip_token(LEFT_CURLY_BRACE)?;
-            let mut facts = vec![self.or_and_spec_fact(tb)?];
-            while tb.current()? == COMMA {
-                tb.skip_token(COMMA)?;
-                facts.push(self.or_and_spec_fact(tb)?);
-            }
-            tb.skip_token(RIGHT_CURLY_BRACE)?;
-            facts
-        } else {
-            vec![self.or_and_spec_fact(tb)?]
-        };
+        let facts = self.parse_facts_inside_exist_fact(tb)?;
 
         let line = Some(tb.line_file_index);
         if is_true {
             Ok(ExistFact::TrueExistFact(TrueExistFact::new(param_def, facts, line)))
         } else {
             Ok(ExistFact::NotExistFact(NotExistFact::new(param_def, facts, line)))
+        }
+    }
+
+    /// 将解析得到的 OrFactOrAndFactOrSpecFact 转为 FactInsideExistFact，并校验 exist 体内只允许 atomic / and-of-atomics / chain / or-of-these。
+    fn try_convert_to_fact_inside_exist(
+        &self,
+        o: OrFactOrAndFactOrSpecFact,
+        line_file_index: (usize, usize),
+    ) -> Result<FactInsideExistFact, ParsingError> {
+        match o {
+            OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(a)) => {
+                Ok(FactInsideExistFact::AtomicFact(a))
+            }
+            OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::ExistFact(_)) => Err(ParsingError::new(
+                "exist fact is not allowed inside exist fact body",
+                line_file_index,
+            )),
+            OrFactOrAndFactOrSpecFact::AndFact(AndFact::AndSpecFacts(AndSpecFacts { facts, line_file_index: lf })) => {
+                let mut atomics = vec![];
+                for s in facts {
+                    match s {
+                        SpecFact::AtomicFact(a) => atomics.push(a),
+                        SpecFact::ExistFact(_) => {
+                            return Err(ParsingError::new(
+                                "exist fact is not allowed inside exist fact body",
+                                line_file_index,
+                            ))
+                        }
+                    }
+                }
+                Ok(FactInsideExistFact::AndAtomicFact(AndAtomicFact::new(atomics, lf)))
+            }
+            OrFactOrAndFactOrSpecFact::AndFact(AndFact::ChainFact(ChainFact {
+                objs,
+                prop_names,
+                line_file_index: lf,
+            })) => Ok(FactInsideExistFact::ChainAtomicFact(ChainAtomicFact::new(
+                objs, prop_names, lf,
+            ))),
+            OrFactOrAndFactOrSpecFact::OrFact(OrFact { facts: or_facts, line_file_index: lf }) => {
+                let mut inner = vec![];
+                for and_or_spec in or_facts {
+                    inner.push(self.try_convert_to_fact_in_or_atomic(and_or_spec, line_file_index)?);
+                }
+                Ok(FactInsideExistFact::OrAtomicFact(OrAtomicFact::new(inner, lf)))
+            }
+        }
+    }
+
+    fn try_convert_to_fact_in_or_atomic(
+        &self,
+        a: AndFactOrSpecFact,
+        line_file_index: (usize, usize),
+    ) -> Result<FactInOrAtomicFact, ParsingError> {
+        match a {
+            AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(atom)) => {
+                Ok(FactInOrAtomicFact::AtomicFact(atom))
+            }
+            AndFactOrSpecFact::SpecFact(SpecFact::ExistFact(_)) => Err(ParsingError::new(
+                "exist fact is not allowed inside exist fact body",
+                line_file_index,
+            )),
+            AndFactOrSpecFact::AndFact(AndFact::AndSpecFacts(AndSpecFacts { facts, line_file_index: lf })) => {
+                let mut atomics = vec![];
+                for s in facts {
+                    match s {
+                        SpecFact::AtomicFact(a) => atomics.push(a),
+                        SpecFact::ExistFact(_) => {
+                            return Err(ParsingError::new(
+                                "exist fact is not allowed inside exist fact body",
+                                line_file_index,
+                            ))
+                        }
+                    }
+                }
+                Ok(FactInOrAtomicFact::AndAtomicFact(AndAtomicFact::new(atomics, lf)))
+            }
+            AndFactOrSpecFact::AndFact(AndFact::ChainFact(ChainFact {
+                objs,
+                prop_names,
+                line_file_index: lf,
+            })) => Ok(FactInOrAtomicFact::ChainAtomicFact(ChainAtomicFact::new(
+                objs, prop_names, lf,
+            ))),
         }
     }
 
@@ -250,5 +326,25 @@ impl Parser {
             facts.push(self.fact(block)?);
         }
         Ok(facts)
+    }
+
+    /// 先按普通 or_and_spec_fact 解析得到多个 OrFactOrAndFactOrSpecFact，再校验并转为 FactInsideExistFact（exist 体内只允许 atomic / and-of-atomics / chain / or）。
+    pub fn parse_facts_inside_exist_fact(&self, tb: &mut TokenBlock) -> Result<Vec<FactInsideExistFact>, ParsingError> {
+        let raw = if tb.current()? == LEFT_CURLY_BRACE {
+            tb.skip_token(LEFT_CURLY_BRACE)?;
+            let mut list = vec![self.or_and_spec_fact(tb)?];
+            while tb.current()? == COMMA {
+                tb.skip_token(COMMA)?;
+                list.push(self.or_and_spec_fact(tb)?);
+            }
+            tb.skip_token(RIGHT_CURLY_BRACE)?;
+            list
+        } else {
+            vec![self.or_and_spec_fact(tb)?]
+        };
+        let line_file = tb.line_file_index;
+        raw.into_iter()
+            .map(|o| self.try_convert_to_fact_inside_exist(o, line_file))
+            .collect()
     }
 }
