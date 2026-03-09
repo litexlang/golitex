@@ -1,6 +1,5 @@
 use std::fmt;
 use crate::keywords::MOD_NAME_SEPARATOR;
-use crate::atom::{IdentifierOrIdentifierWithMod, Atom};
 use crate::module_manager::ModuleManager;
 use crate::environment::Environment;
 use std::collections::HashMap;

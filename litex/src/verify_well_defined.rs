@@ -17,7 +17,7 @@ impl<'a> Verifier<'a> {
         }
     }
 
-    pub fn verify_atomic_fact_well_defined(&self, atomic_fact: &AtomicFact) -> Result<bool, WellDefinedError> {
+    fn verify_atomic_fact_well_defined(&self, atomic_fact: &AtomicFact) -> Result<bool, WellDefinedError> {
         // 1. predicate 定义过了：先看 name 是不是 builtin 之一或从环境里拿到的定义
         let name_string = atomic_fact.key();
         if is_builtin_predicate(&name_string) {
@@ -77,7 +77,7 @@ impl<'a> Verifier<'a> {
 
 // well-defined check for obj
 impl<'a> Verifier<'a> {
-    pub fn verify_obj_well_defined(&self, _obj: &Obj) -> Result<bool, WellDefinedError> {
+    fn verify_obj_well_defined(&self, _obj: &Obj) -> Result<bool, WellDefinedError> {
         match _obj {
             Obj::Identifier(identifier) => self.verify_identifier_well_defined(identifier),
             Obj::FnObj(_obj) => self.verify_fn_obj_well_defined(_obj),
@@ -85,11 +85,13 @@ impl<'a> Verifier<'a> {
         }
     }
 
-    pub fn verify_identifier_well_defined(&self, identifier: &Identifier) -> Result<bool, WellDefinedError> {
+    fn verify_identifier_well_defined(&self, identifier: &Identifier) -> Result<bool, WellDefinedError> {
+        let _ = identifier;
         Err(WellDefinedError::new("verify_identifier_well_defined: NOT IMPLEMENTED YET", vec![], None))
     }
 
-    pub fn verify_fn_obj_well_defined(&self, fn_obj: &FnObj) -> Result<bool, WellDefinedError> {
+    fn verify_fn_obj_well_defined(&self, fn_obj: &FnObj) -> Result<bool, WellDefinedError> {
+        let _ = fn_obj;
         Err(WellDefinedError::new("verify_fn_obj_well_defined: NOT IMPLEMENTED YET", vec![], None))
     }
 }

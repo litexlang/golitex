@@ -1,3 +1,4 @@
+use crate::helper::is_number_string_literally_integer;
 use crate::keywords::{
     ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_NAME_SEPARATOR, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
 };
@@ -61,14 +62,16 @@ impl Parser {
                 ADD => {
                     tb.skip()?;
                     let right = self.obj_hierarchy2(tb)?;
-                    let is_arith = left.is_add_sub_mul_div_mod_pow() && right.is_add_sub_mul_div_mod_pow();
-                    left = Obj::Add(Add::new(left, right, is_arith));
+
+                    let can_be_calculated = left.can_be_calculated() && right.can_be_calculated();
+                    
+                    left = Obj::Add(Add::new(left, right, can_be_calculated));
                 },
                 SUB => {
                     tb.skip()?;
                     let right = self.obj_hierarchy2(tb)?;
-                    let is_arith = left.is_add_sub_mul_div_mod_pow() && right.is_add_sub_mul_div_mod_pow();
-                    left = Obj::Sub(Sub::new(left, right, is_arith));
+                    let can_be_calculated = left.can_be_calculated() && right.can_be_calculated();
+                    left = Obj::Sub(Sub::new(left, right, can_be_calculated));
                 },
                 _ => return Ok(left),
             }
@@ -86,20 +89,32 @@ impl Parser {
                 MUL => {
                     tb.skip()?;
                     let right = self.obj_hierarchy3(tb)?;
-                    let is_arith = left.is_add_sub_mul_div_mod_pow() && right.is_add_sub_mul_div_mod_pow();
-                    left = Obj::Mul(Mul::new(left, right, is_arith));
+                    let can_be_calculated = left.can_be_calculated() && right.can_be_calculated();
+                    left = Obj::Mul(Mul::new(left, right, can_be_calculated));
                 },
                 DIV => {
                     tb.skip()?;
                     let right = self.obj_hierarchy3(tb)?;
-                    let is_arith = left.is_add_sub_mul_div_mod_pow() && right.is_add_sub_mul_div_mod_pow();
-                    left = Obj::Div(Div::new(left, right, is_arith));
+                    left = Obj::Div(Div::new(left, right));
                 },
                 MOD => {
                     tb.skip()?;
                     let right = self.obj_hierarchy3(tb)?;
-                    let is_arith = left.is_add_sub_mul_div_mod_pow() && right.is_add_sub_mul_div_mod_pow();
-                    left = Obj::Mod(Mod::new(left, right, is_arith));
+
+                    let mut can_be_calculated = true;
+                    if !left.can_be_calculated() {
+                        can_be_calculated = false;
+                    }
+                    if !right.can_be_calculated() {
+                        can_be_calculated = false;
+                    } else {
+                        let calculated_right = right.calculate_to_string();
+                        if is_number_string_literally_integer(&calculated_right) {
+                            can_be_calculated = false;
+                        }
+                    }
+                    
+                    left = Obj::Mod(Mod::new(left, right, can_be_calculated));
                 },
                 _ => return Ok(left),
             }

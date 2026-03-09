@@ -142,42 +142,41 @@ pub struct Number {
 pub struct Add {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub is_arithmetic_expr: bool,
+    pub can_be_calculated: bool,
 }
 
 #[derive(Clone)]
 pub struct Sub {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub is_arithmetic_expr: bool,
+    pub can_be_calculated: bool,
 }
 
 #[derive(Clone)]
 pub struct Mul {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub is_arithmetic_expr: bool,
+    pub can_be_calculated: bool,
 }
 
 #[derive(Clone)]
 pub struct Div {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub is_arithmetic_expr: bool,
 }
 
 #[derive(Clone)]
 pub struct Mod {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub is_arithmetic_expr: bool,
+    pub can_be_calculated: bool,
 }
 
 #[derive(Clone)]
 pub struct Pow {
     pub base: Box<Obj>,
     pub exponent: Box<Obj>,
-    pub is_arithmetic_expr: bool,
+    pub can_be_calculated: bool,
 }
 
 #[derive(Clone)]
@@ -337,7 +336,7 @@ impl Add {
         Add {
             left: Box::new(left),
             right: Box::new(right),
-            is_arithmetic_expr,
+            can_be_calculated: is_arithmetic_expr,
         }
     }
 }
@@ -347,7 +346,7 @@ impl Sub {
         Sub {
             left: Box::new(left),
             right: Box::new(right),
-            is_arithmetic_expr,
+            can_be_calculated: is_arithmetic_expr,
         }
     }
 }
@@ -357,17 +356,16 @@ impl Mul {
         Mul {
             left: Box::new(left),
             right: Box::new(right),
-            is_arithmetic_expr,
+            can_be_calculated: is_arithmetic_expr,
         }
     }
 }
 
 impl Div {
-    pub fn new(left: Obj, right: Obj, is_arithmetic_expr: bool) -> Self {
+    pub fn new(left: Obj, right: Obj) -> Self {
         Div {
             left: Box::new(left),
             right: Box::new(right),
-            is_arithmetic_expr,
         }
     }
 }
@@ -377,7 +375,7 @@ impl Mod {
         Mod {
             left: Box::new(left),
             right: Box::new(right),
-            is_arithmetic_expr,
+            can_be_calculated: is_arithmetic_expr,
         }
     }
 }
@@ -387,7 +385,7 @@ impl Pow {
         Pow {
             base: Box::new(base),
             exponent: Box::new(exponent),
-            is_arithmetic_expr,
+            can_be_calculated: is_arithmetic_expr,
         }
     }
 }

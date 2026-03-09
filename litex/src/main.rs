@@ -8,7 +8,7 @@ mod tokenizer;
 mod token_block;
 use token_block::TokenBlock;
 mod errors;
-use errors::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError, ExecError};
+use errors::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError, ExecError, WellDefinedError};
 use errors::ParsingError;
 mod helper;
 mod obj;
@@ -112,8 +112,6 @@ mod exec_know_stmt;
 mod parser_tests;
 
 fn main() {
-
-
     try_atom_fn_obj();
     try_arithmetic();
     try_set_operations();
@@ -177,6 +175,7 @@ fn main() {
     try_executor();
     try_pipeline();
     try_verifier();
+    try_calculate();
 }
 
 fn try_atom_fn_obj() {
@@ -205,7 +204,7 @@ fn try_arithmetic() {
     let one_add_two_result = Obj::Add(Add::new(number_one, number_two, true));
     let one_sub_two_result = Obj::Sub(Sub::new(Obj::Number(Number::new("1")), Obj::Number(Number::new("2")), true));
     let one_mul_two_result = Obj::Mul(Mul::new(Obj::Number(Number::new("1")), Obj::Number(Number::new("2")), true));
-    let one_div_two_result = Obj::Div(Div::new(Obj::Number(Number::new("1")), Obj::Number(Number::new("2")), true));
+    let one_div_two_result = Obj::Div(Div::new(Obj::Number(Number::new("1")), Obj::Number(Number::new("2"))));
     let one_mod_two_result = Obj::Mod(Mod::new(Obj::Number(Number::new("1")), Obj::Number(Number::new("2")), true));
     let one_pow_two_result = Obj::Pow(Pow::new(Obj::Number(Number::new("1")), Obj::Number(Number::new("2")), true));
     println!("{}, {}, {}, {}, {}, {}",  one_add_two_result, one_sub_two_result, one_mul_two_result, one_div_two_result, one_mod_two_result, one_pow_two_result);
@@ -657,6 +656,9 @@ fn try_errors() {
     println!("{}", err);
 
     let err: StmtError = StmtError::ExecError(ExecError::new("demo", vec![], Some((1, 0))));
+    println!("{}", err);
+
+    let err: StmtError = StmtError::WellDefinedError(WellDefinedError::new("demo", vec![StmtError::ArithmeticError(ArithmeticError::new("demo"))], Some((1, 0))));
     println!("{}", err);
 }
 
@@ -1291,6 +1293,26 @@ fn try_verifier() {
     let environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
     let builtin_environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
     let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
-    let verifier = Verifier::new(&mut runtime_context);
+    let mut verifier = Verifier::new(&mut runtime_context);
     println!("{}", verifier.line_file_index_string(1, 0));
+    try_obj_well_defined(&mut verifier);
+}
+
+fn try_calculate() {
+    let one = Obj::Number(Number::new("1"));
+    let two = Obj::Number(Number::new("2"));
+    let one_add_two = Obj::Add(Add::new(one, two, true));
+    println!("{}", one_add_two.calculate_to_string());
+}
+
+fn try_obj_well_defined(verifier: &mut Verifier) {
+    let one = Obj::Number(Number::new("1"));
+    let two = Obj::Number(Number::new("2"));
+    let one_add_two = Obj::Add(Add::new(one, two, true));
+    let atomic_fact = AtomicFact::EqualFact(EqualFact::new(one_add_two, Obj::Number(Number::new("3")), Some((1, 0))));
+    println!("{}", atomic_fact);
+    let obj_well_defined = verifier.verify_fact_well_defined(&Fact::AtomicFact(atomic_fact));
+    if obj_well_defined.is_err() {
+        println!("ERROR:{}", obj_well_defined.err().unwrap());
+    }
 }

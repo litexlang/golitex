@@ -1,5 +1,7 @@
 use std::fmt;
 
+use crate::helper::vec_to_string_with_sep;
+
 #[derive(Debug)]
 pub enum StmtError {
     ArithmeticError(ArithmeticError),
@@ -199,7 +201,7 @@ impl std::error::Error for WellDefinedError {}
 
 impl fmt::Display for WellDefinedError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}", "WellDefinedError:".to_string(), self.msg)
+        write!(f, "{}\n{}\n{}", "WellDefinedError:".to_string(), self.msg, vec_to_string_with_sep(&self.previous_errors, "\n"))
     }
 }
 
