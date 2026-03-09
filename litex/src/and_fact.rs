@@ -2,7 +2,7 @@ use crate::specific_fact::SpecFact;
 use crate::atomic_fact::AtomicFact;
 use crate::errors::NewAtomicFactError;
 use std::fmt;
-use crate::keywords::{AND, FACT_PREFIX};
+use crate::keywords::{AND, FACT_PREFIX, is_comparison_str};
 use crate::obj::Obj;
 use crate::atom::IdentifierOrIdentifierWithMod;
 use crate::helper::vec_to_string_with_sep;
@@ -51,8 +51,13 @@ impl fmt::Display for ChainFact {
         result.push_str(&self.objs[0].to_string());
         
         for (i, x) in self.objs[1..].iter().enumerate() {
-            result.push_str(&format!(" {}{}", FACT_PREFIX, self.prop_names[i]));
-            result.push_str(&format!(" {} {}", AND, x.to_string()));
+            if is_comparison_str(&self.prop_names[i].to_string()) {
+                result.push_str(&format!(" {} {}", self.prop_names[i], x.to_string()));
+            } else {
+                result.push_str(&format!(" {}{} {}", FACT_PREFIX, self.prop_names[i], x.to_string()));
+            }
+            
+            result.push_str(&format!(" {}", x.to_string()));
         }
         write!(f, "{}", result)
     }
