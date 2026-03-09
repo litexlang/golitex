@@ -1,11 +1,11 @@
 use super::specific_fact::SpecFact;
 use super::atomic_fact::AtomicFact;
-use crate::errors::NewAtomicFactError;
+use crate::error::NewAtomicFactError;
 use std::fmt;
-use crate::keywords::{AND, FACT_PREFIX, is_comparison_str};
+use crate::common::keywords::{AND, FACT_PREFIX, is_comparison_str};
 use crate::obj::Obj;
 use crate::obj::IdentifierOrIdentifierWithMod;
-use crate::helper::vec_to_string_with_sep;
+use crate::common::helper::vec_to_string_with_sep;
 
 #[derive(Clone)]
 pub enum AndFact {

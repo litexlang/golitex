@@ -1,6 +1,6 @@
 use crate::fact::Fact;
 use crate::result::StmtResult;
-use crate::errors::VerifyFactError;
+use crate::error::VerifyFactError;
 use crate::execute::Executor;
 
 impl<'a> Executor<'a> {

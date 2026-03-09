@@ -1,7 +1,7 @@
 use crate::fact::AndFactOrSpecFact;
 use crate::obj::Obj;
-use crate::helper::{add_four_spaces_at_beginning, vec_to_string_with_sep, to_string_and_add_four_spaces_at_beginning_of_each_line, braced_vec_to_string};
-use crate::keywords::{RETURN, IF, COLON, ALGO};
+use crate::common::helper::{add_four_spaces_at_beginning, vec_to_string_with_sep, to_string_and_add_four_spaces_at_beginning_of_each_line, braced_vec_to_string};
+use crate::common::keywords::{RETURN, IF, COLON, ALGO};
 use std::fmt;
 
 #[derive(Clone)]

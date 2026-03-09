@@ -1,7 +1,7 @@
 use crate::fact::{AtomicFact, EqualFact};
 use crate::execute::Executor;
 use crate::result::StmtUnknown;
-use crate::errors::VerifyFactError;
+use crate::error::VerifyFactError;
 use crate::result::StmtResult;
 use crate::result::FactVerifiedByBuiltinRules;
 

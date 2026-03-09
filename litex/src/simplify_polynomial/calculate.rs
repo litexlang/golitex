@@ -403,7 +403,7 @@ fn sub_digits(a: &[u8], b: &[u8]) -> Vec<u8> {
 }
 
 /// 化简结果：多个负号合并（---1.1 -> -1.1）、0.0或者-0 写成 0、小数尾零去掉（1.000 -> 1）
-fn normalize_decimal_result(s: &str) -> String {
+pub fn normalize_decimal_result(s: &str) -> String {
     let s = s.trim();
     if s.is_empty() {
         return "0".to_string();

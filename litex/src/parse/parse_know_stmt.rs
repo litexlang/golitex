@@ -1,7 +1,7 @@
-use crate::errors::ParsingError;
+use crate::error::ParsingError;
 use crate::fact::Fact;
 use crate::stmt::know_stmt::KnowStmt;
-use crate::keywords::{COLON, COMMA, FORALL, KNOW};
+use crate::common::keywords::{COLON, COMMA, FORALL, KNOW};
 use super::Parser;
 use crate::stmt::Stmt;
 use super::TokenBlock;

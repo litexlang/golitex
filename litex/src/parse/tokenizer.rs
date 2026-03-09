@@ -1,4 +1,4 @@
-use crate::keywords::key_symbols_sorted_by_len_desc;
+use crate::common::keywords::key_symbols_sorted_by_len_desc;
 
 pub fn tokenize_line(line: &str) -> Vec<String> {
     let symbols = key_symbols_sorted_by_len_desc();

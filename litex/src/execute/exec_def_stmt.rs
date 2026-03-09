@@ -1,4 +1,4 @@
-use crate::errors::ExecError;
+use crate::error::ExecError;
 use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStmt, DefStructStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::result::StmtResult;
@@ -24,7 +24,7 @@ impl<'a> Executor<'a> {
     pub fn def_let_stmt(&mut self, def_let_stmt: &DefLetStmt) -> Result<StmtResult, ExecError> {
         self.validate_name_and_store_atom_name(&def_let_stmt.param_def, def_let_stmt.line_file_index)?;
         for fact in def_let_stmt.facts.iter() {
-            self.validate_and_store_fact(fact)?;
+            self.store_fact(fact)?;
         }
         Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_let_stmt.to_string(), def_let_stmt.line_file_index)))
     }

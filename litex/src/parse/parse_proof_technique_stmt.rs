@@ -1,7 +1,7 @@
 use crate::fact::AndFactOrSpecFact;
-use crate::errors::ParsingError;
+use crate::error::ParsingError;
 use crate::fact::Fact;
-use crate::keywords::{
+use crate::common::keywords::{
     CASE, CASES, COLON, COMMA, CONTRA, ENUM, EQUAL, EQUAL_SET, FOR, FROM, IMPOSSIBLE, INDUC, PROVE,
     RIGHT_ARROW, VIEW_FN_AS_SET,
 };

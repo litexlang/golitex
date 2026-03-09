@@ -1,5 +1,5 @@
-use crate::helper::is_number_string_literally_integer;
-use crate::keywords::{
+use crate::common::helper::is_number_string_literally_integer;
+use crate::common::keywords::{
     ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_NAME_SEPARATOR, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
 };
 use super::Parser;
@@ -11,7 +11,7 @@ use crate::obj::{
     Cart, CartDim, Proj, Count, Range, ClosedRange, Val,
 };
 use crate::obj::{Atom, Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod, FieldAccess, FieldAccessWithMod};
-use crate::errors::ParsingError;
+use crate::error::ParsingError;
 use crate::stmt::parameter_type_and_property::ParamDefWithParamSet;
 
 impl Parser {

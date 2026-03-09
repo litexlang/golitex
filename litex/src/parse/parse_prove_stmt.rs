@@ -1,9 +1,9 @@
 use super::Parser;
 use super::TokenBlock;
-use crate::errors::ParsingError;
+use crate::error::ParsingError;
 use crate::stmt::Stmt;
 use crate::stmt::prove_stmt::ProveStmt;
-use crate::keywords::{PROVE, COLON};
+use crate::common::keywords::{PROVE, COLON};
 
 impl Parser {
     pub fn prove_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
