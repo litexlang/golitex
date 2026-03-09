@@ -1,28 +1,69 @@
 use crate::obj::Obj;
 
-/// 解析数字串为 (整数部分数字, 小数部分数字)，允许 "123.45"、"123"、".5"、"0.5"
-fn parse_decimal_parts(s: &str) -> (Vec<u8>, Vec<u8>) {
-    let s = s.trim();
-    let (int_str, frac_str) = match s.find('.') {
-        Some(i) => (&s[..i], &s[i + 1..]),
-        None => (s, ""),
-    };
-    let int_digits: Vec<u8> = if int_str.is_empty() || int_str == "-" {
-        vec![0]
-    } else {
-        int_str
-            .chars()
-            .filter(|c| c.is_ascii_digit())
-            .map(|c| c as u8 - b'0')
-            .collect()
-    };
-    let frac_digits: Vec<u8> = frac_str
-        .chars()
-        .filter(|c| c.is_ascii_digit())
-        .map(|c| c as u8 - b'0')
-        .collect();
-    let int_digits = if int_digits.is_empty() { vec![0] } else { int_digits };
-    (int_digits, frac_digits)
+impl Obj {
+    pub fn can_be_calculated(&self) -> bool {
+        match self {
+            Obj::Number(_) => true,
+            Obj::Add(add) => {
+                return add.can_be_calculated
+            },
+            Obj::Sub(sub) => {
+                return sub.can_be_calculated;
+            },
+            Obj::Mul(mul) => {
+                return mul.can_be_calculated;
+            },
+            Obj::Mod(mod_obj) => {
+                return mod_obj.can_be_calculated;
+            },
+            Obj::Pow(pow_obj) => {
+                return pow_obj.can_be_calculated;
+            },
+            _ => false,
+        }
+    }
+
+    pub fn two_objs_can_be_calculated_and_equal_by_calculation(&self, other: &Obj) -> bool {
+        if !self.can_be_calculated() || !other.can_be_calculated() {
+            return false;
+        }
+        self.calculate_to_string() == other.calculate_to_string()
+    }
+}
+
+impl Obj {
+    /// 将算术表达式计算出字符串结果；非算术表达式会 panic
+    pub fn calculate_to_string(&self) -> String {
+        match self {
+            Obj::Number(n) => n.value.clone(),
+            Obj::Add(add) => {
+                let l = add.left.calculate_to_string();
+                let r = add.right.calculate_to_string();
+                add_decimal_str(&l, &r)
+            }
+            Obj::Sub(sub) => {
+                let l = sub.left.calculate_to_string();
+                let r = sub.right.calculate_to_string();
+                sub_decimal_str(&l, &r)
+            }
+            Obj::Mul(mul) => {
+                let l = mul.left.calculate_to_string();
+                let r = mul.right.calculate_to_string();
+                mul_decimal_str(&l, &r)
+            }
+            Obj::Mod(mod_obj) => {
+                let l = mod_obj.left.calculate_to_string();
+                let r = mod_obj.right.calculate_to_string();
+                mod_decimal_str(&l, &r)
+            }
+            Obj::Pow(pow_obj) => {
+                let base = pow_obj.base.calculate_to_string();
+                let exp = pow_obj.exponent.calculate_to_string();
+                pow_decimal_str(&base, &exp)
+            }
+            _ => panic!("非算术表达式，无法 calculate_to_string"),
+        }
+    }
 }
 
 /// 竖式加法：两个表示非负数的数字串（可含小数点），返回和的字符串
@@ -221,6 +262,68 @@ fn mul_decimal_str(a: &str, b: &str) -> String {
     }
 }
 
+/// 竖式取余：a mod b，返回余数字符串。约定：b 仅为非零纯整数（字符串），a 取整数部分参与运算。
+fn mod_decimal_str(a: &str, b: &str) -> String {
+    let (int_a, _) = parse_decimal_parts(a);
+    let (int_b, _) = parse_decimal_parts(b);
+    let a_digits = trim_leading_zeros(&int_a);
+    let b_digits = trim_leading_zeros(&int_b);
+    if a_digits.is_empty() {
+        return "0".to_string();
+    }
+    if b_digits.is_empty() || (b_digits.len() == 1 && b_digits[0] == 0) {
+        return "0".to_string();
+    }
+    if compare_digits(&a_digits, &b_digits) == std::cmp::Ordering::Less {
+        return digits_to_string(&a_digits);
+    }
+    let mut current: Vec<u8> = vec![];
+    for &da in &a_digits {
+        current.push(da);
+        current = trim_leading_zeros(&current);
+        let mut d = 9u8;
+        loop {
+            let product = mul_digit(&b_digits, d);
+            if compare_digits(&current, &product) != std::cmp::Ordering::Less {
+                current = sub_digits(&current, &product);
+                break;
+            }
+            if d == 0 {
+                break;
+            }
+            d -= 1;
+        }
+    }
+    digits_to_string(&current)
+}
+
+/// 仅支持非负整数指数：base^exp，exp 必须为整数（如 "3" 或 "0"），返回字符串；否则 panic
+fn pow_decimal_str(base: &str, exp: &str) -> String {
+    let (exp_int, exp_frac) = parse_decimal_parts(exp);
+    if exp_frac.iter().any(|&d| d != 0) {
+        panic!("幂运算仅支持整数指数");
+    }
+    let mut n = 0usize;
+    for &d in &exp_int {
+        n = n.saturating_mul(10).saturating_add(d as usize);
+    }
+    if n == 0 {
+        return "1".to_string();
+    }
+    let mut acc = "1".to_string();
+    let mut b = base.to_string();
+    let mut e = n;
+    while e > 0 {
+        if e % 2 == 1 {
+            acc = mul_decimal_str(&acc, &b);
+        }
+        b = mul_decimal_str(&b, &b);
+        e /= 2;
+    }
+    acc
+}
+
+
 fn trim_leading_zeros(d: &[u8]) -> Vec<u8> {
     let start = d.iter().position(|&x| x != 0).unwrap_or(d.len());
     d[start..].to_vec()
@@ -295,122 +398,27 @@ fn sub_digits(a: &[u8], b: &[u8]) -> Vec<u8> {
     trim_leading_zeros(&out)
 }
 
-/// 竖式取余：a mod b，返回余数字符串。约定：b 仅为非零纯整数（字符串），a 取整数部分参与运算。
-fn mod_decimal_str(a: &str, b: &str) -> String {
-    let (int_a, _) = parse_decimal_parts(a);
-    let (int_b, _) = parse_decimal_parts(b);
-    let a_digits = trim_leading_zeros(&int_a);
-    let b_digits = trim_leading_zeros(&int_b);
-    if a_digits.is_empty() {
-        return "0".to_string();
-    }
-    if b_digits.is_empty() || (b_digits.len() == 1 && b_digits[0] == 0) {
-        return "0".to_string();
-    }
-    if compare_digits(&a_digits, &b_digits) == std::cmp::Ordering::Less {
-        return digits_to_string(&a_digits);
-    }
-    let mut current: Vec<u8> = vec![];
-    for &da in &a_digits {
-        current.push(da);
-        current = trim_leading_zeros(&current);
-        let mut d = 9u8;
-        loop {
-            let product = mul_digit(&b_digits, d);
-            if compare_digits(&current, &product) != std::cmp::Ordering::Less {
-                current = sub_digits(&current, &product);
-                break;
-            }
-            if d == 0 {
-                break;
-            }
-            d -= 1;
-        }
-    }
-    digits_to_string(&current)
-}
-
-/// 仅支持非负整数指数：base^exp，exp 必须为整数（如 "3" 或 "0"），返回字符串；否则 panic
-fn pow_decimal_str_int_exp(base: &str, exp: &str) -> String {
-    let (exp_int, exp_frac) = parse_decimal_parts(exp);
-    if exp_frac.iter().any(|&d| d != 0) {
-        panic!("幂运算仅支持整数指数");
-    }
-    let mut n = 0usize;
-    for &d in &exp_int {
-        n = n.saturating_mul(10).saturating_add(d as usize);
-    }
-    if n == 0 {
-        return "1".to_string();
-    }
-    let mut acc = "1".to_string();
-    let mut b = base.to_string();
-    let mut e = n;
-    while e > 0 {
-        if e % 2 == 1 {
-            acc = mul_decimal_str(&acc, &b);
-        }
-        b = mul_decimal_str(&b, &b);
-        e /= 2;
-    }
-    acc
-}
-
-impl Obj {
-    pub fn can_be_calculated(&self) -> bool {
-        match self {
-            Obj::Number(_) => true,
-            Obj::Add(add) => {
-                return add.can_be_calculated
-            },
-            Obj::Sub(sub) => {
-                return sub.can_be_calculated;
-            },
-            Obj::Mul(mul) => {
-                return mul.can_be_calculated;
-            },
-            Obj::Mod(mod_obj) => {
-                return mod_obj.can_be_calculated;
-            },
-            Obj::Pow(pow_obj) => {
-                return pow_obj.can_be_calculated;
-            },
-            _ => false,
-        }
-    }
-}
-
-impl Obj {
-    /// 将算术表达式计算出字符串结果；非算术表达式会 panic
-    pub fn calculate_to_string(&self) -> String {
-        match self {
-            Obj::Number(n) => n.value.clone(),
-            Obj::Add(add) => {
-                let l = add.left.calculate_to_string();
-                let r = add.right.calculate_to_string();
-                add_decimal_str(&l, &r)
-            }
-            Obj::Sub(sub) => {
-                let l = sub.left.calculate_to_string();
-                let r = sub.right.calculate_to_string();
-                sub_decimal_str(&l, &r)
-            }
-            Obj::Mul(mul) => {
-                let l = mul.left.calculate_to_string();
-                let r = mul.right.calculate_to_string();
-                mul_decimal_str(&l, &r)
-            }
-            Obj::Mod(mod_obj) => {
-                let l = mod_obj.left.calculate_to_string();
-                let r = mod_obj.right.calculate_to_string();
-                mod_decimal_str(&l, &r)
-            }
-            Obj::Pow(pow_obj) => {
-                let base = pow_obj.base.calculate_to_string();
-                let exp = pow_obj.exponent.calculate_to_string();
-                pow_decimal_str_int_exp(&base, &exp)
-            }
-            _ => panic!("非算术表达式，无法 calculate_to_string"),
-        }
-    }
+/// 解析数字串为 (整数部分数字, 小数部分数字)，允许 "123.45"、"123"、".5"、"0.5"
+fn parse_decimal_parts(s: &str) -> (Vec<u8>, Vec<u8>) {
+    let s = s.trim();
+    let (int_str, frac_str) = match s.find('.') {
+        Some(i) => (&s[..i], &s[i + 1..]),
+        None => (s, ""),
+    };
+    let int_digits: Vec<u8> = if int_str.is_empty() || int_str == "-" {
+        vec![0]
+    } else {
+        int_str
+            .chars()
+            .filter(|c| c.is_ascii_digit())
+            .map(|c| c as u8 - b'0')
+            .collect()
+    };
+    let frac_digits: Vec<u8> = frac_str
+        .chars()
+        .filter(|c| c.is_ascii_digit())
+        .map(|c| c as u8 - b'0')
+        .collect();
+    let int_digits = if int_digits.is_empty() { vec![0] } else { int_digits };
+    (int_digits, frac_digits)
 }

@@ -26,7 +26,7 @@ impl StmtResult {
     pub fn line_file(&self) -> Option<(usize, usize)> {
         match self {
             StmtResult::StmtSuccess(stmt_success) => stmt_success.line_file(),
-            StmtResult::StmtUnknown(stmt_unknown) => stmt_unknown.line_file_index,
+            StmtResult::StmtUnknown(_) => None,
             StmtResult::StmtError(stmt_error) => stmt_error.line_file(),
         }
     }

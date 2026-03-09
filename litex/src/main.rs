@@ -1,8 +1,7 @@
 use std::collections::HashMap;
-mod verifier;
-use verifier::Verifier;
+mod verify_atomic_fact;
 mod verify_well_defined;
-mod arithmetic;
+mod calculate;
 mod keywords;
 mod tokenizer;
 mod token_block;
@@ -10,6 +9,7 @@ use token_block::TokenBlock;
 mod errors;
 use errors::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError, ExecError, WellDefinedError};
 use errors::ParsingError;
+mod verify_fact;
 mod helper;
 mod obj;
 use obj::{QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz};
@@ -174,8 +174,8 @@ fn main() {
     try_parse_statements();
     try_executor();
     try_pipeline();
-    try_verifier();
     try_calculate();
+    try_obj_well_defined();
 }
 
 fn try_atom_fn_obj() {
@@ -732,7 +732,7 @@ fn try_stmt_result() {
         Obj::mk("q"),
         Some((1, 0)),
     )));
-    let unknown = StmtUnknown::new(fact.to_string(), None);
+    let unknown = StmtUnknown::new();
     let result = StmtResult::StmtUnknown(unknown);
     println!("{}", result);
 
@@ -1288,15 +1288,6 @@ fn try_pipeline() {
     println!("{}", result);
 }
 
-fn try_verifier() {
-    let mut module_manager = ModuleManager::new();
-    let environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
-    let builtin_environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
-    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
-    let mut verifier = Verifier::new(&mut runtime_context);
-    println!("{}", verifier.line_file_index_string(1, 0));
-    try_obj_well_defined(&mut verifier);
-}
 
 fn try_calculate() {
     let one = Obj::Number(Number::new("1"));
@@ -1305,13 +1296,26 @@ fn try_calculate() {
     println!("{}", one_add_two.calculate_to_string());
 }
 
-fn try_obj_well_defined(verifier: &mut Verifier) {
+fn try_obj_well_defined<'a>() {
+    let mut module_manager = ModuleManager::new();
+    let environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
+    let builtin_environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
+    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
+    let executor = Executor::new(&mut runtime_context);
+    
     let one = Obj::Number(Number::new("1"));
     let two = Obj::Number(Number::new("2"));
     let one_add_two = Obj::Add(Add::new(one, two, true));
     let atomic_fact = AtomicFact::EqualFact(EqualFact::new(one_add_two, Obj::Number(Number::new("3")), Some((1, 0))));
     println!("{}", atomic_fact);
-    let obj_well_defined = verifier.verify_fact_well_defined(&Fact::AtomicFact(atomic_fact));
+
+    let fact = Fact::AtomicFact(atomic_fact);
+    let fact_well_defined = executor.verify_fact_well_defined(&fact);
+    if fact_well_defined.is_err() {
+        println!("ERROR:{}", fact_well_defined.err().unwrap());
+    }
+
+    let obj_well_defined = executor.verify_fact(&fact);
     if obj_well_defined.is_err() {
         println!("ERROR:{}", obj_well_defined.err().unwrap());
     }

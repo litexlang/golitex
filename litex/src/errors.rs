@@ -9,8 +9,10 @@ pub enum StmtError {
     StoreFactError(StoreFactError),
     ParseBlockError(ParseBlockError),
     ParsingError(ParsingError),
-    ExecError(ExecError), 
+    ExecError(ExecError),
+    UnknownError(UnknownError),
     WellDefinedError(WellDefinedError),
+    VerifyFactError(VerifyFactError),
 }
 
 impl std::error::Error for StmtError {}
@@ -24,7 +26,9 @@ impl StmtError {
             StmtError::ParseBlockError(e) => e.line_file(),
             StmtError::ParsingError(e) => Some(e.line_file_index),
             StmtError::ExecError(e) => e.line_file_index,
+            StmtError::UnknownError(e) => e.line_file_index,
             StmtError::WellDefinedError(e) => e.line_file_index,
+            StmtError::VerifyFactError(e) => e.line_file_index,
         }
     }
 }
@@ -39,7 +43,9 @@ impl fmt::Display for StmtError {
             StmtError::ParseBlockError(e) => write!(f, "{}", e),
             StmtError::ParsingError(e) => write!(f, "{}", e),
             StmtError::ExecError(e) => write!(f, "{}", e),
+            StmtError::UnknownError(e) => write!(f, "{}", e),
             StmtError::WellDefinedError(e) => write!(f, "{}", e),
+            StmtError::VerifyFactError(e) => write!(f, "{}", e),
         }
     }
 }
@@ -208,5 +214,46 @@ impl fmt::Display for WellDefinedError {
 impl WellDefinedError {
     pub fn new(msg: &str, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
         WellDefinedError { msg: msg.to_string(), previous_errors, line_file_index }
+    }
+}
+
+#[derive(Debug)]
+pub struct VerifyFactError {
+    pub msg: String,
+    pub previous_errors: Vec<StmtError>,
+    pub line_file_index: Option<(usize, usize)>,
+}
+
+impl std::error::Error for VerifyFactError {}
+
+impl fmt::Display for VerifyFactError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}\n{}\n{}", "VerifyFactError:".to_string(), self.msg, vec_to_string_with_sep(&self.previous_errors, "\n"))
+    }
+}
+
+impl VerifyFactError {
+    pub fn new(msg: &str, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
+        VerifyFactError { msg: msg.to_string(), previous_errors, line_file_index }
+    }
+}
+
+#[derive(Debug)]
+pub struct UnknownError {
+    pub msg: String,
+    pub line_file_index: Option<(usize, usize)>,
+}
+
+impl std::error::Error for UnknownError {}
+
+impl fmt::Display for UnknownError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}\n{}", "UnknownError:".to_string(), self.msg)
+    }
+}
+
+impl UnknownError {
+    pub fn new(msg: &str, line_file_index: Option<(usize, usize)>) -> Self {
+        UnknownError { msg: msg.to_string(), line_file_index }
     }
 }
