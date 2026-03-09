@@ -1,12 +1,12 @@
-use crate::atom::Identifier;
+use crate::obj::Identifier;
 use crate::obj::FnObj;
 use crate::keywords::is_builtin_predicate;
 use crate::fact::Fact;
 use crate::errors::WellDefinedError;
-use crate::atomic_fact::AtomicFact;
-use crate::atomic_fact::line_file as atomic_fact_line_file;
+use crate::fact::AtomicFact;
+use crate::fact::line_file as atomic_fact_line_file;
 use crate::obj::Obj;
-use crate::executor::Executor;
+use crate::execute::Executor;
 
 // well-defined check for fact
 impl<'a> Executor<'a> {

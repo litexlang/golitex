@@ -1,0 +1,56 @@
+use std::fmt;
+use crate::keywords::{EQUIVALENT_SIGN, COLON};
+use crate::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line};
+use super::forall_fact::ForallFact;
+use super::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
+
+#[derive(Clone)]
+pub struct ForallFactWithIff {
+    pub forall_fact: ForallFact,
+    pub iff_facts: Vec<OrFactOrAndFactOrSpecFact>,
+    pub line_file_index: Option<(usize, usize)>,
+}
+
+impl ForallFactWithIff {
+    pub fn new(forall_fact: ForallFact, iff_facts: Vec<OrFactOrAndFactOrSpecFact>, line_file_index: Option<(usize, usize)>) -> Self {
+        ForallFactWithIff { forall_fact, iff_facts, line_file_index }
+    }
+}
+
+impl fmt::Display for ForallFactWithIff {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}\n{}{}\n{}", self.forall_fact, to_string_and_add_four_spaces_at_beginning_of_each_line(&EQUIVALENT_SIGN, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.iff_facts, 2))
+    }
+}
+
+impl ForallFactWithIff {
+    pub fn to_two_forall_facts(self) -> (ForallFact, ForallFact) {
+        let ForallFact {
+            params_def_with_type,
+            dom_facts,
+            then_facts,
+            line_file_index,
+        } = self.forall_fact;
+        let iff_facts = self.iff_facts;
+
+        let mut dom_then = dom_facts.clone();
+        dom_then.extend(then_facts.clone());
+        let forall_then_implies_iff = ForallFact::new(
+            params_def_with_type.clone(),
+            dom_then,
+            iff_facts.clone(),
+            line_file_index,
+        );
+
+        let mut dom_iff = dom_facts;
+        dom_iff.extend(iff_facts);
+        let forall_iff_implies_then = ForallFact::new(
+            params_def_with_type,
+            dom_iff,
+            then_facts,
+            line_file_index,
+        );
+
+        (forall_then_implies_iff, forall_iff_implies_then)
+    }
+}

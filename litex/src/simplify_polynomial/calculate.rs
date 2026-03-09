@@ -101,11 +101,12 @@ pub fn add_decimal_str(a: &str, b: &str) -> String {
 
     let int_str: String = out_int.iter().map(|&d| (b'0' + d) as char).collect();
     let frac_str: String = out_frac.iter().map(|&d| (b'0' + d) as char).collect();
-    if frac_str.is_empty() || out_frac.iter().all(|&d| d == 0) {
+    let result = if frac_str.is_empty() || out_frac.iter().all(|&d| d == 0) {
         int_str
     } else {
         format!("{}.{}", int_str, frac_str.trim_end_matches('0'))
-    }
+    };
+    normalize_decimal_result(&result)
 }
 
 /// 竖式减法：a - b，若 a >= b 返回非负结果字符串，否则返回 "-" + (b - a) 的字符串
@@ -129,9 +130,8 @@ pub fn sub_decimal_str(a: &str, b: &str) -> String {
     let (top_int, top_frac, bot_int, bot_frac) = if cmp >= 0 {
         (ia, fa, ib, fb)
     } else {
-        let mut prefix = String::from("-");
-        prefix.push_str(&sub_decimal_str(b, a));
-        return prefix;
+        let inner = sub_decimal_str(b, a);
+        return normalize_decimal_result(&format!("-{}", inner));
     };
 
     let mut out_frac = vec![0u8; frac_len];
@@ -166,11 +166,12 @@ pub fn sub_decimal_str(a: &str, b: &str) -> String {
     };
     let frac_str: String = out_frac.iter().map(|&d| (b'0' + d) as char).collect();
     let frac_trim = frac_str.trim_end_matches('0');
-    if frac_trim.is_empty() {
+    let result = if frac_trim.is_empty() {
         int_str
     } else {
         format!("{}.{}", int_str, frac_trim)
-    }
+    };
+    normalize_decimal_result(&result)
 }
 
 fn compare_decimal_parts(
@@ -257,11 +258,12 @@ fn mul_decimal_str(a: &str, b: &str) -> String {
             .to_string()
     };
     let int_str = if int_part.is_empty() { "0" } else { &int_part };
-    if frac_part.is_empty() {
+    let result = if frac_part.is_empty() {
         int_str.to_string()
     } else {
         format!("{}.{}", int_str, frac_part)
-    }
+    };
+    normalize_decimal_result(&result)
 }
 
 /// 竖式取余：a mod b，返回余数字符串。约定：b 仅为非零纯整数（字符串），a 取整数部分参与运算。
@@ -398,6 +400,46 @@ fn sub_digits(a: &[u8], b: &[u8]) -> Vec<u8> {
     }
     out.reverse();
     trim_leading_zeros(&out)
+}
+
+/// 化简结果：多个负号合并（---1.1 -> -1.1）、0.0或者-0 写成 0、小数尾零去掉（1.000 -> 1）
+fn normalize_decimal_result(s: &str) -> String {
+    let s = s.trim();
+    if s.is_empty() {
+        return "0".to_string();
+    }
+    let minus_count = s.chars().take_while(|&c| c == '-').count();
+    let rest = s[minus_count..].trim();
+    let negative = (minus_count % 2) == 1;
+
+    let magnitude = if rest.contains('.') {
+        let (int_str, frac_str) = rest.split_once('.').unwrap_or((rest, ""));
+        let frac_trimmed = frac_str.trim_end_matches('0');
+        let int_trimmed = int_str.trim_start_matches('0');
+        let int_part = if int_trimmed.is_empty() || int_trimmed == "." {
+            "0"
+        } else {
+            int_trimmed
+        };
+        if frac_trimmed.is_empty() {
+            int_part.to_string()
+        } else {
+            format!("{}.{}", int_part, frac_trimmed)
+        }
+    } else {
+        let t = rest.trim_start_matches('0');
+        if t.is_empty() { "0" } else { t }.to_string()
+    };
+
+    let is_zero = magnitude == "0"
+        || (magnitude.starts_with("0.") && magnitude[2..].chars().all(|c| c == '0'));
+    if is_zero {
+        "0".to_string()
+    } else if negative {
+        format!("-{}", magnitude)
+    } else {
+        magnitude
+    }
 }
 
 /// 解析数字串为 (整数部分数字, 小数部分数字)，允许 "123.45"、"123"、".5"、"0.5"

@@ -1,7 +1,7 @@
 use crate::fact::Fact;
-use crate::stmt_result::StmtResult;
+use crate::result::StmtResult;
 use crate::errors::VerifyFactError;
-use crate::executor::Executor;
+use crate::execute::Executor;
 
 impl<'a> Executor<'a> {
     pub fn verify_fact(&self, fact: &Fact) -> Result<StmtResult, VerifyFactError> {

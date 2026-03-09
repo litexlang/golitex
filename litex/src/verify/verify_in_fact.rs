@@ -1,11 +1,11 @@
-use crate::atomic_fact::InFact;
+use crate::fact::InFact;
 use crate::errors::VerifyFactError;
-use crate::executor::Executor;
+use crate::execute::Executor;
 use crate::keywords::R;
 use crate::obj::Obj;
-use crate::stmt_result::StmtResult;
-use crate::stmt_success::FactVerifiedByBuiltinRules;
-use crate::stmt_unknown::StmtUnknown;
+use crate::result::StmtResult;
+use crate::result::FactVerifiedByBuiltinRules;
+use crate::result::StmtUnknown;
 
 impl<'a> Executor<'a> {
     pub(crate) fn verify_in_fact(&self, in_fact: &InFact) -> Result<StmtResult, VerifyFactError> {
