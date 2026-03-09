@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 mod verify;
+use verify::SyntacticVerifier;
 mod simplify_polynomial;
 mod keywords;
-mod tokenizer;
-mod token_block;
-use token_block::TokenBlock;
 mod errors;
 use errors::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError, ExecError, WellDefinedError};
 use errors::ParsingError;
 mod helper;
+mod execute;
+use execute::Executor;
 mod obj;
 use obj::{QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz};
 use obj::{
@@ -19,94 +19,40 @@ use obj::{
     Cart, CartDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choose, ObjAtIndex,
     FnSetObj,
 };
+use obj::{Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod};
 mod stmt;
 use stmt::Stmt;
-mod parameter_type_and_property;
-use parameter_type_and_property::{ParamType, Set, NonemptySet, FiniteSet, ParamDefWithParamType, ParamDefWithParamSet};
-mod atom;
-use atom::{Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod};
-mod atomic_fact;
-use atomic_fact::{InFact, NotInFact, IsCartFact, NotIsCartFact, IsTupleFact, NotIsTupleFact, AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact, SubsetFact, NotSubsetFact, SupersetFact, NotSupersetFact,
+use stmt::definition_stmt::{DefStmt, DefStructStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, DefPropStmt, DefLetStmt};
+use stmt::claim_stmt::ClaimStmt;
+use stmt::know_stmt::KnowStmt;
+use stmt::proof_technique_stmt::{ProveCaseByCaseStmt, ProveByContradictionStmt, ProofTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveByEqualSetStmt, ViewFnAsSetStmt};
+use stmt::prove_stmt::ProveStmt;
+use stmt::tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalModuleStmt, ClearStmt, DoNothingStmt, RunFileStmt};
+use stmt::eval_stmt::EvalStmt;
+use stmt::witness_stmt::{WitnessStmt, WitnessExistFact, WitnessNonemptySet};
+use stmt::define_algorithm_stmt::{DefAlgoStmt, AlgoReturn, AlgoIf, AlgoReturnOrAlgoIf};
+use stmt::parameter_type_and_property::{ParamType, Set, NonemptySet, FiniteSet, ParamDefWithParamType, ParamDefWithParamSet};
+mod fact;
+use fact::{Fact, InFact, NotInFact, IsCartFact, NotIsCartFact, IsTupleFact, NotIsTupleFact, AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact, SubsetFact, NotSubsetFact, SupersetFact, NotSupersetFact,
     LessFact, NotLessFact, GreaterFact, NotGreaterFact,
     LessEqualFact, NotLessEqualFact, GreaterEqualFact, NotGreaterEqualFact,
     IsSetFact, NotIsSetFact, IsNonemptySetFact, NotIsNonemptySetFact,
     IsFiniteSetFact, NotIsFiniteSetFact,
+    ExistFact, FactInOrAtomicFact, FactInsideExistFact, NotExistFact, OrAtomicFact, TrueExistFact,
+    OrFact, ForallFact, SpecFact, ForallFactWithIff, AndFact, ChainFact, AndSpecFacts,
+    AndFactOrSpecFact, OrFactOrAndFactOrSpecFact,
 };
-mod fact;
-use fact::Fact;
-mod exist_fact;
-use exist_fact::{ExistFact, FactInOrAtomicFact, FactInsideExistFact, NotExistFact, OrAtomicFact, TrueExistFact};
-mod or_fact;
-use or_fact::OrFact;
-mod forall_fact;
-use forall_fact::ForallFact;
-mod specific_fact;
-use specific_fact::SpecFact;
-mod forall_fact_with_iff;
-use forall_fact_with_iff::ForallFactWithIff;
-mod and_fact;
-use and_fact::{AndFact, ChainFact, AndSpecFacts};
-mod and_fact_or_specific_fact;
-use and_fact_or_specific_fact::AndFactOrSpecFact;
-mod or_fact_or_and_fact_or_specific_fact;
-use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
-mod stmt_result;
-use stmt_result::StmtResult;
-mod stmt_success;
-use stmt_success::{NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules};
-mod stmt_unknown;
-use stmt_unknown::StmtUnknown;
-mod definition_stmt;
-use definition_stmt::{DefStmt, DefStructStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt};
-use definition_stmt::{DefPropStmt, DefLetStmt};
-mod claim_stmt;
-use claim_stmt::ClaimStmt;
-mod know_stmt;
-use know_stmt::KnowStmt;
-mod proof_technique_stmt;
-use proof_technique_stmt::{ProveCaseByCaseStmt, ProveByContradictionStmt, ProofTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveByEqualSetStmt, ViewFnAsSetStmt};
-mod prove_stmt;
-use prove_stmt::ProveStmt;
-mod tooling_stmt;
-use tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalModuleStmt, ClearStmt, DoNothingStmt, RunFileStmt};
-mod eval_stmt;
-use eval_stmt::EvalStmt;
-mod witness_stmt;
-use witness_stmt::{WitnessStmt, WitnessExistFact, WitnessNonemptySet};
-mod syntactic_verifier;
-use syntactic_verifier::SyntacticVerifier;
+mod result;
+use result::{StmtResult, NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules, StmtUnknown};
 mod module_manager;
 use module_manager::ModuleManager;
 mod runtime_context;
 use runtime_context::RuntimeContext;
 mod environment;
 use environment::Environment;
-mod define_algorithm_stmt;
-use define_algorithm_stmt::{DefAlgoStmt, AlgoReturn, AlgoIf, AlgoReturnOrAlgoIf};
-mod parser;
-use parser::Parser;
-mod parse_tooling_stmt;
-mod parse_obj;
-mod parse_param_def;
-mod parse_fact;
-mod parse_def_stmt;
-mod parse_know_stmt;
-mod parse_claim_stmt;
-mod parse_prove_stmt;
-mod parse_witness;
-mod parse_stmt;
-mod parse_eval_stmt;
-mod parse_proof_technique_stmt;
-mod executor;
-use executor::Executor;
-mod exec_stmt;
-mod exec_def_stmt;
-mod exec_store;
+mod parse;
+use parse::{Parser, TokenBlock, tokenize_line};
 mod pipeline;
-mod exec_know_stmt;
-
-#[cfg(test)]
-mod parser_tests;
 
 fn main() {
     try_atom_fn_obj();
@@ -1220,7 +1166,7 @@ fn try_runtime_context() {
 
 fn try_tokenizer() {
     let line = "a+b";
-    let tokens = tokenizer::tokenize_line(line);
+    let tokens = tokenize_line(line);
     println!("{:?}", tokens);
 }
 
@@ -1234,7 +1180,7 @@ fn try_parser() {
     let parser = Parser::new();
     println!("{}", parser);
     let s = "a+b";
-    let tokens = tokenizer::tokenize_line(s);
+    let tokens = tokenize_line(s);
     let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
     let obj = parser.obj(&mut tb);
     println!("{}", obj.unwrap());
@@ -1244,7 +1190,7 @@ fn try_parse_obj() {
     let parser = Parser::new();
     println!("{}", parser);
     let s = "a+b";
-    let tokens = tokenizer::tokenize_line(s);
+    let tokens = tokenize_line(s);
     let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
     let obj = parser.obj(&mut tb);
     println!("{}", obj.unwrap());
@@ -1254,7 +1200,7 @@ fn try_parse_fact() {
     let parser = Parser::new();
     println!("{}", parser);
     let s = "a+b=0";
-    let tokens = tokenizer::tokenize_line(s);
+    let tokens = tokenize_line(s);
     let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
     let fact = parser.fact(&mut tb);
     println!("{}", fact.unwrap());
@@ -1264,7 +1210,7 @@ fn try_parse_statements() {
     let parser = Parser::new();
     println!("{}", parser);
     let s = "a+b=0";
-    let tokens = tokenizer::tokenize_line(s);
+    let tokens = tokenize_line(s);
     let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
     let stmt = parser.stmt(&mut tb);
     println!("{}", stmt.unwrap());
