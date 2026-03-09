@@ -1,7 +1,7 @@
-use crate::keywords::OR;
+use crate::common::keywords::OR;
 use std::fmt;
 use super::and_fact_or_specific_fact::AndFactOrSpecFact;
-use crate::helper::vec_to_string_with_sep;
+use crate::common::helper::vec_to_string_with_sep;
 
 #[derive(Clone)]
 pub struct OrFact {

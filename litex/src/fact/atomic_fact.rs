@@ -1,9 +1,9 @@
 use std::fmt;
 use crate::obj::Obj;
 use crate::obj::IdentifierOrIdentifierWithMod;
-use crate::keywords::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, IN, IS_CART, IS_TUPLE, SUBSET, SUPERSET, NOT_EQUAL};
-use crate::helper::{braced_string, braced_vec_to_string};
-use crate::errors::NewAtomicFactError;
+use crate::common::keywords::{EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IS_FINITE_SET, IS_NONEMPTY_SET, IS_SET, LESS, LESS_EQUAL, NOT, IN, IS_CART, IS_TUPLE, SUBSET, SUPERSET, NOT_EQUAL};
+use crate::common::helper::{braced_string, braced_vec_to_string};
+use crate::error::NewAtomicFactError;
 
 #[derive(Clone)]
 pub enum AtomicFact {

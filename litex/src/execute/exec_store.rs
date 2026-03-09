@@ -1,9 +1,9 @@
-use crate::errors::{ExecError, StmtError};
+use crate::error::{ExecError, StoreFactError};
 use crate::fact::Fact;
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use crate::stmt::definition_stmt::{DefPropStmt, DefStructStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
-use crate::keywords::{PROP, STRUCT, ALGO};
+use crate::common::keywords::{PROP, STRUCT, ALGO};
 use super::Executor;
 
 impl<'a> Executor<'a> {
@@ -57,15 +57,7 @@ impl<'a> Executor<'a> {
 }
 
 impl<'a> Executor<'a> {
-    pub fn validate_and_store_fact(&mut self, fact: &Fact) -> Result<(), ExecError> {
-        let result = self.runtime_context.environments.last_mut().unwrap().store_fact(fact.clone());
-        if let Err(store_err) = result {
-            return Err(ExecError::new(
-                format!("store fact error: {}", store_err).as_str(),
-                vec![StmtError::StoreFactError(store_err)],
-                fact.line_file(),
-            ));
-        }
-        Ok(())
+    pub fn store_fact(&mut self, fact: &Fact) -> Result<(), StoreFactError> {
+        self.runtime_context.environments.last_mut().unwrap().store_fact(fact.clone())
     }
 }

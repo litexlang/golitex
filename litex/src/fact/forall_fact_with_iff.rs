@@ -1,6 +1,6 @@
 use std::fmt;
-use crate::keywords::{EQUIVALENT_SIGN, COLON};
-use crate::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line};
+use crate::common::keywords::{EQUIVALENT_SIGN, COLON};
+use crate::common::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line};
 use super::forall_fact::ForallFact;
 use super::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 

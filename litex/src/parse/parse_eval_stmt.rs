@@ -1,7 +1,7 @@
-use crate::keywords::EVAL;
+use crate::common::keywords::EVAL;
 use super::Parser;
 use super::TokenBlock;
-use crate::errors::ParsingError;
+use crate::error::ParsingError;
 use crate::stmt::Stmt;
 use crate::stmt::eval_stmt::EvalStmt;
 

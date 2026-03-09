@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::helper::vec_to_string_with_sep;
+use crate::common::helper::vec_to_string_with_sep;
 
 #[derive(Debug)]
 pub enum StmtError {
@@ -124,6 +124,12 @@ impl StoreFactError {
 impl From<StoreFactError> for StmtError {
     fn from(e: StoreFactError) -> Self {
         StmtError::StoreFactError(e)
+    }
+}
+
+impl From<StoreFactError> for ExecError {
+    fn from(e: StoreFactError) -> Self {
+        ExecError::new(format!("store fact error: {}", e).as_str(), vec![e.into()], None)
     }
 }
 

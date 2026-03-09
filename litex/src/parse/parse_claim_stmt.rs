@@ -1,8 +1,8 @@
 use crate::stmt::claim_stmt::ClaimStmt;
 use crate::fact::Fact;
 use crate::stmt::Stmt;
-use crate::errors::ParsingError;
-use crate::keywords::{CLAIM, COLON, RIGHT_ARROW};
+use crate::error::ParsingError;
+use crate::common::keywords::{CLAIM, COLON, RIGHT_ARROW};
 use super::Parser;
 use super::TokenBlock;
 

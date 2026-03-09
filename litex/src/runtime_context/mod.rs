@@ -1,6 +1,6 @@
 use std::fmt;
 use std::collections::HashMap;
-use crate::keywords::MOD_NAME_SEPARATOR;
+use crate::common::keywords::MOD_NAME_SEPARATOR;
 use crate::module_manager::ModuleManager;
 use crate::environment::Environment;
 use crate::stmt::definition_stmt::DefPropStmt;

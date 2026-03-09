@@ -11,14 +11,14 @@ use crate::fact::ForallFact;
 use crate::fact::ForallFactWithIff;
 use super::Parser;
 use super::TokenBlock;
-use crate::errors::{NewAtomicFactError, ParsingError};
+use crate::error::{NewAtomicFactError, ParsingError};
 use crate::fact::Fact;
 use crate::fact::{AndFact, AndSpecFacts, ChainFact};
 use crate::obj::Identifier;
-use crate::keywords::{AND, COLON, COMMA, EQUIVALENT_SIGN, EXIST, FACT_PREFIX, FORALL, LEFT_CURLY_BRACE, NOT, OR, RIGHT_ARROW, RIGHT_CURLY_BRACE, ST};
+use crate::common::keywords::{AND, COLON, COMMA, EQUIVALENT_SIGN, EXIST, FACT_PREFIX, FORALL, LEFT_CURLY_BRACE, NOT, OR, RIGHT_ARROW, RIGHT_CURLY_BRACE, ST};
 use crate::fact::OrFact;
 use crate::fact::SpecFact;
-use crate::keywords::is_comparison_str;
+use crate::common::keywords::is_comparison_str;
 
 impl Parser {
     pub fn fact(&self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {

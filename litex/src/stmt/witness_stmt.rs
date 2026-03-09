@@ -1,9 +1,9 @@
-use crate::helper::{ vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
+use crate::common::helper::{ vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
 use std::fmt;
 use crate::fact::TrueExistFact;
 use crate::obj::Obj;
 use super::Stmt;
-use crate::keywords::{COLON, COMMA, ST, WITNESS};
+use crate::common::keywords::{COLON, COMMA, ST, WITNESS};
 
 pub enum WitnessStmt {
     WitnessExistFact(WitnessExistFact),

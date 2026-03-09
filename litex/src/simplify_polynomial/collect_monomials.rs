@@ -1,10 +1,20 @@
-use crate::obj::{Add, Obj};
+use crate::obj::{Add, Mul, Obj};
 use super::calculate::add_decimal_str;
 use super::monomial::Monomial;
+use super::calculate::normalize_decimal_result;
 
 pub fn collect_monomials(obj: &Obj) -> Vec<Monomial> {
     match obj {
-        Obj::Number(num) => vec![Monomial::new(num.value.clone(), None)],
+        // 变成 to_string 后，如果经过 normalize_decimal_result 化简后变成0，那就返回空的；否则返回 Monomial::new(num.value.clone(), None)
+        Obj::Number(num) => {
+            let num_str = num.value.clone();
+            let normalized_num_str = normalize_decimal_result(&num_str);
+            if normalized_num_str == "0" {
+                vec![]
+            } else {
+                vec![Monomial::new(normalized_num_str, None)]
+            }
+        },
         Obj::Add(add) => collect_monomial_in_add(add),
         _ => vec![],
     }
@@ -24,13 +34,13 @@ pub fn collect_monomial_in_add(add: &Add) -> Vec<Monomial> {
                 continue;
             }
             match (&left_monomial.operand, &right_monomial.operand) {
-                (Some(left_operand), Some(right_operand)) => {
-                    if left_operand.to_string() == right_operand.to_string() {
+                (Some(left_operand), Some(_)) => {
+                    if left_monomial.operands_equal(right_monomial) {
                         let new_scalar = add_decimal_str(
                             &left_monomial.non_zero_scalar,
                             &right_monomial.non_zero_scalar,
                         );
-                        if new_scalar != "0" && new_scalar != "-0" {
+                        if new_scalar != "0" {
                             result.push(Monomial::new(
                                 new_scalar,
                                 Some(left_operand.clone()),
@@ -55,7 +65,7 @@ pub fn collect_monomial_in_add(add: &Add) -> Vec<Monomial> {
                         &left_monomial.non_zero_scalar,
                         &right_monomial.non_zero_scalar,
                     );
-                    if new_scalar != "0" && new_scalar != "-0" {
+                    if new_scalar != "0" {
                         result.push(Monomial::new(new_scalar, None));
                     }
                     right_used[i] = true;
@@ -75,4 +85,13 @@ pub fn collect_monomial_in_add(add: &Add) -> Vec<Monomial> {
         }
     }
     result
+}
+
+pub fn collect_monomial_in_mul(mul: &Mul) -> Vec<Monomial> {
+    // 遍历left，遍历right，让每一位都相乘，放在一个
+    panic!("")
+    
+    // 如果两个都是没有operand，那就相乘
+
+    // 如果一个有，一个没有
 }

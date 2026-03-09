@@ -1,8 +1,8 @@
 use crate::obj::Identifier;
 use crate::obj::FnObj;
-use crate::keywords::is_builtin_predicate;
+use crate::common::keywords::is_builtin_predicate;
 use crate::fact::Fact;
-use crate::errors::WellDefinedError;
+use crate::error::WellDefinedError;
 use crate::fact::AtomicFact;
 use crate::fact::line_file as atomic_fact_line_file;
 use crate::obj::Obj;
