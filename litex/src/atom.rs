@@ -24,15 +24,6 @@ impl fmt::Display for IdentifierOrIdentifierWithMod {
     }
 }
 
-impl From<IdentifierOrIdentifierWithMod> for Atom {
-    fn from(x: IdentifierOrIdentifierWithMod) -> Self {
-        match x {
-            IdentifierOrIdentifierWithMod::Identifier(i) => Atom::Identifier(i),
-            IdentifierOrIdentifierWithMod::IdentifierWithMod(m) => Atom::IdentifierWithMod(m),
-        }
-    }
-}
-
 #[derive(Clone)]
 pub struct Identifier {
     pub name: String,

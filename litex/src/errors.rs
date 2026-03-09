@@ -8,6 +8,7 @@ pub enum StmtError {
     ParseBlockError(ParseBlockError),
     ParsingError(ParsingError),
     ExecError(ExecError), 
+    WellDefinedError(WellDefinedError),
 }
 
 impl std::error::Error for StmtError {}
@@ -21,6 +22,7 @@ impl StmtError {
             StmtError::ParseBlockError(e) => e.line_file(),
             StmtError::ParsingError(e) => Some(e.line_file_index),
             StmtError::ExecError(e) => e.line_file_index,
+            StmtError::WellDefinedError(e) => e.line_file_index,
         }
     }
 }
@@ -35,6 +37,7 @@ impl fmt::Display for StmtError {
             StmtError::ParseBlockError(e) => write!(f, "{}", e),
             StmtError::ParsingError(e) => write!(f, "{}", e),
             StmtError::ExecError(e) => write!(f, "{}", e),
+            StmtError::WellDefinedError(e) => write!(f, "{}", e),
         }
     }
 }
@@ -181,5 +184,27 @@ impl fmt::Display for ExecError {
 impl ExecError {
     pub fn new(msg: &str, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
         ExecError { msg: msg.to_string(), previous_errors, line_file_index }
+    }
+}
+
+
+#[derive(Debug)]
+pub struct WellDefinedError {
+    pub msg: String,
+    pub previous_errors: Vec<StmtError>,
+    pub line_file_index: Option<(usize, usize)>,
+}
+
+impl std::error::Error for WellDefinedError {}
+
+impl fmt::Display for WellDefinedError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}\n{}", "WellDefinedError:".to_string(), self.msg)
+    }
+}
+
+impl WellDefinedError {
+    pub fn new(msg: &str, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
+        WellDefinedError { msg: msg.to_string(), previous_errors, line_file_index }
     }
 }

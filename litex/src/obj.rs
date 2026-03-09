@@ -1,7 +1,7 @@
 use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::parameter_type_and_property::ParamDefWithParamSet;
 use crate::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, DISJOINT_UNION, DIV, FN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_NAME_SEPARATOR, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, SET_DIFF, DIV, FN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_NAME_SEPARATOR, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
 };
 use std::fmt;
 use crate::helper::{braced_vec_to_string, curly_braced_vec_to_string, vec_to_string_join_by_comma};
@@ -24,7 +24,7 @@ pub enum Obj {
     Union(Union),
     Intersect(Intersect),
     SetMinus(SetMinus),
-    DisjointUnion(DisjointUnion),
+    SetDiff(SetDiff),
     Cup(Cup),
     Cap(Cap),
     ListSet(ListSet),
@@ -199,7 +199,7 @@ pub struct SetMinus {
 }
 
 #[derive(Clone)]
-pub struct DisjointUnion {
+pub struct SetDiff {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
 }
@@ -419,9 +419,9 @@ impl SetMinus {
     }
 }
 
-impl DisjointUnion {
+impl SetDiff {
     pub fn new(left: Obj, right: Obj) -> Self {
-        DisjointUnion {
+        SetDiff {
             left: Box::new(left),
             right: Box::new(right),
         }
@@ -693,7 +693,7 @@ impl Obj {
             Obj::Union(x) => write!(f, "{}", x)?,
             Obj::Intersect(x) => write!(f, "{}", x)?,
             Obj::SetMinus(x) => write!(f, "{}", x)?,
-            Obj::DisjointUnion(x) => write!(f, "{}", x)?,
+            Obj::SetDiff(x) => write!(f, "{}", x)?,
             Obj::Cup(x) => write!(f, "{}", x)?,
             Obj::Cap(x) => write!(f, "{}", x)?,
             Obj::Identifier(x) => write!(f, "{}", x)?,
@@ -867,9 +867,9 @@ impl fmt::Display for SetMinus {
     }
 }
 
-impl fmt::Display for DisjointUnion {
+impl fmt::Display for SetDiff {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", DISJOINT_UNION, braced_vec_to_string(&vec![self.left.as_ref(), self.right.as_ref()]))
+        write!(f, "{}{}", SET_DIFF, braced_vec_to_string(&vec![self.left.as_ref(), self.right.as_ref()]))
     }
 }
 
@@ -1087,3 +1087,17 @@ impl fmt::Display for FnSetObj {
         }
     }
 }
+
+impl Obj {
+    pub fn is_add_sub_mul_div_mod_pow(&self) -> bool {
+        match self {
+            Obj::Add(_) => true,
+            Obj::Sub(_) => true,
+            Obj::Mul(_) => true,
+            Obj::Div(_) => true,
+            Obj::Mod(_) => true,
+            Obj::Pow(_) => true,
+            _ => false,
+        }
+    }
+}    

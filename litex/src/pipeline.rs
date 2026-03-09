@@ -16,14 +16,16 @@ pub fn run_source_code(source_code: &str) -> String {
         HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
         HashMap::new(), HashMap::new(),
     ));
-    let mut runtime_context = RuntimeContext::new(
-        &mut module_manager,
-        vec![environment],
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-    );
+
+    let builtin_environment: Box<Environment> = Box::new(Environment::new(
+        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
+        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
+        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
+        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
+        HashMap::new(), HashMap::new(),
+    ));
+
+    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
 
     let blocks = match TokenBlock::parse_blocks(source_code, 0) {
         Ok(b) => b,

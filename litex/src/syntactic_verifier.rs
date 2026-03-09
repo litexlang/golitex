@@ -86,8 +86,8 @@ impl<'a> SyntacticVerifier<'a> {
                 Obj::SetMinus(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::DisjointUnion(a) => match right {
-                Obj::DisjointUnion(b) => a.to_string() == b.to_string(),
+            Obj::SetDiff(a) => match right {
+                Obj::SetDiff(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::Cup(a) => match right {
