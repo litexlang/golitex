@@ -1,5 +1,7 @@
 use std::collections::HashMap;
-
+mod verifier;
+use verifier::Verifier;
+mod verify_well_defined;
 mod arithmetic;
 mod keywords;
 mod tokenizer;
@@ -13,7 +15,7 @@ mod obj;
 use obj::{QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz};
 use obj::{
     Obj, FnObj, Number, Add, Sub, Mul, Div, Mod, Pow,
-    Union, Intersect, SetMinus, DisjointUnion, Cup, Cap,
+    Union, Intersect, SetMinus, SetDiff, Cup, Cap,
     ListSet, SetBuilder, FnSetWithoutDom, FnSetWithDom,
     NPosObj, NObj, QObj, ZObj, RObj, InstStructObj,
     Cart, CartDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choose, ObjAtIndex,
@@ -110,6 +112,8 @@ mod exec_know_stmt;
 mod parser_tests;
 
 fn main() {
+
+
     try_atom_fn_obj();
     try_arithmetic();
     try_set_operations();
@@ -172,6 +176,7 @@ fn main() {
     try_parse_statements();
     try_executor();
     try_pipeline();
+    try_verifier();
 }
 
 fn try_atom_fn_obj() {
@@ -204,12 +209,6 @@ fn try_arithmetic() {
     let one_mod_two_result = Obj::Mod(Mod::new(Obj::Number(Number::new("1")), Obj::Number(Number::new("2")), true));
     let one_pow_two_result = Obj::Pow(Pow::new(Obj::Number(Number::new("1")), Obj::Number(Number::new("2")), true));
     println!("{}, {}, {}, {}, {}, {}",  one_add_two_result, one_sub_two_result, one_mul_two_result, one_div_two_result, one_mod_two_result, one_pow_two_result);
-    println!("{}", one_add_two_result.calculate().unwrap());
-    println!("{}", one_sub_two_result.calculate().unwrap());
-    println!("{}", one_mul_two_result.calculate().unwrap());
-    println!("{}", one_div_two_result.calculate().unwrap());
-    println!("{}", one_mod_two_result.calculate().unwrap());
-    println!("{}", one_pow_two_result.calculate().unwrap());
 }
 
 fn try_set_operations() {
@@ -217,7 +216,7 @@ fn try_set_operations() {
     let union_result = Obj::Union(Union::new(mk("A"), mk("B")));
     let intersect_result = Obj::Intersect(Intersect::new(mk("A"), mk("B")));
     let set_minus_result = Obj::SetMinus(SetMinus::new(mk("A"), mk("B")));
-    let disjoint_union_result = Obj::DisjointUnion(DisjointUnion::new(mk("A"), mk("B")));
+    let disjoint_union_result = Obj::SetDiff(SetDiff::new(mk("A"), mk("B")));
     let cup_result = Obj::Cup(Cup::new(mk("A")));
     let cap_result = Obj::Cap(Cap::new(mk("A")));
     println!("{}, {}, {}, {}, {}, {}", union_result, intersect_result, set_minus_result, disjoint_union_result, cup_result, cap_result);
@@ -1162,7 +1161,9 @@ fn try_runtime_context() {
 
     let environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
 
-    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
+    let builtin_environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
+    
+    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
     println!("{}", runtime_context);
 
     let atomic_fact = AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))));
@@ -1170,7 +1171,7 @@ fn try_runtime_context() {
 
     let stored_fact_result = runtime_context.top_level_env().store_fact(Fact::AtomicFact(atomic_fact));
     if stored_fact_result.is_err() {
-        panic!("{}", stored_fact_result.err().unwrap());
+        println!("ERROR:{}", stored_fact_result.err().unwrap());
     }
 
     println!("{}", runtime_context.top_level_env());
@@ -1198,7 +1199,7 @@ fn try_runtime_context() {
     println!("{}", exist_fact.key());
     let stored_fact_result = runtime_context.top_level_env().store_fact(Fact::ExistFact(exist_fact));
     if stored_fact_result.is_err() {
-        panic!("{}", stored_fact_result.err().unwrap());
+        println!("ERROR:{}", stored_fact_result.err().unwrap());
     }
     println!("{}", runtime_context.top_level_env());
 
@@ -1213,7 +1214,7 @@ fn try_runtime_context() {
     
     let stored_fact_result = runtime_context.top_level_env().store_fact(Fact::ForallFact(_forall));
     if stored_fact_result.is_err() {
-        panic!("{}", stored_fact_result.err().unwrap());
+        println!("ERROR:{}", stored_fact_result.err().unwrap());
     }
     
 }
@@ -1273,13 +1274,23 @@ fn try_parse_statements() {
 fn try_executor() {
     let mut module_manager = ModuleManager::new();
     let environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
-    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
+    let builtin_environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
+    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
     let executor = Executor::new(&mut runtime_context);
-    println!("{}", executor);
+    println!("{}", executor.line_file_index_string(1, 0));
 }
 
 fn try_pipeline() {
     let s = "a+b=0";
     let result = pipeline::run_source_code(s);
     println!("{}", result);
+}
+
+fn try_verifier() {
+    let mut module_manager = ModuleManager::new();
+    let environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
+    let builtin_environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
+    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
+    let verifier = Verifier::new(&mut runtime_context);
+    println!("{}", verifier.line_file_index_string(1, 0));
 }

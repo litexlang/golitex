@@ -1,12 +1,12 @@
 use crate::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, DISJOINT_UNION, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_NAME_SEPARATOR, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_NAME_SEPARATOR, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
 };
 use crate::parser::Parser;
 use crate::token_block::TokenBlock;
 use crate::obj::{
     Obj, FnObj, FnSetObj, FnSetWithDom, FnSetWithoutDom, Add, Mul, Div, Mod, Sub, Pow, Number, InstStructObj, ListSet, SetBuilder,
     NPosObj, NObj, QObj, ZObj, RObj, QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz,
-    ObjAtIndex, Union, Intersect, SetMinus, DisjointUnion, Cup, Cap, PowerSet, Choose,
+    ObjAtIndex, Union, Intersect, SetMinus, SetDiff, Cup, Cap, PowerSet, Choose,
     Cart, CartDim, Proj, Count, Range, ClosedRange, Val,
 };
 use crate::atom::{Atom, Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod, FieldAccess, FieldAccessWithMod};
@@ -35,7 +35,7 @@ impl Parser {
                         UNION => Ok(Obj::Union(Union::new(left, right))),
                         INTERSECT => Ok(Obj::Intersect(Intersect::new(left, right))),
                         SET_MINUS => Ok(Obj::SetMinus(SetMinus::new(left, right))),
-                        DISJOINT_UNION => Ok(Obj::DisjointUnion(DisjointUnion::new(left, right))),
+                        SET_DIFF => Ok(Obj::SetDiff(SetDiff::new(left, right))),
                         RANGE => Ok(Obj::Range(Range::new(left, right))),
                         CLOSED_RANGE => Ok(Obj::ClosedRange(ClosedRange::new(left, right))),
                         PROJ => Ok(Obj::Proj(Proj::new(left, right))),
@@ -335,12 +335,12 @@ impl Parser {
             let mut it = args.into_iter();
             return Ok(Obj::SetMinus(SetMinus::new(it.next().unwrap(), it.next().unwrap())));
         }
-        if tok == DISJOINT_UNION {
+        if tok == SET_DIFF {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("disjoint_union expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
-            return Ok(Obj::DisjointUnion(DisjointUnion::new(it.next().unwrap(), it.next().unwrap())));
+            return Ok(Obj::SetDiff(SetDiff::new(it.next().unwrap(), it.next().unwrap())));
         }
         if tok == CAP {
             tb.skip()?;
