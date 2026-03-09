@@ -1,7 +1,6 @@
 use std::collections::HashMap;
-mod verify_atomic_fact;
-mod verify_well_defined;
-mod calculate;
+mod verify;
+mod simplify_polynomial;
 mod keywords;
 mod tokenizer;
 mod token_block;
@@ -9,7 +8,6 @@ use token_block::TokenBlock;
 mod errors;
 use errors::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError, ExecError, WellDefinedError};
 use errors::ParsingError;
-mod verify_fact;
 mod helper;
 mod obj;
 use obj::{QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz};
@@ -1298,8 +1296,8 @@ fn try_calculate() {
 
 fn try_obj_well_defined<'a>() {
     let mut module_manager = ModuleManager::new();
-    let environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
-    let builtin_environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
+    let environment: Box<Environment> = Box::new(Environment::new_empty_env());
+    let builtin_environment: Box<Environment> = Box::new(Environment::new_empty_env());
     let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
     let executor = Executor::new(&mut runtime_context);
     

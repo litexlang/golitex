@@ -265,3 +265,8 @@ impl Environment {
     }
 }
 
+impl Environment {
+    pub fn new_empty_env() -> Self {
+        Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new())
+    }
+}
