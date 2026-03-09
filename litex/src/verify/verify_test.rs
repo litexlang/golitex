@@ -72,7 +72,7 @@ fn test_exec_stmt_fact_one_plus_one_eq_two() {
 
     let result = executor.stmt(&stmt).expect("exec.stmt(fact) failed");
     match &result {
-        StmtResult::StmtSuccess(_) => {println!("{}", result);}
+        StmtResult::NonFactualStmtSuccess(_) | StmtResult::FactVerifiedByFact(_) | StmtResult::FactVerifiedByBuiltinRules(_) => println!("{}", result),
         StmtResult::StmtUnknown(u) => panic!("fact 1+1=2 should be verified, got StmtUnknown: {}", u),
         StmtResult::StmtError(e) => panic!("fact 1+1=2 should be verified, got StmtError: {}", e),
     }

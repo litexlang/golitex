@@ -1,7 +1,6 @@
 use crate::executor::Executor;
 use crate::know_stmt::KnowStmt;
 use crate::stmt_result::StmtResult;
-use crate::stmt_success::StmtSuccess;
 use crate::stmt_success::NonFactualStmtSuccess;
 use crate::errors::ExecError;
 
@@ -10,6 +9,6 @@ impl<'a> Executor<'a> {
         for fact in know_stmt.facts.iter() {
             self.validate_and_store_fact(fact)?;
         }
-        Ok(StmtResult::StmtSuccess(StmtSuccess::NonFactualStmtSuccess(NonFactualStmtSuccess::new(know_stmt.to_string(), know_stmt.line_file_index))))
+        Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(know_stmt.to_string(), know_stmt.line_file_index)))
     }
 }
