@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::keywords::{LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_BRACE, RIGHT_CURLY_BRACE};
+use crate::keywords::{LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_BRACE, RIGHT_CURLY_BRACE, DOT_AKA_FIELD_ACCESS_SIGN};
 
 pub fn braced_vec_to_string<T: fmt::Display>(vec: &Vec<T>) -> String {
     format!("{}{}{}", LEFT_BRACE, vec_to_string_with_sep(vec, ", "), RIGHT_BRACE)
@@ -44,3 +44,6 @@ pub fn add_four_spaces_at_beginning(str: &str, number_of_four_spaces: usize) -> 
     format!("{}{}", "    ".repeat(number_of_four_spaces), str)
 }
 
+pub fn is_number_string_literally_integer(str: &str) -> bool {
+    !str.contains(DOT_AKA_FIELD_ACCESS_SIGN)
+}
