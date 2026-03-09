@@ -1,7 +1,7 @@
 use std::fmt;
 use crate::fact::Fact;
-use crate::keywords::{CLAIM, COLON, PROVE};
-use crate::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line, add_four_spaces_at_beginning};
+use crate::common::keywords::{CLAIM, COLON, PROVE};
+use crate::common::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line, add_four_spaces_at_beginning};
 use super::Stmt;
 
 pub struct ClaimStmt {

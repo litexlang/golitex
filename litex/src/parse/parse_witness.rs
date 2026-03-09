@@ -1,6 +1,6 @@
-use crate::errors::ParsingError;
+use crate::error::ParsingError;
 use crate::fact::ExistFact;
-use crate::keywords::{COLON, EXIST, NONEMPTY_SET, WITNESS};
+use crate::common::keywords::{COLON, EXIST, NONEMPTY_SET, WITNESS};
 use super::Parser;
 use crate::stmt::Stmt;
 use super::TokenBlock;

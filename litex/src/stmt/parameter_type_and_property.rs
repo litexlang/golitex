@@ -1,7 +1,7 @@
 use std::fmt;
-use crate::helper::vec_to_string_join_by_comma;
+use crate::common::helper::vec_to_string_join_by_comma;
 use crate::obj::Obj;
-use crate::keywords::{FINITE_SET, NONEMPTY_SET, SET};
+use crate::common::keywords::{FINITE_SET, NONEMPTY_SET, SET};
 
 /// 参数名列表（长度 1 表示单参数）与对应的 Obj（set）
 #[derive(Clone)]

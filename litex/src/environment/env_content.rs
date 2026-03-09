@@ -15,7 +15,7 @@ use crate::fact::OrFactOrAndFactOrSpecFact;
 use crate::fact::SpecFact;
 use crate::fact::AndFact;
 use crate::fact::ForallFactWithIff;
-use crate::errors::{StoreFactError};
+use crate::error::StoreFactError;
 use crate::fact::EqualFact;
 
 pub struct Environment {
@@ -95,31 +95,36 @@ impl fmt::Display for Environment {
 
 impl Environment {
     fn store_atomic_fact(&mut self, atomic_fact: AtomicFact) -> Result<(), StoreFactError> {
-        let key = atomic_fact.key();
-        let is_true = atomic_fact.is_true();
-        if atomic_fact.args().len() == 1 {
-            let arg_key = atomic_fact.args()[0].to_string();
-            if self.known_atomic_facts_with_1_arg.contains_key(&(key, is_true)) {
-                self.known_atomic_facts_with_1_arg.get_mut(&(atomic_fact.key(), is_true)).unwrap().insert(arg_key, ());
-            } else {
-                self.known_atomic_facts_with_1_arg.insert((atomic_fact.key(), is_true), HashMap::from([(arg_key, ())]));
-            }
-        } else if atomic_fact.args().len() == 2 {
-            let arg_key1 = atomic_fact.args()[0].to_string();
-            let arg_key2 = atomic_fact.args()[1].to_string();
-            if self.known_atomic_facts_with_2_args.contains_key(&(key, is_true)) {
-                self.known_atomic_facts_with_2_args.get_mut(&(atomic_fact.key(), is_true)).unwrap().insert((arg_key1, arg_key2), ());
-            } else {
-                self.known_atomic_facts_with_2_args.insert((atomic_fact.key(), is_true), HashMap::from([((arg_key1, arg_key2), ())]));
-            }
-        } else {
-            if self.known_atomic_facts_with_more_than_2_args.contains_key(&(key, is_true)) {
-                self.known_atomic_facts_with_more_than_2_args.get_mut(&(atomic_fact.key(), is_true)).unwrap().push(atomic_fact);
-            } else {
-                self.known_atomic_facts_with_more_than_2_args.insert((atomic_fact.key(), is_true), vec![atomic_fact]);
+        match atomic_fact {
+            AtomicFact::EqualFact(equal_fact) => self.store_equality(&equal_fact),
+            _ => {
+                let key = atomic_fact.key();
+                let is_true = atomic_fact.is_true();
+                if atomic_fact.args().len() == 1 {
+                    let arg_key = atomic_fact.args()[0].to_string();
+                    if self.known_atomic_facts_with_1_arg.contains_key(&(key, is_true)) {
+                        self.known_atomic_facts_with_1_arg.get_mut(&(atomic_fact.key(), is_true)).unwrap().insert(arg_key, ());
+                    } else {
+                        self.known_atomic_facts_with_1_arg.insert((atomic_fact.key(), is_true), HashMap::from([(arg_key, ())]));
+                    }
+                } else if atomic_fact.args().len() == 2 {
+                    let arg_key1 = atomic_fact.args()[0].to_string();
+                    let arg_key2 = atomic_fact.args()[1].to_string();
+                    if self.known_atomic_facts_with_2_args.contains_key(&(key, is_true)) {
+                        self.known_atomic_facts_with_2_args.get_mut(&(atomic_fact.key(), is_true)).unwrap().insert((arg_key1, arg_key2), ());
+                    } else {
+                        self.known_atomic_facts_with_2_args.insert((atomic_fact.key(), is_true), HashMap::from([((arg_key1, arg_key2), ())]));
+                    }
+                } else {
+                    if self.known_atomic_facts_with_more_than_2_args.contains_key(&(key, is_true)) {
+                        self.known_atomic_facts_with_more_than_2_args.get_mut(&(atomic_fact.key(), is_true)).unwrap().push(atomic_fact);
+                    } else {
+                        self.known_atomic_facts_with_more_than_2_args.insert((atomic_fact.key(), is_true), vec![atomic_fact]);
+                    }
+                }
+                Ok(())
             }
         }
-        Ok(())
     }
 
     fn store_exist_fact(&mut self, exist_fact: ExistFact) -> Result<(), StoreFactError> {

@@ -1,6 +1,6 @@
 use std::fmt;
-use crate::keywords::{FORALL, COLON, RIGHT_ARROW};
-use crate::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma};
+use crate::common::keywords::{FORALL, COLON, RIGHT_ARROW};
+use crate::common::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma};
 use super::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 #[derive(Clone)]

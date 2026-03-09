@@ -1,6 +1,6 @@
 use std::fmt;
-use crate::keywords::{AND, COMMA, EXIST, FACT_PREFIX, LEFT_CURLY_BRACE, NOT, OR, RIGHT_CURLY_BRACE, ST, is_comparison_str};
-use crate::helper::{curly_braced_vec_to_string_with_sep, vec_to_string_join_by_comma, vec_to_string_with_sep};
+use crate::common::keywords::{AND, COMMA, EXIST, FACT_PREFIX, LEFT_CURLY_BRACE, NOT, OR, RIGHT_CURLY_BRACE, ST, is_comparison_str};
+use crate::common::helper::{curly_braced_vec_to_string_with_sep, vec_to_string_join_by_comma, vec_to_string_with_sep};
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use super::atomic_fact::AtomicFact;
 use crate::obj::Obj;

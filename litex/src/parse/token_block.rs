@@ -1,6 +1,6 @@
-use crate::keywords::COLON;
-use crate::errors::ParseBlockError;
-use crate::errors::ParsingError;
+use crate::common::keywords::COLON;
+use crate::error::ParseBlockError;
+use crate::error::ParsingError;
 use super::tokenizer::tokenize_line;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

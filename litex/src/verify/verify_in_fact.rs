@@ -1,7 +1,7 @@
 use crate::fact::InFact;
-use crate::errors::VerifyFactError;
+use crate::error::VerifyFactError;
 use crate::execute::Executor;
-use crate::keywords::R;
+use crate::common::keywords::R;
 use crate::obj::Obj;
 use crate::result::StmtResult;
 use crate::result::FactVerifiedByBuiltinRules;

@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::keywords::{DOT_AKA_FIELD_ACCESS_SIGN, MOD_NAME_SEPARATOR};
+use crate::common::keywords::{DOT_AKA_FIELD_ACCESS_SIGN, MOD_NAME_SEPARATOR};
 
 #[derive(Clone)]
 pub enum Atom {

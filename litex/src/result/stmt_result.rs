@@ -1,6 +1,6 @@
 use std::fmt;
-use crate::errors::StmtError;
-use crate::keywords::SUCCESS;
+use crate::error::StmtError;
+use crate::common::keywords::SUCCESS;
 use super::stmt_success::{FactVerifiedByBuiltinRules, FactVerifiedByFact, NonFactualStmtSuccess};
 use super::stmt_unknown::StmtUnknown;
 
