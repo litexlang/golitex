@@ -4,7 +4,7 @@ use crate::executor::Executor;
 use crate::keywords::R;
 use crate::obj::Obj;
 use crate::stmt_result::StmtResult;
-use crate::stmt_success::{FactVerifiedByBuiltinRules, StmtSuccess};
+use crate::stmt_success::FactVerifiedByBuiltinRules;
 use crate::stmt_unknown::StmtUnknown;
 
 impl<'a> Executor<'a> {
@@ -27,9 +27,9 @@ impl<'a> Executor<'a> {
         match set {
             R => {
                 let fact_str = format!("{} in R", num);
-                Ok(StmtResult::StmtSuccess(StmtSuccess::FactVerifiedByBuiltinRules(
+                Ok(StmtResult::FactVerifiedByBuiltinRules(
                     FactVerifiedByBuiltinRules::new(fact_str, "number in R".to_string(), line_file_index),
-                )))
+                ))
             }
             _ => Ok(StmtResult::StmtUnknown(StmtUnknown::new())),
         }

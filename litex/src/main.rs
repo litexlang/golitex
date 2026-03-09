@@ -53,7 +53,6 @@ use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 mod stmt_result;
 use stmt_result::StmtResult;
 mod stmt_success;
-use stmt_success::StmtSuccess;
 use stmt_success::{NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules};
 mod stmt_unknown;
 use stmt_unknown::StmtUnknown;
@@ -721,7 +720,7 @@ fn try_stmt_result() {
         Obj::mk("q"),
         Some((1, 0)),
     ))));
-    let result = StmtResult::StmtSuccess(StmtSuccess::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), None)));
+    let result = StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), None));
     println!("{}", result);
 
 
@@ -741,11 +740,11 @@ fn try_stmt_result() {
 
 
     let fact_verified_by_fact = FactVerifiedByFact::new(fact.to_string(), fact.to_string(), None);
-    let result = StmtResult::StmtSuccess(StmtSuccess::FactVerifiedByFact(fact_verified_by_fact));
+    let result = StmtResult::FactVerifiedByFact(fact_verified_by_fact);
     println!("{}", result);
 
     let fact_verified_by_builtin_rules = FactVerifiedByBuiltinRules::new(fact.to_string(), "demo".to_string(), None);
-    let result = StmtResult::StmtSuccess(StmtSuccess::FactVerifiedByBuiltinRules(fact_verified_by_builtin_rules));
+    let result = StmtResult::FactVerifiedByBuiltinRules(fact_verified_by_builtin_rules);
     println!("{}", result);
 }
 

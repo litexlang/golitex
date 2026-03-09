@@ -3,7 +3,6 @@ use crate::definition_stmt::DefStmt;
 use crate::executor::Executor;
 use crate::definition_stmt::DefPropStmt;
 use crate::stmt_result::StmtResult;
-use crate::stmt_success::StmtSuccess;
 use crate::stmt_success::NonFactualStmtSuccess;
 use crate::definition_stmt::DefLetStmt;
 use crate::definition_stmt::DefStructStmt;
@@ -22,7 +21,7 @@ impl<'a> Executor<'a> {
 
     pub fn def_prop_stmt(&mut self, def_prop_stmt: &DefPropStmt) -> Result<StmtResult, ExecError> {
         self.validate_name_and_store_def_prop(def_prop_stmt)?;
-        Ok(StmtResult::StmtSuccess(StmtSuccess::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_prop_stmt.to_string(), def_prop_stmt.line_file_index))))
+        Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_prop_stmt.to_string(), def_prop_stmt.line_file_index)))
     }
 
     pub fn def_let_stmt(&mut self, def_let_stmt: &DefLetStmt) -> Result<StmtResult, ExecError> {
@@ -30,17 +29,17 @@ impl<'a> Executor<'a> {
         for fact in def_let_stmt.facts.iter() {
             self.validate_and_store_fact(fact)?;
         }
-        Ok(StmtResult::StmtSuccess(StmtSuccess::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_let_stmt.to_string(), def_let_stmt.line_file_index))))
+        Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_let_stmt.to_string(), def_let_stmt.line_file_index)))
     }
 
 
     pub fn def_struct_stmt(&mut self, def_struct_stmt: &DefStructStmt) -> Result<StmtResult, ExecError> {
         self.validate_name_and_store_def_struct(def_struct_stmt)?;
-        Ok(StmtResult::StmtSuccess(StmtSuccess::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_struct_stmt.to_string(), def_struct_stmt.line_file_index()))))
+        Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_struct_stmt.to_string(), def_struct_stmt.line_file_index())))
     }
 
     pub fn def_algo_stmt(&mut self, def_algo_stmt: &DefAlgoStmt) -> Result<StmtResult, ExecError> {
         self.validate_name_and_store_def_algo(def_algo_stmt)?;
-        Ok(StmtResult::StmtSuccess(StmtSuccess::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_algo_stmt.to_string(), def_algo_stmt.line_file_index))))
+        Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_algo_stmt.to_string(), def_algo_stmt.line_file_index)))
     }
 }

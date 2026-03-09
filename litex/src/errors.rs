@@ -15,6 +15,7 @@ pub enum StmtError {
     VerifyFactError(VerifyFactError),
 }
 
+
 impl std::error::Error for StmtError {}
 
 impl StmtError {
@@ -69,6 +70,12 @@ impl ArithmeticError {
     }
 }
 
+impl From<ArithmeticError> for StmtError {
+    fn from(e: ArithmeticError) -> Self {
+        StmtError::ArithmeticError(e)
+    }
+}
+
 #[derive(Debug)]
 pub struct NewAtomicFactError {
     pub msg: String,
@@ -85,6 +92,12 @@ impl fmt::Display for NewAtomicFactError {
 impl NewAtomicFactError {
     pub fn new(msg: &str) -> Self {
         NewAtomicFactError { msg: msg.to_string() }
+    }
+}
+
+impl From<NewAtomicFactError> for StmtError {
+    fn from(e: NewAtomicFactError) -> Self {
+        StmtError::NewAtomicFactError(e)
     }
 }
 
@@ -105,6 +118,12 @@ impl fmt::Display for StoreFactError {
 impl StoreFactError {
     pub fn new(msg: &str) -> Self {
         StoreFactError { msg: msg.to_string() }
+    }
+}
+
+impl From<StoreFactError> for StmtError {
+    fn from(e: StoreFactError) -> Self {
+        StmtError::StoreFactError(e)
     }
 }
 
@@ -149,6 +168,12 @@ impl ParseBlockError {
 }
 
 
+impl From<ParseBlockError> for StmtError {
+    fn from(e: ParseBlockError) -> Self {
+        StmtError::ParseBlockError(e)
+    }
+}
+
 #[derive(Debug)]
 pub struct ParsingError {
     pub msg: String,
@@ -166,6 +191,12 @@ impl fmt::Display for ParsingError {
 impl ParsingError {
     pub fn new(msg: &str, line_file_index: (usize, usize)) -> Self {
         ParsingError { msg: msg.to_string(), line_file_index }
+    }
+}
+
+impl From<ParsingError> for StmtError {
+    fn from(e: ParsingError) -> Self {
+        StmtError::ParsingError(e)
     }
 }
 
@@ -195,6 +226,11 @@ impl ExecError {
     }
 }
 
+impl From<ExecError> for StmtError {
+    fn from(e: ExecError) -> Self {
+        StmtError::ExecError(e)
+    }
+}
 
 #[derive(Debug)]
 pub struct WellDefinedError {
@@ -214,6 +250,12 @@ impl fmt::Display for WellDefinedError {
 impl WellDefinedError {
     pub fn new(msg: &str, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
         WellDefinedError { msg: msg.to_string(), previous_errors, line_file_index }
+    }
+}
+
+impl From<WellDefinedError> for StmtError {
+    fn from(e: WellDefinedError) -> Self {
+        StmtError::WellDefinedError(e)
     }
 }
 
@@ -238,6 +280,12 @@ impl VerifyFactError {
     }
 }
 
+impl From<VerifyFactError> for StmtError {
+    fn from(e: VerifyFactError) -> Self {
+        StmtError::VerifyFactError(e)
+    }
+}
+
 #[derive(Debug)]
 pub struct UnknownError {
     pub msg: String,
@@ -255,5 +303,11 @@ impl fmt::Display for UnknownError {
 impl UnknownError {
     pub fn new(msg: &str, line_file_index: Option<(usize, usize)>) -> Self {
         UnknownError { msg: msg.to_string(), line_file_index }
+    }
+}
+
+impl From<UnknownError> for StmtError {
+    fn from(e: UnknownError) -> Self {
+        StmtError::UnknownError(e)
     }
 }

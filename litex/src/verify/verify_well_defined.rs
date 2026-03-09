@@ -10,14 +10,14 @@ use crate::executor::Executor;
 
 // well-defined check for fact
 impl<'a> Executor<'a> {
-    pub fn verify_fact_well_defined(&self, fact: &Fact) -> Result<bool, WellDefinedError> {
+    pub fn verify_fact_well_defined(&self, fact: &Fact) -> Result<(), WellDefinedError> {
         match fact {
-            Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact_well_defined(atomic_fact),
-            _ => Err(WellDefinedError::new("verify_fact_well_defined: NOT IMPLEMENTED YET", vec![], fact.line_file())),
+            Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact_well_defined(atomic_fact).map_err(WellDefinedError::from),
+            _ => return Err(WellDefinedError::new("verify_fact_well_defined: NOT IMPLEMENTED YET", vec![], fact.line_file())),
         }
     }
 
-    fn verify_atomic_fact_well_defined(&self, atomic_fact: &AtomicFact) -> Result<bool, WellDefinedError> {
+    fn verify_atomic_fact_well_defined(&self, atomic_fact: &AtomicFact) -> Result<(), WellDefinedError> {
         // 1. predicate 定义过了：先看 name 是不是 builtin 之一或从环境里拿到的定义
         let name_string = atomic_fact.key();
         if is_builtin_predicate(&name_string) {
@@ -35,7 +35,7 @@ impl<'a> Executor<'a> {
                     atomic_fact_line_file(atomic_fact),
                 ));
             }
-            return Ok(true);
+            return Ok(());
         } else {
             let predicate_definition = self.runtime_context.get_predicate_definition_by_name(&name_string);
             if predicate_definition.is_none() {
@@ -71,27 +71,27 @@ impl<'a> Executor<'a> {
         }
             
         
-        Ok(true)
+        Ok(())
     }
 }
 
 // well-defined check for obj
 impl<'a> Executor<'a> {
-    fn verify_obj_well_defined(&self, _obj: &Obj) -> Result<bool, WellDefinedError> {
+    fn verify_obj_well_defined(&self, _obj: &Obj) -> Result<(), WellDefinedError> {
         match _obj {
             Obj::Identifier(identifier) => self.verify_identifier_well_defined(identifier),
             Obj::FnObj(_obj) => self.verify_fn_obj_well_defined(_obj),
-            Obj::Number(_) => Ok(true),
+            Obj::Number(_) => Ok(()),
             _ => Err(WellDefinedError::new("verify_obj_well_defined: NOT IMPLEMENTED YET", vec![], None)),
         }
     }
 
-    fn verify_identifier_well_defined(&self, identifier: &Identifier) -> Result<bool, WellDefinedError> {
+    fn verify_identifier_well_defined(&self, identifier: &Identifier) -> Result<(), WellDefinedError> {
         let _ = identifier;
         Err(WellDefinedError::new("verify_identifier_well_defined: NOT IMPLEMENTED YET", vec![], None))
     }
 
-    fn verify_fn_obj_well_defined(&self, fn_obj: &FnObj) -> Result<bool, WellDefinedError> {
+    fn verify_fn_obj_well_defined(&self, fn_obj: &FnObj) -> Result<(), WellDefinedError> {
         let _ = fn_obj;
         Err(WellDefinedError::new("verify_fn_obj_well_defined: NOT IMPLEMENTED YET", vec![], None))
     }
