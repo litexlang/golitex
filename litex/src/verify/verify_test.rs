@@ -74,6 +74,5 @@ fn test_exec_stmt_fact_one_plus_one_eq_two() {
     match &result {
         StmtResult::NonFactualStmtSuccess(_) | StmtResult::FactVerifiedByFact(_) | StmtResult::FactVerifiedByBuiltinRules(_) => println!("{}", result),
         StmtResult::StmtUnknown(u) => panic!("fact 1+1=2 should be verified, got StmtUnknown: {}", u),
-        StmtResult::StmtError(e) => panic!("fact 1+1=2 should be verified, got StmtError: {}", e),
     }
 }
