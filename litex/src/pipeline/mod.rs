@@ -44,7 +44,7 @@ pub fn run_source_code(source_code: &str) -> String {
         };
         let result = match executor.stmt(&stmt) {
             Ok(r) => r,
-            Err(e) => return format!("exec error: {}", e),
+            Err(e) => return format!("exec error {}: {}", e.line_file().unwrap_or((0, 0)).0, e),
         };
         if !out.is_empty() {
             out.push('\n');
