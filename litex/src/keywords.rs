@@ -33,7 +33,7 @@ pub const INFIX_FN_NAME_SIGN: &str = "\\";
 pub const UNION: &str = "union";
 pub const INTERSECT: &str = "intersect";
 pub const SET_MINUS: &str = "set_minus";
-pub const DISJOINT_UNION: &str = "disjoint_union";
+pub const SET_DIFF: &str = "set_diff";
 pub const CUP: &str = "cup";
 pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
@@ -126,7 +126,7 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
 fn build_keywords_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
     let words = [
-        UNION, INTERSECT, SET_MINUS, DISJOINT_UNION, CUP, CAP, POWER_SET, CHOOSE,
+        UNION, INTERSECT, SET_MINUS, SET_DIFF, CUP, CAP, POWER_SET, CHOOSE,
         FN, SET, NONEMPTY_SET, FINITE_SET, N_POS, N, Q, Z, R,
         CART, CART_DIM, PROJ, COUNT, RANGE, CLOSED_RANGE, VAL,
         EXIST, ST, FORALL, NOT, IS_SET, IS_NONEMPTY_SET, IS_FINITE_SET, IS_CART, IS_TUPLE,
@@ -174,4 +174,8 @@ pub fn is_key_symbol_or_keyword(atom_name: &str) -> bool {
 
 pub fn is_comparison_str(atom_name: &str) -> bool {
     atom_name == EQUAL || atom_name == NOT_EQUAL || atom_name == LESS || atom_name == GREATER || atom_name == LESS_EQUAL || atom_name == GREATER_EQUAL
+}
+
+pub fn is_builtin_predicate(atom_name: &str) -> bool {
+    atom_name == EQUAL || atom_name == NOT_EQUAL || atom_name == LESS || atom_name == GREATER || atom_name == LESS_EQUAL || atom_name == GREATER_EQUAL || atom_name == IS_SET || atom_name == IS_NONEMPTY_SET || atom_name == IS_FINITE_SET || atom_name == IS_CART || atom_name == IS_TUPLE || atom_name == SUBSET || atom_name == SUPERSET || atom_name == IN
 }

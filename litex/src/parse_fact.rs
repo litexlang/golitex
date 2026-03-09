@@ -236,7 +236,7 @@ impl Parser {
     }
 
     /// 将解析得到的 OrFactOrAndFactOrSpecFact 转为 FactInsideExistFact，并校验 exist 体内只允许 atomic / and-of-atomics / chain / or-of-these。
-    fn try_convert_to_fact_inside_exist(
+    fn try_convert_or_and_spec_fact_to_fact_inside_exist(
         &self,
         o: OrFactOrAndFactOrSpecFact,
         line_file_index: (usize, usize),
@@ -274,14 +274,14 @@ impl Parser {
             OrFactOrAndFactOrSpecFact::OrFact(OrFact { facts: or_facts, line_file_index: lf }) => {
                 let mut inner = vec![];
                 for and_or_spec in or_facts {
-                    inner.push(self.try_convert_to_fact_in_or_atomic(and_or_spec, line_file_index)?);
+                    inner.push(self.try_convert_and_spec_fact_to_fact_inside_exist_fact(and_or_spec, line_file_index)?);
                 }
                 Ok(FactInsideExistFact::OrAtomicFact(OrAtomicFact::new(inner, lf)))
             }
         }
     }
 
-    fn try_convert_to_fact_in_or_atomic(
+    fn try_convert_and_spec_fact_to_fact_inside_exist_fact(
         &self,
         a: AndFactOrSpecFact,
         line_file_index: (usize, usize),
@@ -340,11 +340,11 @@ impl Parser {
             tb.skip_token(RIGHT_CURLY_BRACE)?;
             list
         } else {
-            vec![self.or_and_spec_fact(tb)?]
+            return Err(ParsingError::new("Expected { after exist", tb.line_file_index));
         };
         let line_file = tb.line_file_index;
         raw.into_iter()
-            .map(|o| self.try_convert_to_fact_inside_exist(o, line_file))
+            .map(|o| self.try_convert_or_and_spec_fact_to_fact_inside_exist(o, line_file))
             .collect()
     }
 }
