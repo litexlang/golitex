@@ -42,3 +42,17 @@ impl OrFactOrAndFactOrSpecFact {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::atomic_fact::{AtomicFact, EqualFact};
+
+    #[test]
+    fn test_or_fact_or_and_fact_or_specific_fact_key() {
+        let o = OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
+            EqualFact::new(crate::obj::Obj::mk("p"), crate::obj::Obj::mk("q"), Some((1, 0))),
+        )));
+        let _k = o.key();
+    }
+}
+
