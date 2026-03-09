@@ -32,7 +32,9 @@ impl Obj {
 }
 
 impl Obj {
-    /// 将算术表达式计算出字符串结果；非算术表达式会 panic
+    /// 1 + 1 => 2
+    /// 1 - 2 => -1
+    /// 1 - 1 => 0
     pub fn calculate_to_string(&self) -> String {
         match self {
             Obj::Number(n) => n.value.clone(),

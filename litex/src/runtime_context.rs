@@ -1,8 +1,8 @@
 use std::fmt;
+use std::collections::HashMap;
 use crate::keywords::MOD_NAME_SEPARATOR;
 use crate::module_manager::ModuleManager;
 use crate::environment::Environment;
-use std::collections::HashMap;
 use crate::definition_stmt::DefPropStmt;
 use crate::definition_stmt::DefStructStmt;
 use crate::define_algorithm_stmt::DefAlgoStmt;
@@ -60,4 +60,5 @@ impl<'a> RuntimeContext<'a> {
         }
         self.builtin_environment.defined_props.get(predicate_name)
     }
+
 }
