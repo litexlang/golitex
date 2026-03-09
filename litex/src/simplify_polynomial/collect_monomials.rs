@@ -91,7 +91,7 @@ pub fn collect_monomial_in_mul(mul: &Mul) -> Vec<Monomial> {
     // 遍历left，遍历right，让每一位都相乘，放在一个
     panic!("")
     
-    // 如果两个都是没有operand，那就相乘
+    // 如果两个都是没有operand，那就相乘，每一位都获得一个新的 operand 这个新operand需要sort，然后
 
     // 如果一个有，一个没有
 }

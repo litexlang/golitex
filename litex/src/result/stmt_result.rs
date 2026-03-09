@@ -1,6 +1,6 @@
 use std::fmt;
-use crate::error::StmtError;
-use crate::common::keywords::SUCCESS;
+use crate::common::keywords::{SUCCESS, UNKNOWN};
+use crate::error::{StmtError, UnknownError};
 use super::stmt_success::{FactVerifiedByBuiltinRules, FactVerifiedByFact, NonFactualStmtSuccess};
 use super::stmt_unknown::StmtUnknown;
 
@@ -9,7 +9,6 @@ pub enum StmtResult {
     FactVerifiedByFact(FactVerifiedByFact),
     FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules),
     StmtUnknown(StmtUnknown),
-    StmtError(StmtError),
 }
 
 impl fmt::Display for StmtResult {
@@ -19,7 +18,6 @@ impl fmt::Display for StmtResult {
             StmtResult::FactVerifiedByFact(x) => write!(f, "{}", x),
             StmtResult::FactVerifiedByBuiltinRules(x) => write!(f, "{}\n{}", SUCCESS, x),
             StmtResult::StmtUnknown(x) => write!(f, "{}", x),
-            StmtResult::StmtError(x) => write!(f, "{}", x),
         }
     }
 }
@@ -31,7 +29,20 @@ impl StmtResult {
             StmtResult::FactVerifiedByFact(x) => x.line_file_index,
             StmtResult::FactVerifiedByBuiltinRules(x) => x.line_file_index,
             StmtResult::StmtUnknown(_) => None,
-            StmtResult::StmtError(x) => x.line_file(),
         }
     }
 }
+
+pub fn result_to_option_stmt_error<E>(result: Result<StmtResult, E>) -> Option<StmtError>
+where
+    E: Into<StmtError>,
+{
+    match result {
+        Err(e) => Some(e.into()),
+        Ok(StmtResult::StmtUnknown(_)) => {
+            Some(StmtError::UnknownError(UnknownError::new(UNKNOWN, None)))
+        }
+        Ok(_) => None,
+    }
+}
+

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 mod verify;
+use verify::VerifyState;
 use verify::SyntacticVerifier;
 mod simplify_polynomial;
 mod common;
@@ -678,12 +679,6 @@ fn try_stmt_result() {
     let result = StmtResult::StmtUnknown(unknown);
     println!("{}", result);
 
-    let err = StmtError::ArithmeticError(ArithmeticError::new("demo"));
-    let result = StmtResult::StmtError(err);
-    println!("{}", result);
-
-
-
     let fact_verified_by_fact = FactVerifiedByFact::new(fact.to_string(), fact.to_string(), None);
     let result = StmtResult::FactVerifiedByFact(fact_verified_by_fact);
     println!("{}", result);
@@ -1243,7 +1238,7 @@ fn try_obj_well_defined<'a>() {
     let environment: Box<Environment> = Box::new(Environment::new_empty_env());
     let builtin_environment: Box<Environment> = Box::new(Environment::new_empty_env());
     let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
-    let executor = Executor::new(&mut runtime_context);
+    let mut executor = Executor::new(&mut runtime_context);
     
     let one = Obj::Number(Number::new("1"));
     let two = Obj::Number(Number::new("2"));
@@ -1252,13 +1247,14 @@ fn try_obj_well_defined<'a>() {
     println!("{}", atomic_fact);
 
     let fact = Fact::AtomicFact(atomic_fact);
-    let fact_well_defined = executor.verify_fact_well_defined(&fact);
+    let mut verify_state = VerifyState::new(0, false);
+    let fact_well_defined = executor.verify_fact_well_defined(&fact, &mut verify_state);
     if fact_well_defined.is_err() {
         println!("ERROR:{}", fact_well_defined.err().unwrap());
     }
 
-    let obj_well_defined = executor.verify_fact(&fact);
-    if obj_well_defined.is_err() {
-        println!("ERROR:{}", obj_well_defined.err().unwrap());
+    let result = executor.fact(&fact, &mut verify_state);
+    if result.is_err() {
+        println!("ERROR:{}", result.err().unwrap());
     }
 }

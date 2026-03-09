@@ -6,12 +6,13 @@ use crate::obj::Obj;
 use crate::result::StmtResult;
 use crate::result::FactVerifiedByBuiltinRules;
 use crate::result::StmtUnknown;
+use crate::verify::VerifyState;
 
 impl<'a> Executor<'a> {
-    pub(crate) fn verify_in_fact(&self, in_fact: &InFact) -> Result<StmtResult, VerifyFactError> {
+    pub(crate) fn verify_in_fact(&self, in_fact: &InFact, _verify_state: &mut VerifyState) -> Result<StmtResult, VerifyFactError> {
         match (&in_fact.element, &in_fact.set) {
             (Obj::Number(num), Obj::RObj(_)) => {
-                self.verify_number_in_standard_number_set(&num.value, R, in_fact.line_file_index)
+                self.verify_number_in_standard_number_set(&num.value, R, in_fact.line_file_index, _verify_state)
             }
             _ => Ok(StmtResult::StmtUnknown(StmtUnknown::new())),
         }
@@ -22,6 +23,7 @@ impl<'a> Executor<'a> {
         num: &str,
         set: &str,
         line_file_index: Option<(usize, usize)>,
+        _verify_state: &mut VerifyState,
     ) -> Result<StmtResult, VerifyFactError> {
         let _ = self;
         match set {
