@@ -1,18 +1,18 @@
 use std::collections::HashMap;
 
-use crate::atomic_fact::AtomicFact;
-use crate::atomic_fact::EqualFact;
+use crate::fact::AtomicFact;
+use crate::fact::EqualFact;
 use crate::environment::Environment;
-use crate::executor::Executor;
+use crate::execute::Executor;
 use crate::fact::Fact;
 use crate::module_manager::ModuleManager;
 use crate::obj::{Number, Obj};
-use crate::parser::Parser;
+use crate::parse::Parser;
 use crate::runtime_context::RuntimeContext;
 use crate::stmt::Stmt;
-use crate::stmt_result::StmtResult;
-use crate::token_block::TokenBlock;
-use crate::tokenizer::tokenize_line;
+use crate::result::StmtResult;
+use crate::parse::TokenBlock;
+use crate::parse::tokenize_line;
 
 #[test]
 fn test_verify_atomic_fact() {

@@ -2,9 +2,9 @@ use std::collections::HashMap;
 use crate::runtime_context::RuntimeContext;
 use crate::module_manager::ModuleManager;
 use crate::environment::Environment;
-use crate::token_block::TokenBlock;
-use crate::parser::Parser;
-use crate::executor::Executor;
+use crate::parse::TokenBlock;
+use crate::parse::Parser;
+use crate::execute::Executor;
 use crate::stmt::Stmt;
 
 pub fn run_source_code(source_code: &str) -> String {

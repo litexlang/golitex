@@ -1,9 +1,9 @@
-use crate::atomic_fact::{AtomicFact, EqualFact};
-use crate::executor::Executor;
-use crate::stmt_unknown::StmtUnknown;
+use crate::fact::{AtomicFact, EqualFact};
+use crate::execute::Executor;
+use crate::result::StmtUnknown;
 use crate::errors::VerifyFactError;
-use crate::stmt_result::StmtResult;
-use crate::stmt_success::FactVerifiedByBuiltinRules;
+use crate::result::StmtResult;
+use crate::result::FactVerifiedByBuiltinRules;
 
 impl<'a> Executor<'a> {
     pub fn verify_atomic_fact(&self, atomic_fact: &AtomicFact) -> Result<StmtResult, VerifyFactError> {

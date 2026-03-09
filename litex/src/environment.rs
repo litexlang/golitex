@@ -1,21 +1,22 @@
 use std::collections::HashMap;
 use std::fmt;
-use crate::definition_stmt::DefStructStmt;
+use crate::stmt::definition_stmt::DefStructStmt;
 use crate::fact::Fact;
-use crate::definition_stmt::DefPropStmt;
-use crate::define_algorithm_stmt::DefAlgoStmt;
-use crate::atomic_fact::AtomicFact;
-use crate::exist_fact::ExistFact;
-use crate::forall_fact::ForallFact;
-use crate::or_fact::OrFact;
+use crate::stmt::definition_stmt::DefPropStmt;
+use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
+use crate::fact::AtomicFact;
+use crate::fact::ExistFact;
+use crate::fact::ForallFact;
+use crate::fact::OrFact;
 use std::rc::Rc;
 use crate::obj::FnSetObj;
 use crate::obj::SetBuilder;
-use crate::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
-use crate::specific_fact::SpecFact;
-use crate::and_fact::AndFact;
-use crate::forall_fact_with_iff::ForallFactWithIff;
+use crate::fact::OrFactOrAndFactOrSpecFact;
+use crate::fact::SpecFact;
+use crate::fact::AndFact;
+use crate::fact::ForallFactWithIff;
 use crate::errors::{StoreFactError};
+use crate::fact::EqualFact;
 
 pub struct Environment {
     pub defined_atom_names: HashMap<String, ()>,
@@ -262,6 +263,74 @@ impl Environment {
             Fact::ForallFact(forall_fact) => self.store_forall_fact(Rc::new(forall_fact)),
             Fact::ForallFactWithIff(forall_fact_with_iff) => self.store_forall_fact_with_iff(forall_fact_with_iff),
         }
+    }
+
+    pub fn store_equality(&mut self, equality: &EqualFact) -> Result<(), StoreFactError> {
+        let left_as_string = equality.left.to_string();
+        let right_as_string = equality.right.to_string();
+        if left_as_string == right_as_string {
+            return Ok(());
+        }
+
+        let left_rc = self.known_equality.get(&left_as_string).map(Rc::clone);
+        let right_rc = self.known_equality.get(&right_as_string).map(Rc::clone);
+
+        match (left_rc, right_rc) {
+            (Some(ref left_r), Some(ref right_r)) => {
+                if Rc::ptr_eq(left_r, right_r) {
+                    return Ok(());
+                }
+                // 1. 合并两个等价类：新 vec = 两个 vec 的并，所有指向任一的 key 都改为指向新 Rc
+                let merged: Vec<String> = {
+                    let a: &Vec<String> = left_r.as_ref();
+                    let b: &Vec<String> = right_r.as_ref();
+                    let mut v: Vec<String> = a.iter().chain(b.iter()).cloned().collect();
+                    v.sort();
+                    v.dedup();
+                    v
+                };
+                let new_rc = Rc::new(merged);
+                for k in new_rc.iter() {
+                    self.known_equality.insert(k.clone(), Rc::clone(&new_rc));
+                }
+            }
+            (Some(ref rc), None) => {
+                // 2. 仅 right 不在：把 right 加入 left 所在等价类（Rc<Vec> 不可变，新建 Vec 并更新所有指向该类的 key）
+                let mut new_vec = (**rc).clone();
+                new_vec.push(right_as_string.clone());
+                let new_rc = Rc::new(new_vec);
+                let keys_to_update: Vec<String> = self.known_equality.iter()
+                    .filter(|(_, v)| Rc::ptr_eq(v, rc))
+                    .map(|(k, _)| k.clone())
+                    .collect();
+                for k in keys_to_update {
+                    self.known_equality.insert(k, Rc::clone(&new_rc));
+                }
+                self.known_equality.insert(right_as_string, new_rc);
+            }
+            (None, Some(ref rc)) => {
+                // 2. 仅 left 不在：把 left 加入 right 所在等价类
+                let mut new_vec = (**rc).clone();
+                new_vec.push(left_as_string.clone());
+                let new_rc = Rc::new(new_vec);
+                let keys_to_update: Vec<String> = self.known_equality.iter()
+                    .filter(|(_, v)| Rc::ptr_eq(v, rc))
+                    .map(|(k, _)| k.clone())
+                    .collect();
+                for k in keys_to_update {
+                    self.known_equality.insert(k, Rc::clone(&new_rc));
+                }
+                self.known_equality.insert(left_as_string, new_rc);
+            }
+            (None, None) => {
+                // 3. 两个都不在：新建等价类 [left, right]
+                let vec = vec![left_as_string.clone(), right_as_string.clone()];
+                let new_rc = Rc::new(vec);
+                self.known_equality.insert(left_as_string.clone(), Rc::clone(&new_rc));
+                self.known_equality.insert(right_as_string, new_rc);
+            }
+        }
+        Ok(())
     }
 }
 
