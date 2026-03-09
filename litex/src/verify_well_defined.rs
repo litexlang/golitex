@@ -1,4 +1,3 @@
-use crate::verifier::Verifier;
 use crate::atom::Identifier;
 use crate::obj::FnObj;
 use crate::keywords::is_builtin_predicate;
@@ -7,9 +6,10 @@ use crate::errors::WellDefinedError;
 use crate::atomic_fact::AtomicFact;
 use crate::atomic_fact::line_file as atomic_fact_line_file;
 use crate::obj::Obj;
+use crate::executor::Executor;
 
 // well-defined check for fact
-impl<'a> Verifier<'a> {
+impl<'a> Executor<'a> {
     pub fn verify_fact_well_defined(&self, fact: &Fact) -> Result<bool, WellDefinedError> {
         match fact {
             Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact_well_defined(atomic_fact),
@@ -76,12 +76,13 @@ impl<'a> Verifier<'a> {
 }
 
 // well-defined check for obj
-impl<'a> Verifier<'a> {
+impl<'a> Executor<'a> {
     fn verify_obj_well_defined(&self, _obj: &Obj) -> Result<bool, WellDefinedError> {
         match _obj {
             Obj::Identifier(identifier) => self.verify_identifier_well_defined(identifier),
             Obj::FnObj(_obj) => self.verify_fn_obj_well_defined(_obj),
-            _ => Err(WellDefinedError::new("verify_obj_well_defined: NOT IMPLEMENTED YET", vec![], None))
+            Obj::Number(_) => Ok(true),
+            _ => Err(WellDefinedError::new("verify_obj_well_defined: NOT IMPLEMENTED YET", vec![], None)),
         }
     }
 
