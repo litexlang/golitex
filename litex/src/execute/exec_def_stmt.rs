@@ -30,7 +30,13 @@ impl<'a> Executor<'a> {
 
     fn def_prop_stmt_check_well_defined(&mut self, def_prop_stmt: &DefPropStmt) -> Result<(), ExecError> {
         self.runtime_context.new_env();
+
+        for param_def in def_prop_stmt.params_def_with_type.iter() {
+            self.define_params_with_type(param_def)?;
+        }
+        
         let result = self.def_prop_stmt_check_well_defined_body(def_prop_stmt);
+
         self.runtime_context.delete_env();
         result
     }
@@ -40,7 +46,7 @@ impl<'a> Executor<'a> {
             None => {},
             Some(iff_facts) => {
                 for fact in iff_facts.iter() {
-                    self.verify_fact_well_defined(fact, &mut VerifyState::new(0, false))?;
+                    self.verify_fact_well_defined_and_store(fact, &mut VerifyState::new(0, false))?;
                 }
             }
         }
@@ -89,7 +95,6 @@ impl<'a> Executor<'a> {
         return Err(ExecError::new("have_fn_equal_case_by_case_stmt: NOT IMPLEMENTED YET", vec![], have_fn_equal_case_by_case_stmt.line_file_index));
     }
 
-    /// 为 ParamDefWithParamType（let 等用的参数类型）校验名字并写入参数对应的 facts。
     fn define_params_with_type(&mut self, param_def: &ParamDefWithParamType) -> Result<(), ExecError> {
         let facts = param_def.facts();
         for (name, fact) in param_def.0.iter().zip(facts.iter()) {
