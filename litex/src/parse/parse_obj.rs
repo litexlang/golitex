@@ -1,4 +1,4 @@
-use crate::common::helper::is_number_string_literally_integer;
+use crate::common::helper::is_number_string_literally_integer_without_dot;
 use crate::common::keywords::{
     ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SING, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
 };
@@ -109,7 +109,7 @@ impl Parser {
                         can_be_calculated = false;
                     } else {
                         let calculated_right = right.calculate_to_string();
-                        if is_number_string_literally_integer(&calculated_right) {
+                        if is_number_string_literally_integer_without_dot(&calculated_right) {
                             can_be_calculated = false;
                         }
                     }

@@ -36,6 +36,10 @@ impl Obj {
     /// 1 - 2 => -1
     /// 1 - 1 => 0
     pub fn calculate_to_string(&self) -> String {
+        if !self.can_be_calculated() {
+            panic!("kernel bug: 计算不该计算的东西了")
+        }
+        
         match self {
             Obj::Number(n) => n.value.clone(),
             Obj::Add(add) => {
@@ -201,7 +205,7 @@ fn compare_decimal_parts(
 }
 
 /// 竖式乘法：两个非负数字串，返回积的字符串（product[0]=个位，即最低位）
-fn mul_decimal_str(a: &str, b: &str) -> String {
+pub fn mul_decimal_str(a: &str, b: &str) -> String {
     let (int_a, frac_a) = parse_decimal_parts(a);
     let (int_b, frac_b) = parse_decimal_parts(b);
     let frac_places = frac_a.len() + frac_b.len();
@@ -302,7 +306,7 @@ fn mod_decimal_str(a: &str, b: &str) -> String {
 }
 
 /// 仅支持非负整数指数：base^exp，exp 必须为整数（如 "3" 或 "0"），返回字符串；否则 panic
-fn pow_decimal_str(base: &str, exp: &str) -> String {
+pub fn pow_decimal_str(base: &str, exp: &str) -> String {
     let (exp_int, exp_frac) = parse_decimal_parts(exp);
     if exp_frac.iter().any(|&d| d != 0) {
         panic!("幂运算仅支持整数指数");
