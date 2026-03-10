@@ -1,6 +1,7 @@
 use std::fmt;
+use crate::fact::{AtomicFact, Fact, InFact, IsSetFact, IsNonemptySetFact, IsFiniteSetFact};
 use crate::common::helper::vec_to_string_join_by_comma;
-use crate::obj::Obj;
+use crate::obj::{Identifier, Obj};
 use crate::common::keywords::{FINITE_SET, NONEMPTY_SET, SET};
 
 /// 参数名列表（长度 1 表示单参数）与对应的 Obj（set）
@@ -84,5 +85,34 @@ impl fmt::Display for ParamDefWithParamSet {
 impl fmt::Display for ParamDefWithParamType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}", vec_to_string_join_by_comma(&self.0), self.1)
+    }
+}
+
+impl ParamDefWithParamType {
+    pub fn facts(&self) -> Vec<Fact> {
+        self.0
+            .iter()
+            .map(|name| {
+                match &self.1 {
+                    ParamType::Obj(obj) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                        Obj::Identifier(Identifier::new(name)),
+                        obj.clone(),
+                        None,
+                    ))),
+                    ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
+                        Obj::Identifier(Identifier::new(name)),
+                        None,
+                    ))),
+                    ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+                        Obj::Identifier(Identifier::new(name)),
+                        None,
+                    ))),
+                    ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
+                        Obj::Identifier(Identifier::new(name)),
+                        None,
+                    ))),
+                }
+            })
+            .collect()
     }
 }

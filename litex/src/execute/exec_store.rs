@@ -1,16 +1,21 @@
-use crate::error::{ExecError, StoreFactError};
+use crate::error::{ExecError, StoreFactError, WellDefinedError};
 use crate::fact::Fact;
-use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
+use crate::obj::Identifier;
 use crate::stmt::definition_stmt::{DefPropStmt, DefStructStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::common::keywords::{PROP, STRUCT, ALGO};
 use super::Executor;
+use crate::common::is_valid_litex_name::is_valid_litex_name;
 
 impl<'a> Executor<'a> {
     pub fn validate_name_and_store_def_prop(&mut self, def_prop_stmt: &DefPropStmt) -> Result<(), ExecError> {
-        if !self.validate_name(&def_prop_stmt.name) {
-            return Err(ExecError::new(format!("invalid {} name", PROP).as_str(), vec![], def_prop_stmt.line_file_index));
+        if let Err(e) = self.validate_name(&def_prop_stmt.name) {
+            return Err(ExecError::new(format!("invalid {} name", PROP).as_str(), vec![e.into()], def_prop_stmt.line_file_index));
         }
+        self.store_def_prop(def_prop_stmt)
+    }
+
+    fn store_def_prop(&mut self, def_prop_stmt: &DefPropStmt) -> Result<(), ExecError> {
         let name = def_prop_stmt.name.clone();
         self.runtime_context.defined_props.insert(name.clone(), def_prop_stmt.clone());
         self.runtime_context.top_level_env().defined_props.insert(name, def_prop_stmt.clone());
@@ -18,41 +23,56 @@ impl<'a> Executor<'a> {
     }
 
     pub fn validate_name_and_store_def_algo(&mut self, def_algo_stmt: &DefAlgoStmt) -> Result<(), ExecError> {
-        if !self.validate_name(&def_algo_stmt.name) {
-            return Err(ExecError::new(format!("invalid {} name", ALGO).as_str(), vec![], def_algo_stmt.line_file_index));
+        if let Err(e) = self.validate_name(&def_algo_stmt.name) {
+            return Err(ExecError::new(format!("invalid {} name", ALGO).as_str(), vec![e.into()], def_algo_stmt.line_file_index));
         }
+        self.store_def_algo(def_algo_stmt)
+    }
+
+    fn store_def_algo(&mut self, def_algo_stmt: &DefAlgoStmt) -> Result<(), ExecError> {
         let name = def_algo_stmt.name.clone();
         self.runtime_context.defined_algorithms.insert(name.clone(), def_algo_stmt.clone());
         self.runtime_context.top_level_env().defined_algorithms.insert(name, def_algo_stmt.clone());
         Ok(())
     }
 
-    pub fn validate_name_and_store_atom_name(&mut self, arg_def: &Vec<ParamDefWithParamType>, line_file_index: Option<(usize, usize)>) -> Result<(), ExecError> {
-        for param_def in arg_def.iter() {
-            for name in param_def.0.iter() {
-                if !self.validate_name(&name) {
-                    if !self.validate_name(&name) {
-                        return Err(ExecError::new("invalid atom name", vec![], line_file_index));
-                    }
-                    self.runtime_context.defined_identifier_objs.insert(name.clone(), ());
-                    self.runtime_context.top_level_env().defined_identifier_objs.insert(name.clone(), ());
-                }
-            }
+    pub fn validate_name_and_store_identifier_obj(&mut self, name: &str) -> Result<(), ExecError> {
+        if let Err(e) = self.validate_name(name) {
+            return Err(ExecError::new(format!("invalid identifier name {}", name).as_str(), vec![e.into()], None));
         }
+        self.store_identifier_obj(name)
+    }
+    
+    fn store_identifier_obj(&mut self, identifier_obj: &str) -> Result<(), ExecError> {
+        self.runtime_context.defined_identifier_objs.insert(identifier_obj.to_string(), ());
+        self.runtime_context.top_level_env().defined_identifier_objs.insert(identifier_obj.to_string(), ());
         Ok(())
     }
 
     pub fn validate_name_and_store_def_struct(&mut self, def_struct_stmt: &DefStructStmt) -> Result<(), ExecError> {
         let name = def_struct_stmt.name().to_string();
-        if !self.validate_name(&name) {
-            return Err(ExecError::new(format!("invalid {} name", STRUCT).as_str(), vec![], def_struct_stmt.line_file_index())); }
+        if let Err(e) = self.validate_name(&name) {
+            return Err(ExecError::new(format!("invalid {} name", STRUCT).as_str(), vec![e.into()], None)); }
+        self.store_def_struct(def_struct_stmt)
+    }
+
+    fn store_def_struct(&mut self, def_struct_stmt: &DefStructStmt) -> Result<(), ExecError> {
+        let name = def_struct_stmt.name().to_string();
         self.runtime_context.defined_structs.insert(name.clone(), def_struct_stmt.clone());
         self.runtime_context.top_level_env().defined_structs.insert(name, def_struct_stmt.clone());
         Ok(())
     }
 
-    pub fn validate_name(&self, _name: &str) -> bool {
-        true
+    pub fn validate_name(&self, name: &str) -> Result<(), WellDefinedError> {
+        if let Err(e) = is_valid_litex_name(name) {
+            return Err(WellDefinedError::new(e.as_str(), vec![], None));
+        }
+
+        if self.runtime_context.is_name_used(name) {
+            return Err(WellDefinedError::new(format!("name {} is already used", name).as_str(), vec![], None));
+        }
+        
+        Ok(())
     }
 }
 
