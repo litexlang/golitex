@@ -2,7 +2,7 @@ use crate::obj::IdentifierOrIdentifierWithMod;
 use crate::fact::AtomicFact;
 use crate::fact::{
     AndAtomicFact, ChainAtomicFact, ExistFact, MatchableFactWithAtomicFactInside, FactInsideExistFact,
-    NotExistFact, OrAtomicFact, TrueExistFact,
+    NotExistFact, TrueExistFact,
 };
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use crate::fact::OrFactOrAndFactOrSpecFact;

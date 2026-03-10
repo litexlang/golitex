@@ -3,7 +3,8 @@ use crate::common::keywords::{COMMA, EXIST, LEFT_CURLY_BRACE, NOT, RIGHT_CURLY_B
 use crate::common::helper::{curly_braced_vec_to_string_with_sep, vec_to_string_join_by_comma};
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use super::atomic_fact::AtomicFact;
-use super::matchable_fact_with_atomic_fact_inside::{AndAtomicFact, ChainAtomicFact, OrAtomicFact};
+use super::matchable_fact_with_atomic_fact_inside::{AndAtomicFact, ChainAtomicFact};
+use super::or_fact::OrFact;
 
 #[derive(Clone)]
 pub enum ExistFact {
@@ -16,7 +17,7 @@ pub enum FactInsideExistFact {
     AtomicFact(AtomicFact),
     AndAtomicFact(AndAtomicFact),
     ChainAtomicFact(ChainAtomicFact),
-    OrAtomicFact(OrAtomicFact),
+    OrAtomicFact(OrFact),
 }
 
 #[derive(Clone)]
@@ -107,7 +108,7 @@ impl FactInsideExistFact {
             FactInsideExistFact::AtomicFact(_) => None,
             FactInsideExistFact::AndAtomicFact(a) => a.line_file_index(),
             FactInsideExistFact::ChainAtomicFact(c) => c.line_file_index(),
-            FactInsideExistFact::OrAtomicFact(o) => o.line_file_index(),
+            FactInsideExistFact::OrAtomicFact(o) => o.line_file_index,
         }
     }
 }

@@ -10,7 +10,7 @@ mod specific_fact;
 
 pub use atomic_fact::*;
 pub use exist_fact::{ExistFact, FactInsideExistFact, NotExistFact, TrueExistFact};
-pub use matchable_fact_with_atomic_fact_inside::{AndAtomicFact, ChainAtomicFact, MatchableFactWithAtomicFactInside, OrAtomicFact};
+pub use matchable_fact_with_atomic_fact_inside::{AndAtomicFact, ChainAtomicFact, MatchableFactWithAtomicFactInside};
 pub use forall_fact::ForallFact;
 pub use forall_fact_with_iff::ForallFactWithIff;
 pub use or_fact::OrFact;
