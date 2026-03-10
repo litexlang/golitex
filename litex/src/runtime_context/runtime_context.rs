@@ -62,7 +62,7 @@ impl<'a> RuntimeContext<'a> {
         self.builtin_environment.defined_props.get(predicate_name)
     }
 
-    pub fn is_identifier_defined(&self, identifier: &Identifier) -> bool {
+    pub fn is_defined_identifier_obj(&self, identifier: &Identifier) -> bool {
         self.defined_identifier_objs.contains_key(&identifier.name)
     }
 
