@@ -1,6 +1,5 @@
 use crate::error::{ExecError, StoreFactError, WellDefinedError};
 use crate::fact::Fact;
-use crate::obj::Identifier;
 use crate::stmt::definition_stmt::{DefPropStmt, DefStructStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::common::keywords::{PROP, STRUCT, ALGO};
