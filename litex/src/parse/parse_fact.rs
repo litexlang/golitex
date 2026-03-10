@@ -1,7 +1,5 @@
-use crate::obj::IdentifierOrIdentifierWithMod;
-use crate::fact::AtomicFact;
 use crate::fact::{
-    AndAtomicFact, ChainAtomicFact, ExistFact, MatchableFactWithAtomicFactInside, FactInsideExistFact,
+    ExistFact, MatchableFactWithAtomicFactInside, FactInsideExistFact,
     NotExistFact, TrueExistFact,
 };
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
@@ -10,13 +8,10 @@ use crate::fact::ForallFact;
 use crate::fact::ForallFactWithIff;
 use super::Parser;
 use super::TokenBlock;
-use crate::error::{NewAtomicFactError, ParsingError};
+use crate::error::{ParsingError};
 use crate::fact::Fact;
-use crate::obj::Identifier;
-use crate::common::keywords::{AND, COLON, COMMA, EQUIVALENT_SIGN, EXIST, FACT_PREFIX, FORALL, LEFT_CURLY_BRACE, NOT, OR, RIGHT_ARROW, RIGHT_CURLY_BRACE, ST};
+use crate::common::keywords::{COLON, COMMA, EQUIVALENT_SIGN, EXIST, FORALL, OR, RIGHT_ARROW, ST};
 use crate::fact::OrFact;
-use crate::fact::SpecFact;
-use crate::common::keywords::is_comparison_str;
 
 impl Parser {
     pub fn fact(&self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
@@ -139,16 +134,6 @@ impl Parser {
         panic!("and_spec_fact is not implemented");
     }
 
-    /// 返回 AndFactOrSpecFact：要么单个 SpecFact（含 NOT/EXIST/原子），要么链式 AndFact::ChainFact。
-    // hierarchy 4
-    fn spec_fact_chain_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<MatchableFactWithAtomicFactInside, ParsingError> {
-        panic!("spec_fact_chain_fact is not implemented");
-    }
-
-    fn atomic_or_chain_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<MatchableFactWithAtomicFactInside, ParsingError> {
-        panic!("atomic_or_chain_fact is not implemented");
-    }
-
     pub fn exist_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<ExistFact, ParsingError> {
         tb.skip_token(EXIST)?;
         let mut param_def: Vec<ParamDefWithParamType> = vec![];
@@ -170,27 +155,10 @@ impl Parser {
         }
     }
 
-    /// 将解析得到的 OrFactOrAndFactOrSpecFact 转为 FactInsideExistFact，并校验 exist 体内只允许 atomic / and-of-atomics / chain / or-of-these。
-    fn try_convert_or_and_spec_fact_to_fact_inside_exist(
-        &self,
-        o: OrFactOrAndFactOrSpecFact,
-        line_file_index: (usize, usize),
-    ) -> Result<FactInsideExistFact, ParsingError> {
-        panic!("try_convert_or_and_spec_fact_to_fact_inside_exist is not implemented");
-    }
-
-    fn try_convert_and_spec_fact_to_fact_inside_exist_fact(
-        &self,
-        a: MatchableFactWithAtomicFactInside,
-        line_file_index: (usize, usize),
-    ) -> Result<MatchableFactWithAtomicFactInside, ParsingError> {
-        panic!("try_convert_and_spec_fact_to_fact_inside_exist_fact is not implemented");
-    }
-
     /// 解析一个 and_spec_fact 并转为 MatchableFactWithAtomicFactInside（用于 set builder / fn set with dom 等）。
     pub fn parse_matchable_fact_with_atomic_fact_inside(&self, tb: &mut TokenBlock) -> Result<MatchableFactWithAtomicFactInside, ParsingError> {
-        let and_spec = self.and_spec_fact(tb)?;
-        self.try_convert_and_spec_fact_to_fact_inside_exist_fact(and_spec, tb.line_file_index)
+        _ = tb;
+        panic!("parse_matchable_fact_with_atomic_fact_inside is not implemented");
     }
 
     pub fn parse_facts_in_body(&self, tb: &mut TokenBlock) -> Result<Vec<Fact>, ParsingError> 
@@ -202,23 +170,8 @@ impl Parser {
         Ok(facts)
     }
 
-    /// 先按普通 or_and_spec_fact 解析得到多个 OrFactOrAndFactOrSpecFact，再校验并转为 FactInsideExistFact（exist 体内只允许 atomic / and-of-atomics / chain / or）。
     pub fn parse_facts_inside_exist_fact(&self, tb: &mut TokenBlock) -> Result<Vec<FactInsideExistFact>, ParsingError> {
-        let raw = if tb.current()? == LEFT_CURLY_BRACE {
-            tb.skip_token(LEFT_CURLY_BRACE)?;
-            let mut list = vec![self.or_and_spec_fact(tb)?];
-            while tb.current()? == COMMA {
-                tb.skip_token(COMMA)?;
-                list.push(self.or_and_spec_fact(tb)?);
-            }
-            tb.skip_token(RIGHT_CURLY_BRACE)?;
-            list
-        } else {
-            return Err(ParsingError::new("Expected { after exist", tb.line_file_index));
-        };
-        let line_file = tb.line_file_index;
-        raw.into_iter()
-            .map(|o| self.try_convert_or_and_spec_fact_to_fact_inside_exist(o, line_file))
-            .collect()
+        _ = tb;
+        panic!("parse_facts_inside_exist_fact is not implemented");
     }
 }

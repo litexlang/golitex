@@ -30,6 +30,7 @@ use stmt::tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, Import
 use stmt::eval_stmt::EvalStmt;
 use stmt::witness_stmt::{WitnessStmt, WitnessExistFact, WitnessNonemptySet};
 use stmt::parameter_type_and_property::{ParamType, Set, NonemptySet, FiniteSet, ParamDefWithParamType, ParamDefWithParamSet};
+use stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
 mod fact;
 use fact::{Fact, InFact, NotInFact, IsCartFact, NotIsCartFact, IsTupleFact, NotIsTupleFact, AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact, SubsetFact, NotSubsetFact, SupersetFact, NotSupersetFact,
     LessFact, NotLessFact, GreaterFact, NotGreaterFact,
@@ -37,7 +38,7 @@ use fact::{Fact, InFact, NotInFact, IsCartFact, NotIsCartFact, IsTupleFact, NotI
     IsSetFact, NotIsSetFact, IsNonemptySetFact, NotIsNonemptySetFact,
     IsFiniteSetFact, NotIsFiniteSetFact,
     ExistFact, MatchableFactWithAtomicFactInside,  NotExistFact, TrueExistFact,
-    OrFact, ForallFact, SpecFact, ForallFactWithIff, 
+    OrFact, ForallFact, ForallFactWithIff, 
      OrFactOrAndFactOrSpecFact,
     AndAtomicFact, ChainAtomicFact, FactInsideExistFact,
 };
@@ -429,18 +430,33 @@ fn try_exist_fact() {
         Some((1, 0)),
     ));
     println!("{}", _true_exist3);
+
+    // chain atomic fact
+    let _true_exist4 = ExistFact::TrueExistFact(TrueExistFact::new(
+        vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))],
+        vec![FactInsideExistFact::ChainAtomicFact(ChainAtomicFact::new(vec![Obj::mk("a"), Obj::mk("b")], vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("q"))], Some((1, 0))))],
+        Some((1, 0)),
+    ));
+    println!("{}", _true_exist4);
+
+    // and atomic fact
+    let _true_exist5 = ExistFact::TrueExistFact(TrueExistFact::new(
+        vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))],
+        vec![FactInsideExistFact::AndAtomicFact(AndAtomicFact::new(vec![AtomicFact::EqualFact(EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))))], Some((1, 0))))],
+        Some((1, 0)),   
+    ));
+    println!("{}", _true_exist5);
 }
 
 fn try_spec_fact() {
-    let _spec_atom = SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0)))));
+    let _spec_atom = AtomicFact::EqualFact(EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))));
     let ef = ExistFact::TrueExistFact(TrueExistFact::new(
         vec![ParamDefWithParamType(vec!["u".to_string()], ParamType::Set(Set::new()))],
         vec![FactInsideExistFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("u"), Obj::mk("v"), Some((1, 0)))))],
         Some((1, 0)),
     ));
-    let _spec_exist = SpecFact::ExistFact(ef);
+    println!("{}", ef);
     println!("{}", _spec_atom);
-    println!("{}", _spec_exist);
 }
 
 fn try_or_fact() {
@@ -567,6 +583,9 @@ fn try_fact() {
     ];
     let _f_and = Fact::AndAtomicFact(AndAtomicFact::new(facts, Some((1, 0))));
     println!("{}", _f_and);
+
+    let _f_chain = Fact::ChainAtomicFact(ChainAtomicFact::new(vec![Obj::mk("a"), Obj::mk("b")], vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("q"))], Some((1, 0))));
+    println!("{}", _f_chain);
 }
 
 fn try_errors() {
@@ -1056,6 +1075,26 @@ fn try_module_manager() {
 }
 
 fn try_define_algorithm_stmt() {
+    let algo_return = AlgoReturn::new(Obj::mk("x"), Some((10, 2)));
+    let algo_if = AlgoIf::new(
+        MatchableFactWithAtomicFactInside::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            Obj::mk("a"),
+            Obj::mk("b"),
+            Some((1, 0)),
+        ))),
+        AlgoReturn::new(Obj::mk("y"), Some((11, 4))),
+        Some((9, 0)),
+    );
+    let return_or_algo_if = vec![
+        AlgoReturnOrAlgoIf::AlgoReturn(algo_return),
+        AlgoReturnOrAlgoIf::AlgoIf(algo_if),
+    ];
+    let algo = DefAlgoStmt::new("f".to_string(), vec!["x".to_string()], return_or_algo_if, Some((1, 0)));
+    println!("{}", algo);
+    for (i, item) in algo.return_or_algo_if.iter().enumerate() {
+        let line_file = item.line_file();
+        println!("line_file of return_or_algo_if[{}]: {:?}", i, line_file);
+    }
 }
 
 fn try_runtime_context() {

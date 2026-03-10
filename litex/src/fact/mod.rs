@@ -15,7 +15,6 @@ pub use forall_fact::ForallFact;
 pub use forall_fact_with_iff::ForallFactWithIff;
 pub use or_fact::OrFact;
 pub use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
-pub use specific_fact::SpecFact;
 
 pub use fact_enum::Fact;
 mod fact_enum;

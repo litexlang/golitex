@@ -1,6 +1,5 @@
 use super::or_fact::OrFact;
 use super::matchable_fact_with_atomic_fact_inside::AndAtomicFact;
-use super::specific_fact::SpecFact;
 use super::atomic_fact::AtomicFact;
 use super::fact_enum::Fact;
 use std::fmt;

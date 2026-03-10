@@ -159,17 +159,6 @@ impl Environment {
         Ok(())
     }
 
-    fn store_exist_fact_in_forall_fact(&mut self, exist_fact_ref: &ExistFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
-        let key = exist_fact_ref.key();
-        let is_true = exist_fact_ref.is_true();
-        if self.known_exist_facts_in_forall_facts.contains_key(&(key, is_true)) {
-            self.known_exist_facts_in_forall_facts.get_mut(&(exist_fact_ref.key(), is_true)).unwrap().push((index, forall_fact));
-        } else {
-            self.known_exist_facts_in_forall_facts.insert((exist_fact_ref.key(), is_true), vec![(index, forall_fact)]);
-        }
-        Ok(())
-    }
-
     fn store_or_fact_in_forall_fact(&mut self, or_fact: &OrFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
         let key = or_fact.key();
         if self.known_or_facts_in_forall_facts.contains_key(&key) {
