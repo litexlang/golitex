@@ -1,17 +1,7 @@
 use crate::obj::{Obj};
-use crate::module_manager::ModuleManager;
+use crate::execute::Executor;
 
-pub struct SyntacticVerifier<'a> {
-    pub module_manager: &'a ModuleManager<'a>,
-}
-
-impl<'a> SyntacticVerifier<'a> {
-    pub fn new(module_manager: &'a ModuleManager<'a>) -> Self {
-        SyntacticVerifier { module_manager }
-    }
-}
-
-impl<'a> SyntacticVerifier<'a> {
+impl<'a> Executor<'a> {
     pub fn equal_literally(&self, left: &Obj, right: &Obj) -> bool {
         match left {
             Obj::Identifier(a) => match right {
@@ -23,7 +13,7 @@ impl<'a> SyntacticVerifier<'a> {
                     if a.mod_name == b.mod_name {
                         a.name == b.name
                     } else {
-                        self.module_manager.module_name_and_path_map.get(&a.mod_name) == self.module_manager.module_name_and_path_map.get(&b.mod_name) && a.name == b.name
+                        self.runtime_context.module_manager.module_name_and_path_map.get(&a.mod_name) == self.runtime_context.module_manager.module_name_and_path_map.get(&b.mod_name) && a.name == b.name
                     }
                 },
                 _ => false,
@@ -37,7 +27,7 @@ impl<'a> SyntacticVerifier<'a> {
                     if a.mod_name == b.mod_name {
                         a.name == b.name && a.fields.len() == b.fields.len() && a.fields.iter().zip(b.fields.iter()).all(|(a_field, b_field)| a_field.to_string() == b_field.to_string())
                     } else {
-                        self.module_manager.module_name_and_path_map.get(&a.mod_name) == self.module_manager.module_name_and_path_map.get(&b.mod_name) && a.name == b.name && a.fields.len() == b.fields.len() && a.fields.iter().zip(b.fields.iter()).all(|(a_field, b_field)| a_field.to_string() == b_field.to_string())
+                        self.runtime_context.module_manager.module_name_and_path_map.get(&a.mod_name) == self.runtime_context.module_manager.module_name_and_path_map.get(&b.mod_name) && a.name == b.name && a.fields.len() == b.fields.len() && a.fields.iter().zip(b.fields.iter()).all(|(a_field, b_field)| a_field.to_string() == b_field.to_string())
                     }
                 },
                 _ => false,

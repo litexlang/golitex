@@ -1,9 +1,9 @@
 use std::fmt;
-use crate::common::keywords::{DOT_AKA_FIELD_ACCESS_SIGN, MOD_NAME_SEPARATOR};
+use crate::common::keywords::{DOT_AKA_FIELD_ACCESS_SIGN, MOD_SING};
 
 #[derive(Clone)]
 pub enum Atom {
-    Identifier(Identifier),
+    IdentifierAtom(Identifier),
     IdentifierWithMod(IdentifierWithMod),
     FieldAccess(FieldAccess),
     FieldAccessWithMod(FieldAccessWithMod),
@@ -52,7 +52,7 @@ impl Atom {
     /// 转为 IdentifierOrIdentifierWithMod：Identifier/IdentifierWithMod 直接映射，FieldAccess/FieldAccessWithMod 用整体字符串作 Identifier。
     pub fn to_identifier_or_identifier_with_mod(&self) -> IdentifierOrIdentifierWithMod {
         match self {
-            Atom::Identifier(i) => IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&i.name)),
+            Atom::IdentifierAtom(i) => IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&i.name)),
             Atom::IdentifierWithMod(m) => IdentifierOrIdentifierWithMod::IdentifierWithMod(IdentifierWithMod::new(&m.mod_name, &m.name)),
             Atom::FieldAccess(fa) => IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&fa.to_string())),
             Atom::FieldAccessWithMod(fa) => IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&fa.to_string())),
@@ -63,7 +63,7 @@ impl Atom {
 impl fmt::Display for Atom {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Atom::Identifier(atom) => write!(f, "{}", atom),
+            Atom::IdentifierAtom(atom) => write!(f, "{}", atom),
             Atom::IdentifierWithMod(atom) => write!(f, "{}", atom),
             Atom::FieldAccess(atom) => write!(f, "{}", atom),
             Atom::FieldAccessWithMod(atom) => write!(f, "{}", atom),
@@ -103,6 +103,6 @@ impl fmt::Display for FieldAccess {
 
 impl fmt::Display for FieldAccessWithMod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}{}", self.mod_name, MOD_NAME_SEPARATOR, self.name, DOT_AKA_FIELD_ACCESS_SIGN, self.fields.join(DOT_AKA_FIELD_ACCESS_SIGN))
+        write!(f, "{}{}{}{}{}", self.mod_name, MOD_SING, self.name, DOT_AKA_FIELD_ACCESS_SIGN, self.fields.join(DOT_AKA_FIELD_ACCESS_SIGN))
     }
 }

@@ -1,5 +1,5 @@
 use crate::error::ExecError;
-use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStmt, DefStructStmt};
+use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStmt, DefStructStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::result::StmtResult;
 use crate::result::NonFactualStmtSuccess;
@@ -13,11 +13,15 @@ impl<'a> Executor<'a> {
             DefStmt::DefLetStmt(def_let_stmt) => self.def_let_stmt(def_let_stmt),
             DefStmt::DefStructStmt(def_struct_stmt) => self.def_struct_stmt(def_struct_stmt),
             DefStmt::DefAlgoStmt(def_algo_stmt) => self.def_algo_stmt(def_algo_stmt),
-            _ => Err(ExecError::new("不支持的定义语句类型", vec![], def_stmt.line_file())),
+            DefStmt::HaveObjInNonemptySetStmt(have_obj_in_nonempty_set_stmt) => self.have_obj_in_nonempty_set_or_param_type_stmt(have_obj_in_nonempty_set_stmt),
+            DefStmt::HaveObjEqualStmt(have_obj_equal_stmt) => self.have_obj_equal_stmt(have_obj_equal_stmt),
+            DefStmt::HaveExistObjStmt(have_exist_obj_stmt) => self.have_exist_obj_stmt(have_exist_obj_stmt),
+            DefStmt::HaveFnEqualStmt(have_fn_equal_stmt) => self.have_fn_equal_stmt(have_fn_equal_stmt),
+            DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt) => self.have_fn_equal_case_by_case_stmt(have_fn_equal_case_by_case_stmt),
         }
     }
 
-    pub fn def_prop_stmt(&mut self, def_prop_stmt: &DefPropStmt) -> Result<StmtResult, ExecError> {
+    fn def_prop_stmt(&mut self, def_prop_stmt: &DefPropStmt) -> Result<StmtResult, ExecError> {
         match &def_prop_stmt.iff_facts {
             None => {},
             Some(iff_facts) => {
@@ -31,22 +35,53 @@ impl<'a> Executor<'a> {
         Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_prop_stmt.to_string(), def_prop_stmt.line_file_index)))
     }
 
-    pub fn def_let_stmt(&mut self, def_let_stmt: &DefLetStmt) -> Result<StmtResult, ExecError> {
-        self.validate_name_and_store_atom_name(&def_let_stmt.param_def, def_let_stmt.line_file_index)?;
+    fn def_let_stmt(&mut self, def_let_stmt: &DefLetStmt) -> Result<StmtResult, ExecError> {
+        for param_def in def_let_stmt.param_def.iter() {
+            let identifier_param_type_facts = param_def.facts();
+            
+            for (name, fact) in param_def.0.iter().zip(identifier_param_type_facts.iter()) {
+                self.validate_name_and_store_identifier_obj(name)?;
+                self.store_fact(fact)?;
+            }
+        }
+        
         for fact in def_let_stmt.facts.iter() {
             self.store_fact(fact)?;
         }
+        
         Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_let_stmt.to_string(), def_let_stmt.line_file_index)))
     }
 
 
-    pub fn def_struct_stmt(&mut self, def_struct_stmt: &DefStructStmt) -> Result<StmtResult, ExecError> {
+    fn def_struct_stmt(&mut self, def_struct_stmt: &DefStructStmt) -> Result<StmtResult, ExecError> {
         self.validate_name_and_store_def_struct(def_struct_stmt)?;
-        Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_struct_stmt.to_string(), def_struct_stmt.line_file_index())))
+        // Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_struct_stmt.to_string(), def_struct_stmt.line_file_index())))
+        return Err(ExecError::new("不支持的定义语句类型", vec![], def_struct_stmt.line_file_index()));
     }
 
-    pub fn def_algo_stmt(&mut self, def_algo_stmt: &DefAlgoStmt) -> Result<StmtResult, ExecError> {
+    fn def_algo_stmt(&mut self, def_algo_stmt: &DefAlgoStmt) -> Result<StmtResult, ExecError> {
         self.validate_name_and_store_def_algo(def_algo_stmt)?;
-        Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_algo_stmt.to_string(), def_algo_stmt.line_file_index)))
+        // Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_algo_stmt.to_string(), def_algo_stmt.line_file_index)))
+        return Err(ExecError::new("不支持的定义语句类型", vec![], def_algo_stmt.line_file_index));
+    }
+
+    fn have_obj_in_nonempty_set_or_param_type_stmt(&mut self, have_obj_in_nonempty_set_or_param_type_stmt: &HaveObjInNonemptySetOrParamTypeStmt) -> Result<StmtResult, ExecError> {
+        return Err(ExecError::new("不支持的定义语句类型", vec![], have_obj_in_nonempty_set_or_param_type_stmt.line_file_index));
+    }
+
+    fn have_obj_equal_stmt(&mut self, have_obj_equal_stmt: &HaveObjEqualStmt) -> Result<StmtResult, ExecError> {
+        return Err(ExecError::new("不支持的定义语句类型", vec![], have_obj_equal_stmt.line_file_index));
+    }
+
+    fn have_exist_obj_stmt(&mut self, have_exist_obj_stmt: &HaveExistObjStmt) -> Result<StmtResult, ExecError> {
+        return Err(ExecError::new("不支持的定义语句类型", vec![], have_exist_obj_stmt.line_file_index));
+    }
+
+    fn have_fn_equal_stmt(&mut self, have_fn_equal_stmt: &HaveFnEqualStmt) -> Result<StmtResult, ExecError> {
+        return Err(ExecError::new("不支持的定义语句类型", vec![], have_fn_equal_stmt.line_file_index));
+    }
+
+    fn have_fn_equal_case_by_case_stmt(&mut self, have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt) -> Result<StmtResult, ExecError> {
+        return Err(ExecError::new("不支持的定义语句类型", vec![], have_fn_equal_case_by_case_stmt.line_file_index));
     }
 }

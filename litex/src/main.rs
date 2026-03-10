@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 mod verify;
 use verify::VerifyState;
-use verify::SyntacticVerifier;
 mod simplify_polynomial;
 mod common;
 mod error;
@@ -205,14 +204,15 @@ fn try_stmt() {
 }
 
 fn try_equal_literally() {
-    let module_manager = ModuleManager::new();
-    let syntactic_verifier = SyntacticVerifier::new(&module_manager);
-    
+    let mut module_manager = ModuleManager::new_empty_module_manager();
+    let builtin_environment: Box<Environment> = Box::new(Environment::new_empty_env());
+    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
+    let executor = Executor::new(&mut runtime_context);
     let a = Obj::Identifier(Identifier::new("a"));
     let b = Obj::Identifier(Identifier::new("b"));
-    println!("{}", syntactic_verifier.equal_literally(&a, &b));
+    println!("{}", executor.equal_literally(&a, &b));
     let a2 = Obj::Identifier(Identifier::new("a"));
-    println!("{}", syntactic_verifier.equal_literally(&a2, &a));
+    println!("{}", executor.equal_literally(&a2, &a));
 }
 
 fn try_list_set() {
@@ -1073,7 +1073,7 @@ fn try_def_struct_stmt() {
 }
 
 fn try_module_manager() {
-    let module_manager = ModuleManager::new();
+    let module_manager = ModuleManager::new_empty_module_manager();
     println!("{}", module_manager);
 }
 
@@ -1091,7 +1091,7 @@ fn try_define_algorithm_stmt() {
 }
 
 fn try_runtime_context() {
-    let mut module_manager = ModuleManager::new();
+    let mut module_manager = ModuleManager::new_empty_module_manager();
 
     let fn_set_obj = FnSetObj::FnSetWithoutDom(FnSetWithoutDom::new(vec![Obj::mk("p")], Obj::mk("p")));
     println!("{}", fn_set_obj);
@@ -1212,7 +1212,7 @@ fn try_parse_statements() {
 }
 
 fn try_executor() {
-    let mut module_manager = ModuleManager::new();
+    let mut module_manager = ModuleManager::new_empty_module_manager();
     let environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
     let builtin_environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
     let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
@@ -1235,7 +1235,7 @@ fn try_calculate() {
 }
 
 fn try_obj_well_defined<'a>() {
-    let mut module_manager = ModuleManager::new();
+    let mut module_manager = ModuleManager::new_empty_module_manager();
     let environment: Box<Environment> = Box::new(Environment::new_empty_env());
     let builtin_environment: Box<Environment> = Box::new(Environment::new_empty_env());
     let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());

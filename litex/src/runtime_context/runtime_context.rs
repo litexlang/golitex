@@ -1,7 +1,7 @@
 use std::fmt;
 use std::collections::HashMap;
 use crate::obj::Identifier;
-use crate::common::keywords::MOD_NAME_SEPARATOR;
+use crate::common::keywords::MOD_SING;
 use crate::module_manager::ModuleManager;
 use crate::environment::Environment;
 use crate::stmt::definition_stmt::DefPropStmt;
@@ -50,7 +50,7 @@ impl<'a> RuntimeContext<'a> {
     /// 只读查找：用 predicate 名称从当前环境或 builtin 中取定义（供 Verifier 等 &self 场景使用）
     pub fn get_predicate_definition_by_name(&self, predicate_name: &str) -> Option<&DefPropStmt> {
         // 按 separator 拆分
-        let parts = predicate_name.split(MOD_NAME_SEPARATOR).collect::<Vec<&str>>();
+        let parts = predicate_name.split(MOD_SING).collect::<Vec<&str>>();
         if parts.len() != 1 {
             panic!("NOT IMPLEMENTED YET");
         }
@@ -64,5 +64,9 @@ impl<'a> RuntimeContext<'a> {
 
     pub fn is_identifier_defined(&self, identifier: &Identifier) -> bool {
         self.defined_identifier_objs.contains_key(&identifier.name)
+    }
+
+    pub fn is_name_used(&self, name: &str) -> bool {
+        self.defined_identifier_objs.contains_key(name) || self.defined_props.contains_key(name) || self.defined_structs.contains_key(name) || self.defined_algorithms.contains_key(name)
     }
 }

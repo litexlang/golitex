@@ -272,3 +272,4 @@ impl DefStructWithFieldsStmt {
         DefStructWithFieldsStmt { name, params_def_with_type, fields, facts, line_file_index }
     }
 }
+
