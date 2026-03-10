@@ -70,3 +70,14 @@ impl<'a> RuntimeContext<'a> {
         self.defined_identifier_objs.contains_key(name) || self.defined_props.contains_key(name) || self.defined_structs.contains_key(name) || self.defined_algorithms.contains_key(name)
     }
 }
+
+impl<'a> RuntimeContext<'a> {
+    pub fn new_env(&mut self) {
+        let new_env = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
+        self.environments.push(new_env);
+    }
+
+    pub fn delete_env(&mut self) {
+        self.environments.pop();
+    }
+}
