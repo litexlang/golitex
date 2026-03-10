@@ -7,14 +7,15 @@ mod or_fact;
 mod or_fact_or_and_fact_or_specific_fact;
 mod reversible_fact;
 mod specific_fact;
-
+mod fact_inside_forall;
 pub use atomic_fact::*;
 pub use exist_fact::{ExistFact, FactInsideExistFact, NotExistFact, TrueExistFact};
-pub use matchable_fact_with_atomic_fact_inside::{AndAtomicFact, ChainAtomicFact, MatchableFactWithAtomicFactInside};
+pub use matchable_fact_with_atomic_fact_inside::{AndFact, ChainFact, AndFactOrChainFactOrAtomicFact};
 pub use forall_fact::ForallFact;
 pub use forall_fact_with_iff::ForallFactWithIff;
 pub use or_fact::OrFact;
 pub use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 
-pub use fact_enum::Fact;
-mod fact_enum;
+pub use fact::Fact;
+mod fact;
+pub use fact_inside_forall::FactInsideForall;

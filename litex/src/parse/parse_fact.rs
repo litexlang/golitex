@@ -1,5 +1,5 @@
 use crate::fact::{
-    ExistFact, MatchableFactWithAtomicFactInside, FactInsideExistFact,
+    ExistFact, AndFactOrChainFactOrAtomicFact, FactInsideExistFact, FactInsideForall,
     NotExistFact, TrueExistFact,
 };
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
@@ -48,14 +48,14 @@ impl Parser {
             return Err(ParsingError::new("Expected at least 2 body blocks", tb.line_file_index));
         }
         
-        let mut dom_facts: Vec<OrFactOrAndFactOrSpecFact> = Vec::new();
-        let mut then_facts: Vec<OrFactOrAndFactOrSpecFact> = Vec::new();
-        let mut iff_facts: Vec<OrFactOrAndFactOrSpecFact> = Vec::new();
+        let mut dom_facts: Vec<FactInsideForall> = Vec::new();
+        let mut then_facts: Vec<FactInsideForall> = Vec::new();
+        let mut iff_facts: Vec<FactInsideForall> = Vec::new();
 
         let last = tb.body.last_mut().unwrap();
         last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
         for block in last.body.iter_mut() {
-            iff_facts.push(self.or_and_spec_fact(block)?);
+            iff_facts.push(self.parse_fact_in_forall(block)?);
         }
 
         let n = tb.body.len();
@@ -64,16 +64,16 @@ impl Parser {
             let then_block = tb.body.get_mut(n - 2).unwrap();
             then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
             for block in then_block.body.iter_mut() {
-                then_facts.push(self.or_and_spec_fact(block)?);
+                then_facts.push(self.parse_fact_in_forall(block)?);
             }
             
             for block in tb.body.iter_mut().take(n - 2) {
-                dom_facts.push(self.or_and_spec_fact(block)?);
+                dom_facts.push(self.parse_fact_in_forall(block)?);
             }
         } else {
             let then_block = tb.body.get_mut(0).unwrap();
             for block in then_block.body.iter_mut() {
-                then_facts.push(self.or_and_spec_fact(block)?);
+                then_facts.push(self.parse_fact_in_forall(block)?);
             }
         }
 
@@ -87,22 +87,22 @@ impl Parser {
             ParsingError::new("Expected body", tb.line_file_index)
         })?;
         if last_body.current()? == RIGHT_ARROW {
-            let mut dom_facts: Vec<OrFactOrAndFactOrSpecFact> = vec![];
+            let mut dom_facts: Vec<FactInsideForall> = vec![];
             let n = tb.body.len();
             for block in tb.body.iter_mut().take(n - 1) {
-                dom_facts.push(self.or_and_spec_fact(block)?);
+                dom_facts.push(self.parse_fact_in_forall(block)?);
             }
             let last = tb.body.last_mut().unwrap();
             last.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
-            let mut then_facts: Vec<OrFactOrAndFactOrSpecFact> = Vec::new();
+            let mut then_facts: Vec<FactInsideForall> = Vec::new();
             for block in last.body.iter_mut() {
-                then_facts.push(self.or_and_spec_fact(block)?);
+                then_facts.push(self.parse_fact_in_forall(block)?);
             }
             Ok(Fact::ForallFact(ForallFact::new(param_def, dom_facts, then_facts, Some(tb.line_file_index))))
         } else {
-            let mut then_facts: Vec<OrFactOrAndFactOrSpecFact> = Vec::new();
+            let mut then_facts: Vec<FactInsideForall> = Vec::new();
             for block in tb.body.iter_mut() {
-                then_facts.push(self.or_and_spec_fact(block)?);
+                then_facts.push(self.parse_fact_in_forall(block)?);
             }
             Ok(Fact::ForallFact(ForallFact::new(param_def, vec![], then_facts, Some(tb.line_file_index))))
         }
@@ -119,8 +119,8 @@ impl Parser {
         if facts.len() == 1 {
             let one = facts.into_iter().next().unwrap();
             Ok(match one {
-                MatchableFactWithAtomicFactInside::AndAtomicFact(a) => OrFactOrAndFactOrSpecFact::AndFact(a),
-                MatchableFactWithAtomicFactInside::AtomicFact(a) => OrFactOrAndFactOrSpecFact::AtomicFact(a),
+                AndFactOrChainFactOrAtomicFact::AndFact(a) => OrFactOrAndFactOrSpecFact::AndFact(a),
+                AndFactOrChainFactOrAtomicFact::AtomicFact(a) => OrFactOrAndFactOrSpecFact::AtomicFact(a),
                 _ => return Err(ParsingError::new("Expected atomic fact", tb.line_file_index)),
             })
         } else {
@@ -129,7 +129,7 @@ impl Parser {
     }
 
     // hierarchy 3: and 并列
-    pub fn and_spec_fact(&self, tb: &mut TokenBlock) -> Result<MatchableFactWithAtomicFactInside, ParsingError> {
+    pub fn and_spec_fact(&self, tb: &mut TokenBlock) -> Result<AndFactOrChainFactOrAtomicFact, ParsingError> {
         _ = tb;
         panic!("and_spec_fact is not implemented");
     }
@@ -156,7 +156,7 @@ impl Parser {
     }
 
     /// 解析一个 and_spec_fact 并转为 MatchableFactWithAtomicFactInside（用于 set builder / fn set with dom 等）。
-    pub fn parse_matchable_fact_with_atomic_fact_inside(&self, tb: &mut TokenBlock) -> Result<MatchableFactWithAtomicFactInside, ParsingError> {
+    pub fn parse_matchable_fact_with_atomic_fact_inside(&self, tb: &mut TokenBlock) -> Result<AndFactOrChainFactOrAtomicFact, ParsingError> {
         _ = tb;
         panic!("parse_matchable_fact_with_atomic_fact_inside is not implemented");
     }
@@ -173,5 +173,10 @@ impl Parser {
     pub fn parse_facts_inside_exist_fact(&self, tb: &mut TokenBlock) -> Result<Vec<FactInsideExistFact>, ParsingError> {
         _ = tb;
         panic!("parse_facts_inside_exist_fact is not implemented");
+    }
+
+    pub fn parse_fact_in_forall(&self, tb: &mut TokenBlock) -> Result<FactInsideForall, ParsingError> {
+        _ = tb;
+        panic!("parse_fact_in_forall is not implemented");
     }
 }

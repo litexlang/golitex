@@ -6,7 +6,7 @@ use std::fmt;
 use crate::common::keywords::{CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, HAVE, LEFT_BRACE, LET, PROP, RIGHT_BRACE, STRUCT};
 use crate::common::helper::{add_four_spaces_at_beginning, braced_vec_to_string, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
 use crate::obj::FnSetWithDom;
-use crate::fact::MatchableFactWithAtomicFactInside;
+use crate::fact::AndFactOrChainFactOrAtomicFact;
 use crate::fact::TrueExistFact;
 use super::define_algorithm_stmt::DefAlgoStmt;
 
@@ -49,7 +49,7 @@ pub struct DefStructWithNoFieldStmt {
 pub struct HaveFnEqualCaseByCaseStmt {
     pub name: String,
     pub fn_set_with_params: FnSetWithDom,
-    pub cases: Vec<MatchableFactWithAtomicFactInside>,
+    pub cases: Vec<AndFactOrChainFactOrAtomicFact>,
     pub equal_tos: Vec<Obj>,
     pub line_file_index: Option<(usize, usize)>,
 }
@@ -250,7 +250,7 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
 }
 
 impl HaveFnEqualCaseByCaseStmt {
-    pub fn new(name: String, fn_set_with_params: FnSetWithDom, cases: Vec<MatchableFactWithAtomicFactInside>, equal_tos: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(name: String, fn_set_with_params: FnSetWithDom, cases: Vec<AndFactOrChainFactOrAtomicFact>, equal_tos: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Self {
         HaveFnEqualCaseByCaseStmt { name, fn_set_with_params, cases, equal_tos, line_file_index }
     }
 }

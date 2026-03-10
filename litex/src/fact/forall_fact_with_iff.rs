@@ -2,17 +2,17 @@ use std::fmt;
 use crate::common::keywords::{EQUIVALENT_SIGN, COLON};
 use crate::common::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line};
 use super::forall_fact::ForallFact;
-use super::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
+use super::fact_inside_forall::FactInsideForall;
 
 #[derive(Clone)]
 pub struct ForallFactWithIff {
     pub forall_fact: ForallFact,
-    pub iff_facts: Vec<OrFactOrAndFactOrSpecFact>,
+    pub iff_facts: Vec<FactInsideForall>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
 impl ForallFactWithIff {
-    pub fn new(forall_fact: ForallFact, iff_facts: Vec<OrFactOrAndFactOrSpecFact>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(forall_fact: ForallFact, iff_facts: Vec<FactInsideForall>, line_file_index: Option<(usize, usize)>) -> Self {
         ForallFactWithIff { forall_fact, iff_facts, line_file_index }
     }
 }

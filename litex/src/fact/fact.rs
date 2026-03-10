@@ -4,15 +4,15 @@ use super::forall_fact::ForallFact;
 use super::forall_fact_with_iff::ForallFactWithIff;
 use super::atomic_fact::AtomicFact;
 use super::exist_fact::ExistFact;
-use super::matchable_fact_with_atomic_fact_inside::AndAtomicFact;
-use super::matchable_fact_with_atomic_fact_inside::ChainAtomicFact;
+use super::matchable_fact_with_atomic_fact_inside::AndFact;
+use super::matchable_fact_with_atomic_fact_inside::ChainFact;
 #[derive(Clone)]
 pub enum Fact {
     AtomicFact(AtomicFact),
     ExistFact(ExistFact),
     OrFact(OrFact),
-    AndAtomicFact(AndAtomicFact),
-    ChainAtomicFact(ChainAtomicFact),
+    AndAtomicFact(AndFact),
+    ChainAtomicFact(ChainFact),
     ForallFact(ForallFact),
     ForallFactWithIff(ForallFactWithIff),
 }

@@ -7,14 +7,14 @@ use crate::obj::Obj;
 use crate::obj::IdentifierOrIdentifierWithMod;
 
 #[derive(Clone)]
-pub struct AndAtomicFact {
+pub struct AndFact {
     pub facts: Vec<AtomicFact>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
-impl AndAtomicFact {
+impl AndFact {
     pub fn new(facts: Vec<AtomicFact>, line_file_index: Option<(usize, usize)>) -> Self {
-        AndAtomicFact { facts, line_file_index }
+        AndFact { facts, line_file_index }
     }
     pub fn line_file_index(&self) -> Option<(usize, usize)> {
         self.line_file_index
@@ -22,19 +22,19 @@ impl AndAtomicFact {
 }
 
 #[derive(Clone)]
-pub struct ChainAtomicFact {
+pub struct ChainFact {
     pub objs: Vec<Obj>,
     pub prop_names: Vec<IdentifierOrIdentifierWithMod>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
-impl ChainAtomicFact {
+impl ChainFact {
     pub fn new(
         objs: Vec<Obj>,
         prop_names: Vec<IdentifierOrIdentifierWithMod>,
         line_file_index: Option<(usize, usize)>,
     ) -> Self {
-        ChainAtomicFact { objs, prop_names, line_file_index }
+        ChainFact { objs, prop_names, line_file_index }
     }
     pub fn line_file_index(&self) -> Option<(usize, usize)> {
         self.line_file_index
@@ -52,40 +52,25 @@ impl ChainAtomicFact {
 }
 
 #[derive(Clone)]
-pub enum MatchableFactWithAtomicFactInside {
+pub enum AndFactOrChainFactOrAtomicFact {
     AtomicFact(AtomicFact),
-    AndAtomicFact(AndAtomicFact),
-    ChainAtomicFact(ChainAtomicFact),
+    AndFact(AndFact),
+    ChainFact(ChainFact),
 }
 
-// #[derive(Clone)]
-// pub struct OrAtomicFact {
-//     pub facts: Vec<MatchableFactWithAtomicFactInside>,
-//     pub line_file_index: Option<(usize, usize)>,
-// }
-
-// impl OrAtomicFact {
-//     pub fn new(facts: Vec<MatchableFactWithAtomicFactInside>, line_file_index: Option<(usize, usize)>) -> Self {
-//         OrAtomicFact { facts, line_file_index }
-//     }
-//     pub fn line_file_index(&self) -> Option<(usize, usize)> {
-//         self.line_file_index
-//     }
-// }
-
-impl fmt::Display for AndAtomicFact {
+impl fmt::Display for AndFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", vec_to_string_with_sep(&self.facts, format!(" {} ", AND).as_str()))
     }
 }
 
-impl AndAtomicFact {
+impl AndFact {
     pub fn key(&self) -> String {
         vec_to_string_with_sep(&self.facts.iter().map(|a| a.key()).collect::<Vec<_>>(), format!(" {} ", AND).as_str())
     }
 }
 
-impl fmt::Display for ChainAtomicFact {
+impl fmt::Display for ChainFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut s = self.objs[0].to_string();
         for (i, obj) in self.objs[1..].iter().enumerate() {
@@ -99,28 +84,28 @@ impl fmt::Display for ChainAtomicFact {
     }
 }
 
-impl ChainAtomicFact {
+impl ChainFact {
     pub fn key(&self) -> String {
         vec_to_string_with_sep(&self.prop_names.iter().map(|p| p.to_string()).collect::<Vec<_>>(), format!(" {} ", AND).as_str())
     }
 }
 
-impl fmt::Display for MatchableFactWithAtomicFactInside {
+impl fmt::Display for AndFactOrChainFactOrAtomicFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            MatchableFactWithAtomicFactInside::AtomicFact(a) => write!(f, "{}", a),
-            MatchableFactWithAtomicFactInside::AndAtomicFact(a) => write!(f, "{}", a),
-            MatchableFactWithAtomicFactInside::ChainAtomicFact(c) => write!(f, "{}", c),
+            AndFactOrChainFactOrAtomicFact::AtomicFact(a) => write!(f, "{}", a),
+            AndFactOrChainFactOrAtomicFact::AndFact(a) => write!(f, "{}", a),
+            AndFactOrChainFactOrAtomicFact::ChainFact(c) => write!(f, "{}", c),
         }
     }
 }
 
-impl MatchableFactWithAtomicFactInside {
+impl AndFactOrChainFactOrAtomicFact {
     pub fn key(&self) -> String {
         match self {
-            MatchableFactWithAtomicFactInside::AtomicFact(a) => a.key(),
-            MatchableFactWithAtomicFactInside::AndAtomicFact(a) => a.key(),
-            MatchableFactWithAtomicFactInside::ChainAtomicFact(c) => c.key(),
+            AndFactOrChainFactOrAtomicFact::AtomicFact(a) => a.key(),
+            AndFactOrChainFactOrAtomicFact::AndFact(a) => a.key(),
+            AndFactOrChainFactOrAtomicFact::ChainFact(c) => c.key(),
         }
     }
 }
