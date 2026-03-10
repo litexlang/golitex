@@ -48,18 +48,6 @@ pub struct FieldAccessWithMod {
     pub fields: Vec<String>,
 }
 
-impl Atom {
-    /// 转为 IdentifierOrIdentifierWithMod：Identifier/IdentifierWithMod 直接映射，FieldAccess/FieldAccessWithMod 用整体字符串作 Identifier。
-    pub fn to_identifier_or_identifier_with_mod(&self) -> IdentifierOrIdentifierWithMod {
-        match self {
-            Atom::IdentifierAtom(i) => IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&i.name)),
-            Atom::IdentifierWithMod(m) => IdentifierOrIdentifierWithMod::IdentifierWithMod(IdentifierWithMod::new(&m.mod_name, &m.name)),
-            Atom::FieldAccess(fa) => IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&fa.to_string())),
-            Atom::FieldAccessWithMod(fa) => IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&fa.to_string())),
-        }
-    }
-}
-
 impl fmt::Display for Atom {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
