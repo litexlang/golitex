@@ -171,10 +171,10 @@ fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrdere
     let collections_of_left = collect_monomials_in_obj(&mul.left);
     let collections_of_right = collect_monomials_in_obj(&mul.right);
     
-    collect_monomials_of_mul_of_monomial_vec(&collections_of_left, &collections_of_right)
+    collect_monomials_of_mul_of_monomial_vec(collections_of_left, collections_of_right)
 }
 
-fn collect_monomials_of_mul_of_monomial_vec(collections_of_left: &Vec<MonomialWithNonZeroScalarAndOrderedOperands>, collections_of_right: &Vec<MonomialWithNonZeroScalarAndOrderedOperands>) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
+fn collect_monomials_of_mul_of_monomial_vec(collections_of_left: Vec<MonomialWithNonZeroScalarAndOrderedOperands>, collections_of_right: Vec<MonomialWithNonZeroScalarAndOrderedOperands>) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     let mut collect_monomials_after_mul: Vec<MonomialWithNonZeroScalarAndOrderedOperands> = vec![];
     for left in collections_of_left.iter() {
         for right in collections_of_right.iter() {
@@ -262,7 +262,7 @@ fn collect_monomials_in_pow(pow: &Pow) -> Vec<MonomialWithNonZeroScalarAndOrdere
     let base_monomials = collect_monomials_in_obj(&pow.base);
     let mut result = base_monomials.clone();
     for _ in 0..(n - 1) {
-        result = collect_monomials_of_mul_of_monomial_vec(&result, &base_monomials);
+        result = collect_monomials_of_mul_of_monomial_vec(result, base_monomials.clone());
     }
 
     result
