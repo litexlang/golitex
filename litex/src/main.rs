@@ -37,7 +37,7 @@ use fact::{Fact, InFact, NotInFact, IsCartFact, NotIsCartFact, IsTupleFact, NotI
     LessEqualFact, NotLessEqualFact, GreaterEqualFact, NotGreaterEqualFact,
     IsSetFact, NotIsSetFact, IsNonemptySetFact, NotIsNonemptySetFact,
     IsFiniteSetFact, NotIsFiniteSetFact,
-    ExistFact, FactInOrAtomicFact, FactInsideExistFact, NotExistFact, OrAtomicFact, TrueExistFact,
+    ExistFact, MatchableFactWithAtomicFactInside, FactInsideExistFact, NotExistFact, OrAtomicFact, TrueExistFact,
     OrFact, ForallFact, SpecFact, ForallFactWithIff, AndFact, ChainFact, AndSpecFacts,
     AndFactOrSpecFact, OrFactOrAndFactOrSpecFact,
 };
@@ -224,7 +224,7 @@ fn try_list_set() {
 }
 
 fn try_set_builder() {
-    let set_builder = Obj::SetBuilder(SetBuilder::new("a".to_string(), Obj::Identifier(Identifier::new("b")), vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))]));
+    let set_builder = Obj::SetBuilder(SetBuilder::new("a".to_string(), Obj::Identifier(Identifier::new("b")), vec![MatchableFactWithAtomicFactInside::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))]));
     println!("{}", set_builder);
 }
 
@@ -240,7 +240,7 @@ fn try_fn_set_without_params() {
 }
 
 fn try_fn_set_with_params() {
-    let fn_set_with_params = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["a".to_string()], Obj::Identifier(Identifier::new("a"))), ParamDefWithParamSet(vec!["b".to_string()], Obj::Identifier(Identifier::new("b")))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))], Obj::Identifier(Identifier::new("c"))));
+    let fn_set_with_params = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["a".to_string()], Obj::Identifier(Identifier::new("a"))), ParamDefWithParamSet(vec!["b".to_string()], Obj::Identifier(Identifier::new("b")))], vec![MatchableFactWithAtomicFactInside::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))], Obj::Identifier(Identifier::new("c"))));
     println!("{}", fn_set_with_params);
 
     let fn_set_with_params2 = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["a".to_string()], Obj::Identifier(Identifier::new("a"))), ParamDefWithParamSet(vec!["b".to_string()], Obj::Identifier(Identifier::new("b"))), ParamDefWithParamSet(vec!["c".to_string()], Obj::Identifier(Identifier::new("c")))], vec![], Obj::Identifier(Identifier::new("c"))));
@@ -1040,7 +1040,7 @@ fn try_view_fn_as_set() {
 
 fn try_have_fn_equal_stmt() {
     let have_fn_equal_stmt = 
-    HaveFnEqualStmt::new("f".to_string(), FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Obj::mk("p"))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))], Obj::mk("p")), Obj::mk("p"), Some((1, 0)));
+    HaveFnEqualStmt::new("f".to_string(), FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Obj::mk("p"))], vec![MatchableFactWithAtomicFactInside::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))], Obj::mk("p")), Obj::mk("p"), Some((1, 0)));
     have_fn_equal_stmt.to_string();
     println!("{}", have_fn_equal_stmt);
 
@@ -1049,7 +1049,7 @@ fn try_have_fn_equal_stmt() {
 }
 
 fn try_have_fn_equal_case_by_case_stmt() {
-    let have_fn_equal_case_by_case_stmt = HaveFnEqualCaseByCaseStmt::new("f".to_string(), FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Obj::mk("p"))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))], Obj::mk("p")), vec![AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))], vec![Obj::mk("p")], Some((1, 0)));
+    let have_fn_equal_case_by_case_stmt = HaveFnEqualCaseByCaseStmt::new("f".to_string(), FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Obj::mk("p"))], vec![MatchableFactWithAtomicFactInside::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))], Obj::mk("p")), vec![AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))], vec![Obj::mk("p")], Some((1, 0)));
     println!("{}", have_fn_equal_case_by_case_stmt);
 
     let stmt = Stmt::DefStmt(DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt));
@@ -1096,7 +1096,7 @@ fn try_runtime_context() {
     let fn_set_obj = FnSetObj::FnSetWithoutDom(FnSetWithoutDom::new(vec![Obj::mk("p")], Obj::mk("p")));
     println!("{}", fn_set_obj);
 
-    let fn_set_obj = FnSetObj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Obj::mk("p"))], vec![OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))], Obj::mk("p")));
+    let fn_set_obj = FnSetObj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Obj::mk("p"))], vec![MatchableFactWithAtomicFactInside::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))], Obj::mk("p")));
     println!("{}", fn_set_obj);
 
     let environment: Box<Environment> = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
@@ -1121,13 +1121,13 @@ fn try_runtime_context() {
         vec![
             FactInsideExistFact::OrAtomicFact(OrAtomicFact {
                 facts: vec![
-                    FactInOrAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))),
-                    FactInOrAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))),
+                    MatchableFactWithAtomicFactInside::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))),
+                    MatchableFactWithAtomicFactInside::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))),
                 ],
                 line_file_index: Some((1, 0)),
             }),
             FactInsideExistFact::OrAtomicFact(OrAtomicFact {
-                facts: vec![FactInOrAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))],
+                facts: vec![MatchableFactWithAtomicFactInside::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))],
                 line_file_index: Some((1, 0)),
             }),
         ],
