@@ -12,11 +12,10 @@ use std::rc::Rc;
 use crate::obj::FnSetObj;
 use crate::obj::SetBuilder;
 use crate::fact::OrFactOrAndFactOrSpecFact;
-use crate::fact::SpecFact;
-use crate::fact::AndFact;
 use crate::fact::ForallFactWithIff;
 use crate::error::StoreFactError;
 use crate::fact::EqualFact;
+use crate::fact::AndAtomicFact;
 
 pub struct Environment {
     pub defined_identifier_objs: HashMap<String, ()>,
@@ -182,36 +181,17 @@ impl Environment {
 
     fn store_a_fact_in_forall_fact(&mut self, fact: &OrFactOrAndFactOrSpecFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
         match fact {
-            OrFactOrAndFactOrSpecFact::SpecFact(spec_fact) => {
-                match spec_fact {
-                    SpecFact::AtomicFact(atomic_fact) => self.store_atomic_fact_in_forall_fact(&atomic_fact, index, forall_fact),
-                    SpecFact::ExistFact(exist_fact) => self.store_exist_fact_in_forall_fact(&exist_fact, index, forall_fact),
-                }
+            OrFactOrAndFactOrSpecFact::AtomicFact(spec_fact) => {
+                self.store_atomic_fact_in_forall_fact(&spec_fact, index, forall_fact)
             }
             OrFactOrAndFactOrSpecFact::OrFact(or_fact) => self.store_or_fact_in_forall_fact(&or_fact, index, forall_fact),
             OrFactOrAndFactOrSpecFact::AndFact(and_fact) => self.store_and_fact_in_forall_fact(&and_fact, index, forall_fact),
         }
     }
 
-    fn store_and_fact_in_forall_fact(&mut self, and_fact: &AndFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
-        match and_fact {
-            AndFact::AndSpecFacts(and_spec_facts) => {
-                for fact in and_spec_facts.facts.iter() {
-                    self.store_atomic_fact_in_forall_fact(fact, index, forall_fact.clone())?
-                }
-            }
-            AndFact::ChainFact(chain_fact) => {
-                let facts = chain_fact.facts();
-                if facts.is_err() {
-                    return Err(StoreFactError::new(&format!("{}", facts.err().unwrap())));
-                }
-                for fact in facts.unwrap().iter() {
-                    match fact {
-                        SpecFact::AtomicFact(atomic_fact) => self.store_atomic_fact_in_forall_fact(&atomic_fact, index, forall_fact.clone())?,
-                        SpecFact::ExistFact(exist_fact) => self.store_exist_fact_in_forall_fact(&exist_fact, index, forall_fact.clone())?,
-                    }
-                }
-            }
+    fn store_and_fact_in_forall_fact(&mut self, and_fact: &AndAtomicFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
+        for fact in and_fact.facts.iter() {
+            self.store_a_fact_in_forall_fact(&OrFactOrAndFactOrSpecFact::AtomicFact(fact.clone()), index, forall_fact.clone())?;
         }
         Ok(())
     }
@@ -223,25 +203,9 @@ impl Environment {
         Ok(())
     }
 
-    fn store_and_fact(&mut self, and_fact: AndFact) -> Result<(), StoreFactError> {
-        match and_fact {
-            AndFact::AndSpecFacts(and_spec_facts) => {
-                for fact in and_spec_facts.facts {
-                    self.store_atomic_fact(fact)?
-                }
-            }
-            AndFact::ChainFact(chain_fact) => {
-                let facts = chain_fact.facts();
-                if facts.is_err() {
-                    return Err(StoreFactError::new(&format!("{}", facts.err().unwrap())));
-                }
-                for fact in facts.unwrap() {
-                    match fact {
-                        SpecFact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact)?,
-                        SpecFact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact)?,
-                    }
-                }
-            }
+    fn store_and_fact(&mut self, and_fact: AndAtomicFact) -> Result<(), StoreFactError> {
+        for fact in and_fact.facts.iter() {
+            self.store_atomic_fact(fact.clone())?;
         }
         Ok(())
     }
@@ -258,7 +222,7 @@ impl Environment {
             Fact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact),
             Fact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact),
             Fact::OrFact(or_fact) => self.store_or_fact(or_fact),
-            Fact::AndFact(and_fact) => self.store_and_fact(and_fact),
+            Fact::AndAtomicFact(and_fact) => self.store_and_fact(and_fact),
             Fact::ForallFact(forall_fact) => self.store_forall_fact(Rc::new(forall_fact)),
             Fact::ForallFactWithIff(forall_fact_with_iff) => self.store_forall_fact_with_iff(forall_fact_with_iff),
         }
