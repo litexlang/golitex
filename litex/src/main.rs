@@ -475,17 +475,9 @@ fn try_and_fact_or_spec_fact() {
     ))));
     println!("{}", _spec);
 
-    let facts = vec![
-        SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-            Obj::mk("p"),
-            Obj::mk("q"),
-            Some((1, 0)),
-        ))),
-        SpecFact::AtomicFact(AtomicFact::LessFact(LessFact::new(
-            Obj::mk("x"),
-            Obj::mk("y"),
-            Some((2, 0)),
-        ))),
+    let facts: Vec<AtomicFact> = vec![
+        AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))),
+        AtomicFact::LessFact(LessFact::new(Obj::mk("x"), Obj::mk("y"), Some((2, 0)))),
     ];
     let _and = AndFactOrSpecFact::AndFact(AndFact::AndSpecFacts(AndSpecFacts::new(facts, Some((1, 0)))));
     println!("{}", _and);
@@ -569,12 +561,8 @@ fn try_fact() {
             EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
         )))], Some((1, 0))), vec![], Some((1, 0))));
 
-    let facts = vec![
-        SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-            Obj::mk("p"),
-            Obj::mk("q"),
-            Some((1, 0)),
-        ))),
+    let facts: Vec<AtomicFact> = vec![
+        AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))),
     ];
     let _f_and = Fact::AndFact(AndFact::AndSpecFacts(AndSpecFacts::new(facts, Some((1, 0)))));
     println!("{}", _f_and);
@@ -608,12 +596,8 @@ fn try_errors() {
 }
 
 fn try_and_fact() {
-    let facts = vec![
-        SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-            Obj::mk("p"),
-            Obj::mk("q"),
-            Some((1, 0)),
-        ))),
+    let facts: Vec<AtomicFact> = vec![
+        AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))),
     ];
     let _and = AndFact::AndSpecFacts(AndSpecFacts::new(facts, Some((1, 0))));
     println!("{}", _and);
@@ -626,13 +610,6 @@ fn try_or_fact_or_and_fact_or_specific_fact() {
         Some((1, 0)),
     ))));
     println!("{}", fact1);
-
-    let fact2: OrFactOrAndFactOrSpecFact = OrFactOrAndFactOrSpecFact::AndFact(AndFact::AndSpecFacts(AndSpecFacts::new(vec![SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Obj::mk("p"),
-        Obj::mk("q"),
-        Some((1, 0)),
-    )))], Some((1, 0)))));
-    println!("{}", fact2);
 
     let fact3: OrFactOrAndFactOrSpecFact = OrFactOrAndFactOrSpecFact::OrFact(OrFact::new(vec![AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),

@@ -136,23 +136,8 @@ impl Parser {
 
     // hierarchy 3: and 并列
     pub fn and_spec_fact(&self, tb: &mut TokenBlock) -> Result<AndFactOrSpecFact, ParsingError> {
-        let mut facts = vec![self.spec_fact_chain_fact(tb, true)?];
-        while !tb.exceed_end_of_head() && tb.current()? == AND {
-            tb.skip()?;
-            facts.push(self.spec_fact_chain_fact(tb, true)?);
-        }
-        if facts.len() == 1 {
-            Ok(facts.into_iter().next().unwrap())
-        } else {
-            let spec_facts: Vec<SpecFact> = facts
-                .into_iter()
-                .map(|f| match f {
-                    AndFactOrSpecFact::SpecFact(s) => Ok(s),
-                    AndFactOrSpecFact::AndFact(_) => Err(ParsingError::new("and-list cannot mix chain and spec fact", tb.line_file_index)),
-                })
-                .collect::<Result<Vec<_>, _>>()?;
-            Ok(AndFactOrSpecFact::AndFact(AndFact::AndSpecFacts(AndSpecFacts::new(spec_facts, Some(tb.line_file_index)))))
-        }
+        _ = tb;
+        panic!("and_spec_fact is not implemented");
     }
 
     /// 返回 AndFactOrSpecFact：要么单个 SpecFact（含 NOT/EXIST/原子），要么链式 AndFact::ChainFact。
@@ -241,44 +226,7 @@ impl Parser {
         o: OrFactOrAndFactOrSpecFact,
         line_file_index: (usize, usize),
     ) -> Result<FactInsideExistFact, ParsingError> {
-        match o {
-            OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(a)) => {
-                Ok(FactInsideExistFact::AtomicFact(a))
-            }
-            OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::ExistFact(_)) => Err(ParsingError::new(
-                "exist fact is not allowed inside exist fact body",
-                line_file_index,
-            )),
-            OrFactOrAndFactOrSpecFact::AndFact(AndFact::AndSpecFacts(AndSpecFacts { facts, line_file_index: lf })) => {
-                let mut atomics = vec![];
-                for s in facts {
-                    match s {
-                        SpecFact::AtomicFact(a) => atomics.push(a),
-                        SpecFact::ExistFact(_) => {
-                            return Err(ParsingError::new(
-                                "exist fact is not allowed inside exist fact body",
-                                line_file_index,
-                            ))
-                        }
-                    }
-                }
-                Ok(FactInsideExistFact::AndAtomicFact(AndAtomicFact::new(atomics, lf)))
-            }
-            OrFactOrAndFactOrSpecFact::AndFact(AndFact::ChainFact(ChainFact {
-                objs,
-                prop_names,
-                line_file_index: lf,
-            })) => Ok(FactInsideExistFact::ChainAtomicFact(ChainAtomicFact::new(
-                objs, prop_names, lf,
-            ))),
-            OrFactOrAndFactOrSpecFact::OrFact(OrFact { facts: or_facts, line_file_index: lf }) => {
-                let mut inner = vec![];
-                for and_or_spec in or_facts {
-                    inner.push(self.try_convert_and_spec_fact_to_fact_inside_exist_fact(and_or_spec, line_file_index)?);
-                }
-                Ok(FactInsideExistFact::OrAtomicFact(OrAtomicFact::new(inner, lf)))
-            }
-        }
+        panic!("try_convert_or_and_spec_fact_to_fact_inside_exist is not implemented");
     }
 
     fn try_convert_and_spec_fact_to_fact_inside_exist_fact(
@@ -286,37 +234,7 @@ impl Parser {
         a: AndFactOrSpecFact,
         line_file_index: (usize, usize),
     ) -> Result<MatchableFactWithAtomicFactInside, ParsingError> {
-        match a {
-            AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(atom)) => {
-                Ok(MatchableFactWithAtomicFactInside::AtomicFact(atom))
-            }
-            AndFactOrSpecFact::SpecFact(SpecFact::ExistFact(_)) => Err(ParsingError::new(
-                "exist fact is not allowed inside exist fact body",
-                line_file_index,
-            )),
-            AndFactOrSpecFact::AndFact(AndFact::AndSpecFacts(AndSpecFacts { facts, line_file_index: lf })) => {
-                let mut atomics = vec![];
-                for s in facts {
-                    match s {
-                        SpecFact::AtomicFact(a) => atomics.push(a),
-                        SpecFact::ExistFact(_) => {
-                            return Err(ParsingError::new(
-                                "exist fact is not allowed inside exist fact body",
-                                line_file_index,
-                            ))
-                        }
-                    }
-                }
-                Ok(MatchableFactWithAtomicFactInside::AndAtomicFact(AndAtomicFact::new(atomics, lf)))
-            }
-            AndFactOrSpecFact::AndFact(AndFact::ChainFact(ChainFact {
-                objs,
-                prop_names,
-                line_file_index: lf,
-            })) => Ok(MatchableFactWithAtomicFactInside::ChainAtomicFact(ChainAtomicFact::new(
-                objs, prop_names, lf,
-            ))),
-        }
+        panic!("try_convert_and_spec_fact_to_fact_inside_exist_fact is not implemented");
     }
 
     /// 解析一个 and_spec_fact 并转为 MatchableFactWithAtomicFactInside（用于 set builder / fn set with dom 等）。

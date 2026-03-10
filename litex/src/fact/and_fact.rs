@@ -15,7 +15,7 @@ pub enum AndFact {
 
 #[derive(Clone)]
 pub struct AndSpecFacts {
-    pub facts: Vec<SpecFact>,
+    pub facts: Vec<AtomicFact>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
@@ -28,7 +28,7 @@ pub struct ChainFact {
 
 
 impl AndSpecFacts {
-    pub fn new(facts: Vec<SpecFact>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(facts: Vec<AtomicFact>, line_file_index: Option<(usize, usize)>) -> Self {
         AndSpecFacts { facts, line_file_index }
     }
 }

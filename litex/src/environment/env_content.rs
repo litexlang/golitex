@@ -197,10 +197,7 @@ impl Environment {
         match and_fact {
             AndFact::AndSpecFacts(and_spec_facts) => {
                 for fact in and_spec_facts.facts.iter() {
-                    match fact {
-                        SpecFact::AtomicFact(atomic_fact) => self.store_atomic_fact_in_forall_fact(&atomic_fact, index, forall_fact.clone())?,
-                        SpecFact::ExistFact(exist_fact) => self.store_exist_fact_in_forall_fact(&exist_fact, index, forall_fact.clone())?,
-                    }
+                    self.store_atomic_fact_in_forall_fact(fact, index, forall_fact.clone())?
                 }
             }
             AndFact::ChainFact(chain_fact) => {
@@ -230,10 +227,7 @@ impl Environment {
         match and_fact {
             AndFact::AndSpecFacts(and_spec_facts) => {
                 for fact in and_spec_facts.facts {
-                    match fact {
-                        SpecFact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact)?,
-                        SpecFact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact)?,
-                    }
+                    self.store_atomic_fact(fact)?
                 }
             }
             AndFact::ChainFact(chain_fact) => {
