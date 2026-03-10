@@ -1236,31 +1236,31 @@ fn try_calculate() {
 }
 
 fn try_collect_ordered_monomials() {
-    use crate::simplify_polynomial::collect_ordered_monomials;
+    use crate::simplify_polynomial::collect_monomials_in_obj;
     let one = Obj::Number(Number::new("1"));
     let two = Obj::Number(Number::new("2"));
-    let monomials = collect_ordered_monomials(&one);
+    let monomials = collect_monomials_in_obj(&one);
     println!("collect_ordered_monomials(1) => {} term(s)", monomials.len());
     let one_plus_two = Obj::Add(Add::new(one, two, true));
-    let monomials = collect_ordered_monomials(&one_plus_two);
+    let monomials = collect_monomials_in_obj(&one_plus_two);
     println!("collect_ordered_monomials(1+2) => {} term(s), scalar = {:?}", monomials.len(), monomials.first().map(|m| &m.non_zero_scalar));
     let x = Obj::Identifier(Identifier::new("x"));
     let one_plus_x = Obj::Add(Add::new(Obj::Number(Number::new("1")), x.clone(), false));
-    let monomials = collect_ordered_monomials(&one_plus_x);
+    let monomials = collect_monomials_in_obj(&one_plus_x);
     println!("collect_ordered_monomials(1+x) => {} term(s)", monomials.len());
     let two_mul_x = Obj::Mul(Mul::new(Obj::Number(Number::new("2")), x.clone(), false));
-    let monomials = collect_ordered_monomials(&two_mul_x);
+    let monomials = collect_monomials_in_obj(&two_mul_x);
     println!("collect_ordered_monomials(2*x) => {} term(s)", monomials.len());
 
     // collect sub
     let x = Obj::Identifier(Identifier::new("x"));
     let one_minus_x = Obj::Sub(Sub::new(Obj::Number(Number::new("1")), x.clone(), false));
-    let monomials = collect_ordered_monomials(&one_minus_x);
+    let monomials = collect_monomials_in_obj(&one_minus_x);
     println!("collect_ordered_monomials(1-x) => {} term(s)", monomials.len());
 
     // collect_ordered_monomials in mul
     let two_mul_x = Obj::Mul(Mul::new(Obj::Number(Number::new("2")), x.clone(), false));
-    let monomials = collect_ordered_monomials(&two_mul_x);
+    let monomials = collect_monomials_in_obj(&two_mul_x);
     println!("collect_ordered_monomials(2*x) => {} term(s)", monomials.len());
 }
 
