@@ -41,7 +41,7 @@ impl Obj {
         }
         
         match self {
-            Obj::Number(n) => n.value.clone(),
+            Obj::Number(n) => normalize_decimal_result(&n.value.clone()),
             Obj::Add(add) => {
                 let l = add.left.calculate_to_string();
                 let r = add.right.calculate_to_string();
