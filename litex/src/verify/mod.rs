@@ -1,10 +1,10 @@
 #[cfg(test)]
 mod verify_test;
-mod syntactic_verifier;
+mod verify_by_syntax;
 mod verify_atomic_fact;
-mod verify_well_defined;
+mod verify_fact_well_defined;
 mod verify_in_fact;
 mod verify_state;
+mod verify_obj_well_defined;
 
-pub use syntactic_verifier::SyntacticVerifier;
 pub use verify_state::VerifyState;
