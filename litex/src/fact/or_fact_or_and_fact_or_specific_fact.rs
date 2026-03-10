@@ -1,13 +1,13 @@
 use super::or_fact::OrFact;
-use super::matchable_fact_with_atomic_fact_inside::AndAtomicFact;
+use super::matchable_fact_with_atomic_fact_inside::AndFact;
 use super::atomic_fact::AtomicFact;
-use super::fact_enum::Fact;
+use super::fact::Fact;
 use std::fmt;
 
 #[derive(Clone)]
 pub enum OrFactOrAndFactOrSpecFact {
     OrFact(OrFact),
-    AndFact(AndAtomicFact),
+    AndFact(AndFact),
     AtomicFact(AtomicFact)
 }
 

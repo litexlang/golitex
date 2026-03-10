@@ -1,21 +1,22 @@
 use std::fmt;
 use crate::common::keywords::{FORALL, COLON, RIGHT_ARROW};
 use crate::common::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma};
-use super::or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
+use crate::fact::fact_inside_forall::FactInsideForall;
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
+
 #[derive(Clone)]
 pub struct ForallFact {
     pub params_def_with_type: Vec<ParamDefWithParamType>,
-    pub dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
-    pub then_facts: Vec<OrFactOrAndFactOrSpecFact>,
+    pub dom_facts: Vec<FactInsideForall>,
+    pub then_facts: Vec<FactInsideForall>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
 impl ForallFact {
     pub fn new(
         params_def_with_type: Vec<ParamDefWithParamType>,
-        dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
-        then_facts: Vec<OrFactOrAndFactOrSpecFact>,
+        dom_facts: Vec<FactInsideForall>,
+        then_facts: Vec<FactInsideForall>,
         line_file_index: Option<(usize, usize)>,
     ) -> Self {
         ForallFact { params_def_with_type, dom_facts, then_facts, line_file_index }

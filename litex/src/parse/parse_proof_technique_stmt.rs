@@ -1,5 +1,5 @@
 use crate::error::ParsingError;
-use crate::fact::{Fact, MatchableFactWithAtomicFactInside};
+use crate::fact::{Fact, AndFactOrChainFactOrAtomicFact};
 use crate::common::keywords::{
     CASE, CASES, COLON, COMMA, CONTRA, ENUM, EQUAL, EQUAL_SET, FOR, FROM, IMPOSSIBLE, INDUC, PROVE,
     RIGHT_ARROW, VIEW_FN_AS_SET,
@@ -25,7 +25,7 @@ impl Parser {
             first.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
             first.body.iter_mut().map(|b| self.fact(b)).collect::<Result<_, _>>()?
         };
-        let mut cases: Vec<MatchableFactWithAtomicFactInside> = vec![];
+        let mut cases: Vec<AndFactOrChainFactOrAtomicFact> = vec![];
         let mut proofs: Vec<Vec<Stmt>> = vec![];
         let mut impossible_facts: Vec<Option<OrFactOrAndFactOrSpecFact>> = vec![];
         for block in tb.body.iter_mut().skip(1) {

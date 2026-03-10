@@ -1,16 +1,16 @@
 use crate::common::keywords::OR;
 use std::fmt;
 use crate::common::helper::vec_to_string_with_sep;
-use crate::fact::matchable_fact_with_atomic_fact_inside::MatchableFactWithAtomicFactInside;
+use crate::fact::matchable_fact_with_atomic_fact_inside::AndFactOrChainFactOrAtomicFact;
 
 #[derive(Clone)]
 pub struct OrFact {
-    pub facts: Vec<MatchableFactWithAtomicFactInside>,
+    pub facts: Vec<AndFactOrChainFactOrAtomicFact>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
 impl OrFact {
-    pub fn new(facts: Vec<MatchableFactWithAtomicFactInside>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(facts: Vec<AndFactOrChainFactOrAtomicFact>, line_file_index: Option<(usize, usize)>) -> Self {
         OrFact { facts, line_file_index }
     }
 }
