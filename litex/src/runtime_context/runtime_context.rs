@@ -78,6 +78,19 @@ impl<'a> RuntimeContext<'a> {
     }
 
     pub fn delete_env(&mut self) {
+        for defined_identifier_obj in self.environments.last().unwrap().defined_identifier_objs.iter() {
+            self.defined_identifier_objs.remove(defined_identifier_obj.0);
+        }
+        for defined_prop in self.environments.last().unwrap().defined_props.iter() {
+            self.defined_props.remove(defined_prop.0);
+        }
+        for defined_struct in self.environments.last().unwrap().defined_structs.iter() {
+            self.defined_structs.remove(defined_struct.0);
+        }
+        for defined_algorithm in self.environments.last().unwrap().defined_algorithms.iter() {
+            self.defined_algorithms.remove(defined_algorithm.0);
+        }
+        
         self.environments.pop();
     }
 }
