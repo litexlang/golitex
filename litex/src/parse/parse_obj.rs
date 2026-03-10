@@ -223,10 +223,10 @@ impl Parser {
             tb.skip_token(COMMA)?;
         }
         tb.skip_token(COLON)?;
-        let mut dom_facts = vec![self.or_and_spec_fact(tb)?];
+        let mut dom_facts = vec![self.parse_matchable_fact_with_atomic_fact_inside(tb)?];
         while tb.current()? == COMMA {
             tb.skip_token(COMMA)?;
-            dom_facts.push(self.or_and_spec_fact(tb)?);
+            dom_facts.push(self.parse_matchable_fact_with_atomic_fact_inside(tb)?);
         }
         tb.skip_token(RIGHT_BRACE)?;
         let ret_set = self.obj(tb)?;
@@ -455,17 +455,40 @@ impl Parser {
     }
 
     fn set_builder_or_set_list(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        tb.skip_token(LEFT_CURLY_BRACE)?; // 先吃掉 {，再解析首元
+        tb.skip_token(LEFT_CURLY_BRACE)?;
         let left = self.obj(tb)?;
         match left {
             Obj::Identifier(a) => {
-                if tb.current()? != COMMA && tb.current()? != RIGHT_CURLY_BRACE {
-                    self.set_builder(tb, a)
-                } else {
+                if tb.current()? == COMMA || tb.current()? == RIGHT_CURLY_BRACE {
                     self.set_list(tb, Obj::Identifier(a))
+                } else {
+                    // 可能是 set builder "a S : ..." 或 list set "a b c"
+                    let second = self.obj(tb)?;
+                    if tb.current()? == COLON {
+                        tb.skip_token(COLON)?;
+                        let mut facts = vec![];
+                        while tb.current()? != RIGHT_CURLY_BRACE {
+                            facts.push(self.parse_matchable_fact_with_atomic_fact_inside(tb)?);
+                            if tb.current()? == COMMA {
+                                tb.skip_token(COMMA)?;
+                            }
+                        }
+                        tb.skip_token(RIGHT_CURLY_BRACE)?;
+                        Ok(Obj::SetBuilder(SetBuilder::new(a.name, second, facts)))
+                    } else {
+                        let mut objs = vec![Obj::Identifier(a), second];
+                        while tb.current()? != RIGHT_CURLY_BRACE {
+                            if tb.current()? == COMMA {
+                                tb.skip_token(COMMA)?;
+                            }
+                            objs.push(self.obj(tb)?);
+                        }
+                        tb.skip_token(RIGHT_CURLY_BRACE)?;
+                        Ok(Obj::ListSet(ListSet::new(objs)))
+                    }
                 }
             }
-            _ => self.set_list(tb, left)
+            _ => self.set_list(tb, left),
         }
     }
 
@@ -478,22 +501,6 @@ impl Parser {
         }
         tb.skip_token(RIGHT_CURLY_BRACE)?;
         Ok(Obj::ListSet(ListSet::new(objs)))
-    }
-
-    fn set_builder(&self, tb: &mut TokenBlock, left_most_obj: Identifier) -> Result<Obj, ParsingError> {
-        let param = left_most_obj.name;
-        let param_set = self.obj(tb)?;
-        tb.skip_token(COLON)?;
-        // 直到 }
-        let mut facts = vec![];
-        while tb.current()? != RIGHT_CURLY_BRACE {
-            facts.push(self.or_and_spec_fact(tb)?);
-            if tb.current()? == COMMA {
-                tb.skip_token(COMMA)?;
-            }
-        }
-        tb.skip_token(RIGHT_CURLY_BRACE)?;
-        Ok(Obj::SetBuilder(SetBuilder::new(param, param_set, facts)))
     }
 
     fn instantiated_struct_obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
