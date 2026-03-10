@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::verify::VerifyState;
 use crate::fact::AtomicFact;
 use crate::fact::EqualFact;
 use crate::environment::Environment;
@@ -75,4 +76,12 @@ fn test_exec_stmt_fact_one_plus_one_eq_two() {
         StmtResult::NonFactualStmtSuccess(_) | StmtResult::FactVerifiedByFact(_) | StmtResult::FactVerifiedByBuiltinRules(_) => println!("{}", result),
         StmtResult::StmtUnknown(u) => panic!("fact 1+1=2 should be verified, got StmtUnknown: {}", u),
     }
+}
+
+#[test]
+fn test_verify_state() {
+    let mut verify_state = VerifyState::new(0, false);
+    assert!(!verify_state.is_final_round());
+    verify_state = verify_state.new_state_with_round_increased();
+    assert!(!verify_state.is_final_round());
 }

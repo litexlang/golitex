@@ -34,8 +34,8 @@ impl<'a> Executor<'a> {
                     if !self.validate_name(&name) {
                         return Err(ExecError::new("invalid atom name", vec![], line_file_index));
                     }
-                    self.runtime_context.defined_atom_names.insert(name.clone(), ());
-                    self.runtime_context.top_level_env().defined_atom_names.insert(name.clone(), ());
+                    self.runtime_context.defined_identifier_objs.insert(name.clone(), ());
+                    self.runtime_context.top_level_env().defined_identifier_objs.insert(name.clone(), ());
                 }
             }
         }

@@ -19,7 +19,7 @@ use crate::error::StoreFactError;
 use crate::fact::EqualFact;
 
 pub struct Environment {
-    pub defined_atom_names: HashMap<String, ()>,
+    pub defined_identifier_objs: HashMap<String, ()>,
     pub defined_props: HashMap<String, DefPropStmt>,
     pub defined_structs: HashMap<String, DefStructStmt>,
     pub defined_algorithms: HashMap<String, DefAlgoStmt>,
@@ -46,7 +46,7 @@ pub struct Environment {
 impl Environment {
     pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, structs: HashMap<String, DefStructStmt>, algorithms: HashMap<String, DefAlgoStmt>, known_equality: HashMap<String, Rc<Vec<String>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, ()>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), ()>>, known_exist_facts: HashMap<(String, bool), Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_exist_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_fn_obj_with_requirements_checked: HashMap<String,()>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, (usize, usize)>) -> Self {
         Environment {
-            defined_atom_names: objs,
+            defined_identifier_objs: objs,
             defined_props: props,
             defined_structs: structs,
             defined_algorithms: algorithms,
@@ -71,7 +71,7 @@ impl Environment {
 impl fmt::Display for Environment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Environment {{\n")?;
-        write!(f, "    objs: {:?}\n", self.defined_atom_names.len())?;
+        write!(f, "    objs: {:?}\n", self.defined_identifier_objs.len())?;
         write!(f, "    props: {:?}\n", self.defined_props.len())?;
         write!(f, "    structs: {:?}\n", self.defined_structs.len())?;
         write!(f, "    algorithms: {:?}\n", self.defined_algorithms.len())?;

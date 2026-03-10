@@ -4,6 +4,7 @@ use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::result::StmtResult;
 use crate::result::NonFactualStmtSuccess;
 use super::Executor;
+use crate::verify::VerifyState;
 
 impl<'a> Executor<'a> {
     pub fn def_stmt(&mut self, def_stmt: &DefStmt) -> Result<StmtResult, ExecError> {
@@ -17,6 +18,15 @@ impl<'a> Executor<'a> {
     }
 
     pub fn def_prop_stmt(&mut self, def_prop_stmt: &DefPropStmt) -> Result<StmtResult, ExecError> {
+        match &def_prop_stmt.iff_facts {
+            None => {},
+            Some(iff_facts) => {
+                for fact in iff_facts.iter() {
+                    self.verify_fact_well_defined(fact, &mut VerifyState::new(0, false))?;
+                }
+            }
+        };
+        
         self.validate_name_and_store_def_prop(def_prop_stmt)?;
         Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_prop_stmt.to_string(), def_prop_stmt.line_file_index)))
     }

@@ -1,11 +1,10 @@
 use crate::fact::InFact;
-use crate::obj::{Add, FnObj, Identifier, Obj, RObj, Sub};
+use crate::obj::{Add, FnObj, Identifier, Mul, Obj, RObj, Sub};
 use crate::common::keywords::is_builtin_predicate;
 use crate::fact::Fact;
 use crate::error::WellDefinedError;
 use crate::fact::AtomicFact;
 use crate::fact::line_file as atomic_fact_line_file;
-use crate::result::{result_to_option_stmt_error};
 use crate::execute::Executor;
 use crate::verify::VerifyState;
 
@@ -82,13 +81,17 @@ impl<'a> Executor<'a> {
             Obj::Number(_) => Ok(()),
             Obj::Add(add) => self.verify_add_well_defined(add, verify_state),
             Obj::Sub(sub) => self.verify_sub_well_defined(sub, verify_state),
+            Obj::Mul(mul) => self.verify_mul_well_defined(mul, verify_state),
             _ => Err(WellDefinedError::new("verify_obj_well_defined: NOT IMPLEMENTED YET", vec![], None)),
         }
     }
 
     fn verify_identifier_well_defined(&self, identifier: &Identifier, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
-        let _ = identifier;
-        Err(WellDefinedError::new("verify_identifier_well_defined: NOT IMPLEMENTED YET", vec![], None))
+        if self.runtime_context.is_identifier_defined(identifier) {
+            Ok(())
+        } else {
+            Err(WellDefinedError::new("identifier not defined", vec![], None))
+        }
     }
 
     fn verify_fn_obj_well_defined(&self, fn_obj: &FnObj, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
@@ -96,33 +99,35 @@ impl<'a> Executor<'a> {
         Err(WellDefinedError::new("verify_fn_obj_well_defined: NOT IMPLEMENTED YET", vec![], None))
     }
 
-    fn require_obj_is_real_number(&self, obj: &Obj, role: &str, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn require_obj_is_real_number(&self, obj: &Obj, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         let r_obj = Obj::RObj(RObj::new());
         let in_fact = InFact::new(obj.clone(), r_obj, None);
         let atomic_fact = AtomicFact::InFact(in_fact);
-        if let Some(error) = result_to_option_stmt_error(self.verify_atomic_fact(&atomic_fact, verify_state)) {
-            return Err(WellDefinedError::new(
-                &format!("{} must be in R (could not verify)", role),
-                vec![error],
-                None,
-            ));
-        }
+        self.verify_atomic_fact(&atomic_fact, verify_state)?;
         Ok(())
     }
 
     fn verify_add_well_defined(&self, add: &Add, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&add.left, verify_state)?;
         self.verify_obj_well_defined(&add.right, verify_state)?;
-        self.require_obj_is_real_number(&add.left, "left hand side of Add", verify_state)?;
-        self.require_obj_is_real_number(&add.right, "right hand side of Add", verify_state)?;
+        self.require_obj_is_real_number(&add.left, verify_state)?;
+        self.require_obj_is_real_number(&add.right, verify_state)?;
         Ok(())
     }
 
     fn verify_sub_well_defined(&self, sub: &Sub, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&sub.left, verify_state)?;
         self.verify_obj_well_defined(&sub.right, verify_state)?;
-        self.require_obj_is_real_number(&sub.left, "left hand side of Sub", verify_state)?;
-        self.require_obj_is_real_number(&sub.right, "right hand side of Sub", verify_state)?;
+        self.require_obj_is_real_number(&sub.left, verify_state)?;
+        self.require_obj_is_real_number(&sub.right, verify_state)?;
+        Ok(())
+    }
+
+    fn verify_mul_well_defined(&self, mul: &Mul, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+        self.verify_obj_well_defined(&mul.left, verify_state)?;
+        self.verify_obj_well_defined(&mul.right, verify_state)?;
+        self.require_obj_is_real_number(&mul.left, verify_state)?;
+        self.require_obj_is_real_number(&mul.right, verify_state)?;
         Ok(())
     }
 }

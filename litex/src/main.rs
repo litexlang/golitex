@@ -119,6 +119,7 @@ fn main() {
     try_pipeline();
     try_calculate();
     try_obj_well_defined();
+    try_verify_state();
 }
 
 fn try_atom_fn_obj() {
@@ -1257,4 +1258,13 @@ fn try_obj_well_defined<'a>() {
     if result.is_err() {
         println!("ERROR:{}", result.err().unwrap());
     }
+}
+
+fn try_verify_state() {
+    let mut verify_state = VerifyState::new(0, false);
+    assert!(!verify_state.is_final_round());
+    verify_state = verify_state.new_state_with_round_increased();
+    assert!(!verify_state.is_final_round());
+    verify_state = verify_state.new_state_with_req_ok_set_to_true();
+    assert!(verify_state.is_final_round());
 }
