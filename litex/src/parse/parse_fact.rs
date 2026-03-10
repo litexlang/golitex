@@ -2,7 +2,7 @@ use crate::fact::AndFactOrSpecFact;
 use crate::obj::IdentifierOrIdentifierWithMod;
 use crate::fact::AtomicFact;
 use crate::fact::{
-    AndAtomicFact, ChainAtomicFact, ExistFact, FactInOrAtomicFact, FactInsideExistFact,
+    AndAtomicFact, ChainAtomicFact, ExistFact, MatchableFactWithAtomicFactInside, FactInsideExistFact,
     NotExistFact, OrAtomicFact, TrueExistFact,
 };
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
@@ -285,10 +285,10 @@ impl Parser {
         &self,
         a: AndFactOrSpecFact,
         line_file_index: (usize, usize),
-    ) -> Result<FactInOrAtomicFact, ParsingError> {
+    ) -> Result<MatchableFactWithAtomicFactInside, ParsingError> {
         match a {
             AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(atom)) => {
-                Ok(FactInOrAtomicFact::AtomicFact(atom))
+                Ok(MatchableFactWithAtomicFactInside::AtomicFact(atom))
             }
             AndFactOrSpecFact::SpecFact(SpecFact::ExistFact(_)) => Err(ParsingError::new(
                 "exist fact is not allowed inside exist fact body",
@@ -307,16 +307,22 @@ impl Parser {
                         }
                     }
                 }
-                Ok(FactInOrAtomicFact::AndAtomicFact(AndAtomicFact::new(atomics, lf)))
+                Ok(MatchableFactWithAtomicFactInside::AndAtomicFact(AndAtomicFact::new(atomics, lf)))
             }
             AndFactOrSpecFact::AndFact(AndFact::ChainFact(ChainFact {
                 objs,
                 prop_names,
                 line_file_index: lf,
-            })) => Ok(FactInOrAtomicFact::ChainAtomicFact(ChainAtomicFact::new(
+            })) => Ok(MatchableFactWithAtomicFactInside::ChainAtomicFact(ChainAtomicFact::new(
                 objs, prop_names, lf,
             ))),
         }
+    }
+
+    /// 解析一个 and_spec_fact 并转为 MatchableFactWithAtomicFactInside（用于 set builder / fn set with dom 等）。
+    pub fn parse_matchable_fact_with_atomic_fact_inside(&self, tb: &mut TokenBlock) -> Result<MatchableFactWithAtomicFactInside, ParsingError> {
+        let and_spec = self.and_spec_fact(tb)?;
+        self.try_convert_and_spec_fact_to_fact_inside_exist_fact(and_spec, tb.line_file_index)
     }
 
     pub fn parse_facts_in_body(&self, tb: &mut TokenBlock) -> Result<Vec<Fact>, ParsingError> 

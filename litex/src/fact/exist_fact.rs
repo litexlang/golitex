@@ -1,72 +1,14 @@
 use std::fmt;
-use crate::common::keywords::{AND, COMMA, EXIST, FACT_PREFIX, LEFT_CURLY_BRACE, NOT, OR, RIGHT_CURLY_BRACE, ST, is_comparison_str};
-use crate::common::helper::{curly_braced_vec_to_string_with_sep, vec_to_string_join_by_comma, vec_to_string_with_sep};
+use crate::common::keywords::{COMMA, EXIST, LEFT_CURLY_BRACE, NOT, RIGHT_CURLY_BRACE, ST};
+use crate::common::helper::{curly_braced_vec_to_string_with_sep, vec_to_string_join_by_comma};
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use super::atomic_fact::AtomicFact;
-use crate::obj::Obj;
-use crate::obj::IdentifierOrIdentifierWithMod;
+use super::matchable_fact_with_atomic_fact_inside::{AndAtomicFact, ChainAtomicFact, OrAtomicFact};
 
 #[derive(Clone)]
 pub enum ExistFact {
     TrueExistFact(TrueExistFact),
     NotExistFact(NotExistFact),
-}
-
-#[derive(Clone)]
-pub struct AndAtomicFact {
-    pub facts: Vec<AtomicFact>,
-    pub line_file_index: Option<(usize, usize)>,
-}
-
-impl AndAtomicFact {
-    pub fn new(facts: Vec<AtomicFact>, line_file_index: Option<(usize, usize)>) -> Self {
-        AndAtomicFact { facts, line_file_index }
-    }
-    pub fn line_file_index(&self) -> Option<(usize, usize)> {
-        self.line_file_index
-    }
-}
-
-#[derive(Clone)]
-pub struct ChainAtomicFact {
-    pub objs: Vec<Obj>,
-    pub prop_names: Vec<IdentifierOrIdentifierWithMod>,
-    pub line_file_index: Option<(usize, usize)>,
-}
-
-impl ChainAtomicFact {
-    pub fn new(
-        objs: Vec<Obj>,
-        prop_names: Vec<IdentifierOrIdentifierWithMod>,
-        line_file_index: Option<(usize, usize)>,
-    ) -> Self {
-        ChainAtomicFact { objs, prop_names, line_file_index }
-    }
-    pub fn line_file_index(&self) -> Option<(usize, usize)> {
-        self.line_file_index
-    }
-}
-
-#[derive(Clone)]
-pub enum FactInOrAtomicFact {
-    AtomicFact(AtomicFact),
-    AndAtomicFact(AndAtomicFact),
-    ChainAtomicFact(ChainAtomicFact),
-}
-
-#[derive(Clone)]
-pub struct OrAtomicFact {
-    pub facts: Vec<FactInOrAtomicFact>,
-    pub line_file_index: Option<(usize, usize)>,
-}
-
-impl OrAtomicFact {
-    pub fn new(facts: Vec<FactInOrAtomicFact>, line_file_index: Option<(usize, usize)>) -> Self {
-        OrAtomicFact { facts, line_file_index }
-    }
-    pub fn line_file_index(&self) -> Option<(usize, usize)> {
-        self.line_file_index
-    }
 }
 
 #[derive(Clone)]
@@ -139,72 +81,7 @@ impl fmt::Display for NotExistFact {
     }
 }
 
-// ---------- Display & key for FactInsideExistFact and related types ----------
-impl fmt::Display for AndAtomicFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", vec_to_string_with_sep(&self.facts, format!(" {} ", AND).as_str()))
-    }
-}
-
-impl AndAtomicFact {
-    pub fn key(&self) -> String {
-        vec_to_string_with_sep(&self.facts.iter().map(|a| a.key()).collect::<Vec<_>>(), format!(" {} ", AND).as_str())
-    }
-}
-
-impl fmt::Display for ChainAtomicFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut s = self.objs[0].to_string();
-        for (i, obj) in self.objs[1..].iter().enumerate() {
-
-            if is_comparison_str(&self.prop_names[i].to_string()) {
-                s.push_str(&format!(" {} {}", self.prop_names[i], obj));
-            } else {
-                s.push_str(&format!(" {}{} {}", FACT_PREFIX, self.prop_names[i], obj));
-            }
-        }
-        write!(f, "{}", s)
-    }
-}
-
-impl ChainAtomicFact {
-    pub fn key(&self) -> String {
-        vec_to_string_with_sep(&self.prop_names.iter().map(|p| p.to_string()).collect::<Vec<_>>(), format!(" {} ", AND).as_str())
-    }
-}
-
-impl fmt::Display for FactInOrAtomicFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            FactInOrAtomicFact::AtomicFact(a) => write!(f, "{}", a),
-            FactInOrAtomicFact::AndAtomicFact(a) => write!(f, "{}", a),
-            FactInOrAtomicFact::ChainAtomicFact(c) => write!(f, "{}", c),
-        }
-    }
-}
-
-impl FactInOrAtomicFact {
-    pub fn key(&self) -> String {
-        match self {
-            FactInOrAtomicFact::AtomicFact(a) => a.key(),
-            FactInOrAtomicFact::AndAtomicFact(a) => a.key(),
-            FactInOrAtomicFact::ChainAtomicFact(c) => c.key(),
-        }
-    }
-}
-
-impl fmt::Display for OrAtomicFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", vec_to_string_with_sep(&self.facts.iter().map(|x| x.to_string()).collect::<Vec<_>>(), format!(" {} ", OR).as_str()))
-    }
-}
-
-impl OrAtomicFact {
-    pub fn key(&self) -> String {
-        vec_to_string_with_sep(&self.facts.iter().map(|x| x.key()).collect::<Vec<_>>(), format!(" {} ", OR).as_str())
-    }
-}
-
+// ---------- Display & key for FactInsideExistFact ----------
 impl fmt::Display for FactInsideExistFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -275,8 +152,8 @@ impl ExistFact {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::fact::{AtomicFact, EqualFact};
-    use crate::obj::Identifier;
+    use crate::fact::{AtomicFact, EqualFact, MatchableFactWithAtomicFactInside};
+    use crate::obj::{Identifier, Obj};
 
     fn mk_obj(s: &str) -> Obj {
         Obj::Identifier(Identifier::new(s))
@@ -308,7 +185,7 @@ mod tests {
     #[test]
     fn test_or_atomic_fact_new_and_line_file_key() {
         let a = AtomicFact::EqualFact(EqualFact::new(mk_obj("p"), mk_obj("q"), Some((1, 0))));
-        let inner = vec![FactInOrAtomicFact::AtomicFact(a)];
+        let inner = vec![MatchableFactWithAtomicFactInside::AtomicFact(a)];
         let or_fact = OrAtomicFact::new(inner, Some((4, 0)));
         assert_eq!(or_fact.line_file_index(), Some((4, 0)));
         let _k = or_fact.key();
