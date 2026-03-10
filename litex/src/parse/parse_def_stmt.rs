@@ -1,6 +1,5 @@
-use crate::fact::AndFactOrSpecFact;
 use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStructStmt, DefStructWithNoFieldStmt, DefStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt};
-use crate::fact::ExistFact;
+use crate::fact::{ExistFact, MatchableFactWithAtomicFactInside};
 use crate::error::ParsingError;
 use crate::stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
 use crate::common::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, FN, HAVE, IF, LEFT_BRACE, LET, PROP, RETURN, RIGHT_BRACE, STRUCT};
@@ -88,7 +87,7 @@ impl Parser {
         let fs = self.fn_set_with_dom_without_fn_prefix(tb)?;
         if tb.current()? == COLON {
             tb.skip_token(COLON)?;
-            let mut cases: Vec<AndFactOrSpecFact> = vec![];
+            let mut cases: Vec<MatchableFactWithAtomicFactInside> = vec![];
             let mut equal_tos: Vec<crate::obj::Obj> = vec![];
             for block in tb.body.iter_mut() {
                 block.skip_token(CASE)?;

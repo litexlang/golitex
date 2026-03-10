@@ -1,8 +1,7 @@
 use std::fmt;
 use crate::common::keywords::{CASE, CASES, CLAIM, COLON, CONTRA, ENUM, FOR, FROM, INDUC, PROVE, RIGHT_ARROW, EQUAL_SET, EQUAL, IMPOSSIBLE, VIEW_FN_AS_SET};
 use crate::common::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line};
-use crate::fact::AndFactOrSpecFact;
-use crate::fact::Fact;
+use crate::fact::{Fact, MatchableFactWithAtomicFactInside};
 use crate::fact::OrFactOrAndFactOrSpecFact;
 use super::Stmt;
 use crate::obj::{ClosedRange, Obj, Range };
@@ -64,7 +63,7 @@ pub struct ProveByEnumerationStmt {
 }
 
 pub struct ProveCaseByCaseStmt {
-    pub cases: Vec<AndFactOrSpecFact>,
+    pub cases: Vec<MatchableFactWithAtomicFactInside>,
     pub then_facts: Vec<Fact>,
     pub proofs: Vec<Vec<Stmt>>,
     pub impossible_facts: Vec<Option<OrFactOrAndFactOrSpecFact>>,
@@ -86,7 +85,7 @@ impl ProveByEnumerationStmt {
 }
 
 impl ProveCaseByCaseStmt {
-    pub fn new(cases: Vec<AndFactOrSpecFact>, then_facts: Vec<Fact>, proofs: Vec<Vec<Stmt>>, impossible_facts: Vec<Option<OrFactOrAndFactOrSpecFact>>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(cases: Vec<MatchableFactWithAtomicFactInside>, then_facts: Vec<Fact>, proofs: Vec<Vec<Stmt>>, impossible_facts: Vec<Option<OrFactOrAndFactOrSpecFact>>, line_file_index: Option<(usize, usize)>) -> Self {
         ProveCaseByCaseStmt { cases, then_facts, proofs, impossible_facts, line_file_index }
     }
 }

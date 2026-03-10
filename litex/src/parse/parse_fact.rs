@@ -1,4 +1,3 @@
-use crate::fact::AndFactOrSpecFact;
 use crate::obj::IdentifierOrIdentifierWithMod;
 use crate::fact::AtomicFact;
 use crate::fact::{
@@ -13,7 +12,6 @@ use super::Parser;
 use super::TokenBlock;
 use crate::error::{NewAtomicFactError, ParsingError};
 use crate::fact::Fact;
-use crate::fact::{AndFact, AndSpecFacts, ChainFact};
 use crate::obj::Identifier;
 use crate::common::keywords::{AND, COLON, COMMA, EQUIVALENT_SIGN, EXIST, FACT_PREFIX, FORALL, LEFT_CURLY_BRACE, NOT, OR, RIGHT_ARROW, RIGHT_CURLY_BRACE, ST};
 use crate::fact::OrFact;
@@ -126,8 +124,9 @@ impl Parser {
         if facts.len() == 1 {
             let one = facts.into_iter().next().unwrap();
             Ok(match one {
-                AndFactOrSpecFact::AndFact(a) => OrFactOrAndFactOrSpecFact::AndFact(a),
-                AndFactOrSpecFact::SpecFact(s) => OrFactOrAndFactOrSpecFact::SpecFact(s),
+                MatchableFactWithAtomicFactInside::AndAtomicFact(a) => OrFactOrAndFactOrSpecFact::AndFact(a),
+                MatchableFactWithAtomicFactInside::AtomicFact(a) => OrFactOrAndFactOrSpecFact::AtomicFact(a),
+                _ => return Err(ParsingError::new("Expected atomic fact", tb.line_file_index)),
             })
         } else {
             Ok(OrFactOrAndFactOrSpecFact::OrFact(OrFact::new(facts, Some(tb.line_file_index))))
@@ -135,68 +134,19 @@ impl Parser {
     }
 
     // hierarchy 3: and 并列
-    pub fn and_spec_fact(&self, tb: &mut TokenBlock) -> Result<AndFactOrSpecFact, ParsingError> {
+    pub fn and_spec_fact(&self, tb: &mut TokenBlock) -> Result<MatchableFactWithAtomicFactInside, ParsingError> {
         _ = tb;
         panic!("and_spec_fact is not implemented");
     }
 
     /// 返回 AndFactOrSpecFact：要么单个 SpecFact（含 NOT/EXIST/原子），要么链式 AndFact::ChainFact。
     // hierarchy 4
-    fn spec_fact_chain_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<AndFactOrSpecFact, ParsingError> {
-        if tb.current()? == NOT {
-            tb.skip()?;
-            self.spec_fact_chain_fact(tb, !is_true)
-        } else if tb.current()? == EXIST {
-            Ok(AndFactOrSpecFact::SpecFact(SpecFact::ExistFact(self.exist_fact(tb, is_true)?)))
-        } else {
-            self.atomic_or_chain_fact(tb, is_true)
-        }
+    fn spec_fact_chain_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<MatchableFactWithAtomicFactInside, ParsingError> {
+        panic!("spec_fact_chain_fact is not implemented");
     }
 
-    fn atomic_or_chain_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<AndFactOrSpecFact, ParsingError> {
-        if tb.current()? == FACT_PREFIX {
-            tb.skip()?;
-            let prop_name = self.atom(tb)?.to_identifier_or_identifier_with_mod();
-            let args = self.braced_objs(tb)?;
-            let line = Some(tb.line_file_index);
-            let atomic = AtomicFact::to_atomic_fact(prop_name, is_true, args, line)
-                .map_err(|e: NewAtomicFactError| ParsingError::new(&e.msg, tb.line_file_index))?;
-            Ok(AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(atomic)))
-        } else {
-            let left_most_obj = self.obj(tb)?;
-            let mut objs = vec![left_most_obj];
-            let mut prop_names: Vec<IdentifierOrIdentifierWithMod> = vec![];
-
-            while !tb.exceed_end_of_head() && (is_comparison_str(tb.current()?) || tb.current()? == FACT_PREFIX) {
-                let tok = tb.current()?.to_string();
-                if is_comparison_str(&tok) {
-                    tb.skip()?;
-                    prop_names.push(IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&tok)));
-                    objs.push(self.obj(tb)?);
-                } else if tok == FACT_PREFIX {
-                    tb.skip_token(FACT_PREFIX)?;
-                    prop_names.push(self.identifier_or_identifier_with_mod(tb)?);
-                    objs.push(self.obj(tb)?);
-                } else {
-                    break;
-                }
-            }
-
-            if prop_names.is_empty() {
-                return Err(ParsingError::new("Expected operator or $prop after object in chain", tb.line_file_index));
-            }
-            if prop_names.len() == 1 {
-                let prop_name = prop_names.into_iter().next().unwrap();
-                let line = Some(tb.line_file_index);
-                let atomic = AtomicFact::to_atomic_fact(prop_name, is_true, objs, line)
-                    .map_err(|e: NewAtomicFactError| ParsingError::new(&e.msg, tb.line_file_index))?;
-                return Ok(AndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(atomic)));
-            }
-            if !is_true {
-                return Err(ParsingError::new("chain fact cannot be negated", tb.line_file_index));
-            }
-            Ok(AndFactOrSpecFact::AndFact(AndFact::ChainFact(ChainFact::new(objs, prop_names, Some(tb.line_file_index)))))
-        }
+    fn atomic_or_chain_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<MatchableFactWithAtomicFactInside, ParsingError> {
+        panic!("atomic_or_chain_fact is not implemented");
     }
 
     pub fn exist_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<ExistFact, ParsingError> {
@@ -231,7 +181,7 @@ impl Parser {
 
     fn try_convert_and_spec_fact_to_fact_inside_exist_fact(
         &self,
-        a: AndFactOrSpecFact,
+        a: MatchableFactWithAtomicFactInside,
         line_file_index: (usize, usize),
     ) -> Result<MatchableFactWithAtomicFactInside, ParsingError> {
         panic!("try_convert_and_spec_fact_to_fact_inside_exist_fact is not implemented");

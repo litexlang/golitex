@@ -10,8 +10,6 @@ mod or_fact_or_and_fact_or_specific_fact;
 mod reversible_fact;
 mod specific_fact;
 
-pub use and_fact::{AndFact, AndSpecFacts, ChainFact};
-pub use and_fact_or_specific_fact::AndFactOrSpecFact;
 pub use atomic_fact::*;
 pub use exist_fact::{ExistFact, FactInsideExistFact, NotExistFact, TrueExistFact};
 pub use matchable_fact_with_atomic_fact_inside::{AndAtomicFact, ChainAtomicFact, MatchableFactWithAtomicFactInside, OrAtomicFact};
