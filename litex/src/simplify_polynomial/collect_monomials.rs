@@ -28,7 +28,7 @@ pub fn collect_monomials_in_obj(obj: &Obj) -> Vec<MonomialWithNonZeroScalarAndOr
         Obj::Sub(sub) => {
             collect_monomials_in_sub(sub)
         },
-        _ => vec![],
+        _ => vec![MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero("1".to_string(), None).unwrap()],
     }
 }
 
