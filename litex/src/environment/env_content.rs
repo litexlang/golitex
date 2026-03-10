@@ -16,6 +16,7 @@ use crate::fact::ForallFactWithIff;
 use crate::error::StoreFactError;
 use crate::fact::EqualFact;
 use crate::fact::AndAtomicFact;
+use crate::fact::ChainAtomicFact;
 
 pub struct Environment {
     pub defined_identifier_objs: HashMap<String, ()>,
@@ -223,9 +224,17 @@ impl Environment {
             Fact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact),
             Fact::OrFact(or_fact) => self.store_or_fact(or_fact),
             Fact::AndAtomicFact(and_fact) => self.store_and_fact(and_fact),
+            Fact::ChainAtomicFact(chain_fact) => self.store_chain_fact(chain_fact),
             Fact::ForallFact(forall_fact) => self.store_forall_fact(Rc::new(forall_fact)),
             Fact::ForallFactWithIff(forall_fact_with_iff) => self.store_forall_fact_with_iff(forall_fact_with_iff),
         }
+    }
+
+    fn store_chain_fact(&mut self, chain_fact: ChainAtomicFact) -> Result<(), StoreFactError> {
+        for fact in chain_fact.facts()?.iter() {
+            self.store_atomic_fact(fact.clone())?;
+        }
+        Ok(())
     }
 
     pub fn store_equality(&mut self, equality: &EqualFact) -> Result<(), StoreFactError> {

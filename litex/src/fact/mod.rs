@@ -1,5 +1,3 @@
-mod and_fact;
-mod and_fact_or_specific_fact;
 mod atomic_fact;
 mod exist_fact;
 mod forall_fact;

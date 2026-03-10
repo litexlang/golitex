@@ -101,6 +101,11 @@ impl From<NewAtomicFactError> for StmtError {
     }
 }
 
+impl From<NewAtomicFactError> for StoreFactError {
+    fn from(e: NewAtomicFactError) -> Self {
+        StoreFactError::new(format!("new atomic fact error: {}", e).as_str())
+    }
+}
 
 #[derive(Debug)]
 pub struct StoreFactError {
