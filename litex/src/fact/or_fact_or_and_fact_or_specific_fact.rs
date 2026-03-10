@@ -1,14 +1,15 @@
 use super::or_fact::OrFact;
-use super::and_fact::AndFact;
+use super::matchable_fact_with_atomic_fact_inside::AndAtomicFact;
 use super::specific_fact::SpecFact;
+use super::atomic_fact::AtomicFact;
 use super::fact_enum::Fact;
 use std::fmt;
 
 #[derive(Clone)]
 pub enum OrFactOrAndFactOrSpecFact {
     OrFact(OrFact),
-    AndFact(AndFact),
-    SpecFact(SpecFact)
+    AndFact(AndAtomicFact),
+    AtomicFact(AtomicFact)
 }
 
 impl fmt::Display for OrFactOrAndFactOrSpecFact {
@@ -16,7 +17,7 @@ impl fmt::Display for OrFactOrAndFactOrSpecFact {
         match self {
             OrFactOrAndFactOrSpecFact::OrFact(or_fact) => write!(f, "{}", or_fact),
             OrFactOrAndFactOrSpecFact::AndFact(and_fact) => write!(f, "{}", and_fact),
-            OrFactOrAndFactOrSpecFact::SpecFact(spec_fact) => write!(f, "{}", spec_fact),
+            OrFactOrAndFactOrSpecFact::AtomicFact(spec_fact) => write!(f, "{}", spec_fact),
         }
     }
 }
@@ -26,18 +27,15 @@ impl OrFactOrAndFactOrSpecFact {
         match self {
             OrFactOrAndFactOrSpecFact::OrFact(or_fact) => or_fact.key(),
             OrFactOrAndFactOrSpecFact::AndFact(and_fact) => and_fact.key(),
-            OrFactOrAndFactOrSpecFact::SpecFact(spec_fact) => spec_fact.key(),
+            OrFactOrAndFactOrSpecFact::AtomicFact(spec_fact) => spec_fact.key(),
         }
     }
 
     pub fn to_fact(self) -> Fact {
         match self {
             OrFactOrAndFactOrSpecFact::OrFact(or_fact) => Fact::OrFact(or_fact),
-            OrFactOrAndFactOrSpecFact::AndFact(and_fact) => Fact::AndFact(and_fact),
-            OrFactOrAndFactOrSpecFact::SpecFact(spec_fact) => match spec_fact {
-                SpecFact::AtomicFact(atomic_fact) => Fact::AtomicFact(atomic_fact),
-                SpecFact::ExistFact(exist_fact) => Fact::ExistFact(exist_fact),
-            },
+            OrFactOrAndFactOrSpecFact::AndFact(and_fact) => Fact::AndAtomicFact(and_fact),
+            OrFactOrAndFactOrSpecFact::AtomicFact(atomic_fact) => Fact::AtomicFact(atomic_fact),
         }
     }
 }
@@ -49,9 +47,9 @@ mod tests {
 
     #[test]
     fn test_or_fact_or_and_fact_or_specific_fact_key() {
-        let o = OrFactOrAndFactOrSpecFact::SpecFact(SpecFact::AtomicFact(AtomicFact::EqualFact(
+        let o = OrFactOrAndFactOrSpecFact::AtomicFact(AtomicFact::EqualFact(
             EqualFact::new(crate::obj::Obj::mk("p"), crate::obj::Obj::mk("q"), Some((1, 0))),
-        )));
+        ));
         let _k = o.key();
     }
 }
