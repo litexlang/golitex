@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::common::keywords::{AND, FACT_PREFIX, OR, is_comparison_str};
+use crate::common::keywords::{AND, FACT_PREFIX,  is_comparison_str};
 use crate::common::helper::vec_to_string_with_sep;
 use super::atomic_fact::{AtomicFact};
 use crate::error::NewAtomicFactError;
@@ -58,20 +58,20 @@ pub enum MatchableFactWithAtomicFactInside {
     ChainAtomicFact(ChainAtomicFact),
 }
 
-#[derive(Clone)]
-pub struct OrAtomicFact {
-    pub facts: Vec<MatchableFactWithAtomicFactInside>,
-    pub line_file_index: Option<(usize, usize)>,
-}
+// #[derive(Clone)]
+// pub struct OrAtomicFact {
+//     pub facts: Vec<MatchableFactWithAtomicFactInside>,
+//     pub line_file_index: Option<(usize, usize)>,
+// }
 
-impl OrAtomicFact {
-    pub fn new(facts: Vec<MatchableFactWithAtomicFactInside>, line_file_index: Option<(usize, usize)>) -> Self {
-        OrAtomicFact { facts, line_file_index }
-    }
-    pub fn line_file_index(&self) -> Option<(usize, usize)> {
-        self.line_file_index
-    }
-}
+// impl OrAtomicFact {
+//     pub fn new(facts: Vec<MatchableFactWithAtomicFactInside>, line_file_index: Option<(usize, usize)>) -> Self {
+//         OrAtomicFact { facts, line_file_index }
+//     }
+//     pub fn line_file_index(&self) -> Option<(usize, usize)> {
+//         self.line_file_index
+//     }
+// }
 
 impl fmt::Display for AndAtomicFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -125,14 +125,3 @@ impl MatchableFactWithAtomicFactInside {
     }
 }
 
-impl fmt::Display for OrAtomicFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", vec_to_string_with_sep(&self.facts.iter().map(|x| x.to_string()).collect::<Vec<_>>(), format!(" {} ", OR).as_str()))
-    }
-}
-
-impl OrAtomicFact {
-    pub fn key(&self) -> String {
-        vec_to_string_with_sep(&self.facts.iter().map(|x| x.key()).collect::<Vec<_>>(), format!(" {} ", OR).as_str())
-    }
-}

@@ -36,7 +36,7 @@ use fact::{Fact, InFact, NotInFact, IsCartFact, NotIsCartFact, IsTupleFact, NotI
     LessEqualFact, NotLessEqualFact, GreaterEqualFact, NotGreaterEqualFact,
     IsSetFact, NotIsSetFact, IsNonemptySetFact, NotIsNonemptySetFact,
     IsFiniteSetFact, NotIsFiniteSetFact,
-    ExistFact, MatchableFactWithAtomicFactInside,  NotExistFact, OrAtomicFact, TrueExistFact,
+    ExistFact, MatchableFactWithAtomicFactInside,  NotExistFact, TrueExistFact,
     OrFact, ForallFact, SpecFact, ForallFactWithIff, 
      OrFactOrAndFactOrSpecFact,
     AndAtomicFact, ChainAtomicFact, FactInsideExistFact,
@@ -1087,14 +1087,14 @@ fn try_runtime_context() {
     let exist_fact = ExistFact::TrueExistFact(TrueExistFact::new(
         vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))],
         vec![
-            FactInsideExistFact::OrAtomicFact(OrAtomicFact {
+            FactInsideExistFact::OrAtomicFact(OrFact {
                 facts: vec![
                     MatchableFactWithAtomicFactInside::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))),
                     MatchableFactWithAtomicFactInside::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))),
                 ],
                 line_file_index: Some((1, 0)),
             }),
-            FactInsideExistFact::OrAtomicFact(OrAtomicFact {
+            FactInsideExistFact::OrAtomicFact(OrFact {
                 facts: vec![MatchableFactWithAtomicFactInside::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))],
                 line_file_index: Some((1, 0)),
             }),
