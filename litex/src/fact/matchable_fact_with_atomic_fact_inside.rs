@@ -1,7 +1,8 @@
 use std::fmt;
 use crate::common::keywords::{AND, FACT_PREFIX, OR, is_comparison_str};
 use crate::common::helper::vec_to_string_with_sep;
-use super::atomic_fact::AtomicFact;
+use super::atomic_fact::{AtomicFact};
+use crate::error::NewAtomicFactError;
 use crate::obj::Obj;
 use crate::obj::IdentifierOrIdentifierWithMod;
 
@@ -37,6 +38,16 @@ impl ChainAtomicFact {
     }
     pub fn line_file_index(&self) -> Option<(usize, usize)> {
         self.line_file_index
+    }
+
+    pub fn facts(&self) -> Result<Vec<AtomicFact>, NewAtomicFactError> {
+        let mut facts = Vec::new();
+        for (i, obj) in self.objs.iter().enumerate() {
+            let prop_name = self.prop_names[i].clone();
+            let atomic_fact = AtomicFact::to_atomic_fact(prop_name, true, vec![obj.clone()], self.line_file_index);
+            facts.push(atomic_fact?);
+        }
+        Ok(facts)
     }
 }
 

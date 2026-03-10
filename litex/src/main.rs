@@ -36,10 +36,10 @@ use fact::{Fact, InFact, NotInFact, IsCartFact, NotIsCartFact, IsTupleFact, NotI
     LessEqualFact, NotLessEqualFact, GreaterEqualFact, NotGreaterEqualFact,
     IsSetFact, NotIsSetFact, IsNonemptySetFact, NotIsNonemptySetFact,
     IsFiniteSetFact, NotIsFiniteSetFact,
-    ExistFact, MatchableFactWithAtomicFactInside, FactInsideExistFact, NotExistFact, OrAtomicFact, TrueExistFact,
+    ExistFact, MatchableFactWithAtomicFactInside,  NotExistFact, OrAtomicFact, TrueExistFact,
     OrFact, ForallFact, SpecFact, ForallFactWithIff, 
      OrFactOrAndFactOrSpecFact,
-    AndAtomicFact,
+    AndAtomicFact, ChainAtomicFact, FactInsideExistFact,
 };
 mod result;
 use result::{StmtResult, NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules, StmtUnknown};
@@ -460,6 +460,12 @@ fn try_or_fact() {
     let _or = OrFact::new(facts, Some((1, 0)));
     println!("{}", _or);
 
+    let or = OrFact::new(vec![MatchableFactWithAtomicFactInside::ChainAtomicFact(ChainAtomicFact::new(
+        vec![Obj::mk("p")],
+        vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("q"))],
+        Some((1, 0)),
+    ))], Some((1, 0)));
+    println!("{}", or);
 }
 
 fn try_and_fact_or_spec_fact() {
