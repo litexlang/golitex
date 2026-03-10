@@ -1,18 +1,17 @@
 use crate::common::helper::is_number_string_literally_integer_without_dot;
 use crate::obj::{Add, Mul, Obj, Pow, Sub};
 use crate::simplify_polynomial::calculate::{mul_decimal_str, pow_decimal_str, sub_decimal_str};
-use crate::simplify_polynomial::monomial::sort_monomials_by_operands;
 use super::calculate::add_decimal_str;
-use super::monomial::Monomial;
+use super::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 use super::calculate::normalize_decimal_result;
 
-pub fn collect_ordered_monomials(obj: &Obj) -> Vec<Monomial> {
+pub fn collect_monomials_in_obj(obj: &Obj) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     match obj {
         // 变成 to_string 后，如果经过 normalize_decimal_result 化简后变成0，那就返回空的；否则返回 Monomial::new(num.value.clone(), None)
         Obj::Number(num) => {
             let num_str = num.value.clone();
             let normalized_num_str = normalize_decimal_result(&num_str);
-            let current_monomial = Monomial::new_and_check_scalar_is_not_zero(normalized_num_str, None);
+            let current_monomial = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(normalized_num_str, None);
             if current_monomial.is_some() {
                 vec![current_monomial.unwrap()]
             } else {
@@ -20,22 +19,22 @@ pub fn collect_ordered_monomials(obj: &Obj) -> Vec<Monomial> {
             }
         },
         Obj::Add(add) => {
-            collect_ordered_monomial_in_add(add)
+            collect_monomials_in_add(add)
         },
         Obj::Mul(mul) => {
-            collect_ordered_monomial_in_mul(mul)
+            collect_monomials_in_mul(mul)
         },
         Obj::Pow(pow) => {
-            collect_ordered_monomial_in_pow(pow)
+            collect_monomials_in_pow(pow)
         },
         Obj::Sub(sub) => {
-            collect_ordered_monomial_in_sub(sub)
+            collect_monomials_in_sub(sub)
         },
         _ => vec![],
     }
 }
 
-pub fn collect_ordered_monomial_in_sub(sub: &Sub) -> Vec<Monomial> {
+pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if sub.can_be_calculated {
         let left = sub.left.calculate_to_string();
         let right = sub.right.calculate_to_string();
@@ -46,11 +45,11 @@ pub fn collect_ordered_monomial_in_sub(sub: &Sub) -> Vec<Monomial> {
         return vec![]
     }
 
-    let left_monomial_collections = collect_ordered_monomials(&sub.left);
-    let right_monomial_collections = collect_ordered_monomials(&sub.right);
+    let left_monomial_collections = collect_monomials_in_obj(&sub.left);
+    let right_monomial_collections = collect_monomials_in_obj(&sub.right);
 
     let mut already_processed_indexes: Vec<usize> = vec![];
-    let mut result: Vec<Monomial> = vec![];
+    let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> = vec![];
     for (i, left_monomial) in left_monomial_collections.iter().enumerate() {
         if already_processed_indexes.contains(&i) {
             continue;
@@ -66,7 +65,7 @@ pub fn collect_ordered_monomial_in_sub(sub: &Sub) -> Vec<Monomial> {
             if left_monomial.operands_equal(right_monomial) {
                 let new_scalar = sub_decimal_str(&left_monomial.non_zero_scalar, &right_monomial.non_zero_scalar);
                 already_processed_indexes.push(j);
-                let current_monomial = Monomial::new_and_check_scalar_is_not_zero(new_scalar, left_monomial.ordered_operands.clone());
+                let current_monomial = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(new_scalar, left_monomial.ordered_operands.clone());
                 if current_monomial.is_some() {
                     result.push(current_monomial.unwrap());
                 }
@@ -80,12 +79,11 @@ pub fn collect_ordered_monomial_in_sub(sub: &Sub) -> Vec<Monomial> {
         }
     }
 
-    sort_monomials_by_operands(&mut result);
     result
 }
 
 
-pub fn collect_ordered_monomial_in_add(add: &Add) -> Vec<Monomial> {
+pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if add.can_be_calculated {
         let left = add.left.calculate_to_string();
         let right = add.right.calculate_to_string();
@@ -96,11 +94,11 @@ pub fn collect_ordered_monomial_in_add(add: &Add) -> Vec<Monomial> {
         return vec![]
     }
 
-    let left_monomial_collections = collect_ordered_monomials(&add.left);
-    let right_monomial_collections = collect_ordered_monomials(&add.right);
+    let left_monomial_collections = collect_monomials_in_obj(&add.left);
+    let right_monomial_collections = collect_monomials_in_obj(&add.right);
 
     let mut already_processed_indexes: Vec<usize> = vec![];
-    let mut result: Vec<Monomial> = vec![];
+    let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> = vec![];
     for (i, left_monomial) in left_monomial_collections.iter().enumerate() {
         if already_processed_indexes.contains(&i) {
             continue;
@@ -116,7 +114,7 @@ pub fn collect_ordered_monomial_in_add(add: &Add) -> Vec<Monomial> {
             if left_monomial.operands_equal(right_monomial) {
                 let new_scalar = add_decimal_str(&left_monomial.non_zero_scalar, &right_monomial.non_zero_scalar);
                 already_processed_indexes.push(j);
-                let current_monomial = Monomial::new_and_check_scalar_is_not_zero(new_scalar, left_monomial.ordered_operands.clone());
+                let current_monomial = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(new_scalar, left_monomial.ordered_operands.clone());
                 if current_monomial.is_some() {
                     result.push(current_monomial.unwrap());
                 }
@@ -130,11 +128,10 @@ pub fn collect_ordered_monomial_in_add(add: &Add) -> Vec<Monomial> {
         }
     }
 
-    sort_monomials_by_operands(&mut result);
     result
 }
 
-fn collect_ordered_monomial_in_mul(mul: &Mul) -> Vec<Monomial> {
+fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if mul.can_be_calculated {
         let left = mul.left.calculate_to_string();
         let right = mul.right.calculate_to_string();
@@ -147,8 +144,8 @@ fn collect_ordered_monomial_in_mul(mul: &Mul) -> Vec<Monomial> {
 
     if mul.left.can_be_calculated() {
         let left = mul.left.calculate_to_string();
-        let collected_monomials_of_right = collect_ordered_monomials(&mul.right);
-        let mut result:Vec<Monomial> = vec![];
+        let collected_monomials_of_right = collect_monomials_in_obj(&mul.right);
+        let mut result:Vec<MonomialWithNonZeroScalarAndOrderedOperands> = vec![];
         for right in collected_monomials_of_right.iter() {
             let current_monomial = multiply_numbers_to_monomial(left.as_str(), right);
             if current_monomial.is_some() {
@@ -160,8 +157,8 @@ fn collect_ordered_monomial_in_mul(mul: &Mul) -> Vec<Monomial> {
 
     if mul.right.can_be_calculated() {
         let right = mul.right.calculate_to_string();
-        let collected_monomials_of_left = collect_ordered_monomials(&mul.left);
-        let mut result:Vec<Monomial> = vec![];
+        let collected_monomials_of_left = collect_monomials_in_obj(&mul.left);
+        let mut result:Vec<MonomialWithNonZeroScalarAndOrderedOperands> = vec![];
         for left in collected_monomials_of_left.iter() {
             let current_monomial = multiply_numbers_to_monomial(right.as_str(), left);
             if current_monomial.is_some() {
@@ -171,14 +168,14 @@ fn collect_ordered_monomial_in_mul(mul: &Mul) -> Vec<Monomial> {
         return result
     }
 
-    let collections_of_left = collect_ordered_monomials(&mul.left);
-    let collections_of_right = collect_ordered_monomials(&mul.right);
+    let collections_of_left = collect_monomials_in_obj(&mul.left);
+    let collections_of_right = collect_monomials_in_obj(&mul.right);
     
-    collect_ordered_monomials_of_mul_of_ordered_monomial_vec(&collections_of_left, &collections_of_right)
+    collect_monomials_of_mul_of_monomial_vec(&collections_of_left, &collections_of_right)
 }
 
-fn collect_ordered_monomials_of_mul_of_ordered_monomial_vec(collections_of_left: &Vec<Monomial>, collections_of_right: &Vec<Monomial>) -> Vec<Monomial> {
-    let mut collect_monomials_after_mul: Vec<Monomial> = vec![];
+fn collect_monomials_of_mul_of_monomial_vec(collections_of_left: &Vec<MonomialWithNonZeroScalarAndOrderedOperands>, collections_of_right: &Vec<MonomialWithNonZeroScalarAndOrderedOperands>) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
+    let mut collect_monomials_after_mul: Vec<MonomialWithNonZeroScalarAndOrderedOperands> = vec![];
     for left in collections_of_left.iter() {
         for right in collections_of_right.iter() {
             let multiplied = multiply_two_non_zero_monomials_with_operands(left, right);
@@ -187,7 +184,7 @@ fn collect_ordered_monomials_of_mul_of_ordered_monomial_vec(collections_of_left:
     }
 
     let mut already_processed_indexes: Vec<usize> = vec![];
-    let mut result: Vec<Monomial> = vec![];
+    let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> = vec![];
     for (i, monomial) in collect_monomials_after_mul.iter().enumerate() {
         if already_processed_indexes.contains(&i) {
             continue;
@@ -203,22 +200,21 @@ fn collect_ordered_monomials_of_mul_of_ordered_monomial_vec(collections_of_left:
             }
         }
 
-        let current_monomial = Monomial::new_and_check_scalar_is_not_zero(current_scalar, monomial.ordered_operands.clone());
+        let current_monomial = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(current_scalar, monomial.ordered_operands.clone());
         if current_monomial.is_some() {
             result.push(current_monomial.unwrap());
         }
     }
 
-    sort_monomials_by_operands(&mut result);
     result
 }
 
-fn collect_ordered_monomial_in_pow(pow: &Pow) -> Vec<Monomial> {
+fn collect_monomials_in_pow(pow: &Pow) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     if pow.can_be_calculated {
         let left = pow.base.calculate_to_string();
         let right = pow.exponent.calculate_to_string();
         let value = pow_decimal_str(&left, &right);
-        let current_monomial = Monomial::new_and_check_scalar_is_not_zero(value, None);
+        let current_monomial = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(value, None);
         if current_monomial.is_some() {
             return vec![current_monomial.unwrap()]
         }
@@ -247,7 +243,7 @@ fn collect_ordered_monomial_in_pow(pow: &Pow) -> Vec<Monomial> {
     };
 
     if !exponent_ok || exponent_value.unwrap() > 32 {
-        let current_monomial = Monomial::new_and_check_scalar_is_not_zero("1".to_string(), Some(vec![(Obj::Pow(pow.clone()), pow.to_string())]));
+        let current_monomial = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero("1".to_string(), Some(vec![(Obj::Pow(pow.clone()), pow.to_string())]));
         if current_monomial.is_some() {
             return vec![current_monomial.unwrap()]
         }
@@ -255,7 +251,7 @@ fn collect_ordered_monomial_in_pow(pow: &Pow) -> Vec<Monomial> {
     }
 
     if exponent_value == Some(0) {
-        let current_monomial = Monomial::new_and_check_scalar_is_not_zero("1".to_string(), None);
+        let current_monomial = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero("1".to_string(), None);
         if current_monomial.is_some() {
             return vec![current_monomial.unwrap()]
         }
@@ -263,33 +259,32 @@ fn collect_ordered_monomial_in_pow(pow: &Pow) -> Vec<Monomial> {
     }
 
     let n = exponent_value.unwrap();
-    let base_monomials = collect_ordered_monomials(&pow.base);
+    let base_monomials = collect_monomials_in_obj(&pow.base);
     let mut result = base_monomials.clone();
     for _ in 0..(n - 1) {
-        result = collect_ordered_monomials_of_mul_of_ordered_monomial_vec(&result, &base_monomials);
+        result = collect_monomials_of_mul_of_monomial_vec(&result, &base_monomials);
     }
 
-    sort_monomials_by_operands(&mut result);
     result
 }
 
-fn multiply_numbers_and_return_monomial(left: &str, right: &str) -> Option<Monomial> {
+fn multiply_numbers_and_return_monomial(left: &str, right: &str) -> Option<MonomialWithNonZeroScalarAndOrderedOperands> {
     let scalar = mul_decimal_str(left, right);
-    Monomial::new_and_check_scalar_is_not_zero(scalar, None)
+    MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(scalar, None)
 }
 
-fn add_numbers_and_return_monomial(left: &str, right: &str) -> Option<Monomial> {
+fn add_numbers_and_return_monomial(left: &str, right: &str) -> Option<MonomialWithNonZeroScalarAndOrderedOperands> {
     let scalar = add_decimal_str(left, right);
-    Monomial::new_and_check_scalar_is_not_zero(scalar, None)
+    MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(scalar, None)
 }
 
 
-fn multiply_numbers_to_monomial(left: &str, right: &Monomial) -> Option<Monomial> {
+fn multiply_numbers_to_monomial(left: &str, right: &MonomialWithNonZeroScalarAndOrderedOperands) -> Option<MonomialWithNonZeroScalarAndOrderedOperands> {
     let scalar = mul_decimal_str(left, right.non_zero_scalar.as_str());
-    Monomial::new_and_check_scalar_is_not_zero(scalar, right.ordered_operands.clone())
+    MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(scalar, right.ordered_operands.clone())
 }
 
-fn multiply_two_non_zero_monomials_with_operands(left: &Monomial, right: &Monomial) -> Monomial {
+fn multiply_two_non_zero_monomials_with_operands(left: &MonomialWithNonZeroScalarAndOrderedOperands, right: &MonomialWithNonZeroScalarAndOrderedOperands) -> MonomialWithNonZeroScalarAndOrderedOperands {
     let mut new_operands = vec![];
     let new_scalar = mul_decimal_str(&left.non_zero_scalar, &right.non_zero_scalar);
     for operand in (left.ordered_operands.as_ref()).unwrap().iter() {
@@ -304,10 +299,10 @@ fn multiply_two_non_zero_monomials_with_operands(left: &Monomial, right: &Monomi
     }
     new_operands.sort_by(|a, b| a.1.cmp(&b.1));
 
-    Monomial::new_and_check_scalar_is_not_zero(new_scalar, Some(new_operands)).unwrap()
+    MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(new_scalar, Some(new_operands)).unwrap()
 }
 
-fn sub_numbers_and_return_monomial(left: &str, right: &str) -> Option<Monomial> {
+fn sub_numbers_and_return_monomial(left: &str, right: &str) -> Option<MonomialWithNonZeroScalarAndOrderedOperands> {
     let scalar = sub_decimal_str(left, right);
-    Monomial::new_and_check_scalar_is_not_zero(scalar, None)
+    MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(scalar, None)
 }
