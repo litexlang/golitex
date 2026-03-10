@@ -44,6 +44,6 @@ pub fn add_four_spaces_at_beginning(str: &str, number_of_four_spaces: usize) -> 
     format!("{}{}", "    ".repeat(number_of_four_spaces), str)
 }
 
-pub fn is_number_string_literally_integer(str: &str) -> bool {
+pub fn is_number_string_literally_integer_without_dot(str: &str) -> bool {
     !str.contains(DOT_AKA_FIELD_ACCESS_SIGN)
 }
