@@ -3,15 +3,13 @@ use crate::obj::{Add, Mul, Obj, Pow, Sub};
 use crate::simplify_polynomial::calculate::{mul_decimal_str, pow_decimal_str, sub_decimal_str};
 use super::calculate::add_decimal_str;
 use super::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
-use super::calculate::normalize_decimal_result;
 
 pub fn collect_monomials_in_obj(obj: &Obj) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     match obj {
-        // 变成 to_string 后，如果经过 normalize_decimal_result 化简后变成0，那就返回空的；否则返回 Monomial::new(num.value.clone(), None)
-        Obj::Number(num) => {
-            let num_str = num.value.clone();
-            let normalized_num_str = normalize_decimal_result(&num_str);
-            let current_monomial = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(normalized_num_str, None);
+        Obj::Number(_) => {
+            // must be calculated so that it is normalized
+            let num_str = obj.calculate_to_string();
+            let current_monomial = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(num_str, None);
             if current_monomial.is_some() {
                 vec![current_monomial.unwrap()]
             } else {

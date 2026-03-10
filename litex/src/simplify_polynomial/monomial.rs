@@ -7,7 +7,6 @@ pub struct MonomialWithNonZeroScalarAndOrderedOperands {
 }
 
 impl MonomialWithNonZeroScalarAndOrderedOperands {
-    /// 按情况讨论：scalar 为空/全空白、或规范化后为 0 则返回 None；否则返回 Some(Monomial)，且 scalar 存规范化后的值。
     pub fn new_and_check_scalar_is_not_zero(scalar: String, ordered_operands: Option<Vec<(Obj, String)>>) -> Option<Self> {
         if scalar == "0" {
             return None;
