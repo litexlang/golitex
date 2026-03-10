@@ -1,4 +1,5 @@
 mod calculate;
+pub use collect_monomials::collect_ordered_monomials;
 mod collect_monomials;
 mod monomial;
 
