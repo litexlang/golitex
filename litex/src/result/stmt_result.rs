@@ -1,6 +1,5 @@
 use std::fmt;
-use crate::common::keywords::{SUCCESS, UNKNOWN};
-use crate::error::{StmtError, UnknownError};
+use crate::common::keywords::{SUCCESS};
 use super::stmt_success::{FactVerifiedByBuiltinRules, FactVerifiedByFact, NonFactualStmtSuccess};
 use super::stmt_unknown::StmtUnknown;
 
@@ -33,16 +32,16 @@ impl StmtResult {
     }
 }
 
-pub fn result_to_option_stmt_error<E>(result: Result<StmtResult, E>) -> Option<StmtError>
-where
-    E: Into<StmtError>,
-{
-    match result {
-        Err(e) => Some(e.into()),
-        Ok(StmtResult::StmtUnknown(_)) => {
-            Some(StmtError::UnknownError(UnknownError::new(UNKNOWN, None)))
-        }
-        Ok(_) => None,
-    }
-}
+// pub fn result_to_error<E>(result: Result<StmtResult, E>) -> Option<StmtError>
+// where
+//     E: Into<StmtError>,
+// {
+//     match result {
+//         Err(e) => Some(e.into()),
+//         Ok(StmtResult::StmtUnknown(_)) => {
+//             Some(StmtError::UnknownError(UnknownError::new(UNKNOWN, None)))
+//         }
+//         Ok(_) => None,
+//     }
+// }
 
