@@ -52,7 +52,7 @@ impl<'a> Executor<'a> {
             self.define_params_with_type(param_def)?;
         }
         for fact in def_let_stmt.facts.iter() {
-            self.store_fact(fact)?;
+            self.verify_fact_well_defined_and_store(fact, &mut VerifyState::new(0, false))?;
         }
         Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_let_stmt.to_string(), def_let_stmt.line_file_index)))
     }
@@ -94,7 +94,7 @@ impl<'a> Executor<'a> {
         let facts = param_def.facts();
         for (name, fact) in param_def.0.iter().zip(facts.iter()) {
             self.validate_name_and_store_identifier_obj(name)?;
-            self.store_fact(fact)?;
+            self.verify_fact_well_defined_and_store(fact, &mut VerifyState::new(0, false))?;
         }
         Ok(())
     }

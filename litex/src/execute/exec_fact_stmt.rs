@@ -25,7 +25,7 @@ impl<'a> Executor<'a> {
             Err(e) => return Err(e.into()),
         };
 
-        self.store_fact(fact)?;
+        self.store_fact_without_well_defined_verified(fact)?;
 
         Ok(result)
     }

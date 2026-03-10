@@ -90,29 +90,29 @@ impl fmt::Display for ParamDefWithParamType {
 
 impl ParamDefWithParamType {
     pub fn facts(&self) -> Vec<Fact> {
-        self.0
-            .iter()
-            .map(|name| {
-                match &self.1 {
-                    ParamType::Obj(obj) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                        Obj::Identifier(Identifier::new(name)),
-                        obj.clone(),
-                        None,
-                    ))),
-                    ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
-                        Obj::Identifier(Identifier::new(name)),
-                        None,
-                    ))),
-                    ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
-                        Obj::Identifier(Identifier::new(name)),
-                        None,
-                    ))),
-                    ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
-                        Obj::Identifier(Identifier::new(name)),
-                        None,
-                    ))),
-                }
-            })
-            .collect()
+        let mut facts = Vec::with_capacity(self.0.len());
+        for name in self.0.iter() {
+            let fact = match &self.1 {
+                ParamType::Obj(obj) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                    Obj::Identifier(Identifier::new(name)),
+                    obj.clone(),
+                    None,
+                ))),
+                ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
+                    Obj::Identifier(Identifier::new(name)),
+                    None,
+                ))),
+                ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+                    Obj::Identifier(Identifier::new(name)),
+                    None,
+                ))),
+                ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
+                    Obj::Identifier(Identifier::new(name)),
+                    None,
+                ))),
+            };
+            facts.push(fact);
+        }
+        facts
     }
 }
