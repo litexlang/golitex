@@ -1126,14 +1126,14 @@ fn try_runtime_context() {
     let exist_fact = ExistFact::TrueExistFact(TrueExistFact::new(
         vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))],
         vec![
-            OrAndChainAtomicFact::OrAtomicFact(OrFact {
+            OrAndChainAtomicFact::OrFact(OrFact {
                 facts: vec![
                     AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))),
                     AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))),
                 ],
                 line_file_index: Some((1, 0)),
             }),
-            OrAndChainAtomicFact::OrAtomicFact(OrFact {
+            OrAndChainAtomicFact::OrFact(OrFact {
                 facts: vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))],
                 line_file_index: Some((1, 0)),
             }),
