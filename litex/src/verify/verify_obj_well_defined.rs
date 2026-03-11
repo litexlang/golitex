@@ -202,9 +202,10 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_set_builder_well_defined(&self, _x: &SetBuilder, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
-        Err(WellDefinedError::new("verify_set_builder_well_defined 此函数还没有 implement", vec![], None))
+    fn verify_set_builder_well_defined(&self, x: &SetBuilder, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+        panic!("NOT IMPLEMENTED YET");
     }
+
 
     fn verify_fn_set_without_dom_well_defined(&self, x: &FnSetWithoutDom, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         for obj in &x.param_sets {
