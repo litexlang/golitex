@@ -5,11 +5,12 @@ use crate::obj::{
     RPos, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, Union, Val, ZNeg, ZNz, ZObj, ZPos,
     Intersect,
 };
-use crate::error::WellDefinedError;
+use crate::error::{WellDefinedError, StmtError};
 use crate::verify::VerifyState;
 use crate::fact::{AtomicFact, NotEqualFact, IsCartFact, IsNonemptySetFact};
 use crate::fact::InFact;
 use crate::execute::Executor;
+use crate::stmt::parameter_type_and_property::ParamDefWithParamSet;
 
 // well-defined check for obj
 impl<'a> Executor<'a> {
@@ -210,9 +211,19 @@ impl<'a> Executor<'a> {
     }
 
     fn verify_set_builder_well_defined_body(&mut self, x: &SetBuilder, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
-        _ = x;
-        _ = verify_state;
-        panic!("verify_set_builder_well_defined_body 此函数还没有 implement");
+        let result = self.define_params_with_set(&ParamDefWithParamSet::new(vec![x.param.clone()], *x.param_set.clone()));
+        if result.is_err() {
+            return Err(WellDefinedError::new("failed to verify well-defined of set builder", vec![StmtError::ExecError(result.unwrap_err())], None));
+        }
+
+        for fact in x.facts.iter() {
+            let result = self.verify_fact_well_defined_and_store(&(fact.from_ref_to_fact()), verify_state);
+            if result.is_err() {
+                return Err(WellDefinedError::new("failed to verify well-defined of set builder", vec![StmtError::ExecError(result.unwrap_err())], None));
+            }
+        }
+
+        Ok(())
     }
 
 
