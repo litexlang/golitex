@@ -181,17 +181,21 @@ impl Environment {
     }
 
     fn store_chain_fact_in_forall_fact(&mut self, chain_fact: &ChainFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
-        _ = index;
-        _ = forall_fact;
-        _ = chain_fact;
-        panic!("")
+        for fact in chain_fact.facts()?.iter() {
+            self.store_a_fact_in_forall_fact(&ExistOrAndChainAtomicFact::AtomicFact(fact.clone()), index, forall_fact.clone())?;
+        }
+        Ok(())
     }
 
     fn store_exist_fact_in_forall_fact(&mut self, exist_fact: &ExistFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
-        _ = index;
-        _ = forall_fact;
-        _ = exist_fact;
-        panic!("")
+        let key = exist_fact.key();
+        let is_true = exist_fact.is_true();
+        if self.known_exist_facts_in_forall_facts.contains_key(&(key, is_true)) {
+            self.known_exist_facts_in_forall_facts.get_mut(&(exist_fact.key(), is_true)).unwrap().push((index, forall_fact));
+        } else {
+            self.known_exist_facts_in_forall_facts.insert((exist_fact.key(), is_true), vec![(index, forall_fact)]);
+        }
+        Ok(())
     }
 
     fn store_and_fact_in_forall_fact(&mut self, and_fact: &AndFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {

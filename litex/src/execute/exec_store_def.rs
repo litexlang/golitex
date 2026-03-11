@@ -1,11 +1,9 @@
-use crate::error::{ExecError, StoreFactError, WellDefinedError};
-use crate::fact::Fact;
+use crate::error::{ExecError, WellDefinedError};
 use crate::stmt::definition_stmt::{DefPropStmt, DefStructStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::common::keywords::{PROP, STRUCT, ALGO};
 use super::Executor;
 use crate::common::is_valid_litex_name::is_valid_litex_name;
-use crate::verify::VerifyState;
 
 impl<'a> Executor<'a> {
     pub fn validate_name_and_store_def_prop(&mut self, def_prop_stmt: &DefPropStmt) -> Result<(), ExecError> {
@@ -56,18 +54,6 @@ impl<'a> Executor<'a> {
             return Err(WellDefinedError::new(format!("name {} is already used", name).as_str(), vec![], None));
         }
         
-        Ok(())
-    }
-}
-
-impl<'a> Executor<'a> {
-    pub fn store_fact_without_well_defined_verified(&mut self, fact: &Fact) -> Result<(), StoreFactError> {
-        self.runtime_context.environments.last_mut().unwrap().store_fact(fact.clone())
-    }
-
-    pub fn verify_fact_well_defined_and_store(&mut self, fact: &Fact, verify_state: &mut VerifyState) -> Result<(), ExecError> {
-        self.verify_fact_well_defined(fact, verify_state)?;
-        self.store_fact_without_well_defined_verified(fact)?;
         Ok(())
     }
 }

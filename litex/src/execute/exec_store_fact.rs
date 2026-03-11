@@ -1,0 +1,17 @@
+use crate::error::ExecError;
+use crate::verify::VerifyState;
+use crate::fact::Fact;
+use super::Executor;
+use crate::error::StoreFactError;
+
+impl<'a> Executor<'a> {
+    pub fn store_fact_without_well_defined_verified(&mut self, fact: &Fact) -> Result<(), StoreFactError> {
+        self.runtime_context.environments.last_mut().unwrap().store_fact(fact.clone())
+    }
+
+    pub fn verify_fact_well_defined_and_store(&mut self, fact: &Fact, verify_state: &mut VerifyState) -> Result<(), ExecError> {
+        self.verify_fact_well_defined(fact, verify_state)?;
+        self.store_fact_without_well_defined_verified(fact)?;
+        Ok(())
+    }
+}
