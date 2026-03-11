@@ -1,5 +1,5 @@
 use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStructStmt, DefStructWithNoFieldStmt, DefStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt};
-use crate::fact::{ExistFact, AndFactOrChainFactOrAtomicFact};
+use crate::fact::{ExistFact, AndChainAtomicFact};
 use crate::error::ParsingError;
 use crate::stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
 use crate::common::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, FN, HAVE, IF, LEFT_BRACE, LET, PROP, RETURN, RIGHT_BRACE, STRUCT};
@@ -34,7 +34,7 @@ impl Parser {
                 Err(_) => break,
                 Ok(_) => {}
             }
-            param_def.push(self.param_def_with_param_type(tb)?);
+            param_def.push(self.parse_param_def_with_param_type(tb)?);
             if matches!(tb.current(), Ok(t) if t == COMMA) {
                 tb.skip_token(COMMA)?;
             }
@@ -57,7 +57,7 @@ impl Parser {
         tb.skip_token(HAVE)?;
         let mut param_defs: Vec<ParamDefWithParamType> = vec![];
         loop {
-            param_defs.push(self.param_def_with_param_type(tb)?);
+            param_defs.push(self.parse_param_def_with_param_type(tb)?);
             if !matches!(tb.current(), Ok(t) if t == COMMA) {
                 break;
             }
@@ -71,10 +71,10 @@ impl Parser {
             Ok(Stmt::DefStmt(DefStmt::HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, Some(tb.line_file_index)))))
         } else {
             tb.skip_token(EQUAL)?;
-            let mut objs_equal_to = vec![self.obj(tb)?];
+            let mut objs_equal_to = vec![self.parse_obj(tb)?];
             while matches!(tb.current(), Ok(t) if t == COMMA) {
                 tb.skip_token(COMMA)?;
-                objs_equal_to.push(self.obj(tb)?);
+                objs_equal_to.push(self.parse_obj(tb)?);
             }
             Ok(Stmt::DefStmt(DefStmt::HaveObjEqualStmt(HaveObjEqualStmt::new(param_defs, objs_equal_to, Some(tb.line_file_index)))))
         }
@@ -87,20 +87,20 @@ impl Parser {
         let fs = self.fn_set_with_dom_without_fn_prefix(tb)?;
         if tb.current()? == COLON {
             tb.skip_token(COLON)?;
-            let mut cases: Vec<AndFactOrChainFactOrAtomicFact> = vec![];
+            let mut cases: Vec<AndChainAtomicFact> = vec![];
             let mut equal_tos: Vec<crate::obj::Obj> = vec![];
             for block in tb.body.iter_mut() {
                 block.skip_token(CASE)?;
-                cases.push(self.and_spec_fact(block)?);
+                cases.push(self.parse_and_chain_atomic_fact(block)?);
                 block.skip_token(EQUAL)?;
-                equal_tos.push(self.obj(block)?);
+                equal_tos.push(self.parse_obj(block)?);
             }
             Ok(Stmt::DefStmt(DefStmt::HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt::new(
                 name, fs, cases, equal_tos, Some(tb.line_file_index),
             ))))
         } else {
             tb.skip_token(EQUAL)?;
-            let equal_to = self.obj(tb)?;
+            let equal_to = self.parse_obj(tb)?;
             Ok(Stmt::DefStmt(DefStmt::HaveFnEqualStmt(HaveFnEqualStmt::new(
                 name, fs, equal_to, Some(tb.line_file_index),
             ))))
@@ -109,7 +109,7 @@ impl Parser {
 
     pub fn have_exist(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(HAVE)?;
-        let ef = self.exist_fact(tb, true)?;
+        let ef = self.parse_exist_fact(tb, true)?;
         let true_fact = match ef {
             ExistFact::TrueExistFact(t) => t,
             ExistFact::NotExistFact(_) => {
@@ -128,7 +128,7 @@ impl Parser {
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_type: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
-            params_def_with_type.push(self.param_def_with_param_type(tb)?);
+            params_def_with_type.push(self.parse_param_def_with_param_type(tb)?);
             if tb.current()? == COMMA {
                 tb.skip_token(COMMA)?;
             }
@@ -137,7 +137,7 @@ impl Parser {
             tb.skip_token(COLON)?;
             let mut facts = vec![];
             while tb.current()? != RIGHT_BRACE {
-                facts.push(self.or_and_spec_fact(tb)?);
+                facts.push(self.parse_exist_or_and_chain_atomic_fact(tb)?);
                 if tb.current()? == COMMA {
                     tb.skip_token(COMMA)?;
                 }
@@ -148,7 +148,7 @@ impl Parser {
         };
         tb.skip_token(RIGHT_BRACE)?;
         tb.skip_token(EQUAL)?;
-        let equal_to = self.obj(tb)?;
+        let equal_to = self.parse_obj(tb)?;
         Ok(Stmt::DefStmt(DefStmt::DefStructStmt(DefStructStmt::DefStructWithNoFieldStmt(DefStructWithNoFieldStmt::new(
             name,
             params_def_with_type,
@@ -195,7 +195,7 @@ impl Parser {
     /// head 里是 if and_spec_fact :，body 有且只有一个块，即 return obj。
     fn parse_algo_if(&self, block: &mut TokenBlock) -> Result<AlgoIf, ParsingError> {
         block.skip_token(IF)?;
-        let condition = self.and_spec_fact(block)?;
+        let condition = self.parse_and_chain_atomic_fact(block)?;
         block.skip_token(COLON)?;
         if !block.exceed_end_of_head() {
             return Err(ParsingError::new("algo if: expected end of head after condition", block.line_file_index));
@@ -214,7 +214,7 @@ impl Parser {
     /// head 里是 return，后跟 obj。
     fn parse_algo_return(&self, block: &mut TokenBlock) -> Result<AlgoReturn, ParsingError> {
         block.skip_token(RETURN)?;
-        let value = self.obj(block)?;
+        let value = self.parse_obj(block)?;
         Ok(AlgoReturn::new(value, Some(block.line_file_index)))
     }
 

@@ -1,4 +1,4 @@
-use crate::fact::AndFactOrChainFactOrAtomicFact;
+use crate::fact::AndChainAtomicFact;
 use crate::obj::Obj;
 use crate::common::helper::{add_four_spaces_at_beginning, vec_to_string_with_sep, to_string_and_add_four_spaces_at_beginning_of_each_line, braced_vec_to_string};
 use crate::common::keywords::{RETURN, IF, COLON, ALGO};
@@ -20,7 +20,7 @@ pub struct AlgoReturn {
 
 #[derive(Clone)]
 pub struct AlgoIf {
-    pub condition: AndFactOrChainFactOrAtomicFact,
+    pub condition: AndChainAtomicFact,
     pub return_stmt: AlgoReturn,
     pub line_file_index: Option<(usize, usize)>,
 }
@@ -79,7 +79,7 @@ impl AlgoReturn {
 }
 
 impl AlgoIf {
-    pub fn new(condition: AndFactOrChainFactOrAtomicFact, return_stmt: AlgoReturn, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(condition: AndChainAtomicFact, return_stmt: AlgoReturn, line_file_index: Option<(usize, usize)>) -> Self {
         AlgoIf { condition, return_stmt, line_file_index }
     }
 }

@@ -4,7 +4,7 @@ use crate::stmt::Stmt;
 use super::TokenBlock;
 
 impl Parser {
-    pub fn stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         match tb.current()? {
             PROP => self.def_prop_stmt(tb),
             LET => self.def_let_stmt(tb),
@@ -36,7 +36,7 @@ impl Parser {
             EQUAL_SET => self.prove_equal_set_by_def_stmt(tb),
             VIEW_FN_AS_SET => self.view_fn_as_set_stmt(tb),
             _ => {
-                let fact = self.fact(tb)?;
+                let fact = self.parse_fact(tb)?;
                 Ok(Stmt::Fact(fact))
             }
         }

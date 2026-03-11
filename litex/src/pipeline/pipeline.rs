@@ -38,7 +38,7 @@ pub fn run_source_code(source_code: &str) -> String {
 
     for block in blocks {
         let mut tb = block;
-        let stmt: Stmt = match parser.stmt(&mut tb) {
+        let stmt: Stmt = match parser.parse_stmt(&mut tb) {
             Ok(s) => s,
             Err(e) => return format!("parse error: {}", e),
         };

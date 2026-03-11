@@ -8,7 +8,7 @@ use crate::stmt::eval_stmt::EvalStmt;
 impl Parser {
     pub fn eval_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(EVAL)?;
-        let obj = self.obj(tb)?;
+        let obj = self.parse_obj(tb)?;
         Ok(Stmt::EvalStmt(EvalStmt::new(obj, Some(tb.line_file_index))))
     }
 }

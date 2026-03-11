@@ -22,7 +22,7 @@ impl Parser {
         tb.skip_token(EXIST)?;
         let equal_tos = self.obj_list(tb)?;
         tb.skip_token(COLON)?;
-        let exist_fact_result = self.exist_fact(tb, true)?;
+        let exist_fact_result = self.parse_exist_fact(tb, true)?;
         let exist_fact_in_witness = match exist_fact_result {
             ExistFact::TrueExistFact(t) => t,
             ExistFact::NotExistFact(_) => {
@@ -31,7 +31,7 @@ impl Parser {
         };
         let mut proof = vec![];
         for block in tb.body.iter_mut() {
-            proof.push(self.stmt(block)?);
+            proof.push(self.parse_stmt(block)?);
         }
         Ok(Stmt::WitnessStmt(WitnessStmt::WitnessExistFact(WitnessExistFact::new(
             equal_tos,
@@ -43,11 +43,11 @@ impl Parser {
 
     pub fn witness_nonempty_set(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(NONEMPTY_SET)?;
-        let obj = self.obj(tb)?;
-        let set = self.obj(tb)?;
+        let obj = self.parse_obj(tb)?;
+        let set = self.parse_obj(tb)?;
         let mut proof = vec![];
         for block in tb.body.iter_mut() {
-            proof.push(self.stmt(block)?);
+            proof.push(self.parse_stmt(block)?);
         }
         Ok(Stmt::WitnessStmt(WitnessStmt::WitnessNonemptySet(WitnessNonemptySet::new(
             obj,
