@@ -4,7 +4,7 @@ use crate::common::keywords::{
     ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, SET_DIFF, DIV, FN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SING, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
 };
 use std::fmt;
-use crate::common::helper::{braced_vec_to_string, curly_braced_vec_to_string, vec_to_string_join_by_comma};
+use crate::common::helper::{braced_vec_to_string, curly_braced_vec_to_string, vec_to_string_join_by_comma, brace_vec_colon_vec_to_string};
 use super::atom::{Atom, Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod, FieldAccess, FieldAccessWithMod};
 
 #[derive(Clone)]
@@ -909,39 +909,13 @@ impl fmt::Display for FnSetWithoutDom {
 
 impl fmt::Display for FnSetWithDom {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.params_def_with_set.is_empty() {
-            write!(f, "{} {}{}{}", FN, "", braced_vec_to_string(&self.params_def_with_set), self.ret_set)
-        } else {
-            write!(
-                f,
-                "{} {}{}{} {}{} {}",
-                FN,
-                LEFT_BRACE,
-                vec_to_string_join_by_comma(&self.params_def_with_set),
-                COLON,
-                vec_to_string_join_by_comma(&self.dom_facts),
-                RIGHT_BRACE,
-                self.ret_set
-            )
-        }
-    }
-}
-
-impl FnSetWithDom {
-    pub fn with_keyword_fn_with_name_to_string(&self, name: Option<&str>) -> String {
-        if self.params_def_with_set.is_empty() {
-            format!("{} {}{}{}", FN, name.unwrap_or(""), braced_vec_to_string(&self.params_def_with_set), self.ret_set)
-        } else {
-            format!(
-                "{} {}{}{} {} {}",
-                FN,
-                name.unwrap_or(""),
-                vec_to_string_join_by_comma(&self.params_def_with_set),
-                COLON,
-                vec_to_string_join_by_comma(&self.dom_facts),
-                self.ret_set
-            )
-        }
+        write!(
+            f,
+            "{} {} {}",
+            FN,
+            brace_vec_colon_vec_to_string(&self.params_def_with_set, &self.dom_facts),
+            self.ret_set
+        )
     }
 }
 

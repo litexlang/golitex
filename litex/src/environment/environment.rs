@@ -101,24 +101,24 @@ impl Environment {
                 let is_true = atomic_fact.is_true();
                 if atomic_fact.args().len() == 1 {
                     let arg_key = atomic_fact.args()[0].to_string();
-                    if self.known_atomic_facts_with_1_arg.contains_key(&(key, is_true)) {
-                        self.known_atomic_facts_with_1_arg.get_mut(&(atomic_fact.key(), is_true)).unwrap().insert(arg_key, ());
+                    if let Some(map) = self.known_atomic_facts_with_1_arg.get_mut(&(key.clone(), is_true)) {
+                        map.insert(arg_key, ());
                     } else {
-                        self.known_atomic_facts_with_1_arg.insert((atomic_fact.key(), is_true), HashMap::from([(arg_key, ())]));
+                        self.known_atomic_facts_with_1_arg.insert((key, is_true), HashMap::from([(arg_key, ())]));
                     }
                 } else if atomic_fact.args().len() == 2 {
                     let arg_key1 = atomic_fact.args()[0].to_string();
                     let arg_key2 = atomic_fact.args()[1].to_string();
-                    if self.known_atomic_facts_with_2_args.contains_key(&(key, is_true)) {
-                        self.known_atomic_facts_with_2_args.get_mut(&(atomic_fact.key(), is_true)).unwrap().insert((arg_key1, arg_key2), ());
+                    if let Some(map) = self.known_atomic_facts_with_2_args.get_mut(&(key.clone(), is_true)) {
+                        map.insert((arg_key1, arg_key2), ());
                     } else {
-                        self.known_atomic_facts_with_2_args.insert((atomic_fact.key(), is_true), HashMap::from([((arg_key1, arg_key2), ())]));
+                        self.known_atomic_facts_with_2_args.insert((key, is_true), HashMap::from([((arg_key1, arg_key2), ())]));
                     }
                 } else {
-                    if self.known_atomic_facts_with_more_than_2_args.contains_key(&(key, is_true)) {
-                        self.known_atomic_facts_with_more_than_2_args.get_mut(&(atomic_fact.key(), is_true)).unwrap().push(atomic_fact);
+                    if let Some(vec_ref) = self.known_atomic_facts_with_more_than_2_args.get_mut(&(key.clone(), is_true)) {
+                        vec_ref.push(atomic_fact);
                     } else {
-                        self.known_atomic_facts_with_more_than_2_args.insert((atomic_fact.key(), is_true), vec![atomic_fact]);
+                        self.known_atomic_facts_with_more_than_2_args.insert((key, is_true), vec![atomic_fact]);
                     }
                 }
                 Ok(())
@@ -129,18 +129,18 @@ impl Environment {
     fn store_exist_fact(&mut self, exist_fact: ExistFact) -> Result<(), StoreFactError> {
         let key = exist_fact.key();
         let is_true = exist_fact.is_true();
-        if self.known_exist_facts.contains_key(&(key, is_true)) {
-            self.known_exist_facts.get_mut(&(exist_fact.key(), is_true)).unwrap().push(exist_fact);
+        if let Some(vec_ref) = self.known_exist_facts.get_mut(&(key.clone(), is_true)) {
+            vec_ref.push(exist_fact);
         } else {
-            self.known_exist_facts.insert((exist_fact.key(), is_true), vec![exist_fact]);
+            self.known_exist_facts.insert((key, is_true), vec![exist_fact]);
         }
         Ok(())
     }
 
     fn store_or_fact(&mut self, or_fact: OrFact) -> Result<(), StoreFactError> {
         let key = or_fact.key();
-        if self.known_or_facts.contains_key(&key) {
-            self.known_or_facts.get_mut(&key).unwrap().push(or_fact);
+        if let Some(vec_ref) = self.known_or_facts.get_mut(&key) {
+            vec_ref.push(or_fact);
         } else {
             self.known_or_facts.insert(key, vec![or_fact]);
         }
@@ -150,18 +150,18 @@ impl Environment {
     fn store_atomic_fact_in_forall_fact(&mut self, atomic_fact_ref: &AtomicFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
         let key = atomic_fact_ref.key();
         let is_true = atomic_fact_ref.is_true();
-        if self.known_atomic_facts_in_forall_facts.contains_key(&(key, is_true)) {
-            self.known_atomic_facts_in_forall_facts.get_mut(&(atomic_fact_ref.key(), is_true)).unwrap().push((index, forall_fact));
+        if let Some(vec_ref) = self.known_atomic_facts_in_forall_facts.get_mut(&(key.clone(), is_true)) {
+            vec_ref.push((index, forall_fact));
         } else {
-            self.known_atomic_facts_in_forall_facts.insert((atomic_fact_ref.key(), is_true), vec![(index, forall_fact)]);
+            self.known_atomic_facts_in_forall_facts.insert((key, is_true), vec![(index, forall_fact)]);
         }
         Ok(())
     }
 
     fn store_or_fact_in_forall_fact(&mut self, or_fact: &OrFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
         let key = or_fact.key();
-        if self.known_or_facts_in_forall_facts.contains_key(&key) {
-            self.known_or_facts_in_forall_facts.get_mut(&key).unwrap().push((index, forall_fact));
+        if let Some(vec_ref) = self.known_or_facts_in_forall_facts.get_mut(&key) {
+            vec_ref.push((index, forall_fact));
         } else {
             self.known_or_facts_in_forall_facts.insert(key, vec![(index, forall_fact)]);
         }
@@ -190,10 +190,10 @@ impl Environment {
     fn store_exist_fact_in_forall_fact(&mut self, exist_fact: &ExistFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
         let key = exist_fact.key();
         let is_true = exist_fact.is_true();
-        if self.known_exist_facts_in_forall_facts.contains_key(&(key, is_true)) {
-            self.known_exist_facts_in_forall_facts.get_mut(&(exist_fact.key(), is_true)).unwrap().push((index, forall_fact));
+        if let Some(vec_ref) = self.known_exist_facts_in_forall_facts.get_mut(&(key.clone(), is_true)) {
+            vec_ref.push((index, forall_fact));
         } else {
-            self.known_exist_facts_in_forall_facts.insert((exist_fact.key(), is_true), vec![(index, forall_fact)]);
+            self.known_exist_facts_in_forall_facts.insert((key, is_true), vec![(index, forall_fact)]);
         }
         Ok(())
     }

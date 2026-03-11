@@ -20,7 +20,7 @@ impl Parser {
             return Err(ParsingError::new("cases: expects at least one body block", tb.line_file_index));
         }
         let then_facts: Vec<Fact> = {
-            let first = tb.body.get_mut(0).unwrap();
+            let first = tb.body.get_mut(0).ok_or_else(|| ParsingError::new("Expected body", tb.line_file_index))?;
             first.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
             first.body.iter_mut().map(|b| self.parse_fact(b)).collect::<Result<_, _>>()?
         };
@@ -43,7 +43,7 @@ impl Parser {
             }
             let (proof_stmts, impossible) = if block.body[n - 1].header.get(0).map(|s| s.as_str()) == Some(IMPOSSIBLE) {
                 let proof: Vec<Stmt> = block.body[0..n - 1].iter_mut().map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?;
-                let last_block = block.body.get_mut(n - 1).unwrap();
+                let last_block = block.body.get_mut(n - 1).ok_or_else(|| ParsingError::new("Expected body", tb.line_file_index))?;
                 last_block.skip_token(IMPOSSIBLE)?;
                 let imp = self.parse_exist_or_and_chain_atomic_fact(last_block)?;
                 (proof, Some(imp))
@@ -74,7 +74,7 @@ impl Parser {
         for block in tb.body[0..n - 1].iter_mut() {
             proof.push(self.parse_stmt(block)?);
         }
-        let mut last_block = tb.body.last_mut().unwrap();
+        let mut last_block = tb.body.last_mut().ok_or_else(|| ParsingError::new("Expected body", tb.line_file_index))?;
         last_block.skip_token(IMPOSSIBLE)?;
         let impossible_fact = self.parse_exist_or_and_chain_atomic_fact(&mut last_block)?;
         Ok(Stmt::ProofTechnique(ProofTechniqueStmt::ProveByContradiction(
@@ -103,7 +103,7 @@ impl Parser {
         let prove_idx = tb.body.iter().position(|b| b.header.get(0).map(|s| s.as_str()) == Some(PROVE));
         let (to_prove, proof) = if let Some(i) = prove_idx {
             let to_prove: Vec<Fact> = tb.body[0..i].iter_mut().map(|b| self.parse_fact(b)).collect::<Result<_, _>>()?;
-            let prove_block = tb.body.get_mut(i).unwrap();
+            let prove_block = tb.body.get_mut(i).ok_or_else(|| ParsingError::new("Expected body", tb.line_file_index))?;
             prove_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
             let proof: Vec<Stmt> = prove_block.body.iter_mut().map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?;
             (to_prove, proof)
@@ -128,7 +128,7 @@ impl Parser {
             return Err(ParsingError::new("induc: expects at least one body block", tb.line_file_index));
         }
         let fact: Vec<ExistOrAndChainAtomicFact> = {
-            let then_block = tb.body.get_mut(0).unwrap();
+            let then_block = tb.body.get_mut(0).ok_or_else(|| ParsingError::new("Expected body", tb.line_file_index))?;
             then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
             then_block.body.iter_mut().map(|b| self.parse_exist_or_and_chain_atomic_fact(b)).collect::<Result<_, _>>()?
         };
@@ -176,7 +176,7 @@ impl Parser {
 
         if first_is_arrow {
             // body[0] 是 =>:，其 body 是 then_facts；后面全是 proof
-            let then_block = tb.body.get_mut(0).unwrap();
+            let then_block = tb.body.get_mut(0).ok_or_else(|| ParsingError::new("Expected body", tb.line_file_index))?;
             then_block.parse_index = 0;
             then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
             for b in then_block.body.iter_mut() {
@@ -200,7 +200,7 @@ impl Parser {
                 dom_facts.push(self.parse_exist_or_and_chain_atomic_fact(b)?);
             }
 
-            let then_block = tb.body.get_mut(arrow_idx).unwrap();
+            let then_block = tb.body.get_mut(arrow_idx).ok_or_else(|| ParsingError::new("Expected body", tb.line_file_index))?;
             then_block.parse_index = 0;
             then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
             for b in then_block.body.iter_mut() {

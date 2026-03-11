@@ -41,7 +41,11 @@ impl<'a> fmt::Display for RuntimeContext<'a> {
 
 impl<'a> RuntimeContext<'a> {
     pub fn top_level_env(&mut self) -> &mut Environment {
-        self.environments.last_mut().unwrap()
+        let result = self.environments.last_mut();
+        match result {
+            Some(e) => e,
+            None => unreachable!("no top level environment"),
+        }
     }
 }
 
@@ -54,11 +58,16 @@ impl<'a> RuntimeContext<'a> {
         if parts.len() != 1 {
             panic!("NOT IMPLEMENTED YET");
         }
-        
-        let result = self.environments.last().unwrap().defined_props.get(predicate_name);
-        if result.is_some() {
-            return result;
+
+        let top_environment = match self.environments.last() {
+            Some(environment) => environment,
+            None => return None,
+        };
+
+        if let Some(definition) = top_environment.defined_props.get(predicate_name) {
+            return Some(definition);
         }
+
         self.builtin_environment.defined_props.get(predicate_name)
     }
 
@@ -78,19 +87,26 @@ impl<'a> RuntimeContext<'a> {
     }
 
     pub fn delete_env(&mut self) {
-        for defined_identifier_obj in self.environments.last().unwrap().defined_identifier_objs.iter() {
-            self.defined_identifier_objs.remove(defined_identifier_obj.0);
+        let last_env = self.environments.last();
+
+        match last_env {
+            None => {unreachable!("no top level environment")}
+            Some(last_env) => {
+                for defined_identifier_obj in last_env.defined_identifier_objs.iter() {
+                    self.defined_identifier_objs.remove(defined_identifier_obj.0);
+                }
+                for defined_prop in last_env.defined_props.iter() {
+                    self.defined_props.remove(defined_prop.0);
+                }
+                for defined_struct in last_env.defined_structs.iter() {
+                    self.defined_structs.remove(defined_struct.0);
+                }
+                for defined_algorithm in last_env.defined_algorithms.iter() {
+                    self.defined_algorithms.remove(defined_algorithm.0);
+                }
+                
+                self.environments.pop();
+            }
         }
-        for defined_prop in self.environments.last().unwrap().defined_props.iter() {
-            self.defined_props.remove(defined_prop.0);
-        }
-        for defined_struct in self.environments.last().unwrap().defined_structs.iter() {
-            self.defined_structs.remove(defined_struct.0);
-        }
-        for defined_algorithm in self.environments.last().unwrap().defined_algorithms.iter() {
-            self.defined_algorithms.remove(defined_algorithm.0);
-        }
-        
-        self.environments.pop();
     }
 }
