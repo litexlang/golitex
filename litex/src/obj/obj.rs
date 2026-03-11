@@ -1,5 +1,5 @@
-use crate::fact::AndFactOrChainFactOrAtomicFact;
 use crate::stmt::parameter_type_and_property::ParamDefWithParamSet;
+use crate::fact::OrAndChainAtomicFact;
 use crate::common::keywords::{
     ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, SET_DIFF, DIV, FN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SING, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
 };
@@ -222,7 +222,7 @@ pub struct ListSet {
 pub struct SetBuilder {
     pub param: String,
     pub param_set: Box<Obj>,
-    pub facts: Vec<AndFactOrChainFactOrAtomicFact>,
+    pub facts: Vec<OrAndChainAtomicFact>,
 }
 
 #[derive(Clone)]
@@ -244,7 +244,7 @@ impl FnSetWithDom {
 #[derive(Clone)]
 pub struct FnSetWithDom {
     pub params_def_with_set: Vec<ParamDefWithParamSet>,
-    pub dom_facts: Vec<AndFactOrChainFactOrAtomicFact>,
+    pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub ret_set: Box<Obj>,
 }
 
@@ -447,7 +447,7 @@ impl ListSet {
 }
 
 impl SetBuilder {
-    pub fn new(param: String, param_set: Obj, facts: Vec<AndFactOrChainFactOrAtomicFact>) -> Self {
+    pub fn new(param: String, param_set: Obj, facts: Vec<OrAndChainAtomicFact>) -> Self {
         SetBuilder {
             param: param,
             param_set: Box::new(param_set),
@@ -466,7 +466,7 @@ impl FnSetWithoutDom {
 }
 
 impl FnSetWithDom {
-    pub fn new(params_and_their_sets: Vec<ParamDefWithParamSet>, dom_facts: Vec<AndFactOrChainFactOrAtomicFact>, ret_set: Obj) -> Self {
+    pub fn new(params_and_their_sets: Vec<ParamDefWithParamSet>, dom_facts: Vec<OrAndChainAtomicFact>, ret_set: Obj) -> Self {
         FnSetWithDom {
             params_def_with_set: params_and_their_sets,
             dom_facts,

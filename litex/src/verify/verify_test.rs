@@ -54,7 +54,7 @@ fn test_exec_stmt_fact_one_plus_one_eq_two() {
     let tokens = tokenize_line(s);
     let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
     let parser = Parser::new();
-    let stmt = parser.stmt(&mut tb).expect("parse fact \"1 + 1 = 2\" failed");
+    let stmt = parser.parse_stmt(&mut tb).expect("parse fact \"1 + 1 = 2\" failed");
     assert!(matches!(stmt, Stmt::Fact(_)), "expected Stmt::Fact");
 
     let mut module_manager = ModuleManager::new_empty_module_manager();

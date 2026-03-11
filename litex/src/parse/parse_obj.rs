@@ -15,7 +15,7 @@ use crate::error::ParsingError;
 use crate::stmt::parameter_type_and_property::ParamDefWithParamSet;
 
 impl Parser {
-    pub fn obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    pub fn parse_obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         self.obj_hierarchy0(tb)
     }
 
@@ -28,8 +28,8 @@ impl Parser {
         match tb.current_token_empty_if_exceed_end_of_head() {
             INFIX_FN_NAME_SIGN => {
                 tb.skip()?; // 先吃掉 \，再读中缀函数名
-                let fn_name = self.atom(tb)?;
-                let right = self.obj(tb)?;
+                let fn_name = self.parse_atom(tb)?;
+                let right = self.parse_obj(tb)?;
 
                 if is_key_symbol_or_keyword(&fn_name.to_string()) {
                     return match fn_name.to_string().as_str() {
@@ -150,7 +150,7 @@ impl Parser {
         match tb.current_token_empty_if_exceed_end_of_head() {
             LEFT_BRACKET => {
                 tb.skip_token(LEFT_BRACKET)?;
-                let obj = self.obj(tb)?;
+                let obj = self.parse_obj(tb)?;
                 tb.skip_token(RIGHT_BRACKET)?;
                 Ok(Obj::ObjAtIndex(ObjAtIndex::new(left, obj)))
             }
@@ -215,7 +215,7 @@ impl Parser {
         let mut params_def_with_set: Vec<ParamDefWithParamSet> = vec![];
         loop {
             let param = tb.advance()?;
-            let set = self.obj(tb)?;
+            let set = self.parse_obj(tb)?;
             params_def_with_set.push(ParamDefWithParamSet(vec![param], set));
             if tb.current()? == COLON {
                 break;
@@ -223,25 +223,25 @@ impl Parser {
             tb.skip_token(COMMA)?;
         }
         tb.skip_token(COLON)?;
-        let mut dom_facts = vec![self.parse_matchable_fact_with_atomic_fact_inside(tb)?];
+        let mut dom_facts = vec![self.parse_or_and_chain_atomic_fact(tb)?];
         while tb.current()? == COMMA {
             tb.skip_token(COMMA)?;
-            dom_facts.push(self.parse_matchable_fact_with_atomic_fact_inside(tb)?);
+            dom_facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
         }
         tb.skip_token(RIGHT_BRACE)?;
-        let ret_set = self.obj(tb)?;
+        let ret_set = self.parse_obj(tb)?;
         Ok(FnSetWithDom::new(params_def_with_set, dom_facts, ret_set))
     }
 
     pub fn fn_set_without_dom_without_fn_prefix(&self, tb: &mut TokenBlock) -> Result<FnSetWithoutDom, ParsingError> {
         tb.skip_token(LEFT_BRACE)?;
-        let mut param_sets = vec![self.obj(tb)?];
+        let mut param_sets = vec![self.parse_obj(tb)?];
         while tb.current()? == COMMA {
             tb.skip_token(COMMA)?;
-            param_sets.push(self.obj(tb)?);
+            param_sets.push(self.parse_obj(tb)?);
         }
         tb.skip_token(RIGHT_BRACE)?;
-        let ret_set = self.obj(tb)?;
+        let ret_set = self.parse_obj(tb)?;
         Ok(FnSetWithoutDom::new(param_sets, ret_set))
     }
 
@@ -262,7 +262,7 @@ impl Parser {
         // 0. (obj)
         if token == LEFT_BRACE {
             tb.skip()?;
-            let obj = self.obj(tb)?;
+            let obj = self.parse_obj(tb)?;
             tb.skip_token(RIGHT_BRACE)?;
             return Ok(obj);
         }
@@ -429,16 +429,16 @@ impl Parser {
         }
 
         // 普通 atom（标识符）
-        let atom = self.atom(tb)?;
+        let atom = self.parse_atom(tb)?;
         Ok(Obj::from(atom))
     }
 
     pub fn braced_objs(&self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
         tb.skip_token(LEFT_BRACE)?;
-        let mut objs = vec![self.obj(tb)?];
+        let mut objs = vec![self.parse_obj(tb)?];
         while tb.current()? == COMMA {
             tb.skip_token(COMMA)?;
-            objs.push(self.obj(tb)?);
+            objs.push(self.parse_obj(tb)?);
         }
         tb.skip_token(RIGHT_BRACE)?;
         Ok(objs)
@@ -446,32 +446,29 @@ impl Parser {
 
     /// 解析逗号分隔的 obj 列表，直到遇到非 COMMA 的 token（如 COLON）。
     pub fn obj_list(&self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
-        let mut objs = vec![self.obj(tb)?];
+        let mut objs = vec![self.parse_obj(tb)?];
         while tb.current()? == COMMA {
             tb.skip_token(COMMA)?;
-            objs.push(self.obj(tb)?);
+            objs.push(self.parse_obj(tb)?);
         }
         Ok(objs)
     }
 
     fn set_builder_or_set_list(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         tb.skip_token(LEFT_CURLY_BRACE)?;
-        let left = self.obj(tb)?;
+        let left = self.parse_obj(tb)?;
         match left {
             Obj::Identifier(a) => {
                 if tb.current()? == COMMA || tb.current()? == RIGHT_CURLY_BRACE {
                     self.set_list(tb, Obj::Identifier(a))
                 } else {
                     // 可能是 set builder "a S : ..." 或 list set "a b c"
-                    let second = self.obj(tb)?;
+                    let second = self.parse_obj(tb)?;
                     if tb.current()? == COLON {
                         tb.skip_token(COLON)?;
                         let mut facts = vec![];
                         while tb.current()? != RIGHT_CURLY_BRACE {
-                            facts.push(self.parse_matchable_fact_with_atomic_fact_inside(tb)?);
-                            if tb.current()? == COMMA {
-                                tb.skip_token(COMMA)?;
-                            }
+                            facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
                         }
                         tb.skip_token(RIGHT_CURLY_BRACE)?;
                         Ok(Obj::SetBuilder(SetBuilder::new(a.name, second, facts)))
@@ -481,7 +478,7 @@ impl Parser {
                             if tb.current()? == COMMA {
                                 tb.skip_token(COMMA)?;
                             }
-                            objs.push(self.obj(tb)?);
+                            objs.push(self.parse_obj(tb)?);
                         }
                         tb.skip_token(RIGHT_CURLY_BRACE)?;
                         Ok(Obj::ListSet(ListSet::new(objs)))
@@ -497,7 +494,7 @@ impl Parser {
         let mut objs = vec![left_most_obj];
         while tb.current()? != RIGHT_CURLY_BRACE {
             tb.skip_token(COMMA)?;
-            objs.push(self.obj(tb)?);
+            objs.push(self.parse_obj(tb)?);
         }
         tb.skip_token(RIGHT_CURLY_BRACE)?;
         Ok(Obj::ListSet(ListSet::new(objs)))
@@ -510,7 +507,7 @@ impl Parser {
         Ok(Obj::InstSetStructObj(InstStructObj::new(name, args)))
     }
 
-    pub fn atom(&self, tb: &mut TokenBlock) -> Result<Atom, ParsingError> {
+    pub fn parse_atom(&self, tb: &mut TokenBlock) -> Result<Atom, ParsingError> {
         let left = tb.advance()?;
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SING {
             tb.skip()?;
