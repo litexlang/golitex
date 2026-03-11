@@ -114,7 +114,7 @@ fn test_monomial_operands_equal() {
     let m_none2 = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero    ("2".to_string(), None);
     match (m_none, m_none2) {
         (Some(m1), Some(m2)) => assert!(m1.operands_equal(&m2)),
-        _ => unreachable!("m_none and m_none2 should be Some"),
+        _ => panic!("m_none and m_none2 should be Some"),
     }
 
     let op_x = vec![(mk_var("x"), "x".to_string())];
@@ -122,7 +122,7 @@ fn test_monomial_operands_equal() {
     let m_x2 = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero("2".to_string(), Some(vec![(mk_var("x"), "x".to_string())]));
     match (m_x, m_x2) {
         (Some(m1), Some(m2)) => assert!(m1.operands_equal(&m2)),
-        _ => unreachable!("m_x and m_x2 should be Some"),
+        _ => panic!("m_x and m_x2 should be Some"),
     }
 
 }
