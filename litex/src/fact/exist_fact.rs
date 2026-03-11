@@ -43,7 +43,7 @@ pub enum OrAndChainAtomicFact {
     AtomicFact(AtomicFact),
     AndFact(AndFact),
     ChainFact(ChainFact),
-    OrAtomicFact(OrFact),
+    OrFact(OrFact),
 }
 
 
@@ -53,7 +53,7 @@ impl OrAndChainAtomicFact {
             OrAndChainAtomicFact::AtomicFact(a) => ExistOrAndChainAtomicFact::AtomicFact(a),
             OrAndChainAtomicFact::AndFact(a) => ExistOrAndChainAtomicFact::AndFact(a),
             OrAndChainAtomicFact::ChainFact(c) => ExistOrAndChainAtomicFact::ChainFact(c),
-            OrAndChainAtomicFact::OrAtomicFact(o) => ExistOrAndChainAtomicFact::OrFact(o),
+            OrAndChainAtomicFact::OrFact(o) => ExistOrAndChainAtomicFact::OrFact(o),
         }
     }
 }
@@ -127,7 +127,7 @@ impl fmt::Display for OrAndChainAtomicFact {
             OrAndChainAtomicFact::AtomicFact(a) => write!(f, "{}", a),
             OrAndChainAtomicFact::AndFact(a) => write!(f, "{}", a),
             OrAndChainAtomicFact::ChainFact(c) => write!(f, "{}", c),
-            OrAndChainAtomicFact::OrAtomicFact(o) => write!(f, "{}", o),
+            OrAndChainAtomicFact::OrFact(o) => write!(f, "{}", o),
         }
     }
 }
@@ -138,7 +138,7 @@ impl OrAndChainAtomicFact {
             OrAndChainAtomicFact::AtomicFact(a) => a.key(),
             OrAndChainAtomicFact::AndFact(a) => a.key(),
             OrAndChainAtomicFact::ChainFact(c) => c.key(),
-            OrAndChainAtomicFact::OrAtomicFact(o) => o.key(),
+            OrAndChainAtomicFact::OrFact(o) => o.key(),
         }
     }
     pub fn line_file_index(&self) -> Option<(usize, usize)> {
@@ -146,7 +146,7 @@ impl OrAndChainAtomicFact {
             OrAndChainAtomicFact::AtomicFact(_) => None,
             OrAndChainAtomicFact::AndFact(a) => a.line_file_index(),
             OrAndChainAtomicFact::ChainFact(c) => c.line_file_index(),
-            OrAndChainAtomicFact::OrAtomicFact(o) => o.line_file_index,
+            OrAndChainAtomicFact::OrFact(o) => o.line_file_index,
         }
     }
 }

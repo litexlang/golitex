@@ -239,7 +239,7 @@ impl Parser {
                 AndChainAtomicFact::ChainFact(c) => OrAndChainAtomicFact::ChainFact(c),
             });
         }
-        Ok(OrAndChainAtomicFact::OrAtomicFact(OrFact::new(list, Some(tb.line_file_index))))
+        Ok(OrAndChainAtomicFact::OrFact(OrFact::new(list, Some(tb.line_file_index))))
     }
 
     /// Parse chain (obj op obj op ...) or single atomic ($prop(args) or obj op obj). When is_true is false, only single atomic is allowed (negated).
