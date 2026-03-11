@@ -211,15 +211,13 @@ impl<'a> Executor<'a> {
     }
 
     fn verify_set_builder_well_defined_body(&mut self, x: &SetBuilder, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
-        let result = self.define_params_with_set(&ParamDefWithParamSet::new(vec![x.param.clone()], *x.param_set.clone()));
-        if result.is_err() {
-            return Err(WellDefinedError::new("failed to verify well-defined of set builder", vec![StmtError::ExecError(result.unwrap_err())], None));
+        if let Err(e) = self.define_params_with_set(&ParamDefWithParamSet::new(vec![x.param.clone()], *x.param_set.clone())) {
+            return Err(WellDefinedError::new(format!("failed to verify well-defined of set builder {}", x.to_string()).as_str(), vec![StmtError::ExecError(e)], None));
         }
 
         for fact in x.facts.iter() {
-            let result = self.verify_fact_well_defined_and_store(&(fact.from_ref_to_fact()), verify_state);
-            if result.is_err() {
-                return Err(WellDefinedError::new("failed to verify well-defined of set builder", vec![StmtError::ExecError(result.unwrap_err())], None));
+            if let Err(e) = self.verify_fact_well_defined_and_store(&(fact.from_ref_to_fact()), verify_state) {
+                return Err(WellDefinedError::new(format!("failed to verify well-defined of set builder {}", x.to_string()).as_str(), vec![StmtError::ExecError(e)], None));
             }
         }
 
@@ -235,8 +233,32 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_fn_set_with_dom_well_defined(&mut self, _x: &FnSetWithDom, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
-        Err(WellDefinedError::new("verify_fn_set_with_dom_well_defined 此函数还没有 implement", vec![], None))
+    fn verify_fn_set_with_dom_well_defined(&mut self, x: &FnSetWithDom, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+        self.runtime_context.new_env();
+        let result = self.verify_fn_set_with_dom_well_defined_body(x, verify_state);
+        self.runtime_context.delete_env();
+        result
+    }
+
+    fn verify_fn_set_with_dom_well_defined_body(&mut self, x: &FnSetWithDom, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+        if let Err(e) = self.verify_obj_well_defined(&x.ret_set, verify_state) {
+            return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()).as_str(), vec![StmtError::WellDefinedError(e)], None));
+        }
+        
+        
+        for param_def_with_set in x.params_def_with_set.iter() {
+            if let Err(e) = self.define_params_with_set(param_def_with_set) {
+                return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()).as_str(), vec![StmtError::ExecError(e)], None));
+            }
+        }
+
+        for fact in x.dom_facts.iter() {
+            if let Err(e) = self.verify_fact_well_defined_and_store(&(fact.from_ref_to_fact()), verify_state) {
+                return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()).as_str(), vec![StmtError::ExecError(e)], None));
+            }
+        }
+
+        Ok(())
     }
 
     fn verify_n_pos_obj_well_defined(&mut self, _x: &NPosObj, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
