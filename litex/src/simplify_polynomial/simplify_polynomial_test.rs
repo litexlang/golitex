@@ -112,11 +112,17 @@ fn test_collect_ordered_monomials_non_polynomial_returns_empty() {
 fn test_monomial_operands_equal() {
     let m_none = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero("1".to_string(), None);
     let m_none2 = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero    ("2".to_string(), None);
-    assert!(m_none.is_some() && m_none2.is_some() && m_none.unwrap().operands_equal(&m_none2.unwrap()));
+    match (m_none, m_none2) {
+        (Some(m1), Some(m2)) => assert!(m1.operands_equal(&m2)),
+        _ => unreachable!("m_none and m_none2 should be Some"),
+    }
 
     let op_x = vec![(mk_var("x"), "x".to_string())];
     let m_x = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero("1".to_string(), Some(op_x.clone()));
     let m_x2 = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero("2".to_string(), Some(vec![(mk_var("x"), "x".to_string())]));
-    assert!(m_x.is_some() && m_x2.is_some() && m_x.unwrap().operands_equal(&m_x2.unwrap()));
+    match (m_x, m_x2) {
+        (Some(m1), Some(m2)) => assert!(m1.operands_equal(&m2)),
+        _ => unreachable!("m_x and m_x2 should be Some"),
+    }
 
 }

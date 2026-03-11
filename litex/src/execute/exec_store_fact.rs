@@ -6,7 +6,11 @@ use crate::error::StoreFactError;
 
 impl<'a> Executor<'a> {
     pub fn store_fact_without_well_defined_verified(&mut self, fact: &Fact) -> Result<(), StoreFactError> {
-        self.runtime_context.environments.last_mut().unwrap().store_fact(fact.clone())
+        if let Some(env) = self.runtime_context.environments.last_mut() {
+            env.store_fact(fact.clone())
+        } else {
+            Err(StoreFactError::new("no environment found"))
+        }
     }
 
     pub fn verify_fact_well_defined_and_store(&mut self, fact: &Fact, verify_state: &mut VerifyState) -> Result<(), ExecError> {

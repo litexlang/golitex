@@ -1,5 +1,5 @@
-use std::fmt;
-use super::keywords::{LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_BRACE, RIGHT_CURLY_BRACE, DOT_AKA_FIELD_ACCESS_SIGN};
+use std::fmt::{self};
+use super::keywords::{LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_BRACE, RIGHT_CURLY_BRACE, DOT_AKA_FIELD_ACCESS_SIGN, COLON};
 
 pub fn braced_vec_to_string<T: fmt::Display>(vec: &Vec<T>) -> String {
     format!("{}{}{}", LEFT_BRACE, vec_to_string_with_sep(vec, ", "), RIGHT_BRACE)
@@ -46,4 +46,16 @@ pub fn add_four_spaces_at_beginning(str: &str, number_of_four_spaces: usize) -> 
 
 pub fn is_number_string_literally_integer_without_dot(str: &str) -> bool {
     !str.contains(DOT_AKA_FIELD_ACCESS_SIGN)
+}
+
+pub fn brace_vec_colon_vec_to_string<T: fmt::Display, T2: fmt::Display>(left: &Vec<T>, right: &Vec<T2>) -> String {
+    if !left.is_empty() && !right.is_empty() {
+        format!("{}{}{} {}{}", LEFT_BRACE, vec_to_string_with_sep(left, ", "), COLON, vec_to_string_with_sep(right, ", "), RIGHT_BRACE) 
+    } else if right.is_empty() {
+        format!("{}{}{}", LEFT_BRACE, vec_to_string_with_sep(left, ", "), RIGHT_BRACE)
+    } else if left.is_empty() {
+        format!("{}{}{}{}", LEFT_BRACE, COLON, vec_to_string_with_sep(right, ", "), RIGHT_BRACE)
+    } else {
+        format!("{}{}", LEFT_BRACE, RIGHT_BRACE)
+    }
 }

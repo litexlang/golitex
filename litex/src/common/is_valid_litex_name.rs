@@ -14,13 +14,17 @@ pub fn is_valid_litex_name(s: &str) -> Result<(), String> {
         ));
     }
     let mut chars = s.chars();
-    let first = chars.next().unwrap();
-    if first != '_' && !first.is_alphabetic() {
-        return Err(format!(
-            "name first character cannot be a number or symbol, Got: {:?}",
-            first
-        ));
+    let first = chars.next();
+
+    if let Some(first) = first {
+        if first != '_' && !first.is_alphabetic() {
+            return Err(format!(
+                "name first character cannot be a number or symbol, Got: {:?}",
+                first
+            ));
+        }
     }
+    
     for c in chars {
         if c != '_' && !c.is_alphanumeric() {
             return Err(format!(

@@ -208,7 +208,7 @@ impl ExistFact {
 }
 
 impl OrAndChainAtomicFact {
-    pub fn from_ref_to_fact(&self) -> Fact {
+    pub fn from_ref_to_cloned_fact(&self) -> Fact {
         match self {
             OrAndChainAtomicFact::AtomicFact(a) => Fact::AtomicFact(a.clone()),
             OrAndChainAtomicFact::AndFact(a) => Fact::AndFact(a.clone()),

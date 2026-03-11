@@ -334,92 +334,120 @@ impl Parser {
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("union expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
-            return Ok(Obj::Union(Union::new(it.next().unwrap(), it.next().unwrap())));
+            let left = it.next().ok_or_else(|| ParsingError::new("union expects 2 arguments", tb.line_file_index))?;
+            let right = it.next().ok_or_else(|| ParsingError::new("union expects 2 arguments", tb.line_file_index))?;
+            return Ok(Obj::Union(Union::new(left, right)));
         }
         if tok == INTERSECT {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("intersect expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
-            return Ok(Obj::Intersect(Intersect::new(it.next().unwrap(), it.next().unwrap())));
+            let left = it.next().ok_or_else(|| ParsingError::new("intersect expects 2 arguments", tb.line_file_index))?;
+            let right = it.next().ok_or_else(|| ParsingError::new("intersect expects 2 arguments", tb.line_file_index))?;
+            return Ok(Obj::Intersect(Intersect::new(left, right)));
         }
         if tok == SET_MINUS {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("set_minus expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
-            return Ok(Obj::SetMinus(SetMinus::new(it.next().unwrap(), it.next().unwrap())));
+            let left = it.next().ok_or_else(|| ParsingError::new("set_minus expects 2 arguments", tb.line_file_index))?;
+            let right = it.next().ok_or_else(|| ParsingError::new("set_minus expects 2 arguments", tb.line_file_index))?;
+            return Ok(Obj::SetMinus(SetMinus::new(left, right)));
         }
         if tok == SET_DIFF {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("disjoint_union expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
-            return Ok(Obj::SetDiff(SetDiff::new(it.next().unwrap(), it.next().unwrap())));
+            let left = it.next().ok_or_else(|| ParsingError::new("disjoint_union expects 2 arguments", tb.line_file_index))?;
+            let right = it.next().ok_or_else(|| ParsingError::new("disjoint_union expects 2 arguments", tb.line_file_index))?;
+            return Ok(Obj::SetDiff(SetDiff::new(left, right)));
         }
         if tok == CAP {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 1 { return Err(ParsingError::new("cap expects 1 argument", tb.line_file_index)); }
-            return Ok(Obj::Cap(Cap::new(args.into_iter().next().unwrap())));
+            let mut it = args.into_iter();
+            let value = it.next().ok_or_else(|| ParsingError::new("cap expects 1 argument", tb.line_file_index))?;
+            return Ok(Obj::Cap(Cap::new(value)));
         }
         if tok == CHOOSE {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 1 { return Err(ParsingError::new("choice expects 1 argument", tb.line_file_index)); }
-            return Ok(Obj::Choose(Choose::new(args.into_iter().next().unwrap())));
+            let mut it = args.into_iter();
+            let value = it.next().ok_or_else(|| ParsingError::new("choice expects 1 argument", tb.line_file_index))?;
+            return Ok(Obj::Choose(Choose::new(value)));
         }
         if tok == PROJ {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("proj expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
-            return Ok(Obj::Proj(Proj::new(it.next().unwrap(), it.next().unwrap())));
+            let left = it.next().ok_or_else(|| ParsingError::new("proj expects 2 arguments", tb.line_file_index))?;
+            let right = it.next().ok_or_else(|| ParsingError::new("proj expects 2 arguments", tb.line_file_index))?;
+            return Ok(Obj::Proj(Proj::new(left, right)));
         }
         if tok == RANGE {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("range expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
-            return Ok(Obj::Range(Range::new(it.next().unwrap(), it.next().unwrap())));
+            let left = it.next().ok_or_else(|| ParsingError::new("range expects 2 arguments", tb.line_file_index))?;
+            let right = it.next().ok_or_else(|| ParsingError::new("range expects 2 arguments", tb.line_file_index))?;
+            return Ok(Obj::Range(Range::new(left, right)));
         }
         if tok == CLOSED_RANGE {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 2 { return Err(ParsingError::new("closed_range expects 2 arguments", tb.line_file_index)); }
             let mut it = args.into_iter();
-            return Ok(Obj::ClosedRange(ClosedRange::new(it.next().unwrap(), it.next().unwrap())));
+            let left = it.next().ok_or_else(|| ParsingError::new("closed_range expects 2 arguments", tb.line_file_index))?;
+            let right = it.next().ok_or_else(|| ParsingError::new("closed_range expects 2 arguments", tb.line_file_index))?;
+            return Ok(Obj::ClosedRange(ClosedRange::new(left, right)));
         }
 
         if tok == CUP {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 1 { return Err(ParsingError::new("cup expects 1 argument", tb.line_file_index)); }
-            return Ok(Obj::Cup(Cup::new(args.into_iter().next().unwrap())));
+            let mut it = args.into_iter();
+            let value = it.next().ok_or_else(|| ParsingError::new("cup expects 1 argument", tb.line_file_index))?;
+            return Ok(Obj::Cup(Cup::new(value)));
         }
         if tok == POWER_SET {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 1 { return Err(ParsingError::new("power_set expects 1 argument", tb.line_file_index)); }
-            return Ok(Obj::PowerSet(PowerSet::new(args.into_iter().next().unwrap())));
+            let mut it = args.into_iter();
+            let value = it.next().ok_or_else(|| ParsingError::new("power_set expects 1 argument", tb.line_file_index))?;
+            return Ok(Obj::PowerSet(PowerSet::new(value)));
         }
         if tok == CART_DIM {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 1 { return Err(ParsingError::new("set_dim expects 1 argument", tb.line_file_index)); }
-            return Ok(Obj::CartDim(CartDim::new(args.into_iter().next().unwrap())));
+            let mut it = args.into_iter();
+            let value = it.next().ok_or_else(|| ParsingError::new("set_dim expects 1 argument", tb.line_file_index))?;
+            return Ok(Obj::CartDim(CartDim::new(value)));
         }
         if tok == COUNT {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 1 { return Err(ParsingError::new("count expects 1 argument", tb.line_file_index)); }
-            return Ok(Obj::Count(Count::new(args.into_iter().next().unwrap())));
+            let mut it = args.into_iter();
+            let value = it.next().ok_or_else(|| ParsingError::new("count expects 1 argument", tb.line_file_index))?;
+            return Ok(Obj::Count(Count::new(value)));
         }
         if tok == VAL {
             tb.skip()?;
             let args = self.braced_objs(tb)?;
             if args.len() != 1 { return Err(ParsingError::new("val expects 1 argument", tb.line_file_index)); }
-            return Ok(Obj::Val(Val::new(args.into_iter().next().unwrap())));
+            let mut it = args.into_iter();
+            let value = it.next().ok_or_else(|| ParsingError::new("val expects 1 argument", tb.line_file_index))?;
+            return Ok(Obj::Val(Val::new(value)));
         }
 
         if tok == CART {

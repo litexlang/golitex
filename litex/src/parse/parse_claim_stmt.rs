@@ -22,18 +22,24 @@ impl Parser {
             return Err(ParsingError::new("claim : expects at least one body block (=>: fact)", tb.line_file_index));
         }
         let fact = {
-            let first = tb.body.get_mut(0).unwrap();
+            let first = tb.body.get_mut(0).ok_or_else(|| {
+                ParsingError::new("claim : expects at least one body block (=>: fact)", tb.line_file_index)
+            })?;
             first.parse_index = 0;
             first.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
             if first.body.len() != 1 {
                 return Err(ParsingError::new("claim =>: expects exactly one body block (the fact)", first.line_file_index));
             }
-            let f = self.parse_fact(first.body.get_mut(0).unwrap())?;
-            if let Fact::ForallFactWithIff(_) = &f {
+            let body_block = first.body.get_mut(0).ok_or_else(|| {
+                ParsingError::new("claim =>: expects exactly one body block (the fact)", first.line_file_index)
+            })?;
+            let f = self.parse_fact(body_block)?;
+            if matches!(&f, Fact::ForallFactWithIff(_)) {
                 return Err(ParsingError::new("claim multiline fact cannot be iff", first.line_file_index));
             }
-            f
-        };
+            Ok(f)
+        }?;
+
         let proof: Vec<Stmt> = tb.body.iter_mut().skip(1).map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?;
         Ok(ClaimStmt::new(fact, proof, Some(tb.line_file_index)))
     }

@@ -55,16 +55,16 @@ impl Parser {
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         let mut iff_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
 
-        let last = tb.body.last_mut().unwrap();
+        let last = tb.body.last_mut().ok_or_else(|| ParsingError::new("Expected body", tb.line_file_index))?;
         last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
         for block in last.body.iter_mut() {
             iff_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
         }
 
         let n = tb.body.len();
-        let has_right_arrow = tb.body.get(n - 2).unwrap().current()? == RIGHT_ARROW;
+        let has_right_arrow = tb.body.get(n - 2).ok_or_else(|| ParsingError::new("Expected body", tb.line_file_index))?.current()? == RIGHT_ARROW;
         if has_right_arrow {
-            let then_block = tb.body.get_mut(n - 2).unwrap();
+            let then_block = tb.body.get_mut(n - 2).ok_or_else(|| ParsingError::new("Expected body", tb.line_file_index))?;
             then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
             for block in then_block.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
@@ -74,7 +74,7 @@ impl Parser {
                 dom_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
         } else {
-            let then_block = tb.body.get_mut(0).unwrap();
+            let then_block = tb.body.get_mut(0).ok_or_else(|| ParsingError::new("Expected body", tb.line_file_index))?;
             for block in then_block.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
@@ -95,7 +95,7 @@ impl Parser {
             for block in tb.body.iter_mut().take(n - 1) {
                 dom_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
-            let last = tb.body.last_mut().unwrap();
+            let last = tb.body.last_mut().ok_or_else(|| ParsingError::new("Expected body", tb.line_file_index))?;
             last.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
             let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
             for block in last.body.iter_mut() {
