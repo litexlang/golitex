@@ -52,7 +52,22 @@ impl ChainFact {
 }
 
 #[derive(Clone)]
-pub enum AndFactOrChainFactOrAtomicFact {
+pub enum ChainAtomicFact {
+    AtomicFact(AtomicFact),
+    ChainFact(ChainFact),
+}
+
+impl fmt::Display for ChainAtomicFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ChainAtomicFact::AtomicFact(a) => write!(f, "{}", a),
+            ChainAtomicFact::ChainFact(c) => write!(f, "{}", c),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub enum AndChainAtomicFact {
     AtomicFact(AtomicFact),
     AndFact(AndFact),
     ChainFact(ChainFact),
@@ -90,22 +105,22 @@ impl ChainFact {
     }
 }
 
-impl fmt::Display for AndFactOrChainFactOrAtomicFact {
+impl fmt::Display for AndChainAtomicFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            AndFactOrChainFactOrAtomicFact::AtomicFact(a) => write!(f, "{}", a),
-            AndFactOrChainFactOrAtomicFact::AndFact(a) => write!(f, "{}", a),
-            AndFactOrChainFactOrAtomicFact::ChainFact(c) => write!(f, "{}", c),
+            AndChainAtomicFact::AtomicFact(a) => write!(f, "{}", a),
+            AndChainAtomicFact::AndFact(a) => write!(f, "{}", a),
+            AndChainAtomicFact::ChainFact(c) => write!(f, "{}", c),
         }
     }
 }
 
-impl AndFactOrChainFactOrAtomicFact {
+impl AndChainAtomicFact {
     pub fn key(&self) -> String {
         match self {
-            AndFactOrChainFactOrAtomicFact::AtomicFact(a) => a.key(),
-            AndFactOrChainFactOrAtomicFact::AndFact(a) => a.key(),
-            AndFactOrChainFactOrAtomicFact::ChainFact(c) => c.key(),
+            AndChainAtomicFact::AtomicFact(a) => a.key(),
+            AndChainAtomicFact::AndFact(a) => a.key(),
+            AndChainAtomicFact::ChainFact(c) => c.key(),
         }
     }
 }

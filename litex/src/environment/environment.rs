@@ -227,8 +227,8 @@ impl Environment {
             Fact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact),
             Fact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact),
             Fact::OrFact(or_fact) => self.store_or_fact(or_fact),
-            Fact::AndAtomicFact(and_fact) => self.store_and_fact(and_fact),
-            Fact::ChainAtomicFact(chain_fact) => self.store_chain_fact(chain_fact),
+            Fact::AndFact(and_fact) => self.store_and_fact(and_fact),
+            Fact::ChainFact(chain_fact) => self.store_chain_fact(chain_fact),
             Fact::ForallFact(forall_fact) => self.store_forall_fact(Rc::new(forall_fact)),
             Fact::ForallFactWithIff(forall_fact_with_iff) => self.store_forall_fact_with_iff(forall_fact_with_iff),
         }

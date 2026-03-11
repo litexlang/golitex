@@ -5,7 +5,7 @@ use crate::error::ParsingError;
 use crate::stmt::parameter_type_and_property::{ParamDefWithParamType, ParamType, Set, NonemptySet, FiniteSet};
 
 impl Parser {
-    pub fn param_def_with_param_type(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
+    pub fn parse_param_def_with_param_type(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
         self.param_def_with_type(tb)
     }
 
@@ -49,7 +49,7 @@ impl Parser {
     }
 
     pub fn param_type_obj(&self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
-        let obj = self.obj(tb)?;
+        let obj = self.parse_obj(tb)?;
         Ok(ParamType::Obj(obj))
     }
 }

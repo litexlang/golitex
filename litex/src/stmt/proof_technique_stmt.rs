@@ -1,8 +1,7 @@
 use std::fmt;
 use crate::common::keywords::{CASE, CASES, CLAIM, COLON, CONTRA, ENUM, FOR, FROM, INDUC, PROVE, RIGHT_ARROW, EQUAL_SET, EQUAL, IMPOSSIBLE, VIEW_FN_AS_SET};
 use crate::common::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line};
-use crate::fact::{Fact, AndFactOrChainFactOrAtomicFact};
-use crate::fact::OrFactOrAndFactOrSpecFact;
+use crate::fact::{Fact, AndChainAtomicFact, ExistOrAndChainAtomicFact};
 use super::Stmt;
 use crate::obj::{ClosedRange, Obj, Range };
 
@@ -40,14 +39,14 @@ pub enum ClosedRangeOrRange {
 pub struct ProveForStmt {
     pub params: Vec<String>,
     pub param_sets: Vec<ClosedRangeOrRange>,
-    pub dom_facts: Vec<OrFactOrAndFactOrSpecFact>,
-    pub then_facts: Vec<OrFactOrAndFactOrSpecFact>,
+    pub dom_facts: Vec<ExistOrAndChainAtomicFact>,
+    pub then_facts: Vec<ExistOrAndChainAtomicFact>,
     pub proof: Vec<Stmt>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
 pub struct ProveByInductionStmt {
-    pub fact: Vec<OrFactOrAndFactOrSpecFact>,
+    pub fact: Vec<ExistOrAndChainAtomicFact>,
     pub param: String,
     pub proof: Vec<Stmt>,
     pub induc_from: Obj,
@@ -63,17 +62,17 @@ pub struct ProveByEnumerationStmt {
 }
 
 pub struct ProveCaseByCaseStmt {
-    pub cases: Vec<AndFactOrChainFactOrAtomicFact>,
+    pub cases: Vec<AndChainAtomicFact>,
     pub then_facts: Vec<Fact>,
     pub proofs: Vec<Vec<Stmt>>,
-    pub impossible_facts: Vec<Option<OrFactOrAndFactOrSpecFact>>,
+    pub impossible_facts: Vec<Option<ExistOrAndChainAtomicFact>>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
 pub struct ProveByContradictionStmt {
     pub to_prove: Fact,
     pub proof: Vec<Stmt>,
-    pub impossible_fact: OrFactOrAndFactOrSpecFact,
+    pub impossible_fact: ExistOrAndChainAtomicFact,
     pub line_file_index: Option<(usize, usize)>,
 }
 
@@ -85,7 +84,7 @@ impl ProveByEnumerationStmt {
 }
 
 impl ProveCaseByCaseStmt {
-    pub fn new(cases: Vec<AndFactOrChainFactOrAtomicFact>, then_facts: Vec<Fact>, proofs: Vec<Vec<Stmt>>, impossible_facts: Vec<Option<OrFactOrAndFactOrSpecFact>>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(cases: Vec<AndChainAtomicFact>, then_facts: Vec<Fact>, proofs: Vec<Vec<Stmt>>, impossible_facts: Vec<Option<ExistOrAndChainAtomicFact>>, line_file_index: Option<(usize, usize)>) -> Self {
         ProveCaseByCaseStmt { cases, then_facts, proofs, impossible_facts, line_file_index }
     }
 }
@@ -105,7 +104,7 @@ impl fmt::Display for ProveCaseByCaseStmt {
 }
 
 impl ProveByContradictionStmt {
-    pub fn new(to_prove: Fact, proof: Vec<Stmt>, impossible_fact: OrFactOrAndFactOrSpecFact, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(to_prove: Fact, proof: Vec<Stmt>, impossible_fact: ExistOrAndChainAtomicFact, line_file_index: Option<(usize, usize)>) -> Self {
         ProveByContradictionStmt { to_prove, proof, impossible_fact, line_file_index }
     }
 }
@@ -151,7 +150,7 @@ impl fmt::Display for ProveByEnumerationStmt {
 }
 
 impl ProveByInductionStmt {
-    pub fn new(fact: Vec<OrFactOrAndFactOrSpecFact>, param: String, proof: Vec<Stmt>, induc_from: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(fact: Vec<ExistOrAndChainAtomicFact>, param: String, proof: Vec<Stmt>, induc_from: Obj, line_file_index: Option<(usize, usize)>) -> Self {
         ProveByInductionStmt { fact, param, proof, induc_from, line_file_index }
     }
 }
@@ -177,7 +176,7 @@ impl fmt::Display for ProveForStmt {
 }
 
 impl ProveForStmt {
-    pub fn new(params: Vec<String>, param_sets: Vec<ClosedRangeOrRange>, dom_facts: Vec<OrFactOrAndFactOrSpecFact>, then_facts: Vec<OrFactOrAndFactOrSpecFact>, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(params: Vec<String>, param_sets: Vec<ClosedRangeOrRange>, dom_facts: Vec<ExistOrAndChainAtomicFact>, then_facts: Vec<ExistOrAndChainAtomicFact>, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
         ProveForStmt { params, param_sets, dom_facts, then_facts, proof, line_file_index }
     }
 }

@@ -14,12 +14,12 @@ impl Parser {
             let facts = self.parse_facts_in_body(tb)?;
             Ok(Stmt::KnowStmt(KnowStmt::new(facts, Some(tb.line_file_index))))
         } else if tb.current()? == FORALL {
-            let fact = self.fact(tb)?;
+            let fact = self.parse_fact(tb)?;
             Ok(Stmt::KnowStmt(KnowStmt::new(vec![fact], Some(tb.line_file_index))))
         } else {
             let mut facts: Vec<Fact> = vec![];
             loop {
-                let o = self.or_and_spec_fact(tb)?;
+                let o = self.parse_exist_or_and_chain_atomic_fact(tb)?;
                 facts.push(o.to_fact());
                 if tb.current()? != COMMA {
                     break;

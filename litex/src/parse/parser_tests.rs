@@ -9,7 +9,7 @@ fn test_fact() {
     let blocks = TokenBlock::parse_blocks(code, 0).expect("parse blocks failed");
     let parser = Parser::new();
     for mut b in blocks {
-        let stmt = parser.stmt(&mut b);
+        let stmt = parser.parse_stmt(&mut b);
         if let Err(e) = stmt {
             println!("{}", e);
         } else {
@@ -23,7 +23,7 @@ fn test_fact() {
 fn test_list_set_comma() {
     let parser = Parser::new();
     let mut tb = TokenBlock::new(tokenize_line("{1, 0, 2}"), vec![], (1, 0));
-    let r = parser.obj(&mut tb);
+    let r = parser.parse_obj(&mut tb);
     assert!(r.is_ok(), "parse {{1, 0, 2}} failed: {:?}", r.err());
     assert_eq!(r.unwrap().to_string(), "{1, 0, 2}");
 }
@@ -32,7 +32,7 @@ fn test_list_set_comma() {
 fn test_list_set_space() {
     let parser = Parser::new();
     let mut tb = TokenBlock::new(tokenize_line("{a b c}"), vec![], (1, 0));
-    let r = parser.obj(&mut tb);
+    let r = parser.parse_obj(&mut tb);
     assert!(r.is_ok(), "parse {{a b c}} failed: {:?}", r.err());
     assert_eq!(r.unwrap().to_string(), "{a, b, c}");
 }
@@ -98,7 +98,7 @@ fn test_obj() {
     let parser = Parser::new();
     for obj in objs {
         let mut tb = TokenBlock::new(tokenize_line(obj), vec![], (1, 0));
-        let result = parser.obj(&mut tb);
+        let result = parser.parse_obj(&mut tb);
         if let Err(e) = result {
             println!("{}", e);
         } else {

@@ -11,7 +11,7 @@ impl Parser {
         tb.skip_token(COLON)?;
         let mut proof = Vec::with_capacity(tb.body.len());
         for block in tb.body.iter_mut() {
-            proof.push(self.stmt(block)?);
+            proof.push(self.parse_stmt(block)?);
         }
         Ok(Stmt::ProveStmt(ProveStmt::new(proof, Some(tb.line_file_index))))
     }
