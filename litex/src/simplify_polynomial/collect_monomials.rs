@@ -317,14 +317,7 @@ fn multiply_two_non_zero_monomials_with_operands(left: &MonomialWithNonZeroScala
     }
     new_operands.sort_by(|a, b| a.1.cmp(&b.1));
 
-    let result = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(new_scalar, Some(new_operands));
-
-    match result {
-        Some(m) => m,
-        None => {
-            unreachable!("scalar is not zero");
-        }
-    }
+    MonomialWithNonZeroScalarAndOrderedOperands::new(new_scalar, Some(new_operands))
 }
 
 fn sub_numbers_and_return_monomial(left: &str, right: &str) -> Option<MonomialWithNonZeroScalarAndOrderedOperands> {

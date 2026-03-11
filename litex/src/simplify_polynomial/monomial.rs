@@ -36,4 +36,10 @@ impl MonomialWithNonZeroScalarAndOrderedOperands {
         }
     }
 
+    pub fn new(scalar: String, ordered_operands: Option<Vec<(Obj, String)>>) -> Self {
+        MonomialWithNonZeroScalarAndOrderedOperands {
+            non_zero_scalar: scalar,
+            ordered_operands,
+        }
+    }
 }
