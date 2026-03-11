@@ -13,7 +13,7 @@ use crate::execute::Executor;
 
 // well-defined check for obj
 impl<'a> Executor<'a> {
-    pub fn verify_obj_well_defined(&self, obj: &Obj, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    pub fn verify_obj_well_defined(&mut self, obj: &Obj, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         match obj {
             Obj::Identifier(identifier) => self.verify_identifier_well_defined(identifier, verify_state),
             Obj::IdentifierWithMod(x) => self.verify_identifier_with_mod_well_defined(x, verify_state),
@@ -107,7 +107,7 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_add_well_defined(&self, add: &Add, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_add_well_defined(&mut self, add: &Add, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&add.left, verify_state)?;
         self.verify_obj_well_defined(&add.right, verify_state)?;
         self.require_obj_in_r(&add.left, verify_state)?;
@@ -115,7 +115,7 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_sub_well_defined(&self, sub: &Sub, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_sub_well_defined(&mut self, sub: &Sub, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&sub.left, verify_state)?;
         self.verify_obj_well_defined(&sub.right, verify_state)?;
         self.require_obj_in_r(&sub.left, verify_state)?;
@@ -123,7 +123,7 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_mul_well_defined(&self, mul: &Mul, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_mul_well_defined(&mut self, mul: &Mul, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&mul.left, verify_state)?;
         self.verify_obj_well_defined(&mul.right, verify_state)?;
         self.require_obj_in_r(&mul.left, verify_state)?;
@@ -131,7 +131,7 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_div_well_defined(&self, div: &Div, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_div_well_defined(&mut self, div: &Div, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&div.left, verify_state)?;
         self.verify_obj_well_defined(&div.right, verify_state)?;
 
@@ -145,7 +145,7 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_mod_well_defined(&self, m: &Mod, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_mod_well_defined(&mut self, m: &Mod, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&m.left, verify_state)?;
         self.verify_obj_well_defined(&m.right, verify_state)?;
         self.require_obj_in_z(&m.left, verify_state)?;
@@ -160,54 +160,63 @@ impl<'a> Executor<'a> {
         Err(WellDefinedError::new("verify_pow_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_union_well_defined(&self, x: &Union, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_union_well_defined(&mut self, x: &Union, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&x.left, verify_state)?;
         self.verify_obj_well_defined(&x.right, verify_state)?;
         Ok(())
     }
 
-    fn verify_intersect_well_defined(&self, x: &Intersect, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_intersect_well_defined(&mut self, x: &Intersect, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&x.left, verify_state)?;
         self.verify_obj_well_defined(&x.right, verify_state)?;
         Ok(())
 
     }
 
-    fn verify_set_minus_well_defined(&self, x: &SetMinus, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_set_minus_well_defined(&mut self, x: &SetMinus, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&x.left, verify_state)?;
         self.verify_obj_well_defined(&x.right, verify_state)?;
         Ok(())
     }
 
-    fn verify_set_diff_well_defined(&self, x: &SetDiff, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_set_diff_well_defined(&mut self, x: &SetDiff, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&x.left, verify_state)?;
         self.verify_obj_well_defined(&x.right, verify_state)?;
         Ok(())
     }
 
-    fn verify_cup_well_defined(&self, x: &Cup, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_cup_well_defined(&mut self, x: &Cup, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&x.left, verify_state)?;
         Ok(())
     }
 
-    fn verify_cap_well_defined(&self, x: &Cap, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_cap_well_defined(&mut self, x: &Cap, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&x.left, verify_state)?;
         Ok(())
     }
 
-    fn verify_list_set_well_defined(&self, x: &ListSet, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_list_set_well_defined(&mut self, x: &ListSet, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         for obj in &x.list {
             self.verify_obj_well_defined(obj, verify_state)?;
         }
         Ok(())
     }
 
-    fn verify_set_builder_well_defined(&self, x: &SetBuilder, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
-        panic!("NOT IMPLEMENTED YET");
+    fn verify_set_builder_well_defined(&mut self, x: &SetBuilder, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+        self.runtime_context.new_env();
+        let result = self.verify_set_builder_well_defined_body(x, verify_state);
+        self.runtime_context.delete_env();
+        result
+    }
+
+    fn verify_set_builder_well_defined_body(&mut self, x: &SetBuilder, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+        _ = x;
+        _ = verify_state;
+        panic!("verify_set_builder_well_defined_body 此函数还没有 implement");
     }
 
 
-    fn verify_fn_set_without_dom_well_defined(&self, x: &FnSetWithoutDom, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_fn_set_without_dom_well_defined(&mut self, x: &FnSetWithoutDom, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         for obj in &x.param_sets {
             self.verify_obj_well_defined(obj, verify_state)?;
         }
@@ -215,15 +224,15 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_fn_set_with_dom_well_defined(&self, _x: &FnSetWithDom, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_fn_set_with_dom_well_defined(&mut self, _x: &FnSetWithDom, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         Err(WellDefinedError::new("verify_fn_set_with_dom_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_n_pos_obj_well_defined(&self, _x: &NPosObj, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_n_pos_obj_well_defined(&mut self, _x: &NPosObj, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         Ok(())
     }
 
-    fn verify_n_obj_well_defined(&self, _x: &NObj, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_n_obj_well_defined(&mut self, _x: &NObj, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         Ok(())
     }
 
@@ -243,14 +252,14 @@ impl<'a> Executor<'a> {
         Err(WellDefinedError::new("verify_inst_set_struct_obj_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_cart_well_defined(&self, x: &Cart, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_cart_well_defined(&mut self, x: &Cart, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         for obj in &x.args {
             self.verify_obj_well_defined(obj, verify_state)?;
         }
         Ok(())
     }
 
-    fn verify_cart_dim_well_defined(&self, x: &CartDim, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_cart_dim_well_defined(&mut self, x: &CartDim, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&x.set, verify_state)?;
 
         let is_cart_fact = AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), None));
@@ -259,40 +268,40 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_proj_well_defined(&self, _x: &Proj, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_proj_well_defined(&mut self, _x: &Proj, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         Err(WellDefinedError::new("verify_proj_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_dim_well_defined(&self, _x: &Dim, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_dim_well_defined(&mut self, _x: &Dim, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         Err(WellDefinedError::new("verify_dim_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_tuple_well_defined(&self, _x: &Tuple, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_tuple_well_defined(&mut self, _x: &Tuple, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         Err(WellDefinedError::new("verify_tuple_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_count_well_defined(&self, _x: &Count, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_count_well_defined(&mut self, _x: &Count, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         Err(WellDefinedError::new("verify_count_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_range_well_defined(&self, _x: &Range, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_range_well_defined(&mut self, _x: &Range, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         Err(WellDefinedError::new("verify_range_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_closed_range_well_defined(&self, _x: &ClosedRange, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_closed_range_well_defined(&mut self, _x: &ClosedRange, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         Err(WellDefinedError::new("verify_closed_range_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_val_well_defined(&self, _x: &Val, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_val_well_defined(&mut self, _x: &Val, _verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         Err(WellDefinedError::new("verify_val_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_power_set_well_defined(&self, x: &PowerSet, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_power_set_well_defined(&mut self, x: &PowerSet, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&x.set, verify_state)?;
         Ok(())
     }
 
-    fn verify_choose_well_defined(&self, x: &Choose, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_choose_well_defined(&mut self, x: &Choose, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&x.set, verify_state)?;
         let is_nonempty_set_fact = AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new((*x.set).clone(), None));
         self.verify_atomic_fact(&is_nonempty_set_fact, verify_state)?;
