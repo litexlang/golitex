@@ -31,10 +31,6 @@ impl<'a> Executor<'a> {
     fn def_prop_stmt_check_well_defined(&mut self, def_prop_stmt: &DefPropStmt) -> Result<(), ExecError> {
         self.runtime_context.new_env();
 
-        for param_def in def_prop_stmt.params_def_with_type.iter() {
-            self.define_params_with_type(param_def)?;
-        }
-        
         let result = self.def_prop_stmt_check_well_defined_body(def_prop_stmt);
 
         self.runtime_context.delete_env();
@@ -42,6 +38,10 @@ impl<'a> Executor<'a> {
     }
 
     fn def_prop_stmt_check_well_defined_body(&mut self, def_prop_stmt: &DefPropStmt) -> Result<(), ExecError> {
+        for param_def in def_prop_stmt.params_def_with_type.iter() {
+            self.define_params_with_type(param_def)?;
+        }
+        
         match &def_prop_stmt.iff_facts {
             None => {},
             Some(iff_facts) => {
@@ -95,7 +95,7 @@ impl<'a> Executor<'a> {
         return Err(ExecError::new("have_fn_equal_case_by_case_stmt: NOT IMPLEMENTED YET", vec![], have_fn_equal_case_by_case_stmt.line_file_index));
     }
 
-    fn define_params_with_type(&mut self, param_def: &ParamDefWithParamType) -> Result<(), ExecError> {
+    pub fn define_params_with_type(&mut self, param_def: &ParamDefWithParamType) -> Result<(), ExecError> {
         let facts = param_def.facts();
         for (name, fact) in param_def.0.iter().zip(facts.iter()) {
             self.validate_name_and_store_identifier_obj(name)?;
