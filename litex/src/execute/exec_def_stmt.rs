@@ -1,5 +1,5 @@
 use crate::error::ExecError;
-use crate::stmt::parameter_type_and_property::{ParamDefWithParamType, ParamType};
+use crate::stmt::parameter_type_and_property::{ParamDefWithParamType, ParamType, ParamDefWithParamSet};
 use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStmt, DefStructStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::result::StmtResult;
@@ -114,4 +114,13 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
+    pub fn define_params_with_set(&mut self, param_def: &ParamDefWithParamSet) -> Result<(), ExecError> {
+        self.verify_obj_well_defined(&param_def.1, &mut VerifyState::new(0, false))?;
+        let facts = param_def.facts();
+        for (name, fact) in param_def.0.iter().zip(facts.iter()) {
+            self.validate_name_and_store_identifier_obj(name)?;
+            self.store_fact_without_well_defined_verified(fact)?;
+        }
+        Ok(())
+    }
 }

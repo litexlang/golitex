@@ -6,6 +6,7 @@ use super::atomic_fact::AtomicFact;
 use super::matchable_fact_with_atomic_fact_inside::{AndFact, ChainFact};
 use super::or_fact::OrFact;
 use super::fact_inside_forall::ExistOrAndChainAtomicFact;
+use super::fact::Fact;
 
 /// Result of parsing after NOT: either an existential fact (not exist ...) or a single atomic fact (not $p(...)).
 #[derive(Clone)]
@@ -202,6 +203,17 @@ impl ExistFact {
         match self {
             ExistFact::TrueExistFact(x) => x.line_file_index,
             ExistFact::NotExistFact(x) => x.line_file_index,
+        }
+    }
+}
+
+impl OrAndChainAtomicFact {
+    pub fn from_ref_to_fact(&self) -> Fact {
+        match self {
+            OrAndChainAtomicFact::AtomicFact(a) => Fact::AtomicFact(a.clone()),
+            OrAndChainAtomicFact::AndFact(a) => Fact::AndFact(a.clone()),
+            OrAndChainAtomicFact::ChainFact(c) => Fact::ChainFact(c.clone()),
+            OrAndChainAtomicFact::OrFact(o) => Fact::OrFact(o.clone()),
         }
     }
 }

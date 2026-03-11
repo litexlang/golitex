@@ -150,7 +150,7 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_or_and_chain_atomic_fact_well_defined(&mut self, fact: &OrAndChainAtomicFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    pub fn verify_or_and_chain_atomic_fact_well_defined(&mut self, fact: &OrAndChainAtomicFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         match fact {
             OrAndChainAtomicFact::AtomicFact(a) => self.verify_atomic_fact_well_defined(a, verify_state)?,
             OrAndChainAtomicFact::AndFact(a) => self.verify_and_fact_well_defined(a, verify_state)?,

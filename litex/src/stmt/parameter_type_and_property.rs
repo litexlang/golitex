@@ -116,3 +116,24 @@ impl ParamDefWithParamType {
         facts
     }
 }
+
+impl ParamDefWithParamSet {
+    pub fn facts(&self) -> Vec<Fact> {
+        let mut facts = Vec::with_capacity(self.0.len());
+        for name in self.0.iter() {
+            let fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                Obj::Identifier(Identifier::new(name)),
+                self.1.clone(),
+                None,
+            )));
+            facts.push(fact);
+        }
+        facts
+    }
+}
+
+impl ParamDefWithParamSet {
+    pub fn new(param: Vec<String>, param_set: Obj) -> Self {
+        ParamDefWithParamSet(param, param_set)
+    }
+}
