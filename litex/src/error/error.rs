@@ -107,6 +107,12 @@ impl From<NewAtomicFactError> for StoreFactError {
     }
 }
 
+impl From<NewAtomicFactError> for WellDefinedError {
+    fn from(e: NewAtomicFactError) -> Self {
+        WellDefinedError::new(format!("new atomic fact error: {}", e).as_str(), vec![e.into()], None)
+    }
+}
+
 #[derive(Debug)]
 pub struct StoreFactError {
     pub msg: String,

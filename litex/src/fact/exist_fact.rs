@@ -46,6 +46,7 @@ pub enum OrAndChainAtomicFact {
     OrAtomicFact(OrFact),
 }
 
+
 impl OrAndChainAtomicFact {
     pub fn to_exist_or_and_chain_atomic_fact(self) -> ExistOrAndChainAtomicFact {
         match self {
@@ -187,3 +188,20 @@ impl ExistFact {
     }
 }
 
+impl ExistFact {
+    pub fn params_def_with_type(&self) -> &Vec<ParamDefWithParamType> {
+        match self {
+            ExistFact::TrueExistFact(x) => &x.params_def_with_type,
+            ExistFact::NotExistFact(x) => &x.params_def_with_type,
+        }
+    }
+}
+
+impl ExistFact {
+    pub fn line_file_index(&self) -> Option<(usize, usize)> {
+        match self {
+            ExistFact::TrueExistFact(x) => x.line_file_index,
+            ExistFact::NotExistFact(x) => x.line_file_index,
+        }
+    }
+}
