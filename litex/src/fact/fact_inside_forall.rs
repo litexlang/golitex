@@ -6,7 +6,7 @@ use super::or_fact::OrFact;
 use super::exist_fact::ExistFact;
 
 #[derive(Clone)]
-pub enum FactInsideForall {
+pub enum ExistOrAndChainAtomicFact {
     AtomicFact(AtomicFact),
     AndFact(AndFact),
     ChainFact(ChainFact),
@@ -14,14 +14,14 @@ pub enum FactInsideForall {
     ExistFact(ExistFact),
 }
 
-impl fmt::Display for FactInsideForall {
+impl fmt::Display for ExistOrAndChainAtomicFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            FactInsideForall::AtomicFact(atomic_fact) => write!(f, "{}", atomic_fact),
-            FactInsideForall::AndFact(and_fact) => write!(f, "{}", and_fact),
-            FactInsideForall::ChainFact(chain_fact) => write!(f, "{}", chain_fact),
-            FactInsideForall::OrFact(or_fact) => write!(f, "{}", or_fact),
-            FactInsideForall::ExistFact(exist_fact) => write!(f, "{}", exist_fact),
+            ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => write!(f, "{}", atomic_fact),
+            ExistOrAndChainAtomicFact::AndFact(and_fact) => write!(f, "{}", and_fact),
+            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => write!(f, "{}", chain_fact),
+            ExistOrAndChainAtomicFact::OrFact(or_fact) => write!(f, "{}", or_fact),
+            ExistOrAndChainAtomicFact::ExistFact(exist_fact) => write!(f, "{}", exist_fact),
         }
     }
 }
