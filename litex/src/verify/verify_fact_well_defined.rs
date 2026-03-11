@@ -20,7 +20,7 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn verify_atomic_fact_well_defined(&self, atomic_fact: &AtomicFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_atomic_fact_well_defined(&mut self, atomic_fact: &AtomicFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         // 1. predicate is defined, expected args length is equal to actual args length
         let name_string = atomic_fact.key();
         if is_builtin_predicate(&name_string) {
@@ -74,14 +74,14 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_and_fact_well_defined(&self, and_fact: &AndFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_and_fact_well_defined(&mut self, and_fact: &AndFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         for fact in and_fact.facts.iter() {
             self.verify_atomic_fact_well_defined(fact, verify_state)?;
         }
         Ok(())
     }
 
-    fn verify_chain_fact_well_defined(&self, chain_fact: &ChainFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_chain_fact_well_defined(&mut self, chain_fact: &ChainFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         let facts = chain_fact.facts()?;
         for fact in facts.iter() {
             self.verify_atomic_fact_well_defined(fact, verify_state)?;
@@ -89,14 +89,14 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_or_fact_well_defined(&self, or_fact: &OrFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_or_fact_well_defined(&mut self, or_fact: &OrFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         for fact in or_fact.facts.iter() {
             self.verify_and_chain_atomic_fact_well_defined(fact, verify_state)?;
         }
         Ok(())
     }
 
-    fn verify_and_chain_atomic_fact_well_defined(&self, fact: &AndChainAtomicFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_and_chain_atomic_fact_well_defined(&mut self, fact: &AndChainAtomicFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         match fact {
             AndChainAtomicFact::AtomicFact(a) => self.verify_atomic_fact_well_defined(a, verify_state)?,
             AndChainAtomicFact::AndFact(a) => self.verify_and_fact_well_defined(a, verify_state)?,
@@ -150,7 +150,7 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_or_and_chain_atomic_fact_well_defined(&self, fact: &OrAndChainAtomicFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_or_and_chain_atomic_fact_well_defined(&mut self, fact: &OrAndChainAtomicFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         match fact {
             OrAndChainAtomicFact::AtomicFact(a) => self.verify_atomic_fact_well_defined(a, verify_state)?,
             OrAndChainAtomicFact::AndFact(a) => self.verify_and_fact_well_defined(a, verify_state)?,
