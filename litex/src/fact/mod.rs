@@ -6,7 +6,6 @@ mod matchable_fact_with_atomic_fact_inside;
 mod or_fact;
 mod or_fact_or_and_fact_or_specific_fact;
 mod reversible_fact;
-mod specific_fact;
 mod fact_inside_forall;
 pub use atomic_fact::*;
 pub use exist_fact::{ExistFact, FactInsideExistFact, NotExistFact, TrueExistFact};
@@ -18,4 +17,4 @@ pub use or_fact_or_and_fact_or_specific_fact::OrFactOrAndFactOrSpecFact;
 
 pub use fact::Fact;
 mod fact;
-pub use fact_inside_forall::FactInsideForall;
+pub use fact_inside_forall::ExistOrAndChainAtomicFact;

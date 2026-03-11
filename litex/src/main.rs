@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::fact::FactInsideForall;
+use crate::fact::ExistOrAndChainAtomicFact;
 mod verify;
 use verify::VerifyState;
 mod simplify_polynomial;
@@ -504,30 +504,30 @@ fn try_and_fact_or_spec_fact() {
 
 fn try_forall_fact() {
     let param_type_or_property_pairs = vec![ParamDefWithParamType(vec!["n".to_string()], ParamType::Set(Set::new()))];
-    let dom_facts = vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(
+    let dom_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     ))];
-    let then_facts = vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(
+    let then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     ))];
     let _forall = ForallFact::new(param_type_or_property_pairs, dom_facts, then_facts, Some((1, 0)));
     println!("{}", _forall);
 
     let param_type_or_property_pairs2 = vec![ParamDefWithParamType(vec!["n".to_string(), "m".to_string()], ParamType::Set(Set::new()))];
-    let dom_facts2 = vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(
+    let dom_facts2 = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     ))];
-    let then_facts2 = vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(
+    let then_facts2 = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     ))];
     let _forall2 = ForallFact::new(param_type_or_property_pairs2, dom_facts2, then_facts2, Some((1, 0)));
     println!("{}", _forall2);
 
     let param_type_or_property_pairs3 = vec![ParamDefWithParamType(vec!["n".to_string(), "m".to_string()], ParamType::Set(Set::new()))];
-    let dom_facts3 = vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(
+    let dom_facts3 = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     ))];
-    let then_facts3 = vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(
+    let then_facts3 = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     ))];
     let _forall3 = ForallFact::new(param_type_or_property_pairs3, dom_facts3, then_facts3, Some((1, 0)));
@@ -536,15 +536,15 @@ fn try_forall_fact() {
 
 fn try_forall_fact_with_iff() {
     let param_type_or_property_pairs = vec![ParamDefWithParamType(vec!["n".to_string()], ParamType::Set(Set::new()))];
-    let dom_facts = vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(
+    let dom_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     ))];
-    let then_facts = vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(
+    let then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     ))];
     let forall = ForallFact::new(param_type_or_property_pairs, dom_facts, then_facts, Some((1, 0)));
 
-    let _forall_fact_with_iff = ForallFactWithIff::new(forall, vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(
+    let _forall_fact_with_iff = ForallFactWithIff::new(forall, vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     ))], Some((2, 0)));
     println!("{}", _forall_fact_with_iff);
@@ -563,20 +563,20 @@ fn try_fact() {
     let _f_or = Fact::OrFact(OrFact::new(vec![], Some((1, 0))));
     let _f_forall = Fact::ForallFact(ForallFact::new(
         vec![ParamDefWithParamType(vec!["n".to_string()], ParamType::Set(Set::new()))],
-        vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(
+        vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
             EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
         ))],
-        vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(
+        vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
             EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
         ))],
         Some((1, 0)),
     ));
     let _f_forall_fact_with_iff = Fact::ForallFactWithIff(ForallFactWithIff::new(ForallFact::new(
         vec![ParamDefWithParamType(vec!["n".to_string()], ParamType::Set(Set::new()))],
-        vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(
+        vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
             EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
         ))],
-        vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(
+        vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
             EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
         ))], Some((1, 0))), vec![], Some((1, 0))));
 
@@ -1153,10 +1153,10 @@ fn try_runtime_context() {
     println!("{}", runtime_context.top_level_env());
 
     let param_type_or_property_pairs = vec![ParamDefWithParamType(vec!["n".to_string()], ParamType::Set(Set::new()))];
-    let dom_facts = vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(
+    let dom_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     ))];
-    let then_facts = vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(
+    let then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
         EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0))),
     ))];
     let _forall = ForallFact::new(param_type_or_property_pairs, dom_facts, then_facts, Some((1, 0)));
@@ -1309,28 +1309,28 @@ fn try_verify_state() {
 
 fn try_store_forall_fact_in_env() {
     let param_def = vec![ParamDefWithParamType(vec!["n".to_string()], ParamType::Set(Set::new()))];
-    let dom_facts = vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let dom_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("a"),
         Obj::mk("b"),
         Some((1, 0)),
     )))];
-    let then_facts = vec![FactInsideForall::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("a"),
         Obj::mk("b"),
         Some((1, 0)),
-    ))), FactInsideForall::AndFact(AndFact::new(vec![AtomicFact::EqualFact(EqualFact::new(
+    ))), ExistOrAndChainAtomicFact::AndFact(AndFact::new(vec![AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("a"),
         Obj::mk("b"),
         Some((1, 0)),
-    ))], Some((1, 0)))), FactInsideForall::OrFact(OrFact::new(vec![AndFactOrChainFactOrAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    ))], Some((1, 0)))), ExistOrAndChainAtomicFact::OrFact(OrFact::new(vec![AndFactOrChainFactOrAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("a"),
         Obj::mk("b"),
         Some((1, 0)),
-    )))], Some((1, 0)))), FactInsideForall::ChainFact(ChainFact::new(
+    )))], Some((1, 0)))), ExistOrAndChainAtomicFact::ChainFact(ChainFact::new(
         vec![Obj::mk("a"), Obj::mk("b")],
         vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("="))],
         Some((1, 0)),
-    )), FactInsideForall::ExistFact(ExistFact::TrueExistFact(TrueExistFact::new(
+    )), ExistOrAndChainAtomicFact::ExistFact(ExistFact::TrueExistFact(TrueExistFact::new(
         vec![ParamDefWithParamType(vec!["n".to_string()], ParamType::Set(Set::new()))],
         vec![FactInsideExistFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("a"), Obj::mk("b"), Some((1, 0)))))],
         Some((1, 0)),

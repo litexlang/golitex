@@ -1,5 +1,5 @@
 use crate::fact::{
-    ExistFact, AndFactOrChainFactOrAtomicFact, FactInsideExistFact, FactInsideForall,
+    ExistFact, AndFactOrChainFactOrAtomicFact, FactInsideExistFact, ExistOrAndChainAtomicFact,
     NotExistFact, TrueExistFact,
 };
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
@@ -48,9 +48,9 @@ impl Parser {
             return Err(ParsingError::new("Expected at least 2 body blocks", tb.line_file_index));
         }
         
-        let mut dom_facts: Vec<FactInsideForall> = Vec::new();
-        let mut then_facts: Vec<FactInsideForall> = Vec::new();
-        let mut iff_facts: Vec<FactInsideForall> = Vec::new();
+        let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        let mut iff_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
 
         let last = tb.body.last_mut().unwrap();
         last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
@@ -87,20 +87,20 @@ impl Parser {
             ParsingError::new("Expected body", tb.line_file_index)
         })?;
         if last_body.current()? == RIGHT_ARROW {
-            let mut dom_facts: Vec<FactInsideForall> = vec![];
+            let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = vec![];
             let n = tb.body.len();
             for block in tb.body.iter_mut().take(n - 1) {
                 dom_facts.push(self.parse_fact_in_forall(block)?);
             }
             let last = tb.body.last_mut().unwrap();
             last.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
-            let mut then_facts: Vec<FactInsideForall> = Vec::new();
+            let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
             for block in last.body.iter_mut() {
                 then_facts.push(self.parse_fact_in_forall(block)?);
             }
             Ok(Fact::ForallFact(ForallFact::new(param_def, dom_facts, then_facts, Some(tb.line_file_index))))
         } else {
-            let mut then_facts: Vec<FactInsideForall> = Vec::new();
+            let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
             for block in tb.body.iter_mut() {
                 then_facts.push(self.parse_fact_in_forall(block)?);
             }
@@ -175,7 +175,7 @@ impl Parser {
         panic!("parse_facts_inside_exist_fact is not implemented");
     }
 
-    pub fn parse_fact_in_forall(&self, tb: &mut TokenBlock) -> Result<FactInsideForall, ParsingError> {
+    pub fn parse_fact_in_forall(&self, tb: &mut TokenBlock) -> Result<ExistOrAndChainAtomicFact, ParsingError> {
         _ = tb;
         panic!("parse_fact_in_forall is not implemented");
     }
