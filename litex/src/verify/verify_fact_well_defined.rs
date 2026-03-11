@@ -47,7 +47,7 @@ impl<'a> Executor<'a> {
                     atomic_fact_line_file(atomic_fact),
                 ));
             }
-            let def = predicate_definition.unwrap();
+            let def = predicate_definition.ok_or_else(|| WellDefinedError::new(format!("predicate {} not defined", name_string).as_ref(), vec![], atomic_fact_line_file(atomic_fact)))?;
     
             let expected_len = def.params_def_with_type.len();
             let actual_args = atomic_fact.args();
@@ -115,8 +115,8 @@ impl<'a> Executor<'a> {
     fn verify_exist_fact_well_defined_body(&mut self, exist_fact: &ExistFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         for param_def in exist_fact.params_def_with_type().iter() {
             let result = self.define_params_with_type(param_def);
-            if result.is_err() {
-                return Err(WellDefinedError::new(&format!("failed to define parameters in {}:\n{}", exist_fact, result.err().unwrap()), vec![], exist_fact.line_file_index()));
+            if let Err(e) = result {
+                return Err(WellDefinedError::new(&format!("failed to define parameters in {}:\n{}", exist_fact, e), vec![], exist_fact.line_file_index()));
             }
         }
 
@@ -135,9 +135,8 @@ impl<'a> Executor<'a> {
 
     fn verify_forall_fact_well_defined_body(&mut self, forall_fact: &ForallFact, verify_state: &mut VerifyState) -> Result<(), WellDefinedError> {
         for param_def in forall_fact.params_def_with_type.iter() {
-            let result = self.define_params_with_type(param_def);
-            if result.is_err() {
-                return Err(WellDefinedError::new(&format!("failed to define parameters in {}:\n{}", forall_fact, result.err().unwrap()), vec![], forall_fact.line_file_index));
+            if let Err(e) = self.define_params_with_type(param_def) {
+                return Err(WellDefinedError::new(&format!("failed to define parameters in {}:\n{}", forall_fact, e), vec![], forall_fact.line_file_index));
             }
         }
 

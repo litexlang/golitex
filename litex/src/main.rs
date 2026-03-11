@@ -1116,9 +1116,8 @@ fn try_runtime_context() {
     let atomic_fact = AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))));
     println!("{}", atomic_fact.key());
 
-    let stored_fact_result = runtime_context.top_level_env().store_fact(Fact::AtomicFact(atomic_fact));
-    if stored_fact_result.is_err() {
-        println!("ERROR:{}", stored_fact_result.err().unwrap());
+    if let Err(e) = runtime_context.top_level_env().store_fact(Fact::AtomicFact(atomic_fact)) {
+        println!("ERROR:{}", e);
     }
 
     println!("{}", runtime_context.top_level_env());
@@ -1144,9 +1143,8 @@ fn try_runtime_context() {
         let _ = f.line_file_index();
     }
     println!("{}", exist_fact.key());
-    let stored_fact_result = runtime_context.top_level_env().store_fact(Fact::ExistFact(exist_fact));
-    if stored_fact_result.is_err() {
-        println!("ERROR:{}", stored_fact_result.err().unwrap());
+    if let Err(e) = runtime_context.top_level_env().store_fact(Fact::ExistFact(exist_fact)) {
+        println!("ERROR:{}", e);
     }
     println!("{}", runtime_context.top_level_env());
 
@@ -1159,9 +1157,8 @@ fn try_runtime_context() {
     ))];
     let _forall = ForallFact::new(param_type_or_property_pairs, dom_facts, then_facts, Some((1, 0)));
     
-    let stored_fact_result = runtime_context.top_level_env().store_fact(Fact::ForallFact(_forall));
-    if stored_fact_result.is_err() {
-        println!("ERROR:{}", stored_fact_result.err().unwrap());
+    if let Err(e) = runtime_context.top_level_env().store_fact(Fact::ForallFact(_forall)) {
+        println!("ERROR:{}", e);
     }
     
 }
@@ -1179,13 +1176,6 @@ fn try_tb() {
 }
 
 fn try_parser() {
-    let parser = Parser::new();
-    println!("{}", parser);
-    let s = "a+b";
-    let tokens = tokenize_line(s);
-    let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
-    let obj = parser.parse_obj(&mut tb);
-    println!("{}", obj.unwrap());
 }
 
 fn try_parse_obj() {
@@ -1194,8 +1184,10 @@ fn try_parse_obj() {
     let s = "a+b";
     let tokens = tokenize_line(s);
     let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
-    let obj = parser.parse_obj(&mut tb);
-    println!("{}", obj.unwrap());
+    match parser.parse_obj(&mut tb) {
+        Ok(obj) => println!("{}", obj),
+        Err(err) => println!("ERROR:{}", err),
+    }
 }
 
 fn try_parse_fact() {
@@ -1204,8 +1196,10 @@ fn try_parse_fact() {
     let s = "a+b=0";
     let tokens = tokenize_line(s);
     let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
-    let fact = parser.parse_fact(&mut tb);
-    println!("{}", fact.unwrap());
+    match parser.parse_fact(&mut tb) {
+        Ok(fact) => println!("{}", fact),
+        Err(err) => println!("ERROR:{}", err),
+    }
 }
 
 fn try_parse_statements() {
@@ -1214,8 +1208,10 @@ fn try_parse_statements() {
     let s = "a+b=0";
     let tokens = tokenize_line(s);
     let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
-    let stmt = parser.parse_stmt(&mut tb);
-    println!("{}", stmt.unwrap());
+    match parser.parse_stmt(&mut tb) {
+        Ok(stmt) => println!("{}", stmt),
+        Err(err) => println!("ERROR:{}", err),
+    }
 }
 
 fn try_executor() {
@@ -1285,14 +1281,12 @@ fn try_obj_well_defined<'a>() {
 
     let fact = Fact::AtomicFact(atomic_fact);
     let mut verify_state = VerifyState::new(0, false);
-    let fact_well_defined = executor.verify_fact_well_defined(&fact, &mut verify_state);
-    if fact_well_defined.is_err() {
-        println!("ERROR:{}", fact_well_defined.err().unwrap());
+    if let Err(e) = executor.verify_fact_well_defined(&fact, &mut verify_state) {
+        println!("ERROR:{}", e);
     }
 
-    let result = executor.fact(&fact, &mut verify_state);
-    if result.is_err() {
-        println!("ERROR:{}", result.err().unwrap());
+    if let Err(e) = executor.fact(&fact, &mut verify_state) {
+        println!("ERROR:{}", e);
     }
 }
 
@@ -1337,11 +1331,8 @@ fn try_store_forall_fact_in_env() {
     println!("forall fact to store: {}", forall_fact);
 
     let mut env = Environment::new_empty_env();
-    let result = env.store_fact(Fact::ForallFact(forall_fact));
-    if result.is_err() {
-        println!("store forall fact error: {}", result.err().unwrap());
-    } else {
-        println!("store forall fact ok");
+    if let Err(e) = env.store_fact(Fact::ForallFact(forall_fact)) {
+        println!("store forall fact error: {}", e);
     }
     println!("env after store: {}", env);
 }

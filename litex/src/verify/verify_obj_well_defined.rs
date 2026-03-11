@@ -216,7 +216,7 @@ impl<'a> Executor<'a> {
         }
 
         for fact in x.facts.iter() {
-            if let Err(e) = self.verify_fact_well_defined_and_store(&(fact.from_ref_to_fact()), verify_state) {
+            if let Err(e) = self.verify_fact_well_defined_and_store(&(fact.from_ref_to_cloned_fact()), verify_state) {
                 return Err(WellDefinedError::new(format!("failed to verify well-defined of set builder {}", x.to_string()).as_str(), vec![StmtError::ExecError(e)], None));
             }
         }
@@ -253,7 +253,7 @@ impl<'a> Executor<'a> {
         }
 
         for fact in x.dom_facts.iter() {
-            if let Err(e) = self.verify_fact_well_defined_and_store(&(fact.from_ref_to_fact()), verify_state) {
+            if let Err(e) = self.verify_fact_well_defined_and_store(&(fact.from_ref_to_cloned_fact()), verify_state) {
                 return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()).as_str(), vec![StmtError::ExecError(e)], None));
             }
         }

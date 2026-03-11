@@ -203,7 +203,10 @@ impl Parser {
         if block.body.len() != 1 {
             return Err(ParsingError::new("algo if block must have exactly one body block (return stmt)", block.line_file_index));
         }
-        let return_stmt = self.parse_algo_return(block.body.first_mut().unwrap())?;
+
+        let block = block.body.first_mut().ok_or_else(|| ParsingError::new("algo if block must have exactly one body block (return stmt)", block.line_file_index))?;
+        
+        let return_stmt = self.parse_algo_return(block)?;
         Ok(AlgoIf::new(
             condition,
             return_stmt,
