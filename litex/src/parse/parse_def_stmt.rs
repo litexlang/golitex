@@ -1,8 +1,8 @@
-use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStructWithNoFieldStmt, DefStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, DefPropWithoutMeaningStmt};
-use crate::fact::AndChainAtomicFact;
+use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, DefStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, DefPropWithoutMeaningStmt};
+use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
 use crate::error::ParsingError;
 use crate::stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
-use crate::common::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, FN, HAVE, IF, LEFT_BRACE, LET, PROP, RETURN, RIGHT_BRACE, STRUCT};
+use crate::common::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, FN, HAVE, IF, LEFT_BRACE, LET, PROP, RETURN, RIGHT_BRACE, STRUCT};
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use super::Parser;
 use crate::stmt::Stmt;
@@ -154,7 +154,7 @@ impl Parser {
             tb.skip_token(COLON)?;
             let mut facts = vec![];
             while tb.current()? != RIGHT_BRACE {
-                facts.push(self.parse_exist_or_and_chain_atomic_fact(tb)?);
+                facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
                 if tb.current()? == COMMA {
                     tb.skip_token(COMMA)?;
                 }
@@ -164,15 +164,58 @@ impl Parser {
             vec![]
         };
         tb.skip_token(RIGHT_BRACE)?;
-        tb.skip_token(EQUAL)?;
-        let equal_to = self.parse_obj(tb)?;
-        Ok(Stmt::DefStmt(DefStmt::DefStructWithNoFieldStmt(DefStructWithNoFieldStmt::new(
-            name,
-            params_def_with_type,
-            dom_facts,
-            equal_to,
-            Some(tb.line_file_index),
-        ))))
+        if tb.current()? == EQUAL {
+            tb.skip_token(EQUAL)?;
+            let equal_to = self.parse_obj(tb)?;
+            Ok(Stmt::DefStmt(DefStmt::DefStructWithNoFieldStmt(DefStructWithNoFieldStmt::new(
+                name,
+                params_def_with_type,
+                dom_facts,
+                equal_to,
+                Some(tb.line_file_index),
+            ))))
+        } else {
+            tb.skip_token(COLON)?;
+
+            if tb.body.is_empty() {
+                return Err(ParsingError::new("struct with fields expects body", tb.line_file_index));
+            }
+
+            let mut fields: Vec<(String, OrAndChainAtomicFact)> = vec![];
+            let mut facts: Vec<OrAndChainAtomicFact> = vec![];
+
+            let body_len = tb.body.len();
+            let last_index = body_len - 1;
+            let last_is_equiv = {
+                let last = tb.body.get(last_index).ok_or_else(|| ParsingError::new("Expected body", tb.line_file_index))?;
+                last.token_at_end_of_head() == EQUIVALENT_SIGN
+            };
+
+            let field_end = if last_is_equiv { last_index } else { body_len };
+
+            for i in 0..field_end {
+                let block = tb.body.get_mut(i).ok_or_else(|| ParsingError::new("Expected field block", tb.line_file_index))?;
+                let field_name = block.advance()?;
+                let cond = self.parse_or_and_chain_atomic_fact(block)?;
+                fields.push((field_name, cond));
+            }
+
+            if last_is_equiv {
+                let last = tb.body.get_mut(last_index).ok_or_else(|| ParsingError::new("Expected <=>: block", tb.line_file_index))?;
+                last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
+                for block in last.body.iter_mut() {
+                    facts.push(self.parse_or_and_chain_atomic_fact(block)?);
+                }
+            }
+
+            Ok(Stmt::DefStmt(DefStmt::DefStructWithFieldsStmt(DefStructWithFieldsStmt::new(
+                name,
+                params_def_with_type,
+                fields,
+                facts,
+                Some(tb.line_file_index),
+            ))))
+        }
     }
 
     pub fn def_algorithm_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
