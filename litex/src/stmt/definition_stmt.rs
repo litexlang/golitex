@@ -27,6 +27,15 @@ pub enum DefStructStmt {
     DefStructWithNoFieldStmt(DefStructWithNoFieldStmt),
 }
 
+impl DefStructStmt {
+    pub fn get_params_def_with_type(&self) -> &Vec<ParamDefWithParamType> {
+        match self {
+            DefStructStmt::DefStructWithFieldsStmt(x) => &x.params_def_with_type,
+            DefStructStmt::DefStructWithNoFieldStmt(x) => &x.params_def_with_type,
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct DefStructWithFieldsStmt {
     pub name: String,

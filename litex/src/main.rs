@@ -1341,6 +1341,6 @@ fn try_store_forall_fact_in_env() {
 fn try_obj_instantiate() {
     let obj = Obj::Identifier(Identifier::new("x"));
     let param_to_arg_map = HashMap::new();
-    let instantiated_obj = obj.instantiate(param_to_arg_map);
+    let instantiated_obj = obj.instantiate(&param_to_arg_map);
     println!("{}", instantiated_obj);
 }
