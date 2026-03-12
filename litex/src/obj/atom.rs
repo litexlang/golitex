@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::common::keywords::{DOT_AKA_FIELD_ACCESS_SIGN, MOD_SING};
+use crate::common::keywords::{DOT_AKA_FIELD_ACCESS_SIGN, MOD_SIGN};
 
 #[derive(Clone)]
 pub enum Atom {
@@ -91,6 +91,6 @@ impl fmt::Display for FieldAccess {
 
 impl fmt::Display for FieldAccessWithMod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}{}", self.mod_name, MOD_SING, self.name, DOT_AKA_FIELD_ACCESS_SIGN, self.fields.join(DOT_AKA_FIELD_ACCESS_SIGN))
+        write!(f, "{}{}{}{}{}", self.mod_name, MOD_SIGN, self.name, DOT_AKA_FIELD_ACCESS_SIGN, self.fields.join(DOT_AKA_FIELD_ACCESS_SIGN))
     }
 }

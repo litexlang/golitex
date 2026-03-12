@@ -8,7 +8,7 @@ use super::Executor;
 use crate::verify::VerifyState;
 
 impl<'a> Executor<'a> {
-    pub fn def_stmt(&mut self, def_stmt: &DefStmt) -> Result<StmtResult, ExecError> {
+    pub fn exec_def_stmt(&mut self, def_stmt: &DefStmt) -> Result<StmtResult, ExecError> {
         match def_stmt {
             DefStmt::DefPropStmt(def_prop_stmt) => self.def_prop_stmt(def_prop_stmt),
             DefStmt::DefLetStmt(def_let_stmt) => self.def_let_stmt(def_let_stmt),
@@ -46,7 +46,7 @@ impl<'a> Executor<'a> {
             None => {},
             Some(iff_facts) => {
                 for fact in iff_facts.iter() {
-                    self.verify_fact_well_defined_and_store(fact, &mut VerifyState::new(0, false))?;
+                    self.verify_fact_well_defined_and_store(fact, &VerifyState::new(0, false))?;
                 }
             }
         }
@@ -58,7 +58,7 @@ impl<'a> Executor<'a> {
             self.define_params_with_type(param_def)?;
         }
         for fact in def_let_stmt.facts.iter() {
-            self.verify_fact_well_defined_and_store(fact, &mut VerifyState::new(0, false))?;
+            self.verify_fact_well_defined_and_store(fact, &VerifyState::new(0, false))?;
         }
         Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_let_stmt.to_string(), def_let_stmt.line_file_index)))
     }
@@ -102,7 +102,7 @@ impl<'a> Executor<'a> {
             ParamType::NonemptySet(_) => {},
             ParamType::FiniteSet(_) => {},
             ParamType::Obj(param_set) => {
-                self.verify_obj_well_defined(&param_set, &mut VerifyState::new(0, false))?;
+                self.verify_obj_well_defined(&param_set, &VerifyState::new(0, false))?;
             },
         }
         
@@ -115,7 +115,7 @@ impl<'a> Executor<'a> {
     }
 
     pub fn define_params_with_set(&mut self, param_def: &ParamDefWithParamSet) -> Result<(), ExecError> {
-        self.verify_obj_well_defined(&param_def.1, &mut VerifyState::new(0, false))?;
+        self.verify_obj_well_defined(&param_def.1, &VerifyState::new(0, false))?;
         let facts = param_def.facts();
         for (name, fact) in param_def.0.iter().zip(facts.iter()) {
             self.validate_name_and_store_identifier_obj(name)?;

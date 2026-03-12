@@ -8,7 +8,7 @@ use std::result::Result;
 use crate::error::VerifyFactError;
 
 impl<'a> Executor<'a> {
-    pub fn fact(&mut self, fact: &Fact, verify_state: &mut VerifyState) -> Result<StmtResult, StmtError> {
+    pub fn exec_fact(&mut self, fact: &Fact, verify_state: &VerifyState) -> Result<StmtResult, StmtError> {
         self.verify_fact_well_defined(fact, verify_state)?;
         let result = match fact {
             Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact(atomic_fact, verify_state),

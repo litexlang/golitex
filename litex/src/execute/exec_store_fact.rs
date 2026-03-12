@@ -13,7 +13,7 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn verify_fact_well_defined_and_store(&mut self, fact: &Fact, verify_state: &mut VerifyState) -> Result<(), ExecError> {
+    pub fn verify_fact_well_defined_and_store(&mut self, fact: &Fact, verify_state: &VerifyState) -> Result<(), ExecError> {
         self.verify_fact_well_defined(fact, verify_state)?;
         self.store_fact_without_well_defined_verified(fact)?;
         Ok(())

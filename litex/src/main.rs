@@ -122,6 +122,7 @@ fn main() {
     try_collect_ordered_monomials();
     try_obj_well_defined();
     try_verify_state();
+    try_obj_instantiate();
 }
 
 fn try_atom_fn_obj() {
@@ -1285,7 +1286,7 @@ fn try_obj_well_defined<'a>() {
         println!("ERROR:{}", e);
     }
 
-    if let Err(e) = executor.fact(&fact, &mut verify_state) {
+    if let Err(e) = executor.exec_fact(&fact, &mut verify_state) {
         println!("ERROR:{}", e);
     }
 }
@@ -1337,3 +1338,9 @@ fn try_store_forall_fact_in_env() {
     println!("env after store: {}", env);
 }
 
+fn try_obj_instantiate() {
+    let obj = Obj::Identifier(Identifier::new("x"));
+    let param_to_arg_map = HashMap::new();
+    let instantiated_obj = obj.instantiate(param_to_arg_map);
+    println!("{}", instantiated_obj);
+}
