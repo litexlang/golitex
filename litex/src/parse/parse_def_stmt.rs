@@ -1,4 +1,4 @@
-use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStructStmt, DefStructWithNoFieldStmt, DefStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt};
+use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStructStmt, DefStructWithNoFieldStmt, DefStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, DefPropWithoutMeaningStmt};
 use crate::fact::AndChainAtomicFact;
 use crate::error::ParsingError;
 use crate::stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
@@ -9,7 +9,15 @@ use crate::stmt::Stmt;
 use super::TokenBlock;
 
 impl Parser {
-    pub fn def_prop_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn def_prop_stmt_or_prop_without_meaning(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {        
+        if tb.token_at_end_of_head() != COLON {
+            return self.parse_def_prop_without_meaning_stmt(tb)
+        } else {
+            self.parse_def_prop_stmt(tb)
+        }
+    }
+
+    pub fn parse_def_prop_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
         tb.skip_token(LEFT_BRACE)?;
@@ -23,6 +31,21 @@ impl Parser {
             0 => Ok(Stmt::DefStmt(DefStmt::DefPropStmt(DefPropStmt::new(name, param_defs, None, Some(tb.line_file_index))))),
             _ => Ok(Stmt::DefStmt(DefStmt::DefPropStmt(DefPropStmt::new(name, param_defs, Some(facts), Some(tb.line_file_index))))),
         }
+    }
+
+    pub fn parse_def_prop_without_meaning_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        tb.skip_token(PROP)?;
+        let name = tb.advance()?;
+        tb.skip_token(LEFT_BRACE)?;
+        let mut params = vec![];
+        while tb.current()? != RIGHT_BRACE {
+            params.push(tb.advance()?);
+            if tb.current()? == COMMA {
+                tb.skip_token(COMMA)?;
+            }
+        }
+        tb.skip_token(RIGHT_BRACE)?;
+        Ok(Stmt::DefStmt(DefStmt::DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt::new(name, params, Some(tb.line_file_index)))))
     }
 
     pub fn def_let_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {

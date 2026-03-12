@@ -28,6 +28,7 @@ fn test_verify_atomic_fact() {
         HashMap::new(),
         HashMap::new(),
         HashMap::new(),
+        HashMap::new(),
     );
     let mut executor = Executor::new(&mut runtime_context);
 
@@ -64,6 +65,7 @@ fn test_exec_stmt_fact_one_plus_one_eq_two() {
         &mut module_manager,
         vec![environment],
         builtin_environment,
+        HashMap::new(),
         HashMap::new(),
         HashMap::new(),
         HashMap::new(),

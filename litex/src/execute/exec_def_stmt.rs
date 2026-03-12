@@ -1,6 +1,6 @@
 use crate::error::ExecError;
 use crate::stmt::parameter_type_and_property::{ParamDefWithParamType, ParamType, ParamDefWithParamSet};
-use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStmt, DefStructStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt};
+use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefPropWithoutMeaningStmt, DefStmt, DefStructStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::result::StmtResult;
 use crate::result::NonFactualStmtSuccess;
@@ -11,6 +11,7 @@ impl<'a> Executor<'a> {
     pub fn exec_def_stmt(&mut self, def_stmt: &DefStmt) -> Result<StmtResult, ExecError> {
         match def_stmt {
             DefStmt::DefPropStmt(def_prop_stmt) => self.def_prop_stmt(def_prop_stmt),
+            DefStmt::DefPropWithoutMeaningStmt(def_prop_without_meaning_stmt) => self.def_prop_without_meaning_stmt(def_prop_without_meaning_stmt),
             DefStmt::DefLetStmt(def_let_stmt) => self.def_let_stmt(def_let_stmt),
             DefStmt::DefStructStmt(def_struct_stmt) => self.def_struct_stmt(def_struct_stmt),
             DefStmt::DefAlgoStmt(def_algo_stmt) => self.def_algo_stmt(def_algo_stmt),
@@ -51,6 +52,11 @@ impl<'a> Executor<'a> {
             }
         }
         Ok(())
+    }
+
+    fn def_prop_without_meaning_stmt(&mut self, def_prop_without_meaning_stmt: &DefPropWithoutMeaningStmt) -> Result<StmtResult, ExecError> {
+        self.validate_name_and_store_def_prop_without_meaning(def_prop_without_meaning_stmt)?;
+        Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_prop_without_meaning_stmt.to_string(), def_prop_without_meaning_stmt.line_file_index)))
     }
 
     fn def_let_stmt(&mut self, def_let_stmt: &DefLetStmt) -> Result<StmtResult, ExecError> {
