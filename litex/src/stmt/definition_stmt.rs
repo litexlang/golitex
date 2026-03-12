@@ -18,7 +18,8 @@ pub enum DefStmt {
     HaveExistObjStmt(HaveExistObjStmt),
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
-    DefStructStmt(DefStructStmt),
+    DefStructWithFieldsStmt(DefStructWithFieldsStmt),
+    DefStructWithNoFieldStmt(DefStructWithNoFieldStmt),
     DefAlgoStmt(DefAlgoStmt),
 }
 
@@ -32,21 +33,6 @@ pub struct DefPropWithoutMeaningStmt {
 impl DefPropWithoutMeaningStmt {
     pub fn new(name: String, params: Vec<String>, line_file_index: Option<(usize, usize)>) -> Self {
         DefPropWithoutMeaningStmt { name, params, line_file_index }
-    }
-}
-
-#[derive(Clone)]
-pub enum DefStructStmt {
-    DefStructWithFieldsStmt(DefStructWithFieldsStmt),
-    DefStructWithNoFieldStmt(DefStructWithNoFieldStmt),
-}
-
-impl DefStructStmt {
-    pub fn get_params_def_with_type(&self) -> &Vec<ParamDefWithParamType> {
-        match self {
-            DefStructStmt::DefStructWithFieldsStmt(x) => &x.params_def_with_type,
-            DefStructStmt::DefStructWithNoFieldStmt(x) => &x.params_def_with_type,
-        }
     }
 }
 
@@ -124,7 +110,8 @@ impl fmt::Display for DefStmt {
             DefStmt::HaveExistObjStmt(have_obj_st_stmt) => write!(f, "{}", have_obj_st_stmt),
             DefStmt::HaveFnEqualStmt(have_fn_equal_stmt) => write!(f, "{}", have_fn_equal_stmt),
             DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt) => write!(f, "{}", have_fn_equal_case_by_case_stmt),
-            DefStmt::DefStructStmt(def_struct_stmt) => write!(f, "{}", def_struct_stmt),
+            DefStmt::DefStructWithFieldsStmt(def_struct_with_fields_stmt) => write!(f, "{}", def_struct_with_fields_stmt),
+            DefStmt::DefStructWithNoFieldStmt(def_struct_with_no_field_stmt) => write!(f, "{}", def_struct_with_no_field_stmt),
             DefStmt::DefAlgoStmt(define_algorithm_stmt) => write!(f, "{}", define_algorithm_stmt),
         }
     }
@@ -133,31 +120,6 @@ impl fmt::Display for DefStmt {
 impl fmt::Display for DefPropWithoutMeaningStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}{}{}{}", PROP, self.name, LEFT_BRACE, vec_to_string_join_by_comma(&self.params), RIGHT_BRACE)
-    }
-}
-
-impl fmt::Display for DefStructStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            DefStructStmt::DefStructWithFieldsStmt(x) => write!(f, "{}", x),
-            DefStructStmt::DefStructWithNoFieldStmt(x) => write!(f, "{}", x),
-        }
-    }
-}
-
-impl DefStructStmt {
-    pub fn name(&self) -> &str {
-        match self {
-            DefStructStmt::DefStructWithFieldsStmt(x) => &x.name,
-            DefStructStmt::DefStructWithNoFieldStmt(x) => &x.name,
-        }
-    }
-
-    pub fn line_file_index(&self) -> Option<(usize, usize)> {
-        match self {
-            DefStructStmt::DefStructWithFieldsStmt(x) => x.line_file_index,
-            DefStructStmt::DefStructWithNoFieldStmt(x) => x.line_file_index,
-        }
     }
 }
 
@@ -214,7 +176,8 @@ impl DefStmt {
             DefStmt::HaveExistObjStmt(have_obj_st_stmt) => have_obj_st_stmt.line_file_index,
             DefStmt::HaveFnEqualStmt(have_fn_equal_stmt) => have_fn_equal_stmt.line_file_index,
             DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt) => have_fn_equal_case_by_case_stmt.line_file_index,
-            DefStmt::DefStructStmt(def_struct_stmt) => def_struct_stmt.line_file_index(),
+            DefStmt::DefStructWithFieldsStmt(def_struct_with_fields_stmt) => def_struct_with_fields_stmt.line_file_index,
+            DefStmt::DefStructWithNoFieldStmt(def_struct_with_no_field_stmt) => def_struct_with_no_field_stmt.line_file_index,
             DefStmt::DefAlgoStmt(define_algorithm_stmt) => define_algorithm_stmt.line_file_index,
         }
     }

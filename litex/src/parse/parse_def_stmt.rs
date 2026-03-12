@@ -1,4 +1,4 @@
-use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStructStmt, DefStructWithNoFieldStmt, DefStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, DefPropWithoutMeaningStmt};
+use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStructWithNoFieldStmt, DefStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, DefPropWithoutMeaningStmt};
 use crate::fact::AndChainAtomicFact;
 use crate::error::ParsingError;
 use crate::stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
@@ -166,13 +166,13 @@ impl Parser {
         tb.skip_token(RIGHT_BRACE)?;
         tb.skip_token(EQUAL)?;
         let equal_to = self.parse_obj(tb)?;
-        Ok(Stmt::DefStmt(DefStmt::DefStructStmt(DefStructStmt::DefStructWithNoFieldStmt(DefStructWithNoFieldStmt::new(
+        Ok(Stmt::DefStmt(DefStmt::DefStructWithNoFieldStmt(DefStructWithNoFieldStmt::new(
             name,
             params_def_with_type,
             dom_facts,
             equal_to,
             Some(tb.line_file_index),
-        )))))
+        ))))
     }
 
     pub fn def_algorithm_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {

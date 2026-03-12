@@ -22,7 +22,7 @@ use obj::{
 use obj::{Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod};
 mod stmt;
 use stmt::Stmt;
-use stmt::definition_stmt::{DefStmt, DefStructStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, DefPropStmt, DefLetStmt};
+use stmt::definition_stmt::{DefStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, DefPropStmt, DefLetStmt};
 use stmt::claim_stmt::ClaimStmt;
 use stmt::know_stmt::KnowStmt;
 use stmt::proof_technique_stmt::{ProveCaseByCaseStmt, ProveByContradictionStmt, ProofTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveByEqualSetStmt, ViewFnAsSetStmt};
@@ -1053,14 +1053,14 @@ fn try_def_struct_stmt() {
     let def_struct_stmt = DefStructWithNoFieldStmt::new("A".to_string(), params_def_with_type, vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))], Obj::mk("p"), Some((1, 0)));
     println!("{}", def_struct_stmt);
 
-    let stmt = Stmt::DefStmt(DefStmt::DefStructStmt(DefStructStmt::DefStructWithNoFieldStmt(def_struct_stmt)));
+    let stmt = Stmt::DefStmt(DefStmt::DefStructWithNoFieldStmt(def_struct_stmt));
     println!("{}", stmt);
 
     let fields = vec![(String::from("x"), ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))))))];
-    let def_struct_stmt = DefStructStmt::DefStructWithFieldsStmt(DefStructWithFieldsStmt::new("A".to_string(), vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], fields, vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))], Some((1, 0))));
-    println!("{}", def_struct_stmt);
+    let def_struct_with_fields_stmt = DefStructWithFieldsStmt::new("A".to_string(), vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], fields, vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))], Some((1, 0)));
+    println!("{}", def_struct_with_fields_stmt);
 
-    let stmt = Stmt::DefStmt(DefStmt::DefStructStmt(def_struct_stmt));
+    let stmt = Stmt::DefStmt(DefStmt::DefStructWithFieldsStmt(def_struct_with_fields_stmt));
     println!("{}", stmt);
 }
 
