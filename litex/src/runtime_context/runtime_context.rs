@@ -1,7 +1,7 @@
 use std::fmt;
 use std::collections::HashMap;
 use crate::obj::Identifier;
-use crate::common::keywords::MOD_SING;
+use crate::common::keywords::MOD_SIGN;
 use crate::module_manager::ModuleManager;
 use crate::environment::Environment;
 use crate::stmt::definition_stmt::DefPropStmt;
@@ -54,14 +54,14 @@ impl<'a> RuntimeContext<'a> {
     /// 只读查找：用 predicate 名称从当前环境或 builtin 中取定义（供 Verifier 等 &self 场景使用）
     pub fn get_predicate_definition_by_name(&self, predicate_name: &str) -> Option<&DefPropStmt> {
         // 按 separator 拆分
-        let parts = predicate_name.split(MOD_SING).collect::<Vec<&str>>();
+        let parts = predicate_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             panic!("NOT IMPLEMENTED YET");
         }
 
         let top_environment = match self.environments.last() {
             Some(environment) => environment,
-            None => return None,
+            None => unreachable!("no top level environment"),
         };
 
         if let Some(definition) = top_environment.defined_props.get(predicate_name) {
@@ -69,6 +69,24 @@ impl<'a> RuntimeContext<'a> {
         }
 
         self.builtin_environment.defined_props.get(predicate_name)
+    }
+
+    pub fn get_set_struct_definition_by_name(&self, set_struct_name: &str) -> Option<&DefStructStmt> {
+        let parts = set_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        if parts.len() != 1 {
+            panic!("NOT IMPLEMENTED YET");
+        }
+
+        let top_environment = match self.environments.last() {
+            Some(environment) => environment,
+            None => unreachable!("no top level environment"),
+        };
+
+        if let Some(definition) = top_environment.defined_structs.get(set_struct_name) {
+            return Some(definition);
+        }
+
+        self.builtin_environment.defined_structs.get(set_struct_name)
     }
 
     pub fn is_defined_identifier_obj(&self, identifier: &Identifier) -> bool {
