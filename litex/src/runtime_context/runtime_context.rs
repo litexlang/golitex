@@ -12,7 +12,7 @@ use crate::stmt::definition_stmt::DefPropWithoutMeaningStmt;
 pub struct RuntimeContext<'a> {
     pub module_manager: &'a mut ModuleManager<'a>,
     pub environments: Vec<Box<Environment>>,
-    pub builtin_environment: Box<Environment>,
+    pub builtin_environment: &'a mut Environment,
 
     pub defined_identifier_objs: HashMap<String, ()>,
     pub defined_props: HashMap<String, DefPropStmt>,
@@ -22,8 +22,9 @@ pub struct RuntimeContext<'a> {
 }
 
 impl<'a> RuntimeContext<'a> {
-    pub fn new(module_manager: &'a mut ModuleManager<'a>, environments: Vec<Box<Environment>>, builtin_environment: Box<Environment>, objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>, structs: HashMap<String, DefStructStmt>, algorithms: HashMap<String, DefAlgoStmt>) -> Self {
-        RuntimeContext { module_manager, environments, builtin_environment, defined_identifier_objs: objs, defined_props: props, defined_structs: structs, defined_algorithms: algorithms, defined_props_without_meaning: props_without_meaning }
+    pub fn new_empty_runtime_context_with_one_env(module_manager: &'a mut ModuleManager<'a>, builtin_environment: &'a mut Environment) -> Self {
+        let new_env = Box::new(Environment::new_empty_env());
+        RuntimeContext { module_manager, environments: vec![new_env], builtin_environment, defined_identifier_objs: HashMap::new(), defined_props: HashMap::new(), defined_props_without_meaning: HashMap::new(), defined_structs: HashMap::new(), defined_algorithms: HashMap::new() }
     }
 }
 
@@ -71,6 +72,25 @@ impl<'a> RuntimeContext<'a> {
         }
 
         self.builtin_environment.defined_props.get(predicate_name)
+    }
+
+    /// Look up predicate definition without meaning by name from current env or builtin.
+    pub fn get_predicate_without_meaning_definition_by_name(&self, predicate_name: &str) -> Option<&DefPropWithoutMeaningStmt> {
+        let parts = predicate_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        if parts.len() != 1 {
+            panic!("NOT IMPLEMENTED YET");
+        }
+
+        let top_environment = match self.environments.last() {
+            Some(environment) => environment,
+            None => unreachable!("no top level environment"),
+        };
+
+        if let Some(definition) = top_environment.defined_props_without_meaning.get(predicate_name) {
+            return Some(definition);
+        }
+
+        self.builtin_environment.defined_props_without_meaning.get(predicate_name)
     }
 
     pub fn get_set_struct_definition_by_name(&self, set_struct_name: &str) -> Option<&DefStructStmt> {
