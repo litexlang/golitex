@@ -299,7 +299,7 @@ pub struct RNz {}
 #[derive(Clone)]
 pub struct InstStructObj {
     pub struct_name: IdentifierOrIdentifierWithMod,
-    pub param_sets: Vec<Box<Obj>>,
+    pub args: Vec<Box<Obj>>,
 }
 
 #[derive(Clone)]
@@ -546,7 +546,7 @@ impl InstStructObj {
     pub fn new(struct_name: IdentifierOrIdentifierWithMod, param_sets: Vec<Obj>) -> Self {
         InstStructObj {
             struct_name,
-            param_sets: param_sets.into_iter().map(Box::new).collect(),
+            args: param_sets.into_iter().map(Box::new).collect(),
         }
     }
 }
@@ -1012,7 +1012,7 @@ impl fmt::Display for InstStructObj {
             IdentifierOrIdentifierWithMod::Identifier(identifier) => write!(f, "{}", identifier)?,
             IdentifierOrIdentifierWithMod::IdentifierWithMod(identifier_with_mod) => write!(f, "{}", identifier_with_mod)?,
         };
-        write!(f, "{}", braced_vec_to_string(&self.param_sets))
+        write!(f, "{}", braced_vec_to_string(&self.args))
     }
 }
 
@@ -1062,7 +1062,7 @@ impl fmt::Display for FnSetObj {
 }
 
 impl Obj {
-    pub fn instantiate(&self,param_to_arg_map: HashMap<String, Obj>) -> Obj {
+    pub fn instantiate(&self,param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         match self {
             Obj::Identifier(inner) => inner.instantiate(param_to_arg_map),
             Obj::IdentifierWithMod(inner) => inner.instantiate(param_to_arg_map),
