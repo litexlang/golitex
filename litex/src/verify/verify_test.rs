@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::verify::VerifyState;
 use crate::fact::AtomicFact;
 use crate::fact::EqualFact;
@@ -18,18 +16,8 @@ use crate::parse::tokenize_line;
 #[test]
 fn test_verify_atomic_fact() {
     let mut module_manager = ModuleManager::new_empty_module_manager();
-    let environment: Box<Environment> = Box::new(Environment::new_empty_env());
-    let builtin_environment: Box<Environment> = Box::new(Environment::new_empty_env());
-    let mut runtime_context = RuntimeContext::new(
-        &mut module_manager,
-        vec![environment],
-        builtin_environment,
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-    );
+    let mut builtin_environment = Environment::new_empty_env();
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
     let mut executor = Executor::new(&mut runtime_context);
 
     // verify 1 = 1
@@ -59,18 +47,8 @@ fn test_exec_stmt_fact_one_plus_one_eq_two() {
     assert!(matches!(stmt, Stmt::Fact(_)), "expected Stmt::Fact");
 
     let mut module_manager = ModuleManager::new_empty_module_manager();
-    let environment: Box<Environment> = Box::new(Environment::new_empty_env());
-    let builtin_environment: Box<Environment> = Box::new(Environment::new_empty_env());
-    let mut runtime_context = RuntimeContext::new(
-        &mut module_manager,
-        vec![environment],
-        builtin_environment,
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
-    );
+    let mut builtin_environment = Environment::new_empty_env();
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
     let mut executor = Executor::new(&mut runtime_context);
 
     let result = executor.stmt(&stmt).expect("exec.stmt(fact) failed");

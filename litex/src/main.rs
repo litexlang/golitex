@@ -209,8 +209,8 @@ fn try_stmt() {
 
 fn try_equal_literally() {
     let mut module_manager = ModuleManager::new_empty_module_manager();
-    let builtin_environment: Box<Environment> = Box::new(Environment::new_empty_env());
-    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
+    let mut builtin_environment = Environment::new_empty_env();
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
     let executor = Executor::new(&mut runtime_context);
     let a = Obj::Identifier(Identifier::new("a"));
     let b = Obj::Identifier(Identifier::new("b"));
@@ -1101,11 +1101,9 @@ fn try_runtime_context() {
     let fn_set_obj = FnSetObj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Obj::mk("p"))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))], Obj::mk("p")));
     println!("{}", fn_set_obj);
 
-    let environment: Box<Environment> = Box::new(Environment::new_empty_env());
-
-    let builtin_environment: Box<Environment> = Box::new(Environment::new_empty_env());
+    let mut builtin_environment = Environment::new_empty_env();
     
-    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
     println!("{}", runtime_context);
 
     let atomic_fact = AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0))));
@@ -1211,9 +1209,8 @@ fn try_parse_statements() {
 
 fn try_executor() {
     let mut module_manager = ModuleManager::new_empty_module_manager();
-    let environment: Box<Environment> = Box::new(Environment::new_empty_env());
-    let builtin_environment: Box<Environment> = Box::new(Environment::new_empty_env());
-    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
+    let mut builtin_environment = Environment::new_empty_env();
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
     let executor = Executor::new(&mut runtime_context);
     println!("{}", executor.line_file_index_string(1, 0));
 }
@@ -1263,9 +1260,8 @@ fn try_collect_ordered_monomials() {
 
 fn try_obj_well_defined<'a>() {
     let mut module_manager = ModuleManager::new_empty_module_manager();
-    let environment: Box<Environment> = Box::new(Environment::new_empty_env());
-    let builtin_environment: Box<Environment> = Box::new(Environment::new_empty_env());
-    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
+    let mut builtin_environment = Environment::new_empty_env();
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
     let mut executor = Executor::new(&mut runtime_context);
     
     let one = Obj::Number(Number::new("1"));
