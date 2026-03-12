@@ -1,5 +1,5 @@
 use crate::error::{ExecError, WellDefinedError};
-use crate::stmt::definition_stmt::{DefPropStmt, DefPropWithoutMeaningStmt, DefStructStmt};
+use crate::stmt::definition_stmt::{DefPropStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::common::keywords::{PROP, STRUCT, ALGO};
 use super::Executor;
@@ -45,13 +45,23 @@ impl<'a> Executor<'a> {
         Ok(())
     }
     
-    pub fn validate_name_and_store_def_struct(&mut self, def_struct_stmt: &DefStructStmt) -> Result<(), ExecError> {
-        let name = def_struct_stmt.name().to_string();
+    pub fn validate_name_and_store_def_struct_with_fields(&mut self, def_struct_with_fields_stmt: &DefStructWithFieldsStmt) -> Result<(), ExecError> {
+        let name = def_struct_with_fields_stmt.name.clone();
         if let Err(e) = self.validate_name(&name) {
-            return Err(ExecError::new(format!("invalid {} name", STRUCT).as_str(), vec![e.into()], None)); }
-            let name = def_struct_stmt.name().to_string();
-        self.runtime_context.defined_structs.insert(name.clone(), def_struct_stmt.clone());
-        self.runtime_context.top_level_env().defined_structs.insert(name, def_struct_stmt.clone());
+            return Err(ExecError::new(format!("invalid {} name", STRUCT).as_str(), vec![e.into()], def_struct_with_fields_stmt.line_file_index));
+        }
+        self.runtime_context.defined_structs_with_fields.insert(name.clone(), def_struct_with_fields_stmt.clone());
+        self.runtime_context.top_level_env().defined_structs_with_fields.insert(name, def_struct_with_fields_stmt.clone());
+        Ok(())
+    }
+
+    pub fn validate_name_and_store_def_struct_with_no_field(&mut self, def_struct_with_no_field_stmt: &DefStructWithNoFieldStmt) -> Result<(), ExecError> {
+        let name = def_struct_with_no_field_stmt.name.clone();
+        if let Err(e) = self.validate_name(&name) {
+            return Err(ExecError::new(format!("invalid {} name", STRUCT).as_str(), vec![e.into()], def_struct_with_no_field_stmt.line_file_index));
+        }
+        self.runtime_context.defined_structs_with_no_field.insert(name.clone(), def_struct_with_no_field_stmt.clone());
+        self.runtime_context.top_level_env().defined_structs_with_no_field.insert(name, def_struct_with_no_field_stmt.clone());
         Ok(())
     }
 
