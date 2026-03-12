@@ -132,11 +132,16 @@ impl Parser {
 
     pub fn have_exist(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(HAVE)?;
+
+        let mut equal_tos = vec![];
+        while tb.current()? == COMMA {
+            tb.skip_token(COMMA)?;
+            equal_tos.push(self.parse_obj(tb)?);
+        }
+
+        tb.skip_token(COLON)?;
         let true_fact = self.parse_exist_fact(tb)?;
-        Ok(Stmt::DefStmt(DefStmt::HaveExistObjStmt(HaveExistObjStmt::new(
-            true_fact,
-            Some(tb.line_file_index),
-        ))))
+        Ok(Stmt::DefStmt(DefStmt::HaveExistObjStmt(HaveExistObjStmt::new(equal_tos, true_fact, Some(tb.line_file_index)))))
     }
 
     pub fn def_struct_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
