@@ -289,9 +289,11 @@ impl<'a> Executor<'a> {
     }
 
     fn verify_inst_set_struct_obj_well_defined_body(&self, _x: &InstStructObj, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        _ = self.runtime_context.get_set_struct_definition_by_name(_x.struct_name.to_string().as_str());
+        let def = self.runtime_context.get_set_struct_definition_by_name(_x.struct_name.to_string().as_str()).ok_or(WellDefinedError::new(format!("set struct definition not found {}", _x.struct_name.to_string()).as_str(), vec![], None))?;
 
-        panic!("NOT IMPLEMENTED YET");
+        
+        
+        Ok(())
     }
 
     fn verify_cart_well_defined(&mut self, x: &Cart, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
