@@ -191,7 +191,7 @@ fn flat_instantiated_types_for_args(param_defs: &Vec<ParamDefWithParamType>, ins
 }
 
 /// Given param defs and args, instantiates param types and returns one Fact per arg (arg satisfies its param type).
-pub fn facts_for_args_satisfy_param_def_with_type(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Box<Obj>>) -> Result<Vec<Fact>, StmtError> {
+pub fn facts_for_args_satisfy_param_def_with_type_vec(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Box<Obj>>) -> Result<Vec<Fact>, StmtError> {
     let instantiated_types = ParamDefWithParamType::instantiate_param_def_with_type_one_by_one(param_defs, args)?;
     let flat_types = flat_instantiated_types_for_args(param_defs, &instantiated_types);
     let mut facts = Vec::with_capacity(args.len());

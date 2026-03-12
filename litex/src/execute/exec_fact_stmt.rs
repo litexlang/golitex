@@ -1,6 +1,5 @@
 use crate::error::{StmtError, UnknownError};
 use crate::fact::Fact;
-use crate::common::keywords::UNKNOWN;
 use crate::result::StmtResult;
 use crate::verify::VerifyState;
 use super::Executor;
@@ -17,7 +16,7 @@ impl<'a> Executor<'a> {
         let result = match result {
             Ok(StmtResult::StmtUnknown(_)) => {
                 return Err(StmtError::UnknownError(UnknownError::new(
-                    UNKNOWN,
+                    fact.to_string().as_str(),
                     fact.line_file(),
                 )))
             }

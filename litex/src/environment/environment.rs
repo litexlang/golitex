@@ -31,10 +31,10 @@ pub struct Environment {
     pub known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, ()>>,
     pub known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), ()>>,
     
-    pub known_exist_facts: HashMap<(String, bool), Vec<ExistFact>>,
+    pub known_exist_facts: HashMap<String, Vec<ExistFact>>,
     pub known_or_facts: HashMap<String, Vec<OrFact>>,
     pub known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>,
-    pub known_exist_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>,
+    pub known_exist_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>,
     pub known_or_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>,
     pub known_obj_is_well_defined: HashMap<String,()>,
 
@@ -43,7 +43,7 @@ pub struct Environment {
 }
 
 impl Environment {
-    pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, structs: HashMap<String, DefStructStmt>, algorithms: HashMap<String, DefAlgoStmt>, known_equality: HashMap<String, Rc<Vec<String>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, ()>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), ()>>, known_exist_facts: HashMap<(String, bool), Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_exist_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_fn_obj_with_requirements_checked: HashMap<String,()>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, (usize, usize)>) -> Self {
+    pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, structs: HashMap<String, DefStructStmt>, algorithms: HashMap<String, DefAlgoStmt>, known_equality: HashMap<String, Rc<Vec<String>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, ()>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), ()>>, known_exist_facts: HashMap<String, Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_exist_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_fn_obj_with_requirements_checked: HashMap<String,()>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, (usize, usize)>) -> Self {
         Environment {
             defined_identifier_objs: objs,
             defined_props: props,
@@ -128,11 +128,10 @@ impl Environment {
 
     fn store_exist_fact(&mut self, exist_fact: ExistFact) -> Result<(), StoreFactError> {
         let key = exist_fact.key();
-        let is_true = exist_fact.is_true();
-        if let Some(vec_ref) = self.known_exist_facts.get_mut(&(key.clone(), is_true)) {
+        if let Some(vec_ref) = self.known_exist_facts.get_mut(&key) {
             vec_ref.push(exist_fact);
         } else {
-            self.known_exist_facts.insert((key, is_true), vec![exist_fact]);
+            self.known_exist_facts.insert(key, vec![exist_fact]);
         }
         Ok(())
     }
@@ -189,11 +188,10 @@ impl Environment {
 
     fn store_exist_fact_in_forall_fact(&mut self, exist_fact: &ExistFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
         let key = exist_fact.key();
-        let is_true = exist_fact.is_true();
-        if let Some(vec_ref) = self.known_exist_facts_in_forall_facts.get_mut(&(key.clone(), is_true)) {
+        if let Some(vec_ref) = self.known_exist_facts_in_forall_facts.get_mut(&key) {
             vec_ref.push((index, forall_fact));
         } else {
-            self.known_exist_facts_in_forall_facts.insert((key, is_true), vec![(index, forall_fact)]);
+            self.known_exist_facts_in_forall_facts.insert(key, vec![(index, forall_fact)]);
         }
         Ok(())
     }

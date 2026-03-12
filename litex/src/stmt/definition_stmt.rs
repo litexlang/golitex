@@ -6,7 +6,7 @@ use crate::common::keywords::{CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, HAVE, 
 use crate::common::helper::{add_four_spaces_at_beginning, braced_vec_to_string, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep, brace_vec_colon_vec_to_string};
 use crate::obj::FnSetWithDom;
 use crate::fact::AndChainAtomicFact;
-use crate::fact::TrueExistFact;
+use crate::fact::ExistFact;
 use super::define_algorithm_stmt::DefAlgoStmt;
 
 pub enum DefStmt {
@@ -70,7 +70,7 @@ pub struct HaveFnEqualStmt {
 }
 
 pub struct HaveExistObjStmt {
-    pub exist_fact_in_have_obj_st: TrueExistFact,
+    pub exist_fact_in_have_obj_st: ExistFact,
     pub line_file_index: Option<(usize, usize)>,
 }
 
@@ -223,7 +223,7 @@ impl fmt::Display for HaveObjEqualStmt {
 }
 
 impl HaveExistObjStmt {
-    pub fn new(exist_fact_in_have_obj_st: TrueExistFact, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(exist_fact_in_have_obj_st: ExistFact, line_file_index: Option<(usize, usize)>) -> Self {
         HaveExistObjStmt { exist_fact_in_have_obj_st, line_file_index }
     }
 }
