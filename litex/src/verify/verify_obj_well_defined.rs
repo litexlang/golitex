@@ -1,8 +1,7 @@
 use crate::obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FieldAccess, FieldAccessWithMod, 
     FnObj, FnSetWithDom, FnSetWithoutDom, Identifier, IdentifierWithMod, InstStructObj, ListSet, Mod,
-    Mul, NObj, NPosObj, Number, Obj, ObjAtIndex, PowerSet, Pow, Proj, QNeg, QNz, QObj, QPos, RObj, RNeg, RNz,
-    RPos, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, Union, Val, ZNeg, ZNz, ZObj, ZPos,
+    Mul, Number, Obj, ObjAtIndex, PowerSet, Pow, Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, Union, Val, ZObj,
     Intersect,
 };
 use crate::error::{WellDefinedError, StmtError};
@@ -10,16 +9,16 @@ use crate::verify::VerifyState;
 use crate::fact::{AtomicFact, NotEqualFact, IsCartFact, IsNonemptySetFact};
 use crate::fact::InFact;
 use crate::execute::Executor;
-use crate::stmt::parameter_type_and_property::ParamDefWithParamSet;
+use crate::stmt::parameter_type_and_property::{ParamDefWithParamSet, facts_for_args_satisfy_param_def_with_type};
 
 // well-defined check for obj
 impl<'a> Executor<'a> {
     pub fn verify_obj_well_defined(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         match obj {
-            Obj::Identifier(identifier) => self.verify_identifier_well_defined(identifier, verify_state),
-            Obj::IdentifierWithMod(x) => self.verify_identifier_with_mod_well_defined(x, verify_state),
-            Obj::FieldAccess(x) => self.verify_field_access_well_defined(x, verify_state),
-            Obj::FieldAccessWithMod(x) => self.verify_field_access_with_mod_well_defined(x, verify_state),
+            Obj::Identifier(identifier) => self.verify_identifier_well_defined(identifier),
+            Obj::IdentifierWithMod(x) => self.verify_identifier_with_mod_well_defined(x),
+            Obj::FieldAccess(x) => self.verify_field_access_well_defined(x),
+            Obj::FieldAccessWithMod(x) => self.verify_field_access_with_mod_well_defined(x),
             Obj::FnObj(fn_obj) => self.verify_fn_obj_well_defined(fn_obj, verify_state),
             Obj::Number(_) => Ok(()),
             Obj::Add(add) => self.verify_add_well_defined(add, verify_state),
@@ -38,11 +37,11 @@ impl<'a> Executor<'a> {
             Obj::SetBuilder(x) => self.verify_set_builder_well_defined(x, verify_state),
             Obj::FnSetWithoutDom(x) => self.verify_fn_set_without_dom_well_defined(x, verify_state),
             Obj::FnSetWithDom(x) => self.verify_fn_set_with_dom_well_defined(x, verify_state),
-            Obj::NPosObj(x) => self.verify_n_pos_obj_well_defined(x, verify_state),
-            Obj::NObj(x) => self.verify_n_obj_well_defined(x, verify_state),
-            Obj::QObj(x) => self.verify_q_obj_well_defined(x, verify_state),
-            Obj::ZObj(x) => self.verify_z_obj_well_defined(x, verify_state),
-            Obj::RObj(x) => self.verify_r_obj_well_defined(x, verify_state),
+            Obj::NPosObj(_) => self.verify_n_pos_obj_well_defined(),
+            Obj::NObj(_) => self.verify_n_obj_well_defined(),
+            Obj::QObj(_) => self.verify_q_obj_well_defined(),
+            Obj::ZObj(_) => self.verify_z_obj_well_defined(),
+            Obj::RObj(_) => self.verify_r_obj_well_defined(),
             Obj::InstSetStructObj(x) => self.verify_inst_set_struct_obj_well_defined(x, verify_state),
             Obj::Cart(x) => self.verify_cart_well_defined(x, verify_state),
             Obj::CartDim(x) => self.verify_cart_dim_well_defined(x, verify_state),
@@ -56,19 +55,19 @@ impl<'a> Executor<'a> {
             Obj::PowerSet(x) => self.verify_power_set_well_defined(x, verify_state),
             Obj::Choose(x) => self.verify_choose_well_defined(x, verify_state),
             Obj::ObjAtIndex(x) => self.verify_obj_at_index_well_defined(x, verify_state),
-            Obj::QPos(x) => self.verify_q_pos_well_defined(x, verify_state),
-            Obj::ZPos(x) => self.verify_z_pos_well_defined(x, verify_state),
-            Obj::RPos(x) => self.verify_r_pos_well_defined(x, verify_state),
-            Obj::QNeg(x) => self.verify_q_neg_well_defined(x, verify_state),
-            Obj::ZNeg(x) => self.verify_z_neg_well_defined(x, verify_state),
-            Obj::RNeg(x) => self.verify_r_neg_well_defined(x, verify_state),
-            Obj::QNz(x) => self.verify_q_nz_well_defined(x, verify_state),
-            Obj::ZNz(x) => self.verify_z_nz_well_defined(x, verify_state),
-            Obj::RNz(x) => self.verify_r_nz_well_defined(x, verify_state),
+            Obj::QPos(_) => self.verify_q_pos_well_defined(),
+            Obj::ZPos(_) => self.verify_z_pos_well_defined(),
+            Obj::RPos(_) => self.verify_r_pos_well_defined(),
+            Obj::QNeg(_) => self.verify_q_neg_well_defined(),
+            Obj::ZNeg(_) => self.verify_z_neg_well_defined(),
+            Obj::RNeg(_) => self.verify_r_neg_well_defined(),
+            Obj::QNz(_) => self.verify_q_nz_well_defined(),
+            Obj::ZNz(_) => self.verify_z_nz_well_defined(),
+            Obj::RNz(_) => self.verify_r_nz_well_defined(),
         }
     }
 
-    fn verify_identifier_well_defined(&self, identifier: &Identifier, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_identifier_well_defined(&self, identifier: &Identifier) -> Result<(), WellDefinedError> {
         if self.runtime_context.is_defined_identifier_obj(identifier) {
             Ok(())
         } else {
@@ -76,19 +75,23 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn verify_identifier_with_mod_well_defined(&self, _x: &IdentifierWithMod, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_identifier_with_mod_well_defined(&self, x: &IdentifierWithMod) -> Result<(), WellDefinedError> {
+        let _ = x;
         Err(WellDefinedError::new("verify_identifier_with_mod_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_field_access_well_defined(&self, _x: &FieldAccess, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_field_access_well_defined(&self, x: &FieldAccess) -> Result<(), WellDefinedError> {
+        let _ = x;
         Err(WellDefinedError::new("verify_field_access_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_field_access_with_mod_well_defined(&self, _x: &FieldAccessWithMod, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_field_access_with_mod_well_defined(&self, x: &FieldAccessWithMod) -> Result<(), WellDefinedError> {
+        let _ = x;
         Err(WellDefinedError::new("verify_field_access_with_mod_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_fn_obj_well_defined(&self, _fn_obj: &FnObj, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_fn_obj_well_defined(&self, _fn_obj: &FnObj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        let _ = verify_state;
         Err(WellDefinedError::new("verify_fn_obj_well_defined 此函数还没有 implement", vec![], None))
     }
 
@@ -157,7 +160,8 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_pow_well_defined(&self, _pow: &Pow, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_pow_well_defined(&self, _pow: &Pow, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        let _ = verify_state;
         Err(WellDefinedError::new("verify_pow_well_defined 此函数还没有 implement", vec![], None))
     }
 
@@ -261,38 +265,47 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_n_pos_obj_well_defined(&mut self, _x: &NPosObj, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_n_pos_obj_well_defined(&mut self) -> Result<(), WellDefinedError> {
         Ok(())
     }
 
-    fn verify_n_obj_well_defined(&mut self, _x: &NObj, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_n_obj_well_defined(&mut self) -> Result<(), WellDefinedError> {
         Ok(())
     }
 
-    fn verify_q_obj_well_defined(&self, _x: &QObj, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_q_obj_well_defined(&self) -> Result<(), WellDefinedError> {
         Ok(())
     }
 
-    fn verify_z_obj_well_defined(&self, _x: &ZObj, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_z_obj_well_defined(&self) -> Result<(), WellDefinedError> {
         Ok(())
     }
 
-    fn verify_r_obj_well_defined(&self, _x: &RObj, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_r_obj_well_defined(&self) -> Result<(), WellDefinedError> {
         Ok(())
     }
 
-    fn verify_inst_set_struct_obj_well_defined(&mut self, _x: &InstStructObj, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_inst_set_struct_obj_well_defined(&mut self, x: &InstStructObj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         self.runtime_context.new_env();
-        let result = self.verify_inst_set_struct_obj_well_defined_body(_x, _verify_state);
+        let result = self.verify_inst_set_struct_obj_well_defined_body(x, verify_state);
         self.runtime_context.delete_env();
         result
     }
 
-    fn verify_inst_set_struct_obj_well_defined_body(&self, _x: &InstStructObj, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        let def = self.runtime_context.get_set_struct_definition_by_name(_x.struct_name.to_string().as_str()).ok_or(WellDefinedError::new(format!("set struct definition not found {}", _x.struct_name.to_string()).as_str(), vec![], None))?;
+    fn verify_inst_set_struct_obj_well_defined_body(&mut self, x: &InstStructObj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        let def = self.runtime_context.get_set_struct_definition_by_name(x.struct_name.to_string().as_str()).ok_or(WellDefinedError::new(format!("set struct definition not found {}", x.struct_name.to_string()).as_str(), vec![], None))?;
 
-        
-        
+        let param_defs = def.get_params_def_with_type();
+        let facts = facts_for_args_satisfy_param_def_with_type(param_defs, &x.args)
+            .map_err(|e| WellDefinedError::new(format!("failed to build facts for inst struct {}: {}", x.struct_name, e).as_str(), vec![e], None))?;
+        for fact in facts.iter() {
+            self.exec_fact(fact, verify_state).map_err(|e| WellDefinedError::new(
+                &format!("exec_fact failed for inst struct obj arg (struct {})", x.struct_name),
+                vec![e],
+                None,
+            ))?;
+        }
+
         Ok(())
     }
 
@@ -312,31 +325,45 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_proj_well_defined(&mut self, _x: &Proj, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_proj_well_defined(&mut self, x: &Proj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        let _ = x;
+        let _ = verify_state;
         Err(WellDefinedError::new("verify_proj_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_dim_well_defined(&mut self, _x: &Dim, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_dim_well_defined(&mut self, x: &Dim, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        let _ = x;
+        let _ = verify_state;
         Err(WellDefinedError::new("verify_dim_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_tuple_well_defined(&mut self, _x: &Tuple, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_tuple_well_defined(&mut self, x: &Tuple, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        let _ = x;
+        let _ = verify_state;
         Err(WellDefinedError::new("verify_tuple_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_count_well_defined(&mut self, _x: &Count, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_count_well_defined(&mut self, x: &Count, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        let _ = x;
+        let _ = verify_state;
         Err(WellDefinedError::new("verify_count_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_range_well_defined(&mut self, _x: &Range, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_range_well_defined(&mut self, x: &Range, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        let _ = x;
+        let _ = verify_state;
         Err(WellDefinedError::new("verify_range_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_closed_range_well_defined(&mut self, _x: &ClosedRange, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_closed_range_well_defined(&mut self, x: &ClosedRange, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        let _ = x;
+        let _ = verify_state;
         Err(WellDefinedError::new("verify_closed_range_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_val_well_defined(&mut self, _x: &Val, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_val_well_defined(&mut self, x: &Val, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        let _ = x;
+        let _ = verify_state;
         Err(WellDefinedError::new("verify_val_well_defined 此函数还没有 implement", vec![], None))
     }
 
@@ -352,43 +379,45 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_obj_at_index_well_defined(&self, _x: &ObjAtIndex, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_obj_at_index_well_defined(&self, x: &ObjAtIndex, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        let _ = x;
+        let _ = verify_state;
         Err(WellDefinedError::new("verify_obj_at_index_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_q_pos_well_defined(&self, _x: &QPos, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_q_pos_well_defined(&self) -> Result<(), WellDefinedError> {
         Ok(())
     }
 
-    fn verify_z_pos_well_defined(&self, _x: &ZPos, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_z_pos_well_defined(&self) -> Result<(), WellDefinedError> {
         Ok(())
     }
 
-    fn verify_r_pos_well_defined(&self, _x: &RPos, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_r_pos_well_defined(&self) -> Result<(), WellDefinedError> {
         Ok(())
     }
 
-    fn verify_q_neg_well_defined(&self, _x: &QNeg, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_q_neg_well_defined(&self) -> Result<(), WellDefinedError> {
         Ok(())
     }
 
-    fn verify_z_neg_well_defined(&self, _x: &ZNeg, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_z_neg_well_defined(&self) -> Result<(), WellDefinedError> {
         Ok(())
     }
 
-    fn verify_r_neg_well_defined(&self, _x: &RNeg, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_r_neg_well_defined(&self) -> Result<(), WellDefinedError> {
         Ok(())
     }
 
-    fn verify_q_nz_well_defined(&self, _x: &QNz, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_q_nz_well_defined(&self) -> Result<(), WellDefinedError> {
         Ok(())
     }
 
-    fn verify_z_nz_well_defined(&self, _x: &ZNz, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_z_nz_well_defined(&self) -> Result<(), WellDefinedError> {
         Ok(())
     }
 
-    fn verify_r_nz_well_defined(&self, _x: &RNz, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_r_nz_well_defined(&self) -> Result<(), WellDefinedError> {
         Ok(())
     }
 }
