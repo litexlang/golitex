@@ -1,5 +1,6 @@
 mod atom;
 mod obj;
+mod obj_instantiate;
 pub use obj::{Obj, FnObj, Number, Add, Sub, Mul, Div, Mod, Pow,
     Union, Intersect, SetMinus, SetDiff, Cup, Cap,
     ListSet, SetBuilder, FnSetWithoutDom, FnSetWithDom,

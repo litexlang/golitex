@@ -8,7 +8,6 @@ use super::or_fact::OrFact;
 use super::fact_inside_forall::ExistOrAndChainAtomicFact;
 use super::fact::Fact;
 
-/// Result of parsing after NOT: either an existential fact (not exist ...) or a single atomic fact (not $p(...)).
 #[derive(Clone)]
 pub enum ExistAtomicFact {
     AtomicFact(AtomicFact),

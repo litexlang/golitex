@@ -1,6 +1,6 @@
 use crate::common::helper::is_number_string_literally_integer_without_dot;
 use crate::common::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SING, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
 };
 use super::Parser;
 use super::TokenBlock;
@@ -537,7 +537,7 @@ impl Parser {
 
     pub fn parse_atom(&self, tb: &mut TokenBlock) -> Result<Atom, ParsingError> {
         let left = tb.advance()?;
-        if !tb.exceed_end_of_head() && tb.current()? == MOD_SING {
+        if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
             tb.skip()?;
             let right = tb.advance()?;
             if !tb.exceed_end_of_head() && tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
@@ -569,7 +569,7 @@ impl Parser {
 
     pub fn identifier_or_identifier_with_mod(&self, tb: &mut TokenBlock) -> Result<IdentifierOrIdentifierWithMod, ParsingError> {
         let left = tb.advance()?;
-        if !tb.exceed_end_of_head() && tb.current()? == MOD_SING {
+        if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
             tb.skip()?;
             let right = tb.advance()?;
             Ok(IdentifierOrIdentifierWithMod::IdentifierWithMod(IdentifierWithMod::new(&left, &right)))

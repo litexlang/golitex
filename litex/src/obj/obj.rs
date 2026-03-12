@@ -1,7 +1,8 @@
+use std::collections::HashMap;
 use crate::stmt::parameter_type_and_property::ParamDefWithParamSet;
 use crate::fact::OrAndChainAtomicFact;
 use crate::common::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, SET_DIFF, DIV, FN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SING, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, SET_DIFF, DIV, FN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
 };
 use std::fmt;
 use crate::common::helper::{braced_vec_to_string, curly_braced_vec_to_string, vec_to_string_join_by_comma, brace_vec_colon_vec_to_string};
@@ -885,7 +886,7 @@ impl fmt::Display for Cap {
 
 impl fmt::Display for IdentifierWithMod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}", self.mod_name, MOD_SING, self.name)
+        write!(f, "{}{}{}", self.mod_name, MOD_SIGN, self.name)
     }
 }
 
@@ -1061,6 +1062,62 @@ impl fmt::Display for FnSetObj {
 }
 
 impl Obj {
+    pub fn instantiate(&self,param_to_arg_map: HashMap<String, Obj>) -> Obj {
+        match self {
+            Obj::Identifier(inner) => inner.instantiate(param_to_arg_map),
+            Obj::IdentifierWithMod(inner) => inner.instantiate(param_to_arg_map),
+            Obj::FieldAccess(inner) => inner.instantiate(param_to_arg_map),
+            Obj::FieldAccessWithMod(inner) => inner.instantiate(param_to_arg_map),
+            Obj::FnObj(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Number(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Add(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Sub(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Mul(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Div(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Mod(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Pow(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Union(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Intersect(inner) => inner.instantiate(param_to_arg_map),
+            Obj::SetMinus(inner) => inner.instantiate(param_to_arg_map),
+            Obj::SetDiff(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Cup(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Cap(inner) => inner.instantiate(param_to_arg_map),
+            Obj::ListSet(inner) => inner.instantiate(param_to_arg_map),
+            Obj::SetBuilder(inner) => inner.instantiate(param_to_arg_map),
+            Obj::FnSetWithoutDom(inner) => inner.instantiate(param_to_arg_map),
+            Obj::FnSetWithDom(inner) => inner.instantiate(param_to_arg_map),
+            Obj::NPosObj(inner) => inner.instantiate(param_to_arg_map),
+            Obj::NObj(inner) => inner.instantiate(param_to_arg_map),
+            Obj::QObj(inner) => inner.instantiate(param_to_arg_map),
+            Obj::ZObj(inner) => inner.instantiate(param_to_arg_map),
+            Obj::RObj(inner) => inner.instantiate(param_to_arg_map),
+            Obj::InstSetStructObj(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Cart(inner) => inner.instantiate(param_to_arg_map),
+            Obj::CartDim(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Proj(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Dim(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Tuple(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Count(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Range(inner) => inner.instantiate(param_to_arg_map),
+            Obj::ClosedRange(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Val(inner) => inner.instantiate(param_to_arg_map),
+            Obj::PowerSet(inner) => inner.instantiate(param_to_arg_map),
+            Obj::Choose(inner) => inner.instantiate(param_to_arg_map),
+            Obj::ObjAtIndex(inner) => inner.instantiate(param_to_arg_map),
+            Obj::QPos(inner) => inner.instantiate(param_to_arg_map),
+            Obj::ZPos(inner) => inner.instantiate(param_to_arg_map),
+            Obj::RPos(inner) => inner.instantiate(param_to_arg_map),
+            Obj::QNeg(inner) => inner.instantiate(param_to_arg_map),
+            Obj::ZNeg(inner) => inner.instantiate(param_to_arg_map),
+            Obj::RNeg(inner) => inner.instantiate(param_to_arg_map),
+            Obj::QNz(inner) => inner.instantiate(param_to_arg_map),
+            Obj::ZNz(inner) => inner.instantiate(param_to_arg_map),
+            Obj::RNz(inner) => inner.instantiate(param_to_arg_map),
+        }
+    }
+}
+
+impl Obj {
     pub fn is_add_sub_mul_div_mod_pow(&self) -> bool {
         match self {
             Obj::Add(_) => true,
@@ -1072,4 +1129,4 @@ impl Obj {
             _ => false,
         }
     }
-}    
+}
