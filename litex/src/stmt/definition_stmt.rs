@@ -1,5 +1,5 @@
 use super::parameter_type_and_property::ParamDefWithParamType;
-use crate::fact::{Fact, ExistOrAndChainAtomicFact};
+use crate::fact::Fact;
 use crate::obj::Obj;
 use std::fmt;
 use crate::common::keywords::{CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, HAVE, FN, LEFT_BRACE, LET, PROP, RIGHT_BRACE, STRUCT};
@@ -8,6 +8,7 @@ use crate::obj::FnSetWithDom;
 use crate::fact::AndChainAtomicFact;
 use crate::fact::ExistFact;
 use super::define_algorithm_stmt::DefAlgoStmt;
+use crate::fact::OrAndChainAtomicFact;
 
 pub enum DefStmt {
     DefLetStmt(DefLetStmt),
@@ -40,8 +41,8 @@ impl DefPropWithoutMeaningStmt {
 pub struct DefStructWithFieldsStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
-    pub fields: Vec<(String, ExistOrAndChainAtomicFact)>,
-    pub facts: Vec<ExistOrAndChainAtomicFact>,
+    pub fields: Vec<(String, OrAndChainAtomicFact)>,
+    pub facts: Vec<OrAndChainAtomicFact>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
@@ -49,7 +50,7 @@ pub struct DefStructWithFieldsStmt {
 pub struct DefStructWithNoFieldStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
-    pub dom_facts: Vec<ExistOrAndChainAtomicFact>,
+    pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub equal_to: Obj,
     pub line_file_index: Option<(usize, usize)>,
 }
@@ -249,7 +250,7 @@ impl HaveFnEqualCaseByCaseStmt {
 }
 
 impl DefStructWithNoFieldStmt {
-    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, dom_facts: Vec<ExistOrAndChainAtomicFact>, equal_to: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, dom_facts: Vec<OrAndChainAtomicFact>, equal_to: Obj, line_file_index: Option<(usize, usize)>) -> Self {
         DefStructWithNoFieldStmt { name, params_def_with_type, dom_facts, equal_to, line_file_index }
     }
 }
@@ -261,7 +262,7 @@ impl fmt::Display for DefStructWithNoFieldStmt {
 }
 
 impl DefStructWithFieldsStmt {
-    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, fields: Vec<(String, ExistOrAndChainAtomicFact)>, facts: Vec<ExistOrAndChainAtomicFact>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, fields: Vec<(String, OrAndChainAtomicFact)>, facts: Vec<OrAndChainAtomicFact>, line_file_index: Option<(usize, usize)>) -> Self {
         DefStructWithFieldsStmt { name, params_def_with_type, fields, facts, line_file_index }
     }
 }
