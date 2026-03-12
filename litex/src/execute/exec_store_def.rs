@@ -1,5 +1,5 @@
 use crate::error::{ExecError, WellDefinedError};
-use crate::stmt::definition_stmt::{DefPropStmt, DefStructStmt};
+use crate::stmt::definition_stmt::{DefPropStmt, DefPropWithoutMeaningStmt, DefStructStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::common::keywords::{PROP, STRUCT, ALGO};
 use super::Executor;
@@ -13,6 +13,16 @@ impl<'a> Executor<'a> {
         let name = def_prop_stmt.name.clone();
         self.runtime_context.defined_props.insert(name.clone(), def_prop_stmt.clone());
         self.runtime_context.top_level_env().defined_props.insert(name, def_prop_stmt.clone());
+        Ok(())
+    }
+
+    pub fn validate_name_and_store_def_prop_without_meaning(&mut self, def_prop_without_meaning_stmt: &DefPropWithoutMeaningStmt) -> Result<(), ExecError> {
+        if let Err(e) = self.validate_name(&def_prop_without_meaning_stmt.name) {
+            return Err(ExecError::new(format!("invalid {} name", PROP).as_str(), vec![e.into()], def_prop_without_meaning_stmt.line_file_index));
+        }
+        let name = def_prop_without_meaning_stmt.name.clone();
+        self.runtime_context.defined_props_without_meaning.insert(name.clone(), def_prop_without_meaning_stmt.clone());
+        self.runtime_context.top_level_env().defined_props_without_meaning.insert(name, def_prop_without_meaning_stmt.clone());
         Ok(())
     }
 

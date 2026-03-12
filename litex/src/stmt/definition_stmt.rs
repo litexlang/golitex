@@ -12,6 +12,7 @@ use super::define_algorithm_stmt::DefAlgoStmt;
 pub enum DefStmt {
     DefLetStmt(DefLetStmt),
     DefPropStmt(DefPropStmt),
+    DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt),
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
     HaveExistObjStmt(HaveExistObjStmt),
@@ -19,6 +20,19 @@ pub enum DefStmt {
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     DefStructStmt(DefStructStmt),
     DefAlgoStmt(DefAlgoStmt),
+}
+
+#[derive(Clone)]
+pub struct DefPropWithoutMeaningStmt {
+    pub name: String,
+    pub params: Vec<String>,
+    pub line_file_index: Option<(usize, usize)>,
+}
+
+impl DefPropWithoutMeaningStmt {
+    pub fn new(name: String, params: Vec<String>, line_file_index: Option<(usize, usize)>) -> Self {
+        DefPropWithoutMeaningStmt { name, params, line_file_index }
+    }
 }
 
 #[derive(Clone)]
@@ -104,6 +118,7 @@ impl fmt::Display for DefStmt {
         match self {
             DefStmt::DefLetStmt(def_let_stmt) => write!(f, "{}", def_let_stmt),
             DefStmt::DefPropStmt(def_prop_stmt) => write!(f, "{}", def_prop_stmt),
+            DefStmt::DefPropWithoutMeaningStmt(def_prop_without_meaning_stmt) => write!(f, "{}", def_prop_without_meaning_stmt),
             DefStmt::HaveObjInNonemptySetStmt(have_obj_in_nonempty_set_stmt) => write!(f, "{}", have_obj_in_nonempty_set_stmt),
             DefStmt::HaveObjEqualStmt(have_obj_equal_stmt) => write!(f, "{}", have_obj_equal_stmt),
             DefStmt::HaveExistObjStmt(have_obj_st_stmt) => write!(f, "{}", have_obj_st_stmt),
@@ -112,6 +127,12 @@ impl fmt::Display for DefStmt {
             DefStmt::DefStructStmt(def_struct_stmt) => write!(f, "{}", def_struct_stmt),
             DefStmt::DefAlgoStmt(define_algorithm_stmt) => write!(f, "{}", define_algorithm_stmt),
         }
+    }
+}
+
+impl fmt::Display for DefPropWithoutMeaningStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}{}{}{}", PROP, self.name, LEFT_BRACE, vec_to_string_join_by_comma(&self.params), RIGHT_BRACE)
     }
 }
 
@@ -187,6 +208,7 @@ impl DefStmt {
         match self {
             DefStmt::DefLetStmt(def_let_stmt) => def_let_stmt.line_file_index,
             DefStmt::DefPropStmt(def_prop_stmt) => def_prop_stmt.line_file_index,
+            DefStmt::DefPropWithoutMeaningStmt(def_prop_without_meaning_stmt) => def_prop_without_meaning_stmt.line_file_index,
             DefStmt::HaveObjInNonemptySetStmt(have_obj_in_nonempty_set_stmt) => have_obj_in_nonempty_set_stmt.line_file_index,
             DefStmt::HaveObjEqualStmt(have_obj_equal_stmt) => have_obj_equal_stmt.line_file_index,
             DefStmt::HaveExistObjStmt(have_obj_st_stmt) => have_obj_st_stmt.line_file_index,
