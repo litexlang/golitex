@@ -1,5 +1,5 @@
 use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStructStmt, DefStructWithNoFieldStmt, DefStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt};
-use crate::fact::{ExistFact, AndChainAtomicFact};
+use crate::fact::AndChainAtomicFact;
 use crate::error::ParsingError;
 use crate::stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
 use crate::common::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, FN, HAVE, IF, LEFT_BRACE, LET, PROP, RETURN, RIGHT_BRACE, STRUCT};
@@ -109,13 +109,7 @@ impl Parser {
 
     pub fn have_exist(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(HAVE)?;
-        let ef = self.parse_exist_fact(tb, true)?;
-        let true_fact = match ef {
-            ExistFact::TrueExistFact(t) => t,
-            ExistFact::NotExistFact(_) => {
-                return Err(ParsingError::new("have exist expects true exist fact", tb.line_file_index));
-            }
-        };
+        let true_fact = self.parse_exist_fact(tb)?;
         Ok(Stmt::DefStmt(DefStmt::HaveExistObjStmt(HaveExistObjStmt::new(
             true_fact,
             Some(tb.line_file_index),

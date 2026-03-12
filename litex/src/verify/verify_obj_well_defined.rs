@@ -9,7 +9,7 @@ use crate::verify::VerifyState;
 use crate::fact::{AtomicFact, NotEqualFact, IsCartFact, IsNonemptySetFact};
 use crate::fact::InFact;
 use crate::execute::Executor;
-use crate::stmt::parameter_type_and_property::{ParamDefWithParamSet, facts_for_args_satisfy_param_def_with_type};
+use crate::stmt::parameter_type_and_property::{ParamDefWithParamSet, facts_for_args_satisfy_param_def_with_type_vec};
 
 // well-defined check for obj
 impl<'a> Executor<'a> {
@@ -296,7 +296,7 @@ impl<'a> Executor<'a> {
         let def = self.runtime_context.get_set_struct_definition_by_name(x.struct_name.to_string().as_str()).ok_or(WellDefinedError::new(format!("set struct definition not found {}", x.struct_name.to_string()).as_str(), vec![], None))?;
 
         let param_defs = def.get_params_def_with_type();
-        let facts = facts_for_args_satisfy_param_def_with_type(param_defs, &x.args)
+        let facts = facts_for_args_satisfy_param_def_with_type_vec(param_defs, &x.args)
             .map_err(|e| WellDefinedError::new(format!("failed to build facts for inst struct {}: {}", x.struct_name, e).as_str(), vec![e], None))?;
         for fact in facts.iter() {
             self.exec_fact(fact, verify_state).map_err(|e| WellDefinedError::new(

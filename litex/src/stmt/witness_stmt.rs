@@ -1,6 +1,6 @@
 use crate::common::helper::{ vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep};
 use std::fmt;
-use crate::fact::TrueExistFact;
+use crate::fact::ExistFact;
 use crate::obj::Obj;
 use super::Stmt;
 use crate::common::keywords::{COLON, COMMA, ST, WITNESS};
@@ -19,13 +19,13 @@ pub struct WitnessNonemptySet {
 
 pub struct WitnessExistFact {
     pub equal_tos: Vec<Obj>,
-    pub exist_fact_in_witness: TrueExistFact,
+    pub exist_fact_in_witness: ExistFact,
     pub proof: Vec<Stmt>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
 impl WitnessExistFact {
-    pub fn new(equal_tos: Vec<Obj>, exist_fact_in_witness: TrueExistFact, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(equal_tos: Vec<Obj>, exist_fact_in_witness: ExistFact, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
         WitnessExistFact { equal_tos, exist_fact_in_witness, proof, line_file_index }
     }
 }
