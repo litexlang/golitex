@@ -1,6 +1,6 @@
 use crate::error::ExecError;
 use crate::stmt::parameter_type_and_property::{ParamDefWithParamType, ParamType, ParamDefWithParamSet};
-use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefPropWithoutMeaningStmt, DefStmt, DefStructStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt};
+use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefPropWithoutMeaningStmt, DefStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::result::StmtResult;
 use crate::result::NonFactualStmtSuccess;
@@ -13,7 +13,8 @@ impl<'a> Executor<'a> {
             DefStmt::DefPropStmt(def_prop_stmt) => self.def_prop_stmt(def_prop_stmt),
             DefStmt::DefPropWithoutMeaningStmt(def_prop_without_meaning_stmt) => self.def_prop_without_meaning_stmt(def_prop_without_meaning_stmt),
             DefStmt::DefLetStmt(def_let_stmt) => self.def_let_stmt(def_let_stmt),
-            DefStmt::DefStructStmt(def_struct_stmt) => self.def_struct_stmt(def_struct_stmt),
+            DefStmt::DefStructWithFieldsStmt(def_struct_with_fields_stmt) => self.def_struct_with_fields_stmt(def_struct_with_fields_stmt),
+            DefStmt::DefStructWithNoFieldStmt(def_struct_with_no_field_stmt) => self.def_struct_with_no_field_stmt(def_struct_with_no_field_stmt),
             DefStmt::DefAlgoStmt(def_algo_stmt) => self.def_algo_stmt(def_algo_stmt),
             DefStmt::HaveObjInNonemptySetStmt(have_obj_in_nonempty_set_stmt) => self.have_obj_in_nonempty_set_or_param_type_stmt(have_obj_in_nonempty_set_stmt),
             DefStmt::HaveObjEqualStmt(have_obj_equal_stmt) => self.have_obj_equal_stmt(have_obj_equal_stmt),
@@ -69,10 +70,14 @@ impl<'a> Executor<'a> {
         Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_let_stmt.to_string(), def_let_stmt.line_file_index)))
     }
 
-    fn def_struct_stmt(&mut self, def_struct_stmt: &DefStructStmt) -> Result<StmtResult, ExecError> {
-        self.validate_name_and_store_def_struct(def_struct_stmt)?;
-        // Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_struct_stmt.to_string(), def_struct_stmt.line_file_index())))
-        return Err(ExecError::new("def_struct_stmt: NOT IMPLEMENTED YET", vec![], def_struct_stmt.line_file_index()));
+    fn def_struct_with_fields_stmt(&mut self, def_struct_with_fields_stmt: &DefStructWithFieldsStmt) -> Result<StmtResult, ExecError> {
+        self.validate_name_and_store_def_struct_with_fields(def_struct_with_fields_stmt)?;
+        return Err(ExecError::new("def_struct_with_fields_stmt: NOT IMPLEMENTED YET", vec![], def_struct_with_fields_stmt.line_file_index));
+    }
+
+    fn def_struct_with_no_field_stmt(&mut self, def_struct_with_no_field_stmt: &DefStructWithNoFieldStmt) -> Result<StmtResult, ExecError> {
+        self.validate_name_and_store_def_struct_with_no_field(def_struct_with_no_field_stmt)?;
+        return Err(ExecError::new("def_struct_with_no_field_stmt: NOT IMPLEMENTED YET", vec![], def_struct_with_no_field_stmt.line_file_index));
     }
 
     fn def_algo_stmt(&mut self, def_algo_stmt: &DefAlgoStmt) -> Result<StmtResult, ExecError> {

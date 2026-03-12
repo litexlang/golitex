@@ -293,9 +293,13 @@ impl<'a> Executor<'a> {
     }
 
     fn verify_inst_set_struct_obj_well_defined_body(&mut self, x: &InstStructObj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        let def = self.runtime_context.get_set_struct_definition_by_name(x.struct_name.to_string().as_str()).ok_or(WellDefinedError::new(format!("set struct definition not found {}", x.struct_name.to_string()).as_str(), vec![], None))?;
-
-        let param_defs = def.get_params_def_with_type();
+        let param_defs = if let Some(def) = self.runtime_context.get_set_struct_with_fields_definition_by_name(x.struct_name.to_string().as_str()) {
+            &def.params_def_with_type
+        } else if let Some(def) = self.runtime_context.get_set_struct_with_no_field_definition_by_name(x.struct_name.to_string().as_str()) {
+            &def.params_def_with_type
+        } else {
+            return Err(WellDefinedError::new(format!("set struct definition not found {}", x.struct_name.to_string()).as_str(), vec![], None));
+        };
         let facts = facts_for_args_satisfy_param_def_with_type_vec(param_defs, &x.args)
             .map_err(|e| WellDefinedError::new(format!("failed to build facts for inst struct {}: {}", x.struct_name, e).as_str(), vec![e], None))?;
         for fact in facts.iter() {
