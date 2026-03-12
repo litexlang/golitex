@@ -71,6 +71,7 @@ pub struct HaveFnEqualStmt {
 }
 
 pub struct HaveExistObjStmt {
+    pub equal_tos: Vec<Obj>,
     pub exist_fact_in_have_obj_st: ExistFact,
     pub line_file_index: Option<(usize, usize)>,
 }
@@ -209,14 +210,14 @@ impl fmt::Display for HaveObjEqualStmt {
 }
 
 impl HaveExistObjStmt {
-    pub fn new(exist_fact_in_have_obj_st: ExistFact, line_file_index: Option<(usize, usize)>) -> Self {
-        HaveExistObjStmt { exist_fact_in_have_obj_st, line_file_index }
+    pub fn new(equal_tos: Vec<Obj>, exist_fact_in_have_obj_st: ExistFact, line_file_index: Option<(usize, usize)>) -> Self {
+        HaveExistObjStmt { equal_tos, exist_fact_in_have_obj_st, line_file_index }
     }
 }
 
 impl fmt::Display for HaveExistObjStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", HAVE, self.exist_fact_in_have_obj_st.exist_fact_string_without_exist_as_prefix())
+        write!(f, "{} {} {} {}", HAVE, vec_to_string_join_by_comma(&self.equal_tos), COLON, self.exist_fact_in_have_obj_st.exist_fact_string_without_exist_as_prefix())
     }
 }
 
