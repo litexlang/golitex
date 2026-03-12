@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use crate::runtime_context::RuntimeContext;
 use crate::module_manager::ModuleManager;
 use crate::environment::Environment;
@@ -9,11 +8,10 @@ use crate::stmt::Stmt;
 
 pub fn run_source_code(source_code: &str) -> String {
     let mut module_manager = ModuleManager::new_empty_module_manager();
-    let environment: Box<Environment> = Box::new(Environment::new_empty_env());
+    let mut builtin_environment = Environment::new_empty_env();
 
-    let builtin_environment: Box<Environment> = Box::new(Environment::new_empty_env());
 
-    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
 
     let blocks = match TokenBlock::parse_blocks(source_code, 0) {
         Ok(b) => b,
