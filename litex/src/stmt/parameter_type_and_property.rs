@@ -1,4 +1,6 @@
 use std::fmt;
+use std::collections::HashMap;
+use crate::error::{ExecError, StmtError};
 use crate::fact::{AtomicFact, Fact, InFact, IsSetFact, IsNonemptySetFact, IsFiniteSetFact};
 use crate::common::helper::vec_to_string_join_by_comma;
 use crate::obj::{Identifier, Obj};
@@ -135,5 +137,48 @@ impl ParamDefWithParamSet {
 impl ParamDefWithParamSet {
     pub fn new(param: Vec<String>, param_set: Obj) -> Self {
         ParamDefWithParamSet(param, param_set)
+    }
+}
+
+pub fn instantiate_param_def_with_type_one_by_one(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Obj>) -> Result<Vec<ParamType>, StmtError> {
+    let mut total_param_count: usize = 0;
+    for p in param_defs.iter() {
+        total_param_count += p.0.len();
+    }
+    if total_param_count != args.len() {
+        return Err(StmtError::ExecError(ExecError::new(
+            &format!(
+                "argument count mismatch: expected {} parameter(s), got {} argument(s)",
+                total_param_count,
+                args.len()
+            ),
+            vec![],
+            None,
+        )));
+    }
+
+    let mut param_arg_map: HashMap<String, Obj> = HashMap::new();
+    let mut arg_index: usize = 0;
+    let mut new_types: Vec<ParamType> = vec![];
+    for param_def in param_defs.iter() {
+        let new_type =  if arg_index != 0 {
+            param_def.1.instantiate(&param_arg_map)
+        } else {
+            param_def.1.clone()
+        };
+        new_types.push(new_type);
+        
+        for param_name in param_def.0.iter() {
+            param_arg_map.insert(param_name.clone(), args[arg_index].clone());
+            arg_index += 1;
+        }
+    }
+    
+    Ok(new_types)
+}
+
+impl ParamType {
+    fn instantiate(&self, param_arg_map: &HashMap<String, Obj>) -> ParamType {
+        panic!("")
     }
 }
