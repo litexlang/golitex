@@ -7,6 +7,7 @@ use crate::environment::Environment;
 use crate::stmt::definition_stmt::DefPropStmt;
 use crate::stmt::definition_stmt::DefStructStmt;
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
+use crate::stmt::definition_stmt::DefPropWithoutMeaningStmt;
 
 pub struct RuntimeContext<'a> {
     pub module_manager: &'a mut ModuleManager<'a>,
@@ -15,13 +16,14 @@ pub struct RuntimeContext<'a> {
 
     pub defined_identifier_objs: HashMap<String, ()>,
     pub defined_props: HashMap<String, DefPropStmt>,
+    pub defined_props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>,
     pub defined_structs: HashMap<String, DefStructStmt>,
     pub defined_algorithms: HashMap<String, DefAlgoStmt>,
 }
 
 impl<'a> RuntimeContext<'a> {
-    pub fn new(module_manager: &'a mut ModuleManager<'a>, environments: Vec<Box<Environment>>, builtin_environment: Box<Environment>, objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, structs: HashMap<String, DefStructStmt>, algorithms: HashMap<String, DefAlgoStmt>) -> Self {
-        RuntimeContext { module_manager, environments, builtin_environment, defined_identifier_objs: objs, defined_props: props, defined_structs: structs, defined_algorithms: algorithms }
+    pub fn new(module_manager: &'a mut ModuleManager<'a>, environments: Vec<Box<Environment>>, builtin_environment: Box<Environment>, objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>, structs: HashMap<String, DefStructStmt>, algorithms: HashMap<String, DefAlgoStmt>) -> Self {
+        RuntimeContext { module_manager, environments, builtin_environment, defined_identifier_objs: objs, defined_props: props, defined_structs: structs, defined_algorithms: algorithms, defined_props_without_meaning: props_without_meaning }
     }
 }
 
@@ -94,13 +96,13 @@ impl<'a> RuntimeContext<'a> {
     }
 
     pub fn is_name_used(&self, name: &str) -> bool {
-        self.defined_identifier_objs.contains_key(name) || self.defined_props.contains_key(name) || self.defined_structs.contains_key(name) || self.defined_algorithms.contains_key(name)
+        self.defined_identifier_objs.contains_key(name) || self.defined_props.contains_key(name) || self.defined_props_without_meaning.contains_key(name) || self.defined_structs.contains_key(name) || self.defined_algorithms.contains_key(name)
     }
 }
 
 impl<'a> RuntimeContext<'a> {
     pub fn new_env(&mut self) {
-        let new_env = Box::new(Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new()));
+        let new_env = Box::new(Environment::new_empty_env());
         self.environments.push(new_env);
     }
 
@@ -115,6 +117,9 @@ impl<'a> RuntimeContext<'a> {
                 }
                 for defined_prop in last_env.defined_props.iter() {
                     self.defined_props.remove(defined_prop.0);
+                }
+                for defined_prop_without_meaning in last_env.defined_props_without_meaning.iter() {
+                    self.defined_props_without_meaning.remove(defined_prop_without_meaning.0);
                 }
                 for defined_struct in last_env.defined_structs.iter() {
                     self.defined_structs.remove(defined_struct.0);

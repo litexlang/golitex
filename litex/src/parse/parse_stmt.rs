@@ -6,7 +6,7 @@ use super::TokenBlock;
 impl Parser {
     pub fn parse_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         match tb.current()? {
-            PROP => self.def_prop_stmt(tb),
+            PROP => self.def_prop_stmt_or_prop_without_meaning(tb),
             LET => self.def_let_stmt(tb),
             HAVE => {
                 if tb.token_at_index(1)? == FN {

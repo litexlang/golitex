@@ -9,23 +9,11 @@ use crate::stmt::Stmt;
 
 pub fn run_source_code(source_code: &str) -> String {
     let mut module_manager = ModuleManager::new_empty_module_manager();
-    let environment: Box<Environment> = Box::new(Environment::new(
-        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
-        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
-        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
-        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
-        HashMap::new(), HashMap::new(),
-    ));
+    let environment: Box<Environment> = Box::new(Environment::new_empty_env());
 
-    let builtin_environment: Box<Environment> = Box::new(Environment::new(
-        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
-        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
-        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
-        HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(),
-        HashMap::new(), HashMap::new(),
-    ));
+    let builtin_environment: Box<Environment> = Box::new(Environment::new_empty_env());
 
-    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
+    let mut runtime_context = RuntimeContext::new(&mut module_manager, vec![environment], builtin_environment, HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new());
 
     let blocks = match TokenBlock::parse_blocks(source_code, 0) {
         Ok(b) => b,
