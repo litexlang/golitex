@@ -1,5 +1,4 @@
 use crate::error::ParsingError;
-use crate::fact::ExistFact;
 use crate::common::keywords::{COLON, EXIST, NONEMPTY_SET, WITNESS};
 use super::Parser;
 use crate::stmt::Stmt;
@@ -22,13 +21,7 @@ impl Parser {
         tb.skip_token(EXIST)?;
         let equal_tos = self.obj_list(tb)?;
         tb.skip_token(COLON)?;
-        let exist_fact_result = self.parse_exist_fact(tb, true)?;
-        let exist_fact_in_witness = match exist_fact_result {
-            ExistFact::TrueExistFact(t) => t,
-            ExistFact::NotExistFact(_) => {
-                return Err(ParsingError::new("witness exist expects a positive exist fact", tb.line_file_index));
-            }
-        };
+        let exist_fact_in_witness = self.parse_exist_fact(tb)?;
         let mut proof = vec![];
         for block in tb.body.iter_mut() {
             proof.push(self.parse_stmt(block)?);

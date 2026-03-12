@@ -35,7 +35,7 @@ impl Fact {
     pub fn line_file(&self) -> Option<(usize, usize)> {
         match self {
             Fact::AtomicFact(a) => super::atomic_fact::line_file(a),
-            Fact::ExistFact(e) => super::exist_fact::line_file(e),
+            Fact::ExistFact(e) => e.line_file_index(),
             Fact::OrFact(o) => o.line_file_index,
             Fact::AndFact(a) => a.line_file_index(),
             Fact::ChainFact(c) => c.line_file_index(),
