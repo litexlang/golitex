@@ -42,4 +42,15 @@ impl MonomialWithNonZeroScalarAndOrderedOperands {
             ordered_operands,
         }
     }
+
+    pub fn key(&self) -> String {
+        match &self.ordered_operands {
+            Some(ordered_operands) => {
+                return ordered_operands.iter().map(|(obj, _)| obj.to_string()).collect::<Vec<String>>().join("\n");
+            }
+            None => {
+                return "".to_string();
+            }
+        }
+    }
 }
