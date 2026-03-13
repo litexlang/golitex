@@ -5,16 +5,6 @@ use crate::fact::{Fact, AndChainAtomicFact, ExistOrAndChainAtomicFact};
 use super::Stmt;
 use crate::obj::{ClosedRange, Obj, Range };
 
-pub enum ProofTechniqueStmt {
-    ProveCaseByCase(ProveCaseByCaseStmt),
-    ProveByContradiction(ProveByContradictionStmt),
-    ProveByEnumeration(ProveByEnumerationStmt),
-    ProveByInduction(ProveByInductionStmt),
-    ProveForStmt(ProveForStmt),
-    ProveByEqualSet(ProveByEqualSetStmt),
-    ViewFnAsSet(ViewFnAsSetStmt),
-}
-
 // f $in fn(A, B) C => forall a A, b B => ((a, b), f(a, b)) $in f; forall x f: exist a A, b B st ((a, b), f(a, b)) = x
 // f $in fn(a A, b B: $p(a, b)) C {$q(a, b, f)} => forall a A, b B: $p(a, b) => ((a, b), f(a, b)) $in f; forall x f: exist a A, b B st {$p(a, b), ((a, b), f(a, b)) = x}
 pub struct ViewFnAsSetStmt {
@@ -112,34 +102,6 @@ impl ProveByContradictionStmt {
 impl fmt::Display for ProveByContradictionStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}\n{}\n{}{}\n{}\n{} {}", CLAIM, COLON,to_string_and_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1),add_four_spaces_at_beginning(CONTRA, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2), add_four_spaces_at_beginning(IMPOSSIBLE, 2), &self.impossible_fact.to_string())
-    }
-}
-
-impl fmt::Display for ProofTechniqueStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ProofTechniqueStmt::ProveCaseByCase(prove_case_by_case) => write!(f, "{}", prove_case_by_case),
-            ProofTechniqueStmt::ProveByContradiction(prove_by_contradiction_stmt) => write!(f, "{}", prove_by_contradiction_stmt),
-            ProofTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt) => write!(f, "{}", prove_by_enumeration_stmt),
-            ProofTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => write!(f, "{}", prove_by_induction_stmt),
-            ProofTechniqueStmt::ProveForStmt(prove_for_stmt) => write!(f, "{}", prove_for_stmt),
-            ProofTechniqueStmt::ProveByEqualSet(prove_equal_set_stmt) => write!(f, "{}", prove_equal_set_stmt),
-            ProofTechniqueStmt::ViewFnAsSet(prove_fn_is_set_stmt) => write!(f, "{}", prove_fn_is_set_stmt),
-        }
-    }
-}
-
-impl ProofTechniqueStmt {
-    pub fn line_file(&self) -> Option<(usize, usize)> {
-        match self {
-            ProofTechniqueStmt::ProveCaseByCase(prove_case_by_case) => prove_case_by_case.line_file_index,
-            ProofTechniqueStmt::ProveByContradiction(claim_prove_by_contradiction_stmt) => claim_prove_by_contradiction_stmt.line_file_index,
-            ProofTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt) => prove_by_enumeration_stmt.line_file_index,
-            ProofTechniqueStmt::ProveByInduction(prove_by_induction_stmt) => prove_by_induction_stmt.line_file_index,
-            ProofTechniqueStmt::ProveForStmt(prove_for_stmt) => prove_for_stmt.line_file_index,
-            ProofTechniqueStmt::ProveByEqualSet(prove_equal_set_stmt) => prove_equal_set_stmt.line_file_index,
-            ProofTechniqueStmt::ViewFnAsSet(prove_fn_is_set_stmt) => prove_fn_is_set_stmt.line_file_index,
-        }
     }
 }
 

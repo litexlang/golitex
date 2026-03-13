@@ -23,14 +23,14 @@ use obj::{
 use obj::{Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod};
 mod stmt;
 use stmt::Stmt;
-use stmt::definition_stmt::{DefStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, DefPropStmt, DefLetStmt};
+use stmt::definition_stmt::{HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, DefPropStmt, DefLetStmt};
 use stmt::claim_stmt::ClaimStmt;
 use stmt::know_stmt::KnowStmt;
-use stmt::proof_technique_stmt::{ProveCaseByCaseStmt, ProveByContradictionStmt, ProofTechniqueStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveByEqualSetStmt, ViewFnAsSetStmt};
+use stmt::proof_technique_stmt::{ProveCaseByCaseStmt, ProveByContradictionStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveByEqualSetStmt, ViewFnAsSetStmt};
 use stmt::prove_stmt::ProveStmt;
 use stmt::tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalModuleStmt, ClearStmt, DoNothingStmt, RunFileStmt};
 use stmt::eval_stmt::EvalStmt;
-use stmt::witness_stmt::{WitnessStmt, WitnessExistFact, WitnessNonemptySet};
+use stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
 use stmt::parameter_type_and_property::{ParamType, Set, NonemptySet, FiniteSet, ParamDefWithParamType, ParamDefWithParamSet};
 use stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
 mod fact;
@@ -193,18 +193,18 @@ fn try_stmt() {
     println!("{}", fact2);
 
     let def_let_param = vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))];
-    let def_stmt = Stmt::DefStmt(DefStmt::DefLetStmt(DefLetStmt::new(def_let_param, vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let def_stmt = Stmt::DefLetStmt(DefLetStmt::new(def_let_param, vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
         Some((1, 0)),
-    )))], Some((1, 0)))));
+    )))], Some((1, 0))));
     println!("{}", def_stmt);
 
-    let def_stmt2 = Stmt::DefStmt(DefStmt::DefPropStmt(DefPropStmt::new("f".to_string(), vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], Some(vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let def_stmt2 = Stmt::DefPropStmt(DefPropStmt::new("f".to_string(), vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], Some(vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Obj::mk("p"),
         Obj::mk("q"),
         Some((1, 0)),
-    )))]), Some((1, 0)))));
+    )))]), Some((1, 0))));
     println!("{}", def_stmt2);
 }
 
@@ -780,13 +780,10 @@ fn try_proof_techniques() {
     ))))], impossible_fact, Some((1, 0)));
     println!("{}", claim_prove_by_contradiction_stmt);
 
-    let proof_technique = ProofTechniqueStmt::ProveCaseByCase(prove_case_by_case);
-    println!("{}", proof_technique);
+    let stmt = Stmt::ProveCaseByCaseStmt(prove_case_by_case);
+    println!("{}", stmt);
 
-    let proof_technique = ProofTechniqueStmt::ProveByContradiction(claim_prove_by_contradiction_stmt);
-    println!("{}", proof_technique);
-
-    let stmt = Stmt::ProofTechnique(proof_technique);
+    let stmt = Stmt::ProveByContradictionStmt(claim_prove_by_contradiction_stmt);
     println!("{}", stmt);
 }
 
@@ -843,7 +840,7 @@ fn try_prove_by_enumeration_stmt() {
     let prove_by_enumeration_stmt = ProveByEnumerationStmt::new(params, param_sets, to_prove, proof, Some((1, 0)));
     println!("{}", prove_by_enumeration_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ProveByEnumeration(prove_by_enumeration_stmt));
+    let stmt = Stmt::ProveByEnumerationStmt(prove_by_enumeration_stmt);
     println!("{}", stmt);
 }
 
@@ -851,7 +848,7 @@ fn try_have_obj_in_nonempty_set_stmt() {
     let have_obj_in_nonempty_set_stmt = HaveObjInNonemptySetOrParamTypeStmt::new(vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], Some((1, 0)));
     println!("{}", have_obj_in_nonempty_set_stmt);
 
-    let stmt = Stmt::DefStmt(DefStmt::HaveObjInNonemptySetStmt(have_obj_in_nonempty_set_stmt));
+    let stmt = Stmt::HaveObjInNonemptySetStmt(have_obj_in_nonempty_set_stmt);
     println!("{}", stmt);
 }
 
@@ -897,7 +894,7 @@ fn try_prove_by_induction_stmt() {
     let prove_by_induction_stmt = ProveByInductionStmt::new(fact, param, proof, induc_from, Some((1, 0)));
     println!("{}", prove_by_induction_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ProveByInduction(prove_by_induction_stmt));
+    let stmt = Stmt::ProveByInductionStmt(prove_by_induction_stmt);
     println!("{}", stmt);
 }
 
@@ -906,7 +903,7 @@ fn try_have_obj_equal_stmt() {
     let have_obj_equal_stmt = HaveObjEqualStmt::new(have_obj_equal_param, vec![Obj::mk("p")], Some((1, 0)));
     println!("{}", have_obj_equal_stmt);
 
-    let stmt = Stmt::DefStmt(DefStmt::HaveObjEqualStmt(have_obj_equal_stmt));
+    let stmt = Stmt::HaveObjEqualStmt(have_obj_equal_stmt);
     println!("{}", stmt);
 }
 
@@ -943,7 +940,7 @@ fn try_prove_for_stmt() {
     let prove_for_stmt = ProveForStmt::new(params, vec![param_sets], dom_facts, then_facts, proof, Some((1, 0)));
     println!("{}", prove_for_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ProveForStmt(prove_for_stmt));
+    let stmt = Stmt::ProveForStmt(prove_for_stmt);
     println!("{}", stmt);
 
     let params2 = vec!["x".to_string()];
@@ -969,7 +966,7 @@ fn try_prove_for_stmt() {
     let prove_for_stmt = ProveForStmt::new(params2, vec![param_sets2], dom_facts2, then_facts2, proof2, Some((1, 0)));
     println!("{}", prove_for_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ProveForStmt(prove_for_stmt));
+    let stmt = Stmt::ProveForStmt(prove_for_stmt);
     println!("{}", stmt);
 }
 
@@ -977,7 +974,7 @@ fn try_have_obj_st_stmt() {
     let have_obj_st_stmt = HaveExistObjStmt::new(vec![Obj::mk("p")], ExistFact::new(vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], vec![], Some((1, 0))), Some((1, 0)));
     println!("{}", have_obj_st_stmt);
 
-    let stmt = Stmt::DefStmt(DefStmt::HaveExistObjStmt(have_obj_st_stmt));
+    let stmt = Stmt::HaveExistObjStmt(have_obj_st_stmt);
     println!("{}", stmt);
 }
 
@@ -985,7 +982,7 @@ fn try_witness_stmt() {
     let witness_exist_fact = WitnessExistFact::new(vec![Obj::mk("p")], ExistFact::new(vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))], Some((1, 0))), vec![], Some((1, 0)));
     println!("{}", witness_exist_fact);
 
-    let stmt = Stmt::WitnessStmt(WitnessStmt::WitnessExistFact(witness_exist_fact));
+    let stmt = Stmt::WitnessExistFact(witness_exist_fact);
     println!("{}", stmt);
 }
 
@@ -993,7 +990,7 @@ fn try_prove_equal_set_stmt() {
     let prove_equal_set_stmt = ProveByEqualSetStmt::new(Obj::mk("p"), Obj::mk("q"), vec![], Some((1, 0)));
     println!("{}", prove_equal_set_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ProveByEqualSet(prove_equal_set_stmt));
+    let stmt = Stmt::ProveByEqualSetStmt(prove_equal_set_stmt);
     println!("{}", stmt);
 
     let proof2 = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
@@ -1005,7 +1002,7 @@ fn try_prove_equal_set_stmt() {
     let prove_equal_set_stmt = ProveByEqualSetStmt::new(Obj::mk("p"), Obj::mk("q"), proof2, Some((1, 0)));
     println!("{}", prove_equal_set_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ProveByEqualSet(prove_equal_set_stmt));
+    let stmt = Stmt::ProveByEqualSetStmt(prove_equal_set_stmt);
     println!("{}", stmt);
 }
 
@@ -1013,7 +1010,7 @@ fn try_witness_nonempty_set_stmt() {
     let witness_nonempty_set_stmt = WitnessNonemptySet::new(Obj::mk("p"), Obj::mk("q"), vec![], Some((1, 0)));
     println!("{}", witness_nonempty_set_stmt);
 
-    let stmt = Stmt::WitnessStmt(WitnessStmt::WitnessNonemptySet(witness_nonempty_set_stmt));
+    let stmt = Stmt::WitnessNonemptySet(witness_nonempty_set_stmt);
     println!("{}", stmt);
 }
 
@@ -1021,13 +1018,13 @@ fn try_view_fn_as_set() {
     let prove_fn_set_is_subset_of_cart_set_stmt = ViewFnAsSetStmt::new(Obj::mk("p"), Some((1, 0)));
     println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ViewFnAsSet(prove_fn_set_is_subset_of_cart_set_stmt));
+    let stmt = Stmt::ViewFnAsSetStmt(prove_fn_set_is_subset_of_cart_set_stmt);
     println!("{}", stmt);
 
     let prove_fn_set_is_subset_of_cart_set_stmt = ViewFnAsSetStmt::new(Obj::mk("p"), Some((1, 0)));
     println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
 
-    let stmt = Stmt::ProofTechnique(ProofTechniqueStmt::ViewFnAsSet(prove_fn_set_is_subset_of_cart_set_stmt));
+    let stmt = Stmt::ViewFnAsSetStmt(prove_fn_set_is_subset_of_cart_set_stmt);
     println!("{}", stmt);
 }
 
@@ -1037,7 +1034,7 @@ fn try_have_fn_equal_stmt() {
     have_fn_equal_stmt.to_string();
     println!("{}", have_fn_equal_stmt);
 
-    let stmt = Stmt::DefStmt(DefStmt::HaveFnEqualStmt(have_fn_equal_stmt));
+    let stmt = Stmt::HaveFnEqualStmt(have_fn_equal_stmt);
     println!("{}", stmt);
 }
 
@@ -1045,7 +1042,7 @@ fn try_have_fn_equal_case_by_case_stmt() {
     let have_fn_equal_case_by_case_stmt = HaveFnEqualCaseByCaseStmt::new("f".to_string(), FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Obj::mk("p"))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))], Obj::mk("p")), vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Obj::mk("p"), Obj::mk("q"), Some((1, 0)))))], vec![Obj::mk("p")], Some((1, 0)));
     println!("{}", have_fn_equal_case_by_case_stmt);
 
-    let stmt = Stmt::DefStmt(DefStmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt));
+    let stmt = Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt);
     println!("{}", stmt);
 }
 
@@ -1067,7 +1064,7 @@ fn try_def_struct_stmt() {
     );
     println!("{}", def_struct_stmt);
 
-    let stmt = Stmt::DefStmt(DefStmt::DefStructWithNoFieldStmt(def_struct_stmt));
+    let stmt = Stmt::DefStructWithNoFieldStmt(def_struct_stmt);
     println!("{}", stmt);
 
     let fields = vec![(
@@ -1094,7 +1091,7 @@ fn try_def_struct_stmt() {
     );
     println!("{}", def_struct_with_fields_stmt);
 
-    let stmt = Stmt::DefStmt(DefStmt::DefStructWithFieldsStmt(def_struct_with_fields_stmt));
+    let stmt = Stmt::DefStructWithFieldsStmt(def_struct_with_fields_stmt);
     println!("{}", stmt);
 }
 

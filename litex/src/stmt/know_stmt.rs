@@ -10,10 +10,6 @@ impl KnowStmt {
     pub fn new(facts: Vec<Fact>, line_file_index: Option<(usize, usize)>) -> Self {
         KnowStmt { facts, line_file_index }
     }
-
-    pub fn line_file(&self) -> Option<(usize, usize)> {
-        self.line_file_index
-    }
 }
 
 impl fmt::Display for KnowStmt {
