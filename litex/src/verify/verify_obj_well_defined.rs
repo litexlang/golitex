@@ -2,7 +2,7 @@ use crate::obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FieldAccess, FieldAccessWithMod,
     FnObj, FnSetWithDom, FnSetWithoutDom, Identifier, IdentifierWithMod, InstStructObj, ListSet, Mod,
     Mul, Number, Obj, ObjAtIndex, PowerSet, Pow, Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, Union, Val, ZObj,
-    Intersect, Atom, FnSetObj,
+    Intersect, FnSetObj, 
 };
 use crate::error::{WellDefinedError, StmtError};
 use crate::verify::VerifyState;
@@ -91,45 +91,90 @@ impl<'a> Executor<'a> {
         Err(WellDefinedError::new("verify_field_access_with_mod_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_fn_obj_well_defined(&self, fn_obj: &FnObj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        let _ = verify_state;
-
-        match fn_obj.head.as_ref() {
-            Atom::IdentifierAtom(_) => {
-                match self.runtime_context.find_fn_definition_for_atom(fn_obj.head.as_ref()) {
-                    Some(fn_set_obj) => {
-                        self.verify_fn_obj_with_fn_definition_well_defined(fn_obj, fn_set_obj, verify_state)
-                    }
-                    None => {
-                        Err(WellDefinedError::new(
-                            todo_error_message("verify_fn_obj_well_defined: function head identifier has no known definition yet").as_str(),
-                            vec![],
-                            None,
-                        ))
-                    }
-                }
-            }
-            _ => {
-                Err(WellDefinedError::new(
-                    todo_error_message("verify_fn_obj_well_defined: currently only identifier head is supported").as_str(),
-                    vec![],
-                    None,
-                ))
-            }
-        }
-    }
-
-    fn verify_fn_obj_with_fn_definition_well_defined(
-        &self,
-        _fn_obj: &FnObj,
-        _fn_set_obj: &FnSetObj,
-        _verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
-        Err(WellDefinedError::new(
-            todo_error_message("verify_fn_obj_with_fn_definition_well_defined for FnSetWithDom and FnSetWithoutDom").as_str(),
+    fn verify_fn_obj_well_defined(&mut self, fn_obj: &FnObj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        let mut the_set_where_current_fn_obj_is_in = self.runtime_context.find_fn_definition_for_atom(&fn_obj.head).ok_or_else(|| WellDefinedError::new(
+            todo_error_message("verify_fn_obj_well_defined: function head identifier has no known definition yet").as_str(),
             vec![],
             None,
-        ))
+        ))?.clone();
+
+        for args in fn_obj.body.iter() {
+            match &the_set_where_current_fn_obj_is_in {
+                FnSetObj::FnSetWithDom(fn_set_with_dom) => {
+                    self.verify_fn_obj_well_defined_against_fn_set_with_dom(args, &fn_set_with_dom, verify_state)?;
+                }
+                FnSetObj::FnSetWithoutDom(fn_set_without_dom) => {
+                    self.verify_fn_obj_args_well_defined_against_fn_set_without_dom(args, &fn_set_without_dom, verify_state)?;
+                }
+            }
+
+            let next_ret_set = the_set_where_current_fn_obj_is_in.ret_set();
+            the_set_where_current_fn_obj_is_in = match *next_ret_set {
+                Obj::FnSetWithDom(e) => FnSetObj::FnSetWithDom(e),
+                Obj::FnSetWithoutDom(e) => FnSetObj::FnSetWithoutDom(e),
+                _ => {
+                    return Err(WellDefinedError::new(
+                        format!("expect return set of {} to be a fn_set object.", the_set_where_current_fn_obj_is_in.to_string()).as_str(),
+                        vec![],
+                        None,
+                    ));
+                }
+            };
+        }
+
+        Ok(())
+    }
+
+    /// Verify that the given FnObj is well-defined with respect to a FnSetWithDom definition.
+    fn verify_fn_obj_well_defined_against_fn_set_with_dom(
+        &mut self,
+        args: &Vec<Box<Obj>>,
+        fn_set_with_dom: &FnSetWithDom,
+        verify_state: &VerifyState,
+    ) -> Result<(), WellDefinedError> {
+        let param_count = fn_set_with_dom.params_def_with_set.len();
+        if args.len() != param_count {
+            return Err(WellDefinedError::new(
+                format!("number of args ({}) does not match fn set with dom param count ({})", args.len(), param_count).as_str(),
+                vec![],
+                None,
+            ));
+        }
+
+        for (index, arg) in args.iter().enumerate() {
+            self.verify_obj_well_defined(arg, verify_state)?;
+            let param_set = &fn_set_with_dom.params_def_with_set[index].1;
+            let in_fact = InFact::new((**arg).clone(), param_set.clone(), None);
+            self.verify_atomic_fact(&AtomicFact::InFact(in_fact), verify_state)?;
+        }
+
+        Ok(())
+    }
+
+    /// Verify that the given FnObj is well-defined with respect to a FnSetWithoutDom definition.
+    fn verify_fn_obj_args_well_defined_against_fn_set_without_dom(
+        &mut self,
+        args: &Vec<Box<Obj>>,
+        fn_set_without_dom: &FnSetWithoutDom,
+        verify_state: &VerifyState,
+    ) -> Result<(), WellDefinedError> {
+        let param_count = fn_set_without_dom.param_sets.len();
+        if args.len() != param_count {
+            return Err(WellDefinedError::new(
+                format!("number of args ({}) does not match fn set without dom param count ({})", args.len(), param_count).as_str(),
+                vec![],
+                None,
+            ));
+        }
+
+        for (index, arg) in args.iter().enumerate() {
+            self.verify_obj_well_defined(arg, verify_state)?;
+            let param_set = &fn_set_without_dom.param_sets[index];
+            let in_fact = InFact::new((**arg).clone(), (**param_set).clone(), None);
+            self.verify_atomic_fact(&AtomicFact::InFact(in_fact), verify_state)?;
+        }
+
+        Ok(())
     }
 
     fn require_obj_in_r(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
