@@ -97,7 +97,7 @@ impl<'a> Executor<'a> {
             ParamType::NonemptySet(_) => {},
             ParamType::FiniteSet(_) => {},
             ParamType::Obj(param_set) => {
-                self.verify_obj_well_defined(&param_set, &VerifyState::new(0, false))?;
+                self.verify_obj_well_defined_and_store_cache(&param_set, &VerifyState::new(0, false))?;
             },
         }
         
@@ -110,7 +110,7 @@ impl<'a> Executor<'a> {
     }
 
     pub fn define_params_with_set(&mut self, param_def: &ParamDefWithParamSet) -> Result<(), ExecError> {
-        self.verify_obj_well_defined(&param_def.1, &VerifyState::new(0, false))?;
+        self.verify_obj_well_defined_and_store_cache(&param_def.1, &VerifyState::new(0, false))?;
         let facts = param_def.facts();
         for (name, fact) in param_def.0.iter().zip(facts.iter()) {
             self.validate_name_and_store_identifier_obj(name)?;
