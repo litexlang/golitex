@@ -10,5 +10,6 @@ mod verify_non_equational_atomic_fact;
 mod verify_fact;
 mod verify_number_in_standard_set;
 mod verify_equality;
+mod verify_and_chain_fact;
 
 pub use verify_state::VerifyState;

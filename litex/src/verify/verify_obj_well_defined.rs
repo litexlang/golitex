@@ -108,8 +108,8 @@ impl<'a> Executor<'a> {
                 }
             }
 
-            let next_ret_set = the_set_where_current_fn_obj_is_in.ret_set();
-            the_set_where_current_fn_obj_is_in = match *next_ret_set {
+            let set_where_the_next_fn_obj_is_in = the_set_where_current_fn_obj_is_in.ret_set();
+            the_set_where_current_fn_obj_is_in = match *set_where_the_next_fn_obj_is_in {
                 Obj::FnSetWithDom(e) => FnSetObj::FnSetWithDom(e),
                 Obj::FnSetWithoutDom(e) => FnSetObj::FnSetWithoutDom(e),
                 _ => {
