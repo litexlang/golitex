@@ -199,4 +199,13 @@ impl<'a> RuntimeContext<'a> {
 
         self.builtin_environment.known_fn_in_fn_set.get(&key)
     }
+
+    pub fn cache_well_defined_obj_contains(&self, key: &str) -> bool {
+        for env in self.iter_environments_from_top() {
+            if env.cache_well_defined_obj.contains_key(key) {
+                return true;
+            }
+        }
+        self.builtin_environment.cache_well_defined_obj.contains_key(key)
+    }
 }
