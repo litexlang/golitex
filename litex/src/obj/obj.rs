@@ -1133,3 +1133,12 @@ impl Obj {
         }
     }
 }
+
+impl FnSetObj {
+    pub fn ret_set(&self) -> Box<Obj> {
+        match self {
+            FnSetObj::FnSetWithDom(e) => e.ret_set.clone(),
+            FnSetObj::FnSetWithoutDom(e) => e.ret_set.clone(),
+        }
+    }
+}

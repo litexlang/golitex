@@ -47,10 +47,8 @@ impl<'a> Executor<'a> {
         let left_string = equal_fact.left.to_string();
         let right_string = equal_fact.right.to_string();
 
-        for i in (0..self.runtime_context.environments.len()).rev() {
-            let env = &self.runtime_context.environments[i];
-            let known_left = env.known_equality.get(&left_string).map(Rc::clone);
-            let known_right = env.known_equality.get(&right_string).map(Rc::clone);
+        let known_pairs = self.collect_known_equality_pairs_from_envs(&left_string, &right_string);
+        for (known_left, known_right) in known_pairs {
             if let Some(result) = self.try_verify_equality_with_known(equal_fact, known_left.as_ref(), known_right.as_ref())? {
                 return Ok(result);
             }
@@ -62,6 +60,21 @@ impl<'a> Executor<'a> {
         }
 
         Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
+    }
+
+    /// Collect (known_left, known_right) from each env in top-to-bottom order (last env first).
+    fn collect_known_equality_pairs_from_envs(
+        &self,
+        left_string: &str,
+        right_string: &str,
+    ) -> Vec<(Option<Rc<Vec<Obj>>>, Option<Rc<Vec<Obj>>>)> {
+        let mut pairs = vec![];
+        for env in self.runtime_context.iter_environments_from_top() {
+            let known_left = env.known_equality.get(left_string).map(Rc::clone);
+            let known_right = env.known_equality.get(right_string).map(Rc::clone);
+            pairs.push((known_left, known_right));
+        }
+        pairs
     }
 
     fn try_verify_equality_with_known(
