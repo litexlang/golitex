@@ -77,3 +77,8 @@ pub fn vec_has_duplicates<T: Eq + Hash>(vec: &[T]) -> bool {
 pub fn duplicate_parameter_name_error_message(context: &str) -> String {
     format!("duplicate parameter name in {}", context)
 }
+
+/// Standard TODO-style error message for unimplemented functionality.
+pub fn todo_error_message(context: &str) -> String {
+    format!("TODO: {} is not implemented yet", context)
+}

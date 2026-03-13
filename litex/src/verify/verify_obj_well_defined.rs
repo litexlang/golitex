@@ -1,8 +1,8 @@
 use crate::obj::{
-    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FieldAccess, FieldAccessWithMod, 
+    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FieldAccess, FieldAccessWithMod,
     FnObj, FnSetWithDom, FnSetWithoutDom, Identifier, IdentifierWithMod, InstStructObj, ListSet, Mod,
     Mul, Number, Obj, ObjAtIndex, PowerSet, Pow, Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, Union, Val, ZObj,
-    Intersect,
+    Intersect, Atom, FnSetObj,
 };
 use crate::error::{WellDefinedError, StmtError};
 use crate::verify::VerifyState;
@@ -10,6 +10,7 @@ use crate::fact::{AtomicFact, NotEqualFact, IsCartFact, IsNonemptySetFact};
 use crate::fact::InFact;
 use crate::execute::Executor;
 use crate::stmt::parameter_type_and_property::{ParamDefWithParamSet, ParamDefWithParamType};
+use crate::common::helper::todo_error_message;
 
 // well-defined check for obj
 impl<'a> Executor<'a> {
@@ -90,9 +91,45 @@ impl<'a> Executor<'a> {
         Err(WellDefinedError::new("verify_field_access_with_mod_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn verify_fn_obj_well_defined(&self, _fn_obj: &FnObj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_fn_obj_well_defined(&self, fn_obj: &FnObj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_fn_obj_well_defined 此函数还没有 implement", vec![], None))
+
+        match fn_obj.head.as_ref() {
+            Atom::IdentifierAtom(_) => {
+                match self.runtime_context.find_fn_definition_for_atom(fn_obj.head.as_ref()) {
+                    Some(fn_set_obj) => {
+                        self.verify_fn_obj_with_fn_definition_well_defined(fn_obj, fn_set_obj, verify_state)
+                    }
+                    None => {
+                        Err(WellDefinedError::new(
+                            todo_error_message("verify_fn_obj_well_defined: function head identifier has no known definition yet").as_str(),
+                            vec![],
+                            None,
+                        ))
+                    }
+                }
+            }
+            _ => {
+                Err(WellDefinedError::new(
+                    todo_error_message("verify_fn_obj_well_defined: currently only identifier head is supported").as_str(),
+                    vec![],
+                    None,
+                ))
+            }
+        }
+    }
+
+    fn verify_fn_obj_with_fn_definition_well_defined(
+        &self,
+        _fn_obj: &FnObj,
+        _fn_set_obj: &FnSetObj,
+        _verify_state: &VerifyState,
+    ) -> Result<(), WellDefinedError> {
+        Err(WellDefinedError::new(
+            todo_error_message("verify_fn_obj_with_fn_definition_well_defined for FnSetWithDom and FnSetWithoutDom").as_str(),
+            vec![],
+            None,
+        ))
     }
 
     fn require_obj_in_r(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
@@ -305,7 +342,7 @@ impl<'a> Executor<'a> {
         for fact in facts.iter() {
             self.verify_fact(fact, verify_state).map_err(|e| WellDefinedError::new(
                 &format!("exec_fact failed for inst struct obj arg (struct {})", x.struct_name),
-                vec![StmtError::VerifyFactError(e)],
+                vec![StmtError::VerifyError(e)],
                 None,
             ))?;
         }

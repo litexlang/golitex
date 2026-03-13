@@ -7,7 +7,7 @@ use verify::VerifyState;
 mod simplify_polynomial;
 mod common;
 mod error;
-use error::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError, ExecError, WellDefinedError};
+use error::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError, ExecError, WellDefinedError, VerifyError, InferError};
 use error::ParsingError;
 mod execute;
 use execute::Executor;
@@ -599,7 +599,7 @@ fn try_errors() {
     let err: StmtError = StmtError::NewAtomicFactError(NewAtomicFactError::new("demo"));
     println!("{}", err);
 
-    let err: StmtError = StmtError::StoreFactError(StoreFactError::new("demo"));
+    let err: StmtError = StmtError::StoreFactError(StoreFactError::new("demo", vec![]));
     println!("{}", err);
 
     let err: StmtError = StmtError::ParseBlockError(ParseBlockError::ExpectedIndent(1, 0));
@@ -612,6 +612,12 @@ fn try_errors() {
     println!("{}", err);
 
     let err: StmtError = StmtError::WellDefinedError(WellDefinedError::new("demo", vec![StmtError::ArithmeticError(ArithmeticError::new("demo"))], Some((1, 0))));
+    println!("{}", err);
+
+    let err: StmtError = StmtError::VerifyError(VerifyError::new("demo", vec![StmtError::ArithmeticError(ArithmeticError::new("demo"))], Some((1, 0))));
+    println!("{}", err);
+
+    let err: StmtError = StmtError::InferError(InferError::new("demo", Some((1, 0))));
     println!("{}", err);
 }
 

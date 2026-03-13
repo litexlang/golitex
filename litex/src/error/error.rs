@@ -12,7 +12,8 @@ pub enum StmtError {
     ExecError(ExecError),
     UnknownError(UnknownError),
     WellDefinedError(WellDefinedError),
-    VerifyFactError(VerifyError),
+    VerifyError(VerifyError),
+    InferError(InferError),
 }
 
 
@@ -29,7 +30,8 @@ impl StmtError {
             StmtError::ExecError(e) => e.line_file_index,
             StmtError::UnknownError(e) => e.line_file_index,
             StmtError::WellDefinedError(e) => e.line_file_index,
-            StmtError::VerifyFactError(e) => e.line_file_index,
+            StmtError::VerifyError(e) => e.line_file_index,
+            StmtError::InferError(e) => e.line_file_index,
         }
     }
 }
@@ -46,7 +48,8 @@ impl fmt::Display for StmtError {
             StmtError::ExecError(e) => write!(f, "{}", e),
             StmtError::UnknownError(e) => write!(f, "{}", e),
             StmtError::WellDefinedError(e) => write!(f, "{}", e),
-            StmtError::VerifyFactError(e) => write!(f, "{}", e),
+            StmtError::VerifyError(e) => write!(f, "{}", e),
+            StmtError::InferError(e) => write!(f, "{}", e),
         }
     }
 }
@@ -103,7 +106,7 @@ impl From<NewAtomicFactError> for StmtError {
 
 impl From<NewAtomicFactError> for StoreFactError {
     fn from(e: NewAtomicFactError) -> Self {
-        StoreFactError::new(format!("new atomic fact error: {}", e).as_str())
+        StoreFactError::new(format!("new atomic fact error: {}", e).as_str(), vec![e.into()])
     }
 }
 
@@ -116,19 +119,20 @@ impl From<NewAtomicFactError> for WellDefinedError {
 #[derive(Debug)]
 pub struct StoreFactError {
     pub msg: String,
+    pub previous_errors: Vec<StmtError>,
 }
 
 impl std::error::Error for StoreFactError {}
 
 impl fmt::Display for StoreFactError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}", "StoreFactError:".to_string(), self.msg)
+        write!(f, "{}\n{}\n{}", "StoreFactError:".to_string(), self.msg, vec_to_string_with_sep(&self.previous_errors, "\n"))
     }
 }
 
 impl StoreFactError {
-    pub fn new(msg: &str) -> Self {
-        StoreFactError { msg: msg.to_string() }
+    pub fn new(msg: &str, previous_errors: Vec<StmtError>) -> Self {
+        StoreFactError { msg: msg.to_string(), previous_errors }
     }
 }
 
@@ -305,7 +309,7 @@ impl VerifyError {
 
 impl From<VerifyError> for StmtError {
     fn from(e: VerifyError) -> Self {
-        StmtError::VerifyFactError(e)
+        StmtError::VerifyError(e)
     }
 }
 
@@ -344,5 +348,38 @@ impl UnknownError {
 impl From<UnknownError> for StmtError {
     fn from(e: UnknownError) -> Self {
         StmtError::UnknownError(e)
+    }
+}
+
+
+#[derive(Debug)]
+pub struct InferError {
+    pub msg: String,
+    pub line_file_index: Option<(usize, usize)>,
+}
+
+impl std::error::Error for InferError {}
+
+impl fmt::Display for InferError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}\n{}", "InferError:".to_string(), self.msg)
+    }
+}
+
+impl InferError {
+    pub fn new(msg: &str, line_file_index: Option<(usize, usize)>) -> Self {
+        InferError { msg: msg.to_string(), line_file_index }
+    }
+}
+
+impl From<InferError> for StmtError {
+    fn from(e: InferError) -> Self {
+        StmtError::InferError(e)
+    }
+}
+
+impl From<InferError> for ExecError {
+    fn from(e: InferError) -> Self {
+        ExecError::new(format!("infer error: {}", e).as_str(), vec![e.into()], None)
     }
 }
