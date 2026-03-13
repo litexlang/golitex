@@ -303,9 +303,9 @@ impl<'a> Executor<'a> {
         let facts = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(param_defs, &x.args)
             .map_err(|e| WellDefinedError::new(format!("failed to build facts for inst struct {}: {}", x.struct_name, e).as_str(), vec![e], None))?;
         for fact in facts.iter() {
-            self.exec_fact(fact, verify_state).map_err(|e| WellDefinedError::new(
+            self.verify_fact(fact, verify_state).map_err(|e| WellDefinedError::new(
                 &format!("exec_fact failed for inst struct obj arg (struct {})", x.struct_name),
-                vec![e],
+                vec![StmtError::VerifyFactError(e)],
                 None,
             ))?;
         }

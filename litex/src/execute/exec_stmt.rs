@@ -2,7 +2,6 @@ use crate::error::{ExecError, StmtError};
 use crate::stmt::Stmt;
 use crate::result::NonErrStmtResult;
 use super::Executor;
-use crate::verify::VerifyState;
 
 impl<'a> Executor<'a> {
     pub fn stmt(&mut self, stmt: &Stmt) -> Result<NonErrStmtResult, StmtError> {
@@ -19,7 +18,7 @@ impl<'a> Executor<'a> {
             Stmt::DefStructWithNoFieldStmt(d) => self.def_struct_with_no_field_stmt(d).map_err(StmtError::from),
             Stmt::DefAlgoStmt(d) => self.def_algo_stmt(d).map_err(StmtError::from),
             Stmt::KnowStmt(know_stmt) => self.exec_know_stmt(know_stmt).map_err(StmtError::from),
-            Stmt::Fact(fact) => self.exec_fact(fact, &VerifyState::new(0, false)),
+            Stmt::Fact(fact) => self.exec_fact(fact).map_err(StmtError::from),
             _ => return Err(StmtError::ExecError(ExecError::new("不支持的语句类型", vec![], stmt.line_file()))),
         }
     }

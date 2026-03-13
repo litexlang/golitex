@@ -1307,7 +1307,7 @@ fn try_obj_well_defined<'a>() {
         println!("ERROR:{}", e);
     }
 
-    if let Err(e) = executor.exec_fact(&fact, &mut verify_state) {
+    if let Err(e) = executor.exec_fact(&fact) {
         println!("ERROR:{}", e);
     }
 }
