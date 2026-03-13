@@ -9,14 +9,17 @@ use crate::execute::Executor;
 impl<'a> Executor<'a> {
     pub fn verify_fact(&mut self, fact: &Fact, verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
         let use_cache = matches!(fact, Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_) | Fact::OrFact(_));
-        let (cache_ok, cache_line_file) = self.runtime_context.cache_known_or_and_atomic_fact_contains(fact.to_string().as_str());
-        if use_cache && cache_ok {
-            let line_file = cache_line_file.or_else(|| fact.line_file());
-            return Ok(NonErrStmtResult::FactVerifiedByFact(FactVerifiedByFact::new(
-                fact.to_string(),
-                fact.to_string(),
-                line_file,
-            )));
+        if use_cache {
+            let key = fact.to_string();
+            let (cache_ok, cache_line_file) = self.runtime_context.cache_known_or_and_atomic_fact_contains(&key);
+
+            if cache_ok {
+                return Ok(NonErrStmtResult::FactVerifiedByFact(FactVerifiedByFact::new(
+                    key,
+                    fact.to_string(),
+                    cache_line_file,
+                )));
+            }
         }
 
         if !verify_state.well_defined_already_verified {
