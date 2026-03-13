@@ -22,4 +22,8 @@ impl VerifyState {
     pub fn new_state_with_req_ok_set_to_true(&mut self) -> Self {
         return Self::new(self.round, true);
     }
+
+    pub fn is_round_0(&self) -> bool {
+        self.round == 0
+    }
 }

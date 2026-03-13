@@ -7,8 +7,8 @@ use std::result::Result;
 
 
 impl<'a> Executor<'a> {
-    pub fn exec_fact(&mut self, fact: &Fact, verify_state: &VerifyState) -> Result<NonErrStmtResult, StmtError> {
-        let result = self.verify_fact(fact, verify_state)?;
+    pub fn exec_fact(&mut self, fact: &Fact) -> Result<NonErrStmtResult, StmtError> {
+        let result = self.verify_fact(fact, &VerifyState::new(0, false))?;
         let result = match result {
             NonErrStmtResult::StmtUnknown(_) => {
                 return Err(StmtError::UnknownError(UnknownError::new(

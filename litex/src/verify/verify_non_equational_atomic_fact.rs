@@ -13,35 +13,42 @@ impl<'a> Executor<'a> {
             return Ok(result);
         }
 
-        result = self.verify_non_equational_atomic_fact_with_known_atomic_fact(atomic_fact, verify_state)?;
+        result = self.verify_non_equational_atomic_fact_with_known_atomic_fact(atomic_fact)?;
         if result.is_true() {
             return Ok(result);
+        }
+
+        if verify_state.is_round_0() {
+            result = self.verify_non_equational_atomic_fact_with_known_forall_fact(atomic_fact)?;
+            if result.is_true() {
+                return Ok(result);
+            }
         }
 
         Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
     }
     
-    pub fn verify_non_equational_atomic_fact_with_known_atomic_fact(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+    pub fn verify_non_equational_atomic_fact_with_known_atomic_fact(&mut self, atomic_fact: &AtomicFact) -> Result<NonErrStmtResult, VerifyError> {
         if atomic_fact.number_of_args() == 1 {
-            self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(atomic_fact, verify_state)
+            self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(atomic_fact)
         } else if atomic_fact.number_of_args() == 2 {
-            self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params(atomic_fact, verify_state)
+            self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params(atomic_fact)
         } else {
-            self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params(atomic_fact, verify_state)
+            self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params(atomic_fact)
         }
     }
 
-    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(&mut self, atomic_fact: &AtomicFact, _verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(&mut self, atomic_fact: &AtomicFact) -> Result<NonErrStmtResult, VerifyError> {
         let all_objs_equal_to_arg = self.runtime_context.get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
-        
+
         for environment in self.runtime_context.environments.iter() {
-            let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg, _verify_state)?;
+            let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg)?;
             if result.is_true() {
                 return Ok(result);
             }
         }
 
-        let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(&self.runtime_context.builtin_environment, atomic_fact, &all_objs_equal_to_arg, _verify_state)?;
+        let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(&self.runtime_context.builtin_environment, atomic_fact, &all_objs_equal_to_arg)?;
         if result.is_true() {
             return Ok(result);
         }
@@ -49,18 +56,18 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params(&mut self, atomic_fact: &AtomicFact, _verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params(&mut self, atomic_fact: &AtomicFact) -> Result<NonErrStmtResult, VerifyError> {
         let all_objs_equal_to_arg0 = self.runtime_context.get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
         let all_objs_equal_to_arg1 = self.runtime_context.get_all_objs_equal_to_arg(&atomic_fact.args()[1].to_string());
 
         for environment in self.runtime_context.environments.iter() {
-            let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1, _verify_state)?;
+            let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
             if result.is_true() {
                 return Ok(result);
             }
         }
 
-        let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(&self.runtime_context.builtin_environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1, _verify_state)?;
+        let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(&self.runtime_context.builtin_environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
         if result.is_true() {
             return Ok(result);
         }
@@ -68,8 +75,20 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params(&mut self, _atomic_fact: &AtomicFact, _verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
-        panic!("not implemented");
+    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params(&mut self, atomic_fact: &AtomicFact) -> Result<NonErrStmtResult, VerifyError> {
+        for environment in self.runtime_context.environments.iter() {
+            let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(environment, atomic_fact)?;
+            if result.is_true() {
+                return Ok(result);
+            }
+        }
+        
+        let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(&self.runtime_context.builtin_environment, atomic_fact)?;
+        if result.is_true() {
+            return Ok(result);
+        }
+
+        Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
     }
 
     fn verify_non_equational_atomic_fact_with_builtin_rules(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
@@ -79,9 +98,9 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(environment: &Environment, atomic_fact: &AtomicFact, all_objs_equal_to: &Vec<String>, _verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(environment: &Environment, atomic_fact: &AtomicFact, all_objs_equal_to_arg: &Vec<String>) -> Result<NonErrStmtResult, VerifyError> {
         if let Some(known_facts_map) = environment.known_atomic_facts_with_1_arg.get(&(atomic_fact.key(), atomic_fact.is_true())) {
-            for obj in all_objs_equal_to.iter() {
+            for obj in all_objs_equal_to_arg.iter() {
                 if known_facts_map.contains_key(obj) {
                     return Ok(NonErrStmtResult::FactVerifiedByFact(FactVerifiedByFact::new(atomic_fact.to_string(), "known atomic fact".to_string(), atomic_fact.line_file_index())));
                 }
@@ -91,7 +110,7 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment: &Environment, atomic_fact: &AtomicFact, all_objs_equal_to_arg0: &Vec<String>, all_objs_equal_to_arg1: &Vec<String>, _verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment: &Environment, atomic_fact: &AtomicFact, all_objs_equal_to_arg0: &Vec<String>, all_objs_equal_to_arg1: &Vec<String>) -> Result<NonErrStmtResult, VerifyError> {
         if let Some(known_facts_map) = environment.known_atomic_facts_with_2_args.get(&(atomic_fact.key(), atomic_fact.is_true())) {
             for obj0 in all_objs_equal_to_arg0.iter() {
                 for obj1 in all_objs_equal_to_arg1.iter() {
@@ -103,5 +122,26 @@ impl<'a> Executor<'a> {
         }
 
         Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
+    }
+
+    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(environment: &Environment, atomic_fact: &AtomicFact) -> Result<NonErrStmtResult, VerifyError> {
+        if let Some(known_facts_map) = environment.known_atomic_facts_with_0_or_more_than_2_args.get(&(atomic_fact.key(), atomic_fact.is_true())) {
+            for known_fact in known_facts_map.iter() {
+                if known_fact.args().len() != atomic_fact.args().len() {
+                    return Err(VerifyError::new(format!("known atomic fact {} has different number of args than the given fact {}", known_fact.to_string(), atomic_fact.to_string()).as_str(), vec![], None));
+                }
+                for (index, known_arg) in known_fact.args().iter().enumerate() {
+                    if known_arg.to_string() != atomic_fact.args()[index].to_string() {
+                        return Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()));
+                    }
+                }
+            }
+        }
+        
+        Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
+    }
+
+    fn verify_non_equational_atomic_fact_with_known_forall_fact(&mut self, atomic_fact: &AtomicFact) -> Result<NonErrStmtResult, VerifyError> {
+        panic!("not implemented");
     }
 }
