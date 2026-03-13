@@ -1,6 +1,6 @@
 use std::fmt;
 use std::collections::HashMap;
-use crate::obj::Identifier;
+use crate::obj::{Identifier, Atom};
 use crate::common::keywords::MOD_SIGN;
 use crate::module_manager::ModuleManager;
 use crate::environment::Environment;
@@ -54,23 +54,17 @@ impl<'a> RuntimeContext<'a> {
     }
 }
 
-// 从env或者builtin_environment中获取 predicate 定义
 impl<'a> RuntimeContext<'a> {
-    /// 只读查找：用 predicate 名称从当前环境或 builtin 中取定义（供 Verifier 等 &self 场景使用）
     pub fn get_predicate_definition_by_name(&self, predicate_name: &str) -> Option<&DefPropStmt> {
-        // 按 separator 拆分
         let parts = predicate_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             panic!("NOT IMPLEMENTED YET");
         }
 
-        let top_environment = match self.environments.last() {
-            Some(environment) => environment,
-            None => unreachable!("no top level environment"),
-        };
-
-        if let Some(definition) = top_environment.defined_props.get(predicate_name) {
-            return Some(definition);
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment.defined_props.get(predicate_name) {
+                return Some(definition);
+            }
         }
 
         self.builtin_environment.defined_props.get(predicate_name)
@@ -83,13 +77,10 @@ impl<'a> RuntimeContext<'a> {
             panic!("NOT IMPLEMENTED YET");
         }
 
-        let top_environment = match self.environments.last() {
-            Some(environment) => environment,
-            None => unreachable!("no top level environment"),
-        };
-
-        if let Some(definition) = top_environment.defined_props_without_meaning.get(predicate_name) {
-            return Some(definition);
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment.defined_props_without_meaning.get(predicate_name) {
+                return Some(definition);
+            }
         }
 
         self.builtin_environment.defined_props_without_meaning.get(predicate_name)
@@ -101,13 +92,10 @@ impl<'a> RuntimeContext<'a> {
             panic!("NOT IMPLEMENTED YET");
         }
 
-        let top_environment = match self.environments.last() {
-            Some(environment) => environment,
-            None => unreachable!("no top level environment"),
-        };
-
-        if let Some(definition) = top_environment.defined_structs_with_fields.get(set_struct_name) {
-            return Some(definition);
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment.defined_structs_with_fields.get(set_struct_name) {
+                return Some(definition);
+            }
         }
 
         self.builtin_environment.defined_structs_with_fields.get(set_struct_name)
@@ -119,13 +107,10 @@ impl<'a> RuntimeContext<'a> {
             panic!("NOT IMPLEMENTED YET");
         }
 
-        let top_environment = match self.environments.last() {
-            Some(environment) => environment,
-            None => unreachable!("no top level environment"),
-        };
-
-        if let Some(definition) = top_environment.defined_structs_with_no_field.get(set_struct_name) {
-            return Some(definition);
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment.defined_structs_with_no_field.get(set_struct_name) {
+                return Some(definition);
+            }
         }
 
         self.builtin_environment.defined_structs_with_no_field.get(set_struct_name)
@@ -179,7 +164,7 @@ impl<'a> RuntimeContext<'a> {
     // TODO: PREDICATE WITH MOD NAME IS NOT IMPLEMENTED YET
     pub fn get_all_objs_equal_to_arg(&self, given: &str) -> Vec<String> {
         let mut result = vec![];       
-        for env in self.environments.iter() {
+        for env in self.iter_environments_from_top() {
             if let Some(known_equality) = env.known_equality.get(given) {
                 for obj in known_equality.iter() {
                     result.push(obj.to_string());
@@ -194,5 +179,23 @@ impl<'a> RuntimeContext<'a> {
         }
         
         result
+    }
+}
+
+impl<'a> RuntimeContext<'a> {
+    pub fn iter_environments_from_top(&self) -> impl Iterator<Item = &Environment> {
+        self.environments.iter().rev().map(|env| env.as_ref())
+    }
+
+    pub fn find_fn_definition_for_atom(&self, atom: &Atom) -> Option<&crate::obj::FnSetObj> {
+        let key = atom.to_string();
+
+        for env in self.iter_environments_from_top() {
+            if let Some(definition) = env.known_fn_in_fn_set.get(&key) {
+                return Some(definition);
+            }
+        }
+
+        self.builtin_environment.known_fn_in_fn_set.get(&key)
     }
 }
