@@ -1,0 +1,93 @@
+use std::rc::Rc;
+use crate::obj::Obj;
+use crate::fact::EqualFact;
+use crate::execute::Executor;
+use crate::result::StmtUnknown;
+use crate::error::VerifyError;
+use crate::result::NonErrStmtResult;
+use crate::result::FactVerifiedByBuiltinRules;
+use crate::verify::VerifyState;
+
+impl<'a> Executor<'a> {
+    pub fn verify_equal_fact(&mut self, equal_fact: &EqualFact, verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+        let mut result = self.verify_equality_by_builtin_rules(equal_fact)?;
+        if result.is_true() {
+            return Ok(result);
+        }
+
+        result = self.verify_equality_with_known_equalities(equal_fact, verify_state)?;
+        if result.is_true() {
+            return Ok(result);
+        }
+        
+        Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
+    }
+
+    fn verify_equality_by_builtin_rules(&mut self, equal_fact: &EqualFact) -> Result<NonErrStmtResult, VerifyError> {
+        if equal_fact.left.two_objs_can_be_calculated_and_equal_by_calculation(&equal_fact.right) {
+            return Ok(NonErrStmtResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "calculation".to_string(), equal_fact.line_file_index)));
+        }
+
+        Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
+    }
+
+    fn verify_equality_with_known_equalities(&mut self, equal_fact: &EqualFact, _verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+        let left_string = equal_fact.left.to_string();
+        let right_string = equal_fact.right.to_string();
+
+        for i in 0..self.runtime_context.environments.len() {
+            let known_left = self.runtime_context.environments[i].known_equality.get(&left_string).map(Rc::clone);
+            let known_right = self.runtime_context.environments[i].known_equality.get(&right_string).map(Rc::clone);
+            if let Some(result) = self.try_verify_equality_with_known(equal_fact, known_left.as_ref(), known_right.as_ref())? {
+                return Ok(result);
+            }
+        }
+        let known_left = self.runtime_context.builtin_environment.known_equality.get(&left_string).map(Rc::clone);
+        let known_right = self.runtime_context.builtin_environment.known_equality.get(&right_string).map(Rc::clone);
+        if let Some(result) = self.try_verify_equality_with_known(equal_fact, known_left.as_ref(), known_right.as_ref())? {
+            return Ok(result);
+        }
+
+        Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
+    }
+
+    fn try_verify_equality_with_known(
+        &mut self,
+        equal_fact: &EqualFact,
+        known_objs_equal_to_left: Option<&Rc<Vec<Obj>>>,
+        known_objs_equal_to_right: Option<&Rc<Vec<Obj>>>,
+    ) -> Result<Option<NonErrStmtResult>, VerifyError> {
+        match (known_objs_equal_to_left, known_objs_equal_to_right) {
+            (None, None) => Ok(None),
+            (Some(known_objs_equal_to_left), None) => {
+                for obj in known_objs_equal_to_left.iter() {
+                    let result = self.verify_equality_by_builtin_rules(&EqualFact::new(obj.clone(), equal_fact.right.clone(), equal_fact.line_file_index))?;
+                    if result.is_true() {
+                        return Ok(Some(result));
+                    }
+                }
+                Ok(None)
+            },
+            (None, Some(known_objs_equal_to_right)) => {
+                for obj in known_objs_equal_to_right.iter() {
+                    let result = self.verify_equality_by_builtin_rules(&EqualFact::new(equal_fact.left.clone(), obj.clone(), equal_fact.line_file_index))?;
+                    if result.is_true() {
+                        return Ok(Some(result));
+                    }
+                }
+                Ok(None)
+            }
+            (Some(known_objs_equal_to_left), Some(known_objs_equal_to_right)) => {
+                for obj1 in known_objs_equal_to_left.iter() {
+                    for obj2 in known_objs_equal_to_right.iter() {
+                        let result = self.verify_equality_by_builtin_rules(&EqualFact::new(obj1.clone(), obj2.clone(), equal_fact.line_file_index))?;
+                        if result.is_true() {
+                            return Ok(Some(result));
+                        }
+                    }
+                }
+                Ok(None)
+            }
+        }
+    }
+}

@@ -1,13 +1,13 @@
 pub struct VerifyState {
     pub round: u8,
-    pub req_ok: bool,
+    pub well_defined_already_verified: bool,
 }
 
 impl VerifyState {
-    pub fn new(round: u8, req_ok: bool) -> Self {
+    pub fn new(round: u8, well_defined_already_verified: bool) -> Self {
         VerifyState {
             round,
-            req_ok,
+            well_defined_already_verified,
         }
     }
 
@@ -16,7 +16,7 @@ impl VerifyState {
     }
 
     pub fn new_state_with_round_increased(&mut self) -> Self {
-        return Self::new(self.round + 1, self.req_ok);
+        return Self::new(self.round + 1, self.well_defined_already_verified);
     }
 
     pub fn new_state_with_req_ok_set_to_true(&mut self) -> Self {
