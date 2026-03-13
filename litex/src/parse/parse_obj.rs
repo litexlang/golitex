@@ -44,8 +44,8 @@ impl Parser {
                     };
                 }
 
-                let head = Obj::from(fn_name);
-                Ok(Obj::FnObj(FnObj::new(head, vec![left, right])))
+                let body = vec![vec![Box::new(left), Box::new(right)]];
+                Ok(Obj::FnObj(FnObj::new(fn_name, body)))
             },
             _ => Ok(left),
         }
@@ -297,13 +297,21 @@ impl Parser {
         // 2. 单符号集合、多元关键字、或 atom
         let mut result = self.parse_primary_obj(tb)?;
 
-        // 3. 若是 atom，后面可以接多组 (args)，每组变成 FnObj(head, args)
-        let is_atom = matches!(result, Obj::Identifier(_) | Obj::IdentifierWithMod(_));
-        if is_atom {
-            while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
-                let args = self.braced_objs(tb)?;
-                result = Obj::FnObj(FnObj::new(result, args));
-            }
+        // 3. 若是 atom，后面可以接多组 (args)，每组一个 Vec<Obj>，合起来 body: Vec<Vec<Box<Obj>>>
+        let (head_atom, mut body_vectors) = match &result {
+            Obj::Identifier(i) => (Atom::IdentifierAtom(i.clone()), vec![]),
+            Obj::IdentifierWithMod(m) => (Atom::IdentifierWithMod(m.clone()), vec![]),
+            Obj::FieldAccess(field_access) => (Atom::FieldAccess(field_access.clone()), vec![]),
+            Obj::FieldAccessWithMod(field_access_with_mod) => (Atom::FieldAccessWithMod(field_access_with_mod.clone()), vec![]),
+            _ => return Ok(result),
+        };
+        while !tb.exceed_end_of_head() && tb.current()? == LEFT_BRACE {
+            let args = self.braced_objs(tb)?;
+            let group: Vec<Box<Obj>> = args.into_iter().map(Box::new).collect();
+            body_vectors.push(group);
+        }
+        if !body_vectors.is_empty() {
+            result = Obj::FnObj(FnObj::new(head_atom, body_vectors));
         }
         Ok(result)
     }
