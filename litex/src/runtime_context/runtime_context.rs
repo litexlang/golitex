@@ -175,4 +175,24 @@ impl<'a> RuntimeContext<'a> {
             }
         }
     }
+
+    // TODO: PREDICATE WITH MOD NAME IS NOT IMPLEMENTED YET
+    pub fn get_all_objs_equal_to_arg(&self, given: &str) -> Vec<String> {
+        let mut result = vec![];       
+        for env in self.environments.iter() {
+            if let Some(known_equality) = env.known_equality.get(given) {
+                for obj in known_equality.iter() {
+                    result.push(obj.to_string());
+                }
+            }
+        }
+
+        if let Some(known_equality) = self.builtin_environment.known_equality.get(given) {
+            for obj in known_equality.iter() {
+                result.push(obj.to_string());
+            }
+        }
+        
+        result
+    }
 }

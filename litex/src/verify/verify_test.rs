@@ -9,7 +9,7 @@ use crate::obj::{Number, Obj};
 use crate::parse::Parser;
 use crate::runtime_context::RuntimeContext;
 use crate::stmt::Stmt;
-use crate::result::StmtResult;
+use crate::result::NonErrStmtResult;
 use crate::parse::TokenBlock;
 use crate::parse::tokenize_line;
 
@@ -53,8 +53,8 @@ fn test_exec_stmt_fact_one_plus_one_eq_two() {
 
     let result = executor.stmt(&stmt).expect("exec.stmt(fact) failed");
     match &result {
-        StmtResult::NonFactualStmtSuccess(_) | StmtResult::FactVerifiedByFact(_) | StmtResult::FactVerifiedByBuiltinRules(_) => println!("{}", result),
-        StmtResult::StmtUnknown(u) => panic!("fact 1+1=2 should be verified, got StmtUnknown: {}", u),
+        NonErrStmtResult::NonFactualStmtSuccess(_) | NonErrStmtResult::FactVerifiedByFact(_) | NonErrStmtResult::FactVerifiedByBuiltinRules(_) => println!("{}", result),
+        NonErrStmtResult::StmtUnknown(u) => panic!("fact 1+1=2 should be verified, got StmtUnknown: {}", u),
     }
 }
 
