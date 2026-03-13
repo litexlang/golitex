@@ -6,7 +6,7 @@ use crate::obj::{
 };
 use crate::error::{WellDefinedError, StmtError};
 use crate::verify::VerifyState;
-use crate::fact::{AtomicFact, NotEqualFact, IsCartFact, IsNonemptySetFact};
+use crate::fact::{AtomicFact, NotEqualFact, IsCartFact, IsNonemptySetFact, Fact};
 use crate::fact::InFact;
 use crate::execute::Executor;
 use crate::stmt::parameter_type_and_property::{ParamDefWithParamSet, ParamDefWithParamType};
@@ -145,7 +145,7 @@ impl<'a> Executor<'a> {
             self.verify_obj_well_defined(arg, verify_state)?;
             let param_set = &fn_set_with_dom.params_def_with_set[index].1;
             let in_fact = InFact::new((**arg).clone(), param_set.clone(), None);
-            self.verify_atomic_fact(&AtomicFact::InFact(in_fact), verify_state)?;
+            self.verify_fact(&Fact::AtomicFact(AtomicFact::InFact(in_fact)), verify_state)?;
         }
 
         Ok(())
@@ -171,7 +171,7 @@ impl<'a> Executor<'a> {
             self.verify_obj_well_defined(arg, verify_state)?;
             let param_set = &fn_set_without_dom.param_sets[index];
             let in_fact = InFact::new((**arg).clone(), (**param_set).clone(), None);
-            self.verify_atomic_fact(&AtomicFact::InFact(in_fact), verify_state)?;
+            self.verify_fact(&Fact::AtomicFact(AtomicFact::InFact(in_fact)), verify_state)?;
         }
 
         Ok(())
@@ -181,7 +181,7 @@ impl<'a> Executor<'a> {
         let r_obj = Obj::RObj(RObj::new());
         let in_fact = InFact::new(obj.clone(), r_obj, None);
         let atomic_fact = AtomicFact::InFact(in_fact);
-        self.verify_atomic_fact(&atomic_fact, verify_state)?;
+        self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
         Ok(())
     }
 
@@ -189,7 +189,7 @@ impl<'a> Executor<'a> {
         let z_obj = Obj::ZObj(ZObj::new());
         let in_fact = InFact::new(obj.clone(), z_obj, None);
         let atomic_fact = AtomicFact::InFact(in_fact);
-        self.verify_atomic_fact(&atomic_fact, verify_state)?;
+        self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
         Ok(())
     }
 
@@ -224,7 +224,7 @@ impl<'a> Executor<'a> {
         let zero = Obj::Number(Number::new("0"));
         let not_equal_fact = NotEqualFact::new((*div.right).clone(), zero, None);
         let atomic_fact = AtomicFact::NotEqualFact(not_equal_fact);
-        self.verify_atomic_fact(&atomic_fact, verify_state)?;
+        self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
         
         self.require_obj_in_r(&div.left, verify_state)?;
         self.require_obj_in_r(&div.right, verify_state)?;
@@ -238,7 +238,7 @@ impl<'a> Executor<'a> {
         self.require_obj_in_z(&m.right, verify_state)?;
         let zero = Obj::Number(Number::new("0"));
         let not_equal_fact = NotEqualFact::new((*m.right).clone(), zero, None);
-        self.verify_atomic_fact(&AtomicFact::NotEqualFact(not_equal_fact), verify_state)?;
+        self.verify_fact(&Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact)), verify_state)?;
         Ok(())
     }
 
@@ -406,7 +406,7 @@ impl<'a> Executor<'a> {
         self.verify_obj_well_defined(&x.set, verify_state)?;
 
         let is_cart_fact = AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), None));
-        self.verify_atomic_fact(&is_cart_fact, verify_state)?;
+        self.verify_fact(&Fact::AtomicFact(is_cart_fact), verify_state)?;
         
         Ok(())
     }
@@ -461,7 +461,7 @@ impl<'a> Executor<'a> {
     fn verify_choose_well_defined(&mut self, x: &Choose, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined(&x.set, verify_state)?;
         let is_nonempty_set_fact = AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new((*x.set).clone(), None));
-        self.verify_atomic_fact(&is_nonempty_set_fact, verify_state)?;
+        self.verify_fact(&Fact::AtomicFact(is_nonempty_set_fact), verify_state)?;
         Ok(())
     }
 

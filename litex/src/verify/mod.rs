@@ -11,5 +11,8 @@ mod verify_fact;
 mod verify_number_in_standard_set;
 mod verify_equality;
 mod verify_and_chain_fact;
+mod verify_forall_fact_forall_fact_with_iff;
+mod verify_exist_fact;
+mod verify_or_fact;
 
 pub use verify_state::VerifyState;
