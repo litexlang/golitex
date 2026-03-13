@@ -7,7 +7,7 @@ use crate::common::keywords::{
 use super::Parser;
 use crate::stmt::proof_technique_stmt::{
     ClosedRangeOrRange, ProveByContradictionStmt, ProveByEnumerationStmt, ProveByEqualSetStmt,
-    ProveByInductionStmt, ProveCaseByCaseStmt, ProveForStmt, ProofTechniqueStmt, ViewFnAsSetStmt,
+    ProveByInductionStmt, ProveCaseByCaseStmt, ProveForStmt, ViewFnAsSetStmt,
 };
 use crate::stmt::Stmt;
 use super::TokenBlock;
@@ -54,9 +54,9 @@ impl Parser {
             proofs.push(proof_stmts);
             impossible_facts.push(impossible);
         }
-        Ok(Stmt::ProofTechnique(ProofTechniqueStmt::ProveCaseByCase(
+        Ok(Stmt::ProveCaseByCaseStmt(
             ProveCaseByCaseStmt::new(cases, then_facts, proofs, impossible_facts, Some(tb.line_file_index)),
-        )))
+        ))
     }
 
     pub fn prove_by_contradiction_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -77,9 +77,9 @@ impl Parser {
         let mut last_block = tb.body.last_mut().ok_or_else(|| ParsingError::new("Expected body", tb.line_file_index))?;
         last_block.skip_token(IMPOSSIBLE)?;
         let impossible_fact = self.parse_exist_or_and_chain_atomic_fact(&mut last_block)?;
-        Ok(Stmt::ProofTechnique(ProofTechniqueStmt::ProveByContradiction(
+        Ok(Stmt::ProveByContradictionStmt(
             ProveByContradictionStmt::new(to_prove, proof, impossible_fact, Some(tb.line_file_index)),
-        )))
+        ))
     }
 
     pub fn prove_by_enumeration_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -110,9 +110,9 @@ impl Parser {
         } else {
             (vec![], tb.body.iter_mut().map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?)
         };
-        Ok(Stmt::ProofTechnique(ProofTechniqueStmt::ProveByEnumeration(
+        Ok(Stmt::ProveByEnumerationStmt(
             ProveByEnumerationStmt::new(params, param_sets, to_prove, proof, Some(tb.line_file_index)),
-        )))
+        ))
     }
 
     pub fn prove_by_induction_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -133,9 +133,9 @@ impl Parser {
             then_block.body.iter_mut().map(|b| self.parse_exist_or_and_chain_atomic_fact(b)).collect::<Result<_, _>>()?
         };
         let proof: Vec<Stmt> = tb.body.iter_mut().skip(1).map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?;
-        Ok(Stmt::ProofTechnique(ProofTechniqueStmt::ProveByInduction(
+        Ok(Stmt::ProveByInductionStmt(
             ProveByInductionStmt::new(fact, param, proof, induc_from, Some(tb.line_file_index)),
-        )))
+        ))
     }
 
     pub fn prove_for_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -212,14 +212,14 @@ impl Parser {
             }
         }
 
-        Ok(Stmt::ProofTechnique(ProofTechniqueStmt::ProveForStmt(ProveForStmt::new(
+        Ok(Stmt::ProveForStmt(ProveForStmt::new(
             params,
             param_sets,
             dom_facts,
             then_facts,
             proof,
             Some(tb.line_file_index),
-        ))))
+        )))
     }
 
     pub fn prove_equal_set_by_def_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -229,17 +229,17 @@ impl Parser {
         let right = self.parse_obj(tb)?;
         tb.skip_token(COLON)?;
         let proof: Vec<Stmt> = tb.body.iter_mut().map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?;
-        Ok(Stmt::ProofTechnique(ProofTechniqueStmt::ProveByEqualSet(
+        Ok(Stmt::ProveByEqualSetStmt(
             ProveByEqualSetStmt::new(left, right, proof, Some(tb.line_file_index)),
-        )))
+        ))
     }
 
     pub fn view_fn_as_set_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(VIEW_FN_AS_SET)?;
         let function = self.parse_obj(tb)?;
-        Ok(Stmt::ProofTechnique(ProofTechniqueStmt::ViewFnAsSet(ViewFnAsSetStmt::new(
+        Ok(Stmt::ViewFnAsSetStmt(ViewFnAsSetStmt::new(
             function,
             Some(tb.line_file_index),
-        ))))
+        )))
     }
 }

@@ -45,3 +45,13 @@ impl StmtResult {
 //     }
 // }
 
+impl StmtResult {
+    pub fn is_true(&self) -> bool {
+        match self {
+            StmtResult::NonFactualStmtSuccess(_) => true,
+            StmtResult::FactVerifiedByFact(_) => true,
+            StmtResult::FactVerifiedByBuiltinRules(_) => true,
+            StmtResult::StmtUnknown(_) => false,
+        }
+    }
+}

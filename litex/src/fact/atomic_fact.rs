@@ -987,3 +987,38 @@ impl AtomicFact {
         }
     }
 }
+
+impl AtomicFact {
+    pub fn number_of_args(&self) -> usize {
+        match self {
+            AtomicFact::EqualFact(_) => 2,
+            AtomicFact::LessFact(_) => 2,
+            AtomicFact::GreaterFact(_) => 2,
+            AtomicFact::LessEqualFact(_) => 2,
+            AtomicFact::GreaterEqualFact(_) => 2,
+            AtomicFact::IsSetFact(_) => 1,
+            AtomicFact::IsNonemptySetFact(_) => 1,
+            AtomicFact::IsFiniteSetFact(_) => 1,
+            AtomicFact::InFact(_) => 2,
+            AtomicFact::IsCartFact(_) => 1,
+            AtomicFact::IsTupleFact(_) => 1,
+            AtomicFact::SubsetFact(_) => 2,
+            AtomicFact::SupersetFact(_) => 2,
+            AtomicFact::NotEqualFact(_) => 2,
+            AtomicFact::NotLessFact(_) => 2,
+            AtomicFact::NotGreaterFact(_) => 2,
+            AtomicFact::NotLessEqualFact(_) => 2,
+            AtomicFact::NotGreaterEqualFact(_) => 2,
+            AtomicFact::NotIsSetFact(_) => 1,
+            AtomicFact::NotIsNonemptySetFact(_) => 1,
+            AtomicFact::NotIsFiniteSetFact(_) => 1,
+            AtomicFact::NotInFact(_) => 2,
+            AtomicFact::NotIsCartFact(_) => 1,
+            AtomicFact::NotIsTupleFact(_) => 1,
+            AtomicFact::NotSubsetFact(_) => 2,
+            AtomicFact::NotSupersetFact(_) => 2,
+            AtomicFact::NormalAtomicFact(a) => a.body.len(),
+            AtomicFact::NotNormalAtomicFact(a) => a.body.len(),
+        }
+    }
+}

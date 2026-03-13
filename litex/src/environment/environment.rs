@@ -29,7 +29,7 @@ pub struct Environment {
     pub known_fn_in_fn_set: HashMap<String, FnSetObj>,
     pub known_set_equal_to_set_builder: HashMap<String, SetBuilder>,
 
-    pub known_atomic_facts_with_more_than_2_args: HashMap<(String, bool), Vec<AtomicFact>>,
+    pub known_atomic_facts_with_0_or_more_than_2_args: HashMap<(String, bool), Vec<AtomicFact>>,
     pub known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, ()>>,
     pub known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), ()>>,
     
@@ -45,7 +45,7 @@ pub struct Environment {
 }
 
 impl Environment {
-    pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, structs_with_fields: HashMap<String, DefStructWithFieldsStmt>, structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>, props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>, algorithms: HashMap<String, DefAlgoStmt>, known_equality: HashMap<String, Rc<Vec<String>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, ()>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), ()>>, known_exist_facts: HashMap<String, Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_exist_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_fn_obj_with_requirements_checked: HashMap<String,()>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, (usize, usize)>) -> Self {
+    pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, structs_with_fields: HashMap<String, DefStructWithFieldsStmt>, structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>, props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>, algorithms: HashMap<String, DefAlgoStmt>, known_equality: HashMap<String, Rc<Vec<String>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts_with_0_or_more_than_2_args: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, ()>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), ()>>, known_exist_facts: HashMap<String, Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_exist_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_fn_obj_with_requirements_checked: HashMap<String,()>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, (usize, usize)>) -> Self {
         Environment {
             defined_identifier_objs: objs,
             defined_props: props,
@@ -56,7 +56,7 @@ impl Environment {
             known_equality,
             known_fn_in_fn_set,
             known_set_equal_to_set_builder,
-            known_atomic_facts_with_more_than_2_args: known_atomic_facts,
+            known_atomic_facts_with_0_or_more_than_2_args,
             known_atomic_facts_with_1_arg: known_atomic_facts_with_1_arg,
             known_atomic_facts_with_2_args: known_atomic_facts_with_2_args,
             known_exist_facts,
@@ -82,7 +82,7 @@ impl fmt::Display for Environment {
         write!(f, "    known_equality: {:?}\n", self.known_equality.len())?;
         write!(f, "    known_fn_in_fn_set: {:?}\n", self.known_fn_in_fn_set.len())?;
         write!(f, "    known_set_equal_to_set_builder: {:?}\n", self.known_set_equal_to_set_builder.len())?;
-        write!(f, "    known_atomic_facts_with_more_than_two_params: {:?}\n", self.known_atomic_facts_with_more_than_2_args.len())?;
+        write!(f, "    known_atomic_facts_with_0_or_more_than_two_params: {:?}\n", self.known_atomic_facts_with_0_or_more_than_2_args.len())?;
         write!(f, "    known_atomic_facts_with_1_arg: {:?}\n", self.known_atomic_facts_with_1_arg.len())?;
         write!(f, "    known_atomic_facts_with_2_args: {:?}\n", self.known_atomic_facts_with_2_args.len())?;
         write!(f, "    known_exist_facts_with_more_than_two_params: {:?}\n", self.known_exist_facts.len())?;
@@ -120,10 +120,10 @@ impl Environment {
                         self.known_atomic_facts_with_2_args.insert((key, is_true), HashMap::from([((arg_key1, arg_key2), ())]));
                     }
                 } else {
-                    if let Some(vec_ref) = self.known_atomic_facts_with_more_than_2_args.get_mut(&(key.clone(), is_true)) {
+                    if let Some(vec_ref) = self.known_atomic_facts_with_0_or_more_than_2_args.get_mut(&(key.clone(), is_true)) {
                         vec_ref.push(atomic_fact);
                     } else {
-                        self.known_atomic_facts_with_more_than_2_args.insert((key, is_true), vec![atomic_fact]);
+                        self.known_atomic_facts_with_0_or_more_than_2_args.insert((key, is_true), vec![atomic_fact]);
                     }
                 }
                 Ok(())

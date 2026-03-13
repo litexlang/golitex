@@ -95,7 +95,7 @@ impl<'a> Executor<'a> {
         Err(WellDefinedError::new("verify_fn_obj_well_defined 此函数还没有 implement", vec![], None))
     }
 
-    fn require_obj_in_r(&self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn require_obj_in_r(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let r_obj = Obj::RObj(RObj::new());
         let in_fact = InFact::new(obj.clone(), r_obj, None);
         let atomic_fact = AtomicFact::InFact(in_fact);
@@ -103,7 +103,7 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn require_obj_in_z(&self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn require_obj_in_z(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let z_obj = Obj::ZObj(ZObj::new());
         let in_fact = InFact::new(obj.clone(), z_obj, None);
         let atomic_fact = AtomicFact::InFact(in_fact);

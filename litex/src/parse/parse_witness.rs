@@ -3,7 +3,7 @@ use crate::common::keywords::{COLON, EXIST, NONEMPTY_SET, WITNESS};
 use super::Parser;
 use crate::stmt::Stmt;
 use super::TokenBlock;
-use crate::stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet, WitnessStmt};
+use crate::stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
 
 impl Parser {
     pub fn witness_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -26,12 +26,12 @@ impl Parser {
         for block in tb.body.iter_mut() {
             proof.push(self.parse_stmt(block)?);
         }
-        Ok(Stmt::WitnessStmt(WitnessStmt::WitnessExistFact(WitnessExistFact::new(
+        Ok(Stmt::WitnessExistFact(WitnessExistFact::new(
             equal_tos,
             exist_fact_in_witness,
             proof,
             Some(tb.line_file_index),
-        ))))
+        )))
     }
 
     pub fn witness_nonempty_set(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -42,11 +42,11 @@ impl Parser {
         for block in tb.body.iter_mut() {
             proof.push(self.parse_stmt(block)?);
         }
-        Ok(Stmt::WitnessStmt(WitnessStmt::WitnessNonemptySet(WitnessNonemptySet::new(
+        Ok(Stmt::WitnessNonemptySet(WitnessNonemptySet::new(
             obj,
             set,
             proof,
             Some(tb.line_file_index),
-        ))))
+        )))
     }
 }
