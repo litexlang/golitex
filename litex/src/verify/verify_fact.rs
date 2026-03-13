@@ -8,8 +8,10 @@ use crate::execute::Executor;
 
 impl<'a> Executor<'a> {
     pub fn verify_fact(&mut self, fact: &Fact, verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {   
-        if let Err(e) = self.verify_fact_well_defined(fact, verify_state) {
-            return Err(VerifyError::new(fact.to_string().as_str(), vec![StmtError::WellDefinedError(e)], fact.line_file()));
+        if !verify_state.well_defined_already_verified {
+            if let Err(e) = self.verify_fact_well_defined(fact, verify_state) {
+                return Err(VerifyError::new(fact.to_string().as_str(), vec![StmtError::WellDefinedError(e)], fact.line_file()));
+            }
         }
         match fact {
             Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact(atomic_fact, verify_state),

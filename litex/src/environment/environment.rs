@@ -16,6 +16,7 @@ use crate::error::StoreFactError;
 use crate::fact::EqualFact;
 use crate::fact::AndFact;
 use crate::fact::ChainFact;
+use crate::obj::Obj;
 use crate::fact::ExistOrAndChainAtomicFact;
 pub struct Environment {
     pub defined_identifier_objs: HashMap<String, ()>,
@@ -25,7 +26,7 @@ pub struct Environment {
     pub defined_props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>,
     pub defined_algorithms: HashMap<String, DefAlgoStmt>,
 
-    pub known_equality: HashMap<String, Rc<Vec<String>>>,
+    pub known_equality: HashMap<String, Rc<Vec<Obj>>>,
     pub known_fn_in_fn_set: HashMap<String, FnSetObj>,
     pub known_set_equal_to_set_builder: HashMap<String, SetBuilder>,
 
@@ -45,7 +46,7 @@ pub struct Environment {
 }
 
 impl Environment {
-    pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, structs_with_fields: HashMap<String, DefStructWithFieldsStmt>, structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>, props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>, algorithms: HashMap<String, DefAlgoStmt>, known_equality: HashMap<String, Rc<Vec<String>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts_with_0_or_more_than_2_args: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, ()>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), ()>>, known_exist_facts: HashMap<String, Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_exist_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_fn_obj_with_requirements_checked: HashMap<String,()>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, (usize, usize)>) -> Self {
+    pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, structs_with_fields: HashMap<String, DefStructWithFieldsStmt>, structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>, props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>, algorithms: HashMap<String, DefAlgoStmt>, known_equality: HashMap<String, Rc<Vec<Obj>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts_with_0_or_more_than_2_args: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, ()>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), ()>>, known_exist_facts: HashMap<String, Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_exist_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_fn_obj_with_requirements_checked: HashMap<String,()>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, (usize, usize)>) -> Self {
         Environment {
             defined_identifier_objs: objs,
             defined_props: props,
@@ -263,24 +264,24 @@ impl Environment {
                 if Rc::ptr_eq(left_r, right_r) {
                     return Ok(());
                 }
-                // 1. 合并两个等价类：新 vec = 两个 vec 的并，所有指向任一的 key 都改为指向新 Rc
-                let merged: Vec<String> = {
-                    let a: &Vec<String> = left_r.as_ref();
-                    let b: &Vec<String> = right_r.as_ref();
-                    let mut v: Vec<String> = a.iter().chain(b.iter()).cloned().collect();
-                    v.sort();
-                    v.dedup();
+                // 1. Merge two equivalence classes: new vec = union of both, all keys pointing to either now point to new Rc.
+                let merged: Vec<Obj> = {
+                    let a: &Vec<Obj> = left_r.as_ref();
+                    let b: &Vec<Obj> = right_r.as_ref();
+                    let mut v: Vec<Obj> = a.iter().chain(b.iter()).cloned().collect();
+                    v.sort_by(|a, b| a.to_string().cmp(&b.to_string()));
+                    v.dedup_by(|a, b| a.to_string() == b.to_string());
                     v
                 };
                 let new_rc = Rc::new(merged);
-                for k in new_rc.iter() {
-                    self.known_equality.insert(k.clone(), Rc::clone(&new_rc));
+                for obj in new_rc.iter() {
+                    self.known_equality.insert(obj.to_string(), Rc::clone(&new_rc));
                 }
             }
             (Some(ref rc), None) => {
-                // 2. 仅 right 不在：把 right 加入 left 所在等价类（Rc<Vec> 不可变，新建 Vec 并更新所有指向该类的 key）
+                // 2. Right not in any class: add right to left's class (Rc<Vec> is immutable, build new Vec and update all keys pointing to it).
                 let mut new_vec = (**rc).clone();
-                new_vec.push(right_as_string.clone());
+                new_vec.push(equality.right.clone());
                 let new_rc = Rc::new(new_vec);
                 let keys_to_update: Vec<String> = self.known_equality.iter()
                     .filter(|(_, v)| Rc::ptr_eq(v, rc))
@@ -292,9 +293,9 @@ impl Environment {
                 self.known_equality.insert(right_as_string, new_rc);
             }
             (None, Some(ref rc)) => {
-                // 2. 仅 left 不在：把 left 加入 right 所在等价类
+                // 2. Left not in any class: add left to right's class.
                 let mut new_vec = (**rc).clone();
-                new_vec.push(left_as_string.clone());
+                new_vec.push(equality.left.clone());
                 let new_rc = Rc::new(new_vec);
                 let keys_to_update: Vec<String> = self.known_equality.iter()
                     .filter(|(_, v)| Rc::ptr_eq(v, rc))
@@ -306,8 +307,8 @@ impl Environment {
                 self.known_equality.insert(left_as_string, new_rc);
             }
             (None, None) => {
-                // 3. 两个都不在：新建等价类 [left, right]
-                let vec = vec![left_as_string.clone(), right_as_string.clone()];
+                // 3. Neither in any class: new equivalence class [left, right].
+                let vec = vec![equality.left.clone(), equality.right.clone()];
                 let new_rc = Rc::new(vec);
                 self.known_equality.insert(left_as_string.clone(), Rc::clone(&new_rc));
                 self.known_equality.insert(right_as_string, new_rc);
