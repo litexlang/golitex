@@ -8,6 +8,7 @@ use crate::stmt::definition_stmt::DefPropStmt;
 use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::stmt::definition_stmt::DefPropWithoutMeaningStmt;
+use crate::obj::FnSetObj;
 
 pub struct RuntimeContext<'a> {
     pub module_manager: &'a mut ModuleManager<'a>,
@@ -187,7 +188,7 @@ impl<'a> RuntimeContext<'a> {
         self.environments.iter().rev().map(|env| env.as_ref())
     }
 
-    pub fn find_fn_definition_for_atom(&self, atom: &Atom) -> Option<&crate::obj::FnSetObj> {
+    pub fn find_fn_definition_for_atom(&self, atom: &Atom) -> Option<&FnSetObj> {
         let key = atom.to_string();
 
         for env in self.iter_environments_from_top() {
