@@ -1,0 +1,12 @@
+use crate::error::VerifyError;
+use crate::execute::Executor;
+use crate::fact::ExistFact;
+use crate::result::NonErrStmtResult;
+use crate::verify::VerifyState;
+use std::result::Result;
+
+impl<'a> Executor<'a> {
+    pub fn verify_exist_fact(&mut self, exist_fact: &ExistFact, _verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+        return Err(VerifyError::new(exist_fact.to_string().as_str(), vec![], exist_fact.line_file_index()));
+    }
+}
