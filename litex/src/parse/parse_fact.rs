@@ -8,6 +8,7 @@ use super::Parser;
 use super::TokenBlock;
 use crate::error::{ParsingError, NewAtomicFactError};
 use crate::fact::Fact;
+use crate::common::helper::{duplicate_parameter_name_error_message, vec_has_duplicates};
 use crate::common::keywords::{
     COLON, COMMA, EQUIVALENT_SIGN, EXIST, FORALL, RIGHT_ARROW, ST, NOT, OR, AND,
     FACT_PREFIX, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE, is_comparison_str,
@@ -32,7 +33,11 @@ impl Parser {
         let mut param_def: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != COLON {
             param_def.push(self.parse_param_def_with_param_type(tb)?);
-        } 
+        }
+        let forall_param_names = ParamDefWithParamType::collect_param_names(&param_def);
+        if vec_has_duplicates(&forall_param_names) {
+            return Err(ParsingError::new(&duplicate_parameter_name_error_message("forall"), tb.line_file_index));
+        }
         tb.skip_token(COLON)?;
 
         let last_body = tb.body.last().ok_or_else(|| {
@@ -140,6 +145,10 @@ impl Parser {
             if tb.current()? == COMMA {
                 tb.skip_token(COMMA)?;
             }
+        }
+        let exist_param_names = ParamDefWithParamType::collect_param_names(&param_def);
+        if vec_has_duplicates(&exist_param_names) {
+            return Err(ParsingError::new(&duplicate_parameter_name_error_message("exist"), tb.line_file_index));
         }
         tb.skip_token(ST)?;
 
