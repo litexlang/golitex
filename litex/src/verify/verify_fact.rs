@@ -15,12 +15,15 @@ impl<'a> Executor<'a> {
         }
 
         let next_verify_state = verify_state.new_state_with_req_ok_set_to_true();
-        
+
         match fact {
             Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact(atomic_fact, &next_verify_state),
             Fact::AndFact(and_fact) => self.verify_and_fact(and_fact, &next_verify_state),
             Fact::ChainFact(chain_fact) => self.verify_chain_fact(chain_fact, &next_verify_state),
-            _ => Err(VerifyError::new("verify_fact: NOT IMPLEMENTED YET", vec![], None)),
+            Fact::ForallFact(forall_fact) => self.verify_forall_fact(forall_fact, &next_verify_state),
+            Fact::ForallFactWithIff(forall_fact_with_iff) => self.verify_forall_fact_with_iff(forall_fact_with_iff, &next_verify_state),
+            Fact::ExistFact(exists_fact) => self.verify_exist_fact(exists_fact, &next_verify_state),
+            Fact::OrFact(or_fact) => self.verify_or_fact(or_fact, &next_verify_state),
         }
     }
 }
