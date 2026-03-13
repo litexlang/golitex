@@ -15,10 +15,13 @@ use crate::common::helper::todo_error_message;
 // well-defined check for obj
 impl<'a> Executor<'a> {
     pub fn verify_obj_well_defined_and_store_cache(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        let key = obj.to_string();
         let use_cache = !matches!(obj, Obj::FnSetWithDom(_) | Obj::SetBuilder(_));
-        if use_cache && self.runtime_context.cache_well_defined_obj_contains(&key) {
-            return Ok(());
+        if use_cache {
+            let key = obj.to_string();
+            let cache_ok = self.runtime_context.cache_well_defined_obj_contains(&key);
+            if cache_ok {
+                return Ok(());
+            }
         }
 
         match obj {
@@ -74,7 +77,7 @@ impl<'a> Executor<'a> {
         }?;
 
         if use_cache {
-            self.runtime_context.top_level_env().cache_well_defined_obj_except_fn_set_with_dom_and_set_builder.insert(key, ());
+            self.runtime_context.top_level_env().cache_well_defined_obj_except_fn_set_with_dom_and_set_builder.insert(obj.to_string(), ());
         }
         Ok(())
     }
