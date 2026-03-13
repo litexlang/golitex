@@ -47,9 +47,10 @@ impl<'a> Executor<'a> {
         let left_string = equal_fact.left.to_string();
         let right_string = equal_fact.right.to_string();
 
-        for i in 0..self.runtime_context.environments.len() {
-            let known_left = self.runtime_context.environments[i].known_equality.get(&left_string).map(Rc::clone);
-            let known_right = self.runtime_context.environments[i].known_equality.get(&right_string).map(Rc::clone);
+        for i in (0..self.runtime_context.environments.len()).rev() {
+            let env = &self.runtime_context.environments[i];
+            let known_left = env.known_equality.get(&left_string).map(Rc::clone);
+            let known_right = env.known_equality.get(&right_string).map(Rc::clone);
             if let Some(result) = self.try_verify_equality_with_known(equal_fact, known_left.as_ref(), known_right.as_ref())? {
                 return Ok(result);
             }
