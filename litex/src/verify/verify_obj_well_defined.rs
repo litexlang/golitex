@@ -16,7 +16,8 @@ use crate::common::helper::todo_error_message;
 impl<'a> Executor<'a> {
     pub fn verify_obj_well_defined_and_store_cache(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let key = obj.to_string();
-        if self.runtime_context.cache_well_defined_obj_contains(&key) {
+        let use_cache = !matches!(obj, Obj::FnSetWithDom(_) | Obj::SetBuilder(_));
+        if use_cache && self.runtime_context.cache_well_defined_obj_contains(&key) {
             return Ok(());
         }
 
@@ -72,7 +73,9 @@ impl<'a> Executor<'a> {
             Obj::RNz(_) => self.verify_r_nz_well_defined(),
         }?;
 
-        self.runtime_context.top_level_env().cache_well_defined_obj.insert(key, ());
+        if use_cache {
+            self.runtime_context.top_level_env().cache_well_defined_obj_except_fn_set_with_dom_and_set_builder.insert(key, ());
+        }
         Ok(())
     }
 

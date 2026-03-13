@@ -8,18 +8,23 @@ use crate::execute::Executor;
 
 impl<'a> Executor<'a> {
     pub fn verify_fact(&mut self, fact: &Fact, verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
-        // 如果 cache 里写过这个fact是ok的，那就OK了
-        let key = fact.to_string();
-        if self.runtime_context.cache_well_defined_obj_contains(&key) {
-            return Ok(NonErrStmtResult::FactVerifiedByFact(FactVerifiedByFact::new(fact.to_string(), "fact is well-defined".to_string(), fact.line_file())));
+        let use_cache = matches!(fact, Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_) | Fact::OrFact(_));
+        let (cache_ok, cache_line_file) = self.runtime_context.cache_known_or_and_atomic_fact_contains(fact.to_string().as_str());
+        if use_cache && cache_ok {
+            let line_file = cache_line_file.or_else(|| fact.line_file());
+            return Ok(NonErrStmtResult::FactVerifiedByFact(FactVerifiedByFact::new(
+                fact.to_string(),
+                fact.to_string(),
+                line_file,
+            )));
         }
-        
+
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_fact_well_defined(fact, verify_state) {
                 return Err(VerifyError::new(fact.to_string().as_str(), vec![StmtError::WellDefinedError(e)], fact.line_file()));
             }
         }
-
+        
         let next_verify_state = verify_state.new_state_with_req_ok_set_to_true();
 
         let result = match fact {
@@ -32,8 +37,8 @@ impl<'a> Executor<'a> {
             Fact::OrFact(or_fact) => self.verify_or_fact(or_fact, &next_verify_state),
         }?;
 
-        if result.is_true() {
-            self.runtime_context.top_level_env().cache_well_defined_obj.insert(key, ());
+        if use_cache && result.is_true() {
+            self.runtime_context.top_level_env().cache_known_or_and_chain_atomic_fact.insert(fact.to_string(), fact.line_file());
         }
 
         Ok(result)
