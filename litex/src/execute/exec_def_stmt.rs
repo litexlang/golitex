@@ -32,7 +32,7 @@ impl<'a> Executor<'a> {
             None => {},
             Some(iff_facts) => {
                 for fact in iff_facts.iter() {
-                    self.verify_fact_well_defined_and_store(fact, &VerifyState::new(0, false))?;
+                    self.verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))?;
                 }
             }
         }
@@ -49,7 +49,7 @@ impl<'a> Executor<'a> {
             self.define_params_with_type(param_def)?;
         }
         for fact in def_let_stmt.facts.iter() {
-            self.verify_fact_well_defined_and_store(fact, &VerifyState::new(0, false))?;
+            self.verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))?;
         }
         Ok(NonErrStmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_let_stmt.to_string(), def_let_stmt.line_file_index)))
     }
@@ -104,7 +104,7 @@ impl<'a> Executor<'a> {
         let facts = param_def.facts();
         for (name, fact) in param_def.0.iter().zip(facts.iter()) {
             self.validate_name_and_store_identifier_obj(name)?;
-            self.store_fact_without_well_defined_verified(fact)?;
+            self.store_fact_without_well_defined_verified_and_infer(fact)?;
         }
         Ok(())
     }
@@ -114,7 +114,7 @@ impl<'a> Executor<'a> {
         let facts = param_def.facts();
         for (name, fact) in param_def.0.iter().zip(facts.iter()) {
             self.validate_name_and_store_identifier_obj(name)?;
-            self.store_fact_without_well_defined_verified(fact)?;
+            self.store_fact_without_well_defined_verified_and_infer(fact)?;
         }
         Ok(())
     }

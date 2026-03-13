@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use crate::fact::ExistOrAndChainAtomicFact;
 use crate::obj::Atom;
+mod infer;
 mod verify;
 use verify::VerifyState;
 mod simplify_polynomial;
