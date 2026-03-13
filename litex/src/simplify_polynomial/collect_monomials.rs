@@ -28,11 +28,11 @@ pub fn collect_monomials_in_obj(obj: &Obj) -> Vec<MonomialWithNonZeroScalarAndOr
         Obj::Sub(sub) => {
             collect_monomials_in_sub(sub)
         },
-        _ => {
-            if let Some(m) = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero("1".to_string(), None) {
+        obj => {
+            if let Some(m) = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero("1".to_string(), Some(vec![(obj.clone(), obj.to_string())])) {
                 vec![m]
             } else {
-                vec![]
+                unreachable!();
             }
         },
     }
