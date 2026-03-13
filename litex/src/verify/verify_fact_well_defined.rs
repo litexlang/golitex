@@ -24,7 +24,7 @@ impl<'a> Executor<'a> {
         // 1. predicate is defined, expected args length is equal to actual args length
         let name_string = atomic_fact.key();
         if is_builtin_predicate(&name_string) {
-            let expected_len = atomic_fact.is_builtin_predicate_and_return_defined_args_len();
+            let expected_len = atomic_fact.is_builtin_predicate_and_return_expected_args_len();
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
                 return Err(WellDefinedError::new(

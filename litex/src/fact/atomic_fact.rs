@@ -955,7 +955,7 @@ impl AtomicFact {
 
 // 对每个类型的 atomic fact，都有个方法叫 required_args_len，返回该 atomic fact 需要的参数数量
 impl AtomicFact {
-    pub fn is_builtin_predicate_and_return_defined_args_len(&self) -> usize {
+    pub fn is_builtin_predicate_and_return_expected_args_len(&self) -> usize {
         match self {
             AtomicFact::EqualFact(_) => 2,
             AtomicFact::LessFact(_) => 2,
@@ -1019,6 +1019,39 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(_) => 2,
             AtomicFact::NormalAtomicFact(a) => a.body.len(),
             AtomicFact::NotNormalAtomicFact(a) => a.body.len(),
+        }
+    }
+
+    pub fn is_true_atomic_fact(&self) -> bool {
+        match self {
+            AtomicFact::EqualFact(_) => true,
+            AtomicFact::LessFact(_) => true,
+            AtomicFact::GreaterFact(_) => true,
+            AtomicFact::LessEqualFact(_) => true,
+            AtomicFact::GreaterEqualFact(_) => true,
+            AtomicFact::IsSetFact(_) => true,
+            AtomicFact::IsNonemptySetFact(_) => true,
+            AtomicFact::IsFiniteSetFact(_) => true,
+            AtomicFact::InFact(_) => true,
+            AtomicFact::IsCartFact(_) => true,
+            AtomicFact::IsTupleFact(_) => true,
+            AtomicFact::SubsetFact(_) => true,
+            AtomicFact::SupersetFact(_) => true,
+            AtomicFact::NormalAtomicFact(_) => true,
+            AtomicFact::NotNormalAtomicFact(_) => false,
+            AtomicFact::NotEqualFact(_) => false,
+            AtomicFact::NotLessFact(_) => false,
+            AtomicFact::NotGreaterFact(_) => false,
+            AtomicFact::NotLessEqualFact(_) => false,
+            AtomicFact::NotGreaterEqualFact(_) => false,
+            AtomicFact::NotIsSetFact(_) => false,
+            AtomicFact::NotIsNonemptySetFact(_) => false,
+            AtomicFact::NotIsFiniteSetFact(_) => false,
+            AtomicFact::NotInFact(_) => false,
+            AtomicFact::NotIsCartFact(_) => false,
+            AtomicFact::NotIsTupleFact(_) => false,
+            AtomicFact::NotSubsetFact(_) => false,
+            AtomicFact::NotSupersetFact(_) => false,
         }
     }
 }
