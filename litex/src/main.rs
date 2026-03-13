@@ -44,7 +44,7 @@ use fact::{Fact, InFact, NotInFact, IsCartFact, NotIsCartFact, IsTupleFact, NotI
     AndFact, ChainFact, OrAndChainAtomicFact,
 };
 mod result;
-use result::{StmtResult, NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules, StmtUnknown};
+use result::{NonErrStmtResult, NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules, StmtUnknown};
 mod module_manager;
 use module_manager::ModuleManager;
 mod runtime_context;
@@ -661,7 +661,7 @@ fn try_stmt_result() {
         Obj::mk("q"),
         Some((1, 0)),
     ))));
-    let result = StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), None));
+    let result = NonErrStmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), None));
     println!("{}", result);
 
 
@@ -671,15 +671,15 @@ fn try_stmt_result() {
         Some((1, 0)),
     )));
     let unknown = StmtUnknown::new();
-    let result = StmtResult::StmtUnknown(unknown);
+    let result = NonErrStmtResult::StmtUnknown(unknown);
     println!("{}", result);
 
     let fact_verified_by_fact = FactVerifiedByFact::new(fact.to_string(), fact.to_string(), None);
-    let result = StmtResult::FactVerifiedByFact(fact_verified_by_fact);
+    let result = NonErrStmtResult::FactVerifiedByFact(fact_verified_by_fact);
     println!("{}", result);
 
     let fact_verified_by_builtin_rules = FactVerifiedByBuiltinRules::new(fact.to_string(), "demo".to_string(), None);
-    let result = StmtResult::FactVerifiedByBuiltinRules(fact_verified_by_builtin_rules);
+    let result = NonErrStmtResult::FactVerifiedByBuiltinRules(fact_verified_by_builtin_rules);
     println!("{}", result);
 }
 
