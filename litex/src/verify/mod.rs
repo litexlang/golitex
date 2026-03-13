@@ -8,5 +8,6 @@ mod verify_state;
 mod verify_obj_well_defined;
 mod verify_non_equational_atomic_fact;
 mod verify_fact;
+mod verify_number_in_standard_set;
 
 pub use verify_state::VerifyState;
