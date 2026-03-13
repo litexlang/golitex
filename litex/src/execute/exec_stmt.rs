@@ -1,11 +1,11 @@
 use crate::error::{ExecError, StmtError};
 use crate::stmt::Stmt;
-use crate::result::StmtResult;
+use crate::result::NonErrStmtResult;
 use super::Executor;
 use crate::verify::VerifyState;
 
 impl<'a> Executor<'a> {
-    pub fn stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, StmtError> {
+    pub fn stmt(&mut self, stmt: &Stmt) -> Result<NonErrStmtResult, StmtError> {
         match stmt {
             Stmt::DefLetStmt(d) => self.def_let_stmt(d).map_err(StmtError::from),
             Stmt::DefPropStmt(d) => self.def_prop_stmt(d).map_err(StmtError::from),

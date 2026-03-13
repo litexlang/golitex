@@ -12,7 +12,7 @@ pub enum StmtError {
     ExecError(ExecError),
     UnknownError(UnknownError),
     WellDefinedError(WellDefinedError),
-    VerifyFactError(VerifyFactError),
+    VerifyFactError(VerifyError),
 }
 
 
@@ -283,40 +283,40 @@ impl From<WellDefinedError> for ExecError {
 }
 
 #[derive(Debug)]
-pub struct VerifyFactError {
+pub struct VerifyError {
     pub msg: String,
     pub previous_errors: Vec<StmtError>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
-impl std::error::Error for VerifyFactError {}
+impl std::error::Error for VerifyError {}
 
-impl fmt::Display for VerifyFactError {
+impl fmt::Display for VerifyError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}\n{}\n{}", "VerifyFactError:".to_string(), self.msg, vec_to_string_with_sep(&self.previous_errors, "\n"))
     }
 }
 
-impl VerifyFactError {
+impl VerifyError {
     pub fn new(msg: &str, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
-        VerifyFactError { msg: msg.to_string(), previous_errors, line_file_index }
+        VerifyError { msg: msg.to_string(), previous_errors, line_file_index }
     }
 }
 
-impl From<VerifyFactError> for StmtError {
-    fn from(e: VerifyFactError) -> Self {
+impl From<VerifyError> for StmtError {
+    fn from(e: VerifyError) -> Self {
         StmtError::VerifyFactError(e)
     }
 }
 
-impl From<VerifyFactError> for ExecError {
-    fn from(e: VerifyFactError) -> Self {
+impl From<VerifyError> for ExecError {
+    fn from(e: VerifyError) -> Self {
         ExecError::new(format!("verify fact error: {}", e).as_str(), vec![e.into()], None)
     }
 }
 
-impl From<VerifyFactError> for WellDefinedError {
-    fn from(e: VerifyFactError) -> Self {
+impl From<VerifyError> for WellDefinedError {
+    fn from(e: VerifyError) -> Self {
         WellDefinedError::new(format!("verify fact error: {}", e).as_str(), vec![e.into()], None)
     }
 }
