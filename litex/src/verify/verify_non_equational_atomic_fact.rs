@@ -30,8 +30,9 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<StmtResult, VerifyFactError> {
-        panic!("not implemented");
+    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(&mut self, _atomic_fact: &AtomicFact, _verify_state: &VerifyState) -> Result<StmtResult, VerifyFactError> {
+        // TODO: iterate environments and check if known_atomic_facts_with_1_arg contains this atomic_fact
+        Ok(StmtResult::StmtUnknown(StmtUnknown::new()))
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<StmtResult, VerifyFactError> {
