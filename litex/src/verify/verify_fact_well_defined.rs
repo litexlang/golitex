@@ -64,7 +64,7 @@ impl<'a> Executor<'a> {
 
         // 2. all args are well-defined
         for arg in atomic_fact.args() {
-            self.verify_obj_well_defined(&arg, verify_state)?;
+            self.verify_obj_well_defined_and_store_cache(&arg, verify_state)?;
         }
         
         Ok(())

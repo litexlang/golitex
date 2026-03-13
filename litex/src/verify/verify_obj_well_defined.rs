@@ -14,7 +14,12 @@ use crate::common::helper::todo_error_message;
 
 // well-defined check for obj
 impl<'a> Executor<'a> {
-    pub fn verify_obj_well_defined(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    pub fn verify_obj_well_defined_and_store_cache(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        let key = obj.to_string();
+        if self.runtime_context.cache_well_defined_obj_contains(&key) {
+            return Ok(());
+        }
+
         match obj {
             Obj::Identifier(identifier) => self.verify_identifier_well_defined(identifier),
             Obj::IdentifierWithMod(x) => self.verify_identifier_with_mod_well_defined(x),
@@ -65,7 +70,10 @@ impl<'a> Executor<'a> {
             Obj::QNz(_) => self.verify_q_nz_well_defined(),
             Obj::ZNz(_) => self.verify_z_nz_well_defined(),
             Obj::RNz(_) => self.verify_r_nz_well_defined(),
-        }
+        }?;
+
+        self.runtime_context.top_level_env().cache_well_defined_obj.insert(key, ());
+        Ok(())
     }
 
     fn verify_identifier_well_defined(&self, identifier: &Identifier) -> Result<(), WellDefinedError> {
@@ -142,7 +150,7 @@ impl<'a> Executor<'a> {
         }
 
         for (index, arg) in args.iter().enumerate() {
-            self.verify_obj_well_defined(arg, verify_state)?;
+            self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
             let param_set = &fn_set_with_dom.params_def_with_set[index].1;
             let in_fact = InFact::new((**arg).clone(), param_set.clone(), None);
             self.verify_fact(&Fact::AtomicFact(AtomicFact::InFact(in_fact)), verify_state)?;
@@ -168,7 +176,7 @@ impl<'a> Executor<'a> {
         }
 
         for (index, arg) in args.iter().enumerate() {
-            self.verify_obj_well_defined(arg, verify_state)?;
+            self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
             let param_set = &fn_set_without_dom.param_sets[index];
             let in_fact = InFact::new((**arg).clone(), (**param_set).clone(), None);
             self.verify_fact(&Fact::AtomicFact(AtomicFact::InFact(in_fact)), verify_state)?;
@@ -194,32 +202,32 @@ impl<'a> Executor<'a> {
     }
 
     fn verify_add_well_defined(&mut self, add: &Add, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined(&add.left, verify_state)?;
-        self.verify_obj_well_defined(&add.right, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&add.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&add.right, verify_state)?;
         self.require_obj_in_r(&add.left, verify_state)?;
         self.require_obj_in_r(&add.right, verify_state)?;
         Ok(())
     }
 
     fn verify_sub_well_defined(&mut self, sub: &Sub, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined(&sub.left, verify_state)?;
-        self.verify_obj_well_defined(&sub.right, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&sub.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&sub.right, verify_state)?;
         self.require_obj_in_r(&sub.left, verify_state)?;
         self.require_obj_in_r(&sub.right, verify_state)?;
         Ok(())
     }
 
     fn verify_mul_well_defined(&mut self, mul: &Mul, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined(&mul.left, verify_state)?;
-        self.verify_obj_well_defined(&mul.right, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&mul.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&mul.right, verify_state)?;
         self.require_obj_in_r(&mul.left, verify_state)?;
         self.require_obj_in_r(&mul.right, verify_state)?;
         Ok(())
     }
 
     fn verify_div_well_defined(&mut self, div: &Div, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined(&div.left, verify_state)?;
-        self.verify_obj_well_defined(&div.right, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&div.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&div.right, verify_state)?;
 
         let zero = Obj::Number(Number::new("0"));
         let not_equal_fact = NotEqualFact::new((*div.right).clone(), zero, None);
@@ -232,8 +240,8 @@ impl<'a> Executor<'a> {
     }
 
     fn verify_mod_well_defined(&mut self, m: &Mod, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined(&m.left, verify_state)?;
-        self.verify_obj_well_defined(&m.right, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&m.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&m.right, verify_state)?;
         self.require_obj_in_z(&m.left, verify_state)?;
         self.require_obj_in_z(&m.right, verify_state)?;
         let zero = Obj::Number(Number::new("0"));
@@ -248,43 +256,43 @@ impl<'a> Executor<'a> {
     }
 
     fn verify_union_well_defined(&mut self, x: &Union, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined(&x.left, verify_state)?;
-        self.verify_obj_well_defined(&x.right, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.right, verify_state)?;
         Ok(())
     }
 
     fn verify_intersect_well_defined(&mut self, x: &Intersect, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined(&x.left, verify_state)?;
-        self.verify_obj_well_defined(&x.right, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.right, verify_state)?;
         Ok(())
 
     }
 
     fn verify_set_minus_well_defined(&mut self, x: &SetMinus, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined(&x.left, verify_state)?;
-        self.verify_obj_well_defined(&x.right, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.right, verify_state)?;
         Ok(())
     }
 
     fn verify_set_diff_well_defined(&mut self, x: &SetDiff, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined(&x.left, verify_state)?;
-        self.verify_obj_well_defined(&x.right, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.right, verify_state)?;
         Ok(())
     }
 
     fn verify_cup_well_defined(&mut self, x: &Cup, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined(&x.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
         Ok(())
     }
 
     fn verify_cap_well_defined(&mut self, x: &Cap, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined(&x.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
         Ok(())
     }
 
     fn verify_list_set_well_defined(&mut self, x: &ListSet, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         for obj in &x.list {
-            self.verify_obj_well_defined(obj, verify_state)?;
+            self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
         }
         Ok(())
     }
@@ -313,9 +321,9 @@ impl<'a> Executor<'a> {
 
     fn verify_fn_set_without_dom_well_defined(&mut self, x: &FnSetWithoutDom, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         for obj in &x.param_sets {
-            self.verify_obj_well_defined(obj, verify_state)?;
+            self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
         }
-        self.verify_obj_well_defined(&x.ret_set, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.ret_set, verify_state)?;
         Ok(())
     }
 
@@ -327,7 +335,7 @@ impl<'a> Executor<'a> {
     }
 
     fn verify_fn_set_with_dom_well_defined_body(&mut self, x: &FnSetWithDom, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        if let Err(e) = self.verify_obj_well_defined(&x.ret_set, verify_state) {
+        if let Err(e) = self.verify_obj_well_defined_and_store_cache(&x.ret_set, verify_state) {
             return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()).as_str(), vec![StmtError::WellDefinedError(e)], None));
         }
         
@@ -397,13 +405,13 @@ impl<'a> Executor<'a> {
 
     fn verify_cart_well_defined(&mut self, x: &Cart, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         for obj in &x.args {
-            self.verify_obj_well_defined(obj, verify_state)?;
+            self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
         }
         Ok(())
     }
 
     fn verify_cart_dim_well_defined(&mut self, x: &CartDim, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined(&x.set, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
 
         let is_cart_fact = AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), None));
         self.verify_fact(&Fact::AtomicFact(is_cart_fact), verify_state)?;
@@ -454,12 +462,12 @@ impl<'a> Executor<'a> {
     }
 
     fn verify_power_set_well_defined(&mut self, x: &PowerSet, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined(&x.set, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
         Ok(())
     }
 
     fn verify_choose_well_defined(&mut self, x: &Choose, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined(&x.set, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
         let is_nonempty_set_fact = AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new((*x.set).clone(), None));
         self.verify_fact(&Fact::AtomicFact(is_nonempty_set_fact), verify_state)?;
         Ok(())
