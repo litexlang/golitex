@@ -128,8 +128,8 @@ pub struct Proj {
 
 #[derive(Clone)]
 pub struct FnObj {
-    pub head: Box<Obj>,
-    pub body: Vec<Box<Obj>>,
+    pub head: Box<Atom>,
+    pub body: Vec<Vec<Box<Obj>>>,
 }
 
 
@@ -316,12 +316,11 @@ impl ObjAtIndex {
     }
 }
 
-impl FnObj 
-{
-    pub fn new(head: Obj, body: Vec<Obj>) -> Self {
+impl FnObj {
+    pub fn new(head: Atom, body: Vec<Vec<Box<Obj>>>) -> Self {
         FnObj {
             head: Box::new(head),
-            body: body.into_iter().map(Box::new).collect(),
+            body,
         }
     }
 }
@@ -802,7 +801,11 @@ impl fmt::Display for Identifier {
 
 impl fmt::Display for FnObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", self.head, braced_vec_to_string(&self.body))
+        write!(f, "{}", self.head)?;
+        for group in &self.body {
+            write!(f, "{}", braced_vec_to_string(group))?;
+        }
+        Ok(())
     }
 }
 

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use crate::fact::ExistOrAndChainAtomicFact;
+use crate::obj::Atom;
 mod verify;
 use verify::VerifyState;
 mod simplify_polynomial;
@@ -127,20 +128,20 @@ fn main() {
 
 fn try_atom_fn_obj() {
     let a_add_b = Obj::FnObj(FnObj::new(
-        Obj::Identifier(Identifier::new("+")),
-        vec![
-            Obj::Identifier(Identifier::new("a")),
-            Obj::Identifier(Identifier::new("b")),
-        ],
+        Atom::IdentifierWithMod(IdentifierWithMod::new("+", "")),
+        vec![vec![
+            Box::new(Obj::Identifier(Identifier::new("a"))),
+            Box::new(Obj::Identifier(Identifier::new("b"))),
+        ]],
     ));
     println!("{}", a_add_b);
 
     let a_add_b_with_mod = Obj::FnObj(FnObj::new(
-        Obj::IdentifierWithMod(IdentifierWithMod::new("ModA", "name_a")),
-        vec![
-            Obj::Identifier(Identifier::new("a")),
-            Obj::Identifier(Identifier::new("b")),
-        ],
+        Atom::IdentifierWithMod(IdentifierWithMod::new("ModA", "name_a")),
+        vec![vec![
+            Box::new(Obj::Identifier(Identifier::new("a"))),
+            Box::new(Obj::Identifier(Identifier::new("b"))),
+        ]],
     ));
     println!("{}", a_add_b_with_mod);
 }
