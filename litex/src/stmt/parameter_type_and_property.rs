@@ -162,6 +162,9 @@ impl ParamDefWithParamSet {
         }
         facts
     }
+
+
+
 }
 
 impl ParamDefWithParamSet {
@@ -170,41 +173,42 @@ impl ParamDefWithParamSet {
     }
 }
 
-
-pub fn number_of_params_in_param_def_with_type_def(param_defs: &Vec<ParamDefWithParamType>) -> usize {
-    let mut total_param_count: usize = 0;
-    for p in param_defs.iter() {
-        total_param_count += p.0.len();
-    }
-    return total_param_count
-}
-
-/// Builds a flat list of ParamType in the same order as args: one type per parameter.
-fn flat_instantiated_types_for_args(param_defs: &Vec<ParamDefWithParamType>, instantiated_types: &Vec<ParamType>) -> Vec<ParamType> {
-    let mut result = Vec::with_capacity(number_of_params_in_param_def_with_type_def(param_defs));
-    for (param_def, param_type) in param_defs.iter().zip(instantiated_types.iter()) {
-        for _ in param_def.0.iter() {
-            result.push(param_type.clone());
-        }
-    }
-    result
-}
-
-/// Given param defs and args, instantiates param types and returns one Fact per arg (arg satisfies its param type).
-pub fn facts_for_args_satisfy_param_def_with_type_vec(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Box<Obj>>) -> Result<Vec<Fact>, StmtError> {
-    let instantiated_types = ParamDefWithParamType::instantiate_param_def_with_type_one_by_one(param_defs, args)?;
-    let flat_types = flat_instantiated_types_for_args(param_defs, &instantiated_types);
-    let mut facts = Vec::with_capacity(args.len());
-    for (arg, param_type) in args.iter().zip(flat_types.iter()) {
-        let arg_obj = (**arg).clone();
-        facts.push(ParamType::fact_for_obj(arg_obj, param_type));
-    }
-    Ok(facts)
-}
-
 impl ParamDefWithParamType {
-    pub fn instantiate_param_def_with_type_one_by_one(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Box<Obj>>) -> Result<Vec<ParamType>, StmtError> {
-        let total_param_count = number_of_params_in_param_def_with_type_def(param_defs);
+    /// Given param defs and args, instantiates param types and returns one Fact per arg (arg satisfies its param type).
+    pub fn facts_for_args_satisfy_param_def_with_type_vec(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Box<Obj>>) -> Result<Vec<Fact>, StmtError> {
+        let instantiated_types = ParamDefWithParamType::instantiate_param_def_with_type_one_by_one(param_defs, args)?;
+        let flat_types = ParamDefWithParamType::flat_instantiated_types_for_args(param_defs, &instantiated_types);
+        let mut facts = Vec::with_capacity(args.len());
+        for (arg, param_type) in args.iter().zip(flat_types.iter()) {
+            let arg_obj = (**arg).clone();
+            facts.push(ParamType::fact_for_obj(arg_obj, param_type));
+        }
+        Ok(facts)
+    }
+
+    
+    fn number_of_params_in_param_def_with_type_def(param_defs: &Vec<ParamDefWithParamType>) -> usize {
+        let mut total_param_count: usize = 0;
+        for p in param_defs.iter() {
+            total_param_count += p.0.len();
+        }
+        return total_param_count
+    }
+
+    /// Builds a flat list of ParamType in the same order as args: one type per parameter.
+    fn flat_instantiated_types_for_args(param_defs: &Vec<ParamDefWithParamType>, instantiated_types: &Vec<ParamType>) -> Vec<ParamType> {
+        let mut result = Vec::with_capacity(Self::number_of_params_in_param_def_with_type_def(param_defs));
+        for (param_def, param_type) in param_defs.iter().zip(instantiated_types.iter()) {
+            for _ in param_def.0.iter() {
+                result.push(param_type.clone());
+            }
+        }
+        result
+    }
+
+    
+    fn instantiate_param_def_with_type_one_by_one(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Box<Obj>>) -> Result<Vec<ParamType>, StmtError> {
+        let total_param_count = Self::number_of_params_in_param_def_with_type_def(param_defs);
         if total_param_count != args.len() {
             return Err(StmtError::ExecError(ExecError::new(
                 &format!(
