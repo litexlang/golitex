@@ -1,4 +1,4 @@
-use crate::common::helper::is_number_string_literally_integer_without_dot;
+use crate::common::helper::{duplicate_parameter_name_error_message, is_number_string_literally_integer_without_dot, vec_has_duplicates};
 use crate::common::keywords::{
     ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
 };
@@ -221,6 +221,10 @@ impl Parser {
                 break;
             }
             tb.skip_token(COMMA)?;
+        }
+        let fn_set_param_names = ParamDefWithParamSet::collect_param_names(&params_def_with_set);
+        if vec_has_duplicates(&fn_set_param_names) {
+            return Err(ParsingError::new(&duplicate_parameter_name_error_message("fn set"), tb.line_file_index));
         }
         tb.skip_token(COLON)?;
         let mut dom_facts = vec![self.parse_or_and_chain_atomic_fact(tb)?];
