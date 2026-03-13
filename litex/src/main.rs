@@ -55,6 +55,9 @@ mod parse;
 use parse::{Parser, TokenBlock, tokenize_line};
 mod pipeline;
 
+#[cfg(test)]
+mod main_test;
+
 fn main() {
     try_atom_fn_obj();
     try_arithmetic();
