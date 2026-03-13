@@ -11,5 +11,4 @@ impl<'a> Executor<'a> {
             _ => self.verify_non_equational_atomic_fact(atomic_fact, verify_state),
         }
     }
-    
 }

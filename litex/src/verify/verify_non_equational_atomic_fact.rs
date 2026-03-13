@@ -143,6 +143,6 @@ impl<'a> Executor<'a> {
 
     fn verify_non_equational_atomic_fact_with_known_forall_fact(&mut self, atomic_fact: &AtomicFact) -> Result<NonErrStmtResult, VerifyError> {
         _ = atomic_fact;
-        panic!("not implemented");
+        return Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()));
     }
 }

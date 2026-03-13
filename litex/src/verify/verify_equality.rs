@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use crate::obj::Obj;
+use crate::simplify_polynomial::two_objs_equal_by_polynomial_simplification;
 use crate::fact::EqualFact;
 use crate::execute::Executor;
 use crate::result::StmtUnknown;
@@ -19,6 +20,13 @@ impl<'a> Executor<'a> {
         if result.is_true() {
             return Ok(result);
         }
+
+        if verify_state.is_round_0() {
+            let result = self.verify_equality_with_known_forall_facts(equal_fact, verify_state)?;
+            if result.is_true() {
+                return Ok(result);
+            }
+        }
         
         Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
     }
@@ -26,6 +34,10 @@ impl<'a> Executor<'a> {
     fn verify_equality_by_builtin_rules(&mut self, equal_fact: &EqualFact) -> Result<NonErrStmtResult, VerifyError> {
         if equal_fact.left.two_objs_can_be_calculated_and_equal_by_calculation(&equal_fact.right) {
             return Ok(NonErrStmtResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "calculation".to_string(), equal_fact.line_file_index)));
+        }
+
+        if two_objs_equal_by_polynomial_simplification(&equal_fact.left, &equal_fact.right) {
+            return Ok(NonErrStmtResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "polynomial simplification".to_string(), equal_fact.line_file_index)));
         }
 
         Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
@@ -89,5 +101,11 @@ impl<'a> Executor<'a> {
                 Ok(None)
             }
         }
+    }
+
+    fn verify_equality_with_known_forall_facts(&mut self, equal_fact: &EqualFact, verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+        _ = verify_state;
+        _ = equal_fact;
+        return Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()));
     }
 }
