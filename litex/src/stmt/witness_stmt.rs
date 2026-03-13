@@ -5,11 +5,6 @@ use crate::obj::Obj;
 use super::Stmt;
 use crate::common::keywords::{COLON, COMMA, ST, WITNESS};
 
-pub enum WitnessStmt {
-    WitnessExistFact(WitnessExistFact),
-    WitnessNonemptySet(WitnessNonemptySet),
-}
-
 pub struct WitnessNonemptySet {
     pub obj: Obj,
     pub set: Obj,
@@ -36,24 +31,6 @@ impl fmt::Display for WitnessExistFact {
             0 => write!(f, "{} {}{} {} {} {}", WITNESS, vec_to_string_with_sep(&self.equal_tos, COMMA), COLON, vec_to_string_join_by_comma(&self.   exist_fact_in_witness.params_def_with_type), ST, vec_to_string_join_by_comma(&self.exist_fact_in_witness.facts)),
             _ => write!(f, "{} {}{} {} {} {} {}\n{}", WITNESS, vec_to_string_with_sep(&self.equal_tos, COMMA), COLON, vec_to_string_join_by_comma(&self.exist_fact_in_witness.params_def_with_type), ST, vec_to_string_join_by_comma(&self.exist_fact_in_witness.facts), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)),
         }   
-    }
-}
-
-impl WitnessStmt {
-    pub fn line_file(&self) -> Option<(usize, usize)> {
-        match self {
-            WitnessStmt::WitnessExistFact(witness_exist_fact) => witness_exist_fact.line_file_index,
-            WitnessStmt::WitnessNonemptySet(witness_nonempty_set) => witness_nonempty_set.line_file_index,
-        }
-    }
-}
-
-impl fmt::Display for WitnessStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            WitnessStmt::WitnessExistFact(witness_exist_fact) => write!(f, "{}", witness_exist_fact),
-            WitnessStmt::WitnessNonemptySet(witness_nonempty_set) => write!(f, "{}", witness_nonempty_set),
-        }
     }
 }
 

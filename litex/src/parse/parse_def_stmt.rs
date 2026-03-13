@@ -1,4 +1,4 @@
-use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, DefStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, DefPropWithoutMeaningStmt};
+use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, DefPropWithoutMeaningStmt};
 use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
 use crate::error::ParsingError;
 use crate::stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
@@ -28,8 +28,8 @@ impl Parser {
         tb.skip_token(RIGHT_BRACE)?;
         let facts = self.parse_facts_in_body(tb)?;
         match facts.len() {
-            0 => Ok(Stmt::DefStmt(DefStmt::DefPropStmt(DefPropStmt::new(name, param_defs, None, Some(tb.line_file_index))))),
-            _ => Ok(Stmt::DefStmt(DefStmt::DefPropStmt(DefPropStmt::new(name, param_defs, Some(facts), Some(tb.line_file_index))))),
+            0 => Ok(Stmt::DefPropStmt(DefPropStmt::new(name, param_defs, None, Some(tb.line_file_index)))),
+            _ => Ok(Stmt::DefPropStmt(DefPropStmt::new(name, param_defs, Some(facts), Some(tb.line_file_index)))),
         }
     }
 
@@ -45,7 +45,7 @@ impl Parser {
             }
         }
         tb.skip_token(RIGHT_BRACE)?;
-        Ok(Stmt::DefStmt(DefStmt::DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt::new(name, params, Some(tb.line_file_index)))))
+        Ok(Stmt::DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt::new(name, params, Some(tb.line_file_index))))
     }
 
     pub fn def_let_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -68,11 +68,11 @@ impl Parser {
         } else {
             vec![]
         };
-        Ok(Stmt::DefStmt(DefStmt::DefLetStmt(DefLetStmt::new(
+        Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
             facts,
             Some(tb.line_file_index),
-        ))))
+        )))
     }
 
     // return HaveObjInNonemptySetOrParamTypeStmt or HaveObjEqualStmt
@@ -91,7 +91,7 @@ impl Parser {
         }
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
-            Ok(Stmt::DefStmt(DefStmt::HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, Some(tb.line_file_index)))))
+            Ok(Stmt::HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, Some(tb.line_file_index))))
         } else {
             tb.skip_token(EQUAL)?;
             let mut objs_equal_to = vec![self.parse_obj(tb)?];
@@ -99,7 +99,7 @@ impl Parser {
                 tb.skip_token(COMMA)?;
                 objs_equal_to.push(self.parse_obj(tb)?);
             }
-            Ok(Stmt::DefStmt(DefStmt::HaveObjEqualStmt(HaveObjEqualStmt::new(param_defs, objs_equal_to, Some(tb.line_file_index)))))
+            Ok(Stmt::HaveObjEqualStmt(HaveObjEqualStmt::new(param_defs, objs_equal_to, Some(tb.line_file_index))))
         }
     }
 
@@ -118,15 +118,15 @@ impl Parser {
                 block.skip_token(EQUAL)?;
                 equal_tos.push(self.parse_obj(block)?);
             }
-            Ok(Stmt::DefStmt(DefStmt::HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt::new(
+            Ok(Stmt::HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt::new(
                 name, fs, cases, equal_tos, Some(tb.line_file_index),
-            ))))
+            )))
         } else {
             tb.skip_token(EQUAL)?;
             let equal_to = self.parse_obj(tb)?;
-            Ok(Stmt::DefStmt(DefStmt::HaveFnEqualStmt(HaveFnEqualStmt::new(
+            Ok(Stmt::HaveFnEqualStmt(HaveFnEqualStmt::new(
                 name, fs, equal_to, Some(tb.line_file_index),
-            ))))
+            )))
         }
     }
 
@@ -141,7 +141,7 @@ impl Parser {
 
         tb.skip_token(COLON)?;
         let true_fact = self.parse_exist_fact(tb)?;
-        Ok(Stmt::DefStmt(DefStmt::HaveExistObjStmt(HaveExistObjStmt::new(equal_tos, true_fact, Some(tb.line_file_index)))))
+        Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(equal_tos, true_fact, Some(tb.line_file_index))))
     }
 
     pub fn def_struct_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -172,13 +172,13 @@ impl Parser {
         if tb.current()? == EQUAL {
             tb.skip_token(EQUAL)?;
             let equal_to = self.parse_obj(tb)?;
-            Ok(Stmt::DefStmt(DefStmt::DefStructWithNoFieldStmt(DefStructWithNoFieldStmt::new(
+            Ok(Stmt::DefStructWithNoFieldStmt(DefStructWithNoFieldStmt::new(
                 name,
                 params_def_with_type,
                 dom_facts,
                 equal_to,
                 Some(tb.line_file_index),
-            ))))
+            )))
         } else {
             tb.skip_token(COLON)?;
 
@@ -213,13 +213,13 @@ impl Parser {
                 }
             }
 
-            Ok(Stmt::DefStmt(DefStmt::DefStructWithFieldsStmt(DefStructWithFieldsStmt::new(
+            Ok(Stmt::DefStructWithFieldsStmt(DefStructWithFieldsStmt::new(
                 name,
                 params_def_with_type,
                 fields,
                 facts,
                 Some(tb.line_file_index),
-            ))))
+            )))
         }
     }
 
@@ -249,12 +249,12 @@ impl Parser {
             
             return_or_algo_if.push(item);
         }
-        Ok(Stmt::DefStmt(DefStmt::DefAlgoStmt(DefAlgoStmt::new(
+        Ok(Stmt::DefAlgoStmt(DefAlgoStmt::new(
             name,
             params,
             return_or_algo_if,
             Some(tb.line_file_index),
-        ))))
+        )))
     }
 
     /// head 里是 if and_spec_fact :，body 有且只有一个块，即 return obj。

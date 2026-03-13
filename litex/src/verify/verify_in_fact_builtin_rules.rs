@@ -9,7 +9,7 @@ use crate::result::StmtUnknown;
 use crate::verify::VerifyState;
 
 impl<'a> Executor<'a> {
-    pub(crate) fn verify_in_fact(&self, in_fact: &InFact, _verify_state: &VerifyState) -> Result<StmtResult, VerifyFactError> {
+    pub(crate) fn verify_in_fact_with_builtin_rules(&mut self, in_fact: &InFact, _verify_state: &VerifyState) -> Result<StmtResult, VerifyFactError> {
         match (&in_fact.element, &in_fact.set) {
             (Obj::Number(num), Obj::RObj(_)) => {
                 self.verify_number_in_standard_number_set(&num.value, R, in_fact.line_file_index, _verify_state)
