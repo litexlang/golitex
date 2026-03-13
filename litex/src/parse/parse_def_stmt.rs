@@ -2,6 +2,7 @@ use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStructWithNoField
 use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
 use crate::error::ParsingError;
 use crate::stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
+use crate::common::helper::vec_has_duplicates;
 use crate::common::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, FN, HAVE, IF, LEFT_BRACE, LET, PROP, RETURN, RIGHT_BRACE, STRUCT};
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use super::Parser;
@@ -45,6 +46,11 @@ impl Parser {
             }
         }
         tb.skip_token(RIGHT_BRACE)?;
+
+        if vec_has_duplicates(&params) {
+            return Err(ParsingError::new("duplicate parameter name in prop without meaning", tb.line_file_index));
+        }
+
         Ok(Stmt::DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt::new(name, params, Some(tb.line_file_index))))
     }
 
