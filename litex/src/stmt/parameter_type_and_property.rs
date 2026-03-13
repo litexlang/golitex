@@ -253,3 +253,35 @@ impl ParamType {
     }
 }
 
+impl ParamDefWithParamType {
+    pub fn param_names(&self) -> &Vec<String> {
+        &self.0
+    }
+
+    pub fn collect_param_names(param_defs: &Vec<ParamDefWithParamType>) -> Vec<String> {
+        let mut names: Vec<String> = vec![];
+        for def in param_defs.iter() {
+            for name in def.param_names().iter() {
+                names.push(name.clone());
+            }
+        }
+        names
+    }
+}
+
+impl ParamDefWithParamSet {
+    pub fn param_names(&self) -> &Vec<String> {
+        &self.0
+    }
+
+    pub fn collect_param_names(param_defs: &Vec<ParamDefWithParamSet>) -> Vec<String> {
+        let mut names: Vec<String> = vec![];
+        for def in param_defs.iter() {
+            for name in def.param_names().iter() {
+                names.push(name.clone());
+            }
+        }
+        names
+    }
+}
+

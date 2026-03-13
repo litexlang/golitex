@@ -2,7 +2,7 @@ use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStructWithNoField
 use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
 use crate::error::ParsingError;
 use crate::stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
-use crate::common::helper::vec_has_duplicates;
+use crate::common::helper::{duplicate_parameter_name_error_message, vec_has_duplicates};
 use crate::common::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, FN, HAVE, IF, LEFT_BRACE, LET, PROP, RETURN, RIGHT_BRACE, STRUCT};
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use super::Parser;
@@ -27,6 +27,10 @@ impl Parser {
             param_defs.push(self.param_def_with_type(tb)?);
         }
         tb.skip_token(RIGHT_BRACE)?;
+        let all_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
+        if vec_has_duplicates(&all_param_names) {
+            return Err(ParsingError::new(&duplicate_parameter_name_error_message("prop"), tb.line_file_index));
+        }
         let facts = self.parse_facts_in_body(tb)?;
         match facts.len() {
             0 => Ok(Stmt::DefPropStmt(DefPropStmt::new(name, param_defs, None, Some(tb.line_file_index)))),
@@ -48,7 +52,7 @@ impl Parser {
         tb.skip_token(RIGHT_BRACE)?;
 
         if vec_has_duplicates(&params) {
-            return Err(ParsingError::new("duplicate parameter name in prop without meaning", tb.line_file_index));
+            return Err(ParsingError::new(&duplicate_parameter_name_error_message("prop without meaning"), tb.line_file_index));
         }
 
         Ok(Stmt::DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt::new(name, params, Some(tb.line_file_index))))
@@ -74,6 +78,10 @@ impl Parser {
         } else {
             vec![]
         };
+        let all_param_names = ParamDefWithParamType::collect_param_names(&param_def);
+        if vec_has_duplicates(&all_param_names) {
+            return Err(ParsingError::new(&duplicate_parameter_name_error_message("let"), tb.line_file_index));
+        }
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
             facts,
@@ -94,6 +102,10 @@ impl Parser {
         }
         if param_defs.is_empty() {
             return Err(ParsingError::new("have expects at least one param type pair", tb.line_file_index));
+        }
+        let have_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
+        if vec_has_duplicates(&have_param_names) {
+            return Err(ParsingError::new(&duplicate_parameter_name_error_message("have"), tb.line_file_index));
         }
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
@@ -160,6 +172,10 @@ impl Parser {
             if tb.current()? == COMMA {
                 tb.skip_token(COMMA)?;
             }
+        }
+        let struct_param_names = ParamDefWithParamType::collect_param_names(&params_def_with_type);
+        if vec_has_duplicates(&struct_param_names) {
+            return Err(ParsingError::new(&duplicate_parameter_name_error_message("struct"), tb.line_file_index));
         }
         let dom_facts = if tb.current()? == COLON {
             tb.skip_token(COLON)?;
