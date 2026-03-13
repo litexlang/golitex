@@ -52,21 +52,19 @@ impl<'a> Executor<'a> {
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params(&mut self, atomic_fact: &AtomicFact, _verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
         let all_objs_equal_to_arg0 = self.runtime_context.get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
         let all_objs_equal_to_arg1 = self.runtime_context.get_all_objs_equal_to_arg(&atomic_fact.args()[1].to_string());
-        
+
         for environment in self.runtime_context.environments.iter() {
-            if let Some(known_facts_map) = environment.known_atomic_facts_with_2_args.get(&(atomic_fact.key(), atomic_fact.is_true())) {
-                if known_facts_map.contains_key(&(atomic_fact.args()[0].to_string(), atomic_fact.args()[1].to_string())) {
-                    return Ok(NonErrStmtResult::FactVerifiedByFact(FactVerifiedByFact::new(atomic_fact.to_string(), "known atomic fact".to_string(), atomic_fact.line_file_index())));
-                }
+            let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1, _verify_state)?;
+            if result.is_true() {
+                return Ok(result);
             }
         }
-        
-        if let Some(known_facts_map) = self.runtime_context.builtin_environment.known_atomic_facts_with_2_args.get(&(atomic_fact.key(), atomic_fact.is_true())) {
-            if known_facts_map.contains_key(&(atomic_fact.args()[0].to_string(), atomic_fact.args()[1].to_string())) {
-                return Ok(NonErrStmtResult::FactVerifiedByFact(FactVerifiedByFact::new(atomic_fact.to_string(), "known atomic fact".to_string(), atomic_fact.line_file_index())));
-            }
+
+        let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(&self.runtime_context.builtin_environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1, _verify_state)?;
+        if result.is_true() {
+            return Ok(result);
         }
-        
+
         Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
     }
 
@@ -86,6 +84,20 @@ impl<'a> Executor<'a> {
             for obj in all_objs_equal_to.iter() {
                 if known_facts_map.contains_key(obj) {
                     return Ok(NonErrStmtResult::FactVerifiedByFact(FactVerifiedByFact::new(atomic_fact.to_string(), "known atomic fact".to_string(), atomic_fact.line_file_index())));
+                }
+            }
+        }
+
+        Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
+    }
+
+    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment: &Environment, atomic_fact: &AtomicFact, all_objs_equal_to_arg0: &Vec<String>, all_objs_equal_to_arg1: &Vec<String>, _verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+        if let Some(known_facts_map) = environment.known_atomic_facts_with_2_args.get(&(atomic_fact.key(), atomic_fact.is_true())) {
+            for obj0 in all_objs_equal_to_arg0.iter() {
+                for obj1 in all_objs_equal_to_arg1.iter() {
+                    if known_facts_map.contains_key(&(obj0.clone(), obj1.clone())) {
+                        return Ok(NonErrStmtResult::FactVerifiedByFact(FactVerifiedByFact::new(atomic_fact.to_string(), "known atomic fact".to_string(), atomic_fact.line_file_index())));
+                    }
                 }
             }
         }
