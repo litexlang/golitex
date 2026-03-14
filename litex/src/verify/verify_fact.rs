@@ -8,18 +8,8 @@ use crate::execute::Executor;
 
 impl<'a> Executor<'a> {
     pub fn verify_fact(&mut self, fact: &Fact, verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
-        let use_cache = matches!(fact, Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_) | Fact::OrFact(_));
-        if use_cache {
-            let key = fact.to_string();
-            let (cache_ok, cache_line_file) = self.runtime_context.cache_known_or_and_atomic_fact_contains(&key);
-
-            if cache_ok {
-                return Ok(NonErrStmtResult::FactVerifiedByFact(FactVerifiedByFact::new(
-                    key,
-                    fact.to_string(),
-                    cache_line_file,
-                )));
-            }
+        if let Some(cached_result) = self.verify_fact_from_cache(fact) {
+            return Ok(cached_result);
         }
 
         if !verify_state.well_defined_already_verified {
@@ -40,10 +30,26 @@ impl<'a> Executor<'a> {
             Fact::OrFact(or_fact) => self.verify_or_fact(or_fact, &next_verify_state),
         }?;
 
-        if use_cache && result.is_true() {
-            self.runtime_context.top_level_env().cache_known_or_and_chain_atomic_fact.insert(fact.to_string(), fact.line_file());
-        }
-
         Ok(result)
     }
+
+    /// If fact is cacheable (AtomicFact, AndFact, ChainFact, OrFact) and found in known-fact cache, returns Some(result).
+    fn verify_fact_from_cache(&self, fact: &Fact) -> Option<NonErrStmtResult> {
+        let use_cache = matches!(fact, Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_) | Fact::OrFact(_));
+        if !use_cache {
+            return None;
+        }
+        let key = fact.to_string();
+        let (cache_ok, cache_line_file) = self.runtime_context.cache_known_or_and_atomic_fact_contains(&key);
+        if cache_ok {
+            Some(NonErrStmtResult::FactVerifiedByFact(FactVerifiedByFact::new(
+                key,
+                fact.to_string(),
+                cache_line_file,
+            )))
+        } else {
+            None
+        }
+    }
+    
 }

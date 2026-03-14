@@ -326,3 +326,19 @@ impl Environment {
         Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new())
     }
 }
+
+impl Environment {
+    /// Store fact into cache so it can be treated as known. Only And, Or, Chain, and AtomicFact are allowed.
+    pub fn store_fact_to_cache_known_fact(&mut self, fact: &Fact) -> Result<(), StoreFactError> {
+        match fact {
+            Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::OrFact(_) | Fact::ChainFact(_) => {
+                let key = fact.to_string();
+                self.cache_known_or_and_chain_atomic_fact.insert(key, fact.line_file());
+                Ok(())
+            }
+            Fact::ExistFact(_) | Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => {
+                Ok(())
+            }
+        }
+    }
+}
