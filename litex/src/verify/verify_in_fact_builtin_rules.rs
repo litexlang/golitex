@@ -20,7 +20,7 @@ fn number_in_set_verified(num_value: &str, set_name: &str, reason: &str, line_fi
 }
 
 impl<'a> Executor<'a> {
-    pub(crate) fn verify_in_fact_with_builtin_rules(&mut self, in_fact: &InFact, _verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+    pub fn verify_in_fact_with_builtin_rules(&mut self, in_fact: &InFact, _verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
         match (&in_fact.element, &in_fact.set) {
             (Obj::Number(num), Obj::RObj(_)) => Ok(number_in_set_verified(&num.value, R, "number in R", in_fact.line_file_index)),
             (Obj::Number(num), Obj::RPos(_)) => {
