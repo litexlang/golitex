@@ -7,6 +7,9 @@ use crate::error::StoreFactError;
 impl<'a> Executor<'a> {
     pub fn store_fact_without_well_defined_verified_and_infer(&mut self, fact: &Fact) -> Result<(), StoreFactError> {
         self.runtime_context.top_level_env().store_fact(fact.clone())?;
+
+        self.runtime_context.top_level_env().store_fact_to_cache_known_fact(fact)?;
+        
         self.infer(fact).map_err(|e| StoreFactError::new(format!("infer error: {}", e).as_str(), vec![e.into()]))?;
         Ok(())
     }

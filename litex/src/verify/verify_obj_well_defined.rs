@@ -14,15 +14,26 @@ use crate::common::helper::todo_error_message;
 
 // well-defined check for obj
 impl<'a> Executor<'a> {
-    pub fn verify_obj_well_defined_and_store_cache(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    /// If obj is cacheable (not FnSetWithDom or SetBuilder) and found in well-defined cache, returns Some(()).
+    fn verify_obj_well_defined_from_cache_if_known(&self, obj: &Obj) -> Option<()> {
         let use_cache = !matches!(obj, Obj::FnSetWithDom(_) | Obj::SetBuilder(_));
-        if use_cache {
-            let key = obj.to_string();
-            let cache_ok = self.runtime_context.cache_well_defined_obj_contains(&key);
-            if cache_ok {
-                return Ok(());
-            }
+        if !use_cache {
+            return None;
         }
+        let key = obj.to_string();
+        if self.runtime_context.cache_well_defined_obj_contains(&key) {
+            Some(())
+        } else {
+            None
+        }
+    }
+
+    pub fn verify_obj_well_defined_and_store_cache(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        if self.verify_obj_well_defined_from_cache_if_known(obj).is_some() {
+            return Ok(());
+        }
+
+        let use_cache = !matches!(obj, Obj::FnSetWithDom(_) | Obj::SetBuilder(_));
 
         match obj {
             Obj::Identifier(identifier) => self.verify_identifier_well_defined(identifier),
