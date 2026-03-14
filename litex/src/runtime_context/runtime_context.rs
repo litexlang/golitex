@@ -2,6 +2,7 @@ use std::fmt;
 use std::collections::HashMap;
 use crate::obj::{Identifier, Atom};
 use crate::common::keywords::MOD_SIGN;
+use crate::result::NonErrStmtResult;
 use crate::module_manager::ModuleManager;
 use crate::environment::Environment;
 use crate::stmt::definition_stmt::DefPropStmt;
@@ -220,5 +221,23 @@ impl<'a> RuntimeContext<'a> {
         let is_ok = self.builtin_environment.cache_known_or_and_chain_atomic_fact.contains_key(key);
         let line_file = self.builtin_environment.cache_known_or_and_chain_atomic_fact.get(key).and_then(|v| *v);
         (is_ok, line_file)
+    }
+}
+
+impl<'a> RuntimeContext<'a> {
+    /// Format result with optional location: if line_file is set, print "line N" and (when file_index != 0) "file PATH"; otherwise print nothing for location.
+    pub fn display_result(&self, result: &NonErrStmtResult) -> String {
+        let body = result.body_string();
+        if let Some((line, file_index)) = result.line_file() {
+            let prefix = if file_index == 0 {
+                format!("line {}", line)
+            } else {
+                let path = self.module_manager.run_file_paths.get(file_index).map(|s: &String| s.as_str()).unwrap_or("");
+                format!("line {}, file {}", line, path)
+            };
+            format!("{} {}", prefix, body)
+        } else {
+            body
+        }
     }
 }
