@@ -83,7 +83,7 @@ impl<'a> Executor<'a> {
 
             for name in param_def.0.iter() {
                 self.validate_name_and_store_identifier_obj(name)?;
-                self.store_fact_without_well_defined_verified_and_infer(&ParamDefWithParamType::param_satisfy_param_type_fact(name, &param_def.1))?;
+                self.store_fact_without_well_defined_verified_and_infer(&ParamType::param_satisfy_param_type_fact(name, &param_def.1))?;
             }
         }
         Ok(())
