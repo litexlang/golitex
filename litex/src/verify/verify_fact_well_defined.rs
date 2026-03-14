@@ -110,7 +110,7 @@ impl<'a> Executor<'a> {
 
     fn verify_exist_fact_well_defined_body(&mut self, exist_fact: &ExistFact, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         for param_def in exist_fact.params_def_with_type().iter() {
-            let result = self.define_params_with_type(param_def);
+            let result = self.define_params_with_type(std::slice::from_ref(param_def),false);
             if let Err(e) = result {
                 return Err(WellDefinedError::new(&format!("failed to define parameters in {}:\n{}", exist_fact, e.body_string()), vec![], exist_fact.line_file_index()));
             }
@@ -131,7 +131,7 @@ impl<'a> Executor<'a> {
 
     fn verify_forall_fact_well_defined_body(&mut self, forall_fact: &ForallFact, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         for param_def in forall_fact.params_def_with_type.iter() {
-            if let Err(e) = self.define_params_with_type(param_def) {
+            if let Err(e) = self.define_params_with_type(std::slice::from_ref(param_def),false) {
                 return Err(WellDefinedError::new(&format!("failed to define parameters in {}:\n{}", forall_fact, e.body_string()), vec![], forall_fact.line_file_index));
             }
         }

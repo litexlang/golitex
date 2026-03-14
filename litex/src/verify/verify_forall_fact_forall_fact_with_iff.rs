@@ -18,7 +18,7 @@ impl<'a> Executor<'a> {
 
     fn verify_forall_fact_body(&mut self, forall_fact: &ForallFact, verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
         for param_def in forall_fact.params_def_with_type.iter() {
-            self.define_params_with_type(param_def).map_err(|e| {
+            self.define_params_with_type(std::slice::from_ref(param_def),false).map_err(|e| {
                 VerifyError::new(
                     format!("failed to define params in forall: {}", e.body_string()).as_str(),
                     vec![StmtError::ExecError(e)],

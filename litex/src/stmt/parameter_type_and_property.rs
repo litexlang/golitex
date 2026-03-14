@@ -92,7 +92,7 @@ impl fmt::Display for ParamDefWithParamType {
 
 impl ParamType {
     /// Builds the fact that an identifier with the given name satisfies this param type.
-    pub fn fact_for_param_name(param_name: &str, param_type: &ParamType) -> Fact {
+    pub fn _fact_for_param_name(param_name: &str, param_type: &ParamType) -> Fact {
         match param_type {
             ParamType::Obj(obj) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                 Obj::Identifier(Identifier::new(param_name)),
@@ -139,10 +139,10 @@ impl ParamType {
 }
 
 impl ParamDefWithParamType {
-    pub fn facts(&self) -> Vec<Fact> {
+    pub fn _facts(&self) -> Vec<Fact> {
         let mut facts = Vec::with_capacity(self.0.len());
         for name in self.0.iter() {
-            let fact = ParamType::fact_for_param_name(name, &self.1);
+            let fact = ParamType::_fact_for_param_name(name, &self.1);
             facts.push(fact);
         }
         facts
@@ -196,7 +196,7 @@ impl ParamDefWithParamType {
     }
 
     /// Builds a flat list of ParamType in the same order as args: one type per parameter.
-    fn flat_instantiated_types_for_args(param_defs: &Vec<ParamDefWithParamType>, instantiated_types: &Vec<ParamType>) -> Vec<ParamType> {
+    pub fn flat_instantiated_types_for_args(param_defs: &Vec<ParamDefWithParamType>, instantiated_types: &Vec<ParamType>) -> Vec<ParamType> {
         let mut result = Vec::with_capacity(Self::number_of_params_in_param_def_with_type_def(param_defs));
         for (param_def, param_type) in param_defs.iter().zip(instantiated_types.iter()) {
             for _ in param_def.0.iter() {
@@ -285,3 +285,26 @@ impl ParamDefWithParamSet {
     }
 }
 
+impl ParamDefWithParamType {
+    pub fn param_satisfy_param_type_fact(param_name: &str, param_type: &ParamType) -> Fact {
+        match param_type {
+            ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
+                Obj::Identifier(Identifier::new(param_name)),
+                None,
+            ))),
+            ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+                Obj::Identifier(Identifier::new(param_name)),
+                None,
+            ))),
+            ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
+                Obj::Identifier(Identifier::new(param_name)),
+                None,
+            ))),
+            ParamType::Obj(obj) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                Obj::Identifier(Identifier::new(param_name)),
+                obj.clone(),
+                None,
+            ))),
+        }
+    }
+}
