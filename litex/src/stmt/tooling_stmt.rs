@@ -1,13 +1,6 @@
 use std::fmt;
 use crate::common::keywords::{CLEAR, DO_NOTHING, IMPORT, DOUBLE_QUOTE, AS};
 
-pub enum ToolingStmt {
-    Import(ImportStmt),
-    Clear(ClearStmt),
-    DoNothing(DoNothingStmt),
-    RunFile(RunFileStmt),
-}
-
 pub enum ImportStmt {
     ImportRelativePath(ImportRelativePathStmt),
     ImportGlobalModule(ImportGlobalModuleStmt),
@@ -96,28 +89,6 @@ pub struct DoNothingStmt {
 
 pub struct ClearStmt {
     pub line_file_index: Option<(usize, usize)>,
-}
-
-impl fmt::Display for ToolingStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ToolingStmt::Import(import_stmt) => write!(f, "{}", import_stmt),
-            ToolingStmt::Clear(clear_stmt) => write!(f, "{}", clear_stmt),
-            ToolingStmt::DoNothing(do_nothing_stmt) => write!(f, "{}", do_nothing_stmt),
-            ToolingStmt::RunFile(run_file_stmt) => write!(f, "{}", run_file_stmt),
-        }
-    }
-}
-
-impl ToolingStmt {
-    pub fn line_file(&self) -> Option<(usize, usize)> {
-        match self {
-            ToolingStmt::Import(import_stmt) => import_stmt.line_file(),
-            ToolingStmt::Clear(clear_stmt) => clear_stmt.line_file_index,
-            ToolingStmt::DoNothing(do_nothing_stmt) => do_nothing_stmt.line_file_index,
-            ToolingStmt::RunFile(run_file_stmt) => run_file_stmt.line_file_index,
-        }
-    }
 }
 
 impl ClearStmt {

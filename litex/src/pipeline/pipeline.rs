@@ -1,3 +1,4 @@
+use std::fs;
 use crate::runtime_context::RuntimeContext;
 use crate::module_manager::ModuleManager;
 use crate::environment::Environment;
@@ -6,10 +7,14 @@ use crate::parse::Parser;
 use crate::execute::Executor;
 use crate::stmt::Stmt;
 
-pub fn run_source_code(source_code: &str) -> String {
-    let mut module_manager = ModuleManager::new_empty_module_manager();
-    let mut builtin_environment = Environment::new_empty_env();
+pub fn run_source_code_in_file(entrance_file_path: &str) -> String {
+    let source_code = fs::read_to_string(entrance_file_path).expect("Could not read file");
+    run_source_code(&source_code, entrance_file_path)
+}
 
+fn run_source_code(source_code: &str, entrance_file_path: &str) -> String {
+    let mut module_manager = ModuleManager::new_empty_module_manager(entrance_file_path);
+    let mut builtin_environment = Environment::new_empty_env();
 
     let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
 
@@ -35,11 +40,7 @@ pub fn run_source_code(source_code: &str) -> String {
         if !out.is_empty() {
             out.push('\n');
         }
-        if let Some(line_file_index) = result.line_file() {
-            out.push_str(format!("{}\n{}", executor.line_file_index_string(line_file_index.0, line_file_index.1), result).as_str());
-        } else {
-            out.push_str(format!("{}", result).as_str());
-        }
+        out.push_str(executor.runtime_context.display_result(&result).as_str());
     }
 
     out

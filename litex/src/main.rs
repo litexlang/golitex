@@ -29,7 +29,7 @@ use stmt::claim_stmt::ClaimStmt;
 use stmt::know_stmt::KnowStmt;
 use stmt::proof_technique_stmt::{ProveCaseByCaseStmt, ProveByContradictionStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveByEqualSetStmt, ViewFnAsSetStmt};
 use stmt::prove_stmt::ProveStmt;
-use stmt::tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalModuleStmt, ClearStmt, DoNothingStmt, RunFileStmt};
+use stmt::tooling_stmt::{ImportStmt, ImportRelativePathStmt, ImportGlobalModuleStmt, ClearStmt, DoNothingStmt, RunFileStmt};
 use stmt::eval_stmt::EvalStmt;
 use stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
 use stmt::parameter_type_and_property::{ParamType, Set, NonemptySet, FiniteSet, ParamDefWithParamType, ParamDefWithParamSet};
@@ -213,7 +213,7 @@ fn try_stmt() {
 }
 
 fn try_equal_literally() {
-    let mut module_manager = ModuleManager::new_empty_module_manager();
+    let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
     let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
     let executor = Executor::new(&mut runtime_context);
@@ -672,7 +672,7 @@ fn try_stmt_result() {
         Some((1, 0)),
     ))));
     let result = NonErrStmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), None));
-    println!("{}", result);
+    println!("{}", result.body_string());
 
 
     let fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
@@ -682,15 +682,15 @@ fn try_stmt_result() {
     )));
     let unknown = StmtUnknown::new();
     let result = NonErrStmtResult::StmtUnknown(unknown);
-    println!("{}", result);
+    println!("{}", result.body_string());
 
     let fact_verified_by_fact = FactVerifiedByFact::new(fact.to_string(), fact.to_string(), None);
     let result = NonErrStmtResult::FactVerifiedByFact(fact_verified_by_fact);
-    println!("{}", result);
+    println!("{}", result.body_string());
 
     let fact_verified_by_builtin_rules = FactVerifiedByBuiltinRules::new(fact.to_string(), "demo".to_string(), None);
     let result = NonErrStmtResult::FactVerifiedByBuiltinRules(fact_verified_by_builtin_rules);
-    println!("{}", result);
+    println!("{}", result.body_string());
 }
 
 fn try_definitions() {
@@ -804,10 +804,10 @@ fn try_import_stmt() {
     let import_global_mod_stmt = ImportGlobalModuleStmt::new("mod", Some("mod".to_string()), Some((1, 0)));
     println!("{}", import_global_mod_stmt);
 
-    let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportRelativePath(import_relative_path_stmt)));
+    let stmt = Stmt::ImportStmt(ImportStmt::ImportRelativePath(import_relative_path_stmt));
     println!("{}", stmt);
 
-    let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportGlobalModule(import_global_mod_stmt)));
+    let stmt = Stmt::ImportStmt(ImportStmt::ImportGlobalModule(import_global_mod_stmt));
     println!("{}", stmt);
 }
 
@@ -828,7 +828,7 @@ fn try_run_file_stmt() {
     let run_file_stmt = RunFileStmt::new("path/to/file.txt", Some((1, 0)));
     println!("{}", run_file_stmt);
 
-    let stmt = Stmt::ToolingStmt(ToolingStmt::RunFile(run_file_stmt));
+    let stmt = Stmt::RunFileStmt(run_file_stmt);
     println!("{}", stmt);
 }
 
@@ -869,22 +869,22 @@ fn try_tooling_stmt() {
     let import_global_mod_stmt = ImportGlobalModuleStmt::new("mod", Some("mod".to_string()), Some((1, 0)));
     println!("{}", import_global_mod_stmt);
 
-    let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportRelativePath(import_relative_path_stmt)));
+    let stmt = Stmt::ImportStmt(ImportStmt::ImportRelativePath(import_relative_path_stmt));
     println!("{}", stmt);
 
-    let stmt = Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportGlobalModule(import_global_mod_stmt)));
+    let stmt = Stmt::ImportStmt(ImportStmt::ImportGlobalModule(import_global_mod_stmt));
     println!("{}", stmt);
 
     let clear_stmt = ClearStmt::new(Some((1, 0)));
     println!("{}", clear_stmt);
 
-    let stmt = Stmt::ToolingStmt(ToolingStmt::Clear(clear_stmt));
+    let stmt = Stmt::ClearStmt(clear_stmt);
     println!("{}", stmt);
 
     let do_nothing_stmt = DoNothingStmt::new(Some((1, 0)));
     println!("{}", do_nothing_stmt);
 
-    let stmt = Stmt::ToolingStmt(ToolingStmt::DoNothing(do_nothing_stmt));
+    let stmt = Stmt::DoNothingStmt(do_nothing_stmt);
     println!("{}", stmt);
 }
 
@@ -1106,7 +1106,7 @@ fn try_def_struct_stmt() {
 }
 
 fn try_module_manager() {
-    let module_manager = ModuleManager::new_empty_module_manager();
+    let module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     println!("{}", module_manager);
 }
 
@@ -1134,7 +1134,7 @@ fn try_define_algorithm_stmt() {
 }
 
 fn try_runtime_context() {
-    let mut module_manager = ModuleManager::new_empty_module_manager();
+    let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
 
     let fn_set_obj = FnSetObj::FnSetWithoutDom(FnSetWithoutDom::new(vec![Obj::mk("p")], Obj::mk("p")));
     println!("{}", fn_set_obj);
@@ -1249,7 +1249,7 @@ fn try_parse_statements() {
 }
 
 fn try_executor() {
-    let mut module_manager = ModuleManager::new_empty_module_manager();
+    let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
     let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
     let executor = Executor::new(&mut runtime_context);
@@ -1257,8 +1257,7 @@ fn try_executor() {
 }
 
 fn try_pipeline() {
-    let s = "a+b=0";
-    let result = pipeline::run_source_code(s);
+    let result = pipeline::run_source_code_in_file("examples/tmp.lit");
     println!("{}", result);
 }
 
@@ -1274,7 +1273,7 @@ fn try_collect_ordered_monomials() {
 }
 
 fn try_obj_well_defined<'a>() {
-    let mut module_manager = ModuleManager::new_empty_module_manager();
+    let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
     let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
     let mut executor = Executor::new(&mut runtime_context);

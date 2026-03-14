@@ -15,7 +15,7 @@ use crate::parse::tokenize_line;
 
 #[test]
 fn test_verify_atomic_fact() {
-    let mut module_manager = ModuleManager::new_empty_module_manager();
+    let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
     let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
     let mut executor = Executor::new(&mut runtime_context);
@@ -28,7 +28,7 @@ fn test_verify_atomic_fact() {
 
     match result {
         Ok(stmt_result) => {
-            println!("{}", stmt_result);
+            println!("{}", stmt_result.body_string());
         }
         Err(e) => {
             println!("ERROR:{}", e);
@@ -46,14 +46,14 @@ fn test_exec_stmt_fact_one_plus_one_eq_two() {
     let stmt = parser.parse_stmt(&mut tb).expect("parse fact \"1 + 1 = 2\" failed");
     assert!(matches!(stmt, Stmt::Fact(_)), "expected Stmt::Fact");
 
-    let mut module_manager = ModuleManager::new_empty_module_manager();
+    let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
     let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
     let mut executor = Executor::new(&mut runtime_context);
 
     let result = executor.stmt(&stmt).expect("exec.stmt(fact) failed");
     match &result {
-        NonErrStmtResult::NonFactualStmtSuccess(_) | NonErrStmtResult::FactVerifiedByFact(_) | NonErrStmtResult::FactVerifiedByBuiltinRules(_) => println!("{}", result),
+        NonErrStmtResult::NonFactualStmtSuccess(_) | NonErrStmtResult::FactVerifiedByFact(_) | NonErrStmtResult::FactVerifiedByBuiltinRules(_) => println!("{}", result.body_string()),
         NonErrStmtResult::StmtUnknown(u) => panic!("fact 1+1=2 should be verified, got StmtUnknown: {}", u),
     }
 }

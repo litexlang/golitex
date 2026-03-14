@@ -4,7 +4,7 @@ use super::Parser;
 use super::TokenBlock;
 use crate::error::ParsingError;
 use crate::stmt::Stmt;
-use crate::stmt::tooling_stmt::{ToolingStmt, ImportStmt, ImportRelativePathStmt, ImportGlobalModuleStmt};
+use crate::stmt::tooling_stmt::{ImportStmt, ImportRelativePathStmt, ImportGlobalModuleStmt};
 
 impl Parser {
     pub fn import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -23,13 +23,13 @@ impl Parser {
             } else {
                 None
             };
-            Ok(Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportRelativePath(
+            Ok(Stmt::ImportStmt(ImportStmt::ImportRelativePath(
                 ImportRelativePathStmt {
                     path,
                     as_mod_name,
                     line_file_index: Some(tb.line_file_index),
                 },
-            ))))
+            )))
         } else {
             let mod_name = tb.advance()?;
             let as_mod_name = if tb.current().map(|t| t == AS).unwrap_or(false) {
@@ -38,28 +38,28 @@ impl Parser {
             } else {
                 None
             };
-            Ok(Stmt::ToolingStmt(ToolingStmt::Import(ImportStmt::ImportGlobalModule(
+            Ok(Stmt::ImportStmt(ImportStmt::ImportGlobalModule(
                 ImportGlobalModuleStmt {
                     mod_name,
                     as_mod_name,
                     line_file_index: Some(tb.line_file_index),
                 },
-            ))))
+            )))
         }
     }
 
     pub fn clear_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(CLEAR)?;
-        Ok(Stmt::ToolingStmt(ToolingStmt::Clear(ClearStmt {
+        Ok(Stmt::ClearStmt(ClearStmt {
             line_file_index: Some(tb.line_file_index),
-        })))
+        }))
     }
 
     pub fn do_nothing_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(DO_NOTHING)?;
-        Ok(Stmt::ToolingStmt(ToolingStmt::DoNothing(DoNothingStmt {
+        Ok(Stmt::DoNothingStmt(DoNothingStmt {
             line_file_index: Some(tb.line_file_index),
-        })))
+        }))
     }
 
     pub fn run_file_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -71,9 +71,9 @@ impl Parser {
         }
         tb.skip_token(DOUBLE_QUOTE)?;
         let file_path = path_parts.join("");
-        Ok(Stmt::ToolingStmt(ToolingStmt::RunFile(RunFileStmt {
+        Ok(Stmt::RunFileStmt(RunFileStmt {
             file_path,
             line_file_index: Some(tb.line_file_index),
-        })))
+        }))
     }
 }
