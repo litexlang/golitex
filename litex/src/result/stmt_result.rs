@@ -1,5 +1,4 @@
-use std::fmt;
-use crate::common::keywords::{SUCCESS};
+use crate::common::keywords::SUCCESS;
 use super::stmt_success::{FactVerifiedByBuiltinRules, FactVerifiedByFact, NonFactualStmtSuccess};
 use super::stmt_unknown::StmtUnknown;
 
@@ -10,13 +9,16 @@ pub enum NonErrStmtResult {
     StmtUnknown(StmtUnknown),
 }
 
-impl fmt::Display for NonErrStmtResult {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+const VERIFIED_BY: &str = "verified by:";
+
+impl NonErrStmtResult {
+    /// Returns the result body string without any line/file prefix (for tests or when location is not needed).
+    pub fn body_string(&self) -> String {
         match self {
-            NonErrStmtResult::NonFactualStmtSuccess(x) => write!(f, "{}", x),
-            NonErrStmtResult::FactVerifiedByFact(x) => write!(f, "{}", x),
-            NonErrStmtResult::FactVerifiedByBuiltinRules(x) => write!(f, "{}\n{}", SUCCESS, x),
-            NonErrStmtResult::StmtUnknown(x) => write!(f, "{}", x),
+            NonErrStmtResult::NonFactualStmtSuccess(x) => format!("{}\n{}", SUCCESS, x.stmt),
+            NonErrStmtResult::FactVerifiedByFact(x) => format!("{}\n{}\n{}\n{}", SUCCESS, x.fact, VERIFIED_BY, x.verified_by),
+            NonErrStmtResult::FactVerifiedByBuiltinRules(x) => format!("{}\n{}\n{}\n{}", SUCCESS, x.fact, VERIFIED_BY, x.verified_by),
+            NonErrStmtResult::StmtUnknown(x) => x.to_string(),
         }
     }
 }
@@ -31,19 +33,6 @@ impl NonErrStmtResult {
         }
     }
 }
-
-// pub fn result_to_error<E>(result: Result<StmtResult, E>) -> Option<StmtError>
-// where
-//     E: Into<StmtError>,
-// {
-//     match result {
-//         Err(e) => Some(e.into()),
-//         Ok(StmtResult::StmtUnknown(_)) => {
-//             Some(StmtError::UnknownError(UnknownError::new(UNKNOWN, None)))
-//         }
-//         Ok(_) => None,
-//     }
-// }
 
 impl NonErrStmtResult {
     pub fn is_true(&self) -> bool {
