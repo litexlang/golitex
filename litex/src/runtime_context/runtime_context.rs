@@ -2,6 +2,7 @@ use std::fmt;
 use std::collections::HashMap;
 use crate::obj::{Identifier, Atom};
 use crate::common::keywords::MOD_SIGN;
+use crate::error::StmtError;
 use crate::result::NonErrStmtResult;
 use crate::module_manager::ModuleManager;
 use crate::environment::Environment;
@@ -225,17 +226,33 @@ impl<'a> RuntimeContext<'a> {
 }
 
 impl<'a> RuntimeContext<'a> {
-    /// Format result with optional location: if line_file is set, print "line N" and (when file_index != 0) "file PATH"; otherwise print nothing for location.
+    /// Format result: when line_file is set, "Success on line N" (or "Success on line N, file PATH"); otherwise body only.
     pub fn display_result(&self, result: &NonErrStmtResult) -> String {
-        let body = result.body_string();
         if let Some((line, file_index)) = result.line_file() {
-            let prefix = if file_index == 0 {
-                format!("line {}", line)
+            let location = if file_index == 0 {
+                format!("Success on line {}", line)
             } else {
                 let path = self.module_manager.run_file_paths.get(file_index).map(|s: &String| s.as_str()).unwrap_or("");
-                format!("line {}, file {}", line, path)
+                format!("Success on line {}, file {}", line, path)
             };
-            format!("{} {}", prefix, body)
+            format!("{}\n{}", location, result.content_without_success_label())
+        } else {
+            result.body_string()
+        }
+    }
+
+    /// Format error: when line_file is set, "{Label} on line N" (or "{Label} on line N, file PATH"); otherwise body only.
+    pub fn display_error(&self, error: &StmtError) -> String {
+        let body = error.error_body();
+        if let Some((line, file_index)) = error.line_file() {
+            let label = error.display_label();
+            let location = if file_index == 0 {
+                format!("{} on line {}", label, line)
+            } else {
+                let path = self.module_manager.run_file_paths.get(file_index).map(|s: &String| s.as_str()).unwrap_or("");
+                format!("{} on line {}, file {}", label, line, path)
+            };
+            format!("{}\n{}", location, body)
         } else {
             body
         }

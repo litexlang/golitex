@@ -68,8 +68,8 @@ pub const OR: &str = "or";
 pub const AND: &str = "and";
 pub const SUBSET: &str = "subset";
 pub const SUPERSET: &str = "superset";
-pub const SUCCESS: &str = "success";
-pub const UNKNOWN: &str = "unknown";
+pub const SUCCESS_COLON: &str = "Success:";
+pub const UNKNOWN_COLON: &str = "Unknown:";
 pub const LET: &str = "let";
 pub const PROP: &str = "prop";
 pub const CLAIM: &str = "claim";
@@ -130,7 +130,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         FN, SET, NONEMPTY_SET, FINITE_SET, N_POS, N, Q, Z, R,
         CART, CART_DIM, PROJ, COUNT, RANGE, CLOSED_RANGE, VAL,
         EXIST, ST, FORALL, NOT, IS_SET, IS_NONEMPTY_SET, IS_FINITE_SET, IS_CART, IS_TUPLE,
-        IN, OR, AND, SUBSET, SUPERSET, SUCCESS, UNKNOWN, LET, PROP,
+        IN, OR, AND, SUBSET, SUPERSET, SUCCESS_COLON, UNKNOWN_COLON, LET, PROP,
         CLAIM, PROVE, CONTRA, CASE, CASES, IMPORT, AS, ENUM, HAVE, KNOW,
         CLEAR, DO_NOTHING, INDUC, FROM, EVAL, FOR, WITNESS,
         EQUAL_SET, IMPOSSIBLE, VIEW_FN_AS_SET, RETURN, IF, ALGO,

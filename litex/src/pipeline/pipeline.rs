@@ -35,12 +35,14 @@ fn run_source_code(source_code: &str, entrance_file_path: &str) -> String {
         };
         let result = match executor.stmt(&stmt) {
             Ok(r) => r,
-            Err(e) => return format!("exec error {}: {}", e.line_file().unwrap_or((0, 0)).0, e),
+            Err(e) => {
+                out.push_str(format!("\n{}\n", executor.display_error(&e)).as_str());
+                return out;
+            }
         };
-        if !out.is_empty() {
-            out.push('\n');
-        }
-        out.push_str(executor.runtime_context.display_result(&result).as_str());
+        out.push('\n');
+        out.push_str(executor.display_result(&result).as_str());
+        out.push('\n');
     }
 
     out
