@@ -1,12 +1,12 @@
 use std::fmt;
-use crate::common::keywords::UNKNOWN;
+use crate::common::keywords::UNKNOWN_COLON;
 
 pub struct StmtUnknown {
 }
 
 impl fmt::Display for StmtUnknown {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", UNKNOWN)
+        write!(f, "{}", UNKNOWN_COLON)
     }
 }
 

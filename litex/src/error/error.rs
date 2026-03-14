@@ -1,7 +1,5 @@
 use std::fmt;
 
-use crate::common::helper::vec_to_string_with_sep;
-
 #[derive(Debug)]
 pub enum StmtError {
     ArithmeticError(ArithmeticError),
@@ -34,23 +32,81 @@ impl StmtError {
             StmtError::InferError(e) => e.line_file_index,
         }
     }
+
+    /// Short label for display (e.g. "ExecError", "UnknownError").
+    pub fn display_label(&self) -> &'static str {
+        match self {
+            StmtError::ArithmeticError(_) => "ArithmeticError",
+            StmtError::NewAtomicFactError(_) => "NewAtomicFactError",
+            StmtError::StoreFactError(_) => "StoreFactError",
+            StmtError::ParseBlockError(_) => "ParseBlockError",
+            StmtError::ParsingError(_) => "ParsingError",
+            StmtError::ExecError(_) => "ExecError",
+            StmtError::UnknownError(_) => "UnknownError",
+            StmtError::WellDefinedError(_) => "WellDefinedError",
+            StmtError::VerifyError(_) => "VerifyError",
+            StmtError::InferError(_) => "InferError",
+        }
+    }
+
+    /// Error content only (no type label). Formatting with location is done by RuntimeContext::display_error.
+    pub fn error_body(&self) -> String {
+        match self {
+            StmtError::ArithmeticError(e) => e.msg.clone(),
+            StmtError::NewAtomicFactError(e) => e.msg.clone(),
+            StmtError::StoreFactError(e) => {
+                let mut s = e.msg.clone();
+                for p in &e.previous_errors {
+                    s.push_str("\n");
+                    s.push_str(&p.error_body());
+                }
+                s
+            }
+            StmtError::ParseBlockError(e) => parse_block_error_message(e),
+            StmtError::ParsingError(e) => e.msg.clone(),
+            StmtError::ExecError(e) => {
+                let mut s = e.msg.clone();
+                for p in &e.previous_errors {
+                    s.push_str("\n");
+                    s.push_str(&p.error_body());
+                }
+                s
+            }
+            StmtError::UnknownError(e) => e.msg.clone(),
+            StmtError::WellDefinedError(e) => {
+                let mut s = e.msg.clone();
+                for p in &e.previous_errors {
+                    s.push_str("\n");
+                    s.push_str(&p.error_body());
+                }
+                s
+            }
+            StmtError::VerifyError(e) => {
+                let mut s = e.msg.clone();
+                for p in &e.previous_errors {
+                    s.push_str("\n");
+                    s.push_str(&p.error_body());
+                }
+                s
+            }
+            StmtError::InferError(e) => e.msg.clone(),
+        }
+    }
 }
 
+fn parse_block_error_message(e: &ParseBlockError) -> String {
+    match e {
+        ParseBlockError::ExpectedIndent(_, _) => "expected indent".to_string(),
+        ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
+        ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
+        ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
+    }
+}
 
+// Display outputs body only (no type label); full format with label and line is via RuntimeContext::display_error.
 impl fmt::Display for StmtError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            StmtError::ArithmeticError(e) => write!(f, "{}", e),
-            StmtError::NewAtomicFactError(e) => write!(f, "{}", e),
-            StmtError::StoreFactError(e) => write!(f, "{}", e),
-            StmtError::ParseBlockError(e) => write!(f, "{}", e),
-            StmtError::ParsingError(e) => write!(f, "{}", e),
-            StmtError::ExecError(e) => write!(f, "{}", e),
-            StmtError::UnknownError(e) => write!(f, "{}", e),
-            StmtError::WellDefinedError(e) => write!(f, "{}", e),
-            StmtError::VerifyError(e) => write!(f, "{}", e),
-            StmtError::InferError(e) => write!(f, "{}", e),
-        }
+        write!(f, "{}", self.error_body())
     }
 }
 
@@ -61,15 +117,15 @@ pub struct ArithmeticError{
 }
 
 
-impl fmt::Display for ArithmeticError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}", "ArithmeticError:".to_string(), self.msg)
-    }
-}
-
 impl ArithmeticError {
     pub fn new(msg: &str) -> Self {
         ArithmeticError { msg: msg.to_string() }
+    }
+}
+
+impl fmt::Display for ArithmeticError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.msg)
     }
 }
 
@@ -88,7 +144,7 @@ impl std::error::Error for NewAtomicFactError {}
 
 impl fmt::Display for NewAtomicFactError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}", "NewAtomicFactError:".to_string(), self.msg)
+        write!(f, "{}", self.msg)
     }
 }
 
@@ -106,13 +162,15 @@ impl From<NewAtomicFactError> for StmtError {
 
 impl From<NewAtomicFactError> for StoreFactError {
     fn from(e: NewAtomicFactError) -> Self {
-        StoreFactError::new(format!("new atomic fact error: {}", e).as_str(), vec![e.into()])
+        let msg = e.msg.clone();
+        StoreFactError::new(&msg, vec![e.into()])
     }
 }
 
 impl From<NewAtomicFactError> for WellDefinedError {
     fn from(e: NewAtomicFactError) -> Self {
-        WellDefinedError::new(format!("new atomic fact error: {}", e).as_str(), vec![e.into()], None)
+        let msg = e.msg.clone();
+        WellDefinedError::new(&msg, vec![e.into()], None)
     }
 }
 
@@ -126,13 +184,19 @@ impl std::error::Error for StoreFactError {}
 
 impl fmt::Display for StoreFactError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}\n{}", "StoreFactError:".to_string(), self.msg, vec_to_string_with_sep(&self.previous_errors, "\n"))
+        write!(f, "{}", self.body_string())
     }
 }
 
 impl StoreFactError {
     pub fn new(msg: &str, previous_errors: Vec<StmtError>) -> Self {
         StoreFactError { msg: msg.to_string(), previous_errors }
+    }
+
+    /// Content only (msg + previous_errors bodies), for embedding in other errors.
+    pub fn body_string(&self) -> String {
+        let rest: Vec<String> = self.previous_errors.iter().map(|p| p.error_body()).collect();
+        self.msg.clone() + "\n" + &rest.join("\n")
     }
 }
 
@@ -144,7 +208,9 @@ impl From<StoreFactError> for StmtError {
 
 impl From<StoreFactError> for ExecError {
     fn from(e: StoreFactError) -> Self {
-        ExecError::new(format!("store fact error: {}", e).as_str(), vec![e.into()], None)
+        let rest: Vec<String> = e.previous_errors.iter().map(|p| p.error_body()).collect();
+        let body = e.msg.clone() + "\n" + &rest.join("\n");
+        ExecError::new(&body, vec![e.into()], None)
     }
 }
 
@@ -160,20 +226,7 @@ impl std::error::Error for ParseBlockError {}
 
 impl fmt::Display for ParseBlockError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ParseBlockError::ExpectedIndent(_, _) => {
-                write!(f, "expected indent")
-            }
-            ParseBlockError::UnexpectedIndent(_, _) => {
-                write!(f, "unexpected indent")
-            }
-            ParseBlockError::InconsistentIndent(_, _) => {
-                write!(f, "inconsistent indent")
-            }
-            ParseBlockError::MissingBody(_, _) => {
-                write!(f, "block header missing body")
-            }
-        }
+        write!(f, "{}", parse_block_error_message(self))
     }
 }
 
@@ -205,7 +258,7 @@ impl std::error::Error for ParsingError {}
 
 impl fmt::Display for ParsingError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ParsingError on line {} in file index {}: {}", self.line_file_index.0, self.line_file_index.1, self.msg)
+        write!(f, "{}", self.msg)
     }
 }
 
@@ -233,17 +286,19 @@ impl std::error::Error for ExecError {}
 
 impl fmt::Display for ExecError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}", "Execution Error:".to_string(), self.msg)?;
-        for error in self.previous_errors.iter() {
-            write!(f, "\n{}", error)?;
-        }
-        Ok(())
+        write!(f, "{}", self.body_string())
     }
 }
 
 impl ExecError {
     pub fn new(msg: &str, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
         ExecError { msg: msg.to_string(), previous_errors, line_file_index }
+    }
+
+    /// Content only (msg + previous_errors bodies), for embedding in other errors.
+    pub fn body_string(&self) -> String {
+        let rest: Vec<String> = self.previous_errors.iter().map(|p| p.error_body()).collect();
+        self.msg.clone() + "\n" + &rest.join("\n")
     }
 }
 
@@ -264,7 +319,8 @@ impl std::error::Error for WellDefinedError {}
 
 impl fmt::Display for WellDefinedError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}\n{}", "WellDefinedError:".to_string(), self.msg, vec_to_string_with_sep(&self.previous_errors, "\n"))
+        let rest: Vec<String> = self.previous_errors.iter().map(|p| p.error_body()).collect();
+        write!(f, "{}\n{}", self.msg, rest.join("\n"))
     }
 }
 
@@ -282,7 +338,9 @@ impl From<WellDefinedError> for StmtError {
 
 impl From<WellDefinedError> for ExecError {
     fn from(e: WellDefinedError) -> Self {
-        ExecError::new(format!("well defined error: {}", e).as_str(), vec![e.into()], None)
+        let rest: Vec<String> = e.previous_errors.iter().map(|p| p.error_body()).collect();
+        let body = "well defined error: ".to_string() + &e.msg + "\n" + &rest.join("\n");
+        ExecError::new(&body, vec![e.into()], None)
     }
 }
 
@@ -297,7 +355,8 @@ impl std::error::Error for VerifyError {}
 
 impl fmt::Display for VerifyError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}\n{}", "VerifyFactError:".to_string(), self.msg, vec_to_string_with_sep(&self.previous_errors, "\n"))
+        let rest: Vec<String> = self.previous_errors.iter().map(|p| p.error_body()).collect();
+        write!(f, "{}\n{}", self.msg, rest.join("\n"))
     }
 }
 
@@ -315,13 +374,17 @@ impl From<VerifyError> for StmtError {
 
 impl From<VerifyError> for ExecError {
     fn from(e: VerifyError) -> Self {
-        ExecError::new(format!("verify fact error: {}", e).as_str(), vec![e.into()], None)
+        let rest: Vec<String> = e.previous_errors.iter().map(|p| p.error_body()).collect();
+        let body = "verify fact error: ".to_string() + &e.msg + "\n" + &rest.join("\n");
+        ExecError::new(&body, vec![e.into()], None)
     }
 }
 
 impl From<VerifyError> for WellDefinedError {
     fn from(e: VerifyError) -> Self {
-        WellDefinedError::new(format!("verify fact error: {}", e).as_str(), vec![e.into()], None)
+        let rest: Vec<String> = e.previous_errors.iter().map(|p| p.error_body()).collect();
+        let body = "verify fact error: ".to_string() + &e.msg + "\n" + &rest.join("\n");
+        WellDefinedError::new(&body, vec![e.into()], None)
     }
 }
 
@@ -335,7 +398,7 @@ impl std::error::Error for UnknownError {}
 
 impl fmt::Display for UnknownError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}", "UnknownError:".to_string(), self.msg)
+        write!(f, "{}", self.msg)
     }
 }
 
@@ -362,7 +425,7 @@ impl std::error::Error for InferError {}
 
 impl fmt::Display for InferError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}", "InferError:".to_string(), self.msg)
+        write!(f, "{}", self.msg)
     }
 }
 
@@ -380,6 +443,7 @@ impl From<InferError> for StmtError {
 
 impl From<InferError> for ExecError {
     fn from(e: InferError) -> Self {
-        ExecError::new(format!("infer error: {}", e).as_str(), vec![e.into()], None)
+        let msg = e.msg.clone();
+        ExecError::new(&msg, vec![e.into()], None)
     }
 }
