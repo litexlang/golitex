@@ -20,7 +20,7 @@ impl<'a> Executor<'a> {
         for param_def in forall_fact.params_def_with_type.iter() {
             self.define_params_with_type(param_def).map_err(|e| {
                 VerifyError::new(
-                    format!("failed to define params in forall: {}", e).as_str(),
+                    format!("failed to define params in forall: {}", e.body_string()).as_str(),
                     vec![StmtError::ExecError(e)],
                     forall_fact.line_file_index,
                 )
@@ -31,7 +31,7 @@ impl<'a> Executor<'a> {
             let fact = dom_fact.clone().to_fact();
             self.store_fact_without_well_defined_verified_and_infer(&fact).map_err(|e| {
                 VerifyError::new(
-                    format!("failed to assume dom fact in forall: {}", e).as_str(),
+                    format!("failed to assume dom fact in forall: {}", e.body_string()).as_str(),
                     vec![StmtError::StoreFactError(e)],
                     forall_fact.line_file_index,
                 )
