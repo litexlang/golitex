@@ -147,6 +147,14 @@ impl ParamDefWithParamType {
         }
         facts
     }
+
+    pub fn number_of_params(defs: &Vec<ParamDefWithParamType>) -> usize {
+        let mut total_param_count: usize = 0;
+        for p in defs.iter() {
+            total_param_count += p.0.len();
+        }
+        return total_param_count
+    }
 }
 
 impl ParamDefWithParamSet {
@@ -243,7 +251,7 @@ impl ParamDefWithParamType {
 }
 
 impl ParamType {
-    fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> ParamType {
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> ParamType {
         match &self {
             ParamType::Set(_) => self.clone(),
             ParamType::FiniteSet(_) => self.clone(),
@@ -283,5 +291,6 @@ impl ParamDefWithParamSet {
         }
         names
     }
+
 }
 
