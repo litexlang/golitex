@@ -9,7 +9,7 @@ use crate::verify::VerifyState;
 use crate::fact::{AtomicFact, NotEqualFact, IsCartFact, IsNonemptySetFact, Fact};
 use crate::fact::InFact;
 use crate::execute::Executor;
-use crate::stmt::parameter_type_and_property::{ParamDefWithParamSet, ParamDefWithParamType};
+use crate::stmt::parameter_type_and_property::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
 use crate::common::helper::todo_error_message;
 
 // well-defined check for obj
@@ -530,5 +530,16 @@ impl<'a> Executor<'a> {
 
     fn verify_r_nz_well_defined(&self) -> Result<(), WellDefinedError> {
         Ok(())
+    }
+}
+
+impl<'a> Executor<'a> {
+    pub fn verify_param_type_well_defined(&mut self, param_type: &ParamType, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        match param_type {
+            ParamType::Set(_) => Ok(()),
+            ParamType::NonemptySet(_) => Ok(()),
+            ParamType::FiniteSet(_) => Ok(()),
+            ParamType::Obj(obj) => self.verify_obj_well_defined_and_store_cache(obj, verify_state),
+        }
     }
 }

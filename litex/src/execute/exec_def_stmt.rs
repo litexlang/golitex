@@ -1,4 +1,7 @@
 use crate::error::ExecError;
+use std::collections::HashMap;
+use crate::fact::{AtomicFact, Fact, IsNonemptySetFact};
+use crate::obj::Obj;
 use crate::stmt::parameter_type_and_property::{ParamDefWithParamType, ParamType, ParamDefWithParamSet};
 use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
@@ -66,20 +69,24 @@ impl<'a> Executor<'a> {
         return Err(ExecError::new("def_algo_stmt: NOT IMPLEMENTED YET", vec![], def_algo_stmt.line_file_index));
     }
 
-    /// Takes a slice of param defs with type, verifies param types are well-defined, then for each name
-    /// validates and stores the fact that the name satisfies its param type.
-    pub fn define_params_with_type(&mut self, param_defs: &[ParamDefWithParamType], check_type_well_defined: bool) -> Result<(), ExecError> {
+    pub fn define_params_with_type(&mut self, param_defs: &[ParamDefWithParamType], check_type_nonempty: bool) -> Result<(), ExecError> {
         for param_def in param_defs.iter() {
-            if check_type_well_defined {
-            match &param_def.1 {
-                ParamType::Set(_) => {}
-                ParamType::NonemptySet(_) => {}
-                ParamType::FiniteSet(_) => {}
-                ParamType::Obj(param_set) => {
-                    self.verify_obj_well_defined_and_store_cache(param_set, &VerifyState::new(0, false))?;
+            self.verify_param_type_well_defined(&param_def.1, &VerifyState::new(0, false))?;
+
+            if check_type_nonempty {
+                match &param_def.1 {
+                    ParamType::Set(_) => {}
+                    ParamType::NonemptySet(_) => {}
+                    ParamType::FiniteSet(_) => {}
+                    ParamType::Obj(param_set) => {
+                        let nonempty_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+                            param_set.clone(),
+                            None,
+                        )));
+                        self.verify_fact_well_defined_and_store_and_infer(&nonempty_fact, &VerifyState::new(0, false))?;
+                    }
                 }
             }
-        }
 
             for name in param_def.0.iter() {
                 self.validate_name_and_store_identifier_obj(name)?;
@@ -105,7 +112,30 @@ impl<'a> Executor<'a> {
     }
 
     pub fn have_obj_equal_stmt(&mut self, have_obj_equal_stmt: &HaveObjEqualStmt) -> Result<NonErrStmtResult, ExecError> {
-        Err(ExecError::new("have_obj_equal_stmt: NOT IMPLEMENTED YET", vec![], have_obj_equal_stmt.line_file_index))
+        if ParamDefWithParamType::number_of_params(&have_obj_equal_stmt.param_def) != have_obj_equal_stmt.objs_equal_to.len() {
+            return Err(ExecError::new("have_obj_equal_stmt: number of params in param_def does not match number of objs_equal_to", vec![], have_obj_equal_stmt.line_file_index));
+        }
+
+        let mut current_index = 0;
+        let mut param_to_obj_map: HashMap<String, Obj> = HashMap::new();
+        for param_def in have_obj_equal_stmt.param_def.iter() {
+            let current_type = &param_def.1.instantiate(&param_to_obj_map);
+            for name in param_def.0.iter() {
+                let current_param_equal_to = &have_obj_equal_stmt.objs_equal_to[current_index];
+
+                let fact = ParamType::fact_for_obj(current_param_equal_to.clone(), current_type);
+                let verify_result = self.verify_fact(&fact, &VerifyState::new(0, false)).map_err(ExecError::from)?;
+                if !verify_result.is_true() {
+                    let msg = format!("have_obj_equal_stmt: {} is not in type {}", current_param_equal_to, current_type);
+                    return Err(ExecError::new(msg.as_str(), vec![], have_obj_equal_stmt.line_file_index));
+                }
+
+                param_to_obj_map.insert(name.clone(), current_param_equal_to.clone());
+                current_index += 1;
+            }
+        }
+        
+        return Ok(NonErrStmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(have_obj_equal_stmt.to_string(), have_obj_equal_stmt.line_file_index)));
     }
 
     pub fn have_exist_obj_stmt(&mut self, have_exist_obj_stmt: &HaveExistObjStmt) -> Result<NonErrStmtResult, ExecError> {
