@@ -75,13 +75,13 @@ pub enum AndChainAtomicFact {
 
 impl fmt::Display for AndFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", vec_to_string_with_sep(&self.facts, format!(" {} ", AND).as_str()))
+        write!(f, "{}", vec_to_string_with_sep(&self.facts, format!(" {} ", AND)))
     }
 }
 
 impl AndFact {
     pub fn key(&self) -> String {
-        vec_to_string_with_sep(&self.facts.iter().map(|a| a.key()).collect::<Vec<_>>(), format!(" {} ", AND).as_str())
+        vec_to_string_with_sep(&self.facts.iter().map(|a| a.key()).collect::<Vec<_>>(), format!(" {} ", AND))
     }
 }
 
@@ -101,7 +101,7 @@ impl fmt::Display for ChainFact {
 
 impl ChainFact {
     pub fn key(&self) -> String {
-        vec_to_string_with_sep(&self.prop_names.iter().map(|p| p.to_string()).collect::<Vec<_>>(), format!(" {} ", AND).as_str())
+        vec_to_string_with_sep(&self.prop_names.iter().map(|p| p.to_string()).collect::<Vec<_>>(), format!(" {} ", AND))
     }
 }
 

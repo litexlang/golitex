@@ -118,8 +118,8 @@ pub struct ArithmeticError{
 
 
 impl ArithmeticError {
-    pub fn new(msg: &str) -> Self {
-        ArithmeticError { msg: msg.to_string() }
+    pub fn new(msg: String) -> Self {
+        ArithmeticError { msg }
     }
 }
 
@@ -149,8 +149,8 @@ impl fmt::Display for NewAtomicFactError {
 }
 
 impl NewAtomicFactError {
-    pub fn new(msg: &str) -> Self {
-        NewAtomicFactError { msg: msg.to_string() }
+    pub fn new(msg: String) -> Self {
+        NewAtomicFactError { msg }
     }
 }
 
@@ -163,14 +163,14 @@ impl From<NewAtomicFactError> for StmtError {
 impl From<NewAtomicFactError> for StoreFactError {
     fn from(e: NewAtomicFactError) -> Self {
         let msg = e.msg.clone();
-        StoreFactError::new(&msg, vec![e.into()])
+        StoreFactError::new(msg, vec![e.into()])
     }
 }
 
 impl From<NewAtomicFactError> for WellDefinedError {
     fn from(e: NewAtomicFactError) -> Self {
         let msg = e.msg.clone();
-        WellDefinedError::new(&msg, vec![e.into()], None)
+        WellDefinedError::new(msg, vec![e.into()], None)
     }
 }
 
@@ -189,8 +189,8 @@ impl fmt::Display for StoreFactError {
 }
 
 impl StoreFactError {
-    pub fn new(msg: &str, previous_errors: Vec<StmtError>) -> Self {
-        StoreFactError { msg: msg.to_string(), previous_errors }
+    pub fn new(msg: String, previous_errors: Vec<StmtError>) -> Self {
+        StoreFactError { msg, previous_errors }
     }
 
     /// Content only (msg + previous_errors bodies), for embedding in other errors.
@@ -210,7 +210,7 @@ impl From<StoreFactError> for ExecError {
     fn from(e: StoreFactError) -> Self {
         let rest: Vec<String> = e.previous_errors.iter().map(|p| p.error_body()).collect();
         let body = e.msg.clone() + "\n" + &rest.join("\n");
-        ExecError::new(&body, vec![e.into()], None)
+        ExecError::new(body, vec![e.into()], None)
     }
 }
 
@@ -263,8 +263,8 @@ impl fmt::Display for ParsingError {
 }
 
 impl ParsingError {
-    pub fn new(msg: &str, line_file_index: (usize, usize)) -> Self {
-        ParsingError { msg: msg.to_string(), line_file_index }
+    pub fn new(msg: String, line_file_index: (usize, usize)) -> Self {
+        ParsingError { msg, line_file_index }
     }
 }
 
@@ -291,8 +291,8 @@ impl fmt::Display for ExecError {
 }
 
 impl ExecError {
-    pub fn new(msg: &str, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
-        ExecError { msg: msg.to_string(), previous_errors, line_file_index }
+    pub fn new(msg: String, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
+        ExecError { msg, previous_errors, line_file_index }
     }
 
     /// Content only (msg + previous_errors bodies), for embedding in other errors.
@@ -325,8 +325,8 @@ impl fmt::Display for WellDefinedError {
 }
 
 impl WellDefinedError {
-    pub fn new(msg: &str, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
-        WellDefinedError { msg: msg.to_string(), previous_errors, line_file_index }
+    pub fn new(msg: String, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
+        WellDefinedError { msg, previous_errors, line_file_index }
     }
 }
 
@@ -340,7 +340,7 @@ impl From<WellDefinedError> for ExecError {
     fn from(e: WellDefinedError) -> Self {
         let rest: Vec<String> = e.previous_errors.iter().map(|p| p.error_body()).collect();
         let body = "well defined error: ".to_string() + &e.msg + "\n" + &rest.join("\n");
-        ExecError::new(&body, vec![e.into()], None)
+        ExecError::new(body, vec![e.into()], None)
     }
 }
 
@@ -361,8 +361,8 @@ impl fmt::Display for VerifyError {
 }
 
 impl VerifyError {
-    pub fn new(msg: &str, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
-        VerifyError { msg: msg.to_string(), previous_errors, line_file_index }
+    pub fn new(msg: String, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
+        VerifyError { msg, previous_errors, line_file_index }
     }
 }
 
@@ -376,7 +376,7 @@ impl From<VerifyError> for ExecError {
     fn from(e: VerifyError) -> Self {
         let rest: Vec<String> = e.previous_errors.iter().map(|p| p.error_body()).collect();
         let body = "verify fact error: ".to_string() + &e.msg + "\n" + &rest.join("\n");
-        ExecError::new(&body, vec![e.into()], None)
+        ExecError::new(body, vec![e.into()], None)
     }
 }
 
@@ -384,7 +384,7 @@ impl From<VerifyError> for WellDefinedError {
     fn from(e: VerifyError) -> Self {
         let rest: Vec<String> = e.previous_errors.iter().map(|p| p.error_body()).collect();
         let body = "verify fact error: ".to_string() + &e.msg + "\n" + &rest.join("\n");
-        WellDefinedError::new(&body, vec![e.into()], None)
+        WellDefinedError::new(body, vec![e.into()], None)
     }
 }
 
@@ -403,8 +403,8 @@ impl fmt::Display for UnknownError {
 }
 
 impl UnknownError {
-    pub fn new(msg: &str, line_file_index: Option<(usize, usize)>) -> Self {
-        UnknownError { msg: msg.to_string(), line_file_index }
+    pub fn new(msg: String, line_file_index: Option<(usize, usize)>) -> Self {
+        UnknownError { msg, line_file_index }
     }
 }
 
@@ -430,8 +430,8 @@ impl fmt::Display for InferError {
 }
 
 impl InferError {
-    pub fn new(msg: &str, line_file_index: Option<(usize, usize)>) -> Self {
-        InferError { msg: msg.to_string(), line_file_index }
+    pub fn new(msg: String, line_file_index: Option<(usize, usize)>) -> Self {
+        InferError { msg, line_file_index }
     }
 }
 
@@ -444,6 +444,6 @@ impl From<InferError> for StmtError {
 impl From<InferError> for ExecError {
     fn from(e: InferError) -> Self {
         let msg = e.msg.clone();
-        ExecError::new(&msg, vec![e.into()], None)
+        ExecError::new(msg, vec![e.into()], None)
     }
 }

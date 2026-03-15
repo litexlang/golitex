@@ -10,7 +10,7 @@ impl<'a> Executor<'a> {
 
         self.runtime_context.top_level_env().store_fact_to_cache_known_fact(fact)?;
         
-        self.infer(fact).map_err(|e| StoreFactError::new(format!("infer error: {}", e).as_str(), vec![e.into()]))?;
+        self.infer(fact).map_err(|e| StoreFactError::new(format!("infer error: {}", e), vec![e.into()]))?;
         Ok(())
     }
 

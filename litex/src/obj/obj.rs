@@ -1049,9 +1049,10 @@ impl From<Atom> for Obj {
     }
 }
 
-impl Obj {
-    pub fn mk(s: &str) -> Obj {
-        Obj::Identifier(Identifier::new(s))
+impl Identifier {
+    /// Build an Obj::Identifier from a name. Parameter is String (not &str).
+    pub fn mk(name: String) -> Obj {
+        Obj::Identifier(Identifier { name })
     }
 }
 

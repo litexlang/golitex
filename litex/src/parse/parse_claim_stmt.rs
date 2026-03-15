@@ -19,23 +19,23 @@ impl Parser {
     fn multiline_fact_claim(&self, tb: &mut TokenBlock) -> Result<ClaimStmt, ParsingError> {
         tb.skip_token(COLON)?;
         if tb.body.is_empty() {
-            return Err(ParsingError::new("claim : expects at least one body block (=>: fact)", tb.line_file_index));
+            return Err(ParsingError::new("claim : expects at least one body block (=>: fact)".to_string(), tb.line_file_index));
         }
         let fact = {
             let first = tb.body.get_mut(0).ok_or_else(|| {
-                ParsingError::new("claim : expects at least one body block (=>: fact)", tb.line_file_index)
+                ParsingError::new("claim : expects at least one body block (=>: fact)".to_string(), tb.line_file_index)
             })?;
             first.parse_index = 0;
             first.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
             if first.body.len() != 1 {
-                return Err(ParsingError::new("claim =>: expects exactly one body block (the fact)", first.line_file_index));
+                return Err(ParsingError::new("claim =>: expects exactly one body block (the fact)".to_string(), first.line_file_index));
             }
             let body_block = first.body.get_mut(0).ok_or_else(|| {
-                ParsingError::new("claim =>: expects exactly one body block (the fact)", first.line_file_index)
+                ParsingError::new("claim =>: expects exactly one body block (the fact)".to_string(), first.line_file_index)
             })?;
             let f = self.parse_fact(body_block)?;
             if matches!(&f, Fact::ForallFactWithIff(_)) {
-                return Err(ParsingError::new("claim multiline fact cannot be iff", first.line_file_index));
+                return Err(ParsingError::new("claim multiline fact cannot be iff".to_string(), first.line_file_index));
             }
             Ok(f)
         }?;

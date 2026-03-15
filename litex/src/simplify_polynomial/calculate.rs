@@ -195,8 +195,14 @@ fn compare_decimal_parts(
         }
     }
     for i in 0..frac_a.len().max(frac_b.len()) {
-        let da = frac_a.get(i).copied().unwrap_or(0);
-        let db = frac_b.get(i).copied().unwrap_or(0);
+        let da = match frac_a.get(i) {
+            Some(&d) => d,
+            None => 0,
+        };
+        let db = match frac_b.get(i) {
+            Some(&d) => d,
+            None => 0,
+        };
         if da != db {
             return da as i32 - db as i32;
         }

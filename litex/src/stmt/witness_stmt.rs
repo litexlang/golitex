@@ -28,8 +28,8 @@ impl WitnessExistFact {
 impl fmt::Display for WitnessExistFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.proof.len() {
-            0 => write!(f, "{} {}{} {} {} {}", WITNESS, vec_to_string_with_sep(&self.equal_tos, COMMA), COLON, vec_to_string_join_by_comma(&self.   exist_fact_in_witness.params_def_with_type), ST, vec_to_string_join_by_comma(&self.exist_fact_in_witness.facts)),
-            _ => write!(f, "{} {}{} {} {} {} {}\n{}", WITNESS, vec_to_string_with_sep(&self.equal_tos, COMMA), COLON, vec_to_string_join_by_comma(&self.exist_fact_in_witness.params_def_with_type), ST, vec_to_string_join_by_comma(&self.exist_fact_in_witness.facts), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)),
+            0 => write!(f, "{} {}{} {} {} {}", WITNESS, vec_to_string_with_sep(&self.equal_tos, COMMA.to_string()), COLON, vec_to_string_join_by_comma(&self.   exist_fact_in_witness.params_def_with_type), ST, vec_to_string_join_by_comma(&self.exist_fact_in_witness.facts)),
+            _ => write!(f, "{} {}{} {} {} {} {}\n{}", WITNESS, vec_to_string_with_sep(&self.equal_tos, COMMA.to_string()), COLON, vec_to_string_join_by_comma(&self.exist_fact_in_witness.params_def_with_type), ST, vec_to_string_join_by_comma(&self.exist_fact_in_witness.facts), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)),
         }   
     }
 }

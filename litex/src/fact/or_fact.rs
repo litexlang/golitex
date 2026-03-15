@@ -24,6 +24,6 @@ impl fmt::Display for OrFact {
 
 impl OrFact {
     pub fn key(&self) -> String {
-        return format!("{}", vec_to_string_with_sep(&self.facts.iter().map(|fact| fact.key()).collect::<Vec<String>>(), format!(" {} ", OR).as_str()));
+        return format!("{}", vec_to_string_with_sep(&self.facts.iter().map(|fact| fact.key()).collect::<Vec<String>>(), format!(" {} ", OR)));
     }
 }

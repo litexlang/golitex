@@ -232,7 +232,10 @@ impl<'a> RuntimeContext<'a> {
             let location = if file_index == 0 {
                 format!("Success on line {}", line)
             } else {
-                let path = self.module_manager.run_file_paths.get(file_index).map(|s: &String| s.as_str()).unwrap_or("");
+                let path = match self.module_manager.run_file_paths.get(file_index) {
+                    Some(s) => s.as_str(),
+                    None => "",
+                };
                 format!("Success on line {}, file {}", line, path)
             };
             format!("{}\n{}", location, result.content_without_success_label())
@@ -249,7 +252,10 @@ impl<'a> RuntimeContext<'a> {
             let location = if file_index == 0 {
                 format!("{} on line {}", label, line)
             } else {
-                let path = self.module_manager.run_file_paths.get(file_index).map(|s: &String| s.as_str()).unwrap_or("");
+                let path = match self.module_manager.run_file_paths.get(file_index) {
+                    Some(s) => s.as_str(),
+                    None => "",
+                };
                 format!("{} on line {}, file {}", label, line, path)
             };
             format!("{}\n{}", location, body)

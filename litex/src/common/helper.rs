@@ -4,15 +4,15 @@ use std::hash::Hash;
 use super::keywords::{LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_BRACE, RIGHT_CURLY_BRACE, DOT_AKA_FIELD_ACCESS_SIGN, COLON};
 
 pub fn braced_vec_to_string<T: fmt::Display>(vec: &Vec<T>) -> String {
-    format!("{}{}{}", LEFT_BRACE, vec_to_string_with_sep(vec, ", "), RIGHT_BRACE)
+    format!("{}{}{}", LEFT_BRACE, vec_to_string_with_sep(vec, ", ".to_string()), RIGHT_BRACE)
 }
 
 pub fn curly_braced_vec_to_string<T: fmt::Display>(vec: &Vec<T>) -> String {
-    format!("{}{}{}", LEFT_CURLY_BRACE, vec_to_string_with_sep(vec, ", "), RIGHT_CURLY_BRACE)
+    format!("{}{}{}", LEFT_CURLY_BRACE, vec_to_string_with_sep(vec, ", ".to_string()), RIGHT_CURLY_BRACE)
 }
 
-pub fn vec_to_string_with_sep<T: fmt::Display>(vec: &Vec<T>, sep: &str) -> String {
-    vec.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(sep)
+pub fn vec_to_string_with_sep<T: fmt::Display>(vec: &Vec<T>, sep: String) -> String {
+    vec.iter().map(|x| x.to_string()).collect::<Vec<String>>().join(sep.as_str())
 }
 
 pub fn braced_string<T: fmt::Display>(str: &T) -> String {
@@ -30,7 +30,7 @@ pub fn to_string_and_add_four_spaces_at_beginning_of_each_line<T: fmt::Display>(
     fact.to_string().split("\n").map(|fact| format!("{}{}", "    ".repeat(number_of_four_spaces), fact)).collect::<Vec<String>>().join("\n")
 }
 
-pub fn curly_braced_vec_to_string_with_sep<T: fmt::Display>(vec: &Vec<T>, sep: &str) -> String {
+pub fn curly_braced_vec_to_string_with_sep<T: fmt::Display>(vec: &Vec<T>, sep: String) -> String {
     format!("{}{}{}", LEFT_CURLY_BRACE, vec_to_string_with_sep(vec, sep), RIGHT_CURLY_BRACE)
 }
 
@@ -39,24 +39,25 @@ pub fn vec_to_string_join_by_comma<T: fmt::Display>(vec: &Vec<T>) -> String {
 }
 
 pub fn vec_to_string_add_four_spaces_at_beginning_of_each_line<T: fmt::Display>(vec: &Vec<T>, number_of_four_spaces: usize) -> String {
-    to_string_and_add_four_spaces_at_beginning_of_each_line(&vec_to_string_with_sep(vec, "\n"), number_of_four_spaces)
+    to_string_and_add_four_spaces_at_beginning_of_each_line(&vec_to_string_with_sep(vec, "\n".to_string()), number_of_four_spaces)
 }
 
-pub fn add_four_spaces_at_beginning(str: &str, number_of_four_spaces: usize) -> String {
+pub fn add_four_spaces_at_beginning(str: String, number_of_four_spaces: usize) -> String {
     format!("{}{}", "    ".repeat(number_of_four_spaces), str)
 }
 
-pub fn is_number_string_literally_integer_without_dot(str: &str) -> bool {
+pub fn is_number_string_literally_integer_without_dot(str: String) -> bool {
     !str.contains(DOT_AKA_FIELD_ACCESS_SIGN)
 }
 
 pub fn brace_vec_colon_vec_to_string<T: fmt::Display, T2: fmt::Display>(left: &Vec<T>, right: &Vec<T2>) -> String {
+    let sep = ", ".to_string();
     if !left.is_empty() && !right.is_empty() {
-        format!("{}{}{} {}{}", LEFT_BRACE, vec_to_string_with_sep(left, ", "), COLON, vec_to_string_with_sep(right, ", "), RIGHT_BRACE) 
+        format!("{}{}{} {}{}", LEFT_BRACE, vec_to_string_with_sep(left, sep.clone()), COLON, vec_to_string_with_sep(right, sep), RIGHT_BRACE)
     } else if right.is_empty() {
-        format!("{}{}{}", LEFT_BRACE, vec_to_string_with_sep(left, ", "), RIGHT_BRACE)
+        format!("{}{}{}", LEFT_BRACE, vec_to_string_with_sep(left, sep), RIGHT_BRACE)
     } else if left.is_empty() {
-        format!("{}{}{}{}", LEFT_BRACE, COLON, vec_to_string_with_sep(right, ", "), RIGHT_BRACE)
+        format!("{}{}{}{}", LEFT_BRACE, COLON, vec_to_string_with_sep(right, sep), RIGHT_BRACE)
     } else {
         format!("{}{}", LEFT_BRACE, RIGHT_BRACE)
     }
@@ -74,11 +75,11 @@ pub fn vec_has_duplicates<T: Eq + Hash>(vec: &[T]) -> bool {
 }
 
 /// Error message for duplicate parameter names in a given parse context (e.g. "prop", "forall", "exist").
-pub fn duplicate_parameter_name_error_message(context: &str) -> String {
+pub fn duplicate_parameter_name_error_message(context: String) -> String {
     format!("duplicate parameter name in {}", context)
 }
 
 /// Standard TODO-style error message for unimplemented functionality.
-pub fn todo_error_message(context: &str) -> String {
+pub fn todo_error_message(context: String) -> String {
     format!("TODO: {} is not implemented yet", context)
 }

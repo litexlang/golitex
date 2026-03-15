@@ -28,7 +28,7 @@ impl<'a> Executor<'a> {
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
                 return Err(WellDefinedError::new(
-                    &format!(
+                    format!(
                         "predicate {} expects {} argument(s), but got {}",
                         name_string,
                         expected_len,
@@ -44,13 +44,13 @@ impl<'a> Executor<'a> {
             } else if let Some(predicate_without_meaning_definition) = self.runtime_context.get_predicate_without_meaning_definition_by_name(&name_string) {
                 predicate_without_meaning_definition.params.len()
             } else {
-                return Err(WellDefinedError::new(format!("predicate {} not defined", name_string).as_ref(), vec![], atomic_fact_line_file(atomic_fact)));
+                return Err(WellDefinedError::new(format!("predicate {} not defined", name_string), vec![], atomic_fact_line_file(atomic_fact)));
             };
 
             let actual_args = atomic_fact.args();
             if actual_args.len() != expected_len {
                 return Err(WellDefinedError::new(
-                    &format!(
+                    format!(
                         "predicate {} expects {} argument(s), but got {}",
                         name_string,
                         expected_len,
@@ -112,7 +112,7 @@ impl<'a> Executor<'a> {
         for param_def in exist_fact.params_def_with_type().iter() {
             let result = self.define_params_with_type(std::slice::from_ref(param_def),false);
             if let Err(e) = result {
-                return Err(WellDefinedError::new(&format!("failed to define parameters in {}:\n{}", exist_fact, e.body_string()), vec![], exist_fact.line_file_index()));
+                return Err(WellDefinedError::new(format!("failed to define parameters in {}:\n{}", exist_fact, e.body_string()), vec![], exist_fact.line_file_index()));
             }
         }
 
@@ -132,7 +132,7 @@ impl<'a> Executor<'a> {
     fn verify_forall_fact_well_defined_body(&mut self, forall_fact: &ForallFact, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         for param_def in forall_fact.params_def_with_type.iter() {
             if let Err(e) = self.define_params_with_type(std::slice::from_ref(param_def),false) {
-                return Err(WellDefinedError::new(&format!("failed to define parameters in {}:\n{}", forall_fact, e.body_string()), vec![], forall_fact.line_file_index));
+                return Err(WellDefinedError::new(format!("failed to define parameters in {}:\n{}", forall_fact, e.body_string()), vec![], forall_fact.line_file_index));
             }
         }
 

@@ -83,9 +83,9 @@ impl fmt::Display for ProveCaseByCaseStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let case_and_proof_of_each_case = self.cases.iter().zip(self.proofs.iter()).zip(self.impossible_facts.iter()).map(|((case, proof), impossible_fact)| {
             if let Some(impossible_fact) = impossible_fact {
-                format!("{} {}{}\n{}\n{} {}", add_four_spaces_at_beginning(CASE, 1),case, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(proof, 2), add_four_spaces_at_beginning(IMPOSSIBLE, 2), &impossible_fact.to_string())
+                format!("{} {}{}\n{}\n{} {}", add_four_spaces_at_beginning(CASE.to_string(), 1),case, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(proof, 2), add_four_spaces_at_beginning(IMPOSSIBLE.to_string(), 2), &impossible_fact.to_string())
             } else {
-                format!("{} {}{}\n{}", add_four_spaces_at_beginning(CASE, 1),case, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(proof, 2))
+                format!("{} {}{}\n{}", add_four_spaces_at_beginning(CASE.to_string(), 1),case, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(proof, 2))
             }
         }).collect::<Vec<String>>();
         
@@ -101,13 +101,13 @@ impl ProveByContradictionStmt {
 
 impl fmt::Display for ProveByContradictionStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}\n{}\n{}{}\n{}\n{} {}", CLAIM, COLON,to_string_and_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1),add_four_spaces_at_beginning(CONTRA, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2), add_four_spaces_at_beginning(IMPOSSIBLE, 2), &self.impossible_fact.to_string())
+        write!(f, "{}{}\n{}\n{}{}\n{}\n{} {}", CLAIM, COLON,to_string_and_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1),add_four_spaces_at_beginning(CONTRA.to_string(), 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2), add_four_spaces_at_beginning(IMPOSSIBLE.to_string(), 2), &self.impossible_fact.to_string())
     }
 }
 
 impl fmt::Display for ProveByEnumerationStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}{}\n{}\n{}{}\n{}", ENUM, vec_pair_to_string(&self.params, &self.param_sets), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1), add_four_spaces_at_beginning(PROVE, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
+        write!(f, "{} {}{}\n{}\n{}{}\n{}", ENUM, vec_pair_to_string(&self.params, &self.param_sets), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1), add_four_spaces_at_beginning(PROVE.to_string(), 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
     }
 }
 
@@ -119,7 +119,7 @@ impl ProveByInductionStmt {
 
 impl fmt::Display for ProveByInductionStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {} {}{}\n{}\n{}{}\n{}", INDUC, self.param, FROM, self.induc_from, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.fact, 1), add_four_spaces_at_beginning(PROVE, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
+        write!(f, "{} {} {} {}{}\n{}\n{}{}\n{}", INDUC, self.param, FROM, self.induc_from, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.fact, 1), add_four_spaces_at_beginning(PROVE.to_string(), 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
     }
 }
 
@@ -127,12 +127,12 @@ impl fmt::Display for ProveForStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let head = match self.dom_facts.len() {
             0 => format!("{} {}{}\n{}", FOR, vec_pair_to_string(&self.params, &self.param_sets), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.then_facts, 1)),
-            _ => format!("{} {}{}\n{}\n{}{}\n{}", FOR, vec_pair_to_string(&self.params, &self.param_sets), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.dom_facts, 1), add_four_spaces_at_beginning(RIGHT_ARROW, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.then_facts, 2)),
+            _ => format!("{} {}{}\n{}\n{}{}\n{}", FOR, vec_pair_to_string(&self.params, &self.param_sets), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.dom_facts, 1), add_four_spaces_at_beginning(RIGHT_ARROW.to_string(), 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.then_facts, 2)),
         };
 
         match self.proof.len() {
             0 => write!(f, "{}", head),
-            _ => write!(f, "{}\n{}{}\n{}", head, add_four_spaces_at_beginning(PROVE, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2)),
+            _ => write!(f, "{}\n{}{}\n{}", head, add_four_spaces_at_beginning(PROVE.to_string(), 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2)),
         }
     }
 }

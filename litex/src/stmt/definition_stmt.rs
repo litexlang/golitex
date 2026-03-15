@@ -97,7 +97,7 @@ impl fmt::Display for DefStructWithFieldsStmt {
         // 格式: struct name(params): \n  field1 or1 \n  field2 or2 \n  <=>: \n  facts...
         let fields_str: String = self.fields.iter().map(|(name, or_val)| format!("{} {}", name, or_val)).collect::<Vec<_>>().join("\n");
         let fields_indented = to_string_and_add_four_spaces_at_beginning_of_each_line(&fields_str, 1);
-        let equiv_line = add_four_spaces_at_beginning(&format!("{}{}", EQUIVALENT_SIGN, COLON), 1);
+        let equiv_line = add_four_spaces_at_beginning(format!("{}{}", EQUIVALENT_SIGN, COLON), 1);
         let facts_indented = vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1);
         write!(f, "{} {}{}{}{} {}\n{}\n{}\n{}", STRUCT, self.name, LEFT_BRACE, vec_to_string_join_by_comma(&self.params_def_with_type), RIGHT_BRACE, COLON, fields_indented, equiv_line, facts_indented)
     }
@@ -126,7 +126,7 @@ impl DefLetStmt {
 
 impl fmt::Display for DefLetStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let param_str = vec_to_string_with_sep(&self.param_def, ", ");
+        let param_str = vec_to_string_with_sep(&self.param_def, ", ".to_string());
         match self.facts.len() {
             0 => write!(f, "{} {}", LET, param_str),
             _ => write!(f, "{} {}{}\n{}", LET, param_str, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1)),
@@ -154,7 +154,7 @@ impl HaveObjEqualStmt {
 
 impl fmt::Display for HaveObjEqualStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {} {}", HAVE, vec_to_string_with_sep(&self.param_def, ", "), EQUAL, vec_to_string_join_by_comma(&self.objs_equal_to))
+        write!(f, "{} {} {} {}", HAVE, vec_to_string_with_sep(&self.param_def, ", ".to_string()), EQUAL, vec_to_string_join_by_comma(&self.objs_equal_to))
     }
 }
 
@@ -189,7 +189,7 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
             to_string_and_add_four_spaces_at_beginning_of_each_line(&format!("{} {}{} {}{} {} {}", CASE, case, COMMA, self.name, braced_vec_to_string(&self.fn_set_with_params.params()), EQUAL, self.equal_tos[i]),1)
         }).collect::<Vec<String>>();
         
-        write!(f, "{} {} {}{} {} {}\n{}", HAVE, FN, self.name, brace_vec_colon_vec_to_string(&self.fn_set_with_params.params_def_with_set, &self.fn_set_with_params.dom_facts), EQUAL, COLON, vec_to_string_with_sep(&cases_and_proofs, "\n"))
+        write!(f, "{} {} {}{} {} {}\n{}", HAVE, FN, self.name, brace_vec_colon_vec_to_string(&self.fn_set_with_params.params_def_with_set, &self.fn_set_with_params.dom_facts), EQUAL, COLON, vec_to_string_with_sep(&cases_and_proofs, "\n".to_string()))
     }
 }
 

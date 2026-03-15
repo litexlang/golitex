@@ -12,7 +12,7 @@ impl<'a> Executor<'a> {
         let result = match result {
             NonErrStmtResult::StmtUnknown(_) => {
                 return Err(StmtError::UnknownError(UnknownError::new(
-                    fact.to_string().as_str(),
+                    fact.to_string(),
                     fact.line_file(),
                 )))
             }

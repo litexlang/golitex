@@ -29,7 +29,7 @@ impl Parser {
         tb.skip_token(RIGHT_BRACE)?;
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
         if vec_has_duplicates(&all_param_names) {
-            return Err(ParsingError::new(&duplicate_parameter_name_error_message("prop"), tb.line_file_index));
+            return Err(ParsingError::new(duplicate_parameter_name_error_message("prop".to_string()), tb.line_file_index));
         }
         let facts = self.parse_facts_in_body(tb)?;
         match facts.len() {
@@ -52,7 +52,7 @@ impl Parser {
         tb.skip_token(RIGHT_BRACE)?;
 
         if vec_has_duplicates(&params) {
-            return Err(ParsingError::new(&duplicate_parameter_name_error_message("prop without meaning"), tb.line_file_index));
+            return Err(ParsingError::new(duplicate_parameter_name_error_message("prop without meaning".to_string()), tb.line_file_index));
         }
 
         Ok(Stmt::DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt::new(name, params, Some(tb.line_file_index))))
@@ -80,7 +80,7 @@ impl Parser {
         };
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_def);
         if vec_has_duplicates(&all_param_names) {
-            return Err(ParsingError::new(&duplicate_parameter_name_error_message("let"), tb.line_file_index));
+            return Err(ParsingError::new(duplicate_parameter_name_error_message("let".to_string()), tb.line_file_index));
         }
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
@@ -101,11 +101,11 @@ impl Parser {
             tb.skip_token(COMMA)?;
         }
         if param_defs.is_empty() {
-            return Err(ParsingError::new("have expects at least one param type pair", tb.line_file_index));
+            return Err(ParsingError::new("have expects at least one param type pair".to_string(), tb.line_file_index));
         }
         let have_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
         if vec_has_duplicates(&have_param_names) {
-            return Err(ParsingError::new(&duplicate_parameter_name_error_message("have"), tb.line_file_index));
+            return Err(ParsingError::new(duplicate_parameter_name_error_message("have".to_string()), tb.line_file_index));
         }
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
@@ -175,7 +175,7 @@ impl Parser {
         }
         let struct_param_names = ParamDefWithParamType::collect_param_names(&params_def_with_type);
         if vec_has_duplicates(&struct_param_names) {
-            return Err(ParsingError::new(&duplicate_parameter_name_error_message("struct"), tb.line_file_index));
+            return Err(ParsingError::new(duplicate_parameter_name_error_message("struct".to_string()), tb.line_file_index));
         }
         let dom_facts = if tb.current()? == COLON {
             tb.skip_token(COLON)?;
@@ -205,7 +205,7 @@ impl Parser {
             tb.skip_token(COLON)?;
 
             if tb.body.is_empty() {
-                return Err(ParsingError::new("struct with fields expects body", tb.line_file_index));
+                return Err(ParsingError::new("struct with fields expects body".to_string(), tb.line_file_index));
             }
 
             let mut fields: Vec<(String, OrAndChainAtomicFact)> = vec![];
@@ -214,21 +214,21 @@ impl Parser {
             let body_len = tb.body.len();
             let last_index = body_len - 1;
             let last_is_equiv = {
-                let last = tb.body.get(last_index).ok_or_else(|| ParsingError::new("Expected body", tb.line_file_index))?;
+                let last = tb.body.get(last_index).ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file_index))?;
                 last.token_at_end_of_head() == EQUIVALENT_SIGN
             };
 
             let field_end = if last_is_equiv { last_index } else { body_len };
 
             for i in 0..field_end {
-                let block = tb.body.get_mut(i).ok_or_else(|| ParsingError::new("Expected field block", tb.line_file_index))?;
+                let block = tb.body.get_mut(i).ok_or_else(|| ParsingError::new("Expected field block".to_string(), tb.line_file_index))?;
                 let field_name = block.advance()?;
                 let cond = self.parse_or_and_chain_atomic_fact(block)?;
                 fields.push((field_name, cond));
             }
 
             if last_is_equiv {
-                let last = tb.body.get_mut(last_index).ok_or_else(|| ParsingError::new("Expected <=>: block", tb.line_file_index))?;
+                let last = tb.body.get_mut(last_index).ok_or_else(|| ParsingError::new("Expected <=>: block".to_string(), tb.line_file_index))?;
                 last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
                 for block in last.body.iter_mut() {
                     facts.push(self.parse_or_and_chain_atomic_fact(block)?);
@@ -265,7 +265,7 @@ impl Parser {
             } else if block.current()? == RETURN {
                 AlgoReturnOrAlgoIf::AlgoReturn(self.parse_algo_return(block)?)
             } else {
-                return Err(ParsingError::new("algo body block must start with if or return", block.line_file_index));
+                return Err(ParsingError::new("algo body block must start with if or return".to_string(), block.line_file_index));
             };
 
             
@@ -285,13 +285,13 @@ impl Parser {
         let condition = self.parse_and_chain_atomic_fact(block)?;
         block.skip_token(COLON)?;
         if !block.exceed_end_of_head() {
-            return Err(ParsingError::new("algo if: expected end of head after condition", block.line_file_index));
+            return Err(ParsingError::new("algo if: expected end of head after condition".to_string(), block.line_file_index));
         }
         if block.body.len() != 1 {
-            return Err(ParsingError::new("algo if block must have exactly one body block (return stmt)", block.line_file_index));
+            return Err(ParsingError::new("algo if block must have exactly one body block (return stmt)".to_string(), block.line_file_index));
         }
 
-        let block = block.body.first_mut().ok_or_else(|| ParsingError::new("algo if block must have exactly one body block (return stmt)", block.line_file_index))?;
+        let block = block.body.first_mut().ok_or_else(|| ParsingError::new("algo if block must have exactly one body block (return stmt)".to_string(), block.line_file_index))?;
         
         let return_stmt = self.parse_algo_return(block)?;
         Ok(AlgoIf::new(

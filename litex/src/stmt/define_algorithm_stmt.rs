@@ -54,7 +54,7 @@ impl fmt::Display for AlgoReturn {
 
 impl fmt::Display for AlgoIf {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}{}\n{}", IF, self.condition, COLON, add_four_spaces_at_beginning(&self.return_stmt.to_string(), 1))
+        write!(f, "{} {}{}\n{}", IF, self.condition, COLON, add_four_spaces_at_beginning(self.return_stmt.to_string(), 1))
     }
 }
 
@@ -67,7 +67,7 @@ impl fmt::Display for DefAlgoStmt {
             self.name,
             braced_vec_to_string(&self.params),
             COLON,
-            to_string_and_add_four_spaces_at_beginning_of_each_line(&vec_to_string_with_sep(&self.return_or_algo_if, "\n"), 1)
+            to_string_and_add_four_spaces_at_beginning_of_each_line(&vec_to_string_with_sep(&self.return_or_algo_if, "\n".to_string()), 1)
         )
     }
 }
