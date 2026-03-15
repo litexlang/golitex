@@ -205,7 +205,7 @@ impl Parser {
         let tok = tb.current()?.to_string();
         let prop = if is_comparison_str(&tok) {
             tb.advance()?;
-            IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&tok))
+            IdentifierOrIdentifierWithMod::Identifier(Identifier::new(tok.clone()))
         } else if tok == FACT_PREFIX {
             tb.skip_token(FACT_PREFIX)?;
             self.identifier_or_identifier_with_mod(tb)?
@@ -254,7 +254,7 @@ impl Parser {
             let tok = tb.current()?.to_string();
             let prop = if is_comparison_str(&tok) {
                 tb.advance()?;
-                IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&tok))
+                IdentifierOrIdentifierWithMod::Identifier(Identifier::new(tok.clone()))
             } else if tok == FACT_PREFIX {
                 tb.skip_token(FACT_PREFIX)?;
                 self.identifier_or_identifier_with_mod(tb)?

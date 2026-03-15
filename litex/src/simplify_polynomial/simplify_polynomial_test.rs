@@ -7,7 +7,7 @@ fn mk_num(s: &str) -> Obj {
 }
 
 fn mk_var(s: &str) -> Obj {
-    Obj::Identifier(Identifier::new(s))
+    Obj::Identifier(Identifier::new(s.to_string()))
 }
 
 #[test]

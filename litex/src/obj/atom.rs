@@ -60,26 +60,26 @@ impl fmt::Display for Atom {
 }
 
 impl Identifier {
-    pub fn new(name: &str) -> Self {
-        Identifier { name: name.to_string() }
+    pub fn new(name: String) -> Self {
+        Identifier { name }
     }
 }
 
 impl IdentifierWithMod {
-    pub fn new(mod_name: &str, name: &str) -> Self {
-        IdentifierWithMod { mod_name: mod_name.to_string(), name: name.to_string() }
+    pub fn new(mod_name: String, name: String) -> Self {
+        IdentifierWithMod { mod_name, name }
     }
 }
 
 impl FieldAccess {
-    pub fn new(name: &str, fields: Vec<String>) -> Self {
-        FieldAccess { name: name.to_string(), fields }
+    pub fn new(name: String, fields: Vec<String>) -> Self {
+        FieldAccess { name, fields }
     }
 }
 
 impl FieldAccessWithMod {
-    pub fn new(mod_name: &str, name: &str, fields: Vec<String>) -> Self {
-        FieldAccessWithMod { mod_name: mod_name.to_string(), name: name.to_string(), fields }
+    pub fn new(mod_name: String, name: String, fields: Vec<String>) -> Self {
+        FieldAccessWithMod { mod_name, name, fields }
     }
 }
 

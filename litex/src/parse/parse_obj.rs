@@ -559,9 +559,9 @@ impl Parser {
                     tb.skip()?;
                     fields.push(tb.advance()?.to_string());
                 }
-                Ok(Atom::FieldAccessWithMod(FieldAccessWithMod::new(&left, &right, fields)))
+                Ok(Atom::FieldAccessWithMod(FieldAccessWithMod::new(left, right, fields)))
             } else {
-                Ok(Atom::IdentifierWithMod(IdentifierWithMod::new(&left, &right)))
+                Ok(Atom::IdentifierWithMod(IdentifierWithMod::new(left, right)))
             }
         } else {
             // 如果后面有 .，则解析为 FieldAccess
@@ -572,9 +572,9 @@ impl Parser {
                     tb.skip()?;
                     fields.push(tb.advance()?.to_string());
                 }
-                Ok(Atom::FieldAccess(FieldAccess::new(&left, fields)))
+                Ok(Atom::FieldAccess(FieldAccess::new(left, fields)))
             } else {
-                Ok(Atom::IdentifierAtom(Identifier::new(&left)))
+                Ok(Atom::IdentifierAtom(Identifier::new(left)))
             }
         }
     }
@@ -584,9 +584,9 @@ impl Parser {
         if !tb.exceed_end_of_head() && tb.current()? == MOD_SIGN {
             tb.skip()?;
             let right = tb.advance()?;
-            Ok(IdentifierOrIdentifierWithMod::IdentifierWithMod(IdentifierWithMod::new(&left, &right)))
+            Ok(IdentifierOrIdentifierWithMod::IdentifierWithMod(IdentifierWithMod::new(left, right)))
         } else {
-            Ok(IdentifierOrIdentifierWithMod::Identifier(Identifier::new(&left)))
+            Ok(IdentifierOrIdentifierWithMod::Identifier(Identifier::new(left)))
         }
     }
 }
