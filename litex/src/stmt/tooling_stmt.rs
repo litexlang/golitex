@@ -24,8 +24,8 @@ pub struct RunFileStmt {
 }
 
 impl RunFileStmt {
-    pub fn new(file_path: &str, line_file_index: Option<(usize, usize)>) -> Self {
-        RunFileStmt { file_path: file_path.to_string(), line_file_index }
+    pub fn new(file_path: String, line_file_index: Option<(usize, usize)>) -> Self {
+        RunFileStmt { file_path, line_file_index }
     }
 }
 
@@ -45,14 +45,14 @@ impl fmt::Display for ImportStmt {
 }
 
 impl ImportRelativePathStmt {
-    pub fn new(path: &str, as_mod_name: Option<String>, line_file_index: Option<(usize, usize)>) -> Self {
-        ImportRelativePathStmt { path: path.to_string(), as_mod_name, line_file_index }
+    pub fn new(path: String, as_mod_name: Option<String>, line_file_index: Option<(usize, usize)>) -> Self {
+        ImportRelativePathStmt { path, as_mod_name, line_file_index }
     }
 }
 
 impl ImportGlobalModuleStmt {
-    pub fn new(mod_name: &str, as_mod_name: Option<String>, line_file_index: Option<(usize, usize)>) -> Self {
-        ImportGlobalModuleStmt { mod_name: mod_name.to_string(), as_mod_name, line_file_index }
+    pub fn new(mod_name: String, as_mod_name: Option<String>, line_file_index: Option<(usize, usize)>) -> Self {
+        ImportGlobalModuleStmt { mod_name, as_mod_name, line_file_index }
     }
 }
 

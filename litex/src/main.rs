@@ -151,14 +151,14 @@ fn try_atom_fn_obj() {
 }
 
 fn try_arithmetic() {
-    let number_one = Obj::Number(Number::new("1"));
-    let number_two = Obj::Number(Number::new("2"));
+    let number_one = Obj::Number(Number::new("1".to_string()));
+    let number_two = Obj::Number(Number::new("2".to_string()));
     let one_add_two_result = Obj::Add(Add::new(number_one, number_two, true));
-    let one_sub_two_result = Obj::Sub(Sub::new(Obj::Number(Number::new("1")), Obj::Number(Number::new("2")), true));
-    let one_mul_two_result = Obj::Mul(Mul::new(Obj::Number(Number::new("1")), Obj::Number(Number::new("2")), true));
-    let one_div_two_result = Obj::Div(Div::new(Obj::Number(Number::new("1")), Obj::Number(Number::new("2"))));
-    let one_mod_two_result = Obj::Mod(Mod::new(Obj::Number(Number::new("1")), Obj::Number(Number::new("2")), true));
-    let one_pow_two_result = Obj::Pow(Pow::new(Obj::Number(Number::new("1")), Obj::Number(Number::new("2")), true));
+    let one_sub_two_result = Obj::Sub(Sub::new(Obj::Number(Number::new("1".to_string())), Obj::Number(Number::new("2".to_string())), true));
+    let one_mul_two_result = Obj::Mul(Mul::new(Obj::Number(Number::new("1".to_string())), Obj::Number(Number::new("2".to_string())), true));
+    let one_div_two_result = Obj::Div(Div::new(Obj::Number(Number::new("1".to_string())), Obj::Number(Number::new("2".to_string()))));
+    let one_mod_two_result = Obj::Mod(Mod::new(Obj::Number(Number::new("1".to_string())), Obj::Number(Number::new("2".to_string())), true));
+    let one_pow_two_result = Obj::Pow(Pow::new(Obj::Number(Number::new("1".to_string())), Obj::Number(Number::new("2".to_string())), true));
     println!("{}, {}, {}, {}, {}, {}",  one_add_two_result, one_sub_two_result, one_mul_two_result, one_div_two_result, one_mod_two_result, one_pow_two_result);
 }
 
@@ -794,10 +794,10 @@ fn try_proof_techniques() {
 }
 
 fn try_import_stmt() {
-    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/mod", Some("mod".to_string()), Some((1, 0)));
+    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/mod".to_string(), Some("mod".to_string()), Some((1, 0)));
     println!("{}", import_relative_path_stmt);
 
-    let import_global_mod_stmt = ImportGlobalModuleStmt::new("mod", Some("mod".to_string()), Some((1, 0)));
+    let import_global_mod_stmt = ImportGlobalModuleStmt::new("mod".to_string(), Some("mod".to_string()), Some((1, 0)));
     println!("{}", import_global_mod_stmt);
 
     let stmt = Stmt::ImportStmt(ImportStmt::ImportRelativePath(import_relative_path_stmt));
@@ -821,7 +821,7 @@ fn try_prove_stmt() {
 }
 
 fn try_run_file_stmt() {
-    let run_file_stmt = RunFileStmt::new("path/to/file.txt", Some((1, 0)));
+    let run_file_stmt = RunFileStmt::new("path/to/file.txt".to_string(), Some((1, 0)));
     println!("{}", run_file_stmt);
 
     let stmt = Stmt::RunFileStmt(run_file_stmt);
@@ -859,10 +859,10 @@ fn try_have_obj_in_nonempty_set_stmt() {
 }
 
 fn try_tooling_stmt() {
-    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/mod", Some("mod".to_string()), Some((1, 0)));
+    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/mod".to_string(), Some("mod".to_string()), Some((1, 0)));
     println!("{}", import_relative_path_stmt);
 
-    let import_global_mod_stmt = ImportGlobalModuleStmt::new("mod", Some("mod".to_string()), Some((1, 0)));
+    let import_global_mod_stmt = ImportGlobalModuleStmt::new("mod".to_string(), Some("mod".to_string()), Some((1, 0)));
     println!("{}", import_global_mod_stmt);
 
     let stmt = Stmt::ImportStmt(ImportStmt::ImportRelativePath(import_relative_path_stmt));
@@ -1259,8 +1259,8 @@ fn try_pipeline() {
 
 
 fn try_calculate() {
-    let one = Obj::Number(Number::new("1"));
-    let two = Obj::Number(Number::new("2"));
+    let one = Obj::Number(Number::new("1".to_string()));
+    let two = Obj::Number(Number::new("2".to_string()));
     let one_add_two = Obj::Add(Add::new(one, two, true));
     println!("{}", one_add_two.calculate_to_string());
 }
@@ -1274,10 +1274,10 @@ fn try_obj_well_defined<'a>() {
     let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
     let mut executor = Executor::new(&mut runtime_context);
     
-    let one = Obj::Number(Number::new("1"));
-    let two = Obj::Number(Number::new("2"));
+    let one = Obj::Number(Number::new("1".to_string()));
+    let two = Obj::Number(Number::new("2".to_string()));
     let one_add_two = Obj::Add(Add::new(one, two, true));
-    let atomic_fact = AtomicFact::EqualFact(EqualFact::new(one_add_two, Obj::Number(Number::new("3")), Some((1, 0))));
+    let atomic_fact = AtomicFact::EqualFact(EqualFact::new(one_add_two, Obj::Number(Number::new("3".to_string())), Some((1, 0))));
     println!("{}", atomic_fact);
 
     let fact = Fact::AtomicFact(atomic_fact);
