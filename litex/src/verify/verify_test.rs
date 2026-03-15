@@ -21,7 +21,7 @@ fn test_verify_atomic_fact() {
     let mut executor = Executor::new(&mut runtime_context);
 
     // verify 1 = 1
-    let one = Obj::Number(Number::new("1"));
+    let one = Obj::Number(Number::new("1".to_string()));
     let fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(one.clone(), one, None)));
     let stmt = Stmt::Fact(fact);
     let result = executor.stmt(&stmt);

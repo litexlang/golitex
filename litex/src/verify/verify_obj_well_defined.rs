@@ -246,7 +246,7 @@ impl<'a> Executor<'a> {
         self.verify_obj_well_defined_and_store_cache(&div.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&div.right, verify_state)?;
 
-        let zero = Obj::Number(Number::new("0"));
+        let zero = Obj::Number(Number::new("0".to_string()));
         let not_equal_fact = NotEqualFact::new((*div.right).clone(), zero, None);
         let atomic_fact = AtomicFact::NotEqualFact(not_equal_fact);
         self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
@@ -261,7 +261,7 @@ impl<'a> Executor<'a> {
         self.verify_obj_well_defined_and_store_cache(&m.right, verify_state)?;
         self.require_obj_in_z(&m.left, verify_state)?;
         self.require_obj_in_z(&m.right, verify_state)?;
-        let zero = Obj::Number(Number::new("0"));
+        let zero = Obj::Number(Number::new("0".to_string()));
         let not_equal_fact = NotEqualFact::new((*m.right).clone(), zero, None);
         self.verify_fact(&Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact)), verify_state)?;
         Ok(())
