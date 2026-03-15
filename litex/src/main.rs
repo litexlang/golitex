@@ -132,19 +132,19 @@ fn main() {
 
 fn try_atom_fn_obj() {
     let a_add_b = Obj::FnObj(FnObj::new(
-        Atom::IdentifierWithMod(IdentifierWithMod::new("+", "")),
+        Atom::IdentifierWithMod(IdentifierWithMod::new("+".to_string(), "".to_string())),
         vec![vec![
-            Box::new(Obj::Identifier(Identifier::new("a"))),
-            Box::new(Obj::Identifier(Identifier::new("b"))),
+            Box::new(Obj::Identifier(Identifier::new("a".to_string()))),
+            Box::new(Obj::Identifier(Identifier::new("b".to_string()))),
         ]],
     ));
     println!("{}", a_add_b);
 
     let a_add_b_with_mod = Obj::FnObj(FnObj::new(
-        Atom::IdentifierWithMod(IdentifierWithMod::new("ModA", "name_a")),
+        Atom::IdentifierWithMod(IdentifierWithMod::new("ModA".to_string(), "name_a".to_string())),
         vec![vec![
-            Box::new(Obj::Identifier(Identifier::new("a"))),
-            Box::new(Obj::Identifier(Identifier::new("b"))),
+            Box::new(Obj::Identifier(Identifier::new("a".to_string()))),
+            Box::new(Obj::Identifier(Identifier::new("b".to_string()))),
         ]],
     ));
     println!("{}", a_add_b_with_mod);
@@ -174,22 +174,22 @@ fn try_set_operations() {
 
 fn try_stmt() {
     let body3 = vec![
-        Obj::Identifier(Identifier::new("a")),
-        Obj::Identifier(Identifier::new("b")),
+        Obj::Identifier(Identifier::new("a".to_string())),
+        Obj::Identifier(Identifier::new("b".to_string())),
     ];
     let fact1 = Stmt::Fact(Fact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
-        IdentifierOrIdentifierWithMod::Identifier(Identifier::new("p")),
+        IdentifierOrIdentifierWithMod::Identifier(Identifier::new("p".to_string())),
         body3,
         Some((1, 0)),
     ))));
     println!("{}", fact1.to_string());
 
     let body2 = vec![
-        Obj::Identifier(Identifier::new("a")),
-        Obj::Identifier(Identifier::new("b")),
+        Obj::Identifier(Identifier::new("a".to_string())),
+        Obj::Identifier(Identifier::new("b".to_string())),
     ];
     let fact2 = Stmt::Fact(Fact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
-        IdentifierOrIdentifierWithMod::IdentifierWithMod(IdentifierWithMod::new("ModA", "name_a")),
+        IdentifierOrIdentifierWithMod::IdentifierWithMod(IdentifierWithMod::new("ModA".to_string(), "name_a".to_string())),
         body2,
         Some((1, 0)),
     ))));
@@ -216,42 +216,42 @@ fn try_equal_literally() {
     let mut builtin_environment = Environment::new_empty_env();
     let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
     let executor = Executor::new(&mut runtime_context);
-    let a = Obj::Identifier(Identifier::new("a"));
-    let b = Obj::Identifier(Identifier::new("b"));
+    let a = Obj::Identifier(Identifier::new("a".to_string()));
+    let b = Obj::Identifier(Identifier::new("b".to_string()));
     println!("{}", executor.equal_literally(&a, &b));
-    let a2 = Obj::Identifier(Identifier::new("a"));
+    let a2 = Obj::Identifier(Identifier::new("a".to_string()));
     println!("{}", executor.equal_literally(&a2, &a));
 }
 
 fn try_list_set() {
     let list_set = Obj::ListSet(ListSet::new(vec![
-        Obj::Identifier(Identifier::new("a")),
-        Obj::Identifier(Identifier::new("b")),
+        Obj::Identifier(Identifier::new("a".to_string())),
+        Obj::Identifier(Identifier::new("b".to_string())),
     ]));
     println!("{}", list_set);
 }
 
 fn try_set_builder() {
-    let set_builder = Obj::SetBuilder(SetBuilder::new("a".to_string(), Obj::Identifier(Identifier::new("b")), vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), Some((1, 0)))))]));
+    let set_builder = Obj::SetBuilder(SetBuilder::new("a".to_string(), Obj::Identifier(Identifier::new("b".to_string())), vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), Some((1, 0)))))]));
     println!("{}", set_builder);
 }
 
 fn try_fn_set_without_params() {
     let fn_set_without_params = Obj::FnSetWithoutDom(FnSetWithoutDom::new(
         vec![
-            Obj::Identifier(Identifier::new("a")),
-            Obj::Identifier(Identifier::new("b")),
+            Obj::Identifier(Identifier::new("a".to_string())),
+            Obj::Identifier(Identifier::new("b".to_string())),
         ],
-        Obj::Identifier(Identifier::new("c")),
+        Obj::Identifier(Identifier::new("c".to_string())),
     ));
     println!("{}", fn_set_without_params);
 }
 
 fn try_fn_set_with_params() {
-    let fn_set_with_params = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["a".to_string()], Obj::Identifier(Identifier::new("a"))), ParamDefWithParamSet(vec!["b".to_string()], Obj::Identifier(Identifier::new("b")))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), Some((1, 0)))))], Obj::Identifier(Identifier::new("c"))));
+    let fn_set_with_params = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["a".to_string()], Obj::Identifier(Identifier::new("a".to_string()))), ParamDefWithParamSet(vec!["b".to_string()], Obj::Identifier(Identifier::new("b".to_string())))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), Some((1, 0)))))], Obj::Identifier(Identifier::new("c".to_string()))));
     println!("{}", fn_set_with_params);
 
-    let fn_set_with_params2 = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["a".to_string()], Obj::Identifier(Identifier::new("a"))), ParamDefWithParamSet(vec!["b".to_string()], Obj::Identifier(Identifier::new("b"))), ParamDefWithParamSet(vec!["c".to_string()], Obj::Identifier(Identifier::new("c")))], vec![], Obj::Identifier(Identifier::new("c"))));
+    let fn_set_with_params2 = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["a".to_string()], Obj::Identifier(Identifier::new("a".to_string()))), ParamDefWithParamSet(vec!["b".to_string()], Obj::Identifier(Identifier::new("b".to_string()))), ParamDefWithParamSet(vec!["c".to_string()], Obj::Identifier(Identifier::new("c".to_string())))], vec![], Obj::Identifier(Identifier::new("c".to_string()))));
     println!("{}", fn_set_with_params2);
 }
 
@@ -293,19 +293,19 @@ fn try_parameter_set() {
     println!("{}", nonempty_parameter_set);
     let finite_parameter_set = ParamType::FiniteSet(FiniteSet::new());
     println!("{}", finite_parameter_set);
-    let obj_parameter_set = ParamType::Obj(Obj::Identifier(Identifier::new("a")));
+    let obj_parameter_set = ParamType::Obj(Obj::Identifier(Identifier::new("a".to_string())));
     println!("{}", obj_parameter_set);
 }
 
 fn try_instantiated_struct_obj() {
     let instantiated_struct_obj = Obj::InstSetStructObj(InstStructObj::new(
-        IdentifierOrIdentifierWithMod::Identifier(Identifier::new("A")),
-        vec![Obj::Identifier(Identifier::new("b"))],
+        IdentifierOrIdentifierWithMod::Identifier(Identifier::new("A".to_string())),
+        vec![Obj::Identifier(Identifier::new("b".to_string()))],
     ));
     println!("{}", instantiated_struct_obj);
 
     let instantiated_struct_obj2 = Obj::InstSetStructObj(InstStructObj::new(
-        IdentifierOrIdentifierWithMod::Identifier(Identifier::new("a")),
+        IdentifierOrIdentifierWithMod::Identifier(Identifier::new("a".to_string())),
         vec![],
     ));
     println!("{}", instantiated_struct_obj2);
@@ -346,7 +346,7 @@ fn try_power_set_choice() {
 fn try_atomic_fact() {
     let line = 1usize;
     let _normal = AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
-        IdentifierOrIdentifierWithMod::Identifier(Identifier::new("p")),
+        IdentifierOrIdentifierWithMod::Identifier(Identifier::new("p".to_string())),
         vec![Identifier::mk("a".to_string()), Identifier::mk("b".to_string())],
         Some((line, 0)),
     ));
@@ -362,7 +362,7 @@ fn try_atomic_fact() {
     let _not_is_cart = AtomicFact::NotIsCartFact(NotIsCartFact::new(Identifier::mk("S".to_string()), Some((line, 0))));
 
     let _not_normal = AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(
-        IdentifierOrIdentifierWithMod::Identifier(Identifier::new("p")),
+        IdentifierOrIdentifierWithMod::Identifier(Identifier::new("p".to_string())),
         vec![Identifier::mk("a".to_string())],
         Some((line, 0)),
     ));
@@ -431,7 +431,7 @@ fn try_exist_fact() {
     // chain atomic fact
     let _true_exist4 = ExistFact::new(
         vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))],
-        vec![OrAndChainAtomicFact::ChainFact(ChainFact::new(vec![Identifier::mk("a".to_string()), Identifier::mk("b".to_string())], vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("q"))], Some((1, 0))))],
+        vec![OrAndChainAtomicFact::ChainFact(ChainFact::new(vec![Identifier::mk("a".to_string()), Identifier::mk("b".to_string())], vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("q".to_string()))], Some((1, 0))))],
         Some((1, 0)),
     );
     println!("{}", _true_exist4);
@@ -474,7 +474,7 @@ fn try_or_fact() {
 
     let or = OrFact::new(vec![AndChainAtomicFact::ChainFact(ChainFact::new(
         vec![Identifier::mk("p".to_string())],
-        vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("q"))],
+        vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("q".to_string()))],
         Some((1, 0)),
     ))], Some((1, 0)));
     println!("{}", or);
@@ -580,7 +580,7 @@ fn try_fact() {
     let _f_and = Fact::AndFact(AndFact::new(facts, Some((1, 0))));
     println!("{}", _f_and);
 
-    let _f_chain = Fact::ChainFact(ChainFact::new(vec![Identifier::mk("a".to_string()), Identifier::mk("b".to_string())], vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("q"))], Some((1, 0))));
+    let _f_chain = Fact::ChainFact(ChainFact::new(vec![Identifier::mk("a".to_string()), Identifier::mk("b".to_string())], vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("q".to_string()))], Some((1, 0))));
     println!("{}", _f_chain);
 }
 
@@ -1321,7 +1321,7 @@ fn try_store_forall_fact_in_env() {
         Some((1, 0)),
     )))], Some((1, 0)))), ExistOrAndChainAtomicFact::ChainFact(ChainFact::new(
         vec![Identifier::mk("a".to_string()), Identifier::mk("b".to_string())],
-        vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("="))],
+        vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("=".to_string()))],
         Some((1, 0)),
     )), ExistOrAndChainAtomicFact::ExistFact(ExistFact::new(
         vec![ParamDefWithParamType(vec!["n".to_string()], ParamType::Set(Set::new()))],
@@ -1340,7 +1340,7 @@ fn try_store_forall_fact_in_env() {
 }
 
 fn try_obj_instantiate() {
-    let obj = Obj::Identifier(Identifier::new("x"));
+    let obj = Obj::Identifier(Identifier::new("x".to_string()));
     let param_to_arg_map = HashMap::new();
     let instantiated_obj = obj.instantiate(&param_to_arg_map);
     println!("{}", instantiated_obj);
