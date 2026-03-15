@@ -326,8 +326,8 @@ impl FnObj {
 }
 
 impl Number {
-    pub fn new(value: &str) -> Self {
-        Number { value: value.to_string() }
+    pub fn new(value: String) -> Self {
+        Number { value }
     }
 }
 

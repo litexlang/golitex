@@ -253,7 +253,7 @@ impl Parser {
         if tb.current_token_empty_if_exceed_end_of_head() == SUB {
             tb.skip()?;
             let obj = self.number_or_primary_obj_or_fn_obj(tb)?;
-            Ok(Obj::Mul(Mul::new(Obj::Number(Number::new("-1")), obj, false)))
+            Ok(Obj::Mul(Mul::new(Obj::Number(Number::new("-1".to_string())), obj, false)))
         } else {
             self.number_or_primary_obj_or_fn_obj(tb)
         }
@@ -279,7 +279,7 @@ impl Parser {
                 if !is_number(&number) {
                     return Err(ParsingError::new(format!("Invalid number: {}", number), tb.line_file_index));
                 }
-                return Ok(Obj::Number(Number::new(&number)));
+                return Ok(Obj::Number(Number::new(number)));
             }
 
             if tb.current()? == DOT_AKA_FIELD_ACCESS_SIGN {
@@ -289,12 +289,12 @@ impl Parser {
                 if !is_number(&number) {
                     return Err(ParsingError::new(format!("Invalid number: {}", number), tb.line_file_index));
                 }
-                return Ok(Obj::Number(Number::new(&number)));
+                return Ok(Obj::Number(Number::new(number)));
             } else {
                 if !is_number(&number) {
                     return Err(ParsingError::new(format!("Invalid number: {}", number), tb.line_file_index));
                 }
-                return Ok(Obj::Number(Number::new(&number)));
+                return Ok(Obj::Number(Number::new(number)));
             }
         }
 
