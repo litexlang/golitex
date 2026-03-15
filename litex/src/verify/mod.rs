@@ -14,5 +14,6 @@ mod verify_and_chain_fact;
 mod verify_forall_fact_forall_fact_with_iff;
 mod verify_exist_fact;
 mod verify_or_fact;
+mod verify_helper;
 
 pub use verify_state::VerifyState;

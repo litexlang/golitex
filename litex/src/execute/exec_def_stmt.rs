@@ -1,6 +1,5 @@
 use crate::error::ExecError;
 use std::collections::HashMap;
-use crate::fact::{AtomicFact, Fact, IsNonemptySetFact};
 use crate::obj::Obj;
 use crate::stmt::parameter_type_and_property::{ParamDefWithParamType, ParamType, ParamDefWithParamSet};
 use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt};
@@ -55,38 +54,25 @@ impl<'a> Executor<'a> {
 
     pub fn def_struct_with_fields_stmt(&mut self, def_struct_with_fields_stmt: &DefStructWithFieldsStmt) -> Result<NonErrStmtResult, ExecError> {
         self.validate_name_and_store_def_struct_with_fields(def_struct_with_fields_stmt)?;
-        return Err(ExecError::new("def_struct_with_fields_stmt: NOT IMPLEMENTED YET", vec![], def_struct_with_fields_stmt.line_file_index));
+        return Err(ExecError::new("def_struct_with_fields_stmt: NOT IMPLEMENTED YET".to_string(), vec![], def_struct_with_fields_stmt.line_file_index));
     }
 
     pub fn def_struct_with_no_field_stmt(&mut self, def_struct_with_no_field_stmt: &DefStructWithNoFieldStmt) -> Result<NonErrStmtResult, ExecError> {
         self.validate_name_and_store_def_struct_with_no_field(def_struct_with_no_field_stmt)?;
-        return Err(ExecError::new("def_struct_with_no_field_stmt: NOT IMPLEMENTED YET", vec![], def_struct_with_no_field_stmt.line_file_index));
+        return Err(ExecError::new("def_struct_with_no_field_stmt: NOT IMPLEMENTED YET".to_string(), vec![], def_struct_with_no_field_stmt.line_file_index));
     }
 
     pub fn def_algo_stmt(&mut self, def_algo_stmt: &DefAlgoStmt) -> Result<NonErrStmtResult, ExecError> {
         self.validate_name_and_store_def_algo(def_algo_stmt)?;
         // Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_algo_stmt.to_string(), def_algo_stmt.line_file_index)))
-        return Err(ExecError::new("def_algo_stmt: NOT IMPLEMENTED YET", vec![], def_algo_stmt.line_file_index));
+        return Err(ExecError::new("def_algo_stmt: NOT IMPLEMENTED YET".to_string(), vec![], def_algo_stmt.line_file_index));
     }
 
     pub fn define_params_with_type(&mut self, param_defs: &[ParamDefWithParamType], check_type_nonempty: bool) -> Result<(), ExecError> {
         for param_def in param_defs.iter() {
             self.verify_param_type_well_defined(&param_def.1, &VerifyState::new(0, false))?;
 
-            if check_type_nonempty {
-                match &param_def.1 {
-                    ParamType::Set(_) => {}
-                    ParamType::NonemptySet(_) => {}
-                    ParamType::FiniteSet(_) => {}
-                    ParamType::Obj(param_set) => {
-                        let nonempty_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
-                            param_set.clone(),
-                            None,
-                        )));
-                        self.verify_fact_well_defined_and_store_and_infer(&nonempty_fact, &VerifyState::new(0, false))?;
-                    }
-                }
-            }
+            self.verify_param_type_nonempty_if_required(&param_def.1, check_type_nonempty)?;
 
             for name in param_def.0.iter() {
                 self.validate_name_and_store_identifier_obj(name)?;
@@ -113,7 +99,7 @@ impl<'a> Executor<'a> {
 
     pub fn have_obj_equal_stmt(&mut self, have_obj_equal_stmt: &HaveObjEqualStmt) -> Result<NonErrStmtResult, ExecError> {
         if ParamDefWithParamType::number_of_params(&have_obj_equal_stmt.param_def) != have_obj_equal_stmt.objs_equal_to.len() {
-            return Err(ExecError::new("have_obj_equal_stmt: number of params in param_def does not match number of objs_equal_to", vec![], have_obj_equal_stmt.line_file_index));
+            return Err(ExecError::new("have_obj_equal_stmt: number of params in param_def does not match number of objs_equal_to".to_string(), vec![], have_obj_equal_stmt.line_file_index));
         }
 
         let mut current_index = 0;
@@ -127,7 +113,7 @@ impl<'a> Executor<'a> {
                 let verify_result = self.verify_fact(&fact, &VerifyState::new(0, false)).map_err(ExecError::from)?;
                 if !verify_result.is_true() {
                     let msg = format!("have_obj_equal_stmt: {} is not in type {}", current_param_equal_to, current_type);
-                    return Err(ExecError::new(msg.as_str(), vec![], have_obj_equal_stmt.line_file_index));
+                    return Err(ExecError::new(msg, vec![], have_obj_equal_stmt.line_file_index));
                 }
 
                 param_to_obj_map.insert(name.clone(), current_param_equal_to.clone());
@@ -139,14 +125,14 @@ impl<'a> Executor<'a> {
     }
 
     pub fn have_exist_obj_stmt(&mut self, have_exist_obj_stmt: &HaveExistObjStmt) -> Result<NonErrStmtResult, ExecError> {
-        Err(ExecError::new("have_exist_obj_stmt: NOT IMPLEMENTED YET", vec![], have_exist_obj_stmt.line_file_index))
+        Err(ExecError::new("have_exist_obj_stmt: NOT IMPLEMENTED YET".to_string(), vec![], have_exist_obj_stmt.line_file_index))
     }
 
     pub fn have_fn_equal_stmt(&mut self, have_fn_equal_stmt: &HaveFnEqualStmt) -> Result<NonErrStmtResult, ExecError> {
-        Err(ExecError::new("have_fn_equal_stmt: NOT IMPLEMENTED YET", vec![], have_fn_equal_stmt.line_file_index))
+        Err(ExecError::new("have_fn_equal_stmt: NOT IMPLEMENTED YET".to_string(), vec![], have_fn_equal_stmt.line_file_index))
     }
 
     pub fn have_fn_equal_case_by_case_stmt(&mut self, have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt) -> Result<NonErrStmtResult, ExecError> {
-        Err(ExecError::new("have_fn_equal_case_by_case_stmt: NOT IMPLEMENTED YET", vec![], have_fn_equal_case_by_case_stmt.line_file_index))
+        Err(ExecError::new("have_fn_equal_case_by_case_stmt: NOT IMPLEMENTED YET".to_string(), vec![], have_fn_equal_case_by_case_stmt.line_file_index))
     }
 }

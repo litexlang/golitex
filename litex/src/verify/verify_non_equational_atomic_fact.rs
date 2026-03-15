@@ -137,7 +137,7 @@ impl<'a> Executor<'a> {
         if let Some(known_facts_map) = environment.known_atomic_facts_with_0_or_more_than_2_args.get(&(atomic_fact.key(), atomic_fact.is_true())) {
             for known_fact in known_facts_map.iter() {
                 if known_fact.args().len() != atomic_fact.args().len() {
-                    return Err(VerifyError::new(format!("known atomic fact {} has different number of args than the given fact {}", known_fact.to_string(), atomic_fact.to_string()).as_str(), vec![], None));
+                    return Err(VerifyError::new(format!("known atomic fact {} has different number of args than the given fact {}", known_fact.to_string(), atomic_fact.to_string()), vec![], None));
                 }
                 for (index, known_arg) in known_fact.args().iter().enumerate() {
                     if known_arg.to_string() != atomic_fact.args()[index].to_string() {

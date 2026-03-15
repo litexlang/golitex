@@ -229,7 +229,7 @@ fn collect_monomials_in_pow(pow: &Pow) -> Vec<MonomialWithNonZeroScalarAndOrdere
 
     // 判断 exponent 字面量是否为 0 或正整数，返回 (是否 ok, 解析出的数字)
     let (exponent_ok, exponent_value) = if let Obj::Number(num) = &*pow.exponent {
-        if is_number_string_literally_integer_without_dot(&num.value)
+        if is_number_string_literally_integer_without_dot(num.value.clone())
             && !num.value.starts_with('-')
         {
             if let Ok(n) = num.value.parse::<i64>() {

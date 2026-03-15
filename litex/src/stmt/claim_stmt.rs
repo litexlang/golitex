@@ -22,6 +22,6 @@ impl ClaimStmt {
 
 impl fmt::Display for ClaimStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}\n{}\n{}{}\n{}", CLAIM, COLON, to_string_and_add_four_spaces_at_beginning_of_each_line(&self.fact.to_string(), 1), add_four_spaces_at_beginning(PROVE, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
+        write!(f, "{}{}\n{}\n{}{}\n{}", CLAIM, COLON, to_string_and_add_four_spaces_at_beginning_of_each_line(&self.fact.to_string(), 1), add_four_spaces_at_beginning(PROVE.to_string(), 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
     }
 }
