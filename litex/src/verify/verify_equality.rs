@@ -31,8 +31,15 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
+    pub fn verify_equality_by_they_are_the_same(left: &Obj, right: &Obj) -> bool {
+        if left.to_string() == right.to_string() {
+            return true;
+        }
+        false
+    }
+
     fn verify_equality_by_builtin_rules(&mut self, equal_fact: &EqualFact) -> Result<NonErrStmtExecResult, VerifyError> {
-        if equal_fact.left.to_string() == equal_fact.right.to_string() {
+        if Self::verify_equality_by_they_are_the_same(&equal_fact.left, &equal_fact.right) {
             return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "the same".to_string(), equal_fact.line_file_index)));
         }
         
