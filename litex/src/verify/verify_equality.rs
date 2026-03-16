@@ -32,6 +32,10 @@ impl<'a> Executor<'a> {
     }
 
     fn verify_equality_by_builtin_rules(&mut self, equal_fact: &EqualFact) -> Result<NonErrStmtResult, VerifyError> {
+        if equal_fact.left.to_string() == equal_fact.right.to_string() {
+            return Ok(NonErrStmtResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "the same".to_string(), equal_fact.line_file_index)));
+        }
+        
         if equal_fact.left.two_objs_can_be_calculated_and_equal_by_calculation(&equal_fact.right) {
             return Ok(NonErrStmtResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "calculation".to_string(), equal_fact.line_file_index)));
         }
