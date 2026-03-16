@@ -15,7 +15,7 @@ impl VerifyState {
         self.round >= 2
     }
 
-    pub fn new_state_with_round_increased(&mut self) -> Self {
+    pub fn new_state_with_round_increased(&self) -> Self {
         return Self::new(self.round + 1, self.well_defined_already_verified);
     }
 
