@@ -23,7 +23,7 @@ impl<'a> Executor<'a> {
             }
         }
 
-        let result_in_env = self.match_atomic_fact_with_known_forall_facts(
+        let result_in_env = self.match_and_verify_atomic_fact_with_known_forall_facts(
             known_facts,
             atomic_fact,
             verify_state)?;
@@ -34,7 +34,7 @@ impl<'a> Executor<'a> {
         return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
     }
 
-    fn match_atomic_fact_with_known_forall_facts(
+    fn match_and_verify_atomic_fact_with_known_forall_facts(
         &mut self,
         forall_entries: Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>,
         atomic_fact: &AtomicFact,
@@ -44,12 +44,11 @@ impl<'a> Executor<'a> {
             let match_result =
                 Self::match_atomic_fact_in_known_forall_fact_with_given_atomic_fact(
                     atomic_fact_in_known_forall_fact,
-                    forall_rc,
                     atomic_fact,
                     verify_state,
                 )?;
             if let Some(arg_map) = match_result {
-                if let Some(fact_verified) = self.try_verify_with_single_forall_entry(
+                if let Some(fact_verified) = self.verify_matched_args_satisfy_forall_requirements(
                     atomic_fact_in_known_forall_fact,
                     forall_rc,
                     arg_map,
@@ -64,61 +63,34 @@ impl<'a> Executor<'a> {
         Ok(None)
     }
 
-    fn try_verify_with_single_forall_entry(
+    fn verify_matched_args_satisfy_forall_requirements(
         &mut self,
         atomic_fact_in_known_forall_fact: &AtomicFact,
-        forall_rc: &Rc<KnownForallFactParamsAndDom>,
+        known_forall: &Rc<KnownForallFactParamsAndDom>,
         arg_map: HashMap<String, Vec<Obj>>,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
-        let param_names = ParamDefWithParamType::collect_param_names(&forall_rc.params);
+        let param_names = ParamDefWithParamType::collect_param_names(&known_forall.params);
 
-        let mut all_params_covered = true;
-        let mut index = 0;
-        while index < param_names.len() {
-            let param_name = &param_names[index];
-            if !arg_map.contains_key(param_name) {
-                all_params_covered = false;
-                break;
-            }
-            index += 1;
-        }
-
-        if !all_params_covered {
+        if !param_names.iter().all(|param_name| arg_map.contains_key(param_name)) {
             return Ok(None);
         }
 
-        let mut all_equalities_ok = true;
-        let mut i = 0;
-        while i < param_names.len() {
-            let param_name = &param_names[i];
-            let objs_option = arg_map.get(param_name);
-            let objs = match objs_option {
+        for param_name in param_names.iter() {
+            let objs = match arg_map.get(param_name) {
                 Some(v) => v,
-                None => {
-                    all_equalities_ok = false;
-                    break;
-                }
+                None => return Ok(None),
             };
-
-            let equal_ok = self.verify_atom_in_atomic_fact_in_known_forall_fact_matches_equal_objects(
+            if !self.verify_atom_in_atomic_fact_in_known_forall_fact_matches_equal_objects(
                 objs,
                 verify_state,
-            )?;
-            if !equal_ok {
-                all_equalities_ok = false;
-                break;
+            )? {
+                return Ok(None);
             }
-
-            i += 1;
         }
 
-        if !all_equalities_ok {
-            return Ok(None);
-        }
-
-        let args_satisfy_param_types = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(&forall_rc.params, &atomic_fact.args())
+        let args_satisfy_param_types = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(&known_forall.params, &atomic_fact.args())
             .map_err(|e| VerifyError::new(e.error_body(), vec![e], None))?;
 
         for fact in args_satisfy_param_types.iter() {
@@ -130,14 +102,14 @@ impl<'a> Executor<'a> {
 
         
         let param_to_arg_map = match ParamDefWithParamType::param_def_params_to_arg_map(
-            &forall_rc.params,
+            &known_forall.params,
             &arg_map,
         ) {
             Some(m) => m,
             None => return Ok(None),
         };
 
-        for dom_fact in forall_rc.dom.iter() {
+        for dom_fact in known_forall.dom.iter() {
             let instantiated_dom_fact = dom_fact.instantiate(&param_to_arg_map);
             let fact = instantiated_dom_fact.to_fact();
             let result = self.verify_fact(&fact, verify_state)?;
@@ -148,10 +120,10 @@ impl<'a> Executor<'a> {
 
         let fact_string = atomic_fact.to_string();
         let verified_by_known_forall_fact = ForallFact::new(
-            forall_rc.params.clone(),
-            forall_rc.dom.clone(),
+            known_forall.params.clone(),
+            known_forall.dom.clone(),
             vec![ExistOrAndChainAtomicFact::AtomicFact(atomic_fact_in_known_forall_fact.clone())],
-            forall_rc.line_file.clone(),
+            known_forall.line_file.clone(),
         );
         let fact_verified = FactVerifiedByFact::new(
             fact_string,
@@ -164,7 +136,7 @@ impl<'a> Executor<'a> {
     fn verify_atom_in_atomic_fact_in_known_forall_fact_matches_equal_objects(
         &self,
         objs: &Vec<Obj>,
-        verify_state: &VerifyState,
+        _verify_state: &VerifyState,
     ) -> Result<bool, VerifyError> {
         let len = objs.len();
         if len <= 1 {
@@ -186,7 +158,7 @@ impl<'a> Executor<'a> {
         Ok(true)
     }
 
-    fn match_atomic_fact_in_known_forall_fact_with_given_atomic_fact(atomic_fact_in_known_forall: &AtomicFact, forall_params_and_dom: &Rc<KnownForallFactParamsAndDom>, given_atomic_fact: &AtomicFact, _verify_state: &VerifyState) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_atomic_fact_in_known_forall_fact_with_given_atomic_fact(atomic_fact_in_known_forall: &AtomicFact, given_atomic_fact: &AtomicFact, _verify_state: &VerifyState) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         let mut atom_in_known_atomic_fact_to_matched_objs_in_given_fact_map: HashMap<String, Vec<Obj>> = HashMap::new();
 
         for (arg_in_atomic_fact_in_known_forall, arg_in_given) in atomic_fact_in_known_forall.args().iter().zip(given_atomic_fact.args().iter()) {

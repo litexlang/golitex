@@ -19,7 +19,8 @@ impl<'a> Executor<'a> {
         }
 
         if verify_state.is_round_0() {
-            result = self.verify_non_equational_atomic_fact_with_known_forall_fact(atomic_fact)?;
+            let verify_state_add_one_round = verify_state.new_state_with_round_increased();
+            result = self.verify_non_equational_atomic_fact_with_known_forall_fact(atomic_fact, &verify_state_add_one_round)?;
             if result.is_true() {
                 return Ok(result);
             }
@@ -150,8 +151,12 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    fn verify_non_equational_atomic_fact_with_known_forall_fact(&mut self, atomic_fact: &AtomicFact) -> Result<NonErrStmtExecResult, VerifyError> {
-        _ = atomic_fact;
+    fn verify_non_equational_atomic_fact_with_known_forall_fact(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
+        let result = self.verify_atomic_fact_with_known_forall(atomic_fact, verify_state)?;
+        if result.is_true() {
+            return Ok(result);
+        }
+
         return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
     }
 }

@@ -283,27 +283,7 @@ impl ParamDefWithParamType {
         }
         names
     }
-
-    /// Builds param_name -> Obj map from param_defs and args. Returns Some(map) if arg count matches
-    /// total param count, else None.
-    pub fn param_defs_and_args_to_param_to_arg_map(
-        param_defs: &Vec<ParamDefWithParamType>,
-        args: &Vec<Obj>,
-    ) -> Option<HashMap<String, Obj>> {
-        let param_names = Self::collect_param_names(param_defs);
-        if param_names.len() != args.len() {
-            return None;
-        }
-        let mut map = HashMap::new();
-        for (param_name, arg) in param_names.iter().zip(args.iter()) {
-            map.insert(param_name.clone(), arg.clone());
-        }
-        Some(map)
-    }
-
-    /// Builds param_name -> Obj map from param_defs and arg_map (param_name -> Vec<Obj>).
-    /// Returns Some(map) if every param has exactly one Obj (or we take first from non-empty vec),
-    /// and param count matches. Else None.
+    
     pub fn param_def_params_to_arg_map(
         param_defs: &Vec<ParamDefWithParamType>,
         arg_map: &HashMap<String, Vec<Obj>>,
