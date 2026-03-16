@@ -179,3 +179,7 @@ pub fn is_comparison_str(atom_name: &str) -> bool {
 pub fn is_builtin_predicate(atom_name: &str) -> bool {
     atom_name == EQUAL || atom_name == NOT_EQUAL || atom_name == LESS || atom_name == GREATER || atom_name == LESS_EQUAL || atom_name == GREATER_EQUAL || atom_name == IS_SET || atom_name == IS_NONEMPTY_SET || atom_name == IS_FINITE_SET || atom_name == IS_CART || atom_name == IS_TUPLE || atom_name == SUBSET || atom_name == SUPERSET || atom_name == IN
 }
+
+pub fn is_builtin_identifier_obj(atom_name: &str) -> bool {
+    atom_name == ADD || atom_name == SUB || atom_name == MUL || atom_name == DIV || atom_name == MOD || atom_name == POW || atom_name == Q_POS || atom_name == Z_POS || atom_name == R_POS || atom_name == Q_NEG || atom_name == Z_NEG || atom_name == R_NEG || atom_name == Q_NZ || atom_name == Z_NZ || atom_name == R_NZ || atom_name == N_POS || atom_name == N || atom_name == Q || atom_name == Z || atom_name == R
+}

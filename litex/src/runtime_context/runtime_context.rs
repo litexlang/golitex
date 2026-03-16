@@ -1,7 +1,7 @@
 use std::fmt;
 use std::collections::HashMap;
 use crate::obj::{Identifier, Atom};
-use crate::common::keywords::MOD_SIGN;
+use crate::common::keywords::{MOD_SIGN, is_builtin_identifier_obj};
 use crate::error::StmtError;
 use crate::result::NonErrStmtResult;
 use crate::module_manager::ModuleManager;
@@ -120,6 +120,10 @@ impl<'a> RuntimeContext<'a> {
     }
 
     pub fn is_defined_identifier_obj(&self, identifier: &Identifier) -> bool {
+        if is_builtin_identifier_obj(&identifier.name) {
+            return true;
+        }
+        
         self.defined_identifier_objs.contains_key(&identifier.name)
     }
 
