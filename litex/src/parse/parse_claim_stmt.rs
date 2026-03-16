@@ -3,10 +3,10 @@ use crate::fact::Fact;
 use crate::stmt::Stmt;
 use crate::error::ParsingError;
 use crate::common::keywords::{CLAIM, COLON, RIGHT_ARROW};
-use super::Parser;
+use crate::execute::Executor;
 use super::TokenBlock;
 
-impl Parser {
+impl<'a> Executor<'a> {
     pub fn claim_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(CLAIM)?;
         if tb.current()? == COLON {

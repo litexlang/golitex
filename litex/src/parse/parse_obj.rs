@@ -2,7 +2,7 @@ use crate::common::helper::{duplicate_parameter_name_error_message, is_number_st
 use crate::common::keywords::{
     ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
 };
-use super::Parser;
+use crate::execute::Executor;
 use super::TokenBlock;
 use crate::obj::{
     Obj, FnObj, FnSetObj, FnSetWithDom, FnSetWithoutDom, Add, Mul, Div, Mod, Sub, Pow, Number, InstStructObj, ListSet, SetBuilder,
@@ -14,7 +14,7 @@ use crate::obj::{Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierWi
 use crate::error::ParsingError;
 use crate::stmt::parameter_type_and_property::ParamDefWithParamSet;
 
-impl Parser {
+impl<'a> Executor<'a> {
     pub fn parse_obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         self.obj_hierarchy0(tb)
     }

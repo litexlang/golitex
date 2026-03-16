@@ -1,13 +1,14 @@
 use crate::error::ParsingError;
-use crate::common::keywords::{ALGO, CLAIM, CLEAR, DO_NOTHING, EVAL, EXIST, FN, HAVE, IMPORT, KNOW, LET, PROP, PROVE, RUN_FILE, STRUCT, VIEW_FN_AS_SET, WITNESS, CASES, CONTRA, ENUM, INDUC, FOR, EQUAL_SET}; use super::Parser;
+use crate::common::keywords::{ALGO, CLAIM, CLEAR, DO_NOTHING, EVAL, EXIST, FN, HAVE, IMPORT, KNOW, LET, PROP, PROVE, RUN_FILE, STRUCT, VIEW_FN_AS_SET, WITNESS, CASES, CONTRA, ENUM, INDUC, FOR, EQUAL_SET};
+use crate::execute::Executor;
 use crate::stmt::Stmt;
 use super::TokenBlock;
 
-impl Parser {
+impl<'a> Executor<'a> {
     pub fn parse_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         match tb.current()? {
             PROP => self.def_prop_stmt_or_prop_without_meaning(tb),
-            LET => self.def_let_stmt(tb),
+            LET => self.parse_def_let_stmt(tb),
             HAVE => {
                 if tb.token_at_index(1)? == FN {
                     self.have_fn_stmt(tb)

@@ -1,10 +1,10 @@
 use crate::common::keywords::{COMMA, FINITE_SET, NONEMPTY_SET, SET};
-use super::Parser;
+use crate::execute::Executor;
 use super::TokenBlock;
 use crate::error::ParsingError;
 use crate::stmt::parameter_type_and_property::{ParamDefWithParamType, ParamType, Set, NonemptySet, FiniteSet};
 
-impl Parser {
+impl<'a> Executor<'a> {
     pub fn parse_param_def_with_param_type(&self, tb: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
         self.param_def_with_type(tb)
     }

@@ -3,7 +3,6 @@ use crate::runtime_context::RuntimeContext;
 use crate::module_manager::ModuleManager;
 use crate::environment::Environment;
 use crate::parse::TokenBlock;
-use crate::parse::Parser;
 use crate::execute::Executor;
 use crate::stmt::Stmt;
 
@@ -23,27 +22,25 @@ fn run_source_code(source_code: &str, entrance_file_path: &str) -> String {
         Err(e) => return format!("parse block error: {}", e),
     };
 
-    let parser = Parser::new();
-    let mut executor = Executor::new(&mut runtime_context);
     let mut out = String::new();
-
-    for block in blocks {
-        let mut tb = block;
-        let stmt: Stmt = match parser.parse_stmt(&mut tb) {
-            Ok(s) => s,
-            Err(e) => return format!("parse error: {}", e),
+    let mut executor = Executor::new(&mut runtime_context);
+    for mut block in blocks {
+        let stmt: Stmt = {
+            match executor.parse_stmt(&mut block) {
+                Ok(s) => s,
+                Err(e) => return format!("parse error: {}", e),
+            }
         };
         let result = match executor.stmt(&stmt) {
             Ok(r) => r,
             Err(e) => {
-                out.push_str(format!("\n{}\n", executor.display_error(&e)).as_str());
+                out.push_str(format!("\n{}\n", executor.runtime_context.display_error(&e)).as_str());
                 return out;
             }
         };
         out.push('\n');
-        out.push_str(executor.display_result(&result).as_str());
+        out.push_str(executor.runtime_context.display_result(&result).as_str());
         out.push('\n');
     }
-
     out
 }

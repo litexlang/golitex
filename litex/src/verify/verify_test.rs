@@ -6,10 +6,9 @@ use crate::execute::Executor;
 use crate::fact::Fact;
 use crate::module_manager::ModuleManager;
 use crate::obj::{Number, Obj};
-use crate::parse::Parser;
 use crate::runtime_context::RuntimeContext;
 use crate::stmt::Stmt;
-use crate::result::NonErrStmtResult;
+use crate::result::NonErrStmtExecResult;
 use crate::parse::TokenBlock;
 use crate::parse::tokenize_line;
 
@@ -39,22 +38,20 @@ fn test_verify_atomic_fact() {
 /// 从 string → parse → exec 整条链路测试：fact "1 + 1 = 2"
 #[test]
 fn test_exec_stmt_fact_one_plus_one_eq_two() {
-    let s = "1 + 1 = 2";
-    let tokens = tokenize_line(s);
-    let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
-    let parser = Parser::new();
-    let stmt = parser.parse_stmt(&mut tb).expect("parse fact \"1 + 1 = 2\" failed");
-    assert!(matches!(stmt, Stmt::Fact(_)), "expected Stmt::Fact");
-
     let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
     let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
     let mut executor = Executor::new(&mut runtime_context);
+    let s = "1 + 1 = 2";
+    let tokens = tokenize_line(s);
+    let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
+    let stmt = executor.parse_stmt(&mut tb).expect("parse fact \"1 + 1 = 2\" failed");
+    assert!(matches!(stmt, Stmt::Fact(_)), "expected Stmt::Fact");
 
     let result = executor.stmt(&stmt).expect("exec.stmt(fact) failed");
     match &result {
-        NonErrStmtResult::NonFactualStmtSuccess(_) | NonErrStmtResult::FactVerifiedByFact(_) | NonErrStmtResult::FactVerifiedByBuiltinRules(_) => println!("{}", result.body_string()),
-        NonErrStmtResult::StmtUnknown(u) => panic!("fact 1+1=2 should be verified, got StmtUnknown: {}", u),
+        NonErrStmtExecResult::NonFactualStmtSuccess(_) | NonErrStmtExecResult::FactVerifiedByFact(_) | NonErrStmtExecResult::FactVerifiedByBuiltinRules(_) => println!("{}", result.body_string()),
+        NonErrStmtExecResult::StmtUnknown(u) => panic!("fact 1+1=2 should be verified, got StmtUnknown: {}", u),
     }
 }
 

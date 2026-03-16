@@ -4,7 +4,7 @@ use crate::fact::{
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use crate::fact::ForallFact;
 use crate::fact::ForallFactWithIff;
-use super::Parser;
+use crate::execute::Executor;
 use super::TokenBlock;
 use crate::error::{ParsingError, NewAtomicFactError};
 use crate::fact::Fact;
@@ -16,7 +16,7 @@ use crate::common::keywords::{
 use crate::obj::IdentifierOrIdentifierWithMod;
 use crate::obj::Identifier;
 
-impl Parser {
+impl<'a> Executor<'a> {
     pub fn parse_fact(&self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
         match tb.current()? {
             FORALL => self.parse_forall_or_forall_with_iff(tb),
