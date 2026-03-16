@@ -1,62 +1,65 @@
 use std::collections::HashMap;
+use std::rc::Rc;
 use crate::error::VerifyError;
-use crate::fact::{AtomicFact, ForallFact, EqualFact};
-use crate::result::{NonErrStmtExecResult, StmtUnknown};
+use crate::fact::{AtomicFact, ForallFact};
+use crate::result::{FactVerifiedByFact, NonErrStmtExecResult, StmtUnknown};
 use crate::verify::VerifyState;
 use crate::execute::Executor;
 use crate::environment::Environment;
 use crate::obj::{Identifier, Obj, FnObj};
+use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use std::result::Result;
 
 impl<'a> Executor<'a> {
-    pub fn verify_atomic_fact_with_known_forall(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    pub fn verify_atomic_fact_with_known_forall(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
         let key = atomic_fact.key();
         let is_true = atomic_fact.is_true();
 
         for current_env in self.runtime_context.environments.iter().rev() {
-            let result_in_env = Self::match_atomic_fact_with_known_forall_in_single_env(
+            let result_in_env = self.match_atomic_fact_with_known_forall_in_single_env(
                 current_env,
                 &key,
                 is_true,
                 atomic_fact,
                 verify_state,
             )?;
-            if let Some(arg_map) = result_in_env {
-                return Ok(Some(arg_map));
+            if let Some(fact_verified) = result_in_env {
+                return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
             }
         }
 
-        let result_in_builtin = Self::match_atomic_fact_with_known_forall_in_single_env(
+        let result_in_builtin = self.match_atomic_fact_with_known_forall_in_single_env(
             &self.runtime_context.builtin_environment,
             &key,
             is_true,
             atomic_fact,
             verify_state,
         )?;
-        if let Some(arg_map) = result_in_builtin {
-            return Ok(Some(arg_map));
+        if let Some(fact_verified) = result_in_builtin {
+            return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
         }
 
-        Ok(None)
+        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
     fn match_atomic_fact_with_known_forall_in_single_env(
+        &self,
         environment: &Environment,
         key: &String,
         is_true: bool,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
-        let maybe_vec = environment
+    ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
+        let maybe_vec: Option<&Vec<(usize, Rc<ForallFact>)>> = environment
             .known_atomic_facts_in_forall_facts
             .get(&(key.clone(), is_true));
 
-        let forall_entries = match maybe_vec {
+        let forall_entries: &Vec<(usize, Rc<ForallFact>)> = match maybe_vec {
             Some(v) => v,
             None => return Ok(None),
         };
 
-        for (_, forall_rc) in forall_entries.iter().rev() {
+        for (index, forall_rc) in forall_entries.iter().rev() {
             let forall_ref: &ForallFact = forall_rc.as_ref();
             let match_result =
                 Self::match_atomic_fact_in_known_forall_fact_with_given_atomic_fact(
@@ -66,20 +69,69 @@ impl<'a> Executor<'a> {
                     verify_state,
                 )?;
             if let Some(arg_map) = match_result {
-                return Ok(Some(arg_map));
+                let param_names = ParamDefWithParamType::collect_param_names(&forall_ref.params_def_with_type);
+
+                let mut all_params_covered = true;
+                let mut index = 0;
+                while index < param_names.len() {
+                    let param_name = &param_names[index];
+                    if !arg_map.contains_key(param_name) {
+                        all_params_covered = false;
+                        break;
+                    }
+                    index += 1;
+                }
+
+                if !all_params_covered {
+                    continue;
+                }
+
+                let mut all_equalities_ok = true;
+                let mut i = 0;
+                while i < param_names.len() {
+                    let param_name = &param_names[i];
+                    let objs_option = arg_map.get(param_name);
+                    let objs = match objs_option {
+                        Some(v) => v,
+                        None => {
+                            all_equalities_ok = false;
+                            break;
+                        }
+                    };
+
+                    let equal_ok = self.verify_atom_in_atomic_fact_in_known_forall_fact_matches_equal_objects(
+                        objs,
+                        verify_state,
+                    )?;
+                    if !equal_ok {
+                        all_equalities_ok = false;
+                        break;
+                    }
+
+                    i += 1;
+                }
+
+                if !all_equalities_ok {
+                    continue;
+                }
+
+                let fact_string = atomic_fact.to_string();
+                let verified_by_string = forall_ref.to_string();
+                let line_file_index = forall_ref.line_file_index;
+                let fact_verified = FactVerifiedByFact::new(
+                    fact_string,
+                    verified_by_string,
+                    line_file_index,
+                );
+                return Ok(Some(fact_verified));
             }
         }
 
         Ok(None)
     }
 
-    /// Given a list of objects, try to prove that every pair of objects in the list are equal.
-    /// Returns:
-    /// - Ok(true)  if for all i < j, equal_fact(objs[i], objs[j]) can be verified by equality rules;
-    /// - Ok(false) if there exists at least one pair that cannot be verified equal;
-    /// - Err(..)   if equality verification itself fails with a VerifyError.
     fn verify_atom_in_atomic_fact_in_known_forall_fact_matches_equal_objects(
-        &mut self,
+        &self,
         objs: &Vec<Obj>,
         verify_state: &VerifyState,
     ) -> Result<bool, VerifyError> {
@@ -589,4 +641,9 @@ impl<'a> Executor<'a> {
             None,
         ))
     }
+}
+
+impl<'a> Executor<'a> {
+    // 证明 把 args 代入到 forall 的 param 里，得到的 facts_for_args_satisfy_param_def_with_type_vec 是正确的，而且dom里面的东西也是正确的
+
 }
