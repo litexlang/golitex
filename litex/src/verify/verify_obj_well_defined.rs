@@ -1,8 +1,8 @@
 use crate::obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FieldAccess, FieldAccessWithMod,
     FnObj, FnSetWithDom, FnSetWithoutDom, Identifier, IdentifierWithMod, InstStructObj, ListSet, Mod,
-    Mul, Number, Obj, ObjAtIndex, PowerSet, Pow, Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, Union, Val, ZObj,
-    Intersect, FnSetObj, 
+    Mul, Number, NPosObj, Obj, ObjAtIndex, PowerSet, Pow, Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, Union, Val, ZObj,
+    Intersect, FnSetObj,
 };
 use crate::error::{WellDefinedError, StmtError};
 use crate::verify::VerifyState;
@@ -97,7 +97,7 @@ impl<'a> Executor<'a> {
         if self.runtime_context.is_defined_identifier_obj(identifier) {
             Ok(())
         } else {
-            Err(WellDefinedError::new("identifier not defined".to_string(), vec![], None))
+            Err(WellDefinedError::new(format!("identifier `{}` not defined", identifier.to_string()), vec![], None))
         }
     }
 
@@ -218,6 +218,14 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
+    fn require_obj_in_n_pos(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        let n_pos_obj = Obj::NPosObj(NPosObj::new());
+        let in_fact = InFact::new(obj.clone(), n_pos_obj, None);
+        let atomic_fact = AtomicFact::InFact(in_fact);
+        self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
+        Ok(())
+    }
+
     fn verify_add_well_defined(&mut self, add: &Add, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined_and_store_cache(&add.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&add.right, verify_state)?;
@@ -267,9 +275,11 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_pow_well_defined(&self, _pow: &Pow, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        let _ = verify_state;
-        Err(WellDefinedError::new("verify_pow_well_defined 此函数还没有 implement".to_string(), vec![], None))
+    fn verify_pow_well_defined(&mut self, pow: &Pow, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        self.verify_obj_well_defined_and_store_cache(&pow.base, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&pow.exponent, verify_state)?;
+        self.require_obj_in_n_pos(&pow.exponent, verify_state)?;
+        Ok(())
     }
 
     fn verify_union_well_defined(&mut self, x: &Union, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
