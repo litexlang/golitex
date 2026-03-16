@@ -45,7 +45,7 @@ use fact::{Fact, InFact, NotInFact, IsCartFact, NotIsCartFact, IsTupleFact, NotI
     AndFact, ChainFact, OrAndChainAtomicFact,
 };
 mod result;
-use result::{NonErrStmtResult, NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules, StmtUnknown};
+use result::{NonErrStmtExecResult, NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules, StmtUnknown};
 mod module_manager;
 use module_manager::ModuleManager;
 mod runtime_context;
@@ -53,7 +53,7 @@ use runtime_context::RuntimeContext;
 mod environment;
 use environment::Environment;
 mod parse;
-use parse::{Parser, TokenBlock, tokenize_line};
+use parse::{TokenBlock, tokenize_line};
 mod pipeline;
 
 #[cfg(test)]
@@ -667,7 +667,7 @@ fn try_stmt_result() {
         Identifier::mk("q".to_string()),
         Some((1, 0)),
     ))));
-    let result = NonErrStmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), None));
+    let result = NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), None));
     println!("{}", result.body_string());
 
 
@@ -677,15 +677,15 @@ fn try_stmt_result() {
         Some((1, 0)),
     )));
     let unknown = StmtUnknown::new();
-    let result = NonErrStmtResult::StmtUnknown(unknown);
+    let result = NonErrStmtExecResult::StmtUnknown(unknown);
     println!("{}", result.body_string());
 
     let fact_verified_by_fact = FactVerifiedByFact::new(fact.to_string(), fact.to_string(), None);
-    let result = NonErrStmtResult::FactVerifiedByFact(fact_verified_by_fact);
+    let result = NonErrStmtExecResult::FactVerifiedByFact(fact_verified_by_fact);
     println!("{}", result.body_string());
 
     let fact_verified_by_builtin_rules = FactVerifiedByBuiltinRules::new(fact.to_string(), "demo".to_string(), None);
-    let result = NonErrStmtResult::FactVerifiedByBuiltinRules(fact_verified_by_builtin_rules);
+    let result = NonErrStmtExecResult::FactVerifiedByBuiltinRules(fact_verified_by_builtin_rules);
     println!("{}", result.body_string());
 }
 
@@ -1209,36 +1209,45 @@ fn try_parser() {
 }
 
 fn try_parse_obj() {
-    let parser = Parser::new();
-    println!("{}", parser);
+    let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
+    let mut builtin_environment = Environment::new_empty_env();
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+    let executor = Executor::new(&mut runtime_context);
+    println!("{}", executor);
     let s = "a+b";
     let tokens = tokenize_line(s);
     let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
-    match parser.parse_obj(&mut tb) {
+    match executor.parse_obj(&mut tb) {
         Ok(obj) => println!("{}", obj),
         Err(err) => println!("ERROR:{}", err),
     }
 }
 
 fn try_parse_fact() {
-    let parser = Parser::new();
-    println!("{}", parser);
+    let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
+    let mut builtin_environment = Environment::new_empty_env();
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+    let executor = Executor::new(&mut runtime_context);
+    println!("{}", executor);
     let s = "a+b=0";
     let tokens = tokenize_line(s);
     let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
-    match parser.parse_fact(&mut tb) {
+    match executor.parse_fact(&mut tb) {
         Ok(fact) => println!("{}", fact),
         Err(err) => println!("ERROR:{}", err),
     }
 }
 
 fn try_parse_statements() {
-    let parser = Parser::new();
-    println!("{}", parser);
+    let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
+    let mut builtin_environment = Environment::new_empty_env();
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+    let executor = Executor::new(&mut runtime_context);
+    println!("{}", executor);
     let s = "a+b=0";
     let tokens = tokenize_line(s);
     let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
-    match parser.parse_stmt(&mut tb) {
+    match executor.parse_stmt(&mut tb) {
         Ok(stmt) => println!("{}", stmt),
         Err(err) => println!("ERROR:{}", err),
     }

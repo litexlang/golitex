@@ -1,13 +1,13 @@
 use crate::error::{StmtError, VerifyError};
 use crate::execute::Executor;
 use crate::fact::{ForallFact, ForallFactWithIff};
-use crate::result::{FactVerifiedByFact, NonErrStmtResult};
+use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
 use crate::verify::VerifyState;
 use std::result::Result;
 
 impl<'a> Executor<'a> {
     /// Declare params, assume dom facts hold, then verify each then_fact.
-    pub fn verify_forall_fact(&mut self, forall_fact: &ForallFact, verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+    pub fn verify_forall_fact(&mut self, forall_fact: &ForallFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
         self.runtime_context.new_env();
 
         let result = self.verify_forall_fact_body(forall_fact, verify_state);
@@ -16,7 +16,7 @@ impl<'a> Executor<'a> {
         result
     }
 
-    fn verify_forall_fact_body(&mut self, forall_fact: &ForallFact, verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+    fn verify_forall_fact_body(&mut self, forall_fact: &ForallFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
         for param_def in forall_fact.params_def_with_type.iter() {
             self.define_params_with_type(std::slice::from_ref(param_def),false).map_err(|e| {
                 VerifyError::new(
@@ -46,7 +46,7 @@ impl<'a> Executor<'a> {
             }
         }
 
-        Ok(NonErrStmtResult::FactVerifiedByFact(FactVerifiedByFact::new(
+        Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
             forall_fact.to_string(),
             "forall: each then_fact verified under dom".to_string(),
             forall_fact.line_file_index,
@@ -58,7 +58,7 @@ impl<'a> Executor<'a> {
         &mut self,
         forall_iff: &ForallFactWithIff,
         verify_state: &VerifyState,
-    ) -> Result<NonErrStmtResult, VerifyError> {
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
         let f = &forall_iff.forall_fact;
         let line_file_index = forall_iff.line_file_index;
 
@@ -88,7 +88,7 @@ impl<'a> Executor<'a> {
             return Ok(result2);
         }
 
-        Ok(NonErrStmtResult::FactVerifiedByFact(FactVerifiedByFact::new(
+        Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
             forall_iff.to_string(),
             "forall iff: then=>iff and iff=>then verified".to_string(),
             line_file_index,

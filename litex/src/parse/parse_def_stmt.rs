@@ -5,11 +5,11 @@ use crate::stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf,
 use crate::common::helper::{duplicate_parameter_name_error_message, vec_has_duplicates};
 use crate::common::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, FN, HAVE, IF, LEFT_BRACE, LET, PROP, RETURN, RIGHT_BRACE, STRUCT};
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
-use super::Parser;
+use crate::execute::Executor;
 use crate::stmt::Stmt;
 use super::TokenBlock;
 
-impl Parser {
+impl<'a> Executor<'a> {
     pub fn def_prop_stmt_or_prop_without_meaning(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {        
         if tb.token_at_end_of_head() != COLON {
             return self.parse_def_prop_without_meaning_stmt(tb)
@@ -58,7 +58,7 @@ impl Parser {
         Ok(Stmt::DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt::new(name, params, Some(tb.line_file_index))))
     }
 
-    pub fn def_let_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_def_let_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(LET)?;
         let mut param_def: Vec<ParamDefWithParamType> = vec![];
         loop {

@@ -1,11 +1,11 @@
 use crate::common::keywords::EVAL;
-use super::Parser;
+use crate::execute::Executor;
 use super::TokenBlock;
 use crate::error::ParsingError;
 use crate::stmt::Stmt;
 use crate::stmt::eval_stmt::EvalStmt;
 
-impl Parser {
+impl<'a> Executor<'a> {
     pub fn eval_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(EVAL)?;
         let obj = self.parse_obj(tb)?;

@@ -4,7 +4,7 @@ use crate::common::keywords::{
     CASE, CASES, COLON, COMMA, CONTRA, ENUM, EQUAL, EQUAL_SET, FOR, FROM, IMPOSSIBLE, INDUC, PROVE,
     RIGHT_ARROW, VIEW_FN_AS_SET,
 };
-use super::Parser;
+use crate::execute::Executor;
 use crate::stmt::proof_technique_stmt::{
     ClosedRangeOrRange, ProveByContradictionStmt, ProveByEnumerationStmt, ProveByEqualSetStmt,
     ProveByInductionStmt, ProveCaseByCaseStmt, ProveForStmt, ViewFnAsSetStmt,
@@ -12,7 +12,7 @@ use crate::stmt::proof_technique_stmt::{
 use crate::stmt::Stmt;
 use super::TokenBlock;
 
-impl Parser {
+impl<'a> Executor<'a> {
     pub fn prove_case_by_case_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(CASES)?;
         tb.skip_token(COLON)?;
