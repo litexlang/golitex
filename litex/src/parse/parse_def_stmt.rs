@@ -2,7 +2,6 @@ use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStructWithNoField
 use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
 use crate::error::ParsingError;
 use crate::stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
-use crate::common::helper::{duplicate_parameter_name_error_message, vec_has_duplicates};
 use crate::common::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, FN, HAVE, IF, LEFT_BRACE, LET, PROP, RETURN, RIGHT_BRACE, STRUCT};
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use crate::execute::Executor;
@@ -10,7 +9,7 @@ use crate::stmt::Stmt;
 use super::TokenBlock;
 
 impl<'a> Executor<'a> {
-    pub fn def_prop_stmt_or_prop_without_meaning(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {        
+    pub fn def_prop_stmt_or_prop_without_meaning(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {        
         if tb.token_at_end_of_head() != COLON {
             return self.parse_def_prop_without_meaning_stmt(tb)
         } else {
@@ -18,7 +17,14 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn parse_def_prop_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_def_prop_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        self.new_name_block();
+        let stmt = self.parse_def_prop_stmt_body(tb);
+        self.delete_name_block();
+        stmt
+    }
+
+    fn parse_def_prop_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
         tb.skip_token(LEFT_BRACE)?;
@@ -28,9 +34,7 @@ impl<'a> Executor<'a> {
         }
         tb.skip_token(RIGHT_BRACE)?;
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
-        if vec_has_duplicates(&all_param_names) {
-            return Err(ParsingError::new(duplicate_parameter_name_error_message("prop".to_string()), tb.line_file_index));
-        }
+        self.new_names(&all_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         let facts = self.parse_facts_in_body(tb)?;
         match facts.len() {
             0 => Ok(Stmt::DefPropStmt(DefPropStmt::new(name, param_defs, None, Some(tb.line_file_index)))),
@@ -38,7 +42,14 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn parse_def_prop_without_meaning_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_def_prop_without_meaning_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        self.new_name_block();
+        let stmt = self.parse_def_prop_without_meaning_stmt_body(tb);
+        self.delete_name_block();
+        stmt
+    }
+
+    fn parse_def_prop_without_meaning_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
         tb.skip_token(LEFT_BRACE)?;
@@ -51,14 +62,19 @@ impl<'a> Executor<'a> {
         }
         tb.skip_token(RIGHT_BRACE)?;
 
-        if vec_has_duplicates(&params) {
-            return Err(ParsingError::new(duplicate_parameter_name_error_message("prop without meaning".to_string()), tb.line_file_index));
-        }
+        self.new_names(&params).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
 
         Ok(Stmt::DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt::new(name, params, Some(tb.line_file_index))))
     }
 
-    pub fn parse_def_let_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_def_let_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        self.new_name_block();
+        let stmt = self.parse_def_let_stmt_body(tb);
+        self.delete_name_block();
+        stmt
+    }
+
+    fn parse_def_let_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(LET)?;
         let mut param_def: Vec<ParamDefWithParamType> = vec![];
         loop {
@@ -79,9 +95,7 @@ impl<'a> Executor<'a> {
             vec![]
         };
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_def);
-        if vec_has_duplicates(&all_param_names) {
-            return Err(ParsingError::new(duplicate_parameter_name_error_message("let".to_string()), tb.line_file_index));
-        }
+        self.new_names(&all_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
             facts,
@@ -90,7 +104,14 @@ impl<'a> Executor<'a> {
     }
 
     // return HaveObjInNonemptySetOrParamTypeStmt or HaveObjEqualStmt
-    pub fn have_obj_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn have_obj_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        self.new_name_block();
+        let stmt = self.have_obj_stmt_body(tb);
+        self.delete_name_block();
+        stmt
+    }
+
+    fn have_obj_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(HAVE)?;
         let mut param_defs: Vec<ParamDefWithParamType> = vec![];
         loop {
@@ -104,9 +125,7 @@ impl<'a> Executor<'a> {
             return Err(ParsingError::new("have expects at least one param type pair".to_string(), tb.line_file_index));
         }
         let have_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
-        if vec_has_duplicates(&have_param_names) {
-            return Err(ParsingError::new(duplicate_parameter_name_error_message("have".to_string()), tb.line_file_index));
-        }
+        self.new_names(&have_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
             Ok(Stmt::HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, Some(tb.line_file_index))))
@@ -121,7 +140,7 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn have_fn_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn have_fn_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(HAVE)?;
         tb.skip_token(FN)?;
         let name = tb.advance()?;
@@ -148,7 +167,7 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn have_exist(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn have_exist(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(HAVE)?;
 
         let mut equal_tos = vec![];
@@ -162,7 +181,14 @@ impl<'a> Executor<'a> {
         Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(equal_tos, true_fact, Some(tb.line_file_index))))
     }
 
-    pub fn def_struct_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        self.new_name_block();
+        let stmt = self.def_struct_stmt_body(tb);
+        self.delete_name_block();
+        stmt
+    }
+
+    fn def_struct_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(STRUCT)?;
         let name = tb.advance()?;
         tb.skip_token(LEFT_BRACE)?;
@@ -174,9 +200,7 @@ impl<'a> Executor<'a> {
             }
         }
         let struct_param_names = ParamDefWithParamType::collect_param_names(&params_def_with_type);
-        if vec_has_duplicates(&struct_param_names) {
-            return Err(ParsingError::new(duplicate_parameter_name_error_message("struct".to_string()), tb.line_file_index));
-        }
+        self.new_names(&struct_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         let dom_facts = if tb.current()? == COLON {
             tb.skip_token(COLON)?;
             let mut facts = vec![];
@@ -245,7 +269,7 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn def_algorithm_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn def_algorithm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(ALGO)?;
         let name = tb.advance()?;
         tb.skip_token(LEFT_BRACE)?;
@@ -280,7 +304,7 @@ impl<'a> Executor<'a> {
     }
 
     /// head 里是 if and_spec_fact :，body 有且只有一个块，即 return obj。
-    fn parse_algo_if(&self, block: &mut TokenBlock) -> Result<AlgoIf, ParsingError> {
+    fn parse_algo_if(&mut self, block: &mut TokenBlock) -> Result<AlgoIf, ParsingError> {
         block.skip_token(IF)?;
         let condition = self.parse_and_chain_atomic_fact(block)?;
         block.skip_token(COLON)?;
@@ -302,7 +326,7 @@ impl<'a> Executor<'a> {
     }
 
     /// head 里是 return，后跟 obj。
-    fn parse_algo_return(&self, block: &mut TokenBlock) -> Result<AlgoReturn, ParsingError> {
+    fn parse_algo_return(&mut self, block: &mut TokenBlock) -> Result<AlgoReturn, ParsingError> {
         block.skip_token(RETURN)?;
         let value = self.parse_obj(block)?;
         Ok(AlgoReturn::new(value, Some(block.line_file_index)))

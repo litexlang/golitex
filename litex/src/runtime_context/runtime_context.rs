@@ -208,23 +208,22 @@ impl<'a> RuntimeContext<'a> {
 
     pub fn cache_well_defined_obj_contains(&self, key: &str) -> bool {
         for env in self.iter_environments_from_top() {
-            if env.cache_well_defined_obj_except_fn_set_with_dom_and_set_builder.contains_key(key) {
+            if env.cache_well_defined_obj.contains_key(key) {
                 return true;
             }
         }
-        self.builtin_environment.cache_well_defined_obj_except_fn_set_with_dom_and_set_builder.contains_key(key)
+        self.builtin_environment.cache_well_defined_obj.contains_key(key)
     }
 
-    /// Returns (is_ok, line_file): whether the fact is in cache, and its stored (line, file) if any.
-    pub fn cache_known_or_and_atomic_fact_contains(&self, key: &str) -> (bool, Option<(usize, usize)>) {
+    pub fn cache_known_facts_contains(&self, key: &str) -> (bool, Option<(usize, usize)>) {
         for env in self.iter_environments_from_top() {
-            if env.cache_known_or_and_chain_atomic_fact.contains_key(key) {
-                let line_file = env.cache_known_or_and_chain_atomic_fact.get(key).and_then(|v| *v);
+            if env.cache_known_fact.contains_key(key) {
+                let line_file = env.cache_known_fact.get(key).and_then(|v| *v);
                 return (true, line_file);
             }
         }
-        let is_ok = self.builtin_environment.cache_known_or_and_chain_atomic_fact.contains_key(key);
-        let line_file = self.builtin_environment.cache_known_or_and_chain_atomic_fact.get(key).and_then(|v| *v);
+        let is_ok = self.builtin_environment.cache_known_fact.contains_key(key);
+        let line_file = self.builtin_environment.cache_known_fact.get(key).and_then(|v| *v);
         (is_ok, line_file)
     }
 }

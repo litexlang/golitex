@@ -1,4 +1,4 @@
-use crate::common::helper::{duplicate_parameter_name_error_message, is_number_string_literally_integer_without_dot, vec_has_duplicates};
+use crate::common::helper::is_number_string_literally_integer_without_dot;
 use crate::common::keywords::{
     ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
 };
@@ -15,12 +15,12 @@ use crate::error::ParsingError;
 use crate::stmt::parameter_type_and_property::ParamDefWithParamSet;
 
 impl<'a> Executor<'a> {
-    pub fn parse_obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         self.obj_hierarchy0(tb)
     }
 
     /// 中缀 \ 最松散；往下依次为 +-、*/%、^、[]、主元
-    fn obj_hierarchy0(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn obj_hierarchy0(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj_hierarchy1(tb)?;
         if tb.exceed_end_of_head() {
             return Ok(left);
@@ -52,7 +52,7 @@ impl<'a> Executor<'a> {
     }
 
     /// + - 优先级最低，左结合，可连续 2 + 3 - 4
-    fn obj_hierarchy1(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn obj_hierarchy1(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let mut left = self.obj_hierarchy2(tb)?;
         loop {
             if tb.exceed_end_of_head() {
@@ -79,7 +79,7 @@ impl<'a> Executor<'a> {
     }
 
     /// * / % 高于 + -，左结合
-    fn obj_hierarchy2(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn obj_hierarchy2(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let mut left = self.obj_hierarchy3(tb)?;
         loop {
             if tb.exceed_end_of_head() {
@@ -122,7 +122,7 @@ impl<'a> Executor<'a> {
     }
 
     /// ^ 高于 * / %，右结合：2^3^2 = 2^(3^2)
-    fn obj_hierarchy3(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn obj_hierarchy3(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj_hierarchy4(tb)?;
         if tb.exceed_end_of_head() {
             return Ok(left);
@@ -142,7 +142,7 @@ impl<'a> Executor<'a> {
     }
 
     /// [] 下标，优先级高于 ^
-    fn obj_hierarchy4(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn obj_hierarchy4(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let left = self.obj_hierarchy5(tb)?;
         if tb.exceed_end_of_head() {
             return Ok(left);
@@ -159,7 +159,7 @@ impl<'a> Executor<'a> {
     }
 
     /// 主元：{ }、@、fn、数字、括号、关键字、atom
-    fn obj_hierarchy5(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         match tb.current_token_empty_if_exceed_end_of_head() {
             LEFT_CURLY_BRACE => {
                 self.set_builder_or_set_list(tb)
@@ -177,12 +177,12 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn fn_set_obj(&self, tb: &mut TokenBlock) -> Result<FnSetObj, ParsingError> {
+    pub fn fn_set_obj(&mut self, tb: &mut TokenBlock) -> Result<FnSetObj, ParsingError> {
         tb.skip_token(FN)?;
         self.fn_set_obj_without_prefix_fn(tb)
     }
 
-    pub fn fn_set_obj_without_prefix_fn(&self, tb: &mut TokenBlock) -> Result<FnSetObj, ParsingError> {
+    pub fn fn_set_obj_without_prefix_fn(&mut self, tb: &mut TokenBlock) -> Result<FnSetObj, ParsingError> {
         if tb.current()? != LEFT_BRACE {
             return Err(ParsingError::new("Expected left brace".to_string(), tb.line_file_index));
         }
@@ -210,7 +210,14 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn fn_set_with_dom_without_fn_prefix(&self, tb: &mut TokenBlock) -> Result<FnSetWithDom, ParsingError> {
+    pub fn fn_set_with_dom_without_fn_prefix(&mut self, tb: &mut TokenBlock) -> Result<FnSetWithDom, ParsingError> {
+        self.new_name_block();
+        let fn_set = self.fn_set_with_dom_without_fn_prefix_body(tb);
+        self.delete_name_block();
+        fn_set
+    }
+
+    fn fn_set_with_dom_without_fn_prefix_body(&mut self, tb: &mut TokenBlock) -> Result<FnSetWithDom, ParsingError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_set: Vec<ParamDefWithParamSet> = vec![];
         loop {
@@ -223,9 +230,7 @@ impl<'a> Executor<'a> {
             tb.skip_token(COMMA)?;
         }
         let fn_set_param_names = ParamDefWithParamSet::collect_param_names(&params_def_with_set);
-        if vec_has_duplicates(&fn_set_param_names) {
-            return Err(ParsingError::new(duplicate_parameter_name_error_message("fn set".to_string()), tb.line_file_index));
-        }
+        self.new_names(&fn_set_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         tb.skip_token(COLON)?;
         let mut dom_facts = vec![self.parse_or_and_chain_atomic_fact(tb)?];
         while tb.current()? == COMMA {
@@ -237,7 +242,7 @@ impl<'a> Executor<'a> {
         Ok(FnSetWithDom::new(params_def_with_set, dom_facts, ret_set))
     }
 
-    pub fn fn_set_without_dom_without_fn_prefix(&self, tb: &mut TokenBlock) -> Result<FnSetWithoutDom, ParsingError> {
+    pub fn fn_set_without_dom_without_fn_prefix(&mut self, tb: &mut TokenBlock) -> Result<FnSetWithoutDom, ParsingError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut param_sets = vec![self.parse_obj(tb)?];
         while tb.current()? == COMMA {
@@ -249,7 +254,7 @@ impl<'a> Executor<'a> {
         Ok(FnSetWithoutDom::new(param_sets, ret_set))
     }
 
-    pub fn number_or_primary_obj_or_fn_obj_with_minus_prefix(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    pub fn number_or_primary_obj_or_fn_obj_with_minus_prefix(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         if tb.current_token_empty_if_exceed_end_of_head() == SUB {
             tb.skip()?;
             let obj = self.number_or_primary_obj_or_fn_obj(tb)?;
@@ -260,7 +265,7 @@ impl<'a> Executor<'a> {
     }
 
     /// 若得到 atom，调用方再给其接若干 (args) 变成 FnObj。
-    fn number_or_primary_obj_or_fn_obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn number_or_primary_obj_or_fn_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let token = tb.current()?;
 
         // 0. (obj)
@@ -321,7 +326,7 @@ impl<'a> Executor<'a> {
     }
 
     /// 解析「主元」：当前 token 必须是单符号集合名、多元关键字、或普通标识符(atom)。
-    fn parse_primary_obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn parse_primary_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         let tok = tb.current()?;
 
         // 单符号集合（无参）
@@ -473,7 +478,7 @@ impl<'a> Executor<'a> {
         Ok(Obj::from(atom))
     }
 
-    pub fn braced_objs(&self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
+    pub fn braced_objs(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut objs = vec![self.parse_obj(tb)?];
         while tb.current()? == COMMA {
@@ -485,7 +490,7 @@ impl<'a> Executor<'a> {
     }
 
     /// 解析逗号分隔的 obj 列表，直到遇到非 COMMA 的 token（如 COLON）。
-    pub fn obj_list(&self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
+    pub fn obj_list(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
         let mut objs = vec![self.parse_obj(tb)?];
         while tb.current()? == COMMA {
             tb.skip_token(COMMA)?;
@@ -494,7 +499,7 @@ impl<'a> Executor<'a> {
         Ok(objs)
     }
 
-    fn set_builder_or_set_list(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn set_builder_or_set_list(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         tb.skip_token(LEFT_CURLY_BRACE)?;
         let left = self.parse_obj(tb)?;
         match left {
@@ -502,35 +507,50 @@ impl<'a> Executor<'a> {
                 if tb.current()? == COMMA || tb.current()? == RIGHT_CURLY_BRACE {
                     self.set_list(tb, Obj::Identifier(a))
                 } else {
-                    // 可能是 set builder "a S : ..." 或 list set "a b c"
-                    let second = self.parse_obj(tb)?;
-                    if tb.current()? == COLON {
-                        tb.skip_token(COLON)?;
-                        let mut facts = vec![];
-                        while tb.current()? != RIGHT_CURLY_BRACE {
-                            facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
-                        }
-                        tb.skip_token(RIGHT_CURLY_BRACE)?;
-                        Ok(Obj::SetBuilder(SetBuilder::new(a.name, second, facts)))
-                    } else {
-                        let mut objs = vec![Obj::Identifier(a), second];
-                        while tb.current()? != RIGHT_CURLY_BRACE {
-                            if tb.current()? == COMMA {
-                                tb.skip_token(COMMA)?;
-                            }
-                            objs.push(self.parse_obj(tb)?);
-                        }
-                        tb.skip_token(RIGHT_CURLY_BRACE)?;
-                        Ok(Obj::ListSet(ListSet::new(objs)))
-                    }
+                    self.parse_set_builder(tb, a)
                 }
             }
             _ => self.set_list(tb, left),
         }
     }
 
+    /// Parse set builder or list set after the first identifier; wraps body in a name block for the bound variable.
+    fn parse_set_builder(&mut self, tb: &mut TokenBlock, a: Identifier) -> Result<Obj, ParsingError> {
+        self.new_name_block();
+        let result = self.parse_set_builder_body(tb, a);
+        self.delete_name_block();
+        result
+    }
+
+    /// Parse after first identifier: either "S : fact1, fact2" (SetBuilder) or "b c" (ListSet).
+    fn parse_set_builder_body(&mut self, tb: &mut TokenBlock, a: Identifier) -> Result<Obj, ParsingError> {
+        let names = vec![a.name.clone()];
+        self.new_names(&names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
+        
+        let second = self.parse_obj(tb)?;
+        if tb.current()? == COLON {
+            tb.skip_token(COLON)?;
+            let mut facts = vec![];
+            while tb.current()? != RIGHT_CURLY_BRACE {
+                facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
+            }
+            tb.skip_token(RIGHT_CURLY_BRACE)?;
+            Ok(Obj::SetBuilder(SetBuilder::new(a.name, second, facts)))
+        } else {
+            let mut objs = vec![Obj::Identifier(a), second];
+            while tb.current()? != RIGHT_CURLY_BRACE {
+                if tb.current()? == COMMA {
+                    tb.skip_token(COMMA)?;
+                }
+                objs.push(self.parse_obj(tb)?);
+            }
+            tb.skip_token(RIGHT_CURLY_BRACE)?;
+            Ok(Obj::ListSet(ListSet::new(objs)))
+        }
+    }
+
     /// ListSet: { a b c } 或 { 1, 0, 2 }；遇逗号先 skip 再解析下一项
-    fn set_list(&self, tb: &mut TokenBlock, left_most_obj: Obj) -> Result<Obj, ParsingError> {
+    fn set_list(&mut self, tb: &mut TokenBlock, left_most_obj: Obj) -> Result<Obj, ParsingError> {
         let mut objs = vec![left_most_obj];
         while tb.current()? != RIGHT_CURLY_BRACE {
             tb.skip_token(COMMA)?;
@@ -540,7 +560,7 @@ impl<'a> Executor<'a> {
         Ok(Obj::ListSet(ListSet::new(objs)))
     }
 
-    fn instantiated_struct_obj(&self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+    fn instantiated_struct_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         tb.skip_token(INST_STRUCT_OBJ_SIGN)?;
         let name = self.identifier_or_identifier_with_mod(tb)?;
         let args = self.braced_objs(tb)?;
