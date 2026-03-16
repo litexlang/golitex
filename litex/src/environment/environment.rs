@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fmt;
+use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
 use crate::fact::Fact;
 use crate::stmt::definition_stmt::{DefPropStmt, DefPropWithoutMeaningStmt};
@@ -36,9 +37,9 @@ pub struct Environment {
     
     pub known_exist_facts: HashMap<String, Vec<ExistFact>>,
     pub known_or_facts: HashMap<String, Vec<OrFact>>,
-    pub known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>,
-    pub known_exist_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>,
-    pub known_or_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>,
+    pub known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>,
+    pub known_exist_facts_in_forall_facts: HashMap<String, Vec<(ExistFact, Rc<KnownForallFactParamsAndDom>)>>,
+    pub known_or_facts_in_forall_facts: HashMap<String, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>,
     pub known_obj_is_well_defined: HashMap<String,()>,
     pub known_atom_in_fn_set: HashMap<String, FnSetObj>,
 
@@ -47,7 +48,7 @@ pub struct Environment {
 }
 
 impl Environment {
-    pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, structs_with_fields: HashMap<String, DefStructWithFieldsStmt>, structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>, props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>, algorithms: HashMap<String, DefAlgoStmt>, known_equality: HashMap<String, Rc<Vec<Obj>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts_with_0_or_more_than_2_args: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, ()>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), ()>>, known_exist_facts: HashMap<String, Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(usize, Rc<ForallFact>)>>, known_exist_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(usize, Rc<ForallFact>)>>, known_obj_is_well_defined: HashMap<String,()>, known_atom_in_fn_set: HashMap<String, FnSetObj>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, Option<(usize, usize)>>) -> Self {
+    pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, structs_with_fields: HashMap<String, DefStructWithFieldsStmt>, structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>, props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>, algorithms: HashMap<String, DefAlgoStmt>, known_equality: HashMap<String, Rc<Vec<Obj>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts_with_0_or_more_than_2_args: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, ()>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), ()>>, known_exist_facts: HashMap<String, Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>, known_exist_facts_in_forall_facts: HashMap<String, Vec<(ExistFact, Rc<KnownForallFactParamsAndDom>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>, known_obj_is_well_defined: HashMap<String,()>, known_atom_in_fn_set: HashMap<String, FnSetObj>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, Option<(usize, usize)>>) -> Self {
         Environment {
             defined_identifier_objs: objs,
             defined_props: props,
@@ -155,66 +156,68 @@ impl Environment {
         Ok(())
     }
 
-    fn store_atomic_fact_in_forall_fact(&mut self, atomic_fact_ref: &AtomicFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
+    fn store_atomic_fact_in_forall_fact(&mut self, atomic_fact_ref: &AtomicFact, forall_params_and_dom: Rc<KnownForallFactParamsAndDom>) -> Result<(), StoreFactError> {
         let key = atomic_fact_ref.key();
         let is_true = atomic_fact_ref.is_true();
         if let Some(vec_ref) = self.known_atomic_facts_in_forall_facts.get_mut(&(key.clone(), is_true)) {
-            vec_ref.push((index, forall_fact));
+            vec_ref.push((atomic_fact_ref.clone(), forall_params_and_dom));
         } else {
-            self.known_atomic_facts_in_forall_facts.insert((key, is_true), vec![(index, forall_fact)]);
+            self.known_atomic_facts_in_forall_facts.insert((key, is_true), vec![(atomic_fact_ref.clone(), forall_params_and_dom)]);
         }
         Ok(())
     }
 
-    fn store_or_fact_in_forall_fact(&mut self, or_fact: &OrFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
+    fn store_or_fact_in_forall_fact(&mut self, or_fact: &OrFact, forall_params_and_dom: Rc<KnownForallFactParamsAndDom>) -> Result<(), StoreFactError> {
         let key = or_fact.key();
         if let Some(vec_ref) = self.known_or_facts_in_forall_facts.get_mut(&key) {
-            vec_ref.push((index, forall_fact));
+            vec_ref.push((or_fact.clone(), forall_params_and_dom));
         } else {
-            self.known_or_facts_in_forall_facts.insert(key, vec![(index, forall_fact)]);
+            self.known_or_facts_in_forall_facts.insert(key, vec![(or_fact.clone(), forall_params_and_dom)]);
         }
         Ok(())
     }
 
-    fn store_a_fact_in_forall_fact(&mut self, fact: &ExistOrAndChainAtomicFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
+    fn store_a_fact_in_forall_fact(&mut self, fact: &ExistOrAndChainAtomicFact, forall_params_and_dom: Rc<KnownForallFactParamsAndDom>) -> Result<(), StoreFactError> {
         match fact {
             ExistOrAndChainAtomicFact::AtomicFact(spec_fact) => {
-                self.store_atomic_fact_in_forall_fact(&spec_fact, index, forall_fact)
+                self.store_atomic_fact_in_forall_fact(&spec_fact, forall_params_and_dom)
             }
-            ExistOrAndChainAtomicFact::OrFact(or_fact) => self.store_or_fact_in_forall_fact(&or_fact, index, forall_fact),
-            ExistOrAndChainAtomicFact::AndFact(and_fact) => self.store_and_fact_in_forall_fact(&and_fact, index, forall_fact),
-            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => self.store_chain_fact_in_forall_fact(&chain_fact, index, forall_fact),
-            ExistOrAndChainAtomicFact::ExistFact(exist_fact) => self.store_exist_fact_in_forall_fact(&exist_fact, index, forall_fact),
+            ExistOrAndChainAtomicFact::OrFact(or_fact) => self.store_or_fact_in_forall_fact(&or_fact, forall_params_and_dom),
+            ExistOrAndChainAtomicFact::AndFact(and_fact) => self.store_and_fact_in_forall_fact(&and_fact, forall_params_and_dom),
+            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => self.store_chain_fact_in_forall_fact(&chain_fact, forall_params_and_dom),
+            ExistOrAndChainAtomicFact::ExistFact(exist_fact) => self.store_exist_fact_in_forall_fact(&exist_fact, forall_params_and_dom),
         }
     }
 
-    fn store_chain_fact_in_forall_fact(&mut self, chain_fact: &ChainFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
+    fn store_chain_fact_in_forall_fact(&mut self, chain_fact: &ChainFact, forall_params_and_dom: Rc<KnownForallFactParamsAndDom>) -> Result<(), StoreFactError> {
         for fact in chain_fact.facts()?.iter() {
-            self.store_a_fact_in_forall_fact(&ExistOrAndChainAtomicFact::AtomicFact(fact.clone()), index, forall_fact.clone())?;
+            self.store_a_fact_in_forall_fact(&ExistOrAndChainAtomicFact::AtomicFact(fact.clone()), forall_params_and_dom.clone())?;
         }
         Ok(())
     }
 
-    fn store_exist_fact_in_forall_fact(&mut self, exist_fact: &ExistFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
+    fn store_exist_fact_in_forall_fact(&mut self, exist_fact: &ExistFact, forall_params_and_dom: Rc<KnownForallFactParamsAndDom>) -> Result<(), StoreFactError> {
         let key = exist_fact.key();
         if let Some(vec_ref) = self.known_exist_facts_in_forall_facts.get_mut(&key) {
-            vec_ref.push((index, forall_fact));
+            vec_ref.push((exist_fact.clone(), forall_params_and_dom));
         } else {
-            self.known_exist_facts_in_forall_facts.insert(key, vec![(index, forall_fact)]);
+            self.known_exist_facts_in_forall_facts.insert(key, vec![(exist_fact.clone(), forall_params_and_dom)]);
         }
         Ok(())
     }
 
-    fn store_and_fact_in_forall_fact(&mut self, and_fact: &AndFact, index: usize, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
+    fn store_and_fact_in_forall_fact(&mut self, and_fact: &AndFact, forall_params_and_dom: Rc<KnownForallFactParamsAndDom>) -> Result<(), StoreFactError> {
         for fact in and_fact.facts.iter() {
-            self.store_a_fact_in_forall_fact(&ExistOrAndChainAtomicFact::AtomicFact(fact.clone()), index, forall_fact.clone())?;
+            self.store_a_fact_in_forall_fact(&ExistOrAndChainAtomicFact::AtomicFact(fact.clone()), forall_params_and_dom.clone())?;
         }
         Ok(())
     }
 
     fn store_forall_fact(&mut self, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
-        for (index, fact) in forall_fact.then_facts.iter().enumerate() {
-            self.store_a_fact_in_forall_fact(fact, index, forall_fact.clone())?;
+        let forall_params_and_dom = Rc::new(KnownForallFactParamsAndDom::new(forall_fact.params_def_with_type.clone(), forall_fact.dom_facts.clone(), forall_fact.line_file_index));
+        
+        for fact in forall_fact.then_facts.iter() {
+            self.store_a_fact_in_forall_fact(fact, forall_params_and_dom.clone())?;
         }
         Ok(())
     }
@@ -334,3 +337,16 @@ impl Environment {
         Ok(())
     }
 }
+
+pub struct KnownForallFactParamsAndDom {
+    pub params: Vec<ParamDefWithParamType>,
+    pub dom: Vec<ExistOrAndChainAtomicFact>,
+    pub line_file: Option<(usize, usize)>,
+}
+
+impl KnownForallFactParamsAndDom {
+    pub fn new(params: Vec<ParamDefWithParamType>, dom: Vec<ExistOrAndChainAtomicFact>, line_file: Option<(usize, usize)>) -> Self {
+        KnownForallFactParamsAndDom { params, dom, line_file }
+    }
+}
+
