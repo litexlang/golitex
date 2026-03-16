@@ -5,7 +5,7 @@ use crate::stmt::Stmt;
 use super::TokenBlock;
 
 impl<'a> Executor<'a> {
-    pub fn parse_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         match tb.current()? {
             PROP => self.def_prop_stmt_or_prop_without_meaning(tb),
             LET => self.parse_def_let_stmt(tb),

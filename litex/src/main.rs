@@ -1212,7 +1212,7 @@ fn try_parse_obj() {
     let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
     let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
-    let executor = Executor::new(&mut runtime_context);
+    let mut executor = Executor::new(&mut runtime_context);
     println!("{}", executor);
     let s = "a+b";
     let tokens = tokenize_line(s);
@@ -1227,7 +1227,7 @@ fn try_parse_fact() {
     let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
     let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
-    let executor = Executor::new(&mut runtime_context);
+    let mut executor = Executor::new(&mut runtime_context);
     println!("{}", executor);
     let s = "a+b=0";
     let tokens = tokenize_line(s);
@@ -1242,7 +1242,7 @@ fn try_parse_statements() {
     let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
     let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
-    let executor = Executor::new(&mut runtime_context);
+    let mut executor = Executor::new(&mut runtime_context);
     println!("{}", executor);
     let s = "a+b=0";
     let tokens = tokenize_line(s);

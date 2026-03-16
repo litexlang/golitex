@@ -12,14 +12,8 @@ use crate::execute::Executor;
 use crate::stmt::parameter_type_and_property::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
 use crate::common::helper::todo_error_message;
 
-// well-defined check for obj
 impl<'a> Executor<'a> {
-    /// If obj is cacheable (not FnSetWithDom or SetBuilder) and found in well-defined cache, returns Some(()).
     fn verify_obj_well_defined_from_cache_if_known(&self, obj: &Obj) -> Option<()> {
-        let use_cache = !matches!(obj, Obj::FnSetWithDom(_) | Obj::SetBuilder(_));
-        if !use_cache {
-            return None;
-        }
         let key = obj.to_string();
         if self.runtime_context.cache_well_defined_obj_contains(&key) {
             Some(())
@@ -88,7 +82,7 @@ impl<'a> Executor<'a> {
         }?;
 
         if use_cache {
-            self.runtime_context.top_level_env().cache_well_defined_obj_except_fn_set_with_dom_and_set_builder.insert(obj.to_string(), ());
+            self.runtime_context.top_level_env().cache_well_defined_obj.insert(obj.to_string(), ());
         }
         Ok(())
     }

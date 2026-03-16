@@ -42,8 +42,8 @@ pub struct Environment {
     pub known_obj_is_well_defined: HashMap<String,()>,
     pub known_atom_in_fn_set: HashMap<String, FnSetObj>,
 
-    pub cache_well_defined_obj_except_fn_set_with_dom_and_set_builder: HashMap<String, ()>,
-    pub cache_known_or_and_chain_atomic_fact: HashMap<String, Option<(usize, usize)>>,
+    pub cache_well_defined_obj: HashMap<String, ()>,
+    pub cache_known_fact: HashMap<String, Option<(usize, usize)>>,
 }
 
 impl Environment {
@@ -68,8 +68,8 @@ impl Environment {
             known_or_facts_in_forall_facts,
             known_obj_is_well_defined,
             known_atom_in_fn_set,
-            cache_well_defined_obj_except_fn_set_with_dom_and_set_builder: cache_known_valid_obj,
-            cache_known_or_and_chain_atomic_fact: cache_known_fact,
+            cache_well_defined_obj: cache_known_valid_obj,
+            cache_known_fact,
         }
     }
 }
@@ -95,8 +95,8 @@ impl fmt::Display for Environment {
         write!(f, "    known_or_facts_in_forall_facts: {:?}\n", self.known_or_facts_in_forall_facts.len())?;
         write!(f, "    known_obj_is_well_defined: {:?}\n", self.known_obj_is_well_defined.len())?;
         write!(f, "    known_obj_in_fn_set: {:?}\n", self.known_atom_in_fn_set.len())?;
-        write!(f, "    cache_known_valid_obj: {:?}\n", self.cache_well_defined_obj_except_fn_set_with_dom_and_set_builder.len())?;
-        write!(f, "    cache_known_fact: {:?}\n", self.cache_known_or_and_chain_atomic_fact.len())?;
+        write!(f, "    cache_known_valid_obj: {:?}\n", self.cache_well_defined_obj.len())?;
+        write!(f, "    cache_known_fact: {:?}\n", self.cache_known_fact.len())?;
         write!(f, "}}")
     }
 }
@@ -330,7 +330,7 @@ impl Environment {
 impl Environment {
     pub fn store_fact_to_cache_known_fact(&mut self, fact: &Fact) -> Result<(), StoreFactError> {
         let key = fact.to_string();
-        self.cache_known_or_and_chain_atomic_fact.insert(key, fact.line_file());
+        self.cache_known_fact.insert(key, fact.line_file());
         Ok(())
     }
 }

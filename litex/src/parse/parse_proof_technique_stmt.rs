@@ -13,7 +13,7 @@ use crate::stmt::Stmt;
 use super::TokenBlock;
 
 impl<'a> Executor<'a> {
-    pub fn prove_case_by_case_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn prove_case_by_case_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(CASES)?;
         tb.skip_token(COLON)?;
         if tb.body.is_empty() {
@@ -59,7 +59,7 @@ impl<'a> Executor<'a> {
         ))
     }
 
-    pub fn prove_by_contradiction_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn prove_by_contradiction_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(CONTRA)?;
         let to_prove = self.parse_exist_or_and_chain_atomic_fact(tb)?.to_fact();
         tb.skip_token(COLON)?;
@@ -82,7 +82,7 @@ impl<'a> Executor<'a> {
         ))
     }
 
-    pub fn prove_by_enumeration_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn prove_by_enumeration_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(ENUM)?;
         let mut params: Vec<String> = vec![];
         let mut param_sets: Vec<crate::obj::Obj> = vec![];
@@ -115,7 +115,7 @@ impl<'a> Executor<'a> {
         ))
     }
 
-    pub fn prove_by_induction_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn prove_by_induction_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(INDUC)?;
         let param = tb.advance()?;
         tb.skip_token(FROM)?;
@@ -138,7 +138,7 @@ impl<'a> Executor<'a> {
         ))
     }
 
-    pub fn prove_for_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn prove_for_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(FOR)?;
         let mut params: Vec<String> = vec![];
         let mut param_sets: Vec<ClosedRangeOrRange> = vec![];
@@ -222,7 +222,7 @@ impl<'a> Executor<'a> {
         )))
     }
 
-    pub fn prove_equal_set_by_def_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn prove_equal_set_by_def_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(EQUAL_SET)?;
         let left = self.parse_obj(tb)?;
         tb.skip_token(EQUAL)?;
@@ -234,7 +234,7 @@ impl<'a> Executor<'a> {
         ))
     }
 
-    pub fn view_fn_as_set_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn view_fn_as_set_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(VIEW_FN_AS_SET)?;
         let function = self.parse_obj(tb)?;
         Ok(Stmt::ViewFnAsSetStmt(ViewFnAsSetStmt::new(
