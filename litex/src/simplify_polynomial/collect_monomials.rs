@@ -83,6 +83,16 @@ pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOr
         }
     }
 
+    for (j, right_monomial) in right_monomial_collections.iter().enumerate() {
+        if already_processed_indexes.contains(&j) {
+            continue;
+        }
+        let negated_scalar = sub_decimal_str("0", &right_monomial.non_zero_scalar);
+        if let Some(m) = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(negated_scalar, right_monomial.ordered_operands.clone()) {
+            result.push(m);
+        }
+    }
+
     result
 }
 
@@ -131,6 +141,13 @@ pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOr
         if !already_pushed {
             result.push(left_monomial.clone())
         }
+    }
+
+    for (j, right_monomial) in right_monomial_collections.iter().enumerate() {
+        if already_processed_indexes.contains(&j) {
+            continue;
+        }
+        result.push(right_monomial.clone());
     }
 
     result

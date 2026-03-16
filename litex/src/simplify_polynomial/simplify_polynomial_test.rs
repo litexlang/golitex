@@ -36,41 +36,45 @@ fn test_collect_ordered_monomials_add_two_numbers() {
 
 #[test]
 fn test_collect_ordered_monomials_add_number_and_var() {
-    // 当前实现不展开裸 Identifier，1+x 只得到常数项
     let one_plus_x = Obj::Add(Add::new(mk_num("1".to_string()), mk_var("x".to_string()), false));
     let monomials = collect_monomials_in_obj(&one_plus_x);
-    assert_eq!(monomials.len(), 1);
-    assert_eq!(monomials[0].non_zero_scalar, "1");
-    assert!(monomials[0].ordered_operands.is_none());
+    assert_eq!(monomials.len(), 2, "1+x => constant 1 and monomial x");
+    let sorted = sort_monomials_for_test(monomials);
+    assert!(sorted[0].ordered_operands.is_none() || sorted[1].ordered_operands.is_none());
+    assert!(sorted.iter().any(|m| m.non_zero_scalar == "1" && m.ordered_operands.is_none()));
+    assert!(sorted.iter().any(|m| m.non_zero_scalar == "1" && m.key() == "x"));
 }
 
 #[test]
 fn test_collect_ordered_monomials_add_like_terms() {
-    // 当前实现不展开裸 Identifier，2x+3x 中 2x/3x 各返回 []，合并后为 []
     let x = mk_var("x".to_string());
     let two_x = Obj::Mul(Mul::new(mk_num("2".to_string()), x.clone(), false));
     let three_x = Obj::Mul(Mul::new(mk_num("3".to_string()), x.clone(), false));
     let two_x_plus_three_x = Obj::Add(Add::new(two_x, three_x, false));
     let monomials = collect_monomials_in_obj(&two_x_plus_three_x);
-    assert_eq!(monomials.len(), 0);
+    assert_eq!(monomials.len(), 1, "2x+3x => 5x");
+    assert_eq!(monomials[0].non_zero_scalar, "5");
+    assert_eq!(monomials[0].key(), "x");
 }
 
 #[test]
 fn test_collect_ordered_monomials_mul_number_and_var() {
-    // 当前实现：一边为数字时只展开另一边；裸 x 展开为 []，故 2*x => []
     let two_x = Obj::Mul(Mul::new(mk_num("2".to_string()), mk_var("x".to_string()), false));
     let monomials = collect_monomials_in_obj(&two_x);
-    assert_eq!(monomials.len(), 0);
+    assert_eq!(monomials.len(), 1, "2*x => 2x");
+    assert_eq!(monomials[0].non_zero_scalar, "2");
+    assert_eq!(monomials[0].key(), "x");
 }
 
 #[test]
 fn test_collect_ordered_monomials_mul_two_vars() {
-    // 当前实现：裸 x、y 展开为 []，x*y 两边都非数字 => []
     let x = mk_var("x".to_string());
     let y = mk_var("y".to_string());
-    let xy = Obj::Mul(Mul::new(x.clone(), y.clone(), false));
+    let xy = Obj::Mul(Mul::new(x, y, false));
     let monomials = collect_monomials_in_obj(&xy);
-    assert_eq!(monomials.len(), 0);
+    assert_eq!(monomials.len(), 1, "x*y => xy");
+    assert_eq!(monomials[0].non_zero_scalar, "1");
+    assert_eq!(monomials[0].key(), "x\ny");
 }
 
 #[test]
@@ -94,18 +98,84 @@ fn test_collect_ordered_monomials_pow_zero() {
 
 #[test]
 fn test_collect_ordered_monomials_pow_one() {
-    // 当前实现：x^1 的 base 为裸 x 展开为 []，故 result 为空
     let x = mk_var("x".to_string());
-    let x1 = Obj::Pow(Pow::new(x.clone(), mk_num("1".to_string()), false));
+    let x1 = Obj::Pow(Pow::new(x, mk_num("1".to_string()), false));
     let monomials = collect_monomials_in_obj(&x1);
-    assert_eq!(monomials.len(), 0);
+    assert_eq!(monomials.len(), 1, "x^1 => x");
+    assert_eq!(monomials[0].non_zero_scalar, "1");
+    assert_eq!(monomials[0].key(), "x");
 }
 
 #[test]
-fn test_collect_ordered_monomials_non_polynomial_returns_empty() {
+fn test_collect_ordered_monomials_non_polynomial_as_single_operand() {
     let list = Obj::ListSet(crate::obj::ListSet::new(vec![mk_num("1".to_string())]));
     let monomials = collect_monomials_in_obj(&list);
-    assert_eq!(monomials.len(), 0);
+    assert_eq!(monomials.len(), 1, "non-polynomial is wrapped as 1*obj by catch-all");
+}
+
+/// Sort monomials by canonical key (operand product string) so that comparison is deterministic.
+fn sort_monomials_for_test(mut monomials: Vec<MonomialWithNonZeroScalarAndOrderedOperands>) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
+    monomials.sort_by(|a, b| a.key().cmp(&b.key()));
+    monomials
+}
+
+#[test]
+fn test_collect_and_sort_a_plus_b() {
+    let a = mk_var("a".to_string());
+    let b = mk_var("b".to_string());
+    let a_plus_b = Obj::Add(Add::new(a, b, false));
+    let monomials = collect_monomials_in_obj(&a_plus_b);
+    let sorted = sort_monomials_for_test(monomials);
+    assert_eq!(sorted.len(), 2, "a+b should be two monomials");
+    assert_eq!(sorted[0].non_zero_scalar, "1");
+    assert_eq!(sorted[0].key(), "a");
+    assert_eq!(sorted[1].non_zero_scalar, "1");
+    assert_eq!(sorted[1].key(), "b");
+}
+
+#[test]
+fn test_collect_and_sort_a_plus_b_squared() {
+    let a = mk_var("a".to_string());
+    let b = mk_var("b".to_string());
+    let a_plus_b = Obj::Add(Add::new(a.clone(), b.clone(), false));
+    let a_plus_b_sq = Obj::Pow(Pow::new(a_plus_b, mk_num("2".to_string()), false));
+    let monomials = collect_monomials_in_obj(&a_plus_b_sq);
+    let sorted = sort_monomials_for_test(monomials);
+    assert_eq!(sorted.len(), 3, "(a+b)^2 should be a^2, 2ab, b^2");
+    assert_eq!(sorted[0].non_zero_scalar, "1");
+    assert_eq!(sorted[0].key(), "a\na");
+    assert_eq!(sorted[1].non_zero_scalar, "2");
+    assert_eq!(sorted[1].key(), "a\nb");
+    assert_eq!(sorted[2].non_zero_scalar, "1");
+    assert_eq!(sorted[2].key(), "b\nb");
+}
+
+#[test]
+fn test_collect_and_sort_a_times_b() {
+    let a = mk_var("a".to_string());
+    let b = mk_var("b".to_string());
+    let a_times_b = Obj::Mul(Mul::new(a, b, false));
+    let monomials = collect_monomials_in_obj(&a_times_b);
+    let sorted = sort_monomials_for_test(monomials);
+    assert_eq!(sorted.len(), 1);
+    assert_eq!(sorted[0].non_zero_scalar, "1");
+    assert_eq!(sorted[0].key(), "a\nb");
+}
+
+#[test]
+fn test_collect_and_sort_two_a_plus_three_b() {
+    let a = mk_var("a".to_string());
+    let b = mk_var("b".to_string());
+    let two_a = Obj::Mul(Mul::new(mk_num("2".to_string()), a, false));
+    let three_b = Obj::Mul(Mul::new(mk_num("3".to_string()), b, false));
+    let expr = Obj::Add(Add::new(two_a, three_b, false));
+    let monomials = collect_monomials_in_obj(&expr);
+    let sorted = sort_monomials_for_test(monomials);
+    assert_eq!(sorted.len(), 2);
+    assert_eq!(sorted[0].non_zero_scalar, "2");
+    assert_eq!(sorted[0].key(), "a");
+    assert_eq!(sorted[1].non_zero_scalar, "3");
+    assert_eq!(sorted[1].key(), "b");
 }
 
 #[test]
