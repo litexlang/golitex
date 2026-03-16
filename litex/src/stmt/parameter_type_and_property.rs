@@ -182,8 +182,8 @@ impl ParamDefWithParamSet {
 }
 
 impl ParamDefWithParamType {
-    pub fn facts_for_args_satisfy_param_def_with_type_vec(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Box<Obj>>) -> Result<Vec<Fact>, StmtError> {
-        let instantiated_types = ParamDefWithParamType::instantiate_param_def_with_type_one_by_one(param_defs, args)?;
+    pub fn facts_for_boxed_args_satisfy_param_def_with_type_vec(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Box<Obj>>) -> Result<Vec<Fact>, StmtError> {
+        let instantiated_types = ParamDefWithParamType::instantiate_param_def_with_type_one_by_one_boxed(param_defs, args)?;
         let flat_types = ParamDefWithParamType::flat_instantiated_types_for_args(param_defs, &instantiated_types);
         let mut facts = Vec::with_capacity(args.len());
         for (arg, param_type) in args.iter().zip(flat_types.iter()) {
@@ -191,6 +191,11 @@ impl ParamDefWithParamType {
             facts.push(ParamType::fact_for_obj(arg_obj, param_type));
         }
         Ok(facts)
+    }
+
+    pub fn facts_for_args_satisfy_param_def_with_type_vec(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Obj>) -> Result<Vec<Fact>, StmtError> {
+        let args_vec: Vec<Box<Obj>> = args.iter().map(|arg| Box::new(arg.clone())).collect();
+        Self::facts_for_boxed_args_satisfy_param_def_with_type_vec(param_defs, &args_vec)
     }
 
     
@@ -213,7 +218,7 @@ impl ParamDefWithParamType {
     }
 
     
-    fn instantiate_param_def_with_type_one_by_one(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Box<Obj>>) -> Result<Vec<ParamType>, StmtError> {
+    fn instantiate_param_def_with_type_one_by_one(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Obj>) -> Result<Vec<ParamType>, StmtError> {
         let total_param_count = Self::number_of_params_in_param_def_with_type_def(param_defs);
         if total_param_count != args.len() {
             return Err(StmtError::ExecError(ExecError::new(
@@ -239,12 +244,17 @@ impl ParamDefWithParamType {
             new_types.push(new_type);
             
             for param_name in param_def.0.iter() {
-                param_arg_map.insert(param_name.clone(), *args[arg_index].clone());
+                param_arg_map.insert(param_name.clone(), args[arg_index].clone());
                 arg_index += 1;
             }
         }
         
         Ok(new_types)
+    }
+
+    fn instantiate_param_def_with_type_one_by_one_boxed(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Box<Obj>>) -> Result<Vec<ParamType>, StmtError> {
+        let args_as_obj: Vec<Obj> = args.iter().map(|b| (**b).clone()).collect();
+        Self::instantiate_param_def_with_type_one_by_one(param_defs, &args_as_obj)
     }
 }
 
@@ -272,6 +282,48 @@ impl ParamDefWithParamType {
             }
         }
         names
+    }
+
+    /// Builds param_name -> Obj map from param_defs and args. Returns Some(map) if arg count matches
+    /// total param count, else None.
+    pub fn param_defs_and_args_to_param_to_arg_map(
+        param_defs: &Vec<ParamDefWithParamType>,
+        args: &Vec<Obj>,
+    ) -> Option<HashMap<String, Obj>> {
+        let param_names = Self::collect_param_names(param_defs);
+        if param_names.len() != args.len() {
+            return None;
+        }
+        let mut map = HashMap::new();
+        for (param_name, arg) in param_names.iter().zip(args.iter()) {
+            map.insert(param_name.clone(), arg.clone());
+        }
+        Some(map)
+    }
+
+    /// Builds param_name -> Obj map from param_defs and arg_map (param_name -> Vec<Obj>).
+    /// Returns Some(map) if every param has exactly one Obj (or we take first from non-empty vec),
+    /// and param count matches. Else None.
+    pub fn param_def_params_to_arg_map(
+        param_defs: &Vec<ParamDefWithParamType>,
+        arg_map: &HashMap<String, Vec<Obj>>,
+    ) -> Option<HashMap<String, Obj>> {
+        let param_names = Self::collect_param_names(param_defs);
+        let mut result = HashMap::new();
+        for param_name in param_names.iter() {
+            let objs_option = arg_map.get(param_name);
+            let objs = match objs_option {
+                Some(v) => v,
+                None => return None,
+            };
+            let first_obj = objs.first();
+            let obj = match first_obj {
+                Some(o) => o.clone(),
+                None => return None,
+            };
+            result.insert(param_name.clone(), obj);
+        }
+        Some(result)
     }
 }
 
