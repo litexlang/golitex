@@ -7,7 +7,6 @@ use crate::fact::{AtomicFact, ForallFact};
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult, StmtUnknown};
 use crate::verify::VerifyState;
 use crate::execute::Executor;
-use crate::environment::Environment;
 use crate::obj::{Identifier, Obj, FnObj};
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use std::result::Result;
@@ -17,33 +16,26 @@ impl<'a> Executor<'a> {
         let key = atomic_fact.key();
         let is_true = atomic_fact.is_true();
 
+        let mut known_facts = Vec::new();
         for current_env in self.runtime_context.environments.iter().rev() {
-            if let Some(atomic_fact_in_known_forall_facts) = current_env.known_atomic_facts_in_forall_facts.get(&(key.clone(), is_true)).cloned() {
-                let result_in_env = self.match_atomic_fact_with_known_forall_in_single_env(
-                    atomic_fact_in_known_forall_facts,
-                    atomic_fact,
-                    verify_state)?;
-                if let Some(fact_verified) = result_in_env {
-                    return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
-                }
+            if let Some(atomic_fact_in_known_forall_facts) = current_env.known_atomic_facts_in_forall_facts.get(&(key.clone(), is_true)) {
+                known_facts.extend(atomic_fact_in_known_forall_facts.iter().rev().cloned());
             }
         }
 
-        if let Some(atomic_fact_in_known_forall_facts) = self.runtime_context.builtin_environment.known_atomic_facts_in_forall_facts.get(&(key.clone(), is_true)).cloned() {
-            let result_in_builtin = self.match_atomic_fact_with_known_forall_in_single_env(
-                atomic_fact_in_known_forall_facts,
-                atomic_fact,
-                verify_state)?;
-            if let Some(fact_verified) = result_in_builtin {
-                return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
-            }
+        let result_in_env = self.match_atomic_fact_with_known_forall_facts(
+            known_facts,
+            atomic_fact,
+            verify_state)?;
+        if let Some(fact_verified) = result_in_env {
+            return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
         }
 
         return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
     }
 
-    fn match_atomic_fact_with_known_forall_in_single_env(
-        &self,
+    fn match_atomic_fact_with_known_forall_facts(
+        &mut self,
         forall_entries: Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
@@ -57,66 +49,116 @@ impl<'a> Executor<'a> {
                     verify_state,
                 )?;
             if let Some(arg_map) = match_result {
-                let param_names = ParamDefWithParamType::collect_param_names(&forall_rc.params);
-
-                let mut all_params_covered = true;
-                let mut index = 0;
-                while index < param_names.len() {
-                    let param_name = &param_names[index];
-                    if !arg_map.contains_key(param_name) {
-                        all_params_covered = false;
-                        break;
-                    }
-                    index += 1;
+                if let Some(fact_verified) = self.try_verify_with_single_forall_entry(
+                    atomic_fact_in_known_forall_fact,
+                    forall_rc,
+                    arg_map,
+                    atomic_fact,
+                    verify_state,
+                )? {
+                    return Ok(Some(fact_verified));
                 }
-
-                if !all_params_covered {
-                    continue;
-                }
-
-                let mut all_equalities_ok = true;
-                let mut i = 0;
-                while i < param_names.len() {
-                    let param_name = &param_names[i];
-                    let objs_option = arg_map.get(param_name);
-                    let objs = match objs_option {
-                        Some(v) => v,
-                        None => {
-                            all_equalities_ok = false;
-                            break;
-                        }
-                    };
-
-                    let equal_ok = self.verify_atom_in_atomic_fact_in_known_forall_fact_matches_equal_objects(
-                        objs,
-                        verify_state,
-                    )?;
-                    if !equal_ok {
-                        all_equalities_ok = false;
-                        break;
-                    }
-
-                    i += 1;
-                }
-
-                if !all_equalities_ok {
-                    continue;
-                }
-
-                let fact_string = atomic_fact.to_string();
-
-                let verified_by_known_forall_fact = ForallFact::new(forall_rc.params.clone(), forall_rc.dom.clone(), vec![ExistOrAndChainAtomicFact::AtomicFact(atomic_fact_in_known_forall_fact.clone())], forall_rc.line_file.clone());
-                
-                let fact_verified = FactVerifiedByFact::new(
-                    fact_string,
-                    verified_by_known_forall_fact.to_string(),
-                    verified_by_known_forall_fact.line_file_index,
-                );
-                return Ok(Some(fact_verified));
             }
         }
 
         Ok(None)
+    }
+
+    fn try_verify_with_single_forall_entry(
+        &mut self,
+        atomic_fact_in_known_forall_fact: &AtomicFact,
+        forall_rc: &Rc<KnownForallFactParamsAndDom>,
+        arg_map: HashMap<String, Vec<Obj>>,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
+        let param_names = ParamDefWithParamType::collect_param_names(&forall_rc.params);
+
+        let mut all_params_covered = true;
+        let mut index = 0;
+        while index < param_names.len() {
+            let param_name = &param_names[index];
+            if !arg_map.contains_key(param_name) {
+                all_params_covered = false;
+                break;
+            }
+            index += 1;
+        }
+
+        if !all_params_covered {
+            return Ok(None);
+        }
+
+        let mut all_equalities_ok = true;
+        let mut i = 0;
+        while i < param_names.len() {
+            let param_name = &param_names[i];
+            let objs_option = arg_map.get(param_name);
+            let objs = match objs_option {
+                Some(v) => v,
+                None => {
+                    all_equalities_ok = false;
+                    break;
+                }
+            };
+
+            let equal_ok = self.verify_atom_in_atomic_fact_in_known_forall_fact_matches_equal_objects(
+                objs,
+                verify_state,
+            )?;
+            if !equal_ok {
+                all_equalities_ok = false;
+                break;
+            }
+
+            i += 1;
+        }
+
+        if !all_equalities_ok {
+            return Ok(None);
+        }
+
+        let args_satisfy_param_types = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(&forall_rc.params, &atomic_fact.args())
+            .map_err(|e| VerifyError::new(e.error_body(), vec![e], None))?;
+
+        for fact in args_satisfy_param_types.iter() {
+            let result = self.verify_fact(fact, verify_state)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+        }
+
+        
+        let param_to_arg_map = match ParamDefWithParamType::param_def_params_to_arg_map(
+            &forall_rc.params,
+            &arg_map,
+        ) {
+            Some(m) => m,
+            None => return Ok(None),
+        };
+
+        for dom_fact in forall_rc.dom.iter() {
+            let instantiated_dom_fact = dom_fact.instantiate(&param_to_arg_map);
+            let fact = instantiated_dom_fact.to_fact();
+            let result = self.verify_fact(&fact, verify_state)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+        }
+
+        let fact_string = atomic_fact.to_string();
+        let verified_by_known_forall_fact = ForallFact::new(
+            forall_rc.params.clone(),
+            forall_rc.dom.clone(),
+            vec![ExistOrAndChainAtomicFact::AtomicFact(atomic_fact_in_known_forall_fact.clone())],
+            forall_rc.line_file.clone(),
+        );
+        let fact_verified = FactVerifiedByFact::new(
+            fact_string,
+            verified_by_known_forall_fact.to_string(),
+            verified_by_known_forall_fact.line_file_index,
+        );
+        Ok(Some(fact_verified))
     }
 
     fn verify_atom_in_atomic_fact_in_known_forall_fact_matches_equal_objects(
