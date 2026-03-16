@@ -1,14 +1,11 @@
 use std::collections::HashMap;
 use crate::obj::Obj;
-use crate::fact::Fact;
 use crate::fact::ExistOrAndChainAtomicFact;
 use crate::fact::AtomicFact;
 use crate::fact::ExistFact;
 use crate::fact::OrFact;
 use crate::fact::matchable_fact_with_atomic_fact_inside::AndFact;
 use crate::fact::matchable_fact_with_atomic_fact_inside::ChainFact;
-use crate::fact::ForallFact;
-use crate::fact::ForallFactWithIff;
 use crate::fact::{
     NormalAtomicFact,
     EqualFact,
@@ -322,65 +319,26 @@ impl NotSupersetFact {
 }
 
 impl ExistFact {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> ExistFact {
+    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> ExistFact {
         unreachable!("ExistFact::instantiate not implemented yet")
     }
 }
 
 impl OrFact {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> OrFact {
+    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> OrFact {
         unreachable!("OrFact::instantiate not implemented yet")
     }
 }
 
 impl AndFact {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> AndFact {
+    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> AndFact {
         unreachable!("AndFact::instantiate not implemented yet")
     }
 }
 
 impl ChainFact {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> ChainFact {
+    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> ChainFact {
         unreachable!("ChainFact::instantiate not implemented yet")
     }
 }
 
-impl ForallFact {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> ForallFact {
-        unreachable!("ForallFact::instantiate not implemented yet")
-    }
-}
-
-impl ForallFactWithIff {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> ForallFactWithIff {
-        unreachable!("ForallFactWithIff::instantiate not implemented yet")
-    }
-}
-
-impl Fact {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Fact {
-        match self {
-            Fact::AtomicFact(atomic_fact) => {
-                Fact::AtomicFact(atomic_fact.instantiate(param_to_arg_map))
-            }
-            Fact::ExistFact(exist_fact) => {
-                Fact::ExistFact(exist_fact.instantiate(param_to_arg_map))
-            }
-            Fact::OrFact(or_fact) => {
-                Fact::OrFact(or_fact.instantiate(param_to_arg_map))
-            }
-            Fact::AndFact(and_fact) => {
-                Fact::AndFact(and_fact.instantiate(param_to_arg_map))
-            }
-            Fact::ChainFact(chain_fact) => {
-                Fact::ChainFact(chain_fact.instantiate(param_to_arg_map))
-            }
-            Fact::ForallFact(forall_fact) => {
-                Fact::ForallFact(forall_fact.instantiate(param_to_arg_map))
-            }
-            Fact::ForallFactWithIff(forall_fact_with_iff) => {
-                Fact::ForallFactWithIff(forall_fact_with_iff.instantiate(param_to_arg_map))
-            }
-        }
-    }
-}
