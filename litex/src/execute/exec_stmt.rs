@@ -1,10 +1,10 @@
 use crate::error::{ExecError, StmtError};
 use crate::stmt::Stmt;
-use crate::result::NonErrStmtResult;
+use crate::result::NonErrStmtExecResult;
 use super::Executor;
 
 impl<'a> Executor<'a> {
-    pub fn stmt(&mut self, stmt: &Stmt) -> Result<NonErrStmtResult, StmtError> {
+    pub fn stmt(&mut self, stmt: &Stmt) -> Result<NonErrStmtExecResult, StmtError> {
         match stmt {
             Stmt::DefLetStmt(d) => self.def_let_stmt(d).map_err(StmtError::from),
             Stmt::DefPropStmt(d) => self.def_prop_stmt(d).map_err(StmtError::from),
@@ -38,7 +38,7 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn stmt_unsupported(line_file: Option<(usize, usize)>) -> Result<NonErrStmtResult, StmtError> {
+    pub fn stmt_unsupported(line_file: Option<(usize, usize)>) -> Result<NonErrStmtExecResult, StmtError> {
         Err(StmtError::ExecError(ExecError::new("不支持的语句类型".to_string(), vec![], line_file)))
     }
 }

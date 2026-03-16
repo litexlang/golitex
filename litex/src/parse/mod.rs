@@ -1,6 +1,3 @@
-mod parser;
-pub use parser::Parser;
-
 mod token_block;
 mod tokenizer;
 pub use token_block::TokenBlock;

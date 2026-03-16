@@ -1,11 +1,11 @@
 use crate::error::ParsingError;
 use crate::common::keywords::{COLON, EXIST, NONEMPTY_SET, WITNESS};
-use super::Parser;
+use crate::execute::Executor;
 use crate::stmt::Stmt;
 use super::TokenBlock;
 use crate::stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
 
-impl Parser {
+impl<'a> Executor<'a> {
     pub fn witness_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(WITNESS)?;
         if tb.current()? == EXIST {

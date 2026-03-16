@@ -5,12 +5,12 @@ use crate::fact::EqualFact;
 use crate::execute::Executor;
 use crate::result::StmtUnknown;
 use crate::error::VerifyError;
-use crate::result::NonErrStmtResult;
+use crate::result::NonErrStmtExecResult;
 use crate::result::FactVerifiedByBuiltinRules;
 use crate::verify::VerifyState;
 
 impl<'a> Executor<'a> {
-    pub fn verify_equal_fact(&mut self, equal_fact: &EqualFact, verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+    pub fn verify_equal_fact(&mut self, equal_fact: &EqualFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
         let mut result = self.verify_equality_by_builtin_rules(equal_fact)?;
         if result.is_true() {
             return Ok(result);
@@ -28,26 +28,26 @@ impl<'a> Executor<'a> {
             }
         }
         
-        Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
+        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    fn verify_equality_by_builtin_rules(&mut self, equal_fact: &EqualFact) -> Result<NonErrStmtResult, VerifyError> {
+    fn verify_equality_by_builtin_rules(&mut self, equal_fact: &EqualFact) -> Result<NonErrStmtExecResult, VerifyError> {
         if equal_fact.left.to_string() == equal_fact.right.to_string() {
-            return Ok(NonErrStmtResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "the same".to_string(), equal_fact.line_file_index)));
+            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "the same".to_string(), equal_fact.line_file_index)));
         }
         
         if equal_fact.left.two_objs_can_be_calculated_and_equal_by_calculation(&equal_fact.right) {
-            return Ok(NonErrStmtResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "calculation".to_string(), equal_fact.line_file_index)));
+            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "calculation".to_string(), equal_fact.line_file_index)));
         }
 
         if two_objs_equal_by_polynomial_simplification(&equal_fact.left, &equal_fact.right) {
-            return Ok(NonErrStmtResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "polynomial simplification".to_string(), equal_fact.line_file_index)));
+            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "polynomial simplification".to_string(), equal_fact.line_file_index)));
         }
 
-        Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
+        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    fn verify_equality_with_known_equalities(&mut self, equal_fact: &EqualFact, _verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+    fn verify_equality_with_known_equalities(&mut self, equal_fact: &EqualFact, _verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
         let left_string = equal_fact.left.to_string();
         let right_string = equal_fact.right.to_string();
 
@@ -63,7 +63,7 @@ impl<'a> Executor<'a> {
             return Ok(result);
         }
 
-        Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()))
+        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
     /// Collect (known_left, known_right) from each env in top-to-bottom order (last env first).
@@ -86,7 +86,7 @@ impl<'a> Executor<'a> {
         equal_fact: &EqualFact,
         known_objs_equal_to_left: Option<&Rc<Vec<Obj>>>,
         known_objs_equal_to_right: Option<&Rc<Vec<Obj>>>,
-    ) -> Result<Option<NonErrStmtResult>, VerifyError> {
+    ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
         match (known_objs_equal_to_left, known_objs_equal_to_right) {
             (None, None) => Ok(None),
             (Some(known_objs_equal_to_left), None) => {
@@ -121,9 +121,9 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn verify_equality_with_known_forall_facts(&mut self, equal_fact: &EqualFact, verify_state: &VerifyState) -> Result<NonErrStmtResult, VerifyError> {
+    fn verify_equality_with_known_forall_facts(&mut self, equal_fact: &EqualFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
         _ = verify_state;
         _ = equal_fact;
-        return Ok(NonErrStmtResult::StmtUnknown(StmtUnknown::new()));
+        return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
     }
 }

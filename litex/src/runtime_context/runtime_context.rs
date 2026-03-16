@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::obj::{Identifier, Atom};
 use crate::common::keywords::{MOD_SIGN, is_builtin_identifier_obj};
 use crate::error::StmtError;
-use crate::result::NonErrStmtResult;
+use crate::result::NonErrStmtExecResult;
 use crate::module_manager::ModuleManager;
 use crate::environment::Environment;
 use crate::stmt::definition_stmt::DefPropStmt;
@@ -231,7 +231,7 @@ impl<'a> RuntimeContext<'a> {
 
 impl<'a> RuntimeContext<'a> {
     /// Format result: when line_file is set, "Success on line N" (or "Success on line N, file PATH"); otherwise body only.
-    pub fn display_result(&self, result: &NonErrStmtResult) -> String {
+    pub fn display_result(&self, result: &NonErrStmtExecResult) -> String {
         if let Some((line, file_index)) = result.line_file() {
             let location = if file_index == 0 {
                 format!("Success on line {}", line)

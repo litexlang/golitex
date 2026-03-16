@@ -2,11 +2,11 @@ use crate::error::ParsingError;
 use crate::fact::Fact;
 use crate::stmt::know_stmt::KnowStmt;
 use crate::common::keywords::{COLON, COMMA, FORALL, KNOW};
-use super::Parser;
+use crate::execute::Executor;
 use crate::stmt::Stmt;
 use super::TokenBlock;
 
-impl Parser {
+impl<'a> Executor<'a> {
     pub fn know_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(KNOW)?;
         if tb.current()? == COLON {
