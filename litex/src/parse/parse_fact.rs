@@ -8,7 +8,6 @@ use crate::execute::Executor;
 use super::TokenBlock;
 use crate::error::{ParsingError, NewAtomicFactError};
 use crate::fact::Fact;
-use crate::common::helper::{duplicate_parameter_name_error_message, vec_has_duplicates};
 use crate::common::keywords::{
     COLON, COMMA, EQUIVALENT_SIGN, EXIST, FORALL, RIGHT_ARROW, ST, NOT, OR, AND,
     FACT_PREFIX, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE, is_comparison_str,
@@ -17,7 +16,7 @@ use crate::obj::IdentifierOrIdentifierWithMod;
 use crate::obj::Identifier;
 
 impl<'a> Executor<'a> {
-    pub fn parse_fact(&self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
+    pub fn parse_fact(&mut self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
         match tb.current()? {
             FORALL => self.parse_forall_or_forall_with_iff(tb),
             _ => {
@@ -28,16 +27,21 @@ impl<'a> Executor<'a> {
     }
 
     // fact_hierarchy 1
-    fn parse_forall_or_forall_with_iff(&self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
+    fn parse_forall_or_forall_with_iff(&mut self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
+        self.new_name_block();
+        let fact = self.parse_forall_or_forall_with_iff_body(tb);
+        self.delete_name_block();
+        fact
+    }
+
+    fn parse_forall_or_forall_with_iff_body(&mut self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
         tb.skip_token(FORALL)?;
         let mut param_def: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != COLON {
             param_def.push(self.parse_param_def_with_param_type(tb)?);
         }
         let forall_param_names = ParamDefWithParamType::collect_param_names(&param_def);
-        if vec_has_duplicates(&forall_param_names) {
-            return Err(ParsingError::new(duplicate_parameter_name_error_message("forall".to_string()), tb.line_file_index));
-        }
+        self.new_names(&forall_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         tb.skip_token(COLON)?;
 
         let last_body = tb.body.last().ok_or_else(|| {
@@ -50,7 +54,7 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn parse_forall_with_iff(&self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamType>) -> Result<Fact, ParsingError> {
+    fn parse_forall_with_iff(&mut self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamType>) -> Result<Fact, ParsingError> {
         if tb.body.len() < 2 {
             return Err(ParsingError::new("Expected at least 2 body blocks".to_string(), tb.line_file_index));
         }
@@ -89,7 +93,7 @@ impl<'a> Executor<'a> {
         Ok(Fact::ForallFactWithIff(ForallFactWithIff::new(forall_fact, iff_facts, Some(tb.line_file_index))))
     }
 
-    fn parse_forall(&self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamType>) -> Result<Fact, ParsingError> {
+    fn parse_forall(&mut self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamType>) -> Result<Fact, ParsingError> {
         let last_body = tb.body.last().ok_or_else(|| {
             ParsingError::new("Expected body".to_string(), tb.line_file_index)
         })?;
@@ -116,7 +120,7 @@ impl<'a> Executor<'a> {
     }
 
     // hierarchy 3: and 并列
-    pub fn parse_and_chain_atomic_fact(&self, tb: &mut TokenBlock) -> Result<AndChainAtomicFact, ParsingError> {
+    pub fn parse_and_chain_atomic_fact(&mut self, tb: &mut TokenBlock) -> Result<AndChainAtomicFact, ParsingError> {
         let first = self.parse_chain_atomic(tb, true)?;
 
         // 如果是chain，那直接返回
@@ -137,7 +141,14 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn parse_exist_fact(&self, tb: &mut TokenBlock) -> Result<ExistFact, ParsingError> {
+    pub fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<ExistFact, ParsingError> {
+        self.new_name_block();
+        let fact = self.parse_exist_fact_body(tb);
+        self.delete_name_block();
+        fact
+    }
+
+    fn parse_exist_fact_body(&mut self, tb: &mut TokenBlock) -> Result<ExistFact, ParsingError> {
         tb.skip_token(EXIST)?;
         let mut param_def: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != ST {
@@ -147,9 +158,8 @@ impl<'a> Executor<'a> {
             }
         }
         let exist_param_names = ParamDefWithParamType::collect_param_names(&param_def);
-        if vec_has_duplicates(&exist_param_names) {
-            return Err(ParsingError::new(duplicate_parameter_name_error_message("exist".to_string()), tb.line_file_index));
-        }
+        self.new_name_block();
+        self.new_names(&exist_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         tb.skip_token(ST)?;
 
         tb.skip_token(LEFT_CURLY_BRACE)?;
@@ -160,11 +170,12 @@ impl<'a> Executor<'a> {
         }
         tb.skip_token(RIGHT_CURLY_BRACE)?;
 
+        self.delete_name_block();
         let line = Some(tb.line_file_index);
         Ok(ExistFact::new(param_def, facts, line))
     }
 
-    pub fn parse_facts_in_body(&self, tb: &mut TokenBlock) -> Result<Vec<Fact>, ParsingError> 
+    pub fn parse_facts_in_body(&mut self, tb: &mut TokenBlock) -> Result<Vec<Fact>, ParsingError> 
     {
         let mut facts: Vec<Fact> = vec![];
         for block in tb.body.iter_mut() {
@@ -173,7 +184,7 @@ impl<'a> Executor<'a> {
         Ok(facts)
     }
 
-    pub fn parse_exist_or_and_chain_atomic_fact(&self, tb: &mut TokenBlock) -> Result<ExistOrAndChainAtomicFact, ParsingError> {
+    pub fn parse_exist_or_and_chain_atomic_fact(&mut self, tb: &mut TokenBlock) -> Result<ExistOrAndChainAtomicFact, ParsingError> {
         match tb.current()? {
             EXIST => {
                 let exist_fact = self.parse_exist_fact(tb)?;
@@ -188,7 +199,7 @@ impl<'a> Executor<'a> {
     }
 
     /// Parse a single atomic fact only: $prop(args) or obj op obj. Does not parse chain (obj op obj op obj).
-    pub fn parse_atomic_fact(&self, tb: &mut TokenBlock, is_true: bool) -> Result<AtomicFact, ParsingError> {
+    pub fn parse_atomic_fact(&mut self, tb: &mut TokenBlock, is_true: bool) -> Result<AtomicFact, ParsingError> {
         let line_file_index = Some(tb.line_file_index);
         if tb.current()? == FACT_PREFIX {
             tb.skip_token(FACT_PREFIX)?;
@@ -219,7 +230,7 @@ impl<'a> Executor<'a> {
         Ok(atomic)
     }
 
-    pub fn parse_or_and_chain_atomic_fact(&self, tb: &mut TokenBlock) -> Result<OrAndChainAtomicFact, ParsingError> {
+    pub fn parse_or_and_chain_atomic_fact(&mut self, tb: &mut TokenBlock) -> Result<OrAndChainAtomicFact, ParsingError> {
         let first = self.parse_and_chain_atomic_fact(tb)?;
         let mut list: Vec<AndChainAtomicFact> = vec![first];
         while !tb.exceed_end_of_head() && tb.current()? == OR {
@@ -237,7 +248,7 @@ impl<'a> Executor<'a> {
     }
 
     /// Parse chain (obj op obj op ...) or single atomic ($prop(args) or obj op obj). When is_true is false, only single atomic is allowed (negated).
-    pub fn parse_chain_atomic(&self, tb: &mut TokenBlock, is_true: bool) -> Result<ChainAtomicFact, ParsingError> {
+    pub fn parse_chain_atomic(&mut self, tb: &mut TokenBlock, is_true: bool) -> Result<ChainAtomicFact, ParsingError> {
         let line_file_index = Some(tb.line_file_index);
         if tb.current()? == FACT_PREFIX {
             tb.skip_token(FACT_PREFIX)?;

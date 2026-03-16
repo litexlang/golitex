@@ -1,6 +1,4 @@
-use std::collections::HashSet;
 use std::fmt::{self};
-use std::hash::Hash;
 use super::keywords::{LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_BRACE, RIGHT_CURLY_BRACE, DOT_AKA_FIELD_ACCESS_SIGN, COLON};
 
 pub fn braced_vec_to_string<T: fmt::Display>(vec: &Vec<T>) -> String {
@@ -61,22 +59,6 @@ pub fn brace_vec_colon_vec_to_string<T: fmt::Display, T2: fmt::Display>(left: &V
     } else {
         format!("{}{}", LEFT_BRACE, RIGHT_BRACE)
     }
-}
-
-/// Returns true if the slice has at least one duplicate element.
-pub fn vec_has_duplicates<T: Eq + Hash>(vec: &[T]) -> bool {
-    let mut seen = HashSet::new();
-    for item in vec.iter() {
-        if !seen.insert(item) {
-            return true;
-        }
-    }
-    false
-}
-
-/// Error message for duplicate parameter names in a given parse context (e.g. "prop", "forall", "exist").
-pub fn duplicate_parameter_name_error_message(context: String) -> String {
-    format!("duplicate parameter name in {}", context)
 }
 
 /// Standard TODO-style error message for unimplemented functionality.

@@ -6,7 +6,7 @@ use super::TokenBlock;
 use crate::stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
 
 impl<'a> Executor<'a> {
-    pub fn witness_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn witness_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(WITNESS)?;
         if tb.current()? == EXIST {
             self.witness_exist_fact(tb)
@@ -17,7 +17,7 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn witness_exist_fact(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn witness_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(EXIST)?;
         let equal_tos = self.obj_list(tb)?;
         tb.skip_token(COLON)?;
@@ -34,7 +34,7 @@ impl<'a> Executor<'a> {
         )))
     }
 
-    pub fn witness_nonempty_set(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn witness_nonempty_set(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(NONEMPTY_SET)?;
         let obj = self.parse_obj(tb)?;
         let set = self.parse_obj(tb)?;

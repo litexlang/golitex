@@ -7,7 +7,7 @@ use crate::execute::Executor;
 use super::TokenBlock;
 
 impl<'a> Executor<'a> {
-    pub fn claim_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn claim_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(CLAIM)?;
         if tb.current()? == COLON {
             Ok(Stmt::ClaimStmt(self.multiline_fact_claim(tb)?))
@@ -16,7 +16,7 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn multiline_fact_claim(&self, tb: &mut TokenBlock) -> Result<ClaimStmt, ParsingError> {
+    fn multiline_fact_claim(&mut self, tb: &mut TokenBlock) -> Result<ClaimStmt, ParsingError> {
         tb.skip_token(COLON)?;
         if tb.body.is_empty() {
             return Err(ParsingError::new("claim : expects at least one body block (=>: fact)".to_string(), tb.line_file_index));
@@ -44,7 +44,7 @@ impl<'a> Executor<'a> {
         Ok(ClaimStmt::new(fact, proof, Some(tb.line_file_index)))
     }
 
-    fn single_line_fact_claim(&self, tb: &mut TokenBlock) -> Result<ClaimStmt, ParsingError> {
+    fn single_line_fact_claim(&mut self, tb: &mut TokenBlock) -> Result<ClaimStmt, ParsingError> {
         let fact = self.parse_exist_or_and_chain_atomic_fact(tb)?.to_fact();
         tb.skip_token(COLON)?;
         let mut proof = Vec::new();

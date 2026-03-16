@@ -100,6 +100,7 @@ fn parse_block_error_message(e: &ParseBlockError) -> String {
         ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
         ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
         ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
+        ParseBlockError::NameAlreadyUsed(name) => format!("name {} is already used", name),
     }
 }
 
@@ -220,6 +221,7 @@ pub enum ParseBlockError {
     UnexpectedIndent(usize, usize),
     InconsistentIndent(usize, usize),
     MissingBody(usize, usize),
+    NameAlreadyUsed(String),
 }
 
 impl std::error::Error for ParseBlockError {}
@@ -237,6 +239,7 @@ impl ParseBlockError {
             ParseBlockError::UnexpectedIndent(line, file) => Some((*line, *file)),
             ParseBlockError::InconsistentIndent(line, file) => Some((*line, *file)),
             ParseBlockError::MissingBody(line, file) => Some((*line, *file)),
+            ParseBlockError::NameAlreadyUsed(_) => None,
         }
     }
 }
@@ -445,5 +448,18 @@ impl From<InferError> for ExecError {
     fn from(e: InferError) -> Self {
         let msg = e.msg.clone();
         ExecError::new(msg, vec![e.into()], None)
+    }
+}
+
+#[derive(Debug)]
+pub struct NameAlreadyUsedError {
+    pub name: String,
+}
+
+impl std::error::Error for NameAlreadyUsedError {}
+
+impl fmt::Display for NameAlreadyUsedError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "name {} is already used", self.name)
     }
 }
