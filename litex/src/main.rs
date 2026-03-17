@@ -203,11 +203,11 @@ fn try_stmt() {
     )))], Some((1, 0))));
     println!("{}", def_stmt);
 
-    let def_stmt2 = Stmt::DefPropStmt(DefPropStmt::new("f".to_string(), vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], Some(vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let def_stmt2 = Stmt::DefPropStmt(DefPropStmt::new("f".to_string(), vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Identifier::mk("p".to_string()),
         Identifier::mk("q".to_string()),
         Some((1, 0)),
-    )))]), Some((1, 0))));
+    )))], Some((1, 0))));
     println!("{}", def_stmt2);
 }
 
@@ -691,11 +691,11 @@ fn try_stmt_result() {
 
 fn try_definitions() {
     let params_def_with_type = vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))];
-    let def_prop_stmt = DefPropStmt::new("f".to_string(), params_def_with_type, Some(vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let def_prop_stmt = DefPropStmt::new("f".to_string(), params_def_with_type, vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Identifier::mk("p".to_string()),
         Identifier::mk("q".to_string()),
         Some((1, 0)),
-    )))]), Some((1, 0)));
+    )))], Some((1, 0)));
     println!("{}", def_prop_stmt);
 
     let def_let_param = vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))];
@@ -707,7 +707,7 @@ fn try_definitions() {
     println!("{}", def_let_stmt);
 
     let params_def_with_type2 = vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))];
-    let def_prop_stmt2 = DefPropStmt::new("f".to_string(), params_def_with_type2, None, Some((1, 0)));
+    let def_prop_stmt2 = DefPropStmt::new("f".to_string(), params_def_with_type2, vec![], Some((1, 0)));
     println!("{}", def_prop_stmt2);
 }
 

@@ -1,1 +1,8 @@
-+ = +
+prop p(x, y R):
+    x > y
+
+have a, b R
+
+know $p(a, b)
+
+a > b
