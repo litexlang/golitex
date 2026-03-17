@@ -590,31 +590,31 @@ fn try_errors() {
     println!("{}", _err);
 
     let err: StmtError = StmtError::ArithmeticError(ArithmeticError::new("demo".to_string(), None));
-    println!("{}: {}", err.display_label(), err.error_body());
+    println!("{}\n{}", err.display_label(), err.error_body());
 
     let err: StmtError = StmtError::NewAtomicFactError(NewAtomicFactError::new("demo".to_string(), None));
-    println!("{}: {}", err.display_label(), err.error_body());
+    println!("{}\n{}", err.display_label(), err.error_body());
 
     let err: StmtError = StmtError::StoreFactError(StoreFactError::new("demo".to_string(), None));
-    println!("{}: {}", err.display_label(), err.error_body());
+    println!("{}\n{}", err.display_label(), err.error_body());
 
     let err: StmtError = StmtError::ParseBlockError(ParseBlockError::ExpectedIndent(1, 0));
-    println!("{}: {}", err.display_label(), err.error_body());
+    println!("{}\n{}", err.display_label(), err.error_body());
 
     let err: StmtError = StmtError::ParsingError(ParsingError::new("demo".to_string(), (1, 0), None));
-    println!("{}: {}", err.display_label(), err.error_body());
+    println!("{}\n{}", err.display_label(), err.error_body());
 
     let err: StmtError = StmtError::ExecError(ExecError::new( "".to_string(),"demo".to_string(), None, Some((1, 0))));
-    println!("{}: {}", err.display_label(), err.error_body());
+    println!("{}\n{}", err.display_label(), err.error_body());
 
     let err: StmtError = StmtError::WellDefinedError(WellDefinedError::new("demo".to_string(), Some(StmtError::ArithmeticError(ArithmeticError::new("demo".to_string(), None))), Some((1, 0))));
-    println!("{}: {}", err.display_label(), err.error_body());
+    println!("{}\n{}", err.display_label(), err.error_body());
 
     let err: StmtError = StmtError::VerifyError(VerifyError::new("demo".to_string(), Some(StmtError::ArithmeticError(ArithmeticError::new("demo".to_string(), None))), Some((1, 0))));
-    println!("{}: {}", err.display_label(), err.error_body());
+    println!("{}\n{}", err.display_label(), err.error_body());
 
     let err: StmtError = StmtError::InferError(InferError::new("demo".to_string(), Some((1, 0)), None));
-    println!("{}: {}", err.display_label(), err.error_body());
+    println!("{}\n{}", err.display_label(), err.error_body());
 }
 
 fn try_and_fact() {
@@ -1343,7 +1343,7 @@ fn try_store_forall_fact_in_env() {
     let mut env = Environment::new_empty_env();
     if let Err(e) = env.store_fact(Fact::ForallFact(forall_fact)) {
         let stmt_err = StmtError::StoreFactError(e);
-        println!("store forall fact error: {}: {}", stmt_err.display_label(), stmt_err.error_body());
+        println!("store forall fact error\n{}\n{}", stmt_err.display_label(), stmt_err.error_body());
     }
     println!("env after store: {}", env);
 }
