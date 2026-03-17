@@ -39,6 +39,6 @@ impl<'a> Executor<'a> {
     }
 
     pub fn stmt_unsupported(line_file: Option<(usize, usize)>) -> Result<NonErrStmtExecResult, StmtError> {
-        Err(StmtError::ExecError(ExecError::new("不支持的语句类型".to_string(), vec![], line_file)))
+        Err(StmtError::ExecError(ExecError::new("不支持的语句类型".to_string(), None, line_file)))
     }
 }

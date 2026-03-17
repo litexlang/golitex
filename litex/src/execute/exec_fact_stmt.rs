@@ -14,6 +14,7 @@ impl<'a> Executor<'a> {
                 return Err(StmtError::UnknownError(UnknownError::new(
                     fact.to_string(),
                     fact.line_file(),
+                    None,
                 )))
             }
             r => r,

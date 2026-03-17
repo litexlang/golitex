@@ -14,7 +14,7 @@ impl<'a> Executor<'a> {
         
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_fact_well_defined(fact, verify_state) {
-                return Err(VerifyError::new(fact.to_string(), vec![StmtError::WellDefinedError(e)], fact.line_file()));
+                return Err(VerifyError::new(fact.to_string(), Some(StmtError::WellDefinedError(e)), fact.line_file()));
             }
         }
 

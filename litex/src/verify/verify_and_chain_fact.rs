@@ -9,7 +9,7 @@ impl<'a> Executor<'a> {
     pub fn verify_and_fact(&mut self, and_fact: &AndFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
         for fact in &and_fact.facts {
             if let Err(e) = self.verify_fact(&Fact::AtomicFact(fact.clone()), verify_state) {
-                return Err(VerifyError::new(fact.to_string(), vec![StmtError::VerifyError(e)], and_fact.line_file_index()));
+                return Err(VerifyError::new(fact.to_string(), Some(StmtError::VerifyError(e)), and_fact.line_file_index()));
             }
         }
         Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
@@ -20,7 +20,7 @@ impl<'a> Executor<'a> {
     }
 
     pub fn verify_chain_fact(&mut self, chain_fact: &ChainFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
-        let facts = chain_fact.facts().map_err(|e| VerifyError::new(e.to_string(), vec![], None))?;
+        let facts = chain_fact.facts().map_err(|e| VerifyError::new(e.to_string(), None, None))?;
         for fact in &facts {
             if let Err(e) = self.verify_fact(&Fact::AtomicFact(fact.clone()), verify_state) {
                 return Err(e);

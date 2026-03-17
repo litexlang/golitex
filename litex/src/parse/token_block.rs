@@ -102,7 +102,7 @@ impl TokenBlock {
     /// 返回当前 token；若已读完则返回 Error。
     pub fn current(&self) -> Result<&str, ParsingError> {
         self.header.get(self.parse_index).map(|s| s.as_str()).ok_or_else(|| {
-            ParsingError::new("Unexpected end of tokens".to_string(), self.line_file_index)
+            ParsingError::new("Unexpected end of tokens".to_string(), self.line_file_index, None)
         })
     }
 
@@ -111,7 +111,7 @@ impl TokenBlock {
             self.parse_index += 1;
             Ok(())
         } else {
-            Err(ParsingError::new(format!("Expected token: {}", token), self.line_file_index))
+            Err(ParsingError::new(format!("Expected token: {}", token), self.line_file_index, None))
         }
     }
 
@@ -135,14 +135,14 @@ impl TokenBlock {
         self.skip_token(token)?;
         self.skip_token(COLON)?;
         if !self.exceed_end_of_head() {
-            return Err(ParsingError::new("Expected token: at head".to_string(), self.line_file_index));
+            return Err(ParsingError::new("Expected token: at head".to_string(), self.line_file_index, None));
         }   
         Ok(())
     }
 
     pub fn token_at_index(&self, index: usize) -> Result<&str, ParsingError> {
         self.header.get(index).map(|s| s.as_str()).ok_or_else(|| {
-            ParsingError::new(format!("Expected token: at index {}", index), self.line_file_index)
+            ParsingError::new(format!("Expected token: at index {}", index), self.line_file_index, None)
         })
     }
 

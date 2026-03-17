@@ -585,35 +585,35 @@ fn try_fact() {
 }
 
 fn try_errors() {
-    let _err = ArithmeticError::new("demo".to_string());
+    let _err = ArithmeticError::new("demo".to_string(), None);
 
     println!("{}", _err);
 
-    let err: StmtError = StmtError::ArithmeticError(ArithmeticError::new("demo".to_string()));
+    let err: StmtError = StmtError::ArithmeticError(ArithmeticError::new("demo".to_string(), None));
     println!("{}: {}", err.display_label(), err.error_body());
 
-    let err: StmtError = StmtError::NewAtomicFactError(NewAtomicFactError::new("demo".to_string()));
+    let err: StmtError = StmtError::NewAtomicFactError(NewAtomicFactError::new("demo".to_string(), None));
     println!("{}: {}", err.display_label(), err.error_body());
 
-    let err: StmtError = StmtError::StoreFactError(StoreFactError::new("demo".to_string(), vec![]));
+    let err: StmtError = StmtError::StoreFactError(StoreFactError::new("demo".to_string(), None));
     println!("{}: {}", err.display_label(), err.error_body());
 
     let err: StmtError = StmtError::ParseBlockError(ParseBlockError::ExpectedIndent(1, 0));
     println!("{}: {}", err.display_label(), err.error_body());
 
-    let err: StmtError = StmtError::ParsingError(ParsingError::new("demo".to_string(), (1, 0)));
+    let err: StmtError = StmtError::ParsingError(ParsingError::new("demo".to_string(), (1, 0), None));
     println!("{}: {}", err.display_label(), err.error_body());
 
-    let err: StmtError = StmtError::ExecError(ExecError::new("demo".to_string(), vec![], Some((1, 0))));
+    let err: StmtError = StmtError::ExecError(ExecError::new("demo".to_string(), None, Some((1, 0))));
     println!("{}: {}", err.display_label(), err.error_body());
 
-    let err: StmtError = StmtError::WellDefinedError(WellDefinedError::new("demo".to_string(), vec![StmtError::ArithmeticError(ArithmeticError::new("demo".to_string()))], Some((1, 0))));
+    let err: StmtError = StmtError::WellDefinedError(WellDefinedError::new("demo".to_string(), Some(StmtError::ArithmeticError(ArithmeticError::new("demo".to_string(), None))), Some((1, 0))));
     println!("{}: {}", err.display_label(), err.error_body());
 
-    let err: StmtError = StmtError::VerifyError(VerifyError::new("demo".to_string(), vec![StmtError::ArithmeticError(ArithmeticError::new("demo".to_string()))], Some((1, 0))));
+    let err: StmtError = StmtError::VerifyError(VerifyError::new("demo".to_string(), Some(StmtError::ArithmeticError(ArithmeticError::new("demo".to_string(), None))), Some((1, 0))));
     println!("{}: {}", err.display_label(), err.error_body());
 
-    let err: StmtError = StmtError::InferError(InferError::new("demo".to_string(), Some((1, 0))));
+    let err: StmtError = StmtError::InferError(InferError::new("demo".to_string(), Some((1, 0)), None));
     println!("{}: {}", err.display_label(), err.error_body());
 }
 

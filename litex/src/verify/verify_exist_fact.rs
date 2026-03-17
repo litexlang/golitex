@@ -7,6 +7,6 @@ use std::result::Result;
 
 impl<'a> Executor<'a> {
     pub fn verify_exist_fact(&mut self, exist_fact: &ExistFact, _verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
-        return Err(VerifyError::new(exist_fact.to_string(), vec![], exist_fact.line_file_index()));
+        return Err(VerifyError::new(exist_fact.to_string(), None, exist_fact.line_file_index()));
     }
 }
