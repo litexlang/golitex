@@ -41,15 +41,15 @@ impl<'a> Executor<'a> {
 
     fn verify_equality_by_builtin_rules(&mut self, equal_fact: &EqualFact) -> Result<NonErrStmtExecResult, VerifyError> {
         if Self::verify_equality_by_they_are_the_same(&equal_fact.left, &equal_fact.right) {
-            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "the same".to_string(), InferResult::new(), equal_fact.line_file_index)));
+            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "the same".to_string(), InferResult::new(), equal_fact.line_file_index, None)));
         }
         
         if equal_fact.left.two_objs_can_be_calculated_and_equal_by_calculation(&equal_fact.right) {
-            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "calculation".to_string(), InferResult::new(), equal_fact.line_file_index)));
+            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "calculation".to_string(), InferResult::new(), equal_fact.line_file_index, None)));
         }
 
         if two_objs_equal_by_polynomial_simplification(&equal_fact.left, &equal_fact.right) {
-            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "polynomial simplification".to_string(), InferResult::new(), equal_fact.line_file_index)));
+            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "polynomial simplification".to_string(), InferResult::new(), equal_fact.line_file_index, None)));
         }
 
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))

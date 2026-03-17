@@ -157,20 +157,29 @@ impl<'a> Executor<'a> {
             return Ok(None);
         }
 
+        // 获得每个param对应的arg
+        let mut args_for_params: Vec<Obj> = Vec::new();
+
         for param_name in param_names.iter() {
             let objs = match arg_map.get(param_name) {
                 Some(v) => v,
                 None => return Ok(None),
             };
+
+            if objs.len() == 0 {
+                return Ok(None);
+            }
+            
             if !self.verify_atom_in_atomic_fact_in_known_forall_fact_matches_equal_objects(
                 objs,
                 verify_state,
             )? {
                 return Ok(None);
             }
+            args_for_params.push(objs[0].clone());
         }
 
-        let args_satisfy_param_types = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(&known_forall.params, &given_atomic_fact.args())
+        let args_satisfy_param_types = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(&known_forall.params, &args_for_params)
             .map_err(|e| VerifyError::new(e.error_body(), Some(e), None))?;
 
         for fact in args_satisfy_param_types.iter() {
@@ -209,6 +218,7 @@ impl<'a> Executor<'a> {
             fact_string,
             verified_by_known_forall_fact.to_string(),
             InferResult::new(),
+            verified_by_known_forall_fact.line_file_index,
             verified_by_known_forall_fact.line_file_index,
         );
         Ok(Some(fact_verified))

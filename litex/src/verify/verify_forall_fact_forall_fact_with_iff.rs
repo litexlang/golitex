@@ -53,6 +53,7 @@ impl<'a> Executor<'a> {
             "forall: each then_fact verified under dom".to_string(),
             infer_result,
             forall_fact.line_file_index,
+            None,
         )))
     }
 
@@ -96,6 +97,7 @@ impl<'a> Executor<'a> {
             "forall iff: then=>iff and iff=>then verified".to_string(),
             InferResult::new(),
             line_file_index,
+            None,
         )))
     }
 }

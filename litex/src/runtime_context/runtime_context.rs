@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::obj::{Identifier, Atom};
 use crate::common::keywords::{MOD_SIGN, is_builtin_identifier_obj};
 use crate::error::StmtError;
+use crate::infer::InferResult;
 use crate::result::NonErrStmtExecResult;
 use crate::module_manager::ModuleManager;
 use crate::environment::Environment;
@@ -229,20 +230,60 @@ impl<'a> RuntimeContext<'a> {
 }
 
 impl<'a> RuntimeContext<'a> {
-    pub fn display_result(&self, result: &NonErrStmtExecResult) -> String {
-        if let Some((line, file_index)) = result.line_file() {
-            let location = if file_index == 0 {
-                format!("Success on line {}:\n", line)
-            } else {
-                let path = match self.module_manager.run_file_paths.get(file_index) {
-                    Some(s) => s.as_str(),
-                    None => "",
-                };
-                format!("Success on line {}, file {}:\n", line, path)
-            };
-            format!("{}\n{}", location, result.content_without_success_label())
+    fn format_line_file(&self, line: usize, file_index: usize) -> String {
+        if file_index == 0 {
+            format!("line {}", line)
         } else {
-            result.body_string()
+            let path = match self.module_manager.run_file_paths.get(file_index) {
+                Some(s) => s.as_str(),
+                None => "",
+            };
+            format!("line {}, file {}", line, path)
+        }
+    }
+
+    fn format_infer_block(infer_result: &InferResult) -> String {
+        if infer_result.infer_facts.is_empty() {
+            return String::new();
+        }
+        format!("\n\ninfer:\n{}", infer_result.infer_facts.join("\n"))
+    }
+
+    pub fn display_result(&self, result: &NonErrStmtExecResult) -> String {
+        match result {
+            NonErrStmtExecResult::NonFactualStmtSuccess(x) => {
+                let location = match x.line_file_index {
+                    Some((line, file_index)) => format!("Success on {}:\n", self.format_line_file(line, file_index)),
+                    None => "Success:\n".to_string(),
+                };
+                let msg = format!("{}{}", x.stmt, Self::format_infer_block(&x.infers));
+                format!("{}{}", location, msg)
+            }
+            NonErrStmtExecResult::FactVerifiedByFact(x) => {
+                let location = match x.line_file_index {
+                    Some((line, file_index)) => format!("Success on {}:\n", self.format_line_file(line, file_index)),
+                    None => "Success:\n".to_string(),
+                };
+                let verified_by_suffix = match x.verified_by_line_file {
+                    Some((line, file_index)) => format!("{}", self.format_line_file(line, file_index)),
+                    None => String::new(),
+                };
+                let msg = format!("{}\nverified by fact on {}\n{}{}", x.fact, verified_by_suffix, x.verified_by , Self::format_infer_block(&x.infers));
+                format!("{}{}", location, msg)
+            }
+            NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => {
+                let location = match x.line_file_index {
+                    Some((line, file_index)) => format!("Success on {}:\n", self.format_line_file(line, file_index)),
+                    None => "Success:\n".to_string(),
+                };
+                let verified_by_suffix = match x.verified_by_line_file {
+                    Some((line, file_index)) => format!("{}", self.format_line_file(line, file_index)),
+                    None => String::new(),
+                };
+                let msg = format!("{}\nverified by fact on {}\n{}{}", x.fact, verified_by_suffix, x.verified_by , Self::format_infer_block(&x.infers));
+                format!("{}{}", location, msg)
+            }
+            NonErrStmtExecResult::StmtUnknown(x) => x.to_string(),
         }
     }
 
