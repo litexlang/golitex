@@ -1,7 +1,7 @@
 use crate::error::ExecError;
 use crate::execute::Executor;
 use crate::fact::{AtomicFact, Fact, IsNonemptySetFact};
-use crate::stmt::parameter_type_and_property::ParamType;
+use crate::stmt::parameter_def::ParamType;
 use crate::verify::VerifyState;
 
 impl<'a> Executor<'a> {

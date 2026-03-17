@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use crate::obj::Obj;
-use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
+use crate::stmt::parameter_def::ParamDefWithParamType;
 use crate::fact::ExistOrAndChainAtomicFact;
 use crate::fact::AtomicFact;
 use crate::fact::ExistFact;

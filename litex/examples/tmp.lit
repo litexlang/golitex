@@ -1,14 +1,3 @@
-prop q(x, y, z)
+know exist a R st {a > 0}
 
-prop p(x, y R):
-    x > y
-    forall t R:
-        $q(x, y, t)
-
-have a, b R
-
-know $p(a, b)
-
-a > b
-
-$q(a, b, 2)
+exist b R st {b > 0, b < 1}
