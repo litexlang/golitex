@@ -1,5 +1,16 @@
 use std::fmt;
 
+fn body_with_previous(message: &str, previous_error: &Option<Box<StmtError>>) -> String {
+    match previous_error {
+        Some(previous_error) => format!("{}\n{}", message, previous_error.error_body()),
+        None => message.to_string(),
+    }
+}
+
+fn boxed_previous_error(previous_error: Option<StmtError>) -> Option<Box<StmtError>> {
+    previous_error.map(Box::new)
+}
+
 #[derive(Debug)]
 pub enum StmtError {
     ArithmeticError(ArithmeticError),
@@ -52,44 +63,16 @@ impl StmtError {
     /// Error content only (no type label). Formatting with location is done by RuntimeContext::display_error.
     pub fn error_body(&self) -> String {
         match self {
-            StmtError::ArithmeticError(e) => e.msg.clone(),
-            StmtError::NewAtomicFactError(e) => e.msg.clone(),
-            StmtError::StoreFactError(e) => {
-                let mut s = e.msg.clone();
-                for p in &e.previous_errors {
-                    s.push_str("\n");
-                    s.push_str(&p.error_body());
-                }
-                s
-            }
+            StmtError::ArithmeticError(e) => e.body_string(),
+            StmtError::NewAtomicFactError(e) => e.body_string(),
+            StmtError::StoreFactError(e) => e.body_string(),
             StmtError::ParseBlockError(e) => parse_block_error_message(e),
-            StmtError::ParsingError(e) => e.msg.clone(),
-            StmtError::ExecError(e) => {
-                let mut s = e.msg.clone();
-                for p in &e.previous_errors {
-                    s.push_str("\n");
-                    s.push_str(&p.error_body());
-                }
-                s
-            }
-            StmtError::UnknownError(e) => e.msg.clone(),
-            StmtError::WellDefinedError(e) => {
-                let mut s = e.msg.clone();
-                for p in &e.previous_errors {
-                    s.push_str("\n");
-                    s.push_str(&p.error_body());
-                }
-                s
-            }
-            StmtError::VerifyError(e) => {
-                let mut s = e.msg.clone();
-                for p in &e.previous_errors {
-                    s.push_str("\n");
-                    s.push_str(&p.error_body());
-                }
-                s
-            }
-            StmtError::InferError(e) => e.msg.clone(),
+            StmtError::ParsingError(e) => e.body_string(),
+            StmtError::ExecError(e) => e.body_string(),
+            StmtError::UnknownError(e) => e.body_string(),
+            StmtError::WellDefinedError(e) => e.body_string(),
+            StmtError::VerifyError(e) => e.body_string(),
+            StmtError::InferError(e) => e.body_string(),
         }
     }
 }
@@ -116,18 +99,23 @@ impl fmt::Display for StmtError {
 #[derive(Debug)]
 pub struct ArithmeticError{
     pub msg: String,
+    pub previous_error: Option<Box<StmtError>>,
 }
 
 
 impl ArithmeticError {
-    pub fn new(msg: String) -> Self {
-        ArithmeticError { msg }
+    pub fn new(msg: String, previous_error: Option<StmtError>) -> Self {
+        ArithmeticError { msg, previous_error: boxed_previous_error(previous_error) }
+    }
+
+    pub fn body_string(&self) -> String {
+        body_with_previous(&self.msg, &self.previous_error)
     }
 }
 
 impl fmt::Display for ArithmeticError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.msg)
+        write!(f, "{}", self.body_string())
     }
 }
 
@@ -140,19 +128,24 @@ impl From<ArithmeticError> for StmtError {
 #[derive(Debug)]
 pub struct NewAtomicFactError {
     pub msg: String,
+    pub previous_error: Option<Box<StmtError>>,
 }
 
 impl std::error::Error for NewAtomicFactError {}
 
 impl fmt::Display for NewAtomicFactError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.msg)
+        write!(f, "{}", self.body_string())
     }
 }
 
 impl NewAtomicFactError {
-    pub fn new(msg: String) -> Self {
-        NewAtomicFactError { msg }
+    pub fn new(msg: String, previous_error: Option<StmtError>) -> Self {
+        NewAtomicFactError { msg, previous_error: boxed_previous_error(previous_error) }
+    }
+
+    pub fn body_string(&self) -> String {
+        body_with_previous(&self.msg, &self.previous_error)
     }
 }
 
@@ -165,21 +158,21 @@ impl From<NewAtomicFactError> for StmtError {
 impl From<NewAtomicFactError> for StoreFactError {
     fn from(e: NewAtomicFactError) -> Self {
         let msg = e.msg.clone();
-        StoreFactError::new(msg, vec![e.into()])
+        StoreFactError::new(msg, Some(e.into()))
     }
 }
 
 impl From<NewAtomicFactError> for WellDefinedError {
     fn from(e: NewAtomicFactError) -> Self {
         let msg = e.msg.clone();
-        WellDefinedError::new(msg, vec![e.into()], None)
+        WellDefinedError::new(msg, Some(e.into()), None)
     }
 }
 
 #[derive(Debug)]
 pub struct StoreFactError {
     pub msg: String,
-    pub previous_errors: Vec<StmtError>,
+    pub previous_error: Option<Box<StmtError>>,
 }
 
 impl std::error::Error for StoreFactError {}
@@ -191,14 +184,16 @@ impl fmt::Display for StoreFactError {
 }
 
 impl StoreFactError {
-    pub fn new(msg: String, previous_errors: Vec<StmtError>) -> Self {
-        StoreFactError { msg, previous_errors }
+    pub fn new(msg: String, previous_error: Option<StmtError>) -> Self {
+        StoreFactError {
+            msg,
+            previous_error: boxed_previous_error(previous_error),
+        }
     }
 
-    /// Content only (msg + previous_errors bodies), for embedding in other errors.
+    /// Content only (msg + previous_error bodies), for embedding in other errors.
     pub fn body_string(&self) -> String {
-        let rest: Vec<String> = self.previous_errors.iter().map(|p| p.error_body()).collect();
-        self.msg.clone() + "\n" + &rest.join("\n")
+        body_with_previous(&self.msg, &self.previous_error)
     }
 }
 
@@ -210,9 +205,8 @@ impl From<StoreFactError> for StmtError {
 
 impl From<StoreFactError> for ExecError {
     fn from(e: StoreFactError) -> Self {
-        let rest: Vec<String> = e.previous_errors.iter().map(|p| p.error_body()).collect();
-        let body = e.msg.clone() + "\n" + &rest.join("\n");
-        ExecError::new(body, vec![e.into()], None)
+        let body = e.body_string();
+        ExecError::new(body, Some(e.into()), None)
     }
 }
 
@@ -258,19 +252,28 @@ impl From<ParseBlockError> for StmtError {
 pub struct ParsingError {
     pub msg: String,
     pub line_file_index: (usize, usize),
+    pub previous_error: Option<Box<StmtError>>,
 }
 
 impl std::error::Error for ParsingError {}
 
 impl fmt::Display for ParsingError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.msg)
+        write!(f, "{}", self.body_string())
     }
 }
 
 impl ParsingError {
-    pub fn new(msg: String, line_file_index: (usize, usize)) -> Self {
-        ParsingError { msg, line_file_index }
+    pub fn new(msg: String, line_file_index: (usize, usize), previous_error: Option<StmtError>) -> Self {
+        ParsingError {
+            msg,
+            line_file_index,
+            previous_error: boxed_previous_error(previous_error),
+        }
+    }
+
+    pub fn body_string(&self) -> String {
+        body_with_previous(&self.msg, &self.previous_error)
     }
 }
 
@@ -284,7 +287,7 @@ impl From<ParsingError> for StmtError {
 #[derive(Debug)]
 pub struct ExecError {
     pub msg: String,
-    pub previous_errors: Vec<StmtError>,
+    pub previous_error: Option<Box<StmtError>>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
@@ -297,14 +300,17 @@ impl fmt::Display for ExecError {
 }
 
 impl ExecError {
-    pub fn new(msg: String, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
-        ExecError { msg, previous_errors, line_file_index }
+    pub fn new(msg: String, previous_error: Option<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
+        ExecError {
+            msg,
+            previous_error: boxed_previous_error(previous_error),
+            line_file_index,
+        }
     }
 
-    /// Content only (msg + previous_errors bodies), for embedding in other errors.
+    /// Content only (msg + previous_error bodies), for embedding in other errors.
     pub fn body_string(&self) -> String {
-        let rest: Vec<String> = self.previous_errors.iter().map(|p| p.error_body()).collect();
-        self.msg.clone() + "\n" + &rest.join("\n")
+        body_with_previous(&self.msg, &self.previous_error)
     }
 }
 
@@ -317,7 +323,7 @@ impl From<ExecError> for StmtError {
 #[derive(Debug)]
 pub struct WellDefinedError {
     pub msg: String,
-    pub previous_errors: Vec<StmtError>,
+    pub previous_error: Option<Box<StmtError>>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
@@ -325,14 +331,21 @@ impl std::error::Error for WellDefinedError {}
 
 impl fmt::Display for WellDefinedError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let rest: Vec<String> = self.previous_errors.iter().map(|p| p.error_body()).collect();
-        write!(f, "{}\n{}", self.msg, rest.join("\n"))
+        write!(f, "{}", self.body_string())
     }
 }
 
 impl WellDefinedError {
-    pub fn new(msg: String, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
-        WellDefinedError { msg, previous_errors, line_file_index }
+    pub fn new(msg: String, previous_error: Option<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
+        WellDefinedError {
+            msg,
+            previous_error: boxed_previous_error(previous_error),
+            line_file_index,
+        }
+    }
+
+    pub fn body_string(&self) -> String {
+        body_with_previous(&self.msg, &self.previous_error)
     }
 }
 
@@ -344,16 +357,15 @@ impl From<WellDefinedError> for StmtError {
 
 impl From<WellDefinedError> for ExecError {
     fn from(e: WellDefinedError) -> Self {
-        let rest: Vec<String> = e.previous_errors.iter().map(|p| p.error_body()).collect();
-        let body = "well defined error: ".to_string() + &e.msg + "\n" + &rest.join("\n");
-        ExecError::new(body, vec![e.into()], None)
+        let body = "well defined error: ".to_string() + &e.body_string();
+        ExecError::new(body, Some(e.into()), None)
     }
 }
 
 #[derive(Debug)]
 pub struct VerifyError {
     pub msg: String,
-    pub previous_errors: Vec<StmtError>,
+    pub previous_error: Option<Box<StmtError>>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
@@ -361,14 +373,21 @@ impl std::error::Error for VerifyError {}
 
 impl fmt::Display for VerifyError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let rest: Vec<String> = self.previous_errors.iter().map(|p| p.error_body()).collect();
-        write!(f, "{}\n{}", self.msg, rest.join("\n"))
+        write!(f, "{}", self.body_string())
     }
 }
 
 impl VerifyError {
-    pub fn new(msg: String, previous_errors: Vec<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
-        VerifyError { msg, previous_errors, line_file_index }
+    pub fn new(msg: String, previous_error: Option<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
+        VerifyError {
+            msg,
+            previous_error: boxed_previous_error(previous_error),
+            line_file_index,
+        }
+    }
+
+    pub fn body_string(&self) -> String {
+        body_with_previous(&self.msg, &self.previous_error)
     }
 }
 
@@ -380,17 +399,15 @@ impl From<VerifyError> for StmtError {
 
 impl From<VerifyError> for ExecError {
     fn from(e: VerifyError) -> Self {
-        let rest: Vec<String> = e.previous_errors.iter().map(|p| p.error_body()).collect();
-        let body = "verify fact error: ".to_string() + &e.msg + "\n" + &rest.join("\n");
-        ExecError::new(body, vec![e.into()], None)
+        let body = "verify fact error: ".to_string() + &e.body_string();
+        ExecError::new(body, Some(e.into()), None)
     }
 }
 
 impl From<VerifyError> for WellDefinedError {
     fn from(e: VerifyError) -> Self {
-        let rest: Vec<String> = e.previous_errors.iter().map(|p| p.error_body()).collect();
-        let body = "verify fact error: ".to_string() + &e.msg + "\n" + &rest.join("\n");
-        WellDefinedError::new(body, vec![e.into()], None)
+        let body = "verify fact error: ".to_string() + &e.body_string();
+        WellDefinedError::new(body, Some(e.into()), None)
     }
 }
 
@@ -398,19 +415,28 @@ impl From<VerifyError> for WellDefinedError {
 pub struct UnknownError {
     pub msg: String,
     pub line_file_index: Option<(usize, usize)>,
+    pub previous_error: Option<Box<StmtError>>,
 }
 
 impl std::error::Error for UnknownError {}
 
 impl fmt::Display for UnknownError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.msg)
+        write!(f, "{}", self.body_string())
     }
 }
 
 impl UnknownError {
-    pub fn new(msg: String, line_file_index: Option<(usize, usize)>) -> Self {
-        UnknownError { msg, line_file_index }
+    pub fn new(msg: String, line_file_index: Option<(usize, usize)>, previous_error: Option<StmtError>) -> Self {
+        UnknownError {
+            msg,
+            line_file_index,
+            previous_error: boxed_previous_error(previous_error),
+        }
+    }
+
+    pub fn body_string(&self) -> String {
+        body_with_previous(&self.msg, &self.previous_error)
     }
 }
 
@@ -425,19 +451,28 @@ impl From<UnknownError> for StmtError {
 pub struct InferError {
     pub msg: String,
     pub line_file_index: Option<(usize, usize)>,
+    pub previous_error: Option<Box<StmtError>>,
 }
 
 impl std::error::Error for InferError {}
 
 impl fmt::Display for InferError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.msg)
+        write!(f, "{}", self.body_string())
     }
 }
 
 impl InferError {
-    pub fn new(msg: String, line_file_index: Option<(usize, usize)>) -> Self {
-        InferError { msg, line_file_index }
+    pub fn new(msg: String, line_file_index: Option<(usize, usize)>, previous_error: Option<StmtError>) -> Self {
+        InferError {
+            msg,
+            line_file_index,
+            previous_error: boxed_previous_error(previous_error),
+        }
+    }
+
+    pub fn body_string(&self) -> String {
+        body_with_previous(&self.msg, &self.previous_error)
     }
 }
 
@@ -449,20 +484,7 @@ impl From<InferError> for StmtError {
 
 impl From<InferError> for ExecError {
     fn from(e: InferError) -> Self {
-        let msg = e.msg.clone();
-        ExecError::new(msg, vec![e.into()], None)
-    }
-}
-
-#[derive(Debug)]
-pub struct NameAlreadyUsedError {
-    pub name: String,
-}
-
-impl std::error::Error for NameAlreadyUsedError {}
-
-impl fmt::Display for NameAlreadyUsedError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "name {} is already used", self.name)
+        let msg = e.body_string();
+        ExecError::new(msg, Some(e.into()), None)
     }
 }

@@ -91,29 +91,28 @@ impl<'a> Executor<'a> {
         if self.runtime_context.is_defined_identifier_obj(identifier) {
             Ok(())
         } else {
-            Err(WellDefinedError::new(format!("identifier `{}` not defined", identifier.to_string()), vec![], None))
+            Err(WellDefinedError::new(format!("identifier `{}` not defined", identifier.to_string()), None, None))
         }
     }
 
     fn verify_identifier_with_mod_well_defined(&self, x: &IdentifierWithMod) -> Result<(), WellDefinedError> {
         let _ = x;
-        Err(WellDefinedError::new("verify_identifier_with_mod_well_defined 此函数还没有 implement".to_string(), vec![], None))
+        Err(WellDefinedError::new("verify_identifier_with_mod_well_defined 此函数还没有 implement".to_string(), None, None))
     }
 
     fn verify_field_access_well_defined(&self, x: &FieldAccess) -> Result<(), WellDefinedError> {
         let _ = x;
-        Err(WellDefinedError::new("verify_field_access_well_defined 此函数还没有 implement".to_string(), vec![], None))
+        Err(WellDefinedError::new("verify_field_access_well_defined 此函数还没有 implement".to_string(), None, None))
     }
 
     fn verify_field_access_with_mod_well_defined(&self, x: &FieldAccessWithMod) -> Result<(), WellDefinedError> {
         let _ = x;
-        Err(WellDefinedError::new("verify_field_access_with_mod_well_defined 此函数还没有 implement".to_string(), vec![], None))
+        Err(WellDefinedError::new("verify_field_access_with_mod_well_defined 此函数还没有 implement".to_string(), None, None))
     }
 
     fn verify_fn_obj_well_defined(&mut self, fn_obj: &FnObj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let mut the_set_where_current_fn_obj_is_in = self.runtime_context.find_fn_definition_for_atom(&fn_obj.head).ok_or_else(|| WellDefinedError::new(
-            todo_error_message("verify_fn_obj_well_defined: function head identifier has no known definition yet".to_string()).to_string(),
-            vec![],
+            todo_error_message("verify_fn_obj_well_defined: function head identifier has no known definition yet".to_string()).to_string(),None,
             None,
         ))?.clone();
 
@@ -133,8 +132,7 @@ impl<'a> Executor<'a> {
                 Obj::FnSetWithoutDom(e) => FnSetObj::FnSetWithoutDom(e),
                 _ => {
                     return Err(WellDefinedError::new(
-                        format!("expect return set of {} to be a fn_set object.", the_set_where_current_fn_obj_is_in.to_string()),
-                        vec![],
+                        format!("expect return set of {} to be a fn_set object.", the_set_where_current_fn_obj_is_in.to_string()),None,
                         None,
                     ));
                 }
@@ -154,8 +152,7 @@ impl<'a> Executor<'a> {
         let param_count = fn_set_with_dom.params_def_with_set.len();
         if args.len() != param_count {
             return Err(WellDefinedError::new(
-                format!("number of args ({}) does not match fn set with dom param count ({})", args.len(), param_count),
-                vec![],
+                format!("number of args ({}) does not match fn set with dom param count ({})", args.len(), param_count),None,
                 None,
             ));
         }
@@ -180,8 +177,7 @@ impl<'a> Executor<'a> {
         let param_count = fn_set_without_dom.param_sets.len();
         if args.len() != param_count {
             return Err(WellDefinedError::new(
-                format!("number of args ({}) does not match fn set without dom param count ({})", args.len(), param_count),
-                vec![],
+                format!("number of args ({}) does not match fn set without dom param count ({})", args.len(), param_count),None,
                 None,
             ));
         }
@@ -327,12 +323,12 @@ impl<'a> Executor<'a> {
 
     fn verify_set_builder_well_defined_body(&mut self, x: &SetBuilder, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         if let Err(e) = self.define_params_with_set(&ParamDefWithParamSet::new(vec![x.param.clone()], *x.param_set.clone())) {
-            return Err(WellDefinedError::new(format!("failed to verify well-defined of set builder {}", x.to_string()), vec![StmtError::ExecError(e)], None));
+            return Err(WellDefinedError::new(format!("failed to verify well-defined of set builder {}", x.to_string()), Some(StmtError::ExecError(e)), None));
         }
 
         for fact in x.facts.iter() {
             if let Err(e) = self.verify_fact_well_defined_and_store_and_infer(&(fact.from_ref_to_cloned_fact()), verify_state) {
-                return Err(WellDefinedError::new(format!("failed to verify well-defined of set builder {}", x.to_string()), vec![StmtError::ExecError(e)], None));
+                return Err(WellDefinedError::new(format!("failed to verify well-defined of set builder {}", x.to_string()), Some(StmtError::ExecError(e)), None));
             }
         }
 
@@ -357,19 +353,19 @@ impl<'a> Executor<'a> {
 
     fn verify_fn_set_with_dom_well_defined_body(&mut self, x: &FnSetWithDom, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         if let Err(e) = self.verify_obj_well_defined_and_store_cache(&x.ret_set, verify_state) {
-            return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()), vec![StmtError::WellDefinedError(e)], None));
+            return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()), Some(StmtError::WellDefinedError(e)), None));
         }
         
         
         for param_def_with_set in x.params_def_with_set.iter() {
             if let Err(e) = self.define_params_with_set(param_def_with_set) {
-                return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()), vec![StmtError::ExecError(e)], None));
+                return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()), Some(StmtError::ExecError(e)), None));
             }
         }
 
         for fact in x.dom_facts.iter() {
             if let Err(e) = self.verify_fact_well_defined_and_store_and_infer(&(fact.from_ref_to_cloned_fact()), verify_state) {
-                return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()), vec![StmtError::ExecError(e)], None));
+                return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()), Some(StmtError::ExecError(e)), None));
             }
         }
 
@@ -409,14 +405,13 @@ impl<'a> Executor<'a> {
         } else if let Some(def) = self.runtime_context.get_set_struct_with_no_field_definition_by_name(x.struct_name.to_string().as_str()) {
             &def.params_def_with_type
         } else {
-            return Err(WellDefinedError::new(format!("set struct definition not found {}", x.struct_name.to_string()), vec![], None));
+            return Err(WellDefinedError::new(format!("set struct definition not found {}", x.struct_name.to_string()), None, None));
         };
         let facts = ParamDefWithParamType::facts_for_boxed_args_satisfy_param_def_with_type_vec(param_defs, &x.args)
-            .map_err(|e| WellDefinedError::new(format!("failed to build facts for inst struct {}: {}", x.struct_name, e.error_body()), vec![e], None))?;
+            .map_err(|e| WellDefinedError::new(format!("failed to build facts for inst struct {}: {}", x.struct_name, e.error_body()), Some(e), None))?;
         for fact in facts.iter() {
             self.verify_fact(fact, verify_state).map_err(|e| WellDefinedError::new(
-                format!("exec_fact failed for inst struct obj arg (struct {})", x.struct_name),
-                vec![StmtError::VerifyError(e)],
+                format!("exec_fact failed for inst struct obj arg (struct {})", x.struct_name),Some(StmtError::VerifyError(e)),
                 None,
             ))?;
         }
@@ -443,43 +438,43 @@ impl<'a> Executor<'a> {
     fn verify_proj_well_defined(&mut self, x: &Proj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_proj_well_defined 此函数还没有 implement".to_string(), vec![], None))
+        Err(WellDefinedError::new("verify_proj_well_defined 此函数还没有 implement".to_string(), None, None))
     }
 
     fn verify_dim_well_defined(&mut self, x: &Dim, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_dim_well_defined 此函数还没有 implement".to_string(), vec![], None))
+        Err(WellDefinedError::new("verify_dim_well_defined 此函数还没有 implement".to_string(), None, None))
     }
 
     fn verify_tuple_well_defined(&mut self, x: &Tuple, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_tuple_well_defined 此函数还没有 implement".to_string(), vec![], None))
+        Err(WellDefinedError::new("verify_tuple_well_defined 此函数还没有 implement".to_string(), None, None))
     }
 
     fn verify_count_well_defined(&mut self, x: &Count, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_count_well_defined 此函数还没有 implement".to_string(), vec![], None))
+        Err(WellDefinedError::new("verify_count_well_defined 此函数还没有 implement".to_string(), None, None))
     }
 
     fn verify_range_well_defined(&mut self, x: &Range, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_range_well_defined 此函数还没有 implement".to_string(), vec![], None))
+        Err(WellDefinedError::new("verify_range_well_defined 此函数还没有 implement".to_string(), None, None))
     }
 
     fn verify_closed_range_well_defined(&mut self, x: &ClosedRange, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_closed_range_well_defined 此函数还没有 implement".to_string(), vec![], None))
+        Err(WellDefinedError::new("verify_closed_range_well_defined 此函数还没有 implement".to_string(), None, None))
     }
 
     fn verify_val_well_defined(&mut self, x: &Val, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_val_well_defined 此函数还没有 implement".to_string(), vec![], None))
+        Err(WellDefinedError::new("verify_val_well_defined 此函数还没有 implement".to_string(), None, None))
     }
 
     fn verify_power_set_well_defined(&mut self, x: &PowerSet, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
@@ -497,7 +492,7 @@ impl<'a> Executor<'a> {
     fn verify_obj_at_index_well_defined(&self, x: &ObjAtIndex, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_obj_at_index_well_defined 此函数还没有 implement".to_string(), vec![], None))
+        Err(WellDefinedError::new("verify_obj_at_index_well_defined 此函数还没有 implement".to_string(), None, None))
     }
 
     fn verify_q_pos_well_defined(&self) -> Result<(), WellDefinedError> {

@@ -170,7 +170,7 @@ impl<'a> Executor<'a> {
         }
 
         let args_satisfy_param_types = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(&known_forall.params, &given_atomic_fact.args())
-            .map_err(|e| VerifyError::new(e.error_body(), vec![e], None))?;
+            .map_err(|e| VerifyError::new(e.error_body(), Some(e), None))?;
 
         for fact in args_satisfy_param_types.iter() {
             let result = self.verify_fact(fact, verify_state)?;
@@ -772,8 +772,7 @@ impl<'a> Executor<'a> {
 
     fn match_arg_type_not_implemented(obj_type_name: &str) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         Err(VerifyError::new(
-            format!("match_arg for {} not implemented", obj_type_name),
-            vec![],
+            format!("match_arg for {} not implemented", obj_type_name),None,
             None,
         ))
     }
