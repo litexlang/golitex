@@ -229,17 +229,16 @@ impl<'a> RuntimeContext<'a> {
 }
 
 impl<'a> RuntimeContext<'a> {
-    /// Format result: when line_file is set, "Success on line N" (or "Success on line N, file PATH"); otherwise body only.
     pub fn display_result(&self, result: &NonErrStmtExecResult) -> String {
         if let Some((line, file_index)) = result.line_file() {
             let location = if file_index == 0 {
-                format!("Success on line {}", line)
+                format!("Success on line {}:\n", line)
             } else {
                 let path = match self.module_manager.run_file_paths.get(file_index) {
                     Some(s) => s.as_str(),
                     None => "",
                 };
-                format!("Success on line {}, file {}", line, path)
+                format!("Success on line {}, file {}:\n", line, path)
             };
             format!("{}\n{}", location, result.content_without_success_label())
         } else {

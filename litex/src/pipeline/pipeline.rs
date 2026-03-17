@@ -19,7 +19,7 @@ fn run_source_code(source_code: &str, entrance_file_path: &str) -> String {
 
     let blocks = match TokenBlock::parse_blocks(source_code, 0) {
         Ok(b) => b,
-        Err(e) => return format!("parsing error\n{}", e),
+        Err(e) => return format!("\n{}\n", runtime_context.display_error(&e.into())),
     };
 
     let mut out = String::new();
@@ -28,7 +28,10 @@ fn run_source_code(source_code: &str, entrance_file_path: &str) -> String {
         let stmt: Stmt = {
             match executor.parse_stmt(&mut block) {
                 Ok(s) => s,
-                Err(e) => return format!("parsing error\n{}", e),
+                Err(e) => {
+                    out.push_str(format!("\n{}\n", executor.runtime_context.display_error(&e.into())).as_str());
+                    return out;
+                }
             }
         };
         let result = match executor.stmt(&stmt) {
