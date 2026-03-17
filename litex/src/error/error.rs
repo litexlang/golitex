@@ -101,6 +101,7 @@ fn parse_block_error_message(e: &ParseBlockError) -> String {
         ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
         ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
         ParseBlockError::NameAlreadyUsed(name) => format!("name {} is already used", name),
+        ParseBlockError::InvalidName(msg) => msg.clone(),
     }
 }
 
@@ -222,6 +223,7 @@ pub enum ParseBlockError {
     InconsistentIndent(usize, usize),
     MissingBody(usize, usize),
     NameAlreadyUsed(String),
+    InvalidName(String),
 }
 
 impl std::error::Error for ParseBlockError {}
@@ -240,6 +242,7 @@ impl ParseBlockError {
             ParseBlockError::InconsistentIndent(line, file) => Some((*line, *file)),
             ParseBlockError::MissingBody(line, file) => Some((*line, *file)),
             ParseBlockError::NameAlreadyUsed(_) => None,
+            ParseBlockError::InvalidName(_) => None,
         }
     }
 }

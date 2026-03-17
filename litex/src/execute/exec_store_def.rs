@@ -1,9 +1,8 @@
-use crate::error::{ExecError, WellDefinedError};
+use crate::error::ExecError;
 use crate::stmt::definition_stmt::{DefPropStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::common::keywords::{PROP, STRUCT, ALGO};
 use super::Executor;
-use crate::common::is_valid_litex_name::is_valid_litex_name;
 
 impl<'a> Executor<'a> {
     pub fn validate_name_and_store_def_prop(&mut self, def_prop_stmt: &DefPropStmt) -> Result<(), ExecError> {
@@ -65,15 +64,4 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    pub fn validate_name(&self, name: &str) -> Result<(), WellDefinedError> {
-        if let Err(e) = is_valid_litex_name(name) {
-            return Err(WellDefinedError::new(e.clone(), vec![], None));
-        }
-
-        if self.runtime_context.is_name_used(name) {
-            return Err(WellDefinedError::new(format!("name {} is already used", name), vec![], None));
-        }
-        
-        Ok(())
-    }
 }
