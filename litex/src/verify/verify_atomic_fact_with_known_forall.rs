@@ -16,7 +16,7 @@ impl<'a> Executor<'a> {
         if let Some(fact_verified) = self.try_verify_with_known_forall_facts_in_envs(atomic_fact, verify_state)? {
             return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
         }
-        if let Some(fact_verified) = self.try_verify_with_known_forall_facts_in_builtin(atomic_fact, verify_state)? {
+        if let Some(fact_verified) = self.try_verify_with_known_forall_facts_in_builtin_env(atomic_fact, verify_state)? {
             return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
         }
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
@@ -24,28 +24,26 @@ impl<'a> Executor<'a> {
 
     fn get_matched_atomic_fact_in_known_forall_fact_in_envs(
         &self,
-        env_index: usize,
-        known_fact_index_in_env: usize,
+        iterate_from_env_index: usize,
+        iterate_from_known_forall_fact_index: usize,
         given_fact: &AtomicFact,
-        verify_state: &VerifyState,
     ) -> Result<((usize, usize), Option<HashMap<String, Vec<Obj>>>, Option<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>), VerifyError> {
         let key = given_fact.key();
         let is_true = given_fact.is_true();
 
         let envs_count = self.runtime_context.environments.len();
-        for i in env_index..envs_count {
+        for i in iterate_from_env_index..envs_count {
             let env = &self.runtime_context.environments[envs_count - 1 - i];
-            let start_fact_index = if i == env_index { known_fact_index_in_env } else { 0 };
             if let Some(known_forall_facts_in_env) = env.known_atomic_facts_in_forall_facts.get(&(key.clone(), is_true)) {
-                for j in start_fact_index..known_forall_facts_in_env.len() {
-                    let (atomic_fact_in_known_forall_fact, _forall_rc) = &known_forall_facts_in_env[j];
+                let known_forall_facts_count = known_forall_facts_in_env.len();
+                for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
+                    let current_known_forall = &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
                     let match_result = Self::match_atomic_fact_in_known_forall_fact_with_given_atomic_fact(
-                        atomic_fact_in_known_forall_fact,
+                        &current_known_forall.0,
                         given_fact,
-                        verify_state,
                     )?;
                     if let Some(arg_map) = match_result {
-                        return Ok(((i, j), Some(arg_map), Some(known_forall_facts_in_env[j].clone())));
+                        return Ok(((i, j), Some(arg_map), Some(current_known_forall.clone())));
                     }
                 }
             }
@@ -54,26 +52,25 @@ impl<'a> Executor<'a> {
         Ok(((0, 0), None, None))
     }
 
-    fn get_matched_atomic_fact_in_known_forall_fact_in_builtin(
+    fn get_matched_atomic_fact_in_known_forall_fact_in_builtin_env(
         &self,
-        known_fact_index_in_env: usize,
+        iterate_from_known_forall_fact_index: usize,
         given_fact: &AtomicFact,
-        verify_state: &VerifyState,
     ) -> Result<(usize, Option<HashMap<String, Vec<Obj>>>, Option<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>), VerifyError> {
         let key = given_fact.key();
         let is_true = given_fact.is_true();
-        let builtin = &self.runtime_context.builtin_environment;
+        let builtin_env = &self.runtime_context.builtin_environment;
 
-        if let Some(known_forall_facts_in_env) = builtin.known_atomic_facts_in_forall_facts.get(&(key, is_true)) {
-            for j in known_fact_index_in_env..known_forall_facts_in_env.len() {
-                let (atomic_fact_in_known_forall_fact, _forall_rc) = &known_forall_facts_in_env[j];
+        if let Some(known_forall_facts_in_env) = builtin_env.known_atomic_facts_in_forall_facts.get(&(key, is_true)) {
+            let known_forall_facts_count = known_forall_facts_in_env.len();
+            for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
+                let current_known_forall = &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
                 let match_result = Self::match_atomic_fact_in_known_forall_fact_with_given_atomic_fact(
-                    atomic_fact_in_known_forall_fact,
+                    &current_known_forall.0,
                     given_fact,
-                    verify_state,
                 )?;
                 if let Some(arg_map) = match_result {
-                    return Ok((j, Some(arg_map), Some(known_forall_facts_in_env[j].clone())));
+                    return Ok((j, Some(arg_map), Some(current_known_forall.clone())));
                 }
             }
         }
@@ -86,15 +83,14 @@ impl<'a> Executor<'a> {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
-        let mut env_index = 0;
-        let mut known_fact_index_in_env = 0;
+        let mut iterate_from_env_index = 0;
+        let mut iterate_from_known_forall_fact_index = 0;
 
         loop {
             let result = self.get_matched_atomic_fact_in_known_forall_fact_in_envs(
-                env_index,
-                known_fact_index_in_env,
+                iterate_from_env_index,
+                iterate_from_known_forall_fact_index,
                 atomic_fact,
-                verify_state,
             )?;
             let ((i, j), arg_map_opt, known_forall_opt) = result;
             match (arg_map_opt, known_forall_opt) {
@@ -108,15 +104,15 @@ impl<'a> Executor<'a> {
                     )? {
                         return Ok(Some(fact_verified));
                     }
-                    env_index = i;
-                    known_fact_index_in_env = j + 1;
+                    iterate_from_env_index = i;
+                    iterate_from_known_forall_fact_index = j + 1;
                 }
                 _ => return Ok(None),
             }
         }
     }
 
-    fn try_verify_with_known_forall_facts_in_builtin(
+    fn try_verify_with_known_forall_facts_in_builtin_env(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
@@ -124,10 +120,9 @@ impl<'a> Executor<'a> {
         let mut known_fact_index_in_builtin = 0;
 
         loop {
-            let result = self.get_matched_atomic_fact_in_known_forall_fact_in_builtin(
+            let result = self.get_matched_atomic_fact_in_known_forall_fact_in_builtin_env(
                 known_fact_index_in_builtin,
                 atomic_fact,
-                verify_state,
             )?;
             match result {
                 (j, Some(arg_map), Some((atomic_fact_in_known_forall_fact, forall_rc))) => {
@@ -152,7 +147,7 @@ impl<'a> Executor<'a> {
         atomic_fact_in_known_forall_fact: &AtomicFact,
         known_forall: &Rc<KnownForallFactParamsAndDom>,
         arg_map: HashMap<String, Vec<Obj>>,
-        atomic_fact: &AtomicFact,
+        given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
         let param_names = ParamDefWithParamType::collect_param_names(&known_forall.params);
@@ -174,7 +169,7 @@ impl<'a> Executor<'a> {
             }
         }
 
-        let args_satisfy_param_types = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(&known_forall.params, &atomic_fact.args())
+        let args_satisfy_param_types = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(&known_forall.params, &given_atomic_fact.args())
             .map_err(|e| VerifyError::new(e.error_body(), vec![e], None))?;
 
         for fact in args_satisfy_param_types.iter() {
@@ -202,7 +197,7 @@ impl<'a> Executor<'a> {
             }
         }
 
-        let fact_string = atomic_fact.to_string();
+        let fact_string = given_atomic_fact.to_string();
         let verified_by_known_forall_fact = ForallFact::new(
             known_forall.params.clone(),
             known_forall.dom.clone(),
@@ -242,7 +237,7 @@ impl<'a> Executor<'a> {
         Ok(true)
     }
 
-    fn match_atomic_fact_in_known_forall_fact_with_given_atomic_fact(atomic_fact_in_known_forall: &AtomicFact, given_atomic_fact: &AtomicFact, _verify_state: &VerifyState) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_atomic_fact_in_known_forall_fact_with_given_atomic_fact(atomic_fact_in_known_forall: &AtomicFact, given_atomic_fact: &AtomicFact) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         let mut atom_in_known_atomic_fact_to_matched_objs_in_given_fact_map: HashMap<String, Vec<Obj>> = HashMap::new();
 
         for (arg_in_atomic_fact_in_known_forall, arg_in_given) in atomic_fact_in_known_forall.args().iter().zip(given_atomic_fact.args().iter()) {
@@ -279,7 +274,7 @@ impl<'a> Executor<'a> {
             Obj::SetDiff(ref a) => Self::match_arg_when_left_is_set_diff(&a.left, &a.right, given_arg),
             Obj::Cup(ref a) => Self::match_arg_when_left_is_cup(&a.left, given_arg),
             Obj::Cap(ref a) => Self::match_arg_when_left_is_cap(&a.left, given_arg),
-            Obj::ListSet(_) => Self::match_arg_when_left_is_list_set(given_arg),
+            Obj::ListSet(ref left) => Self::match_arg_when_left_is_list_set(&left.list, given_arg),
             Obj::SetBuilder(_) => Self::match_arg_when_left_is_set_builder(given_arg),
             Obj::FnSetWithoutDom(_) => Self::match_arg_when_left_is_fn_set_without_dom(given_arg),
             Obj::FnSetWithDom(_) => Self::match_arg_when_left_is_fn_set_with_dom(given_arg),
@@ -289,18 +284,18 @@ impl<'a> Executor<'a> {
             Obj::ZObj(_) => Self::match_arg_when_left_is_z_obj(given_arg),
             Obj::RObj(_) => Self::match_arg_when_left_is_r_obj(given_arg),
             Obj::InstSetStructObj(_) => Self::match_arg_when_left_is_inst_set_struct_obj(given_arg),
-            Obj::Cart(_) => Self::match_arg_when_left_is_cart(given_arg),
-            Obj::CartDim(_) => Self::match_arg_when_left_is_cart_dim(given_arg),
-            Obj::Proj(_) => Self::match_arg_when_left_is_proj(given_arg),
-            Obj::Dim(_) => Self::match_arg_when_left_is_dim(given_arg),
-            Obj::Tuple(_) => Self::match_arg_when_left_is_tuple(given_arg),
-            Obj::Count(_) => Self::match_arg_when_left_is_count(given_arg),
-            Obj::Range(_) => Self::match_arg_when_left_is_range(given_arg),
-            Obj::ClosedRange(_) => Self::match_arg_when_left_is_closed_range(given_arg),
-            Obj::Val(_) => Self::match_arg_when_left_is_val(given_arg),
-            Obj::PowerSet(_) => Self::match_arg_when_left_is_power_set(given_arg),
-            Obj::Choose(_) => Self::match_arg_when_left_is_choose(given_arg),
-            Obj::ObjAtIndex(_) => Self::match_arg_when_left_is_obj_at_index(given_arg),
+            Obj::Cart(ref left) => Self::match_arg_when_left_is_cart(&left.args, given_arg),
+            Obj::CartDim(ref left) => Self::match_arg_when_left_is_cart_dim(left.set.as_ref(), given_arg),
+            Obj::Proj(ref left) => Self::match_arg_when_left_is_proj(left.set.as_ref(), left.dim.as_ref(), given_arg),
+            Obj::Dim(ref left) => Self::match_arg_when_left_is_dim(left.dim.as_ref(), given_arg),
+            Obj::Tuple(ref left) => Self::match_arg_when_left_is_tuple(&left.elements, given_arg),
+            Obj::Count(ref left) => Self::match_arg_when_left_is_count(left.set.as_ref(), given_arg),
+            Obj::Range(ref left) => Self::match_arg_when_left_is_range(left.start.as_ref(), left.end.as_ref(), given_arg),
+            Obj::ClosedRange(ref left) => Self::match_arg_when_left_is_closed_range(left.start.as_ref(), left.end.as_ref(), given_arg),
+            Obj::Val(ref left) => Self::match_arg_when_left_is_val(left.value.as_ref(), given_arg),
+            Obj::PowerSet(ref left) => Self::match_arg_when_left_is_power_set(left.set.as_ref(), given_arg),
+            Obj::Choose(ref left) => Self::match_arg_when_left_is_choose(left.set.as_ref(), given_arg),
+            Obj::ObjAtIndex(ref left) => Self::match_arg_when_left_is_obj_at_index(left.obj.as_ref(), left.index.as_ref(), given_arg),
             Obj::QPos(_) => Self::match_arg_when_left_is_q_pos(given_arg),
             Obj::ZPos(_) => Self::match_arg_when_left_is_z_pos(given_arg),
             Obj::RPos(_) => Self::match_arg_when_left_is_r_pos(given_arg),
@@ -504,9 +499,29 @@ impl<'a> Executor<'a> {
         map1
     }
 
-    fn match_arg_when_left_is_list_set(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_arg_vec_then_merge(
+        left_elements: &[Box<Obj>],
+        given_elements: &[Box<Obj>],
+    ) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+        if left_elements.len() != given_elements.len() {
+            return Ok(None);
+        }
+        let mut merged: HashMap<String, Vec<Obj>> = HashMap::new();
+        for (left_elem, given_elem) in left_elements.iter().zip(given_elements.iter()) {
+            let sub_map = match Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_elem.as_ref(), given_elem.as_ref())? {
+                Some(m) => m,
+                None => return Ok(None),
+            };
+            for (k, v) in sub_map {
+                merged.entry(k).or_default().extend(v);
+            }
+        }
+        Ok(Some(merged))
+    }
+
+    fn match_arg_when_left_is_list_set(left_list: &[Box<Obj>], given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::ListSet(_) => Self::match_arg_type_not_implemented("ListSet"),
+            Obj::ListSet(ref given) => Self::match_arg_vec_then_merge(left_list, &given.list),
             _ => Ok(None),
         }
     }
@@ -534,35 +549,35 @@ impl<'a> Executor<'a> {
 
     fn match_arg_when_left_is_n_pos_obj(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::NPosObj(_) => Self::match_arg_type_not_implemented("NPosObj"),
+            Obj::NPosObj(_) => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_n_obj(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::NObj(_) => Self::match_arg_type_not_implemented("NObj"),
+            Obj::NObj(_) => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_q_obj(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::QObj(_) => Self::match_arg_type_not_implemented("QObj"),
+            Obj::QObj(_) => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_z_obj(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::ZObj(_) => Self::match_arg_type_not_implemented("ZObj"),
+            Obj::ZObj(_) => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_r_obj(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::RObj(_) => Self::match_arg_type_not_implemented("RObj"),
+            Obj::RObj(_) => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
@@ -574,151 +589,157 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn match_arg_when_left_is_cart(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_arg_when_left_is_cart(left_args: &[Box<Obj>], given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::Cart(_) => Self::match_arg_type_not_implemented("Cart"),
+            Obj::Cart(ref given) => Self::match_arg_vec_then_merge(left_args, &given.args),
             _ => Ok(None),
         }
     }
 
-    fn match_arg_when_left_is_cart_dim(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_arg_when_left_is_cart_dim(left_set: &Obj, given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::CartDim(_) => Self::match_arg_type_not_implemented("CartDim"),
+            Obj::CartDim(ref given) => Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_set, given.set.as_ref()),
             _ => Ok(None),
         }
     }
 
-    fn match_arg_when_left_is_proj(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_arg_when_left_is_proj(left_set: &Obj, left_dim: &Obj, given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::Proj(_) => Self::match_arg_type_not_implemented("Proj"),
+            Obj::Proj(ref given) => Self::match_arg_binary_then_merge(left_set, left_dim, given.set.as_ref(), given.dim.as_ref()),
             _ => Ok(None),
         }
     }
 
-    fn match_arg_when_left_is_dim(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_arg_when_left_is_dim(left_dim: &Obj, given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::Dim(_) => Self::match_arg_type_not_implemented("Dim"),
+            Obj::Dim(ref given) => Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_dim, given.dim.as_ref()),
             _ => Ok(None),
         }
     }
 
-    fn match_arg_when_left_is_tuple(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_arg_when_left_is_tuple(left_elements: &[Box<Obj>], given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::Tuple(_) => Self::match_arg_type_not_implemented("Tuple"),
+            Obj::Tuple(ref given) => Self::match_arg_vec_then_merge(left_elements, &given.elements),
             _ => Ok(None),
         }
     }
 
-    fn match_arg_when_left_is_count(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_arg_when_left_is_count(left_set: &Obj, given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::Count(_) => Self::match_arg_type_not_implemented("Count"),
+            Obj::Count(ref given) => Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_set, given.set.as_ref()),
             _ => Ok(None),
         }
     }
 
-    fn match_arg_when_left_is_range(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_arg_when_left_is_range(left_start: &Obj, left_end: &Obj, given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::Range(_) => Self::match_arg_type_not_implemented("Range"),
+            Obj::Range(ref given) => Self::match_arg_binary_then_merge(left_start, left_end, given.start.as_ref(), given.end.as_ref()),
             _ => Ok(None),
         }
     }
 
-    fn match_arg_when_left_is_closed_range(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_arg_when_left_is_closed_range(left_start: &Obj, left_end: &Obj, given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::ClosedRange(_) => Self::match_arg_type_not_implemented("ClosedRange"),
+            Obj::ClosedRange(ref given) => Self::match_arg_binary_then_merge(left_start, left_end, given.start.as_ref(), given.end.as_ref()),
             _ => Ok(None),
         }
     }
 
-    fn match_arg_when_left_is_val(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_arg_when_left_is_val(left_value: &Obj, given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::Val(_) => Self::match_arg_type_not_implemented("Val"),
+            Obj::Val(ref given) => Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_value, given.value.as_ref()),
             _ => Ok(None),
         }
     }
 
-    fn match_arg_when_left_is_power_set(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_arg_when_left_is_power_set(left_set: &Obj, given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::PowerSet(_) => Self::match_arg_type_not_implemented("PowerSet"),
+            Obj::PowerSet(ref given) => Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_set, given.set.as_ref()),
             _ => Ok(None),
         }
     }
 
-    fn match_arg_when_left_is_choose(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_arg_when_left_is_choose(left_set: &Obj, given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::Choose(_) => Self::match_arg_type_not_implemented("Choose"),
+            Obj::Choose(ref given) => Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_set, given.set.as_ref()),
             _ => Ok(None),
         }
     }
 
-    fn match_arg_when_left_is_obj_at_index(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_arg_when_left_is_obj_at_index(left_obj: &Obj, left_index: &Obj, given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::ObjAtIndex(_) => Self::match_arg_type_not_implemented("ObjAtIndex"),
+            Obj::ObjAtIndex(ref given) => Self::match_arg_binary_then_merge(left_obj, left_index, given.obj.as_ref(), given.index.as_ref()),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_q_pos(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::QPos(_) => Self::match_arg_type_not_implemented("QPos"),
+            Obj::QPos(_) => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_z_pos(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::ZPos(_) => Self::match_arg_type_not_implemented("ZPos"),
+            Obj::ZPos(_) => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_r_pos(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::RPos(_) => Self::match_arg_type_not_implemented("RPos"),
+            Obj::RPos(_) => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_q_neg(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::QNeg(_) => Self::match_arg_type_not_implemented("QNeg"),
+            Obj::QNeg(_) => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_z_neg(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::ZNeg(_) => Self::match_arg_type_not_implemented("ZNeg"),
+            Obj::ZNeg(_) => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_r_neg(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::RNeg(_) => Self::match_arg_type_not_implemented("RNeg"),
+            Obj::RNeg(_) => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_q_nz(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::QNz(_) => Self::match_arg_type_not_implemented("QNz"),
+            Obj::QNz(_) => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_z_nz(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::ZNz(_) => Self::match_arg_type_not_implemented("ZNz"),
+            Obj::ZNz(_) => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
     fn match_arg_when_left_is_r_nz(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::RNz(_) => Self::match_arg_type_not_implemented("RNz"),
+            Obj::RNz(_) => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
+    }
+
+    fn match_arg_same_type(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+        let mut map = HashMap::new();
+        map.insert(given_arg.to_string(), vec![given_arg.clone()]);
+        Ok(Some(map))
     }
 
     fn match_arg_type_not_implemented(obj_type_name: &str) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
@@ -728,9 +749,4 @@ impl<'a> Executor<'a> {
             None,
         ))
     }
-}
-
-impl<'a> Executor<'a> {
-    // 证明 把 args 代入到 forall 的 param 里，得到的 facts_for_args_satisfy_param_def_with_type_vec 是正确的，而且dom里面的东西也是正确的
-
 }
