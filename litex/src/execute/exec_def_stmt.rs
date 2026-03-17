@@ -125,7 +125,13 @@ impl<'a> Executor<'a> {
     }
 
     pub fn have_exist_obj_stmt(&mut self, have_exist_obj_stmt: &HaveExistObjStmt) -> Result<NonErrStmtExecResult, ExecError> {
-        Err(ExecError::new("have_exist_obj_stmt: NOT IMPLEMENTED YET".to_string(), vec![], have_exist_obj_stmt.line_file_index))
+        // 验证 exist 是对的
+
+        // have的obj数量和exist的param对应
+
+        // know have的obj拿去instantiate exist的param后，这些have的obj满足type；然后exist后面的事实全对
+
+        return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(have_exist_obj_stmt.to_string(), have_exist_obj_stmt.line_file_index)));
     }
 
     pub fn have_fn_equal_stmt(&mut self, have_fn_equal_stmt: &HaveFnEqualStmt) -> Result<NonErrStmtExecResult, ExecError> {

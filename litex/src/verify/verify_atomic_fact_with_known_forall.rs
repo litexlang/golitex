@@ -13,54 +13,138 @@ use std::result::Result;
 
 impl<'a> Executor<'a> {
     pub fn verify_atomic_fact_with_known_forall(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
-        let key = atomic_fact.key();
-        let is_true = atomic_fact.is_true();
-
-        let mut known_facts = Vec::new();
-        for current_env in self.runtime_context.environments.iter().rev() {
-            if let Some(atomic_fact_in_known_forall_facts) = current_env.known_atomic_facts_in_forall_facts.get(&(key.clone(), is_true)) {
-                known_facts.extend(atomic_fact_in_known_forall_facts.iter().rev().cloned());
-            }
-        }
-
-        let result_in_env = self.match_and_verify_atomic_fact_with_known_forall_facts(
-            known_facts,
-            atomic_fact,
-            verify_state)?;
-        if let Some(fact_verified) = result_in_env {
+        if let Some(fact_verified) = self.try_verify_with_known_forall_facts_in_envs(atomic_fact, verify_state)? {
             return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
         }
-
-        return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+        if let Some(fact_verified) = self.try_verify_with_known_forall_facts_in_builtin(atomic_fact, verify_state)? {
+            return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
+        }
+        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    fn match_and_verify_atomic_fact_with_known_forall_facts(
-        &mut self,
-        forall_entries: Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>,
-        atomic_fact: &AtomicFact,
+    fn get_matched_atomic_fact_in_known_forall_fact_in_envs(
+        &self,
+        env_index: usize,
+        known_fact_index_in_env: usize,
+        given_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
-        for (atomic_fact_in_known_forall_fact, forall_rc) in forall_entries.iter().rev() {
-            let match_result =
-                Self::match_atomic_fact_in_known_forall_fact_with_given_atomic_fact(
-                    atomic_fact_in_known_forall_fact,
-                    atomic_fact,
-                    verify_state,
-                )?;
-            if let Some(arg_map) = match_result {
-                if let Some(fact_verified) = self.verify_matched_args_satisfy_forall_requirements(
-                    atomic_fact_in_known_forall_fact,
-                    forall_rc,
-                    arg_map,
-                    atomic_fact,
-                    verify_state,
-                )? {
-                    return Ok(Some(fact_verified));
+    ) -> Result<((usize, usize), Option<HashMap<String, Vec<Obj>>>, Option<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>), VerifyError> {
+        let key = given_fact.key();
+        let is_true = given_fact.is_true();
+
+        let envs_count = self.runtime_context.environments.len();
+        for i in env_index..envs_count {
+            let env = &self.runtime_context.environments[envs_count - 1 - i];
+            let start_fact_index = if i == env_index { known_fact_index_in_env } else { 0 };
+            if let Some(known_forall_facts_in_env) = env.known_atomic_facts_in_forall_facts.get(&(key.clone(), is_true)) {
+                for j in start_fact_index..known_forall_facts_in_env.len() {
+                    let (atomic_fact_in_known_forall_fact, _forall_rc) = &known_forall_facts_in_env[j];
+                    let match_result = Self::match_atomic_fact_in_known_forall_fact_with_given_atomic_fact(
+                        atomic_fact_in_known_forall_fact,
+                        given_fact,
+                        verify_state,
+                    )?;
+                    if let Some(arg_map) = match_result {
+                        return Ok(((i, j), Some(arg_map), Some(known_forall_facts_in_env[j].clone())));
+                    }
                 }
             }
         }
 
-        Ok(None)
+        Ok(((0, 0), None, None))
+    }
+
+    fn get_matched_atomic_fact_in_known_forall_fact_in_builtin(
+        &self,
+        known_fact_index_in_env: usize,
+        given_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<(usize, Option<HashMap<String, Vec<Obj>>>, Option<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>), VerifyError> {
+        let key = given_fact.key();
+        let is_true = given_fact.is_true();
+        let builtin = &self.runtime_context.builtin_environment;
+
+        if let Some(known_forall_facts_in_env) = builtin.known_atomic_facts_in_forall_facts.get(&(key, is_true)) {
+            for j in known_fact_index_in_env..known_forall_facts_in_env.len() {
+                let (atomic_fact_in_known_forall_fact, _forall_rc) = &known_forall_facts_in_env[j];
+                let match_result = Self::match_atomic_fact_in_known_forall_fact_with_given_atomic_fact(
+                    atomic_fact_in_known_forall_fact,
+                    given_fact,
+                    verify_state,
+                )?;
+                if let Some(arg_map) = match_result {
+                    return Ok((j, Some(arg_map), Some(known_forall_facts_in_env[j].clone())));
+                }
+            }
+        }
+
+        Ok((0, None, None))
+    }
+
+    fn try_verify_with_known_forall_facts_in_envs(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
+        let mut env_index = 0;
+        let mut known_fact_index_in_env = 0;
+
+        loop {
+            let result = self.get_matched_atomic_fact_in_known_forall_fact_in_envs(
+                env_index,
+                known_fact_index_in_env,
+                atomic_fact,
+                verify_state,
+            )?;
+            let ((i, j), arg_map_opt, known_forall_opt) = result;
+            match (arg_map_opt, known_forall_opt) {
+                (Some(arg_map), Some((atomic_fact_in_known_forall_fact, forall_rc))) => {
+                    if let Some(fact_verified) = self.verify_matched_args_satisfy_forall_requirements(
+                        &atomic_fact_in_known_forall_fact,
+                        &forall_rc,
+                        arg_map,
+                        atomic_fact,
+                        verify_state,
+                    )? {
+                        return Ok(Some(fact_verified));
+                    }
+                    env_index = i;
+                    known_fact_index_in_env = j + 1;
+                }
+                _ => return Ok(None),
+            }
+        }
+    }
+
+    fn try_verify_with_known_forall_facts_in_builtin(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
+        let mut known_fact_index_in_builtin = 0;
+
+        loop {
+            let result = self.get_matched_atomic_fact_in_known_forall_fact_in_builtin(
+                known_fact_index_in_builtin,
+                atomic_fact,
+                verify_state,
+            )?;
+            match result {
+                (j, Some(arg_map), Some((atomic_fact_in_known_forall_fact, forall_rc))) => {
+                    if let Some(fact_verified) = self.verify_matched_args_satisfy_forall_requirements(
+                        &atomic_fact_in_known_forall_fact,
+                        &forall_rc,
+                        arg_map,
+                        atomic_fact,
+                        verify_state,
+                    )? {
+                        return Ok(Some(fact_verified));
+                    }
+                    known_fact_index_in_builtin = j + 1;
+                }
+                _ => return Ok(None),
+            }
+        }
     }
 
     fn verify_matched_args_satisfy_forall_requirements(
