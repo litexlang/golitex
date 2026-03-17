@@ -218,7 +218,7 @@ impl<'a> Executor<'a> {
             fact_string,
             verified_by_known_forall_fact.to_string(),
             InferResult::new(),
-            verified_by_known_forall_fact.line_file_index,
+            given_atomic_fact.line_file_index(),
             verified_by_known_forall_fact.line_file_index,
         );
         Ok(Some(fact_verified))
