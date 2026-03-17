@@ -10,7 +10,7 @@ pub enum NonErrStmtExecResult {
     StmtUnknown(StmtUnknown),
 }
 
-const VERIFIED_BY_COLON: &str = "verified by:";
+const VERIFIED_BY: &str = "verified by";
 const INFER_COLON: &str = "infer:";
 
 impl NonErrStmtExecResult {
@@ -40,30 +40,15 @@ impl NonErrStmtExecResult {
                 format!("{}\n{}{}", SUCCESS_COLON, x.stmt, Self::infer_block(&x.infers))
             }
             NonErrStmtExecResult::FactVerifiedByFact(x) => {
-                format!("{}\n{}\n{}\n{}{}", SUCCESS_COLON, x.fact, VERIFIED_BY_COLON, x.verified_by, Self::infer_block(&x.infers))
+                format!("{}\n{}\n{}\n{}{}", SUCCESS_COLON, x.fact, VERIFIED_BY, x.verified_by, Self::infer_block(&x.infers))
             }
             NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => {
-                format!("{}\n{}\n{}\n{}{}", SUCCESS_COLON, x.fact, VERIFIED_BY_COLON, x.verified_by, Self::infer_block(&x.infers))
+                format!("{}\n{}\n{}\n{}{}", SUCCESS_COLON, x.fact, VERIFIED_BY, x.verified_by, Self::infer_block(&x.infers))
             }
             NonErrStmtExecResult::StmtUnknown(x) => x.to_string(),
         }
     }
 
-    /// Returns the content part without the "Success:" label (used when displaying with "Success on line N").
-    pub fn content_without_success_label(&self) -> String {
-        match self {
-            NonErrStmtExecResult::NonFactualStmtSuccess(x) => {
-                format!("{}{}", x.stmt, Self::infer_block(&x.infers))
-            }
-            NonErrStmtExecResult::FactVerifiedByFact(x) => {
-                format!("{}\n{}\n{}{}", x.fact, VERIFIED_BY_COLON, x.verified_by, Self::infer_block(&x.infers))
-            }
-            NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => {
-                format!("{}\n{}\n{}{}", x.fact, VERIFIED_BY_COLON, x.verified_by, Self::infer_block(&x.infers))
-            }
-            NonErrStmtExecResult::StmtUnknown(x) => x.to_string(),
-        }
-    }
 }
 
 impl NonErrStmtExecResult {

@@ -132,7 +132,7 @@ impl<'a> Executor<'a> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
         let predicate_definition = match self.runtime_context.get_predicate_definition_by_name(&predicate_name) {
             Some(predicate_definition) => predicate_definition.clone(),
-            None => unreachable!(),
+            None => return Ok(InferResult::new()), // prop might be without meaning
         };
         let mut infer_result = InferResult::new();
 
