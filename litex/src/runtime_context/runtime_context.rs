@@ -267,20 +267,3 @@ impl<'a> RuntimeContext<'a> {
         }
     }
 }
-
-impl<'a> RuntimeContext<'a> {
-    pub fn iterate_reversely_from(&self, env_index: usize, index: usize) {
-        let envs_count = self.environments.len();
-        for i in env_index..envs_count {
-            let env = &self.environments[envs_count - 1 - i];
-            let vec: &Vec<()> = &vec![];
-            let len = vec.len();
-            for j in index..len {
-                do_something(len - 1 - j);
-            }
-        }
-    }
-}
-
-fn do_something(_i: usize) {
-}
