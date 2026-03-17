@@ -28,9 +28,9 @@ impl<'a> Executor<'a> {
 
     // fact_hierarchy 1
     fn parse_forall_or_forall_with_iff(&mut self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
-        self.new_name_block();
+        self.new_parsing_names_block();
         let fact = self.parse_forall_or_forall_with_iff_body(tb);
-        self.delete_name_block();
+        self.delete_parsing_names_block();
         fact
     }
 
@@ -142,9 +142,9 @@ impl<'a> Executor<'a> {
     }
 
     pub fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<ExistFact, ParsingError> {
-        self.new_name_block();
+        self.new_parsing_names_block();
         let fact = self.parse_exist_fact_body(tb);
-        self.delete_name_block();
+        self.delete_parsing_names_block();
         fact
     }
 
@@ -158,7 +158,7 @@ impl<'a> Executor<'a> {
             }
         }
         let exist_param_names = ParamDefWithParamType::collect_param_names(&param_def);
-        self.new_name_block();
+        self.new_parsing_names_block();
         self.validate_names_and_put_into_parsing_names_block(&exist_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         tb.skip_token(ST)?;
 
@@ -170,7 +170,7 @@ impl<'a> Executor<'a> {
         }
         tb.skip_token(RIGHT_CURLY_BRACE)?;
 
-        self.delete_name_block();
+        self.delete_parsing_names_block();
         let line = Some(tb.line_file_index);
         Ok(ExistFact::new(param_def, facts, line))
     }

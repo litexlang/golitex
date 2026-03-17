@@ -26,7 +26,7 @@ impl<'a> fmt::Display for Executor<'a> {
 }
 
 impl<'a> Executor<'a> {
-    pub fn new_name_block(&mut self) {
+    pub fn new_parsing_names_block(&mut self) {
         self.parsing_names_blocks.push(HashMap::new());
     }
 
@@ -47,7 +47,7 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    pub fn delete_name_block(&mut self) {
+    pub fn delete_parsing_names_block(&mut self) {
         self.parsing_names_blocks.pop();
     }
 
