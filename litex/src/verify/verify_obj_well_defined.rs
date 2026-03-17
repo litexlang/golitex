@@ -311,6 +311,46 @@ impl<'a> Executor<'a> {
         for obj in &x.list {
             self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
         }
+
+        let next_verify_state = verify_state.new_state_with_req_ok_set_to_true();
+        let len = x.list.len();
+        let mut i = 0;
+        while i < len {
+            let left_obj = match x.list.get(i) {
+                Some(left_obj) => (**left_obj).clone(),
+                None => break,
+            };
+            let mut j = i + 1;
+            while j < len {
+                let right_obj = match x.list.get(j) {
+                    Some(right_obj) => (**right_obj).clone(),
+                    None => break,
+                };
+                let not_equal_fact_as_fact = Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact::new(
+                    left_obj.clone(),
+                    right_obj,
+                    None,
+                )));
+                let verify_result = self.verify_fact(&not_equal_fact_as_fact, &next_verify_state)
+                    .map_err(|previous_error| {
+                        WellDefinedError::new(
+                            format!("failed to verify list set elements are pairwise not equal: {}", not_equal_fact_as_fact),
+                            Some(StmtError::VerifyError(previous_error)),
+                            None,
+                        )
+                    })?;
+                if !verify_result.is_true() {
+                    return Err(WellDefinedError::new(
+                        format!("list set elements must be pairwise not equal, but it is not provable: {}", not_equal_fact_as_fact),
+                        None,
+                        None,
+                    ));
+                }
+                j += 1;
+            }
+            i += 1;
+        }
+
         Ok(())
     }
 

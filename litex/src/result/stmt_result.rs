@@ -52,6 +52,7 @@ impl NonErrStmtExecResult {
 }
 
 impl NonErrStmtExecResult {
+    #[allow(dead_code)]
     pub fn line_file(&self) -> Option<(usize, usize)> {
         match self {
             NonErrStmtExecResult::NonFactualStmtSuccess(x) => x.line_file_index,

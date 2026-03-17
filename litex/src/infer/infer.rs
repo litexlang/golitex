@@ -1,7 +1,7 @@
 use crate::error::InferError;
 use crate::execute::Executor;
 use crate::fact::{
-    AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, ForallFact,
+    AndChainAtomicFact, AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, ForallFact,
     ForallFactWithIff, InFact, NormalAtomicFact, OrFact,
 };
 use crate::obj::{FnSetObj, Obj};
@@ -124,6 +124,34 @@ impl<'a> Executor<'a> {
 
                 Ok(InferResult::new())
             },
+            Obj::ListSet(list_set) => {
+                if list_set.list.is_empty() {
+                    return Ok(InferResult::new());
+                }
+
+                let mut or_case_facts: Vec<AndChainAtomicFact> = Vec::with_capacity(list_set.list.len());
+                for obj_in_list_set in list_set.list.iter() {
+                    let equal_fact = AtomicFact::EqualFact(EqualFact::new(
+                        in_fact.element.clone(),
+                        *obj_in_list_set.clone(),
+                        in_fact.line_file_index,
+                    ));
+                    or_case_facts.push(AndChainAtomicFact::AtomicFact(equal_fact));
+                }
+
+                let or_fact = Fact::OrFact(OrFact::new(or_case_facts, in_fact.line_file_index));
+                self.store_fact_without_well_defined_verified_and_infer(&or_fact).map_err(|previous_error| {
+                    InferError::new(
+                        format!("failed to store inferred or fact while inferring `{}`", in_fact),
+                        in_fact.line_file_index,
+                        Some(previous_error.into()),
+                    )
+                })?;
+
+                let mut infer_result = InferResult::new();
+                infer_result.push_fact(&or_fact);
+                Ok(infer_result)
+            }
             _ => Ok(InferResult::new()),
         }
     }
