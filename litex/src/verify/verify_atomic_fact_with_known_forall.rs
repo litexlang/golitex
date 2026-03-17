@@ -7,7 +7,7 @@ use crate::fact::{AtomicFact, ForallFact};
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult, StmtUnknown};
 use crate::verify::VerifyState;
 use crate::execute::Executor;
-use crate::obj::{Identifier, Obj, FnObj};
+use crate::obj::{FnObj, Identifier, Number, Obj};
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use std::result::Result;
 
@@ -261,7 +261,7 @@ impl<'a> Executor<'a> {
             Obj::FieldAccess(_) => Self::match_arg_when_left_is_field_access(given_arg),
             Obj::FieldAccessWithMod(_) => Self::match_arg_when_left_is_field_access_with_mod(given_arg),
             Obj::FnObj(ref f) => Self::match_arg_when_left_is_fn_obj(f, given_arg),
-            Obj::Number(_) => Self::match_arg_when_left_is_number(given_arg),
+            Obj::Number(ref left) => Self::match_arg_when_left_is_number(left, given_arg),
             Obj::Add(ref a) => Self::match_arg_when_left_is_add(&a.left, &a.right, given_arg),
             Obj::Sub(ref a) => Self::match_arg_when_left_is_sub(&a.left, &a.right, given_arg),
             Obj::Mul(ref a) => Self::match_arg_when_left_is_mul(&a.left, &a.right, given_arg),
@@ -276,14 +276,14 @@ impl<'a> Executor<'a> {
             Obj::Cap(ref a) => Self::match_arg_when_left_is_cap(&a.left, given_arg),
             Obj::ListSet(ref left) => Self::match_arg_when_left_is_list_set(&left.list, given_arg),
             Obj::SetBuilder(_) => Self::match_arg_when_left_is_set_builder(given_arg),
-            Obj::FnSetWithoutDom(_) => Self::match_arg_when_left_is_fn_set_without_dom(given_arg),
+            Obj::FnSetWithoutDom(ref left) => Self::match_arg_when_left_is_fn_set_without_dom(&left.param_sets, left.ret_set.as_ref(), given_arg),
             Obj::FnSetWithDom(_) => Self::match_arg_when_left_is_fn_set_with_dom(given_arg),
             Obj::NPosObj(_) => Self::match_arg_when_left_is_n_pos_obj(given_arg),
             Obj::NObj(_) => Self::match_arg_when_left_is_n_obj(given_arg),
             Obj::QObj(_) => Self::match_arg_when_left_is_q_obj(given_arg),
             Obj::ZObj(_) => Self::match_arg_when_left_is_z_obj(given_arg),
             Obj::RObj(_) => Self::match_arg_when_left_is_r_obj(given_arg),
-            Obj::InstSetStructObj(_) => Self::match_arg_when_left_is_inst_set_struct_obj(given_arg),
+            Obj::InstSetStructObj(ref left) => Self::match_arg_when_left_is_inst_set_struct_obj(&left.struct_name, &left.args, given_arg),
             Obj::Cart(ref left) => Self::match_arg_when_left_is_cart(&left.args, given_arg),
             Obj::CartDim(ref left) => Self::match_arg_when_left_is_cart_dim(left.set.as_ref(), given_arg),
             Obj::Proj(ref left) => Self::match_arg_when_left_is_proj(left.set.as_ref(), left.dim.as_ref(), given_arg),
@@ -378,10 +378,16 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn match_arg_when_left_is_number(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
-        let mut map = HashMap::new();
-        map.insert(given_arg.to_string(), vec![given_arg.clone()]);
-        Ok(Some(map))
+    fn match_arg_when_left_is_number(left: &Number, given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+        if !given_arg.can_be_calculated() {
+            return Ok(None);
+        }
+        let left_obj = Obj::Number(left.clone());
+        if left_obj.two_objs_can_be_calculated_and_equal_by_calculation(given_arg) {
+            Ok(Some(HashMap::new()))
+        } else {
+            Ok(None)
+        }
     }
 
     fn match_arg_when_left_is_add(left_left: &Obj, left_right: &Obj, given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
@@ -533,9 +539,22 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn match_arg_when_left_is_fn_set_without_dom(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_arg_when_left_is_fn_set_without_dom(left_param_sets: &[Box<Obj>], left_ret_set: &Obj, given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::FnSetWithoutDom(_) => Self::match_arg_type_not_implemented("FnSetWithoutDom"),
+            Obj::FnSetWithoutDom(ref given) => {
+                let param_maps = Self::match_arg_vec_then_merge(left_param_sets, &given.param_sets)?;
+                let param_map = match param_maps {
+                    Some(m) => m,
+                    None => return Ok(None),
+                };
+                let ret_map = Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_ret_set, given.ret_set.as_ref())?;
+                let ret_map = match ret_map {
+                    Some(m) => m,
+                    None => return Ok(None),
+                };
+                let merged = Self::merge_arg_match_maps(param_map, ret_map);
+                Ok(Some(merged))
+            }
             _ => Ok(None),
         }
     }
@@ -582,9 +601,18 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn match_arg_when_left_is_inst_set_struct_obj(given_arg: &Obj) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
+    fn match_arg_when_left_is_inst_set_struct_obj(
+        left_struct_name: &crate::obj::IdentifierOrIdentifierWithMod,
+        left_args: &[Box<Obj>],
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         match given_arg {
-            Obj::InstSetStructObj(_) => Self::match_arg_type_not_implemented("InstSetStructObj"),
+            Obj::InstSetStructObj(ref given) => {
+                if !left_struct_name.literally_the_same_as(&given.struct_name) {
+                    return Ok(None);
+                }
+                Self::match_arg_vec_then_merge(left_args, &given.args)
+            }
             _ => Ok(None),
         }
     }
