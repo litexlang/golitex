@@ -12,7 +12,7 @@ use crate::obj::{
 };
 use crate::obj::{Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod};
 use crate::error::ParsingError;
-use crate::stmt::parameter_type_and_property::ParamDefWithParamSet;
+use crate::stmt::parameter_def::ParamDefWithParamSet;
 
 impl<'a> Executor<'a> {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {

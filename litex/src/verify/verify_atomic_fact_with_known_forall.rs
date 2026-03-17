@@ -9,7 +9,7 @@ use crate::result::{FactVerifiedByFact, NonErrStmtExecResult, StmtUnknown};
 use crate::verify::VerifyState;
 use crate::execute::Executor;
 use crate::obj::{FnObj, Identifier, Number, Obj, IdentifierOrIdentifierWithMod};
-use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
+use crate::stmt::parameter_def::ParamDefWithParamType;
 use std::result::Result;
 
 impl<'a> Executor<'a> {

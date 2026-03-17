@@ -9,7 +9,7 @@ use crate::verify::VerifyState;
 use crate::fact::{AtomicFact, NotEqualFact, IsCartFact, IsNonemptySetFact, Fact};
 use crate::fact::InFact;
 use crate::execute::Executor;
-use crate::stmt::parameter_type_and_property::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
+use crate::stmt::parameter_def::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
 use crate::common::helper::todo_error_message;
 
 impl<'a> Executor<'a> {

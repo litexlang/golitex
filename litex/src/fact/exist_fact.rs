@@ -1,7 +1,7 @@
 use std::fmt;
 use crate::common::keywords::{COMMA, EXIST, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE, ST};
 use crate::common::helper::{curly_braced_vec_to_string_with_sep, vec_to_string_join_by_comma};
-use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
+use crate::stmt::parameter_def::ParamDefWithParamType;
 use super::atomic_fact::AtomicFact;
 use super::matchable_fact_with_atomic_fact_inside::{AndFact, ChainFact};
 use super::or_fact::OrFact;
@@ -114,7 +114,7 @@ impl OrAndChainAtomicFact {
             OrAndChainAtomicFact::OrFact(o) => Fact::OrFact(o.clone()),
         }
     }
-    
+
     pub fn to_fact(self) -> Fact {
         match self {
             OrAndChainAtomicFact::AtomicFact(a) => Fact::AtomicFact(a),

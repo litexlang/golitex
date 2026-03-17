@@ -1,4 +1,4 @@
-use super::parameter_type_and_property::ParamDefWithParamType;
+use super::parameter_def::ParamDefWithParamType;
 use crate::fact::Fact;
 use crate::obj::Obj;
 use std::fmt;

@@ -5,7 +5,7 @@ use crate::fact::{
     ForallFactWithIff, InFact, NormalAtomicFact, OrAndChainAtomicFact, OrFact,
 };
 use crate::obj::{FnSetObj, Obj};
-use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
+use crate::stmt::parameter_def::ParamDefWithParamType;
 use std::collections::HashMap;
 
 #[derive(Clone)]

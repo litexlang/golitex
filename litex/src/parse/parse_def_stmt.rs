@@ -3,7 +3,7 @@ use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
 use crate::error::ParsingError;
 use crate::stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
 use crate::common::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, FN, HAVE, IF, LEFT_BRACE, LET, PROP, RETURN, RIGHT_BRACE, STRUCT};
-use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
+use crate::stmt::parameter_def::ParamDefWithParamType;
 use crate::execute::Executor;
 use crate::stmt::Stmt;
 use super::TokenBlock;

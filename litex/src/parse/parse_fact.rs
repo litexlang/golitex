@@ -1,7 +1,7 @@
 use crate::fact::{
     ExistFact, AndChainAtomicFact, ChainAtomicFact, OrAndChainAtomicFact, ExistOrAndChainAtomicFact, AtomicFact, AndFact, ChainFact, OrFact,
 };
-use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
+use crate::stmt::parameter_def::ParamDefWithParamType;
 use crate::fact::ForallFact;
 use crate::fact::ForallFactWithIff;
 use crate::execute::Executor;
@@ -165,8 +165,13 @@ impl<'a> Executor<'a> {
         tb.skip_token(LEFT_CURLY_BRACE)?;
 
         let mut facts: Vec<OrAndChainAtomicFact> = vec![];
-        while !tb.exceed_end_of_head() && tb.current()? != RIGHT_CURLY_BRACE {
+        loop {
             facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
+            if tb.current()? != RIGHT_CURLY_BRACE {
+                tb.skip_token(COMMA)?;
+            } else {
+                break;
+            }
         }
         tb.skip_token(RIGHT_CURLY_BRACE)?;
 

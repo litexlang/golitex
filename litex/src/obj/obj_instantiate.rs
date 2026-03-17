@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::stmt::parameter_type_and_property::ParamDefWithParamSet;
+use crate::stmt::parameter_def::ParamDefWithParamSet;
 use super::atom::{Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierWithMod};
 use super::obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FnObj, FnSetWithDom,
