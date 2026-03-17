@@ -1,7 +1,11 @@
-use crate::error::{InferError};
+use crate::error::InferError;
 use crate::execute::Executor;
-use crate::fact::{AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, ForallFact, ForallFactWithIff, InFact, OrFact};
+use crate::fact::{
+    AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, ForallFact,
+    ForallFactWithIff, InFact, NormalAtomicFact, OrFact,
+};
 use crate::obj::{FnSetObj, Obj};
+use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 
 impl<'a> Executor<'a> {
     pub fn infer(&mut self, fact: &Fact) -> Result<(), InferError> {
@@ -20,6 +24,7 @@ impl<'a> Executor<'a> {
         match _atomic_fact {
             AtomicFact::EqualFact(equal_fact) => self.infer_equal_fact(equal_fact),
             AtomicFact::InFact(in_fact) => self.infer_in_fact(in_fact),
+            AtomicFact::NormalAtomicFact(normal_atomic_fact) => self.infer_normal_atomic_fact(normal_atomic_fact),
             _ => Ok(()),
         }
     }
@@ -102,4 +107,55 @@ impl<'a> Executor<'a> {
         }
     }
 
+    fn infer_normal_atomic_fact(&mut self, normal_atomic_fact: &NormalAtomicFact) -> Result<(), InferError> {
+        let predicate_name = normal_atomic_fact.predicate.to_string();
+        let predicate_definition = match self.runtime_context.get_predicate_definition_by_name(&predicate_name) {
+            Some(predicate_definition) => predicate_definition.clone(),
+            None => unreachable!(),
+        };
+
+        let param_type_facts =
+            ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(
+                &predicate_definition.params_def_with_type,
+                &normal_atomic_fact.body,
+            )
+            .map_err(|previous_error| {
+                InferError::new(
+                    format!("failed to infer parameter type facts for `{}`", normal_atomic_fact),
+                    normal_atomic_fact.line_file_index,
+                    Some(previous_error),
+                )
+            })?;
+
+        for param_type_fact in param_type_facts.iter() {
+            self.store_fact_without_well_defined_verified_and_infer(param_type_fact)
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!("failed to store parameter type fact while inferring `{}`", normal_atomic_fact),
+                        normal_atomic_fact.line_file_index,
+                        Some(previous_error.into()),
+                    )
+                })?;
+        }
+
+        let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
+            &predicate_definition.params_def_with_type,
+            &normal_atomic_fact.body,
+        );
+
+        for iff_fact in predicate_definition.iff_facts.iter() {
+            let instantiated_iff_fact = iff_fact.instantiate(&param_to_arg_map);
+
+            self.store_fact_without_well_defined_verified_and_infer(&instantiated_iff_fact)
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!("failed to store instantiated iff fact while inferring `{}`", normal_atomic_fact),
+                        normal_atomic_fact.line_file_index,
+                        Some(previous_error.into()),
+                    )
+                })?;
+        }
+
+        Ok(())
+    }
 }

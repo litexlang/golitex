@@ -3,6 +3,7 @@ prop p(x, y R):
 
 have a, b R
 
-know $p(a, b)
+know:
+    $p(a, b)
 
 a > b

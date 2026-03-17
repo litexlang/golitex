@@ -30,7 +30,7 @@ fn test_verify_atomic_fact() {
             println!("{}", stmt_result.body_string());
         }
         Err(e) => {
-            println!("ERROR: {}: {}", e.display_label(), e.error_body());
+            println!("ERROR\n{}\n{}", e.display_label(), e.error_body());
         }
     }
 }

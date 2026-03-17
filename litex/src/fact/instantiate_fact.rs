@@ -1,9 +1,15 @@
 use std::collections::HashMap;
 use crate::obj::Obj;
+use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use crate::fact::ExistOrAndChainAtomicFact;
 use crate::fact::AtomicFact;
 use crate::fact::ExistFact;
+use crate::fact::Fact;
+use crate::fact::ForallFact;
+use crate::fact::ForallFactWithIff;
+use crate::fact::OrAndChainAtomicFact;
 use crate::fact::OrFact;
+use crate::fact::AndChainAtomicFact;
 use crate::fact::matchable_fact_with_atomic_fact_inside::AndFact;
 use crate::fact::matchable_fact_with_atomic_fact_inside::ChainFact;
 use crate::fact::{
@@ -37,6 +43,22 @@ use crate::fact::{
     NotSupersetFact,
 };
 
+impl Fact {
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Fact {
+        match self {
+            Fact::AtomicFact(atomic_fact) => Fact::AtomicFact(atomic_fact.instantiate(param_to_arg_map)),
+            Fact::ExistFact(exist_fact) => Fact::ExistFact(exist_fact.instantiate(param_to_arg_map)),
+            Fact::OrFact(or_fact) => Fact::OrFact(or_fact.instantiate(param_to_arg_map)),
+            Fact::AndFact(and_fact) => Fact::AndFact(and_fact.instantiate(param_to_arg_map)),
+            Fact::ChainFact(chain_fact) => Fact::ChainFact(chain_fact.instantiate(param_to_arg_map)),
+            Fact::ForallFact(forall_fact) => Fact::ForallFact(forall_fact.instantiate(param_to_arg_map)),
+            Fact::ForallFactWithIff(forall_fact_with_iff) => {
+                Fact::ForallFactWithIff(forall_fact_with_iff.instantiate(param_to_arg_map))
+            }
+        }
+    }
+}
+
 impl ExistOrAndChainAtomicFact {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> ExistOrAndChainAtomicFact {
         match self {
@@ -54,6 +76,41 @@ impl ExistOrAndChainAtomicFact {
             }
             ExistOrAndChainAtomicFact::ExistFact(exist_fact) => {
                 ExistOrAndChainAtomicFact::ExistFact(exist_fact.instantiate(param_to_arg_map))
+            }
+        }
+    }
+}
+
+impl OrAndChainAtomicFact {
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> OrAndChainAtomicFact {
+        match self {
+            OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+                OrAndChainAtomicFact::AtomicFact(atomic_fact.instantiate(param_to_arg_map))
+            }
+            OrAndChainAtomicFact::AndFact(and_fact) => {
+                OrAndChainAtomicFact::AndFact(and_fact.instantiate(param_to_arg_map))
+            }
+            OrAndChainAtomicFact::ChainFact(chain_fact) => {
+                OrAndChainAtomicFact::ChainFact(chain_fact.instantiate(param_to_arg_map))
+            }
+            OrAndChainAtomicFact::OrFact(or_fact) => {
+                OrAndChainAtomicFact::OrFact(or_fact.instantiate(param_to_arg_map))
+            }
+        }
+    }
+}
+
+impl AndChainAtomicFact {
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> AndChainAtomicFact {
+        match self {
+            AndChainAtomicFact::AtomicFact(atomic_fact) => {
+                AndChainAtomicFact::AtomicFact(atomic_fact.instantiate(param_to_arg_map))
+            }
+            AndChainAtomicFact::AndFact(and_fact) => {
+                AndChainAtomicFact::AndFact(and_fact.instantiate(param_to_arg_map))
+            }
+            AndChainAtomicFact::ChainFact(chain_fact) => {
+                AndChainAtomicFact::ChainFact(chain_fact.instantiate(param_to_arg_map))
             }
         }
     }
@@ -151,194 +208,382 @@ impl AtomicFact {
 }
 
 impl NormalAtomicFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> NormalAtomicFact {
-        unreachable!("NormalAtomicFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NormalAtomicFact {
+        let mut body = Vec::with_capacity(self.body.len());
+        for obj in self.body.iter() {
+            body.push(obj.instantiate(param_to_arg_map));
+        }
+        NormalAtomicFact {
+            predicate: self.predicate.clone(),
+            body,
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl EqualFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> EqualFact {
-        unreachable!("EqualFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> EqualFact {
+        EqualFact {
+            left: self.left.instantiate(param_to_arg_map),
+            right: self.right.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl LessFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> LessFact {
-        unreachable!("LessFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> LessFact {
+        LessFact {
+            left: self.left.instantiate(param_to_arg_map),
+            right: self.right.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl GreaterFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> GreaterFact {
-        unreachable!("GreaterFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> GreaterFact {
+        GreaterFact {
+            left: self.left.instantiate(param_to_arg_map),
+            right: self.right.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl LessEqualFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> LessEqualFact {
-        unreachable!("LessEqualFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> LessEqualFact {
+        LessEqualFact {
+            left: self.left.instantiate(param_to_arg_map),
+            right: self.right.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl GreaterEqualFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> GreaterEqualFact {
-        unreachable!("GreaterEqualFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> GreaterEqualFact {
+        GreaterEqualFact {
+            left: self.left.instantiate(param_to_arg_map),
+            right: self.right.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl IsSetFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> IsSetFact {
-        unreachable!("IsSetFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> IsSetFact {
+        IsSetFact {
+            set: self.set.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl IsNonemptySetFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> IsNonemptySetFact {
-        unreachable!("IsNonemptySetFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> IsNonemptySetFact {
+        IsNonemptySetFact {
+            set: self.set.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl IsFiniteSetFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> IsFiniteSetFact {
-        unreachable!("IsFiniteSetFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> IsFiniteSetFact {
+        IsFiniteSetFact {
+            set: self.set.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl InFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> InFact {
-        unreachable!("InFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> InFact {
+        InFact {
+            element: self.element.instantiate(param_to_arg_map),
+            set: self.set.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl IsCartFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> IsCartFact {
-        unreachable!("IsCartFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> IsCartFact {
+        IsCartFact {
+            set: self.set.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl IsTupleFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> IsTupleFact {
-        unreachable!("IsTupleFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> IsTupleFact {
+        IsTupleFact {
+            set: self.set.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl SubsetFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> SubsetFact {
-        unreachable!("SubsetFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> SubsetFact {
+        SubsetFact {
+            left: self.left.instantiate(param_to_arg_map),
+            right: self.right.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl SupersetFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> SupersetFact {
-        unreachable!("SupersetFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> SupersetFact {
+        SupersetFact {
+            left: self.left.instantiate(param_to_arg_map),
+            right: self.right.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl NotNormalAtomicFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> NotNormalAtomicFact {
-        unreachable!("NotNormalAtomicFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotNormalAtomicFact {
+        let mut body = Vec::with_capacity(self.body.len());
+        for obj in self.body.iter() {
+            body.push(obj.instantiate(param_to_arg_map));
+        }
+        NotNormalAtomicFact {
+            predicate: self.predicate.clone(),
+            body,
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl NotEqualFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> NotEqualFact {
-        unreachable!("NotEqualFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotEqualFact {
+        NotEqualFact {
+            left: self.left.instantiate(param_to_arg_map),
+            right: self.right.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl NotLessFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> NotLessFact {
-        unreachable!("NotLessFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotLessFact {
+        NotLessFact {
+            left: self.left.instantiate(param_to_arg_map),
+            right: self.right.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl NotGreaterFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> NotGreaterFact {
-        unreachable!("NotGreaterFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotGreaterFact {
+        NotGreaterFact {
+            left: self.left.instantiate(param_to_arg_map),
+            right: self.right.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl NotLessEqualFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> NotLessEqualFact {
-        unreachable!("NotLessEqualFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotLessEqualFact {
+        NotLessEqualFact {
+            left: self.left.instantiate(param_to_arg_map),
+            right: self.right.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl NotGreaterEqualFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> NotGreaterEqualFact {
-        unreachable!("NotGreaterEqualFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotGreaterEqualFact {
+        NotGreaterEqualFact {
+            left: self.left.instantiate(param_to_arg_map),
+            right: self.right.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl NotIsSetFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> NotIsSetFact {
-        unreachable!("NotIsSetFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotIsSetFact {
+        NotIsSetFact {
+            set: self.set.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl NotIsNonemptySetFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> NotIsNonemptySetFact {
-        unreachable!("NotIsNonemptySetFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotIsNonemptySetFact {
+        NotIsNonemptySetFact {
+            set: self.set.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl NotIsFiniteSetFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> NotIsFiniteSetFact {
-        unreachable!("NotIsFiniteSetFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotIsFiniteSetFact {
+        NotIsFiniteSetFact {
+            set: self.set.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl NotInFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> NotInFact {
-        unreachable!("NotInFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotInFact {
+        NotInFact {
+            element: self.element.instantiate(param_to_arg_map),
+            set: self.set.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl NotIsCartFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> NotIsCartFact {
-        unreachable!("NotIsCartFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotIsCartFact {
+        NotIsCartFact {
+            set: self.set.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl NotIsTupleFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> NotIsTupleFact {
-        unreachable!("NotIsTupleFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotIsTupleFact {
+        NotIsTupleFact {
+            set: self.set.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl NotSubsetFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> NotSubsetFact {
-        unreachable!("NotSubsetFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotSubsetFact {
+        NotSubsetFact {
+            left: self.left.instantiate(param_to_arg_map),
+            right: self.right.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl NotSupersetFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> NotSupersetFact {
-        unreachable!("NotSupersetFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotSupersetFact {
+        NotSupersetFact {
+            left: self.left.instantiate(param_to_arg_map),
+            right: self.right.instantiate(param_to_arg_map),
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl ExistFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> ExistFact {
-        unreachable!("ExistFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> ExistFact {
+        let mut params_def_with_type = Vec::with_capacity(self.params_def_with_type.len());
+        for param_def_with_type in self.params_def_with_type.iter() {
+            params_def_with_type.push(ParamDefWithParamType(
+                param_def_with_type.0.clone(),
+                param_def_with_type.1.instantiate(param_to_arg_map),
+            ));
+        }
+        let mut facts = Vec::with_capacity(self.facts.len());
+        for fact in self.facts.iter() {
+            facts.push(fact.instantiate(param_to_arg_map));
+        }
+        ExistFact {
+            params_def_with_type,
+            facts,
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl OrFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> OrFact {
-        unreachable!("OrFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> OrFact {
+        let mut facts = Vec::with_capacity(self.facts.len());
+        for fact in self.facts.iter() {
+            facts.push(fact.instantiate(param_to_arg_map));
+        }
+        OrFact {
+            facts,
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl AndFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> AndFact {
-        unreachable!("AndFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> AndFact {
+        let mut facts = Vec::with_capacity(self.facts.len());
+        for fact in self.facts.iter() {
+            facts.push(fact.instantiate(param_to_arg_map));
+        }
+        AndFact {
+            facts,
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
 impl ChainFact {
-    pub fn instantiate(&self, _param_to_arg_map: &HashMap<String, Obj>) -> ChainFact {
-        unreachable!("ChainFact::instantiate not implemented yet")
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> ChainFact {
+        let mut objs = Vec::with_capacity(self.objs.len());
+        for obj in self.objs.iter() {
+            objs.push(obj.instantiate(param_to_arg_map));
+        }
+        ChainFact {
+            objs,
+            prop_names: self.prop_names.clone(),
+            line_file_index: self.line_file_index,
+        }
+    }
+}
+
+impl ForallFact {
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> ForallFact {
+        let mut params_def_with_type = Vec::with_capacity(self.params_def_with_type.len());
+        for param_def_with_type in self.params_def_with_type.iter() {
+            params_def_with_type.push(ParamDefWithParamType(
+                param_def_with_type.0.clone(),
+                param_def_with_type.1.instantiate(param_to_arg_map),
+            ));
+        }
+        let mut dom_facts = Vec::with_capacity(self.dom_facts.len());
+        for dom_fact in self.dom_facts.iter() {
+            dom_facts.push(dom_fact.instantiate(param_to_arg_map));
+        }
+        let mut then_facts = Vec::with_capacity(self.then_facts.len());
+        for then_fact in self.then_facts.iter() {
+            then_facts.push(then_fact.instantiate(param_to_arg_map));
+        }
+        ForallFact {
+            params_def_with_type,
+            dom_facts,
+            then_facts,
+            line_file_index: self.line_file_index,
+        }
+    }
+}
+
+impl ForallFactWithIff {
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> ForallFactWithIff {
+        let forall_fact = self.forall_fact.instantiate(param_to_arg_map);
+        let mut iff_facts = Vec::with_capacity(self.iff_facts.len());
+        for iff_fact in self.iff_facts.iter() {
+            iff_facts.push(iff_fact.instantiate(param_to_arg_map));
+        }
+        ForallFactWithIff {
+            forall_fact,
+            iff_facts,
+            line_file_index: self.line_file_index,
+        }
     }
 }
 
