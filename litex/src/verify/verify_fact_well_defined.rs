@@ -5,6 +5,7 @@ use crate::fact::AtomicFact;
 use crate::fact::line_file as atomic_fact_line_file;
 use crate::execute::Executor;
 use crate::verify::VerifyState;
+use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 
 // well-defined check for fact: 1. predicate is defined 2. all args are well-defined
 impl<'a> Executor<'a> {
@@ -29,7 +30,7 @@ impl<'a> Executor<'a> {
             if actual_args.len() != expected_len {
                 return Err(WellDefinedError::new(
                     format!(
-                        "predicate {} expects {} argument(s), but got {}",
+                        "fact `{}` expects {} argument(s), but got {}",
                         name_string,
                         expected_len,
                         actual_args.len()
@@ -39,11 +40,11 @@ impl<'a> Executor<'a> {
             }
         } else {
             let expected_len = if let Some(predicate_definition) = self.runtime_context.get_predicate_definition_by_name(&name_string) {
-                predicate_definition.params_def_with_type.len()
+                ParamDefWithParamType::number_of_params(&predicate_definition.params_def_with_type)
             } else if let Some(predicate_without_meaning_definition) = self.runtime_context.get_predicate_without_meaning_definition_by_name(&name_string) {
                 predicate_without_meaning_definition.params.len()
             } else {
-                return Err(WellDefinedError::new(format!("predicate {} not defined", name_string), None, atomic_fact_line_file(atomic_fact)));
+                return Err(WellDefinedError::new(format!("fact `{}` not defined", name_string), None, atomic_fact_line_file(atomic_fact)));
             };
 
             let actual_args = atomic_fact.args();

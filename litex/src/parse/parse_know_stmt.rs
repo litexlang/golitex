@@ -21,7 +21,8 @@ impl<'a> Executor<'a> {
             loop {
                 let o = self.parse_exist_or_and_chain_atomic_fact(tb)?;
                 facts.push(o.to_fact());
-                if tb.current()? != COMMA {
+                
+                if tb.exceed_end_of_head() {
                     break;
                 }
                 tb.skip_token(COMMA)?;
