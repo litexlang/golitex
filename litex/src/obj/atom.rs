@@ -24,6 +24,12 @@ impl fmt::Display for IdentifierOrIdentifierWithMod {
     }
 }
 
+impl IdentifierOrIdentifierWithMod {
+    pub fn literally_the_same_as(&self, other: &IdentifierOrIdentifierWithMod) -> bool {
+        return self.to_string() == other.to_string();
+    }
+}
+
 #[derive(Clone)]
 pub struct Identifier {
     pub name: String,
