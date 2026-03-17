@@ -38,7 +38,7 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn stmt_unsupported(line_file: Option<(usize, usize)>) -> Result<NonErrStmtExecResult, StmtError> {
-        Err(StmtError::ExecError(ExecError::new("不支持的语句类型".to_string(), None, line_file)))
+    pub fn stmt_unsupported(stmt_type_name: String, line_file: Option<(usize, usize)>) -> Result<NonErrStmtExecResult, StmtError> {
+        Err(StmtError::ExecError(ExecError::new(stmt_type_name, "unimplemented".to_string(), None, line_file)))
     }
 }

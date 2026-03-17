@@ -222,11 +222,13 @@ impl ParamDefWithParamType {
         let total_param_count = Self::number_of_params_in_param_def_with_type_def(param_defs);
         if total_param_count != args.len() {
             return Err(StmtError::ExecError(ExecError::new(
+                "".to_string(),
                 format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
                     total_param_count,
                     args.len()
-                ),None,
+                ),
+                None,
                 None,
             )));
         }

@@ -27,6 +27,10 @@ impl RunFileStmt {
     pub fn new(file_path: String, line_file_index: Option<(usize, usize)>) -> Self {
         RunFileStmt { file_path, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "RunFileStmt".to_string()
+    }
 }
 
 impl fmt::Display for RunFileStmt {
@@ -48,11 +52,19 @@ impl ImportRelativePathStmt {
     pub fn new(path: String, as_mod_name: Option<String>, line_file_index: Option<(usize, usize)>) -> Self {
         ImportRelativePathStmt { path, as_mod_name, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "ImportRelativePathStmt".to_string()
+    }
 }
 
 impl ImportGlobalModuleStmt {
     pub fn new(mod_name: String, as_mod_name: Option<String>, line_file_index: Option<(usize, usize)>) -> Self {
         ImportGlobalModuleStmt { mod_name, as_mod_name, line_file_index }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        "ImportGlobalModuleStmt".to_string()
     }
 }
 
@@ -81,6 +93,13 @@ impl ImportStmt {
             ImportStmt::ImportGlobalModule(import_global_mod) => import_global_mod.line_file_index,
         }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        match self {
+            ImportStmt::ImportRelativePath(stmt) => stmt.stmt_type_name(),
+            ImportStmt::ImportGlobalModule(stmt) => stmt.stmt_type_name(),
+        }
+    }
 }
 
 pub struct DoNothingStmt {
@@ -95,6 +114,10 @@ impl ClearStmt {
     pub fn new(line_file_index: Option<(usize, usize)>) -> Self {
         ClearStmt { line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "ClearStmt".to_string()
+    }
 }
 
 impl fmt::Display for ClearStmt {
@@ -106,6 +129,10 @@ impl fmt::Display for ClearStmt {
 impl DoNothingStmt {
     pub fn new(line_file_index: Option<(usize, usize)>) -> Self {
         DoNothingStmt { line_file_index }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        "DoNothingStmt".to_string()
     }
 }
 
