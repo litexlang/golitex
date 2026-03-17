@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use crate::fact::ExistOrAndChainAtomicFact;
 use crate::environment::KnownForallFactParamsAndDom;
+use crate::infer::InferResult;
 use std::rc::Rc;
 use crate::error::VerifyError;
 use crate::fact::{AtomicFact, ForallFact};
@@ -207,6 +208,7 @@ impl<'a> Executor<'a> {
         let fact_verified = FactVerifiedByFact::new(
             fact_string,
             verified_by_known_forall_fact.to_string(),
+            InferResult::new(),
             verified_by_known_forall_fact.line_file_index,
         );
         Ok(Some(fact_verified))

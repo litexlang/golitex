@@ -7,8 +7,29 @@ use crate::fact::{
 use crate::obj::{FnSetObj, Obj};
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 
+#[derive(Clone)]
+pub struct InferResult {
+    pub infer_facts: Vec<String>
+}
+
+impl InferResult {
+    pub fn new() -> Self {
+        InferResult { infer_facts: vec![] }
+    }
+
+    pub fn push_fact(&mut self, fact: &Fact) {
+        self.infer_facts.push(fact.to_string());
+    }
+
+    pub fn append(&mut self, other_infer_result: InferResult) {
+        for infer_fact in other_infer_result.infer_facts {
+            self.infer_facts.push(infer_fact);
+        }
+    }
+}
+
 impl<'a> Executor<'a> {
-    pub fn infer(&mut self, fact: &Fact) -> Result<(), InferError> {
+    pub fn infer(&mut self, fact: &Fact) -> Result<InferResult, InferError> {
         match fact {
             Fact::AtomicFact(atomic_fact) => self.infer_atomic_fact(atomic_fact),
             Fact::ExistFact(exist_fact) => self.infer_exist_fact(exist_fact),
@@ -20,47 +41,47 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn infer_atomic_fact(&mut self, _atomic_fact: &AtomicFact) -> Result<(), InferError> {
+    fn infer_atomic_fact(&mut self, _atomic_fact: &AtomicFact) -> Result<InferResult, InferError> {
         match _atomic_fact {
             AtomicFact::EqualFact(equal_fact) => self.infer_equal_fact(equal_fact),
             AtomicFact::InFact(in_fact) => self.infer_in_fact(in_fact),
             AtomicFact::NormalAtomicFact(normal_atomic_fact) => self.infer_normal_atomic_fact(normal_atomic_fact),
-            _ => Ok(()),
+            _ => Ok(InferResult::new()),
         }
     }
 
-    fn infer_exist_fact(&mut self, _exist_fact: &ExistFact) -> Result<(), InferError> {
-        Ok(())
+    fn infer_exist_fact(&mut self, _exist_fact: &ExistFact) -> Result<InferResult, InferError> {
+        Ok(InferResult::new())
     }
 
-    fn infer_or_fact(&mut self, _or_fact: &OrFact) -> Result<(), InferError> {
-        Ok(())
+    fn infer_or_fact(&mut self, _or_fact: &OrFact) -> Result<InferResult, InferError> {
+        Ok(InferResult::new())
     }
 
-    fn infer_and_fact(&mut self, _and_fact: &AndFact) -> Result<(), InferError> {
-        Ok(())
+    fn infer_and_fact(&mut self, _and_fact: &AndFact) -> Result<InferResult, InferError> {
+        Ok(InferResult::new())
     }
 
-    fn infer_chain_fact(&mut self, _chain_fact: &ChainFact) -> Result<(), InferError> {
-        Ok(())
+    fn infer_chain_fact(&mut self, _chain_fact: &ChainFact) -> Result<InferResult, InferError> {
+        Ok(InferResult::new())
     }
 
-    fn infer_forall_fact(&mut self, _forall_fact: &ForallFact) -> Result<(), InferError> {
-        Ok(())
+    fn infer_forall_fact(&mut self, _forall_fact: &ForallFact) -> Result<InferResult, InferError> {
+        Ok(InferResult::new())
     }
 
     fn infer_forall_fact_with_iff(
         &mut self,
         _forall_fact_with_iff: &ForallFactWithIff,
-    ) -> Result<(), InferError> {
-        Ok(())
+    ) -> Result<InferResult, InferError> {
+        Ok(InferResult::new())
     }
 
-    fn infer_equal_fact(&mut self, _equal_fact: &EqualFact) -> Result<(), InferError> {
-        Ok(())
+    fn infer_equal_fact(&mut self, _equal_fact: &EqualFact) -> Result<InferResult, InferError> {
+        Ok(InferResult::new())
     }
 
-    fn infer_in_fact(&mut self, in_fact: &InFact) -> Result<(), InferError> {
+    fn infer_in_fact(&mut self, in_fact: &InFact) -> Result<InferResult, InferError> {
         match &in_fact.set {
             Obj::FnSetWithDom(fn_set_with_dom) => {
                 let is_element_atom = match &in_fact.element {
@@ -72,7 +93,7 @@ impl<'a> Executor<'a> {
                 };
 
                 if !is_element_atom {
-                    return Ok(());
+                    return Ok(InferResult::new());
                 }
 
                 let key = in_fact.element.to_string();
@@ -81,7 +102,7 @@ impl<'a> Executor<'a> {
                 let env = self.runtime_context.top_level_env();
                 env.known_fn_in_fn_set.insert(key, fn_set_obj);
 
-                Ok(())
+                Ok(InferResult::new())
             }
             Obj::FnSetWithoutDom(fn_set_without_dom) => {
                 let is_element_atom = match &in_fact.element {
@@ -93,7 +114,7 @@ impl<'a> Executor<'a> {
                 };
 
                 if !is_element_atom {
-                    return Ok(());
+                    return Ok(InferResult::new());
                 }
 
                 let key = in_fact.element.to_string();
@@ -101,18 +122,19 @@ impl<'a> Executor<'a> {
 
                 self.runtime_context.top_level_env().known_fn_in_fn_set.insert(key, fn_set_obj);
 
-                Ok(())
-            }
-            _ => Ok(()),
+                Ok(InferResult::new())
+            },
+            _ => Ok(InferResult::new()),
         }
     }
 
-    fn infer_normal_atomic_fact(&mut self, normal_atomic_fact: &NormalAtomicFact) -> Result<(), InferError> {
+    fn infer_normal_atomic_fact(&mut self, normal_atomic_fact: &NormalAtomicFact) -> Result<InferResult, InferError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
         let predicate_definition = match self.runtime_context.get_predicate_definition_by_name(&predicate_name) {
             Some(predicate_definition) => predicate_definition.clone(),
             None => unreachable!(),
         };
+        let mut infer_result = InferResult::new();
 
         let param_type_facts =
             ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(
@@ -136,6 +158,7 @@ impl<'a> Executor<'a> {
                         Some(previous_error.into()),
                     )
                 })?;
+            infer_result.push_fact(param_type_fact);
         }
 
         let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
@@ -154,8 +177,9 @@ impl<'a> Executor<'a> {
                         Some(previous_error.into()),
                     )
                 })?;
+            infer_result.push_fact(&instantiated_iff_fact);
         }
 
-        Ok(())
+        Ok(infer_result)
     }
 }
