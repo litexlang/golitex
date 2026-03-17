@@ -13,7 +13,7 @@ impl<'a> Executor<'a> {
         } else if tb.current()? == NONEMPTY_SET {
             self.witness_nonempty_set(tb) 
         } else {
-            return Err(ParsingError::new("witness expects a exist or nonempty set".to_string(), tb.line_file_index));
+            return Err(ParsingError::new("witness expects a exist or nonempty set".to_string(), tb.line_file_index, None));
         }
     }
 
