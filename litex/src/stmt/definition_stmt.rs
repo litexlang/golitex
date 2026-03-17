@@ -86,7 +86,7 @@ pub struct DefLetStmt {
 pub struct DefPropStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
-    pub iff_facts: Option<Vec<Fact>>,
+    pub iff_facts: Vec<Fact>,
     pub line_file_index: Option<(usize, usize)>,
 }
 
@@ -108,7 +108,7 @@ impl fmt::Display for DefStructWithFieldsStmt {
 }
 
 impl DefPropStmt {
-    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, iff_facts: Option<Vec<Fact>>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, iff_facts: Vec<Fact>, line_file_index: Option<(usize, usize)>) -> Self {
         DefPropStmt { name, params_def_with_type, iff_facts, line_file_index }
     }
 
@@ -119,9 +119,9 @@ impl DefPropStmt {
 
 impl fmt::Display for DefPropStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match &self.iff_facts {
-            Some(iff_facts) => write!(f, "{} {}{}{}\n{}", PROP, self.name, braced_vec_to_string(&self.params_def_with_type), COLON,  vec_to_string_add_four_spaces_at_beginning_of_each_line(&iff_facts, 1)),
-            None => write!(f, "{} {}{}", PROP, self.name, braced_vec_to_string(&self.params_def_with_type)),
+        match self.iff_facts.len() {
+            0 => write!(f, "{} {}{}", PROP, self.name, braced_vec_to_string(&self.params_def_with_type)),
+            _ => write!(f, "{} {}{}{}\n{}", PROP, self.name, braced_vec_to_string(&self.params_def_with_type), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.iff_facts, 1)),
         }
     }
 }

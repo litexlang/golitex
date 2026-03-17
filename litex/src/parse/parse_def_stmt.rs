@@ -37,10 +37,7 @@ impl<'a> Executor<'a> {
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
         self.validate_names_and_put_into_parsing_names_block(&all_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
         let facts = self.parse_facts_in_body(tb)?;
-        match facts.len() {
-            0 => Ok(Stmt::DefPropStmt(DefPropStmt::new(name, param_defs, None, Some(tb.line_file_index)))),
-            _ => Ok(Stmt::DefPropStmt(DefPropStmt::new(name, param_defs, Some(facts), Some(tb.line_file_index)))),
-        }
+        Ok(Stmt::DefPropStmt(DefPropStmt::new(name, param_defs, facts, Some(tb.line_file_index))))
     }
 
     pub fn parse_def_prop_without_meaning_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {

@@ -52,13 +52,8 @@ impl<'a> Executor<'a> {
     fn def_prop_stmt_check_well_defined_body(&mut self, def_prop_stmt: &DefPropStmt) -> Result<(), ExecError> {
         self.define_params_with_type(&def_prop_stmt.params_def_with_type,false)?;
 
-        match &def_prop_stmt.iff_facts {
-            None => {},
-            Some(iff_facts) => {
-                for fact in iff_facts.iter() {
-                    self.verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))?;
-                }
-            }
+        for fact in def_prop_stmt.iff_facts.iter() {
+            self.verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))?;
         }
         Ok(())
     }
