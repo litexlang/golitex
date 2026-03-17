@@ -1,10 +1,11 @@
 use crate::error::ExecError;
 use std::collections::HashMap;
-use crate::obj::Obj;
+use crate::obj::{Atom, FnObj, Identifier, Obj};
 use crate::stmt::parameter_type_and_property::{ParamDefWithParamType, ParamType, ParamDefWithParamSet};
 use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::fact::Fact;
+use crate::fact::{AtomicFact, EqualFact, ForallFact, InFact};
 use crate::result::NonErrStmtExecResult;
 use crate::result::NonFactualStmtSuccess;
 use super::Executor;
@@ -162,11 +163,7 @@ impl<'a> Executor<'a> {
         )
         .map_err(|e| ExecError::new(e.error_body(), vec![e], line_file_index))?;
         for fact in args_satisfy_param_types.iter() {
-            let verify_result = self.verify_fact(fact, &verify_state).map_err(ExecError::from)?;
-            if !verify_result.is_true() {
-                let msg = format!("have_exist_obj_stmt: {} is not verified", fact);
-                return Err(ExecError::new(msg, vec![], line_file_index));
-            }
+            self.store_fact_without_well_defined_verified_and_infer(fact)?;
         }
 
         let param_names = ParamDefWithParamType::collect_param_names(&exist_fact_in_have_obj_stmt.params_def_with_type);
@@ -185,11 +182,7 @@ impl<'a> Executor<'a> {
                 .to_exist_or_and_chain_atomic_fact()
                 .instantiate(&param_to_obj_map)
                 .to_fact();
-            let verify_result = self.verify_fact(&instantiated_fact, &verify_state).map_err(ExecError::from)?;
-            if !verify_result.is_true() {
-                let msg = format!("have_exist_obj_stmt: {} is not verified", instantiated_fact);
-                return Err(ExecError::new(msg, vec![], line_file_index));
-            }
+            self.store_fact_without_well_defined_verified_and_infer(&instantiated_fact)?;
         }
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
@@ -199,7 +192,100 @@ impl<'a> Executor<'a> {
     }
 
     pub fn have_fn_equal_stmt(&mut self, have_fn_equal_stmt: &HaveFnEqualStmt) -> Result<NonErrStmtExecResult, ExecError> {
-        Err(ExecError::new("have_fn_equal_stmt: NOT IMPLEMENTED YET".to_string(), vec![], have_fn_equal_stmt.line_file_index))
+        self.have_fn_equal_stmt_verify_well_defined(have_fn_equal_stmt).map_err(|e| {
+            ExecError::new(
+                "have_fn_equal_stmt: verify well-defined failed".to_string(),
+                vec![e.into()],
+                have_fn_equal_stmt.line_file_index,
+            )
+        })?;
+
+        let function_identifier_obj = Obj::Identifier(Identifier::new(have_fn_equal_stmt.name.clone()));
+        let function_set_obj = Obj::FnSetWithDom(have_fn_equal_stmt.fn_set_with_params.clone());
+        let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+            function_identifier_obj,
+            function_set_obj,
+            have_fn_equal_stmt.line_file_index,
+        )));
+        self.store_fact_without_well_defined_verified_and_infer(&function_in_function_set_fact).map_err(ExecError::from)?;
+
+        let param_names = ParamDefWithParamSet::collect_param_names(&have_fn_equal_stmt.fn_set_with_params.params_def_with_set);
+        let mut param_defs_with_type: Vec<ParamDefWithParamType> = vec![];
+        for param_def_with_set in have_fn_equal_stmt.fn_set_with_params.params_def_with_set.iter() {
+            param_defs_with_type.push(ParamDefWithParamType(
+                param_def_with_set.0.clone(),
+                ParamType::Obj(param_def_with_set.1.clone()),
+            ));
+        }
+
+        let mut function_args: Vec<Box<Obj>> = vec![];
+        for param_name in param_names.iter() {
+            function_args.push(Box::new(Obj::Identifier(Identifier::new(param_name.clone()))));
+        }
+        let function_obj = Obj::FnObj(FnObj::new(
+            Atom::IdentifierAtom(Identifier::new(have_fn_equal_stmt.name.clone())),
+            vec![function_args],
+        ));
+
+        let function_equals_equal_to_fact = AtomicFact::EqualFact(EqualFact::new(
+            function_obj,
+            have_fn_equal_stmt.equal_to.clone(),
+            have_fn_equal_stmt.line_file_index,
+        ));
+        let forall_fact = ForallFact::new(
+            param_defs_with_type,
+            have_fn_equal_stmt
+                .fn_set_with_params
+                .dom_facts
+                .iter()
+                .map(|fact| fact.clone().to_exist_or_and_chain_atomic_fact())
+                .collect(),
+            vec![crate::fact::ExistOrAndChainAtomicFact::AtomicFact(function_equals_equal_to_fact)],
+            have_fn_equal_stmt.line_file_index,
+        );
+        let forall_as_fact = Fact::ForallFact(forall_fact);
+        self.store_fact_without_well_defined_verified_and_infer(&forall_as_fact).map_err(ExecError::from)?;
+
+        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
+            have_fn_equal_stmt.to_string(),
+            have_fn_equal_stmt.line_file_index,
+        )))
+    }
+
+    fn have_fn_equal_stmt_verify_well_defined(&mut self, have_fn_equal_stmt: &HaveFnEqualStmt) -> Result<(), ExecError> {
+        self.runtime_context.new_env();
+
+        let result = self.have_fn_equal_stmt_verify_well_defined_body(have_fn_equal_stmt);
+
+        self.runtime_context.delete_env();
+        result
+    }
+
+    fn have_fn_equal_stmt_verify_well_defined_body(&mut self, have_fn_equal_stmt: &HaveFnEqualStmt) -> Result<(), ExecError> {
+        let verify_state = VerifyState::new(0, false);
+
+        for param_def_with_set in have_fn_equal_stmt.fn_set_with_params.params_def_with_set.iter() {
+            self.define_params_with_set(param_def_with_set)?;
+        }
+
+        self.verify_obj_well_defined_and_store_cache(&have_fn_equal_stmt.equal_to, &verify_state)?;
+
+        let equal_to_in_ret_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+            have_fn_equal_stmt.equal_to.clone(),
+            have_fn_equal_stmt.fn_set_with_params.ret_set.as_ref().clone(),
+            have_fn_equal_stmt.line_file_index,
+        )));
+        let verify_result = self.verify_fact(&equal_to_in_ret_set_fact, &verify_state).map_err(ExecError::from)?;
+        if !verify_result.is_true() {
+            let msg = format!(
+                "have_fn_equal_stmt: {} is not in return set {}",
+                have_fn_equal_stmt.equal_to,
+                have_fn_equal_stmt.fn_set_with_params.ret_set
+            );
+            return Err(ExecError::new(msg, vec![], have_fn_equal_stmt.line_file_index));
+        }
+
+        Ok(())
     }
 
     pub fn have_fn_equal_case_by_case_stmt(&mut self, have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt) -> Result<NonErrStmtExecResult, ExecError> {

@@ -211,9 +211,9 @@ impl<'a> Executor<'a> {
     }
 
     pub fn fn_set_with_dom_without_fn_prefix(&mut self, tb: &mut TokenBlock) -> Result<FnSetWithDom, ParsingError> {
-        self.new_name_block();
+        self.new_parsing_names_block();
         let fn_set = self.fn_set_with_dom_without_fn_prefix_body(tb);
-        self.delete_name_block();
+        self.delete_parsing_names_block();
         fn_set
     }
 
@@ -516,9 +516,9 @@ impl<'a> Executor<'a> {
 
     /// Parse set builder or list set after the first identifier; wraps body in a name block for the bound variable.
     fn parse_set_builder(&mut self, tb: &mut TokenBlock, a: Identifier) -> Result<Obj, ParsingError> {
-        self.new_name_block();
+        self.new_parsing_names_block();
         let result = self.parse_set_builder_body(tb, a);
-        self.delete_name_block();
+        self.delete_parsing_names_block();
         result
     }
 

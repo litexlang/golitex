@@ -305,6 +305,26 @@ impl ParamDefWithParamType {
         }
         Some(result)
     }
+
+    pub fn param_defs_and_args_to_param_to_arg_map(
+        param_defs: &Vec<ParamDefWithParamType>,
+        args: &Vec<Obj>,
+    ) -> Option<HashMap<String, Obj>> {
+        let param_names = Self::collect_param_names(param_defs);
+        if param_names.len() != args.len() {
+            return None;
+        }
+
+        let mut result: HashMap<String, Obj> = HashMap::new();
+        let mut index = 0;
+        while index < param_names.len() {
+            let param_name = &param_names[index];
+            let arg = &args[index];
+            result.insert(param_name.clone(), arg.clone());
+            index += 1;
+        }
+        Some(result)
+    }
 }
 
 impl ParamDefWithParamSet {

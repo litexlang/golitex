@@ -18,9 +18,9 @@ impl<'a> Executor<'a> {
     }
 
     pub fn parse_def_prop_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        self.new_name_block();
+        self.new_parsing_names_block();
         let stmt = self.parse_def_prop_stmt_body(tb);
-        self.delete_name_block();
+        self.delete_parsing_names_block();
         stmt
     }
 
@@ -44,9 +44,9 @@ impl<'a> Executor<'a> {
     }
 
     pub fn parse_def_prop_without_meaning_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        self.new_name_block();
+        self.new_parsing_names_block();
         let stmt = self.parse_def_prop_without_meaning_stmt_body(tb);
-        self.delete_name_block();
+        self.delete_parsing_names_block();
         stmt
     }
 
@@ -70,9 +70,9 @@ impl<'a> Executor<'a> {
     }
 
     pub fn parse_def_let_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        self.new_name_block();
+        self.new_parsing_names_block();
         let stmt = self.parse_def_let_stmt_body(tb);
-        self.delete_name_block();
+        self.delete_parsing_names_block();
         stmt
     }
 
@@ -107,9 +107,9 @@ impl<'a> Executor<'a> {
 
     // return HaveObjInNonemptySetOrParamTypeStmt or HaveObjEqualStmt
     pub fn have_obj_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        self.new_name_block();
+        self.new_parsing_names_block();
         let stmt = self.have_obj_stmt_body(tb);
-        self.delete_name_block();
+        self.delete_parsing_names_block();
         stmt
     }
 
@@ -184,9 +184,9 @@ impl<'a> Executor<'a> {
     }
 
     pub fn def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        self.new_name_block();
+        self.new_parsing_names_block();
         let stmt = self.def_struct_stmt_body(tb);
-        self.delete_name_block();
+        self.delete_parsing_names_block();
         stmt
     }
 
@@ -273,9 +273,9 @@ impl<'a> Executor<'a> {
     }
 
     pub fn def_algorithm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        self.new_name_block();
+        self.new_parsing_names_block();
         let stmt = self.def_algorithm_stmt_body(tb);
-        self.delete_name_block();
+        self.delete_parsing_names_block();
         stmt
     }
 
