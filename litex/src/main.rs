@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use crate::fact::ExistOrAndChainAtomicFact;
+use crate::infer::InferResult;
 use crate::obj::Atom;
 mod infer;
 mod verify;
@@ -667,7 +668,7 @@ fn try_stmt_result() {
         Identifier::mk("q".to_string()),
         Some((1, 0)),
     ))));
-    let result = NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), None));
+    let result = NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), InferResult::new(), None));
     println!("{}", result.body_string());
 
 
@@ -680,11 +681,11 @@ fn try_stmt_result() {
     let result = NonErrStmtExecResult::StmtUnknown(unknown);
     println!("{}", result.body_string());
 
-    let fact_verified_by_fact = FactVerifiedByFact::new(fact.to_string(), fact.to_string(), None);
+    let fact_verified_by_fact = FactVerifiedByFact::new(fact.to_string(), fact.to_string(), InferResult::new(), None);
     let result = NonErrStmtExecResult::FactVerifiedByFact(fact_verified_by_fact);
     println!("{}", result.body_string());
 
-    let fact_verified_by_builtin_rules = FactVerifiedByBuiltinRules::new(fact.to_string(), "demo".to_string(), None);
+    let fact_verified_by_builtin_rules = FactVerifiedByBuiltinRules::new(fact.to_string(), "demo".to_string(), InferResult::new(), None);
     let result = NonErrStmtExecResult::FactVerifiedByBuiltinRules(fact_verified_by_builtin_rules);
     println!("{}", result.body_string());
 }

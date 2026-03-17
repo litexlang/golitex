@@ -20,8 +20,8 @@ impl<'a> Executor<'a> {
             r => r,
         };
 
-        self.store_fact_without_well_defined_verified_and_infer(fact)?;
+        let infer_result = self.store_fact_without_well_defined_verified_and_infer(fact)?;
 
-        Ok(result)
+        Ok(result.with_infers(infer_result))
     }
 }

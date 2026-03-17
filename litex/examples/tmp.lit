@@ -1,9 +1,15 @@
+prop q(x, y, z)
+
 prop p(x, y R):
     x > y
+    forall t R:
+        $q(x, y, t)
 
 have a, b R
 
-know:
-    $p(a, b)
+know $p(a, b)
 
 a > b
+
+forall t R:
+    $q(a, b, t)

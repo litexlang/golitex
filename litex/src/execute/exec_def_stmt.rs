@@ -8,6 +8,7 @@ use crate::fact::Fact;
 use crate::fact::{AndChainAtomicFact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, ForallFact, InFact};
 use crate::result::NonErrStmtExecResult;
 use crate::result::NonFactualStmtSuccess;
+use crate::infer::InferResult;
 use super::Executor;
 use crate::verify::VerifyState;
 
@@ -37,7 +38,11 @@ impl<'a> Executor<'a> {
     pub fn def_prop_stmt(&mut self, def_prop_stmt: &DefPropStmt) -> Result<NonErrStmtExecResult, ExecError> {
         self.def_prop_stmt_check_well_defined(def_prop_stmt).map_err(|e| ExecError::new(def_prop_stmt.stmt_type_name(), def_prop_stmt.to_string(), Some(e.into()), def_prop_stmt.line_file_index))?;
         self.store_def_prop(def_prop_stmt)?;
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_prop_stmt.to_string(), def_prop_stmt.line_file_index)))
+        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
+            def_prop_stmt.to_string(),
+            InferResult::new(),
+            def_prop_stmt.line_file_index,
+        )))
     }
 
     fn def_prop_stmt_check_well_defined(&mut self, def_prop_stmt: &DefPropStmt) -> Result<(), ExecError> {
@@ -60,15 +65,24 @@ impl<'a> Executor<'a> {
 
     pub fn def_prop_without_meaning_stmt(&mut self, def_prop_without_meaning_stmt: &DefPropWithoutMeaningStmt) -> Result<NonErrStmtExecResult, ExecError> {
         self.store_def_prop_without_meaning(def_prop_without_meaning_stmt).map_err(|e| ExecError::new(def_prop_without_meaning_stmt.stmt_type_name(), def_prop_without_meaning_stmt.to_string(), Some(e.into()), def_prop_without_meaning_stmt.line_file_index))?;
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_prop_without_meaning_stmt.to_string(), def_prop_without_meaning_stmt.line_file_index)))
+        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
+            def_prop_without_meaning_stmt.to_string(),
+            InferResult::new(),
+            def_prop_without_meaning_stmt.line_file_index,
+        )))
     }
 
     pub fn def_let_stmt(&mut self, def_let_stmt: &DefLetStmt) -> Result<NonErrStmtExecResult, ExecError> {
-        self.define_params_with_type(&def_let_stmt.param_def,false).map_err(|e| ExecError::new(def_let_stmt.stmt_type_name(), def_let_stmt.to_string(), Some(e.into()), def_let_stmt.line_file_index))?;
+        let mut infer_result = self.define_params_with_type(&def_let_stmt.param_def,false).map_err(|e| ExecError::new(def_let_stmt.stmt_type_name(), def_let_stmt.to_string(), Some(e.into()), def_let_stmt.line_file_index))?;
         for fact in def_let_stmt.facts.iter() {
-            self.verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))?;
+            let fact_infer_result = self.verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))?;
+            infer_result.append(fact_infer_result);
         }
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_let_stmt.to_string(), def_let_stmt.line_file_index)))
+        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
+            def_let_stmt.to_string(),
+            infer_result,
+            def_let_stmt.line_file_index,
+        )))
     }
 
     pub fn def_struct_with_fields_stmt(&mut self, def_struct_with_fields_stmt: &DefStructWithFieldsStmt) -> Result<NonErrStmtExecResult, ExecError> {
@@ -87,7 +101,8 @@ impl<'a> Executor<'a> {
         return Err(ExecError::new(def_algo_stmt.stmt_type_name(), "unimplemented".to_string(), None, def_algo_stmt.line_file_index));
     }
 
-    pub fn define_params_with_type(&mut self, param_defs: &[ParamDefWithParamType], check_type_nonempty: bool) -> Result<(), ExecError> {
+    pub fn define_params_with_type(&mut self, param_defs: &[ParamDefWithParamType], check_type_nonempty: bool) -> Result<InferResult, ExecError> {
+        let mut infer_result = InferResult::new();
         for param_def in param_defs.iter() {
             self.verify_param_type_well_defined(&param_def.1, &VerifyState::new(0, false))?;
 
@@ -95,25 +110,32 @@ impl<'a> Executor<'a> {
 
             for name in param_def.0.iter() {
                 self.store_identifier_obj(name)?;
-                self.store_fact_without_well_defined_verified_and_infer(&ParamType::param_satisfy_param_type_fact(name, &param_def.1))?;
+                let fact_infer_result = self.store_fact_without_well_defined_verified_and_infer(&ParamType::param_satisfy_param_type_fact(name, &param_def.1))?;
+                infer_result.append(fact_infer_result);
             }
         }
-        Ok(())
+        Ok(infer_result)
     }
 
     pub fn have_obj_in_nonempty_set_or_param_type_stmt(&mut self, stmt: &HaveObjInNonemptySetOrParamTypeStmt) -> Result<NonErrStmtExecResult, ExecError> {
-        self.define_params_with_type(&stmt.param_def,true).map_err(|e| ExecError::new(stmt.stmt_type_name(), stmt.to_string(), Some(e.into()), stmt.line_file_index))?;
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), stmt.line_file_index)))
+        let infer_result = self.define_params_with_type(&stmt.param_def,true).map_err(|e| ExecError::new(stmt.stmt_type_name(), stmt.to_string(), Some(e.into()), stmt.line_file_index))?;
+        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
+            stmt.to_string(),
+            infer_result,
+            stmt.line_file_index,
+        )))
     }
 
-    pub fn define_params_with_set(&mut self, param_def: &ParamDefWithParamSet) -> Result<(), ExecError> {
+    pub fn define_params_with_set(&mut self, param_def: &ParamDefWithParamSet) -> Result<InferResult, ExecError> {
         self.verify_obj_well_defined_and_store_cache(&param_def.1, &VerifyState::new(0, false))?;
+        let mut infer_result = InferResult::new();
         let facts = param_def.facts();
         for (name, fact) in param_def.0.iter().zip(facts.iter()) {
             self.store_identifier_obj(name)?;
-            self.store_fact_without_well_defined_verified_and_infer(fact)?;
+            let fact_infer_result = self.store_fact_without_well_defined_verified_and_infer(fact)?;
+            infer_result.append(fact_infer_result);
         }
-        Ok(())
+        Ok(infer_result)
     }
 
     pub fn have_obj_equal_stmt(&mut self, have_obj_equal_stmt: &HaveObjEqualStmt) -> Result<NonErrStmtExecResult, ExecError> {
@@ -140,7 +162,11 @@ impl<'a> Executor<'a> {
             }
         }
         
-        return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(have_obj_equal_stmt.to_string(), have_obj_equal_stmt.line_file_index)));
+        return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
+            have_obj_equal_stmt.to_string(),
+            InferResult::new(),
+            have_obj_equal_stmt.line_file_index,
+        )));
     }
 
     pub fn have_exist_obj_stmt(&mut self, have_exist_obj_stmt: &HaveExistObjStmt) -> Result<NonErrStmtExecResult, ExecError> {
@@ -177,8 +203,10 @@ impl<'a> Executor<'a> {
             &have_exist_obj_stmt.equal_tos,
         )
         .map_err(|e| ExecError::new( have_exist_obj_stmt.stmt_type_name(),e.error_body(), Some(e), line_file_index))?;
+        let mut infer_result = InferResult::new();
         for fact in args_satisfy_param_types.iter() {
-            self.store_fact_without_well_defined_verified_and_infer(fact)?;
+            let fact_infer_result = self.store_fact_without_well_defined_verified_and_infer(fact)?;
+            infer_result.append(fact_infer_result);
         }
 
         let param_to_obj_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(&exist_fact_in_have_obj_stmt.params_def_with_type, &have_exist_obj_stmt.equal_tos);
@@ -189,11 +217,13 @@ impl<'a> Executor<'a> {
                 .to_exist_or_and_chain_atomic_fact()
                 .instantiate(&param_to_obj_map)
                 .to_fact();
-            self.store_fact_without_well_defined_verified_and_infer(&instantiated_fact)?;
+            let fact_infer_result = self.store_fact_without_well_defined_verified_and_infer(&instantiated_fact)?;
+            infer_result.append(fact_infer_result);
         }
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
             have_exist_obj_stmt.to_string(),
+            infer_result,
             have_exist_obj_stmt.line_file_index,
         )))
     }
@@ -213,7 +243,7 @@ impl<'a> Executor<'a> {
             function_set_obj,
             have_fn_equal_stmt.line_file_index,
         )));
-        self.store_fact_without_well_defined_verified_and_infer(&function_in_function_set_fact).map_err(ExecError::from)?;
+        let mut infer_result = self.store_fact_without_well_defined_verified_and_infer(&function_in_function_set_fact).map_err(ExecError::from)?;
 
         let param_defs_with_type = param_defs_with_type_from_fn_set_with_dom(&have_fn_equal_stmt.fn_set_with_params);
         let param_names = ParamDefWithParamSet::collect_param_names(&have_fn_equal_stmt.fn_set_with_params.params_def_with_set);
@@ -235,10 +265,12 @@ impl<'a> Executor<'a> {
             have_fn_equal_stmt.line_file_index,
         );
         let forall_as_fact = Fact::ForallFact(forall_fact);
-        self.store_fact_without_well_defined_verified_and_infer(&forall_as_fact).map_err(ExecError::from)?;
+        let forall_infer_result = self.store_fact_without_well_defined_verified_and_infer(&forall_as_fact).map_err(ExecError::from)?;
+        infer_result.append(forall_infer_result);
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
             have_fn_equal_stmt.to_string(),
+            infer_result,
             have_fn_equal_stmt.line_file_index,
         )))
     }
@@ -260,12 +292,12 @@ impl<'a> Executor<'a> {
         self.verify_obj_well_defined_and_store_cache(&function_set_obj, &verify_state).map_err(ExecError::from)?;
 
         for param_def_with_set in have_fn_equal_stmt.fn_set_with_params.params_def_with_set.iter() {
-            self.define_params_with_set(param_def_with_set)?;
+            let _ = self.define_params_with_set(param_def_with_set)?;
         }
 
         for dom_fact in have_fn_equal_stmt.fn_set_with_params.dom_facts.iter() {
             let dom_fact_as_fact = dom_fact.from_ref_to_cloned_fact();
-            self.store_fact_without_well_defined_verified_and_infer(&dom_fact_as_fact).map_err(ExecError::from)?;
+            let _ = self.store_fact_without_well_defined_verified_and_infer(&dom_fact_as_fact).map_err(ExecError::from)?;
         }
 
         let equal_to_in_ret_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
@@ -303,7 +335,7 @@ impl<'a> Executor<'a> {
             function_set_obj,
             have_fn_equal_case_by_case_stmt.line_file_index,
         )));
-        self.store_fact_without_well_defined_verified_and_infer(&function_in_function_set_fact).map_err(ExecError::from)?;
+        let mut infer_result = self.store_fact_without_well_defined_verified_and_infer(&function_in_function_set_fact).map_err(ExecError::from)?;
 
         let param_defs_with_type = param_defs_with_type_from_fn_set_with_dom(&have_fn_equal_case_by_case_stmt.fn_set_with_params);
         let param_names = ParamDefWithParamSet::collect_param_names(&have_fn_equal_case_by_case_stmt.fn_set_with_params.params_def_with_set);
@@ -331,11 +363,13 @@ impl<'a> Executor<'a> {
                 have_fn_equal_case_by_case_stmt.line_file_index,
             );
             let forall_as_fact = Fact::ForallFact(forall_fact);
-            self.store_fact_without_well_defined_verified_and_infer(&forall_as_fact).map_err(ExecError::from)?;
+            let forall_infer_result = self.store_fact_without_well_defined_verified_and_infer(&forall_as_fact).map_err(ExecError::from)?;
+            infer_result.append(forall_infer_result);
         }
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
             have_fn_equal_case_by_case_stmt.to_string(),
+            infer_result,
             have_fn_equal_case_by_case_stmt.line_file_index,
         )))
     }
@@ -382,15 +416,15 @@ impl<'a> Executor<'a> {
         let case_fact_as_fact = case_fact.to_fact();
 
         for param_def_with_set in have_fn_equal_case_by_case_stmt.fn_set_with_params.params_def_with_set.iter() {
-            self.define_params_with_set(param_def_with_set)?;
+            let _ = self.define_params_with_set(param_def_with_set)?;
         }
 
         for dom_fact in have_fn_equal_case_by_case_stmt.fn_set_with_params.dom_facts.iter() {
             let dom_fact_as_fact = dom_fact.from_ref_to_cloned_fact();
-            self.store_fact_without_well_defined_verified_and_infer(&dom_fact_as_fact).map_err(ExecError::from)?;
+            let _ = self.store_fact_without_well_defined_verified_and_infer(&dom_fact_as_fact).map_err(ExecError::from)?;
         }
 
-        self.store_fact_without_well_defined_verified_and_infer(&case_fact_as_fact).map_err(ExecError::from)?;
+        let _ = self.store_fact_without_well_defined_verified_and_infer(&case_fact_as_fact).map_err(ExecError::from)?;
         self.verify_obj_well_defined_and_store_cache(equal_to, &verify_state)?;
 
         let equal_to_in_ret_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(

@@ -1,4 +1,5 @@
 use crate::error::StmtError;
+use crate::infer::InferResult;
 use crate::fact::Fact;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
 use crate::verify::VerifyState;
@@ -40,6 +41,7 @@ impl<'a> Executor<'a> {
             Some(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
                 key,
                 fact.to_string(),
+                InferResult::new(),
                 cache_line_file,
             )))
         } else {

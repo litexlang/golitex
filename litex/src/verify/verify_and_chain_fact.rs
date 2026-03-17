@@ -1,6 +1,7 @@
 use crate::error::{StmtError, VerifyError};
 use crate::execute::Executor;
 use crate::fact::{AndFact, ChainFact, Fact};
+use crate::infer::InferResult;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
 use crate::verify::VerifyState;
 use std::result::Result;
@@ -15,6 +16,7 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
             and_fact.to_string(),
             "each constituent fact verified".to_string(),
+            InferResult::new(),
             and_fact.line_file_index(),
         )))
     }
@@ -29,6 +31,7 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
             chain_fact.to_string(),
             "each constituent fact verified".to_string(),
+            InferResult::new(),
             chain_fact.line_file_index(),
         )))
     }
