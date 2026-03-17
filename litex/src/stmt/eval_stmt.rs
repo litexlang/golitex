@@ -17,4 +17,8 @@ impl EvalStmt {
     pub fn new(obj_to_eval: Obj, line_file_index: Option<(usize, usize)>) -> Self {
         EvalStmt { obj_to_eval, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "EvalStmt".to_string()
+    }
 }

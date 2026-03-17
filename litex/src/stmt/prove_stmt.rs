@@ -11,6 +11,10 @@ impl ProveStmt {
     pub fn new(proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
         ProveStmt { proof, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "ProveStmt".to_string()
+    }
 }
 
 impl fmt::Display for ProveStmt {

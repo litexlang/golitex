@@ -206,7 +206,7 @@ impl From<StoreFactError> for StmtError {
 impl From<StoreFactError> for ExecError {
     fn from(e: StoreFactError) -> Self {
         let body = e.body_string();
-        ExecError::new(body, Some(e.into()), None)
+        ExecError::new("".to_string(), body, Some(e.into()), None)
     }
 }
 
@@ -286,6 +286,7 @@ impl From<ParsingError> for StmtError {
 
 #[derive(Debug)]
 pub struct ExecError {
+    pub stmt_type_name: String,
     pub msg: String,
     pub previous_error: Option<Box<StmtError>>,
     pub line_file_index: Option<(usize, usize)>,
@@ -295,13 +296,14 @@ impl std::error::Error for ExecError {}
 
 impl fmt::Display for ExecError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.body_string())
+        write!(f, "{}\n{}", self.stmt_type_name, self.body_string())
     }
 }
 
 impl ExecError {
-    pub fn new(msg: String, previous_error: Option<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(stmt_type_name: String, msg: String, previous_error: Option<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
         ExecError {
+            stmt_type_name,
             msg,
             previous_error: boxed_previous_error(previous_error),
             line_file_index,
@@ -310,7 +312,12 @@ impl ExecError {
 
     /// Content only (msg + previous_error bodies), for embedding in other errors.
     pub fn body_string(&self) -> String {
-        body_with_previous(&self.msg, &self.previous_error)
+        let body = body_with_previous(&self.msg, &self.previous_error);
+        if self.stmt_type_name.is_empty() {
+            body
+        } else {
+            format!("stmt type: {}\n{}", self.stmt_type_name, body)
+        }
     }
 }
 
@@ -358,7 +365,7 @@ impl From<WellDefinedError> for StmtError {
 impl From<WellDefinedError> for ExecError {
     fn from(e: WellDefinedError) -> Self {
         let body = "well defined error: ".to_string() + &e.body_string();
-        ExecError::new(body, Some(e.into()), None)
+        ExecError::new("".to_string(), body, Some(e.into()), None)
     }
 }
 
@@ -400,7 +407,7 @@ impl From<VerifyError> for StmtError {
 impl From<VerifyError> for ExecError {
     fn from(e: VerifyError) -> Self {
         let body = "verify fact error: ".to_string() + &e.body_string();
-        ExecError::new(body, Some(e.into()), None)
+        ExecError::new("".to_string(), body, Some(e.into()), None)
     }
 }
 
@@ -485,6 +492,6 @@ impl From<InferError> for StmtError {
 impl From<InferError> for ExecError {
     fn from(e: InferError) -> Self {
         let msg = e.body_string();
-        ExecError::new(msg, Some(e.into()), None)
+        ExecError::new("".to_string(), msg, Some(e.into()), None)
     }
 }
