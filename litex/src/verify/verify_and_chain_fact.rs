@@ -17,7 +17,7 @@ impl<'a> Executor<'a> {
             and_fact.to_string(),
             "each constituent fact verified".to_string(),
             InferResult::new(),
-            and_fact.line_file_index(),
+            None,
             None,
         )))
     }
@@ -33,7 +33,7 @@ impl<'a> Executor<'a> {
             chain_fact.to_string(),
             "each constituent fact verified".to_string(),
             InferResult::new(),
-            chain_fact.line_file_index(),
+            None,
             None,
         )))
     }
