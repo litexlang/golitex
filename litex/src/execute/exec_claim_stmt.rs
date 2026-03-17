@@ -56,6 +56,9 @@ impl<'a> Executor<'a> {
                     })
                     .and_then(|_| self.exec_claim_stmt_body(stmt));
                 self.runtime_context.delete_env();
+
+                self.store_fact_without_well_defined_verified_and_infer(&stmt.fact)?;
+                
                 body_result
             }
             _ => {
@@ -68,7 +71,14 @@ impl<'a> Executor<'a> {
                             stmt.line_file_index,
                         ))
                     })?;
-                self.exec_claim_stmt_body(stmt)
+
+                self.runtime_context.new_env();
+                let result =self.exec_claim_stmt_body(stmt);
+                self.runtime_context.delete_env();
+
+                self.store_fact_without_well_defined_verified_and_infer(&stmt.fact)?;
+
+                result
             }
         }
     }

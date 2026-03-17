@@ -15,10 +15,6 @@ impl ClaimStmt {
         ClaimStmt { fact, proof, line_file_index }
     }
 
-    pub fn line_file(&self) -> Option<(usize, usize)> {
-        self.line_file_index
-    }
-
     pub fn stmt_type_name(&self) -> String {
         "ClaimStmt".to_string()
     }
