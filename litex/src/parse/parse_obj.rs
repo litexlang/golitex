@@ -230,7 +230,7 @@ impl<'a> Executor<'a> {
             tb.skip_token(COMMA)?;
         }
         let fn_set_param_names = ParamDefWithParamSet::collect_param_names(&params_def_with_set);
-        self.new_names(&fn_set_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
+        self.validate_names_and_put_into_parsing_names_block(&fn_set_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         tb.skip_token(COLON)?;
         let mut dom_facts = vec![self.parse_or_and_chain_atomic_fact(tb)?];
         while tb.current()? == COMMA {
@@ -524,8 +524,7 @@ impl<'a> Executor<'a> {
 
     /// Parse after first identifier: either "S : fact1, fact2" (SetBuilder) or "b c" (ListSet).
     fn parse_set_builder_body(&mut self, tb: &mut TokenBlock, a: Identifier) -> Result<Obj, ParsingError> {
-        let names = vec![a.name.clone()];
-        self.new_names(&names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
+        self.validate_name_and_put_into_parsing_names_block(&a.name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         
         let second = self.parse_obj(tb)?;
         if tb.current()? == COLON {
