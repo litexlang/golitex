@@ -23,6 +23,10 @@ impl WitnessExistFact {
     pub fn new(equal_tos: Vec<Obj>, exist_fact_in_witness: ExistFact, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
         WitnessExistFact { equal_tos, exist_fact_in_witness, proof, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "WitnessExistFact".to_string()
+    }
 }
 
 impl fmt::Display for WitnessExistFact {
@@ -46,5 +50,9 @@ impl fmt::Display for WitnessNonemptySet {
 impl WitnessNonemptySet {
     pub fn new(obj: Obj, set: Obj, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
         WitnessNonemptySet { obj, set, proof, line_file_index }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        "WitnessNonemptySet".to_string()
     }
 }

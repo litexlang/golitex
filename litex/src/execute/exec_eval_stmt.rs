@@ -5,6 +5,6 @@ use super::Executor;
 
 impl<'a> Executor<'a> {
     pub fn exec_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<NonErrStmtExecResult, StmtError> {
-        Self::stmt_unsupported(stmt.line_file_index)
+        Self::stmt_unsupported(stmt.stmt_type_name(), stmt.line_file_index)
     }
 }

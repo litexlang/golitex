@@ -604,7 +604,7 @@ fn try_errors() {
     let err: StmtError = StmtError::ParsingError(ParsingError::new("demo".to_string(), (1, 0), None));
     println!("{}: {}", err.display_label(), err.error_body());
 
-    let err: StmtError = StmtError::ExecError(ExecError::new("demo".to_string(), None, Some((1, 0))));
+    let err: StmtError = StmtError::ExecError(ExecError::new( "".to_string(),"demo".to_string(), None, Some((1, 0))));
     println!("{}: {}", err.display_label(), err.error_body());
 
     let err: StmtError = StmtError::WellDefinedError(WellDefinedError::new("demo".to_string(), Some(StmtError::ArithmeticError(ArithmeticError::new("demo".to_string(), None))), Some((1, 0))));

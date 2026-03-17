@@ -71,11 +71,19 @@ impl ProveByEnumerationStmt {
     pub fn new(params: Vec<String>, param_sets: Vec<Obj>, to_prove: Vec<Fact>, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
         ProveByEnumerationStmt { params, param_sets, to_prove, proof, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "ProveByEnumerationStmt".to_string()
+    }
 }
 
 impl ProveCaseByCaseStmt {
     pub fn new(cases: Vec<AndChainAtomicFact>, then_facts: Vec<Fact>, proofs: Vec<Vec<Stmt>>, impossible_facts: Vec<Option<ExistOrAndChainAtomicFact>>, line_file_index: Option<(usize, usize)>) -> Self {
         ProveCaseByCaseStmt { cases, then_facts, proofs, impossible_facts, line_file_index }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        "ProveCaseByCaseStmt".to_string()
     }
 }
 
@@ -97,6 +105,10 @@ impl ProveByContradictionStmt {
     pub fn new(to_prove: Fact, proof: Vec<Stmt>, impossible_fact: ExistOrAndChainAtomicFact, line_file_index: Option<(usize, usize)>) -> Self {
         ProveByContradictionStmt { to_prove, proof, impossible_fact, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "ProveByContradictionStmt".to_string()
+    }
 }
 
 impl fmt::Display for ProveByContradictionStmt {
@@ -114,6 +126,10 @@ impl fmt::Display for ProveByEnumerationStmt {
 impl ProveByInductionStmt {
     pub fn new(fact: Vec<ExistOrAndChainAtomicFact>, param: String, proof: Vec<Stmt>, induc_from: Obj, line_file_index: Option<(usize, usize)>) -> Self {
         ProveByInductionStmt { fact, param, proof, induc_from, line_file_index }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        "ProveByInductionStmt".to_string()
     }
 }
 
@@ -141,6 +157,10 @@ impl ProveForStmt {
     pub fn new(params: Vec<String>, param_sets: Vec<ClosedRangeOrRange>, dom_facts: Vec<ExistOrAndChainAtomicFact>, then_facts: Vec<ExistOrAndChainAtomicFact>, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
         ProveForStmt { params, param_sets, dom_facts, then_facts, proof, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "ProveForStmt".to_string()
+    }
 }
 
 impl fmt::Display for ClosedRangeOrRange {
@@ -165,6 +185,10 @@ impl ProveByEqualSetStmt {
     pub fn new(left: Obj, right: Obj, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
         ProveByEqualSetStmt { left, right, proof, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "ProveByEqualSetStmt".to_string()
+    }
 }
 
 impl fmt::Display for ViewFnAsSetStmt {
@@ -176,6 +200,10 @@ impl fmt::Display for ViewFnAsSetStmt {
 impl ViewFnAsSetStmt {
     pub fn new(function: Obj, line_file_index: Option<(usize, usize)>) -> Self {
         ViewFnAsSetStmt { function, line_file_index }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        "ViewFnAsSetStmt".to_string()
     }
 }
 

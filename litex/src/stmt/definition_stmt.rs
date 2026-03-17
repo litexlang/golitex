@@ -20,6 +20,10 @@ impl DefPropWithoutMeaningStmt {
     pub fn new(name: String, params: Vec<String>, line_file_index: Option<(usize, usize)>) -> Self {
         DefPropWithoutMeaningStmt { name, params, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "DefPropWithoutMeaningStmt".to_string()
+    }
 }
 
 #[derive(Clone)]
@@ -107,6 +111,10 @@ impl DefPropStmt {
     pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, iff_facts: Option<Vec<Fact>>, line_file_index: Option<(usize, usize)>) -> Self {
         DefPropStmt { name, params_def_with_type, iff_facts, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "DefPropStmt".to_string()
+    }
 }
 
 impl fmt::Display for DefPropStmt {
@@ -121,6 +129,10 @@ impl fmt::Display for DefPropStmt {
 impl DefLetStmt {
     pub fn new(param_def: Vec<ParamDefWithParamType>, facts: Vec<Fact>, line_file_index: Option<(usize, usize)>) -> Self {
         DefLetStmt { param_def, facts, line_file_index }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        "DefLetStmt".to_string()
     }
 }
 
@@ -138,6 +150,10 @@ impl HaveObjInNonemptySetOrParamTypeStmt {
     pub fn new(param_def: Vec<ParamDefWithParamType>, line_file_index: Option<(usize, usize)>) -> Self {
         HaveObjInNonemptySetOrParamTypeStmt { param_def, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "HaveObjInNonemptySetOrParamTypeStmt".to_string()
+    }
 }
 
 impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
@@ -149,6 +165,10 @@ impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
 impl HaveObjEqualStmt {
     pub fn new(param_def: Vec<ParamDefWithParamType>, objs_equal_to: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Self {
         HaveObjEqualStmt { param_def, objs_equal_to, line_file_index }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        "HaveObjEqualStmt".to_string()
     }
 }
 
@@ -162,6 +182,10 @@ impl HaveExistObjStmt {
     pub fn new(equal_tos: Vec<Obj>, exist_fact_in_have_obj_st: ExistFact, line_file_index: Option<(usize, usize)>) -> Self {
         HaveExistObjStmt { equal_tos, exist_fact_in_have_obj_st, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "HaveExistObjStmt".to_string()
+    }
 }
 
 impl fmt::Display for HaveExistObjStmt {
@@ -173,6 +197,10 @@ impl fmt::Display for HaveExistObjStmt {
 impl HaveFnEqualStmt {
     pub fn new(name: String, fn_set_with_params: FnSetWithDom, equal_to: Obj, line_file_index: Option<(usize, usize)>) -> Self {
         HaveFnEqualStmt { name, fn_set_with_params, equal_to, line_file_index }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        "HaveFnEqualStmt".to_string()
     }
 }
 
@@ -197,11 +225,19 @@ impl HaveFnEqualCaseByCaseStmt {
     pub fn new(name: String, fn_set_with_params: FnSetWithDom, cases: Vec<AndChainAtomicFact>, equal_tos: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Self {
         HaveFnEqualCaseByCaseStmt { name, fn_set_with_params, cases, equal_tos, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "HaveFnEqualCaseByCaseStmt".to_string()
+    }
 }
 
 impl DefStructWithNoFieldStmt {
     pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, dom_facts: Vec<OrAndChainAtomicFact>, equal_to: Obj, line_file_index: Option<(usize, usize)>) -> Self {
         DefStructWithNoFieldStmt { name, params_def_with_type, dom_facts, equal_to, line_file_index }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        "DefStructWithNoFieldStmt".to_string()
     }
 }
 
@@ -214,6 +250,10 @@ impl fmt::Display for DefStructWithNoFieldStmt {
 impl DefStructWithFieldsStmt {
     pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, fields: Vec<(String, OrAndChainAtomicFact)>, facts: Vec<OrAndChainAtomicFact>, line_file_index: Option<(usize, usize)>) -> Self {
         DefStructWithFieldsStmt { name, params_def_with_type, fields, facts, line_file_index }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        "DefStructWithFieldsStmt".to_string()
     }
 }
 

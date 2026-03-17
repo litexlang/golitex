@@ -10,6 +10,10 @@ impl KnowStmt {
     pub fn new(facts: Vec<Fact>, line_file_index: Option<(usize, usize)>) -> Self {
         KnowStmt { facts, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "KnowStmt".to_string()
+    }
 }
 
 impl fmt::Display for KnowStmt {

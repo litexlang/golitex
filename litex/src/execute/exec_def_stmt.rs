@@ -11,9 +11,31 @@ use crate::result::NonFactualStmtSuccess;
 use super::Executor;
 use crate::verify::VerifyState;
 
+fn param_defs_with_type_from_fn_set_with_dom(fn_set_with_params: &crate::obj::FnSetWithDom) -> Vec<ParamDefWithParamType> {
+    let mut param_defs_with_type: Vec<ParamDefWithParamType> = vec![];
+    for param_def_with_set in fn_set_with_params.params_def_with_set.iter() {
+        param_defs_with_type.push(ParamDefWithParamType(
+            param_def_with_set.0.clone(),
+            ParamType::Obj(param_def_with_set.1.clone()),
+        ));
+    }
+    param_defs_with_type
+}
+
+fn build_function_obj_with_param_names(function_name: &str, param_names: &[String]) -> Obj {
+    let mut function_args: Vec<Box<Obj>> = vec![];
+    for param_name in param_names.iter() {
+        function_args.push(Box::new(Obj::Identifier(Identifier::new(param_name.clone()))));
+    }
+    Obj::FnObj(FnObj::new(
+        Atom::IdentifierAtom(Identifier::new(function_name.to_string())),
+        vec![function_args],
+    ))
+}
+
 impl<'a> Executor<'a> {
     pub fn def_prop_stmt(&mut self, def_prop_stmt: &DefPropStmt) -> Result<NonErrStmtExecResult, ExecError> {
-        self.def_prop_stmt_check_well_defined(def_prop_stmt)?;
+        self.def_prop_stmt_check_well_defined(def_prop_stmt).map_err(|e| ExecError::new(def_prop_stmt.stmt_type_name(), def_prop_stmt.to_string(), Some(e.into()), def_prop_stmt.line_file_index))?;
         self.store_def_prop(def_prop_stmt)?;
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_prop_stmt.to_string(), def_prop_stmt.line_file_index)))
     }
@@ -42,12 +64,12 @@ impl<'a> Executor<'a> {
     }
 
     pub fn def_prop_without_meaning_stmt(&mut self, def_prop_without_meaning_stmt: &DefPropWithoutMeaningStmt) -> Result<NonErrStmtExecResult, ExecError> {
-        self.store_def_prop_without_meaning(def_prop_without_meaning_stmt)?;
+        self.store_def_prop_without_meaning(def_prop_without_meaning_stmt).map_err(|e| ExecError::new(def_prop_without_meaning_stmt.stmt_type_name(), def_prop_without_meaning_stmt.to_string(), Some(e.into()), def_prop_without_meaning_stmt.line_file_index))?;
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_prop_without_meaning_stmt.to_string(), def_prop_without_meaning_stmt.line_file_index)))
     }
 
     pub fn def_let_stmt(&mut self, def_let_stmt: &DefLetStmt) -> Result<NonErrStmtExecResult, ExecError> {
-        self.define_params_with_type(&def_let_stmt.param_def,false)?;
+        self.define_params_with_type(&def_let_stmt.param_def,false).map_err(|e| ExecError::new(def_let_stmt.stmt_type_name(), def_let_stmt.to_string(), Some(e.into()), def_let_stmt.line_file_index))?;
         for fact in def_let_stmt.facts.iter() {
             self.verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))?;
         }
@@ -55,19 +77,19 @@ impl<'a> Executor<'a> {
     }
 
     pub fn def_struct_with_fields_stmt(&mut self, def_struct_with_fields_stmt: &DefStructWithFieldsStmt) -> Result<NonErrStmtExecResult, ExecError> {
-        self.store_def_struct_with_fields(def_struct_with_fields_stmt)?;
-        return Err(ExecError::new("def_struct_with_fields_stmt: NOT IMPLEMENTED YET".to_string(), None, def_struct_with_fields_stmt.line_file_index));
+        self.store_def_struct_with_fields(def_struct_with_fields_stmt).map_err(|e| ExecError::new(def_struct_with_fields_stmt.stmt_type_name(), def_struct_with_fields_stmt.to_string(), Some(e.into()), def_struct_with_fields_stmt.line_file_index))?;
+        return Err(ExecError::new(def_struct_with_fields_stmt.stmt_type_name(), "unimplemented".to_string(), None, def_struct_with_fields_stmt.line_file_index));
     }
 
     pub fn def_struct_with_no_field_stmt(&mut self, def_struct_with_no_field_stmt: &DefStructWithNoFieldStmt) -> Result<NonErrStmtExecResult, ExecError> {
         self.store_def_struct_with_no_field(def_struct_with_no_field_stmt)?;
-        return Err(ExecError::new("def_struct_with_no_field_stmt: NOT IMPLEMENTED YET".to_string(), None, def_struct_with_no_field_stmt.line_file_index));
+        return Err(ExecError::new(def_struct_with_no_field_stmt.stmt_type_name(), "unimplemented".to_string(), None, def_struct_with_no_field_stmt.line_file_index));
     }
 
     pub fn def_algo_stmt(&mut self, def_algo_stmt: &DefAlgoStmt) -> Result<NonErrStmtExecResult, ExecError> {
         self.store_def_algo(def_algo_stmt)?;
         // Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_algo_stmt.to_string(), def_algo_stmt.line_file_index)))
-        return Err(ExecError::new("def_algo_stmt: NOT IMPLEMENTED YET".to_string(), None, def_algo_stmt.line_file_index));
+        return Err(ExecError::new(def_algo_stmt.stmt_type_name(), "unimplemented".to_string(), None, def_algo_stmt.line_file_index));
     }
 
     pub fn define_params_with_type(&mut self, param_defs: &[ParamDefWithParamType], check_type_nonempty: bool) -> Result<(), ExecError> {
@@ -85,7 +107,7 @@ impl<'a> Executor<'a> {
     }
 
     pub fn have_obj_in_nonempty_set_or_param_type_stmt(&mut self, stmt: &HaveObjInNonemptySetOrParamTypeStmt) -> Result<NonErrStmtExecResult, ExecError> {
-        self.define_params_with_type(&stmt.param_def,true)?;
+        self.define_params_with_type(&stmt.param_def,true).map_err(|e| ExecError::new(stmt.stmt_type_name(), stmt.to_string(), Some(e.into()), stmt.line_file_index))?;
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), stmt.line_file_index)))
     }
 
@@ -101,7 +123,7 @@ impl<'a> Executor<'a> {
 
     pub fn have_obj_equal_stmt(&mut self, have_obj_equal_stmt: &HaveObjEqualStmt) -> Result<NonErrStmtExecResult, ExecError> {
         if ParamDefWithParamType::number_of_params(&have_obj_equal_stmt.param_def) != have_obj_equal_stmt.objs_equal_to.len() {
-            return Err(ExecError::new("have_obj_equal_stmt: number of params in param_def does not match number of objs_equal_to".to_string(), None, have_obj_equal_stmt.line_file_index));
+            return Err(ExecError::new( have_obj_equal_stmt.stmt_type_name(),"have_obj_equal_stmt: number of params in param_def does not match number of objs_equal_to".to_string(), None, have_obj_equal_stmt.line_file_index));
         }
 
         let mut current_index = 0;
@@ -115,7 +137,7 @@ impl<'a> Executor<'a> {
                 let verify_result = self.verify_fact(&fact, &VerifyState::new(0, false)).map_err(ExecError::from)?;
                 if !verify_result.is_true() {
                     let msg = format!("have_obj_equal_stmt: {} is not in type {}", current_param_equal_to, current_type);
-                    return Err(ExecError::new(msg, None, have_obj_equal_stmt.line_file_index));
+                    return Err(ExecError::new( have_obj_equal_stmt.stmt_type_name(),msg, None, have_obj_equal_stmt.line_file_index));
                 }
 
                 param_to_obj_map.insert(name.clone(), current_param_equal_to.clone());
@@ -137,14 +159,14 @@ impl<'a> Executor<'a> {
         )?;
         if !result.is_true() {
             return Err(ExecError::new(
-                "have_exist_obj_stmt: exist fact is not verified".to_string(),None,
+                have_exist_obj_stmt.stmt_type_name(), "have_exist_obj_stmt: exist fact is not verified".to_string(), None,
                 line_file_index,
             ));
         }
 
         if ParamDefWithParamType::number_of_params(&exist_fact_in_have_obj_stmt.params_def_with_type) != have_exist_obj_stmt.equal_tos.len() {
             return Err(ExecError::new(
-                "have_exist_obj_stmt: number of params in exist does not match number of given objs".to_string(),None,
+                have_exist_obj_stmt.stmt_type_name(), "have_exist_obj_stmt: number of params in exist does not match number of given objs".to_string(), None,
                 line_file_index,
             ));
         }
@@ -159,7 +181,7 @@ impl<'a> Executor<'a> {
             &exist_fact_in_have_obj_stmt.params_def_with_type,
             &have_exist_obj_stmt.equal_tos,
         )
-        .map_err(|e| ExecError::new(e.error_body(), Some(e), line_file_index))?;
+        .map_err(|e| ExecError::new( have_exist_obj_stmt.stmt_type_name(),e.error_body(), Some(e), line_file_index))?;
         for fact in args_satisfy_param_types.iter() {
             self.store_fact_without_well_defined_verified_and_infer(fact)?;
         }
@@ -184,7 +206,7 @@ impl<'a> Executor<'a> {
     pub fn have_fn_equal_stmt(&mut self, have_fn_equal_stmt: &HaveFnEqualStmt) -> Result<NonErrStmtExecResult, ExecError> {
         self.have_fn_equal_stmt_verify_well_defined(have_fn_equal_stmt).map_err(|e| {
             ExecError::new(
-                "have_fn_equal_stmt: verify well-defined failed".to_string(),Some(e.into()),
+                have_fn_equal_stmt.stmt_type_name(), "have_fn_equal_stmt: verify well-defined failed".to_string(), Some(e.into()),
                 have_fn_equal_stmt.line_file_index,
             )
         })?;
@@ -198,9 +220,9 @@ impl<'a> Executor<'a> {
         )));
         self.store_fact_without_well_defined_verified_and_infer(&function_in_function_set_fact).map_err(ExecError::from)?;
 
-        let param_defs_with_type = Self::param_defs_with_type_from_fn_set_with_dom(&have_fn_equal_stmt.fn_set_with_params);
+        let param_defs_with_type = param_defs_with_type_from_fn_set_with_dom(&have_fn_equal_stmt.fn_set_with_params);
         let param_names = ParamDefWithParamSet::collect_param_names(&have_fn_equal_stmt.fn_set_with_params.params_def_with_set);
-        let function_obj = Self::build_function_obj_with_param_names(&have_fn_equal_stmt.name, &param_names);
+        let function_obj = build_function_obj_with_param_names(&have_fn_equal_stmt.name, &param_names);
 
         let function_equals_equal_to_fact = AtomicFact::EqualFact(EqualFact::new(
             function_obj,
@@ -263,7 +285,7 @@ impl<'a> Executor<'a> {
                 have_fn_equal_stmt.equal_to,
                 have_fn_equal_stmt.fn_set_with_params.ret_set
             );
-            return Err(ExecError::new(msg, None, have_fn_equal_stmt.line_file_index));
+            return Err(ExecError::new( have_fn_equal_stmt.stmt_type_name(),msg, None, have_fn_equal_stmt.line_file_index));
         }
 
         Ok(())
@@ -272,6 +294,7 @@ impl<'a> Executor<'a> {
     pub fn have_fn_equal_case_by_case_stmt(&mut self, have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt) -> Result<NonErrStmtExecResult, ExecError> {
         self.have_fn_equal_case_by_case_stmt_verify_well_defined(have_fn_equal_case_by_case_stmt).map_err(|e| {
             ExecError::new(
+                have_fn_equal_case_by_case_stmt.stmt_type_name(),
                 "have_fn_equal_case_by_case_stmt: verify well-defined failed".to_string(),
                 Some(e.into()),
                 have_fn_equal_case_by_case_stmt.line_file_index,
@@ -287,9 +310,9 @@ impl<'a> Executor<'a> {
         )));
         self.store_fact_without_well_defined_verified_and_infer(&function_in_function_set_fact).map_err(ExecError::from)?;
 
-        let param_defs_with_type = Self::param_defs_with_type_from_fn_set_with_dom(&have_fn_equal_case_by_case_stmt.fn_set_with_params);
+        let param_defs_with_type = param_defs_with_type_from_fn_set_with_dom(&have_fn_equal_case_by_case_stmt.fn_set_with_params);
         let param_names = ParamDefWithParamSet::collect_param_names(&have_fn_equal_case_by_case_stmt.fn_set_with_params.params_def_with_set);
-        let function_obj = Self::build_function_obj_with_param_names(&have_fn_equal_case_by_case_stmt.name, &param_names);
+        let function_obj = build_function_obj_with_param_names(&have_fn_equal_case_by_case_stmt.name, &param_names);
 
         for case_index in 0..have_fn_equal_case_by_case_stmt.cases.len() {
             let case_fact = &have_fn_equal_case_by_case_stmt.cases[case_index];
@@ -299,7 +322,7 @@ impl<'a> Executor<'a> {
             for dom_fact in have_fn_equal_case_by_case_stmt.fn_set_with_params.dom_facts.iter() {
                 forall_dom_facts.push(dom_fact.clone().to_exist_or_and_chain_atomic_fact());
             }
-            forall_dom_facts.push(Self::and_chain_atomic_fact_to_exist_or_and_chain_atomic_fact(case_fact));
+            forall_dom_facts.push(case_fact.to_exist_or_and_chain_atomic_fact());
 
             let function_equals_equal_to_fact = AtomicFact::EqualFact(EqualFact::new(
                 function_obj.clone(),
@@ -325,6 +348,7 @@ impl<'a> Executor<'a> {
     fn have_fn_equal_case_by_case_stmt_verify_well_defined(&mut self, have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt) -> Result<(), ExecError> {
         if have_fn_equal_case_by_case_stmt.cases.len() != have_fn_equal_case_by_case_stmt.equal_tos.len() {
             return Err(ExecError::new(
+                have_fn_equal_case_by_case_stmt.stmt_type_name(),
                 "have_fn_equal_case_by_case_stmt: number of cases does not match number of equal_tos".to_string(),
                 None,
                 have_fn_equal_case_by_case_stmt.line_file_index,
@@ -360,7 +384,7 @@ impl<'a> Executor<'a> {
         equal_to: &Obj,
     ) -> Result<(), ExecError> {
         let verify_state = VerifyState::new(0, false);
-        let case_fact_as_fact = Self::and_chain_atomic_fact_to_fact(case_fact);
+        let case_fact_as_fact = case_fact.to_fact();
 
         for param_def_with_set in have_fn_equal_case_by_case_stmt.fn_set_with_params.params_def_with_set.iter() {
             self.define_params_with_set(param_def_with_set)?;
@@ -388,6 +412,7 @@ impl<'a> Executor<'a> {
                 case_fact,
             );
             return Err(ExecError::new(
+                have_fn_equal_case_by_case_stmt.stmt_type_name(),
                 msg,
                 None,
                 have_fn_equal_case_by_case_stmt.line_file_index,
@@ -395,43 +420,5 @@ impl<'a> Executor<'a> {
         }
 
         Ok(())
-    }
-
-    fn param_defs_with_type_from_fn_set_with_dom(fn_set_with_params: &crate::obj::FnSetWithDom) -> Vec<ParamDefWithParamType> {
-        let mut param_defs_with_type: Vec<ParamDefWithParamType> = vec![];
-        for param_def_with_set in fn_set_with_params.params_def_with_set.iter() {
-            param_defs_with_type.push(ParamDefWithParamType(
-                param_def_with_set.0.clone(),
-                ParamType::Obj(param_def_with_set.1.clone()),
-            ));
-        }
-        param_defs_with_type
-    }
-
-    fn build_function_obj_with_param_names(function_name: &str, param_names: &[String]) -> Obj {
-        let mut function_args: Vec<Box<Obj>> = vec![];
-        for param_name in param_names.iter() {
-            function_args.push(Box::new(Obj::Identifier(Identifier::new(param_name.clone()))));
-        }
-        Obj::FnObj(FnObj::new(
-            Atom::IdentifierAtom(Identifier::new(function_name.to_string())),
-            vec![function_args],
-        ))
-    }
-
-    fn and_chain_atomic_fact_to_fact(and_chain_atomic_fact: &AndChainAtomicFact) -> Fact {
-        match and_chain_atomic_fact {
-            AndChainAtomicFact::AtomicFact(atomic_fact) => Fact::AtomicFact(atomic_fact.clone()),
-            AndChainAtomicFact::AndFact(and_fact) => Fact::AndFact(and_fact.clone()),
-            AndChainAtomicFact::ChainFact(chain_fact) => Fact::ChainFact(chain_fact.clone()),
-        }
-    }
-
-    fn and_chain_atomic_fact_to_exist_or_and_chain_atomic_fact(and_chain_atomic_fact: &AndChainAtomicFact) -> ExistOrAndChainAtomicFact {
-        match and_chain_atomic_fact {
-            AndChainAtomicFact::AtomicFact(atomic_fact) => ExistOrAndChainAtomicFact::AtomicFact(atomic_fact.clone()),
-            AndChainAtomicFact::AndFact(and_fact) => ExistOrAndChainAtomicFact::AndFact(and_fact.clone()),
-            AndChainAtomicFact::ChainFact(chain_fact) => ExistOrAndChainAtomicFact::ChainFact(chain_fact.clone()),
-        }
     }
 }

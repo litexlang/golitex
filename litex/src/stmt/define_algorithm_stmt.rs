@@ -35,6 +35,10 @@ impl DefAlgoStmt {
     pub fn new(name: String, params: Vec<String>, return_or_algo_if: Vec<AlgoReturnOrAlgoIf>, line_file_index: Option<(usize, usize)>) -> Self {
         DefAlgoStmt { name, params, return_or_algo_if, line_file_index }
     }
+
+    pub fn stmt_type_name(&self) -> String {
+        "DefAlgoStmt".to_string()
+    }
 }
 
 impl fmt::Display for AlgoReturnOrAlgoIf {

@@ -2,6 +2,7 @@ use std::fmt;
 use crate::common::keywords::{AND, FACT_PREFIX,  is_comparison_str};
 use crate::common::helper::vec_to_string_with_sep;
 use super::atomic_fact::{AtomicFact};
+use super::fact::Fact;
 use crate::error::NewAtomicFactError;
 use crate::obj::Obj;
 use crate::obj::IdentifierOrIdentifierWithMod;
@@ -121,6 +122,22 @@ impl AndChainAtomicFact {
             AndChainAtomicFact::AtomicFact(a) => a.key(),
             AndChainAtomicFact::AndFact(a) => a.key(),
             AndChainAtomicFact::ChainFact(c) => c.key(),
+        }
+    }
+
+    pub fn to_fact(&self) -> Fact {
+        match self {
+            AndChainAtomicFact::AtomicFact(atomic_fact) => Fact::AtomicFact(atomic_fact.clone()),
+            AndChainAtomicFact::AndFact(and_fact) => Fact::AndFact(and_fact.clone()),
+            AndChainAtomicFact::ChainFact(chain_fact) => Fact::ChainFact(chain_fact.clone()),
+        }
+    }
+
+    pub fn to_exist_or_and_chain_atomic_fact(&self) -> crate::fact::ExistOrAndChainAtomicFact {
+        match self {
+            AndChainAtomicFact::AtomicFact(atomic_fact) => crate::fact::ExistOrAndChainAtomicFact::AtomicFact(atomic_fact.clone()),
+            AndChainAtomicFact::AndFact(and_fact) => crate::fact::ExistOrAndChainAtomicFact::AndFact(and_fact.clone()),
+            AndChainAtomicFact::ChainFact(chain_fact) => crate::fact::ExistOrAndChainAtomicFact::ChainFact(chain_fact.clone()),
         }
     }
 }
