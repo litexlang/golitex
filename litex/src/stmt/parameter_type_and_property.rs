@@ -342,6 +342,4 @@ impl ParamDefWithParamSet {
         }
         names
     }
-
 }
-

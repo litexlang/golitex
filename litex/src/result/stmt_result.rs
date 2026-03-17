@@ -1,4 +1,5 @@
 use crate::common::keywords::SUCCESS_COLON;
+use crate::infer::InferResult;
 use super::stmt_success::{FactVerifiedByBuiltinRules, FactVerifiedByFact, NonFactualStmtSuccess};
 use super::stmt_unknown::StmtUnknown;
 
@@ -10,14 +11,27 @@ pub enum NonErrStmtExecResult {
 }
 
 const VERIFIED_BY: &str = "verified by:";
+const INFER_COLON: &str = "infer:";
+
+impl NonErrStmtExecResult {
+    pub fn with_infers(mut self, infer_result: InferResult) -> Self {
+        match &mut self {
+            NonErrStmtExecResult::NonFactualStmtSuccess(x) => x.infers.append(infer_result),
+            NonErrStmtExecResult::FactVerifiedByFact(x) => x.infers.append(infer_result),
+            NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => x.infers.append(infer_result),
+            NonErrStmtExecResult::StmtUnknown(_) => {}
+        }
+        self
+    }
+}
 
 impl NonErrStmtExecResult {
     /// Returns the result body string without any line/file prefix (for tests or when location is not needed).
     pub fn body_string(&self) -> String {
         match self {
-            NonErrStmtExecResult::NonFactualStmtSuccess(x) => format!("{}\n{}", SUCCESS_COLON, x.stmt),
-            NonErrStmtExecResult::FactVerifiedByFact(x) => format!("{}\n{}\n{}\n{}", SUCCESS_COLON, x.fact, VERIFIED_BY, x.verified_by),
-            NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => format!("{}\n{}\n{}\n{}", SUCCESS_COLON, x.fact, VERIFIED_BY, x.verified_by),
+            NonErrStmtExecResult::NonFactualStmtSuccess(x) => format!("{}\n{}\n{}\n{}", SUCCESS_COLON, x.stmt, INFER_COLON, x.infers.infer_facts.join("\n")),
+            NonErrStmtExecResult::FactVerifiedByFact(x) => format!("{}\n{}\n{}\n{}\n{}\n{}", SUCCESS_COLON, x.fact, VERIFIED_BY, x.verified_by, INFER_COLON, x.infers.infer_facts.join("\n")),
+            NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => format!("{}\n{}\n{}\n{}\n{}\n{}", SUCCESS_COLON, x.fact, VERIFIED_BY, x.verified_by, INFER_COLON, x.infers.infer_facts.join("\n")),
             NonErrStmtExecResult::StmtUnknown(x) => x.to_string(),
         }
     }
