@@ -16,7 +16,7 @@ use crate::verify::verify_number_in_standard_set::{
 
 fn number_in_set_verified_by_builtin_rules_result(num_value: &str, set_name: &str, reason: &str, line_file_index: Option<(usize, usize)>) -> NonErrStmtExecResult {
     NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-        FactVerifiedByBuiltinRules::new(format!("{} in {}", num_value, set_name), reason.to_string(), InferResult::new(), line_file_index),
+        FactVerifiedByBuiltinRules::new(format!("{} in {}", num_value, set_name), reason.to_string(), InferResult::new(), line_file_index, None),
     )
 }
 

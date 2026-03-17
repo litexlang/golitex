@@ -43,6 +43,7 @@ impl<'a> Executor<'a> {
                 fact.to_string(),
                 InferResult::new(),
                 cache_line_file,
+                cache_line_file,
             )))
         } else {
             None
