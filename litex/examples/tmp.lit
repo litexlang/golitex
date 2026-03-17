@@ -1,3 +1,1 @@
-know exist a R st {a > 0}
-
-exist b R st {b > 0, b < 1}
+have fn f(a, b R: a > b)R = a + b
