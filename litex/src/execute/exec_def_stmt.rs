@@ -1,7 +1,7 @@
 use crate::error::ExecError;
 use std::collections::HashMap;
 use crate::obj::{Atom, FnObj, Identifier, Obj};
-use crate::stmt::parameter_type_and_property::{ParamDefWithParamType, ParamType, ParamDefWithParamSet};
+use crate::stmt::parameter_def::{ParamDefWithParamType, ParamType, ParamDefWithParamSet};
 use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::fact::Fact;

@@ -5,7 +5,7 @@ use crate::fact::AtomicFact;
 use crate::fact::line_file as atomic_fact_line_file;
 use crate::execute::Executor;
 use crate::verify::VerifyState;
-use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
+use crate::stmt::parameter_def::ParamDefWithParamType;
 
 // well-defined check for fact: 1. predicate is defined 2. all args are well-defined
 impl<'a> Executor<'a> {

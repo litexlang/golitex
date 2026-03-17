@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fmt;
-use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
+use crate::stmt::parameter_def::ParamDefWithParamType;
 use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
 use crate::fact::Fact;
 use crate::stmt::definition_stmt::{DefPropStmt, DefPropWithoutMeaningStmt};

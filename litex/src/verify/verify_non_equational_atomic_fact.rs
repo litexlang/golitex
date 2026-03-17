@@ -136,8 +136,8 @@ impl<'a> Executor<'a> {
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(environment: &Environment, atomic_fact: &AtomicFact) -> Result<NonErrStmtExecResult, VerifyError> {
-        if let Some(known_facts_map) = environment.known_atomic_facts_with_0_or_more_than_2_args.get(&(atomic_fact.key(), atomic_fact.is_true())) {
-            for known_fact in known_facts_map.iter() {
+        if let Some(known_facts) = environment.known_atomic_facts_with_0_or_more_than_2_args.get(&(atomic_fact.key(), atomic_fact.is_true())) {
+            for known_fact in known_facts.iter() {
                 if known_fact.args().len() != atomic_fact.args().len() {
                     return Err(VerifyError::new(format!("known atomic fact {} has different number of args than the given fact {}", known_fact.to_string(), atomic_fact.to_string()), None, None));
                 }
