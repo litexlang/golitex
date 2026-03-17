@@ -7,7 +7,7 @@ use crate::fact::{AtomicFact, ForallFact};
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult, StmtUnknown};
 use crate::verify::VerifyState;
 use crate::execute::Executor;
-use crate::obj::{FnObj, Identifier, Number, Obj};
+use crate::obj::{FnObj, Identifier, Number, Obj, IdentifierOrIdentifierWithMod};
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
 use std::result::Result;
 
@@ -602,7 +602,7 @@ impl<'a> Executor<'a> {
     }
 
     fn match_arg_when_left_is_inst_set_struct_obj(
-        left_struct_name: &crate::obj::IdentifierOrIdentifierWithMod,
+        left_struct_name: &IdentifierOrIdentifierWithMod,
         left_args: &[Box<Obj>],
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
