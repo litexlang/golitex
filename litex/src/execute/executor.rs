@@ -2,6 +2,7 @@ use std::fmt;
 use std::collections::HashMap;
 use crate::runtime_context::RuntimeContext;
 use crate::error::ParseBlockError;
+use crate::common::is_valid_litex_name::is_valid_litex_name;
 
 pub struct Executor<'a> {
     pub runtime_context: &'a mut RuntimeContext<'a>,
@@ -29,7 +30,11 @@ impl<'a> Executor<'a> {
         self.name_blocks.push(HashMap::new());
     }
 
-    pub fn return_error_when_name_is_used(&mut self, name: &str) -> Result<(), ParseBlockError> {
+    pub fn validate_name(&mut self, name: &str) -> Result<(), ParseBlockError> {
+        if let Err(e) = is_valid_litex_name(name) {
+            return Err(ParseBlockError::InvalidName(e));
+        }
+        
         if self.runtime_context.is_name_used(name) {
             return Err(ParseBlockError::NameAlreadyUsed(name.to_string()));
         }
@@ -48,7 +53,7 @@ impl<'a> Executor<'a> {
 
     pub fn new_names(&mut self, names: &Vec<String>) -> Result<(), ParseBlockError> {
         for name in names {
-            self.return_error_when_name_is_used(name)?;
+            self.validate_name(name)?;
             if let Some(name_block) = self.name_blocks.last_mut() {
                 name_block.insert(name.to_string(), ());
             }
