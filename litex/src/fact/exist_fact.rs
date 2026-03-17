@@ -114,4 +114,13 @@ impl OrAndChainAtomicFact {
             OrAndChainAtomicFact::OrFact(o) => Fact::OrFact(o.clone()),
         }
     }
+    
+    pub fn to_fact(self) -> Fact {
+        match self {
+            OrAndChainAtomicFact::AtomicFact(a) => Fact::AtomicFact(a),
+            OrAndChainAtomicFact::AndFact(a) => Fact::AndFact(a),
+            OrAndChainAtomicFact::ChainFact(c) => Fact::ChainFact(c),
+            OrAndChainAtomicFact::OrFact(o) => Fact::OrFact(o),
+        }
+    }
 }

@@ -2,10 +2,11 @@ use crate::error::InferError;
 use crate::execute::Executor;
 use crate::fact::{
     AndChainAtomicFact, AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, ForallFact,
-    ForallFactWithIff, InFact, NormalAtomicFact, OrFact,
+    ForallFactWithIff, InFact, NormalAtomicFact, OrAndChainAtomicFact, OrFact,
 };
 use crate::obj::{FnSetObj, Obj};
 use crate::stmt::parameter_type_and_property::ParamDefWithParamType;
+use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct InferResult {
@@ -150,6 +151,48 @@ impl<'a> Executor<'a> {
 
                 let mut infer_result = InferResult::new();
                 infer_result.push_fact(&or_fact);
+                Ok(infer_result)
+            }
+            Obj::SetBuilder(set_builder) => {
+                let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
+                param_to_arg_map.insert(set_builder.param.clone(), in_fact.element.clone());
+
+                let element_in_param_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+                    in_fact.element.clone(),
+                    *set_builder.param_set.clone(),
+                    in_fact.line_file_index,
+                )));
+
+                self
+                    .store_fact_without_well_defined_verified_and_infer(&element_in_param_set_fact)
+                    .map_err(|previous_error| {
+                        InferError::new(
+                            format!("failed to store inferred in fact while inferring `{}`", in_fact),
+                            in_fact.line_file_index,
+                            Some(previous_error.into()),
+                        )
+                    })?;
+
+                let mut infer_result = InferResult::new();
+                infer_result.push_fact(&element_in_param_set_fact);
+
+                for fact_in_set_builder in set_builder.facts.iter() {
+                    let instantiated_fact_in_set_builder: OrAndChainAtomicFact =
+                        fact_in_set_builder.instantiate(&param_to_arg_map);
+                    let instantiated_fact_as_fact = instantiated_fact_in_set_builder.to_fact();
+
+                    self
+                        .store_fact_without_well_defined_verified_and_infer(&instantiated_fact_as_fact)
+                        .map_err(|previous_error| {
+                            InferError::new(
+                                format!("failed to store inferred set builder fact while inferring `{}`", in_fact),
+                                in_fact.line_file_index,
+                                Some(previous_error.into()),
+                            )
+                        })?;
+                    infer_result.push_fact(&instantiated_fact_as_fact);
+                }
+
                 Ok(infer_result)
             }
             _ => Ok(InferResult::new()),
