@@ -27,6 +27,7 @@ impl<'a> Executor<'a> {
     fn parse_def_prop_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         tb.skip_token(LEFT_BRACE)?;
         let mut param_defs: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != RIGHT_BRACE {
@@ -34,7 +35,7 @@ impl<'a> Executor<'a> {
         }
         tb.skip_token(RIGHT_BRACE)?;
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
-        self.new_names(&all_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
+        self.validate_names_and_put_into_parsing_names_block(&all_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         let facts = self.parse_facts_in_body(tb)?;
         match facts.len() {
             0 => Ok(Stmt::DefPropStmt(DefPropStmt::new(name, param_defs, None, Some(tb.line_file_index)))),
@@ -52,6 +53,7 @@ impl<'a> Executor<'a> {
     fn parse_def_prop_without_meaning_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         tb.skip_token(LEFT_BRACE)?;
         let mut params = vec![];
         while tb.current()? != RIGHT_BRACE {
@@ -62,7 +64,7 @@ impl<'a> Executor<'a> {
         }
         tb.skip_token(RIGHT_BRACE)?;
 
-        self.new_names(&params).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
+        self.validate_names_and_put_into_parsing_names_block(&params).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
 
         Ok(Stmt::DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt::new(name, params, Some(tb.line_file_index))))
     }
@@ -95,7 +97,7 @@ impl<'a> Executor<'a> {
             vec![]
         };
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_def);
-        self.new_names(&all_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
+        self.validate_names_and_put_into_parsing_names_block(&all_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
             facts,
@@ -125,7 +127,7 @@ impl<'a> Executor<'a> {
             return Err(ParsingError::new("have expects at least one param type pair".to_string(), tb.line_file_index));
         }
         let have_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
-        self.new_names(&have_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
+        self.validate_names_and_put_into_parsing_names_block(&have_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
             Ok(Stmt::HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, Some(tb.line_file_index))))
@@ -191,6 +193,7 @@ impl<'a> Executor<'a> {
     fn def_struct_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(STRUCT)?;
         let name = tb.advance()?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_type: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
@@ -200,7 +203,7 @@ impl<'a> Executor<'a> {
             }
         }
         let struct_param_names = ParamDefWithParamType::collect_param_names(&params_def_with_type);
-        self.new_names(&struct_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
+        self.validate_names_and_put_into_parsing_names_block(&struct_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         let dom_facts = if tb.current()? == COLON {
             tb.skip_token(COLON)?;
             let mut facts = vec![];
@@ -270,8 +273,16 @@ impl<'a> Executor<'a> {
     }
 
     pub fn def_algorithm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        self.new_name_block();
+        let stmt = self.def_algorithm_stmt_body(tb);
+        self.delete_name_block();
+        stmt
+    }
+
+    fn def_algorithm_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(ALGO)?;
         let name = tb.advance()?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         tb.skip_token(LEFT_BRACE)?;
         let mut params: Vec<String> = vec![];
         while tb.current()? != RIGHT_BRACE {

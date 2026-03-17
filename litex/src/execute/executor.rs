@@ -6,12 +6,12 @@ use crate::common::is_valid_litex_name::is_valid_litex_name;
 
 pub struct Executor<'a> {
     pub runtime_context: &'a mut RuntimeContext<'a>,
-    pub name_blocks: Vec<HashMap<String, ()>>,
+    pub parsing_names_blocks: Vec<HashMap<String, ()>>,
 }
 
 impl<'a> Executor<'a> {
     pub fn new(runtime_context: &'a mut RuntimeContext<'a>) -> Self {
-        Executor { runtime_context , name_blocks: vec![HashMap::new()] }
+        Executor { runtime_context , parsing_names_blocks: vec![HashMap::new()] }
     }
 
     pub fn line_file_index_string(&self, line: usize, file_index: usize) -> String {
@@ -27,7 +27,7 @@ impl<'a> fmt::Display for Executor<'a> {
 
 impl<'a> Executor<'a> {
     pub fn new_name_block(&mut self) {
-        self.name_blocks.push(HashMap::new());
+        self.parsing_names_blocks.push(HashMap::new());
     }
 
     pub fn validate_name(&mut self, name: &str) -> Result<(), ParseBlockError> {
@@ -39,7 +39,7 @@ impl<'a> Executor<'a> {
             return Err(ParseBlockError::NameAlreadyUsed(name.to_string()));
         }
         
-        for name_block in self.name_blocks.iter() {
+        for name_block in self.parsing_names_blocks.iter() {
             if name_block.contains_key(name) {
                 return Err(ParseBlockError::NameAlreadyUsed(name.to_string()));
             }
@@ -48,15 +48,20 @@ impl<'a> Executor<'a> {
     }
 
     pub fn delete_name_block(&mut self) {
-        self.name_blocks.pop();
+        self.parsing_names_blocks.pop();
     }
 
-    pub fn new_names(&mut self, names: &Vec<String>) -> Result<(), ParseBlockError> {
+    pub fn validate_names_and_put_into_parsing_names_block(&mut self, names: &Vec<String>) -> Result<(), ParseBlockError> {
         for name in names {
-            self.validate_name(name)?;
-            if let Some(name_block) = self.name_blocks.last_mut() {
-                name_block.insert(name.to_string(), ());
-            }
+            self.validate_name_and_put_into_parsing_names_block(name)?;
+        }
+        Ok(())
+    }
+
+    pub fn validate_name_and_put_into_parsing_names_block(&mut self, name: &str) -> Result<(), ParseBlockError> {
+        self.validate_name(name)?;
+        if let Some(name_block) = self.parsing_names_blocks.last_mut() {
+            name_block.insert(name.to_string(), ());
         }
         Ok(())
     }

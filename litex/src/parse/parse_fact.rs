@@ -41,7 +41,7 @@ impl<'a> Executor<'a> {
             param_def.push(self.parse_param_def_with_param_type(tb)?);
         }
         let forall_param_names = ParamDefWithParamType::collect_param_names(&param_def);
-        self.new_names(&forall_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
+        self.validate_names_and_put_into_parsing_names_block(&forall_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         tb.skip_token(COLON)?;
 
         let last_body = tb.body.last().ok_or_else(|| {
@@ -159,7 +159,7 @@ impl<'a> Executor<'a> {
         }
         let exist_param_names = ParamDefWithParamType::collect_param_names(&param_def);
         self.new_name_block();
-        self.new_names(&exist_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
+        self.validate_names_and_put_into_parsing_names_block(&exist_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index))?;
         tb.skip_token(ST)?;
 
         tb.skip_token(LEFT_CURLY_BRACE)?;
