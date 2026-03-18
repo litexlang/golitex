@@ -2,7 +2,7 @@ use crate::fact::InFact;
 use crate::error::VerifyError;
 use crate::execute::Executor;
 use crate::infer::InferResult;
-use crate::common::keywords::{N, N_POS, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, Z, Z_NEG, Z_NZ, Z_POS};
+use crate::common::keywords::{FACT_PREFIX, IN, N, N_POS, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, Z, Z_NEG, Z_NZ, Z_POS};
 use crate::obj::Obj;
 use crate::result::NonErrStmtExecResult;
 use crate::result::FactVerifiedByBuiltinRules;
@@ -14,9 +14,20 @@ use crate::verify::verify_number_in_standard_set::{
     number_is_in_z, number_is_in_z_neg, number_is_in_z_nz, number_is_in_z_pos,
 };
 
-fn number_in_set_verified_by_builtin_rules_result(num_value: &str, set_name: &str, reason: &str, line_file_index: Option<(usize, usize)>) -> NonErrStmtExecResult {
+fn number_in_set_verified_by_builtin_rules_result(num_value: &str, set_name: &str, reason: &str, line_file_index: (usize, usize)) -> NonErrStmtExecResult {
     NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-        FactVerifiedByBuiltinRules::new(format!("{} in {}", num_value, set_name), reason.to_string(), InferResult::new(), line_file_index, None),
+        FactVerifiedByBuiltinRules::new(format!("{} in {}", num_value, set_name), reason.to_string(), InferResult::new(), line_file_index),
+    )
+}
+
+fn arithmetic_obj_in_r_verified_by_builtin_rules_result(obj: &Obj, line_file_index: (usize, usize)) -> NonErrStmtExecResult {
+    NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+        FactVerifiedByBuiltinRules::new(
+            format!("{} {}{} {}", obj, FACT_PREFIX, IN, R),
+            "arithmetic expression is in R".to_string(),
+            InferResult::new(),
+            line_file_index,
+        ),
     )
 }
 
@@ -108,6 +119,9 @@ impl<'a> Executor<'a> {
                 } else {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
                 }
+            }
+            (Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_), Obj::RObj(_)) => {
+                Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(&in_fact.element, in_fact.line_file_index))
             }
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }

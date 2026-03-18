@@ -2,7 +2,7 @@ use std::fmt;
 use std::collections::HashMap;
 use crate::error::{ExecError, StmtError};
 use crate::fact::{AtomicFact, Fact, InFact, IsSetFact, IsNonemptySetFact, IsFiniteSetFact};
-use crate::common::helper::vec_to_string_join_by_comma;
+use crate::common::helper::{vec_to_string_join_by_comma, DEFAULT_LINE_FILE};
 use crate::obj::{Identifier, Obj};
 use crate::common::keywords::{FINITE_SET, NONEMPTY_SET, SET};
 
@@ -97,19 +97,19 @@ impl ParamType {
             ParamType::Obj(obj) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                 Obj::Identifier(Identifier::new(param_name.to_string())),
                 obj.clone(),
-                None,
+                DEFAULT_LINE_FILE.clone(),
             ))),
             ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
                 Obj::Identifier(Identifier::new(param_name.to_string())),
-                None,
+                DEFAULT_LINE_FILE.clone(),
             ))),
             ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
                 Obj::Identifier(Identifier::new(param_name.to_string())),
-                None,
+                DEFAULT_LINE_FILE.clone(),
             ))),
             ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
                 Obj::Identifier(Identifier::new(param_name.to_string())),
-                None,
+                DEFAULT_LINE_FILE.clone(),
             ))),
         }
     }
@@ -120,19 +120,19 @@ impl ParamType {
             ParamType::Obj(set_obj) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                 obj,
                 set_obj.clone(),
-                None,
+                DEFAULT_LINE_FILE.clone(),
             ))),
             ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
                 obj,
-                None,
+                DEFAULT_LINE_FILE.clone(),
             ))),
             ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
                 obj,
-                None,
+                DEFAULT_LINE_FILE.clone(),
             ))),
             ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
                 obj,
-                None,
+                DEFAULT_LINE_FILE.clone(),
             ))),
         }
     }
@@ -164,7 +164,7 @@ impl ParamDefWithParamSet {
             let fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
                 Obj::Identifier(Identifier::new(name.clone())),
                 self.1.clone(),
-                None,
+                DEFAULT_LINE_FILE.clone(),
             )));
             facts.push(fact);
         }
@@ -178,6 +178,94 @@ impl ParamDefWithParamSet {
 impl ParamDefWithParamSet {
     pub fn new(param: Vec<String>, param_set: Obj) -> Self {
         ParamDefWithParamSet(param, param_set)
+    }
+
+    pub fn fact_for_obj(obj: Obj, param_set: &Obj) -> Fact {
+        Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+            obj,
+            param_set.clone(),
+            DEFAULT_LINE_FILE.clone(),
+        )))
+    }
+
+    pub fn facts_for_boxed_args_satisfy_param_def_with_set_vec(param_defs: &Vec<ParamDefWithParamSet>, args: &Vec<Box<Obj>>) -> Result<Vec<Fact>, StmtError> {
+        let instantiated_param_sets = Self::instantiate_param_def_with_set_one_by_one_boxed(param_defs, args)?;
+        let flat_param_sets = Self::flat_instantiated_param_sets_for_args(param_defs, &instantiated_param_sets);
+        let mut facts = Vec::with_capacity(args.len());
+        for (arg, param_set) in args.iter().zip(flat_param_sets.iter()) {
+            let arg_obj = (**arg).clone();
+            facts.push(Self::fact_for_obj(arg_obj, param_set));
+        }
+        Ok(facts)
+    }
+
+    pub fn facts_for_args_satisfy_param_def_with_set_vec(param_defs: &Vec<ParamDefWithParamSet>, args: &Vec<Obj>) -> Result<Vec<Fact>, StmtError> {
+        let mut args_as_boxed_obj: Vec<Box<Obj>> = Vec::with_capacity(args.len());
+        for arg in args.iter() {
+            args_as_boxed_obj.push(Box::new(arg.clone()));
+        }
+        Self::facts_for_boxed_args_satisfy_param_def_with_set_vec(param_defs, &args_as_boxed_obj)
+    }
+
+    fn number_of_params_in_param_def_with_set_def(param_defs: &Vec<ParamDefWithParamSet>) -> usize {
+        let mut total_param_count: usize = 0;
+        for param_def in param_defs.iter() {
+            total_param_count += param_def.0.len();
+        }
+        total_param_count
+    }
+
+    fn flat_instantiated_param_sets_for_args(param_defs: &Vec<ParamDefWithParamSet>, instantiated_param_sets: &Vec<Obj>) -> Vec<Obj> {
+        let mut result = Vec::with_capacity(Self::number_of_params_in_param_def_with_set_def(param_defs));
+        for (param_def, param_set) in param_defs.iter().zip(instantiated_param_sets.iter()) {
+            for _ in param_def.0.iter() {
+                result.push(param_set.clone());
+            }
+        }
+        result
+    }
+
+    fn instantiate_param_def_with_set_one_by_one(param_defs: &Vec<ParamDefWithParamSet>, args: &Vec<Obj>) -> Result<Vec<Obj>, StmtError> {
+        let total_param_count = Self::number_of_params_in_param_def_with_set_def(param_defs);
+        if total_param_count != args.len() {
+            return Err(StmtError::ExecError(ExecError::new(
+                "".to_string(),
+                format!(
+                    "argument count mismatch: expected {} parameter(s), got {} argument(s)",
+                    total_param_count,
+                    args.len()
+                ),
+                None,
+                DEFAULT_LINE_FILE.clone(),
+            )));
+        }
+
+        let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
+        let mut arg_index: usize = 0;
+        let mut instantiated_param_sets: Vec<Obj> = vec![];
+        for param_def in param_defs.iter() {
+            let instantiated_param_set = if arg_index != 0 {
+                param_def.1.instantiate(&param_to_arg_map)
+            } else {
+                param_def.1.clone()
+            };
+            instantiated_param_sets.push(instantiated_param_set);
+
+            for param_name in param_def.0.iter() {
+                param_to_arg_map.insert(param_name.clone(), args[arg_index].clone());
+                arg_index += 1;
+            }
+        }
+
+        Ok(instantiated_param_sets)
+    }
+
+    fn instantiate_param_def_with_set_one_by_one_boxed(param_defs: &Vec<ParamDefWithParamSet>, args: &Vec<Box<Obj>>) -> Result<Vec<Obj>, StmtError> {
+        let mut args_as_obj: Vec<Obj> = Vec::with_capacity(args.len());
+        for arg in args.iter() {
+            args_as_obj.push((**arg).clone());
+        }
+        Self::instantiate_param_def_with_set_one_by_one(param_defs, &args_as_obj)
     }
 }
 
@@ -229,7 +317,7 @@ impl ParamDefWithParamType {
                     args.len()
                 ),
                 None,
-                None,
+                DEFAULT_LINE_FILE.clone(),
             )));
         }
 
@@ -341,5 +429,33 @@ impl ParamDefWithParamSet {
             }
         }
         names
+    }
+
+    pub fn number_of_params(param_defs: &Vec<ParamDefWithParamSet>) -> usize {
+        let mut total_param_count: usize = 0;
+        for p in param_defs.iter() {
+            total_param_count += p.0.len();
+        }
+        return total_param_count
+    }
+
+    pub fn param_defs_and_args_to_param_to_arg_map(
+        param_defs: &Vec<ParamDefWithParamSet>,
+        args: &Vec<Obj>,
+    ) -> HashMap<String, Obj> {
+        let param_names = Self::collect_param_names(param_defs);
+        if param_names.len() != args.len() {
+            unreachable!();
+        }
+
+        let mut result: HashMap<String, Obj> = HashMap::new();
+        let mut index = 0;
+        while index < param_names.len() {
+            let param_name = &param_names[index];
+            let arg = &args[index];
+            result.insert(param_name.clone(), arg.clone());
+            index += 1;
+        }
+        result
     }
 }

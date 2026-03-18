@@ -88,9 +88,9 @@ impl<'a> Executor<'a> {
             }
         }
 
-        let forall_fact = ForallFact::new(param_def, dom_facts, then_facts, Some(tb.line_file_index));
+        let forall_fact = ForallFact::new(param_def, dom_facts, then_facts, tb.line_file_index);
         
-        Ok(Fact::ForallFactWithIff(ForallFactWithIff::new(forall_fact, iff_facts, Some(tb.line_file_index))))
+        Ok(Fact::ForallFactWithIff(ForallFactWithIff::new(forall_fact, iff_facts, tb.line_file_index)))
     }
 
     fn parse_forall(&mut self, tb: &mut TokenBlock, param_def: Vec<ParamDefWithParamType>) -> Result<Fact, ParsingError> {
@@ -109,13 +109,13 @@ impl<'a> Executor<'a> {
             for block in last.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
-            Ok(Fact::ForallFact(ForallFact::new(param_def, dom_facts, then_facts, Some(tb.line_file_index))))
+            Ok(Fact::ForallFact(ForallFact::new(param_def, dom_facts, then_facts, tb.line_file_index)))
         } else {
             let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
             for block in tb.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
             }
-            Ok(Fact::ForallFact(ForallFact::new(param_def, vec![], then_facts, Some(tb.line_file_index))))
+            Ok(Fact::ForallFact(ForallFact::new(param_def, vec![], then_facts, tb.line_file_index)))
         }
     }
 
@@ -136,7 +136,7 @@ impl<'a> Executor<'a> {
                 if collected.len() == 1 {
                     return Ok(AndChainAtomicFact::AtomicFact(collected.remove(0)));
                 }
-                Ok(AndChainAtomicFact::AndFact(AndFact::new(collected, Some(tb.line_file_index))))
+                Ok(AndChainAtomicFact::AndFact(AndFact::new(collected, tb.line_file_index)))
             }
         }
     }
@@ -176,7 +176,7 @@ impl<'a> Executor<'a> {
         tb.skip_token(RIGHT_CURLY_BRACE)?;
 
         self.delete_parsing_names_block();
-        let line = Some(tb.line_file_index);
+        let line = tb.line_file_index;
         Ok(ExistFact::new(param_def, facts, line))
     }
 
@@ -205,7 +205,7 @@ impl<'a> Executor<'a> {
 
     /// Parse a single atomic fact only: $prop(args) or obj op obj. Does not parse chain (obj op obj op obj).
     pub fn parse_atomic_fact(&mut self, tb: &mut TokenBlock, is_true: bool) -> Result<AtomicFact, ParsingError> {
-        let line_file_index = Some(tb.line_file_index);
+        let line_file_index = tb.line_file_index;
         if tb.current()? == FACT_PREFIX {
             tb.skip_token(FACT_PREFIX)?;
             let prop = self.identifier_or_identifier_with_mod(tb)?;
@@ -249,12 +249,12 @@ impl<'a> Executor<'a> {
                 AndChainAtomicFact::ChainFact(c) => OrAndChainAtomicFact::ChainFact(c),
             });
         }
-        Ok(OrAndChainAtomicFact::OrFact(OrFact::new(list, Some(tb.line_file_index))))
+        Ok(OrAndChainAtomicFact::OrFact(OrFact::new(list, tb.line_file_index)))
     }
 
     /// Parse chain (obj op obj op ...) or single atomic ($prop(args) or obj op obj). When is_true is false, only single atomic is allowed (negated).
     pub fn parse_chain_atomic(&mut self, tb: &mut TokenBlock, is_true: bool) -> Result<ChainAtomicFact, ParsingError> {
-        let line_file_index = Some(tb.line_file_index);
+        let line_file_index = tb.line_file_index;
         if tb.current()? == FACT_PREFIX {
             tb.skip_token(FACT_PREFIX)?;
             let prop = self.identifier_or_identifier_with_mod(tb)?;

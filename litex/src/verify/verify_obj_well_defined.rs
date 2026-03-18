@@ -10,7 +10,7 @@ use crate::fact::{AtomicFact, NotEqualFact, IsCartFact, IsNonemptySetFact, Fact}
 use crate::fact::InFact;
 use crate::execute::Executor;
 use crate::stmt::parameter_def::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
-use crate::common::helper::todo_error_message;
+use crate::common::helper::{todo_error_message, DEFAULT_LINE_FILE};
 
 impl<'a> Executor<'a> {
     fn verify_obj_well_defined_from_cache_if_known(&self, obj: &Obj) -> Option<()> {
@@ -91,35 +91,39 @@ impl<'a> Executor<'a> {
         if self.runtime_context.is_defined_identifier_obj(identifier) {
             Ok(())
         } else {
-            Err(WellDefinedError::new(format!("identifier `{}` not defined", identifier.to_string()), None, None))
+            Err(WellDefinedError::new(format!("identifier `{}` not defined", identifier.to_string()), None, DEFAULT_LINE_FILE.clone()))
         }
     }
 
     fn verify_identifier_with_mod_well_defined(&self, x: &IdentifierWithMod) -> Result<(), WellDefinedError> {
         let _ = x;
-        Err(WellDefinedError::new("verify_identifier_with_mod_well_defined 此函数还没有 implement".to_string(), None, None))
+        Err(WellDefinedError::new("verify_identifier_with_mod_well_defined 此函数还没有 implement".to_string(), None, DEFAULT_LINE_FILE.clone()))
     }
 
     fn verify_field_access_well_defined(&self, x: &FieldAccess) -> Result<(), WellDefinedError> {
         let _ = x;
-        Err(WellDefinedError::new("verify_field_access_well_defined 此函数还没有 implement".to_string(), None, None))
+        Err(WellDefinedError::new("verify_field_access_well_defined 此函数还没有 implement".to_string(), None, DEFAULT_LINE_FILE.clone()))
     }
 
     fn verify_field_access_with_mod_well_defined(&self, x: &FieldAccessWithMod) -> Result<(), WellDefinedError> {
         let _ = x;
-        Err(WellDefinedError::new("verify_field_access_with_mod_well_defined 此函数还没有 implement".to_string(), None, None))
+        Err(WellDefinedError::new("verify_field_access_with_mod_well_defined 此函数还没有 implement".to_string(), None, DEFAULT_LINE_FILE.clone()))
     }
 
     fn verify_fn_obj_well_defined(&mut self, fn_obj: &FnObj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let mut the_set_where_current_fn_obj_is_in = self.runtime_context.find_fn_definition_for_atom(&fn_obj.head).ok_or_else(|| WellDefinedError::new(
             todo_error_message("verify_fn_obj_well_defined: function head identifier has no known definition yet".to_string()).to_string(),None,
-            None,
+            DEFAULT_LINE_FILE.clone(),
         ))?.clone();
 
         for args in fn_obj.body.iter() {
             match &the_set_where_current_fn_obj_is_in {
                 FnSetObj::FnSetWithDom(fn_set_with_dom) => {
-                    self.verify_fn_obj_well_defined_against_fn_set_with_dom(args, &fn_set_with_dom, verify_state)?;
+                    self.verify_fn_obj_well_defined_against_fn_set_with_dom(args, &fn_set_with_dom, verify_state).map_err(|well_defined_error| WellDefinedError::new(
+                        format!("object {} is not well-defined, failed to verify arguments satisfy function domain.", fn_obj.to_string()),
+                        Some(StmtError::WellDefinedError(well_defined_error)),
+                        DEFAULT_LINE_FILE.clone(),
+                    ))?;
                 }
                 FnSetObj::FnSetWithoutDom(fn_set_without_dom) => {
                     self.verify_fn_obj_args_well_defined_against_fn_set_without_dom(args, &fn_set_without_dom, verify_state)?;
@@ -133,7 +137,7 @@ impl<'a> Executor<'a> {
                 _ => {
                     return Err(WellDefinedError::new(
                         format!("expect return set of {} to be a fn_set object.", the_set_where_current_fn_obj_is_in.to_string()),None,
-                        None,
+                        DEFAULT_LINE_FILE.clone(),
                     ));
                 }
             };
@@ -149,19 +153,68 @@ impl<'a> Executor<'a> {
         fn_set_with_dom: &FnSetWithDom,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        let param_count = fn_set_with_dom.params_def_with_set.len();
+        let param_count = ParamDefWithParamSet::number_of_params(&fn_set_with_dom.params_def_with_set);
         if args.len() != param_count {
             return Err(WellDefinedError::new(
                 format!("number of args ({}) does not match fn set with dom param count ({})", args.len(), param_count),None,
-                None,
+                DEFAULT_LINE_FILE.clone(),
             ));
         }
 
-        for (index, arg) in args.iter().enumerate() {
+        for arg in args.iter() {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
-            let param_set = &fn_set_with_dom.params_def_with_set[index].1;
-            let in_fact = InFact::new((**arg).clone(), param_set.clone(), None);
-            self.verify_fact(&Fact::AtomicFact(AtomicFact::InFact(in_fact)), verify_state)?;
+        }
+
+        let mut args_as_obj: Vec<Obj> = Vec::with_capacity(args.len());
+        for arg in args.iter() {
+            args_as_obj.push((**arg).clone());
+        }
+
+        let args_satisfy_fn_set_params_set_facts = ParamDefWithParamSet::facts_for_args_satisfy_param_def_with_set_vec(
+            &fn_set_with_dom.params_def_with_set,
+            &args_as_obj,
+        ).map_err(|stmt_error| WellDefinedError::new(
+            format!("failed to build facts for args satisfy fn set parameter sets"),
+            Some(stmt_error),
+            DEFAULT_LINE_FILE.clone(),
+        ))?;
+
+        for fact in args_satisfy_fn_set_params_set_facts.iter() {
+            let verify_result = self.verify_fact(fact, verify_state)
+                .map_err(|verify_error| WellDefinedError::new(
+                    format!("failed to verify arg satisfy fn set parameter set: {}", fact),
+                    Some(StmtError::VerifyError(verify_error)),
+                    DEFAULT_LINE_FILE.clone(),
+                ))?;
+            if !verify_result.is_true() {
+                return Err(WellDefinedError::new(
+                    format!("arg does not satisfy fn set parameter set: {}", fact),
+                    None,
+                    DEFAULT_LINE_FILE.clone(),
+                ));
+            }
+        }
+
+        let param_to_arg_map = ParamDefWithParamSet::param_defs_and_args_to_param_to_arg_map(
+            &fn_set_with_dom.params_def_with_set,
+            &args_as_obj,
+        );
+        for dom_fact in fn_set_with_dom.dom_facts.iter() {
+            let instantiated_dom_fact = dom_fact.instantiate(&param_to_arg_map);
+            let instantiated_dom_fact_as_fact = instantiated_dom_fact.to_fact();
+            let verify_result = self.verify_fact(&instantiated_dom_fact_as_fact, verify_state)
+                .map_err(|verify_error| WellDefinedError::new(
+                    format!("failed to verify function domain fact:\n{}", instantiated_dom_fact_as_fact),
+                    Some(StmtError::VerifyError(verify_error)),
+                    DEFAULT_LINE_FILE.clone(),
+                ))?;
+            if !verify_result.is_true() {
+                return Err(WellDefinedError::new(
+                    format!("failed to verify function domain fact:\n{}", instantiated_dom_fact_as_fact),
+                    None,
+                    DEFAULT_LINE_FILE.clone(),
+                ));
+            }
         }
 
         Ok(())
@@ -178,14 +231,14 @@ impl<'a> Executor<'a> {
         if args.len() != param_count {
             return Err(WellDefinedError::new(
                 format!("number of args ({}) does not match fn set without dom param count ({})", args.len(), param_count),None,
-                None,
+                DEFAULT_LINE_FILE.clone(),
             ));
         }
 
         for (index, arg) in args.iter().enumerate() {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
             let param_set = &fn_set_without_dom.param_sets[index];
-            let in_fact = InFact::new((**arg).clone(), (**param_set).clone(), None);
+            let in_fact = InFact::new((**arg).clone(), (**param_set).clone(), DEFAULT_LINE_FILE.clone());
             self.verify_fact(&Fact::AtomicFact(AtomicFact::InFact(in_fact)), verify_state)?;
         }
 
@@ -194,7 +247,7 @@ impl<'a> Executor<'a> {
 
     fn require_obj_in_r(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let r_obj = Obj::RObj(RObj::new());
-        let in_fact = InFact::new(obj.clone(), r_obj, None);
+        let in_fact = InFact::new(obj.clone(), r_obj, DEFAULT_LINE_FILE.clone());
         let atomic_fact = AtomicFact::InFact(in_fact);
         self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
         Ok(())
@@ -202,7 +255,7 @@ impl<'a> Executor<'a> {
 
     fn require_obj_in_z(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let z_obj = Obj::ZObj(ZObj::new());
-        let in_fact = InFact::new(obj.clone(), z_obj, None);
+        let in_fact = InFact::new(obj.clone(), z_obj, DEFAULT_LINE_FILE.clone());
         let atomic_fact = AtomicFact::InFact(in_fact);
         self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
         Ok(())
@@ -210,7 +263,7 @@ impl<'a> Executor<'a> {
 
     fn require_obj_in_n_pos(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let n_pos_obj = Obj::NPosObj(NPosObj::new());
-        let in_fact = InFact::new(obj.clone(), n_pos_obj, None);
+        let in_fact = InFact::new(obj.clone(), n_pos_obj, DEFAULT_LINE_FILE.clone());
         let atomic_fact = AtomicFact::InFact(in_fact);
         self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
         Ok(())
@@ -245,7 +298,7 @@ impl<'a> Executor<'a> {
         self.verify_obj_well_defined_and_store_cache(&div.right, verify_state)?;
 
         let zero = Obj::Number(Number::new("0".to_string()));
-        let not_equal_fact = NotEqualFact::new((*div.right).clone(), zero, None);
+        let not_equal_fact = NotEqualFact::new((*div.right).clone(), zero, DEFAULT_LINE_FILE.clone());
         let atomic_fact = AtomicFact::NotEqualFact(not_equal_fact);
         self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
         
@@ -260,7 +313,7 @@ impl<'a> Executor<'a> {
         self.require_obj_in_z(&m.left, verify_state)?;
         self.require_obj_in_z(&m.right, verify_state)?;
         let zero = Obj::Number(Number::new("0".to_string()));
-        let not_equal_fact = NotEqualFact::new((*m.right).clone(), zero, None);
+        let not_equal_fact = NotEqualFact::new((*m.right).clone(), zero, DEFAULT_LINE_FILE.clone());
         self.verify_fact(&Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact)), verify_state)?;
         Ok(())
     }
@@ -329,21 +382,21 @@ impl<'a> Executor<'a> {
                 let not_equal_fact_as_fact = Fact::AtomicFact(AtomicFact::NotEqualFact(NotEqualFact::new(
                     left_obj.clone(),
                     right_obj,
-                    None,
+                    DEFAULT_LINE_FILE.clone(),
                 )));
                 let verify_result = self.verify_fact(&not_equal_fact_as_fact, &next_verify_state)
                     .map_err(|previous_error| {
                         WellDefinedError::new(
                             format!("failed to verify list set elements are pairwise not equal: {}", not_equal_fact_as_fact),
                             Some(StmtError::VerifyError(previous_error)),
-                            None,
+                            DEFAULT_LINE_FILE.clone(),
                         )
                     })?;
                 if !verify_result.is_true() {
                     return Err(WellDefinedError::new(
                         format!("list set elements must be pairwise not equal, but it is not provable: {}", not_equal_fact_as_fact),
                         None,
-                        None,
+                        DEFAULT_LINE_FILE.clone(),
                     ));
                 }
                 j += 1;
@@ -363,12 +416,12 @@ impl<'a> Executor<'a> {
 
     fn verify_set_builder_well_defined_body(&mut self, x: &SetBuilder, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         if let Err(e) = self.define_params_with_set(&ParamDefWithParamSet::new(vec![x.param.clone()], *x.param_set.clone())) {
-            return Err(WellDefinedError::new(format!("failed to verify well-defined of set builder {}", x.to_string()), Some(StmtError::ExecError(e)), None));
+            return Err(WellDefinedError::new(format!("failed to verify well-defined of set builder {}", x.to_string()), Some(StmtError::ExecError(e)), DEFAULT_LINE_FILE.clone()));
         }
 
         for fact in x.facts.iter() {
             if let Err(e) = self.verify_fact_well_defined_and_store_and_infer(&(fact.from_ref_to_cloned_fact()), verify_state) {
-                return Err(WellDefinedError::new(format!("failed to verify well-defined of set builder {}", x.to_string()), Some(StmtError::ExecError(e)), None));
+                return Err(WellDefinedError::new(format!("failed to verify well-defined of set builder {}", x.to_string()), Some(StmtError::ExecError(e)), DEFAULT_LINE_FILE.clone()));
             }
         }
 
@@ -393,19 +446,19 @@ impl<'a> Executor<'a> {
 
     fn verify_fn_set_with_dom_well_defined_body(&mut self, x: &FnSetWithDom, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         if let Err(e) = self.verify_obj_well_defined_and_store_cache(&x.ret_set, verify_state) {
-            return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()), Some(StmtError::WellDefinedError(e)), None));
+            return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()), Some(StmtError::WellDefinedError(e)), DEFAULT_LINE_FILE.clone()));
         }
         
         
         for param_def_with_set in x.params_def_with_set.iter() {
             if let Err(e) = self.define_params_with_set(param_def_with_set) {
-                return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()), Some(StmtError::ExecError(e)), None));
+                return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()), Some(StmtError::ExecError(e)), DEFAULT_LINE_FILE.clone()));
             }
         }
 
         for fact in x.dom_facts.iter() {
             if let Err(e) = self.verify_fact_well_defined_and_store_and_infer(&(fact.from_ref_to_cloned_fact()), verify_state) {
-                return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()), Some(StmtError::ExecError(e)), None));
+                return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()), Some(StmtError::ExecError(e)), DEFAULT_LINE_FILE.clone()));
             }
         }
 
@@ -445,14 +498,14 @@ impl<'a> Executor<'a> {
         } else if let Some(def) = self.runtime_context.get_set_struct_with_no_field_definition_by_name(x.struct_name.to_string().as_str()) {
             &def.params_def_with_type
         } else {
-            return Err(WellDefinedError::new(format!("set struct definition not found {}", x.struct_name.to_string()), None, None));
+            return Err(WellDefinedError::new(format!("set struct definition not found {}", x.struct_name.to_string()), None, DEFAULT_LINE_FILE.clone()));
         };
         let facts = ParamDefWithParamType::facts_for_boxed_args_satisfy_param_def_with_type_vec(param_defs, &x.args)
-            .map_err(|e| WellDefinedError::new(format!("failed to build facts for inst struct {}: {}", x.struct_name, e.error_body()), Some(e), None))?;
+            .map_err(|e| WellDefinedError::new(format!("failed to build facts for inst struct {}: {}", x.struct_name, e.error_body()), Some(e), DEFAULT_LINE_FILE.clone()))?;
         for fact in facts.iter() {
             self.verify_fact(fact, verify_state).map_err(|e| WellDefinedError::new(
                 format!("exec_fact failed for inst struct obj arg (struct {})", x.struct_name),Some(StmtError::VerifyError(e)),
-                None,
+                DEFAULT_LINE_FILE.clone(),
             ))?;
         }
 
@@ -469,7 +522,7 @@ impl<'a> Executor<'a> {
     fn verify_cart_dim_well_defined(&mut self, x: &CartDim, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
 
-        let is_cart_fact = AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), None));
+        let is_cart_fact = AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), DEFAULT_LINE_FILE.clone()));
         self.verify_fact(&Fact::AtomicFact(is_cart_fact), verify_state)?;
         
         Ok(())
@@ -478,43 +531,43 @@ impl<'a> Executor<'a> {
     fn verify_proj_well_defined(&mut self, x: &Proj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_proj_well_defined 此函数还没有 implement".to_string(), None, None))
+        Err(WellDefinedError::new("verify_proj_well_defined 此函数还没有 implement".to_string(), None, DEFAULT_LINE_FILE.clone()))
     }
 
     fn verify_dim_well_defined(&mut self, x: &Dim, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_dim_well_defined 此函数还没有 implement".to_string(), None, None))
+        Err(WellDefinedError::new("verify_dim_well_defined 此函数还没有 implement".to_string(), None, DEFAULT_LINE_FILE.clone()))
     }
 
     fn verify_tuple_well_defined(&mut self, x: &Tuple, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_tuple_well_defined 此函数还没有 implement".to_string(), None, None))
+        Err(WellDefinedError::new("verify_tuple_well_defined 此函数还没有 implement".to_string(), None, DEFAULT_LINE_FILE.clone()))
     }
 
     fn verify_count_well_defined(&mut self, x: &Count, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_count_well_defined 此函数还没有 implement".to_string(), None, None))
+        Err(WellDefinedError::new("verify_count_well_defined 此函数还没有 implement".to_string(), None, DEFAULT_LINE_FILE.clone()))
     }
 
     fn verify_range_well_defined(&mut self, x: &Range, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_range_well_defined 此函数还没有 implement".to_string(), None, None))
+        Err(WellDefinedError::new("verify_range_well_defined 此函数还没有 implement".to_string(), None, DEFAULT_LINE_FILE.clone()))
     }
 
     fn verify_closed_range_well_defined(&mut self, x: &ClosedRange, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_closed_range_well_defined 此函数还没有 implement".to_string(), None, None))
+        Err(WellDefinedError::new("verify_closed_range_well_defined 此函数还没有 implement".to_string(), None, DEFAULT_LINE_FILE.clone()))
     }
 
     fn verify_val_well_defined(&mut self, x: &Val, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_val_well_defined 此函数还没有 implement".to_string(), None, None))
+        Err(WellDefinedError::new("verify_val_well_defined 此函数还没有 implement".to_string(), None, DEFAULT_LINE_FILE.clone()))
     }
 
     fn verify_power_set_well_defined(&mut self, x: &PowerSet, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
@@ -524,7 +577,7 @@ impl<'a> Executor<'a> {
 
     fn verify_choose_well_defined(&mut self, x: &Choose, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
-        let is_nonempty_set_fact = AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new((*x.set).clone(), None));
+        let is_nonempty_set_fact = AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new((*x.set).clone(), DEFAULT_LINE_FILE.clone()));
         self.verify_fact(&Fact::AtomicFact(is_nonempty_set_fact), verify_state)?;
         Ok(())
     }
@@ -532,7 +585,7 @@ impl<'a> Executor<'a> {
     fn verify_obj_at_index_well_defined(&self, x: &ObjAtIndex, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new("verify_obj_at_index_well_defined 此函数还没有 implement".to_string(), None, None))
+        Err(WellDefinedError::new("verify_obj_at_index_well_defined 此函数还没有 implement".to_string(), None, DEFAULT_LINE_FILE.clone()))
     }
 
     fn verify_q_pos_well_defined(&self) -> Result<(), WellDefinedError> {

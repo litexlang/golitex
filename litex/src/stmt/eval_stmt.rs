@@ -4,7 +4,7 @@ use crate::obj::Obj;
 
 pub struct EvalStmt {
     pub obj_to_eval: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 impl fmt::Display for EvalStmt {
@@ -14,7 +14,7 @@ impl fmt::Display for EvalStmt {
 }
 
 impl EvalStmt {
-    pub fn new(obj_to_eval: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(obj_to_eval: Obj, line_file_index: (usize, usize)) -> Self {
         EvalStmt { obj_to_eval, line_file_index }
     }
 
