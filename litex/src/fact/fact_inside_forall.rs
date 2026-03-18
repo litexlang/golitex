@@ -48,13 +48,13 @@ impl ExistOrAndChainAtomicFact {
         }
     }
 
-    pub fn line_file_index(&self) -> (usize, usize) {
+    pub fn line_file(&self) -> (usize, usize) {
         match self {
-            ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => atomic_fact.line_file_index(),
-            ExistOrAndChainAtomicFact::AndFact(and_fact) => and_fact.line_file_index(),
-            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => chain_fact.line_file_index(),
-            ExistOrAndChainAtomicFact::OrFact(or_fact) => or_fact.line_file_index,
-            ExistOrAndChainAtomicFact::ExistFact(exist_fact) => exist_fact.line_file_index(),
+            ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => atomic_fact.line_file(),
+            ExistOrAndChainAtomicFact::AndFact(and_fact) => and_fact.line_file(),
+            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => chain_fact.line_file(),
+            ExistOrAndChainAtomicFact::OrFact(or_fact) => or_fact.line_file,
+            ExistOrAndChainAtomicFact::ExistFact(exist_fact) => exist_fact.line_file(),
         }
     }
 }

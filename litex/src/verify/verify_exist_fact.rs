@@ -46,8 +46,8 @@ impl<'a> Executor<'a> {
                             exist_fact.to_string(),
                             known_fact.to_string(),
                             crate::infer::InferResult::new(),
-                            exist_fact.line_file_index(),
-                            known_fact.line_file_index(),
+                            exist_fact.line_file(),
+                            known_fact.line_file(),
                         ),
                     ));
                 }

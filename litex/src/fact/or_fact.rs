@@ -6,12 +6,12 @@ use crate::fact::matchable_fact_with_atomic_fact_inside::AndChainAtomicFact;
 #[derive(Clone)]
 pub struct OrFact {
     pub facts: Vec<AndChainAtomicFact>,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 impl OrFact {
-    pub fn new(facts: Vec<AndChainAtomicFact>, line_file_index: (usize, usize)) -> Self {
-        OrFact { facts, line_file_index }
+    pub fn new(facts: Vec<AndChainAtomicFact>, line_file: (usize, usize)) -> Self {
+        OrFact { facts, line_file }
     }
 }
 

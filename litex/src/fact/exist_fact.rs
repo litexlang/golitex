@@ -31,16 +31,16 @@ impl OrAndChainAtomicFact {
 pub struct ExistFact {
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub facts: Vec<OrAndChainAtomicFact>,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 impl ExistFact {
     pub fn new(
         params_def_with_type: Vec<ParamDefWithParamType>,
         facts: Vec<OrAndChainAtomicFact>,
-        line_file_index: (usize, usize),
+        line_file: (usize, usize),
     ) -> Self {
-        ExistFact { params_def_with_type, facts, line_file_index }
+        ExistFact { params_def_with_type, facts, line_file }
     }
 
     pub fn exist_fact_string_without_exist_as_prefix(&self) -> String {
@@ -51,8 +51,8 @@ impl ExistFact {
         format!("{} {}{}{}", EXIST, LEFT_CURLY_BRACE, vec_to_string_join_by_comma(&self.facts.iter().map(|fact| fact.key()).collect::<Vec<String>>()), RIGHT_CURLY_BRACE)
     }
 
-    pub fn line_file_index(&self) -> (usize, usize) {
-        self.line_file_index
+    pub fn line_file(&self) -> (usize, usize) {
+        self.line_file
     }
 
     pub fn params_def_with_type(&self) -> &Vec<ParamDefWithParamType> {
@@ -95,12 +95,12 @@ impl OrAndChainAtomicFact {
             OrAndChainAtomicFact::OrFact(o) => o.key(),
         }
     }
-    pub fn line_file_index(&self) -> (usize, usize) {
+    pub fn line_file(&self) -> (usize, usize) {
         match self {
-            OrAndChainAtomicFact::AtomicFact(a) => a.line_file_index(),
-            OrAndChainAtomicFact::AndFact(a) => a.line_file_index(),
-            OrAndChainAtomicFact::ChainFact(c) => c.line_file_index(),
-            OrAndChainAtomicFact::OrFact(o) => o.line_file_index,
+            OrAndChainAtomicFact::AtomicFact(a) => a.line_file(),
+            OrAndChainAtomicFact::AndFact(a) => a.line_file(),
+            OrAndChainAtomicFact::ChainFact(c) => c.line_file(),
+            OrAndChainAtomicFact::OrFact(o) => o.line_file,
         }
     }
 }

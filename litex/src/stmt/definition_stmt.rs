@@ -13,12 +13,12 @@ use crate::fact::OrAndChainAtomicFact;
 pub struct DefPropWithoutMeaningStmt {
     pub name: String,
     pub params: Vec<String>,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 impl DefPropWithoutMeaningStmt {
-    pub fn new(name: String, params: Vec<String>, line_file_index: (usize, usize)) -> Self {
-        DefPropWithoutMeaningStmt { name, params, line_file_index }
+    pub fn new(name: String, params: Vec<String>, line_file: (usize, usize)) -> Self {
+        DefPropWithoutMeaningStmt { name, params, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
@@ -32,7 +32,7 @@ pub struct DefStructWithFieldsStmt {
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub fields: Vec<(String, OrAndChainAtomicFact)>,
     pub facts: Vec<OrAndChainAtomicFact>,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 #[derive(Clone)]
@@ -41,7 +41,7 @@ pub struct DefStructWithNoFieldStmt {
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub equal_to: Obj,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 pub struct HaveFnEqualCaseByCaseStmt {
@@ -49,37 +49,37 @@ pub struct HaveFnEqualCaseByCaseStmt {
     pub fn_set_with_params: FnSetWithDom,
     pub cases: Vec<AndChainAtomicFact>,
     pub equal_tos: Vec<Obj>,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 pub struct HaveFnEqualStmt {
     pub name: String,
     pub fn_set_with_params: FnSetWithDom,
     pub equal_to: Obj,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 pub struct HaveExistObjStmt {
     pub equal_tos: Vec<Obj>,
     pub exist_fact_in_have_obj_st: ExistFact,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 pub struct HaveObjEqualStmt {
     pub param_def: Vec<ParamDefWithParamType>,
     pub objs_equal_to: Vec<Obj>,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 pub struct HaveObjInNonemptySetOrParamTypeStmt {
     pub param_def: Vec<ParamDefWithParamType>,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 pub struct DefLetStmt {
     pub param_def: Vec<ParamDefWithParamType>,
     pub facts: Vec<Fact>,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 #[derive(Clone)]
@@ -87,7 +87,7 @@ pub struct DefPropStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub iff_facts: Vec<Fact>,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 impl fmt::Display for DefPropWithoutMeaningStmt {
@@ -108,8 +108,8 @@ impl fmt::Display for DefStructWithFieldsStmt {
 }
 
 impl DefPropStmt {
-    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, iff_facts: Vec<Fact>, line_file_index: (usize, usize)) -> Self {
-        DefPropStmt { name, params_def_with_type, iff_facts, line_file_index }
+    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, iff_facts: Vec<Fact>, line_file: (usize, usize)) -> Self {
+        DefPropStmt { name, params_def_with_type, iff_facts, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
@@ -127,8 +127,8 @@ impl fmt::Display for DefPropStmt {
 }
 
 impl DefLetStmt {
-    pub fn new(param_def: Vec<ParamDefWithParamType>, facts: Vec<Fact>, line_file_index: (usize, usize)) -> Self {
-        DefLetStmt { param_def, facts, line_file_index }
+    pub fn new(param_def: Vec<ParamDefWithParamType>, facts: Vec<Fact>, line_file: (usize, usize)) -> Self {
+        DefLetStmt { param_def, facts, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
@@ -147,8 +147,8 @@ impl fmt::Display for DefLetStmt {
 }
 
 impl HaveObjInNonemptySetOrParamTypeStmt {
-    pub fn new(param_def: Vec<ParamDefWithParamType>, line_file_index: (usize, usize)) -> Self {
-        HaveObjInNonemptySetOrParamTypeStmt { param_def, line_file_index }
+    pub fn new(param_def: Vec<ParamDefWithParamType>, line_file: (usize, usize)) -> Self {
+        HaveObjInNonemptySetOrParamTypeStmt { param_def, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
@@ -163,8 +163,8 @@ impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
 }
 
 impl HaveObjEqualStmt {
-    pub fn new(param_def: Vec<ParamDefWithParamType>, objs_equal_to: Vec<Obj>, line_file_index: (usize, usize)) -> Self {
-        HaveObjEqualStmt { param_def, objs_equal_to, line_file_index }
+    pub fn new(param_def: Vec<ParamDefWithParamType>, objs_equal_to: Vec<Obj>, line_file: (usize, usize)) -> Self {
+        HaveObjEqualStmt { param_def, objs_equal_to, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
@@ -179,8 +179,8 @@ impl fmt::Display for HaveObjEqualStmt {
 }
 
 impl HaveExistObjStmt {
-    pub fn new(equal_tos: Vec<Obj>, exist_fact_in_have_obj_st: ExistFact, line_file_index: (usize, usize)) -> Self {
-        HaveExistObjStmt { equal_tos, exist_fact_in_have_obj_st, line_file_index }
+    pub fn new(equal_tos: Vec<Obj>, exist_fact_in_have_obj_st: ExistFact, line_file: (usize, usize)) -> Self {
+        HaveExistObjStmt { equal_tos, exist_fact_in_have_obj_st, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
@@ -195,8 +195,8 @@ impl fmt::Display for HaveExistObjStmt {
 }
 
 impl HaveFnEqualStmt {
-    pub fn new(name: String, fn_set_with_params: FnSetWithDom, equal_to: Obj, line_file_index: (usize, usize)) -> Self {
-        HaveFnEqualStmt { name, fn_set_with_params, equal_to, line_file_index }
+    pub fn new(name: String, fn_set_with_params: FnSetWithDom, equal_to: Obj, line_file: (usize, usize)) -> Self {
+        HaveFnEqualStmt { name, fn_set_with_params, equal_to, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
@@ -222,8 +222,8 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
 }
 
 impl HaveFnEqualCaseByCaseStmt {
-    pub fn new(name: String, fn_set_with_params: FnSetWithDom, cases: Vec<AndChainAtomicFact>, equal_tos: Vec<Obj>, line_file_index: (usize, usize)) -> Self {
-        HaveFnEqualCaseByCaseStmt { name, fn_set_with_params, cases, equal_tos, line_file_index }
+    pub fn new(name: String, fn_set_with_params: FnSetWithDom, cases: Vec<AndChainAtomicFact>, equal_tos: Vec<Obj>, line_file: (usize, usize)) -> Self {
+        HaveFnEqualCaseByCaseStmt { name, fn_set_with_params, cases, equal_tos, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
@@ -232,8 +232,8 @@ impl HaveFnEqualCaseByCaseStmt {
 }
 
 impl DefStructWithNoFieldStmt {
-    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, dom_facts: Vec<OrAndChainAtomicFact>, equal_to: Obj, line_file_index: (usize, usize)) -> Self {
-        DefStructWithNoFieldStmt { name, params_def_with_type, dom_facts, equal_to, line_file_index }
+    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, dom_facts: Vec<OrAndChainAtomicFact>, equal_to: Obj, line_file: (usize, usize)) -> Self {
+        DefStructWithNoFieldStmt { name, params_def_with_type, dom_facts, equal_to, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
@@ -248,8 +248,8 @@ impl fmt::Display for DefStructWithNoFieldStmt {
 }
 
 impl DefStructWithFieldsStmt {
-    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, fields: Vec<(String, OrAndChainAtomicFact)>, facts: Vec<OrAndChainAtomicFact>, line_file_index: (usize, usize)) -> Self {
-        DefStructWithFieldsStmt { name, params_def_with_type, fields, facts, line_file_index }
+    pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, fields: Vec<(String, OrAndChainAtomicFact)>, facts: Vec<OrAndChainAtomicFact>, line_file: (usize, usize)) -> Self {
+        DefStructWithFieldsStmt { name, params_def_with_type, fields, facts, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {

@@ -1161,17 +1161,17 @@ fn try_runtime_context() {
                     AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0)))),
                     AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0)))),
                 ],
-                line_file_index: (1, 0),
+                line_file: (1, 0),
             }),
             OrAndChainAtomicFact::OrFact(OrFact {
                 facts: vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))],
-                line_file_index: (1, 0),
+                line_file: (1, 0),
             }),
         ],
         (1, 0),
     );
     for f in exist_fact.facts() {
-        let _ = f.line_file_index();
+        let _ = f.line_file();
     }
     println!("{}", exist_fact.key());
     if let Err(e) = runtime_context.top_level_env().store_fact(Fact::ExistFact(exist_fact)) {
@@ -1259,7 +1259,7 @@ fn try_executor() {
     let mut builtin_environment = Environment::new_empty_env();
     let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
     let executor = Executor::new(&mut runtime_context);
-    println!("{}", executor.line_file_index_string(1, 0));
+    println!("{}", executor.line_file_string(1, 0));
 }
 
 fn try_pipeline() {

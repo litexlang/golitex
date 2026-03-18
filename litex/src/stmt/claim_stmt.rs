@@ -7,12 +7,12 @@ use super::Stmt;
 pub struct ClaimStmt {
     pub fact: Fact,
     pub proof: Vec<Stmt>,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 impl ClaimStmt {
-    pub fn new(fact: Fact, proof: Vec<Stmt>, line_file_index: (usize, usize)) -> Self {
-        ClaimStmt { fact, proof, line_file_index }
+    pub fn new(fact: Fact, proof: Vec<Stmt>, line_file: (usize, usize)) -> Self {
+        ClaimStmt { fact, proof, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {

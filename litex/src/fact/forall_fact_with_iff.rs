@@ -8,12 +8,12 @@ use super::fact_inside_forall::ExistOrAndChainAtomicFact;
 pub struct ForallFactWithIff {
     pub forall_fact: ForallFact,
     pub iff_facts: Vec<ExistOrAndChainAtomicFact>,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 impl ForallFactWithIff {
-    pub fn new(forall_fact: ForallFact, iff_facts: Vec<ExistOrAndChainAtomicFact>, line_file_index: (usize, usize)) -> Self {
-        ForallFactWithIff { forall_fact, iff_facts, line_file_index }
+    pub fn new(forall_fact: ForallFact, iff_facts: Vec<ExistOrAndChainAtomicFact>, line_file: (usize, usize)) -> Self {
+        ForallFactWithIff { forall_fact, iff_facts, line_file }
     }
 }
 
@@ -29,7 +29,7 @@ impl ForallFactWithIff {
             params_def_with_type,
             dom_facts,
             then_facts,
-            line_file_index,
+            line_file,
         } = self.forall_fact;
         let iff_facts = self.iff_facts;
 
@@ -39,7 +39,7 @@ impl ForallFactWithIff {
             params_def_with_type.clone(),
             dom_then,
             iff_facts.clone(),
-            line_file_index,
+            line_file,
         );
 
         let mut dom_iff = dom_facts;
@@ -48,7 +48,7 @@ impl ForallFactWithIff {
             params_def_with_type,
             dom_iff,
             then_facts,
-            line_file_index,
+            line_file,
         );
 
         (forall_then_implies_iff, forall_iff_implies_then)

@@ -40,7 +40,7 @@ impl<'a> Executor<'a> {
                     equal_fact.to_string(),
                     same_shape_and_equal_args_reason(&equal_fact.left, &equal_fact.right),
                     InferResult::new(),
-                    equal_fact.line_file_index,
+                    equal_fact.line_file,
                 )
             ));
         }
@@ -211,7 +211,7 @@ impl<'a> Executor<'a> {
         
         let mut result = verify_equality_by_builtin_rules(&equal_fact)?;
         if result.is_true() {
-            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "builtin rules".to_string(), InferResult::new(), equal_fact.line_file_index)));
+            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "builtin rules".to_string(), InferResult::new(), equal_fact.line_file)));
         }
 
         result = self.verify_equality_with_known_equalities(&equal_fact, verify_state)?;
@@ -233,15 +233,15 @@ pub fn verify_equality_by_they_are_the_same(left: &Obj, right: &Obj) -> bool {
 
 fn verify_equality_by_builtin_rules(equal_fact: &EqualFact) -> Result<NonErrStmtExecResult, VerifyError> {
     if verify_equality_by_they_are_the_same(&equal_fact.left, &equal_fact.right) {
-        return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "the same".to_string(), InferResult::new(), equal_fact.line_file_index)));
+        return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "the same".to_string(), InferResult::new(), equal_fact.line_file)));
     }
     
     if equal_fact.left.two_objs_can_be_calculated_and_equal_by_calculation(&equal_fact.right) {
-        return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "calculation".to_string(), InferResult::new(), equal_fact.line_file_index)));
+        return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "calculation".to_string(), InferResult::new(), equal_fact.line_file)));
     }
 
     if two_objs_equal_by_polynomial_simplification(&equal_fact.left, &equal_fact.right) {
-        return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "polynomial simplification".to_string(), InferResult::new(), equal_fact.line_file_index)));
+        return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "polynomial simplification".to_string(), InferResult::new(), equal_fact.line_file)));
     }
 
     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
@@ -256,7 +256,7 @@ fn try_verify_equality_with_known_equalities_by_builtin_rules_only(
         (None, None) => Ok(None),
         (Some(known_objs_equal_to_left), None) => {
             for obj in known_objs_equal_to_left.iter() {
-                let result = verify_equality_by_builtin_rules(&EqualFact::new(obj.clone(), equal_fact.right.clone(), equal_fact.line_file_index))?;
+                let result = verify_equality_by_builtin_rules(&EqualFact::new(obj.clone(), equal_fact.right.clone(), equal_fact.line_file))?;
                 if result.is_true() {
                     return Ok(Some(result));
                 }
@@ -265,7 +265,7 @@ fn try_verify_equality_with_known_equalities_by_builtin_rules_only(
         },
         (None, Some(known_objs_equal_to_right)) => {
             for obj in known_objs_equal_to_right.iter() {
-                let result = verify_equality_by_builtin_rules(&EqualFact::new(equal_fact.left.clone(), obj.clone(), equal_fact.line_file_index))?;
+                let result = verify_equality_by_builtin_rules(&EqualFact::new(equal_fact.left.clone(), obj.clone(), equal_fact.line_file))?;
                 if result.is_true() {
                     return Ok(Some(result));
                 }
@@ -275,7 +275,7 @@ fn try_verify_equality_with_known_equalities_by_builtin_rules_only(
         (Some(known_objs_equal_to_left), Some(known_objs_equal_to_right)) => {
             for obj1 in known_objs_equal_to_left.iter() {
                 for obj2 in known_objs_equal_to_right.iter() {
-                    let result = verify_equality_by_builtin_rules(&EqualFact::new(obj1.clone(), obj2.clone(), equal_fact.line_file_index))?;
+                    let result = verify_equality_by_builtin_rules(&EqualFact::new(obj1.clone(), obj2.clone(), equal_fact.line_file))?;
                     if result.is_true() {
                         return Ok(Some(result));
                     }

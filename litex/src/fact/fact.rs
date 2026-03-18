@@ -35,38 +35,38 @@ impl Fact {
     pub fn line_file(&self) -> (usize, usize) {
         match self {
             Fact::AtomicFact(a) => super::atomic_fact::line_file(a),
-            Fact::ExistFact(e) => e.line_file_index(),
-            Fact::OrFact(o) => o.line_file_index,
-            Fact::AndFact(a) => a.line_file_index(),
-            Fact::ChainFact(c) => c.line_file_index(),
-            Fact::ForallFact(f) => f.line_file_index,
-            Fact::ForallFactWithIff(f) => f.line_file_index,
+            Fact::ExistFact(e) => e.line_file(),
+            Fact::OrFact(o) => o.line_file,
+            Fact::AndFact(a) => a.line_file(),
+            Fact::ChainFact(c) => c.line_file(),
+            Fact::ForallFact(f) => f.line_file,
+            Fact::ForallFactWithIff(f) => f.line_file,
         }
     }
 }
 
 impl Fact {
-    pub fn with_new_line_file(self, line_file_index: (usize, usize)) -> Fact {
+    pub fn with_new_line_file(self, line_file: (usize, usize)) -> Fact {
         match self {
-            Fact::AtomicFact(atomic_fact) => Fact::AtomicFact(atomic_fact.with_new_line_file(line_file_index)),
+            Fact::AtomicFact(atomic_fact) => Fact::AtomicFact(atomic_fact.with_new_line_file(line_file)),
             Fact::ExistFact(e) => Fact::ExistFact(ExistFact {
                 params_def_with_type: e.params_def_with_type,
                 facts: e.facts,
-                line_file_index,
+                line_file,
             }),
-            Fact::OrFact(or_fact) => Fact::OrFact(OrFact::new(or_fact.facts, line_file_index)),
-            Fact::AndFact(and_fact) => Fact::AndFact(AndFact::new(and_fact.facts, line_file_index)),
-            Fact::ChainFact(chain_fact) => Fact::ChainFact(ChainFact::new(chain_fact.objs, chain_fact.prop_names, line_file_index)),
+            Fact::OrFact(or_fact) => Fact::OrFact(OrFact::new(or_fact.facts, line_file)),
+            Fact::AndFact(and_fact) => Fact::AndFact(AndFact::new(and_fact.facts, line_file)),
+            Fact::ChainFact(chain_fact) => Fact::ChainFact(ChainFact::new(chain_fact.objs, chain_fact.prop_names, line_file)),
             Fact::ForallFact(f) => Fact::ForallFact(ForallFact {
                 params_def_with_type: f.params_def_with_type,
                 dom_facts: f.dom_facts,
                 then_facts: f.then_facts,
-                line_file_index,
+                line_file,
             }),
             Fact::ForallFactWithIff(f) => Fact::ForallFactWithIff(ForallFactWithIff {
                 forall_fact: f.forall_fact,
                 iff_facts: f.iff_facts,
-                line_file_index,
+                line_file,
             }),
         }
     }

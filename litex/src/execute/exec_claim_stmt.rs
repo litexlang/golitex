@@ -17,7 +17,7 @@ impl<'a> Executor<'a> {
         if !verify_result.is_true() {
             return Err(StmtError::UnknownError(UnknownError::new(
                 format!("claim failed: cannot prove `{}`", stmt.fact),
-                stmt.line_file_index,
+                stmt.line_file,
                 None,
             )));
         }
@@ -25,7 +25,7 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
             stmt.to_string(),
             crate::infer::InferResult::new(),
-            stmt.line_file_index,
+            stmt.line_file,
         )))
     }
 
@@ -39,7 +39,7 @@ impl<'a> Executor<'a> {
                             stmt.stmt_type_name(),
                             "claim: fact is not well defined".to_string(),
                             Some(e.into()),
-                            stmt.line_file_index,
+                            stmt.line_file,
                         ))
                     })?;
 
@@ -51,7 +51,7 @@ impl<'a> Executor<'a> {
                             stmt.stmt_type_name(),
                             "claim: failed to define forall params".to_string(),
                             Some(e.into()),
-                            stmt.line_file_index,
+                            stmt.line_file,
                         ))
                     })
                     .and_then(|_| self.exec_claim_stmt_body(stmt));
@@ -68,7 +68,7 @@ impl<'a> Executor<'a> {
                             stmt.stmt_type_name(),
                             "claim: fact is not well defined".to_string(),
                             Some(e.into()),
-                            stmt.line_file_index,
+                            stmt.line_file,
                         ))
                     })?;
 

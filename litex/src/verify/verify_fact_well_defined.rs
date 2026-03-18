@@ -124,7 +124,7 @@ impl<'a> Executor<'a> {
         for param_def in exist_fact.params_def_with_type().iter() {
             let result = self.define_params_with_type(std::slice::from_ref(param_def),false);
             if let Err(e) = result {
-                return Err(WellDefinedError::new(format!("failed to define parameters in {}:\n{}", exist_fact, e.body_string()), None, exist_fact.line_file_index()));
+                return Err(WellDefinedError::new(format!("failed to define parameters in {}:\n{}", exist_fact, e.body_string()), None, exist_fact.line_file()));
             }
         }
 
@@ -144,17 +144,17 @@ impl<'a> Executor<'a> {
     fn verify_forall_fact_well_defined_body(&mut self, forall_fact: &ForallFact, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         for param_def in forall_fact.params_def_with_type.iter() {
             if let Err(e) = self.define_params_with_type(std::slice::from_ref(param_def),false) {
-                return Err(WellDefinedError::new(format!("failed to define parameters in {}:\n{}", forall_fact, e.body_string()), None, forall_fact.line_file_index));
+                return Err(WellDefinedError::new(format!("failed to define parameters in {}:\n{}", forall_fact, e.body_string()), None, forall_fact.line_file));
             }
         }
 
         for fact in forall_fact.dom_facts.iter() {
             self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
-            self.store_fact_without_well_defined_verified_and_infer(&fact.from_ref_to_cloned_fact()).map_err(|e| WellDefinedError::new(format!("failed to store fact in environment: {}", e), None, fact.line_file_index()))?;
+            self.store_fact_without_well_defined_verified_and_infer(&fact.from_ref_to_cloned_fact()).map_err(|e| WellDefinedError::new(format!("failed to store fact in environment: {}", e), None, fact.line_file()))?;
         }
         for fact in forall_fact.then_facts.iter() {
             self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
-            self.store_fact_without_well_defined_verified_and_infer(&fact.from_ref_to_cloned_fact()).map_err(|e| WellDefinedError::new(format!("failed to store fact in environment: {}", e), None, fact.line_file_index()))?;
+            self.store_fact_without_well_defined_verified_and_infer(&fact.from_ref_to_cloned_fact()).map_err(|e| WellDefinedError::new(format!("failed to store fact in environment: {}", e), None, fact.line_file()))?;
         }
         Ok(())
     }
