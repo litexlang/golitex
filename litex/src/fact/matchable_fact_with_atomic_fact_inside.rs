@@ -42,10 +42,16 @@ impl ChainFact {
     }
 
     pub fn facts(&self) -> Result<Vec<AtomicFact>, NewAtomicFactError> {
+        if self.objs.len() != self.prop_names.len() + 1 {
+            return Err(NewAtomicFactError::new(format!("the number of objects ({}) is not equal to the number of property names ({}) + 1", self.objs.len(), self.prop_names.len()), None));
+        }
+        
         let mut facts = Vec::new();
-        for (i, obj) in self.objs.iter().enumerate() {
+        for (i, _) in self.prop_names.iter().enumerate() {
             let prop_name = self.prop_names[i].clone();
-            let atomic_fact = AtomicFact::to_atomic_fact(prop_name, true, vec![obj.clone()], self.line_file_index);
+            let left_obj = self.objs[i].clone();
+            let right_obj = self.objs[i + 1].clone();
+            let atomic_fact = AtomicFact::to_atomic_fact(prop_name, true, vec![left_obj, right_obj], self.line_file_index);
             facts.push(atomic_fact?);
         }
         Ok(facts)

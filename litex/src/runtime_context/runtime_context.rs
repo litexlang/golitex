@@ -260,7 +260,7 @@ impl<'a> RuntimeContext<'a> {
             NonErrStmtExecResult::FactVerifiedByFact(x) => {
                 let location = if x.line_file_index == DEFAULT_LINE_FILE { "Success:\n".to_string() } else { format!("Success on {}:\n", self.format_line_file(x.line_file_index.0, x.line_file_index.1)) };
                 let verified_by_suffix = if x.verified_by_line_file == DEFAULT_LINE_FILE { String::new() } else { format!("{}", self.format_line_file(x.verified_by_line_file.0, x.verified_by_line_file.1)) };
-                let msg = format!("{}\nverified by fact on {}\n{}{}", x.fact, verified_by_suffix, x.verified_by , Self::format_infer_block(&x.infers));
+                let msg = format!("{}\nverified by {}\n{}{}", x.fact, verified_by_suffix, x.verified_by , Self::format_infer_block(&x.infers));
                 format!("{}{}", location, msg)
             }
             NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => {
