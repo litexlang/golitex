@@ -222,8 +222,15 @@ impl<'a> Executor<'a> {
         let mut params_def_with_set: Vec<ParamDefWithParamSet> = vec![];
         loop {
             let param = tb.advance()?;
+            let mut current_params = vec![param];
+
+            while tb.current_token_empty_if_exceed_end_of_head() == COMMA {
+                tb.skip_token(COMMA)?;
+                current_params.push(tb.advance()?);
+            }
+
             let set = self.parse_obj(tb)?;
-            params_def_with_set.push(ParamDefWithParamSet(vec![param], set));
+            params_def_with_set.push(ParamDefWithParamSet(current_params, set));
             if tb.current_token_empty_if_exceed_end_of_head() == COMMA {
                 tb.skip_token(COMMA)?;
                 continue;

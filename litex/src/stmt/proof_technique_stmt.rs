@@ -9,7 +9,7 @@ use crate::obj::{ClosedRange, Obj, Range };
 // f $in fn(a A, b B: $p(a, b)) C {$q(a, b, f)} => forall a A, b B: $p(a, b) => ((a, b), f(a, b)) $in f; forall x f: exist a A, b B st {$p(a, b), ((a, b), f(a, b)) = x}
 pub struct ViewFnAsSetStmt {
     pub function: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 
@@ -17,7 +17,7 @@ pub struct ProveByEqualSetStmt {
     pub left: Obj,
     pub right: Obj,
     pub proof: Vec<Stmt>,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 
@@ -32,7 +32,7 @@ pub struct ProveForStmt {
     pub dom_facts: Vec<ExistOrAndChainAtomicFact>,
     pub then_facts: Vec<ExistOrAndChainAtomicFact>,
     pub proof: Vec<Stmt>,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 pub struct ProveByInductionStmt {
@@ -40,7 +40,7 @@ pub struct ProveByInductionStmt {
     pub param: String,
     pub proof: Vec<Stmt>,
     pub induc_from: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 pub struct ProveByEnumerationStmt {
@@ -48,7 +48,7 @@ pub struct ProveByEnumerationStmt {
     pub param_sets: Vec<Obj>,
     pub to_prove: Vec<Fact>,
     pub proof: Vec<Stmt>,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 pub struct ProveCaseByCaseStmt {
@@ -56,19 +56,19 @@ pub struct ProveCaseByCaseStmt {
     pub then_facts: Vec<Fact>,
     pub proofs: Vec<Vec<Stmt>>,
     pub impossible_facts: Vec<Option<ExistOrAndChainAtomicFact>>,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 pub struct ProveByContradictionStmt {
     pub to_prove: Fact,
     pub proof: Vec<Stmt>,
     pub impossible_fact: ExistOrAndChainAtomicFact,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 
 impl ProveByEnumerationStmt {
-    pub fn new(params: Vec<String>, param_sets: Vec<Obj>, to_prove: Vec<Fact>, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(params: Vec<String>, param_sets: Vec<Obj>, to_prove: Vec<Fact>, proof: Vec<Stmt>, line_file_index: (usize, usize)) -> Self {
         ProveByEnumerationStmt { params, param_sets, to_prove, proof, line_file_index }
     }
 
@@ -78,7 +78,7 @@ impl ProveByEnumerationStmt {
 }
 
 impl ProveCaseByCaseStmt {
-    pub fn new(cases: Vec<AndChainAtomicFact>, then_facts: Vec<Fact>, proofs: Vec<Vec<Stmt>>, impossible_facts: Vec<Option<ExistOrAndChainAtomicFact>>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(cases: Vec<AndChainAtomicFact>, then_facts: Vec<Fact>, proofs: Vec<Vec<Stmt>>, impossible_facts: Vec<Option<ExistOrAndChainAtomicFact>>, line_file_index: (usize, usize)) -> Self {
         ProveCaseByCaseStmt { cases, then_facts, proofs, impossible_facts, line_file_index }
     }
 
@@ -102,7 +102,7 @@ impl fmt::Display for ProveCaseByCaseStmt {
 }
 
 impl ProveByContradictionStmt {
-    pub fn new(to_prove: Fact, proof: Vec<Stmt>, impossible_fact: ExistOrAndChainAtomicFact, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(to_prove: Fact, proof: Vec<Stmt>, impossible_fact: ExistOrAndChainAtomicFact, line_file_index: (usize, usize)) -> Self {
         ProveByContradictionStmt { to_prove, proof, impossible_fact, line_file_index }
     }
 
@@ -124,7 +124,7 @@ impl fmt::Display for ProveByEnumerationStmt {
 }
 
 impl ProveByInductionStmt {
-    pub fn new(fact: Vec<ExistOrAndChainAtomicFact>, param: String, proof: Vec<Stmt>, induc_from: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(fact: Vec<ExistOrAndChainAtomicFact>, param: String, proof: Vec<Stmt>, induc_from: Obj, line_file_index: (usize, usize)) -> Self {
         ProveByInductionStmt { fact, param, proof, induc_from, line_file_index }
     }
 
@@ -154,7 +154,7 @@ impl fmt::Display for ProveForStmt {
 }
 
 impl ProveForStmt {
-    pub fn new(params: Vec<String>, param_sets: Vec<ClosedRangeOrRange>, dom_facts: Vec<ExistOrAndChainAtomicFact>, then_facts: Vec<ExistOrAndChainAtomicFact>, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(params: Vec<String>, param_sets: Vec<ClosedRangeOrRange>, dom_facts: Vec<ExistOrAndChainAtomicFact>, then_facts: Vec<ExistOrAndChainAtomicFact>, proof: Vec<Stmt>, line_file_index: (usize, usize)) -> Self {
         ProveForStmt { params, param_sets, dom_facts, then_facts, proof, line_file_index }
     }
 
@@ -182,7 +182,7 @@ impl fmt::Display for ProveByEqualSetStmt {
 }
 
 impl ProveByEqualSetStmt {
-    pub fn new(left: Obj, right: Obj, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(left: Obj, right: Obj, proof: Vec<Stmt>, line_file_index: (usize, usize)) -> Self {
         ProveByEqualSetStmt { left, right, proof, line_file_index }
     }
 
@@ -198,7 +198,7 @@ impl fmt::Display for ViewFnAsSetStmt {
 }
 
 impl ViewFnAsSetStmt {
-    pub fn new(function: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(function: Obj, line_file_index: (usize, usize)) -> Self {
         ViewFnAsSetStmt { function, line_file_index }
     }
 

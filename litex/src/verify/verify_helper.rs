@@ -1,3 +1,4 @@
+use crate::common::helper::DEFAULT_LINE_FILE;
 use crate::error::ExecError;
 use crate::execute::Executor;
 use crate::fact::{AtomicFact, Fact, IsNonemptySetFact};
@@ -15,7 +16,7 @@ impl<'a> Executor<'a> {
             ParamType::Obj(param_set) => {
                 let nonempty_fact = Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
                     param_set.clone(),
-                    None,
+                    DEFAULT_LINE_FILE.clone(),
                 )));
                 self.verify_fact_well_defined_and_store_and_infer(&nonempty_fact, &VerifyState::new(0, false))?;
                 Ok(())

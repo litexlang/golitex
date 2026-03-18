@@ -113,7 +113,7 @@ impl<'a> Executor<'a> {
         if let Some(known_facts_map) = environment.known_atomic_facts_with_1_arg.get(&(atomic_fact.key(), atomic_fact.is_true())) {
             for obj in all_objs_equal_to_arg.iter() {
                 if known_facts_map.contains_key(obj) {
-                    return Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(atomic_fact.to_string(), "known atomic fact".to_string(), InferResult::new(), atomic_fact.line_file_index(), None)));
+                    return Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(atomic_fact.to_string(), "known atomic fact".to_string(), InferResult::new(), atomic_fact.line_file_index(), crate::common::helper::DEFAULT_LINE_FILE.clone())));
                 }
             }
         }
@@ -126,7 +126,7 @@ impl<'a> Executor<'a> {
             for obj0 in all_objs_equal_to_arg0.iter() {
                 for obj1 in all_objs_equal_to_arg1.iter() {
                     if known_facts_map.contains_key(&(obj0.clone(), obj1.clone())) {
-                        return Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(atomic_fact.to_string(), "known atomic fact".to_string(), InferResult::new(), atomic_fact.line_file_index(), None)));
+                        return Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(atomic_fact.to_string(), "known atomic fact".to_string(), InferResult::new(), atomic_fact.line_file_index(), crate::common::helper::DEFAULT_LINE_FILE.clone())));
                     }
                 }
             }
@@ -139,7 +139,7 @@ impl<'a> Executor<'a> {
         if let Some(known_facts) = environment.known_atomic_facts_with_0_or_more_than_2_args.get(&(atomic_fact.key(), atomic_fact.is_true())) {
             for known_fact in known_facts.iter() {
                 if known_fact.args().len() != atomic_fact.args().len() {
-                    return Err(VerifyError::new(format!("known atomic fact {} has different number of args than the given fact {}", known_fact.to_string(), atomic_fact.to_string()), None, None));
+                    return Err(VerifyError::new(format!("known atomic fact {} has different number of args than the given fact {}", known_fact.to_string(), atomic_fact.to_string()), None, atomic_fact.line_file_index()));
                 }
                 for (index, known_arg) in known_fact.args().iter().enumerate() {
                     if known_arg.to_string() != atomic_fact.args()[index].to_string() {

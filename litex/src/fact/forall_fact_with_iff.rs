@@ -8,11 +8,11 @@ use super::fact_inside_forall::ExistOrAndChainAtomicFact;
 pub struct ForallFactWithIff {
     pub forall_fact: ForallFact,
     pub iff_facts: Vec<ExistOrAndChainAtomicFact>,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 impl ForallFactWithIff {
-    pub fn new(forall_fact: ForallFact, iff_facts: Vec<ExistOrAndChainAtomicFact>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(forall_fact: ForallFact, iff_facts: Vec<ExistOrAndChainAtomicFact>, line_file_index: (usize, usize)) -> Self {
         ForallFactWithIff { forall_fact, iff_facts, line_file_index }
     }
 }

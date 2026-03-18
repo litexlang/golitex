@@ -21,7 +21,7 @@ fn test_verify_atomic_fact() {
 
     // verify 1 = 1
     let one = Obj::Number(Number::new("1".to_string()));
-    let fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(one.clone(), one, None)));
+    let fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(one.clone(), one, crate::common::helper::DEFAULT_LINE_FILE.clone())));
     let stmt = Stmt::Fact(fact);
     let result = executor.stmt(&stmt);
 
@@ -44,7 +44,7 @@ fn test_exec_stmt_fact_one_plus_one_eq_two() {
     let mut executor = Executor::new(&mut runtime_context);
     let s = "1 + 1 = 2";
     let tokens = tokenize_line(s);
-    let mut tb = TokenBlock::new(tokens, vec![], (0, 0));
+    let mut tb = TokenBlock::new(tokens, vec![], (0, 1));
     let stmt = executor.parse_stmt(&mut tb).expect("parse fact \"1 + 1 = 2\" failed");
     assert!(matches!(stmt, Stmt::Fact(_)), "expected Stmt::Fact");
 

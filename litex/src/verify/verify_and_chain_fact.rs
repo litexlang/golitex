@@ -1,3 +1,4 @@
+use crate::common::helper::DEFAULT_LINE_FILE;
 use crate::error::{StmtError, VerifyError};
 use crate::execute::Executor;
 use crate::fact::{AndFact, ChainFact, Fact};
@@ -17,13 +18,13 @@ impl<'a> Executor<'a> {
             and_fact.to_string(),
             "each constituent fact verified".to_string(),
             InferResult::new(),
-            None,
-            None,
+            DEFAULT_LINE_FILE.clone(),
+            DEFAULT_LINE_FILE.clone(),
         )))
     }
 
     pub fn verify_chain_fact(&mut self, chain_fact: &ChainFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
-        let facts = chain_fact.facts().map_err(|e| VerifyError::new(e.to_string(), None, None))?;
+        let facts = chain_fact.facts().map_err(|e| VerifyError::new(e.to_string(), None, DEFAULT_LINE_FILE.clone()))?;
         for fact in &facts {
             if let Err(e) = self.verify_fact(&Fact::AtomicFact(fact.clone()), verify_state) {
                 return Err(e);
@@ -33,8 +34,8 @@ impl<'a> Executor<'a> {
             chain_fact.to_string(),
             "each constituent fact verified".to_string(),
             InferResult::new(),
-            None,
-            None,
+            DEFAULT_LINE_FILE.clone(),
+            DEFAULT_LINE_FILE.clone(),
         )))
     }
 }

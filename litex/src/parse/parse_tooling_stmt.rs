@@ -27,7 +27,7 @@ impl<'a> Executor<'a> {
                 ImportRelativePathStmt {
                     path,
                     as_mod_name,
-                    line_file_index: Some(tb.line_file_index),
+                    line_file_index: tb.line_file_index,
                 },
             )))
         } else {
@@ -42,7 +42,7 @@ impl<'a> Executor<'a> {
                 ImportGlobalModuleStmt {
                     mod_name,
                     as_mod_name,
-                    line_file_index: Some(tb.line_file_index),
+                    line_file_index: tb.line_file_index,
                 },
             )))
         }
@@ -51,14 +51,14 @@ impl<'a> Executor<'a> {
     pub fn clear_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(CLEAR)?;
         Ok(Stmt::ClearStmt(ClearStmt {
-            line_file_index: Some(tb.line_file_index),
+            line_file_index: tb.line_file_index,
         }))
     }
 
     pub fn do_nothing_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(DO_NOTHING)?;
         Ok(Stmt::DoNothingStmt(DoNothingStmt {
-            line_file_index: Some(tb.line_file_index),
+            line_file_index: tb.line_file_index,
         }))
     }
 
@@ -73,7 +73,7 @@ impl<'a> Executor<'a> {
         let file_path = path_parts.join("");
         Ok(Stmt::RunFileStmt(RunFileStmt {
             file_path,
-            line_file_index: Some(tb.line_file_index),
+            line_file_index: tb.line_file_index,
         }))
     }
 }

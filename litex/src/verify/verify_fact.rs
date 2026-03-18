@@ -1,3 +1,4 @@
+use crate::common::helper::DEFAULT_LINE_FILE;
 use crate::error::StmtError;
 use crate::infer::InferResult;
 use crate::fact::Fact;
@@ -38,12 +39,13 @@ impl<'a> Executor<'a> {
         let key = fact.to_string();
         let (cache_ok, cache_line_file) = self.runtime_context.cache_known_facts_contains(&key);
         if cache_ok {
+            let line_file = cache_line_file.unwrap_or(DEFAULT_LINE_FILE.clone());
             Some(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
                 key,
                 fact.to_string(),
                 InferResult::new(),
-                cache_line_file,
-                cache_line_file,
+                line_file,
+                line_file,
             )))
         } else {
             None

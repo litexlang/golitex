@@ -1,4 +1,5 @@
 use crate::common::keywords::SUCCESS_COLON;
+use crate::common::helper::DEFAULT_LINE_FILE;
 use crate::infer::InferResult;
 use super::stmt_success::{FactVerifiedByBuiltinRules, FactVerifiedByFact, NonFactualStmtSuccess};
 use super::stmt_unknown::StmtUnknown;
@@ -53,12 +54,12 @@ impl NonErrStmtExecResult {
 
 impl NonErrStmtExecResult {
     #[allow(dead_code)]
-    pub fn line_file(&self) -> Option<(usize, usize)> {
+    pub fn line_file(&self) -> (usize, usize) {
         match self {
             NonErrStmtExecResult::NonFactualStmtSuccess(x) => x.line_file_index,
             NonErrStmtExecResult::FactVerifiedByFact(x) => x.line_file_index,
             NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => x.line_file_index,
-            NonErrStmtExecResult::StmtUnknown(_) => None,
+            NonErrStmtExecResult::StmtUnknown(_) => DEFAULT_LINE_FILE.clone(),
         }
     }
 }

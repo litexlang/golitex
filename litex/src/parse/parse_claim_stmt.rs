@@ -41,7 +41,7 @@ impl<'a> Executor<'a> {
         }?;
 
         let proof: Vec<Stmt> = tb.body.iter_mut().skip(1).map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?;
-        Ok(ClaimStmt::new(fact, proof, Some(tb.line_file_index)))
+        Ok(ClaimStmt::new(fact, proof, tb.line_file_index))
     }
 
     fn single_line_fact_claim(&mut self, tb: &mut TokenBlock) -> Result<ClaimStmt, ParsingError> {
@@ -51,6 +51,6 @@ impl<'a> Executor<'a> {
         for block in tb.body.iter_mut() {
             proof.push(self.parse_stmt(block)?);
         }
-        Ok(ClaimStmt::new(fact, proof, Some(tb.line_file_index)))
+        Ok(ClaimStmt::new(fact, proof, tb.line_file_index))
     }
 }

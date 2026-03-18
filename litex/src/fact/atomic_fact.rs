@@ -42,354 +42,354 @@ pub enum AtomicFact {
 pub struct SupersetFact {
     pub left: Obj,
     pub right: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct NotSupersetFact {
     pub left: Obj,
     pub right: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct SubsetFact {
     pub left: Obj,
     pub right: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct NotSubsetFact {
     pub left: Obj,
     pub right: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct IsTupleFact {
     pub set: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct NotIsTupleFact {
     pub set: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct IsCartFact {
     pub set: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct NotIsCartFact {
     pub set: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct InFact {
     pub element: Obj,
     pub set: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct NotInFact {
     pub element: Obj,
     pub set: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct NormalAtomicFact {
     pub predicate: IdentifierOrIdentifierWithMod,
     pub body: Vec<Obj>,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct NotNormalAtomicFact {
     pub predicate: IdentifierOrIdentifierWithMod,
     pub body: Vec<Obj>,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct EqualFact {
     pub left: Obj,
     pub right: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct NotEqualFact {
     pub left: Obj,
     pub right: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct LessFact {
     pub left: Obj,
     pub right: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct NotLessFact {
     pub left: Obj,
     pub right: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct GreaterFact {
     pub left: Obj,
     pub right: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct NotGreaterFact {
     pub left: Obj,
     pub right: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct LessEqualFact {
     pub left: Obj,
     pub right: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct NotLessEqualFact {
     pub left: Obj,
     pub right: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct GreaterEqualFact {
     pub left: Obj,
     pub right: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct NotGreaterEqualFact {
     pub left: Obj,
     pub right: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct IsSetFact {
     pub set: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct NotIsSetFact {
     pub set: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct IsNonemptySetFact {
     pub set: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct NotIsNonemptySetFact {
     pub set: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct IsFiniteSetFact {
     pub set: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 #[derive(Clone)]
 pub struct NotIsFiniteSetFact {
     pub set: Obj,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 impl SubsetFact {
-    pub fn new(left: Obj, right: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(left: Obj, right: Obj, line_file_index: (usize, usize)) -> Self {
         SubsetFact { left, right, line_file_index }
     }
 }
 
 impl NotSubsetFact {
-    pub fn new(left: Obj, right: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(left: Obj, right: Obj, line_file_index: (usize, usize)) -> Self {
         NotSubsetFact { left, right, line_file_index }
     }
 }
 
 impl NormalAtomicFact {
-    pub fn new(predicate: IdentifierOrIdentifierWithMod, body: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(predicate: IdentifierOrIdentifierWithMod, body: Vec<Obj>, line_file_index: (usize, usize)) -> Self {
         NormalAtomicFact { predicate, body, line_file_index }
     }
 }
 
 impl NotNormalAtomicFact {
-    pub fn new(predicate: IdentifierOrIdentifierWithMod, body: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(predicate: IdentifierOrIdentifierWithMod, body: Vec<Obj>, line_file_index: (usize, usize)) -> Self {
         NotNormalAtomicFact { predicate, body, line_file_index }
     }
 }
 
 impl EqualFact {
-    pub fn new(left: Obj, right: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(left: Obj, right: Obj, line_file_index: (usize, usize)) -> Self {
         EqualFact { left, right, line_file_index }
     }
 }
 
 impl NotEqualFact {
-    pub fn new(left: Obj, right: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(left: Obj, right: Obj, line_file_index: (usize, usize)) -> Self {
         NotEqualFact { left, right, line_file_index }
     }
 }
 
 impl LessFact {
-    pub fn new(left: Obj, right: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(left: Obj, right: Obj, line_file_index: (usize, usize)) -> Self {
         LessFact { left, right, line_file_index }
     }
 }
 
 impl NotLessFact {
-    pub fn new(left: Obj, right: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(left: Obj, right: Obj, line_file_index: (usize, usize)) -> Self {
         NotLessFact { left, right, line_file_index }
     }
 }
 
 impl GreaterFact {
-    pub fn new(left: Obj, right: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(left: Obj, right: Obj, line_file_index: (usize, usize)) -> Self {
         GreaterFact { left, right, line_file_index }
     }
 }
 
 impl NotGreaterFact {
-    pub fn new(left: Obj, right: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(left: Obj, right: Obj, line_file_index: (usize, usize)) -> Self {
         NotGreaterFact { left, right, line_file_index }
     }
 }
 
 impl LessEqualFact {
-    pub fn new(left: Obj, right: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(left: Obj, right: Obj, line_file_index: (usize, usize)) -> Self {
         LessEqualFact { left, right, line_file_index }
     }
 }
 
 impl NotLessEqualFact {
-    pub fn new(left: Obj, right: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(left: Obj, right: Obj, line_file_index: (usize, usize)) -> Self {
         NotLessEqualFact { left, right, line_file_index }
     }
 }
 
 impl GreaterEqualFact {
-    pub fn new(left: Obj, right: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(left: Obj, right: Obj, line_file_index: (usize, usize)) -> Self {
         GreaterEqualFact { left, right, line_file_index }
     }
 }
 
 impl NotGreaterEqualFact {
-    pub fn new(left: Obj, right: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(left: Obj, right: Obj, line_file_index: (usize, usize)) -> Self {
         NotGreaterEqualFact { left, right, line_file_index }
     }
 }
 
 impl IsSetFact {
-    pub fn new(set: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(set: Obj, line_file_index: (usize, usize)) -> Self {
         IsSetFact { set, line_file_index }
     }
 }
 
 impl NotIsSetFact {
-    pub fn new(set: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(set: Obj, line_file_index: (usize, usize)) -> Self {
         NotIsSetFact { set, line_file_index }
     }
 }
 
 impl IsNonemptySetFact {
-    pub fn new(set: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(set: Obj, line_file_index: (usize, usize)) -> Self {
         IsNonemptySetFact { set, line_file_index }
     }
 }
 
 impl NotIsNonemptySetFact {
-    pub fn new(set: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(set: Obj, line_file_index: (usize, usize)) -> Self {
         NotIsNonemptySetFact { set, line_file_index }
     }
 }
 
 impl IsFiniteSetFact {
-    pub fn new(set: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(set: Obj, line_file_index: (usize, usize)) -> Self {
         IsFiniteSetFact { set, line_file_index }
     }
 }
 
 impl NotIsFiniteSetFact {
-    pub fn new(set: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(set: Obj, line_file_index: (usize, usize)) -> Self {
         NotIsFiniteSetFact { set, line_file_index }
     }
 }
 
 impl InFact {
-    pub fn new(element: Obj, set: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(element: Obj, set: Obj, line_file_index: (usize, usize)) -> Self {
         InFact { element, set, line_file_index }
     }
 }
 
 impl NotInFact {
-    pub fn new(element: Obj, set: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(element: Obj, set: Obj, line_file_index: (usize, usize)) -> Self {
         NotInFact { element, set, line_file_index }
     }
 }
 
 
 impl IsCartFact {
-    pub fn new(set: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(set: Obj, line_file_index: (usize, usize)) -> Self {
         IsCartFact { set, line_file_index }
     }
 }
 
 impl NotIsCartFact {
-    pub fn new(set: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(set: Obj, line_file_index: (usize, usize)) -> Self {
         NotIsCartFact { set, line_file_index }
     }
 }
 
 impl IsTupleFact {
-    pub fn new(tuple: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(tuple: Obj, line_file_index: (usize, usize)) -> Self {
         IsTupleFact { set: tuple, line_file_index }
     }
 }
 
 impl NotIsTupleFact {
-    pub fn new(tuple: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(tuple: Obj, line_file_index: (usize, usize)) -> Self {
         NotIsTupleFact { set: tuple, line_file_index }
     }
 }
 
 impl SupersetFact {
-    pub fn new(left: Obj, right: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(left: Obj, right: Obj, line_file_index: (usize, usize)) -> Self {
         SupersetFact { left, right, line_file_index }
     }
 }
 
 impl NotSupersetFact {
 
-    pub fn new(left: Obj, right: Obj, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(left: Obj, right: Obj, line_file_index: (usize, usize)) -> Self {
         NotSupersetFact { left, right, line_file_index }
     }
 }
@@ -429,7 +429,7 @@ impl fmt::Display for AtomicFact {
     }
 }
 
-pub fn line_file(a: &AtomicFact) -> Option<(usize, usize)> {
+pub fn line_file(a: &AtomicFact) -> (usize, usize) {
     match a {
         AtomicFact::NormalAtomicFact(x) => x.line_file_index,
         AtomicFact::EqualFact(x) => x.line_file_index,
@@ -712,7 +712,7 @@ impl AtomicFact {
 
 
 impl AtomicFact {
-    pub fn to_atomic_fact(prop_name: IdentifierOrIdentifierWithMod, is_true: bool, args: Vec<Obj>, line_file_index: Option<(usize, usize)>) -> Result<AtomicFact, NewAtomicFactError> {
+    pub fn to_atomic_fact(prop_name: IdentifierOrIdentifierWithMod, is_true: bool, args: Vec<Obj>, line_file_index: (usize, usize)) -> Result<AtomicFact, NewAtomicFactError> {
         let prop_name_as_string = prop_name.to_string();
         match prop_name_as_string.as_str() {
             EQUAL => {
@@ -1022,7 +1022,7 @@ impl AtomicFact {
         }
     }
 
-    pub fn line_file_index(&self) -> Option<(usize, usize)> {
+    pub fn line_file_index(&self) -> (usize, usize) {
         match self {
             AtomicFact::EqualFact(a) => a.line_file_index,
             AtomicFact::LessFact(a) => a.line_file_index,
@@ -1055,7 +1055,7 @@ impl AtomicFact {
         }
     }
 
-    pub fn with_new_line_file(self, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn with_new_line_file(self, line_file_index: (usize, usize)) -> Self {
         match self {
             AtomicFact::EqualFact(x) => AtomicFact::EqualFact(EqualFact::new(x.left, x.right, line_file_index)),
             AtomicFact::LessFact(x) => AtomicFact::LessFact(LessFact::new(x.left, x.right, line_file_index)),

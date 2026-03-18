@@ -32,7 +32,7 @@ impl fmt::Display for Fact {
 }
 
 impl Fact {
-    pub fn line_file(&self) -> Option<(usize, usize)> {
+    pub fn line_file(&self) -> (usize, usize) {
         match self {
             Fact::AtomicFact(a) => super::atomic_fact::line_file(a),
             Fact::ExistFact(e) => e.line_file_index(),
@@ -46,7 +46,7 @@ impl Fact {
 }
 
 impl Fact {
-    pub fn with_new_line_file(self, line_file_index: Option<(usize, usize)>) -> Fact {
+    pub fn with_new_line_file(self, line_file_index: (usize, usize)) -> Fact {
         match self {
             Fact::AtomicFact(atomic_fact) => Fact::AtomicFact(atomic_fact.with_new_line_file(line_file_index)),
             Fact::ExistFact(e) => Fact::ExistFact(ExistFact {

@@ -55,7 +55,7 @@ impl<'a> Executor<'a> {
             impossible_facts.push(impossible);
         }
         Ok(Stmt::ProveCaseByCaseStmt(
-            ProveCaseByCaseStmt::new(cases, then_facts, proofs, impossible_facts, Some(tb.line_file_index)),
+            ProveCaseByCaseStmt::new(cases, then_facts, proofs, impossible_facts, tb.line_file_index),
         ))
     }
 
@@ -78,7 +78,7 @@ impl<'a> Executor<'a> {
         last_block.skip_token(IMPOSSIBLE)?;
         let impossible_fact = self.parse_exist_or_and_chain_atomic_fact(&mut last_block)?;
         Ok(Stmt::ProveByContradictionStmt(
-            ProveByContradictionStmt::new(to_prove, proof, impossible_fact, Some(tb.line_file_index)),
+            ProveByContradictionStmt::new(to_prove, proof, impossible_fact, tb.line_file_index),
         ))
     }
 
@@ -111,7 +111,7 @@ impl<'a> Executor<'a> {
             (vec![], tb.body.iter_mut().map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?)
         };
         Ok(Stmt::ProveByEnumerationStmt(
-            ProveByEnumerationStmt::new(params, param_sets, to_prove, proof, Some(tb.line_file_index)),
+            ProveByEnumerationStmt::new(params, param_sets, to_prove, proof, tb.line_file_index),
         ))
     }
 
@@ -134,7 +134,7 @@ impl<'a> Executor<'a> {
         };
         let proof: Vec<Stmt> = tb.body.iter_mut().skip(1).map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?;
         Ok(Stmt::ProveByInductionStmt(
-            ProveByInductionStmt::new(fact, param, proof, induc_from, Some(tb.line_file_index)),
+            ProveByInductionStmt::new(fact, param, proof, induc_from, tb.line_file_index),
         ))
     }
 
@@ -219,7 +219,7 @@ impl<'a> Executor<'a> {
             dom_facts,
             then_facts,
             proof,
-            Some(tb.line_file_index),
+            tb.line_file_index,
         )))
     }
 
@@ -231,7 +231,7 @@ impl<'a> Executor<'a> {
         tb.skip_token(COLON)?;
         let proof: Vec<Stmt> = tb.body.iter_mut().map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?;
         Ok(Stmt::ProveByEqualSetStmt(
-            ProveByEqualSetStmt::new(left, right, proof, Some(tb.line_file_index)),
+            ProveByEqualSetStmt::new(left, right, proof, tb.line_file_index),
         ))
     }
 
@@ -240,7 +240,7 @@ impl<'a> Executor<'a> {
         let function = self.parse_obj(tb)?;
         Ok(Stmt::ViewFnAsSetStmt(ViewFnAsSetStmt::new(
             function,
-            Some(tb.line_file_index),
+            tb.line_file_index,
         )))
     }
 }

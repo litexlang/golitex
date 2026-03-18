@@ -30,7 +30,7 @@ impl<'a> Executor<'a> {
             equal_tos,
             exist_fact_in_witness,
             proof,
-            Some(tb.line_file_index),
+            tb.line_file_index,
         )))
     }
 
@@ -46,7 +46,7 @@ impl<'a> Executor<'a> {
             obj,
             set,
             proof,
-            Some(tb.line_file_index),
+            tb.line_file_index,
         )))
     }
 }
