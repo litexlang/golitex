@@ -1,5 +1,6 @@
 use std::rc::Rc;
 use crate::obj::Obj;
+use crate::fact::AtomicFact;
 use crate::simplify_polynomial::two_objs_equal_by_polynomial_simplification;
 use crate::fact::EqualFact;
 use crate::execute::Executor;
@@ -23,7 +24,8 @@ impl<'a> Executor<'a> {
         }
 
         if verify_state.is_round_0() {
-            let result = self.verify_equality_with_known_forall_facts(equal_fact, verify_state)?;
+            let verify_state_add_one_round = verify_state.new_state_with_round_increased();
+            result = self.verify_atomic_fact_with_known_forall_fact(&AtomicFact::EqualFact(equal_fact.clone()), &verify_state_add_one_round)?;
             if result.is_true() {
                 return Ok(result);
             }
@@ -127,11 +129,5 @@ impl<'a> Executor<'a> {
                 Ok(None)
             }
         }
-    }
-
-    fn verify_equality_with_known_forall_facts(&mut self, equal_fact: &EqualFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
-        _ = verify_state;
-        _ = equal_fact;
-        return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
     }
 }
