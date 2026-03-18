@@ -103,8 +103,11 @@ impl<'a> Executor<'a> {
                         can_be_calculated = false;
                     } else {
                         let calculated_right = right.calculate_to_string();
-                        if is_number_string_literally_integer_without_dot(calculated_right.clone()) {
+                        if !is_number_string_literally_integer_without_dot(calculated_right.clone()) {
                             can_be_calculated = false;
+                        }
+                        if calculated_right == "0" {
+                            return Err(ParsingError::new(format!("Modulus by zero: {}", calculated_right), tb.line_file_index, None));
                         }
                     }
                     
@@ -124,11 +127,17 @@ impl<'a> Executor<'a> {
         if tb.current_token_is_equal_to(POW) {
                 tb.skip()?;
                 let right = self.obj_hierarchy3(tb)?; // 右结合：右侧可继续接 ^
-                if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
-                    Ok(Obj::Pow(Pow::new(left, right, false)))
-                } else {
-                    Ok(Obj::Pow(Pow::new(left, right, true)))
+                let mut can_be_calculated = left.can_be_calculated() && right.can_be_calculated();
+                if can_be_calculated {
+                    let calculated_exponent = right.calculate_to_string();
+                    if !is_number_string_literally_integer_without_dot(calculated_exponent.clone()) {
+                        can_be_calculated = false;
+                    }
+                    if calculated_exponent.starts_with('-') {
+                        can_be_calculated = false;
+                    }
                 }
+                Ok(Obj::Pow(Pow::new(left, right, can_be_calculated)))
         } else {
             Ok(left)
         }
