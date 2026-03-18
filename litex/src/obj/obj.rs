@@ -1121,20 +1121,6 @@ impl Obj {
     }
 }
 
-impl Obj {
-    pub fn is_add_sub_mul_div_mod_pow(&self) -> bool {
-        match self {
-            Obj::Add(_) => true,
-            Obj::Sub(_) => true,
-            Obj::Mul(_) => true,
-            Obj::Div(_) => true,
-            Obj::Mod(_) => true,
-            Obj::Pow(_) => true,
-            _ => false,
-        }
-    }
-}
-
 impl FnSetObj {
     pub fn ret_set(&self) -> Box<Obj> {
         match self {
