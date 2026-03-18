@@ -1,4 +1,5 @@
 use std::fmt;
+use crate::common::helper::DEFAULT_LINE_FILE;
 
 fn body_with_previous(message: &str, previous_error: &Option<Box<StmtError>>) -> String {
     match previous_error {
@@ -29,13 +30,13 @@ pub enum StmtError {
 impl std::error::Error for StmtError {}
 
 impl StmtError {
-    pub fn line_file(&self) -> Option<(usize, usize)> {
+    pub fn line_file(&self) -> (usize, usize) {
         match self {
-            StmtError::ArithmeticError(_) => None,
-            StmtError::NewAtomicFactError(_) => None,
-            StmtError::StoreFactError(_) => None,
+            StmtError::ArithmeticError(_) => DEFAULT_LINE_FILE.clone(),
+            StmtError::NewAtomicFactError(_) => DEFAULT_LINE_FILE.clone(),
+            StmtError::StoreFactError(_) => DEFAULT_LINE_FILE.clone(),
             StmtError::ParseBlockError(e) => e.line_file(),
-            StmtError::ParsingError(e) => Some(e.line_file_index),
+            StmtError::ParsingError(e) => e.line_file_index,
             StmtError::ExecError(e) => e.line_file_index,
             StmtError::UnknownError(e) => e.line_file_index,
             StmtError::WellDefinedError(e) => e.line_file_index,
@@ -165,7 +166,7 @@ impl From<NewAtomicFactError> for StoreFactError {
 impl From<NewAtomicFactError> for WellDefinedError {
     fn from(e: NewAtomicFactError) -> Self {
         let msg = e.msg.clone();
-        WellDefinedError::new(msg, Some(e.into()), None)
+        WellDefinedError::new(msg, Some(e.into()), DEFAULT_LINE_FILE.clone())
     }
 }
 
@@ -206,7 +207,7 @@ impl From<StoreFactError> for StmtError {
 impl From<StoreFactError> for ExecError {
     fn from(e: StoreFactError) -> Self {
         let body = e.body_string();
-        ExecError::new("".to_string(), body, Some(e.into()), None)
+        ExecError::new("".to_string(), body, Some(e.into()), DEFAULT_LINE_FILE.clone())
     }
 }
 
@@ -229,14 +230,14 @@ impl fmt::Display for ParseBlockError {
 }
 
 impl ParseBlockError {
-    pub fn line_file(&self) -> Option<(usize, usize)> {
+    pub fn line_file(&self) -> (usize, usize) {
         match self {
-            ParseBlockError::ExpectedIndent(line, file) => Some((*line, *file)),
-            ParseBlockError::UnexpectedIndent(line, file) => Some((*line, *file)),
-            ParseBlockError::InconsistentIndent(line, file) => Some((*line, *file)),
-            ParseBlockError::MissingBody(line, file) => Some((*line, *file)),
-            ParseBlockError::NameAlreadyUsed(_) => None,
-            ParseBlockError::InvalidName(_) => None,
+            ParseBlockError::ExpectedIndent(line, file) => (*line, *file),
+            ParseBlockError::UnexpectedIndent(line, file) => (*line, *file),
+            ParseBlockError::InconsistentIndent(line, file) => (*line, *file),
+            ParseBlockError::MissingBody(line, file) => (*line, *file),
+            ParseBlockError::NameAlreadyUsed(_) => DEFAULT_LINE_FILE.clone(),
+            ParseBlockError::InvalidName(_) => DEFAULT_LINE_FILE.clone(),
         }
     }
 }
@@ -289,7 +290,7 @@ pub struct ExecError {
     pub stmt_type_name: String,
     pub msg: String,
     pub previous_error: Option<Box<StmtError>>,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 impl std::error::Error for ExecError {}
@@ -301,7 +302,7 @@ impl fmt::Display for ExecError {
 }
 
 impl ExecError {
-    pub fn new(stmt_type_name: String, msg: String, previous_error: Option<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(stmt_type_name: String, msg: String, previous_error: Option<StmtError>, line_file_index: (usize, usize)) -> Self {
         ExecError {
             stmt_type_name,
             msg,
@@ -331,7 +332,7 @@ impl From<ExecError> for StmtError {
 pub struct WellDefinedError {
     pub msg: String,
     pub previous_error: Option<Box<StmtError>>,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 impl std::error::Error for WellDefinedError {}
@@ -343,7 +344,7 @@ impl fmt::Display for WellDefinedError {
 }
 
 impl WellDefinedError {
-    pub fn new(msg: String, previous_error: Option<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(msg: String, previous_error: Option<StmtError>, line_file_index: (usize, usize)) -> Self {
         WellDefinedError {
             msg,
             previous_error: boxed_previous_error(previous_error),
@@ -365,7 +366,7 @@ impl From<WellDefinedError> for StmtError {
 impl From<WellDefinedError> for ExecError {
     fn from(e: WellDefinedError) -> Self {
         let body = "well defined error: ".to_string() + &e.body_string();
-        ExecError::new("".to_string(), body, Some(e.into()), None)
+        ExecError::new("".to_string(), body, Some(e.into()), DEFAULT_LINE_FILE.clone())
     }
 }
 
@@ -373,7 +374,7 @@ impl From<WellDefinedError> for ExecError {
 pub struct VerifyError {
     pub msg: String,
     pub previous_error: Option<Box<StmtError>>,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 impl std::error::Error for VerifyError {}
@@ -385,7 +386,7 @@ impl fmt::Display for VerifyError {
 }
 
 impl VerifyError {
-    pub fn new(msg: String, previous_error: Option<StmtError>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(msg: String, previous_error: Option<StmtError>, line_file_index: (usize, usize)) -> Self {
         VerifyError {
             msg,
             previous_error: boxed_previous_error(previous_error),
@@ -407,21 +408,21 @@ impl From<VerifyError> for StmtError {
 impl From<VerifyError> for ExecError {
     fn from(e: VerifyError) -> Self {
         let body = "verify fact error: ".to_string() + &e.body_string();
-        ExecError::new("".to_string(), body, Some(e.into()), None)
+        ExecError::new("".to_string(), body, Some(e.into()), DEFAULT_LINE_FILE.clone())
     }
 }
 
 impl From<VerifyError> for WellDefinedError {
     fn from(e: VerifyError) -> Self {
         let body = "verify fact error: ".to_string() + &e.body_string();
-        WellDefinedError::new(body, Some(e.into()), None)
+        WellDefinedError::new(body, Some(e.into()), DEFAULT_LINE_FILE.clone())
     }
 }
 
 #[derive(Debug)]
 pub struct UnknownError {
     pub msg: String,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
     pub previous_error: Option<Box<StmtError>>,
 }
 
@@ -434,7 +435,7 @@ impl fmt::Display for UnknownError {
 }
 
 impl UnknownError {
-    pub fn new(msg: String, line_file_index: Option<(usize, usize)>, previous_error: Option<StmtError>) -> Self {
+    pub fn new(msg: String, line_file_index: (usize, usize), previous_error: Option<StmtError>) -> Self {
         UnknownError {
             msg,
             line_file_index,
@@ -457,7 +458,7 @@ impl From<UnknownError> for StmtError {
 #[derive(Debug)]
 pub struct InferError {
     pub msg: String,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
     pub previous_error: Option<Box<StmtError>>,
 }
 
@@ -470,7 +471,7 @@ impl fmt::Display for InferError {
 }
 
 impl InferError {
-    pub fn new(msg: String, line_file_index: Option<(usize, usize)>, previous_error: Option<StmtError>) -> Self {
+    pub fn new(msg: String, line_file_index: (usize, usize), previous_error: Option<StmtError>) -> Self {
         InferError {
             msg,
             line_file_index,
@@ -492,6 +493,6 @@ impl From<InferError> for StmtError {
 impl From<InferError> for ExecError {
     fn from(e: InferError) -> Self {
         let msg = e.body_string();
-        ExecError::new("".to_string(), msg, Some(e.into()), None)
+        ExecError::new("".to_string(), msg, Some(e.into()), DEFAULT_LINE_FILE.clone())
     }
 }

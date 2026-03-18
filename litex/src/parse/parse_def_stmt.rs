@@ -37,7 +37,7 @@ impl<'a> Executor<'a> {
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
         self.validate_names_and_put_into_parsing_names_block(&all_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
         let facts = self.parse_facts_in_body(tb)?;
-        Ok(Stmt::DefPropStmt(DefPropStmt::new(name, param_defs, facts, Some(tb.line_file_index))))
+        Ok(Stmt::DefPropStmt(DefPropStmt::new(name, param_defs, facts, tb.line_file_index)))
     }
 
     pub fn parse_def_prop_without_meaning_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -63,7 +63,7 @@ impl<'a> Executor<'a> {
 
         self.validate_names_and_put_into_parsing_names_block(&params).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
 
-        Ok(Stmt::DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt::new(name, params, Some(tb.line_file_index))))
+        Ok(Stmt::DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt::new(name, params, tb.line_file_index)))
     }
 
     pub fn parse_def_let_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -98,7 +98,7 @@ impl<'a> Executor<'a> {
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
             facts,
-            Some(tb.line_file_index),
+            tb.line_file_index,
         )))
     }
 
@@ -127,7 +127,7 @@ impl<'a> Executor<'a> {
         self.validate_names_and_put_into_parsing_names_block(&have_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
-            Ok(Stmt::HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, Some(tb.line_file_index))))
+            Ok(Stmt::HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, tb.line_file_index)))
         } else {
             tb.skip_token(EQUAL)?;
             let mut objs_equal_to = vec![self.parse_obj(tb)?];
@@ -135,7 +135,7 @@ impl<'a> Executor<'a> {
                 tb.skip_token(COMMA)?;
                 objs_equal_to.push(self.parse_obj(tb)?);
             }
-            Ok(Stmt::HaveObjEqualStmt(HaveObjEqualStmt::new(param_defs, objs_equal_to, Some(tb.line_file_index))))
+            Ok(Stmt::HaveObjEqualStmt(HaveObjEqualStmt::new(param_defs, objs_equal_to, tb.line_file_index)))
         }
     }
 
@@ -155,13 +155,13 @@ impl<'a> Executor<'a> {
                 equal_tos.push(self.parse_obj(block)?);
             }
             Ok(Stmt::HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt::new(
-                name, fs, cases, equal_tos, Some(tb.line_file_index),
+                name, fs, cases, equal_tos, tb.line_file_index,
             )))
         } else {
             tb.skip_token(EQUAL)?;
             let equal_to = self.parse_obj(tb)?;
             Ok(Stmt::HaveFnEqualStmt(HaveFnEqualStmt::new(
-                name, fs, equal_to, Some(tb.line_file_index),
+                name, fs, equal_to, tb.line_file_index,
             )))
         }
     }
@@ -177,7 +177,7 @@ impl<'a> Executor<'a> {
 
         tb.skip_token(COLON)?;
         let true_fact = self.parse_exist_fact(tb)?;
-        Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(equal_tos, true_fact, Some(tb.line_file_index))))
+        Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(equal_tos, true_fact, tb.line_file_index)))
     }
 
     pub fn def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -223,7 +223,7 @@ impl<'a> Executor<'a> {
                 params_def_with_type,
                 dom_facts,
                 equal_to,
-                Some(tb.line_file_index),
+                tb.line_file_index,
             )))
         } else {
             tb.skip_token(COLON)?;
@@ -264,7 +264,7 @@ impl<'a> Executor<'a> {
                 params_def_with_type,
                 fields,
                 facts,
-                Some(tb.line_file_index),
+                tb.line_file_index,
             )))
         }
     }
@@ -307,7 +307,7 @@ impl<'a> Executor<'a> {
             name,
             params,
             return_or_algo_if,
-            Some(tb.line_file_index),
+            tb.line_file_index,
         )))
     }
 
@@ -329,7 +329,7 @@ impl<'a> Executor<'a> {
         Ok(AlgoIf::new(
             condition,
             return_stmt,
-            Some(block.line_file_index),
+            block.line_file_index,
         ))
     }
 
@@ -337,7 +337,7 @@ impl<'a> Executor<'a> {
     fn parse_algo_return(&mut self, block: &mut TokenBlock) -> Result<AlgoReturn, ParsingError> {
         block.skip_token(RETURN)?;
         let value = self.parse_obj(block)?;
-        Ok(AlgoReturn::new(value, Some(block.line_file_index)))
+        Ok(AlgoReturn::new(value, block.line_file_index))
     }
 
 }

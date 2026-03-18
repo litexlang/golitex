@@ -13,6 +13,6 @@ impl<'a> Executor<'a> {
         for block in tb.body.iter_mut() {
             proof.push(self.parse_stmt(block)?);
         }
-        Ok(Stmt::ProveStmt(ProveStmt::new(proof, Some(tb.line_file_index))))
+        Ok(Stmt::ProveStmt(ProveStmt::new(proof, tb.line_file_index)))
     }
 }

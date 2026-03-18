@@ -12,6 +12,7 @@ use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoField
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::stmt::definition_stmt::DefPropWithoutMeaningStmt;
 use crate::obj::FnSetObj;
+use crate::common::helper::DEFAULT_LINE_FILE;
 
 pub struct RuntimeContext<'a> {
     pub module_manager: &'a mut ModuleManager<'a>,
@@ -252,50 +253,35 @@ impl<'a> RuntimeContext<'a> {
     pub fn display_result(&self, result: &NonErrStmtExecResult) -> String {
         match result {
             NonErrStmtExecResult::NonFactualStmtSuccess(x) => {
-                let location = match x.line_file_index {
-                    Some((line, file_index)) => format!("Success on {}:\n", self.format_line_file(line, file_index)),
-                    None => "Success:\n".to_string(),
-                };
+                let location = if x.line_file_index == DEFAULT_LINE_FILE { "Success:\n".to_string() } else { format!("Success on {}:\n", self.format_line_file(x.line_file_index.0, x.line_file_index.1)) };
                 let msg = format!("{}{}", x.stmt, Self::format_infer_block(&x.infers));
                 format!("{}{}", location, msg)
             }
             NonErrStmtExecResult::FactVerifiedByFact(x) => {
-                let location = match x.line_file_index {
-                    Some((line, file_index)) => format!("Success on {}:\n", self.format_line_file(line, file_index)),
-                    None => "Success:\n".to_string(),
-                };
-                let verified_by_suffix = match x.verified_by_line_file {
-                    Some((line, file_index)) => format!("{}", self.format_line_file(line, file_index)),
-                    None => String::new(),
-                };
+                let location = if x.line_file_index == DEFAULT_LINE_FILE { "Success:\n".to_string() } else { format!("Success on {}:\n", self.format_line_file(x.line_file_index.0, x.line_file_index.1)) };
+                let verified_by_suffix = if x.verified_by_line_file == DEFAULT_LINE_FILE { String::new() } else { format!("{}", self.format_line_file(x.verified_by_line_file.0, x.verified_by_line_file.1)) };
                 let msg = format!("{}\nverified by fact on {}\n{}{}", x.fact, verified_by_suffix, x.verified_by , Self::format_infer_block(&x.infers));
                 format!("{}{}", location, msg)
             }
             NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => {
-                let location = match x.line_file_index {
-                    Some((line, file_index)) => format!("Success on {}:\n", self.format_line_file(line, file_index)),
-                    None => "Success:\n".to_string(),
-                };
-                let verified_by_suffix = match x.verified_by_line_file {
-                    Some((line, file_index)) => format!("{}", self.format_line_file(line, file_index)),
-                    None => String::new(),
-                };
-                let msg = format!("{}\nverified by fact on {}\n{}{}", x.fact, verified_by_suffix, x.verified_by , Self::format_infer_block(&x.infers));
+                let location = if x.line_file_index == DEFAULT_LINE_FILE { "Success:\n".to_string() } else { format!("Success on {}:\n", self.format_line_file(x.line_file_index.0, x.line_file_index.1)) };
+                let msg = format!("{}\nverified by\n{}{}", x.fact, x.verified_by , Self::format_infer_block(&x.infers));
                 format!("{}{}", location, msg)
             }
             NonErrStmtExecResult::StmtUnknown(x) => x.to_string(),
         }
     }
 
-    /// Format error: when line_file is set, "{Label} on line N" (or "{Label} on line N, file PATH"); otherwise body only.
+    /// Format error: when line_file is not (0,0), "{Label} on line N" (or "{Label} on line N, file PATH"); otherwise body only.
     pub fn display_error(&self, error: &StmtError) -> String {
         let body = error.error_body();
-        if let Some((line, file_index)) = error.line_file() {
+        let (line, file_index) = error.line_file();
+        if (line, file_index) != DEFAULT_LINE_FILE {
             let label = error.display_label();
             let location = if file_index == 0 {
                 format!("{} on line {}", label, line)
             } else {
-                let path = match self.module_manager.run_file_paths.get(file_index) {
+                let path: &str = match self.module_manager.run_file_paths.get(file_index) {
                     Some(s) => s.as_str(),
                     None => "",
                 };

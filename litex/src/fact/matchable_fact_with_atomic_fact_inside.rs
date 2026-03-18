@@ -10,14 +10,14 @@ use crate::obj::IdentifierOrIdentifierWithMod;
 #[derive(Clone)]
 pub struct AndFact {
     pub facts: Vec<AtomicFact>,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 impl AndFact {
-    pub fn new(facts: Vec<AtomicFact>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(facts: Vec<AtomicFact>, line_file_index: (usize, usize)) -> Self {
         AndFact { facts, line_file_index }
     }
-    pub fn line_file_index(&self) -> Option<(usize, usize)> {
+    pub fn line_file_index(&self) -> (usize, usize) {
         self.line_file_index
     }
 }
@@ -26,18 +26,18 @@ impl AndFact {
 pub struct ChainFact {
     pub objs: Vec<Obj>,
     pub prop_names: Vec<IdentifierOrIdentifierWithMod>,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 impl ChainFact {
     pub fn new(
         objs: Vec<Obj>,
         prop_names: Vec<IdentifierOrIdentifierWithMod>,
-        line_file_index: Option<(usize, usize)>,
+        line_file_index: (usize, usize),
     ) -> Self {
         ChainFact { objs, prop_names, line_file_index }
     }
-    pub fn line_file_index(&self) -> Option<(usize, usize)> {
+    pub fn line_file_index(&self) -> (usize, usize) {
         self.line_file_index
     }
 

@@ -12,10 +12,10 @@ impl<'a> Executor<'a> {
         if tb.current()? == COLON {
             tb.skip_token(COLON)?;
             let facts = self.parse_facts_in_body(tb)?;
-            Ok(Stmt::KnowStmt(KnowStmt::new(facts, Some(tb.line_file_index))))
+            Ok(Stmt::KnowStmt(KnowStmt::new(facts, tb.line_file_index)))
         } else if tb.current()? == FORALL {
             let fact = self.parse_fact(tb)?;
-            Ok(Stmt::KnowStmt(KnowStmt::new(vec![fact], Some(tb.line_file_index))))
+            Ok(Stmt::KnowStmt(KnowStmt::new(vec![fact], tb.line_file_index)))
         } else {
             let mut facts: Vec<Fact> = vec![];
             loop {
@@ -27,7 +27,7 @@ impl<'a> Executor<'a> {
                 }
                 tb.skip_token(COMMA)?;
             }
-            Ok(Stmt::KnowStmt(KnowStmt::new(facts, Some(tb.line_file_index))))
+            Ok(Stmt::KnowStmt(KnowStmt::new(facts, tb.line_file_index)))
         }
     }
 }

@@ -333,7 +333,7 @@ impl Environment {
 impl Environment {
     pub fn store_fact_to_cache_known_fact(&mut self, fact: &Fact) -> Result<(), StoreFactError> {
         let key = fact.to_string();
-        self.cache_known_fact.insert(key, fact.line_file());
+        self.cache_known_fact.insert(key, Some(fact.line_file()));
         Ok(())
     }
 }
@@ -341,11 +341,11 @@ impl Environment {
 pub struct KnownForallFactParamsAndDom {
     pub params: Vec<ParamDefWithParamType>,
     pub dom: Vec<ExistOrAndChainAtomicFact>,
-    pub line_file: Option<(usize, usize)>,
+    pub line_file: (usize, usize),
 }
 
 impl KnownForallFactParamsAndDom {
-    pub fn new(params: Vec<ParamDefWithParamType>, dom: Vec<ExistOrAndChainAtomicFact>, line_file: Option<(usize, usize)>) -> Self {
+    pub fn new(params: Vec<ParamDefWithParamType>, dom: Vec<ExistOrAndChainAtomicFact>, line_file: (usize, usize)) -> Self {
         KnownForallFactParamsAndDom { params, dom, line_file }
     }
 }

@@ -9,18 +9,18 @@ pub struct WitnessNonemptySet {
     pub obj: Obj,
     pub set: Obj,
     pub proof: Vec<Stmt>,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 pub struct WitnessExistFact {
     pub equal_tos: Vec<Obj>,
     pub exist_fact_in_witness: ExistFact,
     pub proof: Vec<Stmt>,
-    pub line_file_index: Option<(usize, usize)>,
+    pub line_file_index: (usize, usize),
 }
 
 impl WitnessExistFact {
-    pub fn new(equal_tos: Vec<Obj>, exist_fact_in_witness: ExistFact, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(equal_tos: Vec<Obj>, exist_fact_in_witness: ExistFact, proof: Vec<Stmt>, line_file_index: (usize, usize)) -> Self {
         WitnessExistFact { equal_tos, exist_fact_in_witness, proof, line_file_index }
     }
 
@@ -48,7 +48,7 @@ impl fmt::Display for WitnessNonemptySet {
 }
 
 impl WitnessNonemptySet {
-    pub fn new(obj: Obj, set: Obj, proof: Vec<Stmt>, line_file_index: Option<(usize, usize)>) -> Self {
+    pub fn new(obj: Obj, set: Obj, proof: Vec<Stmt>, line_file_index: (usize, usize)) -> Self {
         WitnessNonemptySet { obj, set, proof, line_file_index }
     }
 
