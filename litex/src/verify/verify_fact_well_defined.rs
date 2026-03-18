@@ -1,5 +1,5 @@
 use crate::common::keywords::is_builtin_predicate;
-use crate::fact::{Fact, AndFact, ChainFact, OrFact, AndChainAtomicFact, ExistFact, OrAndChainAtomicFact, ForallFact, ExistOrAndChainAtomicFact, ForallFactWithIff};
+use crate::fact::{Fact, AndFact, ChainFact, OrFact, AndChainAtomicFact, ExistFact, OrAndChainAtomicFact, ForallFact, ExistOrAndChainAtomicFact, ForallFactWithIff, EqualFact};
 use crate::error::WellDefinedError;
 use crate::fact::AtomicFact;
 use crate::fact::line_file as atomic_fact_line_file;
@@ -22,6 +22,19 @@ impl<'a> Executor<'a> {
     }
 
     fn verify_atomic_fact_well_defined(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        match atomic_fact {
+            AtomicFact::EqualFact(equal_fact) => self.verify_equal_fact_well_defined(equal_fact, verify_state),
+            _ => self.verify_non_equational_atomic_fact_well_defined(atomic_fact, verify_state).map_err(WellDefinedError::from),
+        }
+    }
+
+    fn verify_equal_fact_well_defined(&mut self, equal_fact: &EqualFact, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        self.verify_obj_well_defined_and_store_cache(&equal_fact.left, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&equal_fact.right, verify_state)?;
+        Ok(())
+    }
+
+    fn verify_non_equational_atomic_fact_well_defined(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         // 1. predicate is defined, expected args length is equal to actual args length
         let name_string = atomic_fact.key();
         if is_builtin_predicate(&name_string) {
