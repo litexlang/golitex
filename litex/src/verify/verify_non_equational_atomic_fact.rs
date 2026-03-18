@@ -89,14 +89,31 @@ impl<'a> Executor<'a> {
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params(&mut self, atomic_fact: &AtomicFact) -> Result<NonErrStmtExecResult, VerifyError> {
+        let mut all_objs_equal_to_each_arg: Vec<Vec<String>> = Vec::new();
+        for arg in atomic_fact.args().iter() {
+            let mut all_objs_equal_to_current_arg = self.runtime_context.get_all_objs_equal_to_arg(&arg.to_string());
+            if all_objs_equal_to_current_arg.is_empty() {
+                all_objs_equal_to_current_arg.push(arg.to_string());
+            }
+            all_objs_equal_to_each_arg.push(all_objs_equal_to_current_arg);
+        }
+
         for environment in self.runtime_context.iter_environments_from_top() {
-            let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(environment, atomic_fact)?;
+            let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(
+                environment,
+                atomic_fact,
+                &all_objs_equal_to_each_arg,
+            )?;
             if result.is_true() {
                 return Ok(result);
             }
         }
         
-        let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(&self.runtime_context.builtin_environment, atomic_fact)?;
+        let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(
+            &self.runtime_context.builtin_environment,
+            atomic_fact,
+            &all_objs_equal_to_each_arg,
+        )?;
         if result.is_true() {
             return Ok(result);
         }
@@ -165,16 +182,32 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(environment: &Environment, atomic_fact: &AtomicFact) -> Result<NonErrStmtExecResult, VerifyError> {
+    fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(
+        environment: &Environment,
+        atomic_fact: &AtomicFact,
+        all_objs_equal_to_each_arg: &Vec<Vec<String>>,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
         if let Some(known_facts) = environment.known_atomic_facts_with_0_or_more_than_2_args.get(&(atomic_fact.key(), atomic_fact.is_true())) {
             for known_fact in known_facts.iter() {
                 if known_fact.args().len() != atomic_fact.args().len() {
                     return Err(VerifyError::new(format!("known atomic fact {} has different number of args than the given fact {}", known_fact.to_string(), atomic_fact.to_string()), None, atomic_fact.line_file_index()));
                 }
+                let mut all_args_match = true;
                 for (index, known_arg) in known_fact.args().iter().enumerate() {
-                    if known_arg.to_string() != atomic_fact.args()[index].to_string() {
-                        return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+                    let known_arg_string = known_arg.to_string();
+                    if !all_objs_equal_to_each_arg[index].contains(&known_arg_string) {
+                        all_args_match = false;
+                        break;
                     }
+                }
+                if all_args_match {
+                    return Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
+                        atomic_fact.to_string(),
+                        known_fact.to_string(),
+                        InferResult::new(),
+                        atomic_fact.line_file_index(),
+                        known_fact.line_file_index(),
+                    )));
                 }
             }
         }
