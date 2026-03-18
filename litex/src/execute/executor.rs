@@ -14,7 +14,7 @@ impl<'a> Executor<'a> {
         Executor { runtime_context , parsing_names_blocks: vec![HashMap::new()] }
     }
 
-    pub fn line_file_index_string(&self, line: usize, file_index: usize) -> String {
+    pub fn line_file_string(&self, line: usize, file_index: usize) -> String {
         format!("line {}, file {}", line, self.runtime_context.module_manager.run_file_paths[file_index])
     }
 }

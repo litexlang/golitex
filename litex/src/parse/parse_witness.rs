@@ -13,7 +13,7 @@ impl<'a> Executor<'a> {
         } else if tb.current_token_is_equal_to(NONEMPTY_SET) {
             self.witness_nonempty_set(tb) 
         } else {
-            return Err(ParsingError::new("witness expects a exist or nonempty set".to_string(), tb.line_file_index, None));
+            return Err(ParsingError::new("witness expects a exist or nonempty set".to_string(), tb.line_file, None));
         }
     }
 
@@ -30,7 +30,7 @@ impl<'a> Executor<'a> {
             equal_tos,
             exist_fact_in_witness,
             proof,
-            tb.line_file_index,
+            tb.line_file,
         )))
     }
 
@@ -46,7 +46,7 @@ impl<'a> Executor<'a> {
             obj,
             set,
             proof,
-            tb.line_file_index,
+            tb.line_file,
         )))
     }
 }

@@ -10,15 +10,15 @@ use crate::obj::IdentifierOrIdentifierWithMod;
 #[derive(Clone)]
 pub struct AndFact {
     pub facts: Vec<AtomicFact>,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 impl AndFact {
-    pub fn new(facts: Vec<AtomicFact>, line_file_index: (usize, usize)) -> Self {
-        AndFact { facts, line_file_index }
+    pub fn new(facts: Vec<AtomicFact>, line_file: (usize, usize)) -> Self {
+        AndFact { facts, line_file }
     }
-    pub fn line_file_index(&self) -> (usize, usize) {
-        self.line_file_index
+    pub fn line_file(&self) -> (usize, usize) {
+        self.line_file
     }
 }
 
@@ -26,19 +26,19 @@ impl AndFact {
 pub struct ChainFact {
     pub objs: Vec<Obj>,
     pub prop_names: Vec<IdentifierOrIdentifierWithMod>,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 impl ChainFact {
     pub fn new(
         objs: Vec<Obj>,
         prop_names: Vec<IdentifierOrIdentifierWithMod>,
-        line_file_index: (usize, usize),
+        line_file: (usize, usize),
     ) -> Self {
-        ChainFact { objs, prop_names, line_file_index }
+        ChainFact { objs, prop_names, line_file }
     }
-    pub fn line_file_index(&self) -> (usize, usize) {
-        self.line_file_index
+    pub fn line_file(&self) -> (usize, usize) {
+        self.line_file
     }
 
     pub fn facts(&self) -> Result<Vec<AtomicFact>, NewAtomicFactError> {
@@ -51,7 +51,7 @@ impl ChainFact {
             let prop_name = self.prop_names[i].clone();
             let left_obj = self.objs[i].clone();
             let right_obj = self.objs[i + 1].clone();
-            let atomic_fact = AtomicFact::to_atomic_fact(prop_name, true, vec![left_obj, right_obj], self.line_file_index);
+            let atomic_fact = AtomicFact::to_atomic_fact(prop_name, true, vec![left_obj, right_obj], self.line_file);
             facts.push(atomic_fact?);
         }
         Ok(facts)

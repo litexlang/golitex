@@ -106,6 +106,7 @@ pub const Q_NZ: &str = "Q_nz";
 pub const Z_NZ: &str = "Z_nz";
 pub const R_NZ: &str = "R_nz";
 pub const STRUCT: &str = "struct";
+pub const RESTRICT: &str = "restrict";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
@@ -135,7 +136,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CLEAR, DO_NOTHING, INDUC, FROM, EVAL, FOR, WITNESS,
         EQUAL_SET, IMPOSSIBLE, VIEW_FN_AS_SET, RETURN, IF, ALGO,
         Q_POS, Z_POS, R_POS, Q_NEG, Z_NEG, R_NEG, Q_NZ, Z_NZ, R_NZ,
-        STRUCT,
+        STRUCT, RESTRICT,
     ];
     for &s in &words {
         m.insert(s, s);
@@ -177,7 +178,7 @@ pub fn is_comparison_str(atom_name: &str) -> bool {
 }
 
 pub fn is_builtin_predicate(atom_name: &str) -> bool {
-    atom_name == EQUAL || atom_name == NOT_EQUAL || atom_name == LESS || atom_name == GREATER || atom_name == LESS_EQUAL || atom_name == GREATER_EQUAL || atom_name == IS_SET || atom_name == IS_NONEMPTY_SET || atom_name == IS_FINITE_SET || atom_name == IS_CART || atom_name == IS_TUPLE || atom_name == SUBSET || atom_name == SUPERSET || atom_name == IN
+    atom_name == EQUAL || atom_name == NOT_EQUAL || atom_name == LESS || atom_name == GREATER || atom_name == LESS_EQUAL || atom_name == GREATER_EQUAL || atom_name == IS_SET || atom_name == IS_NONEMPTY_SET || atom_name == IS_FINITE_SET || atom_name == IS_CART || atom_name == IS_TUPLE || atom_name == SUBSET || atom_name == SUPERSET || atom_name == IN || atom_name == RESTRICT
 }
 
 pub fn is_builtin_identifier_obj(atom_name: &str) -> bool {
