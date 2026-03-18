@@ -9,7 +9,7 @@ use crate::stmt::tooling_stmt::{ImportStmt, ImportRelativePathStmt, ImportGlobal
 impl<'a> Executor<'a> {
     pub fn import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(IMPORT)?;
-        if tb.current()? == DOUBLE_QUOTE {
+        if tb.current_token_is_equal_to(DOUBLE_QUOTE) {
             tb.skip_token(DOUBLE_QUOTE)?;
             let mut path_parts: Vec<String> = vec![];
             while tb.current()? != DOUBLE_QUOTE {
@@ -17,7 +17,7 @@ impl<'a> Executor<'a> {
             }
             tb.skip_token(DOUBLE_QUOTE)?;
             let path = path_parts.join("");
-            let as_mod_name = if tb.current().map(|t| t == AS).unwrap_or(false) {
+            let as_mod_name = if tb.current_token_is_equal_to(AS) {
                 tb.skip_token(AS)?;
                 Some(tb.advance()?)
             } else {
@@ -32,7 +32,7 @@ impl<'a> Executor<'a> {
             )))
         } else {
             let mod_name = tb.advance()?;
-            let as_mod_name = if tb.current().map(|t| t == AS).unwrap_or(false) {
+            let as_mod_name = if tb.current_token_is_equal_to(AS) {
                 tb.skip_token(AS)?;
                 Some(tb.advance()?)
             } else {

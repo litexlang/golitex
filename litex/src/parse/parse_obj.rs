@@ -25,8 +25,7 @@ impl<'a> Executor<'a> {
         if tb.exceed_end_of_head() {
             return Ok(left);
         }
-        match tb.current_token_empty_if_exceed_end_of_head() {
-            INFIX_FN_NAME_SIGN => {
+        if tb.current_token_is_equal_to(INFIX_FN_NAME_SIGN) {
                 tb.skip()?; // 先吃掉 \，再读中缀函数名
                 let fn_name = self.parse_atom(tb)?;
                 let right = self.parse_obj(tb)?;
@@ -46,8 +45,8 @@ impl<'a> Executor<'a> {
 
                 let body = vec![vec![Box::new(left), Box::new(right)]];
                 Ok(Obj::FnObj(FnObj::new(fn_name, body)))
-            },
-            _ => Ok(left),
+        } else {
+            Ok(left)
         }
     }
 
@@ -58,22 +57,20 @@ impl<'a> Executor<'a> {
             if tb.exceed_end_of_head() {
                 return Ok(left);
             }
-            match tb.current_token_empty_if_exceed_end_of_head() {
-                ADD => {
+            if tb.current_token_is_equal_to(ADD) {
                     tb.skip()?;
                     let right = self.obj_hierarchy2(tb)?;
 
                     let can_be_calculated = left.can_be_calculated() && right.can_be_calculated();
                     
                     left = Obj::Add(Add::new(left, right, can_be_calculated));
-                },
-                SUB => {
+            } else if tb.current_token_is_equal_to(SUB) {
                     tb.skip()?;
                     let right = self.obj_hierarchy2(tb)?;
                     let can_be_calculated = left.can_be_calculated() && right.can_be_calculated();
                     left = Obj::Sub(Sub::new(left, right, can_be_calculated));
-                },
-                _ => return Ok(left),
+            } else {
+                return Ok(left);
             }
         }
     }
@@ -85,19 +82,16 @@ impl<'a> Executor<'a> {
             if tb.exceed_end_of_head() {
                 return Ok(left);
             }
-            match tb.current_token_empty_if_exceed_end_of_head() {
-                MUL => {
+            if tb.current_token_is_equal_to(MUL) {
                     tb.skip()?;
                     let right = self.obj_hierarchy3(tb)?;
                     let can_be_calculated = left.can_be_calculated() && right.can_be_calculated();
                     left = Obj::Mul(Mul::new(left, right, can_be_calculated));
-                },
-                DIV => {
+            } else if tb.current_token_is_equal_to(DIV) {
                     tb.skip()?;
                     let right = self.obj_hierarchy3(tb)?;
                     left = Obj::Div(Div::new(left, right));
-                },
-                MOD => {
+            } else if tb.current_token_is_equal_to(MOD) {
                     tb.skip()?;
                     let right = self.obj_hierarchy3(tb)?;
 
@@ -115,8 +109,8 @@ impl<'a> Executor<'a> {
                     }
                     
                     left = Obj::Mod(Mod::new(left, right, can_be_calculated));
-                },
-                _ => return Ok(left),
+            } else {
+                return Ok(left);
             }
         }
     }
@@ -127,8 +121,7 @@ impl<'a> Executor<'a> {
         if tb.exceed_end_of_head() {
             return Ok(left);
         }
-        match tb.current_token_empty_if_exceed_end_of_head() {
-            POW => {
+        if tb.current_token_is_equal_to(POW) {
                 tb.skip()?;
                 let right = self.obj_hierarchy3(tb)?; // 右结合：右侧可继续接 ^
                 if !left.is_add_sub_mul_div_mod_pow() || !right.is_add_sub_mul_div_mod_pow() {
@@ -136,8 +129,8 @@ impl<'a> Executor<'a> {
                 } else {
                     Ok(Obj::Pow(Pow::new(left, right, true)))
                 }
-            },
-            _ => Ok(left),
+        } else {
+            Ok(left)
         }
     }
 
@@ -147,33 +140,29 @@ impl<'a> Executor<'a> {
         if tb.exceed_end_of_head() {
             return Ok(left);
         }
-        match tb.current_token_empty_if_exceed_end_of_head() {
-            LEFT_BRACKET => {
+        if tb.current_token_is_equal_to(LEFT_BRACKET) {
                 tb.skip_token(LEFT_BRACKET)?;
                 let obj = self.parse_obj(tb)?;
                 tb.skip_token(RIGHT_BRACKET)?;
                 Ok(Obj::ObjAtIndex(ObjAtIndex::new(left, obj)))
-            }
-            _ => Ok(left),
+        } else {
+            Ok(left)
         }
     }
 
     /// 主元：{ }、@、fn、数字、括号、关键字、atom
     fn obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        match tb.current_token_empty_if_exceed_end_of_head() {
-            LEFT_CURLY_BRACE => {
-                self.set_builder_or_set_list(tb)
-            },
-            INST_STRUCT_OBJ_SIGN => {
-                self.instantiated_struct_obj(tb)
-            },
-            FN => {
-                match self.fn_set_obj(tb)? {
-                    FnSetObj::FnSetWithDom(fs) => Ok(Obj::FnSetWithDom(fs)),
-                    FnSetObj::FnSetWithoutDom(fs) => Ok(Obj::FnSetWithoutDom(fs)),
-                }
-            },
-            _ => self.number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
+        if tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
+            self.set_builder_or_set_list(tb)
+        } else if tb.current_token_is_equal_to(INST_STRUCT_OBJ_SIGN) {
+            self.instantiated_struct_obj(tb)
+        } else if tb.current_token_is_equal_to(FN) {
+            match self.fn_set_obj(tb)? {
+                FnSetObj::FnSetWithDom(fs) => Ok(Obj::FnSetWithDom(fs)),
+                FnSetObj::FnSetWithoutDom(fs) => Ok(Obj::FnSetWithoutDom(fs)),
+            }
+        } else {
+            self.number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
         }
     }
 
@@ -224,14 +213,14 @@ impl<'a> Executor<'a> {
             let param = tb.advance()?;
             let mut current_params = vec![param];
 
-            while tb.current_token_empty_if_exceed_end_of_head() == COMMA {
+            while tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
                 current_params.push(tb.advance()?);
             }
 
             let set = self.parse_obj(tb)?;
             params_def_with_set.push(ParamDefWithParamSet(current_params, set));
-            if tb.current_token_empty_if_exceed_end_of_head() == COMMA {
+            if tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
                 continue;
             } else if tb.current()? == COLON {
@@ -244,7 +233,7 @@ impl<'a> Executor<'a> {
         self.validate_names_and_put_into_parsing_names_block(&fn_set_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
         tb.skip_token(COLON)?;
         let mut dom_facts = vec![self.parse_or_and_chain_atomic_fact(tb)?];
-        while tb.current_token_empty_if_exceed_end_of_head() == COMMA {
+        while tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;
             dom_facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
         }
@@ -256,7 +245,7 @@ impl<'a> Executor<'a> {
     pub fn fn_set_without_dom_without_fn_prefix(&mut self, tb: &mut TokenBlock) -> Result<FnSetWithoutDom, ParsingError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut param_sets = vec![self.parse_obj(tb)?];
-        while tb.current_token_empty_if_exceed_end_of_head() == COMMA {
+        while tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;
             param_sets.push(self.parse_obj(tb)?);
         }
@@ -266,7 +255,7 @@ impl<'a> Executor<'a> {
     }
 
     pub fn number_or_primary_obj_or_fn_obj_with_minus_prefix(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        if tb.current_token_empty_if_exceed_end_of_head() == SUB {
+        if tb.current_token_is_equal_to(SUB) {
             tb.skip()?;
             let obj = self.number_or_primary_obj_or_fn_obj(tb)?;
             Ok(Obj::Mul(Mul::new(Obj::Number(Number::new("-1".to_string())), obj, false)))
@@ -492,7 +481,7 @@ impl<'a> Executor<'a> {
     pub fn braced_objs(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut objs = vec![self.parse_obj(tb)?];
-        while tb.current()? == COMMA {
+        while tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;
             objs.push(self.parse_obj(tb)?);
         }
@@ -503,7 +492,7 @@ impl<'a> Executor<'a> {
     /// 解析逗号分隔的 obj 列表，直到遇到非 COMMA 的 token（如 COLON）。
     pub fn obj_list(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
         let mut objs = vec![self.parse_obj(tb)?];
-        while tb.current()? == COMMA {
+        while tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;
             objs.push(self.parse_obj(tb)?);
         }
@@ -515,7 +504,7 @@ impl<'a> Executor<'a> {
         let left = self.parse_obj(tb)?;
         match left {
             Obj::Identifier(a) => {
-                if tb.current()? == COMMA || tb.current()? == RIGHT_CURLY_BRACE {
+                if tb.current_token_is_equal_to(COMMA) || tb.current()? == RIGHT_CURLY_BRACE {
                     self.set_list(tb, Obj::Identifier(a))
                 } else {
                     self.parse_set_builder(tb, a)
@@ -549,7 +538,7 @@ impl<'a> Executor<'a> {
         } else {
             let mut objs = vec![Obj::Identifier(a), second];
             while tb.current()? != RIGHT_CURLY_BRACE {
-                if tb.current()? == COMMA {
+                if tb.current_token_is_equal_to(COMMA) {
                     tb.skip_token(COMMA)?;
                 }
                 objs.push(self.parse_obj(tb)?);

@@ -146,11 +146,15 @@ impl TokenBlock {
         })
     }
 
-    pub fn current_token_empty_if_exceed_end_of_head(&self) -> &str {
+    fn current_token_empty_if_exceed_end_of_head(&self) -> &str {
         if self.exceed_end_of_head() {
             return "";
         }
         self.header.get(self.parse_index).map(|s| s.as_str()).unwrap_or("")
+    }
+
+    pub fn current_token_is_equal_to(&self, token: &str) -> bool {
+        self.current_token_empty_if_exceed_end_of_head() == token
     }
 
     pub fn token_at_end_of_head(&self) -> &str {

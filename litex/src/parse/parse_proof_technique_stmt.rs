@@ -86,13 +86,13 @@ impl<'a> Executor<'a> {
         tb.skip_token(ENUM)?;
         let mut params: Vec<String> = vec![];
         let mut param_sets: Vec<crate::obj::Obj> = vec![];
-        if tb.current()? == COLON {
+        if tb.current_token_is_equal_to(COLON) {
             return Err(ParsingError::new("enum: expects at least one (param, set) pair".to_string(), tb.line_file_index, None));
         }
         while tb.current()? != COLON {
             params.push(tb.advance()?);
             param_sets.push(self.parse_obj(tb)?);
-            if tb.current()? == COMMA {
+            if tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
             }
         }
@@ -157,7 +157,7 @@ impl<'a> Executor<'a> {
                 }
             };
             param_sets.push(cr);
-            if tb.current()? == COMMA {
+            if tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
             }
         }

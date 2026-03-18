@@ -9,7 +9,7 @@ use super::TokenBlock;
 impl<'a> Executor<'a> {
     pub fn claim_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(CLAIM)?;
-        if tb.current()? == COLON {
+        if tb.current_token_is_equal_to(COLON) {
             Ok(Stmt::ClaimStmt(self.multiline_fact_claim(tb)?))
         } else {
             Ok(Stmt::ClaimStmt(self.single_line_fact_claim(tb)?))

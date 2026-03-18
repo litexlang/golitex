@@ -153,7 +153,7 @@ impl<'a> Executor<'a> {
         let mut param_def: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != ST {
             param_def.push(self.parse_param_def_with_param_type(tb)?);
-            if tb.current()? == COMMA {
+            if tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
             }
         }
