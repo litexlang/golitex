@@ -1,1 +1,6 @@
-do_nothing
+prop p(a, b)
+prop q(a, b)
+
+know $p(1, 2) or $q(1, 2)
+
+$p(1, 2) or $q(1, 2)

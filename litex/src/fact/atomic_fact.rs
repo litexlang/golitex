@@ -1088,3 +1088,122 @@ impl AtomicFact {
         }
     }
 }
+
+impl AtomicFact {
+    pub fn is_the_same_fact_type(&self, other: &AtomicFact) -> bool {
+        match self {
+            AtomicFact::EqualFact(_) => match other {
+                AtomicFact::EqualFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::LessFact(_) => match other {
+                AtomicFact::LessFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::GreaterFact(_) => match other {
+                AtomicFact::GreaterFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::LessEqualFact(_) => match other {
+                AtomicFact::LessEqualFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::GreaterEqualFact(_) => match other {
+                AtomicFact::GreaterEqualFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::IsSetFact(_) => match other {
+                AtomicFact::IsSetFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::IsNonemptySetFact(_) => match other {
+                AtomicFact::IsNonemptySetFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::IsFiniteSetFact(_) => match other {
+                AtomicFact::IsFiniteSetFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::InFact(_) => match other {
+                AtomicFact::InFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::IsCartFact(_) => match other {
+                AtomicFact::IsCartFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::IsTupleFact(_) => match other {
+                AtomicFact::IsTupleFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::SubsetFact(_) => match other {
+                AtomicFact::SubsetFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::SupersetFact(_) => match other {
+                AtomicFact::SupersetFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::NotEqualFact(_) => match other {
+                AtomicFact::NotEqualFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::NotLessFact(_) => match other {
+                AtomicFact::NotLessFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::NotGreaterFact(_) => match other {
+                AtomicFact::NotGreaterFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::NotLessEqualFact(_) => match other {
+                AtomicFact::NotLessEqualFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::NotGreaterEqualFact(_) => match other {
+                AtomicFact::NotGreaterEqualFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::NotIsSetFact(_) => match other {
+                AtomicFact::NotIsSetFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::NotIsNonemptySetFact(_) => match other {
+                AtomicFact::NotIsNonemptySetFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::NotIsFiniteSetFact(_) => match other {
+                AtomicFact::NotIsFiniteSetFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::NotInFact(_) => match other {
+                AtomicFact::NotInFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::NotIsCartFact(_) => match other {
+                AtomicFact::NotIsCartFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::NotIsTupleFact(_) => match other {
+                AtomicFact::NotIsTupleFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::NotSubsetFact(_) => match other {
+                AtomicFact::NotSubsetFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::NotSupersetFact(_) => match other {
+                AtomicFact::NotSupersetFact(_) => true,
+                _ => false,
+            },
+            AtomicFact::NormalAtomicFact(x) => match other {
+                AtomicFact::NormalAtomicFact(y) => x.predicate.to_string() == y.predicate.to_string(),
+                _ => false,
+            },
+            AtomicFact::NotNormalAtomicFact(x) => match other {
+                AtomicFact::NotNormalAtomicFact(y) => x.predicate.to_string() == y.predicate.to_string(),
+                _ => false,
+            },
+        }
+    }
+}
