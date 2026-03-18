@@ -9,6 +9,7 @@ mod verify_obj_well_defined;
 mod verify_non_equational_atomic_fact;
 mod verify_fact;
 mod verify_number_in_standard_set;
+mod verify_number_comparison_builtin_rule;
 mod verify_equality;
 mod verify_and_chain_fact;
 mod verify_forall_fact_forall_fact_with_iff;

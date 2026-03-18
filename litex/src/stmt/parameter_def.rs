@@ -139,15 +139,6 @@ impl ParamType {
 }
 
 impl ParamDefWithParamType {
-    pub fn _facts(&self) -> Vec<Fact> {
-        let mut facts = Vec::with_capacity(self.0.len());
-        for name in self.0.iter() {
-            let fact = ParamType::param_satisfy_param_type_fact(name, &self.1);
-            facts.push(fact);
-        }
-        facts
-    }
-
     pub fn number_of_params(defs: &Vec<ParamDefWithParamType>) -> usize {
         let mut total_param_count: usize = 0;
         for p in defs.iter() {

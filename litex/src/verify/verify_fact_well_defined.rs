@@ -137,9 +137,11 @@ impl<'a> Executor<'a> {
 
         for fact in forall_fact.dom_facts.iter() {
             self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
+            self.store_fact_without_well_defined_verified_and_infer(&fact.from_ref_to_cloned_fact()).map_err(|e| WellDefinedError::new(format!("failed to store fact in environment: {}", e), None, fact.line_file_index()))?;
         }
         for fact in forall_fact.then_facts.iter() {
             self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
+            self.store_fact_without_well_defined_verified_and_infer(&fact.from_ref_to_cloned_fact()).map_err(|e| WellDefinedError::new(format!("failed to store fact in environment: {}", e), None, fact.line_file_index()))?;
         }
         Ok(())
     }

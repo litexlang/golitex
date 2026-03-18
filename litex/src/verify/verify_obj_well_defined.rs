@@ -116,7 +116,7 @@ impl<'a> Executor<'a> {
             DEFAULT_LINE_FILE.clone(),
         ))?.clone();
 
-        for args in fn_obj.body.iter() {
+        for (i, args) in fn_obj.body.iter().enumerate() {
             match &the_set_where_current_fn_obj_is_in {
                 FnSetObj::FnSetWithDom(fn_set_with_dom) => {
                     self.verify_fn_obj_well_defined_against_fn_set_with_dom(args, &fn_set_with_dom, verify_state).map_err(|well_defined_error| WellDefinedError::new(
@@ -128,6 +128,10 @@ impl<'a> Executor<'a> {
                 FnSetObj::FnSetWithoutDom(fn_set_without_dom) => {
                     self.verify_fn_obj_args_well_defined_against_fn_set_without_dom(args, &fn_set_without_dom, verify_state)?;
                 }
+            }
+
+            if i == fn_obj.body.len() - 1 {
+                break;
             }
 
             let set_where_the_next_fn_obj_is_in = the_set_where_current_fn_obj_is_in.ret_set();
