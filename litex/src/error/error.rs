@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::common::helper::DEFAULT_LINE_FILE;
+use crate::common::defaults::DEFAULT_LINE_FILE;
 
 fn body_with_previous(message: &str, previous_error: &Option<Box<StmtError>>) -> String {
     match previous_error {

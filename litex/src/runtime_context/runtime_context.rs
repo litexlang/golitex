@@ -12,7 +12,7 @@ use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoField
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::stmt::definition_stmt::DefPropWithoutMeaningStmt;
 use crate::obj::FnSetObj;
-use crate::common::helper::DEFAULT_LINE_FILE;
+use crate::common::defaults::DEFAULT_LINE_FILE;
 
 pub struct RuntimeContext<'a> {
     pub module_manager: &'a mut ModuleManager<'a>,
@@ -217,16 +217,16 @@ impl<'a> RuntimeContext<'a> {
         self.builtin_environment.cache_well_defined_obj.contains_key(key)
     }
 
-    pub fn cache_known_facts_contains(&self, key: &str) -> (bool, Option<(usize, usize)>) {
+    pub fn cache_known_facts_contains(&self, key: &str) -> (bool, (usize, usize)) {
         for env in self.iter_environments_from_top() {
-            if env.cache_known_fact.contains_key(key) {
-                let line_file = env.cache_known_fact.get(key).and_then(|v| *v);
-                return (true, line_file);
+            if let Some(line_file) = env.cache_known_fact.get(key) {
+                return (true, *line_file);
             }
         }
-        let is_ok = self.builtin_environment.cache_known_fact.contains_key(key);
-        let line_file = self.builtin_environment.cache_known_fact.get(key).and_then(|v| *v);
-        (is_ok, line_file)
+        if let Some(line_file) = self.builtin_environment.cache_known_fact.get(key) {
+            return (true, *line_file);
+        }
+        (false, DEFAULT_LINE_FILE)
     }
 }
 
