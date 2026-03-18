@@ -180,9 +180,10 @@ impl<'a> Executor<'a> {
                     let instantiated_fact_in_set_builder: OrAndChainAtomicFact =
                         fact_in_set_builder.instantiate(&param_to_arg_map);
                     let instantiated_fact_as_fact = instantiated_fact_in_set_builder.to_fact();
+                    let fact_to_store = instantiated_fact_as_fact.with_new_line_file(in_fact.line_file_index);
 
                     self
-                        .store_fact_without_well_defined_verified_and_infer(&instantiated_fact_as_fact)
+                        .store_fact_without_well_defined_verified_and_infer(&fact_to_store)
                         .map_err(|previous_error| {
                             InferError::new(
                                 format!("failed to store inferred set builder fact while inferring `{}`", in_fact),
@@ -190,7 +191,7 @@ impl<'a> Executor<'a> {
                                 Some(previous_error.into()),
                             )
                         })?;
-                    infer_result.push_fact(&instantiated_fact_as_fact);
+                    infer_result.push_fact(&fact_to_store);
                 }
 
                 Ok(infer_result)
@@ -221,7 +222,9 @@ impl<'a> Executor<'a> {
             })?;
 
         for param_type_fact in param_type_facts.iter() {
-            self.store_fact_without_well_defined_verified_and_infer(param_type_fact)
+            let fact_to_store =
+                param_type_fact.clone().with_new_line_file(normal_atomic_fact.line_file_index);
+            self.store_fact_without_well_defined_verified_and_infer(&fact_to_store)
                 .map_err(|previous_error| {
                     InferError::new(
                         format!("failed to store parameter type fact while inferring `{}`", normal_atomic_fact),
@@ -229,7 +232,7 @@ impl<'a> Executor<'a> {
                         Some(previous_error.into()),
                     )
                 })?;
-            infer_result.push_fact(param_type_fact);
+            infer_result.push_fact(&fact_to_store);
         }
 
         let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
@@ -239,8 +242,10 @@ impl<'a> Executor<'a> {
 
         for iff_fact in predicate_definition.iff_facts.iter() {
             let instantiated_iff_fact = iff_fact.instantiate(&param_to_arg_map);
+            let fact_to_store =
+                instantiated_iff_fact.with_new_line_file(normal_atomic_fact.line_file_index);
 
-            self.store_fact_without_well_defined_verified_and_infer(&instantiated_iff_fact)
+            self.store_fact_without_well_defined_verified_and_infer(&fact_to_store)
                 .map_err(|previous_error| {
                     InferError::new(
                         format!("failed to store instantiated iff fact while inferring `{}`", normal_atomic_fact),
@@ -248,7 +253,7 @@ impl<'a> Executor<'a> {
                         Some(previous_error.into()),
                     )
                 })?;
-            infer_result.push_fact(&instantiated_iff_fact);
+            infer_result.push_fact(&fact_to_store);
         }
 
         Ok(infer_result)

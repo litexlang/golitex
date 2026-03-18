@@ -224,16 +224,20 @@ impl<'a> Executor<'a> {
             let param = tb.advance()?;
             let set = self.parse_obj(tb)?;
             params_def_with_set.push(ParamDefWithParamSet(vec![param], set));
-            if tb.current()? == COLON {
+            if tb.current_token_empty_if_exceed_end_of_head() == COMMA {
+                tb.skip_token(COMMA)?;
+                continue;
+            } else if tb.current()? == COLON {
                 break;
+            } else {
+                return Err(ParsingError::new("Expected colon".to_string(), tb.line_file_index, None));
             }
-            tb.skip_token(COMMA)?;
         }
         let fn_set_param_names = ParamDefWithParamSet::collect_param_names(&params_def_with_set);
         self.validate_names_and_put_into_parsing_names_block(&fn_set_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
         tb.skip_token(COLON)?;
         let mut dom_facts = vec![self.parse_or_and_chain_atomic_fact(tb)?];
-        while tb.current()? == COMMA {
+        while tb.current_token_empty_if_exceed_end_of_head() == COMMA {
             tb.skip_token(COMMA)?;
             dom_facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
         }
@@ -245,7 +249,7 @@ impl<'a> Executor<'a> {
     pub fn fn_set_without_dom_without_fn_prefix(&mut self, tb: &mut TokenBlock) -> Result<FnSetWithoutDom, ParsingError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut param_sets = vec![self.parse_obj(tb)?];
-        while tb.current()? == COMMA {
+        while tb.current_token_empty_if_exceed_end_of_head() == COMMA {
             tb.skip_token(COMMA)?;
             param_sets.push(self.parse_obj(tb)?);
         }

@@ -156,6 +156,7 @@ impl TokenBlock {
     pub fn token_at_end_of_head(&self) -> &str {
         self.header.get(self.header.len() - 1).map(|s| s.as_str()).unwrap_or("")
     }
+
 }
 
 
