@@ -98,7 +98,7 @@ impl<'a> Executor<'a> {
             let ((i, j), arg_map_opt, known_forall_opt) = result;
             match (arg_map_opt, known_forall_opt) {
                 (Some(arg_map), Some((atomic_fact_in_known_forall_fact, forall_rc))) => {
-                    if let Some(fact_verified) = self.verify_matched_args_satisfy_forall_requirements(
+                    if let Some(fact_verified) = self.verify_one_param_matches_equal_args_and_args_satisfy_forall_requirements(
                         &atomic_fact_in_known_forall_fact,
                         &forall_rc,
                         arg_map,
@@ -129,7 +129,7 @@ impl<'a> Executor<'a> {
             )?;
             match result {
                 (j, Some(arg_map), Some((atomic_fact_in_known_forall_fact, forall_rc))) => {
-                    if let Some(fact_verified) = self.verify_matched_args_satisfy_forall_requirements(
+                    if let Some(fact_verified) = self.verify_one_param_matches_equal_args_and_args_satisfy_forall_requirements(
                         &atomic_fact_in_known_forall_fact,
                         &forall_rc,
                         arg_map,
@@ -145,7 +145,7 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn verify_matched_args_satisfy_forall_requirements(
+    fn verify_one_param_matches_equal_args_and_args_satisfy_forall_requirements(
         &mut self,
         atomic_fact_in_known_forall_fact: &AtomicFact,
         known_forall: &Rc<KnownForallFactParamsAndDom>,
@@ -179,6 +179,17 @@ impl<'a> Executor<'a> {
                 return Ok(None);
             }
             args_for_params.push(objs[0].clone());
+        }
+
+        // the same atom in atomic fact in known forall fact which is not a parameter matches the same atom in given atomic fact
+        for (key, obj) in arg_map.iter() {
+            if param_names.contains(key) {
+                continue
+            } else {
+                if key != &obj[0].to_string() {
+                    return Ok(None);
+                }
+            }
         }
 
         let args_satisfy_param_types = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(&known_forall.params, &args_for_params)
