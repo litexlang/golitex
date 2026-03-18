@@ -8,9 +8,9 @@ use crate::stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
 impl<'a> Executor<'a> {
     pub fn witness_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(WITNESS)?;
-        if tb.current()? == EXIST {
+        if tb.current_token_is_equal_to(EXIST) {
             self.witness_exist_fact(tb)
-        } else if tb.current()? == NONEMPTY_SET {
+        } else if tb.current_token_is_equal_to(NONEMPTY_SET) {
             self.witness_nonempty_set(tb) 
         } else {
             return Err(ParsingError::new("witness expects a exist or nonempty set".to_string(), tb.line_file_index, None));

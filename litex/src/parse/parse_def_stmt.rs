@@ -55,7 +55,7 @@ impl<'a> Executor<'a> {
         let mut params = vec![];
         while tb.current()? != RIGHT_BRACE {
             params.push(tb.advance()?);
-            if tb.current()? == COMMA {
+            if tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
             }
         }
@@ -147,7 +147,7 @@ impl<'a> Executor<'a> {
         self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
         
         let fs = self.fn_set_with_dom_without_fn_prefix(tb)?;
-        if tb.current()? == COLON {
+        if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let mut cases: Vec<AndChainAtomicFact> = vec![];
             let mut equal_tos: Vec<crate::obj::Obj> = vec![];
@@ -173,7 +173,7 @@ impl<'a> Executor<'a> {
         tb.skip_token(HAVE)?;
 
         let mut equal_tos = vec![];
-        while tb.current()? == COMMA {
+        while tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;
             equal_tos.push(self.parse_obj(tb)?);
         }
@@ -198,18 +198,18 @@ impl<'a> Executor<'a> {
         let mut params_def_with_type: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
             params_def_with_type.push(self.parse_param_def_with_param_type(tb)?);
-            if tb.current()? == COMMA {
+            if tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
             }
         }
         let struct_param_names = ParamDefWithParamType::collect_param_names(&params_def_with_type);
         self.validate_names_and_put_into_parsing_names_block(&struct_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
-        let dom_facts = if tb.current()? == COLON {
+        let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let mut facts = vec![];
             while tb.current()? != RIGHT_BRACE {
                 facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
-                if tb.current()? == COMMA {
+                if tb.current_token_is_equal_to(COMMA) {
                     tb.skip_token(COMMA)?;
                 }
             }
@@ -218,7 +218,7 @@ impl<'a> Executor<'a> {
             vec![]
         };
         tb.skip_token(RIGHT_BRACE)?;
-        if tb.current()? == EQUAL {
+        if tb.current_token_is_equal_to(EQUAL) {
             tb.skip_token(EQUAL)?;
             let equal_to = self.parse_obj(tb)?;
             Ok(Stmt::DefStructWithNoFieldStmt(DefStructWithNoFieldStmt::new(
@@ -287,7 +287,7 @@ impl<'a> Executor<'a> {
         let mut params: Vec<String> = vec![];
         while tb.current()? != RIGHT_BRACE {
             params.push(tb.advance()?);
-            if tb.current()? == COMMA {
+            if tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
             }
         }
