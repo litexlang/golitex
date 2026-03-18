@@ -15,7 +15,7 @@ impl<'a> Executor<'a> {
             Ok(ParamDefWithParamType(vec![param], self.param_type(tb)?))
         } else {
             let mut vec_of_params = vec![param];
-            while tb.current()? == COMMA {
+            while tb.current_token_is_equal_to(COMMA) {
                 tb.skip()?;
                 vec_of_params.push(tb.advance()?);
             }

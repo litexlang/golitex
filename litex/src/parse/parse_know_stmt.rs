@@ -9,11 +9,11 @@ use super::TokenBlock;
 impl<'a> Executor<'a> {
     pub fn know_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(KNOW)?;
-        if tb.current()? == COLON {
+        if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let facts = self.parse_facts_in_body(tb)?;
             Ok(Stmt::KnowStmt(KnowStmt::new(facts, tb.line_file_index)))
-        } else if tb.current()? == FORALL {
+        } else if tb.current_token_is_equal_to(FORALL) {
             let fact = self.parse_fact(tb)?;
             Ok(Stmt::KnowStmt(KnowStmt::new(vec![fact], tb.line_file_index)))
         } else {
