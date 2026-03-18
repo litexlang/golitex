@@ -367,7 +367,7 @@ impl ParamDefWithParamType {
     
     pub fn param_def_params_to_arg_map(
         param_defs: &Vec<ParamDefWithParamType>,
-        arg_map: &HashMap<String, Vec<Obj>>,
+        arg_map: &HashMap<String, Obj>,
     ) -> Option<HashMap<String, Obj>> {
         let param_names = Self::collect_param_names(param_defs);
         let mut result = HashMap::new();
@@ -377,12 +377,7 @@ impl ParamDefWithParamType {
                 Some(v) => v,
                 None => return None,
             };
-            let first_obj = objs.first();
-            let obj = match first_obj {
-                Some(o) => o.clone(),
-                None => return None,
-            };
-            result.insert(param_name.clone(), obj);
+            result.insert(param_name.clone(), objs.clone());
         }
         Some(result)
     }
