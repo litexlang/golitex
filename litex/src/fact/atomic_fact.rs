@@ -1054,4 +1054,37 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(a) => a.line_file_index,
         }
     }
+
+    pub fn with_new_line_file(self, line_file_index: Option<(usize, usize)>) -> Self {
+        match self {
+            AtomicFact::EqualFact(x) => AtomicFact::EqualFact(EqualFact::new(x.left, x.right, line_file_index)),
+            AtomicFact::LessFact(x) => AtomicFact::LessFact(LessFact::new(x.left, x.right, line_file_index)),
+            AtomicFact::GreaterFact(x) => AtomicFact::GreaterFact(GreaterFact::new(x.left, x.right, line_file_index)),
+            AtomicFact::LessEqualFact(x) => AtomicFact::LessEqualFact(LessEqualFact::new(x.left, x.right, line_file_index)),
+            AtomicFact::GreaterEqualFact(x) => AtomicFact::GreaterEqualFact(GreaterEqualFact::new(x.left, x.right, line_file_index)),
+            AtomicFact::IsSetFact(x) => AtomicFact::IsSetFact(IsSetFact::new(x.set, line_file_index)),
+            AtomicFact::IsNonemptySetFact(x) => AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(x.set, line_file_index)),
+            AtomicFact::IsFiniteSetFact(x) => AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(x.set, line_file_index)),
+            AtomicFact::InFact(x) => AtomicFact::InFact(InFact::new(x.element, x.set, line_file_index)),
+            AtomicFact::IsCartFact(x) => AtomicFact::IsCartFact(IsCartFact::new(x.set, line_file_index)),
+            AtomicFact::IsTupleFact(x) => AtomicFact::IsTupleFact(IsTupleFact::new(x.set, line_file_index)),
+            AtomicFact::SubsetFact(x) => AtomicFact::SubsetFact(SubsetFact::new(x.left, x.right, line_file_index)),
+            AtomicFact::SupersetFact(x) => AtomicFact::SupersetFact(SupersetFact::new(x.left, x.right, line_file_index)),
+            AtomicFact::NormalAtomicFact(x) => AtomicFact::NormalAtomicFact(NormalAtomicFact::new(x.predicate, x.body, line_file_index)),
+            AtomicFact::NotNormalAtomicFact(x) => AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(x.predicate, x.body, line_file_index)),
+            AtomicFact::NotEqualFact(x) => AtomicFact::NotEqualFact(NotEqualFact::new(x.left, x.right, line_file_index)),
+            AtomicFact::NotLessFact(x) => AtomicFact::NotLessFact(NotLessFact::new(x.left, x.right, line_file_index)),
+            AtomicFact::NotGreaterFact(x) => AtomicFact::NotGreaterFact(NotGreaterFact::new(x.left, x.right, line_file_index)),
+            AtomicFact::NotLessEqualFact(x) => AtomicFact::NotLessEqualFact(NotLessEqualFact::new(x.left, x.right, line_file_index)),
+            AtomicFact::NotGreaterEqualFact(x) => AtomicFact::NotGreaterEqualFact(NotGreaterEqualFact::new(x.left, x.right, line_file_index)),
+            AtomicFact::NotIsSetFact(x) => AtomicFact::NotIsSetFact(NotIsSetFact::new(x.set, line_file_index)),
+            AtomicFact::NotIsNonemptySetFact(x) => AtomicFact::NotIsNonemptySetFact(NotIsNonemptySetFact::new(x.set, line_file_index)),
+            AtomicFact::NotIsFiniteSetFact(x) => AtomicFact::NotIsFiniteSetFact(NotIsFiniteSetFact::new(x.set, line_file_index)),
+            AtomicFact::NotInFact(x) => AtomicFact::NotInFact(NotInFact::new(x.element, x.set, line_file_index)),
+            AtomicFact::NotIsCartFact(x) => AtomicFact::NotIsCartFact(NotIsCartFact::new(x.set, line_file_index)),
+            AtomicFact::NotIsTupleFact(x) => AtomicFact::NotIsTupleFact(NotIsTupleFact::new(x.set, line_file_index)),
+            AtomicFact::NotSubsetFact(x) => AtomicFact::NotSubsetFact(NotSubsetFact::new(x.left, x.right, line_file_index)),
+            AtomicFact::NotSupersetFact(x) => AtomicFact::NotSupersetFact(NotSupersetFact::new(x.left, x.right, line_file_index)),
+        }
+    }
 }
