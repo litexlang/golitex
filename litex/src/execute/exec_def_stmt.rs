@@ -236,6 +236,8 @@ impl<'a> Executor<'a> {
             )
         })?;
 
+        self.store_identifier_obj(&have_fn_equal_stmt.name)?;
+
         let function_identifier_obj = Obj::Identifier(Identifier::new(have_fn_equal_stmt.name.clone()));
         let function_set_obj = Obj::FnSetWithDom(have_fn_equal_stmt.fn_set_with_params.clone());
         let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
@@ -327,6 +329,8 @@ impl<'a> Executor<'a> {
                 have_fn_equal_case_by_case_stmt.line_file_index,
             )
         })?;
+
+        self.store_identifier_obj(&have_fn_equal_case_by_case_stmt.name)?;
 
         let function_identifier_obj = Obj::Identifier(Identifier::new(have_fn_equal_case_by_case_stmt.name.clone()));
         let function_set_obj = Obj::FnSetWithDom(have_fn_equal_case_by_case_stmt.fn_set_with_params.clone());

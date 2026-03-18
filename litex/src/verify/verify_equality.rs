@@ -25,7 +25,7 @@ impl<'a> Executor<'a> {
 
         if verify_state.is_round_0() {
             let verify_state_add_one_round = verify_state.new_state_with_round_increased();
-            result = self.verify_atomic_fact_with_known_forall_fact(&AtomicFact::EqualFact(equal_fact.clone()), &verify_state_add_one_round)?;
+            result = self.verify_atomic_fact_with_known_forall_facts(&AtomicFact::EqualFact(equal_fact.clone()), &verify_state_add_one_round)?;
             if result.is_true() {
                 return Ok(result);
             }
