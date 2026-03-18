@@ -130,10 +130,6 @@ impl DoNothingStmt {
     pub fn new(line_file_index: (usize, usize)) -> Self {
         DoNothingStmt { line_file_index }
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        "DoNothingStmt".to_string()
-    }
 }
 
 impl fmt::Display for DoNothingStmt {
