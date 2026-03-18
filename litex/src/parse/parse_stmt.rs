@@ -19,7 +19,7 @@ impl<'a> Executor<'a> {
                 }
             },
             KNOW => self.know_stmt(tb),
-            CLAIM => self.claim_stmt(tb),
+            CLAIM => self.parse_claim_stmt(tb),
             PROVE => self.prove_stmt(tb),
             IMPORT => self.import_stmt(tb),
             CLEAR => self.clear_stmt(tb),
