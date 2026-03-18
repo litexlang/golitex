@@ -23,7 +23,7 @@ impl<'a> Executor<'a> {
             let param_infer_result = self.define_params_with_type(std::slice::from_ref(param_def),false).map_err(|e| {
                 VerifyError::new(
                     format!("failed to define params in forall: {}", e.body_string()),Some(StmtError::ExecError(e)),
-                    forall_fact.line_file_index,
+                    forall_fact.line_file,
                 )
             })?;
             infer_result.append(param_infer_result);
@@ -34,7 +34,7 @@ impl<'a> Executor<'a> {
             let dom_infer_result = self.store_fact_without_well_defined_verified_and_infer(&fact).map_err(|e| {
                 VerifyError::new(
                     format!("failed to assume dom fact in forall: {}", e.body_string()),Some(StmtError::StoreFactError(e)),
-                    forall_fact.line_file_index,
+                    forall_fact.line_file,
                 )
             })?;
             infer_result.append(dom_infer_result);
@@ -52,7 +52,7 @@ impl<'a> Executor<'a> {
             forall_fact.to_string(),
             "forall: each then_fact verified under dom".to_string(),
             infer_result,
-            forall_fact.line_file_index,
+            forall_fact.line_file,
             crate::common::defaults::DEFAULT_LINE_FILE.clone(),
         )))
     }
@@ -64,7 +64,7 @@ impl<'a> Executor<'a> {
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         let f = &forall_iff.forall_fact;
-        let line_file_index = forall_iff.line_file_index;
+        let line_file = forall_iff.line_file;
 
         let mut dom_then = f.dom_facts.clone();
         dom_then.extend(f.then_facts.clone());
@@ -72,7 +72,7 @@ impl<'a> Executor<'a> {
             f.params_def_with_type.clone(),
             dom_then,
             forall_iff.iff_facts.clone(),
-            line_file_index,
+            line_file,
         );
         let result1 = self.verify_forall_fact(&forall_then_implies_iff, verify_state)?;
         if !result1.is_true() {
@@ -85,7 +85,7 @@ impl<'a> Executor<'a> {
             f.params_def_with_type.clone(),
             dom_iff,
             f.then_facts.clone(),
-            line_file_index,
+            line_file,
         );
         let result2 = self.verify_forall_fact(&forall_iff_implies_then, verify_state)?;
         if !result2.is_true() {
@@ -96,7 +96,7 @@ impl<'a> Executor<'a> {
             forall_iff.to_string(),
             "forall iff: then=>iff and iff=>then verified".to_string(),
             InferResult::new(),
-            line_file_index,
+            line_file,
             crate::common::defaults::DEFAULT_LINE_FILE.clone(),
         )))
     }

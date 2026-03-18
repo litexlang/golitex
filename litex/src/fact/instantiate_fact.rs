@@ -10,6 +10,8 @@ use crate::fact::ForallFactWithIff;
 use crate::fact::OrAndChainAtomicFact;
 use crate::fact::OrFact;
 use crate::fact::AndChainAtomicFact;
+use crate::fact::RestrictFact;
+use crate::fact::NotRestrictFact;
 use crate::fact::matchable_fact_with_atomic_fact_inside::AndFact;
 use crate::fact::matchable_fact_with_atomic_fact_inside::ChainFact;
 use crate::fact::{
@@ -203,6 +205,12 @@ impl AtomicFact {
             AtomicFact::NotSupersetFact(fact) => {
                 AtomicFact::NotSupersetFact(fact.instantiate(param_to_arg_map))
             }
+            AtomicFact::RestrictFact(fact) => {
+                AtomicFact::RestrictFact(fact.instantiate(param_to_arg_map))
+            }
+            AtomicFact::NotRestrictFact(fact) => {
+                AtomicFact::NotRestrictFact(fact.instantiate(param_to_arg_map))
+            }
         }
     }
 }
@@ -216,7 +224,7 @@ impl NormalAtomicFact {
         NormalAtomicFact {
             predicate: self.predicate.clone(),
             body,
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -226,7 +234,7 @@ impl EqualFact {
         EqualFact {
             left: self.left.instantiate(param_to_arg_map),
             right: self.right.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -236,7 +244,7 @@ impl LessFact {
         LessFact {
             left: self.left.instantiate(param_to_arg_map),
             right: self.right.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -246,7 +254,7 @@ impl GreaterFact {
         GreaterFact {
             left: self.left.instantiate(param_to_arg_map),
             right: self.right.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -256,7 +264,7 @@ impl LessEqualFact {
         LessEqualFact {
             left: self.left.instantiate(param_to_arg_map),
             right: self.right.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -266,7 +274,7 @@ impl GreaterEqualFact {
         GreaterEqualFact {
             left: self.left.instantiate(param_to_arg_map),
             right: self.right.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -275,7 +283,7 @@ impl IsSetFact {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> IsSetFact {
         IsSetFact {
             set: self.set.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -284,7 +292,7 @@ impl IsNonemptySetFact {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> IsNonemptySetFact {
         IsNonemptySetFact {
             set: self.set.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -293,7 +301,7 @@ impl IsFiniteSetFact {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> IsFiniteSetFact {
         IsFiniteSetFact {
             set: self.set.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -303,7 +311,7 @@ impl InFact {
         InFact {
             element: self.element.instantiate(param_to_arg_map),
             set: self.set.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -312,7 +320,7 @@ impl IsCartFact {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> IsCartFact {
         IsCartFact {
             set: self.set.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -321,7 +329,7 @@ impl IsTupleFact {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> IsTupleFact {
         IsTupleFact {
             set: self.set.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -331,7 +339,7 @@ impl SubsetFact {
         SubsetFact {
             left: self.left.instantiate(param_to_arg_map),
             right: self.right.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -341,7 +349,7 @@ impl SupersetFact {
         SupersetFact {
             left: self.left.instantiate(param_to_arg_map),
             right: self.right.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -355,7 +363,7 @@ impl NotNormalAtomicFact {
         NotNormalAtomicFact {
             predicate: self.predicate.clone(),
             body,
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -365,7 +373,7 @@ impl NotEqualFact {
         NotEqualFact {
             left: self.left.instantiate(param_to_arg_map),
             right: self.right.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -375,7 +383,7 @@ impl NotLessFact {
         NotLessFact {
             left: self.left.instantiate(param_to_arg_map),
             right: self.right.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -385,7 +393,7 @@ impl NotGreaterFact {
         NotGreaterFact {
             left: self.left.instantiate(param_to_arg_map),
             right: self.right.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -395,7 +403,7 @@ impl NotLessEqualFact {
         NotLessEqualFact {
             left: self.left.instantiate(param_to_arg_map),
             right: self.right.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -405,7 +413,7 @@ impl NotGreaterEqualFact {
         NotGreaterEqualFact {
             left: self.left.instantiate(param_to_arg_map),
             right: self.right.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -414,7 +422,7 @@ impl NotIsSetFact {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotIsSetFact {
         NotIsSetFact {
             set: self.set.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -423,7 +431,7 @@ impl NotIsNonemptySetFact {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotIsNonemptySetFact {
         NotIsNonemptySetFact {
             set: self.set.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -432,7 +440,7 @@ impl NotIsFiniteSetFact {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotIsFiniteSetFact {
         NotIsFiniteSetFact {
             set: self.set.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -442,7 +450,7 @@ impl NotInFact {
         NotInFact {
             element: self.element.instantiate(param_to_arg_map),
             set: self.set.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -451,7 +459,7 @@ impl NotIsCartFact {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotIsCartFact {
         NotIsCartFact {
             set: self.set.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -460,7 +468,7 @@ impl NotIsTupleFact {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotIsTupleFact {
         NotIsTupleFact {
             set: self.set.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -470,7 +478,7 @@ impl NotSubsetFact {
         NotSubsetFact {
             left: self.left.instantiate(param_to_arg_map),
             right: self.right.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -480,7 +488,7 @@ impl NotSupersetFact {
         NotSupersetFact {
             left: self.left.instantiate(param_to_arg_map),
             right: self.right.instantiate(param_to_arg_map),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -501,7 +509,7 @@ impl ExistFact {
         ExistFact {
             params_def_with_type,
             facts,
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -514,7 +522,7 @@ impl OrFact {
         }
         OrFact {
             facts,
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -527,7 +535,7 @@ impl AndFact {
         }
         AndFact {
             facts,
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -541,7 +549,7 @@ impl ChainFact {
         ChainFact {
             objs,
             prop_names: self.prop_names.clone(),
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -567,7 +575,7 @@ impl ForallFact {
             params_def_with_type,
             dom_facts,
             then_facts,
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
@@ -582,8 +590,27 @@ impl ForallFactWithIff {
         ForallFactWithIff {
             forall_fact,
             iff_facts,
-            line_file_index: self.line_file_index,
+            line_file: self.line_file,
         }
     }
 }
 
+impl RestrictFact {
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> RestrictFact {
+        RestrictFact {
+            obj: self.obj.instantiate(param_to_arg_map),
+            obj_can_restrict_to_fn_set: self.obj_can_restrict_to_fn_set.instantiate(param_to_arg_map),
+            line_file: self.line_file,
+        }
+    }
+}
+
+impl NotRestrictFact {
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> NotRestrictFact {
+        NotRestrictFact {
+            obj: self.obj.instantiate(param_to_arg_map),
+            obj_cannot_restrict_to_fn_set: self.obj_cannot_restrict_to_fn_set.instantiate(param_to_arg_map),
+            line_file: self.line_file,
+        }
+    }
+}

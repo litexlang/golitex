@@ -3,12 +3,12 @@ use crate::fact::Fact;
 
 pub struct KnowStmt {
     pub facts: Vec<Fact>,
-    pub line_file_index: (usize, usize),
+    pub line_file: (usize, usize),
 }
 
 impl KnowStmt {
-    pub fn new(facts: Vec<Fact>, line_file_index: (usize, usize)) -> Self {
-        KnowStmt { facts, line_file_index }
+    pub fn new(facts: Vec<Fact>, line_file: (usize, usize)) -> Self {
+        KnowStmt { facts, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {

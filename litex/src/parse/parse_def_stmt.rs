@@ -27,7 +27,7 @@ impl<'a> Executor<'a> {
     fn parse_def_prop_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
-        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         tb.skip_token(LEFT_BRACE)?;
         let mut param_defs: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != RIGHT_BRACE {
@@ -35,9 +35,9 @@ impl<'a> Executor<'a> {
         }
         tb.skip_token(RIGHT_BRACE)?;
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
-        self.validate_names_and_put_into_parsing_names_block(&all_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
+        self.validate_names_and_put_into_parsing_names_block(&all_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         let facts = self.parse_facts_in_body(tb)?;
-        Ok(Stmt::DefPropStmt(DefPropStmt::new(name, param_defs, facts, tb.line_file_index)))
+        Ok(Stmt::DefPropStmt(DefPropStmt::new(name, param_defs, facts, tb.line_file)))
     }
 
     pub fn parse_def_prop_without_meaning_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -50,7 +50,7 @@ impl<'a> Executor<'a> {
     fn parse_def_prop_without_meaning_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
-        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         tb.skip_token(LEFT_BRACE)?;
         let mut params = vec![];
         while tb.current()? != RIGHT_BRACE {
@@ -61,9 +61,9 @@ impl<'a> Executor<'a> {
         }
         tb.skip_token(RIGHT_BRACE)?;
 
-        self.validate_names_and_put_into_parsing_names_block(&params).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
+        self.validate_names_and_put_into_parsing_names_block(&params).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
 
-        Ok(Stmt::DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt::new(name, params, tb.line_file_index)))
+        Ok(Stmt::DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt::new(name, params, tb.line_file)))
     }
 
     pub fn parse_def_let_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -94,11 +94,11 @@ impl<'a> Executor<'a> {
             vec![]
         };
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_def);
-        self.validate_names_and_put_into_parsing_names_block(&all_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
+        self.validate_names_and_put_into_parsing_names_block(&all_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
             facts,
-            tb.line_file_index,
+            tb.line_file,
         )))
     }
 
@@ -121,13 +121,13 @@ impl<'a> Executor<'a> {
             tb.skip_token(COMMA)?;
         }
         if param_defs.is_empty() {
-            return Err(ParsingError::new("have expects at least one param type pair".to_string(), tb.line_file_index, None));
+            return Err(ParsingError::new("have expects at least one param type pair".to_string(), tb.line_file, None));
         }
         let have_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
-        self.validate_names_and_put_into_parsing_names_block(&have_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
+        self.validate_names_and_put_into_parsing_names_block(&have_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
-            Ok(Stmt::HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, tb.line_file_index)))
+            Ok(Stmt::HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt::new(param_defs, tb.line_file)))
         } else {
             tb.skip_token(EQUAL)?;
             let mut objs_equal_to = vec![self.parse_obj(tb)?];
@@ -135,7 +135,7 @@ impl<'a> Executor<'a> {
                 tb.skip_token(COMMA)?;
                 objs_equal_to.push(self.parse_obj(tb)?);
             }
-            Ok(Stmt::HaveObjEqualStmt(HaveObjEqualStmt::new(param_defs, objs_equal_to, tb.line_file_index)))
+            Ok(Stmt::HaveObjEqualStmt(HaveObjEqualStmt::new(param_defs, objs_equal_to, tb.line_file)))
         }
     }
 
@@ -144,7 +144,7 @@ impl<'a> Executor<'a> {
         tb.skip_token(FN)?;
         let name = tb.advance()?;
 
-        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         
         let fs = self.fn_set_with_dom_without_fn_prefix(tb)?;
         if tb.current_token_is_equal_to(COLON) {
@@ -158,13 +158,13 @@ impl<'a> Executor<'a> {
                 equal_tos.push(self.parse_obj(block)?);
             }
             Ok(Stmt::HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt::new(
-                name, fs, cases, equal_tos, tb.line_file_index,
+                name, fs, cases, equal_tos, tb.line_file,
             )))
         } else {
             tb.skip_token(EQUAL)?;
             let equal_to = self.parse_obj(tb)?;
             Ok(Stmt::HaveFnEqualStmt(HaveFnEqualStmt::new(
-                name, fs, equal_to, tb.line_file_index,
+                name, fs, equal_to, tb.line_file,
             )))
         }
     }
@@ -180,7 +180,7 @@ impl<'a> Executor<'a> {
 
         tb.skip_token(COLON)?;
         let true_fact = self.parse_exist_fact(tb)?;
-        Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(equal_tos, true_fact, tb.line_file_index)))
+        Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(equal_tos, true_fact, tb.line_file)))
     }
 
     pub fn def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -193,7 +193,7 @@ impl<'a> Executor<'a> {
     fn def_struct_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(STRUCT)?;
         let name = tb.advance()?;
-        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_type: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
@@ -203,7 +203,7 @@ impl<'a> Executor<'a> {
             }
         }
         let struct_param_names = ParamDefWithParamType::collect_param_names(&params_def_with_type);
-        self.validate_names_and_put_into_parsing_names_block(&struct_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
+        self.validate_names_and_put_into_parsing_names_block(&struct_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let mut facts = vec![];
@@ -226,13 +226,13 @@ impl<'a> Executor<'a> {
                 params_def_with_type,
                 dom_facts,
                 equal_to,
-                tb.line_file_index,
+                tb.line_file,
             )))
         } else {
             tb.skip_token(COLON)?;
 
             if tb.body.is_empty() {
-                return Err(ParsingError::new("struct with fields expects body".to_string(), tb.line_file_index, None));
+                return Err(ParsingError::new("struct with fields expects body".to_string(), tb.line_file, None));
             }
 
             let mut fields: Vec<(String, OrAndChainAtomicFact)> = vec![];
@@ -241,21 +241,21 @@ impl<'a> Executor<'a> {
             let body_len = tb.body.len();
             let last_index = body_len - 1;
             let last_is_equiv = {
-                let last = tb.body.get(last_index).ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file_index, None))?;
+                let last = tb.body.get(last_index).ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file, None))?;
                 last.token_at_end_of_head() == EQUIVALENT_SIGN
             };
 
             let field_end = if last_is_equiv { last_index } else { body_len };
 
             for i in 0..field_end {
-                let block = tb.body.get_mut(i).ok_or_else(|| ParsingError::new("Expected field block".to_string(), tb.line_file_index, None))?;
+                let block = tb.body.get_mut(i).ok_or_else(|| ParsingError::new("Expected field block".to_string(), tb.line_file, None))?;
                 let field_name = block.advance()?;
                 let cond = self.parse_or_and_chain_atomic_fact(block)?;
                 fields.push((field_name, cond));
             }
 
             if last_is_equiv {
-                let last = tb.body.get_mut(last_index).ok_or_else(|| ParsingError::new("Expected <=>: block".to_string(), tb.line_file_index, None))?;
+                let last = tb.body.get_mut(last_index).ok_or_else(|| ParsingError::new("Expected <=>: block".to_string(), tb.line_file, None))?;
                 last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
                 for block in last.body.iter_mut() {
                     facts.push(self.parse_or_and_chain_atomic_fact(block)?);
@@ -267,7 +267,7 @@ impl<'a> Executor<'a> {
                 params_def_with_type,
                 fields,
                 facts,
-                tb.line_file_index,
+                tb.line_file,
             )))
         }
     }
@@ -282,7 +282,7 @@ impl<'a> Executor<'a> {
     fn def_algorithm_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(ALGO)?;
         let name = tb.advance()?;
-        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         tb.skip_token(LEFT_BRACE)?;
         let mut params: Vec<String> = vec![];
         while tb.current()? != RIGHT_BRACE {
@@ -300,7 +300,7 @@ impl<'a> Executor<'a> {
             } else if block.current()? == RETURN {
                 AlgoReturnOrAlgoIf::AlgoReturn(self.parse_algo_return(block)?)
             } else {
-                return Err(ParsingError::new("algo body block must start with if or return".to_string(), block.line_file_index, None));
+                return Err(ParsingError::new("algo body block must start with if or return".to_string(), block.line_file, None));
             };
 
             
@@ -310,7 +310,7 @@ impl<'a> Executor<'a> {
             name,
             params,
             return_or_algo_if,
-            tb.line_file_index,
+            tb.line_file,
         )))
     }
 
@@ -320,19 +320,19 @@ impl<'a> Executor<'a> {
         let condition = self.parse_and_chain_atomic_fact(block)?;
         block.skip_token(COLON)?;
         if !block.exceed_end_of_head() {
-            return Err(ParsingError::new("algo if: expected end of head after condition".to_string(), block.line_file_index, None));
+            return Err(ParsingError::new("algo if: expected end of head after condition".to_string(), block.line_file, None));
         }
         if block.body.len() != 1 {
-            return Err(ParsingError::new("algo if block must have exactly one body block (return stmt)".to_string(), block.line_file_index, None));
+            return Err(ParsingError::new("algo if block must have exactly one body block (return stmt)".to_string(), block.line_file, None));
         }
 
-        let block = block.body.first_mut().ok_or_else(|| ParsingError::new("algo if block must have exactly one body block (return stmt)".to_string(), block.line_file_index, None))?;
+        let block = block.body.first_mut().ok_or_else(|| ParsingError::new("algo if block must have exactly one body block (return stmt)".to_string(), block.line_file, None))?;
         
         let return_stmt = self.parse_algo_return(block)?;
         Ok(AlgoIf::new(
             condition,
             return_stmt,
-            block.line_file_index,
+            block.line_file,
         ))
     }
 
@@ -340,7 +340,7 @@ impl<'a> Executor<'a> {
     fn parse_algo_return(&mut self, block: &mut TokenBlock) -> Result<AlgoReturn, ParsingError> {
         block.skip_token(RETURN)?;
         let value = self.parse_obj(block)?;
-        Ok(AlgoReturn::new(value, block.line_file_index))
+        Ok(AlgoReturn::new(value, block.line_file))
     }
 
 }

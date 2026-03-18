@@ -214,7 +214,7 @@ impl Environment {
     }
 
     fn store_forall_fact(&mut self, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
-        let forall_params_and_dom = Rc::new(KnownForallFactParamsAndDom::new(forall_fact.params_def_with_type.clone(), forall_fact.dom_facts.clone(), forall_fact.line_file_index));
+        let forall_params_and_dom = Rc::new(KnownForallFactParamsAndDom::new(forall_fact.params_def_with_type.clone(), forall_fact.dom_facts.clone(), forall_fact.line_file));
         
         for fact in forall_fact.then_facts.iter() {
             self.store_a_fact_in_forall_fact(fact, forall_params_and_dom.clone())?;

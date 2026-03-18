@@ -1,4 +1,5 @@
 use crate::fact::AtomicFact;
+use crate::fact::RestrictFact;
 use crate::environment::Environment;
 use crate::infer::InferResult;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
@@ -132,14 +133,15 @@ impl<'a> Executor<'a> {
                             atomic_fact.to_string(),
                             "number comparison".to_string(),
                             InferResult::new(),
-                            atomic_fact.line_file_index(),
+                            atomic_fact.line_file(),
                         ),
                     )),
                     Some(false) => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
                     None => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
                 }
             },
-            AtomicFact::IsSetFact(is_set_fact) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(is_set_fact.to_string(), "Every object is a set.".to_string(), InferResult::new(), is_set_fact.line_file_index))),
+            AtomicFact::IsSetFact(is_set_fact) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(is_set_fact.to_string(), "Every object is a set.".to_string(), InferResult::new(), is_set_fact.line_file))),
+            AtomicFact::RestrictFact(restrict_fact) => self.verify_restrict_fact_with_builtin_rules(restrict_fact, verify_state),
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }
@@ -152,8 +154,8 @@ impl<'a> Executor<'a> {
                         atomic_fact.to_string(),
                         known_atomic_fact.to_string(),
                         InferResult::new(),
-                        atomic_fact.line_file_index(),
-                        known_atomic_fact.line_file_index(),
+                        atomic_fact.line_file(),
+                        known_atomic_fact.line_file(),
                     )));
                 }
             }
@@ -171,8 +173,8 @@ impl<'a> Executor<'a> {
                             atomic_fact.to_string(),
                             known_atomic_fact.to_string(),
                             InferResult::new(),
-                            atomic_fact.line_file_index(),
-                            known_atomic_fact.line_file_index(),
+                            atomic_fact.line_file(),
+                            known_atomic_fact.line_file(),
                         )));
                     }
                 }
@@ -190,7 +192,7 @@ impl<'a> Executor<'a> {
         if let Some(known_facts) = environment.known_atomic_facts_with_0_or_more_than_2_args.get(&(atomic_fact.key(), atomic_fact.is_true())) {
             for known_fact in known_facts.iter() {
                 if known_fact.args().len() != atomic_fact.args().len() {
-                    return Err(VerifyError::new(format!("known atomic fact {} has different number of args than the given fact {}", known_fact.to_string(), atomic_fact.to_string()), None, atomic_fact.line_file_index()));
+                    return Err(VerifyError::new(format!("known atomic fact {} has different number of args than the given fact {}", known_fact.to_string(), atomic_fact.to_string()), None, atomic_fact.line_file()));
                 }
                 let mut all_args_match = true;
                 for (index, known_arg) in known_fact.args().iter().enumerate() {
@@ -205,8 +207,8 @@ impl<'a> Executor<'a> {
                         atomic_fact.to_string(),
                         known_fact.to_string(),
                         InferResult::new(),
-                        atomic_fact.line_file_index(),
-                        known_fact.line_file_index(),
+                        atomic_fact.line_file(),
+                        known_fact.line_file(),
                     )));
                 }
             }
@@ -224,5 +226,9 @@ impl<'a> Executor<'a> {
         return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
     }
 
-
+    pub fn verify_restrict_fact_with_builtin_rules(&mut self, restrict_fact: &RestrictFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
+        _ = restrict_fact;
+        _ = verify_state;
+        return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+    }
 }

@@ -56,9 +56,9 @@ impl NonErrStmtExecResult {
     #[allow(dead_code)]
     pub fn line_file(&self) -> (usize, usize) {
         match self {
-            NonErrStmtExecResult::NonFactualStmtSuccess(x) => x.line_file_index,
-            NonErrStmtExecResult::FactVerifiedByFact(x) => x.line_file_index,
-            NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => x.line_file_index,
+            NonErrStmtExecResult::NonFactualStmtSuccess(x) => x.line_file,
+            NonErrStmtExecResult::FactVerifiedByFact(x) => x.line_file,
+            NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => x.line_file,
             NonErrStmtExecResult::StmtUnknown(_) => DEFAULT_LINE_FILE.clone(),
         }
     }
