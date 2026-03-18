@@ -7,6 +7,7 @@ use crate::execute::Executor;
 use crate::verify::VerifyState;
 use crate::result::StmtUnknown;
 use crate::verify::verify_number_comparison_builtin_rule::verify_number_comparison_builtin_rule;
+use crate::result::FactVerifiedByBuiltinRules;
 
 impl<'a> Executor<'a> {
     pub fn verify_non_equational_atomic_fact(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
@@ -15,14 +16,14 @@ impl<'a> Executor<'a> {
             return Ok(result);
         }
 
-        result = self.verify_non_equational_atomic_fact_with_known_atomic_fact(atomic_fact)?;
+        result = self.verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(atomic_fact)?;
         if result.is_true() {
             return Ok(result);
         }
 
         if verify_state.is_round_0() {
             let verify_state_add_one_round = verify_state.new_state_with_round_increased();
-            result = self.verify_atomic_fact_with_known_forall_fact(atomic_fact, &verify_state_add_one_round)?;
+            result = self.verify_atomic_fact_with_known_forall_facts(atomic_fact, &verify_state_add_one_round)?;
             if result.is_true() {
                 return Ok(result);
             }
@@ -31,7 +32,7 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
     
-    pub fn verify_non_equational_atomic_fact_with_known_atomic_fact(&mut self, atomic_fact: &AtomicFact) -> Result<NonErrStmtExecResult, VerifyError> {
+    pub fn verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(&mut self, atomic_fact: &AtomicFact) -> Result<NonErrStmtExecResult, VerifyError> {
         if atomic_fact.number_of_args() == 1 {
             self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(atomic_fact)
         } else if atomic_fact.number_of_args() == 2 {
@@ -121,6 +122,7 @@ impl<'a> Executor<'a> {
                     None => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
                 }
             },
+            AtomicFact::IsSetFact(is_set_fact) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(is_set_fact.to_string(), "Every object is a set.".to_string(), InferResult::new(), is_set_fact.line_file_index))),
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }
@@ -128,8 +130,14 @@ impl<'a> Executor<'a> {
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(environment: &Environment, atomic_fact: &AtomicFact, all_objs_equal_to_arg: &Vec<String>) -> Result<NonErrStmtExecResult, VerifyError> {
         if let Some(known_facts_map) = environment.known_atomic_facts_with_1_arg.get(&(atomic_fact.key(), atomic_fact.is_true())) {
             for obj in all_objs_equal_to_arg.iter() {
-                if known_facts_map.contains_key(obj) {
-                    return Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(atomic_fact.to_string(), "known atomic fact".to_string(), InferResult::new(), atomic_fact.line_file_index(), crate::common::helper::DEFAULT_LINE_FILE.clone())));
+                if let Some(known_atomic_fact) = known_facts_map.get(obj) {
+                    return Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
+                        atomic_fact.to_string(),
+                        known_atomic_fact.to_string(),
+                        InferResult::new(),
+                        atomic_fact.line_file_index(),
+                        known_atomic_fact.line_file_index(),
+                    )));
                 }
             }
         }
@@ -141,8 +149,14 @@ impl<'a> Executor<'a> {
         if let Some(known_facts_map) = environment.known_atomic_facts_with_2_args.get(&(atomic_fact.key(), atomic_fact.is_true())) {
             for obj0 in all_objs_equal_to_arg0.iter() {
                 for obj1 in all_objs_equal_to_arg1.iter() {
-                    if known_facts_map.contains_key(&(obj0.clone(), obj1.clone())) {
-                        return Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(atomic_fact.to_string(), "known atomic fact".to_string(), InferResult::new(), atomic_fact.line_file_index(), crate::common::helper::DEFAULT_LINE_FILE.clone())));
+                    if let Some(known_atomic_fact) = known_facts_map.get(&(obj0.clone(), obj1.clone())) {
+                        return Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
+                            atomic_fact.to_string(),
+                            known_atomic_fact.to_string(),
+                            InferResult::new(),
+                            atomic_fact.line_file_index(),
+                            known_atomic_fact.line_file_index(),
+                        )));
                     }
                 }
             }
@@ -168,7 +182,7 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    pub fn verify_atomic_fact_with_known_forall_fact(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
+    pub fn verify_atomic_fact_with_known_forall_facts(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
         let result = self.verify_atomic_fact_with_known_forall(atomic_fact, verify_state)?;
         if result.is_true() {
             return Ok(result);

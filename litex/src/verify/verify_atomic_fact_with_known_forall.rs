@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::common::helper::DEFAULT_LINE_FILE;
+use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::fact::ExistOrAndChainAtomicFact;
 use crate::environment::KnownForallFactParamsAndDom;
 use crate::infer::InferResult;
@@ -181,7 +181,7 @@ impl<'a> Executor<'a> {
         }
 
         let args_satisfy_param_types = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(&known_forall.params, &args_for_params)
-            .map_err(|e| VerifyError::new(e.error_body(), Some(e), crate::common::helper::DEFAULT_LINE_FILE.clone()))?;
+            .map_err(|e| VerifyError::new(e.error_body(), Some(e), crate::common::defaults::DEFAULT_LINE_FILE.clone()))?;
 
         for fact in args_satisfy_param_types.iter() {
             let result = self.verify_fact(fact, verify_state)?;
@@ -786,7 +786,7 @@ impl<'a> Executor<'a> {
     fn match_arg_type_not_implemented(obj_type_name: &str) -> Result<Option<HashMap<String, Vec<Obj>>>, VerifyError> {
         Err(VerifyError::new(
             format!("match_arg for {} not implemented", obj_type_name),None,
-            crate::common::helper::DEFAULT_LINE_FILE.clone(),
+            crate::common::defaults::DEFAULT_LINE_FILE.clone(),
         ))
     }
 }

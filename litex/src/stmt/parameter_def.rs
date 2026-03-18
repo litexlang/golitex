@@ -2,7 +2,8 @@ use std::fmt;
 use std::collections::HashMap;
 use crate::error::{ExecError, StmtError};
 use crate::fact::{AtomicFact, Fact, InFact, IsSetFact, IsNonemptySetFact, IsFiniteSetFact};
-use crate::common::helper::{vec_to_string_join_by_comma, DEFAULT_LINE_FILE};
+use crate::common::defaults::DEFAULT_LINE_FILE;
+use crate::common::helper::vec_to_string_join_by_comma;
 use crate::obj::{Identifier, Obj};
 use crate::common::keywords::{FINITE_SET, NONEMPTY_SET, SET};
 

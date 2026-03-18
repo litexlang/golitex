@@ -10,7 +10,8 @@ use crate::fact::{AtomicFact, NotEqualFact, IsCartFact, IsNonemptySetFact, Fact}
 use crate::fact::InFact;
 use crate::execute::Executor;
 use crate::stmt::parameter_def::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
-use crate::common::helper::{todo_error_message, DEFAULT_LINE_FILE};
+use crate::common::defaults::DEFAULT_LINE_FILE;
+use crate::common::helper::todo_error_message;
 
 impl<'a> Executor<'a> {
     fn verify_obj_well_defined_from_cache_if_known(&self, obj: &Obj) -> Option<()> {

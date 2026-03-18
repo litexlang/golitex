@@ -143,6 +143,9 @@ impl<'a> Executor<'a> {
         tb.skip_token(HAVE)?;
         tb.skip_token(FN)?;
         let name = tb.advance()?;
+
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file_index, None))?;
+        
         let fs = self.fn_set_with_dom_without_fn_prefix(tb)?;
         if tb.current()? == COLON {
             tb.skip_token(COLON)?;

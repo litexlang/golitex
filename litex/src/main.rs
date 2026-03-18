@@ -668,7 +668,7 @@ fn try_stmt_result() {
         Identifier::mk("q".to_string()),
         (1, 0),
     ))));
-    let result = NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), InferResult::new(), crate::common::helper::DEFAULT_LINE_FILE.clone()));
+    let result = NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), InferResult::new(), crate::common::defaults::DEFAULT_LINE_FILE.clone()));
     println!("{}", result.body_string());
 
 
@@ -681,11 +681,11 @@ fn try_stmt_result() {
     let result = NonErrStmtExecResult::StmtUnknown(unknown);
     println!("{}", result.body_string());
 
-    let fact_verified_by_fact = FactVerifiedByFact::new(fact.to_string(), fact.to_string(), InferResult::new(), crate::common::helper::DEFAULT_LINE_FILE.clone(), crate::common::helper::DEFAULT_LINE_FILE.clone());
+    let fact_verified_by_fact = FactVerifiedByFact::new(fact.to_string(), fact.to_string(), InferResult::new(), crate::common::defaults::DEFAULT_LINE_FILE.clone(), crate::common::defaults::DEFAULT_LINE_FILE.clone());
     let result = NonErrStmtExecResult::FactVerifiedByFact(fact_verified_by_fact);
     println!("{}", result.body_string());
 
-    let fact_verified_by_builtin_rules = FactVerifiedByBuiltinRules::new(fact.to_string(), "demo".to_string(), InferResult::new(), crate::common::helper::DEFAULT_LINE_FILE.clone());
+    let fact_verified_by_builtin_rules = FactVerifiedByBuiltinRules::new(fact.to_string(), "demo".to_string(), InferResult::new(), crate::common::defaults::DEFAULT_LINE_FILE.clone());
     let result = NonErrStmtExecResult::FactVerifiedByBuiltinRules(fact_verified_by_builtin_rules);
     println!("{}", result.body_string());
 }

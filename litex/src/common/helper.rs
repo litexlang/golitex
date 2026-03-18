@@ -1,8 +1,6 @@
 use std::fmt::{self};
 use super::keywords::{LEFT_BRACE, LEFT_CURLY_BRACE, RIGHT_BRACE, RIGHT_CURLY_BRACE, DOT_AKA_FIELD_ACCESS_SIGN, COLON};
 
-pub const DEFAULT_LINE_FILE: (usize, usize) = (0, 0);
-
 pub fn braced_vec_to_string<T: fmt::Display>(vec: &Vec<T>) -> String {
     format!("{}{}{}", LEFT_BRACE, vec_to_string_with_sep(vec, ", ".to_string()), RIGHT_BRACE)
 }

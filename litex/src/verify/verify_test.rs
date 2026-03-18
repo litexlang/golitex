@@ -21,7 +21,7 @@ fn test_verify_atomic_fact() {
 
     // verify 1 = 1
     let one = Obj::Number(Number::new("1".to_string()));
-    let fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(one.clone(), one, crate::common::helper::DEFAULT_LINE_FILE.clone())));
+    let fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(one.clone(), one, crate::common::defaults::DEFAULT_LINE_FILE.clone())));
     let stmt = Stmt::Fact(fact);
     let result = executor.stmt(&stmt);
 

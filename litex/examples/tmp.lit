@@ -1,2 +1,2 @@
 have fn f(a, b R: a > b)R = a + b
-f(2, 1) = 2 + 1
+f $in fn(a, b R: a > b)R

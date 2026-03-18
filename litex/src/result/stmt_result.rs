@@ -1,5 +1,5 @@
 use crate::common::keywords::SUCCESS_COLON;
-use crate::common::helper::DEFAULT_LINE_FILE;
+use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::infer::InferResult;
 use super::stmt_success::{FactVerifiedByBuiltinRules, FactVerifiedByFact, NonFactualStmtSuccess};
 use super::stmt_unknown::StmtUnknown;
