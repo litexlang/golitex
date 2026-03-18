@@ -8,6 +8,7 @@ use crate::error::VerifyError;
 use crate::fact::{AtomicFact, ForallFact};
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult, StmtUnknown};
 use crate::verify::VerifyState;
+use crate::verify::verify_equality::verify_equality_by_they_are_the_same;
 use crate::execute::Executor;
 use crate::obj::{FnObj, Identifier, Number, Obj, IdentifierOrIdentifierWithMod};
 use crate::stmt::parameter_def::ParamDefWithParamType;
@@ -239,7 +240,7 @@ impl<'a> Executor<'a> {
         while i < len {
             let mut j = i + 1;
             while j < len {
-                if !Self::verify_equality_by_they_are_the_same(&objs[i], &objs[j]) {
+                if !verify_equality_by_they_are_the_same(&objs[i], &objs[j]) {
                     return Ok(false);
                 }
                 j += 1;
