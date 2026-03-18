@@ -1,12 +1,12 @@
 use crate::obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FieldAccess, FieldAccessWithMod,
     FnObj, FnSetWithDom, FnSetWithoutDom, Identifier, IdentifierWithMod, InstStructObj, ListSet, Mod,
-    Mul, Number, NPosObj, Obj, ObjAtIndex, PowerSet, Pow, Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, Union, Val, ZObj,
+    Mul, Number, Obj, ObjAtIndex, PowerSet, Pow, Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, Union, Val, ZObj,
     Intersect, FnSetObj,
 };
 use crate::error::{WellDefinedError, StmtError};
 use crate::verify::VerifyState;
-use crate::fact::{AtomicFact, NotEqualFact, IsCartFact, IsNonemptySetFact, Fact};
+use crate::fact::{AndFact, AtomicFact, EqualFact, GreaterFact, IsCartFact, IsNonemptySetFact, LessFact, NotEqualFact, OrFact, Fact, AndChainAtomicFact};
 use crate::fact::InFact;
 use crate::execute::Executor;
 use crate::stmt::parameter_def::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
@@ -266,14 +266,6 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn require_obj_in_n_pos(&mut self, obj: &Obj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        let n_pos_obj = Obj::NPosObj(NPosObj::new());
-        let in_fact = InFact::new(obj.clone(), n_pos_obj, DEFAULT_LINE_FILE.clone());
-        let atomic_fact = AtomicFact::InFact(in_fact);
-        self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
-        Ok(())
-    }
-
     fn verify_add_well_defined(&mut self, add: &Add, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined_and_store_cache(&add.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&add.right, verify_state)?;
@@ -326,7 +318,35 @@ impl<'a> Executor<'a> {
     fn verify_pow_well_defined(&mut self, pow: &Pow, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined_and_store_cache(&pow.base, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&pow.exponent, verify_state)?;
-        self.require_obj_in_n_pos(&pow.exponent, verify_state)?;
+
+        let zero_obj = Obj::Number(Number::new("0".to_string()));
+        let two_obj = Obj::Number(Number::new("2".to_string()));
+        let exponent_mod_two_obj = Obj::Mod(Mod::new((*pow.exponent).clone(), two_obj, false));
+
+        let positive_base_and_real_exponent = AndChainAtomicFact::AndFact(AndFact::new(vec![
+            AtomicFact::GreaterFact(GreaterFact::new((*pow.base).clone(), zero_obj.clone(), DEFAULT_LINE_FILE)),
+            AtomicFact::InFact(InFact::new((*pow.exponent).clone(), Obj::RObj(RObj::new()), DEFAULT_LINE_FILE)),
+        ], DEFAULT_LINE_FILE));
+
+        let zero_base_and_positive_real_exponent = AndChainAtomicFact::AndFact(AndFact::new(vec![
+            AtomicFact::EqualFact(EqualFact::new((*pow.base).clone(), zero_obj.clone(), DEFAULT_LINE_FILE)),
+            AtomicFact::InFact(InFact::new((*pow.exponent).clone(), Obj::RObj(RObj::new()), DEFAULT_LINE_FILE)),
+            AtomicFact::GreaterFact(GreaterFact::new((*pow.exponent).clone(), zero_obj.clone(), DEFAULT_LINE_FILE)),
+        ], DEFAULT_LINE_FILE));
+
+        let negative_base_and_even_integer_exponent = AndChainAtomicFact::AndFact(AndFact::new(vec![
+            AtomicFact::LessFact(LessFact::new((*pow.base).clone(), zero_obj.clone(), DEFAULT_LINE_FILE)),
+            AtomicFact::InFact(InFact::new((*pow.exponent).clone(), Obj::ZObj(ZObj::new()), DEFAULT_LINE_FILE)),
+            AtomicFact::EqualFact(EqualFact::new(exponent_mod_two_obj, zero_obj, DEFAULT_LINE_FILE)),
+        ], DEFAULT_LINE_FILE));
+
+        let pow_domain_or_fact = OrFact::new(vec![
+            positive_base_and_real_exponent,
+            zero_base_and_positive_real_exponent,
+            negative_base_and_even_integer_exponent,
+        ], DEFAULT_LINE_FILE);
+
+        self.verify_fact(&Fact::OrFact(pow_domain_or_fact), verify_state)?;
         Ok(())
     }
 
