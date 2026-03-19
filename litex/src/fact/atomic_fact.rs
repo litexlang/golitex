@@ -1161,3 +1161,9 @@ impl fmt::Display for NotRestrictFact {
         write!(f, "{} {} {}{} {}", NOT, self.obj, FACT_PREFIX, RESTRICT, self.obj_cannot_restrict_to_fn_set)
     }
 }
+
+impl AtomicFact {
+    pub fn get_args_from_fact(&self) -> Vec<Obj> {
+        self.args()
+    }
+}

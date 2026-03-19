@@ -208,8 +208,8 @@ impl<'a> Executor<'a> {
         let line_file = tb.line_file;
         if tb.current()? == FACT_PREFIX {
             tb.skip_token(FACT_PREFIX)?;
-            let prop = self.identifier_or_identifier_with_mod(tb)?;
-            let args = self.braced_objs(tb)?;
+            let prop = self.parse_identifier_or_identifier_with_mod(tb)?;
+            let args = self.parse_braced_objs(tb)?;
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file)
                 .map_err(|e: NewAtomicFactError| ParsingError::new(e.msg.clone(), tb.line_file, None))?;
             return Ok(atomic);
@@ -224,7 +224,7 @@ impl<'a> Executor<'a> {
             IdentifierOrIdentifierWithMod::Identifier(Identifier::new(tok.clone()))
         } else if tok == FACT_PREFIX {
             tb.skip_token(FACT_PREFIX)?;
-            self.identifier_or_identifier_with_mod(tb)?
+            self.parse_identifier_or_identifier_with_mod(tb)?
         } else {
             return Err(ParsingError::new("Expected operator or $prop in atomic fact".to_string(), tb.line_file, None));
         };
@@ -257,8 +257,8 @@ impl<'a> Executor<'a> {
         let line_file = tb.line_file;
         if tb.current()? == FACT_PREFIX {
             tb.skip_token(FACT_PREFIX)?;
-            let prop = self.identifier_or_identifier_with_mod(tb)?;
-            let args = self.braced_objs(tb)?;
+            let prop = self.parse_identifier_or_identifier_with_mod(tb)?;
+            let args = self.parse_braced_objs(tb)?;
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file)
                 .map_err(|e: NewAtomicFactError| ParsingError::new(e.msg.clone(), tb.line_file, None))?;
             return Ok(ChainAtomicFact::AtomicFact(atomic));
@@ -273,7 +273,7 @@ impl<'a> Executor<'a> {
                 IdentifierOrIdentifierWithMod::Identifier(Identifier::new(tok.clone()))
             } else if tok == FACT_PREFIX {
                 tb.skip_token(FACT_PREFIX)?;
-                self.identifier_or_identifier_with_mod(tb)?
+                self.parse_identifier_or_identifier_with_mod(tb)?
             } else {
                 break;
             };
