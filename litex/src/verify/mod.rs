@@ -17,6 +17,7 @@ mod verify_exist_fact;
 mod verify_or_fact;
 mod verify_helper;
 mod verify_atomic_fact_with_known_forall;
+mod verify_or_fact_with_known_forall;
 mod verify_facts_the_same_type_and_return_matched_args;
 
 pub use verify_state::VerifyState;

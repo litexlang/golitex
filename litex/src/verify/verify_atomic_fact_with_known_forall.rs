@@ -230,7 +230,7 @@ impl<'a> Executor<'a> {
         Ok(Some(fact_verified))
     }
 
-    fn match_args_in_fact_in_known_forall_fact_with_given_args(
+    pub(crate) fn match_args_in_fact_in_known_forall_fact_with_given_args(
         fact_args_in_known_forall: &Vec<Obj>,
         given_fact_args: &Vec<Obj>,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {

@@ -27,7 +27,7 @@ impl<'a> Executor<'a> {
             return Ok(result);
         }
 
-        result = self.verify_or_fact_with_or_facts_in_known_forall_facts(or_fact)?;
+        result = self.verify_or_fact_with_known_forall(or_fact, verify_state)?;
         if result.is_true() {
             return Ok(result);
         }
@@ -96,8 +96,4 @@ impl<'a> Executor<'a> {
         return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
     }
 
-    pub fn verify_or_fact_with_or_facts_in_known_forall_facts(&mut self, or_fact: &OrFact) -> Result<NonErrStmtExecResult, VerifyError> {
-
-        return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
-    }
 }
