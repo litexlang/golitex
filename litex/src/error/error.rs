@@ -1,6 +1,10 @@
 use std::fmt;
 use crate::common::defaults::DEFAULT_LINE_FILE;
 
+pub fn duplicate_name_error_message(name: &str) -> String {
+    format!("name {} is already used", name)
+}
+
 fn body_with_previous(message: &str, previous_error: &Option<Box<StmtError>>) -> String {
     match previous_error {
         Some(previous_error) => format!("{}\n{}", message, previous_error.error_body()),
