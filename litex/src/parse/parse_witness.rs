@@ -1,5 +1,5 @@
 use crate::error::ParsingError;
-use crate::common::keywords::{COLON, EXIST, NONEMPTY_SET, WITNESS};
+use crate::common::keywords::{COLON, EXIST, FACT_PREFIX, FROM, IN, IS_NONEMPTY_SET, LEFT_BRACE, NONEMPTY_SET, RIGHT_BRACE, WITNESS};
 use crate::execute::Executor;
 use crate::stmt::Stmt;
 use super::TokenBlock;
@@ -17,11 +17,12 @@ impl<'a> Executor<'a> {
         }
     }
 
+    // witness exist x, y R st {x > y} from 1, 0:
     pub fn witness_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(EXIST)?;
+        let exist_fact_in_witness = self.parse_exist_fact(tb)?;
+        tb.skip_token(FROM)?;
         let equal_tos = self.parse_obj_list(tb)?;
         tb.skip_token(COLON)?;
-        let exist_fact_in_witness = self.parse_exist_fact(tb)?;
         let mut proof = vec![];
         for block in tb.body.iter_mut() {
             proof.push(self.parse_stmt(block)?);
@@ -34,10 +35,23 @@ impl<'a> Executor<'a> {
         )))
     }
 
+    // witness $is_nonempty_set(R) from 1 $in R:
     pub fn witness_nonempty_set(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(NONEMPTY_SET)?;
-        let obj = self.parse_obj(tb)?;
+        tb.skip_token(FACT_PREFIX)?;
+        tb.skip_token(IS_NONEMPTY_SET)?;
+        tb.skip_token(LEFT_BRACE)?;
         let set = self.parse_obj(tb)?;
+        tb.skip_token(RIGHT_BRACE)?;
+        tb.skip_token(FROM)?;
+        let obj = self.parse_obj(tb)?;
+        tb.skip_token(FACT_PREFIX)?;
+        tb.skip_token(IN)?;
+        let set2 = self.parse_obj(tb)?;
+
+        if set2.to_string() != set.to_string() {
+            return Err(ParsingError::new("the set in witness nonempty set is not the same as the set in the witness".to_string(), tb.line_file, None));
+        }
+        
         let mut proof = vec![];
         for block in tb.body.iter_mut() {
             proof.push(self.parse_stmt(block)?);

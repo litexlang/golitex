@@ -123,4 +123,5 @@ impl OrAndChainAtomicFact {
             OrAndChainAtomicFact::OrFact(o) => Fact::OrFact(o),
         }
     }
+
 }
