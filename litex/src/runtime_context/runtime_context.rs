@@ -255,11 +255,22 @@ impl<'a> RuntimeContext<'a> {
         format!("\n\ninfer:\n{}", infer_result.infer_facts.join("\n"))
     }
 
+    fn format_inside_results_block(&self, inside_results: &Vec<NonErrStmtExecResult>) -> String {
+        if inside_results.is_empty() {
+            return String::new();
+        }
+        let mut display_lines: Vec<String> = Vec::new();
+        for inside_result in inside_results.iter() {
+            display_lines.push(self.display_result(inside_result));
+        }
+        format!("\n\ninside results:\n{}", display_lines.join("\n"))
+    }
+
     pub fn display_result(&self, result: &NonErrStmtExecResult) -> String {
         match result {
             NonErrStmtExecResult::NonFactualStmtSuccess(x) => {
                 let location = if x.line_file == DEFAULT_LINE_FILE { "Success:\n".to_string() } else { format!("Success on {}:\n", self.format_line_file(x.line_file.0, x.line_file.1)) };
-                let msg = format!("{}{}", x.stmt, Self::format_infer_block(&x.infers));
+                let msg = format!("{}{}{}", x.stmt, Self::format_infer_block(&x.infers), self.format_inside_results_block(&x.inside_results));
                 format!("{}{}", location, msg)
             }
             NonErrStmtExecResult::FactVerifiedByFact(x) => {

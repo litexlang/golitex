@@ -8,7 +8,7 @@ pub fn duplicate_name_error_message(name: &str) -> String {
 fn body_with_previous(message: &str, previous_error: &Option<Box<StmtError>>) -> String {
     match previous_error {
         Some(previous_error) => format!("{}\n{}", message, previous_error.error_body()),
-        None => message.to_string(),
+n        None => message.to_string(),
     }
 }
 

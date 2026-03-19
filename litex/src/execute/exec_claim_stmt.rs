@@ -10,7 +10,7 @@ use super::Executor;
 impl<'a> Executor<'a> {
     fn exec_claim_stmt_body(&mut self, stmt: &ClaimStmt) -> Result<NonErrStmtExecResult, StmtError> {
         for proof_stmt in stmt.proof.iter() {
-            self.stmt(proof_stmt)?;
+            self.exec_stmt(proof_stmt)?;
         }
 
         let verify_result = self.verify_fact(&stmt.fact, &VerifyState::new(0, false))?;
@@ -25,6 +25,7 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
             stmt.to_string(),
             crate::infer::InferResult::new(),
+            vec![],
             stmt.line_file,
         )))
     }

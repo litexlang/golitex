@@ -1,8 +1,10 @@
+use crate::result::NonErrStmtExecResult;
 use crate::infer::InferResult;
 
 pub struct NonFactualStmtSuccess {
     pub stmt: String,
     pub infers: InferResult,
+    pub inside_results: Vec<NonErrStmtExecResult>,
     pub line_file: (usize, usize),
 }
 
@@ -22,10 +24,11 @@ pub struct FactVerifiedByBuiltinRules {
 }
 
 impl NonFactualStmtSuccess {
-    pub fn new(stmt: String, infers: InferResult, line_file: (usize, usize)) -> Self {
+    pub fn new(stmt: String, infers: InferResult, inside_results: Vec<NonErrStmtExecResult>, line_file: (usize, usize)) -> Self {
         NonFactualStmtSuccess {
             stmt,
             infers,
+            inside_results,
             line_file,
         }
     }

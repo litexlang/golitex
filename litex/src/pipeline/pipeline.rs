@@ -34,7 +34,7 @@ fn run_source_code(source_code: &str, entrance_file_path: &str) -> String {
                 }
             }
         };
-        let result = match executor.stmt(&stmt) {
+        let result = match executor.exec_stmt(&stmt) {
             Ok(r) => r,
             Err(e) => {
                 out.push_str(format!("\n{}\n", executor.runtime_context.display_error(&e)).as_str());

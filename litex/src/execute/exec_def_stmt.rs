@@ -41,6 +41,7 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
             def_prop_with_meaning_stmt.to_string(),
             InferResult::new(),
+            vec![],
             def_prop_with_meaning_stmt.line_file,
         )))
     }
@@ -68,6 +69,7 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
             def_prop_without_meaning_stmt.to_string(),
             InferResult::new(),
+            vec![],
             def_prop_without_meaning_stmt.line_file,
         )))
     }
@@ -81,6 +83,7 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
             def_let_stmt.to_string(),
             infer_result,
+            vec![],
             def_let_stmt.line_file,
         )))
     }
@@ -122,6 +125,7 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
             stmt.to_string(),
             infer_result,
+            vec![],
             stmt.line_file,
         )))
     }
@@ -165,6 +169,7 @@ impl<'a> Executor<'a> {
         return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
             have_obj_equal_stmt.to_string(),
             InferResult::new(),
+            vec![],
             have_obj_equal_stmt.line_file,
         )));
     }
@@ -224,6 +229,7 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
             have_exist_obj_stmt.to_string(),
             infer_result,
+            vec![],
             have_exist_obj_stmt.line_file,
         )))
     }
@@ -273,6 +279,7 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
             have_fn_equal_stmt.to_string(),
             infer_result,
+            vec![],
             have_fn_equal_stmt.line_file,
         )))
     }
@@ -374,6 +381,7 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
             have_fn_equal_case_by_case_stmt.to_string(),
             infer_result,
+            vec![],
             have_fn_equal_case_by_case_stmt.line_file,
         )))
     }

@@ -23,7 +23,7 @@ fn test_verify_atomic_fact() {
     let one = Obj::Number(Number::new("1".to_string()));
     let fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(one.clone(), one, crate::common::defaults::DEFAULT_LINE_FILE.clone())));
     let stmt = Stmt::Fact(fact);
-    let result = executor.stmt(&stmt);
+    let result = executor.exec_stmt(&stmt);
 
     match result {
         Ok(stmt_result) => {
@@ -48,7 +48,7 @@ fn test_exec_stmt_fact_one_plus_one_eq_two() {
     let stmt = executor.parse_stmt(&mut tb).expect("parse fact \"1 + 1 = 2\" failed");
     assert!(matches!(stmt, Stmt::Fact(_)), "expected Stmt::Fact");
 
-    let result = executor.stmt(&stmt).expect("exec.stmt(fact) failed");
+    let result = executor.exec_stmt(&stmt).expect("exec.stmt(fact) failed");
     match &result {
         NonErrStmtExecResult::NonFactualStmtSuccess(_) | NonErrStmtExecResult::FactVerifiedByFact(_) | NonErrStmtExecResult::FactVerifiedByBuiltinRules(_) => println!("{}", result.body_string()),
         NonErrStmtExecResult::StmtUnknown(u) => panic!("fact 1+1=2 should be verified, got StmtUnknown: {}", u),
