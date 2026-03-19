@@ -11,7 +11,7 @@ use crate::obj::{
     Cart, CartDim, Proj, Count, Range, ClosedRange, Val,
 };
 use crate::obj::{Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod};
-use crate::error::ParsingError;
+use crate::error::{duplicate_name_error_message, ParsingError, StmtError};
 use crate::stmt::parameter_def::ParamDefWithParamSet;
 
 impl<'a> Executor<'a> {
@@ -533,7 +533,7 @@ impl<'a> Executor<'a> {
 
     /// Parse after first identifier: either "S : fact1, fact2" (SetBuilder) or "b c" (ListSet).
     fn parse_set_builder_body(&mut self, tb: &mut TokenBlock, a: Identifier) -> Result<Obj, ParsingError> {
-        self.validate_name_and_put_into_parsing_names_block(&a.name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        self.validate_name_and_put_into_parsing_names_block(&a.name).map_err(|e| ParsingError::new(duplicate_name_error_message(&a.name), tb.line_file, Some(StmtError::ParseBlockError(e))))?;
         
         let second = self.parse_obj(tb)?;
         if tb.current()? == COLON {
