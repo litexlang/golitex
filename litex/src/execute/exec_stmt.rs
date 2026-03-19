@@ -7,7 +7,7 @@ impl<'a> Executor<'a> {
     pub fn stmt(&mut self, stmt: &Stmt) -> Result<NonErrStmtExecResult, StmtError> {
         match stmt {
             Stmt::DefLetStmt(d) => self.def_let_stmt(d).map_err(StmtError::from),
-            Stmt::DefPropStmt(d) => self.def_prop_stmt(d).map_err(StmtError::from),
+            Stmt::DefPropWithMeaningStmt(d) => self.def_prop_with_meaning_stmt(d).map_err(StmtError::from),
             Stmt::DefPropWithoutMeaningStmt(d) => self.def_prop_without_meaning_stmt(d).map_err(StmtError::from),
             Stmt::HaveObjInNonemptySetStmt(d) => self.have_obj_in_nonempty_set_or_param_type_stmt(d).map_err(StmtError::from),
             Stmt::HaveObjEqualStmt(d) => self.have_obj_equal_stmt(d).map_err(StmtError::from),

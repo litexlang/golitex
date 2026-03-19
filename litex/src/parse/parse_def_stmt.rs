@@ -1,4 +1,4 @@
-use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, DefPropWithoutMeaningStmt};
+use crate::stmt::definition_stmt::{DefLetStmt, DefPropWithMeaningStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, DefPropWithoutMeaningStmt};
 use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
 use crate::error::ParsingError;
 use crate::stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
@@ -9,22 +9,25 @@ use crate::stmt::Stmt;
 use super::TokenBlock;
 
 impl<'a> Executor<'a> {
-    pub fn def_prop_stmt_or_prop_without_meaning(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {        
+    pub fn parse_def_prop_with_meaning_stmt_or_prop_without_meaning(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {        
         if tb.token_at_end_of_head() != COLON {
             return self.parse_def_prop_without_meaning_stmt(tb)
         } else {
-            self.parse_def_prop_stmt(tb)
+            self.parse_def_prop_with_meaning_stmt(tb)
         }
     }
 
-    pub fn parse_def_prop_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_def_prop_with_meaning_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         self.new_parsing_names_block();
-        let stmt = self.parse_def_prop_stmt_body(tb);
+        let stmt = self.parse_def_prop_with_meaning_stmt_body(tb);
         self.delete_parsing_names_block();
-        stmt
+
+        let stmt_ok = stmt?;
+        self.validate_name_and_put_into_parsing_names_block(&stmt_ok.name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        Ok(Stmt::DefPropWithMeaningStmt(stmt_ok))
     }
 
-    fn parse_def_prop_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    fn parse_def_prop_with_meaning_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<DefPropWithMeaningStmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
         self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
@@ -37,17 +40,20 @@ impl<'a> Executor<'a> {
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
         self.validate_names_and_put_into_parsing_names_block(&all_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         let facts = self.parse_facts_in_body(tb)?;
-        Ok(Stmt::DefPropStmt(DefPropStmt::new(name, param_defs, facts, tb.line_file)))
+        Ok(DefPropWithMeaningStmt::new(name, param_defs, facts, tb.line_file))
     }
 
     pub fn parse_def_prop_without_meaning_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         self.new_parsing_names_block();
         let stmt = self.parse_def_prop_without_meaning_stmt_body(tb);
         self.delete_parsing_names_block();
-        stmt
+
+        let stmt_ok = stmt?;
+        self.validate_name_and_put_into_parsing_names_block(&stmt_ok.name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        Ok(Stmt::DefPropWithoutMeaningStmt(stmt_ok))
     }
 
-    fn parse_def_prop_without_meaning_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    fn parse_def_prop_without_meaning_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<DefPropWithoutMeaningStmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
         self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
@@ -63,17 +69,10 @@ impl<'a> Executor<'a> {
 
         self.validate_names_and_put_into_parsing_names_block(&params).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
 
-        Ok(Stmt::DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt::new(name, params, tb.line_file)))
+        Ok(DefPropWithoutMeaningStmt::new(name, params, tb.line_file))
     }
 
     pub fn parse_def_let_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        self.new_parsing_names_block();
-        let stmt = self.parse_def_let_stmt_body(tb);
-        self.delete_parsing_names_block();
-        stmt
-    }
-
-    fn parse_def_let_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(LET)?;
         let mut param_def: Vec<ParamDefWithParamType> = vec![];
         loop {
@@ -103,14 +102,7 @@ impl<'a> Executor<'a> {
     }
 
     // return HaveObjInNonemptySetOrParamTypeStmt or HaveObjEqualStmt
-    pub fn have_obj_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        self.new_parsing_names_block();
-        let stmt = self.have_obj_stmt_body(tb);
-        self.delete_parsing_names_block();
-        stmt
-    }
-
-    fn have_obj_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_have_obj_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(HAVE)?;
         let mut param_defs: Vec<ParamDefWithParamType> = vec![];
         loop {
@@ -139,7 +131,7 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn have_fn_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_have_fn_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(HAVE)?;
         tb.skip_token(FN)?;
         let name = tb.advance()?;
@@ -169,17 +161,23 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn have_exist(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_have_exist(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(HAVE)?;
 
-        let mut equal_tos = vec![];
-        while tb.current_token_is_equal_to(COMMA) {
-            tb.skip_token(COMMA)?;
-            equal_tos.push(self.parse_obj(tb)?);
-        }
+        let true_fact = self.parse_exist_fact(tb)?;
 
         tb.skip_token(COLON)?;
-        let true_fact = self.parse_exist_fact(tb)?;
+
+        let mut equal_tos = vec![];
+        while !tb.exceed_end_of_head() {
+            equal_tos.push(tb.advance()?);
+            if tb.current_token_is_equal_to(COMMA) {
+                tb.skip_token(COMMA)?;
+            }
+        }
+
+        self.validate_names_and_put_into_parsing_names_block(&equal_tos).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        
         Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(equal_tos, true_fact, tb.line_file)))
     }
 

@@ -7,15 +7,15 @@ use super::TokenBlock;
 impl<'a> Executor<'a> {
     pub fn parse_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         match tb.current()? {
-            PROP => self.def_prop_stmt_or_prop_without_meaning(tb),
+            PROP => self.parse_def_prop_with_meaning_stmt_or_prop_without_meaning(tb),
             LET => self.parse_def_let_stmt(tb),
             HAVE => {
                 if tb.token_at_index(1)? == FN {
-                    self.have_fn_stmt(tb)
+                    self.parse_have_fn_stmt(tb)
                 } else if tb.token_at_index(1)? == EXIST {
-                    self.have_exist(tb)
+                    self.parse_have_exist(tb)
                 } else {
-                    self.have_obj_stmt(tb)
+                    self.parse_have_obj_stmt(tb)
                 }
             },
             KNOW => self.know_stmt(tb),

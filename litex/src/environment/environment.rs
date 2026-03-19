@@ -3,7 +3,7 @@ use std::fmt;
 use crate::stmt::parameter_def::ParamDefWithParamType;
 use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
 use crate::fact::Fact;
-use crate::stmt::definition_stmt::{DefPropStmt, DefPropWithoutMeaningStmt};
+use crate::stmt::definition_stmt::{DefPropWithMeaningStmt, DefPropWithoutMeaningStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::fact::AtomicFact;
 use crate::fact::ExistFact;
@@ -21,7 +21,7 @@ use crate::obj::Obj;
 use crate::fact::ExistOrAndChainAtomicFact;
 pub struct Environment {
     pub defined_identifier_objs: HashMap<String, ()>,
-    pub defined_props: HashMap<String, DefPropStmt>,
+    pub defined_props_with_meaning: HashMap<String, DefPropWithMeaningStmt>,
     pub defined_structs_with_fields: HashMap<String, DefStructWithFieldsStmt>,
     pub defined_structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>,
     pub defined_props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>,
@@ -48,10 +48,10 @@ pub struct Environment {
 }
 
 impl Environment {
-    pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropStmt>, structs_with_fields: HashMap<String, DefStructWithFieldsStmt>, structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>, props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>, algorithms: HashMap<String, DefAlgoStmt>, known_equality: HashMap<String, Rc<Vec<Obj>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts_with_0_or_more_than_2_args: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, AtomicFact>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), AtomicFact>>, known_exist_facts: HashMap<String, Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>, known_exist_facts_in_forall_facts: HashMap<String, Vec<(ExistFact, Rc<KnownForallFactParamsAndDom>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>, known_obj_is_well_defined: HashMap<String,()>, known_atom_in_fn_set: HashMap<String, FnSetObj>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, (usize, usize)>) -> Self {
+    pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropWithMeaningStmt>, structs_with_fields: HashMap<String, DefStructWithFieldsStmt>, structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>, props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>, algorithms: HashMap<String, DefAlgoStmt>, known_equality: HashMap<String, Rc<Vec<Obj>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts_with_0_or_more_than_2_args: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, AtomicFact>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), AtomicFact>>, known_exist_facts: HashMap<String, Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>, known_exist_facts_in_forall_facts: HashMap<String, Vec<(ExistFact, Rc<KnownForallFactParamsAndDom>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>, known_obj_is_well_defined: HashMap<String,()>, known_atom_in_fn_set: HashMap<String, FnSetObj>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, (usize, usize)>) -> Self {
         Environment {
             defined_identifier_objs: objs,
-            defined_props: props,
+            defined_props_with_meaning: props,
             defined_structs_with_fields: structs_with_fields,
             defined_structs_with_no_field: structs_with_no_field,
             defined_props_without_meaning: props_without_meaning,
@@ -79,7 +79,7 @@ impl fmt::Display for Environment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Environment {{\n")?;
         write!(f, "    objs: {:?}\n", self.defined_identifier_objs.len())?;
-        write!(f, "    props: {:?}\n", self.defined_props.len())?;
+        write!(f, "    props_with_meaning: {:?}\n", self.defined_props_with_meaning.len())?;
         write!(f, "    structs_with_fields: {:?}\n", self.defined_structs_with_fields.len())?;
         write!(f, "    structs_with_no_field: {:?}\n", self.defined_structs_with_no_field.len())?;
         write!(f, "    algorithms: {:?}\n", self.defined_algorithms.len())?;
