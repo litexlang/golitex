@@ -1,3 +1,4 @@
+use crate::error::{duplicate_name_error_message, StmtError};
 use crate::stmt::definition_stmt::{DefLetStmt, DefPropWithMeaningStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, DefPropWithoutMeaningStmt};
 use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
 use crate::error::ParsingError;
@@ -23,14 +24,14 @@ impl<'a> Executor<'a> {
         self.delete_parsing_names_block();
 
         let stmt_ok = stmt?;
-        self.validate_name_and_put_into_parsing_names_block(&stmt_ok.name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        self.validate_name_and_put_into_parsing_names_block(&stmt_ok.name).map_err(|e| ParsingError::new(duplicate_name_error_message(&stmt_ok.name), tb.line_file, Some(StmtError::ParseBlockError(e))))?;
         Ok(Stmt::DefPropWithMeaningStmt(stmt_ok))
     }
 
     fn parse_def_prop_with_meaning_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<DefPropWithMeaningStmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
-        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(duplicate_name_error_message(&name), tb.line_file, Some(StmtError::ParseBlockError(e))))?;
         tb.skip_token(LEFT_BRACE)?;
         let mut param_defs: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != RIGHT_BRACE {
@@ -49,14 +50,14 @@ impl<'a> Executor<'a> {
         self.delete_parsing_names_block();
 
         let stmt_ok = stmt?;
-        self.validate_name_and_put_into_parsing_names_block(&stmt_ok.name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        self.validate_name_and_put_into_parsing_names_block(&stmt_ok.name).map_err(|e| ParsingError::new(duplicate_name_error_message(&stmt_ok.name), tb.line_file, Some(StmtError::ParseBlockError(e))))?;
         Ok(Stmt::DefPropWithoutMeaningStmt(stmt_ok))
     }
 
     fn parse_def_prop_without_meaning_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<DefPropWithoutMeaningStmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
-        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(duplicate_name_error_message(&name), tb.line_file, Some(StmtError::ParseBlockError(e))))?;
         tb.skip_token(LEFT_BRACE)?;
         let mut params = vec![];
         while tb.current()? != RIGHT_BRACE {
@@ -136,7 +137,7 @@ impl<'a> Executor<'a> {
         tb.skip_token(FN)?;
         let name = tb.advance()?;
 
-        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(duplicate_name_error_message(&name), tb.line_file, Some(StmtError::ParseBlockError(e))))?;
         
         let fs = self.fn_set_with_dom_without_fn_prefix(tb)?;
         if tb.current_token_is_equal_to(COLON) {
@@ -184,7 +185,7 @@ impl<'a> Executor<'a> {
     pub fn parse_def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(STRUCT)?;
         let name = tb.advance()?;
-        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(duplicate_name_error_message(&name), tb.line_file, Some(StmtError::ParseBlockError(e))))?;
 
         self.new_parsing_names_block();
         let stmt = self.parse_def_struct_stmt_body(name, tb);
@@ -274,7 +275,7 @@ impl<'a> Executor<'a> {
     pub fn parse_def_algorithm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(ALGO)?;
         let name = tb.advance()?;
-        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(duplicate_name_error_message(&name), tb.line_file, Some(StmtError::ParseBlockError(e))))?;
         
         self.new_parsing_names_block();
         let stmt = self.parse_def_algorithm_stmt_body(name, tb);
