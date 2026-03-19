@@ -1,9 +1,9 @@
 use crate::obj::Obj;
-use crate::simplify_polynomial::collect_monomials::collect_monomials_in_obj;
-use crate::simplify_polynomial::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
-use crate::simplify_polynomial::process_division_after_polynomial_simplification::polynomial_equal_after_division_process;
+use crate::calculate_and_simplify_rational_expression::collect_monomials::collect_monomials_in_obj;
+use crate::calculate_and_simplify_rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
+use crate::calculate_and_simplify_rational_expression::process_division_after_polynomial_simplification::collect_rational_expression_monomials_after_denominator_clearing_process;
 
-pub fn two_objs_equal_by_polynomial_simplification_and_division_process(left: &Obj, right: &Obj) -> bool {
+pub fn objs_equal_by_rational_expression_simplification(left: &Obj, right: &Obj) -> bool {
     let left_monomials = collect_monomials_in_obj(left);
     let right_monomials = collect_monomials_in_obj(right);
 
@@ -11,8 +11,10 @@ pub fn two_objs_equal_by_polynomial_simplification_and_division_process(left: &O
         return true;
     }
 
-    let (left_monomials_after_division, right_monomials_after_division) = polynomial_equal_after_division_process(left_monomials, right_monomials);
-    monomial_vectors_are_equal(left_monomials_after_division, right_monomials_after_division)
+    let (left_monomials_after_denominator_clearing, right_monomials_after_denominator_clearing) =
+        collect_rational_expression_monomials_after_denominator_clearing_process(left_monomials, right_monomials);
+        
+    monomial_vectors_are_equal(left_monomials_after_denominator_clearing, right_monomials_after_denominator_clearing)
 }
 
 fn sort_monomials(monomials: Vec<MonomialWithNonZeroScalarAndOrderedOperands>) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {

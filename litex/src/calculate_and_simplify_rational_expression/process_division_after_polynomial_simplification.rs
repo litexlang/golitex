@@ -1,8 +1,11 @@
 use crate::obj::{Add, Mul, Number, Obj};
-use crate::simplify_polynomial::collect_monomials::collect_monomials_in_obj;
-use crate::simplify_polynomial::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
+use crate::calculate_and_simplify_rational_expression::collect_monomials::collect_monomials_in_obj;
+use crate::calculate_and_simplify_rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 
-pub fn polynomial_equal_after_division_process(polynomial1: Vec<MonomialWithNonZeroScalarAndOrderedOperands>, polynomial2: Vec<MonomialWithNonZeroScalarAndOrderedOperands>) -> (Vec<MonomialWithNonZeroScalarAndOrderedOperands>, Vec<MonomialWithNonZeroScalarAndOrderedOperands>) {
+pub fn collect_rational_expression_monomials_after_denominator_clearing_process(
+    left_monomials: Vec<MonomialWithNonZeroScalarAndOrderedOperands>,
+    right_monomials: Vec<MonomialWithNonZeroScalarAndOrderedOperands>,
+) -> (Vec<MonomialWithNonZeroScalarAndOrderedOperands>, Vec<MonomialWithNonZeroScalarAndOrderedOperands>) {
     // Each side is first transformed from:
     //   Vec<Monomial> (with denominators embedded in operands)
     // into:
@@ -15,50 +18,50 @@ pub fn polynomial_equal_after_division_process(polynomial1: Vec<MonomialWithNonZ
     //   denominators = [b, e]
     // and it is stored together with its (side flag, local index).
 
-    let collected_polynomial1 = remove_denominators_from_monomials(polynomial1);
-    let collected_polynomial2 = remove_denominators_from_monomials(polynomial2);
+    let extracted_left_monomials = extract_monomial_fractions_from_monomial_vec(left_monomials);
+    let extracted_right_monomials = extract_monomial_fractions_from_monomial_vec(right_monomials);
 
     // Collect all monomial denominator factors from left and right.
     // Each element is tagged by (is_left, local_monomial_index).
     // When rebuilding a specific monomial on a given side, we skip multiplying by
     // the denominators that originate from that same (side, local index).
-    let mut collected_all: Vec<((bool, usize), (Vec<Obj>, Vec<Obj>))> = vec![];
-    for (local_index, pair) in collected_polynomial1.into_iter() {
-        collected_all.push(((true, local_index), pair));
+    let mut all_monomial_fraction_entries: Vec<((bool, usize), (Vec<Obj>, Vec<Obj>))> = vec![];
+    for (local_index, pair) in extracted_left_monomials.into_iter() {
+        all_monomial_fraction_entries.push(((true, local_index), pair));
     }
-    for (local_index, pair) in collected_polynomial2.into_iter() {
-        collected_all.push(((false, local_index), pair));
+    for (local_index, pair) in extracted_right_monomials.into_iter() {
+        all_monomial_fraction_entries.push(((false, local_index), pair));
     }
 
-    let simplified_polynomial1 = multiply_collected_denominators_and_get_new_monomials(
-        &collected_all,
+    let left_monomials_after_denominator_clearing = multiply_fraction_denominators_and_get_side_monomials(
+        &all_monomial_fraction_entries,
         true,
     );
-    let simplified_polynomial2 = multiply_collected_denominators_and_get_new_monomials(
-        &collected_all,
+    let right_monomials_after_denominator_clearing = multiply_fraction_denominators_and_get_side_monomials(
+        &all_monomial_fraction_entries,
         false,
     );
 
-    (simplified_polynomial1, simplified_polynomial2)
+    (left_monomials_after_denominator_clearing, right_monomials_after_denominator_clearing)
 }
 
-fn multiply_collected_denominators_and_get_new_monomials(
-    collected_all_monomials_with_denominator_removed_and_their_denominators: &Vec<((bool, usize), (Vec<Obj>, Vec<Obj>))>,
-    monomial_is_left: bool,
+fn multiply_fraction_denominators_and_get_side_monomials(
+    all_monomial_fraction_entries: &Vec<((bool, usize), (Vec<Obj>, Vec<Obj>))>,
+    target_side_is_left: bool,
 ) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     // Build the "new" monomials for one side (left or right).
     //
     // Input type:
-    //   collected_all_monomials_with_denominator_removed_and_their_denominators:
+    //   all_monomial_fraction_entries:
     //     Vec<
     //       ((is_left, local_monomial_index), (factors_without_denominators, denominators))
     //     >
     //
-    // For each entry that matches `monomial_is_left`, we rebuild that monomial as:
+    // For each entry that matches `target_side_is_left`, we rebuild that monomial as:
     //   rebuilt_monomial = multiply(entry_factors_without_denominators, all_other_denominators)
     //
     // The "skip self denominators" rule is implemented inside
-    // `multiply_collect_denominator_to_monomial(...)`.
+    // `multiply_monomial_factors_with_all_other_denominators_except_self(...)`.
     //
     // Example:
     //   Suppose the target entry (side=left, index=0) has:
@@ -70,28 +73,30 @@ fn multiply_collected_denominators_and_get_new_monomials(
     //     4 * a * c * x * y
     let mut rebuilt_monomial_objs: Vec<Obj> = vec![];
 
-    for ((entry_is_left, entry_local_index), (entry_factors, _)) in collected_all_monomials_with_denominator_removed_and_their_denominators.iter() {
+    for ((entry_is_left, entry_local_index), (entry_factors, _)) in all_monomial_fraction_entries.iter() {
         // Only rebuild monomials that belong to the requested side.
-        if *entry_is_left != monomial_is_left {
+        if *entry_is_left != target_side_is_left {
             continue;
         }
 
-        let rebuilt_monomial = multiply_collect_denominator_to_monomial(
-            collected_all_monomials_with_denominator_removed_and_their_denominators,
-            monomial_is_left,
+        let rebuilt_monomial = multiply_monomial_factors_with_all_other_denominators_except_self(
+            all_monomial_fraction_entries,
+            target_side_is_left,
             *entry_local_index,
             entry_factors,
         );
         rebuilt_monomial_objs.push(rebuilt_monomial);
     }
 
-    let rebuilt_polynomial = add_objs(rebuilt_monomial_objs);
-    let simplified_monomials = collect_monomials_in_obj(&rebuilt_polynomial);
-    simplified_monomials
+    let rebuilt_rational_expression = add_obj_list(rebuilt_monomial_objs);
+    let collected_monomials = collect_monomials_in_obj(&rebuilt_rational_expression);
+    collected_monomials
 }
 
 // monomial: a/b * c/d * f(e), return ([a, c, f(e)], [b, d])
-fn remove_denominators_from_monomial(monomial: &MonomialWithNonZeroScalarAndOrderedOperands) -> (Vec<Obj>, Vec<Obj>) {
+fn split_monomial_into_fraction_factors_and_denominators(
+    monomial: &MonomialWithNonZeroScalarAndOrderedOperands,
+) -> (Vec<Obj>, Vec<Obj>) {
     let mut factors = vec![Obj::Number(Number::new(monomial.non_zero_scalar.clone()))];
     let mut denominators: Vec<Obj> = vec![];
     if let Some(operands) = monomial.ordered_operands.as_ref() {
@@ -111,7 +116,7 @@ fn remove_denominators_from_monomial(monomial: &MonomialWithNonZeroScalarAndOrde
     (factors, denominators)
 }
 
-fn remove_denominators_from_monomials(
+fn extract_monomial_fractions_from_monomial_vec(
     monomials: Vec<MonomialWithNonZeroScalarAndOrderedOperands>,
 ) -> Vec<(usize, (Vec<Obj>, Vec<Obj>))> {
     // Return format:
@@ -136,17 +141,17 @@ fn remove_denominators_from_monomials(
     let mut monomials_with_denominator_removed_and_their_denominators: Vec<(usize, (Vec<Obj>, Vec<Obj>))> = vec![];
 
     for (index, monomial) in monomials.iter().enumerate() {
-        let current = remove_denominators_from_monomial(monomial);
+        let current = split_monomial_into_fraction_factors_and_denominators(monomial);
         monomials_with_denominator_removed_and_their_denominators.push((index, current));
     }
 
     monomials_with_denominator_removed_and_their_denominators
 }
 
-fn multiply_collect_denominator_to_monomial(
-    collected_all_monomials_with_denominator_removed_and_their_denominators: &Vec<((bool, usize), (Vec<Obj>, Vec<Obj>))>,
-    monomial_is_left: bool,
-    monomial_local_index: usize,
+fn multiply_monomial_factors_with_all_other_denominators_except_self(
+    all_monomial_fraction_entries: &Vec<((bool, usize), (Vec<Obj>, Vec<Obj>))>,
+    target_side_is_left: bool,
+    target_monomial_local_index: usize,
     entry_factors: &Vec<Obj>,
 ) -> Obj {
     // Rebuild one monomial by multiplying:
@@ -160,9 +165,9 @@ fn multiply_collect_denominator_to_monomial(
     let mut collected_factors = entry_factors.clone();
 
     for ((entry_is_left, entry_local_index), (_entry_factors, denominators)) in
-        collected_all_monomials_with_denominator_removed_and_their_denominators.iter()
+        all_monomial_fraction_entries.iter()
     {
-        if *entry_is_left == monomial_is_left && *entry_local_index == monomial_local_index {
+        if *entry_is_left == target_side_is_left && *entry_local_index == target_monomial_local_index {
             continue;
         }
 
@@ -171,7 +176,7 @@ fn multiply_collect_denominator_to_monomial(
         }
     }
 
-    multiply_objs(collected_factors)
+    multiply_obj_list(collected_factors)
 }
 
 fn flatten_mul_obj_to_factors(obj: &Obj) -> Vec<Obj> {
@@ -192,7 +197,7 @@ fn flatten_mul_obj_to_factors(obj: &Obj) -> Vec<Obj> {
     }
 }
 
-fn multiply_objs(objs: Vec<Obj>) -> Obj {
+fn multiply_obj_list(objs: Vec<Obj>) -> Obj {
     let mut objs = objs.into_iter();
     let first_obj = match objs.next() {
         Some(obj) => obj,
@@ -208,7 +213,7 @@ fn multiply_objs(objs: Vec<Obj>) -> Obj {
     result
 }
 
-fn add_objs(objs: Vec<Obj>) -> Obj {
+fn add_obj_list(objs: Vec<Obj>) -> Obj {
     let mut objs = objs.into_iter();
     let first_obj = match objs.next() {
         Some(obj) => obj,
