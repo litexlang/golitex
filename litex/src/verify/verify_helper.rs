@@ -1,5 +1,5 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
-use crate::error::ExecError;
+use crate::error::ExecStmtError;
 use crate::execute::Executor;
 use crate::fact::{AtomicFact, Fact, IsNonemptySetFact};
 use crate::stmt::parameter_def::ParamType;
@@ -7,7 +7,7 @@ use crate::verify::VerifyState;
 
 impl<'a> Executor<'a> {
     /// If check_type_nonempty is true and param_type is Obj(set), verifies that the set is nonempty and stores the fact.
-    pub fn verify_param_type_nonempty_if_required(&mut self, param_type: &ParamType, check_type_nonempty: bool) -> Result<(), ExecError> {
+    pub fn verify_param_type_nonempty_if_required(&mut self, param_type: &ParamType, check_type_nonempty: bool) -> Result<(), ExecStmtError> {
         if !check_type_nonempty {
             return Ok(());
         }

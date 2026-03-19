@@ -1,6 +1,7 @@
 use std::fmt;
 use crate::common::keywords::UNKNOWN_COLON;
 
+#[derive(Debug)]
 pub struct StmtUnknown {
 }
 

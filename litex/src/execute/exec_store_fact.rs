@@ -1,4 +1,4 @@
-use crate::error::ExecError;
+use crate::error::ExecStmtError;
 use crate::infer::InferResult;
 use crate::verify::VerifyState;
 use crate::fact::Fact;
@@ -15,8 +15,8 @@ impl<'a> Executor<'a> {
         Ok(infer_result)
     }
 
-    pub fn verify_fact_well_defined_and_store_and_infer(&mut self, fact: &Fact, verify_state: &VerifyState) -> Result<InferResult, ExecError> {
+    pub fn verify_fact_well_defined_and_store_and_infer(&mut self, fact: &Fact, verify_state: &VerifyState) -> Result<InferResult, ExecStmtError> {
         self.verify_fact_well_defined(fact, verify_state)?;
-        self.store_fact_without_well_defined_verified_and_infer(fact).map_err(ExecError::from)
+        self.store_fact_without_well_defined_verified_and_infer(fact).map_err(ExecStmtError::from)
     }
 }

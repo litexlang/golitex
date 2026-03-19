@@ -8,7 +8,7 @@ use crate::obj::{FnSetObj, Obj};
 use crate::stmt::parameter_def::ParamDefWithParamType;
 use std::collections::HashMap;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct InferResult {
     pub infer_facts: Vec<String>
 }

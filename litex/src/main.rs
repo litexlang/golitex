@@ -8,7 +8,7 @@ use verify::VerifyState;
 mod calculate_and_simplify_rational_expression;
 mod common;
 mod error;
-use error::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError, ExecError, WellDefinedError, VerifyError, InferError};
+use error::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError, ExecStmtError, WellDefinedError, VerifyError, InferError};
 use error::ParsingError;
 mod execute;
 use execute::Executor;
@@ -605,7 +605,7 @@ fn try_errors() {
     let err: StmtError = StmtError::ParsingError(ParsingError::new("demo".to_string(), (1, 0), None));
     println!("{}\n{}", err.display_label(), err.error_body());
 
-    let err: StmtError = StmtError::ExecError(ExecError::new( "".to_string(),"demo".to_string(), None, (1, 0)));
+    let err: StmtError = StmtError::ExecError(ExecStmtError::new( "".to_string(),"demo".to_string(), None, (1, 0)));
     println!("{}\n{}", err.display_label(), err.error_body());
 
     let err: StmtError = StmtError::WellDefinedError(WellDefinedError::new("demo".to_string(), Some(StmtError::ArithmeticError(ArithmeticError::new("demo".to_string(), None))), (1, 0)));

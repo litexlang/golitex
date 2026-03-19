@@ -1,2 +1,8 @@
-prove:
-    1 + 1 = 2
+prop p(a, b)
+prop q(a, b)
+
+know:
+    forall a, b R:
+        $p(a, b) or $q(a, b)
+
+$p(1, 2) or $q(1, 2)

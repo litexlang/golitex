@@ -1,6 +1,6 @@
 use std::fmt;
 use std::collections::HashMap;
-use crate::error::{ExecError, StmtError};
+use crate::error::{ExecStmtError, StmtError};
 use crate::fact::{AtomicFact, Fact, InFact, IsSetFact, IsNonemptySetFact, IsFiniteSetFact};
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::helper::vec_to_string_join_by_comma;
@@ -220,7 +220,7 @@ impl ParamDefWithParamSet {
     fn instantiate_param_def_with_set_one_by_one(param_defs: &Vec<ParamDefWithParamSet>, args: &Vec<Obj>) -> Result<Vec<Obj>, StmtError> {
         let total_param_count = Self::number_of_params_in_param_def_with_set_def(param_defs);
         if total_param_count != args.len() {
-            return Err(StmtError::ExecError(ExecError::new(
+            return Err(StmtError::ExecError(ExecStmtError::new(
                 "".to_string(),
                 format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
@@ -301,7 +301,7 @@ impl ParamDefWithParamType {
     fn instantiate_param_def_with_type_one_by_one(param_defs: &Vec<ParamDefWithParamType>, args: &Vec<Obj>) -> Result<Vec<ParamType>, StmtError> {
         let total_param_count = Self::number_of_params_in_param_def_with_type_def(param_defs);
         if total_param_count != args.len() {
-            return Err(StmtError::ExecError(ExecError::new(
+            return Err(StmtError::ExecError(ExecStmtError::new(
                 "".to_string(),
                 format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",

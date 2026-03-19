@@ -1,6 +1,7 @@
 use crate::result::NonErrStmtExecResult;
 use crate::infer::InferResult;
 
+#[derive(Debug)]
 pub struct NonFactualStmtSuccess {
     pub stmt: String,
     pub infers: InferResult,
@@ -8,6 +9,7 @@ pub struct NonFactualStmtSuccess {
     pub line_file: (usize, usize),
 }
 
+#[derive(Debug)]
 pub struct FactVerifiedByFact {
     pub fact: String,
     pub verified_by: String,
@@ -16,6 +18,7 @@ pub struct FactVerifiedByFact {
     pub verified_by_line_file: (usize, usize),
 }
 
+#[derive(Debug)]
 pub struct FactVerifiedByBuiltinRules {
     pub fact: String,
     pub verified_by: String,
