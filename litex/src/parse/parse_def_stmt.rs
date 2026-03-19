@@ -139,7 +139,7 @@ impl<'a> Executor<'a> {
 
         self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(duplicate_name_error_message(&name), tb.line_file, Some(StmtError::ParseBlockError(e))))?;
         
-        let fs = self.fn_set_with_dom_without_fn_prefix(tb)?;
+        let fs = self.parse_fn_set_with_dom_without_fn_prefix(tb)?;
         if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let mut cases: Vec<AndChainAtomicFact> = vec![];

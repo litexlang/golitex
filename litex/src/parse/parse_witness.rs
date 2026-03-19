@@ -19,7 +19,7 @@ impl<'a> Executor<'a> {
 
     pub fn witness_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(EXIST)?;
-        let equal_tos = self.obj_list(tb)?;
+        let equal_tos = self.parse_obj_list(tb)?;
         tb.skip_token(COLON)?;
         let exist_fact_in_witness = self.parse_exist_fact(tb)?;
         let mut proof = vec![];

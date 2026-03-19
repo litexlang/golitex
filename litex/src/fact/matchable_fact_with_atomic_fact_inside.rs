@@ -90,6 +90,17 @@ impl AndFact {
     pub fn key(&self) -> String {
         vec_to_string_with_sep(&self.facts.iter().map(|a| a.key()).collect::<Vec<_>>(), format!(" {} ", AND))
     }
+
+    pub fn get_args_from_fact(&self) -> Vec<Obj> {
+        let mut result: Vec<Obj> = Vec::new();
+        for atomic_fact in self.facts.iter() {
+            let args_from_atomic_fact = atomic_fact.get_args_from_fact();
+            for arg in args_from_atomic_fact {
+                result.push(arg);
+            }
+        }
+        result
+    }
 }
 
 impl fmt::Display for ChainFact {
@@ -109,6 +120,14 @@ impl fmt::Display for ChainFact {
 impl ChainFact {
     pub fn key(&self) -> String {
         vec_to_string_with_sep(&self.prop_names.iter().map(|p| p.to_string()).collect::<Vec<_>>(), format!(" {} ", AND))
+    }
+
+    pub fn get_args_from_fact(&self) -> Vec<Obj> {
+        let mut result: Vec<Obj> = Vec::new();
+        for obj in self.objs.iter() {
+            result.push(obj.clone());
+        }
+        result
     }
 }
 
@@ -148,3 +167,12 @@ impl AndChainAtomicFact {
     }
 }
 
+impl AndChainAtomicFact {
+    pub fn get_args_from_fact(&self) -> Vec<Obj> {
+        match self {
+            AndChainAtomicFact::AtomicFact(atomic_fact) => atomic_fact.get_args_from_fact(),
+            AndChainAtomicFact::AndFact(and_fact) => and_fact.get_args_from_fact(),
+            AndChainAtomicFact::ChainFact(chain_fact) => chain_fact.get_args_from_fact(),
+        }
+    }
+}
