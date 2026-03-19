@@ -4,6 +4,7 @@ use crate::infer::InferResult;
 use super::stmt_success::{FactVerifiedByBuiltinRules, FactVerifiedByFact, NonFactualStmtSuccess};
 use super::stmt_unknown::StmtUnknown;
 
+#[derive(Debug)]
 pub enum NonErrStmtExecResult {
     NonFactualStmtSuccess(NonFactualStmtSuccess),
     FactVerifiedByFact(FactVerifiedByFact),
