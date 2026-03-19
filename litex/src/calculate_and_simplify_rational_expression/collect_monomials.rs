@@ -1,6 +1,6 @@
 use crate::common::helper::is_number_string_literally_integer_without_dot;
 use crate::obj::{Add, Mul, Obj, Pow, Sub};
-use crate::simplify_polynomial::calculate::{mul_decimal_str, pow_decimal_str, sub_decimal_str};
+use crate::calculate_and_simplify_rational_expression::calculate::{mul_decimal_str, pow_decimal_str, sub_decimal_str};
 use super::calculate::add_decimal_str;
 use super::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 

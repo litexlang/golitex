@@ -1,7 +1,7 @@
 use crate::obj::{Add, Div, Identifier, Mul, Number, Obj, Pow};
-use crate::simplify_polynomial::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
+use crate::calculate_and_simplify_rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 use super::collect_monomials::collect_monomials_in_obj;
-use super::simplify_polynomial::two_objs_equal_by_polynomial_simplification_and_division_process;
+use super::objs_equal_by_rational_expression_simplification::objs_equal_by_rational_expression_simplification;
 
 fn mk_num(s: String) -> Obj {
     Obj::Number(Number::new(s))
@@ -224,7 +224,7 @@ fn test_two_objs_equal_by_polynomial_simplification_after_division_process() {
         mk_mul_obj(x, y),
     );
 
-    assert!(two_objs_equal_by_polynomial_simplification_and_division_process(&left, &right));
+    assert!(objs_equal_by_rational_expression_simplification(&left, &right));
 }
 
 #[test]
@@ -245,7 +245,7 @@ fn test_two_objs_equal_by_polynomial_simplification_a_over_b_plus_c_over_d() {
     let right_denominator = mk_mul_obj(b, d);
     let right = mk_div_obj(right_numerator, right_denominator);
 
-    assert!(two_objs_equal_by_polynomial_simplification_and_division_process(&left, &right));
+    assert!(objs_equal_by_rational_expression_simplification(&left, &right));
 }
 
 #[test]
@@ -263,7 +263,7 @@ fn test_two_objs_equal_by_polynomial_simplification_same_denominator_addition() 
         c,
     );
 
-    assert!(two_objs_equal_by_polynomial_simplification_and_division_process(&left, &right));
+    assert!(objs_equal_by_rational_expression_simplification(&left, &right));
 }
 
 #[test]
@@ -280,7 +280,7 @@ fn test_two_objs_equal_by_polynomial_simplification_duplicate_fraction_addition(
         b,
     );
 
-    assert!(two_objs_equal_by_polynomial_simplification_and_division_process(&left, &right));
+    assert!(objs_equal_by_rational_expression_simplification(&left, &right));
 }
 
 #[test]
@@ -309,5 +309,5 @@ fn test_two_objs_equal_by_polynomial_simplification_sum_of_three_unit_fractions(
     );
     let right = mk_div_obj(right_numerator, right_denominator);
 
-    assert!(two_objs_equal_by_polynomial_simplification_and_division_process(&left, &right));
+    assert!(objs_equal_by_rational_expression_simplification(&left, &right));
 }

@@ -5,7 +5,7 @@ use crate::obj::Atom;
 mod infer;
 mod verify;
 use verify::VerifyState;
-mod simplify_polynomial;
+mod calculate_and_simplify_rational_expression;
 mod common;
 mod error;
 use error::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError, ExecError, WellDefinedError, VerifyError, InferError};
