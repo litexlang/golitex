@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use crate::obj::{FnObj, Obj};
 use crate::fact::AtomicFact;
-use crate::simplify_polynomial::two_objs_equal_by_polynomial_simplification;
+use crate::simplify_polynomial::two_objs_equal_by_polynomial_simplification_and_division_process;
 use crate::fact::EqualFact;
 use crate::execute::Executor;
 use crate::infer::InferResult;
@@ -240,7 +240,7 @@ fn verify_equality_by_builtin_rules(equal_fact: &EqualFact) -> Result<NonErrStmt
         return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "calculation".to_string(), InferResult::new(), equal_fact.line_file)));
     }
 
-    if two_objs_equal_by_polynomial_simplification(&equal_fact.left, &equal_fact.right) {
+    if two_objs_equal_by_polynomial_simplification_and_division_process(&equal_fact.left, &equal_fact.right) {
         return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(equal_fact.to_string(), "polynomial simplification".to_string(), InferResult::new(), equal_fact.line_file)));
     }
 

@@ -1,6 +1,7 @@
-use crate::obj::{Add, Identifier, Mul, Number, Obj, Pow};
+use crate::obj::{Add, Div, Identifier, Mul, Number, Obj, Pow};
 use crate::simplify_polynomial::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 use super::collect_monomials::collect_monomials_in_obj;
+use super::simplify_polynomial::two_objs_equal_by_polynomial_simplification_and_division_process;
 
 fn mk_num(s: String) -> Obj {
     Obj::Number(Number::new(s))
@@ -8,6 +9,18 @@ fn mk_num(s: String) -> Obj {
 
 fn mk_var(s: String) -> Obj {
     Obj::Identifier(Identifier::new(s))
+}
+
+fn mk_add_obj(left: Obj, right: Obj) -> Obj {
+    Obj::Add(Add::new(left, right, false))
+}
+
+fn mk_mul_obj(left: Obj, right: Obj) -> Obj {
+    Obj::Mul(Mul::new(left, right, false))
+}
+
+fn mk_div_obj(left: Obj, right: Obj) -> Obj {
+    Obj::Div(Div::new(left, right))
 }
 
 #[test]
@@ -195,4 +208,106 @@ fn test_monomial_operands_equal() {
         _ => panic!("m_x and m_x2 should be Some"),
     }
 
+}
+
+#[test]
+fn test_two_objs_equal_by_polynomial_simplification_after_division_process() {
+    let x = mk_var("x".to_string());
+    let y = mk_var("y".to_string());
+
+    let left = mk_add_obj(
+        mk_div_obj(mk_num("1".to_string()), x.clone()),
+        mk_div_obj(mk_num("1".to_string()), y.clone()),
+    );
+    let right = mk_div_obj(
+        mk_add_obj(x.clone(), y.clone()),
+        mk_mul_obj(x, y),
+    );
+
+    assert!(two_objs_equal_by_polynomial_simplification_and_division_process(&left, &right));
+}
+
+#[test]
+fn test_two_objs_equal_by_polynomial_simplification_a_over_b_plus_c_over_d() {
+    let a = mk_var("a".to_string());
+    let b = mk_var("b".to_string());
+    let c = mk_var("c".to_string());
+    let d = mk_var("d".to_string());
+
+    let left = mk_add_obj(
+        mk_div_obj(a.clone(), b.clone()),
+        mk_div_obj(c.clone(), d.clone()),
+    );
+    let right_numerator = mk_add_obj(
+        mk_mul_obj(a, d.clone()),
+        mk_mul_obj(b.clone(), c),
+    );
+    let right_denominator = mk_mul_obj(b, d);
+    let right = mk_div_obj(right_numerator, right_denominator);
+
+    assert!(two_objs_equal_by_polynomial_simplification_and_division_process(&left, &right));
+}
+
+#[test]
+fn test_two_objs_equal_by_polynomial_simplification_same_denominator_addition() {
+    let a = mk_var("a".to_string());
+    let b = mk_var("b".to_string());
+    let c = mk_var("c".to_string());
+
+    let left = mk_add_obj(
+        mk_div_obj(a.clone(), c.clone()),
+        mk_div_obj(b.clone(), c.clone()),
+    );
+    let right = mk_div_obj(
+        mk_add_obj(a, b),
+        c,
+    );
+
+    assert!(two_objs_equal_by_polynomial_simplification_and_division_process(&left, &right));
+}
+
+#[test]
+fn test_two_objs_equal_by_polynomial_simplification_duplicate_fraction_addition() {
+    let a = mk_var("a".to_string());
+    let b = mk_var("b".to_string());
+
+    let left = mk_add_obj(
+        mk_div_obj(a.clone(), b.clone()),
+        mk_div_obj(a.clone(), b.clone()),
+    );
+    let right = mk_div_obj(
+        mk_mul_obj(mk_num("2".to_string()), a),
+        b,
+    );
+
+    assert!(two_objs_equal_by_polynomial_simplification_and_division_process(&left, &right));
+}
+
+#[test]
+fn test_two_objs_equal_by_polynomial_simplification_sum_of_three_unit_fractions() {
+    let a = mk_var("a".to_string());
+    let b = mk_var("b".to_string());
+    let c = mk_var("c".to_string());
+
+    let left = mk_add_obj(
+        mk_add_obj(
+            mk_div_obj(mk_num("1".to_string()), a.clone()),
+            mk_div_obj(mk_num("1".to_string()), b.clone()),
+        ),
+        mk_div_obj(mk_num("1".to_string()), c.clone()),
+    );
+    let right_numerator = mk_add_obj(
+        mk_add_obj(
+            mk_mul_obj(b.clone(), c.clone()),
+            mk_mul_obj(a.clone(), c.clone()),
+        ),
+        mk_mul_obj(a.clone(), b.clone()),
+    );
+    let right_denominator = mk_mul_obj(
+        mk_mul_obj(a, b),
+        c,
+    );
+    let right = mk_div_obj(right_numerator, right_denominator);
+
+    assert!(two_objs_equal_by_polynomial_simplification_and_division_process(&left, &right));
 }
