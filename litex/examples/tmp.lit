@@ -1,0 +1,3 @@
+have a, b, c, d R
+
+a / b + c / d = (a * d + c * b) / (b * d)
