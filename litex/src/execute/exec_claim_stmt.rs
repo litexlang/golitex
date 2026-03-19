@@ -1,5 +1,5 @@
 use crate::error::StmtError;
-use crate::error::{ExecError, UnknownError};
+use crate::error::{ExecStmtError, UnknownError};
 use crate::fact::Fact;
 use crate::verify::VerifyState;
 use crate::stmt::claim_stmt::ClaimStmt;
@@ -36,7 +36,7 @@ impl<'a> Executor<'a> {
             Fact::ForallFact(forall_fact) => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        StmtError::ExecError(ExecError::new(
+                        StmtError::ExecError(ExecStmtError::new(
                             stmt.stmt_type_name(),
                             "claim: fact is not well defined".to_string(),
                             Some(e.into()),
@@ -48,7 +48,7 @@ impl<'a> Executor<'a> {
                 let body_result = self
                     .define_params_with_type(&forall_fact.params_def_with_type, false)
                     .map_err(|e| {
-                        StmtError::ExecError(ExecError::new(
+                        StmtError::ExecError(ExecStmtError::new(
                             stmt.stmt_type_name(),
                             "claim: failed to define forall params".to_string(),
                             Some(e.into()),
@@ -65,7 +65,7 @@ impl<'a> Executor<'a> {
             _ => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        StmtError::ExecError(ExecError::new(
+                        StmtError::ExecError(ExecStmtError::new(
                             stmt.stmt_type_name(),
                             "claim: fact is not well defined".to_string(),
                             Some(e.into()),

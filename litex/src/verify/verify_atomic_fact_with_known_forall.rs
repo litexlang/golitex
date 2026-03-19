@@ -40,9 +40,11 @@ impl<'a> Executor<'a> {
                 let known_forall_facts_count = known_forall_facts_in_env.len();
                 for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
                     let current_known_forall = &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
-                    let match_result = Self::match_atomic_fact_in_known_forall_fact_with_given_atomic_fact(
-                        &current_known_forall.0,
-                        given_fact,
+                    let atomic_fact_args_in_known_forall = current_known_forall.0.args();
+                    let given_atomic_fact_args = given_fact.args();
+                    let match_result = Self::match_args_in_fact_in_known_forall_fact_with_given_args(
+                        &atomic_fact_args_in_known_forall,
+                        &given_atomic_fact_args,
                     )?;
                     if let Some(arg_map) = match_result {
                         return Ok(((i, j), Some(arg_map), Some(current_known_forall.clone())));
@@ -67,9 +69,11 @@ impl<'a> Executor<'a> {
             let known_forall_facts_count = known_forall_facts_in_env.len();
             for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
                 let current_known_forall = &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
-                let match_result = Self::match_atomic_fact_in_known_forall_fact_with_given_atomic_fact(
-                    &current_known_forall.0,
-                    given_fact,
+                let atomic_fact_args_in_known_forall = current_known_forall.0.args();
+                let given_atomic_fact_args = given_fact.args();
+                let match_result = Self::match_args_in_fact_in_known_forall_fact_with_given_args(
+                    &atomic_fact_args_in_known_forall,
+                    &given_atomic_fact_args,
                 )?;
                 if let Some(arg_map) = match_result {
                     return Ok((j, Some(arg_map), Some(current_known_forall.clone())));
@@ -97,7 +101,7 @@ impl<'a> Executor<'a> {
             let ((i, j), arg_map_opt, known_forall_opt) = result;
             match (arg_map_opt, known_forall_opt) {
                 (Some(arg_map), Some((atomic_fact_in_known_forall_fact, forall_rc))) => {
-                    if let Some(fact_verified) = self.verify_one_param_matches_equal_args_and_args_satisfy_forall_requirements(
+                    if let Some(fact_verified) = self.verify_args_satisfy_forall_requirements(
                         &atomic_fact_in_known_forall_fact,
                         &forall_rc,
                         arg_map,
@@ -128,7 +132,7 @@ impl<'a> Executor<'a> {
             )?;
             match result {
                 (j, Some(arg_map), Some((atomic_fact_in_known_forall_fact, forall_rc))) => {
-                    if let Some(fact_verified) = self.verify_one_param_matches_equal_args_and_args_satisfy_forall_requirements(
+                    if let Some(fact_verified) = self.verify_args_satisfy_forall_requirements(
                         &atomic_fact_in_known_forall_fact,
                         &forall_rc,
                         arg_map,
@@ -144,7 +148,7 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn verify_one_param_matches_equal_args_and_args_satisfy_forall_requirements(
+    fn verify_args_satisfy_forall_requirements(
         &mut self,
         atomic_fact_in_known_forall_fact: &AtomicFact,
         known_forall: &Rc<KnownForallFactParamsAndDom>,
@@ -226,23 +230,33 @@ impl<'a> Executor<'a> {
         Ok(Some(fact_verified))
     }
 
-    fn match_atomic_fact_in_known_forall_fact_with_given_atomic_fact(atomic_fact_in_known_forall: &AtomicFact, given_atomic_fact: &AtomicFact) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
+    fn match_args_in_fact_in_known_forall_fact_with_given_args(
+        fact_args_in_known_forall: &Vec<Obj>,
+        given_fact_args: &Vec<Obj>,
+    ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
+        if fact_args_in_known_forall.len() != given_fact_args.len() {
+            return Ok(None);
+        }
+
         let mut atom_in_known_atomic_fact_to_matched_objs_in_given_fact_map: HashMap<String, Obj> = HashMap::new();
 
-        for (arg_in_atomic_fact_in_known_forall, arg_in_given) in atomic_fact_in_known_forall.args().iter().zip(given_atomic_fact.args().iter()) {
-            let sub_map_option = Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(arg_in_atomic_fact_in_known_forall, arg_in_given)?;
+        for (arg_in_atomic_fact_in_known_forall, arg_in_given) in fact_args_in_known_forall
+            .iter()
+            .zip(given_fact_args.iter())
+        {
+            let sub_map_option =
+                Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(arg_in_atomic_fact_in_known_forall, arg_in_given)?;
             let sub_map = match sub_map_option {
                 Some(m) => m,
                 None => return Ok(None),
             };
             for (k, v) in sub_map {
-                // 如果sub_map 传上来的东西，原来已经有了，那就看看是不是一样，如果不一样，那就return None
                 if let Some(existing_obj) = atom_in_known_atomic_fact_to_matched_objs_in_given_fact_map.get(&k) {
                     if existing_obj.to_string() != v.to_string() {
                         return Ok(None);
                     }
                 }
-                
+
                 atom_in_known_atomic_fact_to_matched_objs_in_given_fact_map.insert(k, v);
             }
         }

@@ -1,4 +1,4 @@
-use crate::error::{ExecError, StmtError};
+use crate::error::{ExecStmtError, StmtError};
 use crate::stmt::Stmt;
 use crate::result::NonErrStmtExecResult;
 use super::Executor;
@@ -39,6 +39,6 @@ impl<'a> Executor<'a> {
     }
 
     pub fn stmt_unsupported(stmt_type_name: String, line_file: (usize, usize)) -> Result<NonErrStmtExecResult, StmtError> {
-        Err(StmtError::ExecError(ExecError::new(stmt_type_name, "unimplemented".to_string(), None, line_file)))
+        Err(StmtError::ExecError(ExecStmtError::new(stmt_type_name, "unimplemented".to_string(), None, line_file)))
     }
 }
