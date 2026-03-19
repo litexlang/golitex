@@ -60,7 +60,7 @@ pub struct HaveFnEqualStmt {
 }
 
 pub struct HaveExistObjStmt {
-    pub equal_tos: Vec<Obj>,
+    pub equal_tos: Vec<String>,
     pub exist_fact_in_have_obj_st: ExistFact,
     pub line_file: (usize, usize),
 }
@@ -83,7 +83,7 @@ pub struct DefLetStmt {
 }
 
 #[derive(Clone)]
-pub struct DefPropStmt {
+pub struct DefPropWithMeaningStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
     pub iff_facts: Vec<Fact>,
@@ -107,17 +107,17 @@ impl fmt::Display for DefStructWithFieldsStmt {
     }
 }
 
-impl DefPropStmt {
+impl DefPropWithMeaningStmt {
     pub fn new(name: String, params_def_with_type: Vec<ParamDefWithParamType>, iff_facts: Vec<Fact>, line_file: (usize, usize)) -> Self {
-        DefPropStmt { name, params_def_with_type, iff_facts, line_file }
+        DefPropWithMeaningStmt { name, params_def_with_type, iff_facts, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
-        "DefPropStmt".to_string()
+        "DefPropWithMeaningStmt".to_string()
     }
 }
 
-impl fmt::Display for DefPropStmt {
+impl fmt::Display for DefPropWithMeaningStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.iff_facts.len() {
             0 => write!(f, "{} {}{}", PROP, self.name, braced_vec_to_string(&self.params_def_with_type)),
@@ -179,7 +179,7 @@ impl fmt::Display for HaveObjEqualStmt {
 }
 
 impl HaveExistObjStmt {
-    pub fn new(equal_tos: Vec<Obj>, exist_fact_in_have_obj_st: ExistFact, line_file: (usize, usize)) -> Self {
+    pub fn new(equal_tos: Vec<String>, exist_fact_in_have_obj_st: ExistFact, line_file: (usize, usize)) -> Self {
         HaveExistObjStmt { equal_tos, exist_fact_in_have_obj_st, line_file }
     }
 

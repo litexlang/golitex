@@ -7,7 +7,7 @@ use crate::infer::InferResult;
 use crate::result::NonErrStmtExecResult;
 use crate::module_manager::ModuleManager;
 use crate::environment::Environment;
-use crate::stmt::definition_stmt::DefPropStmt;
+use crate::stmt::definition_stmt::DefPropWithMeaningStmt;
 use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::stmt::definition_stmt::DefPropWithoutMeaningStmt;
@@ -20,7 +20,7 @@ pub struct RuntimeContext<'a> {
     pub builtin_environment: &'a mut Environment,
 
     pub defined_identifier_objs: HashMap<String, ()>,
-    pub defined_props: HashMap<String, DefPropStmt>,
+    pub defined_props_with_meaning: HashMap<String, DefPropWithMeaningStmt>,
     pub defined_props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>,
     pub defined_structs_with_fields: HashMap<String, DefStructWithFieldsStmt>,
     pub defined_structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>,
@@ -30,7 +30,7 @@ pub struct RuntimeContext<'a> {
 impl<'a> RuntimeContext<'a> {
     pub fn new_empty_runtime_context_with_one_env(module_manager: &'a mut ModuleManager<'a>, builtin_environment: &'a mut Environment) -> Self {
         let new_env = Box::new(Environment::new_empty_env());
-        RuntimeContext { module_manager, environments: vec![new_env], builtin_environment, defined_identifier_objs: HashMap::new(), defined_props: HashMap::new(), defined_props_without_meaning: HashMap::new(), defined_structs_with_fields: HashMap::new(), defined_structs_with_no_field: HashMap::new(), defined_algorithms: HashMap::new() }
+        RuntimeContext { module_manager, environments: vec![new_env], builtin_environment, defined_identifier_objs: HashMap::new(), defined_props_with_meaning: HashMap::new(), defined_props_without_meaning: HashMap::new(), defined_structs_with_fields: HashMap::new(), defined_structs_with_no_field: HashMap::new(), defined_algorithms: HashMap::new() }
     }
 }
 
@@ -41,7 +41,7 @@ impl<'a> fmt::Display for RuntimeContext<'a> {
         write!(f, "    environments: {:?}\n", self.environments.len())?;
         write!(f, "    builtin_environment: {}\n", self.builtin_environment)?;
         write!(f, "    objs: {:?}\n", self.defined_identifier_objs.len())?;
-        write!(f, "    props: {:?}\n", self.defined_props.len())?;
+        write!(f, "    props_with_meaning: {:?}\n", self.defined_props_with_meaning.len())?;
         write!(f, "    structs_with_fields: {:?}\n", self.defined_structs_with_fields.len())?;
         write!(f, "    structs_with_no_field: {:?}\n", self.defined_structs_with_no_field.len())?;
         write!(f, "    algorithms: {:?}\n", self.defined_algorithms.len())?;
@@ -60,19 +60,19 @@ impl<'a> RuntimeContext<'a> {
 }
 
 impl<'a> RuntimeContext<'a> {
-    pub fn get_predicate_definition_by_name(&self, predicate_name: &str) -> Option<&DefPropStmt> {
+    pub fn get_predicate_with_meaning_definition_by_name(&self, predicate_name: &str) -> Option<&DefPropWithMeaningStmt> {
         let parts = predicate_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
             panic!("NOT IMPLEMENTED YET");
         }
 
         for environment in self.iter_environments_from_top() {
-            if let Some(definition) = environment.defined_props.get(predicate_name) {
+            if let Some(definition) = environment.defined_props_with_meaning.get(predicate_name) {
                 return Some(definition);
             }
         }
 
-        self.builtin_environment.defined_props.get(predicate_name)
+        self.builtin_environment.defined_props_with_meaning.get(predicate_name)
     }
 
     /// Look up predicate definition without meaning by name from current env or builtin.
@@ -130,7 +130,12 @@ impl<'a> RuntimeContext<'a> {
     }
 
     pub fn is_name_used(&self, name: &str) -> bool {
-        self.defined_identifier_objs.contains_key(name) || self.defined_props.contains_key(name) || self.defined_props_without_meaning.contains_key(name) || self.defined_structs_with_fields.contains_key(name) || self.defined_structs_with_no_field.contains_key(name) || self.defined_algorithms.contains_key(name)
+        self.defined_identifier_objs.contains_key(name)
+            || self.defined_props_with_meaning.contains_key(name)
+            || self.defined_props_without_meaning.contains_key(name)
+            || self.defined_structs_with_fields.contains_key(name)
+            || self.defined_structs_with_no_field.contains_key(name)
+            || self.defined_algorithms.contains_key(name)
     }
 }
 
@@ -149,8 +154,8 @@ impl<'a> RuntimeContext<'a> {
                 for defined_identifier_obj in last_env.defined_identifier_objs.iter() {
                     self.defined_identifier_objs.remove(defined_identifier_obj.0);
                 }
-                for defined_prop in last_env.defined_props.iter() {
-                    self.defined_props.remove(defined_prop.0);
+                for defined_prop_with_meaning in last_env.defined_props_with_meaning.iter() {
+                    self.defined_props_with_meaning.remove(defined_prop_with_meaning.0);
                 }
                 for defined_prop_without_meaning in last_env.defined_props_without_meaning.iter() {
                     self.defined_props_without_meaning.remove(defined_prop_without_meaning.0);

@@ -25,7 +25,7 @@ use obj::{
 use obj::{Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod};
 mod stmt;
 use stmt::Stmt;
-use stmt::definition_stmt::{HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, DefPropStmt, DefLetStmt};
+use stmt::definition_stmt::{HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, DefPropWithMeaningStmt, DefLetStmt};
 use stmt::claim_stmt::ClaimStmt;
 use stmt::know_stmt::KnowStmt;
 use stmt::proof_technique_stmt::{ProveCaseByCaseStmt, ProveByContradictionStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveByEqualSetStmt, ViewFnAsSetStmt};
@@ -204,7 +204,7 @@ fn try_stmt() {
     )))], (1, 0)));
     println!("{}", def_stmt);
 
-    let def_stmt2 = Stmt::DefPropStmt(DefPropStmt::new("f".to_string(), vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let def_stmt2 = Stmt::DefPropWithMeaningStmt(DefPropWithMeaningStmt::new("f".to_string(), vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Identifier::mk("p".to_string()),
         Identifier::mk("q".to_string()),
         (1, 0),
@@ -692,12 +692,12 @@ fn try_stmt_result() {
 
 fn try_definitions() {
     let params_def_with_type = vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))];
-    let def_prop_stmt = DefPropStmt::new("f".to_string(), params_def_with_type, vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let def_prop_with_meaning_stmt = DefPropWithMeaningStmt::new("f".to_string(), params_def_with_type, vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Identifier::mk("p".to_string()),
         Identifier::mk("q".to_string()),
         (1, 0),
     )))], (1, 0));
-    println!("{}", def_prop_stmt);
+    println!("{}", def_prop_with_meaning_stmt);
 
     let def_let_param = vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))];
     let def_let_stmt = DefLetStmt::new(def_let_param, vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
@@ -708,8 +708,8 @@ fn try_definitions() {
     println!("{}", def_let_stmt);
 
     let params_def_with_type2 = vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))];
-    let def_prop_stmt2 = DefPropStmt::new("f".to_string(), params_def_with_type2, vec![], (1, 0));
-    println!("{}", def_prop_stmt2);
+    let def_prop_with_meaning_stmt2 = DefPropWithMeaningStmt::new("f".to_string(), params_def_with_type2, vec![], (1, 0));
+    println!("{}", def_prop_with_meaning_stmt2);
 }
 
 fn try_obj_at_index() {
@@ -978,7 +978,7 @@ fn try_prove_for_stmt() {
 }
 
 fn try_have_obj_st_stmt() {
-    let have_obj_st_stmt = HaveExistObjStmt::new(vec![Identifier::mk("p".to_string())], ExistFact::new(vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], vec![], (1, 0)), (1, 0));
+    let have_obj_st_stmt = HaveExistObjStmt::new(vec!["p".to_string()], ExistFact::new(vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], vec![], (1, 0)), (1, 0));
     println!("{}", have_obj_st_stmt);
 
     let stmt = Stmt::HaveExistObjStmt(have_obj_st_stmt);

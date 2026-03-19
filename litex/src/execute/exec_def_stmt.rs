@@ -2,7 +2,7 @@ use crate::error::ExecError;
 use std::collections::HashMap;
 use crate::obj::{Atom, FnObj, Identifier, Obj};
 use crate::stmt::parameter_def::{ParamDefWithParamType, ParamType, ParamDefWithParamSet};
-use crate::stmt::definition_stmt::{DefLetStmt, DefPropStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt};
+use crate::stmt::definition_stmt::{DefLetStmt, DefPropWithMeaningStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt, HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::fact::Fact;
 use crate::fact::{AndChainAtomicFact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, ForallFact, InFact};
@@ -35,29 +35,29 @@ fn build_function_obj_with_param_names(function_name: &str, param_names: &[Strin
 }
 
 impl<'a> Executor<'a> {
-    pub fn def_prop_stmt(&mut self, def_prop_stmt: &DefPropStmt) -> Result<NonErrStmtExecResult, ExecError> {
-        self.def_prop_stmt_check_well_defined(def_prop_stmt).map_err(|e| ExecError::new(def_prop_stmt.stmt_type_name(), def_prop_stmt.to_string(), Some(e.into()), def_prop_stmt.line_file))?;
-        self.store_def_prop(def_prop_stmt)?;
+    pub fn def_prop_with_meaning_stmt(&mut self, def_prop_with_meaning_stmt: &DefPropWithMeaningStmt) -> Result<NonErrStmtExecResult, ExecError> {
+        self.def_prop_with_meaning_stmt_check_well_defined(def_prop_with_meaning_stmt).map_err(|e| ExecError::new(def_prop_with_meaning_stmt.stmt_type_name(), def_prop_with_meaning_stmt.to_string(), Some(e.into()), def_prop_with_meaning_stmt.line_file))?;
+        self.store_def_prop_with_meaning(def_prop_with_meaning_stmt)?;
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
-            def_prop_stmt.to_string(),
+            def_prop_with_meaning_stmt.to_string(),
             InferResult::new(),
-            def_prop_stmt.line_file,
+            def_prop_with_meaning_stmt.line_file,
         )))
     }
 
-    fn def_prop_stmt_check_well_defined(&mut self, def_prop_stmt: &DefPropStmt) -> Result<(), ExecError> {
+    fn def_prop_with_meaning_stmt_check_well_defined(&mut self, def_prop_with_meaning_stmt: &DefPropWithMeaningStmt) -> Result<(), ExecError> {
         self.runtime_context.new_env();
 
-        let result = self.def_prop_stmt_check_well_defined_body(def_prop_stmt);
+        let result = self.def_prop_with_meaning_stmt_check_well_defined_body(def_prop_with_meaning_stmt);
 
         self.runtime_context.delete_env();
         result
     }
 
-    fn def_prop_stmt_check_well_defined_body(&mut self, def_prop_stmt: &DefPropStmt) -> Result<(), ExecError> {
-        self.define_params_with_type(&def_prop_stmt.params_def_with_type,false)?;
+    fn def_prop_with_meaning_stmt_check_well_defined_body(&mut self, def_prop_with_meaning_stmt: &DefPropWithMeaningStmt) -> Result<(), ExecError> {
+        self.define_params_with_type(&def_prop_with_meaning_stmt.params_def_with_type,false)?;
 
-        for fact in def_prop_stmt.iff_facts.iter() {
+        for fact in def_prop_with_meaning_stmt.iff_facts.iter() {
             self.verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))?;
         }
         Ok(())
@@ -193,14 +193,14 @@ impl<'a> Executor<'a> {
         }
 
         for obj in have_exist_obj_stmt.equal_tos.iter() {
-            if let Obj::Identifier(identifier) = obj {
-                self.store_identifier_obj(&identifier.name)?;
-            }
+            self.store_identifier_obj(obj)?;
         }
+
+        let new_obj_names_as_identifier_objs = have_exist_obj_stmt.equal_tos.iter().map(|s| Obj::Identifier(Identifier::new(s.clone()))).collect();
 
         let args_satisfy_param_types = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(
             &exist_fact_in_have_obj_stmt.params_def_with_type,
-            &have_exist_obj_stmt.equal_tos,
+            &new_obj_names_as_identifier_objs,
         )
         .map_err(|e| ExecError::new( have_exist_obj_stmt.stmt_type_name(),e.error_body(), Some(e), line_file))?;
         let mut infer_result = InferResult::new();
@@ -209,7 +209,7 @@ impl<'a> Executor<'a> {
             infer_result.append(fact_infer_result);
         }
 
-        let param_to_obj_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(&exist_fact_in_have_obj_stmt.params_def_with_type, &have_exist_obj_stmt.equal_tos);
+        let param_to_obj_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(&exist_fact_in_have_obj_stmt.params_def_with_type, &new_obj_names_as_identifier_objs);
 
         for fact in exist_fact_in_have_obj_stmt.facts.iter() {
             let instantiated_fact = fact
