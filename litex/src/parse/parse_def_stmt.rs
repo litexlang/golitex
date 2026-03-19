@@ -181,17 +181,18 @@ impl<'a> Executor<'a> {
         Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(equal_tos, true_fact, tb.line_file)))
     }
 
-    pub fn def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        tb.skip_token(STRUCT)?;
+        let name = tb.advance()?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+
         self.new_parsing_names_block();
-        let stmt = self.def_struct_stmt_body(tb);
+        let stmt = self.parse_def_struct_stmt_body(name, tb);
         self.delete_parsing_names_block();
         stmt
     }
 
-    fn def_struct_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(STRUCT)?;
-        let name = tb.advance()?;
-        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+    fn parse_def_struct_stmt_body(&mut self, name: String, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_type: Vec<ParamDefWithParamType> = vec![];
         while tb.current()? != COLON && tb.current()? != RIGHT_BRACE {
@@ -270,17 +271,18 @@ impl<'a> Executor<'a> {
         }
     }
 
-    pub fn def_algorithm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_def_algorithm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        tb.skip_token(ALGO)?;
+        let name = tb.advance()?;
+        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        
         self.new_parsing_names_block();
-        let stmt = self.def_algorithm_stmt_body(tb);
+        let stmt = self.parse_def_algorithm_stmt_body(name, tb);
         self.delete_parsing_names_block();
         stmt
     }
 
-    fn def_algorithm_stmt_body(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(ALGO)?;
-        let name = tb.advance()?;
-        self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+    fn parse_def_algorithm_stmt_body(&mut self, name: String, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut params: Vec<String> = vec![];
         while tb.current()? != RIGHT_BRACE {
