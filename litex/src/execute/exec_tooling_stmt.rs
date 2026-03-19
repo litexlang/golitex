@@ -14,7 +14,12 @@ impl<'a> Executor<'a> {
     }
 
     pub fn exec_do_nothing_stmt(&mut self, stmt: &DoNothingStmt) -> Result<NonErrStmtExecResult, StmtError> {
-        return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), InferResult::new(), stmt.line_file)));
+        return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
+            stmt.to_string(),
+            InferResult::new(),
+            vec![],
+            stmt.line_file,
+        )));
     }
 
     pub fn exec_run_file_stmt(&mut self, stmt: &RunFileStmt) -> Result<NonErrStmtExecResult, StmtError> {

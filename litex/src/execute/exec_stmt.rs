@@ -4,7 +4,7 @@ use crate::result::NonErrStmtExecResult;
 use super::Executor;
 
 impl<'a> Executor<'a> {
-    pub fn stmt(&mut self, stmt: &Stmt) -> Result<NonErrStmtExecResult, StmtError> {
+    pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<NonErrStmtExecResult, StmtError> {
         match stmt {
             Stmt::DefLetStmt(d) => self.def_let_stmt(d).map_err(StmtError::from),
             Stmt::DefPropWithMeaningStmt(d) => self.def_prop_with_meaning_stmt(d).map_err(StmtError::from),

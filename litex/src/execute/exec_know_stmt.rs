@@ -16,6 +16,7 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
             know_stmt.to_string(),
             infer_result,
+            vec![],
             know_stmt.line_file,
         )))
     }

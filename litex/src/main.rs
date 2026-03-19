@@ -668,7 +668,12 @@ fn try_stmt_result() {
         Identifier::mk("q".to_string()),
         (1, 0),
     ))));
-    let result = NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(stmt.to_string(), InferResult::new(), crate::common::defaults::DEFAULT_LINE_FILE.clone()));
+    let result = NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
+        stmt.to_string(),
+        InferResult::new(),
+        vec![],
+        crate::common::defaults::DEFAULT_LINE_FILE.clone(),
+    ));
     println!("{}", result.body_string());
 
 
