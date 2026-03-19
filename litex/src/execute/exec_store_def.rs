@@ -1,13 +1,13 @@
 use crate::error::ExecError;
-use crate::stmt::definition_stmt::{DefPropStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
+use crate::stmt::definition_stmt::{DefPropWithMeaningStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use super::Executor;
 
 impl<'a> Executor<'a> {
-    pub fn store_def_prop(&mut self, def_prop_stmt: &DefPropStmt) -> Result<(), ExecError> {
-        let name = def_prop_stmt.name.clone();
-        self.runtime_context.defined_props.insert(name.clone(), def_prop_stmt.clone());
-        self.runtime_context.top_level_env().defined_props.insert(name, def_prop_stmt.clone());
+    pub fn store_def_prop_with_meaning(&mut self, def_prop_with_meaning_stmt: &DefPropWithMeaningStmt) -> Result<(), ExecError> {
+        let name = def_prop_with_meaning_stmt.name.clone();
+        self.runtime_context.defined_props_with_meaning.insert(name.clone(), def_prop_with_meaning_stmt.clone());
+        self.runtime_context.top_level_env().defined_props_with_meaning.insert(name, def_prop_with_meaning_stmt.clone());
         Ok(())
     }
 

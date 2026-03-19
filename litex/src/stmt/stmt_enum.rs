@@ -1,7 +1,7 @@
 use std::fmt;
 use crate::fact::Fact;
 use super::definition_stmt::{
-    DefLetStmt, DefPropStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt,
+    DefLetStmt, DefPropWithMeaningStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt,
     HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt,
 };
 use super::define_algorithm_stmt::DefAlgoStmt;
@@ -19,7 +19,7 @@ use super::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
 pub enum Stmt {
     Fact(Fact),
     DefLetStmt(DefLetStmt),
-    DefPropStmt(DefPropStmt),
+    DefPropWithMeaningStmt(DefPropWithMeaningStmt),
     DefPropWithoutMeaningStmt(DefPropWithoutMeaningStmt),
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
@@ -53,7 +53,7 @@ impl fmt::Display for Stmt {
         match self {
             Stmt::Fact(x) => write!(f, "{}", x),
             Stmt::DefLetStmt(x) => write!(f, "{}", x),
-            Stmt::DefPropStmt(x) => write!(f, "{}", x),
+            Stmt::DefPropWithMeaningStmt(x) => write!(f, "{}", x),
             Stmt::DefPropWithoutMeaningStmt(x) => write!(f, "{}", x),
             Stmt::HaveObjInNonemptySetStmt(x) => write!(f, "{}", x),
             Stmt::HaveObjEqualStmt(x) => write!(f, "{}", x),
