@@ -231,6 +231,8 @@ impl<'a> Executor<'a> {
                     )
                 })?;
                 infer_result.push_fact(&tuple_dim_fact);
+
+                self.runtime_context.top_level_env().known_tuple_obj_in_what_cart.insert(in_fact.element.to_string(), cart.clone());
                 
                 Ok(infer_result)
             }

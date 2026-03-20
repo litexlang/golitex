@@ -82,7 +82,7 @@ impl<'a> Executor<'a> {
         match &is_nonempty_set_fact.set {
             Obj::NPosObj(_) | Obj::NObj(_) | Obj::QObj(_) | 
             Obj::RObj(_) | Obj::RNz(_) | Obj::ZNz(_) | Obj::QNz
-            (_) | Obj::ZPos(_) | Obj::QPos(_) | Obj::RPos(_) | 
+            (_) | Obj::QPos(_) | Obj::RPos(_) | 
             Obj::RNeg(_) | Obj::ZNeg(_) | Obj::QNeg(_) | 
             Obj::ZObj(_) => Ok(
                 NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(

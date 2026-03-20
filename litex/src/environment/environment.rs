@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use crate::obj::Cart;
 use std::fmt;
 use crate::stmt::parameter_def::ParamDefWithParamType;
 use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
@@ -42,13 +43,14 @@ pub struct Environment {
     pub known_or_facts_in_forall_facts: HashMap<String, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>,
     pub known_obj_is_well_defined: HashMap<String,()>,
     pub known_atom_in_fn_set: HashMap<String, FnSetObj>,
+    pub known_tuple_obj_in_what_cart: HashMap<String, Cart>,
 
     pub cache_well_defined_obj: HashMap<String, ()>,
     pub cache_known_fact: HashMap<String, (usize, usize)>,
 }
 
 impl Environment {
-    pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropWithMeaningStmt>, structs_with_fields: HashMap<String, DefStructWithFieldsStmt>, structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>, props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>, algorithms: HashMap<String, DefAlgoStmt>, known_equality: HashMap<String, Rc<Vec<Obj>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts_with_0_or_more_than_2_args: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, AtomicFact>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), AtomicFact>>, known_exist_facts: HashMap<String, Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>, known_exist_facts_in_forall_facts: HashMap<String, Vec<(ExistFact, Rc<KnownForallFactParamsAndDom>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>, known_obj_is_well_defined: HashMap<String,()>, known_atom_in_fn_set: HashMap<String, FnSetObj>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, (usize, usize)>) -> Self {
+    pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropWithMeaningStmt>, structs_with_fields: HashMap<String, DefStructWithFieldsStmt>, structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>, props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>, algorithms: HashMap<String, DefAlgoStmt>, known_equality: HashMap<String, Rc<Vec<Obj>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts_with_0_or_more_than_2_args: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, AtomicFact>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), AtomicFact>>, known_exist_facts: HashMap<String, Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>, known_exist_facts_in_forall_facts: HashMap<String, Vec<(ExistFact, Rc<KnownForallFactParamsAndDom>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>, known_obj_is_well_defined: HashMap<String,()>, known_atom_in_fn_set: HashMap<String, FnSetObj>, known_tuple_dim_obj: HashMap<String, Cart>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, (usize, usize)>) -> Self {
         Environment {
             defined_identifier_objs: objs,
             defined_props_with_meaning: props,
@@ -69,6 +71,7 @@ impl Environment {
             known_or_facts_in_forall_facts,
             known_obj_is_well_defined,
             known_atom_in_fn_set,
+            known_tuple_obj_in_what_cart: known_tuple_dim_obj,
             cache_well_defined_obj: cache_known_valid_obj,
             cache_known_fact,
         }
@@ -326,7 +329,7 @@ impl Environment {
 
 impl Environment {
     pub fn new_empty_env() -> Self {
-        Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new())
+        Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new())
     }
 }
 

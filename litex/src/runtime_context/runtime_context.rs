@@ -1,6 +1,6 @@
 use std::fmt;
 use std::collections::HashMap;
-use crate::obj::{Identifier, Atom};
+use crate::obj::{Cart, Identifier, Atom};
 use crate::common::keywords::{MOD_SIGN, is_builtin_identifier_obj};
 use crate::error::StmtError;
 use crate::infer::InferResult;
@@ -307,5 +307,16 @@ impl<'a> RuntimeContext<'a> {
         } else {
             body
         }
+    }
+}
+
+impl<'a> RuntimeContext<'a> {
+    pub fn get_tuple_obj_is_in_what_cart(&self, name: &str) -> Option<Cart> {
+        for env in self.iter_environments_from_top() {
+            if let Some(cart) = env.known_tuple_obj_in_what_cart.get(name) {
+                return Some(cart.clone());
+            }
+        }
+        self.builtin_environment.known_tuple_obj_in_what_cart.get(name).cloned()
     }
 }

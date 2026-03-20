@@ -94,10 +94,6 @@ pub fn number_is_in_z_nz(number: &Number) -> bool {
     number_is_in_z(number) && number_is_nonzero(number)
 }
 
-// --- Z_pos (positive integers): same as N_pos for integer subset ---
-pub fn number_is_in_z_pos(number: &Number) -> bool {
-    number_is_in_z(number) && number_is_positive(number)
-}
 
 // --- Q_pos, R_pos (positive rationals/reals) ---
 pub fn number_is_in_q_pos(number: &Number) -> bool {

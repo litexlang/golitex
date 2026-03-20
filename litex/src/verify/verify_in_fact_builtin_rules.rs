@@ -2,7 +2,7 @@ use crate::fact::InFact;
 use crate::error::VerifyError;
 use crate::execute::Executor;
 use crate::infer::InferResult;
-use crate::common::keywords::{FACT_PREFIX, IN, N, N_POS, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, Z, Z_NEG, Z_NZ, Z_POS};
+use crate::common::keywords::{FACT_PREFIX, IN, N, N_POS, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, Z, Z_NEG, Z_NZ};
 use crate::obj::Obj;
 use crate::result::NonErrStmtExecResult;
 use crate::result::FactVerifiedByBuiltinRules;
@@ -11,7 +11,7 @@ use crate::verify::VerifyState;
 use crate::verify::verify_number_in_standard_set::{
     number_is_in_n, number_is_in_n_pos, number_is_in_q_neg, number_is_in_q_nz, number_is_in_q_pos,
     number_is_in_r_neg, number_is_in_r_nz, number_is_in_r_pos,
-    number_is_in_z, number_is_in_z_neg, number_is_in_z_nz, number_is_in_z_pos,
+    number_is_in_z, number_is_in_z_neg, number_is_in_z_nz,
 };
 
 fn number_in_set_verified_by_builtin_rules_result(num_value: &str, set_name: &str, reason: &str, line_file: (usize, usize)) -> NonErrStmtExecResult {
@@ -81,13 +81,6 @@ impl<'a> Executor<'a> {
             (Obj::Number(num), Obj::ZObj(_)) => {
                 if number_is_in_z(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(&num.value, Z, "number in Z", in_fact.line_file))
-                } else {
-                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
-                }
-            }
-            (Obj::Number(num), Obj::ZPos(_)) => {
-                if number_is_in_z_pos(num) {
-                    Ok(number_in_set_verified_by_builtin_rules_result(&num.value, Z_POS, "number in Z_pos", in_fact.line_file))
                 } else {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
                 }

@@ -1,12 +1,12 @@
 use crate::common::helper::is_number_string_literally_integer_without_dot;
 use crate::common::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ, is_key_symbol_or_keyword
 };
 use crate::execute::Executor;
 use super::TokenBlock;
 use crate::obj::{
     Obj, FnObj, FnSetObj, FnSetWithDom, FnSetWithoutDom, Add, Mul, Div, Mod, Sub, Pow, Number, InstStructObj, ListSet, SetBuilder,
-    NPosObj, NObj, QObj, ZObj, RObj, QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz,
+    NPosObj, NObj, QObj, ZObj, RObj, QPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz,
     ObjAtIndex, Union, Intersect, SetMinus, SetDiff, Cup, Cap, PowerSet, Choose, TupleDimObj,
     Cart, CartDim, Proj, Count, Range, ClosedRange, Val,
 };
@@ -354,7 +354,6 @@ impl<'a> Executor<'a> {
         if tok == Z { tb.skip()?; return Ok(Obj::ZObj(ZObj::new())); }
         if tok == R { tb.skip()?; return Ok(Obj::RObj(RObj::new())); }
         if tok == Q_POS { tb.skip()?; return Ok(Obj::QPos(QPos::new())); }
-        if tok == Z_POS { tb.skip()?; return Ok(Obj::ZPos(ZPos::new())); }
         if tok == R_POS { tb.skip()?; return Ok(Obj::RPos(RPos::new())); }
         if tok == Q_NEG { tb.skip()?; return Ok(Obj::QNeg(QNeg::new())); }
         if tok == Z_NEG { tb.skip()?; return Ok(Obj::ZNeg(ZNeg::new())); }
