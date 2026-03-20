@@ -8,6 +8,22 @@ pub fn tokenize_line(line: &str) -> Vec<String> {
     let bytes = line.as_bytes();
 
     while i < bytes.len() {
+        // Ensure `i` is always on a UTF-8 char boundary before slicing `line[i..]`.
+        // Otherwise Rust will panic when `&line[i..j]` is evaluated.
+        if !line.is_char_boundary(i) {
+            let mut char_start = i;
+            while char_start > 0 && !line.is_char_boundary(char_start) {
+                char_start -= 1;
+            }
+            i = char_start;
+            continue;
+        }
+
+        // Single-line comment: ignore everything after `#`.
+        if bytes[i] == b'#' {
+            break;
+        }
+
         if bytes[i].is_ascii_whitespace() {
             i += 1;
             continue;
@@ -15,9 +31,14 @@ pub fn tokenize_line(line: &str) -> Vec<String> {
 
         let mut matched = false;
         for &sym in &symbols {
-            if i + sym.len() <= line.len() && &line[i..i + sym.len()] == sym {
+            let sym_length_bytes = sym.len();
+            if i + sym_length_bytes <= line.len()
+                && line.is_char_boundary(i)
+                && line.is_char_boundary(i + sym_length_bytes)
+                && &line[i..i + sym_length_bytes] == sym
+            {
                 tokens.push(sym.to_string());
-                i += sym.len();
+                i += sym_length_bytes;
                 matched = true;
                 break;
             }
@@ -66,6 +87,5 @@ pub fn tokenize_line(line: &str) -> Vec<String> {
         tokens.push(ch.to_string());
         i += ch.len_utf8();
     }
-
     tokens
 }

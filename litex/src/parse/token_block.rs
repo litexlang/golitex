@@ -24,15 +24,43 @@ fn indent_level(line: &str) -> usize {
 }
 
 fn ends_with_colon(s: &str) -> bool {
-    s.trim_end().ends_with(':')
+    let trimmed = s.trim_end();
+    trimmed.ends_with(':') || trimmed.ends_with('：')
 }
 
 impl TokenBlock {
     pub fn parse_blocks(s: &str, current_file_index: usize) -> Result<Vec<TokenBlock>, ParseBlockError> {
-        let lines: Vec<_> = s.lines().collect();
+        let stripped_source_code = strip_triple_quote_comment_blocks(s);
+        let lines: Vec<_> = stripped_source_code.lines().collect();
         let mut i = 0;
         parse_level(&lines, &mut i, 0, current_file_index)
     }    
+}
+
+fn strip_triple_quote_comment_blocks(source_code: &str) -> String {
+    // Treat a line that consists only of `"` characters (after trimming) as a delimiter.
+    // Between two delimiter lines, everything is replaced with empty lines so
+    // the parser will ignore those lines.
+    let mut in_comment = false;
+    let mut out_lines: Vec<String> = Vec::new();
+
+    for line in source_code.lines() {
+        let trimmed = line.trim();
+        let only_quote_chars = !trimmed.is_empty() && trimmed.chars().all(|c| c == '"');
+        if only_quote_chars {
+            in_comment = !in_comment;
+            out_lines.push(String::new());
+            continue;
+        }
+
+        if in_comment {
+            out_lines.push(String::new());
+        } else {
+            out_lines.push(line.to_string());
+        }
+    }
+
+    out_lines.join("\n")
 }
 
 fn parse_level(
@@ -65,6 +93,13 @@ fn parse_level(
 
         *i += 1;
 
+        // Tokenize header; if it's empty (e.g. whole line comment),
+        // treat it like a blank line for block parsing.
+        let header_tokens = tokenize_line(content);
+        if header_tokens.is_empty() {
+            continue;
+        }
+
         if ends_with_colon(content) {
             // 必须有 body
             if *i >= lines.len() {
@@ -77,12 +112,8 @@ fn parse_level(
             }
 
             let body = parse_level(lines, i, next_indent, current_file_index)?;
-
-            let header_tokens = tokenize_line(content);
-            
             items.push(TokenBlock::new(header_tokens, body, (line_no, current_file_index)));
         } else {
-            let header_tokens = tokenize_line(content);
             items.push(TokenBlock::new(header_tokens, vec![], (line_no, current_file_index)));
         }
 
