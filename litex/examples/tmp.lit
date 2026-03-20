@@ -1,7 +1,16 @@
-prop p(a, b)
+know forall x R:
+    x > 0 or x <= 0
 
-know:
-    forall a R:
-        exist x R st {$p(a, x)}
+have fn f(x R) R =:
+    case x > 0: x
+    case x <=  0: -x
 
-exist x R st {$p(3, x)}
+forall x R:
+    x > 0
+    =>:
+        f(x) = x
+
+forall x R:
+    x <= 0
+    =>:
+        f(x) = -x
