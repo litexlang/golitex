@@ -1,20 +1,21 @@
 use crate::error::ParsingError;
 use crate::fact::{Fact, AndChainAtomicFact, ExistOrAndChainAtomicFact};
 use crate::common::keywords::{
-    CASE, CASES, COLON, COMMA, CONTRA, ENUM, EQUAL, EQUAL_SET, FOR, FROM, IMPOSSIBLE, INDUC, PROVE,
-    RIGHT_ARROW, VIEW_FN_AS_SET,
+    CASE, BY_CASES, COLON, COMMA, BY_CONTRA, ENUMERATE, EQUAL, BY_EXTENSION, FOR, FROM, IMPOSSIBLE, BY_INDUC, PROVE,
+    RIGHT_ARROW, BY_FN_DEF, BY_CART_DEF,
 };
 use crate::execute::Executor;
-use crate::stmt::proof_technique_stmt::{
-    ClosedRangeOrRange, ProveByContradictionStmt, ProveByEnumerationStmt, ProveByEqualSetStmt,
-    ProveByInductionStmt, ProveCaseByCaseStmt, ProveForStmt, ViewFnAsSetStmt,
+use crate::obj::Obj;
+use crate::stmt::axiom_stmt::{
+    ClosedRangeOrRange, ByContraAxiomStmt, EnumerateAxiomStmt, ByExtensionAxiomStmt,
+    ByInducAxiomStmt, ByCasesAxiomStmt, ForAxiomStmt, ByFnDefAxiomStmt, ByCartDefAxiomStmt,
 };
 use crate::stmt::Stmt;
 use super::TokenBlock;
 
 impl<'a> Executor<'a> {
-    pub fn prove_case_by_case_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(CASES)?;
+    pub fn parse_by_cases_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        tb.skip_token(BY_CASES)?;
         tb.skip_token(COLON)?;
         if tb.body.is_empty() {
             return Err(ParsingError::new("cases: expects at least one body block".to_string(), tb.line_file, None));
@@ -54,13 +55,13 @@ impl<'a> Executor<'a> {
             proofs.push(proof_stmts);
             impossible_facts.push(impossible);
         }
-        Ok(Stmt::ProveCaseByCaseStmt(
-            ProveCaseByCaseStmt::new(cases, then_facts, proofs, impossible_facts, tb.line_file),
+        Ok(Stmt::ByCasesAxiomStmt(
+            ByCasesAxiomStmt::new(cases, then_facts, proofs, impossible_facts, tb.line_file),
         ))
     }
 
-    pub fn prove_by_contradiction_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(CONTRA)?;
+    pub fn parse_by_contra_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        tb.skip_token(BY_CONTRA)?;
         let to_prove = self.parse_exist_or_and_chain_atomic_fact(tb)?.to_fact();
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
@@ -77,13 +78,13 @@ impl<'a> Executor<'a> {
         let mut last_block = tb.body.last_mut().ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file, None))?;
         last_block.skip_token(IMPOSSIBLE)?;
         let impossible_fact = self.parse_exist_or_and_chain_atomic_fact(&mut last_block)?;
-        Ok(Stmt::ProveByContradictionStmt(
-            ProveByContradictionStmt::new(to_prove, proof, impossible_fact, tb.line_file),
+        Ok(Stmt::ByContraAxiomStmt(
+            ByContraAxiomStmt::new(to_prove, proof, impossible_fact, tb.line_file),
         ))
     }
 
-    pub fn prove_by_enumeration_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(ENUM)?;
+    pub fn parse_enumerate_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        tb.skip_token(ENUMERATE)?;
         let mut params: Vec<String> = vec![];
         let mut param_sets: Vec<crate::obj::Obj> = vec![];
         if tb.current_token_is_equal_to(COLON) {
@@ -110,13 +111,13 @@ impl<'a> Executor<'a> {
         } else {
             (vec![], tb.body.iter_mut().map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?)
         };
-        Ok(Stmt::ProveByEnumerationStmt(
-            ProveByEnumerationStmt::new(params, param_sets, to_prove, proof, tb.line_file),
+        Ok(Stmt::EnumerateAxiomStmt(
+            EnumerateAxiomStmt::new(params, param_sets, to_prove, proof, tb.line_file),
         ))
     }
 
-    pub fn prove_by_induction_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(INDUC)?;
+    pub fn parse_by_induc_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        tb.skip_token(BY_INDUC)?;
         let param = tb.advance()?;
         tb.skip_token(FROM)?;
         let induc_from = self.parse_obj(tb)?;
@@ -133,12 +134,12 @@ impl<'a> Executor<'a> {
             then_block.body.iter_mut().map(|b| self.parse_exist_or_and_chain_atomic_fact(b)).collect::<Result<_, _>>()?
         };
         let proof: Vec<Stmt> = tb.body.iter_mut().skip(1).map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?;
-        Ok(Stmt::ProveByInductionStmt(
-            ProveByInductionStmt::new(fact, param, proof, induc_from, tb.line_file),
+        Ok(Stmt::ByInducAxiomStmt(
+            ByInducAxiomStmt::new(fact, param, proof, induc_from, tb.line_file),
         ))
     }
 
-    pub fn prove_for_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_for_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(FOR)?;
         let mut params: Vec<String> = vec![];
         let mut param_sets: Vec<ClosedRangeOrRange> = vec![];
@@ -213,7 +214,7 @@ impl<'a> Executor<'a> {
             }
         }
 
-        Ok(Stmt::ProveForStmt(ProveForStmt::new(
+        Ok(Stmt::ForAxiomStmt(ForAxiomStmt::new(
             params,
             param_sets,
             dom_facts,
@@ -223,23 +224,42 @@ impl<'a> Executor<'a> {
         )))
     }
 
-    pub fn prove_equal_set_by_def_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(EQUAL_SET)?;
+    pub fn parse_by_extension_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        tb.skip_token(BY_EXTENSION)?;
         let left = self.parse_obj(tb)?;
         tb.skip_token(EQUAL)?;
         let right = self.parse_obj(tb)?;
         tb.skip_token(COLON)?;
         let proof: Vec<Stmt> = tb.body.iter_mut().map(|b| self.parse_stmt(b)).collect::<Result<_, _>>()?;
-        Ok(Stmt::ProveByEqualSetStmt(
-            ProveByEqualSetStmt::new(left, right, proof, tb.line_file),
+        Ok(Stmt::ByExtensionAxiomStmt(
+            ByExtensionAxiomStmt::new(left, right, proof, tb.line_file),
         ))
     }
 
-    pub fn view_fn_as_set_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(VIEW_FN_AS_SET)?;
+    pub fn parse_by_fn_def_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        tb.skip_token(BY_FN_DEF)?;
         let function = self.parse_obj(tb)?;
-        Ok(Stmt::ViewFnAsSetStmt(ViewFnAsSetStmt::new(
+        Ok(Stmt::ByFnDefAxiomStmt(ByFnDefAxiomStmt::new(
             function,
+            tb.line_file,
+        )))
+    }
+
+    pub fn parse_by_cart_def_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        tb.skip_token(BY_CART_DEF)?;
+        let obj = self.parse_obj(tb)?;
+        let cart = match obj {
+            Obj::Cart(cart_value) => cart_value,
+            _ => {
+                return Err(ParsingError::new(
+                    "by_cart_def: expected cart(...) object".to_string(),
+                    tb.line_file,
+                    None,
+                ));
+            }
+        };
+        Ok(Stmt::ByCartDefAxiomStmt(ByCartDefAxiomStmt::new(
+            cart,
             tb.line_file,
         )))
     }

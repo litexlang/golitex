@@ -1,5 +1,5 @@
 use crate::error::ParsingError;
-use crate::common::keywords::{ALGO, CLAIM, CLEAR, DO_NOTHING, EVAL, EXIST, FN, HAVE, IMPORT, KNOW, LET, PROP, PROVE, RUN_FILE, STRUCT, VIEW_FN_AS_SET, WITNESS, CASES, CONTRA, ENUM, INDUC, FOR, EQUAL_SET};
+use crate::common::keywords::{ALGO, CLAIM, CLEAR, DO_NOTHING, EVAL, EXIST, FN, HAVE, IMPORT, KNOW, LET, PROP, PROVE, RUN_FILE, STRUCT, BY_FN_DEF, BY_CART_DEF, WITNESS, BY_CASES, BY_CONTRA, ENUMERATE, BY_INDUC, FOR, BY_EXTENSION};
 use crate::execute::Executor;
 use crate::stmt::Stmt;
 use super::TokenBlock;
@@ -29,13 +29,14 @@ impl<'a> Executor<'a> {
             WITNESS => self.witness_stmt(tb),
             STRUCT => self.parse_def_struct_stmt(tb),
             ALGO => self.parse_def_algorithm_stmt(tb),
-            CASES => self.prove_case_by_case_stmt(tb),
-            CONTRA => self.prove_by_contradiction_stmt(tb),
-            ENUM => self.prove_by_enumeration_stmt(tb),
-            INDUC => self.prove_by_induction_stmt(tb),
-            FOR => self.prove_for_stmt(tb),
-            EQUAL_SET => self.prove_equal_set_by_def_stmt(tb),
-            VIEW_FN_AS_SET => self.view_fn_as_set_stmt(tb),
+            BY_CASES => self.parse_by_cases_axiom_stmt(tb),
+            BY_CONTRA => self.parse_by_contra_axiom_stmt(tb),
+            ENUMERATE => self.parse_enumerate_axiom_stmt(tb),
+            BY_INDUC => self.parse_by_induc_axiom_stmt(tb),
+            FOR => self.parse_for_axiom_stmt(tb),
+            BY_EXTENSION => self.parse_by_extension_axiom_stmt(tb),
+            BY_FN_DEF => self.parse_by_fn_def_axiom_stmt(tb),
+            BY_CART_DEF => self.parse_by_cart_def_axiom_stmt(tb),
             _ => {
                 let fact = self.parse_fact(tb)?;
                 Ok(Stmt::Fact(fact))
