@@ -8,9 +8,9 @@ use crate::verify::VerifyState;
 use crate::stmt::parameter_def::ParamDefWithParamType;
 
 // well-defined check for fact: 1. predicate is defined 2. all args are well-defined
+// store verified related facts during the verification process, e.g. when verifying f(a)(b) is well-defined, we store f(a) in the set where f returns, and store f(a)(b) in the set where f(a) returns
 impl<'a> Executor<'a> {
     pub fn verify_fact_well_defined(&mut self, fact: &Fact, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.runtime_context.new_env();
         let result = match fact {
             Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact_well_defined(atomic_fact, verify_state).map_err(WellDefinedError::from),
             Fact::AndFact(and_fact) => self.verify_and_fact_well_defined(and_fact, verify_state).map_err(WellDefinedError::from),
@@ -20,7 +20,6 @@ impl<'a> Executor<'a> {
             Fact::ForallFact(forall_fact) => self.verify_forall_fact_well_defined(forall_fact, verify_state).map_err(WellDefinedError::from),
             Fact::ForallFactWithIff(forall_fact_with_iff) => self.verify_forall_fact_with_iff_well_defined(forall_fact_with_iff, verify_state).map_err(WellDefinedError::from),
         };
-        self.runtime_context.delete_env();
         result
     }
 

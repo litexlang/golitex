@@ -1,3 +1,23 @@
-let f fn(R) cart(R, R)
+"""
+angle_mirror x a b c
+x : a b c x
+a b c = ncoll a b c
+x : eqangle b a b c b c b x
+amirror a b c
+"""
 
-f(1)[1] = f(1)[1]
+
+"""
+circle x a b c
+x : a b c
+a b c = ncoll a b c
+x : cong x a x b, cong x b x c
+bline a b, bline a 
+"""
+"""
+circumcenter x a b c
+x : a b c
+a b c = ncoll a b c
+x : cong x a x b, cong x b x c
+bline a b, bline a c
+"""
