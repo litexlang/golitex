@@ -140,6 +140,7 @@ impl<'a> Executor<'a> {
         self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(duplicate_name_error_message(&name), tb.line_file, Some(StmtError::ParseBlockError(e))))?;
         
         let fs = self.parse_fn_set_with_dom_without_fn_prefix(tb)?;
+        tb.skip_token(EQUAL)?;
         if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let mut cases: Vec<AndChainAtomicFact> = vec![];
@@ -147,14 +148,13 @@ impl<'a> Executor<'a> {
             for block in tb.body.iter_mut() {
                 block.skip_token(CASE)?;
                 cases.push(self.parse_and_chain_atomic_fact(block)?);
-                block.skip_token(EQUAL)?;
+                block.skip_token(COLON)?;
                 equal_tos.push(self.parse_obj(block)?);
             }
             Ok(Stmt::HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt::new(
                 name, fs, cases, equal_tos, tb.line_file,
             )))
         } else {
-            tb.skip_token(EQUAL)?;
             let equal_to = self.parse_obj(tb)?;
             Ok(Stmt::HaveFnEqualStmt(HaveFnEqualStmt::new(
                 name, fs, equal_to, tb.line_file,
