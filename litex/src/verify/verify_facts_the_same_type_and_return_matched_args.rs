@@ -2,6 +2,7 @@ use crate::Executor;
 use crate::error::VerifyError;
 use crate::fact::{ExistOrAndChainAtomicFact, OrAndChainAtomicFact, ChainFact, AndChainAtomicFact, OrFact, AndFact, ExistFact, AtomicFact};
 use crate::obj::Obj;
+use crate::stmt::parameter_def::ParamType;
 
 impl<'a> Executor<'a> {
     pub fn _verify_exist_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(fact: &ExistOrAndChainAtomicFact, other: &ExistOrAndChainAtomicFact) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
@@ -158,17 +159,47 @@ impl<'a> Executor<'a> {
         if fact.facts.len() != other.facts.len() {
             return Ok(None);
         }
+        
+        let mut matched_args: Vec<(Obj, Obj)> = Vec::new();
 
         for (fact_param_def, other_param_def) in fact.params_def_with_type.iter().zip(other.params_def_with_type.iter()) {
-            if fact_param_def.1.to_string() != other_param_def.1.to_string() {
-                return Ok(None);
-            }
             if fact_param_def.0.len() != other_param_def.0.len() {
                 return Ok(None);
             }
+
+            match &fact_param_def.1 {
+                ParamType::Obj(ref obj) => {
+                    match &other_param_def.1 {
+                        ParamType::Obj(other_obj) => {
+                            matched_args.push((obj.clone(), other_obj.clone()));
+                        }
+                        _ => return Ok(None),
+                    }
+                }
+                ParamType::Set(_) => {
+                    match &other_param_def.1 {
+                        ParamType::Set(_) => {
+                        }
+                        _ => return Ok(None),
+                    }
+                }
+                ParamType::NonemptySet(_) => {
+                    match &other_param_def.1 {
+                        ParamType::NonemptySet(_) => {
+                        }
+                        _ => return Ok(None),
+                    }
+                }
+                ParamType::FiniteSet(_) => {
+                    match &other_param_def.1 {
+                        ParamType::FiniteSet(_) => {
+                        }
+                        _ => return Ok(None),
+                    }
+                }
+            }
         }
 
-        let mut matched_args: Vec<(Obj, Obj)> = Vec::new();
         for (fact_item, other_item) in fact.facts.iter().zip(other.facts.iter()) {
             let sub_matched_args = match Self::_verify_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(fact_item, other_item)? {
                 Some(value) => value,

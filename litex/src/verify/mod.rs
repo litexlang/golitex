@@ -14,6 +14,7 @@ mod verify_equality;
 mod verify_and_chain_fact;
 mod verify_forall_fact_forall_fact_with_iff;
 mod verify_exist_fact;
+mod verify_exist_fact_with_known_forall;
 mod verify_or_fact;
 mod verify_helper;
 mod verify_atomic_fact_with_known_forall;

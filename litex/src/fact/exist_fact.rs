@@ -1,4 +1,6 @@
 use std::fmt;
+use crate::stmt::parameter_def::ParamType;
+use crate::obj::Obj;
 use crate::common::keywords::{COMMA, EXIST, LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE, ST};
 use crate::common::helper::{curly_braced_vec_to_string_with_sep, vec_to_string_join_by_comma};
 use crate::stmt::parameter_def::ParamDefWithParamType;
@@ -124,4 +126,31 @@ impl OrAndChainAtomicFact {
         }
     }
 
+    pub fn get_args_from_fact(&self) -> Vec<Obj> {
+        match self {
+            OrAndChainAtomicFact::AtomicFact(a) => a.get_args_from_fact(),
+            OrAndChainAtomicFact::AndFact(a) => a.get_args_from_fact(),
+            OrAndChainAtomicFact::ChainFact(c) => c.get_args_from_fact(),
+            OrAndChainAtomicFact::OrFact(o) => o.get_args_from_fact(),
+        }
+    }
+}
+
+impl ExistFact {
+    pub fn get_args_from_fact(&self) -> Vec<Obj> {
+        let mut args: Vec<Obj> = Vec::new();
+        for param_def_with_type in self.params_def_with_type.iter() {
+            if let ParamType::Obj(obj) = &param_def_with_type.1 {
+                args.push(obj.clone());
+            }
+        }
+
+        for fact in self.facts.iter() {
+            for arg in fact.get_args_from_fact() {
+                args.push(arg);
+            }
+        }
+
+        args
+    }
 }

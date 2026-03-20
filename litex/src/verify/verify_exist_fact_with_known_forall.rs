@@ -3,7 +3,7 @@ use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::environment::KnownForallFactParamsAndDom;
 use crate::error::VerifyError;
 use crate::execute::Executor;
-use crate::fact::{ExistOrAndChainAtomicFact, ForallFact, OrFact};
+use crate::fact::{ExistFact, ExistOrAndChainAtomicFact, ForallFact};
 use crate::infer::InferResult;
 use crate::obj::Obj;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult, StmtUnknown};
@@ -13,33 +13,33 @@ use std::rc::Rc;
 use std::result::Result;
 
 impl<'a> Executor<'a> {
-    pub fn verify_or_fact_with_known_forall(&mut self, or_fact: &OrFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
-        if let Some(fact_verified) = self.try_verify_or_fact_with_known_forall_facts_in_envs(or_fact, verify_state)? {
+    pub fn verify_exist_fact_with_known_forall(&mut self, exist_fact: &ExistFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
+        if let Some(fact_verified) = self.try_verify_exist_fact_with_known_forall_facts_in_envs(exist_fact, verify_state)? {
             return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
         }
-        if let Some(fact_verified) = self.try_verify_or_fact_with_known_forall_facts_in_builtin_env(or_fact, verify_state)? {
+        if let Some(fact_verified) = self.try_verify_exist_fact_with_known_forall_facts_in_builtin_env(exist_fact, verify_state)? {
             return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
         }
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    fn get_matched_or_fact_in_known_forall_fact_in_envs(
+    fn get_matched_exist_fact_in_known_forall_fact_in_envs(
         &self,
         iterate_from_env_index: usize,
         iterate_from_known_forall_fact_index: usize,
-        given_or_fact: &OrFact,
-    ) -> Result<((usize, usize), Option<HashMap<String, Obj>>, Option<(OrFact, Rc<KnownForallFactParamsAndDom>)>), VerifyError> {
-        let lookup_key = given_or_fact.key();
+        given_exist_fact: &ExistFact,
+    ) -> Result<((usize, usize), Option<HashMap<String, Obj>>, Option<(ExistFact, Rc<KnownForallFactParamsAndDom>)>), VerifyError> {
+        let lookup_key = given_exist_fact.key();
 
         let envs_count = self.runtime_context.environments.len();
         for i in iterate_from_env_index..envs_count {
             let env = &self.runtime_context.environments[envs_count - 1 - i];
-            if let Some(known_forall_facts_in_env) = env.known_or_facts_in_forall_facts.get(lookup_key.as_str()) {
+            if let Some(known_forall_facts_in_env) = env.known_exist_facts_in_forall_facts.get(lookup_key.as_str()) {
                 let known_forall_facts_count = known_forall_facts_in_env.len();
                 for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
                     let current_known_forall = &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
                     let fact_args_in_known_forall = current_known_forall.0.get_args_from_fact();
-                    let given_fact_args = given_or_fact.get_args_from_fact();
+                    let given_fact_args = given_exist_fact.get_args_from_fact();
                     let match_result = Self::match_args_in_fact_in_known_forall_fact_with_given_args(
                         &fact_args_in_known_forall,
                         &given_fact_args,
@@ -54,20 +54,20 @@ impl<'a> Executor<'a> {
         Ok((DEFAULT_LINE_FILE, None, None))
     }
 
-    fn get_matched_or_fact_in_known_forall_fact_in_builtin_env(
+    fn get_matched_exist_fact_in_known_forall_fact_in_builtin_env(
         &self,
         iterate_from_known_forall_fact_index: usize,
-        given_or_fact: &OrFact,
-    ) -> Result<(usize, Option<HashMap<String, Obj>>, Option<(OrFact, Rc<KnownForallFactParamsAndDom>)>), VerifyError> {
-        let lookup_key = given_or_fact.key();
+        given_exist_fact: &ExistFact,
+    ) -> Result<(usize, Option<HashMap<String, Obj>>, Option<(ExistFact, Rc<KnownForallFactParamsAndDom>)>), VerifyError> {
+        let lookup_key = given_exist_fact.key();
         let builtin_env = &self.runtime_context.builtin_environment;
 
-        if let Some(known_forall_facts_in_env) = builtin_env.known_or_facts_in_forall_facts.get(lookup_key.as_str()) {
+        if let Some(known_forall_facts_in_env) = builtin_env.known_exist_facts_in_forall_facts.get(lookup_key.as_str()) {
             let known_forall_facts_count = known_forall_facts_in_env.len();
             for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
                 let current_known_forall = &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
                 let fact_args_in_known_forall = current_known_forall.0.get_args_from_fact();
-                let given_fact_args = given_or_fact.get_args_from_fact();
+                let given_fact_args = given_exist_fact.get_args_from_fact();
                 let match_result = Self::match_args_in_fact_in_known_forall_fact_with_given_args(
                     &fact_args_in_known_forall,
                     &given_fact_args,
@@ -81,28 +81,28 @@ impl<'a> Executor<'a> {
         Ok((0, None, None))
     }
 
-    fn try_verify_or_fact_with_known_forall_facts_in_envs(
+    fn try_verify_exist_fact_with_known_forall_facts_in_envs(
         &mut self,
-        or_fact: &OrFact,
+        exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
         let mut iterate_from_env_index = 0;
         let mut iterate_from_known_forall_fact_index = 0;
 
         loop {
-            let result = self.get_matched_or_fact_in_known_forall_fact_in_envs(
+            let result = self.get_matched_exist_fact_in_known_forall_fact_in_envs(
                 iterate_from_env_index,
                 iterate_from_known_forall_fact_index,
-                or_fact,
+                exist_fact,
             )?;
             let ((i, j), arg_map_opt, known_forall_opt) = result;
             match (arg_map_opt, known_forall_opt) {
-                (Some(arg_map), Some((or_fact_in_known_forall, forall_rc))) => {
-                    if let Some(fact_verified) = self.verify_or_fact_args_satisfy_forall_requirements(
-                        &or_fact_in_known_forall,
+                (Some(arg_map), Some((exist_fact_in_known_forall, forall_rc))) => {
+                    if let Some(fact_verified) = self.verify_exist_fact_args_satisfy_forall_requirements(
+                        &exist_fact_in_known_forall,
                         &forall_rc,
                         arg_map,
-                        or_fact,
+                        exist_fact,
                         verify_state,
                     )? {
                         return Ok(Some(fact_verified));
@@ -115,22 +115,22 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn try_verify_or_fact_with_known_forall_facts_in_builtin_env(
+    fn try_verify_exist_fact_with_known_forall_facts_in_builtin_env(
         &mut self,
-        or_fact: &OrFact,
+        exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
         let mut known_fact_index_in_builtin = 0;
 
         loop {
-            let result = self.get_matched_or_fact_in_known_forall_fact_in_builtin_env(known_fact_index_in_builtin, or_fact)?;
+            let result = self.get_matched_exist_fact_in_known_forall_fact_in_builtin_env(known_fact_index_in_builtin, exist_fact)?;
             match result {
-                (j, Some(arg_map), Some((or_fact_in_known_forall, forall_rc))) => {
-                    if let Some(fact_verified) = self.verify_or_fact_args_satisfy_forall_requirements(
-                        &or_fact_in_known_forall,
+                (j, Some(arg_map), Some((exist_fact_in_known_forall, forall_rc))) => {
+                    if let Some(fact_verified) = self.verify_exist_fact_args_satisfy_forall_requirements(
+                        &exist_fact_in_known_forall,
                         &forall_rc,
                         arg_map,
-                        or_fact,
+                        exist_fact,
                         verify_state,
                     )? {
                         return Ok(Some(fact_verified));
@@ -142,14 +142,50 @@ impl<'a> Executor<'a> {
         }
     }
 
-    fn verify_or_fact_args_satisfy_forall_requirements(
+    fn verify_exist_fact_args_satisfy_forall_requirements(
         &mut self,
-        or_fact_in_known_forall: &OrFact,
+        exist_fact_in_known_forall: &ExistFact,
         known_forall: &Rc<KnownForallFactParamsAndDom>,
         arg_map: HashMap<String, Obj>,
-        given_or_fact: &OrFact,
+        given_exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
+        // exist param matches exist param
+        let given_exist_param_names = ParamDefWithParamType::collect_param_names(&given_exist_fact.params_def_with_type);
+        
+        let known_exist_param_names = ParamDefWithParamType::collect_param_names(&exist_fact_in_known_forall.params_def_with_type);
+        if !known_exist_param_names.iter().all(|param_name| arg_map.contains_key(param_name)) {
+            return Ok(None);
+        }
+
+        if given_exist_param_names.len() != known_exist_param_names.len() {
+            return Ok(None);
+        }
+
+        let mut known_exist_params_to_given_exist_params_map: Vec<Obj> = Vec::new();
+        for (known_param_name, given_param_name) in known_exist_param_names.iter().zip(given_exist_param_names.iter()) {
+            let obj = match arg_map.get(known_param_name) {
+                Some(v) => {
+                    if v.to_string() != given_param_name.to_string() {
+                        return Ok(None);
+                    }
+                    v
+                },
+                None => return Ok(None),
+            };
+            known_exist_params_to_given_exist_params_map.push(obj.clone());
+        }
+
+        // given exist param can only match known exist param, it can not match other params
+        for (key, obj) in arg_map.iter() {
+            if given_exist_param_names.contains(&obj.to_string()) {
+                if !known_exist_param_names.contains(key) {
+                    return Ok(None);
+                }
+            }
+        }
+        
+        // arg that matches forall params
         let param_names = ParamDefWithParamType::collect_param_names(&known_forall.params_def);
 
         if !param_names.iter().all(|param_name| arg_map.contains_key(param_name)) {
@@ -168,7 +204,7 @@ impl<'a> Executor<'a> {
         }
 
         for (key, obj) in arg_map.iter() {
-            if param_names.contains(key) {
+            if param_names.contains(key) || known_exist_param_names.contains(key) {
                 continue;
             } else {
                 if key != &obj.to_string() {
@@ -201,18 +237,18 @@ impl<'a> Executor<'a> {
             }
         }
 
-        let fact_string = given_or_fact.to_string();
+        let fact_string = given_exist_fact.to_string();
         let verified_by_known_forall_fact = ForallFact::new(
             known_forall.params_def.clone(),
             known_forall.dom.clone(),
-            vec![ExistOrAndChainAtomicFact::OrFact(or_fact_in_known_forall.clone())],
+            vec![ExistOrAndChainAtomicFact::ExistFact(exist_fact_in_known_forall.clone())],
             known_forall.line_file.clone(),
         );
         let fact_verified = FactVerifiedByFact::new(
             fact_string,
             verified_by_known_forall_fact.to_string(),
             InferResult::new(),
-            given_or_fact.line_file,
+            given_exist_fact.line_file(),
             verified_by_known_forall_fact.line_file,
         );
         Ok(Some(fact_verified))
