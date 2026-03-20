@@ -38,7 +38,8 @@ pub const CUP: &str = "cup";
 pub const CAP: &str = "cap";
 pub const POWER_SET: &str = "power_set";
 pub const CHOOSE: &str = "choose";
-pub const FN: &str = "fn";
+pub const FN_FOR_FN_WITH_DOM: &str = "fn";
+pub const FN_FOR_FN_WITHOUT_DOM: &str = "Fn";
 pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
 pub const FINITE_SET: &str = "finite_set";
@@ -130,7 +131,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
     let words = [
         UNION, INTERSECT, SET_MINUS, SET_DIFF, CUP, CAP, POWER_SET, CHOOSE,
-        FN, SET, NONEMPTY_SET, FINITE_SET, N_POS, N, Q, Z, R,
+        FN_FOR_FN_WITH_DOM, SET, NONEMPTY_SET, FINITE_SET, N_POS, N, Q, Z, R,
         CART, CART_DIM, PROJ, COUNT, RANGE, CLOSED_RANGE, VAL,
         EXIST, ST, FORALL, NOT, IS_SET, IS_NONEMPTY_SET, IS_FINITE_SET, IS_CART, IS_TUPLE,
         IN, OR, AND, SUBSET, SUPERSET, SUCCESS_COLON, UNKNOWN_COLON, LET, PROP,
@@ -139,7 +140,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         BY_EXTENSION, IMPOSSIBLE, BY_FN_DEF, BY_CART_DEF, ALGO,
         Q_POS, R_POS, Q_NEG, Z_NEG, R_NEG, Q_NZ, Z_NZ, R_NZ,
         STRUCT, RESTRICT,
-        TUPLE_DIM,
+        TUPLE_DIM, FN_FOR_FN_WITHOUT_DOM,
     ];
     for &s in &words {
         m.insert(s, s);

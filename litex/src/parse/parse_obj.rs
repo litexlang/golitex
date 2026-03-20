@@ -1,6 +1,6 @@
 use crate::common::helper::is_number_string_literally_integer_without_dot;
 use crate::common::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ, is_key_symbol_or_keyword
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN_FOR_FN_WITH_DOM, FN_FOR_FN_WITHOUT_DOM, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ, is_key_symbol_or_keyword
 };
 use crate::execute::Executor;
 use super::TokenBlock;
@@ -165,7 +165,7 @@ impl<'a> Executor<'a> {
             self.parse_set_builder_or_set_list(tb)
         } else if tb.current_token_is_equal_to(INST_STRUCT_OBJ_SIGN) {
             self.parse_instantiated_struct_obj(tb)
-        } else if tb.current_token_is_equal_to(FN) {
+        } else if tb.current_token_is_equal_to(FN_FOR_FN_WITH_DOM) | tb.current_token_is_equal_to(FN_FOR_FN_WITHOUT_DOM) {
             match self.parse_fn_set_obj(tb)? {
                 FnSetObj::FnSetWithDom(fs) => Ok(Obj::FnSetWithDom(fs)),
                 FnSetObj::FnSetWithoutDom(fs) => Ok(Obj::FnSetWithoutDom(fs)),
@@ -176,35 +176,14 @@ impl<'a> Executor<'a> {
     }
 
     pub fn parse_fn_set_obj(&mut self, tb: &mut TokenBlock) -> Result<FnSetObj, ParsingError> {
-        tb.skip_token(FN)?;
-        self.parse_fn_set_obj_without_prefix_fn(tb)
-    }
-
-    pub fn parse_fn_set_obj_without_prefix_fn(&mut self, tb: &mut TokenBlock) -> Result<FnSetObj, ParsingError> {
-        if tb.current()? != LEFT_BRACE {
-            return Err(ParsingError::new("Expected left brace".to_string(), tb.line_file, None));
-        }
-        
-        let start = tb.parse_index + 1;
-        let mut depth = 1;
-        let mut i = start;
-        while i < tb.header.len() {
-            if tb.header[i] == LEFT_BRACE {
-                depth += 1;
-            } else if tb.header[i] == RIGHT_BRACE {
-                depth -= 1;
-                if depth == 0 {
-                    break;
-                }
-            }
-            i += 1;
-        }
-        let end = i;
-        let has_colon = tb.header[start..end].iter().any(|t| t.as_str() == COLON);
-        if has_colon {
+        if tb.current_token_is_equal_to(FN_FOR_FN_WITH_DOM) {
+            tb.skip_token(FN_FOR_FN_WITH_DOM)?;
             Ok(FnSetObj::FnSetWithDom(self.parse_fn_set_with_dom_without_fn_prefix(tb)?))
-        } else {
+        } else if tb.current_token_is_equal_to(FN_FOR_FN_WITHOUT_DOM) {
+            tb.skip_token(FN_FOR_FN_WITHOUT_DOM)?;
             Ok(FnSetObj::FnSetWithoutDom(self.parse_fn_set_without_dom_without_fn_prefix(tb)?))
+        } else {
+            Err(ParsingError::new("Expected fn for fn with dom".to_string(), tb.line_file, None))
         }
     }
 
