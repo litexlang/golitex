@@ -20,5 +20,6 @@ mod verify_helper;
 mod verify_atomic_fact_with_known_forall;
 mod verify_or_fact_with_known_forall;
 mod verify_facts_the_same_type_and_return_matched_args;
+mod verify_non_equational_atomic_fact_with_builtin_rules;
 
 pub use verify_state::VerifyState;

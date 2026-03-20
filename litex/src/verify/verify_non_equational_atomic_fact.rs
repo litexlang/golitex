@@ -7,8 +7,6 @@ use crate::error::{VerifyError};
 use crate::execute::Executor;
 use crate::verify::VerifyState;
 use crate::result::StmtUnknown;
-use crate::verify::verify_number_comparison_builtin_rule::verify_number_comparison_builtin_rule;
-use crate::result::FactVerifiedByBuiltinRules;
 
 impl<'a> Executor<'a> {
     pub fn verify_non_equational_atomic_fact(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
@@ -120,30 +118,6 @@ impl<'a> Executor<'a> {
         }
 
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
-    }
-
-    fn verify_non_equational_atomic_fact_with_builtin_rules(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
-        match atomic_fact {
-            AtomicFact::InFact(in_fact) => self.verify_in_fact_with_builtin_rules(in_fact, verify_state),
-            AtomicFact::LessFact(_) | AtomicFact::GreaterFact(_) | AtomicFact::LessEqualFact(_) | AtomicFact::GreaterEqualFact(_) => {
-                let number_compare_result = verify_number_comparison_builtin_rule(atomic_fact);
-                match number_compare_result {
-                    Some(true) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                        crate::result::FactVerifiedByBuiltinRules::new(
-                            atomic_fact.to_string(),
-                            "number comparison".to_string(),
-                            InferResult::new(),
-                            atomic_fact.line_file(),
-                        ),
-                    )),
-                    Some(false) => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
-                    None => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
-                }
-            },
-            AtomicFact::IsSetFact(is_set_fact) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(is_set_fact.to_string(), "Every object is a set.".to_string(), InferResult::new(), is_set_fact.line_file))),
-            AtomicFact::RestrictFact(restrict_fact) => self.verify_restrict_fact_with_builtin_rules(restrict_fact, verify_state),
-            _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
-        }
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(environment: &Environment, atomic_fact: &AtomicFact, all_objs_equal_to_arg: &Vec<String>) -> Result<NonErrStmtExecResult, VerifyError> {
