@@ -232,20 +232,29 @@ impl<'a> Executor<'a> {
             if tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
                 continue;
-            } else if tb.current()? == COLON {
+            } else if tb.current_token_is_equal_to(COLON) {
+                tb.skip_token(COLON)?;
+                break;
+            } else if tb.current_token_is_equal_to(RIGHT_BRACE){
                 break;
             } else {
-                return Err(ParsingError::new("Expected colon".to_string(), tb.line_file, None));
+                return Err(ParsingError::new("Expected comma or colon".to_string(), tb.line_file, None));
             }
         }
+        
         let fn_set_param_names = ParamDefWithParamSet::collect_param_names(&params_def_with_set);
         self.validate_names_and_put_into_parsing_names_block(&fn_set_param_names).map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
-        tb.skip_token(COLON)?;
-        let mut dom_facts = vec![self.parse_or_and_chain_atomic_fact(tb)?];
-        while tb.current_token_is_equal_to(COMMA) {
-            tb.skip_token(COMMA)?;
+
+        let mut dom_facts = vec![];
+        if tb.current_token_is_equal_to(COLON) {
+            tb.skip_token(COLON)?;
             dom_facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
+            while tb.current_token_is_equal_to(COMMA) {
+                tb.skip_token(COMMA)?;
+                dom_facts.push(self.parse_or_and_chain_atomic_fact(tb)?);
+            }
         }
+
         tb.skip_token(RIGHT_BRACE)?;
         let ret_set = self.parse_obj(tb)?;
         Ok(FnSetWithDom::new(params_def_with_set, dom_facts, ret_set))
