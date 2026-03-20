@@ -2,8 +2,8 @@ use crate::error::{duplicate_name_error_message, StmtError};
 use crate::stmt::definition_stmt::{DefLetStmt, DefPropWithMeaningStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt, DefPropWithoutMeaningStmt};
 use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
 use crate::error::ParsingError;
-use crate::stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
-use crate::common::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, FN, HAVE, IF, LEFT_BRACE, LET, PROP, RETURN, RIGHT_BRACE, STRUCT};
+use crate::stmt::define_algorithm_stmt::{AlgoCase, AlgoReturn, AlgoReturnOrAlgoCase, DefAlgoStmt};
+use crate::common::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, FN, HAVE, LEFT_BRACE, LET, PROP, RIGHT_BRACE, STRUCT};
 use crate::stmt::parameter_def::ParamDefWithParamType;
 use crate::execute::Executor;
 use crate::stmt::Stmt;
@@ -294,30 +294,27 @@ impl<'a> Executor<'a> {
         }
         tb.skip_token(RIGHT_BRACE)?;
         tb.skip_token(COLON)?;
-        let mut return_or_algo_if: Vec<AlgoReturnOrAlgoIf> = vec![];
+        let mut return_or_algo_case: Vec<AlgoReturnOrAlgoCase> = vec![];
         for block in tb.body.iter_mut() {
-            let item = if block.current()? == IF {
-                AlgoReturnOrAlgoIf::AlgoIf(self.parse_algo_if(block)?)
-            } else if block.current()? == RETURN {
-                AlgoReturnOrAlgoIf::AlgoReturn(self.parse_algo_return(block)?)
+            let item = if block.current()? == CASE {
+                AlgoReturnOrAlgoCase::AlgoCase(self.parse_algo_case(block)?)
             } else {
-                return Err(ParsingError::new("algo body block must start with if or return".to_string(), block.line_file, None));
+                AlgoReturnOrAlgoCase::AlgoReturn(self.parse_algo_return(block)?)
             };
-
             
-            return_or_algo_if.push(item);
+            return_or_algo_case.push(item);
         }
         Ok(Stmt::DefAlgoStmt(DefAlgoStmt::new(
             name,
             params,
-            return_or_algo_if,
+            return_or_algo_case,
             tb.line_file,
         )))
     }
 
     /// head 里是 if and_spec_fact :，body 有且只有一个块，即 return obj。
-    fn parse_algo_if(&mut self, block: &mut TokenBlock) -> Result<AlgoIf, ParsingError> {
-        block.skip_token(IF)?;
+    fn parse_algo_case(&mut self, block: &mut TokenBlock) -> Result<AlgoCase, ParsingError> {
+        block.skip_token(CASE)?;
         let condition = self.parse_and_chain_atomic_fact(block)?;
         block.skip_token(COLON)?;
         if !block.exceed_end_of_head() {
@@ -330,7 +327,7 @@ impl<'a> Executor<'a> {
         let block = block.body.first_mut().ok_or_else(|| ParsingError::new("algo if block must have exactly one body block (return stmt)".to_string(), block.line_file, None))?;
         
         let return_stmt = self.parse_algo_return(block)?;
-        Ok(AlgoIf::new(
+        Ok(AlgoCase::new(
             condition,
             return_stmt,
             block.line_file,
@@ -339,7 +336,6 @@ impl<'a> Executor<'a> {
 
     /// head 里是 return，后跟 obj。
     fn parse_algo_return(&mut self, block: &mut TokenBlock) -> Result<AlgoReturn, ParsingError> {
-        block.skip_token(RETURN)?;
         let value = self.parse_obj(block)?;
         Ok(AlgoReturn::new(value, block.line_file))
     }
