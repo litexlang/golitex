@@ -1,4 +1,11 @@
-let a R:
-    a $in {1, 2}
+know forall a, b R:
+    a > b or a <= b
 
-a = 1 or a = 2
+have fn f(a, b R) R =:
+    case a > b: a
+    case a <= b: b
+
+algo f(a, b):
+    case a > b: a
+    case a <= b: b
+
