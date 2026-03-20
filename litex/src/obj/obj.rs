@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use crate::stmt::parameter_def::ParamDefWithParamSet;
 use crate::fact::OrAndChainAtomicFact;
 use crate::common::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, SET_DIFF, DIV, FN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, SET_DIFF, DIV, FN_FOR_FN_WITH_DOM, FN_FOR_FN_WITHOUT_DOM, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ
 };
 use std::fmt;
 use crate::common::helper::{braced_vec_to_string, curly_braced_vec_to_string, vec_to_string_join_by_comma, brace_vec_colon_vec_to_string};
@@ -917,7 +917,7 @@ impl fmt::Display for SetBuilder {
 
 impl fmt::Display for FnSetWithoutDom {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}", FN, braced_vec_to_string(&self.param_sets), self.ret_set)
+        write!(f, "{}{}{}", FN_FOR_FN_WITHOUT_DOM, braced_vec_to_string(&self.param_sets), self.ret_set)
     }
 }
 
@@ -926,7 +926,7 @@ impl fmt::Display for FnSetWithDom {
         write!(
             f,
             "{} {} {}",
-            FN,
+            FN_FOR_FN_WITH_DOM,
             brace_vec_colon_vec_to_string(&self.params_def_with_set, &self.dom_facts),
             self.ret_set
         )

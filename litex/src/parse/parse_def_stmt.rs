@@ -3,7 +3,7 @@ use crate::stmt::definition_stmt::{DefLetStmt, DefPropWithMeaningStmt, DefStruct
 use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
 use crate::error::ParsingError;
 use crate::stmt::define_algorithm_stmt::{AlgoCase, AlgoReturn, AlgoReturnOrAlgoCase, DefAlgoStmt};
-use crate::common::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, FN, HAVE, LEFT_BRACE, LET, PROP, RIGHT_BRACE, STRUCT};
+use crate::common::keywords::{ALGO, CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, FN_FOR_FN_WITH_DOM, HAVE, LEFT_BRACE, LET, PROP, RIGHT_BRACE, STRUCT};
 use crate::stmt::parameter_def::ParamDefWithParamType;
 use crate::execute::Executor;
 use crate::stmt::Stmt;
@@ -134,7 +134,7 @@ impl<'a> Executor<'a> {
 
     pub fn parse_have_fn_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(HAVE)?;
-        tb.skip_token(FN)?;
+        tb.skip_token(FN_FOR_FN_WITH_DOM)?;
         let name = tb.advance()?;
 
         self.validate_name_and_put_into_parsing_names_block(&name).map_err(|e| ParsingError::new(duplicate_name_error_message(&name), tb.line_file, Some(StmtError::ParseBlockError(e))))?;
