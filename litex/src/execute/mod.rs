@@ -2,7 +2,7 @@ mod exec_claim_stmt;
 mod exec_def_stmt;
 mod exec_eval_stmt;
 mod exec_know_stmt;
-mod exec_proof_technique_stmt;
+mod exec_axiom_stmt;
 mod exec_prove_stmt;
 mod exec_store_def;
 mod exec_stmt;

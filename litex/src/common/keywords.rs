@@ -74,25 +74,28 @@ pub const LET: &str = "let";
 pub const PROP: &str = "prop";
 pub const CLAIM: &str = "claim";
 pub const PROVE: &str = "prove";
-pub const CONTRA: &str = "contra";
+
+pub const BY_CONTRA: &str = "by_contra";
+pub const ENUMERATE: &str = "enumerate";
+pub const BY_CASES: &str = "by_cases";
+pub const BY_INDUC: &str = "by_induc";
+pub const FOR: &str = "for";
+pub const BY_FN_DEF: &str = "by_fn_def";
+pub const BY_EXTENSION: &str = "by_extension";
+pub const BY_CART_DEF: &str = "by_cart_def";
+
 pub const CASE: &str = "case";
-pub const CASES: &str = "cases";
 pub const IMPORT: &str = "import";
 pub const AS: &str = "as";
-pub const ENUM: &str = "enum";
 pub const HAVE: &str = "have";
 pub const KNOW: &str = "know";
 pub const CLEAR: &str = "clear";
 pub const DO_NOTHING: &str = "do_nothing";
 pub const RUN_FILE: &str = "run_file";
-pub const INDUC: &str = "induc";
 pub const FROM: &str = "from";
 pub const EVAL: &str = "eval";
-pub const FOR: &str = "for";
 pub const WITNESS: &str = "witness";
-pub const EQUAL_SET: &str = "equal_set";
 pub const IMPOSSIBLE: &str = "impossible";
-pub const VIEW_FN_AS_SET: &str = "view_fn_as_set";
 pub const RETURN: &str = "return";
 pub const IF: &str = "if";
 pub const ALGO: &str = "algo";
@@ -132,9 +135,9 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CART, CART_DIM, PROJ, COUNT, RANGE, CLOSED_RANGE, VAL,
         EXIST, ST, FORALL, NOT, IS_SET, IS_NONEMPTY_SET, IS_FINITE_SET, IS_CART, IS_TUPLE,
         IN, OR, AND, SUBSET, SUPERSET, SUCCESS_COLON, UNKNOWN_COLON, LET, PROP,
-        CLAIM, PROVE, CONTRA, CASE, CASES, IMPORT, AS, ENUM, HAVE, KNOW,
-        CLEAR, DO_NOTHING, INDUC, FROM, EVAL, FOR, WITNESS,
-        EQUAL_SET, IMPOSSIBLE, VIEW_FN_AS_SET, RETURN, IF, ALGO,
+        CLAIM, PROVE, BY_CONTRA, CASE, BY_CASES, IMPORT, AS, ENUMERATE, HAVE, KNOW,
+        CLEAR, DO_NOTHING, BY_INDUC, FROM, EVAL, FOR, WITNESS,
+        BY_EXTENSION, IMPOSSIBLE, BY_FN_DEF, BY_CART_DEF, RETURN, IF, ALGO,
         Q_POS, Z_POS, R_POS, Q_NEG, Z_NEG, R_NEG, Q_NZ, Z_NZ, R_NZ,
         STRUCT, RESTRICT,
     ];

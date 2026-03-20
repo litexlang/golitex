@@ -1,32 +1,34 @@
 use std::fmt;
-use crate::common::keywords::{CASE, CASES, CLAIM, COLON, CONTRA, ENUM, FOR, FROM, INDUC, PROVE, RIGHT_ARROW, EQUAL_SET, EQUAL, IMPOSSIBLE, VIEW_FN_AS_SET};
+use crate::common::keywords::{CASE, BY_CASES, CLAIM, COLON, BY_CONTRA, ENUMERATE, FOR, FROM, BY_INDUC, PROVE, RIGHT_ARROW, BY_EXTENSION, EQUAL, IMPOSSIBLE, BY_FN_DEF, BY_CART_DEF};
 use crate::common::helper::{add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line};
 use crate::fact::{Fact, AndChainAtomicFact, ExistOrAndChainAtomicFact};
 use super::Stmt;
-use crate::obj::{ClosedRange, Obj, Range };
+use crate::obj::{Cart, ClosedRange, Obj, Range };
 
-// f $in fn(A, B) C => forall a A, b B => ((a, b), f(a, b)) $in f; forall x f: exist a A, b B st ((a, b), f(a, b)) = x
-// f $in fn(a A, b B: $p(a, b)) C {$q(a, b, f)} => forall a A, b B: $p(a, b) => ((a, b), f(a, b)) $in f; forall x f: exist a A, b B st {$p(a, b), ((a, b), f(a, b)) = x}
-pub struct ViewFnAsSetStmt {
+// f $in fn(a A, b B: $p(a, b)) C => forall a A, b B: $p(a, b) => ((a, b), f(a, b)) $in f; forall x f: exist a A, b B st ((a, b), f(a, b)) = x
+pub struct ByFnDefAxiomStmt {
     pub function: Obj,
     pub line_file: (usize, usize),
 }
 
+pub struct ByCartDefAxiomStmt {
+    pub cart: Cart,
+    pub line_file: (usize, usize),
+}
 
-pub struct ProveByEqualSetStmt {
+pub struct ByExtensionAxiomStmt {
     pub left: Obj,
     pub right: Obj,
     pub proof: Vec<Stmt>,
     pub line_file: (usize, usize),
 }
 
-
 pub enum ClosedRangeOrRange {
     ClosedRange(ClosedRange),
     Range(Range),
 }
 
-pub struct ProveForStmt {
+pub struct ForAxiomStmt {
     pub params: Vec<String>,
     pub param_sets: Vec<ClosedRangeOrRange>,
     pub dom_facts: Vec<ExistOrAndChainAtomicFact>,
@@ -35,7 +37,7 @@ pub struct ProveForStmt {
     pub line_file: (usize, usize),
 }
 
-pub struct ProveByInductionStmt {
+pub struct ByInducAxiomStmt {
     pub fact: Vec<ExistOrAndChainAtomicFact>,
     pub param: String,
     pub proof: Vec<Stmt>,
@@ -43,7 +45,7 @@ pub struct ProveByInductionStmt {
     pub line_file: (usize, usize),
 }
 
-pub struct ProveByEnumerationStmt {
+pub struct EnumerateAxiomStmt {
     pub params: Vec<String>,
     pub param_sets: Vec<Obj>,
     pub to_prove: Vec<Fact>,
@@ -51,7 +53,7 @@ pub struct ProveByEnumerationStmt {
     pub line_file: (usize, usize),
 }
 
-pub struct ProveCaseByCaseStmt {
+pub struct ByCasesAxiomStmt {
     pub cases: Vec<AndChainAtomicFact>,
     pub then_facts: Vec<Fact>,
     pub proofs: Vec<Vec<Stmt>>,
@@ -59,7 +61,7 @@ pub struct ProveCaseByCaseStmt {
     pub line_file: (usize, usize),
 }
 
-pub struct ProveByContradictionStmt {
+pub struct ByContraAxiomStmt {
     pub to_prove: Fact,
     pub proof: Vec<Stmt>,
     pub impossible_fact: ExistOrAndChainAtomicFact,
@@ -67,27 +69,27 @@ pub struct ProveByContradictionStmt {
 }
 
 
-impl ProveByEnumerationStmt {
+impl EnumerateAxiomStmt {
     pub fn new(params: Vec<String>, param_sets: Vec<Obj>, to_prove: Vec<Fact>, proof: Vec<Stmt>, line_file: (usize, usize)) -> Self {
-        ProveByEnumerationStmt { params, param_sets, to_prove, proof, line_file }
+        EnumerateAxiomStmt { params, param_sets, to_prove, proof, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
-        "ProveByEnumerationStmt".to_string()
+        "EnumerateAxiomStmt".to_string()
     }
 }
 
-impl ProveCaseByCaseStmt {
+impl ByCasesAxiomStmt {
     pub fn new(cases: Vec<AndChainAtomicFact>, then_facts: Vec<Fact>, proofs: Vec<Vec<Stmt>>, impossible_facts: Vec<Option<ExistOrAndChainAtomicFact>>, line_file: (usize, usize)) -> Self {
-        ProveCaseByCaseStmt { cases, then_facts, proofs, impossible_facts, line_file }
+        ByCasesAxiomStmt { cases, then_facts, proofs, impossible_facts, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
-        "ProveCaseByCaseStmt".to_string()
+        "ByCasesAxiomStmt".to_string()
     }
 }
 
-impl fmt::Display for ProveCaseByCaseStmt {
+impl fmt::Display for ByCasesAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let case_and_proof_of_each_case = self.cases.iter().zip(self.proofs.iter()).zip(self.impossible_facts.iter()).map(|((case, proof), impossible_fact)| {
             if let Some(impossible_fact) = impossible_fact {
@@ -97,49 +99,49 @@ impl fmt::Display for ProveCaseByCaseStmt {
             }
         }).collect::<Vec<String>>();
         
-        write!(f, "{}{}\n{}\n{}", CASES, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.then_facts, 1), case_and_proof_of_each_case.join("\n"))
+        write!(f, "{}{}\n{}\n{}", BY_CASES, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.then_facts, 1), case_and_proof_of_each_case.join("\n"))
     }
 }
 
-impl ProveByContradictionStmt {
+impl ByContraAxiomStmt {
     pub fn new(to_prove: Fact, proof: Vec<Stmt>, impossible_fact: ExistOrAndChainAtomicFact, line_file: (usize, usize)) -> Self {
-        ProveByContradictionStmt { to_prove, proof, impossible_fact, line_file }
+        ByContraAxiomStmt { to_prove, proof, impossible_fact, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
-        "ProveByContradictionStmt".to_string()
+        "ByContraAxiomStmt".to_string()
     }
 }
 
-impl fmt::Display for ProveByContradictionStmt {
+impl fmt::Display for ByContraAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}\n{}\n{}{}\n{}\n{} {}", CLAIM, COLON,to_string_and_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1),add_four_spaces_at_beginning(CONTRA.to_string(), 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2), add_four_spaces_at_beginning(IMPOSSIBLE.to_string(), 2), &self.impossible_fact.to_string())
+        write!(f, "{}{}\n{}\n{}{}\n{}\n{} {}", CLAIM, COLON,to_string_and_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1),add_four_spaces_at_beginning(BY_CONTRA.to_string(), 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2), add_four_spaces_at_beginning(IMPOSSIBLE.to_string(), 2), &self.impossible_fact.to_string())
     }
 }
 
-impl fmt::Display for ProveByEnumerationStmt {
+impl fmt::Display for EnumerateAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}{}\n{}\n{}{}\n{}", ENUM, vec_pair_to_string(&self.params, &self.param_sets), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1), add_four_spaces_at_beginning(PROVE.to_string(), 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
+        write!(f, "{} {}{}\n{}\n{}{}\n{}", ENUMERATE, vec_pair_to_string(&self.params, &self.param_sets), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1), add_four_spaces_at_beginning(PROVE.to_string(), 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
     }
 }
 
-impl ProveByInductionStmt {
+impl ByInducAxiomStmt {
     pub fn new(fact: Vec<ExistOrAndChainAtomicFact>, param: String, proof: Vec<Stmt>, induc_from: Obj, line_file: (usize, usize)) -> Self {
-        ProveByInductionStmt { fact, param, proof, induc_from, line_file }
+        ByInducAxiomStmt { fact, param, proof, induc_from, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
-        "ProveByInductionStmt".to_string()
+        "ByInducAxiomStmt".to_string()
     }
 }
 
-impl fmt::Display for ProveByInductionStmt {
+impl fmt::Display for ByInducAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {} {}{}\n{}\n{}{}\n{}", INDUC, self.param, FROM, self.induc_from, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.fact, 1), add_four_spaces_at_beginning(PROVE.to_string(), 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
+        write!(f, "{} {} {} {}{}\n{}\n{}{}\n{}", BY_INDUC, self.param, FROM, self.induc_from, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.fact, 1), add_four_spaces_at_beginning(PROVE.to_string(), 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2))
     }
 }
 
-impl fmt::Display for ProveForStmt {
+impl fmt::Display for ForAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let head = match self.dom_facts.len() {
             0 => format!("{} {}{}\n{}", FOR, vec_pair_to_string(&self.params, &self.param_sets), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.then_facts, 1)),
@@ -153,13 +155,13 @@ impl fmt::Display for ProveForStmt {
     }
 }
 
-impl ProveForStmt {
+impl ForAxiomStmt {
     pub fn new(params: Vec<String>, param_sets: Vec<ClosedRangeOrRange>, dom_facts: Vec<ExistOrAndChainAtomicFact>, then_facts: Vec<ExistOrAndChainAtomicFact>, proof: Vec<Stmt>, line_file: (usize, usize)) -> Self {
-        ProveForStmt { params, param_sets, dom_facts, then_facts, proof, line_file }
+        ForAxiomStmt { params, param_sets, dom_facts, then_facts, proof, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
-        "ProveForStmt".to_string()
+        "ForAxiomStmt".to_string()
     }
 }
 
@@ -172,38 +174,54 @@ impl fmt::Display for ClosedRangeOrRange {
     }
 }
 
-impl fmt::Display for ProveByEqualSetStmt {
+impl fmt::Display for ByExtensionAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.proof.len() {
-            0 => write!(f, "{} {} {} {}", EQUAL_SET, self.left, EQUAL, self.right),
-            _ => write!(f, "{} {} {} {}{}\n{}", EQUAL_SET, self.left, EQUAL, self.right, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)),
+            0 => write!(f, "{} {} {} {}", BY_EXTENSION, self.left, EQUAL, self.right),
+            _ => write!(f, "{} {} {} {}{}\n{}", BY_EXTENSION, self.left, EQUAL, self.right, COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)),
         }
     }
 }
 
-impl ProveByEqualSetStmt {
+impl ByExtensionAxiomStmt {
     pub fn new(left: Obj, right: Obj, proof: Vec<Stmt>, line_file: (usize, usize)) -> Self {
-        ProveByEqualSetStmt { left, right, proof, line_file }
+        ByExtensionAxiomStmt { left, right, proof, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
-        "ProveByEqualSetStmt".to_string()
+        "ByExtensionAxiomStmt".to_string()
     }
 }
 
-impl fmt::Display for ViewFnAsSetStmt {
+impl fmt::Display for ByFnDefAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", VIEW_FN_AS_SET, self.function)
+        write!(f, "{} {}", BY_FN_DEF, self.function)
     }
 }
 
-impl ViewFnAsSetStmt {
+impl ByFnDefAxiomStmt {
     pub fn new(function: Obj, line_file: (usize, usize)) -> Self {
-        ViewFnAsSetStmt { function, line_file }
+        ByFnDefAxiomStmt { function, line_file }
     }
 
     pub fn stmt_type_name(&self) -> String {
-        "ViewFnAsSetStmt".to_string()
+        "ByFnDefAxiomStmt".to_string()
+    }
+}
+
+impl fmt::Display for ByCartDefAxiomStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} {}", BY_CART_DEF, self.cart)
+    }
+}
+
+impl ByCartDefAxiomStmt {
+    pub fn new(cart: Cart, line_file: (usize, usize)) -> Self {
+        ByCartDefAxiomStmt { cart, line_file }
+    }
+
+    pub fn stmt_type_name(&self) -> String {
+        "ByCartDefAxiomStmt".to_string()
     }
 }
 
