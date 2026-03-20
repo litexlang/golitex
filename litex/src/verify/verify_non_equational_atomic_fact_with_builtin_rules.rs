@@ -1,7 +1,11 @@
-use crate::fact::{AtomicFact, NotEqualFact, LessFact, GreaterFact, LessEqualFact, GreaterEqualFact};
+use crate::fact::{
+    AtomicFact, NotEqualFact,
+    IsNonemptySetFact,
+};
 use crate::error::VerifyError;
 use crate::execute::Executor;
 use crate::calculate_and_simplify_rational_expression::objs_equal_by_rational_expression_simplification;
+use crate::obj::Obj;
 use crate::result::NonErrStmtExecResult;
 use crate::result::StmtUnknown;
 use crate::verify::VerifyState;
@@ -32,6 +36,7 @@ impl<'a> Executor<'a> {
             },
             AtomicFact::IsSetFact(is_set_fact) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(is_set_fact.to_string(), "Every object is a set.".to_string(), InferResult::new(), is_set_fact.line_file))),
             AtomicFact::RestrictFact(restrict_fact) => self.verify_restrict_fact_with_builtin_rules(restrict_fact, verify_state),
+            AtomicFact::IsNonemptySetFact(is_nonempty_set_fact) => self._verify_is_nonempty_set_fact_with_builtin_rules(is_nonempty_set_fact, verify_state),
             _ => unreachable!(),
         }
     }
@@ -69,19 +74,42 @@ impl<'a> Executor<'a> {
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    fn _verify_less_fact_with_builtin_rules(&mut self, _less_fact: &LessFact, _verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
-        return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
-    }
+    fn _verify_is_nonempty_set_fact_with_builtin_rules(
+        &mut self,
+        is_nonempty_set_fact: &IsNonemptySetFact,
+        _verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        match &is_nonempty_set_fact.set {
+            Obj::NPosObj(_) | Obj::NObj(_) | Obj::QObj(_) | 
+            Obj::RObj(_) | Obj::RNz(_) | Obj::ZNz(_) | Obj::QNz
+            (_) | Obj::ZPos(_) | Obj::QPos(_) | Obj::RPos(_) | 
+            Obj::RNeg(_) | Obj::ZNeg(_) | Obj::QNeg(_) | 
+            Obj::ZObj(_) => Ok(
+                NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(
+                    is_nonempty_set_fact.to_string(),
+                    "standard_nonempty_set".to_string(),
+                    InferResult::new(),
+                    is_nonempty_set_fact.line_file,
+                )),
+            ),
+            Obj::Cart(cart) => {
+                for arg_obj in &cart.args {
+                    let is_nonempty_set_result = self.verify_non_equational_atomic_fact_with_builtin_rules(&AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(*arg_obj.clone(), is_nonempty_set_fact.line_file)), _verify_state)?;
 
-    fn _verify_greater_fact_with_builtin_rules(&mut self, _greater_fact: &GreaterFact, _verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
-        return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
-    }
+                    if !is_nonempty_set_result.is_true() {
+                        return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+                    }
+                }
 
-    fn _verify_less_equal_fact_with_builtin_rules(&mut self, _less_equal_fact: &LessEqualFact, _verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
-        return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
-    }
-
-    fn _verify_greater_equal_fact_with_builtin_rules(&mut self, _greater_equal_fact: &GreaterEqualFact, _verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
-        return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+                // verified by objects in cart are all nonempty sets
+                Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(
+                    is_nonempty_set_fact.to_string(),
+                    "cart_nonempty_set".to_string(),
+                    InferResult::new(),
+                    is_nonempty_set_fact.line_file,
+                )))
+            }
+            _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
+        }
     }
 }

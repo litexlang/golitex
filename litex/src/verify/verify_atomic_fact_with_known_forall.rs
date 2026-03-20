@@ -305,6 +305,7 @@ impl<'a> Executor<'a> {
             Obj::Val(ref left) => Self::match_arg_when_left_is_val(left.value.as_ref(), given_arg),
             Obj::PowerSet(ref left) => Self::match_arg_when_left_is_power_set(left.set.as_ref(), given_arg),
             Obj::Choose(ref left) => Self::match_arg_when_left_is_choose(left.set.as_ref(), given_arg),
+            Obj::TupleDimObj(ref left) => Self::match_arg_when_left_is_tuple_dim_obj(left.obj.as_ref(), given_arg),
             Obj::ObjAtIndex(ref left) => Self::match_arg_when_left_is_obj_at_index(left.obj.as_ref(), left.index.as_ref(), given_arg),
             Obj::QPos(_) => Self::match_arg_when_left_is_q_pos(given_arg),
             Obj::ZPos(_) => Self::match_arg_when_left_is_z_pos(given_arg),
@@ -716,6 +717,13 @@ impl<'a> Executor<'a> {
     fn match_arg_when_left_is_choose(left_set: &Obj, given_arg: &Obj) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
             Obj::Choose(ref given) => Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_set, given.set.as_ref()),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_tuple_dim_obj(left_obj: &Obj, given_arg: &Obj) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
+        match given_arg {
+            Obj::TupleDimObj(ref given) => Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(left_obj, given.obj.as_ref()),
             _ => Ok(None),
         }
     }

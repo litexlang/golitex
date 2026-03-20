@@ -1,12 +1,12 @@
 use crate::obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FieldAccess, FieldAccessWithMod,
     FnObj, FnSetWithDom, FnSetWithoutDom, Identifier, IdentifierWithMod, InstStructObj, ListSet, Mod,
-    Mul, Number, Obj, ObjAtIndex, PowerSet, Pow, Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, Union, Val, ZObj,
+    Mul, Number, Obj, ObjAtIndex, PowerSet, Pow, Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, TupleDimObj, Union, Val, ZObj,
     Intersect, FnSetObj,
 };
 use crate::error::{WellDefinedError, StmtError};
 use crate::verify::VerifyState;
-use crate::fact::{AndFact, AtomicFact, EqualFact, GreaterFact, IsCartFact, LessFact, NotEqualFact, OrFact, Fact, AndChainAtomicFact};
+use crate::fact::{AndFact, AtomicFact, EqualFact, GreaterFact, IsCartFact, IsTupleFact, LessFact, NotEqualFact, OrFact, Fact, AndChainAtomicFact};
 use crate::fact::InFact;
 use crate::execute::Executor;
 use crate::stmt::parameter_def::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
@@ -70,6 +70,7 @@ impl<'a> Executor<'a> {
             Obj::Val(x) => self.verify_val_well_defined(x, verify_state),
             Obj::PowerSet(x) => self.verify_power_set_well_defined(x, verify_state),
             Obj::Choose(x) => self.verify_choose_well_defined(x, verify_state),
+            Obj::TupleDimObj(x) => self.verify_tuple_dim_obj_well_defined(x, verify_state),
             Obj::ObjAtIndex(x) => self.verify_obj_at_index_well_defined(x, verify_state),
             Obj::QPos(_) => self.verify_q_pos_well_defined(),
             Obj::ZPos(_) => self.verify_z_pos_well_defined(),
@@ -602,6 +603,16 @@ impl<'a> Executor<'a> {
 
     fn verify_choose_well_defined(&mut self, _x: &Choose, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         Err(WellDefinedError::new("verify_choose_well_defined 此函数还没有 implement".to_string(), None, DEFAULT_LINE_FILE.clone()))
+    }
+
+    fn verify_tuple_dim_obj_well_defined(&mut self, x: &TupleDimObj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        self.verify_obj_well_defined_and_store_cache(&x.obj, verify_state)?;
+
+        // well-defined condition: the inner obj must satisfy is_tuple
+        let is_tuple_fact = AtomicFact::IsTupleFact(IsTupleFact::new((*x.obj).clone(), DEFAULT_LINE_FILE.clone()));
+        self.verify_fact(&Fact::AtomicFact(is_tuple_fact), verify_state)?;
+
+        Ok(())
     }
 
     fn verify_obj_at_index_well_defined(&self, x: &ObjAtIndex, verify_state: &VerifyState) -> Result<(), WellDefinedError> {

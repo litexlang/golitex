@@ -4,6 +4,9 @@ use crate::common::helper::{add_four_spaces_at_beginning, vec_to_string_with_sep
 use crate::common::keywords::{CASE, COLON, ALGO};
 use std::fmt;
 
+// algo f(a, b):
+//     case a > b: a
+//     case a <= b: b
 #[derive(Clone)]
 pub struct DefAlgoStmt {
     pub name: String,
