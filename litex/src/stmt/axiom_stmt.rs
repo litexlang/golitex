@@ -5,17 +5,19 @@ use crate::fact::{Fact, AndChainAtomicFact, ExistOrAndChainAtomicFact};
 use super::Stmt;
 use crate::obj::{Cart, ClosedRange, Obj, Range };
 
-// f $in fn(a A, b B: $p(a, b)) C => forall a A, b B: $p(a, b) => ((a, b), f(a, b)) $in f; forall x f: exist a A, b B st ((a, b), f(a, b)) = x
+// view fn set as a subset of a cartesian product set
 pub struct ByFnDefAxiomStmt {
     pub function: Obj,
     pub line_file: (usize, usize),
 }
 
+// view a cartesian product set as a set (ordered pairs)
 pub struct ByCartDefAxiomStmt {
     pub cart: Cart,
     pub line_file: (usize, usize),
 }
 
+// prove that a set is equal to another set by proving that they are subsets of each other
 pub struct ByExtensionAxiomStmt {
     pub left: Obj,
     pub right: Obj,
@@ -28,6 +30,7 @@ pub enum ClosedRangeOrRange {
     Range(Range),
 }
 
+// prove fact is true for a range of integers
 pub struct ForAxiomStmt {
     pub params: Vec<String>,
     pub param_sets: Vec<ClosedRangeOrRange>,
@@ -37,6 +40,7 @@ pub struct ForAxiomStmt {
     pub line_file: (usize, usize),
 }
 
+// prove fact is true by induction
 pub struct ByInducAxiomStmt {
     pub fact: Vec<ExistOrAndChainAtomicFact>,
     pub param: String,
@@ -45,6 +49,7 @@ pub struct ByInducAxiomStmt {
     pub line_file: (usize, usize),
 }
 
+// prove fact is true for a set of values by enumeration
 pub struct EnumerateAxiomStmt {
     pub params: Vec<String>,
     pub param_sets: Vec<Obj>,
@@ -53,6 +58,7 @@ pub struct EnumerateAxiomStmt {
     pub line_file: (usize, usize),
 }
 
+// prove fact is true case by case
 pub struct ByCasesAxiomStmt {
     pub cases: Vec<AndChainAtomicFact>,
     pub then_facts: Vec<Fact>,
@@ -61,6 +67,7 @@ pub struct ByCasesAxiomStmt {
     pub line_file: (usize, usize),
 }
 
+// prove fact is true by contradiction
 pub struct ByContraAxiomStmt {
     pub to_prove: Fact,
     pub proof: Vec<Stmt>,
