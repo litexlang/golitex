@@ -131,11 +131,41 @@ impl<'a> Executor<'a> {
                 }
             }
 
+            let set_where_the_next_fn_obj_is_in = the_set_where_current_fn_obj_is_in.ret_set();
+
+            // Store: after applying current argument group i,
+            // the intermediate prefix application fn_obj_prefix (e.g. f(a))
+            // must be in the current function set's return set.
+            //
+            // Example: input is f(a)(b), body = [[a], [b]]
+            // at i=0 we store: f(a) in ret_set_of_f
+            let fn_obj_prefix_body: Vec<Vec<Box<Obj>>> =
+                fn_obj.body[..=i].iter().cloned().collect();
+            let fn_obj_prefix = FnObj {
+                head: fn_obj.head.clone(),
+                body: fn_obj_prefix_body,
+            };
+            let fn_obj_prefix_as_obj = Obj::FnObj(fn_obj_prefix);
+            let set_where_the_next_fn_obj_is_in_obj = (*set_where_the_next_fn_obj_is_in.clone()).clone();
+            let intermediate_in_fact = InFact::new(
+                fn_obj_prefix_as_obj,
+                set_where_the_next_fn_obj_is_in_obj,
+                DEFAULT_LINE_FILE.clone(),
+            );
+            let intermediate_atomic_fact = AtomicFact::InFact(intermediate_in_fact);
+            self.store_fact_without_well_defined_verified_and_infer(&Fact::AtomicFact(intermediate_atomic_fact))
+                .map_err(|store_fact_error| {
+                    WellDefinedError::new(
+                        format!("failed to store intermediate fn-obj membership fact while verifying `{}`", fn_obj.to_string()),
+                        Some(store_fact_error.into()),
+                        DEFAULT_LINE_FILE.clone(),
+                    )
+                })?;
+
             if i == fn_obj.body.len() - 1 {
                 break;
             }
 
-            let set_where_the_next_fn_obj_is_in = the_set_where_current_fn_obj_is_in.ret_set();
             the_set_where_current_fn_obj_is_in = match *set_where_the_next_fn_obj_is_in {
                 Obj::FnSetWithDom(e) => FnSetObj::FnSetWithDom(e),
                 Obj::FnSetWithoutDom(e) => FnSetObj::FnSetWithoutDom(e),
@@ -642,6 +672,8 @@ impl<'a> Executor<'a> {
     }
 
     fn verify_obj_at_index_well_defined(&mut self, x: &ObjAtIndex, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        self.verify_obj_well_defined_and_store_cache(&x.obj, verify_state)?;
+        
         let cart_obj_where_tuple_obj_is = self.runtime_context.get_tuple_obj_is_in_what_cart(&x.obj.to_string()).ok_or_else(|| WellDefinedError::new(format!("tuple object {} is not in any cart", x.obj.to_string()), None, DEFAULT_LINE_FILE.clone()))?;
         let tuple_dim = cart_obj_where_tuple_obj_is.args.len();
 
