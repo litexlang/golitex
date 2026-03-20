@@ -1,16 +1,4 @@
-know forall x R:
-    x > 0 or x <= 0
+let a R:
+    a $in {1, 2}
 
-have fn f(x R) R =:
-    case x > 0: x
-    case x <=  0: -x
-
-forall x R:
-    x > 0
-    =>:
-        f(x) = x
-
-forall x R:
-    x <= 0
-    =>:
-        f(x) = -x
+a = 1 or a = 2
