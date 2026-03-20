@@ -109,6 +109,8 @@ pub const R_NZ: &str = "R_nz";
 pub const STRUCT: &str = "struct";
 pub const RESTRICT: &str = "restrict";
 
+pub const TUPLE_DIM: &str = "tuple_dim";
+
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
     let symbols = [
@@ -138,6 +140,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         BY_EXTENSION, IMPOSSIBLE, BY_FN_DEF, BY_CART_DEF, ALGO,
         Q_POS, Z_POS, R_POS, Q_NEG, Z_NEG, R_NEG, Q_NZ, Z_NZ, R_NZ,
         STRUCT, RESTRICT,
+        TUPLE_DIM,
     ];
     for &s in &words {
         m.insert(s, s);

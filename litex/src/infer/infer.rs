@@ -1,10 +1,9 @@
 use crate::error::InferError;
 use crate::execute::Executor;
 use crate::fact::{
-    AndChainAtomicFact, AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, ForallFact,
-    ForallFactWithIff, InFact, NormalAtomicFact, OrAndChainAtomicFact, OrFact,
+    AndChainAtomicFact, AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, ForallFact, ForallFactWithIff, InFact, IsTupleFact, NormalAtomicFact, OrAndChainAtomicFact, OrFact
 };
-use crate::obj::{FnSetObj, Obj};
+use crate::obj::{FnSetObj, Number, Obj, TupleDimObj};
 use crate::stmt::parameter_def::ParamDefWithParamType;
 use std::collections::HashMap;
 
@@ -194,6 +193,45 @@ impl<'a> Executor<'a> {
                     infer_result.push_fact(&fact_to_store);
                 }
 
+                Ok(infer_result)
+            }
+            Obj::Cart(cart) => {
+                let mut infer_result = InferResult::new();
+
+                let is_cart_fact = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact::new(
+                    in_fact.element.clone(),
+                    in_fact.line_file,
+                )));
+
+                self.store_fact_without_well_defined_verified_and_infer(&is_cart_fact).map_err(|previous_error| {
+                    InferError::new(
+                        format!("failed to store inferred is cart fact while inferring `{}`", in_fact),
+                        in_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
+                infer_result.push_fact(&is_cart_fact);
+
+                // tuple_dim(tuple) should equal the number of parameters of the `cart` set.
+                let cart_args_count = cart.args.len();
+                let tuple_dim_obj = Obj::TupleDimObj(TupleDimObj::new(in_fact.element.clone()));
+                let cart_args_count_obj = Obj::Number(Number::new(cart_args_count.to_string()));
+
+                let tuple_dim_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                    tuple_dim_obj,
+                    cart_args_count_obj,
+                    in_fact.line_file,
+                )));
+
+                self.store_fact_without_well_defined_verified_and_infer(&tuple_dim_fact).map_err(|previous_error| {
+                    InferError::new(
+                        format!("failed to store inferred tuple_dim equals cart args count fact while inferring `{}`", in_fact),
+                        in_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
+                infer_result.push_fact(&tuple_dim_fact);
+                
                 Ok(infer_result)
             }
             _ => Ok(InferResult::new()),
