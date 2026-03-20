@@ -196,7 +196,6 @@ impl<'a> Executor<'a> {
                 _ => false,
             },
             Obj::QPos(_) => match right { Obj::QPos(_) => true, _ => false },
-            Obj::ZPos(_) => match right { Obj::ZPos(_) => true, _ => false },
             Obj::RPos(_) => match right { Obj::RPos(_) => true, _ => false },
             Obj::QNeg(_) => match right { Obj::QNeg(_) => true, _ => false },
             Obj::ZNeg(_) => match right { Obj::ZNeg(_) => true, _ => false },

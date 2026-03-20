@@ -308,7 +308,6 @@ impl<'a> Executor<'a> {
             Obj::TupleDimObj(ref left) => Self::match_arg_when_left_is_tuple_dim_obj(left.obj.as_ref(), given_arg),
             Obj::ObjAtIndex(ref left) => Self::match_arg_when_left_is_obj_at_index(left.obj.as_ref(), left.index.as_ref(), given_arg),
             Obj::QPos(_) => Self::match_arg_when_left_is_q_pos(given_arg),
-            Obj::ZPos(_) => Self::match_arg_when_left_is_z_pos(given_arg),
             Obj::RPos(_) => Self::match_arg_when_left_is_r_pos(given_arg),
             Obj::QNeg(_) => Self::match_arg_when_left_is_q_neg(given_arg),
             Obj::ZNeg(_) => Self::match_arg_when_left_is_z_neg(given_arg),
@@ -738,13 +737,6 @@ impl<'a> Executor<'a> {
     fn match_arg_when_left_is_q_pos(given_arg: &Obj) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
             Obj::QPos(_) => Self::match_arg_same_type(given_arg),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_z_pos(given_arg: &Obj) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
-        match given_arg {
-            Obj::ZPos(_) => Self::match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }

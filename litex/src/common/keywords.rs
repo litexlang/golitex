@@ -98,7 +98,6 @@ pub const WITNESS: &str = "witness";
 pub const IMPOSSIBLE: &str = "impossible";
 pub const ALGO: &str = "algo";
 pub const Q_POS: &str = "Q_pos";
-pub const Z_POS: &str = "Z_pos";
 pub const R_POS: &str = "R_pos";
 pub const Q_NEG: &str = "Q_neg";
 pub const Z_NEG: &str = "Z_neg";
@@ -138,7 +137,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         CLAIM, PROVE, BY_CONTRA, CASE, BY_CASES, IMPORT, AS, ENUMERATE, HAVE, KNOW,
         CLEAR, DO_NOTHING, BY_INDUC, FROM, EVAL, FOR, WITNESS,
         BY_EXTENSION, IMPOSSIBLE, BY_FN_DEF, BY_CART_DEF, ALGO,
-        Q_POS, Z_POS, R_POS, Q_NEG, Z_NEG, R_NEG, Q_NZ, Z_NZ, R_NZ,
+        Q_POS, R_POS, Q_NEG, Z_NEG, R_NEG, Q_NZ, Z_NZ, R_NZ,
         STRUCT, RESTRICT,
         TUPLE_DIM,
     ];
@@ -186,5 +185,5 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
 }
 
 pub fn is_builtin_identifier_obj(atom_name: &str) -> bool {
-    atom_name == ADD || atom_name == SUB || atom_name == MUL || atom_name == DIV || atom_name == MOD || atom_name == POW || atom_name == Q_POS || atom_name == Z_POS || atom_name == R_POS || atom_name == Q_NEG || atom_name == Z_NEG || atom_name == R_NEG || atom_name == Q_NZ || atom_name == Z_NZ || atom_name == R_NZ || atom_name == N_POS || atom_name == N || atom_name == Q || atom_name == Z || atom_name == R
+    atom_name == ADD || atom_name == SUB || atom_name == MUL || atom_name == DIV || atom_name == MOD || atom_name == POW || atom_name == Q_POS || atom_name == R_POS || atom_name == Q_NEG || atom_name == Z_NEG || atom_name == R_NEG || atom_name == Q_NZ || atom_name == Z_NZ || atom_name == R_NZ || atom_name == N_POS || atom_name == N || atom_name == Q || atom_name == Z || atom_name == R
 }
