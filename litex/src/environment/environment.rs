@@ -339,14 +339,14 @@ impl Environment {
 }
 
 pub struct KnownForallFactParamsAndDom {
-    pub params: Vec<ParamDefWithParamType>,
+    pub params_def: Vec<ParamDefWithParamType>,
     pub dom: Vec<ExistOrAndChainAtomicFact>,
     pub line_file: (usize, usize),
 }
 
 impl KnownForallFactParamsAndDom {
     pub fn new(params: Vec<ParamDefWithParamType>, dom: Vec<ExistOrAndChainAtomicFact>, line_file: (usize, usize)) -> Self {
-        KnownForallFactParamsAndDom { params, dom, line_file }
+        KnownForallFactParamsAndDom { params_def: params, dom, line_file }
     }
 }
 

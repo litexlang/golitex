@@ -10,8 +10,13 @@ use crate::verify::VerifyState;
 use std::result::Result;
 
 impl<'a> Executor<'a> {
-    pub fn verify_exist_fact(&mut self, exist_fact: &ExistFact, _verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
+    pub fn verify_exist_fact(&mut self, exist_fact: &ExistFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
         let result = self.verify_exist_fact_with_known_exist_fact(exist_fact, exist_fact)?;
+        if result.is_true() {
+            return Ok(result);
+        }
+
+        let result = self.verify_exist_fact_with_known_forall(exist_fact, verify_state)?;
         if result.is_true() {
             return Ok(result);
         }
