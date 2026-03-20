@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use crate::stmt::parameter_def::ParamDefWithParamSet;
 use crate::fact::OrAndChainAtomicFact;
 use crate::common::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, SET_DIFF, DIV, FN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, SET_DIFF, DIV, FN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
 };
 use std::fmt;
 use crate::common::helper::{braced_vec_to_string, curly_braced_vec_to_string, vec_to_string_join_by_comma, brace_vec_colon_vec_to_string};
@@ -49,6 +49,7 @@ pub enum Obj {
     Val(Val),
     PowerSet(PowerSet),
     Choose(Choose),
+    TupleDimObj(TupleDimObj),
     ObjAtIndex(ObjAtIndex),
     QPos(QPos),
     ZPos(ZPos),
@@ -59,6 +60,11 @@ pub enum Obj {
     QNz(QNz),
     ZNz(ZNz),
     RNz(RNz),
+}
+
+#[derive(Clone)]
+pub struct TupleDimObj {
+    pub obj: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -564,6 +570,12 @@ impl Choose {
     }
 }
 
+impl TupleDimObj {
+    pub fn new(obj: Obj) -> Self {
+        TupleDimObj { obj: Box::new(obj) }
+    }
+}
+
 impl CartDim {
     pub fn new(set: Obj) -> Self {
         CartDim { set: Box::new(set) }
@@ -721,6 +733,7 @@ impl Obj {
             Obj::Val(x) => write!(f, "{}", x)?,
             Obj::PowerSet(x) => write!(f, "{}", x)?,
             Obj::Choose(x) => write!(f, "{}", x)?,
+            Obj::TupleDimObj(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::QPos(x) => write!(f, "{}", x)?,
             Obj::ZPos(x) => write!(f, "{}", x)?,
@@ -748,6 +761,12 @@ impl fmt::Display for ObjAtIndex {
 impl fmt::Display for Choose {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}", CHOOSE, braced_vec_to_string(&vec![self.set.as_ref()]))
+    }
+}
+
+impl fmt::Display for TupleDimObj {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}", TUPLE_DIM, braced_vec_to_string(&vec![self.obj.as_ref()]))
     }
 }
 
@@ -1107,6 +1126,7 @@ impl Obj {
             Obj::Val(inner) => inner.instantiate(param_to_arg_map),
             Obj::PowerSet(inner) => inner.instantiate(param_to_arg_map),
             Obj::Choose(inner) => inner.instantiate(param_to_arg_map),
+            Obj::TupleDimObj(inner) => inner.instantiate(param_to_arg_map),
             Obj::ObjAtIndex(inner) => inner.instantiate(param_to_arg_map),
             Obj::QPos(inner) => inner.instantiate(param_to_arg_map),
             Obj::ZPos(inner) => inner.instantiate(param_to_arg_map),

@@ -5,7 +5,7 @@ use super::obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FnObj, FnSetWithDom,
     FnSetWithoutDom, InstStructObj, Intersect, ListSet, Mod, Mul, NObj, NPosObj, Number, Obj,
     ObjAtIndex, Pow, PowerSet, Proj, QNeg, QNz, QObj, QPos, Range, RNeg, RNz, RObj, RPos, SetBuilder,
-    SetDiff, SetMinus, Sub, Tuple, Union, Val, ZNeg, ZNz,     ZObj, ZPos,
+    SetDiff, SetMinus, Sub, Tuple, TupleDimObj, Union, Val, ZNeg, ZNz,     ZObj, ZPos,
 };
 
 impl Obj {
@@ -459,6 +459,14 @@ impl Choose {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         Obj::Choose(Choose {
             set: Box::new(self.set.instantiate(param_to_arg_map)),
+        })
+    }
+}
+
+impl TupleDimObj {
+    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
+        Obj::TupleDimObj(TupleDimObj {
+            obj: Box::new(self.obj.instantiate(param_to_arg_map)),
         })
     }
 }

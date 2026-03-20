@@ -1,13 +1,13 @@
 use crate::common::helper::is_number_string_literally_integer_without_dot;
 use crate::common::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS, is_key_symbol_or_keyword
 };
 use crate::execute::Executor;
 use super::TokenBlock;
 use crate::obj::{
     Obj, FnObj, FnSetObj, FnSetWithDom, FnSetWithoutDom, Add, Mul, Div, Mod, Sub, Pow, Number, InstStructObj, ListSet, SetBuilder,
     NPosObj, NObj, QObj, ZObj, RObj, QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz,
-    ObjAtIndex, Union, Intersect, SetMinus, SetDiff, Cup, Cap, PowerSet, Choose,
+    ObjAtIndex, Union, Intersect, SetMinus, SetDiff, Cup, Cap, PowerSet, Choose, TupleDimObj,
     Cart, CartDim, Proj, Count, Range, ClosedRange, Val,
 };
 use crate::obj::{Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod};
@@ -415,6 +415,14 @@ impl<'a> Executor<'a> {
             let mut it = args.into_iter();
             let value = it.next().ok_or_else(|| ParsingError::new("choice expects 1 argument".to_string(), tb.line_file, None))?;
             return Ok(Obj::Choose(Choose::new(value)));
+        }
+        if tok == TUPLE_DIM {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 1 { return Err(ParsingError::new("tuple_dim expects 1 argument".to_string(), tb.line_file, None)); }
+            let mut it = args.into_iter();
+            let value = it.next().ok_or_else(|| ParsingError::new("tuple_dim expects 1 argument".to_string(), tb.line_file, None))?;
+            return Ok(Obj::TupleDimObj(TupleDimObj::new(value)));
         }
         if tok == PROJ {
             tb.skip()?;

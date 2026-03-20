@@ -187,6 +187,10 @@ impl<'a> Executor<'a> {
                 Obj::Choose(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::TupleDimObj(a) => match right {
+                Obj::TupleDimObj(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::ObjAtIndex(a) => match right {
                 Obj::ObjAtIndex(b) => a.to_string() == b.to_string(),
                 _ => false,

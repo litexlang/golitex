@@ -88,6 +88,8 @@ fn test_obj() {
         "cap(T)",
         "power_set(S)",
         "choose(S)",
+        // TupleDim（前缀单参）
+        "tuple_dim(S)",
         // CartDim, Count, Val
         "cart_dim(S)",
         "count(S)",

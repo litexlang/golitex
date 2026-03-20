@@ -1,11 +1,4 @@
-know forall a, b R:
-    a > b or a <= b
-
-have fn f(a, b R) R =:
-    case a > b: a
-    case a <= b: b
-
-algo f(a, b):
-    case a > b: a
-    case a <= b: b
-
+have a cart(R, R)
+tuple_dim(a) = 2
+a[1]
+a[2]

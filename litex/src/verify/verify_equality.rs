@@ -186,6 +186,7 @@ impl<'a> Executor<'a> {
             (Obj::Cap(left_cap), Obj::Cap(right_cap)) => self.verify_unary_objs_are_equal_when_their_only_args_are_equal(&left_cap.left, &right_cap.left, verify_state),
             (Obj::PowerSet(left_power_set), Obj::PowerSet(right_power_set)) => self.verify_unary_objs_are_equal_when_their_only_args_are_equal(&left_power_set.set, &right_power_set.set, verify_state),
             (Obj::Choose(left_choose), Obj::Choose(right_choose)) => self.verify_unary_objs_are_equal_when_their_only_args_are_equal(&left_choose.set, &right_choose.set, verify_state),
+            (Obj::TupleDimObj(left_tuple_dim_obj), Obj::TupleDimObj(right_tuple_dim_obj)) => self.verify_unary_objs_are_equal_when_their_only_args_are_equal(&left_tuple_dim_obj.obj, &right_tuple_dim_obj.obj, verify_state),
             (Obj::CartDim(left_cart_dim), Obj::CartDim(right_cart_dim)) => self.verify_unary_objs_are_equal_when_their_only_args_are_equal(&left_cart_dim.set, &right_cart_dim.set, verify_state),
             (Obj::Dim(left_dim), Obj::Dim(right_dim)) => self.verify_unary_objs_are_equal_when_their_only_args_are_equal(&left_dim.dim, &right_dim.dim, verify_state),
             (Obj::Count(left_count), Obj::Count(right_count)) => self.verify_unary_objs_are_equal_when_their_only_args_are_equal(&left_count.set, &right_count.set, verify_state),
