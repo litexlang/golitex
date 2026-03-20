@@ -2,7 +2,7 @@ use super::parameter_def::ParamDefWithParamType;
 use crate::fact::Fact;
 use crate::obj::Obj;
 use std::fmt;
-use crate::common::keywords::{CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, HAVE, FN, LEFT_BRACE, LET, PROP, RIGHT_BRACE, STRUCT};
+use crate::common::keywords::{CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, HAVE, FN_FOR_FN_WITH_DOM, LEFT_BRACE, LET, PROP, RIGHT_BRACE, STRUCT};
 use crate::common::helper::{add_four_spaces_at_beginning, braced_vec_to_string, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep, brace_vec_colon_vec_to_string};
 use crate::obj::FnSetWithDom;
 use crate::fact::AndChainAtomicFact;
@@ -206,7 +206,7 @@ impl HaveFnEqualStmt {
 
 impl fmt::Display for HaveFnEqualStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}{} {} {}", HAVE, FN, self.name, brace_vec_colon_vec_to_string(&self.fn_set_with_params.params_def_with_set, &self.fn_set_with_params.dom_facts), EQUAL, self.equal_to)
+        write!(f, "{} {} {}{} {} {}", HAVE, FN_FOR_FN_WITH_DOM, self.name, brace_vec_colon_vec_to_string(&self.fn_set_with_params.params_def_with_set, &self.fn_set_with_params.dom_facts), EQUAL, self.equal_to)
     }
 }
 
@@ -217,7 +217,7 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
             to_string_and_add_four_spaces_at_beginning_of_each_line(&format!("{} {}{} {}{} {} {}", CASE, case, COMMA, self.name, braced_vec_to_string(&self.fn_set_with_params.params()), EQUAL, self.equal_tos[i]),1)
         }).collect::<Vec<String>>();
         
-        write!(f, "{} {} {}{} {} {}\n{}", HAVE, FN, self.name, brace_vec_colon_vec_to_string(&self.fn_set_with_params.params_def_with_set, &self.fn_set_with_params.dom_facts), EQUAL, COLON, vec_to_string_with_sep(&cases_and_proofs, "\n".to_string()))
+        write!(f, "{} {} {}{} {} {}\n{}", HAVE, FN_FOR_FN_WITH_DOM, self.name, brace_vec_colon_vec_to_string(&self.fn_set_with_params.params_def_with_set, &self.fn_set_with_params.dom_facts), EQUAL, COLON, vec_to_string_with_sep(&cases_and_proofs, "\n".to_string()))
     }
 }
 
