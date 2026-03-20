@@ -244,7 +244,10 @@ impl<'a> Executor<'a> {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
             let param_set = &fn_set_without_dom.param_sets[index];
             let in_fact = InFact::new((**arg).clone(), (**param_set).clone(), DEFAULT_LINE_FILE.clone());
-            self.verify_fact(&Fact::AtomicFact(AtomicFact::InFact(in_fact)), verify_state)?;
+            let result = self.verify_fact(&Fact::AtomicFact(AtomicFact::InFact(in_fact)), verify_state)?;
+            if !result.is_true() {
+                return Err(WellDefinedError::new(format!("arg {} is not in param set {}", (**arg).to_string(), (**param_set).to_string()), None, DEFAULT_LINE_FILE.clone()));
+            }
         }
 
         Ok(())
@@ -254,7 +257,10 @@ impl<'a> Executor<'a> {
         let r_obj = Obj::RObj(RObj::new());
         let in_fact = InFact::new(obj.clone(), r_obj, DEFAULT_LINE_FILE.clone());
         let atomic_fact = AtomicFact::InFact(in_fact);
-        self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
+        let result = self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
+        if !result.is_true() {
+            return Err(WellDefinedError::new(format!("obj {} is not in r", obj.to_string()), None, DEFAULT_LINE_FILE.clone()));
+        }
         Ok(())
     }
 
@@ -262,7 +268,10 @@ impl<'a> Executor<'a> {
         let z_obj = Obj::ZObj(ZObj::new());
         let in_fact = InFact::new(obj.clone(), z_obj, DEFAULT_LINE_FILE.clone());
         let atomic_fact = AtomicFact::InFact(in_fact);
-        self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
+        let result = self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
+        if !result.is_true() {
+            return Err(WellDefinedError::new(format!("obj {} is not in z", obj.to_string()), None, DEFAULT_LINE_FILE.clone()));
+        }
         Ok(())
     }
 
@@ -297,7 +306,10 @@ impl<'a> Executor<'a> {
         let zero = Obj::Number(Number::new("0".to_string()));
         let not_equal_fact = NotEqualFact::new((*div.right).clone(), zero, DEFAULT_LINE_FILE.clone());
         let atomic_fact = AtomicFact::NotEqualFact(not_equal_fact);
-        self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
+        let result = self.verify_fact(&Fact::AtomicFact(atomic_fact), verify_state)?;
+        if !result.is_true() {
+            return Err(WellDefinedError::new(format!("right of div is equal to 0"), None, DEFAULT_LINE_FILE.clone()));
+        }
         
         self.require_obj_in_r(&div.left, verify_state)?;
         self.require_obj_in_r(&div.right, verify_state)?;
@@ -311,7 +323,10 @@ impl<'a> Executor<'a> {
         self.require_obj_in_z(&m.right, verify_state)?;
         let zero = Obj::Number(Number::new("0".to_string()));
         let not_equal_fact = NotEqualFact::new((*m.right).clone(), zero, DEFAULT_LINE_FILE.clone());
-        self.verify_fact(&Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact)), verify_state)?;
+        let result = self.verify_fact(&Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact)), verify_state)?;
+        if !result.is_true() {
+            return Err(WellDefinedError::new(format!("right of mod is equal to 0"), None, DEFAULT_LINE_FILE.clone()));
+        }
         Ok(())
     }
 
@@ -346,7 +361,10 @@ impl<'a> Executor<'a> {
             negative_base_and_even_integer_exponent,
         ], DEFAULT_LINE_FILE);
 
-        self.verify_fact(&Fact::OrFact(pow_domain_or_fact), verify_state)?;
+        let result = self.verify_fact(&Fact::OrFact(pow_domain_or_fact), verify_state)?;
+        if !result.is_true() {
+            return Err(WellDefinedError::new(format!("base and exponent do not satisfy the pow domain"), None, DEFAULT_LINE_FILE.clone()));
+        }
         Ok(())
     }
 
@@ -528,10 +546,13 @@ impl<'a> Executor<'a> {
         let facts = ParamDefWithParamType::facts_for_boxed_args_satisfy_param_def_with_type_vec(param_defs, &x.args)
             .map_err(|e| WellDefinedError::new(format!("failed to build facts for inst struct {}: {}", x.struct_name, e.error_body()), Some(e), DEFAULT_LINE_FILE.clone()))?;
         for fact in facts.iter() {
-            self.verify_fact(fact, verify_state).map_err(|e| WellDefinedError::new(
+            let result = self.verify_fact(fact, verify_state).map_err(|e| WellDefinedError::new(
                 format!("exec_fact failed for inst struct obj arg (struct {})", x.struct_name),Some(StmtError::VerifyError(e)),
                 DEFAULT_LINE_FILE.clone(),
             ))?;
+            if !result.is_true() {
+                return Err(WellDefinedError::new(format!("exec_fact failed for inst struct obj arg (struct {})", x.struct_name), None, DEFAULT_LINE_FILE.clone()));
+            }
         }
 
         Ok(())
@@ -548,7 +569,10 @@ impl<'a> Executor<'a> {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
 
         let is_cart_fact = AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), DEFAULT_LINE_FILE.clone()));
-        self.verify_fact(&Fact::AtomicFact(is_cart_fact), verify_state)?;
+        let result = self.verify_fact(&Fact::AtomicFact(is_cart_fact), verify_state)?;
+        if !result.is_true() {
+            return Err(WellDefinedError::new(format!("set {} is not a cart", x.set.to_string()), None, DEFAULT_LINE_FILE.clone()));
+        }
         
         Ok(())
     }
