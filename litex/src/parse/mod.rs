@@ -10,7 +10,7 @@ mod parse_fact;
 mod parse_know_stmt;
 mod parse_obj;
 mod parse_param_def;
-mod parse_proof_technique_stmt;
+mod parse_axiom_stmt;
 mod parse_prove_stmt;
 mod parse_stmt;
 mod parse_tooling_stmt;

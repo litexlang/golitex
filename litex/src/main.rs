@@ -28,7 +28,7 @@ use stmt::Stmt;
 use stmt::definition_stmt::{HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, DefPropWithMeaningStmt, DefLetStmt};
 use stmt::claim_stmt::ClaimStmt;
 use stmt::know_stmt::KnowStmt;
-use stmt::proof_technique_stmt::{ProveCaseByCaseStmt, ProveByContradictionStmt, ProveByEnumerationStmt, ProveByInductionStmt, ProveForStmt, ClosedRangeOrRange, ProveByEqualSetStmt, ViewFnAsSetStmt};
+use stmt::axiom_stmt::{ByCasesAxiomStmt, ByContraAxiomStmt, EnumerateAxiomStmt, ByInducAxiomStmt, ForAxiomStmt, ClosedRangeOrRange, ByExtensionAxiomStmt, ByFnDefAxiomStmt};
 use stmt::prove_stmt::ProveStmt;
 use stmt::tooling_stmt::{ImportStmt, ImportRelativePathStmt, ImportGlobalModuleStmt, ClearStmt, DoNothingStmt, RunFileStmt};
 use stmt::eval_stmt::EvalStmt;
@@ -93,7 +93,7 @@ fn main() {
     try_obj_at_index();
     try_claim_stmt();
     try_know_stmt();
-    try_proof_techniques();
+    try_axiom_stmts();
     try_import_stmt();
     try_prove_stmt();
     try_run_file_stmt();
@@ -755,13 +755,13 @@ fn try_know_stmt() {
     println!("{}", stmt);
 }
 
-fn try_proof_techniques() {
+fn try_axiom_stmts() {
     let impossible_fact = ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Identifier::mk("p".to_string()),
         Identifier::mk("q".to_string()),
         (1, 0),
     )));
-    let prove_case_by_case = ProveCaseByCaseStmt::new(vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let prove_case_by_case = ByCasesAxiomStmt::new(vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Identifier::mk("p".to_string()),
         Identifier::mk("q".to_string()),
         (1, 0),
@@ -781,7 +781,7 @@ fn try_proof_techniques() {
         (1, 0),
     )));
 
-    let claim_prove_by_contradiction_stmt = ProveByContradictionStmt::new(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let claim_prove_by_contradiction_stmt = ByContraAxiomStmt::new(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Identifier::mk("p".to_string()),
         Identifier::mk("q".to_string()),
         (1, 0),
@@ -792,10 +792,10 @@ fn try_proof_techniques() {
     ))))], impossible_fact, (1, 0));
     println!("{}", claim_prove_by_contradiction_stmt);
 
-    let stmt = Stmt::ProveCaseByCaseStmt(prove_case_by_case);
+    let stmt = Stmt::ByCasesAxiomStmt(prove_case_by_case);
     println!("{}", stmt);
 
-    let stmt = Stmt::ProveByContradictionStmt(claim_prove_by_contradiction_stmt);
+    let stmt = Stmt::ByContraAxiomStmt(claim_prove_by_contradiction_stmt);
     println!("{}", stmt);
 }
 
@@ -849,10 +849,10 @@ fn try_prove_by_enumeration_stmt() {
         (1, 0),
     )))];
     
-    let prove_by_enumeration_stmt = ProveByEnumerationStmt::new(params, param_sets, to_prove, proof, (1, 0));
+    let prove_by_enumeration_stmt = EnumerateAxiomStmt::new(params, param_sets, to_prove, proof, (1, 0));
     println!("{}", prove_by_enumeration_stmt);
 
-    let stmt = Stmt::ProveByEnumerationStmt(prove_by_enumeration_stmt);
+    let stmt = Stmt::EnumerateAxiomStmt(prove_by_enumeration_stmt);
     println!("{}", stmt);
 }
 
@@ -903,10 +903,10 @@ fn try_prove_by_induction_stmt() {
         (1, 0),
     ))))];
     let induc_from = Identifier::mk("N".to_string());
-    let prove_by_induction_stmt = ProveByInductionStmt::new(fact, param, proof, induc_from, (1, 0));
+    let prove_by_induction_stmt = ByInducAxiomStmt::new(fact, param, proof, induc_from, (1, 0));
     println!("{}", prove_by_induction_stmt);
 
-    let stmt = Stmt::ProveByInductionStmt(prove_by_induction_stmt);
+    let stmt = Stmt::ByInducAxiomStmt(prove_by_induction_stmt);
     println!("{}", stmt);
 }
 
@@ -949,10 +949,10 @@ fn try_prove_for_stmt() {
         Identifier::mk("q".to_string()),
         (1, 0),
     ))))];
-    let prove_for_stmt = ProveForStmt::new(params, vec![param_sets], dom_facts, then_facts, proof, (1, 0));
+    let prove_for_stmt = ForAxiomStmt::new(params, vec![param_sets], dom_facts, then_facts, proof, (1, 0));
     println!("{}", prove_for_stmt);
 
-    let stmt = Stmt::ProveForStmt(prove_for_stmt);
+    let stmt = Stmt::ForAxiomStmt(prove_for_stmt);
     println!("{}", stmt);
 
     let params2 = vec!["x".to_string()];
@@ -975,10 +975,10 @@ fn try_prove_for_stmt() {
         (1, 0),
     ))))];
     
-    let prove_for_stmt = ProveForStmt::new(params2, vec![param_sets2], dom_facts2, then_facts2, proof2, (1, 0));
+    let prove_for_stmt = ForAxiomStmt::new(params2, vec![param_sets2], dom_facts2, then_facts2, proof2, (1, 0));
     println!("{}", prove_for_stmt);
 
-    let stmt = Stmt::ProveForStmt(prove_for_stmt);
+    let stmt = Stmt::ForAxiomStmt(prove_for_stmt);
     println!("{}", stmt);
 }
 
@@ -999,10 +999,10 @@ fn try_witness_stmt() {
 }
 
 fn try_prove_equal_set_stmt() {
-    let prove_equal_set_stmt = ProveByEqualSetStmt::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), vec![], (1, 0));
+    let prove_equal_set_stmt = ByExtensionAxiomStmt::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), vec![], (1, 0));
     println!("{}", prove_equal_set_stmt);
 
-    let stmt = Stmt::ProveByEqualSetStmt(prove_equal_set_stmt);
+    let stmt = Stmt::ByExtensionAxiomStmt(prove_equal_set_stmt);
     println!("{}", stmt);
 
     let proof2 = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
@@ -1011,10 +1011,10 @@ fn try_prove_equal_set_stmt() {
         (1, 0),
     ))))];
 
-    let prove_equal_set_stmt = ProveByEqualSetStmt::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), proof2, (1, 0));
+    let prove_equal_set_stmt = ByExtensionAxiomStmt::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), proof2, (1, 0));
     println!("{}", prove_equal_set_stmt);
 
-    let stmt = Stmt::ProveByEqualSetStmt(prove_equal_set_stmt);
+    let stmt = Stmt::ByExtensionAxiomStmt(prove_equal_set_stmt);
     println!("{}", stmt);
 }
 
@@ -1027,16 +1027,16 @@ fn try_witness_nonempty_set_stmt() {
 }
 
 fn try_view_fn_as_set() {
-    let prove_fn_set_is_subset_of_cart_set_stmt = ViewFnAsSetStmt::new(Identifier::mk("p".to_string()), (1, 0));
+    let prove_fn_set_is_subset_of_cart_set_stmt = ByFnDefAxiomStmt::new(Identifier::mk("p".to_string()), (1, 0));
     println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
 
-    let stmt = Stmt::ViewFnAsSetStmt(prove_fn_set_is_subset_of_cart_set_stmt);
+    let stmt = Stmt::ByFnDefAxiomStmt(prove_fn_set_is_subset_of_cart_set_stmt);
     println!("{}", stmt);
 
-    let prove_fn_set_is_subset_of_cart_set_stmt = ViewFnAsSetStmt::new(Identifier::mk("p".to_string()), (1, 0));
+    let prove_fn_set_is_subset_of_cart_set_stmt = ByFnDefAxiomStmt::new(Identifier::mk("p".to_string()), (1, 0));
     println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
 
-    let stmt = Stmt::ViewFnAsSetStmt(prove_fn_set_is_subset_of_cart_set_stmt);
+    let stmt = Stmt::ByFnDefAxiomStmt(prove_fn_set_is_subset_of_cart_set_stmt);
     println!("{}", stmt);
 }
 

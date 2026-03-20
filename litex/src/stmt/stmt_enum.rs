@@ -7,9 +7,9 @@ use super::definition_stmt::{
 use super::define_algorithm_stmt::DefAlgoStmt;
 use super::claim_stmt::ClaimStmt;
 use super::know_stmt::KnowStmt;
-use super::proof_technique_stmt::{
-    ProveCaseByCaseStmt, ProveByContradictionStmt, ProveByEnumerationStmt, ProveByInductionStmt,
-    ProveForStmt, ProveByEqualSetStmt, ViewFnAsSetStmt,
+use super::axiom_stmt::{
+    ByCasesAxiomStmt, ByContraAxiomStmt, EnumerateAxiomStmt, ByInducAxiomStmt,
+    ForAxiomStmt, ByExtensionAxiomStmt, ByFnDefAxiomStmt, ByCartDefAxiomStmt,
 };
 use super::tooling_stmt::{ImportStmt, ClearStmt, DoNothingStmt, RunFileStmt};
 use super::prove_stmt::ProveStmt;
@@ -39,13 +39,14 @@ pub enum Stmt {
     EvalStmt(EvalStmt),
     WitnessExistFact(WitnessExistFact),
     WitnessNonemptySet(WitnessNonemptySet),
-    ProveCaseByCaseStmt(ProveCaseByCaseStmt),
-    ProveByContradictionStmt(ProveByContradictionStmt),
-    ProveByEnumerationStmt(ProveByEnumerationStmt),
-    ProveByInductionStmt(ProveByInductionStmt),
-    ProveForStmt(ProveForStmt),
-    ProveByEqualSetStmt(ProveByEqualSetStmt),
-    ViewFnAsSetStmt(ViewFnAsSetStmt),
+    ByCasesAxiomStmt(ByCasesAxiomStmt),
+    ByContraAxiomStmt(ByContraAxiomStmt),
+    EnumerateAxiomStmt(EnumerateAxiomStmt),
+    ByInducAxiomStmt(ByInducAxiomStmt),
+    ForAxiomStmt(ForAxiomStmt),
+    ByExtensionAxiomStmt(ByExtensionAxiomStmt),
+    ByFnDefAxiomStmt(ByFnDefAxiomStmt),
+    ByCartDefAxiomStmt(ByCartDefAxiomStmt),
 }
 
 impl fmt::Display for Stmt {
@@ -73,14 +74,14 @@ impl fmt::Display for Stmt {
             Stmt::EvalStmt(x) => write!(f, "{}", x),
             Stmt::WitnessExistFact(x) => write!(f, "{}", x),
             Stmt::WitnessNonemptySet(x) => write!(f, "{}", x),
-            Stmt::ProveCaseByCaseStmt(x) => write!(f, "{}", x),
-            Stmt::ProveByContradictionStmt(x) => write!(f, "{}", x),
-            Stmt::ProveByEnumerationStmt(x) => write!(f, "{}", x),
-            Stmt::ProveByInductionStmt(x) => write!(f, "{}", x),
-            Stmt::ProveForStmt(x) => write!(f, "{}", x),
-            Stmt::ProveByEqualSetStmt(x) => write!(f, "{}", x),
-            Stmt::ViewFnAsSetStmt(x) => write!(f, "{}", x),
+            Stmt::ByCasesAxiomStmt(x) => write!(f, "{}", x),
+            Stmt::ByContraAxiomStmt(x) => write!(f, "{}", x),
+            Stmt::EnumerateAxiomStmt(x) => write!(f, "{}", x),
+            Stmt::ByInducAxiomStmt(x) => write!(f, "{}", x),
+            Stmt::ForAxiomStmt(x) => write!(f, "{}", x),
+            Stmt::ByExtensionAxiomStmt(x) => write!(f, "{}", x),
+            Stmt::ByFnDefAxiomStmt(x) => write!(f, "{}", x),
+            Stmt::ByCartDefAxiomStmt(x) => write!(f, "{}", x),
         }
     }
 }
-

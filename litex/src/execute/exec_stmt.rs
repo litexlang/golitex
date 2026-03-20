@@ -28,13 +28,14 @@ impl<'a> Executor<'a> {
             Stmt::EvalStmt(s) => self.exec_eval_stmt(s),
             Stmt::WitnessExistFact(s) => self.exec_witness_exist_fact(s),
             Stmt::WitnessNonemptySet(s) => self.exec_witness_nonempty_set(s),
-            Stmt::ProveCaseByCaseStmt(s) => self.exec_prove_case_by_case_stmt(s),
-            Stmt::ProveByContradictionStmt(s) => self.exec_prove_by_contradiction_stmt(s),
-            Stmt::ProveByEnumerationStmt(s) => self.exec_prove_by_enumeration_stmt(s),
-            Stmt::ProveByInductionStmt(s) => self.exec_prove_by_induction_stmt(s),
-            Stmt::ProveForStmt(s) => self.exec_prove_for_stmt(s),
-            Stmt::ProveByEqualSetStmt(s) => self.exec_prove_by_equal_set_stmt(s),
-            Stmt::ViewFnAsSetStmt(s) => self.exec_view_fn_as_set_stmt(s),
+            Stmt::ByCasesAxiomStmt(s) => self.exec_by_cases_axiom_stmt(s),
+            Stmt::ByContraAxiomStmt(s) => self.exec_by_contra_axiom_stmt(s),
+            Stmt::EnumerateAxiomStmt(s) => self.exec_enumerate_axiom_stmt(s),
+            Stmt::ByInducAxiomStmt(s) => self.exec_by_induc_axiom_stmt(s),
+            Stmt::ForAxiomStmt(s) => self.exec_for_axiom_stmt(s),
+            Stmt::ByExtensionAxiomStmt(s) => self.exec_by_extension_axiom_stmt(s),
+            Stmt::ByFnDefAxiomStmt(s) => self.exec_by_fn_def_axiom_stmt(s),
+            Stmt::ByCartDefAxiomStmt(s) => self.exec_by_cart_def_axiom_stmt(s),
         }
     }
 
