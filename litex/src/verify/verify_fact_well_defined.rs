@@ -10,7 +10,8 @@ use crate::stmt::parameter_def::ParamDefWithParamType;
 // well-defined check for fact: 1. predicate is defined 2. all args are well-defined
 impl<'a> Executor<'a> {
     pub fn verify_fact_well_defined(&mut self, fact: &Fact, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        match fact {
+        self.runtime_context.new_env();
+        let result = match fact {
             Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact_well_defined(atomic_fact, verify_state).map_err(WellDefinedError::from),
             Fact::AndFact(and_fact) => self.verify_and_fact_well_defined(and_fact, verify_state).map_err(WellDefinedError::from),
             Fact::ChainFact(chain_fact) => self.verify_chain_fact_well_defined(chain_fact, verify_state).map_err(WellDefinedError::from),
@@ -18,7 +19,9 @@ impl<'a> Executor<'a> {
             Fact::ExistFact(exist_fact) => self.verify_exist_fact_well_defined(exist_fact, verify_state).map_err(WellDefinedError::from),
             Fact::ForallFact(forall_fact) => self.verify_forall_fact_well_defined(forall_fact, verify_state).map_err(WellDefinedError::from),
             Fact::ForallFactWithIff(forall_fact_with_iff) => self.verify_forall_fact_with_iff_well_defined(forall_fact_with_iff, verify_state).map_err(WellDefinedError::from),
-        }
+        };
+        self.runtime_context.delete_env();
+        result
     }
 
     fn verify_atomic_fact_well_defined(&mut self, atomic_fact: &AtomicFact, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
