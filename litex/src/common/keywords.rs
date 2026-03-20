@@ -96,8 +96,6 @@ pub const FROM: &str = "from";
 pub const EVAL: &str = "eval";
 pub const WITNESS: &str = "witness";
 pub const IMPOSSIBLE: &str = "impossible";
-pub const RETURN: &str = "return";
-pub const IF: &str = "if";
 pub const ALGO: &str = "algo";
 pub const Q_POS: &str = "Q_pos";
 pub const Z_POS: &str = "Z_pos";
@@ -137,7 +135,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         IN, OR, AND, SUBSET, SUPERSET, SUCCESS_COLON, UNKNOWN_COLON, LET, PROP,
         CLAIM, PROVE, BY_CONTRA, CASE, BY_CASES, IMPORT, AS, ENUMERATE, HAVE, KNOW,
         CLEAR, DO_NOTHING, BY_INDUC, FROM, EVAL, FOR, WITNESS,
-        BY_EXTENSION, IMPOSSIBLE, BY_FN_DEF, BY_CART_DEF, RETURN, IF, ALGO,
+        BY_EXTENSION, IMPOSSIBLE, BY_FN_DEF, BY_CART_DEF, ALGO,
         Q_POS, Z_POS, R_POS, Q_NEG, Z_NEG, R_NEG, Q_NZ, Z_NZ, R_NZ,
         STRUCT, RESTRICT,
     ];

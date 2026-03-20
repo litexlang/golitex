@@ -34,7 +34,7 @@ use stmt::tooling_stmt::{ImportStmt, ImportRelativePathStmt, ImportGlobalModuleS
 use stmt::eval_stmt::EvalStmt;
 use stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
 use stmt::parameter_def::{ParamType, Set, NonemptySet, FiniteSet, ParamDefWithParamType, ParamDefWithParamSet};
-use stmt::define_algorithm_stmt::{AlgoIf, AlgoReturn, AlgoReturnOrAlgoIf, DefAlgoStmt};
+use stmt::define_algorithm_stmt::{AlgoCase, AlgoReturn, AlgoReturnOrAlgoCase, DefAlgoStmt};
 mod fact;
 use fact::{Fact, InFact, NotInFact, IsCartFact, NotIsCartFact, IsTupleFact, NotIsTupleFact, AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact, SubsetFact, NotSubsetFact, SupersetFact, NotSupersetFact,
     LessFact, NotLessFact, GreaterFact, NotGreaterFact,
@@ -1114,7 +1114,7 @@ fn try_module_manager() {
 
 fn try_define_algorithm_stmt() {
     let algo_return = AlgoReturn::new(Identifier::mk("x".to_string()), (10, 2));
-    let algo_if = AlgoIf::new(
+    let algo_case = AlgoCase::new(
         AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
             Identifier::mk("a".to_string()),
             Identifier::mk("b".to_string()),
@@ -1123,15 +1123,15 @@ fn try_define_algorithm_stmt() {
         AlgoReturn::new(Identifier::mk("y".to_string()), (11, 4)),
         (9, 0),
     );
-    let return_or_algo_if = vec![
-        AlgoReturnOrAlgoIf::AlgoReturn(algo_return),
-        AlgoReturnOrAlgoIf::AlgoIf(algo_if),
+    let return_or_algo_case = vec![
+        AlgoReturnOrAlgoCase::AlgoReturn(algo_return),
+        AlgoReturnOrAlgoCase::AlgoCase(algo_case),
     ];
-    let algo = DefAlgoStmt::new("f".to_string(), vec!["x".to_string()], return_or_algo_if, (1, 0));
+    let algo = DefAlgoStmt::new("f".to_string(), vec!["x".to_string()], return_or_algo_case, (1, 0));
     println!("{}", algo);
-    for (i, item) in algo.return_or_algo_if.iter().enumerate() {
+    for (i, item) in algo.return_or_algo_case.iter().enumerate() {
         let line_file = item.line_file();
-        println!("line_file of return_or_algo_if[{}]: {:?}", i, line_file);
+        println!("line_file of return_or_algo_case[{}]: {:?}", i, line_file);
     }
 }
 
