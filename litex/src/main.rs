@@ -13,7 +13,7 @@ use error::ParsingError;
 mod execute;
 use execute::Executor;
 mod obj;
-use obj::{QPos, ZPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz};
+use obj::{QPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz};
 use obj::{
     Obj, FnObj, Number, Add, Sub, Mul, Div, Mod, Pow,
     Union, Intersect, SetMinus, SetDiff, Cup, Cap,
@@ -269,8 +269,6 @@ fn try_n_pos_obj() {
     println!("{}", r_obj);
     let q_pos_obj = Obj::QPos(QPos::new());
     println!("{}", q_pos_obj);
-    let z_pos_obj = Obj::ZPos(ZPos::new());
-    println!("{}", z_pos_obj);
     let r_pos_obj = Obj::RPos(RPos::new());
     println!("{}", r_pos_obj);
     let q_neg_obj = Obj::QNeg(QNeg::new());

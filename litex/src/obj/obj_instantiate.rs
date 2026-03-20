@@ -5,7 +5,7 @@ use super::obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FnObj, FnSetWithDom,
     FnSetWithoutDom, InstStructObj, Intersect, ListSet, Mod, Mul, NObj, NPosObj, Number, Obj,
     ObjAtIndex, Pow, PowerSet, Proj, QNeg, QNz, QObj, QPos, Range, RNeg, RNz, RObj, RPos, SetBuilder,
-    SetDiff, SetMinus, Sub, Tuple, TupleDimObj, Union, Val, ZNeg, ZNz,     ZObj, ZPos,
+    SetDiff, SetMinus, Sub, Tuple, TupleDimObj, Union, Val, ZNeg, ZNz,     ZObj,
 };
 
 impl Obj {
@@ -484,13 +484,6 @@ impl QPos {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         _ = param_to_arg_map;
         Obj::QPos(self.clone())
-    }
-}
-
-impl ZPos {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::ZPos(self.clone())
     }
 }
 

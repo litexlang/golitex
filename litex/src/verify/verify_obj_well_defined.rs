@@ -1,12 +1,12 @@
 use crate::obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FieldAccess, FieldAccessWithMod,
     FnObj, FnSetWithDom, FnSetWithoutDom, Identifier, IdentifierWithMod, InstStructObj, ListSet, Mod,
-    Mul, Number, Obj, ObjAtIndex, PowerSet, Pow, Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, TupleDimObj, Union, Val, ZObj,
+    Mul, Number, Obj, ObjAtIndex, PowerSet, Pow, Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, TupleDimObj, Union, Val, ZObj, NPosObj,
     Intersect, FnSetObj,
 };
 use crate::error::{WellDefinedError, StmtError};
 use crate::verify::VerifyState;
-use crate::fact::{AndFact, AtomicFact, EqualFact, GreaterFact, IsCartFact, IsTupleFact, LessFact, NotEqualFact, OrFact, Fact, AndChainAtomicFact};
+use crate::fact::{AndFact, AtomicFact, EqualFact, GreaterFact, IsCartFact, IsTupleFact, LessEqualFact, LessFact, NotEqualFact, OrFact, Fact, AndChainAtomicFact};
 use crate::fact::InFact;
 use crate::execute::Executor;
 use crate::stmt::parameter_def::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
@@ -73,7 +73,6 @@ impl<'a> Executor<'a> {
             Obj::TupleDimObj(x) => self.verify_tuple_dim_obj_well_defined(x, verify_state),
             Obj::ObjAtIndex(x) => self.verify_obj_at_index_well_defined(x, verify_state),
             Obj::QPos(_) => self.verify_q_pos_well_defined(),
-            Obj::ZPos(_) => self.verify_z_pos_well_defined(),
             Obj::RPos(_) => self.verify_r_pos_well_defined(),
             Obj::QNeg(_) => self.verify_q_neg_well_defined(),
             Obj::ZNeg(_) => self.verify_z_neg_well_defined(),
@@ -607,25 +606,48 @@ impl<'a> Executor<'a> {
 
     fn verify_tuple_dim_obj_well_defined(&mut self, x: &TupleDimObj, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined_and_store_cache(&x.obj, verify_state)?;
-
+        
         // well-defined condition: the inner obj must satisfy is_tuple
         let is_tuple_fact = AtomicFact::IsTupleFact(IsTupleFact::new((*x.obj).clone(), DEFAULT_LINE_FILE.clone()));
-        self.verify_fact(&Fact::AtomicFact(is_tuple_fact), verify_state)?;
+        let result = self.verify_fact(&Fact::AtomicFact(is_tuple_fact), verify_state)?;
+        if !result.is_true() {
+            return Err(WellDefinedError::new(format!("obj {} is not a tuple", x.obj.to_string()), None, DEFAULT_LINE_FILE.clone()));
+        }
 
         Ok(())
     }
 
-    fn verify_obj_at_index_well_defined(&self, x: &ObjAtIndex, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        let _ = x;
-        let _ = verify_state;
-        Err(WellDefinedError::new("verify_obj_at_index_well_defined 此函数还没有 implement".to_string(), None, DEFAULT_LINE_FILE.clone()))
+    fn verify_obj_at_index_well_defined(&mut self, x: &ObjAtIndex, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        let cart_obj_where_tuple_obj_is = self.runtime_context.get_tuple_obj_is_in_what_cart(&x.obj.to_string()).ok_or_else(|| WellDefinedError::new(format!("tuple object {} is not in any cart", x.obj.to_string()), None, DEFAULT_LINE_FILE.clone()))?;
+        let tuple_dim = cart_obj_where_tuple_obj_is.args.len();
+
+        let index_calculated_string = x.index.calculate_to_string();
+        let index_calculated_obj = Obj::Number(Number::new(index_calculated_string));
+
+        let index_is_positive_integer_in_z_pos_fact = AtomicFact::InFact(InFact::new(
+            index_calculated_obj.clone(),
+            Obj::NPosObj(NPosObj::new()),
+            DEFAULT_LINE_FILE.clone(),
+        ));
+        let mut result = self.verify_fact(&Fact::AtomicFact(index_is_positive_integer_in_z_pos_fact), verify_state)?;
+        if !result.is_true() {
+            return Err(WellDefinedError::new(format!("index {} is not a positive integer", index_calculated_obj), None, DEFAULT_LINE_FILE.clone()));
+        }
+
+        let less_equal_fact = AtomicFact::LessEqualFact(LessEqualFact::new(
+            index_calculated_obj.clone(),
+            Obj::Number(Number::new(tuple_dim.to_string())),
+            DEFAULT_LINE_FILE.clone(),
+        ));
+        result = self.verify_fact(&Fact::AtomicFact(less_equal_fact), verify_state)?;
+        if !result.is_true() {
+            return Err(WellDefinedError::new(format!("{} has dimension {} but index {} is not less than or equal to it, so {} is not well-defined", x.obj, tuple_dim, index_calculated_obj, x.to_string()), None, DEFAULT_LINE_FILE.clone()));
+        }
+
+        Ok(())
     }
 
     fn verify_q_pos_well_defined(&self) -> Result<(), WellDefinedError> {
-        Ok(())
-    }
-
-    fn verify_z_pos_well_defined(&self) -> Result<(), WellDefinedError> {
         Ok(())
     }
 

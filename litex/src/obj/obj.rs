@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use crate::stmt::parameter_def::ParamDefWithParamSet;
 use crate::fact::OrAndChainAtomicFact;
 use crate::common::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, SET_DIFF, DIV, FN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ, Z_POS
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, SET_DIFF, DIV, FN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ
 };
 use std::fmt;
 use crate::common::helper::{braced_vec_to_string, curly_braced_vec_to_string, vec_to_string_join_by_comma, brace_vec_colon_vec_to_string};
@@ -52,7 +52,6 @@ pub enum Obj {
     TupleDimObj(TupleDimObj),
     ObjAtIndex(ObjAtIndex),
     QPos(QPos),
-    ZPos(ZPos),
     RPos(RPos),
     QNeg(QNeg),
     ZNeg(ZNeg),
@@ -277,9 +276,6 @@ pub struct RObj {
 
 #[derive(Clone)]
 pub struct QPos {}
-
-#[derive(Clone)]
-pub struct ZPos {}
 
 #[derive(Clone)]
 pub struct RPos {}
@@ -515,10 +511,6 @@ impl QPos {
     pub fn new() -> Self { QPos {} }
 }
 
-impl ZPos {
-    pub fn new() -> Self { ZPos {} }
-}
-
 impl RPos {
     pub fn new() -> Self { RPos {} }
 }
@@ -736,7 +728,6 @@ impl Obj {
             Obj::TupleDimObj(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::QPos(x) => write!(f, "{}", x)?,
-            Obj::ZPos(x) => write!(f, "{}", x)?,
             Obj::RPos(x) => write!(f, "{}", x)?,
             Obj::QNeg(x) => write!(f, "{}", x)?,
             Obj::ZNeg(x) => write!(f, "{}", x)?,
@@ -978,12 +969,6 @@ impl fmt::Display for QPos {
     }
 }
 
-impl fmt::Display for ZPos {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Z_POS)
-    }
-}
-
 impl fmt::Display for RPos {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", R_POS)
@@ -1129,7 +1114,6 @@ impl Obj {
             Obj::TupleDimObj(inner) => inner.instantiate(param_to_arg_map),
             Obj::ObjAtIndex(inner) => inner.instantiate(param_to_arg_map),
             Obj::QPos(inner) => inner.instantiate(param_to_arg_map),
-            Obj::ZPos(inner) => inner.instantiate(param_to_arg_map),
             Obj::RPos(inner) => inner.instantiate(param_to_arg_map),
             Obj::QNeg(inner) => inner.instantiate(param_to_arg_map),
             Obj::ZNeg(inner) => inner.instantiate(param_to_arg_map),
