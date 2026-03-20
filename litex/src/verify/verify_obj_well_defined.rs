@@ -6,7 +6,7 @@ use crate::obj::{
 };
 use crate::error::{WellDefinedError, StmtError};
 use crate::verify::VerifyState;
-use crate::fact::{AndFact, AtomicFact, EqualFact, GreaterFact, IsCartFact, IsNonemptySetFact, LessFact, NotEqualFact, OrFact, Fact, AndChainAtomicFact};
+use crate::fact::{AndFact, AtomicFact, EqualFact, GreaterFact, IsCartFact, LessFact, NotEqualFact, OrFact, Fact, AndChainAtomicFact};
 use crate::fact::InFact;
 use crate::execute::Executor;
 use crate::stmt::parameter_def::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
@@ -600,11 +600,8 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_choose_well_defined(&mut self, x: &Choose, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
-        let is_nonempty_set_fact = AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new((*x.set).clone(), DEFAULT_LINE_FILE.clone()));
-        self.verify_fact(&Fact::AtomicFact(is_nonempty_set_fact), verify_state)?;
-        Ok(())
+    fn verify_choose_well_defined(&mut self, _x: &Choose, _verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+        Err(WellDefinedError::new("verify_choose_well_defined 此函数还没有 implement".to_string(), None, DEFAULT_LINE_FILE.clone()))
     }
 
     fn verify_obj_at_index_well_defined(&self, x: &ObjAtIndex, verify_state: &VerifyState) -> Result<(), WellDefinedError> {

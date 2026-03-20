@@ -1,0 +1,7 @@
+prop p(a, b)
+
+know:
+    forall a R:
+        exist x R st {$p(a, x)}
+
+exist x R st {$p(3, x)}

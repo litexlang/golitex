@@ -156,7 +156,7 @@ impl<'a> Executor<'a> {
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
-        let param_names = ParamDefWithParamType::collect_param_names(&known_forall.params);
+        let param_names = ParamDefWithParamType::collect_param_names(&known_forall.params_def);
 
         if !param_names.iter().all(|param_name| arg_map.contains_key(param_name)) {
             return Ok(None);
@@ -185,7 +185,7 @@ impl<'a> Executor<'a> {
             }
         }
 
-        let args_satisfy_param_types = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(&known_forall.params, &args_for_params)
+        let args_satisfy_param_types = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(&known_forall.params_def, &args_for_params)
             .map_err(|e| VerifyError::new(e.error_body(), Some(e), crate::common::defaults::DEFAULT_LINE_FILE.clone()))?;
 
         for fact in args_satisfy_param_types.iter() {
@@ -197,7 +197,7 @@ impl<'a> Executor<'a> {
 
         
         let param_to_arg_map = match ParamDefWithParamType::param_def_params_to_arg_map(
-            &known_forall.params,
+            &known_forall.params_def,
             &arg_map,
         ) {
             Some(m) => m,
@@ -215,7 +215,7 @@ impl<'a> Executor<'a> {
 
         let fact_string = given_atomic_fact.to_string();
         let verified_by_known_forall_fact = ForallFact::new(
-            known_forall.params.clone(),
+            known_forall.params_def.clone(),
             known_forall.dom.clone(),
             vec![ExistOrAndChainAtomicFact::AtomicFact(atomic_fact_in_known_forall_fact.clone())],
             known_forall.line_file.clone(),
