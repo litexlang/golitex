@@ -87,16 +87,6 @@ know:
 
 know forall x R: x > 0 or x < 0 => x != 0
 
-"""
-# 必须要有，否则不能说明有限集合的子集还是有限集合
-know prop_infer finite_set_subset_is_finite_set(s1 finite_set, s2 set):
-	forall x s2:
-		x $in s1
-	=>:
-		$is_finite_set(s2)
-
-"""
-
 know forall x N: x != 0 => x > 0
 
 know forall x, y R: x > 0, y > 0 => x ^ y $in R, x ^ y > 0, x * y > 0
@@ -159,12 +149,6 @@ know forall a R => 1^a = 1
 know forall a, b, c R: a < b - c => a + c < b
 know forall a, b R: b > 0 => a - b < a
 
-know prop_infer subtraction_preserves_inequality_with_positive_term(a R, b R, c R):
-    a < b - c
-    c > 0
-    =>:
-        a < b
-
 know:
 	forall x, y R: y > 0 => x + y > x
 	forall x, y R: y > 0 => x - y < x
@@ -216,11 +200,6 @@ prop div_cancel_cond(a, b, c R):
 	c != 0
     a / c = b / c
 
-know prop_infer cancel(a, b, c R):
-	a + c = b + c or a - c = b - c or $mul_cancel_cond(a, b, c)or $div_cancel_cond(a, b, c)
-    =>:
-        a = b
-
 prop mul_cancel_general_cond(a, b, c, d R):
     a * c = b * d
     c != 0
@@ -229,13 +208,6 @@ prop div_cancel_general_cond(a, b, c, d R):
 	c != 0
 	d != 0
     a / c = b / d
-
-
-know prop_infer cancel_general(a, b, c, d R):
-    c = d
-    a + c = b + d or a - c = b - d or $mul_cancel_general_cond(a, b, c, d) or $div_cancel_general_cond(a, b, c, d)
-    =>:
-        a = b
 
 know:
 	forall a, b, c, e, f, g R:
@@ -557,28 +529,6 @@ know forall x set: not x $in x
 prop is_superset_of(A, B set):
 	forall x B: x $in A
 
-"""
-let fn intersect(x, y set) set:
-	forall z x:
-		z $in y
-		=>:
-			z $in intersect(x, y)
-	forall z y:
-		z $in x
-		=>:
-			z $in intersect(x, y)
-"""
-
-
-"""
-let fn union(x, y set) set:
-	forall z x:
-		z $in union(x, y)
-	forall z y:
-		z $in union(x, y)
-"""
-
-
 prop sets_are_equal(x, y set):
 	forall a x => a $in y
 	forall a y => a $in x
@@ -616,36 +566,9 @@ know:
 	forall x, y R: x > y => not x <= y, not x = y, not x < y
 	forall x, y R: x < y => not x >= y, not x = y, not x > y
 
-know prop_infer subset_of_finite_set_is_finite_set(x set, y finite_set):
-	x $subset_of y
-	=>:
-		$is_finite_set(x)
-		count(x) <= count(y)
-
 prop is_cart(x set)
 
 prop is_tuple(x set)
-
-"""
-let fn proj(x set, i N_pos) set:
-	dom:
-		$is_cart(x)
-		i <= dim(x)
-
-let fn dim(x set) N_pos:
-	dom:
-		$is_cart(x)
-"""
-
-# ∏_{a in I} A_a (Cartesian product)
-prop is_cart_prod(s set)
-"""
-let fn index_set_of_cart_prod(s set) set:
-	dom:
-		$is_cart_prod(s)
-"""
-		
-# let fn cart_prod(index_set set, family fn (index_set) set) set
 
 know:
 	forall x, y R:
@@ -668,12 +591,6 @@ know:
 		not z $in y
 		<=>:
 			z $in difference(x, y)
-
-know prop_infer item_in_difference(x, y set, z set):
-	z $in difference(x, y)
-	=>:
-		not z $in y
-		z $in x
 
 """
 
@@ -820,10 +737,6 @@ know:
 
 ### cup
 
-# check item in cup
-know prop_infer check_item_in_cup(x set, x_item x, cup_x_item x_item):
-	cup_x_item $in cup(x)
-
 # when item in cup, it has properties
 know forall x set, cup_x_item cup(x) => exist x_item x st cup_x_item $in x_item
 	
@@ -839,13 +752,6 @@ know:
 			item $in cap(x)
 """
 
-"""
-# when item in cap, it has properties
-know prop_infer item_in_cap_implies(x set, item cap(x)):
-	forall x_item x:
-		item $in x_item
-"""
-
 ### union
 
 # check item in union
@@ -853,10 +759,6 @@ know:
 	forall item, x, y set: item $in x or item $in y => item $in union(x, y)
 
 # when item in union, it has properties
-know prop_infer item_in_union_implies(z set, x, y set):
-	z $in union(x, y)
-	=>:
-		z $in x or z $in y
 
 # Properties of union
 know:
@@ -869,12 +771,6 @@ know:
 	forall item, x, y set: item $in x, item $in y => item $in intersect(x, y)
 
 # when item in intersect, it has properties
-know prop_infer item_in_intersect_implies(z set, x, y set):
-	z $in intersect(x, y)
-	=>:
-		z $in x
-		z $in y
-
 ### power set
 
 # check item in power_set
@@ -910,10 +806,6 @@ know:
 		=>:
 			x $in set_minus(s, s2)
 
-# when item in set minus, it has properties
-know prop_infer item_in_set_minus_implies(x, y set, item set_minus(x, y)):
-	item $in x
-	not item $in y
 
 ### set diff
 
@@ -950,19 +842,8 @@ prop is_bijective_fn(X set, Y set, f fn(X)Y):
 	$is_injective_fn(X, Y, f)
 	$is_surjective_fn(X, Y, f)
 	
-know prop_infer is_injective_fn_to_finite_set_implies(X finite_set, Y finite_set, f fn(X)Y):
-	$is_injective_fn(X, Y, f)
-	=>:
-		$is_finite_set(Y)
-		count(X) <= count(Y)
-
 prop not_equal_set(x set, y set)
 
-know prop_infer is_nonempty_with_item(x, z set):
-	z $in x
-	=>:
-		$is_nonempty_set(x)
-		
 # 和序数，有限有关的事实
 know:
 	forall x finite_set: count(x) > 0 <=> not $is_nonempty_set(x)
