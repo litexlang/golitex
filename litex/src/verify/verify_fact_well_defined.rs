@@ -66,7 +66,7 @@ impl<'a> Executor<'a> {
             if actual_args.len() != expected_len {
                 return Err(WellDefinedError::new(
                     format!(
-                        "predicate {} expects {} argument(s), but got {}",
+                        "fact `{}` expects {} argument(s), but got {}",
                         name_string,
                         expected_len,
                         actual_args.len()

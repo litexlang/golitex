@@ -303,7 +303,7 @@ impl<'a> RuntimeContext<'a> {
                 };
                 format!("{} on line {}, file {}", label, line, path)
             };
-            format!("{}\n{}", location, body)
+            format!("{}\n\n{}", location, body)
         } else {
             body
         }

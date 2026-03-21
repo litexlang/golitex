@@ -8,7 +8,7 @@ pub fn duplicate_used_name_error_message(name: &str) -> String {
 
 fn body_with_previous(message: &str, previous_error: &Option<Box<StmtError>>) -> String {
     match previous_error {
-        Some(previous_error) => format!("{}\n{}", message, previous_error.error_body()),
+        Some(previous_error) => format!("{}\n\n{}", message, previous_error.error_body()),
         None => message.to_string(),
     }
 }
@@ -303,7 +303,7 @@ impl std::error::Error for ExecStmtError {}
 
 impl fmt::Display for ExecStmtError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}", self.stmt_type_name, self.body_string())
+        write!(f, "{}\n\n{}", self.stmt_type_name, self.body_string())
     }
 }
 
@@ -334,7 +334,7 @@ impl ExecStmtError {
         let mut main_body = if self.stmt_type_name.is_empty() {
             body
         } else {
-            format!("stmt type: {}\n{}", self.stmt_type_name, body)
+            format!("stmt type: {}\n\n{}", self.stmt_type_name, body)
         };
         if !self.inside_results.is_empty() {
             let mut inside_body_lines: Vec<String> = Vec::new();
@@ -394,8 +394,13 @@ impl From<WellDefinedError> for StmtError {
 
 impl From<WellDefinedError> for ExecStmtError {
     fn from(e: WellDefinedError) -> Self {
-        let body = "well defined error: ".to_string() + &e.body_string();
-        ExecStmtError::new("".to_string(), body, Some(e.into()), DEFAULT_LINE_FILE.clone())
+        let line_file = e.line_file;
+        ExecStmtError::new(
+            "".to_string(),
+            "fact/object is not well-defined:".to_string(),
+            Some(StmtError::WellDefinedError(e)),
+            line_file,
+        )
     }
 }
 
@@ -436,15 +441,24 @@ impl From<VerifyError> for StmtError {
 
 impl From<VerifyError> for ExecStmtError {
     fn from(e: VerifyError) -> Self {
-        let body = "verify fact error: ".to_string() + &e.body_string();
-        ExecStmtError::new("".to_string(), body, Some(e.into()), DEFAULT_LINE_FILE.clone())
+        let line_file = e.line_file;
+        ExecStmtError::new(
+            "".to_string(),
+            "verify fact error:".to_string(),
+            Some(StmtError::VerifyError(e)),
+            line_file,
+        )
     }
 }
 
 impl From<VerifyError> for WellDefinedError {
     fn from(e: VerifyError) -> Self {
-        let body = "verify fact error: ".to_string() + &e.body_string();
-        WellDefinedError::new(body, Some(e.into()), DEFAULT_LINE_FILE.clone())
+        let line_file = e.line_file;
+        WellDefinedError::new(
+            "verify fact error:".to_string(),
+            Some(StmtError::VerifyError(e)),
+            line_file,
+        )
     }
 }
 
