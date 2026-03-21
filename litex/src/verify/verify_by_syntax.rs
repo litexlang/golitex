@@ -111,12 +111,12 @@ impl<'a> Executor<'a> {
                 Obj::SetBuilder(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::FnSetWithoutDom(a) => match right {
-                Obj::FnSetWithoutDom(b) => a.to_string() == b.to_string(),
+            Obj::FnSetWithoutParams(a) => match right {
+                Obj::FnSetWithoutParams(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::FnSetWithDom(a) => match right {
-                Obj::FnSetWithDom(b) => a.to_string() == b.to_string(),
+            Obj::FnSetWithParams(a) => match right {
+                Obj::FnSetWithParams(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::NPosObj(_) => match right {

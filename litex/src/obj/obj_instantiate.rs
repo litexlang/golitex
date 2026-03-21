@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use crate::stmt::parameter_def::ParamDefWithParamSet;
 use super::atom::{Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierWithMod};
 use super::obj::{
-    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FnObj, FnSetWithDom,
-    FnSetWithoutDom, InstStructObj, Intersect, ListSet, Mod, Mul, NObj, NPosObj, Number, Obj,
+    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FnObj, FnSetWithParams,
+    FnSetWithoutParams, InstStructObj, Intersect, ListSet, Mod, Mul, NObj, NPosObj, Number, Obj,
     ObjAtIndex, Pow, PowerSet, Proj, QNeg, QNz, QObj, QPos, Range, RNeg, RNz, RObj, RPos, SetBuilder,
     SetDiff, SetMinus, Sub, Tuple, TupleDimObj, Union, Val, ZNeg, ZNz,     ZObj,
 };
@@ -283,20 +283,20 @@ impl SetBuilder {
     }
 }
 
-impl FnSetWithoutDom {
+impl FnSetWithoutParams {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         let mut param_sets = Vec::with_capacity(self.param_sets.len());
         for param_set in self.param_sets.iter() {
             param_sets.push(Box::new(param_set.instantiate(param_to_arg_map)));
         }
-        Obj::FnSetWithoutDom(FnSetWithoutDom {
+        Obj::FnSetWithoutParams(FnSetWithoutParams {
             param_sets,
             ret_set: Box::new(self.ret_set.instantiate(param_to_arg_map)),
         })
     }
 }
 
-impl FnSetWithDom {
+impl FnSetWithParams {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         let param_names = ParamDefWithParamSet::collect_param_names(&self.params_def_with_set);
         let filtered_param_to_arg_map =
@@ -312,7 +312,7 @@ impl FnSetWithDom {
         for dom_fact in self.dom_facts.iter() {
             dom_facts.push(dom_fact.instantiate(&filtered_param_to_arg_map));
         }
-        Obj::FnSetWithDom(FnSetWithDom {
+        Obj::FnSetWithParams(FnSetWithParams {
             params_def_with_set,
             dom_facts,
             ret_set: Box::new(self.ret_set.instantiate(&filtered_param_to_arg_map)),

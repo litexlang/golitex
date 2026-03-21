@@ -2,9 +2,9 @@ use super::parameter_def::ParamDefWithParamType;
 use crate::fact::Fact;
 use crate::obj::Obj;
 use std::fmt;
-use crate::common::keywords::{CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, HAVE, FN_FOR_FN_WITH_DOM, LEFT_BRACE, LET, PROP, RIGHT_BRACE, STRUCT};
+use crate::common::keywords::{CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, HAVE, FN_FOR_FN_WITH_PARAMS, LEFT_BRACE, LET, PROP, RIGHT_BRACE, STRUCT};
 use crate::common::helper::{add_four_spaces_at_beginning, braced_vec_to_string, to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma, vec_to_string_with_sep, brace_vec_colon_vec_to_string};
-use crate::obj::FnSetWithDom;
+use crate::obj::FnSetWithParams;
 use crate::fact::AndChainAtomicFact;
 use crate::fact::ExistFact;
 use crate::fact::OrAndChainAtomicFact;
@@ -46,7 +46,7 @@ pub struct DefStructWithNoFieldStmt {
 
 pub struct HaveFnEqualCaseByCaseStmt {
     pub name: String,
-    pub fn_set_with_params: FnSetWithDom,
+    pub fn_set_with_params: FnSetWithParams,
     pub cases: Vec<AndChainAtomicFact>,
     pub equal_tos: Vec<Obj>,
     pub line_file: (usize, usize),
@@ -54,7 +54,7 @@ pub struct HaveFnEqualCaseByCaseStmt {
 
 pub struct HaveFnEqualStmt {
     pub name: String,
-    pub fn_set_with_params: FnSetWithDom,
+    pub fn_set_with_params: FnSetWithParams,
     pub equal_to: Obj,
     pub line_file: (usize, usize),
 }
@@ -195,7 +195,7 @@ impl fmt::Display for HaveExistObjStmt {
 }
 
 impl HaveFnEqualStmt {
-    pub fn new(name: String, fn_set_with_params: FnSetWithDom, equal_to: Obj, line_file: (usize, usize)) -> Self {
+    pub fn new(name: String, fn_set_with_params: FnSetWithParams, equal_to: Obj, line_file: (usize, usize)) -> Self {
         HaveFnEqualStmt { name, fn_set_with_params, equal_to, line_file }
     }
 
@@ -206,7 +206,7 @@ impl HaveFnEqualStmt {
 
 impl fmt::Display for HaveFnEqualStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}{} {} {}", HAVE, FN_FOR_FN_WITH_DOM, self.name, brace_vec_colon_vec_to_string(&self.fn_set_with_params.params_def_with_set, &self.fn_set_with_params.dom_facts), EQUAL, self.equal_to)
+        write!(f, "{} {} {}{} {} {}", HAVE, FN_FOR_FN_WITH_PARAMS, self.name, brace_vec_colon_vec_to_string(&self.fn_set_with_params.params_def_with_set, &self.fn_set_with_params.dom_facts), EQUAL, self.equal_to)
     }
 }
 
@@ -217,12 +217,12 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
             to_string_and_add_four_spaces_at_beginning_of_each_line(&format!("{} {}{} {}{} {} {}", CASE, case, COMMA, self.name, braced_vec_to_string(&self.fn_set_with_params.params()), EQUAL, self.equal_tos[i]),1)
         }).collect::<Vec<String>>();
         
-        write!(f, "{} {} {}{} {} {}\n{}", HAVE, FN_FOR_FN_WITH_DOM, self.name, brace_vec_colon_vec_to_string(&self.fn_set_with_params.params_def_with_set, &self.fn_set_with_params.dom_facts), EQUAL, COLON, vec_to_string_with_sep(&cases_and_proofs, "\n".to_string()))
+        write!(f, "{} {} {}{} {} {}\n{}", HAVE, FN_FOR_FN_WITH_PARAMS, self.name, brace_vec_colon_vec_to_string(&self.fn_set_with_params.params_def_with_set, &self.fn_set_with_params.dom_facts), EQUAL, COLON, vec_to_string_with_sep(&cases_and_proofs, "\n".to_string()))
     }
 }
 
 impl HaveFnEqualCaseByCaseStmt {
-    pub fn new(name: String, fn_set_with_params: FnSetWithDom, cases: Vec<AndChainAtomicFact>, equal_tos: Vec<Obj>, line_file: (usize, usize)) -> Self {
+    pub fn new(name: String, fn_set_with_params: FnSetWithParams, cases: Vec<AndChainAtomicFact>, equal_tos: Vec<Obj>, line_file: (usize, usize)) -> Self {
         HaveFnEqualCaseByCaseStmt { name, fn_set_with_params, cases, equal_tos, line_file }
     }
 

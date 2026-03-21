@@ -12,7 +12,7 @@ use crate::infer::InferResult;
 use super::Executor;
 use crate::verify::VerifyState;
 
-fn param_defs_with_type_from_fn_set_with_dom(fn_set_with_params: &crate::obj::FnSetWithDom) -> Vec<ParamDefWithParamType> {
+fn param_defs_with_type_from_fn_set_with_dom(fn_set_with_params: &crate::obj::FnSetWithParams) -> Vec<ParamDefWithParamType> {
     let mut param_defs_with_type: Vec<ParamDefWithParamType> = vec![];
     for param_def_with_set in fn_set_with_params.params_def_with_set.iter() {
         param_defs_with_type.push(ParamDefWithParamType(
@@ -245,7 +245,7 @@ impl<'a> Executor<'a> {
         self.store_identifier_obj(&have_fn_equal_stmt.name)?;
 
         let function_identifier_obj = Obj::Identifier(Identifier::new(have_fn_equal_stmt.name.clone()));
-        let function_set_obj = Obj::FnSetWithDom(have_fn_equal_stmt.fn_set_with_params.clone());
+        let function_set_obj = Obj::FnSetWithParams(have_fn_equal_stmt.fn_set_with_params.clone());
         let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             function_identifier_obj,
             function_set_obj,
@@ -297,7 +297,7 @@ impl<'a> Executor<'a> {
         let verify_state = VerifyState::new(0, false);
 
         // 证明 fn_set 是 well-defined 的
-        let function_set_obj = Obj::FnSetWithDom(have_fn_equal_stmt.fn_set_with_params.clone());
+        let function_set_obj = Obj::FnSetWithParams(have_fn_equal_stmt.fn_set_with_params.clone());
         self.verify_obj_well_defined_and_store_cache(&function_set_obj, &verify_state).map_err(ExecStmtError::from)?;
 
         for param_def_with_set in have_fn_equal_stmt.fn_set_with_params.params_def_with_set.iter() {
@@ -353,7 +353,7 @@ impl<'a> Executor<'a> {
         self.store_identifier_obj(&have_fn_equal_case_by_case_stmt.name)?;
 
         let function_identifier_obj = Obj::Identifier(Identifier::new(have_fn_equal_case_by_case_stmt.name.clone()));
-        let function_set_obj = Obj::FnSetWithDom(have_fn_equal_case_by_case_stmt.fn_set_with_params.clone());
+        let function_set_obj = Obj::FnSetWithParams(have_fn_equal_case_by_case_stmt.fn_set_with_params.clone());
         let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             function_identifier_obj,
             function_set_obj,
@@ -411,7 +411,7 @@ impl<'a> Executor<'a> {
         }
 
         // 证明 fn_set 是 well-defined 的
-        let function_set_obj = Obj::FnSetWithDom(have_fn_equal_case_by_case_stmt.fn_set_with_params.clone());
+        let function_set_obj = Obj::FnSetWithParams(have_fn_equal_case_by_case_stmt.fn_set_with_params.clone());
         self.verify_obj_well_defined_and_store_cache(&function_set_obj, &VerifyState::new(0, false)).map_err(ExecStmtError::from)?;
 
         for case_index in 0..have_fn_equal_case_by_case_stmt.cases.len() {

@@ -2,8 +2,8 @@ use std::fmt;
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::result::NonErrStmtExecResult;
 
-pub fn duplicate_name_error_message(name: &str) -> String {
-    format!("name {} is already used", name)
+pub fn duplicate_used_name_error_message(name: &str) -> String {
+    format!("name `{}` is already used, cannot be used again for other definitions", name)
 }
 
 fn body_with_previous(message: &str, previous_error: &Option<Box<StmtError>>) -> String {
@@ -89,7 +89,7 @@ fn parse_block_error_message(e: &ParseBlockError) -> String {
         ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
         ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
         ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
-        ParseBlockError::NameAlreadyUsed(name) => format!("name {} is already used", name),
+        ParseBlockError::NameAlreadyUsed(name) => format!("{}", duplicate_used_name_error_message(name)),
         ParseBlockError::InvalidName(msg) => msg.clone(),
     }
 }

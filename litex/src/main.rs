@@ -17,7 +17,7 @@ use obj::{QPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz};
 use obj::{
     Obj, FnObj, Number, Add, Sub, Mul, Div, Mod, Pow,
     Union, Intersect, SetMinus, SetDiff, Cup, Cap,
-    ListSet, SetBuilder, FnSetWithoutDom, FnSetWithDom,
+    ListSet, SetBuilder, FnSetWithoutParams, FnSetWithParams,
     NPosObj, NObj, QObj, ZObj, RObj, InstStructObj,
     Cart, CartDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choose, ObjAtIndex,
     FnSetObj,
@@ -238,7 +238,7 @@ fn try_set_builder() {
 }
 
 fn try_fn_set_without_params() {
-    let fn_set_without_params = Obj::FnSetWithoutDom(FnSetWithoutDom::new(
+    let fn_set_without_params = Obj::FnSetWithoutParams(FnSetWithoutParams::new(
         vec![
             Obj::Identifier(Identifier::new("a".to_string())),
             Obj::Identifier(Identifier::new("b".to_string())),
@@ -249,10 +249,10 @@ fn try_fn_set_without_params() {
 }
 
 fn try_fn_set_with_params() {
-    let fn_set_with_params = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["a".to_string()], Obj::Identifier(Identifier::new("a".to_string()))), ParamDefWithParamSet(vec!["b".to_string()], Obj::Identifier(Identifier::new("b".to_string())))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], Obj::Identifier(Identifier::new("c".to_string()))));
+    let fn_set_with_params = Obj::FnSetWithParams(FnSetWithParams::new(vec![ParamDefWithParamSet(vec!["a".to_string()], Obj::Identifier(Identifier::new("a".to_string()))), ParamDefWithParamSet(vec!["b".to_string()], Obj::Identifier(Identifier::new("b".to_string())))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], Obj::Identifier(Identifier::new("c".to_string()))));
     println!("{}", fn_set_with_params);
 
-    let fn_set_with_params2 = Obj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["a".to_string()], Obj::Identifier(Identifier::new("a".to_string()))), ParamDefWithParamSet(vec!["b".to_string()], Obj::Identifier(Identifier::new("b".to_string()))), ParamDefWithParamSet(vec!["c".to_string()], Obj::Identifier(Identifier::new("c".to_string())))], vec![], Obj::Identifier(Identifier::new("c".to_string()))));
+    let fn_set_with_params2 = Obj::FnSetWithParams(FnSetWithParams::new(vec![ParamDefWithParamSet(vec!["a".to_string()], Obj::Identifier(Identifier::new("a".to_string()))), ParamDefWithParamSet(vec!["b".to_string()], Obj::Identifier(Identifier::new("b".to_string()))), ParamDefWithParamSet(vec!["c".to_string()], Obj::Identifier(Identifier::new("c".to_string())))], vec![], Obj::Identifier(Identifier::new("c".to_string()))));
     println!("{}", fn_set_with_params2);
 }
 
@@ -1040,7 +1040,7 @@ fn try_view_fn_as_set() {
 
 fn try_have_fn_equal_stmt() {
     let have_fn_equal_stmt = 
-    HaveFnEqualStmt::new("f".to_string(), FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Identifier::mk("p".to_string()))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], Identifier::mk("p".to_string())), Identifier::mk("p".to_string()), (1, 0));
+    HaveFnEqualStmt::new("f".to_string(), FnSetWithParams::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Identifier::mk("p".to_string()))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], Identifier::mk("p".to_string())), Identifier::mk("p".to_string()), (1, 0));
     have_fn_equal_stmt.to_string();
     println!("{}", have_fn_equal_stmt);
 
@@ -1049,7 +1049,7 @@ fn try_have_fn_equal_stmt() {
 }
 
 fn try_have_fn_equal_case_by_case_stmt() {
-    let have_fn_equal_case_by_case_stmt = HaveFnEqualCaseByCaseStmt::new("f".to_string(), FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Identifier::mk("p".to_string()))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], Identifier::mk("p".to_string())), vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], vec![Identifier::mk("p".to_string())], (1, 0));
+    let have_fn_equal_case_by_case_stmt = HaveFnEqualCaseByCaseStmt::new("f".to_string(), FnSetWithParams::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Identifier::mk("p".to_string()))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], Identifier::mk("p".to_string())), vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], vec![Identifier::mk("p".to_string())], (1, 0));
     println!("{}", have_fn_equal_case_by_case_stmt);
 
     let stmt = Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt);
@@ -1136,10 +1136,10 @@ fn try_define_algorithm_stmt() {
 fn try_runtime_context() {
     let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
 
-    let fn_set_obj = FnSetObj::FnSetWithoutDom(FnSetWithoutDom::new(vec![Identifier::mk("p".to_string())], Identifier::mk("p".to_string())));
+    let fn_set_obj = FnSetObj::FnSetWithoutDom(FnSetWithoutParams::new(vec![Identifier::mk("p".to_string())], Identifier::mk("p".to_string())));
     println!("{}", fn_set_obj);
 
-    let fn_set_obj = FnSetObj::FnSetWithDom(FnSetWithDom::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Identifier::mk("p".to_string()))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], Identifier::mk("p".to_string())));
+    let fn_set_obj = FnSetObj::FnSetWithDom(FnSetWithParams::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Identifier::mk("p".to_string()))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], Identifier::mk("p".to_string())));
     println!("{}", fn_set_obj);
 
     let mut builtin_environment = Environment::new_empty_env();
