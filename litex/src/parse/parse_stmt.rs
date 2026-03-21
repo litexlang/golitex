@@ -1,0 +1,46 @@
+use crate::error::ParsingError;
+use crate::common::keywords::{ALGO, CLAIM, CLEAR, DO_NOTHING, EVAL, EXIST, FN_FOR_FN_WITH_PARAMS, HAVE, IMPORT, KNOW, LET, PROP, PROVE, RUN_FILE, STRUCT, BY_FN_DEF, BY_CART_DEF, WITNESS, BY_CASES, BY_CONTRA, ENUMERATE, BY_INDUC, FOR, BY_EXTENSION};
+use crate::execute::Executor;
+use crate::stmt::Stmt;
+use super::TokenBlock;
+
+impl<'a> Executor<'a> {
+    pub fn parse_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+        match tb.current()? {
+            PROP => self.parse_def_prop_with_meaning_stmt_or_prop_without_meaning(tb),
+            LET => self.parse_def_let_stmt(tb),
+            HAVE => {
+                if tb.token_at_index(1)? == FN_FOR_FN_WITH_PARAMS {
+                    self.parse_have_fn_stmt(tb)
+                } else if tb.token_at_index(1)? == EXIST {
+                    self.parse_have_exist(tb)
+                } else {
+                    self.parse_have_obj_stmt(tb)
+                }
+            },
+            KNOW => self.know_stmt(tb),
+            CLAIM => self.parse_claim_stmt(tb),
+            PROVE => self.prove_stmt(tb),
+            IMPORT => self.import_stmt(tb),
+            CLEAR => self.clear_stmt(tb),
+            DO_NOTHING => self.do_nothing_stmt(tb),
+            RUN_FILE => self.run_file_stmt(tb),
+            EVAL => self.eval_stmt(tb),
+            WITNESS => self.witness_stmt(tb),
+            STRUCT => self.parse_def_struct_stmt(tb),
+            ALGO => self.parse_def_algorithm_stmt(tb),
+            BY_CASES => self.parse_by_cases_axiom_stmt(tb),
+            BY_CONTRA => self.parse_by_contra_axiom_stmt(tb),
+            ENUMERATE => self.parse_enumerate_axiom_stmt(tb),
+            BY_INDUC => self.parse_by_induc_axiom_stmt(tb),
+            FOR => self.parse_for_axiom_stmt(tb),
+            BY_EXTENSION => self.parse_by_extension_axiom_stmt(tb),
+            BY_FN_DEF => self.parse_by_fn_def_axiom_stmt(tb),
+            BY_CART_DEF => self.parse_by_cart_def_axiom_stmt(tb),
+            _ => {
+                let fact = self.parse_fact(tb)?;
+                Ok(Stmt::Fact(fact))
+            }
+        }
+    }
+}

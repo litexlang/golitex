@@ -35,10 +35,10 @@ const (
 
 	// KeywordExistProp = "exist_prop"
 
-	// KeywordImply      = "imply"
-	KeywordProvePropInfer = "prove_prop_infer"
-	KeywordPropInfer      = "prop_infer"
-	KeywordInfer          = "infer"
+	// // KeywordImply      = "imply"
+	// KeywordProvePropInfer = "prove_prop_infer"
+	// KeywordPropInfer      = "prop_infer"
+	// KeywordInfer          = "infer"
 
 	KeywordHave = "have"
 	KeywordLet  = "let"
@@ -79,8 +79,7 @@ const (
 	KeywordWitnessNonempty = "witness_nonempty"
 	KeywordEqualSet        = "equal_set"
 
-	KeywordFn    = "fn"
-	KeywordFnSet = "fn_set"
+	KeywordFn = "fn"
 
 	KeywordClaim      = "claim"
 	KeywordProve      = "prove"
@@ -132,14 +131,14 @@ const (
 )
 
 var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
-	KeywordSet:            {},
-	KeywordForall:         {},
-	KeywordDom:            {},
-	KeywordProvePropInfer: {},
-	KeywordHave:           {},
-	KeywordFn:             {},
-	KeywordProp:           {},
-	KeywordKnow:           {},
+	KeywordSet:    {},
+	KeywordForall: {},
+	KeywordDom:    {},
+	// KeywordProvePropInfer: {},
+	KeywordHave: {},
+	KeywordFn:   {},
+	KeywordProp: {},
+	KeywordKnow: {},
 	// KeywordExistProp:            {},
 	KeywordSt:     {},
 	KeywordClaim:  {},
@@ -161,7 +160,6 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordFiniteSet: {},
 	KeywordEnum:      {},
 	// KeywordItemExistsIn: {},
-	KeywordFnSet:         {},
 	KeywordNPos:          {},
 	KeywordLet:           {},
 	KeywordClear:         {},
@@ -234,8 +232,8 @@ var BuiltinKeywordsSet map[string]struct{} = map[string]struct{}{
 	KeywordZNot0: {},
 	KeywordQNot0: {},
 
-	KeywordPropInfer: {},
-	KeywordInfer:     {},
+	// KeywordPropInfer: {},
+	// KeywordInfer:     {},
 
 	KeywordRestrict: {},
 
@@ -410,14 +408,14 @@ func IsBuiltinAtomName(name string) bool {
 }
 
 var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struct{}{
-	KeywordSet:            {},
-	KeywordForall:         {},
-	KeywordDom:            {},
-	KeywordProvePropInfer: {},
-	KeywordHave:           {},
-	KeywordFn:             {},
-	KeywordProp:           {},
-	KeywordKnow:           {},
+	KeywordSet:    {},
+	KeywordForall: {},
+	KeywordDom:    {},
+	// KeywordProvePropInfer: {},
+	KeywordHave: {},
+	KeywordFn:   {},
+	KeywordProp: {},
+	KeywordKnow: {},
 	// KeywordExistProp:              {},
 	KeywordSt:             {},
 	KeywordClaim:          {},
@@ -436,7 +434,6 @@ var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struc
 	KeywordCount:          {},
 	KeywordFiniteSet:      {},
 	KeywordEnum:           {},
-	KeywordFnSet:          {},
 	KeywordNPos:           {},
 	KeywordLet:            {},
 	KeywordClear:          {},
@@ -463,25 +460,25 @@ var BuiltinKeywordsThatCanNotBeUsedAsName map[string]struct{} = map[string]struc
 	KeywordIsAFiniteSet:   {},
 	KeywordIsANonEmptySet: {},
 	// KeywordIsNonEmptyWithItem:     {},
-	KeywordRunFile:     {},
-	KeywordUnion:       {},
-	KeywordIntersect:   {},
-	KeywordRPos:        {},
-	KeywordRNeg:        {},
-	KeywordZNeg:        {},
-	KeywordQNeg:        {},
-	KeywordQPos:        {},
-	KeywordRNot0:       {},
-	KeywordZNot0:       {},
-	KeywordQNot0:       {},
-	KeywordPowerSet:    {},
-	KeywordCup:         {},
-	KeywordCap:         {},
-	KeywordSetMinus:    {},
-	KeywordSetDiff:     {},
-	KeywordVal:         {},
-	KeywordPropInfer:   {},
-	KeywordInfer:       {},
+	KeywordRunFile:   {},
+	KeywordUnion:     {},
+	KeywordIntersect: {},
+	KeywordRPos:      {},
+	KeywordRNeg:      {},
+	KeywordZNeg:      {},
+	KeywordQNeg:      {},
+	KeywordQPos:      {},
+	KeywordRNot0:     {},
+	KeywordZNot0:     {},
+	KeywordQNot0:     {},
+	KeywordPowerSet:  {},
+	KeywordCup:       {},
+	KeywordCap:       {},
+	KeywordSetMinus:  {},
+	KeywordSetDiff:   {},
+	KeywordVal:       {},
+	// KeywordPropInfer:   {},
+	// KeywordInfer:       {},
 	KeywordClosedRange: {},
 	KeywordRange:       {},
 }

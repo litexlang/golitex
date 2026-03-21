@@ -90,11 +90,11 @@ type KnowFactStmt struct {
 	Line uint
 }
 
-type KnowPropInferStmt struct {
-	DefProp *DefPropStmt
+// type KnowPropInferStmt struct {
+// 	DefProp *DefPropStmt
 
-	Line uint
-}
+// 	Line uint
+// }
 
 // TODO: 可以把caseFacts换成[]Spec_orFact，这样更合理
 type ProveCaseByCaseStmt struct {
@@ -195,11 +195,11 @@ type DoNothingStmt struct {
 	Line uint
 }
 
-type InlineFactsStmt struct {
-	Facts FactStmtSlice
+// type InlineFactsStmt struct {
+// 	Facts FactStmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type ProveByInductionStmt struct {
 	Fact  Spec_OrFact
@@ -372,34 +372,34 @@ type WitnessStmt struct {
 	Line uint
 }
 
-type InferStmt struct {
-	DomFacts  ReversibleFacts
-	ThenFacts ReversibleFacts
+// type InferStmt struct {
+// 	DomFacts  ReversibleFacts
+// 	ThenFacts ReversibleFacts
 
-	Line uint
-}
+// 	Line uint
+// }
 
-type InferTemplateStmt struct {
-	Params    StrSlice
-	ParamSets ObjSlice
-	DomFacts  ReversibleFacts
-	ThenFacts ReversibleFacts
-	Proof     StmtSlice
+// type InferTemplateStmt struct {
+// 	Params    StrSlice
+// 	ParamSets ObjSlice
+// 	DomFacts  ReversibleFacts
+// 	ThenFacts ReversibleFacts
+// 	Proof     StmtSlice
 
-	IfFacts FactStmtSlice
+// 	IfFacts FactStmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
-type KnowInferStmt struct {
-	Params    StrSlice
-	ParamSets ObjSlice
-	DomFacts  ReversibleFacts
-	ThenFacts ReversibleFacts
-	IfFacts   FactStmtSlice
+// type KnowInferStmt struct {
+// 	Params    StrSlice
+// 	ParamSets ObjSlice
+// 	DomFacts  ReversibleFacts
+// 	ThenFacts ReversibleFacts
+// 	IfFacts   FactStmtSlice
 
-	Line uint
-}
+// 	Line uint
+// }
 
 type EqualSetStmt struct {
 	Left   Obj

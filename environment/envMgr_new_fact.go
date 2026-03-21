@@ -61,45 +61,45 @@ func (envMgr *EnvMgr) NewFactWithCheckingNameDefined(stmt ast.FactStmt) ast.Infe
 // storeUniFactAsInferTemplateIfApplicable checks if all DomFacts and ThenFacts are SpecFactStmt or OrStmt,
 // and if so, stores them as InferTemplateStmt in SpecFactInImplyTemplateMem.
 // This function does not return errors - it silently skips storage if conditions are not met.
-func (envMgr *EnvMgr) storeUniFactAsInferTemplateIfApplicable(stmt *ast.UniFactStmt, ifFacts []ast.FactStmt) {
-	// 如果dom和then全是spec 或者 or，那做成 imply存起来
-	// Check if all DomFacts and ThenFacts are SpecFactStmt or OrStmt
-	domFactsReversible := []ast.Spec_OrFact{}
-	for _, domFact := range stmt.DomFacts {
-		if specFact, ok := domFact.(ast.SpecificFactStmt); ok {
-			domFactsReversible = append(domFactsReversible, specFact)
-		} else if orStmt, ok := domFact.(*ast.OrStmt); ok {
-			domFactsReversible = append(domFactsReversible, orStmt)
-		} else {
-			// Not all facts are Spec_OrFact, skip storing as InferTemplate
-			return
-		}
-	}
+// func (envMgr *EnvMgr) storeUniFactAsInferTemplateIfApplicable(stmt *ast.UniFactStmt, ifFacts []ast.FactStmt) {
+// 	// 如果dom和then全是spec 或者 or，那做成 imply存起来
+// 	// Check if all DomFacts and ThenFacts are SpecFactStmt or OrStmt
+// 	domFactsReversible := []ast.Spec_OrFact{}
+// 	for _, domFact := range stmt.DomFacts {
+// 		if specFact, ok := domFact.(ast.SpecificFactStmt); ok {
+// 			domFactsReversible = append(domFactsReversible, specFact)
+// 		} else if orStmt, ok := domFact.(*ast.OrStmt); ok {
+// 			domFactsReversible = append(domFactsReversible, orStmt)
+// 		} else {
+// 			// Not all facts are Spec_OrFact, skip storing as InferTemplate
+// 			return
+// 		}
+// 	}
 
-	thenFactsReversible := []ast.Spec_OrFact{}
-	for _, thenFact := range stmt.ThenFacts {
-		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
-			thenFactsReversible = append(thenFactsReversible, specFact)
-		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
-			thenFactsReversible = append(thenFactsReversible, orStmt)
-		} else {
-			// Not all facts are Spec_OrFact, skip storing as InferTemplate
-			return
-		}
-	}
+// 	thenFactsReversible := []ast.Spec_OrFact{}
+// 	for _, thenFact := range stmt.ThenFacts {
+// 		if specFact, ok := thenFact.(ast.SpecificFactStmt); ok {
+// 			thenFactsReversible = append(thenFactsReversible, specFact)
+// 		} else if orStmt, ok := thenFact.(*ast.OrStmt); ok {
+// 			thenFactsReversible = append(thenFactsReversible, orStmt)
+// 		} else {
+// 			// Not all facts are Spec_OrFact, skip storing as InferTemplate
+// 			return
+// 		}
+// 	}
 
-	// All facts are Spec_OrFact, create InferTemplateStmt and store
-	inferTemplate := ast.NewInferTemplateStmt(stmt.Params, stmt.ParamSets, domFactsReversible, thenFactsReversible, ifFacts, []ast.Stmt{}, stmt.Line)
+// 	// All facts are Spec_OrFact, create InferTemplateStmt and store
+// 	inferTemplate := ast.NewInferTemplateStmt(stmt.Params, stmt.ParamSets, domFactsReversible, thenFactsReversible, ifFacts, []ast.Stmt{}, stmt.Line)
 
-	// Store each thenFact in SpecFactInImplyTemplateMem
-	for _, thenFact := range inferTemplate.ThenFacts {
-		storeRet := envMgr.StoreSpecFactInImplyTemplateMem(thenFact, inferTemplate)
-		if storeRet.IsErr() {
-			// If storage fails, silently skip (don't fail the whole operation)
-			return
-		}
-	}
-}
+// 	// Store each thenFact in SpecFactInImplyTemplateMem
+// 	for _, thenFact := range inferTemplate.ThenFacts {
+// 		storeRet := envMgr.StoreSpecFactInImplyTemplateMem(thenFact, inferTemplate)
+// 		if storeRet.IsErr() {
+// 			// If storage fails, silently skip (don't fail the whole operation)
+// 			return
+// 		}
+// 	}
+// }
 
 func (envMgr *EnvMgr) NewFactWithCheckingNameDefined_UniFact(stmt *ast.UniFactStmt) ast.InferRet {
 	ret := envMgr.newUniFact(stmt)
@@ -108,7 +108,7 @@ func (envMgr *EnvMgr) NewFactWithCheckingNameDefined_UniFact(stmt *ast.UniFactSt
 	}
 
 	// Try to store as InferTemplate if applicable
-	envMgr.storeUniFactAsInferTemplateIfApplicable(stmt, []ast.FactStmt{})
+	// envMgr.storeUniFactAsInferTemplateIfApplicable(stmt, []ast.FactStmt{})
 
 	return ast.NewTrueInferRet(stmt)
 }
@@ -140,7 +140,7 @@ func (envMgr *EnvMgr) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) ast.InferR
 	}
 
 	// Try to store as InferTemplate if applicable (with IffFacts as ifFacts)
-	envMgr.storeUniFactAsInferTemplateIfApplicable(thenToIff, []ast.FactStmt{})
+	// envMgr.storeUniFactAsInferTemplateIfApplicable(thenToIff, []ast.FactStmt{})
 
 	iffToThen := stmt.NewUniFactWithIffToThen()
 	ret = envMgr.newUniFact(iffToThen)
@@ -149,7 +149,7 @@ func (envMgr *EnvMgr) newUniFactWithIff(stmt *ast.UniFactWithIffStmt) ast.InferR
 	}
 
 	// Try to store as InferTemplate if applicable (with IffFacts as ifFacts)
-	envMgr.storeUniFactAsInferTemplateIfApplicable(iffToThen, []ast.FactStmt{})
+	// envMgr.storeUniFactAsInferTemplateIfApplicable(iffToThen, []ast.FactStmt{})
 
 	return ast.NewTrueInferRet(stmt)
 }

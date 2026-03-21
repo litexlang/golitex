@@ -1,0 +1,45 @@
+use crate::common::defaults::DEFAULT_LINE_FILE;
+use crate::error::VerifyError;
+use crate::execute::Executor;
+use crate::fact::{AndFact, ChainFact, Fact};
+use crate::infer::InferResult;
+use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
+use crate::verify::VerifyState;
+use std::result::Result;
+
+impl<'a> Executor<'a> {
+    pub fn verify_and_fact(&mut self, and_fact: &AndFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
+        let mut verify_what = vec![];
+        for fact in &and_fact.facts {
+            if let Err(e) = self.verify_fact(&Fact::AtomicFact(fact.clone()), verify_state) {
+                return Err(e);
+            }
+            verify_what.push(fact.to_string());
+        }
+        Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
+            and_fact.to_string(),
+            format!("{} are verified", verify_what.join(", ")),
+            InferResult::new(),
+            DEFAULT_LINE_FILE.clone(),
+            DEFAULT_LINE_FILE.clone(),
+        )))
+    }
+
+    pub fn verify_chain_fact(&mut self, chain_fact: &ChainFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
+        let facts = chain_fact.facts().map_err(|e| VerifyError::new(e.to_string(), None, DEFAULT_LINE_FILE.clone()))?;
+        let mut verify_what = vec![];
+        for fact in &facts {
+            if let Err(e) = self.verify_fact(&Fact::AtomicFact(fact.clone()), verify_state) {
+                return Err(e);
+            }
+            verify_what.push(fact.to_string());
+        }
+        Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
+            chain_fact.to_string(),
+            format!("{} are verified", verify_what.join(", ")),
+            InferResult::new(),
+            DEFAULT_LINE_FILE.clone(),
+            DEFAULT_LINE_FILE.clone(),
+        )))
+    }
+}

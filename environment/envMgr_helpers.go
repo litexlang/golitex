@@ -141,9 +141,9 @@ func (envMgr *EnvMgr) storeSpecFactInMem(stmt ast.SpecificFactStmt) ast.InferRet
 	return ast.NewErrInferRet(stmt).AddExtraInfo(fmt.Sprintf("invalid spec fact type: %T", stmt))
 }
 
-func (envMgr *EnvMgr) StoreSpecFactInImplyTemplateMem(specFact ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) ast.StmtRet {
-	return envMgr.CurEnv().KnownFactsStruct.SpecFactInImplyTemplateMem.newFact(specFact, implyTemplate)
-}
+// func (envMgr *EnvMgr) StoreSpecFactInImplyTemplateMem(specFact ast.Spec_OrFact, implyTemplate *ast.InferTemplateStmt) ast.StmtRet {
+// 	return envMgr.CurEnv().KnownFactsStruct.SpecFactInImplyTemplateMem.newFact(specFact, implyTemplate)
+// }
 
 func (envMgr *EnvMgr) storeTrueEqualInEqualMemNoInfer(fact *ast.PureSpecificFactStmt) ast.InferRet {
 	mem := envMgr.CurEnv().EqualMem
