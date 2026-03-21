@@ -1,17 +1,17 @@
 use crate::common::helper::is_number_string_literally_integer_without_dot;
 use crate::common::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN_FOR_FN_WITH_DOM, FN_FOR_FN_WITHOUT_DOM, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ, is_key_symbol_or_keyword
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT, CUP, SET_DIFF, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN_FOR_FN_WITH_PARAMS, FN_FOR_FN_WITHOUT_PARAMS, INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ, is_key_symbol_or_keyword
 };
 use crate::execute::Executor;
 use super::TokenBlock;
 use crate::obj::{
-    Obj, FnObj, FnSetObj, FnSetWithDom, FnSetWithoutDom, Add, Mul, Div, Mod, Sub, Pow, Number, InstStructObj, ListSet, SetBuilder,
+    Obj, FnObj, FnSetObj, FnSetWithParams, FnSetWithoutParams, Add, Mul, Div, Mod, Sub, Pow, Number, InstStructObj, ListSet, SetBuilder,
     NPosObj, NObj, QObj, ZObj, RObj, QPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz,
     ObjAtIndex, Union, Intersect, SetMinus, SetDiff, Cup, Cap, PowerSet, Choose, TupleDimObj,
     Cart, CartDim, Proj, Count, Range, ClosedRange, Val,
 };
 use crate::obj::{Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod};
-use crate::error::{duplicate_name_error_message, ParsingError, StmtError};
+use crate::error::{duplicate_used_name_error_message, ParsingError, StmtError};
 use crate::stmt::parameter_def::ParamDefWithParamSet;
 
 impl<'a> Executor<'a> {
@@ -165,10 +165,10 @@ impl<'a> Executor<'a> {
             self.parse_set_builder_or_set_list(tb)
         } else if tb.current_token_is_equal_to(INST_STRUCT_OBJ_SIGN) {
             self.parse_instantiated_struct_obj(tb)
-        } else if tb.current_token_is_equal_to(FN_FOR_FN_WITH_DOM) | tb.current_token_is_equal_to(FN_FOR_FN_WITHOUT_DOM) {
+        } else if tb.current_token_is_equal_to(FN_FOR_FN_WITH_PARAMS) | tb.current_token_is_equal_to(FN_FOR_FN_WITHOUT_PARAMS) {
             match self.parse_fn_set_obj(tb)? {
-                FnSetObj::FnSetWithDom(fs) => Ok(Obj::FnSetWithDom(fs)),
-                FnSetObj::FnSetWithoutDom(fs) => Ok(Obj::FnSetWithoutDom(fs)),
+                FnSetObj::FnSetWithDom(fs) => Ok(Obj::FnSetWithParams(fs)),
+                FnSetObj::FnSetWithoutDom(fs) => Ok(Obj::FnSetWithoutParams(fs)),
             }
         } else {
             self.parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
@@ -176,25 +176,25 @@ impl<'a> Executor<'a> {
     }
 
     pub fn parse_fn_set_obj(&mut self, tb: &mut TokenBlock) -> Result<FnSetObj, ParsingError> {
-        if tb.current_token_is_equal_to(FN_FOR_FN_WITH_DOM) {
-            tb.skip_token(FN_FOR_FN_WITH_DOM)?;
+        if tb.current_token_is_equal_to(FN_FOR_FN_WITH_PARAMS) {
+            tb.skip_token(FN_FOR_FN_WITH_PARAMS)?;
             Ok(FnSetObj::FnSetWithDom(self.parse_fn_set_with_dom_without_fn_prefix(tb)?))
-        } else if tb.current_token_is_equal_to(FN_FOR_FN_WITHOUT_DOM) {
-            tb.skip_token(FN_FOR_FN_WITHOUT_DOM)?;
+        } else if tb.current_token_is_equal_to(FN_FOR_FN_WITHOUT_PARAMS) {
+            tb.skip_token(FN_FOR_FN_WITHOUT_PARAMS)?;
             Ok(FnSetObj::FnSetWithoutDom(self.parse_fn_set_without_dom_without_fn_prefix(tb)?))
         } else {
             Err(ParsingError::new("Expected fn for fn with dom".to_string(), tb.line_file, None))
         }
     }
 
-    pub fn parse_fn_set_with_dom_without_fn_prefix(&mut self, tb: &mut TokenBlock) -> Result<FnSetWithDom, ParsingError> {
+    pub fn parse_fn_set_with_dom_without_fn_prefix(&mut self, tb: &mut TokenBlock) -> Result<FnSetWithParams, ParsingError> {
         self.new_parsing_names_block();
         let fn_set = self.parse_fn_set_with_dom_without_fn_prefix_body(tb);
         self.delete_parsing_names_block();
         fn_set
     }
 
-    fn parse_fn_set_with_dom_without_fn_prefix_body(&mut self, tb: &mut TokenBlock) -> Result<FnSetWithDom, ParsingError> {
+    fn parse_fn_set_with_dom_without_fn_prefix_body(&mut self, tb: &mut TokenBlock) -> Result<FnSetWithParams, ParsingError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut params_def_with_set: Vec<ParamDefWithParamSet> = vec![];
         loop {
@@ -212,7 +212,6 @@ impl<'a> Executor<'a> {
                 tb.skip_token(COMMA)?;
                 continue;
             } else if tb.current_token_is_equal_to(COLON) {
-                tb.skip_token(COLON)?;
                 break;
             } else if tb.current_token_is_equal_to(RIGHT_BRACE){
                 break;
@@ -236,10 +235,10 @@ impl<'a> Executor<'a> {
 
         tb.skip_token(RIGHT_BRACE)?;
         let ret_set = self.parse_obj(tb)?;
-        Ok(FnSetWithDom::new(params_def_with_set, dom_facts, ret_set))
+        Ok(FnSetWithParams::new(params_def_with_set, dom_facts, ret_set))
     }
 
-    pub fn parse_fn_set_without_dom_without_fn_prefix(&mut self, tb: &mut TokenBlock) -> Result<FnSetWithoutDom, ParsingError> {
+    pub fn parse_fn_set_without_dom_without_fn_prefix(&mut self, tb: &mut TokenBlock) -> Result<FnSetWithoutParams, ParsingError> {
         tb.skip_token(LEFT_BRACE)?;
         let mut param_sets = vec![self.parse_obj(tb)?];
         while tb.current_token_is_equal_to(COMMA) {
@@ -248,7 +247,7 @@ impl<'a> Executor<'a> {
         }
         tb.skip_token(RIGHT_BRACE)?;
         let ret_set = self.parse_obj(tb)?;
-        Ok(FnSetWithoutDom::new(param_sets, ret_set))
+        Ok(FnSetWithoutParams::new(param_sets, ret_set))
     }
 
     pub fn parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
@@ -528,7 +527,7 @@ impl<'a> Executor<'a> {
 
     /// Parse after first identifier: either "S : fact1, fact2" (SetBuilder) or "b c" (ListSet).
     fn parse_set_builder_body(&mut self, tb: &mut TokenBlock, a: Identifier) -> Result<Obj, ParsingError> {
-        self.validate_name_and_put_into_parsing_names_block(&a.name).map_err(|e| ParsingError::new(duplicate_name_error_message(&a.name), tb.line_file, Some(StmtError::ParseBlockError(e))))?;
+        self.validate_name_and_put_into_parsing_names_block(&a.name).map_err(|e| ParsingError::new(duplicate_used_name_error_message(&a.name), tb.line_file, Some(StmtError::ParseBlockError(e))))?;
         
         let second = self.parse_obj(tb)?;
         if tb.current()? == COLON {

@@ -286,8 +286,8 @@ impl<'a> Executor<'a> {
             Obj::Cap(ref a) => Self::match_arg_when_left_is_cap(&a.left, given_arg),
             Obj::ListSet(ref left) => Self::match_arg_when_left_is_list_set(&left.list, given_arg),
             Obj::SetBuilder(_) => Self::match_arg_when_left_is_set_builder(given_arg),
-            Obj::FnSetWithoutDom(ref left) => Self::match_arg_when_left_is_fn_set_without_dom(&left.param_sets, left.ret_set.as_ref(), given_arg),
-            Obj::FnSetWithDom(_) => Self::match_arg_when_left_is_fn_set_with_dom(given_arg),
+            Obj::FnSetWithoutParams(ref left) => Self::match_arg_when_left_is_fn_set_without_dom(&left.param_sets, left.ret_set.as_ref(), given_arg),
+            Obj::FnSetWithParams(_) => Self::match_arg_when_left_is_fn_set_with_dom(given_arg),
             Obj::NPosObj(_) => Self::match_arg_when_left_is_n_pos_obj(given_arg),
             Obj::NObj(_) => Self::match_arg_when_left_is_n_obj(given_arg),
             Obj::QObj(_) => Self::match_arg_when_left_is_q_obj(given_arg),
@@ -567,7 +567,7 @@ impl<'a> Executor<'a> {
 
     fn match_arg_when_left_is_fn_set_without_dom(left_param_sets: &[Box<Obj>], left_ret_set: &Obj, given_arg: &Obj) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::FnSetWithoutDom(ref given) => {
+            Obj::FnSetWithoutParams(ref given) => {
                 let param_maps = Self::match_arg_vec_then_merge(left_param_sets, &given.param_sets)?;
                 let param_map = match param_maps {
                     Some(m) => m,
@@ -587,7 +587,7 @@ impl<'a> Executor<'a> {
 
     fn match_arg_when_left_is_fn_set_with_dom(given_arg: &Obj) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::FnSetWithDom(_) => Self::match_arg_type_not_implemented("FnSetWithDom"),
+            Obj::FnSetWithParams(_) => Self::match_arg_type_not_implemented("FnSetWithDom"),
             _ => Ok(None),
         }
     }
