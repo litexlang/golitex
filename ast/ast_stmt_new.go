@@ -28,9 +28,9 @@ func NewDefPropStmt(defHeader *DefHeader, iffFacts []FactStmt, thenFacts []Spec_
 	return &DefPropStmt{defHeader, iffFacts, thenFacts, line}
 }
 
-func NewImplyStmt(domFacts []Spec_OrFact, thenFacts []Spec_OrFact, line uint) *InferStmt {
-	return &InferStmt{domFacts, thenFacts, line}
-}
+// func NewImplyStmt(domFacts []Spec_OrFact, thenFacts []Spec_OrFact, line uint) *InferStmt {
+// 	return &InferStmt{domFacts, thenFacts, line}
+// }
 
 func NewClaimProveByContradictionStmt(toCheckFact Spec_OrFact, proofs []Stmt, line uint) *ClaimProveByContradictionStmt {
 	return &ClaimProveByContradictionStmt{toCheckFact, proofs, line}
@@ -80,20 +80,20 @@ func NewProveCaseByCaseStmt(caseFacts []SpecificFactStmt, thenFacts []FactStmt, 
 	return &ProveCaseByCaseStmt{caseFacts, thenFacts, proofs, proveOr, line}
 }
 
-func NewKnowPropInferStmt(prop *DefPropStmt, line uint) *KnowPropInferStmt {
-	return &KnowPropInferStmt{prop, line}
-}
+// func NewKnowPropInferStmt(prop *DefPropStmt, line uint) *KnowPropInferStmt {
+// 	return &KnowPropInferStmt{prop, line}
+// }
 
-func NewKnowInferStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts FactStmtSlice, line uint) *KnowInferStmt {
-	return &KnowInferStmt{
-		Params:    params,
-		ParamSets: paramSets,
-		DomFacts:  domFacts,
-		ThenFacts: thenFacts,
-		IfFacts:   ifFacts,
-		Line:      line,
-	}
-}
+// func NewKnowInferStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts FactStmtSlice, line uint) *KnowInferStmt {
+// 	return &KnowInferStmt{
+// 		Params:    params,
+// 		ParamSets: paramSets,
+// 		DomFacts:  domFacts,
+// 		ThenFacts: thenFacts,
+// 		IfFacts:   ifFacts,
+// 		Line:      line,
+// 	}
+// }
 
 // func NewDefExistPropBodyStmt(defHeader *DefHeader, domFacts []FactStmt, iffFacts []FactStmt, thenFacts []FactStmt, line uint) *DefExistPropStmtBody {
 // 	return &DefExistPropStmtBody{defHeader, domFacts, iffFacts, thenFacts, line}
@@ -163,9 +163,9 @@ func NewDoNothingStmt(line uint) *DoNothingStmt {
 	return &DoNothingStmt{line}
 }
 
-func NewInlineFactsStmt(facts []FactStmt, line uint) *InlineFactsStmt {
-	return &InlineFactsStmt{facts, line}
-}
+// func NewInlineFactsStmt(facts []FactStmt, line uint) *InlineFactsStmt {
+// 	return &InlineFactsStmt{facts, line}
+// }
 
 func NewProveByInductionStmt(fact Spec_OrFact, param string, proof StmtSlice, inducFrom Obj, line uint) *ProveByInductionStmt {
 	return &ProveByInductionStmt{fact, param, proof, inducFrom, line}
@@ -307,9 +307,9 @@ func NewProveExistStmt(params []string, paramSets []Obj, equalTos []Obj, fact []
 	return &WitnessStmt{params, paramSets, equalTos, fact, proofs, line}
 }
 
-func NewInferTemplateStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts []FactStmt, proof StmtSlice, line uint) *InferTemplateStmt {
-	return &InferTemplateStmt{Params: params, ParamSets: paramSets, DomFacts: domFacts, ThenFacts: thenFacts, IfFacts: ifFacts, Proof: proof, Line: line}
-}
+// func NewInferTemplateStmt(params []string, paramSets []Obj, domFacts ReversibleFacts, thenFacts ReversibleFacts, ifFacts []FactStmt, proof StmtSlice, line uint) *InferTemplateStmt {
+// 	return &InferTemplateStmt{Params: params, ParamSets: paramSets, DomFacts: domFacts, ThenFacts: thenFacts, IfFacts: ifFacts, Proof: proof, Line: line}
+// }
 
 func NewEqualSetStmt(left Obj, right Obj, proofs StmtSlice, line uint) *EqualSetStmt {
 	return &EqualSetStmt{Left: left, Right: right, Proofs: proofs, Line: line}
