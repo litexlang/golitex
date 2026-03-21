@@ -37,7 +37,7 @@ impl<'a> Executor<'a> {
             AtomicFact::IsSetFact(is_set_fact) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(is_set_fact.to_string(), "Every object is a set.".to_string(), InferResult::new(), is_set_fact.line_file))),
             AtomicFact::RestrictFact(restrict_fact) => self.verify_restrict_fact_with_builtin_rules(restrict_fact, verify_state),
             AtomicFact::IsNonemptySetFact(is_nonempty_set_fact) => self._verify_is_nonempty_set_fact_with_builtin_rules(is_nonempty_set_fact, verify_state),
-            _ => unreachable!(),
+            _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }
 

@@ -83,7 +83,7 @@ impl<'a> Executor<'a> {
 
     fn infer_in_fact(&mut self, in_fact: &InFact) -> Result<InferResult, InferError> {
         match &in_fact.set {
-            Obj::FnSetWithDom(fn_set_with_dom) => {
+            Obj::FnSetWithParams(fn_set_with_dom) => {
                 let is_element_atom = match &in_fact.element {
                     Obj::Identifier(_)
                     | Obj::IdentifierWithMod(_)
@@ -104,7 +104,7 @@ impl<'a> Executor<'a> {
 
                 Ok(InferResult::new())
             }
-            Obj::FnSetWithoutDom(fn_set_without_dom) => {
+            Obj::FnSetWithoutParams(fn_set_without_dom) => {
                 let is_element_atom = match &in_fact.element {
                     Obj::Identifier(_)
                     | Obj::IdentifierWithMod(_)

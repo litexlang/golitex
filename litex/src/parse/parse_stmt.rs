@@ -1,5 +1,5 @@
 use crate::error::ParsingError;
-use crate::common::keywords::{ALGO, CLAIM, CLEAR, DO_NOTHING, EVAL, EXIST, FN_FOR_FN_WITH_DOM, HAVE, IMPORT, KNOW, LET, PROP, PROVE, RUN_FILE, STRUCT, BY_FN_DEF, BY_CART_DEF, WITNESS, BY_CASES, BY_CONTRA, ENUMERATE, BY_INDUC, FOR, BY_EXTENSION};
+use crate::common::keywords::{ALGO, CLAIM, CLEAR, DO_NOTHING, EVAL, EXIST, FN_FOR_FN_WITH_PARAMS, HAVE, IMPORT, KNOW, LET, PROP, PROVE, RUN_FILE, STRUCT, BY_FN_DEF, BY_CART_DEF, WITNESS, BY_CASES, BY_CONTRA, ENUMERATE, BY_INDUC, FOR, BY_EXTENSION};
 use crate::execute::Executor;
 use crate::stmt::Stmt;
 use super::TokenBlock;
@@ -10,7 +10,7 @@ impl<'a> Executor<'a> {
             PROP => self.parse_def_prop_with_meaning_stmt_or_prop_without_meaning(tb),
             LET => self.parse_def_let_stmt(tb),
             HAVE => {
-                if tb.token_at_index(1)? == FN_FOR_FN_WITH_DOM {
+                if tb.token_at_index(1)? == FN_FOR_FN_WITH_PARAMS {
                     self.parse_have_fn_stmt(tb)
                 } else if tb.token_at_index(1)? == EXIST {
                     self.parse_have_exist(tb)

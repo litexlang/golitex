@@ -70,7 +70,7 @@ bline a b, bline a c
 
 1 = 1
 
-prop circle(x, a, b, c point):
+prop circle(x, a, b, c point)：
     $ncoll(a, b, c)
     $cong(x, a, x, b)
     $cong(x, b, x, c)
@@ -79,11 +79,9 @@ let draw_circumcenter_x fn(a, b, c point: $ncoll(a, b, c)) point
 
 know:
     forall a, b, c point:
-        $ncoll(a, b, c)
-        =>:
-            $cong(draw_circumcenter_x(a, b, c), a, draw_circumcenter_x(a, b, c), b)
-            $cong(draw_circumcenter_x(a, b, c), b, draw_circumcenter_x(a, b, c), c)
-            $circle(draw_circumcenter_x(a, b, c), a, b, c)
+        $cong(draw_circumcenter_x(a, b, c), a, draw_circumcenter_x(a, b, c), b)
+        $cong(draw_circumcenter_x(a, b, c), b, draw_circumcenter_x(a, b, c), c)
+        $circle(draw_circumcenter_x(a, b, c), a, b, c)
 
 """
 eq_quadrangle a b c d
@@ -100,10 +98,8 @@ let draw_eq_quadrangle_d fn(a, b, c point: $ncoll(a, b, c)) point
 
 know:
     forall a, b, c point:
-        $ncoll(a, b, c)
-        =>:
-            $cong(draw_eq_quadrangle_d(a, b, c), a, b, c)
-            $eq_quadrangle( a, b, c, draw_eq_quadrangle_d(a, b, c))
+        $cong(draw_eq_quadrangle_d(a, b, c), a, b, c)
+        $eq_quadrangle( a, b, c, draw_eq_quadrangle_d(a, b, c))
 
 """
 eq_trapezoid a b c d

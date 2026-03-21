@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use crate::stmt::parameter_def::ParamDefWithParamSet;
 use crate::fact::OrAndChainAtomicFact;
 use crate::common::keywords::{
-    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, SET_DIFF, DIV, FN_FOR_FN_WITH_DOM, FN_FOR_FN_WITHOUT_DOM, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ
+    ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COUNT, CUP, SET_DIFF, DIV, FN_FOR_FN_WITH_PARAMS, FN_FOR_FN_WITHOUT_PARAMS, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET, LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, SET_MINUS, SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ
 };
 use std::fmt;
 use crate::common::helper::{braced_vec_to_string, curly_braced_vec_to_string, vec_to_string_join_by_comma, brace_vec_colon_vec_to_string};
@@ -30,8 +30,8 @@ pub enum Obj {
     Cap(Cap),
     ListSet(ListSet),
     SetBuilder(SetBuilder),
-    FnSetWithoutDom(FnSetWithoutDom),
-    FnSetWithDom(FnSetWithDom),
+    FnSetWithoutParams(FnSetWithoutParams),
+    FnSetWithParams(FnSetWithParams),
     NPosObj(NPosObj),
     NObj(NObj),
     QObj(QObj),
@@ -68,8 +68,8 @@ pub struct TupleDimObj {
 
 #[derive(Clone)]
 pub enum FnSetObj {
-    FnSetWithoutDom(FnSetWithoutDom),
-    FnSetWithDom(FnSetWithDom),
+    FnSetWithoutDom(FnSetWithoutParams),
+    FnSetWithDom(FnSetWithParams),
 }
 
 #[derive(Clone)]
@@ -232,12 +232,12 @@ pub struct SetBuilder {
 }
 
 #[derive(Clone)]
-pub struct FnSetWithoutDom {
+pub struct FnSetWithoutParams {
     pub param_sets: Vec<Box<Obj>>,
     pub ret_set: Box<Obj>,
 }
 
-impl FnSetWithDom {
+impl FnSetWithParams {
     pub fn params(&self) -> Vec<String> {
         let mut ret = vec![];
         for param_def_with_set in &self.params_def_with_set {
@@ -248,7 +248,7 @@ impl FnSetWithDom {
 }
 
 #[derive(Clone)]
-pub struct FnSetWithDom {
+pub struct FnSetWithParams {
     pub params_def_with_set: Vec<ParamDefWithParamSet>,
     pub dom_facts: Vec<OrAndChainAtomicFact>,
     pub ret_set: Box<Obj>,
@@ -458,18 +458,18 @@ impl SetBuilder {
     }
 }
 
-impl FnSetWithoutDom {
+impl FnSetWithoutParams {
     pub fn new(param_sets: Vec<Obj>, ret_set: Obj) -> Self {
-        FnSetWithoutDom {
+        FnSetWithoutParams {
             param_sets: param_sets.into_iter().map(Box::new).collect(),
             ret_set: Box::new(ret_set),
         }
     }
 }
 
-impl FnSetWithDom {
+impl FnSetWithParams {
     pub fn new(params_and_their_sets: Vec<ParamDefWithParamSet>, dom_facts: Vec<OrAndChainAtomicFact>, ret_set: Obj) -> Self {
-        FnSetWithDom {
+        FnSetWithParams {
             params_def_with_set: params_and_their_sets,
             dom_facts,
             ret_set: Box::new(ret_set),
@@ -706,8 +706,8 @@ impl Obj {
             Obj::Number(x) => write!(f, "{}", x)?,
             Obj::ListSet(x) => write!(f, "{}", x)?,
             Obj::SetBuilder(x) => write!(f, "{}", x)?,
-            Obj::FnSetWithoutDom(x) => write!(f, "{}", x)?,
-            Obj::FnSetWithDom(x) => write!(f, "{}", x)?,
+            Obj::FnSetWithoutParams(x) => write!(f, "{}", x)?,
+            Obj::FnSetWithParams(x) => write!(f, "{}", x)?,
             Obj::NPosObj(x) => write!(f, "{}", x)?,
             Obj::NObj(x) => write!(f, "{}", x)?,
             Obj::QObj(x) => write!(f, "{}", x)?,
@@ -915,18 +915,18 @@ impl fmt::Display for SetBuilder {
     }
 }
 
-impl fmt::Display for FnSetWithoutDom {
+impl fmt::Display for FnSetWithoutParams {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}", FN_FOR_FN_WITHOUT_DOM, braced_vec_to_string(&self.param_sets), self.ret_set)
+        write!(f, "{}{}{}", FN_FOR_FN_WITHOUT_PARAMS, braced_vec_to_string(&self.param_sets), self.ret_set)
     }
 }
 
-impl fmt::Display for FnSetWithDom {
+impl fmt::Display for FnSetWithParams {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{} {} {}",
-            FN_FOR_FN_WITH_DOM,
+            FN_FOR_FN_WITH_PARAMS,
             brace_vec_colon_vec_to_string(&self.params_def_with_set, &self.dom_facts),
             self.ret_set
         )
@@ -1092,8 +1092,8 @@ impl Obj {
             Obj::Cap(inner) => inner.instantiate(param_to_arg_map),
             Obj::ListSet(inner) => inner.instantiate(param_to_arg_map),
             Obj::SetBuilder(inner) => inner.instantiate(param_to_arg_map),
-            Obj::FnSetWithoutDom(inner) => inner.instantiate(param_to_arg_map),
-            Obj::FnSetWithDom(inner) => inner.instantiate(param_to_arg_map),
+            Obj::FnSetWithoutParams(inner) => inner.instantiate(param_to_arg_map),
+            Obj::FnSetWithParams(inner) => inner.instantiate(param_to_arg_map),
             Obj::NPosObj(inner) => inner.instantiate(param_to_arg_map),
             Obj::NObj(inner) => inner.instantiate(param_to_arg_map),
             Obj::QObj(inner) => inner.instantiate(param_to_arg_map),

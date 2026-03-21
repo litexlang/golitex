@@ -27,7 +27,7 @@ func (ver *Verifier) verChainFactStmt(stmt *ast.ChainPureFact, state *VerState) 
 	for i := 0; i < len(stmt.Objs)-1; i++ {
 		curFact := ast.NewPureSpecificFactStmt(true, stmt.PropNames[i], []ast.Obj{stmt.Objs[i], stmt.Objs[i+1]}, glob.BuiltinLine0)
 		verRet := ver.VerFactStmt(curFact, state)
-		if verRet.IsErr() || verRet.IsTrue() {
+		if verRet.IsErr() {
 			return verRet
 		}
 		if verRet.IsUnknown() {

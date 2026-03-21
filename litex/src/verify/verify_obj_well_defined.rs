@@ -1,6 +1,6 @@
 use crate::obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FieldAccess, FieldAccessWithMod,
-    FnObj, FnSetWithDom, FnSetWithoutDom, Identifier, IdentifierWithMod, InstStructObj, ListSet, Mod,
+    FnObj, FnSetWithParams, FnSetWithoutParams, Identifier, IdentifierWithMod, InstStructObj, ListSet, Mod,
     Mul, Number, Obj, ObjAtIndex, PowerSet, Pow, Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, TupleDimObj, Union, Val, ZObj, NPosObj,
     Intersect, FnSetObj,
 };
@@ -28,7 +28,7 @@ impl<'a> Executor<'a> {
             return Ok(());
         }
 
-        let use_cache = !matches!(obj, Obj::FnSetWithDom(_) | Obj::SetBuilder(_));
+        let use_cache = !matches!(obj, Obj::FnSetWithParams(_) | Obj::SetBuilder(_));
 
         match obj {
             Obj::Identifier(identifier) => self.verify_identifier_well_defined(identifier),
@@ -51,8 +51,8 @@ impl<'a> Executor<'a> {
             Obj::Cap(x) => self.verify_cap_well_defined(x, verify_state),
             Obj::ListSet(x) => self.verify_list_set_well_defined(x, verify_state),
             Obj::SetBuilder(x) => self.verify_set_builder_well_defined(x, verify_state),
-            Obj::FnSetWithoutDom(x) => self.verify_fn_set_without_dom_well_defined(x, verify_state),
-            Obj::FnSetWithDom(x) => self.verify_fn_set_with_dom_well_defined(x, verify_state),
+            Obj::FnSetWithoutParams(x) => self.verify_fn_set_without_dom_well_defined(x, verify_state),
+            Obj::FnSetWithParams(x) => self.verify_fn_set_with_dom_well_defined(x, verify_state),
             Obj::NPosObj(_) => self.verify_n_pos_obj_well_defined(),
             Obj::NObj(_) => self.verify_n_obj_well_defined(),
             Obj::QObj(_) => self.verify_q_obj_well_defined(),
@@ -167,8 +167,8 @@ impl<'a> Executor<'a> {
             }
 
             the_set_where_current_fn_obj_is_in = match *set_where_the_next_fn_obj_is_in {
-                Obj::FnSetWithDom(e) => FnSetObj::FnSetWithDom(e),
-                Obj::FnSetWithoutDom(e) => FnSetObj::FnSetWithoutDom(e),
+                Obj::FnSetWithParams(e) => FnSetObj::FnSetWithDom(e),
+                Obj::FnSetWithoutParams(e) => FnSetObj::FnSetWithoutDom(e),
                 _ => {
                     return Err(WellDefinedError::new(
                         format!("expect return set of {} to be a fn_set object.", the_set_where_current_fn_obj_is_in.to_string()),None,
@@ -185,7 +185,7 @@ impl<'a> Executor<'a> {
     fn verify_fn_obj_well_defined_against_fn_set_with_dom(
         &mut self,
         args: &Vec<Box<Obj>>,
-        fn_set_with_dom: &FnSetWithDom,
+        fn_set_with_dom: &FnSetWithParams,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
         let param_count = ParamDefWithParamSet::number_of_params(&fn_set_with_dom.params_def_with_set);
@@ -259,7 +259,7 @@ impl<'a> Executor<'a> {
     fn verify_fn_obj_args_well_defined_against_fn_set_without_dom(
         &mut self,
         args: &Vec<Box<Obj>>,
-        fn_set_without_dom: &FnSetWithoutDom,
+        fn_set_without_dom: &FnSetWithoutParams,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
         let param_count = fn_set_without_dom.param_sets.len();
@@ -502,7 +502,7 @@ impl<'a> Executor<'a> {
     }
 
 
-    fn verify_fn_set_without_dom_well_defined(&mut self, x: &FnSetWithoutDom, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_fn_set_without_dom_well_defined(&mut self, x: &FnSetWithoutParams, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         for obj in &x.param_sets {
             self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
         }
@@ -510,14 +510,14 @@ impl<'a> Executor<'a> {
         Ok(())
     }
 
-    fn verify_fn_set_with_dom_well_defined(&mut self, x: &FnSetWithDom, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_fn_set_with_dom_well_defined(&mut self, x: &FnSetWithParams, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         self.runtime_context.new_env();
         let result = self.verify_fn_set_with_dom_well_defined_body(x, verify_state);
         self.runtime_context.delete_env();
         result
     }
 
-    fn verify_fn_set_with_dom_well_defined_body(&mut self, x: &FnSetWithDom, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
+    fn verify_fn_set_with_dom_well_defined_body(&mut self, x: &FnSetWithParams, verify_state: &VerifyState) -> Result<(), WellDefinedError> {
         if let Err(e) = self.verify_obj_well_defined_and_store_cache(&x.ret_set, verify_state) {
             return Err(WellDefinedError::new(format!("failed to verify well-defined of fn set with dom {}", x.to_string()), Some(StmtError::WellDefinedError(e)), DEFAULT_LINE_FILE.clone()));
         }
