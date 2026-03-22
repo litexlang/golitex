@@ -290,7 +290,6 @@ impl<'a> Runtime<'a> {
                 ParsingError::new("Expected body".to_string(), tb.line_file, None)
             })?;
             let then_fact_count_upper_bound = then_block.body.len();
-            then_block.parse_index = 0;
             then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
             let mut then_facts: Vec<ExistOrAndChainAtomicFact> =
                 Vec::with_capacity(then_fact_count_upper_bound);
@@ -325,7 +324,6 @@ impl<'a> Runtime<'a> {
                 ParsingError::new("Expected body".to_string(), tb.line_file, None)
             })?;
             let then_fact_count_upper_bound = then_block.body.len();
-            then_block.parse_index = 0;
             then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
             let mut then_facts: Vec<ExistOrAndChainAtomicFact> =
                 Vec::with_capacity(then_fact_count_upper_bound);
