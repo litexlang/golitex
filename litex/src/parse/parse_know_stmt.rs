@@ -1,10 +1,10 @@
+use super::TokenBlock;
+use crate::common::keywords::{COLON, COMMA, FORALL, KNOW};
 use crate::error::ParsingError;
+use crate::execute::Executor;
 use crate::fact::Fact;
 use crate::stmt::know_stmt::KnowStmt;
-use crate::common::keywords::{COLON, COMMA, FORALL, KNOW};
-use crate::execute::Executor;
 use crate::stmt::Stmt;
-use super::TokenBlock;
 
 impl<'a> Executor<'a> {
     pub fn know_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -21,7 +21,7 @@ impl<'a> Executor<'a> {
             loop {
                 let o = self.parse_exist_or_and_chain_atomic_fact(tb)?;
                 facts.push(o.to_fact());
-                
+
                 if tb.exceed_end_of_head() {
                     break;
                 }

@@ -8,7 +8,11 @@ use std::result::Result;
 
 impl<'a> Executor<'a> {
     /// Declare params, assume dom facts hold, then verify each then_fact.
-    pub fn verify_forall_fact(&mut self, forall_fact: &ForallFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
+    pub fn verify_forall_fact(
+        &mut self,
+        forall_fact: &ForallFact,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
         self.runtime_context.new_env();
 
         let result = self.verify_forall_fact_body(forall_fact, verify_state);
@@ -17,26 +21,36 @@ impl<'a> Executor<'a> {
         result
     }
 
-    fn verify_forall_fact_body(&mut self, forall_fact: &ForallFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
+    fn verify_forall_fact_body(
+        &mut self,
+        forall_fact: &ForallFact,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
         let mut infer_result = InferResult::new();
         for param_def in forall_fact.params_def_with_type.iter() {
-            let param_infer_result = self.define_params_with_type(std::slice::from_ref(param_def),false).map_err(|e| {
-                VerifyError::new(
-                    format!("failed to define params in forall: {}", e.body_string()),Some(StmtError::ExecError(e)),
-                    forall_fact.line_file,
-                )
-            })?;
+            let param_infer_result = self
+                .define_params_with_type(std::slice::from_ref(param_def), false)
+                .map_err(|e| {
+                    VerifyError::new(
+                        format!("failed to define params in forall: {}", e.body_string()),
+                        Some(StmtError::ExecError(e)),
+                        forall_fact.line_file,
+                    )
+                })?;
             infer_result.append(param_infer_result);
         }
 
         for dom_fact in forall_fact.dom_facts.iter() {
             let fact = dom_fact.clone().to_fact();
-            let dom_infer_result = self.store_fact_without_well_defined_verified_and_infer(&fact).map_err(|e| {
-                VerifyError::new(
-                    format!("failed to assume dom fact in forall: {}", e.body_string()),Some(StmtError::StoreFactError(e)),
-                    forall_fact.line_file,
-                )
-            })?;
+            let dom_infer_result = self
+                .store_fact_without_well_defined_verified_and_infer(&fact)
+                .map_err(|e| {
+                    VerifyError::new(
+                        format!("failed to assume dom fact in forall: {}", e.body_string()),
+                        Some(StmtError::StoreFactError(e)),
+                        forall_fact.line_file,
+                    )
+                })?;
             infer_result.append(dom_infer_result);
         }
 
@@ -48,13 +62,15 @@ impl<'a> Executor<'a> {
             }
         }
 
-        Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
-            forall_fact.to_string(),
-            "forall: each then_fact verified under dom".to_string(),
-            infer_result,
-            forall_fact.line_file,
-            crate::common::defaults::DEFAULT_LINE_FILE.clone(),
-        )))
+        Ok(NonErrStmtExecResult::FactVerifiedByFact(
+            FactVerifiedByFact::new(
+                forall_fact.to_string(),
+                "forall: each then_fact verified under dom".to_string(),
+                infer_result,
+                forall_fact.line_file,
+                crate::common::defaults::DEFAULT_LINE_FILE.clone(),
+            ),
+        ))
     }
 
     /// Forall iff: two steps. Step 1: take then as part of dom, verify iff. Step 2: take iff as part of dom, verify then.
@@ -92,12 +108,14 @@ impl<'a> Executor<'a> {
             return Ok(result2);
         }
 
-        Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
-            forall_iff.to_string(),
-            "forall iff: then=>iff and iff=>then verified".to_string(),
-            InferResult::new(),
-            line_file,
-            crate::common::defaults::DEFAULT_LINE_FILE.clone(),
-        )))
+        Ok(NonErrStmtExecResult::FactVerifiedByFact(
+            FactVerifiedByFact::new(
+                forall_iff.to_string(),
+                "forall iff: then=>iff and iff=>then verified".to_string(),
+                InferResult::new(),
+                line_file,
+                crate::common::defaults::DEFAULT_LINE_FILE.clone(),
+            ),
+        ))
     }
 }

@@ -1,5 +1,5 @@
-use crate::result::NonErrStmtExecResult;
 use crate::infer::InferResult;
+use crate::result::NonErrStmtExecResult;
 
 #[derive(Debug)]
 pub struct NonFactualStmtSuccess {
@@ -27,7 +27,12 @@ pub struct FactVerifiedByBuiltinRules {
 }
 
 impl NonFactualStmtSuccess {
-    pub fn new(stmt: String, infers: InferResult, inside_results: Vec<NonErrStmtExecResult>, line_file: (usize, usize)) -> Self {
+    pub fn new(
+        stmt: String,
+        infers: InferResult,
+        inside_results: Vec<NonErrStmtExecResult>,
+        line_file: (usize, usize),
+    ) -> Self {
         NonFactualStmtSuccess {
             stmt,
             infers,
@@ -38,13 +43,35 @@ impl NonFactualStmtSuccess {
 }
 
 impl FactVerifiedByFact {
-    pub fn new(fact: String, verified_by: String, infers: InferResult, line_file: (usize, usize), verified_by_line_file: (usize, usize)) -> Self {
-        FactVerifiedByFact { fact, verified_by, infers, line_file, verified_by_line_file }
+    pub fn new(
+        fact: String,
+        verified_by: String,
+        infers: InferResult,
+        line_file: (usize, usize),
+        verified_by_line_file: (usize, usize),
+    ) -> Self {
+        FactVerifiedByFact {
+            fact,
+            verified_by,
+            infers,
+            line_file,
+            verified_by_line_file,
+        }
     }
 }
 
 impl FactVerifiedByBuiltinRules {
-    pub fn new(fact: String, verified_by: String, infers: InferResult, line_file: (usize, usize)) -> Self {
-        FactVerifiedByBuiltinRules { fact, verified_by, infers, line_file }
+    pub fn new(
+        fact: String,
+        verified_by: String,
+        infers: InferResult,
+        line_file: (usize, usize),
+    ) -> Self {
+        FactVerifiedByBuiltinRules {
+            fact,
+            verified_by,
+            infers,
+            line_file,
+        }
     }
 }

@@ -1,9 +1,12 @@
-use crate::error::ParsingError;
-use crate::common::keywords::{COLON, EXIST, FACT_PREFIX, FROM, IN, IS_NONEMPTY_SET, LEFT_BRACE, NONEMPTY_SET, RIGHT_BRACE, WITNESS};
-use crate::execute::Executor;
-use crate::stmt::Stmt;
 use super::TokenBlock;
+use crate::common::keywords::{
+    COLON, EXIST, FACT_PREFIX, FROM, IN, IS_NONEMPTY_SET, LEFT_BRACE, NONEMPTY_SET, RIGHT_BRACE,
+    WITNESS,
+};
+use crate::error::ParsingError;
+use crate::execute::Executor;
 use crate::stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
+use crate::stmt::Stmt;
 
 impl<'a> Executor<'a> {
     pub fn witness_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -11,9 +14,13 @@ impl<'a> Executor<'a> {
         if tb.current_token_is_equal_to(EXIST) {
             self.witness_exist_fact(tb)
         } else if tb.current_token_is_equal_to(NONEMPTY_SET) {
-            self.witness_nonempty_set(tb) 
+            self.witness_nonempty_set(tb)
         } else {
-            return Err(ParsingError::new("witness expects a exist or nonempty set".to_string(), tb.line_file, None));
+            return Err(ParsingError::new(
+                "witness expects a exist or nonempty set".to_string(),
+                tb.line_file,
+                None,
+            ));
         }
     }
 
@@ -49,9 +56,14 @@ impl<'a> Executor<'a> {
         let set2 = self.parse_obj(tb)?;
 
         if set2.to_string() != set.to_string() {
-            return Err(ParsingError::new("the set in witness nonempty set is not the same as the set in the witness".to_string(), tb.line_file, None));
+            return Err(ParsingError::new(
+                "the set in witness nonempty set is not the same as the set in the witness"
+                    .to_string(),
+                tb.line_file,
+                None,
+            ));
         }
-        
+
         let mut proof = vec![];
         for block in tb.body.iter_mut() {
             proof.push(self.parse_stmt(block)?);

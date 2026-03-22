@@ -7,7 +7,10 @@ pub struct MonomialWithNonZeroScalarAndOrderedOperands {
 }
 
 impl MonomialWithNonZeroScalarAndOrderedOperands {
-    pub fn new_and_check_scalar_is_not_zero(scalar: String, ordered_operands: Option<Vec<(Obj, String)>>) -> Option<Self> {
+    pub fn new_and_check_scalar_is_not_zero(
+        scalar: String,
+        ordered_operands: Option<Vec<(Obj, String)>>,
+    ) -> Option<Self> {
         if scalar == "0" {
             return None;
         }
@@ -23,7 +26,8 @@ impl MonomialWithNonZeroScalarAndOrderedOperands {
                 if self_operands.len() != other_operands.len() {
                     return false;
                 }
-                for (self_operand, other_operand) in self_operands.iter().zip(other_operands.iter()) {
+                for (self_operand, other_operand) in self_operands.iter().zip(other_operands.iter())
+                {
                     if self_operand.1 != other_operand.1 {
                         return false;
                     }
@@ -46,7 +50,11 @@ impl MonomialWithNonZeroScalarAndOrderedOperands {
     pub fn key(&self) -> String {
         match &self.ordered_operands {
             Some(ordered_operands) => {
-                return ordered_operands.iter().map(|(obj, _)| obj.to_string()).collect::<Vec<String>>().join("\n");
+                return ordered_operands
+                    .iter()
+                    .map(|(obj, _)| obj.to_string())
+                    .collect::<Vec<String>>()
+                    .join("\n");
             }
             None => {
                 return "".to_string();

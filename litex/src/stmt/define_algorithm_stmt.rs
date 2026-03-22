@@ -1,7 +1,10 @@
+use crate::common::helper::{
+    add_four_spaces_at_beginning, braced_vec_to_string,
+    to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_with_sep,
+};
+use crate::common::keywords::{ALGO, CASE, COLON};
 use crate::fact::AndChainAtomicFact;
 use crate::obj::Obj;
-use crate::common::helper::{add_four_spaces_at_beginning, vec_to_string_with_sep, to_string_and_add_four_spaces_at_beginning_of_each_line, braced_vec_to_string};
-use crate::common::keywords::{CASE, COLON, ALGO};
 use std::fmt;
 
 // algo f(a, b):
@@ -35,8 +38,18 @@ pub enum AlgoReturnOrAlgoCase {
 }
 
 impl DefAlgoStmt {
-    pub fn new(name: String, params: Vec<String>, return_or_algo_case: Vec<AlgoReturnOrAlgoCase>, line_file: (usize, usize)) -> Self {
-        DefAlgoStmt { name, params, return_or_algo_case, line_file }
+    pub fn new(
+        name: String,
+        params: Vec<String>,
+        return_or_algo_case: Vec<AlgoReturnOrAlgoCase>,
+        line_file: (usize, usize),
+    ) -> Self {
+        DefAlgoStmt {
+            name,
+            params,
+            return_or_algo_case,
+            line_file,
+        }
     }
 
     pub fn stmt_type_name(&self) -> String {
@@ -61,7 +74,14 @@ impl fmt::Display for AlgoReturn {
 
 impl fmt::Display for AlgoCase {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}{} {}", CASE, self.condition, COLON, add_four_spaces_at_beginning(self.return_stmt.to_string(), 1))
+        write!(
+            f,
+            "{} {}{} {}",
+            CASE,
+            self.condition,
+            COLON,
+            add_four_spaces_at_beginning(self.return_stmt.to_string(), 1)
+        )
     }
 }
 
@@ -74,7 +94,10 @@ impl fmt::Display for DefAlgoStmt {
             self.name,
             braced_vec_to_string(&self.params),
             COLON,
-            to_string_and_add_four_spaces_at_beginning_of_each_line(&vec_to_string_with_sep(&self.return_or_algo_case, "\n".to_string()), 1)
+            to_string_and_add_four_spaces_at_beginning_of_each_line(
+                &vec_to_string_with_sep(&self.return_or_algo_case, "\n".to_string()),
+                1
+            )
         )
     }
 }
@@ -86,8 +109,16 @@ impl AlgoReturn {
 }
 
 impl AlgoCase {
-    pub fn new(condition: AndChainAtomicFact, return_stmt: AlgoReturn, line_file: (usize, usize)) -> Self {
-        AlgoCase { condition, return_stmt, line_file }
+    pub fn new(
+        condition: AndChainAtomicFact,
+        return_stmt: AlgoReturn,
+        line_file: (usize, usize),
+    ) -> Self {
+        AlgoCase {
+            condition,
+            return_stmt,
+            line_file,
+        }
     }
 }
 

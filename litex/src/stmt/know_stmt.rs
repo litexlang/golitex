@@ -1,5 +1,5 @@
-use std::fmt;
 use crate::fact::Fact;
+use std::fmt;
 
 pub struct KnowStmt {
     pub facts: Vec<Fact>,
@@ -18,6 +18,14 @@ impl KnowStmt {
 
 impl fmt::Display for KnowStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "know {}", self.facts.iter().map(|fact| fact.to_string()).collect::<Vec<String>>().join(", "))
+        write!(
+            f,
+            "know {}",
+            self.facts
+                .iter()
+                .map(|fact| fact.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )
     }
 }

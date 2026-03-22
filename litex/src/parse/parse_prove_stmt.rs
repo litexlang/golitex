@@ -1,9 +1,9 @@
-use crate::execute::Executor;
 use super::TokenBlock;
+use crate::common::keywords::{COLON, PROVE};
 use crate::error::ParsingError;
-use crate::stmt::Stmt;
+use crate::execute::Executor;
 use crate::stmt::prove_stmt::ProveStmt;
-use crate::common::keywords::{PROVE, COLON};
+use crate::stmt::Stmt;
 
 impl<'a> Executor<'a> {
     pub fn prove_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {

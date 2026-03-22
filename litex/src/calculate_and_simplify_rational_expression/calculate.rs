@@ -4,21 +4,19 @@ impl Obj {
     pub fn can_be_calculated(&self) -> bool {
         match self {
             Obj::Number(_) => true,
-            Obj::Add(add) => {
-                return add.can_be_calculated
-            },
+            Obj::Add(add) => return add.can_be_calculated,
             Obj::Sub(sub) => {
                 return sub.can_be_calculated;
-            },
+            }
             Obj::Mul(mul) => {
                 return mul.can_be_calculated;
-            },
+            }
             Obj::Mod(mod_obj) => {
                 return mod_obj.can_be_calculated;
-            },
+            }
             Obj::Pow(pow_obj) => {
                 return pow_obj.can_be_calculated;
-            },
+            }
             _ => false,
         }
     }
@@ -39,7 +37,7 @@ impl Obj {
         if !self.can_be_calculated() {
             panic!("kernel bug: 计算不该计算的东西了")
         }
-        
+
         match self {
             Obj::Number(n) => normalize_decimal_result(&n.value.clone()),
             Obj::Add(add) => {
@@ -160,7 +158,10 @@ pub fn sub_decimal_str(a: &str, b: &str) -> String {
         out_int.push(d as u8);
     }
     out_int.reverse();
-    let start = out_int.iter().position(|&d| d != 0).unwrap_or(out_int.len().saturating_sub(1));
+    let start = out_int
+        .iter()
+        .position(|&d| d != 0)
+        .unwrap_or(out_int.len().saturating_sub(1));
     let out_int = out_int[start..].to_vec();
 
     let int_str: String = if out_int.is_empty() {
@@ -178,12 +179,7 @@ pub fn sub_decimal_str(a: &str, b: &str) -> String {
     normalize_decimal_result(&result)
 }
 
-fn compare_decimal_parts(
-    int_a: &[u8],
-    frac_a: &[u8],
-    int_b: &[u8],
-    frac_b: &[u8],
-) -> i32 {
+fn compare_decimal_parts(int_a: &[u8], frac_a: &[u8], int_b: &[u8], frac_b: &[u8]) -> i32 {
     let len_a = int_a.len();
     let len_b = int_b.len();
     if len_a != len_b {
@@ -337,7 +333,6 @@ pub fn pow_decimal_str(base: &str, exp: &str) -> String {
     acc
 }
 
-
 fn trim_leading_zeros(d: &[u8]) -> Vec<u8> {
     let start = d.iter().position(|&x| x != 0).unwrap_or(d.len());
     d[start..].to_vec()
@@ -473,6 +468,10 @@ fn parse_decimal_parts(s: &str) -> (Vec<u8>, Vec<u8>) {
         .filter(|c| c.is_ascii_digit())
         .map(|c| c as u8 - b'0')
         .collect();
-    let int_digits = if int_digits.is_empty() { vec![0] } else { int_digits };
+    let int_digits = if int_digits.is_empty() {
+        vec![0]
+    } else {
+        int_digits
+    };
     (int_digits, frac_digits)
 }

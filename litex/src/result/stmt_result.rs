@@ -1,8 +1,8 @@
-use crate::common::keywords::SUCCESS_COLON;
-use crate::common::defaults::DEFAULT_LINE_FILE;
-use crate::infer::InferResult;
 use super::stmt_success::{FactVerifiedByBuiltinRules, FactVerifiedByFact, NonFactualStmtSuccess};
 use super::stmt_unknown::StmtUnknown;
+use crate::common::defaults::DEFAULT_LINE_FILE;
+use crate::common::keywords::SUCCESS_COLON;
+use crate::infer::InferResult;
 
 #[derive(Debug)]
 pub enum NonErrStmtExecResult {
@@ -32,25 +32,47 @@ impl NonErrStmtExecResult {
         if infer_result.infer_facts.is_empty() {
             return String::new();
         }
-        format!("\n\n{}\n{}", INFER_COLON, infer_result.infer_facts.join("\n"))
+        format!(
+            "\n\n{}\n{}",
+            INFER_COLON,
+            infer_result.infer_facts.join("\n")
+        )
     }
 
     /// Returns the result body string without any line/file prefix (for tests or when location is not needed).
     pub fn body_string(&self) -> String {
         match self {
             NonErrStmtExecResult::NonFactualStmtSuccess(x) => {
-                format!("{}\n{}{}", SUCCESS_COLON, x.stmt, Self::infer_block(&x.infers))
+                format!(
+                    "{}\n{}{}",
+                    SUCCESS_COLON,
+                    x.stmt,
+                    Self::infer_block(&x.infers)
+                )
             }
             NonErrStmtExecResult::FactVerifiedByFact(x) => {
-                format!("{}\n{}\n{}\n{}{}", SUCCESS_COLON, x.fact, VERIFIED_BY, x.verified_by, Self::infer_block(&x.infers))
+                format!(
+                    "{}\n{}\n{}\n{}{}",
+                    SUCCESS_COLON,
+                    x.fact,
+                    VERIFIED_BY,
+                    x.verified_by,
+                    Self::infer_block(&x.infers)
+                )
             }
             NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => {
-                format!("{}\n{}\n{}\n{}{}", SUCCESS_COLON, x.fact, VERIFIED_BY, x.verified_by, Self::infer_block(&x.infers))
+                format!(
+                    "{}\n{}\n{}\n{}{}",
+                    SUCCESS_COLON,
+                    x.fact,
+                    VERIFIED_BY,
+                    x.verified_by,
+                    Self::infer_block(&x.infers)
+                )
             }
             NonErrStmtExecResult::StmtUnknown(x) => x.to_string(),
         }
     }
-
 }
 
 impl NonErrStmtExecResult {
@@ -75,4 +97,3 @@ impl NonErrStmtExecResult {
         }
     }
 }
-

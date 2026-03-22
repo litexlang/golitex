@@ -1,6 +1,6 @@
+use crate::runtime_context::RuntimeContext;
 use std::collections::HashMap;
 use std::fmt;
-use crate::runtime_context::RuntimeContext;
 
 pub struct ModuleManager<'a> {
     pub run_file_paths: Vec<String>,
@@ -28,16 +28,30 @@ impl<'a> ModuleManager<'a> {
     }
 }
 
-impl<'a>  fmt::Display for ModuleManager<'a> {
+impl<'a> fmt::Display for ModuleManager<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "ModuleManager {{")?;
         write!(f, "run_file_paths: {:?}", self.run_file_paths)?;
-        write!(f, "module_name_and_path_map: {:?}", self.module_name_and_path_map)?;
-        write!(f, "module_path_and_names_map: {:?}", self.module_path_and_names_map)?;
+        write!(
+            f,
+            "module_name_and_path_map: {:?}",
+            self.module_name_and_path_map
+        )?;
+        write!(
+            f,
+            "module_path_and_names_map: {:?}",
+            self.module_path_and_names_map
+        )?;
         write!(f, "current_module_path: {}", self.current_module_path)?;
         write!(f, "current_module_name: {}", self.current_module_name)?;
         write!(f, "entrance_path: {}", self.entrance_path)?;
-        write!(f, "imported_module_environments: {:?}", self.imported_module_environments.keys().collect::<Vec<&String>>())?;
+        write!(
+            f,
+            "imported_module_environments: {:?}",
+            self.imported_module_environments
+                .keys()
+                .collect::<Vec<&String>>()
+        )?;
         write!(f, "current_file_index: {}", self.current_file_index)?;
         write!(f, "}}")
     }

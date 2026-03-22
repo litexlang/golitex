@@ -1,9 +1,12 @@
-use std::fmt;
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::result::NonErrStmtExecResult;
+use std::fmt;
 
 pub fn duplicate_used_name_error_message(name: &str) -> String {
-    format!("name `{}` is already used, cannot be used again for other definitions", name)
+    format!(
+        "name `{}` is already used, cannot be used again for other definitions",
+        name
+    )
 }
 
 fn body_with_previous(message: &str, previous_error: &Option<Box<StmtError>>) -> String {
@@ -30,7 +33,6 @@ pub enum StmtError {
     VerifyError(VerifyError),
     InferError(InferError),
 }
-
 
 impl std::error::Error for StmtError {}
 
@@ -89,7 +91,9 @@ fn parse_block_error_message(e: &ParseBlockError) -> String {
         ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
         ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
         ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
-        ParseBlockError::NameAlreadyUsed(name) => format!("{}", duplicate_used_name_error_message(name)),
+        ParseBlockError::NameAlreadyUsed(name) => {
+            format!("{}", duplicate_used_name_error_message(name))
+        }
         ParseBlockError::InvalidName(msg) => msg.clone(),
     }
 }
@@ -101,17 +105,18 @@ impl fmt::Display for StmtError {
     }
 }
 
-
 #[derive(Debug)]
-pub struct ArithmeticError{
+pub struct ArithmeticError {
     pub msg: String,
     pub previous_error: Option<Box<StmtError>>,
 }
 
-
 impl ArithmeticError {
     pub fn new(msg: String, previous_error: Option<StmtError>) -> Self {
-        ArithmeticError { msg, previous_error: boxed_previous_error(previous_error) }
+        ArithmeticError {
+            msg,
+            previous_error: boxed_previous_error(previous_error),
+        }
     }
 
     pub fn body_string(&self) -> String {
@@ -147,7 +152,10 @@ impl fmt::Display for NewAtomicFactError {
 
 impl NewAtomicFactError {
     pub fn new(msg: String, previous_error: Option<StmtError>) -> Self {
-        NewAtomicFactError { msg, previous_error: boxed_previous_error(previous_error) }
+        NewAtomicFactError {
+            msg,
+            previous_error: boxed_previous_error(previous_error),
+        }
     }
 
     pub fn body_string(&self) -> String {
@@ -212,7 +220,12 @@ impl From<StoreFactError> for StmtError {
 impl From<StoreFactError> for ExecStmtError {
     fn from(e: StoreFactError) -> Self {
         let body = e.body_string();
-        ExecStmtError::new("".to_string(), body, Some(e.into()), DEFAULT_LINE_FILE.clone())
+        ExecStmtError::new(
+            "".to_string(),
+            body,
+            Some(e.into()),
+            DEFAULT_LINE_FILE.clone(),
+        )
     }
 }
 
@@ -246,7 +259,6 @@ impl ParseBlockError {
         }
     }
 }
-
 
 impl From<ParseBlockError> for StmtError {
     fn from(e: ParseBlockError) -> Self {
@@ -289,7 +301,6 @@ impl From<ParsingError> for StmtError {
     }
 }
 
-
 #[derive(Debug)]
 pub struct ExecStmtError {
     pub stmt_type_name: String,
@@ -308,7 +319,12 @@ impl fmt::Display for ExecStmtError {
 }
 
 impl ExecStmtError {
-    pub fn new(stmt_type_name: String, msg: String, previous_error: Option<StmtError>, line_file: (usize, usize)) -> Self {
+    pub fn new(
+        stmt_type_name: String,
+        msg: String,
+        previous_error: Option<StmtError>,
+        line_file: (usize, usize),
+    ) -> Self {
         Self::new_with_inside_results(stmt_type_name, msg, previous_error, vec![], line_file)
     }
 
@@ -497,7 +513,6 @@ impl From<UnknownError> for StmtError {
     }
 }
 
-
 #[derive(Debug)]
 pub struct InferError {
     pub msg: String,
@@ -536,6 +551,11 @@ impl From<InferError> for StmtError {
 impl From<InferError> for ExecStmtError {
     fn from(e: InferError) -> Self {
         let msg = e.body_string();
-        ExecStmtError::new("".to_string(), msg, Some(e.into()), DEFAULT_LINE_FILE.clone())
+        ExecStmtError::new(
+            "".to_string(),
+            msg,
+            Some(e.into()),
+            DEFAULT_LINE_FILE.clone(),
+        )
     }
 }
