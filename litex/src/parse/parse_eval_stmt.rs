@@ -1,9 +1,9 @@
-use crate::common::keywords::EVAL;
-use crate::execute::Executor;
 use super::TokenBlock;
+use crate::common::keywords::EVAL;
 use crate::error::ParsingError;
-use crate::stmt::Stmt;
+use crate::execute::Executor;
 use crate::stmt::eval_stmt::EvalStmt;
+use crate::stmt::Stmt;
 
 impl<'a> Executor<'a> {
     pub fn eval_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {

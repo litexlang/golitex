@@ -1,8 +1,12 @@
+use super::TokenBlock;
+use crate::common::keywords::{
+    ALGO, BY_CART_DEF, BY_CASES, BY_CONTRA, BY_EXTENSION, BY_FN_DEF, BY_INDUC, CLAIM, CLEAR,
+    DO_NOTHING, ENUMERATE, EVAL, EXIST, FN_FOR_FN_WITH_PARAMS, FOR, HAVE, IMPORT, KNOW, LET, PROP,
+    PROVE, RUN_FILE, STRUCT, WITNESS,
+};
 use crate::error::ParsingError;
-use crate::common::keywords::{ALGO, CLAIM, CLEAR, DO_NOTHING, EVAL, EXIST, FN_FOR_FN_WITH_PARAMS, HAVE, IMPORT, KNOW, LET, PROP, PROVE, RUN_FILE, STRUCT, BY_FN_DEF, BY_CART_DEF, WITNESS, BY_CASES, BY_CONTRA, ENUMERATE, BY_INDUC, FOR, BY_EXTENSION};
 use crate::execute::Executor;
 use crate::stmt::Stmt;
-use super::TokenBlock;
 
 impl<'a> Executor<'a> {
     pub fn parse_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
@@ -17,7 +21,7 @@ impl<'a> Executor<'a> {
                 } else {
                     self.parse_have_obj_stmt(tb)
                 }
-            },
+            }
             KNOW => self.know_stmt(tb),
             CLAIM => self.parse_claim_stmt(tb),
             PROVE => self.prove_stmt(tb),

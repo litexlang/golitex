@@ -8,7 +8,7 @@ golitex.code-workspace
 deploy_web
 ./reference_manual/thoughts.md
 /binary/
-litex/.binary/
+litex/binary/
 litex/scripts/
 /kernel_lib/
 ./examples/testings/.order

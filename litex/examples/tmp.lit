@@ -10,7 +10,8 @@ prop npara(a, b, c, d)
 prop diff(a, b)
 prop perp(a, b, c, d)
 prop coll(a, b, c)
-
+prop nperp(a, b, c, d)
+prop ncoll2(a, b, c, d)
 
 """
 angle_bisector x a b c
@@ -394,7 +395,7 @@ know:
             $coll(a, draw_centroid(a, b, c)[1], draw_centroid(a, b, c)[4])
             $coll(b, draw_centroid(a, b, c)[2], draw_centroid(a, b, c)[4])
             $coll(c, draw_centroid(a, b, c)[3], draw_centroid(a, b, c)[4])
-            $centroid(draw_centroid(a, b, c), a, b, c)
+            $centroid(draw_centroid(a, b, c)[1], draw_centroid(a, b, c)[2], draw_centroid(a, b, c)[3], draw_centroid(a, b, c)[4], a, b, c)
 
 """
 ninepoints x y z i a b c
@@ -427,7 +428,7 @@ know:
             $cong(draw_ninepoints(a, b, c)[3], a, draw_ninepoints(a, b, c)[3], b)
             $cong(draw_ninepoints(a, b, c)[4], draw_ninepoints(a, b, c)[1], draw_ninepoints(a, b, c)[4], draw_ninepoints(a, b, c)[2])
             $cong(draw_ninepoints(a, b, c)[4], draw_ninepoints(a, b, c)[2], draw_ninepoints(a, b, c)[4], draw_ninepoints(a, b, c)[3])
-            $ninepoints(draw_ninepoints(a, b, c), a, b, c)
+            $ninepoints(draw_ninepoints(a, b, c)[1], draw_ninepoints(a, b, c)[2], draw_ninepoints(a, b, c)[3], draw_ninepoints(a, b, c)[4], a, b, c)
 
 """
 intersection_cc x o w a
@@ -484,15 +485,15 @@ line a b, line c d
 """
 prop intersection_ll(x, a, b, c, d point):
     $npara(a, b, c, d)
-    $ncoll(a, b, c, d)
+    $ncoll2(a, b, c, d)
     $coll(x, a, b)
     $coll(x, c, d)
 
-let draw_intersection_ll_x fn(a, b, c, d point: $npara(a, b, c, d), $ncoll(a, b, c, d)) point
+let draw_intersection_ll_x fn(a, b, c, d point: $npara(a, b, c, d), $ncoll2(a, b, c, d)) point
 know:
     forall a, b, c, d point:
         $npara(a, b, c, d)
-        $ncoll(a, b, c, d)
+        $ncoll2(a, b, c, d)
         =>:
             $coll(draw_intersection_ll_x(a, b, c, d), a, b)
             $coll(draw_intersection_ll_x(a, b, c, d), c, d)
@@ -1201,7 +1202,7 @@ a : ; b : ; c : ; d : para a b c d
 trapezoid
 """
 prop trapezoid(a, b, c, d point):
-    $ncoll(a, b, c, d)
+    $ncoll2(a, b, c, d)
     $para(a, b, c, d)
 
 let draw_trapezoid_d fn(a, b, c point: $ncoll(a, b, c)) point

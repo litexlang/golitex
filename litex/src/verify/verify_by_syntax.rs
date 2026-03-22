@@ -1,5 +1,5 @@
-use crate::obj::{Obj};
 use crate::execute::Executor;
+use crate::obj::Obj;
 
 impl<'a> Executor<'a> {
     pub fn equal_literally(&self, left: &Obj, right: &Obj) -> bool {
@@ -14,14 +14,20 @@ impl<'a> Executor<'a> {
                         a.name == b.name
                     } else {
                         match (
-                            self.runtime_context.module_manager.module_name_and_path_map.get(&a.mod_name),
-                            self.runtime_context.module_manager.module_name_and_path_map.get(&b.mod_name),
+                            self.runtime_context
+                                .module_manager
+                                .module_name_and_path_map
+                                .get(&a.mod_name),
+                            self.runtime_context
+                                .module_manager
+                                .module_name_and_path_map
+                                .get(&b.mod_name),
                         ) {
                             (Some(p1), Some(p2)) => p1 == p2 && a.name == b.name,
                             _ => false,
                         }
                     }
-                },
+                }
                 _ => false,
             },
             Obj::FieldAccess(a) => match right {
@@ -31,20 +37,39 @@ impl<'a> Executor<'a> {
             Obj::FieldAccessWithMod(a) => match right {
                 Obj::FieldAccessWithMod(b) => {
                     if a.mod_name == b.mod_name {
-                        a.name == b.name && a.fields.len() == b.fields.len() && a.fields.iter().zip(b.fields.iter()).all(|(a_field, b_field)| a_field.to_string() == b_field.to_string())
+                        a.name == b.name
+                            && a.fields.len() == b.fields.len()
+                            && a.fields
+                                .iter()
+                                .zip(b.fields.iter())
+                                .all(|(a_field, b_field)| {
+                                    a_field.to_string() == b_field.to_string()
+                                })
                     } else {
                         match (
-                            self.runtime_context.module_manager.module_name_and_path_map.get(&a.mod_name),
-                            self.runtime_context.module_manager.module_name_and_path_map.get(&b.mod_name),
+                            self.runtime_context
+                                .module_manager
+                                .module_name_and_path_map
+                                .get(&a.mod_name),
+                            self.runtime_context
+                                .module_manager
+                                .module_name_and_path_map
+                                .get(&b.mod_name),
                         ) {
                             (Some(p1), Some(p2)) => {
-                                p1 == p2 && a.name == b.name && a.fields.len() == b.fields.len()
-                                    && a.fields.iter().zip(b.fields.iter()).all(|(a_field, b_field)| a_field.to_string() == b_field.to_string())
+                                p1 == p2
+                                    && a.name == b.name
+                                    && a.fields.len() == b.fields.len()
+                                    && a.fields.iter().zip(b.fields.iter()).all(
+                                        |(a_field, b_field)| {
+                                            a_field.to_string() == b_field.to_string()
+                                        },
+                                    )
                             }
                             _ => false,
                         }
                     }
-                },
+                }
                 _ => false,
             },
             Obj::FnObj(f) => match right {
@@ -195,14 +220,38 @@ impl<'a> Executor<'a> {
                 Obj::ObjAtIndex(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::QPos(_) => match right { Obj::QPos(_) => true, _ => false },
-            Obj::RPos(_) => match right { Obj::RPos(_) => true, _ => false },
-            Obj::QNeg(_) => match right { Obj::QNeg(_) => true, _ => false },
-            Obj::ZNeg(_) => match right { Obj::ZNeg(_) => true, _ => false },
-            Obj::RNeg(_) => match right { Obj::RNeg(_) => true, _ => false },
-            Obj::QNz(_) => match right { Obj::QNz(_) => true, _ => false },
-            Obj::ZNz(_) => match right { Obj::ZNz(_) => true, _ => false },
-            Obj::RNz(_) => match right { Obj::RNz(_) => true, _ => false },
+            Obj::QPos(_) => match right {
+                Obj::QPos(_) => true,
+                _ => false,
+            },
+            Obj::RPos(_) => match right {
+                Obj::RPos(_) => true,
+                _ => false,
+            },
+            Obj::QNeg(_) => match right {
+                Obj::QNeg(_) => true,
+                _ => false,
+            },
+            Obj::ZNeg(_) => match right {
+                Obj::ZNeg(_) => true,
+                _ => false,
+            },
+            Obj::RNeg(_) => match right {
+                Obj::RNeg(_) => true,
+                _ => false,
+            },
+            Obj::QNz(_) => match right {
+                Obj::QNz(_) => true,
+                _ => false,
+            },
+            Obj::ZNz(_) => match right {
+                Obj::ZNz(_) => true,
+                _ => false,
+            },
+            Obj::RNz(_) => match right {
+                Obj::RNz(_) => true,
+                _ => false,
+            },
         }
     }
 }

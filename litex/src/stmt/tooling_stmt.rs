@@ -1,5 +1,5 @@
+use crate::common::keywords::{AS, CLEAR, DOUBLE_QUOTE, DO_NOTHING, IMPORT};
 use std::fmt;
-use crate::common::keywords::{CLEAR, DO_NOTHING, IMPORT, DOUBLE_QUOTE, AS};
 
 pub enum ImportStmt {
     ImportRelativePath(ImportRelativePathStmt),
@@ -25,7 +25,10 @@ pub struct RunFileStmt {
 
 impl RunFileStmt {
     pub fn new(file_path: String, line_file: (usize, usize)) -> Self {
-        RunFileStmt { file_path, line_file }
+        RunFileStmt {
+            file_path,
+            line_file,
+        }
     }
 
     pub fn stmt_type_name(&self) -> String {
@@ -42,7 +45,9 @@ impl fmt::Display for RunFileStmt {
 impl fmt::Display for ImportStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ImportStmt::ImportRelativePath(import_relative_path) => write!(f, "{}", import_relative_path),
+            ImportStmt::ImportRelativePath(import_relative_path) => {
+                write!(f, "{}", import_relative_path)
+            }
             ImportStmt::ImportGlobalModule(import_global_mod) => write!(f, "{}", import_global_mod),
         }
     }
@@ -50,7 +55,11 @@ impl fmt::Display for ImportStmt {
 
 impl ImportRelativePathStmt {
     pub fn new(path: String, as_mod_name: Option<String>, line_file: (usize, usize)) -> Self {
-        ImportRelativePathStmt { path, as_mod_name, line_file }
+        ImportRelativePathStmt {
+            path,
+            as_mod_name,
+            line_file,
+        }
     }
 
     pub fn stmt_type_name(&self) -> String {
@@ -60,7 +69,11 @@ impl ImportRelativePathStmt {
 
 impl ImportGlobalModuleStmt {
     pub fn new(mod_name: String, as_mod_name: Option<String>, line_file: (usize, usize)) -> Self {
-        ImportGlobalModuleStmt { mod_name, as_mod_name, line_file }
+        ImportGlobalModuleStmt {
+            mod_name,
+            as_mod_name,
+            line_file,
+        }
     }
 
     pub fn stmt_type_name(&self) -> String {
@@ -71,8 +84,16 @@ impl ImportGlobalModuleStmt {
 impl fmt::Display for ImportRelativePathStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self.as_mod_name {
-            Some(name) => write!(f, "{} {}{}{} {} {}", IMPORT, DOUBLE_QUOTE, self.path, DOUBLE_QUOTE, AS, name),
-            None => write!(f, "{} {}{}{}", IMPORT, DOUBLE_QUOTE, self.path, DOUBLE_QUOTE),
+            Some(name) => write!(
+                f,
+                "{} {}{}{} {} {}",
+                IMPORT, DOUBLE_QUOTE, self.path, DOUBLE_QUOTE, AS, name
+            ),
+            None => write!(
+                f,
+                "{} {}{}{}",
+                IMPORT, DOUBLE_QUOTE, self.path, DOUBLE_QUOTE
+            ),
         }
     }
 }

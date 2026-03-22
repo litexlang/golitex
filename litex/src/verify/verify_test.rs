@@ -1,27 +1,34 @@
-use crate::verify::VerifyState;
-use crate::fact::AtomicFact;
-use crate::fact::EqualFact;
 use crate::environment::Environment;
 use crate::execute::Executor;
+use crate::fact::AtomicFact;
+use crate::fact::EqualFact;
 use crate::fact::Fact;
 use crate::module_manager::ModuleManager;
 use crate::obj::{Number, Obj};
+use crate::parse::tokenize_line;
+use crate::parse::TokenBlock;
+use crate::result::NonErrStmtExecResult;
 use crate::runtime_context::RuntimeContext;
 use crate::stmt::Stmt;
-use crate::result::NonErrStmtExecResult;
-use crate::parse::TokenBlock;
-use crate::parse::tokenize_line;
+use crate::verify::VerifyState;
 
 #[test]
 fn test_verify_atomic_fact() {
     let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
-    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
+        &mut module_manager,
+        &mut builtin_environment,
+    );
     let mut executor = Executor::new(&mut runtime_context);
 
     // verify 1 = 1
     let one = Obj::Number(Number::new("1".to_string()));
-    let fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(one.clone(), one, crate::common::defaults::DEFAULT_LINE_FILE.clone())));
+    let fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+        one.clone(),
+        one,
+        crate::common::defaults::DEFAULT_LINE_FILE.clone(),
+    )));
     let stmt = Stmt::Fact(fact);
     let result = executor.exec_stmt(&stmt);
 
@@ -40,18 +47,29 @@ fn test_verify_atomic_fact() {
 fn test_exec_stmt_fact_one_plus_one_eq_two() {
     let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
-    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
+        &mut module_manager,
+        &mut builtin_environment,
+    );
     let mut executor = Executor::new(&mut runtime_context);
     let s = "1 + 1 = 2";
     let tokens = tokenize_line(s);
     let mut tb = TokenBlock::new(tokens, vec![], (0, 1));
-    let stmt = executor.parse_stmt(&mut tb).expect("parse fact \"1 + 1 = 2\" failed");
+    let stmt = executor
+        .parse_stmt(&mut tb)
+        .expect("parse fact \"1 + 1 = 2\" failed");
     assert!(matches!(stmt, Stmt::Fact(_)), "expected Stmt::Fact");
 
     let result = executor.exec_stmt(&stmt).expect("exec.stmt(fact) failed");
     match &result {
-        NonErrStmtExecResult::NonFactualStmtSuccess(_) | NonErrStmtExecResult::FactVerifiedByFact(_) | NonErrStmtExecResult::FactVerifiedByBuiltinRules(_) => println!("{}", result.body_string()),
-        NonErrStmtExecResult::StmtUnknown(u) => panic!("fact 1+1=2 should be verified, got StmtUnknown: {}", u),
+        NonErrStmtExecResult::NonFactualStmtSuccess(_)
+        | NonErrStmtExecResult::FactVerifiedByFact(_)
+        | NonErrStmtExecResult::FactVerifiedByBuiltinRules(_) => {
+            println!("{}", result.body_string())
+        }
+        NonErrStmtExecResult::StmtUnknown(u) => {
+            panic!("fact 1+1=2 should be verified, got StmtUnknown: {}", u)
+        }
     }
 }
 

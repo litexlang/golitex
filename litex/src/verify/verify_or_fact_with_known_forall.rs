@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::environment::KnownForallFactParamsAndDom;
 use crate::error::VerifyError;
@@ -9,15 +8,24 @@ use crate::obj::Obj;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult, StmtUnknown};
 use crate::stmt::parameter_def::ParamDefWithParamType;
 use crate::verify::VerifyState;
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::result::Result;
 
 impl<'a> Executor<'a> {
-    pub fn verify_or_fact_with_known_forall(&mut self, or_fact: &OrFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
-        if let Some(fact_verified) = self.try_verify_or_fact_with_known_forall_facts_in_envs(or_fact, verify_state)? {
+    pub fn verify_or_fact_with_known_forall(
+        &mut self,
+        or_fact: &OrFact,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        if let Some(fact_verified) =
+            self.try_verify_or_fact_with_known_forall_facts_in_envs(or_fact, verify_state)?
+        {
             return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
         }
-        if let Some(fact_verified) = self.try_verify_or_fact_with_known_forall_facts_in_builtin_env(or_fact, verify_state)? {
+        if let Some(fact_verified) =
+            self.try_verify_or_fact_with_known_forall_facts_in_builtin_env(or_fact, verify_state)?
+        {
             return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
         }
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
@@ -28,22 +36,33 @@ impl<'a> Executor<'a> {
         iterate_from_env_index: usize,
         iterate_from_known_forall_fact_index: usize,
         given_or_fact: &OrFact,
-    ) -> Result<((usize, usize), Option<HashMap<String, Obj>>, Option<(OrFact, Rc<KnownForallFactParamsAndDom>)>), VerifyError> {
+    ) -> Result<
+        (
+            (usize, usize),
+            Option<HashMap<String, Obj>>,
+            Option<(OrFact, Rc<KnownForallFactParamsAndDom>)>,
+        ),
+        VerifyError,
+    > {
         let lookup_key = given_or_fact.key();
 
         let envs_count = self.runtime_context.environments.len();
         for i in iterate_from_env_index..envs_count {
             let env = &self.runtime_context.environments[envs_count - 1 - i];
-            if let Some(known_forall_facts_in_env) = env.known_or_facts_in_forall_facts.get(lookup_key.as_str()) {
+            if let Some(known_forall_facts_in_env) =
+                env.known_or_facts_in_forall_facts.get(lookup_key.as_str())
+            {
                 let known_forall_facts_count = known_forall_facts_in_env.len();
                 for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
-                    let current_known_forall = &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
+                    let current_known_forall =
+                        &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
                     let fact_args_in_known_forall = current_known_forall.0.get_args_from_fact();
                     let given_fact_args = given_or_fact.get_args_from_fact();
-                    let match_result = Self::match_args_in_fact_in_known_forall_fact_with_given_args(
-                        &fact_args_in_known_forall,
-                        &given_fact_args,
-                    )?;
+                    let match_result =
+                        Self::match_args_in_fact_in_known_forall_fact_with_given_args(
+                            &fact_args_in_known_forall,
+                            &given_fact_args,
+                        )?;
                     if let Some(arg_map) = match_result {
                         return Ok(((i, j), Some(arg_map), Some(current_known_forall.clone())));
                     }
@@ -58,14 +77,25 @@ impl<'a> Executor<'a> {
         &self,
         iterate_from_known_forall_fact_index: usize,
         given_or_fact: &OrFact,
-    ) -> Result<(usize, Option<HashMap<String, Obj>>, Option<(OrFact, Rc<KnownForallFactParamsAndDom>)>), VerifyError> {
+    ) -> Result<
+        (
+            usize,
+            Option<HashMap<String, Obj>>,
+            Option<(OrFact, Rc<KnownForallFactParamsAndDom>)>,
+        ),
+        VerifyError,
+    > {
         let lookup_key = given_or_fact.key();
         let builtin_env = &self.runtime_context.builtin_environment;
 
-        if let Some(known_forall_facts_in_env) = builtin_env.known_or_facts_in_forall_facts.get(lookup_key.as_str()) {
+        if let Some(known_forall_facts_in_env) = builtin_env
+            .known_or_facts_in_forall_facts
+            .get(lookup_key.as_str())
+        {
             let known_forall_facts_count = known_forall_facts_in_env.len();
             for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
-                let current_known_forall = &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
+                let current_known_forall =
+                    &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
                 let fact_args_in_known_forall = current_known_forall.0.get_args_from_fact();
                 let given_fact_args = given_or_fact.get_args_from_fact();
                 let match_result = Self::match_args_in_fact_in_known_forall_fact_with_given_args(
@@ -98,13 +128,15 @@ impl<'a> Executor<'a> {
             let ((i, j), arg_map_opt, known_forall_opt) = result;
             match (arg_map_opt, known_forall_opt) {
                 (Some(arg_map), Some((or_fact_in_known_forall, forall_rc))) => {
-                    if let Some(fact_verified) = self.verify_or_fact_args_satisfy_forall_requirements(
-                        &or_fact_in_known_forall,
-                        &forall_rc,
-                        arg_map,
-                        or_fact,
-                        verify_state,
-                    )? {
+                    if let Some(fact_verified) = self
+                        .verify_or_fact_args_satisfy_forall_requirements(
+                            &or_fact_in_known_forall,
+                            &forall_rc,
+                            arg_map,
+                            or_fact,
+                            verify_state,
+                        )?
+                    {
                         return Ok(Some(fact_verified));
                     }
                     iterate_from_env_index = i;
@@ -123,16 +155,21 @@ impl<'a> Executor<'a> {
         let mut known_fact_index_in_builtin = 0;
 
         loop {
-            let result = self.get_matched_or_fact_in_known_forall_fact_in_builtin_env(known_fact_index_in_builtin, or_fact)?;
+            let result = self.get_matched_or_fact_in_known_forall_fact_in_builtin_env(
+                known_fact_index_in_builtin,
+                or_fact,
+            )?;
             match result {
                 (j, Some(arg_map), Some((or_fact_in_known_forall, forall_rc))) => {
-                    if let Some(fact_verified) = self.verify_or_fact_args_satisfy_forall_requirements(
-                        &or_fact_in_known_forall,
-                        &forall_rc,
-                        arg_map,
-                        or_fact,
-                        verify_state,
-                    )? {
+                    if let Some(fact_verified) = self
+                        .verify_or_fact_args_satisfy_forall_requirements(
+                            &or_fact_in_known_forall,
+                            &forall_rc,
+                            arg_map,
+                            or_fact,
+                            verify_state,
+                        )?
+                    {
                         return Ok(Some(fact_verified));
                     }
                     known_fact_index_in_builtin = j + 1;
@@ -152,7 +189,10 @@ impl<'a> Executor<'a> {
     ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
         let param_names = ParamDefWithParamType::collect_param_names(&known_forall.params_def);
 
-        if !param_names.iter().all(|param_name| arg_map.contains_key(param_name)) {
+        if !param_names
+            .iter()
+            .all(|param_name| arg_map.contains_key(param_name))
+        {
             return Ok(None);
         }
 
@@ -177,8 +217,18 @@ impl<'a> Executor<'a> {
             }
         }
 
-        let args_satisfy_param_types = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(&known_forall.params_def, &args_for_params)
-            .map_err(|e| VerifyError::new(e.error_body(), Some(e), crate::common::defaults::DEFAULT_LINE_FILE.clone()))?;
+        let args_satisfy_param_types =
+            ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(
+                &known_forall.params_def,
+                &args_for_params,
+            )
+            .map_err(|e| {
+                VerifyError::new(
+                    e.error_body(),
+                    Some(e),
+                    crate::common::defaults::DEFAULT_LINE_FILE.clone(),
+                )
+            })?;
 
         for fact in args_satisfy_param_types.iter() {
             let result = self.verify_fact(fact, verify_state)?;
@@ -187,7 +237,10 @@ impl<'a> Executor<'a> {
             }
         }
 
-        let param_to_arg_map = match ParamDefWithParamType::param_def_params_to_arg_map(&known_forall.params_def, &arg_map) {
+        let param_to_arg_map = match ParamDefWithParamType::param_def_params_to_arg_map(
+            &known_forall.params_def,
+            &arg_map,
+        ) {
             Some(m) => m,
             None => return Ok(None),
         };
@@ -205,7 +258,9 @@ impl<'a> Executor<'a> {
         let verified_by_known_forall_fact = ForallFact::new(
             known_forall.params_def.clone(),
             known_forall.dom.clone(),
-            vec![ExistOrAndChainAtomicFact::OrFact(or_fact_in_known_forall.clone())],
+            vec![ExistOrAndChainAtomicFact::OrFact(
+                or_fact_in_known_forall.clone(),
+            )],
             known_forall.line_file.clone(),
         );
         let fact_verified = FactVerifiedByFact::new(

@@ -1,15 +1,21 @@
-use crate::common::keywords::{COMMA, FINITE_SET, NONEMPTY_SET, SET};
-use crate::execute::Executor;
 use super::TokenBlock;
+use crate::common::keywords::{COMMA, FINITE_SET, NONEMPTY_SET, SET};
 use crate::error::ParsingError;
-use crate::stmt::parameter_def::{ParamDefWithParamType, ParamType, Set, NonemptySet, FiniteSet};
+use crate::execute::Executor;
+use crate::stmt::parameter_def::{FiniteSet, NonemptySet, ParamDefWithParamType, ParamType, Set};
 
 impl<'a> Executor<'a> {
-    pub fn parse_param_def_with_param_type(&mut self, tb: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
+    pub fn parse_param_def_with_param_type(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<ParamDefWithParamType, ParsingError> {
         self.param_def_with_type(tb)
     }
 
-    pub fn param_def_with_type(&mut self, tb: &mut TokenBlock) -> Result<ParamDefWithParamType, ParsingError> {
+    pub fn param_def_with_type(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<ParamDefWithParamType, ParsingError> {
         let param = tb.advance()?;
         if tb.current()? != COMMA {
             Ok(ParamDefWithParamType(vec![param], self.param_type(tb)?))

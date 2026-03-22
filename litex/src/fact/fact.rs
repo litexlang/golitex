@@ -1,11 +1,11 @@
-use std::fmt;
-use super::or_fact::OrFact;
-use super::forall_fact::ForallFact;
-use super::forall_fact_with_iff::ForallFactWithIff;
 use super::atomic_fact::AtomicFact;
 use super::exist_fact::ExistFact;
+use super::forall_fact::ForallFact;
+use super::forall_fact_with_iff::ForallFactWithIff;
 use super::matchable_fact_with_atomic_fact_inside::AndFact;
 use super::matchable_fact_with_atomic_fact_inside::ChainFact;
+use super::or_fact::OrFact;
+use std::fmt;
 #[derive(Clone)]
 pub enum Fact {
     AtomicFact(AtomicFact),
@@ -48,7 +48,9 @@ impl Fact {
 impl Fact {
     pub fn with_new_line_file(self, line_file: (usize, usize)) -> Fact {
         match self {
-            Fact::AtomicFact(atomic_fact) => Fact::AtomicFact(atomic_fact.with_new_line_file(line_file)),
+            Fact::AtomicFact(atomic_fact) => {
+                Fact::AtomicFact(atomic_fact.with_new_line_file(line_file))
+            }
             Fact::ExistFact(e) => Fact::ExistFact(ExistFact {
                 params_def_with_type: e.params_def_with_type,
                 facts: e.facts,
@@ -56,7 +58,11 @@ impl Fact {
             }),
             Fact::OrFact(or_fact) => Fact::OrFact(OrFact::new(or_fact.facts, line_file)),
             Fact::AndFact(and_fact) => Fact::AndFact(AndFact::new(and_fact.facts, line_file)),
-            Fact::ChainFact(chain_fact) => Fact::ChainFact(ChainFact::new(chain_fact.objs, chain_fact.prop_names, line_file)),
+            Fact::ChainFact(chain_fact) => Fact::ChainFact(ChainFact::new(
+                chain_fact.objs,
+                chain_fact.prop_names,
+                line_file,
+            )),
             Fact::ForallFact(f) => Fact::ForallFact(ForallFact {
                 params_def_with_type: f.params_def_with_type,
                 dom_facts: f.dom_facts,

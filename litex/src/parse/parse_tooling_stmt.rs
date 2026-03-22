@@ -1,10 +1,10 @@
-use crate::common::keywords::{DOUBLE_QUOTE, IMPORT, AS, CLEAR, DO_NOTHING, RUN_FILE};
-use crate::stmt::tooling_stmt::{ClearStmt, DoNothingStmt, RunFileStmt};
-use crate::execute::Executor;
 use super::TokenBlock;
+use crate::common::keywords::{AS, CLEAR, DOUBLE_QUOTE, DO_NOTHING, IMPORT, RUN_FILE};
 use crate::error::ParsingError;
+use crate::execute::Executor;
+use crate::stmt::tooling_stmt::{ClearStmt, DoNothingStmt, RunFileStmt};
+use crate::stmt::tooling_stmt::{ImportGlobalModuleStmt, ImportRelativePathStmt, ImportStmt};
 use crate::stmt::Stmt;
-use crate::stmt::tooling_stmt::{ImportStmt, ImportRelativePathStmt, ImportGlobalModuleStmt};
 
 impl<'a> Executor<'a> {
     pub fn import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {

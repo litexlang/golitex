@@ -1,7 +1,8 @@
 use crate::error::InferError;
 use crate::execute::Executor;
 use crate::fact::{
-    AndChainAtomicFact, AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, ForallFact, ForallFactWithIff, InFact, IsTupleFact, NormalAtomicFact, OrAndChainAtomicFact, OrFact
+    AndChainAtomicFact, AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, ForallFact,
+    ForallFactWithIff, InFact, IsTupleFact, NormalAtomicFact, OrAndChainAtomicFact, OrFact,
 };
 use crate::obj::{FnSetObj, Number, Obj, TupleDimObj};
 use crate::stmt::parameter_def::ParamDefWithParamType;
@@ -9,12 +10,14 @@ use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
 pub struct InferResult {
-    pub infer_facts: Vec<String>
+    pub infer_facts: Vec<String>,
 }
 
 impl InferResult {
     pub fn new() -> Self {
-        InferResult { infer_facts: vec![] }
+        InferResult {
+            infer_facts: vec![],
+        }
     }
 
     pub fn push_fact(&mut self, fact: &Fact) {
@@ -37,7 +40,9 @@ impl<'a> Executor<'a> {
             Fact::AndFact(and_fact) => self.infer_and_fact(and_fact),
             Fact::ChainFact(chain_fact) => self.infer_chain_fact(chain_fact),
             Fact::ForallFact(forall_fact) => self.infer_forall_fact(forall_fact),
-            Fact::ForallFactWithIff(forall_fact_with_iff) => self.infer_forall_fact_with_iff(forall_fact_with_iff),
+            Fact::ForallFactWithIff(forall_fact_with_iff) => {
+                self.infer_forall_fact_with_iff(forall_fact_with_iff)
+            }
         }
     }
 
@@ -45,7 +50,9 @@ impl<'a> Executor<'a> {
         match _atomic_fact {
             AtomicFact::EqualFact(equal_fact) => self.infer_equal_fact(equal_fact),
             AtomicFact::InFact(in_fact) => self.infer_in_fact(in_fact),
-            AtomicFact::NormalAtomicFact(normal_atomic_fact) => self.infer_normal_atomic_fact(normal_atomic_fact),
+            AtomicFact::NormalAtomicFact(normal_atomic_fact) => {
+                self.infer_normal_atomic_fact(normal_atomic_fact)
+            }
             _ => Ok(InferResult::new()),
         }
     }
@@ -120,16 +127,20 @@ impl<'a> Executor<'a> {
                 let key = in_fact.element.to_string();
                 let fn_set_obj = FnSetObj::FnSetWithoutDom(fn_set_without_dom.clone());
 
-                self.runtime_context.top_level_env().known_fn_in_fn_set.insert(key, fn_set_obj);
+                self.runtime_context
+                    .top_level_env()
+                    .known_fn_in_fn_set
+                    .insert(key, fn_set_obj);
 
                 Ok(InferResult::new())
-            },
+            }
             Obj::ListSet(list_set) => {
                 if list_set.list.is_empty() {
                     return Ok(InferResult::new());
                 }
 
-                let mut or_case_facts: Vec<AndChainAtomicFact> = Vec::with_capacity(list_set.list.len());
+                let mut or_case_facts: Vec<AndChainAtomicFact> =
+                    Vec::with_capacity(list_set.list.len());
                 for obj_in_list_set in list_set.list.iter() {
                     let equal_fact = AtomicFact::EqualFact(EqualFact::new(
                         in_fact.element.clone(),
@@ -140,13 +151,17 @@ impl<'a> Executor<'a> {
                 }
 
                 let or_fact = Fact::OrFact(OrFact::new(or_case_facts, in_fact.line_file));
-                self.store_fact_without_well_defined_verified_and_infer(&or_fact).map_err(|previous_error| {
-                    InferError::new(
-                        format!("failed to store inferred or fact while inferring `{}`", in_fact),
-                        in_fact.line_file,
-                        Some(previous_error.into()),
-                    )
-                })?;
+                self.store_fact_without_well_defined_verified_and_infer(&or_fact)
+                    .map_err(|previous_error| {
+                        InferError::new(
+                            format!(
+                                "failed to store inferred or fact while inferring `{}`",
+                                in_fact
+                            ),
+                            in_fact.line_file,
+                            Some(previous_error.into()),
+                        )
+                    })?;
 
                 let mut infer_result = InferResult::new();
                 infer_result.push_fact(&or_fact);
@@ -162,11 +177,13 @@ impl<'a> Executor<'a> {
                     in_fact.line_file,
                 )));
 
-                self
-                    .store_fact_without_well_defined_verified_and_infer(&element_in_param_set_fact)
+                self.store_fact_without_well_defined_verified_and_infer(&element_in_param_set_fact)
                     .map_err(|previous_error| {
                         InferError::new(
-                            format!("failed to store inferred in fact while inferring `{}`", in_fact),
+                            format!(
+                                "failed to store inferred in fact while inferring `{}`",
+                                in_fact
+                            ),
                             in_fact.line_file,
                             Some(previous_error.into()),
                         )
@@ -179,7 +196,8 @@ impl<'a> Executor<'a> {
                     let instantiated_fact_in_set_builder: OrAndChainAtomicFact =
                         fact_in_set_builder.instantiate(&param_to_arg_map);
                     let instantiated_fact_as_fact = instantiated_fact_in_set_builder.to_fact();
-                    let fact_to_store = instantiated_fact_as_fact.with_new_line_file(in_fact.line_file);
+                    let fact_to_store =
+                        instantiated_fact_as_fact.with_new_line_file(in_fact.line_file);
 
                     self
                         .store_fact_without_well_defined_verified_and_infer(&fact_to_store)
@@ -203,13 +221,17 @@ impl<'a> Executor<'a> {
                     in_fact.line_file,
                 )));
 
-                self.store_fact_without_well_defined_verified_and_infer(&is_cart_fact).map_err(|previous_error| {
-                    InferError::new(
-                        format!("failed to store inferred is cart fact while inferring `{}`", in_fact),
-                        in_fact.line_file,
-                        Some(previous_error.into()),
-                    )
-                })?;
+                self.store_fact_without_well_defined_verified_and_infer(&is_cart_fact)
+                    .map_err(|previous_error| {
+                        InferError::new(
+                            format!(
+                                "failed to store inferred is cart fact while inferring `{}`",
+                                in_fact
+                            ),
+                            in_fact.line_file,
+                            Some(previous_error.into()),
+                        )
+                    })?;
                 infer_result.push_fact(&is_cart_fact);
 
                 // tuple_dim(tuple) should equal the number of parameters of the `cart` set.
@@ -232,17 +254,26 @@ impl<'a> Executor<'a> {
                 })?;
                 infer_result.push_fact(&tuple_dim_fact);
 
-                self.runtime_context.top_level_env().known_tuple_obj_in_what_cart.insert(in_fact.element.to_string(), cart.clone());
-                
+                self.runtime_context
+                    .top_level_env()
+                    .known_tuple_obj_in_what_cart
+                    .insert(in_fact.element.to_string(), cart.clone());
+
                 Ok(infer_result)
             }
             _ => Ok(InferResult::new()),
         }
     }
 
-    fn infer_normal_atomic_fact(&mut self, normal_atomic_fact: &NormalAtomicFact) -> Result<InferResult, InferError> {
+    fn infer_normal_atomic_fact(
+        &mut self,
+        normal_atomic_fact: &NormalAtomicFact,
+    ) -> Result<InferResult, InferError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
-        let predicate_definition = match self.runtime_context.get_predicate_with_meaning_definition_by_name(&predicate_name) {
+        let predicate_definition = match self
+            .runtime_context
+            .get_predicate_with_meaning_definition_by_name(&predicate_name)
+        {
             Some(predicate_definition) => predicate_definition.clone(),
             None => return Ok(InferResult::new()), // prop might be without meaning
         };
@@ -255,19 +286,26 @@ impl<'a> Executor<'a> {
             )
             .map_err(|previous_error| {
                 InferError::new(
-                    format!("failed to infer parameter type facts for `{}`", normal_atomic_fact),
+                    format!(
+                        "failed to infer parameter type facts for `{}`",
+                        normal_atomic_fact
+                    ),
                     normal_atomic_fact.line_file,
                     Some(previous_error),
                 )
             })?;
 
         for param_type_fact in param_type_facts.iter() {
-            let fact_to_store =
-                param_type_fact.clone().with_new_line_file(normal_atomic_fact.line_file);
+            let fact_to_store = param_type_fact
+                .clone()
+                .with_new_line_file(normal_atomic_fact.line_file);
             self.store_fact_without_well_defined_verified_and_infer(&fact_to_store)
                 .map_err(|previous_error| {
                     InferError::new(
-                        format!("failed to store parameter type fact while inferring `{}`", normal_atomic_fact),
+                        format!(
+                            "failed to store parameter type fact while inferring `{}`",
+                            normal_atomic_fact
+                        ),
                         normal_atomic_fact.line_file,
                         Some(previous_error.into()),
                     )
@@ -288,7 +326,10 @@ impl<'a> Executor<'a> {
             self.store_fact_without_well_defined_verified_and_infer(&fact_to_store)
                 .map_err(|previous_error| {
                     InferError::new(
-                        format!("failed to store instantiated iff fact while inferring `{}`", normal_atomic_fact),
+                        format!(
+                            "failed to store instantiated iff fact while inferring `{}`",
+                            normal_atomic_fact
+                        ),
                         normal_atomic_fact.line_file,
                         Some(previous_error.into()),
                     )

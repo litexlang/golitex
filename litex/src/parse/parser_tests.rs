@@ -1,8 +1,8 @@
-use super::TokenBlock;
 use super::tokenize_line;
+use super::TokenBlock;
+use crate::environment::Environment;
 use crate::execute::Executor;
 use crate::module_manager::ModuleManager;
-use crate::environment::Environment;
 use crate::runtime_context::RuntimeContext;
 
 #[test]
@@ -10,7 +10,10 @@ use crate::runtime_context::RuntimeContext;
 fn test_fact() {
     let mut module_manager = ModuleManager::new_empty_module_manager("test");
     let mut builtin_environment = Environment::new_empty_env();
-    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
+        &mut module_manager,
+        &mut builtin_environment,
+    );
     let mut executor = Executor::new(&mut runtime_context);
     let code = "1 + 1 = 2";
     let blocks = TokenBlock::parse_blocks(code, 0).expect("parse blocks failed");
@@ -28,7 +31,10 @@ fn test_fact() {
 fn test_list_set_comma() {
     let mut module_manager = ModuleManager::new_empty_module_manager("test");
     let mut builtin_environment = Environment::new_empty_env();
-    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
+        &mut module_manager,
+        &mut builtin_environment,
+    );
     let mut executor = Executor::new(&mut runtime_context);
     let mut tb = TokenBlock::new(tokenize_line("{1, 0, 2}"), vec![], (1, 0));
     let r = executor.parse_obj(&mut tb);
@@ -42,7 +48,10 @@ fn test_list_set_comma() {
 fn test_list_set_space() {
     let mut module_manager = ModuleManager::new_empty_module_manager("test");
     let mut builtin_environment = Environment::new_empty_env();
-    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
+        &mut module_manager,
+        &mut builtin_environment,
+    );
     let mut executor = Executor::new(&mut runtime_context);
     let mut tb = TokenBlock::new(tokenize_line("{a b c}"), vec![], (1, 0));
     let r = executor.parse_obj(&mut tb);
@@ -99,8 +108,20 @@ fn test_obj() {
         // "{a b c}",  // ListSet
         "fn(R, R) R",
         // 单符号集合
-        "N_pos", "N", "Q", "Z", "R",
-        "Q_pos", "Z_pos", "R_pos", "Q_neg", "Z_neg", "R_neg", "Q_nz", "Z_nz", "R_nz",
+        "N_pos",
+        "N",
+        "Q",
+        "Z",
+        "R",
+        "Q_pos",
+        "Z_pos",
+        "R_pos",
+        "Q_neg",
+        "Z_neg",
+        "R_neg",
+        "Q_nz",
+        "Z_nz",
+        "R_nz",
         "a[0]",
         "f(1)[0]",
         "&Foo(R)",
@@ -114,7 +135,10 @@ fn test_obj() {
 
     let mut module_manager = ModuleManager::new_empty_module_manager("test");
     let mut builtin_environment = Environment::new_empty_env();
-    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
+        &mut module_manager,
+        &mut builtin_environment,
+    );
     let mut executor = Executor::new(&mut runtime_context);
     for obj in objs {
         let mut tb = TokenBlock::new(tokenize_line(obj), vec![], (1, 0));

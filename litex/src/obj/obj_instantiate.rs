@@ -1,12 +1,12 @@
-use std::collections::HashMap;
-use crate::stmt::parameter_def::ParamDefWithParamSet;
 use super::atom::{Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierWithMod};
 use super::obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FnObj, FnSetWithParams,
     FnSetWithoutParams, InstStructObj, Intersect, ListSet, Mod, Mul, NObj, NPosObj, Number, Obj,
-    ObjAtIndex, Pow, PowerSet, Proj, QNeg, QNz, QObj, QPos, Range, RNeg, RNz, RObj, RPos, SetBuilder,
-    SetDiff, SetMinus, Sub, Tuple, TupleDimObj, Union, Val, ZNeg, ZNz,     ZObj,
+    ObjAtIndex, Pow, PowerSet, Proj, QNeg, QNz, QObj, QPos, RNeg, RNz, RObj, RPos, Range,
+    SetBuilder, SetDiff, SetMinus, Sub, Tuple, TupleDimObj, Union, Val, ZNeg, ZNz, ZObj,
 };
+use crate::stmt::parameter_def::ParamDefWithParamSet;
+use std::collections::HashMap;
 
 impl Obj {
     fn remove_param_names_from_param_to_arg_map(

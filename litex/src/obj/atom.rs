@@ -1,5 +1,5 @@
-use std::fmt;
 use crate::common::keywords::{DOT_AKA_FIELD_ACCESS_SIGN, MOD_SIGN};
+use std::fmt;
 
 #[derive(Clone)]
 pub enum Atom {
@@ -85,18 +85,36 @@ impl FieldAccess {
 
 impl FieldAccessWithMod {
     pub fn new(mod_name: String, name: String, fields: Vec<String>) -> Self {
-        FieldAccessWithMod { mod_name, name, fields }
+        FieldAccessWithMod {
+            mod_name,
+            name,
+            fields,
+        }
     }
 }
 
 impl fmt::Display for FieldAccess {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}", self.name, DOT_AKA_FIELD_ACCESS_SIGN, self.fields.join(DOT_AKA_FIELD_ACCESS_SIGN))
+        write!(
+            f,
+            "{}{}{}",
+            self.name,
+            DOT_AKA_FIELD_ACCESS_SIGN,
+            self.fields.join(DOT_AKA_FIELD_ACCESS_SIGN)
+        )
     }
 }
 
 impl fmt::Display for FieldAccessWithMod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}{}{}{}", self.mod_name, MOD_SIGN, self.name, DOT_AKA_FIELD_ACCESS_SIGN, self.fields.join(DOT_AKA_FIELD_ACCESS_SIGN))
+        write!(
+            f,
+            "{}{}{}{}{}",
+            self.mod_name,
+            MOD_SIGN,
+            self.name,
+            DOT_AKA_FIELD_ACCESS_SIGN,
+            self.fields.join(DOT_AKA_FIELD_ACCESS_SIGN)
+        )
     }
 }

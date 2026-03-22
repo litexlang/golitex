@@ -29,7 +29,11 @@ fn parse_decimal_parts(s: &str) -> (Vec<u8>, Vec<u8>) {
             .map(|c| c as u8 - b'0')
             .collect()
     };
-    let int_digits = if int_digits.is_empty() { vec![0] } else { int_digits };
+    let int_digits = if int_digits.is_empty() {
+        vec![0]
+    } else {
+        int_digits
+    };
     let frac_digits: Vec<u8> = frac_str
         .chars()
         .filter(|c| c.is_ascii_digit())
@@ -55,13 +59,15 @@ fn number_is_zero(number: &Number) -> bool {
 
 fn number_is_positive(number: &Number) -> bool {
     let (negative, int_digits, frac_digits) = parse_number_parts(&number.value);
-    let zero = digits_all_zero(&int_digits) && (frac_digits.is_empty() || digits_all_zero(&frac_digits));
+    let zero =
+        digits_all_zero(&int_digits) && (frac_digits.is_empty() || digits_all_zero(&frac_digits));
     !negative && !zero
 }
 
 fn number_is_negative(number: &Number) -> bool {
     let (negative, int_digits, frac_digits) = parse_number_parts(&number.value);
-    let zero = digits_all_zero(&int_digits) && (frac_digits.is_empty() || digits_all_zero(&frac_digits));
+    let zero =
+        digits_all_zero(&int_digits) && (frac_digits.is_empty() || digits_all_zero(&frac_digits));
     negative && !zero
 }
 
@@ -93,7 +99,6 @@ pub fn number_is_in_z_neg(number: &Number) -> bool {
 pub fn number_is_in_z_nz(number: &Number) -> bool {
     number_is_in_z(number) && number_is_nonzero(number)
 }
-
 
 // --- Q_pos, R_pos (positive rationals/reals) ---
 pub fn number_is_in_q_pos(number: &Number) -> bool {

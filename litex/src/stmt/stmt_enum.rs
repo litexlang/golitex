@@ -1,20 +1,21 @@
-use std::fmt;
-use crate::fact::Fact;
-use super::definition_stmt::{
-    DefLetStmt, DefPropWithMeaningStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt,
-    HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt,
-};
-use super::define_algorithm_stmt::DefAlgoStmt;
-use super::claim_stmt::ClaimStmt;
-use super::know_stmt::KnowStmt;
 use super::axiom_stmt::{
-    ByCasesAxiomStmt, ByContraAxiomStmt, EnumerateAxiomStmt, ByInducAxiomStmt,
-    ForAxiomStmt, ByExtensionAxiomStmt, ByFnDefAxiomStmt, ByCartDefAxiomStmt,
+    ByCartDefAxiomStmt, ByCasesAxiomStmt, ByContraAxiomStmt, ByExtensionAxiomStmt,
+    ByFnDefAxiomStmt, ByInducAxiomStmt, EnumerateAxiomStmt, ForAxiomStmt,
 };
-use super::tooling_stmt::{ImportStmt, ClearStmt, DoNothingStmt, RunFileStmt};
-use super::prove_stmt::ProveStmt;
+use super::claim_stmt::ClaimStmt;
+use super::define_algorithm_stmt::DefAlgoStmt;
+use super::definition_stmt::{
+    DefLetStmt, DefPropWithMeaningStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt,
+    DefStructWithNoFieldStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt,
+    HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt,
+};
 use super::eval_stmt::EvalStmt;
+use super::know_stmt::KnowStmt;
+use super::prove_stmt::ProveStmt;
+use super::tooling_stmt::{ClearStmt, DoNothingStmt, ImportStmt, RunFileStmt};
 use super::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
+use crate::fact::Fact;
+use std::fmt;
 
 pub enum Stmt {
     Fact(Fact),

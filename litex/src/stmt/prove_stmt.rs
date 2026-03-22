@@ -1,6 +1,6 @@
-use std::fmt;
 use super::Stmt;
 use crate::common::helper::vec_to_string_add_four_spaces_at_beginning_of_each_line;
+use std::fmt;
 
 pub struct ProveStmt {
     pub proof: Vec<Stmt>,
@@ -19,6 +19,10 @@ impl ProveStmt {
 
 impl fmt::Display for ProveStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1))
+        write!(
+            f,
+            "{}",
+            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)
+        )
     }
 }
