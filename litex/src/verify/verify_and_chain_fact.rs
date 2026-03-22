@@ -13,7 +13,7 @@ impl<'a> Executor<'a> {
         and_fact: &AndFact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        let mut verify_what = vec![];
+        let mut verify_what = Vec::with_capacity(and_fact.facts.len());
         for fact in &and_fact.facts {
             let result = self.verify_fact(&Fact::AtomicFact(fact.clone()), verify_state)?;
             if !result.is_true() {
@@ -40,7 +40,7 @@ impl<'a> Executor<'a> {
         let facts = chain_fact
             .facts()
             .map_err(|e| VerifyError::new(e.to_string(), None, DEFAULT_LINE_FILE.clone()))?;
-        let mut verify_what = vec![];
+        let mut verify_what = Vec::with_capacity(facts.len());
         for fact in &facts {
             let result = self.verify_fact(&Fact::AtomicFact(fact.clone()), verify_state)?;
             if !result.is_true() {

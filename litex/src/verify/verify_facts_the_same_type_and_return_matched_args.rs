@@ -256,7 +256,8 @@ impl<'a> Executor<'a> {
                         return Ok(None);
                     }
 
-                    let mut matched_args: Vec<(Obj, Obj)> = vec![];
+                    let mut matched_args: Vec<(Obj, Obj)> =
+                        Vec::with_capacity(fact_normal_atomic_fact.body.len());
                     for (fact_arg, other_arg) in fact_normal_atomic_fact
                         .body
                         .iter()
@@ -277,7 +278,8 @@ impl<'a> Executor<'a> {
                         return Ok(None);
                     }
 
-                    let mut matched_args: Vec<(Obj, Obj)> = vec![];
+                    let mut matched_args: Vec<(Obj, Obj)> =
+                        Vec::with_capacity(fact_normal_atomic_fact.body.len());
                     for (fact_arg, other_arg) in fact_normal_atomic_fact
                         .body
                         .iter()
@@ -312,7 +314,8 @@ impl<'a> Executor<'a> {
                         return Ok(None);
                     }
 
-                    let mut matched_args: Vec<(Obj, Obj)> = vec![];
+                    let mut matched_args: Vec<(Obj, Obj)> =
+                        Vec::with_capacity(fact_not_normal_atomic_fact.body.len());
                     for (fact_arg, other_arg) in fact_not_normal_atomic_fact
                         .body
                         .iter()
@@ -333,7 +336,8 @@ impl<'a> Executor<'a> {
                         return Ok(None);
                     }
 
-                    let mut matched_args: Vec<(Obj, Obj)> = vec![];
+                    let mut matched_args: Vec<(Obj, Obj)> =
+                        Vec::with_capacity(fact_not_normal_atomic_fact.body.len());
                     for (fact_arg, other_arg) in fact_not_normal_atomic_fact
                         .body
                         .iter()

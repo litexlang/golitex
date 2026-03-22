@@ -21,7 +21,8 @@ use std::collections::HashMap;
 fn param_defs_with_type_from_fn_set_with_dom(
     fn_set_with_params: &crate::obj::FnSetWithParams,
 ) -> Vec<ParamDefWithParamType> {
-    let mut param_defs_with_type: Vec<ParamDefWithParamType> = vec![];
+    let mut param_defs_with_type: Vec<ParamDefWithParamType> =
+        Vec::with_capacity(fn_set_with_params.params_def_with_set.len());
     for param_def_with_set in fn_set_with_params.params_def_with_set.iter() {
         param_defs_with_type.push(ParamDefWithParamType(
             param_def_with_set.0.clone(),
@@ -32,7 +33,7 @@ fn param_defs_with_type_from_fn_set_with_dom(
 }
 
 fn build_function_obj_with_param_names(function_name: &str, param_names: &[String]) -> Obj {
-    let mut function_args: Vec<Box<Obj>> = vec![];
+    let mut function_args: Vec<Box<Obj>> = Vec::with_capacity(param_names.len());
     for param_name in param_names.iter() {
         function_args.push(Box::new(Obj::Identifier(Identifier::new(
             param_name.clone(),
@@ -428,7 +429,9 @@ impl<'a> Executor<'a> {
             have_fn_equal_stmt.equal_to.clone(),
             have_fn_equal_stmt.line_file,
         ));
-        let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> = vec![];
+        let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::with_capacity(
+            have_fn_equal_stmt.fn_set_with_params.dom_facts.len(),
+        );
         for dom_fact in have_fn_equal_stmt.fn_set_with_params.dom_facts.iter() {
             forall_dom_facts.push(dom_fact.clone().to_exist_or_and_chain_atomic_fact());
         }
@@ -587,7 +590,13 @@ impl<'a> Executor<'a> {
             let case_fact = &have_fn_equal_case_by_case_stmt.cases[case_index];
             let equal_to = &have_fn_equal_case_by_case_stmt.equal_tos[case_index];
 
-            let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> = vec![];
+            let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::with_capacity(
+                have_fn_equal_case_by_case_stmt
+                    .fn_set_with_params
+                    .dom_facts
+                    .len()
+                    + 1,
+            );
             for dom_fact in have_fn_equal_case_by_case_stmt
                 .fn_set_with_params
                 .dom_facts

@@ -247,7 +247,9 @@ pub struct FnSetWithoutParams {
 
 impl FnSetWithParams {
     pub fn params(&self) -> Vec<String> {
-        let mut ret = vec![];
+        let mut ret = Vec::with_capacity(ParamDefWithParamSet::number_of_params(
+            &self.params_def_with_set,
+        ));
         for param_def_with_set in &self.params_def_with_set {
             ret.extend(param_def_with_set.0.iter().cloned());
         }

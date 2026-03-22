@@ -836,7 +836,9 @@ impl<'a> Executor<'a> {
             tb.skip_token(RIGHT_CURLY_BRACE)?;
             Ok(Obj::SetBuilder(SetBuilder::new(a.name, second, facts)))
         } else {
-            let mut objs = vec![Obj::Identifier(a), second];
+            let mut objs = Vec::with_capacity(2);
+            objs.push(Obj::Identifier(a));
+            objs.push(second);
             while tb.current()? != RIGHT_CURLY_BRACE {
                 if tb.current_token_is_equal_to(COMMA) {
                     tb.skip_token(COMMA)?;
