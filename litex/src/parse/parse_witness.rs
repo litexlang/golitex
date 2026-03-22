@@ -30,7 +30,7 @@ impl<'a> Executor<'a> {
         tb.skip_token(FROM)?;
         let equal_tos = self.parse_obj_list(tb)?;
         tb.skip_token(COLON)?;
-        let mut proof = vec![];
+        let mut proof = Vec::with_capacity(tb.body.len());
         for block in tb.body.iter_mut() {
             proof.push(self.parse_stmt(block)?);
         }
@@ -64,7 +64,7 @@ impl<'a> Executor<'a> {
             ));
         }
 
-        let mut proof = vec![];
+        let mut proof = Vec::with_capacity(tb.body.len());
         for block in tb.body.iter_mut() {
             proof.push(self.parse_stmt(block)?);
         }

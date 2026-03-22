@@ -179,31 +179,31 @@ impl ParamDefWithParamSet {
         )))
     }
 
+    #[allow(dead_code)]
     pub fn facts_for_boxed_args_satisfy_param_def_with_set_vec(
         param_defs: &Vec<ParamDefWithParamSet>,
         args: &Vec<Box<Obj>>,
     ) -> Result<Vec<Fact>, StmtError> {
-        let instantiated_param_sets =
-            Self::instantiate_param_def_with_set_one_by_one_boxed(param_defs, args)?;
-        let flat_param_sets =
-            Self::flat_instantiated_param_sets_for_args(param_defs, &instantiated_param_sets);
-        let mut facts = Vec::with_capacity(args.len());
-        for (arg, param_set) in args.iter().zip(flat_param_sets.iter()) {
-            let arg_obj = (**arg).clone();
-            facts.push(Self::fact_for_obj(arg_obj, param_set));
+        let mut args_as_obj: Vec<Obj> = Vec::with_capacity(args.len());
+        for arg in args.iter() {
+            args_as_obj.push((**arg).clone());
         }
-        Ok(facts)
+        Self::facts_for_args_satisfy_param_def_with_set_vec(param_defs, &args_as_obj)
     }
 
     pub fn facts_for_args_satisfy_param_def_with_set_vec(
         param_defs: &Vec<ParamDefWithParamSet>,
         args: &Vec<Obj>,
     ) -> Result<Vec<Fact>, StmtError> {
-        let mut args_as_boxed_obj: Vec<Box<Obj>> = Vec::with_capacity(args.len());
-        for arg in args.iter() {
-            args_as_boxed_obj.push(Box::new(arg.clone()));
+        let instantiated_param_sets =
+            Self::instantiate_param_def_with_set_one_by_one(param_defs, args)?;
+        let flat_param_sets =
+            Self::flat_instantiated_param_sets_for_args(param_defs, &instantiated_param_sets);
+        let mut facts = Vec::with_capacity(args.len());
+        for (arg, param_set) in args.iter().zip(flat_param_sets.iter()) {
+            facts.push(Self::fact_for_obj(arg.clone(), param_set));
         }
-        Self::facts_for_boxed_args_satisfy_param_def_with_set_vec(param_defs, &args_as_boxed_obj)
+        Ok(facts)
     }
 
     fn number_of_params_in_param_def_with_set_def(param_defs: &Vec<ParamDefWithParamSet>) -> usize {
@@ -246,9 +246,9 @@ impl ParamDefWithParamSet {
             )));
         }
 
-        let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
+        let mut param_to_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
         let mut arg_index: usize = 0;
-        let mut instantiated_param_sets: Vec<Obj> = vec![];
+        let mut instantiated_param_sets: Vec<Obj> = Vec::with_capacity(param_defs.len());
         for param_def in param_defs.iter() {
             let instantiated_param_set = if arg_index != 0 {
                 param_def.1.instantiate(&param_to_arg_map)
@@ -264,17 +264,6 @@ impl ParamDefWithParamSet {
         }
 
         Ok(instantiated_param_sets)
-    }
-
-    fn instantiate_param_def_with_set_one_by_one_boxed(
-        param_defs: &Vec<ParamDefWithParamSet>,
-        args: &Vec<Box<Obj>>,
-    ) -> Result<Vec<Obj>, StmtError> {
-        let mut args_as_obj: Vec<Obj> = Vec::with_capacity(args.len());
-        for arg in args.iter() {
-            args_as_obj.push((**arg).clone());
-        }
-        Self::instantiate_param_def_with_set_one_by_one(param_defs, &args_as_obj)
     }
 }
 
@@ -350,9 +339,9 @@ impl ParamDefWithParamType {
             )));
         }
 
-        let mut param_arg_map: HashMap<String, Obj> = HashMap::new();
+        let mut param_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
         let mut arg_index: usize = 0;
-        let mut new_types: Vec<ParamType> = vec![];
+        let mut new_types: Vec<ParamType> = Vec::with_capacity(param_defs.len());
         for param_def in param_defs.iter() {
             let new_type = if arg_index != 0 {
                 param_def.1.instantiate(&param_arg_map)
@@ -396,7 +385,9 @@ impl ParamDefWithParamType {
     }
 
     pub fn collect_param_names(param_defs: &Vec<ParamDefWithParamType>) -> Vec<String> {
-        let mut names: Vec<String> = vec![];
+        let mut names: Vec<String> = Vec::with_capacity(
+            Self::number_of_params_in_param_def_with_type_def(param_defs),
+        );
         for def in param_defs.iter() {
             for name in def.param_names().iter() {
                 names.push(name.clone());
@@ -449,7 +440,7 @@ impl ParamDefWithParamSet {
     }
 
     pub fn collect_param_names(param_defs: &Vec<ParamDefWithParamSet>) -> Vec<String> {
-        let mut names: Vec<String> = vec![];
+        let mut names: Vec<String> = Vec::with_capacity(Self::number_of_params(param_defs));
         for def in param_defs.iter() {
             for name in def.param_names().iter() {
                 names.push(name.clone());

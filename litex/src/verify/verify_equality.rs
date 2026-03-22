@@ -107,7 +107,7 @@ impl<'a> Executor<'a> {
         left_string: &str,
         right_string: &str,
     ) -> Vec<(Option<Rc<Vec<Obj>>>, Option<Rc<Vec<Obj>>>)> {
-        let mut pairs = vec![];
+        let mut pairs = Vec::with_capacity(self.runtime_context.environments.len());
         for env in self.runtime_context.iter_environments_from_top() {
             let known_left = env.known_equality.get(left_string).map(Rc::clone);
             let known_right = env.known_equality.get(right_string).map(Rc::clone);
