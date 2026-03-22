@@ -54,8 +54,12 @@ pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOr
     let left_monomial_collections = collect_monomials_in_obj(&sub.left);
     let right_monomial_collections = collect_monomials_in_obj(&sub.right);
 
-    let mut already_processed_indexes: Vec<usize> = vec![];
-    let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> = vec![];
+    let mut already_processed_indexes: Vec<usize> = Vec::with_capacity(
+        left_monomial_collections.len() + right_monomial_collections.len(),
+    );
+    let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> = Vec::with_capacity(
+        left_monomial_collections.len() + right_monomial_collections.len(),
+    );
     for (i, left_monomial) in left_monomial_collections.iter().enumerate() {
         if already_processed_indexes.contains(&i) {
             continue;
@@ -125,8 +129,12 @@ pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOr
     let left_monomial_collections = collect_monomials_in_obj(&add.left);
     let right_monomial_collections = collect_monomials_in_obj(&add.right);
 
-    let mut already_processed_indexes: Vec<usize> = vec![];
-    let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> = vec![];
+    let mut already_processed_indexes: Vec<usize> = Vec::with_capacity(
+        left_monomial_collections.len() + right_monomial_collections.len(),
+    );
+    let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> = Vec::with_capacity(
+        left_monomial_collections.len() + right_monomial_collections.len(),
+    );
     for (i, left_monomial) in left_monomial_collections.iter().enumerate() {
         if already_processed_indexes.contains(&i) {
             continue;
@@ -188,7 +196,8 @@ fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrdere
     if mul.left.can_be_calculated() {
         let left = mul.left.calculate_to_string();
         let collected_monomials_of_right = collect_monomials_in_obj(&mul.right);
-        let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> = vec![];
+        let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> =
+            Vec::with_capacity(collected_monomials_of_right.len());
         for right in collected_monomials_of_right.iter() {
             let current_monomial = multiply_numbers_to_monomial(left.as_str(), right);
             if let Some(m) = current_monomial {
@@ -201,7 +210,8 @@ fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrdere
     if mul.right.can_be_calculated() {
         let right = mul.right.calculate_to_string();
         let collected_monomials_of_left = collect_monomials_in_obj(&mul.left);
-        let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> = vec![];
+        let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> =
+            Vec::with_capacity(collected_monomials_of_left.len());
         for left in collected_monomials_of_left.iter() {
             let current_monomial = multiply_numbers_to_monomial(right.as_str(), left);
             if let Some(m) = current_monomial {
@@ -221,7 +231,8 @@ fn collect_monomials_of_mul_of_monomial_vec(
     collections_of_left: Vec<MonomialWithNonZeroScalarAndOrderedOperands>,
     collections_of_right: Vec<MonomialWithNonZeroScalarAndOrderedOperands>,
 ) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    let mut collect_monomials_after_mul: Vec<MonomialWithNonZeroScalarAndOrderedOperands> = vec![];
+    let mut collect_monomials_after_mul: Vec<MonomialWithNonZeroScalarAndOrderedOperands> =
+        Vec::with_capacity(collections_of_left.len() * collections_of_right.len());
     for left in collections_of_left.iter() {
         for right in collections_of_right.iter() {
             let multiplied = multiply_two_non_zero_monomials_with_operands(left, right);
@@ -229,8 +240,10 @@ fn collect_monomials_of_mul_of_monomial_vec(
         }
     }
 
-    let mut already_processed_indexes: Vec<usize> = vec![];
-    let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> = vec![];
+    let mut already_processed_indexes: Vec<usize> =
+        Vec::with_capacity(collect_monomials_after_mul.len());
+    let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> =
+        Vec::with_capacity(collect_monomials_after_mul.len());
     for (i, monomial) in collect_monomials_after_mul.iter().enumerate() {
         if already_processed_indexes.contains(&i) {
             continue;
@@ -366,7 +379,15 @@ fn multiply_two_non_zero_monomials_with_operands(
     left: &MonomialWithNonZeroScalarAndOrderedOperands,
     right: &MonomialWithNonZeroScalarAndOrderedOperands,
 ) -> MonomialWithNonZeroScalarAndOrderedOperands {
-    let mut new_operands = vec![];
+    let left_operand_count = left
+        .ordered_operands
+        .as_ref()
+        .map_or(0, |ordered_operands| ordered_operands.len());
+    let right_operand_count = right
+        .ordered_operands
+        .as_ref()
+        .map_or(0, |ordered_operands| ordered_operands.len());
+    let mut new_operands = Vec::with_capacity(left_operand_count + right_operand_count);
     let new_scalar = mul_decimal_str(&left.non_zero_scalar, &right.non_zero_scalar);
     if let Some(operands) = left.ordered_operands.as_ref() {
         for operand in operands.iter() {

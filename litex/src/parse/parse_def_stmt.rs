@@ -219,8 +219,9 @@ impl<'a> Executor<'a> {
         tb.skip_token(EQUAL)?;
         if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
-            let mut cases: Vec<AndChainAtomicFact> = vec![];
-            let mut equal_tos: Vec<crate::obj::Obj> = vec![];
+            let case_block_count = tb.body.len();
+            let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(case_block_count);
+            let mut equal_tos: Vec<crate::obj::Obj> = Vec::with_capacity(case_block_count);
             for block in tb.body.iter_mut() {
                 block.skip_token(CASE)?;
                 cases.push(self.parse_and_chain_atomic_fact(block)?);

@@ -50,7 +50,7 @@ impl ChainFact {
             return Err(NewAtomicFactError::new(format!("the number of objects ({}) is not equal to the number of property names ({}) + 1", self.objs.len(), self.prop_names.len()), None));
         }
 
-        let mut facts = Vec::new();
+        let mut facts = Vec::with_capacity(self.prop_names.len());
         for (i, _) in self.prop_names.iter().enumerate() {
             let prop_name = self.prop_names[i].clone();
             let left_obj = self.objs[i].clone();

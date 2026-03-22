@@ -45,7 +45,8 @@ fn strip_triple_quote_comment_blocks(source_code: &str) -> String {
     // Between two delimiter lines, everything is replaced with empty lines so
     // the parser will ignore those lines.
     let mut in_comment = false;
-    let mut out_lines: Vec<String> = Vec::new();
+    let line_count_upper_bound = source_code.lines().count();
+    let mut out_lines: Vec<String> = Vec::with_capacity(line_count_upper_bound);
 
     for line in source_code.lines() {
         let trimmed = line.trim();
@@ -72,7 +73,8 @@ fn parse_level(
     base_indent: usize,
     current_file_index: usize,
 ) -> Result<Vec<TokenBlock>, ParseBlockError> {
-    let mut items = Vec::new();
+    let remaining_line_count_upper_bound = lines.len().saturating_sub(*i);
+    let mut items = Vec::with_capacity(remaining_line_count_upper_bound);
     let mut body_indent = None;
 
     while *i < lines.len() {

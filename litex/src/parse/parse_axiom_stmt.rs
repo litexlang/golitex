@@ -35,9 +35,11 @@ impl<'a> Executor<'a> {
                 .map(|b| self.parse_fact(b))
                 .collect::<Result<_, _>>()?
         };
-        let mut cases: Vec<AndChainAtomicFact> = vec![];
-        let mut proofs: Vec<Vec<Stmt>> = vec![];
-        let mut impossible_facts: Vec<Option<ExistOrAndChainAtomicFact>> = vec![];
+        let case_block_count = tb.body.len().saturating_sub(1);
+        let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(case_block_count);
+        let mut proofs: Vec<Vec<Stmt>> = Vec::with_capacity(case_block_count);
+        let mut impossible_facts: Vec<Option<ExistOrAndChainAtomicFact>> =
+            Vec::with_capacity(case_block_count);
         for block in tb.body.iter_mut().skip(1) {
             block.skip_token(CASE)?;
             let case = self.parse_and_chain_atomic_fact(block)?;
@@ -110,7 +112,8 @@ impl<'a> Executor<'a> {
             ));
         }
         let n = tb.body.len();
-        let mut proof = vec![];
+        let proof_stmt_block_count = n.saturating_sub(1);
+        let mut proof = Vec::with_capacity(proof_stmt_block_count);
         for block in tb.body[0..n - 1].iter_mut() {
             proof.push(self.parse_stmt(block)?);
         }
@@ -279,25 +282,27 @@ impl<'a> Executor<'a> {
             ));
         }
 
-        let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = vec![];
-        let mut then_facts: Vec<ExistOrAndChainAtomicFact> = vec![];
-        let mut proof: Vec<Stmt> = vec![];
-
         let first_is_arrow = tb.body[0].header.get(0).map(|s| s.as_str()) == Some(RIGHT_ARROW);
 
-        if first_is_arrow {
+        let (dom_facts, then_facts, proof) = if first_is_arrow {
             // body[0] 是 =>:，其 body 是 then_facts；后面全是 proof
             let then_block = tb.body.get_mut(0).ok_or_else(|| {
                 ParsingError::new("Expected body".to_string(), tb.line_file, None)
             })?;
+            let then_fact_count_upper_bound = then_block.body.len();
             then_block.parse_index = 0;
             then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
+            let mut then_facts: Vec<ExistOrAndChainAtomicFact> =
+                Vec::with_capacity(then_fact_count_upper_bound);
             for b in then_block.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(b)?);
             }
+            let proof_block_count_upper_bound = tb.body.len().saturating_sub(1);
+            let mut proof: Vec<Stmt> = Vec::with_capacity(proof_block_count_upper_bound);
             for b in tb.body.iter_mut().skip(1) {
                 proof.push(self.parse_stmt(b)?);
             }
+            (Vec::new(), then_facts, proof)
         } else {
             // 前面若干 block 是 dom，直到 =>:；=>: 的 body 是 then_facts；再后面是 proof
             let mut arrow_idx = None;
@@ -311,6 +316,7 @@ impl<'a> Executor<'a> {
                 ParsingError::new("for: expects a =>: block".to_string(), tb.line_file, None)
             })?;
 
+            let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::with_capacity(arrow_idx);
             for b in tb.body[0..arrow_idx].iter_mut() {
                 dom_facts.push(self.parse_exist_or_and_chain_atomic_fact(b)?);
             }
@@ -318,16 +324,22 @@ impl<'a> Executor<'a> {
             let then_block = tb.body.get_mut(arrow_idx).ok_or_else(|| {
                 ParsingError::new("Expected body".to_string(), tb.line_file, None)
             })?;
+            let then_fact_count_upper_bound = then_block.body.len();
             then_block.parse_index = 0;
             then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
+            let mut then_facts: Vec<ExistOrAndChainAtomicFact> =
+                Vec::with_capacity(then_fact_count_upper_bound);
             for b in then_block.body.iter_mut() {
                 then_facts.push(self.parse_exist_or_and_chain_atomic_fact(b)?);
             }
 
+            let proof_block_count_upper_bound = tb.body.len().saturating_sub(arrow_idx + 1);
+            let mut proof: Vec<Stmt> = Vec::with_capacity(proof_block_count_upper_bound);
             for b in tb.body.iter_mut().skip(arrow_idx + 1) {
                 proof.push(self.parse_stmt(b)?);
             }
-        }
+            (dom_facts, then_facts, proof)
+        };
 
         Ok(Stmt::ForAxiomStmt(ForAxiomStmt::new(
             params,
