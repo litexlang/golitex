@@ -1,9 +1,9 @@
-use super::Executor;
+use super::Runtime;
 use crate::error::StmtError;
 use crate::result::NonErrStmtExecResult;
 use crate::stmt::eval_stmt::EvalStmt;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn exec_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<NonErrStmtExecResult, StmtError> {
         Self::stmt_unsupported(stmt.stmt_type_name(), stmt.line_file)
     }

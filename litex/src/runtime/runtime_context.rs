@@ -16,7 +16,7 @@ use std::fmt;
 
 pub struct RuntimeContext<'a> {
     pub module_manager: &'a mut ModuleManager<'a>,
-    pub environments: Vec<Box<Environment>>,
+    pub environment_stack: Vec<Box<Environment>>,
     pub builtin_environment: &'a mut Environment,
 
     pub defined_identifier_objs: HashMap<String, ()>,
@@ -35,7 +35,7 @@ impl<'a> RuntimeContext<'a> {
         let new_env = Box::new(Environment::new_empty_env());
         RuntimeContext {
             module_manager,
-            environments: vec![new_env],
+            environment_stack: vec![new_env],
             builtin_environment,
             defined_identifier_objs: HashMap::new(),
             defined_props_with_meaning: HashMap::new(),
@@ -51,7 +51,7 @@ impl<'a> fmt::Display for RuntimeContext<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "RuntimeContext {{\n")?;
         write!(f, "    module_manager: {}\n", self.module_manager)?;
-        write!(f, "    environments: {:?}\n", self.environments.len())?;
+        write!(f, "    environments: {:?}\n", self.environment_stack.len())?;
         write!(f, "    builtin_environment: {}\n", self.builtin_environment)?;
         write!(f, "    objs: {:?}\n", self.defined_identifier_objs.len())?;
         write!(
@@ -76,7 +76,7 @@ impl<'a> fmt::Display for RuntimeContext<'a> {
 
 impl<'a> RuntimeContext<'a> {
     pub fn top_level_env(&mut self) -> &mut Environment {
-        let result = self.environments.last_mut();
+        let result = self.environment_stack.last_mut();
         match result {
             Some(e) => e,
             None => unreachable!("no top level environment"),
@@ -191,13 +191,13 @@ impl<'a> RuntimeContext<'a> {
 }
 
 impl<'a> RuntimeContext<'a> {
-    pub fn new_env(&mut self) {
+    pub fn push_env(&mut self) {
         let new_env = Box::new(Environment::new_empty_env());
-        self.environments.push(new_env);
+        self.environment_stack.push(new_env);
     }
 
-    pub fn delete_env(&mut self) {
-        let last_env = self.environments.last();
+    pub fn pop_env(&mut self) {
+        let last_env = self.environment_stack.last();
 
         match last_env {
             None => {
@@ -228,7 +228,7 @@ impl<'a> RuntimeContext<'a> {
                     self.defined_algorithms.remove(defined_algorithm.0);
                 }
 
-                self.environments.pop();
+                self.environment_stack.pop();
             }
         }
     }
@@ -256,7 +256,7 @@ impl<'a> RuntimeContext<'a> {
 
 impl<'a> RuntimeContext<'a> {
     pub fn iter_environments_from_top(&self) -> impl Iterator<Item = &Environment> {
-        self.environments.iter().rev().map(|env| env.as_ref())
+        self.environment_stack.iter().rev().map(|env| env.as_ref())
     }
 
     pub fn find_fn_definition_for_atom(&self, atom: &Atom) -> Option<&FnSetObj> {

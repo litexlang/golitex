@@ -1,7 +1,7 @@
 use crate::calculate_and_simplify_rational_expression::objs_equal_by_rational_expression_simplification;
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::error::VerifyError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::AtomicFact;
 use crate::fact::EqualFact;
 use crate::infer::InferResult;
@@ -12,7 +12,7 @@ use crate::result::StmtUnknown;
 use crate::verify::VerifyState;
 use std::rc::Rc;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn verify_equal_fact(
         &mut self,
         equal_fact: &EqualFact,
@@ -107,7 +107,7 @@ impl<'a> Executor<'a> {
         left_string: &str,
         right_string: &str,
     ) -> Vec<(Option<Rc<Vec<Obj>>>, Option<Rc<Vec<Obj>>>)> {
-        let mut pairs = Vec::with_capacity(self.runtime_context.environments.len());
+        let mut pairs = Vec::with_capacity(self.runtime_context.environment_stack.len());
         for env in self.runtime_context.iter_environments_from_top() {
             let known_left = env.known_equality.get(left_string).map(Rc::clone);
             let known_right = env.known_equality.get(right_string).map(Rc::clone);

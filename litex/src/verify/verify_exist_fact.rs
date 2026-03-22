@@ -1,6 +1,6 @@
 use crate::environment::Environment;
 use crate::error::VerifyError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::ExistFact;
 use crate::obj::{Identifier, Obj};
 use crate::result::{NonErrStmtExecResult, StmtUnknown};
@@ -9,7 +9,7 @@ use crate::verify::VerifyState;
 use std::collections::HashMap;
 use std::result::Result;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn verify_exist_fact(
         &mut self,
         exist_fact: &ExistFact,

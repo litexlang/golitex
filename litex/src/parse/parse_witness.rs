@@ -4,11 +4,11 @@ use crate::common::keywords::{
     WITNESS,
 };
 use crate::error::ParsingError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
 use crate::stmt::Stmt;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn witness_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(WITNESS)?;
         if tb.current_token_is_equal_to(EXIST) {

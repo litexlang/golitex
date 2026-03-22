@@ -1,9 +1,9 @@
-use super::Executor;
+use super::Runtime;
 use crate::error::StmtError;
 use crate::result::NonErrStmtExecResult;
 use crate::stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn exec_witness_exist_fact(
         &mut self,
         stmt: &WitnessExistFact,

@@ -1,6 +1,6 @@
 use crate::calculate_and_simplify_rational_expression::objs_equal_by_rational_expression_simplification;
 use crate::error::VerifyError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::{AtomicFact, IsNonemptySetFact, NotEqualFact};
 use crate::infer::InferResult;
 use crate::obj::Obj;
@@ -10,7 +10,7 @@ use crate::result::StmtUnknown;
 use crate::verify::verify_number_comparison_builtin_rule::verify_number_comparison_builtin_rule;
 use crate::verify::VerifyState;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn verify_non_equational_atomic_fact_with_builtin_rules(
         &mut self,
         atomic_fact: &AtomicFact,

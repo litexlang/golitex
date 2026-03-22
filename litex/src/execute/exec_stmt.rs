@@ -1,9 +1,9 @@
-use super::Executor;
+use super::Runtime;
 use crate::error::{ExecStmtError, StmtError};
 use crate::result::NonErrStmtExecResult;
 use crate::stmt::Stmt;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<NonErrStmtExecResult, StmtError> {
         match stmt {
             Stmt::DefLetStmt(d) => self.def_let_stmt(d).map_err(StmtError::from),

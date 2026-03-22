@@ -1,5 +1,5 @@
 use crate::environment::Environment;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::AtomicFact;
 use crate::fact::EqualFact;
 use crate::fact::Fact;
@@ -8,7 +8,7 @@ use crate::obj::{Number, Obj};
 use crate::parse::tokenize_line;
 use crate::parse::TokenBlock;
 use crate::result::NonErrStmtExecResult;
-use crate::runtime_context::RuntimeContext;
+use crate::runtime::RuntimeContext;
 use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 
@@ -20,7 +20,7 @@ fn test_verify_atomic_fact() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Executor::new(&mut runtime_context);
+    let mut executor = Runtime::new(&mut runtime_context);
 
     // verify 1 = 1
     let one = Obj::Number(Number::new("1".to_string()));
@@ -51,7 +51,7 @@ fn test_exec_stmt_fact_one_plus_one_eq_two() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Executor::new(&mut runtime_context);
+    let mut executor = Runtime::new(&mut runtime_context);
     let s = "1 + 1 = 2";
     let tokens = tokenize_line(s);
     let mut tb = TokenBlock::new(tokens, vec![], (0, 1));

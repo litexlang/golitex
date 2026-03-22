@@ -1,4 +1,4 @@
-use super::Executor;
+use super::Runtime;
 use crate::error::ExecStmtError;
 use crate::infer::InferResult;
 use crate::result::NonErrStmtExecResult;
@@ -6,7 +6,7 @@ use crate::result::NonFactualStmtSuccess;
 use crate::stmt::know_stmt::KnowStmt;
 use crate::verify::VerifyState;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn exec_know_stmt(
         &mut self,
         know_stmt: &KnowStmt,

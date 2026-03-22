@@ -1,4 +1,4 @@
-use super::Executor;
+use super::Runtime;
 use crate::error::ExecStmtError;
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::stmt::definition_stmt::{
@@ -6,7 +6,7 @@ use crate::stmt::definition_stmt::{
     DefStructWithNoFieldStmt,
 };
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn store_def_prop_with_meaning(
         &mut self,
         def_prop_with_meaning_stmt: &DefPropWithMeaningStmt,

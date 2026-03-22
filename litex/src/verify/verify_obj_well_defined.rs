@@ -1,7 +1,7 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::helper::todo_error_message;
 use crate::error::{StmtError, WellDefinedError};
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::InFact;
 use crate::fact::{
     AndChainAtomicFact, AndFact, AtomicFact, EqualFact, Fact, GreaterFact, IsCartFact, IsTupleFact,
@@ -17,7 +17,7 @@ use crate::obj::{
 use crate::stmt::parameter_def::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
 use crate::verify::VerifyState;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     fn verify_obj_well_defined_from_cache_if_known(&self, obj: &Obj) -> Option<()> {
         let key = obj.to_string();
         if self.runtime_context.cache_well_defined_obj_contains(&key) {
@@ -718,9 +718,9 @@ impl<'a> Executor<'a> {
         x: &SetBuilder,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        self.runtime_context.new_env();
+        self.runtime_context.push_env();
         let result = self.verify_set_builder_well_defined_body(x, verify_state);
-        self.runtime_context.delete_env();
+        self.runtime_context.pop_env();
         result
     }
 
@@ -779,9 +779,9 @@ impl<'a> Executor<'a> {
         x: &FnSetWithParams,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        self.runtime_context.new_env();
+        self.runtime_context.push_env();
         let result = self.verify_fn_set_with_dom_well_defined_body(x, verify_state);
-        self.runtime_context.delete_env();
+        self.runtime_context.pop_env();
         result
     }
 
@@ -858,9 +858,9 @@ impl<'a> Executor<'a> {
         x: &InstStructObj,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        self.runtime_context.new_env();
+        self.runtime_context.push_env();
         let result = self.verify_inst_set_struct_obj_well_defined_body(x, verify_state);
-        self.runtime_context.delete_env();
+        self.runtime_context.pop_env();
         result
     }
 
@@ -1189,7 +1189,7 @@ impl<'a> Executor<'a> {
     }
 }
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn verify_param_type_well_defined(
         &mut self,
         param_type: &ParamType,
