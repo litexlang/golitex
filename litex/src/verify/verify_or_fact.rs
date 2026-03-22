@@ -1,13 +1,13 @@
 use crate::environment::Environment;
 use crate::error::VerifyError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::OrFact;
 use crate::infer::InferResult;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult, StmtUnknown};
 use crate::verify::VerifyState;
 use std::result::Result;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn verify_or_fact(
         &mut self,
         or_fact: &OrFact,

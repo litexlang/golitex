@@ -1,5 +1,5 @@
 use crate::error::InferError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::{
     AndChainAtomicFact, AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, ForallFact,
     ForallFactWithIff, InFact, IsTupleFact, NormalAtomicFact, OrAndChainAtomicFact, OrFact,
@@ -31,7 +31,7 @@ impl InferResult {
     }
 }
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn infer(&mut self, fact: &Fact) -> Result<InferResult, InferError> {
         match fact {
             Fact::AtomicFact(atomic_fact) => self.infer_atomic_fact(atomic_fact),

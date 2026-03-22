@@ -5,7 +5,7 @@ use crate::common::keywords::{
 };
 use crate::error::ParsingError;
 use crate::error::{duplicate_used_name_error_message, StmtError};
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
 use crate::stmt::define_algorithm_stmt::{AlgoCase, AlgoReturn, AlgoReturnOrAlgoCase, DefAlgoStmt};
 use crate::stmt::definition_stmt::{
@@ -16,7 +16,7 @@ use crate::stmt::definition_stmt::{
 use crate::stmt::parameter_def::ParamDefWithParamType;
 use crate::stmt::Stmt;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn parse_def_prop_with_meaning_stmt_or_prop_without_meaning(
         &mut self,
         tb: &mut TokenBlock,
@@ -32,12 +32,12 @@ impl<'a> Executor<'a> {
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, ParsingError> {
-        self.new_parsing_names_block();
+        self.push_parsing_time_name_scope();
         let stmt = self.parse_def_prop_with_meaning_stmt_body(tb);
-        self.delete_parsing_names_block();
+        self.pop_parsing_time_name_scope();
 
         let stmt_ok = stmt?;
-        self.validate_name_and_put_into_parsing_names_block(&stmt_ok.name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&stmt_ok.name),
@@ -54,7 +54,7 @@ impl<'a> Executor<'a> {
     ) -> Result<DefPropWithMeaningStmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
-        self.validate_name_and_put_into_parsing_names_block(&name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&name),
@@ -69,7 +69,7 @@ impl<'a> Executor<'a> {
         }
         tb.skip_token(RIGHT_BRACE)?;
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
-        self.validate_names_and_put_into_parsing_names_block(&all_param_names)
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(&all_param_names)
             .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         let facts = self.parse_facts_in_body(tb)?;
         Ok(DefPropWithMeaningStmt::new(
@@ -84,12 +84,12 @@ impl<'a> Executor<'a> {
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, ParsingError> {
-        self.new_parsing_names_block();
+        self.push_parsing_time_name_scope();
         let stmt = self.parse_def_prop_without_meaning_stmt_body(tb);
-        self.delete_parsing_names_block();
+        self.pop_parsing_time_name_scope();
 
         let stmt_ok = stmt?;
-        self.validate_name_and_put_into_parsing_names_block(&stmt_ok.name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&stmt_ok.name),
@@ -106,7 +106,7 @@ impl<'a> Executor<'a> {
     ) -> Result<DefPropWithoutMeaningStmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
-        self.validate_name_and_put_into_parsing_names_block(&name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&name),
@@ -124,7 +124,7 @@ impl<'a> Executor<'a> {
         }
         tb.skip_token(RIGHT_BRACE)?;
 
-        self.validate_names_and_put_into_parsing_names_block(&params)
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(&params)
             .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
 
         Ok(DefPropWithoutMeaningStmt::new(name, params, tb.line_file))
@@ -151,7 +151,7 @@ impl<'a> Executor<'a> {
             vec![]
         };
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_def);
-        self.validate_names_and_put_into_parsing_names_block(&all_param_names)
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(&all_param_names)
             .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
@@ -179,7 +179,7 @@ impl<'a> Executor<'a> {
             ));
         }
         let have_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
-        self.validate_names_and_put_into_parsing_names_block(&have_param_names)
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(&have_param_names)
             .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
@@ -206,7 +206,7 @@ impl<'a> Executor<'a> {
         tb.skip_token(FN_FOR_FN_WITH_PARAMS)?;
         let name = tb.advance()?;
 
-        self.validate_name_and_put_into_parsing_names_block(&name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&name),
@@ -257,7 +257,7 @@ impl<'a> Executor<'a> {
             }
         }
 
-        self.validate_names_and_put_into_parsing_names_block(&equal_tos)
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(&equal_tos)
             .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
 
         Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(
@@ -270,7 +270,7 @@ impl<'a> Executor<'a> {
     pub fn parse_def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(STRUCT)?;
         let name = tb.advance()?;
-        self.validate_name_and_put_into_parsing_names_block(&name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&name),
@@ -279,9 +279,9 @@ impl<'a> Executor<'a> {
                 )
             })?;
 
-        self.new_parsing_names_block();
+        self.push_parsing_time_name_scope();
         let stmt = self.parse_def_struct_stmt_body(name, tb);
-        self.delete_parsing_names_block();
+        self.pop_parsing_time_name_scope();
         stmt
     }
 
@@ -299,7 +299,7 @@ impl<'a> Executor<'a> {
             }
         }
         let struct_param_names = ParamDefWithParamType::collect_param_names(&params_def_with_type);
-        self.validate_names_and_put_into_parsing_names_block(&struct_param_names)
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(&struct_param_names)
             .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
@@ -384,7 +384,7 @@ impl<'a> Executor<'a> {
     pub fn parse_def_algorithm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(ALGO)?;
         let name = tb.advance()?;
-        self.validate_name_and_put_into_parsing_names_block(&name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&name),
@@ -393,9 +393,9 @@ impl<'a> Executor<'a> {
                 )
             })?;
 
-        self.new_parsing_names_block();
+        self.push_parsing_time_name_scope();
         let stmt = self.parse_def_algorithm_stmt_body(name, tb);
-        self.delete_parsing_names_block();
+        self.pop_parsing_time_name_scope();
         stmt
     }
 

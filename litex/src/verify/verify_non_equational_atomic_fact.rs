@@ -1,6 +1,6 @@
 use crate::environment::Environment;
 use crate::error::VerifyError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::AtomicFact;
 use crate::fact::RestrictFact;
 use crate::infer::InferResult;
@@ -8,7 +8,7 @@ use crate::result::StmtUnknown;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
 use crate::verify::VerifyState;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn verify_non_equational_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,

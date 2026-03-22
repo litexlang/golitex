@@ -1,11 +1,11 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::error::ExecStmtError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::{AtomicFact, Fact, IsNonemptySetFact};
 use crate::stmt::parameter_def::ParamType;
 use crate::verify::VerifyState;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     /// If check_type_nonempty is true and param_type is Obj(set), verifies that the set is nonempty and stores the fact.
     pub fn verify_param_type_nonempty_if_required(
         &mut self,

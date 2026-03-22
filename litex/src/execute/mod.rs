@@ -10,5 +10,4 @@ mod exec_store_def;
 mod exec_store_fact;
 mod exec_tooling_stmt;
 mod exec_witness_stmt;
-mod executor;
-pub use executor::Executor;
+pub use crate::runtime::Runtime;

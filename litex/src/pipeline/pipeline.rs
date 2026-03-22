@@ -1,8 +1,8 @@
 use crate::environment::Environment;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::module_manager::ModuleManager;
 use crate::parse::TokenBlock;
-use crate::runtime_context::RuntimeContext;
+use crate::runtime::RuntimeContext;
 use crate::stmt::Stmt;
 use std::fs;
 
@@ -26,7 +26,7 @@ fn run_source_code(source_code: &str, entrance_file_path: &str) -> String {
     };
 
     let mut out = String::new();
-    let mut executor = Executor::new(&mut runtime_context);
+    let mut executor = Runtime::new(&mut runtime_context);
     for mut block in blocks {
         let stmt: Stmt = {
             match executor.parse_stmt(&mut block) {

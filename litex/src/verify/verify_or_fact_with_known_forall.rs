@@ -1,7 +1,7 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::environment::KnownForallFactParamsAndDom;
 use crate::error::VerifyError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::{ExistOrAndChainAtomicFact, ForallFact, OrFact};
 use crate::infer::InferResult;
 use crate::obj::Obj;
@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::result::Result;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn verify_or_fact_with_known_forall(
         &mut self,
         or_fact: &OrFact,
@@ -46,9 +46,9 @@ impl<'a> Executor<'a> {
     > {
         let lookup_key = given_or_fact.key();
 
-        let envs_count = self.runtime_context.environments.len();
+        let envs_count = self.runtime_context.environment_stack.len();
         for i in iterate_from_env_index..envs_count {
-            let env = &self.runtime_context.environments[envs_count - 1 - i];
+            let env = &self.runtime_context.environment_stack[envs_count - 1 - i];
             if let Some(known_forall_facts_in_env) =
                 env.known_or_facts_in_forall_facts.get(lookup_key.as_str())
             {

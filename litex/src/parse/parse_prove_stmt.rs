@@ -1,11 +1,11 @@
 use super::TokenBlock;
 use crate::common::keywords::{COLON, PROVE};
 use crate::error::ParsingError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::stmt::prove_stmt::ProveStmt;
 use crate::stmt::Stmt;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn prove_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(PROVE)?;
         tb.skip_token(COLON)?;

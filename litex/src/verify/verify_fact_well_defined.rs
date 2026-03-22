@@ -1,6 +1,6 @@
 use crate::common::keywords::is_builtin_predicate;
 use crate::error::WellDefinedError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::line_file as atomic_fact_line_file;
 use crate::fact::AtomicFact;
 use crate::fact::{
@@ -12,7 +12,7 @@ use crate::verify::VerifyState;
 
 // well-defined check for fact: 1. predicate is defined 2. all args are well-defined
 // store verified related facts during the verification process, e.g. when verifying f(a)(b) is well-defined, we store f(a) in the set where f returns, and store f(a)(b) in the set where f(a) returns
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn verify_fact_well_defined(
         &mut self,
         fact: &Fact,
@@ -189,9 +189,9 @@ impl<'a> Executor<'a> {
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        self.runtime_context.new_env();
+        self.runtime_context.push_env();
         let result = self.verify_exist_fact_well_defined_body(&exist_fact, verify_state);
-        self.runtime_context.delete_env();
+        self.runtime_context.pop_env();
         result
     }
 
@@ -226,9 +226,9 @@ impl<'a> Executor<'a> {
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        self.runtime_context.new_env();
+        self.runtime_context.push_env();
         let result = self.verify_forall_fact_well_defined_body(&forall_fact, verify_state);
-        self.runtime_context.delete_env();
+        self.runtime_context.pop_env();
         result
     }
 
@@ -330,10 +330,10 @@ impl<'a> Executor<'a> {
         forall_fact_with_iff: &ForallFactWithIff,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        self.runtime_context.new_env();
+        self.runtime_context.push_env();
         let result =
             self.verify_forall_fact_with_iff_well_defined_body(forall_fact_with_iff, verify_state);
-        self.runtime_context.delete_env();
+        self.runtime_context.pop_env();
         result
     }
 

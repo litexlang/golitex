@@ -1,10 +1,10 @@
-use super::Executor;
+use super::Runtime;
 use crate::error::{ExecStmtError, StmtError};
 use crate::infer::InferResult;
 use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
 use crate::stmt::prove_stmt::ProveStmt;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn exec_prove_stmt(&mut self, stmt: &ProveStmt) -> Result<NonErrStmtExecResult, StmtError> {
         let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
         for proof_stmt in &stmt.proof {

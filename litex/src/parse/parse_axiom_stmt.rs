@@ -4,7 +4,7 @@ use crate::common::keywords::{
     ENUMERATE, EQUAL, FOR, FROM, IMPOSSIBLE, PROVE, RIGHT_ARROW,
 };
 use crate::error::ParsingError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::{AndChainAtomicFact, ExistOrAndChainAtomicFact, Fact};
 use crate::obj::Obj;
 use crate::stmt::axiom_stmt::{
@@ -13,7 +13,7 @@ use crate::stmt::axiom_stmt::{
 };
 use crate::stmt::Stmt;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn parse_by_cases_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(BY_CASES)?;
         tb.skip_token(COLON)?;

@@ -1,7 +1,7 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::environment::KnownForallFactParamsAndDom;
 use crate::error::VerifyError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::ExistOrAndChainAtomicFact;
 use crate::fact::{AtomicFact, ForallFact};
 use crate::infer::InferResult;
@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::result::Result;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn verify_atomic_fact_with_known_forall(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -48,9 +48,9 @@ impl<'a> Executor<'a> {
         let key = given_fact.key();
         let is_true = given_fact.is_true();
 
-        let envs_count = self.runtime_context.environments.len();
+        let envs_count = self.runtime_context.environment_stack.len();
         for i in iterate_from_env_index..envs_count {
-            let env = &self.runtime_context.environments[envs_count - 1 - i];
+            let env = &self.runtime_context.environment_stack[envs_count - 1 - i];
             if let Some(known_forall_facts_in_env) = env
                 .known_atomic_facts_in_forall_facts
                 .get(&(key.clone(), is_true))

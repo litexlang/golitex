@@ -1,11 +1,11 @@
-use super::Executor;
+use super::Runtime;
 use crate::error::ExecStmtError;
 use crate::error::StoreFactError;
 use crate::fact::Fact;
 use crate::infer::InferResult;
 use crate::verify::VerifyState;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn store_fact_without_well_defined_verified_and_infer(
         &mut self,
         fact: &Fact,

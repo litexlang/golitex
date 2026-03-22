@@ -1,11 +1,11 @@
-use super::Executor;
+use super::Runtime;
 use crate::error::{StmtError, UnknownError};
 use crate::fact::Fact;
 use crate::result::NonErrStmtExecResult;
 use crate::verify::VerifyState;
 use std::result::Result;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn exec_fact(&mut self, fact: &Fact) -> Result<NonErrStmtExecResult, StmtError> {
         let result = self.verify_fact(fact, &VerifyState::new(0, false))?;
         let result = match result {

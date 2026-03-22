@@ -1,4 +1,4 @@
-use super::Executor;
+use super::Runtime;
 use crate::error::StmtError;
 use crate::error::{ExecStmtError, UnknownError};
 use crate::fact::Fact;
@@ -7,7 +7,7 @@ use crate::result::NonFactualStmtSuccess;
 use crate::stmt::claim_stmt::ClaimStmt;
 use crate::verify::VerifyState;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     fn exec_claim_stmt_body_fact_except_forall_fact(
         &mut self,
         stmt: &ClaimStmt,
@@ -72,9 +72,9 @@ impl<'a> Executor<'a> {
                         ))
                     })?;
 
-                self.runtime_context.new_env();
+                self.runtime_context.push_env();
                 let body_result = self.exec_claim_stmt_body_fact_for_forall_fact(stmt);
-                self.runtime_context.delete_env();
+                self.runtime_context.pop_env();
 
                 if let Err(e) = body_result {
                     return Err(e);
@@ -95,9 +95,9 @@ impl<'a> Executor<'a> {
                         ))
                     })?;
 
-                self.runtime_context.new_env();
+                self.runtime_context.push_env();
                 let result = self.exec_claim_stmt_body_fact_except_forall_fact(stmt);
-                self.runtime_context.delete_env();
+                self.runtime_context.pop_env();
 
                 self.store_fact_without_well_defined_verified_and_infer(&stmt.fact)?;
 

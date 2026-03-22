@@ -1,13 +1,13 @@
 use crate::error::StmtError;
 use crate::error::VerifyError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::Fact;
 use crate::infer::InferResult;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
 use crate::verify::VerifyState;
 use std::result::Result;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn verify_fact(
         &mut self,
         fact: &Fact,

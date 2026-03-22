@@ -2,12 +2,12 @@ use super::TokenBlock;
 use crate::common::keywords::PROVE;
 use crate::common::keywords::{CLAIM, COLON};
 use crate::error::ParsingError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::Fact;
 use crate::stmt::claim_stmt::ClaimStmt;
 use crate::stmt::Stmt;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn parse_claim_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(CLAIM)?;
         Ok(Stmt::ClaimStmt(self.parse_multiline_fact_claim(tb)?))

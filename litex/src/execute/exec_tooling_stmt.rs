@@ -1,10 +1,10 @@
-use super::Executor;
+use super::Runtime;
 use crate::error::StmtError;
 use crate::infer::InferResult;
 use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
 use crate::stmt::tooling_stmt::{ClearStmt, DoNothingStmt, ImportStmt, RunFileStmt};
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn exec_import_stmt(
         &mut self,
         stmt: &ImportStmt,

@@ -1,22 +1,22 @@
 use crate::error::{StmtError, VerifyError};
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::{ForallFact, ForallFactWithIff};
 use crate::infer::InferResult;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
 use crate::verify::VerifyState;
 use std::result::Result;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     /// Declare params, assume dom facts hold, then verify each then_fact.
     pub fn verify_forall_fact(
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        self.runtime_context.new_env();
+        self.runtime_context.push_env();
 
         let result = self.verify_forall_fact_body(forall_fact, verify_state);
-        self.runtime_context.delete_env();
+        self.runtime_context.pop_env();
 
         result
     }

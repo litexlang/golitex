@@ -13,8 +13,10 @@ use error::{
     ArithmeticError, ExecStmtError, InferError, NewAtomicFactError, ParseBlockError, StmtError,
     StoreFactError, VerifyError, WellDefinedError,
 };
+mod runtime;
+use runtime::RuntimeContext;
 mod execute;
-use execute::Executor;
+use execute::Runtime;
 mod obj;
 use obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FnObj, FnSetObj,
@@ -65,8 +67,6 @@ use result::{
 };
 mod module_manager;
 use module_manager::ModuleManager;
-mod runtime_context;
-use runtime_context::RuntimeContext;
 mod environment;
 use environment::Environment;
 mod parse;
@@ -307,7 +307,7 @@ fn try_equal_literally() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let executor = Executor::new(&mut runtime_context);
+    let executor = Runtime::new(&mut runtime_context);
     let a = Obj::Identifier(Identifier::new("a".to_string()));
     let b = Obj::Identifier(Identifier::new("b".to_string()));
     println!("{}", executor.equal_literally(&a, &b));
@@ -1964,7 +1964,7 @@ fn try_parse_obj() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Executor::new(&mut runtime_context);
+    let mut executor = Runtime::new(&mut runtime_context);
     println!("{}", executor);
     let s = "a+b";
     let tokens = tokenize_line(s);
@@ -1982,7 +1982,7 @@ fn try_parse_fact() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Executor::new(&mut runtime_context);
+    let mut executor = Runtime::new(&mut runtime_context);
     println!("{}", executor);
     let s = "a+b=0";
     let tokens = tokenize_line(s);
@@ -2000,7 +2000,7 @@ fn try_parse_statements() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Executor::new(&mut runtime_context);
+    let mut executor = Runtime::new(&mut runtime_context);
     println!("{}", executor);
     let s = "a+b=0";
     let tokens = tokenize_line(s);
@@ -2018,7 +2018,7 @@ fn try_executor() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let executor = Executor::new(&mut runtime_context);
+    let executor = Runtime::new(&mut runtime_context);
     println!("{}", executor.line_file_string(1, 0));
 }
 
@@ -2043,7 +2043,7 @@ fn try_obj_well_defined<'a>() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Executor::new(&mut runtime_context);
+    let mut executor = Runtime::new(&mut runtime_context);
 
     let one = Obj::Number(Number::new("1".to_string()));
     let two = Obj::Number(Number::new("2".to_string()));

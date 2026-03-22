@@ -1,13 +1,13 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::error::VerifyError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::{AndFact, ChainFact, Fact};
 use crate::infer::InferResult;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
 use crate::verify::VerifyState;
 use std::result::Result;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn verify_and_fact(
         &mut self,
         and_fact: &AndFact,

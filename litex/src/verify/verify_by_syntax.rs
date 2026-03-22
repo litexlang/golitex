@@ -1,7 +1,7 @@
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::obj::Obj;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn equal_literally(&self, left: &Obj, right: &Obj) -> bool {
         match left {
             Obj::Identifier(a) => match right {
