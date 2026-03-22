@@ -1,11 +1,11 @@
-use std::fmt;
-use crate::common::keywords::{AND, FACT_PREFIX,  is_comparison_str};
-use crate::common::helper::vec_to_string_with_sep;
-use super::atomic_fact::{AtomicFact};
+use super::atomic_fact::AtomicFact;
 use super::fact::Fact;
+use crate::common::helper::vec_to_string_with_sep;
+use crate::common::keywords::{is_comparison_str, AND, FACT_PREFIX};
 use crate::error::NewAtomicFactError;
-use crate::obj::Obj;
 use crate::obj::IdentifierOrIdentifierWithMod;
+use crate::obj::Obj;
+use std::fmt;
 
 #[derive(Clone)]
 pub struct AndFact {
@@ -35,7 +35,11 @@ impl ChainFact {
         prop_names: Vec<IdentifierOrIdentifierWithMod>,
         line_file: (usize, usize),
     ) -> Self {
-        ChainFact { objs, prop_names, line_file }
+        ChainFact {
+            objs,
+            prop_names,
+            line_file,
+        }
     }
     pub fn line_file(&self) -> (usize, usize) {
         self.line_file
@@ -45,13 +49,18 @@ impl ChainFact {
         if self.objs.len() != self.prop_names.len() + 1 {
             return Err(NewAtomicFactError::new(format!("the number of objects ({}) is not equal to the number of property names ({}) + 1", self.objs.len(), self.prop_names.len()), None));
         }
-        
+
         let mut facts = Vec::new();
         for (i, _) in self.prop_names.iter().enumerate() {
             let prop_name = self.prop_names[i].clone();
             let left_obj = self.objs[i].clone();
             let right_obj = self.objs[i + 1].clone();
-            let atomic_fact = AtomicFact::to_atomic_fact(prop_name, true, vec![left_obj, right_obj], self.line_file);
+            let atomic_fact = AtomicFact::to_atomic_fact(
+                prop_name,
+                true,
+                vec![left_obj, right_obj],
+                self.line_file,
+            );
             facts.push(atomic_fact?);
         }
         Ok(facts)
@@ -82,13 +91,20 @@ pub enum AndChainAtomicFact {
 
 impl fmt::Display for AndFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", vec_to_string_with_sep(&self.facts, format!(" {} ", AND)))
+        write!(
+            f,
+            "{}",
+            vec_to_string_with_sep(&self.facts, format!(" {} ", AND))
+        )
     }
 }
 
 impl AndFact {
     pub fn key(&self) -> String {
-        vec_to_string_with_sep(&self.facts.iter().map(|a| a.key()).collect::<Vec<_>>(), format!(" {} ", AND))
+        vec_to_string_with_sep(
+            &self.facts.iter().map(|a| a.key()).collect::<Vec<_>>(),
+            format!(" {} ", AND),
+        )
     }
 
     pub fn get_args_from_fact(&self) -> Vec<Obj> {
@@ -119,7 +135,14 @@ impl fmt::Display for ChainFact {
 
 impl ChainFact {
     pub fn key(&self) -> String {
-        vec_to_string_with_sep(&self.prop_names.iter().map(|p| p.to_string()).collect::<Vec<_>>(), format!(" {} ", AND))
+        vec_to_string_with_sep(
+            &self
+                .prop_names
+                .iter()
+                .map(|p| p.to_string())
+                .collect::<Vec<_>>(),
+            format!(" {} ", AND),
+        )
     }
 
     pub fn get_args_from_fact(&self) -> Vec<Obj> {
@@ -160,9 +183,15 @@ impl AndChainAtomicFact {
 
     pub fn to_exist_or_and_chain_atomic_fact(&self) -> crate::fact::ExistOrAndChainAtomicFact {
         match self {
-            AndChainAtomicFact::AtomicFact(atomic_fact) => crate::fact::ExistOrAndChainAtomicFact::AtomicFact(atomic_fact.clone()),
-            AndChainAtomicFact::AndFact(and_fact) => crate::fact::ExistOrAndChainAtomicFact::AndFact(and_fact.clone()),
-            AndChainAtomicFact::ChainFact(chain_fact) => crate::fact::ExistOrAndChainAtomicFact::ChainFact(chain_fact.clone()),
+            AndChainAtomicFact::AtomicFact(atomic_fact) => {
+                crate::fact::ExistOrAndChainAtomicFact::AtomicFact(atomic_fact.clone())
+            }
+            AndChainAtomicFact::AndFact(and_fact) => {
+                crate::fact::ExistOrAndChainAtomicFact::AndFact(and_fact.clone())
+            }
+            AndChainAtomicFact::ChainFact(chain_fact) => {
+                crate::fact::ExistOrAndChainAtomicFact::ChainFact(chain_fact.clone())
+            }
         }
     }
 }

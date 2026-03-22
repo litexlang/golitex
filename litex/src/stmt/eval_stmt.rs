@@ -1,6 +1,6 @@
-use std::fmt;
 use crate::common::keywords::EVAL;
 use crate::obj::Obj;
+use std::fmt;
 
 pub struct EvalStmt {
     pub obj_to_eval: Obj,
@@ -15,7 +15,10 @@ impl fmt::Display for EvalStmt {
 
 impl EvalStmt {
     pub fn new(obj_to_eval: Obj, line_file: (usize, usize)) -> Self {
-        EvalStmt { obj_to_eval, line_file }
+        EvalStmt {
+            obj_to_eval,
+            line_file,
+        }
     }
 
     pub fn stmt_type_name(&self) -> String {

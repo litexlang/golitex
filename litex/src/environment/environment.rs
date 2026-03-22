@@ -1,25 +1,25 @@
-use std::collections::HashMap;
-use crate::obj::Cart;
-use std::fmt;
-use crate::stmt::parameter_def::ParamDefWithParamType;
-use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
-use crate::fact::Fact;
-use crate::stmt::definition_stmt::{DefPropWithMeaningStmt, DefPropWithoutMeaningStmt};
-use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
-use crate::fact::AtomicFact;
-use crate::fact::ExistFact;
-use crate::fact::ForallFact;
-use crate::fact::OrFact;
-use std::rc::Rc;
-use crate::obj::FnSetObj;
-use crate::obj::SetBuilder;
-use crate::fact::ForallFactWithIff;
 use crate::error::StoreFactError;
-use crate::fact::EqualFact;
 use crate::fact::AndFact;
+use crate::fact::AtomicFact;
 use crate::fact::ChainFact;
-use crate::obj::Obj;
+use crate::fact::EqualFact;
+use crate::fact::ExistFact;
 use crate::fact::ExistOrAndChainAtomicFact;
+use crate::fact::Fact;
+use crate::fact::ForallFact;
+use crate::fact::ForallFactWithIff;
+use crate::fact::OrFact;
+use crate::obj::Cart;
+use crate::obj::FnSetObj;
+use crate::obj::Obj;
+use crate::obj::SetBuilder;
+use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
+use crate::stmt::definition_stmt::{DefPropWithMeaningStmt, DefPropWithoutMeaningStmt};
+use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
+use crate::stmt::parameter_def::ParamDefWithParamType;
+use std::collections::HashMap;
+use std::fmt;
+use std::rc::Rc;
 pub struct Environment {
     pub defined_identifier_objs: HashMap<String, ()>,
     pub defined_props_with_meaning: HashMap<String, DefPropWithMeaningStmt>,
@@ -34,14 +34,18 @@ pub struct Environment {
 
     pub known_atomic_facts_with_0_or_more_than_2_args: HashMap<(String, bool), Vec<AtomicFact>>,
     pub known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, AtomicFact>>,
-    pub known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), AtomicFact>>,
-    
+    pub known_atomic_facts_with_2_args:
+        HashMap<(String, bool), HashMap<(String, String), AtomicFact>>,
+
     pub known_exist_facts: HashMap<String, Vec<ExistFact>>,
     pub known_or_facts: HashMap<String, Vec<OrFact>>,
-    pub known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>,
-    pub known_exist_facts_in_forall_facts: HashMap<String, Vec<(ExistFact, Rc<KnownForallFactParamsAndDom>)>>,
-    pub known_or_facts_in_forall_facts: HashMap<String, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>,
-    pub known_obj_is_well_defined: HashMap<String,()>,
+    pub known_atomic_facts_in_forall_facts:
+        HashMap<(String, bool), Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>,
+    pub known_exist_facts_in_forall_facts:
+        HashMap<String, Vec<(ExistFact, Rc<KnownForallFactParamsAndDom>)>>,
+    pub known_or_facts_in_forall_facts:
+        HashMap<String, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>,
+    pub known_obj_is_well_defined: HashMap<String, ()>,
     pub known_atom_in_fn_set: HashMap<String, FnSetObj>,
     pub known_tuple_obj_in_what_cart: HashMap<String, Cart>,
 
@@ -50,7 +54,42 @@ pub struct Environment {
 }
 
 impl Environment {
-    pub fn new(objs: HashMap<String, ()>, props: HashMap<String, DefPropWithMeaningStmt>, structs_with_fields: HashMap<String, DefStructWithFieldsStmt>, structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>, props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>, algorithms: HashMap<String, DefAlgoStmt>, known_equality: HashMap<String, Rc<Vec<Obj>>>, known_fn_in_fn_set: HashMap<String, FnSetObj>, known_set_equal_to_set_builder: HashMap<String, SetBuilder>, known_atomic_facts_with_0_or_more_than_2_args: HashMap<(String, bool), Vec<AtomicFact>>, known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, AtomicFact>>, known_atomic_facts_with_2_args: HashMap<(String, bool), HashMap<(String, String), AtomicFact>>, known_exist_facts: HashMap<String, Vec<ExistFact>>, known_atomic_facts_in_forall_facts: HashMap<(String, bool), Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>>, known_exist_facts_in_forall_facts: HashMap<String, Vec<(ExistFact, Rc<KnownForallFactParamsAndDom>)>>, known_or_facts: HashMap<String, Vec<OrFact>>, known_or_facts_in_forall_facts: HashMap<String, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>, known_obj_is_well_defined: HashMap<String,()>, known_atom_in_fn_set: HashMap<String, FnSetObj>, known_tuple_dim_obj: HashMap<String, Cart>, cache_known_valid_obj: HashMap<String, ()>, cache_known_fact: HashMap<String, (usize, usize)>) -> Self {
+    pub fn new(
+        objs: HashMap<String, ()>,
+        props: HashMap<String, DefPropWithMeaningStmt>,
+        structs_with_fields: HashMap<String, DefStructWithFieldsStmt>,
+        structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>,
+        props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>,
+        algorithms: HashMap<String, DefAlgoStmt>,
+        known_equality: HashMap<String, Rc<Vec<Obj>>>,
+        known_fn_in_fn_set: HashMap<String, FnSetObj>,
+        known_set_equal_to_set_builder: HashMap<String, SetBuilder>,
+        known_atomic_facts_with_0_or_more_than_2_args: HashMap<(String, bool), Vec<AtomicFact>>,
+        known_atomic_facts_with_1_arg: HashMap<(String, bool), HashMap<String, AtomicFact>>,
+        known_atomic_facts_with_2_args: HashMap<
+            (String, bool),
+            HashMap<(String, String), AtomicFact>,
+        >,
+        known_exist_facts: HashMap<String, Vec<ExistFact>>,
+        known_atomic_facts_in_forall_facts: HashMap<
+            (String, bool),
+            Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>,
+        >,
+        known_exist_facts_in_forall_facts: HashMap<
+            String,
+            Vec<(ExistFact, Rc<KnownForallFactParamsAndDom>)>,
+        >,
+        known_or_facts: HashMap<String, Vec<OrFact>>,
+        known_or_facts_in_forall_facts: HashMap<
+            String,
+            Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>,
+        >,
+        known_obj_is_well_defined: HashMap<String, ()>,
+        known_atom_in_fn_set: HashMap<String, FnSetObj>,
+        known_tuple_dim_obj: HashMap<String, Cart>,
+        cache_known_valid_obj: HashMap<String, ()>,
+        cache_known_fact: HashMap<String, (usize, usize)>,
+    ) -> Self {
         Environment {
             defined_identifier_objs: objs,
             defined_props_with_meaning: props,
@@ -82,25 +121,93 @@ impl fmt::Display for Environment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Environment {{\n")?;
         write!(f, "    objs: {:?}\n", self.defined_identifier_objs.len())?;
-        write!(f, "    props_with_meaning: {:?}\n", self.defined_props_with_meaning.len())?;
-        write!(f, "    structs_with_fields: {:?}\n", self.defined_structs_with_fields.len())?;
-        write!(f, "    structs_with_no_field: {:?}\n", self.defined_structs_with_no_field.len())?;
+        write!(
+            f,
+            "    props_with_meaning: {:?}\n",
+            self.defined_props_with_meaning.len()
+        )?;
+        write!(
+            f,
+            "    structs_with_fields: {:?}\n",
+            self.defined_structs_with_fields.len()
+        )?;
+        write!(
+            f,
+            "    structs_with_no_field: {:?}\n",
+            self.defined_structs_with_no_field.len()
+        )?;
         write!(f, "    algorithms: {:?}\n", self.defined_algorithms.len())?;
         write!(f, "    known_equality: {:?}\n", self.known_equality.len())?;
-        write!(f, "    known_fn_in_fn_set: {:?}\n", self.known_fn_in_fn_set.len())?;
-        write!(f, "    known_set_equal_to_set_builder: {:?}\n", self.known_set_equal_to_set_builder.len())?;
-        write!(f, "    known_atomic_facts_with_0_or_more_than_two_params: {:?}\n", self.known_atomic_facts_with_0_or_more_than_2_args.len())?;
-        write!(f, "    known_atomic_facts_with_1_arg: {:?}\n", self.known_atomic_facts_with_1_arg.len())?;
-        write!(f, "    known_atomic_facts_with_2_args: {:?}\n", self.known_atomic_facts_with_2_args.len())?;
-        write!(f, "    known_exist_facts_with_more_than_two_params: {:?}\n", self.known_exist_facts.len())?;
-        write!(f, "    known_or_facts_with_more_than_two_params: {:?}\n", self.known_or_facts.len())?;
-        write!(f, "    known_atomic_facts_in_forall_facts: {:?}\n", self.known_atomic_facts_in_forall_facts.len())?;
-        write!(f, "    known_exist_facts_in_forall_facts: {:?}\n", self.known_exist_facts_in_forall_facts.len())?;
-        write!(f, "    known_or_facts_in_forall_facts: {:?}\n", self.known_or_facts_in_forall_facts.len())?;
-        write!(f, "    known_obj_is_well_defined: {:?}\n", self.known_obj_is_well_defined.len())?;
-        write!(f, "    known_obj_in_fn_set: {:?}\n", self.known_atom_in_fn_set.len())?;
-        write!(f, "    cache_known_valid_obj: {:?}\n", self.cache_well_defined_obj.len())?;
-        write!(f, "    cache_known_fact: {:?}\n", self.cache_known_fact.len())?;
+        write!(
+            f,
+            "    known_fn_in_fn_set: {:?}\n",
+            self.known_fn_in_fn_set.len()
+        )?;
+        write!(
+            f,
+            "    known_set_equal_to_set_builder: {:?}\n",
+            self.known_set_equal_to_set_builder.len()
+        )?;
+        write!(
+            f,
+            "    known_atomic_facts_with_0_or_more_than_two_params: {:?}\n",
+            self.known_atomic_facts_with_0_or_more_than_2_args.len()
+        )?;
+        write!(
+            f,
+            "    known_atomic_facts_with_1_arg: {:?}\n",
+            self.known_atomic_facts_with_1_arg.len()
+        )?;
+        write!(
+            f,
+            "    known_atomic_facts_with_2_args: {:?}\n",
+            self.known_atomic_facts_with_2_args.len()
+        )?;
+        write!(
+            f,
+            "    known_exist_facts_with_more_than_two_params: {:?}\n",
+            self.known_exist_facts.len()
+        )?;
+        write!(
+            f,
+            "    known_or_facts_with_more_than_two_params: {:?}\n",
+            self.known_or_facts.len()
+        )?;
+        write!(
+            f,
+            "    known_atomic_facts_in_forall_facts: {:?}\n",
+            self.known_atomic_facts_in_forall_facts.len()
+        )?;
+        write!(
+            f,
+            "    known_exist_facts_in_forall_facts: {:?}\n",
+            self.known_exist_facts_in_forall_facts.len()
+        )?;
+        write!(
+            f,
+            "    known_or_facts_in_forall_facts: {:?}\n",
+            self.known_or_facts_in_forall_facts.len()
+        )?;
+        write!(
+            f,
+            "    known_obj_is_well_defined: {:?}\n",
+            self.known_obj_is_well_defined.len()
+        )?;
+        write!(
+            f,
+            "    known_obj_in_fn_set: {:?}\n",
+            self.known_atom_in_fn_set.len()
+        )?;
+        write!(
+            f,
+            "    cache_known_valid_obj: {:?}\n",
+            self.cache_well_defined_obj.len()
+        )?;
+        write!(
+            f,
+            "    cache_known_fact: {:?}\n",
+            self.cache_known_fact.len()
+        )?;
         write!(f, "}}")
     }
 }
@@ -114,24 +221,38 @@ impl Environment {
                 let is_true = atomic_fact.is_true();
                 if atomic_fact.args().len() == 1 {
                     let arg_key = atomic_fact.args()[0].to_string();
-                    if let Some(map) = self.known_atomic_facts_with_1_arg.get_mut(&(key.clone(), is_true)) {
+                    if let Some(map) = self
+                        .known_atomic_facts_with_1_arg
+                        .get_mut(&(key.clone(), is_true))
+                    {
                         map.insert(arg_key, atomic_fact);
                     } else {
-                        self.known_atomic_facts_with_1_arg.insert((key, is_true), HashMap::from([(arg_key, atomic_fact)]));
+                        self.known_atomic_facts_with_1_arg
+                            .insert((key, is_true), HashMap::from([(arg_key, atomic_fact)]));
                     }
                 } else if atomic_fact.args().len() == 2 {
                     let arg_key1 = atomic_fact.args()[0].to_string();
                     let arg_key2 = atomic_fact.args()[1].to_string();
-                    if let Some(map) = self.known_atomic_facts_with_2_args.get_mut(&(key.clone(), is_true)) {
+                    if let Some(map) = self
+                        .known_atomic_facts_with_2_args
+                        .get_mut(&(key.clone(), is_true))
+                    {
                         map.insert((arg_key1, arg_key2), atomic_fact);
                     } else {
-                        self.known_atomic_facts_with_2_args.insert((key, is_true), HashMap::from([((arg_key1, arg_key2), atomic_fact)]));
+                        self.known_atomic_facts_with_2_args.insert(
+                            (key, is_true),
+                            HashMap::from([((arg_key1, arg_key2), atomic_fact)]),
+                        );
                     }
                 } else {
-                    if let Some(vec_ref) = self.known_atomic_facts_with_0_or_more_than_2_args.get_mut(&(key.clone(), is_true)) {
+                    if let Some(vec_ref) = self
+                        .known_atomic_facts_with_0_or_more_than_2_args
+                        .get_mut(&(key.clone(), is_true))
+                    {
                         vec_ref.push(atomic_fact);
                     } else {
-                        self.known_atomic_facts_with_0_or_more_than_2_args.insert((key, is_true), vec![atomic_fact]);
+                        self.known_atomic_facts_with_0_or_more_than_2_args
+                            .insert((key, is_true), vec![atomic_fact]);
                     }
                 }
                 Ok(())
@@ -159,66 +280,116 @@ impl Environment {
         Ok(())
     }
 
-    fn store_atomic_fact_in_forall_fact(&mut self, atomic_fact_ref: &AtomicFact, forall_params_and_dom: Rc<KnownForallFactParamsAndDom>) -> Result<(), StoreFactError> {
+    fn store_atomic_fact_in_forall_fact(
+        &mut self,
+        atomic_fact_ref: &AtomicFact,
+        forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
+    ) -> Result<(), StoreFactError> {
         let key = atomic_fact_ref.key();
         let is_true = atomic_fact_ref.is_true();
-        if let Some(vec_ref) = self.known_atomic_facts_in_forall_facts.get_mut(&(key.clone(), is_true)) {
+        if let Some(vec_ref) = self
+            .known_atomic_facts_in_forall_facts
+            .get_mut(&(key.clone(), is_true))
+        {
             vec_ref.push((atomic_fact_ref.clone(), forall_params_and_dom));
         } else {
-            self.known_atomic_facts_in_forall_facts.insert((key, is_true), vec![(atomic_fact_ref.clone(), forall_params_and_dom)]);
+            self.known_atomic_facts_in_forall_facts.insert(
+                (key, is_true),
+                vec![(atomic_fact_ref.clone(), forall_params_and_dom)],
+            );
         }
         Ok(())
     }
 
-    fn store_or_fact_in_forall_fact(&mut self, or_fact: &OrFact, forall_params_and_dom: Rc<KnownForallFactParamsAndDom>) -> Result<(), StoreFactError> {
+    fn store_or_fact_in_forall_fact(
+        &mut self,
+        or_fact: &OrFact,
+        forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
+    ) -> Result<(), StoreFactError> {
         let key = or_fact.key();
         if let Some(vec_ref) = self.known_or_facts_in_forall_facts.get_mut(&key) {
             vec_ref.push((or_fact.clone(), forall_params_and_dom));
         } else {
-            self.known_or_facts_in_forall_facts.insert(key, vec![(or_fact.clone(), forall_params_and_dom)]);
+            self.known_or_facts_in_forall_facts
+                .insert(key, vec![(or_fact.clone(), forall_params_and_dom)]);
         }
         Ok(())
     }
 
-    fn store_a_fact_in_forall_fact(&mut self, fact: &ExistOrAndChainAtomicFact, forall_params_and_dom: Rc<KnownForallFactParamsAndDom>) -> Result<(), StoreFactError> {
+    fn store_a_fact_in_forall_fact(
+        &mut self,
+        fact: &ExistOrAndChainAtomicFact,
+        forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
+    ) -> Result<(), StoreFactError> {
         match fact {
             ExistOrAndChainAtomicFact::AtomicFact(spec_fact) => {
                 self.store_atomic_fact_in_forall_fact(&spec_fact, forall_params_and_dom)
             }
-            ExistOrAndChainAtomicFact::OrFact(or_fact) => self.store_or_fact_in_forall_fact(&or_fact, forall_params_and_dom),
-            ExistOrAndChainAtomicFact::AndFact(and_fact) => self.store_and_fact_in_forall_fact(&and_fact, forall_params_and_dom),
-            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => self.store_chain_fact_in_forall_fact(&chain_fact, forall_params_and_dom),
-            ExistOrAndChainAtomicFact::ExistFact(exist_fact) => self.store_exist_fact_in_forall_fact(&exist_fact, forall_params_and_dom),
+            ExistOrAndChainAtomicFact::OrFact(or_fact) => {
+                self.store_or_fact_in_forall_fact(&or_fact, forall_params_and_dom)
+            }
+            ExistOrAndChainAtomicFact::AndFact(and_fact) => {
+                self.store_and_fact_in_forall_fact(&and_fact, forall_params_and_dom)
+            }
+            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
+                self.store_chain_fact_in_forall_fact(&chain_fact, forall_params_and_dom)
+            }
+            ExistOrAndChainAtomicFact::ExistFact(exist_fact) => {
+                self.store_exist_fact_in_forall_fact(&exist_fact, forall_params_and_dom)
+            }
         }
     }
 
-    fn store_chain_fact_in_forall_fact(&mut self, chain_fact: &ChainFact, forall_params_and_dom: Rc<KnownForallFactParamsAndDom>) -> Result<(), StoreFactError> {
+    fn store_chain_fact_in_forall_fact(
+        &mut self,
+        chain_fact: &ChainFact,
+        forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
+    ) -> Result<(), StoreFactError> {
         for fact in chain_fact.facts()?.iter() {
-            self.store_a_fact_in_forall_fact(&ExistOrAndChainAtomicFact::AtomicFact(fact.clone()), forall_params_and_dom.clone())?;
+            self.store_a_fact_in_forall_fact(
+                &ExistOrAndChainAtomicFact::AtomicFact(fact.clone()),
+                forall_params_and_dom.clone(),
+            )?;
         }
         Ok(())
     }
 
-    fn store_exist_fact_in_forall_fact(&mut self, exist_fact: &ExistFact, forall_params_and_dom: Rc<KnownForallFactParamsAndDom>) -> Result<(), StoreFactError> {
+    fn store_exist_fact_in_forall_fact(
+        &mut self,
+        exist_fact: &ExistFact,
+        forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
+    ) -> Result<(), StoreFactError> {
         let key = exist_fact.key();
         if let Some(vec_ref) = self.known_exist_facts_in_forall_facts.get_mut(&key) {
             vec_ref.push((exist_fact.clone(), forall_params_and_dom));
         } else {
-            self.known_exist_facts_in_forall_facts.insert(key, vec![(exist_fact.clone(), forall_params_and_dom)]);
+            self.known_exist_facts_in_forall_facts
+                .insert(key, vec![(exist_fact.clone(), forall_params_and_dom)]);
         }
         Ok(())
     }
 
-    fn store_and_fact_in_forall_fact(&mut self, and_fact: &AndFact, forall_params_and_dom: Rc<KnownForallFactParamsAndDom>) -> Result<(), StoreFactError> {
+    fn store_and_fact_in_forall_fact(
+        &mut self,
+        and_fact: &AndFact,
+        forall_params_and_dom: Rc<KnownForallFactParamsAndDom>,
+    ) -> Result<(), StoreFactError> {
         for fact in and_fact.facts.iter() {
-            self.store_a_fact_in_forall_fact(&ExistOrAndChainAtomicFact::AtomicFact(fact.clone()), forall_params_and_dom.clone())?;
+            self.store_a_fact_in_forall_fact(
+                &ExistOrAndChainAtomicFact::AtomicFact(fact.clone()),
+                forall_params_and_dom.clone(),
+            )?;
         }
         Ok(())
     }
 
     fn store_forall_fact(&mut self, forall_fact: Rc<ForallFact>) -> Result<(), StoreFactError> {
-        let forall_params_and_dom = Rc::new(KnownForallFactParamsAndDom::new(forall_fact.params_def_with_type.clone(), forall_fact.dom_facts.clone(), forall_fact.line_file));
-        
+        let forall_params_and_dom = Rc::new(KnownForallFactParamsAndDom::new(
+            forall_fact.params_def_with_type.clone(),
+            forall_fact.dom_facts.clone(),
+            forall_fact.line_file,
+        ));
+
         for fact in forall_fact.then_facts.iter() {
             self.store_a_fact_in_forall_fact(fact, forall_params_and_dom.clone())?;
         }
@@ -232,8 +403,12 @@ impl Environment {
         Ok(())
     }
 
-    fn store_forall_fact_with_iff(&mut self, forall_fact_with_iff: ForallFactWithIff) -> Result<(), StoreFactError> {
-        let (forall_then_implies_iff, forall_iff_implies_then) = forall_fact_with_iff.to_two_forall_facts();
+    fn store_forall_fact_with_iff(
+        &mut self,
+        forall_fact_with_iff: ForallFactWithIff,
+    ) -> Result<(), StoreFactError> {
+        let (forall_then_implies_iff, forall_iff_implies_then) =
+            forall_fact_with_iff.to_two_forall_facts();
         self.store_forall_fact(Rc::new(forall_then_implies_iff))?;
         self.store_forall_fact(Rc::new(forall_iff_implies_then))?;
         Ok(())
@@ -247,7 +422,9 @@ impl Environment {
             Fact::AndFact(and_fact) => self.store_and_fact(and_fact),
             Fact::ChainFact(chain_fact) => self.store_chain_fact(chain_fact),
             Fact::ForallFact(forall_fact) => self.store_forall_fact(Rc::new(forall_fact)),
-            Fact::ForallFactWithIff(forall_fact_with_iff) => self.store_forall_fact_with_iff(forall_fact_with_iff),
+            Fact::ForallFactWithIff(forall_fact_with_iff) => {
+                self.store_forall_fact_with_iff(forall_fact_with_iff)
+            }
         }
     }
 
@@ -284,7 +461,8 @@ impl Environment {
                 };
                 let new_rc = Rc::new(merged);
                 for obj in new_rc.iter() {
-                    self.known_equality.insert(obj.to_string(), Rc::clone(&new_rc));
+                    self.known_equality
+                        .insert(obj.to_string(), Rc::clone(&new_rc));
                 }
             }
             (Some(ref rc), None) => {
@@ -292,7 +470,9 @@ impl Environment {
                 let mut new_vec = (**rc).clone();
                 new_vec.push(equality.right.clone());
                 let new_rc = Rc::new(new_vec);
-                let keys_to_update: Vec<String> = self.known_equality.iter()
+                let keys_to_update: Vec<String> = self
+                    .known_equality
+                    .iter()
                     .filter(|(_, v)| Rc::ptr_eq(v, rc))
                     .map(|(k, _)| k.clone())
                     .collect();
@@ -306,7 +486,9 @@ impl Environment {
                 let mut new_vec = (**rc).clone();
                 new_vec.push(equality.left.clone());
                 let new_rc = Rc::new(new_vec);
-                let keys_to_update: Vec<String> = self.known_equality.iter()
+                let keys_to_update: Vec<String> = self
+                    .known_equality
+                    .iter()
                     .filter(|(_, v)| Rc::ptr_eq(v, rc))
                     .map(|(k, _)| k.clone())
                     .collect();
@@ -319,7 +501,8 @@ impl Environment {
                 // 3. Neither in any class: new equivalence class [left, right].
                 let vec = vec![equality.left.clone(), equality.right.clone()];
                 let new_rc = Rc::new(vec);
-                self.known_equality.insert(left_as_string.clone(), Rc::clone(&new_rc));
+                self.known_equality
+                    .insert(left_as_string.clone(), Rc::clone(&new_rc));
                 self.known_equality.insert(right_as_string, new_rc);
             }
         }
@@ -329,7 +512,30 @@ impl Environment {
 
 impl Environment {
     pub fn new_empty_env() -> Self {
-        Environment::new(HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new(), HashMap::new())
+        Environment::new(
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+            HashMap::new(),
+        )
     }
 }
 
@@ -348,8 +554,15 @@ pub struct KnownForallFactParamsAndDom {
 }
 
 impl KnownForallFactParamsAndDom {
-    pub fn new(params: Vec<ParamDefWithParamType>, dom: Vec<ExistOrAndChainAtomicFact>, line_file: (usize, usize)) -> Self {
-        KnownForallFactParamsAndDom { params_def: params, dom, line_file }
+    pub fn new(
+        params: Vec<ParamDefWithParamType>,
+        dom: Vec<ExistOrAndChainAtomicFact>,
+        line_file: (usize, usize),
+    ) -> Self {
+        KnownForallFactParamsAndDom {
+            params_def: params,
+            dom,
+            line_file,
+        }
     }
 }
-

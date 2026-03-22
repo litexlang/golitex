@@ -1,10 +1,10 @@
-use std::fmt;
 use super::atomic_fact::AtomicFact;
+use super::exist_fact::ExistFact;
+use super::fact::Fact;
 use super::matchable_fact_with_atomic_fact_inside::AndFact;
 use super::matchable_fact_with_atomic_fact_inside::ChainFact;
 use super::or_fact::OrFact;
-use super::exist_fact::ExistFact;
-use super::fact::Fact;
+use std::fmt;
 
 #[derive(Clone)]
 pub enum ExistOrAndChainAtomicFact {
@@ -40,7 +40,9 @@ impl ExistOrAndChainAtomicFact {
 
     pub fn from_ref_to_cloned_fact(&self) -> Fact {
         match self {
-            ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => Fact::AtomicFact(atomic_fact.clone()),
+            ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+                Fact::AtomicFact(atomic_fact.clone())
+            }
             ExistOrAndChainAtomicFact::AndFact(and_fact) => Fact::AndFact(and_fact.clone()),
             ExistOrAndChainAtomicFact::ChainFact(chain_fact) => Fact::ChainFact(chain_fact.clone()),
             ExistOrAndChainAtomicFact::OrFact(or_fact) => Fact::OrFact(or_fact.clone()),

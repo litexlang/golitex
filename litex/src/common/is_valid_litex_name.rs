@@ -24,7 +24,7 @@ pub fn is_valid_litex_name(s: &str) -> Result<(), String> {
             ));
         }
     }
-    
+
     for c in chars {
         if c != '_' && !c.is_alphanumeric() {
             return Err(format!(

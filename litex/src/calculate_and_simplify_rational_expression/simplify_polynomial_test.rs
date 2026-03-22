@@ -1,7 +1,7 @@
-use crate::obj::{Add, Div, Identifier, Mul, Number, Obj, Pow};
-use crate::calculate_and_simplify_rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 use super::collect_monomials::collect_monomials_in_obj;
 use super::objs_equal_by_rational_expression_simplification::objs_equal_by_rational_expression_simplification;
+use crate::calculate_and_simplify_rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
+use crate::obj::{Add, Div, Identifier, Mul, Number, Obj, Pow};
 
 fn mk_num(s: String) -> Obj {
     Obj::Number(Number::new(s))
@@ -49,13 +49,21 @@ fn test_collect_ordered_monomials_add_two_numbers() {
 
 #[test]
 fn test_collect_ordered_monomials_add_number_and_var() {
-    let one_plus_x = Obj::Add(Add::new(mk_num("1".to_string()), mk_var("x".to_string()), false));
+    let one_plus_x = Obj::Add(Add::new(
+        mk_num("1".to_string()),
+        mk_var("x".to_string()),
+        false,
+    ));
     let monomials = collect_monomials_in_obj(&one_plus_x);
     assert_eq!(monomials.len(), 2, "1+x => constant 1 and monomial x");
     let sorted = sort_monomials_for_test(monomials);
     assert!(sorted[0].ordered_operands.is_none() || sorted[1].ordered_operands.is_none());
-    assert!(sorted.iter().any(|m| m.non_zero_scalar == "1" && m.ordered_operands.is_none()));
-    assert!(sorted.iter().any(|m| m.non_zero_scalar == "1" && m.key() == "x"));
+    assert!(sorted
+        .iter()
+        .any(|m| m.non_zero_scalar == "1" && m.ordered_operands.is_none()));
+    assert!(sorted
+        .iter()
+        .any(|m| m.non_zero_scalar == "1" && m.key() == "x"));
 }
 
 #[test]
@@ -72,7 +80,11 @@ fn test_collect_ordered_monomials_add_like_terms() {
 
 #[test]
 fn test_collect_ordered_monomials_mul_number_and_var() {
-    let two_x = Obj::Mul(Mul::new(mk_num("2".to_string()), mk_var("x".to_string()), false));
+    let two_x = Obj::Mul(Mul::new(
+        mk_num("2".to_string()),
+        mk_var("x".to_string()),
+        false,
+    ));
     let monomials = collect_monomials_in_obj(&two_x);
     assert_eq!(monomials.len(), 1, "2*x => 2x");
     assert_eq!(monomials[0].non_zero_scalar, "2");
@@ -92,7 +104,11 @@ fn test_collect_ordered_monomials_mul_two_vars() {
 
 #[test]
 fn test_collect_ordered_monomials_pow_number() {
-    let two_sq = Obj::Pow(Pow::new(mk_num("2".to_string()), mk_num("2".to_string()), true));
+    let two_sq = Obj::Pow(Pow::new(
+        mk_num("2".to_string()),
+        mk_num("2".to_string()),
+        true,
+    ));
     let monomials = collect_monomials_in_obj(&two_sq);
     assert_eq!(monomials.len(), 1);
     assert_eq!(monomials[0].non_zero_scalar, "4");
@@ -123,11 +139,17 @@ fn test_collect_ordered_monomials_pow_one() {
 fn test_collect_ordered_monomials_non_polynomial_as_single_operand() {
     let list = Obj::ListSet(crate::obj::ListSet::new(vec![mk_num("1".to_string())]));
     let monomials = collect_monomials_in_obj(&list);
-    assert_eq!(monomials.len(), 1, "non-polynomial is wrapped as 1*obj by catch-all");
+    assert_eq!(
+        monomials.len(),
+        1,
+        "non-polynomial is wrapped as 1*obj by catch-all"
+    );
 }
 
 /// Sort monomials by canonical key (operand product string) so that comparison is deterministic.
-fn sort_monomials_for_test(mut monomials: Vec<MonomialWithNonZeroScalarAndOrderedOperands>) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
+fn sort_monomials_for_test(
+    mut monomials: Vec<MonomialWithNonZeroScalarAndOrderedOperands>,
+) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     monomials.sort_by(|a, b| a.key().cmp(&b.key()));
     monomials
 }
@@ -193,21 +215,32 @@ fn test_collect_and_sort_two_a_plus_three_b() {
 
 #[test]
 fn test_monomial_operands_equal() {
-    let m_none = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero("1".to_string(), None);
-    let m_none2 = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero    ("2".to_string(), None);
+    let m_none = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
+        "1".to_string(),
+        None,
+    );
+    let m_none2 = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
+        "2".to_string(),
+        None,
+    );
     match (m_none, m_none2) {
         (Some(m1), Some(m2)) => assert!(m1.operands_equal(&m2)),
         _ => panic!("m_none and m_none2 should be Some"),
     }
 
     let op_x = vec![(mk_var("x".to_string()), "x".to_string())];
-    let m_x = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero("1".to_string(), Some(op_x.clone()));
-    let m_x2 = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero("2".to_string(), Some(vec![(mk_var("x".to_string()), "x".to_string())]));
+    let m_x = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
+        "1".to_string(),
+        Some(op_x.clone()),
+    );
+    let m_x2 = MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
+        "2".to_string(),
+        Some(vec![(mk_var("x".to_string()), "x".to_string())]),
+    );
     match (m_x, m_x2) {
         (Some(m1), Some(m2)) => assert!(m1.operands_equal(&m2)),
         _ => panic!("m_x and m_x2 should be Some"),
     }
-
 }
 
 #[test]
@@ -219,12 +252,11 @@ fn test_two_objs_equal_by_polynomial_simplification_after_division_process() {
         mk_div_obj(mk_num("1".to_string()), x.clone()),
         mk_div_obj(mk_num("1".to_string()), y.clone()),
     );
-    let right = mk_div_obj(
-        mk_add_obj(x.clone(), y.clone()),
-        mk_mul_obj(x, y),
-    );
+    let right = mk_div_obj(mk_add_obj(x.clone(), y.clone()), mk_mul_obj(x, y));
 
-    assert!(objs_equal_by_rational_expression_simplification(&left, &right));
+    assert!(objs_equal_by_rational_expression_simplification(
+        &left, &right
+    ));
 }
 
 #[test]
@@ -238,14 +270,13 @@ fn test_two_objs_equal_by_polynomial_simplification_a_over_b_plus_c_over_d() {
         mk_div_obj(a.clone(), b.clone()),
         mk_div_obj(c.clone(), d.clone()),
     );
-    let right_numerator = mk_add_obj(
-        mk_mul_obj(a, d.clone()),
-        mk_mul_obj(b.clone(), c),
-    );
+    let right_numerator = mk_add_obj(mk_mul_obj(a, d.clone()), mk_mul_obj(b.clone(), c));
     let right_denominator = mk_mul_obj(b, d);
     let right = mk_div_obj(right_numerator, right_denominator);
 
-    assert!(objs_equal_by_rational_expression_simplification(&left, &right));
+    assert!(objs_equal_by_rational_expression_simplification(
+        &left, &right
+    ));
 }
 
 #[test]
@@ -258,12 +289,11 @@ fn test_two_objs_equal_by_polynomial_simplification_same_denominator_addition() 
         mk_div_obj(a.clone(), c.clone()),
         mk_div_obj(b.clone(), c.clone()),
     );
-    let right = mk_div_obj(
-        mk_add_obj(a, b),
-        c,
-    );
+    let right = mk_div_obj(mk_add_obj(a, b), c);
 
-    assert!(objs_equal_by_rational_expression_simplification(&left, &right));
+    assert!(objs_equal_by_rational_expression_simplification(
+        &left, &right
+    ));
 }
 
 #[test]
@@ -275,12 +305,11 @@ fn test_two_objs_equal_by_polynomial_simplification_duplicate_fraction_addition(
         mk_div_obj(a.clone(), b.clone()),
         mk_div_obj(a.clone(), b.clone()),
     );
-    let right = mk_div_obj(
-        mk_mul_obj(mk_num("2".to_string()), a),
-        b,
-    );
+    let right = mk_div_obj(mk_mul_obj(mk_num("2".to_string()), a), b);
 
-    assert!(objs_equal_by_rational_expression_simplification(&left, &right));
+    assert!(objs_equal_by_rational_expression_simplification(
+        &left, &right
+    ));
 }
 
 #[test]
@@ -303,11 +332,10 @@ fn test_two_objs_equal_by_polynomial_simplification_sum_of_three_unit_fractions(
         ),
         mk_mul_obj(a.clone(), b.clone()),
     );
-    let right_denominator = mk_mul_obj(
-        mk_mul_obj(a, b),
-        c,
-    );
+    let right_denominator = mk_mul_obj(mk_mul_obj(a, b), c);
     let right = mk_div_obj(right_numerator, right_denominator);
 
-    assert!(objs_equal_by_rational_expression_simplification(&left, &right));
+    assert!(objs_equal_by_rational_expression_simplification(
+        &left, &right
+    ));
 }

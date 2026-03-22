@@ -1,52 +1,68 @@
-use std::collections::HashMap;
 use crate::fact::ExistOrAndChainAtomicFact;
 use crate::infer::InferResult;
 use crate::obj::Atom;
+use std::collections::HashMap;
 mod infer;
 mod verify;
 use verify::VerifyState;
 mod calculate_and_simplify_rational_expression;
 mod common;
 mod error;
-use error::{ArithmeticError, NewAtomicFactError, StoreFactError, StmtError, ParseBlockError, ExecStmtError, WellDefinedError, VerifyError, InferError};
 use error::ParsingError;
+use error::{
+    ArithmeticError, ExecStmtError, InferError, NewAtomicFactError, ParseBlockError, StmtError,
+    StoreFactError, VerifyError, WellDefinedError,
+};
 mod execute;
 use execute::Executor;
 mod obj;
-use obj::{QPos, RPos, QNeg, ZNeg, RNeg, QNz, ZNz, RNz};
 use obj::{
-    Obj, FnObj, Number, Add, Sub, Mul, Div, Mod, Pow,
-    Union, Intersect, SetMinus, SetDiff, Cup, Cap,
-    ListSet, SetBuilder, FnSetWithoutParams, FnSetWithParams,
-    NPosObj, NObj, QObj, ZObj, RObj, InstStructObj,
-    Cart, CartDim, Proj, Dim, Tuple, Count, Range, ClosedRange, Val, PowerSet, Choose, ObjAtIndex,
-    FnSetObj,
+    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FnObj, FnSetObj,
+    FnSetWithParams, FnSetWithoutParams, InstStructObj, Intersect, ListSet, Mod, Mul, NObj,
+    NPosObj, Number, Obj, ObjAtIndex, Pow, PowerSet, Proj, QObj, RObj, Range, SetBuilder, SetDiff,
+    SetMinus, Sub, Tuple, Union, Val, ZObj,
 };
-use obj::{Identifier, IdentifierWithMod, IdentifierOrIdentifierWithMod};
+use obj::{Identifier, IdentifierOrIdentifierWithMod, IdentifierWithMod};
+use obj::{QNeg, QNz, QPos, RNeg, RNz, RPos, ZNeg, ZNz};
 mod stmt;
-use stmt::Stmt;
-use stmt::definition_stmt::{HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, HaveExistObjStmt, HaveFnEqualStmt, HaveFnEqualCaseByCaseStmt, DefStructWithNoFieldStmt, DefStructWithFieldsStmt, DefPropWithMeaningStmt, DefLetStmt};
+use stmt::axiom_stmt::{
+    ByCasesAxiomStmt, ByContraAxiomStmt, ByExtensionAxiomStmt, ByFnDefAxiomStmt, ByInducAxiomStmt,
+    ClosedRangeOrRange, EnumerateAxiomStmt, ForAxiomStmt,
+};
 use stmt::claim_stmt::ClaimStmt;
-use stmt::know_stmt::KnowStmt;
-use stmt::axiom_stmt::{ByCasesAxiomStmt, ByContraAxiomStmt, EnumerateAxiomStmt, ByInducAxiomStmt, ForAxiomStmt, ClosedRangeOrRange, ByExtensionAxiomStmt, ByFnDefAxiomStmt};
-use stmt::prove_stmt::ProveStmt;
-use stmt::tooling_stmt::{ImportStmt, ImportRelativePathStmt, ImportGlobalModuleStmt, ClearStmt, DoNothingStmt, RunFileStmt};
-use stmt::eval_stmt::EvalStmt;
-use stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
-use stmt::parameter_def::{ParamType, Set, NonemptySet, FiniteSet, ParamDefWithParamType, ParamDefWithParamSet};
 use stmt::define_algorithm_stmt::{AlgoCase, AlgoReturn, AlgoReturnOrAlgoCase, DefAlgoStmt};
+use stmt::definition_stmt::{
+    DefLetStmt, DefPropWithMeaningStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt,
+    HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt, HaveObjEqualStmt,
+    HaveObjInNonemptySetOrParamTypeStmt,
+};
+use stmt::eval_stmt::EvalStmt;
+use stmt::know_stmt::KnowStmt;
+use stmt::parameter_def::{
+    FiniteSet, NonemptySet, ParamDefWithParamSet, ParamDefWithParamType, ParamType, Set,
+};
+use stmt::prove_stmt::ProveStmt;
+use stmt::tooling_stmt::{
+    ClearStmt, DoNothingStmt, ImportGlobalModuleStmt, ImportRelativePathStmt, ImportStmt,
+    RunFileStmt,
+};
+use stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
+use stmt::Stmt;
 mod fact;
-use fact::{Fact, InFact, NotInFact, IsCartFact, NotIsCartFact, IsTupleFact, NotIsTupleFact, AtomicFact, NormalAtomicFact, NotNormalAtomicFact, EqualFact, NotEqualFact, SubsetFact, NotSubsetFact, SupersetFact, NotSupersetFact,
-    LessFact, NotLessFact, GreaterFact, NotGreaterFact,
-    LessEqualFact, NotLessEqualFact, GreaterEqualFact, NotGreaterEqualFact,
-    IsSetFact, NotIsSetFact, IsNonemptySetFact, NotIsNonemptySetFact,
-    IsFiniteSetFact, NotIsFiniteSetFact,
-    AndChainAtomicFact, ExistFact,
-    OrFact, ForallFact, ForallFactWithIff, 
-    AndFact, ChainFact, OrAndChainAtomicFact,
+use fact::{
+    AndChainAtomicFact, AndFact, AtomicFact, ChainFact, EqualFact, ExistFact, Fact, ForallFact,
+    ForallFactWithIff, GreaterEqualFact, GreaterFact, InFact, IsCartFact, IsFiniteSetFact,
+    IsNonemptySetFact, IsSetFact, IsTupleFact, LessEqualFact, LessFact, NormalAtomicFact,
+    NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact, NotIsCartFact,
+    NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact,
+    NotLessFact, NotNormalAtomicFact, NotSubsetFact, NotSupersetFact, OrAndChainAtomicFact, OrFact,
+    SubsetFact, SupersetFact,
 };
 mod result;
-use result::{NonErrStmtExecResult, NonFactualStmtSuccess, FactVerifiedByFact, FactVerifiedByBuiltinRules, StmtUnknown};
+use result::{
+    FactVerifiedByBuiltinRules, FactVerifiedByFact, NonErrStmtExecResult, NonFactualStmtSuccess,
+    StmtUnknown,
+};
 mod module_manager;
 use module_manager::ModuleManager;
 mod runtime_context;
@@ -54,7 +70,7 @@ use runtime_context::RuntimeContext;
 mod environment;
 use environment::Environment;
 mod parse;
-use parse::{TokenBlock, tokenize_line};
+use parse::{tokenize_line, TokenBlock};
 mod pipeline;
 
 #[cfg(test)]
@@ -142,7 +158,10 @@ fn try_atom_fn_obj() {
     println!("{}", a_add_b);
 
     let a_add_b_with_mod = Obj::FnObj(FnObj::new(
-        Atom::IdentifierWithMod(IdentifierWithMod::new("ModA".to_string(), "name_a".to_string())),
+        Atom::IdentifierWithMod(IdentifierWithMod::new(
+            "ModA".to_string(),
+            "name_a".to_string(),
+        )),
         vec![vec![
             Box::new(Obj::Identifier(Identifier::new("a".to_string()))),
             Box::new(Obj::Identifier(Identifier::new("b".to_string()))),
@@ -155,22 +174,69 @@ fn try_arithmetic() {
     let number_one = Obj::Number(Number::new("1".to_string()));
     let number_two = Obj::Number(Number::new("2".to_string()));
     let one_add_two_result = Obj::Add(Add::new(number_one, number_two, true));
-    let one_sub_two_result = Obj::Sub(Sub::new(Obj::Number(Number::new("1".to_string())), Obj::Number(Number::new("2".to_string())), true));
-    let one_mul_two_result = Obj::Mul(Mul::new(Obj::Number(Number::new("1".to_string())), Obj::Number(Number::new("2".to_string())), true));
-    let one_div_two_result = Obj::Div(Div::new(Obj::Number(Number::new("1".to_string())), Obj::Number(Number::new("2".to_string()))));
-    let one_mod_two_result = Obj::Mod(Mod::new(Obj::Number(Number::new("1".to_string())), Obj::Number(Number::new("2".to_string())), true));
-    let one_pow_two_result = Obj::Pow(Pow::new(Obj::Number(Number::new("1".to_string())), Obj::Number(Number::new("2".to_string())), true));
-    println!("{}, {}, {}, {}, {}, {}",  one_add_two_result, one_sub_two_result, one_mul_two_result, one_div_two_result, one_mod_two_result, one_pow_two_result);
+    let one_sub_two_result = Obj::Sub(Sub::new(
+        Obj::Number(Number::new("1".to_string())),
+        Obj::Number(Number::new("2".to_string())),
+        true,
+    ));
+    let one_mul_two_result = Obj::Mul(Mul::new(
+        Obj::Number(Number::new("1".to_string())),
+        Obj::Number(Number::new("2".to_string())),
+        true,
+    ));
+    let one_div_two_result = Obj::Div(Div::new(
+        Obj::Number(Number::new("1".to_string())),
+        Obj::Number(Number::new("2".to_string())),
+    ));
+    let one_mod_two_result = Obj::Mod(Mod::new(
+        Obj::Number(Number::new("1".to_string())),
+        Obj::Number(Number::new("2".to_string())),
+        true,
+    ));
+    let one_pow_two_result = Obj::Pow(Pow::new(
+        Obj::Number(Number::new("1".to_string())),
+        Obj::Number(Number::new("2".to_string())),
+        true,
+    ));
+    println!(
+        "{}, {}, {}, {}, {}, {}",
+        one_add_two_result,
+        one_sub_two_result,
+        one_mul_two_result,
+        one_div_two_result,
+        one_mod_two_result,
+        one_pow_two_result
+    );
 }
 
 fn try_set_operations() {
-    let union_result = Obj::Union(Union::new(Identifier::mk("A".to_string()), Identifier::mk("B".to_string())));
-    let intersect_result = Obj::Intersect(Intersect::new(Identifier::mk("A".to_string()), Identifier::mk("B".to_string())));
-    let set_minus_result = Obj::SetMinus(SetMinus::new(Identifier::mk("A".to_string()), Identifier::mk("B".to_string())));
-    let disjoint_union_result = Obj::SetDiff(SetDiff::new(Identifier::mk("A".to_string()), Identifier::mk("B".to_string())));
+    let union_result = Obj::Union(Union::new(
+        Identifier::mk("A".to_string()),
+        Identifier::mk("B".to_string()),
+    ));
+    let intersect_result = Obj::Intersect(Intersect::new(
+        Identifier::mk("A".to_string()),
+        Identifier::mk("B".to_string()),
+    ));
+    let set_minus_result = Obj::SetMinus(SetMinus::new(
+        Identifier::mk("A".to_string()),
+        Identifier::mk("B".to_string()),
+    ));
+    let disjoint_union_result = Obj::SetDiff(SetDiff::new(
+        Identifier::mk("A".to_string()),
+        Identifier::mk("B".to_string()),
+    ));
     let cup_result = Obj::Cup(Cup::new(Identifier::mk("A".to_string())));
     let cap_result = Obj::Cap(Cap::new(Identifier::mk("A".to_string())));
-    println!("{}, {}, {}, {}, {}, {}", union_result, intersect_result, set_minus_result, disjoint_union_result, cup_result, cap_result);
+    println!(
+        "{}, {}, {}, {}, {}, {}",
+        union_result,
+        intersect_result,
+        set_minus_result,
+        disjoint_union_result,
+        cup_result,
+        cap_result
+    );
 }
 
 fn try_stmt() {
@@ -178,44 +244,69 @@ fn try_stmt() {
         Obj::Identifier(Identifier::new("a".to_string())),
         Obj::Identifier(Identifier::new("b".to_string())),
     ];
-    let fact1 = Stmt::Fact(Fact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
-        IdentifierOrIdentifierWithMod::Identifier(Identifier::new("p".to_string())),
-        body3,
-        (1, 0),
-    ))));
+    let fact1 = Stmt::Fact(Fact::AtomicFact(AtomicFact::NormalAtomicFact(
+        NormalAtomicFact::new(
+            IdentifierOrIdentifierWithMod::Identifier(Identifier::new("p".to_string())),
+            body3,
+            (1, 0),
+        ),
+    )));
     println!("{}", fact1.to_string());
 
     let body2 = vec![
         Obj::Identifier(Identifier::new("a".to_string())),
         Obj::Identifier(Identifier::new("b".to_string())),
     ];
-    let fact2 = Stmt::Fact(Fact::AtomicFact(AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
-        IdentifierOrIdentifierWithMod::IdentifierWithMod(IdentifierWithMod::new("ModA".to_string(), "name_a".to_string())),
-        body2,
-        (1, 0),
-    ))));
+    let fact2 = Stmt::Fact(Fact::AtomicFact(AtomicFact::NormalAtomicFact(
+        NormalAtomicFact::new(
+            IdentifierOrIdentifierWithMod::IdentifierWithMod(IdentifierWithMod::new(
+                "ModA".to_string(),
+                "name_a".to_string(),
+            )),
+            body2,
+            (1, 0),
+        ),
+    )));
     println!("{}", fact2);
 
-    let def_let_param = vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))];
-    let def_stmt = Stmt::DefLetStmt(DefLetStmt::new(def_let_param, vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
+    let def_let_param = vec![ParamDefWithParamType(
+        vec!["x".to_string()],
+        ParamType::Set(Set::new()),
+    )];
+    let def_stmt = Stmt::DefLetStmt(DefLetStmt::new(
+        def_let_param,
+        vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        )))],
         (1, 0),
-    )))], (1, 0)));
+    ));
     println!("{}", def_stmt);
 
-    let def_stmt2 = Stmt::DefPropWithMeaningStmt(DefPropWithMeaningStmt::new("f".to_string(), vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
+    let def_stmt2 = Stmt::DefPropWithMeaningStmt(DefPropWithMeaningStmt::new(
+        "f".to_string(),
+        vec![ParamDefWithParamType(
+            vec!["x".to_string()],
+            ParamType::Set(Set::new()),
+        )],
+        vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        )))],
         (1, 0),
-    )))], (1, 0)));
+    ));
     println!("{}", def_stmt2);
 }
 
 fn try_equal_literally() {
     let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
-    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
+        &mut module_manager,
+        &mut builtin_environment,
+    );
     let executor = Executor::new(&mut runtime_context);
     let a = Obj::Identifier(Identifier::new("a".to_string()));
     let b = Obj::Identifier(Identifier::new("b".to_string()));
@@ -233,7 +324,17 @@ fn try_list_set() {
 }
 
 fn try_set_builder() {
-    let set_builder = Obj::SetBuilder(SetBuilder::new("a".to_string(), Obj::Identifier(Identifier::new("b".to_string())), vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))]));
+    let set_builder = Obj::SetBuilder(SetBuilder::new(
+        "a".to_string(),
+        Obj::Identifier(Identifier::new("b".to_string())),
+        vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+            EqualFact::new(
+                Identifier::mk("p".to_string()),
+                Identifier::mk("q".to_string()),
+                (1, 0),
+            ),
+        ))],
+    ));
     println!("{}", set_builder);
 }
 
@@ -249,10 +350,46 @@ fn try_fn_set_without_params() {
 }
 
 fn try_fn_set_with_params() {
-    let fn_set_with_params = Obj::FnSetWithParams(FnSetWithParams::new(vec![ParamDefWithParamSet(vec!["a".to_string()], Obj::Identifier(Identifier::new("a".to_string()))), ParamDefWithParamSet(vec!["b".to_string()], Obj::Identifier(Identifier::new("b".to_string())))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], Obj::Identifier(Identifier::new("c".to_string()))));
+    let fn_set_with_params = Obj::FnSetWithParams(FnSetWithParams::new(
+        vec![
+            ParamDefWithParamSet(
+                vec!["a".to_string()],
+                Obj::Identifier(Identifier::new("a".to_string())),
+            ),
+            ParamDefWithParamSet(
+                vec!["b".to_string()],
+                Obj::Identifier(Identifier::new("b".to_string())),
+            ),
+        ],
+        vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+            EqualFact::new(
+                Identifier::mk("p".to_string()),
+                Identifier::mk("q".to_string()),
+                (1, 0),
+            ),
+        ))],
+        Obj::Identifier(Identifier::new("c".to_string())),
+    ));
     println!("{}", fn_set_with_params);
 
-    let fn_set_with_params2 = Obj::FnSetWithParams(FnSetWithParams::new(vec![ParamDefWithParamSet(vec!["a".to_string()], Obj::Identifier(Identifier::new("a".to_string()))), ParamDefWithParamSet(vec!["b".to_string()], Obj::Identifier(Identifier::new("b".to_string()))), ParamDefWithParamSet(vec!["c".to_string()], Obj::Identifier(Identifier::new("c".to_string())))], vec![], Obj::Identifier(Identifier::new("c".to_string()))));
+    let fn_set_with_params2 = Obj::FnSetWithParams(FnSetWithParams::new(
+        vec![
+            ParamDefWithParamSet(
+                vec!["a".to_string()],
+                Obj::Identifier(Identifier::new("a".to_string())),
+            ),
+            ParamDefWithParamSet(
+                vec!["b".to_string()],
+                Obj::Identifier(Identifier::new("b".to_string())),
+            ),
+            ParamDefWithParamSet(
+                vec!["c".to_string()],
+                Obj::Identifier(Identifier::new("c".to_string())),
+            ),
+        ],
+        vec![],
+        Obj::Identifier(Identifier::new("c".to_string())),
+    ));
     println!("{}", fn_set_with_params2);
 }
 
@@ -310,24 +447,38 @@ fn try_instantiated_struct_obj() {
     println!("{}", instantiated_struct_obj2);
 }
 
-
 fn try_cart_set_dim_proj_dim_tuple() {
-    let cart = Obj::Cart(Cart::new(vec![Identifier::mk("a".to_string()), Identifier::mk("b".to_string())]));
+    let cart = Obj::Cart(Cart::new(vec![
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+    ]));
     let set_dim = Obj::CartDim(CartDim::new(Identifier::mk("a".to_string())));
-    let proj = Obj::Proj(Proj::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string())));
+    let proj = Obj::Proj(Proj::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+    ));
     let dim = Obj::Dim(Dim::new(Identifier::mk("b".to_string())));
     println!("{}", cart);
     println!("{}", set_dim);
     println!("{}", proj);
     println!("{}", dim);
-    let tuple = Obj::Tuple(Tuple::new(vec![Identifier::mk("a".to_string()), Identifier::mk("b".to_string())]));
+    let tuple = Obj::Tuple(Tuple::new(vec![
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+    ]));
     println!("{}", tuple);
 }
 
 fn try_count_range_closed_range_val() {
     let count = Obj::Count(Count::new(Identifier::mk("a".to_string())));
-    let range = Obj::Range(Range::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string())));
-    let closed_range = Obj::ClosedRange(ClosedRange::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string())));
+    let range = Obj::Range(Range::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+    ));
+    let closed_range = Obj::ClosedRange(ClosedRange::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+    ));
     let val = Obj::Val(Val::new(Identifier::mk("a".to_string())));
     println!("{}", count);
     println!("{}", range);
@@ -346,33 +497,95 @@ fn try_atomic_fact() {
     let line = 1usize;
     let _normal = AtomicFact::NormalAtomicFact(NormalAtomicFact::new(
         IdentifierOrIdentifierWithMod::Identifier(Identifier::new("p".to_string())),
-        vec![Identifier::mk("a".to_string()), Identifier::mk("b".to_string())],
+        vec![
+            Identifier::mk("a".to_string()),
+            Identifier::mk("b".to_string()),
+        ],
         (line, 0),
     ));
-    let _equal = AtomicFact::EqualFact(EqualFact::new(Identifier::mk("x".to_string()), Identifier::mk("y".to_string()), (line, 0)));
-    let _less = AtomicFact::LessFact(LessFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (line, 0)));
-    let _greater = AtomicFact::GreaterFact(GreaterFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (line, 0)));
-    let _less_equal = AtomicFact::LessEqualFact(LessEqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (line, 0)));
-    let _greater_equal = AtomicFact::GreaterEqualFact(GreaterEqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (line, 0)));
+    let _equal = AtomicFact::EqualFact(EqualFact::new(
+        Identifier::mk("x".to_string()),
+        Identifier::mk("y".to_string()),
+        (line, 0),
+    ));
+    let _less = AtomicFact::LessFact(LessFact::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+        (line, 0),
+    ));
+    let _greater = AtomicFact::GreaterFact(GreaterFact::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+        (line, 0),
+    ));
+    let _less_equal = AtomicFact::LessEqualFact(LessEqualFact::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+        (line, 0),
+    ));
+    let _greater_equal = AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+        (line, 0),
+    ));
     let _is_set = AtomicFact::IsSetFact(IsSetFact::new(Identifier::mk("S".to_string()), (line, 0)));
-    let _is_nonempty_set = AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(Identifier::mk("S".to_string()), (line, 0)));
-    let _is_finite_set = AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(Identifier::mk("S".to_string()), (line, 0)));
-    let _is_cart = AtomicFact::IsCartFact(IsCartFact::new(Identifier::mk("S".to_string()), (line, 0)));
-    let _not_is_cart = AtomicFact::NotIsCartFact(NotIsCartFact::new(Identifier::mk("S".to_string()), (line, 0)));
+    let _is_nonempty_set = AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+        Identifier::mk("S".to_string()),
+        (line, 0),
+    ));
+    let _is_finite_set = AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
+        Identifier::mk("S".to_string()),
+        (line, 0),
+    ));
+    let _is_cart =
+        AtomicFact::IsCartFact(IsCartFact::new(Identifier::mk("S".to_string()), (line, 0)));
+    let _not_is_cart = AtomicFact::NotIsCartFact(NotIsCartFact::new(
+        Identifier::mk("S".to_string()),
+        (line, 0),
+    ));
 
     let _not_normal = AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact::new(
         IdentifierOrIdentifierWithMod::Identifier(Identifier::new("p".to_string())),
         vec![Identifier::mk("a".to_string())],
         (line, 0),
     ));
-    let _not_equal = AtomicFact::NotEqualFact(NotEqualFact::new(Identifier::mk("x".to_string()), Identifier::mk("y".to_string()), (line, 0)));
-    let _not_less = AtomicFact::NotLessFact(NotLessFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (line, 0)));
-    let _not_greater = AtomicFact::NotGreaterFact(NotGreaterFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (line, 0)));
-    let _not_less_equal = AtomicFact::NotLessEqualFact(NotLessEqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (line, 0)));
-    let _not_greater_equal = AtomicFact::NotGreaterEqualFact(NotGreaterEqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (line, 0)));
-    let _not_is_set = AtomicFact::NotIsSetFact(NotIsSetFact::new(Identifier::mk("S".to_string()), (line, 0)));
-    let _not_is_nonempty_set = AtomicFact::NotIsNonemptySetFact(NotIsNonemptySetFact::new(Identifier::mk("S".to_string()), (line, 0)));
-    let _not_is_finite_set = AtomicFact::NotIsFiniteSetFact(NotIsFiniteSetFact::new(Identifier::mk("S".to_string()), (line, 0)));
+    let _not_equal = AtomicFact::NotEqualFact(NotEqualFact::new(
+        Identifier::mk("x".to_string()),
+        Identifier::mk("y".to_string()),
+        (line, 0),
+    ));
+    let _not_less = AtomicFact::NotLessFact(NotLessFact::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+        (line, 0),
+    ));
+    let _not_greater = AtomicFact::NotGreaterFact(NotGreaterFact::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+        (line, 0),
+    ));
+    let _not_less_equal = AtomicFact::NotLessEqualFact(NotLessEqualFact::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+        (line, 0),
+    ));
+    let _not_greater_equal = AtomicFact::NotGreaterEqualFact(NotGreaterEqualFact::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+        (line, 0),
+    ));
+    let _not_is_set = AtomicFact::NotIsSetFact(NotIsSetFact::new(
+        Identifier::mk("S".to_string()),
+        (line, 0),
+    ));
+    let _not_is_nonempty_set = AtomicFact::NotIsNonemptySetFact(NotIsNonemptySetFact::new(
+        Identifier::mk("S".to_string()),
+        (line, 0),
+    ));
+    let _not_is_finite_set = AtomicFact::NotIsFiniteSetFact(NotIsFiniteSetFact::new(
+        Identifier::mk("S".to_string()),
+        (line, 0),
+    ));
     println!("{}", _normal);
     println!("{}", _equal);
     println!("{}", _less);
@@ -394,61 +607,145 @@ fn try_atomic_fact() {
     println!("{}", _is_cart);
     println!("{}", _not_is_cart);
 
-    let _in = AtomicFact::InFact(InFact::new(Identifier::mk("a".to_string()), Identifier::mk("S".to_string()), (line, 0)));
-    let _not_in = AtomicFact::NotInFact(NotInFact::new(Identifier::mk("a".to_string()), Identifier::mk("S".to_string()), (line, 0)));
+    let _in = AtomicFact::InFact(InFact::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("S".to_string()),
+        (line, 0),
+    ));
+    let _not_in = AtomicFact::NotInFact(NotInFact::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("S".to_string()),
+        (line, 0),
+    ));
     println!("{}", _in);
     println!("{}", _not_in);
 
-    let _is_tuple = AtomicFact::IsTupleFact(IsTupleFact::new(Identifier::mk("t".to_string()), (line, 0)));
-    let _not_is_tuple = AtomicFact::NotIsTupleFact(NotIsTupleFact::new(Identifier::mk("t".to_string()), (line, 0)));
+    let _is_tuple =
+        AtomicFact::IsTupleFact(IsTupleFact::new(Identifier::mk("t".to_string()), (line, 0)));
+    let _not_is_tuple = AtomicFact::NotIsTupleFact(NotIsTupleFact::new(
+        Identifier::mk("t".to_string()),
+        (line, 0),
+    ));
     println!("{}", _is_tuple);
     println!("{}", _not_is_tuple);
 }
 
 fn try_exist_fact() {
     let _true_exist = ExistFact::new(
-        vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))],
-        vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0))))],
+        vec![ParamDefWithParamType(
+            vec!["x".to_string()],
+            ParamType::Set(Set::new()),
+        )],
+        vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+            EqualFact::new(
+                Identifier::mk("a".to_string()),
+                Identifier::mk("b".to_string()),
+                (1, 0),
+            ),
+        ))],
         (1, 0),
     );
     println!("{}", _true_exist);
 
     let _true_exist2 = ExistFact::new(
-        vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))],
-        vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)))), OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("c".to_string()), Identifier::mk("d".to_string()), (1, 0))))],
+        vec![ParamDefWithParamType(
+            vec!["x".to_string()],
+            ParamType::Set(Set::new()),
+        )],
+        vec![
+            OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                Identifier::mk("a".to_string()),
+                Identifier::mk("b".to_string()),
+                (1, 0),
+            ))),
+            OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                Identifier::mk("c".to_string()),
+                Identifier::mk("d".to_string()),
+                (1, 0),
+            ))),
+        ],
         (1, 0),
     );
     println!("{}", _true_exist2);
 
     let _true_exist3 = ExistFact::new(
-        vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))],
-        vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)))), OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("c".to_string()), Identifier::mk("d".to_string()), (1, 0))))],
+        vec![ParamDefWithParamType(
+            vec!["x".to_string()],
+            ParamType::Set(Set::new()),
+        )],
+        vec![
+            OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                Identifier::mk("a".to_string()),
+                Identifier::mk("b".to_string()),
+                (1, 0),
+            ))),
+            OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                Identifier::mk("c".to_string()),
+                Identifier::mk("d".to_string()),
+                (1, 0),
+            ))),
+        ],
         (1, 0),
     );
     println!("{}", _true_exist3);
 
     // chain atomic fact
     let _true_exist4 = ExistFact::new(
-        vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))],
-        vec![OrAndChainAtomicFact::ChainFact(ChainFact::new(vec![Identifier::mk("a".to_string()), Identifier::mk("b".to_string())], vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("q".to_string()))], (1, 0)))],
+        vec![ParamDefWithParamType(
+            vec!["x".to_string()],
+            ParamType::Set(Set::new()),
+        )],
+        vec![OrAndChainAtomicFact::ChainFact(ChainFact::new(
+            vec![
+                Identifier::mk("a".to_string()),
+                Identifier::mk("b".to_string()),
+            ],
+            vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new(
+                "q".to_string(),
+            ))],
+            (1, 0),
+        ))],
         (1, 0),
     );
     println!("{}", _true_exist4);
 
     // and atomic fact
     let _true_exist5 = ExistFact::new(
-        vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))],
-        vec![OrAndChainAtomicFact::AndFact(AndFact::new(vec![AtomicFact::EqualFact(EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)))], (1, 0)))],
-        (1, 0),   
+        vec![ParamDefWithParamType(
+            vec!["x".to_string()],
+            ParamType::Set(Set::new()),
+        )],
+        vec![OrAndChainAtomicFact::AndFact(AndFact::new(
+            vec![AtomicFact::EqualFact(EqualFact::new(
+                Identifier::mk("a".to_string()),
+                Identifier::mk("b".to_string()),
+                (1, 0),
+            ))],
+            (1, 0),
+        ))],
+        (1, 0),
     );
     println!("{}", _true_exist5);
 }
 
 fn try_spec_fact() {
-    let _spec_atom = AtomicFact::EqualFact(EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)));
+    let _spec_atom = AtomicFact::EqualFact(EqualFact::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+        (1, 0),
+    ));
     let ef = ExistFact::new(
-        vec![ParamDefWithParamType(vec!["u".to_string()], ParamType::Set(Set::new()))],
-        vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("u".to_string()), Identifier::mk("v".to_string()), (1, 0))))],
+        vec![ParamDefWithParamType(
+            vec!["u".to_string()],
+            ParamType::Set(Set::new()),
+        )],
+        vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+            EqualFact::new(
+                Identifier::mk("u".to_string()),
+                Identifier::mk("v".to_string()),
+                (1, 0),
+            ),
+        ))],
         (1, 0),
     );
     println!("{}", ef);
@@ -461,21 +758,26 @@ fn try_or_fact() {
         Identifier::mk("q".to_string()),
         (1, 0),
     )));
-    let facts = vec![
-        AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let facts = vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+        EqualFact::new(
             Identifier::mk("p".to_string()),
             Identifier::mk("q".to_string()),
             (1, 0),
-        ))),
-    ];
+        ),
+    ))];
     let _or = OrFact::new(facts, (1, 0));
     println!("{}", _or);
 
-    let or = OrFact::new(vec![AndChainAtomicFact::ChainFact(ChainFact::new(
-        vec![Identifier::mk("p".to_string())],
-        vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("q".to_string()))],
+    let or = OrFact::new(
+        vec![AndChainAtomicFact::ChainFact(ChainFact::new(
+            vec![Identifier::mk("p".to_string())],
+            vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new(
+                "q".to_string(),
+            ))],
+            (1, 0),
+        ))],
         (1, 0),
-    ))], (1, 0));
+    );
     println!("{}", or);
 }
 
@@ -488,98 +790,219 @@ fn try_and_fact_or_spec_fact() {
     println!("{}", _spec);
 
     let facts: Vec<AtomicFact> = vec![
-        AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))),
-        AtomicFact::LessFact(LessFact::new(Identifier::mk("x".to_string()), Identifier::mk("y".to_string()), (2, 0))),
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        )),
+        AtomicFact::LessFact(LessFact::new(
+            Identifier::mk("x".to_string()),
+            Identifier::mk("y".to_string()),
+            (2, 0),
+        )),
     ];
     let _and = AndChainAtomicFact::AndFact(AndFact::new(facts, (1, 0)));
     println!("{}", _and);
 }
 
 fn try_forall_fact() {
-    let param_type_or_property_pairs = vec![ParamDefWithParamType(vec!["n".to_string()], ParamType::Set(Set::new()))];
-    let dom_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-        EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)),
-    ))];
-    let then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-        EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)),
-    ))];
+    let param_type_or_property_pairs = vec![ParamDefWithParamType(
+        vec!["n".to_string()],
+        ParamType::Set(Set::new()),
+    )];
+    let dom_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("a".to_string()),
+            Identifier::mk("b".to_string()),
+            (1, 0),
+        )),
+    )];
+    let then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("a".to_string()),
+            Identifier::mk("b".to_string()),
+            (1, 0),
+        )),
+    )];
     let _forall = ForallFact::new(param_type_or_property_pairs, dom_facts, then_facts, (1, 0));
     println!("{}", _forall);
 
-    let param_type_or_property_pairs2 = vec![ParamDefWithParamType(vec!["n".to_string(), "m".to_string()], ParamType::Set(Set::new()))];
-    let dom_facts2 = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-        EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)),
-    ))];
-    let then_facts2 = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-        EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)),
-    ))];
-    let _forall2 = ForallFact::new(param_type_or_property_pairs2, dom_facts2, then_facts2, (1, 0));
+    let param_type_or_property_pairs2 = vec![ParamDefWithParamType(
+        vec!["n".to_string(), "m".to_string()],
+        ParamType::Set(Set::new()),
+    )];
+    let dom_facts2 = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("a".to_string()),
+            Identifier::mk("b".to_string()),
+            (1, 0),
+        )),
+    )];
+    let then_facts2 = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("a".to_string()),
+            Identifier::mk("b".to_string()),
+            (1, 0),
+        )),
+    )];
+    let _forall2 = ForallFact::new(
+        param_type_or_property_pairs2,
+        dom_facts2,
+        then_facts2,
+        (1, 0),
+    );
     println!("{}", _forall2);
 
-    let param_type_or_property_pairs3 = vec![ParamDefWithParamType(vec!["n".to_string(), "m".to_string()], ParamType::Set(Set::new()))];
-    let dom_facts3 = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-        EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)),
-    ))];
-    let then_facts3 = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-        EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)),
-    ))];
-    let _forall3 = ForallFact::new(param_type_or_property_pairs3, dom_facts3, then_facts3, (1, 0));
+    let param_type_or_property_pairs3 = vec![ParamDefWithParamType(
+        vec!["n".to_string(), "m".to_string()],
+        ParamType::Set(Set::new()),
+    )];
+    let dom_facts3 = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("a".to_string()),
+            Identifier::mk("b".to_string()),
+            (1, 0),
+        )),
+    )];
+    let then_facts3 = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("a".to_string()),
+            Identifier::mk("b".to_string()),
+            (1, 0),
+        )),
+    )];
+    let _forall3 = ForallFact::new(
+        param_type_or_property_pairs3,
+        dom_facts3,
+        then_facts3,
+        (1, 0),
+    );
     println!("{}", _forall3);
 }
 
 fn try_forall_fact_with_iff() {
-    let param_type_or_property_pairs = vec![ParamDefWithParamType(vec!["n".to_string()], ParamType::Set(Set::new()))];
-    let dom_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-        EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)),
-    ))];
-    let then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-        EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)),
-    ))];
+    let param_type_or_property_pairs = vec![ParamDefWithParamType(
+        vec!["n".to_string()],
+        ParamType::Set(Set::new()),
+    )];
+    let dom_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("a".to_string()),
+            Identifier::mk("b".to_string()),
+            (1, 0),
+        )),
+    )];
+    let then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("a".to_string()),
+            Identifier::mk("b".to_string()),
+            (1, 0),
+        )),
+    )];
     let forall = ForallFact::new(param_type_or_property_pairs, dom_facts, then_facts, (1, 0));
 
-    let _forall_fact_with_iff = ForallFactWithIff::new(forall, vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-        EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)),
-    ))], (2, 0));
+    let _forall_fact_with_iff = ForallFactWithIff::new(
+        forall,
+        vec![ExistOrAndChainAtomicFact::AtomicFact(
+            AtomicFact::EqualFact(EqualFact::new(
+                Identifier::mk("a".to_string()),
+                Identifier::mk("b".to_string()),
+                (1, 0),
+            )),
+        )],
+        (2, 0),
+    );
     println!("{}", _forall_fact_with_iff);
 }
 
-
 fn try_fact() {
-    let af = AtomicFact::EqualFact(EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)));
+    let af = AtomicFact::EqualFact(EqualFact::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+        (1, 0),
+    ));
     let _f_atom = Fact::AtomicFact(af);
     let ef = ExistFact::new(
-        vec![ParamDefWithParamType(vec!["u".to_string()], ParamType::Set(Set::new()))],
-        vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("u".to_string()), Identifier::mk("v".to_string()), (1, 0))))],
+        vec![ParamDefWithParamType(
+            vec!["u".to_string()],
+            ParamType::Set(Set::new()),
+        )],
+        vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+            EqualFact::new(
+                Identifier::mk("u".to_string()),
+                Identifier::mk("v".to_string()),
+                (1, 0),
+            ),
+        ))],
         (1, 0),
     );
     let _f_exist = Fact::ExistFact(ef);
     let _f_or = Fact::OrFact(OrFact::new(vec![], (1, 0)));
     let _f_forall = Fact::ForallFact(ForallFact::new(
-        vec![ParamDefWithParamType(vec!["n".to_string()], ParamType::Set(Set::new()))],
-        vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-            EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)),
-        ))],
-        vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-            EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)),
-        ))],
+        vec![ParamDefWithParamType(
+            vec!["n".to_string()],
+            ParamType::Set(Set::new()),
+        )],
+        vec![ExistOrAndChainAtomicFact::AtomicFact(
+            AtomicFact::EqualFact(EqualFact::new(
+                Identifier::mk("a".to_string()),
+                Identifier::mk("b".to_string()),
+                (1, 0),
+            )),
+        )],
+        vec![ExistOrAndChainAtomicFact::AtomicFact(
+            AtomicFact::EqualFact(EqualFact::new(
+                Identifier::mk("a".to_string()),
+                Identifier::mk("b".to_string()),
+                (1, 0),
+            )),
+        )],
         (1, 0),
     ));
-    let _f_forall_fact_with_iff = Fact::ForallFactWithIff(ForallFactWithIff::new(ForallFact::new(
-        vec![ParamDefWithParamType(vec!["n".to_string()], ParamType::Set(Set::new()))],
-        vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-            EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)),
-        ))],
-        vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-            EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)),
-        ))], (1, 0)), vec![], (1, 0)));
+    let _f_forall_fact_with_iff = Fact::ForallFactWithIff(ForallFactWithIff::new(
+        ForallFact::new(
+            vec![ParamDefWithParamType(
+                vec!["n".to_string()],
+                ParamType::Set(Set::new()),
+            )],
+            vec![ExistOrAndChainAtomicFact::AtomicFact(
+                AtomicFact::EqualFact(EqualFact::new(
+                    Identifier::mk("a".to_string()),
+                    Identifier::mk("b".to_string()),
+                    (1, 0),
+                )),
+            )],
+            vec![ExistOrAndChainAtomicFact::AtomicFact(
+                AtomicFact::EqualFact(EqualFact::new(
+                    Identifier::mk("a".to_string()),
+                    Identifier::mk("b".to_string()),
+                    (1, 0),
+                )),
+            )],
+            (1, 0),
+        ),
+        vec![],
+        (1, 0),
+    ));
 
-    let facts: Vec<AtomicFact> = vec![
-        AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))),
-    ];
+    let facts: Vec<AtomicFact> = vec![AtomicFact::EqualFact(EqualFact::new(
+        Identifier::mk("p".to_string()),
+        Identifier::mk("q".to_string()),
+        (1, 0),
+    ))];
     let _f_and = Fact::AndFact(AndFact::new(facts, (1, 0)));
     println!("{}", _f_and);
 
-    let _f_chain = Fact::ChainFact(ChainFact::new(vec![Identifier::mk("a".to_string()), Identifier::mk("b".to_string())], vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("q".to_string()))], (1, 0)));
+    let _f_chain = Fact::ChainFact(ChainFact::new(
+        vec![
+            Identifier::mk("a".to_string()),
+            Identifier::mk("b".to_string()),
+        ],
+        vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new(
+            "q".to_string(),
+        ))],
+        (1, 0),
+    ));
     println!("{}", _f_chain);
 }
 
@@ -591,7 +1014,8 @@ fn try_errors() {
     let err: StmtError = StmtError::ArithmeticError(ArithmeticError::new("demo".to_string(), None));
     println!("{}\n{}", err.display_label(), err.error_body());
 
-    let err: StmtError = StmtError::NewAtomicFactError(NewAtomicFactError::new("demo".to_string(), None));
+    let err: StmtError =
+        StmtError::NewAtomicFactError(NewAtomicFactError::new("demo".to_string(), None));
     println!("{}\n{}", err.display_label(), err.error_body());
 
     let err: StmtError = StmtError::StoreFactError(StoreFactError::new("demo".to_string(), None));
@@ -600,16 +1024,36 @@ fn try_errors() {
     let err: StmtError = StmtError::ParseBlockError(ParseBlockError::ExpectedIndent(1, 0));
     println!("{}\n{}", err.display_label(), err.error_body());
 
-    let err: StmtError = StmtError::ParsingError(ParsingError::new("demo".to_string(), (1, 0), None));
+    let err: StmtError =
+        StmtError::ParsingError(ParsingError::new("demo".to_string(), (1, 0), None));
     println!("{}\n{}", err.display_label(), err.error_body());
 
-    let err: StmtError = StmtError::ExecError(ExecStmtError::new( "".to_string(),"demo".to_string(), None, (1, 0)));
+    let err: StmtError = StmtError::ExecError(ExecStmtError::new(
+        "".to_string(),
+        "demo".to_string(),
+        None,
+        (1, 0),
+    ));
     println!("{}\n{}", err.display_label(), err.error_body());
 
-    let err: StmtError = StmtError::WellDefinedError(WellDefinedError::new("demo".to_string(), Some(StmtError::ArithmeticError(ArithmeticError::new("demo".to_string(), None))), (1, 0)));
+    let err: StmtError = StmtError::WellDefinedError(WellDefinedError::new(
+        "demo".to_string(),
+        Some(StmtError::ArithmeticError(ArithmeticError::new(
+            "demo".to_string(),
+            None,
+        ))),
+        (1, 0),
+    ));
     println!("{}\n{}", err.display_label(), err.error_body());
 
-    let err: StmtError = StmtError::VerifyError(VerifyError::new("demo".to_string(), Some(StmtError::ArithmeticError(ArithmeticError::new("demo".to_string(), None))), (1, 0)));
+    let err: StmtError = StmtError::VerifyError(VerifyError::new(
+        "demo".to_string(),
+        Some(StmtError::ArithmeticError(ArithmeticError::new(
+            "demo".to_string(),
+            None,
+        ))),
+        (1, 0),
+    ));
     println!("{}\n{}", err.display_label(), err.error_body());
 
     let err: StmtError = StmtError::InferError(InferError::new("demo".to_string(), (1, 0), None));
@@ -617,34 +1061,58 @@ fn try_errors() {
 }
 
 fn try_and_fact() {
-    let facts: Vec<AtomicFact> = vec![
-        AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))),
-    ];
+    let facts: Vec<AtomicFact> = vec![AtomicFact::EqualFact(EqualFact::new(
+        Identifier::mk("p".to_string()),
+        Identifier::mk("q".to_string()),
+        (1, 0),
+    ))];
     let _and = AndFact::new(facts, (1, 0));
     println!("{}", _and);
 }
 
 fn try_or_fact_or_and_fact_or_specific_fact() {
-    let fact1: ExistOrAndChainAtomicFact = ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
-        (1, 0),
-    )));
+    let fact1: ExistOrAndChainAtomicFact =
+        ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        )));
     println!("{}", fact1);
 
-    let fact3: ExistOrAndChainAtomicFact = ExistOrAndChainAtomicFact::OrFact(OrFact::new(vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
+    let fact3: ExistOrAndChainAtomicFact = ExistOrAndChainAtomicFact::OrFact(OrFact::new(
+        vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+            EqualFact::new(
+                Identifier::mk("p".to_string()),
+                Identifier::mk("q".to_string()),
+                (1, 0),
+            ),
+        ))],
         (1, 0),
-    )))], (1, 0)));
+    ));
     println!("{}", fact3);
 }
 
 fn try_subset_superset_fact() {
-    let subset = AtomicFact::SubsetFact(SubsetFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0)));
-    let superset = AtomicFact::SupersetFact(SupersetFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0)));
-    let not_subset = AtomicFact::NotSubsetFact(NotSubsetFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0)));
-    let not_superset = AtomicFact::NotSupersetFact(NotSupersetFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0)));
+    let subset = AtomicFact::SubsetFact(SubsetFact::new(
+        Identifier::mk("p".to_string()),
+        Identifier::mk("q".to_string()),
+        (1, 0),
+    ));
+    let superset = AtomicFact::SupersetFact(SupersetFact::new(
+        Identifier::mk("p".to_string()),
+        Identifier::mk("q".to_string()),
+        (1, 0),
+    ));
+    let not_subset = AtomicFact::NotSubsetFact(NotSubsetFact::new(
+        Identifier::mk("p".to_string()),
+        Identifier::mk("q".to_string()),
+        (1, 0),
+    ));
+    let not_superset = AtomicFact::NotSupersetFact(NotSupersetFact::new(
+        Identifier::mk("p".to_string()),
+        Identifier::mk("q".to_string()),
+        (1, 0),
+    ));
     println!("{}", subset);
     println!("{}", superset);
     println!("{}", not_subset);
@@ -674,7 +1142,6 @@ fn try_stmt_result() {
     ));
     println!("{}", result.body_string());
 
-
     let fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Identifier::mk("p".to_string()),
         Identifier::mk("q".to_string()),
@@ -684,48 +1151,83 @@ fn try_stmt_result() {
     let result = NonErrStmtExecResult::StmtUnknown(unknown);
     println!("{}", result.body_string());
 
-    let fact_verified_by_fact = FactVerifiedByFact::new(fact.to_string(), fact.to_string(), InferResult::new(), crate::common::defaults::DEFAULT_LINE_FILE.clone(), crate::common::defaults::DEFAULT_LINE_FILE.clone());
+    let fact_verified_by_fact = FactVerifiedByFact::new(
+        fact.to_string(),
+        fact.to_string(),
+        InferResult::new(),
+        crate::common::defaults::DEFAULT_LINE_FILE.clone(),
+        crate::common::defaults::DEFAULT_LINE_FILE.clone(),
+    );
     let result = NonErrStmtExecResult::FactVerifiedByFact(fact_verified_by_fact);
     println!("{}", result.body_string());
 
-    let fact_verified_by_builtin_rules = FactVerifiedByBuiltinRules::new(fact.to_string(), "demo".to_string(), InferResult::new(), crate::common::defaults::DEFAULT_LINE_FILE.clone());
+    let fact_verified_by_builtin_rules = FactVerifiedByBuiltinRules::new(
+        fact.to_string(),
+        "demo".to_string(),
+        InferResult::new(),
+        crate::common::defaults::DEFAULT_LINE_FILE.clone(),
+    );
     let result = NonErrStmtExecResult::FactVerifiedByBuiltinRules(fact_verified_by_builtin_rules);
     println!("{}", result.body_string());
 }
 
 fn try_definitions() {
-    let params_def_with_type = vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))];
-    let def_prop_with_meaning_stmt = DefPropWithMeaningStmt::new("f".to_string(), params_def_with_type, vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
+    let params_def_with_type = vec![ParamDefWithParamType(
+        vec!["x".to_string()],
+        ParamType::Set(Set::new()),
+    )];
+    let def_prop_with_meaning_stmt = DefPropWithMeaningStmt::new(
+        "f".to_string(),
+        params_def_with_type,
+        vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        )))],
         (1, 0),
-    )))], (1, 0));
+    );
     println!("{}", def_prop_with_meaning_stmt);
 
-    let def_let_param = vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))];
-    let def_let_stmt = DefLetStmt::new(def_let_param, vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
+    let def_let_param = vec![ParamDefWithParamType(
+        vec!["x".to_string()],
+        ParamType::Set(Set::new()),
+    )];
+    let def_let_stmt = DefLetStmt::new(
+        def_let_param,
+        vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        )))],
         (1, 0),
-    )))], (1, 0));
+    );
     println!("{}", def_let_stmt);
 
-    let params_def_with_type2 = vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))];
-    let def_prop_with_meaning_stmt2 = DefPropWithMeaningStmt::new("f".to_string(), params_def_with_type2, vec![], (1, 0));
+    let params_def_with_type2 = vec![ParamDefWithParamType(
+        vec!["x".to_string()],
+        ParamType::Set(Set::new()),
+    )];
+    let def_prop_with_meaning_stmt2 =
+        DefPropWithMeaningStmt::new("f".to_string(), params_def_with_type2, vec![], (1, 0));
     println!("{}", def_prop_with_meaning_stmt2);
 }
 
 fn try_obj_at_index() {
-    let obj = Obj::ObjAtIndex(ObjAtIndex::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string())));
+    let obj = Obj::ObjAtIndex(ObjAtIndex::new(
+        Identifier::mk("a".to_string()),
+        Identifier::mk("b".to_string()),
+    ));
     println!("{}", obj);
 }
 
 fn try_claim_stmt() {
-    let proof = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
-        (1, 0),
-    ))))];
+    let proof = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(
+        EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        ),
+    )))];
     let claim_stmt = ClaimStmt::new(
         Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
             Identifier::mk("p".to_string()),
@@ -742,11 +1244,14 @@ fn try_claim_stmt() {
 }
 
 fn try_know_stmt() {
-    let know_stmt = KnowStmt::new(vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
+    let know_stmt = KnowStmt::new(
+        vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        )))],
         (1, 0),
-    )))], (1, 0));
+    );
     println!("{}", know_stmt);
 
     let stmt = Stmt::KnowStmt(know_stmt);
@@ -754,40 +1259,60 @@ fn try_know_stmt() {
 }
 
 fn try_axiom_stmts() {
-    let impossible_fact = ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
+    let impossible_fact =
+        ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        )));
+    let prove_case_by_case = ByCasesAxiomStmt::new(
+        vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+            EqualFact::new(
+                Identifier::mk("p".to_string()),
+                Identifier::mk("q".to_string()),
+                (1, 0),
+            ),
+        ))],
+        vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        )))],
+        vec![vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(
+            EqualFact::new(
+                Identifier::mk("p".to_string()),
+                Identifier::mk("q".to_string()),
+                (1, 0),
+            ),
+        )))]],
+        vec![Some(impossible_fact)],
         (1, 0),
-    )));
-    let prove_case_by_case = ByCasesAxiomStmt::new(vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
-        (1, 0),
-    )))], vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
-        (1, 0),
-    )))], vec![vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
-        (1, 0)))))]], vec![Some(impossible_fact)], (1, 0));
+    );
     println!("{}", prove_case_by_case);
 
-    let impossible_fact = ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
-        (1, 0),
-    )));
+    let impossible_fact =
+        ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        )));
 
-    let claim_prove_by_contradiction_stmt = ByContraAxiomStmt::new(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
+    let claim_prove_by_contradiction_stmt = ByContraAxiomStmt::new(
+        Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        ))),
+        vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(
+            EqualFact::new(
+                Identifier::mk("p".to_string()),
+                Identifier::mk("q".to_string()),
+                (1, 0),
+            ),
+        )))],
+        impossible_fact,
         (1, 0),
-    ))), vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
-        (1, 0),
-    ))))], impossible_fact, (1, 0));
+    );
     println!("{}", claim_prove_by_contradiction_stmt);
 
     let stmt = Stmt::ByCasesAxiomStmt(prove_case_by_case);
@@ -798,10 +1323,12 @@ fn try_axiom_stmts() {
 }
 
 fn try_import_stmt() {
-    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/mod".to_string(), Some("mod".to_string()), (1, 0));
+    let import_relative_path_stmt =
+        ImportRelativePathStmt::new("path/to/mod".to_string(), Some("mod".to_string()), (1, 0));
     println!("{}", import_relative_path_stmt);
 
-    let import_global_mod_stmt = ImportGlobalModuleStmt::new("mod".to_string(), Some("mod".to_string()), (1, 0));
+    let import_global_mod_stmt =
+        ImportGlobalModuleStmt::new("mod".to_string(), Some("mod".to_string()), (1, 0));
     println!("{}", import_global_mod_stmt);
 
     let stmt = Stmt::ImportStmt(ImportStmt::ImportRelativePath(import_relative_path_stmt));
@@ -812,11 +1339,13 @@ fn try_import_stmt() {
 }
 
 fn try_prove_stmt() {
-    let proof = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
-        (1, 0),
-    ))))];
+    let proof = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(
+        EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        ),
+    )))];
     let prove_stmt = ProveStmt::new(proof, (1, 0));
     println!("{}", prove_stmt);
 
@@ -835,19 +1364,22 @@ fn try_run_file_stmt() {
 fn try_prove_by_enumeration_stmt() {
     let params = vec!["x".to_string()];
     let param_sets = vec![Identifier::mk("p".to_string())];
-    let proof = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
-        (1, 0),
-    ))))];
+    let proof = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(
+        EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        ),
+    )))];
 
     let to_prove = vec![Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
         Identifier::mk("p".to_string()),
         Identifier::mk("q".to_string()),
         (1, 0),
     )))];
-    
-    let prove_by_enumeration_stmt = EnumerateAxiomStmt::new(params, param_sets, to_prove, proof, (1, 0));
+
+    let prove_by_enumeration_stmt =
+        EnumerateAxiomStmt::new(params, param_sets, to_prove, proof, (1, 0));
     println!("{}", prove_by_enumeration_stmt);
 
     let stmt = Stmt::EnumerateAxiomStmt(prove_by_enumeration_stmt);
@@ -855,7 +1387,13 @@ fn try_prove_by_enumeration_stmt() {
 }
 
 fn try_have_obj_in_nonempty_set_stmt() {
-    let have_obj_in_nonempty_set_stmt = HaveObjInNonemptySetOrParamTypeStmt::new(vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], (1, 0));
+    let have_obj_in_nonempty_set_stmt = HaveObjInNonemptySetOrParamTypeStmt::new(
+        vec![ParamDefWithParamType(
+            vec!["x".to_string()],
+            ParamType::Set(Set::new()),
+        )],
+        (1, 0),
+    );
     println!("{}", have_obj_in_nonempty_set_stmt);
 
     let stmt = Stmt::HaveObjInNonemptySetStmt(have_obj_in_nonempty_set_stmt);
@@ -863,10 +1401,12 @@ fn try_have_obj_in_nonempty_set_stmt() {
 }
 
 fn try_tooling_stmt() {
-    let import_relative_path_stmt = ImportRelativePathStmt::new("path/to/mod".to_string(), Some("mod".to_string()), (1, 0));
+    let import_relative_path_stmt =
+        ImportRelativePathStmt::new("path/to/mod".to_string(), Some("mod".to_string()), (1, 0));
     println!("{}", import_relative_path_stmt);
 
-    let import_global_mod_stmt = ImportGlobalModuleStmt::new("mod".to_string(), Some("mod".to_string()), (1, 0));
+    let import_global_mod_stmt =
+        ImportGlobalModuleStmt::new("mod".to_string(), Some("mod".to_string()), (1, 0));
     println!("{}", import_global_mod_stmt);
 
     let stmt = Stmt::ImportStmt(ImportStmt::ImportRelativePath(import_relative_path_stmt));
@@ -889,17 +1429,21 @@ fn try_tooling_stmt() {
 }
 
 fn try_prove_by_induction_stmt() {
-    let fact = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
-        (1, 0),
-    )))];
+    let fact = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        )),
+    )];
     let param = "x".to_string();
-    let proof = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
-        (1, 0),
-    ))))];
+    let proof = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(
+        EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        ),
+    )))];
     let induc_from = Identifier::mk("N".to_string());
     let prove_by_induction_stmt = ByInducAxiomStmt::new(fact, param, proof, induc_from, (1, 0));
     println!("{}", prove_by_induction_stmt);
@@ -909,14 +1453,20 @@ fn try_prove_by_induction_stmt() {
 }
 
 fn try_have_obj_equal_stmt() {
-    let have_obj_equal_param = vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))];
-    let have_obj_equal_stmt = HaveObjEqualStmt::new(have_obj_equal_param, vec![Identifier::mk("p".to_string())], (1, 0));
+    let have_obj_equal_param = vec![ParamDefWithParamType(
+        vec!["x".to_string()],
+        ParamType::Set(Set::new()),
+    )];
+    let have_obj_equal_stmt = HaveObjEqualStmt::new(
+        have_obj_equal_param,
+        vec![Identifier::mk("p".to_string())],
+        (1, 0),
+    );
     println!("{}", have_obj_equal_stmt);
 
     let stmt = Stmt::HaveObjEqualStmt(have_obj_equal_stmt);
     println!("{}", stmt);
 }
-
 
 fn try_eval_stmt() {
     let eval_stmt = EvalStmt::new(Identifier::mk("p".to_string()), (1, 0));
@@ -931,49 +1481,81 @@ fn try_eval_stmt() {
 
 fn try_prove_for_stmt() {
     let params = vec!["x".to_string()];
-    let param_sets = ClosedRangeOrRange::ClosedRange(ClosedRange::new(Identifier::mk("0".to_string()), Identifier::mk("10".to_string())));
-    let dom_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
-        (1, 0),
+    let param_sets = ClosedRangeOrRange::ClosedRange(ClosedRange::new(
+        Identifier::mk("0".to_string()),
+        Identifier::mk("10".to_string()),
+    ));
+    let dom_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        )),
+    )];
+    let then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        )),
+    )];
+    let proof = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(
+        EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        ),
     )))];
-    let then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
+    let prove_for_stmt = ForAxiomStmt::new(
+        params,
+        vec![param_sets],
+        dom_facts,
+        then_facts,
+        proof,
         (1, 0),
-    )))];
-    let proof = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
-        (1, 0),
-    ))))];
-    let prove_for_stmt = ForAxiomStmt::new(params, vec![param_sets], dom_facts, then_facts, proof, (1, 0));
+    );
     println!("{}", prove_for_stmt);
 
     let stmt = Stmt::ForAxiomStmt(prove_for_stmt);
     println!("{}", stmt);
 
     let params2 = vec!["x".to_string()];
-    
-    let param_sets2 = ClosedRangeOrRange::Range(Range::new(Identifier::mk("0".to_string()), Identifier::mk("10".to_string())));
-    let dom_facts2 = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
-        (1, 0),
-    )))];
-    let then_facts2 = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
-        (1, 0),
+
+    let param_sets2 = ClosedRangeOrRange::Range(Range::new(
+        Identifier::mk("0".to_string()),
+        Identifier::mk("10".to_string()),
+    ));
+    let dom_facts2 = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        )),
+    )];
+    let then_facts2 = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        )),
+    )];
+
+    let proof2 = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(
+        EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        ),
     )))];
 
-    let proof2 = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("p".to_string()),
-        Identifier::mk("q".to_string()),
+    let prove_for_stmt = ForAxiomStmt::new(
+        params2,
+        vec![param_sets2],
+        dom_facts2,
+        then_facts2,
+        proof2,
         (1, 0),
-    ))))];
-    
-    let prove_for_stmt = ForAxiomStmt::new(params2, vec![param_sets2], dom_facts2, then_facts2, proof2, (1, 0));
+    );
     println!("{}", prove_for_stmt);
 
     let stmt = Stmt::ForAxiomStmt(prove_for_stmt);
@@ -981,7 +1563,18 @@ fn try_prove_for_stmt() {
 }
 
 fn try_have_obj_st_stmt() {
-    let have_obj_st_stmt = HaveExistObjStmt::new(vec!["p".to_string()], ExistFact::new(vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], vec![], (1, 0)), (1, 0));
+    let have_obj_st_stmt = HaveExistObjStmt::new(
+        vec!["p".to_string()],
+        ExistFact::new(
+            vec![ParamDefWithParamType(
+                vec!["x".to_string()],
+                ParamType::Set(Set::new()),
+            )],
+            vec![],
+            (1, 0),
+        ),
+        (1, 0),
+    );
     println!("{}", have_obj_st_stmt);
 
     let stmt = Stmt::HaveExistObjStmt(have_obj_st_stmt);
@@ -989,7 +1582,25 @@ fn try_have_obj_st_stmt() {
 }
 
 fn try_witness_stmt() {
-    let witness_exist_fact = WitnessExistFact::new(vec![Identifier::mk("p".to_string())], ExistFact::new(vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], (1, 0)), vec![], (1, 0));
+    let witness_exist_fact = WitnessExistFact::new(
+        vec![Identifier::mk("p".to_string())],
+        ExistFact::new(
+            vec![ParamDefWithParamType(
+                vec!["x".to_string()],
+                ParamType::Set(Set::new()),
+            )],
+            vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+                EqualFact::new(
+                    Identifier::mk("p".to_string()),
+                    Identifier::mk("q".to_string()),
+                    (1, 0),
+                ),
+            ))],
+            (1, 0),
+        ),
+        vec![],
+        (1, 0),
+    );
     println!("{}", witness_exist_fact);
 
     let stmt = Stmt::WitnessExistFact(witness_exist_fact);
@@ -997,19 +1608,31 @@ fn try_witness_stmt() {
 }
 
 fn try_prove_equal_set_stmt() {
-    let prove_equal_set_stmt = ByExtensionAxiomStmt::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), vec![], (1, 0));
+    let prove_equal_set_stmt = ByExtensionAxiomStmt::new(
+        Identifier::mk("p".to_string()),
+        Identifier::mk("q".to_string()),
+        vec![],
+        (1, 0),
+    );
     println!("{}", prove_equal_set_stmt);
 
     let stmt = Stmt::ByExtensionAxiomStmt(prove_equal_set_stmt);
     println!("{}", stmt);
 
-    let proof2 = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+    let proof2 = vec![Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(
+        EqualFact::new(
+            Identifier::mk("p".to_string()),
+            Identifier::mk("q".to_string()),
+            (1, 0),
+        ),
+    )))];
+
+    let prove_equal_set_stmt = ByExtensionAxiomStmt::new(
         Identifier::mk("p".to_string()),
         Identifier::mk("q".to_string()),
+        proof2,
         (1, 0),
-    ))))];
-
-    let prove_equal_set_stmt = ByExtensionAxiomStmt::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), proof2, (1, 0));
+    );
     println!("{}", prove_equal_set_stmt);
 
     let stmt = Stmt::ByExtensionAxiomStmt(prove_equal_set_stmt);
@@ -1017,7 +1640,12 @@ fn try_prove_equal_set_stmt() {
 }
 
 fn try_witness_nonempty_set_stmt() {
-    let witness_nonempty_set_stmt = WitnessNonemptySet::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), vec![], (1, 0));
+    let witness_nonempty_set_stmt = WitnessNonemptySet::new(
+        Identifier::mk("p".to_string()),
+        Identifier::mk("q".to_string()),
+        vec![],
+        (1, 0),
+    );
     println!("{}", witness_nonempty_set_stmt);
 
     let stmt = Stmt::WitnessNonemptySet(witness_nonempty_set_stmt);
@@ -1025,13 +1653,15 @@ fn try_witness_nonempty_set_stmt() {
 }
 
 fn try_view_fn_as_set() {
-    let prove_fn_set_is_subset_of_cart_set_stmt = ByFnDefAxiomStmt::new(Identifier::mk("p".to_string()), (1, 0));
+    let prove_fn_set_is_subset_of_cart_set_stmt =
+        ByFnDefAxiomStmt::new(Identifier::mk("p".to_string()), (1, 0));
     println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
 
     let stmt = Stmt::ByFnDefAxiomStmt(prove_fn_set_is_subset_of_cart_set_stmt);
     println!("{}", stmt);
 
-    let prove_fn_set_is_subset_of_cart_set_stmt = ByFnDefAxiomStmt::new(Identifier::mk("p".to_string()), (1, 0));
+    let prove_fn_set_is_subset_of_cart_set_stmt =
+        ByFnDefAxiomStmt::new(Identifier::mk("p".to_string()), (1, 0));
     println!("{}", prove_fn_set_is_subset_of_cart_set_stmt);
 
     let stmt = Stmt::ByFnDefAxiomStmt(prove_fn_set_is_subset_of_cart_set_stmt);
@@ -1039,8 +1669,25 @@ fn try_view_fn_as_set() {
 }
 
 fn try_have_fn_equal_stmt() {
-    let have_fn_equal_stmt = 
-    HaveFnEqualStmt::new("f".to_string(), FnSetWithParams::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Identifier::mk("p".to_string()))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], Identifier::mk("p".to_string())), Identifier::mk("p".to_string()), (1, 0));
+    let have_fn_equal_stmt = HaveFnEqualStmt::new(
+        "f".to_string(),
+        FnSetWithParams::new(
+            vec![ParamDefWithParamSet(
+                vec!["x".to_string()],
+                Identifier::mk("p".to_string()),
+            )],
+            vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+                EqualFact::new(
+                    Identifier::mk("p".to_string()),
+                    Identifier::mk("q".to_string()),
+                    (1, 0),
+                ),
+            ))],
+            Identifier::mk("p".to_string()),
+        ),
+        Identifier::mk("p".to_string()),
+        (1, 0),
+    );
     have_fn_equal_stmt.to_string();
     println!("{}", have_fn_equal_stmt);
 
@@ -1049,7 +1696,32 @@ fn try_have_fn_equal_stmt() {
 }
 
 fn try_have_fn_equal_case_by_case_stmt() {
-    let have_fn_equal_case_by_case_stmt = HaveFnEqualCaseByCaseStmt::new("f".to_string(), FnSetWithParams::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Identifier::mk("p".to_string()))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], Identifier::mk("p".to_string())), vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], vec![Identifier::mk("p".to_string())], (1, 0));
+    let have_fn_equal_case_by_case_stmt = HaveFnEqualCaseByCaseStmt::new(
+        "f".to_string(),
+        FnSetWithParams::new(
+            vec![ParamDefWithParamSet(
+                vec!["x".to_string()],
+                Identifier::mk("p".to_string()),
+            )],
+            vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+                EqualFact::new(
+                    Identifier::mk("p".to_string()),
+                    Identifier::mk("q".to_string()),
+                    (1, 0),
+                ),
+            ))],
+            Identifier::mk("p".to_string()),
+        ),
+        vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+            EqualFact::new(
+                Identifier::mk("p".to_string()),
+                Identifier::mk("q".to_string()),
+                (1, 0),
+            ),
+        ))],
+        vec![Identifier::mk("p".to_string())],
+        (1, 0),
+    );
     println!("{}", have_fn_equal_case_by_case_stmt);
 
     let stmt = Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt);
@@ -1057,16 +1729,21 @@ fn try_have_fn_equal_case_by_case_stmt() {
 }
 
 fn try_def_struct_stmt() {
-    let params_def_with_type = vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))];
+    let params_def_with_type = vec![ParamDefWithParamType(
+        vec!["x".to_string()],
+        ParamType::Set(Set::new()),
+    )];
     let def_struct_stmt = DefStructWithNoFieldStmt::new(
         "A".to_string(),
         params_def_with_type,
         vec![OrAndChainAtomicFact::OrFact(OrFact::new(
-            vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-                Identifier::mk("p".to_string()),
-                Identifier::mk("q".to_string()),
-                (1, 0),
-            )))],
+            vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+                EqualFact::new(
+                    Identifier::mk("p".to_string()),
+                    Identifier::mk("q".to_string()),
+                    (1, 0),
+                ),
+            ))],
             (1, 0),
         ))],
         Identifier::mk("p".to_string()),
@@ -1087,14 +1764,19 @@ fn try_def_struct_stmt() {
     )];
     let def_struct_with_fields_stmt = DefStructWithFieldsStmt::new(
         "A".to_string(),
-        vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))],
+        vec![ParamDefWithParamType(
+            vec!["x".to_string()],
+            ParamType::Set(Set::new()),
+        )],
         fields,
         vec![OrAndChainAtomicFact::OrFact(OrFact::new(
-            vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-                Identifier::mk("p".to_string()),
-                Identifier::mk("q".to_string()),
-                (1, 0),
-            )))],
+            vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+                EqualFact::new(
+                    Identifier::mk("p".to_string()),
+                    Identifier::mk("q".to_string()),
+                    (1, 0),
+                ),
+            ))],
             (1, 0),
         ))],
         (1, 0),
@@ -1125,7 +1807,12 @@ fn try_define_algorithm_stmt() {
         AlgoReturnOrAlgoCase::AlgoReturn(algo_return),
         AlgoReturnOrAlgoCase::AlgoCase(algo_case),
     ];
-    let algo = DefAlgoStmt::new("f".to_string(), vec!["x".to_string()], return_or_algo_case, (1, 0));
+    let algo = DefAlgoStmt::new(
+        "f".to_string(),
+        vec!["x".to_string()],
+        return_or_algo_case,
+        (1, 0),
+    );
     println!("{}", algo);
     for (i, item) in algo.return_or_algo_case.iter().enumerate() {
         let line_file = item.line_file();
@@ -1136,38 +1823,81 @@ fn try_define_algorithm_stmt() {
 fn try_runtime_context() {
     let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
 
-    let fn_set_obj = FnSetObj::FnSetWithoutDom(FnSetWithoutParams::new(vec![Identifier::mk("p".to_string())], Identifier::mk("p".to_string())));
+    let fn_set_obj = FnSetObj::FnSetWithoutDom(FnSetWithoutParams::new(
+        vec![Identifier::mk("p".to_string())],
+        Identifier::mk("p".to_string()),
+    ));
     println!("{}", fn_set_obj);
 
-    let fn_set_obj = FnSetObj::FnSetWithDom(FnSetWithParams::new(vec![ParamDefWithParamSet(vec!["x".to_string()], Identifier::mk("p".to_string()))], vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))], Identifier::mk("p".to_string())));
+    let fn_set_obj = FnSetObj::FnSetWithDom(FnSetWithParams::new(
+        vec![ParamDefWithParamSet(
+            vec!["x".to_string()],
+            Identifier::mk("p".to_string()),
+        )],
+        vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+            EqualFact::new(
+                Identifier::mk("p".to_string()),
+                Identifier::mk("q".to_string()),
+                (1, 0),
+            ),
+        ))],
+        Identifier::mk("p".to_string()),
+    ));
     println!("{}", fn_set_obj);
 
     let mut builtin_environment = Environment::new_empty_env();
-    
-    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
+        &mut module_manager,
+        &mut builtin_environment,
+    );
     println!("{}", runtime_context);
 
-    let atomic_fact = AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0)));
+    let atomic_fact = AtomicFact::EqualFact(EqualFact::new(
+        Identifier::mk("p".to_string()),
+        Identifier::mk("q".to_string()),
+        (1, 0),
+    ));
     println!("{}", atomic_fact.key());
 
-    if let Err(e) = runtime_context.top_level_env().store_fact(Fact::AtomicFact(atomic_fact)) {
+    if let Err(e) = runtime_context
+        .top_level_env()
+        .store_fact(Fact::AtomicFact(atomic_fact))
+    {
         println!("ERROR:{}", e);
     }
 
     println!("{}", runtime_context.top_level_env());
 
     let exist_fact = ExistFact::new(
-        vec![ParamDefWithParamType(vec!["x".to_string()], ParamType::Set(Set::new()))],
+        vec![ParamDefWithParamType(
+            vec!["x".to_string()],
+            ParamType::Set(Set::new()),
+        )],
         vec![
             OrAndChainAtomicFact::OrFact(OrFact {
                 facts: vec![
-                    AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0)))),
-                    AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0)))),
+                    AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                        Identifier::mk("p".to_string()),
+                        Identifier::mk("q".to_string()),
+                        (1, 0),
+                    ))),
+                    AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                        Identifier::mk("p".to_string()),
+                        Identifier::mk("q".to_string()),
+                        (1, 0),
+                    ))),
                 ],
                 line_file: (1, 0),
             }),
             OrAndChainAtomicFact::OrFact(OrFact {
-                facts: vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("p".to_string()), Identifier::mk("q".to_string()), (1, 0))))],
+                facts: vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+                    EqualFact::new(
+                        Identifier::mk("p".to_string()),
+                        Identifier::mk("q".to_string()),
+                        (1, 0),
+                    ),
+                ))],
                 line_file: (1, 0),
             }),
         ],
@@ -1177,24 +1907,40 @@ fn try_runtime_context() {
         let _ = f.line_file();
     }
     println!("{}", exist_fact.key());
-    if let Err(e) = runtime_context.top_level_env().store_fact(Fact::ExistFact(exist_fact)) {
+    if let Err(e) = runtime_context
+        .top_level_env()
+        .store_fact(Fact::ExistFact(exist_fact))
+    {
         println!("ERROR:{}", e);
     }
     println!("{}", runtime_context.top_level_env());
 
-    let param_type_or_property_pairs = vec![ParamDefWithParamType(vec!["n".to_string()], ParamType::Set(Set::new()))];
-    let dom_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-        EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)),
-    ))];
-    let then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
-        EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0)),
-    ))];
+    let param_type_or_property_pairs = vec![ParamDefWithParamType(
+        vec!["n".to_string()],
+        ParamType::Set(Set::new()),
+    )];
+    let dom_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("a".to_string()),
+            Identifier::mk("b".to_string()),
+            (1, 0),
+        )),
+    )];
+    let then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("a".to_string()),
+            Identifier::mk("b".to_string()),
+            (1, 0),
+        )),
+    )];
     let _forall = ForallFact::new(param_type_or_property_pairs, dom_facts, then_facts, (1, 0));
-    
-    if let Err(e) = runtime_context.top_level_env().store_fact(Fact::ForallFact(_forall)) {
+
+    if let Err(e) = runtime_context
+        .top_level_env()
+        .store_fact(Fact::ForallFact(_forall))
+    {
         println!("ERROR:{}", e);
     }
-    
 }
 
 fn try_tokenizer() {
@@ -1209,18 +1955,20 @@ fn try_tb() {
     println!("{:?}", blocks);
 }
 
-fn try_parser() {
-}
+fn try_parser() {}
 
 fn try_parse_obj() {
     let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
-    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
+        &mut module_manager,
+        &mut builtin_environment,
+    );
     let mut executor = Executor::new(&mut runtime_context);
     println!("{}", executor);
     let s = "a+b";
     let tokens = tokenize_line(s);
-    let mut tb = TokenBlock::new(tokens, vec![], (1 ,1));
+    let mut tb = TokenBlock::new(tokens, vec![], (1, 1));
     match executor.parse_obj(&mut tb) {
         Ok(obj) => println!("{}", obj),
         Err(err) => println!("ERROR:{}", err),
@@ -1230,7 +1978,10 @@ fn try_parse_obj() {
 fn try_parse_fact() {
     let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
-    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
+        &mut module_manager,
+        &mut builtin_environment,
+    );
     let mut executor = Executor::new(&mut runtime_context);
     println!("{}", executor);
     let s = "a+b=0";
@@ -1245,7 +1996,10 @@ fn try_parse_fact() {
 fn try_parse_statements() {
     let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
-    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
+        &mut module_manager,
+        &mut builtin_environment,
+    );
     let mut executor = Executor::new(&mut runtime_context);
     println!("{}", executor);
     let s = "a+b=0";
@@ -1260,7 +2014,10 @@ fn try_parse_statements() {
 fn try_executor() {
     let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
-    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
+        &mut module_manager,
+        &mut builtin_environment,
+    );
     let executor = Executor::new(&mut runtime_context);
     println!("{}", executor.line_file_string(1, 0));
 }
@@ -1270,7 +2027,6 @@ fn try_pipeline() {
     println!("{}", result);
 }
 
-
 fn try_calculate() {
     let one = Obj::Number(Number::new("1".to_string()));
     let two = Obj::Number(Number::new("2".to_string()));
@@ -1278,19 +2034,25 @@ fn try_calculate() {
     println!("{}", one_add_two.calculate_to_string());
 }
 
-fn try_collect_ordered_monomials() {
-}
+fn try_collect_ordered_monomials() {}
 
 fn try_obj_well_defined<'a>() {
     let mut module_manager = ModuleManager::new_empty_module_manager("examples/tmp.lit");
     let mut builtin_environment = Environment::new_empty_env();
-    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager, &mut builtin_environment);
+    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
+        &mut module_manager,
+        &mut builtin_environment,
+    );
     let mut executor = Executor::new(&mut runtime_context);
-    
+
     let one = Obj::Number(Number::new("1".to_string()));
     let two = Obj::Number(Number::new("2".to_string()));
     let one_add_two = Obj::Add(Add::new(one, two, true));
-    let atomic_fact = AtomicFact::EqualFact(EqualFact::new(one_add_two, Obj::Number(Number::new("3".to_string())), (1, 0)));
+    let atomic_fact = AtomicFact::EqualFact(EqualFact::new(
+        one_add_two,
+        Obj::Number(Number::new("3".to_string())),
+        (1, 0),
+    ));
     println!("{}", atomic_fact);
 
     let fact = Fact::AtomicFact(atomic_fact);
@@ -1314,40 +2076,77 @@ fn try_verify_state() {
 }
 
 fn try_store_forall_fact_in_env() {
-    let param_def = vec![ParamDefWithParamType(vec!["n".to_string()], ParamType::Set(Set::new()))];
-    let dom_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("a".to_string()),
-        Identifier::mk("b".to_string()),
-        (1, 0),
-    )))];
-    let then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("a".to_string()),
-        Identifier::mk("b".to_string()),
-        (1, 0),
-    ))), ExistOrAndChainAtomicFact::AndFact(AndFact::new(vec![AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("a".to_string()),
-        Identifier::mk("b".to_string()),
-        (1, 0),
-    ))], (1, 0))), ExistOrAndChainAtomicFact::OrFact(OrFact::new(vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-        Identifier::mk("a".to_string()),
-        Identifier::mk("b".to_string()),
-        (1, 0),
-    )))], (1, 0))), ExistOrAndChainAtomicFact::ChainFact(ChainFact::new(
-        vec![Identifier::mk("a".to_string()), Identifier::mk("b".to_string())],
-        vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new("=".to_string()))],
-        (1, 0),
-    )), ExistOrAndChainAtomicFact::ExistFact(ExistFact::new(
-        vec![ParamDefWithParamType(vec!["n".to_string()], ParamType::Set(Set::new()))],
-        vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(Identifier::mk("a".to_string()), Identifier::mk("b".to_string()), (1, 0))))],
-        (1, 0),
-    ))];
+    let param_def = vec![ParamDefWithParamType(
+        vec!["n".to_string()],
+        ParamType::Set(Set::new()),
+    )];
+    let dom_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(
+        AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("a".to_string()),
+            Identifier::mk("b".to_string()),
+            (1, 0),
+        )),
+    )];
+    let then_facts = vec![
+        ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+            Identifier::mk("a".to_string()),
+            Identifier::mk("b".to_string()),
+            (1, 0),
+        ))),
+        ExistOrAndChainAtomicFact::AndFact(AndFact::new(
+            vec![AtomicFact::EqualFact(EqualFact::new(
+                Identifier::mk("a".to_string()),
+                Identifier::mk("b".to_string()),
+                (1, 0),
+            ))],
+            (1, 0),
+        )),
+        ExistOrAndChainAtomicFact::OrFact(OrFact::new(
+            vec![AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+                EqualFact::new(
+                    Identifier::mk("a".to_string()),
+                    Identifier::mk("b".to_string()),
+                    (1, 0),
+                ),
+            ))],
+            (1, 0),
+        )),
+        ExistOrAndChainAtomicFact::ChainFact(ChainFact::new(
+            vec![
+                Identifier::mk("a".to_string()),
+                Identifier::mk("b".to_string()),
+            ],
+            vec![IdentifierOrIdentifierWithMod::Identifier(Identifier::new(
+                "=".to_string(),
+            ))],
+            (1, 0),
+        )),
+        ExistOrAndChainAtomicFact::ExistFact(ExistFact::new(
+            vec![ParamDefWithParamType(
+                vec!["n".to_string()],
+                ParamType::Set(Set::new()),
+            )],
+            vec![OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(
+                EqualFact::new(
+                    Identifier::mk("a".to_string()),
+                    Identifier::mk("b".to_string()),
+                    (1, 0),
+                ),
+            ))],
+            (1, 0),
+        )),
+    ];
     let forall_fact = ForallFact::new(param_def, dom_facts, then_facts, (1, 0));
     println!("forall fact to store: {}", forall_fact);
 
     let mut env = Environment::new_empty_env();
     if let Err(e) = env.store_fact(Fact::ForallFact(forall_fact)) {
         let stmt_err = StmtError::StoreFactError(e);
-        println!("store forall fact error\n{}\n{}", stmt_err.display_label(), stmt_err.error_body());
+        println!(
+            "store forall fact error\n{}\n{}",
+            stmt_err.display_label(),
+            stmt_err.error_body()
+        );
     }
     println!("env after store: {}", env);
 }

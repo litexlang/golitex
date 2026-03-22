@@ -1,8 +1,8 @@
+use super::Executor;
 use crate::error::{ExecStmtError, StmtError};
 use crate::infer::InferResult;
-use crate::stmt::prove_stmt::ProveStmt;
 use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
-use super::Executor;
+use crate::stmt::prove_stmt::ProveStmt;
 
 impl<'a> Executor<'a> {
     pub fn exec_prove_stmt(&mut self, stmt: &ProveStmt) -> Result<NonErrStmtExecResult, StmtError> {
@@ -12,22 +12,26 @@ impl<'a> Executor<'a> {
             match exec_stmt_result {
                 Ok(result) => inside_results.push(result),
                 Err(statement_error) => {
-                    return Err(StmtError::ExecError(ExecStmtError::new_with_inside_results(
-                        stmt.stmt_type_name(),
-                        proof_stmt.to_string(),
-                        Some(statement_error),
-                        inside_results,
-                        stmt.line_file,
-                    )));
+                    return Err(StmtError::ExecError(
+                        ExecStmtError::new_with_inside_results(
+                            stmt.stmt_type_name(),
+                            proof_stmt.to_string(),
+                            Some(statement_error),
+                            inside_results,
+                            stmt.line_file,
+                        ),
+                    ));
                 }
             }
         }
 
-        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(
-            "prove statement".to_string(),
-            InferResult::new(),
-            inside_results,
-            stmt.line_file,
-        )))
+        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+            NonFactualStmtSuccess::new(
+                "prove statement".to_string(),
+                InferResult::new(),
+                inside_results,
+                stmt.line_file,
+            ),
+        ))
     }
 }

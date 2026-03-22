@@ -12,12 +12,20 @@ pub fn objs_equal_by_rational_expression_simplification(left: &Obj, right: &Obj)
     }
 
     let (left_monomials_after_denominator_clearing, right_monomials_after_denominator_clearing) =
-        collect_rational_expression_monomials_after_denominator_clearing_process(left_monomials, right_monomials);
-        
-    monomial_vectors_are_equal(left_monomials_after_denominator_clearing, right_monomials_after_denominator_clearing)
+        collect_rational_expression_monomials_after_denominator_clearing_process(
+            left_monomials,
+            right_monomials,
+        );
+
+    monomial_vectors_are_equal(
+        left_monomials_after_denominator_clearing,
+        right_monomials_after_denominator_clearing,
+    )
 }
 
-fn sort_monomials(monomials: Vec<MonomialWithNonZeroScalarAndOrderedOperands>) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
+fn sort_monomials(
+    monomials: Vec<MonomialWithNonZeroScalarAndOrderedOperands>,
+) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     let mut result = monomials;
     result.sort_by(|a, b| a.key().cmp(&b.key()));
     result
