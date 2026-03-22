@@ -2,7 +2,7 @@ use crate::common::keywords::{
     FACT_PREFIX, IN, N, N_POS, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, Z, Z_NEG, Z_NZ,
 };
 use crate::error::VerifyError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::InFact;
 use crate::infer::InferResult;
 use crate::obj::Obj;
@@ -42,7 +42,7 @@ fn arithmetic_obj_in_r_verified_by_builtin_rules_result(
     ))
 }
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn verify_in_fact_with_builtin_rules(
         &mut self,
         in_fact: &InFact,

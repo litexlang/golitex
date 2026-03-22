@@ -4,7 +4,7 @@ use crate::common::keywords::{
     LEFT_CURLY_BRACE, NOT, OR, RIGHT_ARROW, RIGHT_CURLY_BRACE, ST,
 };
 use crate::error::{NewAtomicFactError, ParsingError};
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::Fact;
 use crate::fact::ForallFact;
 use crate::fact::ForallFactWithIff;
@@ -16,7 +16,7 @@ use crate::obj::Identifier;
 use crate::obj::IdentifierOrIdentifierWithMod;
 use crate::stmt::parameter_def::ParamDefWithParamType;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn parse_fact(&mut self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
         match tb.current()? {
             FORALL => self.parse_forall_or_forall_with_iff(tb),
@@ -32,9 +32,9 @@ impl<'a> Executor<'a> {
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Fact, ParsingError> {
-        self.new_parsing_names_block();
+        self.push_parsing_time_name_scope();
         let fact = self.parse_forall_or_forall_with_iff_body(tb);
-        self.delete_parsing_names_block();
+        self.pop_parsing_time_name_scope();
         fact
     }
 
@@ -48,7 +48,7 @@ impl<'a> Executor<'a> {
             param_def.push(self.parse_param_def_with_param_type(tb)?);
         }
         let forall_param_names = ParamDefWithParamType::collect_param_names(&param_def);
-        self.validate_names_and_put_into_parsing_names_block(&forall_param_names)
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(&forall_param_names)
             .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         tb.skip_token(COLON)?;
 
@@ -198,9 +198,9 @@ impl<'a> Executor<'a> {
     }
 
     pub fn parse_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<ExistFact, ParsingError> {
-        self.new_parsing_names_block();
+        self.push_parsing_time_name_scope();
         let fact = self.parse_exist_fact_body(tb);
-        self.delete_parsing_names_block();
+        self.pop_parsing_time_name_scope();
         fact
     }
 
@@ -214,8 +214,8 @@ impl<'a> Executor<'a> {
             }
         }
         let exist_param_names = ParamDefWithParamType::collect_param_names(&param_def);
-        self.new_parsing_names_block();
-        self.validate_names_and_put_into_parsing_names_block(&exist_param_names)
+        self.push_parsing_time_name_scope();
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(&exist_param_names)
             .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         tb.skip_token(ST)?;
 
@@ -232,7 +232,7 @@ impl<'a> Executor<'a> {
         }
         tb.skip_token(RIGHT_CURLY_BRACE)?;
 
-        self.delete_parsing_names_block();
+        self.pop_parsing_time_name_scope();
         let line = tb.line_file;
         Ok(ExistFact::new(param_def, facts, line))
     }

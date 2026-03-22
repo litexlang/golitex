@@ -9,7 +9,7 @@ use crate::common::keywords::{
     SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ,
 };
 use crate::error::{duplicate_used_name_error_message, ParsingError, StmtError};
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div, FnObj, FnSetObj,
     FnSetWithParams, FnSetWithoutParams, InstStructObj, Intersect, ListSet, Mod, Mul, NObj,
@@ -22,7 +22,7 @@ use crate::obj::{
 };
 use crate::stmt::parameter_def::ParamDefWithParamSet;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         self.parse_obj_hierarchy0(tb)
     }
@@ -217,9 +217,9 @@ impl<'a> Executor<'a> {
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<FnSetWithParams, ParsingError> {
-        self.new_parsing_names_block();
+        self.push_parsing_time_name_scope();
         let fn_set = self.parse_fn_set_with_dom_without_fn_prefix_body(tb);
-        self.delete_parsing_names_block();
+        self.pop_parsing_time_name_scope();
         fn_set
     }
 
@@ -257,7 +257,7 @@ impl<'a> Executor<'a> {
         }
 
         let fn_set_param_names = ParamDefWithParamSet::collect_param_names(&params_def_with_set);
-        self.validate_names_and_put_into_parsing_names_block(&fn_set_param_names)
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(&fn_set_param_names)
             .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
 
         let mut dom_facts = vec![];
@@ -805,9 +805,9 @@ impl<'a> Executor<'a> {
         tb: &mut TokenBlock,
         a: Identifier,
     ) -> Result<Obj, ParsingError> {
-        self.new_parsing_names_block();
+        self.push_parsing_time_name_scope();
         let result = self.parse_set_builder_body(tb, a);
-        self.delete_parsing_names_block();
+        self.pop_parsing_time_name_scope();
         result
     }
 
@@ -817,7 +817,7 @@ impl<'a> Executor<'a> {
         tb: &mut TokenBlock,
         a: Identifier,
     ) -> Result<Obj, ParsingError> {
-        self.validate_name_and_put_into_parsing_names_block(&a.name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&a.name)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&a.name),

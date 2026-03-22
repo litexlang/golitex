@@ -1,19 +1,19 @@
+use super::RuntimeContext;
 use crate::common::is_valid_litex_name::is_valid_litex_name;
 use crate::error::ParseBlockError;
-use crate::runtime_context::RuntimeContext;
 use std::collections::HashMap;
 use std::fmt;
 
-pub struct Executor<'a> {
+pub struct Runtime<'a> {
     pub runtime_context: &'a mut RuntimeContext<'a>,
-    pub parsing_names_blocks: Vec<HashMap<String, ()>>,
+    pub parsing_time_name_scope_stack: Vec<HashMap<String, ()>>,
 }
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn new(runtime_context: &'a mut RuntimeContext<'a>) -> Self {
-        Executor {
+        Runtime {
             runtime_context,
-            parsing_names_blocks: vec![HashMap::new()],
+            parsing_time_name_scope_stack: vec![HashMap::new()],
         }
     }
 
@@ -25,7 +25,7 @@ impl<'a> Executor<'a> {
     }
 }
 
-impl<'a> fmt::Display for Executor<'a> {
+impl<'a> fmt::Display for Runtime<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -35,9 +35,9 @@ impl<'a> fmt::Display for Executor<'a> {
     }
 }
 
-impl<'a> Executor<'a> {
-    pub fn new_parsing_names_block(&mut self) {
-        self.parsing_names_blocks.push(HashMap::new());
+impl<'a> Runtime<'a> {
+    pub fn push_parsing_time_name_scope(&mut self) {
+        self.parsing_time_name_scope_stack.push(HashMap::new());
     }
 
     pub fn validate_name(&mut self, name: &str) -> Result<(), ParseBlockError> {
@@ -49,35 +49,35 @@ impl<'a> Executor<'a> {
             return Err(ParseBlockError::NameAlreadyUsed(name.to_string()));
         }
 
-        for name_block in self.parsing_names_blocks.iter() {
-            if name_block.contains_key(name) {
+        for names_in_scope in self.parsing_time_name_scope_stack.iter() {
+            if names_in_scope.contains_key(name) {
                 return Err(ParseBlockError::NameAlreadyUsed(name.to_string()));
             }
         }
         Ok(())
     }
 
-    pub fn delete_parsing_names_block(&mut self) {
-        self.parsing_names_blocks.pop();
+    pub fn pop_parsing_time_name_scope(&mut self) {
+        self.parsing_time_name_scope_stack.pop();
     }
 
-    pub fn validate_names_and_put_into_parsing_names_block(
+    pub fn validate_names_and_insert_into_top_parsing_time_name_scope(
         &mut self,
         names: &Vec<String>,
     ) -> Result<(), ParseBlockError> {
         for name in names {
-            self.validate_name_and_put_into_parsing_names_block(name)?;
+            self.validate_name_and_insert_into_top_parsing_time_name_scope(name)?;
         }
         Ok(())
     }
 
-    pub fn validate_name_and_put_into_parsing_names_block(
+    pub fn validate_name_and_insert_into_top_parsing_time_name_scope(
         &mut self,
         name: &str,
     ) -> Result<(), ParseBlockError> {
         self.validate_name(name)?;
-        if let Some(name_block) = self.parsing_names_blocks.last_mut() {
-            name_block.insert(name.to_string(), ());
+        if let Some(names_in_top_scope) = self.parsing_time_name_scope_stack.last_mut() {
+            names_in_top_scope.insert(name.to_string(), ());
         }
         Ok(())
     }

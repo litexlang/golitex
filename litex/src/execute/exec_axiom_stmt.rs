@@ -1,4 +1,4 @@
-use super::Executor;
+use super::Runtime;
 use crate::error::StmtError;
 use crate::result::NonErrStmtExecResult;
 use crate::stmt::axiom_stmt::{
@@ -6,7 +6,7 @@ use crate::stmt::axiom_stmt::{
     ByFnDefAxiomStmt, ByInducAxiomStmt, EnumerateAxiomStmt, ForAxiomStmt,
 };
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn exec_by_cases_axiom_stmt(
         &mut self,
         stmt: &ByCasesAxiomStmt,

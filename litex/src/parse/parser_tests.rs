@@ -1,9 +1,9 @@
 use super::tokenize_line;
 use super::TokenBlock;
 use crate::environment::Environment;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::module_manager::ModuleManager;
-use crate::runtime_context::RuntimeContext;
+use crate::runtime::RuntimeContext;
 
 #[test]
 #[ignore]
@@ -14,7 +14,7 @@ fn test_fact() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Executor::new(&mut runtime_context);
+    let mut executor = Runtime::new(&mut runtime_context);
     let code = "1 + 1 = 2";
     let blocks = TokenBlock::parse_blocks(code, 0).expect("parse blocks failed");
     for mut b in blocks {
@@ -35,7 +35,7 @@ fn test_list_set_comma() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Executor::new(&mut runtime_context);
+    let mut executor = Runtime::new(&mut runtime_context);
     let mut tb = TokenBlock::new(tokenize_line("{1, 0, 2}"), vec![], (1, 0));
     let r = executor.parse_obj(&mut tb);
     match r {
@@ -52,7 +52,7 @@ fn test_list_set_space() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Executor::new(&mut runtime_context);
+    let mut executor = Runtime::new(&mut runtime_context);
     let mut tb = TokenBlock::new(tokenize_line("{a b c}"), vec![], (1, 0));
     let r = executor.parse_obj(&mut tb);
     match r {
@@ -139,7 +139,7 @@ fn test_obj() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Executor::new(&mut runtime_context);
+    let mut executor = Runtime::new(&mut runtime_context);
     for obj in objs {
         let mut tb = TokenBlock::new(tokenize_line(obj), vec![], (1, 0));
         let result = executor.parse_obj(&mut tb);

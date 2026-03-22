@@ -1,12 +1,12 @@
 use super::TokenBlock;
 use crate::common::keywords::{COLON, COMMA, FORALL, KNOW};
 use crate::error::ParsingError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::Fact;
 use crate::stmt::know_stmt::KnowStmt;
 use crate::stmt::Stmt;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn know_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(KNOW)?;
         if tb.current_token_is_equal_to(COLON) {

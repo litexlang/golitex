@@ -1,12 +1,12 @@
 use super::TokenBlock;
 use crate::common::keywords::{AS, CLEAR, DOUBLE_QUOTE, DO_NOTHING, IMPORT, RUN_FILE};
 use crate::error::ParsingError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::stmt::tooling_stmt::{ClearStmt, DoNothingStmt, RunFileStmt};
 use crate::stmt::tooling_stmt::{ImportGlobalModuleStmt, ImportRelativePathStmt, ImportStmt};
 use crate::stmt::Stmt;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(IMPORT)?;
         if tb.current_token_is_equal_to(DOUBLE_QUOTE) {

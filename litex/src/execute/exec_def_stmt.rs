@@ -1,4 +1,4 @@
-use super::Executor;
+use super::Runtime;
 use crate::error::ExecStmtError;
 use crate::fact::Fact;
 use crate::fact::{
@@ -45,7 +45,7 @@ fn build_function_obj_with_param_names(function_name: &str, param_names: &[Strin
     ))
 }
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn def_prop_with_meaning_stmt(
         &mut self,
         def_prop_with_meaning_stmt: &DefPropWithMeaningStmt,
@@ -74,12 +74,12 @@ impl<'a> Executor<'a> {
         &mut self,
         def_prop_with_meaning_stmt: &DefPropWithMeaningStmt,
     ) -> Result<(), ExecStmtError> {
-        self.runtime_context.new_env();
+        self.runtime_context.push_env();
 
         let result =
             self.def_prop_with_meaning_stmt_check_well_defined_body(def_prop_with_meaning_stmt);
 
-        self.runtime_context.delete_env();
+        self.runtime_context.pop_env();
         result
     }
 
@@ -429,9 +429,8 @@ impl<'a> Executor<'a> {
             have_fn_equal_stmt.equal_to.clone(),
             have_fn_equal_stmt.line_file,
         ));
-        let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::with_capacity(
-            have_fn_equal_stmt.fn_set_with_params.dom_facts.len(),
-        );
+        let mut forall_dom_facts: Vec<ExistOrAndChainAtomicFact> =
+            Vec::with_capacity(have_fn_equal_stmt.fn_set_with_params.dom_facts.len());
         for dom_fact in have_fn_equal_stmt.fn_set_with_params.dom_facts.iter() {
             forall_dom_facts.push(dom_fact.clone().to_exist_or_and_chain_atomic_fact());
         }
@@ -463,11 +462,11 @@ impl<'a> Executor<'a> {
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
     ) -> Result<(), ExecStmtError> {
-        self.runtime_context.new_env();
+        self.runtime_context.push_env();
 
         let result = self.have_fn_equal_stmt_verify_well_defined_body(have_fn_equal_stmt);
 
-        self.runtime_context.delete_env();
+        self.runtime_context.pop_env();
         result
     }
 
@@ -659,7 +658,7 @@ impl<'a> Executor<'a> {
             let case_fact = &have_fn_equal_case_by_case_stmt.cases[case_index];
             let equal_to = &have_fn_equal_case_by_case_stmt.equal_tos[case_index];
 
-            self.runtime_context.new_env();
+            self.runtime_context.push_env();
             let case_result = self
                 .have_fn_equal_case_by_case_stmt_verify_well_defined_body_for_one_case(
                     have_fn_equal_case_by_case_stmt,
@@ -667,7 +666,7 @@ impl<'a> Executor<'a> {
                     equal_to,
                 );
 
-            self.runtime_context.delete_env();
+            self.runtime_context.pop_env();
             case_result?;
         }
 

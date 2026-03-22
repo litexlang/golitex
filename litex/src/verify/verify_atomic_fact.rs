@@ -1,10 +1,10 @@
 use crate::error::VerifyError;
-use crate::execute::Executor;
+use crate::execute::Runtime;
 use crate::fact::AtomicFact;
 use crate::result::NonErrStmtExecResult;
 use crate::verify::VerifyState;
 
-impl<'a> Executor<'a> {
+impl<'a> Runtime<'a> {
     pub fn verify_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,
