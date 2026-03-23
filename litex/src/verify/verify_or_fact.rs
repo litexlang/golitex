@@ -34,7 +34,7 @@ impl<'a> Runtime<'a> {
         let verify_state_for_children = verify_state.new_state_with_req_ok_set_to_true();
 
         for fact in or_fact.facts.iter() {
-            let result = self.verify_fact(&fact.to_fact(), &verify_state_for_children)?;
+            let result = self.verify_and_chain_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_true() {
                 return Ok(NonErrStmtExecResult::FactVerifiedByFact(
                     FactVerifiedByFact::new(
