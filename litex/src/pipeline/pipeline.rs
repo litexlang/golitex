@@ -7,6 +7,8 @@ use crate::stmt::Stmt;
 use std::fs;
 use std::io::{self, BufRead, Write};
 
+const REPL_MODULE_NAME: &str = "repl";
+
 pub fn run_source_code_in_file(entrance_file_path: &str) -> String {
     let source_code = fs::read_to_string(entrance_file_path).expect("Could not read file");
     run_source_code(&source_code, entrance_file_path)
@@ -89,14 +91,12 @@ where
     R: BufRead,
     W: Write,
 {
-    writeln!(
-        stdout_writer,
-        "Litex kernel REPL (litex {})",
-        version_banner
-    )?;
-    writeln!(stdout_writer, "Empty lines are skipped. Ctrl+D to exit.\n")?;
+    writeln!(stdout_writer, "Litex version {}", version_banner)?;
+    writeln!(stdout_writer, "Copyright (C) 2024-2026 Jiachen Shen")?;
+    writeln!(stdout_writer, "website: https://litexlang.com")?;
+    writeln!(stdout_writer, "Ctrl+D to exit.\n")?;
 
-    let mut module_manager = ModuleManager::new_empty_module_manager("repl");
+    let mut module_manager = ModuleManager::new_empty_module_manager(REPL_MODULE_NAME);
     let mut builtin_environment = Environment::new_empty_env();
 
     let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
