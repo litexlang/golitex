@@ -271,7 +271,7 @@ impl<'a> Runtime<'a> {
 
                 let fact = ParamType::fact_for_obj(current_param_equal_to.clone(), current_type);
                 let verify_result = self
-                    .verify_fact(&fact, &VerifyState::new(0, false))
+                    .verify_atomic_fact(&fact, &VerifyState::new(0, false))
                     .map_err(ExecStmtError::from)?;
                 if !verify_result.is_true() {
                     let msg = format!(
@@ -309,10 +309,7 @@ impl<'a> Runtime<'a> {
         let line_file = have_exist_obj_stmt.line_file;
         let verify_state = VerifyState::new(0, false);
 
-        let result = self.verify_fact(
-            &Fact::ExistFact(exist_fact_in_have_obj_stmt.clone()),
-            &verify_state,
-        )?;
+        let result = self.verify_exist_fact(exist_fact_in_have_obj_stmt, &verify_state)?;
         if !result.is_true() {
             return Err(ExecStmtError::new(
                 have_exist_obj_stmt.stmt_type_name(),
@@ -358,7 +355,7 @@ impl<'a> Runtime<'a> {
         let mut infer_result = InferResult::new();
         for fact in args_satisfy_param_types.iter() {
             let fact_infer_result =
-                self.store_fact_without_well_defined_verified_and_infer(fact)?;
+                self.store_atomic_fact_without_well_defined_verified_and_infer(fact)?;
             infer_result.append(fact_infer_result);
         }
 
@@ -495,7 +492,7 @@ impl<'a> Runtime<'a> {
                 .map_err(ExecStmtError::from)?;
         }
 
-        let equal_to_in_ret_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+        let equal_to_in_ret_set_atomic_fact = AtomicFact::InFact(InFact::new(
             have_fn_equal_stmt.equal_to.clone(),
             have_fn_equal_stmt
                 .fn_set_with_params
@@ -503,9 +500,9 @@ impl<'a> Runtime<'a> {
                 .as_ref()
                 .clone(),
             have_fn_equal_stmt.line_file,
-        )));
+        ));
         let verify_result = self
-            .verify_fact(&equal_to_in_ret_set_fact, &verify_state)
+            .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
             .map_err(ExecStmtError::from)?;
         if !verify_result.is_true() {
             let msg = format!(
@@ -704,7 +701,7 @@ impl<'a> Runtime<'a> {
             .map_err(ExecStmtError::from)?;
         self.verify_obj_well_defined_and_store_cache(equal_to, &verify_state)?;
 
-        let equal_to_in_ret_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+        let equal_to_in_ret_set_atomic_fact = AtomicFact::InFact(InFact::new(
             equal_to.clone(),
             have_fn_equal_case_by_case_stmt
                 .fn_set_with_params
@@ -712,9 +709,9 @@ impl<'a> Runtime<'a> {
                 .as_ref()
                 .clone(),
             have_fn_equal_case_by_case_stmt.line_file,
-        )));
+        ));
         let verify_result = self
-            .verify_fact(&equal_to_in_ret_set_fact, &verify_state)
+            .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
             .map_err(ExecStmtError::from)?;
         if !verify_result.is_true() {
             let msg = format!(

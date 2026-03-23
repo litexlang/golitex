@@ -120,23 +120,21 @@ impl ParamType {
     }
 
     /// Builds the fact that the given object satisfies this param type.
-    pub fn fact_for_obj(obj: Obj, param_type: &ParamType) -> Fact {
+    pub fn fact_for_obj(obj: Obj, param_type: &ParamType) -> AtomicFact {
         match param_type {
-            ParamType::Obj(set_obj) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+            ParamType::Obj(set_obj) => {
+                AtomicFact::InFact(InFact::new(obj, set_obj.clone(), DEFAULT_LINE_FILE.clone()))
+            }
+            ParamType::Set(_) => {
+                AtomicFact::IsSetFact(IsSetFact::new(obj, DEFAULT_LINE_FILE.clone()))
+            }
+            ParamType::NonemptySet(_) => AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
                 obj,
-                set_obj.clone(),
                 DEFAULT_LINE_FILE.clone(),
-            ))),
-            ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
-                obj,
-                DEFAULT_LINE_FILE.clone(),
-            ))),
-            ParamType::NonemptySet(_) => Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
-                IsNonemptySetFact::new(obj, DEFAULT_LINE_FILE.clone()),
             )),
-            ParamType::FiniteSet(_) => Fact::AtomicFact(AtomicFact::IsFiniteSetFact(
-                IsFiniteSetFact::new(obj, DEFAULT_LINE_FILE.clone()),
-            )),
+            ParamType::FiniteSet(_) => {
+                AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(obj, DEFAULT_LINE_FILE.clone()))
+            }
         }
     }
 }
@@ -171,30 +169,18 @@ impl ParamDefWithParamSet {
         ParamDefWithParamSet(param, param_set)
     }
 
-    pub fn fact_for_obj(obj: Obj, param_set: &Obj) -> Fact {
-        Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+    pub fn fact_for_obj(obj: Obj, param_set: &Obj) -> AtomicFact {
+        AtomicFact::InFact(InFact::new(
             obj,
             param_set.clone(),
             DEFAULT_LINE_FILE.clone(),
-        )))
-    }
-
-    #[allow(dead_code)]
-    pub fn facts_for_boxed_args_satisfy_param_def_with_set_vec(
-        param_defs: &Vec<ParamDefWithParamSet>,
-        args: &Vec<Box<Obj>>,
-    ) -> Result<Vec<Fact>, StmtError> {
-        let mut args_as_obj: Vec<Obj> = Vec::with_capacity(args.len());
-        for arg in args.iter() {
-            args_as_obj.push((**arg).clone());
-        }
-        Self::facts_for_args_satisfy_param_def_with_set_vec(param_defs, &args_as_obj)
+        ))
     }
 
     pub fn facts_for_args_satisfy_param_def_with_set_vec(
         param_defs: &Vec<ParamDefWithParamSet>,
         args: &Vec<Obj>,
-    ) -> Result<Vec<Fact>, StmtError> {
+    ) -> Result<Vec<AtomicFact>, StmtError> {
         let instantiated_param_sets =
             Self::instantiate_param_def_with_set_one_by_one(param_defs, args)?;
         let flat_param_sets =
@@ -271,7 +257,7 @@ impl ParamDefWithParamType {
     pub fn facts_for_boxed_args_satisfy_param_def_with_type_vec(
         param_defs: &Vec<ParamDefWithParamType>,
         args: &Vec<Box<Obj>>,
-    ) -> Result<Vec<Fact>, StmtError> {
+    ) -> Result<Vec<AtomicFact>, StmtError> {
         let instantiated_types =
             ParamDefWithParamType::instantiate_param_def_with_type_one_by_one_boxed(
                 param_defs, args,
@@ -291,9 +277,18 @@ impl ParamDefWithParamType {
     pub fn facts_for_args_satisfy_param_def_with_type_vec(
         param_defs: &Vec<ParamDefWithParamType>,
         args: &Vec<Obj>,
-    ) -> Result<Vec<Fact>, StmtError> {
-        let args_vec: Vec<Box<Obj>> = args.iter().map(|arg| Box::new(arg.clone())).collect();
-        Self::facts_for_boxed_args_satisfy_param_def_with_type_vec(param_defs, &args_vec)
+    ) -> Result<Vec<AtomicFact>, StmtError> {
+        let instantiated_types =
+            ParamDefWithParamType::instantiate_param_def_with_type_one_by_one(param_defs, args)?;
+        let flat_types = ParamDefWithParamType::flat_instantiated_types_for_args(
+            param_defs,
+            &instantiated_types,
+        );
+        let mut facts = Vec::with_capacity(args.len());
+        for (arg, param_type) in args.iter().zip(flat_types.iter()) {
+            facts.push(ParamType::fact_for_obj(arg.clone(), param_type));
+        }
+        Ok(facts)
     }
 
     fn number_of_params_in_param_def_with_type_def(
@@ -363,8 +358,50 @@ impl ParamDefWithParamType {
         param_defs: &Vec<ParamDefWithParamType>,
         args: &Vec<Box<Obj>>,
     ) -> Result<Vec<ParamType>, StmtError> {
-        let args_as_obj: Vec<Obj> = args.iter().map(|b| (**b).clone()).collect();
-        Self::instantiate_param_def_with_type_one_by_one(param_defs, &args_as_obj)
+        let total_param_count = Self::number_of_params_in_param_def_with_type_def(param_defs);
+        if total_param_count != args.len() {
+            return Err(StmtError::ExecError(ExecStmtError::new(
+                "".to_string(),
+                format!(
+                    "argument count mismatch: expected {} parameter(s), got {} argument(s)",
+                    total_param_count,
+                    args.len()
+                ),
+                None,
+                DEFAULT_LINE_FILE.clone(),
+            )));
+        }
+
+        let mut param_arg_map: HashMap<String, Obj> = HashMap::with_capacity(total_param_count);
+        let mut arg_index: usize = 0;
+        let mut new_types: Vec<ParamType> = Vec::with_capacity(param_defs.len());
+        for param_def in param_defs.iter() {
+            let new_type = if arg_index != 0 {
+                param_def.1.instantiate(&param_arg_map)
+            } else {
+                param_def.1.clone()
+            };
+            new_types.push(new_type);
+
+            for param_name in param_def.0.iter() {
+                let arg_obj = match args.get(arg_index) {
+                    Some(boxed_arg) => (**boxed_arg).clone(),
+                    None => {
+                        return Err(StmtError::ExecError(ExecStmtError::new(
+                            "".to_string(),
+                            "internal error: argument index out of range for boxed args"
+                                .to_string(),
+                            None,
+                            DEFAULT_LINE_FILE.clone(),
+                        )));
+                    }
+                };
+                param_arg_map.insert(param_name.clone(), arg_obj);
+                arg_index += 1;
+            }
+        }
+
+        Ok(new_types)
     }
 }
 

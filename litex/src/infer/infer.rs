@@ -25,6 +25,10 @@ impl InferResult {
         self.infer_facts.push(fact.to_string());
     }
 
+    pub fn push_atomic_fact(&mut self, atomic_fact: &AtomicFact) {
+        self.infer_facts.push(atomic_fact.to_string());
+    }
+
     pub fn append(&mut self, other_infer_result: InferResult) {
         for infer_fact in other_infer_result.infer_facts {
             self.infer_facts.push(infer_fact);
@@ -327,7 +331,7 @@ impl<'a> Runtime<'a> {
             let fact_to_store = param_type_fact
                 .clone()
                 .with_new_line_file(normal_atomic_fact.line_file);
-            self.store_fact_without_well_defined_verified_and_infer(&fact_to_store)
+            self.store_atomic_fact_without_well_defined_verified_and_infer(&fact_to_store)
                 .map_err(|previous_error| {
                     InferError::new(
                         format!(
@@ -338,7 +342,7 @@ impl<'a> Runtime<'a> {
                         Some(previous_error.into()),
                     )
                 })?;
-            infer_result.push_fact(&fact_to_store);
+            infer_result.push_atomic_fact(&fact_to_store);
         }
 
         let param_to_arg_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
