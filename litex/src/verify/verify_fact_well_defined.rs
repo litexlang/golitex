@@ -44,7 +44,7 @@ impl<'a> Runtime<'a> {
         result
     }
 
-    fn verify_atomic_fact_well_defined(
+    pub fn verify_atomic_fact_well_defined(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
@@ -133,7 +133,7 @@ impl<'a> Runtime<'a> {
         Ok(())
     }
 
-    fn verify_and_fact_well_defined(
+    pub(crate) fn verify_and_fact_well_defined(
         &mut self,
         and_fact: &AndFact,
         verify_state: &VerifyState,
@@ -144,7 +144,7 @@ impl<'a> Runtime<'a> {
         Ok(())
     }
 
-    fn verify_chain_fact_well_defined(
+    pub(crate) fn verify_chain_fact_well_defined(
         &mut self,
         chain_fact: &ChainFact,
         verify_state: &VerifyState,
@@ -156,7 +156,7 @@ impl<'a> Runtime<'a> {
         Ok(())
     }
 
-    fn verify_or_fact_well_defined(
+    pub(crate) fn verify_or_fact_well_defined(
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
@@ -184,7 +184,7 @@ impl<'a> Runtime<'a> {
         Ok(())
     }
 
-    fn verify_exist_fact_well_defined(
+    pub(crate) fn verify_exist_fact_well_defined(
         &mut self,
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
@@ -221,7 +221,7 @@ impl<'a> Runtime<'a> {
         Ok(())
     }
 
-    fn verify_forall_fact_well_defined(
+    pub(crate) fn verify_forall_fact_well_defined(
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
@@ -325,7 +325,7 @@ impl<'a> Runtime<'a> {
         Ok(())
     }
 
-    fn verify_forall_fact_with_iff_well_defined(
+    pub(crate) fn verify_forall_fact_with_iff_well_defined(
         &mut self,
         forall_fact_with_iff: &ForallFactWithIff,
         verify_state: &VerifyState,

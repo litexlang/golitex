@@ -1,5 +1,5 @@
 use crate::environment::Environment;
-use crate::error::VerifyError;
+use crate::error::{StmtError, VerifyError};
 use crate::execute::Runtime;
 use crate::fact::OrFact;
 use crate::infer::InferResult;
@@ -13,8 +13,28 @@ impl<'a> Runtime<'a> {
         or_fact: &OrFact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
+        let fact_display_string = or_fact.to_string();
+        let fact_line_file = or_fact.line_file;
+        if let Some(cached_result) = self
+            .verify_fact_from_cache_using_display_string(&fact_display_string, fact_line_file)
+        {
+            return Ok(cached_result);
+        }
+
+        if !verify_state.well_defined_already_verified {
+            if let Err(e) = self.verify_or_fact_well_defined(or_fact, verify_state) {
+                return Err(VerifyError::new(
+                    fact_display_string,
+                    Some(StmtError::WellDefinedError(e)),
+                    fact_line_file,
+                ));
+            }
+        }
+
+        let verify_state_for_children = verify_state.new_state_with_req_ok_set_to_true();
+
         for fact in or_fact.facts.iter() {
-            let result = self.verify_fact(&fact.to_fact(), verify_state)?;
+            let result = self.verify_fact(&fact.to_fact(), &verify_state_for_children)?;
             if result.is_true() {
                 return Ok(NonErrStmtExecResult::FactVerifiedByFact(
                     FactVerifiedByFact::new(
