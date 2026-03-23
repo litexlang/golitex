@@ -395,12 +395,10 @@ impl<'a> RuntimeContext<'a> {
         }
     }
 
-    /// Same data as [`Self::display_result`], as a pretty-printed JSON text string (no external JSON crates).
     pub fn display_result_json_string(&self, result: &NonErrStmtExecResult) -> String {
         super::runtime_context_display_result_json::display_result_json_string(self, result)
     }
 
-    /// Format error: when line_file is not (0,0), "{Label} on line N" (or "{Label} on line N, file PATH"); otherwise body only.
     pub fn display_error(&self, error: &StmtError) -> String {
         let body = error.error_body();
         let (line, file_index) = error.line_file();
