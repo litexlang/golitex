@@ -1,4 +1,7 @@
-use litex::pipeline::{run_repl_loop, run_source_code_from_string, run_source_code_in_file};
+use litex::pipeline::{
+    run_repl_loop, run_repl_loop_json, run_source_code_from_string,
+    run_source_code_from_string_json, run_source_code_in_file, run_source_code_in_file_json,
+};
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process;
@@ -8,7 +11,16 @@ pub const MAIN_DOT_LIT: &str = "main.lit";
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub fn run_cli() {
-    let args: Vec<String> = env::args().skip(1).collect();
+    let raw_args: Vec<String> = env::args().skip(1).collect();
+    let mut should_output_json = false;
+    let mut args: Vec<String> = Vec::new();
+    for arg in raw_args {
+        if arg == "-json" || arg == "--json" {
+            should_output_json = true;
+            continue;
+        }
+        args.push(arg);
+    }
     let mut index: usize = 0;
 
     while index < args.len() {
@@ -57,7 +69,11 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                let output = run_source_code_from_string(code.as_str(), "-e");
+                let output = if should_output_json {
+                    run_source_code_from_string_json(code.as_str(), "-e")
+                } else {
+                    run_source_code_from_string(code.as_str(), "-e")
+                };
                 println!("{}", output.trim());
                 println!("{}", repl_footer_placeholder());
                 return;
@@ -72,7 +88,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                main_flag_file(file_path.as_str());
+                main_flag_file(file_path.as_str(), should_output_json);
                 return;
             }
             "-r" => {
@@ -93,7 +109,7 @@ pub fn run_cli() {
                         process::exit(1);
                     }
                 };
-                main_flag_file(joined_string.as_str());
+                main_flag_file(joined_string.as_str(), should_output_json);
                 return;
             }
             "-latex" => {
@@ -192,7 +208,7 @@ pub fn run_cli() {
         }
     }
 
-    run_repl(VERSION);
+    run_repl(VERSION, should_output_json);
 }
 
 /// `index` must point at the first token after the flag; reads one value and advances past it.
@@ -219,6 +235,7 @@ fn print_usage() {
     println!("  -e <CODE>          Execute the given code");
     println!("  -f <PATH>          Execute the given file");
     println!("  -r <REPO>          Execute the given repo (runs REPO/main.lit)");
+    println!("  -json              Output execution result in JSON format");
     println!("  -latex <PATH>      Compile the given file to LaTeX (not implemented)");
     println!("  -elatex <CODE>     Compile the given code to LaTeX (not implemented)");
     println!("  -fmt <CODE>        Format the given code (not implemented)");
@@ -233,7 +250,7 @@ fn remove_windows_carriage_return(path_or_code: &str) -> String {
     path_or_code.replace('\r', "")
 }
 
-fn main_flag_file(file_flag: &str) {
+fn main_flag_file(file_flag: &str, should_output_json: bool) {
     let path = remove_windows_carriage_return(file_flag);
 
     let abs_file_path: PathBuf = if Path::new(path.as_str()).is_absolute() {
@@ -263,7 +280,11 @@ fn main_flag_file(file_flag: &str) {
         }
     };
 
-    let output = run_source_code_in_file(path_string.as_str());
+    let output = if should_output_json {
+        run_source_code_in_file_json(path_string.as_str())
+    } else {
+        run_source_code_in_file(path_string.as_str())
+    };
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
     println!("{}", repl_footer_placeholder());
 }
@@ -317,6 +338,10 @@ fn run_tutorial() {
     panic!("-tutorial: not implemented in the Rust kernel yet");
 }
 
-fn run_repl(version: &str) {
-    run_repl_loop(version);
+fn run_repl(version: &str, should_output_json: bool) {
+    if should_output_json {
+        run_repl_loop_json(version);
+    } else {
+        run_repl_loop(version);
+    }
 }
