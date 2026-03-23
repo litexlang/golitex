@@ -79,22 +79,29 @@ fn display_non_factual_stmt_success_json(
 
     let mut field_lines: Vec<String> = Vec::new();
     field_lines.push(format!(
-        "{}\"kind\": {}",
+        "{}\"type\": {}",
         indent_inner,
         json_string_literal("non_factual_stmt_success")
+    ));
+    field_lines.push(format!(
+        "{}\"stmt_type\": {}",
+        indent_inner,
+        json_string_literal("stmt")
     ));
     field_lines.push(format!(
         "{}\"line\": {}",
         indent_inner, non_factual_stmt_success_result.line_file.0
     ));
     field_lines.push(format!(
-        "{}\"file\": {}",
+        "{}\"source\": {}",
         indent_inner,
-        runtime_context
-            .module_manager
-            .run_file_paths
-            .get(non_factual_stmt_success_result.line_file.1)
-            .unwrap_or(&String::new())
+        json_string_literal(
+            runtime_context
+                .module_manager
+                .run_file_paths
+                .get(non_factual_stmt_success_result.line_file.1)
+                .unwrap_or(&String::new())
+        )
     ));
     field_lines.push(format!(
         "{}\"location_display\": {}",
@@ -177,22 +184,29 @@ fn display_fact_verified_by_fact_json(
 
     let mut field_lines: Vec<String> = Vec::new();
     field_lines.push(format!(
-        "{}\"kind\": {}",
+        "{}\"type\": {}",
         indent_inner,
         json_string_literal("fact_verified_by_fact")
+    ));
+    field_lines.push(format!(
+        "{}\"stmt_type\": {}",
+        indent_inner,
+        json_string_literal("fact")
     ));
     field_lines.push(format!(
         "{}\"line\": {}",
         indent_inner, fact_verified_by_fact_result.line_file.0
     ));
     field_lines.push(format!(
-        "{}\"file\": {}",
+        "{}\"source\": {}",
         indent_inner,
-        runtime_context
-            .module_manager
-            .run_file_paths
-            .get(fact_verified_by_fact_result.line_file.1)
-            .unwrap_or(&String::new())
+        json_string_literal(
+            runtime_context
+                .module_manager
+                .run_file_paths
+                .get(fact_verified_by_fact_result.line_file.1)
+                .unwrap_or(&String::new())
+        )
     ));
     field_lines.push(format!(
         "{}\"fact\": {}",
@@ -254,50 +268,33 @@ fn display_fact_verified_by_builtin_rules_json(
 ) -> String {
     let indent_outer = json_one_level_indent(depth);
     let indent_inner = json_one_level_indent(depth + 1);
-    let success_on_location =
-        if fact_verified_by_builtin_rules_result.line_file == DEFAULT_LINE_FILE {
-            "Success:\n".to_string()
-        } else {
-            format!(
-                "Success on {}:\n",
-                runtime_context.format_line_file(
-                    fact_verified_by_builtin_rules_result.line_file.0,
-                    fact_verified_by_builtin_rules_result.line_file.1
-                )
-            )
-        };
-    let infer_block_formatted =
-        RuntimeContext::format_infer_block(&fact_verified_by_builtin_rules_result.infers);
-
     let mut field_lines: Vec<String> = Vec::new();
     field_lines.push(format!(
-        "{}\"kind\": {}",
+        "{}\"type\": {}",
         indent_inner,
         json_string_literal("fact_verified_by_builtin_rules")
     ));
     field_lines.push(format!(
-        "{}\"success_on_location\": {}",
+        "{}\"stmt_type\": {}",
         indent_inner,
-        json_string_literal(&success_on_location)
+        json_string_literal("fact")
     ));
     field_lines.push(format!(
         "{}\"line\": {}",
         indent_inner, fact_verified_by_builtin_rules_result.line_file.0
     ));
     field_lines.push(format!(
-        "{}\"file_index\": {}",
-        indent_inner, fact_verified_by_builtin_rules_result.line_file.1
-    ));
-    field_lines.push(format!(
-        "{}\"location_display\": {}",
+        "{}\"source\": {}",
         indent_inner,
         json_string_literal(
-            runtime_context
-                .format_line_file(
-                    fact_verified_by_builtin_rules_result.line_file.0,
-                    fact_verified_by_builtin_rules_result.line_file.1
-                )
-                .as_str(),
+            match runtime_context
+                .module_manager
+                .run_file_paths
+                .get(fact_verified_by_builtin_rules_result.line_file.1)
+            {
+                Some(source_path) => source_path,
+                None => "",
+            }
         )
     ));
     field_lines.push(format!(
@@ -328,11 +325,6 @@ fn display_fact_verified_by_builtin_rules_json(
     field_lines.push(format!(
         "{}\"infer_facts\": [\n{}\n{}]",
         indent_inner, infer_facts_joined, indent_inner
-    ));
-    field_lines.push(format!(
-        "{}\"infer_block_formatted\": {}",
-        indent_inner,
-        json_string_literal(&infer_block_formatted)
     ));
 
     format!("{{\n{}\n{}}}", field_lines.join(",\n"), indent_outer)
