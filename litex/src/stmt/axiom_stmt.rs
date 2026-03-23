@@ -192,14 +192,19 @@ impl fmt::Display for ByContraAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{}{}\n{}\n{}{}\n{}\n{} {}",
-            CLAIM,
+            "{} {}{}{}\n{} {}",
+            BY_CONTRA,
+            self.to_prove,
             COLON,
-            to_string_and_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1),
-            add_four_spaces_at_beginning(BY_CONTRA.to_string(), 1),
-            COLON,
-            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2),
-            add_four_spaces_at_beginning(IMPOSSIBLE.to_string(), 2),
+            if self.proof.is_empty() {
+                String::new()
+            } else {
+                format!(
+                    "\n{}",
+                    vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)
+                )
+            },
+            add_four_spaces_at_beginning(IMPOSSIBLE.to_string(), 1),
             &self.impossible_fact.to_string()
         )
     }
