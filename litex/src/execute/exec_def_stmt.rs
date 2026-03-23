@@ -273,7 +273,7 @@ impl<'a> Runtime<'a> {
                 let verify_result = self
                     .verify_atomic_fact(&fact, &VerifyState::new(0, false))
                     .map_err(ExecStmtError::from)?;
-                if !verify_result.is_true() {
+                if verify_result.is_unknown() {
                     let msg = format!(
                         "have_obj_equal_stmt: {} is not in type {}",
                         current_param_equal_to, current_type
@@ -310,7 +310,7 @@ impl<'a> Runtime<'a> {
         let verify_state = VerifyState::new(0, false);
 
         let result = self.verify_exist_fact(exist_fact_in_have_obj_stmt, &verify_state)?;
-        if !result.is_true() {
+        if result.is_unknown() {
             return Err(ExecStmtError::new(
                 have_exist_obj_stmt.stmt_type_name(),
                 "have_exist_obj_stmt: exist fact is not verified".to_string(),
@@ -504,7 +504,7 @@ impl<'a> Runtime<'a> {
         let verify_result = self
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
             .map_err(ExecStmtError::from)?;
-        if !verify_result.is_true() {
+        if verify_result.is_unknown() {
             let msg = format!(
                 "have_fn_equal_stmt: {} is not in return set {}",
                 have_fn_equal_stmt.equal_to, have_fn_equal_stmt.fn_set_with_params.ret_set
@@ -713,7 +713,7 @@ impl<'a> Runtime<'a> {
         let verify_result = self
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
             .map_err(ExecStmtError::from)?;
-        if !verify_result.is_true() {
+        if verify_result.is_unknown() {
             let msg = format!(
                 "have_fn_equal_case_by_case_stmt: {} is not in return set {} under case {}",
                 equal_to, have_fn_equal_case_by_case_stmt.fn_set_with_params.ret_set, case_fact,

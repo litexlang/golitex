@@ -96,4 +96,13 @@ impl NonErrStmtExecResult {
             NonErrStmtExecResult::StmtUnknown(_) => false,
         }
     }
+
+    pub fn is_unknown(&self) -> bool {
+        match self {
+            NonErrStmtExecResult::StmtUnknown(_) => true,
+            NonErrStmtExecResult::NonFactualStmtSuccess(_) => false,
+            NonErrStmtExecResult::FactVerifiedByFact(_) => false,
+            NonErrStmtExecResult::FactVerifiedByBuiltinRules(_) => false,
+        }
+    }
 }

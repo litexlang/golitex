@@ -138,7 +138,7 @@ impl<'a> Runtime<'a> {
                             _verify_state,
                         )?;
 
-                    if !is_nonempty_set_result.is_true() {
+                    if is_nonempty_set_result.is_unknown() {
                         return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
                     }
                 }

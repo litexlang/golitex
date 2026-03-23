@@ -36,7 +36,7 @@ impl<'a> Runtime<'a> {
         let mut verify_what = Vec::with_capacity(and_fact.facts.len());
         for fact in &and_fact.facts {
             let result = self.verify_atomic_fact(fact, &verify_state_for_children)?;
-            if !result.is_true() {
+            if result.is_unknown() {
                 return Ok(result);
             }
             verify_what.push(fact.to_string());
@@ -83,7 +83,7 @@ impl<'a> Runtime<'a> {
         let mut verify_what = Vec::with_capacity(facts.len());
         for fact in &facts {
             let result = self.verify_atomic_fact(fact, &verify_state_for_children)?;
-            if !result.is_true() {
+            if result.is_unknown() {
                 return Ok(result);
             }
 

@@ -26,7 +26,7 @@ impl<'a> Runtime<'a> {
             Fact::OrFact(or_fact) => self.verify_or_fact(or_fact, verify_state),
         }?;
 
-        if !result.is_true() {
+        if result.is_unknown() {
             return Err(VerifyError::new(fact.to_string(), None, fact.line_file()));
         } else {
             Ok(result)

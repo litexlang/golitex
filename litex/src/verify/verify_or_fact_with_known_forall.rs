@@ -232,7 +232,7 @@ impl<'a> Runtime<'a> {
 
         for fact in args_satisfy_param_types.iter() {
             let result = self.verify_atomic_fact(fact, verify_state)?;
-            if !result.is_true() {
+            if result.is_unknown() {
                 return Ok(None);
             }
         }
@@ -249,7 +249,7 @@ impl<'a> Runtime<'a> {
             let instantiated_dom_fact = dom_fact.instantiate(&param_to_arg_map);
             let result =
                 self.verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)?;
-            if !result.is_true() {
+            if result.is_unknown() {
                 return Ok(None);
             }
         }
