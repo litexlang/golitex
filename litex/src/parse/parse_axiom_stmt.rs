@@ -28,7 +28,7 @@ impl<'a> Runtime<'a> {
             let first = tb.body.get_mut(0).ok_or_else(|| {
                 ParsingError::new("Expected body".to_string(), tb.line_file, None)
             })?;
-            first.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
+            first.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
             first
                 .body
                 .iter_mut()

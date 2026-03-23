@@ -1,5 +1,7 @@
-claim:
+by_cases:
     prove:
-        forall a R:
-            a $in R
-    do_nothing
+        1 + 1 = 2
+    case 1 + 1 = 2:
+        do_nothing
+    case 1 + 1 != 2:
+        impossible 1 + 1 = 2

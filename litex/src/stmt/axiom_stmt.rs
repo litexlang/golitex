@@ -157,8 +157,10 @@ impl fmt::Display for ByCasesAxiomStmt {
 
         write!(
             f,
-            "{}{}\n{}\n{}",
+            "{}{}\n{}{}\n{}\n{}",
             BY_CASES,
+            COLON,
+            add_four_spaces_at_beginning(PROVE.to_string(), 1),
             COLON,
             vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.then_facts, 1),
             case_and_proof_of_each_case.join("\n")

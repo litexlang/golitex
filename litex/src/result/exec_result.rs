@@ -28,7 +28,7 @@ impl NonErrStmtExecResult {
 }
 
 impl NonErrStmtExecResult {
-    fn infer_block(infer_result: &InferResult) -> String {
+    fn infer_block_string(infer_result: &InferResult) -> String {
         if infer_result.infer_facts.is_empty() {
             return String::new();
         }
@@ -47,7 +47,7 @@ impl NonErrStmtExecResult {
                     "{}\n{}{}",
                     SUCCESS_COLON,
                     x.stmt,
-                    Self::infer_block(&x.infers)
+                    Self::infer_block_string(&x.infers)
                 )
             }
             NonErrStmtExecResult::FactVerifiedByFact(x) => {
@@ -57,7 +57,7 @@ impl NonErrStmtExecResult {
                     x.fact,
                     VERIFIED_BY,
                     x.verified_by,
-                    Self::infer_block(&x.infers)
+                    Self::infer_block_string(&x.infers)
                 )
             }
             NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => {
@@ -67,7 +67,7 @@ impl NonErrStmtExecResult {
                     x.fact,
                     VERIFIED_BY,
                     x.verified_by,
-                    Self::infer_block(&x.infers)
+                    Self::infer_block_string(&x.infers)
                 )
             }
             NonErrStmtExecResult::StmtUnknown(x) => x.to_string(),
