@@ -92,7 +92,8 @@ impl<'a> Runtime<'a> {
 
         if let Some(impossible_fact) = &stmt.impossible_facts[case_index] {
             let verify_state = VerifyState::new(0, false);
-            self.verify_exist_or_and_chain_atomic_fact(impossible_fact, &verify_state)
+            let verify_result = self
+                .verify_atomic_fact(impossible_fact, &verify_state)
                 .map_err(|verify_error| {
                     ExecStmtError::new(
                         stmt.stmt_type_name(),
@@ -104,6 +105,33 @@ impl<'a> Runtime<'a> {
                         stmt.line_file,
                     )
                 })?;
+
+            if verify_result.is_unknown() {
+                return Err(ExecStmtError::new(
+                    stmt.stmt_type_name(),
+                    format!(
+                        "by_cases: failed to verify impossible fact `{}` under case `{}`",
+                        impossible_fact, case_fact
+                    ),
+                    None,
+                    stmt.line_file,
+                ));
+            }
+
+            let verify_result2 =
+                self.verify_atomic_fact(&impossible_fact.make_reversed(), &verify_state)?;
+
+            if verify_result2.is_unknown() {
+                return Err(ExecStmtError::new(
+                    stmt.stmt_type_name(),
+                    format!(
+                        "by_cases: failed to verify impossible fact `{}` under case `{}`",
+                        impossible_fact, case_fact
+                    ),
+                    None,
+                    stmt.line_file,
+                ));
+            }
 
             return Ok(inside_results);
         }
