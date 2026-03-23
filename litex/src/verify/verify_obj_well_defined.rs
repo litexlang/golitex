@@ -744,9 +744,8 @@ impl<'a> Runtime<'a> {
         }
 
         for fact in x.facts.iter() {
-            if let Err(e) = self.verify_fact_well_defined_and_store_and_infer(
-                &(fact.from_ref_to_cloned_fact()),
-                verify_state,
+            if let Err(e) = self.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                fact, verify_state,
             ) {
                 return Err(WellDefinedError::new(
                     format!(
@@ -815,9 +814,8 @@ impl<'a> Runtime<'a> {
         }
 
         for fact in x.dom_facts.iter() {
-            if let Err(e) = self.verify_fact_well_defined_and_store_and_infer(
-                &(fact.from_ref_to_cloned_fact()),
-                verify_state,
+            if let Err(e) = self.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                fact, verify_state,
             ) {
                 return Err(WellDefinedError::new(
                     format!(

@@ -38,18 +38,6 @@ impl ExistOrAndChainAtomicFact {
         }
     }
 
-    pub fn from_ref_to_cloned_fact(&self) -> Fact {
-        match self {
-            ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
-                Fact::AtomicFact(atomic_fact.clone())
-            }
-            ExistOrAndChainAtomicFact::AndFact(and_fact) => Fact::AndFact(and_fact.clone()),
-            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => Fact::ChainFact(chain_fact.clone()),
-            ExistOrAndChainAtomicFact::OrFact(or_fact) => Fact::OrFact(or_fact.clone()),
-            ExistOrAndChainAtomicFact::ExistFact(exist_fact) => Fact::ExistFact(exist_fact.clone()),
-        }
-    }
-
     pub fn line_file(&self) -> (usize, usize) {
         match self {
             ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => atomic_fact.line_file(),

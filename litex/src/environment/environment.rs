@@ -8,6 +8,7 @@ use crate::fact::ExistOrAndChainAtomicFact;
 use crate::fact::Fact;
 use crate::fact::ForallFact;
 use crate::fact::ForallFactWithIff;
+use crate::fact::OrAndChainAtomicFact;
 use crate::fact::OrFact;
 use crate::obj::Cart;
 use crate::obj::FnSetObj;
@@ -396,11 +397,15 @@ impl Environment {
         Ok(())
     }
 
-    fn store_and_fact(&mut self, and_fact: AndFact) -> Result<(), StoreFactError> {
+    fn store_and_fact_by_ref(&mut self, and_fact: &AndFact) -> Result<(), StoreFactError> {
         for fact in and_fact.facts.iter() {
             self.store_atomic_fact(fact.clone())?;
         }
         Ok(())
+    }
+
+    fn store_and_fact(&mut self, and_fact: AndFact) -> Result<(), StoreFactError> {
+        self.store_and_fact_by_ref(&and_fact)
     }
 
     fn store_forall_fact_with_iff(
@@ -428,11 +433,63 @@ impl Environment {
         }
     }
 
-    fn store_chain_fact(&mut self, chain_fact: ChainFact) -> Result<(), StoreFactError> {
+    /// Stores a fact without moving it; clones only where the underlying maps need owned values.
+    pub fn store_fact_by_ref(&mut self, fact: &Fact) -> Result<(), StoreFactError> {
+        match fact {
+            Fact::AtomicFact(atomic_fact) => self.store_atomic_fact(atomic_fact.clone()),
+            Fact::ExistFact(exist_fact) => self.store_exist_fact(exist_fact.clone()),
+            Fact::OrFact(or_fact) => self.store_or_fact(or_fact.clone()),
+            Fact::AndFact(and_fact) => self.store_and_fact_by_ref(and_fact),
+            Fact::ChainFact(chain_fact) => self.store_chain_fact_by_ref(chain_fact),
+            Fact::ForallFact(forall_fact) => self.store_forall_fact(Rc::new(forall_fact.clone())),
+            Fact::ForallFactWithIff(forall_fact_with_iff) => {
+                self.store_forall_fact_with_iff(forall_fact_with_iff.clone())
+            }
+        }
+    }
+
+    pub fn store_exist_or_and_chain_atomic_fact(
+        &mut self,
+        fact: &ExistOrAndChainAtomicFact,
+    ) -> Result<(), StoreFactError> {
+        match fact {
+            ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+                self.store_atomic_fact(atomic_fact.clone())
+            }
+            ExistOrAndChainAtomicFact::AndFact(and_fact) => self.store_and_fact_by_ref(and_fact),
+            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
+                self.store_chain_fact_by_ref(chain_fact)
+            }
+            ExistOrAndChainAtomicFact::OrFact(or_fact) => self.store_or_fact(or_fact.clone()),
+            ExistOrAndChainAtomicFact::ExistFact(exist_fact) => {
+                self.store_exist_fact(exist_fact.clone())
+            }
+        }
+    }
+
+    pub fn store_or_and_chain_atomic_fact(
+        &mut self,
+        fact: &OrAndChainAtomicFact,
+    ) -> Result<(), StoreFactError> {
+        match fact {
+            OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+                self.store_atomic_fact(atomic_fact.clone())
+            }
+            OrAndChainAtomicFact::AndFact(and_fact) => self.store_and_fact_by_ref(and_fact),
+            OrAndChainAtomicFact::ChainFact(chain_fact) => self.store_chain_fact_by_ref(chain_fact),
+            OrAndChainAtomicFact::OrFact(or_fact) => self.store_or_fact(or_fact.clone()),
+        }
+    }
+
+    fn store_chain_fact_by_ref(&mut self, chain_fact: &ChainFact) -> Result<(), StoreFactError> {
         for fact in chain_fact.facts()?.iter() {
             self.store_atomic_fact(fact.clone())?;
         }
         Ok(())
+    }
+
+    fn store_chain_fact(&mut self, chain_fact: ChainFact) -> Result<(), StoreFactError> {
+        self.store_chain_fact_by_ref(&chain_fact)
     }
 
     pub fn store_equality(&mut self, equality: &EqualFact) -> Result<(), StoreFactError> {
@@ -540,9 +597,12 @@ impl Environment {
 }
 
 impl Environment {
-    pub fn store_fact_to_cache_known_fact(&mut self, fact: &Fact) -> Result<(), StoreFactError> {
-        let key = fact.to_string();
-        self.cache_known_fact.insert(key, fact.line_file());
+    pub fn store_fact_to_cache_known_fact(
+        &mut self,
+        fact_key: String,
+        fact_line_file: (usize, usize),
+    ) -> Result<(), StoreFactError> {
+        self.cache_known_fact.insert(fact_key, fact_line_file);
         Ok(())
     }
 }

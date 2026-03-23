@@ -62,9 +62,10 @@ impl<'a> Runtime<'a> {
         }
 
         for dom_fact in forall_fact.dom_facts.iter() {
-            let fact = dom_fact.clone().to_fact();
             let dom_infer_result = self
-                .store_fact_without_well_defined_verified_and_infer(&fact)
+                .store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    dom_fact,
+                )
                 .map_err(|e| {
                     VerifyError::new(
                         format!("failed to assume dom fact in forall: {}", e.body_string()),
