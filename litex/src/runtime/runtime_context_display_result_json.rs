@@ -1,11 +1,9 @@
-//! Pretty-printed JSON for [`super::RuntimeContext::display_result`] (no external JSON crates).
-
 use super::RuntimeContext;
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::keywords::UNKNOWN_COLON;
 use crate::result::NonErrStmtExecResult;
 
-pub(in crate::runtime) fn display_result_json_string(
+pub fn display_result_json_string(
     runtime_context: &RuntimeContext<'_>,
     result: &NonErrStmtExecResult,
 ) -> String {
@@ -143,10 +141,8 @@ fn build_display_result_json_pretty(
             } else {
                 format!(
                     "fact known/verified/inferred {}",
-                    runtime_context.format_line_file(
-                        x.verified_by_line_file.0,
-                        x.verified_by_line_file.1,
-                    )
+                    runtime_context
+                        .format_line_file(x.verified_by_line_file.0, x.verified_by_line_file.1,)
                 )
             };
             let infer_block_formatted = RuntimeContext::format_infer_block(&x.infers);
@@ -185,23 +181,18 @@ fn build_display_result_json_pretty(
             ));
             field_lines.push(format!(
                 "{}\"verified_by_line\": {}",
-                indent_inner,
-                x.verified_by_line_file.0
+                indent_inner, x.verified_by_line_file.0
             ));
             field_lines.push(format!(
                 "{}\"verified_by_file_index\": {}",
-                indent_inner,
-                x.verified_by_line_file.1
+                indent_inner, x.verified_by_line_file.1
             ));
             field_lines.push(format!(
                 "{}\"verified_by_location_display\": {}",
                 indent_inner,
                 json_string_literal(
                     runtime_context
-                        .format_line_file(
-                            x.verified_by_line_file.0,
-                            x.verified_by_line_file.1,
-                        )
+                        .format_line_file(x.verified_by_line_file.0, x.verified_by_line_file.1,)
                         .as_str(),
                 )
             ));

@@ -14,9 +14,19 @@ pub fn run_source_code_in_file(entrance_file_path: &str) -> String {
     run_source_code(&source_code, entrance_file_path)
 }
 
+pub fn run_source_code_in_file_json(entrance_file_path: &str) -> String {
+    let source_code = fs::read_to_string(entrance_file_path).expect("Could not read file");
+    run_source_code_json(&source_code, entrance_file_path)
+}
+
 pub fn run_source_code_from_string(source_code: &str, entrance_label: &str) -> String {
     let normalized_source = remove_windows_carriage_return(source_code);
     run_source_code(normalized_source.as_str(), entrance_label)
+}
+
+pub fn run_source_code_from_string_json(source_code: &str, entrance_label: &str) -> String {
+    let normalized_source = remove_windows_carriage_return(source_code);
+    run_source_code_json(normalized_source.as_str(), entrance_label)
 }
 
 fn remove_windows_carriage_return(source_code: &str) -> String {
@@ -24,6 +34,18 @@ fn remove_windows_carriage_return(source_code: &str) -> String {
 }
 
 pub fn run_source_code(source_code: &str, entrance_file_path: &str) -> String {
+    run_source_code_internal(source_code, entrance_file_path, false)
+}
+
+pub fn run_source_code_json(source_code: &str, entrance_file_path: &str) -> String {
+    run_source_code_internal(source_code, entrance_file_path, true)
+}
+
+fn run_source_code_internal(
+    source_code: &str,
+    entrance_file_path: &str,
+    should_output_json: bool,
+) -> String {
     let mut module_manager = ModuleManager::new_empty_module_manager(entrance_file_path);
     let mut builtin_environment = Environment::new_empty_env();
 
@@ -62,7 +84,16 @@ pub fn run_source_code(source_code: &str, entrance_file_path: &str) -> String {
             }
         };
         out.push('\n');
-        out.push_str(executor.runtime_context.display_result(&result).as_str());
+        if should_output_json {
+            out.push_str(
+                executor
+                    .runtime_context
+                    .display_result_json_string(&result)
+                    .as_str(),
+            );
+        } else {
+            out.push_str(executor.runtime_context.display_result(&result).as_str());
+        }
         out.push('\n');
     }
 
@@ -70,11 +101,24 @@ pub fn run_source_code(source_code: &str, entrance_file_path: &str) -> String {
 }
 
 pub fn run_repl_loop(version_banner: &str) {
+    run_repl_loop_internal(version_banner, false);
+}
+
+pub fn run_repl_loop_json(version_banner: &str) {
+    run_repl_loop_internal(version_banner, true);
+}
+
+fn run_repl_loop_internal(version_banner: &str, should_output_json: bool) {
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
     let mut stdin_locked = stdin_handle.lock();
     let mut stdout_locked = stdout_handle.lock();
-    match run_repl_loop_with_readers(version_banner, &mut stdin_locked, &mut stdout_locked) {
+    match run_repl_loop_with_readers(
+        version_banner,
+        &mut stdin_locked,
+        &mut stdout_locked,
+        should_output_json,
+    ) {
         Ok(()) => {}
         Err(write_error) => {
             eprintln!("repl output error: {}", write_error);
@@ -86,6 +130,7 @@ fn run_repl_loop_with_readers<R, W>(
     version_banner: &str,
     stdin_reader: &mut R,
     stdout_writer: &mut W,
+    should_output_json: bool,
 ) -> io::Result<()>
 where
     R: BufRead,
@@ -168,12 +213,16 @@ where
             };
 
             output_chunk.push('\n');
-            output_chunk.push_str(
-                runtime
-                    .runtime_context
-                    .display_result(&exec_result)
-                    .as_str(),
-            );
+            if should_output_json {
+                output_chunk.push_str(
+                    runtime
+                        .runtime_context
+                        .display_result_json_string(&exec_result)
+                        .as_str(),
+                );
+            } else {
+                output_chunk.push_str(runtime.runtime_context.display_result(&exec_result).as_str());
+            }
             output_chunk.push('\n');
         }
 
