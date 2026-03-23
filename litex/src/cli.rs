@@ -1,6 +1,6 @@
 use litex::pipeline::{
     run_repl_loop, run_repl_loop_json, run_source_code_from_string,
-    run_source_code_from_string_json, run_source_code_in_file, run_source_code_in_file_json,
+    run_source_code_in_file, run_source_code_in_file_json,
 };
 use std::env;
 use std::path::{Path, PathBuf};
@@ -11,16 +11,7 @@ pub const MAIN_DOT_LIT: &str = "main.lit";
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub fn run_cli() {
-    let raw_args: Vec<String> = env::args().skip(1).collect();
-    let mut should_output_json = false;
-    let mut args: Vec<String> = Vec::new();
-    for arg in raw_args {
-        if arg == "-json" || arg == "--json" {
-            should_output_json = true;
-            continue;
-        }
-        args.push(arg);
-    }
+    let args: Vec<String> = env::args().skip(1).collect();
     let mut index: usize = 0;
 
     while index < args.len() {
@@ -30,6 +21,18 @@ pub fn run_cli() {
         };
 
         match head {
+            "-json" | "--json" => {
+                if args.len() == 1 {
+                    run_repl(VERSION, true);
+                    return;
+                }
+                eprintln!(
+                    "standalone {} is only valid by itself (for JSON REPL) or after -f/-r",
+                    head
+                );
+                print_usage();
+                process::exit(2);
+            }
             "-help" | "--help" => {
                 print_usage();
                 println!();
@@ -69,11 +72,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                let output = if should_output_json {
-                    run_source_code_from_string_json(code.as_str(), "-e")
-                } else {
-                    run_source_code_from_string(code.as_str(), "-e")
-                };
+                let output = run_source_code_from_string(code.as_str(), "-e");
                 println!("{}", output.trim());
                 println!("{}", repl_footer_placeholder());
                 return;
@@ -88,6 +87,12 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
+                let mut should_output_json = false;
+                if let Some(next_token) = args.get(index) {
+                    if next_token == "-json" || next_token == "--json" {
+                        should_output_json = true;
+                    }
+                }
                 main_flag_file(file_path.as_str(), should_output_json);
                 return;
             }
@@ -109,6 +114,12 @@ pub fn run_cli() {
                         process::exit(1);
                     }
                 };
+                let mut should_output_json = false;
+                if let Some(next_token) = args.get(index) {
+                    if next_token == "-json" || next_token == "--json" {
+                        should_output_json = true;
+                    }
+                }
                 main_flag_file(joined_string.as_str(), should_output_json);
                 return;
             }
@@ -208,7 +219,7 @@ pub fn run_cli() {
         }
     }
 
-    run_repl(VERSION, should_output_json);
+    run_repl(VERSION, false);
 }
 
 /// `index` must point at the first token after the flag; reads one value and advances past it.
@@ -235,7 +246,8 @@ fn print_usage() {
     println!("  -e <CODE>          Execute the given code");
     println!("  -f <PATH>          Execute the given file");
     println!("  -r <REPO>          Execute the given repo (runs REPO/main.lit)");
-    println!("  -json              Output execution result in JSON format");
+    println!("  -f <PATH> -json    Execute file and output JSON format");
+    println!("  -json              Start REPL and output JSON format");
     println!("  -latex <PATH>      Compile the given file to LaTeX (not implemented)");
     println!("  -elatex <CODE>     Compile the given code to LaTeX (not implemented)");
     println!("  -fmt <CODE>        Format the given code (not implemented)");
