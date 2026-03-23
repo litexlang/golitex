@@ -64,14 +64,7 @@ impl<'a> Runtime<'a> {
             self.exec_stmt(proof_stmt)?;
         }
 
-        let verify_result = self.verify_fact(&stmt.fact, &VerifyState::new(0, false))?;
-        if !verify_result.is_true() {
-            return Err(StmtError::UnknownError(UnknownError::new(
-                format!("claim failed: cannot prove `{}`", stmt.fact),
-                stmt.line_file,
-                None,
-            )));
-        }
+        self.verify_fact_return_err_if_not_true(&stmt.fact, &VerifyState::new(0, false))?;
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
