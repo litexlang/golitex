@@ -6,7 +6,9 @@ use crate::infer::InferResult;
 use crate::module_manager::ModuleManager;
 use crate::obj::FnSetObj;
 use crate::obj::{Atom, Cart, Identifier};
-use crate::result::NonErrStmtExecResult;
+use crate::result::{
+    FactVerifiedByBuiltinRules, FactVerifiedByFact, NonErrStmtExecResult, NonFactualStmtSuccess,
+};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::stmt::definition_stmt::DefPropWithMeaningStmt;
 use crate::stmt::definition_stmt::DefPropWithoutMeaningStmt;
@@ -329,70 +331,90 @@ impl<'a> RuntimeContext<'a> {
         format!("\n\ninside results:\n{}", display_lines.join("\n"))
     }
 
-    pub fn display_result(&self, result: &NonErrStmtExecResult) -> String {
-        match result {
-            NonErrStmtExecResult::NonFactualStmtSuccess(x) => {
-                let location = if x.line_file == DEFAULT_LINE_FILE {
-                    "Success:\n".to_string()
-                } else {
-                    format!(
-                        "Success on {}:\n",
-                        self.format_line_file(x.line_file.0, x.line_file.1)
-                    )
-                };
-                let msg = format!(
-                    "{}{}{}",
-                    x.stmt,
-                    Self::format_infer_block(&x.infers),
-                    self.format_inside_results_block(&x.inside_results)
-                );
-                format!("{}{}", location, msg)
-            }
-            NonErrStmtExecResult::FactVerifiedByFact(x) => {
-                let location = if x.line_file == DEFAULT_LINE_FILE {
-                    "Success:\n".to_string()
-                } else {
-                    format!(
-                        "Success on {}:\n",
-                        self.format_line_file(x.line_file.0, x.line_file.1)
-                    )
-                };
-                let verified_by_suffix = if x.verified_by_line_file == DEFAULT_LINE_FILE {
-                    String::new()
-                } else {
-                    format!(
-                        "fact known/verified/inferred {}",
-                        self.format_line_file(x.verified_by_line_file.0, x.verified_by_line_file.1)
-                    )
-                };
-                let msg = format!(
-                    "{}\nverified by {}\n{}{}",
-                    x.fact,
-                    verified_by_suffix,
-                    x.verified_by,
-                    Self::format_infer_block(&x.infers)
-                );
-                format!("{}{}", location, msg)
-            }
-            NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => {
-                let location = if x.line_file == DEFAULT_LINE_FILE {
-                    "Success:\n".to_string()
-                } else {
-                    format!(
-                        "Success on {}:\n",
-                        self.format_line_file(x.line_file.0, x.line_file.1)
-                    )
-                };
-                let msg = format!(
-                    "{}\nverified by\n{}{}",
-                    x.fact,
-                    x.verified_by,
-                    Self::format_infer_block(&x.infers)
-                );
-                format!("{}{}", location, msg)
-            }
-            NonErrStmtExecResult::StmtUnknown(x) => x.to_string(),
+    fn success_prefix_by_line_file(&self, line_file: (usize, usize)) -> String {
+        if line_file == DEFAULT_LINE_FILE {
+            "Success:\n".to_string()
+        } else {
+            format!(
+                "Success on {}:\n",
+                self.format_line_file(line_file.0, line_file.1)
+            )
         }
+    }
+
+    fn display_non_factual_stmt_success(
+        &self,
+        non_factual_stmt_success_result: &NonFactualStmtSuccess,
+    ) -> String {
+        let success_prefix = self.success_prefix_by_line_file(non_factual_stmt_success_result.line_file);
+        let message_body = format!(
+            "{}{}{}",
+            non_factual_stmt_success_result.stmt,
+            Self::format_infer_block(&non_factual_stmt_success_result.infers),
+            self.format_inside_results_block(&non_factual_stmt_success_result.inside_results)
+        );
+        format!("{}{}", success_prefix, message_body)
+    }
+
+    fn display_fact_verified_by_fact(
+        &self,
+        fact_verified_by_fact_result: &FactVerifiedByFact,
+    ) -> String {
+        let success_prefix = self.success_prefix_by_line_file(fact_verified_by_fact_result.line_file);
+        let verified_by_suffix =
+            if fact_verified_by_fact_result.verified_by_line_file == DEFAULT_LINE_FILE {
+                String::new()
+            } else {
+                format!(
+                    "fact known/verified/inferred {}",
+                    self.format_line_file(
+                        fact_verified_by_fact_result.verified_by_line_file.0,
+                        fact_verified_by_fact_result.verified_by_line_file.1
+                    )
+                )
+            };
+        let message_body = format!(
+            "{}\nverified by {}\n{}{}",
+            fact_verified_by_fact_result.fact,
+            verified_by_suffix,
+            fact_verified_by_fact_result.verified_by,
+            Self::format_infer_block(&fact_verified_by_fact_result.infers)
+        );
+        format!("{}{}", success_prefix, message_body)
+    }
+
+    fn display_fact_verified_by_builtin_rules(
+        &self,
+        fact_verified_by_builtin_rules_result: &FactVerifiedByBuiltinRules,
+    ) -> String {
+        let success_prefix =
+            self.success_prefix_by_line_file(fact_verified_by_builtin_rules_result.line_file);
+        let message_body = format!(
+            "{}\nverified by\n{}{}",
+            fact_verified_by_builtin_rules_result.fact,
+            fact_verified_by_builtin_rules_result.verified_by,
+            Self::format_infer_block(&fact_verified_by_builtin_rules_result.infers)
+        );
+        format!("{}{}", success_prefix, message_body)
+    }
+
+    pub fn display_result_non_json(&self, result: &NonErrStmtExecResult) -> String {
+        match result {
+            NonErrStmtExecResult::NonFactualStmtSuccess(non_factual_stmt_success_result) => {
+                self.display_non_factual_stmt_success(non_factual_stmt_success_result)
+            }
+            NonErrStmtExecResult::FactVerifiedByFact(fact_verified_by_fact_result) => {
+                self.display_fact_verified_by_fact(fact_verified_by_fact_result)
+            }
+            NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                fact_verified_by_builtin_rules_result,
+            ) => self.display_fact_verified_by_builtin_rules(fact_verified_by_builtin_rules_result),
+            NonErrStmtExecResult::StmtUnknown(stmt_unknown_result) => stmt_unknown_result.to_string(),
+        }
+    }
+
+    pub fn display_result(&self, result: &NonErrStmtExecResult) -> String {
+        self.display_result_non_json(result)
     }
 
     pub fn display_result_json_string(&self, result: &NonErrStmtExecResult) -> String {
