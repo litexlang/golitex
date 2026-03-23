@@ -296,7 +296,7 @@ impl<'a> RuntimeContext<'a> {
 }
 
 impl<'a> RuntimeContext<'a> {
-    fn format_line_file(&self, line: usize, file_index: usize) -> String {
+    pub(in crate::runtime) fn format_line_file(&self, line: usize, file_index: usize) -> String {
         if file_index == 0 {
             format!("on line {}", line)
         } else {
@@ -308,14 +308,17 @@ impl<'a> RuntimeContext<'a> {
         }
     }
 
-    fn format_infer_block(infer_result: &InferResult) -> String {
+    pub(in crate::runtime) fn format_infer_block(infer_result: &InferResult) -> String {
         if infer_result.infer_facts.is_empty() {
             return String::new();
         }
         format!("\n\ninfer:\n{}", infer_result.infer_facts.join("\n"))
     }
 
-    fn format_inside_results_block(&self, inside_results: &Vec<NonErrStmtExecResult>) -> String {
+    pub(in crate::runtime) fn format_inside_results_block(
+        &self,
+        inside_results: &Vec<NonErrStmtExecResult>,
+    ) -> String {
         if inside_results.is_empty() {
             return String::new();
         }
@@ -390,6 +393,11 @@ impl<'a> RuntimeContext<'a> {
             }
             NonErrStmtExecResult::StmtUnknown(x) => x.to_string(),
         }
+    }
+
+    /// Same data as [`Self::display_result`], as a pretty-printed JSON text string (no external JSON crates).
+    pub fn display_result_json_string(&self, result: &NonErrStmtExecResult) -> String {
+        super::runtime_context_display_result_json::display_result_json_string(self, result)
     }
 
     /// Format error: when line_file is not (0,0), "{Label} on line N" (or "{Label} on line N, file PATH"); otherwise body only.
