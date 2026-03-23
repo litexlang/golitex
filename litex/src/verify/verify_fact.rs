@@ -9,12 +9,12 @@ use crate::verify::VerifyState;
 use std::result::Result;
 
 impl<'a> Runtime<'a> {
-    pub fn verify_fact(
+    pub fn verify_fact_return_err_if_not_true(
         &mut self,
         fact: &Fact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        match fact {
+        let result = match fact {
             Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact(atomic_fact, verify_state),
             Fact::AndFact(and_fact) => self.verify_and_fact(and_fact, verify_state),
             Fact::ChainFact(chain_fact) => self.verify_chain_fact(chain_fact, verify_state),
@@ -24,6 +24,12 @@ impl<'a> Runtime<'a> {
             }
             Fact::ExistFact(exists_fact) => self.verify_exist_fact(exists_fact, verify_state),
             Fact::OrFact(or_fact) => self.verify_or_fact(or_fact, verify_state),
+        }?;
+
+        if !result.is_true() {
+            return Err(VerifyError::new(fact.to_string(), None, fact.line_file()));
+        } else {
+            Ok(result)
         }
     }
 }
