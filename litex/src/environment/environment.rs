@@ -214,6 +214,10 @@ impl fmt::Display for Environment {
 }
 
 impl Environment {
+    pub fn store_atomic_fact_by_ref(&mut self, atomic_fact: &AtomicFact) -> Result<(), StoreFactError> {
+        self.store_atomic_fact(atomic_fact.clone())
+    }
+
     fn store_atomic_fact(&mut self, atomic_fact: AtomicFact) -> Result<(), StoreFactError> {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => self.store_equality(&equal_fact),

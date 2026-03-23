@@ -1,7 +1,7 @@
 use super::Runtime;
 use crate::error::ExecStmtError;
 use crate::error::StoreFactError;
-use crate::fact::{ExistOrAndChainAtomicFact, Fact, OrAndChainAtomicFact};
+use crate::fact::{AtomicFact, ExistOrAndChainAtomicFact, Fact, OrAndChainAtomicFact};
 use crate::infer::InferResult;
 use crate::verify::VerifyState;
 
@@ -20,6 +20,26 @@ impl<'a> Runtime<'a> {
 
         let infer_result = self
             .infer(fact)
+            .map_err(|e| StoreFactError::new(format!("infer error: {}", e), Some(e.into())))?;
+        Ok(infer_result)
+    }
+
+    pub fn store_atomic_fact_without_well_defined_verified_and_infer(
+        &mut self,
+        fact: &AtomicFact,
+    ) -> Result<InferResult, StoreFactError> {
+        self.runtime_context
+            .top_level_env()
+            .store_atomic_fact_by_ref(fact)?;
+
+        let line_file = fact.line_file();
+        self.runtime_context
+            .top_level_env()
+            .store_fact_to_cache_known_fact(fact.to_string(), line_file)?;
+
+        let wrapped_fact = Fact::AtomicFact(fact.clone());
+        let infer_result = self
+            .infer(&wrapped_fact)
             .map_err(|e| StoreFactError::new(format!("infer error: {}", e), Some(e.into())))?;
         Ok(infer_result)
     }

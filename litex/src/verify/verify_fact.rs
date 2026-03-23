@@ -1,7 +1,9 @@
 use crate::error::VerifyError;
 use crate::execute::Runtime;
+use crate::fact::AndChainAtomicFact;
 use crate::fact::ExistOrAndChainAtomicFact;
 use crate::fact::Fact;
+use crate::fact::OrAndChainAtomicFact;
 use crate::result::NonErrStmtExecResult;
 use crate::verify::VerifyState;
 use std::result::Result;
@@ -47,6 +49,39 @@ impl<'a> Runtime<'a> {
             }
             ExistOrAndChainAtomicFact::ExistFact(exist_fact) => {
                 self.verify_exist_fact(exist_fact, verify_state)
+            }
+        }
+    }
+
+    pub fn verify_or_and_chain_atomic_fact(
+        &mut self,
+        or_and_chain_atomic_fact: &OrAndChainAtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        match or_and_chain_atomic_fact {
+            OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+                self.verify_atomic_fact(atomic_fact, verify_state)
+            }
+            OrAndChainAtomicFact::AndFact(and_fact) => self.verify_and_fact(and_fact, verify_state),
+            OrAndChainAtomicFact::ChainFact(chain_fact) => {
+                self.verify_chain_fact(chain_fact, verify_state)
+            }
+            OrAndChainAtomicFact::OrFact(or_fact) => self.verify_or_fact(or_fact, verify_state),
+        }
+    }
+
+    pub fn verify_and_chain_atomic_fact(
+        &mut self,
+        and_chain_atomic_fact: &AndChainAtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        match and_chain_atomic_fact {
+            AndChainAtomicFact::AtomicFact(atomic_fact) => {
+                self.verify_atomic_fact(atomic_fact, verify_state)
+            }
+            AndChainAtomicFact::AndFact(and_fact) => self.verify_and_fact(and_fact, verify_state),
+            AndChainAtomicFact::ChainFact(chain_fact) => {
+                self.verify_chain_fact(chain_fact, verify_state)
             }
         }
     }

@@ -77,8 +77,7 @@ impl<'a> Runtime<'a> {
         }
 
         for then_fact in forall_fact.then_facts.iter() {
-            let fact = then_fact.clone().to_fact();
-            let result = self.verify_fact(&fact, verify_state)?;
+            let result = self.verify_exist_or_and_chain_atomic_fact(then_fact, verify_state)?;
             if !result.is_true() {
                 return Ok(result);
             }
