@@ -129,7 +129,7 @@ impl<'a> Runtime<'a> {
             right_left,
             verify_state,
         )?;
-        if !result.is_true() {
+        if result.is_unknown() {
             return Ok(false);
         }
         let result = self.verify_two_objs_equal_by_builtin_rules_and_known_equalities(
@@ -137,7 +137,7 @@ impl<'a> Runtime<'a> {
             right_right,
             verify_state,
         )?;
-        if !result.is_true() {
+        if result.is_unknown() {
             return Ok(false);
         }
         Ok(true)
@@ -177,7 +177,7 @@ impl<'a> Runtime<'a> {
                 &right_values[current_index],
                 verify_state,
             )?;
-            if !result.is_true() {
+            if result.is_unknown() {
                 return Ok(false);
             }
             current_index += 1;

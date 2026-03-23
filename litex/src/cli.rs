@@ -1,6 +1,6 @@
 use litex::pipeline::{
-    run_repl_loop, run_repl_loop_json, run_source_code_from_string,
-    run_source_code_in_file, run_source_code_in_file_json,
+    run_repl_loop, run_repl_loop_json, run_source_code_from_string, run_source_code_in_file,
+    run_source_code_in_file_json,
 };
 use std::env;
 use std::path::{Path, PathBuf};
@@ -163,7 +163,7 @@ pub fn run_cli() {
             }
             "-install" => {
                 index += 1;
-                let package_name =
+                let module_name =
                     match read_non_flag_value_after_flag(&args, &mut index, "-install") {
                         Ok(value) => value,
                         Err(message) => {
@@ -172,12 +172,12 @@ pub fn run_cli() {
                             process::exit(2);
                         }
                     };
-                install_package(package_name.as_str());
+                install_module(module_name.as_str());
                 return;
             }
             "-uninstall" => {
                 index += 1;
-                let package_name =
+                let module_name =
                     match read_non_flag_value_after_flag(&args, &mut index, "-uninstall") {
                         Ok(value) => value,
                         Err(message) => {
@@ -186,25 +186,25 @@ pub fn run_cli() {
                             process::exit(2);
                         }
                     };
-                uninstall_package(package_name.as_str());
+                uninstall_module(module_name.as_str());
                 return;
             }
             "-list" => {
-                list_installed_packages();
+                list_installed_modules();
                 return;
             }
             "-update" => {
                 index += 1;
-                let package_name =
-                    match read_non_flag_value_after_flag(&args, &mut index, "-update") {
-                        Ok(value) => value,
-                        Err(message) => {
-                            eprintln!("{}", message);
-                            print_usage();
-                            process::exit(2);
-                        }
-                    };
-                update_package(package_name.as_str());
+                let module_name = match read_non_flag_value_after_flag(&args, &mut index, "-update")
+                {
+                    Ok(value) => value,
+                    Err(message) => {
+                        eprintln!("{}", message);
+                        print_usage();
+                        process::exit(2);
+                    }
+                };
+                update_module(module_name.as_str());
                 return;
             }
             "-tutorial" => {
@@ -252,10 +252,10 @@ fn print_usage() {
     println!("  -latex <PATH>      Compile the given file to LaTeX (not implemented)");
     println!("  -elatex <CODE>     Compile the given code to LaTeX (not implemented)");
     println!("  -fmt <CODE>        Format the given code (not implemented)");
-    println!("  -install <PKG>     Install package (not implemented)");
-    println!("  -uninstall <PKG>   Uninstall package (not implemented)");
-    println!("  -list              List installed packages (not implemented)");
-    println!("  -update <PKG>      Update package (not implemented)");
+    println!("  -install <PKG>     Install module (not implemented)");
+    println!("  -uninstall <PKG>   Uninstall module (not implemented)");
+    println!("  -list              List installed modules (not implemented)");
+    println!("  -update <PKG>      Update module (not implemented)");
     println!("  -tutorial          Interactive tutorial (not implemented)");
 }
 
@@ -322,28 +322,28 @@ fn format_code(_code: &str) -> Result<String, String> {
     panic!("-fmt: format code is not implemented in the Rust kernel yet");
 }
 
-fn install_package(package_name: &str) {
+fn install_module(module_name: &str) {
     panic!(
-        "-install: package manager is not implemented in the Rust kernel yet (package: {})",
-        package_name
+        "-install: module manager is not implemented in the Rust kernel yet (module: {})",
+        module_name
     );
 }
 
-fn uninstall_package(package_name: &str) {
+fn uninstall_module(module_name: &str) {
     panic!(
-        "-uninstall: package manager is not implemented in the Rust kernel yet (package: {})",
-        package_name
+        "-uninstall: module manager is not implemented in the Rust kernel yet (module: {})",
+        module_name
     );
 }
 
-fn list_installed_packages() {
-    panic!("-list: package manager is not implemented in the Rust kernel yet");
+fn list_installed_modules() {
+    panic!("-list: module manager is not implemented in the Rust kernel yet");
 }
 
-fn update_package(package_name: &str) {
+fn update_module(module_name: &str) {
     panic!(
-        "-update: package manager is not implemented in the Rust kernel yet (package: {})",
-        package_name
+        "-update: module manager is not implemented in the Rust kernel yet (module: {})",
+        module_name
     );
 }
 
