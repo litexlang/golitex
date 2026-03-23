@@ -1,11 +1,11 @@
 use super::Stmt;
 use crate::common::helper::{
-    add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line,
-    vec_pair_to_string, vec_to_string_add_four_spaces_at_beginning_of_each_line,
+    add_four_spaces_at_beginning, vec_pair_to_string,
+    vec_to_string_add_four_spaces_at_beginning_of_each_line,
 };
 use crate::common::keywords::{
-    BY_CART_DEF, BY_CASES, BY_CONTRA, BY_EXTENSION, BY_FN_DEF, BY_INDUC, CASE, CLAIM, COLON,
-    ENUMERATE, EQUAL, FOR, FROM, IMPOSSIBLE, PROVE, RIGHT_ARROW,
+    BY_CART_DEF, BY_CASES, BY_CONTRA, BY_EXTENSION, BY_FN_DEF, BY_INDUC, CASE, COLON, ENUMERATE,
+    EQUAL, FOR, FROM, IMPOSSIBLE, PROVE, RIGHT_ARROW,
 };
 use crate::fact::{AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact};
 use crate::obj::{Cart, ClosedRange, Obj, Range};

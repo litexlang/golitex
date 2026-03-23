@@ -291,10 +291,32 @@ impl<'a> Runtime<'a> {
             }
         }
 
+        let mut infer_result = InferResult::new();
+
+        // define params
+        let param_infer_result =
+            self.define_params_with_type(&have_obj_equal_stmt.param_def, true)?;
+        infer_result.append(param_infer_result);
+
+        // store obj equal to
+        for (name, obj) in ParamType::get_all_param_names(&have_obj_equal_stmt.param_def)
+            .iter()
+            .zip(have_obj_equal_stmt.objs_equal_to.iter())
+        {
+            let equal_to_fact = AtomicFact::EqualFact(EqualFact::new(
+                Obj::Identifier(Identifier::new(name.clone())),
+                obj.clone(),
+                have_obj_equal_stmt.line_file,
+            ));
+            let equal_to_fact_infer_result =
+                self.store_atomic_fact_without_well_defined_verified_and_infer(&equal_to_fact)?;
+            infer_result.append(equal_to_fact_infer_result);
+        }
+
         return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
                 have_obj_equal_stmt.to_string(),
-                InferResult::new(),
+                infer_result,
                 vec![],
                 have_obj_equal_stmt.line_file,
             ),
