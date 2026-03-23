@@ -13,9 +13,30 @@ impl<'a> Runtime<'a> {
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        self.runtime_context.push_env();
+        let fact_display_string = forall_fact.to_string();
+        let fact_line_file = forall_fact.line_file;
 
-        let result = self.verify_forall_fact_body(forall_fact, verify_state);
+        if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
+            &fact_display_string,
+            fact_line_file,
+        ) {
+            return Ok(cached_result);
+        }
+
+        if !verify_state.well_defined_already_verified {
+            if let Err(e) = self.verify_forall_fact_well_defined(forall_fact, verify_state) {
+                return Err(VerifyError::new(
+                    fact_display_string,
+                    Some(StmtError::WellDefinedError(e)),
+                    fact_line_file,
+                ));
+            }
+        }
+
+        let verify_state_for_children = verify_state.new_state_with_req_ok_set_to_true();
+
+        self.runtime_context.push_env();
+        let result = self.verify_forall_fact_body(forall_fact, &verify_state_for_children);
         self.runtime_context.pop_env();
 
         result
@@ -79,8 +100,28 @@ impl<'a> Runtime<'a> {
         forall_iff: &ForallFactWithIff,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        let f = &forall_iff.forall_fact;
+        let fact_display_string = forall_iff.to_string();
         let line_file = forall_iff.line_file;
+
+        if let Some(cached_result) =
+            self.verify_fact_from_cache_using_display_string(&fact_display_string, line_file)
+        {
+            return Ok(cached_result);
+        }
+
+        if !verify_state.well_defined_already_verified {
+            if let Err(e) = self.verify_forall_fact_with_iff_well_defined(forall_iff, verify_state) {
+                return Err(VerifyError::new(
+                    fact_display_string.clone(),
+                    Some(StmtError::WellDefinedError(e)),
+                    line_file,
+                ));
+            }
+        }
+
+        let verify_state_for_children = verify_state.new_state_with_req_ok_set_to_true();
+
+        let f = &forall_iff.forall_fact;
 
         let mut dom_then = f.dom_facts.clone();
         dom_then.extend(f.then_facts.clone());
@@ -90,7 +131,8 @@ impl<'a> Runtime<'a> {
             forall_iff.iff_facts.clone(),
             line_file,
         );
-        let result1 = self.verify_forall_fact(&forall_then_implies_iff, verify_state)?;
+        let result1 =
+            self.verify_forall_fact(&forall_then_implies_iff, &verify_state_for_children)?;
         if !result1.is_true() {
             return Ok(result1);
         }
@@ -103,14 +145,15 @@ impl<'a> Runtime<'a> {
             f.then_facts.clone(),
             line_file,
         );
-        let result2 = self.verify_forall_fact(&forall_iff_implies_then, verify_state)?;
+        let result2 =
+            self.verify_forall_fact(&forall_iff_implies_then, &verify_state_for_children)?;
         if !result2.is_true() {
             return Ok(result2);
         }
 
         Ok(NonErrStmtExecResult::FactVerifiedByFact(
             FactVerifiedByFact::new(
-                forall_iff.to_string(),
+                fact_display_string,
                 "forall iff: then=>iff and iff=>then verified".to_string(),
                 InferResult::new(),
                 line_file,
