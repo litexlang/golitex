@@ -63,46 +63,66 @@ pub fn run_source_code(source_code: &str, entrance_file_path: &str) -> String {
         out.push_str(executor.runtime_context.display_result(&result).as_str());
         out.push('\n');
     }
+
     out
 }
 
-/// Interactive REPL: one persistent [`RuntimeContext`] for the session (same as running a file line by line).
-///
-/// Parse errors use normal `&mut runtime_context`. After a successful parse, execution uses a raw pointer for
-/// one iteration only so the borrow checker accepts a loop; this matches the usual “one `Runtime` per line”
-/// pattern while keeping `module_manager`, `builtin_environment`, and environment stack across inputs.
 pub fn run_repl_loop(version_banner: &str) {
-    println!("Litex kernel REPL (litex {})", version_banner);
-    println!("Empty lines are skipped. Ctrl+D to exit.\n");
+    let stdin_handle = io::stdin();
+    let stdout_handle = io::stdout();
+    let mut stdin_locked = stdin_handle.lock();
+    let mut stdout_locked = stdout_handle.lock();
+    match run_repl_loop_with_readers(version_banner, &mut stdin_locked, &mut stdout_locked) {
+        Ok(()) => {}
+        Err(write_error) => {
+            eprintln!("repl output error: {}", write_error);
+        }
+    }
+}
+
+fn run_repl_loop_with_readers<R, W>(
+    version_banner: &str,
+    stdin_reader: &mut R,
+    stdout_writer: &mut W,
+) -> io::Result<()>
+where
+    R: BufRead,
+    W: Write,
+{
+    writeln!(
+        stdout_writer,
+        "Litex kernel REPL (litex {})",
+        version_banner
+    )?;
+    writeln!(stdout_writer, "Empty lines are skipped. Ctrl+D to exit.\n")?;
 
     let mut module_manager = ModuleManager::new_empty_module_manager("repl");
     let mut builtin_environment = Environment::new_empty_env();
+
     let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
         &mut module_manager,
         &mut builtin_environment,
     );
 
-    let stdin_handle = io::stdin();
-    let mut line_reader = stdin_handle.lock();
+    let mut runtime = Runtime::new(&mut runtime_context);
+
     let mut line_buffer = String::new();
 
     loop {
-        print!("litex> ");
-        if io::stdout().flush().is_err() {
-            break;
-        }
+        write!(stdout_writer, ">>> ")?;
+        stdout_writer.flush()?;
 
         line_buffer.clear();
-        let bytes_read = match line_reader.read_line(&mut line_buffer) {
+        let bytes_read = match stdin_reader.read_line(&mut line_buffer) {
             Ok(byte_count) => byte_count,
             Err(read_error) => {
-                eprintln!("stdin read error: {}", read_error);
+                writeln!(stdout_writer, "stdin read error: {}", read_error)?;
                 break;
             }
         };
 
         if bytes_read == 0 {
-            println!();
+            writeln!(stdout_writer)?;
             break;
         }
 
@@ -117,55 +137,51 @@ pub fn run_repl_loop(version_banner: &str) {
             Ok(parsed_blocks) => parsed_blocks,
             Err(parse_block_error) => {
                 let stmt_error = parse_block_error.into();
-                let error_string = runtime_context.display_error(&stmt_error);
-                println!("\n{}\n", error_string);
-                continue;
+                let error_string = runtime.runtime_context.display_error(&stmt_error);
+                writeln!(stdout_writer)?;
+                writeln!(stdout_writer, "{}", error_string)?;
+                writeln!(stdout_writer)?;
+                break;
             }
         };
 
-        // SAFETY: `ctx_ptr` is created from `&mut runtime_context` for this statement only. Inside the
-        // block, `Runtime` is the sole accessor until it is dropped. We do not use `runtime_context` by
-        // name while `executor` is alive.
-        let ctx_ptr: *mut RuntimeContext<'_> = &mut runtime_context;
         let mut output_chunk = String::new();
-        unsafe {
-            let ctx_ref = &mut *ctx_ptr;
-            let mut executor = Runtime::new(ctx_ref);
-            for mut block in blocks {
-                let stmt: Stmt = match executor.parse_stmt(&mut block) {
-                    Ok(statement) => statement,
-                    Err(parse_stmt_error) => {
-                        let message = executor
-                            .runtime_context
-                            .display_error(&parse_stmt_error.into());
-                        output_chunk.push_str(&format!("\n{}\n", message));
-                        break;
-                    }
-                };
-
-                let exec_result = match executor.exec_stmt(&stmt) {
-                    Ok(result) => result,
-                    Err(exec_error) => {
-                        let message = executor.runtime_context.display_error(&exec_error);
-                        output_chunk.push_str(&format!("\n{}\n", message));
-                        break;
-                    }
-                };
-
-                output_chunk.push('\n');
-                output_chunk.push_str(
-                    executor
+        for mut block in blocks {
+            let stmt: Stmt = match runtime.parse_stmt(&mut block) {
+                Ok(statement) => statement,
+                Err(parse_stmt_error) => {
+                    let message = runtime
                         .runtime_context
-                        .display_result(&exec_result)
-                        .as_str(),
-                );
-                output_chunk.push('\n');
-            }
+                        .display_error(&parse_stmt_error.into());
+                    output_chunk.push_str(&format!("\n{}\n", message));
+                    break;
+                }
+            };
+
+            let exec_result = match runtime.exec_stmt(&stmt) {
+                Ok(result) => result,
+                Err(exec_error) => {
+                    let message = runtime.runtime_context.display_error(&exec_error);
+                    output_chunk.push_str(&format!("\n{}\n", message));
+                    break;
+                }
+            };
+
+            output_chunk.push('\n');
+            output_chunk.push_str(
+                runtime
+                    .runtime_context
+                    .display_result(&exec_result)
+                    .as_str(),
+            );
+            output_chunk.push('\n');
         }
 
         let trimmed_output = output_chunk.trim();
         if !trimmed_output.is_empty() {
-            println!("{}", trimmed_output);
+            writeln!(stdout_writer, "{}", trimmed_output)?;
         }
     }
+
+    Ok(())
 }
