@@ -24,6 +24,12 @@ impl<'a> Runtime<'a> {
                 ))
             })?;
 
+        for dom_fact in forall_fact.dom_facts.iter() {
+            self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                dom_fact,
+            )?;
+        }
+
         for proof_stmt in stmt.proof.iter() {
             self.exec_stmt(proof_stmt)?;
         }

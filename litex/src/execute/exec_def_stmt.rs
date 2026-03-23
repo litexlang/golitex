@@ -490,9 +490,8 @@ impl<'a> Runtime<'a> {
         }
 
         for dom_fact in have_fn_equal_stmt.fn_set_with_params.dom_facts.iter() {
-            let dom_fact_as_fact = dom_fact.from_ref_to_cloned_fact();
             let _ = self
-                .store_fact_without_well_defined_verified_and_infer(&dom_fact_as_fact)
+                .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(dom_fact)
                 .map_err(ExecStmtError::from)?;
         }
 
@@ -695,9 +694,8 @@ impl<'a> Runtime<'a> {
             .dom_facts
             .iter()
         {
-            let dom_fact_as_fact = dom_fact.from_ref_to_cloned_fact();
             let _ = self
-                .store_fact_without_well_defined_verified_and_infer(&dom_fact_as_fact)
+                .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(dom_fact)
                 .map_err(ExecStmtError::from)?;
         }
 
