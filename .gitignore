@@ -27,3 +27,4 @@ process_tmp.py
 .cursor/Tutorial
 golitex
 /litex/target/
+/litex/local-tools/
