@@ -1,5 +1,5 @@
 use crate::common::keywords::is_builtin_predicate;
-use crate::error::WellDefinedError;
+use crate::error::{StmtError, WellDefinedError};
 use crate::execute::Runtime;
 use crate::fact::line_file as atomic_fact_line_file;
 use crate::fact::AtomicFact;
@@ -252,30 +252,36 @@ impl<'a> Runtime<'a> {
         }
 
         for fact in forall_fact.dom_facts.iter() {
-            self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
-            self.store_fact_without_well_defined_verified_and_infer(
-                &fact.from_ref_to_cloned_fact(),
-            )
-            .map_err(|e| {
-                WellDefinedError::new(
-                    format!("failed to store fact in environment: {}", e),
-                    None,
-                    fact.line_file(),
+            if let Err(exec_stmt_error) = self
+                .verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                    fact, verify_state,
                 )
-            })?;
+            {
+                return Err(WellDefinedError::new(
+                    format!(
+                        "failed to store fact in environment: {}",
+                        exec_stmt_error.body_string()
+                    ),
+                    Some(StmtError::ExecError(exec_stmt_error)),
+                    fact.line_file(),
+                ));
+            }
         }
         for fact in forall_fact.then_facts.iter() {
-            self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
-            self.store_fact_without_well_defined_verified_and_infer(
-                &fact.from_ref_to_cloned_fact(),
-            )
-            .map_err(|e| {
-                WellDefinedError::new(
-                    format!("failed to store fact in environment: {}", e),
-                    None,
-                    fact.line_file(),
+            if let Err(exec_stmt_error) = self
+                .verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                    fact, verify_state,
                 )
-            })?;
+            {
+                return Err(WellDefinedError::new(
+                    format!(
+                        "failed to store fact in environment: {}",
+                        exec_stmt_error.body_string()
+                    ),
+                    Some(StmtError::ExecError(exec_stmt_error)),
+                    fact.line_file(),
+                ));
+            }
         }
         Ok(())
     }
@@ -300,7 +306,7 @@ impl<'a> Runtime<'a> {
         Ok(())
     }
 
-    fn verify_exist_or_and_chain_atomic_fact_well_defined(
+    pub(crate) fn verify_exist_or_and_chain_atomic_fact_well_defined(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
         verify_state: &VerifyState,
