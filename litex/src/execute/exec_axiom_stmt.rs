@@ -1,7 +1,7 @@
 use super::Runtime;
 use crate::error::{ExecStmtError, StmtError};
 use crate::fact::{Fact, OrFact};
-use crate::infer::{self, InferResult};
+use crate::infer::InferResult;
 use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
 use crate::stmt::axiom_stmt::{
     ByCartDefAxiomStmt, ByCasesAxiomStmt, ByContraAxiomStmt, ByExtensionAxiomStmt,
@@ -254,7 +254,7 @@ impl<'a> Runtime<'a> {
 
         if let Some(impossible_fact) = &stmt.impossible_facts[case_index] {
             let verify_state = VerifyState::new(0, false);
-            let verify_result = self
+            let verify_impossible_fact_result = self
                 .verify_atomic_fact(impossible_fact, &verify_state)
                 .map_err(|verify_error| {
                     ExecStmtError::new(
@@ -268,7 +268,7 @@ impl<'a> Runtime<'a> {
                     )
                 })?;
 
-            if verify_result.is_unknown() {
+            if verify_impossible_fact_result.is_unknown() {
                 return Err(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     format!(
@@ -280,10 +280,10 @@ impl<'a> Runtime<'a> {
                 ));
             }
 
-            let verify_result2 =
+            let verify_reversed_impossible_fact_result =
                 self.verify_atomic_fact(&impossible_fact.make_reversed(), &verify_state)?;
 
-            if verify_result2.is_unknown() {
+            if verify_reversed_impossible_fact_result.is_unknown() {
                 return Err(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     format!(
@@ -297,18 +297,15 @@ impl<'a> Runtime<'a> {
 
             inside_results.push(NonErrStmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
-                    impossible_fact.to_string(),
+                    format!(
+                        "impossible `{}` under case `{}`",
+                        impossible_fact, case_fact
+                    ),
                     InferResult::new(),
-                    vec![],
-                    impossible_fact.line_file(),
-                ),
-            ));
-
-            inside_results.push(NonErrStmtExecResult::NonFactualStmtSuccess(
-                NonFactualStmtSuccess::new(
-                    impossible_fact.make_reversed().to_string(),
-                    InferResult::new(),
-                    vec![],
+                    vec![
+                        verify_impossible_fact_result,
+                        verify_reversed_impossible_fact_result,
+                    ],
                     impossible_fact.line_file(),
                 ),
             ));
