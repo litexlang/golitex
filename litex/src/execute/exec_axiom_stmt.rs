@@ -1,7 +1,7 @@
 use super::Runtime;
 use crate::error::{ExecStmtError, StmtError};
 use crate::fact::{Fact, OrFact};
-use crate::infer::InferResult;
+use crate::infer::{self, InferResult};
 use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
 use crate::stmt::axiom_stmt::{
     ByCartDefAxiomStmt, ByCasesAxiomStmt, ByContraAxiomStmt, ByExtensionAxiomStmt,
@@ -223,17 +223,15 @@ impl<'a> Runtime<'a> {
         let case_fact = &stmt.cases[case_index];
         let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
 
-        self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-            &case_fact.to_exist_or_and_chain_atomic_fact(),
-        )
-        .map_err(|store_fact_error| {
-            ExecStmtError::new(
-                stmt.stmt_type_name(),
-                format!("by_cases: failed to assume case `{}`", case_fact),
-                Some(store_fact_error.into()),
-                stmt.line_file,
-            )
-        })?;
+        self.store_and_chain_atomic_fact_without_well_defined_verified_and_infer(case_fact)
+            .map_err(|store_fact_error| {
+                ExecStmtError::new(
+                    stmt.stmt_type_name(),
+                    format!("by_cases: failed to assume case `{}`", case_fact),
+                    Some(store_fact_error.into()),
+                    stmt.line_file,
+                )
+            })?;
 
         for proof_stmt in stmt.proofs[case_index].iter() {
             let exec_stmt_result = self.exec_stmt(proof_stmt);
@@ -266,7 +264,7 @@ impl<'a> Runtime<'a> {
                             impossible_fact, case_fact
                         ),
                         Some(verify_error.into()),
-                        stmt.line_file,
+                        impossible_fact.line_file(),
                     )
                 })?;
 
@@ -278,7 +276,7 @@ impl<'a> Runtime<'a> {
                         impossible_fact, case_fact
                     ),
                     None,
-                    stmt.line_file,
+                    impossible_fact.line_file(),
                 ));
             }
 
@@ -293,9 +291,27 @@ impl<'a> Runtime<'a> {
                         impossible_fact, case_fact
                     ),
                     None,
-                    stmt.line_file,
+                    impossible_fact.line_file(),
                 ));
             }
+
+            inside_results.push(NonErrStmtExecResult::NonFactualStmtSuccess(
+                NonFactualStmtSuccess::new(
+                    impossible_fact.to_string(),
+                    InferResult::new(),
+                    vec![],
+                    impossible_fact.line_file(),
+                ),
+            ));
+
+            inside_results.push(NonErrStmtExecResult::NonFactualStmtSuccess(
+                NonFactualStmtSuccess::new(
+                    impossible_fact.make_reversed().to_string(),
+                    InferResult::new(),
+                    vec![],
+                    impossible_fact.line_file(),
+                ),
+            ));
 
             return Ok(inside_results);
         }

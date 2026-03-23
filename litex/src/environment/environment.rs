@@ -1,4 +1,5 @@
 use crate::error::StoreFactError;
+use crate::fact::AndChainAtomicFact;
 use crate::fact::AndFact;
 use crate::fact::AtomicFact;
 use crate::fact::ChainFact;
@@ -214,7 +215,10 @@ impl fmt::Display for Environment {
 }
 
 impl Environment {
-    pub fn store_atomic_fact_by_ref(&mut self, atomic_fact: &AtomicFact) -> Result<(), StoreFactError> {
+    pub fn store_atomic_fact_by_ref(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<(), StoreFactError> {
         self.store_atomic_fact(atomic_fact.clone())
     }
 
@@ -469,6 +473,22 @@ impl Environment {
                 self.store_exist_fact(exist_fact.clone())
             }
         }
+    }
+
+    pub fn store_and_chain_atomic_fact_by_ref(
+        &mut self,
+        and_chain_atomic_fact: &AndChainAtomicFact,
+    ) -> Result<(), StoreFactError> {
+        match and_chain_atomic_fact {
+            AndChainAtomicFact::AtomicFact(atomic_fact) => {
+                self.store_atomic_fact(atomic_fact.clone())?
+            }
+            AndChainAtomicFact::AndFact(and_fact) => self.store_and_fact_by_ref(and_fact)?,
+            AndChainAtomicFact::ChainFact(chain_fact) => {
+                self.store_chain_fact_by_ref(chain_fact)?
+            }
+        }
+        Ok(())
     }
 
     pub fn store_or_and_chain_atomic_fact(

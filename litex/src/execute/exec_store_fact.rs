@@ -5,6 +5,8 @@ use crate::fact::{AtomicFact, ExistOrAndChainAtomicFact, Fact, OrAndChainAtomicF
 use crate::infer::InferResult;
 use crate::verify::VerifyState;
 
+use crate::fact::AndChainAtomicFact;
+
 impl<'a> Runtime<'a> {
     pub fn store_fact_without_well_defined_verified_and_infer(
         &mut self,
@@ -20,6 +22,25 @@ impl<'a> Runtime<'a> {
 
         let infer_result = self
             .infer(fact)
+            .map_err(|e| StoreFactError::new(format!("infer error: {}", e), Some(e.into())))?;
+        Ok(infer_result)
+    }
+
+    pub fn store_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+        &mut self,
+        fact: &AndChainAtomicFact,
+    ) -> Result<InferResult, StoreFactError> {
+        self.runtime_context
+            .top_level_env()
+            .store_and_chain_atomic_fact_by_ref(fact)?;
+
+        let line_file = fact.line_file();
+        self.runtime_context
+            .top_level_env()
+            .store_fact_to_cache_known_fact(fact.to_string(), line_file)?;
+
+        let infer_result = self
+            .infer(&fact.to_fact())
             .map_err(|e| StoreFactError::new(format!("infer error: {}", e), Some(e.into())))?;
         Ok(infer_result)
     }

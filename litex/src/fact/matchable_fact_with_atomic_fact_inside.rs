@@ -89,6 +89,16 @@ pub enum AndChainAtomicFact {
     ChainFact(ChainFact),
 }
 
+impl AndChainAtomicFact {
+    pub fn line_file(&self) -> (usize, usize) {
+        match self {
+            AndChainAtomicFact::AtomicFact(a) => a.line_file(),
+            AndChainAtomicFact::AndFact(a) => a.line_file(),
+            AndChainAtomicFact::ChainFact(c) => c.line_file(),
+        }
+    }
+}
+
 impl fmt::Display for AndFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
