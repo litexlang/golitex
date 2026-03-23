@@ -78,7 +78,7 @@ impl<'a> Runtime<'a> {
 
         for then_fact in forall_fact.then_facts.iter() {
             let result = self.verify_exist_or_and_chain_atomic_fact(then_fact, verify_state)?;
-            if !result.is_true() {
+            if result.is_unknown() {
                 return Ok(result);
             }
         }
@@ -133,7 +133,7 @@ impl<'a> Runtime<'a> {
         );
         let result1 =
             self.verify_forall_fact(&forall_then_implies_iff, &verify_state_for_children)?;
-        if !result1.is_true() {
+        if result1.is_unknown() {
             return Ok(result1);
         }
 
@@ -147,7 +147,7 @@ impl<'a> Runtime<'a> {
         );
         let result2 =
             self.verify_forall_fact(&forall_iff_implies_then, &verify_state_for_children)?;
-        if !result2.is_true() {
+        if result2.is_unknown() {
             return Ok(result2);
         }
 

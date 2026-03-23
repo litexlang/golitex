@@ -37,7 +37,7 @@ impl<'a> Runtime<'a> {
         for then_fact in forall_fact.then_facts.iter() {
             let result =
                 self.verify_exist_or_and_chain_atomic_fact(then_fact, &VerifyState::new(0, false))?;
-            if !result.is_true() {
+            if result.is_unknown() {
                 return Err(StmtError::UnknownError(UnknownError::new(
                     format!("claim failed: cannot prove `{}`", stmt.fact),
                     stmt.line_file,
@@ -98,7 +98,7 @@ impl<'a> Runtime<'a> {
                 if let Err(e) = body_result {
                     return Err(e);
                 } else if let Ok(result) = body_result {
-                    if !result.is_true() {
+                    if result.is_unknown() {
                         return Err(StmtError::UnknownError(UnknownError::new(
                             format!("claim failed: cannot prove `{}`", stmt.fact),
                             stmt.line_file,

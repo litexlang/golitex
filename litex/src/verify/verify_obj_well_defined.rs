@@ -298,7 +298,7 @@ impl<'a> Runtime<'a> {
                             DEFAULT_LINE_FILE.clone(),
                         )
                     })?;
-            if !verify_result.is_true() {
+            if verify_result.is_unknown() {
                 return Err(WellDefinedError::new(
                     format!("arg does not satisfy fn set parameter set: {}", fact),
                     None,
@@ -325,7 +325,7 @@ impl<'a> Runtime<'a> {
                         DEFAULT_LINE_FILE.clone(),
                     )
                 })?;
-            if !verify_result.is_true() {
+            if verify_result.is_unknown() {
                 return Err(WellDefinedError::new(
                     format!(
                         "failed to verify function domain fact:\n{}",
@@ -370,7 +370,7 @@ impl<'a> Runtime<'a> {
             );
             let atomic_fact = AtomicFact::InFact(in_fact);
             let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
-            if !result.is_true() {
+            if result.is_unknown() {
                 return Err(WellDefinedError::new(
                     format!(
                         "arg {} is not in param set {}",
@@ -395,7 +395,7 @@ impl<'a> Runtime<'a> {
         let in_fact = InFact::new(obj.clone(), r_obj, DEFAULT_LINE_FILE.clone());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
-        if !result.is_true() {
+        if result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("obj {} is not in r", obj.to_string()),
                 None,
@@ -414,7 +414,7 @@ impl<'a> Runtime<'a> {
         let in_fact = InFact::new(obj.clone(), z_obj, DEFAULT_LINE_FILE.clone());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
-        if !result.is_true() {
+        if result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("obj {} is not in z", obj.to_string()),
                 None,
@@ -473,7 +473,7 @@ impl<'a> Runtime<'a> {
             NotEqualFact::new((*div.right).clone(), zero, DEFAULT_LINE_FILE.clone());
         let atomic_fact = AtomicFact::NotEqualFact(not_equal_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
-        if !result.is_true() {
+        if result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("right of div is equal to 0"),
                 None,
@@ -499,7 +499,7 @@ impl<'a> Runtime<'a> {
         let not_equal_fact = NotEqualFact::new((*m.right).clone(), zero, DEFAULT_LINE_FILE.clone());
         let atomic_fact = AtomicFact::NotEqualFact(not_equal_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
-        if !result.is_true() {
+        if result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("right of mod is equal to 0"),
                 None,
@@ -589,7 +589,7 @@ impl<'a> Runtime<'a> {
         );
 
         let result = self.verify_or_fact(&pow_domain_or_fact, verify_state)?;
-        if !result.is_true() {
+        if result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("base and exponent do not satisfy the pow domain"),
                 None,
@@ -697,7 +697,7 @@ impl<'a> Runtime<'a> {
                             DEFAULT_LINE_FILE.clone(),
                         )
                     })?;
-                if !verify_result.is_true() {
+                if verify_result.is_unknown() {
                     return Err(WellDefinedError::new(
                         format!("list set elements must be pairwise not equal, but it is not provable: {}", not_equal_atomic_fact),
                         None,
@@ -913,7 +913,7 @@ impl<'a> Runtime<'a> {
                     DEFAULT_LINE_FILE.clone(),
                 )
             })?;
-            if !result.is_true() {
+            if result.is_unknown() {
                 return Err(WellDefinedError::new(
                     format!(
                         "exec_fact failed for inst struct obj arg (struct {})",
@@ -949,7 +949,7 @@ impl<'a> Runtime<'a> {
         let is_cart_fact =
             AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), DEFAULT_LINE_FILE.clone()));
         let result = self.verify_atomic_fact(&is_cart_fact, verify_state)?;
-        if !result.is_true() {
+        if result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("set {} is not a cart", x.set.to_string()),
                 None,
@@ -1092,7 +1092,7 @@ impl<'a> Runtime<'a> {
             DEFAULT_LINE_FILE.clone(),
         ));
         let result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
-        if !result.is_true() {
+        if result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("obj {} is not a tuple", x.obj.to_string()),
                 None,
@@ -1132,7 +1132,7 @@ impl<'a> Runtime<'a> {
         ));
         let mut result =
             self.verify_atomic_fact(&index_is_positive_integer_in_z_pos_fact, verify_state)?;
-        if !result.is_true() {
+        if result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("index {} is not a positive integer", index_calculated_obj),
                 None,
@@ -1146,7 +1146,7 @@ impl<'a> Runtime<'a> {
             DEFAULT_LINE_FILE.clone(),
         ));
         result = self.verify_atomic_fact(&less_equal_fact, verify_state)?;
-        if !result.is_true() {
+        if result.is_unknown() {
             return Err(WellDefinedError::new(format!("{} has dimension {} but index {} is not less than or equal to it, so {} is not well-defined", x.obj, tuple_dim, index_calculated_obj, x.to_string()), None, DEFAULT_LINE_FILE.clone()));
         }
 
