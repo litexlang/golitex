@@ -7,7 +7,7 @@ use crate::common::keywords::{
     BY_CART_DEF, BY_CASES, BY_CONTRA, BY_EXTENSION, BY_FN_DEF, BY_INDUC, CASE, CLAIM, COLON,
     ENUMERATE, EQUAL, FOR, FROM, IMPOSSIBLE, PROVE, RIGHT_ARROW,
 };
-use crate::fact::{AndChainAtomicFact, ExistOrAndChainAtomicFact, Fact};
+use crate::fact::{AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact};
 use crate::obj::{Cart, ClosedRange, Obj, Range};
 use std::fmt;
 
@@ -69,7 +69,7 @@ pub struct ByCasesAxiomStmt {
     pub cases: Vec<AndChainAtomicFact>,
     pub then_facts: Vec<Fact>,
     pub proofs: Vec<Vec<Stmt>>,
-    pub impossible_facts: Vec<Option<ExistOrAndChainAtomicFact>>,
+    pub impossible_facts: Vec<Option<AtomicFact>>,
     pub line_file: (usize, usize),
 }
 
@@ -77,7 +77,7 @@ pub struct ByCasesAxiomStmt {
 pub struct ByContraAxiomStmt {
     pub to_prove: Fact,
     pub proof: Vec<Stmt>,
-    pub impossible_fact: ExistOrAndChainAtomicFact,
+    pub impossible_fact: AtomicFact,
     pub line_file: (usize, usize),
 }
 
@@ -108,7 +108,7 @@ impl ByCasesAxiomStmt {
         cases: Vec<AndChainAtomicFact>,
         then_facts: Vec<Fact>,
         proofs: Vec<Vec<Stmt>>,
-        impossible_facts: Vec<Option<ExistOrAndChainAtomicFact>>,
+        impossible_facts: Vec<Option<AtomicFact>>,
         line_file: (usize, usize),
     ) -> Self {
         ByCasesAxiomStmt {
@@ -172,7 +172,7 @@ impl ByContraAxiomStmt {
     pub fn new(
         to_prove: Fact,
         proof: Vec<Stmt>,
-        impossible_fact: ExistOrAndChainAtomicFact,
+        impossible_fact: AtomicFact,
         line_file: (usize, usize),
     ) -> Self {
         ByContraAxiomStmt {

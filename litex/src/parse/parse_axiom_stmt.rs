@@ -5,7 +5,7 @@ use crate::common::keywords::{
 };
 use crate::error::ParsingError;
 use crate::execute::Runtime;
-use crate::fact::{AndChainAtomicFact, ExistOrAndChainAtomicFact, Fact};
+use crate::fact::{AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact};
 use crate::obj::Obj;
 use crate::stmt::axiom_stmt::{
     ByCartDefAxiomStmt, ByCasesAxiomStmt, ByContraAxiomStmt, ByExtensionAxiomStmt,
@@ -38,8 +38,7 @@ impl<'a> Runtime<'a> {
         let case_block_count = tb.body.len().saturating_sub(1);
         let mut cases: Vec<AndChainAtomicFact> = Vec::with_capacity(case_block_count);
         let mut proofs: Vec<Vec<Stmt>> = Vec::with_capacity(case_block_count);
-        let mut impossible_facts: Vec<Option<ExistOrAndChainAtomicFact>> =
-            Vec::with_capacity(case_block_count);
+        let mut impossible_facts: Vec<Option<AtomicFact>> = Vec::with_capacity(case_block_count);
         for block in tb.body.iter_mut().skip(1) {
             block.skip_token(CASE)?;
             let case = self.parse_and_chain_atomic_fact(block)?;
@@ -68,7 +67,7 @@ impl<'a> Runtime<'a> {
                         ParsingError::new("Expected body".to_string(), tb.line_file, None)
                     })?;
                     last_block.skip_token(IMPOSSIBLE)?;
-                    let imp = self.parse_exist_or_and_chain_atomic_fact(last_block)?;
+                    let imp = self.parse_atomic_fact(last_block, true)?;
                     (proof, Some(imp))
                 } else {
                     let proof: Vec<Stmt> = block
@@ -122,7 +121,7 @@ impl<'a> Runtime<'a> {
             .last_mut()
             .ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file, None))?;
         last_block.skip_token(IMPOSSIBLE)?;
-        let impossible_fact = self.parse_exist_or_and_chain_atomic_fact(&mut last_block)?;
+        let impossible_fact = self.parse_atomic_fact(&mut last_block, true)?;
         Ok(Stmt::ByContraAxiomStmt(ByContraAxiomStmt::new(
             to_prove,
             proof,
