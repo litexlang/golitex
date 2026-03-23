@@ -5,6 +5,7 @@ pub mod error;
 pub mod execute;
 pub mod fact;
 pub mod infer;
+pub mod main_test;
 pub mod module_manager;
 pub mod obj;
 pub mod parse;
