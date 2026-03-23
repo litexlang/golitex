@@ -92,6 +92,16 @@ impl fmt::Display for ParamDefWithParamType {
 }
 
 impl ParamType {
+    pub fn get_all_param_names(param_def: &Vec<ParamDefWithParamType>) -> Vec<String> {
+        let mut names = vec![];
+        for param_def in param_def.iter() {
+            for name in param_def.0.iter() {
+                names.push(name.clone());
+            }
+        }
+        names
+    }
+
     /// Builds the fact that an identifier with the given name satisfies this param type.
     pub fn param_satisfy_param_type_fact(param_name: &str, param_type: &ParamType) -> Fact {
         match param_type {
