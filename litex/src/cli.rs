@@ -27,7 +27,7 @@ pub fn run_cli() {
                     return;
                 }
                 eprintln!(
-                    "standalone {} is only valid by itself (for JSON REPL) or after -f/-r",
+                    "{} is only valid in two forms: `litex -json` (JSON REPL), `litex -f/-r ... -json` (JSON output)",
                     head
                 );
                 print_usage();
@@ -246,8 +246,9 @@ fn print_usage() {
     println!("  -e <CODE>          Execute the given code");
     println!("  -f <PATH>          Execute the given file");
     println!("  -r <REPO>          Execute the given repo (runs REPO/main.lit)");
-    println!("  -f <PATH> -json    Execute file and output JSON format");
-    println!("  -json              Start REPL and output JSON format");
+    println!("  -f <PATH> -json    Execute file and output JSON");
+    println!("  -r <REPO> -json    Execute repo main.lit and output JSON");
+    println!("  -json              Start REPL with JSON output");
     println!("  -latex <PATH>      Compile the given file to LaTeX (not implemented)");
     println!("  -elatex <CODE>     Compile the given code to LaTeX (not implemented)");
     println!("  -fmt <CODE>        Format the given code (not implemented)");
