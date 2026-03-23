@@ -1,11 +1,3 @@
-// Copyright Jiachen Shen.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-
 use litex::pipeline::{run_repl_loop, run_source_code_from_string, run_source_code_in_file};
 use std::env;
 use std::path::{Path, PathBuf};
@@ -29,7 +21,7 @@ pub fn run_cli() {
             "-help" | "--help" => {
                 print_usage();
                 println!();
-        println!("If no options are provided, starts interactive REPL mode.");
+                println!("If no options are provided, starts interactive REPL mode.");
                 return;
             }
             "-version" | "--version" => {
