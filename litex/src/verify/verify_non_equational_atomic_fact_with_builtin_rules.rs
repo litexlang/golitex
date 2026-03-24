@@ -70,7 +70,7 @@ impl<'a> Runtime<'a> {
         let left_obj = &not_equal_fact.left;
         let right_obj = &not_equal_fact.right;
 
-        if left_obj.calculated_value().is_some() && right_obj.calculated_value().is_some() {
+        if left_obj.normalized_calculated_value().is_some() && right_obj.normalized_calculated_value().is_some() {
             if left_obj.two_objs_can_be_calculated_and_equal_by_calculation(right_obj) {
                 return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
             }
@@ -84,7 +84,7 @@ impl<'a> Runtime<'a> {
             ));
         }
 
-        if left_obj.calculated_value().is_some() && right_obj.calculated_value().is_some() {
+        if left_obj.normalized_calculated_value().is_some() && right_obj.normalized_calculated_value().is_some() {
             if objs_equal_by_rational_expression_simplification(left_obj, right_obj) {
                 return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
             }

@@ -51,7 +51,7 @@ pub struct Environment {
     pub known_obj_is_well_defined: HashMap<String, ()>,
     pub known_atom_in_fn_set: HashMap<String, FnSetObj>,
     pub known_tuple_obj_in_what_cart: HashMap<String, Cart>,
-    pub known_calculated_value_of_obj: HashMap<String, Number>,
+    pub known_normalized_calculated_value_of_obj: HashMap<String, Number>,
 
     pub cache_well_defined_obj: HashMap<String, ()>,
     pub cache_known_fact: HashMap<String, (usize, usize)>,
@@ -116,7 +116,7 @@ impl Environment {
             known_obj_is_well_defined,
             known_atom_in_fn_set,
             known_tuple_obj_in_what_cart: known_tuple_dim_obj,
-            known_calculated_value_of_obj,
+            known_normalized_calculated_value_of_obj: known_calculated_value_of_obj,
             cache_well_defined_obj: cache_known_valid_obj,
             cache_known_fact,
         }

@@ -513,7 +513,7 @@ impl<'a> Runtime<'a> {
         left: &Number,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
-        if !given_arg.calculated_value().is_some() {
+        if !given_arg.normalized_calculated_value().is_some() {
             return Ok(None);
         }
         let left_obj = Obj::Number(left.clone());

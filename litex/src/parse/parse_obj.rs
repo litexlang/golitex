@@ -64,7 +64,7 @@ impl<'a> Runtime<'a> {
 
             let calculated_value = self
                 .runtime_context
-                .get_calculated_value_of_obj(&fn_obj_to_string(&fn_name, &body));
+                .get_normalized_calculated_value_of_obj(&fn_obj_to_string(&fn_name, &body));
 
             Ok(Obj::FnObj(FnObj::new(fn_name, body, calculated_value)))
         } else {
@@ -128,7 +128,7 @@ impl<'a> Runtime<'a> {
         if tb.current_token_is_equal_to(POW) {
             tb.skip()?;
             let right = self.parse_obj_hierarchy3(tb)?; // 右结合：右侧可继续接 ^
-            if right.calculated_value().is_some() {
+            if right.normalized_calculated_value().is_some() {
                 let calculated_exponent =
                     right.calculate_to_string_panic_when_cannot_be_calculated();
                 if !is_number_string_literally_integer_without_dot(calculated_exponent.clone()) {
@@ -369,9 +369,12 @@ impl<'a> Runtime<'a> {
             body_vectors.push(group);
         }
         if !body_vectors.is_empty() {
-            let calculated_value = self
-                .runtime_context
-                .get_calculated_value_of_obj(&fn_obj_to_string(&head_atom, &body_vectors));
+            let calculated_value =
+                self.runtime_context
+                    .get_normalized_calculated_value_of_obj(&fn_obj_to_string(
+                        &head_atom,
+                        &body_vectors,
+                    ));
             result = Obj::FnObj(FnObj::new(head_atom, body_vectors, calculated_value));
         }
         Ok(result)
@@ -894,7 +897,7 @@ impl<'a> Runtime<'a> {
                 let display_string = field_access_with_mod_to_string(&left, &right, &fields);
                 let calculated_value = self
                     .runtime_context
-                    .get_calculated_value_of_obj(&display_string);
+                    .get_normalized_calculated_value_of_obj(&display_string);
 
                 Ok(Atom::FieldAccessWithMod(FieldAccessWithMod::new(
                     left,
@@ -906,7 +909,7 @@ impl<'a> Runtime<'a> {
                 let display_string = identifier_with_mod_to_string(&left, &right);
                 let calculated_value = self
                     .runtime_context
-                    .get_calculated_value_of_obj(&display_string);
+                    .get_normalized_calculated_value_of_obj(&display_string);
                 Ok(Atom::IdentifierWithMod(IdentifierWithMod::new(
                     left,
                     right,
@@ -925,7 +928,7 @@ impl<'a> Runtime<'a> {
                 let display_string = field_access_to_string(&left, &fields);
                 let calculated_value = self
                     .runtime_context
-                    .get_calculated_value_of_obj(&display_string);
+                    .get_normalized_calculated_value_of_obj(&display_string);
                 Ok(Atom::FieldAccess(FieldAccess::new(
                     left,
                     fields,
@@ -935,7 +938,7 @@ impl<'a> Runtime<'a> {
                 let display_string = identifier_to_string(&left);
                 let calculated_value = self
                     .runtime_context
-                    .get_calculated_value_of_obj(&display_string);
+                    .get_normalized_calculated_value_of_obj(&display_string);
                 Ok(Atom::IdentifierAtom(Identifier::new(
                     left,
                     calculated_value,

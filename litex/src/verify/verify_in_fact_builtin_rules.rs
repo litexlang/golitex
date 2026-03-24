@@ -52,7 +52,7 @@ impl<'a> Runtime<'a> {
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         match (&in_fact.element, &in_fact.set) {
             (Obj::Number(num), Obj::RObj(_)) => Ok(number_in_set_verified_by_builtin_rules_result(
-                &num.value,
+                &num.normalized_value,
                 R,
                 "number in R",
                 in_fact.line_file,
@@ -60,7 +60,7 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::RPos(_)) => {
                 if number_is_in_r_pos(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.value,
+                        &num.normalized_value,
                         R_POS,
                         "number in R_pos",
                         in_fact.line_file,
@@ -72,7 +72,7 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::RNeg(_)) => {
                 if number_is_in_r_neg(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.value,
+                        &num.normalized_value,
                         R_NEG,
                         "number in R_neg",
                         in_fact.line_file,
@@ -84,7 +84,7 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::RNz(_)) => {
                 if number_is_in_r_nz(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.value,
+                        &num.normalized_value,
                         R_NZ,
                         "number in R_nz",
                         in_fact.line_file,
@@ -94,7 +94,7 @@ impl<'a> Runtime<'a> {
                 }
             }
             (Obj::Number(num), Obj::QObj(_)) => Ok(number_in_set_verified_by_builtin_rules_result(
-                &num.value,
+                &num.normalized_value,
                 Q,
                 "number in Q",
                 in_fact.line_file,
@@ -102,7 +102,7 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::QPos(_)) => {
                 if number_is_in_q_pos(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.value,
+                        &num.normalized_value,
                         Q_POS,
                         "number in Q_pos",
                         in_fact.line_file,
@@ -114,7 +114,7 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::QNeg(_)) => {
                 if number_is_in_q_neg(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.value,
+                        &num.normalized_value,
                         Q_NEG,
                         "number in Q_neg",
                         in_fact.line_file,
@@ -126,7 +126,7 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::QNz(_)) => {
                 if number_is_in_q_nz(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.value,
+                        &num.normalized_value,
                         Q_NZ,
                         "number in Q_nz",
                         in_fact.line_file,
@@ -138,7 +138,7 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::ZObj(_)) => {
                 if number_is_in_z(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.value,
+                        &num.normalized_value,
                         Z,
                         "number in Z",
                         in_fact.line_file,
@@ -150,7 +150,7 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::ZNeg(_)) => {
                 if number_is_in_z_neg(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.value,
+                        &num.normalized_value,
                         Z_NEG,
                         "number in Z_neg",
                         in_fact.line_file,
@@ -162,7 +162,7 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::ZNz(_)) => {
                 if number_is_in_z_nz(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.value,
+                        &num.normalized_value,
                         Z_NZ,
                         "number in Z_nz",
                         in_fact.line_file,
@@ -174,7 +174,7 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::NObj(_)) => {
                 if number_is_in_n(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.value,
+                        &num.normalized_value,
                         N,
                         "number in N",
                         in_fact.line_file,
@@ -186,7 +186,7 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::NPosObj(_)) => {
                 if number_is_in_n_pos(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.value,
+                        &num.normalized_value,
                         N_POS,
                         "number in N_pos",
                         in_fact.line_file,

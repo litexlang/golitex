@@ -1,29 +1,31 @@
 use crate::obj::{Number, Obj};
 
 impl Obj {
-    pub fn calculated_value(&self) -> Option<Number> {
+    pub fn normalized_calculated_value(&self) -> Option<Number> {
         match self {
             Obj::Number(number) => Some(number.clone()),
-            Obj::Identifier(identifier) => identifier.calculated_value.clone(),
+            Obj::Identifier(identifier) => identifier.normalized_calculated_value.clone(),
             Obj::IdentifierWithMod(identifier_with_mod) => {
-                identifier_with_mod.calculated_value.clone()
+                identifier_with_mod.normalized_calculated_value.clone()
             }
-            Obj::FieldAccess(field_access) => field_access.calculated_value.clone(),
+            Obj::FieldAccess(field_access) => field_access.normalized_calculated_value.clone(),
             Obj::FieldAccessWithMod(field_access_with_mod) => {
-                field_access_with_mod.calculated_value.clone()
+                field_access_with_mod.normalized_calculated_value.clone()
             }
-            Obj::FnObj(fn_obj) => fn_obj.calculated_value.clone(),
-            Obj::Add(add) => add.calculated_value.clone(),
-            Obj::Sub(sub) => sub.calculated_value.clone(),
-            Obj::Mul(mul) => mul.calculated_value.clone(),
-            Obj::Mod(mod_obj) => mod_obj.calculated_value.clone(),
-            Obj::Pow(pow_obj) => pow_obj.calculated_value.clone(),
+            Obj::FnObj(fn_obj) => fn_obj.normalized_calculated_value.clone(),
+            Obj::Add(add) => add.normalized_calculated_value.clone(),
+            Obj::Sub(sub) => sub.normalized_calculated_value.clone(),
+            Obj::Mul(mul) => mul.normalized_calculated_value.clone(),
+            Obj::Mod(mod_obj) => mod_obj.normalized_calculated_value.clone(),
+            Obj::Pow(pow_obj) => pow_obj.normalized_calculated_value.clone(),
             _ => None,
         }
     }
 
     pub fn two_objs_can_be_calculated_and_equal_by_calculation(&self, other: &Obj) -> bool {
-        if self.calculated_value().is_none() || other.calculated_value().is_none() {
+        if self.normalized_calculated_value().is_none()
+            || other.normalized_calculated_value().is_none()
+        {
             return false;
         }
         self.calculate_to_string_panic_when_cannot_be_calculated()
@@ -33,12 +35,12 @@ impl Obj {
 
 impl Obj {
     pub fn calculate_to_string_panic_when_cannot_be_calculated(&self) -> String {
-        if let Some(calculated_value) = self.calculated_value() {
-            return normalize_decimal_result(&calculated_value.value);
+        if let Some(calculated_value) = self.normalized_calculated_value() {
+            return normalize_decimal_result(&calculated_value.normalized_value);
         }
 
         match self {
-            Obj::Number(n) => normalize_decimal_result(&n.value.clone()),
+            Obj::Number(n) => normalize_decimal_result(&n.normalized_value.clone()),
             Obj::Add(add) => {
                 let l = add
                     .left
@@ -46,7 +48,7 @@ impl Obj {
                 let r = add
                     .right
                     .calculate_to_string_panic_when_cannot_be_calculated();
-                add_decimal_str(&l, &r)
+                add_decimal_str_and_normalize(&l, &r)
             }
             Obj::Sub(sub) => {
                 let l = sub
@@ -55,7 +57,7 @@ impl Obj {
                 let r = sub
                     .right
                     .calculate_to_string_panic_when_cannot_be_calculated();
-                sub_decimal_str(&l, &r)
+                sub_decimal_str_and_normalize(&l, &r)
             }
             Obj::Mul(mul) => {
                 let l = mul
@@ -73,7 +75,7 @@ impl Obj {
                 let r = mod_obj
                     .right
                     .calculate_to_string_panic_when_cannot_be_calculated();
-                mod_decimal_str(&l, &r)
+                mod_decimal_str_and_normalize(&l, &r)
             }
             Obj::Pow(pow_obj) => {
                 let base = pow_obj
@@ -82,7 +84,7 @@ impl Obj {
                 let exp = pow_obj
                     .exponent
                     .calculate_to_string_panic_when_cannot_be_calculated();
-                pow_decimal_str(&base, &exp)
+                pow_decimal_str_and_normalize(&base, &exp)
             }
             _ => panic!("非算术表达式，无法 calculate_to_string"),
         }
@@ -103,7 +105,7 @@ pub fn mul_signed_decimal_str(left_number_string: &str, right_number_string: &st
         split_sign_and_magnitude(left_number_string);
     let (right_is_negative, right_magnitude_number_string) =
         split_sign_and_magnitude(right_number_string);
-    let multiplied_magnitude_number_string = mul_decimal_str(
+    let multiplied_magnitude_number_string = mul_decimal_str_and_normalize(
         &left_magnitude_number_string,
         &right_magnitude_number_string,
     );
@@ -118,7 +120,7 @@ pub fn mul_signed_decimal_str(left_number_string: &str, right_number_string: &st
 
 impl Obj {
     pub fn replace_with_numeric_result_if_can_be_calculated(&self) -> (Obj, bool) {
-        if let Some(calculated_number) = self.calculated_value() {
+        if let Some(calculated_number) = self.normalized_calculated_value() {
             (Obj::Number(calculated_number), true)
         } else {
             (self.clone(), false)
@@ -127,7 +129,7 @@ impl Obj {
 }
 
 /// 竖式加法：两个表示非负数的数字串（可含小数点），返回和的字符串
-pub fn add_decimal_str(a: &str, b: &str) -> String {
+pub fn add_decimal_str_and_normalize(a: &str, b: &str) -> String {
     let (mut int_a, mut frac_a) = parse_decimal_parts(a);
     let (mut int_b, mut frac_b) = parse_decimal_parts(b);
     let frac_len = frac_a.len().max(frac_b.len());
@@ -168,7 +170,7 @@ pub fn add_decimal_str(a: &str, b: &str) -> String {
 }
 
 /// 竖式减法：a - b，若 a >= b 返回非负结果字符串，否则返回 "-" + (b - a) 的字符串
-pub fn sub_decimal_str(a: &str, b: &str) -> String {
+pub fn sub_decimal_str_and_normalize(a: &str, b: &str) -> String {
     let (int_a, frac_a) = parse_decimal_parts(a);
     let (int_b, frac_b) = parse_decimal_parts(b);
     let frac_len = frac_a.len().max(frac_b.len());
@@ -188,7 +190,7 @@ pub fn sub_decimal_str(a: &str, b: &str) -> String {
     let (top_int, top_frac, bot_int, bot_frac) = if cmp >= 0 {
         (ia, fa, ib, fb)
     } else {
-        let inner = sub_decimal_str(b, a);
+        let inner = sub_decimal_str_and_normalize(b, a);
         return normalize_decimal_result(&format!("-{}", inner));
     };
 
@@ -263,7 +265,7 @@ fn compare_decimal_parts(int_a: &[u8], frac_a: &[u8], int_b: &[u8], frac_b: &[u8
 }
 
 /// 竖式乘法：两个非负数字串，返回积的字符串（product[0]=个位，即最低位）
-pub fn mul_decimal_str(a: &str, b: &str) -> String {
+pub fn mul_decimal_str_and_normalize(a: &str, b: &str) -> String {
     let (int_a, frac_a) = parse_decimal_parts(a);
     let (int_b, frac_b) = parse_decimal_parts(b);
     let frac_places = frac_a.len() + frac_b.len();
@@ -329,7 +331,7 @@ pub fn mul_decimal_str(a: &str, b: &str) -> String {
 }
 
 /// 竖式取余：a mod b，返回余数字符串。约定：b 仅为非零纯整数（字符串），a 取整数部分参与运算。
-pub fn mod_decimal_str(a: &str, b: &str) -> String {
+pub fn mod_decimal_str_and_normalize(a: &str, b: &str) -> String {
     let (int_a, _) = parse_decimal_parts(a);
     let (int_b, _) = parse_decimal_parts(b);
     let a_digits = trim_leading_zeros(&int_a);
@@ -360,11 +362,11 @@ pub fn mod_decimal_str(a: &str, b: &str) -> String {
             d -= 1;
         }
     }
-    digits_to_string(&current)
+    normalize_decimal_result(&digits_to_string(&current))
 }
 
 /// 仅支持非负整数指数：base^exp，exp 必须为整数（如 "3" 或 "0"），返回字符串；否则 panic
-pub fn pow_decimal_str(base: &str, exp: &str) -> String {
+pub fn pow_decimal_str_and_normalize(base: &str, exp: &str) -> String {
     let (exp_int, exp_frac) = parse_decimal_parts(exp);
     if exp_frac.iter().any(|&d| d != 0) {
         panic!("幂运算仅支持整数指数");
@@ -381,12 +383,12 @@ pub fn pow_decimal_str(base: &str, exp: &str) -> String {
     let mut e = n;
     while e > 0 {
         if e % 2 == 1 {
-            acc = mul_decimal_str(&acc, &b);
+            acc = mul_decimal_str_and_normalize(&acc, &b);
         }
-        b = mul_decimal_str(&b, &b);
+        b = mul_decimal_str_and_normalize(&b, &b);
         e /= 2;
     }
-    acc
+    normalize_decimal_result(&acc)
 }
 
 fn trim_leading_zeros(d: &[u8]) -> Vec<u8> {
@@ -464,7 +466,7 @@ fn sub_digits(a: &[u8], b: &[u8]) -> Vec<u8> {
 }
 
 /// 化简结果：多个负号合并（---1.1 -> -1.1）、0.0或者-0 写成 0、小数尾零去掉（1.000 -> 1）
-fn normalize_decimal_result(s: &str) -> String {
+pub fn normalize_decimal_result(s: &str) -> String {
     let s = s.trim();
     if s.is_empty() {
         return "0".to_string();
