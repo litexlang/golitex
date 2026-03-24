@@ -201,32 +201,93 @@ impl<'a> Runtime<'a> {
                 &in_fact.element,
                 in_fact.line_file,
             )),
-            (_, Obj::RObj(_)) => {
-                self.verify_in_fact_into_r_by_known_standard_subset_membership(in_fact)
+            (_, target_set_obj) => {
+                self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
             }
-            _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }
 
-    fn verify_in_fact_into_r_by_known_standard_subset_membership(
+    fn standard_subset_set_objs_for_target_set(target_set_obj: &Obj) -> Option<Vec<Obj>> {
+        match target_set_obj {
+            Obj::NPosObj(_) => Some(vec![]),
+            Obj::NObj(_) => Some(vec![Obj::NPosObj(crate::obj::NPosObj::new())]),
+            Obj::ZNeg(_) => Some(vec![]),
+            Obj::ZNz(_) => Some(vec![
+                Obj::NPosObj(crate::obj::NPosObj::new()),
+                Obj::ZNeg(crate::obj::ZNeg::new()),
+            ]),
+            Obj::ZObj(_) => Some(vec![
+                Obj::NPosObj(crate::obj::NPosObj::new()),
+                Obj::NObj(crate::obj::NObj::new()),
+                Obj::ZNeg(crate::obj::ZNeg::new()),
+                Obj::ZNz(crate::obj::ZNz::new()),
+            ]),
+            Obj::QPos(_) => Some(vec![Obj::NPosObj(crate::obj::NPosObj::new())]),
+            Obj::QNeg(_) => Some(vec![Obj::ZNeg(crate::obj::ZNeg::new())]),
+            Obj::QNz(_) => Some(vec![
+                Obj::NPosObj(crate::obj::NPosObj::new()),
+                Obj::ZNeg(crate::obj::ZNeg::new()),
+                Obj::ZNz(crate::obj::ZNz::new()),
+                Obj::QPos(crate::obj::QPos::new()),
+                Obj::QNeg(crate::obj::QNeg::new()),
+            ]),
+            Obj::QObj(_) => Some(vec![
+                Obj::NPosObj(crate::obj::NPosObj::new()),
+                Obj::NObj(crate::obj::NObj::new()),
+                Obj::ZNeg(crate::obj::ZNeg::new()),
+                Obj::ZNz(crate::obj::ZNz::new()),
+                Obj::ZObj(crate::obj::ZObj::new()),
+                Obj::QPos(crate::obj::QPos::new()),
+                Obj::QNeg(crate::obj::QNeg::new()),
+                Obj::QNz(crate::obj::QNz::new()),
+            ]),
+            Obj::RPos(_) => Some(vec![
+                Obj::NPosObj(crate::obj::NPosObj::new()),
+                Obj::QPos(crate::obj::QPos::new()),
+            ]),
+            Obj::RNeg(_) => Some(vec![
+                Obj::ZNeg(crate::obj::ZNeg::new()),
+                Obj::QNeg(crate::obj::QNeg::new()),
+            ]),
+            Obj::RNz(_) => Some(vec![
+                Obj::NPosObj(crate::obj::NPosObj::new()),
+                Obj::ZNeg(crate::obj::ZNeg::new()),
+                Obj::ZNz(crate::obj::ZNz::new()),
+                Obj::QPos(crate::obj::QPos::new()),
+                Obj::QNeg(crate::obj::QNeg::new()),
+                Obj::QNz(crate::obj::QNz::new()),
+                Obj::RPos(crate::obj::RPos::new()),
+                Obj::RNeg(crate::obj::RNeg::new()),
+            ]),
+            Obj::RObj(_) => Some(vec![
+                Obj::NPosObj(crate::obj::NPosObj::new()),
+                Obj::NObj(crate::obj::NObj::new()),
+                Obj::ZNeg(crate::obj::ZNeg::new()),
+                Obj::ZNz(crate::obj::ZNz::new()),
+                Obj::ZObj(crate::obj::ZObj::new()),
+                Obj::QPos(crate::obj::QPos::new()),
+                Obj::QNeg(crate::obj::QNeg::new()),
+                Obj::QNz(crate::obj::QNz::new()),
+                Obj::QObj(crate::obj::QObj::new()),
+                Obj::RPos(crate::obj::RPos::new()),
+                Obj::RNeg(crate::obj::RNeg::new()),
+                Obj::RNz(crate::obj::RNz::new()),
+            ]),
+            _ => None,
+        }
+    }
+
+    fn verify_in_fact_by_known_standard_subset_membership(
         &mut self,
         in_fact: &InFact,
+        target_set_obj: &Obj,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        let standard_subset_set_objs_of_r = vec![
-            Obj::NPosObj(crate::obj::NPosObj::new()),
-            Obj::NObj(crate::obj::NObj::new()),
-            Obj::QPos(crate::obj::QPos::new()),
-            Obj::QNeg(crate::obj::QNeg::new()),
-            Obj::QNz(crate::obj::QNz::new()),
-            Obj::QObj(crate::obj::QObj::new()),
-            Obj::ZNeg(crate::obj::ZNeg::new()),
-            Obj::ZNz(crate::obj::ZNz::new()),
-            Obj::ZObj(crate::obj::ZObj::new()),
-            Obj::RPos(crate::obj::RPos::new()),
-            Obj::RNeg(crate::obj::RNeg::new()),
-            Obj::RNz(crate::obj::RNz::new()),
-        ];
-        for standard_subset_set_obj in standard_subset_set_objs_of_r.iter() {
+        let standard_subset_set_objs = match Self::standard_subset_set_objs_for_target_set(target_set_obj)
+        {
+            Some(standard_subset_set_objs) => standard_subset_set_objs,
+            None => return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
+        };
+        for standard_subset_set_obj in standard_subset_set_objs.iter() {
             let in_fact_into_standard_subset = AtomicFact::InFact(InFact::new(
                 in_fact.element.clone(),
                 standard_subset_set_obj.clone(),
@@ -239,10 +300,10 @@ impl<'a> Runtime<'a> {
             if verify_result.is_true() {
                 return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                     FactVerifiedByBuiltinRules::new(
-                        format!("{} {}{} {}", in_fact.element, FACT_PREFIX, IN, R),
+                        format!("{} {}{} {}", in_fact.element, FACT_PREFIX, IN, target_set_obj),
                         format!(
-                            "{} in {} implies in {}",
-                            in_fact.element, standard_subset_set_obj, R
+                            "{} in {} implies in {} (standard subset relation)",
+                            in_fact.element, standard_subset_set_obj, target_set_obj
                         ),
                         InferResult::new(),
                         in_fact.line_file,
