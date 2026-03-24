@@ -56,6 +56,7 @@ impl<'a> Runtime<'a> {
                     def_prop_with_meaning_stmt.stmt_type_name(),
                     def_prop_with_meaning_stmt.to_string(),
                     Some(e.into()),
+                    vec![],
                     def_prop_with_meaning_stmt.line_file,
                 )
             })?;
@@ -105,6 +106,7 @@ impl<'a> Runtime<'a> {
                     def_prop_without_meaning_stmt.stmt_type_name(),
                     def_prop_without_meaning_stmt.to_string(),
                     Some(e.into()),
+                    vec![],
                     def_prop_without_meaning_stmt.line_file,
                 )
             })?;
@@ -129,6 +131,7 @@ impl<'a> Runtime<'a> {
                     def_let_stmt.stmt_type_name(),
                     def_let_stmt.to_string(),
                     Some(e.into()),
+                    vec![],
                     def_let_stmt.line_file,
                 )
             })?;
@@ -157,6 +160,7 @@ impl<'a> Runtime<'a> {
                     def_struct_with_fields_stmt.stmt_type_name(),
                     def_struct_with_fields_stmt.to_string(),
                     Some(e.into()),
+                    vec![],
                     def_struct_with_fields_stmt.line_file,
                 )
             })?;
@@ -164,6 +168,7 @@ impl<'a> Runtime<'a> {
             def_struct_with_fields_stmt.stmt_type_name(),
             "unimplemented".to_string(),
             None,
+            vec![],
             def_struct_with_fields_stmt.line_file,
         ));
     }
@@ -177,6 +182,7 @@ impl<'a> Runtime<'a> {
             def_struct_with_no_field_stmt.stmt_type_name(),
             "unimplemented".to_string(),
             None,
+            vec![],
             def_struct_with_no_field_stmt.line_file,
         ));
     }
@@ -191,6 +197,7 @@ impl<'a> Runtime<'a> {
             def_algo_stmt.stmt_type_name(),
             "unimplemented".to_string(),
             None,
+            vec![],
             def_algo_stmt.line_file,
         ));
     }
@@ -228,6 +235,7 @@ impl<'a> Runtime<'a> {
                     stmt.stmt_type_name(),
                     stmt.to_string(),
                     Some(e.into()),
+                    vec![],
                     stmt.line_file,
                 )
             })?;
@@ -260,7 +268,13 @@ impl<'a> Runtime<'a> {
         if ParamDefWithParamType::number_of_params(&have_obj_equal_stmt.param_def)
             != have_obj_equal_stmt.objs_equal_to.len()
         {
-            return Err(ExecStmtError::new( have_obj_equal_stmt.stmt_type_name(),"have_obj_equal_stmt: number of params in param_def does not match number of objs_equal_to".to_string(), None, have_obj_equal_stmt.line_file));
+            return Err(ExecStmtError::new(
+                have_obj_equal_stmt.stmt_type_name(),
+                "have_obj_equal_stmt: number of params in param_def does not match number of objs_equal_to".to_string(),
+                None,
+                vec![],
+                have_obj_equal_stmt.line_file,
+            ));
         }
 
         let mut current_index = 0;
@@ -283,6 +297,7 @@ impl<'a> Runtime<'a> {
                         have_obj_equal_stmt.stmt_type_name(),
                         msg,
                         None,
+                        vec![],
                         have_obj_equal_stmt.line_file,
                     ));
                 }
@@ -338,6 +353,7 @@ impl<'a> Runtime<'a> {
                 have_exist_obj_stmt.stmt_type_name(),
                 "have_exist_obj_stmt: exist fact is not verified".to_string(),
                 None,
+                vec![],
                 line_file,
             ));
         }
@@ -348,6 +364,7 @@ impl<'a> Runtime<'a> {
         {
             return Err(ExecStmtError::new(
                 have_exist_obj_stmt.stmt_type_name(), "have_exist_obj_stmt: number of params in exist does not match number of given objs".to_string(), None,
+                vec![],
                 line_file,
             ));
         }
@@ -372,6 +389,7 @@ impl<'a> Runtime<'a> {
                     have_exist_obj_stmt.stmt_type_name(),
                     e.error_body(),
                     Some(e),
+                    vec![],
                     line_file,
                 )
             })?;
@@ -418,6 +436,7 @@ impl<'a> Runtime<'a> {
                     have_fn_equal_stmt.stmt_type_name(),
                     "have_fn_equal_stmt: verify well-defined failed".to_string(),
                     Some(e.into()),
+                    vec![],
                     have_fn_equal_stmt.line_file,
                 )
             })?;
@@ -536,6 +555,7 @@ impl<'a> Runtime<'a> {
                 have_fn_equal_stmt.stmt_type_name(),
                 msg,
                 None,
+                vec![],
                 have_fn_equal_stmt.line_file,
             ));
         }
@@ -553,6 +573,7 @@ impl<'a> Runtime<'a> {
                     have_fn_equal_case_by_case_stmt.stmt_type_name(),
                     "have_fn_equal_case_by_case_stmt: verify well-defined failed".to_string(),
                     Some(e.into()),
+                    vec![],
                     have_fn_equal_case_by_case_stmt.line_file,
                 )
             })?;
@@ -660,6 +681,7 @@ impl<'a> Runtime<'a> {
                 have_fn_equal_case_by_case_stmt.stmt_type_name(),
                 "have_fn_equal_case_by_case_stmt: number of cases does not match number of equal_tos".to_string(),
                 None,
+                vec![],
                 have_fn_equal_case_by_case_stmt.line_file,
             ));
         }
@@ -745,6 +767,7 @@ impl<'a> Runtime<'a> {
                 have_fn_equal_case_by_case_stmt.stmt_type_name(),
                 msg,
                 None,
+                vec![],
                 have_fn_equal_case_by_case_stmt.line_file,
             ));
         }

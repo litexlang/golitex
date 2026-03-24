@@ -197,7 +197,7 @@ impl fmt::Display for ByContraAxiomStmt {
             COLON,
             add_four_spaces_at_beginning(PROVE.to_string(), 1),
             COLON,
-            add_four_spaces_at_beginning(self.to_prove.to_string(), 1),
+            add_four_spaces_at_beginning(self.to_prove.to_string(), 2),
         )?;
         if !self.proof.is_empty() {
             write!(

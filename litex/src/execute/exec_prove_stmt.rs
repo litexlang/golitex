@@ -13,7 +13,7 @@ impl<'a> Runtime<'a> {
                 Ok(result) => inside_results.push(result),
                 Err(statement_error) => {
                     return Err(StmtError::ExecError(
-                        ExecStmtError::new_with_inside_results(
+                        ExecStmtError::new(
                             stmt.stmt_type_name(),
                             proof_stmt.to_string(),
                             Some(statement_error),

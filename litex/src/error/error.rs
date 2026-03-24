@@ -224,6 +224,7 @@ impl From<StoreFactError> for ExecStmtError {
             "".to_string(),
             body,
             Some(e.into()),
+            vec![],
             DEFAULT_LINE_FILE.clone(),
         )
     }
@@ -323,15 +324,6 @@ impl ExecStmtError {
         stmt_type_name: String,
         msg: String,
         previous_error: Option<StmtError>,
-        line_file: (usize, usize),
-    ) -> Self {
-        Self::new_with_inside_results(stmt_type_name, msg, previous_error, vec![], line_file)
-    }
-
-    pub fn new_with_inside_results(
-        stmt_type_name: String,
-        msg: String,
-        previous_error: Option<StmtError>,
         inside_results: Vec<NonErrStmtExecResult>,
         line_file: (usize, usize),
     ) -> Self {
@@ -415,6 +407,7 @@ impl From<WellDefinedError> for ExecStmtError {
             "".to_string(),
             "fact/object is not well-defined:".to_string(),
             Some(StmtError::WellDefinedError(e)),
+            vec![],
             line_file,
         )
     }
@@ -462,6 +455,7 @@ impl From<VerifyError> for ExecStmtError {
             "".to_string(),
             "verify fact error:".to_string(),
             Some(StmtError::VerifyError(e)),
+            vec![],
             line_file,
         )
     }
@@ -555,6 +549,7 @@ impl From<InferError> for ExecStmtError {
             "".to_string(),
             msg,
             Some(e.into()),
+            vec![],
             DEFAULT_LINE_FILE.clone(),
         )
     }

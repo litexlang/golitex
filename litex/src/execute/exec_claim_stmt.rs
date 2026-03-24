@@ -20,6 +20,7 @@ impl<'a> Runtime<'a> {
                     stmt.stmt_type_name(),
                     "claim: failed to define forall params".to_string(),
                     Some(e.into()),
+                    vec![],
                     stmt.line_file,
                 ))
             })?;
@@ -86,6 +87,7 @@ impl<'a> Runtime<'a> {
                             stmt.stmt_type_name(),
                             "claim: fact is not well defined".to_string(),
                             Some(e.into()),
+                            vec![],
                             stmt.line_file,
                         ))
                     })?;
@@ -125,6 +127,7 @@ impl<'a> Runtime<'a> {
                             stmt.stmt_type_name(),
                             "claim: fact is not well defined".to_string(),
                             Some(e.into()),
+                            vec![],
                             stmt.line_file,
                         ))
                     })?;

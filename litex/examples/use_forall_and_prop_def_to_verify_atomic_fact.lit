@@ -1,14 +1,29 @@
-prop q(x, y, z)
+prove:
+    prop q(x, y, z)
 
-prop p(x, y R):
-    x > y
-    forall t R:
-        $q(x, y, t)
+    prop p(x, y R):
+        x > y
+        forall t R:
+            $q(x, y, t)
 
-have a, b R
+    have a, b R
 
-know $p(a, b)
+    know $p(a, b)
 
-a > b
+    a > b
 
-$q(a, b, 2)
+    $q(a, b, 2)
+
+prove:
+    prop p(a)
+
+    have b R, c R
+
+    know forall a R:
+        $p(a + b)
+        =>:
+            $p(a)
+
+    know $p(c + b)
+
+    $p(c)

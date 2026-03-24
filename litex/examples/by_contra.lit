@@ -1,12 +1,15 @@
 prop p(a)
+
+have b R, c R
+
 know forall a R:
-    $p(a + 1)
+    $p(a + b)
     =>:
         $p(a)
-know not $p(0)
+
+know not $p(c)
 
 by_contra:
     prove:
-        not $p(1)
-    $p(1)
-    impossible $p(0)
+        not $p(c + b)
+    impossible $p(c)

@@ -20,6 +20,7 @@ impl<'a> Runtime<'a> {
                         know_stmt.stmt_type_name(),
                         know_stmt.to_string(),
                         Some(e.into()),
+                        vec![],
                         know_stmt.line_file,
                     )
                 })?;
