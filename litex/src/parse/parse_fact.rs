@@ -272,6 +272,11 @@ impl<'a> Runtime<'a> {
         tb: &mut TokenBlock,
         is_true: bool,
     ) -> Result<AtomicFact, ParsingError> {
+        if tb.current()? == NOT {
+            tb.skip_token(NOT)?;
+            return Ok(self.parse_atomic_fact(tb, !is_true)?);
+        }
+
         let line_file = tb.line_file;
         if tb.current()? == FACT_PREFIX {
             tb.skip_token(FACT_PREFIX)?;

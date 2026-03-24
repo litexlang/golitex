@@ -1,4 +1,4 @@
-use crate::obj::Obj;
+use crate::obj::{Number, Obj};
 
 impl Obj {
     pub fn can_be_calculated(&self) -> bool {
@@ -66,6 +66,17 @@ impl Obj {
                 pow_decimal_str(&base, &exp)
             }
             _ => panic!("非算术表达式，无法 calculate_to_string"),
+        }
+    }
+}
+
+impl Obj {
+    pub fn replace_with_numeric_result_if_can_be_calculated(&self) -> Obj {
+        if self.can_be_calculated() {
+            let calculated_value_string = self.calculate_to_string();
+            Obj::Number(Number::new(calculated_value_string))
+        } else {
+            self.clone()
         }
     }
 }

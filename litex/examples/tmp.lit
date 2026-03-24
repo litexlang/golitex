@@ -1,4 +1,5 @@
-have a, b R
-know a = b
-know b + 2 = 3
-a + 2 = b + 2
+prop p(a)
+
+know $p(1)
+
+$p(1+0)

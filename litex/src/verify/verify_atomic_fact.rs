@@ -33,7 +33,11 @@ impl<'a> Runtime<'a> {
             AtomicFact::EqualFact(equal_fact) => {
                 self.verify_equal_fact(equal_fact, &next_verify_state)
             }
-            _ => self.verify_non_equational_atomic_fact(fact, &next_verify_state),
+            _ => self.verify_non_equational_atomic_fact(
+                fact,
+                &next_verify_state,
+                Some(fact.calculate_args()),
+            ),
         }
     }
 }
