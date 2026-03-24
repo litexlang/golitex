@@ -1,4 +1,4 @@
-use crate::error::VerifyError;
+use crate::error::{VerifyError, VerifyUnknownError};
 use crate::execute::Runtime;
 use crate::fact::AndChainAtomicFact;
 use crate::fact::ExistOrAndChainAtomicFact;
@@ -27,7 +27,7 @@ impl<'a> Runtime<'a> {
         }?;
 
         if result.is_unknown() {
-            return Err(VerifyError::new(fact.to_string(), None, fact.line_file()));
+            return Err(VerifyUnknownError::new(fact.to_string(), None, fact.line_file()).into());
         } else {
             Ok(result)
         }

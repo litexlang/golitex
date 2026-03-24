@@ -31,6 +31,7 @@ pub enum RuntimeError {
     UnknownError(UnknownError),
     WellDefinedError(WellDefinedError),
     VerifyError(VerifyError),
+    VerifyUnknownError(VerifyUnknownError),
     InferError(InferError),
 }
 
@@ -48,6 +49,7 @@ impl RuntimeError {
             RuntimeError::UnknownError(e) => e.line_file,
             RuntimeError::WellDefinedError(e) => e.line_file,
             RuntimeError::VerifyError(e) => e.line_file,
+            RuntimeError::VerifyUnknownError(e) => e.line_file,
             RuntimeError::InferError(e) => e.line_file,
         }
     }
@@ -64,6 +66,7 @@ impl RuntimeError {
             RuntimeError::UnknownError(_) => "UnknownError",
             RuntimeError::WellDefinedError(_) => "WellDefinedError",
             RuntimeError::VerifyError(_) => "VerifyError",
+            RuntimeError::VerifyUnknownError(_) => "VerifyUnknownError",
             RuntimeError::InferError(_) => "InferError",
         }
     }
@@ -80,6 +83,7 @@ impl RuntimeError {
             RuntimeError::UnknownError(e) => e.body_string(),
             RuntimeError::WellDefinedError(e) => e.body_string(),
             RuntimeError::VerifyError(e) => e.body_string(),
+            RuntimeError::VerifyUnknownError(e) => e.body_string(),
             RuntimeError::InferError(e) => e.body_string(),
         }
     }
@@ -479,6 +483,56 @@ impl From<VerifyError> for WellDefinedError {
         WellDefinedError::new(
             "verify fact error:".to_string(),
             Some(RuntimeError::VerifyError(e)),
+            line_file,
+        )
+    }
+}
+
+#[derive(Debug)]
+pub struct VerifyUnknownError {
+    pub msg: String,
+    pub previous_error: Option<Box<RuntimeError>>,
+    pub line_file: (usize, usize),
+}
+
+impl std::error::Error for VerifyUnknownError {}
+
+impl fmt::Display for VerifyUnknownError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.body_string())
+    }
+}
+
+impl VerifyUnknownError {
+    pub fn new(
+        msg: String,
+        previous_error: Option<RuntimeError>,
+        line_file: (usize, usize),
+    ) -> Self {
+        VerifyUnknownError {
+            msg,
+            previous_error: boxed_previous_error(previous_error),
+            line_file,
+        }
+    }
+
+    pub fn body_string(&self) -> String {
+        body_with_previous(&self.msg, &self.previous_error)
+    }
+}
+
+impl From<VerifyUnknownError> for RuntimeError {
+    fn from(e: VerifyUnknownError) -> Self {
+        RuntimeError::VerifyUnknownError(e)
+    }
+}
+
+impl From<VerifyUnknownError> for VerifyError {
+    fn from(e: VerifyUnknownError) -> Self {
+        let line_file = e.line_file;
+        VerifyError::new(
+            "verify result is unknown:".to_string(),
+            Some(RuntimeError::VerifyUnknownError(e)),
             line_file,
         )
     }
