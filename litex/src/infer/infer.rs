@@ -21,7 +21,7 @@ impl InferResult {
         }
     }
 
-    pub fn push_fact(&mut self, fact: &Fact) {
+    pub fn new_fact(&mut self, fact: &Fact) {
         self.infer_facts.push(fact.to_string());
     }
 
@@ -196,7 +196,7 @@ impl<'a> Runtime<'a> {
                     })?;
 
                 let mut infer_result = InferResult::new();
-                infer_result.push_fact(&or_fact);
+                infer_result.new_fact(&or_fact);
                 Ok(infer_result)
             }
             Obj::SetBuilder(set_builder) => {
@@ -222,7 +222,7 @@ impl<'a> Runtime<'a> {
                     })?;
 
                 let mut infer_result = InferResult::new();
-                infer_result.push_fact(&element_in_param_set_fact);
+                infer_result.new_fact(&element_in_param_set_fact);
 
                 for fact_in_set_builder in set_builder.facts.iter() {
                     let instantiated_fact_in_set_builder: OrAndChainAtomicFact =
@@ -240,7 +240,7 @@ impl<'a> Runtime<'a> {
                                 Some(previous_error.into()),
                             )
                         })?;
-                    infer_result.push_fact(&fact_to_store);
+                    infer_result.new_fact(&fact_to_store);
                 }
 
                 Ok(infer_result)
@@ -264,7 +264,7 @@ impl<'a> Runtime<'a> {
                             Some(previous_error.into()),
                         )
                     })?;
-                infer_result.push_fact(&is_cart_fact);
+                infer_result.new_fact(&is_cart_fact);
 
                 // tuple_dim(tuple) should equal the number of parameters of the `cart` set.
                 let cart_args_count = cart.args.len();
@@ -284,7 +284,7 @@ impl<'a> Runtime<'a> {
                         Some(previous_error.into()),
                     )
                 })?;
-                infer_result.push_fact(&tuple_dim_fact);
+                infer_result.new_fact(&tuple_dim_fact);
 
                 self.runtime_context
                     .top_level_env()
@@ -366,7 +366,7 @@ impl<'a> Runtime<'a> {
                         Some(previous_error.into()),
                     )
                 })?;
-            infer_result.push_fact(&fact_to_store);
+            infer_result.new_fact(&fact_to_store);
         }
 
         Ok(infer_result)

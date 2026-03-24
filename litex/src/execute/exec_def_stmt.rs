@@ -610,7 +610,7 @@ impl<'a> Runtime<'a> {
         let mut infer_result = self
             .store_fact_without_well_defined_verified_and_infer(&function_in_function_set_fact)
             .map_err(ExecStmtError::from)?;
-        infer_result.push_fact(&function_in_function_set_fact);
+        infer_result.new_fact(&function_in_function_set_fact);
 
         let param_defs_with_type = param_defs_with_type_from_fn_set_with_dom(
             &have_fn_equal_case_by_case_stmt.fn_set_with_params,
@@ -664,7 +664,7 @@ impl<'a> Runtime<'a> {
                 .store_fact_without_well_defined_verified_and_infer(&forall_as_fact)
                 .map_err(ExecStmtError::from)?;
             infer_result.append(forall_infer_result);
-            infer_result.push_fact(&forall_as_fact);
+            infer_result.new_fact(&forall_as_fact);
         }
 
         Ok(infer_result)

@@ -17,6 +17,20 @@ pub enum Fact {
     ForallFactWithIff(ForallFactWithIff),
 }
 
+impl Fact {
+    pub fn fact_type_string(&self) -> String {
+        match self {
+            Fact::AtomicFact(_) => "AtomicFact".to_string(),
+            Fact::ExistFact(_) => "ExistFact".to_string(),
+            Fact::OrFact(_) => "OrFact".to_string(),
+            Fact::AndFact(_) => "AndFact".to_string(),
+            Fact::ChainFact(_) => "ChainFact".to_string(),
+            Fact::ForallFact(_) => "ForallFact".to_string(),
+            Fact::ForallFactWithIff(_) => "ForallFactWithIff".to_string(),
+        }
+    }
+}
+
 impl fmt::Display for Fact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

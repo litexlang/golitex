@@ -31,7 +31,7 @@ impl<'a> Runtime<'a> {
             }
         }
 
-        let verify_state_for_children = verify_state.new_state_with_req_ok_set_to_true();
+        let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
 
         let mut verify_what = Vec::with_capacity(and_fact.facts.len());
         for fact in &and_fact.facts {
@@ -75,7 +75,7 @@ impl<'a> Runtime<'a> {
             }
         }
 
-        let verify_state_for_children = verify_state.new_state_with_req_ok_set_to_true();
+        let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
 
         let facts = chain_fact
             .facts()
