@@ -5,7 +5,7 @@ use crate::fact::{
     ExistOrAndChainAtomicFact, Fact, ForallFact, ForallFactWithIff, InFact, IsTupleFact,
     NormalAtomicFact, OrAndChainAtomicFact, OrFact,
 };
-use crate::obj::{FnSetObj, Number, Obj, TupleDimObj};
+use crate::obj::{FnSetObj, Number, Obj, TupleDimObj, ZObj};
 use crate::stmt::parameter_def::ParamDefWithParamType;
 use std::collections::HashMap;
 
@@ -29,7 +29,7 @@ impl InferResult {
         self.infer_facts.push(atomic_fact.to_string());
     }
 
-    pub fn append(&mut self, other_infer_result: InferResult) {
+    pub fn new_infer_result_inside(&mut self, other_infer_result: InferResult) {
         for infer_fact in other_infer_result.infer_facts {
             self.infer_facts.push(infer_fact);
         }
@@ -291,6 +291,28 @@ impl<'a> Runtime<'a> {
                     .known_tuple_obj_in_what_cart
                     .insert(in_fact.element.to_string(), cart.clone());
 
+                Ok(infer_result)
+            }
+            Obj::Range(_) | Obj::ClosedRange(_) => {
+                let inferred_in_z_fact = AtomicFact::InFact(InFact::new(
+                    in_fact.element.clone(),
+                    Obj::ZObj(ZObj::new()),
+                    in_fact.line_file,
+                ));
+                self.store_atomic_fact_without_well_defined_verified_and_infer(&inferred_in_z_fact)
+                    .map_err(|previous_error| {
+                        InferError::new(
+                            format!(
+                                "failed to store inferred integer membership while inferring `{}`",
+                                in_fact
+                            ),
+                            in_fact.line_file,
+                            Some(previous_error.into()),
+                        )
+                    })?;
+
+                let mut infer_result = InferResult::new();
+                infer_result.push_atomic_fact(&inferred_in_z_fact);
                 Ok(infer_result)
             }
             _ => Ok(InferResult::new()),

@@ -24,7 +24,7 @@ impl<'a> Runtime<'a> {
                         know_stmt.line_file,
                     )
                 })?;
-            infer_result.append(fact_infer_result);
+            infer_result.new_infer_result_inside(fact_infer_result);
         }
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(

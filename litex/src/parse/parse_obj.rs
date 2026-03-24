@@ -301,10 +301,11 @@ impl<'a> Runtime<'a> {
         if tb.current_token_is_equal_to(SUB) {
             tb.skip()?;
             let obj = self.parse_number_or_primary_obj_or_fn_obj(tb)?;
+            let negated_obj_can_be_calculated = obj.can_be_calculated();
             Ok(Obj::Mul(Mul::new(
                 Obj::Number(Number::new("-1".to_string())),
                 obj,
-                false,
+                negated_obj_can_be_calculated,
             )))
         } else {
             self.parse_number_or_primary_obj_or_fn_obj(tb)

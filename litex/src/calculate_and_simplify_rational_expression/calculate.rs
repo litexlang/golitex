@@ -53,7 +53,7 @@ impl Obj {
             Obj::Mul(mul) => {
                 let l = mul.left.calculate_to_string();
                 let r = mul.right.calculate_to_string();
-                mul_decimal_str(&l, &r)
+                mul_signed_decimal_str(&l, &r)
             }
             Obj::Mod(mod_obj) => {
                 let l = mod_obj.left.calculate_to_string();
@@ -67,6 +67,31 @@ impl Obj {
             }
             _ => panic!("非算术表达式，无法 calculate_to_string"),
         }
+    }
+}
+
+fn split_sign_and_magnitude(number_string: &str) -> (bool, String) {
+    let trimmed_number_string = number_string.trim();
+    if let Some(stripped_number_string) = trimmed_number_string.strip_prefix('-') {
+        (true, stripped_number_string.trim().to_string())
+    } else {
+        (false, trimmed_number_string.to_string())
+    }
+}
+
+fn mul_signed_decimal_str(left_number_string: &str, right_number_string: &str) -> String {
+    let (left_is_negative, left_magnitude_number_string) =
+        split_sign_and_magnitude(left_number_string);
+    let (right_is_negative, right_magnitude_number_string) =
+        split_sign_and_magnitude(right_number_string);
+    let multiplied_magnitude_number_string =
+        mul_decimal_str(&left_magnitude_number_string, &right_magnitude_number_string);
+    let multiplied_magnitude_is_zero = multiplied_magnitude_number_string == "0";
+    let multiplied_result_is_negative = left_is_negative ^ right_is_negative;
+    if multiplied_result_is_negative && !multiplied_magnitude_is_zero {
+        normalize_decimal_result(&format!("-{}", multiplied_magnitude_number_string))
+    } else {
+        normalize_decimal_result(&multiplied_magnitude_number_string)
     }
 }
 

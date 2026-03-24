@@ -138,7 +138,7 @@ impl<'a> Runtime<'a> {
         for fact in def_let_stmt.facts.iter() {
             let fact_infer_result = self
                 .verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))?;
-            infer_result.append(fact_infer_result);
+            infer_result.new_infer_result_inside(fact_infer_result);
         }
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
@@ -218,7 +218,7 @@ impl<'a> Runtime<'a> {
                 let fact_infer_result = self.store_fact_without_well_defined_verified_and_infer(
                     &ParamType::param_satisfy_param_type_fact(name, &param_def.1),
                 )?;
-                infer_result.append(fact_infer_result);
+                infer_result.new_infer_result_inside(fact_infer_result);
             }
         }
         Ok(infer_result)
@@ -255,7 +255,7 @@ impl<'a> Runtime<'a> {
             self.store_identifier_obj(name)?;
             let fact_infer_result =
                 self.store_fact_without_well_defined_verified_and_infer(fact)?;
-            infer_result.append(fact_infer_result);
+            infer_result.new_infer_result_inside(fact_infer_result);
         }
         Ok(infer_result)
     }
@@ -312,7 +312,7 @@ impl<'a> Runtime<'a> {
         // define params
         let param_infer_result =
             self.define_params_with_type(&have_obj_equal_stmt.param_def, true)?;
-        infer_result.append(param_infer_result);
+        infer_result.new_infer_result_inside(param_infer_result);
 
         // store obj equal to
         for (name, obj) in ParamType::get_all_param_names(&have_obj_equal_stmt.param_def)
@@ -326,7 +326,7 @@ impl<'a> Runtime<'a> {
             ));
             let equal_to_fact_infer_result =
                 self.store_atomic_fact_without_well_defined_verified_and_infer(&equal_to_fact)?;
-            infer_result.append(equal_to_fact_infer_result);
+            infer_result.new_infer_result_inside(equal_to_fact_infer_result);
         }
 
         return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
@@ -397,7 +397,7 @@ impl<'a> Runtime<'a> {
         for fact in args_satisfy_param_types.iter() {
             let fact_infer_result =
                 self.store_atomic_fact_without_well_defined_verified_and_infer(fact)?;
-            infer_result.append(fact_infer_result);
+            infer_result.new_infer_result_inside(fact_infer_result);
         }
 
         let param_to_obj_map = ParamDefWithParamType::param_defs_and_args_to_param_to_arg_map(
@@ -413,7 +413,7 @@ impl<'a> Runtime<'a> {
                 .to_fact();
             let fact_infer_result =
                 self.store_fact_without_well_defined_verified_and_infer(&instantiated_fact)?;
-            infer_result.append(fact_infer_result);
+            infer_result.new_infer_result_inside(fact_infer_result);
         }
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
@@ -485,7 +485,7 @@ impl<'a> Runtime<'a> {
         let forall_infer_result = self
             .store_fact_without_well_defined_verified_and_infer(&forall_as_fact)
             .map_err(ExecStmtError::from)?;
-        infer_result.append(forall_infer_result);
+        infer_result.new_infer_result_inside(forall_infer_result);
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
@@ -663,7 +663,7 @@ impl<'a> Runtime<'a> {
             let forall_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(&forall_as_fact)
                 .map_err(ExecStmtError::from)?;
-            infer_result.append(forall_infer_result);
+            infer_result.new_infer_result_inside(forall_infer_result);
             infer_result.new_fact(&forall_as_fact);
         }
 
