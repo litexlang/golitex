@@ -252,6 +252,7 @@ impl<'a> Runtime<'a> {
         Ok(infer_result)
     }
 
+    // TODO: THIS IS A MESS
     pub fn have_obj_equal_stmt(
         &mut self,
         have_obj_equal_stmt: &HaveObjEqualStmt,
