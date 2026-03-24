@@ -226,34 +226,15 @@ impl<'a> Runtime<'a> {
                 None,
             ));
         }
-        if tb.body.is_empty() {
-            return Err(ParsingError::new(
-                "induc: expects at least one body block".to_string(),
-                tb.line_file,
-                None,
-            ));
+
+        let mut to_prove: Vec<ExistOrAndChainAtomicFact> = vec![];
+        for block in tb.body.iter_mut() {
+            to_prove.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
         }
-        let fact: Vec<ExistOrAndChainAtomicFact> = {
-            let then_block = tb.body.get_mut(0).ok_or_else(|| {
-                ParsingError::new("Expected body".to_string(), tb.line_file, None)
-            })?;
-            then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
-            then_block
-                .body
-                .iter_mut()
-                .map(|b| self.parse_exist_or_and_chain_atomic_fact(b))
-                .collect::<Result<_, _>>()?
-        };
-        let proof: Vec<Stmt> = tb
-            .body
-            .iter_mut()
-            .skip(1)
-            .map(|b| self.parse_stmt(b))
-            .collect::<Result<_, _>>()?;
+
         Ok(Stmt::ByInducAxiomStmt(ByInducAxiomStmt::new(
-            fact,
+            to_prove,
             param,
-            proof,
             induc_from,
             tb.line_file,
         )))

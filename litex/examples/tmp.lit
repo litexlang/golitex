@@ -1,7 +1,17 @@
-enumerate x {1, 2}:
-    prove:
-        x = 1 or x = 2
-    do_nothing
+prop p(a)
 
-forall x {1, 2}:
-    x = 1 or x = 2
+know:
+    $p(0)
+    forall n Z:
+        n >= 0
+        $p(n)
+        =>:
+            $p(n + 1)
+
+by_induc n from 0:
+    $p(n)
+
+forall n Z:
+    n >= 0
+    =>:
+        $p(n)
