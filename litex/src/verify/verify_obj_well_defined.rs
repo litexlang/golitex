@@ -1119,10 +1119,19 @@ impl<'a> Runtime<'a> {
             })?;
         let tuple_dim = cart_obj_where_tuple_obj_is.args.len();
 
-        let index_calculated_string = x
-            .index
-            .calculate_to_string_panic_when_cannot_be_calculated();
-        let index_calculated_obj = Obj::Number(Number::new(index_calculated_string));
+        let index_calculated_string = x.index.normalized_calculated_value();
+
+        let index_calculated_obj = {
+            if let Some(index_calculated_number) = index_calculated_string {
+                Obj::Number(Number::new(index_calculated_number.normalized_value))
+            } else {
+                return Err(WellDefinedError::new(
+                    format!("index {} is not a number", x.index.to_string()),
+                    None,
+                    DEFAULT_LINE_FILE.clone(),
+                ));
+            }
+        };
 
         let index_is_positive_integer_in_z_pos_fact = AtomicFact::InFact(InFact::new(
             index_calculated_obj.clone(),

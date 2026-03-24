@@ -1,5 +1,4 @@
 use super::TokenBlock;
-use crate::common::helper::is_number_string_literally_integer_without_dot;
 use crate::common::keywords::{
     is_key_symbol_or_keyword, ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT,
     CUP, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN_FOR_FN_WITHOUT_PARAMS, FN_FOR_FN_WITH_PARAMS,
@@ -128,16 +127,6 @@ impl<'a> Runtime<'a> {
         if tb.current_token_is_equal_to(POW) {
             tb.skip()?;
             let right = self.parse_obj_hierarchy3(tb)?; // 右结合：右侧可继续接 ^
-            if right.normalized_calculated_value().is_some() {
-                let calculated_exponent =
-                    right.calculate_to_string_panic_when_cannot_be_calculated();
-                if !is_number_string_literally_integer_without_dot(calculated_exponent.clone()) {
-                    // keep as symbolic pow if exponent is not integer
-                }
-                if calculated_exponent.starts_with('-') {
-                    // keep as symbolic pow if exponent is negative
-                }
-            }
             Ok(Obj::Pow(Pow::new(left, right)))
         } else {
             Ok(left)

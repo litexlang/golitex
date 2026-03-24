@@ -167,15 +167,15 @@ fn calculate_obj_pair_to_number_strings(
     left_obj: &Obj,
     right_obj: &Obj,
 ) -> Option<(String, String)> {
-    if !left_obj.normalized_calculated_value().is_some()
-        || !right_obj.normalized_calculated_value().is_some()
-    {
-        return None;
+    match (
+        left_obj.normalized_calculated_value(),
+        right_obj.normalized_calculated_value(),
+    ) {
+        (Some(left_number), Some(right_number)) => {
+            Some((left_number.normalized_value, right_number.normalized_value))
+        }
+        _ => None,
     }
-    Some((
-        left_obj.calculate_to_string_panic_when_cannot_be_calculated(),
-        right_obj.calculate_to_string_panic_when_cannot_be_calculated(),
-    ))
 }
 
 pub fn verify_number_comparison_builtin_rule(atomic_fact: &AtomicFact) -> Option<bool> {
