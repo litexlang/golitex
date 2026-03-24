@@ -89,31 +89,48 @@ impl<'a> Runtime<'a> {
         )))
     }
 
+    /// `by_contra:` then `prove:` block with exactly one atomic fact, optional proof statements, then `impossible` atomic fact.
     pub fn parse_by_contra_axiom_stmt(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, ParsingError> {
         tb.skip_token(BY_CONTRA)?;
-        let to_prove = self.parse_exist_or_and_chain_atomic_fact(tb)?.to_fact();
         tb.skip_token(COLON)?;
         if !tb.exceed_end_of_head() {
             return Err(ParsingError::new(
-                "contra: expected end of head after to_prove".to_string(),
+                "by_contra: expected end of head after by_contra:".to_string(),
                 tb.line_file,
                 None,
             ));
         }
-        if tb.body.len() < 1 {
+        if tb.body.len() < 2 {
             return Err(ParsingError::new(
-                "contra: expects at least one body block (impossible fact)".to_string(),
+                "by_contra: expects prove: block and impossible ... tail".to_string(),
                 tb.line_file,
                 None,
             ));
         }
+        let to_prove = {
+            let prove_block = tb.body.get_mut(0).ok_or_else(|| {
+                ParsingError::new("Expected body".to_string(), tb.line_file, None)
+            })?;
+            prove_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
+            if prove_block.body.len() != 1 {
+                return Err(ParsingError::new(
+                    "by_contra: prove: expects exactly one atomic fact block".to_string(),
+                    prove_block.line_file,
+                    None,
+                ));
+            }
+            let atomic_fact_block = prove_block.body.get_mut(0).ok_or_else(|| {
+                ParsingError::new("Expected body".to_string(), prove_block.line_file, None)
+            })?;
+            self.parse_atomic_fact(atomic_fact_block, true)?
+        };
         let n = tb.body.len();
-        let proof_stmt_block_count = n.saturating_sub(1);
+        let proof_stmt_block_count = n.saturating_sub(2);
         let mut proof = Vec::with_capacity(proof_stmt_block_count);
-        for block in tb.body[0..n - 1].iter_mut() {
+        for block in tb.body[1..n - 1].iter_mut() {
             proof.push(self.parse_stmt(block)?);
         }
         let mut last_block = tb

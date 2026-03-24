@@ -75,11 +75,12 @@ impl<'a> Runtime<'a> {
         &mut self,
         stmt: &ByContraAxiomStmt,
     ) -> Result<NonErrStmtExecResult, StmtError> {
-        self.verify_fact_well_defined(&stmt.to_prove, &VerifyState::new(0, false))
+        let to_prove_fact = Fact::AtomicFact(stmt.to_prove.clone());
+        self.verify_fact_well_defined(&to_prove_fact, &VerifyState::new(0, false))
             .map_err(|e| {
                 StmtError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
-                    format!("by_contra: failed to prove `{}`", stmt.to_prove),
+                    format!("by_contra: failed to prove `{}`", to_prove_fact),
                     Some(e.into()),
                     stmt.line_file,
                 ))
@@ -90,6 +91,19 @@ impl<'a> Runtime<'a> {
             let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
 
             self.runtime_context.push_env();
+
+            // know reverse of to_prove
+            let reverse_to_prove_fact = stmt.to_prove.make_reversed();
+            self.store_atomic_fact_without_well_defined_verified_and_infer(&reverse_to_prove_fact)
+                .map_err(|store_fact_error| {
+                    StmtError::ExecError(ExecStmtError::new(
+                        stmt.stmt_type_name(),
+                        format!("by_contra: failed to know reverse of `{}`", to_prove_fact),
+                        Some(store_fact_error.into()),
+                        stmt.line_file,
+                    ))
+                })?;
+
             for proof_stmt in stmt.proof.iter() {
                 let exec_stmt_result = self.exec_stmt(proof_stmt);
                 match exec_stmt_result {
@@ -116,18 +130,25 @@ impl<'a> Runtime<'a> {
             ));
         }
 
-        // store to_prove
-        let infer_result =
-            self.store_fact_without_well_defined_verified_and_infer(&stmt.to_prove)?;
+        let infer_result = self
+            .store_fact_without_well_defined_verified_and_infer(&to_prove_fact)
+            .map_err(|store_fact_error| {
+                StmtError::ExecError(ExecStmtError::new(
+                    stmt.stmt_type_name(),
+                    format!("by_contra: failed to release `{}`", to_prove_fact),
+                    Some(store_fact_error.into()),
+                    stmt.line_file,
+                ))
+            })?;
 
-        return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
                 stmt.to_string(),
                 infer_result,
                 exec_proof_inside_results,
                 stmt.line_file,
             ),
-        ));
+        ))
     }
 
     pub fn exec_enumerate_axiom_stmt(

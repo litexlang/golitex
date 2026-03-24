@@ -1,3 +1,12 @@
-by_contra 1 != 0:
-    1 + 2 = 3
-    impossible 1 = 0
+prop p(a)
+know forall a R:
+    $p(a + 1)
+    =>:
+        $p(a)
+know not $p(0)
+
+by_contra:
+    prove:
+        not $p(1)
+    $p(1)
+    impossible $p(0)
