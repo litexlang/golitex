@@ -238,6 +238,7 @@ impl ParamDefWithParamSet {
                     args.len()
                 ),
                 None,
+                vec![],
                 DEFAULT_LINE_FILE.clone(),
             )));
         }
@@ -340,6 +341,7 @@ impl ParamDefWithParamType {
                     args.len()
                 ),
                 None,
+                vec![],
                 DEFAULT_LINE_FILE.clone(),
             )));
         }
@@ -378,6 +380,7 @@ impl ParamDefWithParamType {
                     args.len()
                 ),
                 None,
+                vec![],
                 DEFAULT_LINE_FILE.clone(),
             )));
         }
@@ -402,6 +405,7 @@ impl ParamDefWithParamType {
                             "internal error: argument index out of range for boxed args"
                                 .to_string(),
                             None,
+                            vec![],
                             DEFAULT_LINE_FILE.clone(),
                         )));
                     }
