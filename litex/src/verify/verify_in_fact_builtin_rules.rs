@@ -3,6 +3,7 @@ use crate::common::keywords::{
 };
 use crate::error::VerifyError;
 use crate::execute::Runtime;
+use crate::fact::AtomicFact;
 use crate::fact::InFact;
 use crate::infer::InferResult;
 use crate::obj::Obj;
@@ -200,7 +201,55 @@ impl<'a> Runtime<'a> {
                 &in_fact.element,
                 in_fact.line_file,
             )),
+            (_, Obj::RObj(_)) => {
+                self.verify_in_fact_into_r_by_known_standard_subset_membership(in_fact)
+            }
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
+    }
+
+    fn verify_in_fact_into_r_by_known_standard_subset_membership(
+        &mut self,
+        in_fact: &InFact,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        let standard_subset_set_objs_of_r = vec![
+            Obj::NPosObj(crate::obj::NPosObj::new()),
+            Obj::NObj(crate::obj::NObj::new()),
+            Obj::QPos(crate::obj::QPos::new()),
+            Obj::QNeg(crate::obj::QNeg::new()),
+            Obj::QNz(crate::obj::QNz::new()),
+            Obj::QObj(crate::obj::QObj::new()),
+            Obj::ZNeg(crate::obj::ZNeg::new()),
+            Obj::ZNz(crate::obj::ZNz::new()),
+            Obj::ZObj(crate::obj::ZObj::new()),
+            Obj::RPos(crate::obj::RPos::new()),
+            Obj::RNeg(crate::obj::RNeg::new()),
+            Obj::RNz(crate::obj::RNz::new()),
+        ];
+        for standard_subset_set_obj in standard_subset_set_objs_of_r.iter() {
+            let in_fact_into_standard_subset = AtomicFact::InFact(InFact::new(
+                in_fact.element.clone(),
+                standard_subset_set_obj.clone(),
+                in_fact.line_file,
+            ));
+            let verify_result = self
+                .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
+                    &in_fact_into_standard_subset,
+                )?;
+            if verify_result.is_true() {
+                return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                    FactVerifiedByBuiltinRules::new(
+                        format!("{} {}{} {}", in_fact.element, FACT_PREFIX, IN, R),
+                        format!(
+                            "{} in {} implies in {}",
+                            in_fact.element, standard_subset_set_obj, R
+                        ),
+                        InferResult::new(),
+                        in_fact.line_file,
+                    ),
+                ));
+            }
+        }
+        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 }
