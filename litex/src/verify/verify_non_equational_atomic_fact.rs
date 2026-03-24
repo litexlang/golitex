@@ -13,11 +13,22 @@ impl<'a> Runtime<'a> {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
+        option_fact_with_args_calculated: Option<AtomicFact>,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         let mut result =
             self.verify_non_equational_atomic_fact_with_builtin_rules(atomic_fact, verify_state)?;
         if result.is_true() {
             return Ok(result);
+        }
+
+        if let Some(fact_with_args_calculated) = &option_fact_with_args_calculated {
+            result = self
+                .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
+                    &fact_with_args_calculated,
+                )?;
+            if result.is_true() {
+                return Ok(result);
+            }
         }
 
         result = self.verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
@@ -27,12 +38,32 @@ impl<'a> Runtime<'a> {
             return Ok(result);
         }
 
+        if let Some(fact_with_args_calculated) = &option_fact_with_args_calculated {
+            result = self
+                .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
+                    &fact_with_args_calculated,
+                )?;
+            if result.is_true() {
+                return Ok(result);
+            }
+        }
+
         if verify_state.is_round_0() {
             let verify_state_add_one_round = verify_state.new_state_with_round_increased();
             result = self
                 .verify_atomic_fact_with_known_forall(atomic_fact, &verify_state_add_one_round)?;
             if result.is_true() {
                 return Ok(result);
+            }
+
+            if let Some(fact_with_args_calculated) = &option_fact_with_args_calculated {
+                result = self
+                    .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
+                        &fact_with_args_calculated,
+                    )?;
+                if result.is_true() {
+                    return Ok(result);
+                }
             }
         }
 
@@ -48,7 +79,8 @@ impl<'a> Runtime<'a> {
         } else if atomic_fact.number_of_args() == 2 {
             self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params(atomic_fact)
         } else {
-            self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params(atomic_fact)
+            self
+                .verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params(atomic_fact)
         }
     }
 
