@@ -1,4 +1,4 @@
-use crate::error::{StmtError, VerifyError};
+use crate::error::{RuntimeError, VerifyError};
 use crate::execute::Runtime;
 use crate::fact::{ForallFact, ForallFactWithIff};
 use crate::infer::InferResult;
@@ -26,7 +26,7 @@ impl<'a> Runtime<'a> {
             if let Err(e) = self.verify_forall_fact_well_defined(forall_fact, verify_state) {
                 return Err(VerifyError::new(
                     fact_display_string,
-                    Some(StmtError::WellDefinedError(e)),
+                    Some(RuntimeError::WellDefinedError(e)),
                     fact_line_file,
                 ));
             }
@@ -53,7 +53,7 @@ impl<'a> Runtime<'a> {
                 .map_err(|e| {
                     VerifyError::new(
                         format!("failed to define params in forall: {}", e.body_string()),
-                        Some(StmtError::ExecError(e)),
+                        Some(RuntimeError::ExecError(e)),
                         forall_fact.line_file,
                     )
                 })?;
@@ -68,7 +68,7 @@ impl<'a> Runtime<'a> {
                 .map_err(|e| {
                     VerifyError::new(
                         format!("failed to assume dom fact in forall: {}", e.body_string()),
-                        Some(StmtError::StoreFactError(e)),
+                        Some(RuntimeError::StoreFactError(e)),
                         forall_fact.line_file,
                     )
                 })?;
@@ -113,7 +113,7 @@ impl<'a> Runtime<'a> {
             {
                 return Err(VerifyError::new(
                     fact_display_string.clone(),
-                    Some(StmtError::WellDefinedError(e)),
+                    Some(RuntimeError::WellDefinedError(e)),
                     line_file,
                 ));
             }

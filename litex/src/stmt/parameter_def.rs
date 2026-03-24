@@ -1,7 +1,7 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::helper::vec_to_string_join_by_comma;
 use crate::common::keywords::{FINITE_SET, NONEMPTY_SET, SET};
-use crate::error::{ExecStmtError, StmtError};
+use crate::error::{ExecStmtError, RuntimeError};
 use crate::fact::{AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact};
 use crate::obj::{Identifier, Obj};
 use std::collections::HashMap;
@@ -106,23 +106,23 @@ impl ParamType {
     pub fn param_satisfy_param_type_fact(param_name: &str, param_type: &ParamType) -> Fact {
         match param_type {
             ParamType::Obj(obj) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                Obj::Identifier(Identifier::new(param_name.to_string())),
+                Obj::Identifier(Identifier::new(param_name.to_string(), None)),
                 obj.clone(),
                 DEFAULT_LINE_FILE.clone(),
             ))),
             ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
-                Obj::Identifier(Identifier::new(param_name.to_string())),
+                Obj::Identifier(Identifier::new(param_name.to_string(), None)),
                 DEFAULT_LINE_FILE.clone(),
             ))),
             ParamType::NonemptySet(_) => {
                 Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
-                    Obj::Identifier(Identifier::new(param_name.to_string())),
+                    Obj::Identifier(Identifier::new(param_name.to_string(), None)),
                     DEFAULT_LINE_FILE.clone(),
                 )))
             }
             ParamType::FiniteSet(_) => {
                 Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
-                    Obj::Identifier(Identifier::new(param_name.to_string())),
+                    Obj::Identifier(Identifier::new(param_name.to_string(), None)),
                     DEFAULT_LINE_FILE.clone(),
                 )))
             }
@@ -164,7 +164,7 @@ impl ParamDefWithParamSet {
         let mut facts = Vec::with_capacity(self.0.len());
         for name in self.0.iter() {
             let fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                Obj::Identifier(Identifier::new(name.clone())),
+                Obj::Identifier(Identifier::new(name.clone(), None)),
                 self.1.clone(),
                 DEFAULT_LINE_FILE.clone(),
             )));
@@ -190,7 +190,7 @@ impl ParamDefWithParamSet {
     pub fn facts_for_args_satisfy_param_def_with_set_vec(
         param_defs: &Vec<ParamDefWithParamSet>,
         args: &Vec<Obj>,
-    ) -> Result<Vec<AtomicFact>, StmtError> {
+    ) -> Result<Vec<AtomicFact>, RuntimeError> {
         let instantiated_param_sets =
             Self::instantiate_param_def_with_set_one_by_one(param_defs, args)?;
         let flat_param_sets =
@@ -227,10 +227,10 @@ impl ParamDefWithParamSet {
     fn instantiate_param_def_with_set_one_by_one(
         param_defs: &Vec<ParamDefWithParamSet>,
         args: &Vec<Obj>,
-    ) -> Result<Vec<Obj>, StmtError> {
+    ) -> Result<Vec<Obj>, RuntimeError> {
         let total_param_count = Self::number_of_params_in_param_def_with_set_def(param_defs);
         if total_param_count != args.len() {
-            return Err(StmtError::ExecError(ExecStmtError::new(
+            return Err(RuntimeError::ExecError(ExecStmtError::new(
                 "".to_string(),
                 format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
@@ -268,7 +268,7 @@ impl ParamDefWithParamType {
     pub fn facts_for_boxed_args_satisfy_param_def_with_type_vec(
         param_defs: &Vec<ParamDefWithParamType>,
         args: &Vec<Box<Obj>>,
-    ) -> Result<Vec<AtomicFact>, StmtError> {
+    ) -> Result<Vec<AtomicFact>, RuntimeError> {
         let instantiated_types =
             ParamDefWithParamType::instantiate_param_def_with_type_one_by_one_boxed(
                 param_defs, args,
@@ -288,7 +288,7 @@ impl ParamDefWithParamType {
     pub fn facts_for_args_satisfy_param_def_with_type_vec(
         param_defs: &Vec<ParamDefWithParamType>,
         args: &Vec<Obj>,
-    ) -> Result<Vec<AtomicFact>, StmtError> {
+    ) -> Result<Vec<AtomicFact>, RuntimeError> {
         let instantiated_types =
             ParamDefWithParamType::instantiate_param_def_with_type_one_by_one(param_defs, args)?;
         let flat_types = ParamDefWithParamType::flat_instantiated_types_for_args(
@@ -330,10 +330,10 @@ impl ParamDefWithParamType {
     fn instantiate_param_def_with_type_one_by_one(
         param_defs: &Vec<ParamDefWithParamType>,
         args: &Vec<Obj>,
-    ) -> Result<Vec<ParamType>, StmtError> {
+    ) -> Result<Vec<ParamType>, RuntimeError> {
         let total_param_count = Self::number_of_params_in_param_def_with_type_def(param_defs);
         if total_param_count != args.len() {
-            return Err(StmtError::ExecError(ExecStmtError::new(
+            return Err(RuntimeError::ExecError(ExecStmtError::new(
                 "".to_string(),
                 format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
@@ -369,10 +369,10 @@ impl ParamDefWithParamType {
     fn instantiate_param_def_with_type_one_by_one_boxed(
         param_defs: &Vec<ParamDefWithParamType>,
         args: &Vec<Box<Obj>>,
-    ) -> Result<Vec<ParamType>, StmtError> {
+    ) -> Result<Vec<ParamType>, RuntimeError> {
         let total_param_count = Self::number_of_params_in_param_def_with_type_def(param_defs);
         if total_param_count != args.len() {
-            return Err(StmtError::ExecError(ExecStmtError::new(
+            return Err(RuntimeError::ExecError(ExecStmtError::new(
                 "".to_string(),
                 format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
@@ -400,7 +400,7 @@ impl ParamDefWithParamType {
                 let arg_obj = match args.get(arg_index) {
                     Some(boxed_arg) => (**boxed_arg).clone(),
                     None => {
-                        return Err(StmtError::ExecError(ExecStmtError::new(
+                        return Err(RuntimeError::ExecError(ExecStmtError::new(
                             "".to_string(),
                             "internal error: argument index out of range for boxed args"
                                 .to_string(),

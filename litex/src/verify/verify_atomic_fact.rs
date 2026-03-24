@@ -1,4 +1,4 @@
-use crate::error::StmtError;
+use crate::error::RuntimeError;
 use crate::error::VerifyError;
 use crate::execute::Runtime;
 use crate::fact::AtomicFact;
@@ -21,7 +21,7 @@ impl<'a> Runtime<'a> {
             if let Err(e) = self.verify_atomic_fact_well_defined(fact, verify_state) {
                 return Err(VerifyError::new(
                     fact.to_string(),
-                    Some(StmtError::WellDefinedError(e)),
+                    Some(RuntimeError::WellDefinedError(e)),
                     fact.line_file(),
                 ));
             }
@@ -33,11 +33,19 @@ impl<'a> Runtime<'a> {
             AtomicFact::EqualFact(equal_fact) => {
                 self.verify_equal_fact(equal_fact, &next_verify_state)
             }
-            _ => self.verify_non_equational_atomic_fact(
-                fact,
-                &next_verify_state,
-                Some(fact.calculate_args()),
-            ),
+            _ => {
+                let (calculated_atomic_fact, any_argument_replaced) = fact.calculate_args();
+                let maybe_calculated_atomic_fact = if any_argument_replaced {
+                    Some(calculated_atomic_fact)
+                } else {
+                    None
+                };
+                self.verify_non_equational_atomic_fact(
+                    fact,
+                    &next_verify_state,
+                    maybe_calculated_atomic_fact,
+                )
+            }
         }
     }
 }

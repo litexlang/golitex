@@ -1627,13 +1627,13 @@ impl AtomicFact {
     fn body_vec_after_calculate_each_calculable_arg(original_body: &Vec<Obj>) -> Vec<Obj> {
         let mut next_body = Vec::new();
         for obj in original_body {
-            next_body.push(obj.replace_with_numeric_result_if_can_be_calculated());
+            next_body.push(obj.replace_with_numeric_result_if_can_be_calculated().0);
         }
         next_body
     }
 
-    pub fn calculate_args(&self) -> AtomicFact {
-        match self {
+    pub fn calculate_args(&self) -> (AtomicFact, bool) {
+        let calculated_atomic_fact = match self {
             AtomicFact::NormalAtomicFact(inner) => AtomicFact::NormalAtomicFact(
                 NormalAtomicFact::new(
                     inner.predicate.clone(),
@@ -1651,76 +1651,76 @@ impl AtomicFact {
             AtomicFact::EqualFact(inner) => AtomicFact::EqualFact(EqualFact::new(
                 inner
                     .left
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner
                     .right
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::NotEqualFact(inner) => AtomicFact::NotEqualFact(NotEqualFact::new(
                 inner
                     .left
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner
                     .right
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::LessFact(inner) => AtomicFact::LessFact(LessFact::new(
                 inner
                     .left
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner
                     .right
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::NotLessFact(inner) => AtomicFact::NotLessFact(NotLessFact::new(
                 inner
                     .left
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner
                     .right
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::GreaterFact(inner) => AtomicFact::GreaterFact(GreaterFact::new(
                 inner
                     .left
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner
                     .right
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::NotGreaterFact(inner) => {
                 AtomicFact::NotGreaterFact(NotGreaterFact::new(
                     inner
                         .left
-                        .replace_with_numeric_result_if_can_be_calculated(),
+                        .replace_with_numeric_result_if_can_be_calculated().0,
                     inner
                         .right
-                        .replace_with_numeric_result_if_can_be_calculated(),
+                        .replace_with_numeric_result_if_can_be_calculated().0,
                     inner.line_file,
                 ))
             }
             AtomicFact::LessEqualFact(inner) => AtomicFact::LessEqualFact(LessEqualFact::new(
                 inner
                     .left
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner
                     .right
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::NotLessEqualFact(inner) => {
                 AtomicFact::NotLessEqualFact(NotLessEqualFact::new(
                     inner
                         .left
-                        .replace_with_numeric_result_if_can_be_calculated(),
+                        .replace_with_numeric_result_if_can_be_calculated().0,
                     inner
                         .right
-                        .replace_with_numeric_result_if_can_be_calculated(),
+                        .replace_with_numeric_result_if_can_be_calculated().0,
                     inner.line_file,
                 ))
             }
@@ -1728,10 +1728,10 @@ impl AtomicFact {
                 AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
                     inner
                         .left
-                        .replace_with_numeric_result_if_can_be_calculated(),
+                        .replace_with_numeric_result_if_can_be_calculated().0,
                     inner
                         .right
-                        .replace_with_numeric_result_if_can_be_calculated(),
+                        .replace_with_numeric_result_if_can_be_calculated().0,
                     inner.line_file,
                 ))
             }
@@ -1739,129 +1739,131 @@ impl AtomicFact {
                 AtomicFact::NotGreaterEqualFact(NotGreaterEqualFact::new(
                     inner
                         .left
-                        .replace_with_numeric_result_if_can_be_calculated(),
+                        .replace_with_numeric_result_if_can_be_calculated().0,
                     inner
                         .right
-                        .replace_with_numeric_result_if_can_be_calculated(),
+                        .replace_with_numeric_result_if_can_be_calculated().0,
                     inner.line_file,
                 ))
             }
             AtomicFact::IsSetFact(inner) => AtomicFact::IsSetFact(IsSetFact::new(
-                inner.set.replace_with_numeric_result_if_can_be_calculated(),
+                inner.set.replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::NotIsSetFact(inner) => AtomicFact::NotIsSetFact(NotIsSetFact::new(
-                inner.set.replace_with_numeric_result_if_can_be_calculated(),
+                inner.set.replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::IsNonemptySetFact(inner) => {
                 AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
-                    inner.set.replace_with_numeric_result_if_can_be_calculated(),
+                    inner.set.replace_with_numeric_result_if_can_be_calculated().0,
                     inner.line_file,
                 ))
             }
             AtomicFact::NotIsNonemptySetFact(inner) => {
                 AtomicFact::NotIsNonemptySetFact(NotIsNonemptySetFact::new(
-                    inner.set.replace_with_numeric_result_if_can_be_calculated(),
+                    inner.set.replace_with_numeric_result_if_can_be_calculated().0,
                     inner.line_file,
                 ))
             }
             AtomicFact::IsFiniteSetFact(inner) => {
                 AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
-                    inner.set.replace_with_numeric_result_if_can_be_calculated(),
+                    inner.set.replace_with_numeric_result_if_can_be_calculated().0,
                     inner.line_file,
                 ))
             }
             AtomicFact::NotIsFiniteSetFact(inner) => {
                 AtomicFact::NotIsFiniteSetFact(NotIsFiniteSetFact::new(
-                    inner.set.replace_with_numeric_result_if_can_be_calculated(),
+                    inner.set.replace_with_numeric_result_if_can_be_calculated().0,
                     inner.line_file,
                 ))
             }
             AtomicFact::InFact(inner) => AtomicFact::InFact(InFact::new(
                 inner
                     .element
-                    .replace_with_numeric_result_if_can_be_calculated(),
-                inner.set.replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
+                inner.set.replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::NotInFact(inner) => AtomicFact::NotInFact(NotInFact::new(
                 inner
                     .element
-                    .replace_with_numeric_result_if_can_be_calculated(),
-                inner.set.replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
+                inner.set.replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::IsCartFact(inner) => AtomicFact::IsCartFact(IsCartFact::new(
-                inner.set.replace_with_numeric_result_if_can_be_calculated(),
+                inner.set.replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::NotIsCartFact(inner) => AtomicFact::NotIsCartFact(NotIsCartFact::new(
-                inner.set.replace_with_numeric_result_if_can_be_calculated(),
+                inner.set.replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::IsTupleFact(inner) => AtomicFact::IsTupleFact(IsTupleFact::new(
-                inner.set.replace_with_numeric_result_if_can_be_calculated(),
+                inner.set.replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::NotIsTupleFact(inner) => AtomicFact::NotIsTupleFact(NotIsTupleFact::new(
-                inner.set.replace_with_numeric_result_if_can_be_calculated(),
+                inner.set.replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::SubsetFact(inner) => AtomicFact::SubsetFact(SubsetFact::new(
                 inner
                     .left
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner
                     .right
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::NotSubsetFact(inner) => AtomicFact::NotSubsetFact(NotSubsetFact::new(
                 inner
                     .left
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner
                     .right
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::SupersetFact(inner) => AtomicFact::SupersetFact(SupersetFact::new(
                 inner
                     .left
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner
                     .right
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::NotSupersetFact(inner) => {
                 AtomicFact::NotSupersetFact(NotSupersetFact::new(
                     inner
                         .left
-                        .replace_with_numeric_result_if_can_be_calculated(),
+                        .replace_with_numeric_result_if_can_be_calculated().0,
                     inner
                         .right
-                        .replace_with_numeric_result_if_can_be_calculated(),
+                        .replace_with_numeric_result_if_can_be_calculated().0,
                     inner.line_file,
                 ))
             }
             AtomicFact::RestrictFact(inner) => AtomicFact::RestrictFact(RestrictFact::new(
-                inner.obj.replace_with_numeric_result_if_can_be_calculated(),
+                inner.obj.replace_with_numeric_result_if_can_be_calculated().0,
                 inner
                     .obj_can_restrict_to_fn_set
-                    .replace_with_numeric_result_if_can_be_calculated(),
+                    .replace_with_numeric_result_if_can_be_calculated().0,
                 inner.line_file,
             )),
             AtomicFact::NotRestrictFact(inner) => {
                 AtomicFact::NotRestrictFact(NotRestrictFact::new(
-                    inner.obj.replace_with_numeric_result_if_can_be_calculated(),
+                    inner.obj.replace_with_numeric_result_if_can_be_calculated().0,
                     inner
                         .obj_cannot_restrict_to_fn_set
-                        .replace_with_numeric_result_if_can_be_calculated(),
+                        .replace_with_numeric_result_if_can_be_calculated().0,
                     inner.line_file,
                 ))
             }
-        }
+        };
+        let any_argument_replaced = calculated_atomic_fact.to_string() != self.to_string();
+        (calculated_atomic_fact, any_argument_replaced)
     }
 }

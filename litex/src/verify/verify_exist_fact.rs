@@ -1,5 +1,5 @@
 use crate::environment::Environment;
-use crate::error::{StmtError, VerifyError};
+use crate::error::{RuntimeError, VerifyError};
 use crate::execute::Runtime;
 use crate::fact::ExistFact;
 use crate::obj::{Identifier, Obj};
@@ -27,7 +27,7 @@ impl<'a> Runtime<'a> {
             if let Err(e) = self.verify_exist_fact_well_defined(exist_fact, verify_state) {
                 return Err(VerifyError::new(
                     fact_display_string,
-                    Some(StmtError::WellDefinedError(e)),
+                    Some(RuntimeError::WellDefinedError(e)),
                     fact_line_file,
                 ));
             }
@@ -114,7 +114,7 @@ impl<'a> Runtime<'a> {
 
                 param_to_arg_map.insert(
                     original_name.clone(),
-                    Obj::Identifier(Identifier::new(normalized_name.clone())),
+                    Obj::Identifier(Identifier::new(normalized_name.clone(), None)),
                 );
                 new_param_names.push(normalized_name);
             }

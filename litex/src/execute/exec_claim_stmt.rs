@@ -1,5 +1,5 @@
 use super::Runtime;
-use crate::error::StmtError;
+use crate::error::RuntimeError;
 use crate::error::{ExecStmtError, UnknownError};
 use crate::fact::Fact;
 use crate::fact::ForallFact;
@@ -13,10 +13,10 @@ impl<'a> Runtime<'a> {
         &mut self,
         stmt: &ClaimStmt,
         forall_fact: &ForallFact,
-    ) -> Result<NonErrStmtExecResult, StmtError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         self.define_params_with_type(&forall_fact.params_def_with_type, false)
             .map_err(|e| {
-                StmtError::ExecError(ExecStmtError::new(
+                RuntimeError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     "claim: failed to define forall params".to_string(),
                     Some(e.into()),
@@ -39,7 +39,7 @@ impl<'a> Runtime<'a> {
             let result =
                 self.verify_exist_or_and_chain_atomic_fact(then_fact, &VerifyState::new(0, false))?;
             if result.is_unknown() {
-                return Err(StmtError::UnknownError(UnknownError::new(
+                return Err(RuntimeError::UnknownError(UnknownError::new(
                     format!("claim failed: cannot prove `{}`", stmt.fact),
                     stmt.line_file,
                     None,
@@ -60,7 +60,7 @@ impl<'a> Runtime<'a> {
     fn exec_claim_stmt_body_fact_except_forall_fact(
         &mut self,
         stmt: &ClaimStmt,
-    ) -> Result<NonErrStmtExecResult, StmtError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         for proof_stmt in stmt.proof.iter() {
             self.exec_stmt(proof_stmt)?;
         }
@@ -77,13 +77,13 @@ impl<'a> Runtime<'a> {
         ))
     }
 
-    pub fn exec_claim_stmt(&mut self, stmt: &ClaimStmt) -> Result<NonErrStmtExecResult, StmtError> {
+    pub fn exec_claim_stmt(&mut self, stmt: &ClaimStmt) -> Result<NonErrStmtExecResult, RuntimeError> {
         match &stmt.fact {
             Fact::ForallFactWithIff(_) => unreachable!("claim forall with iff is not supported"),
             Fact::ForallFact(forall_fact) => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        StmtError::ExecError(ExecStmtError::new(
+                        RuntimeError::ExecError(ExecStmtError::new(
                             stmt.stmt_type_name(),
                             "claim: fact is not well defined".to_string(),
                             Some(e.into()),
@@ -101,7 +101,7 @@ impl<'a> Runtime<'a> {
                     return Err(e);
                 } else if let Ok(result) = body_result {
                     if result.is_unknown() {
-                        return Err(StmtError::UnknownError(UnknownError::new(
+                        return Err(RuntimeError::UnknownError(UnknownError::new(
                             format!("claim failed: cannot prove `{}`", stmt.fact),
                             stmt.line_file,
                             None,
@@ -123,7 +123,7 @@ impl<'a> Runtime<'a> {
             _ => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        StmtError::ExecError(ExecStmtError::new(
+                        RuntimeError::ExecError(ExecStmtError::new(
                             stmt.stmt_type_name(),
                             "claim: fact is not well defined".to_string(),
                             Some(e.into()),
