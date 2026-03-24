@@ -1,4 +1,4 @@
-use super::Stmt;
+use super::{parameter_def::ParamDefWithParamType, Stmt};
 use crate::common::helper::{
     add_four_spaces_at_beginning, vec_pair_to_string,
     vec_to_string_add_four_spaces_at_beginning_of_each_line,
@@ -7,9 +7,12 @@ use crate::common::keywords::{
     BY_CART_DEF, BY_CASES, BY_CONTRA, BY_EXTENSION, BY_FN_DEF, BY_INDUC, CASE, COLON, ENUMERATE,
     EQUAL, FOR, FROM, IMPOSSIBLE, PROVE, RIGHT_ARROW,
 };
-use crate::fact::{AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact};
-use crate::obj::{Cart, ClosedRange, ListSet, Obj, Range};
-use crate::stmt::parameter_def::{ParamDefWithParamType, ParamType};
+use crate::fact::{
+    AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, GreaterEqualFact,
+};
+use crate::obj::Identifier;
+use crate::obj::{Cart, ClosedRange, ListSet, Obj, Range, ZObj};
+use crate::stmt::parameter_def::ParamType;
 use std::fmt;
 
 fn fact_to_exist_or_and_chain_atomic_fact_for_forall_then_body(
@@ -67,9 +70,8 @@ pub struct ForAxiomStmt {
 
 // prove fact is true by induction
 pub struct ByInducAxiomStmt {
-    pub fact: Vec<ExistOrAndChainAtomicFact>,
+    pub to_prove: Vec<ExistOrAndChainAtomicFact>,
     pub param: String,
-    pub proof: Vec<Stmt>,
     pub induc_from: Obj,
     pub line_file: (usize, usize),
 }
@@ -278,14 +280,12 @@ impl ByInducAxiomStmt {
     pub fn new(
         fact: Vec<ExistOrAndChainAtomicFact>,
         param: String,
-        proof: Vec<Stmt>,
         induc_from: Obj,
         line_file: (usize, usize),
     ) -> Self {
         ByInducAxiomStmt {
-            fact,
+            to_prove: fact,
             param,
-            proof,
             induc_from,
             line_file,
         }
@@ -300,16 +300,13 @@ impl fmt::Display for ByInducAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {} {} {}{}\n{}\n{}{}\n{}",
+            "{} {} {} {}{}\n{}",
             BY_INDUC,
             self.param,
             FROM,
             self.induc_from,
             COLON,
-            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.fact, 1),
-            add_four_spaces_at_beginning(PROVE.to_string(), 1),
-            COLON,
-            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2)
+            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1),
         )
     }
 }
@@ -448,5 +445,32 @@ impl ByCartDefAxiomStmt {
 
     pub fn stmt_type_name(&self) -> String {
         "ByCartDefAxiomStmt".to_string()
+    }
+}
+
+impl ByInducAxiomStmt {
+    pub fn to_corresponding_forall_fact(&self) -> Result<Fact, String> {
+        let mut params_def_with_type: Vec<ParamDefWithParamType> = Vec::new();
+        params_def_with_type.push(ParamDefWithParamType(
+            vec![self.param.clone()],
+            ParamType::Obj(Obj::ZObj(ZObj::new())),
+        ));
+        let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+
+        dom_facts.push(ExistOrAndChainAtomicFact::AtomicFact(
+            AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                Obj::Identifier(Identifier::new(self.param.clone())),
+                self.induc_from.clone(),
+                self.line_file,
+            )),
+        ));
+
+        let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        for fact in self.to_prove.iter() {
+            then_facts.push(fact.clone());
+        }
+        let forall_fact =
+            ForallFact::new(params_def_with_type, dom_facts, then_facts, self.line_file);
+        Ok(Fact::ForallFact(forall_fact))
     }
 }

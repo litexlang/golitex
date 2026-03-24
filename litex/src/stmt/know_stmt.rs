@@ -1,3 +1,5 @@
+use crate::common::helper::vec_to_string_add_four_spaces_at_beginning_of_each_line;
+use crate::common::keywords::{COLON, KNOW};
 use crate::fact::Fact;
 use std::fmt;
 
@@ -18,14 +20,16 @@ impl KnowStmt {
 
 impl fmt::Display for KnowStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "know {}",
-            self.facts
-                .iter()
-                .map(|fact| fact.to_string())
-                .collect::<Vec<String>>()
-                .join(", ")
-        )
+        if self.facts.len() == 1 {
+            write!(f, "know {}", self.facts[0])
+        } else {
+            write!(
+                f,
+                "{}{}\n{}",
+                KNOW,
+                COLON,
+                vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1),
+            )
+        }
     }
 }
