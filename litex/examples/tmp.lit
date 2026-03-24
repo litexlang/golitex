@@ -1,4 +1,4 @@
-have a R = 2
-a = 2
-2 + 1 = 3
-a + 1 = 3
+have a, b R
+know a = b
+know b + 2 = 3
+a + 2 = b + 2
