@@ -733,20 +733,22 @@ impl<'a> Runtime<'a> {
         number_like_obj: &Obj,
         line_file: (usize, usize),
     ) -> Result<String, RuntimeError> {
-        if !number_like_obj.normalized_calculated_value().is_some() {
-            return Err(RuntimeError::ExecError(ExecStmtError::new(
-                "ForAxiomStmt".to_string(),
-                format!(
-                    "for: range boundary `{}` must be a calculable number expression",
-                    number_like_obj
-                ),
-                None,
-                vec![],
-                line_file,
-            )));
-        }
-        let calculated_string =
-            number_like_obj.calculate_to_string_panic_when_cannot_be_calculated();
+        let calculated_string = match number_like_obj.normalized_calculated_value() {
+            Some(calculated_number) => calculated_number.normalized_value,
+            None => {
+                return Err(RuntimeError::ExecError(ExecStmtError::new(
+                    "ForAxiomStmt".to_string(),
+                    format!(
+                        "for: range boundary `{}` must be a calculable number expression",
+                        number_like_obj
+                    ),
+                    None,
+                    vec![],
+                    line_file,
+                )));
+            }
+        };
+
         if !is_number_string_literally_integer_without_dot(calculated_string.clone()) {
             return Err(RuntimeError::ExecError(ExecStmtError::new(
                 "ForAxiomStmt".to_string(),
