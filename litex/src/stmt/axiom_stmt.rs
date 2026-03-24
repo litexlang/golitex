@@ -7,9 +7,28 @@ use crate::common::keywords::{
     BY_CART_DEF, BY_CASES, BY_CONTRA, BY_EXTENSION, BY_FN_DEF, BY_INDUC, CASE, COLON, ENUMERATE,
     EQUAL, FOR, FROM, IMPOSSIBLE, PROVE, RIGHT_ARROW,
 };
-use crate::fact::{AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact};
-use crate::obj::{Cart, ClosedRange, Obj, Range};
+use crate::fact::{AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact};
+use crate::obj::{Cart, ClosedRange, ListSet, Obj, Range};
+use crate::stmt::parameter_def::{ParamDefWithParamType, ParamType};
 use std::fmt;
+
+fn fact_to_exist_or_and_chain_atomic_fact_for_forall_then_body(
+    fact: &Fact,
+) -> Result<ExistOrAndChainAtomicFact, String> {
+    match fact {
+        Fact::AtomicFact(atomic_fact) => {
+            Ok(ExistOrAndChainAtomicFact::AtomicFact(atomic_fact.clone()))
+        }
+        Fact::AndFact(and_fact) => Ok(ExistOrAndChainAtomicFact::AndFact(and_fact.clone())),
+        Fact::ChainFact(chain_fact) => Ok(ExistOrAndChainAtomicFact::ChainFact(chain_fact.clone())),
+        Fact::OrFact(or_fact) => Ok(ExistOrAndChainAtomicFact::OrFact(or_fact.clone())),
+        Fact::ExistFact(exist_fact) => Ok(ExistOrAndChainAtomicFact::ExistFact(exist_fact.clone())),
+        Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => Err(
+            "enumerate: a fact in to_prove cannot be a nested forall inside the generated forall"
+                .to_string(),
+        ),
+    }
+}
 
 // view fn set as a subset of a cartesian product set
 pub struct ByFnDefAxiomStmt {
@@ -58,7 +77,7 @@ pub struct ByInducAxiomStmt {
 // prove fact is true for a set of values by enumeration
 pub struct EnumerateAxiomStmt {
     pub params: Vec<String>,
-    pub param_sets: Vec<Obj>,
+    pub param_sets: Vec<ListSet>,
     pub to_prove: Vec<Fact>,
     pub proof: Vec<Stmt>,
     pub line_file: (usize, usize),
@@ -84,7 +103,7 @@ pub struct ByContraAxiomStmt {
 impl EnumerateAxiomStmt {
     pub fn new(
         params: Vec<String>,
-        param_sets: Vec<Obj>,
+        param_sets: Vec<ListSet>,
         to_prove: Vec<Fact>,
         proof: Vec<Stmt>,
         line_file: (usize, usize),
@@ -96,6 +115,30 @@ impl EnumerateAxiomStmt {
             proof,
             line_file,
         }
+    }
+
+    /// Same parameters as `list { ... }` in the header; `dom_facts` empty; `then_facts` are `to_prove`.
+    pub fn to_corresponding_forall_fact(&self) -> Result<Fact, String> {
+        if self.params.len() != self.param_sets.len() {
+            return Err(
+                "enumerate: number of params does not match number of list sets".to_string(),
+            );
+        }
+        let mut params_def_with_type: Vec<ParamDefWithParamType> = Vec::new();
+        for (param_name, list_set_obj) in self.params.iter().zip(self.param_sets.iter()) {
+            params_def_with_type.push(ParamDefWithParamType(
+                vec![param_name.clone()],
+                ParamType::Obj(Obj::ListSet(list_set_obj.clone())),
+            ));
+        }
+        let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+        for fact in self.to_prove.iter() {
+            then_facts.push(fact_to_exist_or_and_chain_atomic_fact_for_forall_then_body(
+                fact,
+            )?);
+        }
+        let forall_fact = ForallFact::new(params_def_with_type, vec![], then_facts, self.line_file);
+        Ok(Fact::ForallFact(forall_fact))
     }
 
     pub fn stmt_type_name(&self) -> String {
@@ -219,14 +262,14 @@ impl fmt::Display for EnumerateAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {}{}\n{}\n{}{}\n{}",
+            "{} {}{}\n{}{}\n{}\n{}",
             ENUMERATE,
             vec_pair_to_string(&self.params, &self.param_sets),
             COLON,
-            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1),
             add_four_spaces_at_beginning(PROVE.to_string(), 1),
             COLON,
-            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2)
+            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 2),
+            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.to_prove, 1),
         )
     }
 }

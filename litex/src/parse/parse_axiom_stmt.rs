@@ -6,7 +6,7 @@ use crate::common::keywords::{
 use crate::error::ParsingError;
 use crate::execute::Runtime;
 use crate::fact::{AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact};
-use crate::obj::Obj;
+use crate::obj::{ListSet, Obj};
 use crate::stmt::axiom_stmt::{
     ByCartDefAxiomStmt, ByCasesAxiomStmt, ByContraAxiomStmt, ByExtensionAxiomStmt,
     ByFnDefAxiomStmt, ByInducAxiomStmt, ClosedRangeOrRange, EnumerateAxiomStmt, ForAxiomStmt,
@@ -153,7 +153,7 @@ impl<'a> Runtime<'a> {
     ) -> Result<Stmt, ParsingError> {
         tb.skip_token(ENUMERATE)?;
         let mut params: Vec<String> = vec![];
-        let mut param_sets: Vec<crate::obj::Obj> = vec![];
+        let mut param_sets: Vec<ListSet> = vec![];
         if tb.current_token_is_equal_to(COLON) {
             return Err(ParsingError::new(
                 "enum: expects at least one (param, set) pair".to_string(),
@@ -163,7 +163,7 @@ impl<'a> Runtime<'a> {
         }
         while tb.current()? != COLON {
             params.push(tb.advance()?);
-            param_sets.push(self.parse_obj(tb)?);
+            param_sets.push(self.parse_list_set_obj(tb)?);
             if tb.current_token_is_equal_to(COMMA) {
                 tb.skip_token(COMMA)?;
             }
@@ -176,34 +176,34 @@ impl<'a> Runtime<'a> {
                 None,
             ));
         }
-        let prove_idx = tb
-            .body
-            .iter()
-            .position(|b| b.header.get(0).map(|s| s.as_str()) == Some(PROVE));
-        let (to_prove, proof) = if let Some(i) = prove_idx {
-            let to_prove: Vec<Fact> = tb.body[0..i]
-                .iter_mut()
-                .map(|b| self.parse_fact(b))
-                .collect::<Result<_, _>>()?;
-            let prove_block = tb.body.get_mut(i).ok_or_else(|| {
-                ParsingError::new("Expected body".to_string(), tb.line_file, None)
-            })?;
-            prove_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
-            let proof: Vec<Stmt> = prove_block
-                .body
-                .iter_mut()
-                .map(|b| self.parse_stmt(b))
-                .collect::<Result<_, _>>()?;
-            (to_prove, proof)
-        } else {
-            (
-                vec![],
-                tb.body
-                    .iter_mut()
-                    .map(|b| self.parse_stmt(b))
-                    .collect::<Result<_, _>>()?,
-            )
-        };
+        if tb.body.is_empty() {
+            return Err(ParsingError::new(
+                "enum: expects prove: block and at least one fact to prove".to_string(),
+                tb.line_file,
+                None,
+            ));
+        }
+
+        if tb.body.len() == 0 {
+            return Err(ParsingError::new(
+                "enum: expects at least one body block".to_string(),
+                tb.line_file,
+                None,
+            ));
+        }
+
+        tb.body[0].skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
+
+        let mut to_prove: Vec<Fact> = vec![];
+        for block in tb.body[0].body.iter_mut() {
+            to_prove.push(self.parse_fact(block)?);
+        }
+
+        let mut proof: Vec<Stmt> = vec![];
+        for block in tb.body[1..].iter_mut() {
+            proof.push(self.parse_stmt(block)?);
+        }
+
         Ok(Stmt::EnumerateAxiomStmt(EnumerateAxiomStmt::new(
             params,
             param_sets,

@@ -666,7 +666,7 @@ impl<'a> Runtime<'a> {
             self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
         }
 
-        let next_verify_state = verify_state.new_state_with_req_ok_set_to_true();
+        let next_verify_state = verify_state.make_state_with_req_ok_set_to_true();
         let len = x.list.len();
         let mut i = 0;
         while i < len {
