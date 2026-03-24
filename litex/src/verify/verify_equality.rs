@@ -28,23 +28,11 @@ impl<'a> Runtime<'a> {
             return Ok(result);
         }
 
-        if verify_state.is_round_0() {
-            let verify_state_add_one_round = verify_state.new_state_with_round_increased();
-            result = self.verify_atomic_fact_with_known_forall(
-                &AtomicFact::EqualFact(equal_fact.clone()),
-                &verify_state_add_one_round,
-            )?;
-            if result.is_true() {
-                return Ok(result);
-            }
-        }
-
-        let next_verify_state = verify_state.new_state_with_round_increased();
         let verified_by_arg_to_arg = self
             .verify_objs_are_equal_when_they_have_same_builtin_shape_and_equal_args_recursively(
                 &equal_fact.left,
                 &equal_fact.right,
-                &next_verify_state,
+                verify_state,
             )?;
         if verified_by_arg_to_arg {
             return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
@@ -55,6 +43,17 @@ impl<'a> Runtime<'a> {
                     equal_fact.line_file,
                 ),
             ));
+        }
+
+        if verify_state.is_round_0() {
+            let verify_state_add_one_round = verify_state.new_state_with_round_increased();
+            result = self.verify_atomic_fact_with_known_forall(
+                &AtomicFact::EqualFact(equal_fact.clone()),
+                &verify_state_add_one_round,
+            )?;
+            if result.is_true() {
+                return Ok(result);
+            }
         }
 
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
@@ -185,6 +184,34 @@ impl<'a> Runtime<'a> {
         Ok(true)
     }
 
+    fn verify_fn_objs_equal_when_they_have_same_head_and_equal_args(
+        &mut self,
+        left_fn_obj: &FnObj,
+        right_fn_obj: &FnObj,
+        verify_state: &VerifyState,
+    ) -> Result<bool, VerifyError> {
+        if left_fn_obj.body.len() != right_fn_obj.body.len() {
+            return Ok(false);
+        }
+
+        if left_fn_obj.head.to_string() != right_fn_obj.head.to_string() {
+            return Ok(false);
+        }
+
+        for (left_group, right_group) in left_fn_obj.body.iter().zip(right_fn_obj.body.iter()) {
+            let result = self.verify_obj_vec_are_equal_when_all_corresponding_args_are_equal(
+                left_group,
+                right_group,
+                verify_state,
+            )?;
+            if !result {
+                return Ok(false);
+            }
+        }
+
+        Ok(true)
+    }
+
     fn verify_fn_objs_are_equal_when_their_body_groups_match_from_right_to_left(
         &mut self,
         left_fn_obj: &FnObj,
@@ -226,12 +253,23 @@ impl<'a> Runtime<'a> {
         verify_state: &VerifyState,
     ) -> Result<bool, VerifyError> {
         match (left_obj, right_obj) {
-            (Obj::FnObj(left_fn_obj), Obj::FnObj(right_fn_obj)) => self
-                .verify_fn_objs_are_equal_when_their_body_groups_match_from_right_to_left(
-                    left_fn_obj,
-                    right_fn_obj,
-                    verify_state,
-                ),
+            (Obj::FnObj(left_fn_obj), Obj::FnObj(right_fn_obj)) => {
+                if left_fn_obj.body.len() == right_fn_obj.body.len()
+                    && left_fn_obj.head.to_string() == right_fn_obj.head.to_string()
+                {
+                    self.verify_fn_objs_equal_when_they_have_same_head_and_equal_args(
+                        left_fn_obj,
+                        right_fn_obj,
+                        verify_state,
+                    )
+                } else {
+                    self.verify_fn_objs_are_equal_when_their_body_groups_match_from_right_to_left(
+                        left_fn_obj,
+                        right_fn_obj,
+                        verify_state,
+                    )
+                }
+            }
             (Obj::Add(left_add), Obj::Add(right_add)) => self
                 .verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
                     &left_add.left,
@@ -443,6 +481,23 @@ impl<'a> Runtime<'a> {
         result = self.verify_equality_with_known_equalities(&equal_fact, verify_state)?;
         if result.is_true() {
             return Ok(result);
+        }
+
+        let verified_by_arg_to_arg = self
+            .verify_objs_are_equal_when_they_have_same_builtin_shape_and_equal_args_recursively(
+                &equal_fact.left,
+                &equal_fact.right,
+                verify_state,
+            )?;
+        if verified_by_arg_to_arg {
+            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                FactVerifiedByBuiltinRules::new(
+                    equal_fact.to_string(),
+                    same_shape_and_equal_args_reason(&equal_fact.left, &equal_fact.right),
+                    InferResult::new(),
+                    equal_fact.line_file,
+                ),
+            ));
         }
 
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
