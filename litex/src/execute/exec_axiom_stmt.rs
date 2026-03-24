@@ -1,6 +1,6 @@
 use super::Runtime;
 use crate::error::{ExecStmtError, StmtError};
-use crate::fact::{Fact, OrFact};
+use crate::fact::{AtomicFact, Fact, OrFact};
 use crate::infer::InferResult;
 use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
 use crate::stmt::axiom_stmt::{
@@ -10,6 +10,34 @@ use crate::stmt::axiom_stmt::{
 use crate::verify::VerifyState;
 
 impl<'a> Runtime<'a> {
+    fn impossible_proof_message(
+        impossible_fact: &AtomicFact,
+        option_case_fact_string: Option<String>,
+    ) -> String {
+        match option_case_fact_string {
+            Some(case_fact) => format!(
+                "failed to prove impossible `{}` under case `{}`",
+                impossible_fact, case_fact
+            ),
+            None => format!("failed to prove impossible `{}`", impossible_fact),
+        }
+    }
+
+    fn impossible_proof_success_message(
+        impossible_fact: &AtomicFact,
+        option_case_fact_string: Option<String>,
+    ) -> String {
+        match option_case_fact_string {
+            Some(case_fact) => {
+                format!(
+                    "proved impossible `{}` under case `{}`",
+                    impossible_fact, case_fact
+                )
+            }
+            None => format!("proved impossible `{}`", impossible_fact),
+        }
+    }
+
     pub fn exec_by_cases_axiom_stmt(
         &mut self,
         stmt: &ByCasesAxiomStmt,
@@ -22,6 +50,7 @@ impl<'a> Runtime<'a> {
                         stmt.stmt_type_name(),
                         format!("by_cases: failed to prove `{}`", fact),
                         Some(e.into()),
+                        vec![],
                         stmt.line_file,
                     ))
                 })?;
@@ -55,6 +84,7 @@ impl<'a> Runtime<'a> {
                         stmt.stmt_type_name(),
                         format!("by_cases: failed to release `{}`", then_fact),
                         Some(store_fact_error.into()),
+                        vec![],
                         stmt.line_file,
                     ))
                 })?;
@@ -82,6 +112,7 @@ impl<'a> Runtime<'a> {
                     stmt.stmt_type_name(),
                     format!("by_contra: failed to prove `{}`", to_prove_fact),
                     Some(e.into()),
+                    vec![],
                     stmt.line_file,
                 ))
             })?;
@@ -100,6 +131,7 @@ impl<'a> Runtime<'a> {
                         stmt.stmt_type_name(),
                         format!("by_contra: failed to know reverse of `{}`", to_prove_fact),
                         Some(store_fact_error.into()),
+                        vec![],
                         stmt.line_file,
                     ))
                 })?;
@@ -114,20 +146,46 @@ impl<'a> Runtime<'a> {
                     }
                 }
             }
+
+            // 这里要证明 impossible 的 正面和反面都是对的
+            let verify_impossible_fact_result =
+                self.verify_atomic_fact(&stmt.impossible_fact, &VerifyState::new(0, false))?;
+            if verify_impossible_fact_result.is_unknown() {
+                return Err(StmtError::ExecError(ExecStmtError::new(
+                    stmt.stmt_type_name(),
+                    Self::impossible_proof_message(&stmt.impossible_fact, None),
+                    None,
+                    inside_results,
+                    stmt.line_file,
+                )));
+            }
+
+            let verify_reversed_impossible_fact_result = self.verify_atomic_fact(
+                &stmt.impossible_fact.make_reversed(),
+                &VerifyState::new(0, false),
+            )?;
+            if verify_reversed_impossible_fact_result.is_unknown() {
+                return Err(StmtError::ExecError(ExecStmtError::new(
+                    stmt.stmt_type_name(),
+                    Self::impossible_proof_message(&stmt.impossible_fact, None),
+                    None,
+                    vec![],
+                    stmt.line_file,
+                )));
+            }
+
             self.runtime_context.pop_env();
             inside_results
         };
 
         if let Some(last_error) = last_error {
-            return Err(StmtError::ExecError(
-                ExecStmtError::new_with_inside_results(
-                    stmt.stmt_type_name(),
-                    "by_contra: failed to execute proof".to_string(),
-                    Some(last_error),
-                    exec_proof_inside_results,
-                    stmt.line_file,
-                ),
-            ));
+            return Err(StmtError::ExecError(ExecStmtError::new(
+                stmt.stmt_type_name(),
+                "by_contra: failed to execute proof".to_string(),
+                Some(last_error),
+                exec_proof_inside_results,
+                stmt.line_file,
+            )));
         }
 
         let infer_result = self
@@ -137,6 +195,7 @@ impl<'a> Runtime<'a> {
                     stmt.stmt_type_name(),
                     format!("by_contra: failed to release `{}`", to_prove_fact),
                     Some(store_fact_error.into()),
+                    vec![],
                     stmt.line_file,
                 ))
             })?;
@@ -206,6 +265,7 @@ impl<'a> Runtime<'a> {
                     stmt.stmt_type_name(),
                     "by_cases: cannot verify that all cases cover all situations".to_string(),
                     Some(verify_error.into()),
+                    vec![],
                     stmt.line_file,
                 )
             })?;
@@ -220,7 +280,7 @@ impl<'a> Runtime<'a> {
     ) -> Result<(), ExecStmtError> {
         for then_fact in stmt.then_facts.iter() {
             let exec_fact_result = self.exec_fact(then_fact).map_err(|statement_error| {
-                ExecStmtError::new_with_inside_results(
+                ExecStmtError::new(
                     stmt.stmt_type_name(),
                     format!(
                         "by_cases: failed to prove `{}` under case `{}`",
@@ -250,6 +310,7 @@ impl<'a> Runtime<'a> {
                     stmt.stmt_type_name(),
                     format!("by_cases: failed to assume case `{}`", case_fact),
                     Some(store_fact_error.into()),
+                    vec![],
                     stmt.line_file,
                 )
             })?;
@@ -259,7 +320,7 @@ impl<'a> Runtime<'a> {
             match exec_stmt_result {
                 Ok(result) => inside_results.push(result),
                 Err(statement_error) => {
-                    return Err(ExecStmtError::new_with_inside_results(
+                    return Err(ExecStmtError::new(
                         stmt.stmt_type_name(),
                         format!(
                             "by_cases: failed while executing proof under case `{}`",
@@ -280,11 +341,12 @@ impl<'a> Runtime<'a> {
                 .map_err(|verify_error| {
                     ExecStmtError::new(
                         stmt.stmt_type_name(),
-                        format!(
-                            "by_cases: failed to verify impossible fact `{}` under case `{}`",
-                            impossible_fact, case_fact
+                        Self::impossible_proof_message(
+                            impossible_fact,
+                            Some(case_fact.to_string()),
                         ),
                         Some(verify_error.into()),
+                        vec![],
                         impossible_fact.line_file(),
                     )
                 })?;
@@ -292,35 +354,43 @@ impl<'a> Runtime<'a> {
             if verify_impossible_fact_result.is_unknown() {
                 return Err(ExecStmtError::new(
                     stmt.stmt_type_name(),
-                    format!(
-                        "by_cases: failed to verify impossible fact `{}` under case `{}`",
-                        impossible_fact, case_fact
-                    ),
+                    Self::impossible_proof_message(impossible_fact, Some(case_fact.to_string())),
                     None,
+                    vec![],
                     impossible_fact.line_file(),
                 ));
             }
 
-            let verify_reversed_impossible_fact_result =
-                self.verify_atomic_fact(&impossible_fact.make_reversed(), &verify_state)?;
+            let verify_reversed_impossible_fact_result = self
+                .verify_atomic_fact(&impossible_fact.make_reversed(), &verify_state)
+                .map_err(|verify_error| {
+                    ExecStmtError::new(
+                        stmt.stmt_type_name(),
+                        Self::impossible_proof_message(
+                            impossible_fact,
+                            Some(case_fact.to_string()),
+                        ),
+                        Some(verify_error.into()),
+                        vec![],
+                        impossible_fact.line_file(),
+                    )
+                })?;
 
             if verify_reversed_impossible_fact_result.is_unknown() {
                 return Err(ExecStmtError::new(
                     stmt.stmt_type_name(),
-                    format!(
-                        "by_cases: failed to verify impossible fact `{}` under case `{}`",
-                        impossible_fact, case_fact
-                    ),
+                    Self::impossible_proof_message(impossible_fact, Some(case_fact.to_string())),
                     None,
+                    vec![],
                     impossible_fact.line_file(),
                 ));
             }
 
             inside_results.push(NonErrStmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
-                    format!(
-                        "impossible `{}` under case `{}`",
-                        impossible_fact, case_fact
+                    Self::impossible_proof_success_message(
+                        impossible_fact,
+                        Some(case_fact.to_string()),
                     ),
                     InferResult::new(),
                     vec![

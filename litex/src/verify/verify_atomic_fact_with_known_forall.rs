@@ -249,6 +249,10 @@ impl<'a> Runtime<'a> {
 
         for dom_fact in known_forall.dom.iter() {
             let instantiated_dom_fact = dom_fact.instantiate(&param_to_arg_map);
+            println!(
+                "instantiated_dom_fact: {}",
+                instantiated_dom_fact.to_string()
+            );
             let result =
                 self.verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)?;
             if result.is_unknown() {

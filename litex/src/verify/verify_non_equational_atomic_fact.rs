@@ -22,10 +22,10 @@ impl<'a> Runtime<'a> {
         }
 
         if let Some(fact_with_args_calculated) = &option_fact_with_args_calculated {
-            result = self
-                .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
-                    &fact_with_args_calculated,
-                )?;
+            result = self.verify_non_equational_atomic_fact_with_builtin_rules(
+                &fact_with_args_calculated,
+                verify_state,
+            )?;
             if result.is_true() {
                 return Ok(result);
             }
@@ -57,10 +57,10 @@ impl<'a> Runtime<'a> {
             }
 
             if let Some(fact_with_args_calculated) = &option_fact_with_args_calculated {
-                result = self
-                    .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
-                        &fact_with_args_calculated,
-                    )?;
+                result = self.verify_atomic_fact_with_known_forall(
+                    &fact_with_args_calculated,
+                    &verify_state_add_one_round,
+                )?;
                 if result.is_true() {
                     return Ok(result);
                 }
