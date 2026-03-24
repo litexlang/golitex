@@ -1021,13 +1021,11 @@ impl<'a> Runtime<'a> {
         x: &Range,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        let _ = x;
-        let _ = verify_state;
-        Err(WellDefinedError::new(
-            "verify_range_well_defined 此函数还没有 implement".to_string(),
-            None,
-            DEFAULT_LINE_FILE.clone(),
-        ))
+        self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
+        self.require_obj_in_z(&x.start, verify_state)?;
+        self.require_obj_in_z(&x.end, verify_state)?;
+        Ok(())
     }
 
     fn verify_closed_range_well_defined(
@@ -1035,13 +1033,11 @@ impl<'a> Runtime<'a> {
         x: &ClosedRange,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        let _ = x;
-        let _ = verify_state;
-        Err(WellDefinedError::new(
-            "verify_closed_range_well_defined 此函数还没有 implement".to_string(),
-            None,
-            DEFAULT_LINE_FILE.clone(),
-        ))
+        self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
+        self.require_obj_in_z(&x.start, verify_state)?;
+        self.require_obj_in_z(&x.end, verify_state)?;
+        Ok(())
     }
 
     fn verify_val_well_defined(
