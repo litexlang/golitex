@@ -117,7 +117,21 @@ impl<'a> Runtime<'a> {
     }
 
     fn infer_equal_fact(&mut self, _equal_fact: &EqualFact) -> Result<InferResult, InferError> {
-        Ok(InferResult::new())
+        if let Some(right_calculated_value) = _equal_fact.right.calculated_value() {
+            self.runtime_context
+                .top_level_env()
+                .known_calculated_value_of_obj
+                .insert(_equal_fact.left.to_string(), right_calculated_value);
+        }
+
+        if let Some(left_calculated_value) = _equal_fact.left.calculated_value() {
+            self.runtime_context
+                .top_level_env()
+                .known_calculated_value_of_obj
+                .insert(_equal_fact.right.to_string(), left_calculated_value);
+        }
+
+        return Ok(InferResult::new());
     }
 
     fn infer_in_fact(&mut self, in_fact: &InFact) -> Result<InferResult, InferError> {

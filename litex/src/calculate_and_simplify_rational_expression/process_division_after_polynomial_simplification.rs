@@ -230,8 +230,7 @@ fn multiply_obj_list(objs: Vec<Obj>) -> Obj {
 
     let mut result = first_obj;
     for obj in objs {
-        let can_be_calculated = result.can_be_calculated() && obj.can_be_calculated();
-        result = Obj::Mul(Mul::new(result, obj, can_be_calculated));
+        result = Obj::Mul(Mul::new(result, obj));
     }
 
     result
@@ -246,8 +245,7 @@ fn add_obj_list(objs: Vec<Obj>) -> Obj {
 
     let mut result = first_obj;
     for obj in objs {
-        let can_be_calculated = result.can_be_calculated() && obj.can_be_calculated();
-        result = Obj::Add(Add::new(result, obj, can_be_calculated));
+        result = Obj::Add(Add::new(result, obj));
     }
 
     result

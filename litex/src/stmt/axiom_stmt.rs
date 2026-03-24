@@ -488,7 +488,7 @@ impl ByInducAxiomStmt {
 
         dom_facts.push(ExistOrAndChainAtomicFact::AtomicFact(
             AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
-                Obj::Identifier(Identifier::new(self.param.clone())),
+                Obj::Identifier(Identifier::new(self.param.clone(), None)),
                 self.induc_from.clone(),
                 self.line_file,
             )),

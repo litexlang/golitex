@@ -1,6 +1,6 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::environment::Environment;
-use crate::error::{StmtError, VerifyError};
+use crate::error::{RuntimeError, VerifyError};
 use crate::execute::Runtime;
 use crate::fact::OrFact;
 use crate::infer::InferResult;
@@ -26,7 +26,7 @@ impl<'a> Runtime<'a> {
             if let Err(e) = self.verify_or_fact_well_defined(or_fact, verify_state) {
                 return Err(VerifyError::new(
                     fact_display_string,
-                    Some(StmtError::WellDefinedError(e)),
+                    Some(RuntimeError::WellDefinedError(e)),
                     fact_line_file,
                 ));
             }

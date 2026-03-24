@@ -8,13 +8,18 @@ use crate::common::keywords::{
     RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, R_NEG, R_NZ, R_POS, SET_DIFF, SET_MINUS,
     SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ,
 };
-use crate::error::{duplicate_used_name_error_message, ParsingError, StmtError};
+use crate::error::{duplicate_used_name_error_message, ParsingError, RuntimeError};
 use crate::execute::Runtime;
 use crate::obj::{
-    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div, FnObj, FnSetObj,
-    FnSetWithParams, FnSetWithoutParams, InstStructObj, Intersect, ListSet, Mod, Mul, NObj,
-    NPosObj, Number, Obj, ObjAtIndex, Pow, PowerSet, Proj, QNeg, QNz, QObj, QPos, RNeg, RNz, RObj,
-    RPos, Range, SetBuilder, SetDiff, SetMinus, Sub, TupleDimObj, Union, Val, ZNeg, ZNz, ZObj,
+    field_access_to_string, field_access_with_mod_to_string, identifier_to_string,
+    identifier_with_mod_to_string,
+};
+use crate::obj::{
+    fn_obj_to_string, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div, FnObj,
+    FnSetObj, FnSetWithParams, FnSetWithoutParams, InstStructObj, Intersect, ListSet, Mod, Mul,
+    NObj, NPosObj, Number, Obj, ObjAtIndex, Pow, PowerSet, Proj, QNeg, QNz, QObj, QPos, RNeg, RNz,
+    RObj, RPos, Range, SetBuilder, SetDiff, SetMinus, Sub, TupleDimObj, Union, Val, ZNeg, ZNz,
+    ZObj,
 };
 use crate::obj::{
     Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierOrIdentifierWithMod,
@@ -56,7 +61,12 @@ impl<'a> Runtime<'a> {
             }
 
             let body = vec![vec![Box::new(left), Box::new(right)]];
-            Ok(Obj::FnObj(FnObj::new(fn_name, body)))
+
+            let calculated_value = self
+                .runtime_context
+                .get_calculated_value_of_obj(&fn_obj_to_string(&fn_name, &body));
+
+            Ok(Obj::FnObj(FnObj::new(fn_name, body, calculated_value)))
         } else {
             Ok(left)
         }
@@ -73,14 +83,11 @@ impl<'a> Runtime<'a> {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy2(tb)?;
 
-                let can_be_calculated = left.can_be_calculated() && right.can_be_calculated();
-
-                left = Obj::Add(Add::new(left, right, can_be_calculated));
+                left = Obj::Add(Add::new(left, right));
             } else if tb.current_token_is_equal_to(SUB) {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy2(tb)?;
-                let can_be_calculated = left.can_be_calculated() && right.can_be_calculated();
-                left = Obj::Sub(Sub::new(left, right, can_be_calculated));
+                left = Obj::Sub(Sub::new(left, right));
             } else {
                 return Ok(left);
             }
@@ -97,8 +104,7 @@ impl<'a> Runtime<'a> {
             if tb.current_token_is_equal_to(MUL) {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy3(tb)?;
-                let can_be_calculated = left.can_be_calculated() && right.can_be_calculated();
-                left = Obj::Mul(Mul::new(left, right, can_be_calculated));
+                left = Obj::Mul(Mul::new(left, right));
             } else if tb.current_token_is_equal_to(DIV) {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy3(tb)?;
@@ -106,28 +112,7 @@ impl<'a> Runtime<'a> {
             } else if tb.current_token_is_equal_to(MOD) {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy3(tb)?;
-
-                let mut can_be_calculated = true;
-                if !left.can_be_calculated() {
-                    can_be_calculated = false;
-                }
-                if !right.can_be_calculated() {
-                    can_be_calculated = false;
-                } else {
-                    let calculated_right = right.calculate_to_string();
-                    if !is_number_string_literally_integer_without_dot(calculated_right.clone()) {
-                        can_be_calculated = false;
-                    }
-                    if calculated_right == "0" {
-                        return Err(ParsingError::new(
-                            format!("Modulus by zero: {}", calculated_right),
-                            tb.line_file,
-                            None,
-                        ));
-                    }
-                }
-
-                left = Obj::Mod(Mod::new(left, right, can_be_calculated));
+                left = Obj::Mod(Mod::new(left, right));
             } else {
                 return Ok(left);
             }
@@ -143,17 +128,17 @@ impl<'a> Runtime<'a> {
         if tb.current_token_is_equal_to(POW) {
             tb.skip()?;
             let right = self.parse_obj_hierarchy3(tb)?; // 右结合：右侧可继续接 ^
-            let mut can_be_calculated = left.can_be_calculated() && right.can_be_calculated();
-            if can_be_calculated {
-                let calculated_exponent = right.calculate_to_string();
+            if right.calculated_value().is_some() {
+                let calculated_exponent =
+                    right.calculate_to_string_panic_when_cannot_be_calculated();
                 if !is_number_string_literally_integer_without_dot(calculated_exponent.clone()) {
-                    can_be_calculated = false;
+                    // keep as symbolic pow if exponent is not integer
                 }
                 if calculated_exponent.starts_with('-') {
-                    can_be_calculated = false;
+                    // keep as symbolic pow if exponent is negative
                 }
             }
-            Ok(Obj::Pow(Pow::new(left, right, can_be_calculated)))
+            Ok(Obj::Pow(Pow::new(left, right)))
         } else {
             Ok(left)
         }
@@ -301,11 +286,9 @@ impl<'a> Runtime<'a> {
         if tb.current_token_is_equal_to(SUB) {
             tb.skip()?;
             let obj = self.parse_number_or_primary_obj_or_fn_obj(tb)?;
-            let negated_obj_can_be_calculated = obj.can_be_calculated();
             Ok(Obj::Mul(Mul::new(
                 Obj::Number(Number::new("-1".to_string())),
                 obj,
-                negated_obj_can_be_calculated,
             )))
         } else {
             self.parse_number_or_primary_obj_or_fn_obj(tb)
@@ -386,7 +369,10 @@ impl<'a> Runtime<'a> {
             body_vectors.push(group);
         }
         if !body_vectors.is_empty() {
-            result = Obj::FnObj(FnObj::new(head_atom, body_vectors));
+            let calculated_value = self
+                .runtime_context
+                .get_calculated_value_of_obj(&fn_obj_to_string(&head_atom, &body_vectors));
+            result = Obj::FnObj(FnObj::new(head_atom, body_vectors, calculated_value));
         }
         Ok(result)
     }
@@ -761,7 +747,7 @@ impl<'a> Runtime<'a> {
 
         // 普通 atom（标识符）
         let atom = self.parse_atom(tb)?;
-        Ok(Obj::from(atom))
+        return Ok(Obj::from(atom));
     }
 
     pub fn parse_braced_objs(&mut self, tb: &mut TokenBlock) -> Result<Vec<Obj>, ParsingError> {
@@ -828,7 +814,7 @@ impl<'a> Runtime<'a> {
                 ParsingError::new(
                     duplicate_used_name_error_message(&a.name),
                     tb.line_file,
-                    Some(StmtError::ParseBlockError(e)),
+                    Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
 
@@ -905,11 +891,27 @@ impl<'a> Runtime<'a> {
                     tb.skip()?;
                     fields.push(tb.advance()?.to_string());
                 }
+                let display_string = field_access_with_mod_to_string(&left, &right, &fields);
+                let calculated_value = self
+                    .runtime_context
+                    .get_calculated_value_of_obj(&display_string);
+
                 Ok(Atom::FieldAccessWithMod(FieldAccessWithMod::new(
-                    left, right, fields,
+                    left,
+                    right,
+                    fields,
+                    calculated_value,
                 )))
             } else {
-                Ok(Atom::IdentifierWithMod(IdentifierWithMod::new(left, right)))
+                let display_string = identifier_with_mod_to_string(&left, &right);
+                let calculated_value = self
+                    .runtime_context
+                    .get_calculated_value_of_obj(&display_string);
+                Ok(Atom::IdentifierWithMod(IdentifierWithMod::new(
+                    left,
+                    right,
+                    calculated_value,
+                )))
             }
         } else {
             // 如果后面有 .，则解析为 FieldAccess
@@ -920,9 +922,24 @@ impl<'a> Runtime<'a> {
                     tb.skip()?;
                     fields.push(tb.advance()?.to_string());
                 }
-                Ok(Atom::FieldAccess(FieldAccess::new(left, fields)))
+                let display_string = field_access_to_string(&left, &fields);
+                let calculated_value = self
+                    .runtime_context
+                    .get_calculated_value_of_obj(&display_string);
+                Ok(Atom::FieldAccess(FieldAccess::new(
+                    left,
+                    fields,
+                    calculated_value,
+                )))
             } else {
-                Ok(Atom::IdentifierAtom(Identifier::new(left)))
+                let display_string = identifier_to_string(&left);
+                let calculated_value = self
+                    .runtime_context
+                    .get_calculated_value_of_obj(&display_string);
+                Ok(Atom::IdentifierAtom(Identifier::new(
+                    left,
+                    calculated_value,
+                )))
             }
         }
     }
@@ -936,11 +953,11 @@ impl<'a> Runtime<'a> {
             tb.skip()?;
             let right = tb.advance()?;
             Ok(IdentifierOrIdentifierWithMod::IdentifierWithMod(
-                IdentifierWithMod::new(left, right),
+                IdentifierWithMod::new(left, right, None),
             ))
         } else {
             Ok(IdentifierOrIdentifierWithMod::Identifier(Identifier::new(
-                left,
+                left, None,
             )))
         }
     }

@@ -45,12 +45,14 @@ impl FieldAccess {
             Some(Obj::Identifier(identifier)) => Obj::FieldAccess(FieldAccess {
                 name: identifier.name.clone(),
                 fields: self.fields.clone(),
+                calculated_value: None,
             }),
             Some(Obj::IdentifierWithMod(identifier_with_mod)) => {
                 Obj::FieldAccessWithMod(FieldAccessWithMod {
                     mod_name: identifier_with_mod.mod_name.clone(),
                     name: identifier_with_mod.name.clone(),
                     fields: self.fields.clone(),
+                    calculated_value: None,
                 })
             }
             Some(Obj::FieldAccess(existing_field_access)) => {
@@ -61,6 +63,7 @@ impl FieldAccess {
                 Obj::FieldAccess(FieldAccess {
                     name: existing_field_access.name.clone(),
                     fields,
+                    calculated_value: None,
                 })
             }
             Some(Obj::FieldAccessWithMod(existing_field_access_with_mod)) => {
@@ -72,6 +75,7 @@ impl FieldAccess {
                     mod_name: existing_field_access_with_mod.mod_name.clone(),
                     name: existing_field_access_with_mod.name.clone(),
                     fields,
+                    calculated_value: None,
                 })
             }
             _ => Obj::FieldAccess(self.clone()),
@@ -134,6 +138,7 @@ impl FnObj {
         Obj::FnObj(FnObj {
             head: Box::new(self.head.instantiate(param_to_arg_map)),
             body,
+            calculated_value: None,
         })
     }
 }
@@ -149,13 +154,7 @@ impl Add {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         let instantiated_left_obj = self.left.instantiate(param_to_arg_map);
         let instantiated_right_obj = self.right.instantiate(param_to_arg_map);
-        let instantiated_add_can_be_calculated =
-            instantiated_left_obj.can_be_calculated() && instantiated_right_obj.can_be_calculated();
-        Obj::Add(Add {
-            left: Box::new(instantiated_left_obj),
-            right: Box::new(instantiated_right_obj),
-            can_be_calculated: instantiated_add_can_be_calculated,
-        })
+        Obj::Add(Add::new(instantiated_left_obj, instantiated_right_obj))
     }
 }
 
@@ -163,13 +162,7 @@ impl Sub {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         let instantiated_left_obj = self.left.instantiate(param_to_arg_map);
         let instantiated_right_obj = self.right.instantiate(param_to_arg_map);
-        let instantiated_sub_can_be_calculated =
-            instantiated_left_obj.can_be_calculated() && instantiated_right_obj.can_be_calculated();
-        Obj::Sub(Sub {
-            left: Box::new(instantiated_left_obj),
-            right: Box::new(instantiated_right_obj),
-            can_be_calculated: instantiated_sub_can_be_calculated,
-        })
+        Obj::Sub(Sub::new(instantiated_left_obj, instantiated_right_obj))
     }
 }
 
@@ -177,13 +170,7 @@ impl Mul {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         let instantiated_left_obj = self.left.instantiate(param_to_arg_map);
         let instantiated_right_obj = self.right.instantiate(param_to_arg_map);
-        let instantiated_mul_can_be_calculated =
-            instantiated_left_obj.can_be_calculated() && instantiated_right_obj.can_be_calculated();
-        Obj::Mul(Mul {
-            left: Box::new(instantiated_left_obj),
-            right: Box::new(instantiated_right_obj),
-            can_be_calculated: instantiated_mul_can_be_calculated,
-        })
+        Obj::Mul(Mul::new(instantiated_left_obj, instantiated_right_obj))
     }
 }
 
@@ -200,13 +187,7 @@ impl Mod {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         let instantiated_left_obj = self.left.instantiate(param_to_arg_map);
         let instantiated_right_obj = self.right.instantiate(param_to_arg_map);
-        let instantiated_mod_can_be_calculated =
-            instantiated_left_obj.can_be_calculated() && instantiated_right_obj.can_be_calculated();
-        Obj::Mod(Mod {
-            left: Box::new(instantiated_left_obj),
-            right: Box::new(instantiated_right_obj),
-            can_be_calculated: instantiated_mod_can_be_calculated,
-        })
+        Obj::Mod(Mod::new(instantiated_left_obj, instantiated_right_obj))
     }
 }
 
@@ -214,13 +195,7 @@ impl Pow {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         let instantiated_base_obj = self.base.instantiate(param_to_arg_map);
         let instantiated_exponent_obj = self.exponent.instantiate(param_to_arg_map);
-        let instantiated_pow_can_be_calculated =
-            instantiated_base_obj.can_be_calculated() && instantiated_exponent_obj.can_be_calculated();
-        Obj::Pow(Pow {
-            base: Box::new(instantiated_base_obj),
-            exponent: Box::new(instantiated_exponent_obj),
-            can_be_calculated: instantiated_pow_can_be_calculated,
-        })
+        Obj::Pow(Pow::new(instantiated_base_obj, instantiated_exponent_obj))
     }
 }
 

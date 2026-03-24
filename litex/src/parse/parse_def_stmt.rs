@@ -4,7 +4,7 @@ use crate::common::keywords::{
     PROP, RIGHT_BRACE, STRUCT,
 };
 use crate::error::ParsingError;
-use crate::error::{duplicate_used_name_error_message, StmtError};
+use crate::error::{duplicate_used_name_error_message, RuntimeError};
 use crate::execute::Runtime;
 use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
 use crate::stmt::define_algorithm_stmt::{AlgoCase, AlgoReturn, AlgoReturnOrAlgoCase, DefAlgoStmt};
@@ -42,7 +42,7 @@ impl<'a> Runtime<'a> {
                 ParsingError::new(
                     duplicate_used_name_error_message(&stmt_ok.name),
                     tb.line_file,
-                    Some(StmtError::ParseBlockError(e)),
+                    Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
         Ok(Stmt::DefPropWithMeaningStmt(stmt_ok))
@@ -59,7 +59,7 @@ impl<'a> Runtime<'a> {
                 ParsingError::new(
                     duplicate_used_name_error_message(&name),
                     tb.line_file,
-                    Some(StmtError::ParseBlockError(e)),
+                    Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
         tb.skip_token(LEFT_BRACE)?;
@@ -94,7 +94,7 @@ impl<'a> Runtime<'a> {
                 ParsingError::new(
                     duplicate_used_name_error_message(&stmt_ok.name),
                     tb.line_file,
-                    Some(StmtError::ParseBlockError(e)),
+                    Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
         Ok(Stmt::DefPropWithoutMeaningStmt(stmt_ok))
@@ -111,7 +111,7 @@ impl<'a> Runtime<'a> {
                 ParsingError::new(
                     duplicate_used_name_error_message(&name),
                     tb.line_file,
-                    Some(StmtError::ParseBlockError(e)),
+                    Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
         tb.skip_token(LEFT_BRACE)?;
@@ -211,7 +211,7 @@ impl<'a> Runtime<'a> {
                 ParsingError::new(
                     duplicate_used_name_error_message(&name),
                     tb.line_file,
-                    Some(StmtError::ParseBlockError(e)),
+                    Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
 
@@ -275,7 +275,7 @@ impl<'a> Runtime<'a> {
                 ParsingError::new(
                     duplicate_used_name_error_message(&name),
                     tb.line_file,
-                    Some(StmtError::ParseBlockError(e)),
+                    Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
 
@@ -389,7 +389,7 @@ impl<'a> Runtime<'a> {
                 ParsingError::new(
                     duplicate_used_name_error_message(&name),
                     tb.line_file,
-                    Some(StmtError::ParseBlockError(e)),
+                    Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
 

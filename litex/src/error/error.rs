@@ -9,19 +9,19 @@ pub fn duplicate_used_name_error_message(name: &str) -> String {
     )
 }
 
-fn body_with_previous(message: &str, previous_error: &Option<Box<StmtError>>) -> String {
+fn body_with_previous(message: &str, previous_error: &Option<Box<RuntimeError>>) -> String {
     match previous_error {
         Some(previous_error) => format!("{}\n\n{}", message, previous_error.error_body()),
         None => message.to_string(),
     }
 }
 
-fn boxed_previous_error(previous_error: Option<StmtError>) -> Option<Box<StmtError>> {
+fn boxed_previous_error(previous_error: Option<RuntimeError>) -> Option<Box<RuntimeError>> {
     previous_error.map(Box::new)
 }
 
 #[derive(Debug)]
-pub enum StmtError {
+pub enum RuntimeError {
     ArithmeticError(ArithmeticError),
     NewAtomicFactError(NewAtomicFactError),
     StoreFactError(StoreFactError),
@@ -34,53 +34,53 @@ pub enum StmtError {
     InferError(InferError),
 }
 
-impl std::error::Error for StmtError {}
+impl std::error::Error for RuntimeError {}
 
-impl StmtError {
+impl RuntimeError {
     pub fn line_file(&self) -> (usize, usize) {
         match self {
-            StmtError::ArithmeticError(_) => DEFAULT_LINE_FILE.clone(),
-            StmtError::NewAtomicFactError(_) => DEFAULT_LINE_FILE.clone(),
-            StmtError::StoreFactError(_) => DEFAULT_LINE_FILE.clone(),
-            StmtError::ParseBlockError(e) => e.line_file(),
-            StmtError::ParsingError(e) => e.line_file,
-            StmtError::ExecError(e) => e.line_file,
-            StmtError::UnknownError(e) => e.line_file,
-            StmtError::WellDefinedError(e) => e.line_file,
-            StmtError::VerifyError(e) => e.line_file,
-            StmtError::InferError(e) => e.line_file,
+            RuntimeError::ArithmeticError(_) => DEFAULT_LINE_FILE.clone(),
+            RuntimeError::NewAtomicFactError(_) => DEFAULT_LINE_FILE.clone(),
+            RuntimeError::StoreFactError(_) => DEFAULT_LINE_FILE.clone(),
+            RuntimeError::ParseBlockError(e) => e.line_file(),
+            RuntimeError::ParsingError(e) => e.line_file,
+            RuntimeError::ExecError(e) => e.line_file,
+            RuntimeError::UnknownError(e) => e.line_file,
+            RuntimeError::WellDefinedError(e) => e.line_file,
+            RuntimeError::VerifyError(e) => e.line_file,
+            RuntimeError::InferError(e) => e.line_file,
         }
     }
 
     /// Short label for display (e.g. "ExecError", "UnknownError").
     pub fn display_label(&self) -> &'static str {
         match self {
-            StmtError::ArithmeticError(_) => "ArithmeticError",
-            StmtError::NewAtomicFactError(_) => "NewAtomicFactError",
-            StmtError::StoreFactError(_) => "StoreFactError",
-            StmtError::ParseBlockError(_) => "ParseBlockError",
-            StmtError::ParsingError(_) => "ParsingError",
-            StmtError::ExecError(_) => "ExecError",
-            StmtError::UnknownError(_) => "UnknownError",
-            StmtError::WellDefinedError(_) => "WellDefinedError",
-            StmtError::VerifyError(_) => "VerifyError",
-            StmtError::InferError(_) => "InferError",
+            RuntimeError::ArithmeticError(_) => "ArithmeticError",
+            RuntimeError::NewAtomicFactError(_) => "NewAtomicFactError",
+            RuntimeError::StoreFactError(_) => "StoreFactError",
+            RuntimeError::ParseBlockError(_) => "ParseBlockError",
+            RuntimeError::ParsingError(_) => "ParsingError",
+            RuntimeError::ExecError(_) => "ExecError",
+            RuntimeError::UnknownError(_) => "UnknownError",
+            RuntimeError::WellDefinedError(_) => "WellDefinedError",
+            RuntimeError::VerifyError(_) => "VerifyError",
+            RuntimeError::InferError(_) => "InferError",
         }
     }
 
     /// Error content only (no type label). Formatting with location is done by RuntimeContext::display_error.
     pub fn error_body(&self) -> String {
         match self {
-            StmtError::ArithmeticError(e) => e.body_string(),
-            StmtError::NewAtomicFactError(e) => e.body_string(),
-            StmtError::StoreFactError(e) => e.body_string(),
-            StmtError::ParseBlockError(e) => parse_block_error_message(e),
-            StmtError::ParsingError(e) => e.body_string(),
-            StmtError::ExecError(e) => e.body_string(),
-            StmtError::UnknownError(e) => e.body_string(),
-            StmtError::WellDefinedError(e) => e.body_string(),
-            StmtError::VerifyError(e) => e.body_string(),
-            StmtError::InferError(e) => e.body_string(),
+            RuntimeError::ArithmeticError(e) => e.body_string(),
+            RuntimeError::NewAtomicFactError(e) => e.body_string(),
+            RuntimeError::StoreFactError(e) => e.body_string(),
+            RuntimeError::ParseBlockError(e) => parse_block_error_message(e),
+            RuntimeError::ParsingError(e) => e.body_string(),
+            RuntimeError::ExecError(e) => e.body_string(),
+            RuntimeError::UnknownError(e) => e.body_string(),
+            RuntimeError::WellDefinedError(e) => e.body_string(),
+            RuntimeError::VerifyError(e) => e.body_string(),
+            RuntimeError::InferError(e) => e.body_string(),
         }
     }
 }
@@ -99,7 +99,7 @@ fn parse_block_error_message(e: &ParseBlockError) -> String {
 }
 
 // Display outputs body only (no type label); full format with label and line is via RuntimeContext::display_error.
-impl fmt::Display for StmtError {
+impl fmt::Display for RuntimeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.error_body())
     }
@@ -108,11 +108,11 @@ impl fmt::Display for StmtError {
 #[derive(Debug)]
 pub struct ArithmeticError {
     pub msg: String,
-    pub previous_error: Option<Box<StmtError>>,
+    pub previous_error: Option<Box<RuntimeError>>,
 }
 
 impl ArithmeticError {
-    pub fn new(msg: String, previous_error: Option<StmtError>) -> Self {
+    pub fn new(msg: String, previous_error: Option<RuntimeError>) -> Self {
         ArithmeticError {
             msg,
             previous_error: boxed_previous_error(previous_error),
@@ -130,16 +130,16 @@ impl fmt::Display for ArithmeticError {
     }
 }
 
-impl From<ArithmeticError> for StmtError {
+impl From<ArithmeticError> for RuntimeError {
     fn from(e: ArithmeticError) -> Self {
-        StmtError::ArithmeticError(e)
+        RuntimeError::ArithmeticError(e)
     }
 }
 
 #[derive(Debug)]
 pub struct NewAtomicFactError {
     pub msg: String,
-    pub previous_error: Option<Box<StmtError>>,
+    pub previous_error: Option<Box<RuntimeError>>,
 }
 
 impl std::error::Error for NewAtomicFactError {}
@@ -151,7 +151,7 @@ impl fmt::Display for NewAtomicFactError {
 }
 
 impl NewAtomicFactError {
-    pub fn new(msg: String, previous_error: Option<StmtError>) -> Self {
+    pub fn new(msg: String, previous_error: Option<RuntimeError>) -> Self {
         NewAtomicFactError {
             msg,
             previous_error: boxed_previous_error(previous_error),
@@ -163,9 +163,9 @@ impl NewAtomicFactError {
     }
 }
 
-impl From<NewAtomicFactError> for StmtError {
+impl From<NewAtomicFactError> for RuntimeError {
     fn from(e: NewAtomicFactError) -> Self {
-        StmtError::NewAtomicFactError(e)
+        RuntimeError::NewAtomicFactError(e)
     }
 }
 
@@ -186,7 +186,7 @@ impl From<NewAtomicFactError> for WellDefinedError {
 #[derive(Debug)]
 pub struct StoreFactError {
     pub msg: String,
-    pub previous_error: Option<Box<StmtError>>,
+    pub previous_error: Option<Box<RuntimeError>>,
 }
 
 impl std::error::Error for StoreFactError {}
@@ -198,7 +198,7 @@ impl fmt::Display for StoreFactError {
 }
 
 impl StoreFactError {
-    pub fn new(msg: String, previous_error: Option<StmtError>) -> Self {
+    pub fn new(msg: String, previous_error: Option<RuntimeError>) -> Self {
         StoreFactError {
             msg,
             previous_error: boxed_previous_error(previous_error),
@@ -211,9 +211,9 @@ impl StoreFactError {
     }
 }
 
-impl From<StoreFactError> for StmtError {
+impl From<StoreFactError> for RuntimeError {
     fn from(e: StoreFactError) -> Self {
-        StmtError::StoreFactError(e)
+        RuntimeError::StoreFactError(e)
     }
 }
 
@@ -261,9 +261,9 @@ impl ParseBlockError {
     }
 }
 
-impl From<ParseBlockError> for StmtError {
+impl From<ParseBlockError> for RuntimeError {
     fn from(e: ParseBlockError) -> Self {
-        StmtError::ParseBlockError(e)
+        RuntimeError::ParseBlockError(e)
     }
 }
 
@@ -271,7 +271,7 @@ impl From<ParseBlockError> for StmtError {
 pub struct ParsingError {
     pub msg: String,
     pub line_file: (usize, usize),
-    pub previous_error: Option<Box<StmtError>>,
+    pub previous_error: Option<Box<RuntimeError>>,
 }
 
 impl std::error::Error for ParsingError {}
@@ -283,7 +283,11 @@ impl fmt::Display for ParsingError {
 }
 
 impl ParsingError {
-    pub fn new(msg: String, line_file: (usize, usize), previous_error: Option<StmtError>) -> Self {
+    pub fn new(
+        msg: String,
+        line_file: (usize, usize),
+        previous_error: Option<RuntimeError>,
+    ) -> Self {
         ParsingError {
             msg,
             line_file,
@@ -296,9 +300,9 @@ impl ParsingError {
     }
 }
 
-impl From<ParsingError> for StmtError {
+impl From<ParsingError> for RuntimeError {
     fn from(e: ParsingError) -> Self {
-        StmtError::ParsingError(e)
+        RuntimeError::ParsingError(e)
     }
 }
 
@@ -306,7 +310,7 @@ impl From<ParsingError> for StmtError {
 pub struct ExecStmtError {
     pub stmt_type_name: String,
     pub msg: String,
-    pub previous_error: Option<Box<StmtError>>,
+    pub previous_error: Option<Box<RuntimeError>>,
     pub inside_results: Vec<NonErrStmtExecResult>,
     pub line_file: (usize, usize),
 }
@@ -323,7 +327,7 @@ impl ExecStmtError {
     pub fn new(
         stmt_type_name: String,
         msg: String,
-        previous_error: Option<StmtError>,
+        previous_error: Option<RuntimeError>,
         inside_results: Vec<NonErrStmtExecResult>,
         line_file: (usize, usize),
     ) -> Self {
@@ -359,16 +363,16 @@ impl ExecStmtError {
     }
 }
 
-impl From<ExecStmtError> for StmtError {
+impl From<ExecStmtError> for RuntimeError {
     fn from(e: ExecStmtError) -> Self {
-        StmtError::ExecError(e)
+        RuntimeError::ExecError(e)
     }
 }
 
 #[derive(Debug)]
 pub struct WellDefinedError {
     pub msg: String,
-    pub previous_error: Option<Box<StmtError>>,
+    pub previous_error: Option<Box<RuntimeError>>,
     pub line_file: (usize, usize),
 }
 
@@ -381,7 +385,11 @@ impl fmt::Display for WellDefinedError {
 }
 
 impl WellDefinedError {
-    pub fn new(msg: String, previous_error: Option<StmtError>, line_file: (usize, usize)) -> Self {
+    pub fn new(
+        msg: String,
+        previous_error: Option<RuntimeError>,
+        line_file: (usize, usize),
+    ) -> Self {
         WellDefinedError {
             msg,
             previous_error: boxed_previous_error(previous_error),
@@ -394,9 +402,9 @@ impl WellDefinedError {
     }
 }
 
-impl From<WellDefinedError> for StmtError {
+impl From<WellDefinedError> for RuntimeError {
     fn from(e: WellDefinedError) -> Self {
-        StmtError::WellDefinedError(e)
+        RuntimeError::WellDefinedError(e)
     }
 }
 
@@ -406,7 +414,7 @@ impl From<WellDefinedError> for ExecStmtError {
         ExecStmtError::new(
             "".to_string(),
             "fact/object is not well-defined:".to_string(),
-            Some(StmtError::WellDefinedError(e)),
+            Some(RuntimeError::WellDefinedError(e)),
             vec![],
             line_file,
         )
@@ -416,7 +424,7 @@ impl From<WellDefinedError> for ExecStmtError {
 #[derive(Debug)]
 pub struct VerifyError {
     pub msg: String,
-    pub previous_error: Option<Box<StmtError>>,
+    pub previous_error: Option<Box<RuntimeError>>,
     pub line_file: (usize, usize),
 }
 
@@ -429,7 +437,11 @@ impl fmt::Display for VerifyError {
 }
 
 impl VerifyError {
-    pub fn new(msg: String, previous_error: Option<StmtError>, line_file: (usize, usize)) -> Self {
+    pub fn new(
+        msg: String,
+        previous_error: Option<RuntimeError>,
+        line_file: (usize, usize),
+    ) -> Self {
         VerifyError {
             msg,
             previous_error: boxed_previous_error(previous_error),
@@ -442,9 +454,9 @@ impl VerifyError {
     }
 }
 
-impl From<VerifyError> for StmtError {
+impl From<VerifyError> for RuntimeError {
     fn from(e: VerifyError) -> Self {
-        StmtError::VerifyError(e)
+        RuntimeError::VerifyError(e)
     }
 }
 
@@ -454,7 +466,7 @@ impl From<VerifyError> for ExecStmtError {
         ExecStmtError::new(
             "".to_string(),
             "verify fact error:".to_string(),
-            Some(StmtError::VerifyError(e)),
+            Some(RuntimeError::VerifyError(e)),
             vec![],
             line_file,
         )
@@ -466,7 +478,7 @@ impl From<VerifyError> for WellDefinedError {
         let line_file = e.line_file;
         WellDefinedError::new(
             "verify fact error:".to_string(),
-            Some(StmtError::VerifyError(e)),
+            Some(RuntimeError::VerifyError(e)),
             line_file,
         )
     }
@@ -476,7 +488,7 @@ impl From<VerifyError> for WellDefinedError {
 pub struct UnknownError {
     pub msg: String,
     pub line_file: (usize, usize),
-    pub previous_error: Option<Box<StmtError>>,
+    pub previous_error: Option<Box<RuntimeError>>,
 }
 
 impl std::error::Error for UnknownError {}
@@ -488,7 +500,11 @@ impl fmt::Display for UnknownError {
 }
 
 impl UnknownError {
-    pub fn new(msg: String, line_file: (usize, usize), previous_error: Option<StmtError>) -> Self {
+    pub fn new(
+        msg: String,
+        line_file: (usize, usize),
+        previous_error: Option<RuntimeError>,
+    ) -> Self {
         UnknownError {
             msg,
             line_file,
@@ -501,9 +517,9 @@ impl UnknownError {
     }
 }
 
-impl From<UnknownError> for StmtError {
+impl From<UnknownError> for RuntimeError {
     fn from(e: UnknownError) -> Self {
-        StmtError::UnknownError(e)
+        RuntimeError::UnknownError(e)
     }
 }
 
@@ -511,7 +527,7 @@ impl From<UnknownError> for StmtError {
 pub struct InferError {
     pub msg: String,
     pub line_file: (usize, usize),
-    pub previous_error: Option<Box<StmtError>>,
+    pub previous_error: Option<Box<RuntimeError>>,
 }
 
 impl std::error::Error for InferError {}
@@ -523,7 +539,11 @@ impl fmt::Display for InferError {
 }
 
 impl InferError {
-    pub fn new(msg: String, line_file: (usize, usize), previous_error: Option<StmtError>) -> Self {
+    pub fn new(
+        msg: String,
+        line_file: (usize, usize),
+        previous_error: Option<RuntimeError>,
+    ) -> Self {
         InferError {
             msg,
             line_file,
@@ -536,9 +556,9 @@ impl InferError {
     }
 }
 
-impl From<InferError> for StmtError {
+impl From<InferError> for RuntimeError {
     fn from(e: InferError) -> Self {
-        StmtError::InferError(e)
+        RuntimeError::InferError(e)
     }
 }
 

@@ -1,10 +1,11 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::keywords::{is_builtin_identifier_obj, MOD_SIGN};
 use crate::environment::Environment;
-use crate::error::StmtError;
+use crate::error::RuntimeError;
 use crate::infer::InferResult;
 use crate::module_manager::ModuleManager;
 use crate::obj::FnSetObj;
+use crate::obj::Number;
 use crate::obj::{Atom, Cart, Identifier};
 use crate::result::{
     FactVerifiedByBuiltinRules, FactVerifiedByFact, NonErrStmtExecResult, NonFactualStmtSuccess,
@@ -346,7 +347,8 @@ impl<'a> RuntimeContext<'a> {
         &self,
         non_factual_stmt_success_result: &NonFactualStmtSuccess,
     ) -> String {
-        let success_prefix = self.success_prefix_by_line_file(non_factual_stmt_success_result.line_file);
+        let success_prefix =
+            self.success_prefix_by_line_file(non_factual_stmt_success_result.line_file);
         let message_body = format!(
             "{}{}{}",
             non_factual_stmt_success_result.stmt,
@@ -360,7 +362,8 @@ impl<'a> RuntimeContext<'a> {
         &self,
         fact_verified_by_fact_result: &FactVerifiedByFact,
     ) -> String {
-        let success_prefix = self.success_prefix_by_line_file(fact_verified_by_fact_result.line_file);
+        let success_prefix =
+            self.success_prefix_by_line_file(fact_verified_by_fact_result.line_file);
         let verified_by_suffix =
             if fact_verified_by_fact_result.verified_by_line_file == DEFAULT_LINE_FILE {
                 String::new()
@@ -409,7 +412,9 @@ impl<'a> RuntimeContext<'a> {
             NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                 fact_verified_by_builtin_rules_result,
             ) => self.display_fact_verified_by_builtin_rules(fact_verified_by_builtin_rules_result),
-            NonErrStmtExecResult::StmtUnknown(stmt_unknown_result) => stmt_unknown_result.to_string(),
+            NonErrStmtExecResult::StmtUnknown(stmt_unknown_result) => {
+                stmt_unknown_result.to_string()
+            }
         }
     }
 
@@ -421,7 +426,7 @@ impl<'a> RuntimeContext<'a> {
         super::runtime_context_display_result_json::display_result_json_string(self, result)
     }
 
-    pub fn display_error(&self, error: &StmtError) -> String {
+    pub fn display_error(&self, error: &RuntimeError) -> String {
         let body = error.error_body();
         let (line, file_index) = error.line_file();
         if (line, file_index) != DEFAULT_LINE_FILE {
@@ -452,6 +457,18 @@ impl<'a> RuntimeContext<'a> {
         self.builtin_environment
             .known_tuple_obj_in_what_cart
             .get(name)
+            .cloned()
+    }
+
+    pub fn get_calculated_value_of_obj(&self, obj_str: &str) -> Option<Number> {
+        for env in self.iter_environments_from_top() {
+            if let Some(calculated_value) = env.known_calculated_value_of_obj.get(obj_str) {
+                return Some(calculated_value.clone());
+            }
+        }
+        self.builtin_environment
+            .known_calculated_value_of_obj
+            .get(obj_str)
             .cloned()
     }
 }

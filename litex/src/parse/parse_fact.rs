@@ -298,7 +298,7 @@ impl<'a> Runtime<'a> {
         let tok = tb.current()?.to_string();
         let prop = if is_comparison_str(&tok) {
             tb.advance()?;
-            IdentifierOrIdentifierWithMod::Identifier(Identifier::new(tok.clone()))
+            IdentifierOrIdentifierWithMod::Identifier(Identifier::new(tok.clone(), None))
         } else if tok == FACT_PREFIX {
             tb.skip_token(FACT_PREFIX)?;
             self.parse_identifier_or_identifier_with_mod(tb)?
@@ -363,7 +363,7 @@ impl<'a> Runtime<'a> {
             let tok = tb.current()?.to_string();
             let prop = if is_comparison_str(&tok) {
                 tb.advance()?;
-                IdentifierOrIdentifierWithMod::Identifier(Identifier::new(tok.clone()))
+                IdentifierOrIdentifierWithMod::Identifier(Identifier::new(tok.clone(), None))
             } else if tok == FACT_PREFIX {
                 tb.skip_token(FACT_PREFIX)?;
                 self.parse_identifier_or_identifier_with_mod(tb)?

@@ -1,68 +1,87 @@
 use crate::obj::{Number, Obj};
 
 impl Obj {
-    pub fn can_be_calculated(&self) -> bool {
+    pub fn calculated_value(&self) -> Option<Number> {
         match self {
-            Obj::Number(_) => true,
-            Obj::Add(add) => return add.can_be_calculated,
-            Obj::Sub(sub) => {
-                return sub.can_be_calculated;
+            Obj::Number(number) => Some(number.clone()),
+            Obj::Identifier(identifier) => identifier.calculated_value.clone(),
+            Obj::IdentifierWithMod(identifier_with_mod) => {
+                identifier_with_mod.calculated_value.clone()
             }
-            Obj::Mul(mul) => {
-                return mul.can_be_calculated;
+            Obj::FieldAccess(field_access) => field_access.calculated_value.clone(),
+            Obj::FieldAccessWithMod(field_access_with_mod) => {
+                field_access_with_mod.calculated_value.clone()
             }
-            Obj::Mod(mod_obj) => {
-                return mod_obj.can_be_calculated;
-            }
-            Obj::Pow(pow_obj) => {
-                return pow_obj.can_be_calculated;
-            }
-            _ => false,
+            Obj::FnObj(fn_obj) => fn_obj.calculated_value.clone(),
+            Obj::Add(add) => add.calculated_value.clone(),
+            Obj::Sub(sub) => sub.calculated_value.clone(),
+            Obj::Mul(mul) => mul.calculated_value.clone(),
+            Obj::Mod(mod_obj) => mod_obj.calculated_value.clone(),
+            Obj::Pow(pow_obj) => pow_obj.calculated_value.clone(),
+            _ => None,
         }
     }
 
     pub fn two_objs_can_be_calculated_and_equal_by_calculation(&self, other: &Obj) -> bool {
-        if !self.can_be_calculated() || !other.can_be_calculated() {
+        if self.calculated_value().is_none() || other.calculated_value().is_none() {
             return false;
         }
-        self.calculate_to_string() == other.calculate_to_string()
+        self.calculate_to_string_panic_when_cannot_be_calculated()
+            == other.calculate_to_string_panic_when_cannot_be_calculated()
     }
 }
 
 impl Obj {
-    /// 1 + 1 => 2
-    /// 1 - 2 => -1
-    /// 1 - 1 => 0
-    pub fn calculate_to_string(&self) -> String {
-        if !self.can_be_calculated() {
-            panic!("kernel bug: 计算不该计算的东西了")
+    pub fn calculate_to_string_panic_when_cannot_be_calculated(&self) -> String {
+        if let Some(calculated_value) = self.calculated_value() {
+            return normalize_decimal_result(&calculated_value.value);
         }
 
         match self {
             Obj::Number(n) => normalize_decimal_result(&n.value.clone()),
             Obj::Add(add) => {
-                let l = add.left.calculate_to_string();
-                let r = add.right.calculate_to_string();
+                let l = add
+                    .left
+                    .calculate_to_string_panic_when_cannot_be_calculated();
+                let r = add
+                    .right
+                    .calculate_to_string_panic_when_cannot_be_calculated();
                 add_decimal_str(&l, &r)
             }
             Obj::Sub(sub) => {
-                let l = sub.left.calculate_to_string();
-                let r = sub.right.calculate_to_string();
+                let l = sub
+                    .left
+                    .calculate_to_string_panic_when_cannot_be_calculated();
+                let r = sub
+                    .right
+                    .calculate_to_string_panic_when_cannot_be_calculated();
                 sub_decimal_str(&l, &r)
             }
             Obj::Mul(mul) => {
-                let l = mul.left.calculate_to_string();
-                let r = mul.right.calculate_to_string();
+                let l = mul
+                    .left
+                    .calculate_to_string_panic_when_cannot_be_calculated();
+                let r = mul
+                    .right
+                    .calculate_to_string_panic_when_cannot_be_calculated();
                 mul_signed_decimal_str(&l, &r)
             }
             Obj::Mod(mod_obj) => {
-                let l = mod_obj.left.calculate_to_string();
-                let r = mod_obj.right.calculate_to_string();
+                let l = mod_obj
+                    .left
+                    .calculate_to_string_panic_when_cannot_be_calculated();
+                let r = mod_obj
+                    .right
+                    .calculate_to_string_panic_when_cannot_be_calculated();
                 mod_decimal_str(&l, &r)
             }
             Obj::Pow(pow_obj) => {
-                let base = pow_obj.base.calculate_to_string();
-                let exp = pow_obj.exponent.calculate_to_string();
+                let base = pow_obj
+                    .base
+                    .calculate_to_string_panic_when_cannot_be_calculated();
+                let exp = pow_obj
+                    .exponent
+                    .calculate_to_string_panic_when_cannot_be_calculated();
                 pow_decimal_str(&base, &exp)
             }
             _ => panic!("非算术表达式，无法 calculate_to_string"),
@@ -79,13 +98,15 @@ fn split_sign_and_magnitude(number_string: &str) -> (bool, String) {
     }
 }
 
-fn mul_signed_decimal_str(left_number_string: &str, right_number_string: &str) -> String {
+pub fn mul_signed_decimal_str(left_number_string: &str, right_number_string: &str) -> String {
     let (left_is_negative, left_magnitude_number_string) =
         split_sign_and_magnitude(left_number_string);
     let (right_is_negative, right_magnitude_number_string) =
         split_sign_and_magnitude(right_number_string);
-    let multiplied_magnitude_number_string =
-        mul_decimal_str(&left_magnitude_number_string, &right_magnitude_number_string);
+    let multiplied_magnitude_number_string = mul_decimal_str(
+        &left_magnitude_number_string,
+        &right_magnitude_number_string,
+    );
     let multiplied_magnitude_is_zero = multiplied_magnitude_number_string == "0";
     let multiplied_result_is_negative = left_is_negative ^ right_is_negative;
     if multiplied_result_is_negative && !multiplied_magnitude_is_zero {
@@ -96,12 +117,11 @@ fn mul_signed_decimal_str(left_number_string: &str, right_number_string: &str) -
 }
 
 impl Obj {
-    pub fn replace_with_numeric_result_if_can_be_calculated(&self) -> Obj {
-        if self.can_be_calculated() {
-            let calculated_value_string = self.calculate_to_string();
-            Obj::Number(Number::new(calculated_value_string))
+    pub fn replace_with_numeric_result_if_can_be_calculated(&self) -> (Obj, bool) {
+        if let Some(calculated_number) = self.calculated_value() {
+            (Obj::Number(calculated_number), true)
         } else {
-            self.clone()
+            (self.clone(), false)
         }
     }
 }
@@ -309,7 +329,7 @@ pub fn mul_decimal_str(a: &str, b: &str) -> String {
 }
 
 /// 竖式取余：a mod b，返回余数字符串。约定：b 仅为非零纯整数（字符串），a 取整数部分参与运算。
-fn mod_decimal_str(a: &str, b: &str) -> String {
+pub fn mod_decimal_str(a: &str, b: &str) -> String {
     let (int_a, _) = parse_decimal_parts(a);
     let (int_b, _) = parse_decimal_parts(b);
     let a_digits = trim_leading_zeros(&int_a);

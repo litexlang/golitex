@@ -13,6 +13,7 @@ use crate::fact::OrAndChainAtomicFact;
 use crate::fact::OrFact;
 use crate::obj::Cart;
 use crate::obj::FnSetObj;
+use crate::obj::Number;
 use crate::obj::Obj;
 use crate::obj::SetBuilder;
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
@@ -50,6 +51,7 @@ pub struct Environment {
     pub known_obj_is_well_defined: HashMap<String, ()>,
     pub known_atom_in_fn_set: HashMap<String, FnSetObj>,
     pub known_tuple_obj_in_what_cart: HashMap<String, Cart>,
+    pub known_calculated_value_of_obj: HashMap<String, Number>,
 
     pub cache_well_defined_obj: HashMap<String, ()>,
     pub cache_known_fact: HashMap<String, (usize, usize)>,
@@ -89,6 +91,7 @@ impl Environment {
         known_obj_is_well_defined: HashMap<String, ()>,
         known_atom_in_fn_set: HashMap<String, FnSetObj>,
         known_tuple_dim_obj: HashMap<String, Cart>,
+        known_calculated_value_of_obj: HashMap<String, Number>,
         cache_known_valid_obj: HashMap<String, ()>,
         cache_known_fact: HashMap<String, (usize, usize)>,
     ) -> Self {
@@ -113,6 +116,7 @@ impl Environment {
             known_obj_is_well_defined,
             known_atom_in_fn_set,
             known_tuple_obj_in_what_cart: known_tuple_dim_obj,
+            known_calculated_value_of_obj,
             cache_well_defined_obj: cache_known_valid_obj,
             cache_known_fact,
         }
@@ -594,6 +598,7 @@ impl Environment {
 impl Environment {
     pub fn new_empty_env() -> Self {
         Environment::new(
+            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),

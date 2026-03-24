@@ -1,4 +1,5 @@
 use crate::common::keywords::{DOT_AKA_FIELD_ACCESS_SIGN, MOD_SIGN};
+use crate::obj::Number;
 use std::fmt;
 
 #[derive(Clone)]
@@ -33,18 +34,29 @@ impl IdentifierOrIdentifierWithMod {
 #[derive(Clone)]
 pub struct Identifier {
     pub name: String,
+    pub calculated_value: Option<Number>,
+}
+
+pub fn identifier_to_string(name: &str) -> String {
+    name.to_string()
 }
 
 #[derive(Clone)]
 pub struct IdentifierWithMod {
     pub mod_name: String,
     pub name: String,
+    pub calculated_value: Option<Number>,
+}
+
+pub fn identifier_with_mod_to_string(mod_name: &str, name: &str) -> String {
+    format!("{}{}{}", mod_name, MOD_SIGN, name)
 }
 
 #[derive(Clone)]
 pub struct FieldAccess {
     pub name: String,
     pub fields: Vec<String>,
+    pub calculated_value: Option<Number>,
 }
 
 #[derive(Clone)]
@@ -52,6 +64,7 @@ pub struct FieldAccessWithMod {
     pub mod_name: String,
     pub name: String,
     pub fields: Vec<String>,
+    pub calculated_value: Option<Number>,
 }
 
 impl fmt::Display for Atom {
@@ -66,55 +79,82 @@ impl fmt::Display for Atom {
 }
 
 impl Identifier {
-    pub fn new(name: String) -> Self {
-        Identifier { name }
+    pub fn new(name: String, calculated_value: Option<Number>) -> Self {
+        Identifier {
+            name,
+            calculated_value,
+        }
     }
 }
 
 impl IdentifierWithMod {
-    pub fn new(mod_name: String, name: String) -> Self {
-        IdentifierWithMod { mod_name, name }
+    pub fn new(mod_name: String, name: String, calculated_value: Option<Number>) -> Self {
+        IdentifierWithMod {
+            mod_name,
+            name,
+            calculated_value,
+        }
     }
 }
 
 impl FieldAccess {
-    pub fn new(name: String, fields: Vec<String>) -> Self {
-        FieldAccess { name, fields }
+    pub fn new(name: String, fields: Vec<String>, calculated_value: Option<Number>) -> Self {
+        FieldAccess {
+            name,
+            fields,
+            calculated_value,
+        }
     }
 }
 
 impl FieldAccessWithMod {
-    pub fn new(mod_name: String, name: String, fields: Vec<String>) -> Self {
+    pub fn new(
+        mod_name: String,
+        name: String,
+        fields: Vec<String>,
+        calculated_value: Option<Number>,
+    ) -> Self {
         FieldAccessWithMod {
             mod_name,
             name,
             fields,
+            calculated_value,
         }
     }
 }
 
 impl fmt::Display for FieldAccess {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}{}{}",
-            self.name,
-            DOT_AKA_FIELD_ACCESS_SIGN,
-            self.fields.join(DOT_AKA_FIELD_ACCESS_SIGN)
-        )
+        write!(f, "{}", field_access_to_string(&self.name, &self.fields))
     }
+}
+
+pub fn field_access_to_string(name: &str, fields: &Vec<String>) -> String {
+    format!(
+        "{}{}{}",
+        name,
+        DOT_AKA_FIELD_ACCESS_SIGN,
+        fields.join(DOT_AKA_FIELD_ACCESS_SIGN)
+    )
 }
 
 impl fmt::Display for FieldAccessWithMod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{}{}{}{}{}",
-            self.mod_name,
-            MOD_SIGN,
-            self.name,
-            DOT_AKA_FIELD_ACCESS_SIGN,
-            self.fields.join(DOT_AKA_FIELD_ACCESS_SIGN)
+            "{}",
+            field_access_with_mod_to_string(&self.mod_name, &self.name, &self.fields)
         )
     }
+}
+
+pub fn field_access_with_mod_to_string(mod_name: &str, name: &str, fields: &Vec<String>) -> String {
+    format!(
+        "{}{}{}{}{}",
+        mod_name,
+        MOD_SIGN,
+        name,
+        DOT_AKA_FIELD_ACCESS_SIGN,
+        fields.join(DOT_AKA_FIELD_ACCESS_SIGN)
+    )
 }

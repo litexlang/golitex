@@ -1,5 +1,5 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
-use crate::error::{StmtError, VerifyError};
+use crate::error::{RuntimeError, VerifyError};
 use crate::execute::Runtime;
 use crate::fact::{AndFact, ChainFact};
 use crate::infer::InferResult;
@@ -25,7 +25,7 @@ impl<'a> Runtime<'a> {
             if let Err(e) = self.verify_and_fact_well_defined(and_fact, verify_state) {
                 return Err(VerifyError::new(
                     fact_display_string,
-                    Some(StmtError::WellDefinedError(e)),
+                    Some(RuntimeError::WellDefinedError(e)),
                     fact_line_file,
                 ));
             }
@@ -69,7 +69,7 @@ impl<'a> Runtime<'a> {
             if let Err(e) = self.verify_chain_fact_well_defined(chain_fact, verify_state) {
                 return Err(VerifyError::new(
                     fact_display_string,
-                    Some(StmtError::WellDefinedError(e)),
+                    Some(RuntimeError::WellDefinedError(e)),
                     fact_line_file,
                 ));
             }

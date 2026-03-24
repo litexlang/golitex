@@ -1,6 +1,6 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::helper::todo_error_message;
-use crate::error::{StmtError, WellDefinedError};
+use crate::error::{RuntimeError, WellDefinedError};
 use crate::execute::Runtime;
 use crate::fact::InFact;
 use crate::fact::{
@@ -169,7 +169,7 @@ impl<'a> Runtime<'a> {
                 FnSetObj::FnSetWithDom(fn_set_with_dom) => {
                     self.verify_fn_obj_well_defined_against_fn_set_with_dom(args, &fn_set_with_dom, verify_state).map_err(|well_defined_error| WellDefinedError::new(
                         format!("object {} is not well-defined, failed to verify arguments satisfy function domain.", fn_obj.to_string()),
-                        Some(StmtError::WellDefinedError(well_defined_error)),
+                        Some(RuntimeError::WellDefinedError(well_defined_error)),
                         DEFAULT_LINE_FILE.clone(),
                     ))?;
                 }
@@ -195,6 +195,7 @@ impl<'a> Runtime<'a> {
             let fn_obj_prefix = FnObj {
                 head: fn_obj.head.clone(),
                 body: fn_obj_prefix_body,
+                calculated_value: None,
             };
             let fn_obj_prefix_as_obj = Obj::FnObj(fn_obj_prefix);
             let set_where_the_next_fn_obj_is_in_obj =
@@ -294,7 +295,7 @@ impl<'a> Runtime<'a> {
                                 "failed to verify arg satisfy fn set parameter set: {}",
                                 fact
                             ),
-                            Some(StmtError::VerifyError(verify_error)),
+                            Some(RuntimeError::VerifyError(verify_error)),
                             DEFAULT_LINE_FILE.clone(),
                         )
                     })?;
@@ -321,7 +322,7 @@ impl<'a> Runtime<'a> {
                             "failed to verify function domain fact:\n{}",
                             instantiated_dom_fact
                         ),
-                        Some(StmtError::VerifyError(verify_error)),
+                        Some(RuntimeError::VerifyError(verify_error)),
                         DEFAULT_LINE_FILE.clone(),
                     )
                 })?;
@@ -519,7 +520,7 @@ impl<'a> Runtime<'a> {
 
         let zero_obj = Obj::Number(Number::new("0".to_string()));
         let two_obj = Obj::Number(Number::new("2".to_string()));
-        let exponent_mod_two_obj = Obj::Mod(Mod::new((*pow.exponent).clone(), two_obj, false));
+        let exponent_mod_two_obj = Obj::Mod(Mod::new((*pow.exponent).clone(), two_obj));
 
         let positive_base_and_real_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
@@ -693,7 +694,7 @@ impl<'a> Runtime<'a> {
                                 "failed to verify list set elements are pairwise not equal: {}",
                                 not_equal_atomic_fact
                             ),
-                            Some(StmtError::VerifyError(previous_error)),
+                            Some(RuntimeError::VerifyError(previous_error)),
                             DEFAULT_LINE_FILE.clone(),
                         )
                     })?;
@@ -737,7 +738,7 @@ impl<'a> Runtime<'a> {
                     "failed to verify well-defined of set builder {}",
                     x.to_string()
                 ),
-                Some(StmtError::ExecError(e)),
+                Some(RuntimeError::ExecError(e)),
                 DEFAULT_LINE_FILE.clone(),
             ));
         }
@@ -752,7 +753,7 @@ impl<'a> Runtime<'a> {
                         "failed to verify well-defined of set builder {}",
                         x.to_string()
                     ),
-                    Some(StmtError::ExecError(e)),
+                    Some(RuntimeError::ExecError(e)),
                     DEFAULT_LINE_FILE.clone(),
                 ));
             }
@@ -795,7 +796,7 @@ impl<'a> Runtime<'a> {
                     "failed to verify well-defined of fn set with dom {}",
                     x.to_string()
                 ),
-                Some(StmtError::WellDefinedError(e)),
+                Some(RuntimeError::WellDefinedError(e)),
                 DEFAULT_LINE_FILE.clone(),
             ));
         }
@@ -807,7 +808,7 @@ impl<'a> Runtime<'a> {
                         "failed to verify well-defined of fn set with dom {}",
                         x.to_string()
                     ),
-                    Some(StmtError::ExecError(e)),
+                    Some(RuntimeError::ExecError(e)),
                     DEFAULT_LINE_FILE.clone(),
                 ));
             }
@@ -823,7 +824,7 @@ impl<'a> Runtime<'a> {
                         "failed to verify well-defined of fn set with dom {}",
                         x.to_string()
                     ),
-                    Some(StmtError::ExecError(e)),
+                    Some(RuntimeError::ExecError(e)),
                     DEFAULT_LINE_FILE.clone(),
                 ));
             }
@@ -909,7 +910,7 @@ impl<'a> Runtime<'a> {
                         "exec_fact failed for inst struct obj arg (struct {})",
                         x.struct_name
                     ),
-                    Some(StmtError::VerifyError(e)),
+                    Some(RuntimeError::VerifyError(e)),
                     DEFAULT_LINE_FILE.clone(),
                 )
             })?;
@@ -1118,7 +1119,7 @@ impl<'a> Runtime<'a> {
             })?;
         let tuple_dim = cart_obj_where_tuple_obj_is.args.len();
 
-        let index_calculated_string = x.index.calculate_to_string();
+        let index_calculated_string = x.index.calculate_to_string_panic_when_cannot_be_calculated();
         let index_calculated_obj = Obj::Number(Number::new(index_calculated_string));
 
         let index_is_positive_integer_in_z_pos_fact = AtomicFact::InFact(InFact::new(
