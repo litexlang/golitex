@@ -18,9 +18,15 @@ const INFER_COLON: &str = "infer:";
 impl NonErrStmtExecResult {
     pub fn with_infers(mut self, infer_result: InferResult) -> Self {
         match &mut self {
-            NonErrStmtExecResult::NonFactualStmtSuccess(x) => x.infers.append(infer_result),
-            NonErrStmtExecResult::FactVerifiedByFact(x) => x.infers.append(infer_result),
-            NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => x.infers.append(infer_result),
+            NonErrStmtExecResult::NonFactualStmtSuccess(x) => {
+                x.infers.new_infer_result_inside(infer_result)
+            }
+            NonErrStmtExecResult::FactVerifiedByFact(x) => {
+                x.infers.new_infer_result_inside(infer_result)
+            }
+            NonErrStmtExecResult::FactVerifiedByBuiltinRules(x) => {
+                x.infers.new_infer_result_inside(infer_result)
+            }
             NonErrStmtExecResult::StmtUnknown(_) => {}
         }
         self

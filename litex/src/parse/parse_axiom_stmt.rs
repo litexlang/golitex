@@ -1,7 +1,7 @@
 use super::TokenBlock;
 use crate::common::keywords::{
     BY_CART_DEF, BY_CASES, BY_CONTRA, BY_EXTENSION, BY_FN_DEF, BY_INDUC, CASE, COLON, COMMA,
-    ENUMERATE, EQUAL, FOR, FROM, IMPOSSIBLE, PROVE, RIGHT_ARROW,
+    ENUMERATE, FOR, FROM, IMPOSSIBLE, PROVE,
 };
 use crate::error::ParsingError;
 use crate::execute::Runtime;
@@ -279,15 +279,15 @@ impl<'a> Runtime<'a> {
             ));
         }
 
-        let first_is_arrow = tb.body[0].header.get(0).map(|s| s.as_str()) == Some(RIGHT_ARROW);
+        let first_is_prove = tb.body[0].header.get(0).map(|s| s.as_str()) == Some(PROVE);
 
-        let (dom_facts, then_facts, proof) = if first_is_arrow {
+        let (dom_facts, then_facts, proof) = if first_is_prove {
             // body[0] 是 =>:，其 body 是 then_facts；后面全是 proof
             let then_block = tb.body.get_mut(0).ok_or_else(|| {
                 ParsingError::new("Expected body".to_string(), tb.line_file, None)
             })?;
             let then_fact_count_upper_bound = then_block.body.len();
-            then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
+            then_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
             let mut then_facts: Vec<ExistOrAndChainAtomicFact> =
                 Vec::with_capacity(then_fact_count_upper_bound);
             for b in then_block.body.iter_mut() {
@@ -303,7 +303,7 @@ impl<'a> Runtime<'a> {
             // 前面若干 block 是 dom，直到 =>:；=>: 的 body 是 then_facts；再后面是 proof
             let mut arrow_idx = None;
             for (i, b) in tb.body.iter().enumerate() {
-                if b.header.get(0).map(|s| s.as_str()) == Some(RIGHT_ARROW) {
+                if b.header.get(0).map(|s| s.as_str()) == Some(PROVE) {
                     arrow_idx = Some(i);
                     break;
                 }
@@ -312,16 +312,16 @@ impl<'a> Runtime<'a> {
                 ParsingError::new("for: expects a =>: block".to_string(), tb.line_file, None)
             })?;
 
-            let mut dom_facts: Vec<ExistOrAndChainAtomicFact> = Vec::with_capacity(arrow_idx);
+            let mut dom_facts: Vec<AtomicFact> = Vec::with_capacity(arrow_idx);
             for b in tb.body[0..arrow_idx].iter_mut() {
-                dom_facts.push(self.parse_exist_or_and_chain_atomic_fact(b)?);
+                dom_facts.push(self.parse_atomic_fact(b, true)?);
             }
 
             let then_block = tb.body.get_mut(arrow_idx).ok_or_else(|| {
                 ParsingError::new("Expected body".to_string(), tb.line_file, None)
             })?;
             let then_fact_count_upper_bound = then_block.body.len();
-            then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
+            then_block.skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
             let mut then_facts: Vec<ExistOrAndChainAtomicFact> =
                 Vec::with_capacity(then_fact_count_upper_bound);
             for b in then_block.body.iter_mut() {
@@ -350,16 +350,49 @@ impl<'a> Runtime<'a> {
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<Stmt, ParsingError> {
-        tb.skip_token(BY_EXTENSION)?;
-        let left = self.parse_obj(tb)?;
-        tb.skip_token(EQUAL)?;
-        let right = self.parse_obj(tb)?;
-        tb.skip_token(COLON)?;
-        let proof: Vec<Stmt> = tb
-            .body
-            .iter_mut()
-            .map(|b| self.parse_stmt(b))
-            .collect::<Result<_, _>>()?;
+        tb.skip_token_and_colon_and_exceed_end_of_head(BY_EXTENSION)?;
+
+        if tb.body.is_empty() {
+            return Err(ParsingError::new(
+                "by_extension: expects at least one body block".to_string(),
+                tb.line_file,
+                None,
+            ));
+        }
+
+        tb.body[0].skip_token_and_colon_and_exceed_end_of_head(PROVE)?;
+
+        if tb.body[0].body.len() != 1 {
+            return Err(ParsingError::new(
+                "by_extension: prove: expects exactly one atomic fact block".to_string(),
+                tb.body[0].line_file,
+                None,
+            ));
+        }
+
+        let to_prove_equal_fact = self.parse_atomic_fact(
+            tb.body[0].body.get_mut(0).ok_or_else(|| {
+                ParsingError::new("Expected body".to_string(), tb.line_file, None)
+            })?,
+            true,
+        )?;
+
+        let (left, right) = match to_prove_equal_fact {
+            AtomicFact::EqualFact(equal_fact) => (equal_fact.left, equal_fact.right),
+            _ => {
+                return Err(ParsingError::new(
+                    "by_extension: prove: expects equal fact".to_string(),
+                    tb.line_file,
+                    None,
+                ));
+            }
+        };
+
+        let mut proof: Vec<Stmt> = vec![];
+        for block in tb.body[1..].iter_mut() {
+            proof.push(self.parse_stmt(block)?);
+        }
+
         Ok(Stmt::ByExtensionAxiomStmt(ByExtensionAxiomStmt::new(
             left,
             right,

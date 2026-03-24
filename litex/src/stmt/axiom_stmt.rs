@@ -62,7 +62,7 @@ pub enum ClosedRangeOrRange {
 pub struct ForAxiomStmt {
     pub params: Vec<String>,
     pub param_sets: Vec<ClosedRangeOrRange>,
-    pub dom_facts: Vec<ExistOrAndChainAtomicFact>,
+    pub dom_facts: Vec<AtomicFact>,
     pub then_facts: Vec<ExistOrAndChainAtomicFact>,
     pub proof: Vec<Stmt>,
     pub line_file: (usize, usize),
@@ -348,10 +348,39 @@ impl fmt::Display for ForAxiomStmt {
 }
 
 impl ForAxiomStmt {
+    pub fn to_corresponding_forall_fact(&self) -> Result<Fact, String> {
+        if self.params.len() != self.param_sets.len() {
+            return Err("for: number of params does not match number of param sets".to_string());
+        }
+        let mut params_def_with_type: Vec<ParamDefWithParamType> = Vec::new();
+        for (param_name, param_set) in self.params.iter().zip(self.param_sets.iter()) {
+            let param_set_as_obj = match param_set {
+                ClosedRangeOrRange::ClosedRange(closed_range) => {
+                    Obj::ClosedRange(closed_range.clone())
+                }
+                ClosedRangeOrRange::Range(range) => Obj::Range(range.clone()),
+            };
+            params_def_with_type.push(ParamDefWithParamType(
+                vec![param_name.clone()],
+                ParamType::Obj(param_set_as_obj),
+            ));
+        }
+        Ok(Fact::ForallFact(ForallFact::new(
+            params_def_with_type,
+            self
+                .dom_facts
+                .iter()
+                .map(|atomic_fact| ExistOrAndChainAtomicFact::AtomicFact(atomic_fact.clone()))
+                .collect(),
+            self.then_facts.clone(),
+            self.line_file,
+        )))
+    }
+
     pub fn new(
         params: Vec<String>,
         param_sets: Vec<ClosedRangeOrRange>,
-        dom_facts: Vec<ExistOrAndChainAtomicFact>,
+        dom_facts: Vec<AtomicFact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
         proof: Vec<Stmt>,
         line_file: (usize, usize),

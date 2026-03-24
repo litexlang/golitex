@@ -5,6 +5,7 @@ use crate::error::VerifyError;
 use crate::execute::Runtime;
 use crate::fact::AtomicFact;
 use crate::fact::InFact;
+use crate::fact::EqualFact;
 use crate::infer::InferResult;
 use crate::obj::Obj;
 use crate::result::FactVerifiedByBuiltinRules;
@@ -47,7 +48,7 @@ impl<'a> Runtime<'a> {
     pub fn verify_in_fact_with_builtin_rules(
         &mut self,
         in_fact: &InFact,
-        _verify_state: &VerifyState,
+        verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         match (&in_fact.element, &in_fact.set) {
             (Obj::Number(num), Obj::RObj(_)) => Ok(number_in_set_verified_by_builtin_rules_result(
@@ -201,10 +202,43 @@ impl<'a> Runtime<'a> {
                 &in_fact.element,
                 in_fact.line_file,
             )),
+            (_, Obj::ListSet(list_set)) => {
+                self.verify_in_fact_by_equal_to_one_element_in_list_set(in_fact, list_set, verify_state)
+            }
             (_, target_set_obj) => {
                 self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
             }
         }
+    }
+
+    fn verify_in_fact_by_equal_to_one_element_in_list_set(
+        &mut self,
+        in_fact: &InFact,
+        list_set: &crate::obj::ListSet,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        for current_element_in_list_set in list_set.list.iter() {
+            let equal_fact = AtomicFact::EqualFact(EqualFact::new(
+                in_fact.element.clone(),
+                *current_element_in_list_set.clone(),
+                in_fact.line_file,
+            ));
+            let equal_fact_verify_result = self.verify_atomic_fact(&equal_fact, verify_state)?;
+            if equal_fact_verify_result.is_true() {
+                return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                    FactVerifiedByBuiltinRules::new(
+                        format!("{} {}{} {}", in_fact.element, FACT_PREFIX, IN, in_fact.set),
+                        format!(
+                            "{} equals one element in list_set {}",
+                            in_fact.element, in_fact.set
+                        ),
+                        InferResult::new(),
+                        in_fact.line_file,
+                    ),
+                ));
+            }
+        }
+        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
     fn standard_subset_set_objs_for_target_set(target_set_obj: &Obj) -> Option<Vec<Obj>> {

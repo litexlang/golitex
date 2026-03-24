@@ -1,0 +1,11 @@
+by_extension:
+    prove:
+        {1, 2} = {2, 1}
+    enumerate x {1, 2}:
+        prove:
+            x $in {2, 1}
+    enumerate y {2, 1}:
+        prove:
+            y $in {1, 2}
+
+{1, 2} = {2, 1}

@@ -57,7 +57,7 @@ impl<'a> Runtime<'a> {
                         forall_fact.line_file,
                     )
                 })?;
-            infer_result.append(param_infer_result);
+            infer_result.new_infer_result_inside(param_infer_result);
         }
 
         for dom_fact in forall_fact.dom_facts.iter() {
@@ -72,7 +72,7 @@ impl<'a> Runtime<'a> {
                         forall_fact.line_file,
                     )
                 })?;
-            infer_result.append(dom_infer_result);
+            infer_result.new_infer_result_inside(dom_infer_result);
         }
 
         for then_fact in forall_fact.then_facts.iter() {
