@@ -786,16 +786,21 @@ impl<'a> Runtime<'a> {
 
     fn parse_set_builder_or_set_list(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         tb.skip_token(LEFT_CURLY_BRACE)?;
+        if tb.current_token_is_equal_to(RIGHT_CURLY_BRACE) {
+            tb.skip_token(RIGHT_CURLY_BRACE)?;
+            return Ok(Obj::ListSet(ListSet::new(vec![])));
+        }
+
         let left = self.parse_obj(tb)?;
         match left {
             Obj::Identifier(a) => {
                 if tb.current_token_is_equal_to(COMMA) || tb.current()? == RIGHT_CURLY_BRACE {
-                    self.parse_set_list(tb, Obj::Identifier(a))
+                    self.parse_list_set_obj_with_leftmost_obj(tb, Obj::Identifier(a))
                 } else {
                     self.parse_set_builder(tb, a)
                 }
             }
-            _ => self.parse_set_list(tb, left),
+            _ => self.parse_list_set_obj_with_leftmost_obj(tb, left),
         }
     }
 
@@ -851,18 +856,33 @@ impl<'a> Runtime<'a> {
     }
 
     /// ListSet: { a b c } 或 { 1, 0, 2 }；遇逗号先 skip 再解析下一项
-    fn parse_set_list(
+    fn parse_list_set_obj_with_leftmost_obj(
         &mut self,
         tb: &mut TokenBlock,
         left_most_obj: Obj,
     ) -> Result<Obj, ParsingError> {
         let mut objs = vec![left_most_obj];
         while tb.current()? != RIGHT_CURLY_BRACE {
-            tb.skip_token(COMMA)?;
+            if tb.current_token_is_equal_to(COMMA) {
+                tb.skip_token(COMMA)?;
+            }
             objs.push(self.parse_obj(tb)?);
         }
         tb.skip_token(RIGHT_CURLY_BRACE)?;
         Ok(Obj::ListSet(ListSet::new(objs)))
+    }
+
+    pub fn parse_list_set_obj(&mut self, tb: &mut TokenBlock) -> Result<ListSet, ParsingError> {
+        let mut objs = vec![];
+        tb.skip_token(LEFT_CURLY_BRACE)?;
+        while tb.current()? != RIGHT_CURLY_BRACE {
+            objs.push(self.parse_obj(tb)?);
+            if tb.current_token_is_equal_to(COMMA) {
+                tb.skip_token(COMMA)?;
+            }
+        }
+        tb.skip_token(RIGHT_CURLY_BRACE)?;
+        Ok(ListSet::new(objs))
     }
 
     fn parse_instantiated_struct_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {

@@ -27,7 +27,7 @@ impl<'a> Runtime<'a> {
             }
         }
 
-        let next_verify_state = verify_state.new_state_with_req_ok_set_to_true();
+        let next_verify_state = verify_state.make_state_with_req_ok_set_to_true();
 
         match fact {
             AtomicFact::EqualFact(equal_fact) => {

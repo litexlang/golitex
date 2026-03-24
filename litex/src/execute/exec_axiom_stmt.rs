@@ -1,7 +1,8 @@
 use super::Runtime;
 use crate::error::{ExecStmtError, StmtError};
-use crate::fact::{AtomicFact, Fact, OrFact};
+use crate::fact::{AtomicFact, EqualFact, Fact, OrFact};
 use crate::infer::InferResult;
+use crate::obj::{Identifier, Obj};
 use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
 use crate::stmt::axiom_stmt::{
     ByCartDefAxiomStmt, ByCasesAxiomStmt, ByContraAxiomStmt, ByExtensionAxiomStmt,
@@ -10,34 +11,6 @@ use crate::stmt::axiom_stmt::{
 use crate::verify::VerifyState;
 
 impl<'a> Runtime<'a> {
-    fn impossible_proof_message(
-        impossible_fact: &AtomicFact,
-        option_case_fact_string: Option<String>,
-    ) -> String {
-        match option_case_fact_string {
-            Some(case_fact) => format!(
-                "failed to prove impossible `{}` under case `{}`",
-                impossible_fact, case_fact
-            ),
-            None => format!("failed to prove impossible `{}`", impossible_fact),
-        }
-    }
-
-    fn impossible_proof_success_message(
-        impossible_fact: &AtomicFact,
-        option_case_fact_string: Option<String>,
-    ) -> String {
-        match option_case_fact_string {
-            Some(case_fact) => {
-                format!(
-                    "proved impossible `{}` under case `{}`",
-                    impossible_fact, case_fact
-                )
-            }
-            None => format!("proved impossible `{}`", impossible_fact),
-        }
-    }
-
     pub fn exec_by_cases_axiom_stmt(
         &mut self,
         stmt: &ByCasesAxiomStmt,
@@ -153,7 +126,7 @@ impl<'a> Runtime<'a> {
             if verify_impossible_fact_result.is_unknown() {
                 return Err(StmtError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
-                    Self::impossible_proof_message(&stmt.impossible_fact, None),
+                    impossible_proof_error_message(&stmt.impossible_fact, None),
                     None,
                     inside_results,
                     stmt.line_file,
@@ -167,7 +140,7 @@ impl<'a> Runtime<'a> {
             if verify_reversed_impossible_fact_result.is_unknown() {
                 return Err(StmtError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
-                    Self::impossible_proof_message(&stmt.impossible_fact, None),
+                    impossible_proof_error_message(&stmt.impossible_fact, None),
                     None,
                     vec![],
                     stmt.line_file,
@@ -214,7 +187,108 @@ impl<'a> Runtime<'a> {
         &mut self,
         stmt: &EnumerateAxiomStmt,
     ) -> Result<NonErrStmtExecResult, StmtError> {
-        Self::stmt_unsupported(stmt.stmt_type_name(), stmt.line_file)
+        let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
+            StmtError::ExecError(ExecStmtError::new(
+                stmt.stmt_type_name(),
+                msg,
+                None,
+                vec![],
+                stmt.line_file,
+            ))
+        })?;
+
+        self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
+            .map_err(|well_defined_error| {
+                StmtError::ExecError(ExecStmtError::new(
+                    stmt.stmt_type_name(),
+                    format!(
+                        "enumerate: corresponding forall `{}` is not well-defined",
+                        corresponding_forall_fact
+                    ),
+                    Some(well_defined_error.into()),
+                    vec![],
+                    stmt.line_file,
+                ))
+            })?;
+
+        let enumerate_cartesian_product_is_empty = stmt
+            .param_sets
+            .iter()
+            .any(|list_set_obj| list_set_obj.list.is_empty());
+
+        if enumerate_cartesian_product_is_empty {
+            let mut infer_result = InferResult::new();
+            infer_result.new_fact(&corresponding_forall_fact);
+            let infer_result_from_stored_forall_fact = self
+                .store_fact_without_well_defined_verified_and_infer(&corresponding_forall_fact)
+                .map_err(|store_fact_error| {
+                    StmtError::ExecError(ExecStmtError::new(
+                        stmt.stmt_type_name(),
+                        format!(
+                            "enumerate: failed to store corresponding forall `{}`",
+                            corresponding_forall_fact
+                        ),
+                        Some(store_fact_error.into()),
+                        vec![],
+                        stmt.line_file,
+                    ))
+                })?;
+            return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+                NonFactualStmtSuccess::new(
+                    stmt.to_string(),
+                    infer_result_from_stored_forall_fact,
+                    vec![],
+                    stmt.line_file,
+                ),
+            ));
+        }
+
+        let mut all_inside_results: Vec<NonErrStmtExecResult> = Vec::new();
+        let mut current_parameter_index_assignment = Self::enumerate_start_index_assignment(stmt);
+        loop {
+            let mut one_assignment_inside_results = self
+                .exec_enumerate_axiom_stmt_for_one_assignment(
+                    stmt,
+                    &current_parameter_index_assignment,
+                )?;
+            all_inside_results.append(&mut one_assignment_inside_results);
+            let next_parameter_index_assignment =
+                Self::enumerate_next_index_assignment(stmt, &current_parameter_index_assignment);
+            match next_parameter_index_assignment {
+                Some(next_parameter_index_assignment) => {
+                    current_parameter_index_assignment = next_parameter_index_assignment;
+                }
+                None => break,
+            }
+        }
+
+        let mut infer_result = InferResult::new();
+        infer_result.new_fact(&corresponding_forall_fact);
+
+        let infer_result_from_stored_forall_fact = self
+            .store_fact_without_well_defined_verified_and_infer(&corresponding_forall_fact)
+            .map_err(|store_fact_error| {
+                StmtError::ExecError(ExecStmtError::new(
+                    stmt.stmt_type_name(),
+                    format!(
+                        "enumerate: failed to store corresponding forall `{}`",
+                        corresponding_forall_fact
+                    ),
+                    Some(store_fact_error.into()),
+                    vec![],
+                    stmt.line_file,
+                ))
+            })?;
+        infer_result.append(infer_result_from_stored_forall_fact);
+
+        Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+            NonFactualStmtSuccess::new(
+                stmt.to_string(),
+                infer_result,
+                all_inside_results,
+                stmt.line_file,
+            ),
+        ))
     }
 
     pub fn exec_by_induc_axiom_stmt(
@@ -254,6 +328,79 @@ impl<'a> Runtime<'a> {
 }
 
 impl<'a> Runtime<'a> {
+    fn enumerate_start_index_assignment(stmt: &EnumerateAxiomStmt) -> Vec<usize> {
+        let mut start_index_assignment: Vec<usize> = Vec::new();
+        for _ in stmt.param_sets.iter() {
+            start_index_assignment.push(0);
+        }
+        start_index_assignment
+    }
+
+    fn enumerate_next_index_assignment(
+        stmt: &EnumerateAxiomStmt,
+        current_parameter_index_assignment: &Vec<usize>,
+    ) -> Option<Vec<usize>> {
+        let mut next_parameter_index_assignment = current_parameter_index_assignment.clone();
+        for reversed_position in 0..next_parameter_index_assignment.len() {
+            let position_from_right = next_parameter_index_assignment.len() - 1 - reversed_position;
+            let current_index = next_parameter_index_assignment[position_from_right];
+            let current_list_set_length = stmt.param_sets[position_from_right].list.len();
+            if current_index + 1 < current_list_set_length {
+                next_parameter_index_assignment[position_from_right] = current_index + 1;
+                return Some(next_parameter_index_assignment);
+            }
+            next_parameter_index_assignment[position_from_right] = 0;
+        }
+        None
+    }
+
+    fn exec_enumerate_axiom_stmt_for_one_assignment(
+        &mut self,
+        stmt: &EnumerateAxiomStmt,
+        parameter_index_assignment: &Vec<usize>,
+    ) -> Result<Vec<NonErrStmtExecResult>, StmtError> {
+        self.runtime_context.push_env();
+        let execute_result = self
+            .exec_enumerate_axiom_stmt_for_one_assignment_body(stmt, parameter_index_assignment);
+        self.runtime_context.pop_env();
+        execute_result
+    }
+
+    fn exec_enumerate_axiom_stmt_for_one_assignment_body(
+        &mut self,
+        stmt: &EnumerateAxiomStmt,
+        parameter_index_assignment: &Vec<usize>,
+    ) -> Result<Vec<NonErrStmtExecResult>, StmtError> {
+        let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
+        for (parameter_position, parameter_name) in stmt.params.iter().enumerate() {
+            let assigned_obj = (*stmt.param_sets[parameter_position].list
+                [parameter_index_assignment[parameter_position]])
+                .clone();
+            self.store_identifier_obj(parameter_name)
+                .map_err(StmtError::from)?;
+            let parameter_equal_to_assigned_obj_atomic_fact =
+                AtomicFact::EqualFact(EqualFact::new(
+                    Obj::Identifier(Identifier::new(parameter_name.clone())),
+                    assigned_obj.clone(),
+                    stmt.line_file,
+                ));
+            self.store_atomic_fact_without_well_defined_verified_and_infer(
+                &parameter_equal_to_assigned_obj_atomic_fact,
+            )
+            .map_err(StmtError::from)?;
+        }
+        for proof_stmt in stmt.proof.iter() {
+            let proof_result = self.exec_stmt(proof_stmt)?;
+            inside_results.push(proof_result);
+        }
+        for fact_to_prove in stmt.to_prove.iter() {
+            let verified_result = self
+                .verify_fact_return_err_if_not_true(fact_to_prove, &VerifyState::new(0, false))?;
+            inside_results.push(verified_result);
+        }
+        Ok(inside_results)
+    }
+
     fn exec_by_cases_axiom_stmt_verify_cases_cover_all_situations(
         &mut self,
         stmt: &ByCasesAxiomStmt,
@@ -341,7 +488,7 @@ impl<'a> Runtime<'a> {
                 .map_err(|verify_error| {
                     ExecStmtError::new(
                         stmt.stmt_type_name(),
-                        Self::impossible_proof_message(
+                        impossible_proof_error_message(
                             impossible_fact,
                             Some(case_fact.to_string()),
                         ),
@@ -354,7 +501,7 @@ impl<'a> Runtime<'a> {
             if verify_impossible_fact_result.is_unknown() {
                 return Err(ExecStmtError::new(
                     stmt.stmt_type_name(),
-                    Self::impossible_proof_message(impossible_fact, Some(case_fact.to_string())),
+                    impossible_proof_error_message(impossible_fact, Some(case_fact.to_string())),
                     None,
                     vec![],
                     impossible_fact.line_file(),
@@ -366,7 +513,7 @@ impl<'a> Runtime<'a> {
                 .map_err(|verify_error| {
                     ExecStmtError::new(
                         stmt.stmt_type_name(),
-                        Self::impossible_proof_message(
+                        impossible_proof_error_message(
                             impossible_fact,
                             Some(case_fact.to_string()),
                         ),
@@ -379,7 +526,7 @@ impl<'a> Runtime<'a> {
             if verify_reversed_impossible_fact_result.is_unknown() {
                 return Err(ExecStmtError::new(
                     stmt.stmt_type_name(),
-                    Self::impossible_proof_message(impossible_fact, Some(case_fact.to_string())),
+                    impossible_proof_error_message(impossible_fact, Some(case_fact.to_string())),
                     None,
                     vec![],
                     impossible_fact.line_file(),
@@ -388,10 +535,7 @@ impl<'a> Runtime<'a> {
 
             inside_results.push(NonErrStmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
-                    Self::impossible_proof_success_message(
-                        impossible_fact,
-                        Some(case_fact.to_string()),
-                    ),
+                    impossible_proof_success_message(impossible_fact, Some(case_fact.to_string())),
                     InferResult::new(),
                     vec![
                         verify_impossible_fact_result,
@@ -410,5 +554,33 @@ impl<'a> Runtime<'a> {
             &mut inside_results,
         )?;
         Ok(inside_results)
+    }
+}
+
+fn impossible_proof_error_message(
+    impossible_fact: &AtomicFact,
+    option_case_fact_string: Option<String>,
+) -> String {
+    match option_case_fact_string {
+        Some(case_fact) => format!(
+            "failed to prove impossible `{}` under case `{}`",
+            impossible_fact, case_fact
+        ),
+        None => format!("failed to prove impossible `{}`", impossible_fact),
+    }
+}
+
+fn impossible_proof_success_message(
+    impossible_fact: &AtomicFact,
+    option_case_fact_string: Option<String>,
+) -> String {
+    match option_case_fact_string {
+        Some(case_fact) => {
+            format!(
+                "proved impossible `{}` under case `{}`",
+                impossible_fact, case_fact
+            )
+        }
+        None => format!("proved impossible `{}`", impossible_fact),
     }
 }
