@@ -167,7 +167,9 @@ fn calculate_obj_pair_to_number_strings(
     left_obj: &Obj,
     right_obj: &Obj,
 ) -> Option<(String, String)> {
-    if !left_obj.calculated_value().is_some() || !right_obj.calculated_value().is_some() {
+    if !left_obj.normalized_calculated_value().is_some()
+        || !right_obj.normalized_calculated_value().is_some()
+    {
         return None;
     }
     Some((

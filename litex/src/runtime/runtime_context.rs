@@ -460,14 +460,16 @@ impl<'a> RuntimeContext<'a> {
             .cloned()
     }
 
-    pub fn get_calculated_value_of_obj(&self, obj_str: &str) -> Option<Number> {
+    pub fn get_normalized_calculated_value_of_obj(&self, obj_str: &str) -> Option<Number> {
         for env in self.iter_environments_from_top() {
-            if let Some(calculated_value) = env.known_calculated_value_of_obj.get(obj_str) {
+            if let Some(calculated_value) =
+                env.known_normalized_calculated_value_of_obj.get(obj_str)
+            {
                 return Some(calculated_value.clone());
             }
         }
         self.builtin_environment
-            .known_calculated_value_of_obj
+            .known_normalized_calculated_value_of_obj
             .get(obj_str)
             .cloned()
     }

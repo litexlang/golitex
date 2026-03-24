@@ -48,24 +48,24 @@ fn digits_all_zero(digits: &[u8]) -> bool {
 
 /// True if the number is a whole number (no fractional part or fractional part all zeros, e.g. -1.00, 2.0).
 pub fn is_integer_after_simplification(number: &Number) -> bool {
-    let (_, _, frac_digits) = parse_number_parts(&number.value);
+    let (_, _, frac_digits) = parse_number_parts(&number.normalized_value);
     frac_digits.is_empty() || digits_all_zero(&frac_digits)
 }
 
 fn number_is_zero(number: &Number) -> bool {
-    let (_, int_digits, frac_digits) = parse_number_parts(&number.value);
+    let (_, int_digits, frac_digits) = parse_number_parts(&number.normalized_value);
     digits_all_zero(&int_digits) && (frac_digits.is_empty() || digits_all_zero(&frac_digits))
 }
 
 fn number_is_positive(number: &Number) -> bool {
-    let (negative, int_digits, frac_digits) = parse_number_parts(&number.value);
+    let (negative, int_digits, frac_digits) = parse_number_parts(&number.normalized_value);
     let zero =
         digits_all_zero(&int_digits) && (frac_digits.is_empty() || digits_all_zero(&frac_digits));
     !negative && !zero
 }
 
 fn number_is_negative(number: &Number) -> bool {
-    let (negative, int_digits, frac_digits) = parse_number_parts(&number.value);
+    let (negative, int_digits, frac_digits) = parse_number_parts(&number.normalized_value);
     let zero =
         digits_all_zero(&int_digits) && (frac_digits.is_empty() || digits_all_zero(&frac_digits));
     negative && !zero

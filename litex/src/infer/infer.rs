@@ -117,17 +117,17 @@ impl<'a> Runtime<'a> {
     }
 
     fn infer_equal_fact(&mut self, _equal_fact: &EqualFact) -> Result<InferResult, InferError> {
-        if let Some(right_calculated_value) = _equal_fact.right.calculated_value() {
+        if let Some(right_calculated_value) = _equal_fact.right.normalized_calculated_value() {
             self.runtime_context
                 .top_level_env()
-                .known_calculated_value_of_obj
+                .known_normalized_calculated_value_of_obj
                 .insert(_equal_fact.left.to_string(), right_calculated_value);
         }
 
-        if let Some(left_calculated_value) = _equal_fact.left.calculated_value() {
+        if let Some(left_calculated_value) = _equal_fact.left.normalized_calculated_value() {
             self.runtime_context
                 .top_level_env()
-                .known_calculated_value_of_obj
+                .known_normalized_calculated_value_of_obj
                 .insert(_equal_fact.right.to_string(), left_calculated_value);
         }
 

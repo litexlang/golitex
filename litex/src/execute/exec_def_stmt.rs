@@ -52,7 +52,7 @@ impl<'a> Runtime<'a> {
         let fn_obj_display_string = fn_obj_to_string(&fn_head_atom, &fn_body_groups);
         let calculated_value = self
             .runtime_context
-            .get_calculated_value_of_obj(&fn_obj_display_string);
+            .get_normalized_calculated_value_of_obj(&fn_obj_display_string);
         Obj::FnObj(FnObj::new(fn_head_atom, fn_body_groups, calculated_value))
     }
 
