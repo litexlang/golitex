@@ -167,12 +167,12 @@ fn calculate_obj_pair_to_number_strings(
     left_obj: &Obj,
     right_obj: &Obj,
 ) -> Option<(String, String)> {
-    if !left_obj.can_be_calculated() || !right_obj.can_be_calculated() {
+    if !left_obj.calculated_value().is_some() || !right_obj.calculated_value().is_some() {
         return None;
     }
     Some((
-        left_obj.calculate_to_string(),
-        right_obj.calculate_to_string(),
+        left_obj.calculate_to_string_panic_when_cannot_be_calculated(),
+        right_obj.calculate_to_string_panic_when_cannot_be_calculated(),
     ))
 }
 

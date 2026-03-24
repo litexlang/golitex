@@ -1,6 +1,6 @@
 use super::Runtime;
 use crate::common::helper::is_number_string_literally_integer_without_dot;
-use crate::error::{ExecStmtError, StmtError};
+use crate::error::{ExecStmtError, RuntimeError};
 use crate::fact::{
     AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, GreaterEqualFact, InFact,
     OrFact,
@@ -20,12 +20,12 @@ impl<'a> Runtime<'a> {
     pub fn exec_by_cases_axiom_stmt(
         &mut self,
         stmt: &ByCasesAxiomStmt,
-    ) -> Result<NonErrStmtExecResult, StmtError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         // 证明 well-defined
         for fact in stmt.then_facts.iter() {
             self.verify_fact_well_defined(fact, &VerifyState::new(0, false))
                 .map_err(|e| {
-                    StmtError::ExecError(ExecStmtError::new(
+                    RuntimeError::ExecError(ExecStmtError::new(
                         stmt.stmt_type_name(),
                         format!("by_cases: failed to prove `{}`", fact),
                         Some(e.into()),
@@ -36,7 +36,7 @@ impl<'a> Runtime<'a> {
         }
 
         self.exec_by_cases_axiom_stmt_verify_cases_cover_all_situations(stmt)
-            .map_err(StmtError::from)?;
+            .map_err(RuntimeError::from)?;
 
         let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
         for case_index in 0..stmt.cases.len() {
@@ -49,7 +49,7 @@ impl<'a> Runtime<'a> {
                     inside_results.append(&mut one_case_inside_results);
                 }
                 Err(exec_stmt_error) => {
-                    return Err(StmtError::ExecError(exec_stmt_error));
+                    return Err(RuntimeError::ExecError(exec_stmt_error));
                 }
             }
         }
@@ -59,7 +59,7 @@ impl<'a> Runtime<'a> {
             let one_then_fact_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(then_fact)
                 .map_err(|store_fact_error| {
-                    StmtError::ExecError(ExecStmtError::new(
+                    RuntimeError::ExecError(ExecStmtError::new(
                         stmt.stmt_type_name(),
                         format!("by_cases: failed to release `{}`", then_fact),
                         Some(store_fact_error.into()),
@@ -83,11 +83,11 @@ impl<'a> Runtime<'a> {
     pub fn exec_by_contra_axiom_stmt(
         &mut self,
         stmt: &ByContraAxiomStmt,
-    ) -> Result<NonErrStmtExecResult, StmtError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let to_prove_fact = Fact::AtomicFact(stmt.to_prove.clone());
         self.verify_fact_well_defined(&to_prove_fact, &VerifyState::new(0, false))
             .map_err(|e| {
-                StmtError::ExecError(ExecStmtError::new(
+                RuntimeError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     format!("by_contra: failed to prove `{}`", to_prove_fact),
                     Some(e.into()),
@@ -96,7 +96,7 @@ impl<'a> Runtime<'a> {
                 ))
             })?;
 
-        let mut last_error: Option<StmtError> = None;
+        let mut last_error: Option<RuntimeError> = None;
         let exec_proof_inside_results = {
             let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
 
@@ -106,7 +106,7 @@ impl<'a> Runtime<'a> {
             let reverse_to_prove_fact = stmt.to_prove.make_reversed();
             self.store_atomic_fact_without_well_defined_verified_and_infer(&reverse_to_prove_fact)
                 .map_err(|store_fact_error| {
-                    StmtError::ExecError(ExecStmtError::new(
+                    RuntimeError::ExecError(ExecStmtError::new(
                         stmt.stmt_type_name(),
                         format!("by_contra: failed to know reverse of `{}`", to_prove_fact),
                         Some(store_fact_error.into()),
@@ -130,7 +130,7 @@ impl<'a> Runtime<'a> {
             let verify_impossible_fact_result =
                 self.verify_atomic_fact(&stmt.impossible_fact, &VerifyState::new(0, false))?;
             if verify_impossible_fact_result.is_unknown() {
-                return Err(StmtError::ExecError(ExecStmtError::new(
+                return Err(RuntimeError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     impossible_proof_error_message(&stmt.impossible_fact, None),
                     None,
@@ -144,7 +144,7 @@ impl<'a> Runtime<'a> {
                 &VerifyState::new(0, false),
             )?;
             if verify_reversed_impossible_fact_result.is_unknown() {
-                return Err(StmtError::ExecError(ExecStmtError::new(
+                return Err(RuntimeError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     impossible_proof_error_message(&stmt.impossible_fact, None),
                     None,
@@ -158,7 +158,7 @@ impl<'a> Runtime<'a> {
         };
 
         if let Some(last_error) = last_error {
-            return Err(StmtError::ExecError(ExecStmtError::new(
+            return Err(RuntimeError::ExecError(ExecStmtError::new(
                 stmt.stmt_type_name(),
                 "by_contra: failed to execute proof".to_string(),
                 Some(last_error),
@@ -170,7 +170,7 @@ impl<'a> Runtime<'a> {
         let infer_result = self
             .store_fact_without_well_defined_verified_and_infer(&to_prove_fact)
             .map_err(|store_fact_error| {
-                StmtError::ExecError(ExecStmtError::new(
+                RuntimeError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     format!("by_contra: failed to release `{}`", to_prove_fact),
                     Some(store_fact_error.into()),
@@ -192,9 +192,9 @@ impl<'a> Runtime<'a> {
     pub fn exec_enumerate_axiom_stmt(
         &mut self,
         stmt: &EnumerateAxiomStmt,
-    ) -> Result<NonErrStmtExecResult, StmtError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            StmtError::ExecError(ExecStmtError::new(
+            RuntimeError::ExecError(ExecStmtError::new(
                 stmt.stmt_type_name(),
                 msg,
                 None,
@@ -205,7 +205,7 @@ impl<'a> Runtime<'a> {
 
         self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                StmtError::ExecError(ExecStmtError::new(
+                RuntimeError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     format!(
                         "enumerate: corresponding forall `{}` is not well-defined",
@@ -228,7 +228,7 @@ impl<'a> Runtime<'a> {
             let infer_result_from_stored_forall_fact = self
                 .store_fact_without_well_defined_verified_and_infer(&corresponding_forall_fact)
                 .map_err(|store_fact_error| {
-                    StmtError::ExecError(ExecStmtError::new(
+                    RuntimeError::ExecError(ExecStmtError::new(
                         stmt.stmt_type_name(),
                         format!(
                             "enumerate: failed to store corresponding forall `{}`",
@@ -274,7 +274,7 @@ impl<'a> Runtime<'a> {
         let infer_result_from_stored_forall_fact = self
             .store_fact_without_well_defined_verified_and_infer(&corresponding_forall_fact)
             .map_err(|store_fact_error| {
-                StmtError::ExecError(ExecStmtError::new(
+                RuntimeError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     format!(
                         "enumerate: failed to store corresponding forall `{}`",
@@ -300,7 +300,7 @@ impl<'a> Runtime<'a> {
     pub fn exec_by_induc_axiom_stmt(
         &mut self,
         stmt: &ByInducAxiomStmt,
-    ) -> Result<NonErrStmtExecResult, StmtError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let mut infer_result = InferResult::new();
         let all_inside_results: Vec<NonErrStmtExecResult> = Vec::new();
         for fact in stmt.to_prove.iter() {
@@ -313,7 +313,7 @@ impl<'a> Runtime<'a> {
                     infer_result.new_infer_result_inside(one_fact_infer_result);
                 }
                 Err(exec_stmt_error) => {
-                    return Err(StmtError::ExecError(ExecStmtError::new(
+                    return Err(RuntimeError::ExecError(ExecStmtError::new(
                         stmt.stmt_type_name(),
                         format!("by_induc: failed to prove `{}`", fact),
                         Some(exec_stmt_error.into()),
@@ -326,7 +326,7 @@ impl<'a> Runtime<'a> {
 
         // store 对应的forall
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            StmtError::ExecError(ExecStmtError::new(
+            RuntimeError::ExecError(ExecStmtError::new(
                 stmt.stmt_type_name(),
                 msg,
                 None,
@@ -350,7 +350,7 @@ impl<'a> Runtime<'a> {
         &mut self,
         stmt: &ByInducAxiomStmt,
         fact: &ExistOrAndChainAtomicFact,
-    ) -> Result<InferResult, StmtError> {
+    ) -> Result<InferResult, RuntimeError> {
         let mut infer_result = InferResult::new();
 
         let mut base_case_param_to_arg_map: HashMap<String, Obj> = HashMap::new();
@@ -361,7 +361,7 @@ impl<'a> Runtime<'a> {
             .to_fact();
         self.verify_fact_return_err_if_not_true(&base_case_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
-                StmtError::ExecError(ExecStmtError::new(
+                RuntimeError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     format!("by_induc: base case is not proved `{}`", base_case_fact),
                     Some(verify_error.into()),
@@ -378,7 +378,7 @@ impl<'a> Runtime<'a> {
         let verify_induc_from_in_z_result = self
             .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
-                StmtError::ExecError(ExecStmtError::new(
+                RuntimeError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     format!("by_induc: failed to verify `{}`", induc_from_in_z_fact),
                     Some(verify_error.into()),
@@ -387,7 +387,7 @@ impl<'a> Runtime<'a> {
                 ))
             })?;
         if verify_induc_from_in_z_result.is_unknown() {
-            return Err(StmtError::ExecError(ExecStmtError::new(
+            return Err(RuntimeError::ExecError(ExecStmtError::new(
                 stmt.stmt_type_name(),
                 format!("by_induc: failed to verify `{}`", induc_from_in_z_fact),
                 None,
@@ -396,12 +396,11 @@ impl<'a> Runtime<'a> {
             )));
         }
 
-        let param_as_identifier = Obj::Identifier(Identifier::new(stmt.param.clone()));
+        let param_as_identifier = Obj::Identifier(Identifier::new(stmt.param.clone(), None));
 
         let param_plus_one_obj = Obj::Add(Add::new(
             param_as_identifier.clone(),
             Obj::Number(Number::new("1".to_string())),
-            false,
         ));
         let mut induction_step_param_to_obj_map: HashMap<String, Obj> = HashMap::new();
         induction_step_param_to_obj_map.insert(stmt.param.clone(), param_plus_one_obj);
@@ -431,7 +430,7 @@ impl<'a> Runtime<'a> {
             &VerifyState::new(0, false),
         )
         .map_err(|well_defined_error| {
-            StmtError::ExecError(ExecStmtError::new(
+            RuntimeError::ExecError(ExecStmtError::new(
                 stmt.stmt_type_name(),
                 format!(
                     "by_induc: generated step forall is not well-defined `{}`",
@@ -450,9 +449,9 @@ impl<'a> Runtime<'a> {
     pub fn exec_for_axiom_stmt(
         &mut self,
         stmt: &ForAxiomStmt,
-    ) -> Result<NonErrStmtExecResult, StmtError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if stmt.params.len() != stmt.param_sets.len() {
-            return Err(StmtError::ExecError(ExecStmtError::new(
+            return Err(RuntimeError::ExecError(ExecStmtError::new(
                 stmt.stmt_type_name(),
                 "for: number of params does not match number of ranges".to_string(),
                 None,
@@ -462,7 +461,7 @@ impl<'a> Runtime<'a> {
         }
 
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            StmtError::ExecError(ExecStmtError::new(
+            RuntimeError::ExecError(ExecStmtError::new(
                 stmt.stmt_type_name(),
                 msg,
                 None,
@@ -472,7 +471,7 @@ impl<'a> Runtime<'a> {
         })?;
         self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                StmtError::ExecError(ExecStmtError::new(
+                RuntimeError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     format!(
                         "for: corresponding forall `{}` is not well-defined",
@@ -486,7 +485,7 @@ impl<'a> Runtime<'a> {
 
         let param_value_strings_of_each_param = Self::for_param_value_strings_of_each_param(stmt)
             .map_err(|msg| {
-            StmtError::ExecError(ExecStmtError::new(
+            RuntimeError::ExecError(ExecStmtError::new(
                 stmt.stmt_type_name(),
                 msg,
                 None,
@@ -501,7 +500,7 @@ impl<'a> Runtime<'a> {
             let infer_result_from_stored_forall_fact = self
                 .store_fact_without_well_defined_verified_and_infer(&corresponding_forall_fact)
                 .map_err(|store_fact_error| {
-                    StmtError::ExecError(ExecStmtError::new(
+                    RuntimeError::ExecError(ExecStmtError::new(
                         stmt.stmt_type_name(),
                         format!(
                             "for: failed to store corresponding forall `{}`",
@@ -546,7 +545,7 @@ impl<'a> Runtime<'a> {
         let infer_result_from_stored_forall_fact = self
             .store_fact_without_well_defined_verified_and_infer(&corresponding_forall_fact)
             .map_err(|store_fact_error| {
-                StmtError::ExecError(ExecStmtError::new(
+                RuntimeError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     format!(
                         "for: failed to store corresponding forall `{}`",
@@ -570,10 +569,10 @@ impl<'a> Runtime<'a> {
     pub fn exec_by_extension_axiom_stmt(
         &mut self,
         stmt: &ByExtensionAxiomStmt,
-    ) -> Result<NonErrStmtExecResult, StmtError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&stmt.left, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                StmtError::ExecError(ExecStmtError::new(
+                RuntimeError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     format!("by_extension: left set `{}` is not well-defined", stmt.left),
                     Some(well_defined_error.into()),
@@ -583,7 +582,7 @@ impl<'a> Runtime<'a> {
             })?;
         self.verify_obj_well_defined_and_store_cache(&stmt.right, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                StmtError::ExecError(ExecStmtError::new(
+                RuntimeError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     format!(
                         "by_extension: right set `{}` is not well-defined",
@@ -597,12 +596,12 @@ impl<'a> Runtime<'a> {
 
         self.runtime_context.push_env();
         let local_proof_result =
-            (|| -> Result<(Vec<NonErrStmtExecResult>, Fact, Fact), StmtError> {
+            (|| -> Result<(Vec<NonErrStmtExecResult>, Fact, Fact), RuntimeError> {
                 let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
                 for proof_stmt in stmt.proof.iter() {
                     let one_proof_stmt_exec_result =
                         self.exec_stmt(proof_stmt).map_err(|stmt_error| {
-                            StmtError::ExecError(ExecStmtError::new(
+                            RuntimeError::ExecError(ExecStmtError::new(
                                 stmt.stmt_type_name(),
                                 format!(
                                     "by_extension: failed to execute proof stmt `{}`",
@@ -626,7 +625,7 @@ impl<'a> Runtime<'a> {
                     vec![],
                     vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                         InFact::new(
-                            Obj::Identifier(Identifier::new(unused_name.clone())),
+                            Obj::Identifier(Identifier::new(unused_name.clone(), None)),
                             stmt.right.clone(),
                             stmt.line_file,
                         ),
@@ -638,7 +637,7 @@ impl<'a> Runtime<'a> {
                     &VerifyState::new(0, false),
                 )
                 .map_err(|verify_error| {
-                    StmtError::ExecError(ExecStmtError::new(
+                    RuntimeError::ExecError(ExecStmtError::new(
                         stmt.stmt_type_name(),
                         format!(
                             "by_extension: failed to prove left subset right `{}`",
@@ -658,7 +657,7 @@ impl<'a> Runtime<'a> {
                     vec![],
                     vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                         InFact::new(
-                            Obj::Identifier(Identifier::new(unused_name.clone())),
+                            Obj::Identifier(Identifier::new(unused_name.clone(), None)),
                             stmt.left.clone(),
                             stmt.line_file,
                         ),
@@ -670,7 +669,7 @@ impl<'a> Runtime<'a> {
                     &VerifyState::new(0, false),
                 )
                 .map_err(|verify_error| {
-                    StmtError::ExecError(ExecStmtError::new(
+                    RuntimeError::ExecError(ExecStmtError::new(
                         stmt.stmt_type_name(),
                         format!(
                             "by_extension: failed to prove right subset left `{}`",
@@ -717,14 +716,14 @@ impl<'a> Runtime<'a> {
     pub fn exec_by_fn_def_axiom_stmt(
         &mut self,
         stmt: &ByFnDefAxiomStmt,
-    ) -> Result<NonErrStmtExecResult, StmtError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         Self::stmt_unsupported(stmt.stmt_type_name(), stmt.line_file)
     }
 
     pub fn exec_by_cart_def_axiom_stmt(
         &mut self,
         stmt: &ByCartDefAxiomStmt,
-    ) -> Result<NonErrStmtExecResult, StmtError> {
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         Self::stmt_unsupported(stmt.stmt_type_name(), stmt.line_file)
     }
 }
@@ -733,9 +732,9 @@ impl<'a> Runtime<'a> {
     fn integer_string_from_number_like_obj_for_for(
         number_like_obj: &Obj,
         line_file: (usize, usize),
-    ) -> Result<String, StmtError> {
-        if !number_like_obj.can_be_calculated() {
-            return Err(StmtError::ExecError(ExecStmtError::new(
+    ) -> Result<String, RuntimeError> {
+        if !number_like_obj.calculated_value().is_some() {
+            return Err(RuntimeError::ExecError(ExecStmtError::new(
                 "ForAxiomStmt".to_string(),
                 format!(
                     "for: range boundary `{}` must be a calculable number expression",
@@ -746,9 +745,10 @@ impl<'a> Runtime<'a> {
                 line_file,
             )));
         }
-        let calculated_string = number_like_obj.calculate_to_string();
+        let calculated_string =
+            number_like_obj.calculate_to_string_panic_when_cannot_be_calculated();
         if !is_number_string_literally_integer_without_dot(calculated_string.clone()) {
-            return Err(StmtError::ExecError(ExecStmtError::new(
+            return Err(RuntimeError::ExecError(ExecStmtError::new(
                 "ForAxiomStmt".to_string(),
                 format!(
                     "for: range boundary `{}` is not an integer number",
@@ -845,7 +845,7 @@ impl<'a> Runtime<'a> {
         stmt: &ForAxiomStmt,
         parameter_index_assignment: &Vec<usize>,
         param_value_strings_of_each_param: &Vec<Vec<String>>,
-    ) -> Result<Vec<NonErrStmtExecResult>, StmtError> {
+    ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
         self.runtime_context.push_env();
         let execute_result = self.exec_for_axiom_stmt_for_one_assignment_body(
             stmt,
@@ -861,36 +861,36 @@ impl<'a> Runtime<'a> {
         stmt: &ForAxiomStmt,
         parameter_index_assignment: &Vec<usize>,
         param_value_strings_of_each_param: &Vec<Vec<String>>,
-    ) -> Result<Vec<NonErrStmtExecResult>, StmtError> {
+    ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
         let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
         for (parameter_position, parameter_name) in stmt.params.iter().enumerate() {
             let assigned_integer_string = param_value_strings_of_each_param[parameter_position]
                 [parameter_index_assignment[parameter_position]]
                 .clone();
             self.store_identifier_obj(parameter_name)
-                .map_err(StmtError::from)?;
+                .map_err(RuntimeError::from)?;
 
             // it is in Z
             let parameter_in_z_atomic_fact = AtomicFact::InFact(InFact::new(
-                Obj::Identifier(Identifier::new(parameter_name.clone())),
+                Obj::Identifier(Identifier::new(parameter_name.clone(), None)),
                 Obj::ZObj(ZObj::new()),
                 stmt.line_file,
             ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 &parameter_in_z_atomic_fact,
             )
-            .map_err(StmtError::from)?;
+            .map_err(RuntimeError::from)?;
 
             let parameter_equal_to_assigned_obj_atomic_fact =
                 AtomicFact::EqualFact(EqualFact::new(
-                    Obj::Identifier(Identifier::new(parameter_name.clone())),
+                    Obj::Identifier(Identifier::new(parameter_name.clone(), None)),
                     Obj::Number(Number::new(assigned_integer_string)),
                     stmt.line_file,
                 ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 &parameter_equal_to_assigned_obj_atomic_fact,
             )
-            .map_err(StmtError::from)?;
+            .map_err(RuntimeError::from)?;
         }
 
         let mut no_dom_fact_is_false = true;
@@ -899,14 +899,14 @@ impl<'a> Runtime<'a> {
                 self.verify_atomic_fact(dom_fact, &VerifyState::new(0, false))?;
             if verify_dom_result.is_true() {
                 self.store_atomic_fact_without_well_defined_verified_and_infer(dom_fact)
-                    .map_err(StmtError::from)?;
+                    .map_err(RuntimeError::from)?;
                 inside_results.push(verify_dom_result);
             } else {
                 let reversed = dom_fact.make_reversed();
                 let verify_reversed_dom_result =
                     self.verify_atomic_fact(&reversed, &VerifyState::new(0, false))?;
                 if verify_reversed_dom_result.is_unknown() {
-                    return Err(StmtError::ExecError(ExecStmtError::new(
+                    return Err(RuntimeError::ExecError(ExecStmtError::new(
                         stmt.stmt_type_name(),
                         format!("for: domain fact `{}` or its reversed `{}` must be verified to be true, but both are unknown", dom_fact, reversed),
                         None,
@@ -934,7 +934,7 @@ impl<'a> Runtime<'a> {
                 &VerifyState::new(0, false),
             )?;
             if verified_result.is_unknown() {
-                return Err(StmtError::ExecError(ExecStmtError::new(
+                return Err(RuntimeError::ExecError(ExecStmtError::new(
                     stmt.stmt_type_name(),
                     format!("for: failed to prove `{}`", fact_to_prove),
                     None,
@@ -977,7 +977,7 @@ impl<'a> Runtime<'a> {
         &mut self,
         stmt: &EnumerateAxiomStmt,
         parameter_index_assignment: &Vec<usize>,
-    ) -> Result<Vec<NonErrStmtExecResult>, StmtError> {
+    ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
         self.runtime_context.push_env();
         let execute_result = self
             .exec_enumerate_axiom_stmt_for_one_assignment_body(stmt, parameter_index_assignment);
@@ -989,24 +989,24 @@ impl<'a> Runtime<'a> {
         &mut self,
         stmt: &EnumerateAxiomStmt,
         parameter_index_assignment: &Vec<usize>,
-    ) -> Result<Vec<NonErrStmtExecResult>, StmtError> {
+    ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
         let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
         for (parameter_position, parameter_name) in stmt.params.iter().enumerate() {
             let assigned_obj = (*stmt.param_sets[parameter_position].list
                 [parameter_index_assignment[parameter_position]])
                 .clone();
             self.store_identifier_obj(parameter_name)
-                .map_err(StmtError::from)?;
+                .map_err(RuntimeError::from)?;
             let parameter_equal_to_assigned_obj_atomic_fact =
                 AtomicFact::EqualFact(EqualFact::new(
-                    Obj::Identifier(Identifier::new(parameter_name.clone())),
+                    Obj::Identifier(Identifier::new(parameter_name.clone(), None)),
                     assigned_obj.clone(),
                     stmt.line_file,
                 ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 &parameter_equal_to_assigned_obj_atomic_fact,
             )
-            .map_err(StmtError::from)?;
+            .map_err(RuntimeError::from)?;
         }
         for proof_stmt in stmt.proof.iter() {
             let proof_result = self.exec_stmt(proof_stmt)?;

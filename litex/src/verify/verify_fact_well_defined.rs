@@ -1,5 +1,5 @@
 use crate::common::keywords::is_builtin_predicate;
-use crate::error::{StmtError, WellDefinedError};
+use crate::error::{RuntimeError, WellDefinedError};
 use crate::execute::Runtime;
 use crate::fact::line_file as atomic_fact_line_file;
 use crate::fact::AtomicFact;
@@ -262,7 +262,7 @@ impl<'a> Runtime<'a> {
                         "failed to store fact in environment: {}",
                         exec_stmt_error.body_string()
                     ),
-                    Some(StmtError::ExecError(exec_stmt_error)),
+                    Some(RuntimeError::ExecError(exec_stmt_error)),
                     fact.line_file(),
                 ));
             }
@@ -278,7 +278,7 @@ impl<'a> Runtime<'a> {
                         "failed to store fact in environment: {}",
                         exec_stmt_error.body_string()
                     ),
-                    Some(StmtError::ExecError(exec_stmt_error)),
+                    Some(RuntimeError::ExecError(exec_stmt_error)),
                     fact.line_file(),
                 ));
             }

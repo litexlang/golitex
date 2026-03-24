@@ -677,7 +677,16 @@ fn fn_obj_prefix_to_obj(fn_obj: &FnObj, number_of_body_groups_to_keep: usize) ->
         current_group_index += 1;
     }
 
-    Obj::FnObj(FnObj::new(fn_obj.head.as_ref().clone(), kept_body_groups))
+    let calculated_value = if number_of_body_groups_to_keep == fn_obj.body.len() {
+        fn_obj.calculated_value.clone()
+    } else {
+        None
+    };
+    Obj::FnObj(FnObj::new(
+        fn_obj.head.as_ref().clone(),
+        kept_body_groups,
+        calculated_value,
+    ))
 }
 
 fn same_shape_and_equal_args_reason(left_obj: &Obj, right_obj: &Obj) -> String {

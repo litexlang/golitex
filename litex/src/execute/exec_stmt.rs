@@ -1,36 +1,36 @@
 use super::Runtime;
-use crate::error::{ExecStmtError, StmtError};
+use crate::error::{ExecStmtError, RuntimeError};
 use crate::result::NonErrStmtExecResult;
 use crate::stmt::Stmt;
 
 impl<'a> Runtime<'a> {
-    pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<NonErrStmtExecResult, StmtError> {
+    pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<NonErrStmtExecResult, RuntimeError> {
         match stmt {
-            Stmt::DefLetStmt(d) => self.def_let_stmt(d).map_err(StmtError::from),
-            Stmt::DefPropWithMeaningStmt(d) => {
-                self.def_prop_with_meaning_stmt(d).map_err(StmtError::from)
-            }
+            Stmt::DefLetStmt(d) => self.def_let_stmt(d).map_err(RuntimeError::from),
+            Stmt::DefPropWithMeaningStmt(d) => self
+                .def_prop_with_meaning_stmt(d)
+                .map_err(RuntimeError::from),
             Stmt::DefPropWithoutMeaningStmt(d) => self
                 .def_prop_without_meaning_stmt(d)
-                .map_err(StmtError::from),
+                .map_err(RuntimeError::from),
             Stmt::HaveObjInNonemptySetStmt(d) => self
                 .have_obj_in_nonempty_set_or_param_type_stmt(d)
-                .map_err(StmtError::from),
-            Stmt::HaveObjEqualStmt(d) => self.have_obj_equal_stmt(d).map_err(StmtError::from),
-            Stmt::HaveExistObjStmt(d) => self.have_exist_obj_stmt(d).map_err(StmtError::from),
-            Stmt::HaveFnEqualStmt(d) => self.have_fn_equal_stmt(d).map_err(StmtError::from),
+                .map_err(RuntimeError::from),
+            Stmt::HaveObjEqualStmt(d) => self.have_obj_equal_stmt(d).map_err(RuntimeError::from),
+            Stmt::HaveExistObjStmt(d) => self.have_exist_obj_stmt(d).map_err(RuntimeError::from),
+            Stmt::HaveFnEqualStmt(d) => self.have_fn_equal_stmt(d).map_err(RuntimeError::from),
             Stmt::HaveFnEqualCaseByCaseStmt(d) => self
                 .have_fn_equal_case_by_case_stmt(d)
-                .map_err(StmtError::from),
-            Stmt::DefStructWithFieldsStmt(d) => {
-                self.def_struct_with_fields_stmt(d).map_err(StmtError::from)
-            }
+                .map_err(RuntimeError::from),
+            Stmt::DefStructWithFieldsStmt(d) => self
+                .def_struct_with_fields_stmt(d)
+                .map_err(RuntimeError::from),
             Stmt::DefStructWithNoFieldStmt(d) => self
                 .def_struct_with_no_field_stmt(d)
-                .map_err(StmtError::from),
-            Stmt::DefAlgoStmt(d) => self.def_algo_stmt(d).map_err(StmtError::from),
-            Stmt::KnowStmt(know_stmt) => self.exec_know_stmt(know_stmt).map_err(StmtError::from),
-            Stmt::Fact(fact) => self.exec_fact(fact).map_err(StmtError::from),
+                .map_err(RuntimeError::from),
+            Stmt::DefAlgoStmt(d) => self.def_algo_stmt(d).map_err(RuntimeError::from),
+            Stmt::KnowStmt(know_stmt) => self.exec_know_stmt(know_stmt).map_err(RuntimeError::from),
+            Stmt::Fact(fact) => self.exec_fact(fact).map_err(RuntimeError::from),
             Stmt::ClaimStmt(s) => self.exec_claim_stmt(s),
             Stmt::ProveStmt(s) => self.exec_prove_stmt(s),
             Stmt::ImportStmt(s) => self.exec_import_stmt(s),
@@ -54,8 +54,8 @@ impl<'a> Runtime<'a> {
     pub fn stmt_unsupported(
         stmt_type_name: String,
         line_file: (usize, usize),
-    ) -> Result<NonErrStmtExecResult, StmtError> {
-        Err(StmtError::ExecError(ExecStmtError::new(
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+        Err(RuntimeError::ExecError(ExecStmtError::new(
             stmt_type_name,
             "unimplemented".to_string(),
             None,

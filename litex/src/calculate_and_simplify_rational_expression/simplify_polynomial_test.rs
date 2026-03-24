@@ -8,15 +8,15 @@ fn mk_num(s: String) -> Obj {
 }
 
 fn mk_var(s: String) -> Obj {
-    Obj::Identifier(Identifier::new(s))
+    Obj::Identifier(Identifier::new(s, None))
 }
 
 fn mk_add_obj(left: Obj, right: Obj) -> Obj {
-    Obj::Add(Add::new(left, right, false))
+    Obj::Add(Add::new(left, right))
 }
 
 fn mk_mul_obj(left: Obj, right: Obj) -> Obj {
-    Obj::Mul(Mul::new(left, right, false))
+    Obj::Mul(Mul::new(left, right))
 }
 
 fn mk_div_obj(left: Obj, right: Obj) -> Obj {
@@ -40,7 +40,7 @@ fn test_collect_ordered_monomials_number() {
 fn test_collect_ordered_monomials_add_two_numbers() {
     let one = mk_num("1".to_string());
     let two = mk_num("2".to_string());
-    let one_plus_two = Obj::Add(Add::new(one, two, true));
+    let one_plus_two = Obj::Add(Add::new(one, two));
     let monomials = collect_monomials_in_obj(&one_plus_two);
     assert_eq!(monomials.len(), 1);
     assert_eq!(monomials[0].non_zero_scalar, "3");
@@ -49,11 +49,7 @@ fn test_collect_ordered_monomials_add_two_numbers() {
 
 #[test]
 fn test_collect_ordered_monomials_add_number_and_var() {
-    let one_plus_x = Obj::Add(Add::new(
-        mk_num("1".to_string()),
-        mk_var("x".to_string()),
-        false,
-    ));
+    let one_plus_x = Obj::Add(Add::new(mk_num("1".to_string()), mk_var("x".to_string())));
     let monomials = collect_monomials_in_obj(&one_plus_x);
     assert_eq!(monomials.len(), 2, "1+x => constant 1 and monomial x");
     let sorted = sort_monomials_for_test(monomials);
@@ -69,9 +65,9 @@ fn test_collect_ordered_monomials_add_number_and_var() {
 #[test]
 fn test_collect_ordered_monomials_add_like_terms() {
     let x = mk_var("x".to_string());
-    let two_x = Obj::Mul(Mul::new(mk_num("2".to_string()), x.clone(), false));
-    let three_x = Obj::Mul(Mul::new(mk_num("3".to_string()), x.clone(), false));
-    let two_x_plus_three_x = Obj::Add(Add::new(two_x, three_x, false));
+    let two_x = Obj::Mul(Mul::new(mk_num("2".to_string()), x.clone()));
+    let three_x = Obj::Mul(Mul::new(mk_num("3".to_string()), x.clone()));
+    let two_x_plus_three_x = Obj::Add(Add::new(two_x, three_x));
     let monomials = collect_monomials_in_obj(&two_x_plus_three_x);
     assert_eq!(monomials.len(), 1, "2x+3x => 5x");
     assert_eq!(monomials[0].non_zero_scalar, "5");
@@ -80,11 +76,7 @@ fn test_collect_ordered_monomials_add_like_terms() {
 
 #[test]
 fn test_collect_ordered_monomials_mul_number_and_var() {
-    let two_x = Obj::Mul(Mul::new(
-        mk_num("2".to_string()),
-        mk_var("x".to_string()),
-        false,
-    ));
+    let two_x = Obj::Mul(Mul::new(mk_num("2".to_string()), mk_var("x".to_string())));
     let monomials = collect_monomials_in_obj(&two_x);
     assert_eq!(monomials.len(), 1, "2*x => 2x");
     assert_eq!(monomials[0].non_zero_scalar, "2");
@@ -95,7 +87,7 @@ fn test_collect_ordered_monomials_mul_number_and_var() {
 fn test_collect_ordered_monomials_mul_two_vars() {
     let x = mk_var("x".to_string());
     let y = mk_var("y".to_string());
-    let xy = Obj::Mul(Mul::new(x, y, false));
+    let xy = Obj::Mul(Mul::new(x, y));
     let monomials = collect_monomials_in_obj(&xy);
     assert_eq!(monomials.len(), 1, "x*y => xy");
     assert_eq!(monomials[0].non_zero_scalar, "1");
@@ -104,11 +96,7 @@ fn test_collect_ordered_monomials_mul_two_vars() {
 
 #[test]
 fn test_collect_ordered_monomials_pow_number() {
-    let two_sq = Obj::Pow(Pow::new(
-        mk_num("2".to_string()),
-        mk_num("2".to_string()),
-        true,
-    ));
+    let two_sq = Obj::Pow(Pow::new(mk_num("2".to_string()), mk_num("2".to_string())));
     let monomials = collect_monomials_in_obj(&two_sq);
     assert_eq!(monomials.len(), 1);
     assert_eq!(monomials[0].non_zero_scalar, "4");
@@ -118,7 +106,7 @@ fn test_collect_ordered_monomials_pow_number() {
 #[test]
 fn test_collect_ordered_monomials_pow_zero() {
     let x = mk_var("x".to_string());
-    let x0 = Obj::Pow(Pow::new(x.clone(), mk_num("0".to_string()), false));
+    let x0 = Obj::Pow(Pow::new(x.clone(), mk_num("0".to_string())));
     let monomials = collect_monomials_in_obj(&x0);
     assert_eq!(monomials.len(), 1);
     assert_eq!(monomials[0].non_zero_scalar, "1");
@@ -128,7 +116,7 @@ fn test_collect_ordered_monomials_pow_zero() {
 #[test]
 fn test_collect_ordered_monomials_pow_one() {
     let x = mk_var("x".to_string());
-    let x1 = Obj::Pow(Pow::new(x, mk_num("1".to_string()), false));
+    let x1 = Obj::Pow(Pow::new(x, mk_num("1".to_string())));
     let monomials = collect_monomials_in_obj(&x1);
     assert_eq!(monomials.len(), 1, "x^1 => x");
     assert_eq!(monomials[0].non_zero_scalar, "1");
@@ -158,7 +146,7 @@ fn sort_monomials_for_test(
 fn test_collect_and_sort_a_plus_b() {
     let a = mk_var("a".to_string());
     let b = mk_var("b".to_string());
-    let a_plus_b = Obj::Add(Add::new(a, b, false));
+    let a_plus_b = Obj::Add(Add::new(a, b));
     let monomials = collect_monomials_in_obj(&a_plus_b);
     let sorted = sort_monomials_for_test(monomials);
     assert_eq!(sorted.len(), 2, "a+b should be two monomials");
@@ -172,8 +160,8 @@ fn test_collect_and_sort_a_plus_b() {
 fn test_collect_and_sort_a_plus_b_squared() {
     let a = mk_var("a".to_string());
     let b = mk_var("b".to_string());
-    let a_plus_b = Obj::Add(Add::new(a.clone(), b.clone(), false));
-    let a_plus_b_sq = Obj::Pow(Pow::new(a_plus_b, mk_num("2".to_string()), false));
+    let a_plus_b = Obj::Add(Add::new(a.clone(), b.clone()));
+    let a_plus_b_sq = Obj::Pow(Pow::new(a_plus_b, mk_num("2".to_string())));
     let monomials = collect_monomials_in_obj(&a_plus_b_sq);
     let sorted = sort_monomials_for_test(monomials);
     assert_eq!(sorted.len(), 3, "(a+b)^2 should be a^2, 2ab, b^2");
@@ -189,7 +177,7 @@ fn test_collect_and_sort_a_plus_b_squared() {
 fn test_collect_and_sort_a_times_b() {
     let a = mk_var("a".to_string());
     let b = mk_var("b".to_string());
-    let a_times_b = Obj::Mul(Mul::new(a, b, false));
+    let a_times_b = Obj::Mul(Mul::new(a, b));
     let monomials = collect_monomials_in_obj(&a_times_b);
     let sorted = sort_monomials_for_test(monomials);
     assert_eq!(sorted.len(), 1);
@@ -201,9 +189,9 @@ fn test_collect_and_sort_a_times_b() {
 fn test_collect_and_sort_two_a_plus_three_b() {
     let a = mk_var("a".to_string());
     let b = mk_var("b".to_string());
-    let two_a = Obj::Mul(Mul::new(mk_num("2".to_string()), a, false));
-    let three_b = Obj::Mul(Mul::new(mk_num("3".to_string()), b, false));
-    let expr = Obj::Add(Add::new(two_a, three_b, false));
+    let two_a = Obj::Mul(Mul::new(mk_num("2".to_string()), a));
+    let three_b = Obj::Mul(Mul::new(mk_num("3".to_string()), b));
+    let expr = Obj::Add(Add::new(two_a, three_b));
     let monomials = collect_monomials_in_obj(&expr);
     let sorted = sort_monomials_for_test(monomials);
     assert_eq!(sorted.len(), 2);

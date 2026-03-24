@@ -2,6 +2,9 @@ use super::atom::{
     Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierOrIdentifierWithMod,
     IdentifierWithMod,
 };
+use crate::calculate_and_simplify_rational_expression::{
+    add_decimal_str, mod_decimal_str, mul_signed_decimal_str, pow_decimal_str, sub_decimal_str,
+};
 use crate::common::helper::{
     brace_vec_colon_vec_to_string, braced_vec_to_string, curly_braced_vec_to_string,
     vec_to_string_join_by_comma,
@@ -145,6 +148,7 @@ pub struct Proj {
 pub struct FnObj {
     pub head: Box<Atom>,
     pub body: Vec<Vec<Box<Obj>>>,
+    pub calculated_value: Option<Number>,
 }
 
 #[derive(Clone)]
@@ -156,21 +160,21 @@ pub struct Number {
 pub struct Add {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub can_be_calculated: bool,
+    pub calculated_value: Option<Number>,
 }
 
 #[derive(Clone)]
 pub struct Sub {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub can_be_calculated: bool,
+    pub calculated_value: Option<Number>,
 }
 
 #[derive(Clone)]
 pub struct Mul {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub can_be_calculated: bool,
+    pub calculated_value: Option<Number>,
 }
 
 #[derive(Clone)]
@@ -183,14 +187,14 @@ pub struct Div {
 pub struct Mod {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub can_be_calculated: bool,
+    pub calculated_value: Option<Number>,
 }
 
 #[derive(Clone)]
 pub struct Pow {
     pub base: Box<Obj>,
     pub exponent: Box<Obj>,
-    pub can_be_calculated: bool,
+    pub calculated_value: Option<Number>,
 }
 
 #[derive(Clone)]
@@ -324,10 +328,11 @@ impl ObjAtIndex {
 }
 
 impl FnObj {
-    pub fn new(head: Atom, body: Vec<Vec<Box<Obj>>>) -> Self {
+    pub fn new(head: Atom, body: Vec<Vec<Box<Obj>>>, calculated_value: Option<Number>) -> Self {
         FnObj {
             head: Box::new(head),
             body,
+            calculated_value,
         }
     }
 }
@@ -339,31 +344,52 @@ impl Number {
 }
 
 impl Add {
-    pub fn new(left: Obj, right: Obj, is_arithmetic_expr: bool) -> Self {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        let calculated_value = match (left.get_calculated_value(), right.get_calculated_value()) {
+            (Some(left_number), Some(right_number)) => Some(Number::new(add_decimal_str(
+                &left_number.value,
+                &right_number.value,
+            ))),
+            _ => None,
+        };
         Add {
             left: Box::new(left),
             right: Box::new(right),
-            can_be_calculated: is_arithmetic_expr,
+            calculated_value,
         }
     }
 }
 
 impl Sub {
-    pub fn new(left: Obj, right: Obj, is_arithmetic_expr: bool) -> Self {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        let calculated_value = match (left.get_calculated_value(), right.get_calculated_value()) {
+            (Some(left_number), Some(right_number)) => Some(Number::new(sub_decimal_str(
+                &left_number.value,
+                &right_number.value,
+            ))),
+            _ => None,
+        };
         Sub {
             left: Box::new(left),
             right: Box::new(right),
-            can_be_calculated: is_arithmetic_expr,
+            calculated_value,
         }
     }
 }
 
 impl Mul {
-    pub fn new(left: Obj, right: Obj, is_arithmetic_expr: bool) -> Self {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        let calculated_value = match (left.get_calculated_value(), right.get_calculated_value()) {
+            (Some(left_number), Some(right_number)) => Some(Number::new(mul_signed_decimal_str(
+                &left_number.value,
+                &right_number.value,
+            ))),
+            _ => None,
+        };
         Mul {
             left: Box::new(left),
             right: Box::new(right),
-            can_be_calculated: is_arithmetic_expr,
+            calculated_value,
         }
     }
 }
@@ -378,21 +404,36 @@ impl Div {
 }
 
 impl Mod {
-    pub fn new(left: Obj, right: Obj, is_arithmetic_expr: bool) -> Self {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        let calculated_value = match (left.get_calculated_value(), right.get_calculated_value()) {
+            (Some(left_number), Some(right_number)) => Some(Number::new(mod_decimal_str(
+                &left_number.value,
+                &right_number.value,
+            ))),
+            _ => None,
+        };
         Mod {
             left: Box::new(left),
             right: Box::new(right),
-            can_be_calculated: is_arithmetic_expr,
+            calculated_value,
         }
     }
 }
 
 impl Pow {
-    pub fn new(base: Obj, exponent: Obj, is_arithmetic_expr: bool) -> Self {
+    pub fn new(base: Obj, exponent: Obj) -> Self {
+        let calculated_value = match (base.get_calculated_value(), exponent.get_calculated_value())
+        {
+            (Some(base_number), Some(exponent_number)) => Some(Number::new(pow_decimal_str(
+                &base_number.value,
+                &exponent_number.value,
+            ))),
+            _ => None,
+        };
         Pow {
             base: Box::new(base),
             exponent: Box::new(exponent),
-            can_be_calculated: is_arithmetic_expr,
+            calculated_value,
         }
     }
 }
@@ -886,12 +927,16 @@ impl fmt::Display for Identifier {
 
 impl fmt::Display for FnObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.head)?;
-        for group in &self.body {
-            write!(f, "{}", braced_vec_to_string(group))?;
-        }
-        Ok(())
+        write!(f, "{}", fn_obj_to_string(self.head.as_ref(), &self.body))
     }
+}
+
+pub fn fn_obj_to_string(head: &Atom, body: &Vec<Vec<Box<Obj>>>) -> String {
+    let mut fn_obj_string = head.to_string();
+    for group in body.iter() {
+        fn_obj_string = format!("{}{}", fn_obj_string, braced_vec_to_string(group));
+    }
+    fn_obj_string
 }
 
 impl fmt::Display for Number {
@@ -1186,7 +1231,10 @@ impl From<Atom> for Obj {
 impl Identifier {
     /// Build an Obj::Identifier from a name. Parameter is String (not &str).
     pub fn mk(name: String) -> Obj {
-        Obj::Identifier(Identifier { name })
+        Obj::Identifier(Identifier {
+            name,
+            calculated_value: None,
+        })
     }
 }
 
@@ -1260,6 +1308,29 @@ impl FnSetObj {
         match self {
             FnSetObj::FnSetWithDom(e) => e.ret_set.clone(),
             FnSetObj::FnSetWithoutDom(e) => e.ret_set.clone(),
+        }
+    }
+}
+
+impl Obj {
+    pub fn get_calculated_value(&self) -> Option<Number> {
+        match self {
+            Obj::Number(n) => Some(n.clone()),
+            Obj::Identifier(identifier) => identifier.calculated_value.clone(),
+            Obj::IdentifierWithMod(identifier_with_mod) => {
+                identifier_with_mod.calculated_value.clone()
+            }
+            Obj::FieldAccess(field_access) => field_access.calculated_value.clone(),
+            Obj::FieldAccessWithMod(field_access_with_mod) => {
+                field_access_with_mod.calculated_value.clone()
+            }
+            Obj::FnObj(fn_obj) => fn_obj.calculated_value.clone(),
+            Obj::Add(add) => add.calculated_value.clone(),
+            Obj::Sub(sub) => sub.calculated_value.clone(),
+            Obj::Mul(mul) => mul.calculated_value.clone(),
+            Obj::Mod(mod_obj) => mod_obj.calculated_value.clone(),
+            Obj::Pow(pow_obj) => pow_obj.calculated_value.clone(),
+            _ => None,
         }
     }
 }
