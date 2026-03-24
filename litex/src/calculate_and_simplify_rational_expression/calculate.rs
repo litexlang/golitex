@@ -23,71 +23,25 @@ impl Obj {
     }
 
     pub fn two_objs_can_be_calculated_and_equal_by_calculation(&self, other: &Obj) -> bool {
-        if self.normalized_calculated_value().is_none()
-            || other.normalized_calculated_value().is_none()
-        {
-            return false;
+        match (
+            self.normalized_calculated_value(),
+            other.normalized_calculated_value(),
+        ) {
+            (Some(left_number), Some(right_number)) => {
+                return left_number.normalized_value == right_number.normalized_value;
+            }
+            _ => return false,
         }
-        self.calculate_to_string_panic_when_cannot_be_calculated()
-            == other.calculate_to_string_panic_when_cannot_be_calculated()
     }
 }
 
 impl Obj {
     pub fn calculate_to_string_panic_when_cannot_be_calculated(&self) -> String {
         if let Some(calculated_value) = self.normalized_calculated_value() {
-            return normalize_decimal_result(&calculated_value.normalized_value);
+            return calculated_value.normalized_value;
         }
 
-        match self {
-            Obj::Number(n) => normalize_decimal_result(&n.normalized_value.clone()),
-            Obj::Add(add) => {
-                let l = add
-                    .left
-                    .calculate_to_string_panic_when_cannot_be_calculated();
-                let r = add
-                    .right
-                    .calculate_to_string_panic_when_cannot_be_calculated();
-                add_decimal_str_and_normalize(&l, &r)
-            }
-            Obj::Sub(sub) => {
-                let l = sub
-                    .left
-                    .calculate_to_string_panic_when_cannot_be_calculated();
-                let r = sub
-                    .right
-                    .calculate_to_string_panic_when_cannot_be_calculated();
-                sub_decimal_str_and_normalize(&l, &r)
-            }
-            Obj::Mul(mul) => {
-                let l = mul
-                    .left
-                    .calculate_to_string_panic_when_cannot_be_calculated();
-                let r = mul
-                    .right
-                    .calculate_to_string_panic_when_cannot_be_calculated();
-                mul_signed_decimal_str(&l, &r)
-            }
-            Obj::Mod(mod_obj) => {
-                let l = mod_obj
-                    .left
-                    .calculate_to_string_panic_when_cannot_be_calculated();
-                let r = mod_obj
-                    .right
-                    .calculate_to_string_panic_when_cannot_be_calculated();
-                mod_decimal_str_and_normalize(&l, &r)
-            }
-            Obj::Pow(pow_obj) => {
-                let base = pow_obj
-                    .base
-                    .calculate_to_string_panic_when_cannot_be_calculated();
-                let exp = pow_obj
-                    .exponent
-                    .calculate_to_string_panic_when_cannot_be_calculated();
-                pow_decimal_str_and_normalize(&base, &exp)
-            }
-            _ => panic!("非算术表达式，无法 calculate_to_string"),
-        }
+        unreachable!("cannot be calculated");
     }
 }
 
