@@ -33,19 +33,7 @@ impl<'a> Runtime<'a> {
             AtomicFact::EqualFact(equal_fact) => {
                 self.verify_equal_fact(equal_fact, &next_verify_state)
             }
-            _ => {
-                let (calculated_atomic_fact, any_argument_replaced) = fact.calculate_args();
-                let maybe_calculated_atomic_fact = if any_argument_replaced {
-                    Some(calculated_atomic_fact)
-                } else {
-                    None
-                };
-                self.verify_non_equational_atomic_fact(
-                    fact,
-                    &next_verify_state,
-                    maybe_calculated_atomic_fact,
-                )
-            }
+            _ => self.verify_non_equational_atomic_fact(fact, &next_verify_state),
         }
     }
 }

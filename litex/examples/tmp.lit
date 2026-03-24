@@ -1,4 +1,9 @@
-have a R = 1
+prop p(a)
 
-a + 2 = 3
+know $p(1)
 
+have a R = 0
+
+a + 1 = 1
+
+$p(a + 1)
