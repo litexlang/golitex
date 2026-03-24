@@ -195,7 +195,7 @@ impl<'a> Runtime<'a> {
             let fn_obj_prefix = FnObj {
                 head: fn_obj.head.clone(),
                 body: fn_obj_prefix_body,
-                calculated_value: None,
+                normalized_calculated_value: None,
             };
             let fn_obj_prefix_as_obj = Obj::FnObj(fn_obj_prefix);
             let set_where_the_next_fn_obj_is_in_obj =
@@ -1119,7 +1119,9 @@ impl<'a> Runtime<'a> {
             })?;
         let tuple_dim = cart_obj_where_tuple_obj_is.args.len();
 
-        let index_calculated_string = x.index.calculate_to_string_panic_when_cannot_be_calculated();
+        let index_calculated_string = x
+            .index
+            .calculate_to_string_panic_when_cannot_be_calculated();
         let index_calculated_obj = Obj::Number(Number::new(index_calculated_string));
 
         let index_is_positive_integer_in_z_pos_fact = AtomicFact::InFact(InFact::new(

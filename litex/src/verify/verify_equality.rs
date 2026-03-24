@@ -678,7 +678,7 @@ fn fn_obj_prefix_to_obj(fn_obj: &FnObj, number_of_body_groups_to_keep: usize) ->
     }
 
     let calculated_value = if number_of_body_groups_to_keep == fn_obj.body.len() {
-        fn_obj.calculated_value.clone()
+        fn_obj.normalized_calculated_value.clone()
     } else {
         None
     };

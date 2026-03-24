@@ -34,7 +34,7 @@ impl IdentifierOrIdentifierWithMod {
 #[derive(Clone)]
 pub struct Identifier {
     pub name: String,
-    pub calculated_value: Option<Number>,
+    pub normalized_calculated_value: Option<Number>,
 }
 
 pub fn identifier_to_string(name: &str) -> String {
@@ -45,7 +45,7 @@ pub fn identifier_to_string(name: &str) -> String {
 pub struct IdentifierWithMod {
     pub mod_name: String,
     pub name: String,
-    pub calculated_value: Option<Number>,
+    pub normalized_calculated_value: Option<Number>,
 }
 
 pub fn identifier_with_mod_to_string(mod_name: &str, name: &str) -> String {
@@ -56,7 +56,7 @@ pub fn identifier_with_mod_to_string(mod_name: &str, name: &str) -> String {
 pub struct FieldAccess {
     pub name: String,
     pub fields: Vec<String>,
-    pub calculated_value: Option<Number>,
+    pub normalized_calculated_value: Option<Number>,
 }
 
 #[derive(Clone)]
@@ -64,7 +64,7 @@ pub struct FieldAccessWithMod {
     pub mod_name: String,
     pub name: String,
     pub fields: Vec<String>,
-    pub calculated_value: Option<Number>,
+    pub normalized_calculated_value: Option<Number>,
 }
 
 impl fmt::Display for Atom {
@@ -82,7 +82,7 @@ impl Identifier {
     pub fn new(name: String, calculated_value: Option<Number>) -> Self {
         Identifier {
             name,
-            calculated_value,
+            normalized_calculated_value: calculated_value,
         }
     }
 }
@@ -92,7 +92,7 @@ impl IdentifierWithMod {
         IdentifierWithMod {
             mod_name,
             name,
-            calculated_value,
+            normalized_calculated_value: calculated_value,
         }
     }
 }
@@ -102,7 +102,7 @@ impl FieldAccess {
         FieldAccess {
             name,
             fields,
-            calculated_value,
+            normalized_calculated_value: calculated_value,
         }
     }
 }
@@ -118,7 +118,7 @@ impl FieldAccessWithMod {
             mod_name,
             name,
             fields,
-            calculated_value,
+            normalized_calculated_value: calculated_value,
         }
     }
 }

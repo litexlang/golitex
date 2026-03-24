@@ -733,7 +733,7 @@ impl<'a> Runtime<'a> {
         number_like_obj: &Obj,
         line_file: (usize, usize),
     ) -> Result<String, RuntimeError> {
-        if !number_like_obj.calculated_value().is_some() {
+        if !number_like_obj.normalized_calculated_value().is_some() {
             return Err(RuntimeError::ExecError(ExecStmtError::new(
                 "ForAxiomStmt".to_string(),
                 format!(
