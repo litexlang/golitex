@@ -4,7 +4,7 @@ use crate::common::keywords::{
     PROP, RIGHT_BRACE, STRUCT,
 };
 use crate::error::ParsingError;
-use crate::error::{duplicate_used_name_error_message, RuntimeError};
+use crate::error::{duplicate_used_name_error_msg_without_line_file, RuntimeError};
 use crate::execute::Runtime;
 use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
 use crate::stmt::define_algorithm_stmt::{AlgoCase, AlgoReturn, AlgoReturnOrAlgoCase, DefAlgoStmt};
@@ -40,7 +40,7 @@ impl<'a> Runtime<'a> {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
-                    duplicate_used_name_error_message(&stmt_ok.name),
+                    duplicate_used_name_error_msg_without_line_file(&stmt_ok.name),
                     tb.line_file,
                     Some(RuntimeError::ParseBlockError(e)),
                 )
@@ -57,7 +57,7 @@ impl<'a> Runtime<'a> {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
-                    duplicate_used_name_error_message(&name),
+                    duplicate_used_name_error_msg_without_line_file(&name),
                     tb.line_file,
                     Some(RuntimeError::ParseBlockError(e)),
                 )
@@ -95,7 +95,7 @@ impl<'a> Runtime<'a> {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
-                    duplicate_used_name_error_message(&stmt_ok.name),
+                    duplicate_used_name_error_msg_without_line_file(&stmt_ok.name),
                     tb.line_file,
                     Some(RuntimeError::ParseBlockError(e)),
                 )
@@ -112,7 +112,7 @@ impl<'a> Runtime<'a> {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
-                    duplicate_used_name_error_message(&name),
+                    duplicate_used_name_error_msg_without_line_file(&name),
                     tb.line_file,
                     Some(RuntimeError::ParseBlockError(e)),
                 )
@@ -224,7 +224,7 @@ impl<'a> Runtime<'a> {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
-                    duplicate_used_name_error_message(&name),
+                    duplicate_used_name_error_msg_without_line_file(&name),
                     tb.line_file,
                     Some(RuntimeError::ParseBlockError(e)),
                 )
@@ -288,7 +288,7 @@ impl<'a> Runtime<'a> {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
-                    duplicate_used_name_error_message(&name),
+                    duplicate_used_name_error_msg_without_line_file(&name),
                     tb.line_file,
                     Some(RuntimeError::ParseBlockError(e)),
                 )
@@ -405,7 +405,7 @@ impl<'a> Runtime<'a> {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
-                    duplicate_used_name_error_message(&name),
+                    duplicate_used_name_error_msg_without_line_file(&name),
                     tb.line_file,
                     Some(RuntimeError::ParseBlockError(e)),
                 )

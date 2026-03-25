@@ -1,7 +1,7 @@
 mod error;
 
 pub use error::{
-    duplicate_used_name_error_message, ArithmeticError, ExecStmtError, InferError,
+    duplicate_used_name_error_msg_without_line_file, ArithmeticError, ExecStmtError, InferError,
     NameAlreadyUsedError, NewAtomicFactError, ParseBlockError, ParsingError, RuntimeError,
     StoreFactError, UnknownError, VerifyError, VerifyUnknownError, WellDefinedError,
 };

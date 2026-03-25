@@ -7,7 +7,7 @@ use crate::common::keywords::{
     RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, R_NEG, R_NZ, R_POS, SET_DIFF, SET_MINUS,
     SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ,
 };
-use crate::error::{duplicate_used_name_error_message, ParsingError, RuntimeError};
+use crate::error::{duplicate_used_name_error_msg_without_line_file, ParsingError, RuntimeError};
 use crate::execute::Runtime;
 use crate::obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div, FnObj, FnSetObj,
@@ -792,7 +792,7 @@ impl<'a> Runtime<'a> {
         self.validate_name_and_insert_into_top_parsing_time_name_scope(&a.name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
-                    duplicate_used_name_error_message(&a.name),
+                    duplicate_used_name_error_msg_without_line_file(&a.name),
                     tb.line_file,
                     Some(RuntimeError::ParseBlockError(e)),
                 )
