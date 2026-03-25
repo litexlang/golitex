@@ -16,7 +16,7 @@ fn test_fact() {
     );
     let mut runtime = Runtime::new(&mut runtime_context);
     let code = "1 + 1 = 2";
-    let blocks = TokenBlock::parse_blocks(code, 0).expect("parse blocks failed");
+    let blocks = TokenBlock::parse_blocks(code, 1).expect("parse blocks failed");
     for mut b in blocks {
         let stmt = runtime.parse_stmt(&mut b);
         match stmt {
