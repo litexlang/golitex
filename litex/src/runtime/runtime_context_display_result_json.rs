@@ -1,13 +1,19 @@
 use super::RuntimeContext;
-use crate::common::defaults::DEFAULT_LINE_FILE;
-use crate::common::keywords::UNKNOWN_COLON;
+use crate::common::keywords::{COLON, PROVE};
 use crate::result::NonErrStmtExecResult;
+use crate::stmt::Stmt;
+
+const JSON_KEY_RESULT: &str = "result";
+const JSON_KEY_SUCCESS: &str = "success";
+const JSON_KEY_VERIFIED_BY_BUILTIN_RULE: &str = "verified_by_builtin_rule";
+const JSON_KEY_VERIFIED_BY_KNOWN_FACT: &str = "verified_by_known_fact";
+const JSON_KEY_INFER_FACTS: &str = "infer_facts";
 
 pub fn display_result_json_string(
     runtime_context: &RuntimeContext<'_>,
     result: &NonErrStmtExecResult,
 ) -> String {
-    build_display_result_json_pretty(runtime_context, result, 0)
+    build_display_result_json(runtime_context, result, 0)
 }
 
 fn json_one_level_indent(unit_count: usize) -> String {
@@ -38,7 +44,23 @@ fn json_string_literal(source_text: &str) -> String {
     output
 }
 
-fn build_display_result_json_pretty(
+fn json_array_field_line(
+    indent_inner: &str,
+    json_key: &str,
+    json_elements: &Vec<String>,
+) -> String {
+    if json_elements.is_empty() {
+        format!("{}\"{}\": []", indent_inner, json_key)
+    } else {
+        let joined_elements = json_elements.join(",\n");
+        format!(
+            "{}\"{}\": [\n{}\n{}]",
+            indent_inner, json_key, joined_elements, indent_inner
+        )
+    }
+}
+
+fn build_display_result_json(
     runtime_context: &RuntimeContext<'_>,
     result: &NonErrStmtExecResult,
     depth: usize,
@@ -61,7 +83,7 @@ fn build_display_result_json_pretty(
                 depth,
             )
         }
-        NonErrStmtExecResult::StmtUnknown(_stmt_unknown_result) => display_stmt_unknown_json(depth),
+        NonErrStmtExecResult::StmtUnknown(_stmt_unknown_result) => unreachable!(),
     }
 }
 
@@ -72,21 +94,22 @@ fn display_non_factual_stmt_success_json(
 ) -> String {
     let indent_outer = json_one_level_indent(depth);
     let indent_inner = json_one_level_indent(depth + 1);
-    let infer_block_formatted =
-        RuntimeContext::format_infer_block(&non_factual_stmt_success_result.infers);
-    let inside_results_plain_text_block = runtime_context
-        .format_inside_results_block(&non_factual_stmt_success_result.inside_results);
-
     let mut field_lines: Vec<String> = Vec::new();
     field_lines.push(format!(
-        "{}\"type\": {}",
+        "{}\"{}\": {}",
         indent_inner,
-        json_string_literal("non_factual_stmt_success")
+        JSON_KEY_RESULT,
+        json_string_literal(JSON_KEY_SUCCESS)
     ));
     field_lines.push(format!(
         "{}\"stmt_type\": {}",
         indent_inner,
-        json_string_literal("stmt")
+        json_string_literal(
+            non_factual_stmt_success_result
+                .stmt
+                .stmt_type_name()
+                .as_str()
+        )
     ));
     let stmt_line_file = non_factual_stmt_success_result.stmt.line_file();
     field_lines.push(format!("{}\"line\": {}", indent_inner, stmt_line_file.0));
@@ -102,18 +125,15 @@ fn display_non_factual_stmt_success_json(
         )
     ));
     field_lines.push(format!(
-        "{}\"location_display\": {}",
-        indent_inner,
-        json_string_literal(
-            runtime_context
-                .format_line_file(stmt_line_file.0, stmt_line_file.1)
-                .as_str(),
-        )
-    ));
-    field_lines.push(format!(
         "{}\"stmt\": {}",
         indent_inner,
-        json_string_literal(&non_factual_stmt_success_result.stmt.to_string())
+        json_string_literal(&{
+            let stmt_display_string = non_factual_stmt_success_result.stmt.to_string();
+            match &non_factual_stmt_success_result.stmt {
+                Stmt::ProveStmt(_) => format!("{}{}\n{}", PROVE, COLON, stmt_display_string),
+                _ => stmt_display_string,
+            }
+        })
     ));
 
     let infer_indent = json_one_level_indent(depth + 2);
@@ -125,36 +145,29 @@ fn display_non_factual_stmt_success_json(
             json_string_literal(infer_fact.as_str())
         ));
     }
-    let infer_facts_joined = infer_elements.join(",\n");
-    field_lines.push(format!(
-        "{}\"infer_facts\": [\n{}\n{}]",
-        indent_inner, infer_facts_joined, indent_inner
-    ));
-
-    field_lines.push(format!(
-        "{}\"infer_block_formatted\": {}",
-        indent_inner,
-        json_string_literal(&infer_block_formatted)
-    ));
-    field_lines.push(format!(
-        "{}\"inside_results_plain_text_block\": {}",
-        indent_inner,
-        json_string_literal(&inside_results_plain_text_block)
+    field_lines.push(json_array_field_line(
+        indent_inner.as_str(),
+        JSON_KEY_INFER_FACTS,
+        &infer_elements,
     ));
 
     let mut inside_elements: Vec<String> = Vec::new();
     for inside_result in non_factual_stmt_success_result.inside_results.iter() {
-        let nested_json =
-            build_display_result_json_pretty(runtime_context, inside_result, depth + 2);
+        let nested_json = build_display_result_json(runtime_context, inside_result, depth + 2);
         inside_elements.push(nested_json);
     }
-    let inside_joined = inside_elements.join(",\n");
-    field_lines.push(format!(
-        "{}\"inside_results\": [\n{}\n{}]",
-        indent_inner, inside_joined, indent_inner
+    field_lines.push(json_array_field_line(
+        indent_inner.as_str(),
+        "inside_results",
+        &inside_elements,
     ));
 
-    format!("{{\n{}\n{}}}", field_lines.join(",\n"), indent_outer)
+    format!(
+        "{}{{\n{}\n{}}}",
+        indent_outer,
+        field_lines.join(",\n"),
+        indent_outer
+    )
 }
 
 fn display_fact_verified_by_fact_json(
@@ -164,29 +177,18 @@ fn display_fact_verified_by_fact_json(
 ) -> String {
     let indent_outer = json_one_level_indent(depth);
     let indent_inner = json_one_level_indent(depth + 1);
-    let verified_by_reference_suffix =
-        if fact_verified_by_fact_result.verified_by_line_file == DEFAULT_LINE_FILE {
-            String::new()
-        } else {
-            format!(
-                "fact known/verified/inferred {}",
-                runtime_context.format_line_file(
-                    fact_verified_by_fact_result.verified_by_line_file.0,
-                    fact_verified_by_fact_result.verified_by_line_file.1,
-                )
-            )
-        };
 
     let mut field_lines: Vec<String> = Vec::new();
     field_lines.push(format!(
-        "{}\"type\": {}",
+        "{}\"{}\": {}",
         indent_inner,
-        json_string_literal("fact_verified_by_fact")
+        JSON_KEY_RESULT,
+        json_string_literal(JSON_KEY_VERIFIED_BY_KNOWN_FACT)
     ));
     field_lines.push(format!(
         "{}\"stmt_type\": {}",
         indent_inner,
-        json_string_literal("fact")
+        json_string_literal("Fact")
     ));
     let fact_line_file = fact_verified_by_fact_result.fact.line_file();
     field_lines.push(format!("{}\"line\": {}", indent_inner, fact_line_file.0));
@@ -202,33 +204,23 @@ fn display_fact_verified_by_fact_json(
         )
     ));
     field_lines.push(format!(
-        "{}\"fact\": {}",
+        "{}\"stmt\": {}",
         indent_inner,
         json_string_literal(&fact_verified_by_fact_result.fact.to_string())
     ));
     field_lines.push(format!(
-        "{}\"verified_by_reference_suffix\": {}",
-        indent_inner,
-        json_string_literal(&verified_by_reference_suffix)
-    ));
-    field_lines.push(format!(
-        "{}\"verified_by_line\": {}",
+        "{}\"verified_by_fact_known_on_line\": {}",
         indent_inner, fact_verified_by_fact_result.verified_by_line_file.0
     ));
     field_lines.push(format!(
-        "{}\"verified_by_file_index\": {}",
-        indent_inner, fact_verified_by_fact_result.verified_by_line_file.1
-    ));
-    field_lines.push(format!(
-        "{}\"verified_by_location_display\": {}",
+        "{}\"verified_by_fact_known_from_source\": {}",
         indent_inner,
         json_string_literal(
             runtime_context
-                .format_line_file(
-                    fact_verified_by_fact_result.verified_by_line_file.0,
-                    fact_verified_by_fact_result.verified_by_line_file.1,
-                )
-                .as_str(),
+                .module_manager
+                .run_file_paths
+                .get(fact_verified_by_fact_result.verified_by_line_file.1)
+                .unwrap_or(&String::new())
         )
     ));
     field_lines.push(format!(
@@ -246,12 +238,17 @@ fn display_fact_verified_by_fact_json(
             json_string_literal(infer_fact.as_str())
         ));
     }
-    let infer_facts_joined = infer_elements.join(",\n");
-    field_lines.push(format!(
-        "{}\"infer_facts\": [\n{}\n{}]",
-        indent_inner, infer_facts_joined, indent_inner
+    field_lines.push(json_array_field_line(
+        indent_inner.as_str(),
+        JSON_KEY_INFER_FACTS,
+        &infer_elements,
     ));
-    format!("{{\n{}\n{}}}", field_lines.join(",\n"), indent_outer)
+    format!(
+        "{}{{\n{}\n{}}}",
+        indent_outer,
+        field_lines.join(",\n"),
+        indent_outer
+    )
 }
 
 fn display_fact_verified_by_builtin_rules_json(
@@ -263,14 +260,15 @@ fn display_fact_verified_by_builtin_rules_json(
     let indent_inner = json_one_level_indent(depth + 1);
     let mut field_lines: Vec<String> = Vec::new();
     field_lines.push(format!(
-        "{}\"type\": {}",
+        "{}\"{}\": {}",
         indent_inner,
-        json_string_literal("fact_verified_by_builtin_rules")
+        JSON_KEY_RESULT,
+        json_string_literal(JSON_KEY_VERIFIED_BY_BUILTIN_RULE)
     ));
     field_lines.push(format!(
         "{}\"stmt_type\": {}",
         indent_inner,
-        json_string_literal("fact")
+        json_string_literal("Fact")
     ));
     let fact_line_file = fact_verified_by_builtin_rules_result.fact.line_file();
     field_lines.push(format!("{}\"line\": {}", indent_inner, fact_line_file.0));
@@ -289,14 +287,16 @@ fn display_fact_verified_by_builtin_rules_json(
         )
     ));
     field_lines.push(format!(
-        "{}\"fact\": {}",
+        "{}\"stmt\": {}",
         indent_inner,
         json_string_literal(&fact_verified_by_builtin_rules_result.fact.to_string())
     ));
     field_lines.push(format!(
         "{}\"verified_by\": {}",
         indent_inner,
-        json_string_literal(&fact_verified_by_builtin_rules_result.verified_by)
+        json_string_literal(
+            format!("{}", &fact_verified_by_builtin_rules_result.verified_by).as_str()
+        )
     ));
 
     let infer_indent = json_one_level_indent(depth + 2);
@@ -312,28 +312,16 @@ fn display_fact_verified_by_builtin_rules_json(
             json_string_literal(infer_fact.as_str())
         ));
     }
-    let infer_facts_joined = infer_elements.join(",\n");
-    field_lines.push(format!(
-        "{}\"infer_facts\": [\n{}\n{}]",
-        indent_inner, infer_facts_joined, indent_inner
+    field_lines.push(json_array_field_line(
+        indent_inner.as_str(),
+        JSON_KEY_INFER_FACTS,
+        &infer_elements,
     ));
 
-    format!("{{\n{}\n{}}}", field_lines.join(",\n"), indent_outer)
-}
-
-fn display_stmt_unknown_json(depth: usize) -> String {
-    let indent_outer = json_one_level_indent(depth);
-    let indent_inner = json_one_level_indent(depth + 1);
-    let mut field_lines: Vec<String> = Vec::new();
-    field_lines.push(format!(
-        "{}\"kind\": {}",
-        indent_inner,
-        json_string_literal("stmt_unknown")
-    ));
-    field_lines.push(format!(
-        "{}\"message\": {}",
-        indent_inner,
-        json_string_literal(UNKNOWN_COLON)
-    ));
-    format!("{{\n{}\n{}}}", field_lines.join(",\n"), indent_outer)
+    format!(
+        "{}{{\n{}\n{}}}",
+        indent_outer,
+        field_lines.join(",\n"),
+        indent_outer
+    )
 }
