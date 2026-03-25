@@ -60,33 +60,18 @@ fn json_array_field_line(
     }
 }
 
+fn parse_block_error_message(parse_block_error: &ParseBlockError) -> String {
+    match parse_block_error {
+        ParseBlockError::ExpectedIndent(_, _) => "expected indent".to_string(),
+        ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
+        ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
+        ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
+        ParseBlockError::NameAlreadyUsed(name) => duplicate_used_name_error_message(name),
+        ParseBlockError::InvalidName(msg) => msg.clone(),
+    }
+}
+
 impl<'a> RuntimeContext<'a> {
-    pub fn duplicate_used_name_error_message(
-        &self,
-        name: &str,
-        already_defined_on_line_file: (usize, usize),
-    ) -> String {
-        format!(
-            "name `{}` is already used, cannot be used again for other definitions on line {} of file {}",
-            name,
-            already_defined_on_line_file.0,
-            
-        )
-    }
-
-    fn parse_block_error_message(&self, parse_block_error: &ParseBlockError) -> String {
-        match parse_block_error {
-            ParseBlockError::ExpectedIndent(_, _) => "expected indent".to_string(),
-            ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
-            ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
-            ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
-            ParseBlockError::NameAlreadyUsed(name, already_defined_on_line_file) => {
-                duplicate_used_name_error_message(name, already_defined_on_line_file)
-            }
-            ParseBlockError::InvalidName(msg) => msg.clone(),
-        }
-    }
-
     pub fn display_error_json_string(&self, error: &RuntimeError) -> String {
         self.build_display_error_json_object(error, 0, true)
     }

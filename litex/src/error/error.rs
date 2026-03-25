@@ -90,11 +90,16 @@ fn parse_block_error_message(e: &ParseBlockError) -> String {
         ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
         ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
         ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
-        ParseBlockError::NameAlreadyUsed(name, _) => {
-            format!("{}", duplicate_used_name_error_message(name))
-        }
+        ParseBlockError::NameAlreadyUsed(name) => duplicate_used_name_error_message(name),
         ParseBlockError::InvalidName(msg) => msg.clone(),
     }
+}
+
+pub fn duplicate_used_name_error_message(name: &str) -> String {
+    format!(
+        "name `{}` is already used, cannot be used again for other definitions",
+        name
+    )
 }
 
 // Display outputs body only (no type label); full format with label and line is via RuntimeContext::display_error.
@@ -222,7 +227,7 @@ pub enum ParseBlockError {
     UnexpectedIndent(usize, usize),
     InconsistentIndent(usize, usize),
     MissingBody(usize, usize),
-    NameAlreadyUsed(String, (usize, usize)),
+    NameAlreadyUsed(String),
     InvalidName(String),
 }
 
@@ -241,7 +246,7 @@ impl ParseBlockError {
             ParseBlockError::UnexpectedIndent(line, file) => (*line, *file),
             ParseBlockError::InconsistentIndent(line, file) => (*line, *file),
             ParseBlockError::MissingBody(line, file) => (*line, *file),
-            ParseBlockError::NameAlreadyUsed(_, _) => DEFAULT_LINE_FILE.clone(),
+            ParseBlockError::NameAlreadyUsed(_) => DEFAULT_LINE_FILE.clone(),
             ParseBlockError::InvalidName(_) => DEFAULT_LINE_FILE.clone(),
         }
     }
