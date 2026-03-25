@@ -203,11 +203,6 @@ where
 
         let normalized_source = remove_windows_carriage_return(trimmed_line);
 
-        // 新的 parsing_time_name_scope_stack
-        // 新的 env
-        runtime.push_parsing_time_name_scope();
-        runtime.runtime_context.push_env();
-
         let blocks = match TokenBlock::parse_blocks(normalized_source.as_str(), 0) {
             Ok(parsed_blocks) => parsed_blocks,
             Err(parse_block_error) => {
@@ -222,10 +217,6 @@ where
                 writeln!(stdout_writer)?;
                 writeln!(stdout_writer, "{}", error_string)?;
                 writeln!(stdout_writer)?;
-
-                runtime.pop_parsing_time_name_scope();
-                runtime.runtime_context.pop_env();
-
                 break;
             }
         };
@@ -244,10 +235,6 @@ where
                         runtime.runtime_context.display_error(&runtime_error)
                     };
                     output_chunk.push_str(&format!("\n{}\n", message));
-
-                    runtime.pop_parsing_time_name_scope();
-                    runtime.runtime_context.pop_env();
-
                     break;
                 }
             };
@@ -263,10 +250,6 @@ where
                         runtime.runtime_context.display_error(&exec_error)
                     };
                     output_chunk.push_str(&format!("\n{}\n", message));
-
-                    runtime.pop_parsing_time_name_scope();
-                    runtime.runtime_context.pop_env();
-
                     break;
                 }
             };
@@ -288,29 +271,6 @@ where
                 );
             }
             output_chunk.push('\n');
-        }
-
-        if let Some(top_parsing_time_scope) = runtime.parsing_time_name_scope_stack.pop() {
-            if let Some(previous_parsing_time_scope) =
-                runtime.parsing_time_name_scope_stack.last_mut()
-            {
-                for (name, line_file) in top_parsing_time_scope.into_iter() {
-                    previous_parsing_time_scope.insert(name, line_file);
-                }
-            }
-        } else {
-            unreachable!("REPL parsing_time_name_scope_stack should keep at least one scope");
-        }
-
-        if let Some(top_environment) = runtime.runtime_context.environment_stack.pop() {
-            if let Some(previous_environment) = runtime.runtime_context.environment_stack.last_mut()
-            {
-                previous_environment.merge_from(*top_environment);
-            } else {
-                unreachable!("REPL environment stack should keep at least one env");
-            }
-        } else {
-            unreachable!("REPL environment stack should keep at least one env");
         }
 
         let trimmed_output = output_chunk.trim();
