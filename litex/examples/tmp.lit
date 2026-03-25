@@ -1,6 +1,0 @@
-have s set
-
-witness $is_nonempty_set(s) from 1:
-    know 1 $in s
-
-$is_nonempty_set(s)
