@@ -4,7 +4,6 @@ use crate::common::is_valid_litex_name::is_valid_litex_name;
 use crate::error::ParseBlockError;
 use crate::obj::{Add, Div, Mod, Mul, Number, Obj, Pow, Sub};
 use std::collections::HashMap;
-use std::fmt;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct Runtime<'a> {
@@ -68,16 +67,6 @@ impl<'a> Runtime<'a> {
             }
             _ => obj.clone(),
         }
-    }
-}
-
-impl<'a> fmt::Display for Runtime<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Executor {{ runtime_context: {} }}",
-            self.runtime_context
-        )
     }
 }
 

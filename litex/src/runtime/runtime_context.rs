@@ -14,7 +14,6 @@ use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::stmt::definition_stmt::DefPropWithMeaningStmt;
 use crate::stmt::definition_stmt::DefPropWithoutMeaningStmt;
 use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
-use std::fmt;
 
 pub struct RuntimeContext<'a> {
     pub module_manager: &'a mut ModuleManager<'a>,
@@ -33,16 +32,6 @@ impl<'a> RuntimeContext<'a> {
             environment_stack: vec![new_env],
             builtin_environment,
         }
-    }
-}
-
-impl<'a> fmt::Display for RuntimeContext<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "RuntimeContext {{\n")?;
-        write!(f, "    module_manager: {}\n", self.module_manager)?;
-        write!(f, "    environments: {:?}\n", self.environment_stack.len())?;
-        write!(f, "    builtin_environment: {}\n", self.builtin_environment)?;
-        write!(f, "}}")
     }
 }
 
