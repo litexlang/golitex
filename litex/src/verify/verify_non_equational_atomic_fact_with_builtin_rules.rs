@@ -352,6 +352,13 @@ impl<'a> Runtime<'a> {
                     InferResult::new(),
                 ),
             )),
+            Obj::ListSet(_) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                FactVerifiedByBuiltinRules::new(
+                    Fact::AtomicFact(AtomicFact::IsNonemptySetFact(is_nonempty_set_fact.clone())),
+                    "list_set_nonempty".to_string(),
+                    InferResult::new(),
+                ),
+            )),
             Obj::Cart(cart) => {
                 for arg_obj in &cart.args {
                     let is_nonempty_set_result = self
