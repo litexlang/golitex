@@ -1,6 +1,7 @@
 use super::RuntimeContext;
 use crate::common::is_valid_litex_name::is_valid_litex_name;
 use crate::error::ParseBlockError;
+use crate::obj::{Add, Div, Mod, Mul, Number, Obj, Pow, Sub};
 use std::collections::HashMap;
 use std::fmt;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -15,6 +16,56 @@ impl<'a> Runtime<'a> {
         Runtime {
             runtime_context,
             parsing_time_name_scope_stack: vec![HashMap::new()],
+        }
+    }
+
+    pub fn normalized_calculated_value_for_obj(&self, obj: &Obj) -> Option<Number> {
+        if let Some(number) = obj.normalized_calculated_value() {
+            return Some(number);
+        }
+        self.runtime_context
+            .get_normalized_calculated_value_of_obj(&obj.to_string())
+    }
+
+    pub fn obj_with_runtime_known_numbers_substituted_for_verification(&self, obj: &Obj) -> Obj {
+        match obj {
+            Obj::Number(number) => Obj::Number(number.clone()),
+            Obj::Add(add) => Obj::Add(Add::new(
+                self.obj_with_runtime_known_numbers_substituted_for_verification(&add.left),
+                self.obj_with_runtime_known_numbers_substituted_for_verification(&add.right),
+            )),
+            Obj::Sub(sub) => Obj::Sub(Sub::new(
+                self.obj_with_runtime_known_numbers_substituted_for_verification(&sub.left),
+                self.obj_with_runtime_known_numbers_substituted_for_verification(&sub.right),
+            )),
+            Obj::Mul(mul) => Obj::Mul(Mul::new(
+                self.obj_with_runtime_known_numbers_substituted_for_verification(&mul.left),
+                self.obj_with_runtime_known_numbers_substituted_for_verification(&mul.right),
+            )),
+            Obj::Div(div) => Obj::Div(Div::new(
+                self.obj_with_runtime_known_numbers_substituted_for_verification(&div.left),
+                self.obj_with_runtime_known_numbers_substituted_for_verification(&div.right),
+            )),
+            Obj::Mod(mod_obj) => Obj::Mod(Mod::new(
+                self.obj_with_runtime_known_numbers_substituted_for_verification(&mod_obj.left),
+                self.obj_with_runtime_known_numbers_substituted_for_verification(&mod_obj.right),
+            )),
+            Obj::Pow(pow) => Obj::Pow(Pow::new(
+                self.obj_with_runtime_known_numbers_substituted_for_verification(&pow.base),
+                self.obj_with_runtime_known_numbers_substituted_for_verification(&pow.exponent),
+            )),
+            Obj::Identifier(_)
+            | Obj::IdentifierWithMod(_)
+            | Obj::FieldAccess(_)
+            | Obj::FieldAccessWithMod(_)
+            | Obj::FnObj(_) => {
+                if let Some(number) = self.normalized_calculated_value_for_obj(obj) {
+                    Obj::Number(number)
+                } else {
+                    obj.clone()
+                }
+            }
+            _ => obj.clone(),
         }
     }
 
