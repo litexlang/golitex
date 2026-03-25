@@ -460,6 +460,13 @@ impl Environment {
         }
     }
 
+    pub fn store_exist_fact_by_ref(
+        &mut self,
+        exist_fact: &ExistFact,
+    ) -> Result<(), StoreFactError> {
+        self.store_exist_fact(exist_fact.clone())
+    }
+
     pub fn store_exist_or_and_chain_atomic_fact(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,

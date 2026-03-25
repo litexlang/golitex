@@ -1,2 +1,2 @@
-1 = 1
-0 = 1
+witness exist x, y R st {x > y} from 1, 0:
+    1 > 0
