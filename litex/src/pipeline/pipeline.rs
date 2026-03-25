@@ -46,7 +46,16 @@ pub fn run_source_code(
 
     let blocks = match TokenBlock::parse_blocks(source_code, 0) {
         Ok(b) => b,
-        Err(e) => return format!("\n{}\n", runtime_context.display_error(&e.into())),
+        Err(e) => {
+            let runtime_error = e.into();
+            if should_output_json {
+                return format!(
+                    "\n{}\n",
+                    runtime_context.display_error_json_string(&runtime_error)
+                );
+            }
+            return format!("\n{}\n", runtime_context.display_error(&runtime_error));
+        }
     };
 
     let mut out = String::new();
@@ -56,10 +65,26 @@ pub fn run_source_code(
             match runtime.parse_stmt(&mut block) {
                 Ok(s) => s,
                 Err(e) => {
-                    out.push_str(
-                        format!("\n{}\n", runtime.runtime_context.display_error(&e.into()))
+                    let runtime_error = e.into();
+                    if should_output_json {
+                        out.push_str(
+                            format!(
+                                "\n{}\n",
+                                runtime
+                                    .runtime_context
+                                    .display_error_json_string(&runtime_error)
+                            )
                             .as_str(),
-                    );
+                        );
+                    } else {
+                        out.push_str(
+                            format!(
+                                "\n{}\n",
+                                runtime.runtime_context.display_error(&runtime_error)
+                            )
+                            .as_str(),
+                        );
+                    }
                     return out;
                 }
             }
@@ -67,7 +92,19 @@ pub fn run_source_code(
         let result = match runtime.exec_stmt(&stmt) {
             Ok(r) => r,
             Err(e) => {
-                out.push_str(format!("\n{}\n", runtime.runtime_context.display_error(&e)).as_str());
+                if should_output_json {
+                    out.push_str(
+                        format!(
+                            "\n{}\n",
+                            runtime.runtime_context.display_error_json_string(&e)
+                        )
+                        .as_str(),
+                    );
+                } else {
+                    out.push_str(
+                        format!("\n{}\n", runtime.runtime_context.display_error(&e)).as_str(),
+                    );
+                }
                 return out;
             }
         };
@@ -170,7 +207,13 @@ where
             Ok(parsed_blocks) => parsed_blocks,
             Err(parse_block_error) => {
                 let stmt_error = parse_block_error.into();
-                let error_string = runtime.runtime_context.display_error(&stmt_error);
+                let error_string = if should_output_json {
+                    runtime
+                        .runtime_context
+                        .display_error_json_string(&stmt_error)
+                } else {
+                    runtime.runtime_context.display_error(&stmt_error)
+                };
                 writeln!(stdout_writer)?;
                 writeln!(stdout_writer, "{}", error_string)?;
                 writeln!(stdout_writer)?;
@@ -183,9 +226,14 @@ where
             let stmt: Stmt = match runtime.parse_stmt(&mut block) {
                 Ok(statement) => statement,
                 Err(parse_stmt_error) => {
-                    let message = runtime
-                        .runtime_context
-                        .display_error(&parse_stmt_error.into());
+                    let runtime_error = parse_stmt_error.into();
+                    let message = if should_output_json {
+                        runtime
+                            .runtime_context
+                            .display_error_json_string(&runtime_error)
+                    } else {
+                        runtime.runtime_context.display_error(&runtime_error)
+                    };
                     output_chunk.push_str(&format!("\n{}\n", message));
                     break;
                 }
@@ -194,7 +242,13 @@ where
             let exec_result = match runtime.exec_stmt(&stmt) {
                 Ok(result) => result,
                 Err(exec_error) => {
-                    let message = runtime.runtime_context.display_error(&exec_error);
+                    let message = if should_output_json {
+                        runtime
+                            .runtime_context
+                            .display_error_json_string(&exec_error)
+                    } else {
+                        runtime.runtime_context.display_error(&exec_error)
+                    };
                     output_chunk.push_str(&format!("\n{}\n", message));
                     break;
                 }
