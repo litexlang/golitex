@@ -422,10 +422,6 @@ impl<'a> RuntimeContext<'a> {
         self.display_result_non_json(result)
     }
 
-    pub fn display_result_json_string(&self, result: &NonErrStmtExecResult) -> String {
-        super::runtime_context_display_result_json::display_result_json_string(self, result)
-    }
-
     pub fn display_error(&self, error: &RuntimeError) -> String {
         let body = error.error_body();
         let (line, file_index) = error.line_file();

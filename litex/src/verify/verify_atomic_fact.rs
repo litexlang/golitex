@@ -20,9 +20,8 @@ impl<'a> Runtime<'a> {
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_atomic_fact_well_defined(fact, verify_state) {
                 return Err(VerifyError::new(
-                    fact.to_string(),
+                    Fact::AtomicFact(fact.clone()),
                     Some(RuntimeError::WellDefinedError(e)),
-                    fact.line_file(),
                 ));
             }
         }

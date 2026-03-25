@@ -273,9 +273,8 @@ impl<'a> Runtime<'a> {
             )
             .map_err(|e| {
                 VerifyError::new(
-                    e.error_body(),
+                    Fact::ExistFact(given_exist_fact.clone()),
                     Some(e),
-                    crate::common::defaults::DEFAULT_LINE_FILE.clone(),
                 )
             })?;
 

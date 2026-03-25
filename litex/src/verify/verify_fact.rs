@@ -27,7 +27,7 @@ impl<'a> Runtime<'a> {
         }?;
 
         if result.is_unknown() {
-            return Err(VerifyUnknownError::new(fact.to_string(), None, fact.line_file()).into());
+            return Err(VerifyUnknownError::new(fact.clone(), None).into());
         } else {
             Ok(result)
         }

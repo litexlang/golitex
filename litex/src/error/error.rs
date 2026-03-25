@@ -1,6 +1,7 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::result::NonErrStmtExecResult;
 use crate::stmt::Stmt;
+use crate::fact::Fact;
 use std::fmt;
 
 pub fn duplicate_used_name_error_message(name: &str) -> String {
@@ -49,8 +50,8 @@ impl RuntimeError {
             RuntimeError::ExecStmtError(e) => e.stmt.line_file(),
             RuntimeError::UnknownError(e) => e.line_file,
             RuntimeError::WellDefinedError(e) => e.line_file,
-            RuntimeError::VerifyError(e) => e.line_file,
-            RuntimeError::VerifyUnknownError(e) => e.line_file,
+            RuntimeError::VerifyError(e) => e.fact.line_file(),
+            RuntimeError::VerifyUnknownError(e) => e.fact.line_file(),
             RuntimeError::InferError(e) => e.line_file,
         }
     }
@@ -400,9 +401,8 @@ impl From<WellDefinedError> for RuntimeError {
 
 #[derive(Debug)]
 pub struct VerifyError {
-    pub msg: String,
+    pub fact: Fact,
     pub previous_error: Option<Box<RuntimeError>>,
-    pub line_file: (usize, usize),
 }
 
 impl std::error::Error for VerifyError {}
@@ -415,19 +415,17 @@ impl fmt::Display for VerifyError {
 
 impl VerifyError {
     pub fn new(
-        msg: String,
+        fact: Fact,
         previous_error: Option<RuntimeError>,
-        line_file: (usize, usize),
     ) -> Self {
         VerifyError {
-            msg,
+            fact,
             previous_error: boxed_previous_error(previous_error),
-            line_file,
         }
     }
 
     pub fn body_string(&self) -> String {
-        body_with_previous(&self.msg, &self.previous_error)
+        body_with_previous(&self.fact.to_string(), &self.previous_error)
     }
 }
 
@@ -439,7 +437,7 @@ impl From<VerifyError> for RuntimeError {
 
 impl From<VerifyError> for WellDefinedError {
     fn from(e: VerifyError) -> Self {
-        let line_file = e.line_file;
+        let line_file = e.fact.line_file();
         WellDefinedError::new(
             "verify fact error:".to_string(),
             Some(RuntimeError::VerifyError(e)),
@@ -450,9 +448,8 @@ impl From<VerifyError> for WellDefinedError {
 
 #[derive(Debug)]
 pub struct VerifyUnknownError {
-    pub msg: String,
+    pub fact: Fact,
     pub previous_error: Option<Box<RuntimeError>>,
-    pub line_file: (usize, usize),
 }
 
 impl std::error::Error for VerifyUnknownError {}
@@ -465,19 +462,17 @@ impl fmt::Display for VerifyUnknownError {
 
 impl VerifyUnknownError {
     pub fn new(
-        msg: String,
+        fact: Fact,
         previous_error: Option<RuntimeError>,
-        line_file: (usize, usize),
     ) -> Self {
         VerifyUnknownError {
-            msg,
+            fact,
             previous_error: boxed_previous_error(previous_error),
-            line_file,
         }
     }
 
     pub fn body_string(&self) -> String {
-        body_with_previous(&self.msg, &self.previous_error)
+        body_with_previous(&self.fact.to_string(), &self.previous_error)
     }
 }
 
@@ -489,12 +484,8 @@ impl From<VerifyUnknownError> for RuntimeError {
 
 impl From<VerifyUnknownError> for VerifyError {
     fn from(e: VerifyUnknownError) -> Self {
-        let line_file = e.line_file;
-        VerifyError::new(
-            "verify result is unknown:".to_string(),
-            Some(RuntimeError::VerifyUnknownError(e)),
-            line_file,
-        )
+        let fact = e.fact.clone();
+        VerifyError::new(fact, Some(RuntimeError::VerifyUnknownError(e)))
     }
 }
 

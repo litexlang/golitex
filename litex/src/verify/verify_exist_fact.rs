@@ -15,8 +15,6 @@ impl<'a> Runtime<'a> {
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        let fact_display_string = exist_fact.to_string();
-        let fact_line_file = exist_fact.line_file();
         if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
             &Fact::ExistFact(exist_fact.clone()),
         ) {
@@ -26,9 +24,8 @@ impl<'a> Runtime<'a> {
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_exist_fact_well_defined(exist_fact, verify_state) {
                 return Err(VerifyError::new(
-                    fact_display_string,
+                    Fact::ExistFact(exist_fact.clone()),
                     Some(RuntimeError::WellDefinedError(e)),
-                    fact_line_file,
                 ));
             }
         }

@@ -1,5 +1,5 @@
 use crate::environment::Environment;
-use crate::error::VerifyError;
+use crate::error::{UnknownError, VerifyError};
 use crate::execute::Runtime;
 use crate::fact::{AtomicFact, Fact, RestrictFact};
 use crate::infer::InferResult;
@@ -216,7 +216,15 @@ impl<'a> Runtime<'a> {
         {
             for known_fact in known_facts.iter() {
                 if known_fact.args().len() != atomic_fact.args().len() {
-                    return Err(VerifyError::new(format!("known atomic fact {} has different number of args than the given fact {}", known_fact.to_string(), atomic_fact.to_string()), None, atomic_fact.line_file()));
+                    let message = format!(
+                        "known atomic fact {} has different number of args than the given fact {}",
+                        known_fact.to_string(),
+                        atomic_fact.to_string()
+                    );
+                    return Err(VerifyError::new(
+                        Fact::AtomicFact(atomic_fact.clone()),
+                        Some(UnknownError::new(message, atomic_fact.line_file(), None).into()),
+                    ));
                 }
                 let mut all_args_match = true;
                 for (index, known_arg) in known_fact.args().iter().enumerate() {

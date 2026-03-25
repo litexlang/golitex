@@ -72,7 +72,7 @@ mod run_source_code_from_string_json_samples {
     #[test]
     fn print_json_for_sample_lit_string() {
         // let code = "prove:\n    1 = 1\n";
-        let code = "have a N_pos = 1\na = 1\n1+1=2\n1=1";
+        let code = "have a N_pos = 1\na = 1\n1+1=2\n1=0";
         print_json_for_lit_source("test.lit", code);
     }
 }
