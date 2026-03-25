@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod run_tmp_lit {
+    use std::fs;
     use std::path::PathBuf;
     use std::time::Instant;
 
@@ -16,6 +17,12 @@ mod run_tmp_lit {
         let path_str = path
             .to_str()
             .expect("examples/tmp.lit path must be valid UTF-8");
+
+        let tmp_lit_content = fs::read_to_string(&path).expect("examples/tmp.lit must be readable");
+        if tmp_lit_content.trim().is_empty() {
+            println!("examples/tmp.lit is empty; skip run_examples_tmp_lit");
+            return;
+        }
 
         let start_time = Instant::now();
         let result_from_string = run_source_code_in_file_and_return_string(path_str);
@@ -58,6 +65,9 @@ mod run_tmp_lit {
 
 #[cfg(test)]
 mod run_source_code_from_string_json_samples {
+    use std::fs;
+    use std::path::PathBuf;
+
     use crate::pipeline::run_source_code_and_return_json_string;
 
     fn print_json_for_lit_source(sample_label: &str, lit_source_code: &str) {
@@ -71,8 +81,11 @@ mod run_source_code_from_string_json_samples {
 
     #[test]
     fn print_json_for_sample_lit_string() {
-        // let code = "prove:\n    1 = 1\n";
-        let code = "have a N_pos = 1\na = 1\n1+1=2\n1=0";
-        print_json_for_lit_source("test.lit", code);
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("examples")
+            .join("tmp.lit");
+        let file_content = fs::read_to_string(&path).expect("examples/tmp.lit must be readable");
+
+        print_json_for_lit_source("tmp.lit", file_content.as_str());
     }
 }
