@@ -1,7 +1,7 @@
 use super::RuntimeContext;
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::keywords::{COLON, PROVE};
-use crate::error::{duplicate_used_name_error_message, ParseBlockError, RuntimeError};
+use crate::error::{format_name_already_used_error_body, ParseBlockError, RuntimeError};
 use crate::result::NonErrStmtExecResult;
 use crate::stmt::Stmt;
 
@@ -66,8 +66,12 @@ fn parse_block_error_message(parse_block_error: &ParseBlockError) -> String {
         ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
         ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
         ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
-        ParseBlockError::NameAlreadyUsed(name) => duplicate_used_name_error_message(name),
         ParseBlockError::InvalidName(msg) => msg.clone(),
+        ParseBlockError::NameAlreadyUsed {
+            name,
+            name_already_used_on_line_file,
+            ..
+        } => format_name_already_used_error_body(name, *name_already_used_on_line_file),
     }
 }
 
@@ -123,6 +127,16 @@ impl<'a> RuntimeContext<'a> {
         }
 
         match error {
+            RuntimeError::NameAlreadyUsedError(e) => {
+                let body_string =
+                    format_name_already_used_error_body(&e.name, e.name_already_used_on_line_file);
+                field_lines.push(format!(
+                    "{}\"{}\": {}",
+                    indent_inner,
+                    JSON_KEY_MESSAGE,
+                    json_string_literal(&body_string)
+                ));
+            }
             RuntimeError::ArithmeticError(e) => {
                 field_lines.push(format!(
                     "{}\"{}\": {}",
@@ -284,6 +298,7 @@ impl<'a> RuntimeContext<'a> {
         error: &'b RuntimeError,
     ) -> Option<&'b RuntimeError> {
         match error {
+            RuntimeError::NameAlreadyUsedError(_) => None,
             RuntimeError::ArithmeticError(e) => match &e.previous_error {
                 Some(previous_error) => Some(previous_error.as_ref()),
                 None => None,
