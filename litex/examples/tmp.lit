@@ -1,2 +1,6 @@
-witness exist x, y R st {x > y} from 1, 0:
-    1 > 0
+have s set
+
+witness $is_nonempty_set(s) from 1:
+    know 1 $in s
+
+$is_nonempty_set(s)
