@@ -2,8 +2,8 @@ use super::Runtime;
 use crate::error::ExecStmtError;
 use crate::error::StoreFactError;
 use crate::fact::{AtomicFact, ExistOrAndChainAtomicFact, Fact, OrAndChainAtomicFact};
-use crate::stmt::Stmt;
 use crate::infer::InferResult;
+use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 
 use crate::fact::AndChainAtomicFact;
@@ -120,11 +120,7 @@ impl<'a> Runtime<'a> {
             })?;
         self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(fact)
             .map_err(|store_fact_error| {
-                ExecStmtError::new(
-                    stmt_for_fact_errors,
-                    Some(store_fact_error.into()),
-                    vec![],
-                )
+                ExecStmtError::new(stmt_for_fact_errors, Some(store_fact_error.into()), vec![])
             })
     }
 
@@ -144,11 +140,7 @@ impl<'a> Runtime<'a> {
             })?;
         self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(fact)
             .map_err(|store_fact_error| {
-                ExecStmtError::new(
-                    stmt_for_fact_errors,
-                    Some(store_fact_error.into()),
-                    vec![],
-                )
+                ExecStmtError::new(stmt_for_fact_errors, Some(store_fact_error.into()), vec![])
             })
     }
 
@@ -168,11 +160,7 @@ impl<'a> Runtime<'a> {
             })?;
         self.store_fact_without_well_defined_verified_and_infer(fact)
             .map_err(|store_fact_error| {
-                ExecStmtError::new(
-                    stmt_for_fact_errors,
-                    Some(store_fact_error.into()),
-                    vec![],
-                )
+                ExecStmtError::new(stmt_for_fact_errors, Some(store_fact_error.into()), vec![])
             })
     }
 }
