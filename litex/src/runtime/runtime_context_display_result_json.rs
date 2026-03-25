@@ -108,7 +108,7 @@ impl<'a> RuntimeContext<'a> {
             indent_inner,
             JSON_KEY_SOURCE,
             json_string_literal(
-                &self.get_source_text_by_line_file_return_empty_when_default(stmt_line_file)
+                &self.get_source_file_by_line_file_return_empty_when_default(stmt_line_file)
             )
         ));
         field_lines.push(format!(
@@ -184,7 +184,7 @@ impl<'a> RuntimeContext<'a> {
             indent_inner,
             JSON_KEY_SOURCE,
             json_string_literal(
-                &self.get_source_text_by_line_file_return_empty_when_default(fact_line_file)
+                &self.get_source_file_by_line_file_return_empty_when_default(fact_line_file)
             )
         ));
         field_lines.push(format!(
@@ -200,7 +200,7 @@ impl<'a> RuntimeContext<'a> {
             "{}\"verified_by_fact_known_from_source\": {}",
             indent_inner,
             json_string_literal(
-                &self.get_source_text_by_line_file_return_empty_when_default(
+                &self.get_source_file_by_line_file_return_empty_when_default(
                     fact_verified_by_fact_result.verified_by_line_file
                 )
             )
@@ -260,7 +260,7 @@ impl<'a> RuntimeContext<'a> {
             indent_inner,
             JSON_KEY_SOURCE,
             json_string_literal(
-                &self.get_source_text_by_line_file_return_empty_when_default(fact_line_file)
+                &self.get_source_file_by_line_file_return_empty_when_default(fact_line_file)
             )
         ));
         field_lines.push(format!(
