@@ -17,12 +17,7 @@ impl<'a> Runtime<'a> {
         let (cache_ok, cache_line_file) = self.runtime_context.cache_known_facts_contains(&key);
         if cache_ok {
             Some(NonErrStmtExecResult::FactVerifiedByFact(
-                FactVerifiedByFact::new(
-                    fact.clone(),
-                    key,
-                    InferResult::new(),
-                    cache_line_file,
-                ),
+                FactVerifiedByFact::new(fact.clone(), key, InferResult::new(), cache_line_file),
             ))
         } else {
             None
