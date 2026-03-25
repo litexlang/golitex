@@ -28,6 +28,7 @@ pub enum RuntimeError {
     VerifyError(VerifyError),
     VerifyUnknownError(VerifyUnknownError),
     InferError(InferError),
+    NameAlreadyUsedError(NameAlreadyUsedError),
 }
 
 impl std::error::Error for RuntimeError {}
@@ -46,6 +47,7 @@ impl RuntimeError {
             RuntimeError::VerifyError(e) => e.fact.line_file(),
             RuntimeError::VerifyUnknownError(e) => e.fact.line_file(),
             RuntimeError::InferError(e) => e.line_file,
+            RuntimeError::NameAlreadyUsedError(e) => e.line_file,
         }
     }
 
@@ -63,6 +65,7 @@ impl RuntimeError {
             RuntimeError::VerifyError(_) => "VerifyError",
             RuntimeError::VerifyUnknownError(_) => "VerifyUnknownError",
             RuntimeError::InferError(_) => "InferError",
+            RuntimeError::NameAlreadyUsedError(_) => "NameAlreadyUsedError",
         }
     }
 
@@ -80,6 +83,7 @@ impl RuntimeError {
             RuntimeError::VerifyError(e) => e.body_string(),
             RuntimeError::VerifyUnknownError(e) => e.body_string(),
             RuntimeError::InferError(e) => e.body_string(),
+            RuntimeError::NameAlreadyUsedError(e) => e.body_string(),
         }
     }
 }
@@ -90,8 +94,12 @@ fn parse_block_error_message(e: &ParseBlockError) -> String {
         ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
         ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
         ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
-        ParseBlockError::NameAlreadyUsed(name) => duplicate_used_name_error_message(name),
         ParseBlockError::InvalidName(msg) => msg.clone(),
+        ParseBlockError::NameAlreadyUsed {
+            name,
+            name_already_used_on_line_file,
+            ..
+        } => format_name_already_used_error_body(name, *name_already_used_on_line_file),
     }
 }
 
@@ -99,6 +107,24 @@ pub fn duplicate_used_name_error_message(name: &str) -> String {
     format!(
         "name `{}` is already used, cannot be used again for other definitions",
         name
+    )
+}
+
+pub fn format_name_already_used_error_body(
+    name: &str,
+    name_already_used_on_line_file: (usize, usize),
+) -> String {
+    let location_string = if name_already_used_on_line_file.1 == 0 {
+        format!("line {}", name_already_used_on_line_file.0)
+    } else {
+        format!(
+            "line {}, file {}",
+            name_already_used_on_line_file.0, name_already_used_on_line_file.1
+        )
+    };
+    format!(
+        "name `{}` is already used on {}, cannot be used again for other definitions",
+        name, location_string
     )
 }
 
@@ -227,8 +253,12 @@ pub enum ParseBlockError {
     UnexpectedIndent(usize, usize),
     InconsistentIndent(usize, usize),
     MissingBody(usize, usize),
-    NameAlreadyUsed(String),
     InvalidName(String),
+    NameAlreadyUsed {
+        name: String,
+        name_already_used_on_line_file: (usize, usize),
+        line_file: (usize, usize),
+    },
 }
 
 impl std::error::Error for ParseBlockError {}
@@ -246,8 +276,8 @@ impl ParseBlockError {
             ParseBlockError::UnexpectedIndent(line, file) => (*line, *file),
             ParseBlockError::InconsistentIndent(line, file) => (*line, *file),
             ParseBlockError::MissingBody(line, file) => (*line, *file),
-            ParseBlockError::NameAlreadyUsed(_) => DEFAULT_LINE_FILE.clone(),
             ParseBlockError::InvalidName(_) => DEFAULT_LINE_FILE.clone(),
+            ParseBlockError::NameAlreadyUsed { line_file, .. } => *line_file,
         }
     }
 }
@@ -556,5 +586,38 @@ impl InferError {
 impl From<InferError> for RuntimeError {
     fn from(e: InferError) -> Self {
         RuntimeError::InferError(e)
+    }
+}
+
+#[derive(Debug)]
+pub struct NameAlreadyUsedError {
+    pub name: String,
+    pub name_already_used_on_line_file: (usize, usize),
+    pub line_file: (usize, usize),
+}
+
+impl std::error::Error for NameAlreadyUsedError {}
+
+impl fmt::Display for NameAlreadyUsedError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.body_string())
+    }
+}
+
+impl NameAlreadyUsedError {
+    pub fn new(
+        name: String,
+        name_already_used_on_line_file: (usize, usize),
+        line_file: (usize, usize),
+    ) -> Self {
+        NameAlreadyUsedError {
+            name,
+            name_already_used_on_line_file,
+            line_file,
+        }
+    }
+
+    pub fn body_string(&self) -> String {
+        format_name_already_used_error_body(&self.name, self.name_already_used_on_line_file)
     }
 }

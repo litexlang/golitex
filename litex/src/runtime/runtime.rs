@@ -1,4 +1,5 @@
 use super::RuntimeContext;
+use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::is_valid_litex_name::is_valid_litex_name;
 use crate::error::ParseBlockError;
 use crate::obj::{Add, Div, Mod, Mul, Number, Obj, Pow, Sub};
@@ -92,20 +93,33 @@ impl<'a> Runtime<'a> {
         self.parsing_time_name_scope_stack.push(HashMap::new());
     }
 
-    pub fn validate_name(&mut self, name: &str) -> Result<(), ParseBlockError> {
-        if let Err(e) = is_valid_litex_name(name) {
-            return Err(ParseBlockError::InvalidName(e));
+    pub fn validate_name(
+        &mut self,
+        name: &str,
+        current_line_file: (usize, usize),
+    ) -> Result<(), ParseBlockError> {
+        if let Err(invalid_name_message) = is_valid_litex_name(name) {
+            return Err(ParseBlockError::InvalidName(invalid_name_message));
+        }
+
+        for names_in_scope in self.parsing_time_name_scope_stack.iter().rev() {
+            if let Some(name_already_defined_on_line_file) = names_in_scope.get(name) {
+                return Err(ParseBlockError::NameAlreadyUsed {
+                    name: name.to_string(),
+                    name_already_used_on_line_file: *name_already_defined_on_line_file,
+                    line_file: current_line_file,
+                });
+            }
         }
 
         if self.runtime_context.is_name_used(name) {
-            return Err(ParseBlockError::NameAlreadyUsed(name.to_string()));
+            return Err(ParseBlockError::NameAlreadyUsed {
+                name: name.to_string(),
+                name_already_used_on_line_file: DEFAULT_LINE_FILE,
+                line_file: current_line_file,
+            });
         }
 
-        for names_in_scope in self.parsing_time_name_scope_stack.iter() {
-            if names_in_scope.contains_key(name) {
-                return Err(ParseBlockError::NameAlreadyUsed(name.to_string()));
-            }
-        }
         Ok(())
     }
 
@@ -129,7 +143,7 @@ impl<'a> Runtime<'a> {
         name: &str,
         (line, file): (usize, usize),
     ) -> Result<(), ParseBlockError> {
-        self.validate_name(name)?;
+        self.validate_name(name, (line, file))?;
         if let Some(names_in_top_scope) = self.parsing_time_name_scope_stack.last_mut() {
             names_in_top_scope.insert(name.to_string(), (line, file));
         }
