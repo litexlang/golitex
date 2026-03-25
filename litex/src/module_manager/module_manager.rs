@@ -1,7 +1,6 @@
 use crate::common::defaults::FILE_INDEX_FOR_BUILTIN;
 use crate::runtime::RuntimeContext;
 use std::collections::HashMap;
-use std::fmt;
 
 pub struct ModuleManager<'a> {
     pub run_file_paths: Vec<String>,
@@ -26,34 +25,5 @@ impl<'a> ModuleManager<'a> {
             entrance_path: entrance_file_path.to_string(),
             imported_module_environments: HashMap::new(),
         }
-    }
-}
-
-impl<'a> fmt::Display for ModuleManager<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ModuleManager {{")?;
-        write!(f, "run_file_paths: {:?}", self.run_file_paths)?;
-        write!(
-            f,
-            "module_name_and_path_map: {:?}",
-            self.module_name_and_path_map
-        )?;
-        write!(
-            f,
-            "module_path_and_names_map: {:?}",
-            self.module_path_and_names_map
-        )?;
-        write!(f, "current_module_path: {}", self.current_module_path)?;
-        write!(f, "current_module_name: {}", self.current_module_name)?;
-        write!(f, "entrance_path: {}", self.entrance_path)?;
-        write!(
-            f,
-            "imported_module_environments: {:?}",
-            self.imported_module_environments
-                .keys()
-                .collect::<Vec<&String>>()
-        )?;
-        write!(f, "current_file_index: {}", self.current_file_index)?;
-        write!(f, "}}")
     }
 }

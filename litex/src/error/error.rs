@@ -135,7 +135,7 @@ impl NameAlreadyUsedError {
     }
 }
 
-pub fn duplicate_used_name_error_message(name: &str) -> String {
+pub fn duplicate_used_name_error_msg_without_line_file(name: &str) -> String {
     format!(
         "name `{}` is already used, cannot be used again for other definitions",
         name
