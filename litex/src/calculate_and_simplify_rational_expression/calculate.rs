@@ -4,20 +4,66 @@ impl Obj {
     pub fn normalized_calculated_value(&self) -> Option<Number> {
         let result = match self {
             Obj::Number(number) => Some(number.clone()),
-            Obj::Identifier(identifier) => identifier.normalized_calculated_value.clone(),
-            Obj::IdentifierWithMod(identifier_with_mod) => {
-                identifier_with_mod.normalized_calculated_value.clone()
+            Obj::Add(add) => {
+                let left_number = add.left.normalized_calculated_value();
+                let right_number = add.right.normalized_calculated_value();
+                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
+                    Some(Number::new(add_decimal_str_and_normalize(
+                        &left_number.normalized_value,
+                        &right_number.normalized_value,
+                    )))
+                } else {
+                    None
+                }
             }
-            Obj::FieldAccess(field_access) => field_access.normalized_calculated_value.clone(),
-            Obj::FieldAccessWithMod(field_access_with_mod) => {
-                field_access_with_mod.normalized_calculated_value.clone()
+            Obj::Sub(sub) => {
+                let left_number = sub.left.normalized_calculated_value();
+                let right_number = sub.right.normalized_calculated_value();
+                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
+                    Some(Number::new(sub_decimal_str_and_normalize(
+                        &left_number.normalized_value,
+                        &right_number.normalized_value,
+                    )))
+                } else {
+                    None
+                }
             }
-            Obj::FnObj(fn_obj) => fn_obj.normalized_calculated_value.clone(),
-            Obj::Add(add) => add.normalized_calculated_value.clone(),
-            Obj::Sub(sub) => sub.normalized_calculated_value.clone(),
-            Obj::Mul(mul) => mul.normalized_calculated_value.clone(),
-            Obj::Mod(mod_obj) => mod_obj.normalized_calculated_value.clone(),
-            Obj::Pow(pow_obj) => pow_obj.normalized_calculated_value.clone(),
+            Obj::Mul(mul) => {
+                let left_number = mul.left.normalized_calculated_value();
+                let right_number = mul.right.normalized_calculated_value();
+                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
+                    Some(Number::new(mul_signed_decimal_str(
+                        &left_number.normalized_value,
+                        &right_number.normalized_value,
+                    )))
+                } else {
+                    None
+                }
+            }
+            Obj::Mod(mod_obj) => {
+                let left_number = mod_obj.left.normalized_calculated_value();
+                let right_number = mod_obj.right.normalized_calculated_value();
+                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
+                    Some(Number::new(mod_decimal_str_and_normalize(
+                        &left_number.normalized_value,
+                        &right_number.normalized_value,
+                    )))
+                } else {
+                    None
+                }
+            }
+            Obj::Pow(pow_obj) => {
+                let base_number = pow_obj.base.normalized_calculated_value();
+                let exponent_number = pow_obj.exponent.normalized_calculated_value();
+                if let (Some(base_number), Some(exponent_number)) = (base_number, exponent_number) {
+                    Some(Number::new(pow_decimal_str_and_normalize(
+                        &base_number.normalized_value,
+                        &exponent_number.normalized_value,
+                    )))
+                } else {
+                    None
+                }
+            }
             _ => None,
         };
 

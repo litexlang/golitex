@@ -5,7 +5,6 @@ use crate::fact::{
     AndChainAtomicFact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, ForallFact, InFact,
 };
 use crate::infer::InferResult;
-use crate::obj::fn_obj_to_string;
 use crate::obj::{Atom, FnObj, Identifier, Obj};
 use crate::result::NonErrStmtExecResult;
 use crate::result::NonFactualStmtSuccess;
@@ -43,17 +42,12 @@ impl<'a> Runtime<'a> {
         for param_name in param_names.iter() {
             function_args.push(Box::new(Obj::Identifier(Identifier::new(
                 param_name.clone(),
-                None,
             ))));
         }
 
-        let fn_head_atom = Atom::IdentifierAtom(Identifier::new(function_name.to_string(), None));
+        let fn_head_atom = Atom::IdentifierAtom(Identifier::new(function_name.to_string()));
         let fn_body_groups = vec![function_args];
-        let fn_obj_display_string = fn_obj_to_string(&fn_head_atom, &fn_body_groups);
-        let calculated_value = self
-            .runtime_context
-            .get_normalized_calculated_value_of_obj(&fn_obj_display_string);
-        Obj::FnObj(FnObj::new(fn_head_atom, fn_body_groups, calculated_value))
+        Obj::FnObj(FnObj::new(fn_head_atom, fn_body_groups))
     }
 
     pub fn def_prop_with_meaning_stmt(
@@ -330,7 +324,7 @@ impl<'a> Runtime<'a> {
             .zip(have_obj_equal_stmt.objs_equal_to.iter())
         {
             let equal_to_fact = AtomicFact::EqualFact(EqualFact::new(
-                Obj::Identifier(Identifier::new(name.clone(), None)),
+                Obj::Identifier(Identifier::new(name.clone())),
                 obj.clone(),
                 have_obj_equal_stmt.line_file,
             ));
@@ -386,7 +380,7 @@ impl<'a> Runtime<'a> {
         let new_obj_names_as_identifier_objs = have_exist_obj_stmt
             .equal_tos
             .iter()
-            .map(|s| Obj::Identifier(Identifier::new(s.clone(), None)))
+            .map(|s| Obj::Identifier(Identifier::new(s.clone())))
             .collect();
 
         let args_satisfy_param_types =
@@ -454,7 +448,7 @@ impl<'a> Runtime<'a> {
         self.store_identifier_obj(&have_fn_equal_stmt.name)?;
 
         let function_identifier_obj =
-            Obj::Identifier(Identifier::new(have_fn_equal_stmt.name.clone(), None));
+            Obj::Identifier(Identifier::new(have_fn_equal_stmt.name.clone()));
         let function_set_obj = Obj::FnSetWithParams(have_fn_equal_stmt.fn_set_with_params.clone());
         let function_in_function_set_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
             function_identifier_obj,
@@ -608,7 +602,6 @@ impl<'a> Runtime<'a> {
 
         let function_identifier_obj = Obj::Identifier(Identifier::new(
             have_fn_equal_case_by_case_stmt.name.clone(),
-            None,
         ));
         let function_set_obj =
             Obj::FnSetWithParams(have_fn_equal_case_by_case_stmt.fn_set_with_params.clone());

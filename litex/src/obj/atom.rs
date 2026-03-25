@@ -1,5 +1,4 @@
 use crate::common::keywords::{DOT_AKA_FIELD_ACCESS_SIGN, MOD_SIGN};
-use crate::obj::Number;
 use std::fmt;
 
 #[derive(Clone)]
@@ -34,7 +33,6 @@ impl IdentifierOrIdentifierWithMod {
 #[derive(Clone)]
 pub struct Identifier {
     pub name: String,
-    pub normalized_calculated_value: Option<Number>,
 }
 
 pub fn identifier_to_string(name: &str) -> String {
@@ -45,7 +43,6 @@ pub fn identifier_to_string(name: &str) -> String {
 pub struct IdentifierWithMod {
     pub mod_name: String,
     pub name: String,
-    pub normalized_calculated_value: Option<Number>,
 }
 
 pub fn identifier_with_mod_to_string(mod_name: &str, name: &str) -> String {
@@ -56,7 +53,6 @@ pub fn identifier_with_mod_to_string(mod_name: &str, name: &str) -> String {
 pub struct FieldAccess {
     pub name: String,
     pub fields: Vec<String>,
-    pub normalized_calculated_value: Option<Number>,
 }
 
 #[derive(Clone)]
@@ -64,7 +60,6 @@ pub struct FieldAccessWithMod {
     pub mod_name: String,
     pub name: String,
     pub fields: Vec<String>,
-    pub normalized_calculated_value: Option<Number>,
 }
 
 impl fmt::Display for Atom {
@@ -79,46 +74,29 @@ impl fmt::Display for Atom {
 }
 
 impl Identifier {
-    pub fn new(name: String, calculated_value: Option<Number>) -> Self {
-        Identifier {
-            name,
-            normalized_calculated_value: calculated_value,
-        }
+    pub fn new(name: String) -> Self {
+        Identifier { name }
     }
 }
 
 impl IdentifierWithMod {
-    pub fn new(mod_name: String, name: String, calculated_value: Option<Number>) -> Self {
-        IdentifierWithMod {
-            mod_name,
-            name,
-            normalized_calculated_value: calculated_value,
-        }
+    pub fn new(mod_name: String, name: String) -> Self {
+        IdentifierWithMod { mod_name, name }
     }
 }
 
 impl FieldAccess {
-    pub fn new(name: String, fields: Vec<String>, calculated_value: Option<Number>) -> Self {
-        FieldAccess {
-            name,
-            fields,
-            normalized_calculated_value: calculated_value,
-        }
+    pub fn new(name: String, fields: Vec<String>) -> Self {
+        FieldAccess { name, fields }
     }
 }
 
 impl FieldAccessWithMod {
-    pub fn new(
-        mod_name: String,
-        name: String,
-        fields: Vec<String>,
-        calculated_value: Option<Number>,
-    ) -> Self {
+    pub fn new(mod_name: String, name: String, fields: Vec<String>) -> Self {
         FieldAccessWithMod {
             mod_name,
             name,
             fields,
-            normalized_calculated_value: calculated_value,
         }
     }
 }

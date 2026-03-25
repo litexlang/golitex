@@ -3,10 +3,6 @@ use super::atom::{
     IdentifierWithMod,
 };
 use crate::calculate_and_simplify_rational_expression::normalize_decimal_result;
-use crate::calculate_and_simplify_rational_expression::{
-    add_decimal_str_and_normalize, mod_decimal_str_and_normalize, mul_signed_decimal_str,
-    pow_decimal_str_and_normalize, sub_decimal_str_and_normalize,
-};
 use crate::common::helper::{
     brace_vec_colon_vec_to_string, braced_vec_to_string, curly_braced_vec_to_string,
     vec_to_string_join_by_comma,
@@ -150,7 +146,6 @@ pub struct Proj {
 pub struct FnObj {
     pub head: Box<Atom>,
     pub body: Vec<Vec<Box<Obj>>>,
-    pub normalized_calculated_value: Option<Number>,
 }
 
 #[derive(Clone)]
@@ -162,21 +157,18 @@ pub struct Number {
 pub struct Add {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub normalized_calculated_value: Option<Number>,
 }
 
 #[derive(Clone)]
 pub struct Sub {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub normalized_calculated_value: Option<Number>,
 }
 
 #[derive(Clone)]
 pub struct Mul {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub normalized_calculated_value: Option<Number>,
 }
 
 #[derive(Clone)]
@@ -189,14 +181,12 @@ pub struct Div {
 pub struct Mod {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub normalized_calculated_value: Option<Number>,
 }
 
 #[derive(Clone)]
 pub struct Pow {
     pub base: Box<Obj>,
     pub exponent: Box<Obj>,
-    pub normalized_calculated_value: Option<Number>,
 }
 
 #[derive(Clone)]
@@ -330,11 +320,10 @@ impl ObjAtIndex {
 }
 
 impl FnObj {
-    pub fn new(head: Atom, body: Vec<Vec<Box<Obj>>>, calculated_value: Option<Number>) -> Self {
+    pub fn new(head: Atom, body: Vec<Vec<Box<Obj>>>) -> Self {
         FnObj {
             head: Box::new(head),
             body,
-            normalized_calculated_value: calculated_value,
         }
     }
 }
@@ -349,64 +338,27 @@ impl Number {
 
 impl Add {
     pub fn new(left: Obj, right: Obj) -> Self {
-        let calculated_value = match (
-            left.normalized_calculated_value(),
-            right.normalized_calculated_value(),
-        ) {
-            (Some(left_number), Some(right_number)) => {
-                Some(Number::new(add_decimal_str_and_normalize(
-                    &left_number.normalized_value,
-                    &right_number.normalized_value,
-                )))
-            }
-            _ => None,
-        };
         Add {
             left: Box::new(left),
             right: Box::new(right),
-            normalized_calculated_value: calculated_value,
         }
     }
 }
 
 impl Sub {
     pub fn new(left: Obj, right: Obj) -> Self {
-        let calculated_value = match (
-            left.normalized_calculated_value(),
-            right.normalized_calculated_value(),
-        ) {
-            (Some(left_number), Some(right_number)) => {
-                Some(Number::new(sub_decimal_str_and_normalize(
-                    &left_number.normalized_value,
-                    &right_number.normalized_value,
-                )))
-            }
-            _ => None,
-        };
         Sub {
             left: Box::new(left),
             right: Box::new(right),
-            normalized_calculated_value: calculated_value,
         }
     }
 }
 
 impl Mul {
     pub fn new(left: Obj, right: Obj) -> Self {
-        let calculated_value = match (
-            left.normalized_calculated_value(),
-            right.normalized_calculated_value(),
-        ) {
-            (Some(left_number), Some(right_number)) => Some(Number::new(mul_signed_decimal_str(
-                &left_number.normalized_value,
-                &right_number.normalized_value,
-            ))),
-            _ => None,
-        };
         Mul {
             left: Box::new(left),
             right: Box::new(right),
-            normalized_calculated_value: calculated_value,
         }
     }
 }
@@ -422,44 +374,18 @@ impl Div {
 
 impl Mod {
     pub fn new(left: Obj, right: Obj) -> Self {
-        let calculated_value = match (
-            left.normalized_calculated_value(),
-            right.normalized_calculated_value(),
-        ) {
-            (Some(left_number), Some(right_number)) => {
-                Some(Number::new(mod_decimal_str_and_normalize(
-                    &left_number.normalized_value,
-                    &right_number.normalized_value,
-                )))
-            }
-            _ => None,
-        };
         Mod {
             left: Box::new(left),
             right: Box::new(right),
-            normalized_calculated_value: calculated_value,
         }
     }
 }
 
 impl Pow {
     pub fn new(base: Obj, exponent: Obj) -> Self {
-        let calculated_value = match (
-            base.normalized_calculated_value(),
-            exponent.normalized_calculated_value(),
-        ) {
-            (Some(base_number), Some(exponent_number)) => {
-                Some(Number::new(pow_decimal_str_and_normalize(
-                    &base_number.normalized_value,
-                    &exponent_number.normalized_value,
-                )))
-            }
-            _ => None,
-        };
         Pow {
             base: Box::new(base),
             exponent: Box::new(exponent),
-            normalized_calculated_value: calculated_value,
         }
     }
 }
@@ -1257,10 +1183,7 @@ impl From<Atom> for Obj {
 impl Identifier {
     /// Build an Obj::Identifier from a name. Parameter is String (not &str).
     pub fn mk(name: String) -> Obj {
-        Obj::Identifier(Identifier {
-            name,
-            normalized_calculated_value: None,
-        })
+        Obj::Identifier(Identifier { name })
     }
 }
 
