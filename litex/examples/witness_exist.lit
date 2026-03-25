@@ -1,0 +1,4 @@
+witness exist x, y R st {x > y} from 1, 0:
+    1 > 0
+
+exist x, y R st {x > y}

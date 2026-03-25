@@ -1,6 +1,6 @@
 use super::Runtime;
 use crate::error::{ExecStmtError, RuntimeError};
-use crate::fact::Fact;
+use crate::fact::{AtomicFact, Fact, InFact, IsNonemptySetFact};
 use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
 use crate::stmt::definition_stmt::HaveObjEqualStmt;
 use crate::stmt::parameter_def::ParamDefWithParamType;
@@ -158,6 +158,106 @@ impl<'a> Runtime<'a> {
         &mut self,
         stmt: &WitnessNonemptySet,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
-        Self::stmt_unsupported(Stmt::WitnessNonemptySet(stmt.clone()))
+        let witness_stmt = Stmt::WitnessNonemptySet(stmt.clone());
+
+        self.runtime_context.push_env();
+
+        let inside_results_when_verify = self.exec_witness_nonempty_set_body(stmt);
+
+        // End verification: pop local environment.
+        self.runtime_context.pop_env();
+
+        let inside_results = match inside_results_when_verify {
+            Ok(proof_inside_results) => proof_inside_results,
+            Err(inside_results_error) => return Err(RuntimeError::from(inside_results_error)),
+        };
+
+        // 6) Store nonempty set fact into the top-level (big) environment.
+        let store_result = self.store_fact_without_well_defined_verified_and_infer(
+            &Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
+                stmt.set.clone(),
+                stmt.line_file,
+            ))),
+        );
+        match store_result {
+            Ok(infer_result) => Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+                NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results),
+            )),
+            Err(store_error) => Err(RuntimeError::ExecStmtError(
+                ExecStmtError::with_message_and_cause(
+                    witness_stmt,
+                    "witness nonempty set: failed to store nonempty set fact".to_string(),
+                    Some(store_error.into()),
+                    // Keep inside_results for error reporting.
+                    inside_results,
+                ),
+            )),
+        }
+    }
+
+    fn exec_witness_nonempty_set_body(
+        &mut self,
+        stmt: &WitnessNonemptySet,
+    ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
+        let witness_stmt = Stmt::WitnessNonemptySet(stmt.clone());
+
+        let verify_state_for_well_defined = VerifyState::new(0, false);
+
+        if let Err(well_defined_error) =
+            self.verify_obj_well_defined_and_store_cache(&stmt.obj, &verify_state_for_well_defined)
+        {
+            return Err(RuntimeError::ExecStmtError(
+                ExecStmtError::with_message_and_cause(
+                    witness_stmt,
+                    "witness nonempty set: obj well-defined failed".to_string(),
+                    Some(well_defined_error.into()),
+                    vec![],
+                ),
+            ));
+        }
+
+        if let Err(well_defined_error) =
+            self.verify_obj_well_defined_and_store_cache(&stmt.set, &verify_state_for_well_defined)
+        {
+            return Err(RuntimeError::ExecStmtError(
+                ExecStmtError::with_message_and_cause(
+                    witness_stmt.clone(),
+                    "witness nonempty set: set well-defined failed".to_string(),
+                    Some(well_defined_error.into()),
+                    vec![],
+                ),
+            ));
+        }
+
+        // 2) Run witness proof in the local environment.
+        let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
+        for proof_stmt in stmt.proof.iter() {
+            match self.exec_stmt(proof_stmt) {
+                Ok(proof_result) => {
+                    inside_results.push(proof_result);
+                }
+                Err(proof_exec_error) => {
+                    return Err(RuntimeError::ExecStmtError(
+                        ExecStmtError::with_message_and_cause(
+                            witness_stmt.clone(),
+                            proof_stmt.to_string(),
+                            Some(proof_exec_error),
+                            inside_results,
+                        ),
+                    ));
+                }
+            }
+        }
+
+        // 3) Verify internal membership fact: `obj in set` must be true under the proof.
+        let membership_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
+            stmt.obj.clone(),
+            stmt.set.clone(),
+            stmt.line_file,
+        )));
+        let verify_state_for_proof_check = VerifyState::new(0, false);
+        self.verify_fact_return_err_if_not_true(&membership_fact, &verify_state_for_proof_check)?;
+
+        Ok(inside_results)
     }
 }
