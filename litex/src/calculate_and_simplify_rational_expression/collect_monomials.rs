@@ -1,26 +1,15 @@
 use super::calculate::add_decimal_str_and_normalize;
 use super::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 use crate::calculate_and_simplify_rational_expression::calculate::{
-    mul_decimal_str_and_normalize, pow_decimal_str_and_normalize, sub_decimal_str_and_normalize,
+    mul_decimal_str_and_normalize, sub_decimal_str_and_normalize,
 };
 use crate::common::helper::is_number_string_literally_integer_without_dot;
+use crate::obj::Number;
 use crate::obj::{Add, Mul, Obj, Pow, Sub};
 
 pub fn collect_monomials_in_obj(obj: &Obj) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     match obj {
-        Obj::Number(_) => {
-            // must be calculated so that it is normalized
-            let num_str = obj.calculate_to_string_panic_when_cannot_be_calculated();
-            let current_monomial =
-                MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
-                    num_str, None,
-                );
-            if let Some(current_monomial) = current_monomial {
-                vec![current_monomial]
-            } else {
-                vec![]
-            }
-        }
+        Obj::Number(number) => from_number_obj_to_monomial(number),
         Obj::Add(add) => collect_monomials_in_add(add),
         Obj::Mul(mul) => collect_monomials_in_mul(mul),
         Obj::Pow(pow) => collect_monomials_in_pow(pow),
@@ -41,18 +30,8 @@ pub fn collect_monomials_in_obj(obj: &Obj) -> Vec<MonomialWithNonZeroScalarAndOr
 }
 
 pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if sub.normalized_calculated_value.is_some() {
-        let left = sub
-            .left
-            .calculate_to_string_panic_when_cannot_be_calculated();
-        let right = sub
-            .right
-            .calculate_to_string_panic_when_cannot_be_calculated();
-        let current_monomial = sub_numbers_and_return_monomial(&left, &right);
-        if let Some(current_monomial) = current_monomial {
-            return vec![current_monomial];
-        }
-        return vec![];
+    if let Some(normalized_calculated_value) = &sub.normalized_calculated_value {
+        return from_number_obj_to_monomial(normalized_calculated_value);
     }
 
     let left_monomial_collections = collect_monomials_in_obj(&sub.left);
@@ -117,19 +96,8 @@ pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOr
 }
 
 pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if add.normalized_calculated_value.is_some() {
-        let left = add
-            .left
-            .calculate_to_string_panic_when_cannot_be_calculated();
-        let right = add
-            .right
-            .calculate_to_string_panic_when_cannot_be_calculated();
-        let current_monomial = add_numbers_and_return_monomial(&left, &right);
-        return if let Some(current_monomial) = current_monomial {
-            vec![current_monomial]
-        } else {
-            vec![]
-        };
+    if let Some(normalized_calculated_value) = &add.normalized_calculated_value {
+        return from_number_obj_to_monomial(normalized_calculated_value);
     }
 
     let left_monomial_collections = collect_monomials_in_obj(&add.left);
@@ -186,25 +154,12 @@ pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOr
 }
 
 fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if mul.normalized_calculated_value.is_some() {
-        let left = mul
-            .left
-            .calculate_to_string_panic_when_cannot_be_calculated();
-        let right = mul
-            .right
-            .calculate_to_string_panic_when_cannot_be_calculated();
-        let current_monomial = multiply_numbers_and_return_monomial(&left, &right);
-        return if let Some(current_monomial) = current_monomial {
-            vec![current_monomial]
-        } else {
-            vec![]
-        };
+    if let Some(normalized_calculated_value) = &mul.normalized_calculated_value {
+        return from_number_obj_to_monomial(normalized_calculated_value);
     }
 
-    if mul.left.normalized_calculated_value().is_some() {
-        let left = mul
-            .left
-            .calculate_to_string_panic_when_cannot_be_calculated();
+    if let Some(normalized_calculated_value) = &mul.left.normalized_calculated_value() {
+        let left = normalized_calculated_value.normalized_value.clone();
         let collected_monomials_of_right = collect_monomials_in_obj(&mul.right);
         let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> =
             Vec::with_capacity(collected_monomials_of_right.len());
@@ -217,10 +172,8 @@ fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrdere
         return result;
     }
 
-    if mul.right.normalized_calculated_value().is_some() {
-        let right = mul
-            .right
-            .calculate_to_string_panic_when_cannot_be_calculated();
+    if let Some(normalized_calculated_value) = &mul.right.normalized_calculated_value() {
+        let right = normalized_calculated_value.normalized_value.clone();
         let collected_monomials_of_left = collect_monomials_in_obj(&mul.left);
         let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> =
             Vec::with_capacity(collected_monomials_of_left.len());
@@ -288,22 +241,8 @@ fn collect_monomials_of_mul_of_monomial_vec(
 }
 
 fn collect_monomials_in_pow(pow: &Pow) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if pow.normalized_calculated_value.is_some() {
-        let left = pow
-            .base
-            .calculate_to_string_panic_when_cannot_be_calculated();
-        let right = pow
-            .exponent
-            .calculate_to_string_panic_when_cannot_be_calculated();
-        let value = pow_decimal_str_and_normalize(&left, &right);
-        let current_monomial =
-            MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
-                value, None,
-            );
-        if let Some(m) = current_monomial {
-            return vec![m];
-        }
-        return vec![];
+    if let Some(normalized_calculated_value) = &pow.normalized_calculated_value {
+        return from_number_obj_to_monomial(normalized_calculated_value);
     }
 
     // 判断 exponent 字面量是否为 0 或正整数，返回 (是否 ok, 解析出的数字)
@@ -366,22 +305,6 @@ fn default_pow_fallback(pow: &Pow) -> Vec<MonomialWithNonZeroScalarAndOrderedOpe
     }
 }
 
-fn multiply_numbers_and_return_monomial(
-    left: &str,
-    right: &str,
-) -> Option<MonomialWithNonZeroScalarAndOrderedOperands> {
-    let scalar = mul_decimal_str_and_normalize(left, right);
-    MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(scalar, None)
-}
-
-fn add_numbers_and_return_monomial(
-    left: &str,
-    right: &str,
-) -> Option<MonomialWithNonZeroScalarAndOrderedOperands> {
-    let scalar = add_decimal_str_and_normalize(left, right);
-    MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(scalar, None)
-}
-
 fn multiply_numbers_to_monomial(
     left: &str,
     right: &MonomialWithNonZeroScalarAndOrderedOperands,
@@ -426,10 +349,19 @@ fn multiply_two_non_zero_monomials_with_operands(
     MonomialWithNonZeroScalarAndOrderedOperands::new(new_scalar, Some(new_operands))
 }
 
-fn sub_numbers_and_return_monomial(
-    left: &str,
-    right: &str,
-) -> Option<MonomialWithNonZeroScalarAndOrderedOperands> {
-    let scalar = sub_decimal_str_and_normalize(left, right);
-    MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(scalar, None)
+fn from_number_obj_to_monomial(
+    number: &Number,
+) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
+    let number_string = number.normalized_value.clone();
+    // must be calculated so that it is normalized
+    let current_monomial =
+        MonomialWithNonZeroScalarAndOrderedOperands::new_and_check_scalar_is_not_zero(
+            number_string,
+            None,
+        );
+    if let Some(current_monomial) = current_monomial {
+        vec![current_monomial]
+    } else {
+        vec![]
+    }
 }

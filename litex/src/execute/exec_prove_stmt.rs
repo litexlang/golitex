@@ -5,25 +5,29 @@ use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
 use crate::stmt::prove_stmt::ProveStmt;
 
 impl<'a> Runtime<'a> {
-    pub fn exec_prove_stmt(&mut self, stmt: &ProveStmt) -> Result<NonErrStmtExecResult, RuntimeError> {
+    pub fn exec_prove_stmt(
+        &mut self,
+        stmt: &ProveStmt,
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+        self.runtime_context.push_env();
         let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
         for proof_stmt in &stmt.proof {
             let exec_stmt_result = self.exec_stmt(proof_stmt);
             match exec_stmt_result {
                 Ok(result) => inside_results.push(result),
                 Err(statement_error) => {
-                    return Err(RuntimeError::ExecError(
-                        ExecStmtError::new(
-                            stmt.stmt_type_name(),
-                            proof_stmt.to_string(),
-                            Some(statement_error),
-                            inside_results,
-                            stmt.line_file,
-                        ),
-                    ));
+                    self.runtime_context.pop_env();
+                    return Err(RuntimeError::ExecError(ExecStmtError::new(
+                        stmt.stmt_type_name(),
+                        proof_stmt.to_string(),
+                        Some(statement_error),
+                        inside_results,
+                        stmt.line_file,
+                    )));
                 }
             }
         }
+        self.runtime_context.pop_env();
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
