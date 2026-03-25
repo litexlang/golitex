@@ -396,7 +396,7 @@ impl<'a> Runtime<'a> {
             )));
         }
 
-        let param_as_identifier = Obj::Identifier(Identifier::new(stmt.param.clone(), None));
+        let param_as_identifier = Obj::Identifier(Identifier::new(stmt.param.clone()));
 
         let param_plus_one_obj = Obj::Add(Add::new(
             param_as_identifier.clone(),
@@ -625,7 +625,7 @@ impl<'a> Runtime<'a> {
                     vec![],
                     vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                         InFact::new(
-                            Obj::Identifier(Identifier::new(unused_name.clone(), None)),
+                            Obj::Identifier(Identifier::new(unused_name.clone())),
                             stmt.right.clone(),
                             stmt.line_file,
                         ),
@@ -657,7 +657,7 @@ impl<'a> Runtime<'a> {
                     vec![],
                     vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(
                         InFact::new(
-                            Obj::Identifier(Identifier::new(unused_name.clone(), None)),
+                            Obj::Identifier(Identifier::new(unused_name.clone())),
                             stmt.left.clone(),
                             stmt.line_file,
                         ),
@@ -874,7 +874,7 @@ impl<'a> Runtime<'a> {
 
             // it is in Z
             let parameter_in_z_atomic_fact = AtomicFact::InFact(InFact::new(
-                Obj::Identifier(Identifier::new(parameter_name.clone(), None)),
+                Obj::Identifier(Identifier::new(parameter_name.clone())),
                 Obj::ZObj(ZObj::new()),
                 stmt.line_file,
             ));
@@ -885,7 +885,7 @@ impl<'a> Runtime<'a> {
 
             let parameter_equal_to_assigned_obj_atomic_fact =
                 AtomicFact::EqualFact(EqualFact::new(
-                    Obj::Identifier(Identifier::new(parameter_name.clone(), None)),
+                    Obj::Identifier(Identifier::new(parameter_name.clone())),
                     Obj::Number(Number::new(assigned_integer_string)),
                     stmt.line_file,
                 ));
@@ -1001,7 +1001,7 @@ impl<'a> Runtime<'a> {
                 .map_err(RuntimeError::from)?;
             let parameter_equal_to_assigned_obj_atomic_fact =
                 AtomicFact::EqualFact(EqualFact::new(
-                    Obj::Identifier(Identifier::new(parameter_name.clone(), None)),
+                    Obj::Identifier(Identifier::new(parameter_name.clone())),
                     assigned_obj.clone(),
                     stmt.line_file,
                 ));

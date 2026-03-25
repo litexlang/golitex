@@ -106,23 +106,23 @@ impl ParamType {
     pub fn param_satisfy_param_type_fact(param_name: &str, param_type: &ParamType) -> Fact {
         match param_type {
             ParamType::Obj(obj) => Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                Obj::Identifier(Identifier::new(param_name.to_string(), None)),
+                Obj::Identifier(Identifier::new(param_name.to_string())),
                 obj.clone(),
                 DEFAULT_LINE_FILE.clone(),
             ))),
             ParamType::Set(_) => Fact::AtomicFact(AtomicFact::IsSetFact(IsSetFact::new(
-                Obj::Identifier(Identifier::new(param_name.to_string(), None)),
+                Obj::Identifier(Identifier::new(param_name.to_string())),
                 DEFAULT_LINE_FILE.clone(),
             ))),
             ParamType::NonemptySet(_) => {
                 Fact::AtomicFact(AtomicFact::IsNonemptySetFact(IsNonemptySetFact::new(
-                    Obj::Identifier(Identifier::new(param_name.to_string(), None)),
+                    Obj::Identifier(Identifier::new(param_name.to_string())),
                     DEFAULT_LINE_FILE.clone(),
                 )))
             }
             ParamType::FiniteSet(_) => {
                 Fact::AtomicFact(AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
-                    Obj::Identifier(Identifier::new(param_name.to_string(), None)),
+                    Obj::Identifier(Identifier::new(param_name.to_string())),
                     DEFAULT_LINE_FILE.clone(),
                 )))
             }
@@ -164,7 +164,7 @@ impl ParamDefWithParamSet {
         let mut facts = Vec::with_capacity(self.0.len());
         for name in self.0.iter() {
             let fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                Obj::Identifier(Identifier::new(name.clone(), None)),
+                Obj::Identifier(Identifier::new(name.clone())),
                 self.1.clone(),
                 DEFAULT_LINE_FILE.clone(),
             )));

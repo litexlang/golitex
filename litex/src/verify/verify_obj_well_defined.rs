@@ -195,7 +195,6 @@ impl<'a> Runtime<'a> {
             let fn_obj_prefix = FnObj {
                 head: fn_obj.head.clone(),
                 body: fn_obj_prefix_body,
-                normalized_calculated_value: None,
             };
             let fn_obj_prefix_as_obj = Obj::FnObj(fn_obj_prefix);
             let set_where_the_next_fn_obj_is_in_obj =
