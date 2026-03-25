@@ -1,4 +1,8 @@
-use litex::pipeline::{run_repl_loop, run_source_code_from_string, run_source_code_in_file};
+use litex::pipeline::run_repl_loop_and_return_json_string;
+use litex::pipeline::run_repl_loop_and_return_string;
+use litex::pipeline::run_source_code;
+use litex::pipeline::run_source_code_in_file_and_return_json_string;
+use litex::pipeline::run_source_code_in_file_and_return_string;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process;
@@ -18,51 +22,87 @@ pub fn run_cli() {
         };
 
         match head {
-            "-help" | "--help" => {
-                print_usage();
+            "-help" => {
+                print_help_message();
                 println!();
                 println!("If no options are provided, starts interactive REPL mode.");
                 return;
             }
-            "-version" | "--version" => {
+            "-version" => {
                 println!("Litex Kernel: litex {}", VERSION);
                 return;
             }
+            "-json" => {
+                index += 1;
+                if index == 1 {
+                    run_repl(VERSION, true);
+                    return;
+                }
+                // In case someone passes "-json" after other flags, we try to reject
+                // ambiguous ordering. Documented usage is "-f -json <file>" etc.
+                eprintln!(
+                    "{} should be used alone (litex -json) or as '-f/-e/-r -json <value>'",
+                    head
+                );
+                print_help_message();
+                process::exit(2);
+            }
             "-e" => {
                 index += 1;
+                let should_output_json = if args.get(index).map(|v| v.as_str()) == Some("-json") {
+                    index += 1;
+                    true
+                } else {
+                    false
+                };
+
                 let code = match read_non_flag_value_after_flag(&args, &mut index, "-e") {
                     Ok(value) => value,
                     Err(message) => {
                         eprintln!("{}", message);
-                        print_usage();
+                        print_help_message();
                         process::exit(2);
                     }
                 };
-                let output = run_source_code_from_string(code.as_str(), "-e");
+                let output = run_source_code(code.as_str(), "-e", should_output_json);
                 println!("{}", output.trim());
                 println!("{}", repl_footer_placeholder());
                 return;
             }
             "-f" => {
                 index += 1;
+                let should_output_json = if args.get(index).map(|v| v.as_str()) == Some("-json") {
+                    index += 1;
+                    true
+                } else {
+                    false
+                };
+
                 let file_path = match read_non_flag_value_after_flag(&args, &mut index, "-f") {
                     Ok(value) => value,
                     Err(message) => {
                         eprintln!("{}", message);
-                        print_usage();
+                        print_help_message();
                         process::exit(2);
                     }
                 };
-                main_flag_file(file_path.as_str());
+                main_flag_file(file_path.as_str(), should_output_json);
                 return;
             }
             "-r" => {
                 index += 1;
+                let should_output_json = if args.get(index).map(|v| v.as_str()) == Some("-json") {
+                    index += 1;
+                    true
+                } else {
+                    false
+                };
+
                 let repo_path = match read_non_flag_value_after_flag(&args, &mut index, "-r") {
                     Ok(value) => value,
                     Err(message) => {
                         eprintln!("{}", message);
-                        print_usage();
+                        print_help_message();
                         process::exit(2);
                     }
                 };
@@ -74,7 +114,7 @@ pub fn run_cli() {
                         process::exit(1);
                     }
                 };
-                main_flag_file(joined_string.as_str());
+                main_flag_file(joined_string.as_str(), should_output_json);
                 return;
             }
             "-latex" => {
@@ -83,24 +123,26 @@ pub fn run_cli() {
                     run_latex_interactive();
                     return;
                 }
-                let latex_target_flag = match read_any_value_after_flag(&args, &mut index, "-latex") {
+                let latex_target_flag = match read_any_value_after_flag(&args, &mut index, "-latex")
+                {
                     Ok(value) => value,
                     Err(message) => {
                         eprintln!("{}", message);
-                        print_usage();
+                        print_help_message();
                         process::exit(2);
                     }
                 };
                 let latex_output_result = match latex_target_flag.as_str() {
                     "-f" => {
-                        let file_path = match read_non_flag_value_after_flag(&args, &mut index, "-f") {
-                            Ok(value) => value,
-                            Err(message) => {
-                                eprintln!("{}", message);
-                                print_usage();
-                                process::exit(2);
-                            }
-                        };
+                        let file_path =
+                            match read_non_flag_value_after_flag(&args, &mut index, "-f") {
+                                Ok(value) => value,
+                                Err(message) => {
+                                    eprintln!("{}", message);
+                                    print_help_message();
+                                    process::exit(2);
+                                }
+                            };
                         compile_file_to_latex(file_path.as_str())
                     }
                     "-e" => {
@@ -108,21 +150,22 @@ pub fn run_cli() {
                             Ok(value) => value,
                             Err(message) => {
                                 eprintln!("{}", message);
-                                print_usage();
+                                print_help_message();
                                 process::exit(2);
                             }
                         };
                         compile_code_to_latex(code.as_str())
                     }
                     "-r" => {
-                        let repo_path = match read_non_flag_value_after_flag(&args, &mut index, "-r") {
-                            Ok(value) => value,
-                            Err(message) => {
-                                eprintln!("{}", message);
-                                print_usage();
-                                process::exit(2);
-                            }
-                        };
+                        let repo_path =
+                            match read_non_flag_value_after_flag(&args, &mut index, "-r") {
+                                Ok(value) => value,
+                                Err(message) => {
+                                    eprintln!("{}", message);
+                                    print_help_message();
+                                    process::exit(2);
+                                }
+                            };
                         let joined = Path::new(repo_path.as_str()).join(MAIN_DOT_LIT);
                         let joined_string = match joined.to_str() {
                             Some(path_string) => path_string.to_string(),
@@ -134,8 +177,10 @@ pub fn run_cli() {
                         compile_file_to_latex(joined_string.as_str())
                     }
                     _ => {
-                        eprintln!("-latex must be followed by one of: -f <file>, -e <code>, -r <repo>");
-                        print_usage();
+                        eprintln!(
+                            "-latex must be followed by one of: -f <file>, -e <code>, -r <repo>"
+                        );
+                        print_help_message();
                         process::exit(2);
                     }
                 };
@@ -154,7 +199,7 @@ pub fn run_cli() {
                     Ok(value) => value,
                     Err(message) => {
                         eprintln!("{}", message);
-                        print_usage();
+                        print_help_message();
                         process::exit(2);
                     }
                 };
@@ -174,7 +219,7 @@ pub fn run_cli() {
                         Ok(value) => value,
                         Err(message) => {
                             eprintln!("{}", message);
-                            print_usage();
+                            print_help_message();
                             process::exit(2);
                         }
                     };
@@ -188,7 +233,7 @@ pub fn run_cli() {
                         Ok(value) => value,
                         Err(message) => {
                             eprintln!("{}", message);
-                            print_usage();
+                            print_help_message();
                             process::exit(2);
                         }
                     };
@@ -206,7 +251,7 @@ pub fn run_cli() {
                     Ok(value) => value,
                     Err(message) => {
                         eprintln!("{}", message);
-                        print_usage();
+                        print_help_message();
                         process::exit(2);
                     }
                 };
@@ -219,13 +264,13 @@ pub fn run_cli() {
             }
             other => {
                 eprintln!("unknown argument: {}", other);
-                print_usage();
+                print_help_message();
                 process::exit(2);
             }
         }
     }
 
-    run_repl(VERSION);
+    run_repl(VERSION, false);
 }
 
 /// `index` must point at the first token after the flag; reads one value and advances past it.
@@ -258,30 +303,15 @@ fn read_any_value_after_flag(
     Ok(value)
 }
 
-fn print_usage() {
-    println!("Usage: litex [options]");
-    println!("Options:");
-    println!("  -help              Show help message");
-    println!("  -version           Show version information");
-    println!("  -e <CODE>          Execute the given code");
-    println!("  -f <PATH>          Execute the given file");
-    println!("  -r <REPO>          Execute the given repo (runs REPO/main.lit)");
-    println!("  -latex -f <PATH>   Compile the given file to LaTeX (not implemented)");
-    println!("  -latex -e <CODE>   Compile the given code to LaTeX (not implemented)");
-    println!("  -latex -r <REPO>   Compile REPO/main.lit to LaTeX (not implemented)");
-    println!("  -fmt <CODE>        Format the given code (not implemented)");
-    println!("  -install <PKG>     Install module (not implemented)");
-    println!("  -uninstall <PKG>   Uninstall module (not implemented)");
-    println!("  -list              List installed modules (not implemented)");
-    println!("  -update <PKG>      Update module (not implemented)");
-    println!("  -tutorial          Interactive tutorial (not implemented)");
+fn print_help_message() {
+    println!("{}", help_message());
 }
 
 fn remove_windows_carriage_return(path_or_code: &str) -> String {
     path_or_code.replace('\r', "")
 }
 
-fn main_flag_file(file_flag: &str) {
+fn main_flag_file(file_flag: &str, should_output_json: bool) {
     let path = remove_windows_carriage_return(file_flag);
 
     let abs_file_path: PathBuf = if Path::new(path.as_str()).is_absolute() {
@@ -311,7 +341,11 @@ fn main_flag_file(file_flag: &str) {
         }
     };
 
-    let output = run_source_code_in_file(path_string.as_str());
+    let output = if should_output_json {
+        run_source_code_in_file_and_return_json_string(path_string.as_str())
+    } else {
+        run_source_code_in_file_and_return_string(path_string.as_str())
+    };
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
     println!("{}", repl_footer_placeholder());
 }
@@ -369,6 +403,35 @@ fn run_latex_interactive() {
     panic!("-latex: interactive LaTeX mode is not implemented in the Rust kernel yet");
 }
 
-fn run_repl(version: &str) {
-    run_repl_loop(version);
+fn run_repl(version: &str, should_output_json: bool) {
+    if should_output_json {
+        run_repl_loop_and_return_json_string(version);
+    } else {
+        run_repl_loop_and_return_string(version);
+    }
+}
+
+fn help_message() -> String {
+    let result = r#"litex : run Litex interactively in your terminal
+litex -f <file> : run the given file
+litex -r <repo> : run the given repository
+litex -e <code> : execute the given code
+litex -json : run Litex interactively in your terminal and return the result in JSON format
+litex -f -json <file> : execute the given file and return the result in JSON format
+litex -e -json <code> : execute the given code and return the result in JSON format
+litex -r -json <repo> : execute the given repository and return the result in JSON format
+litex -latex : compile the given file or code to LaTeX interactively in your terminal
+litex -latex -f <file> : compile the given file to LaTeX
+litex -latex -e <code> : compile the given code to LaTeX
+litex -latex -r <repo> : compile the given repository to LaTeX
+litex -help : show the help message
+litex -version : show the version
+litex -fmt : format the given code
+litex -install <module> : install the given module
+litex -uninstall <module> : uninstall the given module
+litex -list : list all installed modules
+litex -update <module> : update the given module
+litex -tutorial : run the tutorial
+"#;
+    result.to_string()
 }

@@ -20,7 +20,7 @@ fn test_verify_atomic_fact() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Runtime::new(&mut runtime_context);
+    let mut runtime = Runtime::new(&mut runtime_context);
 
     // verify 1 = 1
     let one = Obj::Number(Number::new("1".to_string()));
@@ -30,7 +30,7 @@ fn test_verify_atomic_fact() {
         crate::common::defaults::DEFAULT_LINE_FILE.clone(),
     )));
     let stmt = Stmt::Fact(fact);
-    let result = executor.exec_stmt(&stmt);
+    let result = runtime.exec_stmt(&stmt);
 
     match result {
         Ok(stmt_result) => {
@@ -51,16 +51,16 @@ fn test_exec_stmt_fact_one_plus_one_eq_two() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Runtime::new(&mut runtime_context);
+    let mut runtime = Runtime::new(&mut runtime_context);
     let s = "1 + 1 = 2";
     let tokens = tokenize_line(s);
     let mut tb = TokenBlock::new(tokens, vec![], (0, 1));
-    let stmt = executor
+    let stmt = runtime
         .parse_stmt(&mut tb)
         .expect("parse fact \"1 + 1 = 2\" failed");
     assert!(matches!(stmt, Stmt::Fact(_)), "expected Stmt::Fact");
 
-    let result = executor.exec_stmt(&stmt).expect("exec.stmt(fact) failed");
+    let result = runtime.exec_stmt(&stmt).expect("exec.stmt(fact) failed");
     match &result {
         NonErrStmtExecResult::NonFactualStmtSuccess(_)
         | NonErrStmtExecResult::FactVerifiedByFact(_)
