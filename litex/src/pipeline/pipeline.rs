@@ -1,4 +1,4 @@
-use crate::common::defaults::BUILTIN_FILE_INDEX;
+use crate::common::defaults::DEFAULT_FIRST_FILE_INDEX_FOR_USER;
 use crate::environment::Environment;
 use crate::execute::Runtime;
 use crate::module_manager::ModuleManager;
@@ -45,7 +45,7 @@ pub fn run_source_code(
         &mut builtin_environment,
     );
 
-    let blocks = match TokenBlock::parse_blocks(source_code, BUILTIN_FILE_INDEX + 1) {
+    let blocks = match TokenBlock::parse_blocks(source_code, DEFAULT_FIRST_FILE_INDEX_FOR_USER) {
         Ok(b) => b,
         Err(e) => {
             let runtime_error = e.into();
@@ -204,24 +204,26 @@ where
 
         let normalized_source = remove_windows_carriage_return(trimmed_line);
 
-        let blocks =
-            match TokenBlock::parse_blocks(normalized_source.as_str(), BUILTIN_FILE_INDEX + 1) {
-                Ok(parsed_blocks) => parsed_blocks,
-                Err(parse_block_error) => {
-                    let stmt_error = parse_block_error.into();
-                    let error_string = if should_output_json {
-                        runtime
-                            .runtime_context
-                            .display_error_json_string(&stmt_error)
-                    } else {
-                        runtime.runtime_context.display_error(&stmt_error)
-                    };
-                    writeln!(stdout_writer)?;
-                    writeln!(stdout_writer, "{}", error_string)?;
-                    writeln!(stdout_writer)?;
-                    break;
-                }
-            };
+        let blocks = match TokenBlock::parse_blocks(
+            normalized_source.as_str(),
+            DEFAULT_FIRST_FILE_INDEX_FOR_USER,
+        ) {
+            Ok(parsed_blocks) => parsed_blocks,
+            Err(parse_block_error) => {
+                let stmt_error = parse_block_error.into();
+                let error_string = if should_output_json {
+                    runtime
+                        .runtime_context
+                        .display_error_json_string(&stmt_error)
+                } else {
+                    runtime.runtime_context.display_error(&stmt_error)
+                };
+                writeln!(stdout_writer)?;
+                writeln!(stdout_writer, "{}", error_string)?;
+                writeln!(stdout_writer)?;
+                break;
+            }
+        };
 
         let mut output_chunk = String::new();
         for mut block in blocks {
