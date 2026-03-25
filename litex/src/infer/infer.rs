@@ -2,8 +2,8 @@ use crate::error::InferError;
 use crate::execute::Runtime;
 use crate::fact::{
     AndChainAtomicFact, AndFact, AtomicFact, ChainFact, EqualFact, ExistFact,
-    ExistOrAndChainAtomicFact, Fact, ForallFact, ForallFactWithIff, InFact, IsTupleFact,
-    NormalAtomicFact, OrAndChainAtomicFact, OrFact,
+    ExistOrAndChainAtomicFact, Fact, ForallFact, ForallFactWithIff, GreaterFact, InFact,
+    IsTupleFact, LessFact, NormalAtomicFact, NotEqualFact, OrAndChainAtomicFact, OrFact,
 };
 use crate::obj::{FnSetObj, Number, Obj, TupleDimObj, ZObj};
 use crate::stmt::parameter_def::ParamDefWithParamType;
@@ -329,6 +329,81 @@ impl<'a> Runtime<'a> {
                 infer_result.push_atomic_fact(&inferred_in_z_fact);
                 Ok(infer_result)
             }
+            Obj::QPos(_)
+            | Obj::RPos(_)
+            | Obj::NPosObj(_) => {
+                let zero_obj = Obj::Number(Number::new("0".to_string()));
+                let inferred_atomic_fact = AtomicFact::GreaterFact(GreaterFact::new(
+                    in_fact.element.clone(),
+                    zero_obj,
+                    in_fact.line_file,
+                ));
+                self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    &inferred_atomic_fact,
+                )
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred greater-than-zero while inferring `{}`",
+                            in_fact
+                        ),
+                        in_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
+                let mut infer_result = InferResult::new();
+                infer_result.push_atomic_fact(&inferred_atomic_fact);
+                Ok(infer_result)
+            }
+            Obj::QNeg(_) | Obj::ZNeg(_) | Obj::RNeg(_) => {
+                let zero_obj = Obj::Number(Number::new("0".to_string()));
+                let inferred_atomic_fact = AtomicFact::LessFact(LessFact::new(
+                    in_fact.element.clone(),
+                    zero_obj,
+                    in_fact.line_file,
+                ));
+                self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    &inferred_atomic_fact,
+                )
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred less-than-zero while inferring `{}`",
+                            in_fact
+                        ),
+                        in_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
+                let mut infer_result = InferResult::new();
+                infer_result.push_atomic_fact(&inferred_atomic_fact);
+                Ok(infer_result)
+            }
+            Obj::QNz(_) | Obj::ZNz(_) | Obj::RNz(_) => {
+                let zero_obj = Obj::Number(Number::new("0".to_string()));
+                let inferred_atomic_fact = AtomicFact::NotEqualFact(NotEqualFact::new(
+                    in_fact.element.clone(),
+                    zero_obj,
+                    in_fact.line_file,
+                ));
+                self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    &inferred_atomic_fact,
+                )
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred not-equal-to-zero while inferring `{}`",
+                            in_fact
+                        ),
+                        in_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
+                let mut infer_result = InferResult::new();
+                infer_result.push_atomic_fact(&inferred_atomic_fact);
+                Ok(infer_result)
+            }
+            Obj::NObj(_) | Obj::QObj(_) | Obj::ZObj(_) | Obj::RObj(_) => Ok(InferResult::new()),
             _ => Ok(InferResult::new()),
         }
     }

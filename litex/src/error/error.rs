@@ -347,22 +347,11 @@ impl ExecStmtError {
     /// Content only (msg + previous_error bodies), for embedding in other errors.
     pub fn body_string(&self) -> String {
         let body = body_with_previous(&self.msg, &self.previous_error);
-        let mut main_body = if self.stmt_type_name.is_empty() {
+        let main_body = if self.stmt_type_name.is_empty() {
             body
         } else {
             format!("stmt type: {}\n\n{}", self.stmt_type_name, body)
         };
-        if !self.inside_results.is_empty() {
-            let mut inside_body_lines: Vec<String> = Vec::new();
-            for inside_result in self.inside_results.iter() {
-                inside_body_lines.push(inside_result.body_string());
-            }
-            main_body = format!(
-                "{}\n\nstatements completed before this error:\n{}",
-                main_body,
-                inside_body_lines.join("\n---\n")
-            );
-        }
         main_body
     }
 }
