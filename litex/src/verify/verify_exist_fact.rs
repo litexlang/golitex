@@ -1,7 +1,7 @@
 use crate::environment::Environment;
 use crate::error::{RuntimeError, VerifyError};
 use crate::execute::Runtime;
-use crate::fact::ExistFact;
+use crate::fact::{ExistFact, Fact};
 use crate::obj::{Identifier, Obj};
 use crate::result::{NonErrStmtExecResult, StmtUnknown};
 use crate::stmt::parameter_def::ParamDefWithParamType;
@@ -17,9 +17,9 @@ impl<'a> Runtime<'a> {
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         let fact_display_string = exist_fact.to_string();
         let fact_line_file = exist_fact.line_file();
-        if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&fact_display_string, fact_line_file)
-        {
+        if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
+            &Fact::ExistFact(exist_fact.clone()),
+        ) {
             return Ok(cached_result);
         }
 
@@ -87,10 +87,9 @@ impl<'a> Runtime<'a> {
                 if target_string == known_string {
                     return Ok(NonErrStmtExecResult::FactVerifiedByFact(
                         crate::result::FactVerifiedByFact::new(
-                            exist_fact.to_string(),
+                            Fact::ExistFact(exist_fact.clone()),
                             known_fact.to_string(),
                             crate::infer::InferResult::new(),
-                            exist_fact.line_file(),
                             known_fact.line_file(),
                         ),
                     ));

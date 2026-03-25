@@ -1,6 +1,6 @@
 use super::Runtime;
 use crate::common::helper::is_number_string_literally_integer_without_dot;
-use crate::error::{ExecStmtError, RuntimeError};
+use crate::error::{ExecStmtError, RuntimeError, UnknownError};
 use crate::fact::{
     AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, GreaterEqualFact, InFact,
     OrFact,
@@ -8,6 +8,7 @@ use crate::fact::{
 use crate::infer::InferResult;
 use crate::obj::{Add, Identifier, Number, Obj, ZObj};
 use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
+use crate::stmt::Stmt;
 use crate::stmt::axiom_stmt::{
     ByCartDefAxiomStmt, ByCasesAxiomStmt, ByContraAxiomStmt, ByExtensionAxiomStmt,
     ByFnDefAxiomStmt, ByInducAxiomStmt, EnumerateAxiomStmt, ForAxiomStmt,
@@ -25,12 +26,11 @@ impl<'a> Runtime<'a> {
         for fact in stmt.then_facts.iter() {
             self.verify_fact_well_defined(fact, &VerifyState::new(0, false))
                 .map_err(|e| {
-                    RuntimeError::ExecError(ExecStmtError::new(
-                        stmt.stmt_type_name(),
-                        format!("by_cases: failed to prove `{}`", fact),
+                    RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByCasesAxiomStmt(stmt.clone()),
+                    format!("by_cases: failed to prove `{}`", fact),
                         Some(e.into()),
                         vec![],
-                        stmt.line_file,
                     ))
                 })?;
         }
@@ -49,7 +49,7 @@ impl<'a> Runtime<'a> {
                     inside_results.append(&mut one_case_inside_results);
                 }
                 Err(exec_stmt_error) => {
-                    return Err(RuntimeError::ExecError(exec_stmt_error));
+                    return Err(RuntimeError::ExecStmtError(exec_stmt_error));
                 }
             }
         }
@@ -59,12 +59,11 @@ impl<'a> Runtime<'a> {
             let one_then_fact_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(then_fact)
                 .map_err(|store_fact_error| {
-                    RuntimeError::ExecError(ExecStmtError::new(
-                        stmt.stmt_type_name(),
-                        format!("by_cases: failed to release `{}`", then_fact),
+                    RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByCasesAxiomStmt(stmt.clone()),
+                    format!("by_cases: failed to release `{}`", then_fact),
                         Some(store_fact_error.into()),
                         vec![],
-                        stmt.line_file,
                     ))
                 })?;
             infer_result.new_infer_result_inside(one_then_fact_infer_result);
@@ -72,10 +71,9 @@ impl<'a> Runtime<'a> {
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                stmt.to_string(),
+                Stmt::ByCasesAxiomStmt(stmt.clone()),
                 infer_result,
                 inside_results,
-                stmt.line_file,
             ),
         ))
     }
@@ -87,12 +85,11 @@ impl<'a> Runtime<'a> {
         let to_prove_fact = Fact::AtomicFact(stmt.to_prove.clone());
         self.verify_fact_well_defined(&to_prove_fact, &VerifyState::new(0, false))
             .map_err(|e| {
-                RuntimeError::ExecError(ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByContraAxiomStmt(stmt.clone()),
                     format!("by_contra: failed to prove `{}`", to_prove_fact),
                     Some(e.into()),
                     vec![],
-                    stmt.line_file,
                 ))
             })?;
 
@@ -106,12 +103,11 @@ impl<'a> Runtime<'a> {
             let reverse_to_prove_fact = stmt.to_prove.make_reversed();
             self.store_atomic_fact_without_well_defined_verified_and_infer(&reverse_to_prove_fact)
                 .map_err(|store_fact_error| {
-                    RuntimeError::ExecError(ExecStmtError::new(
-                        stmt.stmt_type_name(),
-                        format!("by_contra: failed to know reverse of `{}`", to_prove_fact),
+                    RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByContraAxiomStmt(stmt.clone()),
+                    format!("by_contra: failed to know reverse of `{}`", to_prove_fact),
                         Some(store_fact_error.into()),
                         vec![],
-                        stmt.line_file,
                     ))
                 })?;
 
@@ -130,12 +126,11 @@ impl<'a> Runtime<'a> {
             let verify_impossible_fact_result =
                 self.verify_atomic_fact(&stmt.impossible_fact, &VerifyState::new(0, false))?;
             if verify_impossible_fact_result.is_unknown() {
-                return Err(RuntimeError::ExecError(ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                return Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByContraAxiomStmt(stmt.clone()),
                     impossible_proof_error_message(&stmt.impossible_fact, None),
                     None,
                     inside_results,
-                    stmt.line_file,
                 )));
             }
 
@@ -144,12 +139,11 @@ impl<'a> Runtime<'a> {
                 &VerifyState::new(0, false),
             )?;
             if verify_reversed_impossible_fact_result.is_unknown() {
-                return Err(RuntimeError::ExecError(ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                return Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByContraAxiomStmt(stmt.clone()),
                     impossible_proof_error_message(&stmt.impossible_fact, None),
                     None,
                     vec![],
-                    stmt.line_file,
                 )));
             }
 
@@ -158,33 +152,30 @@ impl<'a> Runtime<'a> {
         };
 
         if let Some(last_error) = last_error {
-            return Err(RuntimeError::ExecError(ExecStmtError::new(
-                stmt.stmt_type_name(),
-                "by_contra: failed to execute proof".to_string(),
+            return Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByContraAxiomStmt(stmt.clone()),
+                    "by_contra: failed to execute proof".to_string(),
                 Some(last_error),
                 exec_proof_inside_results,
-                stmt.line_file,
             )));
         }
 
         let infer_result = self
             .store_fact_without_well_defined_verified_and_infer(&to_prove_fact)
             .map_err(|store_fact_error| {
-                RuntimeError::ExecError(ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByContraAxiomStmt(stmt.clone()),
                     format!("by_contra: failed to release `{}`", to_prove_fact),
                     Some(store_fact_error.into()),
                     vec![],
-                    stmt.line_file,
                 ))
             })?;
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                stmt.to_string(),
+                Stmt::ByContraAxiomStmt(stmt.clone()),
                 infer_result,
                 exec_proof_inside_results,
-                stmt.line_file,
             ),
         ))
     }
@@ -194,26 +185,24 @@ impl<'a> Runtime<'a> {
         stmt: &EnumerateAxiomStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::ExecError(ExecStmtError::new(
-                stmt.stmt_type_name(),
-                msg,
+            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::EnumerateAxiomStmt(stmt.clone()),
+                    msg,
                 None,
                 vec![],
-                stmt.line_file,
             ))
         })?;
 
         self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::ExecError(ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::EnumerateAxiomStmt(stmt.clone()),
                     format!(
                         "enumerate: corresponding forall `{}` is not well-defined",
                         corresponding_forall_fact
                     ),
                     Some(well_defined_error.into()),
                     vec![],
-                    stmt.line_file,
                 ))
             })?;
 
@@ -228,23 +217,21 @@ impl<'a> Runtime<'a> {
             let infer_result_from_stored_forall_fact = self
                 .store_fact_without_well_defined_verified_and_infer(&corresponding_forall_fact)
                 .map_err(|store_fact_error| {
-                    RuntimeError::ExecError(ExecStmtError::new(
-                        stmt.stmt_type_name(),
-                        format!(
+                    RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::EnumerateAxiomStmt(stmt.clone()),
+                    format!(
                             "enumerate: failed to store corresponding forall `{}`",
                             corresponding_forall_fact
                         ),
                         Some(store_fact_error.into()),
                         vec![],
-                        stmt.line_file,
                     ))
                 })?;
             return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
-                    stmt.to_string(),
+                    Stmt::EnumerateAxiomStmt(stmt.clone()),
                     infer_result_from_stored_forall_fact,
                     vec![],
-                    stmt.line_file,
                 ),
             ));
         }
@@ -274,25 +261,23 @@ impl<'a> Runtime<'a> {
         let infer_result_from_stored_forall_fact = self
             .store_fact_without_well_defined_verified_and_infer(&corresponding_forall_fact)
             .map_err(|store_fact_error| {
-                RuntimeError::ExecError(ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::EnumerateAxiomStmt(stmt.clone()),
                     format!(
                         "enumerate: failed to store corresponding forall `{}`",
                         corresponding_forall_fact
                     ),
                     Some(store_fact_error.into()),
                     vec![],
-                    stmt.line_file,
                 ))
             })?;
         infer_result.new_infer_result_inside(infer_result_from_stored_forall_fact);
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                stmt.to_string(),
+                Stmt::EnumerateAxiomStmt(stmt.clone()),
                 infer_result,
                 all_inside_results,
-                stmt.line_file,
             ),
         ))
     }
@@ -313,12 +298,11 @@ impl<'a> Runtime<'a> {
                     infer_result.new_infer_result_inside(one_fact_infer_result);
                 }
                 Err(exec_stmt_error) => {
-                    return Err(RuntimeError::ExecError(ExecStmtError::new(
-                        stmt.stmt_type_name(),
-                        format!("by_induc: failed to prove `{}`", fact),
+                    return Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByInducAxiomStmt(stmt.clone()),
+                    format!("by_induc: failed to prove `{}`", fact),
                         Some(exec_stmt_error.into()),
                         vec![],
-                        stmt.line_file,
                     )));
                 }
             }
@@ -326,22 +310,20 @@ impl<'a> Runtime<'a> {
 
         // store 对应的forall
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::ExecError(ExecStmtError::new(
-                stmt.stmt_type_name(),
-                msg,
+            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByInducAxiomStmt(stmt.clone()),
+                    msg,
                 None,
                 vec![],
-                stmt.line_file,
             ))
         })?;
         self.store_fact_without_well_defined_verified_and_infer(&corresponding_forall_fact)?;
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                stmt.to_string(),
+                Stmt::ByInducAxiomStmt(stmt.clone()),
                 infer_result,
                 all_inside_results,
-                stmt.line_file,
             ),
         ))
     }
@@ -361,12 +343,11 @@ impl<'a> Runtime<'a> {
             .to_fact();
         self.verify_fact_return_err_if_not_true(&base_case_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
-                RuntimeError::ExecError(ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByInducAxiomStmt(stmt.clone()),
                     format!("by_induc: base case is not proved `{}`", base_case_fact),
                     Some(verify_error.into()),
                     vec![],
-                    stmt.line_file,
                 ))
             })?;
 
@@ -378,21 +359,19 @@ impl<'a> Runtime<'a> {
         let verify_induc_from_in_z_result = self
             .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
-                RuntimeError::ExecError(ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByInducAxiomStmt(stmt.clone()),
                     format!("by_induc: failed to verify `{}`", induc_from_in_z_fact),
                     Some(verify_error.into()),
                     vec![],
-                    stmt.line_file,
                 ))
             })?;
         if verify_induc_from_in_z_result.is_unknown() {
-            return Err(RuntimeError::ExecError(ExecStmtError::new(
-                stmt.stmt_type_name(),
-                format!("by_induc: failed to verify `{}`", induc_from_in_z_fact),
+            return Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByInducAxiomStmt(stmt.clone()),
+                    format!("by_induc: failed to verify `{}`", induc_from_in_z_fact),
                 None,
                 vec![],
-                stmt.line_file,
             )));
         }
 
@@ -430,15 +409,14 @@ impl<'a> Runtime<'a> {
             &VerifyState::new(0, false),
         )
         .map_err(|well_defined_error| {
-            RuntimeError::ExecError(ExecStmtError::new(
-                stmt.stmt_type_name(),
-                format!(
+            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByInducAxiomStmt(stmt.clone()),
+                    format!(
                     "by_induc: generated step forall is not well-defined `{}`",
                     corresponding_forall_fact
                 ),
                 Some(well_defined_error.into()),
                 vec![],
-                stmt.line_file,
             ))
         })?;
 
@@ -451,46 +429,42 @@ impl<'a> Runtime<'a> {
         stmt: &ForAxiomStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if stmt.params.len() != stmt.param_sets.len() {
-            return Err(RuntimeError::ExecError(ExecStmtError::new(
-                stmt.stmt_type_name(),
-                "for: number of params does not match number of ranges".to_string(),
+            return Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ForAxiomStmt(stmt.clone()),
+                    "for: number of params does not match number of ranges".to_string(),
                 None,
                 vec![],
-                stmt.line_file,
             )));
         }
 
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
-            RuntimeError::ExecError(ExecStmtError::new(
-                stmt.stmt_type_name(),
-                msg,
+            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ForAxiomStmt(stmt.clone()),
+                    msg,
                 None,
                 vec![],
-                stmt.line_file,
             ))
         })?;
         self.verify_fact_well_defined(&corresponding_forall_fact, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::ExecError(ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ForAxiomStmt(stmt.clone()),
                     format!(
                         "for: corresponding forall `{}` is not well-defined",
                         corresponding_forall_fact
                     ),
                     Some(well_defined_error.into()),
                     vec![],
-                    stmt.line_file,
                 ))
             })?;
 
         let param_value_strings_of_each_param = Self::for_param_value_strings_of_each_param(stmt)
             .map_err(|msg| {
-            RuntimeError::ExecError(ExecStmtError::new(
-                stmt.stmt_type_name(),
-                msg,
+            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ForAxiomStmt(stmt.clone()),
+                    msg,
                 None,
                 vec![],
-                stmt.line_file,
             ))
         })?;
         let for_cartesian_product_is_empty = param_value_strings_of_each_param
@@ -500,23 +474,21 @@ impl<'a> Runtime<'a> {
             let infer_result_from_stored_forall_fact = self
                 .store_fact_without_well_defined_verified_and_infer(&corresponding_forall_fact)
                 .map_err(|store_fact_error| {
-                    RuntimeError::ExecError(ExecStmtError::new(
-                        stmt.stmt_type_name(),
-                        format!(
+                    RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ForAxiomStmt(stmt.clone()),
+                    format!(
                             "for: failed to store corresponding forall `{}`",
                             corresponding_forall_fact
                         ),
                         Some(store_fact_error.into()),
                         vec![],
-                        stmt.line_file,
                     ))
                 })?;
             return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
-                    stmt.to_string(),
+                    Stmt::ForAxiomStmt(stmt.clone()),
                     infer_result_from_stored_forall_fact,
                     vec![],
-                    stmt.line_file,
                 ),
             ));
         }
@@ -545,23 +517,21 @@ impl<'a> Runtime<'a> {
         let infer_result_from_stored_forall_fact = self
             .store_fact_without_well_defined_verified_and_infer(&corresponding_forall_fact)
             .map_err(|store_fact_error| {
-                RuntimeError::ExecError(ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ForAxiomStmt(stmt.clone()),
                     format!(
                         "for: failed to store corresponding forall `{}`",
                         corresponding_forall_fact
                     ),
                     Some(store_fact_error.into()),
                     vec![],
-                    stmt.line_file,
                 ))
             })?;
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                stmt.to_string(),
+                Stmt::ForAxiomStmt(stmt.clone()),
                 infer_result_from_stored_forall_fact,
                 all_inside_results,
-                stmt.line_file,
             ),
         ))
     }
@@ -572,25 +542,23 @@ impl<'a> Runtime<'a> {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&stmt.left, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::ExecError(ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByExtensionAxiomStmt(stmt.clone()),
                     format!("by_extension: left set `{}` is not well-defined", stmt.left),
                     Some(well_defined_error.into()),
                     vec![],
-                    stmt.line_file,
                 ))
             })?;
         self.verify_obj_well_defined_and_store_cache(&stmt.right, &VerifyState::new(0, false))
             .map_err(|well_defined_error| {
-                RuntimeError::ExecError(ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByExtensionAxiomStmt(stmt.clone()),
                     format!(
                         "by_extension: right set `{}` is not well-defined",
                         stmt.right
                     ),
                     Some(well_defined_error.into()),
                     vec![],
-                    stmt.line_file,
                 ))
             })?;
 
@@ -601,15 +569,14 @@ impl<'a> Runtime<'a> {
                 for proof_stmt in stmt.proof.iter() {
                     let one_proof_stmt_exec_result =
                         self.exec_stmt(proof_stmt).map_err(|stmt_error| {
-                            RuntimeError::ExecError(ExecStmtError::new(
-                                stmt.stmt_type_name(),
-                                format!(
+                            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByExtensionAxiomStmt(stmt.clone()),
+                    format!(
                                     "by_extension: failed to execute proof stmt `{}`",
                                     proof_stmt
                                 ),
                                 Some(stmt_error),
                                 vec![],
-                                stmt.line_file,
                             ))
                         })?;
                     inside_results.push(one_proof_stmt_exec_result);
@@ -637,15 +604,14 @@ impl<'a> Runtime<'a> {
                     &VerifyState::new(0, false),
                 )
                 .map_err(|verify_error| {
-                    RuntimeError::ExecError(ExecStmtError::new(
-                        stmt.stmt_type_name(),
-                        format!(
+                    RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByExtensionAxiomStmt(stmt.clone()),
+                    format!(
                             "by_extension: failed to prove left subset right `{}`",
                             left_to_right_forall_fact
                         ),
                         Some(verify_error.into()),
                         vec![],
-                        stmt.line_file,
                     ))
                 })?;
 
@@ -669,15 +635,14 @@ impl<'a> Runtime<'a> {
                     &VerifyState::new(0, false),
                 )
                 .map_err(|verify_error| {
-                    RuntimeError::ExecError(ExecStmtError::new(
-                        stmt.stmt_type_name(),
-                        format!(
+                    RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ByExtensionAxiomStmt(stmt.clone()),
+                    format!(
                             "by_extension: failed to prove right subset left `{}`",
                             right_to_left_forall_fact
                         ),
                         Some(verify_error.into()),
                         vec![],
-                        stmt.line_file,
                     ))
                 })?;
                 Ok((
@@ -705,10 +670,9 @@ impl<'a> Runtime<'a> {
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                stmt.to_string(),
+                Stmt::ByExtensionAxiomStmt(stmt.clone()),
                 infer_result,
                 inside_results,
-                stmt.line_file,
             ),
         ))
     }
@@ -717,14 +681,14 @@ impl<'a> Runtime<'a> {
         &mut self,
         stmt: &ByFnDefAxiomStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
-        Self::stmt_unsupported(stmt.stmt_type_name(), stmt.line_file)
+        Self::stmt_unsupported(Stmt::ByFnDefAxiomStmt(stmt.clone()))
     }
 
     pub fn exec_by_cart_def_axiom_stmt(
         &mut self,
         stmt: &ByCartDefAxiomStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
-        Self::stmt_unsupported(stmt.stmt_type_name(), stmt.line_file)
+        Self::stmt_unsupported(Stmt::ByCartDefAxiomStmt(stmt.clone()))
     }
 }
 
@@ -736,29 +700,25 @@ impl<'a> Runtime<'a> {
         let calculated_string = match number_like_obj.normalized_calculated_value() {
             Some(calculated_number) => calculated_number.normalized_value,
             None => {
-                return Err(RuntimeError::ExecError(ExecStmtError::new(
-                    "ForAxiomStmt".to_string(),
+                return Err(RuntimeError::UnknownError(UnknownError::new(
                     format!(
                         "for: range boundary `{}` must be a calculable number expression",
                         number_like_obj
                     ),
-                    None,
-                    vec![],
                     line_file,
+                    None,
                 )));
             }
         };
 
         if !is_number_string_literally_integer_without_dot(calculated_string.clone()) {
-            return Err(RuntimeError::ExecError(ExecStmtError::new(
-                "ForAxiomStmt".to_string(),
+            return Err(RuntimeError::UnknownError(UnknownError::new(
                 format!(
                     "for: range boundary `{}` is not an integer number",
                     number_like_obj
                 ),
-                None,
-                vec![],
                 line_file,
+                None,
             )));
         }
         Ok(calculated_string)
@@ -908,12 +868,11 @@ impl<'a> Runtime<'a> {
                 let verify_reversed_dom_result =
                     self.verify_atomic_fact(&reversed, &VerifyState::new(0, false))?;
                 if verify_reversed_dom_result.is_unknown() {
-                    return Err(RuntimeError::ExecError(ExecStmtError::new(
-                        stmt.stmt_type_name(),
-                        format!("for: domain fact `{}` or its reversed `{}` must be verified to be true, but both are unknown", dom_fact, reversed),
+                    return Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ForAxiomStmt(stmt.clone()),
+                    format!("for: domain fact `{}` or its reversed `{}` must be verified to be true, but both are unknown", dom_fact, reversed),
                         None,
                         inside_results,
-                        stmt.line_file,
                     )));
                 }
                 if verify_reversed_dom_result.is_true() {
@@ -936,12 +895,11 @@ impl<'a> Runtime<'a> {
                 &VerifyState::new(0, false),
             )?;
             if verified_result.is_unknown() {
-                return Err(RuntimeError::ExecError(ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                return Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ForAxiomStmt(stmt.clone()),
                     format!("for: failed to prove `{}`", fact_to_prove),
                     None,
                     inside_results,
-                    stmt.line_file,
                 )));
             }
             inside_results.push(verified_result);
@@ -1029,12 +987,11 @@ impl<'a> Runtime<'a> {
         let all_cases_or_fact = Fact::OrFact(OrFact::new(stmt.cases.clone(), stmt.line_file));
         self.verify_fact_return_err_if_not_true(&all_cases_or_fact, &VerifyState::new(0, false))
             .map_err(|verify_error| {
-                ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                ExecStmtError::with_message_and_cause(
+                    Stmt::ByCasesAxiomStmt(stmt.clone()),
                     "by_cases: cannot verify that all cases cover all situations".to_string(),
                     Some(verify_error.into()),
                     vec![],
-                    stmt.line_file,
                 )
             })?;
         Ok(())
@@ -1048,15 +1005,14 @@ impl<'a> Runtime<'a> {
     ) -> Result<(), ExecStmtError> {
         for then_fact in stmt.then_facts.iter() {
             let exec_fact_result = self.exec_fact(then_fact).map_err(|statement_error| {
-                ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                ExecStmtError::with_message_and_cause(
+                    Stmt::ByCasesAxiomStmt(stmt.clone()),
                     format!(
                         "by_cases: failed to prove `{}` under case `{}`",
                         then_fact, stmt.cases[case_index]
                     ),
                     Some(statement_error),
                     std::mem::take(inside_results),
-                    stmt.line_file,
                 )
             })?;
             inside_results.push(exec_fact_result);
@@ -1074,12 +1030,11 @@ impl<'a> Runtime<'a> {
 
         self.store_and_chain_atomic_fact_without_well_defined_verified_and_infer(case_fact)
             .map_err(|store_fact_error| {
-                ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                ExecStmtError::with_message_and_cause(
+                    Stmt::ByCasesAxiomStmt(stmt.clone()),
                     format!("by_cases: failed to assume case `{}`", case_fact),
                     Some(store_fact_error.into()),
                     vec![],
-                    stmt.line_file,
                 )
             })?;
 
@@ -1088,15 +1043,14 @@ impl<'a> Runtime<'a> {
             match exec_stmt_result {
                 Ok(result) => inside_results.push(result),
                 Err(statement_error) => {
-                    return Err(ExecStmtError::new(
-                        stmt.stmt_type_name(),
-                        format!(
+                    return Err(ExecStmtError::with_message_and_cause(
+                    Stmt::ByCasesAxiomStmt(stmt.clone()),
+                    format!(
                             "by_cases: failed while executing proof under case `{}`",
                             case_fact
                         ),
                         Some(statement_error),
                         inside_results,
-                        stmt.line_file,
                     ));
                 }
             }
@@ -1107,62 +1061,57 @@ impl<'a> Runtime<'a> {
             let verify_impossible_fact_result = self
                 .verify_atomic_fact(impossible_fact, &verify_state)
                 .map_err(|verify_error| {
-                    ExecStmtError::new(
-                        stmt.stmt_type_name(),
-                        impossible_proof_error_message(
+                    ExecStmtError::with_message_and_cause(
+                    Stmt::ByCasesAxiomStmt(stmt.clone()),
+                    impossible_proof_error_message(
                             impossible_fact,
                             Some(case_fact.to_string()),
                         ),
                         Some(verify_error.into()),
                         vec![],
-                        impossible_fact.line_file(),
                     )
                 })?;
 
             if verify_impossible_fact_result.is_unknown() {
-                return Err(ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                return Err(ExecStmtError::with_message_and_cause(
+                    Stmt::ByCasesAxiomStmt(stmt.clone()),
                     impossible_proof_error_message(impossible_fact, Some(case_fact.to_string())),
                     None,
                     vec![],
-                    impossible_fact.line_file(),
                 ));
             }
 
             let verify_reversed_impossible_fact_result = self
                 .verify_atomic_fact(&impossible_fact.make_reversed(), &verify_state)
                 .map_err(|verify_error| {
-                    ExecStmtError::new(
-                        stmt.stmt_type_name(),
-                        impossible_proof_error_message(
+                    ExecStmtError::with_message_and_cause(
+                    Stmt::ByCasesAxiomStmt(stmt.clone()),
+                    impossible_proof_error_message(
                             impossible_fact,
                             Some(case_fact.to_string()),
                         ),
                         Some(verify_error.into()),
                         vec![],
-                        impossible_fact.line_file(),
                     )
                 })?;
 
             if verify_reversed_impossible_fact_result.is_unknown() {
-                return Err(ExecStmtError::new(
-                    stmt.stmt_type_name(),
+                return Err(ExecStmtError::with_message_and_cause(
+                    Stmt::ByCasesAxiomStmt(stmt.clone()),
                     impossible_proof_error_message(impossible_fact, Some(case_fact.to_string())),
                     None,
                     vec![],
-                    impossible_fact.line_file(),
                 ));
             }
 
             inside_results.push(NonErrStmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
-                    impossible_proof_success_message(impossible_fact, Some(case_fact.to_string())),
+                    Stmt::ByCasesAxiomStmt(stmt.clone()),
                     InferResult::new(),
                     vec![
                         verify_impossible_fact_result,
                         verify_reversed_impossible_fact_result,
                     ],
-                    impossible_fact.line_file(),
                 ),
             ));
 
@@ -1188,20 +1137,5 @@ fn impossible_proof_error_message(
             impossible_fact, case_fact
         ),
         None => format!("failed to prove impossible `{}`", impossible_fact),
-    }
-}
-
-fn impossible_proof_success_message(
-    impossible_fact: &AtomicFact,
-    option_case_fact_string: Option<String>,
-) -> String {
-    match option_case_fact_string {
-        Some(case_fact) => {
-            format!(
-                "proved impossible `{}` under case `{}`",
-                impossible_fact, case_fact
-            )
-        }
-        None => format!("proved impossible `{}`", impossible_fact),
     }
 }

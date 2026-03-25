@@ -51,10 +51,6 @@ impl DefAlgoStmt {
             line_file,
         }
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        "DefAlgoStmt".to_string()
-    }
 }
 
 impl fmt::Display for AlgoReturnOrAlgoCase {

@@ -1,8 +1,7 @@
 use crate::calculate_and_simplify_rational_expression::objs_equal_by_rational_expression_simplification;
 use crate::error::VerifyError;
 use crate::execute::Runtime;
-use crate::fact::AtomicFact;
-use crate::fact::EqualFact;
+use crate::fact::{AtomicFact, EqualFact, Fact};
 use crate::infer::InferResult;
 use crate::obj::{FnObj, Obj};
 use crate::result::FactVerifiedByBuiltinRules;
@@ -53,10 +52,13 @@ impl<'a> Runtime<'a> {
         if verified_by_arg_to_arg {
             return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                 FactVerifiedByBuiltinRules::new(
-                    equality_string(left, right),
+                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                        left.clone(),
+                        right.clone(),
+                        line_file,
+                    ))),
                     same_shape_and_equal_args_reason(left, right),
                     InferResult::new(),
-                    line_file,
                 ),
             ));
         }
@@ -535,10 +537,13 @@ impl<'a> Runtime<'a> {
         if result.is_true() {
             return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                 FactVerifiedByBuiltinRules::new(
-                    equality_string(left_obj, right_obj),
+                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                        left_obj.clone(),
+                        right_obj.clone(),
+                        equality_line_file,
+                    ))),
                     "builtin rules".to_string(),
                     InferResult::new(),
-                    equality_line_file,
                 ),
             ));
         }
@@ -563,10 +568,13 @@ impl<'a> Runtime<'a> {
         if verified_by_arg_to_arg {
             return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                 FactVerifiedByBuiltinRules::new(
-                    equality_string(left_obj, right_obj),
+                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                        left_obj.clone(),
+                        right_obj.clone(),
+                        equality_line_file,
+                    ))),
                     same_shape_and_equal_args_reason(left_obj, right_obj),
                     InferResult::new(),
-                    equality_line_file,
                 ),
             ));
         }
@@ -582,10 +590,6 @@ pub fn verify_equality_by_they_are_the_same(left: &Obj, right: &Obj) -> bool {
     false
 }
 
-fn equality_string(left: &Obj, right: &Obj) -> String {
-    format!("{} = {}", left.to_string(), right.to_string())
-}
-
 fn verify_equality_by_builtin_rules(
     runtime: &Runtime<'_>,
     left: &Obj,
@@ -595,10 +599,13 @@ fn verify_equality_by_builtin_rules(
     if verify_equality_by_they_are_the_same(left, right) {
         return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
             FactVerifiedByBuiltinRules::new(
-                equality_string(left, right),
+                Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                    left.clone(),
+                    right.clone(),
+                    line_file,
+                ))),
                 "the same".to_string(),
                 InferResult::new(),
-                line_file,
             ),
         ));
     }
@@ -613,10 +620,13 @@ fn verify_equality_by_builtin_rules(
     {
         return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
             FactVerifiedByBuiltinRules::new(
-                equality_string(left, right),
+                Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                    left.clone(),
+                    right.clone(),
+                    line_file,
+                ))),
                 "calculation".to_string(),
                 InferResult::new(),
-                line_file,
             ),
         ));
     }
@@ -627,10 +637,13 @@ fn verify_equality_by_builtin_rules(
     ) {
         return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
             FactVerifiedByBuiltinRules::new(
-                equality_string(left, right),
+                Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                    left.clone(),
+                    right.clone(),
+                    line_file,
+                ))),
                 "rational expression simplification".to_string(),
                 InferResult::new(),
-                line_file,
             ),
         ));
     }

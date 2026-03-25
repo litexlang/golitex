@@ -1,8 +1,10 @@
 use crate::error::{RuntimeError, VerifyError};
 use crate::execute::Runtime;
-use crate::fact::{ForallFact, ForallFactWithIff};
+use crate::fact::{Fact, ForallFact, ForallFactWithIff};
 use crate::infer::InferResult;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
+use crate::stmt::tooling_stmt::DoNothingStmt;
+use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 use std::result::Result;
 
@@ -16,9 +18,9 @@ impl<'a> Runtime<'a> {
         let fact_display_string = forall_fact.to_string();
         let fact_line_file = forall_fact.line_file;
 
-        if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&fact_display_string, fact_line_file)
-        {
+        if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
+            &Fact::ForallFact(forall_fact.clone()),
+        ) {
             return Ok(cached_result);
         }
 
@@ -49,11 +51,15 @@ impl<'a> Runtime<'a> {
         let mut infer_result = InferResult::new();
         for param_def in forall_fact.params_def_with_type.iter() {
             let param_infer_result = self
-                .define_params_with_type(std::slice::from_ref(param_def), false)
+                .define_params_with_type(
+                    std::slice::from_ref(param_def),
+                    false,
+                    Stmt::DoNothingStmt(DoNothingStmt::new(forall_fact.line_file)),
+                )
                 .map_err(|e| {
                     VerifyError::new(
                         format!("failed to define params in forall: {}", e.body_string()),
-                        Some(RuntimeError::ExecError(e)),
+                        Some(RuntimeError::ExecStmtError(e)),
                         forall_fact.line_file,
                     )
                 })?;
@@ -84,10 +90,9 @@ impl<'a> Runtime<'a> {
 
         Ok(NonErrStmtExecResult::FactVerifiedByFact(
             FactVerifiedByFact::new(
-                forall_fact.to_string(),
+                Fact::ForallFact(forall_fact.clone()),
                 "forall: each then_fact verified under dom".to_string(),
                 infer_result,
-                forall_fact.line_file,
                 crate::common::defaults::DEFAULT_LINE_FILE.clone(),
             ),
         ))
@@ -102,9 +107,9 @@ impl<'a> Runtime<'a> {
         let fact_display_string = forall_iff.to_string();
         let line_file = forall_iff.line_file;
 
-        if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&fact_display_string, line_file)
-        {
+        if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
+            &Fact::ForallFactWithIff(forall_iff.clone()),
+        ) {
             return Ok(cached_result);
         }
 
@@ -153,10 +158,9 @@ impl<'a> Runtime<'a> {
 
         Ok(NonErrStmtExecResult::FactVerifiedByFact(
             FactVerifiedByFact::new(
-                fact_display_string,
+                Fact::ForallFactWithIff(forall_iff.clone()),
                 "forall iff: then=>iff and iff=>then verified".to_string(),
                 InferResult::new(),
-                line_file,
                 crate::common::defaults::DEFAULT_LINE_FILE.clone(),
             ),
         ))
