@@ -69,13 +69,6 @@ impl<'a> Runtime<'a> {
             _ => obj.clone(),
         }
     }
-
-    pub fn line_file_string(&self, line: usize, file_index: usize) -> String {
-        format!(
-            "line {}, file {}",
-            line, self.runtime_context.module_manager.run_file_paths[file_index]
-        )
-    }
 }
 
 impl<'a> fmt::Display for Runtime<'a> {

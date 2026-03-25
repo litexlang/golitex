@@ -904,11 +904,7 @@ impl<'a> Runtime<'a> {
         )
         .map_err(|e| {
             WellDefinedError::new(
-                format!(
-                    "failed to build facts for inst struct {}: {}",
-                    x.struct_name,
-                    e.error_body()
-                ),
+                "failed to build facts for inst struct".to_string(),
                 Some(e),
                 DEFAULT_LINE_FILE.clone(),
             )
@@ -916,20 +912,14 @@ impl<'a> Runtime<'a> {
         for fact in facts.iter() {
             let result = self.verify_atomic_fact(fact, verify_state).map_err(|e| {
                 WellDefinedError::new(
-                    format!(
-                        "exec_fact failed for inst struct obj arg (struct {})",
-                        x.struct_name
-                    ),
+                    "exec_fact failed for inst struct obj arg".to_string(),
                     Some(RuntimeError::VerifyError(e)),
                     DEFAULT_LINE_FILE.clone(),
                 )
             })?;
             if result.is_unknown() {
                 return Err(WellDefinedError::new(
-                    format!(
-                        "exec_fact failed for inst struct obj arg (struct {})",
-                        x.struct_name
-                    ),
+                    "exec_fact failed for inst struct obj arg".to_string(),
                     None,
                     DEFAULT_LINE_FILE.clone(),
                 ));
