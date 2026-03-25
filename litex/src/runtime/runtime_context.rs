@@ -266,13 +266,10 @@ impl<'a> RuntimeContext<'a> {
         line: usize,
         file_index: usize,
     ) -> String {
-        if file_index == DEFAULT_FIRST_FILE_INDEX_FOR_USER {
+        let path = self.get_source_file_by_line_file_return_empty_when_default((line, file_index));
+        if path.is_empty() {
             format!("on line {}", line)
         } else {
-            let path = match self.module_manager.run_file_paths.get(file_index) {
-                Some(s) => s.as_str(),
-                None => "",
-            };
             format!("on line {}, file {}", line, path)
         }
     }
