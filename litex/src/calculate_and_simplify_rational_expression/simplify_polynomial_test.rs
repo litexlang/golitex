@@ -8,7 +8,7 @@ fn mk_num(s: String) -> Obj {
 }
 
 fn mk_var(s: String) -> Obj {
-    Obj::Identifier(Identifier::new(s, None))
+    Obj::Identifier(Identifier::new(s))
 }
 
 fn mk_add_obj(left: Obj, right: Obj) -> Obj {

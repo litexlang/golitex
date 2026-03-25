@@ -45,14 +45,12 @@ impl FieldAccess {
             Some(Obj::Identifier(identifier)) => Obj::FieldAccess(FieldAccess {
                 name: identifier.name.clone(),
                 fields: self.fields.clone(),
-                normalized_calculated_value: None,
             }),
             Some(Obj::IdentifierWithMod(identifier_with_mod)) => {
                 Obj::FieldAccessWithMod(FieldAccessWithMod {
                     mod_name: identifier_with_mod.mod_name.clone(),
                     name: identifier_with_mod.name.clone(),
                     fields: self.fields.clone(),
-                    normalized_calculated_value: None,
                 })
             }
             Some(Obj::FieldAccess(existing_field_access)) => {
@@ -63,7 +61,6 @@ impl FieldAccess {
                 Obj::FieldAccess(FieldAccess {
                     name: existing_field_access.name.clone(),
                     fields,
-                    normalized_calculated_value: None,
                 })
             }
             Some(Obj::FieldAccessWithMod(existing_field_access_with_mod)) => {
@@ -75,7 +72,6 @@ impl FieldAccess {
                     mod_name: existing_field_access_with_mod.mod_name.clone(),
                     name: existing_field_access_with_mod.name.clone(),
                     fields,
-                    normalized_calculated_value: None,
                 })
             }
             _ => Obj::FieldAccess(self.clone()),
@@ -138,7 +134,6 @@ impl FnObj {
         Obj::FnObj(FnObj {
             head: Box::new(self.head.instantiate(param_to_arg_map)),
             body,
-            normalized_calculated_value: None,
         })
     }
 }

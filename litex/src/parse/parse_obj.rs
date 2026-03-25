@@ -10,15 +10,10 @@ use crate::common::keywords::{
 use crate::error::{duplicate_used_name_error_message, ParsingError, RuntimeError};
 use crate::execute::Runtime;
 use crate::obj::{
-    field_access_to_string, field_access_with_mod_to_string, identifier_to_string,
-    identifier_with_mod_to_string,
-};
-use crate::obj::{
-    fn_obj_to_string, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div, FnObj,
-    FnSetObj, FnSetWithParams, FnSetWithoutParams, InstStructObj, Intersect, ListSet, Mod, Mul,
-    NObj, NPosObj, Number, Obj, ObjAtIndex, Pow, PowerSet, Proj, QNeg, QNz, QObj, QPos, RNeg, RNz,
-    RObj, RPos, Range, SetBuilder, SetDiff, SetMinus, Sub, TupleDimObj, Union, Val, ZNeg, ZNz,
-    ZObj,
+    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div, FnObj, FnSetObj,
+    FnSetWithParams, FnSetWithoutParams, InstStructObj, Intersect, ListSet, Mod, Mul, NObj,
+    NPosObj, Number, Obj, ObjAtIndex, Pow, PowerSet, Proj, QNeg, QNz, QObj, QPos, RNeg, RNz, RObj,
+    RPos, Range, SetBuilder, SetDiff, SetMinus, Sub, TupleDimObj, Union, Val, ZNeg, ZNz, ZObj,
 };
 use crate::obj::{
     Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierOrIdentifierWithMod,
@@ -61,11 +56,7 @@ impl<'a> Runtime<'a> {
 
             let body = vec![vec![Box::new(left), Box::new(right)]];
 
-            let calculated_value = self
-                .runtime_context
-                .get_normalized_calculated_value_of_obj(&fn_obj_to_string(&fn_name, &body));
-
-            Ok(Obj::FnObj(FnObj::new(fn_name, body, calculated_value)))
+            Ok(Obj::FnObj(FnObj::new(fn_name, body)))
         } else {
             Ok(left)
         }
@@ -358,13 +349,7 @@ impl<'a> Runtime<'a> {
             body_vectors.push(group);
         }
         if !body_vectors.is_empty() {
-            let calculated_value =
-                self.runtime_context
-                    .get_normalized_calculated_value_of_obj(&fn_obj_to_string(
-                        &head_atom,
-                        &body_vectors,
-                    ));
-            result = Obj::FnObj(FnObj::new(head_atom, body_vectors, calculated_value));
+            result = Obj::FnObj(FnObj::new(head_atom, body_vectors));
         }
         Ok(result)
     }
@@ -883,27 +868,12 @@ impl<'a> Runtime<'a> {
                     tb.skip()?;
                     fields.push(tb.advance()?.to_string());
                 }
-                let display_string = field_access_with_mod_to_string(&left, &right, &fields);
-                let calculated_value = self
-                    .runtime_context
-                    .get_normalized_calculated_value_of_obj(&display_string);
 
                 Ok(Atom::FieldAccessWithMod(FieldAccessWithMod::new(
-                    left,
-                    right,
-                    fields,
-                    calculated_value,
+                    left, right, fields,
                 )))
             } else {
-                let display_string = identifier_with_mod_to_string(&left, &right);
-                let calculated_value = self
-                    .runtime_context
-                    .get_normalized_calculated_value_of_obj(&display_string);
-                Ok(Atom::IdentifierWithMod(IdentifierWithMod::new(
-                    left,
-                    right,
-                    calculated_value,
-                )))
+                Ok(Atom::IdentifierWithMod(IdentifierWithMod::new(left, right)))
             }
         } else {
             // 如果后面有 .，则解析为 FieldAccess
@@ -914,24 +884,9 @@ impl<'a> Runtime<'a> {
                     tb.skip()?;
                     fields.push(tb.advance()?.to_string());
                 }
-                let display_string = field_access_to_string(&left, &fields);
-                let calculated_value = self
-                    .runtime_context
-                    .get_normalized_calculated_value_of_obj(&display_string);
-                Ok(Atom::FieldAccess(FieldAccess::new(
-                    left,
-                    fields,
-                    calculated_value,
-                )))
+                Ok(Atom::FieldAccess(FieldAccess::new(left, fields)))
             } else {
-                let display_string = identifier_to_string(&left);
-                let calculated_value = self
-                    .runtime_context
-                    .get_normalized_calculated_value_of_obj(&display_string);
-                Ok(Atom::IdentifierAtom(Identifier::new(
-                    left,
-                    calculated_value,
-                )))
+                Ok(Atom::IdentifierAtom(Identifier::new(left)))
             }
         }
     }
@@ -945,11 +900,11 @@ impl<'a> Runtime<'a> {
             tb.skip()?;
             let right = tb.advance()?;
             Ok(IdentifierOrIdentifierWithMod::IdentifierWithMod(
-                IdentifierWithMod::new(left, right, None),
+                IdentifierWithMod::new(left, right),
             ))
         } else {
             Ok(IdentifierOrIdentifierWithMod::Identifier(Identifier::new(
-                left, None,
+                left,
             )))
         }
     }

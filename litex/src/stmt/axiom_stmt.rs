@@ -367,8 +367,7 @@ impl ForAxiomStmt {
         }
         Ok(Fact::ForallFact(ForallFact::new(
             params_def_with_type,
-            self
-                .dom_facts
+            self.dom_facts
                 .iter()
                 .map(|atomic_fact| ExistOrAndChainAtomicFact::AtomicFact(atomic_fact.clone()))
                 .collect(),
@@ -488,7 +487,7 @@ impl ByInducAxiomStmt {
 
         dom_facts.push(ExistOrAndChainAtomicFact::AtomicFact(
             AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
-                Obj::Identifier(Identifier::new(self.param.clone(), None)),
+                Obj::Identifier(Identifier::new(self.param.clone())),
                 self.induc_from.clone(),
                 self.line_file,
             )),

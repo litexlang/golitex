@@ -30,8 +30,8 @@ pub fn collect_monomials_in_obj(obj: &Obj) -> Vec<MonomialWithNonZeroScalarAndOr
 }
 
 pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) = &sub.normalized_calculated_value {
-        return from_number_obj_to_monomial(normalized_calculated_value);
+    if let Some(normalized_calculated_value) = Obj::Sub(sub.clone()).normalized_calculated_value() {
+        return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
     let left_monomial_collections = collect_monomials_in_obj(&sub.left);
@@ -96,8 +96,8 @@ pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOr
 }
 
 pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) = &add.normalized_calculated_value {
-        return from_number_obj_to_monomial(normalized_calculated_value);
+    if let Some(normalized_calculated_value) = Obj::Add(add.clone()).normalized_calculated_value() {
+        return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
     let left_monomial_collections = collect_monomials_in_obj(&add.left);
@@ -154,8 +154,8 @@ pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOr
 }
 
 fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) = &mul.normalized_calculated_value {
-        return from_number_obj_to_monomial(normalized_calculated_value);
+    if let Some(normalized_calculated_value) = Obj::Mul(mul.clone()).normalized_calculated_value() {
+        return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
     if let Some(normalized_calculated_value) = &mul.left.normalized_calculated_value() {
@@ -241,8 +241,8 @@ fn collect_monomials_of_mul_of_monomial_vec(
 }
 
 fn collect_monomials_in_pow(pow: &Pow) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) = &pow.normalized_calculated_value {
-        return from_number_obj_to_monomial(normalized_calculated_value);
+    if let Some(normalized_calculated_value) = Obj::Pow(pow.clone()).normalized_calculated_value() {
+        return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
     // 判断 exponent 字面量是否为 0 或正整数，返回 (是否 ok, 解析出的数字)

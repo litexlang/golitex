@@ -17,8 +17,8 @@ impl<'a> Runtime<'a> {
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         let fact_display_string = exist_fact.to_string();
         let fact_line_file = exist_fact.line_file();
-        if let Some(cached_result) = self
-            .verify_fact_from_cache_using_display_string(&fact_display_string, fact_line_file)
+        if let Some(cached_result) =
+            self.verify_fact_from_cache_using_display_string(&fact_display_string, fact_line_file)
         {
             return Ok(cached_result);
         }
@@ -114,7 +114,7 @@ impl<'a> Runtime<'a> {
 
                 param_to_arg_map.insert(
                     original_name.clone(),
-                    Obj::Identifier(Identifier::new(normalized_name.clone(), None)),
+                    Obj::Identifier(Identifier::new(normalized_name.clone())),
                 );
                 new_param_names.push(normalized_name);
             }
