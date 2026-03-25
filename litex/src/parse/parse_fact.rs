@@ -48,8 +48,11 @@ impl<'a> Runtime<'a> {
             param_def.push(self.parse_param_def_with_param_type(tb)?);
         }
         let forall_param_names = ParamDefWithParamType::collect_param_names(&param_def);
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(&forall_param_names)
-            .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(
+            &forall_param_names,
+            tb.line_file,
+        )
+        .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         tb.skip_token(COLON)?;
 
         let last_body = tb
@@ -215,8 +218,11 @@ impl<'a> Runtime<'a> {
         }
         let exist_param_names = ParamDefWithParamType::collect_param_names(&param_def);
         self.push_parsing_time_name_scope();
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(&exist_param_names)
-            .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(
+            &exist_param_names,
+            tb.line_file,
+        )
+        .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         tb.skip_token(ST)?;
 
         tb.skip_token(LEFT_CURLY_BRACE)?;

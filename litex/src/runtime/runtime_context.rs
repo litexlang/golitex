@@ -1,12 +1,12 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
-use crate::common::keywords::{is_builtin_identifier_obj, MOD_SIGN};
+use crate::common::keywords::{is_builtin_identifier_obj, is_builtin_predicate, MOD_SIGN};
 use crate::environment::Environment;
 use crate::error::RuntimeError;
 use crate::infer::InferResult;
 use crate::module_manager::ModuleManager;
 use crate::obj::FnSetObj;
 use crate::obj::Number;
-use crate::obj::{Atom, Cart, Identifier};
+use crate::obj::{Atom, Cart};
 use crate::result::{
     FactVerifiedByBuiltinRules, FactVerifiedByFact, NonErrStmtExecResult, NonFactualStmtSuccess,
 };
@@ -14,20 +14,12 @@ use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::stmt::definition_stmt::DefPropWithMeaningStmt;
 use crate::stmt::definition_stmt::DefPropWithoutMeaningStmt;
 use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
-use std::collections::HashMap;
 use std::fmt;
 
 pub struct RuntimeContext<'a> {
     pub module_manager: &'a mut ModuleManager<'a>,
     pub environment_stack: Vec<Box<Environment>>,
     pub builtin_environment: &'a mut Environment,
-
-    pub defined_identifier_objs: HashMap<String, ()>,
-    pub defined_props_with_meaning: HashMap<String, DefPropWithMeaningStmt>,
-    pub defined_props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>,
-    pub defined_structs_with_fields: HashMap<String, DefStructWithFieldsStmt>,
-    pub defined_structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>,
-    pub defined_algorithms: HashMap<String, DefAlgoStmt>,
 }
 
 impl<'a> RuntimeContext<'a> {
@@ -40,12 +32,6 @@ impl<'a> RuntimeContext<'a> {
             module_manager,
             environment_stack: vec![new_env],
             builtin_environment,
-            defined_identifier_objs: HashMap::new(),
-            defined_props_with_meaning: HashMap::new(),
-            defined_props_without_meaning: HashMap::new(),
-            defined_structs_with_fields: HashMap::new(),
-            defined_structs_with_no_field: HashMap::new(),
-            defined_algorithms: HashMap::new(),
         }
     }
 }
@@ -56,23 +42,6 @@ impl<'a> fmt::Display for RuntimeContext<'a> {
         write!(f, "    module_manager: {}\n", self.module_manager)?;
         write!(f, "    environments: {:?}\n", self.environment_stack.len())?;
         write!(f, "    builtin_environment: {}\n", self.builtin_environment)?;
-        write!(f, "    objs: {:?}\n", self.defined_identifier_objs.len())?;
-        write!(
-            f,
-            "    props_with_meaning: {:?}\n",
-            self.defined_props_with_meaning.len()
-        )?;
-        write!(
-            f,
-            "    structs_with_fields: {:?}\n",
-            self.defined_structs_with_fields.len()
-        )?;
-        write!(
-            f,
-            "    structs_with_no_field: {:?}\n",
-            self.defined_structs_with_no_field.len()
-        )?;
-        write!(f, "    algorithms: {:?}\n", self.defined_algorithms.len())?;
         write!(f, "}}")
     }
 }
@@ -152,6 +121,15 @@ impl<'a> RuntimeContext<'a> {
             .get(set_struct_name)
     }
 
+    pub fn get_algo_definition_by_name(&self, algo_name: &str) -> Option<&DefAlgoStmt> {
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment.defined_algorithms.get(algo_name) {
+                return Some(definition);
+            }
+        }
+        self.builtin_environment.defined_algorithms.get(algo_name)
+    }
+
     pub fn get_set_struct_with_no_field_definition_by_name(
         &self,
         set_struct_name: &str,
@@ -175,21 +153,28 @@ impl<'a> RuntimeContext<'a> {
             .get(set_struct_name)
     }
 
-    pub fn is_defined_identifier_obj(&self, identifier: &Identifier) -> bool {
-        if is_builtin_identifier_obj(&identifier.name) {
+    pub fn is_name_used(&self, name: &str) -> bool {
+        if self.is_name_used_for_identifier(name) {
             return true;
         }
 
-        self.defined_identifier_objs.contains_key(&identifier.name)
-    }
+        if self.is_name_used_for_predicate_with_meaning(name) {
+            return true;
+        }
 
-    pub fn is_name_used(&self, name: &str) -> bool {
-        self.defined_identifier_objs.contains_key(name)
-            || self.defined_props_with_meaning.contains_key(name)
-            || self.defined_props_without_meaning.contains_key(name)
-            || self.defined_structs_with_fields.contains_key(name)
-            || self.defined_structs_with_no_field.contains_key(name)
-            || self.defined_algorithms.contains_key(name)
+        if self.is_name_used_for_predicate_without_meaning(name) {
+            return true;
+        }
+
+        if self.is_name_used_for_struct_with_fields(name) {
+            return true;
+        }
+
+        if self.is_name_used_for_struct_with_no_field(name) {
+            return true;
+        }
+
+        return self.is_name_used_for_algo(name);
     }
 }
 
@@ -206,31 +191,7 @@ impl<'a> RuntimeContext<'a> {
             None => {
                 unreachable!("no top level environment")
             }
-            Some(last_env) => {
-                for defined_identifier_obj in last_env.defined_identifier_objs.iter() {
-                    self.defined_identifier_objs
-                        .remove(defined_identifier_obj.0);
-                }
-                for defined_prop_with_meaning in last_env.defined_props_with_meaning.iter() {
-                    self.defined_props_with_meaning
-                        .remove(defined_prop_with_meaning.0);
-                }
-                for defined_prop_without_meaning in last_env.defined_props_without_meaning.iter() {
-                    self.defined_props_without_meaning
-                        .remove(defined_prop_without_meaning.0);
-                }
-                for defined_struct_with_fields in last_env.defined_structs_with_fields.iter() {
-                    self.defined_structs_with_fields
-                        .remove(defined_struct_with_fields.0);
-                }
-                for defined_struct_with_no_field in last_env.defined_structs_with_no_field.iter() {
-                    self.defined_structs_with_no_field
-                        .remove(defined_struct_with_no_field.0);
-                }
-                for defined_algorithm in last_env.defined_algorithms.iter() {
-                    self.defined_algorithms.remove(defined_algorithm.0);
-                }
-
+            Some(_) => {
                 self.environment_stack.pop();
             }
         }
@@ -468,5 +429,55 @@ impl<'a> RuntimeContext<'a> {
             .known_normalized_calculated_value_of_obj
             .get(obj_str)
             .cloned()
+    }
+}
+
+impl<'a> RuntimeContext<'a> {
+    pub fn is_name_used_for_identifier(&self, name: &str) -> bool {
+        if is_builtin_identifier_obj(name) {
+            return true;
+        }
+
+        for env in self.iter_environments_from_top() {
+            if env.defined_identifier_objs.contains_key(name) {
+                return true;
+            }
+        }
+
+        self.builtin_environment
+            .defined_identifier_objs
+            .contains_key(name)
+    }
+
+    pub fn is_name_used_for_predicate_with_meaning(&self, name: &str) -> bool {
+        return self
+            .get_predicate_with_meaning_definition_by_name(name)
+            .is_some();
+    }
+
+    pub fn is_name_used_for_predicate_without_meaning(&self, name: &str) -> bool {
+        if is_builtin_predicate(name) {
+            return true;
+        }
+
+        return self
+            .get_predicate_without_meaning_definition_by_name(name)
+            .is_some();
+    }
+
+    pub fn is_name_used_for_struct_with_fields(&self, name: &str) -> bool {
+        return self
+            .get_set_struct_with_fields_definition_by_name(name)
+            .is_some();
+    }
+
+    pub fn is_name_used_for_struct_with_no_field(&self, name: &str) -> bool {
+        return self
+            .get_set_struct_with_no_field_definition_by_name(name)
+            .is_some();
+    }
+
+    pub fn is_name_used_for_algo(&self, name: &str) -> bool {
+        return self.get_algo_definition_by_name(name).is_some();
     }
 }
