@@ -1,4 +1,5 @@
 use crate::error::StoreFactError;
+use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::fact::AndChainAtomicFact;
 use crate::fact::AndFact;
 use crate::fact::AtomicFact;
@@ -629,6 +630,176 @@ impl Environment {
             HashMap::new(),
             HashMap::new(),
         )
+    }
+}
+
+impl Environment {
+    /// Merge all definitions/caches from `other_environment` into `self`.
+    ///
+    /// This is used by the REPL to "commit" successful top-level execution into the
+    /// previous environment layer.
+    pub fn merge_from(&mut self, mut other_environment: Environment) {
+        self.defined_identifier_objs.extend(std::mem::take(
+            &mut other_environment.defined_identifier_objs,
+        ));
+        self.defined_props_with_meaning.extend(std::mem::take(
+            &mut other_environment.defined_props_with_meaning,
+        ));
+        self.defined_structs_with_fields.extend(std::mem::take(
+            &mut other_environment.defined_structs_with_fields,
+        ));
+        self.defined_structs_with_no_field.extend(std::mem::take(
+            &mut other_environment.defined_structs_with_no_field,
+        ));
+        self.defined_props_without_meaning.extend(std::mem::take(
+            &mut other_environment.defined_props_without_meaning,
+        ));
+        self.defined_algorithms.extend(std::mem::take(&mut other_environment.defined_algorithms));
+
+        // Merge equality equivalence classes by connecting one representative object
+        // with every other object in the same class.
+        let other_known_equality = std::mem::take(&mut other_environment.known_equality);
+        let mut seen_equivalence_class_pointers: std::collections::HashSet<*const Vec<Obj>> =
+            std::collections::HashSet::new();
+        for (_, equivalence_class_rc) in other_known_equality.iter() {
+            let equivalence_class_pointer = Rc::as_ptr(equivalence_class_rc);
+            if !seen_equivalence_class_pointers.insert(equivalence_class_pointer) {
+                continue;
+            }
+            let equivalence_class_objects = equivalence_class_rc.as_ref();
+            if equivalence_class_objects.len() <= 1 {
+                continue;
+            }
+            let representative_object = equivalence_class_objects[0].clone();
+            for object_index in 1..equivalence_class_objects.len() {
+                let equality_fact = EqualFact {
+                    left: representative_object.clone(),
+                    right: equivalence_class_objects[object_index].clone(),
+                    line_file: DEFAULT_LINE_FILE.clone(),
+                };
+                if self.store_equality(&equality_fact).is_err() {
+                    // store_equality is expected to be infallible in current implementation.
+                }
+            }
+        }
+
+        self.known_fn_in_fn_set.extend(std::mem::take(&mut other_environment.known_fn_in_fn_set));
+        self.known_set_equal_to_set_builder.extend(std::mem::take(
+            &mut other_environment.known_set_equal_to_set_builder,
+        ));
+
+        let other_known_atomic_facts_with_0_or_more_than_2_args = std::mem::take(
+            &mut other_environment.known_atomic_facts_with_0_or_more_than_2_args,
+        );
+        for (atomic_fact_key, mut other_atomic_fact_vector) in
+            other_known_atomic_facts_with_0_or_more_than_2_args.into_iter()
+        {
+            if let Some(existing_vector) = self
+                .known_atomic_facts_with_0_or_more_than_2_args
+                .get_mut(&atomic_fact_key)
+            {
+                existing_vector.append(&mut other_atomic_fact_vector);
+            } else {
+                self.known_atomic_facts_with_0_or_more_than_2_args
+                    .insert(atomic_fact_key, other_atomic_fact_vector);
+            }
+        }
+
+        let other_known_atomic_facts_with_1_arg =
+            std::mem::take(&mut other_environment.known_atomic_facts_with_1_arg);
+        for (atomic_fact_key, other_known_atomic_facts_map) in
+            other_known_atomic_facts_with_1_arg.into_iter()
+        {
+            let existing_inner_map = self
+                .known_atomic_facts_with_1_arg
+                .entry(atomic_fact_key)
+                .or_insert_with(HashMap::new);
+            existing_inner_map.extend(other_known_atomic_facts_map.into_iter());
+        }
+
+        let other_known_atomic_facts_with_2_args =
+            std::mem::take(&mut other_environment.known_atomic_facts_with_2_args);
+        for (atomic_fact_key, other_known_atomic_facts_map) in
+            other_known_atomic_facts_with_2_args.into_iter()
+        {
+            let existing_inner_map = self
+                .known_atomic_facts_with_2_args
+                .entry(atomic_fact_key)
+                .or_insert_with(HashMap::new);
+            existing_inner_map.extend(other_known_atomic_facts_map.into_iter());
+        }
+
+        let other_known_exist_facts = std::mem::take(&mut other_environment.known_exist_facts);
+        for (key, mut other_exist_fact_vector) in other_known_exist_facts.into_iter() {
+            if let Some(existing_vector) = self.known_exist_facts.get_mut(&key) {
+                existing_vector.append(&mut other_exist_fact_vector);
+            } else {
+                self.known_exist_facts.insert(key, other_exist_fact_vector);
+            }
+        }
+
+        let other_known_or_facts = std::mem::take(&mut other_environment.known_or_facts);
+        for (key, mut other_or_fact_vector) in other_known_or_facts.into_iter() {
+            if let Some(existing_vector) = self.known_or_facts.get_mut(&key) {
+                existing_vector.append(&mut other_or_fact_vector);
+            } else {
+                self.known_or_facts.insert(key, other_or_fact_vector);
+            }
+        }
+
+        let other_known_atomic_facts_in_forall_facts = std::mem::take(
+            &mut other_environment.known_atomic_facts_in_forall_facts,
+        );
+        for (key, mut other_vector) in other_known_atomic_facts_in_forall_facts.into_iter() {
+            if let Some(existing_vector) = self.known_atomic_facts_in_forall_facts.get_mut(&key)
+            {
+                existing_vector.append(&mut other_vector);
+            } else {
+                self.known_atomic_facts_in_forall_facts
+                    .insert(key, other_vector);
+            }
+        }
+
+        let other_known_exist_facts_in_forall_facts = std::mem::take(
+            &mut other_environment.known_exist_facts_in_forall_facts,
+        );
+        for (key, mut other_vector) in other_known_exist_facts_in_forall_facts.into_iter() {
+            if let Some(existing_vector) = self.known_exist_facts_in_forall_facts.get_mut(&key)
+            {
+                existing_vector.append(&mut other_vector);
+            } else {
+                self.known_exist_facts_in_forall_facts
+                    .insert(key, other_vector);
+            }
+        }
+
+        let other_known_or_facts_in_forall_facts = std::mem::take(
+            &mut other_environment.known_or_facts_in_forall_facts,
+        );
+        for (key, mut other_vector) in other_known_or_facts_in_forall_facts.into_iter() {
+            if let Some(existing_vector) = self.known_or_facts_in_forall_facts.get_mut(&key) {
+                existing_vector.append(&mut other_vector);
+            } else {
+                self.known_or_facts_in_forall_facts
+                    .insert(key, other_vector);
+            }
+        }
+
+        self.known_obj_is_well_defined.extend(std::mem::take(
+            &mut other_environment.known_obj_is_well_defined,
+        ));
+        self.known_atom_in_fn_set.extend(std::mem::take(&mut other_environment.known_atom_in_fn_set));
+        self.known_tuple_obj_in_what_cart.extend(std::mem::take(
+            &mut other_environment.known_tuple_obj_in_what_cart,
+        ));
+        self.known_normalized_calculated_value_of_obj.extend(
+            std::mem::take(&mut other_environment.known_normalized_calculated_value_of_obj),
+        );
+
+        self.cache_well_defined_obj.extend(std::mem::take(
+            &mut other_environment.cache_well_defined_obj,
+        ));
+        self.cache_known_fact.extend(std::mem::take(&mut other_environment.cache_known_fact));
     }
 }
 
