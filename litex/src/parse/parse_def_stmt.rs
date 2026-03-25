@@ -37,7 +37,7 @@ impl<'a> Runtime<'a> {
         self.pop_parsing_time_name_scope();
 
         let stmt_ok = stmt?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&stmt_ok.name),
@@ -54,7 +54,7 @@ impl<'a> Runtime<'a> {
     ) -> Result<DefPropWithMeaningStmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&name),
@@ -69,8 +69,11 @@ impl<'a> Runtime<'a> {
         }
         tb.skip_token(RIGHT_BRACE)?;
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(&all_param_names)
-            .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(
+            &all_param_names,
+            tb.line_file,
+        )
+        .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         let facts = self.parse_facts_in_body(tb)?;
         Ok(DefPropWithMeaningStmt::new(
             name,
@@ -89,7 +92,7 @@ impl<'a> Runtime<'a> {
         self.pop_parsing_time_name_scope();
 
         let stmt_ok = stmt?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&stmt_ok.name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&stmt_ok.name),
@@ -106,7 +109,7 @@ impl<'a> Runtime<'a> {
     ) -> Result<DefPropWithoutMeaningStmt, ParsingError> {
         tb.skip_token(PROP)?;
         let name = tb.advance()?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&name),
@@ -124,7 +127,7 @@ impl<'a> Runtime<'a> {
         }
         tb.skip_token(RIGHT_BRACE)?;
 
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(&params)
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(&params, tb.line_file)
             .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
 
         Ok(DefPropWithoutMeaningStmt::new(name, params, tb.line_file))
@@ -151,8 +154,11 @@ impl<'a> Runtime<'a> {
             vec![]
         };
         let all_param_names = ParamDefWithParamType::collect_param_names(&param_def);
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(&all_param_names)
-            .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(
+            &all_param_names,
+            tb.line_file,
+        )
+        .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
             facts,
@@ -179,8 +185,11 @@ impl<'a> Runtime<'a> {
             ));
         }
         let have_param_names = ParamDefWithParamType::collect_param_names(&param_defs);
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(&have_param_names)
-            .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(
+            &have_param_names,
+            tb.line_file,
+        )
+        .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
             Ok(Stmt::HaveObjInNonemptySetStmt(
@@ -206,7 +215,7 @@ impl<'a> Runtime<'a> {
         tb.skip_token(FN_FOR_FN_WITH_PARAMS)?;
         let name = tb.advance()?;
 
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&name),
@@ -257,7 +266,7 @@ impl<'a> Runtime<'a> {
             }
         }
 
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(&equal_tos)
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(&equal_tos, tb.line_file)
             .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
 
         Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(
@@ -270,7 +279,7 @@ impl<'a> Runtime<'a> {
     pub fn parse_def_struct_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(STRUCT)?;
         let name = tb.advance()?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&name),
@@ -299,8 +308,11 @@ impl<'a> Runtime<'a> {
             }
         }
         let struct_param_names = ParamDefWithParamType::collect_param_names(&params_def_with_type);
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(&struct_param_names)
-            .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(
+            &struct_param_names,
+            tb.line_file,
+        )
+        .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let mut facts = vec![];
@@ -384,7 +396,7 @@ impl<'a> Runtime<'a> {
     pub fn parse_def_algorithm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(ALGO)?;
         let name = tb.advance()?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&name),

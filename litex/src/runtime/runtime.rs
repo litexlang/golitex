@@ -8,7 +8,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct Runtime<'a> {
     pub runtime_context: &'a mut RuntimeContext<'a>,
-    pub parsing_time_name_scope_stack: Vec<HashMap<String, ()>>,
+    pub parsing_time_name_scope_stack: Vec<HashMap<String, (usize, usize)>>,
 }
 
 impl<'a> Runtime<'a> {
@@ -92,18 +92,28 @@ impl<'a> Runtime<'a> {
         self.parsing_time_name_scope_stack.push(HashMap::new());
     }
 
-    pub fn validate_name(&mut self, name: &str) -> Result<(), ParseBlockError> {
+    pub fn validate_name(
+        &mut self,
+        name: &str,
+        line_file: (usize, usize),
+    ) -> Result<(), ParseBlockError> {
         if let Err(e) = is_valid_litex_name(name) {
             return Err(ParseBlockError::InvalidName(e));
         }
 
         if self.runtime_context.is_name_used(name) {
-            return Err(ParseBlockError::NameAlreadyUsed(name.to_string()));
+            return Err(ParseBlockError::NameAlreadyUsed(
+                name.to_string(),
+                line_file,
+            ));
         }
 
         for names_in_scope in self.parsing_time_name_scope_stack.iter() {
             if names_in_scope.contains_key(name) {
-                return Err(ParseBlockError::NameAlreadyUsed(name.to_string()));
+                return Err(ParseBlockError::NameAlreadyUsed(
+                    name.to_string(),
+                    line_file,
+                ));
             }
         }
         Ok(())
@@ -116,9 +126,10 @@ impl<'a> Runtime<'a> {
     pub fn validate_names_and_insert_into_top_parsing_time_name_scope(
         &mut self,
         names: &Vec<String>,
+        line_file: (usize, usize),
     ) -> Result<(), ParseBlockError> {
         for name in names {
-            self.validate_name_and_insert_into_top_parsing_time_name_scope(name)?;
+            self.validate_name_and_insert_into_top_parsing_time_name_scope(name, line_file)?;
         }
         Ok(())
     }
@@ -126,10 +137,11 @@ impl<'a> Runtime<'a> {
     pub fn validate_name_and_insert_into_top_parsing_time_name_scope(
         &mut self,
         name: &str,
+        line_file: (usize, usize),
     ) -> Result<(), ParseBlockError> {
-        self.validate_name(name)?;
+        self.validate_name(name, line_file)?;
         if let Some(names_in_top_scope) = self.parsing_time_name_scope_stack.last_mut() {
-            names_in_top_scope.insert(name.to_string(), ());
+            names_in_top_scope.insert(name.to_string(), line_file);
         }
         Ok(())
     }

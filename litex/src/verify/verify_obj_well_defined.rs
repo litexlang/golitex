@@ -112,7 +112,10 @@ impl<'a> Runtime<'a> {
         &self,
         identifier: &Identifier,
     ) -> Result<(), WellDefinedError> {
-        if self.runtime_context.is_defined_identifier_obj(identifier) {
+        if self
+            .runtime_context
+            .is_name_used_for_identifier(&identifier.name)
+        {
             Ok(())
         } else {
             Err(WellDefinedError::new(
