@@ -51,16 +51,12 @@ impl<'a> Runtime<'a> {
         }
     }
 
-    pub fn stmt_unsupported(
-        stmt_type_name: String,
-        line_file: (usize, usize),
-    ) -> Result<NonErrStmtExecResult, RuntimeError> {
-        Err(RuntimeError::ExecError(ExecStmtError::new(
-            stmt_type_name,
+    pub fn stmt_unsupported(stmt: Stmt) -> Result<NonErrStmtExecResult, RuntimeError> {
+        Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+            stmt,
             "unimplemented".to_string(),
             None,
             vec![],
-            line_file,
         )))
     }
 }

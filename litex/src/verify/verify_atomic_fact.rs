@@ -1,7 +1,7 @@
 use crate::error::RuntimeError;
 use crate::error::VerifyError;
 use crate::execute::Runtime;
-use crate::fact::AtomicFact;
+use crate::fact::{AtomicFact, Fact};
 use crate::result::NonErrStmtExecResult;
 use crate::verify::VerifyState;
 
@@ -11,8 +11,8 @@ impl<'a> Runtime<'a> {
         fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&fact.to_string(), fact.line_file())
+        if let Some(cached_result) = self
+            .verify_fact_from_cache_using_display_string(&Fact::AtomicFact(fact.clone()))
         {
             return Ok(cached_result);
         }

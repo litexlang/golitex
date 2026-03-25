@@ -1,5 +1,6 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::result::NonErrStmtExecResult;
+use crate::stmt::Stmt;
 use std::fmt;
 
 pub fn duplicate_used_name_error_message(name: &str) -> String {
@@ -27,7 +28,7 @@ pub enum RuntimeError {
     StoreFactError(StoreFactError),
     ParseBlockError(ParseBlockError),
     ParsingError(ParsingError),
-    ExecError(ExecStmtError),
+    ExecStmtError(ExecStmtError),
     UnknownError(UnknownError),
     WellDefinedError(WellDefinedError),
     VerifyError(VerifyError),
@@ -45,7 +46,7 @@ impl RuntimeError {
             RuntimeError::StoreFactError(_) => DEFAULT_LINE_FILE.clone(),
             RuntimeError::ParseBlockError(e) => e.line_file(),
             RuntimeError::ParsingError(e) => e.line_file,
-            RuntimeError::ExecError(e) => e.line_file,
+            RuntimeError::ExecStmtError(e) => e.stmt.line_file(),
             RuntimeError::UnknownError(e) => e.line_file,
             RuntimeError::WellDefinedError(e) => e.line_file,
             RuntimeError::VerifyError(e) => e.line_file,
@@ -62,7 +63,7 @@ impl RuntimeError {
             RuntimeError::StoreFactError(_) => "StoreFactError",
             RuntimeError::ParseBlockError(_) => "ParseBlockError",
             RuntimeError::ParsingError(_) => "ParsingError",
-            RuntimeError::ExecError(_) => "ExecError",
+            RuntimeError::ExecStmtError(_) => "ExecError",
             RuntimeError::UnknownError(_) => "UnknownError",
             RuntimeError::WellDefinedError(_) => "WellDefinedError",
             RuntimeError::VerifyError(_) => "VerifyError",
@@ -79,7 +80,7 @@ impl RuntimeError {
             RuntimeError::StoreFactError(e) => e.body_string(),
             RuntimeError::ParseBlockError(e) => parse_block_error_message(e),
             RuntimeError::ParsingError(e) => e.body_string(),
-            RuntimeError::ExecError(e) => e.body_string(),
+            RuntimeError::ExecStmtError(e) => e.body_string(),
             RuntimeError::UnknownError(e) => e.body_string(),
             RuntimeError::WellDefinedError(e) => e.body_string(),
             RuntimeError::VerifyError(e) => e.body_string(),
@@ -221,19 +222,6 @@ impl From<StoreFactError> for RuntimeError {
     }
 }
 
-impl From<StoreFactError> for ExecStmtError {
-    fn from(e: StoreFactError) -> Self {
-        let body = e.body_string();
-        ExecStmtError::new(
-            "".to_string(),
-            body,
-            Some(e.into()),
-            vec![],
-            DEFAULT_LINE_FILE.clone(),
-        )
-    }
-}
-
 #[derive(Debug)]
 pub enum ParseBlockError {
     ExpectedIndent(usize, usize),
@@ -312,53 +300,62 @@ impl From<ParsingError> for RuntimeError {
 
 #[derive(Debug)]
 pub struct ExecStmtError {
-    pub stmt_type_name: String,
-    pub msg: String,
+    pub stmt: Stmt,
     pub previous_error: Option<Box<RuntimeError>>,
     pub inside_results: Vec<NonErrStmtExecResult>,
-    pub line_file: (usize, usize),
 }
 
 impl std::error::Error for ExecStmtError {}
 
 impl fmt::Display for ExecStmtError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n\n{}", self.stmt_type_name, self.body_string())
+        write!(f, "{}", self.body_string())
     }
 }
 
 impl ExecStmtError {
     pub fn new(
-        stmt_type_name: String,
-        msg: String,
+        stmt: Stmt,
         previous_error: Option<RuntimeError>,
         inside_results: Vec<NonErrStmtExecResult>,
-        line_file: (usize, usize),
     ) -> Self {
         ExecStmtError {
-            stmt_type_name,
-            msg,
+            stmt,
             previous_error: boxed_previous_error(previous_error),
             inside_results,
-            line_file,
         }
     }
 
-    /// Content only (msg + previous_error bodies), for embedding in other errors.
-    pub fn body_string(&self) -> String {
-        let body = body_with_previous(&self.msg, &self.previous_error);
-        let main_body = if self.stmt_type_name.is_empty() {
-            body
+    pub fn with_message_and_cause(
+        stmt: Stmt,
+        message: String,
+        cause: Option<RuntimeError>,
+        inside_results: Vec<NonErrStmtExecResult>,
+    ) -> Self {
+        let line_file = stmt.line_file();
+        let previous_error = if message.is_empty() {
+            cause
         } else {
-            format!("stmt type: {}\n\n{}", self.stmt_type_name, body)
+            Some(RuntimeError::UnknownError(UnknownError::new(
+                message, line_file, cause,
+            )))
         };
-        main_body
+        ExecStmtError::new(stmt, previous_error, inside_results)
+    }
+
+    /// Full text for embedding in other errors (statement + optional cause chain).
+    pub fn body_string(&self) -> String {
+        let stmt_header = format!("stmt type: {}\n{}", self.stmt.stmt_type_name(), self.stmt);
+        match &self.previous_error {
+            Some(previous_error) => format!("{}\n\n{}", stmt_header, previous_error.error_body()),
+            None => stmt_header,
+        }
     }
 }
 
 impl From<ExecStmtError> for RuntimeError {
     fn from(e: ExecStmtError) -> Self {
-        RuntimeError::ExecError(e)
+        RuntimeError::ExecStmtError(e)
     }
 }
 
@@ -401,19 +398,6 @@ impl From<WellDefinedError> for RuntimeError {
     }
 }
 
-impl From<WellDefinedError> for ExecStmtError {
-    fn from(e: WellDefinedError) -> Self {
-        let line_file = e.line_file;
-        ExecStmtError::new(
-            "".to_string(),
-            "fact/object is not well-defined:".to_string(),
-            Some(RuntimeError::WellDefinedError(e)),
-            vec![],
-            line_file,
-        )
-    }
-}
-
 #[derive(Debug)]
 pub struct VerifyError {
     pub msg: String,
@@ -450,19 +434,6 @@ impl VerifyError {
 impl From<VerifyError> for RuntimeError {
     fn from(e: VerifyError) -> Self {
         RuntimeError::VerifyError(e)
-    }
-}
-
-impl From<VerifyError> for ExecStmtError {
-    fn from(e: VerifyError) -> Self {
-        let line_file = e.line_file;
-        ExecStmtError::new(
-            "".to_string(),
-            "verify fact error:".to_string(),
-            Some(RuntimeError::VerifyError(e)),
-            vec![],
-            line_file,
-        )
     }
 }
 
@@ -602,18 +573,5 @@ impl InferError {
 impl From<InferError> for RuntimeError {
     fn from(e: InferError) -> Self {
         RuntimeError::InferError(e)
-    }
-}
-
-impl From<InferError> for ExecStmtError {
-    fn from(e: InferError) -> Self {
-        let msg = e.body_string();
-        ExecStmtError::new(
-            "".to_string(),
-            msg,
-            Some(e.into()),
-            vec![],
-            DEFAULT_LINE_FILE.clone(),
-        )
     }
 }

@@ -32,10 +32,6 @@ impl DefPropWithoutMeaningStmt {
             line_file,
         }
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        "DefPropWithoutMeaningStmt".to_string()
-    }
 }
 
 #[derive(Clone)]
@@ -56,6 +52,7 @@ pub struct DefStructWithNoFieldStmt {
     pub line_file: (usize, usize),
 }
 
+#[derive(Clone)]
 pub struct HaveFnEqualCaseByCaseStmt {
     pub name: String,
     pub fn_set_with_params: FnSetWithParams,
@@ -64,6 +61,7 @@ pub struct HaveFnEqualCaseByCaseStmt {
     pub line_file: (usize, usize),
 }
 
+#[derive(Clone)]
 pub struct HaveFnEqualStmt {
     pub name: String,
     pub fn_set_with_params: FnSetWithParams,
@@ -71,23 +69,27 @@ pub struct HaveFnEqualStmt {
     pub line_file: (usize, usize),
 }
 
+#[derive(Clone)]
 pub struct HaveExistObjStmt {
     pub equal_tos: Vec<String>,
     pub exist_fact_in_have_obj_st: ExistFact,
     pub line_file: (usize, usize),
 }
 
+#[derive(Clone)]
 pub struct HaveObjEqualStmt {
     pub param_def: Vec<ParamDefWithParamType>,
     pub objs_equal_to: Vec<Obj>,
     pub line_file: (usize, usize),
 }
 
+#[derive(Clone)]
 pub struct HaveObjInNonemptySetOrParamTypeStmt {
     pub param_def: Vec<ParamDefWithParamType>,
     pub line_file: (usize, usize),
 }
 
+#[derive(Clone)]
 pub struct DefLetStmt {
     pub param_def: Vec<ParamDefWithParamType>,
     pub facts: Vec<Fact>,
@@ -160,10 +162,6 @@ impl DefPropWithMeaningStmt {
             line_file,
         }
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        "DefPropWithMeaningStmt".to_string()
-    }
 }
 
 impl fmt::Display for DefPropWithMeaningStmt {
@@ -201,10 +199,6 @@ impl DefLetStmt {
             line_file,
         }
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        "DefLetStmt".to_string()
-    }
 }
 
 impl fmt::Display for DefLetStmt {
@@ -231,10 +225,6 @@ impl HaveObjInNonemptySetOrParamTypeStmt {
             line_file,
         }
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        "HaveObjInNonemptySetOrParamTypeStmt".to_string()
-    }
 }
 
 impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
@@ -259,10 +249,6 @@ impl HaveObjEqualStmt {
             objs_equal_to,
             line_file,
         }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "HaveObjEqualStmt".to_string()
     }
 }
 
@@ -290,10 +276,6 @@ impl HaveExistObjStmt {
             exist_fact_in_have_obj_st,
             line_file,
         }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "HaveExistObjStmt".to_string()
     }
 }
 
@@ -324,10 +306,6 @@ impl HaveFnEqualStmt {
             equal_to,
             line_file,
         }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "HaveFnEqualStmt".to_string()
     }
 }
 
@@ -405,10 +383,6 @@ impl HaveFnEqualCaseByCaseStmt {
             line_file,
         }
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        "HaveFnEqualCaseByCaseStmt".to_string()
-    }
 }
 
 impl DefStructWithNoFieldStmt {
@@ -426,10 +400,6 @@ impl DefStructWithNoFieldStmt {
             equal_to,
             line_file,
         }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "DefStructWithNoFieldStmt".to_string()
     }
 }
 
@@ -466,9 +436,5 @@ impl DefStructWithFieldsStmt {
             facts,
             line_file,
         }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "DefStructWithFieldsStmt".to_string()
     }
 }

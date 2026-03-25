@@ -34,18 +34,21 @@ fn fact_to_exist_or_and_chain_atomic_fact_for_forall_then_body(
 }
 
 // view fn set as a subset of a cartesian product set
+#[derive(Clone)]
 pub struct ByFnDefAxiomStmt {
     pub function: Obj,
     pub line_file: (usize, usize),
 }
 
 // view a cartesian product set as a set (ordered pairs)
+#[derive(Clone)]
 pub struct ByCartDefAxiomStmt {
     pub cart: Cart,
     pub line_file: (usize, usize),
 }
 
 // prove that a set is equal to another set by proving that they are subsets of each other
+#[derive(Clone)]
 pub struct ByExtensionAxiomStmt {
     pub left: Obj,
     pub right: Obj,
@@ -53,12 +56,14 @@ pub struct ByExtensionAxiomStmt {
     pub line_file: (usize, usize),
 }
 
+#[derive(Clone)]
 pub enum ClosedRangeOrRange {
     ClosedRange(ClosedRange),
     Range(Range),
 }
 
 // prove fact is true for a range of integers
+#[derive(Clone)]
 pub struct ForAxiomStmt {
     pub params: Vec<String>,
     pub param_sets: Vec<ClosedRangeOrRange>,
@@ -69,6 +74,7 @@ pub struct ForAxiomStmt {
 }
 
 // prove fact is true by induction
+#[derive(Clone)]
 pub struct ByInducAxiomStmt {
     pub to_prove: Vec<ExistOrAndChainAtomicFact>,
     pub param: String,
@@ -77,6 +83,7 @@ pub struct ByInducAxiomStmt {
 }
 
 // prove fact is true for a set of values by enumeration
+#[derive(Clone)]
 pub struct EnumerateAxiomStmt {
     pub params: Vec<String>,
     pub param_sets: Vec<ListSet>,
@@ -86,6 +93,7 @@ pub struct EnumerateAxiomStmt {
 }
 
 // prove fact is true case by case
+#[derive(Clone)]
 pub struct ByCasesAxiomStmt {
     pub cases: Vec<AndChainAtomicFact>,
     pub then_facts: Vec<Fact>,
@@ -95,6 +103,7 @@ pub struct ByCasesAxiomStmt {
 }
 
 // prove fact is true by contradiction
+#[derive(Clone)]
 pub struct ByContraAxiomStmt {
     pub to_prove: AtomicFact,
     pub proof: Vec<Stmt>,
@@ -142,10 +151,6 @@ impl EnumerateAxiomStmt {
         let forall_fact = ForallFact::new(params_def_with_type, vec![], then_facts, self.line_file);
         Ok(Fact::ForallFact(forall_fact))
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        "EnumerateAxiomStmt".to_string()
-    }
 }
 
 impl ByCasesAxiomStmt {
@@ -163,10 +168,6 @@ impl ByCasesAxiomStmt {
             impossible_facts,
             line_file,
         }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "ByCasesAxiomStmt".to_string()
     }
 }
 
@@ -227,10 +228,6 @@ impl ByContraAxiomStmt {
             line_file,
         }
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        "ByContraAxiomStmt".to_string()
-    }
 }
 
 impl fmt::Display for ByContraAxiomStmt {
@@ -289,10 +286,6 @@ impl ByInducAxiomStmt {
             induc_from,
             line_file,
         }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "ByInducAxiomStmt".to_string()
     }
 }
 
@@ -393,10 +386,6 @@ impl ForAxiomStmt {
             line_file,
         }
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        "ForAxiomStmt".to_string()
-    }
 }
 
 impl fmt::Display for ClosedRangeOrRange {
@@ -435,10 +424,6 @@ impl ByExtensionAxiomStmt {
             line_file,
         }
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        "ByExtensionAxiomStmt".to_string()
-    }
 }
 
 impl fmt::Display for ByFnDefAxiomStmt {
@@ -454,10 +439,6 @@ impl ByFnDefAxiomStmt {
             line_file,
         }
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        "ByFnDefAxiomStmt".to_string()
-    }
 }
 
 impl fmt::Display for ByCartDefAxiomStmt {
@@ -469,10 +450,6 @@ impl fmt::Display for ByCartDefAxiomStmt {
 impl ByCartDefAxiomStmt {
     pub fn new(cart: Cart, line_file: (usize, usize)) -> Self {
         ByCartDefAxiomStmt { cart, line_file }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "ByCartDefAxiomStmt".to_string()
     }
 }
 

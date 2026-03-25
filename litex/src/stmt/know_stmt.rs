@@ -3,6 +3,7 @@ use crate::common::keywords::{COLON, KNOW};
 use crate::fact::Fact;
 use std::fmt;
 
+#[derive(Clone)]
 pub struct KnowStmt {
     pub facts: Vec<Fact>,
     pub line_file: (usize, usize),
@@ -11,10 +12,6 @@ pub struct KnowStmt {
 impl KnowStmt {
     pub fn new(facts: Vec<Fact>, line_file: (usize, usize)) -> Self {
         KnowStmt { facts, line_file }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "KnowStmt".to_string()
     }
 }
 

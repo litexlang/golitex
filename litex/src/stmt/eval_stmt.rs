@@ -2,6 +2,7 @@ use crate::common::keywords::EVAL;
 use crate::obj::Obj;
 use std::fmt;
 
+#[derive(Clone)]
 pub struct EvalStmt {
     pub obj_to_eval: Obj,
     pub line_file: (usize, usize),
@@ -19,9 +20,5 @@ impl EvalStmt {
             obj_to_eval,
             line_file,
         }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "EvalStmt".to_string()
     }
 }

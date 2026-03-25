@@ -88,10 +88,8 @@ fn display_non_factual_stmt_success_json(
         indent_inner,
         json_string_literal("stmt")
     ));
-    field_lines.push(format!(
-        "{}\"line\": {}",
-        indent_inner, non_factual_stmt_success_result.line_file.0
-    ));
+    let stmt_line_file = non_factual_stmt_success_result.stmt.line_file();
+    field_lines.push(format!("{}\"line\": {}", indent_inner, stmt_line_file.0));
     field_lines.push(format!(
         "{}\"source\": {}",
         indent_inner,
@@ -99,7 +97,7 @@ fn display_non_factual_stmt_success_json(
             runtime_context
                 .module_manager
                 .run_file_paths
-                .get(non_factual_stmt_success_result.line_file.1)
+                .get(stmt_line_file.1)
                 .unwrap_or(&String::new())
         )
     ));
@@ -108,17 +106,14 @@ fn display_non_factual_stmt_success_json(
         indent_inner,
         json_string_literal(
             runtime_context
-                .format_line_file(
-                    non_factual_stmt_success_result.line_file.0,
-                    non_factual_stmt_success_result.line_file.1
-                )
+                .format_line_file(stmt_line_file.0, stmt_line_file.1)
                 .as_str(),
         )
     ));
     field_lines.push(format!(
         "{}\"stmt\": {}",
         indent_inner,
-        json_string_literal(&non_factual_stmt_success_result.stmt)
+        json_string_literal(&non_factual_stmt_success_result.stmt.to_string())
     ));
 
     let infer_indent = json_one_level_indent(depth + 2);
@@ -193,10 +188,8 @@ fn display_fact_verified_by_fact_json(
         indent_inner,
         json_string_literal("fact")
     ));
-    field_lines.push(format!(
-        "{}\"line\": {}",
-        indent_inner, fact_verified_by_fact_result.line_file.0
-    ));
+    let fact_line_file = fact_verified_by_fact_result.fact.line_file();
+    field_lines.push(format!("{}\"line\": {}", indent_inner, fact_line_file.0));
     field_lines.push(format!(
         "{}\"source\": {}",
         indent_inner,
@@ -204,14 +197,14 @@ fn display_fact_verified_by_fact_json(
             runtime_context
                 .module_manager
                 .run_file_paths
-                .get(fact_verified_by_fact_result.line_file.1)
+                .get(fact_line_file.1)
                 .unwrap_or(&String::new())
         )
     ));
     field_lines.push(format!(
         "{}\"fact\": {}",
         indent_inner,
-        json_string_literal(&fact_verified_by_fact_result.fact)
+        json_string_literal(&fact_verified_by_fact_result.fact.to_string())
     ));
     field_lines.push(format!(
         "{}\"verified_by_reference_suffix\": {}",
@@ -279,10 +272,8 @@ fn display_fact_verified_by_builtin_rules_json(
         indent_inner,
         json_string_literal("fact")
     ));
-    field_lines.push(format!(
-        "{}\"line\": {}",
-        indent_inner, fact_verified_by_builtin_rules_result.line_file.0
-    ));
+    let fact_line_file = fact_verified_by_builtin_rules_result.fact.line_file();
+    field_lines.push(format!("{}\"line\": {}", indent_inner, fact_line_file.0));
     field_lines.push(format!(
         "{}\"source\": {}",
         indent_inner,
@@ -290,7 +281,7 @@ fn display_fact_verified_by_builtin_rules_json(
             match runtime_context
                 .module_manager
                 .run_file_paths
-                .get(fact_verified_by_builtin_rules_result.line_file.1)
+                .get(fact_line_file.1)
             {
                 Some(source_path) => source_path,
                 None => "",
@@ -300,7 +291,7 @@ fn display_fact_verified_by_builtin_rules_json(
     field_lines.push(format!(
         "{}\"fact\": {}",
         indent_inner,
-        json_string_literal(&fact_verified_by_builtin_rules_result.fact)
+        json_string_literal(&fact_verified_by_builtin_rules_result.fact.to_string())
     ));
     field_lines.push(format!(
         "{}\"verified_by\": {}",
