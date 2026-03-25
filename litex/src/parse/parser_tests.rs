@@ -14,11 +14,11 @@ fn test_fact() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Runtime::new(&mut runtime_context);
+    let mut runtime = Runtime::new(&mut runtime_context);
     let code = "1 + 1 = 2";
     let blocks = TokenBlock::parse_blocks(code, 0).expect("parse blocks failed");
     for mut b in blocks {
-        let stmt = executor.parse_stmt(&mut b);
+        let stmt = runtime.parse_stmt(&mut b);
         match stmt {
             Ok(s) => println!("{}\n", s),
             Err(e) => println!("{}", e),
@@ -35,9 +35,9 @@ fn test_list_set_comma() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Runtime::new(&mut runtime_context);
+    let mut runtime = Runtime::new(&mut runtime_context);
     let mut tb = TokenBlock::new(tokenize_line("{1, 0, 2}"), vec![], (1, 0));
-    let r = executor.parse_obj(&mut tb);
+    let r = runtime.parse_obj(&mut tb);
     match r {
         Ok(o) => assert_eq!(o.to_string(), "{1, 0, 2}"),
         Err(e) => panic!("parse {{1, 0, 2}} failed: {:?}", e),
@@ -52,9 +52,9 @@ fn test_list_set_space() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Runtime::new(&mut runtime_context);
+    let mut runtime = Runtime::new(&mut runtime_context);
     let mut tb = TokenBlock::new(tokenize_line("{a b c}"), vec![], (1, 0));
-    let r = executor.parse_obj(&mut tb);
+    let r = runtime.parse_obj(&mut tb);
     match r {
         Ok(o) => assert_eq!(o.to_string(), "{a, b, c}"),
         Err(e) => panic!("parse {{a b c}} failed: {:?}", e),
@@ -139,10 +139,10 @@ fn test_obj() {
         &mut module_manager,
         &mut builtin_environment,
     );
-    let mut executor = Runtime::new(&mut runtime_context);
+    let mut runtime = Runtime::new(&mut runtime_context);
     for obj in objs {
         let mut tb = TokenBlock::new(tokenize_line(obj), vec![], (1, 0));
-        let result = executor.parse_obj(&mut tb);
+        let result = runtime.parse_obj(&mut tb);
         match result {
             Ok(o) => println!("{}\n", o),
             Err(e) => println!("{}", e),
