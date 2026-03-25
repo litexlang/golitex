@@ -1,7 +1,6 @@
 use super::TokenBlock;
 use crate::common::keywords::{
-    COLON, EXIST, FACT_PREFIX, FROM, IN, IS_NONEMPTY_SET, LEFT_BRACE, NONEMPTY_SET, RIGHT_BRACE,
-    WITNESS,
+    COLON, EXIST, FACT_PREFIX, FROM, IS_NONEMPTY_SET, LEFT_BRACE, RIGHT_BRACE, WITNESS,
 };
 use crate::error::ParsingError;
 use crate::execute::Runtime;
@@ -9,12 +8,12 @@ use crate::stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
 use crate::stmt::Stmt;
 
 impl<'a> Runtime<'a> {
-    pub fn witness_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_witness_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(WITNESS)?;
         if tb.current_token_is_equal_to(EXIST) {
-            self.witness_exist_fact(tb)
-        } else if tb.current_token_is_equal_to(NONEMPTY_SET) {
-            self.witness_nonempty_set(tb)
+            self.parse_witness_exist_fact(tb)
+        } else if tb.current_token_is_equal_to(FACT_PREFIX) {
+            self.parse_witness_nonempty_set(tb)
         } else {
             return Err(ParsingError::new(
                 "witness expects a exist or nonempty set".to_string(),
@@ -25,7 +24,7 @@ impl<'a> Runtime<'a> {
     }
 
     // witness exist x, y R st {x > y} from 1, 0:
-    pub fn witness_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_witness_exist_fact(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         let exist_fact_in_witness = self.parse_exist_fact(tb)?;
         tb.skip_token(FROM)?;
         let equal_tos = self.parse_obj_list(tb)?;
@@ -42,8 +41,11 @@ impl<'a> Runtime<'a> {
         )))
     }
 
-    // witness $is_nonempty_set(R) from 1 $in R:
-    pub fn witness_nonempty_set(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    // witness $is_nonempty_set(R) from 1:
+    pub fn parse_witness_nonempty_set(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Stmt, ParsingError> {
         tb.skip_token(FACT_PREFIX)?;
         tb.skip_token(IS_NONEMPTY_SET)?;
         tb.skip_token(LEFT_BRACE)?;
@@ -51,18 +53,6 @@ impl<'a> Runtime<'a> {
         tb.skip_token(RIGHT_BRACE)?;
         tb.skip_token(FROM)?;
         let obj = self.parse_obj(tb)?;
-        tb.skip_token(FACT_PREFIX)?;
-        tb.skip_token(IN)?;
-        let set2 = self.parse_obj(tb)?;
-
-        if set2.to_string() != set.to_string() {
-            return Err(ParsingError::new(
-                "the set in witness nonempty set is not the same as the set in the witness"
-                    .to_string(),
-                tb.line_file,
-                None,
-            ));
-        }
 
         let mut proof = Vec::with_capacity(tb.body.len());
         for block in tb.body.iter_mut() {

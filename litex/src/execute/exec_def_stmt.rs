@@ -194,6 +194,7 @@ impl<'a> Runtime<'a> {
         ));
     }
 
+    // TODO: unimplemented
     pub fn def_algo_stmt(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,

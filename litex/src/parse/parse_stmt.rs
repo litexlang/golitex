@@ -30,7 +30,7 @@ impl<'a> Runtime<'a> {
             DO_NOTHING => self.do_nothing_stmt(tb),
             RUN_FILE => self.run_file_stmt(tb),
             EVAL => self.eval_stmt(tb),
-            WITNESS => self.witness_stmt(tb),
+            WITNESS => self.parse_witness_stmt(tb),
             STRUCT => self.parse_def_struct_stmt(tb),
             ALGO => self.parse_def_algorithm_stmt(tb),
             BY_CASES => self.parse_by_cases_axiom_stmt(tb),
