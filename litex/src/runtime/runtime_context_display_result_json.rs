@@ -107,7 +107,7 @@ impl<'a> RuntimeContext<'a> {
             "{}\"{}\": {}",
             indent_inner,
             JSON_KEY_SOURCE,
-            json_string_literal(&self.get_file_name_by_index(stmt_line_file))
+            json_string_literal(&self.get_source_text_by_line_file(stmt_line_file))
         ));
         field_lines.push(format!(
             "{}\"stmt\": {}",
@@ -181,7 +181,7 @@ impl<'a> RuntimeContext<'a> {
             "{}\"{}\": {}",
             indent_inner,
             JSON_KEY_SOURCE,
-            json_string_literal(&self.get_file_name_by_index(fact_line_file))
+            json_string_literal(&self.get_source_text_by_line_file(fact_line_file))
         ));
         field_lines.push(format!(
             "{}\"stmt\": {}",
@@ -196,10 +196,9 @@ impl<'a> RuntimeContext<'a> {
             "{}\"verified_by_fact_known_from_source\": {}",
             indent_inner,
             json_string_literal(
-                self.module_manager
-                    .run_file_paths
-                    .get(fact_verified_by_fact_result.verified_by_line_file.1)
-                    .unwrap_or(&String::new())
+                &self.get_source_text_by_line_file(
+                    fact_verified_by_fact_result.verified_by_line_file
+                )
             )
         ));
         field_lines.push(format!(
@@ -256,7 +255,7 @@ impl<'a> RuntimeContext<'a> {
             "{}\"{}\": {}",
             indent_inner,
             JSON_KEY_SOURCE,
-            json_string_literal(&self.get_file_name_by_index(fact_line_file))
+            json_string_literal(&self.get_source_text_by_line_file(fact_line_file))
         ));
         field_lines.push(format!(
             "{}\"stmt\": {}",

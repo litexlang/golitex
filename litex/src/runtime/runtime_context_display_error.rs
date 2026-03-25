@@ -358,4 +358,12 @@ impl<'a> RuntimeContext<'a> {
         // We reuse the existing json result formatter for nested results.
         self.display_result_json_string(inside_result)
     }
+
+    pub fn get_source_text_by_line_file(&self, line_file: (usize, usize)) -> String {
+        let file_index = line_file.1 + 1;
+        match self.module_manager.run_file_paths.get(file_index) {
+            Some(source_path) => source_path.clone(),
+            None => String::new(),
+        }
+    }
 }

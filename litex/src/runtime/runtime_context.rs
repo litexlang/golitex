@@ -1,4 +1,4 @@
-use crate::common::defaults::DEFAULT_FILE_INDEX;
+use crate::common::defaults::BUILTIN_FILE_INDEX;
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::keywords::{is_builtin_identifier_obj, is_builtin_predicate, MOD_SIGN};
 use crate::environment::Environment;
@@ -266,14 +266,14 @@ impl<'a> RuntimeContext<'a> {
         line: usize,
         file_index: usize,
     ) -> String {
-        if file_index == DEFAULT_FILE_INDEX {
+        if file_index == BUILTIN_FILE_INDEX {
             format!("on line {}", line)
         } else {
             let path = match self.module_manager.run_file_paths.get(file_index) {
                 Some(s) => s.as_str(),
                 None => "",
             };
-            format!("online {}, file {}", line, path)
+            format!("on line {}, file {}", line, path)
         }
     }
 
@@ -508,18 +508,5 @@ impl<'a> RuntimeContext<'a> {
 
     pub fn is_name_used_for_algo(&self, name: &str) -> bool {
         return self.get_algo_definition_by_name(name).is_some();
-    }
-}
-
-impl<'a> RuntimeContext<'a> {
-    pub fn get_file_name_by_index(&self, line_file: (usize, usize)) -> String {
-        if line_file == DEFAULT_LINE_FILE {
-            return "builtin".to_string();
-        }
-        self.module_manager
-            .run_file_paths
-            .get(line_file.1)
-            .unwrap()
-            .clone()
     }
 }
