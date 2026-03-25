@@ -390,8 +390,8 @@ impl<'a> RuntimeContext<'a> {
         &self,
         fact_verified_by_builtin_rules_result: &FactVerifiedByBuiltinRules,
     ) -> String {
-        let success_prefix =
-            self.success_prefix_by_line_file(fact_verified_by_builtin_rules_result.fact.line_file());
+        let success_prefix = self
+            .success_prefix_by_line_file(fact_verified_by_builtin_rules_result.fact.line_file());
         let message_body = format!(
             "{}\nverified by\n{}{}",
             fact_verified_by_builtin_rules_result.fact,
