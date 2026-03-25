@@ -1,3 +1,4 @@
+use crate::common::defaults::DEFAULT_FILE_INDEX;
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::keywords::{is_builtin_identifier_obj, is_builtin_predicate, MOD_SIGN};
 use crate::environment::Environment;
@@ -260,8 +261,12 @@ impl<'a> RuntimeContext<'a> {
 }
 
 impl<'a> RuntimeContext<'a> {
-    pub(in crate::runtime) fn format_line_file(&self, line: usize, file_index: usize) -> String {
-        if file_index == 0 {
+    pub(in crate::runtime) fn format_line_file_location_string(
+        &self,
+        line: usize,
+        file_index: usize,
+    ) -> String {
+        if file_index == DEFAULT_FILE_INDEX {
             format!("on line {}", line)
         } else {
             let path = match self.module_manager.run_file_paths.get(file_index) {
@@ -299,7 +304,7 @@ impl<'a> RuntimeContext<'a> {
         } else {
             format!(
                 "Success on {}:\n",
-                self.format_line_file(line_file.0, line_file.1)
+                self.format_line_file_location_string(line_file.0, line_file.1)
             )
         }
     }
@@ -331,7 +336,7 @@ impl<'a> RuntimeContext<'a> {
             } else {
                 format!(
                     "fact known/verified/inferred {}",
-                    self.format_line_file(
+                    self.format_line_file_location_string(
                         fact_verified_by_fact_result.verified_by_line_file.0,
                         fact_verified_by_fact_result.verified_by_line_file.1
                     )
@@ -384,22 +389,46 @@ impl<'a> RuntimeContext<'a> {
     }
 
     pub fn display_error(&self, error: &RuntimeError) -> String {
-        let body = error.error_body();
-        let (line, file_index) = error.line_file();
-        if (line, file_index) != DEFAULT_LINE_FILE {
-            let label = error.display_label();
-            let location = if file_index == 0 {
-                format!("{} on line {}", label, line)
-            } else {
-                let path: &str = match self.module_manager.run_file_paths.get(file_index) {
-                    Some(s) => s.as_str(),
-                    None => "",
-                };
-                format!("{} on line {}, file {}", label, line, path)
-            };
-            format!("{}\n\n{}", location, body)
-        } else {
-            body
+        let location_string =
+            self.format_line_file_location_string(error.line_file().0, error.line_file().1);
+
+        match error {
+            RuntimeError::ArithmeticError(_) => {
+                format!("ArithmeticError: {}", location_string)
+            }
+            RuntimeError::NewAtomicFactError(_) => {
+                format!("NewAtomicFactError: {}", location_string)
+            }
+            RuntimeError::StoreFactError(_) => {
+                format!("StoreFactError: {}", location_string)
+            }
+            RuntimeError::ParseBlockError(_) => {
+                format!("ParseBlockError: {}", location_string)
+            }
+            RuntimeError::ParsingError(_) => {
+                format!("ParsingError: {}", location_string)
+            }
+            RuntimeError::ExecStmtError(_) => {
+                format!("ExecStmtError: {}", location_string)
+            }
+            RuntimeError::UnknownError(_) => {
+                format!("UnknownError: {}", location_string)
+            }
+            RuntimeError::WellDefinedError(_) => {
+                format!("WellDefinedError: {}", location_string)
+            }
+            RuntimeError::VerifyError(_) => {
+                format!("VerifyError: {}", location_string)
+            }
+            RuntimeError::VerifyUnknownError(_) => {
+                format!("VerifyUnknownError: {}", location_string)
+            }
+            RuntimeError::InferError(_) => {
+                format!("InferError: {}", location_string)
+            }
+            RuntimeError::NameAlreadyUsedError(_) => {
+                format!("NameAlreadyUsedError: {}", location_string)
+            }
         }
     }
 }
@@ -479,5 +508,18 @@ impl<'a> RuntimeContext<'a> {
 
     pub fn is_name_used_for_algo(&self, name: &str) -> bool {
         return self.get_algo_definition_by_name(name).is_some();
+    }
+}
+
+impl<'a> RuntimeContext<'a> {
+    pub fn get_file_name_by_index(&self, line_file: (usize, usize)) -> String {
+        if line_file == DEFAULT_LINE_FILE {
+            return "builtin".to_string();
+        }
+        self.module_manager
+            .run_file_paths
+            .get(line_file.1)
+            .unwrap()
+            .clone()
     }
 }

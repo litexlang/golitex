@@ -52,7 +52,7 @@ impl<'a> Runtime<'a> {
             }
             cases.push(case);
             let n = block.body.len();
-            if n == 0 {
+            if block.body.is_empty() {
                 proofs.push(vec![]);
                 impossible_facts.push(None);
                 continue;
@@ -184,7 +184,7 @@ impl<'a> Runtime<'a> {
             ));
         }
 
-        if tb.body.len() == 0 {
+        if tb.body.is_empty() {
             return Err(ParsingError::new(
                 "enum: expects at least one body block".to_string(),
                 tb.line_file,

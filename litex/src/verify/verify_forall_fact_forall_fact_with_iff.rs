@@ -53,7 +53,7 @@ impl<'a> Runtime<'a> {
                     Stmt::DoNothingStmt(DoNothingStmt::new(forall_fact.line_file)),
                 )
                 .map_err(|e| {
-                    let message = format!("failed to define params in forall: {}", e.body_string());
+                    let message = "failed to define params in forall".to_string();
                     VerifyError::new(
                         Fact::ForallFact(forall_fact.clone()),
                         Some(
@@ -75,8 +75,7 @@ impl<'a> Runtime<'a> {
                     dom_fact,
                 )
                 .map_err(|e| {
-                    let message =
-                        format!("failed to assume dom fact in forall: {}", e.body_string());
+                    let message = "failed to assume dom fact in forall".to_string();
                     VerifyError::new(
                         Fact::ForallFact(forall_fact.clone()),
                         Some(

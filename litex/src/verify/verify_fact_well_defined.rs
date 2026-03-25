@@ -210,12 +210,8 @@ impl<'a> Runtime<'a> {
             );
             if let Err(e) = result {
                 return Err(WellDefinedError::new(
-                    format!(
-                        "failed to define parameters in {}:\n{}",
-                        exist_fact,
-                        e.body_string()
-                    ),
-                    None,
+                    "failed to define parameters in exist fact".to_string(),
+                    Some(e.into()),
                     exist_fact.line_file(),
                 ));
             }
@@ -250,12 +246,8 @@ impl<'a> Runtime<'a> {
                 Stmt::DoNothingStmt(DoNothingStmt::new(forall_fact.line_file)),
             ) {
                 return Err(WellDefinedError::new(
-                    format!(
-                        "failed to define parameters in {}:\n{}",
-                        forall_fact,
-                        e.body_string()
-                    ),
-                    None,
+                    "failed to define parameters in forall fact".to_string(),
+                    Some(e.into()),
                     forall_fact.line_file,
                 ));
             }
@@ -269,10 +261,7 @@ impl<'a> Runtime<'a> {
                 )
             {
                 return Err(WellDefinedError::new(
-                    format!(
-                        "failed to store fact in environment: {}",
-                        exec_stmt_error.body_string()
-                    ),
+                    "failed to store fact in environment".to_string(),
                     Some(RuntimeError::ExecStmtError(exec_stmt_error)),
                     fact.line_file(),
                 ));
@@ -286,10 +275,7 @@ impl<'a> Runtime<'a> {
                 )
             {
                 return Err(WellDefinedError::new(
-                    format!(
-                        "failed to store fact in environment: {}",
-                        exec_stmt_error.body_string()
-                    ),
+                    "failed to store fact in environment".to_string(),
                     Some(RuntimeError::ExecStmtError(exec_stmt_error)),
                     fact.line_file(),
                 ));

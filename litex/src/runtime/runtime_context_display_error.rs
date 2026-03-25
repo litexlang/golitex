@@ -1,7 +1,7 @@
 use super::RuntimeContext;
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::keywords::{COLON, PROVE};
-use crate::error::{format_name_already_used_error_body, ParseBlockError, RuntimeError};
+use crate::error::{ParseBlockError, RuntimeError};
 use crate::result::NonErrStmtExecResult;
 use crate::stmt::Stmt;
 
@@ -60,22 +60,28 @@ fn json_array_field_line(
     }
 }
 
-fn parse_block_error_message(parse_block_error: &ParseBlockError) -> String {
-    match parse_block_error {
-        ParseBlockError::ExpectedIndent(_, _) => "expected indent".to_string(),
-        ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
-        ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
-        ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
-        ParseBlockError::InvalidName(msg) => msg.clone(),
-        ParseBlockError::NameAlreadyUsed {
-            name,
-            name_already_used_on_line_file,
-            ..
-        } => format_name_already_used_error_body(name, *name_already_used_on_line_file),
-    }
-}
-
 impl<'a> RuntimeContext<'a> {
+    fn parse_block_error_message(&self, parse_block_error: &ParseBlockError) -> String {
+        match parse_block_error {
+            ParseBlockError::ExpectedIndent(_, _) => "expected indent".to_string(),
+            ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
+            ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
+            ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
+            ParseBlockError::InvalidName(msg) => msg.clone(),
+            ParseBlockError::NameAlreadyUsed {
+                name,
+                name_already_used_on_line_file,
+                ..
+            } => {
+                let location_string = self.format_line_file_location_string(
+                    name_already_used_on_line_file.0,
+                    name_already_used_on_line_file.1,
+                );
+                format!("name `{}` already used on {}", name, location_string)
+            }
+        }
+    }
+
     pub fn display_error_json_string(&self, error: &RuntimeError) -> String {
         self.build_display_error_json_object(error, 0, true)
     }
@@ -105,7 +111,7 @@ impl<'a> RuntimeContext<'a> {
 
         let (line, file_index) = error.line_file();
         field_lines.push(format!("{}\"{}\": {}", indent_inner, JSON_KEY_LINE, line));
-        let source_text = match self.module_manager.run_file_paths.get(file_index) {
+        let source_text = match self.module_manager.run_file_paths.get(file_index + 1) {
             Some(source_path) => source_path.as_str(),
             None => "",
         };
@@ -127,9 +133,11 @@ impl<'a> RuntimeContext<'a> {
         }
 
         match error {
-            RuntimeError::NameAlreadyUsedError(e) => {
-                let body_string =
-                    format_name_already_used_error_body(&e.name, e.name_already_used_on_line_file);
+            RuntimeError::NameAlreadyUsedError(_) => {
+                let location_string = self.format_line_file_location_string(line, file_index);
+
+                let body_string = format!("name already used {}", location_string);
+
                 field_lines.push(format!(
                     "{}\"{}\": {}",
                     indent_inner,
@@ -166,7 +174,7 @@ impl<'a> RuntimeContext<'a> {
                     "{}\"{}\": {}",
                     indent_inner,
                     JSON_KEY_MESSAGE,
-                    json_string_literal(&parse_block_error_message(e))
+                    json_string_literal(&self.parse_block_error_message(e))
                 ));
             }
             RuntimeError::ParsingError(e) => {

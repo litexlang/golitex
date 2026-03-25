@@ -189,7 +189,13 @@ impl<'a> Runtime<'a> {
             &have_param_names,
             tb.line_file,
         )
-        .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        .map_err(|e| {
+            ParsingError::new(
+                e.to_string(),
+                tb.line_file,
+                Some(RuntimeError::ParseBlockError(e)),
+            )
+        })?;
 
         if tb.current().map(|t| t != EQUAL).unwrap_or(true) {
             Ok(Stmt::HaveObjInNonemptySetStmt(
