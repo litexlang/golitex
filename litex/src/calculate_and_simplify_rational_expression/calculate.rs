@@ -2,7 +2,7 @@ use crate::obj::{Number, Obj};
 
 impl Obj {
     pub fn normalized_calculated_value(&self) -> Option<Number> {
-        match self {
+        let result = match self {
             Obj::Number(number) => Some(number.clone()),
             Obj::Identifier(identifier) => identifier.normalized_calculated_value.clone(),
             Obj::IdentifierWithMod(identifier_with_mod) => {
@@ -19,6 +19,11 @@ impl Obj {
             Obj::Mod(mod_obj) => mod_obj.normalized_calculated_value.clone(),
             Obj::Pow(pow_obj) => pow_obj.normalized_calculated_value.clone(),
             _ => None,
+        };
+
+        match result {
+            Some(number) => Some(number),
+            None => None,
         }
     }
 
@@ -32,16 +37,6 @@ impl Obj {
             }
             _ => return false,
         }
-    }
-}
-
-impl Obj {
-    pub fn calculate_to_string_panic_when_cannot_be_calculated(&self) -> String {
-        if let Some(calculated_value) = self.normalized_calculated_value() {
-            return calculated_value.normalized_value;
-        }
-
-        unreachable!("cannot be calculated");
     }
 }
 
