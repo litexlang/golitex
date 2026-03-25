@@ -13,8 +13,6 @@ impl<'a> Runtime<'a> {
         or_fact: &OrFact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        let fact_display_string = or_fact.to_string();
-        let fact_line_file = or_fact.line_file;
         if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
             &Fact::OrFact(or_fact.clone()),
         ) {
@@ -24,9 +22,8 @@ impl<'a> Runtime<'a> {
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_or_fact_well_defined(or_fact, verify_state) {
                 return Err(VerifyError::new(
-                    fact_display_string,
+                    Fact::OrFact(or_fact.clone()),
                     Some(RuntimeError::WellDefinedError(e)),
-                    fact_line_file,
                 ));
             }
         }

@@ -13,8 +13,6 @@ impl<'a> Runtime<'a> {
         and_fact: &AndFact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        let fact_display_string = and_fact.to_string();
-        let fact_line_file = and_fact.line_file();
         if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
             &Fact::AndFact(and_fact.clone()),
         ) {
@@ -24,9 +22,8 @@ impl<'a> Runtime<'a> {
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_and_fact_well_defined(and_fact, verify_state) {
                 return Err(VerifyError::new(
-                    fact_display_string,
+                    Fact::AndFact(and_fact.clone()),
                     Some(RuntimeError::WellDefinedError(e)),
-                    fact_line_file,
                 ));
             }
         }
@@ -56,8 +53,6 @@ impl<'a> Runtime<'a> {
         chain_fact: &ChainFact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        let fact_display_string = chain_fact.to_string();
-        let fact_line_file = chain_fact.line_file();
         if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
             &Fact::ChainFact(chain_fact.clone()),
         ) {
@@ -67,9 +62,8 @@ impl<'a> Runtime<'a> {
         if !verify_state.well_defined_already_verified {
             if let Err(e) = self.verify_chain_fact_well_defined(chain_fact, verify_state) {
                 return Err(VerifyError::new(
-                    fact_display_string,
+                    Fact::ChainFact(chain_fact.clone()),
                     Some(RuntimeError::WellDefinedError(e)),
-                    fact_line_file,
                 ));
             }
         }
@@ -78,7 +72,12 @@ impl<'a> Runtime<'a> {
 
         let facts = chain_fact
             .facts()
-            .map_err(|e| VerifyError::new(e.to_string(), None, fact_line_file))?;
+            .map_err(|e| {
+                VerifyError::new(
+                    Fact::ChainFact(chain_fact.clone()),
+                    Some(e.into()),
+                )
+            })?;
         let mut verify_what = Vec::with_capacity(facts.len());
         for fact in &facts {
             let result = self.verify_atomic_fact(fact, &verify_state_for_children)?;

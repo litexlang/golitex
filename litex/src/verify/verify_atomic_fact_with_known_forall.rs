@@ -196,7 +196,7 @@ impl<'a> Runtime<'a> {
             return Ok(None);
         }
 
-        // 获得每个param对应的arg
+        // Collect the arg for each param.
         let mut args_for_params: Vec<Obj> = Vec::new();
 
         for param_name in param_names.iter() {
@@ -226,9 +226,8 @@ impl<'a> Runtime<'a> {
             )
             .map_err(|e| {
                 VerifyError::new(
-                    e.error_body(),
+                    Fact::AtomicFact(given_atomic_fact.clone()),
                     Some(e),
-                    crate::common::defaults::DEFAULT_LINE_FILE.clone(),
                 )
             })?;
 
@@ -249,10 +248,6 @@ impl<'a> Runtime<'a> {
 
         for dom_fact in known_forall.dom.iter() {
             let instantiated_dom_fact = dom_fact.instantiate(&param_to_arg_map);
-            println!(
-                "instantiated_dom_fact: {}",
-                instantiated_dom_fact.to_string()
-            );
             let result =
                 self.verify_exist_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)?;
             if result.is_unknown() {
@@ -1124,10 +1119,7 @@ impl<'a> Runtime<'a> {
     fn match_arg_type_not_implemented(
         obj_type_name: &str,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
-        Err(VerifyError::new(
-            format!("match_arg for {} not implemented", obj_type_name),
-            None,
-            crate::common::defaults::DEFAULT_LINE_FILE.clone(),
-        ))
+        let _ = obj_type_name;
+        Ok(None)
     }
 }
