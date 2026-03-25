@@ -111,7 +111,7 @@ impl<'a> RuntimeContext<'a> {
 
         let (line, file_index) = error.line_file();
         field_lines.push(format!("{}\"{}\": {}", indent_inner, JSON_KEY_LINE, line));
-        let source_text = match self.module_manager.run_file_paths.get(file_index + 1) {
+        let source_text = match self.module_manager.run_file_paths.get(file_index) {
             Some(source_path) => source_path.as_str(),
             None => "",
         };
@@ -360,7 +360,7 @@ impl<'a> RuntimeContext<'a> {
     }
 
     pub fn get_source_text_by_line_file(&self, line_file: (usize, usize)) -> String {
-        let file_index = line_file.1 + 1;
+        let file_index = line_file.1;
         match self.module_manager.run_file_paths.get(file_index) {
             Some(source_path) => source_path.clone(),
             None => String::new(),
