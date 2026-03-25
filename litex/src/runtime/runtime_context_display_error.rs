@@ -113,7 +113,7 @@ impl<'a> RuntimeContext<'a> {
         field_lines.push(format!("{}\"{}\": {}", indent_inner, JSON_KEY_LINE, line));
 
         let source_text =
-            self.get_source_text_by_line_file_return_empty_when_default((line, file_index));
+            self.get_source_file_by_line_file_return_empty_when_default((line, file_index));
 
         field_lines.push(format!(
             "{}\"{}\": {}",
@@ -349,7 +349,7 @@ impl<'a> RuntimeContext<'a> {
         self.display_result_json_string(inside_result)
     }
 
-    pub fn get_source_text_by_line_file_return_empty_when_default(
+    pub fn get_source_file_by_line_file_return_empty_when_default(
         &self,
         line_file: (usize, usize),
     ) -> String {
