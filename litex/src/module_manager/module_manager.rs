@@ -1,4 +1,4 @@
-use crate::common::defaults::BUILTIN_FILE_INDEX;
+use crate::common::defaults::DEFAULT_FIRST_FILE_INDEX_FOR_USER;
 use crate::runtime::RuntimeContext;
 use std::collections::HashMap;
 use std::fmt;
@@ -22,7 +22,7 @@ impl<'a> ModuleManager<'a> {
             module_path_and_names_map: HashMap::new(),
             current_module_path: String::new(),
             current_module_name: String::new(),
-            current_file_index: BUILTIN_FILE_INDEX + 1,
+            current_file_index: DEFAULT_FIRST_FILE_INDEX_FOR_USER,
             entrance_path: entrance_file_path.to_string(),
             imported_module_environments: HashMap::new(),
         }

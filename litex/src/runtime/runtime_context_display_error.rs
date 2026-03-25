@@ -111,26 +111,16 @@ impl<'a> RuntimeContext<'a> {
 
         let (line, file_index) = error.line_file();
         field_lines.push(format!("{}\"{}\": {}", indent_inner, JSON_KEY_LINE, line));
-        let source_text = match self.module_manager.run_file_paths.get(file_index) {
-            Some(source_path) => source_path.as_str(),
-            None => "",
-        };
-        // Keep `source` empty when line/file are default to avoid misleading info.
-        if (line, file_index) == DEFAULT_LINE_FILE {
-            field_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_inner,
-                JSON_KEY_SOURCE,
-                json_string_literal("")
-            ));
-        } else {
-            field_lines.push(format!(
-                "{}\"{}\": {}",
-                indent_inner,
-                JSON_KEY_SOURCE,
-                json_string_literal(source_text)
-            ));
-        }
+
+        let source_text =
+            self.get_source_text_by_line_file_return_empty_when_default((line, file_index));
+
+        field_lines.push(format!(
+            "{}\"{}\": {}",
+            indent_inner,
+            JSON_KEY_SOURCE,
+            json_string_literal(source_text.as_str())
+        ));
 
         match error {
             RuntimeError::NameAlreadyUsedError(_) => {
@@ -359,7 +349,14 @@ impl<'a> RuntimeContext<'a> {
         self.display_result_json_string(inside_result)
     }
 
-    pub fn get_source_text_by_line_file(&self, line_file: (usize, usize)) -> String {
+    pub fn get_source_text_by_line_file_return_empty_when_default(
+        &self,
+        line_file: (usize, usize),
+    ) -> String {
+        if line_file == DEFAULT_LINE_FILE {
+            return String::new();
+        }
+
         let file_index = line_file.1;
         match self.module_manager.run_file_paths.get(file_index) {
             Some(source_path) => source_path.clone(),
