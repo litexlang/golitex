@@ -1,11 +1,6 @@
-use crate::common::keywords::{
-    FACT_PREFIX, IN, N, N_POS, Q, Q_NEG, Q_NZ, Q_POS, R, R_NEG, R_NZ, R_POS, Z, Z_NEG, Z_NZ,
-};
 use crate::error::VerifyError;
 use crate::execute::Runtime;
-use crate::fact::AtomicFact;
-use crate::fact::InFact;
-use crate::fact::EqualFact;
+use crate::fact::{AtomicFact, EqualFact, Fact, InFact};
 use crate::infer::InferResult;
 use crate::obj::Obj;
 use crate::result::FactVerifiedByBuiltinRules;
@@ -19,28 +14,21 @@ use crate::verify::verify_number_in_standard_set::{
 use crate::verify::VerifyState;
 
 fn number_in_set_verified_by_builtin_rules_result(
-    num_value: &str,
-    set_name: &str,
+    in_fact: &InFact,
     reason: &str,
-    line_file: (usize, usize),
 ) -> NonErrStmtExecResult {
     NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(
-        format!("{} in {}", num_value, set_name),
+        Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
         reason.to_string(),
         InferResult::new(),
-        line_file,
     ))
 }
 
-fn arithmetic_obj_in_r_verified_by_builtin_rules_result(
-    obj: &Obj,
-    line_file: (usize, usize),
-) -> NonErrStmtExecResult {
+fn arithmetic_obj_in_r_verified_by_builtin_rules_result(in_fact: &InFact) -> NonErrStmtExecResult {
     NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(
-        format!("{} {}{} {}", obj, FACT_PREFIX, IN, R),
+        Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
         "arithmetic expression is in R".to_string(),
         InferResult::new(),
-        line_file,
     ))
 }
 
@@ -51,19 +39,15 @@ impl<'a> Runtime<'a> {
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         match (&in_fact.element, &in_fact.set) {
-            (Obj::Number(num), Obj::RObj(_)) => Ok(number_in_set_verified_by_builtin_rules_result(
-                &num.normalized_value,
-                R,
+            (Obj::Number(_), Obj::RObj(_)) => Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact,
                 "number in R",
-                in_fact.line_file,
             )),
             (Obj::Number(num), Obj::RPos(_)) => {
                 if number_is_in_r_pos(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.normalized_value,
-                        R_POS,
+                        in_fact,
                         "number in R_pos",
-                        in_fact.line_file,
                     ))
                 } else {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
@@ -72,10 +56,8 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::RNeg(_)) => {
                 if number_is_in_r_neg(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.normalized_value,
-                        R_NEG,
+                        in_fact,
                         "number in R_neg",
-                        in_fact.line_file,
                     ))
                 } else {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
@@ -84,28 +66,22 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::RNz(_)) => {
                 if number_is_in_r_nz(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.normalized_value,
-                        R_NZ,
+                        in_fact,
                         "number in R_nz",
-                        in_fact.line_file,
                     ))
                 } else {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
                 }
             }
-            (Obj::Number(num), Obj::QObj(_)) => Ok(number_in_set_verified_by_builtin_rules_result(
-                &num.normalized_value,
-                Q,
+            (Obj::Number(_), Obj::QObj(_)) => Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact,
                 "number in Q",
-                in_fact.line_file,
             )),
             (Obj::Number(num), Obj::QPos(_)) => {
                 if number_is_in_q_pos(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.normalized_value,
-                        Q_POS,
+                        in_fact,
                         "number in Q_pos",
-                        in_fact.line_file,
                     ))
                 } else {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
@@ -114,10 +90,8 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::QNeg(_)) => {
                 if number_is_in_q_neg(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.normalized_value,
-                        Q_NEG,
+                        in_fact,
                         "number in Q_neg",
-                        in_fact.line_file,
                     ))
                 } else {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
@@ -126,10 +100,8 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::QNz(_)) => {
                 if number_is_in_q_nz(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.normalized_value,
-                        Q_NZ,
+                        in_fact,
                         "number in Q_nz",
-                        in_fact.line_file,
                     ))
                 } else {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
@@ -138,10 +110,8 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::ZObj(_)) => {
                 if number_is_in_z(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.normalized_value,
-                        Z,
+                        in_fact,
                         "number in Z",
-                        in_fact.line_file,
                     ))
                 } else {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
@@ -150,10 +120,8 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::ZNeg(_)) => {
                 if number_is_in_z_neg(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.normalized_value,
-                        Z_NEG,
+                        in_fact,
                         "number in Z_neg",
-                        in_fact.line_file,
                     ))
                 } else {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
@@ -162,10 +130,8 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::ZNz(_)) => {
                 if number_is_in_z_nz(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.normalized_value,
-                        Z_NZ,
+                        in_fact,
                         "number in Z_nz",
-                        in_fact.line_file,
                     ))
                 } else {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
@@ -174,10 +140,8 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::NObj(_)) => {
                 if number_is_in_n(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.normalized_value,
-                        N,
+                        in_fact,
                         "number in N",
-                        in_fact.line_file,
                     ))
                 } else {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
@@ -186,10 +150,8 @@ impl<'a> Runtime<'a> {
             (Obj::Number(num), Obj::NPosObj(_)) => {
                 if number_is_in_n_pos(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
-                        &num.normalized_value,
-                        N_POS,
+                        in_fact,
                         "number in N_pos",
-                        in_fact.line_file,
                     ))
                 } else {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
@@ -198,13 +160,12 @@ impl<'a> Runtime<'a> {
             (
                 Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
                 Obj::RObj(_),
-            ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
-                &in_fact.element,
-                in_fact.line_file,
-            )),
-            (_, Obj::ListSet(list_set)) => {
-                self.verify_in_fact_by_equal_to_one_element_in_list_set(in_fact, list_set, verify_state)
-            }
+            ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(in_fact)),
+            (_, Obj::ListSet(list_set)) => self.verify_in_fact_by_equal_to_one_element_in_list_set(
+                in_fact,
+                list_set,
+                verify_state,
+            ),
             (_, target_set_obj) => {
                 self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
             }
@@ -227,13 +188,12 @@ impl<'a> Runtime<'a> {
             if equal_fact_verify_result.is_true() {
                 return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                     FactVerifiedByBuiltinRules::new(
-                        format!("{} {}{} {}", in_fact.element, FACT_PREFIX, IN, in_fact.set),
+                        Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
                         format!(
                             "{} equals one element in list_set {}",
                             in_fact.element, in_fact.set
                         ),
                         InferResult::new(),
-                        in_fact.line_file,
                     ),
                 ));
             }
@@ -316,11 +276,11 @@ impl<'a> Runtime<'a> {
         in_fact: &InFact,
         target_set_obj: &Obj,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        let standard_subset_set_objs = match Self::standard_subset_set_objs_for_target_set(target_set_obj)
-        {
-            Some(standard_subset_set_objs) => standard_subset_set_objs,
-            None => return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
-        };
+        let standard_subset_set_objs =
+            match Self::standard_subset_set_objs_for_target_set(target_set_obj) {
+                Some(standard_subset_set_objs) => standard_subset_set_objs,
+                None => return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
+            };
         for standard_subset_set_obj in standard_subset_set_objs.iter() {
             let in_fact_into_standard_subset = AtomicFact::InFact(InFact::new(
                 in_fact.element.clone(),
@@ -334,13 +294,12 @@ impl<'a> Runtime<'a> {
             if verify_result.is_true() {
                 return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                     FactVerifiedByBuiltinRules::new(
-                        format!("{} {}{} {}", in_fact.element, FACT_PREFIX, IN, target_set_obj),
+                        Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
                         format!(
                             "{} in {} implies in {} (standard subset relation)",
                             in_fact.element, standard_subset_set_obj, target_set_obj
                         ),
                         InferResult::new(),
-                        in_fact.line_file,
                     ),
                 ));
             }

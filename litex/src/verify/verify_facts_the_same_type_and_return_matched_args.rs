@@ -1,11 +1,11 @@
 use crate::error::VerifyError;
+use crate::execute::Runtime;
 use crate::fact::{
     AndChainAtomicFact, AndFact, AtomicFact, ChainFact, ExistFact, ExistOrAndChainAtomicFact,
     OrAndChainAtomicFact, OrFact,
 };
 use crate::obj::Obj;
 use crate::stmt::parameter_def::ParamType;
-use crate::execute::Runtime;
 
 impl<'a> Runtime<'a> {
     pub fn _verify_exist_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(

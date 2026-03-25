@@ -4,6 +4,7 @@ use crate::infer::InferResult;
 use crate::result::NonErrStmtExecResult;
 use crate::result::NonFactualStmtSuccess;
 use crate::stmt::know_stmt::KnowStmt;
+use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 
 impl<'a> Runtime<'a> {
@@ -17,21 +18,18 @@ impl<'a> Runtime<'a> {
                 .verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))
                 .map_err(|e| {
                     ExecStmtError::new(
-                        know_stmt.stmt_type_name(),
-                        know_stmt.to_string(),
+                        Stmt::KnowStmt(know_stmt.clone()),
                         Some(e.into()),
                         vec![],
-                        know_stmt.line_file,
                     )
                 })?;
             infer_result.new_infer_result_inside(fact_infer_result);
         }
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                know_stmt.to_string(),
+                Stmt::KnowStmt(know_stmt.clone()),
                 infer_result,
                 vec![],
-                know_stmt.line_file,
             ),
         ))
     }

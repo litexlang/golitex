@@ -8,6 +8,8 @@ use crate::fact::{
     ForallFact, ForallFactWithIff, OrAndChainAtomicFact, OrFact,
 };
 use crate::stmt::parameter_def::ParamDefWithParamType;
+use crate::stmt::tooling_stmt::DoNothingStmt;
+use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 
 // well-defined check for fact: 1. predicate is defined 2. all args are well-defined
@@ -201,7 +203,11 @@ impl<'a> Runtime<'a> {
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
         for param_def in exist_fact.params_def_with_type().iter() {
-            let result = self.define_params_with_type(std::slice::from_ref(param_def), false);
+            let result = self.define_params_with_type(
+                std::slice::from_ref(param_def),
+                false,
+                Stmt::DoNothingStmt(DoNothingStmt::new(exist_fact.line_file())),
+            );
             if let Err(e) = result {
                 return Err(WellDefinedError::new(
                     format!(
@@ -238,7 +244,11 @@ impl<'a> Runtime<'a> {
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
         for param_def in forall_fact.params_def_with_type.iter() {
-            if let Err(e) = self.define_params_with_type(std::slice::from_ref(param_def), false) {
+            if let Err(e) = self.define_params_with_type(
+                std::slice::from_ref(param_def),
+                false,
+                Stmt::DoNothingStmt(DoNothingStmt::new(forall_fact.line_file)),
+            ) {
                 return Err(WellDefinedError::new(
                     format!(
                         "failed to define parameters in {}:\n{}",
@@ -254,7 +264,8 @@ impl<'a> Runtime<'a> {
         for fact in forall_fact.dom_facts.iter() {
             if let Err(exec_stmt_error) = self
                 .verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
-                    fact, verify_state,
+                    fact,
+                    verify_state,
                 )
             {
                 return Err(WellDefinedError::new(
@@ -262,7 +273,7 @@ impl<'a> Runtime<'a> {
                         "failed to store fact in environment: {}",
                         exec_stmt_error.body_string()
                     ),
-                    Some(RuntimeError::ExecError(exec_stmt_error)),
+                    Some(RuntimeError::ExecStmtError(exec_stmt_error)),
                     fact.line_file(),
                 ));
             }
@@ -270,7 +281,8 @@ impl<'a> Runtime<'a> {
         for fact in forall_fact.then_facts.iter() {
             if let Err(exec_stmt_error) = self
                 .verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
-                    fact, verify_state,
+                    fact,
+                    verify_state,
                 )
             {
                 return Err(WellDefinedError::new(
@@ -278,7 +290,7 @@ impl<'a> Runtime<'a> {
                         "failed to store fact in environment: {}",
                         exec_stmt_error.body_string()
                     ),
-                    Some(RuntimeError::ExecError(exec_stmt_error)),
+                    Some(RuntimeError::ExecStmtError(exec_stmt_error)),
                     fact.line_file(),
                 ));
             }

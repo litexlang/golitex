@@ -1,8 +1,7 @@
-use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::environment::Environment;
 use crate::error::{RuntimeError, VerifyError};
 use crate::execute::Runtime;
-use crate::fact::OrFact;
+use crate::fact::{Fact, OrFact};
 use crate::infer::InferResult;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult, StmtUnknown};
 use crate::verify::VerifyState;
@@ -16,9 +15,9 @@ impl<'a> Runtime<'a> {
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         let fact_display_string = or_fact.to_string();
         let fact_line_file = or_fact.line_file;
-        if let Some(cached_result) =
-            self.verify_fact_from_cache_using_display_string(&fact_display_string, fact_line_file)
-        {
+        if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
+            &Fact::OrFact(or_fact.clone()),
+        ) {
             return Ok(cached_result);
         }
 
@@ -39,11 +38,10 @@ impl<'a> Runtime<'a> {
             if result.is_true() {
                 return Ok(NonErrStmtExecResult::FactVerifiedByFact(
                     FactVerifiedByFact::new(
-                        or_fact.to_string(),
+                        Fact::OrFact(or_fact.clone()),
                         fact.to_string(),
                         InferResult::new(),
-                        or_fact.line_file,
-                        DEFAULT_LINE_FILE,
+                        fact.line_file(),
                     ),
                 ));
             }
@@ -129,10 +127,9 @@ impl<'a> Runtime<'a> {
                 if all_args_match {
                     return Ok(NonErrStmtExecResult::FactVerifiedByFact(
                         FactVerifiedByFact::new(
-                            or_fact.to_string(),
+                            Fact::OrFact(or_fact.clone()),
                             known_or_fact.to_string(),
                             InferResult::new(),
-                            or_fact.line_file,
                             known_or_fact.line_file,
                         ),
                     ));

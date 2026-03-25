@@ -17,6 +17,12 @@ pub enum Fact {
     ForallFactWithIff(ForallFactWithIff),
 }
 
+impl fmt::Debug for Fact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
 impl Fact {
     pub fn fact_type_string(&self) -> String {
         match self {

@@ -2,6 +2,7 @@ use super::Stmt;
 use crate::common::helper::vec_to_string_add_four_spaces_at_beginning_of_each_line;
 use std::fmt;
 
+#[derive(Clone)]
 pub struct ProveStmt {
     pub proof: Vec<Stmt>,
     pub line_file: (usize, usize),
@@ -10,10 +11,6 @@ pub struct ProveStmt {
 impl ProveStmt {
     pub fn new(proof: Vec<Stmt>, line_file: (usize, usize)) -> Self {
         ProveStmt { proof, line_file }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "ProveStmt".to_string()
     }
 }
 

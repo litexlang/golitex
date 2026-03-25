@@ -221,7 +221,12 @@ where
                         .as_str(),
                 );
             } else {
-                output_chunk.push_str(runtime.runtime_context.display_result(&exec_result).as_str());
+                output_chunk.push_str(
+                    runtime
+                        .runtime_context
+                        .display_result(&exec_result)
+                        .as_str(),
+                );
             }
             output_chunk.push('\n');
         }

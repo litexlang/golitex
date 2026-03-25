@@ -10,4 +10,5 @@ pub mod tooling_stmt;
 pub mod witness_stmt;
 
 mod stmt_enum;
+mod stmt_type_name;
 pub use stmt_enum::Stmt;

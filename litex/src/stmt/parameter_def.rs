@@ -1,7 +1,7 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::helper::vec_to_string_join_by_comma;
 use crate::common::keywords::{FINITE_SET, NONEMPTY_SET, SET};
-use crate::error::{ExecStmtError, RuntimeError};
+use crate::error::{RuntimeError, UnknownError};
 use crate::fact::{AtomicFact, Fact, InFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact};
 use crate::obj::{Identifier, Obj};
 use std::collections::HashMap;
@@ -187,6 +187,8 @@ impl ParamDefWithParamSet {
         ))
     }
 
+    // Example: given fn(x R, y Q), we want to verify x = 1, y = 2 can be used as argument to this function. This function returns the facts that 1 $in R, 2 $in Q.
+    // Unlike facts_for_args_satisfy_param_def_with_type_vec, this function requires each later parameter to belong to a concrete, fixed set (not syntactic sugar like set/nonempty_set/finite_set), and that set must not depend on earlier parameters. For example, in a ParamSet definition, `x R, y f(x)` is not allowed: mathematically, y's set membership must be specified in advance, rather than chosen only after x is determined.
     pub fn facts_for_args_satisfy_param_def_with_set_vec(
         param_defs: &Vec<ParamDefWithParamSet>,
         args: &Vec<Obj>,
@@ -230,16 +232,14 @@ impl ParamDefWithParamSet {
     ) -> Result<Vec<Obj>, RuntimeError> {
         let total_param_count = Self::number_of_params_in_param_def_with_set_def(param_defs);
         if total_param_count != args.len() {
-            return Err(RuntimeError::ExecError(ExecStmtError::new(
-                "".to_string(),
+            return Err(RuntimeError::UnknownError(UnknownError::new(
                 format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
                     total_param_count,
                     args.len()
                 ),
-                None,
-                vec![],
                 DEFAULT_LINE_FILE.clone(),
+                None,
             )));
         }
 
@@ -265,6 +265,7 @@ impl ParamDefWithParamSet {
 }
 
 impl ParamDefWithParamType {
+    // Example: given forall x, y R, z f(x, y), s set. We want to verify when "x" = obj1, "y" = obj2, "z" = obj3, "s" = obj4, they satisfy definition requirement or not. This function returns the facts that obj1 $in R, obj2 $in R, obj3 = f(obj1, obj2), obj4 $in set.
     pub fn facts_for_boxed_args_satisfy_param_def_with_type_vec(
         param_defs: &Vec<ParamDefWithParamType>,
         args: &Vec<Box<Obj>>,
@@ -333,16 +334,14 @@ impl ParamDefWithParamType {
     ) -> Result<Vec<ParamType>, RuntimeError> {
         let total_param_count = Self::number_of_params_in_param_def_with_type_def(param_defs);
         if total_param_count != args.len() {
-            return Err(RuntimeError::ExecError(ExecStmtError::new(
-                "".to_string(),
+            return Err(RuntimeError::UnknownError(UnknownError::new(
                 format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
                     total_param_count,
                     args.len()
                 ),
-                None,
-                vec![],
                 DEFAULT_LINE_FILE.clone(),
+                None,
             )));
         }
 
@@ -372,16 +371,14 @@ impl ParamDefWithParamType {
     ) -> Result<Vec<ParamType>, RuntimeError> {
         let total_param_count = Self::number_of_params_in_param_def_with_type_def(param_defs);
         if total_param_count != args.len() {
-            return Err(RuntimeError::ExecError(ExecStmtError::new(
-                "".to_string(),
+            return Err(RuntimeError::UnknownError(UnknownError::new(
                 format!(
                     "argument count mismatch: expected {} parameter(s), got {} argument(s)",
                     total_param_count,
                     args.len()
                 ),
-                None,
-                vec![],
                 DEFAULT_LINE_FILE.clone(),
+                None,
             )));
         }
 
@@ -400,13 +397,11 @@ impl ParamDefWithParamType {
                 let arg_obj = match args.get(arg_index) {
                     Some(boxed_arg) => (**boxed_arg).clone(),
                     None => {
-                        return Err(RuntimeError::ExecError(ExecStmtError::new(
-                            "".to_string(),
+                        return Err(RuntimeError::UnknownError(UnknownError::new(
                             "internal error: argument index out of range for boxed args"
                                 .to_string(),
-                            None,
-                            vec![],
                             DEFAULT_LINE_FILE.clone(),
+                            None,
                         )));
                     }
                 };

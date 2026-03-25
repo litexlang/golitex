@@ -1,5 +1,6 @@
 use super::Runtime;
 use crate::error::ExecStmtError;
+use crate::error::RuntimeError;
 use crate::fact::Fact;
 use crate::fact::{
     AndChainAtomicFact, AtomicFact, EqualFact, ExistOrAndChainAtomicFact, ForallFact, InFact,
@@ -15,6 +16,7 @@ use crate::stmt::definition_stmt::{
     HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt,
 };
 use crate::stmt::parameter_def::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
+use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 use std::collections::HashMap;
 
@@ -57,20 +59,17 @@ impl<'a> Runtime<'a> {
         self.def_prop_with_meaning_stmt_check_well_defined(def_prop_with_meaning_stmt)
             .map_err(|e| {
                 ExecStmtError::new(
-                    def_prop_with_meaning_stmt.stmt_type_name(),
-                    def_prop_with_meaning_stmt.to_string(),
+                    Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
                     Some(e.into()),
                     vec![],
-                    def_prop_with_meaning_stmt.line_file,
                 )
             })?;
         self.store_def_prop_with_meaning(def_prop_with_meaning_stmt)?;
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                def_prop_with_meaning_stmt.to_string(),
+                Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
                 InferResult::new(),
                 vec![],
-                def_prop_with_meaning_stmt.line_file,
             ),
         ))
     }
@@ -92,10 +91,21 @@ impl<'a> Runtime<'a> {
         &mut self,
         def_prop_with_meaning_stmt: &DefPropWithMeaningStmt,
     ) -> Result<(), ExecStmtError> {
-        self.define_params_with_type(&def_prop_with_meaning_stmt.params_def_with_type, false)?;
+        self.define_params_with_type(
+            &def_prop_with_meaning_stmt.params_def_with_type,
+            false,
+            Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
+        )?;
 
         for fact in def_prop_with_meaning_stmt.iff_facts.iter() {
-            self.verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))?;
+            self.verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))
+                .map_err(|inner_exec_error| {
+                    ExecStmtError::new(
+                        Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
+                        Some(RuntimeError::ExecStmtError(inner_exec_error)),
+                        vec![],
+                    )
+                })?;
         }
         Ok(())
     }
@@ -107,19 +117,16 @@ impl<'a> Runtime<'a> {
         self.store_def_prop_without_meaning(def_prop_without_meaning_stmt)
             .map_err(|e| {
                 ExecStmtError::new(
-                    def_prop_without_meaning_stmt.stmt_type_name(),
-                    def_prop_without_meaning_stmt.to_string(),
+                    Stmt::DefPropWithoutMeaningStmt(def_prop_without_meaning_stmt.clone()),
                     Some(e.into()),
                     vec![],
-                    def_prop_without_meaning_stmt.line_file,
                 )
             })?;
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                def_prop_without_meaning_stmt.to_string(),
+                Stmt::DefPropWithoutMeaningStmt(def_prop_without_meaning_stmt.clone()),
                 InferResult::new(),
                 vec![],
-                def_prop_without_meaning_stmt.line_file,
             ),
         ))
     }
@@ -128,28 +135,28 @@ impl<'a> Runtime<'a> {
         &mut self,
         def_let_stmt: &DefLetStmt,
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
-        let mut infer_result = self
-            .define_params_with_type(&def_let_stmt.param_def, false)
-            .map_err(|e| {
-                ExecStmtError::new(
-                    def_let_stmt.stmt_type_name(),
-                    def_let_stmt.to_string(),
-                    Some(e.into()),
-                    vec![],
-                    def_let_stmt.line_file,
-                )
-            })?;
+        let mut infer_result = self.define_params_with_type(
+            &def_let_stmt.param_def,
+            false,
+            Stmt::DefLetStmt(def_let_stmt.clone()),
+        )?;
         for fact in def_let_stmt.facts.iter() {
             let fact_infer_result = self
-                .verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))?;
+                .verify_fact_well_defined_and_store_and_infer(fact, &VerifyState::new(0, false))
+                .map_err(|inner_exec_error| {
+                    ExecStmtError::new(
+                        Stmt::DefLetStmt(def_let_stmt.clone()),
+                        Some(RuntimeError::ExecStmtError(inner_exec_error)),
+                        vec![],
+                    )
+                })?;
             infer_result.new_infer_result_inside(fact_infer_result);
         }
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                def_let_stmt.to_string(),
+                Stmt::DefLetStmt(def_let_stmt.clone()),
                 infer_result,
                 vec![],
-                def_let_stmt.line_file,
             ),
         ))
     }
@@ -161,19 +168,16 @@ impl<'a> Runtime<'a> {
         self.store_def_struct_with_fields(def_struct_with_fields_stmt)
             .map_err(|e| {
                 ExecStmtError::new(
-                    def_struct_with_fields_stmt.stmt_type_name(),
-                    def_struct_with_fields_stmt.to_string(),
+                    Stmt::DefStructWithFieldsStmt(def_struct_with_fields_stmt.clone()),
                     Some(e.into()),
                     vec![],
-                    def_struct_with_fields_stmt.line_file,
                 )
             })?;
-        return Err(ExecStmtError::new(
-            def_struct_with_fields_stmt.stmt_type_name(),
+        return Err(ExecStmtError::with_message_and_cause(
+            Stmt::DefStructWithFieldsStmt(def_struct_with_fields_stmt.clone()),
             "unimplemented".to_string(),
             None,
             vec![],
-            def_struct_with_fields_stmt.line_file,
         ));
     }
 
@@ -182,12 +186,11 @@ impl<'a> Runtime<'a> {
         def_struct_with_no_field_stmt: &DefStructWithNoFieldStmt,
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
         self.store_def_struct_with_no_field(def_struct_with_no_field_stmt)?;
-        return Err(ExecStmtError::new(
-            def_struct_with_no_field_stmt.stmt_type_name(),
+        return Err(ExecStmtError::with_message_and_cause(
+            Stmt::DefStructWithNoFieldStmt(def_struct_with_no_field_stmt.clone()),
             "unimplemented".to_string(),
             None,
             vec![],
-            def_struct_with_no_field_stmt.line_file,
         ));
     }
 
@@ -197,12 +200,11 @@ impl<'a> Runtime<'a> {
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
         self.store_def_algo(def_algo_stmt)?;
         // Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_algo_stmt.to_string(), def_algo_stmt.line_file)))
-        return Err(ExecStmtError::new(
-            def_algo_stmt.stmt_type_name(),
+        return Err(ExecStmtError::with_message_and_cause(
+            Stmt::DefAlgoStmt(def_algo_stmt.clone()),
             "unimplemented".to_string(),
             None,
             vec![],
-            def_algo_stmt.line_file,
         ));
     }
 
@@ -210,18 +212,41 @@ impl<'a> Runtime<'a> {
         &mut self,
         param_defs: &[ParamDefWithParamType],
         check_type_nonempty: bool,
+        stmt_for_errors: Stmt,
     ) -> Result<InferResult, ExecStmtError> {
         let mut infer_result = InferResult::new();
         for param_def in param_defs.iter() {
-            self.verify_param_type_well_defined(&param_def.1, &VerifyState::new(0, false))?;
+            self.verify_param_type_well_defined(&param_def.1, &VerifyState::new(0, false))
+                .map_err(|well_defined_error| {
+                    ExecStmtError::new(
+                        stmt_for_errors.clone(),
+                        Some(well_defined_error.into()),
+                        vec![],
+                    )
+                })?;
 
-            self.verify_param_type_nonempty_if_required(&param_def.1, check_type_nonempty)?;
+            self.verify_param_type_nonempty_if_required(&param_def.1, check_type_nonempty)
+                .map_err(|inner_exec_error| {
+                    ExecStmtError::new(
+                        stmt_for_errors.clone(),
+                        Some(RuntimeError::ExecStmtError(inner_exec_error)),
+                        vec![],
+                    )
+                })?;
 
             for name in param_def.0.iter() {
                 self.store_identifier_obj(name)?;
-                let fact_infer_result = self.store_fact_without_well_defined_verified_and_infer(
-                    &ParamType::param_satisfy_param_type_fact(name, &param_def.1),
-                )?;
+                let fact_infer_result = self
+                    .store_fact_without_well_defined_verified_and_infer(
+                        &ParamType::param_satisfy_param_type_fact(name, &param_def.1),
+                    )
+                    .map_err(|store_fact_error| {
+                        ExecStmtError::new(
+                            stmt_for_errors.clone(),
+                            Some(store_fact_error.into()),
+                            vec![],
+                        )
+                    })?;
                 infer_result.new_infer_result_inside(fact_infer_result);
             }
         }
@@ -232,33 +257,46 @@ impl<'a> Runtime<'a> {
         &mut self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
-        let infer_result = self
-            .define_params_with_type(&stmt.param_def, true)
-            .map_err(|e| {
-                ExecStmtError::new(
-                    stmt.stmt_type_name(),
-                    stmt.to_string(),
-                    Some(e.into()),
-                    vec![],
-                    stmt.line_file,
-                )
-            })?;
+        let infer_result = self.define_params_with_type(
+            &stmt.param_def,
+            true,
+            Stmt::HaveObjInNonemptySetStmt(stmt.clone()),
+        )?;
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
-            NonFactualStmtSuccess::new(stmt.to_string(), infer_result, vec![], stmt.line_file),
+            NonFactualStmtSuccess::new(
+                Stmt::HaveObjInNonemptySetStmt(stmt.clone()),
+                infer_result,
+                vec![],
+            ),
         ))
     }
 
     pub fn define_params_with_set(
         &mut self,
         param_def: &ParamDefWithParamSet,
+        stmt_for_errors: Stmt,
     ) -> Result<InferResult, ExecStmtError> {
-        self.verify_obj_well_defined_and_store_cache(&param_def.1, &VerifyState::new(0, false))?;
+        self.verify_obj_well_defined_and_store_cache(&param_def.1, &VerifyState::new(0, false))
+            .map_err(|well_defined_error| {
+                ExecStmtError::new(
+                    stmt_for_errors.clone(),
+                    Some(well_defined_error.into()),
+                    vec![],
+                )
+            })?;
         let mut infer_result = InferResult::new();
         let facts = param_def.facts();
         for (name, fact) in param_def.0.iter().zip(facts.iter()) {
             self.store_identifier_obj(name)?;
-            let fact_infer_result =
-                self.store_fact_without_well_defined_verified_and_infer(fact)?;
+            let fact_infer_result = self
+                .store_fact_without_well_defined_verified_and_infer(fact)
+                .map_err(|store_fact_error| {
+                    ExecStmtError::new(
+                        stmt_for_errors.clone(),
+                        Some(store_fact_error.into()),
+                        vec![],
+                    )
+                })?;
             infer_result.new_infer_result_inside(fact_infer_result);
         }
         Ok(infer_result)
@@ -272,12 +310,11 @@ impl<'a> Runtime<'a> {
         if ParamDefWithParamType::number_of_params(&have_obj_equal_stmt.param_def)
             != have_obj_equal_stmt.objs_equal_to.len()
         {
-            return Err(ExecStmtError::new(
-                have_obj_equal_stmt.stmt_type_name(),
+            return Err(ExecStmtError::with_message_and_cause(
+                Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
                 "have_obj_equal_stmt: number of params in param_def does not match number of objs_equal_to".to_string(),
                 None,
                 vec![],
-                have_obj_equal_stmt.line_file,
             ));
         }
 
@@ -291,18 +328,23 @@ impl<'a> Runtime<'a> {
                 let fact = ParamType::fact_for_obj(current_param_equal_to.clone(), current_type);
                 let verify_result = self
                     .verify_atomic_fact(&fact, &VerifyState::new(0, false))
-                    .map_err(ExecStmtError::from)?;
+                    .map_err(|verify_error| {
+                        ExecStmtError::new(
+                            Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
+                            Some(verify_error.into()),
+                            vec![],
+                        )
+                    })?;
                 if verify_result.is_unknown() {
                     let msg = format!(
                         "have_obj_equal_stmt: {} is not in type {}",
                         current_param_equal_to, current_type
                     );
-                    return Err(ExecStmtError::new(
-                        have_obj_equal_stmt.stmt_type_name(),
+                    return Err(ExecStmtError::with_message_and_cause(
+                        Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
                         msg,
                         None,
                         vec![],
-                        have_obj_equal_stmt.line_file,
                     ));
                 }
 
@@ -314,8 +356,11 @@ impl<'a> Runtime<'a> {
         let mut infer_result = InferResult::new();
 
         // define params
-        let param_infer_result =
-            self.define_params_with_type(&have_obj_equal_stmt.param_def, true)?;
+        let param_infer_result = self.define_params_with_type(
+            &have_obj_equal_stmt.param_def,
+            true,
+            Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
+        )?;
         infer_result.new_infer_result_inside(param_infer_result);
 
         // store obj equal to
@@ -328,17 +373,23 @@ impl<'a> Runtime<'a> {
                 obj.clone(),
                 have_obj_equal_stmt.line_file,
             ));
-            let equal_to_fact_infer_result =
-                self.store_atomic_fact_without_well_defined_verified_and_infer(&equal_to_fact)?;
+            let equal_to_fact_infer_result = self
+                .store_atomic_fact_without_well_defined_verified_and_infer(&equal_to_fact)
+                .map_err(|store_fact_error| {
+                    ExecStmtError::new(
+                        Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
+                        Some(store_fact_error.into()),
+                        vec![],
+                    )
+                })?;
             infer_result.new_infer_result_inside(equal_to_fact_infer_result);
         }
 
         return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                have_obj_equal_stmt.to_string(),
+                Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
                 infer_result,
                 vec![],
-                have_obj_equal_stmt.line_file,
             ),
         ));
     }
@@ -348,17 +399,23 @@ impl<'a> Runtime<'a> {
         have_exist_obj_stmt: &HaveExistObjStmt,
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
         let exist_fact_in_have_obj_stmt = &have_exist_obj_stmt.exist_fact_in_have_obj_st;
-        let line_file = have_exist_obj_stmt.line_file;
         let verify_state = VerifyState::new(0, false);
 
-        let result = self.verify_exist_fact(exist_fact_in_have_obj_stmt, &verify_state)?;
+        let result = self
+            .verify_exist_fact(exist_fact_in_have_obj_stmt, &verify_state)
+            .map_err(|verify_error| {
+                ExecStmtError::new(
+                    Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                    Some(verify_error.into()),
+                    vec![],
+                )
+            })?;
         if result.is_unknown() {
-            return Err(ExecStmtError::new(
-                have_exist_obj_stmt.stmt_type_name(),
+            return Err(ExecStmtError::with_message_and_cause(
+                Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
                 "have_exist_obj_stmt: exist fact is not verified".to_string(),
                 None,
                 vec![],
-                line_file,
             ));
         }
 
@@ -366,10 +423,11 @@ impl<'a> Runtime<'a> {
             &exist_fact_in_have_obj_stmt.params_def_with_type,
         ) != have_exist_obj_stmt.equal_tos.len()
         {
-            return Err(ExecStmtError::new(
-                have_exist_obj_stmt.stmt_type_name(), "have_exist_obj_stmt: number of params in exist does not match number of given objs".to_string(), None,
+            return Err(ExecStmtError::with_message_and_cause(
+                Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                "have_exist_obj_stmt: number of params in exist does not match number of given objs".to_string(),
+                None,
                 vec![],
-                line_file,
             ));
         }
 
@@ -390,17 +448,22 @@ impl<'a> Runtime<'a> {
             )
             .map_err(|e| {
                 ExecStmtError::new(
-                    have_exist_obj_stmt.stmt_type_name(),
-                    e.error_body(),
+                    Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
                     Some(e),
                     vec![],
-                    line_file,
                 )
             })?;
         let mut infer_result = InferResult::new();
         for fact in args_satisfy_param_types.iter() {
-            let fact_infer_result =
-                self.store_atomic_fact_without_well_defined_verified_and_infer(fact)?;
+            let fact_infer_result = self
+                .store_atomic_fact_without_well_defined_verified_and_infer(fact)
+                .map_err(|store_fact_error| {
+                    ExecStmtError::new(
+                        Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                        Some(store_fact_error.into()),
+                        vec![],
+                    )
+                })?;
             infer_result.new_infer_result_inside(fact_infer_result);
         }
 
@@ -415,17 +478,23 @@ impl<'a> Runtime<'a> {
                 .to_exist_or_and_chain_atomic_fact()
                 .instantiate(&param_to_obj_map)
                 .to_fact();
-            let fact_infer_result =
-                self.store_fact_without_well_defined_verified_and_infer(&instantiated_fact)?;
+            let fact_infer_result = self
+                .store_fact_without_well_defined_verified_and_infer(&instantiated_fact)
+                .map_err(|store_fact_error| {
+                    ExecStmtError::new(
+                        Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                        Some(store_fact_error.into()),
+                        vec![],
+                    )
+                })?;
             infer_result.new_infer_result_inside(fact_infer_result);
         }
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                have_exist_obj_stmt.to_string(),
+                Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
                 infer_result,
                 vec![],
-                have_exist_obj_stmt.line_file,
             ),
         ))
     }
@@ -436,12 +505,11 @@ impl<'a> Runtime<'a> {
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
         self.have_fn_equal_stmt_verify_well_defined(have_fn_equal_stmt)
             .map_err(|e| {
-                ExecStmtError::new(
-                    have_fn_equal_stmt.stmt_type_name(),
+                ExecStmtError::with_message_and_cause(
+                    Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
                     "have_fn_equal_stmt: verify well-defined failed".to_string(),
                     Some(e.into()),
                     vec![],
-                    have_fn_equal_stmt.line_file,
                 )
             })?;
 
@@ -457,7 +525,13 @@ impl<'a> Runtime<'a> {
         )));
         let mut infer_result = self
             .store_fact_without_well_defined_verified_and_infer(&function_in_function_set_fact)
-            .map_err(ExecStmtError::from)?;
+            .map_err(|store_fact_error| {
+                ExecStmtError::new(
+                    Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                    Some(store_fact_error.into()),
+                    vec![],
+                )
+            })?;
 
         let param_defs_with_type =
             param_defs_with_type_from_fn_set_with_dom(&have_fn_equal_stmt.fn_set_with_params);
@@ -488,15 +562,20 @@ impl<'a> Runtime<'a> {
         let forall_as_fact = Fact::ForallFact(forall_fact);
         let forall_infer_result = self
             .store_fact_without_well_defined_verified_and_infer(&forall_as_fact)
-            .map_err(ExecStmtError::from)?;
+            .map_err(|store_fact_error| {
+                ExecStmtError::new(
+                    Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                    Some(store_fact_error.into()),
+                    vec![],
+                )
+            })?;
         infer_result.new_infer_result_inside(forall_infer_result);
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                have_fn_equal_stmt.to_string(),
+                Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
                 infer_result,
                 vec![],
-                have_fn_equal_stmt.line_file,
             ),
         ))
     }
@@ -522,20 +601,35 @@ impl<'a> Runtime<'a> {
         // 证明 fn_set 是 well-defined 的
         let function_set_obj = Obj::FnSetWithParams(have_fn_equal_stmt.fn_set_with_params.clone());
         self.verify_obj_well_defined_and_store_cache(&function_set_obj, &verify_state)
-            .map_err(ExecStmtError::from)?;
+            .map_err(|well_defined_error| {
+                ExecStmtError::new(
+                    Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                    Some(well_defined_error.into()),
+                    vec![],
+                )
+            })?;
 
         for param_def_with_set in have_fn_equal_stmt
             .fn_set_with_params
             .params_def_with_set
             .iter()
         {
-            let _ = self.define_params_with_set(param_def_with_set)?;
+            let _ = self.define_params_with_set(
+                param_def_with_set,
+                Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+            )?;
         }
 
         for dom_fact in have_fn_equal_stmt.fn_set_with_params.dom_facts.iter() {
             let _ = self
                 .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(dom_fact)
-                .map_err(ExecStmtError::from)?;
+                .map_err(|store_fact_error| {
+                    ExecStmtError::new(
+                        Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                        Some(store_fact_error.into()),
+                        vec![],
+                    )
+                })?;
         }
 
         let equal_to_in_ret_set_atomic_fact = AtomicFact::InFact(InFact::new(
@@ -549,18 +643,23 @@ impl<'a> Runtime<'a> {
         ));
         let verify_result = self
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
-            .map_err(ExecStmtError::from)?;
+            .map_err(|verify_error| {
+                ExecStmtError::new(
+                    Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                    Some(verify_error.into()),
+                    vec![],
+                )
+            })?;
         if verify_result.is_unknown() {
             let msg = format!(
                 "have_fn_equal_stmt: {} is not in return set {}",
                 have_fn_equal_stmt.equal_to, have_fn_equal_stmt.fn_set_with_params.ret_set
             );
-            return Err(ExecStmtError::new(
-                have_fn_equal_stmt.stmt_type_name(),
+            return Err(ExecStmtError::with_message_and_cause(
+                Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
                 msg,
                 None,
                 vec![],
-                have_fn_equal_stmt.line_file,
             ));
         }
 
@@ -573,12 +672,11 @@ impl<'a> Runtime<'a> {
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
         self.verify_have_fn_equal_case_by_case_stmt(have_fn_equal_case_by_case_stmt)
             .map_err(|e| {
-                ExecStmtError::new(
-                    have_fn_equal_case_by_case_stmt.stmt_type_name(),
+                ExecStmtError::with_message_and_cause(
+                    Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
                     "have_fn_equal_case_by_case_stmt: verify well-defined failed".to_string(),
                     Some(e.into()),
                     vec![],
-                    have_fn_equal_case_by_case_stmt.line_file,
                 )
             })?;
 
@@ -586,10 +684,9 @@ impl<'a> Runtime<'a> {
             self.store_have_fn_equal_case_by_case(have_fn_equal_case_by_case_stmt)?;
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                have_fn_equal_case_by_case_stmt.to_string(),
+                Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
                 infer_result,
                 vec![],
-                have_fn_equal_case_by_case_stmt.line_file,
             ),
         ))
     }
@@ -613,7 +710,13 @@ impl<'a> Runtime<'a> {
 
         let mut infer_result = self
             .store_fact_without_well_defined_verified_and_infer(&function_in_function_set_fact)
-            .map_err(ExecStmtError::from)?;
+            .map_err(|store_fact_error| {
+                ExecStmtError::new(
+                    Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                    Some(store_fact_error.into()),
+                    vec![],
+                )
+            })?;
         infer_result.new_fact(&function_in_function_set_fact);
 
         let param_defs_with_type = param_defs_with_type_from_fn_set_with_dom(
@@ -666,7 +769,13 @@ impl<'a> Runtime<'a> {
 
             let forall_infer_result = self
                 .store_fact_without_well_defined_verified_and_infer(&forall_as_fact)
-                .map_err(ExecStmtError::from)?;
+                .map_err(|store_fact_error| {
+                    ExecStmtError::new(
+                        Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                        Some(store_fact_error.into()),
+                        vec![],
+                    )
+                })?;
             infer_result.new_infer_result_inside(forall_infer_result);
             infer_result.new_fact(&forall_as_fact);
         }
@@ -681,12 +790,11 @@ impl<'a> Runtime<'a> {
         if have_fn_equal_case_by_case_stmt.cases.len()
             != have_fn_equal_case_by_case_stmt.equal_tos.len()
         {
-            return Err(ExecStmtError::new(
-                have_fn_equal_case_by_case_stmt.stmt_type_name(),
+            return Err(ExecStmtError::with_message_and_cause(
+                Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
                 "have_fn_equal_case_by_case_stmt: number of cases does not match number of equal_tos".to_string(),
                 None,
                 vec![],
-                have_fn_equal_case_by_case_stmt.line_file,
             ));
         }
 
@@ -697,7 +805,13 @@ impl<'a> Runtime<'a> {
             &function_set_obj,
             &VerifyState::new(0, false),
         )
-        .map_err(ExecStmtError::from)?;
+        .map_err(|well_defined_error| {
+            ExecStmtError::new(
+                Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                Some(well_defined_error.into()),
+                vec![],
+            )
+        })?;
 
         for case_index in 0..have_fn_equal_case_by_case_stmt.cases.len() {
             let case_fact = &have_fn_equal_case_by_case_stmt.cases[case_index];
@@ -732,7 +846,10 @@ impl<'a> Runtime<'a> {
             .params_def_with_set
             .iter()
         {
-            let _ = self.define_params_with_set(param_def_with_set)?;
+            let _ = self.define_params_with_set(
+                param_def_with_set,
+                Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+            )?;
         }
 
         for dom_fact in have_fn_equal_case_by_case_stmt
@@ -742,13 +859,32 @@ impl<'a> Runtime<'a> {
         {
             let _ = self
                 .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(dom_fact)
-                .map_err(ExecStmtError::from)?;
+                .map_err(|store_fact_error| {
+                    ExecStmtError::new(
+                        Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                        Some(store_fact_error.into()),
+                        vec![],
+                    )
+                })?;
         }
 
         let _ = self
             .store_fact_without_well_defined_verified_and_infer(&case_fact_as_fact)
-            .map_err(ExecStmtError::from)?;
-        self.verify_obj_well_defined_and_store_cache(equal_to, &verify_state)?;
+            .map_err(|store_fact_error| {
+                ExecStmtError::new(
+                    Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                    Some(store_fact_error.into()),
+                    vec![],
+                )
+            })?;
+        self.verify_obj_well_defined_and_store_cache(equal_to, &verify_state)
+            .map_err(|well_defined_error| {
+                ExecStmtError::new(
+                    Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                    Some(well_defined_error.into()),
+                    vec![],
+                )
+            })?;
 
         let equal_to_in_ret_set_atomic_fact = AtomicFact::InFact(InFact::new(
             equal_to.clone(),
@@ -761,18 +897,23 @@ impl<'a> Runtime<'a> {
         ));
         let verify_result = self
             .verify_atomic_fact(&equal_to_in_ret_set_atomic_fact, &verify_state)
-            .map_err(ExecStmtError::from)?;
+            .map_err(|verify_error| {
+                ExecStmtError::new(
+                    Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                    Some(verify_error.into()),
+                    vec![],
+                )
+            })?;
         if verify_result.is_unknown() {
             let msg = format!(
                 "have_fn_equal_case_by_case_stmt: {} is not in return set {} under case {}",
                 equal_to, have_fn_equal_case_by_case_stmt.fn_set_with_params.ret_set, case_fact,
             );
-            return Err(ExecStmtError::new(
-                have_fn_equal_case_by_case_stmt.stmt_type_name(),
+            return Err(ExecStmtError::with_message_and_cause(
+                Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
                 msg,
                 None,
                 vec![],
-                have_fn_equal_case_by_case_stmt.line_file,
             ));
         }
 

@@ -1,12 +1,11 @@
 use crate::error::VerifyError;
 use crate::execute::Runtime;
-use crate::fact::{AtomicFact, GreaterFact, IsNonemptySetFact, LessFact, NotEqualFact};
+use crate::fact::{AtomicFact, Fact, GreaterFact, IsNonemptySetFact, LessFact, NotEqualFact};
 use crate::infer::InferResult;
 use crate::obj::{Number, Obj};
 use crate::result::FactVerifiedByBuiltinRules;
 use crate::result::NonErrStmtExecResult;
 use crate::result::StmtUnknown;
-use crate::verify::verify_number_comparison_builtin_rule::verify_number_comparison_builtin_rule;
 use crate::verify::VerifyState;
 
 impl<'a> Runtime<'a> {
@@ -27,14 +26,13 @@ impl<'a> Runtime<'a> {
             | AtomicFact::GreaterFact(_)
             | AtomicFact::LessEqualFact(_)
             | AtomicFact::GreaterEqualFact(_) => {
-                let number_compare_result = verify_number_comparison_builtin_rule(atomic_fact);
+                let number_compare_result = self.verify_number_comparison_builtin_rule(atomic_fact);
                 match number_compare_result {
                     Some(true) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                         crate::result::FactVerifiedByBuiltinRules::new(
-                            atomic_fact.to_string(),
+                            Fact::AtomicFact(atomic_fact.clone()),
                             "number comparison".to_string(),
                             InferResult::new(),
-                            atomic_fact.line_file(),
                         ),
                     )),
                     Some(false) => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
@@ -43,10 +41,9 @@ impl<'a> Runtime<'a> {
             }
             AtomicFact::IsSetFact(is_set_fact) => Ok(
                 NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(
-                    is_set_fact.to_string(),
+                    Fact::AtomicFact(AtomicFact::IsSetFact(is_set_fact.clone())),
                     "Every object is a set.".to_string(),
                     InferResult::new(),
-                    is_set_fact.line_file,
                 )),
             ),
             AtomicFact::RestrictFact(restrict_fact) => {
@@ -77,10 +74,9 @@ impl<'a> Runtime<'a> {
                 if left_number.normalized_value != right_number.normalized_value {
                     return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                         FactVerifiedByBuiltinRules::new(
-                            not_equal_fact.to_string(),
+                            Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact.clone())),
                             "calculation".to_string(),
                             InferResult::new(),
-                            not_equal_fact.line_file,
                         ),
                     ));
                 }
@@ -322,10 +318,9 @@ impl<'a> Runtime<'a> {
         match builtin_rule_label {
             Some(rule_label) => Ok(Some(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                 FactVerifiedByBuiltinRules::new(
-                    not_equal_fact.to_string(),
+                    Fact::AtomicFact(AtomicFact::NotEqualFact(not_equal_fact.clone())),
                     rule_label.to_string(),
                     InferResult::new(),
-                    line_file,
                 ),
             ))),
             None => Ok(None),
@@ -352,10 +347,9 @@ impl<'a> Runtime<'a> {
             | Obj::QNeg(_)
             | Obj::ZObj(_) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                 FactVerifiedByBuiltinRules::new(
-                    is_nonempty_set_fact.to_string(),
+                    Fact::AtomicFact(AtomicFact::IsNonemptySetFact(is_nonempty_set_fact.clone())),
                     "standard_nonempty_set".to_string(),
                     InferResult::new(),
-                    is_nonempty_set_fact.line_file,
                 ),
             )),
             Obj::Cart(cart) => {
@@ -377,10 +371,11 @@ impl<'a> Runtime<'a> {
                 // verified by objects in cart are all nonempty sets
                 Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                     FactVerifiedByBuiltinRules::new(
-                        is_nonempty_set_fact.to_string(),
+                        Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
+                            is_nonempty_set_fact.clone(),
+                        )),
                         "cart_nonempty_set".to_string(),
                         InferResult::new(),
-                        is_nonempty_set_fact.line_file,
                     ),
                 ))
             }

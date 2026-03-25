@@ -1,23 +1,27 @@
 use crate::common::keywords::{AS, CLEAR, DOUBLE_QUOTE, DO_NOTHING, IMPORT};
 use std::fmt;
 
+#[derive(Clone)]
 pub enum ImportStmt {
     ImportRelativePath(ImportRelativePathStmt),
     ImportGlobalModule(ImportGlobalModuleStmt),
 }
 
+#[derive(Clone)]
 pub struct ImportRelativePathStmt {
     pub path: String,
     pub as_mod_name: Option<String>,
     pub line_file: (usize, usize),
 }
 
+#[derive(Clone)]
 pub struct ImportGlobalModuleStmt {
     pub mod_name: String,
     pub as_mod_name: Option<String>,
     pub line_file: (usize, usize),
 }
 
+#[derive(Clone)]
 pub struct RunFileStmt {
     pub file_path: String,
     pub line_file: (usize, usize),
@@ -29,10 +33,6 @@ impl RunFileStmt {
             file_path,
             line_file,
         }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "RunFileStmt".to_string()
     }
 }
 
@@ -61,10 +61,6 @@ impl ImportRelativePathStmt {
             line_file,
         }
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        "ImportRelativePathStmt".to_string()
-    }
 }
 
 impl ImportGlobalModuleStmt {
@@ -74,10 +70,6 @@ impl ImportGlobalModuleStmt {
             as_mod_name,
             line_file,
         }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "ImportGlobalModuleStmt".to_string()
     }
 }
 
@@ -114,19 +106,14 @@ impl ImportStmt {
             ImportStmt::ImportGlobalModule(import_global_mod) => import_global_mod.line_file,
         }
     }
-
-    pub fn stmt_type_name(&self) -> String {
-        match self {
-            ImportStmt::ImportRelativePath(stmt) => stmt.stmt_type_name(),
-            ImportStmt::ImportGlobalModule(stmt) => stmt.stmt_type_name(),
-        }
-    }
 }
 
+#[derive(Clone)]
 pub struct DoNothingStmt {
     pub line_file: (usize, usize),
 }
 
+#[derive(Clone)]
 pub struct ClearStmt {
     pub line_file: (usize, usize),
 }
@@ -134,10 +121,6 @@ pub struct ClearStmt {
 impl ClearStmt {
     pub fn new(line_file: (usize, usize)) -> Self {
         ClearStmt { line_file }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "ClearStmt".to_string()
     }
 }
 

@@ -7,6 +7,7 @@ use crate::common::keywords::{CLAIM, COLON, PROVE};
 use crate::fact::Fact;
 use std::fmt;
 
+#[derive(Clone)]
 pub struct ClaimStmt {
     pub fact: Fact,
     pub proof: Vec<Stmt>,
@@ -20,10 +21,6 @@ impl ClaimStmt {
             proof,
             line_file,
         }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "ClaimStmt".to_string()
     }
 }
 

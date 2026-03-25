@@ -6,6 +6,7 @@ use crate::fact::ForallFact;
 use crate::result::NonErrStmtExecResult;
 use crate::result::NonFactualStmtSuccess;
 use crate::stmt::claim_stmt::ClaimStmt;
+use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 
 impl<'a> Runtime<'a> {
@@ -14,16 +15,12 @@ impl<'a> Runtime<'a> {
         stmt: &ClaimStmt,
         forall_fact: &ForallFact,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
-        self.define_params_with_type(&forall_fact.params_def_with_type, false)
-            .map_err(|e| {
-                RuntimeError::ExecError(ExecStmtError::new(
-                    stmt.stmt_type_name(),
-                    "claim: failed to define forall params".to_string(),
-                    Some(e.into()),
-                    vec![],
-                    stmt.line_file,
-                ))
-            })?;
+        self.define_params_with_type(
+            &forall_fact.params_def_with_type,
+            false,
+            Stmt::ClaimStmt(stmt.clone()),
+        )
+        .map_err(|exec_stmt_error| RuntimeError::ExecStmtError(exec_stmt_error))?;
 
         for dom_fact in forall_fact.dom_facts.iter() {
             self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
@@ -49,10 +46,9 @@ impl<'a> Runtime<'a> {
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                stmt.to_string(),
+                Stmt::ClaimStmt(stmt.clone()),
                 crate::infer::InferResult::new(),
                 vec![],
-                stmt.line_file,
             ),
         ))
     }
@@ -69,26 +65,27 @@ impl<'a> Runtime<'a> {
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                stmt.to_string(),
+                Stmt::ClaimStmt(stmt.clone()),
                 crate::infer::InferResult::new(),
                 vec![],
-                stmt.line_file,
             ),
         ))
     }
 
-    pub fn exec_claim_stmt(&mut self, stmt: &ClaimStmt) -> Result<NonErrStmtExecResult, RuntimeError> {
+    pub fn exec_claim_stmt(
+        &mut self,
+        stmt: &ClaimStmt,
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
         match &stmt.fact {
             Fact::ForallFactWithIff(_) => unreachable!("claim forall with iff is not supported"),
             Fact::ForallFact(forall_fact) => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        RuntimeError::ExecError(ExecStmtError::new(
-                            stmt.stmt_type_name(),
+                        RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                            Stmt::ClaimStmt(stmt.clone()),
                             "claim: fact is not well defined".to_string(),
                             Some(e.into()),
                             vec![],
-                            stmt.line_file,
                         ))
                     })?;
 
@@ -113,22 +110,20 @@ impl<'a> Runtime<'a> {
 
                 Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
                     NonFactualStmtSuccess::new(
-                        stmt.to_string(),
+                        Stmt::ClaimStmt(stmt.clone()),
                         crate::infer::InferResult::new(),
                         vec![],
-                        stmt.line_file,
                     ),
                 ))
             }
             _ => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
                     .map_err(|e| {
-                        RuntimeError::ExecError(ExecStmtError::new(
-                            stmt.stmt_type_name(),
+                        RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                            Stmt::ClaimStmt(stmt.clone()),
                             "claim: fact is not well defined".to_string(),
                             Some(e.into()),
                             vec![],
-                            stmt.line_file,
                         ))
                     })?;
 

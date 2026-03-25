@@ -2,7 +2,7 @@ use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::environment::KnownForallFactParamsAndDom;
 use crate::error::VerifyError;
 use crate::execute::Runtime;
-use crate::fact::{ExistFact, ExistOrAndChainAtomicFact, ForallFact};
+use crate::fact::{ExistFact, ExistOrAndChainAtomicFact, Fact, ForallFact};
 use crate::infer::InferResult;
 use crate::obj::Obj;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult, StmtUnknown};
@@ -303,7 +303,6 @@ impl<'a> Runtime<'a> {
             }
         }
 
-        let fact_string = given_exist_fact.to_string();
         let verified_by_known_forall_fact = ForallFact::new(
             known_forall.params_def.clone(),
             known_forall.dom.clone(),
@@ -313,10 +312,9 @@ impl<'a> Runtime<'a> {
             known_forall.line_file.clone(),
         );
         let fact_verified = FactVerifiedByFact::new(
-            fact_string,
+            Fact::ExistFact(given_exist_fact.clone()),
             verified_by_known_forall_fact.to_string(),
             InferResult::new(),
-            given_exist_fact.line_file(),
             verified_by_known_forall_fact.line_file,
         );
         Ok(Some(fact_verified))

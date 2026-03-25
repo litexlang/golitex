@@ -11,18 +11,16 @@ impl<'a> Runtime<'a> {
     /// If the fact string is in the known-facts cache, return the cached verification result.
     pub fn verify_fact_from_cache_using_display_string(
         &self,
-        fact_display_string: &str,
-        fact_line_file: (usize, usize),
+        fact: &Fact,
     ) -> Option<NonErrStmtExecResult> {
-        let key = fact_display_string.to_string();
+        let key = fact.to_string();
         let (cache_ok, cache_line_file) = self.runtime_context.cache_known_facts_contains(&key);
         if cache_ok {
             Some(NonErrStmtExecResult::FactVerifiedByFact(
                 FactVerifiedByFact::new(
-                    key.clone(),
+                    fact.clone(),
                     key,
                     InferResult::new(),
-                    fact_line_file,
                     cache_line_file,
                 ),
             ))

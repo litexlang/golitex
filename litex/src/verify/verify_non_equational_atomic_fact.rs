@@ -1,8 +1,7 @@
 use crate::environment::Environment;
 use crate::error::VerifyError;
 use crate::execute::Runtime;
-use crate::fact::AtomicFact;
-use crate::fact::RestrictFact;
+use crate::fact::{AtomicFact, Fact, RestrictFact};
 use crate::infer::InferResult;
 use crate::result::StmtUnknown;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
@@ -162,10 +161,9 @@ impl<'a> Runtime<'a> {
                 if let Some(known_atomic_fact) = known_facts_map.get(obj) {
                     return Ok(NonErrStmtExecResult::FactVerifiedByFact(
                         FactVerifiedByFact::new(
-                            atomic_fact.to_string(),
+                            Fact::AtomicFact(atomic_fact.clone()),
                             known_atomic_fact.to_string(),
                             InferResult::new(),
-                            atomic_fact.line_file(),
                             known_atomic_fact.line_file(),
                         ),
                     ));
@@ -193,10 +191,9 @@ impl<'a> Runtime<'a> {
                     {
                         return Ok(NonErrStmtExecResult::FactVerifiedByFact(
                             FactVerifiedByFact::new(
-                                atomic_fact.to_string(),
+                                Fact::AtomicFact(atomic_fact.clone()),
                                 known_atomic_fact.to_string(),
                                 InferResult::new(),
-                                atomic_fact.line_file(),
                                 known_atomic_fact.line_file(),
                             ),
                         ));
@@ -232,10 +229,9 @@ impl<'a> Runtime<'a> {
                 if all_args_match {
                     return Ok(NonErrStmtExecResult::FactVerifiedByFact(
                         FactVerifiedByFact::new(
-                            atomic_fact.to_string(),
+                            Fact::AtomicFact(atomic_fact.clone()),
                             known_fact.to_string(),
                             InferResult::new(),
-                            atomic_fact.line_file(),
                             known_fact.line_file(),
                         ),
                     ));

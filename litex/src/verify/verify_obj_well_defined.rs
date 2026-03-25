@@ -15,6 +15,8 @@ use crate::obj::{
     TupleDimObj, Union, Val, ZObj,
 };
 use crate::stmt::parameter_def::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
+use crate::stmt::tooling_stmt::DoNothingStmt;
+use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 
 impl<'a> Runtime<'a> {
@@ -731,16 +733,16 @@ impl<'a> Runtime<'a> {
         x: &SetBuilder,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        if let Err(e) = self.define_params_with_set(&ParamDefWithParamSet::new(
-            vec![x.param.clone()],
-            *x.param_set.clone(),
-        )) {
+        if let Err(e) = self.define_params_with_set(
+            &ParamDefWithParamSet::new(vec![x.param.clone()], *x.param_set.clone()),
+            Stmt::DoNothingStmt(DoNothingStmt::new(DEFAULT_LINE_FILE.clone())),
+        ) {
             return Err(WellDefinedError::new(
                 format!(
                     "failed to verify well-defined of set builder {}",
                     x.to_string()
                 ),
-                Some(RuntimeError::ExecError(e)),
+                Some(RuntimeError::ExecStmtError(e)),
                 DEFAULT_LINE_FILE.clone(),
             ));
         }
@@ -755,7 +757,7 @@ impl<'a> Runtime<'a> {
                         "failed to verify well-defined of set builder {}",
                         x.to_string()
                     ),
-                    Some(RuntimeError::ExecError(e)),
+                    Some(RuntimeError::ExecStmtError(e)),
                     DEFAULT_LINE_FILE.clone(),
                 ));
             }
@@ -804,13 +806,16 @@ impl<'a> Runtime<'a> {
         }
 
         for param_def_with_set in x.params_def_with_set.iter() {
-            if let Err(e) = self.define_params_with_set(param_def_with_set) {
+            if let Err(e) = self.define_params_with_set(
+                param_def_with_set,
+                Stmt::DoNothingStmt(DoNothingStmt::new(DEFAULT_LINE_FILE.clone())),
+            ) {
                 return Err(WellDefinedError::new(
                     format!(
                         "failed to verify well-defined of fn set with dom {}",
                         x.to_string()
                     ),
-                    Some(RuntimeError::ExecError(e)),
+                    Some(RuntimeError::ExecStmtError(e)),
                     DEFAULT_LINE_FILE.clone(),
                 ));
             }
@@ -826,7 +831,7 @@ impl<'a> Runtime<'a> {
                         "failed to verify well-defined of fn set with dom {}",
                         x.to_string()
                     ),
-                    Some(RuntimeError::ExecError(e)),
+                    Some(RuntimeError::ExecStmtError(e)),
                     DEFAULT_LINE_FILE.clone(),
                 ));
             }

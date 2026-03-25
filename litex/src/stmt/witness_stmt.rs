@@ -8,6 +8,7 @@ use crate::fact::ExistFact;
 use crate::obj::Obj;
 use std::fmt;
 
+#[derive(Clone)]
 pub struct WitnessNonemptySet {
     pub obj: Obj,
     pub set: Obj,
@@ -15,6 +16,7 @@ pub struct WitnessNonemptySet {
     pub line_file: (usize, usize),
 }
 
+#[derive(Clone)]
 pub struct WitnessExistFact {
     pub equal_tos: Vec<Obj>,
     pub exist_fact_in_witness: ExistFact,
@@ -35,10 +37,6 @@ impl WitnessExistFact {
             proof,
             line_file,
         }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "WitnessExistFact".to_string()
     }
 }
 
@@ -96,9 +94,5 @@ impl WitnessNonemptySet {
             proof,
             line_file,
         }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "WitnessNonemptySet".to_string()
     }
 }

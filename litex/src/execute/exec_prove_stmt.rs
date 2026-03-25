@@ -3,6 +3,7 @@ use crate::error::{ExecStmtError, RuntimeError};
 use crate::infer::InferResult;
 use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
 use crate::stmt::prove_stmt::ProveStmt;
+use crate::stmt::Stmt;
 
 impl<'a> Runtime<'a> {
     pub fn exec_prove_stmt(
@@ -17,12 +18,11 @@ impl<'a> Runtime<'a> {
                 Ok(result) => inside_results.push(result),
                 Err(statement_error) => {
                     self.runtime_context.pop_env();
-                    return Err(RuntimeError::ExecError(ExecStmtError::new(
-                        stmt.stmt_type_name(),
+                    return Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                        Stmt::ProveStmt(stmt.clone()),
                         proof_stmt.to_string(),
                         Some(statement_error),
                         inside_results,
-                        stmt.line_file,
                     )));
                 }
             }
@@ -31,10 +31,9 @@ impl<'a> Runtime<'a> {
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                "prove statement".to_string(),
+                Stmt::ProveStmt(stmt.clone()),
                 InferResult::new(),
                 inside_results,
-                stmt.line_file,
             ),
         ))
     }

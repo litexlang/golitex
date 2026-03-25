@@ -13,7 +13,3 @@ prove:
     have a R = 1
 
     a + 2 = 3
-
-    have b R
-
-    a * b + b * 1 = b * 2

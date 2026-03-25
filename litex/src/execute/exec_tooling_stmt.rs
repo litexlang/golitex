@@ -3,17 +3,21 @@ use crate::error::RuntimeError;
 use crate::infer::InferResult;
 use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
 use crate::stmt::tooling_stmt::{ClearStmt, DoNothingStmt, ImportStmt, RunFileStmt};
+use crate::stmt::Stmt;
 
 impl<'a> Runtime<'a> {
     pub fn exec_import_stmt(
         &mut self,
         stmt: &ImportStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
-        Self::stmt_unsupported(stmt.stmt_type_name(), stmt.line_file())
+        Self::stmt_unsupported(Stmt::ImportStmt(stmt.clone()))
     }
 
-    pub fn exec_clear_stmt(&mut self, stmt: &ClearStmt) -> Result<NonErrStmtExecResult, RuntimeError> {
-        Self::stmt_unsupported(stmt.stmt_type_name(), stmt.line_file)
+    pub fn exec_clear_stmt(
+        &mut self,
+        stmt: &ClearStmt,
+    ) -> Result<NonErrStmtExecResult, RuntimeError> {
+        Self::stmt_unsupported(Stmt::ClearStmt(stmt.clone()))
     }
 
     pub fn exec_do_nothing_stmt(
@@ -22,10 +26,9 @@ impl<'a> Runtime<'a> {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
-                stmt.to_string(),
+                Stmt::DoNothingStmt(stmt.clone()),
                 InferResult::new(),
                 vec![],
-                stmt.line_file,
             ),
         ));
     }
@@ -34,6 +37,6 @@ impl<'a> Runtime<'a> {
         &mut self,
         stmt: &RunFileStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
-        Self::stmt_unsupported(stmt.stmt_type_name(), stmt.line_file)
+        Self::stmt_unsupported(Stmt::RunFileStmt(stmt.clone()))
     }
 }
