@@ -1,4 +1,11 @@
-mod exec_axiom_stmt;
+mod exec_axiom_by_cases;
+mod exec_axiom_by_contra;
+mod exec_axiom_by_extension;
+mod exec_axiom_by_induc;
+mod exec_axiom_enumerate;
+mod exec_axiom_for;
+mod exec_axiom_helpers;
+mod exec_axiom_unsupported;
 mod exec_claim_stmt;
 mod exec_def_stmt;
 mod exec_eval_stmt;

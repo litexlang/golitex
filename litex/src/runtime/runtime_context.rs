@@ -1,4 +1,3 @@
-use crate::common::defaults::DEFAULT_FIRST_FILE_INDEX_FOR_USER;
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::keywords::{is_builtin_identifier_obj, is_builtin_predicate, MOD_SIGN};
 use crate::environment::Environment;

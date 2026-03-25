@@ -1,4 +1,3 @@
-use crate::common::defaults::DEFAULT_FIRST_FILE_INDEX_FOR_USER;
 use crate::environment::Environment;
 use crate::execute::Runtime;
 use crate::module_manager::ModuleManager;
@@ -45,7 +44,10 @@ pub fn run_source_code(
         &mut builtin_environment,
     );
 
-    let blocks = match TokenBlock::parse_blocks(source_code, DEFAULT_FIRST_FILE_INDEX_FOR_USER) {
+    let blocks = match TokenBlock::parse_blocks(
+        source_code,
+        runtime_context.module_manager.current_file_index,
+    ) {
         Ok(b) => b,
         Err(e) => {
             let runtime_error = e.into();
@@ -206,7 +208,7 @@ where
 
         let blocks = match TokenBlock::parse_blocks(
             normalized_source.as_str(),
-            DEFAULT_FIRST_FILE_INDEX_FOR_USER,
+            runtime.runtime_context.module_manager.current_file_index,
         ) {
             Ok(parsed_blocks) => parsed_blocks,
             Err(parse_block_error) => {
