@@ -4,13 +4,6 @@ use crate::result::NonErrStmtExecResult;
 use crate::stmt::Stmt;
 use std::fmt;
 
-fn body_with_previous(message: &str, previous_error: &Option<Box<RuntimeError>>) -> String {
-    match previous_error {
-        Some(previous_error) => format!("{}\n\n{}", message, previous_error.error_body()),
-        None => message.to_string(),
-    }
-}
-
 fn boxed_previous_error(previous_error: Option<RuntimeError>) -> Option<Box<RuntimeError>> {
     previous_error.map(Box::new)
 }
@@ -54,52 +47,91 @@ impl RuntimeError {
     /// Short label for display (e.g. "ExecError", "UnknownError").
     pub fn display_label(&self) -> &'static str {
         match self {
-            RuntimeError::ArithmeticError(_) => "ArithmeticError",
-            RuntimeError::NewAtomicFactError(_) => "NewAtomicFactError",
-            RuntimeError::StoreFactError(_) => "StoreFactError",
-            RuntimeError::ParseBlockError(_) => "ParseBlockError",
-            RuntimeError::ParsingError(_) => "ParsingError",
-            RuntimeError::ExecStmtError(_) => "ExecError",
-            RuntimeError::UnknownError(_) => "UnknownError",
-            RuntimeError::WellDefinedError(_) => "WellDefinedError",
-            RuntimeError::VerifyError(_) => "VerifyError",
-            RuntimeError::VerifyUnknownError(_) => "VerifyUnknownError",
-            RuntimeError::InferError(_) => "InferError",
-            RuntimeError::NameAlreadyUsedError(_) => "NameAlreadyUsedError",
-        }
-    }
-
-    /// Error content only (no type label). Formatting with location is done by RuntimeContext::display_error.
-    pub fn error_body(&self) -> String {
-        match self {
-            RuntimeError::ArithmeticError(e) => e.body_string(),
-            RuntimeError::NewAtomicFactError(e) => e.body_string(),
-            RuntimeError::StoreFactError(e) => e.body_string(),
-            RuntimeError::ParseBlockError(e) => parse_block_error_message(e),
-            RuntimeError::ParsingError(e) => e.body_string(),
-            RuntimeError::ExecStmtError(e) => e.body_string(),
-            RuntimeError::UnknownError(e) => e.body_string(),
-            RuntimeError::WellDefinedError(e) => e.body_string(),
-            RuntimeError::VerifyError(e) => e.body_string(),
-            RuntimeError::VerifyUnknownError(e) => e.body_string(),
-            RuntimeError::InferError(e) => e.body_string(),
-            RuntimeError::NameAlreadyUsedError(e) => e.body_string(),
+            RuntimeError::ArithmeticError(e) => e.display_label(),
+            RuntimeError::NewAtomicFactError(e) => e.display_label(),
+            RuntimeError::StoreFactError(e) => e.display_label(),
+            RuntimeError::ParseBlockError(e) => e.display_label(),
+            RuntimeError::ParsingError(e) => e.display_label(),
+            RuntimeError::ExecStmtError(e) => e.display_label(),
+            RuntimeError::UnknownError(e) => e.display_label(),
+            RuntimeError::WellDefinedError(e) => e.display_label(),
+            RuntimeError::VerifyError(e) => e.display_label(),
+            RuntimeError::VerifyUnknownError(e) => e.display_label(),
+            RuntimeError::InferError(e) => e.display_label(),
+            RuntimeError::NameAlreadyUsedError(e) => e.display_label(),
         }
     }
 }
 
-fn parse_block_error_message(e: &ParseBlockError) -> String {
-    match e {
-        ParseBlockError::ExpectedIndent(_, _) => "expected indent".to_string(),
-        ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
-        ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
-        ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
-        ParseBlockError::InvalidName(msg) => msg.clone(),
-        ParseBlockError::NameAlreadyUsed {
-            name,
-            name_already_used_on_line_file,
-            ..
-        } => format_name_already_used_error_body(name, *name_already_used_on_line_file),
+impl ArithmeticError {
+    pub fn display_label(&self) -> &'static str {
+        "ArithmeticError"
+    }
+}
+
+impl NewAtomicFactError {
+    pub fn display_label(&self) -> &'static str {
+        "NewAtomicFactError"
+    }
+}
+
+impl StoreFactError {
+    pub fn display_label(&self) -> &'static str {
+        "StoreFactError"
+    }
+}
+
+impl ParseBlockError {
+    pub fn display_label(&self) -> &'static str {
+        "ParseBlockError"
+    }
+}
+
+impl ParsingError {
+    pub fn display_label(&self) -> &'static str {
+        "ParsingError"
+    }
+}
+
+impl ExecStmtError {
+    pub fn display_label(&self) -> &'static str {
+        "ExecStmtError"
+    }
+}
+
+impl UnknownError {
+    pub fn display_label(&self) -> &'static str {
+        "UnknownError"
+    }
+}
+
+impl WellDefinedError {
+    pub fn display_label(&self) -> &'static str {
+        "WellDefinedError"
+    }
+}
+
+impl VerifyError {
+    pub fn display_label(&self) -> &'static str {
+        "VerifyError"
+    }
+}
+
+impl VerifyUnknownError {
+    pub fn display_label(&self) -> &'static str {
+        "VerifyUnknownError"
+    }
+}
+
+impl InferError {
+    pub fn display_label(&self) -> &'static str {
+        "InferError"
+    }
+}
+
+impl NameAlreadyUsedError {
+    pub fn display_label(&self) -> &'static str {
+        "NameAlreadyUsedError"
     }
 }
 
@@ -110,28 +142,10 @@ pub fn duplicate_used_name_error_message(name: &str) -> String {
     )
 }
 
-pub fn format_name_already_used_error_body(
-    name: &str,
-    name_already_used_on_line_file: (usize, usize),
-) -> String {
-    let location_string = if name_already_used_on_line_file.1 == 0 {
-        format!("line {}", name_already_used_on_line_file.0)
-    } else {
-        format!(
-            "line {}, file {}",
-            name_already_used_on_line_file.0, name_already_used_on_line_file.1
-        )
-    };
-    format!(
-        "name `{}` is already used on {}, cannot be used again for other definitions",
-        name, location_string
-    )
-}
-
 // Display outputs body only (no type label); full format with label and line is via RuntimeContext::display_error.
 impl fmt::Display for RuntimeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.error_body())
+        write!(f, "{}", "error")
     }
 }
 
@@ -148,15 +162,11 @@ impl ArithmeticError {
             previous_error: boxed_previous_error(previous_error),
         }
     }
-
-    pub fn body_string(&self) -> String {
-        body_with_previous(&self.msg, &self.previous_error)
-    }
 }
 
 impl fmt::Display for ArithmeticError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.body_string())
+        write!(f, "{}", self.display_label())
     }
 }
 
@@ -176,7 +186,7 @@ impl std::error::Error for NewAtomicFactError {}
 
 impl fmt::Display for NewAtomicFactError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.body_string())
+        write!(f, "{}", self.display_label())
     }
 }
 
@@ -186,10 +196,6 @@ impl NewAtomicFactError {
             msg,
             previous_error: boxed_previous_error(previous_error),
         }
-    }
-
-    pub fn body_string(&self) -> String {
-        body_with_previous(&self.msg, &self.previous_error)
     }
 }
 
@@ -223,7 +229,7 @@ impl std::error::Error for StoreFactError {}
 
 impl fmt::Display for StoreFactError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.body_string())
+        write!(f, "{}", self.display_label())
     }
 }
 
@@ -233,11 +239,6 @@ impl StoreFactError {
             msg,
             previous_error: boxed_previous_error(previous_error),
         }
-    }
-
-    /// Content only (msg + previous_error bodies), for embedding in other errors.
-    pub fn body_string(&self) -> String {
-        body_with_previous(&self.msg, &self.previous_error)
     }
 }
 
@@ -265,7 +266,7 @@ impl std::error::Error for ParseBlockError {}
 
 impl fmt::Display for ParseBlockError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", parse_block_error_message(self))
+        write!(f, "{}", self.display_label())
     }
 }
 
@@ -299,7 +300,7 @@ impl std::error::Error for ParsingError {}
 
 impl fmt::Display for ParsingError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.body_string())
+        write!(f, "{}", self.display_label())
     }
 }
 
@@ -314,10 +315,6 @@ impl ParsingError {
             line_file,
             previous_error: boxed_previous_error(previous_error),
         }
-    }
-
-    pub fn body_string(&self) -> String {
-        body_with_previous(&self.msg, &self.previous_error)
     }
 }
 
@@ -338,7 +335,7 @@ impl std::error::Error for ExecStmtError {}
 
 impl fmt::Display for ExecStmtError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.body_string())
+        write!(f, "{}", self.display_label())
     }
 }
 
@@ -371,15 +368,6 @@ impl ExecStmtError {
         };
         ExecStmtError::new(stmt, previous_error, inside_results)
     }
-
-    /// Full text for embedding in other errors (statement + optional cause chain).
-    pub fn body_string(&self) -> String {
-        let stmt_header = format!("stmt type: {}\n{}", self.stmt.stmt_type_name(), self.stmt);
-        match &self.previous_error {
-            Some(previous_error) => format!("{}\n\n{}", stmt_header, previous_error.error_body()),
-            None => stmt_header,
-        }
-    }
 }
 
 impl From<ExecStmtError> for RuntimeError {
@@ -399,7 +387,7 @@ impl std::error::Error for WellDefinedError {}
 
 impl fmt::Display for WellDefinedError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.body_string())
+        write!(f, "{}", self.display_label())
     }
 }
 
@@ -414,10 +402,6 @@ impl WellDefinedError {
             previous_error: boxed_previous_error(previous_error),
             line_file,
         }
-    }
-
-    pub fn body_string(&self) -> String {
-        body_with_previous(&self.msg, &self.previous_error)
     }
 }
 
@@ -437,7 +421,7 @@ impl std::error::Error for VerifyError {}
 
 impl fmt::Display for VerifyError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.body_string())
+        write!(f, "{}", self.display_label())
     }
 }
 
@@ -447,10 +431,6 @@ impl VerifyError {
             fact,
             previous_error: boxed_previous_error(previous_error),
         }
-    }
-
-    pub fn body_string(&self) -> String {
-        body_with_previous(&self.fact.to_string(), &self.previous_error)
     }
 }
 
@@ -481,7 +461,7 @@ impl std::error::Error for VerifyUnknownError {}
 
 impl fmt::Display for VerifyUnknownError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.body_string())
+        write!(f, "{}", self.display_label())
     }
 }
 
@@ -491,10 +471,6 @@ impl VerifyUnknownError {
             fact,
             previous_error: boxed_previous_error(previous_error),
         }
-    }
-
-    pub fn body_string(&self) -> String {
-        body_with_previous(&self.fact.to_string(), &self.previous_error)
     }
 }
 
@@ -522,7 +498,7 @@ impl std::error::Error for UnknownError {}
 
 impl fmt::Display for UnknownError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.body_string())
+        write!(f, "{}", self.display_label())
     }
 }
 
@@ -537,10 +513,6 @@ impl UnknownError {
             line_file,
             previous_error: boxed_previous_error(previous_error),
         }
-    }
-
-    pub fn body_string(&self) -> String {
-        body_with_previous(&self.msg, &self.previous_error)
     }
 }
 
@@ -561,7 +533,7 @@ impl std::error::Error for InferError {}
 
 impl fmt::Display for InferError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.body_string())
+        write!(f, "{}", self.display_label())
     }
 }
 
@@ -576,10 +548,6 @@ impl InferError {
             line_file,
             previous_error: boxed_previous_error(previous_error),
         }
-    }
-
-    pub fn body_string(&self) -> String {
-        body_with_previous(&self.msg, &self.previous_error)
     }
 }
 
@@ -600,7 +568,7 @@ impl std::error::Error for NameAlreadyUsedError {}
 
 impl fmt::Display for NameAlreadyUsedError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.body_string())
+        write!(f, "{}", self.display_label())
     }
 }
 
@@ -615,9 +583,5 @@ impl NameAlreadyUsedError {
             name_already_used_on_line_file,
             line_file,
         }
-    }
-
-    pub fn body_string(&self) -> String {
-        format_name_already_used_error_body(&self.name, self.name_already_used_on_line_file)
     }
 }

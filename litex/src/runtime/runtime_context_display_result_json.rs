@@ -8,6 +8,7 @@ const JSON_KEY_SUCCESS: &str = "success";
 const JSON_KEY_VERIFIED_BY_BUILTIN_RULE: &str = "verified_by_builtin_rule";
 const JSON_KEY_VERIFIED_BY_KNOWN_FACT: &str = "verified_by_known_fact";
 const JSON_KEY_INFER_FACTS: &str = "infer_facts";
+const JSON_KEY_SOURCE: &str = "source";
 
 fn json_one_level_indent(unit_count: usize) -> String {
     let mut indent = String::new();
@@ -103,14 +104,10 @@ impl<'a> RuntimeContext<'a> {
         let stmt_line_file = non_factual_stmt_success_result.stmt.line_file();
         field_lines.push(format!("{}\"line\": {}", indent_inner, stmt_line_file.0));
         field_lines.push(format!(
-            "{}\"source\": {}",
+            "{}\"{}\": {}",
             indent_inner,
-            json_string_literal(
-                self.module_manager
-                    .run_file_paths
-                    .get(stmt_line_file.1)
-                    .unwrap_or(&String::new())
-            )
+            JSON_KEY_SOURCE,
+            json_string_literal(&self.get_file_name_by_index(stmt_line_file))
         ));
         field_lines.push(format!(
             "{}\"stmt\": {}",
@@ -181,14 +178,10 @@ impl<'a> RuntimeContext<'a> {
         let fact_line_file = fact_verified_by_fact_result.fact.line_file();
         field_lines.push(format!("{}\"line\": {}", indent_inner, fact_line_file.0));
         field_lines.push(format!(
-            "{}\"source\": {}",
+            "{}\"{}\": {}",
             indent_inner,
-            json_string_literal(
-                self.module_manager
-                    .run_file_paths
-                    .get(fact_line_file.1)
-                    .unwrap_or(&String::new())
-            )
+            JSON_KEY_SOURCE,
+            json_string_literal(&self.get_file_name_by_index(fact_line_file))
         ));
         field_lines.push(format!(
             "{}\"stmt\": {}",
@@ -260,14 +253,10 @@ impl<'a> RuntimeContext<'a> {
         let fact_line_file = fact_verified_by_builtin_rules_result.fact.line_file();
         field_lines.push(format!("{}\"line\": {}", indent_inner, fact_line_file.0));
         field_lines.push(format!(
-            "{}\"source\": {}",
+            "{}\"{}\": {}",
             indent_inner,
-            json_string_literal(
-                match self.module_manager.run_file_paths.get(fact_line_file.1) {
-                    Some(source_path) => source_path,
-                    None => "",
-                }
-            )
+            JSON_KEY_SOURCE,
+            json_string_literal(&self.get_file_name_by_index(fact_line_file))
         ));
         field_lines.push(format!(
             "{}\"stmt\": {}",
