@@ -32,7 +32,7 @@ impl<'a> Runtime<'a> {
         line_file: (usize, usize),
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        let mut result = verify_equality_by_builtin_rules(left, right, line_file)?;
+        let mut result = verify_equality_by_builtin_rules(self, left, right, line_file)?;
         if result.is_true() {
             return Ok(result);
         }
@@ -88,6 +88,7 @@ impl<'a> Runtime<'a> {
         let known_pairs = self.collect_known_equality_pairs_from_envs(&left_string, &right_string);
         for (known_left, known_right) in known_pairs {
             if let Some(result) = try_verify_equality_with_known_equalities_by_builtin_rules_only(
+                self,
                 left,
                 right,
                 line_file,
@@ -110,6 +111,7 @@ impl<'a> Runtime<'a> {
             .get(&right_string)
             .map(Rc::clone);
         if let Some(result) = try_verify_equality_with_known_equalities_by_builtin_rules_only(
+            self,
             left,
             right,
             line_file,
@@ -528,7 +530,8 @@ impl<'a> Runtime<'a> {
         verify_state: &VerifyState,
         equality_line_file: (usize, usize),
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        let mut result = verify_equality_by_builtin_rules(left_obj, right_obj, equality_line_file)?;
+        let mut result =
+            verify_equality_by_builtin_rules(self, left_obj, right_obj, equality_line_file)?;
         if result.is_true() {
             return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                 FactVerifiedByBuiltinRules::new(
@@ -584,6 +587,7 @@ fn equality_string(left: &Obj, right: &Obj) -> String {
 }
 
 fn verify_equality_by_builtin_rules(
+    runtime: &Runtime<'_>,
     left: &Obj,
     right: &Obj,
     line_file: (usize, usize),
@@ -599,7 +603,14 @@ fn verify_equality_by_builtin_rules(
         ));
     }
 
-    if left.two_objs_can_be_calculated_and_equal_by_calculation(right) {
+    let left_for_numeric_verification =
+        runtime.obj_with_runtime_known_numbers_substituted_for_verification(left);
+    let right_for_numeric_verification =
+        runtime.obj_with_runtime_known_numbers_substituted_for_verification(right);
+
+    if left_for_numeric_verification
+        .two_objs_can_be_calculated_and_equal_by_calculation(&right_for_numeric_verification)
+    {
         return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
             FactVerifiedByBuiltinRules::new(
                 equality_string(left, right),
@@ -610,7 +621,10 @@ fn verify_equality_by_builtin_rules(
         ));
     }
 
-    if objs_equal_by_rational_expression_simplification(left, right) {
+    if objs_equal_by_rational_expression_simplification(
+        &left_for_numeric_verification,
+        &right_for_numeric_verification,
+    ) {
         return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
             FactVerifiedByBuiltinRules::new(
                 equality_string(left, right),
@@ -625,6 +639,7 @@ fn verify_equality_by_builtin_rules(
 }
 
 fn try_verify_equality_with_known_equalities_by_builtin_rules_only(
+    runtime: &Runtime<'_>,
     left: &Obj,
     right: &Obj,
     line_file: (usize, usize),
@@ -635,7 +650,7 @@ fn try_verify_equality_with_known_equalities_by_builtin_rules_only(
         (None, None) => Ok(None),
         (Some(known_objs_equal_to_left), None) => {
             for obj in known_objs_equal_to_left.iter() {
-                let result = verify_equality_by_builtin_rules(obj, right, line_file)?;
+                let result = verify_equality_by_builtin_rules(runtime, obj, right, line_file)?;
                 if result.is_true() {
                     return Ok(Some(result));
                 }
@@ -644,7 +659,7 @@ fn try_verify_equality_with_known_equalities_by_builtin_rules_only(
         }
         (None, Some(known_objs_equal_to_right)) => {
             for obj in known_objs_equal_to_right.iter() {
-                let result = verify_equality_by_builtin_rules(left, obj, line_file)?;
+                let result = verify_equality_by_builtin_rules(runtime, left, obj, line_file)?;
                 if result.is_true() {
                     return Ok(Some(result));
                 }
@@ -654,7 +669,7 @@ fn try_verify_equality_with_known_equalities_by_builtin_rules_only(
         (Some(known_objs_equal_to_left), Some(known_objs_equal_to_right)) => {
             for obj1 in known_objs_equal_to_left.iter() {
                 for obj2 in known_objs_equal_to_right.iter() {
-                    let result = verify_equality_by_builtin_rules(obj1, obj2, line_file)?;
+                    let result = verify_equality_by_builtin_rules(runtime, obj1, obj2, line_file)?;
                     if result.is_true() {
                         return Ok(Some(result));
                     }

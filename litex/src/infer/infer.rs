@@ -117,14 +117,18 @@ impl<'a> Runtime<'a> {
     }
 
     fn infer_equal_fact(&mut self, _equal_fact: &EqualFact) -> Result<InferResult, InferError> {
-        if let Some(right_calculated_value) = _equal_fact.right.normalized_calculated_value() {
+        if let Some(right_calculated_value) =
+            self.normalized_calculated_value_for_obj(&_equal_fact.right)
+        {
             self.runtime_context
                 .top_level_env()
                 .known_normalized_calculated_value_of_obj
                 .insert(_equal_fact.left.to_string(), right_calculated_value);
         }
 
-        if let Some(left_calculated_value) = _equal_fact.left.normalized_calculated_value() {
+        if let Some(left_calculated_value) =
+            self.normalized_calculated_value_for_obj(&_equal_fact.left)
+        {
             self.runtime_context
                 .top_level_env()
                 .known_normalized_calculated_value_of_obj
@@ -329,9 +333,7 @@ impl<'a> Runtime<'a> {
                 infer_result.push_atomic_fact(&inferred_in_z_fact);
                 Ok(infer_result)
             }
-            Obj::QPos(_)
-            | Obj::RPos(_)
-            | Obj::NPosObj(_) => {
+            Obj::QPos(_) | Obj::RPos(_) | Obj::NPosObj(_) => {
                 let zero_obj = Obj::Number(Number::new("0".to_string()));
                 let inferred_atomic_fact = AtomicFact::GreaterFact(GreaterFact::new(
                     in_fact.element.clone(),
