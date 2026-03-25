@@ -5,7 +5,7 @@ use crate::execute::Runtime;
 use crate::fact::InFact;
 use crate::fact::{
     AndChainAtomicFact, AndFact, AtomicFact, EqualFact, Fact, GreaterFact, IsCartFact, IsTupleFact,
-    LessEqualFact, LessFact, NotEqualFact, OrFact,
+    LessEqualFact, NotEqualFact, OrFact,
 };
 use crate::obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FieldAccess,
@@ -476,7 +476,7 @@ impl<'a> Runtime<'a> {
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
             return Err(WellDefinedError::new(
-                format!("right of div is equal to 0"),
+                format!("divisor `{}` must be non-zero", div.right.to_string()),
                 None,
                 DEFAULT_LINE_FILE.clone(),
             ));
@@ -502,7 +502,7 @@ impl<'a> Runtime<'a> {
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
         if result.is_unknown() {
             return Err(WellDefinedError::new(
-                format!("right of mod is equal to 0"),
+                format!("modulus `{}` must be non-zero", m.right.to_string()),
                 None,
                 DEFAULT_LINE_FILE.clone(),
             ));
@@ -559,13 +559,8 @@ impl<'a> Runtime<'a> {
             DEFAULT_LINE_FILE,
         ));
 
-        let negative_base_and_even_integer_exponent = AndChainAtomicFact::AndFact(AndFact::new(
+        let even_integer_exponent = AndChainAtomicFact::AndFact(AndFact::new(
             vec![
-                AtomicFact::LessFact(LessFact::new(
-                    (*pow.base).clone(),
-                    zero_obj.clone(),
-                    DEFAULT_LINE_FILE,
-                )),
                 AtomicFact::InFact(InFact::new(
                     (*pow.exponent).clone(),
                     Obj::ZObj(ZObj::new()),
@@ -580,11 +575,19 @@ impl<'a> Runtime<'a> {
             DEFAULT_LINE_FILE,
         ));
 
+        let exponent_is_positive_integer =
+            AndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
+                (*pow.exponent).clone(),
+                Obj::NPosObj(NPosObj::new()),
+                DEFAULT_LINE_FILE,
+            )));
+
         let pow_domain_or_fact = OrFact::new(
             vec![
                 positive_base_and_real_exponent,
                 zero_base_and_positive_real_exponent,
-                negative_base_and_even_integer_exponent,
+                even_integer_exponent,
+                exponent_is_positive_integer,
             ],
             DEFAULT_LINE_FILE,
         );

@@ -24,7 +24,7 @@ impl<'a> Runtime<'a> {
             }
             KNOW => self.know_stmt(tb),
             CLAIM => self.parse_claim_stmt(tb),
-            PROVE => self.prove_stmt(tb),
+            PROVE => self.parse_prove_stmt(tb),
             IMPORT => self.import_stmt(tb),
             CLEAR => self.clear_stmt(tb),
             DO_NOTHING => self.do_nothing_stmt(tb),
