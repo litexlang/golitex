@@ -60,18 +60,33 @@ fn json_array_field_line(
     }
 }
 
-fn parse_block_error_message(parse_block_error: &ParseBlockError) -> String {
-    match parse_block_error {
-        ParseBlockError::ExpectedIndent(_, _) => "expected indent".to_string(),
-        ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
-        ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
-        ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
-        ParseBlockError::NameAlreadyUsed(name) => duplicate_used_name_error_message(name),
-        ParseBlockError::InvalidName(msg) => msg.clone(),
-    }
-}
-
 impl<'a> RuntimeContext<'a> {
+    pub fn duplicate_used_name_error_message(
+        &self,
+        name: &str,
+        already_defined_on_line_file: (usize, usize),
+    ) -> String {
+        format!(
+            "name `{}` is already used, cannot be used again for other definitions on line {} of file {}",
+            name,
+            already_defined_on_line_file.0,
+            
+        )
+    }
+
+    fn parse_block_error_message(&self, parse_block_error: &ParseBlockError) -> String {
+        match parse_block_error {
+            ParseBlockError::ExpectedIndent(_, _) => "expected indent".to_string(),
+            ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
+            ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
+            ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
+            ParseBlockError::NameAlreadyUsed(name, already_defined_on_line_file) => {
+                duplicate_used_name_error_message(name, already_defined_on_line_file)
+            }
+            ParseBlockError::InvalidName(msg) => msg.clone(),
+        }
+    }
+
     pub fn display_error_json_string(&self, error: &RuntimeError) -> String {
         self.build_display_error_json_object(error, 0, true)
     }
@@ -88,11 +103,15 @@ impl<'a> RuntimeContext<'a> {
 
         field_lines.push(format!(
             "{}\"{}\": {}",
-            indent_inner, JSON_KEY_ERROR_TYPE, json_string_literal(error.display_label())
+            indent_inner,
+            JSON_KEY_ERROR_TYPE,
+            json_string_literal(error.display_label())
         ));
         field_lines.push(format!(
             "{}\"{}\": {}",
-            indent_inner, JSON_KEY_RESULT, json_string_literal(JSON_VALUE_ERROR)
+            indent_inner,
+            JSON_KEY_RESULT,
+            json_string_literal(JSON_VALUE_ERROR)
         ));
 
         let (line, file_index) = error.line_file();
@@ -105,12 +124,16 @@ impl<'a> RuntimeContext<'a> {
         if (line, file_index) == DEFAULT_LINE_FILE {
             field_lines.push(format!(
                 "{}\"{}\": {}",
-                indent_inner, JSON_KEY_SOURCE, json_string_literal("")
+                indent_inner,
+                JSON_KEY_SOURCE,
+                json_string_literal("")
             ));
         } else {
             field_lines.push(format!(
                 "{}\"{}\": {}",
-                indent_inner, JSON_KEY_SOURCE, json_string_literal(source_text)
+                indent_inner,
+                JSON_KEY_SOURCE,
+                json_string_literal(source_text)
             ));
         }
 
@@ -169,14 +192,15 @@ impl<'a> RuntimeContext<'a> {
                 ));
                 field_lines.push(format!(
                     "{}\"{}\": {}",
-                    indent_inner, JSON_KEY_STMT, json_string_literal(&wrapped_stmt_display_string)
+                    indent_inner,
+                    JSON_KEY_STMT,
+                    json_string_literal(&wrapped_stmt_display_string)
                 ));
 
                 let mut inside_result_elements: Vec<String> = Vec::new();
                 for inside_result in e.inside_results.iter() {
-                    inside_result_elements.push(
-                        self.runtime_context_display_result_json_string(inside_result),
-                    );
+                    inside_result_elements
+                        .push(self.runtime_context_display_result_json_string(inside_result));
                 }
                 field_lines.push(json_array_field_line(
                     indent_inner.as_str(),
@@ -256,8 +280,11 @@ impl<'a> RuntimeContext<'a> {
         let previous_error_reference = self.get_previous_error_reference(error);
         match previous_error_reference {
             Some(previous_error) => {
-                let previous_error_json =
-                    self.build_display_error_json_object(previous_error, previous_error_depth, false);
+                let previous_error_json = self.build_display_error_json_object(
+                    previous_error,
+                    previous_error_depth,
+                    false,
+                );
                 format!(
                     "{}\"{}\":\n{}",
                     indent_inner, JSON_KEY_PREVIOUS_ERROR, previous_error_json

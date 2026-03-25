@@ -222,8 +222,11 @@ impl<'a> Runtime<'a> {
         }
 
         let fn_set_param_names = ParamDefWithParamSet::collect_param_names(&params_def_with_set);
-        self.validate_names_and_insert_into_top_parsing_time_name_scope(&fn_set_param_names)
-            .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        self.validate_names_and_insert_into_top_parsing_time_name_scope(
+            &fn_set_param_names,
+            tb.line_file,
+        )
+        .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
 
         let mut dom_facts = vec![];
         if tb.current_token_is_equal_to(COLON) {
@@ -786,7 +789,7 @@ impl<'a> Runtime<'a> {
         tb: &mut TokenBlock,
         a: Identifier,
     ) -> Result<Obj, ParsingError> {
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&a.name)
+        self.validate_name_and_insert_into_top_parsing_time_name_scope(&a.name, tb.line_file)
             .map_err(|e| {
                 ParsingError::new(
                     duplicate_used_name_error_message(&a.name),

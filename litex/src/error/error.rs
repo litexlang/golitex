@@ -1,15 +1,8 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
+use crate::fact::Fact;
 use crate::result::NonErrStmtExecResult;
 use crate::stmt::Stmt;
-use crate::fact::Fact;
 use std::fmt;
-
-pub fn duplicate_used_name_error_message(name: &str) -> String {
-    format!(
-        "name `{}` is already used, cannot be used again for other definitions",
-        name
-    )
-}
 
 fn body_with_previous(message: &str, previous_error: &Option<Box<RuntimeError>>) -> String {
     match previous_error {
@@ -97,7 +90,7 @@ fn parse_block_error_message(e: &ParseBlockError) -> String {
         ParseBlockError::UnexpectedIndent(_, _) => "unexpected indent".to_string(),
         ParseBlockError::InconsistentIndent(_, _) => "inconsistent indent".to_string(),
         ParseBlockError::MissingBody(_, _) => "block header missing body".to_string(),
-        ParseBlockError::NameAlreadyUsed(name) => {
+        ParseBlockError::NameAlreadyUsed(name, _) => {
             format!("{}", duplicate_used_name_error_message(name))
         }
         ParseBlockError::InvalidName(msg) => msg.clone(),
@@ -229,7 +222,7 @@ pub enum ParseBlockError {
     UnexpectedIndent(usize, usize),
     InconsistentIndent(usize, usize),
     MissingBody(usize, usize),
-    NameAlreadyUsed(String),
+    NameAlreadyUsed(String, (usize, usize)),
     InvalidName(String),
 }
 
@@ -248,7 +241,7 @@ impl ParseBlockError {
             ParseBlockError::UnexpectedIndent(line, file) => (*line, *file),
             ParseBlockError::InconsistentIndent(line, file) => (*line, *file),
             ParseBlockError::MissingBody(line, file) => (*line, *file),
-            ParseBlockError::NameAlreadyUsed(_) => DEFAULT_LINE_FILE.clone(),
+            ParseBlockError::NameAlreadyUsed(_, _) => DEFAULT_LINE_FILE.clone(),
             ParseBlockError::InvalidName(_) => DEFAULT_LINE_FILE.clone(),
         }
     }
@@ -414,10 +407,7 @@ impl fmt::Display for VerifyError {
 }
 
 impl VerifyError {
-    pub fn new(
-        fact: Fact,
-        previous_error: Option<RuntimeError>,
-    ) -> Self {
+    pub fn new(fact: Fact, previous_error: Option<RuntimeError>) -> Self {
         VerifyError {
             fact,
             previous_error: boxed_previous_error(previous_error),
@@ -461,10 +451,7 @@ impl fmt::Display for VerifyUnknownError {
 }
 
 impl VerifyUnknownError {
-    pub fn new(
-        fact: Fact,
-        previous_error: Option<RuntimeError>,
-    ) -> Self {
+    pub fn new(fact: Fact, previous_error: Option<RuntimeError>) -> Self {
         VerifyUnknownError {
             fact,
             previous_error: boxed_previous_error(previous_error),
