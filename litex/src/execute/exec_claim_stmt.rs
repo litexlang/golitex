@@ -15,6 +15,7 @@ impl<'a> Runtime<'a> {
         stmt: &ClaimStmt,
         forall_fact: &ForallFact,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
+        println!("exec_claim_stmt_body_fact_for_forall_fact");
         self.define_params_with_type(
             &forall_fact.params_def_with_type,
             false,
