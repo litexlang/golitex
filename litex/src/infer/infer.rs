@@ -175,7 +175,7 @@ impl<'a> Runtime<'a> {
                 }
 
                 let key = in_fact.element.to_string();
-                let fn_set_obj = FnSetObj::FnSetWithoutDom(fn_set_without_dom.clone());
+                let fn_set_obj = FnSetObj::FnSetWithoutParams(fn_set_without_dom.clone());
 
                 self.runtime_context
                     .top_level_env()

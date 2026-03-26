@@ -7,7 +7,7 @@ use crate::error::ParsingError;
 use crate::error::{duplicate_used_name_error_msg_without_line_file, RuntimeError};
 use crate::execute::Runtime;
 use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
-use crate::stmt::define_algorithm_stmt::{AlgoCase, AlgoReturn, AlgoReturnOrAlgoCase, DefAlgoStmt};
+use crate::stmt::define_algorithm_stmt::{AlgoCase, AlgoReturn, DefAlgoStmt};
 use crate::stmt::definition_stmt::{
     DefLetStmt, DefPropWithMeaningStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt,
     DefStructWithNoFieldStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt,
@@ -423,20 +423,26 @@ impl<'a> Runtime<'a> {
         }
         tb.skip_token(RIGHT_BRACE)?;
         tb.skip_token(COLON)?;
-        let mut return_or_algo_case: Vec<AlgoReturnOrAlgoCase> = vec![];
-        for block in tb.body.iter_mut() {
-            let item = if block.current()? == CASE {
-                AlgoReturnOrAlgoCase::AlgoCase(self.parse_algo_case(block)?)
-            } else {
-                AlgoReturnOrAlgoCase::AlgoReturn(self.parse_algo_return(block)?)
-            };
-
-            return_or_algo_case.push(item);
+        let mut algo_cases: Vec<AlgoCase> = vec![];
+        let mut default_return: Option<AlgoReturn> = None;
+        match tb.body.split_last_mut() {
+            None => {}
+            Some((last_block, leading_blocks)) => {
+                for block in leading_blocks.iter_mut() {
+                    algo_cases.push(self.parse_algo_case(block)?);
+                }
+                if last_block.current()? == CASE {
+                    algo_cases.push(self.parse_algo_case(last_block)?);
+                } else {
+                    default_return = Some(self.parse_algo_return(last_block)?);
+                }
+            }
         }
         Ok(Stmt::DefAlgoStmt(DefAlgoStmt::new(
             name,
             params,
-            return_or_algo_case,
+            algo_cases,
+            default_return,
             tb.line_file,
         )))
     }

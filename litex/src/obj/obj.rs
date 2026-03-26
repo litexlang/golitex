@@ -79,7 +79,7 @@ pub struct TupleDimObj {
 
 #[derive(Clone)]
 pub enum FnSetObj {
-    FnSetWithoutDom(FnSetWithoutParams),
+    FnSetWithoutParams(FnSetWithoutParams),
     FnSetWithDom(FnSetWithParams),
 }
 
@@ -1172,7 +1172,7 @@ impl fmt::Display for PowerSet {
 impl From<Atom> for Obj {
     fn from(atom: Atom) -> Self {
         match atom {
-            Atom::IdentifierAtom(a) => Obj::Identifier(a),
+            Atom::Identifier(a) => Obj::Identifier(a),
             Atom::IdentifierWithMod(a) => Obj::IdentifierWithMod(a),
             Atom::FieldAccess(a) => Obj::FieldAccess(a),
             Atom::FieldAccessWithMod(a) => Obj::FieldAccessWithMod(a),
@@ -1190,7 +1190,7 @@ impl Identifier {
 impl fmt::Display for FnSetObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            FnSetObj::FnSetWithoutDom(fn_set_without_dom) => write!(f, "{}", fn_set_without_dom),
+            FnSetObj::FnSetWithoutParams(fn_set_without_dom) => write!(f, "{}", fn_set_without_dom),
             FnSetObj::FnSetWithDom(fn_set_with_dom) => write!(f, "{}", fn_set_with_dom),
         }
     }
@@ -1256,7 +1256,7 @@ impl FnSetObj {
     pub fn ret_set(&self) -> Box<Obj> {
         match self {
             FnSetObj::FnSetWithDom(e) => e.ret_set.clone(),
-            FnSetObj::FnSetWithoutDom(e) => e.ret_set.clone(),
+            FnSetObj::FnSetWithoutParams(e) => e.ret_set.clone(),
         }
     }
 }

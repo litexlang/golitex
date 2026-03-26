@@ -83,41 +83,26 @@ impl<'a> Runtime<'a> {
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
         let mut iff_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
 
-        let last = tb
-            .body
-            .last_mut()
-            .ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file, None))?;
-        last.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
-        for block in last.body.iter_mut() {
+        let body_len = tb.body.len();
+
+        let iff_block = tb.body.get_mut(body_len - 1).ok_or_else(|| {
+            ParsingError::new("Expected <=>: block in forall body".to_string(), tb.line_file, None)
+        })?;
+        iff_block.skip_token_and_colon_and_exceed_end_of_head(EQUIVALENT_SIGN)?;
+        for block in iff_block.body.iter_mut() {
             iff_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
         }
 
-        let n = tb.body.len();
-        let has_right_arrow = tb
-            .body
-            .get(n - 2)
-            .ok_or_else(|| ParsingError::new("Expected body".to_string(), tb.line_file, None))?
-            .current()?
-            == RIGHT_ARROW;
-        if has_right_arrow {
-            let then_block = tb.body.get_mut(n - 2).ok_or_else(|| {
-                ParsingError::new("Expected body".to_string(), tb.line_file, None)
-            })?;
-            then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
-            for block in then_block.body.iter_mut() {
-                then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
-            }
+        let then_block = tb.body.get_mut(body_len - 2).ok_or_else(|| {
+            ParsingError::new("Expected =>: block in forall body".to_string(), tb.line_file, None)
+        })?;
+        then_block.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
+        for block in then_block.body.iter_mut() {
+            then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
+        }
 
-            for block in tb.body.iter_mut().take(n - 2) {
-                dom_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
-            }
-        } else {
-            let then_block = tb.body.get_mut(0).ok_or_else(|| {
-                ParsingError::new("Expected body".to_string(), tb.line_file, None)
-            })?;
-            for block in then_block.body.iter_mut() {
-                then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
-            }
+        for block in tb.body.iter_mut().take(body_len - 2) {
+            dom_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
         }
 
         let forall_fact = ForallFact::new(param_def, dom_facts, then_facts, tb.line_file);

@@ -89,8 +89,8 @@ impl FieldAccessWithMod {
 impl Atom {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Atom {
         match self {
-            Atom::IdentifierAtom(identifier) => match identifier.instantiate(param_to_arg_map) {
-                Obj::Identifier(new_identifier) => Atom::IdentifierAtom(new_identifier),
+            Atom::Identifier(identifier) => match identifier.instantiate(param_to_arg_map) {
+                Obj::Identifier(new_identifier) => Atom::Identifier(new_identifier),
                 Obj::IdentifierWithMod(new_identifier_with_mod) => {
                     Atom::IdentifierWithMod(new_identifier_with_mod)
                 }
@@ -98,13 +98,13 @@ impl Atom {
                 Obj::FieldAccessWithMod(new_field_access_with_mod) => {
                     Atom::FieldAccessWithMod(new_field_access_with_mod)
                 }
-                _ => Atom::IdentifierAtom(identifier.clone()),
+                _ => Atom::Identifier(identifier.clone()),
             },
             Atom::IdentifierWithMod(identifier_with_mod) => {
                 Atom::IdentifierWithMod(identifier_with_mod.clone())
             }
             Atom::FieldAccess(field_access) => match field_access.instantiate(param_to_arg_map) {
-                Obj::Identifier(new_identifier) => Atom::IdentifierAtom(new_identifier),
+                Obj::Identifier(new_identifier) => Atom::Identifier(new_identifier),
                 Obj::IdentifierWithMod(new_identifier_with_mod) => {
                     Atom::IdentifierWithMod(new_identifier_with_mod)
                 }

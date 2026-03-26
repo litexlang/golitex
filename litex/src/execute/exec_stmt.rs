@@ -28,7 +28,7 @@ impl<'a> Runtime<'a> {
             Stmt::DefStructWithNoFieldStmt(d) => self
                 .def_struct_with_no_field_stmt(d)
                 .map_err(RuntimeError::from),
-            Stmt::DefAlgoStmt(d) => self.def_algo_stmt(d).map_err(RuntimeError::from),
+            Stmt::DefAlgoStmt(d) => self.exec_def_algo_stmt(d).map_err(RuntimeError::from),
             Stmt::KnowStmt(know_stmt) => self.exec_know_stmt(know_stmt).map_err(RuntimeError::from),
             Stmt::Fact(fact) => self.exec_fact(fact).map_err(RuntimeError::from),
             Stmt::ClaimStmt(s) => self.exec_claim_stmt(s),
@@ -52,11 +52,8 @@ impl<'a> Runtime<'a> {
     }
 
     pub fn stmt_unsupported(stmt: Stmt) -> Result<NonErrStmtExecResult, RuntimeError> {
-        Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
-            stmt,
-            "unimplemented".to_string(),
-            None,
-            vec![],
-        )))
+        Err(RuntimeError::ExecStmtError(
+            ExecStmtError::with_message_and_cause(stmt, "unimplemented".to_string(), None, vec![]),
+        ))
     }
 }

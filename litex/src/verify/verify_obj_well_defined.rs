@@ -165,7 +165,7 @@ impl<'a> Runtime<'a> {
         fn_obj: &FnObj,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        let mut the_set_where_current_fn_obj_is_in = self.runtime_context.find_fn_definition_for_atom(&fn_obj.head).ok_or_else(|| WellDefinedError::new(
+        let mut the_set_where_current_fn_obj_is_in = self.runtime_context.get_fn_set_where_fn_belongs_to(&fn_obj.head).ok_or_else(|| WellDefinedError::new(
             todo_error_message("verify_fn_obj_well_defined: function head identifier has no known definition yet".to_string()).to_string(),None,
             DEFAULT_LINE_FILE.clone(),
         ))?.clone();
@@ -179,7 +179,7 @@ impl<'a> Runtime<'a> {
                         DEFAULT_LINE_FILE.clone(),
                     ))?;
                 }
-                FnSetObj::FnSetWithoutDom(fn_set_without_dom) => {
+                FnSetObj::FnSetWithoutParams(fn_set_without_dom) => {
                     self.verify_fn_obj_args_well_defined_against_fn_set_without_dom(
                         args,
                         &fn_set_without_dom,
@@ -231,7 +231,7 @@ impl<'a> Runtime<'a> {
 
             the_set_where_current_fn_obj_is_in = match *set_where_the_next_fn_obj_is_in {
                 Obj::FnSetWithParams(e) => FnSetObj::FnSetWithDom(e),
-                Obj::FnSetWithoutParams(e) => FnSetObj::FnSetWithoutDom(e),
+                Obj::FnSetWithoutParams(e) => FnSetObj::FnSetWithoutParams(e),
                 _ => {
                     return Err(WellDefinedError::new(
                         format!(
