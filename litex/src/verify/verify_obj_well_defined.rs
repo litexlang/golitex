@@ -1127,7 +1127,7 @@ impl<'a> Runtime<'a> {
             })?;
         let tuple_dim = cart_obj_where_tuple_obj_is.args.len();
 
-        let index_calculated_string = x.index.calculate_value_and_normalize();
+        let index_calculated_string = self.get_known_normalized_calculated_value_for_obj(&x.index);
 
         let index_calculated_obj = {
             if let Some(index_calculated_number) = index_calculated_string {
