@@ -131,30 +131,6 @@ impl<'a> RuntimeContext<'a> {
 
         None
     }
-
-    pub fn is_name_used(&self, name: &str) -> bool {
-        if self.is_name_used_for_identifier(name) {
-            return true;
-        }
-
-        if self.is_name_used_for_predicate_with_meaning(name) {
-            return true;
-        }
-
-        if self.is_name_used_for_predicate_without_meaning(name) {
-            return true;
-        }
-
-        if self.is_name_used_for_struct_with_fields(name) {
-            return true;
-        }
-
-        if self.is_name_used_for_struct_with_no_field(name) {
-            return true;
-        }
-
-        return self.is_name_used_for_algo(name);
-    }
 }
 
 impl<'a> RuntimeContext<'a> {
