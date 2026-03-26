@@ -45,7 +45,7 @@ where
     writeln!(stdout_writer, "Litex version {}", version_banner)?;
     writeln!(stdout_writer, "Copyright (C) 2024-2026 Jiachen Shen")?;
     writeln!(stdout_writer, "website: https://litexlang.com")?;
-    writeln!(stdout_writer, "Ctrl+D to exit.\n")?;
+    writeln!(stdout_writer, "Ctrl+D to exit.")?;
 
     let mut module_manager = ModuleManager::new_empty_module_manager(BUILTIN_CODE);
     let mut runtime_context =
