@@ -402,15 +402,6 @@ impl<'a> Runtime<'a> {
     pub fn parse_def_algorithm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(ALGO)?;
         let name = tb.advance()?;
-        self.validate_name_and_insert_into_top_parsing_time_name_scope(&name, tb.line_file)
-            .map_err(|e| {
-                ParsingError::new(
-                    duplicate_used_name_error_msg_without_line_file(&name),
-                    tb.line_file,
-                    Some(RuntimeError::ParseBlockError(e)),
-                )
-            })?;
-
         self.push_parsing_time_name_scope();
         let stmt = self.parse_def_algorithm_stmt_body(name, tb);
         self.pop_parsing_time_name_scope();
