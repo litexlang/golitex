@@ -3,7 +3,7 @@ use crate::common::helper::{
     to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_with_sep,
 };
 use crate::common::keywords::{ALGO, CASE, COLON};
-use crate::fact::AndChainAtomicFact;
+use crate::fact::AtomicFact;
 use crate::obj::Obj;
 use std::fmt;
 
@@ -26,7 +26,7 @@ pub struct AlgoReturn {
 }
 #[derive(Clone)]
 pub struct AlgoCase {
-    pub condition: AndChainAtomicFact,
+    pub condition: AtomicFact, // 只有 atomic fact 能reverse，而 algo case 有可能需要被reverse掉（处理 default_return 的时候）。
     pub return_stmt: AlgoReturn,
     pub line_file: (usize, usize),
 }
@@ -122,11 +122,7 @@ impl AlgoReturn {
 }
 
 impl AlgoCase {
-    pub fn new(
-        condition: AndChainAtomicFact,
-        return_stmt: AlgoReturn,
-        line_file: (usize, usize),
-    ) -> Self {
+    pub fn new(condition: AtomicFact, return_stmt: AlgoReturn, line_file: (usize, usize)) -> Self {
         AlgoCase {
             condition,
             return_stmt,

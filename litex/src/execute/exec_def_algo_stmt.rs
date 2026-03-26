@@ -1,5 +1,6 @@
 use crate::error::ExecStmtError;
 use crate::execute::Runtime;
+use crate::fact::AndChainAtomicFact;
 use crate::fact::{
     AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, OrFact,
 };
@@ -241,12 +242,9 @@ impl<'a> Runtime<'a> {
             for requirement_dom_fact in requirement_dom_facts.iter() {
                 case_dom_facts.push(requirement_dom_fact.clone());
             }
-            case_dom_facts.push(
-                algo_case
-                    .condition
-                    .clone()
-                    .to_exist_or_and_chain_atomic_fact(),
-            );
+            case_dom_facts.push(ExistOrAndChainAtomicFact::AtomicFact(
+                algo_case.condition.clone(),
+            ));
 
             let case_then_facts = vec![ExistOrAndChainAtomicFact::AtomicFact(
                 AtomicFact::EqualFact(EqualFact::new(
@@ -289,7 +287,7 @@ impl<'a> Runtime<'a> {
             let mut case_conditions: Vec<crate::fact::AndChainAtomicFact> =
                 Vec::with_capacity(def_algo_stmt.cases.len());
             for algo_case in def_algo_stmt.cases.iter() {
-                case_conditions.push(algo_case.condition.clone());
+                case_conditions.push(AndChainAtomicFact::AtomicFact(algo_case.condition.clone()));
             }
             let coverage_or_fact = OrFact::new(case_conditions, def_algo_stmt.line_file);
             let coverage_forall_fact = Fact::ForallFact(ForallFact::new(
