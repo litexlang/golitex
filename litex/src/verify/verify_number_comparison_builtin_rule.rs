@@ -293,7 +293,7 @@ impl<'a> Runtime<'a> {
         &self,
         obj: &Obj,
     ) -> Option<Number> {
-        if let Some(number_from_literal_obj_tree) = obj.normalized_calculated_value() {
+        if let Some(number_from_literal_obj_tree) = obj.calculate_value_and_normalize() {
             return Some(number_from_literal_obj_tree);
         }
         self.runtime_context

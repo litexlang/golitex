@@ -226,7 +226,7 @@ impl<'a> RuntimeContext<'a> {
             format!(
                 "on line {}, file {}",
                 line,
-                self.get_file_name_empty_if_default(file_index)
+                self.get_file_name_empty_if_default((line, file_index))
             )
         }
     }
