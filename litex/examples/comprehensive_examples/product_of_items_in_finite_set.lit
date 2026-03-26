@@ -1,0 +1,15 @@
+let fn product_of(s power_set(R)) R:
+    dom:
+        $is_finite_set(s)
+
+know:
+    forall x R:
+        product_of({x}) = x
+
+    forall s finite_set, x s:
+        product_of(s) = product_of(set_minus(s, {x})) * product_of({x})
+
+prove product_of({1,2}) = 2:
+    know set_minus({1,2}, {1}) = {2}
+    {1, 2} $subset_of R
+    product_of({1, 2}) = product_of({2}) * product_of({1}) = 2 * 1 = 2
