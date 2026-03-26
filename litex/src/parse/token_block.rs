@@ -214,7 +214,7 @@ impl TokenBlock {
         })
     }
 
-    fn current_token_empty_if_exceed_end_of_head(&self) -> &str {
+    pub fn current_token_empty_if_exceed_end_of_head(&self) -> &str {
         if self.exceed_end_of_head() {
             return "";
         }
