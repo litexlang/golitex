@@ -94,7 +94,7 @@ impl<'a> Runtime<'a> {
             }
         }
 
-        if self.runtime_context.is_name_used(name) {
+        if self.is_name_used(name) {
             return Err(ParseBlockError::NameAlreadyUsed {
                 name: name.to_string(),
                 name_already_used_on_line_file: DEFAULT_LINE_FILE,
@@ -165,7 +165,7 @@ impl<'a> Runtime<'a> {
                 try_index += 1;
                 continue;
             }
-            if self.runtime_context.is_name_used(&candidate_name) {
+            if self.is_name_used(&candidate_name) {
                 try_index += 1;
                 continue;
             }
@@ -192,5 +192,11 @@ impl<'a> Runtime<'a> {
         self.runtime_context.module_manager.current_file_index += 1;
         self.push_parsing_time_name_scope();
         self.runtime_context.push_env();
+    }
+
+    pub fn is_name_used(&self, name: &str) -> bool {
+        self.parsing_time_name_scope_stack
+            .iter()
+            .any(|scope| scope.contains_key(name))
     }
 }
