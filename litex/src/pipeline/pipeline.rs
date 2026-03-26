@@ -1,4 +1,4 @@
-use crate::common::keywords::BUILTIN;
+use crate::common::keywords::BUILTIN_CODE;
 use crate::execute::Runtime;
 use crate::module_manager::ModuleManager;
 use crate::parse::TokenBlock;
@@ -9,8 +9,7 @@ use std::fs;
 use std::io::{self, BufRead, Write};
 
 pub fn run_source_code_in_file_and_return_string(entrance_file_path: &str) -> String {
-    let source_code = fs::read_to_string(entrance_file_path).expect("Could not read file");
-    run_source_code_and_return_string(&source_code, entrance_file_path)
+    run_source_code_in_file_and_return_json_string(entrance_file_path)
 }
 
 pub fn run_source_code_in_file_and_return_json_string(entrance_file_path: &str) -> String {
@@ -18,32 +17,18 @@ pub fn run_source_code_in_file_and_return_json_string(entrance_file_path: &str) 
     run_source_code_and_return_json_string(&source_code, entrance_file_path)
 }
 
-pub fn run_source_code_and_return_string(source_code: &str, entrance_label: &str) -> String {
-    let normalized_source = remove_windows_carriage_return(source_code);
-    let mut module_manager = ModuleManager::new_empty_module_manager(BUILTIN);
-    let mut runtime_context =
-        RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager);
-    let mut runtime = Runtime::new(&mut runtime_context);
-    run_source_code(normalized_source.as_str(), &mut runtime, false);
-    runtime
-        .runtime_context
-        .module_manager
-        .new_file_path(entrance_label);
-    run_source_code(BUILTIN_ENV_CODE, &mut runtime, false)
-}
-
 pub fn run_source_code_and_return_json_string(source_code: &str, entrance_label: &str) -> String {
     let normalized_source = remove_windows_carriage_return(source_code);
-    let mut module_manager = ModuleManager::new_empty_module_manager(BUILTIN);
+    let mut module_manager = ModuleManager::new_empty_module_manager(BUILTIN_CODE);
     let mut runtime_context =
         RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager);
     let mut runtime = Runtime::new(&mut runtime_context);
-    run_source_code(BUILTIN_ENV_CODE, &mut runtime, true);
-    runtime
-        .runtime_context
-        .module_manager
-        .new_file_path(entrance_label);
-    run_source_code(normalized_source.as_str(), &mut runtime, true)
+    let (ok, msg) = run_source_code(BUILTIN_ENV_CODE, &mut runtime, true);
+    if !ok {
+        return format!("builtin code execution failed: {}", msg);
+    }
+    runtime.new_file_path_new_env_new_name_scope(entrance_label);
+    run_source_code(normalized_source.as_str(), &mut runtime, true).1
 }
 
 fn remove_windows_carriage_return(source_code: &str) -> String {
@@ -54,7 +39,7 @@ pub fn run_source_code(
     source_code: &str,
     runtime: &mut Runtime,
     should_output_json: bool,
-) -> String {
+) -> (bool, String) {
     let blocks = match TokenBlock::parse_blocks(
         source_code,
         runtime.runtime_context.module_manager.current_file_index,
@@ -63,16 +48,22 @@ pub fn run_source_code(
         Err(e) => {
             let runtime_error = e.into();
             if should_output_json {
-                return format!(
-                    "\n{}\n",
-                    runtime
-                        .runtime_context
-                        .display_error_json_string(&runtime_error)
+                return (
+                    false,
+                    format!(
+                        "\n{}\n",
+                        runtime
+                            .runtime_context
+                            .display_error_json_string(&runtime_error)
+                    ),
                 );
             }
-            return format!(
-                "\n{}\n",
-                runtime.runtime_context.display_error(&runtime_error)
+            return (
+                false,
+                format!(
+                    "\n{}\n",
+                    runtime.runtime_context.display_error(&runtime_error)
+                ),
             );
         }
     };
@@ -85,25 +76,24 @@ pub fn run_source_code(
                 Err(e) => {
                     let runtime_error = e.into();
                     if should_output_json {
-                        out.push_str(
+                        return (
+                            false,
                             format!(
                                 "\n{}\n",
                                 runtime
                                     .runtime_context
                                     .display_error_json_string(&runtime_error)
-                            )
-                            .as_str(),
+                            ),
                         );
                     } else {
-                        out.push_str(
+                        return (
+                            false,
                             format!(
                                 "\n{}\n",
                                 runtime.runtime_context.display_error(&runtime_error)
-                            )
-                            .as_str(),
+                            ),
                         );
                     }
-                    return out;
                 }
             }
         };
@@ -123,7 +113,7 @@ pub fn run_source_code(
                         format!("\n{}\n", runtime.runtime_context.display_error(&e)).as_str(),
                     );
                 }
-                return out;
+                return (false, out);
             }
         };
         out.push('\n');
@@ -140,7 +130,7 @@ pub fn run_source_code(
         out.push('\n');
     }
 
-    out
+    (true, out)
 }
 
 pub fn run_repl_loop_and_return_string(version_banner: &str) {
@@ -184,14 +174,21 @@ where
     writeln!(stdout_writer, "website: https://litexlang.com")?;
     writeln!(stdout_writer, "Ctrl+D to exit.\n")?;
 
-    let mut module_manager = ModuleManager::new_empty_module_manager(BUILTIN);
+    let mut module_manager = ModuleManager::new_empty_module_manager(BUILTIN_CODE);
     let mut runtime_context =
         RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager);
 
     let mut runtime = Runtime::new(&mut runtime_context);
 
-    run_source_code(BUILTIN_ENV_CODE, &mut runtime, true);
-    runtime.runtime_context.module_manager.new_file_path("repl");
+    let (ok, msg) = run_source_code(BUILTIN_ENV_CODE, &mut runtime, true);
+    if !ok {
+        eprintln!("builtin code execution failed: {}", msg);
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            "builtin code execution failed",
+        ));
+    }
+    runtime.new_file_path_new_env_new_name_scope("repl");
 
     let mut line_buffer = String::new();
 

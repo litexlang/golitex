@@ -26,9 +26,4 @@ impl<'a> ModuleManager<'a> {
             imported_module_environments: HashMap::new(),
         }
     }
-
-    pub fn new_file_path(&mut self, path: &str) {
-        self.run_file_paths.push(path.to_string());
-        self.current_file_index += 1;
-    }
 }

@@ -183,4 +183,14 @@ impl<'a> Runtime<'a> {
             return candidate_name;
         }
     }
+
+    pub fn new_file_path_new_env_new_name_scope(&mut self, path: &str) {
+        self.runtime_context
+            .module_manager
+            .run_file_paths
+            .push(path.to_string());
+        self.runtime_context.module_manager.current_file_index += 1;
+        self.push_parsing_time_name_scope();
+        self.runtime_context.push_env();
+    }
 }
