@@ -15,9 +15,9 @@ impl<'a> Runtime<'a> {
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
-            &Fact::ExistFact(exist_fact.clone()),
-        ) {
+        if let Some(cached_result) =
+            self.verify_fact_from_cache_using_display_string(&Fact::ExistFact(exist_fact.clone()))
+        {
             return Ok(cached_result);
         }
 
@@ -57,15 +57,6 @@ impl<'a> Runtime<'a> {
             if result.is_true() {
                 return Ok(result);
             }
-        }
-
-        let result = Self::verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
-            &self.runtime_context.builtin_environment,
-            exist_fact,
-            known_exist_fact,
-        )?;
-        if result.is_true() {
-            return Ok(result);
         }
 
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
