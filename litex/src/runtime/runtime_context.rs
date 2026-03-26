@@ -1,4 +1,5 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
+use crate::common::defaults::FILE_INDEX_FOR_BUILTIN;
 use crate::common::keywords::{is_builtin_identifier_obj, is_builtin_predicate, MOD_SIGN};
 use crate::environment::Environment;
 use crate::error::RuntimeError;
@@ -227,16 +228,30 @@ impl<'a> RuntimeContext<'a> {
 }
 
 impl<'a> RuntimeContext<'a> {
-    pub(in crate::runtime) fn format_line_file_location_string(
+    pub(in crate::runtime) fn get_location_string_of_line_file(
         &self,
         line: usize,
         file_index: usize,
     ) -> String {
-        let path = self.get_source_file_by_line_file_return_empty_when_default((line, file_index));
+        if (line, file_index) == DEFAULT_LINE_FILE {
+            return String::new();
+        }
+
+        let path = match self.module_manager.run_file_paths.get(file_index) {
+            Some(path) => path.clone(),
+            None => String::new(),
+        };
+
         if path.is_empty() {
             format!("on line {}", line)
+        } else if file_index == FILE_INDEX_FOR_BUILTIN + 1 {
+            format!("on line {}", line)
         } else {
-            format!("on line {}, file {}", line, path)
+            format!(
+                "on line {}, file {}",
+                line,
+                self.get_file_name_empty_if_default(file_index)
+            )
         }
     }
 
@@ -267,7 +282,7 @@ impl<'a> RuntimeContext<'a> {
         } else {
             format!(
                 "Success on {}:\n",
-                self.format_line_file_location_string(line_file.0, line_file.1)
+                self.get_location_string_of_line_file(line_file.0, line_file.1)
             )
         }
     }
@@ -299,7 +314,7 @@ impl<'a> RuntimeContext<'a> {
             } else {
                 format!(
                     "fact known/verified/inferred {}",
-                    self.format_line_file_location_string(
+                    self.get_location_string_of_line_file(
                         fact_verified_by_fact_result.verified_by_line_file.0,
                         fact_verified_by_fact_result.verified_by_line_file.1
                     )
@@ -353,7 +368,7 @@ impl<'a> RuntimeContext<'a> {
 
     pub fn display_error(&self, error: &RuntimeError) -> String {
         let location_string =
-            self.format_line_file_location_string(error.line_file().0, error.line_file().1);
+            self.get_location_string_of_line_file(error.line_file().0, error.line_file().1);
 
         match error {
             RuntimeError::ArithmeticError(_) => {

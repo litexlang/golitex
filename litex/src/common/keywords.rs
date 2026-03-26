@@ -111,7 +111,8 @@ pub const RESTRICT: &str = "restrict";
 
 pub const TUPLE_DIM: &str = "tuple_dim";
 
-pub const BUILTIN: &str = "builtin";
+pub const BUILTIN_CODE: &str = "builtin_code";
+
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
     let symbols = [
@@ -229,7 +230,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         RESTRICT,
         TUPLE_DIM,
         FN_FOR_FN_WITHOUT_PARAMS,
-        BUILTIN,
+        BUILTIN_CODE,
     ];
     for &s in &words {
         m.insert(s, s);
