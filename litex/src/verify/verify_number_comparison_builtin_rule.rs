@@ -1,6 +1,6 @@
 use crate::execute::Runtime;
 use crate::fact::AtomicFact;
-use crate::obj::{Number, Obj};
+use crate::obj::Obj;
 
 enum NumberCompareResult {
     Less,
@@ -282,21 +282,8 @@ impl<'a> Runtime<'a> {
         left_obj: &Obj,
         right_obj: &Obj,
     ) -> Option<(String, String)> {
-        let left_number =
-            self.normalized_calculated_number_for_number_comparison_builtin_rule(left_obj)?;
-        let right_number =
-            self.normalized_calculated_number_for_number_comparison_builtin_rule(right_obj)?;
+        let left_number = self.get_known_normalized_calculated_value_for_obj(left_obj)?;
+        let right_number = self.get_known_normalized_calculated_value_for_obj(right_obj)?;
         Some((left_number.normalized_value, right_number.normalized_value))
-    }
-
-    fn normalized_calculated_number_for_number_comparison_builtin_rule(
-        &self,
-        obj: &Obj,
-    ) -> Option<Number> {
-        if let Some(number_from_literal_obj_tree) = obj.calculate_value_and_normalize() {
-            return Some(number_from_literal_obj_tree);
-        }
-        self.runtime_context
-            .get_normalized_calculated_value_of_obj(&obj.to_string())
     }
 }
