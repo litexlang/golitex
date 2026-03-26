@@ -13,3 +13,7 @@ prove:
     have a R = 1
 
     a + 2 = 3
+
+prove:
+    have a R, b R = 1, 2
+    (a + (a + (a * b + (a + b)))) * (a + 3 * b) = 49

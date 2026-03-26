@@ -4,6 +4,7 @@ mod monomial;
 mod objs_equal_by_rational_expression_simplification;
 mod process_division_after_polynomial_simplification;
 
+mod calculate_div;
 #[cfg(test)]
 mod simplify_polynomial_test;
 

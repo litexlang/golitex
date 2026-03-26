@@ -66,18 +66,6 @@ impl<'a> Runtime<'a> {
                     result
                 }
             }
-            Obj::Div(div) => {
-                let result = Obj::Div(Div::new(
-                    self.obj_with_runtime_known_numbers_substituted_for_verification(&div.left),
-                    self.obj_with_runtime_known_numbers_substituted_for_verification(&div.right),
-                ));
-                let calculated_result = result.calculate_value_and_normalize();
-                if let Some(calculated_result) = calculated_result {
-                    Obj::Number(calculated_result)
-                } else {
-                    result
-                }
-            }
             Obj::Mod(mod_obj) => {
                 let result = Obj::Mod(Mod::new(
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&mod_obj.left),
@@ -104,6 +92,18 @@ impl<'a> Runtime<'a> {
                     result
                 }
             }
+            Obj::Div(div) => {
+                let result = Obj::Div(Div::new(
+                    self.obj_with_runtime_known_numbers_substituted_for_verification(&div.left),
+                    self.obj_with_runtime_known_numbers_substituted_for_verification(&div.right),
+                ));
+                let calculated_result = result.calculate_value_and_normalize();
+                if let Some(calculated_result) = calculated_result {
+                    Obj::Number(calculated_result)
+                } else {
+                    result
+                }
+            }
             Obj::Identifier(_)
             | Obj::IdentifierWithMod(_)
             | Obj::FieldAccess(_)
@@ -115,16 +115,10 @@ impl<'a> Runtime<'a> {
                     obj.clone()
                 }
             }
-            Obj::Count(count) => {
-                // 如果里面的东西是 list set 那就返回 number，这个number是set len
-                match &*count.set {
-                    Obj::ListSet(list_set) => {
-                        let list_set_len = list_set.list.len();
-                        Obj::Number(Number::new(list_set_len.to_string()))
-                    }
-                    _ => obj.clone(),
-                }
-            }
+            Obj::Count(count) => match &*count.set {
+                Obj::ListSet(list_set) => Obj::Number(Number::new(list_set.list.len().to_string())),
+                _ => obj.clone(),
+            },
             _ => obj.clone(),
         }
     }

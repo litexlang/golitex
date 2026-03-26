@@ -1,0 +1,2 @@
+$is_finite_set({1, 2})
+count({1, 2, 3}) = 3
