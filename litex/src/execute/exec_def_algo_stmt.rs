@@ -1,9 +1,7 @@
 use crate::error::ExecStmtError;
 use crate::execute::Runtime;
 use crate::fact::AndChainAtomicFact;
-use crate::fact::{
-    AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, OrFact,
-};
+use crate::fact::{AtomicFact, EqualFact, ExistOrAndChainAtomicFact, Fact, ForallFact, OrFact};
 use crate::infer::InferResult;
 use crate::obj::{Atom, FnObj, FnSetObj, Identifier, Obj};
 use crate::result::NonErrStmtExecResult;
@@ -79,7 +77,6 @@ impl<'a> Runtime<'a> {
                     ));
                 }
 
-                let mut param_satisfy_fn_param_set_facts = vec![];
                 let mut algo_param_defs_with_type_local = vec![];
 
                 for (param_name, param_set) in def_algo_stmt
@@ -87,22 +84,13 @@ impl<'a> Runtime<'a> {
                     .iter()
                     .zip(set_where_fn_belongs_to_as_short_form.param_sets.iter())
                 {
-                    let in_fact = Fact::AtomicFact(AtomicFact::InFact(InFact::new(
-                        crate::obj::Obj::Identifier(Identifier::new(param_name.clone())),
-                        param_set.as_ref().clone(),
-                        def_algo_stmt.line_file,
-                    )));
-                    param_satisfy_fn_param_set_facts.push(in_fact);
                     algo_param_defs_with_type_local.push(ParamDefWithParamType(
                         vec![param_name.clone()],
                         ParamType::Obj(param_set.as_ref().clone()),
                     ));
                 }
 
-                (
-                    param_satisfy_fn_param_set_facts,
-                    algo_param_defs_with_type_local,
-                )
+                (vec![], algo_param_defs_with_type_local)
             }
             FnSetObj::FnSetWithDom(set_where_fn_belongs_to_as_short_form) => {
                 let args_for_algo_params: Vec<Obj> = {
