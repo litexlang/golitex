@@ -107,7 +107,7 @@ impl<'a> RuntimeContext<'a> {
             "{}\"{}\": {}",
             indent_inner,
             JSON_KEY_SOURCE,
-            json_string_literal(&self.get_file_name_empty_if_default(stmt_line_file.1))
+            json_string_literal(&self.get_file_name_empty_if_default(stmt_line_file))
         ));
         field_lines.push(format!(
             "{}\"stmt\": {}",
@@ -181,7 +181,7 @@ impl<'a> RuntimeContext<'a> {
             "{}\"{}\": {}",
             indent_inner,
             JSON_KEY_SOURCE,
-            json_string_literal(&self.get_file_name_empty_if_default(fact_line_file.1))
+            json_string_literal(&self.get_file_name_empty_if_default(fact_line_file))
         ));
         field_lines.push(format!(
             "{}\"stmt\": {}",
@@ -196,7 +196,7 @@ impl<'a> RuntimeContext<'a> {
             "{}\"verified_by_fact_known_from_source\": {}",
             indent_inner,
             json_string_literal(&self.get_file_name_empty_if_default(
-                fact_verified_by_fact_result.verified_by_line_file.1
+                fact_verified_by_fact_result.verified_by_line_file
             ))
         ));
         field_lines.push(format!(
@@ -253,7 +253,7 @@ impl<'a> RuntimeContext<'a> {
             "{}\"{}\": {}",
             indent_inner,
             JSON_KEY_SOURCE,
-            json_string_literal(&self.get_file_name_empty_if_default(fact_line_file.1))
+            json_string_literal(&self.get_file_name_empty_if_default(fact_line_file))
         ));
         field_lines.push(format!(
             "{}\"stmt\": {}",

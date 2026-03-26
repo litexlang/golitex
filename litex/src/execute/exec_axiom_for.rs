@@ -14,12 +14,14 @@ impl<'a> Runtime<'a> {
         stmt: &ForAxiomStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         if stmt.params.len() != stmt.param_sets.len() {
-            return Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
-                Stmt::ForAxiomStmt(stmt.clone()),
-                "for: number of params does not match number of ranges".to_string(),
-                None,
-                vec![],
-            )));
+            return Err(RuntimeError::ExecStmtError(
+                ExecStmtError::with_message_and_cause(
+                    Stmt::ForAxiomStmt(stmt.clone()),
+                    "for: number of params does not match number of ranges".to_string(),
+                    None,
+                    vec![],
+                ),
+            ));
         }
 
         let corresponding_forall_fact = stmt.to_corresponding_forall_fact().map_err(|msg| {
@@ -43,15 +45,15 @@ impl<'a> Runtime<'a> {
                 ))
             })?;
 
-        let param_value_strings_of_each_param =
-            Self::for_param_value_strings_of_each_param(stmt).map_err(|msg| {
-                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
-                    Stmt::ForAxiomStmt(stmt.clone()),
-                    msg,
-                    None,
-                    vec![],
-                ))
-            })?;
+        let param_value_strings_of_each_param = Self::for_param_value_strings_of_each_param(stmt)
+            .map_err(|msg| {
+            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                Stmt::ForAxiomStmt(stmt.clone()),
+                msg,
+                None,
+                vec![],
+            ))
+        })?;
         let for_cartesian_product_is_empty = param_value_strings_of_each_param
             .iter()
             .any(|one_param_value_strings| one_param_value_strings.is_empty());
@@ -128,7 +130,7 @@ impl<'a> Runtime<'a> {
         number_like_obj: &Obj,
         line_file: (usize, usize),
     ) -> Result<String, RuntimeError> {
-        let calculated_string = match number_like_obj.normalized_calculated_value() {
+        let calculated_string = match number_like_obj.calculate_value_and_normalize() {
             Some(calculated_number) => calculated_number.normalized_value,
             None => {
                 return Err(RuntimeError::UnknownError(UnknownError::new(
@@ -155,7 +157,9 @@ impl<'a> Runtime<'a> {
         Ok(calculated_string)
     }
 
-    fn for_param_value_strings_of_each_param(stmt: &ForAxiomStmt) -> Result<Vec<Vec<String>>, String> {
+    fn for_param_value_strings_of_each_param(
+        stmt: &ForAxiomStmt,
+    ) -> Result<Vec<Vec<String>>, String> {
         let mut param_value_strings_of_each_param: Vec<Vec<String>> = Vec::new();
         for param_set in stmt.param_sets.iter() {
             let (start_obj, end_obj, is_closed_range) = match param_set {
@@ -266,14 +270,17 @@ impl<'a> Runtime<'a> {
                 Obj::ZObj(ZObj::new()),
                 stmt.line_file,
             ));
-            self.store_atomic_fact_without_well_defined_verified_and_infer(&parameter_in_z_atomic_fact)
-                .map_err(RuntimeError::from)?;
+            self.store_atomic_fact_without_well_defined_verified_and_infer(
+                &parameter_in_z_atomic_fact,
+            )
+            .map_err(RuntimeError::from)?;
 
-            let parameter_equal_to_assigned_obj_atomic_fact = AtomicFact::EqualFact(crate::fact::EqualFact::new(
-                Obj::Identifier(Identifier::new(parameter_name.clone())),
-                Obj::Number(Number::new(assigned_integer_string)),
-                stmt.line_file,
-            ));
+            let parameter_equal_to_assigned_obj_atomic_fact =
+                AtomicFact::EqualFact(crate::fact::EqualFact::new(
+                    Obj::Identifier(Identifier::new(parameter_name.clone())),
+                    Obj::Number(Number::new(assigned_integer_string)),
+                    stmt.line_file,
+                ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 &parameter_equal_to_assigned_obj_atomic_fact,
             )
@@ -323,16 +330,17 @@ impl<'a> Runtime<'a> {
                 &VerifyState::new(0, false),
             )?;
             if verified_result.is_unknown() {
-                return Err(RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
-                    Stmt::ForAxiomStmt(stmt.clone()),
-                    format!("for: failed to prove `{}`", fact_to_prove),
-                    None,
-                    inside_results,
-                )));
+                return Err(RuntimeError::ExecStmtError(
+                    ExecStmtError::with_message_and_cause(
+                        Stmt::ForAxiomStmt(stmt.clone()),
+                        format!("for: failed to prove `{}`", fact_to_prove),
+                        None,
+                        inside_results,
+                    ),
+                ));
             }
             inside_results.push(verified_result);
         }
         Ok(inside_results)
     }
 }
-
