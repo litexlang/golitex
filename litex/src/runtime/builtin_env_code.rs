@@ -63,3 +63,6 @@ know:
         <=>:
             not a <= b
 "#;
+
+const BUILTIN_ENV_CODE_FOR_SET: &str = r#"
+"#;

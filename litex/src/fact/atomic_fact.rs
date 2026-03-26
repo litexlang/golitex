@@ -941,7 +941,7 @@ impl AtomicFact {
                 if is_true {
                     Ok(AtomicFact::LessFact(LessFact::new(a0, a1, line_file)))
                 } else {
-                    Ok(AtomicFact::GreaterFact(GreaterFact::new(a0, a1, line_file)))
+                    Ok(AtomicFact::NotLessFact(NotLessFact::new(a0, a1, line_file)))
                 }
             }
             GREATER => {
@@ -955,7 +955,9 @@ impl AtomicFact {
                 if is_true {
                     Ok(AtomicFact::GreaterFact(GreaterFact::new(a0, a1, line_file)))
                 } else {
-                    Ok(AtomicFact::LessFact(LessFact::new(a0, a1, line_file)))
+                    Ok(AtomicFact::NotGreaterFact(NotGreaterFact::new(
+                        a0, a1, line_file,
+                    )))
                 }
             }
             LESS_EQUAL => {
@@ -975,7 +977,7 @@ impl AtomicFact {
                         a0, a1, line_file,
                     )))
                 } else {
-                    Ok(AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+                    Ok(AtomicFact::NotLessEqualFact(NotLessEqualFact::new(
                         a0, a1, line_file,
                     )))
                 }
@@ -997,7 +999,7 @@ impl AtomicFact {
                         a0, a1, line_file,
                     )))
                 } else {
-                    Ok(AtomicFact::LessEqualFact(LessEqualFact::new(
+                    Ok(AtomicFact::NotGreaterEqualFact(NotGreaterEqualFact::new(
                         a0, a1, line_file,
                     )))
                 }
