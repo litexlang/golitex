@@ -1,8 +1,13 @@
+use litex::common::keywords::BUILTIN;
+use litex::module_manager::ModuleManager;
 use litex::pipeline::run_repl_loop_and_return_json_string;
 use litex::pipeline::run_repl_loop_and_return_string;
 use litex::pipeline::run_source_code;
 use litex::pipeline::run_source_code_in_file_and_return_json_string;
 use litex::pipeline::run_source_code_in_file_and_return_string;
+use litex::runtime::Runtime;
+use litex::runtime::RuntimeContext;
+use litex::runtime::BUILTIN_ENV_CODE;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process;
@@ -64,7 +69,15 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                let output = run_source_code(code.as_str(), "-e", should_output_json);
+                let mut module_manager = ModuleManager::new_empty_module_manager(BUILTIN);
+                let mut runtime_context =
+                    RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager);
+                let mut runtime = Runtime::new(&mut runtime_context);
+
+                run_source_code(BUILTIN_ENV_CODE, &mut runtime, true);
+                runtime.runtime_context.module_manager.new_file_path("-e");
+
+                let output = run_source_code(code.as_str(), &mut runtime, should_output_json);
                 println!("{}", output.trim());
                 println!("{}", repl_footer_placeholder());
                 return;

@@ -16,7 +16,7 @@ pub struct ModuleManager<'a> {
 impl<'a> ModuleManager<'a> {
     pub fn new_empty_module_manager(entrance_file_path: &str) -> Self {
         ModuleManager {
-            run_file_paths: vec!["builtin".to_string(), entrance_file_path.to_string()],
+            run_file_paths: vec![entrance_file_path.to_string()],
             module_name_and_path_map: HashMap::new(),
             module_path_and_names_map: HashMap::new(),
             current_module_path: String::new(),
@@ -25,5 +25,10 @@ impl<'a> ModuleManager<'a> {
             entrance_path: entrance_file_path.to_string(),
             imported_module_environments: HashMap::new(),
         }
+    }
+
+    pub fn new_file_path(&mut self, path: &str) {
+        self.run_file_paths.push(path.to_string());
+        self.current_file_index += 1;
     }
 }
