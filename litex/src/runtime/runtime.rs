@@ -20,7 +20,7 @@ impl<'a> Runtime<'a> {
     }
 
     pub fn get_known_normalized_calculated_value_for_obj(&self, obj: &Obj) -> Option<Number> {
-        if let Some(number) = obj.calculate_value_and_normalize() {
+        if let Some(number) = obj.calculate_arithmetic_value_and_normalize() {
             return Some(number);
         }
         self.runtime_context
@@ -35,7 +35,7 @@ impl<'a> Runtime<'a> {
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&add.left),
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&add.right),
                 ));
-                let calculated_result = result.calculate_value_and_normalize();
+                let calculated_result = result.calculate_arithmetic_value_and_normalize();
                 if let Some(calculated_result) = calculated_result {
                     Obj::Number(calculated_result)
                 } else {
@@ -47,7 +47,7 @@ impl<'a> Runtime<'a> {
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&sub.left),
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&sub.right),
                 ));
-                let calculated_result = result.calculate_value_and_normalize();
+                let calculated_result = result.calculate_arithmetic_value_and_normalize();
                 if let Some(calculated_result) = calculated_result {
                     Obj::Number(calculated_result)
                 } else {
@@ -59,7 +59,7 @@ impl<'a> Runtime<'a> {
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&mul.left),
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&mul.right),
                 ));
-                let calculated_result = result.calculate_value_and_normalize();
+                let calculated_result = result.calculate_arithmetic_value_and_normalize();
                 if let Some(calculated_result) = calculated_result {
                     Obj::Number(calculated_result)
                 } else {
@@ -73,7 +73,7 @@ impl<'a> Runtime<'a> {
                         &mod_obj.right,
                     ),
                 ));
-                let calculated_result = result.calculate_value_and_normalize();
+                let calculated_result = result.calculate_arithmetic_value_and_normalize();
                 if let Some(calculated_result) = calculated_result {
                     Obj::Number(calculated_result)
                 } else {
@@ -85,7 +85,7 @@ impl<'a> Runtime<'a> {
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&pow.base),
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&pow.exponent),
                 ));
-                let calculated_result = result.calculate_value_and_normalize();
+                let calculated_result = result.calculate_arithmetic_value_and_normalize();
                 if let Some(calculated_result) = calculated_result {
                     Obj::Number(calculated_result)
                 } else {
@@ -97,7 +97,7 @@ impl<'a> Runtime<'a> {
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&div.left),
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&div.right),
                 ));
-                let calculated_result = result.calculate_value_and_normalize();
+                let calculated_result = result.calculate_arithmetic_value_and_normalize();
                 if let Some(calculated_result) = calculated_result {
                     Obj::Number(calculated_result)
                 } else {
