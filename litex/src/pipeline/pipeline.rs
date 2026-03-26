@@ -1,4 +1,3 @@
-use crate::environment::Environment;
 use crate::execute::Runtime;
 use crate::module_manager::ModuleManager;
 use crate::parse::TokenBlock;
@@ -37,12 +36,9 @@ pub fn run_source_code(
     should_output_json: bool,
 ) -> String {
     let mut module_manager = ModuleManager::new_empty_module_manager(entrance_file_path);
-    let mut builtin_environment = Environment::new_empty_env();
 
-    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
-        &mut module_manager,
-        &mut builtin_environment,
-    );
+    let mut runtime_context =
+        RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager);
 
     let blocks = match TokenBlock::parse_blocks(
         source_code,
@@ -170,12 +166,8 @@ where
     writeln!(stdout_writer, "Ctrl+D to exit.\n")?;
 
     let mut module_manager = ModuleManager::new_empty_module_manager("repl");
-    let mut builtin_environment = Environment::new_empty_env();
-
-    let mut runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(
-        &mut module_manager,
-        &mut builtin_environment,
-    );
+    let mut runtime_context =
+        RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager);
 
     let mut runtime = Runtime::new(&mut runtime_context);
 

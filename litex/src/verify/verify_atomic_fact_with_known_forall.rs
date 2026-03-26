@@ -24,11 +24,6 @@ impl<'a> Runtime<'a> {
         {
             return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
         }
-        if let Some(fact_verified) =
-            self.try_verify_with_known_forall_facts_in_builtin_env(atomic_fact, verify_state)?
-        {
-            return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
-        }
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
@@ -76,45 +71,6 @@ impl<'a> Runtime<'a> {
         Ok((DEFAULT_LINE_FILE, None, None))
     }
 
-    fn get_matched_atomic_fact_in_known_forall_fact_in_builtin_env(
-        &self,
-        iterate_from_known_forall_fact_index: usize,
-        given_fact: &AtomicFact,
-    ) -> Result<
-        (
-            usize,
-            Option<HashMap<String, Obj>>,
-            Option<(AtomicFact, Rc<KnownForallFactParamsAndDom>)>,
-        ),
-        VerifyError,
-    > {
-        let key = given_fact.key();
-        let is_true = given_fact.is_true();
-        let builtin_env = &self.runtime_context.builtin_environment;
-
-        if let Some(known_forall_facts_in_env) = builtin_env
-            .known_atomic_facts_in_forall_facts
-            .get(&(key, is_true))
-        {
-            let known_forall_facts_count = known_forall_facts_in_env.len();
-            for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
-                let current_known_forall =
-                    &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
-                let atomic_fact_args_in_known_forall = current_known_forall.0.args();
-                let given_atomic_fact_args = given_fact.args();
-                let match_result = Self::match_args_in_fact_in_known_forall_fact_with_given_args(
-                    &atomic_fact_args_in_known_forall,
-                    &given_atomic_fact_args,
-                )?;
-                if let Some(arg_map) = match_result {
-                    return Ok((j, Some(arg_map), Some(current_known_forall.clone())));
-                }
-            }
-        }
-
-        Ok((0, None, None))
-    }
-
     fn try_verify_with_known_forall_facts_in_envs(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -143,36 +99,6 @@ impl<'a> Runtime<'a> {
                     }
                     iterate_from_env_index = i;
                     iterate_from_known_forall_fact_index = j + 1;
-                }
-                _ => return Ok(None),
-            }
-        }
-    }
-
-    fn try_verify_with_known_forall_facts_in_builtin_env(
-        &mut self,
-        atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
-    ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
-        let mut known_fact_index_in_builtin = 0;
-
-        loop {
-            let result = self.get_matched_atomic_fact_in_known_forall_fact_in_builtin_env(
-                known_fact_index_in_builtin,
-                atomic_fact,
-            )?;
-            match result {
-                (j, Some(arg_map), Some((atomic_fact_in_known_forall_fact, forall_rc))) => {
-                    if let Some(fact_verified) = self.verify_args_satisfy_forall_requirements(
-                        &atomic_fact_in_known_forall_fact,
-                        &forall_rc,
-                        arg_map,
-                        atomic_fact,
-                        verify_state,
-                    )? {
-                        return Ok(Some(fact_verified));
-                    }
-                    known_fact_index_in_builtin = j + 1;
                 }
                 _ => return Ok(None),
             }
@@ -224,12 +150,7 @@ impl<'a> Runtime<'a> {
                 &known_forall.params_def,
                 &args_for_params,
             )
-            .map_err(|e| {
-                VerifyError::new(
-                    Fact::AtomicFact(given_atomic_fact.clone()),
-                    Some(e),
-                )
-            })?;
+            .map_err(|e| VerifyError::new(Fact::AtomicFact(given_atomic_fact.clone()), Some(e)))?;
 
         for fact in args_satisfy_param_types.iter() {
             let result = self.verify_atomic_fact(fact, verify_state)?;

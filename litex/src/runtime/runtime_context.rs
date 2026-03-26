@@ -18,19 +18,16 @@ use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoField
 pub struct RuntimeContext<'a> {
     pub module_manager: &'a mut ModuleManager<'a>,
     pub environment_stack: Vec<Box<Environment>>,
-    pub builtin_environment: &'a mut Environment,
 }
 
 impl<'a> RuntimeContext<'a> {
     pub fn new_empty_runtime_context_with_one_env(
         module_manager: &'a mut ModuleManager<'a>,
-        builtin_environment: &'a mut Environment,
     ) -> Self {
         let new_env = Box::new(Environment::new_empty_env());
         RuntimeContext {
             module_manager,
             environment_stack: vec![new_env],
-            builtin_environment,
         }
     }
 }
@@ -61,9 +58,7 @@ impl<'a> RuntimeContext<'a> {
             }
         }
 
-        self.builtin_environment
-            .defined_props_with_meaning
-            .get(predicate_name)
+        None
     }
 
     /// Look up predicate definition without meaning by name from current env or builtin.
@@ -85,9 +80,7 @@ impl<'a> RuntimeContext<'a> {
             }
         }
 
-        self.builtin_environment
-            .defined_props_without_meaning
-            .get(predicate_name)
+        None
     }
 
     pub fn get_set_struct_with_fields_definition_by_name(
@@ -105,9 +98,7 @@ impl<'a> RuntimeContext<'a> {
             }
         }
 
-        self.builtin_environment
-            .defined_structs_with_fields
-            .get(set_struct_name)
+        None
     }
 
     pub fn get_algo_definition_by_name(&self, algo_name: &str) -> Option<&DefAlgoStmt> {
@@ -116,7 +107,7 @@ impl<'a> RuntimeContext<'a> {
                 return Some(definition);
             }
         }
-        self.builtin_environment.defined_algorithms.get(algo_name)
+        None
     }
 
     pub fn get_set_struct_with_no_field_definition_by_name(
@@ -137,9 +128,7 @@ impl<'a> RuntimeContext<'a> {
             }
         }
 
-        self.builtin_environment
-            .defined_structs_with_no_field
-            .get(set_struct_name)
+        None
     }
 
     pub fn is_name_used(&self, name: &str) -> bool {
@@ -197,12 +186,6 @@ impl<'a> RuntimeContext<'a> {
             }
         }
 
-        if let Some(known_equality) = self.builtin_environment.known_equality.get(given) {
-            for obj in known_equality.iter() {
-                result.push(obj.to_string());
-            }
-        }
-
         result
     }
 }
@@ -221,7 +204,7 @@ impl<'a> RuntimeContext<'a> {
             }
         }
 
-        self.builtin_environment.known_fn_in_fn_set.get(&key)
+        None
     }
 
     pub fn cache_well_defined_obj_contains(&self, key: &str) -> bool {
@@ -230,9 +213,7 @@ impl<'a> RuntimeContext<'a> {
                 return true;
             }
         }
-        self.builtin_environment
-            .cache_well_defined_obj
-            .contains_key(key)
+        false
     }
 
     pub fn cache_known_facts_contains(&self, key: &str) -> (bool, (usize, usize)) {
@@ -240,9 +221,6 @@ impl<'a> RuntimeContext<'a> {
             if let Some(line_file) = env.cache_known_fact.get(key) {
                 return (true, *line_file);
             }
-        }
-        if let Some(line_file) = self.builtin_environment.cache_known_fact.get(key) {
-            return (true, *line_file);
         }
         (false, DEFAULT_LINE_FILE)
     }
@@ -425,10 +403,7 @@ impl<'a> RuntimeContext<'a> {
                 return Some(cart.clone());
             }
         }
-        self.builtin_environment
-            .known_tuple_obj_in_what_cart
-            .get(name)
-            .cloned()
+        None
     }
 
     pub fn get_normalized_calculated_value_of_obj(&self, obj_str: &str) -> Option<Number> {
@@ -439,10 +414,7 @@ impl<'a> RuntimeContext<'a> {
                 return Some(calculated_value.clone());
             }
         }
-        self.builtin_environment
-            .known_normalized_calculated_value_of_obj
-            .get(obj_str)
-            .cloned()
+        None
     }
 }
 
@@ -458,9 +430,7 @@ impl<'a> RuntimeContext<'a> {
             }
         }
 
-        self.builtin_environment
-            .defined_identifier_objs
-            .contains_key(name)
+        false
     }
 
     pub fn is_name_used_for_predicate_with_meaning(&self, name: &str) -> bool {

@@ -15,6 +15,3 @@ mod parse_prove_stmt;
 mod parse_stmt;
 mod parse_tooling_stmt;
 mod parse_witness;
-
-#[cfg(test)]
-mod parser_tests;

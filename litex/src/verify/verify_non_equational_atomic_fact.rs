@@ -70,11 +70,6 @@ impl<'a> Runtime<'a> {
             }
         }
 
-        let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(&self.runtime_context.builtin_environment, atomic_fact, &all_objs_equal_to_arg)?;
-        if result.is_true() {
-            return Ok(result);
-        }
-
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
@@ -100,11 +95,6 @@ impl<'a> Runtime<'a> {
             if result.is_true() {
                 return Ok(result);
             }
-        }
-
-        let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(&self.runtime_context.builtin_environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
-        if result.is_true() {
-            return Ok(result);
         }
 
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
@@ -134,15 +124,6 @@ impl<'a> Runtime<'a> {
             if result.is_true() {
                 return Ok(result);
             }
-        }
-
-        let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(
-            &self.runtime_context.builtin_environment,
-            atomic_fact,
-            &all_objs_equal_to_each_arg,
-        )?;
-        if result.is_true() {
-            return Ok(result);
         }
 
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
