@@ -101,7 +101,7 @@ impl<'a> Runtime<'a> {
         Ok(NonErrStmtExecResult::FactVerifiedByFact(
             FactVerifiedByFact::new(
                 Fact::ForallFact(forall_fact.clone()),
-                "forall: each then_fact verified under dom".to_string(),
+                "".to_string(),
                 infer_result,
                 crate::common::defaults::DEFAULT_LINE_FILE.clone(),
             ),
