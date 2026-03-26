@@ -28,8 +28,10 @@ impl<'a> Runtime<'a> {
             )?;
         }
 
+        let mut inside_results = vec![];
         for proof_stmt in stmt.proof.iter() {
-            self.exec_stmt(proof_stmt)?;
+            let result = self.exec_stmt(proof_stmt)?;
+            inside_results.push(result);
         }
 
         for then_fact in forall_fact.then_facts.iter() {
@@ -42,13 +44,15 @@ impl<'a> Runtime<'a> {
                     None,
                 )));
             }
+
+            inside_results.push(result);
         }
 
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
                 Stmt::ClaimStmt(stmt.clone()),
                 crate::infer::InferResult::new(),
-                vec![],
+                inside_results,
             ),
         ))
     }
@@ -57,8 +61,10 @@ impl<'a> Runtime<'a> {
         &mut self,
         stmt: &ClaimStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
+        let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
         for proof_stmt in stmt.proof.iter() {
-            self.exec_stmt(proof_stmt)?;
+            let proof_exec_result = self.exec_stmt(proof_stmt)?;
+            inside_results.push(proof_exec_result);
         }
 
         self.verify_fact_return_err_if_not_true(&stmt.fact, &VerifyState::new(0, false))?;
@@ -67,7 +73,7 @@ impl<'a> Runtime<'a> {
             NonFactualStmtSuccess::new(
                 Stmt::ClaimStmt(stmt.clone()),
                 crate::infer::InferResult::new(),
-                vec![],
+                inside_results,
             ),
         ))
     }
@@ -90,31 +96,26 @@ impl<'a> Runtime<'a> {
                     })?;
 
                 self.runtime_context.push_env();
-                let body_result =
-                    self.exec_claim_stmt_body_fact_for_forall_fact(stmt, &forall_fact);
+                let body_exec_result =
+                    self.exec_claim_stmt_body_fact_for_forall_fact(stmt, forall_fact);
                 self.runtime_context.pop_env();
 
-                if let Err(e) = body_result {
-                    return Err(e);
-                } else if let Ok(result) = body_result {
-                    if result.is_unknown() {
-                        return Err(RuntimeError::UnknownError(UnknownError::new(
-                            format!("claim failed: cannot prove `{}`", stmt.fact),
-                            stmt.line_file,
-                            None,
-                        )));
-                    }
+                let non_err_after_body = match body_exec_result {
+                    Ok(non_err_stmt_exec_result) => non_err_stmt_exec_result,
+                    Err(runtime_error) => return Err(runtime_error),
+                };
+                if non_err_after_body.is_unknown() {
+                    return Err(RuntimeError::UnknownError(UnknownError::new(
+                        format!("claim failed: cannot prove `{}`", stmt.fact),
+                        stmt.line_file,
+                        None,
+                    )));
                 }
 
-                self.store_fact_without_well_defined_verified_and_infer(&stmt.fact)?;
+                let infer_result_after_store =
+                    self.store_fact_without_well_defined_verified_and_infer(&stmt.fact)?;
 
-                Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
-                    NonFactualStmtSuccess::new(
-                        Stmt::ClaimStmt(stmt.clone()),
-                        crate::infer::InferResult::new(),
-                        vec![],
-                    ),
-                ))
+                Ok(non_err_after_body.with_infers(infer_result_after_store))
             }
             _ => {
                 self.verify_fact_well_defined(&stmt.fact, &VerifyState::new(0, false))
@@ -128,12 +129,17 @@ impl<'a> Runtime<'a> {
                     })?;
 
                 self.runtime_context.push_env();
-                let result = self.exec_claim_stmt_body_fact_except_forall_fact(stmt);
+                let body_exec_result = self.exec_claim_stmt_body_fact_except_forall_fact(stmt);
                 self.runtime_context.pop_env();
 
-                self.store_fact_without_well_defined_verified_and_infer(&stmt.fact)?;
+                let non_err_after_body = match body_exec_result {
+                    Ok(non_err_stmt_exec_result) => non_err_stmt_exec_result,
+                    Err(runtime_error) => return Err(runtime_error),
+                };
+                let infer_result_after_store =
+                    self.store_fact_without_well_defined_verified_and_infer(&stmt.fact)?;
 
-                result
+                Ok(non_err_after_body.with_infers(infer_result_after_store))
             }
         }
     }

@@ -1,0 +1,11 @@
+claim:
+    prove:
+        forall a, b R:
+            a < b or a = b or a > b
+
+claim:
+    prove:
+        forall a, b R:
+            a <= b
+            =>:
+                a = b or a < b
