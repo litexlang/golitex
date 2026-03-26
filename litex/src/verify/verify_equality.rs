@@ -24,7 +24,7 @@ impl<'a> Runtime<'a> {
         )
     }
 
-    pub fn verify_objs_are_equal(
+    fn verify_objs_are_equal(
         &mut self,
         left: &Obj,
         right: &Obj,

@@ -172,7 +172,7 @@ impl<'a> RuntimeContext<'a> {
         self.environment_stack.iter().rev().map(|env| env.as_ref())
     }
 
-    pub fn find_fn_definition_for_atom(&self, atom: &Atom) -> Option<&FnSetObj> {
+    pub fn get_fn_set_where_fn_belongs_to(&self, atom: &Atom) -> Option<&FnSetObj> {
         let key = atom.to_string();
 
         for env in self.iter_environments_from_top() {

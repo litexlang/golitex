@@ -9,7 +9,6 @@ use crate::infer::InferResult;
 use crate::obj::{Atom, FnObj, Identifier, Obj};
 use crate::result::NonErrStmtExecResult;
 use crate::result::NonFactualStmtSuccess;
-use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::stmt::definition_stmt::{
     DefLetStmt, DefPropWithMeaningStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt,
     DefStructWithNoFieldStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt,
@@ -47,7 +46,7 @@ impl<'a> Runtime<'a> {
             ))));
         }
 
-        let fn_head_atom = Atom::IdentifierAtom(Identifier::new(function_name.to_string()));
+        let fn_head_atom = Atom::Identifier(Identifier::new(function_name.to_string()));
         let fn_body_groups = vec![function_args];
         Obj::FnObj(FnObj::new(fn_head_atom, fn_body_groups))
     }
@@ -188,21 +187,6 @@ impl<'a> Runtime<'a> {
         self.store_def_struct_with_no_field(def_struct_with_no_field_stmt)?;
         return Err(ExecStmtError::with_message_and_cause(
             Stmt::DefStructWithNoFieldStmt(def_struct_with_no_field_stmt.clone()),
-            "unimplemented".to_string(),
-            None,
-            vec![],
-        ));
-    }
-
-    // TODO: unimplemented
-    pub fn def_algo_stmt(
-        &mut self,
-        def_algo_stmt: &DefAlgoStmt,
-    ) -> Result<NonErrStmtExecResult, ExecStmtError> {
-        self.store_def_algo(def_algo_stmt)?;
-        // Ok(StmtResult::NonFactualStmtSuccess(NonFactualStmtSuccess::new(def_algo_stmt.to_string(), def_algo_stmt.line_file)))
-        return Err(ExecStmtError::with_message_and_cause(
-            Stmt::DefAlgoStmt(def_algo_stmt.clone()),
             "unimplemented".to_string(),
             None,
             vec![],

@@ -151,7 +151,7 @@ impl<'a> Runtime<'a> {
         {
             match self.parse_fn_set_obj(tb)? {
                 FnSetObj::FnSetWithDom(fs) => Ok(Obj::FnSetWithParams(fs)),
-                FnSetObj::FnSetWithoutDom(fs) => Ok(Obj::FnSetWithoutParams(fs)),
+                FnSetObj::FnSetWithoutParams(fs) => Ok(Obj::FnSetWithoutParams(fs)),
             }
         } else {
             self.parse_number_or_primary_obj_or_fn_obj_with_minus_prefix(tb)
@@ -166,7 +166,7 @@ impl<'a> Runtime<'a> {
             ))
         } else if tb.current_token_is_equal_to(FN_FOR_FN_WITHOUT_PARAMS) {
             tb.skip_token(FN_FOR_FN_WITHOUT_PARAMS)?;
-            Ok(FnSetObj::FnSetWithoutDom(
+            Ok(FnSetObj::FnSetWithoutParams(
                 self.parse_fn_set_without_dom_without_fn_prefix(tb)?,
             ))
         } else {
@@ -337,7 +337,7 @@ impl<'a> Runtime<'a> {
 
         // 3. 若是 atom，后面可以接多组 (args)，每组一个 Vec<Obj>，合起来 body: Vec<Vec<Box<Obj>>>
         let (head_atom, mut body_vectors) = match &result {
-            Obj::Identifier(i) => (Atom::IdentifierAtom(i.clone()), vec![]),
+            Obj::Identifier(i) => (Atom::Identifier(i.clone()), vec![]),
             Obj::IdentifierWithMod(m) => (Atom::IdentifierWithMod(m.clone()), vec![]),
             Obj::FieldAccess(field_access) => (Atom::FieldAccess(field_access.clone()), vec![]),
             Obj::FieldAccessWithMod(field_access_with_mod) => (
@@ -889,7 +889,7 @@ impl<'a> Runtime<'a> {
                 }
                 Ok(Atom::FieldAccess(FieldAccess::new(left, fields)))
             } else {
-                Ok(Atom::IdentifierAtom(Identifier::new(left)))
+                Ok(Atom::Identifier(Identifier::new(left)))
             }
         }
     }

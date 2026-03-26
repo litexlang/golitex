@@ -1,4 +1,0 @@
-have fn f(x R) R = 1
-
-algo f(x):
-    1
