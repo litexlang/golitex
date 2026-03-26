@@ -1,0 +1,20 @@
+prop p(x, y)
+have fn f(x, y R) R = 1
+
+know:
+    forall x, y R:
+        x < y
+        =>:
+            f(x, y) = 1
+
+    forall x, y R:
+        $p(x, y)
+        =>:
+            f(x, y) = 2
+
+    forall x, y R:
+        x < y or $p(x, y)
+
+algo f(x, y):
+    case x < y: 1
+    case $p(x, y): 2

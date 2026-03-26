@@ -1,7 +1,7 @@
 use crate::environment::Environment;
 use crate::error::{RuntimeError, VerifyError};
 use crate::execute::Runtime;
-use crate::fact::{Fact, OrFact};
+use crate::fact::{AndChainAtomicFact, Fact, OrFact};
 use crate::infer::InferResult;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult, StmtUnknown};
 use crate::verify::VerifyState;
@@ -44,12 +44,17 @@ impl<'a> Runtime<'a> {
             }
         }
 
-        let mut result = self.verify_or_fact_with_known_or_facts(or_fact)?;
+        let result = self.verify_or_fact_with_builtin_rules(or_fact)?;
         if result.is_true() {
             return Ok(result);
         }
 
-        result = self.verify_or_fact_with_known_forall(or_fact, verify_state)?;
+        let result = self.verify_or_fact_with_known_or_facts(or_fact)?;
+        if result.is_true() {
+            return Ok(result);
+        }
+
+        let result = self.verify_or_fact_with_known_forall(or_fact, verify_state)?;
         if result.is_true() {
             return Ok(result);
         }
@@ -126,5 +131,30 @@ impl<'a> Runtime<'a> {
         }
 
         return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+    }
+
+    pub fn verify_or_fact_with_builtin_rules(
+        &mut self,
+        or_fact: &OrFact,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        if or_fact.facts.len() == 2 {
+            match (&or_fact.facts[0], &or_fact.facts[1]) {
+                (AndChainAtomicFact::AtomicFact(a), AndChainAtomicFact::AtomicFact(b)) => {
+                    let first_fact_reversed = a.make_reversed();
+                    if first_fact_reversed.to_string() == b.to_string() {
+                        return Ok(NonErrStmtExecResult::FactVerifiedByFact(
+                            FactVerifiedByFact::new(
+                                Fact::OrFact(or_fact.clone()),
+                                b.to_string(),
+                                InferResult::new(),
+                                b.line_file(),
+                            ),
+                        ));
+                    }
+                }
+                _ => {}
+            }
+        }
+        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 }

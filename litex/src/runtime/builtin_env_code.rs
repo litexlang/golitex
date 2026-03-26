@@ -60,6 +60,6 @@ know:
     forall a, b R:
         =>:
             a > b
-        =>:
+        <=>:
             not a <= b
 "#;

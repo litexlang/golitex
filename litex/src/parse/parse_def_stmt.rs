@@ -431,7 +431,7 @@ impl<'a> Runtime<'a> {
                 for block in leading_blocks.iter_mut() {
                     algo_cases.push(self.parse_algo_case(block)?);
                 }
-                if last_block.current()? == CASE {
+                if last_block.current_token_empty_if_exceed_end_of_head() == CASE {
                     algo_cases.push(self.parse_algo_case(last_block)?);
                 } else {
                     default_return = Some(self.parse_algo_return(last_block)?);
@@ -452,28 +452,6 @@ impl<'a> Runtime<'a> {
         block.skip_token(CASE)?;
         let condition = self.parse_and_chain_atomic_fact(block)?;
         block.skip_token(COLON)?;
-        if !block.exceed_end_of_head() {
-            return Err(ParsingError::new(
-                "algo if: expected end of head after condition".to_string(),
-                block.line_file,
-                None,
-            ));
-        }
-        if block.body.len() != 1 {
-            return Err(ParsingError::new(
-                "algo if block must have exactly one body block (return stmt)".to_string(),
-                block.line_file,
-                None,
-            ));
-        }
-
-        let block = block.body.first_mut().ok_or_else(|| {
-            ParsingError::new(
-                "algo if block must have exactly one body block (return stmt)".to_string(),
-                block.line_file,
-                None,
-            )
-        })?;
 
         let return_stmt = self.parse_algo_return(block)?;
         Ok(AlgoCase::new(condition, return_stmt, block.line_file))
