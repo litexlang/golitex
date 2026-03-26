@@ -3,7 +3,7 @@ use std::fmt;
 
 #[derive(Clone)]
 pub enum Atom {
-    IdentifierAtom(Identifier),
+    Identifier(Identifier),
     IdentifierWithMod(IdentifierWithMod),
     FieldAccess(FieldAccess),
     FieldAccessWithMod(FieldAccessWithMod),
@@ -65,7 +65,7 @@ pub struct FieldAccessWithMod {
 impl fmt::Display for Atom {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Atom::IdentifierAtom(atom) => write!(f, "{}", atom),
+            Atom::Identifier(atom) => write!(f, "{}", atom),
             Atom::IdentifierWithMod(atom) => write!(f, "{}", atom),
             Atom::FieldAccess(atom) => write!(f, "{}", atom),
             Atom::FieldAccessWithMod(atom) => write!(f, "{}", atom),

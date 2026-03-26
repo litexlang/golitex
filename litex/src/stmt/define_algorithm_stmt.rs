@@ -14,7 +14,8 @@ use std::fmt;
 pub struct DefAlgoStmt {
     pub name: String,
     pub params: Vec<String>,
-    pub return_or_algo_case: Vec<AlgoReturnOrAlgoCase>,
+    pub default_return: Option<AlgoReturn>,
+    pub cases: Vec<AlgoCase>,
     pub line_file: (usize, usize),
 }
 
@@ -23,7 +24,6 @@ pub struct AlgoReturn {
     pub value: Obj,
     pub line_file: (usize, usize),
 }
-
 #[derive(Clone)]
 pub struct AlgoCase {
     pub condition: AndChainAtomicFact,
@@ -41,13 +41,15 @@ impl DefAlgoStmt {
     pub fn new(
         name: String,
         params: Vec<String>,
-        return_or_algo_case: Vec<AlgoReturnOrAlgoCase>,
+        cases: Vec<AlgoCase>,
+        default_return: Option<AlgoReturn>,
         line_file: (usize, usize),
     ) -> Self {
         DefAlgoStmt {
             name,
             params,
-            return_or_algo_case,
+            default_return,
+            cases,
             line_file,
         }
     }
@@ -83,6 +85,21 @@ impl fmt::Display for AlgoCase {
 
 impl fmt::Display for DefAlgoStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Some(default_return) = &self.default_return {
+            write!(
+                f,
+                "{} {}{}{}\n{}\n{}",
+                ALGO,
+                self.name,
+                braced_vec_to_string(&self.params),
+                COLON,
+                to_string_and_add_four_spaces_at_beginning_of_each_line(
+                    &vec_to_string_with_sep(&self.cases, "\n".to_string()),
+                    1
+                ),
+                default_return
+            )?;
+        }
         write!(
             f,
             "{} {}{}{}\n{}",
@@ -91,7 +108,7 @@ impl fmt::Display for DefAlgoStmt {
             braced_vec_to_string(&self.params),
             COLON,
             to_string_and_add_four_spaces_at_beginning_of_each_line(
-                &vec_to_string_with_sep(&self.return_or_algo_case, "\n".to_string()),
+                &vec_to_string_with_sep(&self.cases, "\n".to_string()),
                 1
             )
         )

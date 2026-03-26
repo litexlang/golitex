@@ -7,6 +7,7 @@ mod exec_axiom_for;
 mod exec_axiom_helpers;
 mod exec_axiom_unsupported;
 mod exec_claim_stmt;
+mod exec_def_algo_stmt;
 mod exec_def_stmt;
 mod exec_eval_stmt;
 mod exec_fact_stmt;
