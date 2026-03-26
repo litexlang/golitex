@@ -72,24 +72,19 @@ pub fn run_source_code(
                 Err(e) => {
                     let runtime_error = e.into();
                     if should_output_json {
-                        return (
-                            false,
-                            format!(
-                                "\n{}\n",
-                                runtime
-                                    .runtime_context
-                                    .display_error_json_string(&runtime_error)
-                            ),
-                        );
+                        out.push_str(&format!(
+                            "\n{}\n",
+                            runtime
+                                .runtime_context
+                                .display_error_json_string(&runtime_error)
+                        ));
                     } else {
-                        return (
-                            false,
-                            format!(
-                                "\n{}\n",
-                                runtime.runtime_context.display_error(&runtime_error)
-                            ),
-                        );
+                        out.push_str(&format!(
+                            "\n{}\n",
+                            runtime.runtime_context.display_error(&runtime_error)
+                        ));
                     }
+                    return (false, out);
                 }
             }
         };

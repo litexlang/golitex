@@ -118,7 +118,7 @@ impl<'a> Runtime<'a> {
 
     fn infer_equal_fact(&mut self, _equal_fact: &EqualFact) -> Result<InferResult, InferError> {
         if let Some(right_calculated_value) =
-            self.normalized_calculated_value_for_obj(&_equal_fact.right)
+            self.get_known_normalized_calculated_value_for_obj(&_equal_fact.right)
         {
             self.runtime_context
                 .top_level_env()
@@ -127,7 +127,7 @@ impl<'a> Runtime<'a> {
         }
 
         if let Some(left_calculated_value) =
-            self.normalized_calculated_value_for_obj(&_equal_fact.left)
+            self.get_known_normalized_calculated_value_for_obj(&_equal_fact.left)
         {
             self.runtime_context
                 .top_level_env()

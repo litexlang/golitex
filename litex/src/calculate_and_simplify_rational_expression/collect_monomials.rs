@@ -30,7 +30,7 @@ pub fn collect_monomials_in_obj(obj: &Obj) -> Vec<MonomialWithNonZeroScalarAndOr
 }
 
 pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) = Obj::Sub(sub.clone()).normalized_calculated_value() {
+    if let Some(normalized_calculated_value) = Obj::Sub(sub.clone()).calculate_value_and_normalize() {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
@@ -96,7 +96,7 @@ pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOr
 }
 
 pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) = Obj::Add(add.clone()).normalized_calculated_value() {
+    if let Some(normalized_calculated_value) = Obj::Add(add.clone()).calculate_value_and_normalize() {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
@@ -154,11 +154,11 @@ pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOr
 }
 
 fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) = Obj::Mul(mul.clone()).normalized_calculated_value() {
+    if let Some(normalized_calculated_value) = Obj::Mul(mul.clone()).calculate_value_and_normalize() {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
-    if let Some(normalized_calculated_value) = &mul.left.normalized_calculated_value() {
+    if let Some(normalized_calculated_value) = &mul.left.calculate_value_and_normalize() {
         let left = normalized_calculated_value.normalized_value.clone();
         let collected_monomials_of_right = collect_monomials_in_obj(&mul.right);
         let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> =
@@ -172,7 +172,7 @@ fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrdere
         return result;
     }
 
-    if let Some(normalized_calculated_value) = &mul.right.normalized_calculated_value() {
+    if let Some(normalized_calculated_value) = &mul.right.calculate_value_and_normalize() {
         let right = normalized_calculated_value.normalized_value.clone();
         let collected_monomials_of_left = collect_monomials_in_obj(&mul.left);
         let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> =
@@ -241,7 +241,7 @@ fn collect_monomials_of_mul_of_monomial_vec(
 }
 
 fn collect_monomials_in_pow(pow: &Pow) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) = Obj::Pow(pow.clone()).normalized_calculated_value() {
+    if let Some(normalized_calculated_value) = Obj::Pow(pow.clone()).calculate_value_and_normalize() {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 

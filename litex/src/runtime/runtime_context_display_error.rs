@@ -1,4 +1,5 @@
 use super::RuntimeContext;
+use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::keywords::{COLON, PROVE};
 use crate::error::{ParseBlockError, RuntimeError};
 use crate::result::NonErrStmtExecResult;
@@ -111,7 +112,7 @@ impl<'a> RuntimeContext<'a> {
         let (line, file_index) = error.line_file();
         field_lines.push(format!("{}\"{}\": {}", indent_inner, JSON_KEY_LINE, line));
 
-        let source_text = self.get_file_name_empty_if_default(file_index);
+        let source_text = self.get_file_name_empty_if_default((line, file_index));
 
         field_lines.push(format!(
             "{}\"{}\": {}",
@@ -347,7 +348,11 @@ impl<'a> RuntimeContext<'a> {
         self.display_result_json_string(inside_result)
     }
 
-    pub fn get_file_name_empty_if_default(&self, file_index: usize) -> String {
+    pub fn get_file_name_empty_if_default(&self, (line, file_index): (usize, usize)) -> String {
+        if (line, file_index) == DEFAULT_LINE_FILE {
+            return String::new();
+        }
+
         let path = match self.module_manager.run_file_paths.get(file_index) {
             Some(path) => path.clone(),
             None => String::new(),

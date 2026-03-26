@@ -19,8 +19,8 @@ impl<'a> Runtime<'a> {
         }
     }
 
-    pub fn normalized_calculated_value_for_obj(&self, obj: &Obj) -> Option<Number> {
-        if let Some(number) = obj.normalized_calculated_value() {
+    pub fn get_known_normalized_calculated_value_for_obj(&self, obj: &Obj) -> Option<Number> {
+        if let Some(number) = obj.calculate_value_and_normalize() {
             return Some(number);
         }
         self.runtime_context
@@ -30,39 +30,99 @@ impl<'a> Runtime<'a> {
     pub fn obj_with_runtime_known_numbers_substituted_for_verification(&self, obj: &Obj) -> Obj {
         match obj {
             Obj::Number(number) => Obj::Number(number.clone()),
-            Obj::Add(add) => Obj::Add(Add::new(
-                self.obj_with_runtime_known_numbers_substituted_for_verification(&add.left),
-                self.obj_with_runtime_known_numbers_substituted_for_verification(&add.right),
-            )),
-            Obj::Sub(sub) => Obj::Sub(Sub::new(
-                self.obj_with_runtime_known_numbers_substituted_for_verification(&sub.left),
-                self.obj_with_runtime_known_numbers_substituted_for_verification(&sub.right),
-            )),
-            Obj::Mul(mul) => Obj::Mul(Mul::new(
-                self.obj_with_runtime_known_numbers_substituted_for_verification(&mul.left),
-                self.obj_with_runtime_known_numbers_substituted_for_verification(&mul.right),
-            )),
-            Obj::Div(div) => Obj::Div(Div::new(
-                self.obj_with_runtime_known_numbers_substituted_for_verification(&div.left),
-                self.obj_with_runtime_known_numbers_substituted_for_verification(&div.right),
-            )),
-            Obj::Mod(mod_obj) => Obj::Mod(Mod::new(
-                self.obj_with_runtime_known_numbers_substituted_for_verification(&mod_obj.left),
-                self.obj_with_runtime_known_numbers_substituted_for_verification(&mod_obj.right),
-            )),
-            Obj::Pow(pow) => Obj::Pow(Pow::new(
-                self.obj_with_runtime_known_numbers_substituted_for_verification(&pow.base),
-                self.obj_with_runtime_known_numbers_substituted_for_verification(&pow.exponent),
-            )),
+            Obj::Add(add) => {
+                let result = Obj::Add(Add::new(
+                    self.obj_with_runtime_known_numbers_substituted_for_verification(&add.left),
+                    self.obj_with_runtime_known_numbers_substituted_for_verification(&add.right),
+                ));
+                let calculated_result = result.calculate_value_and_normalize();
+                if let Some(calculated_result) = calculated_result {
+                    Obj::Number(calculated_result)
+                } else {
+                    result
+                }
+            }
+            Obj::Sub(sub) => {
+                let result = Obj::Sub(Sub::new(
+                    self.obj_with_runtime_known_numbers_substituted_for_verification(&sub.left),
+                    self.obj_with_runtime_known_numbers_substituted_for_verification(&sub.right),
+                ));
+                let calculated_result = result.calculate_value_and_normalize();
+                if let Some(calculated_result) = calculated_result {
+                    Obj::Number(calculated_result)
+                } else {
+                    result
+                }
+            }
+            Obj::Mul(mul) => {
+                let result = Obj::Mul(Mul::new(
+                    self.obj_with_runtime_known_numbers_substituted_for_verification(&mul.left),
+                    self.obj_with_runtime_known_numbers_substituted_for_verification(&mul.right),
+                ));
+                let calculated_result = result.calculate_value_and_normalize();
+                if let Some(calculated_result) = calculated_result {
+                    Obj::Number(calculated_result)
+                } else {
+                    result
+                }
+            }
+            Obj::Div(div) => {
+                let result = Obj::Div(Div::new(
+                    self.obj_with_runtime_known_numbers_substituted_for_verification(&div.left),
+                    self.obj_with_runtime_known_numbers_substituted_for_verification(&div.right),
+                ));
+                let calculated_result = result.calculate_value_and_normalize();
+                if let Some(calculated_result) = calculated_result {
+                    Obj::Number(calculated_result)
+                } else {
+                    result
+                }
+            }
+            Obj::Mod(mod_obj) => {
+                let result = Obj::Mod(Mod::new(
+                    self.obj_with_runtime_known_numbers_substituted_for_verification(&mod_obj.left),
+                    self.obj_with_runtime_known_numbers_substituted_for_verification(
+                        &mod_obj.right,
+                    ),
+                ));
+                let calculated_result = result.calculate_value_and_normalize();
+                if let Some(calculated_result) = calculated_result {
+                    Obj::Number(calculated_result)
+                } else {
+                    result
+                }
+            }
+            Obj::Pow(pow) => {
+                let result = Obj::Pow(Pow::new(
+                    self.obj_with_runtime_known_numbers_substituted_for_verification(&pow.base),
+                    self.obj_with_runtime_known_numbers_substituted_for_verification(&pow.exponent),
+                ));
+                let calculated_result = result.calculate_value_and_normalize();
+                if let Some(calculated_result) = calculated_result {
+                    Obj::Number(calculated_result)
+                } else {
+                    result
+                }
+            }
             Obj::Identifier(_)
             | Obj::IdentifierWithMod(_)
             | Obj::FieldAccess(_)
             | Obj::FieldAccessWithMod(_)
             | Obj::FnObj(_) => {
-                if let Some(number) = self.normalized_calculated_value_for_obj(obj) {
+                if let Some(number) = self.get_known_normalized_calculated_value_for_obj(obj) {
                     Obj::Number(number)
                 } else {
                     obj.clone()
+                }
+            }
+            Obj::Count(count) => {
+                // 如果里面的东西是 list set 那就返回 number，这个number是set len
+                match &*count.set {
+                    Obj::ListSet(list_set) => {
+                        let list_set_len = list_set.list.len();
+                        Obj::Number(Number::new(list_set_len.to_string()))
+                    }
+                    _ => obj.clone(),
                 }
             }
             _ => obj.clone(),

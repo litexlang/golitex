@@ -3,6 +3,7 @@ use crate::common::helper::todo_error_message;
 use crate::error::{RuntimeError, WellDefinedError};
 use crate::execute::Runtime;
 use crate::fact::InFact;
+use crate::fact::IsFiniteSetFact;
 use crate::fact::{
     AndChainAtomicFact, AndFact, AtomicFact, EqualFact, Fact, GreaterFact, IsCartFact, IsTupleFact,
     LessEqualFact, NotEqualFact, OrFact,
@@ -1008,13 +1009,20 @@ impl<'a> Runtime<'a> {
         x: &Count,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        let _ = x;
-        let _ = verify_state;
-        Err(WellDefinedError::new(
-            "verify_count_well_defined 此函数还没有 implement".to_string(),
-            None,
+        // 必须 is_finite_set
+        let is_finite_set_fact = AtomicFact::IsFiniteSetFact(IsFiniteSetFact::new(
+            (*x.set).clone(),
             DEFAULT_LINE_FILE.clone(),
-        ))
+        ));
+        let result = self.verify_atomic_fact(&is_finite_set_fact, verify_state)?;
+        if result.is_unknown() {
+            return Err(WellDefinedError::new(
+                format!("set {} is not a finite set", x.set.to_string()),
+                None,
+                DEFAULT_LINE_FILE.clone(),
+            ));
+        }
+        Ok(())
     }
 
     fn verify_range_well_defined(
@@ -1119,7 +1127,7 @@ impl<'a> Runtime<'a> {
             })?;
         let tuple_dim = cart_obj_where_tuple_obj_is.args.len();
 
-        let index_calculated_string = x.index.normalized_calculated_value();
+        let index_calculated_string = x.index.calculate_value_and_normalize();
 
         let index_calculated_obj = {
             if let Some(index_calculated_number) = index_calculated_string {

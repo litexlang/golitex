@@ -1,5 +1,6 @@
 use crate::error::VerifyError;
 use crate::execute::Runtime;
+use crate::fact::IsFiniteSetFact;
 use crate::fact::{AtomicFact, Fact, GreaterFact, IsNonemptySetFact, LessFact, NotEqualFact};
 use crate::infer::InferResult;
 use crate::obj::{Number, Obj};
@@ -54,6 +55,9 @@ impl<'a> Runtime<'a> {
                     is_nonempty_set_fact,
                     verify_state,
                 ),
+            AtomicFact::IsFiniteSetFact(is_finite_set_fact) => {
+                self._verify_is_finite_set_fact_with_builtin_rules(is_finite_set_fact, verify_state)
+            }
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }
@@ -67,8 +71,8 @@ impl<'a> Runtime<'a> {
         let right_obj = &not_equal_fact.right;
 
         match (
-            left_obj.normalized_calculated_value(),
-            right_obj.normalized_calculated_value(),
+            left_obj.calculate_value_and_normalize(),
+            right_obj.calculate_value_and_normalize(),
         ) {
             (Some(left_number), Some(right_number)) => {
                 if left_number.normalized_value != right_number.normalized_value {
@@ -99,7 +103,7 @@ impl<'a> Runtime<'a> {
     fn obj_represents_zero_for_not_equal_builtin_rules(obj: &Obj) -> bool {
         match obj {
             Obj::Number(number) => number.normalized_value == "0",
-            _ => match obj.normalized_calculated_value() {
+            _ => match obj.calculate_value_and_normalize() {
                 Some(calculated_number) => calculated_number.normalized_value == "0",
                 None => false,
             },
@@ -386,6 +390,23 @@ impl<'a> Runtime<'a> {
                     ),
                 ))
             }
+            _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
+        }
+    }
+
+    fn _verify_is_finite_set_fact_with_builtin_rules(
+        &mut self,
+        is_finite_set_fact: &IsFiniteSetFact,
+        _verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        match &is_finite_set_fact.set {
+            Obj::ListSet(_) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                FactVerifiedByBuiltinRules::new(
+                    Fact::AtomicFact(AtomicFact::IsFiniteSetFact(is_finite_set_fact.clone())),
+                    "list_set_finite".to_string(),
+                    InferResult::new(),
+                ),
+            )),
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }

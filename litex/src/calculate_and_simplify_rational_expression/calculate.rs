@@ -1,12 +1,12 @@
 use crate::obj::{Number, Obj};
 
 impl Obj {
-    pub fn normalized_calculated_value(&self) -> Option<Number> {
+    pub fn calculate_value_and_normalize(&self) -> Option<Number> {
         let result = match self {
             Obj::Number(number) => Some(number.clone()),
             Obj::Add(add) => {
-                let left_number = add.left.normalized_calculated_value();
-                let right_number = add.right.normalized_calculated_value();
+                let left_number = add.left.calculate_value_and_normalize();
+                let right_number = add.right.calculate_value_and_normalize();
                 if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
                     Some(Number::new(add_decimal_str_and_normalize(
                         &left_number.normalized_value,
@@ -17,8 +17,8 @@ impl Obj {
                 }
             }
             Obj::Sub(sub) => {
-                let left_number = sub.left.normalized_calculated_value();
-                let right_number = sub.right.normalized_calculated_value();
+                let left_number = sub.left.calculate_value_and_normalize();
+                let right_number = sub.right.calculate_value_and_normalize();
                 if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
                     Some(Number::new(sub_decimal_str_and_normalize(
                         &left_number.normalized_value,
@@ -29,8 +29,8 @@ impl Obj {
                 }
             }
             Obj::Mul(mul) => {
-                let left_number = mul.left.normalized_calculated_value();
-                let right_number = mul.right.normalized_calculated_value();
+                let left_number = mul.left.calculate_value_and_normalize();
+                let right_number = mul.right.calculate_value_and_normalize();
                 if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
                     Some(Number::new(mul_signed_decimal_str(
                         &left_number.normalized_value,
@@ -41,8 +41,8 @@ impl Obj {
                 }
             }
             Obj::Mod(mod_obj) => {
-                let left_number = mod_obj.left.normalized_calculated_value();
-                let right_number = mod_obj.right.normalized_calculated_value();
+                let left_number = mod_obj.left.calculate_value_and_normalize();
+                let right_number = mod_obj.right.calculate_value_and_normalize();
                 if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
                     Some(Number::new(mod_decimal_str_and_normalize(
                         &left_number.normalized_value,
@@ -53,8 +53,8 @@ impl Obj {
                 }
             }
             Obj::Pow(pow_obj) => {
-                let base_number = pow_obj.base.normalized_calculated_value();
-                let exponent_number = pow_obj.exponent.normalized_calculated_value();
+                let base_number = pow_obj.base.calculate_value_and_normalize();
+                let exponent_number = pow_obj.exponent.calculate_value_and_normalize();
                 if let (Some(base_number), Some(exponent_number)) = (base_number, exponent_number) {
                     Some(Number::new(pow_decimal_str_and_normalize(
                         &base_number.normalized_value,
@@ -75,8 +75,8 @@ impl Obj {
 
     pub fn two_objs_can_be_calculated_and_equal_by_calculation(&self, other: &Obj) -> bool {
         match (
-            self.normalized_calculated_value(),
-            other.normalized_calculated_value(),
+            self.calculate_value_and_normalize(),
+            other.calculate_value_and_normalize(),
         ) {
             (Some(left_number), Some(right_number)) => {
                 return left_number.normalized_value == right_number.normalized_value;
@@ -115,7 +115,7 @@ pub fn mul_signed_decimal_str(left_number_string: &str, right_number_string: &st
 
 impl Obj {
     pub fn replace_with_numeric_result_if_can_be_calculated(&self) -> (Obj, bool) {
-        if let Some(calculated_number) = self.normalized_calculated_value() {
+        if let Some(calculated_number) = self.calculate_value_and_normalize() {
             (Obj::Number(calculated_number), true)
         } else {
             (self.clone(), false)
