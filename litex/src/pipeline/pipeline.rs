@@ -1,7 +1,9 @@
+use crate::common::keywords::BUILTIN;
 use crate::execute::Runtime;
 use crate::module_manager::ModuleManager;
 use crate::parse::TokenBlock;
 use crate::runtime::RuntimeContext;
+use crate::runtime::BUILTIN_ENV_CODE;
 use crate::stmt::Stmt;
 use std::fs;
 use std::io::{self, BufRead, Write};
@@ -18,12 +20,30 @@ pub fn run_source_code_in_file_and_return_json_string(entrance_file_path: &str) 
 
 pub fn run_source_code_and_return_string(source_code: &str, entrance_label: &str) -> String {
     let normalized_source = remove_windows_carriage_return(source_code);
-    run_source_code(normalized_source.as_str(), entrance_label, false)
+    let mut module_manager = ModuleManager::new_empty_module_manager(BUILTIN);
+    let mut runtime_context =
+        RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager);
+    let mut runtime = Runtime::new(&mut runtime_context);
+    run_source_code(normalized_source.as_str(), &mut runtime, false);
+    runtime
+        .runtime_context
+        .module_manager
+        .new_file_path(entrance_label);
+    run_source_code(BUILTIN_ENV_CODE, &mut runtime, false)
 }
 
 pub fn run_source_code_and_return_json_string(source_code: &str, entrance_label: &str) -> String {
     let normalized_source = remove_windows_carriage_return(source_code);
-    run_source_code(normalized_source.as_str(), entrance_label, true)
+    let mut module_manager = ModuleManager::new_empty_module_manager(BUILTIN);
+    let mut runtime_context =
+        RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager);
+    let mut runtime = Runtime::new(&mut runtime_context);
+    run_source_code(BUILTIN_ENV_CODE, &mut runtime, true);
+    runtime
+        .runtime_context
+        .module_manager
+        .new_file_path(entrance_label);
+    run_source_code(normalized_source.as_str(), &mut runtime, true)
 }
 
 fn remove_windows_carriage_return(source_code: &str) -> String {
@@ -32,17 +52,12 @@ fn remove_windows_carriage_return(source_code: &str) -> String {
 
 pub fn run_source_code(
     source_code: &str,
-    entrance_file_path: &str,
+    runtime: &mut Runtime,
     should_output_json: bool,
 ) -> String {
-    let mut module_manager = ModuleManager::new_empty_module_manager(entrance_file_path);
-
-    let mut runtime_context =
-        RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager);
-
     let blocks = match TokenBlock::parse_blocks(
         source_code,
-        runtime_context.module_manager.current_file_index,
+        runtime.runtime_context.module_manager.current_file_index,
     ) {
         Ok(b) => b,
         Err(e) => {
@@ -50,15 +65,19 @@ pub fn run_source_code(
             if should_output_json {
                 return format!(
                     "\n{}\n",
-                    runtime_context.display_error_json_string(&runtime_error)
+                    runtime
+                        .runtime_context
+                        .display_error_json_string(&runtime_error)
                 );
             }
-            return format!("\n{}\n", runtime_context.display_error(&runtime_error));
+            return format!(
+                "\n{}\n",
+                runtime.runtime_context.display_error(&runtime_error)
+            );
         }
     };
 
     let mut out = String::new();
-    let mut runtime = Runtime::new(&mut runtime_context);
     for mut block in blocks {
         let stmt: Stmt = {
             match runtime.parse_stmt(&mut block) {
@@ -165,11 +184,14 @@ where
     writeln!(stdout_writer, "website: https://litexlang.com")?;
     writeln!(stdout_writer, "Ctrl+D to exit.\n")?;
 
-    let mut module_manager = ModuleManager::new_empty_module_manager("repl");
+    let mut module_manager = ModuleManager::new_empty_module_manager(BUILTIN);
     let mut runtime_context =
         RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager);
 
     let mut runtime = Runtime::new(&mut runtime_context);
+
+    run_source_code(BUILTIN_ENV_CODE, &mut runtime, true);
+    runtime.runtime_context.module_manager.new_file_path("repl");
 
     let mut line_buffer = String::new();
 
