@@ -450,7 +450,7 @@ impl<'a> Runtime<'a> {
     /// head 里是 if and_spec_fact :，body 有且只有一个块，即 return obj。
     fn parse_algo_case(&mut self, block: &mut TokenBlock) -> Result<AlgoCase, ParsingError> {
         block.skip_token(CASE)?;
-        let condition = self.parse_and_chain_atomic_fact(block)?;
+        let condition = self.parse_atomic_fact(block, true)?;
         block.skip_token(COLON)?;
 
         let return_stmt = self.parse_algo_return(block)?;
