@@ -128,3 +128,7 @@ pub fn brace_vec_colon_vec_to_string<T: fmt::Display, T2: fmt::Display>(
 pub fn todo_error_message(context: String) -> String {
     format!("TODO: {} is not implemented yet", context)
 }
+
+pub fn remove_windows_carriage_return(source_code: &str) -> String {
+    source_code.replace('\r', "")
+}
