@@ -1,4 +1,4 @@
-use litex::common::keywords::BUILTIN;
+use litex::common::keywords::BUILTIN_CODE;
 use litex::module_manager::ModuleManager;
 use litex::pipeline::run_repl_loop_and_return_json_string;
 use litex::pipeline::run_repl_loop_and_return_string;
@@ -69,16 +69,20 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                let mut module_manager = ModuleManager::new_empty_module_manager(BUILTIN);
+                let mut module_manager = ModuleManager::new_empty_module_manager(BUILTIN_CODE);
                 let mut runtime_context =
                     RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager);
                 let mut runtime = Runtime::new(&mut runtime_context);
 
-                run_source_code(BUILTIN_ENV_CODE, &mut runtime, true);
-                runtime.runtime_context.module_manager.new_file_path("-e");
+                let (ok, msg) = run_source_code(BUILTIN_ENV_CODE, &mut runtime, true);
+                if !ok {
+                    eprintln!("builtin code execution failed: {}", msg);
+                    process::exit(1);
+                }
+                runtime.new_file_path_new_env_new_name_scope("-e");
 
                 let output = run_source_code(code.as_str(), &mut runtime, should_output_json);
-                println!("{}", output.trim());
+                println!("{}", output.1.trim());
                 println!("{}", repl_footer_placeholder());
                 return;
             }
