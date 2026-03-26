@@ -1,7 +1,6 @@
 use litex::common::keywords::BUILTIN_CODE;
 use litex::module_manager::ModuleManager;
-use litex::pipeline::run_repl_loop_and_return_json_string;
-use litex::pipeline::run_repl_loop_and_return_string;
+use litex::pipeline::run_repl;
 use litex::pipeline::run_source_code;
 use litex::pipeline::run_source_code_in_file_and_return_json_string;
 use litex::pipeline::run_source_code_in_file_and_return_string;
@@ -418,14 +417,6 @@ fn run_tutorial() {
 
 fn run_latex_interactive() {
     panic!("-latex: interactive LaTeX mode is not implemented in the Rust kernel yet");
-}
-
-fn run_repl(version: &str, should_output_json: bool) {
-    if should_output_json {
-        run_repl_loop_and_return_json_string(version);
-    } else {
-        run_repl_loop_and_return_string(version);
-    }
 }
 
 fn help_message() -> String {
