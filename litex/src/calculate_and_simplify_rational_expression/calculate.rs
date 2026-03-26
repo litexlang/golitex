@@ -1,3 +1,4 @@
+use crate::calculate_and_simplify_rational_expression::calculate_div::safe_div;
 use crate::obj::{Number, Obj};
 
 impl Obj {
@@ -62,6 +63,24 @@ impl Obj {
                     )))
                 } else {
                     None
+                }
+            }
+            Obj::Div(div) => {
+                let left_number = div.left.calculate_value_and_normalize();
+                let right_number = div.right.calculate_value_and_normalize();
+                if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
+                    let exact_quotient_string = safe_div(
+                        &left_number.normalized_value,
+                        &right_number.normalized_value,
+                    );
+
+                    if let Some(exact_quotient_string) = exact_quotient_string {
+                        Some(Number::new(exact_quotient_string))
+                    } else {
+                        None
+                    }
+                } else {
+                    return None;
                 }
             }
             _ => None,

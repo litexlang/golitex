@@ -71,8 +71,8 @@ impl<'a> Runtime<'a> {
         let right_obj = &not_equal_fact.right;
 
         match (
-            left_obj.calculate_value_and_normalize(),
-            right_obj.calculate_value_and_normalize(),
+            self.get_known_normalized_calculated_value_for_obj(left_obj),
+            self.get_known_normalized_calculated_value_for_obj(right_obj),
         ) {
             (Some(left_number), Some(right_number)) => {
                 if left_number.normalized_value != right_number.normalized_value {
