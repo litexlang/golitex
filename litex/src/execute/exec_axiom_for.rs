@@ -45,15 +45,16 @@ impl<'a> Runtime<'a> {
                 ))
             })?;
 
-        let param_value_strings_of_each_param = Self::for_param_value_strings_of_each_param(stmt)
+        let param_value_strings_of_each_param = self
+            .for_param_value_strings_of_each_param(stmt)
             .map_err(|msg| {
-            RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
-                Stmt::ForAxiomStmt(stmt.clone()),
-                msg,
-                None,
-                vec![],
-            ))
-        })?;
+                RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
+                    Stmt::ForAxiomStmt(stmt.clone()),
+                    msg,
+                    None,
+                    vec![],
+                ))
+            })?;
         let for_cartesian_product_is_empty = param_value_strings_of_each_param
             .iter()
             .any(|one_param_value_strings| one_param_value_strings.is_empty());
@@ -127,20 +128,25 @@ impl<'a> Runtime<'a> {
 
 impl<'a> Runtime<'a> {
     fn integer_string_from_number_like_obj_for_for(
+        self: &Self,
         number_like_obj: &Obj,
         line_file: (usize, usize),
     ) -> Result<String, RuntimeError> {
-        let calculated_string = match number_like_obj.calculate_value_and_normalize() {
-            Some(calculated_number) => calculated_number.normalized_value,
-            None => {
-                return Err(RuntimeError::UnknownError(UnknownError::new(
-                    format!(
-                        "for: range boundary `{}` must be a calculable number expression",
-                        number_like_obj
-                    ),
-                    line_file,
-                    None,
-                )));
+        let calculated_string = {
+            let value = self.get_known_normalized_calculated_value_for_obj(number_like_obj);
+
+            match value {
+                Some(number) => number.normalized_value,
+                _ => {
+                    return Err(RuntimeError::UnknownError(UnknownError::new(
+                        format!(
+                            "for: range boundary `{}` must be a calculable number expression",
+                            number_like_obj
+                        ),
+                        line_file,
+                        None,
+                    )));
+                }
             }
         };
 
@@ -158,6 +164,7 @@ impl<'a> Runtime<'a> {
     }
 
     fn for_param_value_strings_of_each_param(
+        self: &Self,
         stmt: &ForAxiomStmt,
     ) -> Result<Vec<Vec<String>>, String> {
         let mut param_value_strings_of_each_param: Vec<Vec<String>> = Vec::new();
@@ -170,12 +177,12 @@ impl<'a> Runtime<'a> {
                     (range.start.as_ref(), range.end.as_ref(), false)
                 }
             };
-            let start_integer_string =
-                Self::integer_string_from_number_like_obj_for_for(start_obj, stmt.line_file)
-                    .map_err(|e| e.to_string())?;
-            let end_integer_string =
-                Self::integer_string_from_number_like_obj_for_for(end_obj, stmt.line_file)
-                    .map_err(|e| e.to_string())?;
+            let start_integer_string = self
+                .integer_string_from_number_like_obj_for_for(start_obj, stmt.line_file)
+                .map_err(|e| e.to_string())?;
+            let end_integer_string = self
+                .integer_string_from_number_like_obj_for_for(end_obj, stmt.line_file)
+                .map_err(|e| e.to_string())?;
             let start_integer_i128 = start_integer_string.parse::<i128>().map_err(|_| {
                 format!(
                     "for: failed to parse start boundary `{}` as integer",

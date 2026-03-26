@@ -100,13 +100,10 @@ impl<'a> Runtime<'a> {
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
-    fn obj_represents_zero_for_not_equal_builtin_rules(obj: &Obj) -> bool {
-        match obj {
-            Obj::Number(number) => number.normalized_value == "0",
-            _ => match obj.calculate_value_and_normalize() {
-                Some(calculated_number) => calculated_number.normalized_value == "0",
-                None => false,
-            },
+    fn obj_represents_zero_for_not_equal_builtin_rules(self: &Self, obj: &Obj) -> bool {
+        match self.get_known_normalized_calculated_value_for_obj(obj) {
+            Some(number) => number.normalized_value == "0",
+            None => false,
         }
     }
 
@@ -251,9 +248,9 @@ impl<'a> Runtime<'a> {
     ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
         let line_file = not_equal_fact.line_file;
         let expression_obj =
-            if Self::obj_represents_zero_for_not_equal_builtin_rules(&not_equal_fact.right) {
+            if self.obj_represents_zero_for_not_equal_builtin_rules(&not_equal_fact.right) {
                 &not_equal_fact.left
-            } else if Self::obj_represents_zero_for_not_equal_builtin_rules(&not_equal_fact.left) {
+            } else if self.obj_represents_zero_for_not_equal_builtin_rules(&not_equal_fact.left) {
                 &not_equal_fact.right
             } else {
                 return Ok(None);
