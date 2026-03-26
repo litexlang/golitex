@@ -100,28 +100,6 @@ impl<'a> Runtime<'a> {
                 return Ok(result);
             }
         }
-        let known_left = self
-            .runtime_context
-            .builtin_environment
-            .known_equality
-            .get(&left_string)
-            .map(Rc::clone);
-        let known_right = self
-            .runtime_context
-            .builtin_environment
-            .known_equality
-            .get(&right_string)
-            .map(Rc::clone);
-        if let Some(result) = try_verify_equality_with_known_equalities_by_builtin_rules_only(
-            self,
-            left,
-            right,
-            line_file,
-            known_left.as_ref(),
-            known_right.as_ref(),
-        )? {
-            return Ok(result);
-        }
 
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }

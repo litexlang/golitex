@@ -23,14 +23,6 @@ impl<'a> Runtime<'a> {
         {
             return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
         }
-        if let Some(fact_verified) = self
-            .try_verify_exist_fact_with_known_forall_facts_in_builtin_env(
-                exist_fact,
-                verify_state,
-            )?
-        {
-            return Ok(NonErrStmtExecResult::FactVerifiedByFact(fact_verified));
-        }
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
 
@@ -77,44 +69,6 @@ impl<'a> Runtime<'a> {
         Ok((DEFAULT_LINE_FILE, None, None))
     }
 
-    fn get_matched_exist_fact_in_known_forall_fact_in_builtin_env(
-        &self,
-        iterate_from_known_forall_fact_index: usize,
-        given_exist_fact: &ExistFact,
-    ) -> Result<
-        (
-            usize,
-            Option<HashMap<String, Obj>>,
-            Option<(ExistFact, Rc<KnownForallFactParamsAndDom>)>,
-        ),
-        VerifyError,
-    > {
-        let lookup_key = given_exist_fact.key();
-        let builtin_env = &self.runtime_context.builtin_environment;
-
-        if let Some(known_forall_facts_in_env) = builtin_env
-            .known_exist_facts_in_forall_facts
-            .get(lookup_key.as_str())
-        {
-            let known_forall_facts_count = known_forall_facts_in_env.len();
-            for j in iterate_from_known_forall_fact_index..known_forall_facts_count {
-                let current_known_forall =
-                    &known_forall_facts_in_env[known_forall_facts_count - 1 - j];
-                let fact_args_in_known_forall = current_known_forall.0.get_args_from_fact();
-                let given_fact_args = given_exist_fact.get_args_from_fact();
-                let match_result = Self::match_args_in_fact_in_known_forall_fact_with_given_args(
-                    &fact_args_in_known_forall,
-                    &given_fact_args,
-                )?;
-                if let Some(arg_map) = match_result {
-                    return Ok((j, Some(arg_map), Some(current_known_forall.clone())));
-                }
-            }
-        }
-
-        Ok((0, None, None))
-    }
-
     fn try_verify_exist_fact_with_known_forall_facts_in_envs(
         &mut self,
         exist_fact: &ExistFact,
@@ -145,38 +99,6 @@ impl<'a> Runtime<'a> {
                     }
                     iterate_from_env_index = i;
                     iterate_from_known_forall_fact_index = j + 1;
-                }
-                _ => return Ok(None),
-            }
-        }
-    }
-
-    fn try_verify_exist_fact_with_known_forall_facts_in_builtin_env(
-        &mut self,
-        exist_fact: &ExistFact,
-        verify_state: &VerifyState,
-    ) -> Result<Option<FactVerifiedByFact>, VerifyError> {
-        let mut known_fact_index_in_builtin = 0;
-
-        loop {
-            let result = self.get_matched_exist_fact_in_known_forall_fact_in_builtin_env(
-                known_fact_index_in_builtin,
-                exist_fact,
-            )?;
-            match result {
-                (j, Some(arg_map), Some((exist_fact_in_known_forall, forall_rc))) => {
-                    if let Some(fact_verified) = self
-                        .verify_exist_fact_args_satisfy_forall_requirements(
-                            &exist_fact_in_known_forall,
-                            &forall_rc,
-                            arg_map,
-                            exist_fact,
-                            verify_state,
-                        )?
-                    {
-                        return Ok(Some(fact_verified));
-                    }
-                    known_fact_index_in_builtin = j + 1;
                 }
                 _ => return Ok(None),
             }
@@ -271,12 +193,7 @@ impl<'a> Runtime<'a> {
                 &known_forall.params_def,
                 &args_for_params,
             )
-            .map_err(|e| {
-                VerifyError::new(
-                    Fact::ExistFact(given_exist_fact.clone()),
-                    Some(e),
-                )
-            })?;
+            .map_err(|e| VerifyError::new(Fact::ExistFact(given_exist_fact.clone()), Some(e)))?;
 
         for fact in args_satisfy_param_types.iter() {
             let result = self.verify_atomic_fact(fact, verify_state)?;

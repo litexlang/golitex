@@ -13,9 +13,9 @@ impl<'a> Runtime<'a> {
         or_fact: &OrFact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
-            &Fact::OrFact(or_fact.clone()),
-        ) {
+        if let Some(cached_result) =
+            self.verify_fact_from_cache_using_display_string(&Fact::OrFact(or_fact.clone()))
+        {
             return Ok(cached_result);
         }
 
@@ -82,15 +82,6 @@ impl<'a> Runtime<'a> {
             if result.is_true() {
                 return Ok(result);
             }
-        }
-
-        let result = Self::verify_or_fact_with_known_or_facts_with_facts_in_environment(
-            &self.runtime_context.builtin_environment,
-            or_fact,
-            &all_objs_equal_to_each_arg,
-        )?;
-        if result.is_true() {
-            return Ok(result);
         }
 
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
