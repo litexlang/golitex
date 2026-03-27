@@ -1,5 +1,6 @@
 use crate::common::helper::remove_windows_carriage_return;
 use crate::parse::TokenBlock;
+use crate::pipeline::render_run_source_code_output;
 use crate::pipeline::run_source_code;
 use crate::pipeline::run_stmt_at_global_env;
 use crate::runtime::builtin_env_code;
@@ -47,7 +48,9 @@ where
 
     let mut runtime = Runtime::new();
 
-    let (ok, msg) = run_source_code(builtin_env_code().as_str(), &mut runtime, true);
+    let (builtin_stmt_results, builtin_error) = run_source_code(builtin_env_code().as_str(), &mut runtime);
+    let (ok, msg) =
+        render_run_source_code_output(&runtime, &builtin_stmt_results, &builtin_error, true);
     if !ok {
         eprintln!("builtin code execution failed: {}", msg);
         return Err(io::Error::new(

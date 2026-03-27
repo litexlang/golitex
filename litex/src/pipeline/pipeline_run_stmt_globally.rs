@@ -1,9 +1,13 @@
+use crate::error::ExecStmtError;
 use crate::error::RuntimeError;
-use crate::result::NonErrStmtExecResult;
+use crate::infer::InferResult;
+use crate::pipeline::run_source_code;
+use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
 use crate::runtime::Runtime;
 use crate::stmt::tooling_stmt::ImportStmt;
 use crate::stmt::tooling_stmt::RunFileStmt;
 use crate::stmt::Stmt;
+use std::fs;
 
 pub fn run_stmt_at_global_env(
     stmt: &Stmt,
@@ -26,7 +30,33 @@ fn run_file(
     _run_file_stmt: &RunFileStmt,
     _runtime: &mut Runtime,
 ) -> Result<NonErrStmtExecResult, RuntimeError> {
-    unimplemented!();
+    let path = _run_file_stmt.file_path.as_str();
+    let content = fs::read_to_string(path).map_err(|_| {
+        RuntimeError::ExecStmtError(ExecStmtError::new(
+            Stmt::RunFileStmt(_run_file_stmt.clone()),
+            None,
+            vec![],
+        ))
+    })?;
+
+    let current_file_index = _runtime.module_manager.current_file_index;
+    _runtime.new_file_and_update_runtime_with_file_content(path);
+
+    let result = run_source_code(content.as_str(), _runtime);
+
+    _runtime.change_file_index_to(current_file_index);
+
+    if let Some(error) = result.1 {
+        return Err(error);
+    };
+
+    return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
+        NonFactualStmtSuccess::new(
+            Stmt::RunFileStmt(_run_file_stmt.clone()),
+            InferResult::new(),
+            result.0,
+        ),
+    ));
 }
 
 fn run_import_stmt(
