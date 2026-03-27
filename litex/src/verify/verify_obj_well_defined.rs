@@ -113,7 +113,7 @@ impl<'a> Runtime<'a> {
     ) -> Result<(), WellDefinedError> {
         if self
             .runtime_context
-            .is_name_used_for_identifier(&identifier.name)
+            .is_name_used_for_identifier_and_field_access(&identifier.name)
         {
             Ok(())
         } else {
@@ -138,12 +138,19 @@ impl<'a> Runtime<'a> {
     }
 
     fn verify_field_access_well_defined(&self, x: &FieldAccess) -> Result<(), WellDefinedError> {
-        let _ = x;
-        Err(WellDefinedError::new(
-            "verify_field_access_well_defined 此函数还没有 implement".to_string(),
+        let key = x.to_string();
+        if self
+            .runtime_context
+            .is_name_used_for_identifier_and_field_access(&key)
+        {
+            return Ok(());
+        }
+
+        return Err(WellDefinedError::new(
+            format!("field access `{}` not defined", x.to_string()),
             None,
             DEFAULT_LINE_FILE.clone(),
-        ))
+        ));
     }
 
     fn verify_field_access_with_mod_well_defined(
@@ -735,9 +742,10 @@ impl<'a> Runtime<'a> {
         x: &SetBuilder,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        if let Err(e) = self
-            .define_params_with_set(&ParamDefWithParamSet::new(vec![x.param.clone()], *x.param_set.clone()))
-        {
+        if let Err(e) = self.define_params_with_set(&ParamDefWithParamSet::new(
+            vec![x.param.clone()],
+            *x.param_set.clone(),
+        )) {
             return Err(WellDefinedError::new(
                 format!(
                     "failed to verify well-defined of set builder {}",
