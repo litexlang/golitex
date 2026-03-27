@@ -21,45 +21,6 @@ know:
         =>:
             a = b or a > b
 
-    forall a, b R:
-        a <= b
-        a >= b
-        =>:
-            a = b
-
-    forall a, b R:
-        a < b or a > b
-        =>:
-            a != b
-
-    forall a, b R:
-        a != b
-        =>:
-            a < b or a > b
-
-    forall a, b R:
-        =>:
-            a <= b
-        <=>:
-            not a > b
-
-    forall a, b R:
-        =>:
-            a >= b
-        <=>:
-            not a < b
-
-    forall a, b R:
-        =>:
-            a < b
-        <=>:
-            not a >= b
-
-    forall a, b R:
-        =>:
-            a > b
-        <=>:
-            not a <= b
 "#;
 
 pub fn builtin_env_code() -> String {
