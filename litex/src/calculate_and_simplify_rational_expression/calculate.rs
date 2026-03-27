@@ -83,6 +83,18 @@ impl Obj {
                     return None;
                 }
             }
+            Obj::CartDim(cart_dim) => match &*cart_dim.set {
+                Obj::Cart(cart) => Some(Number::new(cart.args.len().to_string())),
+                _ => None,
+            },
+            Obj::TupleDim(tuple_dim) => match &*tuple_dim.arg {
+                Obj::Tuple(tuple) => Some(Number::new(tuple.args.len().to_string())),
+                _ => None,
+            },
+            Obj::Count(count) => match &*count.set {
+                Obj::ListSet(list_set) => Some(Number::new(list_set.list.len().to_string())),
+                _ => None,
+            },
             _ => None,
         };
 
