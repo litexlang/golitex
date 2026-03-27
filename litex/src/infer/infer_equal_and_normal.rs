@@ -1,7 +1,9 @@
 use crate::error::InferError;
 use crate::execute::Runtime;
-use crate::fact::{EqualFact, NormalAtomicFact};
+use crate::fact::AtomicFact;
+use crate::fact::{EqualFact, Fact, IsCartFact, IsTupleFact, NormalAtomicFact};
 use crate::infer::InferResult;
+use crate::obj::{CartDim, Obj, TupleDim};
 use crate::stmt::parameter_def::ParamDefWithParamType;
 
 impl Runtime {
@@ -11,11 +13,203 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
     ) -> Result<InferResult, InferError> {
+        let mut infer_result = InferResult::new();
+        infer_result
+            .new_infer_result_inside(self.infer_equal_fact_and_give_value_to_obj(equal_fact)?);
+        infer_result.new_infer_result_inside(self.infer_equal_fact_by_cart(equal_fact)?);
+        infer_result.new_infer_result_inside(self.infer_equal_fact_by_tuple(equal_fact)?);
+
+        Ok(infer_result)
+    }
+
+    fn infer_equal_fact_by_cart(
+        &mut self,
+        equal_fact: &EqualFact,
+    ) -> Result<InferResult, InferError> {
+        let mut infer_result = InferResult::new();
+
+        if let Obj::Cart(cart) = &equal_fact.left {
+            let right_is_cart_fact = Fact::AtomicFact(AtomicFact::IsCartFact(IsCartFact::new(
+                equal_fact.right.clone(),
+                equal_fact.line_file,
+            )));
+            self.store_fact_without_well_defined_verified_and_infer(&right_is_cart_fact)
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred cart fact while inferring `{}`",
+                            equal_fact
+                        ),
+                        equal_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
+            infer_result.new_fact(&right_is_cart_fact);
+
+            let right_cart_dim_obj = Obj::CartDim(CartDim::new(equal_fact.right.clone()));
+            let left_cart_dim_obj =
+                Obj::Number(crate::obj::Number::new(cart.args.len().to_string()));
+            let cart_dim_equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                right_cart_dim_obj,
+                left_cart_dim_obj,
+                equal_fact.line_file,
+            )));
+            self.store_fact_without_well_defined_verified_and_infer(&cart_dim_equal_fact)
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred cart_dim fact while inferring `{}`",
+                            equal_fact
+                        ),
+                        equal_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
+            infer_result.new_fact(&cart_dim_equal_fact);
+        }
+
+        if let Obj::Cart(cart) = &equal_fact.right {
+            let left_is_cart_fact = Fact::AtomicFact(AtomicFact::IsCartFact(IsCartFact::new(
+                equal_fact.left.clone(),
+                equal_fact.line_file,
+            )));
+            self.store_fact_without_well_defined_verified_and_infer(&left_is_cart_fact)
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred cart fact while inferring `{}`",
+                            equal_fact
+                        ),
+                        equal_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
+            infer_result.new_fact(&left_is_cart_fact);
+
+            let left_cart_dim_obj = Obj::CartDim(CartDim::new(equal_fact.left.clone()));
+            let right_cart_dim_obj =
+                Obj::Number(crate::obj::Number::new(cart.args.len().to_string()));
+            let cart_dim_equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                left_cart_dim_obj,
+                right_cart_dim_obj,
+                equal_fact.line_file,
+            )));
+            self.store_fact_without_well_defined_verified_and_infer(&cart_dim_equal_fact)
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred cart_dim fact while inferring `{}`",
+                            equal_fact
+                        ),
+                        equal_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
+            infer_result.new_fact(&cart_dim_equal_fact);
+        }
+
+        Ok(infer_result)
+    }
+
+    fn infer_equal_fact_by_tuple(
+        &mut self,
+        equal_fact: &EqualFact,
+    ) -> Result<InferResult, InferError> {
+        let mut infer_result = InferResult::new();
+
+        if let Obj::Tuple(tuple) = &equal_fact.left {
+            let right_is_tuple_fact = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact::new(
+                equal_fact.right.clone(),
+                equal_fact.line_file,
+            )));
+            self.store_fact_without_well_defined_verified_and_infer(&right_is_tuple_fact)
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred tuple fact while inferring `{}`",
+                            equal_fact
+                        ),
+                        equal_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
+            infer_result.new_fact(&right_is_tuple_fact);
+
+            let right_tuple_dim_obj = Obj::TupleDim(TupleDim::new(equal_fact.right.clone()));
+            let left_tuple_dim_obj =
+                Obj::Number(crate::obj::Number::new(tuple.args.len().to_string()));
+            let tuple_dim_equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                right_tuple_dim_obj,
+                left_tuple_dim_obj,
+                equal_fact.line_file,
+            )));
+            self.store_fact_without_well_defined_verified_and_infer(&tuple_dim_equal_fact)
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred tuple_dim fact while inferring `{}`",
+                            equal_fact
+                        ),
+                        equal_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
+            infer_result.new_fact(&tuple_dim_equal_fact);
+
+            self.store_tuple_obj_and_cart(&equal_fact.left.to_string(), Some(tuple.clone()), None);
+        }
+
+        if let Obj::Tuple(tuple) = &equal_fact.right {
+            let left_is_tuple_fact = Fact::AtomicFact(AtomicFact::IsTupleFact(IsTupleFact::new(
+                equal_fact.left.clone(),
+                equal_fact.line_file,
+            )));
+            self.store_fact_without_well_defined_verified_and_infer(&left_is_tuple_fact)
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred tuple fact while inferring `{}`",
+                            equal_fact
+                        ),
+                        equal_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
+            infer_result.new_fact(&left_is_tuple_fact);
+
+            let left_tuple_dim_obj = Obj::TupleDim(TupleDim::new(equal_fact.left.clone()));
+            let right_tuple_dim_obj =
+                Obj::Number(crate::obj::Number::new(tuple.args.len().to_string()));
+            let tuple_dim_equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                left_tuple_dim_obj,
+                right_tuple_dim_obj,
+                equal_fact.line_file,
+            )));
+            self.store_fact_without_well_defined_verified_and_infer(&tuple_dim_equal_fact)
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred tuple_dim fact while inferring `{}`",
+                            equal_fact
+                        ),
+                        equal_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
+            infer_result.new_fact(&tuple_dim_equal_fact);
+        }
+
+        Ok(infer_result)
+    }
+
+    fn infer_equal_fact_and_give_value_to_obj(
+        &mut self,
+        equal_fact: &EqualFact,
+    ) -> Result<InferResult, InferError> {
         if let Some(right_calculated_value) =
             self.get_known_normalized_calculated_value_for_obj(&equal_fact.right)
         {
-            self
-                .top_level_env()
+            self.top_level_env()
                 .known_normalized_calculated_value_of_obj
                 .insert(equal_fact.left.to_string(), right_calculated_value);
         }
@@ -23,8 +217,7 @@ impl Runtime {
         if let Some(left_calculated_value) =
             self.get_known_normalized_calculated_value_for_obj(&equal_fact.left)
         {
-            self
-                .top_level_env()
+            self.top_level_env()
                 .known_normalized_calculated_value_of_obj
                 .insert(equal_fact.right.to_string(), left_calculated_value);
         }
@@ -39,13 +232,11 @@ impl Runtime {
         normal_atomic_fact: &NormalAtomicFact,
     ) -> Result<InferResult, InferError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
-        let predicate_definition = match self
-            
-            .get_predicate_with_meaning_definition_by_name(&predicate_name)
-        {
-            Some(predicate_definition) => predicate_definition.clone(),
-            None => return Ok(InferResult::new()),
-        };
+        let predicate_definition =
+            match self.get_predicate_with_meaning_definition_by_name(&predicate_name) {
+                Some(predicate_definition) => predicate_definition.clone(),
+                None => return Ok(InferResult::new()),
+            };
         let mut infer_result = InferResult::new();
 
         let param_type_facts =
