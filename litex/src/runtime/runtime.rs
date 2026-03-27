@@ -543,3 +543,14 @@ impl Runtime {
         return self.get_algo_definition_by_name(name).is_some();
     }
 }
+
+impl Runtime {
+    pub fn new_file_and_update_runtime_with_file_content(&mut self, path: &str) {
+        self.module_manager.run_file_paths.push(path.to_string());
+        self.module_manager.current_file_index = self.module_manager.run_file_paths.len() - 1;
+    }
+
+    pub fn change_file_index_to(&mut self, file_index: usize) {
+        self.module_manager.current_file_index = file_index;
+    }
+}
