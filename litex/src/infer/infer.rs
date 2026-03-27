@@ -42,7 +42,7 @@ impl InferResult {
     }
 }
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn infer(&mut self, fact: &Fact) -> Result<InferResult, InferError> {
         match fact {
             Fact::AtomicFact(atomic_fact) => self.infer_atomic_fact(atomic_fact),

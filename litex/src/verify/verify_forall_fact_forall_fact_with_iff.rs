@@ -6,7 +6,7 @@ use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
 use crate::verify::VerifyState;
 use std::result::Result;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     /// Declare params, assume dom facts hold, then verify each then_fact.
     pub fn verify_forall_fact(
         &mut self,
@@ -45,10 +45,7 @@ impl<'a> Runtime<'a> {
         let mut infer_result = InferResult::new();
         for param_def in forall_fact.params_def_with_type.iter() {
             let param_infer_result = self
-                .define_params_with_type(
-                    std::slice::from_ref(param_def),
-                    false,
-                )
+                .define_params_with_type(std::slice::from_ref(param_def), false)
                 .map_err(|e| {
                     let message = "failed to define params in forall".to_string();
                     VerifyError::new(

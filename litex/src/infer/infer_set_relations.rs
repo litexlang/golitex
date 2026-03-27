@@ -1,11 +1,13 @@
 use crate::error::InferError;
 use crate::execute::Runtime;
-use crate::fact::{AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, SubsetFact, SupersetFact};
+use crate::fact::{
+    AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, InFact, SubsetFact, SupersetFact,
+};
 use crate::infer::InferResult;
 use crate::obj::{Identifier, Obj};
 use crate::stmt::parameter_def::{ParamDefWithParamType, ParamType};
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     /// Infer `forall x in left: x in right` from `left subset right`.
     pub(crate) fn infer_subset_fact(
         &mut self,

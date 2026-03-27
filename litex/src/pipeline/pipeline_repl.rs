@@ -47,11 +47,10 @@ where
     writeln!(stdout_writer, "website: https://litexlang.com")?;
     writeln!(stdout_writer, "Ctrl+D to exit.")?;
 
-    let mut module_manager = ModuleManager::new_empty_module_manager(BUILTIN_CODE);
-    let mut runtime_context =
-        RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager);
+    let module_manager = ModuleManager::new_empty_module_manager(BUILTIN_CODE);
+    let runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(module_manager);
 
-    let mut runtime = Runtime::new(&mut runtime_context);
+    let mut runtime = Runtime::new(runtime_context);
 
     let (ok, msg) = run_source_code(builtin_env_code().as_str(), &mut runtime, true);
     if !ok {

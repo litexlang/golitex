@@ -5,7 +5,7 @@ use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
 use crate::stmt::tooling_stmt::{ClearStmt, DoNothingStmt, ImportStmt, RunFileStmt};
 use crate::stmt::Stmt;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn exec_import_stmt(
         &mut self,
         stmt: &ImportStmt,

@@ -8,7 +8,7 @@ use crate::result::NonErrStmtExecResult;
 use crate::verify::VerifyState;
 use std::result::Result;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn verify_fact_return_err_if_not_true(
         &mut self,
         fact: &Fact,
@@ -34,7 +34,7 @@ impl<'a> Runtime<'a> {
     }
 }
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn verify_exist_or_and_chain_atomic_fact(
         &mut self,
         exist_or_and_chain_atomic_fact: &ExistOrAndChainAtomicFact,

@@ -9,7 +9,7 @@ use crate::infer::InferResult;
 use crate::result::{FactVerifiedByBuiltinRules, NonErrStmtExecResult, StmtUnknown};
 use crate::verify::VerifyState;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     /// Verify subset by duality: `a subset b` iff `b superset a`.
     pub(crate) fn verify_subset_fact_with_builtin_rules(
         &mut self,

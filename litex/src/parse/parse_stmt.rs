@@ -8,7 +8,7 @@ use crate::error::ParsingError;
 use crate::execute::Runtime;
 use crate::stmt::Stmt;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn parse_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         match tb.current()? {
             PROP => self.parse_def_prop_with_meaning_stmt_or_prop_without_meaning(tb),

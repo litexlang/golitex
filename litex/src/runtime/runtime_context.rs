@@ -16,15 +16,13 @@ use crate::stmt::definition_stmt::DefPropWithMeaningStmt;
 use crate::stmt::definition_stmt::DefPropWithoutMeaningStmt;
 use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
 
-pub struct RuntimeContext<'a> {
-    pub module_manager: &'a mut ModuleManager<'a>,
+pub struct RuntimeContext {
+    pub module_manager: ModuleManager,
     pub environment_stack: Vec<Box<Environment>>,
 }
 
-impl<'a> RuntimeContext<'a> {
-    pub fn new_empty_runtime_context_with_one_env(
-        module_manager: &'a mut ModuleManager<'a>,
-    ) -> Self {
+impl RuntimeContext {
+    pub fn new_empty_runtime_context_with_one_env(module_manager: ModuleManager) -> Self {
         let new_env = Box::new(Environment::new_empty_env());
         RuntimeContext {
             module_manager,
@@ -33,7 +31,7 @@ impl<'a> RuntimeContext<'a> {
     }
 }
 
-impl<'a> RuntimeContext<'a> {
+impl RuntimeContext {
     pub fn top_level_env(&mut self) -> &mut Environment {
         let result = self.environment_stack.last_mut();
         match result {
@@ -43,7 +41,7 @@ impl<'a> RuntimeContext<'a> {
     }
 }
 
-impl<'a> RuntimeContext<'a> {
+impl RuntimeContext {
     pub fn get_predicate_with_meaning_definition_by_name(
         &self,
         predicate_name: &str,
@@ -172,7 +170,7 @@ impl<'a> RuntimeContext<'a> {
     }
 }
 
-impl<'a> RuntimeContext<'a> {
+impl RuntimeContext {
     pub fn push_env(&mut self) {
         let new_env = Box::new(Environment::new_empty_env());
         self.environment_stack.push(new_env);
@@ -206,7 +204,7 @@ impl<'a> RuntimeContext<'a> {
     }
 }
 
-impl<'a> RuntimeContext<'a> {
+impl RuntimeContext {
     pub fn iter_environments_from_top(&self) -> impl Iterator<Item = &Environment> {
         self.environment_stack.iter().rev().map(|env| env.as_ref())
     }
@@ -242,7 +240,7 @@ impl<'a> RuntimeContext<'a> {
     }
 }
 
-impl<'a> RuntimeContext<'a> {
+impl RuntimeContext {
     pub(in crate::runtime) fn get_location_string_of_line_file(
         &self,
         line: usize,
@@ -391,7 +389,7 @@ impl<'a> RuntimeContext<'a> {
     }
 }
 
-impl<'a> RuntimeContext<'a> {
+impl RuntimeContext {
     pub fn get_tuple_obj_is_in_what_cart(&self, name: &str) -> Option<Cart> {
         for env in self.iter_environments_from_top() {
             if let Some(cart) = env.known_tuple_obj_in_what_cart.get(name) {
@@ -413,7 +411,7 @@ impl<'a> RuntimeContext<'a> {
     }
 }
 
-impl<'a> RuntimeContext<'a> {
+impl RuntimeContext {
     pub fn is_name_used_for_identifier_and_field_access(&self, name: &str) -> bool {
         if is_builtin_identifier_obj(name) {
             return true;

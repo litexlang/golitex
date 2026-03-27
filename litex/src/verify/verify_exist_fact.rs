@@ -9,7 +9,7 @@ use crate::verify::VerifyState;
 use std::collections::HashMap;
 use std::result::Result;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn verify_exist_fact(
         &mut self,
         exist_fact: &ExistFact,

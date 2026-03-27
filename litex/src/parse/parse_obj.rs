@@ -21,7 +21,7 @@ use crate::obj::{
 };
 use crate::stmt::parameter_def::ParamDefWithParamSet;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         self.parse_obj_hierarchy0(tb)
     }

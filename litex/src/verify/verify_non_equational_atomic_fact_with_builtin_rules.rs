@@ -12,7 +12,7 @@ use crate::result::NonErrStmtExecResult;
 use crate::result::StmtUnknown;
 use crate::verify::VerifyState;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn verify_non_equational_atomic_fact_with_builtin_rules(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -466,5 +466,4 @@ impl<'a> Runtime<'a> {
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }
-
 }

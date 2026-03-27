@@ -32,7 +32,7 @@ fn arithmetic_obj_in_r_verified_by_builtin_rules_result(in_fact: &InFact) -> Non
     ))
 }
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn verify_in_fact_with_builtin_rules(
         &mut self,
         in_fact: &InFact,

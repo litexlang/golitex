@@ -7,7 +7,7 @@ use crate::stmt::axiom_stmt::ByContraAxiomStmt;
 use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn exec_by_contra_axiom_stmt(
         &mut self,
         stmt: &ByContraAxiomStmt,

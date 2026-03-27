@@ -9,7 +9,7 @@ use crate::stmt::parameter_def::{ParamDefWithParamType, ParamType};
 use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn exec_by_extension_axiom_stmt(
         &mut self,
         stmt: &ByExtensionAxiomStmt,

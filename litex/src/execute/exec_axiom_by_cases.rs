@@ -8,7 +8,7 @@ use crate::stmt::axiom_stmt::ByCasesAxiomStmt;
 use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn exec_by_cases_axiom_stmt(
         &mut self,
         stmt: &ByCasesAxiomStmt,

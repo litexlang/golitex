@@ -5,7 +5,7 @@ use crate::execute::Runtime;
 use crate::stmt::prove_stmt::ProveStmt;
 use crate::stmt::Stmt;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn parse_prove_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(PROVE)?;
         tb.skip_token(COLON)?;

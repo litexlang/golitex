@@ -8,7 +8,7 @@ use crate::stmt::axiom_stmt::ForAxiomStmt;
 use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn exec_for_axiom_stmt(
         &mut self,
         stmt: &ForAxiomStmt,
@@ -126,7 +126,7 @@ impl<'a> Runtime<'a> {
     }
 }
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     fn integer_string_from_number_like_obj_for_for(
         self: &Self,
         number_like_obj: &Obj,

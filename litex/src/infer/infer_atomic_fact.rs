@@ -3,7 +3,7 @@ use crate::execute::Runtime;
 use crate::fact::AtomicFact;
 use crate::infer::InferResult;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     /// Dispatch infer by atomic fact type.
     /// Example: `x $in S` enters membership infer.
     pub(crate) fn infer_atomic_fact(

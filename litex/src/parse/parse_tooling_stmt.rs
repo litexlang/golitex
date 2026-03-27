@@ -6,7 +6,7 @@ use crate::stmt::tooling_stmt::{ClearStmt, DoNothingStmt, RunFileStmt};
 use crate::stmt::tooling_stmt::{ImportGlobalModuleStmt, ImportRelativePathStmt, ImportStmt};
 use crate::stmt::Stmt;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn import_stmt(&self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(IMPORT)?;
         if tb.current_token_is_equal_to(DOUBLE_QUOTE) {

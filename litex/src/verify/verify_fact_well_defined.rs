@@ -12,7 +12,7 @@ use crate::verify::VerifyState;
 
 // well-defined check for fact: 1. predicate is defined 2. all args are well-defined
 // store verified related facts during the verification process, e.g. when verifying f(a)(b) is well-defined, we store f(a) in the set where f returns, and store f(a)(b) in the set where f(a) returns
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn verify_fact_well_defined(
         &mut self,
         fact: &Fact,

@@ -7,7 +7,7 @@ use crate::stmt::know_stmt::KnowStmt;
 use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn exec_know_stmt(
         &mut self,
         know_stmt: &KnowStmt,

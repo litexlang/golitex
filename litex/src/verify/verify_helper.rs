@@ -7,7 +7,7 @@ use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
 use crate::stmt::parameter_def::ParamType;
 use crate::verify::VerifyState;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     /// If the fact string is in the known-facts cache, return the cached verification result.
     pub fn verify_fact_from_cache_using_display_string(
         &self,

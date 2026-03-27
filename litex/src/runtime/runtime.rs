@@ -6,13 +6,13 @@ use crate::obj::{Add, Div, Mod, Mul, Number, Obj, Pow, Sub};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub struct Runtime<'a> {
-    pub runtime_context: &'a mut RuntimeContext<'a>,
+pub struct Runtime {
+    pub runtime_context: RuntimeContext,
     pub parsing_time_name_scope_stack: Vec<HashMap<String, (usize, usize)>>,
 }
 
-impl<'a> Runtime<'a> {
-    pub fn new(runtime_context: &'a mut RuntimeContext<'a>) -> Self {
+impl Runtime {
+    pub fn new(runtime_context: RuntimeContext) -> Self {
         Runtime {
             runtime_context,
             parsing_time_name_scope_stack: vec![HashMap::new()],
@@ -124,7 +124,7 @@ impl<'a> Runtime<'a> {
     }
 }
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn push_parsing_time_name_scope(&mut self) {
         self.parsing_time_name_scope_stack.push(HashMap::new());
     }
@@ -187,7 +187,7 @@ impl<'a> Runtime<'a> {
     }
 }
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn generate_a_random_unused_name(&self) -> String {
         let available_chars: Vec<char> = "abcdefghijklmnopqrstuvwxyz0123456789".chars().collect();
         let first_char_candidates: Vec<char> = "abcdefghijklmnopqrstuvwxyz".chars().collect();

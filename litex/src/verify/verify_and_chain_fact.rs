@@ -7,7 +7,7 @@ use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
 use crate::verify::VerifyState;
 use std::result::Result;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn verify_and_fact(
         &mut self,
         and_fact: &AndFact,

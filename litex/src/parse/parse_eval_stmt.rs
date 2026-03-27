@@ -5,7 +5,7 @@ use crate::execute::Runtime;
 use crate::stmt::eval_stmt::EvalStmt;
 use crate::stmt::Stmt;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn eval_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(EVAL)?;
         let obj = self.parse_obj(tb)?;
