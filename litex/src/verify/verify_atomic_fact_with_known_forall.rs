@@ -293,8 +293,10 @@ impl Runtime {
             Obj::Proj(ref left) => {
                 Self::match_arg_when_left_is_proj(left.set.as_ref(), left.dim.as_ref(), given_arg)
             }
-            Obj::Dim(ref left) => Self::match_arg_when_left_is_dim(left.dim.as_ref(), given_arg),
-            Obj::Tuple(ref left) => Self::match_arg_when_left_is_tuple(&left.elements, given_arg),
+            Obj::TupleDim(ref left) => {
+                Self::match_arg_when_left_is_dim(left.arg.as_ref(), given_arg)
+            }
+            Obj::Tuple(ref left) => Self::match_arg_when_left_is_tuple(&left.args, given_arg),
             Obj::Count(ref left) => {
                 Self::match_arg_when_left_is_count(left.set.as_ref(), given_arg)
             }
@@ -314,9 +316,6 @@ impl Runtime {
             }
             Obj::Choose(ref left) => {
                 Self::match_arg_when_left_is_choose(left.set.as_ref(), given_arg)
-            }
-            Obj::TupleDimObj(ref left) => {
-                Self::match_arg_when_left_is_tuple_dim_obj(left.obj.as_ref(), given_arg)
             }
             Obj::ObjAtIndex(ref left) => Self::match_arg_when_left_is_obj_at_index(
                 left.obj.as_ref(),
@@ -825,10 +824,12 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::Dim(ref given) => Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                left_dim,
-                given.dim.as_ref(),
-            ),
+            Obj::TupleDim(ref given) => {
+                Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                    left_dim,
+                    given.arg.as_ref(),
+                )
+            }
             _ => Ok(None),
         }
     }
@@ -838,7 +839,7 @@ impl Runtime {
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
         match given_arg {
-            Obj::Tuple(ref given) => Self::match_arg_vec_then_merge(left_elements, &given.elements),
+            Obj::Tuple(ref given) => Self::match_arg_vec_then_merge(left_elements, &given.args),
             _ => Ok(None),
         }
     }
@@ -925,21 +926,6 @@ impl Runtime {
                 Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                     left_set,
                     given.set.as_ref(),
-                )
-            }
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_tuple_dim_obj(
-        left_obj: &Obj,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
-        match given_arg {
-            Obj::TupleDimObj(ref given) => {
-                Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                    left_obj,
-                    given.obj.as_ref(),
                 )
             }
             _ => Ok(None),

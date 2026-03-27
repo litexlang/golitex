@@ -7,7 +7,8 @@ use crate::fact::{
 };
 use crate::infer::InferResult;
 use crate::obj::InstStructObj;
-use crate::obj::{FnSetObj, Number, Obj, TupleDimObj, ZObj};
+use crate::obj::TupleDim;
+use crate::obj::{FnSetObj, Number, Obj, ZObj};
 use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
 use std::collections::HashMap;
 
@@ -158,7 +159,7 @@ impl Runtime {
                 infer_result.new_fact(&is_cart_fact);
 
                 let cart_args_count = cart.args.len();
-                let tuple_dim_obj = Obj::TupleDimObj(TupleDimObj::new(in_fact.element.clone()));
+                let tuple_dim_obj = Obj::TupleDim(TupleDim::new(in_fact.element.clone()));
                 let cart_args_count_obj = Obj::Number(Number::new(cart_args_count.to_string()));
                 let tuple_dim_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
                     tuple_dim_obj,

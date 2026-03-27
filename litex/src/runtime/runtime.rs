@@ -134,6 +134,14 @@ impl Runtime {
                 Obj::ListSet(list_set) => Obj::Number(Number::new(list_set.list.len().to_string())),
                 _ => obj.clone(),
             },
+            Obj::TupleDim(dim) => match &*dim.arg {
+                Obj::Tuple(tuple) => Obj::Number(Number::new(tuple.args.len().to_string())),
+                _ => obj.clone(),
+            },
+            Obj::CartDim(cart_dim) => match &*cart_dim.set {
+                Obj::Cart(cart) => Obj::Number(Number::new(cart.args.len().to_string())),
+                _ => obj.clone(),
+            },
             _ => obj.clone(),
         }
     }
