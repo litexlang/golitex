@@ -266,7 +266,7 @@ impl ParamDefWithParamSet {
 
 impl ParamDefWithParamType {
     // Example: given forall x, y R, z f(x, y), s set. We want to verify when "x" = obj1, "y" = obj2, "z" = obj3, "s" = obj4, they satisfy definition requirement or not. This function returns the facts that obj1 $in R, obj2 $in R, obj3 = f(obj1, obj2), obj4 $in set.
-    pub fn facts_for_boxed_args_satisfy_param_def_with_type_vec(
+    pub fn boxed_args_satisfy_param_def_facts(
         param_defs: &Vec<ParamDefWithParamType>,
         args: &Vec<Box<Obj>>,
     ) -> Result<Vec<AtomicFact>, RuntimeError> {
