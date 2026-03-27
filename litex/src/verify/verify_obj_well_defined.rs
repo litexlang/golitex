@@ -124,11 +124,7 @@ impl Runtime {
         x: &IdentifierWithMod,
     ) -> Result<(), WellDefinedError> {
         let _ = x;
-        Err(WellDefinedError::new(
-            "verify_identifier_with_mod_well_defined 此函数还没有 implement".to_string(),
-            None,
-            DEFAULT_LINE_FILE.clone(),
-        ))
+        unreachable!()
     }
 
     fn verify_field_access_well_defined(&self, x: &FieldAccess) -> Result<(), WellDefinedError> {
@@ -149,11 +145,7 @@ impl Runtime {
         x: &FieldAccessWithMod,
     ) -> Result<(), WellDefinedError> {
         let _ = x;
-        Err(WellDefinedError::new(
-            "verify_field_access_with_mod_well_defined 此函数还没有 implement".to_string(),
-            None,
-            DEFAULT_LINE_FILE.clone(),
-        ))
+        unreachable!()
     }
 
     fn verify_fn_obj_well_defined(
@@ -1122,11 +1114,7 @@ impl Runtime {
     ) -> Result<(), WellDefinedError> {
         let _ = x;
         let _ = verify_state;
-        Err(WellDefinedError::new(
-            "verify_val_well_defined 此函数还没有 implement".to_string(),
-            None,
-            DEFAULT_LINE_FILE.clone(),
-        ))
+        unreachable!()
     }
 
     fn verify_power_set_well_defined(
@@ -1143,11 +1131,7 @@ impl Runtime {
         _x: &Choose,
         _verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        Err(WellDefinedError::new(
-            "verify_choose_well_defined 此函数还没有 implement".to_string(),
-            None,
-            DEFAULT_LINE_FILE.clone(),
-        ))
+        unimplemented!()
     }
 
     fn verify_obj_at_index_well_defined(
