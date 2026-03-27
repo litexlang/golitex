@@ -122,6 +122,14 @@ impl<'a> RuntimeContext<'a> {
         ));
 
         match error {
+            RuntimeError::DefineParamsError(e) => {
+                field_lines.push(format!(
+                    "{}\"{}\": {}",
+                    indent_inner,
+                    JSON_KEY_MESSAGE,
+                    json_string_literal(&e.msg)
+                ));
+            }
             RuntimeError::NameAlreadyUsedError(_) => {
                 let location_string = self.get_location_string_of_line_file(line, file_index);
 
@@ -295,6 +303,10 @@ impl<'a> RuntimeContext<'a> {
         error: &'b RuntimeError,
     ) -> Option<&'b RuntimeError> {
         match error {
+            RuntimeError::DefineParamsError(e) => match &e.previous_error {
+                Some(previous_error) => Some(previous_error.as_ref()),
+                None => None,
+            },
             RuntimeError::NameAlreadyUsedError(_) => None,
             RuntimeError::ArithmeticError(e) => match &e.previous_error {
                 Some(previous_error) => Some(previous_error.as_ref()),

@@ -3,9 +3,9 @@ use crate::common::keywords::BUILTIN_CODE;
 use crate::module_manager::ModuleManager;
 use crate::parse::TokenBlock;
 use crate::pipeline::run_source_code;
+use crate::runtime::builtin_env_code;
 use crate::runtime::Runtime;
 use crate::runtime::RuntimeContext;
-use crate::runtime::BUILTIN_ENV_CODE;
 use crate::stmt::Stmt;
 use std::io::{self, BufRead, Write};
 
@@ -53,7 +53,7 @@ where
 
     let mut runtime = Runtime::new(&mut runtime_context);
 
-    let (ok, msg) = run_source_code(BUILTIN_ENV_CODE, &mut runtime, true);
+    let (ok, msg) = run_source_code(builtin_env_code().as_str(), &mut runtime, true);
     if !ok {
         eprintln!("builtin code execution failed: {}", msg);
         return Err(io::Error::new(
@@ -102,7 +102,9 @@ where
                         .runtime_context
                         .display_error_json_string(&stmt_error)
                 } else {
-                    runtime.runtime_context.display_error(&stmt_error)
+                    runtime
+                        .runtime_context
+                        .display_error_with_label_and_location(&stmt_error)
                 };
                 writeln!(stdout_writer)?;
                 writeln!(stdout_writer, "{}", error_string)?;
@@ -122,7 +124,9 @@ where
                             .runtime_context
                             .display_error_json_string(&runtime_error)
                     } else {
-                        runtime.runtime_context.display_error(&runtime_error)
+                        runtime
+                            .runtime_context
+                            .display_error_with_label_and_location(&runtime_error)
                     };
                     output_chunk.push_str(&format!("\n{}\n", message));
                     break;
@@ -137,7 +141,9 @@ where
                             .runtime_context
                             .display_error_json_string(&exec_error)
                     } else {
-                        runtime.runtime_context.display_error(&exec_error)
+                        runtime
+                            .runtime_context
+                            .display_error_with_label_and_location(&exec_error)
                     };
                     output_chunk.push_str(&format!("\n{}\n", message));
                     break;

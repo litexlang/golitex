@@ -38,7 +38,7 @@ impl DefPropWithoutMeaningStmt {
 pub struct DefStructWithFieldsStmt {
     pub name: String,
     pub params_def_with_type: Vec<ParamDefWithParamType>,
-    pub fields: Vec<(String, OrAndChainAtomicFact)>,
+    pub fields: Vec<(String, Obj)>,
     pub facts: Vec<OrAndChainAtomicFact>,
     pub line_file: (usize, usize),
 }
@@ -425,7 +425,7 @@ impl DefStructWithFieldsStmt {
     pub fn new(
         name: String,
         params_def_with_type: Vec<ParamDefWithParamType>,
-        fields: Vec<(String, OrAndChainAtomicFact)>,
+        fields: Vec<(String, Obj)>,
         facts: Vec<OrAndChainAtomicFact>,
         line_file: (usize, usize),
     ) -> Self {

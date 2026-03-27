@@ -1,5 +1,3 @@
-pub const BUILTIN_ENV_CODE: &str = BUILTIN_ENV_CODE_FOR_REAL_NUMBER_COMPARISON;
-
 const BUILTIN_ENV_CODE_FOR_REAL_NUMBER_COMPARISON: &str = r#"
 know:
     forall a, b R:
@@ -66,3 +64,10 @@ know:
 
 const BUILTIN_ENV_CODE_FOR_SET: &str = r#"
 "#;
+
+pub fn builtin_env_code() -> String {
+    format!(
+        "{}\n{}",
+        BUILTIN_ENV_CODE_FOR_REAL_NUMBER_COMPARISON, BUILTIN_ENV_CODE_FOR_SET
+    )
+}

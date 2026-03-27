@@ -3,8 +3,6 @@ use crate::execute::Runtime;
 use crate::fact::{Fact, ForallFact, ForallFactWithIff};
 use crate::infer::InferResult;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
-use crate::stmt::tooling_stmt::DoNothingStmt;
-use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 use std::result::Result;
 
@@ -50,7 +48,6 @@ impl<'a> Runtime<'a> {
                 .define_params_with_type(
                     std::slice::from_ref(param_def),
                     false,
-                    Stmt::DoNothingStmt(DoNothingStmt::new(forall_fact.line_file)),
                 )
                 .map_err(|e| {
                     let message = "failed to define params in forall".to_string();
@@ -60,7 +57,7 @@ impl<'a> Runtime<'a> {
                             UnknownError::new(
                                 message,
                                 forall_fact.line_file,
-                                Some(RuntimeError::ExecStmtError(e)),
+                                Some(RuntimeError::DefineParamsError(e)),
                             )
                             .into(),
                         ),

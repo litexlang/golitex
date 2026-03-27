@@ -18,9 +18,14 @@ impl<'a> Runtime<'a> {
         self.define_params_with_type(
             &forall_fact.params_def_with_type,
             false,
-            Stmt::ClaimStmt(stmt.clone()),
         )
-        .map_err(|exec_stmt_error| RuntimeError::ExecStmtError(exec_stmt_error))?;
+        .map_err(|define_params_error| {
+            ExecStmtError::new(
+                Stmt::ClaimStmt(stmt.clone()),
+                Some(define_params_error.into()),
+                vec![],
+            )
+        })?;
 
         for dom_fact in forall_fact.dom_facts.iter() {
             self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(

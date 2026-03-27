@@ -3,8 +3,8 @@ use crate::common::keywords::BUILTIN_CODE;
 use crate::execute::Runtime;
 use crate::module_manager::ModuleManager;
 use crate::parse::TokenBlock;
+use crate::runtime::builtin_env_code;
 use crate::runtime::RuntimeContext;
-use crate::runtime::BUILTIN_ENV_CODE;
 use crate::stmt::Stmt;
 use std::fs;
 
@@ -23,7 +23,7 @@ fn run_source_code_and_return_json_string(source_code: &str, entrance_label: &st
     let mut runtime_context =
         RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager);
     let mut runtime = Runtime::new(&mut runtime_context);
-    let (ok, msg) = run_source_code(BUILTIN_ENV_CODE, &mut runtime, true);
+    let (ok, msg) = run_source_code(builtin_env_code().as_str(), &mut runtime, true);
     if !ok {
         return format!("builtin code execution failed: {}", msg);
     }
@@ -58,7 +58,9 @@ pub fn run_source_code(
                 false,
                 format!(
                     "\n{}\n",
-                    runtime.runtime_context.display_error(&runtime_error)
+                    runtime
+                        .runtime_context
+                        .display_error_with_label_and_location(&runtime_error)
                 ),
             );
         }
@@ -81,7 +83,9 @@ pub fn run_source_code(
                     } else {
                         out.push_str(&format!(
                             "\n{}\n",
-                            runtime.runtime_context.display_error(&runtime_error)
+                            runtime
+                                .runtime_context
+                                .display_error_with_label_and_location(&runtime_error)
                         ));
                     }
                     return (false, out);
@@ -101,7 +105,13 @@ pub fn run_source_code(
                     );
                 } else {
                     out.push_str(
-                        format!("\n{}\n", runtime.runtime_context.display_error(&e)).as_str(),
+                        format!(
+                            "\n{}\n",
+                            runtime
+                                .runtime_context
+                                .display_error_with_label_and_location(&e)
+                        )
+                        .as_str(),
                     );
                 }
                 return (false, out);
