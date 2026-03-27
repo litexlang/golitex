@@ -22,6 +22,7 @@ pub enum RuntimeError {
     VerifyUnknownError(VerifyUnknownError),
     InferError(InferError),
     NameAlreadyUsedError(NameAlreadyUsedError),
+    DefineParamsError(DefineParamsError),
 }
 
 impl std::error::Error for RuntimeError {}
@@ -41,6 +42,7 @@ impl RuntimeError {
             RuntimeError::VerifyUnknownError(e) => e.fact.line_file(),
             RuntimeError::InferError(e) => e.line_file,
             RuntimeError::NameAlreadyUsedError(e) => e.line_file,
+            RuntimeError::DefineParamsError(e) => e.line_file,
         }
     }
 
@@ -59,6 +61,7 @@ impl RuntimeError {
             RuntimeError::VerifyUnknownError(e) => e.display_label(),
             RuntimeError::InferError(e) => e.display_label(),
             RuntimeError::NameAlreadyUsedError(e) => e.display_label(),
+            RuntimeError::DefineParamsError(e) => e.display_label(),
         }
     }
 }
@@ -583,5 +586,44 @@ impl NameAlreadyUsedError {
             name_already_used_on_line_file,
             line_file,
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct DefineParamsError {
+    pub msg: String,
+    pub previous_error: Option<Box<RuntimeError>>,
+    pub line_file: (usize, usize),
+}
+
+impl std::error::Error for DefineParamsError {}
+
+impl fmt::Display for DefineParamsError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.display_label())
+    }
+}
+
+impl DefineParamsError {
+    pub fn new(
+        msg: String,
+        previous_error: Option<RuntimeError>,
+        line_file: (usize, usize),
+    ) -> Self {
+        DefineParamsError {
+            msg,
+            previous_error: boxed_previous_error(previous_error),
+            line_file,
+        }
+    }
+
+    pub fn display_label(&self) -> &'static str {
+        "DefineParamsError"
+    }
+}
+
+impl From<DefineParamsError> for RuntimeError {
+    fn from(e: DefineParamsError) -> Self {
+        RuntimeError::DefineParamsError(e)
     }
 }

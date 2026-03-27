@@ -7,6 +7,7 @@ use crate::error::ParsingError;
 use crate::error::{duplicate_used_name_error_msg_without_line_file, RuntimeError};
 use crate::execute::Runtime;
 use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
+use crate::obj::Obj;
 use crate::stmt::define_algorithm_stmt::{AlgoCase, AlgoReturn, DefAlgoStmt};
 use crate::stmt::definition_stmt::{
     DefLetStmt, DefPropWithMeaningStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt,
@@ -356,7 +357,7 @@ impl<'a> Runtime<'a> {
                 ));
             }
 
-            let mut fields: Vec<(String, OrAndChainAtomicFact)> = vec![];
+            let mut fields: Vec<(String, Obj)> = vec![];
             let mut facts: Vec<OrAndChainAtomicFact> = vec![];
 
             let body_len = tb.body.len();
@@ -375,7 +376,7 @@ impl<'a> Runtime<'a> {
                     ParsingError::new("Expected field block".to_string(), tb.line_file, None)
                 })?;
                 let field_name = block.advance()?;
-                let cond = self.parse_or_and_chain_atomic_fact(block)?;
+                let cond = self.parse_obj(block)?;
                 fields.push((field_name, cond));
             }
 
