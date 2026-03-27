@@ -2,3 +2,9 @@ tuple_dim((1, 2)) = 2
 cart_dim(cart(R, R)) = 2
 proj(cart(R, R), 1) = proj(cart(R, R), 1)
 (1, 2)[1] = (1, 2)[1]
+
+let a set:
+    a = (2, 3)
+
+a[1] = a[1]
+tuple_dim(a) = 2
