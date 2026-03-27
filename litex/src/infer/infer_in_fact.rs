@@ -184,6 +184,7 @@ impl Runtime {
                     &in_fact.element.to_string(),
                     None,
                     Some(cart.clone()),
+                    in_fact.line_file,
                 );
 
                 Ok(infer_result)
