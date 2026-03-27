@@ -62,12 +62,6 @@ know:
             not a <= b
 "#;
 
-const BUILTIN_ENV_CODE_FOR_SET: &str = r#"
-"#;
-
 pub fn builtin_env_code() -> String {
-    format!(
-        "{}\n{}",
-        BUILTIN_ENV_CODE_FOR_REAL_NUMBER_COMPARISON, BUILTIN_ENV_CODE_FOR_SET
-    )
+    BUILTIN_ENV_CODE_FOR_REAL_NUMBER_COMPARISON.to_string()
 }
