@@ -375,13 +375,13 @@ impl<'a> RuntimeContext<'a> {
 }
 
 impl<'a> RuntimeContext<'a> {
-    pub fn is_name_used_for_identifier(&self, name: &str) -> bool {
+    pub fn is_name_used_for_identifier_and_field_access(&self, name: &str) -> bool {
         if is_builtin_identifier_obj(name) {
             return true;
         }
 
         for env in self.iter_environments_from_top() {
-            if env.defined_identifier_objs.contains_key(name) {
+            if env.defined_identifier_and_field_access.contains_key(name) {
                 return true;
             }
         }
