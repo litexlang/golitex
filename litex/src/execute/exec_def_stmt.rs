@@ -61,6 +61,7 @@ impl Runtime {
             .map_err(|e| {
                 ExecStmtError::new(
                     Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
+                    "".to_string(),
                     Some(e.into()),
                     vec![],
                 )
@@ -96,6 +97,7 @@ impl Runtime {
             .map_err(|e| {
                 ExecStmtError::new(
                     Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
+                    "".to_string(),
                     Some(e.into()),
                     vec![],
                 )
@@ -106,6 +108,7 @@ impl Runtime {
                 .map_err(|inner_exec_error| {
                     ExecStmtError::new(
                         Stmt::DefPropWithMeaningStmt(def_prop_with_meaning_stmt.clone()),
+                        "".to_string(),
                         Some(RuntimeError::ExecStmtError(inner_exec_error)),
                         vec![],
                     )
@@ -122,6 +125,7 @@ impl Runtime {
             .map_err(|e| {
                 ExecStmtError::new(
                     Stmt::DefPropWithoutMeaningStmt(def_prop_without_meaning_stmt.clone()),
+                    "".to_string(),
                     Some(e.into()),
                     vec![],
                 )
@@ -144,6 +148,7 @@ impl Runtime {
             .map_err(|e| {
                 ExecStmtError::new(
                     Stmt::DefLetStmt(def_let_stmt.clone()),
+                    "".to_string(),
                     Some(e.into()),
                     vec![],
                 )
@@ -154,6 +159,7 @@ impl Runtime {
                 .map_err(|inner_exec_error| {
                     ExecStmtError::new(
                         Stmt::DefLetStmt(def_let_stmt.clone()),
+                        "".to_string(),
                         Some(RuntimeError::ExecStmtError(inner_exec_error)),
                         vec![],
                     )
@@ -242,6 +248,7 @@ impl Runtime {
             .map_err(|define_params_error| {
                 ExecStmtError::new(
                     Stmt::HaveObjInNonemptySetStmt(stmt.clone()),
+                    "".to_string(),
                     Some(define_params_error.into()),
                     vec![],
                 )
@@ -328,6 +335,7 @@ impl Runtime {
                     .map_err(|verify_error| {
                         ExecStmtError::new(
                             Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
+                            "".to_string(),
                             Some(verify_error.into()),
                             vec![],
                         )
@@ -358,6 +366,7 @@ impl Runtime {
             .map_err(|define_params_error| {
                 ExecStmtError::new(
                     Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
+                    "".to_string(),
                     Some(define_params_error.into()),
                     vec![],
                 )
@@ -379,6 +388,7 @@ impl Runtime {
                 .map_err(|store_fact_error| {
                     ExecStmtError::new(
                         Stmt::HaveObjEqualStmt(have_obj_equal_stmt.clone()),
+                        "".to_string(),
                         Some(store_fact_error.into()),
                         vec![],
                     )
@@ -407,6 +417,7 @@ impl Runtime {
             .map_err(|verify_error| {
                 ExecStmtError::new(
                     Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                    "".to_string(),
                     Some(verify_error.into()),
                     vec![],
                 )
@@ -450,6 +461,7 @@ impl Runtime {
             .map_err(|e| {
                 ExecStmtError::new(
                     Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                    "".to_string(),
                     Some(e),
                     vec![],
                 )
@@ -461,6 +473,7 @@ impl Runtime {
                 .map_err(|store_fact_error| {
                     ExecStmtError::new(
                         Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                        "".to_string(),
                         Some(store_fact_error.into()),
                         vec![],
                     )
@@ -484,6 +497,7 @@ impl Runtime {
                 .map_err(|store_fact_error| {
                     ExecStmtError::new(
                         Stmt::HaveExistObjStmt(have_exist_obj_stmt.clone()),
+                        "".to_string(),
                         Some(store_fact_error.into()),
                         vec![],
                     )
@@ -529,6 +543,7 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 ExecStmtError::new(
                     Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                    "".to_string(),
                     Some(store_fact_error.into()),
                     vec![],
                 )
@@ -566,6 +581,7 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 ExecStmtError::new(
                     Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                    "".to_string(),
                     Some(store_fact_error.into()),
                     vec![],
                 )
@@ -605,6 +621,7 @@ impl Runtime {
             .map_err(|well_defined_error| {
                 ExecStmtError::new(
                     Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                    "".to_string(),
                     Some(well_defined_error.into()),
                     vec![],
                 )
@@ -619,6 +636,7 @@ impl Runtime {
             .map_err(|define_params_error| {
                 ExecStmtError::new(
                     Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                    "".to_string(),
                     Some(define_params_error.into()),
                     vec![],
                 )
@@ -631,6 +649,7 @@ impl Runtime {
                 .map_err(|store_fact_error| {
                     ExecStmtError::new(
                         Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                        "".to_string(),
                         Some(store_fact_error.into()),
                         vec![],
                     )
@@ -651,6 +670,7 @@ impl Runtime {
             .map_err(|verify_error| {
                 ExecStmtError::new(
                     Stmt::HaveFnEqualStmt(have_fn_equal_stmt.clone()),
+                    "".to_string(),
                     Some(verify_error.into()),
                     vec![],
                 )
@@ -718,6 +738,7 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 ExecStmtError::new(
                     Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                    "".to_string(),
                     Some(store_fact_error.into()),
                     vec![],
                 )
@@ -777,6 +798,7 @@ impl Runtime {
                 .map_err(|store_fact_error| {
                     ExecStmtError::new(
                         Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                        "".to_string(),
                         Some(store_fact_error.into()),
                         vec![],
                     )
@@ -813,6 +835,7 @@ impl Runtime {
         .map_err(|well_defined_error| {
             ExecStmtError::new(
                 Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                "".to_string(),
                 Some(well_defined_error.into()),
                 vec![],
             )
@@ -855,6 +878,7 @@ impl Runtime {
             .map_err(|define_params_error| {
                 ExecStmtError::new(
                     Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                    "".to_string(),
                     Some(define_params_error.into()),
                     vec![],
                 )
@@ -871,6 +895,7 @@ impl Runtime {
                 .map_err(|store_fact_error| {
                     ExecStmtError::new(
                         Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                        "".to_string(),
                         Some(store_fact_error.into()),
                         vec![],
                     )
@@ -882,6 +907,7 @@ impl Runtime {
             .map_err(|store_fact_error| {
                 ExecStmtError::new(
                     Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                    "".to_string(),
                     Some(store_fact_error.into()),
                     vec![],
                 )
@@ -890,6 +916,7 @@ impl Runtime {
             .map_err(|well_defined_error| {
                 ExecStmtError::new(
                     Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                    "".to_string(),
                     Some(well_defined_error.into()),
                     vec![],
                 )
@@ -909,6 +936,7 @@ impl Runtime {
             .map_err(|verify_error| {
                 ExecStmtError::new(
                     Stmt::HaveFnEqualCaseByCaseStmt(have_fn_equal_case_by_case_stmt.clone()),
+                    "".to_string(),
                     Some(verify_error.into()),
                     vec![],
                 )

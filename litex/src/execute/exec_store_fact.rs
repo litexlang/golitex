@@ -114,13 +114,19 @@ impl Runtime {
             .map_err(|well_defined_error| {
                 ExecStmtError::new(
                     stmt_for_fact_errors.clone(),
+                    "".to_string(),
                     Some(well_defined_error.into()),
                     vec![],
                 )
             })?;
         self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(fact)
             .map_err(|store_fact_error| {
-                ExecStmtError::new(stmt_for_fact_errors, Some(store_fact_error.into()), vec![])
+                ExecStmtError::new(
+                    stmt_for_fact_errors,
+                    "".to_string(),
+                    Some(store_fact_error.into()),
+                    vec![],
+                )
             })
     }
 
@@ -134,13 +140,19 @@ impl Runtime {
             .map_err(|well_defined_error| {
                 ExecStmtError::new(
                     stmt_for_fact_errors.clone(),
+                    "".to_string(),
                     Some(well_defined_error.into()),
                     vec![],
                 )
             })?;
         self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(fact)
             .map_err(|store_fact_error| {
-                ExecStmtError::new(stmt_for_fact_errors, Some(store_fact_error.into()), vec![])
+                ExecStmtError::new(
+                    stmt_for_fact_errors,
+                    "".to_string(),
+                    Some(store_fact_error.into()),
+                    vec![],
+                )
             })
     }
 
@@ -154,13 +166,19 @@ impl Runtime {
             .map_err(|well_defined_error| {
                 ExecStmtError::new(
                     stmt_for_fact_errors.clone(),
+                    "".to_string(),
                     Some(well_defined_error.into()),
                     vec![],
                 )
             })?;
         self.store_fact_without_well_defined_verified_and_infer(fact)
             .map_err(|store_fact_error| {
-                ExecStmtError::new(stmt_for_fact_errors, Some(store_fact_error.into()), vec![])
+                ExecStmtError::new(
+                    stmt_for_fact_errors,
+                    "".to_string(),
+                    Some(store_fact_error.into()),
+                    vec![],
+                )
             })
     }
 }

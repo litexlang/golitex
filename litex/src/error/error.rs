@@ -330,6 +330,7 @@ impl From<ParsingError> for RuntimeError {
 #[derive(Debug)]
 pub struct ExecStmtError {
     pub stmt: Stmt,
+    pub info: String,
     pub previous_error: Option<Box<RuntimeError>>,
     pub inside_results: Vec<NonErrStmtExecResult>,
 }
@@ -345,11 +346,13 @@ impl fmt::Display for ExecStmtError {
 impl ExecStmtError {
     pub fn new(
         stmt: Stmt,
+        info: String,
         previous_error: Option<RuntimeError>,
         inside_results: Vec<NonErrStmtExecResult>,
     ) -> Self {
         ExecStmtError {
             stmt,
+            info,
             previous_error: boxed_previous_error(previous_error),
             inside_results,
         }
@@ -365,11 +368,14 @@ impl ExecStmtError {
         let previous_error = if message.is_empty() {
             cause
         } else {
+            let error_message_for_unknown_error = message.clone();
             Some(RuntimeError::UnknownError(UnknownError::new(
-                message, line_file, cause,
+                error_message_for_unknown_error,
+                line_file,
+                cause,
             )))
         };
-        ExecStmtError::new(stmt, previous_error, inside_results)
+        ExecStmtError::new(stmt, message, previous_error, inside_results)
     }
 }
 

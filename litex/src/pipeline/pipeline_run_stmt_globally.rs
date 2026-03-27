@@ -34,6 +34,7 @@ fn run_file(
     let content = fs::read_to_string(path).map_err(|_| {
         RuntimeError::ExecStmtError(ExecStmtError::new(
             Stmt::RunFileStmt(_run_file_stmt.clone()),
+            format!("Failed to read file: {}", path),
             None,
             vec![],
         ))
