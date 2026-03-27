@@ -1,11 +1,8 @@
 use crate::common::helper::remove_windows_carriage_return;
-use crate::common::keywords::BUILTIN_CODE;
-use crate::module_manager::ModuleManager;
 use crate::parse::TokenBlock;
 use crate::pipeline::run_source_code;
 use crate::runtime::builtin_env_code;
 use crate::runtime::Runtime;
-use crate::runtime::RuntimeContext;
 use crate::stmt::Stmt;
 use std::io::{self, BufRead, Write};
 
@@ -47,10 +44,7 @@ where
     writeln!(stdout_writer, "website: https://litexlang.com")?;
     writeln!(stdout_writer, "Ctrl+D to exit.")?;
 
-    let module_manager = ModuleManager::new_empty_module_manager(BUILTIN_CODE);
-    let runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(module_manager);
-
-    let mut runtime = Runtime::new(runtime_context);
+    let mut runtime = Runtime::new();
 
     let (ok, msg) = run_source_code(builtin_env_code().as_str(), &mut runtime, true);
     if !ok {

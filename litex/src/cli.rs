@@ -1,12 +1,9 @@
-use litex::common::keywords::BUILTIN_CODE;
-use litex::module_manager::ModuleManager;
 use litex::pipeline::run_repl;
 use litex::pipeline::run_source_code;
 use litex::pipeline::run_source_code_in_file_and_return_json_string;
 use litex::pipeline::run_source_code_in_file_and_return_string;
 use litex::runtime::builtin_env_code;
 use litex::runtime::Runtime;
-use litex::runtime::RuntimeContext;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process;
@@ -68,10 +65,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                let module_manager = ModuleManager::new_empty_module_manager(BUILTIN_CODE);
-                let runtime_context =
-                    RuntimeContext::new_empty_runtime_context_with_one_env(module_manager);
-                let mut runtime = Runtime::new(runtime_context);
+                let mut runtime = Runtime::new();
 
                 let (ok, msg) = run_source_code(builtin_env_code().as_str(), &mut runtime, true);
                 if !ok {
