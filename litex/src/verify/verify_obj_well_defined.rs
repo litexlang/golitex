@@ -9,11 +9,11 @@ use crate::fact::{
     LessEqualFact, NotEqualFact, OrFact,
 };
 use crate::obj::{
-    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FieldAccess,
+    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, TupleDim, Div, FieldAccess,
     FieldAccessWithMod, FnObj, FnSetObj, FnSetWithParams, FnSetWithoutParams, Identifier,
     IdentifierWithMod, InstStructObj, Intersect, ListSet, Mod, Mul, NPosObj, Number, Obj,
-    ObjAtIndex, Pow, PowerSet, Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple,
-    TupleDimObj, Union, Val, ZObj,
+    ObjAtIndex, Pow, PowerSet, Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, Union,
+    Val, ZObj,
 };
 use crate::stmt::parameter_def::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
 use crate::verify::VerifyState;
@@ -78,7 +78,7 @@ impl Runtime {
             Obj::Cart(x) => self.verify_cart_well_defined(x, verify_state),
             Obj::CartDim(x) => self.verify_cart_dim_well_defined(x, verify_state),
             Obj::Proj(x) => self.verify_proj_well_defined(x, verify_state),
-            Obj::Dim(x) => self.verify_dim_well_defined(x, verify_state),
+            Obj::TupleDim(x) => self.verify_dim_well_defined(x, verify_state),
             Obj::Tuple(x) => self.verify_tuple_well_defined(x, verify_state),
             Obj::Count(x) => self.verify_count_well_defined(x, verify_state),
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
@@ -86,7 +86,6 @@ impl Runtime {
             Obj::Val(x) => self.verify_val_well_defined(x, verify_state),
             Obj::PowerSet(x) => self.verify_power_set_well_defined(x, verify_state),
             Obj::Choose(x) => self.verify_choose_well_defined(x, verify_state),
-            Obj::TupleDimObj(x) => self.verify_tuple_dim_obj_well_defined(x, verify_state),
             Obj::ObjAtIndex(x) => self.verify_obj_at_index_well_defined(x, verify_state),
             Obj::QPos(_) => self.verify_q_pos_well_defined(),
             Obj::RPos(_) => self.verify_r_pos_well_defined(),
@@ -163,10 +162,19 @@ impl Runtime {
         fn_obj: &FnObj,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        let mut the_set_where_current_fn_obj_is_in = self.get_fn_set_where_fn_belongs_to(&fn_obj.head).ok_or_else(|| WellDefinedError::new(
-            todo_error_message("verify_fn_obj_well_defined: function head identifier has no known definition yet".to_string()).to_string(),None,
-            DEFAULT_LINE_FILE.clone(),
-        ))?.clone();
+        let mut the_set_where_current_fn_obj_is_in = self
+            .get_fn_set_where_fn_belongs_to(&fn_obj.head)
+            .ok_or_else(|| {
+                WellDefinedError::new(
+                    todo_error_message(format!(
+                        "`{}` is not a defined function",
+                        fn_obj.head.to_string()
+                    )),
+                    None,
+                    DEFAULT_LINE_FILE.clone(),
+                )
+            })?
+            .clone();
 
         for (i, args) in fn_obj.body.iter().enumerate() {
             match &the_set_where_current_fn_obj_is_in {
@@ -969,16 +977,28 @@ impl Runtime {
 
     fn verify_dim_well_defined(
         &mut self,
-        x: &Dim,
+        x: &TupleDim,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        let _ = x;
-        let _ = verify_state;
-        Err(WellDefinedError::new(
-            "verify_dim_well_defined 此函数还没有 implement".to_string(),
-            None,
+        self.verify_obj_well_defined_and_store_cache(&x.arg, verify_state)?;
+
+        let is_tuple_fact = AtomicFact::IsTupleFact(IsTupleFact::new(
+            (*x.arg).clone(),
             DEFAULT_LINE_FILE.clone(),
-        ))
+        ));
+        let result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
+        if result.is_unknown() {
+            return Err(WellDefinedError::new(
+                format!(
+                    "`{}` is unknown, `dim` object requires its argument to be a tuple",
+                    is_tuple_fact
+                ),
+                None,
+                DEFAULT_LINE_FILE.clone(),
+            ));
+        }
+
+        Ok(())
     }
 
     fn verify_tuple_well_defined(
@@ -986,13 +1006,10 @@ impl Runtime {
         x: &Tuple,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        let _ = x;
-        let _ = verify_state;
-        Err(WellDefinedError::new(
-            "verify_tuple_well_defined 此函数还没有 implement".to_string(),
-            None,
-            DEFAULT_LINE_FILE.clone(),
-        ))
+        for obj in &x.args {
+            self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
+        }
+        Ok(())
     }
 
     fn verify_count_well_defined(
@@ -1073,30 +1090,6 @@ impl Runtime {
             None,
             DEFAULT_LINE_FILE.clone(),
         ))
-    }
-
-    fn verify_tuple_dim_obj_well_defined(
-        &mut self,
-        x: &TupleDimObj,
-        verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
-        self.verify_obj_well_defined_and_store_cache(&x.obj, verify_state)?;
-
-        // well-defined condition: the inner obj must satisfy is_tuple
-        let is_tuple_fact = AtomicFact::IsTupleFact(IsTupleFact::new(
-            (*x.obj).clone(),
-            DEFAULT_LINE_FILE.clone(),
-        ));
-        let result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
-        if result.is_unknown() {
-            return Err(WellDefinedError::new(
-                format!("obj {} is not a tuple", x.obj.to_string()),
-                None,
-                DEFAULT_LINE_FILE.clone(),
-            ));
-        }
-
-        Ok(())
     }
 
     fn verify_obj_at_index_well_defined(

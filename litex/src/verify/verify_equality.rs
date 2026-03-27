@@ -408,13 +408,6 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
-            (Obj::TupleDimObj(left_tuple_dim_obj), Obj::TupleDimObj(right_tuple_dim_obj)) => self
-                .verify_unary_objs_are_equal_when_their_only_args_are_equal(
-                    &left_tuple_dim_obj.obj,
-                    &right_tuple_dim_obj.obj,
-                    verify_state,
-                    equality_line_file,
-                ),
             (Obj::CartDim(left_cart_dim), Obj::CartDim(right_cart_dim)) => self
                 .verify_unary_objs_are_equal_when_their_only_args_are_equal(
                     &left_cart_dim.set,
@@ -422,10 +415,10 @@ impl Runtime {
                     verify_state,
                     equality_line_file,
                 ),
-            (Obj::Dim(left_dim), Obj::Dim(right_dim)) => self
+            (Obj::TupleDim(left_dim), Obj::TupleDim(right_dim)) => self
                 .verify_unary_objs_are_equal_when_their_only_args_are_equal(
-                    &left_dim.dim,
-                    &right_dim.dim,
+                    &left_dim.arg,
+                    &right_dim.arg,
                     verify_state,
                     equality_line_file,
                 ),
@@ -481,8 +474,8 @@ impl Runtime {
                 ),
             (Obj::Tuple(left_tuple), Obj::Tuple(right_tuple)) => self
                 .verify_obj_vec_are_equal_when_all_corresponding_args_are_equal(
-                    &left_tuple.elements,
-                    &right_tuple.elements,
+                    &left_tuple.args,
+                    &right_tuple.args,
                     verify_state,
                     equality_line_file,
                 ),

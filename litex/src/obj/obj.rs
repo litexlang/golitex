@@ -47,7 +47,7 @@ pub enum Obj {
     Cart(Cart),
     CartDim(CartDim),
     Proj(Proj),
-    Dim(Dim),
+    TupleDim(TupleDim),
     Tuple(Tuple),
     Count(Count),
     Range(Range),
@@ -55,7 +55,6 @@ pub enum Obj {
     Val(Val),
     PowerSet(PowerSet),
     Choose(Choose),
-    TupleDimObj(TupleDimObj),
     ObjAtIndex(ObjAtIndex),
     NPosObj(NPosObj),
     NObj(NObj),
@@ -70,11 +69,6 @@ pub enum Obj {
     QNz(QNz),
     ZNz(ZNz),
     RNz(RNz),
-}
-
-#[derive(Clone)]
-pub struct TupleDimObj {
-    pub obj: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -123,12 +117,12 @@ pub struct Count {
 
 #[derive(Clone)]
 pub struct Tuple {
-    pub elements: Vec<Box<Obj>>,
+    pub args: Vec<Box<Obj>>,
 }
 
 #[derive(Clone)]
-pub struct Dim {
-    pub dim: Box<Obj>,
+pub struct TupleDim {
+    pub arg: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -582,12 +576,6 @@ impl Choose {
     }
 }
 
-impl TupleDimObj {
-    pub fn new(obj: Obj) -> Self {
-        TupleDimObj { obj: Box::new(obj) }
-    }
-}
-
 impl CartDim {
     pub fn new(set: Obj) -> Self {
         CartDim { set: Box::new(set) }
@@ -603,9 +591,9 @@ impl Proj {
     }
 }
 
-impl Dim {
+impl TupleDim {
     pub fn new(dim: Obj) -> Self {
-        Dim { dim: Box::new(dim) }
+        TupleDim { arg: Box::new(dim) }
     }
 }
 
@@ -620,7 +608,7 @@ impl Cart {
 impl Tuple {
     pub fn new(elements: Vec<Obj>) -> Self {
         Tuple {
-            elements: elements.into_iter().map(Box::new).collect(),
+            args: elements.into_iter().map(Box::new).collect(),
         }
     }
 }
@@ -741,7 +729,7 @@ impl Obj {
             Obj::Cart(x) => write!(f, "{}", x)?,
             Obj::CartDim(x) => write!(f, "{}", x)?,
             Obj::Proj(x) => write!(f, "{}", x)?,
-            Obj::Dim(x) => write!(f, "{}", x)?,
+            Obj::TupleDim(x) => write!(f, "{}", x)?,
             Obj::Tuple(x) => write!(f, "{}", x)?,
             Obj::Count(x) => write!(f, "{}", x)?,
             Obj::Range(x) => write!(f, "{}", x)?,
@@ -749,7 +737,6 @@ impl Obj {
             Obj::Val(x) => write!(f, "{}", x)?,
             Obj::PowerSet(x) => write!(f, "{}", x)?,
             Obj::Choose(x) => write!(f, "{}", x)?,
-            Obj::TupleDimObj(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
             Obj::QPos(x) => write!(f, "{}", x)?,
             Obj::RPos(x) => write!(f, "{}", x)?,
@@ -784,17 +771,6 @@ impl fmt::Display for Choose {
             "{}{}",
             CHOOSE,
             braced_vec_to_string(&vec![self.set.as_ref()])
-        )
-    }
-}
-
-impl fmt::Display for TupleDimObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}{}",
-            TUPLE_DIM,
-            braced_vec_to_string(&vec![self.obj.as_ref()])
         )
     }
 }
@@ -834,7 +810,7 @@ impl fmt::Display for Count {
 
 impl fmt::Display for Tuple {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", braced_vec_to_string(&self.elements))
+        write!(f, "{}", braced_vec_to_string(&self.args))
     }
 }
 
@@ -860,13 +836,13 @@ impl fmt::Display for Proj {
     }
 }
 
-impl fmt::Display for Dim {
+impl fmt::Display for TupleDim {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}{}",
-            CART_DIM,
-            braced_vec_to_string(&vec![self.dim.as_ref()])
+            TUPLE_DIM,
+            braced_vec_to_string(&vec![self.arg.as_ref()])
         )
     }
 }
@@ -1230,7 +1206,7 @@ impl Obj {
             Obj::Cart(inner) => inner.instantiate(param_to_arg_map),
             Obj::CartDim(inner) => inner.instantiate(param_to_arg_map),
             Obj::Proj(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Dim(inner) => inner.instantiate(param_to_arg_map),
+            Obj::TupleDim(inner) => inner.instantiate(param_to_arg_map),
             Obj::Tuple(inner) => inner.instantiate(param_to_arg_map),
             Obj::Count(inner) => inner.instantiate(param_to_arg_map),
             Obj::Range(inner) => inner.instantiate(param_to_arg_map),
@@ -1238,7 +1214,6 @@ impl Obj {
             Obj::Val(inner) => inner.instantiate(param_to_arg_map),
             Obj::PowerSet(inner) => inner.instantiate(param_to_arg_map),
             Obj::Choose(inner) => inner.instantiate(param_to_arg_map),
-            Obj::TupleDimObj(inner) => inner.instantiate(param_to_arg_map),
             Obj::ObjAtIndex(inner) => inner.instantiate(param_to_arg_map),
             Obj::QPos(inner) => inner.instantiate(param_to_arg_map),
             Obj::RPos(inner) => inner.instantiate(param_to_arg_map),

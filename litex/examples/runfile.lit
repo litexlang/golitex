@@ -1,0 +1,5 @@
+run_file "./examples/tmp2.lit"
+
+$p(1, 2)
+
+1 = 1
