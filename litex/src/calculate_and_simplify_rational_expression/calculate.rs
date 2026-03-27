@@ -379,11 +379,11 @@ pub fn mod_decimal_str_and_normalize(a: &str, b: &str) -> String {
     normalize_decimal_result(&digits_to_string(&current))
 }
 
-/// 仅支持非负整数指数：base^exp，exp 必须为整数（如 "3" 或 "0"），返回字符串；否则 panic
+/// 仅支持非负整数指数：base^exp，exp 必须为整数（如 "3" 或 "0"），返回字符串
 pub fn pow_decimal_str_and_normalize(base: &str, exp: &str) -> String {
     let (exp_int, exp_frac) = parse_decimal_parts(exp);
     if exp_frac.iter().any(|&d| d != 0) {
-        panic!("幂运算仅支持整数指数");
+        unreachable!("幂运算仅支持整数指数");
     }
     let mut n = 0usize;
     for &d in &exp_int {

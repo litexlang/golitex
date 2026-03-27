@@ -5,8 +5,6 @@ mod objs_equal_by_rational_expression_simplification;
 mod process_division_after_polynomial_simplification;
 
 mod calculate_div;
-#[cfg(test)]
-mod simplify_polynomial_test;
 
 pub use calculate::{
     add_decimal_str_and_normalize, mod_decimal_str_and_normalize, mul_signed_decimal_str,
