@@ -159,7 +159,26 @@ impl Runtime {
                     }
                     obj.clone()
                 }
-                _ => obj.clone(),
+                _ => {
+                    let known_cart_obj = self.get_known_cart_obj_of_obj(&proj.set.to_string());
+                    if let Some(known_cart_obj) = known_cart_obj {
+                        let projection_index_number =
+                            self.get_known_normalized_calculated_value_for_obj(&proj.dim);
+                        if let Some(projection_index_number) = projection_index_number {
+                            let projection_index_parsed_result =
+                                projection_index_number.normalized_value.parse::<usize>();
+                            if let Ok(projection_index_one_based) = projection_index_parsed_result {
+                                if projection_index_one_based >= 1
+                                    && projection_index_one_based <= known_cart_obj.args.len()
+                                {
+                                    return (*known_cart_obj.args[projection_index_one_based - 1])
+                                        .clone();
+                                }
+                            }
+                        }
+                    }
+                    obj.clone()
+                }
             },
             Obj::ObjAtIndex(obj_at_index) => match &*obj_at_index.obj {
                 Obj::Tuple(tuple) => {
@@ -178,7 +197,27 @@ impl Runtime {
                     }
                     obj.clone()
                 }
-                _ => obj.clone(),
+                _ => {
+                    let known_tuple_obj =
+                        self.get_known_tuple_obj_of_obj(&obj_at_index.obj.to_string());
+                    if let Some(known_tuple_obj) = known_tuple_obj {
+                        let tuple_index_number =
+                            self.get_known_normalized_calculated_value_for_obj(&obj_at_index.index);
+                        if let Some(tuple_index_number) = tuple_index_number {
+                            let tuple_index_parsed_result =
+                                tuple_index_number.normalized_value.parse::<usize>();
+                            if let Ok(tuple_index_one_based) = tuple_index_parsed_result {
+                                if tuple_index_one_based >= 1
+                                    && tuple_index_one_based <= known_tuple_obj.args.len()
+                                {
+                                    return (*known_tuple_obj.args[tuple_index_one_based - 1])
+                                        .clone();
+                                }
+                            }
+                        }
+                    }
+                    obj.clone()
+                }
             },
             _ => obj.clone(),
         }
@@ -521,6 +560,27 @@ impl Runtime {
 }
 
 impl Runtime {
+    pub fn get_known_cart_obj_of_obj(&self, name: &str) -> Option<Cart> {
+        for env in self.iter_environments_from_top() {
+            if let Some((known_cart_obj, _)) = env.known_cart_objs.get(name) {
+                return Some(known_cart_obj.clone());
+            }
+            if let Some((_, Some(known_cart_obj), _)) = env.known_tuple_objs.get(name) {
+                return Some(known_cart_obj.clone());
+            }
+        }
+        None
+    }
+
+    pub fn get_known_tuple_obj_of_obj(&self, name: &str) -> Option<Tuple> {
+        for env in self.iter_environments_from_top() {
+            if let Some((Some(known_tuple_obj), _, _)) = env.known_tuple_objs.get(name) {
+                return Some(known_tuple_obj.clone());
+            }
+        }
+        None
+    }
+
     pub fn get_tuple_obj_is_in_what_cart(&self, name: &str) -> Option<Cart> {
         for env in self.iter_environments_from_top() {
             if let Some(cart) = env.known_tuple_objs.get(name) {
@@ -607,21 +667,32 @@ impl Runtime {
         name: &str,
         tuple: Option<Tuple>,
         cart: Option<Cart>,
+        line_file: (usize, usize),
     ) {
         let known_tuple_objs = &mut self.top_level_env().known_tuple_objs;
         let old_tuple_and_cart = known_tuple_objs.get(name).cloned();
 
         let merged_tuple = match (tuple, old_tuple_and_cart.as_ref()) {
             (Some(new_tuple), _) => Some(new_tuple),
-            (None, Some((old_tuple, _))) => old_tuple.clone(),
+            (None, Some((old_tuple, _, _))) => old_tuple.clone(),
             (None, None) => None,
         };
         let merged_cart = match (cart, old_tuple_and_cart.as_ref()) {
             (Some(new_cart), _) => Some(new_cart),
-            (None, Some((_, old_cart))) => old_cart.clone(),
+            (None, Some((_, old_cart, _))) => old_cart.clone(),
             (None, None) => None,
         };
+        let merged_line_file = line_file;
 
-        known_tuple_objs.insert(name.to_string(), (merged_tuple, merged_cart));
+        known_tuple_objs.insert(
+            name.to_string(),
+            (merged_tuple, merged_cart, merged_line_file),
+        );
+    }
+
+    pub fn store_known_cart_obj(&mut self, name: &str, cart: Cart, line_file: (usize, usize)) {
+        self.top_level_env()
+            .known_cart_objs
+            .insert(name.to_string(), (cart, line_file));
     }
 }
