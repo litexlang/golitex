@@ -1,5 +1,5 @@
-use litex::pipeline::run_repl;
 use litex::pipeline::render_run_source_code_output;
+use litex::pipeline::run_repl;
 use litex::pipeline::run_source_code;
 use litex::pipeline::run_source_code_in_file_and_return_json_string;
 use litex::pipeline::run_source_code_in_file_and_return_string;
@@ -144,7 +144,7 @@ pub fn run_cli() {
             "-latex" => {
                 index += 1;
                 if index >= args.len() {
-                    run_latex_interactive();
+                    println!("{}", run_latex_interactive());
                     return;
                 }
                 let latex_target_flag = match read_any_value_after_flag(&args, &mut index, "-latex")
@@ -208,13 +208,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                match latex_output_result {
-                    Ok(output) => println!("{}", output),
-                    Err(message) => {
-                        eprintln!("Error: {}", message);
-                        process::exit(1);
-                    }
-                }
+                println!("{}", latex_output_result);
                 return;
             }
             "-fmt" => {
@@ -227,13 +221,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                match format_code(code.as_str()) {
-                    Ok(output) => println!("{}", output),
-                    Err(message) => {
-                        eprintln!("Error: {}", message);
-                        process::exit(1);
-                    }
-                }
+                println!("{}", format_code(code.as_str()));
                 return;
             }
             "-install" => {
@@ -382,49 +370,50 @@ fn repl_footer_placeholder() -> String {
     "(REPL / ret-type footer: not implemented in Rust kernel yet)".to_string()
 }
 
-fn compile_code_to_latex(_code: &str) -> Result<String, String> {
-    panic!("-latex -e: compile code to LaTeX is not implemented in the Rust kernel yet");
+fn compile_code_to_latex(_code: &str) -> String {
+    return "-latex -e: compile code to LaTeX is not implemented in the Rust kernel yet"
+        .to_string();
 }
 
-fn compile_file_to_latex(_file_path: &str) -> Result<String, String> {
-    panic!("-latex: compile file to LaTeX is not implemented in the Rust kernel yet");
+fn compile_file_to_latex(_file_path: &str) -> String {
+    return "-latex: compile file to LaTeX is not implemented in the Rust kernel yet".to_string();
 }
 
-fn format_code(_code: &str) -> Result<String, String> {
-    panic!("-fmt: format code is not implemented in the Rust kernel yet");
+fn format_code(_code: &str) -> String {
+    return "-fmt: format code is not implemented in the Rust kernel yet".to_string();
 }
 
-fn install_module(module_name: &str) {
-    panic!(
+fn install_module(module_name: &str) -> String {
+    return format!(
         "-install: module manager is not implemented in the Rust kernel yet (module: {})",
         module_name
     );
 }
 
-fn uninstall_module(module_name: &str) {
-    panic!(
+fn uninstall_module(module_name: &str) -> String {
+    return format!(
         "-uninstall: module manager is not implemented in the Rust kernel yet (module: {})",
         module_name
     );
 }
 
-fn list_installed_modules() {
-    panic!("-list: module manager is not implemented in the Rust kernel yet");
+fn list_installed_modules() -> String {
+    return "-list: module manager is not implemented in the Rust kernel yet".to_string();
 }
 
-fn update_module(module_name: &str) {
-    panic!(
+fn update_module(module_name: &str) -> String {
+    return format!(
         "-update: module manager is not implemented in the Rust kernel yet (module: {})",
         module_name
     );
 }
 
-fn run_tutorial() {
-    panic!("-tutorial: not implemented in the Rust kernel yet");
+fn run_tutorial() -> String {
+    return "-tutorial: not implemented in the Rust kernel yet".to_string();
 }
 
-fn run_latex_interactive() {
-    panic!("-latex: interactive LaTeX mode is not implemented in the Rust kernel yet");
+fn run_latex_interactive() -> String {
+    return "-latex: interactive LaTeX mode is not implemented in the Rust kernel yet".to_string();
 }
 
 fn help_message() -> String {
