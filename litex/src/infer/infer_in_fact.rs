@@ -180,9 +180,11 @@ impl Runtime {
                     })?;
                 infer_result.new_fact(&tuple_dim_fact);
 
-                self.top_level_env()
-                    .known_tuple_obj_in_what_cart
-                    .insert(in_fact.element.to_string(), cart.clone());
+                self.store_tuple_obj_and_cart(
+                    &in_fact.element.to_string(),
+                    None,
+                    Some(cart.clone()),
+                );
 
                 Ok(infer_result)
             }

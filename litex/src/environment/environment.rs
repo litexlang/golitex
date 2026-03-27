@@ -16,6 +16,7 @@ use crate::obj::FnSetObj;
 use crate::obj::Number;
 use crate::obj::Obj;
 use crate::obj::SetBuilder;
+use crate::obj::Tuple;
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::stmt::definition_stmt::{DefPropWithMeaningStmt, DefPropWithoutMeaningStmt};
 use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
@@ -50,7 +51,7 @@ pub struct Environment {
         HashMap<String, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>,
     pub known_obj_is_well_defined: HashMap<String, ()>,
     pub known_atom_in_fn_set: HashMap<String, FnSetObj>,
-    pub known_tuple_obj_in_what_cart: HashMap<String, Cart>,
+    pub known_tuple_objs: HashMap<String, (Option<Tuple>, Option<Cart>)>,
     pub known_normalized_calculated_value_of_obj: HashMap<String, Number>,
 
     pub cache_well_defined_obj: HashMap<String, ()>,
@@ -90,7 +91,7 @@ impl Environment {
         >,
         known_obj_is_well_defined: HashMap<String, ()>,
         known_atom_in_fn_set: HashMap<String, FnSetObj>,
-        known_tuple_dim_obj: HashMap<String, Cart>,
+        known_tuple_objs: HashMap<String, (Option<Tuple>, Option<Cart>)>,
         known_calculated_value_of_obj: HashMap<String, Number>,
         cache_known_valid_obj: HashMap<String, ()>,
         cache_known_fact: HashMap<String, (usize, usize)>,
@@ -115,7 +116,7 @@ impl Environment {
             known_or_facts_in_forall_facts,
             known_obj_is_well_defined,
             known_atom_in_fn_set,
-            known_tuple_obj_in_what_cart: known_tuple_dim_obj,
+            known_tuple_objs: known_tuple_objs,
             known_normalized_calculated_value_of_obj: known_calculated_value_of_obj,
             cache_well_defined_obj: cache_known_valid_obj,
             cache_known_fact,

@@ -3,7 +3,7 @@ use crate::common::keywords::{is_builtin_identifier_obj, is_builtin_predicate, M
 use crate::environment::Environment;
 use crate::obj::FnSetObj;
 use crate::obj::Number;
-use crate::obj::{Atom, Cart};
+use crate::obj::{Atom, Cart, Tuple};
 use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
 use crate::stmt::definition_stmt::DefPropWithMeaningStmt;
 use crate::stmt::definition_stmt::DefPropWithoutMeaningStmt;
@@ -485,8 +485,8 @@ impl Runtime {
 impl Runtime {
     pub fn get_tuple_obj_is_in_what_cart(&self, name: &str) -> Option<Cart> {
         for env in self.iter_environments_from_top() {
-            if let Some(cart) = env.known_tuple_obj_in_what_cart.get(name) {
-                return Some(cart.clone());
+            if let Some(cart) = env.known_tuple_objs.get(name) {
+                return cart.1.clone();
             }
         }
         None
@@ -560,5 +560,30 @@ impl Runtime {
 
     pub fn change_file_index_to(&mut self, file_index: usize) {
         self.module_manager.current_file_index = file_index;
+    }
+}
+
+impl Runtime {
+    pub fn store_tuple_obj_and_cart(
+        &mut self,
+        name: &str,
+        tuple: Option<Tuple>,
+        cart: Option<Cart>,
+    ) {
+        let known_tuple_objs = &mut self.top_level_env().known_tuple_objs;
+        let old_tuple_and_cart = known_tuple_objs.get(name).cloned();
+
+        let merged_tuple = match (tuple, old_tuple_and_cart.as_ref()) {
+            (Some(new_tuple), _) => Some(new_tuple),
+            (None, Some((old_tuple, _))) => old_tuple.clone(),
+            (None, None) => None,
+        };
+        let merged_cart = match (cart, old_tuple_and_cart.as_ref()) {
+            (Some(new_cart), _) => Some(new_cart),
+            (None, Some((_, old_cart))) => old_cart.clone(),
+            (None, None) => None,
+        };
+
+        known_tuple_objs.insert(name.to_string(), (merged_tuple, merged_cart));
     }
 }
