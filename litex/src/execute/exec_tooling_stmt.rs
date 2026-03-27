@@ -1,4 +1,5 @@
 use super::Runtime;
+use crate::error::ExecStmtError;
 use crate::error::RuntimeError;
 use crate::infer::InferResult;
 use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
@@ -10,7 +11,11 @@ impl Runtime {
         &mut self,
         stmt: &ImportStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
-        Self::stmt_unsupported(Stmt::ImportStmt(stmt.clone()))
+        return Err(RuntimeError::ExecStmtError(ExecStmtError::new(
+            Stmt::ImportStmt(stmt.clone()),
+            None,
+            vec![],
+        )));
     }
 
     pub fn exec_clear_stmt(
@@ -37,6 +42,10 @@ impl Runtime {
         &mut self,
         stmt: &RunFileStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
-        Self::stmt_unsupported(Stmt::RunFileStmt(stmt.clone()))
+        return Err(RuntimeError::ExecStmtError(ExecStmtError::new(
+            Stmt::RunFileStmt(stmt.clone()),
+            None,
+            vec![],
+        )));
     }
 }
