@@ -14,12 +14,10 @@ impl Runtime {
                         a.name == b.name
                     } else {
                         match (
-                            self
-                                .module_manager
+                            self.module_manager
                                 .module_name_and_path_map
                                 .get(&a.mod_name),
-                            self
-                                .module_manager
+                            self.module_manager
                                 .module_name_and_path_map
                                 .get(&b.mod_name),
                         ) {
@@ -47,12 +45,10 @@ impl Runtime {
                                 })
                     } else {
                         match (
-                            self
-                                .module_manager
+                            self.module_manager
                                 .module_name_and_path_map
                                 .get(&a.mod_name),
-                            self
-                                .module_manager
+                            self.module_manager
                                 .module_name_and_path_map
                                 .get(&b.mod_name),
                         ) {
@@ -180,8 +176,8 @@ impl Runtime {
                 Obj::Proj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::Dim(a) => match right {
-                Obj::Dim(b) => a.to_string() == b.to_string(),
+            Obj::TupleDim(a) => match right {
+                Obj::TupleDim(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::Tuple(a) => match right {
@@ -210,10 +206,6 @@ impl Runtime {
             },
             Obj::Choose(a) => match right {
                 Obj::Choose(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
-            Obj::TupleDimObj(a) => match right {
-                Obj::TupleDimObj(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
             Obj::ObjAtIndex(a) => match right {

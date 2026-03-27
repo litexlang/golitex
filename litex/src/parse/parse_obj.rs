@@ -9,12 +9,13 @@ use crate::common::keywords::{
 };
 use crate::error::{duplicate_used_name_error_msg_without_line_file, ParsingError, RuntimeError};
 use crate::execute::Runtime;
+use crate::obj::Tuple;
+use crate::obj::TupleDim;
 use crate::obj::{
     Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div, FnObj, FnSetObj,
     FnSetWithParams, FnSetWithoutParams, IdentifierWithMod, InstStructObj, Intersect, ListSet, Mod,
     Mul, NObj, NPosObj, Number, Obj, ObjAtIndex, Pow, PowerSet, Proj, QNeg, QNz, QObj, QPos, RNeg,
-    RNz, RObj, RPos, Range, SetBuilder, SetDiff, SetMinus, Sub, TupleDimObj, Union, Val, ZNeg, ZNz,
-    ZObj,
+    RNz, RObj, RPos, Range, SetBuilder, SetDiff, SetMinus, Sub, Union, Val, ZNeg, ZNz, ZObj,
 };
 use crate::obj::{
     Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierOrIdentifierWithMod,
@@ -285,12 +286,23 @@ impl Runtime {
     ) -> Result<Obj, ParsingError> {
         let token = tb.current()?;
 
-        // 0. (obj)
+        // 0. (obj) 或 (obj, obj, ...)
         if token == LEFT_BRACE {
             tb.skip()?;
             let obj = self.parse_obj(tb)?;
-            tb.skip_token(RIGHT_BRACE)?;
-            return Ok(obj);
+
+            if tb.current_token_is_equal_to(COMMA) {
+                let mut args = vec![obj];
+                tb.skip_token(COMMA)?;
+                while !tb.current_token_is_equal_to(RIGHT_BRACE) {
+                    args.push(self.parse_obj(tb)?);
+                }
+                tb.skip_token(RIGHT_BRACE)?;
+                return Ok(Obj::Tuple(Tuple::new(args)));
+            } else {
+                tb.skip_token(RIGHT_BRACE)?;
+                return Ok(obj);
+            }
         }
 
         // 1. 数字
@@ -532,6 +544,22 @@ impl Runtime {
             })?;
             return Ok(Obj::Cap(Cap::new(value)));
         }
+        if tok == CUP {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 1 {
+                return Err(ParsingError::new(
+                    "cup expects 1 argument".to_string(),
+                    tb.line_file,
+                    None,
+                ));
+            }
+            let mut it = args.into_iter();
+            let value = it.next().ok_or_else(|| {
+                ParsingError::new("cup expects 1 argument".to_string(), tb.line_file, None)
+            })?;
+            return Ok(Obj::Cup(Cup::new(value)));
+        }
         if tok == CHOOSE {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
@@ -547,26 +575,6 @@ impl Runtime {
                 ParsingError::new("choice expects 1 argument".to_string(), tb.line_file, None)
             })?;
             return Ok(Obj::Choose(Choose::new(value)));
-        }
-        if tok == TUPLE_DIM {
-            tb.skip()?;
-            let args = self.parse_braced_objs(tb)?;
-            if args.len() != 1 {
-                return Err(ParsingError::new(
-                    "tuple_dim expects 1 argument".to_string(),
-                    tb.line_file,
-                    None,
-                ));
-            }
-            let mut it = args.into_iter();
-            let value = it.next().ok_or_else(|| {
-                ParsingError::new(
-                    "tuple_dim expects 1 argument".to_string(),
-                    tb.line_file,
-                    None,
-                )
-            })?;
-            return Ok(Obj::TupleDimObj(TupleDimObj::new(value)));
         }
         if tok == PROJ {
             tb.skip()?;
@@ -725,6 +733,18 @@ impl Runtime {
             return Ok(Obj::Cart(Cart::new(args)));
         }
 
+        if tok == TUPLE_DIM {
+            tb.skip()?;
+            let args = self.parse_braced_obj(tb)?;
+            return Ok(Obj::TupleDim(TupleDim::new(args)));
+        }
+
+        if tok == CART_DIM {
+            tb.skip()?;
+            let args = self.parse_braced_obj(tb)?;
+            return Ok(Obj::CartDim(CartDim::new(args)));
+        }
+
         // 普通 atom（标识符）
         let atom = self.parse_atom(tb)?;
         return Ok(Obj::from(atom));
@@ -739,6 +759,19 @@ impl Runtime {
         }
         tb.skip_token(RIGHT_BRACE)?;
         Ok(objs)
+    }
+
+    pub fn parse_braced_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
+        let mut parsed_args = self.parse_braced_objs(tb)?;
+        if parsed_args.len() != 1 {
+            return Err(ParsingError::new(
+                "expected exactly 1 argument".to_string(),
+                tb.line_file,
+                None,
+            ));
+        }
+        let parsed_obj = parsed_args.remove(0);
+        Ok(parsed_obj)
     }
 
     /// 解析逗号分隔的 obj 列表，直到遇到非 COMMA 的 token（如 COLON）。

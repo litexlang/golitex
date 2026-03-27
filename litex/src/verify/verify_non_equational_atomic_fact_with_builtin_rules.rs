@@ -1,10 +1,11 @@
 use crate::error::VerifyError;
 use crate::execute::Runtime;
-use crate::fact::IsFiniteSetFact;
+use crate::fact::IsTupleFact;
 use crate::fact::{
     AtomicFact, Fact, GreaterFact, IsNonemptySetFact, LessFact, NotEqualFact, NotGreaterEqualFact,
     NotGreaterFact, NotLessEqualFact, NotLessFact,
 };
+use crate::fact::{IsCartFact, IsFiniteSetFact};
 use crate::infer::InferResult;
 use crate::obj::{Number, Obj};
 use crate::result::FactVerifiedByBuiltinRules;
@@ -116,6 +117,12 @@ impl Runtime {
                 ),
             AtomicFact::IsFiniteSetFact(is_finite_set_fact) => {
                 self._verify_is_finite_set_fact_with_builtin_rules(is_finite_set_fact, verify_state)
+            }
+            AtomicFact::IsCartFact(is_cart_fact) => {
+                self._verify_is_cart_fact_with_builtin_rules(is_cart_fact, verify_state)
+            }
+            AtomicFact::IsTupleFact(is_tuple_fact) => {
+                self._verify_is_tuple_fact_with_builtin_rules(is_tuple_fact, verify_state)
             }
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
@@ -463,6 +470,44 @@ impl Runtime {
                     InferResult::new(),
                 ),
             )),
+            _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
+        }
+    }
+
+    fn _verify_is_cart_fact_with_builtin_rules(
+        &mut self,
+        is_cart_fact: &IsCartFact,
+        _verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        match &is_cart_fact.set {
+            Obj::Cart(_) => {
+                return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                    FactVerifiedByBuiltinRules::new(
+                        Fact::AtomicFact(AtomicFact::IsCartFact(is_cart_fact.clone())),
+                        "any `cart` object is a cart".to_string(),
+                        InferResult::new(),
+                    ),
+                ));
+            }
+            _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
+        }
+    }
+
+    fn _verify_is_tuple_fact_with_builtin_rules(
+        &mut self,
+        is_tuple_fact: &IsTupleFact,
+        _verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        match &is_tuple_fact.set {
+            Obj::Tuple(_) => {
+                return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                    FactVerifiedByBuiltinRules::new(
+                        Fact::AtomicFact(AtomicFact::IsTupleFact(is_tuple_fact.clone())),
+                        "any `cart_dim` object is a cart_dim".to_string(),
+                        InferResult::new(),
+                    ),
+                ));
+            }
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }

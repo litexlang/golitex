@@ -50,6 +50,7 @@ pub const Z: &str = "Z";
 pub const R: &str = "R";
 pub const CART: &str = "cart";
 pub const CART_DIM: &str = "cart_dim";
+pub const TUPLE_DIM: &str = "tuple_dim";
 pub const PROJ: &str = "proj";
 pub const COUNT: &str = "count";
 pub const RANGE: &str = "range";
@@ -108,8 +109,6 @@ pub const Z_NZ: &str = "Z_nz";
 pub const R_NZ: &str = "R_nz";
 pub const STRUCT: &str = "struct";
 pub const RESTRICT: &str = "restrict";
-
-pub const TUPLE_DIM: &str = "tuple_dim";
 
 pub const BUILTIN_CODE: &str = "builtin_code";
 
@@ -173,6 +172,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         R,
         CART,
         CART_DIM,
+        TUPLE_DIM,
         PROJ,
         COUNT,
         RANGE,
@@ -228,7 +228,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         R_NZ,
         STRUCT,
         RESTRICT,
-        TUPLE_DIM,
         FN_FOR_FN_WITHOUT_PARAMS,
         BUILTIN_CODE,
     ];

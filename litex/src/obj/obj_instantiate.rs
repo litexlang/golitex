@@ -1,9 +1,9 @@
 use super::atom::{Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierWithMod};
 use super::obj::{
-    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Dim, Div, FnObj, FnSetWithParams,
+    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, TupleDim, Div, FnObj, FnSetWithParams,
     FnSetWithoutParams, InstStructObj, Intersect, ListSet, Mod, Mul, NObj, NPosObj, Number, Obj,
     ObjAtIndex, Pow, PowerSet, Proj, QNeg, QNz, QObj, QPos, RNeg, RNz, RObj, RPos, Range,
-    SetBuilder, SetDiff, SetMinus, Sub, Tuple, TupleDimObj, Union, Val, ZNeg, ZNz, ZObj,
+    SetBuilder, SetDiff, SetMinus, Sub, Tuple, Union, Val, ZNeg, ZNz, ZObj,
 };
 use crate::stmt::parameter_def::ParamDefWithParamSet;
 use std::collections::HashMap;
@@ -385,21 +385,21 @@ impl Proj {
     }
 }
 
-impl Dim {
+impl TupleDim {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        Obj::Dim(Dim {
-            dim: Box::new(self.dim.instantiate(param_to_arg_map)),
+        Obj::TupleDim(TupleDim {
+            arg: Box::new(self.arg.instantiate(param_to_arg_map)),
         })
     }
 }
 
 impl Tuple {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        let mut elements = Vec::with_capacity(self.elements.len());
-        for element in self.elements.iter() {
+        let mut elements = Vec::with_capacity(self.args.len());
+        for element in self.args.iter() {
             elements.push(Box::new(element.instantiate(param_to_arg_map)));
         }
-        Obj::Tuple(Tuple { elements })
+        Obj::Tuple(Tuple { args: elements })
     }
 }
 
@@ -449,14 +449,6 @@ impl Choose {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         Obj::Choose(Choose {
             set: Box::new(self.set.instantiate(param_to_arg_map)),
-        })
-    }
-}
-
-impl TupleDimObj {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        Obj::TupleDimObj(TupleDimObj {
-            obj: Box::new(self.obj.instantiate(param_to_arg_map)),
         })
     }
 }
