@@ -1,2 +1,3 @@
 tuple_dim((1, 2)) = 2
 cart_dim(cart(R, R)) = 2
+proj(cart(R, R), 1) = proj(cart(R, R), 1)

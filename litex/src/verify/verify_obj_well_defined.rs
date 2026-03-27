@@ -9,11 +9,10 @@ use crate::fact::{
     LessEqualFact, NotEqualFact, OrFact,
 };
 use crate::obj::{
-    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, TupleDim, Div, FieldAccess,
-    FieldAccessWithMod, FnObj, FnSetObj, FnSetWithParams, FnSetWithoutParams, Identifier,
-    IdentifierWithMod, InstStructObj, Intersect, ListSet, Mod, Mul, NPosObj, Number, Obj,
-    ObjAtIndex, Pow, PowerSet, Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, Union,
-    Val, ZObj,
+    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div, FieldAccess, FieldAccessWithMod,
+    FnObj, FnSetObj, FnSetWithParams, FnSetWithoutParams, Identifier, IdentifierWithMod,
+    InstStructObj, Intersect, ListSet, Mod, Mul, NPosObj, Number, Obj, ObjAtIndex, Pow, PowerSet,
+    Proj, RObj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple, TupleDim, Union, Val, ZObj,
 };
 use crate::stmt::parameter_def::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
 use crate::verify::VerifyState;
@@ -966,13 +965,72 @@ impl Runtime {
         x: &Proj,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        let _ = x;
-        let _ = verify_state;
-        Err(WellDefinedError::new(
-            "verify_proj_well_defined 此函数还没有 implement".to_string(),
-            None,
+        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.dim, verify_state)?;
+
+        let projection_dimension_number = self
+            .get_known_normalized_calculated_value_for_obj(&x.dim)
+            .ok_or_else(|| {
+                WellDefinedError::new(
+                    format!("projection dimension {} is not a number", x.dim),
+                    None,
+                    DEFAULT_LINE_FILE.clone(),
+                )
+            })?;
+        let projection_dimension_obj =
+            Obj::Number(Number::new(projection_dimension_number.normalized_value));
+
+        let projection_dimension_is_positive_integer_fact = AtomicFact::InFact(InFact::new(
+            projection_dimension_obj.clone(),
+            Obj::NPosObj(NPosObj::new()),
             DEFAULT_LINE_FILE.clone(),
-        ))
+        ));
+        let projection_dimension_is_positive_integer_result =
+            self.verify_atomic_fact(&projection_dimension_is_positive_integer_fact, verify_state)?;
+        if projection_dimension_is_positive_integer_result.is_unknown() {
+            return Err(WellDefinedError::new(
+                format!(
+                    "projection dimension {} is not a positive integer",
+                    projection_dimension_obj
+                ),
+                None,
+                DEFAULT_LINE_FILE.clone(),
+            ));
+        }
+
+        let left_set_is_cart_fact =
+            AtomicFact::IsCartFact(IsCartFact::new((*x.set).clone(), DEFAULT_LINE_FILE.clone()));
+        let left_set_is_cart_result =
+            self.verify_atomic_fact(&left_set_is_cart_fact, verify_state)?;
+        if left_set_is_cart_result.is_unknown() {
+            return Err(WellDefinedError::new(
+                format!("projection left side {} is not a cart", x.set),
+                None,
+                DEFAULT_LINE_FILE.clone(),
+            ));
+        }
+
+        let left_set_cart_dim_obj = Obj::CartDim(CartDim::new((*x.set).clone()));
+
+        let proj_index_not_larger_than_cart_dim = AtomicFact::LessEqualFact(LessEqualFact::new(
+            projection_dimension_obj.clone(),
+            left_set_cart_dim_obj.clone(),
+            DEFAULT_LINE_FILE.clone(),
+        ));
+        let left_set_cart_dim_less_equal_projection_dimension_result =
+            self.verify_atomic_fact(&proj_index_not_larger_than_cart_dim, verify_state)?;
+        if left_set_cart_dim_less_equal_projection_dimension_result.is_unknown() {
+            return Err(WellDefinedError::new(
+                format!(
+                    "{} <= {} is unknown",
+                    projection_dimension_obj, left_set_cart_dim_obj
+                ),
+                None,
+                DEFAULT_LINE_FILE.clone(),
+            ));
+        }
+
+        Ok(())
     }
 
     fn verify_dim_well_defined(
@@ -1098,40 +1156,28 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
         self.verify_obj_well_defined_and_store_cache(&x.obj, verify_state)?;
+        self.verify_obj_well_defined_and_store_cache(&x.index, verify_state)?;
 
-        let cart_obj_where_tuple_obj_is = self
-            .get_tuple_obj_is_in_what_cart(&x.obj.to_string())
+        let index_calculated_number = self
+            .get_known_normalized_calculated_value_for_obj(&x.index)
             .ok_or_else(|| {
                 WellDefinedError::new(
-                    format!("tuple object {} is not in any cart", x.obj.to_string()),
+                    format!("index {} is not a number", x.index.to_string()),
                     None,
                     DEFAULT_LINE_FILE.clone(),
                 )
             })?;
-        let tuple_dim = cart_obj_where_tuple_obj_is.args.len();
-
-        let index_calculated_string = self.get_known_normalized_calculated_value_for_obj(&x.index);
-
-        let index_calculated_obj = {
-            if let Some(index_calculated_number) = index_calculated_string {
-                Obj::Number(Number::new(index_calculated_number.normalized_value))
-            } else {
-                return Err(WellDefinedError::new(
-                    format!("index {} is not a number", x.index.to_string()),
-                    None,
-                    DEFAULT_LINE_FILE.clone(),
-                ));
-            }
-        };
+        let index_calculated_obj =
+            Obj::Number(Number::new(index_calculated_number.normalized_value));
 
         let index_is_positive_integer_in_z_pos_fact = AtomicFact::InFact(InFact::new(
             index_calculated_obj.clone(),
             Obj::NPosObj(NPosObj::new()),
             DEFAULT_LINE_FILE.clone(),
         ));
-        let mut result =
+        let index_is_positive_integer_result =
             self.verify_atomic_fact(&index_is_positive_integer_in_z_pos_fact, verify_state)?;
-        if result.is_unknown() {
+        if index_is_positive_integer_result.is_unknown() {
             return Err(WellDefinedError::new(
                 format!("index {} is not a positive integer", index_calculated_obj),
                 None,
@@ -1139,14 +1185,37 @@ impl Runtime {
             ));
         }
 
-        let less_equal_fact = AtomicFact::LessEqualFact(LessEqualFact::new(
-            index_calculated_obj.clone(),
-            Obj::Number(Number::new(tuple_dim.to_string())),
+        let target_obj_is_tuple_fact = AtomicFact::IsTupleFact(IsTupleFact::new(
+            (*x.obj).clone(),
             DEFAULT_LINE_FILE.clone(),
         ));
-        result = self.verify_atomic_fact(&less_equal_fact, verify_state)?;
-        if result.is_unknown() {
-            return Err(WellDefinedError::new(format!("{} has dimension {} but index {} is not less than or equal to it, so {} is not well-defined", x.obj, tuple_dim, index_calculated_obj, x.to_string()), None, DEFAULT_LINE_FILE.clone()));
+        let target_obj_is_tuple_result =
+            self.verify_atomic_fact(&target_obj_is_tuple_fact, verify_state)?;
+        if target_obj_is_tuple_result.is_unknown() {
+            return Err(WellDefinedError::new(
+                format!("index target {} is not a tuple", x.obj),
+                None,
+                DEFAULT_LINE_FILE.clone(),
+            ));
+        }
+
+        let target_tuple_dim_obj = Obj::TupleDim(TupleDim::new((*x.obj).clone()));
+        let index_not_larger_than_tuple_dim_fact = AtomicFact::LessEqualFact(LessEqualFact::new(
+            index_calculated_obj.clone(),
+            target_tuple_dim_obj.clone(),
+            DEFAULT_LINE_FILE.clone(),
+        ));
+        let index_not_larger_than_tuple_dim_result =
+            self.verify_atomic_fact(&index_not_larger_than_tuple_dim_fact, verify_state)?;
+        if index_not_larger_than_tuple_dim_result.is_unknown() {
+            return Err(WellDefinedError::new(
+                format!(
+                    "{} <= {} is unknown",
+                    index_calculated_obj, target_tuple_dim_obj
+                ),
+                None,
+                DEFAULT_LINE_FILE.clone(),
+            ));
         }
 
         Ok(())
