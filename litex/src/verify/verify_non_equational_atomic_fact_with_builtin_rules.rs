@@ -508,7 +508,24 @@ impl Runtime {
                     ),
                 ));
             }
-            _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
+            _ => {
+                // 如果能从env里拿出 tuple 和 cart，则验证成功
+                if let Some((_, _)) = self
+                    .top_level_env()
+                    .known_tuple_objs
+                    .get(&is_tuple_fact.set.to_string())
+                {
+                    return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                        FactVerifiedByBuiltinRules::new(
+                            Fact::AtomicFact(AtomicFact::IsTupleFact(is_tuple_fact.clone())),
+                            "it is a known tuple".to_string(),
+                            InferResult::new(),
+                        ),
+                    ));
+                }
+
+                Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+            }
         }
     }
 }

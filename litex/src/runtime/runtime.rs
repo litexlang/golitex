@@ -142,6 +142,44 @@ impl Runtime {
                 Obj::Cart(cart) => Obj::Number(Number::new(cart.args.len().to_string())),
                 _ => obj.clone(),
             },
+            Obj::Proj(proj) => match &*proj.set {
+                Obj::Cart(cart) => {
+                    let projection_index_number =
+                        self.get_known_normalized_calculated_value_for_obj(&proj.dim);
+                    if let Some(projection_index_number) = projection_index_number {
+                        let projection_index_parsed_result =
+                            projection_index_number.normalized_value.parse::<usize>();
+                        if let Ok(projection_index_one_based) = projection_index_parsed_result {
+                            if projection_index_one_based >= 1
+                                && projection_index_one_based <= cart.args.len()
+                            {
+                                return (*cart.args[projection_index_one_based - 1]).clone();
+                            }
+                        }
+                    }
+                    obj.clone()
+                }
+                _ => obj.clone(),
+            },
+            Obj::ObjAtIndex(obj_at_index) => match &*obj_at_index.obj {
+                Obj::Tuple(tuple) => {
+                    let tuple_index_number =
+                        self.get_known_normalized_calculated_value_for_obj(&obj_at_index.index);
+                    if let Some(tuple_index_number) = tuple_index_number {
+                        let tuple_index_parsed_result =
+                            tuple_index_number.normalized_value.parse::<usize>();
+                        if let Ok(tuple_index_one_based) = tuple_index_parsed_result {
+                            if tuple_index_one_based >= 1
+                                && tuple_index_one_based <= tuple.args.len()
+                            {
+                                return (*tuple.args[tuple_index_one_based - 1]).clone();
+                            }
+                        }
+                    }
+                    obj.clone()
+                }
+                _ => obj.clone(),
+            },
             _ => obj.clone(),
         }
     }
