@@ -41,9 +41,9 @@ impl Runtime {
     > {
         let lookup_key = given_or_fact.key();
 
-        let envs_count = self.runtime_context.environment_stack.len();
+        let envs_count = self.environment_stack.len();
         for i in iterate_from_env_index..envs_count {
-            let env = &self.runtime_context.environment_stack[envs_count - 1 - i];
+            let env = &self.environment_stack[envs_count - 1 - i];
             if let Some(known_forall_facts_in_env) =
                 env.known_or_facts_in_forall_facts.get(lookup_key.as_str())
             {

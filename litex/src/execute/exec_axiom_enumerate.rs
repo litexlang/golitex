@@ -137,10 +137,10 @@ impl Runtime {
         stmt: &EnumerateAxiomStmt,
         parameter_index_assignment: &Vec<usize>,
     ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
-        self.runtime_context.push_env();
+        self.push_env();
         let execute_result =
             self.exec_enumerate_axiom_stmt_for_one_assignment_body(stmt, parameter_index_assignment);
-        self.runtime_context.pop_env();
+        self.pop_env();
         execute_result
     }
 

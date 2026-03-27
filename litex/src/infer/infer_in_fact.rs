@@ -31,7 +31,7 @@ impl Runtime {
 
                 let key = in_fact.element.to_string();
                 let fn_set_obj = FnSetObj::FnSetWithDom(fn_set_with_dom.clone());
-                let env = self.runtime_context.top_level_env();
+                let env = self.top_level_env();
                 env.known_fn_in_fn_set.insert(key, fn_set_obj);
                 Ok(InferResult::new())
             }
@@ -50,7 +50,7 @@ impl Runtime {
 
                 let key = in_fact.element.to_string();
                 let fn_set_obj = FnSetObj::FnSetWithoutParams(fn_set_without_dom.clone());
-                self.runtime_context
+                self
                     .top_level_env()
                     .known_fn_in_fn_set
                     .insert(key, fn_set_obj);
@@ -180,7 +180,7 @@ impl Runtime {
                     })?;
                 infer_result.new_fact(&tuple_dim_fact);
 
-                self.runtime_context
+                self
                     .top_level_env()
                     .known_tuple_obj_in_what_cart
                     .insert(in_fact.element.to_string(), cart.clone());
@@ -294,7 +294,7 @@ impl Runtime {
         inst_set_struct_obj: &InstStructObj,
     ) -> Result<InferResult, InferError> {
         if let Some(struct_def_without_field) = self
-            .runtime_context
+            
             .get_cloned_set_struct_with_no_field_definition_by_name(
                 &inst_set_struct_obj.struct_name.to_string(),
             )
@@ -306,7 +306,7 @@ impl Runtime {
         }
 
         if let Some(struct_def_with_fields) = self
-            .runtime_context
+            
             .get_cloned_set_struct_with_fields_definition_by_name(
                 &inst_set_struct_obj.struct_name.to_string(),
             )

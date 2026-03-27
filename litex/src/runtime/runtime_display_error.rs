@@ -1,4 +1,4 @@
-use super::RuntimeContext;
+use super::Runtime;
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::keywords::{COLON, PROVE};
 use crate::error::{ParseBlockError, RuntimeError};
@@ -60,7 +60,7 @@ fn json_array_field_line(
     }
 }
 
-impl RuntimeContext {
+impl Runtime {
     fn parse_block_error_message(&self, parse_block_error: &ParseBlockError) -> String {
         match parse_block_error {
             ParseBlockError::ExpectedIndent(_, _) => "expected indent".to_string(),

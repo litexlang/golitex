@@ -1,26 +1,36 @@
-use super::RuntimeContext;
 use crate::common::defaults::DEFAULT_LINE_FILE;
+use crate::common::keywords::{is_builtin_identifier_obj, is_builtin_predicate, MOD_SIGN};
+use crate::environment::Environment;
+use crate::obj::FnSetObj;
+use crate::obj::Number;
+use crate::obj::{Atom, Cart};
+use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
+use crate::stmt::definition_stmt::DefPropWithMeaningStmt;
+use crate::stmt::definition_stmt::DefPropWithoutMeaningStmt;
+use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
+
 use crate::common::is_valid_litex_name::is_valid_litex_name;
 use crate::common::keywords::BUILTIN_CODE;
 use crate::error::ParseBlockError;
 use crate::module_manager::ModuleManager;
-use crate::obj::{Add, Div, Mod, Mul, Number, Obj, Pow, Sub};
+use crate::obj::{Add, Div, Mod, Mul, Obj, Pow, Sub};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct Runtime {
-    pub runtime_context: RuntimeContext,
+    pub module_manager: ModuleManager,
+    pub environment_stack: Vec<Box<Environment>>,
     pub parsing_time_name_scope_stack: Vec<HashMap<String, (usize, usize)>>,
 }
 
 impl Runtime {
     pub fn new() -> Self {
         let module_manager = ModuleManager::new_empty_module_manager(BUILTIN_CODE);
-        let runtime_context =
-            RuntimeContext::new_empty_runtime_context_with_one_env(module_manager);
+        let new_environment = Box::new(Environment::new_empty_env());
 
         Runtime {
-            runtime_context,
+            module_manager,
+            environment_stack: vec![new_environment],
             parsing_time_name_scope_stack: vec![HashMap::new()],
         }
     }
@@ -29,8 +39,7 @@ impl Runtime {
         if let Some(number) = obj.calculate_arithmetic_value_and_normalize() {
             return Some(number);
         }
-        self.runtime_context
-            .get_normalized_calculated_value_of_obj(&obj.to_string())
+        self.get_normalized_calculated_value_of_obj(&obj.to_string())
     }
 
     pub fn obj_with_runtime_known_numbers_substituted_for_verification(&self, obj: &Obj) -> Obj {
@@ -245,18 +254,292 @@ impl Runtime {
     }
 
     pub fn new_file_path_new_env_new_name_scope(&mut self, path: &str) {
-        self.runtime_context
-            .module_manager
-            .run_file_paths
-            .push(path.to_string());
-        self.runtime_context.module_manager.current_file_index += 1;
+        self.module_manager.run_file_paths.push(path.to_string());
+        self.module_manager.current_file_index += 1;
         self.push_parsing_time_name_scope();
-        self.runtime_context.push_env();
+        self.push_env();
     }
 
     pub fn is_name_used(&self, name: &str) -> bool {
         self.parsing_time_name_scope_stack
             .iter()
             .any(|scope| scope.contains_key(name))
+    }
+}
+
+impl Runtime {
+    pub fn top_level_env(&mut self) -> &mut Environment {
+        let result = self.environment_stack.last_mut();
+        match result {
+            Some(environment) => environment,
+            None => unreachable!("no top level environment"),
+        }
+    }
+
+    pub fn get_predicate_with_meaning_definition_by_name(
+        &self,
+        predicate_name: &str,
+    ) -> Option<&DefPropWithMeaningStmt> {
+        let parts = predicate_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        if parts.len() != 1 {
+            panic!("NOT IMPLEMENTED YET");
+        }
+
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment.defined_props_with_meaning.get(predicate_name) {
+                return Some(definition);
+            }
+        }
+
+        None
+    }
+
+    /// Look up predicate definition without meaning by name from current env or builtin.
+    pub fn get_predicate_without_meaning_definition_by_name(
+        &self,
+        predicate_name: &str,
+    ) -> Option<&DefPropWithoutMeaningStmt> {
+        let parts = predicate_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        if parts.len() != 1 {
+            panic!("NOT IMPLEMENTED YET");
+        }
+
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment
+                .defined_props_without_meaning
+                .get(predicate_name)
+            {
+                return Some(definition);
+            }
+        }
+
+        None
+    }
+
+    pub fn get_cloned_set_struct_with_fields_definition_by_name(
+        &self,
+        set_struct_name: &str,
+    ) -> Option<DefStructWithFieldsStmt> {
+        let parts = set_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        if parts.len() != 1 {
+            panic!("NOT IMPLEMENTED YET");
+        }
+
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment.defined_structs_with_fields.get(set_struct_name) {
+                return Some(definition.clone());
+            }
+        }
+
+        None
+    }
+
+    pub fn get_set_struct_with_fields_definition_by_name(
+        &self,
+        set_struct_name: &str,
+    ) -> Option<&DefStructWithFieldsStmt> {
+        let parts = set_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        if parts.len() != 1 {
+            panic!("NOT IMPLEMENTED YET");
+        }
+
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment.defined_structs_with_fields.get(set_struct_name) {
+                return Some(definition);
+            }
+        }
+
+        None
+    }
+
+    pub fn get_algo_definition_by_name(&self, algo_name: &str) -> Option<&DefAlgoStmt> {
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment.defined_algorithms.get(algo_name) {
+                return Some(definition);
+            }
+        }
+        None
+    }
+
+    pub fn get_set_struct_with_no_field_definition_by_name(
+        &self,
+        set_struct_name: &str,
+    ) -> Option<&DefStructWithNoFieldStmt> {
+        let parts = set_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        if parts.len() != 1 {
+            panic!("NOT IMPLEMENTED YET");
+        }
+
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment
+                .defined_structs_with_no_field
+                .get(set_struct_name)
+            {
+                return Some(definition);
+            }
+        }
+
+        None
+    }
+
+    pub fn get_cloned_set_struct_with_no_field_definition_by_name(
+        &self,
+        set_struct_name: &str,
+    ) -> Option<DefStructWithNoFieldStmt> {
+        let parts = set_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        if parts.len() != 1 {
+            panic!("NOT IMPLEMENTED YET");
+        }
+
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment
+                .defined_structs_with_no_field
+                .get(set_struct_name)
+            {
+                return Some(definition.clone());
+            }
+        }
+
+        None
+    }
+}
+
+impl Runtime {
+    pub fn push_env(&mut self) {
+        let new_env = Box::new(Environment::new_empty_env());
+        self.environment_stack.push(new_env);
+    }
+
+    pub fn pop_env(&mut self) {
+        let last_env = self.environment_stack.last();
+
+        match last_env {
+            None => {
+                unreachable!("no top level environment")
+            }
+            Some(_) => {
+                self.environment_stack.pop();
+            }
+        }
+    }
+
+    // TODO: PREDICATE WITH MOD NAME IS NOT IMPLEMENTED YET
+    pub fn get_all_objs_equal_to_arg(&self, given: &str) -> Vec<String> {
+        let mut result = vec![];
+        for env in self.iter_environments_from_top() {
+            if let Some(known_equality) = env.known_equality.get(given) {
+                for obj in known_equality.iter() {
+                    result.push(obj.to_string());
+                }
+            }
+        }
+
+        result
+    }
+}
+
+impl Runtime {
+    pub fn iter_environments_from_top(&self) -> impl Iterator<Item = &Environment> {
+        self.environment_stack.iter().rev().map(|env| env.as_ref())
+    }
+
+    pub fn get_fn_set_where_fn_belongs_to(&self, atom: &Atom) -> Option<&FnSetObj> {
+        let key = atom.to_string();
+
+        for env in self.iter_environments_from_top() {
+            if let Some(definition) = env.known_fn_in_fn_set.get(&key) {
+                return Some(definition);
+            }
+        }
+
+        None
+    }
+
+    pub fn cache_well_defined_obj_contains(&self, key: &str) -> bool {
+        for env in self.iter_environments_from_top() {
+            if env.cache_well_defined_obj.contains_key(key) {
+                return true;
+            }
+        }
+        false
+    }
+
+    pub fn cache_known_facts_contains(&self, key: &str) -> (bool, (usize, usize)) {
+        for env in self.iter_environments_from_top() {
+            if let Some(line_file) = env.cache_known_fact.get(key) {
+                return (true, *line_file);
+            }
+        }
+        (false, DEFAULT_LINE_FILE)
+    }
+}
+
+impl Runtime {
+    pub fn get_tuple_obj_is_in_what_cart(&self, name: &str) -> Option<Cart> {
+        for env in self.iter_environments_from_top() {
+            if let Some(cart) = env.known_tuple_obj_in_what_cart.get(name) {
+                return Some(cart.clone());
+            }
+        }
+        None
+    }
+
+    pub fn get_normalized_calculated_value_of_obj(&self, obj_str: &str) -> Option<Number> {
+        for env in self.iter_environments_from_top() {
+            if let Some(calculated_value) =
+                env.known_normalized_calculated_value_of_obj.get(obj_str)
+            {
+                return Some(calculated_value.clone());
+            }
+        }
+        None
+    }
+}
+
+impl Runtime {
+    pub fn is_name_used_for_identifier_and_field_access(&self, name: &str) -> bool {
+        if is_builtin_identifier_obj(name) {
+            return true;
+        }
+
+        for env in self.iter_environments_from_top() {
+            if env.defined_identifier_and_field_access.contains_key(name) {
+                return true;
+            }
+        }
+
+        false
+    }
+
+    pub fn is_name_used_for_predicate_with_meaning(&self, name: &str) -> bool {
+        return self
+            .get_predicate_with_meaning_definition_by_name(name)
+            .is_some();
+    }
+
+    pub fn is_name_used_for_predicate_without_meaning(&self, name: &str) -> bool {
+        if is_builtin_predicate(name) {
+            return true;
+        }
+
+        return self
+            .get_predicate_without_meaning_definition_by_name(name)
+            .is_some();
+    }
+
+    pub fn is_name_used_for_struct_with_fields(&self, name: &str) -> bool {
+        return self
+            .get_set_struct_with_fields_definition_by_name(name)
+            .is_some();
+    }
+
+    pub fn is_name_used_for_struct_with_no_field(&self, name: &str) -> bool {
+        return self
+            .get_set_struct_with_no_field_definition_by_name(name)
+            .is_some();
+    }
+
+    pub fn is_name_used_for_algo(&self, name: &str) -> bool {
+        return self.get_algo_definition_by_name(name).is_some();
     }
 }

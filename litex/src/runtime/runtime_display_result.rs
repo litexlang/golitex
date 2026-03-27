@@ -1,6 +1,11 @@
-use super::RuntimeContext;
+use super::Runtime;
+use crate::common::defaults::DEFAULT_LINE_FILE;
+use crate::common::defaults::FILE_INDEX_FOR_BUILTIN;
 use crate::common::keywords::{COLON, PROVE};
+use crate::error::RuntimeError;
+use crate::infer::InferResult;
 use crate::result::NonErrStmtExecResult;
+use crate::result::{FactVerifiedByBuiltinRules, FactVerifiedByFact, NonFactualStmtSuccess};
 use crate::stmt::Stmt;
 
 const JSON_KEY_RESULT: &str = "result";
@@ -54,7 +59,7 @@ fn json_array_field_line(
     }
 }
 
-impl RuntimeContext {
+impl Runtime {
     pub fn display_result_json_string(&self, result: &NonErrStmtExecResult) -> String {
         self.build_display_result_json(result, 0)
     }
@@ -293,5 +298,154 @@ impl RuntimeContext {
             field_lines.join(",\n"),
             indent_outer
         )
+    }
+}
+
+impl Runtime {
+    pub(in crate::runtime) fn get_location_string_of_line_file(
+        &self,
+        line: usize,
+        file_index: usize,
+    ) -> String {
+        if (line, file_index) == DEFAULT_LINE_FILE {
+            return String::new();
+        }
+
+        let path = match self.module_manager.run_file_paths.get(file_index) {
+            Some(path) => path.clone(),
+            None => String::new(),
+        };
+
+        if path.is_empty() {
+            format!("on line {}", line)
+        } else if file_index == FILE_INDEX_FOR_BUILTIN + 1 {
+            format!("on line {}", line)
+        } else {
+            format!(
+                "on line {}, file {}",
+                line,
+                self.get_file_name_empty_if_default((line, file_index))
+            )
+        }
+    }
+
+    pub(in crate::runtime) fn format_infer_block(infer_result: &InferResult) -> String {
+        if infer_result.infer_facts.is_empty() {
+            return String::new();
+        }
+        format!("\n\ninfer:\n{}", infer_result.infer_facts.join("\n"))
+    }
+
+    pub(in crate::runtime) fn format_inside_results_block(
+        &self,
+        inside_results: &Vec<NonErrStmtExecResult>,
+    ) -> String {
+        if inside_results.is_empty() {
+            return String::new();
+        }
+        let mut display_lines: Vec<String> = Vec::new();
+        for inside_result in inside_results.iter() {
+            display_lines.push(self.display_result(inside_result));
+        }
+        format!("\n\ninside results:\n{}", display_lines.join("\n"))
+    }
+
+    fn success_prefix_by_line_file(&self, line_file: (usize, usize)) -> String {
+        if line_file == DEFAULT_LINE_FILE {
+            "Success:\n".to_string()
+        } else {
+            format!(
+                "Success on {}:\n",
+                self.get_location_string_of_line_file(line_file.0, line_file.1)
+            )
+        }
+    }
+
+    fn display_non_factual_stmt_success(
+        &self,
+        non_factual_stmt_success_result: &NonFactualStmtSuccess,
+    ) -> String {
+        let success_prefix =
+            self.success_prefix_by_line_file(non_factual_stmt_success_result.stmt.line_file());
+        let message_body = format!(
+            "{}{}{}",
+            non_factual_stmt_success_result.stmt,
+            Self::format_infer_block(&non_factual_stmt_success_result.infers),
+            self.format_inside_results_block(&non_factual_stmt_success_result.inside_results)
+        );
+        format!("{}{}", success_prefix, message_body)
+    }
+
+    fn display_fact_verified_by_fact(
+        &self,
+        fact_verified_by_fact_result: &FactVerifiedByFact,
+    ) -> String {
+        let success_prefix =
+            self.success_prefix_by_line_file(fact_verified_by_fact_result.fact.line_file());
+        let verified_by_suffix =
+            if fact_verified_by_fact_result.verified_by_line_file == DEFAULT_LINE_FILE {
+                String::new()
+            } else {
+                format!(
+                    "fact known/verified/inferred {}",
+                    self.get_location_string_of_line_file(
+                        fact_verified_by_fact_result.verified_by_line_file.0,
+                        fact_verified_by_fact_result.verified_by_line_file.1
+                    )
+                )
+            };
+        let message_body = format!(
+            "{}\nverified by {}\n{}{}",
+            fact_verified_by_fact_result.fact,
+            verified_by_suffix,
+            fact_verified_by_fact_result.verified_by,
+            Self::format_infer_block(&fact_verified_by_fact_result.infers)
+        );
+        format!("{}{}", success_prefix, message_body)
+    }
+
+    fn display_fact_verified_by_builtin_rules(
+        &self,
+        fact_verified_by_builtin_rules_result: &FactVerifiedByBuiltinRules,
+    ) -> String {
+        let success_prefix = self
+            .success_prefix_by_line_file(fact_verified_by_builtin_rules_result.fact.line_file());
+        let message_body = format!(
+            "{}\nverified by\n{}{}",
+            fact_verified_by_builtin_rules_result.fact,
+            fact_verified_by_builtin_rules_result.verified_by,
+            Self::format_infer_block(&fact_verified_by_builtin_rules_result.infers)
+        );
+        format!("{}{}", success_prefix, message_body)
+    }
+
+    pub fn display_result_non_json(&self, result: &NonErrStmtExecResult) -> String {
+        match result {
+            NonErrStmtExecResult::NonFactualStmtSuccess(non_factual_stmt_success_result) => {
+                self.display_non_factual_stmt_success(non_factual_stmt_success_result)
+            }
+            NonErrStmtExecResult::FactVerifiedByFact(fact_verified_by_fact_result) => {
+                self.display_fact_verified_by_fact(fact_verified_by_fact_result)
+            }
+            NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                fact_verified_by_builtin_rules_result,
+            ) => self.display_fact_verified_by_builtin_rules(fact_verified_by_builtin_rules_result),
+            NonErrStmtExecResult::StmtUnknown(stmt_unknown_result) => {
+                stmt_unknown_result.to_string()
+            }
+        }
+    }
+
+    pub fn display_result(&self, result: &NonErrStmtExecResult) -> String {
+        self.display_result_non_json(result)
+    }
+
+    pub fn display_error_with_label_and_location(&self, error: &RuntimeError) -> String {
+        let location_string =
+            self.get_location_string_of_line_file(error.line_file().0, error.line_file().1);
+
+        let label = error.display_label();
+
+        return format!("{}: {}", label, location_string);
     }
 }

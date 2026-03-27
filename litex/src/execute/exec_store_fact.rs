@@ -13,11 +13,11 @@ impl Runtime {
         &mut self,
         fact: &Fact,
     ) -> Result<InferResult, StoreFactError> {
-        self.runtime_context
+        self
             .top_level_env()
             .store_fact_by_ref(fact)?;
 
-        self.runtime_context
+        self
             .top_level_env()
             .store_fact_to_cache_known_fact(fact.to_string(), fact.line_file())?;
 
@@ -31,12 +31,12 @@ impl Runtime {
         &mut self,
         fact: &AndChainAtomicFact,
     ) -> Result<InferResult, StoreFactError> {
-        self.runtime_context
+        self
             .top_level_env()
             .store_and_chain_atomic_fact_by_ref(fact)?;
 
         let line_file = fact.line_file();
-        self.runtime_context
+        self
             .top_level_env()
             .store_fact_to_cache_known_fact(fact.to_string(), line_file)?;
 
@@ -50,12 +50,12 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
     ) -> Result<InferResult, StoreFactError> {
-        self.runtime_context
+        self
             .top_level_env()
             .store_atomic_fact_by_ref(fact)?;
 
         let line_file = fact.line_file();
-        self.runtime_context
+        self
             .top_level_env()
             .store_fact_to_cache_known_fact(fact.to_string(), line_file)?;
 
@@ -70,12 +70,12 @@ impl Runtime {
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
     ) -> Result<InferResult, StoreFactError> {
-        self.runtime_context
+        self
             .top_level_env()
             .store_exist_or_and_chain_atomic_fact(fact)?;
 
         let line_file = fact.line_file();
-        self.runtime_context
+        self
             .top_level_env()
             .store_fact_to_cache_known_fact(fact.to_string(), line_file)?;
 
@@ -89,12 +89,12 @@ impl Runtime {
         &mut self,
         fact: &OrAndChainAtomicFact,
     ) -> Result<InferResult, StoreFactError> {
-        self.runtime_context
+        self
             .top_level_env()
             .store_or_and_chain_atomic_fact(fact)?;
 
         let line_file = fact.line_file();
-        self.runtime_context
+        self
             .top_level_env()
             .store_fact_to_cache_known_fact(fact.to_string(), line_file)?;
 

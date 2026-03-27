@@ -70,7 +70,7 @@ impl Runtime {
         let mut all_objs_equal_to_each_arg: Vec<Vec<String>> = Vec::new();
         for arg in args_in_or_fact.iter() {
             let mut all_objs_equal_to_current_arg = self
-                .runtime_context
+                
                 .get_all_objs_equal_to_arg(&arg.to_string());
             if all_objs_equal_to_current_arg.is_empty() {
                 all_objs_equal_to_current_arg.push(arg.to_string());
@@ -78,7 +78,7 @@ impl Runtime {
             all_objs_equal_to_each_arg.push(all_objs_equal_to_current_arg);
         }
 
-        for environment in self.runtime_context.iter_environments_from_top() {
+        for environment in self.iter_environments_from_top() {
             let result = Self::verify_or_fact_with_known_or_facts_with_facts_in_environment(
                 environment,
                 or_fact,

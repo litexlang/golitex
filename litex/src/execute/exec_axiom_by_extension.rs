@@ -36,7 +36,7 @@ impl Runtime {
                 ))
             })?;
 
-        self.runtime_context.push_env();
+        self.push_env();
         let local_proof_result =
             (|| -> Result<(Vec<NonErrStmtExecResult>, Fact, Fact), RuntimeError> {
                 let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
@@ -125,7 +125,7 @@ impl Runtime {
                     right_to_left_forall_fact,
                 ))
             })();
-        self.runtime_context.pop_env();
+        self.pop_env();
         let (inside_results, _, _) = local_proof_result?;
 
         let left_equal_to_right_atomic_fact = AtomicFact::EqualFact(crate::fact::EqualFact::new(

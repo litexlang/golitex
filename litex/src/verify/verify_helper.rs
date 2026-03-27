@@ -14,7 +14,7 @@ impl Runtime {
         fact: &Fact,
     ) -> Option<NonErrStmtExecResult> {
         let key = fact.to_string();
-        let (cache_ok, cache_line_file) = self.runtime_context.cache_known_facts_contains(&key);
+        let (cache_ok, cache_line_file) = self.cache_known_facts_contains(&key);
         if cache_ok {
             Some(NonErrStmtExecResult::FactVerifiedByFact(
                 FactVerifiedByFact::new(fact.clone(), key, InferResult::new(), cache_line_file),

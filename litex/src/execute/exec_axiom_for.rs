@@ -248,13 +248,13 @@ impl Runtime {
         parameter_index_assignment: &Vec<usize>,
         param_value_strings_of_each_param: &Vec<Vec<String>>,
     ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
-        self.runtime_context.push_env();
+        self.push_env();
         let execute_result = self.exec_for_axiom_stmt_for_one_assignment_body(
             stmt,
             parameter_index_assignment,
             param_value_strings_of_each_param,
         );
-        self.runtime_context.pop_env();
+        self.pop_env();
         execute_result
     }
 

@@ -57,13 +57,13 @@ impl Runtime {
         atomic_fact: &AtomicFact,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         let mut all_objs_equal_to_arg = self
-            .runtime_context
+            
             .get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
         if all_objs_equal_to_arg.is_empty() {
             all_objs_equal_to_arg.push(atomic_fact.args()[0].to_string());
         }
 
-        for environment in self.runtime_context.iter_environments_from_top() {
+        for environment in self.iter_environments_from_top() {
             let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg)?;
             if result.is_true() {
                 return Ok(result);
@@ -78,19 +78,19 @@ impl Runtime {
         atomic_fact: &AtomicFact,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         let mut all_objs_equal_to_arg0 = self
-            .runtime_context
+            
             .get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
         if all_objs_equal_to_arg0.is_empty() {
             all_objs_equal_to_arg0.push(atomic_fact.args()[0].to_string());
         }
         let mut all_objs_equal_to_arg1 = self
-            .runtime_context
+            
             .get_all_objs_equal_to_arg(&atomic_fact.args()[1].to_string());
         if all_objs_equal_to_arg1.is_empty() {
             all_objs_equal_to_arg1.push(atomic_fact.args()[1].to_string());
         }
 
-        for environment in self.runtime_context.iter_environments_from_top() {
+        for environment in self.iter_environments_from_top() {
             let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
             if result.is_true() {
                 return Ok(result);
@@ -107,7 +107,7 @@ impl Runtime {
         let mut all_objs_equal_to_each_arg: Vec<Vec<String>> = Vec::new();
         for arg in atomic_fact.args().iter() {
             let mut all_objs_equal_to_current_arg = self
-                .runtime_context
+                
                 .get_all_objs_equal_to_arg(&arg.to_string());
             if all_objs_equal_to_current_arg.is_empty() {
                 all_objs_equal_to_current_arg.push(arg.to_string());
@@ -115,7 +115,7 @@ impl Runtime {
             all_objs_equal_to_each_arg.push(all_objs_equal_to_current_arg);
         }
 
-        for environment in self.runtime_context.iter_environments_from_top() {
+        for environment in self.iter_environments_from_top() {
             let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(
                 environment,
                 atomic_fact,
