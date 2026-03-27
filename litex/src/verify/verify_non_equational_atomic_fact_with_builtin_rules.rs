@@ -2,6 +2,7 @@ use crate::error::VerifyError;
 use crate::execute::Runtime;
 use crate::fact::IsFiniteSetFact;
 use crate::fact::{AtomicFact, Fact, GreaterFact, IsNonemptySetFact, LessFact, NotEqualFact};
+use crate::fact::{NotSubsetFact, NotSupersetFact, SubsetFact, SupersetFact};
 use crate::infer::InferResult;
 use crate::obj::{Number, Obj};
 use crate::result::FactVerifiedByBuiltinRules;
@@ -22,6 +23,18 @@ impl<'a> Runtime<'a> {
             }
             AtomicFact::InFact(in_fact) => {
                 self.verify_in_fact_with_builtin_rules(in_fact, verify_state)
+            }
+            AtomicFact::SubsetFact(subset_fact) => {
+                self.verify_subset_fact_with_builtin_rules(subset_fact, verify_state)
+            }
+            AtomicFact::SupersetFact(superset_fact) => {
+                self.verify_superset_fact_with_builtin_rules(superset_fact, verify_state)
+            }
+            AtomicFact::NotSubsetFact(not_subset_fact) => {
+                self.verify_not_subset_fact_with_builtin_rules(not_subset_fact, verify_state)
+            }
+            AtomicFact::NotSupersetFact(not_superset_fact) => {
+                self.verify_not_superset_fact_with_builtin_rules(not_superset_fact, verify_state)
             }
             AtomicFact::LessFact(_)
             | AtomicFact::GreaterFact(_)
@@ -405,6 +418,114 @@ impl<'a> Runtime<'a> {
                 ),
             )),
             _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
+        }
+    }
+
+    fn verify_subset_fact_with_builtin_rules(
+        &mut self,
+        subset_fact: &SubsetFact,
+        _verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        let converted_superset_fact = AtomicFact::SupersetFact(SupersetFact::new(
+            subset_fact.right.clone(),
+            subset_fact.left.clone(),
+            subset_fact.line_file,
+        ));
+        let verify_result = self
+            .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
+                &converted_superset_fact,
+            )?;
+        if verify_result.is_true() {
+            Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                FactVerifiedByBuiltinRules::new(
+                    Fact::AtomicFact(AtomicFact::SubsetFact(subset_fact.clone())),
+                    "subset_superset_duality".to_string(),
+                    InferResult::new(),
+                ),
+            ))
+        } else {
+            Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+        }
+    }
+
+    fn verify_superset_fact_with_builtin_rules(
+        &mut self,
+        superset_fact: &SupersetFact,
+        _verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        let converted_subset_fact = AtomicFact::SubsetFact(SubsetFact::new(
+            superset_fact.right.clone(),
+            superset_fact.left.clone(),
+            superset_fact.line_file,
+        ));
+        let verify_result = self
+            .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
+                &converted_subset_fact,
+            )?;
+        if verify_result.is_true() {
+            Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                FactVerifiedByBuiltinRules::new(
+                    Fact::AtomicFact(AtomicFact::SupersetFact(superset_fact.clone())),
+                    "subset_superset_duality".to_string(),
+                    InferResult::new(),
+                ),
+            ))
+        } else {
+            Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+        }
+    }
+
+    fn verify_not_subset_fact_with_builtin_rules(
+        &mut self,
+        not_subset_fact: &NotSubsetFact,
+        _verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        let converted_not_superset_fact = AtomicFact::NotSupersetFact(NotSupersetFact::new(
+            not_subset_fact.right.clone(),
+            not_subset_fact.left.clone(),
+            not_subset_fact.line_file,
+        ));
+        let verify_result = self
+            .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
+                &converted_not_superset_fact,
+            )?;
+        if verify_result.is_true() {
+            Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                FactVerifiedByBuiltinRules::new(
+                    Fact::AtomicFact(AtomicFact::NotSubsetFact(not_subset_fact.clone())),
+                    "subset_superset_duality".to_string(),
+                    InferResult::new(),
+                ),
+            ))
+        } else {
+            Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+        }
+    }
+
+    fn verify_not_superset_fact_with_builtin_rules(
+        &mut self,
+        not_superset_fact: &NotSupersetFact,
+        _verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        let converted_not_subset_fact = AtomicFact::NotSubsetFact(NotSubsetFact::new(
+            not_superset_fact.right.clone(),
+            not_superset_fact.left.clone(),
+            not_superset_fact.line_file,
+        ));
+        let verify_result = self
+            .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
+                &converted_not_subset_fact,
+            )?;
+        if verify_result.is_true() {
+            Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                FactVerifiedByBuiltinRules::new(
+                    Fact::AtomicFact(AtomicFact::NotSupersetFact(not_superset_fact.clone())),
+                    "subset_superset_duality".to_string(),
+                    InferResult::new(),
+                ),
+            ))
+        } else {
+            Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
         }
     }
 }

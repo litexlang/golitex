@@ -1,4 +1,11 @@
-let a, b set:
-    a $subset b
-forall x a:
-    x $in b
+prove:
+    let a, b set:
+        a $subset b
+    forall x a:
+        x $in b
+    b $superset a
+
+prove:
+    let a, b set:
+        not a $subset b
+    not b $superset a

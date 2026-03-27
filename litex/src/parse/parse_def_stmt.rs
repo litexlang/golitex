@@ -153,7 +153,7 @@ impl<'a> Runtime<'a> {
 
             if !tb.exceed_end_of_head() {
                 return Err(ParsingError::new(
-                    "expect end of line after colon in let statement".to_string(),
+                    "expect end of line after `:` in let statement".to_string(),
                     tb.line_file,
                     None,
                 ));
