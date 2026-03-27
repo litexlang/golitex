@@ -32,6 +32,7 @@ impl Runtime {
     fn infer_equal_fact_cart_from_known_side(
         &mut self,
         known_cart_obj: &crate::obj::Cart,
+        known_cart_obj_as_symbol: &Obj,
         target_obj: &Obj,
         equal_fact: &EqualFact,
         infer_result: &mut InferResult,
@@ -62,6 +63,16 @@ impl Runtime {
             infer_result,
             "cart_dim fact",
         )?;
+        self.store_known_cart_obj(
+            &known_cart_obj_as_symbol.to_string(),
+            known_cart_obj.clone(),
+            equal_fact.line_file,
+        );
+        self.store_known_cart_obj(
+            &target_obj.to_string(),
+            known_cart_obj.clone(),
+            equal_fact.line_file,
+        );
         Ok(())
     }
 
@@ -104,6 +115,7 @@ impl Runtime {
             &known_tuple_obj_as_symbol.to_string(),
             Some(known_tuple_obj.clone()),
             None,
+            equal_fact.line_file,
         );
         Ok(())
     }
@@ -132,6 +144,7 @@ impl Runtime {
         if let Obj::Cart(cart) = &equal_fact.left {
             self.infer_equal_fact_cart_from_known_side(
                 cart,
+                &equal_fact.left,
                 &equal_fact.right,
                 equal_fact,
                 &mut infer_result,
@@ -141,6 +154,7 @@ impl Runtime {
         if let Obj::Cart(cart) = &equal_fact.right {
             self.infer_equal_fact_cart_from_known_side(
                 cart,
+                &equal_fact.right,
                 &equal_fact.left,
                 equal_fact,
                 &mut infer_result,

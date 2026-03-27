@@ -51,7 +51,8 @@ pub struct Environment {
         HashMap<String, Vec<(OrFact, Rc<KnownForallFactParamsAndDom>)>>,
     pub known_obj_is_well_defined: HashMap<String, ()>,
     pub known_atom_in_fn_set: HashMap<String, FnSetObj>,
-    pub known_tuple_objs: HashMap<String, (Option<Tuple>, Option<Cart>)>,
+    pub known_tuple_objs: HashMap<String, (Option<Tuple>, Option<Cart>, (usize, usize))>,
+    pub known_cart_objs: HashMap<String, (Cart, (usize, usize))>,
     pub known_normalized_calculated_value_of_obj: HashMap<String, Number>,
 
     pub cache_well_defined_obj: HashMap<String, ()>,
@@ -91,7 +92,8 @@ impl Environment {
         >,
         known_obj_is_well_defined: HashMap<String, ()>,
         known_atom_in_fn_set: HashMap<String, FnSetObj>,
-        known_tuple_objs: HashMap<String, (Option<Tuple>, Option<Cart>)>,
+        known_tuple_objs: HashMap<String, (Option<Tuple>, Option<Cart>, (usize, usize))>,
+        known_cart_objs: HashMap<String, (Cart, (usize, usize))>,
         known_calculated_value_of_obj: HashMap<String, Number>,
         cache_known_valid_obj: HashMap<String, ()>,
         cache_known_fact: HashMap<String, (usize, usize)>,
@@ -117,6 +119,7 @@ impl Environment {
             known_obj_is_well_defined,
             known_atom_in_fn_set,
             known_tuple_objs: known_tuple_objs,
+            known_cart_objs,
             known_normalized_calculated_value_of_obj: known_calculated_value_of_obj,
             cache_well_defined_obj: cache_known_valid_obj,
             cache_known_fact,
@@ -610,6 +613,7 @@ impl Environment {
 impl Environment {
     pub fn new_empty_env() -> Self {
         Environment::new(
+            HashMap::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),

@@ -510,7 +510,7 @@ impl Runtime {
             }
             _ => {
                 // 如果能从env里拿出 tuple 和 cart，则验证成功
-                if let Some((_, _)) = self
+                if let Some((_, _, _)) = self
                     .top_level_env()
                     .known_tuple_objs
                     .get(&is_tuple_fact.set.to_string())
