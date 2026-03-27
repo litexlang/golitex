@@ -902,16 +902,14 @@ impl<'a> Runtime<'a> {
                 DEFAULT_LINE_FILE.clone(),
             ));
         };
-        let facts = ParamDefWithParamType::facts_for_boxed_args_satisfy_param_def_with_type_vec(
-            param_defs, &x.args,
-        )
-        .map_err(|e| {
-            WellDefinedError::new(
-                "failed to build facts for inst struct".to_string(),
-                Some(e),
-                DEFAULT_LINE_FILE.clone(),
-            )
-        })?;
+        let facts = ParamDefWithParamType::boxed_args_satisfy_param_def_facts(param_defs, &x.args)
+            .map_err(|e| {
+                WellDefinedError::new(
+                    "failed to build facts for inst struct".to_string(),
+                    Some(e),
+                    DEFAULT_LINE_FILE.clone(),
+                )
+            })?;
         for fact in facts.iter() {
             let result = self.verify_atomic_fact(fact, verify_state).map_err(|e| {
                 WellDefinedError::new(

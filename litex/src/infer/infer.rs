@@ -1,3 +1,4 @@
+use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::error::InferError;
 use crate::execute::Runtime;
 use crate::fact::{
@@ -5,7 +6,9 @@ use crate::fact::{
     ExistOrAndChainAtomicFact, Fact, ForallFact, ForallFactWithIff, GreaterFact, InFact,
     IsTupleFact, LessFact, NormalAtomicFact, NotEqualFact, OrAndChainAtomicFact, OrFact,
 };
+use crate::obj::InstStructObj;
 use crate::obj::{FnSetObj, Number, Obj, TupleDimObj, ZObj};
+use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
 use crate::stmt::parameter_def::ParamDefWithParamType;
 use std::collections::HashMap;
 
@@ -406,6 +409,9 @@ impl<'a> Runtime<'a> {
                 Ok(infer_result)
             }
             Obj::NObj(_) | Obj::QObj(_) | Obj::ZObj(_) | Obj::RObj(_) => Ok(InferResult::new()),
+            Obj::InstSetStructObj(inst_set_struct_obj) => {
+                self.infer_in_fact_with_obj_in_struct_obj(inst_set_struct_obj)
+            }
             _ => Ok(InferResult::new()),
         }
     }
@@ -483,5 +489,56 @@ impl<'a> Runtime<'a> {
         }
 
         Ok(infer_result)
+    }
+
+    fn infer_in_fact_with_obj_in_struct_obj(
+        &mut self,
+        inst_set_struct_obj: &InstStructObj,
+    ) -> Result<InferResult, InferError> {
+        if let Some(struct_def_without_field) = self
+            .runtime_context
+            .get_cloned_set_struct_with_no_field_definition_by_name(
+                &inst_set_struct_obj.struct_name.to_string(),
+            )
+        {
+            return self.infer_in_fact_with_obj_in_struct_obj_without_field(
+                inst_set_struct_obj,
+                &struct_def_without_field,
+            );
+        }
+
+        if let Some(struct_def_with_fields) = self
+            .runtime_context
+            .get_cloned_set_struct_with_fields_definition_by_name(
+                &inst_set_struct_obj.struct_name.to_string(),
+            )
+        {
+            return self.infer_in_fact_with_obj_in_struct_obj_with_fields(
+                inst_set_struct_obj,
+                &struct_def_with_fields,
+            );
+        }
+
+        return Err(InferError::new(
+            format!("struct `{}` not defined", inst_set_struct_obj.struct_name),
+            DEFAULT_LINE_FILE,
+            None,
+        ));
+    }
+
+    fn infer_in_fact_with_obj_in_struct_obj_without_field(
+        &mut self,
+        inst_set_struct_obj: &InstStructObj,
+        struct_def: &DefStructWithNoFieldStmt,
+    ) -> Result<InferResult, InferError> {
+        Ok(InferResult::new())
+    }
+
+    fn infer_in_fact_with_obj_in_struct_obj_with_fields(
+        &mut self,
+        inst_set_struct_obj: &InstStructObj,
+        struct_def: &DefStructWithFieldsStmt,
+    ) -> Result<InferResult, InferError> {
+        Ok(InferResult::new())
     }
 }
