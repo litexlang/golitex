@@ -48,7 +48,7 @@ impl Runtime {
         exist_fact: &ExistFact,
         known_exist_fact: &ExistFact,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        for environment in self.runtime_context.iter_environments_from_top() {
+        for environment in self.iter_environments_from_top() {
             let result = Self::verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
                 environment,
                 exist_fact,

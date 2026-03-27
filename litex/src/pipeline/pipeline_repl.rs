@@ -85,18 +85,18 @@ where
 
         let blocks = match TokenBlock::parse_blocks(
             normalized_source.as_str(),
-            runtime.runtime_context.module_manager.current_file_index,
+            runtime.module_manager.current_file_index,
         ) {
             Ok(parsed_blocks) => parsed_blocks,
             Err(parse_block_error) => {
                 let stmt_error = parse_block_error.into();
                 let error_string = if should_output_json {
                     runtime
-                        .runtime_context
+                        
                         .display_error_json_string(&stmt_error)
                 } else {
                     runtime
-                        .runtime_context
+                        
                         .display_error_with_label_and_location(&stmt_error)
                 };
                 writeln!(stdout_writer)?;
@@ -114,11 +114,11 @@ where
                     let runtime_error = parse_stmt_error.into();
                     let message = if should_output_json {
                         runtime
-                            .runtime_context
+                            
                             .display_error_json_string(&runtime_error)
                     } else {
                         runtime
-                            .runtime_context
+                            
                             .display_error_with_label_and_location(&runtime_error)
                     };
                     output_chunk.push_str(&format!("\n{}\n", message));
@@ -131,11 +131,11 @@ where
                 Err(exec_error) => {
                     let message = if should_output_json {
                         runtime
-                            .runtime_context
+                            
                             .display_error_json_string(&exec_error)
                     } else {
                         runtime
-                            .runtime_context
+                            
                             .display_error_with_label_and_location(&exec_error)
                     };
                     output_chunk.push_str(&format!("\n{}\n", message));
@@ -147,14 +147,14 @@ where
             if should_output_json {
                 output_chunk.push_str(
                     runtime
-                        .runtime_context
+                        
                         .display_result_json_string(&exec_result)
                         .as_str(),
                 );
             } else {
                 output_chunk.push_str(
                     runtime
-                        .runtime_context
+                        
                         .display_result(&exec_result)
                         .as_str(),
                 );

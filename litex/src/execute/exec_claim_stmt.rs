@@ -100,10 +100,10 @@ impl Runtime {
                         ))
                     })?;
 
-                self.runtime_context.push_env();
+                self.push_env();
                 let body_exec_result =
                     self.exec_claim_stmt_body_fact_for_forall_fact(stmt, forall_fact);
-                self.runtime_context.pop_env();
+                self.pop_env();
 
                 let non_err_after_body = match body_exec_result {
                     Ok(non_err_stmt_exec_result) => non_err_stmt_exec_result,
@@ -133,9 +133,9 @@ impl Runtime {
                         ))
                     })?;
 
-                self.runtime_context.push_env();
+                self.push_env();
                 let body_exec_result = self.exec_claim_stmt_body_fact_except_forall_fact(stmt);
-                self.runtime_context.pop_env();
+                self.pop_env();
 
                 let non_err_after_body = match body_exec_result {
                     Ok(non_err_stmt_exec_result) => non_err_stmt_exec_result,

@@ -79,12 +79,12 @@ impl Runtime {
         &mut self,
         def_prop_with_meaning_stmt: &DefPropWithMeaningStmt,
     ) -> Result<(), ExecStmtError> {
-        self.runtime_context.push_env();
+        self.push_env();
 
         let result =
             self.def_prop_with_meaning_stmt_check_well_defined_body(def_prop_with_meaning_stmt);
 
-        self.runtime_context.pop_env();
+        self.pop_env();
         result
     }
 
@@ -585,11 +585,11 @@ impl Runtime {
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
     ) -> Result<(), ExecStmtError> {
-        self.runtime_context.push_env();
+        self.push_env();
 
         let result = self.have_fn_equal_stmt_verify_well_defined_body(have_fn_equal_stmt);
 
-        self.runtime_context.pop_env();
+        self.pop_env();
         result
     }
 
@@ -822,7 +822,7 @@ impl Runtime {
             let case_fact = &have_fn_equal_case_by_case_stmt.cases[case_index];
             let equal_to = &have_fn_equal_case_by_case_stmt.equal_tos[case_index];
 
-            self.runtime_context.push_env();
+            self.push_env();
             let case_result = self
                 .have_fn_equal_case_by_case_stmt_verify_well_defined_body_for_one_case(
                     have_fn_equal_case_by_case_stmt,
@@ -830,7 +830,7 @@ impl Runtime {
                     equal_to,
                 );
 
-            self.runtime_context.pop_env();
+            self.pop_env();
             case_result?;
         }
 

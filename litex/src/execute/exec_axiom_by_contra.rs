@@ -27,7 +27,7 @@ impl Runtime {
         let exec_proof_inside_results = {
             let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
 
-            self.runtime_context.push_env();
+            self.push_env();
 
             let reverse_to_prove_fact = stmt.to_prove.make_reversed();
             self.store_atomic_fact_without_well_defined_verified_and_infer(&reverse_to_prove_fact)
@@ -79,7 +79,7 @@ impl Runtime {
                 ));
             }
 
-            self.runtime_context.pop_env();
+            self.pop_env();
             inside_results
         };
 

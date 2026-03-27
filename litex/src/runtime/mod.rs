@@ -1,9 +1,7 @@
 pub mod builtin_env_code;
 pub mod runtime;
-pub mod runtime_context;
-pub mod runtime_context_display_error;
-pub mod runtime_context_display_result_json;
+pub mod runtime_display_error;
+pub mod runtime_display_result;
 
 pub use builtin_env_code::builtin_env_code;
 pub use runtime::Runtime;
-pub use runtime_context::RuntimeContext;

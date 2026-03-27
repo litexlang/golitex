@@ -93,12 +93,12 @@ impl Runtime {
             }
         } else {
             let expected_len = if let Some(predicate_definition) = self
-                .runtime_context
+                
                 .get_predicate_with_meaning_definition_by_name(&name_string)
             {
                 ParamDefWithParamType::number_of_params(&predicate_definition.params_def_with_type)
             } else if let Some(predicate_without_meaning_definition) = self
-                .runtime_context
+                
                 .get_predicate_without_meaning_definition_by_name(&name_string)
             {
                 predicate_without_meaning_definition.params.len()
@@ -189,9 +189,9 @@ impl Runtime {
         exist_fact: &ExistFact,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        self.runtime_context.push_env();
+        self.push_env();
         let result = self.verify_exist_fact_well_defined_body(&exist_fact, verify_state);
-        self.runtime_context.pop_env();
+        self.pop_env();
         result
     }
 
@@ -225,9 +225,9 @@ impl Runtime {
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        self.runtime_context.push_env();
+        self.push_env();
         let result = self.verify_forall_fact_well_defined_body(&forall_fact, verify_state);
-        self.runtime_context.pop_env();
+        self.pop_env();
         result
     }
 
@@ -328,10 +328,10 @@ impl Runtime {
         forall_fact_with_iff: &ForallFactWithIff,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        self.runtime_context.push_env();
+        self.push_env();
         let result =
             self.verify_forall_fact_with_iff_well_defined_body(forall_fact_with_iff, verify_state);
-        self.runtime_context.pop_env();
+        self.pop_env();
         result
     }
 
