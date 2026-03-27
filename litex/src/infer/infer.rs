@@ -2,6 +2,7 @@ use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::error::InferError;
 use crate::execute::Runtime;
 use crate::fact::SubsetFact;
+use crate::fact::SupersetFact;
 use crate::fact::{
     AndChainAtomicFact, AndFact, AtomicFact, ChainFact, EqualFact, ExistFact,
     ExistOrAndChainAtomicFact, Fact, ForallFact, ForallFactWithIff, GreaterFact, InFact,
@@ -91,6 +92,7 @@ impl<'a> Runtime<'a> {
                 self.infer_normal_atomic_fact(normal_atomic_fact)
             }
             AtomicFact::SubsetFact(subset_fact) => self.infer_subset_fact(subset_fact),
+            AtomicFact::SupersetFact(superset_fact) => self.infer_superset_fact(superset_fact),
             _ => Ok(InferResult::new()),
         }
     }
@@ -585,6 +587,45 @@ impl<'a> Runtime<'a> {
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&forall_fact);
+        Ok(infer_result)
+    }
+
+    fn infer_superset_fact(
+        &mut self,
+        superset_fact: &SupersetFact,
+    ) -> Result<InferResult, InferError> {
+        let generated_param_name = self.generate_a_random_unused_name();
+        let parameter_definition = ParamDefWithParamType(
+            vec![generated_param_name.clone()],
+            ParamType::Obj(superset_fact.right.clone()),
+        );
+        let in_fact_for_forall_then =
+            ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
+                Obj::Identifier(Identifier::new(generated_param_name.clone())),
+                superset_fact.left.clone(),
+                superset_fact.line_file,
+            )));
+        let inferred_forall_fact = Fact::ForallFact(ForallFact::new(
+            vec![parameter_definition],
+            vec![],
+            vec![in_fact_for_forall_then],
+            superset_fact.line_file,
+        ));
+
+        self.store_fact_without_well_defined_verified_and_infer(&inferred_forall_fact)
+            .map_err(|previous_error| {
+                InferError::new(
+                    format!(
+                        "failed to store inferred forall fact while inferring `{}`",
+                        superset_fact
+                    ),
+                    superset_fact.line_file,
+                    Some(previous_error.into()),
+                )
+            })?;
+
+        let mut infer_result = InferResult::new();
+        infer_result.new_fact(&inferred_forall_fact);
         Ok(infer_result)
     }
 }
