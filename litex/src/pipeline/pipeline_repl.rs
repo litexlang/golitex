@@ -1,6 +1,7 @@
 use crate::common::helper::remove_windows_carriage_return;
 use crate::parse::TokenBlock;
 use crate::pipeline::run_source_code;
+use crate::pipeline::run_stmt_at_global_env;
 use crate::runtime::builtin_env_code;
 use crate::runtime::Runtime;
 use crate::stmt::Stmt;
@@ -91,13 +92,9 @@ where
             Err(parse_block_error) => {
                 let stmt_error = parse_block_error.into();
                 let error_string = if should_output_json {
-                    runtime
-                        
-                        .display_error_json_string(&stmt_error)
+                    runtime.display_error_json_string(&stmt_error)
                 } else {
-                    runtime
-                        
-                        .display_error_with_label_and_location(&stmt_error)
+                    runtime.display_error_with_label_and_location(&stmt_error)
                 };
                 writeln!(stdout_writer)?;
                 writeln!(stdout_writer, "{}", error_string)?;
@@ -113,30 +110,22 @@ where
                 Err(parse_stmt_error) => {
                     let runtime_error = parse_stmt_error.into();
                     let message = if should_output_json {
-                        runtime
-                            
-                            .display_error_json_string(&runtime_error)
+                        runtime.display_error_json_string(&runtime_error)
                     } else {
-                        runtime
-                            
-                            .display_error_with_label_and_location(&runtime_error)
+                        runtime.display_error_with_label_and_location(&runtime_error)
                     };
                     output_chunk.push_str(&format!("\n{}\n", message));
                     break;
                 }
             };
 
-            let exec_result = match runtime.exec_stmt(&stmt) {
+            let exec_result = match run_stmt_at_global_env(&stmt, &mut runtime) {
                 Ok(result) => result,
                 Err(exec_error) => {
                     let message = if should_output_json {
-                        runtime
-                            
-                            .display_error_json_string(&exec_error)
+                        runtime.display_error_json_string(&exec_error)
                     } else {
-                        runtime
-                            
-                            .display_error_with_label_and_location(&exec_error)
+                        runtime.display_error_with_label_and_location(&exec_error)
                     };
                     output_chunk.push_str(&format!("\n{}\n", message));
                     break;
@@ -145,19 +134,9 @@ where
 
             output_chunk.push('\n');
             if should_output_json {
-                output_chunk.push_str(
-                    runtime
-                        
-                        .display_result_json_string(&exec_result)
-                        .as_str(),
-                );
+                output_chunk.push_str(runtime.display_result_json_string(&exec_result).as_str());
             } else {
-                output_chunk.push_str(
-                    runtime
-                        
-                        .display_result(&exec_result)
-                        .as_str(),
-                );
+                output_chunk.push_str(runtime.display_result(&exec_result).as_str());
             }
             output_chunk.push('\n');
         }

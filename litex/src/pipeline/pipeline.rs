@@ -1,6 +1,7 @@
 use crate::common::helper::remove_windows_carriage_return;
 use crate::execute::Runtime;
 use crate::parse::TokenBlock;
+use crate::pipeline::run_stmt_at_global_env;
 use crate::runtime::builtin_env_code;
 use crate::stmt::Stmt;
 use std::fs;
@@ -30,35 +31,26 @@ pub fn run_source_code(
     runtime: &mut Runtime,
     should_output_json: bool,
 ) -> (bool, String) {
-    let blocks = match TokenBlock::parse_blocks(
-        source_code,
-        runtime.module_manager.current_file_index,
-    ) {
-        Ok(b) => b,
-        Err(e) => {
-            let runtime_error = e.into();
-            if should_output_json {
+    let blocks =
+        match TokenBlock::parse_blocks(source_code, runtime.module_manager.current_file_index) {
+            Ok(b) => b,
+            Err(e) => {
+                let runtime_error = e.into();
+                if should_output_json {
+                    return (
+                        false,
+                        format!("\n{}\n", runtime.display_error_json_string(&runtime_error)),
+                    );
+                }
                 return (
                     false,
                     format!(
                         "\n{}\n",
-                        runtime
-                            
-                            .display_error_json_string(&runtime_error)
+                        runtime.display_error_with_label_and_location(&runtime_error)
                     ),
                 );
             }
-            return (
-                false,
-                format!(
-                    "\n{}\n",
-                    runtime
-                        
-                        .display_error_with_label_and_location(&runtime_error)
-                ),
-            );
-        }
-    };
+        };
 
     let mut out = String::new();
     for mut block in blocks {
@@ -70,42 +62,27 @@ pub fn run_source_code(
                     if should_output_json {
                         out.push_str(&format!(
                             "\n{}\n",
-                            runtime
-                                
-                                .display_error_json_string(&runtime_error)
+                            runtime.display_error_json_string(&runtime_error)
                         ));
                     } else {
                         out.push_str(&format!(
                             "\n{}\n",
-                            runtime
-                                
-                                .display_error_with_label_and_location(&runtime_error)
+                            runtime.display_error_with_label_and_location(&runtime_error)
                         ));
                     }
                     return (false, out);
                 }
             }
         };
-        let result = match runtime.exec_stmt(&stmt) {
+        let result = match run_stmt_at_global_env(&stmt, runtime) {
             Ok(r) => r,
             Err(e) => {
                 if should_output_json {
-                    out.push_str(
-                        format!(
-                            "\n{}\n",
-                            runtime.display_error_json_string(&e)
-                        )
-                        .as_str(),
-                    );
+                    out.push_str(format!("\n{}\n", runtime.display_error_json_string(&e)).as_str());
                 } else {
                     out.push_str(
-                        format!(
-                            "\n{}\n",
-                            runtime
-                                
-                                .display_error_with_label_and_location(&e)
-                        )
-                        .as_str(),
+                        format!("\n{}\n", runtime.display_error_with_label_and_location(&e))
+                            .as_str(),
                     );
                 }
                 return (false, out);
@@ -113,12 +90,7 @@ pub fn run_source_code(
         };
         out.push('\n');
         if should_output_json {
-            out.push_str(
-                runtime
-                    
-                    .display_result_json_string(&result)
-                    .as_str(),
-            );
+            out.push_str(runtime.display_result_json_string(&result).as_str());
         } else {
             out.push_str(runtime.display_result(&result).as_str());
         }
