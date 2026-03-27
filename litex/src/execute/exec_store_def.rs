@@ -43,7 +43,7 @@ impl<'a> Runtime<'a> {
     pub fn store_identifier_obj(&mut self, name: &str) -> Result<(), ExecStmtError> {
         self.runtime_context
             .top_level_env()
-            .defined_identifier_objs
+            .defined_identifier_and_field_access
             .insert(name.to_string(), ());
         Ok(())
     }

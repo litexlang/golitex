@@ -24,7 +24,7 @@ use std::collections::HashMap;
 use std::fmt;
 use std::rc::Rc;
 pub struct Environment {
-    pub defined_identifier_objs: HashMap<String, ()>,
+    pub defined_identifier_and_field_access: HashMap<String, ()>,
     pub defined_props_with_meaning: HashMap<String, DefPropWithMeaningStmt>,
     pub defined_structs_with_fields: HashMap<String, DefStructWithFieldsStmt>,
     pub defined_structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>,
@@ -96,7 +96,7 @@ impl Environment {
         cache_known_fact: HashMap<String, (usize, usize)>,
     ) -> Self {
         Environment {
-            defined_identifier_objs: objs,
+            defined_identifier_and_field_access: objs,
             defined_props_with_meaning: props,
             defined_structs_with_fields: structs_with_fields,
             defined_structs_with_no_field: structs_with_no_field,
@@ -126,7 +126,11 @@ impl Environment {
 impl fmt::Display for Environment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Environment {{\n")?;
-        write!(f, "    objs: {:?}\n", self.defined_identifier_objs.len())?;
+        write!(
+            f,
+            "    objs: {:?}\n",
+            self.defined_identifier_and_field_access.len()
+        )?;
         write!(
             f,
             "    props_with_meaning: {:?}\n",
