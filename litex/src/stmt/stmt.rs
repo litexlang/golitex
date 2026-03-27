@@ -12,7 +12,7 @@ use super::definition_stmt::{
 use super::eval_stmt::EvalStmt;
 use super::know_stmt::KnowStmt;
 use super::prove_stmt::ProveStmt;
-use super::tooling_stmt::{ClearStmt, DoNothingStmt, ImportStmt, RunFileStmt};
+use super::tooling_stmt::{DoNothingStmt, ImportStmt, RunFileStmt};
 use super::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
 use crate::fact::Fact;
 use std::fmt;
@@ -35,7 +35,6 @@ pub enum Stmt {
     KnowStmt(KnowStmt),
     ProveStmt(ProveStmt),
     ImportStmt(ImportStmt),
-    ClearStmt(ClearStmt),
     DoNothingStmt(DoNothingStmt),
     RunFileStmt(RunFileStmt),
     EvalStmt(EvalStmt),
@@ -76,7 +75,6 @@ impl fmt::Display for Stmt {
             Stmt::KnowStmt(x) => write!(f, "{}", x),
             Stmt::ProveStmt(x) => write!(f, "{}", x),
             Stmt::ImportStmt(x) => write!(f, "{}", x),
-            Stmt::ClearStmt(x) => write!(f, "{}", x),
             Stmt::DoNothingStmt(x) => write!(f, "{}", x),
             Stmt::RunFileStmt(x) => write!(f, "{}", x),
             Stmt::EvalStmt(x) => write!(f, "{}", x),
@@ -113,7 +111,6 @@ impl Stmt {
             Stmt::KnowStmt(stmt) => stmt.line_file,
             Stmt::ProveStmt(stmt) => stmt.line_file,
             Stmt::ImportStmt(stmt) => stmt.line_file(),
-            Stmt::ClearStmt(stmt) => stmt.line_file,
             Stmt::DoNothingStmt(stmt) => stmt.line_file,
             Stmt::RunFileStmt(stmt) => stmt.line_file,
             Stmt::EvalStmt(stmt) => stmt.line_file,
@@ -148,7 +145,6 @@ impl Stmt {
             Stmt::KnowStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ProveStmt(stmt) => stmt.stmt_type_name(),
             Stmt::ImportStmt(stmt) => stmt.stmt_type_name(),
-            Stmt::ClearStmt(stmt) => stmt.stmt_type_name(),
             Stmt::DoNothingStmt(stmt) => stmt.stmt_type_name(),
             Stmt::RunFileStmt(stmt) => stmt.stmt_type_name(),
             Stmt::EvalStmt(stmt) => stmt.stmt_type_name(),

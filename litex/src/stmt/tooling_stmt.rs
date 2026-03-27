@@ -1,4 +1,4 @@
-use crate::common::keywords::{AS, CLEAR, DOUBLE_QUOTE, DO_NOTHING, IMPORT};
+use crate::common::keywords::{AS, DOUBLE_QUOTE, DO_NOTHING, IMPORT};
 use std::fmt;
 
 #[derive(Clone)]
@@ -111,23 +111,6 @@ impl ImportStmt {
 #[derive(Clone)]
 pub struct DoNothingStmt {
     pub line_file: (usize, usize),
-}
-
-#[derive(Clone)]
-pub struct ClearStmt {
-    pub line_file: (usize, usize),
-}
-
-impl ClearStmt {
-    pub fn new(line_file: (usize, usize)) -> Self {
-        ClearStmt { line_file }
-    }
-}
-
-impl fmt::Display for ClearStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", CLEAR)
-    }
 }
 
 impl DoNothingStmt {

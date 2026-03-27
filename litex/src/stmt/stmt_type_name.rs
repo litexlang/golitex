@@ -13,8 +13,7 @@ use super::eval_stmt::EvalStmt;
 use super::know_stmt::KnowStmt;
 use super::prove_stmt::ProveStmt;
 use super::tooling_stmt::{
-    ClearStmt, DoNothingStmt, ImportGlobalModuleStmt, ImportRelativePathStmt, ImportStmt,
-    RunFileStmt,
+    DoNothingStmt, ImportGlobalModuleStmt, ImportRelativePathStmt, ImportStmt, RunFileStmt,
 };
 use super::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
 
@@ -72,12 +71,6 @@ impl ImportStmt {
             ImportStmt::ImportRelativePath(stmt) => stmt.stmt_type_name(),
             ImportStmt::ImportGlobalModule(stmt) => stmt.stmt_type_name(),
         }
-    }
-}
-
-impl ClearStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ClearStmt".to_string()
     }
 }
 
