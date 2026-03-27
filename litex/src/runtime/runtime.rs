@@ -1,7 +1,9 @@
 use super::RuntimeContext;
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::common::is_valid_litex_name::is_valid_litex_name;
+use crate::common::keywords::BUILTIN_CODE;
 use crate::error::ParseBlockError;
+use crate::module_manager::ModuleManager;
 use crate::obj::{Add, Div, Mod, Mul, Number, Obj, Pow, Sub};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -12,7 +14,11 @@ pub struct Runtime {
 }
 
 impl Runtime {
-    pub fn new(runtime_context: RuntimeContext) -> Self {
+    pub fn new() -> Self {
+        let module_manager = ModuleManager::new_empty_module_manager(BUILTIN_CODE);
+        let runtime_context =
+            RuntimeContext::new_empty_runtime_context_with_one_env(module_manager);
+
         Runtime {
             runtime_context,
             parsing_time_name_scope_stack: vec![HashMap::new()],
