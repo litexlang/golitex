@@ -1,7 +1,10 @@
 use crate::error::VerifyError;
 use crate::execute::Runtime;
 use crate::fact::IsFiniteSetFact;
-use crate::fact::{AtomicFact, Fact, GreaterFact, IsNonemptySetFact, LessFact, NotEqualFact};
+use crate::fact::{
+    AtomicFact, Fact, GreaterEqualFact, GreaterFact, IsNonemptySetFact, LessEqualFact, LessFact,
+    NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotLessEqualFact, NotLessFact,
+};
 use crate::fact::{NotSubsetFact, NotSupersetFact, SubsetFact, SupersetFact};
 use crate::infer::InferResult;
 use crate::obj::{Number, Obj};
@@ -36,22 +39,66 @@ impl<'a> Runtime<'a> {
             AtomicFact::NotSupersetFact(not_superset_fact) => {
                 self.verify_not_superset_fact_with_builtin_rules(not_superset_fact, verify_state)
             }
-            AtomicFact::LessFact(_)
-            | AtomicFact::GreaterFact(_)
-            | AtomicFact::LessEqualFact(_)
-            | AtomicFact::GreaterEqualFact(_) => {
-                let number_compare_result = self.verify_number_comparison_builtin_rule(atomic_fact);
-                match number_compare_result {
-                    Some(true) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-                        crate::result::FactVerifiedByBuiltinRules::new(
-                            Fact::AtomicFact(atomic_fact.clone()),
-                            "number comparison".to_string(),
-                            InferResult::new(),
-                        ),
-                    )),
-                    Some(false) => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
-                    None => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
-                }
+            AtomicFact::NotLessFact(not_less_fact) => {
+                self.verify_not_less_fact_with_builtin_rules(not_less_fact, verify_state)
+            }
+            AtomicFact::NotGreaterFact(not_greater_fact) => {
+                self.verify_not_greater_fact_with_builtin_rules(not_greater_fact, verify_state)
+            }
+            AtomicFact::NotLessEqualFact(not_less_equal_fact) => self
+                .verify_not_less_equal_fact_with_builtin_rules(not_less_equal_fact, verify_state),
+            AtomicFact::NotGreaterEqualFact(not_greater_equal_fact) => self
+                .verify_not_greater_equal_fact_with_builtin_rules(
+                    not_greater_equal_fact,
+                    verify_state,
+                ),
+            AtomicFact::LessFact(less_fact) => {
+                let current_fact = AtomicFact::LessFact(less_fact.clone());
+                let counterpart_fact = AtomicFact::NotGreaterEqualFact(NotGreaterEqualFact::new(
+                    less_fact.left.clone(),
+                    less_fact.right.clone(),
+                    less_fact.line_file,
+                ));
+                self.verify_order_or_negation_fact_with_builtin_duality_and_number_compare(
+                    &current_fact,
+                    &counterpart_fact,
+                )
+            }
+            AtomicFact::GreaterFact(greater_fact) => {
+                let current_fact = AtomicFact::GreaterFact(greater_fact.clone());
+                let counterpart_fact = AtomicFact::NotLessEqualFact(NotLessEqualFact::new(
+                    greater_fact.left.clone(),
+                    greater_fact.right.clone(),
+                    greater_fact.line_file,
+                ));
+                self.verify_order_or_negation_fact_with_builtin_duality_and_number_compare(
+                    &current_fact,
+                    &counterpart_fact,
+                )
+            }
+            AtomicFact::LessEqualFact(less_equal_fact) => {
+                let current_fact = AtomicFact::LessEqualFact(less_equal_fact.clone());
+                let counterpart_fact = AtomicFact::NotGreaterFact(NotGreaterFact::new(
+                    less_equal_fact.left.clone(),
+                    less_equal_fact.right.clone(),
+                    less_equal_fact.line_file,
+                ));
+                self.verify_order_or_negation_fact_with_builtin_duality_and_number_compare(
+                    &current_fact,
+                    &counterpart_fact,
+                )
+            }
+            AtomicFact::GreaterEqualFact(greater_equal_fact) => {
+                let current_fact = AtomicFact::GreaterEqualFact(greater_equal_fact.clone());
+                let counterpart_fact = AtomicFact::NotLessFact(NotLessFact::new(
+                    greater_equal_fact.left.clone(),
+                    greater_equal_fact.right.clone(),
+                    greater_equal_fact.line_file,
+                ));
+                self.verify_order_or_negation_fact_with_builtin_duality_and_number_compare(
+                    &current_fact,
+                    &counterpart_fact,
+                )
             }
             AtomicFact::IsSetFact(is_set_fact) => Ok(
                 NonErrStmtExecResult::FactVerifiedByBuiltinRules(FactVerifiedByBuiltinRules::new(
@@ -527,5 +574,118 @@ impl<'a> Runtime<'a> {
         } else {
             Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
         }
+    }
+
+    fn verify_not_less_fact_with_builtin_rules(
+        &mut self,
+        not_less_fact: &NotLessFact,
+        _verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        let counterpart_fact = AtomicFact::GreaterEqualFact(GreaterEqualFact::new(
+            not_less_fact.left.clone(),
+            not_less_fact.right.clone(),
+            not_less_fact.line_file,
+        ));
+        self.verify_duality_atomic_fact_by_known_counterpart(
+            &AtomicFact::NotLessFact(not_less_fact.clone()),
+            &counterpart_fact,
+            "real_order_negation_duality",
+        )
+    }
+
+    fn verify_not_greater_fact_with_builtin_rules(
+        &mut self,
+        not_greater_fact: &NotGreaterFact,
+        _verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        let counterpart_fact = AtomicFact::LessEqualFact(LessEqualFact::new(
+            not_greater_fact.left.clone(),
+            not_greater_fact.right.clone(),
+            not_greater_fact.line_file,
+        ));
+        self.verify_duality_atomic_fact_by_known_counterpart(
+            &AtomicFact::NotGreaterFact(not_greater_fact.clone()),
+            &counterpart_fact,
+            "real_order_negation_duality",
+        )
+    }
+
+    fn verify_not_less_equal_fact_with_builtin_rules(
+        &mut self,
+        not_less_equal_fact: &NotLessEqualFact,
+        _verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        let counterpart_fact = AtomicFact::GreaterFact(GreaterFact::new(
+            not_less_equal_fact.left.clone(),
+            not_less_equal_fact.right.clone(),
+            not_less_equal_fact.line_file,
+        ));
+        self.verify_duality_atomic_fact_by_known_counterpart(
+            &AtomicFact::NotLessEqualFact(not_less_equal_fact.clone()),
+            &counterpart_fact,
+            "real_order_negation_duality",
+        )
+    }
+
+    fn verify_not_greater_equal_fact_with_builtin_rules(
+        &mut self,
+        not_greater_equal_fact: &NotGreaterEqualFact,
+        _verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        let counterpart_fact = AtomicFact::LessFact(LessFact::new(
+            not_greater_equal_fact.left.clone(),
+            not_greater_equal_fact.right.clone(),
+            not_greater_equal_fact.line_file,
+        ));
+        self.verify_duality_atomic_fact_by_known_counterpart(
+            &AtomicFact::NotGreaterEqualFact(not_greater_equal_fact.clone()),
+            &counterpart_fact,
+            "real_order_negation_duality",
+        )
+    }
+
+    fn verify_duality_atomic_fact_by_known_counterpart(
+        &mut self,
+        current_fact: &AtomicFact,
+        counterpart_fact: &AtomicFact,
+        builtin_rule_name: &str,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        let counterpart_verify_result = self
+            .verify_non_equational_atomic_fact_with_known_atomic_non_equational_facts(
+                counterpart_fact,
+            )?;
+        if counterpart_verify_result.is_true() {
+            Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                FactVerifiedByBuiltinRules::new(
+                    Fact::AtomicFact(current_fact.clone()),
+                    builtin_rule_name.to_string(),
+                    InferResult::new(),
+                ),
+            ))
+        } else {
+            Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+        }
+    }
+
+    fn verify_order_or_negation_fact_with_builtin_duality_and_number_compare(
+        &mut self,
+        current_fact: &AtomicFact,
+        counterpart_fact: &AtomicFact,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        let number_compare_result = self.verify_number_comparison_builtin_rule(current_fact);
+        if let Some(true) = number_compare_result {
+            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                FactVerifiedByBuiltinRules::new(
+                    Fact::AtomicFact(current_fact.clone()),
+                    "number comparison".to_string(),
+                    InferResult::new(),
+                ),
+            ));
+        }
+        self.verify_duality_atomic_fact_by_known_counterpart(
+            current_fact,
+            counterpart_fact,
+            "real_order_negation_duality",
+        )
     }
 }
