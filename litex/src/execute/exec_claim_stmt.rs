@@ -22,6 +22,7 @@ impl Runtime {
         .map_err(|define_params_error| {
             ExecStmtError::new(
                 Stmt::ClaimStmt(stmt.clone()),
+                "".to_string(),
                 Some(define_params_error.into()),
                 vec![],
             )

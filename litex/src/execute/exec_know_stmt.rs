@@ -19,6 +19,7 @@ impl Runtime {
                 .map_err(|e| {
                     ExecStmtError::new(
                         Stmt::KnowStmt(know_stmt.clone()),
+                        "".to_string(),
                         Some(e.into()),
                         vec![],
                     )
