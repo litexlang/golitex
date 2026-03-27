@@ -13,6 +13,7 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         return Err(RuntimeError::ExecStmtError(ExecStmtError::new(
             Stmt::ImportStmt(stmt.clone()),
+            "".to_string(),
             None,
             vec![],
         )));
@@ -44,6 +45,7 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
         return Err(RuntimeError::ExecStmtError(ExecStmtError::new(
             Stmt::RunFileStmt(stmt.clone()),
+            "".to_string(),
             None,
             vec![],
         )));

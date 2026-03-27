@@ -22,6 +22,7 @@ impl Runtime {
         if let Err(e) = result {
             return Err(ExecStmtError::new(
                 Stmt::DefStructWithNoFieldStmt(def_struct_with_no_field_stmt.clone()),
+                "".to_string(),
                 Some(e.into()),
                 vec![],
             ));
@@ -49,6 +50,7 @@ impl Runtime {
             .map_err(|define_params_error| {
                 ExecStmtError::new(
                     stmt_for_error.clone(),
+                    "".to_string(),
                     Some(define_params_error.into()),
                     vec![],
                 )
@@ -62,6 +64,7 @@ impl Runtime {
             .map_err(|inner_exec_error| {
                 ExecStmtError::new(
                     stmt_for_error.clone(),
+                    "".to_string(),
                     Some(inner_exec_error.into()),
                     vec![],
                 )
@@ -73,7 +76,12 @@ impl Runtime {
             &verify_state,
         )
         .map_err(|well_defined_error| {
-            ExecStmtError::new(stmt_for_error, Some(well_defined_error.into()), vec![])
+            ExecStmtError::new(
+                stmt_for_error,
+                "".to_string(),
+                Some(well_defined_error.into()),
+                vec![],
+            )
         })?;
 
         Ok(())
@@ -90,6 +98,7 @@ impl Runtime {
         if let Err(e) = result {
             return Err(ExecStmtError::new(
                 Stmt::DefStructWithFieldsStmt(def_struct_with_fields_stmt.clone()),
+                "".to_string(),
                 Some(e.into()),
                 vec![],
             ));
@@ -99,6 +108,7 @@ impl Runtime {
             .map_err(|e| {
                 ExecStmtError::new(
                     Stmt::DefStructWithFieldsStmt(def_struct_with_fields_stmt.clone()),
+                    "".to_string(),
                     Some(e.into()),
                     vec![],
                 )
@@ -123,6 +133,7 @@ impl Runtime {
             .map_err(|define_params_error| {
                 ExecStmtError::new(
                     stmt_for_error.clone(),
+                    "".to_string(),
                     Some(define_params_error.into()),
                     vec![],
                 )
@@ -133,6 +144,7 @@ impl Runtime {
                 .map_err(|well_defined_error| {
                     ExecStmtError::new(
                         stmt_for_error.clone(),
+                        "".to_string(),
                         Some(well_defined_error.into()),
                         vec![],
                     )
@@ -174,6 +186,7 @@ impl Runtime {
                 .map_err(|store_fact_error| {
                     ExecStmtError::new(
                         stmt_for_error.clone(),
+                        "".to_string(),
                         Some(store_fact_error.into()),
                         vec![],
                     )
@@ -188,6 +201,7 @@ impl Runtime {
             .map_err(|inner_exec_error| {
                 ExecStmtError::new(
                     stmt_for_error.clone(),
+                    "".to_string(),
                     Some(inner_exec_error.into()),
                     vec![],
                 )
