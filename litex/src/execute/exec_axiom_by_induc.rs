@@ -12,7 +12,7 @@ use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 use std::collections::HashMap;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn exec_by_induc_axiom_stmt(
         &mut self,
         stmt: &ByInducAxiomStmt,
@@ -59,7 +59,7 @@ impl<'a> Runtime<'a> {
     }
 }
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     fn exec_by_induc_axiom_stmt_for_one_fact(
         &mut self,
         stmt: &ByInducAxiomStmt,

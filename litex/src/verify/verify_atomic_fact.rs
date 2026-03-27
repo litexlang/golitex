@@ -5,14 +5,14 @@ use crate::fact::{AtomicFact, Fact};
 use crate::result::NonErrStmtExecResult;
 use crate::verify::VerifyState;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn verify_atomic_fact(
         &mut self,
         fact: &AtomicFact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        if let Some(cached_result) = self
-            .verify_fact_from_cache_using_display_string(&Fact::AtomicFact(fact.clone()))
+        if let Some(cached_result) =
+            self.verify_fact_from_cache_using_display_string(&Fact::AtomicFact(fact.clone()))
         {
             return Ok(cached_result);
         }

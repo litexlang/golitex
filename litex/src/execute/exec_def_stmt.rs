@@ -35,7 +35,7 @@ fn param_defs_with_type_from_fn_set_with_dom(
     param_defs_with_type
 }
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     fn build_function_obj_with_param_names(
         &self,
         function_name: &str,

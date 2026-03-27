@@ -7,7 +7,7 @@ use crate::execute::Runtime;
 use crate::stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
 use crate::stmt::Stmt;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn parse_witness_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(WITNESS)?;
         if tb.current_token_is_equal_to(EXIST) {

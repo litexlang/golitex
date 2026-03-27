@@ -6,7 +6,7 @@ use crate::fact::Fact;
 use crate::stmt::know_stmt::KnowStmt;
 use crate::stmt::Stmt;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn know_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(KNOW)?;
         if tb.current_token_is_equal_to(COLON) {

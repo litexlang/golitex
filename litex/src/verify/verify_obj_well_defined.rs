@@ -18,7 +18,7 @@ use crate::obj::{
 use crate::stmt::parameter_def::{ParamDefWithParamSet, ParamDefWithParamType, ParamType};
 use crate::verify::VerifyState;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     fn verify_obj_well_defined_from_cache_if_known(&self, obj: &Obj) -> Option<()> {
         let key = obj.to_string();
         if self.runtime_context.cache_well_defined_obj_contains(&key) {
@@ -1202,7 +1202,7 @@ impl<'a> Runtime<'a> {
     }
 }
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn verify_param_type_well_defined(
         &mut self,
         param_type: &ParamType,

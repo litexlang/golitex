@@ -4,7 +4,7 @@ use crate::result::NonErrStmtExecResult;
 use crate::stmt::axiom_stmt::{ByCartDefAxiomStmt, ByFnDefAxiomStmt};
 use crate::stmt::Stmt;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn exec_by_fn_def_axiom_stmt(
         &mut self,
         stmt: &ByFnDefAxiomStmt,

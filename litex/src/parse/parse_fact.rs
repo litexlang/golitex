@@ -16,7 +16,7 @@ use crate::obj::Identifier;
 use crate::obj::IdentifierOrIdentifierWithMod;
 use crate::stmt::parameter_def::ParamDefWithParamType;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn parse_fact(&mut self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {
         match tb.current()? {
             FORALL => self.parse_forall_or_forall_with_iff(tb),

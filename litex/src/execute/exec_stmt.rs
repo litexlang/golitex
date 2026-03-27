@@ -3,7 +3,7 @@ use crate::error::{ExecStmtError, RuntimeError};
 use crate::result::NonErrStmtExecResult;
 use crate::stmt::Stmt;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<NonErrStmtExecResult, RuntimeError> {
         match stmt {
             Stmt::DefLetStmt(d) => self.def_let_stmt(d).map_err(RuntimeError::from),

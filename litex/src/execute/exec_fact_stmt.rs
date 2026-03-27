@@ -5,7 +5,7 @@ use crate::result::NonErrStmtExecResult;
 use crate::verify::VerifyState;
 use std::result::Result;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn exec_fact(&mut self, fact: &Fact) -> Result<NonErrStmtExecResult, RuntimeError> {
         let result = self.verify_fact_return_err_if_not_true(fact, &VerifyState::new(0, false))?;
 

@@ -17,7 +17,7 @@ use crate::stmt::definition_stmt::{
 use crate::stmt::parameter_def::ParamDefWithParamType;
 use crate::stmt::Stmt;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn parse_def_prop_with_meaning_stmt_or_prop_without_meaning(
         &mut self,
         tb: &mut TokenBlock,

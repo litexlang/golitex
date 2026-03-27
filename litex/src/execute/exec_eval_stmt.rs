@@ -9,7 +9,7 @@ use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 use std::collections::HashMap;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     fn evaluate_symbol_obj_recursively(
         &mut self,
         obj_to_evaluate: &Obj,

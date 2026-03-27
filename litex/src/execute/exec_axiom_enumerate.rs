@@ -8,7 +8,7 @@ use crate::stmt::axiom_stmt::EnumerateAxiomStmt;
 use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn exec_enumerate_axiom_stmt(
         &mut self,
         stmt: &EnumerateAxiomStmt,

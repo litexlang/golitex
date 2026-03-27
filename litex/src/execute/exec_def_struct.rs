@@ -9,7 +9,7 @@ use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoField
 use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn def_struct_with_no_field_stmt(
         &mut self,
         def_struct_with_no_field_stmt: &DefStructWithNoFieldStmt,

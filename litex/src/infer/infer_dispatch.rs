@@ -6,7 +6,7 @@ use crate::fact::{
 };
 use crate::infer::InferResult;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     /// Dispatch infer by fact kind.
     /// Example: `a $subset b` enters atomic infer branch.
     pub fn infer(&mut self, fact: &Fact) -> Result<InferResult, InferError> {

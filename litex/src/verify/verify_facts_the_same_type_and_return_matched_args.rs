@@ -7,7 +7,7 @@ use crate::fact::{
 use crate::obj::Obj;
 use crate::stmt::parameter_def::ParamType;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn _verify_exist_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(
         fact: &ExistOrAndChainAtomicFact,
         other: &ExistOrAndChainAtomicFact,

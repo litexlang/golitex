@@ -8,7 +8,7 @@ use crate::verify::VerifyState;
 
 use crate::fact::AndChainAtomicFact;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn store_fact_without_well_defined_verified_and_infer(
         &mut self,
         fact: &Fact,

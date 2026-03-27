@@ -164,7 +164,7 @@ fn compare_number_strings(
     non_negative_compare_result
 }
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn verify_number_comparison_builtin_rule(&self, atomic_fact: &AtomicFact) -> Option<bool> {
         match atomic_fact {
             AtomicFact::LessFact(less_fact) => {
