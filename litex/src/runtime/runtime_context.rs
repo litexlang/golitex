@@ -84,6 +84,24 @@ impl<'a> RuntimeContext<'a> {
         None
     }
 
+    pub fn get_cloned_set_struct_with_fields_definition_by_name(
+        &self,
+        set_struct_name: &str,
+    ) -> Option<DefStructWithFieldsStmt> {
+        let parts = set_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        if parts.len() != 1 {
+            panic!("NOT IMPLEMENTED YET");
+        }
+
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment.defined_structs_with_fields.get(set_struct_name) {
+                return Some(definition.clone());
+            }
+        }
+
+        None
+    }
+
     pub fn get_set_struct_with_fields_definition_by_name(
         &self,
         set_struct_name: &str,
@@ -126,6 +144,27 @@ impl<'a> RuntimeContext<'a> {
                 .get(set_struct_name)
             {
                 return Some(definition);
+            }
+        }
+
+        None
+    }
+
+    pub fn get_cloned_set_struct_with_no_field_definition_by_name(
+        &self,
+        set_struct_name: &str,
+    ) -> Option<DefStructWithNoFieldStmt> {
+        let parts = set_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
+        if parts.len() != 1 {
+            panic!("NOT IMPLEMENTED YET");
+        }
+
+        for environment in self.iter_environments_from_top() {
+            if let Some(definition) = environment
+                .defined_structs_with_no_field
+                .get(set_struct_name)
+            {
+                return Some(definition.clone());
             }
         }
 
