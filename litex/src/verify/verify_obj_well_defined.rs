@@ -21,7 +21,7 @@ use crate::verify::VerifyState;
 impl Runtime {
     fn verify_obj_well_defined_from_cache_if_known(&self, obj: &Obj) -> Option<()> {
         let key = obj.to_string();
-        if self.runtime_context.cache_well_defined_obj_contains(&key) {
+        if self.cache_well_defined_obj_contains(&key) {
             Some(())
         } else {
             None
@@ -99,7 +99,7 @@ impl Runtime {
         }?;
 
         if use_cache {
-            self.runtime_context
+            self
                 .top_level_env()
                 .cache_well_defined_obj
                 .insert(obj.to_string(), ());
@@ -112,7 +112,7 @@ impl Runtime {
         identifier: &Identifier,
     ) -> Result<(), WellDefinedError> {
         if self
-            .runtime_context
+            
             .is_name_used_for_identifier_and_field_access(&identifier.name)
         {
             Ok(())
@@ -140,7 +140,7 @@ impl Runtime {
     fn verify_field_access_well_defined(&self, x: &FieldAccess) -> Result<(), WellDefinedError> {
         let key = x.to_string();
         if self
-            .runtime_context
+            
             .is_name_used_for_identifier_and_field_access(&key)
         {
             return Ok(());
@@ -170,7 +170,7 @@ impl Runtime {
         fn_obj: &FnObj,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        let mut the_set_where_current_fn_obj_is_in = self.runtime_context.get_fn_set_where_fn_belongs_to(&fn_obj.head).ok_or_else(|| WellDefinedError::new(
+        let mut the_set_where_current_fn_obj_is_in = self.get_fn_set_where_fn_belongs_to(&fn_obj.head).ok_or_else(|| WellDefinedError::new(
             todo_error_message("verify_fn_obj_well_defined: function head identifier has no known definition yet".to_string()).to_string(),None,
             DEFAULT_LINE_FILE.clone(),
         ))?.clone();
@@ -731,9 +731,9 @@ impl Runtime {
         x: &SetBuilder,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        self.runtime_context.push_env();
+        self.push_env();
         let result = self.verify_set_builder_well_defined_body(x, verify_state);
-        self.runtime_context.pop_env();
+        self.pop_env();
         result
     }
 
@@ -792,9 +792,9 @@ impl Runtime {
         x: &FnSetWithParams,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        self.runtime_context.push_env();
+        self.push_env();
         let result = self.verify_fn_set_with_dom_well_defined_body(x, verify_state);
-        self.runtime_context.pop_env();
+        self.pop_env();
         result
     }
 
@@ -871,9 +871,9 @@ impl Runtime {
         x: &InstStructObj,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        self.runtime_context.push_env();
+        self.push_env();
         let result = self.verify_inst_set_struct_obj_well_defined_body(x, verify_state);
-        self.runtime_context.pop_env();
+        self.pop_env();
         result
     }
 
@@ -883,12 +883,12 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
         let param_defs = if let Some(def) = self
-            .runtime_context
+            
             .get_set_struct_with_fields_definition_by_name(x.struct_name.to_string().as_str())
         {
             &def.params_def_with_type
         } else if let Some(def) = self
-            .runtime_context
+            
             .get_set_struct_with_no_field_definition_by_name(x.struct_name.to_string().as_str())
         {
             &def.params_def_with_type
@@ -1116,7 +1116,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.obj, verify_state)?;
 
         let cart_obj_where_tuple_obj_is = self
-            .runtime_context
+            
             .get_tuple_obj_is_in_what_cart(&x.obj.to_string())
             .ok_or_else(|| {
                 WellDefinedError::new(

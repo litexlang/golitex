@@ -14,7 +14,7 @@ impl Runtime {
         if let Some(right_calculated_value) =
             self.get_known_normalized_calculated_value_for_obj(&equal_fact.right)
         {
-            self.runtime_context
+            self
                 .top_level_env()
                 .known_normalized_calculated_value_of_obj
                 .insert(equal_fact.left.to_string(), right_calculated_value);
@@ -23,7 +23,7 @@ impl Runtime {
         if let Some(left_calculated_value) =
             self.get_known_normalized_calculated_value_for_obj(&equal_fact.left)
         {
-            self.runtime_context
+            self
                 .top_level_env()
                 .known_normalized_calculated_value_of_obj
                 .insert(equal_fact.right.to_string(), left_calculated_value);
@@ -40,7 +40,7 @@ impl Runtime {
     ) -> Result<InferResult, InferError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
         let predicate_definition = match self
-            .runtime_context
+            
             .get_predicate_with_meaning_definition_by_name(&predicate_name)
         {
             Some(predicate_definition) => predicate_definition.clone(),

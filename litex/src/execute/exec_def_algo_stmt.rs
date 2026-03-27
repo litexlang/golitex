@@ -33,11 +33,11 @@ impl Runtime {
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
-        self.runtime_context.push_env();
+        self.push_env();
 
         let result = self.exec_def_algo_stmt_verify_process_body(def_algo_stmt);
 
-        self.runtime_context.pop_env();
+        self.pop_env();
 
         result
     }
@@ -47,7 +47,7 @@ impl Runtime {
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
         let fn_set_where_algo_belongs = match self
-            .runtime_context
+            
             .get_fn_set_where_fn_belongs_to(&Atom::Identifier(Identifier::new(
                 def_algo_stmt.name.clone(),
             ))) {

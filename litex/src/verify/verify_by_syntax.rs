@@ -14,11 +14,11 @@ impl Runtime {
                         a.name == b.name
                     } else {
                         match (
-                            self.runtime_context
+                            self
                                 .module_manager
                                 .module_name_and_path_map
                                 .get(&a.mod_name),
-                            self.runtime_context
+                            self
                                 .module_manager
                                 .module_name_and_path_map
                                 .get(&b.mod_name),
@@ -47,11 +47,11 @@ impl Runtime {
                                 })
                     } else {
                         match (
-                            self.runtime_context
+                            self
                                 .module_manager
                                 .module_name_and_path_map
                                 .get(&a.mod_name),
-                            self.runtime_context
+                            self
                                 .module_manager
                                 .module_name_and_path_map
                                 .get(&b.mod_name),

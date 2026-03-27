@@ -32,7 +32,7 @@ pub fn run_source_code(
 ) -> (bool, String) {
     let blocks = match TokenBlock::parse_blocks(
         source_code,
-        runtime.runtime_context.module_manager.current_file_index,
+        runtime.module_manager.current_file_index,
     ) {
         Ok(b) => b,
         Err(e) => {
@@ -43,7 +43,7 @@ pub fn run_source_code(
                     format!(
                         "\n{}\n",
                         runtime
-                            .runtime_context
+                            
                             .display_error_json_string(&runtime_error)
                     ),
                 );
@@ -53,7 +53,7 @@ pub fn run_source_code(
                 format!(
                     "\n{}\n",
                     runtime
-                        .runtime_context
+                        
                         .display_error_with_label_and_location(&runtime_error)
                 ),
             );
@@ -71,14 +71,14 @@ pub fn run_source_code(
                         out.push_str(&format!(
                             "\n{}\n",
                             runtime
-                                .runtime_context
+                                
                                 .display_error_json_string(&runtime_error)
                         ));
                     } else {
                         out.push_str(&format!(
                             "\n{}\n",
                             runtime
-                                .runtime_context
+                                
                                 .display_error_with_label_and_location(&runtime_error)
                         ));
                     }
@@ -93,7 +93,7 @@ pub fn run_source_code(
                     out.push_str(
                         format!(
                             "\n{}\n",
-                            runtime.runtime_context.display_error_json_string(&e)
+                            runtime.display_error_json_string(&e)
                         )
                         .as_str(),
                     );
@@ -102,7 +102,7 @@ pub fn run_source_code(
                         format!(
                             "\n{}\n",
                             runtime
-                                .runtime_context
+                                
                                 .display_error_with_label_and_location(&e)
                         )
                         .as_str(),
@@ -115,12 +115,12 @@ pub fn run_source_code(
         if should_output_json {
             out.push_str(
                 runtime
-                    .runtime_context
+                    
                     .display_result_json_string(&result)
                     .as_str(),
             );
         } else {
-            out.push_str(runtime.runtime_context.display_result(&result).as_str());
+            out.push_str(runtime.display_result(&result).as_str());
         }
         out.push('\n');
     }

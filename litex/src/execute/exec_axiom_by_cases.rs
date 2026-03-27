@@ -30,9 +30,9 @@ impl Runtime {
 
         let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
         for case_index in 0..stmt.cases.len() {
-            self.runtime_context.push_env();
+            self.push_env();
             let one_case_result = self.exec_by_cases_axiom_stmt_for_one_case(stmt, case_index);
-            self.runtime_context.pop_env();
+            self.pop_env();
 
             match one_case_result {
                 Ok(mut one_case_inside_results) => {

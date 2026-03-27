@@ -10,9 +10,9 @@ impl Runtime {
         &mut self,
         stmt: &ProveStmt,
     ) -> Result<NonErrStmtExecResult, RuntimeError> {
-        self.runtime_context.push_env();
+        self.push_env();
         let inside_results = self.exec_prove_stmt_body(stmt);
-        self.runtime_context.pop_env();
+        self.pop_env();
 
         match inside_results {
             Ok(inside_results) => Ok(NonErrStmtExecResult::NonFactualStmtSuccess(

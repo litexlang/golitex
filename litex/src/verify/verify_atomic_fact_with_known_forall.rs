@@ -43,9 +43,9 @@ impl Runtime {
         let key = given_fact.key();
         let is_true = given_fact.is_true();
 
-        let envs_count = self.runtime_context.environment_stack.len();
+        let envs_count = self.environment_stack.len();
         for i in iterate_from_env_index..envs_count {
-            let env = &self.runtime_context.environment_stack[envs_count - 1 - i];
+            let env = &self.environment_stack[envs_count - 1 - i];
             if let Some(known_forall_facts_in_env) = env
                 .known_atomic_facts_in_forall_facts
                 .get(&(key.clone(), is_true))

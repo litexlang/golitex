@@ -30,9 +30,9 @@ impl Runtime {
 
         let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
 
-        self.runtime_context.push_env();
+        self.push_env();
         let result = self.verify_forall_fact_body(forall_fact, &verify_state_for_children);
-        self.runtime_context.pop_env();
+        self.pop_env();
 
         result
     }

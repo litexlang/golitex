@@ -137,7 +137,7 @@ impl Runtime {
             }
         }
 
-        let algo_definition = match self.runtime_context.get_algo_definition_by_name(&fn_name) {
+        let algo_definition = match self.get_algo_definition_by_name(&fn_name) {
             Some(definition) => definition.clone(),
             None => {
                 return Err(RuntimeError::ExecStmtError(
@@ -258,9 +258,9 @@ impl Runtime {
             ));
         }
 
-        self.runtime_context.push_env();
+        self.push_env();
         let eval_result = self.evaluate_symbol_obj_recursively(&stmt.obj_to_eval, stmt);
-        self.runtime_context.pop_env();
+        self.pop_env();
 
         let evaluated_obj = eval_result?;
         let evaluated_equal_fact = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(

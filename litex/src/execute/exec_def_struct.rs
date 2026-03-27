@@ -14,10 +14,10 @@ impl Runtime {
         &mut self,
         def_struct_with_no_field_stmt: &DefStructWithNoFieldStmt,
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
-        self.runtime_context.push_env();
+        self.push_env();
         let result =
             self.def_struct_with_no_field_stmt_verify_process(def_struct_with_no_field_stmt);
-        self.runtime_context.pop_env();
+        self.pop_env();
 
         if let Err(e) = result {
             return Err(ExecStmtError::new(
@@ -83,9 +83,9 @@ impl Runtime {
         &mut self,
         def_struct_with_fields_stmt: &DefStructWithFieldsStmt,
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
-        self.runtime_context.push_env();
+        self.push_env();
         let result = self.def_struct_with_fields_stmt_verify_process(def_struct_with_fields_stmt);
-        self.runtime_context.pop_env();
+        self.pop_env();
 
         if let Err(e) = result {
             return Err(ExecStmtError::new(
