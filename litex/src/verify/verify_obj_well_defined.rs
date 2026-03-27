@@ -99,8 +99,7 @@ impl Runtime {
         }?;
 
         if use_cache {
-            self
-                .top_level_env()
+            self.top_level_env()
                 .cache_well_defined_obj
                 .insert(obj.to_string(), ());
         }
@@ -111,10 +110,7 @@ impl Runtime {
         &self,
         identifier: &Identifier,
     ) -> Result<(), WellDefinedError> {
-        if self
-            
-            .is_name_used_for_identifier_and_field_access(&identifier.name)
-        {
+        if self.is_name_used_for_identifier_and_field_access(&identifier.name) {
             Ok(())
         } else {
             Err(WellDefinedError::new(
@@ -139,10 +135,7 @@ impl Runtime {
 
     fn verify_field_access_well_defined(&self, x: &FieldAccess) -> Result<(), WellDefinedError> {
         let key = x.to_string();
-        if self
-            
-            .is_name_used_for_identifier_and_field_access(&key)
-        {
+        if self.is_name_used_for_identifier_and_field_access(&key) {
             return Ok(());
         }
 
@@ -882,14 +875,12 @@ impl Runtime {
         x: &InstStructObj,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        let param_defs = if let Some(def) = self
-            
-            .get_set_struct_with_fields_definition_by_name(x.struct_name.to_string().as_str())
+        let param_defs = if let Some(def) =
+            self.get_set_struct_with_fields_definition_by_name(x.struct_name.to_string().as_str())
         {
             &def.params_def_with_type
-        } else if let Some(def) = self
-            
-            .get_set_struct_with_no_field_definition_by_name(x.struct_name.to_string().as_str())
+        } else if let Some(def) =
+            self.get_set_struct_with_no_field_definition_by_name(x.struct_name.to_string().as_str())
         {
             &def.params_def_with_type
         } else {
@@ -1116,7 +1107,6 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.obj, verify_state)?;
 
         let cart_obj_where_tuple_obj_is = self
-            
             .get_tuple_obj_is_in_what_cart(&x.obj.to_string())
             .ok_or_else(|| {
                 WellDefinedError::new(

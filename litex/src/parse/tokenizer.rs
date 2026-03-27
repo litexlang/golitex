@@ -9,7 +9,7 @@ pub fn tokenize_line(line: &str) -> Vec<String> {
 
     while i < bytes.len() {
         // Ensure `i` is always on a UTF-8 char boundary before slicing `line[i..]`.
-        // Otherwise Rust will panic when `&line[i..j]` is evaluated.
+        // Otherwise Rust will unreachable when `&line[i..j]` is evaluated.
         if !line.is_char_boundary(i) {
             let mut char_start = i;
             while char_start > 0 && !line.is_char_boundary(char_start) {

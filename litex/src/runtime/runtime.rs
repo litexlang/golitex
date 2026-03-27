@@ -282,7 +282,7 @@ impl Runtime {
     ) -> Option<&DefPropWithMeaningStmt> {
         let parts = predicate_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
-            panic!("NOT IMPLEMENTED YET");
+            unimplemented!();
         }
 
         for environment in self.iter_environments_from_top() {
@@ -301,7 +301,7 @@ impl Runtime {
     ) -> Option<&DefPropWithoutMeaningStmt> {
         let parts = predicate_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
-            panic!("NOT IMPLEMENTED YET");
+            unimplemented!();
         }
 
         for environment in self.iter_environments_from_top() {
@@ -322,7 +322,7 @@ impl Runtime {
     ) -> Option<DefStructWithFieldsStmt> {
         let parts = set_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
-            panic!("NOT IMPLEMENTED YET");
+            unimplemented!();
         }
 
         for environment in self.iter_environments_from_top() {
@@ -340,7 +340,7 @@ impl Runtime {
     ) -> Option<&DefStructWithFieldsStmt> {
         let parts = set_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
-            panic!("NOT IMPLEMENTED YET");
+            unimplemented!();
         }
 
         for environment in self.iter_environments_from_top() {
@@ -367,7 +367,7 @@ impl Runtime {
     ) -> Option<&DefStructWithNoFieldStmt> {
         let parts = set_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
-            panic!("NOT IMPLEMENTED YET");
+            unimplemented!();
         }
 
         for environment in self.iter_environments_from_top() {
@@ -388,7 +388,7 @@ impl Runtime {
     ) -> Option<DefStructWithNoFieldStmt> {
         let parts = set_struct_name.split(MOD_SIGN).collect::<Vec<&str>>();
         if parts.len() != 1 {
-            panic!("NOT IMPLEMENTED YET");
+            unimplemented!();
         }
 
         for environment in self.iter_environments_from_top() {

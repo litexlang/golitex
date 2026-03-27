@@ -37,7 +37,7 @@ pub fn vec_pair_to_string<A: fmt::Display, B: fmt::Display>(
     right: &Vec<B>,
 ) -> String {
     if left.len() != right.len() {
-        panic!("left and right must have the same length");
+        unreachable!("left and right must have the same length");
     }
     left.iter()
         .zip(right.iter())
