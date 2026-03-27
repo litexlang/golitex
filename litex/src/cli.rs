@@ -4,9 +4,9 @@ use litex::pipeline::run_repl;
 use litex::pipeline::run_source_code;
 use litex::pipeline::run_source_code_in_file_and_return_json_string;
 use litex::pipeline::run_source_code_in_file_and_return_string;
+use litex::runtime::builtin_env_code;
 use litex::runtime::Runtime;
 use litex::runtime::RuntimeContext;
-use litex::runtime::BUILTIN_ENV_CODE;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process;
@@ -73,7 +73,7 @@ pub fn run_cli() {
                     RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager);
                 let mut runtime = Runtime::new(&mut runtime_context);
 
-                let (ok, msg) = run_source_code(BUILTIN_ENV_CODE, &mut runtime, true);
+                let (ok, msg) = run_source_code(builtin_env_code().as_str(), &mut runtime, true);
                 if !ok {
                     eprintln!("builtin code execution failed: {}", msg);
                     process::exit(1);

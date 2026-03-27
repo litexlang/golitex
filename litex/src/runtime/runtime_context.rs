@@ -342,48 +342,13 @@ impl<'a> RuntimeContext<'a> {
         self.display_result_non_json(result)
     }
 
-    pub fn display_error(&self, error: &RuntimeError) -> String {
+    pub fn display_error_with_label_and_location(&self, error: &RuntimeError) -> String {
         let location_string =
             self.get_location_string_of_line_file(error.line_file().0, error.line_file().1);
 
-        match error {
-            RuntimeError::ArithmeticError(_) => {
-                format!("ArithmeticError: {}", location_string)
-            }
-            RuntimeError::NewAtomicFactError(_) => {
-                format!("NewAtomicFactError: {}", location_string)
-            }
-            RuntimeError::StoreFactError(_) => {
-                format!("StoreFactError: {}", location_string)
-            }
-            RuntimeError::ParseBlockError(_) => {
-                format!("ParseBlockError: {}", location_string)
-            }
-            RuntimeError::ParsingError(_) => {
-                format!("ParsingError: {}", location_string)
-            }
-            RuntimeError::ExecStmtError(_) => {
-                format!("ExecStmtError: {}", location_string)
-            }
-            RuntimeError::UnknownError(_) => {
-                format!("UnknownError: {}", location_string)
-            }
-            RuntimeError::WellDefinedError(_) => {
-                format!("WellDefinedError: {}", location_string)
-            }
-            RuntimeError::VerifyError(_) => {
-                format!("VerifyError: {}", location_string)
-            }
-            RuntimeError::VerifyUnknownError(_) => {
-                format!("VerifyUnknownError: {}", location_string)
-            }
-            RuntimeError::InferError(_) => {
-                format!("InferError: {}", location_string)
-            }
-            RuntimeError::NameAlreadyUsedError(_) => {
-                format!("NameAlreadyUsedError: {}", location_string)
-            }
-        }
+        let label = error.display_label();
+
+        return format!("{}: {}", label, location_string);
     }
 }
 
