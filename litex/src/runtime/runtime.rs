@@ -188,7 +188,7 @@ impl<'a> Runtime<'a> {
 }
 
 impl<'a> Runtime<'a> {
-    pub fn generate_an_unused_name(&self) -> String {
+    pub fn generate_a_random_unused_name(&self) -> String {
         let available_chars: Vec<char> = "abcdefghijklmnopqrstuvwxyz0123456789".chars().collect();
         let first_char_candidates: Vec<char> = "abcdefghijklmnopqrstuvwxyz".chars().collect();
         let mut try_index: usize = 0;

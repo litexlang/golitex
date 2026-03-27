@@ -1,15 +1,17 @@
 use crate::common::defaults::DEFAULT_LINE_FILE;
 use crate::error::InferError;
 use crate::execute::Runtime;
+use crate::fact::SubsetFact;
 use crate::fact::{
     AndChainAtomicFact, AndFact, AtomicFact, ChainFact, EqualFact, ExistFact,
     ExistOrAndChainAtomicFact, Fact, ForallFact, ForallFactWithIff, GreaterFact, InFact,
     IsTupleFact, LessFact, NormalAtomicFact, NotEqualFact, OrAndChainAtomicFact, OrFact,
 };
+use crate::obj::Identifier;
 use crate::obj::InstStructObj;
 use crate::obj::{FnSetObj, Number, Obj, TupleDimObj, ZObj};
 use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
-use crate::stmt::parameter_def::ParamDefWithParamType;
+use crate::stmt::parameter_def::{ParamDefWithParamType, ParamType};
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
@@ -88,6 +90,7 @@ impl<'a> Runtime<'a> {
             AtomicFact::NormalAtomicFact(normal_atomic_fact) => {
                 self.infer_normal_atomic_fact(normal_atomic_fact)
             }
+            AtomicFact::SubsetFact(subset_fact) => self.infer_subset_fact(subset_fact),
             _ => Ok(InferResult::new()),
         }
     }
@@ -528,17 +531,60 @@ impl<'a> Runtime<'a> {
 
     fn infer_in_fact_with_obj_in_struct_obj_without_field(
         &mut self,
-        inst_set_struct_obj: &InstStructObj,
-        struct_def: &DefStructWithNoFieldStmt,
+        _inst_set_struct_obj: &InstStructObj,
+        _struct_def: &DefStructWithNoFieldStmt,
     ) -> Result<InferResult, InferError> {
-        Ok(InferResult::new())
+        return Err(InferError::new(
+            format!("unimplemented: infer in fact with obj in struct obj without field"),
+            DEFAULT_LINE_FILE,
+            None,
+        ));
     }
 
     fn infer_in_fact_with_obj_in_struct_obj_with_fields(
         &mut self,
-        inst_set_struct_obj: &InstStructObj,
-        struct_def: &DefStructWithFieldsStmt,
+        _inst_set_struct_obj: &InstStructObj,
+        _struct_def: &DefStructWithFieldsStmt,
     ) -> Result<InferResult, InferError> {
-        Ok(InferResult::new())
+        return Err(InferError::new(
+            format!("unimplemented: infer in fact with obj in struct obj with fields"),
+            DEFAULT_LINE_FILE,
+            None,
+        ));
+    }
+
+    fn infer_subset_fact(&mut self, _subset_fact: &SubsetFact) -> Result<InferResult, InferError> {
+        let generate_param_name = &self.generate_a_random_unused_name();
+        let param_def = ParamDefWithParamType(
+            vec![generate_param_name.clone()],
+            ParamType::Obj(_subset_fact.left.clone()),
+        );
+        let in_fact = ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
+            Obj::Identifier(Identifier::new(generate_param_name.clone())),
+            _subset_fact.right.clone(),
+            _subset_fact.line_file,
+        )));
+        let forall_fact = Fact::ForallFact(ForallFact::new(
+            vec![param_def],
+            vec![],
+            vec![in_fact],
+            _subset_fact.line_file,
+        ));
+
+        self.store_fact_without_well_defined_verified_and_infer(&forall_fact)
+            .map_err(|previous_error| {
+                InferError::new(
+                    format!(
+                        "failed to store inferred forall fact while inferring `{}`",
+                        _subset_fact
+                    ),
+                    _subset_fact.line_file,
+                    Some(previous_error.into()),
+                )
+            })?;
+
+        let mut infer_result = InferResult::new();
+        infer_result.new_fact(&forall_fact);
+        Ok(infer_result)
     }
 }

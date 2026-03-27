@@ -27,7 +27,10 @@ impl<'a> Runtime<'a> {
             .map_err(|well_defined_error| {
                 RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                     Stmt::ByExtensionAxiomStmt(stmt.clone()),
-                    format!("by_extension: right set `{}` is not well-defined", stmt.right),
+                    format!(
+                        "by_extension: right set `{}` is not well-defined",
+                        stmt.right
+                    ),
                     Some(well_defined_error.into()),
                     vec![],
                 ))
@@ -53,7 +56,7 @@ impl<'a> Runtime<'a> {
                     inside_results.push(one_proof_stmt_exec_result);
                 }
 
-                let unused_name = self.generate_an_unused_name();
+                let unused_name = self.generate_a_random_unused_name();
 
                 let left_to_right_forall_fact = Fact::ForallFact(ForallFact::new(
                     vec![ParamDefWithParamType(
@@ -116,7 +119,11 @@ impl<'a> Runtime<'a> {
                         vec![],
                     ))
                 })?;
-                Ok((inside_results, left_to_right_forall_fact, right_to_left_forall_fact))
+                Ok((
+                    inside_results,
+                    left_to_right_forall_fact,
+                    right_to_left_forall_fact,
+                ))
             })();
         self.runtime_context.pop_env();
         let (inside_results, _, _) = local_proof_result?;
@@ -143,4 +150,3 @@ impl<'a> Runtime<'a> {
         ))
     }
 }
-

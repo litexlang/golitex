@@ -1,0 +1,4 @@
+let a, b set:
+    a $subset b
+forall x a:
+    x $in b
