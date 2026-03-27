@@ -1,101 +1,113 @@
 use crate::common::helper::remove_windows_carriage_return;
+use crate::error::RuntimeError;
 use crate::execute::Runtime;
 use crate::parse::TokenBlock;
 use crate::pipeline::run_stmt_at_global_env;
+use crate::result::NonErrStmtExecResult;
 use crate::runtime::builtin_env_code;
 use crate::stmt::Stmt;
 use std::fs;
 
+pub type StmtResult = NonErrStmtExecResult;
+
 pub fn run_source_code_in_file_and_return_string(entrance_file_path: &str) -> String {
-    run_source_code_in_file_and_return_json_string(entrance_file_path)
+    run_source_code_with_output_mode_in_file(entrance_file_path, false)
 }
 
 pub fn run_source_code_in_file_and_return_json_string(entrance_file_path: &str) -> String {
-    let source_code = fs::read_to_string(entrance_file_path).expect("Could not read file");
-    run_source_code_and_return_json_string(&source_code, entrance_file_path)
+    run_source_code_with_output_mode_in_file(entrance_file_path, true)
 }
 
-fn run_source_code_and_return_json_string(source_code: &str, entrance_label: &str) -> String {
+fn run_source_code_with_output_mode_in_file(
+    entrance_file_path: &str,
+    should_output_json: bool,
+) -> String {
+    let source_code = fs::read_to_string(entrance_file_path).expect("Could not read file");
+    run_source_code_with_output_mode(&source_code, entrance_file_path, should_output_json)
+}
+
+fn run_source_code_with_output_mode(
+    source_code: &str,
+    entrance_label: &str,
+    should_output_json: bool,
+) -> String {
     let normalized_source = remove_windows_carriage_return(source_code);
     let mut runtime = Runtime::new();
-    let (ok, msg) = run_source_code(builtin_env_code().as_str(), &mut runtime, true);
+    let (builtin_stmt_results, builtin_error) = run_source_code(builtin_env_code().as_str(), &mut runtime);
+    let (ok, msg) = render_run_source_code_output(
+        &runtime,
+        &builtin_stmt_results,
+        &builtin_error,
+        true,
+    );
     if !ok {
         return format!("builtin code execution failed: {}", msg);
     }
     runtime.new_file_path_new_env_new_name_scope(entrance_label);
-    run_source_code(normalized_source.as_str(), &mut runtime, true).1
+    let (stmt_results, runtime_error) = run_source_code(normalized_source.as_str(), &mut runtime);
+    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, should_output_json).1
 }
 
-pub fn run_source_code(
-    source_code: &str,
-    runtime: &mut Runtime,
-    should_output_json: bool,
-) -> (bool, String) {
+pub fn run_source_code(source_code: &str, runtime: &mut Runtime) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let blocks =
         match TokenBlock::parse_blocks(source_code, runtime.module_manager.current_file_index) {
             Ok(b) => b,
             Err(e) => {
                 let runtime_error = e.into();
-                if should_output_json {
-                    return (
-                        false,
-                        format!("\n{}\n", runtime.display_error_json_string(&runtime_error)),
-                    );
-                }
-                return (
-                    false,
-                    format!(
-                        "\n{}\n",
-                        runtime.display_error_with_label_and_location(&runtime_error)
-                    ),
-                );
+                return (vec![], Some(runtime_error));
             }
         };
 
-    let mut out = String::new();
+    let mut stmt_results: Vec<StmtResult> = Vec::new();
     for mut block in blocks {
         let stmt: Stmt = {
             match runtime.parse_stmt(&mut block) {
                 Ok(s) => s,
                 Err(e) => {
                     let runtime_error = e.into();
-                    if should_output_json {
-                        out.push_str(&format!(
-                            "\n{}\n",
-                            runtime.display_error_json_string(&runtime_error)
-                        ));
-                    } else {
-                        out.push_str(&format!(
-                            "\n{}\n",
-                            runtime.display_error_with_label_and_location(&runtime_error)
-                        ));
-                    }
-                    return (false, out);
+                    return (stmt_results, Some(runtime_error));
                 }
             }
         };
         let result = match run_stmt_at_global_env(&stmt, runtime) {
             Ok(r) => r,
             Err(e) => {
-                if should_output_json {
-                    out.push_str(format!("\n{}\n", runtime.display_error_json_string(&e)).as_str());
-                } else {
-                    out.push_str(
-                        format!("\n{}\n", runtime.display_error_with_label_and_location(&e))
-                            .as_str(),
-                    );
-                }
-                return (false, out);
+                return (stmt_results, Some(e));
             }
         };
-        out.push('\n');
-        if should_output_json {
-            out.push_str(runtime.display_result_json_string(&result).as_str());
-        } else {
-            out.push_str(runtime.display_result(&result).as_str());
-        }
-        out.push('\n');
+        stmt_results.push(result);
     }
 
-    (true, out)
+    (stmt_results, None)
+}
+
+pub fn render_run_source_code_output(
+    runtime: &Runtime,
+    stmt_results: &Vec<StmtResult>,
+    runtime_error: &Option<RuntimeError>,
+    should_output_json: bool,
+) -> (bool, String) {
+    let mut output_text = String::new();
+    for stmt_result in stmt_results.iter() {
+        output_text.push('\n');
+        if should_output_json {
+            output_text.push_str(runtime.display_result_json_string(stmt_result).as_str());
+        } else {
+            output_text.push_str(runtime.display_result(stmt_result).as_str());
+        }
+        output_text.push('\n');
+    }
+
+    if let Some(error) = runtime_error {
+        output_text.push('\n');
+        if should_output_json {
+            output_text.push_str(runtime.display_error_json_string(error).as_str());
+        } else {
+            output_text.push_str(runtime.display_error_with_label_and_location(error).as_str());
+        }
+        output_text.push('\n');
+        return (false, output_text);
+    }
+
+    (true, output_text)
 }

@@ -1,4 +1,5 @@
 use litex::pipeline::run_repl;
+use litex::pipeline::render_run_source_code_output;
 use litex::pipeline::run_source_code;
 use litex::pipeline::run_source_code_in_file_and_return_json_string;
 use litex::pipeline::run_source_code_in_file_and_return_string;
@@ -67,14 +68,27 @@ pub fn run_cli() {
                 };
                 let mut runtime = Runtime::new();
 
-                let (ok, msg) = run_source_code(builtin_env_code().as_str(), &mut runtime, true);
+                let (builtin_stmt_results, builtin_error) =
+                    run_source_code(builtin_env_code().as_str(), &mut runtime);
+                let (ok, msg) = render_run_source_code_output(
+                    &runtime,
+                    &builtin_stmt_results,
+                    &builtin_error,
+                    true,
+                );
                 if !ok {
                     eprintln!("builtin code execution failed: {}", msg);
                     process::exit(1);
                 }
                 runtime.new_file_path_new_env_new_name_scope("-e");
 
-                let output = run_source_code(code.as_str(), &mut runtime, should_output_json);
+                let (stmt_results, runtime_error) = run_source_code(code.as_str(), &mut runtime);
+                let output = render_run_source_code_output(
+                    &runtime,
+                    &stmt_results,
+                    &runtime_error,
+                    should_output_json,
+                );
                 println!("{}", output.1.trim());
                 println!("{}", repl_footer_placeholder());
                 return;
