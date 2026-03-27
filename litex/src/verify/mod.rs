@@ -12,6 +12,7 @@ mod verify_forall_fact_forall_fact_with_iff;
 mod verify_helper;
 mod verify_in_fact_builtin_rules;
 mod verify_non_equational_atomic_fact;
+mod verify_non_equational_atomic_fact_builtin_duality_rules;
 mod verify_non_equational_atomic_fact_with_builtin_rules;
 mod verify_number_comparison_builtin_rule;
 mod verify_number_in_standard_set;
