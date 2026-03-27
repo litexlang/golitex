@@ -7,7 +7,7 @@ use crate::stmt::know_stmt::KnowStmt;
 use crate::stmt::Stmt;
 
 impl Runtime {
-    pub fn know_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
+    pub fn parse_know_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(KNOW)?;
         if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;

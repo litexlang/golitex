@@ -1,8 +1,8 @@
 use super::TokenBlock;
 use crate::common::keywords::{
-    ALGO, BY_CART_DEF, BY_CASES, BY_CONTRA, BY_EXTENSION, BY_FN_DEF, BY_INDUC, CLAIM, CLEAR,
-    DO_NOTHING, ENUMERATE, EVAL, EXIST, FN_FOR_FN_WITH_PARAMS, FOR, HAVE, IMPORT, KNOW, LET, PROP,
-    PROVE, RUN_FILE, STRUCT, WITNESS,
+    ALGO, BY_CART_DEF, BY_CASES, BY_CONTRA, BY_EXTENSION, BY_FN_DEF, BY_INDUC, CLAIM, DO_NOTHING,
+    ENUMERATE, EVAL, EXIST, FN_FOR_FN_WITH_PARAMS, FOR, HAVE, IMPORT, KNOW, LET, PROP, PROVE,
+    RUN_FILE, STRUCT, WITNESS,
 };
 use crate::error::ParsingError;
 use crate::execute::Runtime;
@@ -22,14 +22,13 @@ impl Runtime {
                     self.parse_have_obj_stmt(tb)
                 }
             }
-            KNOW => self.know_stmt(tb),
+            KNOW => self.parse_know_stmt(tb),
             CLAIM => self.parse_claim_stmt(tb),
             PROVE => self.parse_prove_stmt(tb),
-            IMPORT => self.import_stmt(tb),
-            CLEAR => self.clear_stmt(tb),
-            DO_NOTHING => self.do_nothing_stmt(tb),
-            RUN_FILE => self.run_file_stmt(tb),
-            EVAL => self.eval_stmt(tb),
+            IMPORT => self.parse_import_stmt(tb),
+            DO_NOTHING => self.parse_do_nothing_stmt(tb),
+            RUN_FILE => self.parse_run_file_stmt(tb),
+            EVAL => self.parse_eval_stmt(tb),
             WITNESS => self.parse_witness_stmt(tb),
             STRUCT => self.parse_def_struct_stmt(tb),
             ALGO => self.parse_def_algorithm_stmt(tb),
