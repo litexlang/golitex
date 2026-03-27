@@ -148,9 +148,18 @@ impl<'a> Runtime<'a> {
                 tb.skip_token(COMMA)?;
             }
         }
-        let facts = if tb.current().map(|c| c == COLON).unwrap_or(false) {
+        let facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
-            self.parse_facts_in_body(tb)?
+
+            if !tb.exceed_end_of_head() {
+                return Err(ParsingError::new(
+                    "expect end of line after colon in let statement".to_string(),
+                    tb.line_file,
+                    None,
+                ));
+            } else {
+                self.parse_facts_in_body(tb)?
+            }
         } else {
             vec![]
         };
