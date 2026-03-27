@@ -4,7 +4,7 @@ use crate::fact::{EqualFact, NormalAtomicFact};
 use crate::infer::InferResult;
 use crate::stmt::parameter_def::ParamDefWithParamType;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     /// Infer from equality by syncing known calculated values.
     /// Example: from `a = 1 + 2`, remember `a -> 3`.
     pub(crate) fn infer_equal_fact(
@@ -48,20 +48,21 @@ impl<'a> Runtime<'a> {
         };
         let mut infer_result = InferResult::new();
 
-        let param_type_facts = ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(
-            &predicate_definition.params_def_with_type,
-            &normal_atomic_fact.body,
-        )
-        .map_err(|previous_error| {
-            InferError::new(
-                format!(
-                    "failed to infer parameter type facts for `{}`",
-                    normal_atomic_fact
-                ),
-                normal_atomic_fact.line_file,
-                Some(previous_error),
+        let param_type_facts =
+            ParamDefWithParamType::facts_for_args_satisfy_param_def_with_type_vec(
+                &predicate_definition.params_def_with_type,
+                &normal_atomic_fact.body,
             )
-        })?;
+            .map_err(|previous_error| {
+                InferError::new(
+                    format!(
+                        "failed to infer parameter type facts for `{}`",
+                        normal_atomic_fact
+                    ),
+                    normal_atomic_fact.line_file,
+                    Some(previous_error),
+                )
+            })?;
 
         for param_type_fact in param_type_facts.iter() {
             let fact_to_store = param_type_fact
@@ -88,7 +89,8 @@ impl<'a> Runtime<'a> {
 
         for iff_fact in predicate_definition.iff_facts.iter() {
             let instantiated_iff_fact = iff_fact.instantiate(&param_to_arg_map);
-            let fact_to_store = instantiated_iff_fact.with_new_line_file(normal_atomic_fact.line_file);
+            let fact_to_store =
+                instantiated_iff_fact.with_new_line_file(normal_atomic_fact.line_file);
             self.store_fact_without_well_defined_verified_and_infer(&fact_to_store)
                 .map_err(|previous_error| {
                     InferError::new(

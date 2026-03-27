@@ -8,7 +8,7 @@ use crate::stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
 use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn exec_witness_exist_fact(
         &mut self,
         stmt: &WitnessExistFact,

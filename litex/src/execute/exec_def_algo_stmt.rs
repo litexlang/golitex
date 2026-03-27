@@ -13,7 +13,7 @@ use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 use std::collections::HashMap;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn exec_def_algo_stmt(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,

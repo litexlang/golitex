@@ -11,7 +11,7 @@ use crate::obj::{FnSetObj, Number, Obj, TupleDimObj, ZObj};
 use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
 use std::collections::HashMap;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     /// Infer consequences from membership facts `x in S`.
     /// Example: `x in {1,2}` infers `x = 1 or x = 2`.
     pub(crate) fn infer_in_fact(&mut self, in_fact: &InFact) -> Result<InferResult, InferError> {
@@ -216,17 +216,19 @@ impl<'a> Runtime<'a> {
                     zero_obj,
                     in_fact.line_file,
                 ));
-                self.store_atomic_fact_without_well_defined_verified_and_infer(&inferred_atomic_fact)
-                    .map_err(|previous_error| {
-                        InferError::new(
-                            format!(
-                                "failed to store inferred greater-than-zero while inferring `{}`",
-                                in_fact
-                            ),
-                            in_fact.line_file,
-                            Some(previous_error.into()),
-                        )
-                    })?;
+                self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    &inferred_atomic_fact,
+                )
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred greater-than-zero while inferring `{}`",
+                            in_fact
+                        ),
+                        in_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
                 let mut infer_result = InferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 Ok(infer_result)
@@ -238,17 +240,19 @@ impl<'a> Runtime<'a> {
                     zero_obj,
                     in_fact.line_file,
                 ));
-                self.store_atomic_fact_without_well_defined_verified_and_infer(&inferred_atomic_fact)
-                    .map_err(|previous_error| {
-                        InferError::new(
-                            format!(
-                                "failed to store inferred less-than-zero while inferring `{}`",
-                                in_fact
-                            ),
-                            in_fact.line_file,
-                            Some(previous_error.into()),
-                        )
-                    })?;
+                self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    &inferred_atomic_fact,
+                )
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred less-than-zero while inferring `{}`",
+                            in_fact
+                        ),
+                        in_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
                 let mut infer_result = InferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 Ok(infer_result)
@@ -260,17 +264,19 @@ impl<'a> Runtime<'a> {
                     zero_obj,
                     in_fact.line_file,
                 ));
-                self.store_atomic_fact_without_well_defined_verified_and_infer(&inferred_atomic_fact)
-                    .map_err(|previous_error| {
-                        InferError::new(
-                            format!(
-                                "failed to store inferred not-equal-to-zero while inferring `{}`",
-                                in_fact
-                            ),
-                            in_fact.line_file,
-                            Some(previous_error.into()),
-                        )
-                    })?;
+                self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    &inferred_atomic_fact,
+                )
+                .map_err(|previous_error| {
+                    InferError::new(
+                        format!(
+                            "failed to store inferred not-equal-to-zero while inferring `{}`",
+                            in_fact
+                        ),
+                        in_fact.line_file,
+                        Some(previous_error.into()),
+                    )
+                })?;
                 let mut infer_result = InferResult::new();
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 Ok(infer_result)

@@ -5,7 +5,7 @@ use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
 use crate::stmt::prove_stmt::ProveStmt;
 use crate::stmt::Stmt;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn exec_prove_stmt(
         &mut self,
         stmt: &ProveStmt,

@@ -7,7 +7,7 @@ use crate::result::StmtUnknown;
 use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
 use crate::verify::VerifyState;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn verify_non_equational_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,

@@ -9,7 +9,7 @@ use crate::stmt::claim_stmt::ClaimStmt;
 use crate::stmt::Stmt;
 use crate::verify::VerifyState;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     fn exec_claim_stmt_body_fact_for_forall_fact(
         &mut self,
         stmt: &ClaimStmt,

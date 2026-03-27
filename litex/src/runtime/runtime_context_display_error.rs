@@ -60,7 +60,7 @@ fn json_array_field_line(
     }
 }
 
-impl<'a> RuntimeContext<'a> {
+impl RuntimeContext {
     fn parse_block_error_message(&self, parse_block_error: &ParseBlockError) -> String {
         match parse_block_error {
             ParseBlockError::ExpectedIndent(_, _) => "expected indent".to_string(),

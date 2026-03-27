@@ -19,10 +19,9 @@ pub fn run_source_code_in_file_and_return_json_string(entrance_file_path: &str) 
 
 fn run_source_code_and_return_json_string(source_code: &str, entrance_label: &str) -> String {
     let normalized_source = remove_windows_carriage_return(source_code);
-    let mut module_manager = ModuleManager::new_empty_module_manager(BUILTIN_CODE);
-    let mut runtime_context =
-        RuntimeContext::new_empty_runtime_context_with_one_env(&mut module_manager);
-    let mut runtime = Runtime::new(&mut runtime_context);
+    let module_manager = ModuleManager::new_empty_module_manager(BUILTIN_CODE);
+    let runtime_context = RuntimeContext::new_empty_runtime_context_with_one_env(module_manager);
+    let mut runtime = Runtime::new(runtime_context);
     let (ok, msg) = run_source_code(builtin_env_code().as_str(), &mut runtime, true);
     if !ok {
         return format!("builtin code execution failed: {}", msg);

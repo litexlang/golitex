@@ -2,7 +2,7 @@ use crate::common::defaults::FILE_INDEX_FOR_BUILTIN;
 use crate::runtime::RuntimeContext;
 use std::collections::HashMap;
 
-pub struct ModuleManager<'a> {
+pub struct ModuleManager {
     pub run_file_paths: Vec<String>,
     pub module_name_and_path_map: HashMap<String, String>,
     pub module_path_and_names_map: HashMap<String, Vec<String>>,
@@ -10,10 +10,10 @@ pub struct ModuleManager<'a> {
     pub current_module_name: String,
     pub current_file_index: usize,
     pub entrance_path: String,
-    pub imported_module_environments: HashMap<String, Box<RuntimeContext<'a>>>,
+    pub imported_module_environments: HashMap<String, Box<RuntimeContext>>,
 }
 
-impl<'a> ModuleManager<'a> {
+impl ModuleManager {
     pub fn new_empty_module_manager(entrance_file_path: &str) -> Self {
         ModuleManager {
             run_file_paths: vec![entrance_file_path.to_string()],

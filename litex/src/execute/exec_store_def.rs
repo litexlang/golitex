@@ -6,7 +6,7 @@ use crate::stmt::definition_stmt::{
     DefStructWithNoFieldStmt,
 };
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn store_def_prop_with_meaning(
         &mut self,
         def_prop_with_meaning_stmt: &DefPropWithMeaningStmt,

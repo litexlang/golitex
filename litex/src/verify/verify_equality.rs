@@ -10,7 +10,7 @@ use crate::result::StmtUnknown;
 use crate::verify::VerifyState;
 use std::rc::Rc;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn verify_equal_fact(
         &mut self,
         equal_fact: &EqualFact,
@@ -31,7 +31,7 @@ impl<'a> Runtime<'a> {
         line_file: (usize, usize),
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        let mut result = verify_equality_by_builtin_rules(self, left, right, line_file)?;
+        let mut result = self.verify_equality_by_builtin_rules(left, right, line_file)?;
         if result.is_true() {
             return Ok(result);
         }
@@ -89,14 +89,15 @@ impl<'a> Runtime<'a> {
 
         let known_pairs = self.collect_known_equality_pairs_from_envs(&left_string, &right_string);
         for (known_left, known_right) in known_pairs {
-            if let Some(result) = try_verify_equality_with_known_equalities_by_builtin_rules_only(
-                self,
-                left,
-                right,
-                line_file,
-                known_left.as_ref(),
-                known_right.as_ref(),
-            )? {
+            if let Some(result) = self
+                .try_verify_equality_with_known_equalities_by_builtin_rules_only(
+                    left,
+                    right,
+                    line_file,
+                    known_left.as_ref(),
+                    known_right.as_ref(),
+                )?
+            {
                 return Ok(result);
             }
         }
@@ -511,7 +512,7 @@ impl<'a> Runtime<'a> {
         equality_line_file: (usize, usize),
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         let mut result =
-            verify_equality_by_builtin_rules(self, left_obj, right_obj, equality_line_file)?;
+            self.verify_equality_by_builtin_rules(left_obj, right_obj, equality_line_file)?;
         if result.is_true() {
             return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                 FactVerifiedByBuiltinRules::new(
@@ -568,105 +569,110 @@ pub fn verify_equality_by_they_are_the_same(left: &Obj, right: &Obj) -> bool {
     false
 }
 
-fn verify_equality_by_builtin_rules(
-    runtime: &Runtime<'_>,
-    left: &Obj,
-    right: &Obj,
-    line_file: (usize, usize),
-) -> Result<NonErrStmtExecResult, VerifyError> {
-    if verify_equality_by_they_are_the_same(left, right) {
-        return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-            FactVerifiedByBuiltinRules::new(
-                Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-                    left.clone(),
-                    right.clone(),
-                    line_file,
-                ))),
-                "the same".to_string(),
-                InferResult::new(),
-            ),
-        ));
+impl Runtime {
+    fn verify_equality_by_builtin_rules(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        line_file: (usize, usize),
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        if verify_equality_by_they_are_the_same(left, right) {
+            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                FactVerifiedByBuiltinRules::new(
+                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                        left.clone(),
+                        right.clone(),
+                        line_file,
+                    ))),
+                    "the same".to_string(),
+                    InferResult::new(),
+                ),
+            ));
+        }
+
+        let left_for_numeric_verification =
+            self.obj_with_runtime_known_numbers_substituted_for_verification(left);
+        let right_for_numeric_verification =
+            self.obj_with_runtime_known_numbers_substituted_for_verification(right);
+
+        if left_for_numeric_verification
+            .two_objs_can_be_calculated_and_equal_by_calculation(&right_for_numeric_verification)
+        {
+            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                FactVerifiedByBuiltinRules::new(
+                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                        left.clone(),
+                        right.clone(),
+                        line_file,
+                    ))),
+                    "calculation".to_string(),
+                    InferResult::new(),
+                ),
+            ));
+        }
+
+        if objs_equal_by_rational_expression_simplification(
+            &left_for_numeric_verification,
+            &right_for_numeric_verification,
+        ) {
+            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                FactVerifiedByBuiltinRules::new(
+                    Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
+                        left.clone(),
+                        right.clone(),
+                        line_file,
+                    ))),
+                    "rational expression simplification".to_string(),
+                    InferResult::new(),
+                ),
+            ));
+        }
+
+        Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
     }
-
-    let left_for_numeric_verification =
-        runtime.obj_with_runtime_known_numbers_substituted_for_verification(left);
-    let right_for_numeric_verification =
-        runtime.obj_with_runtime_known_numbers_substituted_for_verification(right);
-
-    if left_for_numeric_verification
-        .two_objs_can_be_calculated_and_equal_by_calculation(&right_for_numeric_verification)
-    {
-        return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-            FactVerifiedByBuiltinRules::new(
-                Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-                    left.clone(),
-                    right.clone(),
-                    line_file,
-                ))),
-                "calculation".to_string(),
-                InferResult::new(),
-            ),
-        ));
-    }
-
-    if objs_equal_by_rational_expression_simplification(
-        &left_for_numeric_verification,
-        &right_for_numeric_verification,
-    ) {
-        return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
-            FactVerifiedByBuiltinRules::new(
-                Fact::AtomicFact(AtomicFact::EqualFact(EqualFact::new(
-                    left.clone(),
-                    right.clone(),
-                    line_file,
-                ))),
-                "rational expression simplification".to_string(),
-                InferResult::new(),
-            ),
-        ));
-    }
-
-    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
 }
 
-fn try_verify_equality_with_known_equalities_by_builtin_rules_only(
-    runtime: &Runtime<'_>,
-    left: &Obj,
-    right: &Obj,
-    line_file: (usize, usize),
-    known_objs_equal_to_left: Option<&Rc<Vec<Obj>>>,
-    known_objs_equal_to_right: Option<&Rc<Vec<Obj>>>,
-) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
-    match (known_objs_equal_to_left, known_objs_equal_to_right) {
-        (None, None) => Ok(None),
-        (Some(known_objs_equal_to_left), None) => {
-            for obj in known_objs_equal_to_left.iter() {
-                let result = verify_equality_by_builtin_rules(runtime, obj, right, line_file)?;
-                if result.is_true() {
-                    return Ok(Some(result));
-                }
-            }
-            Ok(None)
-        }
-        (None, Some(known_objs_equal_to_right)) => {
-            for obj in known_objs_equal_to_right.iter() {
-                let result = verify_equality_by_builtin_rules(runtime, left, obj, line_file)?;
-                if result.is_true() {
-                    return Ok(Some(result));
-                }
-            }
-            Ok(None)
-        }
-        (Some(known_objs_equal_to_left), Some(known_objs_equal_to_right)) => {
-            for obj1 in known_objs_equal_to_left.iter() {
-                for obj2 in known_objs_equal_to_right.iter() {
-                    let result = verify_equality_by_builtin_rules(runtime, obj1, obj2, line_file)?;
+impl Runtime {
+    fn try_verify_equality_with_known_equalities_by_builtin_rules_only(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: (usize, usize),
+        known_objs_equal_to_left: Option<&Rc<Vec<Obj>>>,
+        known_objs_equal_to_right: Option<&Rc<Vec<Obj>>>,
+    ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
+        match (known_objs_equal_to_left, known_objs_equal_to_right) {
+            (None, None) => Ok(None),
+            (Some(known_objs_equal_to_left), None) => {
+                for obj in known_objs_equal_to_left.iter() {
+                    let result = self.verify_equality_by_builtin_rules(obj, right, line_file)?;
                     if result.is_true() {
                         return Ok(Some(result));
                     }
                 }
+                Ok(None)
             }
-            Ok(None)
+            (None, Some(known_objs_equal_to_right)) => {
+                for obj in known_objs_equal_to_right.iter() {
+                    let result = self.verify_equality_by_builtin_rules(left, obj, line_file)?;
+                    if result.is_true() {
+                        return Ok(Some(result));
+                    }
+                }
+                Ok(None)
+            }
+            (Some(known_objs_equal_to_left), Some(known_objs_equal_to_right)) => {
+                for obj1 in known_objs_equal_to_left.iter() {
+                    for obj2 in known_objs_equal_to_right.iter() {
+                        let result =
+                            self.verify_equality_by_builtin_rules(obj1, obj2, line_file)?;
+                        if result.is_true() {
+                            return Ok(Some(result));
+                        }
+                    }
+                }
+                Ok(None)
+            }
         }
     }
 }

@@ -4,7 +4,7 @@ use crate::error::ParsingError;
 use crate::execute::Runtime;
 use crate::stmt::parameter_def::{FiniteSet, NonemptySet, ParamDefWithParamType, ParamType, Set};
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn parse_param_def_with_param_type(
         &mut self,
         tb: &mut TokenBlock,

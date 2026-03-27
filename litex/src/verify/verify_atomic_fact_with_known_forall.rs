@@ -13,7 +13,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::result::Result;
 
-impl<'a> Runtime<'a> {
+impl Runtime {
     pub fn verify_atomic_fact_with_known_forall(
         &mut self,
         atomic_fact: &AtomicFact,

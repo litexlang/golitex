@@ -54,7 +54,7 @@ fn json_array_field_line(
     }
 }
 
-impl<'a> RuntimeContext<'a> {
+impl RuntimeContext {
     pub fn display_result_json_string(&self, result: &NonErrStmtExecResult) -> String {
         self.build_display_result_json(result, 0)
     }
