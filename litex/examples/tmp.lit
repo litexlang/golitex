@@ -14,7 +14,5 @@ let b set:
     b = cart(R, Q)
 
 $is_cart(b)
-proj(b, 1) = proj(b, 1)
 cart_dim(b) = 2
-proj(cart(R, Q), 1) = R
 proj(b, 1) = R
