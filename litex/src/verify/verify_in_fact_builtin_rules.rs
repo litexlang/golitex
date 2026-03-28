@@ -2,7 +2,7 @@ use crate::error::VerifyError;
 use crate::execute::Runtime;
 use crate::fact::{AtomicFact, EqualFact, Fact, InFact};
 use crate::infer::InferResult;
-use crate::obj::Obj;
+use crate::obj::{Cart, Obj, Tuple};
 use crate::result::FactVerifiedByBuiltinRules;
 use crate::result::NonErrStmtExecResult;
 use crate::result::StmtUnknown;
@@ -39,6 +39,14 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         match (&in_fact.element, &in_fact.set) {
+            (Obj::Tuple(tuple), Obj::Cart(cart)) => {
+                return self.verify_in_fact_by_left_is_tuple_right_is_cart(
+                    in_fact,
+                    tuple,
+                    cart,
+                    verify_state,
+                );
+            }
             (Obj::Number(_), Obj::RObj(_)) => Ok(number_in_set_verified_by_builtin_rules_result(
                 in_fact,
                 "number in R",
@@ -160,7 +168,9 @@ impl Runtime {
             (
                 Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
                 Obj::RObj(_),
-            ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(in_fact)),
+            ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
+                in_fact,
+            )),
             (_, Obj::ListSet(list_set)) => self.verify_in_fact_by_equal_to_one_element_in_list_set(
                 in_fact,
                 list_set,
@@ -305,5 +315,40 @@ impl Runtime {
             }
         }
         Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+    }
+
+    fn verify_in_fact_by_left_is_tuple_right_is_cart(
+        &mut self,
+        in_fact: &InFact,
+        tuple: &Tuple,
+        cart: &Cart,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        if tuple.args.len() != cart.args.len() {
+            return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+        }
+
+        for component_index in 0..tuple.args.len() {
+            let tuple_component_obj = (*tuple.args[component_index]).clone();
+            let cart_component_obj = (*cart.args[component_index]).clone();
+            let component_in_fact = AtomicFact::InFact(InFact::new(
+                tuple_component_obj,
+                cart_component_obj,
+                in_fact.line_file,
+            ));
+            let component_verify_result =
+                self.verify_atomic_fact(&component_in_fact, verify_state)?;
+            if !component_verify_result.is_true() {
+                return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+            }
+        }
+
+        Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+            FactVerifiedByBuiltinRules::new(
+                Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+                "tuple in cart: each component is in the corresponding cart factor".to_string(),
+                InferResult::new(),
+            ),
+        ))
     }
 }

@@ -3,6 +3,7 @@ mod verify_atomic_fact;
 mod verify_atomic_fact_with_known_forall;
 mod verify_by_syntax;
 mod verify_equality;
+mod verify_equality_with_getting_known_calculated_value_for_obj;
 mod verify_exist_fact;
 mod verify_exist_fact_with_known_forall;
 mod verify_fact;
