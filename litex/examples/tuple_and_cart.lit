@@ -1,0 +1,26 @@
+prove:
+    let a set:
+        a = cart(R ,Q)
+
+    $is_cart(a)
+    cart_dim(a) = 2
+    proj(a, 1) = R
+    proj(a, 2) = Q
+
+prove:
+    let a set:
+        a = (2, 3)
+
+    $is_tuple(a)
+    tuple_dim(a) = 2
+    a[1] = 2
+
+let b set:
+    b = cart(R, Q)
+
+$is_cart(b)
+cart_dim(b) = 2
+proj(b, 1) = R
+
+$is_nonempty_set(cart(R, R))
+(1, 2) $in cart(R, R)
