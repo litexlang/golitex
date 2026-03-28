@@ -56,9 +56,19 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        let mut all_objs_equal_to_arg = self
-            
-            .get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
+        let mut all_objs_equal_to_arg =
+            self.get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
+
+        // 得到它的 calculated obj
+        if let Some(calculated_obj) =
+            self.get_known_normalized_calculated_value_for_obj(&atomic_fact.args()[0])
+        {
+            if calculated_obj.to_string() != atomic_fact.args()[0].to_string() {
+                let equal_tos = self.get_all_objs_equal_to_arg(&calculated_obj.to_string());
+                all_objs_equal_to_arg.extend(equal_tos);
+            }
+        }
+
         if all_objs_equal_to_arg.is_empty() {
             all_objs_equal_to_arg.push(atomic_fact.args()[0].to_string());
         }
@@ -77,15 +87,29 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
-        let mut all_objs_equal_to_arg0 = self
-            
-            .get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
+        let mut all_objs_equal_to_arg0 =
+            self.get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
+        if let Some(calculated_obj) =
+            self.get_known_normalized_calculated_value_for_obj(&atomic_fact.args()[0])
+        {
+            if calculated_obj.to_string() != atomic_fact.args()[0].to_string() {
+                let equal_tos = self.get_all_objs_equal_to_arg(&calculated_obj.to_string());
+                all_objs_equal_to_arg0.extend(equal_tos);
+            }
+        }
         if all_objs_equal_to_arg0.is_empty() {
             all_objs_equal_to_arg0.push(atomic_fact.args()[0].to_string());
         }
-        let mut all_objs_equal_to_arg1 = self
-            
-            .get_all_objs_equal_to_arg(&atomic_fact.args()[1].to_string());
+        let mut all_objs_equal_to_arg1 =
+            self.get_all_objs_equal_to_arg(&atomic_fact.args()[1].to_string());
+        if let Some(calculated_obj) =
+            self.get_known_normalized_calculated_value_for_obj(&atomic_fact.args()[1])
+        {
+            if calculated_obj.to_string() != atomic_fact.args()[1].to_string() {
+                let equal_tos = self.get_all_objs_equal_to_arg(&calculated_obj.to_string());
+                all_objs_equal_to_arg1.extend(equal_tos);
+            }
+        }
         if all_objs_equal_to_arg1.is_empty() {
             all_objs_equal_to_arg1.push(atomic_fact.args()[1].to_string());
         }
@@ -106,9 +130,8 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         let mut all_objs_equal_to_each_arg: Vec<Vec<String>> = Vec::new();
         for arg in atomic_fact.args().iter() {
-            let mut all_objs_equal_to_current_arg = self
-                
-                .get_all_objs_equal_to_arg(&arg.to_string());
+            let mut all_objs_equal_to_current_arg =
+                self.get_all_objs_equal_to_arg(&arg.to_string());
             if all_objs_equal_to_current_arg.is_empty() {
                 all_objs_equal_to_current_arg.push(arg.to_string());
             }
