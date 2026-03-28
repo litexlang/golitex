@@ -615,7 +615,7 @@ impl Runtime {
                         right.clone(),
                         line_file,
                     ))),
-                    "rational expression simplification".to_string(),
+                    "calculation and rational expression simplification".to_string(),
                     InferResult::new(),
                 ),
             ));

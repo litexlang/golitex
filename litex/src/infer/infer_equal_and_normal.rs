@@ -79,7 +79,6 @@ impl Runtime {
     fn infer_equal_fact_tuple_from_known_side(
         &mut self,
         known_tuple_obj: &crate::obj::Tuple,
-        known_tuple_obj_as_symbol: &Obj,
         target_obj: &Obj,
         equal_fact: &EqualFact,
         infer_result: &mut InferResult,
@@ -112,7 +111,7 @@ impl Runtime {
         )?;
 
         self.store_tuple_obj_and_cart(
-            &known_tuple_obj_as_symbol.to_string(),
+            &target_obj.to_string(),
             Some(known_tuple_obj.clone()),
             None,
             equal_fact.line_file,
@@ -173,7 +172,6 @@ impl Runtime {
         if let Obj::Tuple(tuple) = &equal_fact.left {
             self.infer_equal_fact_tuple_from_known_side(
                 tuple,
-                &equal_fact.left,
                 &equal_fact.right,
                 equal_fact,
                 &mut infer_result,
@@ -183,7 +181,6 @@ impl Runtime {
         if let Obj::Tuple(tuple) = &equal_fact.right {
             self.infer_equal_fact_tuple_from_known_side(
                 tuple,
-                &equal_fact.right,
                 &equal_fact.left,
                 equal_fact,
                 &mut infer_result,

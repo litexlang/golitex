@@ -443,12 +443,21 @@ impl Runtime {
                 }
 
                 // verified by objects in cart are all nonempty sets
+                // e.g. cart(R, Q) is nonempty set because R and Q are nonempty sets
                 Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                     FactVerifiedByBuiltinRules::new(
                         Fact::AtomicFact(AtomicFact::IsNonemptySetFact(
                             is_nonempty_set_fact.clone(),
                         )),
-                        "cart_nonempty_set".to_string(),
+                        format!(
+                            "sets `{}` in `{}` are nonempty sets",
+                            cart.args
+                                .iter()
+                                .map(|arg| arg.as_ref().to_string())
+                                .collect::<Vec<String>>()
+                                .join(", "),
+                            cart.to_string()
+                        ),
                         InferResult::new(),
                     ),
                 ))
