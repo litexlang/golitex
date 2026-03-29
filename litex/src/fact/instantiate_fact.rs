@@ -1,25 +1,4 @@
-use crate::fact::matchable_fact_with_atomic_fact_inside::AndFact;
-use crate::fact::matchable_fact_with_atomic_fact_inside::ChainFact;
-use crate::fact::AndChainAtomicFact;
-use crate::fact::AtomicFact;
-use crate::fact::ExistFact;
-use crate::fact::ExistOrAndChainAtomicFact;
-use crate::fact::Fact;
-use crate::fact::ForallFact;
-use crate::fact::ForallFactWithIff;
-use crate::fact::NotRestrictFact;
-use crate::fact::OrAndChainAtomicFact;
-use crate::fact::OrFact;
-use crate::fact::RestrictFact;
-use crate::fact::{
-    EqualFact, GreaterEqualFact, GreaterFact, InFact, IsCartFact, IsFiniteSetFact,
-    IsNonemptySetFact, IsSetFact, IsTupleFact, LessEqualFact, LessFact, NormalAtomicFact,
-    NotEqualFact, NotGreaterEqualFact, NotGreaterFact, NotInFact, NotIsCartFact,
-    NotIsFiniteSetFact, NotIsNonemptySetFact, NotIsSetFact, NotIsTupleFact, NotLessEqualFact,
-    NotLessFact, NotNormalAtomicFact, NotSubsetFact, NotSupersetFact, SubsetFact, SupersetFact,
-};
-use crate::obj::Obj;
-use crate::stmt::parameter_def::ParamDefWithParamType;
+use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Fact {

@@ -1,26 +1,5 @@
 use super::TokenBlock;
-use crate::common::keywords::{
-    is_key_symbol_or_keyword, ADD, CAP, CART, CART_DIM, CHOOSE, CLOSED_RANGE, COLON, COMMA, COUNT,
-    CUP, DIV, DOT_AKA_FIELD_ACCESS_SIGN, FN_FOR_FN_WITHOUT_PARAMS, FN_FOR_FN_WITH_PARAMS,
-    INFIX_FN_NAME_SIGN, INST_STRUCT_OBJ_SIGN, INTERSECT, LEFT_BRACE, LEFT_BRACKET,
-    LEFT_CURLY_BRACE, MOD, MOD_SIGN, MUL, N, N_POS, POW, POWER_SET, PROJ, Q, Q_NEG, Q_NZ, Q_POS, R,
-    RANGE, RIGHT_BRACE, RIGHT_BRACKET, RIGHT_CURLY_BRACE, R_NEG, R_NZ, R_POS, SET_DIFF, SET_MINUS,
-    SUB, TUPLE_DIM, UNION, VAL, Z, Z_NEG, Z_NZ,
-};
-use crate::error::{duplicate_used_name_error_msg_without_line_file, ParsingError, RuntimeError};
-use crate::execute::Runtime;
-use crate::obj::Tuple;
-use crate::obj::TupleDim;
-use crate::obj::{
-    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, Div, FnObj, FnSetObj,
-    FnSetWithParams, FnSetWithoutParams, IdentifierWithMod, InstStructObj, Intersect, ListSet, Mod,
-    Mul, NObj, NPosObj, Number, Obj, ObjAtIndex, Pow, PowerSet, Proj, QNeg, QNz, QObj, QPos, RNeg,
-    RNz, RObj, RPos, Range, SetBuilder, SetDiff, SetMinus, Sub, Union, Val, ZNeg, ZNz, ZObj,
-};
-use crate::obj::{
-    Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierOrIdentifierWithMod,
-};
-use crate::stmt::parameter_def::ParamDefWithParamSet;
+use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {

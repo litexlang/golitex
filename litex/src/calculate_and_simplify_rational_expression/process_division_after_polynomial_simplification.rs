@@ -1,6 +1,6 @@
+use crate::prelude::*;
 use crate::calculate_and_simplify_rational_expression::collect_monomials::collect_monomials_in_obj;
 use crate::calculate_and_simplify_rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
-use crate::obj::{Add, Mul, Number, Obj};
 
 pub fn collect_rational_expression_monomials_after_denominator_clearing_process(
     left_monomials: Vec<MonomialWithNonZeroScalarAndOrderedOperands>,

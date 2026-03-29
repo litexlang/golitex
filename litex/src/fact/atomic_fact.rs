@@ -1,12 +1,4 @@
-use crate::common::helper::{braced_string, braced_vec_to_string};
-use crate::common::keywords::RESTRICT;
-use crate::common::keywords::{
-    EQUAL, FACT_PREFIX, GREATER, GREATER_EQUAL, IN, IS_CART, IS_FINITE_SET, IS_NONEMPTY_SET,
-    IS_SET, IS_TUPLE, LESS, LESS_EQUAL, NOT, NOT_EQUAL, SUBSET, SUPERSET,
-};
-use crate::error::NewAtomicFactError;
-use crate::obj::IdentifierOrIdentifierWithMod;
-use crate::obj::Obj;
+use crate::prelude::*;
 use std::fmt;
 
 #[derive(Clone)]

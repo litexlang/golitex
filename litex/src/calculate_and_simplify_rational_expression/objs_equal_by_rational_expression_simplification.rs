@@ -1,4 +1,4 @@
-use crate::obj::Obj;
+use crate::prelude::*;
 use crate::calculate_and_simplify_rational_expression::collect_monomials::collect_monomials_in_obj;
 use crate::calculate_and_simplify_rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 use crate::calculate_and_simplify_rational_expression::process_division_after_polynomial_simplification::collect_rational_expression_monomials_after_denominator_clearing_process;

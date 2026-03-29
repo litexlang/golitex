@@ -1,11 +1,4 @@
-use crate::environment::Environment;
-use crate::error::{UnknownError, VerifyError};
-use crate::execute::Runtime;
-use crate::fact::{AtomicFact, Fact, RestrictFact};
-use crate::infer::InferResult;
-use crate::result::StmtUnknown;
-use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
-use crate::verify::VerifyState;
+use crate::prelude::*;
 
 impl Runtime {
     pub fn verify_non_equational_atomic_fact(

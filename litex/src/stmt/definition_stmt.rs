@@ -1,20 +1,5 @@
 use super::parameter_def::ParamDefWithParamType;
-use crate::common::helper::{
-    add_four_spaces_at_beginning, brace_vec_colon_vec_to_string, braced_vec_to_string,
-    to_string_and_add_four_spaces_at_beginning_of_each_line,
-    vec_to_string_add_four_spaces_at_beginning_of_each_line, vec_to_string_join_by_comma,
-    vec_to_string_with_sep,
-};
-use crate::common::keywords::{
-    CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, FN_FOR_FN_WITH_PARAMS, HAVE, LEFT_BRACE, LET, PROP,
-    RIGHT_BRACE, STRUCT,
-};
-use crate::fact::AndChainAtomicFact;
-use crate::fact::ExistFact;
-use crate::fact::Fact;
-use crate::fact::OrAndChainAtomicFact;
-use crate::obj::FnSetWithParams;
-use crate::obj::Obj;
+use crate::prelude::*;
 use std::fmt;
 
 #[derive(Clone)]

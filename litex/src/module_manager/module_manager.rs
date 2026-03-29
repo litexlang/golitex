@@ -1,5 +1,4 @@
-use crate::common::defaults::FILE_INDEX_FOR_BUILTIN;
-use crate::environment::Environment;
+use crate::prelude::*;
 use std::collections::HashMap;
 
 pub struct ImportedModuleEnvironment {

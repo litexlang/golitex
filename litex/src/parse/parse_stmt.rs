@@ -1,12 +1,5 @@
 use super::TokenBlock;
-use crate::common::keywords::{
-    ALGO, BY_CART_DEF, BY_CASES, BY_CONTRA, BY_EXTENSION, BY_FN_DEF, BY_INDUC, CLAIM, DO_NOTHING,
-    ENUMERATE, EVAL, EXIST, FN_FOR_FN_WITH_PARAMS, FOR, HAVE, IMPORT, KNOW, LET, PROP, PROVE,
-    RUN_FILE, STRUCT, WITNESS,
-};
-use crate::error::ParsingError;
-use crate::execute::Runtime;
-use crate::stmt::Stmt;
+use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {

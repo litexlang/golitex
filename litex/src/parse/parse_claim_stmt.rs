@@ -1,11 +1,5 @@
 use super::TokenBlock;
-use crate::common::keywords::PROVE;
-use crate::common::keywords::{CLAIM, COLON};
-use crate::error::ParsingError;
-use crate::execute::Runtime;
-use crate::fact::Fact;
-use crate::stmt::claim_stmt::ClaimStmt;
-use crate::stmt::Stmt;
+use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_claim_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {

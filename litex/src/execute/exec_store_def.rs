@@ -1,10 +1,4 @@
-use super::Runtime;
-use crate::error::ExecStmtError;
-use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
-use crate::stmt::definition_stmt::{
-    DefPropWithMeaningStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt,
-    DefStructWithNoFieldStmt,
-};
+use crate::prelude::*;
 
 impl Runtime {
     pub fn store_def_prop_with_meaning(

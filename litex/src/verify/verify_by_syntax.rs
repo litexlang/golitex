@@ -1,5 +1,4 @@
-use crate::execute::Runtime;
-use crate::obj::Obj;
+use crate::prelude::*;
 
 impl Runtime {
     pub fn equal_literally(&self, left: &Obj, right: &Obj) -> bool {

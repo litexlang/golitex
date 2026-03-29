@@ -1,10 +1,6 @@
 use super::atomic_fact::AtomicFact;
 use super::fact::Fact;
-use crate::common::helper::vec_to_string_with_sep;
-use crate::common::keywords::{is_comparison_str, AND, FACT_PREFIX};
-use crate::error::NewAtomicFactError;
-use crate::obj::IdentifierOrIdentifierWithMod;
-use crate::obj::Obj;
+use crate::prelude::*;
 use std::fmt;
 
 #[derive(Clone)]

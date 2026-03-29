@@ -1,10 +1,6 @@
+use crate::prelude::*;
 use super::fact_inside_forall::ExistOrAndChainAtomicFact;
 use super::forall_fact::ForallFact;
-use crate::common::helper::{
-    to_string_and_add_four_spaces_at_beginning_of_each_line,
-    vec_to_string_add_four_spaces_at_beginning_of_each_line,
-};
-use crate::common::keywords::{COLON, EQUIVALENT_SIGN};
 use std::fmt;
 
 #[derive(Clone)]

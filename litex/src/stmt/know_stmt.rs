@@ -1,6 +1,4 @@
-use crate::common::helper::vec_to_string_add_four_spaces_at_beginning_of_each_line;
-use crate::common::keywords::{COLON, KNOW};
-use crate::fact::Fact;
+use crate::prelude::*;
 use std::fmt;
 
 #[derive(Clone)]

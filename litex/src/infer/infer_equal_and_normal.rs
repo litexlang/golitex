@@ -1,10 +1,4 @@
-use crate::error::InferError;
-use crate::execute::Runtime;
-use crate::fact::AtomicFact;
-use crate::fact::{EqualFact, Fact, IsCartFact, IsTupleFact, NormalAtomicFact};
-use crate::infer::InferResult;
-use crate::obj::{CartDim, Obj, TupleDim};
-use crate::stmt::parameter_def::ParamDefWithParamType;
+use crate::prelude::*;
 
 impl Runtime {
     fn store_inferred_fact_and_record_result(

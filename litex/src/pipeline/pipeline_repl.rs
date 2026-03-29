@@ -1,11 +1,7 @@
-use crate::common::helper::remove_windows_carriage_return;
-use crate::parse::TokenBlock;
+use crate::prelude::*;
 use crate::pipeline::render_run_source_code_output;
 use crate::pipeline::run_source_code;
 use crate::pipeline::run_stmt_at_global_env;
-use crate::runtime::builtin_env_code;
-use crate::runtime::Runtime;
-use crate::stmt::Stmt;
 use std::io::{self, BufRead, Write};
 
 pub fn run_repl(version: &str, should_output_json: bool) {

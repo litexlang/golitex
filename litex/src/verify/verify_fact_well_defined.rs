@@ -1,14 +1,4 @@
-use crate::common::keywords::is_builtin_predicate;
-use crate::error::{RuntimeError, WellDefinedError};
-use crate::execute::Runtime;
-use crate::fact::line_file as atomic_fact_line_file;
-use crate::fact::AtomicFact;
-use crate::fact::{
-    AndChainAtomicFact, AndFact, ChainFact, EqualFact, ExistFact, ExistOrAndChainAtomicFact, Fact,
-    ForallFact, ForallFactWithIff, OrAndChainAtomicFact, OrFact,
-};
-use crate::stmt::parameter_def::ParamDefWithParamType;
-use crate::verify::VerifyState;
+use crate::prelude::*;
 
 // well-defined check for fact: 1. predicate is defined 2. all args are well-defined
 // store verified related facts during the verification process, e.g. when verifying f(a)(b) is well-defined, we store f(a) in the set where f returns, and store f(a)(b) in the set where f(a) returns
@@ -88,7 +78,7 @@ impl Runtime {
                         actual_args.len()
                     ),
                     None,
-                    atomic_fact_line_file(atomic_fact),
+                    line_file(atomic_fact),
                 ));
             }
         } else {
@@ -106,7 +96,7 @@ impl Runtime {
                 return Err(WellDefinedError::new(
                     format!("fact `{}` not defined", name_string),
                     None,
-                    atomic_fact_line_file(atomic_fact),
+                    line_file(atomic_fact),
                 ));
             };
 
@@ -120,7 +110,7 @@ impl Runtime {
                         actual_args.len()
                     ),
                     None,
-                    atomic_fact_line_file(atomic_fact),
+                    line_file(atomic_fact),
                 ));
             }
         }

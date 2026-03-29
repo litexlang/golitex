@@ -1,13 +1,4 @@
-use super::Runtime;
-use crate::error::ExecStmtError;
-use crate::fact::{AtomicFact, Fact, InFact};
-use crate::infer::InferResult;
-use crate::obj::{FieldAccess, Identifier, Obj};
-use crate::result::NonErrStmtExecResult;
-use crate::result::NonFactualStmtSuccess;
-use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
-use crate::stmt::Stmt;
-use crate::verify::VerifyState;
+use crate::prelude::*;
 
 impl Runtime {
     pub fn def_struct_with_no_field_stmt(

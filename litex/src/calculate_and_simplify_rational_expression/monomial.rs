@@ -1,4 +1,4 @@
-use crate::obj::Obj;
+use crate::prelude::*;
 
 #[derive(Clone)]
 pub struct MonomialWithNonZeroScalarAndOrderedOperands {

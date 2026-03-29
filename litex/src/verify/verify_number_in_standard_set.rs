@@ -1,8 +1,8 @@
 //! Decides whether a decimal Number belongs to a standard number set (N, N_pos, Z, Z_neg, Z_nz, Q, R, etc.).
 
-use crate::obj::Number;
 
 /// Parses number string into sign and digit parts. Handles "-1.00", "0", "0.5".
+use crate::prelude::*;
 fn parse_number_parts(value: &str) -> (bool, Vec<u8>, Vec<u8>) {
     let s = value.trim();
     let (negative, magnitude) = if s.starts_with('-') {
