@@ -1,10 +1,4 @@
-use crate::error::InferError;
-use crate::execute::Runtime;
-use crate::fact::{
-    AndFact, ChainFact, ExistFact, ExistOrAndChainAtomicFact, Fact, ForallFact, ForallFactWithIff,
-    OrAndChainAtomicFact, OrFact,
-};
-use crate::infer::InferResult;
+use crate::prelude::*;
 
 impl Runtime {
     /// Dispatch infer by fact kind.

@@ -1,20 +1,5 @@
 use super::TokenBlock;
-use crate::common::keywords::{
-    is_comparison_str, AND, COLON, COMMA, EQUIVALENT_SIGN, EXIST, FACT_PREFIX, FORALL,
-    LEFT_CURLY_BRACE, NOT, OR, RIGHT_ARROW, RIGHT_CURLY_BRACE, ST,
-};
-use crate::error::{NewAtomicFactError, ParsingError};
-use crate::execute::Runtime;
-use crate::fact::Fact;
-use crate::fact::ForallFact;
-use crate::fact::ForallFactWithIff;
-use crate::fact::{
-    AndChainAtomicFact, AndFact, AtomicFact, ChainAtomicFact, ChainFact, ExistFact,
-    ExistOrAndChainAtomicFact, OrAndChainAtomicFact, OrFact,
-};
-use crate::obj::Identifier;
-use crate::obj::IdentifierOrIdentifierWithMod;
-use crate::stmt::parameter_def::ParamDefWithParamType;
+use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_fact(&mut self, tb: &mut TokenBlock) -> Result<Fact, ParsingError> {

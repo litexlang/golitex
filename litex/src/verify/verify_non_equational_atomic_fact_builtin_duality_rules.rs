@@ -1,13 +1,4 @@
-use crate::error::VerifyError;
-use crate::execute::Runtime;
-use crate::fact::{
-    AtomicFact, Fact, GreaterEqualFact, GreaterFact, LessEqualFact, LessFact, NotGreaterEqualFact,
-    NotGreaterFact, NotLessEqualFact, NotLessFact, NotSubsetFact, NotSupersetFact, SubsetFact,
-    SupersetFact,
-};
-use crate::infer::InferResult;
-use crate::result::{FactVerifiedByBuiltinRules, NonErrStmtExecResult, StmtUnknown};
-use crate::verify::VerifyState;
+use crate::prelude::*;
 
 impl Runtime {
     /// Verify subset by duality: `a subset b` iff `b superset a`.

@@ -1,21 +1,4 @@
-use super::axiom_stmt::{
-    ByCartDefAxiomStmt, ByCasesAxiomStmt, ByContraAxiomStmt, ByExtensionAxiomStmt,
-    ByFnDefAxiomStmt, ByInducAxiomStmt, EnumerateAxiomStmt, ForAxiomStmt,
-};
-use super::claim_stmt::ClaimStmt;
-use super::define_algorithm_stmt::DefAlgoStmt;
-use super::definition_stmt::{
-    DefLetStmt, DefPropWithMeaningStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt,
-    DefStructWithNoFieldStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt,
-    HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt,
-};
-use super::eval_stmt::EvalStmt;
-use super::know_stmt::KnowStmt;
-use super::prove_stmt::ProveStmt;
-use super::tooling_stmt::{
-    DoNothingStmt, ImportGlobalModuleStmt, ImportRelativePathStmt, ImportStmt, RunFileStmt,
-};
-use super::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
+use crate::prelude::*;
 
 impl ProveStmt {
     pub fn stmt_type_name(&self) -> String {

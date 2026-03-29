@@ -1,7 +1,4 @@
-use super::Runtime;
-use crate::error::{ExecStmtError, RuntimeError};
-use crate::result::NonErrStmtExecResult;
-use crate::stmt::Stmt;
+use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<NonErrStmtExecResult, RuntimeError> {

@@ -1,15 +1,4 @@
-use crate::common::defaults::DEFAULT_LINE_FILE;
-use crate::error::InferError;
-use crate::execute::Runtime;
-use crate::fact::{
-    AndChainAtomicFact, AtomicFact, EqualFact, Fact, GreaterFact, InFact, IsTupleFact, LessFact,
-    NotEqualFact, OrAndChainAtomicFact, OrFact,
-};
-use crate::infer::InferResult;
-use crate::obj::InstStructObj;
-use crate::obj::TupleDim;
-use crate::obj::{FnSetObj, Number, Obj, ZObj};
-use crate::stmt::definition_stmt::{DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
+use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {

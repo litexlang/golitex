@@ -1,11 +1,9 @@
 use super::calculate::add_decimal_str_and_normalize;
 use super::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
+use crate::prelude::*;
 use crate::calculate_and_simplify_rational_expression::calculate::{
     mul_decimal_str_and_normalize, sub_decimal_str_and_normalize,
 };
-use crate::common::helper::is_number_string_literally_integer_without_dot;
-use crate::obj::Number;
-use crate::obj::{Add, Mul, Obj, Pow, Sub};
 
 pub fn collect_monomials_in_obj(obj: &Obj) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     match obj {

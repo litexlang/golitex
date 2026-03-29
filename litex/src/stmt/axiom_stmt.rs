@@ -1,18 +1,5 @@
-use super::{parameter_def::ParamDefWithParamType, Stmt};
-use crate::common::helper::{
-    add_four_spaces_at_beginning, vec_pair_to_string,
-    vec_to_string_add_four_spaces_at_beginning_of_each_line,
-};
-use crate::common::keywords::{
-    BY_CART_DEF, BY_CASES, BY_CONTRA, BY_EXTENSION, BY_FN_DEF, BY_INDUC, CASE, COLON, ENUMERATE,
-    EQUAL, FOR, FROM, IMPOSSIBLE, PROVE, RIGHT_ARROW,
-};
-use crate::fact::{
-    AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, GreaterEqualFact,
-};
-use crate::obj::Identifier;
-use crate::obj::{Cart, ClosedRange, ListSet, Obj, Range, ZObj};
-use crate::stmt::parameter_def::ParamType;
+use super::parameter_def::ParamDefWithParamType;
+use crate::prelude::*;
 use std::fmt;
 
 fn fact_to_exist_or_and_chain_atomic_fact_for_forall_then_body(

@@ -1,10 +1,5 @@
 use super::Stmt;
-use crate::common::helper::{
-    add_four_spaces_at_beginning, to_string_and_add_four_spaces_at_beginning_of_each_line,
-    vec_to_string_add_four_spaces_at_beginning_of_each_line,
-};
-use crate::common::keywords::{CLAIM, COLON, PROVE};
-use crate::fact::Fact;
+use crate::prelude::*;
 use std::fmt;
 
 #[derive(Clone)]

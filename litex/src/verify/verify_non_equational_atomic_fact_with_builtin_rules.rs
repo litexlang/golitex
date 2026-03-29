@@ -1,17 +1,4 @@
-use crate::error::VerifyError;
-use crate::execute::Runtime;
-use crate::fact::IsTupleFact;
-use crate::fact::{
-    AtomicFact, Fact, GreaterFact, IsNonemptySetFact, LessFact, NotEqualFact, NotGreaterEqualFact,
-    NotGreaterFact, NotLessEqualFact, NotLessFact,
-};
-use crate::fact::{IsCartFact, IsFiniteSetFact};
-use crate::infer::InferResult;
-use crate::obj::{Number, Obj};
-use crate::result::FactVerifiedByBuiltinRules;
-use crate::result::NonErrStmtExecResult;
-use crate::result::StmtUnknown;
-use crate::verify::VerifyState;
+use crate::prelude::*;
 
 impl Runtime {
     pub fn verify_non_equational_atomic_fact_with_builtin_rules(

@@ -1,12 +1,5 @@
-use super::Runtime;
-use crate::error::ExecStmtError;
-use crate::error::StoreFactError;
-use crate::fact::{AtomicFact, ExistOrAndChainAtomicFact, Fact, OrAndChainAtomicFact};
-use crate::infer::InferResult;
-use crate::stmt::Stmt;
-use crate::verify::VerifyState;
+use crate::prelude::*;
 
-use crate::fact::AndChainAtomicFact;
 
 impl Runtime {
     pub fn store_fact_without_well_defined_verified_and_infer(

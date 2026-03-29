@@ -1,7 +1,4 @@
-use crate::common::defaults::DEFAULT_LINE_FILE;
-use crate::fact::Fact;
-use crate::result::NonErrStmtExecResult;
-use crate::stmt::Stmt;
+use crate::prelude::*;
 use std::fmt;
 
 fn boxed_previous_error(previous_error: Option<RuntimeError>) -> Option<Box<RuntimeError>> {

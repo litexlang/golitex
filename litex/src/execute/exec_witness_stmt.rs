@@ -1,12 +1,4 @@
-use super::Runtime;
-use crate::error::{ExecStmtError, RuntimeError};
-use crate::fact::{AtomicFact, Fact, InFact, IsNonemptySetFact};
-use crate::result::{NonErrStmtExecResult, NonFactualStmtSuccess};
-use crate::stmt::definition_stmt::HaveObjEqualStmt;
-use crate::stmt::parameter_def::ParamDefWithParamType;
-use crate::stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
-use crate::stmt::Stmt;
-use crate::verify::VerifyState;
+use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_witness_exist_fact(

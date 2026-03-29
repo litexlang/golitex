@@ -1,11 +1,5 @@
 use super::TokenBlock;
-use crate::common::keywords::{
-    COLON, EXIST, FACT_PREFIX, FROM, IS_NONEMPTY_SET, LEFT_BRACE, RIGHT_BRACE, WITNESS,
-};
-use crate::error::ParsingError;
-use crate::execute::Runtime;
-use crate::stmt::witness_stmt::{WitnessExistFact, WitnessNonemptySet};
-use crate::stmt::Stmt;
+use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_witness_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {

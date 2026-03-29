@@ -1,6 +1,4 @@
-use crate::execute::Runtime;
-use crate::fact::AtomicFact;
-use crate::obj::Obj;
+use crate::prelude::*;
 
 enum NumberCompareResult {
     Less,

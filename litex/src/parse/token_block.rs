@@ -1,7 +1,5 @@
 use super::tokenizer::tokenize_line;
-use crate::common::keywords::COLON;
-use crate::error::ParseBlockError;
-use crate::error::ParsingError;
+use crate::prelude::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TokenBlock {

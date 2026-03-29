@@ -1,5 +1,5 @@
+use crate::prelude::*;
 use crate::calculate_and_simplify_rational_expression::calculate_div::safe_div;
-use crate::obj::{Number, Obj};
 
 impl Obj {
     pub fn calculate_arithmetic_value_and_normalize(&self) -> Option<Number> {
