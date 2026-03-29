@@ -189,7 +189,7 @@ impl Runtime {
         equal_fact: &EqualFact,
     ) -> Result<InferResult, InferError> {
         if let Some(right_calculated_value) =
-            self.get_known_normalized_calculated_value_for_obj(&equal_fact.right)
+            self.resolve_obj(&equal_fact.right)
         {
             self.top_level_env()
                 .known_normalized_calculated_value_of_obj
@@ -197,7 +197,7 @@ impl Runtime {
         }
 
         if let Some(left_calculated_value) =
-            self.get_known_normalized_calculated_value_for_obj(&equal_fact.left)
+            self.resolve_obj(&equal_fact.left)
         {
             self.top_level_env()
                 .known_normalized_calculated_value_of_obj

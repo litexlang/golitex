@@ -416,10 +416,7 @@ impl Runtime {
         left: &Number,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
-        if !given_arg
-            .calculate_arithmetic_value_and_normalize()
-            .is_some()
-        {
+        if !given_arg.evaluate_to_normalized_decimal_number().is_some() {
             return Ok(None);
         }
         let left_obj = Obj::Number(left.clone());

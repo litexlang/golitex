@@ -1,9 +1,9 @@
 use crate::prelude::*;
-use crate::calculate_and_simplify_rational_expression::collect_monomials::collect_monomials_in_obj;
-use crate::calculate_and_simplify_rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
-use crate::calculate_and_simplify_rational_expression::process_division_after_polynomial_simplification::collect_rational_expression_monomials_after_denominator_clearing_process;
+use crate::rational_expression::collect_monomials::collect_monomials_in_obj;
+use crate::rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
+use crate::rational_expression::process_division_after_polynomial_simplification::collect_rational_expression_monomials_after_denominator_clearing_process;
 
-pub fn objs_equal_by_rational_expression_simplification(left: &Obj, right: &Obj) -> bool {
+pub fn objs_equal_by_rational_expression_evaluation(left: &Obj, right: &Obj) -> bool {
     let left_monomials = collect_monomials_in_obj(left);
     let right_monomials = collect_monomials_in_obj(right);
 

@@ -1,6 +1,4 @@
 use crate::prelude::*;
-use super::fact_inside_forall::ExistOrAndChainAtomicFact;
-use super::forall_fact::ForallFact;
 use std::fmt;
 
 #[derive(Clone)]

@@ -944,7 +944,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.dim, verify_state)?;
 
         let projection_dimension_number = self
-            .get_known_normalized_calculated_value_for_obj(&x.dim)
+            .resolve_obj(&x.dim)
             .ok_or_else(|| {
                 WellDefinedError::new(
                     format!("projection dimension {} is not a number", x.dim),
@@ -1126,7 +1126,7 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.index, verify_state)?;
 
         let index_calculated_number = self
-            .get_known_normalized_calculated_value_for_obj(&x.index)
+            .resolve_obj(&x.index)
             .ok_or_else(|| {
                 WellDefinedError::new(
                     format!("index {} is not a number", x.index.to_string()),

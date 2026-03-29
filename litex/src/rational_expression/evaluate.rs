@@ -1,13 +1,13 @@
 use crate::prelude::*;
-use crate::calculate_and_simplify_rational_expression::calculate_div::safe_div;
+use crate::rational_expression::evaluate_div::safe_div;
 
 impl Obj {
-    pub fn calculate_arithmetic_value_and_normalize(&self) -> Option<Number> {
+    pub fn evaluate_to_normalized_decimal_number(&self) -> Option<Number> {
         let result = match self {
             Obj::Number(number) => Some(number.clone()),
             Obj::Add(add) => {
-                let left_number = add.left.calculate_arithmetic_value_and_normalize();
-                let right_number = add.right.calculate_arithmetic_value_and_normalize();
+                let left_number = add.left.evaluate_to_normalized_decimal_number();
+                let right_number = add.right.evaluate_to_normalized_decimal_number();
                 if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
                     Some(Number::new(add_decimal_str_and_normalize(
                         &left_number.normalized_value,
@@ -18,8 +18,8 @@ impl Obj {
                 }
             }
             Obj::Sub(sub) => {
-                let left_number = sub.left.calculate_arithmetic_value_and_normalize();
-                let right_number = sub.right.calculate_arithmetic_value_and_normalize();
+                let left_number = sub.left.evaluate_to_normalized_decimal_number();
+                let right_number = sub.right.evaluate_to_normalized_decimal_number();
                 if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
                     Some(Number::new(sub_decimal_str_and_normalize(
                         &left_number.normalized_value,
@@ -30,8 +30,8 @@ impl Obj {
                 }
             }
             Obj::Mul(mul) => {
-                let left_number = mul.left.calculate_arithmetic_value_and_normalize();
-                let right_number = mul.right.calculate_arithmetic_value_and_normalize();
+                let left_number = mul.left.evaluate_to_normalized_decimal_number();
+                let right_number = mul.right.evaluate_to_normalized_decimal_number();
                 if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
                     Some(Number::new(mul_signed_decimal_str(
                         &left_number.normalized_value,
@@ -42,8 +42,8 @@ impl Obj {
                 }
             }
             Obj::Mod(mod_obj) => {
-                let left_number = mod_obj.left.calculate_arithmetic_value_and_normalize();
-                let right_number = mod_obj.right.calculate_arithmetic_value_and_normalize();
+                let left_number = mod_obj.left.evaluate_to_normalized_decimal_number();
+                let right_number = mod_obj.right.evaluate_to_normalized_decimal_number();
                 if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
                     Some(Number::new(mod_decimal_str_and_normalize(
                         &left_number.normalized_value,
@@ -54,8 +54,8 @@ impl Obj {
                 }
             }
             Obj::Pow(pow_obj) => {
-                let base_number = pow_obj.base.calculate_arithmetic_value_and_normalize();
-                let exponent_number = pow_obj.exponent.calculate_arithmetic_value_and_normalize();
+                let base_number = pow_obj.base.evaluate_to_normalized_decimal_number();
+                let exponent_number = pow_obj.exponent.evaluate_to_normalized_decimal_number();
                 if let (Some(base_number), Some(exponent_number)) = (base_number, exponent_number) {
                     Some(Number::new(pow_decimal_str_and_normalize(
                         &base_number.normalized_value,
@@ -66,8 +66,8 @@ impl Obj {
                 }
             }
             Obj::Div(div) => {
-                let left_number = div.left.calculate_arithmetic_value_and_normalize();
-                let right_number = div.right.calculate_arithmetic_value_and_normalize();
+                let left_number = div.left.evaluate_to_normalized_decimal_number();
+                let right_number = div.right.evaluate_to_normalized_decimal_number();
                 if let (Some(left_number), Some(right_number)) = (left_number, right_number) {
                     let exact_quotient_string = safe_div(
                         &left_number.normalized_value,
@@ -106,8 +106,8 @@ impl Obj {
 
     pub fn two_objs_can_be_calculated_and_equal_by_calculation(&self, other: &Obj) -> bool {
         match (
-            self.calculate_arithmetic_value_and_normalize(),
-            other.calculate_arithmetic_value_and_normalize(),
+            self.evaluate_to_normalized_decimal_number(),
+            other.evaluate_to_normalized_decimal_number(),
         ) {
             (Some(left_number), Some(right_number)) => {
                 return left_number.normalized_value == right_number.normalized_value;
@@ -138,15 +138,15 @@ pub fn mul_signed_decimal_str(left_number_string: &str, right_number_string: &st
     let multiplied_magnitude_is_zero = multiplied_magnitude_number_string == "0";
     let multiplied_result_is_negative = left_is_negative ^ right_is_negative;
     if multiplied_result_is_negative && !multiplied_magnitude_is_zero {
-        normalize_decimal_result(&format!("-{}", multiplied_magnitude_number_string))
+        normalize_decimal_number_string(&format!("-{}", multiplied_magnitude_number_string))
     } else {
-        normalize_decimal_result(&multiplied_magnitude_number_string)
+        normalize_decimal_number_string(&multiplied_magnitude_number_string)
     }
 }
 
 impl Obj {
     pub fn replace_with_numeric_result_if_can_be_calculated(&self) -> (Obj, bool) {
-        if let Some(calculated_number) = self.calculate_arithmetic_value_and_normalize() {
+        if let Some(calculated_number) = self.evaluate_to_normalized_decimal_number() {
             (Obj::Number(calculated_number), true)
         } else {
             (self.clone(), false)
@@ -192,7 +192,7 @@ pub fn add_decimal_str_and_normalize(a: &str, b: &str) -> String {
     } else {
         format!("{}.{}", int_str, frac_str.trim_end_matches('0'))
     };
-    normalize_decimal_result(&result)
+    normalize_decimal_number_string(&result)
 }
 
 /// 竖式减法：a - b，若 a >= b 返回非负结果字符串，否则返回 "-" + (b - a) 的字符串
@@ -217,7 +217,7 @@ pub fn sub_decimal_str_and_normalize(a: &str, b: &str) -> String {
         (ia, fa, ib, fb)
     } else {
         let inner = sub_decimal_str_and_normalize(b, a);
-        return normalize_decimal_result(&format!("-{}", inner));
+        return normalize_decimal_number_string(&format!("-{}", inner));
     };
 
     let mut out_frac = vec![0u8; frac_len];
@@ -260,7 +260,7 @@ pub fn sub_decimal_str_and_normalize(a: &str, b: &str) -> String {
     } else {
         format!("{}.{}", int_str, frac_trim)
     };
-    normalize_decimal_result(&result)
+    normalize_decimal_number_string(&result)
 }
 
 fn compare_decimal_parts(int_a: &[u8], frac_a: &[u8], int_b: &[u8], frac_b: &[u8]) -> i32 {
@@ -353,7 +353,7 @@ pub fn mul_decimal_str_and_normalize(a: &str, b: &str) -> String {
     } else {
         format!("{}.{}", int_str, frac_part)
     };
-    normalize_decimal_result(&result)
+    normalize_decimal_number_string(&result)
 }
 
 /// 竖式取余：a mod b，返回余数字符串。约定：b 仅为非零纯整数（字符串），a 取整数部分参与运算。
@@ -388,7 +388,7 @@ pub fn mod_decimal_str_and_normalize(a: &str, b: &str) -> String {
             d -= 1;
         }
     }
-    normalize_decimal_result(&digits_to_string(&current))
+    normalize_decimal_number_string(&digits_to_string(&current))
 }
 
 /// 仅支持非负整数指数：base^exp，exp 必须为整数（如 "3" 或 "0"），返回字符串
@@ -414,7 +414,7 @@ pub fn pow_decimal_str_and_normalize(base: &str, exp: &str) -> String {
         b = mul_decimal_str_and_normalize(&b, &b);
         e /= 2;
     }
-    normalize_decimal_result(&acc)
+    normalize_decimal_number_string(&acc)
 }
 
 fn trim_leading_zeros(d: &[u8]) -> Vec<u8> {
@@ -492,7 +492,7 @@ fn sub_digits(a: &[u8], b: &[u8]) -> Vec<u8> {
 }
 
 /// 化简结果：多个负号合并（---1.1 -> -1.1）、0.0或者-0 写成 0、小数尾零去掉（1.000 -> 1）
-pub fn normalize_decimal_result(s: &str) -> String {
+pub fn normalize_decimal_number_string(s: &str) -> String {
     let s = s.trim();
     if s.is_empty() {
         return "0".to_string();

@@ -1,5 +1,3 @@
-use super::atomic_fact::AtomicFact;
-use super::fact::Fact;
 use crate::prelude::*;
 use std::fmt;
 

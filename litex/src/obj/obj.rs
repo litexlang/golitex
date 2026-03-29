@@ -1,9 +1,4 @@
-use super::atom::{
-    Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierOrIdentifierWithMod,
-    IdentifierWithMod,
-};
 use crate::prelude::*;
-use crate::calculate_and_simplify_rational_expression::normalize_decimal_result;
 use std::collections::HashMap;
 use std::fmt;
 
@@ -313,7 +308,7 @@ impl FnObj {
 impl Number {
     pub fn new(value: String) -> Self {
         Number {
-            normalized_value: normalize_decimal_result(&value),
+            normalized_value: normalize_decimal_number_string(&value),
         }
     }
 }

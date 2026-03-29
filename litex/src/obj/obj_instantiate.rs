@@ -1,10 +1,3 @@
-use super::atom::{Atom, FieldAccess, FieldAccessWithMod, Identifier, IdentifierWithMod};
-use super::obj::{
-    Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, TupleDim, Div, FnObj, FnSetWithParams,
-    FnSetWithoutParams, InstStructObj, Intersect, ListSet, Mod, Mul, NObj, NPosObj, Number, Obj,
-    ObjAtIndex, Pow, PowerSet, Proj, QNeg, QNz, QObj, QPos, RNeg, RNz, RObj, RPos, Range,
-    SetBuilder, SetDiff, SetMinus, Sub, Tuple, Union, Val, ZNeg, ZNz, ZObj,
-};
 use crate::prelude::*;
 use std::collections::HashMap;
 

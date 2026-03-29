@@ -18,7 +18,7 @@ impl Runtime {
                     evaluated_left_obj,
                     evaluated_right_obj,
                 ))
-                .calculate_arithmetic_value_and_normalize();
+                .evaluate_to_normalized_decimal_number();
                 match calculated_number {
                     Some(number) => Ok(Obj::Number(number)),
                     None => Err(RuntimeError::ExecStmtError(
@@ -40,7 +40,7 @@ impl Runtime {
                     evaluated_left_obj,
                     evaluated_right_obj,
                 ))
-                .calculate_arithmetic_value_and_normalize();
+                .evaluate_to_normalized_decimal_number();
                 match calculated_number {
                     Some(number) => Ok(Obj::Number(number)),
                     None => Err(RuntimeError::ExecStmtError(
@@ -62,7 +62,7 @@ impl Runtime {
                     evaluated_left_obj,
                     evaluated_right_obj,
                 ))
-                .calculate_arithmetic_value_and_normalize();
+                .evaluate_to_normalized_decimal_number();
                 match calculated_number {
                     Some(number) => Ok(Obj::Number(number)),
                     None => Err(RuntimeError::ExecStmtError(
@@ -84,7 +84,7 @@ impl Runtime {
                     evaluated_left_obj,
                     evaluated_right_obj,
                 ))
-                .calculate_arithmetic_value_and_normalize();
+                .evaluate_to_normalized_decimal_number();
                 match calculated_number {
                     Some(number) => Ok(Obj::Number(number)),
                     None => Err(RuntimeError::ExecStmtError(

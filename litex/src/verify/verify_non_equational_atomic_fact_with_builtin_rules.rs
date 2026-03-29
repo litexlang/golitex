@@ -124,8 +124,8 @@ impl Runtime {
         let right_obj = &not_equal_fact.right;
 
         match (
-            self.get_known_normalized_calculated_value_for_obj(left_obj),
-            self.get_known_normalized_calculated_value_for_obj(right_obj),
+            self.resolve_obj(left_obj),
+            self.resolve_obj(right_obj),
         ) {
             (Some(left_number), Some(right_number)) => {
                 if left_number.normalized_value != right_number.normalized_value {
@@ -154,7 +154,7 @@ impl Runtime {
     }
 
     fn obj_represents_zero_for_not_equal_builtin_rules(self: &Self, obj: &Obj) -> bool {
-        match self.get_known_normalized_calculated_value_for_obj(obj) {
+        match self.resolve_obj(obj) {
             Some(number) => number.normalized_value == "0",
             None => false,
         }

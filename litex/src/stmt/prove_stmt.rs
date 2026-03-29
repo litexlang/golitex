@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use super::Stmt;
 use std::fmt;
 
 #[derive(Clone)]
