@@ -139,24 +139,24 @@ impl Runtime {
                 Obj::FnSetWithParams(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::NPosObj(_) => match right {
-                Obj::NPosObj(_) => true,
+            Obj::StandardSet { standard_set: StandardSet::NPos } => match right {
+                Obj::StandardSet { standard_set: StandardSet::NPos } => true,
                 _ => false,
             },
-            Obj::NObj(_) => match right {
-                Obj::NObj(_) => true,
+            Obj::StandardSet { standard_set: StandardSet::N } => match right {
+                Obj::StandardSet { standard_set: StandardSet::N } => true,
                 _ => false,
             },
-            Obj::QObj(_) => match right {
-                Obj::QObj(_) => true,
+            Obj::StandardSet { standard_set: StandardSet::Q } => match right {
+                Obj::StandardSet { standard_set: StandardSet::Q } => true,
                 _ => false,
             },
-            Obj::ZObj(_) => match right {
-                Obj::ZObj(_) => true,
+            Obj::StandardSet { standard_set: StandardSet::Z } => match right {
+                Obj::StandardSet { standard_set: StandardSet::Z } => true,
                 _ => false,
             },
-            Obj::RObj(_) => match right {
-                Obj::RObj(_) => true,
+            Obj::StandardSet { standard_set: StandardSet::R } => match right {
+                Obj::StandardSet { standard_set: StandardSet::R } => true,
                 _ => false,
             },
             Obj::InstSetStructObj(a) => match right {
@@ -211,36 +211,36 @@ impl Runtime {
                 Obj::ObjAtIndex(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::QPos(_) => match right {
-                Obj::QPos(_) => true,
+            Obj::StandardSet { standard_set: StandardSet::QPos } => match right {
+                Obj::StandardSet { standard_set: StandardSet::QPos } => true,
                 _ => false,
             },
-            Obj::RPos(_) => match right {
-                Obj::RPos(_) => true,
+            Obj::StandardSet { standard_set: StandardSet::RPos } => match right {
+                Obj::StandardSet { standard_set: StandardSet::RPos } => true,
                 _ => false,
             },
-            Obj::QNeg(_) => match right {
-                Obj::QNeg(_) => true,
+            Obj::StandardSet { standard_set: StandardSet::QNeg } => match right {
+                Obj::StandardSet { standard_set: StandardSet::QNeg } => true,
                 _ => false,
             },
-            Obj::ZNeg(_) => match right {
-                Obj::ZNeg(_) => true,
+            Obj::StandardSet { standard_set: StandardSet::ZNeg } => match right {
+                Obj::StandardSet { standard_set: StandardSet::ZNeg } => true,
                 _ => false,
             },
-            Obj::RNeg(_) => match right {
-                Obj::RNeg(_) => true,
+            Obj::StandardSet { standard_set: StandardSet::RNeg } => match right {
+                Obj::StandardSet { standard_set: StandardSet::RNeg } => true,
                 _ => false,
             },
-            Obj::QNz(_) => match right {
-                Obj::QNz(_) => true,
+            Obj::StandardSet { standard_set: StandardSet::QNz } => match right {
+                Obj::StandardSet { standard_set: StandardSet::QNz } => true,
                 _ => false,
             },
-            Obj::ZNz(_) => match right {
-                Obj::ZNz(_) => true,
+            Obj::StandardSet { standard_set: StandardSet::ZNz } => match right {
+                Obj::StandardSet { standard_set: StandardSet::ZNz } => true,
                 _ => false,
             },
-            Obj::RNz(_) => match right {
-                Obj::RNz(_) => true,
+            Obj::StandardSet { standard_set: StandardSet::RNz } => match right {
+                Obj::StandardSet { standard_set: StandardSet::RNz } => true,
                 _ => false,
             },
         }

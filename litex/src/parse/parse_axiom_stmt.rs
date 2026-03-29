@@ -201,7 +201,7 @@ impl Runtime {
     }
 
     pub fn parse_by_induc_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
-        tb.skip_token(BY_INDUC)?;
+        tb.skip_token(INDUC)?;
         let param = tb.advance()?;
         tb.skip_token(FROM)?;
         let induc_from = self.parse_obj(tb)?;

@@ -303,41 +303,6 @@ impl FnSetWithParams {
     }
 }
 
-impl NPosObj {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::NPosObj(self.clone())
-    }
-}
-
-impl NObj {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::NObj(self.clone())
-    }
-}
-
-impl QObj {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::QObj(self.clone())
-    }
-}
-
-impl ZObj {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::ZObj(self.clone())
-    }
-}
-
-impl RObj {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::RObj(self.clone())
-    }
-}
-
 impl InstStructObj {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         let mut args = Vec::with_capacity(self.args.len());
@@ -455,58 +420,3 @@ impl ObjAtIndex {
     }
 }
 
-impl QPos {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::QPos(self.clone())
-    }
-}
-
-impl RPos {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::RPos(self.clone())
-    }
-}
-
-impl QNeg {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::QNeg(self.clone())
-    }
-}
-
-impl ZNeg {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::ZNeg(self.clone())
-    }
-}
-
-impl RNeg {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::RNeg(self.clone())
-    }
-}
-
-impl QNz {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::QNz(self.clone())
-    }
-}
-
-impl ZNz {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::ZNz(self.clone())
-    }
-}
-
-impl RNz {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        _ = param_to_arg_map;
-        Obj::RNz(self.clone())
-    }
-}

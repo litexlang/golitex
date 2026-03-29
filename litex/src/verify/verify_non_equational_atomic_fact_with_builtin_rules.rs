@@ -387,19 +387,7 @@ impl Runtime {
         _verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         match &is_nonempty_set_fact.set {
-            Obj::NPosObj(_)
-            | Obj::NObj(_)
-            | Obj::QObj(_)
-            | Obj::RObj(_)
-            | Obj::RNz(_)
-            | Obj::ZNz(_)
-            | Obj::QNz(_)
-            | Obj::QPos(_)
-            | Obj::RPos(_)
-            | Obj::RNeg(_)
-            | Obj::ZNeg(_)
-            | Obj::QNeg(_)
-            | Obj::ZObj(_) => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+            Obj::StandardSet { .. } => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
                 FactVerifiedByBuiltinRules::new(
                     Fact::AtomicFact(AtomicFact::IsNonemptySetFact(is_nonempty_set_fact.clone())),
                     "standard_nonempty_set".to_string(),

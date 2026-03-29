@@ -80,7 +80,7 @@ pub const PROVE: &str = "prove";
 pub const BY_CONTRA: &str = "by_contra";
 pub const ENUMERATE: &str = "enumerate";
 pub const BY_CASES: &str = "by_cases";
-pub const BY_INDUC: &str = "by_induc";
+pub const INDUC: &str = "induc";
 pub const FOR: &str = "for";
 pub const BY_FN_DEF: &str = "by_fn_def";
 pub const BY_EXTENSION: &str = "by_extension";
@@ -208,7 +208,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         KNOW,
         CLEAR,
         DO_NOTHING,
-        BY_INDUC,
+        INDUC,
         FROM,
         EVAL,
         FOR,
