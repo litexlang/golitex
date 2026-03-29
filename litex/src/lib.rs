@@ -10,6 +10,7 @@ pub mod module_manager;
 pub mod obj;
 pub mod parse;
 pub mod pipeline;
+pub mod prelude;
 pub mod result;
 pub mod runtime;
 pub mod stmt;

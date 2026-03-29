@@ -1,5 +1,5 @@
-use crate::common::keywords::key_symbols_sorted_by_len_desc;
 
+use crate::prelude::*;
 pub fn tokenize_line(line: &str) -> Vec<String> {
     let symbols = key_symbols_sorted_by_len_desc();
     let mut tokens = Vec::with_capacity(line.len());

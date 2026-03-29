@@ -1,21 +1,5 @@
 use super::TokenBlock;
-use crate::common::keywords::{
-    ALGO, CASE, COLON, COMMA, EQUAL, EQUIVALENT_SIGN, FN_FOR_FN_WITH_PARAMS, HAVE, LEFT_BRACE, LET,
-    PROP, RIGHT_BRACE, STRUCT,
-};
-use crate::error::ParsingError;
-use crate::error::{duplicate_used_name_error_msg_without_line_file, RuntimeError};
-use crate::execute::Runtime;
-use crate::fact::{AndChainAtomicFact, OrAndChainAtomicFact};
-use crate::obj::Obj;
-use crate::stmt::define_algorithm_stmt::{AlgoCase, AlgoReturn, DefAlgoStmt};
-use crate::stmt::definition_stmt::{
-    DefLetStmt, DefPropWithMeaningStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt,
-    DefStructWithNoFieldStmt, HaveExistObjStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt,
-    HaveObjEqualStmt, HaveObjInNonemptySetOrParamTypeStmt,
-};
-use crate::stmt::parameter_def::ParamDefWithParamType;
-use crate::stmt::Stmt;
+use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_def_prop_with_meaning_stmt_or_prop_without_meaning(

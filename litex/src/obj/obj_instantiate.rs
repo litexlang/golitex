@@ -5,7 +5,7 @@ use super::obj::{
     ObjAtIndex, Pow, PowerSet, Proj, QNeg, QNz, QObj, QPos, RNeg, RNz, RObj, RPos, Range,
     SetBuilder, SetDiff, SetMinus, Sub, Tuple, Union, Val, ZNeg, ZNz, ZObj,
 };
-use crate::stmt::parameter_def::ParamDefWithParamSet;
+use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Obj {

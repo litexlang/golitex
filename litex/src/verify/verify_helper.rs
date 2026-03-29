@@ -1,11 +1,4 @@
-use crate::common::defaults::DEFAULT_LINE_FILE;
-use crate::error::ExecStmtError;
-use crate::execute::Runtime;
-use crate::fact::{AtomicFact, Fact, IsNonemptySetFact};
-use crate::infer::InferResult;
-use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
-use crate::stmt::parameter_def::ParamType;
-use crate::verify::VerifyState;
+use crate::prelude::*;
 
 impl Runtime {
     /// If the fact string is in the known-facts cache, return the cached verification result.

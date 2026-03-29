@@ -1,10 +1,5 @@
 use super::TokenBlock;
-use crate::common::keywords::{COLON, COMMA, FORALL, KNOW};
-use crate::error::ParsingError;
-use crate::execute::Runtime;
-use crate::fact::Fact;
-use crate::stmt::know_stmt::KnowStmt;
-use crate::stmt::Stmt;
+use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_know_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {

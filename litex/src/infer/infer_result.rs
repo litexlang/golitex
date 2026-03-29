@@ -1,4 +1,4 @@
-use crate::fact::{AtomicFact, Fact};
+use crate::prelude::*;
 
 #[derive(Clone, Debug)]
 pub struct InferResult {

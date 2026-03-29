@@ -1,12 +1,4 @@
-use crate::execute::Runtime;
-use crate::obj::Add;
-use crate::obj::Div;
-use crate::obj::Mod;
-use crate::obj::Mul;
-use crate::obj::Number;
-use crate::obj::Obj;
-use crate::obj::Pow;
-use crate::obj::Sub;
+use crate::prelude::*;
 
 impl Runtime {
     pub fn get_known_normalized_calculated_value_for_obj(&self, obj: &Obj) -> Option<Number> {

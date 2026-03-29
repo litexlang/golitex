@@ -1,4 +1,4 @@
-use crate::fact::AtomicFact;
+use crate::prelude::*;
 
 pub(super) fn impossible_proof_error_message(
     impossible_fact: &AtomicFact,

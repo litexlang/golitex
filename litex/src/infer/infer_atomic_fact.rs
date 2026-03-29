@@ -1,7 +1,4 @@
-use crate::error::InferError;
-use crate::execute::Runtime;
-use crate::fact::AtomicFact;
-use crate::infer::InferResult;
+use crate::prelude::*;
 
 impl Runtime {
     /// Dispatch infer by atomic fact type.

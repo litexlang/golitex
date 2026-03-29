@@ -1,17 +1,5 @@
 use super::TokenBlock;
-use crate::common::keywords::{
-    BY_CART_DEF, BY_CASES, BY_CONTRA, BY_EXTENSION, BY_FN_DEF, BY_INDUC, CASE, COLON, COMMA,
-    ENUMERATE, FOR, FROM, IMPOSSIBLE, PROVE,
-};
-use crate::error::ParsingError;
-use crate::execute::Runtime;
-use crate::fact::{AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact};
-use crate::obj::{ListSet, Obj};
-use crate::stmt::axiom_stmt::{
-    ByCartDefAxiomStmt, ByCasesAxiomStmt, ByContraAxiomStmt, ByExtensionAxiomStmt,
-    ByFnDefAxiomStmt, ByInducAxiomStmt, ClosedRangeOrRange, EnumerateAxiomStmt, ForAxiomStmt,
-};
-use crate::stmt::Stmt;
+use crate::prelude::*;
 
 impl Runtime {
     pub fn parse_by_cases_axiom_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
