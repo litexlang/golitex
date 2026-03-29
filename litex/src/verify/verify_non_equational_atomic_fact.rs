@@ -54,7 +54,7 @@ impl Runtime {
 
         // 得到它的 calculated obj
         if let Some(calculated_obj) =
-            self.get_known_normalized_calculated_value_for_obj(&atomic_fact.args()[0])
+            self.resolve_obj(&atomic_fact.args()[0])
         {
             if calculated_obj.to_string() != atomic_fact.args()[0].to_string() {
                 let equal_tos = self.get_all_objs_equal_to_arg(&calculated_obj.to_string());
@@ -83,7 +83,7 @@ impl Runtime {
         let mut all_objs_equal_to_arg0 =
             self.get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
         if let Some(calculated_obj) =
-            self.get_known_normalized_calculated_value_for_obj(&atomic_fact.args()[0])
+            self.resolve_obj(&atomic_fact.args()[0])
         {
             if calculated_obj.to_string() != atomic_fact.args()[0].to_string() {
                 let equal_tos = self.get_all_objs_equal_to_arg(&calculated_obj.to_string());
@@ -96,7 +96,7 @@ impl Runtime {
         let mut all_objs_equal_to_arg1 =
             self.get_all_objs_equal_to_arg(&atomic_fact.args()[1].to_string());
         if let Some(calculated_obj) =
-            self.get_known_normalized_calculated_value_for_obj(&atomic_fact.args()[1])
+            self.resolve_obj(&atomic_fact.args()[1])
         {
             if calculated_obj.to_string() != atomic_fact.args()[1].to_string() {
                 let equal_tos = self.get_all_objs_equal_to_arg(&calculated_obj.to_string());

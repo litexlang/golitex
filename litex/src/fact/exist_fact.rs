@@ -1,8 +1,3 @@
-use super::atomic_fact::AtomicFact;
-use super::fact::Fact;
-use super::fact_inside_forall::ExistOrAndChainAtomicFact;
-use super::matchable_fact_with_atomic_fact_inside::{AndFact, ChainFact};
-use super::or_fact::OrFact;
 use crate::prelude::*;
 use std::fmt;
 

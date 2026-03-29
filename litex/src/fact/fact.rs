@@ -1,10 +1,4 @@
-use super::atomic_fact::AtomicFact;
-use super::exist_fact::ExistFact;
-use super::forall_fact::ForallFact;
-use super::forall_fact_with_iff::ForallFactWithIff;
-use super::matchable_fact_with_atomic_fact_inside::AndFact;
-use super::matchable_fact_with_atomic_fact_inside::ChainFact;
-use super::or_fact::OrFact;
+use crate::prelude::*;
 use std::fmt;
 #[derive(Clone)]
 pub enum Fact {

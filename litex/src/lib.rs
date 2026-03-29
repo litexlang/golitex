@@ -1,4 +1,3 @@
-pub mod calculate_and_simplify_rational_expression;
 pub mod common;
 pub mod environment;
 pub mod error;
@@ -11,6 +10,7 @@ pub mod obj;
 pub mod parse;
 pub mod pipeline;
 pub mod prelude;
+pub mod rational_expression;
 pub mod result;
 pub mod runtime;
 pub mod stmt;

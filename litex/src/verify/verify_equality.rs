@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use crate::calculate_and_simplify_rational_expression::objs_equal_by_rational_expression_simplification;
 use std::rc::Rc;
 
 impl Runtime {
@@ -596,7 +595,7 @@ impl Runtime {
             ));
         }
 
-        if objs_equal_by_rational_expression_simplification(
+        if objs_equal_by_rational_expression_evaluation(
             &left_for_numeric_verification,
             &right_for_numeric_verification,
         ) {
