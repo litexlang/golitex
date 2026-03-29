@@ -2,6 +2,23 @@ use crate::prelude::*;
 use std::collections::HashMap;
 use std::fmt;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum StandardSet {
+    NPos,
+    N,
+    Q,
+    Z,
+    R,
+    QPos,
+    RPos,
+    QNeg,
+    ZNeg,
+    RNeg,
+    QNz,
+    ZNz,
+    RNz,
+}
+
 #[derive(Clone)]
 pub enum Obj {
     Identifier(Identifier),
@@ -39,19 +56,9 @@ pub enum Obj {
     PowerSet(PowerSet),
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
-    NPosObj(NPosObj),
-    NObj(NObj),
-    QObj(QObj),
-    ZObj(ZObj),
-    RObj(RObj),
-    QPos(QPos),
-    RPos(RPos),
-    QNeg(QNeg),
-    ZNeg(ZNeg),
-    RNeg(RNeg),
-    QNz(QNz),
-    ZNz(ZNz),
-    RNz(RNz),
+    StandardSet {
+        standard_set: StandardSet,
+    },
 }
 
 #[derive(Clone)]
@@ -238,45 +245,6 @@ pub struct FnSetWithParams {
 }
 
 #[derive(Clone)]
-pub struct NPosObj {}
-
-#[derive(Clone)]
-pub struct NObj {}
-
-#[derive(Clone)]
-pub struct QObj {}
-
-#[derive(Clone)]
-pub struct ZObj {}
-
-#[derive(Clone)]
-pub struct RObj {}
-
-#[derive(Clone)]
-pub struct QPos {}
-
-#[derive(Clone)]
-pub struct RPos {}
-
-#[derive(Clone)]
-pub struct QNeg {}
-
-#[derive(Clone)]
-pub struct ZNeg {}
-
-#[derive(Clone)]
-pub struct RNeg {}
-
-#[derive(Clone)]
-pub struct QNz {}
-
-#[derive(Clone)]
-pub struct ZNz {}
-
-#[derive(Clone)]
-pub struct RNz {}
-
-#[derive(Clone)]
 pub struct InstStructObj {
     pub struct_name: IdentifierOrIdentifierWithMod,
     pub args: Vec<Box<Obj>>,
@@ -460,84 +428,6 @@ impl FnSetWithParams {
     }
 }
 
-impl NPosObj {
-    pub fn new() -> Self {
-        NPosObj {}
-    }
-}
-
-impl NObj {
-    pub fn new() -> Self {
-        NObj {}
-    }
-}
-
-impl QObj {
-    pub fn new() -> Self {
-        QObj {}
-    }
-}
-
-impl ZObj {
-    pub fn new() -> Self {
-        ZObj {}
-    }
-}
-
-impl RObj {
-    pub fn new() -> Self {
-        RObj {}
-    }
-}
-
-impl QPos {
-    pub fn new() -> Self {
-        QPos {}
-    }
-}
-
-impl RPos {
-    pub fn new() -> Self {
-        RPos {}
-    }
-}
-
-impl QNeg {
-    pub fn new() -> Self {
-        QNeg {}
-    }
-}
-
-impl ZNeg {
-    pub fn new() -> Self {
-        ZNeg {}
-    }
-}
-
-impl RNeg {
-    pub fn new() -> Self {
-        RNeg {}
-    }
-}
-
-impl QNz {
-    pub fn new() -> Self {
-        QNz {}
-    }
-}
-
-impl ZNz {
-    pub fn new() -> Self {
-        ZNz {}
-    }
-}
-
-impl RNz {
-    pub fn new() -> Self {
-        RNz {}
-    }
-}
-
 impl InstStructObj {
     pub fn new(struct_name: IdentifierOrIdentifierWithMod, param_sets: Vec<Obj>) -> Self {
         InstStructObj {
@@ -703,11 +593,7 @@ impl Obj {
             Obj::SetBuilder(x) => write!(f, "{}", x)?,
             Obj::FnSetWithoutParams(x) => write!(f, "{}", x)?,
             Obj::FnSetWithParams(x) => write!(f, "{}", x)?,
-            Obj::NPosObj(x) => write!(f, "{}", x)?,
-            Obj::NObj(x) => write!(f, "{}", x)?,
-            Obj::QObj(x) => write!(f, "{}", x)?,
-            Obj::ZObj(x) => write!(f, "{}", x)?,
-            Obj::RObj(x) => write!(f, "{}", x)?,
+            Obj::StandardSet { standard_set } => write!(f, "{}", standard_set)?,
             Obj::InstSetStructObj(x) => write!(f, "{}", x)?,
             Obj::Cart(x) => write!(f, "{}", x)?,
             Obj::CartDim(x) => write!(f, "{}", x)?,
@@ -721,14 +607,6 @@ impl Obj {
             Obj::PowerSet(x) => write!(f, "{}", x)?,
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
-            Obj::QPos(x) => write!(f, "{}", x)?,
-            Obj::RPos(x) => write!(f, "{}", x)?,
-            Obj::QNeg(x) => write!(f, "{}", x)?,
-            Obj::ZNeg(x) => write!(f, "{}", x)?,
-            Obj::RNeg(x) => write!(f, "{}", x)?,
-            Obj::QNz(x) => write!(f, "{}", x)?,
-            Obj::ZNz(x) => write!(f, "{}", x)?,
-            Obj::RNz(x) => write!(f, "{}", x)?,
         }
         if need_parens {
             write!(f, "{}", RIGHT_BRACE)?;
@@ -1009,81 +887,23 @@ impl fmt::Display for FnSetWithParams {
     }
 }
 
-impl fmt::Display for NPosObj {
+impl fmt::Display for StandardSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", N_POS)
-    }
-}
-
-impl fmt::Display for NObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", N)
-    }
-}
-
-impl fmt::Display for QObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Q)
-    }
-}
-
-impl fmt::Display for ZObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Z)
-    }
-}
-
-impl fmt::Display for RObj {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", R)
-    }
-}
-
-impl fmt::Display for QPos {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Q_POS)
-    }
-}
-
-impl fmt::Display for RPos {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", R_POS)
-    }
-}
-
-impl fmt::Display for QNeg {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Q_NEG)
-    }
-}
-
-impl fmt::Display for ZNeg {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Z_NEG)
-    }
-}
-
-impl fmt::Display for RNeg {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", R_NEG)
-    }
-}
-
-impl fmt::Display for QNz {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Q_NZ)
-    }
-}
-
-impl fmt::Display for ZNz {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", Z_NZ)
-    }
-}
-
-impl fmt::Display for RNz {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", R_NZ)
+        match self {
+            StandardSet::NPos => write!(f, "{}", N_POS),
+            StandardSet::N => write!(f, "{}", N),
+            StandardSet::Q => write!(f, "{}", Q),
+            StandardSet::Z => write!(f, "{}", Z),
+            StandardSet::R => write!(f, "{}", R),
+            StandardSet::QPos => write!(f, "{}", Q_POS),
+            StandardSet::RPos => write!(f, "{}", R_POS),
+            StandardSet::QNeg => write!(f, "{}", Q_NEG),
+            StandardSet::ZNeg => write!(f, "{}", Z_NEG),
+            StandardSet::RNeg => write!(f, "{}", R_NEG),
+            StandardSet::QNz => write!(f, "{}", Q_NZ),
+            StandardSet::ZNz => write!(f, "{}", Z_NZ),
+            StandardSet::RNz => write!(f, "{}", R_NZ),
+        }
     }
 }
 
@@ -1180,11 +1000,9 @@ impl Obj {
             Obj::SetBuilder(inner) => inner.instantiate(param_to_arg_map),
             Obj::FnSetWithoutParams(inner) => inner.instantiate(param_to_arg_map),
             Obj::FnSetWithParams(inner) => inner.instantiate(param_to_arg_map),
-            Obj::NPosObj(inner) => inner.instantiate(param_to_arg_map),
-            Obj::NObj(inner) => inner.instantiate(param_to_arg_map),
-            Obj::QObj(inner) => inner.instantiate(param_to_arg_map),
-            Obj::ZObj(inner) => inner.instantiate(param_to_arg_map),
-            Obj::RObj(inner) => inner.instantiate(param_to_arg_map),
+            Obj::StandardSet { standard_set } => Obj::StandardSet {
+                standard_set: *standard_set,
+            },
             Obj::InstSetStructObj(inner) => inner.instantiate(param_to_arg_map),
             Obj::Cart(inner) => inner.instantiate(param_to_arg_map),
             Obj::CartDim(inner) => inner.instantiate(param_to_arg_map),
@@ -1198,14 +1016,6 @@ impl Obj {
             Obj::PowerSet(inner) => inner.instantiate(param_to_arg_map),
             Obj::Choose(inner) => inner.instantiate(param_to_arg_map),
             Obj::ObjAtIndex(inner) => inner.instantiate(param_to_arg_map),
-            Obj::QPos(inner) => inner.instantiate(param_to_arg_map),
-            Obj::RPos(inner) => inner.instantiate(param_to_arg_map),
-            Obj::QNeg(inner) => inner.instantiate(param_to_arg_map),
-            Obj::ZNeg(inner) => inner.instantiate(param_to_arg_map),
-            Obj::RNeg(inner) => inner.instantiate(param_to_arg_map),
-            Obj::QNz(inner) => inner.instantiate(param_to_arg_map),
-            Obj::ZNz(inner) => inner.instantiate(param_to_arg_map),
-            Obj::RNz(inner) => inner.instantiate(param_to_arg_map),
         }
     }
 }

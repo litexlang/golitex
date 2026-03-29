@@ -266,7 +266,7 @@ impl Runtime {
 
             let parameter_in_z_atomic_fact = AtomicFact::InFact(crate::fact::InFact::new(
                 Obj::Identifier(Identifier::new(parameter_name.clone())),
-                Obj::ZObj(ZObj::new()),
+                Obj::StandardSet { standard_set: StandardSet::Z },
                 stmt.line_file,
             ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(

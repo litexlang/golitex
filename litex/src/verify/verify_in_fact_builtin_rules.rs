@@ -39,11 +39,11 @@ impl Runtime {
                     verify_state,
                 );
             }
-            (Obj::Number(_), Obj::RObj(_)) => Ok(number_in_set_verified_by_builtin_rules_result(
+            (Obj::Number(_), Obj::StandardSet { standard_set: StandardSet::R }) => Ok(number_in_set_verified_by_builtin_rules_result(
                 in_fact,
                 "number in R",
             )),
-            (Obj::Number(num), Obj::RPos(_)) => {
+            (Obj::Number(num), Obj::StandardSet { standard_set: StandardSet::RPos }) => {
                 if number_is_in_r_pos(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
                         in_fact,
@@ -53,7 +53,7 @@ impl Runtime {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
                 }
             }
-            (Obj::Number(num), Obj::RNeg(_)) => {
+            (Obj::Number(num), Obj::StandardSet { standard_set: StandardSet::RNeg }) => {
                 if number_is_in_r_neg(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
                         in_fact,
@@ -63,7 +63,7 @@ impl Runtime {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
                 }
             }
-            (Obj::Number(num), Obj::RNz(_)) => {
+            (Obj::Number(num), Obj::StandardSet { standard_set: StandardSet::RNz }) => {
                 if number_is_in_r_nz(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
                         in_fact,
@@ -73,11 +73,11 @@ impl Runtime {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
                 }
             }
-            (Obj::Number(_), Obj::QObj(_)) => Ok(number_in_set_verified_by_builtin_rules_result(
+            (Obj::Number(_), Obj::StandardSet { standard_set: StandardSet::Q }) => Ok(number_in_set_verified_by_builtin_rules_result(
                 in_fact,
                 "number in Q",
             )),
-            (Obj::Number(num), Obj::QPos(_)) => {
+            (Obj::Number(num), Obj::StandardSet { standard_set: StandardSet::QPos }) => {
                 if number_is_in_q_pos(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
                         in_fact,
@@ -87,7 +87,7 @@ impl Runtime {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
                 }
             }
-            (Obj::Number(num), Obj::QNeg(_)) => {
+            (Obj::Number(num), Obj::StandardSet { standard_set: StandardSet::QNeg }) => {
                 if number_is_in_q_neg(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
                         in_fact,
@@ -97,7 +97,7 @@ impl Runtime {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
                 }
             }
-            (Obj::Number(num), Obj::QNz(_)) => {
+            (Obj::Number(num), Obj::StandardSet { standard_set: StandardSet::QNz }) => {
                 if number_is_in_q_nz(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
                         in_fact,
@@ -107,7 +107,7 @@ impl Runtime {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
                 }
             }
-            (Obj::Number(num), Obj::ZObj(_)) => {
+            (Obj::Number(num), Obj::StandardSet { standard_set: StandardSet::Z }) => {
                 if number_is_in_z(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
                         in_fact,
@@ -117,7 +117,7 @@ impl Runtime {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
                 }
             }
-            (Obj::Number(num), Obj::ZNeg(_)) => {
+            (Obj::Number(num), Obj::StandardSet { standard_set: StandardSet::ZNeg }) => {
                 if number_is_in_z_neg(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
                         in_fact,
@@ -127,7 +127,7 @@ impl Runtime {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
                 }
             }
-            (Obj::Number(num), Obj::ZNz(_)) => {
+            (Obj::Number(num), Obj::StandardSet { standard_set: StandardSet::ZNz }) => {
                 if number_is_in_z_nz(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
                         in_fact,
@@ -137,7 +137,7 @@ impl Runtime {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
                 }
             }
-            (Obj::Number(num), Obj::NObj(_)) => {
+            (Obj::Number(num), Obj::StandardSet { standard_set: StandardSet::N }) => {
                 if number_is_in_n(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
                         in_fact,
@@ -147,7 +147,7 @@ impl Runtime {
                     Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
                 }
             }
-            (Obj::Number(num), Obj::NPosObj(_)) => {
+            (Obj::Number(num), Obj::StandardSet { standard_set: StandardSet::NPos }) => {
                 if number_is_in_n_pos(num) {
                     Ok(number_in_set_verified_by_builtin_rules_result(
                         in_fact,
@@ -159,7 +159,7 @@ impl Runtime {
             }
             (
                 Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
-                Obj::RObj(_),
+                Obj::StandardSet { standard_set: StandardSet::R },
             ) => Ok(arithmetic_obj_in_r_verified_by_builtin_rules_result(
                 in_fact,
             )),
@@ -205,69 +205,69 @@ impl Runtime {
 
     fn standard_subset_set_objs_for_target_set(target_set_obj: &Obj) -> Option<Vec<Obj>> {
         match target_set_obj {
-            Obj::NPosObj(_) => Some(vec![]),
-            Obj::NObj(_) => Some(vec![Obj::NPosObj(crate::obj::NPosObj::new())]),
-            Obj::ZNeg(_) => Some(vec![]),
-            Obj::ZNz(_) => Some(vec![
-                Obj::NPosObj(crate::obj::NPosObj::new()),
-                Obj::ZNeg(crate::obj::ZNeg::new()),
+            Obj::StandardSet { standard_set: StandardSet::NPos } => Some(vec![]),
+            Obj::StandardSet { standard_set: StandardSet::N } => Some(vec![Obj::StandardSet { standard_set: StandardSet::NPos }]),
+            Obj::StandardSet { standard_set: StandardSet::ZNeg } => Some(vec![]),
+            Obj::StandardSet { standard_set: StandardSet::ZNz } => Some(vec![
+                Obj::StandardSet { standard_set: StandardSet::NPos },
+                Obj::StandardSet { standard_set: StandardSet::ZNeg },
             ]),
-            Obj::ZObj(_) => Some(vec![
-                Obj::NPosObj(crate::obj::NPosObj::new()),
-                Obj::NObj(crate::obj::NObj::new()),
-                Obj::ZNeg(crate::obj::ZNeg::new()),
-                Obj::ZNz(crate::obj::ZNz::new()),
+            Obj::StandardSet { standard_set: StandardSet::Z } => Some(vec![
+                Obj::StandardSet { standard_set: StandardSet::NPos },
+                Obj::StandardSet { standard_set: StandardSet::N },
+                Obj::StandardSet { standard_set: StandardSet::ZNeg },
+                Obj::StandardSet { standard_set: StandardSet::ZNz },
             ]),
-            Obj::QPos(_) => Some(vec![Obj::NPosObj(crate::obj::NPosObj::new())]),
-            Obj::QNeg(_) => Some(vec![Obj::ZNeg(crate::obj::ZNeg::new())]),
-            Obj::QNz(_) => Some(vec![
-                Obj::NPosObj(crate::obj::NPosObj::new()),
-                Obj::ZNeg(crate::obj::ZNeg::new()),
-                Obj::ZNz(crate::obj::ZNz::new()),
-                Obj::QPos(crate::obj::QPos::new()),
-                Obj::QNeg(crate::obj::QNeg::new()),
+            Obj::StandardSet { standard_set: StandardSet::QPos } => Some(vec![Obj::StandardSet { standard_set: StandardSet::NPos }]),
+            Obj::StandardSet { standard_set: StandardSet::QNeg } => Some(vec![Obj::StandardSet { standard_set: StandardSet::ZNeg }]),
+            Obj::StandardSet { standard_set: StandardSet::QNz } => Some(vec![
+                Obj::StandardSet { standard_set: StandardSet::NPos },
+                Obj::StandardSet { standard_set: StandardSet::ZNeg },
+                Obj::StandardSet { standard_set: StandardSet::ZNz },
+                Obj::StandardSet { standard_set: StandardSet::QPos },
+                Obj::StandardSet { standard_set: StandardSet::QNeg },
             ]),
-            Obj::QObj(_) => Some(vec![
-                Obj::NPosObj(crate::obj::NPosObj::new()),
-                Obj::NObj(crate::obj::NObj::new()),
-                Obj::ZNeg(crate::obj::ZNeg::new()),
-                Obj::ZNz(crate::obj::ZNz::new()),
-                Obj::ZObj(crate::obj::ZObj::new()),
-                Obj::QPos(crate::obj::QPos::new()),
-                Obj::QNeg(crate::obj::QNeg::new()),
-                Obj::QNz(crate::obj::QNz::new()),
+            Obj::StandardSet { standard_set: StandardSet::Q } => Some(vec![
+                Obj::StandardSet { standard_set: StandardSet::NPos },
+                Obj::StandardSet { standard_set: StandardSet::N },
+                Obj::StandardSet { standard_set: StandardSet::ZNeg },
+                Obj::StandardSet { standard_set: StandardSet::ZNz },
+                Obj::StandardSet { standard_set: StandardSet::Z },
+                Obj::StandardSet { standard_set: StandardSet::QPos },
+                Obj::StandardSet { standard_set: StandardSet::QNeg },
+                Obj::StandardSet { standard_set: StandardSet::QNz },
             ]),
-            Obj::RPos(_) => Some(vec![
-                Obj::NPosObj(crate::obj::NPosObj::new()),
-                Obj::QPos(crate::obj::QPos::new()),
+            Obj::StandardSet { standard_set: StandardSet::RPos } => Some(vec![
+                Obj::StandardSet { standard_set: StandardSet::NPos },
+                Obj::StandardSet { standard_set: StandardSet::QPos },
             ]),
-            Obj::RNeg(_) => Some(vec![
-                Obj::ZNeg(crate::obj::ZNeg::new()),
-                Obj::QNeg(crate::obj::QNeg::new()),
+            Obj::StandardSet { standard_set: StandardSet::RNeg } => Some(vec![
+                Obj::StandardSet { standard_set: StandardSet::ZNeg },
+                Obj::StandardSet { standard_set: StandardSet::QNeg },
             ]),
-            Obj::RNz(_) => Some(vec![
-                Obj::NPosObj(crate::obj::NPosObj::new()),
-                Obj::ZNeg(crate::obj::ZNeg::new()),
-                Obj::ZNz(crate::obj::ZNz::new()),
-                Obj::QPos(crate::obj::QPos::new()),
-                Obj::QNeg(crate::obj::QNeg::new()),
-                Obj::QNz(crate::obj::QNz::new()),
-                Obj::RPos(crate::obj::RPos::new()),
-                Obj::RNeg(crate::obj::RNeg::new()),
+            Obj::StandardSet { standard_set: StandardSet::RNz } => Some(vec![
+                Obj::StandardSet { standard_set: StandardSet::NPos },
+                Obj::StandardSet { standard_set: StandardSet::ZNeg },
+                Obj::StandardSet { standard_set: StandardSet::ZNz },
+                Obj::StandardSet { standard_set: StandardSet::QPos },
+                Obj::StandardSet { standard_set: StandardSet::QNeg },
+                Obj::StandardSet { standard_set: StandardSet::QNz },
+                Obj::StandardSet { standard_set: StandardSet::RPos },
+                Obj::StandardSet { standard_set: StandardSet::RNeg },
             ]),
-            Obj::RObj(_) => Some(vec![
-                Obj::NPosObj(crate::obj::NPosObj::new()),
-                Obj::NObj(crate::obj::NObj::new()),
-                Obj::ZNeg(crate::obj::ZNeg::new()),
-                Obj::ZNz(crate::obj::ZNz::new()),
-                Obj::ZObj(crate::obj::ZObj::new()),
-                Obj::QPos(crate::obj::QPos::new()),
-                Obj::QNeg(crate::obj::QNeg::new()),
-                Obj::QNz(crate::obj::QNz::new()),
-                Obj::QObj(crate::obj::QObj::new()),
-                Obj::RPos(crate::obj::RPos::new()),
-                Obj::RNeg(crate::obj::RNeg::new()),
-                Obj::RNz(crate::obj::RNz::new()),
+            Obj::StandardSet { standard_set: StandardSet::R } => Some(vec![
+                Obj::StandardSet { standard_set: StandardSet::NPos },
+                Obj::StandardSet { standard_set: StandardSet::N },
+                Obj::StandardSet { standard_set: StandardSet::ZNeg },
+                Obj::StandardSet { standard_set: StandardSet::ZNz },
+                Obj::StandardSet { standard_set: StandardSet::Z },
+                Obj::StandardSet { standard_set: StandardSet::QPos },
+                Obj::StandardSet { standard_set: StandardSet::QNeg },
+                Obj::StandardSet { standard_set: StandardSet::QNz },
+                Obj::StandardSet { standard_set: StandardSet::Q },
+                Obj::StandardSet { standard_set: StandardSet::RPos },
+                Obj::StandardSet { standard_set: StandardSet::RNeg },
+                Obj::StandardSet { standard_set: StandardSet::RNz },
             ]),
             _ => None,
         }

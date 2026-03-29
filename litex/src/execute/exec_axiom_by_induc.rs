@@ -74,7 +74,7 @@ impl Runtime {
 
         let induc_from_in_z_fact = AtomicFact::InFact(InFact::new(
             stmt.induc_from.clone(),
-            Obj::ZObj(ZObj::new()),
+            Obj::StandardSet { standard_set: StandardSet::Z },
             stmt.line_file,
         ));
         let verify_induc_from_in_z_result = self
@@ -108,7 +108,7 @@ impl Runtime {
         let corresponding_forall_fact = Fact::ForallFact(ForallFact::new(
             vec![ParamDefWithParamType(
                 vec![stmt.param.clone()],
-                ParamType::Obj(Obj::ZObj(ZObj::new())),
+                ParamType::Obj(Obj::StandardSet { standard_set: StandardSet::Z }),
             )],
             vec![
                 ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(

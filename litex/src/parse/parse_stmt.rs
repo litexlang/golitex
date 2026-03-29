@@ -27,7 +27,7 @@ impl Runtime {
             BY_CASES => self.parse_by_cases_axiom_stmt(tb),
             BY_CONTRA => self.parse_by_contra_axiom_stmt(tb),
             ENUMERATE => self.parse_enumerate_axiom_stmt(tb),
-            BY_INDUC => self.parse_by_induc_axiom_stmt(tb),
+            INDUC => self.parse_by_induc_axiom_stmt(tb),
             FOR => self.parse_for_axiom_stmt(tb),
             BY_EXTENSION => self.parse_by_extension_axiom_stmt(tb),
             BY_FN_DEF => self.parse_by_fn_def_axiom_stmt(tb),
