@@ -125,7 +125,7 @@ impl Runtime {
         line_file: (usize, usize),
     ) -> Result<String, RuntimeError> {
         let calculated_string = {
-            let value = self.get_known_normalized_calculated_value_for_obj(number_like_obj);
+            let value = self.resolve_obj(number_like_obj);
 
             match value {
                 Some(number) => number.normalized_value,

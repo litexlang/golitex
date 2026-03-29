@@ -1,9 +1,8 @@
-use super::calculate::add_decimal_str_and_normalize;
-use super::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 use crate::prelude::*;
-use crate::calculate_and_simplify_rational_expression::calculate::{
-    mul_decimal_str_and_normalize, sub_decimal_str_and_normalize,
+use crate::rational_expression::evaluate::{
+    add_decimal_str_and_normalize, mul_decimal_str_and_normalize, sub_decimal_str_and_normalize,
 };
+use crate::rational_expression::monomial::MonomialWithNonZeroScalarAndOrderedOperands;
 
 pub fn collect_monomials_in_obj(obj: &Obj) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
     match obj {
@@ -28,7 +27,9 @@ pub fn collect_monomials_in_obj(obj: &Obj) -> Vec<MonomialWithNonZeroScalarAndOr
 }
 
 pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) = Obj::Sub(sub.clone()).calculate_arithmetic_value_and_normalize() {
+    if let Some(normalized_calculated_value) =
+        Obj::Sub(sub.clone()).evaluate_to_normalized_decimal_number()
+    {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
@@ -94,7 +95,9 @@ pub fn collect_monomials_in_sub(sub: &Sub) -> Vec<MonomialWithNonZeroScalarAndOr
 }
 
 pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) = Obj::Add(add.clone()).calculate_arithmetic_value_and_normalize() {
+    if let Some(normalized_calculated_value) =
+        Obj::Add(add.clone()).evaluate_to_normalized_decimal_number()
+    {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
@@ -152,11 +155,13 @@ pub fn collect_monomials_in_add(add: &Add) -> Vec<MonomialWithNonZeroScalarAndOr
 }
 
 fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) = Obj::Mul(mul.clone()).calculate_arithmetic_value_and_normalize() {
+    if let Some(normalized_calculated_value) =
+        Obj::Mul(mul.clone()).evaluate_to_normalized_decimal_number()
+    {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 
-    if let Some(normalized_calculated_value) = &mul.left.calculate_arithmetic_value_and_normalize() {
+    if let Some(normalized_calculated_value) = &mul.left.evaluate_to_normalized_decimal_number() {
         let left = normalized_calculated_value.normalized_value.clone();
         let collected_monomials_of_right = collect_monomials_in_obj(&mul.right);
         let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> =
@@ -170,7 +175,7 @@ fn collect_monomials_in_mul(mul: &Mul) -> Vec<MonomialWithNonZeroScalarAndOrdere
         return result;
     }
 
-    if let Some(normalized_calculated_value) = &mul.right.calculate_arithmetic_value_and_normalize() {
+    if let Some(normalized_calculated_value) = &mul.right.evaluate_to_normalized_decimal_number() {
         let right = normalized_calculated_value.normalized_value.clone();
         let collected_monomials_of_left = collect_monomials_in_obj(&mul.left);
         let mut result: Vec<MonomialWithNonZeroScalarAndOrderedOperands> =
@@ -218,8 +223,8 @@ fn collect_monomials_of_mul_of_monomial_vec(
             let current_right_monomial = &collect_monomials_after_mul[j];
             if monomial.operands_equal(current_right_monomial) {
                 current_scalar = add_decimal_str_and_normalize(
-                    &current_scalar,
-                    &current_right_monomial.non_zero_scalar,
+                    current_scalar.as_str(),
+                    current_right_monomial.non_zero_scalar.as_str(),
                 );
                 already_processed_indexes.push(j);
             }
@@ -239,7 +244,9 @@ fn collect_monomials_of_mul_of_monomial_vec(
 }
 
 fn collect_monomials_in_pow(pow: &Pow) -> Vec<MonomialWithNonZeroScalarAndOrderedOperands> {
-    if let Some(normalized_calculated_value) = Obj::Pow(pow.clone()).calculate_arithmetic_value_and_normalize() {
+    if let Some(normalized_calculated_value) =
+        Obj::Pow(pow.clone()).evaluate_to_normalized_decimal_number()
+    {
         return from_number_obj_to_monomial(&normalized_calculated_value);
     }
 

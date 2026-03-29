@@ -1,8 +1,8 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn get_known_normalized_calculated_value_for_obj(&self, obj: &Obj) -> Option<Number> {
-        if let Some(number) = obj.calculate_arithmetic_value_and_normalize() {
+    pub fn resolve_obj(&self, obj: &Obj) -> Option<Number> {
+        if let Some(number) = obj.evaluate_to_normalized_decimal_number() {
             return Some(number);
         }
         self.get_normalized_calculated_value_of_obj(&obj.to_string())
@@ -16,7 +16,7 @@ impl Runtime {
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&add.left),
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&add.right),
                 ));
-                let calculated_result = result.calculate_arithmetic_value_and_normalize();
+                let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
                     Obj::Number(calculated_result)
                 } else {
@@ -28,7 +28,7 @@ impl Runtime {
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&sub.left),
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&sub.right),
                 ));
-                let calculated_result = result.calculate_arithmetic_value_and_normalize();
+                let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
                     Obj::Number(calculated_result)
                 } else {
@@ -40,7 +40,7 @@ impl Runtime {
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&mul.left),
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&mul.right),
                 ));
-                let calculated_result = result.calculate_arithmetic_value_and_normalize();
+                let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
                     Obj::Number(calculated_result)
                 } else {
@@ -54,7 +54,7 @@ impl Runtime {
                         &mod_obj.right,
                     ),
                 ));
-                let calculated_result = result.calculate_arithmetic_value_and_normalize();
+                let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
                     Obj::Number(calculated_result)
                 } else {
@@ -66,7 +66,7 @@ impl Runtime {
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&pow.base),
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&pow.exponent),
                 ));
-                let calculated_result = result.calculate_arithmetic_value_and_normalize();
+                let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
                     Obj::Number(calculated_result)
                 } else {
@@ -78,7 +78,7 @@ impl Runtime {
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&div.left),
                     self.obj_with_runtime_known_numbers_substituted_for_verification(&div.right),
                 ));
-                let calculated_result = result.calculate_arithmetic_value_and_normalize();
+                let calculated_result = result.evaluate_to_normalized_decimal_number();
                 if let Some(calculated_result) = calculated_result {
                     Obj::Number(calculated_result)
                 } else {
@@ -90,7 +90,7 @@ impl Runtime {
             | Obj::FieldAccess(_)
             | Obj::FieldAccessWithMod(_)
             | Obj::FnObj(_) => {
-                if let Some(number) = self.get_known_normalized_calculated_value_for_obj(obj) {
+                if let Some(number) = self.resolve_obj(obj) {
                     Obj::Number(number)
                 } else {
                     obj.clone()
@@ -110,8 +110,7 @@ impl Runtime {
             },
             Obj::Proj(proj) => match &*proj.set {
                 Obj::Cart(cart) => {
-                    let projection_index_number =
-                        self.get_known_normalized_calculated_value_for_obj(&proj.dim);
+                    let projection_index_number = self.resolve_obj(&proj.dim);
                     if let Some(projection_index_number) = projection_index_number {
                         let projection_index_parsed_result =
                             projection_index_number.normalized_value.parse::<usize>();
@@ -128,8 +127,7 @@ impl Runtime {
                 _ => {
                     let known_cart_obj = self.get_known_cart_obj_of_obj(&proj.set.to_string());
                     if let Some(known_cart_obj) = known_cart_obj {
-                        let projection_index_number =
-                            self.get_known_normalized_calculated_value_for_obj(&proj.dim);
+                        let projection_index_number = self.resolve_obj(&proj.dim);
                         if let Some(projection_index_number) = projection_index_number {
                             let projection_index_parsed_result =
                                 projection_index_number.normalized_value.parse::<usize>();
@@ -148,8 +146,7 @@ impl Runtime {
             },
             Obj::ObjAtIndex(obj_at_index) => match &*obj_at_index.obj {
                 Obj::Tuple(tuple) => {
-                    let tuple_index_number =
-                        self.get_known_normalized_calculated_value_for_obj(&obj_at_index.index);
+                    let tuple_index_number = self.resolve_obj(&obj_at_index.index);
                     if let Some(tuple_index_number) = tuple_index_number {
                         let tuple_index_parsed_result =
                             tuple_index_number.normalized_value.parse::<usize>();
@@ -167,8 +164,7 @@ impl Runtime {
                     let known_tuple_obj =
                         self.get_known_tuple_obj_of_obj(&obj_at_index.obj.to_string());
                     if let Some(known_tuple_obj) = known_tuple_obj {
-                        let tuple_index_number =
-                            self.get_known_normalized_calculated_value_for_obj(&obj_at_index.index);
+                        let tuple_index_number = self.resolve_obj(&obj_at_index.index);
                         if let Some(tuple_index_number) = tuple_index_number {
                             let tuple_index_parsed_result =
                                 tuple_index_number.normalized_value.parse::<usize>();

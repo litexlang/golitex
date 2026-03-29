@@ -1,5 +1,3 @@
-use super::stmt_success::{FactVerifiedByBuiltinRules, FactVerifiedByFact, NonFactualStmtSuccess};
-use super::stmt_unknown::StmtUnknown;
 use crate::prelude::*;
 
 #[derive(Debug)]
