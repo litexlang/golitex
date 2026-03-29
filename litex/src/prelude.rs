@@ -157,6 +157,17 @@ pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
 pub use crate::stmt::Stmt;
 pub use crate::verify::VerifyState;
+pub use crate::verify::number_is_in_n;
+pub use crate::verify::number_is_in_n_pos;
+pub use crate::verify::number_is_in_q_neg;
+pub use crate::verify::number_is_in_q_nz;
+pub use crate::verify::number_is_in_q_pos;
+pub use crate::verify::number_is_in_r_neg;
+pub use crate::verify::number_is_in_r_nz;
+pub use crate::verify::number_is_in_r_pos;
+pub use crate::verify::number_is_in_z;
+pub use crate::verify::number_is_in_z_neg;
+pub use crate::verify::number_is_in_z_nz;
 
 pub use crate::common::defaults::DEFAULT_LINE_FILE;
 pub use crate::common::defaults::FILE_INDEX_FOR_BUILTIN;

@@ -23,3 +23,14 @@ mod verify_resolve_obj;
 mod verify_state;
 
 pub use verify_state::VerifyState;
+pub use verify_number_in_standard_set::number_is_in_n;
+pub use verify_number_in_standard_set::number_is_in_n_pos;
+pub use verify_number_in_standard_set::number_is_in_q_neg;
+pub use verify_number_in_standard_set::number_is_in_q_nz;
+pub use verify_number_in_standard_set::number_is_in_q_pos;
+pub use verify_number_in_standard_set::number_is_in_r_neg;
+pub use verify_number_in_standard_set::number_is_in_r_nz;
+pub use verify_number_in_standard_set::number_is_in_r_pos;
+pub use verify_number_in_standard_set::number_is_in_z;
+pub use verify_number_in_standard_set::number_is_in_z_neg;
+pub use verify_number_in_standard_set::number_is_in_z_nz;

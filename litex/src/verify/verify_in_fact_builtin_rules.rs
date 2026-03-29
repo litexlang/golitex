@@ -1,9 +1,4 @@
 use crate::prelude::*;
-use crate::verify::verify_number_in_standard_set::{
-    number_is_in_n, number_is_in_n_pos, number_is_in_q_neg, number_is_in_q_nz, number_is_in_q_pos,
-    number_is_in_r_neg, number_is_in_r_nz, number_is_in_r_pos, number_is_in_z, number_is_in_z_neg,
-    number_is_in_z_nz,
-};
 
 fn number_in_set_verified_by_builtin_rules_result(
     in_fact: &InFact,
