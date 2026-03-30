@@ -300,7 +300,6 @@ impl Runtime {
                 left.end.as_ref(),
                 given_arg,
             ),
-            Obj::Val(ref left) => Self::match_arg_when_left_is_val(left.value.as_ref(), given_arg),
             Obj::PowerSet(ref left) => {
                 Self::match_arg_when_left_is_power_set(left.set.as_ref(), given_arg)
             }
@@ -871,19 +870,6 @@ impl Runtime {
                 left_end,
                 given.start.as_ref(),
                 given.end.as_ref(),
-            ),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_val(
-        left_value: &Obj,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, VerifyError> {
-        match given_arg {
-            Obj::Val(ref given) => Self::match_arg_in_atomic_fact_in_known_forall_with_given_arg(
-                left_value,
-                given.value.as_ref(),
             ),
             _ => Ok(None),
         }

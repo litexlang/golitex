@@ -55,7 +55,6 @@ pub const PROJ: &str = "proj";
 pub const COUNT: &str = "count";
 pub const RANGE: &str = "range";
 pub const CLOSED_RANGE: &str = "closed_range";
-pub const VAL: &str = "val";
 pub const EXIST: &str = "exist";
 pub const ST: &str = "st";
 pub const FORALL: &str = "forall";
@@ -177,7 +176,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         COUNT,
         RANGE,
         CLOSED_RANGE,
-        VAL,
         EXIST,
         ST,
         FORALL,

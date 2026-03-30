@@ -65,7 +65,6 @@ impl Runtime {
             Obj::Count(x) => self.verify_count_well_defined(x, verify_state),
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
             Obj::ClosedRange(x) => self.verify_closed_range_well_defined(x, verify_state),
-            Obj::Val(x) => self.verify_val_well_defined(x, verify_state),
             Obj::PowerSet(x) => self.verify_power_set_well_defined(x, verify_state),
             Obj::Choose(x) => self.verify_choose_well_defined(x, verify_state),
             Obj::ObjAtIndex(x) => self.verify_obj_at_index_well_defined(x, verify_state),
@@ -1088,16 +1087,6 @@ impl Runtime {
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
         Ok(())
-    }
-
-    fn verify_val_well_defined(
-        &mut self,
-        x: &Val,
-        verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
-        let _ = x;
-        let _ = verify_state;
-        unreachable!()
     }
 
     fn verify_power_set_well_defined(

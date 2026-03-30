@@ -36,7 +36,6 @@ pub enum Obj {
     Count(Count),
     Range(Range),
     ClosedRange(ClosedRange),
-    Val(Val),
     PowerSet(PowerSet),
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
@@ -63,11 +62,6 @@ pub struct Choose {
 #[derive(Clone)]
 pub struct PowerSet {
     pub set: Box<Obj>,
-}
-
-#[derive(Clone)]
-pub struct Val {
-    pub value: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -492,14 +486,6 @@ impl ClosedRange {
     }
 }
 
-impl Val {
-    pub fn new(value: Obj) -> Self {
-        Val {
-            value: Box::new(value),
-        }
-    }
-}
-
 /// 算术运算符优先级：数值越小绑定越紧。^=1, * / %=2, + -=3；非算术=0 不参与括号。
 fn precedence(o: &Obj) -> u8 {
     match o {
@@ -585,7 +571,6 @@ impl Obj {
             Obj::Count(x) => write!(f, "{}", x)?,
             Obj::Range(x) => write!(f, "{}", x)?,
             Obj::ClosedRange(x) => write!(f, "{}", x)?,
-            Obj::Val(x) => write!(f, "{}", x)?,
             Obj::PowerSet(x) => write!(f, "{}", x)?,
             Obj::Choose(x) => write!(f, "{}", x)?,
             Obj::ObjAtIndex(x) => write!(f, "{}", x)?,
@@ -888,17 +873,6 @@ impl fmt::Display for Cart {
     }
 }
 
-impl fmt::Display for Val {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}{}",
-            VAL,
-            braced_vec_to_string(&vec![self.value.as_ref()])
-        )
-    }
-}
-
 impl fmt::Display for PowerSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -974,7 +948,6 @@ impl Obj {
             Obj::Count(inner) => inner.instantiate(param_to_arg_map),
             Obj::Range(inner) => inner.instantiate(param_to_arg_map),
             Obj::ClosedRange(inner) => inner.instantiate(param_to_arg_map),
-            Obj::Val(inner) => inner.instantiate(param_to_arg_map),
             Obj::PowerSet(inner) => inner.instantiate(param_to_arg_map),
             Obj::Choose(inner) => inner.instantiate(param_to_arg_map),
             Obj::ObjAtIndex(inner) => inner.instantiate(param_to_arg_map),
