@@ -22,6 +22,30 @@ impl Runtime {
         if verify_state.is_round_0() {
             let verify_state_add_one_round = verify_state.new_state_with_round_increased();
 
+            match atomic_fact {
+                AtomicFact::SubsetFact(subset_fact) => {
+                    if let Some(verified_by_subset_definition) = self
+                        .verify_subset_fact_by_membership_forall_definition(
+                            subset_fact,
+                            verify_state,
+                        )?
+                    {
+                        return Ok(verified_by_subset_definition);
+                    }
+                }
+                AtomicFact::SupersetFact(superset_fact) => {
+                    if let Some(verified_by_superset_definition) = self
+                        .verify_superset_fact_by_membership_forall_definition(
+                            superset_fact,
+                            verify_state,
+                        )?
+                    {
+                        return Ok(verified_by_superset_definition);
+                    }
+                }
+                _ => {}
+            }
+
             if let AtomicFact::NormalAtomicFact(normal_atomic_fact) = atomic_fact {
                 let maybe_verified_by_prop_definition = self
                     .verify_normal_atomic_fact_using_its_definition(
@@ -294,12 +318,105 @@ impl Runtime {
         }
     }
 
+    fn verify_subset_fact_by_membership_forall_definition(
+        &mut self,
+        subset_fact: &SubsetFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
+        let bound_param_name = self.generate_a_random_unused_name();
+        let membership_forall_fact = Fact::ForallFact(ForallFact::new(
+            vec![ParamDefWithParamType(
+                vec![bound_param_name.clone()],
+                ParamType::Obj(subset_fact.left.clone()),
+            )],
+            vec![],
+            vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
+                Obj::Identifier(Identifier::new(bound_param_name)),
+                subset_fact.right.clone(),
+                subset_fact.line_file,
+            )))],
+            subset_fact.line_file,
+        ));
+        let verify_forall_result =
+            self.verify_fact(&membership_forall_fact, verify_state)?;
+        if !verify_forall_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(NonErrStmtExecResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                Fact::AtomicFact(AtomicFact::SubsetFact(subset_fact.clone())),
+                InferResult::new(),
+                "subset by definition (forall x in left: x in right)".to_string(),
+                Vec::new(),
+            ),
+        )))
+    }
+
+    fn verify_superset_fact_by_membership_forall_definition(
+        &mut self,
+        superset_fact: &SupersetFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
+        let bound_param_name = self.generate_a_random_unused_name();
+        let membership_forall_fact = Fact::ForallFact(ForallFact::new(
+            vec![ParamDefWithParamType(
+                vec![bound_param_name.clone()],
+                ParamType::Obj(superset_fact.right.clone()),
+            )],
+            vec![],
+            vec![ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
+                Obj::Identifier(Identifier::new(bound_param_name)),
+                superset_fact.left.clone(),
+                superset_fact.line_file,
+            )))],
+            superset_fact.line_file,
+        ));
+        let verify_forall_result =
+            self.verify_fact(&membership_forall_fact, verify_state)?;
+        if !verify_forall_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(NonErrStmtExecResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules(
+                Fact::AtomicFact(AtomicFact::SupersetFact(superset_fact.clone())),
+                InferResult::new(),
+                "superset by definition (forall x in right: x in left)".to_string(),
+                Vec::new(),
+            ),
+        )))
+    }
+
     fn verify_normal_atomic_fact_using_its_definition(
         &mut self,
         normal_atomic_fact: &NormalAtomicFact,
         verify_state: &VerifyState,
     ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
+        if predicate_name.as_str() == SUBSET {
+            if normal_atomic_fact.body.len() != 2 {
+                return Ok(None);
+            }
+            let subset_fact = SubsetFact::new(
+                normal_atomic_fact.body[0].clone(),
+                normal_atomic_fact.body[1].clone(),
+                normal_atomic_fact.line_file,
+            );
+            return self.verify_subset_fact_by_membership_forall_definition(&subset_fact, verify_state);
+        }
+        if predicate_name.as_str() == SUPERSET {
+            if normal_atomic_fact.body.len() != 2 {
+                return Ok(None);
+            }
+            let superset_fact = SupersetFact::new(
+                normal_atomic_fact.body[0].clone(),
+                normal_atomic_fact.body[1].clone(),
+                normal_atomic_fact.line_file,
+            );
+            return self.verify_superset_fact_by_membership_forall_definition(
+                &superset_fact,
+                verify_state,
+            );
+        }
         let definition = match self.get_predicate_with_meaning_definition_by_name(&predicate_name) {
             Some(definition_reference) => definition_reference.clone(),
             None => return Ok(None),
