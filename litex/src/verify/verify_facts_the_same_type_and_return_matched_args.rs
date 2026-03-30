@@ -214,9 +214,35 @@ impl Runtime {
                     ParamType::FiniteSet(_) => {}
                     _ => return Ok(None),
                 },
+                ParamType::InstantiatedStruct(ref instantiated_struct) => {
+                    match &other_param_def.1 {
+                        ParamType::InstantiatedStruct(other_instantiated_struct) => {
+                            if instantiated_struct.name.to_string()
+                                != other_instantiated_struct.name.to_string()
+                            {
+                                return Ok(None);
+                            }
+                            if instantiated_struct.params.len()
+                                != other_instantiated_struct.params.len()
+                            {
+                                return Ok(None);
+                            }
+                            let mut matched_args: Vec<(Obj, Obj)> =
+                                Vec::with_capacity(instantiated_struct.params.len());
+                            for (param, other_param) in instantiated_struct
+                                .params
+                                .iter()
+                                .zip(other_instantiated_struct.params.iter())
+                            {
+                                matched_args.push((param.clone(), other_param.clone()));
+                            }
+                            return Ok(Some(matched_args));
+                        }
+                        _ => return Ok(None),
+                    }
+                }
             }
         }
-
         for (fact_item, other_item) in fact.facts.iter().zip(other.facts.iter()) {
             let sub_matched_args =
                 match Self::_verify_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(

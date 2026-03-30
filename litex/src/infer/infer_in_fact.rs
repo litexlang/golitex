@@ -4,7 +4,10 @@ use std::collections::HashMap;
 impl Runtime {
     /// Infer consequences from membership facts `x in S`.
     /// Example: `x in {1,2}` infers `x = 1 or x = 2`.
-    pub(crate) fn infer_in_fact(&mut self, in_fact: &InFact) -> Result<InferResult, InferError> {
+    pub(in crate::infer) fn infer_in_fact(
+        &mut self,
+        in_fact: &InFact,
+    ) -> Result<InferResult, InferError> {
         match &in_fact.set {
             Obj::FnSetWithParams(fn_set_with_dom) => {
                 let is_element_atom = match &in_fact.element {

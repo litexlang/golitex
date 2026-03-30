@@ -38,6 +38,9 @@ impl Runtime {
                 )?;
                 Ok(())
             }
+            ParamType::InstantiatedStruct(_) => {
+                unimplemented!("instantiated struct param type is not supported yet");
+            }
         }
     }
 }
