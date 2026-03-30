@@ -326,7 +326,7 @@ impl Runtime {
                 let previous_error_json = self.build_display_error_json_object(
                     previous_error,
                     previous_error_depth,
-                    false,
+                    true,
                 );
                 format!(
                     "{}\"{}\":\n{}",

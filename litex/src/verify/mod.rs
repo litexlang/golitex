@@ -3,6 +3,7 @@ mod verify_atomic_fact;
 mod verify_atomic_fact_with_known_forall;
 mod verify_by_syntax;
 mod verify_equality;
+mod verify_equality_by_builtin_rules;
 mod verify_exist_fact;
 mod verify_exist_fact_with_known_forall;
 mod verify_fact;
@@ -19,7 +20,6 @@ mod verify_number_in_standard_set;
 mod verify_obj_well_defined;
 mod verify_or_fact;
 mod verify_or_fact_with_known_forall;
-mod verify_resolve_obj;
 mod verify_state;
 
 pub use verify_number_in_standard_set::number_is_in_n;

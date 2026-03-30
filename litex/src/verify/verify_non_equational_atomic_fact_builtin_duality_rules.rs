@@ -206,11 +206,45 @@ impl Runtime {
         }
     }
 
+    fn verify_less_fact_when_left_is_mul_right_is_zero_by_opposite_sign_factors(
+        &mut self,
+        less_fact: &LessFact,
+        verify_state: &VerifyState,
+    ) -> Result<Option<NonErrStmtExecResult>, VerifyError> {
+        let right_is_zero = match self.resolve_obj_to_number(&less_fact.right) {
+            Some(number) => number.normalized_value == "0",
+            None => false,
+        };
+        if !right_is_zero {
+            return Ok(None);
+        }
+        let mul = match &less_fact.left {
+            Obj::Mul(mul) => mul,
+            _ => return Ok(None),
+        };
+        if !self.mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
+            &mul.left,
+            &mul.right,
+            less_fact.line_file,
+            verify_state,
+        )? {
+            return Ok(None);
+        }
+        Ok(Some(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+            FactVerifiedByBuiltinRules::new(
+                Fact::AtomicFact(AtomicFact::LessFact(less_fact.clone())),
+                "mul_opposite_signs_product_less_than_zero".to_string(),
+                InferResult::new(),
+            ),
+        )))
+    }
+
     /// Verify order facts by either direct number calculation or negation duality.
     pub(crate) fn verify_order_or_negation_fact_with_builtin_duality_and_number_compare(
         &mut self,
         current_fact: &AtomicFact,
         counterpart_fact: &AtomicFact,
+        verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         let number_compare_result = self.verify_number_comparison_builtin_rule(current_fact);
         if let Some(true) = number_compare_result {
@@ -221,6 +255,15 @@ impl Runtime {
                     InferResult::new(),
                 ),
             ));
+        }
+        if let AtomicFact::LessFact(less_fact) = current_fact {
+            if let Some(verified_by_opposite_sign_factors) = self
+                .verify_less_fact_when_left_is_mul_right_is_zero_by_opposite_sign_factors(
+                    less_fact,
+                    verify_state,
+                )? {
+                return Ok(verified_by_opposite_sign_factors);
+            }
         }
         self.verify_duality_atomic_fact_by_known_counterpart(
             current_fact,

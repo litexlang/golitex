@@ -19,12 +19,119 @@ fn arithmetic_obj_in_r_verified_by_builtin_rules_result(in_fact: &InFact) -> Non
     ))
 }
 
+fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
+    in_fact: &InFact,
+    evaluated_number: &Number,
+    standard_set: &StandardSet,
+) -> NonErrStmtExecResult {
+    match standard_set {
+        StandardSet::R => {
+            number_in_set_verified_by_builtin_rules_result(in_fact, "number in R")
+        }
+        StandardSet::RPos => {
+            if number_is_in_r_pos(evaluated_number) {
+                number_in_set_verified_by_builtin_rules_result(in_fact, "number in R_pos")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::RNeg => {
+            if number_is_in_r_neg(evaluated_number) {
+                number_in_set_verified_by_builtin_rules_result(in_fact, "number in R_neg")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::RNz => {
+            if number_is_in_r_nz(evaluated_number) {
+                number_in_set_verified_by_builtin_rules_result(in_fact, "number in R_nz")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::Q => {
+            number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q")
+        }
+        StandardSet::QPos => {
+            if number_is_in_q_pos(evaluated_number) {
+                number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q_pos")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::QNeg => {
+            if number_is_in_q_neg(evaluated_number) {
+                number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q_neg")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::QNz => {
+            if number_is_in_q_nz(evaluated_number) {
+                number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q_nz")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::Z => {
+            if number_is_in_z(evaluated_number) {
+                number_in_set_verified_by_builtin_rules_result(in_fact, "number in Z")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::ZNeg => {
+            if number_is_in_z_neg(evaluated_number) {
+                number_in_set_verified_by_builtin_rules_result(in_fact, "number in Z_neg")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::ZNz => {
+            if number_is_in_z_nz(evaluated_number) {
+                number_in_set_verified_by_builtin_rules_result(in_fact, "number in Z_nz")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::N => {
+            if number_is_in_n(evaluated_number) {
+                number_in_set_verified_by_builtin_rules_result(in_fact, "number in N")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+        StandardSet::NPos => {
+            if number_is_in_n_pos(evaluated_number) {
+                number_in_set_verified_by_builtin_rules_result(in_fact, "number in N_pos")
+            } else {
+                NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())
+            }
+        }
+    }
+}
+
 impl Runtime {
     pub fn verify_in_fact_with_builtin_rules(
         &mut self,
         in_fact: &InFact,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
+        if let Obj::StandardSet(standard_set) = &in_fact.set {
+            if !matches!(&in_fact.element, Obj::Number(_)) {
+                if let Some(evaluated_number) =
+                    in_fact.element.evaluate_to_normalized_decimal_number()
+                {
+                    let evaluation_membership_result =
+                        builtin_in_fact_result_for_evaluated_number_in_standard_set(
+                            in_fact,
+                            &evaluated_number,
+                            standard_set,
+                        );
+                    return Ok(evaluation_membership_result);
+                }
+            }
+        }
         match (&in_fact.element, &in_fact.set) {
             (Obj::Tuple(tuple), Obj::Cart(cart)) => {
                 return self.verify_in_fact_by_left_is_tuple_right_is_cart(
@@ -34,122 +141,37 @@ impl Runtime {
                     verify_state,
                 );
             }
-            (Obj::Number(_), Obj::StandardSet(StandardSet::R)) => Ok(
-                number_in_set_verified_by_builtin_rules_result(in_fact, "number in R"),
+            (Obj::Number(num), Obj::StandardSet(standard_set)) => Ok(
+                builtin_in_fact_result_for_evaluated_number_in_standard_set(
+                    in_fact,
+                    num,
+                    standard_set,
+                ),
             ),
-            (Obj::Number(num), Obj::StandardSet(StandardSet::RPos)) => {
-                if number_is_in_r_pos(num) {
-                    Ok(number_in_set_verified_by_builtin_rules_result(
-                        in_fact,
-                        "number in R_pos",
-                    ))
-                } else {
-                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
-                }
-            }
-            (Obj::Number(num), Obj::StandardSet(StandardSet::RNeg)) => {
-                if number_is_in_r_neg(num) {
-                    Ok(number_in_set_verified_by_builtin_rules_result(
-                        in_fact,
-                        "number in R_neg",
-                    ))
-                } else {
-                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
-                }
-            }
-            (Obj::Number(num), Obj::StandardSet(StandardSet::RNz)) => {
-                if number_is_in_r_nz(num) {
-                    Ok(number_in_set_verified_by_builtin_rules_result(
-                        in_fact,
-                        "number in R_nz",
-                    ))
-                } else {
-                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
-                }
-            }
-            (Obj::Number(_), Obj::StandardSet(StandardSet::Q)) => Ok(
-                number_in_set_verified_by_builtin_rules_result(in_fact, "number in Q"),
+            (
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
+                Obj::StandardSet(StandardSet::RNeg),
+            ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
+                in_fact,
+                verify_state,
+                StandardSet::RNeg,
             ),
-            (Obj::Number(num), Obj::StandardSet(StandardSet::QPos)) => {
-                if number_is_in_q_pos(num) {
-                    Ok(number_in_set_verified_by_builtin_rules_result(
-                        in_fact,
-                        "number in Q_pos",
-                    ))
-                } else {
-                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
-                }
-            }
-            (Obj::Number(num), Obj::StandardSet(StandardSet::QNeg)) => {
-                if number_is_in_q_neg(num) {
-                    Ok(number_in_set_verified_by_builtin_rules_result(
-                        in_fact,
-                        "number in Q_neg",
-                    ))
-                } else {
-                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
-                }
-            }
-            (Obj::Number(num), Obj::StandardSet(StandardSet::QNz)) => {
-                if number_is_in_q_nz(num) {
-                    Ok(number_in_set_verified_by_builtin_rules_result(
-                        in_fact,
-                        "number in Q_nz",
-                    ))
-                } else {
-                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
-                }
-            }
-            (Obj::Number(num), Obj::StandardSet(StandardSet::Z)) => {
-                if number_is_in_z(num) {
-                    Ok(number_in_set_verified_by_builtin_rules_result(
-                        in_fact,
-                        "number in Z",
-                    ))
-                } else {
-                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
-                }
-            }
-            (Obj::Number(num), Obj::StandardSet(StandardSet::ZNeg)) => {
-                if number_is_in_z_neg(num) {
-                    Ok(number_in_set_verified_by_builtin_rules_result(
-                        in_fact,
-                        "number in Z_neg",
-                    ))
-                } else {
-                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
-                }
-            }
-            (Obj::Number(num), Obj::StandardSet(StandardSet::ZNz)) => {
-                if number_is_in_z_nz(num) {
-                    Ok(number_in_set_verified_by_builtin_rules_result(
-                        in_fact,
-                        "number in Z_nz",
-                    ))
-                } else {
-                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
-                }
-            }
-            (Obj::Number(num), Obj::StandardSet(StandardSet::N)) => {
-                if number_is_in_n(num) {
-                    Ok(number_in_set_verified_by_builtin_rules_result(
-                        in_fact,
-                        "number in N",
-                    ))
-                } else {
-                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
-                }
-            }
-            (Obj::Number(num), Obj::StandardSet(StandardSet::NPos)) => {
-                if number_is_in_n_pos(num) {
-                    Ok(number_in_set_verified_by_builtin_rules_result(
-                        in_fact,
-                        "number in N_pos",
-                    ))
-                } else {
-                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
-                }
-            }
+            (
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
+                Obj::StandardSet(StandardSet::QNeg),
+            ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
+                in_fact,
+                verify_state,
+                StandardSet::QNeg,
+            ),
+            (
+                Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
+                Obj::StandardSet(StandardSet::ZNeg),
+            ) => self.verify_in_fact_arithmetic_expression_in_standard_negative_set(
+                in_fact,
+                verify_state,
+                StandardSet::ZNeg,
+            ),
             (
                 Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) | Obj::Mod(_) | Obj::Pow(_),
                 Obj::StandardSet(StandardSet::R),
@@ -164,6 +186,96 @@ impl Runtime {
             (_, target_set_obj) => {
                 self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
             }
+        }
+    }
+
+    fn verify_in_fact_arithmetic_expression_in_standard_negative_set(
+        &mut self,
+        in_fact: &InFact,
+        verify_state: &VerifyState,
+        target_negative_standard_set: StandardSet,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
+            return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
+                in_fact,
+                &evaluated_number,
+                &target_negative_standard_set,
+            ));
+        }
+        let mul = match &in_fact.element {
+            Obj::Mul(mul) => mul,
+            _ => return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
+        };
+        let product_in_r_fact = AtomicFact::InFact(InFact::new(
+            in_fact.element.clone(),
+            Obj::StandardSet(StandardSet::R),
+            in_fact.line_file,
+        ));
+        if !self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+            &product_in_r_fact,
+            verify_state,
+        )? {
+            return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+        }
+        if !self.mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
+            &mul.left,
+            &mul.right,
+            in_fact.line_file,
+            verify_state,
+        )? {
+            return Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()));
+        }
+        match target_negative_standard_set {
+            StandardSet::RNeg => Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                FactVerifiedByBuiltinRules::new(
+                    Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+                    "mul_opposite_signs_product_in_R_neg".to_string(),
+                    InferResult::new(),
+                ),
+            )),
+            StandardSet::QNeg => {
+                let product_in_q_fact = AtomicFact::InFact(InFact::new(
+                    in_fact.element.clone(),
+                    Obj::StandardSet(StandardSet::Q),
+                    in_fact.line_file,
+                ));
+                if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                    &product_in_q_fact,
+                    verify_state,
+                )? {
+                    Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                        FactVerifiedByBuiltinRules::new(
+                            Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+                            "mul_opposite_signs_product_in_Q_neg".to_string(),
+                            InferResult::new(),
+                        ),
+                    ))
+                } else {
+                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+                }
+            }
+            StandardSet::ZNeg => {
+                let product_in_z_fact = AtomicFact::InFact(InFact::new(
+                    in_fact.element.clone(),
+                    Obj::StandardSet(StandardSet::Z),
+                    in_fact.line_file,
+                ));
+                if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                    &product_in_z_fact,
+                    verify_state,
+                )? {
+                    Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                        FactVerifiedByBuiltinRules::new(
+                            Fact::AtomicFact(AtomicFact::InFact(in_fact.clone())),
+                            "mul_opposite_signs_product_in_Z_neg".to_string(),
+                            InferResult::new(),
+                        ),
+                    ))
+                } else {
+                    Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new()))
+                }
+            }
+            _ => Ok(NonErrStmtExecResult::StmtUnknown(StmtUnknown::new())),
         }
     }
 

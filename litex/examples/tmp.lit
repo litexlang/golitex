@@ -1,6 +1,22 @@
-have a, b R
-know:
-    a != 0
-    b != 0
+-1 < 0
 
-1 / (a * b) = 1 / (a * b)
+have a, b R, c Z
+
+a $in R
+b $in R
+c $in Z
+
+1 $in N
+1 $in N_pos
+1 $in Z
+1 $in Q
+1 $in R
+
+1 $in Q_pos
+1 $in R_pos
+-1 $in R_neg
+-1.1 $in Q_neg
+-1 $in Z_neg
+1 $in Q_nz
+
+1 + 1 $in N
