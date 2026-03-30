@@ -27,7 +27,6 @@ pub enum Obj {
     SetBuilder(SetBuilder),
     FnSetWithoutParams(FnSetWithoutParams),
     FnSetWithParams(FnSetWithParams),
-    InstSetStructObj(InstStructObj),
     Cart(Cart),
     CartDim(CartDim),
     Proj(Proj),
@@ -562,7 +561,6 @@ impl Obj {
             Obj::FnSetWithoutParams(x) => write!(f, "{}", x)?,
             Obj::FnSetWithParams(x) => write!(f, "{}", x)?,
             Obj::StandardSet { standard_set } => write!(f, "{}", standard_set)?,
-            Obj::InstSetStructObj(x) => write!(f, "{}", x)?,
             Obj::Cart(x) => write!(f, "{}", x)?,
             Obj::CartDim(x) => write!(f, "{}", x)?,
             Obj::Proj(x) => write!(f, "{}", x)?,
@@ -939,7 +937,6 @@ impl Obj {
             Obj::StandardSet { standard_set } => Obj::StandardSet {
                 standard_set: standard_set.clone(),
             },
-            Obj::InstSetStructObj(inner) => inner.instantiate(param_to_arg_map),
             Obj::Cart(inner) => inner.instantiate(param_to_arg_map),
             Obj::CartDim(inner) => inner.instantiate(param_to_arg_map),
             Obj::Proj(inner) => inner.instantiate(param_to_arg_map),

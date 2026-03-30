@@ -123,10 +123,7 @@ impl Runtime {
         let left_obj = &not_equal_fact.left;
         let right_obj = &not_equal_fact.right;
 
-        match (
-            self.resolve_obj(left_obj),
-            self.resolve_obj(right_obj),
-        ) {
+        match (self.resolve_obj(left_obj), self.resolve_obj(right_obj)) {
             (Some(left_number), Some(right_number)) => {
                 if left_number.normalized_value != right_number.normalized_value {
                     return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(

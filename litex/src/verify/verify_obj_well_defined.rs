@@ -49,14 +49,21 @@ impl Runtime {
                 self.verify_fn_set_without_dom_well_defined(x, verify_state)
             }
             Obj::FnSetWithParams(x) => self.verify_fn_set_with_dom_well_defined(x, verify_state),
-            Obj::StandardSet { standard_set: StandardSet::NPos } => self.verify_n_pos_obj_well_defined(),
-            Obj::StandardSet { standard_set: StandardSet::N } => self.verify_n_obj_well_defined(),
-            Obj::StandardSet { standard_set: StandardSet::Q } => self.verify_q_obj_well_defined(),
-            Obj::StandardSet { standard_set: StandardSet::Z } => self.verify_z_obj_well_defined(),
-            Obj::StandardSet { standard_set: StandardSet::R } => self.verify_r_obj_well_defined(),
-            Obj::InstSetStructObj(x) => {
-                self.verify_inst_set_struct_obj_well_defined(x, verify_state)
-            }
+            Obj::StandardSet {
+                standard_set: StandardSet::NPos,
+            } => self.verify_n_pos_obj_well_defined(),
+            Obj::StandardSet {
+                standard_set: StandardSet::N,
+            } => self.verify_n_obj_well_defined(),
+            Obj::StandardSet {
+                standard_set: StandardSet::Q,
+            } => self.verify_q_obj_well_defined(),
+            Obj::StandardSet {
+                standard_set: StandardSet::Z,
+            } => self.verify_z_obj_well_defined(),
+            Obj::StandardSet {
+                standard_set: StandardSet::R,
+            } => self.verify_r_obj_well_defined(),
             Obj::Cart(x) => self.verify_cart_well_defined(x, verify_state),
             Obj::CartDim(x) => self.verify_cart_dim_well_defined(x, verify_state),
             Obj::Proj(x) => self.verify_proj_well_defined(x, verify_state),
@@ -68,14 +75,30 @@ impl Runtime {
             Obj::PowerSet(x) => self.verify_power_set_well_defined(x, verify_state),
             Obj::Choose(x) => self.verify_choose_well_defined(x, verify_state),
             Obj::ObjAtIndex(x) => self.verify_obj_at_index_well_defined(x, verify_state),
-            Obj::StandardSet { standard_set: StandardSet::QPos } => self.verify_q_pos_well_defined(),
-            Obj::StandardSet { standard_set: StandardSet::RPos } => self.verify_r_pos_well_defined(),
-            Obj::StandardSet { standard_set: StandardSet::QNeg } => self.verify_q_neg_well_defined(),
-            Obj::StandardSet { standard_set: StandardSet::ZNeg } => self.verify_z_neg_well_defined(),
-            Obj::StandardSet { standard_set: StandardSet::RNeg } => self.verify_r_neg_well_defined(),
-            Obj::StandardSet { standard_set: StandardSet::QNz } => self.verify_q_nz_well_defined(),
-            Obj::StandardSet { standard_set: StandardSet::ZNz } => self.verify_z_nz_well_defined(),
-            Obj::StandardSet { standard_set: StandardSet::RNz } => self.verify_r_nz_well_defined(),
+            Obj::StandardSet {
+                standard_set: StandardSet::QPos,
+            } => self.verify_q_pos_well_defined(),
+            Obj::StandardSet {
+                standard_set: StandardSet::RPos,
+            } => self.verify_r_pos_well_defined(),
+            Obj::StandardSet {
+                standard_set: StandardSet::QNeg,
+            } => self.verify_q_neg_well_defined(),
+            Obj::StandardSet {
+                standard_set: StandardSet::ZNeg,
+            } => self.verify_z_neg_well_defined(),
+            Obj::StandardSet {
+                standard_set: StandardSet::RNeg,
+            } => self.verify_r_neg_well_defined(),
+            Obj::StandardSet {
+                standard_set: StandardSet::QNz,
+            } => self.verify_q_nz_well_defined(),
+            Obj::StandardSet {
+                standard_set: StandardSet::ZNz,
+            } => self.verify_z_nz_well_defined(),
+            Obj::StandardSet {
+                standard_set: StandardSet::RNz,
+            } => self.verify_r_nz_well_defined(),
         }?;
 
         if use_cache {
@@ -376,7 +399,9 @@ impl Runtime {
         obj: &Obj,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        let r_obj = Obj::StandardSet { standard_set: StandardSet::R };
+        let r_obj = Obj::StandardSet {
+            standard_set: StandardSet::R,
+        };
         let in_fact = InFact::new(obj.clone(), r_obj, DEFAULT_LINE_FILE.clone());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
@@ -395,7 +420,9 @@ impl Runtime {
         obj: &Obj,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        let z_obj = Obj::StandardSet { standard_set: StandardSet::Z };
+        let z_obj = Obj::StandardSet {
+            standard_set: StandardSet::Z,
+        };
         let in_fact = InFact::new(obj.clone(), z_obj, DEFAULT_LINE_FILE.clone());
         let atomic_fact = AtomicFact::InFact(in_fact);
         let result = self.verify_atomic_fact(&atomic_fact, verify_state)?;
@@ -515,7 +542,9 @@ impl Runtime {
                 )),
                 AtomicFact::InFact(InFact::new(
                     (*pow.exponent).clone(),
-                    Obj::StandardSet { standard_set: StandardSet::R },
+                    Obj::StandardSet {
+                        standard_set: StandardSet::R,
+                    },
                     DEFAULT_LINE_FILE,
                 )),
             ],
@@ -531,7 +560,9 @@ impl Runtime {
                 )),
                 AtomicFact::InFact(InFact::new(
                     (*pow.exponent).clone(),
-                    Obj::StandardSet { standard_set: StandardSet::R },
+                    Obj::StandardSet {
+                        standard_set: StandardSet::R,
+                    },
                     DEFAULT_LINE_FILE,
                 )),
                 AtomicFact::GreaterFact(GreaterFact::new(
@@ -547,7 +578,9 @@ impl Runtime {
             vec![
                 AtomicFact::InFact(InFact::new(
                     (*pow.exponent).clone(),
-                    Obj::StandardSet { standard_set: StandardSet::Z },
+                    Obj::StandardSet {
+                        standard_set: StandardSet::Z,
+                    },
                     DEFAULT_LINE_FILE,
                 )),
                 AtomicFact::EqualFact(EqualFact::new(
@@ -562,7 +595,9 @@ impl Runtime {
         let exponent_is_positive_integer =
             AndChainAtomicFact::AtomicFact(AtomicFact::InFact(InFact::new(
                 (*pow.exponent).clone(),
-                Obj::StandardSet { standard_set: StandardSet::NPos },
+                Obj::StandardSet {
+                    standard_set: StandardSet::NPos,
+                },
                 DEFAULT_LINE_FILE,
             )));
 
@@ -840,68 +875,6 @@ impl Runtime {
         Ok(())
     }
 
-    fn verify_inst_set_struct_obj_well_defined(
-        &mut self,
-        x: &InstStructObj,
-        verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
-        self.push_env();
-        let result = self.verify_inst_set_struct_obj_well_defined_body(x, verify_state);
-        self.pop_env();
-        result
-    }
-
-    fn verify_inst_set_struct_obj_well_defined_body(
-        &mut self,
-        x: &InstStructObj,
-        verify_state: &VerifyState,
-    ) -> Result<(), WellDefinedError> {
-        let param_defs = if let Some(def) =
-            self.get_set_struct_with_fields_definition_by_name(x.struct_name.to_string().as_str())
-        {
-            &def.params_def_with_type
-        } else if let Some(def) =
-            self.get_set_struct_with_no_field_definition_by_name(x.struct_name.to_string().as_str())
-        {
-            &def.params_def_with_type
-        } else {
-            return Err(WellDefinedError::new(
-                format!(
-                    "set struct definition not found {}",
-                    x.struct_name.to_string()
-                ),
-                None,
-                DEFAULT_LINE_FILE.clone(),
-            ));
-        };
-        let facts = ParamDefWithParamType::boxed_args_satisfy_param_def_facts(param_defs, &x.args)
-            .map_err(|e| {
-                WellDefinedError::new(
-                    "failed to build facts for inst struct".to_string(),
-                    Some(e),
-                    DEFAULT_LINE_FILE.clone(),
-                )
-            })?;
-        for fact in facts.iter() {
-            let result = self.verify_atomic_fact(fact, verify_state).map_err(|e| {
-                WellDefinedError::new(
-                    "exec_fact failed for inst struct obj arg".to_string(),
-                    Some(RuntimeError::VerifyError(e)),
-                    DEFAULT_LINE_FILE.clone(),
-                )
-            })?;
-            if result.is_unknown() {
-                return Err(WellDefinedError::new(
-                    "exec_fact failed for inst struct obj arg".to_string(),
-                    None,
-                    DEFAULT_LINE_FILE.clone(),
-                ));
-            }
-        }
-
-        Ok(())
-    }
-
     fn verify_cart_well_defined(
         &mut self,
         x: &Cart,
@@ -942,21 +915,21 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.dim, verify_state)?;
 
-        let projection_dimension_number = self
-            .resolve_obj(&x.dim)
-            .ok_or_else(|| {
-                WellDefinedError::new(
-                    format!("projection dimension {} is not a number", x.dim),
-                    None,
-                    DEFAULT_LINE_FILE.clone(),
-                )
-            })?;
+        let projection_dimension_number = self.resolve_obj(&x.dim).ok_or_else(|| {
+            WellDefinedError::new(
+                format!("projection dimension {} is not a number", x.dim),
+                None,
+                DEFAULT_LINE_FILE.clone(),
+            )
+        })?;
         let projection_dimension_obj =
             Obj::Number(Number::new(projection_dimension_number.normalized_value));
 
         let projection_dimension_is_positive_integer_fact = AtomicFact::InFact(InFact::new(
             projection_dimension_obj.clone(),
-            Obj::StandardSet { standard_set: StandardSet::NPos },
+            Obj::StandardSet {
+                standard_set: StandardSet::NPos,
+            },
             DEFAULT_LINE_FILE.clone(),
         ));
         let projection_dimension_is_positive_integer_result =
@@ -1114,21 +1087,21 @@ impl Runtime {
         self.verify_obj_well_defined_and_store_cache(&x.obj, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&x.index, verify_state)?;
 
-        let index_calculated_number = self
-            .resolve_obj(&x.index)
-            .ok_or_else(|| {
-                WellDefinedError::new(
-                    format!("index {} is not a number", x.index.to_string()),
-                    None,
-                    DEFAULT_LINE_FILE.clone(),
-                )
-            })?;
+        let index_calculated_number = self.resolve_obj(&x.index).ok_or_else(|| {
+            WellDefinedError::new(
+                format!("index {} is not a number", x.index.to_string()),
+                None,
+                DEFAULT_LINE_FILE.clone(),
+            )
+        })?;
         let index_calculated_obj =
             Obj::Number(Number::new(index_calculated_number.normalized_value));
 
         let index_is_positive_integer_in_z_pos_fact = AtomicFact::InFact(InFact::new(
             index_calculated_obj.clone(),
-            Obj::StandardSet { standard_set: StandardSet::NPos },
+            Obj::StandardSet {
+                standard_set: StandardSet::NPos,
+            },
             DEFAULT_LINE_FILE.clone(),
         ));
         let index_is_positive_integer_result =

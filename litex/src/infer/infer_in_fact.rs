@@ -181,7 +181,9 @@ impl Runtime {
             Obj::Range(_) | Obj::ClosedRange(_) => {
                 let inferred_in_z_fact = AtomicFact::InFact(InFact::new(
                     in_fact.element.clone(),
-                    Obj::StandardSet { standard_set: StandardSet::Z },
+                    Obj::StandardSet {
+                        standard_set: StandardSet::Z,
+                    },
                     in_fact.line_file,
                 ));
                 self.store_atomic_fact_without_well_defined_verified_and_infer(&inferred_in_z_fact)
@@ -200,7 +202,15 @@ impl Runtime {
                 infer_result.push_atomic_fact(&inferred_in_z_fact);
                 Ok(infer_result)
             }
-            Obj::StandardSet { standard_set: StandardSet::QPos } | Obj::StandardSet { standard_set: StandardSet::RPos } | Obj::StandardSet { standard_set: StandardSet::NPos } => {
+            Obj::StandardSet {
+                standard_set: StandardSet::QPos,
+            }
+            | Obj::StandardSet {
+                standard_set: StandardSet::RPos,
+            }
+            | Obj::StandardSet {
+                standard_set: StandardSet::NPos,
+            } => {
                 let zero_obj = Obj::Number(Number::new("0".to_string()));
                 let inferred_atomic_fact = AtomicFact::GreaterFact(GreaterFact::new(
                     in_fact.element.clone(),
@@ -224,7 +234,15 @@ impl Runtime {
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 Ok(infer_result)
             }
-            Obj::StandardSet { standard_set: StandardSet::QNeg } | Obj::StandardSet { standard_set: StandardSet::ZNeg } | Obj::StandardSet { standard_set: StandardSet::RNeg } => {
+            Obj::StandardSet {
+                standard_set: StandardSet::QNeg,
+            }
+            | Obj::StandardSet {
+                standard_set: StandardSet::ZNeg,
+            }
+            | Obj::StandardSet {
+                standard_set: StandardSet::RNeg,
+            } => {
                 let zero_obj = Obj::Number(Number::new("0".to_string()));
                 let inferred_atomic_fact = AtomicFact::LessFact(LessFact::new(
                     in_fact.element.clone(),
@@ -248,7 +266,15 @@ impl Runtime {
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 Ok(infer_result)
             }
-            Obj::StandardSet { standard_set: StandardSet::QNz } | Obj::StandardSet { standard_set: StandardSet::ZNz } | Obj::StandardSet { standard_set: StandardSet::RNz } => {
+            Obj::StandardSet {
+                standard_set: StandardSet::QNz,
+            }
+            | Obj::StandardSet {
+                standard_set: StandardSet::ZNz,
+            }
+            | Obj::StandardSet {
+                standard_set: StandardSet::RNz,
+            } => {
                 let zero_obj = Obj::Number(Number::new("0".to_string()));
                 let inferred_atomic_fact = AtomicFact::NotEqualFact(NotEqualFact::new(
                     in_fact.element.clone(),
@@ -272,68 +298,19 @@ impl Runtime {
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 Ok(infer_result)
             }
-            Obj::StandardSet { standard_set: StandardSet::N } | Obj::StandardSet { standard_set: StandardSet::Q } | Obj::StandardSet { standard_set: StandardSet::Z } | Obj::StandardSet { standard_set: StandardSet::R } => Ok(InferResult::new()),
-            Obj::InstSetStructObj(inst_set_struct_obj) => {
-                self.infer_in_fact_with_obj_in_struct_obj(inst_set_struct_obj)
+            Obj::StandardSet {
+                standard_set: StandardSet::N,
             }
+            | Obj::StandardSet {
+                standard_set: StandardSet::Q,
+            }
+            | Obj::StandardSet {
+                standard_set: StandardSet::Z,
+            }
+            | Obj::StandardSet {
+                standard_set: StandardSet::R,
+            } => Ok(InferResult::new()),
             _ => Ok(InferResult::new()),
         }
-    }
-
-    fn infer_in_fact_with_obj_in_struct_obj(
-        &mut self,
-        inst_set_struct_obj: &InstStructObj,
-    ) -> Result<InferResult, InferError> {
-        if let Some(struct_def_without_field) = self
-            .get_cloned_set_struct_with_no_field_definition_by_name(
-                &inst_set_struct_obj.struct_name.to_string(),
-            )
-        {
-            return self.infer_in_fact_with_obj_in_struct_obj_without_field(
-                inst_set_struct_obj,
-                &struct_def_without_field,
-            );
-        }
-
-        if let Some(struct_def_with_fields) = self
-            .get_cloned_set_struct_with_fields_definition_by_name(
-                &inst_set_struct_obj.struct_name.to_string(),
-            )
-        {
-            return self.infer_in_fact_with_obj_in_struct_obj_with_fields(
-                inst_set_struct_obj,
-                &struct_def_with_fields,
-            );
-        }
-
-        Err(InferError::new(
-            format!("struct `{}` not defined", inst_set_struct_obj.struct_name),
-            DEFAULT_LINE_FILE,
-            None,
-        ))
-    }
-
-    fn infer_in_fact_with_obj_in_struct_obj_without_field(
-        &mut self,
-        _inst_set_struct_obj: &InstStructObj,
-        _struct_def: &DefStructWithNoFieldStmt,
-    ) -> Result<InferResult, InferError> {
-        Err(InferError::new(
-            "unimplemented: infer in fact with obj in struct obj without field".to_string(),
-            DEFAULT_LINE_FILE,
-            None,
-        ))
-    }
-
-    fn infer_in_fact_with_obj_in_struct_obj_with_fields(
-        &mut self,
-        _inst_set_struct_obj: &InstStructObj,
-        _struct_def: &DefStructWithFieldsStmt,
-    ) -> Result<InferResult, InferError> {
-        Err(InferError::new(
-            "unimplemented: infer in fact with obj in struct obj with fields".to_string(),
-            DEFAULT_LINE_FILE,
-            None,
-        ))
     }
 }

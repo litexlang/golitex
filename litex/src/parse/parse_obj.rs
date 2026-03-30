@@ -123,8 +123,6 @@ impl Runtime {
     fn parse_obj_hierarchy5(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
         if tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
             self.parse_set_builder_or_set_list(tb)
-        } else if tb.current_token_is_equal_to(INST_STRUCT_OBJ_SIGN) {
-            self.parse_instantiated_struct_obj(tb)
         } else if tb.current_token_is_equal_to(FN_FOR_FN_WITH_PARAMS)
             | tb.current_token_is_equal_to(FN_FOR_FN_WITHOUT_PARAMS)
         {
@@ -870,13 +868,6 @@ impl Runtime {
         }
         tb.skip_token(RIGHT_CURLY_BRACE)?;
         Ok(ListSet::new(objs))
-    }
-
-    fn parse_instantiated_struct_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, ParsingError> {
-        tb.skip_token(INST_STRUCT_OBJ_SIGN)?;
-        let name = self.parse_identifier_or_identifier_with_mod(tb)?;
-        let args = self.parse_braced_objs(tb)?;
-        Ok(Obj::InstSetStructObj(InstStructObj::new(name, args)))
     }
 
     pub fn parse_atom(&self, tb: &mut TokenBlock) -> Result<Atom, ParsingError> {
