@@ -257,6 +257,7 @@ impl ParamDefWithParamSet {
                 ),
                 DEFAULT_LINE_FILE.clone(),
                 None,
+                None,
             )));
         }
 
@@ -359,6 +360,7 @@ impl ParamDefWithParamType {
                 ),
                 DEFAULT_LINE_FILE.clone(),
                 None,
+                None,
             )));
         }
 
@@ -396,6 +398,7 @@ impl ParamDefWithParamType {
                 ),
                 DEFAULT_LINE_FILE.clone(),
                 None,
+                None,
             )));
         }
 
@@ -418,6 +421,7 @@ impl ParamDefWithParamType {
                             "internal error: argument index out of range for boxed args"
                                 .to_string(),
                             DEFAULT_LINE_FILE.clone(),
+                            None,
                             None,
                         )));
                     }

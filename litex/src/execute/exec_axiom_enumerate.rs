@@ -58,7 +58,10 @@ impl Runtime {
         let mut current_parameter_index_assignment = Self::enumerate_start_index_assignment(stmt);
         loop {
             let mut one_assignment_inside_results = self
-                .exec_enumerate_axiom_stmt_for_one_assignment(stmt, &current_parameter_index_assignment)?;
+                .exec_enumerate_axiom_stmt_for_one_assignment(
+                    stmt,
+                    &current_parameter_index_assignment,
+                )?;
             all_inside_results.append(&mut one_assignment_inside_results);
             let next_parameter_index_assignment =
                 Self::enumerate_next_index_assignment(stmt, &current_parameter_index_assignment);
@@ -130,8 +133,8 @@ impl Runtime {
         parameter_index_assignment: &Vec<usize>,
     ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
         self.push_env();
-        let execute_result =
-            self.exec_enumerate_axiom_stmt_for_one_assignment_body(stmt, parameter_index_assignment);
+        let execute_result = self
+            .exec_enumerate_axiom_stmt_for_one_assignment_body(stmt, parameter_index_assignment);
         self.pop_env();
         execute_result
     }
@@ -143,16 +146,17 @@ impl Runtime {
     ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
         let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
         for (parameter_position, parameter_name) in stmt.params.iter().enumerate() {
-            let assigned_obj =
-                (*stmt.param_sets[parameter_position].list[parameter_index_assignment[parameter_position]])
-                    .clone();
+            let assigned_obj = (*stmt.param_sets[parameter_position].list
+                [parameter_index_assignment[parameter_position]])
+                .clone();
             self.store_identifier_obj(parameter_name)
                 .map_err(RuntimeError::from)?;
-            let parameter_equal_to_assigned_obj_atomic_fact = AtomicFact::EqualFact(EqualFact::new(
-                Obj::Identifier(Identifier::new(parameter_name.clone())),
-                assigned_obj.clone(),
-                stmt.line_file,
-            ));
+            let parameter_equal_to_assigned_obj_atomic_fact =
+                AtomicFact::EqualFact(EqualFact::new(
+                    Obj::Identifier(Identifier::new(parameter_name.clone())),
+                    assigned_obj.clone(),
+                    stmt.line_file,
+                ));
             self.store_atomic_fact_without_well_defined_verified_and_infer(
                 &parameter_equal_to_assigned_obj_atomic_fact,
             )
@@ -172,4 +176,3 @@ impl Runtime {
         Ok(inside_results)
     }
 }
-

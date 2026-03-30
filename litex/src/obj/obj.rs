@@ -23,6 +23,7 @@ pub enum Obj {
     SetDiff(SetDiff),
     Cup(Cup),
     Cap(Cap),
+    PowerSet(PowerSet),
     ListSet(ListSet),
     SetBuilder(SetBuilder),
     FnSetWithoutParams(FnSetWithoutParams),
@@ -35,10 +36,9 @@ pub enum Obj {
     Count(Count),
     Range(Range),
     ClosedRange(ClosedRange),
-    PowerSet(PowerSet),
     Choose(Choose),
     ObjAtIndex(ObjAtIndex),
-    StandardSet { standard_set: StandardSet },
+    StandardSet(StandardSet),
 }
 
 #[derive(Clone)]
@@ -560,7 +560,7 @@ impl Obj {
             Obj::SetBuilder(x) => write!(f, "{}", x)?,
             Obj::FnSetWithoutParams(x) => write!(f, "{}", x)?,
             Obj::FnSetWithParams(x) => write!(f, "{}", x)?,
-            Obj::StandardSet { standard_set } => write!(f, "{}", standard_set)?,
+            Obj::StandardSet(standard_set) => write!(f, "{}", standard_set)?,
             Obj::Cart(x) => write!(f, "{}", x)?,
             Obj::CartDim(x) => write!(f, "{}", x)?,
             Obj::Proj(x) => write!(f, "{}", x)?,
@@ -934,9 +934,7 @@ impl Obj {
             Obj::SetBuilder(inner) => inner.instantiate(param_to_arg_map),
             Obj::FnSetWithoutParams(inner) => inner.instantiate(param_to_arg_map),
             Obj::FnSetWithParams(inner) => inner.instantiate(param_to_arg_map),
-            Obj::StandardSet { standard_set } => Obj::StandardSet {
-                standard_set: standard_set.clone(),
-            },
+            Obj::StandardSet(standard_set) => Obj::StandardSet(standard_set.clone()),
             Obj::Cart(inner) => inner.instantiate(param_to_arg_map),
             Obj::CartDim(inner) => inner.instantiate(param_to_arg_map),
             Obj::Proj(inner) => inner.instantiate(param_to_arg_map),

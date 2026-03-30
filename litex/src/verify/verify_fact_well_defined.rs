@@ -82,14 +82,12 @@ impl Runtime {
                 ));
             }
         } else {
-            let expected_len = if let Some(predicate_definition) = self
-                
-                .get_predicate_with_meaning_definition_by_name(&name_string)
+            let expected_len = if let Some(predicate_definition) =
+                self.get_predicate_with_meaning_definition_by_name(&name_string)
             {
                 ParamDefWithParamType::number_of_params(&predicate_definition.params_def_with_type)
-            } else if let Some(predicate_without_meaning_definition) = self
-                
-                .get_predicate_without_meaning_definition_by_name(&name_string)
+            } else if let Some(predicate_without_meaning_definition) =
+                self.get_predicate_without_meaning_definition_by_name(&name_string)
             {
                 predicate_without_meaning_definition.params.len()
             } else {
@@ -191,10 +189,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
         for param_def in exist_fact.params_def_with_type().iter() {
-            let result = self.define_params_with_type(
-                std::slice::from_ref(param_def),
-                false,
-            );
+            let result = self.define_params_with_type(std::slice::from_ref(param_def), false);
             if let Err(e) = result {
                 return Err(WellDefinedError::new(
                     "failed to define parameters in exist fact".to_string(),
@@ -226,10 +221,7 @@ impl Runtime {
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
     ) -> Result<(), WellDefinedError> {
-        if let Err(e) = self.define_params_with_type(
-            &forall_fact.params_def_with_type,
-            false,
-        ) {
+        if let Err(e) = self.define_params_with_type(&forall_fact.params_def_with_type, false) {
             return Err(WellDefinedError::new(
                 "failed to define parameters in forall fact".to_string(),
                 Some(e.into()),

@@ -207,14 +207,6 @@ impl Runtime {
                     &inside_result_elements,
                 ));
             }
-            RuntimeError::UnknownError(e) => {
-                field_lines.push(format!(
-                    "{}\"{}\": {}",
-                    indent_inner,
-                    JSON_KEY_MESSAGE,
-                    json_string_literal(&e.msg)
-                ));
-            }
             RuntimeError::WellDefinedError(e) => {
                 field_lines.push(format!(
                     "{}\"{}\": {}",
@@ -231,12 +223,19 @@ impl Runtime {
                     json_string_literal(&e.fact.to_string())
                 ));
             }
-            RuntimeError::VerifyUnknownError(e) => {
+            RuntimeError::UnknownError(e) => {
+                let message_for_json = if !e.msg.is_empty() {
+                    e.msg.clone()
+                } else if let Some(ref fact) = e.fact {
+                    fact.to_string()
+                } else {
+                    String::new()
+                };
                 field_lines.push(format!(
                     "{}\"{}\": {}",
                     indent_inner,
                     JSON_KEY_MESSAGE,
-                    json_string_literal(&e.fact.to_string())
+                    json_string_literal(&message_for_json)
                 ));
             }
             RuntimeError::InferError(e) => {
@@ -324,10 +323,6 @@ impl Runtime {
                 Some(previous_error) => Some(previous_error.as_ref()),
                 None => None,
             },
-            RuntimeError::UnknownError(e) => match &e.previous_error {
-                Some(previous_error) => Some(previous_error.as_ref()),
-                None => None,
-            },
             RuntimeError::WellDefinedError(e) => match &e.previous_error {
                 Some(previous_error) => Some(previous_error.as_ref()),
                 None => None,
@@ -336,7 +331,7 @@ impl Runtime {
                 Some(previous_error) => Some(previous_error.as_ref()),
                 None => None,
             },
-            RuntimeError::VerifyUnknownError(e) => match &e.previous_error {
+            RuntimeError::UnknownError(e) => match &e.previous_error {
                 Some(previous_error) => Some(previous_error.as_ref()),
                 None => None,
             },

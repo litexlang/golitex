@@ -184,9 +184,7 @@ impl Runtime {
             Obj::Range(_) | Obj::ClosedRange(_) => {
                 let inferred_in_z_fact = AtomicFact::InFact(InFact::new(
                     in_fact.element.clone(),
-                    Obj::StandardSet {
-                        standard_set: StandardSet::Z,
-                    },
+                    Obj::StandardSet(StandardSet::Z),
                     in_fact.line_file,
                 ));
                 self.store_atomic_fact_without_well_defined_verified_and_infer(&inferred_in_z_fact)
@@ -205,15 +203,9 @@ impl Runtime {
                 infer_result.push_atomic_fact(&inferred_in_z_fact);
                 Ok(infer_result)
             }
-            Obj::StandardSet {
-                standard_set: StandardSet::QPos,
-            }
-            | Obj::StandardSet {
-                standard_set: StandardSet::RPos,
-            }
-            | Obj::StandardSet {
-                standard_set: StandardSet::NPos,
-            } => {
+            Obj::StandardSet(StandardSet::QPos)
+            | Obj::StandardSet(StandardSet::RPos)
+            | Obj::StandardSet(StandardSet::NPos) => {
                 let zero_obj = Obj::Number(Number::new("0".to_string()));
                 let inferred_atomic_fact = AtomicFact::GreaterFact(GreaterFact::new(
                     in_fact.element.clone(),
@@ -237,15 +229,9 @@ impl Runtime {
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 Ok(infer_result)
             }
-            Obj::StandardSet {
-                standard_set: StandardSet::QNeg,
-            }
-            | Obj::StandardSet {
-                standard_set: StandardSet::ZNeg,
-            }
-            | Obj::StandardSet {
-                standard_set: StandardSet::RNeg,
-            } => {
+            Obj::StandardSet(StandardSet::QNeg)
+            | Obj::StandardSet(StandardSet::ZNeg)
+            | Obj::StandardSet(StandardSet::RNeg) => {
                 let zero_obj = Obj::Number(Number::new("0".to_string()));
                 let inferred_atomic_fact = AtomicFact::LessFact(LessFact::new(
                     in_fact.element.clone(),
@@ -269,15 +255,9 @@ impl Runtime {
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 Ok(infer_result)
             }
-            Obj::StandardSet {
-                standard_set: StandardSet::QNz,
-            }
-            | Obj::StandardSet {
-                standard_set: StandardSet::ZNz,
-            }
-            | Obj::StandardSet {
-                standard_set: StandardSet::RNz,
-            } => {
+            Obj::StandardSet(StandardSet::QNz)
+            | Obj::StandardSet(StandardSet::ZNz)
+            | Obj::StandardSet(StandardSet::RNz) => {
                 let zero_obj = Obj::Number(Number::new("0".to_string()));
                 let inferred_atomic_fact = AtomicFact::NotEqualFact(NotEqualFact::new(
                     in_fact.element.clone(),
@@ -301,18 +281,10 @@ impl Runtime {
                 infer_result.push_atomic_fact(&inferred_atomic_fact);
                 Ok(infer_result)
             }
-            Obj::StandardSet {
-                standard_set: StandardSet::N,
-            }
-            | Obj::StandardSet {
-                standard_set: StandardSet::Q,
-            }
-            | Obj::StandardSet {
-                standard_set: StandardSet::Z,
-            }
-            | Obj::StandardSet {
-                standard_set: StandardSet::R,
-            } => Ok(InferResult::new()),
+            Obj::StandardSet(StandardSet::N)
+            | Obj::StandardSet(StandardSet::Q)
+            | Obj::StandardSet(StandardSet::Z)
+            | Obj::StandardSet(StandardSet::R) => Ok(InferResult::new()),
             _ => Ok(InferResult::new()),
         }
     }

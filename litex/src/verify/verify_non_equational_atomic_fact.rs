@@ -53,9 +53,7 @@ impl Runtime {
             self.get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
 
         // 得到它的 calculated obj
-        if let Some(calculated_obj) =
-            self.resolve_obj(&atomic_fact.args()[0])
-        {
+        if let Some(calculated_obj) = self.resolve_obj_to_number(&atomic_fact.args()[0]) {
             if calculated_obj.to_string() != atomic_fact.args()[0].to_string() {
                 let equal_tos = self.get_all_objs_equal_to_arg(&calculated_obj.to_string());
                 all_objs_equal_to_arg.extend(equal_tos);
@@ -82,9 +80,7 @@ impl Runtime {
     ) -> Result<NonErrStmtExecResult, VerifyError> {
         let mut all_objs_equal_to_arg0 =
             self.get_all_objs_equal_to_arg(&atomic_fact.args()[0].to_string());
-        if let Some(calculated_obj) =
-            self.resolve_obj(&atomic_fact.args()[0])
-        {
+        if let Some(calculated_obj) = self.resolve_obj_to_number(&atomic_fact.args()[0]) {
             if calculated_obj.to_string() != atomic_fact.args()[0].to_string() {
                 let equal_tos = self.get_all_objs_equal_to_arg(&calculated_obj.to_string());
                 all_objs_equal_to_arg0.extend(equal_tos);
@@ -95,9 +91,7 @@ impl Runtime {
         }
         let mut all_objs_equal_to_arg1 =
             self.get_all_objs_equal_to_arg(&atomic_fact.args()[1].to_string());
-        if let Some(calculated_obj) =
-            self.resolve_obj(&atomic_fact.args()[1])
-        {
+        if let Some(calculated_obj) = self.resolve_obj_to_number(&atomic_fact.args()[1]) {
             if calculated_obj.to_string() != atomic_fact.args()[1].to_string() {
                 let equal_tos = self.get_all_objs_equal_to_arg(&calculated_obj.to_string());
                 all_objs_equal_to_arg1.extend(equal_tos);
@@ -220,7 +214,12 @@ impl Runtime {
                     );
                     return Err(VerifyError::new(
                         Fact::AtomicFact(atomic_fact.clone()),
-                        Some(UnknownError::new(message, atomic_fact.line_file(), None).into()),
+                        Some(RuntimeError::UnknownError(UnknownError::new(
+                            message,
+                            atomic_fact.line_file(),
+                            Some(Fact::AtomicFact(atomic_fact.clone())),
+                            None,
+                        ))),
                     ));
                 }
                 let mut all_args_match = true;

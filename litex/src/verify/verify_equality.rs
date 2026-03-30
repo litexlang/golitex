@@ -567,10 +567,8 @@ impl Runtime {
             ));
         }
 
-        let left_for_numeric_verification =
-            self.obj_with_runtime_known_numbers_substituted_for_verification(left);
-        let right_for_numeric_verification =
-            self.obj_with_runtime_known_numbers_substituted_for_verification(right);
+        let left_for_numeric_verification = self.resolve_obj(left);
+        let right_for_numeric_verification = self.resolve_obj(right);
 
         if left_for_numeric_verification
             .two_objs_can_be_calculated_and_equal_by_calculation(&right_for_numeric_verification)

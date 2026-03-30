@@ -34,14 +34,14 @@ impl Runtime {
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
-        let fn_set_where_algo_belongs = match self
-            
-            .get_fn_set_where_fn_belongs_to(&Atom::Identifier(Identifier::new(
-                def_algo_stmt.name.clone(),
-            ))) {
+        let fn_set_where_algo_belongs = match self.get_fn_set_where_fn_belongs_to(
+            &Atom::Identifier(Identifier::new(def_algo_stmt.name.clone())),
+        ) {
             Some(fn_set) => fn_set,
             None => {
-                return Err(Self::def_algo_verify_exec_error_without_message(def_algo_stmt));
+                return Err(Self::def_algo_verify_exec_error_without_message(
+                    def_algo_stmt,
+                ));
             }
         };
 
@@ -126,7 +126,9 @@ impl Runtime {
         fn_set_without_params: &FnSetWithoutParams,
     ) -> Result<(Vec<Fact>, Vec<ParamDefWithParamType>), ExecStmtError> {
         if fn_set_without_params.param_sets.len() != def_algo_stmt.params.len() {
-            return Err(Self::def_algo_verify_exec_error_without_message(def_algo_stmt));
+            return Err(Self::def_algo_verify_exec_error_without_message(
+                def_algo_stmt,
+            ));
         }
 
         let mut algo_param_defs_with_type: Vec<ParamDefWithParamType> =
@@ -169,15 +171,17 @@ impl Runtime {
 
         let fn_set_param_names = fn_set_with_dom.params();
         if fn_set_param_names.len() != def_algo_stmt.params.len() {
-            return Err(Self::def_algo_verify_exec_error_with_message_and_optional_cause(
-                def_algo_stmt,
-                format!(
+            return Err(
+                Self::def_algo_verify_exec_error_with_message_and_optional_cause(
+                    def_algo_stmt,
+                    format!(
                     "algo verify: number of params mismatch (algo params: {}, fn set params: {})",
                     def_algo_stmt.params.len(),
                     fn_set_param_names.len()
                 ),
-                None,
-            ));
+                    None,
+                ),
+            );
         }
 
         let mut fn_set_param_name_to_algo_arg_obj: HashMap<String, Obj> = HashMap::new();
@@ -266,11 +270,13 @@ impl Runtime {
                     ExistOrAndChainAtomicFact::ExistFact(exist_fact.clone())
                 }
                 Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => {
-                    return Err(Self::def_algo_verify_exec_error_with_message_and_optional_cause(
-                        def_algo_stmt,
-                        "algo verify: requirement fact cannot be forall".to_string(),
-                        None,
-                    ));
+                    return Err(
+                        Self::def_algo_verify_exec_error_with_message_and_optional_cause(
+                            def_algo_stmt,
+                            "algo verify: requirement fact cannot be forall".to_string(),
+                            None,
+                        ),
+                    );
                 }
             };
             requirement_dom_facts.push(requirement_dom_fact);
@@ -350,11 +356,13 @@ impl Runtime {
         }
 
         if def_algo_stmt.cases.is_empty() {
-            return Err(Self::def_algo_verify_exec_error_with_message_and_optional_cause(
-                def_algo_stmt,
-                "algo verify: no case and no default return".to_string(),
-                None,
-            ));
+            return Err(
+                Self::def_algo_verify_exec_error_with_message_and_optional_cause(
+                    def_algo_stmt,
+                    "algo verify: no case and no default return".to_string(),
+                    None,
+                ),
+            );
         }
 
         let mut case_conditions: Vec<AndChainAtomicFact> =

@@ -12,4 +12,3 @@ pub(super) fn impossible_proof_error_message(
         None => format!("failed to prove impossible `{}`", impossible_fact),
     }
 }
-
