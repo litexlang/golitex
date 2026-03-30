@@ -1,16 +1,14 @@
 pub use crate::environment::Environment;
 pub use crate::environment::KnownForallFactParamsAndDom;
 pub use crate::error::duplicate_used_name_error_msg_without_line_file;
-pub use crate::error::ArithmeticError;
 pub use crate::error::DefineParamsError;
 pub use crate::error::ExecStmtError;
 pub use crate::error::InferError;
 pub use crate::error::NameAlreadyUsedError;
-pub use crate::error::NewAtomicFactError;
 pub use crate::error::ParseBlockError;
 pub use crate::error::ParsingError;
 pub use crate::error::RuntimeError;
-pub use crate::error::StoreFactError;
+pub use crate::error::RuntimeErrorStruct;
 pub use crate::error::UnknownError;
 pub use crate::error::VerifyError;
 pub use crate::error::WellDefinedError;

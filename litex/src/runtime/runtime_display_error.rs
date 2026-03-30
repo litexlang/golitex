@@ -55,6 +55,44 @@ fn json_array_field_line(
     }
 }
 
+fn stmt_json_field_lines(indent_inner: &str, stmt: &Stmt) -> Vec<String> {
+    let stmt_display_string = stmt.to_string();
+    let wrapped_stmt_display_string = match stmt {
+        Stmt::ProveStmt(_) => format!("{}{}\n{}", PROVE, COLON, stmt_display_string),
+        _ => stmt_display_string,
+    };
+    let mut lines: Vec<String> = Vec::new();
+    lines.push(format!(
+        "{}\"{}\": {}",
+        indent_inner,
+        JSON_KEY_STMT_TYPE,
+        json_string_literal(stmt.stmt_type_name().as_str())
+    ));
+    lines.push(format!(
+        "{}\"{}\": {}",
+        indent_inner,
+        JSON_KEY_STMT,
+        json_string_literal(&wrapped_stmt_display_string)
+    ));
+    lines
+}
+
+fn push_optional_statement_json_field_lines(
+    field_lines: &mut Vec<String>,
+    indent_inner: &str,
+    statement: &Option<Stmt>,
+) {
+    match statement {
+        Some(stmt) => {
+            let stmt_lines = stmt_json_field_lines(indent_inner, stmt);
+            for stmt_line in stmt_lines {
+                field_lines.push(stmt_line);
+            }
+        }
+        None => {}
+    }
+}
+
 impl Runtime {
     fn parse_block_error_message(&self, parse_block_error: &ParseBlockError) -> String {
         match parse_block_error {
@@ -144,6 +182,11 @@ impl Runtime {
                     JSON_KEY_MESSAGE,
                     json_string_literal(&e.msg)
                 ));
+                push_optional_statement_json_field_lines(
+                    &mut field_lines,
+                    indent_inner.as_str(),
+                    &e.statement,
+                );
             }
             RuntimeError::NewAtomicFactError(e) => {
                 field_lines.push(format!(
@@ -152,6 +195,11 @@ impl Runtime {
                     JSON_KEY_MESSAGE,
                     json_string_literal(&e.msg)
                 ));
+                push_optional_statement_json_field_lines(
+                    &mut field_lines,
+                    indent_inner.as_str(),
+                    &e.statement,
+                );
             }
             RuntimeError::StoreFactError(e) => {
                 field_lines.push(format!(
@@ -160,6 +208,11 @@ impl Runtime {
                     JSON_KEY_MESSAGE,
                     json_string_literal(&e.msg)
                 ));
+                push_optional_statement_json_field_lines(
+                    &mut field_lines,
+                    indent_inner.as_str(),
+                    &e.statement,
+                );
             }
             RuntimeError::ParseBlockError(e) => {
                 field_lines.push(format!(
@@ -178,23 +231,10 @@ impl Runtime {
                 ));
             }
             RuntimeError::ExecStmtError(e) => {
-                let stmt_display_string = e.stmt.to_string();
-                let wrapped_stmt_display_string = match &e.stmt {
-                    Stmt::ProveStmt(_) => format!("{}{}\n{}", PROVE, COLON, stmt_display_string),
-                    _ => stmt_display_string,
-                };
-                field_lines.push(format!(
-                    "{}\"{}\": {}",
-                    indent_inner,
-                    JSON_KEY_STMT_TYPE,
-                    json_string_literal(e.stmt.stmt_type_name().as_str())
-                ));
-                field_lines.push(format!(
-                    "{}\"{}\": {}",
-                    indent_inner,
-                    JSON_KEY_STMT,
-                    json_string_literal(&wrapped_stmt_display_string)
-                ));
+                let stmt_lines = stmt_json_field_lines(indent_inner.as_str(), &e.stmt);
+                for stmt_line in stmt_lines {
+                    field_lines.push(stmt_line);
+                }
 
                 let mut inside_result_elements: Vec<String> = Vec::new();
                 for inside_result in e.inside_results.iter() {
@@ -216,11 +256,16 @@ impl Runtime {
                 ));
             }
             RuntimeError::VerifyError(e) => {
+                let message_for_json = if !e.msg.is_empty() {
+                    e.msg.clone()
+                } else {
+                    e.fact.to_string()
+                };
                 field_lines.push(format!(
                     "{}\"{}\": {}",
                     indent_inner,
                     JSON_KEY_MESSAGE,
-                    json_string_literal(&e.fact.to_string())
+                    json_string_literal(&message_for_json)
                 ));
             }
             RuntimeError::UnknownError(e) => {

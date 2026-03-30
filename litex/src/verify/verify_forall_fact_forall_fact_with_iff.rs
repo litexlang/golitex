@@ -18,6 +18,8 @@ impl Runtime {
             if let Err(e) = self.verify_forall_fact_well_defined(forall_fact, verify_state) {
                 return Err(VerifyError::new(
                     Fact::ForallFact(forall_fact.clone()),
+                    String::new(),
+                    forall_fact.line_file,
                     Some(RuntimeError::WellDefinedError(e)),
                 ));
             }
@@ -45,6 +47,8 @@ impl Runtime {
                     let message = "failed to define params in forall".to_string();
                     VerifyError::new(
                         Fact::ForallFact(forall_fact.clone()),
+                        message.clone(),
+                        forall_fact.line_file,
                         Some(RuntimeError::UnknownError(UnknownError::new(
                             message,
                             forall_fact.line_file,
@@ -65,6 +69,8 @@ impl Runtime {
                     let message = "failed to assume dom fact in forall".to_string();
                     VerifyError::new(
                         Fact::ForallFact(forall_fact.clone()),
+                        message.clone(),
+                        forall_fact.line_file,
                         Some(RuntimeError::UnknownError(UnknownError::new(
                             message,
                             forall_fact.line_file,
@@ -110,6 +116,8 @@ impl Runtime {
             {
                 return Err(VerifyError::new(
                     Fact::ForallFactWithIff(forall_iff.clone()),
+                    String::new(),
+                    forall_iff.line_file,
                     Some(RuntimeError::WellDefinedError(e)),
                 ));
             }

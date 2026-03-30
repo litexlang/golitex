@@ -887,13 +887,13 @@ impl AtomicFact {
         is_true: bool,
         args: Vec<Obj>,
         line_file: (usize, usize),
-    ) -> Result<AtomicFact, NewAtomicFactError> {
+    ) -> Result<AtomicFact, RuntimeErrorStruct> {
         let prop_name_as_string = prop_name.to_string();
         match prop_name_as_string.as_str() {
             EQUAL => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", EQUAL, args.len());
-                    return Err(NewAtomicFactError::new(msg, None));
+                    return Err(RuntimeErrorStruct::new_with_msg_previous_error(msg, None));
                 }
                 let mut args = args;
                 let a0 = args.remove(0);
@@ -909,7 +909,7 @@ impl AtomicFact {
             NOT_EQUAL => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", NOT_EQUAL, args.len());
-                    return Err(NewAtomicFactError::new(msg, None));
+                    return Err(RuntimeErrorStruct::new_with_msg_previous_error(msg, None));
                 }
                 let mut args = args;
                 let a0 = args.remove(0);
@@ -925,7 +925,7 @@ impl AtomicFact {
             LESS => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", LESS, args.len());
-                    return Err(NewAtomicFactError::new(msg, None));
+                    return Err(RuntimeErrorStruct::new_with_msg_previous_error(msg, None));
                 }
                 let mut args = args;
                 let a0 = args.remove(0);
@@ -939,7 +939,7 @@ impl AtomicFact {
             GREATER => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", GREATER, args.len());
-                    return Err(NewAtomicFactError::new(msg, None));
+                    return Err(RuntimeErrorStruct::new_with_msg_previous_error(msg, None));
                 }
                 let mut args = args;
                 let a0 = args.remove(0);
@@ -959,7 +959,7 @@ impl AtomicFact {
                         LESS_EQUAL,
                         args.len()
                     );
-                    return Err(NewAtomicFactError::new(msg, None));
+                    return Err(RuntimeErrorStruct::new_with_msg_previous_error(msg, None));
                 }
                 let mut args = args;
                 let a0 = args.remove(0);
@@ -981,7 +981,7 @@ impl AtomicFact {
                         GREATER_EQUAL,
                         args.len()
                     );
-                    return Err(NewAtomicFactError::new(msg, None));
+                    return Err(RuntimeErrorStruct::new_with_msg_previous_error(msg, None));
                 }
                 let mut args = args;
                 let a0 = args.remove(0);
@@ -999,7 +999,7 @@ impl AtomicFact {
             IS_SET => {
                 if args.len() != 1 {
                     let msg = format!("{} requires 1 argument, but got {}", IS_SET, args.len());
-                    return Err(NewAtomicFactError::new(msg, None));
+                    return Err(RuntimeErrorStruct::new_with_msg_previous_error(msg, None));
                 }
                 let mut args = args;
                 let a0 = args.remove(0);
@@ -1016,7 +1016,7 @@ impl AtomicFact {
                         IS_NONEMPTY_SET,
                         args.len()
                     );
-                    return Err(NewAtomicFactError::new(msg, None));
+                    return Err(RuntimeErrorStruct::new_with_msg_previous_error(msg, None));
                 }
                 let mut args = args;
                 let a0 = args.remove(0);
@@ -1037,7 +1037,7 @@ impl AtomicFact {
                         IS_FINITE_SET,
                         args.len()
                     );
-                    return Err(NewAtomicFactError::new(msg, None));
+                    return Err(RuntimeErrorStruct::new_with_msg_previous_error(msg, None));
                 }
                 let mut args = args;
                 let a0 = args.remove(0);
@@ -1054,7 +1054,7 @@ impl AtomicFact {
             IN => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", IN, args.len());
-                    return Err(NewAtomicFactError::new(msg, None));
+                    return Err(RuntimeErrorStruct::new_with_msg_previous_error(msg, None));
                 }
                 let mut args = args;
                 let a0 = args.remove(0);
@@ -1068,7 +1068,7 @@ impl AtomicFact {
             IS_CART => {
                 if args.len() != 1 {
                     let msg = format!("{} requires 1 argument, but got {}", IS_CART, args.len());
-                    return Err(NewAtomicFactError::new(msg, None));
+                    return Err(RuntimeErrorStruct::new_with_msg_previous_error(msg, None));
                 }
                 let mut args = args;
                 let a0 = args.remove(0);
@@ -1081,7 +1081,7 @@ impl AtomicFact {
             IS_TUPLE => {
                 if args.len() != 1 {
                     let msg = format!("{} requires 1 argument, but got {}", IS_TUPLE, args.len());
-                    return Err(NewAtomicFactError::new(msg, None));
+                    return Err(RuntimeErrorStruct::new_with_msg_previous_error(msg, None));
                 }
                 let mut args = args;
                 let a0 = args.remove(0);
@@ -1096,7 +1096,7 @@ impl AtomicFact {
             SUBSET => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", SUBSET, args.len());
-                    return Err(NewAtomicFactError::new(msg, None));
+                    return Err(RuntimeErrorStruct::new_with_msg_previous_error(msg, None));
                 }
                 let mut args = args;
                 let a0 = args.remove(0);
@@ -1112,7 +1112,7 @@ impl AtomicFact {
             SUPERSET => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", SUPERSET, args.len());
-                    return Err(NewAtomicFactError::new(msg, None));
+                    return Err(RuntimeErrorStruct::new_with_msg_previous_error(msg, None));
                 }
                 let mut args = args;
                 let a0 = args.remove(0);
@@ -1130,7 +1130,7 @@ impl AtomicFact {
             RESTRICT => {
                 if args.len() != 2 {
                     let msg = format!("{} requires 2 arguments, but got {}", RESTRICT, args.len());
-                    return Err(NewAtomicFactError::new(msg, None));
+                    return Err(RuntimeErrorStruct::new_with_msg_previous_error(msg, None));
                 }
                 let mut args = args;
                 let a0 = args.remove(0);

@@ -140,7 +140,14 @@ impl Runtime {
                 &known_forall.params_def,
                 &args_for_params,
             )
-            .map_err(|e| VerifyError::new(Fact::AtomicFact(given_atomic_fact.clone()), Some(e)))?;
+            .map_err(|e| {
+                VerifyError::new(
+                    Fact::AtomicFact(given_atomic_fact.clone()),
+                    String::new(),
+                    Fact::AtomicFact(given_atomic_fact.clone()).line_file(),
+                    Some(e),
+                )
+            })?;
 
         for fact in args_satisfy_param_types.iter() {
             let result = self.verify_atomic_fact(fact, verify_state)?;
