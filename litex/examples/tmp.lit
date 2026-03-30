@@ -1,8 +1,8 @@
-let a2 set:
-    a2 = (2, 3)
+let A, B set:
+    forall x A:
+        $in(x, B)
 
+forall x A:
+    $in(x, B)
 
-forall a set:
-    $is_cart(a)
-    =>:
-        cart_dim(a) = cart_dim(a)
+A $subset B

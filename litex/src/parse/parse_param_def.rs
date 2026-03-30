@@ -1,32 +1,28 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn parse_param_def_with_param_type(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<ParamDefWithParamType, ParsingError> {
-        self.param_def_with_type(tb)
-    }
-
-    pub fn param_def_with_type(
+    pub fn parse_param_def_with_param_type_and_skip_comma(
         &mut self,
         tb: &mut TokenBlock,
     ) -> Result<ParamDefWithParamType, ParsingError> {
         let param = tb.advance()?;
-        if tb.current()? != COMMA {
-            Ok(ParamDefWithParamType(
-                vec![param],
-                self.parse_param_type(tb)?,
-            ))
+        let param_def_with_param_type = if tb.current()? != COMMA {
+            ParamDefWithParamType(vec![param], self.parse_param_type(tb)?)
         } else {
             let mut vec_of_params = vec![param];
+
             while tb.current_token_is_equal_to(COMMA) {
                 tb.skip()?;
                 vec_of_params.push(tb.advance()?);
             }
             let param_type = self.parse_param_type(tb)?;
-            Ok(ParamDefWithParamType(vec_of_params, param_type))
+
+            ParamDefWithParamType(vec_of_params, param_type)
+        };
+        if tb.current_token_is_equal_to(COMMA) {
+            tb.skip_token(COMMA)?;
         }
+        Ok(param_def_with_param_type)
     }
 
     pub fn parse_param_type(&mut self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
