@@ -11,6 +11,6 @@ pub use obj::{
     fn_obj_to_string, Add, Cap, Cart, CartDim, Choose, ClosedRange, Count, Cup, TupleDim, Div, FnObj,
     FnSetObj, FnSetWithParams, FnSetWithoutParams, InstStructObj, Intersect, ListSet, Mod, Mul,
     Number, Obj, ObjAtIndex, Pow, PowerSet, Proj, Range, SetBuilder, SetDiff, SetMinus, Sub, Tuple,
-    Union, Val,
+    Union,
 };
 pub use standard_set::StandardSet;

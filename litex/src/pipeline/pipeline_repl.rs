@@ -4,12 +4,11 @@ use crate::pipeline::run_source_code;
 use crate::pipeline::run_stmt_at_global_env;
 use std::io::{self, BufRead, Write};
 
-pub fn run_repl(version: &str, should_output_json: bool) {
-    _ = should_output_json;
-    return run_repl_loop_internal(version, true);
+pub fn run_repl(version: &str) {
+    return run_repl_loop_internal(version);
 }
 
-fn run_repl_loop_internal(version_banner: &str, should_output_json: bool) {
+fn run_repl_loop_internal(version_banner: &str) {
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
     let mut stdin_locked = stdin_handle.lock();
@@ -18,7 +17,6 @@ fn run_repl_loop_internal(version_banner: &str, should_output_json: bool) {
         version_banner,
         &mut stdin_locked,
         &mut stdout_locked,
-        should_output_json,
     ) {
         Ok(()) => {}
         Err(write_error) => {
@@ -31,7 +29,6 @@ fn run_repl_loop_with_readers<R, W>(
     version_banner: &str,
     stdin_reader: &mut R,
     stdout_writer: &mut W,
-    should_output_json: bool,
 ) -> io::Result<()>
 where
     R: BufRead,
@@ -45,8 +42,7 @@ where
     let mut runtime = Runtime::new();
 
     let (builtin_stmt_results, builtin_error) = run_source_code(builtin_env_code().as_str(), &mut runtime);
-    let (ok, msg) =
-        render_run_source_code_output(&runtime, &builtin_stmt_results, &builtin_error, true);
+    let (ok, msg) = render_run_source_code_output(&runtime, &builtin_stmt_results, &builtin_error);
     if !ok {
         eprintln!("builtin code execution failed: {}", msg);
         return Err(io::Error::new(
@@ -90,11 +86,7 @@ where
             Ok(parsed_blocks) => parsed_blocks,
             Err(parse_block_error) => {
                 let stmt_error = parse_block_error.into();
-                let error_string = if should_output_json {
-                    runtime.display_error_json_string(&stmt_error)
-                } else {
-                    runtime.display_error_with_label_and_location(&stmt_error)
-                };
+                let error_string = runtime.display_error_json_string(&stmt_error);
                 writeln!(stdout_writer)?;
                 writeln!(stdout_writer, "{}", error_string)?;
                 writeln!(stdout_writer)?;
@@ -108,11 +100,7 @@ where
                 Ok(statement) => statement,
                 Err(parse_stmt_error) => {
                     let runtime_error = parse_stmt_error.into();
-                    let message = if should_output_json {
-                        runtime.display_error_json_string(&runtime_error)
-                    } else {
-                        runtime.display_error_with_label_and_location(&runtime_error)
-                    };
+                    let message = runtime.display_error_json_string(&runtime_error);
                     output_chunk.push_str(&format!("\n{}\n", message));
                     break;
                 }
@@ -121,22 +109,14 @@ where
             let exec_result = match run_stmt_at_global_env(&stmt, &mut runtime) {
                 Ok(result) => result,
                 Err(exec_error) => {
-                    let message = if should_output_json {
-                        runtime.display_error_json_string(&exec_error)
-                    } else {
-                        runtime.display_error_with_label_and_location(&exec_error)
-                    };
+                    let message = runtime.display_error_json_string(&exec_error);
                     output_chunk.push_str(&format!("\n{}\n", message));
                     break;
                 }
             };
 
             output_chunk.push('\n');
-            if should_output_json {
-                output_chunk.push_str(runtime.display_result_json_string(&exec_result).as_str());
-            } else {
-                output_chunk.push_str(runtime.display_result(&exec_result).as_str());
-            }
+            output_chunk.push_str(runtime.display_result_json_string(&exec_result).as_str());
             output_chunk.push('\n');
         }
 

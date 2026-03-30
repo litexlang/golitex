@@ -142,7 +142,7 @@ pub fn duplicate_used_name_error_msg_without_line_file(name: &str) -> String {
     )
 }
 
-// Display outputs body only (no type label); full format with label and line is via RuntimeContext::display_error.
+// Display outputs a short placeholder; full machine-readable form is Runtime::display_error_json_string.
 impl fmt::Display for RuntimeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", "error")

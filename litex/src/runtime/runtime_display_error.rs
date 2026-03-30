@@ -355,7 +355,10 @@ impl Runtime {
         self.display_result_json_string(inside_result)
     }
 
-    pub fn get_file_name_empty_if_default(&self, (line, file_index): (usize, usize)) -> String {
+    pub(in crate::runtime) fn get_file_name_empty_if_default(
+        &self,
+        (line, file_index): (usize, usize),
+    ) -> String {
         if (line, file_index) == DEFAULT_LINE_FILE {
             return String::new();
         }

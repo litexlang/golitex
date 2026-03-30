@@ -387,14 +387,6 @@ impl ClosedRange {
     }
 }
 
-impl Val {
-    pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
-        Obj::Val(Val {
-            value: Box::new(self.value.instantiate(param_to_arg_map)),
-        })
-    }
-}
-
 impl PowerSet {
     pub fn instantiate(&self, param_to_arg_map: &HashMap<String, Obj>) -> Obj {
         Obj::PowerSet(PowerSet {
