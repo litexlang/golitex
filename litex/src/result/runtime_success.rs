@@ -7,9 +7,17 @@ pub struct NonFactualStmtSuccess {
     pub inside_results: Vec<NonErrStmtExecResult>,
 }
 
+pub struct _FactualStmtSuccess {
+    pub stmt: Fact,
+    pub infers: InferResult,
+    pub msg: String,
+    pub verified_by_fact: Fact,
+    pub inside_results: Vec<NonErrStmtExecResult>,
+}
+
 #[derive(Debug)]
 pub struct FactVerifiedByFact {
-    pub fact: Fact,
+    pub stmt: Fact,
     pub verified_by: String,
     pub infers: InferResult,
     pub verified_by_line_file: (usize, usize),
@@ -17,7 +25,7 @@ pub struct FactVerifiedByFact {
 
 #[derive(Debug)]
 pub struct FactVerifiedByBuiltinRules {
-    pub fact: Fact,
+    pub stmt: Fact,
     pub verified_by: String,
     pub infers: InferResult,
 }
@@ -40,7 +48,7 @@ impl FactVerifiedByFact {
         verified_by_line_file: (usize, usize),
     ) -> Self {
         FactVerifiedByFact {
-            fact,
+            stmt: fact,
             verified_by,
             infers,
             verified_by_line_file,
@@ -51,7 +59,7 @@ impl FactVerifiedByFact {
 impl FactVerifiedByBuiltinRules {
     pub fn new(fact: Fact, verified_by: String, infers: InferResult) -> Self {
         FactVerifiedByBuiltinRules {
-            fact,
+            stmt: fact,
             verified_by,
             infers,
         }

@@ -172,7 +172,7 @@ impl Runtime {
             indent_inner,
             json_string_literal("Fact")
         ));
-        let fact_line_file = fact_verified_by_fact_result.fact.line_file();
+        let fact_line_file = fact_verified_by_fact_result.stmt.line_file();
         field_lines.push(format!("{}\"line\": {}", indent_inner, fact_line_file.0));
         field_lines.push(format!(
             "{}\"{}\": {}",
@@ -183,7 +183,7 @@ impl Runtime {
         field_lines.push(format!(
             "{}\"stmt\": {}",
             indent_inner,
-            json_string_literal(&fact_verified_by_fact_result.fact.to_string())
+            json_string_literal(&fact_verified_by_fact_result.stmt.to_string())
         ));
         field_lines.push(format!(
             "{}\"verified_by_fact_known_on_line\": {}",
@@ -244,7 +244,7 @@ impl Runtime {
             indent_inner,
             json_string_literal("Fact")
         ));
-        let fact_line_file = fact_verified_by_builtin_rules_result.fact.line_file();
+        let fact_line_file = fact_verified_by_builtin_rules_result.stmt.line_file();
         field_lines.push(format!("{}\"line\": {}", indent_inner, fact_line_file.0));
         field_lines.push(format!(
             "{}\"{}\": {}",
@@ -255,7 +255,7 @@ impl Runtime {
         field_lines.push(format!(
             "{}\"stmt\": {}",
             indent_inner,
-            json_string_literal(&fact_verified_by_builtin_rules_result.fact.to_string())
+            json_string_literal(&fact_verified_by_builtin_rules_result.stmt.to_string())
         ));
         field_lines.push(format!(
             "{}\"verified_by\": {}",
