@@ -1,8 +1,7 @@
 use litex::pipeline::render_run_source_code_output;
 use litex::pipeline::run_repl;
 use litex::pipeline::run_source_code;
-use litex::pipeline::run_source_code_in_file_and_return_json_string;
-use litex::pipeline::run_source_code_in_file_and_return_string;
+use litex::pipeline::run_source_code_in_file;
 use litex::prelude::*;
 use std::env;
 use std::path::{Path, PathBuf};
@@ -33,30 +32,8 @@ pub fn run_cli() {
                 println!("Litex Kernel: litex {}", VERSION);
                 return;
             }
-            "-json" => {
-                index += 1;
-                if index == 1 {
-                    run_repl(VERSION, true);
-                    return;
-                }
-                // In case someone passes "-json" after other flags, we try to reject
-                // ambiguous ordering. Documented usage is "-f -json <file>" etc.
-                eprintln!(
-                    "{} should be used alone (litex -json) or as '-f/-e/-r -json <value>'",
-                    head
-                );
-                print_help_message();
-                process::exit(2);
-            }
             "-e" => {
                 index += 1;
-                let should_output_json = if args.get(index).map(|v| v.as_str()) == Some("-json") {
-                    index += 1;
-                    true
-                } else {
-                    false
-                };
-
                 let code = match read_non_flag_value_after_flag(&args, &mut index, "-e") {
                     Ok(value) => value,
                     Err(message) => {
@@ -69,12 +46,8 @@ pub fn run_cli() {
 
                 let (builtin_stmt_results, builtin_error) =
                     run_source_code(builtin_env_code().as_str(), &mut runtime);
-                let (ok, msg) = render_run_source_code_output(
-                    &runtime,
-                    &builtin_stmt_results,
-                    &builtin_error,
-                    true,
-                );
+                let (ok, msg) =
+                    render_run_source_code_output(&runtime, &builtin_stmt_results, &builtin_error);
                 if !ok {
                     eprintln!("builtin code execution failed: {}", msg);
                     process::exit(1);
@@ -82,25 +55,14 @@ pub fn run_cli() {
                 runtime.new_file_path_new_env_new_name_scope("-e");
 
                 let (stmt_results, runtime_error) = run_source_code(code.as_str(), &mut runtime);
-                let output = render_run_source_code_output(
-                    &runtime,
-                    &stmt_results,
-                    &runtime_error,
-                    should_output_json,
-                );
+                let output =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error);
                 println!("{}", output.1.trim());
                 println!("{}", repl_footer_placeholder());
                 return;
             }
             "-f" => {
                 index += 1;
-                let should_output_json = if args.get(index).map(|v| v.as_str()) == Some("-json") {
-                    index += 1;
-                    true
-                } else {
-                    false
-                };
-
                 let file_path = match read_non_flag_value_after_flag(&args, &mut index, "-f") {
                     Ok(value) => value,
                     Err(message) => {
@@ -109,18 +71,11 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                main_flag_file(file_path.as_str(), should_output_json);
+                main_flag_file(file_path.as_str());
                 return;
             }
             "-r" => {
                 index += 1;
-                let should_output_json = if args.get(index).map(|v| v.as_str()) == Some("-json") {
-                    index += 1;
-                    true
-                } else {
-                    false
-                };
-
                 let repo_path = match read_non_flag_value_after_flag(&args, &mut index, "-r") {
                     Ok(value) => value,
                     Err(message) => {
@@ -137,7 +92,7 @@ pub fn run_cli() {
                         process::exit(1);
                     }
                 };
-                main_flag_file(joined_string.as_str(), should_output_json);
+                main_flag_file(joined_string.as_str());
                 return;
             }
             "-latex" => {
@@ -281,7 +236,7 @@ pub fn run_cli() {
         }
     }
 
-    run_repl(VERSION, false);
+    run_repl(VERSION);
 }
 
 /// `index` must point at the first token after the flag; reads one value and advances past it.
@@ -322,7 +277,7 @@ fn remove_windows_carriage_return(path_or_code: &str) -> String {
     path_or_code.replace('\r', "")
 }
 
-fn main_flag_file(file_flag: &str, should_output_json: bool) {
+fn main_flag_file(file_flag: &str) {
     let path = remove_windows_carriage_return(file_flag);
 
     let abs_file_path: PathBuf = if Path::new(path.as_str()).is_absolute() {
@@ -352,11 +307,7 @@ fn main_flag_file(file_flag: &str, should_output_json: bool) {
         }
     };
 
-    let output = if should_output_json {
-        run_source_code_in_file_and_return_json_string(path_string.as_str())
-    } else {
-        run_source_code_in_file_and_return_string(path_string.as_str())
-    };
+    let output = run_source_code_in_file(path_string.as_str());
     println!("{}", string_with_trimmed_outer_newlines(output.as_str()));
     println!("{}", repl_footer_placeholder());
 }
@@ -420,10 +371,6 @@ fn help_message() -> String {
 litex -f <file> : run the given file
 litex -r <repo> : run the given repository
 litex -e <code> : execute the given code
-litex -json : run Litex interactively in your terminal and return the result in JSON format
-litex -f -json <file> : execute the given file and return the result in JSON format
-litex -e -json <code> : execute the given code and return the result in JSON format
-litex -r -json <repo> : execute the given repository and return the result in JSON format
 litex -latex : compile the given file or code to LaTeX interactively in your terminal
 litex -latex -f <file> : compile the given file to LaTeX
 litex -latex -e <code> : compile the given code to LaTeX

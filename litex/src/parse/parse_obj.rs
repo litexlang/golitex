@@ -714,23 +714,6 @@ impl Runtime {
             })?;
             return Ok(Obj::Count(Count::new(value)));
         }
-        if tok == VAL {
-            tb.skip()?;
-            let args = self.parse_braced_objs(tb)?;
-            if args.len() != 1 {
-                return Err(ParsingError::new(
-                    "val expects 1 argument".to_string(),
-                    tb.line_file,
-                    None,
-                ));
-            }
-            let mut it = args.into_iter();
-            let value = it.next().ok_or_else(|| {
-                ParsingError::new("val expects 1 argument".to_string(), tb.line_file, None)
-            })?;
-            return Ok(Obj::Val(Val::new(value)));
-        }
-
         if tok == CART {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;

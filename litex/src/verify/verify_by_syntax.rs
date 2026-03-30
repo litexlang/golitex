@@ -195,10 +195,6 @@ impl Runtime {
                 Obj::ClosedRange(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::Val(a) => match right {
-                Obj::Val(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
             Obj::PowerSet(a) => match right {
                 Obj::PowerSet(b) => a.to_string() == b.to_string(),
                 _ => false,

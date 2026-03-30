@@ -4,9 +4,7 @@ mod run_examples_lit {
     use std::path::PathBuf;
     use std::time::Instant;
 
-    use crate::pipeline::{
-        run_source_code_in_file_and_return_json_string, run_source_code_in_file_and_return_string,
-    };
+    use crate::pipeline::run_source_code_in_file;
 
     #[test]
     fn run_all_lit_files_under_examples_directory() {
@@ -74,7 +72,7 @@ mod run_examples_lit {
             };
 
             let start_time = Instant::now();
-            let run_result_string = run_source_code_in_file_and_return_string(lit_file_path_str);
+            let run_result_string = run_source_code_in_file(lit_file_path_str);
             let duration = start_time.elapsed();
 
             println!("\n=== {:?} ===\n{}\n", lit_file_path, run_result_string);
@@ -117,7 +115,7 @@ mod run_examples_lit {
         }
 
         let start_time = Instant::now();
-        let result_from_string = run_source_code_in_file_and_return_json_string(path_str);
+        let result_from_string = run_source_code_in_file(path_str);
         let duration_string = start_time.elapsed();
 
         println!("\n{}\n", result_from_string);
