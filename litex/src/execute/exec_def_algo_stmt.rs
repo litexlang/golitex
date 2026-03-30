@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {
-        self.exec_def_algo_stmt_verify_process(def_algo_stmt)?;
+        self._exec_def_algo_stmt_verify_process(def_algo_stmt)?;
         self.store_def_algo(def_algo_stmt)?;
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
@@ -17,7 +17,7 @@ impl Runtime {
         ))
     }
 
-    fn exec_def_algo_stmt_verify_process(
+    fn _exec_def_algo_stmt_verify_process(
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<NonErrStmtExecResult, ExecStmtError> {

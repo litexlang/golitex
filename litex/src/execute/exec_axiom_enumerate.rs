@@ -45,24 +45,25 @@ impl Runtime {
                         vec![],
                     ))
                 })?;
+            let infer_result = Self::infer_result_with_generated_forall_and_store_infer(
+                &corresponding_forall_fact,
+                infer_result_from_stored_forall_fact,
+            );
             return Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
                 NonFactualStmtSuccess::new(
                     Stmt::EnumerateAxiomStmt(stmt.clone()),
-                    infer_result_from_stored_forall_fact,
+                    infer_result,
                     vec![],
                 ),
             ));
         }
 
-        let mut all_inside_results: Vec<NonErrStmtExecResult> = Vec::new();
         let mut current_parameter_index_assignment = Self::enumerate_start_index_assignment(stmt);
         loop {
-            let mut one_assignment_inside_results = self
-                .exec_enumerate_axiom_stmt_for_one_assignment(
-                    stmt,
-                    &current_parameter_index_assignment,
-                )?;
-            all_inside_results.append(&mut one_assignment_inside_results);
+            self.exec_enumerate_axiom_stmt_for_one_assignment(
+                stmt,
+                &current_parameter_index_assignment,
+            )?;
             let next_parameter_index_assignment =
                 Self::enumerate_next_index_assignment(stmt, &current_parameter_index_assignment);
             match next_parameter_index_assignment {
@@ -87,18 +88,29 @@ impl Runtime {
                 ))
             })?;
 
+        let infer_result = Self::infer_result_with_generated_forall_and_store_infer(
+            &corresponding_forall_fact,
+            infer_result_from_stored_forall_fact,
+        );
+
         Ok(NonErrStmtExecResult::NonFactualStmtSuccess(
             NonFactualStmtSuccess::new(
                 Stmt::EnumerateAxiomStmt(stmt.clone()),
-                {
-                    let mut infer_result = InferResult::new();
-                    infer_result.new_fact(&corresponding_forall_fact);
-                    infer_result.new_infer_result_inside(infer_result_from_stored_forall_fact);
-                    infer_result
-                },
-                all_inside_results,
+                infer_result,
+                vec![],
             ),
         ))
+    }
+
+    /// Puts the generated forall fact string first in `infer_facts`, then appends infer from store.
+    fn infer_result_with_generated_forall_and_store_infer(
+        generated_forall_fact: &Fact,
+        infer_after_store: InferResult,
+    ) -> InferResult {
+        let mut infer_result = InferResult::new();
+        infer_result.new_fact(generated_forall_fact);
+        infer_result.new_infer_result_inside(infer_after_store);
+        infer_result
     }
 
     fn enumerate_start_index_assignment(stmt: &EnumerateAxiomStmt) -> Vec<usize> {
@@ -131,7 +143,7 @@ impl Runtime {
         &mut self,
         stmt: &EnumerateAxiomStmt,
         parameter_index_assignment: &Vec<usize>,
-    ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
+    ) -> Result<(), RuntimeError> {
         self.push_env();
         let execute_result = self
             .exec_enumerate_axiom_stmt_for_one_assignment_body(stmt, parameter_index_assignment);
@@ -143,8 +155,8 @@ impl Runtime {
         &mut self,
         stmt: &EnumerateAxiomStmt,
         parameter_index_assignment: &Vec<usize>,
-    ) -> Result<Vec<NonErrStmtExecResult>, RuntimeError> {
-        let mut inside_results: Vec<NonErrStmtExecResult> = Vec::new();
+    ) -> Result<(), RuntimeError> {
+        let mut inside_results_before_failure: Vec<NonErrStmtExecResult> = Vec::new();
         for (parameter_position, parameter_name) in stmt.params.iter().enumerate() {
             let assigned_obj = (*stmt.param_sets[parameter_position].list
                 [parameter_index_assignment[parameter_position]])
@@ -164,15 +176,26 @@ impl Runtime {
         }
 
         for proof_stmt in stmt.proof.iter() {
-            let proof_result = self.exec_stmt(proof_stmt)?;
-            inside_results.push(proof_result);
+            match self.exec_stmt(proof_stmt) {
+                Ok(proof_result) => {
+                    inside_results_before_failure.push(proof_result);
+                }
+                Err(statement_error) => {
+                    return Err(RuntimeError::ExecStmtError(
+                        ExecStmtError::with_message_and_cause(
+                            Stmt::EnumerateAxiomStmt(stmt.clone()),
+                            proof_stmt.to_string(),
+                            Some(statement_error),
+                            inside_results_before_failure,
+                        ),
+                    ));
+                }
+            }
         }
 
         for fact_to_prove in stmt.to_prove.iter() {
-            let verified_result = self
-                .verify_fact_return_err_if_not_true(fact_to_prove, &VerifyState::new(0, false))?;
-            inside_results.push(verified_result);
+            self.verify_fact_return_err_if_not_true(fact_to_prove, &VerifyState::new(0, false))?;
         }
-        Ok(inside_results)
+        Ok(())
     }
 }
