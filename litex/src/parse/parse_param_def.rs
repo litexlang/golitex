@@ -14,23 +14,27 @@ impl Runtime {
     ) -> Result<ParamDefWithParamType, ParsingError> {
         let param = tb.advance()?;
         if tb.current()? != COMMA {
-            Ok(ParamDefWithParamType(vec![param], self.param_type(tb)?))
+            Ok(ParamDefWithParamType(
+                vec![param],
+                self.parse_param_type(tb)?,
+            ))
         } else {
             let mut vec_of_params = vec![param];
             while tb.current_token_is_equal_to(COMMA) {
                 tb.skip()?;
                 vec_of_params.push(tb.advance()?);
             }
-            let param_type = self.param_type(tb)?;
+            let param_type = self.parse_param_type(tb)?;
             Ok(ParamDefWithParamType(vec_of_params, param_type))
         }
     }
 
-    pub fn param_type(&mut self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
+    pub fn parse_param_type(&mut self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
         match tb.current()? {
             NONEMPTY_SET => self.param_type_nonempty_set(tb),
             FINITE_SET => self.param_type_finite_set(tb),
             SET => self.param_type_set(tb),
+            INST_STRUCT_OBJ_SIGN => self.param_type_instantiated_struct(tb),
             _ => self.param_type_obj(tb),
         }
     }
@@ -53,5 +57,18 @@ impl Runtime {
     pub fn param_type_obj(&mut self, tb: &mut TokenBlock) -> Result<ParamType, ParsingError> {
         let obj = self.parse_obj(tb)?;
         Ok(ParamType::Obj(obj))
+    }
+
+    pub fn param_type_instantiated_struct(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<ParamType, ParsingError> {
+        tb.skip_token(INST_STRUCT_OBJ_SIGN)?;
+        let name = self.parse_identifier_or_identifier_with_mod(tb)?;
+        let params = self.parse_braced_objs(tb)?;
+        Ok(ParamType::InstantiatedStruct(InstantiatedStruct {
+            name,
+            params,
+        }))
     }
 }

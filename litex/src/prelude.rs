@@ -141,6 +141,7 @@ pub use crate::stmt::definition_stmt::HaveObjInNonemptySetOrParamTypeStmt;
 pub use crate::stmt::eval_stmt::EvalStmt;
 pub use crate::stmt::know_stmt::KnowStmt;
 pub use crate::stmt::parameter_def::FiniteSet;
+pub use crate::stmt::parameter_def::InstantiatedStruct;
 pub use crate::stmt::parameter_def::NonemptySet;
 pub use crate::stmt::parameter_def::ParamDefWithParamSet;
 pub use crate::stmt::parameter_def::ParamDefWithParamType;
