@@ -16,6 +16,8 @@ impl Runtime {
             if let Err(e) = self.verify_atomic_fact_well_defined(fact, verify_state) {
                 return Err(VerifyError::new(
                     Fact::AtomicFact(fact.clone()),
+                    String::new(),
+                    fact.line_file(),
                     Some(RuntimeError::WellDefinedError(e)),
                 ));
             }

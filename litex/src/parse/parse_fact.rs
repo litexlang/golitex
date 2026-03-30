@@ -266,7 +266,7 @@ impl Runtime {
             let prop = self.parse_identifier_or_identifier_with_mod(tb)?;
             let args = self.parse_braced_objs(tb)?;
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
-                |e: NewAtomicFactError| ParsingError::new(e.msg.clone(), tb.line_file, None),
+                |e: RuntimeErrorStruct| ParsingError::new(e.msg.clone(), tb.line_file, None),
             )?;
             return Ok(atomic);
         }
@@ -295,7 +295,7 @@ impl Runtime {
         let next_obj = self.parse_obj(tb)?;
         let args = vec![first_obj, next_obj];
         let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
-            |e: NewAtomicFactError| ParsingError::new(e.msg.clone(), tb.line_file, None),
+            |e: RuntimeErrorStruct| ParsingError::new(e.msg.clone(), tb.line_file, None),
         )?;
         Ok(atomic)
     }
@@ -335,7 +335,7 @@ impl Runtime {
             let prop = self.parse_identifier_or_identifier_with_mod(tb)?;
             let args = self.parse_braced_objs(tb)?;
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
-                |e: NewAtomicFactError| ParsingError::new(e.msg.clone(), tb.line_file, None),
+                |e: RuntimeErrorStruct| ParsingError::new(e.msg.clone(), tb.line_file, None),
             )?;
             return Ok(ChainAtomicFact::AtomicFact(atomic));
         }
@@ -375,7 +375,7 @@ impl Runtime {
             let prop = prop_names.remove(0);
             let args = objs;
             let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
-                |e: NewAtomicFactError| ParsingError::new(e.msg.clone(), tb.line_file, None),
+                |e: RuntimeErrorStruct| ParsingError::new(e.msg.clone(), tb.line_file, None),
             )?;
             return Ok(ChainAtomicFact::AtomicFact(atomic));
         }

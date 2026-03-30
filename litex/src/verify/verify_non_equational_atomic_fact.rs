@@ -214,6 +214,8 @@ impl Runtime {
                     );
                     return Err(VerifyError::new(
                         Fact::AtomicFact(atomic_fact.clone()),
+                        message.clone(),
+                        atomic_fact.line_file(),
                         Some(RuntimeError::UnknownError(UnknownError::new(
                             message,
                             atomic_fact.line_file(),

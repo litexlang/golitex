@@ -17,6 +17,8 @@ impl Runtime {
             if let Err(e) = self.verify_and_fact_well_defined(and_fact, verify_state) {
                 return Err(VerifyError::new(
                     Fact::AndFact(and_fact.clone()),
+                    String::new(),
+                    and_fact.line_file(),
                     Some(RuntimeError::WellDefinedError(e)),
                 ));
             }
@@ -57,6 +59,8 @@ impl Runtime {
             if let Err(e) = self.verify_chain_fact_well_defined(chain_fact, verify_state) {
                 return Err(VerifyError::new(
                     Fact::ChainFact(chain_fact.clone()),
+                    String::new(),
+                    chain_fact.line_file(),
                     Some(RuntimeError::WellDefinedError(e)),
                 ));
             }
@@ -64,9 +68,14 @@ impl Runtime {
 
         let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
 
-        let facts = chain_fact
-            .facts()
-            .map_err(|e| VerifyError::new(Fact::ChainFact(chain_fact.clone()), Some(e.into())))?;
+        let facts = chain_fact.facts().map_err(|e| {
+            VerifyError::new(
+                Fact::ChainFact(chain_fact.clone()),
+                String::new(),
+                Fact::ChainFact(chain_fact.clone()).line_file(),
+                Some(RuntimeError::NewAtomicFactError(e)),
+            )
+        })?;
         let mut verify_what = Vec::with_capacity(facts.len());
         for fact in &facts {
             let result = self.verify_atomic_fact(fact, &verify_state_for_children)?;

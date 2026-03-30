@@ -21,8 +21,11 @@ impl Runtime {
 
         if result.is_unknown() {
             let fact_owned = fact.clone();
+            let line_file = fact_owned.line_file();
             return Err(VerifyError::new(
                 fact_owned.clone(),
+                String::new(),
+                line_file,
                 Some(RuntimeError::UnknownError(
                     UnknownError::verify_result_unknown(fact_owned, None),
                 )),

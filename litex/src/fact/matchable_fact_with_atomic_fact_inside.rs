@@ -39,9 +39,16 @@ impl ChainFact {
         self.line_file
     }
 
-    pub fn facts(&self) -> Result<Vec<AtomicFact>, NewAtomicFactError> {
+    pub fn facts(&self) -> Result<Vec<AtomicFact>, RuntimeErrorStruct> {
         if self.objs.len() != self.prop_names.len() + 1 {
-            return Err(NewAtomicFactError::new(format!("the number of objects ({}) is not equal to the number of property names ({}) + 1", self.objs.len(), self.prop_names.len()), None));
+            return Err(RuntimeErrorStruct::new_with_msg_previous_error(
+                format!(
+                    "the number of objects ({}) is not equal to the number of property names ({}) + 1",
+                    self.objs.len(),
+                    self.prop_names.len(),
+                ),
+                None,
+            ));
         }
 
         let mut facts = Vec::with_capacity(self.prop_names.len());
