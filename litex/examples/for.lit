@@ -1,4 +1,4 @@
-for n range(0, 10):
+by for n range(0, 10):
     prove:
         1 = 1
     do_nothing

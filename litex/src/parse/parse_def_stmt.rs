@@ -252,6 +252,7 @@ impl Runtime {
 
     pub fn parse_have_exist(&mut self, tb: &mut TokenBlock) -> Result<Stmt, ParsingError> {
         tb.skip_token(HAVE)?;
+        tb.skip_token(BY)?;
 
         let true_fact = self.parse_exist_fact(tb)?;
 

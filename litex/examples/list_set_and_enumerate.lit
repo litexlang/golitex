@@ -3,6 +3,6 @@ let a R:
 
 a = 1 or a = 2
 
-enumerate a {1, 2, 3}:
+by enumerate a {1, 2, 3}:
     prove:
         a < 4
