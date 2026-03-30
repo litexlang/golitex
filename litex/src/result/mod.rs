@@ -1,7 +1,7 @@
-mod stmt_result;
-mod stmt_success;
-mod stmt_unknown;
+mod runtime_result;
+mod runtime_success;
+mod runtime_unknown;
 
-pub use stmt_result::{NonErrStmtExecResult};
-pub use stmt_success::{FactVerifiedByBuiltinRules, FactVerifiedByFact, NonFactualStmtSuccess};
-pub use stmt_unknown::StmtUnknown;
+pub use runtime_result::NonErrStmtExecResult;
+pub use runtime_success::{FactVerifiedByBuiltinRules, FactVerifiedByFact, NonFactualStmtSuccess};
+pub use runtime_unknown::StmtUnknown;

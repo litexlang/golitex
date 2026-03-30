@@ -8,6 +8,8 @@ golitex.code-workspace
 deploy_web
 ./reference_manual/thoughts.md
 /binary/
+litex/binary/
+litex/scripts/
 /kernel_lib/
 ./examples/testings/.order
 /to_latex/
@@ -25,3 +27,4 @@ process_tmp.py
 .cursor/Tutorial
 golitex
 /litex/target/
+/litex/local-tools/

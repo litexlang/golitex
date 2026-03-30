@@ -1,98 +1,106 @@
-use crate::Executor;
-use crate::error::VerifyError;
-use crate::fact::{ExistOrAndChainAtomicFact, OrAndChainAtomicFact, ChainFact, AndChainAtomicFact, OrFact, AndFact, ExistFact, AtomicFact};
-use crate::obj::Obj;
-use crate::stmt::parameter_def::ParamType;
+use crate::prelude::*;
 
-impl<'a> Executor<'a> {
-    pub fn _verify_exist_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(fact: &ExistOrAndChainAtomicFact, other: &ExistOrAndChainAtomicFact) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+impl Runtime {
+    pub fn _verify_exist_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(
+        fact: &ExistOrAndChainAtomicFact,
+        other: &ExistOrAndChainAtomicFact,
+    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
         match fact {
-            ExistOrAndChainAtomicFact::ChainFact(f) => {
-                match other {
-                    ExistOrAndChainAtomicFact::ChainFact(other) => Self::_verify_chain_fact_the_same_type_and_return_matched_args(f, other),
-                    _ => Ok(None)
+            ExistOrAndChainAtomicFact::ChainFact(f) => match other {
+                ExistOrAndChainAtomicFact::ChainFact(other) => {
+                    Self::_verify_chain_fact_the_same_type_and_return_matched_args(f, other)
                 }
+                _ => Ok(None),
             },
-            ExistOrAndChainAtomicFact::AndFact(f) => {
-                match other {
-                    ExistOrAndChainAtomicFact::AndFact(other) => Self::_verify_and_fact_the_same_type_and_return_matched_args(f, other),
-                    _ => Ok(None)
+            ExistOrAndChainAtomicFact::AndFact(f) => match other {
+                ExistOrAndChainAtomicFact::AndFact(other) => {
+                    Self::_verify_and_fact_the_same_type_and_return_matched_args(f, other)
                 }
+                _ => Ok(None),
             },
-            ExistOrAndChainAtomicFact::OrFact(f) => {
-                match other {
-                    ExistOrAndChainAtomicFact::OrFact(other) => Self::_verify_or_fact_the_same_type_and_return_matched_args(f, other),
-                    _ => Ok(None)
+            ExistOrAndChainAtomicFact::OrFact(f) => match other {
+                ExistOrAndChainAtomicFact::OrFact(other) => {
+                    Self::_verify_or_fact_the_same_type_and_return_matched_args(f, other)
                 }
+                _ => Ok(None),
             },
-            ExistOrAndChainAtomicFact::ExistFact(f) => {
-                match other {
-                    ExistOrAndChainAtomicFact::ExistFact(other) => Self::_verify_exist_fact_the_same_type_and_return_matched_args(f, other),
-                    _ => Ok(None)
+            ExistOrAndChainAtomicFact::ExistFact(f) => match other {
+                ExistOrAndChainAtomicFact::ExistFact(other) => {
+                    Self::_verify_exist_fact_the_same_type_and_return_matched_args(f, other)
                 }
+                _ => Ok(None),
             },
-            ExistOrAndChainAtomicFact::AtomicFact(f) => {
-                match other {
-                    ExistOrAndChainAtomicFact::AtomicFact(other) => Self::_verify_atomic_fact_the_same_type_and_return_matched_args(f, other),
-                    _ => Ok(None)
+            ExistOrAndChainAtomicFact::AtomicFact(f) => match other {
+                ExistOrAndChainAtomicFact::AtomicFact(other) => {
+                    Self::_verify_atomic_fact_the_same_type_and_return_matched_args(f, other)
                 }
+                _ => Ok(None),
             },
         }
     }
 
-    pub fn _verify_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(fact: &OrAndChainAtomicFact, other: &OrAndChainAtomicFact) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+    pub fn _verify_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(
+        fact: &OrAndChainAtomicFact,
+        other: &OrAndChainAtomicFact,
+    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
         match fact {
-            OrAndChainAtomicFact::AndFact(f) => {
-                match other {
-                    OrAndChainAtomicFact::AndFact(other) => Self::_verify_and_fact_the_same_type_and_return_matched_args(f, other),
-                    _ => Ok(None)
+            OrAndChainAtomicFact::AndFact(f) => match other {
+                OrAndChainAtomicFact::AndFact(other) => {
+                    Self::_verify_and_fact_the_same_type_and_return_matched_args(f, other)
                 }
+                _ => Ok(None),
             },
-            OrAndChainAtomicFact::OrFact(f) => {
-                match other {
-                    OrAndChainAtomicFact::OrFact(other) => Self::_verify_or_fact_the_same_type_and_return_matched_args(f, other),
-                    _ => Ok(None)
+            OrAndChainAtomicFact::OrFact(f) => match other {
+                OrAndChainAtomicFact::OrFact(other) => {
+                    Self::_verify_or_fact_the_same_type_and_return_matched_args(f, other)
                 }
+                _ => Ok(None),
             },
-            OrAndChainAtomicFact::AtomicFact(f) => {
-                match other {
-                    OrAndChainAtomicFact::AtomicFact(other) => Self::_verify_atomic_fact_the_same_type_and_return_matched_args(f, other),
-                    _ => Ok(None)
+            OrAndChainAtomicFact::AtomicFact(f) => match other {
+                OrAndChainAtomicFact::AtomicFact(other) => {
+                    Self::_verify_atomic_fact_the_same_type_and_return_matched_args(f, other)
                 }
+                _ => Ok(None),
             },
-            OrAndChainAtomicFact::ChainFact(f) => {
-                match other {
-                    OrAndChainAtomicFact::ChainFact(other) => Self::_verify_chain_fact_the_same_type_and_return_matched_args(f, other),
-                    _ => Ok(None)
+            OrAndChainAtomicFact::ChainFact(f) => match other {
+                OrAndChainAtomicFact::ChainFact(other) => {
+                    Self::_verify_chain_fact_the_same_type_and_return_matched_args(f, other)
                 }
+                _ => Ok(None),
             },
         }
     }
 
-    pub fn _verify_and_chain_atomic_facts_the_same_type_and_return_matched_args(fact: &AndChainAtomicFact, other: &AndChainAtomicFact) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+    pub fn _verify_and_chain_atomic_facts_the_same_type_and_return_matched_args(
+        fact: &AndChainAtomicFact,
+        other: &AndChainAtomicFact,
+    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
         match fact {
-            AndChainAtomicFact::AndFact(f) => {
-                match other {
-                    AndChainAtomicFact::AndFact(other) => Self::_verify_and_fact_the_same_type_and_return_matched_args(f, other),
-                    _ => Ok(None)
+            AndChainAtomicFact::AndFact(f) => match other {
+                AndChainAtomicFact::AndFact(other) => {
+                    Self::_verify_and_fact_the_same_type_and_return_matched_args(f, other)
                 }
+                _ => Ok(None),
             },
-            AndChainAtomicFact::AtomicFact(f) => {
-                match other {
-                    AndChainAtomicFact::AtomicFact(other) => Self::_verify_atomic_fact_the_same_type_and_return_matched_args(f, other),
-                    _ => Ok(None)
+            AndChainAtomicFact::AtomicFact(f) => match other {
+                AndChainAtomicFact::AtomicFact(other) => {
+                    Self::_verify_atomic_fact_the_same_type_and_return_matched_args(f, other)
                 }
+                _ => Ok(None),
             },
-            AndChainAtomicFact::ChainFact(f) => {
-                match other {
-                    AndChainAtomicFact::ChainFact(other) => Self::_verify_chain_fact_the_same_type_and_return_matched_args(f, other),
-                    _ => Ok(None)
+            AndChainAtomicFact::ChainFact(f) => match other {
+                AndChainAtomicFact::ChainFact(other) => {
+                    Self::_verify_chain_fact_the_same_type_and_return_matched_args(f, other)
                 }
+                _ => Ok(None),
             },
         }
     }
 
-    pub fn _verify_chain_fact_the_same_type_and_return_matched_args(fact: &ChainFact, other: &ChainFact) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+    pub fn _verify_chain_fact_the_same_type_and_return_matched_args(
+        fact: &ChainFact,
+        other: &ChainFact,
+    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
         if fact.prop_names.len() != other.prop_names.len() {
             return Ok(None);
         }
@@ -100,7 +108,8 @@ impl<'a> Executor<'a> {
             return Ok(None);
         }
 
-        for (fact_prop_name, other_prop_name) in fact.prop_names.iter().zip(other.prop_names.iter()) {
+        for (fact_prop_name, other_prop_name) in fact.prop_names.iter().zip(other.prop_names.iter())
+        {
             if fact_prop_name.to_string() != other_prop_name.to_string() {
                 return Ok(None);
             }
@@ -114,17 +123,23 @@ impl<'a> Executor<'a> {
         Ok(Some(matched_args))
     }
 
-    pub fn _verify_or_fact_the_same_type_and_return_matched_args(fact: &OrFact, other: &OrFact) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+    pub fn _verify_or_fact_the_same_type_and_return_matched_args(
+        fact: &OrFact,
+        other: &OrFact,
+    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
         if fact.facts.len() != other.facts.len() {
             return Ok(None);
         }
 
         let mut matched_args: Vec<(Obj, Obj)> = Vec::new();
         for (fact_item, other_item) in fact.facts.iter().zip(other.facts.iter()) {
-            let sub_matched_args = match Self::_verify_and_chain_atomic_facts_the_same_type_and_return_matched_args(fact_item, other_item)? {
-                Some(value) => value,
-                None => return Ok(None),
-            };
+            let sub_matched_args =
+                match Self::_verify_and_chain_atomic_facts_the_same_type_and_return_matched_args(
+                    fact_item, other_item,
+                )? {
+                    Some(value) => value,
+                    None => return Ok(None),
+                };
             for matched_arg in sub_matched_args {
                 matched_args.push(matched_arg);
             }
@@ -133,17 +148,23 @@ impl<'a> Executor<'a> {
         Ok(Some(matched_args))
     }
 
-    pub fn _verify_and_fact_the_same_type_and_return_matched_args(fact: &AndFact, other: &AndFact) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+    pub fn _verify_and_fact_the_same_type_and_return_matched_args(
+        fact: &AndFact,
+        other: &AndFact,
+    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
         if fact.facts.len() != other.facts.len() {
             return Ok(None);
         }
 
         let mut matched_args: Vec<(Obj, Obj)> = Vec::new();
         for (fact_item, other_item) in fact.facts.iter().zip(other.facts.iter()) {
-            let sub_matched_args = match Self::_verify_atomic_fact_the_same_type_and_return_matched_args(fact_item, other_item)? {
-                Some(value) => value,
-                None => return Ok(None),
-            };
+            let sub_matched_args =
+                match Self::_verify_atomic_fact_the_same_type_and_return_matched_args(
+                    fact_item, other_item,
+                )? {
+                    Some(value) => value,
+                    None => return Ok(None),
+                };
             for matched_arg in sub_matched_args {
                 matched_args.push(matched_arg);
             }
@@ -152,59 +173,84 @@ impl<'a> Executor<'a> {
         Ok(Some(matched_args))
     }
 
-    pub fn _verify_exist_fact_the_same_type_and_return_matched_args(fact: &ExistFact, other: &ExistFact) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+    pub fn _verify_exist_fact_the_same_type_and_return_matched_args(
+        fact: &ExistFact,
+        other: &ExistFact,
+    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
         if fact.params_def_with_type.len() != other.params_def_with_type.len() {
             return Ok(None);
         }
         if fact.facts.len() != other.facts.len() {
             return Ok(None);
         }
-        
+
         let mut matched_args: Vec<(Obj, Obj)> = Vec::new();
 
-        for (fact_param_def, other_param_def) in fact.params_def_with_type.iter().zip(other.params_def_with_type.iter()) {
+        for (fact_param_def, other_param_def) in fact
+            .params_def_with_type
+            .iter()
+            .zip(other.params_def_with_type.iter())
+        {
             if fact_param_def.0.len() != other_param_def.0.len() {
                 return Ok(None);
             }
 
             match &fact_param_def.1 {
-                ParamType::Obj(ref obj) => {
-                    match &other_param_def.1 {
-                        ParamType::Obj(other_obj) => {
-                            matched_args.push((obj.clone(), other_obj.clone()));
-                        }
-                        _ => return Ok(None),
+                ParamType::Obj(ref obj) => match &other_param_def.1 {
+                    ParamType::Obj(other_obj) => {
+                        matched_args.push((obj.clone(), other_obj.clone()));
                     }
-                }
-                ParamType::Set(_) => {
+                    _ => return Ok(None),
+                },
+                ParamType::Set(_) => match &other_param_def.1 {
+                    ParamType::Set(_) => {}
+                    _ => return Ok(None),
+                },
+                ParamType::NonemptySet(_) => match &other_param_def.1 {
+                    ParamType::NonemptySet(_) => {}
+                    _ => return Ok(None),
+                },
+                ParamType::FiniteSet(_) => match &other_param_def.1 {
+                    ParamType::FiniteSet(_) => {}
+                    _ => return Ok(None),
+                },
+                ParamType::InstantiatedStruct(ref instantiated_struct) => {
                     match &other_param_def.1 {
-                        ParamType::Set(_) => {
-                        }
-                        _ => return Ok(None),
-                    }
-                }
-                ParamType::NonemptySet(_) => {
-                    match &other_param_def.1 {
-                        ParamType::NonemptySet(_) => {
-                        }
-                        _ => return Ok(None),
-                    }
-                }
-                ParamType::FiniteSet(_) => {
-                    match &other_param_def.1 {
-                        ParamType::FiniteSet(_) => {
+                        ParamType::InstantiatedStruct(other_instantiated_struct) => {
+                            if instantiated_struct.name.to_string()
+                                != other_instantiated_struct.name.to_string()
+                            {
+                                return Ok(None);
+                            }
+                            if instantiated_struct.params.len()
+                                != other_instantiated_struct.params.len()
+                            {
+                                return Ok(None);
+                            }
+                            let mut matched_args: Vec<(Obj, Obj)> =
+                                Vec::with_capacity(instantiated_struct.params.len());
+                            for (param, other_param) in instantiated_struct
+                                .params
+                                .iter()
+                                .zip(other_instantiated_struct.params.iter())
+                            {
+                                matched_args.push((param.clone(), other_param.clone()));
+                            }
+                            return Ok(Some(matched_args));
                         }
                         _ => return Ok(None),
                     }
                 }
             }
         }
-
         for (fact_item, other_item) in fact.facts.iter().zip(other.facts.iter()) {
-            let sub_matched_args = match Self::_verify_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(fact_item, other_item)? {
-                Some(value) => value,
-                None => return Ok(None),
-            };
+            let sub_matched_args =
+                match Self::_verify_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(
+                    fact_item, other_item,
+                )? {
+                    Some(value) => value,
+                    None => return Ok(None),
+                };
             for matched_arg in sub_matched_args {
                 matched_args.push(matched_arg);
             }
@@ -213,7 +259,10 @@ impl<'a> Executor<'a> {
         Ok(Some(matched_args))
     }
 
-    pub fn _verify_atomic_fact_the_same_type_and_return_matched_args(_fact: &AtomicFact, _other: &AtomicFact) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
+    pub fn _verify_atomic_fact_the_same_type_and_return_matched_args(
+        _fact: &AtomicFact,
+        _other: &AtomicFact,
+    ) -> Result<Option<Vec<(Obj, Obj)>>, VerifyError> {
         match _fact {
             AtomicFact::NormalAtomicFact(fact_normal_atomic_fact) => match _other {
                 AtomicFact::NormalAtomicFact(other_normal_atomic_fact) => {
@@ -226,7 +275,8 @@ impl<'a> Executor<'a> {
                         return Ok(None);
                     }
 
-                    let mut matched_args: Vec<(Obj, Obj)> = vec![];
+                    let mut matched_args: Vec<(Obj, Obj)> =
+                        Vec::with_capacity(fact_normal_atomic_fact.body.len());
                     for (fact_arg, other_arg) in fact_normal_atomic_fact
                         .body
                         .iter()
@@ -247,7 +297,8 @@ impl<'a> Executor<'a> {
                         return Ok(None);
                     }
 
-                    let mut matched_args: Vec<(Obj, Obj)> = vec![];
+                    let mut matched_args: Vec<(Obj, Obj)> =
+                        Vec::with_capacity(fact_normal_atomic_fact.body.len());
                     for (fact_arg, other_arg) in fact_normal_atomic_fact
                         .body
                         .iter()
@@ -259,14 +310,15 @@ impl<'a> Executor<'a> {
                 }
                 _ => Ok(None),
             },
-            AtomicFact::EqualFact(f) => {
-                match _other {
-                    AtomicFact::EqualFact(other) => {
-                        let matched_args = vec![(f.left.clone(), other.left.clone()), (f.right.clone(), other.right.clone())];
-                        return Ok(Some(matched_args));
-                    }
-                    _ => Ok(None)
+            AtomicFact::EqualFact(f) => match _other {
+                AtomicFact::EqualFact(other) => {
+                    let matched_args = vec![
+                        (f.left.clone(), other.left.clone()),
+                        (f.right.clone(), other.right.clone()),
+                    ];
+                    return Ok(Some(matched_args));
                 }
+                _ => Ok(None),
             },
             AtomicFact::NotNormalAtomicFact(fact_not_normal_atomic_fact) => match _other {
                 AtomicFact::NotNormalAtomicFact(other_not_normal_atomic_fact) => {
@@ -275,12 +327,14 @@ impl<'a> Executor<'a> {
                     {
                         return Ok(None);
                     }
-                    if fact_not_normal_atomic_fact.body.len() != other_not_normal_atomic_fact.body.len()
+                    if fact_not_normal_atomic_fact.body.len()
+                        != other_not_normal_atomic_fact.body.len()
                     {
                         return Ok(None);
                     }
 
-                    let mut matched_args: Vec<(Obj, Obj)> = vec![];
+                    let mut matched_args: Vec<(Obj, Obj)> =
+                        Vec::with_capacity(fact_not_normal_atomic_fact.body.len());
                     for (fact_arg, other_arg) in fact_not_normal_atomic_fact
                         .body
                         .iter()
@@ -296,11 +350,13 @@ impl<'a> Executor<'a> {
                     {
                         return Ok(None);
                     }
-                    if fact_not_normal_atomic_fact.body.len() != other_normal_atomic_fact.body.len() {
+                    if fact_not_normal_atomic_fact.body.len() != other_normal_atomic_fact.body.len()
+                    {
                         return Ok(None);
                     }
 
-                    let mut matched_args: Vec<(Obj, Obj)> = vec![];
+                    let mut matched_args: Vec<(Obj, Obj)> =
+                        Vec::with_capacity(fact_not_normal_atomic_fact.body.len());
                     for (fact_arg, other_arg) in fact_not_normal_atomic_fact
                         .body
                         .iter()
@@ -314,8 +370,14 @@ impl<'a> Executor<'a> {
             },
             AtomicFact::NotEqualFact(fact_not_equal_fact) => match _other {
                 AtomicFact::NotEqualFact(other_not_equal_fact) => Ok(Some(vec![
-                    (fact_not_equal_fact.left.clone(), other_not_equal_fact.left.clone()),
-                    (fact_not_equal_fact.right.clone(), other_not_equal_fact.right.clone()),
+                    (
+                        fact_not_equal_fact.left.clone(),
+                        other_not_equal_fact.left.clone(),
+                    ),
+                    (
+                        fact_not_equal_fact.right.clone(),
+                        other_not_equal_fact.right.clone(),
+                    ),
                 ])),
                 _ => Ok(None),
             },
@@ -328,50 +390,92 @@ impl<'a> Executor<'a> {
             },
             AtomicFact::NotLessFact(fact_not_less_fact) => match _other {
                 AtomicFact::NotLessFact(other_not_less_fact) => Ok(Some(vec![
-                    (fact_not_less_fact.left.clone(), other_not_less_fact.left.clone()),
-                    (fact_not_less_fact.right.clone(), other_not_less_fact.right.clone()),
+                    (
+                        fact_not_less_fact.left.clone(),
+                        other_not_less_fact.left.clone(),
+                    ),
+                    (
+                        fact_not_less_fact.right.clone(),
+                        other_not_less_fact.right.clone(),
+                    ),
                 ])),
                 _ => Ok(None),
             },
             AtomicFact::GreaterFact(fact_greater_fact) => match _other {
                 AtomicFact::GreaterFact(other_greater_fact) => Ok(Some(vec![
-                    (fact_greater_fact.left.clone(), other_greater_fact.left.clone()),
-                    (fact_greater_fact.right.clone(), other_greater_fact.right.clone()),
+                    (
+                        fact_greater_fact.left.clone(),
+                        other_greater_fact.left.clone(),
+                    ),
+                    (
+                        fact_greater_fact.right.clone(),
+                        other_greater_fact.right.clone(),
+                    ),
                 ])),
                 _ => Ok(None),
             },
             AtomicFact::NotGreaterFact(fact_not_greater_fact) => match _other {
                 AtomicFact::NotGreaterFact(other_not_greater_fact) => Ok(Some(vec![
-                    (fact_not_greater_fact.left.clone(), other_not_greater_fact.left.clone()),
-                    (fact_not_greater_fact.right.clone(), other_not_greater_fact.right.clone()),
+                    (
+                        fact_not_greater_fact.left.clone(),
+                        other_not_greater_fact.left.clone(),
+                    ),
+                    (
+                        fact_not_greater_fact.right.clone(),
+                        other_not_greater_fact.right.clone(),
+                    ),
                 ])),
                 _ => Ok(None),
             },
             AtomicFact::LessEqualFact(fact_less_equal_fact) => match _other {
                 AtomicFact::LessEqualFact(other_less_equal_fact) => Ok(Some(vec![
-                    (fact_less_equal_fact.left.clone(), other_less_equal_fact.left.clone()),
-                    (fact_less_equal_fact.right.clone(), other_less_equal_fact.right.clone()),
+                    (
+                        fact_less_equal_fact.left.clone(),
+                        other_less_equal_fact.left.clone(),
+                    ),
+                    (
+                        fact_less_equal_fact.right.clone(),
+                        other_less_equal_fact.right.clone(),
+                    ),
                 ])),
                 _ => Ok(None),
             },
             AtomicFact::NotLessEqualFact(fact_not_less_equal_fact) => match _other {
                 AtomicFact::NotLessEqualFact(other_not_less_equal_fact) => Ok(Some(vec![
-                    (fact_not_less_equal_fact.left.clone(), other_not_less_equal_fact.left.clone()),
-                    (fact_not_less_equal_fact.right.clone(), other_not_less_equal_fact.right.clone()),
+                    (
+                        fact_not_less_equal_fact.left.clone(),
+                        other_not_less_equal_fact.left.clone(),
+                    ),
+                    (
+                        fact_not_less_equal_fact.right.clone(),
+                        other_not_less_equal_fact.right.clone(),
+                    ),
                 ])),
                 _ => Ok(None),
             },
             AtomicFact::GreaterEqualFact(fact_greater_equal_fact) => match _other {
                 AtomicFact::GreaterEqualFact(other_greater_equal_fact) => Ok(Some(vec![
-                    (fact_greater_equal_fact.left.clone(), other_greater_equal_fact.left.clone()),
-                    (fact_greater_equal_fact.right.clone(), other_greater_equal_fact.right.clone()),
+                    (
+                        fact_greater_equal_fact.left.clone(),
+                        other_greater_equal_fact.left.clone(),
+                    ),
+                    (
+                        fact_greater_equal_fact.right.clone(),
+                        other_greater_equal_fact.right.clone(),
+                    ),
                 ])),
                 _ => Ok(None),
             },
             AtomicFact::NotGreaterEqualFact(fact_not_greater_equal_fact) => match _other {
                 AtomicFact::NotGreaterEqualFact(other_not_greater_equal_fact) => Ok(Some(vec![
-                    (fact_not_greater_equal_fact.left.clone(), other_not_greater_equal_fact.left.clone()),
-                    (fact_not_greater_equal_fact.right.clone(), other_not_greater_equal_fact.right.clone()),
+                    (
+                        fact_not_greater_equal_fact.left.clone(),
+                        other_not_greater_equal_fact.left.clone(),
+                    ),
+                    (
+                        fact_not_greater_equal_fact.right.clone(),
+                        other_not_greater_equal_fact.right.clone(),
+                    ),
                 ])),
                 _ => Ok(None),
             },
@@ -397,10 +501,12 @@ impl<'a> Executor<'a> {
                 _ => Ok(None),
             },
             AtomicFact::NotIsNonemptySetFact(fact_not_is_nonempty_set_fact) => match _other {
-                AtomicFact::NotIsNonemptySetFact(other_not_is_nonempty_set_fact) => Ok(Some(vec![(
-                    fact_not_is_nonempty_set_fact.set.clone(),
-                    other_not_is_nonempty_set_fact.set.clone(),
-                )])),
+                AtomicFact::NotIsNonemptySetFact(other_not_is_nonempty_set_fact) => {
+                    Ok(Some(vec![(
+                        fact_not_is_nonempty_set_fact.set.clone(),
+                        other_not_is_nonempty_set_fact.set.clone(),
+                    )]))
+                }
                 _ => Ok(None),
             },
             AtomicFact::IsFiniteSetFact(fact_is_finite_set_fact) => match _other {
@@ -426,7 +532,10 @@ impl<'a> Executor<'a> {
             },
             AtomicFact::NotInFact(fact_not_in_fact) => match _other {
                 AtomicFact::NotInFact(other_not_in_fact) => Ok(Some(vec![
-                    (fact_not_in_fact.element.clone(), other_not_in_fact.element.clone()),
+                    (
+                        fact_not_in_fact.element.clone(),
+                        other_not_in_fact.element.clone(),
+                    ),
                     (fact_not_in_fact.set.clone(), other_not_in_fact.set.clone()),
                 ])),
                 _ => Ok(None),
@@ -461,35 +570,62 @@ impl<'a> Executor<'a> {
             },
             AtomicFact::SubsetFact(fact_subset_fact) => match _other {
                 AtomicFact::SubsetFact(other_subset_fact) => Ok(Some(vec![
-                    (fact_subset_fact.left.clone(), other_subset_fact.left.clone()),
-                    (fact_subset_fact.right.clone(), other_subset_fact.right.clone()),
+                    (
+                        fact_subset_fact.left.clone(),
+                        other_subset_fact.left.clone(),
+                    ),
+                    (
+                        fact_subset_fact.right.clone(),
+                        other_subset_fact.right.clone(),
+                    ),
                 ])),
                 _ => Ok(None),
             },
             AtomicFact::NotSubsetFact(fact_not_subset_fact) => match _other {
                 AtomicFact::NotSubsetFact(other_not_subset_fact) => Ok(Some(vec![
-                    (fact_not_subset_fact.left.clone(), other_not_subset_fact.left.clone()),
-                    (fact_not_subset_fact.right.clone(), other_not_subset_fact.right.clone()),
+                    (
+                        fact_not_subset_fact.left.clone(),
+                        other_not_subset_fact.left.clone(),
+                    ),
+                    (
+                        fact_not_subset_fact.right.clone(),
+                        other_not_subset_fact.right.clone(),
+                    ),
                 ])),
                 _ => Ok(None),
             },
             AtomicFact::SupersetFact(fact_superset_fact) => match _other {
                 AtomicFact::SupersetFact(other_superset_fact) => Ok(Some(vec![
-                    (fact_superset_fact.left.clone(), other_superset_fact.left.clone()),
-                    (fact_superset_fact.right.clone(), other_superset_fact.right.clone()),
+                    (
+                        fact_superset_fact.left.clone(),
+                        other_superset_fact.left.clone(),
+                    ),
+                    (
+                        fact_superset_fact.right.clone(),
+                        other_superset_fact.right.clone(),
+                    ),
                 ])),
                 _ => Ok(None),
             },
             AtomicFact::NotSupersetFact(fact_not_superset_fact) => match _other {
                 AtomicFact::NotSupersetFact(other_not_superset_fact) => Ok(Some(vec![
-                    (fact_not_superset_fact.left.clone(), other_not_superset_fact.left.clone()),
-                    (fact_not_superset_fact.right.clone(), other_not_superset_fact.right.clone()),
+                    (
+                        fact_not_superset_fact.left.clone(),
+                        other_not_superset_fact.left.clone(),
+                    ),
+                    (
+                        fact_not_superset_fact.right.clone(),
+                        other_not_superset_fact.right.clone(),
+                    ),
                 ])),
                 _ => Ok(None),
             },
             AtomicFact::RestrictFact(fact_restrict_fact) => match _other {
                 AtomicFact::RestrictFact(other_restrict_fact) => Ok(Some(vec![
-                    (fact_restrict_fact.obj.clone(), other_restrict_fact.obj.clone()),
+                    (
+                        fact_restrict_fact.obj.clone(),
+                        other_restrict_fact.obj.clone(),
+                    ),
                     (
                         fact_restrict_fact.obj_can_restrict_to_fn_set.clone(),
                         other_restrict_fact.obj_can_restrict_to_fn_set.clone(),
@@ -499,10 +635,15 @@ impl<'a> Executor<'a> {
             },
             AtomicFact::NotRestrictFact(fact_not_restrict_fact) => match _other {
                 AtomicFact::NotRestrictFact(other_not_restrict_fact) => Ok(Some(vec![
-                    (fact_not_restrict_fact.obj.clone(), other_not_restrict_fact.obj.clone()),
+                    (
+                        fact_not_restrict_fact.obj.clone(),
+                        other_not_restrict_fact.obj.clone(),
+                    ),
                     (
                         fact_not_restrict_fact.obj_cannot_restrict_to_fn_set.clone(),
-                        other_not_restrict_fact.obj_cannot_restrict_to_fn_set.clone(),
+                        other_not_restrict_fact
+                            .obj_cannot_restrict_to_fn_set
+                            .clone(),
                     ),
                 ])),
                 _ => Ok(None),

@@ -1,7 +1,4 @@
-use crate::fact::AndChainAtomicFact;
-use crate::obj::Obj;
-use crate::common::helper::{add_four_spaces_at_beginning, vec_to_string_with_sep, to_string_and_add_four_spaces_at_beginning_of_each_line, braced_vec_to_string};
-use crate::common::keywords::{CASE, COLON, ALGO};
+use crate::prelude::*;
 use std::fmt;
 
 // algo f(a, b):
@@ -11,7 +8,8 @@ use std::fmt;
 pub struct DefAlgoStmt {
     pub name: String,
     pub params: Vec<String>,
-    pub return_or_algo_case: Vec<AlgoReturnOrAlgoCase>,
+    pub default_return: Option<AlgoReturn>,
+    pub cases: Vec<AlgoCase>,
     pub line_file: (usize, usize),
 }
 
@@ -20,10 +18,9 @@ pub struct AlgoReturn {
     pub value: Obj,
     pub line_file: (usize, usize),
 }
-
 #[derive(Clone)]
 pub struct AlgoCase {
-    pub condition: AndChainAtomicFact,
+    pub condition: AtomicFact, // 只有 atomic fact 能reverse，而 algo case 有可能需要被reverse掉（处理 default_return 的时候）。
     pub return_stmt: AlgoReturn,
     pub line_file: (usize, usize),
 }
@@ -35,12 +32,20 @@ pub enum AlgoReturnOrAlgoCase {
 }
 
 impl DefAlgoStmt {
-    pub fn new(name: String, params: Vec<String>, return_or_algo_case: Vec<AlgoReturnOrAlgoCase>, line_file: (usize, usize)) -> Self {
-        DefAlgoStmt { name, params, return_or_algo_case, line_file }
-    }
-
-    pub fn stmt_type_name(&self) -> String {
-        "DefAlgoStmt".to_string()
+    pub fn new(
+        name: String,
+        params: Vec<String>,
+        cases: Vec<AlgoCase>,
+        default_return: Option<AlgoReturn>,
+        line_file: (usize, usize),
+    ) -> Self {
+        DefAlgoStmt {
+            name,
+            params,
+            default_return,
+            cases,
+            line_file,
+        }
     }
 }
 
@@ -61,12 +66,34 @@ impl fmt::Display for AlgoReturn {
 
 impl fmt::Display for AlgoCase {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}{} {}", CASE, self.condition, COLON, add_four_spaces_at_beginning(self.return_stmt.to_string(), 1))
+        write!(
+            f,
+            "{} {}{} {}",
+            CASE,
+            self.condition,
+            COLON,
+            add_four_spaces_at_beginning(self.return_stmt.to_string(), 1)
+        )
     }
 }
 
 impl fmt::Display for DefAlgoStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Some(default_return) = &self.default_return {
+            write!(
+                f,
+                "{} {}{}{}\n{}\n{}",
+                ALGO,
+                self.name,
+                braced_vec_to_string(&self.params),
+                COLON,
+                to_string_and_add_four_spaces_at_beginning_of_each_line(
+                    &vec_to_string_with_sep(&self.cases, "\n".to_string()),
+                    1
+                ),
+                default_return
+            )?;
+        }
         write!(
             f,
             "{} {}{}{}\n{}",
@@ -74,7 +101,10 @@ impl fmt::Display for DefAlgoStmt {
             self.name,
             braced_vec_to_string(&self.params),
             COLON,
-            to_string_and_add_four_spaces_at_beginning_of_each_line(&vec_to_string_with_sep(&self.return_or_algo_case, "\n".to_string()), 1)
+            to_string_and_add_four_spaces_at_beginning_of_each_line(
+                &vec_to_string_with_sep(&self.cases, "\n".to_string()),
+                1
+            )
         )
     }
 }
@@ -86,8 +116,12 @@ impl AlgoReturn {
 }
 
 impl AlgoCase {
-    pub fn new(condition: AndChainAtomicFact, return_stmt: AlgoReturn, line_file: (usize, usize)) -> Self {
-        AlgoCase { condition, return_stmt, line_file }
+    pub fn new(condition: AtomicFact, return_stmt: AlgoReturn, line_file: (usize, usize)) -> Self {
+        AlgoCase {
+            condition,
+            return_stmt,
+            line_file,
+        }
     }
 }
 

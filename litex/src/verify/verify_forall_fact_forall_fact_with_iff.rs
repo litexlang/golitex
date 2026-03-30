@@ -1,60 +1,144 @@
-use crate::error::{StmtError, VerifyError};
-use crate::execute::Executor;
-use crate::fact::{ForallFact, ForallFactWithIff};
-use crate::infer::InferResult;
-use crate::result::{FactVerifiedByFact, NonErrStmtExecResult};
-use crate::verify::VerifyState;
+use crate::prelude::*;
 use std::result::Result;
 
-impl<'a> Executor<'a> {
+impl Runtime {
     /// Declare params, assume dom facts hold, then verify each then_fact.
-    pub fn verify_forall_fact(&mut self, forall_fact: &ForallFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
-        self.runtime_context.new_env();
+    pub fn verify_forall_fact(
+        &mut self,
+        forall_fact: &ForallFact,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
+        if let Some(cached_result) =
+            self.verify_fact_from_cache_using_display_string(&Fact::ForallFact(forall_fact.clone()))
+        {
+            return Ok(cached_result);
+        }
 
-        let result = self.verify_forall_fact_body(forall_fact, verify_state);
-        self.runtime_context.delete_env();
+        if !verify_state.well_defined_already_verified {
+            if let Err(e) = self.verify_forall_fact_well_defined(forall_fact, verify_state) {
+                return Err(VerifyError::new(
+                    Fact::ForallFact(forall_fact.clone()),
+                    String::new(),
+                    forall_fact.line_file,
+                    Some(RuntimeError::WellDefinedError(e)),
+                ));
+            }
+        }
+
+        let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
+
+        self.push_env();
+        let result = self.verify_forall_fact_body(forall_fact, &verify_state_for_children);
+        self.pop_env();
 
         result
     }
 
-    fn verify_forall_fact_body(&mut self, forall_fact: &ForallFact, verify_state: &VerifyState) -> Result<NonErrStmtExecResult, VerifyError> {
+    fn verify_forall_fact_body(
+        &mut self,
+        forall_fact: &ForallFact,
+        verify_state: &VerifyState,
+    ) -> Result<NonErrStmtExecResult, VerifyError> {
         let mut infer_result = InferResult::new();
         for param_def in forall_fact.params_def_with_type.iter() {
-            let param_infer_result = self.define_params_with_type(std::slice::from_ref(param_def),false).map_err(|e| {
-                VerifyError::new(
-                    format!("failed to define params in forall: {}", e.body_string()),Some(StmtError::ExecError(e)),
-                    forall_fact.line_file,
-                )
-            })?;
-            infer_result.append(param_infer_result);
+            let param_infer_result = self
+                .define_params_with_type(std::slice::from_ref(param_def), false)
+                .map_err(|e| {
+                    let message = "failed to define params in forall".to_string();
+                    VerifyError::new(
+                        Fact::ForallFact(forall_fact.clone()),
+                        message.clone(),
+                        forall_fact.line_file,
+                        Some(RuntimeError::UnknownError(UnknownError::new(
+                            message,
+                            forall_fact.line_file,
+                            Some(Fact::ForallFact(forall_fact.clone())),
+                            Some(RuntimeError::DefineParamsError(e)),
+                        ))),
+                    )
+                })?;
+            infer_result.new_infer_result_inside(param_infer_result);
         }
 
         for dom_fact in forall_fact.dom_facts.iter() {
-            let fact = dom_fact.clone().to_fact();
-            let dom_infer_result = self.store_fact_without_well_defined_verified_and_infer(&fact).map_err(|e| {
-                VerifyError::new(
-                    format!("failed to assume dom fact in forall: {}", e.body_string()),Some(StmtError::StoreFactError(e)),
-                    forall_fact.line_file,
+            let dom_infer_result = self
+                .store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    dom_fact,
                 )
-            })?;
-            infer_result.append(dom_infer_result);
+                .map_err(|e| {
+                    let message = "failed to assume dom fact in forall".to_string();
+                    VerifyError::new(
+                        Fact::ForallFact(forall_fact.clone()),
+                        message.clone(),
+                        forall_fact.line_file,
+                        Some(RuntimeError::UnknownError(UnknownError::new(
+                            message,
+                            forall_fact.line_file,
+                            Some(Fact::ForallFact(forall_fact.clone())),
+                            Some(RuntimeError::StoreFactError(e)),
+                        ))),
+                    )
+                })?;
+            infer_result.new_infer_result_inside(dom_infer_result);
         }
 
+        let mut all_then_facts_are_verified_by_builtin_rules = true;
+        let mut then_facts_builtin_verified_by_messages: Vec<String> = Vec::new();
+
         for then_fact in forall_fact.then_facts.iter() {
-            let fact = then_fact.clone().to_fact();
-            let result = self.verify_fact(&fact, verify_state)?;
-            if !result.is_true() {
+            let result = self.verify_exist_or_and_chain_atomic_fact(then_fact, verify_state)?;
+            if result.is_unknown() {
                 return Ok(result);
+            }
+
+            match &result {
+                NonErrStmtExecResult::FactVerifiedByBuiltinRules(builtin_verification_result) => {
+                    then_facts_builtin_verified_by_messages
+                        .push(builtin_verification_result.verified_by.clone());
+                    infer_result
+                        .new_infer_result_inside(builtin_verification_result.infers.clone());
+                }
+                NonErrStmtExecResult::FactVerifiedByFact(fact_verification_result) => {
+                    all_then_facts_are_verified_by_builtin_rules = false;
+                    infer_result.new_infer_result_inside(fact_verification_result.infers.clone());
+                }
+                NonErrStmtExecResult::NonFactualStmtSuccess(non_factual_success) => {
+                    all_then_facts_are_verified_by_builtin_rules = false;
+                    infer_result.new_infer_result_inside(non_factual_success.infers.clone());
+                }
+                NonErrStmtExecResult::StmtUnknown(_) => {
+                    return Ok(result);
+                }
             }
         }
 
-        Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
-            forall_fact.to_string(),
-            "forall: each then_fact verified under dom".to_string(),
-            infer_result,
-            forall_fact.line_file,
-            crate::common::defaults::DEFAULT_LINE_FILE.clone(),
-        )))
+        if all_then_facts_are_verified_by_builtin_rules && !forall_fact.then_facts.is_empty() {
+            let combined_verified_by_message =
+                if then_facts_builtin_verified_by_messages.len() == 1 {
+                    then_facts_builtin_verified_by_messages[0].clone()
+                } else {
+                    format!(
+                        "forall then-facts: {}",
+                        then_facts_builtin_verified_by_messages.join("; ")
+                    )
+                };
+            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                FactVerifiedByBuiltinRules::new(
+                    Fact::ForallFact(forall_fact.clone()),
+                    combined_verified_by_message,
+                    infer_result,
+                ),
+            ));
+        }
+
+        Ok(NonErrStmtExecResult::FactVerifiedByFact(
+            FactVerifiedByFact::new(
+                Fact::ForallFact(forall_fact.clone()),
+                "".to_string(),
+                infer_result,
+                forall_fact.line_file,
+            ),
+        ))
     }
 
     /// Forall iff: two steps. Step 1: take then as part of dom, verify iff. Step 2: take iff as part of dom, verify then.
@@ -63,8 +147,27 @@ impl<'a> Executor<'a> {
         forall_iff: &ForallFactWithIff,
         verify_state: &VerifyState,
     ) -> Result<NonErrStmtExecResult, VerifyError> {
+        if let Some(cached_result) = self.verify_fact_from_cache_using_display_string(
+            &Fact::ForallFactWithIff(forall_iff.clone()),
+        ) {
+            return Ok(cached_result);
+        }
+
+        if !verify_state.well_defined_already_verified {
+            if let Err(e) = self.verify_forall_fact_with_iff_well_defined(forall_iff, verify_state)
+            {
+                return Err(VerifyError::new(
+                    Fact::ForallFactWithIff(forall_iff.clone()),
+                    String::new(),
+                    forall_iff.line_file,
+                    Some(RuntimeError::WellDefinedError(e)),
+                ));
+            }
+        }
+
+        let verify_state_for_children = verify_state.make_state_with_req_ok_set_to_true();
+
         let f = &forall_iff.forall_fact;
-        let line_file = forall_iff.line_file;
 
         let mut dom_then = f.dom_facts.clone();
         dom_then.extend(f.then_facts.clone());
@@ -72,10 +175,11 @@ impl<'a> Executor<'a> {
             f.params_def_with_type.clone(),
             dom_then,
             forall_iff.iff_facts.clone(),
-            line_file,
+            forall_iff.line_file,
         );
-        let result1 = self.verify_forall_fact(&forall_then_implies_iff, verify_state)?;
-        if !result1.is_true() {
+        let result1 =
+            self.verify_forall_fact(&forall_then_implies_iff, &verify_state_for_children)?;
+        if result1.is_unknown() {
             return Ok(result1);
         }
 
@@ -85,19 +189,21 @@ impl<'a> Executor<'a> {
             f.params_def_with_type.clone(),
             dom_iff,
             f.then_facts.clone(),
-            line_file,
+            forall_iff.line_file,
         );
-        let result2 = self.verify_forall_fact(&forall_iff_implies_then, verify_state)?;
-        if !result2.is_true() {
+        let result2 =
+            self.verify_forall_fact(&forall_iff_implies_then, &verify_state_for_children)?;
+        if result2.is_unknown() {
             return Ok(result2);
         }
 
-        Ok(NonErrStmtExecResult::FactVerifiedByFact(FactVerifiedByFact::new(
-            forall_iff.to_string(),
-            "forall iff: then=>iff and iff=>then verified".to_string(),
-            InferResult::new(),
-            line_file,
-            crate::common::defaults::DEFAULT_LINE_FILE.clone(),
-        )))
+        Ok(NonErrStmtExecResult::FactVerifiedByFact(
+            FactVerifiedByFact::new(
+                Fact::ForallFactWithIff(forall_iff.clone()),
+                "forall iff: then=>iff and iff=>then verified".to_string(),
+                InferResult::new(),
+                crate::common::defaults::DEFAULT_LINE_FILE.clone(),
+            ),
+        ))
     }
 }

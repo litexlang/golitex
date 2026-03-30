@@ -1,8 +1,5 @@
+use crate::prelude::*;
 use std::fmt;
-use crate::common::keywords::{EQUIVALENT_SIGN, COLON};
-use crate::common::helper::{to_string_and_add_four_spaces_at_beginning_of_each_line, vec_to_string_add_four_spaces_at_beginning_of_each_line};
-use super::forall_fact::ForallFact;
-use super::fact_inside_forall::ExistOrAndChainAtomicFact;
 
 #[derive(Clone)]
 pub struct ForallFactWithIff {
@@ -12,14 +9,29 @@ pub struct ForallFactWithIff {
 }
 
 impl ForallFactWithIff {
-    pub fn new(forall_fact: ForallFact, iff_facts: Vec<ExistOrAndChainAtomicFact>, line_file: (usize, usize)) -> Self {
-        ForallFactWithIff { forall_fact, iff_facts, line_file }
+    pub fn new(
+        forall_fact: ForallFact,
+        iff_facts: Vec<ExistOrAndChainAtomicFact>,
+        line_file: (usize, usize),
+    ) -> Self {
+        ForallFactWithIff {
+            forall_fact,
+            iff_facts,
+            line_file,
+        }
     }
 }
 
 impl fmt::Display for ForallFactWithIff {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}\n{}{}\n{}", self.forall_fact, to_string_and_add_four_spaces_at_beginning_of_each_line(&EQUIVALENT_SIGN, 1), COLON, vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.iff_facts, 2))
+        write!(
+            f,
+            "{}\n{}{}\n{}",
+            self.forall_fact,
+            to_string_and_add_four_spaces_at_beginning_of_each_line(&EQUIVALENT_SIGN, 1),
+            COLON,
+            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.iff_facts, 2)
+        )
     }
 }
 
@@ -44,12 +56,8 @@ impl ForallFactWithIff {
 
         let mut dom_iff = dom_facts;
         dom_iff.extend(iff_facts);
-        let forall_iff_implies_then = ForallFact::new(
-            params_def_with_type,
-            dom_iff,
-            then_facts,
-            line_file,
-        );
+        let forall_iff_implies_then =
+            ForallFact::new(params_def_with_type, dom_iff, then_facts, line_file);
 
         (forall_then_implies_iff, forall_iff_implies_then)
     }

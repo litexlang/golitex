@@ -1,0 +1,3060 @@
+"""
+basic properties referenced from defs.txt without definitions only for problem solving
+"""
+have point nonempty_set
+
+
+# Not collinear: points a, b, c are not collinear
+prop ncoll(a, b, c)
+
+# Non-collinear: points a, b, c, d are not collinear
+prop ncoll2(a, b, c, d)
+
+# Equal angles: ∠(a,b,c,d) = ∠(e,f,g,h)
+prop eqangle(a, b, c, d, e, f, g, h)
+
+
+# Congruent: segment ab equals segment cd in length
+prop cong(a, b, c, d)
+
+know:
+    forall a, b, c, d point:
+        $cong(a, b, c, d)
+        =>:
+            $cong(b, a, c, d)
+            $cong(a, b, d, c)
+            $cong(b, a, d, c)
+            $cong(c, d, a, b)
+prop congtransitive(x,a,b,c point):
+    $cong(x,b,x,c)
+    
+know:
+    forall x,a,b,c point:
+        $cong(x,a,x,b)
+        $cong(x,a,x,c)
+        =>:
+            $congtransitive(x,a,b,c)
+know:
+    forall a,b point:
+        =>:
+            $cong(a,b,a,b)
+
+# Parallel: line ab is parallel to line cd
+prop para(a, b, c, d)
+
+# Not parallel: line ab is not parallel to line cd
+prop npara(a, b, c, d)
+
+# Different: point a differs from point b
+prop diff(a, b)
+
+# Perpendicular: line ab is perpendicular to line cd
+prop perp(a, b, c, d)
+
+# Not perpendicular: line ab is not perpendicular to line cd
+prop nperp(a, b, c, d)
+
+# Collinear: points a, b, c are collinear
+prop coll(a, b, c)
+
+
+
+
+"""
+angle_bisector x a b c
+x : a b c x
+a b c = ncoll a b c
+x : eqangle b a b x b x b c
+bisect a b c
+"""
+# 角平分线上的点：点 x 在角 ∠abc 的平分线上，使得 ∠abx 与 ∠xbc 相等
+# Angle bisector point: x on bisector of ∠abc, ∠abx = ∠xbc
+prop angle_bisector(x, a, b, c point):
+    $ncoll(a, b, c)
+    $eqangle(b, a, b, x, b, x, b, c)
+
+# 由三角形 abc 构造角平分线上的点 x
+# Construct point x on the angle bisector from triangle abc
+let draw_angle_bisector_x fn(a, b, c point: $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $eqangle(b, a, b, draw_angle_bisector_x(a, b, c), b, draw_angle_bisector_x(a, b, c), b, c)
+            $angle_bisector(draw_angle_bisector_x(a, b, c), a, b, c)
+
+
+"""
+angle_mirror x a b c
+x : a b c x
+a b c = ncoll a b c
+x : eqangle b a b c b c b x
+amirror a b c
+"""
+# 角的镜射线上的点：点 x 使得 ∠abc 与 ∠cbx 相等（即 x 在角边 bc 的镜射方向上）
+# Angle mirror point: x such that ∠abc = ∠cbx
+prop angle_mirror(x, a, b, c point):
+    $ncoll(a, b, c)
+    $eqangle(b, a, b, c, b, c, b, x)
+
+# 由三角形 abc 构造角的镜射方向上的点 x
+# Construct point x on the angle mirror ray from triangle abc
+let draw_angle_mirror_x fn(a, b, c point: $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $eqangle(b, a, b, c, b, c, b, draw_angle_mirror_x(a, b, c))
+            $angle_mirror(draw_angle_mirror_x(a, b, c), a, b, c)
+
+"""
+circle x a b c
+x : a b c
+a b c = ncoll a b c
+x : cong x a x b, cong x b x c
+bline a b, bline a 
+"""
+# 外接圆心：点 x 是过 a、b、c 三点的圆的圆心，即 x 到 a、b、c 距离相等
+# Circumcenter: x is center of circle through a, b, c, equidistant from them
+prop circle(x, a, b, c point):
+    $ncoll(a, b, c)
+    $cong(x, a, x, b)
+    $cong(x, b, x, c)
+
+"""
+circumcenter x a b c
+x : a b c
+a b c = ncoll a b c
+x : cong x a x b, cong x b x c
+bline a b, bline a c
+"""
+prop is_circumcenter(x, a, b, c point):
+    $ncoll(a, b, c)
+    $cong(x, a, x, b)
+    $cong(x, b, x, c)
+ 
+# 由三角形 abc 构造外接圆心 x
+# Construct circumcenter x of triangle abc
+let draw_circumcenter_x fn(a, b, c point: $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $cong(draw_circumcenter_x(a, b, c), a, draw_circumcenter_x(a, b, c), b)
+            $cong(draw_circumcenter_x(a, b, c), b, draw_circumcenter_x(a, b, c), c)
+            $circle(draw_circumcenter_x(a, b, c), a, b, c)
+
+"""
+eq_quadrangle a b c d
+d : a b c d
+ =
+a : ; b : ; c : ; d : cong d a b c
+eq_quadrangle
+"""
+# 等边四边形：四边形 abcd 中，da 与 bc 长度相等
+# Equatorial quadrangle: da = bc in quadrangle abcd
+prop eq_quadrangle(a, b, c, d point):
+    $cong(d, a, b, c)
+    $ncoll(a, b, c)
+
+# 由三角形 abc 构造第四点 d，使得 da = bc
+# Construct d from triangle abc such that da = bc
+let draw_eq_quadrangle_d fn(a, b, c point: $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $cong(draw_eq_quadrangle_d(a, b, c), a, b, c)
+            $eq_quadrangle( a, b, c, draw_eq_quadrangle_d(a, b, c))
+
+"""
+eq_trapezoid a b c d
+d : a b c
+ =
+a : ; b : ; c : ; d : para d c a b, cong d a b c
+eq_trapezoid
+"""
+# 等腰梯形：梯形 abcd 中，dc 平行于 ab，且 da 与 bc 长度相等
+# Isosceles trapezoid: dc∥ab, da = bc
+prop eq_trapezoid(a, b, c, d point):
+    $para(d, c, a, b)
+    $cong(d, a, b, c)
+    $ncoll(a, b, c)
+
+# 由三角形 abc 构造第四点 d，形成等腰梯形
+# Construct d from triangle abc to form isosceles trapezoid
+let draw_eq_trapezoid_d fn(a, b, c point: $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $para(draw_eq_trapezoid_d(a, b, c), c, a, b)
+            $cong(draw_eq_trapezoid_d(a, b, c), a, b, c)
+            $eq_trapezoid(a, b, c, draw_eq_trapezoid_d(a, b, c))
+
+"""
+eq_triangle x b c
+x : b c
+b c = diff b c
+x : cong x b b c, cong b c c x; eqangle b x b c c b c x, eqangle x c x b b x b c
+circle b b c, circle c b c
+"""
+# 等边三角形：三角形 xbc 中三边相等，xb=bc=cx
+# Equilateral triangle: xb = bc = cx
+prop eq_triangle(x, b, c point):
+    $diff(b, c)
+    $cong(x, b, b, c)
+    $cong(b, c, c, x)
+    $eqangle(b, x, b, c, c, b, c, x)
+    $eqangle(x, c, x, b, b, x, b, c)
+
+# 由线段 bc 构造等边三角形第三个顶点 x
+# Construct third vertex x of equilateral triangle from bc
+let draw_eq_triangle_x fn(b, c point: $diff(b, c)) point
+know:
+    forall b, c point:
+        $diff(b, c)
+        =>:
+            $cong(draw_eq_triangle_x(b, c), b, b, c)
+            $cong(b, c, c, draw_eq_triangle_x(b, c))
+            $eqangle(b, draw_eq_triangle_x(b, c), b, c, c, b, c, draw_eq_triangle_x(b, c))
+            $eqangle(draw_eq_triangle_x(b, c), c, draw_eq_triangle_x(b, c), b, b, draw_eq_triangle_x(b, c), b, c)
+            $eq_triangle(draw_eq_triangle_x(b, c), b, c)
+
+"""
+eqangle2 x a b c
+x : a b c x
+a b c = ncoll a b c
+x : eqangle a b a x c x c b
+eqangle2 a b c
+"""
+# 等角点：点 x 使得 ∠abx 与 ∠xcb 相等
+# Equiangular point: x such that ∠abx = ∠xcb
+prop eqangle2(x, a, b, c point):
+    $ncoll(a, b, c)
+    $eqangle(a, b, a, x, c, x, c, b)
+
+# 由三角形 abc 构造满足 ∠abx=∠xcb 的点 x
+# Construct x from triangle abc with ∠abx = ∠xcb
+let draw_eqangle2_x fn(a, b, c point: $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $eqangle(a, b, a, draw_eqangle2_x(a, b, c), c, draw_eqangle2_x(a, b, c), c, b)
+
+"""
+eqdia_quadrangle a b c d
+d : a b c d
+ =
+a : ; b : ; c : ; d : cong d b a c
+eqdia_quadrangle
+"""
+# 等对角线四边形：四边形 abcd 中，db 与 ac 长度相等
+# Equal-diagonal quadrangle: db = ac
+prop eqdia_quadrangle(a, b, c, d point):
+    $cong(d, b, a, c)
+    $ncoll(a, b, c)
+
+# 由三角形 abc 构造第四点 d，使得 db=ac
+# Construct d from triangle abc such that db = ac
+let draw_eqdia_quadrangle_d fn(a, b, c point: $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $cong(draw_eqdia_quadrangle_d(a, b, c), b, a, c)
+            $eqdia_quadrangle(a, b, c, draw_eqdia_quadrangle_d(a, b, c))
+
+"""
+eqdistance x a b c
+x : a b c x
+a b c = diff b c
+x : cong x a b c
+circle a b c
+"""
+# 等距点：点 x 到 a 的距离等于 bc 的长度
+# Equidistant point: xa = bc
+prop eqdistance(x, a, b, c point):
+    $diff(b, c)
+    $cong(x, a, b, c)
+
+# 以 a 为圆心、bc 为半径的圆上任意一点 x
+# Point x on circle centered at a with radius bc
+let draw_eqdistance_x fn(a, b, c point: $diff(b, c)) point
+know:
+    forall a, b, c point:
+        $diff(b, c)
+        =>:
+            $cong(draw_eqdistance_x(a, b, c), a, b, c)
+            $eqdistance(draw_eqdistance_x(a, b, c), a, b, c)
+
+"""
+foot x a b c
+x : a b c
+a b c = ncoll a b c
+x : perp x a b c, coll x b c
+tline a b c, line b c
+"""
+# 垂足：点 x 是点 a 在直线 bc 上的垂直投影
+# Foot: x is the perpendicular projection of a onto line bc
+prop foot(x, a, b, c point):
+    $ncoll(a, b, c)
+    $perp(x, a, b, c)
+    $coll(x, b, c)
+
+# 由点 a 和直线 bc 构造垂足 x
+# Construct foot x of a onto line bc
+let draw_foot_x fn(a, b, c point: $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $perp(draw_foot_x(a, b, c), a, b, c)
+            $coll(draw_foot_x(a, b, c), b, c)
+            $foot(draw_foot_x(a, b, c), a, b, c)
+
+"""
+free a
+a : a
+ =
+a :
+free
+"""
+
+"""
+incenter x a b c
+x : a b c
+a b c = ncoll a b c
+x : eqangle a b a x a x a c, eqangle c a c x c x c b; eqangle b c b x b x b a
+bisect a b c, bisect b c a
+"""
+# 内心：点 x 是三角形 abc 的内心，即三条角平分线的交点
+# Incenter: x is the incenter of triangle abc
+prop incenter(x, a, b, c point):
+    $ncoll(a, b, c)
+    $eqangle(a, b, a, x, a, x, a, c)
+    $eqangle(c, a, c, x, c, x, c, b)
+    $eqangle(b, c, b, x, b, x, b, a)
+
+# 由三角形 abc 构造内心 x
+# Construct incenter x of triangle abc
+let draw_incenter_x fn(a, b, c point: $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $eqangle(a, b, a, draw_incenter_x(a, b, c), a, draw_incenter_x(a, b, c), a, c)
+            $eqangle(c, a, c, draw_incenter_x(a, b, c), c, draw_incenter_x(a, b, c), c, b)
+            $eqangle(b, c, b, draw_incenter_x(a, b, c), b, draw_incenter_x(a, b, c), b, a)
+            $incenter(draw_incenter_x(a, b, c), a, b, c)
+
+
+"""
+incenter2 x y z i a b c
+i : a b c, x : i b c, y : i c a, z : i a b
+a b c = ncoll a b c
+i : eqangle a b a i a i a c, eqangle c a c i c i c b; eqangle b c b i b i b a; x : coll x b c, perp i x b c; y : coll y c a, perp i y c a; z : coll z a b, perp i z a b; cong i x i y, cong i y i z
+incenter2 a b c
+"""
+# 内心及三边垂足：i 为内心，x、y、z 分别是 i 在 bc、ca、ab 上的垂足
+# Incenter with feet: i incenter, x,y,z feet on bc,ca,ab
+prop incenter2(x, y, z, i, a, b, c point):
+    $ncoll(a, b, c)
+    $eqangle(a, b, a, i, a, i, a, c)
+    $eqangle(c, a, c, i, c, i, c, b)
+    $eqangle(b, c, b, i, b, i, b, a)
+    $coll(x, b, c)
+    $perp(i, x, b, c)
+    $coll(y, c, a)
+    $perp(i, y, c, a)
+    $coll(z, a, b)
+    $perp(i, z, a, b)
+    $cong(i, x, i, y)
+    $cong(i, y, i, z)
+
+# 由三角形 abc 构造内心 i 及三边垂足 x、y、z
+# Construct incenter i and feet x,y,z of triangle abc
+let draw_incenter2 fn(a, b, c point: $ncoll(a, b, c)) cart(point, point, point, point)
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $eqangle(a, b, a, draw_incenter2(a, b, c)[1], a, draw_incenter2(a, b, c)[1], a, c)
+            $eqangle(c, a, c, draw_incenter2(a, b, c)[1], c, draw_incenter2(a, b, c)[1], c, b)
+            $eqangle(b, c, b, draw_incenter2(a, b, c)[1], b, draw_incenter2(a, b, c)[1], b, a)
+            $coll(draw_incenter2(a, b, c)[2], b, c)
+            $perp(draw_incenter2(a, b, c)[1], draw_incenter2(a, b, c)[2], b, c)
+            $coll(draw_incenter2(a, b, c)[3], c, a)
+            $perp(draw_incenter2(a, b, c)[1], draw_incenter2(a, b, c)[3], c, a)
+            $coll(draw_incenter2(a, b, c)[4], a, b)
+            $perp(draw_incenter2(a, b, c)[1], draw_incenter2(a, b, c)[4], a, b)
+            $cong(draw_incenter2(a, b, c)[1], draw_incenter2(a, b, c)[2], draw_incenter2(a, b, c)[1], draw_incenter2(a, b, c)[3])
+            $cong(draw_incenter2(a, b, c)[1], draw_incenter2(a, b, c)[3], draw_incenter2(a, b, c)[1], draw_incenter2(a, b, c)[4])
+            $incenter2(draw_incenter2(a, b, c)[2], draw_incenter2(a, b, c)[3], draw_incenter2(a, b, c)[4], draw_incenter2(a, b, c)[1], a, b, c)
+"""
+excenter x a b c
+x : a b c
+a b c = ncoll a b c
+x : eqangle a b a x a x a c, eqangle c a c x c x c b; eqangle b c b x b x b a
+bisect b a c, exbisect b c a
+"""
+# 旁心：点 x 是三角形 abc 的旁心
+# Excenter: x is an excenter of triangle abc
+prop excenter(x, a, b, c point):
+    $ncoll(a, b, c)
+    $eqangle(a, b, a, x, a, x, a, c)
+    $eqangle(c, a, c, x, c, x, c, b)
+    $eqangle(b, c, b, x, b, x, b, a)
+
+# 由三角形 abc 构造旁心 x
+# Construct excenter x of triangle abc
+let draw_excenter_x fn(a, b, c point: $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $eqangle(a, b, a, draw_excenter_x(a, b, c), a, draw_excenter_x(a, b, c), a, c)
+            $eqangle(c, a, c, draw_excenter_x(a, b, c), c, draw_excenter_x(a, b, c), c, b)
+            $eqangle(b, c, b, draw_excenter_x(a, b, c), b, draw_excenter_x(a, b, c), b, a)
+            $excenter(draw_excenter_x(a, b, c), a, b, c)
+
+"""
+excenter2 x y z i a b c
+i : a b c, x : i b c, y : i c a, z : i a b
+a b c = ncoll a b c
+i : eqangle a b a i a i a c, eqangle c a c i c i c b; eqangle b c b i b i b a; x : coll x b c, perp i x b c; y : coll y c a, perp i y c a; z : coll z a b, perp i z a b; cong i x i y, cong i y i z
+excenter2 a b c
+"""
+# 旁心及三边垂足：i 为旁心，x、y、z 为三边垂足
+# Excenter with feet: i excenter, x,y,z feet
+prop excenter2(x, y, z, i, a, b, c point):
+    $ncoll(a, b, c)
+    $eqangle(a, b, a, i, a, i, a, c)
+    $eqangle(c, a, c, i, c, i, c, b)
+    $eqangle(b, c, b, i, b, i, b, a)
+    $coll(x, b, c)
+    $perp(i, x, b, c)
+    $coll(y, c, a)
+    $perp(i, y, c, a)
+    $coll(z, a, b)
+    $perp(i, z, a, b)
+    $cong(i, x, i, y)
+    $cong(i, y, i, z)
+
+# 由三角形 abc 构造旁心 i 及三边垂足 x、y、z
+# Construct excenter i and feet x,y,z of triangle abc
+let draw_excenter2 fn(a, b, c point: $ncoll(a, b, c)) cart(point, point, point, point)
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $eqangle(a, b, a, draw_excenter2(a, b, c)[1], a, draw_excenter2(a, b, c)[1], a, c)
+            $eqangle(c, a, c, draw_excenter2(a, b, c)[1], c, draw_excenter2(a, b, c)[1], c, b)
+            $eqangle(b, c, b, draw_excenter2(a, b, c)[1], b, draw_excenter2(a, b, c)[1], b, a)
+            $coll(draw_excenter2(a, b, c)[2], b, c)
+            $perp(draw_excenter2(a, b, c)[1], draw_excenter2(a, b, c)[2], b, c)
+            $coll(draw_excenter2(a, b, c)[3], c, a)
+            $perp(draw_excenter2(a, b, c)[1], draw_excenter2(a, b, c)[3], c, a)
+            $coll(draw_excenter2(a, b, c)[4], a, b)
+            $perp(draw_excenter2(a, b, c)[1], draw_excenter2(a, b, c)[4], a, b)
+            $cong(draw_excenter2(a, b, c)[1], draw_excenter2(a, b, c)[2], draw_excenter2(a, b, c)[1], draw_excenter2(a, b, c)[3])
+            $cong(draw_excenter2(a, b, c)[1], draw_excenter2(a, b, c)[3], draw_excenter2(a, b, c)[1], draw_excenter2(a, b, c)[4])
+            $excenter2(draw_excenter2(a, b, c)[2], draw_excenter2(a, b, c)[3], draw_excenter2(a, b, c)[4], draw_excenter2(a, b, c)[1], a, b, c)
+
+"""
+centroid x y z i a b c
+x : b c, y : c a, z : a b, i : a x b y
+a b c = ncoll a b c
+x : coll x b c, cong x b x c; y : coll y c a, cong y c y a; z : coll z a b, cong z a z b; i : coll a x i, coll b y i; coll c z i
+centroid a b c
+"""
+# 重心：x、y、z 为三边中点，i 为重心
+# Centroid: x,y,z midpoints, i centroid of triangle abc
+prop centroid(x, y, z, i, a, b, c point):
+    $ncoll(a, b, c)
+    $coll(x, b, c)
+    $cong(x, b, x, c)
+    $coll(y, c, a)
+    $cong(y, c, y, a)
+    $coll(z, a, b)
+    $cong(z, a, z, b)
+    $coll(a, x, i)
+    $coll(b, y, i)
+    $coll(c, z, i)
+
+# 由三角形 abc 构造三边中点 x、y、z 及重心 i
+# Construct midpoints x,y,z and centroid i of triangle abc
+let draw_centroid fn(a, b, c point: $ncoll(a, b, c)) cart(point, point, point, point)
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $coll(draw_centroid(a, b, c)[1], b, c)
+            $cong(draw_centroid(a, b, c)[1], b, draw_centroid(a, b, c)[1], c)
+            $coll(draw_centroid(a, b, c)[2], c, a)
+            $cong(draw_centroid(a, b, c)[2], c, draw_centroid(a, b, c)[2], a)
+            $coll(draw_centroid(a, b, c)[3], a, b)
+            $cong(draw_centroid(a, b, c)[3], a, draw_centroid(a, b, c)[3], b)
+            $coll(a, draw_centroid(a, b, c)[1], draw_centroid(a, b, c)[4])
+            $coll(b, draw_centroid(a, b, c)[2], draw_centroid(a, b, c)[4])
+            $coll(c, draw_centroid(a, b, c)[3], draw_centroid(a, b, c)[4])
+            $centroid(draw_centroid(a, b, c)[2], draw_centroid(a, b, c)[3], draw_centroid(a, b, c)[4], draw_centroid(a, b, c)[1], a, b, c)
+
+"""
+ninepoints x y z i a b c
+x : b c, y : c a, z : a b, i : x y z
+a b c = ncoll a b c
+x : coll x b c, cong x b x c; y : coll y c a, cong y c y a; z : coll z a b, cong z a z b; i : cong i x i y, cong i y i z
+ninepoints a b c
+"""
+# 九点圆圆心：x、y、z 为三边中点，i 为九点圆的圆心
+# Nine-point circle center: x,y,z midpoints, i center (equidistant from midpoints)
+prop ninepoints(x, y, z, i, a, b, c point):
+    $ncoll(a, b, c)
+    $coll(x, b, c)
+    $cong(x, b, x, c)
+    $coll(y, c, a)
+    $cong(y, c, y, a)
+    $coll(z, a, b)
+    $cong(z, a, z, b)
+    $cong(i, x, i, y)
+    $cong(i, y, i, z)
+
+# 由三角形 abc 构造三边中点 x、y、z 及九点圆圆心 i
+# Construct nine-point center i and midpoints x,y,z of triangle abc
+let draw_ninepoints fn(a, b, c point: $ncoll(a, b, c)) cart(point, point, point, point)
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $coll(draw_ninepoints(a, b, c)[1], b, c)
+            $cong(draw_ninepoints(a, b, c)[1], b, draw_ninepoints(a, b, c)[1], c)
+            $coll(draw_ninepoints(a, b, c)[2], c, a)
+            $cong(draw_ninepoints(a, b, c)[2], c, draw_ninepoints(a, b, c)[2], a)
+            $coll(draw_ninepoints(a, b, c)[3], a, b)
+            $cong(draw_ninepoints(a, b, c)[3], a, draw_ninepoints(a, b, c)[3], b)
+            $cong(draw_ninepoints(a, b, c)[4], draw_ninepoints(a, b, c)[1], draw_ninepoints(a, b, c)[4], draw_ninepoints(a, b, c)[2])
+            $cong(draw_ninepoints(a, b, c)[4], draw_ninepoints(a, b, c)[2], draw_ninepoints(a, b, c)[4], draw_ninepoints(a, b, c)[3])
+            $ninepoints(draw_ninepoints(a, b, c)[2], draw_ninepoints(a, b, c)[3], draw_ninepoints(a, b, c)[4], draw_ninepoints(a, b, c)[1], a, b, c)
+
+"""
+intersection_cc x o w a
+x : o w a
+o w a = ncoll o w a
+x : cong o a o x, cong w a w x
+circle o o a, circle w w a
+"""
+# 两圆交点：点 x 是两圆的另一交点
+# Intersection of two circles: x is the other intersection (circles through a)
+prop intersection_cc(x, o, w, a point):
+    $ncoll(o, w, a)
+    $cong(o, a, o, x)
+    $cong(w, a, w, x)
+
+# 由两圆心 o、w 及公共点 a 构造两圆的另一交点 x
+# Construct other intersection x of two circles
+let draw_intersection_cc_x fn(o, w, a point: $ncoll(o, w, a)) point
+know:
+    forall o, w, a point:
+        $ncoll(o, w, a)
+        =>:
+            $cong(o, a, o, draw_intersection_cc_x(o, w, a))
+            $cong(w, a, w, draw_intersection_cc_x(o, w, a))
+            $intersection_cc(draw_intersection_cc_x(o, w, a), o, w, a)
+
+"""
+intersection_lc x a o b
+x : a o b
+a o b = diff a b, diff o b, nperp b o b a
+x : coll x a b, cong o b o x
+line b a, circle o o b
+"""
+# 直线与圆的交点：点 x 在直线 ab 与圆（圆心 o 过 b）上
+# Line-circle intersection: x on line ab and circle (center o through b)
+prop intersection_lc(x, a, o, b point):
+    $diff(a, b)
+    $diff(o, b)
+    $nperp(b, o, b, a)
+    $coll(x, a, b)
+    $cong(o, b, o, x)
+
+# 由直线 ab 和圆心为 o 过 b 的圆构造交点 x
+# Construct intersection x of line ab and circle
+let draw_intersection_lc_x fn(a, o, b point: $diff(a, b), $diff(o, b), $nperp(b, o, b, a)) point
+know:
+    forall a, o, b point:
+        $diff(a, b)
+        $diff(o, b)
+        $nperp(b, o, b, a)
+        =>:
+            $coll(draw_intersection_lc_x(a, o, b), a, b)
+            $cong(o, b, o, draw_intersection_lc_x(a, o, b))
+            $intersection_lc(draw_intersection_lc_x(a, o, b), a, o, b)
+
+"""
+intersection_ll x a b c d
+x : a b c d
+a b c d = npara a b c d, ncoll a b c d
+x : coll x a b, coll x c d
+line a b, line c d
+"""
+# 两直线交点：点 x 是直线 ab 与直线 cd 的交点
+# Line-line intersection: x = ab ∩ cd
+prop intersection_ll(x, a, b, c, d point):
+    $npara(a, b, c, d)
+    $ncoll2(a, b, c, d)
+    $coll(x, a, b)
+    $coll(x, c, d)
+
+# 由两直线 ab 和 cd 构造交点 x
+# Construct intersection x of lines ab and cd
+let draw_intersection_ll_x fn(a, b, c, d point: $npara(a, b, c, d), $ncoll2(a, b, c, d)) point
+know:
+    forall a, b, c, d point:
+        $npara(a, b, c, d)
+        $ncoll2(a, b, c, d)
+        =>:
+            $coll(draw_intersection_ll_x(a, b, c, d), a, b)
+            $coll(draw_intersection_ll_x(a, b, c, d), c, d)
+            $intersection_ll(draw_intersection_ll_x(a, b, c, d), a, b, c, d)
+
+"""
+intersection_lp x a b c m n
+x : a b c m n
+a b c m n = npara m n a b, ncoll a b c, ncoll c m n
+x : coll x a b, para c x m n
+line a b, pline c m n
+"""
+# 直线与平行线交点：x 在 ab 上且过 c∥mn 的直线经过 x
+# Line-parallel line intersection
+prop intersection_lp(x, a, b, c, m, n point):
+    $npara(m, n, a, b)
+    $ncoll(a, b, c)
+    $ncoll(c, m, n)
+    $coll(x, a, b)
+    $para(c, x, m, n)
+
+# 由直线 ab 和过 c 平行于 mn 的直线构造交点 x
+# Construct intersection x of line ab and line through c parallel to mn
+let draw_intersection_lp_x fn(a, b, c, m, n point: $npara(m, n, a, b), $ncoll(a, b, c), $ncoll(c, m, n)) point
+know:
+    forall a, b, c, m, n point:
+        $npara(m, n, a, b)
+        $ncoll(a, b, c)
+        $ncoll(c, m, n)
+        =>:
+            $coll(draw_intersection_lp_x(a, b, c, m, n), a, b)
+            $para(c, draw_intersection_lp_x(a, b, c, m, n), m, n)
+            $intersection_lp(draw_intersection_lp_x(a, b, c, m, n), a, b, c, m, n)
+
+"""
+intersection_lt x a b c d e
+x : a b c d e
+a b c d e = ncoll a b c, nperp a b d e
+x : coll x a b, perp x c d e
+line a b, tline c d e
+"""
+# 直线与垂线交点：x 在 ab 上且过 c⊥de 的直线经过 x
+# Line-perpendicular line intersection
+prop intersection_lt(x, a, b, c, d, e point):
+    $ncoll(a, b, c)
+    $nperp(a, b, d, e)
+    $coll(x, a, b)
+    $perp(x, c, d, e)
+
+# 由直线 ab 和过 c 垂直于 de 的直线构造交点 x
+# Construct intersection x of line ab and perpendicular through c
+let draw_intersection_lt_x fn(a, b, c, d, e point: $ncoll(a, b, c), $nperp(a, b, d, e)) point
+know:
+    forall a, b, c, d, e point:
+        $ncoll(a, b, c)
+        $nperp(a, b, d, e)
+        =>:
+            $coll(draw_intersection_lt_x(a, b, c, d, e), a, b)
+            $perp(draw_intersection_lt_x(a, b, c, d, e), c, d, e)
+            $intersection_lt(draw_intersection_lt_x(a, b, c, d, e), a, b, c, d, e)
+
+"""
+intersection_pp x a b c d e f
+x : a b c d e f
+a b c d e f = diff a d, npara b c e f
+x : para x a b c, para x d e f
+pline a b c, pline d e f
+"""
+# 两平行线交点：x 在过 a∥bc 和过 d∥ef 的两直线上
+# Two parallel line families intersection
+prop intersection_pp(x, a, b, c, d, e, f point):
+    $diff(a, d)
+    $npara(b, c, e, f)
+    $para(x, a, b, c)
+    $para(x, d, e, f)
+
+# 由过 a∥bc 和过 d∥ef 的直线构造交点 x
+# Construct intersection x of two parallel line families
+let draw_intersection_pp_x fn(a, b, c, d, e, f point: $diff(a, d), $npara(b, c, e, f)) point
+know:
+    forall a, b, c, d, e, f point:
+        $diff(a, d)
+        $npara(b, c, e, f)
+        =>:
+            $para(draw_intersection_pp_x(a, b, c, d, e, f), a, b, c)
+            $para(draw_intersection_pp_x(a, b, c, d, e, f), d, e, f)
+            $intersection_pp(draw_intersection_pp_x(a, b, c, d, e, f), a, b, c, d, e, f)
+
+"""
+intersection_tt x a b c d e f
+x : a b c d e f
+a b c d e f = diff a d, npara b c e f
+x : perp x a b c, perp x d e f
+tline a b c, tline d e f
+"""
+# 两垂线交点：x 在过 a⊥bc 和过 d⊥ef 的两直线上
+# Two perpendicular line families intersection
+prop intersection_tt(x, a, b, c, d, e, f point):
+    $diff(a, d)
+    $npara(b, c, e, f)
+    $perp(x, a, b, c)
+    $perp(x, d, e, f)
+
+# 由过 a⊥bc 和过 d⊥ef 的直线构造交点 x
+# Construct intersection x of two perpendicular line families
+let draw_intersection_tt_x fn(a, b, c, d, e, f point: $diff(a, d), $npara(b, c, e, f)) point
+know:
+    forall a, b, c, d, e, f point:
+        $diff(a, d)
+        $npara(b, c, e, f)
+        =>:
+            $perp(draw_intersection_tt_x(a, b, c, d, e, f), a, b, c)
+            $perp(draw_intersection_tt_x(a, b, c, d, e, f), d, e, f)
+            $intersection_tt(draw_intersection_tt_x(a, b, c, d, e, f), a, b, c, d, e, f)
+
+"""
+iso_triangle a b c
+c : a b c
+ =
+a : ; b : ; c : eqangle b a b c c b c a, cong a b a c
+isos
+"""
+# 等腰三角形：三角形 abc 中 ab = ac，且底角相等
+# Isosceles triangle: ab = ac
+prop iso_triangle(a, b, c point):
+    $ncoll(a, b, c)
+    $eqangle(b, a, b, c, c, b, c, a)
+    $cong(a, b, a, c)
+
+# 由线段 ab 构造等腰三角形的第三顶点 c
+# Construct third vertex c of isosceles triangle from ab
+let draw_iso_triangle_c fn(a, b point: $diff(a, b)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $eqangle(b, a, b, draw_iso_triangle_c(a, b), draw_iso_triangle_c(a, b), b, draw_iso_triangle_c(a, b), a)
+            $cong(a, b, a, draw_iso_triangle_c(a, b))
+            $iso_triangle(a, b, draw_iso_triangle_c(a, b))
+
+"""
+lc_tangent x a o
+x : x a o
+a o = diff a o
+x : perp a x a o
+tline a a o
+"""
+# 圆的切线点：x 在圆上，切线 ax ⊥ 半径 ao
+# Circle tangent point: x on circle, tangent ax ⊥ radius ao
+prop lc_tangent(x, a, o point):
+    $diff(a, o)
+    $perp(a, x, a, o)
+
+# 由圆外点 a 和圆心 o 构造切点 x
+# Construct tangent point x from external point a to circle with center o
+let draw_lc_tangent_x fn(a, o point: $diff(a, o)) point
+know:
+    forall a, o point:
+        $diff(a, o)
+        =>:
+            $perp(a, draw_lc_tangent_x(a, o), a, o)
+            $lc_tangent(draw_lc_tangent_x(a, o), a, o)
+"""
+midpoint x a b
+x : a b
+a b = diff a b
+x : coll x a b, cong x a x b
+midp a b
+"""
+prop midpoint(x, a, b point):
+    $diff(a, b)
+    $coll(x, a, b)
+    $cong(x, a, x, b)
+
+# 由线段 ab 构造中点 x
+# Construct midpoint x of segment ab
+let draw_midpoint_x fn(a, b point: $diff(a, b)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $coll(draw_midpoint_x(a, b), a, b)
+            $cong(draw_midpoint_x(a, b), a, draw_midpoint_x(a, b), b)
+            $midpoint(draw_midpoint_x(a, b), a, b)
+
+"""
+mirror x a b
+x : a b
+a b = diff a b
+x : coll x a b, cong b a b x
+pmirror a b
+"""
+# 轴对称点：点 x 是点 a 关于直线的对称点
+# Mirror/reflection: x is reflection of a (bx = ba)
+prop mirror(x, a, b point):
+    $diff(a, b)
+    $coll(x, a, b)
+    $cong(b, a, b, x)
+
+# 由点 a 和直线构造对称点 x
+# Construct reflection x of a about line
+let draw_mirror_x fn(a, b point: $diff(a, b)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $coll(draw_mirror_x(a, b), a, b)
+            $cong(b, a, b, draw_mirror_x(a, b))
+            $mirror(draw_mirror_x(a, b), a, b)
+
+"""
+nsquare x a b
+x : a b
+a b = diff a b
+x : cong x a a b, perp x a a b
+rotaten90 a b
+"""
+# 逆时针方向正方形顶点：ax ⊥ ab 且 ax = ab
+# Square vertex (CCW): ax ⊥ ab, ax = ab
+prop nsquare(x, a, b point):
+    $diff(a, b)
+    $cong(x, a, a, b)
+    $perp(x, a, a, b)
+
+# 由线段 ab 构造正方形逆时针方向第三顶点 x
+# Construct CCW square vertex x from ab
+let draw_nsquare_x fn(a, b point: $diff(a, b)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $cong(draw_nsquare_x(a, b), a, a, b)
+            $perp(draw_nsquare_x(a, b), a, a, b)
+            $nsquare(draw_nsquare_x(a, b), a, b)
+
+"""
+on_aline x a b c d e
+x : x a b c d e
+a b c d e = ncoll c d e
+x : eqangle a x a b d c d e
+aline e d c b a
+"""
+# 等角线上的点：∠axb = ∠cde
+# Point on equal-angle line: ∠axb = ∠cde
+prop on_aline(x, a, b, c, d, e point):
+    $ncoll(c, d, e)
+    $eqangle(a, x, a, b, d, c, d, e)
+
+# 由角 cde 和射线 ab 构造满足 ∠axb = ∠cde 的点 x
+# Construct x with ∠axb = ∠cde
+let draw_on_aline_x fn(a, b, c, d, e point: $ncoll(c, d, e)) point
+know:
+    forall a, b, c, d, e point:
+        $ncoll(c, d, e)
+        =>:
+            $eqangle(a, draw_on_aline_x(a, b, c, d, e), a, b, d, c, d, e)
+            $on_aline(draw_on_aline_x(a, b, c, d, e), a, b, c, d, e)
+
+"""
+on_aline2 x a b c d e
+x : x a b c d e
+a b c d e = ncoll c d e
+x : eqangle x a x b d c d e
+aline2 e d c b a
+"""
+# 等角线第二种形式：∠xab = ∠cde
+# Equal-angle line (form 2): ∠xab = ∠cde
+prop on_aline2(x, a, b, c, d, e point):
+    $ncoll(c, d, e)
+    $eqangle(x, a, x, b, d, c, d, e)
+
+# 由角 cde 和两点 a、b 构造满足 ∠xab = ∠cde 的点 x
+# Construct x with ∠xab = ∠cde
+let draw_on_aline2_x fn(a, b, c, d, e point: $ncoll(c, d, e)) point
+know:
+    forall a, b, c, d, e point:
+        $ncoll(c, d, e)
+        =>:
+            $eqangle(draw_on_aline2_x(a, b, c, d, e), a, draw_on_aline2_x(a, b, c, d, e), b, d, c, d, e)
+            $on_aline2(draw_on_aline2_x(a, b, c, d, e), a, b, c, d, e)
+
+"""
+on_bline x a b
+x : x a b
+a b = diff a b
+x : cong x a x b, eqangle a x a b b a b x
+bline a b
+"""
+# 线段延长线上的点：x 在 ab 延长线上
+# Point on line extension: x on line through ab
+prop on_bline(x, a, b point):
+    $diff(a, b)
+    $cong(x, a, x, b)
+    $eqangle(a, x, a, b, b, a, b, x)
+
+# 由线段 ab 构造其延长线上的点 x
+# Construct point x on extension of ab
+let draw_on_bline_x fn(a, b point: $diff(a, b)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $cong(draw_on_bline_x(a, b), a, draw_on_bline_x(a, b), b)
+            $eqangle(a, draw_on_bline_x(a, b), a, b, b, a, b, draw_on_bline_x(a, b))
+            $on_bline(draw_on_bline_x(a, b), a, b)
+
+"""
+on_circle x o a
+x : x o a
+o a = diff o a
+x : cong o x o a
+circle o o a
+"""
+# 圆上的点：点 x 在圆心为 o、过 a 的圆上
+# Point on circle: x on circle (center o through a)
+prop on_circle(x, o, a point):
+    $diff(o, a)
+    $cong(o, x, o, a)
+    $cong(o, a, o, x)
+
+# 由圆心 o 和圆上点 a 构造圆上另一点 x
+# Construct another point x on circle
+let draw_on_circle_x fn(o, a point: $diff(o, a)) point
+know:
+    forall o, a point:
+        $diff(o, a)
+        =>:
+            $cong(o, draw_on_circle_x(o, a), o, a)
+            $on_circle(draw_on_circle_x(o, a), o, a)
+
+"""
+on_line x a b
+x : x a b
+a b = diff a b
+x : coll x a b
+line a b
+"""
+# 直线上的点：点 x 在直线 ab 上
+# Point on line: x on line ab
+prop on_line(x, a, b point):
+    $diff(a, b)
+    $coll(x, a, b)
+
+# 由直线 ab 构造其上的点 x
+# Construct point x on line ab
+let draw_on_line_x fn(a, b point: $diff(a, b)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $coll(draw_on_line_x(a, b), a, b)
+            $on_line(draw_on_line_x(a, b), a, b)
+
+"""
+on_pline x a b c
+x : x a b c
+a b c = diff b c, ncoll a b c
+x : para x a b c
+pline a b c
+"""
+# 平行线上的点：x 在过 a 平行于 bc 的直线上
+# Point on parallel line: x on line through a ∥ bc
+prop on_pline(x, a, b, c point):
+    $diff(b, c)
+    $ncoll(a, b, c)
+    $para(x, a, b, c)
+
+# 由过 a∥bc 的直线构造其上的点 x
+# Construct point x on line through a parallel to bc
+let draw_on_pline_x fn(a, b, c point: $diff(b, c), $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $diff(b, c)
+        $ncoll(a, b, c)
+        =>:
+            $para(draw_on_pline_x(a, b, c), a, b, c)
+            $on_pline(draw_on_pline_x(a, b, c), a, b, c)
+
+"""
+on_tline x a b c
+x : x a b c
+a b c = diff b c
+x : perp x a b c
+tline a b c
+"""
+# 垂线上的点：x 在过 a 垂直于 bc 的直线上
+# Point on perpendicular: x on line through a ⊥ bc
+prop on_tline(x, a, b, c point):
+    $diff(b, c)
+    $perp(x, a, b, c)
+
+# 由过 a⊥bc 的直线构造其上的点 x
+# Construct point x on line through a perpendicular to bc
+let draw_on_tline_x fn(a, b, c point: $diff(b, c)) point
+know:
+    forall a, b, c point:
+        $diff(b, c)
+        =>:
+            $perp(draw_on_tline_x(a, b, c), a, b, c)
+            $on_tline(draw_on_tline_x(a, b, c), a, b, c)
+
+"""
+orthocenter x a b c
+x : a b c
+a b c = ncoll a b c
+x : perp x a b c, perp x b c a; perp x c a b
+tline a b c, tline b c a
+"""
+# 垂心：点 x 是三角形 abc 的垂心
+# Orthocenter: x is the orthocenter of triangle abc
+prop orthocenter(x, a, b, c point):
+    $ncoll(a, b, c)
+    $perp(x, a, b, c)
+    $perp(x, b, c, a)
+    $perp(x, c, a, b)
+
+# 由三角形 abc 构造垂心 x
+# Construct orthocenter x of triangle abc
+let draw_orthocenter_x fn(a, b, c point: $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $perp(draw_orthocenter_x(a, b, c), a, b, c)
+            $perp(draw_orthocenter_x(a, b, c), b, c, a)
+            $perp(draw_orthocenter_x(a, b, c), c, a, b)
+            $orthocenter(draw_orthocenter_x(a, b, c), a, b, c)
+
+"""
+parallelogram a b c x
+x : a b c
+a b c = ncoll a b c
+x : para a b c x, para a x b c; cong a b c x, cong a x b c
+pline a b c, pline c a b
+"""
+# 平行四边形：ab∥cx，ax∥bc，对边相等
+# Parallelogram: ab∥cx, ax∥bc, opposite sides equal
+prop parallelogram(a, b, c, x point):
+    $ncoll(a, b, c)
+    $para(a, b, c, x)
+    $para(a, x, b, c)
+    $cong(a, b, c, x)
+    $cong(a, x, b, c)
+
+# 由三角形 abc 构造第四点 x 使 abcx 为平行四边形
+# Construct vertex x to form parallelogram abcx
+let draw_parallelogram_x fn(a, b, c point: $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $para(a, b, c, draw_parallelogram_x(a, b, c))
+            $para(a, draw_parallelogram_x(a, b, c), b, c)
+            $cong(a, b, c, draw_parallelogram_x(a, b, c))
+            $cong(a, draw_parallelogram_x(a, b, c), b, c)
+            $parallelogram(a, b, c, draw_parallelogram_x(a, b, c))
+
+"""
+pentagon a b c d e
+
+ =
+a : ; b : ; c : ; d : ; e :
+pentagon
+"""
+# 五边形：五点中任意三点不共线
+# Pentagon: no three of five points collinear
+prop pentagon(a, b, c, d, e point):
+    $ncoll(a, b, c)
+    $ncoll(a, b, d)
+    $ncoll(a, b, e)
+    $ncoll(a, c, d)
+    $ncoll(a, c, e)
+    $ncoll(a, d, e)
+    $ncoll(b, c, d)
+    $ncoll(b, c, e)
+    $ncoll(b, d, e)
+    $ncoll(c, d, e)
+
+"""
+psquare x a b
+x : a b
+a b = diff a b
+x : cong x a a b, perp x a a b
+rotatep90 a b
+"""
+# 顺时针方向正方形顶点：ax ⊥ ab 且 ax = ab
+# Square vertex (CW): ax ⊥ ab, ax = ab
+prop psquare(x, a, b point):
+    $diff(a, b)
+    $cong(x, a, a, b)
+    $perp(x, a, a, b)
+
+# 由线段 ab 构造正方形顺时针方向第三顶点 x
+# Construct CW square vertex x from ab
+let draw_psquare_x fn(a, b point: $diff(a, b)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $cong(draw_psquare_x(a, b), a, a, b)
+            $perp(draw_psquare_x(a, b), a, a, b)
+            $psquare(draw_psquare_x(a, b), a, b)
+
+"""
+quadrangle a b c d
+
+ =
+a : ; b : ; c : ; d :
+quadrangle
+"""
+# 四边形：四点中任意三点不共线
+# Quadrangle: no three of four points collinear
+prop quadrangle(a, b, c, d point):
+    $ncoll(a, b, c)
+    $ncoll(a, b, d)
+    $ncoll(a, c, d)
+    $ncoll(b, c, d)
+
+"""
+r_trapezoid a b c d
+d : a b c
+ =
+a : ; b : ; c : ; d : para a b c d, perp a b a d
+r_trapezoid
+"""
+# 直角梯形：ab∥cd，ad ⊥ ab
+# Right trapezoid: ab∥cd, ad ⊥ ab
+prop r_trapezoid(a, b, c, d point):
+    $ncoll(a, b, c)
+    $para(a, b, c, d)
+    $perp(a, b, a, d)
+
+# 由三角形 abc 构造第四点 d 使 abcd 为直角梯形
+# Construct vertex d to form right trapezoid
+let draw_r_trapezoid_d fn(a, b, c point: $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $para(a, b, c, draw_r_trapezoid_d(a, b, c))
+            $perp(a, b, a, draw_r_trapezoid_d(a, b, c))
+            $r_trapezoid(a, b, c, draw_r_trapezoid_d(a, b, c))
+
+"""
+r_triangle a b c
+c : a b c
+ =
+a : ; b : ; c : perp a b a c
+r_triangle
+"""
+# 直角三角形：ab ⊥ ac，角 a 为直角
+# Right triangle: ab ⊥ ac, angle a is right
+prop r_triangle(a, b, c point):
+    $ncoll(a, b, c)
+    $perp(a, b, a, c)
+
+# 由线段 ab 构造直角三角形的第三顶点 c
+# Construct vertex c of right triangle from ab
+let draw_r_triangle_c fn(a, b point: $diff(a, b)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $perp(a, b, a, draw_r_triangle_c(a, b))
+            $r_triangle(a, b, draw_r_triangle_c(a, b))
+
+"""
+rectangle a b c d
+c : a b c , d : a b c
+ =
+a : ; b : ; c : perp a b b c ; d : para a b c d, para a d b c; perp a b a d, cong a b c d, cong a d b c, cong a c b d
+rectangle
+"""
+# 矩形：四边形四个角为直角，对边相等，对角线相等
+# Rectangle: all angles right, opposite sides equal
+prop rectangle(a, b, c, d point):
+    $ncoll(a, b, c)
+    $perp(a, b, b, c)
+    $para(a, b, c, d)
+    $para(a, d, b, c)
+    $perp(a, b, a, d)
+    $cong(a, b, c, d)
+    $cong(a, d, b, c)
+    $cong(a, c, b, d)
+
+# 由线段 ab 构造矩形的第三顶点 c
+# Construct vertex c of rectangle from ab
+let draw_rectangle_c fn(a, b point: $diff(a, b)) point
+# 由矩形三顶点 a、b、c 构造第四顶点 d
+# Construct vertex d of rectangle from abc
+let draw_rectangle_d fn(a, b, c point: $ncoll(a, b, c), $perp(a, b, b, c)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $perp(a, b, b, draw_rectangle_c(a, b))
+            $ncoll(a,b,draw_rectangle_c(a,b))
+            $rectangle(a, b, draw_rectangle_c(a, b), draw_rectangle_d(a, b, draw_rectangle_c(a, b)))
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        $perp(a, b, b, c)
+        =>:
+            $para(a, b, c, draw_rectangle_d(a, b, c))
+            $para(a, draw_rectangle_d(a, b, c), b, c)
+            $perp(a, b, a, draw_rectangle_d(a, b, c))
+            $cong(a, b, c, draw_rectangle_d(a, b, c))
+            $cong(a, draw_rectangle_d(a, b, c), b, c)
+            $cong(a, c, b, draw_rectangle_d(a, b, c))
+            $rectangle(a, b, c, draw_rectangle_d(a, b, c))
+
+"""
+reflect x a b c
+x : a b c
+a b c = diff b c, ncoll a b c
+x : cong b a b x, cong c a c x; perp b c a x
+reflect a b c
+"""
+# 轴对称：点 x 是点 a 关于直线 bc 的对称点
+# Reflection: x is reflection of a about line bc
+prop reflect(x, a, b, c point):
+    $diff(b, c)
+    $ncoll(a, b, c)
+    $cong(b, a, b, x)
+    $cong(c, a, c, x)
+    $perp(b, c, a, x)
+
+# 由点 a 和直线 bc 构造对称点 x
+# Construct reflection x of a about line bc
+let draw_reflect_x fn(a, b, c point: $diff(b, c), $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $diff(b, c)
+        $ncoll(a, b, c)
+        =>:
+            $cong(b, a, b, draw_reflect_x(a, b, c))
+            $cong(c, a, c, draw_reflect_x(a, b, c))
+            $perp(b, c, a, draw_reflect_x(a, b, c))
+            $reflect(draw_reflect_x(a, b, c), a, b, c)
+
+"""
+risos a b c
+c : a b
+ =
+a : ; b : ; c : perp a b a c, cong a b a c; eqangle b a b c c b c a
+risos
+"""
+# 等腰直角三角形：ab ⊥ ac，ab = ac
+# Right isosceles triangle: ab ⊥ ac, ab = ac
+prop risos(a, b, c point):
+    $diff(a, b)
+    $perp(a, b, a, c)
+    $cong(a, b, a, c)
+    $eqangle(b, a, b, c, c, b, c, a)
+
+# 由线段 ab 构造等腰直角三角形的第三顶点 c
+# Construct vertex c of right isosceles triangle
+let draw_risos_c fn(a, b point: $diff(a, b)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $perp(a, b, a, draw_risos_c(a, b))
+            $cong(a, b, a, draw_risos_c(a, b))
+            $eqangle(b, a, b, draw_risos_c(a, b), draw_risos_c(a, b), b, draw_risos_c(a, b), a)
+            $risos(a, b, draw_risos_c(a, b))
+
+"""
+s_angle a b x y
+x : a b x
+a b = diff a b
+x : s_angle a b x y
+s_angle a b y
+"""
+# 同侧角：射线 bx、by 在 ab 同侧
+# Same-side angle: rays bx, by on same side of ab
+prop s_angle(a, b, x, y point):
+    $diff(a, b)
+    $ncoll(a, b, x)
+    $ncoll(a, b, y)
+
+# 由射线 ab 和点 x 构造同侧的点 y
+# Construct point y on same side of ab as x
+let draw_s_angle_y fn(a, b, x point: $diff(a, b), $ncoll(a, b, x)) point
+know:
+    forall a, b, x point:
+        $diff(a, b)
+        $ncoll(a, b, x)
+        =>:
+            $s_angle(a, b, x, draw_s_angle_y(a, b, x))
+
+"""
+segment a b
+
+ =
+a : ; b :
+segment
+"""
+# 线段：a 和 b 是不同的两点
+# Segment: a and b are distinct points
+prop segment(a, b point):
+    $diff(a, b)
+
+"""
+shift x b c d
+x : b c d
+b c d = diff d b
+x : cong x b c d, cong x c b d
+shift d c b
+"""
+# 平移点：将 bc 平移至 xd，xb = cd，xc = bd
+# Translation: translate bc to xd
+prop shift(x, b, c, d point):
+    $diff(d, b)
+    $cong(x, b, c, d)
+    $cong(x, c, b, d)
+
+# 由向量 bc 和目标点 d 构造平移后的点 x
+# Construct translated point x (xb = cd)
+let draw_shift_x fn(b, c, d point: $diff(d, b)) point
+know:
+    forall b, c, d point:
+        $diff(d, b)
+        =>:
+            $cong(draw_shift_x(b, c, d), b, c, d)
+            $cong(draw_shift_x(b, c, d), c, b, d)
+            $shift(draw_shift_x(b, c, d), b, c, d)
+
+"""
+square a b x y
+x : a b, y : a b x
+a b = diff a b
+x : perp a b b x, cong a b b x; y : para a b x y, para a y b x; perp a y y x, cong b x x y, cong x y y a, perp a x b y, cong a x b y
+square a b
+"""
+# 正方形：ab ⊥ bx，四边相等，对角线垂直且相等
+# Square: ab ⊥ bx, all sides equal, diagonals ⊥ and equal
+prop square(a, b, x, y point):
+    $diff(a, b)
+    $perp(a, b, b, x)
+    $cong(a, b, b, x)
+    $para(a, b, x, y)
+    $para(a, y, b, x)
+    $perp(a, y, y, x)
+    $cong(b, x, x, y)
+    $cong(x, y, y, a)
+    $perp(a, x, b, y)
+    $cong(a, x, b, y)
+
+# 由线段 ab 构造正方形的第三顶点 x
+# Construct vertex x of square from ab
+let draw_square_x fn(a, b point: $diff(a, b)) point
+# 由正方形三顶点 a、b、x 构造第四顶点 y
+# Construct vertex y of square from abx
+let draw_square_y fn(a, b, x point: $diff(a, b), $perp(a, b, b, x), $cong(a, b, b, x)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $perp(a, b, b, draw_square_x(a, b))
+            $cong(a, b, b, draw_square_x(a, b))
+            $square(a, b, draw_square_x(a, b), draw_square_y(a, b, draw_square_x(a, b)))
+    forall a, b, x point:
+        $diff(a, b)
+        $perp(a, b, b, x)
+        $cong(a, b, b, x)
+        =>:
+            $para(a, b, x, draw_square_y(a, b, x))
+            $para(a, draw_square_y(a, b, x), b, x)
+            $perp(a, draw_square_y(a, b, x), draw_square_y(a, b, x), x)
+            $cong(b, x, x, draw_square_y(a, b, x))
+            $cong(x, draw_square_y(a, b, x), draw_square_y(a, b, x), a)
+            $perp(a, x, b, draw_square_y(a, b, x))
+            $cong(a, x, b, draw_square_y(a, b, x))
+            $square(a, b, x, draw_square_y(a, b, x))
+
+"""
+isquare a b c d
+c : a b , d : a b c
+ =
+a : ; b : ; c : perp a b b c, cong a b b c; d : para a b c d, para a d b c; perp a d d c, cong b c c d, cong c d d a, perp a c b d, cong a c b d
+isquare
+"""
+# 内接正方形：以 ab 为边的正方形 abcd
+# Inscribed square: square abcd with side ab
+prop isquare(a, b, c, d point):
+    $diff(a, b)
+    $perp(a, b, b, c)
+    $cong(a, b, b, c)
+    $para(a, b, c, d)
+    $para(a, d, b, c)
+    $perp(a, d, d, c)
+    $cong(b, c, c, d)
+    $cong(c, d, d, a)
+    $perp(a, c, b, d)
+    $cong(a, c, b, d)
+
+# 由线段 ab 构造正方形的第三顶点 c
+# Construct vertex c of inscribed square from ab
+let draw_isquare_c fn(a, b point: $diff(a, b)) point
+# 由正方形三顶点 a、b、c 构造第四顶点 d
+# Construct vertex d of inscribed square from abc
+let draw_isquare_d fn(a, b, c point: $diff(a, b), $perp(a, b, b, c), $cong(a, b, b, c)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $perp(a, b, b, draw_isquare_c(a, b))
+            $cong(a, b, b, draw_isquare_c(a, b))
+            $isquare(a, b, draw_isquare_c(a, b), draw_isquare_d(a, b, draw_isquare_c(a, b)))
+    forall a, b, c point:
+        $diff(a, b)
+        $perp(a, b, b, c)
+        $cong(a, b, b, c)
+        =>:
+            $para(a, b, c, draw_isquare_d(a, b, c))
+            $para(a, draw_isquare_d(a, b, c), b, c)
+            $perp(a, draw_isquare_d(a, b, c), draw_isquare_d(a, b, c), c)
+            $cong(b, c, c, draw_isquare_d(a, b, c))
+            $cong(c, draw_isquare_d(a, b, c), draw_isquare_d(a, b, c), a)
+            $perp(a, c, b, draw_isquare_d(a, b, c))
+            $cong(a, c, b, draw_isquare_d(a, b, c))
+            $isquare(a, b, c, draw_isquare_d(a, b, c))
+
+"""
+trapezoid a b c d
+d : a b c d
+ =
+a : ; b : ; c : ; d : para a b c d
+trapezoid
+"""
+# 梯形：四边形 abcd 中 ab ∥ cd
+# Trapezoid: ab ∥ cd in quadrangle abcd
+prop trapezoid(a, b, c, d point):
+    $ncoll2(a, b, c, d)
+    $para(a, b, c, d)
+
+# 由三角形 abc 构造第四点 d 使 abcd 为梯形
+# Construct vertex d to form trapezoid abcd
+let draw_trapezoid_d fn(a, b, c point: $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $para(a, b, c, draw_trapezoid_d(a, b, c))
+            $trapezoid(a, b, c, draw_trapezoid_d(a, b, c))
+
+"""
+triangle a b c
+
+ =
+a : ; b : ; c :
+triangle
+"""
+# 三角形：三点 a、b、c 不共线
+# Triangle: points a, b, c are non-collinear
+prop triangle(a, b, c point):
+    $ncoll(a, b, c)
+
+"""
+triangle12 a b c
+c : a b c
+ =
+a : ; b : ; c : rconst a b a c 1 2
+triangle12
+"""
+# 1:2 比例三角形：ab 与 ac 长度比为 1:2
+# Triangle with ab:ac = 1:2
+prop triangle12(a, b, c point):
+    $ncoll(a, b, c)
+    # rconst a b a c 1 2 表示 ab:ac = 1:2
+    # ratio ab:ac = 1:2
+
+# 由线段 ab 构造满足 ab:ac=1:2 的第三顶点 c
+# Construct vertex c with ab:ac = 1:2
+let draw_triangle12_c fn(a, b point: $diff(a, b)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $triangle12(a, b, draw_triangle12_c(a, b))
+
+"""
+2l1c x y z i a b c o
+x : a b c o y z i, y : a b c o x z i, z : a b c o x y i, i : a b c o x y z
+a b c o = cong o a o b, ncoll a b c
+x y z i : coll x a c, coll y b c, cong o a o z, coll i o z, cong i x i y, cong i y i z, perp i x a c, perp i y b c
+2l1c a b c o
+"""
+# 两线一圆构型：o 为圆心 oa=ob，x 在 ac 上，y 在 bc 上，z 在圆上
+# Two lines one circle: o center, x on ac, y on bc, z on circle
+prop two_l1c(x, y, z, i, a, b, c, o point):
+    $cong(o, a, o, b)
+    $ncoll(a, b, c)
+    $coll(x, a, c)
+    $coll(y, b, c)
+    $cong(o, a, o, z)
+    $coll(i, o, z)
+    $cong(i, x, i, y)
+    $cong(i, y, i, z)
+    $perp(i, x, a, c)
+    $perp(i, y, b, c)
+
+# 由三角形 abc 和圆心 o 构造两线一圆构型 x、y、z、i
+# Construct two-lines-one-circle configuration
+let draw_two_l1c fn(a, b, c, o point: $cong(o, a, o, b), $ncoll(a, b, c)) cart(point, point, point, point)
+know:
+    forall a, b, c, o point:
+        $cong(o, a, o, b)
+        $ncoll(a, b, c)
+        =>:
+            $coll(draw_two_l1c(a, b, c, o)[1], a, c)
+            $coll(draw_two_l1c(a, b, c, o)[2], b, c)
+            $cong(o, a, o, draw_two_l1c(a, b, c, o)[3])
+            $coll(draw_two_l1c(a, b, c, o)[4], o, draw_two_l1c(a, b, c, o)[3])
+            $cong(draw_two_l1c(a, b, c, o)[4], draw_two_l1c(a, b, c, o)[1], draw_two_l1c(a, b, c, o)[4], draw_two_l1c(a, b, c, o)[2])
+            $cong(draw_two_l1c(a, b, c, o)[4], draw_two_l1c(a, b, c, o)[2], draw_two_l1c(a, b, c, o)[4], draw_two_l1c(a, b, c, o)[3])
+            $perp(draw_two_l1c(a, b, c, o)[4], draw_two_l1c(a, b, c, o)[1], a, c)
+            $perp(draw_two_l1c(a, b, c, o)[4], draw_two_l1c(a, b, c, o)[2], b, c)
+            $two_l1c(draw_two_l1c(a, b, c, o)[1], draw_two_l1c(a, b, c, o)[2], draw_two_l1c(a, b, c, o)[3], draw_two_l1c(a, b, c, o)[4], a, b, c, o)
+
+"""
+e5128 x y a b c d
+x : a b c d y, y : a b c d x
+a b c d = cong c b c d, perp b c b a
+x y : cong c b c x, coll y a b, coll x y d, eqangle a b a d x a x y
+e5128 a b c d
+"""
+# 几何构型 e5128：cb=cd，cb⊥ba，x 在圆上，y 在 ab 上
+# Config e5128: cb=cd, cb⊥ba, x on circle, y on ab
+prop e5128(x, y, a, b, c, d point):
+    $cong(c, b, c, d)
+    $perp(b, c, b, a)
+    $cong(c, b, c, x)
+    $coll(y, a, b)
+    $coll(x, y, d)
+    $eqangle(a, b, a, d, x, a, x, y)
+
+# 由构型 a、b、c、d 构造 e5128 中的 x、y
+# Construct e5128 configuration points x, y
+let draw_e5128 fn(a, b, c, d point: $cong(c, b, c, d), $perp(b, c, b, a)) cart(point, point)
+know:
+    forall a, b, c, d point:
+        $cong(c, b, c, d)
+        $perp(b, c, b, a)
+        =>:
+            $cong(c, b, c, draw_e5128(a, b, c, d)[1])
+            $coll(draw_e5128(a, b, c, d)[2], a, b)
+            $coll(draw_e5128(a, b, c, d)[1], draw_e5128(a, b, c, d)[2], d)
+            $eqangle(a, b, a, d, draw_e5128(a, b, c, d)[1], a, draw_e5128(a, b, c, d)[1], draw_e5128(a, b, c, d)[2])
+            $e5128(draw_e5128(a, b, c, d)[1], draw_e5128(a, b, c, d)[2], a, b, c, d)
+
+"""
+3peq x y z a b c
+z : b c z , x : a b c z y, y : a b c z x
+a b c = ncoll a b c
+z : coll z b c ; x y : coll x a b, coll y a c, coll x y z, cong z x z y
+3peq a b c
+"""
+# 三点等距：z 在 bc 上，x 在 ab 上，y 在 ac 上，zx = zy
+# Three equidistant points: z on bc, x on ab, y on ac, zx = zy
+prop three_peq(x, y, z, a, b, c point):
+    $ncoll(a, b, c)
+    $coll(z, b, c)
+    $coll(x, a, b)
+    $coll(y, a, c)
+    $coll(x, y, z)
+    $cong(z, x, z, y)
+
+# 由三角形 abc 构造三点等距构型 x、y、z
+# Construct three equidistant points from triangle abc
+let draw_three_peq fn(a, b, c point: $ncoll(a, b, c)) cart(point, point, point)
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $coll(draw_three_peq(a, b, c)[3], b, c)
+            $coll(draw_three_peq(a, b, c)[1], a, b)
+            $coll(draw_three_peq(a, b, c)[2], a, c)
+            $coll(draw_three_peq(a, b, c)[1], draw_three_peq(a, b, c)[2], draw_three_peq(a, b, c)[3])
+            $cong(draw_three_peq(a, b, c)[3], draw_three_peq(a, b, c)[1], draw_three_peq(a, b, c)[3], draw_three_peq(a, b, c)[2])
+            $three_peq(draw_three_peq(a, b, c)[1], draw_three_peq(a, b, c)[2], draw_three_peq(a, b, c)[3], a, b, c)
+
+"""
+trisect x y a b c
+x : a b c y, y : a b c x
+a b c = ncoll a b c
+x y : coll x a c, coll y a c, eqangle b a b x b x b y, eqangle b x b y b y b c
+trisect a b c
+"""
+# 三等分角：x、y 在 ac 上，∠abx = ∠xby = ∠ybc
+# Angle trisection: x,y on ac, trisect ∠abc
+prop trisect(x, y, a, b, c point):
+    $ncoll(a, b, c)
+    $coll(x, a, c)
+    $coll(y, a, c)
+    $eqangle(b, a, b, x, b, x, b, y)
+    $eqangle(b, x, b, y, b, y, b, c)
+
+# 由角 abc 构造三等分点 x、y
+# Construct trisection points x, y of angle abc
+let draw_trisect fn(a, b, c point: $ncoll(a, b, c)) cart(point, point)
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $coll(draw_trisect(a, b, c)[1], a, c)
+            $coll(draw_trisect(a, b, c)[2], a, c)
+            $eqangle(b, a, b, draw_trisect(a, b, c)[1], b, draw_trisect(a, b, c)[1], b, draw_trisect(a, b, c)[2])
+            $eqangle(b, draw_trisect(a, b, c)[1], b, draw_trisect(a, b, c)[2], b, draw_trisect(a, b, c)[2], b, c)
+            $trisect(draw_trisect(a, b, c)[1], draw_trisect(a, b, c)[2], a, b, c)
+
+"""
+trisegment x y a b
+x : a b y, y : a b x
+a b = diff a b
+x y : coll x a b, coll y a b, cong x a x y, cong y x y b
+trisegment a b
+"""
+# 三等分线段：x、y 在 ab 上，ax = xy = yb
+# Segment trisection: x,y on ab, ax = xy = yb
+prop trisegment(x, y, a, b point):
+    $diff(a, b)
+    $coll(x, a, b)
+    $coll(y, a, b)
+    $cong(x, a, x, y)
+    $cong(y, x, y, b)
+
+# 由线段 ab 构造三等分点 x、y
+# Construct trisection points x, y of segment ab
+let draw_trisegment fn(a, b point: $diff(a, b)) cart(point, point)
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $coll(draw_trisegment(a, b)[1], a, b)
+            $coll(draw_trisegment(a, b)[2], a, b)
+            $cong(draw_trisegment(a, b)[1], a, draw_trisegment(a, b)[1], draw_trisegment(a, b)[2])
+            $cong(draw_trisegment(a, b)[2], draw_trisegment(a, b)[1], draw_trisegment(a, b)[2], b)
+            $trisegment(draw_trisegment(a, b)[1], draw_trisegment(a, b)[2], a, b)
+
+"""
+on_dia x a b
+x : x a b
+a b = diff a b
+x : perp x a x b
+dia a b
+"""
+# 直径端点视角为直角：∠axb 为直角（x 在以 ab 为直径的圆上）
+# On diameter: ∠axb right (Thales)
+prop on_dia(x, a, b point):
+    $diff(a, b)
+    $perp(x, a, x, b)
+
+# 由直径 ab 构造圆上点 x
+# Construct point x on circle with diameter ab
+let draw_on_dia_x fn(a, b point: $diff(a, b)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $perp(draw_on_dia_x(a, b), a, draw_on_dia_x(a, b), b)
+            $on_dia(draw_on_dia_x(a, b), a, b)
+
+"""
+ieq_triangle a b c
+c : a b
+ =
+a : ; b : ; c : cong a b b c, cong b c c a; eqangle a b a c c a c b, eqangle c a c b b c b a
+ieq_triangle
+"""
+# 等边三角形：ab = bc = ca
+# Equilateral triangle: ab = bc = ca
+prop ieq_triangle(a, b, c point):
+    $diff(a, b)
+    $cong(a, b, b, c)
+    $cong(b, c, c, a)
+    $eqangle(a, b, a, c, c, a, c, b)
+    $eqangle(c, a, c, b, b, c, b, a)
+
+# 由线段 ab 构造等边三角形的第三顶点 c
+# Construct third vertex c of equilateral triangle
+let draw_ieq_triangle_c fn(a, b point: $diff(a, b)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $cong(a, b, b, draw_ieq_triangle_c(a, b))
+            $cong(b, draw_ieq_triangle_c(a, b), draw_ieq_triangle_c(a, b), a)
+            $eqangle(a, b, a, draw_ieq_triangle_c(a, b), draw_ieq_triangle_c(a, b), a, draw_ieq_triangle_c(a, b), b)
+            $eqangle(draw_ieq_triangle_c(a, b), a, draw_ieq_triangle_c(a, b), b, b, draw_ieq_triangle_c(a, b), b, a)
+            $ieq_triangle(a, b, draw_ieq_triangle_c(a, b))
+
+"""
+on_opline x a b
+x : x a b
+a b = diff a b
+x : coll x a b
+on_opline a b
+"""
+# 直线上的点（同 on_line）：点 x 在直线 ab 上
+# Point on line (same as on_line): x on ab
+prop on_opline(x, a, b point):
+    $diff(a, b)
+    $coll(x, a, b)
+
+# 由直线 ab 构造其上的点 x
+# Construct point x on line ab
+let draw_on_opline_x fn(a, b point: $diff(a, b)) point
+know:
+    forall a, b point:
+        $diff(a, b)
+        =>:
+            $coll(draw_on_opline_x(a, b), a, b)
+            $on_opline(draw_on_opline_x(a, b), a, b)
+
+"""
+cc_tangent0 x y o a w b
+x : o a w b y, y : o a w b x
+o a w b = diff o a, diff w b, diff o w
+x y : cong o x o a, cong w y w b, perp x o x y, perp y w y x
+cc_tangent0 o a w b
+"""
+# 两圆外公切线：x、y 为两圆外公切线切点
+# External common tangent: x on circle o, y on circle w
+prop cc_tangent0(x, y, o, a, w, b point):
+    $diff(o, a)
+    $diff(w, b)
+    $diff(o, w)
+    $cong(o, x, o, a)
+    $cong(w, y, w, b)
+    $perp(x, o, x, y)
+    $perp(y, w, y, x)
+
+# 由两圆构造外公切线切点 x、y
+# Construct external tangent points x, y of two circles
+let draw_cc_tangent0 fn(o, a, w, b point: $diff(o, a), $diff(w, b), $diff(o, w)) cart(point, point)
+know:
+    forall o, a, w, b point:
+        $diff(o, a)
+        $diff(w, b)
+        $diff(o, w)
+        =>:
+            $cong(o, draw_cc_tangent0(o, a, w, b)[1], o, a)
+            $cong(w, draw_cc_tangent0(o, a, w, b)[2], w, b)
+            $perp(draw_cc_tangent0(o, a, w, b)[1], o, draw_cc_tangent0(o, a, w, b)[1], draw_cc_tangent0(o, a, w, b)[2])
+            $perp(draw_cc_tangent0(o, a, w, b)[2], w, draw_cc_tangent0(o, a, w, b)[2], draw_cc_tangent0(o, a, w, b)[1])
+            $cc_tangent0(draw_cc_tangent0(o, a, w, b)[1], draw_cc_tangent0(o, a, w, b)[2], o, a, w, b)
+
+"""
+cc_tangent x y z i o a w b
+x : o a w b y, y : o a w b x, z : o a w b i, i : o a w b z
+o a w b = diff o a, diff w b, diff o w
+x y : cong o x o a, cong w y w b, perp x o x y, perp y w y x; z i : cong o z o a, cong w i w b, perp z o z i, perp i w i z
+cc_tangent o a w b
+"""
+# 两圆两条外公切线：x、y 为一条，z、i 为另一条
+# Two external common tangents: (x,y) and (z,i)
+prop cc_tangent(x, y, z, i, o, a, w, b point):
+    $diff(o, a)
+    $diff(w, b)
+    $diff(o, w)
+    $cong(o, x, o, a)
+    $cong(w, y, w, b)
+    $perp(x, o, x, y)
+    $perp(y, w, y, x)
+    $cong(o, z, o, a)
+    $cong(w, i, w, b)
+    $perp(z, o, z, i)
+    $perp(i, w, i, z)
+
+# 由两圆构造两条外公切线的四个切点
+# Construct four tangent points of two external tangents
+let draw_cc_tangent fn(o, a, w, b point: $diff(o, a), $diff(w, b), $diff(o, w)) cart(point, point, point, point)
+know:
+    forall o, a, w, b point:
+        $diff(o, a)
+        $diff(w, b)
+        $diff(o, w)
+        =>:
+            $cong(o, draw_cc_tangent(o, a, w, b)[1], o, a)
+            $cong(w, draw_cc_tangent(o, a, w, b)[2], w, b)
+            $perp(draw_cc_tangent(o, a, w, b)[1], o, draw_cc_tangent(o, a, w, b)[1], draw_cc_tangent(o, a, w, b)[2])
+            $perp(draw_cc_tangent(o, a, w, b)[2], w, draw_cc_tangent(o, a, w, b)[2], draw_cc_tangent(o, a, w, b)[1])
+            $cong(o, draw_cc_tangent(o, a, w, b)[3], o, a)
+            $cong(w, draw_cc_tangent(o, a, w, b)[4], w, b)
+            $perp(draw_cc_tangent(o, a, w, b)[3], o, draw_cc_tangent(o, a, w, b)[3], draw_cc_tangent(o, a, w, b)[4])
+            $perp(draw_cc_tangent(o, a, w, b)[4], w, draw_cc_tangent(o, a, w, b)[4], draw_cc_tangent(o, a, w, b)[3])
+            $cc_tangent(draw_cc_tangent(o, a, w, b)[1], draw_cc_tangent(o, a, w, b)[2], draw_cc_tangent(o, a, w, b)[3], draw_cc_tangent(o, a, w, b)[4], o, a, w, b)
+
+"""
+eqangle3 x a b d e f
+x : x a b d e f
+a b d e f = ncoll d e f, diff a b, diff d e, diff e f
+x : eqangle x a x b d e d f
+eqangle3 a b d e f
+"""
+# 等角线第三种形式：∠xab = ∠def
+# Equal-angle line (form 3): ∠xab = ∠def
+prop eqangle3(x, a, b, d, e, f point):
+    $ncoll(d, e, f)
+    $diff(a, b)
+    $diff(d, e)
+    $diff(e, f)
+    $eqangle(x, a, x, b, d, e, d, f)
+
+# 由角 def 和射线 ab 构造满足 ∠xab = ∠def 的点 x
+# Construct x with ∠xab = ∠def
+let draw_eqangle3_x fn(a, b, d, e, f point: $ncoll(d, e, f), $diff(a, b), $diff(d, e), $diff(e, f)) point
+know:
+    forall a, b, d, e, f point:
+        $ncoll(d, e, f)
+        $diff(a, b)
+        $diff(d, e)
+        $diff(e, f)
+        =>:
+            $eqangle(draw_eqangle3_x(a, b, d, e, f), a, draw_eqangle3_x(a, b, d, e, f), b, d, e, d, f)
+            $eqangle3(draw_eqangle3_x(a, b, d, e, f), a, b, d, e, f)
+
+"""
+tangent x y a o b
+x y : o a b
+a o b = diff o a, diff o b, diff a b
+x : cong o x o b, perp a x o x; y : cong o y o b, perp a y o y
+tangent a o b
+"""
+# 从圆外点作圆的切线：从 a 到圆(o,b)的两条切线切点为 x、y
+# Tangents from external point a to circle
+prop tangent(x, y, a, o, b point):
+    $diff(o, a)
+    $diff(o, b)
+    $diff(a, b)
+    $cong(o, x, o, b)
+    $perp(a, x, o, x)
+    $cong(o, y, o, b)
+    $perp(a, y, o, y)
+
+# 由圆外点 a 和圆构造两条切线的切点 x、y
+# Construct tangent points x, y from external point a
+let draw_tangent fn(a, o, b point: $diff(o, a), $diff(o, b), $diff(a, b)) cart(point, point)
+know:
+    forall a, o, b point:
+        $diff(o, a)
+        $diff(o, b)
+        $diff(a, b)
+        =>:
+            $cong(o, draw_tangent(a, o, b)[1], o, b)
+            $perp(a, draw_tangent(a, o, b)[1], o, draw_tangent(a, o, b)[1])
+            $cong(o, draw_tangent(a, o, b)[2], o, b)
+            $perp(a, draw_tangent(a, o, b)[2], o, draw_tangent(a, o, b)[2])
+            $tangent(draw_tangent(a, o, b)[1], draw_tangent(a, o, b)[2], a, o, b)
+
+"""
+on_circum x a b c
+x : a b c
+a b c = ncoll a b c
+x : cyclic a b c x
+cyclic a b c
+"""
+# 外接圆上的点：点 x 在三角形 abc 的外接圆上
+# Point on circumcircle: x on circumcircle of abc
+prop on_circum(x, a, b, c point):
+    $ncoll(a, b, c)
+    # cyclic a b c x 表示 x 在过 a、b、c 的圆上
+    # means x on circle through a, b, c
+
+# 由三角形 abc 构造其外接圆上的点 x
+# Construct point x on circumcircle of triangle abc
+let draw_on_circum_x fn(a, b, c point: $ncoll(a, b, c)) point
+know:
+    forall a, b, c point:
+        $ncoll(a, b, c)
+        =>:
+            $on_circum(draw_on_circum_x(a, b, c), a, b, c)
+
+"""
+Rules-only predicates (not in simplified_def.lit). Base props used by rules are declared here.
+Inference rules use AlphaGeometry-style $... names.
+"""
+# Props moved from simplified_def.lit (only those used by rules below)
+
+prop cyclic(a, b, c, d)
+prop cyclic6(a, b, c, p, q, r)
+prop eqratio(a, b, c, d, m, n, p, q)
+prop eqratio6(d, b, c, a)
+prop eqratio3(a, b, c, d, o)
+prop contri(a, b, c, p, q, r point):
+    $eqangle(b, a, b, c, q, p, q, r)
+    $eqangle(c, a, c, b, r, p, r, q)
+    $eqangle(a, b, a, c, p, q, p, r)
+    $ncoll(a, b, c)
+    $ncoll(p, q, r)
+    $cong(a, b, p, q)
+    $cong(a, c, p, r)
+    $cong(b, c, q, r)
+
+prop contri2(a, b, c, p, q, r)
+prop simtri(a, b, c, p, q, r)
+prop sameside(a, o1, c, b, o2, d)
+
+
+
+# Rule 1
+### rules.txt 单行:perp a b c d, perp c d e f, ncoll a b e => para a b e f
+### If line ab is perpendicular to line cd, and line cd is perpendicular to line ef,
+### and points a, b, e are not collinear, then line ab is parallel to line ef.
+### 如果直线ab垂直于直线cd，直线cd垂直于直线ef，且点a、b、e不共线，则直线ab平行于直线ef。
+know:
+    forall a, b, c, d, e, f point:
+        $perp(a, b, c, d)
+        $perp(c, d, e, f)
+        $ncoll(a, b, e)
+        =>:
+            $para(a, b, e, f)
+
+# Rule 2
+### rules.txt 单行:cong o a o b, cong o b o c, cong o c o d => cyclic a b c d
+### If segments oa, ob, oc, od are all congruent (oa ≅ ob ≅ oc ≅ od),
+### then points a, b, c, d are concyclic (lie on the same circle).
+### 如果线段oa、ob、oc、od都相等（oa ≅ ob ≅ oc ≅ od），则点a、b、c、d共圆。
+know:
+    forall o, a, b, c, d point:
+        $cong(o, a, o, b)
+        $cong(o, b, o, c)
+        $cong(o, c, o, d)
+        =>:
+            $cyclic(a, b, c, d)
+
+# Rule 3
+### rules.txt 单行:eqangle a b p q c d p q => para a b c d
+### 自然语言:若 \(\angle(ab,pq)=\angle(cd,pq)\)（两条直线 ab 与 cd 相对同一参考直线 pq 的夹角相等），则 ab ∥ cd。
+### If ∠(ab,pq)=∠(cd,pq) (equal angles with respect to line pq), then ab ∥ cd.
+know:
+    forall a, b, c, d, p, q point:
+        $eqangle(a, b, p, q, c, d, p, q)
+        =>:
+            $para(a, b, c, d)
+    forall a, b, c, d, p, q point:
+        $para(a, b, c, d)
+        =>:
+            $eqangle(a, b, p, q, c, d, p, q)
+
+
+# Rule 4
+### rules.txt 单行:cyclic a b p q => eqangle p a p b q a q b
+### 自然语言:同圆定理（同弦所对圆周角相等）:若 a,b,p,q 共圆，则 \(\angle apb = \angle aqb\)（同为弦 ab 所对的圆周角）。
+### Inscribed angle theorem: if a,b,p,q are concyclic, then ∠apb = ∠aqb (angles subtended by chord ab).
+know:
+    forall a, b, p, q point:
+        $cyclic(a, b, p, q)
+        =>:
+            $eqangle(p, a, p, b, q, a, q, b)
+
+# Rule 5
+### rules.txt 单行:eqangle6 p a p b q a q b, ncoll p q a b => cyclic a b p q
+### 自然语言:圆周角定理的逆:若 \(\angle apb=\angle aqb\)，并且不出现 p,q,a,b 全共线的退化情况，则 a,b,p,q 共圆。
+### Converse of inscribed angle theorem: if ∠apb = ∠aqb and p,q,a,b not collinear, then a,b,p,q are concyclic.
+know:
+    forall p, a, b, q point:
+        $eqangle(p, a, p, b, q, a, q, b)
+        $ncoll2(p, q, a, b)
+        =>:
+            $cyclic(a, b, p, q)
+
+# Rule 6
+### rules.txt 单行:cyclic a b c p q r, eqangle c a c b r p r q => cong a b p q
+### 自然语言:同圆中"等角对等弦":在同一圆上，若圆周角 \(\angle acb\) 与 \(\angle prq\) 相等，则它们所对的弦 ab 与 pq 相等。
+### Equal angles subtend equal chords: on the same circle, if ∠acb = ∠prq, then chord ab = chord pq.
+know:
+    forall a, b, c, p, q, r point:
+        $cyclic6(a, b, c, p, q, r)
+        $eqangle(c, a, c, b, r, p, r, q)
+        =>:
+            $cong(a, b, p, q)
+
+# Rule 7
+### rules.txt 单行:midp e a b, midp f a c => para e f b c
+### 自然语言:三角形中位线定理:若 e、f 分别是 ab、ac 的中点，则 ef ∥ bc。
+### Midsegment theorem: if e, f are midpoints of ab, ac, then ef ∥ bc.
+know:
+    forall e, a, b, f, c point:
+        $ncoll(a, b, c)
+        $midpoint(e, a, b)
+        $midpoint(f, a, c)
+        =>:
+            $para(e, f, b, c)
+
+# Rule 8
+### rules.txt 单行:para a b c d, coll o a c, coll o b d => eqratio3 a b c d o o
+### 自然语言:平行线截比/相似带来的比例结论:ab ∥ cd 且 o 分别在 ac、bd 上时，会导出关于 a,b,c,d 与交点 o 的一个比例关系。
+### Parallel intercept theorem: if ab ∥ cd and o lies on ac, bd, then a ratio holds among a,b,c,d and o.
+know:
+    forall a, b, c, d, o point:
+        $para(a, b, c, d)
+        $coll(o, a, c)
+        $coll(o, b, d)
+        =>:
+            $eqratio3(a, b, c, d, o)
+
+# Rule 9
+### rules.txt 单行:perp a b c d, perp e f g h, npara a b e f => eqangle a b e f c d g h
+### 自然语言:若 ab ⟂ cd 且 ef ⟂ gh，则 \(\angle(ab,ef)=\angle(cd,gh)\)；再加 "ab 与 ef 不平行" 用来排除夹角为 0/180° 的退化情况。
+### If ab ⟂ cd and ef ⟂ gh, then ∠(ab,ef)=∠(cd,gh); "ab not parallel to ef" excludes 0/180° degenerate case.
+know:
+    forall a, b, c, d, e, f, g, h point:
+        $perp(a, b, c, d)
+        $perp(e, f, g, h)
+        $npara(a, b, e, f)
+        =>:
+            $eqangle(a, b, e, f, c, d, g, h)
+
+# Rule 10
+### rules.txt 单行:eqangle a b c d m n p q, eqangle c d e f p q r u => eqangle a b e f m n r u
+### 自然语言:第一组:∠(ab, cd) = ∠(mn, pq)第二组:∠(cd, ef) = ∠(pq, ru)
+### 结论:∠(ab, ef) = ∠(mn, ru)
+### Group 1: ∠(ab, cd) = ∠(mn, pq); Group 2: ∠(cd, ef) = ∠(pq, ru) => ∠(ab, ef) = ∠(mn, ru).
+know:
+    forall a, b, c, d, m, n, p, q, e, f, r, u point:
+        $eqangle(a, b, c, d, m, n, p, q)
+        $eqangle(c, d, e, f, p, q, r, u)
+        =>:
+            $eqangle(a, b, e, f, m, n, r, u)
+
+# Rule 11
+### rules.txt 单行:eqratio a b c d m n p q, eqratio c d e f p q r u => eqratio a b e f m n r u
+### 自然语言:比例关系的传递性:若 ab/cd = mn/pq 且 cd/ef = pq/ru，则 ab/ef = mn/ru。
+### Ratio transitivity: if ab/cd = mn/pq and cd/ef = pq/ru, then ab/ef = mn/ru.
+know:
+    forall a, b, c, d, m, n, p, q, e, f, r, u point:
+        $eqratio(a, b, c, d, m, n, p, q)
+        $eqratio(c, d, e, f, p, q, r, u)
+        =>:
+            $eqratio(a, b, e, f, m, n, r, u)
+
+# Rule 12
+### rules.txt 单行:eqratio6 d b d c a b a c, coll d b c, ncoll a b c => eqangle6 a b a d a d a c
+### 自然语言:若 db/dc = ab/ac，且 d, b, c 共线，a, b, c 不共线，则角 bad 等于角 cad（即 ad 是角 bac 的角平分线）。
+### If db/dc = ab/ac, d,b,c collinear, a,b,c non-collinear, then ∠bad = ∠cad (ad is angle bisector of ∠bac).
+know:
+    forall d, b, c, a point:
+        $eqratio6(d, b, c, a)
+        $coll(d, b, c)
+        $ncoll(a, b, c)
+        =>:
+            $eqangle(a, b, a, d, a, d, a, c)
+
+# Rule 13
+### rules.txt 单行:eqangle6 a b a d a d a c, coll d b c, ncoll a b c => eqratio6 d b d c a b a c
+### 自然语言:Rule 12 的逆:若角 bad 等于角 cad（即 ad 是角 bac 的角平分线），且 d, b, c 共线，a, b, c 不共线，则 db/dc = ab/ac（角平分线定理）。
+### Converse of Rule 12 / Angle bisector theorem: if ∠bad = ∠cad (ad bisects ∠bac), then db/dc = ab/ac.
+know:
+    forall a, b, d, c point:
+        $eqangle(a, b, a, d, a, d, a, c)
+        $coll(d, b, c)
+        $ncoll(a, b, c)
+        =>:
+            $eqratio6(d, b, c, a)
+
+# Rule 14
+### rules.txt 单行:cong o a o b, ncoll o a b => eqangle o a a b a b o b
+### 自然语言:等腰三角形底角相等:若 oa = ob（等腰三角形），且 o, a, b 不共线，则角 oab 等于角 oba。
+### Isosceles triangle base angles: if oa = ob and o,a,b non-collinear, then ∠oab = ∠oba.
+know:
+    forall o, a, b point:
+        $cong(o, a, o, b)
+        $ncoll(o, a, b)
+        =>:
+            $eqangle(o, a, a, b, a, b, o, b)
+
+# Rule 15
+### rules.txt 单行:eqangle6 a o a b b a b o, ncoll o a b => cong o a o b
+### 自然语言:Rule 14 的逆:若角 aob 等于角 bao（即角 oab = 角 oba），且 o, a, b 不共线，则 oa = ob（等腰三角形判定）。
+### Converse of Rule 14: if ∠oab = ∠oba and o,a,b non-collinear, then oa = ob (isosceles triangle).
+know:
+    forall a, o, b point:
+        $eqangle(a, o, a, b, b, a, b, o)
+        $ncoll(o, a, b)
+        =>:
+            $cong(o, a, o, b)
+
+# Rule 16
+### rules.txt 单行:circle o a b c, perp o a a x => eqangle a x a b c a c b
+### 自然语言:圆的切线性质:若 o 为圆心，a, b, c 在圆上，且直线 oa 垂直于直线 ax（即 ax 是切线），则角 xab 等于角 acb（切线与弦的夹角等于同弧所对的圆周角）。
+### Tangent-chord angle: if o is center, a,b,c on circle, oa ⟂ ax (ax tangent), then ∠xab = ∠acb.
+prop tline_eqangle(o,a, b, c ,x point):
+    $eqangle(a, x, a, b, c, a, c, b)
+know:
+    forall o, a, b, c, x point:
+        $ncoll(a, b, c)
+        $circle(o, a, b, c)
+        $perp(o, a, a, x)
+        =>:
+            $tline_eqangle(o,a, b, c, x)
+
+# Rule 17
+### rules.txt 单行:circle o a b c, eqangle a x a b c a c b => perp o a a x
+### 自然语言:Rule 16 的逆:若 o 为圆心，a, b, c 在圆上，且角 xab 等于角 acb，则直线 oa 垂直于直线 ax（切线判定）。
+### Converse of Rule 16 / Tangent criterion: if ∠xab = ∠acb, then oa ⟂ ax (ax is tangent).
+know:
+    forall o, a, b, c, x point:
+        $ncoll(a, b, c)
+        $circle(o, a, b, c)
+        $eqangle(a, x, a, b, c, a, c, b)
+        =>:
+            $perp(o, a, a, x)
+
+# Rule 18
+### rules.txt 单行:circle o a b c, midp m b c => eqangle a b a c o b o m
+### 自然语言:圆的性质:若 o 为圆心，a, b, c 在圆上，且 m 是 bc 的中点，则角 bac 等于角 bom（圆心角与圆周角的关系）。
+### Central angle vs inscribed angle: if m is midpoint of bc, then ∠bac = ∠bom.
+know:
+    forall o, a, b, c, m point:
+        $circle(o, a, b, c)
+        $midpoint(m, b, c)
+        =>:
+            $eqangle(a, b, a, c, o, b, o, m)
+
+# Rule 19
+### rules.txt 单行:circle o a b c, coll m b c, eqangle a b a c o b o m => midp m b c
+### 自然语言:Rule 18 的逆:若 o 为圆心，a, b, c 在圆上，m 在直线 bc 上，且角 bac 等于角 bom，则 m 是 bc 的中点。
+### Converse of Rule 18: if m on bc and ∠bac = ∠bom, then m is midpoint of bc.
+know:
+    forall o, a, b, c, m point:
+        $circle(o, a, b, c)
+        $coll(m, b, c)
+        $eqangle(a, b, a, c, o, b, o, m)
+        =>:
+            $midpoint(m, b, c)
+
+# Rule 20
+### rules.txt 单行:perp a b b c, midp m a c => cong a m b m
+### 自然语言:直角三角形斜边中点性质:若 ab 垂直于 bc（即角 abc 是直角），且 m 是 ac 的中点，则 am = bm（直角三角形斜边上的中线等于斜边的一半，因此 m 到 a 和 b 的距离相等）。
+### Right triangle median: if ∠abc is right and m is midpoint of ac, then am = bm.
+know:
+    forall a, b, c, m point:
+        $perp(a, b, b, c)
+        $midpoint(m, a, c)
+        =>:
+            $cong(a, m, b, m)
+
+# Rule 21
+### rules.txt 单行:circle o a b c, coll o a c => perp a b b c
+### 自然语言:圆的性质:若 o 为圆心，a, b, c 在圆上，且 o, a, c 共线（即 ac 是直径），则 ab 垂直于 bc（直径所对的圆周角是直角）。
+### Thales' theorem: if ac is diameter, then ∠abc is right (ab ⟂ bc).
+know:
+    forall o, a, b, c point:
+        $ncoll(a, b, c)
+        $circle(o, a, b, c)
+        $coll(o, a, c)
+        =>:
+            $perp(a, b, b, c)
+
+# Rule 22
+### rules.txt 单行:cyclic a b c d, para a b c d => eqangle a d c d c d c b
+### 自然语言:圆内接梯形的性质:若 a, b, c, d 共圆，且 ab ∥ cd，则角 adc 等于角 bcd（同底角相等）。
+### Cyclic trapezoid: if a,b,c,d concyclic and ab ∥ cd, then ∠adc = ∠bcd.
+know:
+    forall a, b, c, d point:
+        $cyclic(a, b, c, d)
+        $para(a, b, c, d)
+        =>:
+            $eqangle(a, d, c, d, c, d, c, b)
+
+# Rule 23
+### rules.txt 单行:midp m a b, perp o m a b => cong o a o b
+### 自然语言:垂直平分线的性质:若 m 是 ab 的中点，且直线 om 垂直于 ab，则 oa = ob（o 在 ab 的垂直平分线上，因此到 a 和 b 的距离相等）。
+### Perpendicular bisector: if m is midpoint of ab and om ⟂ ab, then oa = ob.
+know:
+    forall m, a, b, o point:
+        $midpoint(m, a, b)
+        $perp(o, m, a, b)
+        =>:
+            $cong(o, a, o, b)
+
+# Rule 24
+### rules.txt 单行:cong a p b p, cong a q b q => perp a b p q
+### 自然语言:到两点距离相等的点的轨迹:若 ap = bp 且 aq = bq（p 和 q 都在 ab 的垂直平分线上），则 ab 垂直于 pq。
+### Locus of equidistant points: if ap = bp and aq = bq, then ab ⟂ pq.
+know:
+    forall a, p, b, q point:
+        $cong(a, p, b, p)
+        $cong(a, q, b, q)
+        =>:
+            $perp(a, b, p, q)
+
+# Rule 25
+### rules.txt 单行:cong a p b p, cong a q b q, cyclic a b p q => perp p a a q
+### 自然语言:圆的性质:若 ap = bp，aq = bq，且 a, b, p, q 共圆，则 pa 垂直于 aq（a 是圆心，pa 和 aq 是半径，因此垂直）。
+### If a,b,p,q concyclic with ap = bp = aq = bq (a center), then pa ⟂ aq.
+know:
+    forall a, p, b, q point:
+        $cong(a, p, b, p)
+        $cong(a, q, b, q)
+        $cyclic(a, b, p, q)
+        =>:
+            $perp(p, a, a, q)
+
+# Rule 26
+### rules.txt 单行:midp m a b, midp m c d => para a c b d
+### 自然语言:中点连线性质:若 m 既是 ab 的中点，也是 cd 的中点，则 ac ∥ bd（对角线互相平分的四边形是平行四边形）。
+### Parallelogram diagonals: if m bisects both ab and cd, then ac ∥ bd (parallelogram).
+know:
+    forall m, a, b, c, d point:
+        $midpoint(m, a, b)
+        $midpoint(m, c, d)
+        =>:
+            $para(a, c, b, d)
+
+# Rule 27
+### rules.txt 单行:midp m a b, para a c b d, para a d b c => midp m c d
+### 自然语言:Rule 26 的逆:若 m 是 ab 的中点，且 ac ∥ bd，ad ∥ bc（即 abcd 是平行四边形），则 m 也是 cd 的中点。
+### Converse of Rule 26: if abcd is parallelogram (ac∥bd, ad∥bc) and m midpoint of ab, then m midpoint of cd.
+know:
+    forall m, a, b, c, d point:
+        $midpoint(m, a, b)
+        $para(a, c, b, d)
+        $para(a, d, b, c)
+        =>:
+            $midpoint(m, c, d)
+
+# Rule 28
+### rules.txt 单行:eqratio o a a c o b b d, coll o a c, coll o b d, ncoll a b c, sameside a o c b o d => para a b c d
+### 自然语言:比例判定平行:若 oa/ac = ob/bd，o 在 ac 上，o 在 bd 上，a, b, c 不共线，且 a, c 在 o 的同侧，b, d 在 o 的同侧，则 ab ∥ cd。
+### Parallel by ratio: if oa/ac = ob/bd with sameside condition, then ab ∥ cd.
+know:
+    forall o, a, c, b, d point:
+        $eqratio(o, a, a, c, o, b, b, d)
+        $coll(o, a, c)
+        $coll(o, b, d)
+        $ncoll(a, b, c)
+        $sameside(a, o, c, b, o, d)
+        =>:
+            $para(a, b, c, d)
+
+# Rule 29
+### rules.txt 单行:para a b a c => coll a b c
+### 自然语言:平行线的退化情况:若 ab ∥ ac（两条直线都经过点 a），则 a, b, c 共线（同一直线）。
+### Degenerate parallel: if ab ∥ ac (both through a), then a, b, c are collinear.
+know:
+    forall a, b, c point:
+        $para(a, b, a, c)
+        =>:
+            $coll(a, b, c)
+
+# Rule 30
+### rules.txt 单行:midp m a b, midp n c d => eqratio m a a b n c c d
+### 自然语言:中点比例关系:若 m 是 ab 的中点，n 是 cd 的中点，则 ma/ab = nc/cd（都等于 1/2）。
+### Midpoint ratio: if m, n are midpoints of ab, cd, then ma/ab = nc/cd (= 1/2).
+know:
+    forall m, a, b, n, c, d point:
+        $midpoint(m, a, b)
+        $midpoint(n, c, d)
+        =>:
+            $eqratio(m, a, a, b, n, c, c, d)
+
+# Rule 31
+### rules.txt 单行:eqangle a b p q c d u v, perp p q u v => perp a b c d
+### 自然语言:若直线 ab 与 pq 的夹角等于直线 cd 与 uv 的夹角，且 pq 垂直于 uv，则 ab 垂直于 cd。
+### If ∠(ab,pq) = ∠(cd,uv) and pq ⟂ uv, then ab ⟂ cd.
+know:
+    forall a, b, p, q, c, d, u, v point:        
+        $eqangle(a, b, p, q, c, d, u, v)
+        $perp(p, q, u, v)
+        =>:
+            $perp(a, b, c, d)
+
+# Rule 32
+### rules.txt 单行:eqratio a b p q c d u v, cong p q u v => cong a b c d
+### 自然语言:若 ab/pq = cd/uv，且 pq = uv，则 ab = cd。
+### If ab/pq = cd/uv and pq = uv, then ab = cd.
+know:
+    forall a, b, p, q, c, d, u, v point:
+        $eqratio(a, b, p, q, c, d, u, v)
+        $cong(p, q, u, v)
+        =>:
+            $cong(a, b, c, d)
+
+# Rule 33
+### rules.txt 单行:cong a b p q, cong b c q r, cong c a r p, ncoll a b c => contri* a b c p q r
+### 自然语言:全等三角形判定（SSS）:若 ab = pq，bc = qr，ca = rp，且 a, b, c 不共线，则三角形 abc 与三角形 pqr 全等。
+### SSS congruence: if ab=pq, bc=qr, ca=rp and a,b,c non-collinear, then Δabc ≅ Δpqr.
+know:
+    forall a, b, c, p, q, r point:
+        $cong(a, b, p, q)
+        $cong(b, c, q, r)
+        $cong(c, a, r, p)
+        $ncoll(a, b, c)
+        $ncoll(p, q, r)
+        =>:
+            $contri(a, b, c, p, q, r)
+
+# Rule 34
+### rules.txt 单行:cong a b p q, cong b c q r, eqangle6 b a b c q p q r, ncoll a b c => contri* a b c p q r
+### 自然语言:全等三角形判定（SAS）:若 ab = pq，bc = qr，角 abc = 角 pqr，且 a, b, c 不共线，则三角形 abc 与三角形 pqr 全等。
+### SAS congruence: if ab=pq, bc=qr, ∠abc=∠pqr, then Δabc ≅ Δpqr.
+know:
+    forall a, b, c, p, q, r point:
+        $cong(a, b, p, q)
+        $cong(b, c, q, r)
+        $eqangle(b, a, b, c, q, p, q, r)
+        $ncoll(a, b, c)
+        $ncoll(p, q, r)
+        =>:
+            $contri(a, b, c, p, q, r)
+
+# Rule 35
+### rules.txt 单行:eqangle6 b a b c q p q r, eqangle6 c a c b r p r q, ncoll a b c => simtri a b c p q r
+### 自然语言:相似三角形判定（AA）:若角 abc = 角 pqr，角 acb = 角 prq，且 a, b, c 不共线，则三角形 abc 与三角形 pqr 相似。
+### AA similarity: if ∠abc=∠pqr, ∠acb=∠prq, then Δabc ~ Δpqr.
+know:
+    forall a, b, c, p, q, r point:
+        $eqangle(b, a, b, c, q, p, q, r)
+        $eqangle(c, a, c, b, r, p, r, q)
+        $ncoll(a, b, c)
+        $ncoll(p, q, r)
+        =>:
+            $simtri(a, b, c, p, q, r)
+
+# Rule 36
+### rules.txt 单行:eqangle6 b a b c q r q p, eqangle6 c a c b r q r p, ncoll a b c => simtri2 a b c p q r
+### 自然语言:相似三角形判定（AA，交替方向）:若角 abc = 角 qrp，角 acb = 角 rqp，且 a, b, c 不共线，则三角形 abc 与三角形 pqr 相似（交替方向）。
+### AA similarity (alternate orientation): if ∠abc=∠qrp, ∠acb=∠rqp, then Δabc ~ Δpqr.
+###不必要
+
+# Rule 37
+### rules.txt 单行:eqangle6 b a b c q p q r, eqangle6 c a c b r p r q, ncoll a b c, cong a b p q => contri a b c p q r
+### 自然语言:全等三角形判定（ASA）:若角 abc = 角 pqr，角 acb = 角 prq，ab = pq，且 a, b, c 不共线，则三角形 abc 与三角形 pqr 全等。
+### ASA congruence: if ∠abc=∠pqr, ∠acb=∠prq, ab=pq, then Δabc ≅ Δpqr.
+know:
+    forall a, b, c, p, q, r point:
+        $eqangle(b, a, b, c, q, p, q, r)
+        $eqangle(c, a, c, b, r, p, r, q)
+        $ncoll(a, b, c)
+        $ncoll(p, q, r)
+        $cong(a, b, p, q)
+        =>:
+            $contri(a, b, c, p, q, r)
+
+# Rule 38
+### rules.txt 单行:eqangle6 b a b c q r q p, eqangle6 c a c b r q r p, ncoll a b c, cong a b p q => contri2 a b c p q r
+### 自然语言:全等三角形判定（AAS，交替方向）:若角 abc = 角 qrp，角 acb = 角 rqp，ab = pq，且 a, b, c 不共线，则三角形 abc 与三角形 pqr 全等。
+### AAS congruence (alternate): if ∠abc=∠qrp, ∠acb=∠rqp, ab=pq, then Δabc ≅ Δpqr.
+know:
+    forall a, b, c, p, q, r point:
+        $eqangle(b, a, b, c, q, r, q, p)
+        $eqangle(c, a, c, b, r, q, r, p)
+        $ncoll(a, b, c)
+        $ncoll(p, q, r)
+        $cong(a, b, p, q)
+        =>:
+            $contri2(a, b, c, p, q, r)
+
+# Rule 39
+### rules.txt 单行:eqratio6 b a b c q p q r, eqratio6 c a c b r p r q, ncoll a b c => simtri* a b c p q r
+### 自然语言:相似三角形判定（SSS）:若 ba/bc = qp/qr，ca/cb = rp/rq，且 a, b, c 不共线，则三角形 abc 与三角形 pqr 相似。
+### SSS similarity: if ba/bc=qp/qr, ca/cb=rp/rq, then Δabc ~ Δpqr.
+know:
+    forall a, b, c, p, q, r point:
+        $eqratio(b, a, b, c, q, p, q, r)
+        $eqratio(c, a, c, b, r, p, r, q)
+        $ncoll(a, b, c)
+        $ncoll(p, q, r)
+        =>:
+            $simtri(a, b, c, p, q, r)
+
+# Rule 40
+### rules.txt 单行:eqratio6 b a b c q p q r, eqangle6 b a b c q p q r, ncoll a b c => simtri* a b c p q r
+### 自然语言:相似三角形判定（SAS）:若 ba/bc = qp/qr，角 abc = 角 pqr，且 a, b, c 不共线，则三角形 abc 与三角形 pqr 相似。
+### SAS similarity: if ba/bc=qp/qr, ∠abc=∠pqr, then Δabc ~ Δpqr.
+know:
+    forall a, b, c, p, q, r point:
+        $eqratio(b, a, b, c, q, p, q, r)
+        $eqangle(b, a, b, c, q, p, q, r)
+        $ncoll(a, b, c)
+        $ncoll(p, q, r)
+        =>:
+            $simtri(a, b, c, p, q, r)
+
+# Rule 41
+### rules.txt 单行:eqratio6 b a b c q p q r, eqratio6 c a c b r p r q, ncoll a b c, cong a b p q => contri* a b c p q r
+### 自然语言:全等三角形判定（SSS，通过比例）:若 ba/bc = qp/qr，ca/cb = rp/rq，ab = pq，且 a, b, c 不共线，则三角形 abc 与三角形 pqr 全等。
+### SSS congruence (via ratios): if ba/bc=qp/qr, ca/cb=rp/rq, ab=pq, then Δabc ≅ Δpqr.
+know:
+    forall a, b, c, p, q, r point:
+        $eqratio(b, a, b, c, q, p, q, r)
+        $eqratio(c, a, c, b, r, p, r, q)
+        $ncoll(a, b, c)
+        $ncoll(p, q, r)
+        $cong(a, b, p, q)
+        =>:
+            $contri(a, b, c, p, q, r)
+
+# Rule 42
+### rules.txt 单行:para a b c d, coll m a d, coll n b c, eqratio6 m a m d n b n c, sameside m a d n b c => para m n a b
+### 自然语言:平行线截比定理:若 ab ∥ cd，m 在直线 ad 上，n 在直线 bc 上，ma/md = nb/nc，且 m, a, d 与 n, b, c 在各自直线的同侧，则 mn ∥ ab。
+### Intercept theorem: if ab ∥ cd, m on ad, n on bc, ma/md=nb/nc (sameside), then mn ∥ ab.
+### 注:sameside m a d 表示 m, a, d 在一条直线的同侧，这里简化为 m 不在 a 和 d 之间。
+know:
+    forall a, b, c, d, m, n point:
+        $para(a, b, c, d)
+        $coll(m, a, d)
+        $coll(n, b, c)
+        $eqratio(m, a, m, d, n, b, n, c)
+        $sameside(m, a, d, n, b, c)
+        =>:
+            $para(m, n, a, b)
+
+# Rule 43
+### rules.txt 单行:para a b c d, coll m a d, coll n b c, para m n a b => eqratio6 m a m d n b n c
+### 自然语言:Rule 42 的逆:若 ab ∥ cd，m 在直线 ad 上，n 在直线 bc 上，且 mn ∥ ab，则 ma/md = nb/nc。
+### Converse of intercept theorem: if ab ∥ cd, m on ad, n on bc, mn ∥ ab, then ma/md = nb/nc.
+know:
+    forall a, b, c, d, m, n point:
+        $para(a, b, c, d)
+        $coll(m, a, d)
+        $coll(n, b, c)
+        $para(m, n, a, b)
+        =>:
+            $eqratio(m, a, m, d, n, b, n, c)
+
+"""
+IMO 2000 P1
+a b = segment a b; g1 = on_tline g1 a a b; 
+g2 = on_tline g2 b b a; m = on_circle m g1 a, on_circle m g2 b; 
+n = on_circle n g1 a, on_circle n g2 b; c = on_pline c m a b, on_circle c g1 a; 
+d = on_pline d m a b, on_circle d g2 b; e = on_line e a c, on_line e b d; 
+p = on_line p a n, on_line p c d; q = on_line q b n, on_line q c d 
+? cong e p e q
+"""
+
+let a,b,g1,g2,m,n,c,d,e,p,q point
+know:
+    $segment(a, b)
+    $on_tline(g1, a, a, b)
+    $on_tline(g2, b, b, a)
+    $on_circle(m, g1, a)
+    $on_circle(m, g2, b)
+    $on_circle(n, g1, a)
+    $on_circle(n, g2, b)
+    $on_pline(c, m, a, b)
+    $on_circle(c, g1, a)
+    $on_pline(d, m, a, b)
+    $on_circle(d, g2, b)
+    $on_line(e, a, c)
+    $on_line(e, b, d)
+    $on_line(p, a, n)
+    $on_line(p, c, d)
+    $on_line(q, b, n)
+    $on_line(q, c, d)
+    $ncoll(b,d,m)
+    $ncoll(a,m,c)
+    $ncoll(m,b,e)
+    $is_circumcenter(g2, b, d, m) #??
+    $is_circumcenter(g1, a, c, m) #???
+    $circle(g1,a,m,c) #???
+    $circle(g2,b,d,m) #???
+    $eqangle(b,a,b,d,b,a,b,e) #归一一下直线夹角
+    $eqangle(m,b,m,d,b,m,b,a) #归一一下平行线夹角
+    $eqangle(b,m,b,a,b,a,b,e) #归一一下夹角传递性
+    $angle_bisector(a,m,b,e)  #???
+    $eqangle(c,a,c,m,a,b,a,e) #平行线夹角
+    $eqangle(a,b,a,e,a,m,a,b) #归一一下角传递性  
+    $ncoll(m,a,e)
+    $angle_bisector(b,m,a,e)
+    $ncoll(a,b,e)
+    $ncoll(a,b,m)
+    $contri(a,b,e,a,b,m)
+    
+
+
+#step 1:
+know:
+    forall _g2, _b, _d, _m point:
+        $cong(_g2, _b, _g2, _d)
+        $cong(_g2, _b, _g2, _m)
+        $ncoll(_b, _d, _m)
+        =>:
+            $congtransitive(_g2, _b, _d, _m)
+            $cong(_g2, _d, _g2, _m)
+            $is_circumcenter(_g2, _b, _d, _m)
+    $cong(g2,b,g2,d)
+    $cong(g2,b,g2,m)
+    $ncoll(b,d,m)
+$congtransitive(g2,b,d,m)
+$cong(g2,d,g2,m)
+$is_circumcenter(g2, b, d, m) #???
+"""
+prop is_circumcenter(x, a, b, c point):
+    $ncoll(a, b, c)
+    $cong(x, a, x, b)
+    $cong(x, b, x, c)
+"""
+
+#step 2:
+know:
+    forall _g2, _b, _d, _m, _a point:
+        $perp(_g2, _b, _b, _a)
+        $ncoll(_b, _d, _m)
+        $circle(_g2, _b, _d, _m)
+        =>:
+            $tline_eqangle(_g2, _b, _d, _m, _a)
+            $eqangle(_b, _a, _b, _d, _m, _b, _m, _d)
+    $perp(g2,b,b,a)
+    $ncoll(b,d,m)
+    $circle(g2,b,d,m)
+#ABD= BMD.
+$tline_eqangle(g2,b,d,m,a)
+$eqangle(b,a,b,d,m,b,m,d)
+
+#step 3:
+know:
+    forall _a, _g1, _c, _m point:
+        $cong(_a, _g1, _c, _g1)
+        $cong(_a, _g1, _g1, _m)
+        =>:
+            $is_circumcenter(_g1, _a, _c, _m)
+    $cong(a,g1,c,g1)
+    $cong(a,g1,g1,m)
+$is_circumcenter(g1, a, c, m)
+
+#step 4:
+know:
+    forall _g1, _a, _m, _c, _b point:
+        $perp(_g1, _a, _a, _b)
+        $ncoll(_a, _m, _c)
+        $circle(_g1, _a, _m, _c)
+        =>:
+            $tline_eqangle(_g1, _a, _m, _c, _b)
+            $eqangle(_a, _b, _a, _m, _c, _a, _c, _m)
+    $perp(g1,a,a,b)
+    $ncoll(a,m,c)
+    $circle(g1,a,m,c)
+# BAM= ACM
+$tline_eqangle(g1,a,m,c,b)
+$eqangle(a,b,a,m,c,a,c,m)
+
+#step 5:
+know:
+    forall _e, _b, _d, _a, _m point:
+        $coll(_e, _b, _d)
+        $eqangle(_b, _a, _b, _d, _b, _a, _b, _e)
+        $eqangle(_b, _a, _b, _d, _m, _b, _m, _d)
+        $para(_d, _m, _a, _b)
+        $eqangle(_m, _b, _m, _d, _b, _m, _b, _a)
+        $ncoll(_m, _b, _e)
+        $eqangle(_b, _m, _b, _a, _b, _a, _b, _e)
+        =>:
+            $angle_bisector(_a, _m, _b, _e)
+    $coll(e,b,d)
+    $eqangle(b,a,b,d,b,a,b,e)
+    $eqangle(b,a,b,d,m,b,m,d)
+    $para(d,m,a,b)
+    $eqangle(m,b,m,d,b,m,b,a)
+    $ncoll(m,b,e)
+    $eqangle(b,m,b,a,b,a,b,e)
+$angle_bisector(a,m,b,e)  #??? 
+"""
+prop angle_bisector(x, a, b, c point):
+    $ncoll(a, b, c)
+    $eqangle(b, a, b, x, b, x, b, c)
+""" 
+
+#step 6:
+know:
+    forall _e, _a, _c, _b, _m point:
+        $coll(_e, _a, _c)
+        $eqangle(_a, _b, _a, _m, _c, _a, _c, _m)
+        $para(_c, _m, _a, _b)
+        $eqangle(_c, _a, _c, _m, _a, _b, _a, _e)
+        $eqangle(_a, _b, _a, _e, _a, _m, _a, _b)
+        $ncoll(_m, _a, _e)
+        =>:
+            $angle_bisector(_b, _m, _a, _e)
+    $coll(e,a,c)
+    $eqangle(a,b,a,m,c,a,c,m)
+    $para(c,m,a,b)
+    $eqangle(c,a,c,m,a,b,a,e)
+    $eqangle(a,b,a,e,a,m,a,b)
+    $ncoll(m,a,e)
+$angle_bisector(b,m,a,e)
+
+#step 7:
+know:
+    forall _a, _b, _e, _m point:
+        $angle_bisector(_b, _m, _a, _e)
+        $angle_bisector(_a, _m, _b, _e)
+        $cong(_a, _b, _a, _b)
+        $ncoll(_a, _b, _e)
+        $ncoll(_a, _b, _m)
+        =>:
+            $contri(_a, _b, _e, _a, _b, _m)
+            $cong(_a, _e, _a, _m)
+            $cong(_b, _e, _b, _m)
+    $angle_bisector(b,m,a,e)
+    $angle_bisector(a,m,b,e)
+    $cong(a,b,a,b)
+    $ncoll(a,b,e)
+    $ncoll(a,b,m)
+$contri(a,b,e,a,b,m)
+#AE = AM  
+$cong(a,e,a,m)
+#BE = BM
+$cong(b,e,b,m)
+
+#step 8:
+know:
+    forall _a, _g1, _m, _n point:
+        $ncoll(_a, _g1, _m)# AG1 = G1M
+        $ncoll(_a, _g1, _n)# AG1 = G1N
+        =>:
+            $cong(_a,_g1,_g1,_m)
+            $cong(_a,_g1,_g1,_n)
+            $is_circumcenter(_g1, _a, _m, _n)# G1 is the circumcenter of AMN
+    $ncoll(a,g1,m)
+    $ncoll(a,g1,n)
+    $cong(a,g1,g1,m)
+    $cong(a,g1,g1,n)
+$is_circumcenter(g1, a, m, n)
+
+#step 9:
+know:
+    forall _a, _b, _g1, _m, _n point:
+        $is_circumcenter(_g1, _a, _m, _n)
+        $perp(_a, _b, _a, _g1)
+        =>:
+            $eqangle(_a, _b, _a, _m, _n, _a, _n, _m)
+            $eqangle(_a, _b, _a, _n, _m, _a, _m, _n)
+    $is_circumcenter(g1, a, m, n)
+    $perp(a,b,a,g1)
+    $eqangle(a,b,a,m,n,a,n,m)
+    $eqangle(a,b,a,n,m,a,m,n)
+# BAM = ANM
+$eqangle(a,b,a,m,n,a,n,m)
+# BAN = AMN
+$eqangle(a,b,a,n,m,a,m,n)
+
+#step 10:
+know:
+    forall _a, _b, _c, _d, _m point:
+        $para(_a, _b, _c, _m)
+        $para(_a, _b, _d, _m)
+        =>:
+            $para(_c, _m, _d, _m)
+    $para(a,b,c,m)
+    $para(a,b,d,m)
+# CM is parallel to DM
+$para(c,m,d,m)
+
+#step 11:
+know:
+    forall _c, _d, _m point:
+        $para(_c, _m, _d, _m)
+        =>:
+            $coll(_c, _d, _m)
+    $para(c,m,d,m)
+# C,D,M are collinear
+$coll(c,d,m)
+
+#step 12:
+know:
+    forall _a, _n, _p, _c, _d, _m, _b point:
+        $coll(_a, _n, _p)
+        $coll(_c, _d, _m)
+        $coll(_c, _d, _p)
+        $eqangle(_a, _b, _a, _n, _m, _a, _m, _n)
+        $para(_a, _b, _d, _m)
+        =>:
+            $eqangle(_m, _a, _m, _n, _p, _a, _p, _m)
+    $coll(a,n,p)
+    $coll(c,d,m)
+    $coll(c,d,p)
+    $eqangle(a,b,a,n,m,a,m,n)
+    $para(a,b,d,m)
+# AMN = MPA
+$eqangle(m,a,m,n,p,a,p,m)
+
+#step 13:
+know:
+    forall _c, _d, _m, _p, _a, _b, _n point:
+        $coll(_c, _d, _m)
+        $coll(_c, _d, _p)
+        $eqangle(_a, _b, _a, _m, _n, _a, _n, _m)
+        $para(_a, _b, _d, _m)
+        =>:
+            $eqangle(_m, _a, _m, _p, _n, _a, _n, _m)
+    $coll(c,d,m)
+    $coll(c,d,p)
+    $eqangle(a,b,a,m,n,a,n,m)
+    $para(a,b,d,m)
+# AMP = MNA
+$eqangle(m,a,m,p,n,a,n,m)
+
+#step 14:
+know:
+    forall _a, _m, _n, _p point:
+        $eqangle(_m, _a, _m, _n, _p, _a, _p, _m)
+        $eqangle(_m, _a, _m, _p, _n, _a, _n, _m)
+        =>:
+            $eqratio(_a, _m, _a, _p, _a, _n, _a, _m)
+    $eqangle(m,a,m,n,p,a,p,m)
+    $eqangle(m,a,m,p,n,a,n,m)
+# AM/AP = AN/AM ratio
+$eqratio(a,m,a,p,a,n,a,m)
+
+#step 15:
+know:
+    forall _a, _e, _m, _n, _p point:
+        $cong(_a, _e, _a, _m)
+        $eqratio(_a, _m, _a, _p, _a, _n, _a, _m)
+        =>:
+            $eqratio(_a, _e, _a, _p, _a, _n, _a, _e)
+    $cong(a,e,a,m)
+    $eqratio(a,m,a,p,a,n,a,m)
+# AE/AP = AN/AE ratio
+$eqratio(a,e,a,p,a,n,a,e)
+
+#step 16:
+know:
+    forall _a, _e, _n, _p point:
+        $coll(_a, _n, _p)
+        =>:
+            $eqangle(_a, _e, _a, _n, _a, _e, _a, _p)
+    $coll(a,n,p)
+# EAN = EAP
+$eqangle(a,e,a,n,a,e,a,p)
+
+#step 17:
+know:
+    forall _a, _e, _n, _p point:
+        $eqangle(_a, _e, _a, _n, _a, _e, _a, _p)
+        $eqratio(_a, _e, _a, _p, _a, _n, _a, _e)
+        =>:
+            $eqangle(_e, _a, _e, _n, _p, _e, _p, _a)
+    $eqangle(a,e,a,n,a,e,a,p)
+    $eqratio(a,e,a,p,a,n,a,e)
+# AEN = EPA
+$eqangle(e,a,e,n,p,e,p,a)
+
+#step 18:
+know:
+    forall _a, _g1, _c, _m, _n point:
+        $cong(_a, _g1, _c, _g1)
+        $cong(_a, _g1, _g1, _m)
+        $cong(_a, _g1, _g1, _n)
+        =>:
+            $cyclic(_a, _c, _m, _n)
+    $cong(a,g1,c,g1)
+    $cong(a,g1,g1,m)
+    $cong(a,g1,g1,n)
+# A,C,M,N are cyclic
+$cyclic(a,c,m,n)
+
+#step 19:
+know:
+    forall _a, _c, _m, _n point:
+        $cyclic(_a, _c, _m, _n)
+        =>:
+            $eqangle(_a, _c, _a, _n, _m, _c, _m, _n)
+    $cyclic(a,c,m,n)
+# CAN = CMN
+$eqangle(a,c,a,n,m,c,m,n)
+
+#step 20:
+know:
+    forall _b, _g2, _d, _m, _n point:
+        $cong(_b, _g2, _d, _g2)
+        $cong(_b, _g2, _g2, _m)
+        $cong(_b, _g2, _g2, _n)
+        =>:
+            $cyclic(_b, _d, _m, _n)
+    $cong(b,g2,d,g2)
+    $cong(b,g2,g2,m)
+    $cong(b,g2,g2,n)
+# B,D,M,N are cyclic
+$cyclic(b,d,m,n)
+
+#step 21:
+know:
+    forall _b, _d, _m, _n point:
+        $cyclic(_b, _d, _m, _n)
+        =>:
+            $eqangle(_b, _d, _b, _n, _m, _d, _m, _n)
+    $cyclic(b,d,m,n)
+# DBN = DMN
+$eqangle(b,d,b,n,m,d,m,n)
+
+#step 22:
+know:
+    forall _a, _c, _e, _b, _d, _m, _n point:
+        $coll(_a, _c, _e)
+        $coll(_b, _d, _e)
+        $eqangle(_a, _c, _a, _n, _m, _c, _m, _n)
+        $eqangle(_b, _d, _b, _n, _m, _d, _m, _n)
+        $para(_a, _b, _c, _m)
+        $para(_a, _b, _d, _m)
+        =>:
+            $eqangle(_a, _e, _a, _n, _b, _e, _b, _n)
+    $coll(a,c,e)
+    $coll(b,d,e)
+    $eqangle(a,c,a,n,m,c,m,n)
+    $eqangle(b,d,b,n,m,d,m,n)
+    $para(a,b,c,m)
+    $para(a,b,d,m)
+# EAN = EBN
+$eqangle(a,e,a,n,b,e,b,n)
+
+#step 23:
+know:
+    forall _a, _b, _e, _n point:
+        $eqangle(_a, _e, _a, _n, _b, _e, _b, _n)
+        =>:
+            $cyclic(_a, _b, _e, _n)
+    $eqangle(a,e,a,n,b,e,b,n)
+# A,B,E,N are cyclic
+$cyclic(a,b,e,n)
+
+#step 24:
+know:
+    forall _a, _b, _e, _n point:
+        $cyclic(_a, _b, _e, _n)
+        =>:
+            $eqangle(_a, _b, _a, _e, _n, _b, _n, _e)
+            $eqangle(_a, _b, _a, _n, _e, _b, _e, _n)
+    $cyclic(a,b,e,n)
+# BAE = BNE
+$eqangle(a,b,a,e,n,b,n,e)
+# BAN = BEN
+$eqangle(a,b,a,n,e,b,e,n)
+
+#step 25:
+know:
+    forall _b, _g2, _d, _n point:
+        $cong(_b, _g2, _d, _g2)
+        $cong(_b, _g2, _g2, _n)
+        =>:
+            $is_circumcenter(_g2, _b, _d, _n)
+    $cong(b,g2,d,g2)
+    $cong(b,g2,g2,n)
+# G2 is the circumcenter of BDN
+$is_circumcenter(g2, b, d, n)
+
+#step 26:
+know:
+    forall _a, _b, _g2, _d, _n point:
+        $is_circumcenter(_g2, _b, _d, _n)
+        $perp(_a, _b, _b, _g2)
+        =>:
+            $eqangle(_b, _a, _b, _d, _n, _b, _n, _d)
+    $is_circumcenter(g2, b, d, n)
+    $perp(a,b,b,g2)
+# ABD = BND
+$eqangle(b,a,b,d,n,b,n,d)
+
+#step 27:
+know:
+    forall _c, _d, _m, _q, _b, _a, _n point:
+        $coll(_c, _d, _m)
+        $coll(_c, _d, _q)
+        $eqangle(_b, _d, _b, _a, _n, _b, _n, _d)
+        $para(_a, _b, _d, _m)
+        =>:
+            $eqangle(_d, _b, _d, _q, _n, _d, _n, _b)
+    $coll(c,d,m)
+    $coll(c,d,q)
+    $eqangle(b,d,b,a,n,b,n,d)
+    $para(a,b,d,m)
+# BDQ = DNB
+$eqangle(d,b,d,q,n,d,n,b)
+
+#step 28:
+know:
+    forall _b, _n, _q, _d point:
+        $coll(_b, _n, _q)
+        =>:
+            $eqangle(_b, _d, _b, _n, _b, _d, _b, _q)
+    $coll(b,n,q)
+# DBN = DBQ
+$eqangle(b,d,b,n,b,d,b,q)
+
+#step 29:
+know:
+    forall _b, _d, _n, _q point:
+        $eqangle(_b, _d, _b, _n, _b, _d, _b, _q)
+        $eqangle(_d, _b, _d, _q, _n, _d, _n, _b)
+        =>:
+            $eqratio(_b, _d, _b, _q, _b, _n, _b, _d)
+    $eqangle(b,d,b,n,b,d,b,q)
+    $eqangle(d,b,d,q,n,d,n,b)
+# BD/BQ = BN/BD
+$eqratio(b,d,b,q,b,n,b,d)
+
+#step 30:
+know:
+    forall _b, _g2, _m, _n point:
+        $cong(_b, _g2, _g2, _m)
+        $cong(_b, _g2, _g2, _n)
+        =>:
+            $is_circumcenter(_g2, _b, _m, _n)
+    $cong(b,g2,g2,m)
+    $cong(b,g2,g2,n)
+# G2 is the circumcenter of BMN
+$is_circumcenter(g2, b, m, n)
+
+#step 31:
+know:
+    forall _a, _b, _g2, _m, _n point:
+        $is_circumcenter(_g2, _b, _m, _n)
+        $perp(_a, _b, _b, _g2)
+        =>:
+            $eqangle(_b, _a, _b, _m, _n, _b, _n, _m)
+    $is_circumcenter(g2, b, m, n)
+    $perp(a,b,b,g2)
+# ABM = BNM
+$eqangle(b,a,b,m,n,b,n,m)
+
+#step 32:
+know:
+    forall _b, _a, _m, _n, _d point:
+        $eqangle(_b, _a, _b, _m, _n, _b, _n, _m)
+        $para(_a, _b, _d, _m)
+        =>:
+            $eqangle(_n, _b, _n, _m, _m, _d, _m, _b)
+    $eqangle(b,a,b,m,n,b,n,m)
+    $para(a,b,d,m)
+# BNM = DMB
+$eqangle(n,b,n,m,m,d,m,b)
+
+#step 33:
+know:
+    forall _b, _d, _m, _n point:
+        $cyclic(_b, _d, _m, _n)
+        $eqangle(_n, _b, _n, _m, _m, _d, _m, _b)
+        =>:
+            $cong(_b, _d, _b, _m)
+    $cyclic(b,d,m,n)
+    $eqangle(n,b,n,m,m,d,m,b)
+# BD = BM
+$cong(b,d,b,m)
+
+#step 34:
+know:
+    forall _b, _d, _m, _n, _q point:
+        $cong(_b, _d, _b, _m)
+        $eqratio(_b, _d, _b, _q, _b, _n, _b, _d)
+        =>:
+            $cong(_b, _q, _b, _n)
+    $cong(b,d,b,m)
+    $eqratio(b,d,b,q,b,n,b,d)
+# BQ = BN
+$cong(b,q,b,n)
+
+#step 35:
+know:
+    forall _b, _e, _n, _q point:
+        $coll(_b, _n, _q)
+        =>:
+            $eqangle(_b, _e, _b, _n, _b, _e, _b, _q)
+    $coll(b,n,q)
+# EBN = EBQ
+$eqangle(b,e,b,n,b,e,b,q)
+
+#step 36:
+know:
+    forall _b, _e, _n, _q point:
+        $eqangle(_b, _e, _b, _n, _b, _e, _b, _q)
+        $eqratio(_b, _e, _b, _q, _b, _n, _b, _e)
+        =>:
+            $eqangle(_e, _b, _e, _n, _q, _e, _q, _b)
+    $eqangle(b,e,b,n,b,e,b,q)
+    $eqratio(b,e,b,q,b,n,b,e)
+# BEN = EQB
+$eqangle(e,b,e,n,q,e,q,b)
+
+#step 37:
+know:
+    forall _a, _n, _p, _b, _e, _d, _m point:
+        $coll(_a, _n, _p)
+        $eqangle(_a, _b, _a, _e, _n, _b, _n, _e)
+        $eqangle(_e, _a, _e, _n, _p, _e, _p, _a)
+        $para(_a, _b, _d, _m)
+        =>:
+            $eqangle(_b, _n, _d, _m, _p, _n, _p, _e)
+    $coll(a,n,p)
+    $eqangle(a,b,a,e,n,b,n,e)
+    $eqangle(e,a,e,n,p,e,p,a)
+    $para(a,b,d,m)
+# (BN,DM) = NPE
+$eqangle(b,n,d,m,p,n,p,e)
+
+#step 38:
+know:
+    forall _a, _n, _p, _b, _q, _e, _d, _m point:
+        $coll(_a, _n, _p)
+        $coll(_b, _n, _q)
+        $eqangle(_a, _b, _a, _n, _e, _b, _e, _n)
+        $eqangle(_e, _b, _e, _n, _q, _e, _q, _b)
+        $para(_a, _b, _d, _m)
+        =>:
+            $eqangle(_b, _n, _e, _q, _n, _p, _d, _m)
+    $coll(a,n,p)
+    $coll(b,n,q)
+    $eqangle(a,b,a,n,e,b,e,n)
+    $eqangle(e,b,e,n,q,e,q,b)
+    $para(a,b,d,m)
+# (BN,EQ) = (NP,DM)
+$eqangle(b,n,e,q,n,p,d,m)
+
+#step 39:
+know:
+    forall _b, _n, _d, _m, _p, _e, _q point:
+        $eqangle(_b, _n, _d, _m, _p, _n, _p, _e)
+        $eqangle(_b, _n, _e, _q, _n, _p, _d, _m)
+        =>:
+            $eqangle(_d, _m, _e, _q, _e, _p, _d, _m)
+    $eqangle(b,n,d,m,p,n,p,e)
+    $eqangle(b,n,e,q,n,p,d,m)
+# (DM,EQ) = (EP,DM)
+$eqangle(d,m,e,q,e,p,d,m)
+
+#step 40:
+know:
+    forall _c, _d, _m, _p, _q, _e point:
+        $coll(_c, _d, _m)
+        $coll(_c, _d, _p)
+        $coll(_c, _d, _q)
+        $eqangle(_d, _m, _e, _q, _e, _p, _d, _m)
+        =>:
+            $eqangle(_p, _e, _p, _q, _q, _p, _q, _e)
+    $coll(c,d,m)
+    $coll(c,d,p)
+    $coll(c,d,q)
+    $eqangle(d,m,e,q,e,p,d,m)
+# EPQ = PQE
+$eqangle(p,e,p,q,q,p,q,e)
+
+#step 41:
+know:
+    forall _p, _e, _q point:
+        $eqangle(_p, _e, _p, _q, _q, _p, _q, _e)
+        =>:
+            $cong(_e, _p, _e, _q)
+    $eqangle(p,e,p,q,q,p,q,e)
+# EP = EQ
+$cong(e,p,e,q)
+

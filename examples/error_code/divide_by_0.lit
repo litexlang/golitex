@@ -1,5 +1,0 @@
-# All code in this file is error or unknown
-
-set $is_set
-0 / 0 = 0
-0 / 0 = 1

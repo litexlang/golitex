@@ -1,0 +1,33 @@
+prop p(x R)
+prop q(x R)
+
+know:
+    forall x R:
+        =>:
+            $p(x)
+        <=>:
+            $q(x)
+
+forall x R:
+    =>:
+        $p(x)
+    <=>:
+        $q(x)
+
+forall x R:
+    $p(x)
+    <=>:
+        $q(x)
+
+forall x R:
+    $p(x)
+    =>:
+        $q(x)
+
+forall x R:
+    $q(x)
+    =>:
+        $p(x)
+
+forall x R: $p(x) <=> $q(x)
+forall x R => $p(x) <=> $q(x)

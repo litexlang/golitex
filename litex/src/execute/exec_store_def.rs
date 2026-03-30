@@ -1,48 +1,62 @@
-use crate::error::ExecStmtError;
-use crate::stmt::definition_stmt::{DefPropWithMeaningStmt, DefPropWithoutMeaningStmt, DefStructWithFieldsStmt, DefStructWithNoFieldStmt};
-use crate::stmt::define_algorithm_stmt::DefAlgoStmt;
-use super::Executor;
+use crate::prelude::*;
 
-impl<'a> Executor<'a> {
-    pub fn store_def_prop_with_meaning(&mut self, def_prop_with_meaning_stmt: &DefPropWithMeaningStmt) -> Result<(), ExecStmtError> {
+impl Runtime {
+    pub fn store_def_prop_with_meaning(
+        &mut self,
+        def_prop_with_meaning_stmt: &DefPropWithMeaningStmt,
+    ) -> Result<(), ExecStmtError> {
         let name = def_prop_with_meaning_stmt.name.clone();
-        self.runtime_context.defined_props_with_meaning.insert(name.clone(), def_prop_with_meaning_stmt.clone());
-        self.runtime_context.top_level_env().defined_props_with_meaning.insert(name, def_prop_with_meaning_stmt.clone());
+        self.top_level_env()
+            .defined_props_with_meaning
+            .insert(name, def_prop_with_meaning_stmt.clone());
         Ok(())
     }
 
-    pub fn store_def_prop_without_meaning(&mut self, def_prop_without_meaning_stmt: &DefPropWithoutMeaningStmt) -> Result<(), ExecStmtError> {
+    pub fn store_def_prop_without_meaning(
+        &mut self,
+        def_prop_without_meaning_stmt: &DefPropWithoutMeaningStmt,
+    ) -> Result<(), ExecStmtError> {
         let name = def_prop_without_meaning_stmt.name.clone();
-        self.runtime_context.defined_props_without_meaning.insert(name.clone(), def_prop_without_meaning_stmt.clone());
-        self.runtime_context.top_level_env().defined_props_without_meaning.insert(name, def_prop_without_meaning_stmt.clone());
+        self.top_level_env()
+            .defined_props_without_meaning
+            .insert(name, def_prop_without_meaning_stmt.clone());
         Ok(())
     }
 
     pub fn store_def_algo(&mut self, def_algo_stmt: &DefAlgoStmt) -> Result<(), ExecStmtError> {
         let name = def_algo_stmt.name.clone();
-        self.runtime_context.defined_algorithms.insert(name.clone(), def_algo_stmt.clone());
-        self.runtime_context.top_level_env().defined_algorithms.insert(name, def_algo_stmt.clone());
+        self.top_level_env()
+            .defined_algorithms
+            .insert(name, def_algo_stmt.clone());
         Ok(())
     }
 
     pub fn store_identifier_obj(&mut self, name: &str) -> Result<(), ExecStmtError> {
-        self.runtime_context.defined_identifier_objs.insert(name.to_string(), ());
-        self.runtime_context.top_level_env().defined_identifier_objs.insert(name.to_string(), ());
+        self.top_level_env()
+            .defined_identifier_and_field_access
+            .insert(name.to_string(), ());
         Ok(())
     }
-    
-    pub fn store_def_struct_with_fields(&mut self, def_struct_with_fields_stmt: &DefStructWithFieldsStmt) -> Result<(), ExecStmtError> {
+
+    pub fn store_def_struct_with_fields(
+        &mut self,
+        def_struct_with_fields_stmt: &DefStructWithFieldsStmt,
+    ) -> Result<(), ExecStmtError> {
         let name = def_struct_with_fields_stmt.name.clone();
-        self.runtime_context.defined_structs_with_fields.insert(name.clone(), def_struct_with_fields_stmt.clone());
-        self.runtime_context.top_level_env().defined_structs_with_fields.insert(name, def_struct_with_fields_stmt.clone());
+        self.top_level_env()
+            .defined_structs_with_fields
+            .insert(name, def_struct_with_fields_stmt.clone());
         Ok(())
     }
 
-    pub fn store_def_struct_with_no_field(&mut self, def_struct_with_no_field_stmt: &DefStructWithNoFieldStmt) -> Result<(), ExecStmtError> {
+    pub fn store_def_struct_with_no_field(
+        &mut self,
+        def_struct_with_no_field_stmt: &DefStructWithNoFieldStmt,
+    ) -> Result<(), ExecStmtError> {
         let name = def_struct_with_no_field_stmt.name.clone();
-        self.runtime_context.defined_structs_with_no_field.insert(name.clone(), def_struct_with_no_field_stmt.clone());
-        self.runtime_context.top_level_env().defined_structs_with_no_field.insert(name, def_struct_with_no_field_stmt.clone());
+        self.top_level_env()
+            .defined_structs_with_no_field
+            .insert(name, def_struct_with_no_field_stmt.clone());
         Ok(())
     }
-
 }
