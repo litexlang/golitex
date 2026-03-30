@@ -21,7 +21,7 @@ impl Runtime {
                     return Err(RuntimeError::ExecStmtError(
                         ExecStmtError::with_message_and_cause(
                             Stmt::ByInducAxiomStmt(stmt.clone()),
-                            format!("by_induc: failed to prove `{}`", fact),
+                            format!("by induc: failed to prove `{}`", fact),
                             Some(exec_stmt_error.into()),
                             vec![],
                         ),
@@ -68,7 +68,7 @@ impl Runtime {
             .map_err(|verify_error| {
                 RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                     Stmt::ByInducAxiomStmt(stmt.clone()),
-                    format!("by_induc: base case is not proved `{}`", base_case_fact),
+                    format!("by induc: base case is not proved `{}`", base_case_fact),
                     Some(verify_error.into()),
                     vec![],
                 ))
@@ -84,7 +84,7 @@ impl Runtime {
             .map_err(|verify_error| {
                 RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                     Stmt::ByInducAxiomStmt(stmt.clone()),
-                    format!("by_induc: failed to verify `{}`", induc_from_in_z_fact),
+                    format!("by induc: failed to verify `{}`", induc_from_in_z_fact),
                     Some(verify_error.into()),
                     vec![],
                 ))
@@ -93,7 +93,7 @@ impl Runtime {
             return Err(RuntimeError::ExecStmtError(
                 ExecStmtError::with_message_and_cause(
                     Stmt::ByInducAxiomStmt(stmt.clone()),
-                    format!("by_induc: failed to verify `{}`", induc_from_in_z_fact),
+                    format!("by induc: failed to verify `{}`", induc_from_in_z_fact),
                     None,
                     vec![],
                 ),
@@ -136,7 +136,7 @@ impl Runtime {
             RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                 Stmt::ByInducAxiomStmt(stmt.clone()),
                 format!(
-                    "by_induc: generated step forall is not well-defined `{}`",
+                    "by induc: generated step forall is not well-defined `{}`",
                     corresponding_forall_fact
                 ),
                 Some(well_defined_error.into()),

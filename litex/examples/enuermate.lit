@@ -1,4 +1,4 @@
-enumerate x {1, 2}:
+by enumerate x {1, 2}:
     prove:
         x = 1 or x = 2
     do_nothing

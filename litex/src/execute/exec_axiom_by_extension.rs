@@ -9,7 +9,7 @@ impl Runtime {
             .map_err(|well_defined_error| {
                 RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                     Stmt::ByExtensionAxiomStmt(stmt.clone()),
-                    format!("by_extension: left set `{}` is not well-defined", stmt.left),
+                    format!("by extension: left set `{}` is not well-defined", stmt.left),
                     Some(well_defined_error.into()),
                     vec![],
                 ))
@@ -19,7 +19,7 @@ impl Runtime {
                 RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                     Stmt::ByExtensionAxiomStmt(stmt.clone()),
                     format!(
-                        "by_extension: right set `{}` is not well-defined",
+                        "by extension: right set `{}` is not well-defined",
                         stmt.right
                     ),
                     Some(well_defined_error.into()),
@@ -37,7 +37,7 @@ impl Runtime {
                             RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                                 Stmt::ByExtensionAxiomStmt(stmt.clone()),
                                 format!(
-                                    "by_extension: failed to execute proof stmt `{}`",
+                                    "by extension: failed to execute proof stmt `{}`",
                                     proof_stmt
                                 ),
                                 Some(stmt_error),
@@ -72,7 +72,7 @@ impl Runtime {
                     RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                         Stmt::ByExtensionAxiomStmt(stmt.clone()),
                         format!(
-                            "by_extension: failed to prove left subset right `{}`",
+                            "by extension: failed to prove left subset right `{}`",
                             left_to_right_forall_fact
                         ),
                         Some(verify_error.into()),
@@ -103,7 +103,7 @@ impl Runtime {
                     RuntimeError::ExecStmtError(ExecStmtError::with_message_and_cause(
                         Stmt::ByExtensionAxiomStmt(stmt.clone()),
                         format!(
-                            "by_extension: failed to prove right subset left `{}`",
+                            "by extension: failed to prove right subset left `{}`",
                             right_to_left_forall_fact
                         ),
                         Some(verify_error.into()),

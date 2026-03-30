@@ -21,6 +21,34 @@ know:
         =>:
             a = b or a > b
 
+    forall a R:
+        exist b R st {a > b}
+        exist b R st {a < b}
+        exist b R st {a = b}
+        exist b R st {a != b}
+        exist b R st {a >= b}
+        exist b R st {a <= b}
+
+        exist b R st {b > a}
+        exist b R st {b < a}
+        exist b R st {b = a}
+        exist b R st {b != a}
+        exist b R st {b >= a}
+        exist b R st {b <= a}
+
+    exist a, b R st {a > b}
+    exist a, b R st {a < b}
+    exist a, b R st {a = b}
+    exist a, b R st {a != b}
+    exist a, b R st {a >= b}
+    exist a, b R st {a <= b}
+
+    exist a, b R st {b > a}
+    exist a, b R st {b < a}
+    exist a, b R st {b = a}
+    exist a, b R st {b != a}
+    exist a, b R st {b >= a}
+    exist a, b R st {b <= a}
 "#;
 
 pub fn builtin_env_code() -> String {

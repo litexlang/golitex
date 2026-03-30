@@ -1,24 +1,6 @@
 use crate::prelude::*;
 use std::fmt;
 
-fn fact_to_exist_or_and_chain_atomic_fact_for_forall_then_body(
-    fact: &Fact,
-) -> Result<ExistOrAndChainAtomicFact, String> {
-    match fact {
-        Fact::AtomicFact(atomic_fact) => {
-            Ok(ExistOrAndChainAtomicFact::AtomicFact(atomic_fact.clone()))
-        }
-        Fact::AndFact(and_fact) => Ok(ExistOrAndChainAtomicFact::AndFact(and_fact.clone())),
-        Fact::ChainFact(chain_fact) => Ok(ExistOrAndChainAtomicFact::ChainFact(chain_fact.clone())),
-        Fact::OrFact(or_fact) => Ok(ExistOrAndChainAtomicFact::OrFact(or_fact.clone())),
-        Fact::ExistFact(exist_fact) => Ok(ExistOrAndChainAtomicFact::ExistFact(exist_fact.clone())),
-        Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => Err(
-            "enumerate: a fact in to_prove cannot be a nested forall inside the generated forall"
-                .to_string(),
-        ),
-    }
-}
-
 // view fn set as a subset of a cartesian product set
 #[derive(Clone)]
 pub struct ByFnDefAxiomStmt {
@@ -73,7 +55,7 @@ pub struct ByInducAxiomStmt {
 pub struct EnumerateAxiomStmt {
     pub params: Vec<String>,
     pub param_sets: Vec<ListSet>,
-    pub to_prove: Vec<Fact>,
+    pub to_prove: Vec<ExistOrAndChainAtomicFact>,
     pub proof: Vec<Stmt>,
     pub line_file: (usize, usize),
 }
@@ -101,7 +83,7 @@ impl EnumerateAxiomStmt {
     pub fn new(
         params: Vec<String>,
         param_sets: Vec<ListSet>,
-        to_prove: Vec<Fact>,
+        to_prove: Vec<ExistOrAndChainAtomicFact>,
         proof: Vec<Stmt>,
         line_file: (usize, usize),
     ) -> Self {
@@ -118,7 +100,7 @@ impl EnumerateAxiomStmt {
     pub fn to_corresponding_forall_fact(&self) -> Result<Fact, String> {
         if self.params.len() != self.param_sets.len() {
             return Err(
-                "enumerate: number of params does not match number of list sets".to_string(),
+                "by enumerate: number of params does not match number of list sets".to_string(),
             );
         }
         let mut params_def_with_type: Vec<ParamDefWithParamType> = Vec::new();
@@ -128,13 +110,12 @@ impl EnumerateAxiomStmt {
                 ParamType::Obj(Obj::ListSet(list_set_obj.clone())),
             ));
         }
-        let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
-        for fact in self.to_prove.iter() {
-            then_facts.push(fact_to_exist_or_and_chain_atomic_fact_for_forall_then_body(
-                fact,
-            )?);
-        }
-        let forall_fact = ForallFact::new(params_def_with_type, vec![], then_facts, self.line_file);
+        let forall_fact = ForallFact::new(
+            params_def_with_type,
+            vec![],
+            self.to_prove.clone(),
+            self.line_file,
+        );
         Ok(Fact::ForallFact(forall_fact))
     }
 }
@@ -189,8 +170,9 @@ impl fmt::Display for ByCasesAxiomStmt {
 
         write!(
             f,
-            "{}{}\n{}{}\n{}\n{}",
-            BY_CASES,
+            "{} {}{}\n{}{}\n{}\n{}",
+            BY,
+            CASES,
             COLON,
             add_four_spaces_at_beginning(PROVE.to_string(), 1),
             COLON,
@@ -220,8 +202,9 @@ impl fmt::Display for ByContraAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{}{}\n{}{}\n{}",
-            BY_CONTRA,
+            "{} {}{}\n{}{}\n{}",
+            BY,
+            CONTRA,
             COLON,
             add_four_spaces_at_beginning(PROVE.to_string(), 1),
             COLON,
@@ -247,7 +230,8 @@ impl fmt::Display for EnumerateAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {}{}\n{}{}\n{}\n{}",
+            "{} {} {}{}\n{}{}\n{}\n{}",
+            BY,
             ENUMERATE,
             vec_pair_to_string(&self.params, &self.param_sets),
             COLON,
@@ -279,7 +263,8 @@ impl fmt::Display for ByInducAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "{} {} {} {}{}\n{}",
+            "{} {} {} {} {}{}\n{}",
+            BY,
             INDUC,
             self.param,
             FROM,
@@ -294,14 +279,16 @@ impl fmt::Display for ForAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let head = match self.dom_facts.len() {
             0 => format!(
-                "{} {}{}\n{}",
+                "{} {} {}{}\n{}",
+                BY,
                 FOR,
                 vec_pair_to_string(&self.params, &self.param_sets),
                 COLON,
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.then_facts, 1)
             ),
             _ => format!(
-                "{} {}{}\n{}\n{}{}\n{}",
+                "{} {} {}{}\n{}\n{}{}\n{}",
+                BY,
                 FOR,
                 vec_pair_to_string(&self.params, &self.param_sets),
                 COLON,
@@ -329,7 +316,7 @@ impl fmt::Display for ForAxiomStmt {
 impl ForAxiomStmt {
     pub fn to_corresponding_forall_fact(&self) -> Result<Fact, String> {
         if self.params.len() != self.param_sets.len() {
-            return Err("for: number of params does not match number of param sets".to_string());
+            return Err("by for: number of params does not match number of param sets".to_string());
         }
         let mut params_def_with_type: Vec<ParamDefWithParamType> = Vec::new();
         for (param_name, param_set) in self.params.iter().zip(self.param_sets.iter()) {
@@ -386,11 +373,16 @@ impl fmt::Display for ClosedRangeOrRange {
 impl fmt::Display for ByExtensionAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.proof.len() {
-            0 => write!(f, "{} {} {} {}", BY_EXTENSION, self.left, EQUAL, self.right),
+            0 => write!(
+                f,
+                "{} {} {} {} {}",
+                BY, EXTENSION, self.left, EQUAL, self.right
+            ),
             _ => write!(
                 f,
-                "{} {} {} {}{}\n{}",
-                BY_EXTENSION,
+                "{} {} {} {} {}{}\n{}",
+                BY,
+                EXTENSION,
                 self.left,
                 EQUAL,
                 self.right,
@@ -414,7 +406,7 @@ impl ByExtensionAxiomStmt {
 
 impl fmt::Display for ByFnDefAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", BY_FN_DEF, self.function)
+        write!(f, "{} {} {}", BY, FN_DEF, self.function)
     }
 }
 
@@ -429,7 +421,7 @@ impl ByFnDefAxiomStmt {
 
 impl fmt::Display for ByCartDefAxiomStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {}", BY_CART_DEF, self.cart)
+        write!(f, "{} {} {}", BY, CART_DEF, self.cart)
     }
 }
 
