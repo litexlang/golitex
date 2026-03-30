@@ -49,6 +49,11 @@ know:
     exist a, b R st {b != a}
     exist a, b R st {b >= a}
     exist a, b R st {b <= a}
+
+    forall a, b R:
+        a * b = 0
+        =>:
+            a = 0 or b = 0
 "#;
 
 pub fn builtin_env_code() -> String {

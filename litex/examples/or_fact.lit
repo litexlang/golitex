@@ -28,3 +28,8 @@ prove:
             $p(a, b) or $q(a, b)
 
     $p(1, 2) or $q(1, 2)
+
+prove:
+    prop p(a, b)
+
+    $p(a, b) or not $p(b, a)

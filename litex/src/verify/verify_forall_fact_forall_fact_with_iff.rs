@@ -82,11 +82,53 @@ impl Runtime {
             infer_result.new_infer_result_inside(dom_infer_result);
         }
 
+        let mut all_then_facts_are_verified_by_builtin_rules = true;
+        let mut then_facts_builtin_verified_by_messages: Vec<String> = Vec::new();
+
         for then_fact in forall_fact.then_facts.iter() {
             let result = self.verify_exist_or_and_chain_atomic_fact(then_fact, verify_state)?;
             if result.is_unknown() {
                 return Ok(result);
             }
+
+            match &result {
+                NonErrStmtExecResult::FactVerifiedByBuiltinRules(builtin_verification_result) => {
+                    then_facts_builtin_verified_by_messages
+                        .push(builtin_verification_result.verified_by.clone());
+                    infer_result
+                        .new_infer_result_inside(builtin_verification_result.infers.clone());
+                }
+                NonErrStmtExecResult::FactVerifiedByFact(fact_verification_result) => {
+                    all_then_facts_are_verified_by_builtin_rules = false;
+                    infer_result.new_infer_result_inside(fact_verification_result.infers.clone());
+                }
+                NonErrStmtExecResult::NonFactualStmtSuccess(non_factual_success) => {
+                    all_then_facts_are_verified_by_builtin_rules = false;
+                    infer_result.new_infer_result_inside(non_factual_success.infers.clone());
+                }
+                NonErrStmtExecResult::StmtUnknown(_) => {
+                    return Ok(result);
+                }
+            }
+        }
+
+        if all_then_facts_are_verified_by_builtin_rules && !forall_fact.then_facts.is_empty() {
+            let combined_verified_by_message =
+                if then_facts_builtin_verified_by_messages.len() == 1 {
+                    then_facts_builtin_verified_by_messages[0].clone()
+                } else {
+                    format!(
+                        "forall then-facts: {}",
+                        then_facts_builtin_verified_by_messages.join("; ")
+                    )
+                };
+            return Ok(NonErrStmtExecResult::FactVerifiedByBuiltinRules(
+                FactVerifiedByBuiltinRules::new(
+                    Fact::ForallFact(forall_fact.clone()),
+                    combined_verified_by_message,
+                    infer_result,
+                ),
+            ));
         }
 
         Ok(NonErrStmtExecResult::FactVerifiedByFact(
@@ -94,7 +136,7 @@ impl Runtime {
                 Fact::ForallFact(forall_fact.clone()),
                 "".to_string(),
                 infer_result,
-                crate::common::defaults::DEFAULT_LINE_FILE.clone(),
+                forall_fact.line_file,
             ),
         ))
     }
