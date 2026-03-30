@@ -355,9 +355,8 @@ impl Runtime {
             if result.is_unknown() {
                 return Err(WellDefinedError::new(
                     format!(
-                        "arg {} is not in param set {}",
-                        (**arg).to_string(),
-                        (**param_set).to_string()
+                        "`{}` must hold, by function definition, but verification is unknown.",
+                        atomic_fact.to_string(),
                     ),
                     None,
                     DEFAULT_LINE_FILE.clone(),

@@ -49,6 +49,7 @@ impl Runtime {
                 self.verify_order_or_negation_fact_with_builtin_duality_and_number_compare(
                     &current_fact,
                     &counterpart_fact,
+                    verify_state,
                 )
             }
             AtomicFact::GreaterFact(greater_fact) => {
@@ -61,6 +62,7 @@ impl Runtime {
                 self.verify_order_or_negation_fact_with_builtin_duality_and_number_compare(
                     &current_fact,
                     &counterpart_fact,
+                    verify_state,
                 )
             }
             AtomicFact::LessEqualFact(less_equal_fact) => {
@@ -73,6 +75,7 @@ impl Runtime {
                 self.verify_order_or_negation_fact_with_builtin_duality_and_number_compare(
                     &current_fact,
                     &counterpart_fact,
+                    verify_state,
                 )
             }
             AtomicFact::GreaterEqualFact(greater_equal_fact) => {
@@ -85,6 +88,7 @@ impl Runtime {
                 self.verify_order_or_negation_fact_with_builtin_duality_and_number_compare(
                     &current_fact,
                     &counterpart_fact,
+                    verify_state,
                 )
             }
             AtomicFact::IsSetFact(is_set_fact) => Ok(
@@ -189,7 +193,7 @@ impl Runtime {
         self.operand_is_not_equal_to_zero_by_known_non_equational_facts(right_operand, line_file)
     }
 
-    fn non_equational_atomic_fact_holds_by_full_verify_pipeline(
+    pub(crate) fn non_equational_atomic_fact_holds_by_full_verify_pipeline(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
@@ -249,6 +253,51 @@ impl Runtime {
         self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
             &right_less_than_zero,
             verify_state,
+        )
+    }
+
+    pub(crate) fn mul_product_negative_when_factors_have_strict_opposite_sign_by_non_equational_verify(
+        &mut self,
+        left_factor: &Obj,
+        right_factor: &Obj,
+        line_file: (usize, usize),
+        verify_state: &VerifyState,
+    ) -> Result<bool, VerifyError> {
+        let zero_obj = Obj::Number(Number::new("0".to_string()));
+        let left_less_than_zero = AtomicFact::LessFact(LessFact::new(
+            left_factor.clone(),
+            zero_obj.clone(),
+            line_file,
+        ));
+        let right_greater_than_zero = AtomicFact::GreaterFact(GreaterFact::new(
+            right_factor.clone(),
+            zero_obj.clone(),
+            line_file,
+        ));
+        if self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+            &left_less_than_zero,
+            verify_state,
+        )? && self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+            &right_greater_than_zero,
+            verify_state,
+        )? {
+            return Ok(true);
+        }
+        let left_greater_than_zero = AtomicFact::GreaterFact(GreaterFact::new(
+            left_factor.clone(),
+            zero_obj.clone(),
+            line_file,
+        ));
+        let right_less_than_zero =
+            AtomicFact::LessFact(LessFact::new(right_factor.clone(), zero_obj, line_file));
+        Ok(
+            self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                &left_greater_than_zero,
+                verify_state,
+            )? && self.non_equational_atomic_fact_holds_by_full_verify_pipeline(
+                &right_less_than_zero,
+                verify_state,
+            )?,
         )
     }
 

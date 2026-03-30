@@ -237,7 +237,7 @@ impl Runtime {
                 )
             {
                 return Err(WellDefinedError::new(
-                    "failed to store fact in environment".to_string(),
+                    String::new(),
                     Some(RuntimeError::ExecStmtError(exec_stmt_error)),
                     fact.line_file(),
                 ));
@@ -251,7 +251,7 @@ impl Runtime {
                 )
             {
                 return Err(WellDefinedError::new(
-                    "failed to store fact in environment".to_string(),
+                    String::new(),
                     Some(RuntimeError::ExecStmtError(exec_stmt_error)),
                     fact.line_file(),
                 ));

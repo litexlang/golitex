@@ -5,7 +5,7 @@ prove:
         $p(1)
         forall n N_pos: $p(n) => $p(n+1)
 
-    by induc n N_pos: $p(n):
+    induc n N_pos: $p(n):
         do_nothing
 
 prove:
@@ -13,7 +13,7 @@ prove:
         $p(2)
         forall n N_pos: $p(n) => $p(n+1)
 
-    by induc n >= 2: $p(n):
+    induc n >= 2: $p(n):
         do_nothing
 
 prove:
@@ -21,7 +21,7 @@ prove:
         $p(0)
         forall n N_pos: $p(n) => $p(n+1)
 
-    by induc n N: $p(n):
+    induc n N: $p(n):
         do_nothing
 
  
