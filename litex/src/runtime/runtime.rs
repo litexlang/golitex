@@ -309,8 +309,8 @@ impl Runtime {
     pub fn get_all_objs_equal_to_arg(&self, given: &str) -> Vec<String> {
         let mut result = vec![];
         for env in self.iter_environments_from_top() {
-            if let Some(known_equality) = env.known_equality.get(given) {
-                for obj in known_equality.iter() {
+            if let Some((_, equiv_class_members_rc)) = env.known_equality.get(given) {
+                for obj in equiv_class_members_rc.iter() {
                     result.push(obj.to_string());
                 }
             }

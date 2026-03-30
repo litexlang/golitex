@@ -9,8 +9,15 @@ impl Runtime {
         let key = fact.to_string();
         let (cache_ok, cache_line_file) = self.cache_known_facts_contains(&key);
         if cache_ok {
-            Some(NonErrStmtExecResult::FactVerifiedByFact(
-                FactVerifiedByFact::new(fact.clone(), key, InferResult::new(), cache_line_file),
+            Some(NonErrStmtExecResult::FactualStmtSuccess(
+                FactualStmtSuccess::new_with_verified_by_known_fact_source(
+                    fact.clone(),
+                    InferResult::new(),
+                    key,
+                    None,
+                    Some(cache_line_file),
+                    Vec::new(),
+                ),
             ))
         } else {
             None

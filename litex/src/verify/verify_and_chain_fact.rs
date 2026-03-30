@@ -34,12 +34,14 @@ impl Runtime {
             }
             verify_what.push(fact.to_string());
         }
-        Ok(NonErrStmtExecResult::FactVerifiedByFact(
-            FactVerifiedByFact::new(
+        Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_known_fact_source(
                 Fact::AndFact(and_fact.clone()),
-                format!("{} are verified", verify_what.join(", ")),
                 InferResult::new(),
-                DEFAULT_LINE_FILE.clone(),
+                format!("{} are verified", verify_what.join(", ")),
+                None,
+                Some(DEFAULT_LINE_FILE),
+                Vec::new(),
             ),
         ))
     }
@@ -85,12 +87,14 @@ impl Runtime {
 
             verify_what.push(fact.to_string());
         }
-        Ok(NonErrStmtExecResult::FactVerifiedByFact(
-            FactVerifiedByFact::new(
+        Ok(NonErrStmtExecResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_known_fact_source(
                 Fact::ChainFact(chain_fact.clone()),
-                format!("{} are verified", verify_what.join(", ")),
                 InferResult::new(),
-                DEFAULT_LINE_FILE.clone(),
+                format!("{} are verified", verify_what.join(", ")),
+                None,
+                Some(DEFAULT_LINE_FILE),
+                Vec::new(),
             ),
         ))
     }

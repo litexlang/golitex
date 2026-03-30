@@ -162,12 +162,14 @@ impl Runtime {
         {
             for obj in all_objs_equal_to_arg.iter() {
                 if let Some(known_atomic_fact) = known_facts_map.get(obj) {
-                    return Ok(NonErrStmtExecResult::FactVerifiedByFact(
-                        FactVerifiedByFact::new(
+                    return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_known_fact_source(
                             Fact::AtomicFact(atomic_fact.clone()),
-                            known_atomic_fact.to_string(),
                             InferResult::new(),
-                            known_atomic_fact.line_file(),
+                            known_atomic_fact.to_string(),
+                            Some(Fact::AtomicFact(known_atomic_fact.clone())),
+                            None,
+                            Vec::new(),
                         ),
                     ));
                 }
@@ -192,12 +194,14 @@ impl Runtime {
                     if let Some(known_atomic_fact) =
                         known_facts_map.get(&(obj0.clone(), obj1.clone()))
                     {
-                        return Ok(NonErrStmtExecResult::FactVerifiedByFact(
-                            FactVerifiedByFact::new(
+                        return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                            FactualStmtSuccess::new_with_verified_by_known_fact_source(
                                 Fact::AtomicFact(atomic_fact.clone()),
-                                known_atomic_fact.to_string(),
                                 InferResult::new(),
-                                known_atomic_fact.line_file(),
+                                known_atomic_fact.to_string(),
+                                Some(Fact::AtomicFact(known_atomic_fact.clone())),
+                                None,
+                                Vec::new(),
                             ),
                         ));
                     }
@@ -245,12 +249,14 @@ impl Runtime {
                     }
                 }
                 if all_args_match {
-                    return Ok(NonErrStmtExecResult::FactVerifiedByFact(
-                        FactVerifiedByFact::new(
+                    return Ok(NonErrStmtExecResult::FactualStmtSuccess(
+                        FactualStmtSuccess::new_with_verified_by_known_fact_source(
                             Fact::AtomicFact(atomic_fact.clone()),
-                            known_fact.to_string(),
                             InferResult::new(),
-                            known_fact.line_file(),
+                            known_fact.to_string(),
+                            Some(Fact::AtomicFact(known_fact.clone())),
+                            None,
+                            Vec::new(),
                         ),
                     ));
                 }
@@ -342,14 +348,9 @@ impl Runtime {
                 return Ok(None);
             }
             match &iff_clause_verify_result {
-                NonErrStmtExecResult::FactVerifiedByFact(fact_verified_by_fact) => {
-                    infer_result.new_infer_result_inside(fact_verified_by_fact.infers.clone());
-                    definition_clause_descriptions.push(fact_verified_by_fact.verified_by.clone());
-                }
-                NonErrStmtExecResult::FactVerifiedByBuiltinRules(fact_verified_by_builtin) => {
-                    infer_result.new_infer_result_inside(fact_verified_by_builtin.infers.clone());
-                    definition_clause_descriptions
-                        .push(fact_verified_by_builtin.verified_by.clone());
+                NonErrStmtExecResult::FactualStmtSuccess(factual_success) => {
+                    infer_result.new_infer_result_inside(factual_success.infers.clone());
+                    definition_clause_descriptions.push(factual_success.msg.clone());
                 }
                 NonErrStmtExecResult::NonFactualStmtSuccess(non_factual_success) => {
                     infer_result.new_infer_result_inside(non_factual_success.infers.clone());
@@ -363,12 +364,14 @@ impl Runtime {
             predicate_name,
             definition_clause_descriptions.join("; ")
         );
-        Ok(Some(NonErrStmtExecResult::FactVerifiedByFact(
-            FactVerifiedByFact::new(
+        Ok(Some(NonErrStmtExecResult::FactualStmtSuccess(
+            FactualStmtSuccess::new_with_verified_by_known_fact_source(
                 Fact::AtomicFact(AtomicFact::NormalAtomicFact(normal_atomic_fact.clone())),
-                verified_by_text,
                 infer_result,
-                normal_atomic_fact.line_file,
+                verified_by_text,
+                None,
+                Some(normal_atomic_fact.line_file),
+                Vec::new(),
             ),
         )))
     }

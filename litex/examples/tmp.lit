@@ -1,16 +1,8 @@
-have point nonempty_set
+let a2 set:
+    a2 = (2, 3)
 
-prop ncoll(a, b, c)
-prop cong(a, b, c, d)
 
-prop is_circumcenter(x, a, b, c point):
-    $ncoll(a, b, c)
-    $cong(x, a, x, b)
-    $cong(x, b, x, c)
-
-forall x, a, b, c point:
-    $ncoll(a, b, c)
-    $cong(x, a, x, b)
-    $cong(x, b, x, c)
+forall a set:
+    $is_cart(a)
     =>:
-        $is_circumcenter(x, a, b, c)
+        cart_dim(a) = cart_dim(a)

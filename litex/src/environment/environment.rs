@@ -10,7 +10,7 @@ pub struct Environment {
     pub defined_props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>,
     pub defined_algorithms: HashMap<String, DefAlgoStmt>,
 
-    pub known_equality: HashMap<String, Rc<Vec<Obj>>>,
+    pub known_equality: HashMap<String, (HashMap<String, AtomicFact>, Rc<Vec<Obj>>)>,
     pub known_fn_in_fn_set: HashMap<String, FnSetObj>,
     pub known_set_equal_to_set_builder: HashMap<String, SetBuilder>,
 
@@ -45,7 +45,7 @@ impl Environment {
         structs_with_no_field: HashMap<String, DefStructWithNoFieldStmt>,
         props_without_meaning: HashMap<String, DefPropWithoutMeaningStmt>,
         algorithms: HashMap<String, DefAlgoStmt>,
-        known_equality: HashMap<String, Rc<Vec<Obj>>>,
+        known_equality: HashMap<String, (HashMap<String, AtomicFact>, Rc<Vec<Obj>>)>,
         known_fn_in_fn_set: HashMap<String, FnSetObj>,
         known_set_equal_to_set_builder: HashMap<String, SetBuilder>,
         known_atomic_facts_with_0_or_more_than_2_args: HashMap<(String, bool), Vec<AtomicFact>>,
@@ -531,68 +531,146 @@ impl Environment {
             return Ok(());
         }
 
-        let left_rc = self.known_equality.get(&left_as_string).map(Rc::clone);
-        let right_rc = self.known_equality.get(&right_as_string).map(Rc::clone);
+        let left_rc = self
+            .known_equality
+            .get(&left_as_string)
+            .map(|(_, rc)| Rc::clone(rc));
+        let right_rc = self
+            .known_equality
+            .get(&right_as_string)
+            .map(|(_, rc)| Rc::clone(rc));
+
+        let equal_atomic_fact = AtomicFact::EqualFact(equality.clone());
 
         match (left_rc, right_rc) {
-            (Some(ref left_r), Some(ref right_r)) => {
-                if Rc::ptr_eq(left_r, right_r) {
+            (Some(ref left_class_rc), Some(ref right_class_rc)) => {
+                if Rc::ptr_eq(left_class_rc, right_class_rc) {
                     return Ok(());
                 }
-                // 1. Merge two equivalence classes: new vec = union of both, all keys pointing to either now point to new Rc.
-                let merged: Vec<Obj> = {
-                    let a: &Vec<Obj> = left_r.as_ref();
-                    let b: &Vec<Obj> = right_r.as_ref();
-                    let mut v: Vec<Obj> = a.iter().chain(b.iter()).cloned().collect();
-                    v.sort_by(|a, b| a.to_string().cmp(&b.to_string()));
-                    v.dedup_by(|a, b| a.to_string() == b.to_string());
-                    v
+                let merged_vec: Vec<Obj> = {
+                    let left_vec: &Vec<Obj> = left_class_rc.as_ref();
+                    let right_vec: &Vec<Obj> = right_class_rc.as_ref();
+                    let mut merged = Vec::with_capacity(left_vec.len() + right_vec.len());
+                    for obj in left_vec.iter().chain(right_vec.iter()) {
+                        merged.push(obj.clone());
+                    }
+                    merged.sort_by(|a_obj, b_obj| a_obj.to_string().cmp(&b_obj.to_string()));
+                    merged.dedup_by(|a_obj, b_obj| a_obj.to_string() == b_obj.to_string());
+                    merged
                 };
-                let new_rc = Rc::new(merged);
-                for obj in new_rc.iter() {
-                    self.known_equality
-                        .insert(obj.to_string(), Rc::clone(&new_rc));
+                let new_equiv_rc = Rc::new(merged_vec);
+
+                let keys_in_either_class: Vec<String> = self
+                    .known_equality
+                    .iter()
+                    .filter(|(_, (_, class_rc))| {
+                        Rc::ptr_eq(class_rc, left_class_rc) || Rc::ptr_eq(class_rc, right_class_rc)
+                    })
+                    .map(|(k, _)| k.clone())
+                    .collect();
+
+                for key_in_class in keys_in_either_class {
+                    let removed_entry = match self.known_equality.remove(&key_in_class) {
+                        Some(entry) => entry,
+                        None => continue,
+                    };
+                    let (mut direct_equality_proof_map, _) = removed_entry;
+                    if key_in_class == left_as_string {
+                        direct_equality_proof_map
+                            .insert(right_as_string.clone(), equal_atomic_fact.clone());
+                    }
+                    if key_in_class == right_as_string {
+                        direct_equality_proof_map
+                            .insert(left_as_string.clone(), equal_atomic_fact.clone());
+                    }
+                    self.known_equality.insert(
+                        key_in_class,
+                        (direct_equality_proof_map, Rc::clone(&new_equiv_rc)),
+                    );
                 }
             }
-            (Some(ref rc), None) => {
-                // 2. Right not in any class: add right to left's class (Rc<Vec> is immutable, build new Vec and update all keys pointing to it).
-                let mut new_vec = (**rc).clone();
+            (Some(existing_class_rc), None) => {
+                let mut new_vec = (*existing_class_rc).clone();
                 new_vec.push(equality.right.clone());
-                let new_rc = Rc::new(new_vec);
-                let keys_to_update: Vec<String> = self
+                let new_equiv_rc = Rc::new(new_vec);
+
+                let keys_in_existing_class: Vec<String> = self
                     .known_equality
                     .iter()
-                    .filter(|(_, v)| Rc::ptr_eq(v, rc))
+                    .filter(|(_, (_, class_rc))| Rc::ptr_eq(class_rc, &existing_class_rc))
                     .map(|(k, _)| k.clone())
                     .collect();
-                for k in keys_to_update {
-                    self.known_equality.insert(k, Rc::clone(&new_rc));
+
+                for key_in_class in keys_in_existing_class {
+                    let removed_entry = match self.known_equality.remove(&key_in_class) {
+                        Some(entry) => entry,
+                        None => continue,
+                    };
+                    let (mut direct_equality_proof_map, _) = removed_entry;
+                    if key_in_class == left_as_string {
+                        direct_equality_proof_map
+                            .insert(right_as_string.clone(), equal_atomic_fact.clone());
+                    }
+                    self.known_equality.insert(
+                        key_in_class,
+                        (direct_equality_proof_map, Rc::clone(&new_equiv_rc)),
+                    );
                 }
-                self.known_equality.insert(right_as_string, new_rc);
+
+                let mut proof_for_new_right = HashMap::new();
+                proof_for_new_right.insert(left_as_string.clone(), equal_atomic_fact.clone());
+                self.known_equality
+                    .insert(right_as_string, (proof_for_new_right, new_equiv_rc));
             }
-            (None, Some(ref rc)) => {
-                // 2. Left not in any class: add left to right's class.
-                let mut new_vec = (**rc).clone();
+            (None, Some(existing_class_rc)) => {
+                let mut new_vec = (*existing_class_rc).clone();
                 new_vec.push(equality.left.clone());
-                let new_rc = Rc::new(new_vec);
-                let keys_to_update: Vec<String> = self
+                let new_equiv_rc = Rc::new(new_vec);
+
+                let keys_in_existing_class: Vec<String> = self
                     .known_equality
                     .iter()
-                    .filter(|(_, v)| Rc::ptr_eq(v, rc))
+                    .filter(|(_, (_, class_rc))| Rc::ptr_eq(class_rc, &existing_class_rc))
                     .map(|(k, _)| k.clone())
                     .collect();
-                for k in keys_to_update {
-                    self.known_equality.insert(k, Rc::clone(&new_rc));
+
+                for key_in_class in keys_in_existing_class {
+                    let removed_entry = match self.known_equality.remove(&key_in_class) {
+                        Some(entry) => entry,
+                        None => continue,
+                    };
+                    let (mut direct_equality_proof_map, _) = removed_entry;
+                    if key_in_class == right_as_string {
+                        direct_equality_proof_map
+                            .insert(left_as_string.clone(), equal_atomic_fact.clone());
+                    }
+                    self.known_equality.insert(
+                        key_in_class,
+                        (direct_equality_proof_map, Rc::clone(&new_equiv_rc)),
+                    );
                 }
-                self.known_equality.insert(left_as_string, new_rc);
+
+                let mut proof_for_new_left = HashMap::new();
+                proof_for_new_left.insert(right_as_string.clone(), equal_atomic_fact.clone());
+                self.known_equality
+                    .insert(left_as_string, (proof_for_new_left, new_equiv_rc));
             }
             (None, None) => {
-                // 3. Neither in any class: new equivalence class [left, right].
-                let vec = vec![equality.left.clone(), equality.right.clone()];
-                let new_rc = Rc::new(vec);
+                let equiv_members = vec![equality.left.clone(), equality.right.clone()];
+                let new_equiv_rc = Rc::new(equiv_members);
+
+                let mut left_direct_proof_map = HashMap::new();
+                left_direct_proof_map.insert(right_as_string.clone(), equal_atomic_fact.clone());
+
+                let mut right_direct_proof_map = HashMap::new();
+                right_direct_proof_map.insert(left_as_string.clone(), equal_atomic_fact);
+
+                self.known_equality.insert(
+                    left_as_string.clone(),
+                    (left_direct_proof_map, Rc::clone(&new_equiv_rc)),
+                );
                 self.known_equality
-                    .insert(left_as_string.clone(), Rc::clone(&new_rc));
-                self.known_equality.insert(right_as_string, new_rc);
+                    .insert(right_as_string, (right_direct_proof_map, new_equiv_rc));
             }
         }
         Ok(())
