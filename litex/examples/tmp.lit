@@ -1,22 +1,16 @@
--1 < 0
+have point nonempty_set
 
-have a, b R, c Z
+prop ncoll(a, b, c)
+prop cong(a, b, c, d)
 
-a $in R
-b $in R
-c $in Z
+prop is_circumcenter(x, a, b, c point):
+    $ncoll(a, b, c)
+    $cong(x, a, x, b)
+    $cong(x, b, x, c)
 
-1 $in N
-1 $in N_pos
-1 $in Z
-1 $in Q
-1 $in R
-
-1 $in Q_pos
-1 $in R_pos
--1 $in R_neg
--1.1 $in Q_neg
--1 $in Z_neg
-1 $in Q_nz
-
-1 + 1 $in N
+forall x, a, b, c point:
+    $ncoll(a, b, c)
+    $cong(x, a, x, b)
+    $cong(x, b, x, c)
+    =>:
+        $is_circumcenter(x, a, b, c)

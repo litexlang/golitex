@@ -29,6 +29,7 @@ impl Runtime {
                     Some(RuntimeError::ParseBlockError(e)),
                 )
             })?;
+
         Ok(Stmt::DefPropWithMeaningStmt(stmt_ok))
     }
 
