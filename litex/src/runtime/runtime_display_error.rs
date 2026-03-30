@@ -110,7 +110,11 @@ impl Runtime {
                     name_already_used_on_line_file.0,
                     name_already_used_on_line_file.1,
                 );
-                format!("name `{}` already used on {}", name, location_string)
+                if location_string.is_empty() {
+                    duplicate_used_name_error_msg_without_line_file(name)
+                } else {
+                    format!("name `{}` already used {}", name, location_string)
+                }
             }
         }
     }

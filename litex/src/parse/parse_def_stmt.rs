@@ -58,7 +58,13 @@ impl Runtime {
             &all_param_names,
             tb.line_file,
         )
-        .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        .map_err(|e| {
+            ParsingError::new(
+                e.to_string(),
+                tb.line_file,
+                Some(RuntimeError::ParseBlockError(e)),
+            )
+        })?;
         let facts = self.parse_facts_in_body(tb)?;
         Ok(DefPropWithMeaningStmt::new(
             name,
@@ -113,7 +119,13 @@ impl Runtime {
         tb.skip_token(RIGHT_BRACE)?;
 
         self.validate_names_and_insert_into_top_parsing_time_name_scope(&params, tb.line_file)
-            .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+            .map_err(|e| {
+            ParsingError::new(
+                e.to_string(),
+                tb.line_file,
+                Some(RuntimeError::ParseBlockError(e)),
+            )
+        })?;
 
         Ok(DefPropWithoutMeaningStmt::new(name, params, tb.line_file))
     }
@@ -152,7 +164,13 @@ impl Runtime {
             &all_param_names,
             tb.line_file,
         )
-        .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        .map_err(|e| {
+            ParsingError::new(
+                e.to_string(),
+                tb.line_file,
+                Some(RuntimeError::ParseBlockError(e)),
+            )
+        })?;
         Ok(Stmt::DefLetStmt(DefLetStmt::new(
             param_def,
             facts,
@@ -268,7 +286,13 @@ impl Runtime {
         }
 
         self.validate_names_and_insert_into_top_parsing_time_name_scope(&equal_tos, tb.line_file)
-            .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+            .map_err(|e| {
+            ParsingError::new(
+                e.to_string(),
+                tb.line_file,
+                Some(RuntimeError::ParseBlockError(e)),
+            )
+        })?;
 
         Ok(Stmt::HaveExistObjStmt(HaveExistObjStmt::new(
             equal_tos,
@@ -313,7 +337,13 @@ impl Runtime {
             &struct_param_names,
             tb.line_file,
         )
-        .map_err(|e| ParsingError::new(e.to_string(), tb.line_file, None))?;
+        .map_err(|e| {
+            ParsingError::new(
+                e.to_string(),
+                tb.line_file,
+                Some(RuntimeError::ParseBlockError(e)),
+            )
+        })?;
         let dom_facts = if tb.current_token_is_equal_to(COLON) {
             tb.skip_token(COLON)?;
             let mut facts = vec![];
